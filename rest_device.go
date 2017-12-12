@@ -27,6 +27,7 @@ import (
 
 	"github.com/edgexfoundry/core-domain-go/models"
 	"github.com/gorilla/mux"
+	"gopkg.in/mgo.v2"
 )
 
 func restGetAllDevices(w http.ResponseWriter, _ *http.Request) {
