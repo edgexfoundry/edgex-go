@@ -1,0 +1,16 @@
+package: bitbucket.org/clientcto/go-core-metadata
+import:
+- package: bitbucket.org/clientcto/go-consul-client
+- package: bitbucket.org/clientcto/go-core-domain
+  subpackages:
+  - models
+- package: bitbucket.org/clientcto/go-logging-client
+- package: bitbucket.org/clientcto/go-notifications-client
+- package: github.com/go-yaml/yaml.git
+- package: github.com/gorilla/mux
+  version: ^1.6.0
+- package: github.com/robfig/cron
+  version: ^1.0.0
+- package: gopkg.in/mgo.v2
+  subpackages:
+  - bson
