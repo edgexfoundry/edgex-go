@@ -1,0 +1,9 @@
+package: github.com/edgexfoundry/core-clients-go
+import:
+- package: github.com/edgexfoundry/core-domain-go
+  subpackages:
+  - models
+testImport:
+- package: gopkg.in/mgo.v2
+  subpackages:
+  - bson
