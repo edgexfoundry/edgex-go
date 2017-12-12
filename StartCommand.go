@@ -26,7 +26,7 @@ import (
 	"time"
 
 	consulclient "github.com/edgexfoundry/consul-client-go"
-	logger "github.com/edgexfoundry/logging-client-go"
+	logger "github.com/edgexfoundry/support-logging-client-go"
 )
 
 var loggingClient = logger.NewClient(SERVICENAME, "")
