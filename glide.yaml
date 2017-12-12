@@ -1,0 +1,3 @@
+package: github.com/edgexfoundry/support-logging-client-go
+import:
+- package: github.com/edgexfoundry/support-domain-go
