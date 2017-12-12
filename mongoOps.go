@@ -23,6 +23,7 @@ import (
 	"strings"
 
 	"github.com/edgexfoundry/core-domain-go/models"
+	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
