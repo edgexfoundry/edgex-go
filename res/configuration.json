@@ -5,15 +5,15 @@
 	"ConsulPort" : 8500,
 	"ServiceTimeout" : 300,
 	"CheckInterval" : "10s",
-	"ServiceAddress" : "command",
-	"ServiceName" : "Command",
+	"ServiceAddress" : "localhost",
+	"ServiceName" : "core-command",
 	"DeviceServiceProtocol" : "http",
 	"HeartBeatMesssage" : "Core Command heart beat",
 	"AppOpenMessage" : "This is the Core Command Micro Service",
 	"URLProtocol" : "http://",
 	"URLDevicePath" : "/api/v1/device",
-	"ConsulHost" : "10.0.1.144",
+	"ConsulHost" : "loaclhost",
 	"ConsulCheckAddress" : "http://localhost:48082/api/v1/ping",
 	"LogFile" : "edgex-core-command.log",
-	"LoggingRemoteURL" : "http://10.0.1.144:48061/api/v1/logs"
+	"LoggingRemoteURL" : "http://localhost:48061/api/v1/logs"
 }
