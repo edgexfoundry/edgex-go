@@ -1,0 +1,5 @@
+package: bitbucket.org/clientcto/go-consul-client
+import:
+- package: github.com/hashicorp/consul
+  subpackages:
+  - api
