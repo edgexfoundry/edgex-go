@@ -17,21 +17,22 @@
  *******************************************************************************/
 package support_domain
 
-type LogEntry struct{
-	Id string	`json:"id"`
-	Level LogLevel	`json:"logLevel"`
-	Labels []string	`json:"labels"`
-	OriginService string	`json:"originService"`
-	Message string	`json:"message"`
-	Created int64	`json:"created"`
+type LogEntry struct {
+	Id            string   `json:"id"`
+	Level         LogLevel `json:"logLevel"`
+	Labels        []string `json:"labels"`
+	OriginService string   `json:"originService"`
+	Message       string   `json:"message"`
+	Created       int64    `json:"created"`
 }
 
 // Log Level enum
 type LogLevel string
-const(
+
+const (
 	TRACE LogLevel = "TRACE"
-	DEBUG = "DEBUG"
-	WARN = "WARN"
-	INFO = "INFO"
-	ERROR = "ERROR"
+	DEBUG          = "DEBUG"
+	WARN           = "WARN"
+	INFO           = "INFO"
+	ERROR          = "ERROR"
 )
