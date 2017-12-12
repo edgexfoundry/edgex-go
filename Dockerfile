@@ -4,8 +4,8 @@
 FROM golang:1.7.5-alpine AS build-env
 
 # Dependencies
-RUN apt-get update && apt-get install \
-    curl && curl https://glide.sh/get | sh
+RUN apk add --update --no-cache \
+    curl git && curl https://glide.sh/get | sh
 
 # Setup Go env
 RUN mkdir -p /go/src \
@@ -27,6 +27,7 @@ ARG GOOS=linux
 ARG GOARCH=amd64
 ARG METADATA_EXE=$CORE_METADATA_GO
 
+RUN go get -d
 RUN GOOS=$GOOS GOARCH=$GOARCH go build -o $METADATA_EXE
 
 # Next image - Copy built Go binary into new workspace
