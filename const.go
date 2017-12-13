@@ -82,7 +82,6 @@ var (
 	DEVICECOL  = "device"
 	DPCOL      = "deviceProfile"
 	DSCOL      = "deviceService"
-	DMCOL      = "deviceManager"
 	ADDCOL     = "addressable"
 	COMCOL     = "command"
 	DRCOL      = "deviceReport"
@@ -104,7 +103,6 @@ var (
 	URLLASTCONNECTED         = "lastconnected"
 	LASTCONNECTED            = "lastConnected"
 	LASTCONNECTEDNOTIFY      = "lastconnectednotify"
-	DEVICEMANAGER            = "devicemanager"
 	ADDRESSABLE              = "addressable"
 	ADDRESSABLENAME          = "addressablename"
 	ADDRESSABLEID            = "addressableid"
@@ -152,6 +150,6 @@ var (
 	LOCKED   = "LOCKED"
 	UNLOCKED = "UNLOCKED"
 	ENABLED  = "ENABLED"
-	DISABLED = "ENABLED"
+	DISABLED = "DISABLED"
 	QUERYTS  = "-timestamp"
 )
