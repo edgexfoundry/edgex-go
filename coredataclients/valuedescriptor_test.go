@@ -17,21 +17,22 @@
  *******************************************************************************/
 package coredataclients
 
-import(
-	"testing"
+import (
 	"fmt"
+	"testing"
 )
 
-func TestGetvaluedescriptors(t *testing.T){
+func TestGetvaluedescriptors(t *testing.T) {
 	v, err := vdc.ValueDescriptors()
-	if err != nil{
+	if err != nil {
 		t.FailNow()
 	}
 	fmt.Println(v)
 }
 
 var vdc ValueDescriptorClient
-func TestMain(m *testing.M){
+
+func TestMain(m *testing.M) {
 	vdc = NewValueDescriptorClient("http://localhost:48080/api/v1/valuedescriptor")
 
 	m.Run()

@@ -21,14 +21,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/edgexfoundry/core-domain-go/models"
 	"io/ioutil"
 	"net/http"
-	"github.com/edgexfoundry/core-domain-go/models"
 )
 
 var (
-	ErrResponseNil = errors.New("Response was nil")
-	ErrNotFound error = errors.New("Item not found")
+	ErrResponseNil       = errors.New("Response was nil")
+	ErrNotFound    error = errors.New("Item not found")
 )
 
 // Addressable client for interacting with the addressable section of metadata
@@ -81,11 +81,11 @@ func (v *ValueDescriptorClient) ValueDescriptors() ([]models.ValueDescriptor, er
 	}
 
 	resp, err := makeRequest(req)
-	if err != nil{
+	if err != nil {
 		fmt.Println(err.Error())
 		return []models.ValueDescriptor{}, err
 	}
-	if resp == nil{
+	if resp == nil {
 		fmt.Println(ErrResponseNil)
 		return []models.ValueDescriptor{}, ErrResponseNil
 	}
@@ -95,7 +95,7 @@ func (v *ValueDescriptorClient) ValueDescriptors() ([]models.ValueDescriptor, er
 	if resp.StatusCode != 200 {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
-		if err != nil{
+		if err != nil {
 			fmt.Println(err.Error())
 			return []models.ValueDescriptor{}, err
 		}
@@ -105,4 +105,3 @@ func (v *ValueDescriptorClient) ValueDescriptors() ([]models.ValueDescriptor, er
 
 	return decodeValueDescriptorSlice(resp)
 }
-
