@@ -22,16 +22,16 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/edgexfoundry/core-domain-go/models"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strconv"
-	"github.com/edgexfoundry/core-domain-go/models"
 )
 
 var (
 	ErrResponseNil error = errors.New("Problem connecting to metadata - reponse was nil")
-	ErrNotFound error = errors.New("Item not found")
+	ErrNotFound    error = errors.New("Item not found")
 )
 
 /*
@@ -63,7 +63,7 @@ type ServiceClient struct {
 }
 
 // Device Profile client for interacting with the device profile section of metadata
-type DeviceProfileClient struct{
+type DeviceProfileClient struct {
 	url string
 }
 
@@ -96,8 +96,8 @@ func NewServiceClient(metaDbServiceUrl string) ServiceClient {
 }
 
 // Return an instance of DeviceProfileClient
-func NewDeviceProfileClient(metaDbDeviceProfileUrl string) DeviceProfileClient{
-	return DeviceProfileClient{url : metaDbDeviceProfileUrl}
+func NewDeviceProfileClient(metaDbDeviceProfileUrl string) DeviceProfileClient {
+	return DeviceProfileClient{url: metaDbDeviceProfileUrl}
 }
 
 // Helper method to make the request and return the response
@@ -139,15 +139,15 @@ func (a *AddressableClient) Add(addr *models.Addressable) (string, error) {
 		fmt.Println(err)
 		return "", err
 	}
-	if resp == nil{
+	if resp == nil {
 		fmt.Println(ErrResponseNil.Error())
 		return "", ErrResponseNil
 	}
 	defer resp.Body.Close()
-	
+
 	// Get the response body
 	bodyBytes, err := getBody(resp)
-	if err != nil{
+	if err != nil {
 		fmt.Println(err.Error())
 		return "", err
 	}
@@ -185,9 +185,9 @@ func (a *AddressableClient) AddressableForName(name string) (models.Addressable,
 	}
 
 	resp, err := makeRequest(req)
-	
+
 	// Check response
-	if resp == nil{
+	if resp == nil {
 		fmt.Println(ErrResponseNil)
 		return models.Addressable{}, ErrResponseNil
 	}
@@ -200,12 +200,12 @@ func (a *AddressableClient) AddressableForName(name string) (models.Addressable,
 	if resp.StatusCode != 200 {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
-		if err != nil{
+		if err != nil {
 			fmt.Println(err.Error())
 			return models.Addressable{}, err
 		}
 		bodyString := string(bodyBytes)
-		
+
 		fmt.Println(bodyString)
 		return models.Addressable{}, errors.New(bodyString)
 	}
@@ -247,23 +247,23 @@ func (d *DeviceClient) Device(id string) (models.Device, error) {
 		fmt.Println(err)
 		return models.Device{}, err
 	}
-	
+
 	// Make the request and get response
 	resp, err := makeRequest(req)
-	if err != nil{
+	if err != nil {
 		fmt.Println(err.Error())
 		return models.Device{}, err
 	}
-	if resp == nil{
+	if resp == nil {
 		fmt.Println(ErrResponseNil)
 		return models.Device{}, ErrResponseNil
 	}
 	defer resp.Body.Close()
-	
-	if resp.StatusCode != 200{
+
+	if resp.StatusCode != 200 {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
-		if err != nil{
+		if err != nil {
 			fmt.Println(err.Error())
 			return models.Device{}, err
 		}
@@ -282,23 +282,23 @@ func (d *DeviceClient) Devices() ([]models.Device, error) {
 		fmt.Println(err)
 		return []models.Device{}, err
 	}
-	
+
 	// Make the request and get response
 	resp, err := makeRequest(req)
-	if err != nil{
+	if err != nil {
 		fmt.Println(err.Error())
 		return []models.Device{}, err
 	}
-	if resp == nil{
+	if resp == nil {
 		fmt.Println(ErrResponseNil)
 		return []models.Device{}, ErrResponseNil
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200{
+	if resp.StatusCode != 200 {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
-		if err != nil{
+		if err != nil {
 			fmt.Println(err.Error())
 			return []models.Device{}, err
 		}
@@ -316,23 +316,23 @@ func (d *DeviceClient) DeviceForName(name string) (models.Device, error) {
 		fmt.Println(err)
 		return models.Device{}, err
 	}
-	
+
 	// Make the request and get response
 	resp, err := makeRequest(req)
-	if err != nil{
+	if err != nil {
 		fmt.Println(err.Error())
 		return models.Device{}, err
 	}
-	if resp == nil{
+	if resp == nil {
 		fmt.Println(ErrResponseNil)
 		return models.Device{}, ErrResponseNil
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200{
+	if resp.StatusCode != 200 {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
-		if err != nil{
+		if err != nil {
 			fmt.Println(err.Error())
 			return models.Device{}, err
 		}
@@ -350,23 +350,23 @@ func (d *DeviceClient) DevicesByLabel(label string) ([]models.Device, error) {
 		fmt.Println(err)
 		return []models.Device{}, err
 	}
-	
+
 	// Make the request and get response
 	resp, err := makeRequest(req)
-	if err != nil{
+	if err != nil {
 		fmt.Println(err.Error())
 		return []models.Device{}, err
 	}
-	if resp == nil{
+	if resp == nil {
 		fmt.Println(ErrResponseNil)
 		return []models.Device{}, ErrResponseNil
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200{
+	if resp.StatusCode != 200 {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
-		if err != nil{
+		if err != nil {
 			fmt.Println(err.Error())
 			return []models.Device{}, err
 		}
@@ -384,23 +384,23 @@ func (d *DeviceClient) DevicesForService(serviceId string) ([]models.Device, err
 		fmt.Println(err)
 		return []models.Device{}, err
 	}
-	
+
 	// Make the request and get response
 	resp, err := makeRequest(req)
-	if err != nil{
+	if err != nil {
 		fmt.Println(err.Error())
 		return []models.Device{}, err
 	}
-	if resp == nil{
+	if resp == nil {
 		fmt.Println(ErrResponseNil)
 		return []models.Device{}, ErrResponseNil
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200{
+	if resp.StatusCode != 200 {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
-		if err != nil{
+		if err != nil {
 			fmt.Println(err.Error())
 			return []models.Device{}, err
 		}
@@ -418,23 +418,23 @@ func (d *DeviceClient) DevicesForServiceByName(serviceName string) ([]models.Dev
 		fmt.Println(err)
 		return []models.Device{}, err
 	}
-	
+
 	// Make the request and get response
 	resp, err := makeRequest(req)
-	if err != nil{
+	if err != nil {
 		fmt.Println(err.Error())
 		return []models.Device{}, err
 	}
-	if resp == nil{
+	if resp == nil {
 		fmt.Println(ErrResponseNil)
 		return []models.Device{}, ErrResponseNil
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200{
+	if resp.StatusCode != 200 {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
-		if err != nil{
+		if err != nil {
 			fmt.Println(err.Error())
 			return []models.Device{}, err
 		}
@@ -452,23 +452,23 @@ func (d *DeviceClient) DevicesForProfile(profileId string) ([]models.Device, err
 		fmt.Println(err)
 		return []models.Device{}, err
 	}
-	
+
 	// Make the request and get response
 	resp, err := makeRequest(req)
-	if err != nil{
+	if err != nil {
 		fmt.Println(err.Error())
 		return []models.Device{}, err
 	}
-	if resp == nil{
+	if resp == nil {
 		fmt.Println(ErrResponseNil)
 		return []models.Device{}, ErrResponseNil
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200{
+	if resp.StatusCode != 200 {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
-		if err != nil{
+		if err != nil {
 			fmt.Println(err.Error())
 			return []models.Device{}, err
 		}
@@ -486,23 +486,23 @@ func (d *DeviceClient) DevicesForProfileByName(profileName string) ([]models.Dev
 		fmt.Println(err)
 		return []models.Device{}, err
 	}
-	
+
 	// Make the request and get response
 	resp, err := makeRequest(req)
-	if err != nil{
+	if err != nil {
 		fmt.Println(err.Error())
 		return []models.Device{}, err
 	}
-	if resp == nil{
+	if resp == nil {
 		fmt.Println(ErrResponseNil)
 		return []models.Device{}, ErrResponseNil
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200{
+	if resp.StatusCode != 200 {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
-		if err != nil{
+		if err != nil {
 			fmt.Println(err.Error())
 			return []models.Device{}, err
 		}
@@ -520,23 +520,23 @@ func (d *DeviceClient) DevicesForAddressable(addressableId string) ([]models.Dev
 		fmt.Println(err)
 		return []models.Device{}, err
 	}
-	
+
 	// Make the request and get response
 	resp, err := makeRequest(req)
-	if err != nil{
+	if err != nil {
 		fmt.Println(err.Error())
 		return []models.Device{}, err
 	}
-	if resp == nil{
+	if resp == nil {
 		fmt.Println(ErrResponseNil)
 		return []models.Device{}, ErrResponseNil
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200{
+	if resp.StatusCode != 200 {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
-		if err != nil{
+		if err != nil {
 			fmt.Println(err.Error())
 			return []models.Device{}, err
 		}
@@ -555,23 +555,23 @@ func (d *DeviceClient) DevicesForAddressableByName(addressableName string) ([]mo
 		fmt.Println(err)
 		return []models.Device{}, err
 	}
-	
+
 	// Make the request and get response
 	resp, err := makeRequest(req)
-	if err != nil{
+	if err != nil {
 		fmt.Println(err.Error())
 		return []models.Device{}, err
 	}
-	if resp == nil{
+	if resp == nil {
 		fmt.Println(ErrResponseNil)
 		return []models.Device{}, ErrResponseNil
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200{
+	if resp.StatusCode != 200 {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
-		if err != nil{
+		if err != nil {
 			fmt.Println(err.Error())
 			return []models.Device{}, err
 		}
@@ -598,19 +598,19 @@ func (d *DeviceClient) Add(dev *models.Device) (string, error) {
 	}
 
 	resp, err := makeRequest(req)
-	if err != nil{
+	if err != nil {
 		fmt.Println(err.Error())
 		return "", err
 	}
-	if resp == nil{
+	if resp == nil {
 		fmt.Println(ErrResponseNil)
 		return "", ErrResponseNil
 	}
 	defer resp.Body.Close()
-	
+
 	// Get the body
 	bodyBytes, err := getBody(resp)
-	if err != nil{
+	if err != nil {
 		fmt.Println(err.Error())
 		return "", err
 	}
@@ -639,20 +639,20 @@ func (d *DeviceClient) Update(dev models.Device) error {
 	}
 
 	resp, err := makeRequest(req)
-	if err != nil{
+	if err != nil {
 		fmt.Println(err.Error())
 		return err
 	}
-	if resp == nil{
+	if resp == nil {
 		fmt.Println(ErrResponseNil)
 		return ErrResponseNil
 	}
 	defer resp.Body.Close()
-	
-	if resp.StatusCode != 200{
+
+	if resp.StatusCode != 200 {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
-		if err != nil{
+		if err != nil {
 			fmt.Println(err.Error())
 			return err
 		}
@@ -673,20 +673,20 @@ func (d *DeviceClient) UpdateLastConnected(id string, time int64) error {
 	}
 
 	resp, err := makeRequest(req)
-	if err != nil{
+	if err != nil {
 		fmt.Println(err.Error())
 		return err
 	}
-	if resp == nil{
+	if resp == nil {
 		fmt.Println(ErrResponseNil)
 		return ErrResponseNil
 	}
 	defer resp.Body.Close()
-	
-	if resp.StatusCode != 200{
+
+	if resp.StatusCode != 200 {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
-		if err != nil{
+		if err != nil {
 			fmt.Println(err.Error())
 			return err
 		}
@@ -707,20 +707,20 @@ func (d *DeviceClient) UpdateLastConnectedByName(name string, time int64) error 
 	}
 
 	resp, err := makeRequest(req)
-	if err != nil{
+	if err != nil {
 		fmt.Println(err.Error())
 		return err
 	}
-	if resp == nil{
+	if resp == nil {
 		fmt.Println(ErrResponseNil)
 		return ErrResponseNil
 	}
 	defer resp.Body.Close()
-	
-	if resp.StatusCode != 200{
+
+	if resp.StatusCode != 200 {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
-		if err != nil{
+		if err != nil {
 			fmt.Println(err.Error())
 			return err
 		}
@@ -741,20 +741,20 @@ func (d *DeviceClient) UpdateLastReported(id string, time int64) error {
 	}
 
 	resp, err := makeRequest(req)
-	if err != nil{
+	if err != nil {
 		fmt.Println(err.Error())
 		return err
 	}
-	if resp == nil{
+	if resp == nil {
 		fmt.Println(ErrResponseNil)
 		return ErrResponseNil
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200{
+	if resp.StatusCode != 200 {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
-		if err != nil{
+		if err != nil {
 			fmt.Println(err.Error())
 			return err
 		}
@@ -762,12 +762,12 @@ func (d *DeviceClient) UpdateLastReported(id string, time int64) error {
 
 		return errors.New(bodyString)
 	}
-	
+
 	return nil
 }
 
 // Update the lastReported value for a device (specified by name)
-func (d *DeviceClient) UpdateLastReportedByName(name string, time int64) (error) {
+func (d *DeviceClient) UpdateLastReportedByName(name string, time int64) error {
 	req, err := http.NewRequest("PUT", d.url+"/name/"+url.QueryEscape(name)+"/lastreported/"+strconv.FormatInt(time, 10), nil)
 	if err != nil {
 		fmt.Println(err)
@@ -775,20 +775,20 @@ func (d *DeviceClient) UpdateLastReportedByName(name string, time int64) (error)
 	}
 
 	resp, err := makeRequest(req)
-	if err != nil{
+	if err != nil {
 		fmt.Println(err.Error())
 		return err
 	}
-	if resp == nil{
+	if resp == nil {
 		fmt.Println(ErrResponseNil)
 		return ErrResponseNil
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200{
+	if resp.StatusCode != 200 {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
-		if err != nil{
+		if err != nil {
 			fmt.Println(err.Error())
 			return err
 		}
@@ -801,7 +801,7 @@ func (d *DeviceClient) UpdateLastReportedByName(name string, time int64) (error)
 }
 
 // Update the opState value for a device (specified by id)
-func (d *DeviceClient) UpdateOpState(id string, opState string) (error) {
+func (d *DeviceClient) UpdateOpState(id string, opState string) error {
 	req, err := http.NewRequest("PUT", d.url+"/"+id+"/opstate/"+opState, nil)
 	if err != nil {
 		fmt.Println(err.Error())
@@ -809,20 +809,20 @@ func (d *DeviceClient) UpdateOpState(id string, opState string) (error) {
 	}
 
 	resp, err := makeRequest(req)
-	if err != nil{
+	if err != nil {
 		fmt.Println(err.Error())
 		return err
 	}
-	if resp == nil{
+	if resp == nil {
 		fmt.Println(ErrResponseNil)
 		return ErrResponseNil
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200{
+	if resp.StatusCode != 200 {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
-		if err != nil{
+		if err != nil {
 			fmt.Println(err.Error())
 			return err
 		}
@@ -835,7 +835,7 @@ func (d *DeviceClient) UpdateOpState(id string, opState string) (error) {
 }
 
 // Update the opState value for a device (specified by name)
-func (d *DeviceClient) UpdateOpStateByName(name string, opState string) (error) {
+func (d *DeviceClient) UpdateOpStateByName(name string, opState string) error {
 	req, err := http.NewRequest("PUT", d.url+"/name/"+url.QueryEscape(name)+"/opstate/"+opState, nil)
 	if err != nil {
 		fmt.Println(err)
@@ -843,20 +843,20 @@ func (d *DeviceClient) UpdateOpStateByName(name string, opState string) (error) 
 	}
 
 	resp, err := makeRequest(req)
-	if err != nil{
+	if err != nil {
 		fmt.Println(err)
 		return err
 	}
-	if resp == nil{
+	if resp == nil {
 		fmt.Println(ErrResponseNil)
 		return ErrResponseNil
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200{
+	if resp.StatusCode != 200 {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
-		if err != nil{
+		if err != nil {
 			fmt.Println(err.Error())
 			return err
 		}
@@ -869,7 +869,7 @@ func (d *DeviceClient) UpdateOpStateByName(name string, opState string) (error) 
 }
 
 // Update the adminState value for a device (specified by id)
-func (d *DeviceClient) UpdateAdminState(id string, adminState string) (error) {
+func (d *DeviceClient) UpdateAdminState(id string, adminState string) error {
 	req, err := http.NewRequest("PUT", d.url+"/"+id+"/adminstate/"+adminState, nil)
 	if err != nil {
 		fmt.Println(err)
@@ -877,21 +877,21 @@ func (d *DeviceClient) UpdateAdminState(id string, adminState string) (error) {
 	}
 
 	resp, err := makeRequest(req)
-	if err != nil{
+	if err != nil {
 		fmt.Println(err.Error())
 		return err
 	}
-	if resp == nil{
+	if resp == nil {
 		fmt.Println(ErrResponseNil)
 		return ErrResponseNil
 	}
 
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200{
+	if resp.StatusCode != 200 {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
-		if err != nil{
+		if err != nil {
 			fmt.Println(err.Error())
 			return err
 		}
@@ -904,7 +904,7 @@ func (d *DeviceClient) UpdateAdminState(id string, adminState string) (error) {
 }
 
 // Update the adminState value for a device (specified by name)
-func (d *DeviceClient) UpdateAdminStateByName(name string, adminState string) (error) {
+func (d *DeviceClient) UpdateAdminStateByName(name string, adminState string) error {
 	req, err := http.NewRequest("PUT", d.url+"/name/"+url.QueryEscape(name)+"/adminstate/"+adminState, nil)
 	if err != nil {
 		fmt.Println(err)
@@ -912,20 +912,20 @@ func (d *DeviceClient) UpdateAdminStateByName(name string, adminState string) (e
 	}
 
 	resp, err := makeRequest(req)
-	if err != nil{
+	if err != nil {
 		fmt.Println(err)
 		return err
 	}
-	if resp == nil{
+	if resp == nil {
 		fmt.Println(ErrResponseNil)
 		return ErrResponseNil
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200{
+	if resp.StatusCode != 200 {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
-		if err != nil{
+		if err != nil {
 			fmt.Println(err.Error())
 			return err
 		}
@@ -938,7 +938,7 @@ func (d *DeviceClient) UpdateAdminStateByName(name string, adminState string) (e
 }
 
 // Delete a device (specified by id)
-func (d *DeviceClient) Delete(id string) (error) {
+func (d *DeviceClient) Delete(id string) error {
 	req, err := http.NewRequest("DELETE", d.url+"/id/"+id, nil)
 	if err != nil {
 		fmt.Println(err)
@@ -946,20 +946,20 @@ func (d *DeviceClient) Delete(id string) (error) {
 	}
 
 	resp, err := makeRequest(req)
-	if err != nil{
+	if err != nil {
 		fmt.Println(err)
 		return err
 	}
-	if resp == nil{
+	if resp == nil {
 		fmt.Println(ErrResponseNil)
 		return ErrResponseNil
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200{
+	if resp.StatusCode != 200 {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
-		if err != nil{
+		if err != nil {
 			fmt.Println(err.Error())
 			return err
 		}
@@ -980,20 +980,20 @@ func (d *DeviceClient) DeleteByName(name string) error {
 	}
 
 	resp, err := makeRequest(req)
-	if err != nil{
+	if err != nil {
 		fmt.Println(err)
 		return err
 	}
-	if resp == nil{
+	if resp == nil {
 		fmt.Println(ErrResponseNil)
 		return ErrResponseNil
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200{
+	if resp.StatusCode != 200 {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
-		if err != nil{
+		if err != nil {
 			fmt.Println(err.Error())
 			return err
 		}
@@ -1040,20 +1040,20 @@ func (c *CommandClient) Command(id string) (models.Command, error) {
 	}
 
 	resp, err := makeRequest(req)
-	if err != nil{
+	if err != nil {
 		fmt.Println(err)
 		return models.Command{}, err
 	}
-	if resp == nil{
+	if resp == nil {
 		fmt.Println(ErrResponseNil)
 		return models.Command{}, ErrResponseNil
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200{
+	if resp.StatusCode != 200 {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
-		if err != nil{
+		if err != nil {
 			fmt.Println(err.Error())
 			return models.Command{}, err
 		}
@@ -1074,19 +1074,19 @@ func (c *CommandClient) Commands() ([]models.Command, error) {
 	}
 
 	resp, err := makeRequest(req)
-	if err != nil{
+	if err != nil {
 		fmt.Println(err)
 		return []models.Command{}, err
 	}
-	if resp == nil{
+	if resp == nil {
 		fmt.Println(ErrResponseNil)
 		return []models.Command{}, ErrResponseNil
 	}
 
-	if resp.StatusCode != 200{
+	if resp.StatusCode != 200 {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
-		if err != nil{
+		if err != nil {
 			fmt.Println(err.Error())
 			return []models.Command{}, err
 		}
@@ -1107,20 +1107,20 @@ func (c *CommandClient) CommandsForName(name string) ([]models.Command, error) {
 	}
 
 	resp, err := makeRequest(req)
-	if err != nil{
+	if err != nil {
 		fmt.Println(err)
 		return []models.Command{}, err
 	}
-	if resp == nil{
+	if resp == nil {
 		fmt.Println(ErrResponseNil)
 		return []models.Command{}, ErrResponseNil
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200{
+	if resp.StatusCode != 200 {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
-		if err != nil{
+		if err != nil {
 			fmt.Println(err.Error())
 			return []models.Command{}, err
 		}
@@ -1133,7 +1133,7 @@ func (c *CommandClient) CommandsForName(name string) ([]models.Command, error) {
 }
 
 // Add a new command
-func (c *CommandClient) Add(com *models.Command) (string, error){
+func (c *CommandClient) Add(com *models.Command) (string, error) {
 	jsonStr, err := json.Marshal(com)
 	if err != nil {
 		fmt.Println(err)
@@ -1147,11 +1147,11 @@ func (c *CommandClient) Add(com *models.Command) (string, error){
 	}
 
 	resp, err := makeRequest(req)
-	if err != nil{
+	if err != nil {
 		fmt.Println(err)
 		return "", err
 	}
-	if resp == nil{
+	if resp == nil {
 		fmt.Println(ErrResponseNil)
 		return "", ErrResponseNil
 	}
@@ -1159,13 +1159,13 @@ func (c *CommandClient) Add(com *models.Command) (string, error){
 
 	// Get the response body
 	bodyBytes, err := getBody(resp)
-	if err != nil{
+	if err != nil {
 		fmt.Println(err.Error())
 		return "", err
 	}
 	bodyString := string(bodyBytes)
 
-	if resp.StatusCode != 200{
+	if resp.StatusCode != 200 {
 		return "", errors.New(bodyString)
 	}
 
@@ -1173,7 +1173,7 @@ func (c *CommandClient) Add(com *models.Command) (string, error){
 }
 
 // Update a command
-func (c *CommandClient) Update(com models.Command) error{
+func (c *CommandClient) Update(com models.Command) error {
 	jsonStr, err := json.Marshal(&com)
 	if err != nil {
 		fmt.Println(err)
@@ -1187,20 +1187,20 @@ func (c *CommandClient) Update(com models.Command) error{
 	}
 
 	resp, err := makeRequest(req)
-	if err != nil{
+	if err != nil {
 		fmt.Println(err)
 		return err
 	}
-	if resp == nil{
+	if resp == nil {
 		fmt.Println(ErrResponseNil)
 		return ErrResponseNil
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200{
+	if resp.StatusCode != 200 {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
-		if err != nil{
+		if err != nil {
 			fmt.Println(err.Error())
 			return err
 		}
@@ -1213,7 +1213,7 @@ func (c *CommandClient) Update(com models.Command) error{
 }
 
 // Delete a command
-func (c *CommandClient) Delete(id string) error{
+func (c *CommandClient) Delete(id string) error {
 	req, err := http.NewRequest("DELETE", c.url+"/id/"+id, nil)
 	if err != nil {
 		fmt.Println(err)
@@ -1221,20 +1221,20 @@ func (c *CommandClient) Delete(id string) error{
 	}
 
 	resp, err := makeRequest(req)
-	if err != nil{
+	if err != nil {
 		fmt.Println(err)
 		return err
 	}
-	if resp == nil{
+	if resp == nil {
 		fmt.Println(ErrResponseNil)
 		return ErrResponseNil
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200{
+	if resp.StatusCode != 200 {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
-		if err != nil{
+		if err != nil {
 			fmt.Println(err.Error())
 			return err
 		}
@@ -1268,20 +1268,20 @@ func (s *ServiceClient) UpdateLastConnected(id string, time int64) error {
 	}
 
 	resp, err := makeRequest(req)
-	if err != nil{
+	if err != nil {
 		fmt.Println(err)
 		return err
 	}
-	if resp == nil{
+	if resp == nil {
 		fmt.Println(ErrResponseNil)
 		return ErrResponseNil
 	}
 	defer resp.Body.Close()
-	
-	if resp.StatusCode != 200{
+
+	if resp.StatusCode != 200 {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
-		if err != nil{
+		if err != nil {
 			fmt.Println(err.Error())
 			return err
 		}
@@ -1302,20 +1302,20 @@ func (s *ServiceClient) UpdateLastReported(id string, time int64) error {
 	}
 
 	resp, err := makeRequest(req)
-	if err != nil{
+	if err != nil {
 		fmt.Println(err)
 		return err
 	}
-	if resp == nil{
+	if resp == nil {
 		fmt.Println(ErrResponseNil)
 		return ErrResponseNil
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200{
+	if resp.StatusCode != 200 {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
-		if err != nil{
+		if err != nil {
 			fmt.Println(err.Error())
 			return err
 		}
@@ -1341,7 +1341,7 @@ func (s *ServiceClient) Add(ds *models.DeviceService) (string, error) {
 		fmt.Println(err)
 		return "", err
 	}
-	if resp == nil{
+	if resp == nil {
 		fmt.Println(ErrResponseNil)
 		return "", ErrResponseNil
 	}
@@ -1349,7 +1349,7 @@ func (s *ServiceClient) Add(ds *models.DeviceService) (string, error) {
 
 	// Get the response body
 	bodyBytes, err := getBody(resp)
-	if err != nil{
+	if err != nil {
 		fmt.Println(err.Error())
 		return "", err
 	}
@@ -1372,7 +1372,7 @@ func (s *ServiceClient) DeviceServiceForName(name string) (models.DeviceService,
 	}
 
 	resp, err := makeRequest(req)
-	if resp == nil{
+	if resp == nil {
 		fmt.Println(ErrResponseNil)
 		return models.DeviceService{}, ErrResponseNil
 	}
@@ -1382,10 +1382,10 @@ func (s *ServiceClient) DeviceServiceForName(name string) (models.DeviceService,
 		return models.DeviceService{}, err
 	}
 
-	if resp.StatusCode != 200{
+	if resp.StatusCode != 200 {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
-		if err != nil{
+		if err != nil {
 			fmt.Println(err.Error())
 			return models.DeviceService{}, err
 		}
@@ -1397,11 +1397,10 @@ func (s *ServiceClient) DeviceServiceForName(name string) (models.DeviceService,
 	return s.decodeDeviceService(resp)
 }
 
-
 // ***************** DEVICE PROFILE METHODS *************************
 
 // Add a new device profile to metadata
-func (dpc *DeviceProfileClient) Add(dp *models.DeviceProfile)(string, error){
+func (dpc *DeviceProfileClient) Add(dp *models.DeviceProfile) (string, error) {
 	jsonStr, err := json.Marshal(dp)
 	if err != nil {
 		fmt.Println(err)
@@ -1414,25 +1413,25 @@ func (dpc *DeviceProfileClient) Add(dp *models.DeviceProfile)(string, error){
 		fmt.Println(err)
 		return "", err
 	}
-	if resp == nil{
+	if resp == nil {
 		fmt.Println(ErrResponseNil)
 		return "", ErrResponseNil
 	}
 	defer resp.Body.Close()
-	
+
 	// Get the response
 	bodyBytes, err := getBody(resp)
-	if err != nil{
+	if err != nil {
 		fmt.Println(err.Error())
 		return "", err
 	}
 	bodyString := string(bodyBytes)
-	
+
 	// Check the response code
-	if resp.StatusCode != 200{
+	if resp.StatusCode != 200 {
 		fmt.Println(bodyString)
 		return "", errors.New(bodyString)
 	}
-	
+
 	return bodyString, nil
 }
