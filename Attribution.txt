@@ -1,0 +1,25 @@
+The following open source projects are referenced by Core Metadata Go:
+
+
+
+mgo v2 (BSD-2) - https://github.com/go-mgo/mgo
+
+https://github.com/go-mgo/mgo/blob/v2-unstable/LICENSE
+
+
+
+mgo/bson v2 (unspecified) - https://github.com/go-mgo/mgo/tree/v2/bson
+
+https://github.com/go-mgo/mgo/blob/v2/bson/LICENSE
+
+
+
+gorilla/mux (BSD-3) - https://github.com/gorilla/mux
+
+https://github.com/gorilla/mux/blob/master/LICENSEE
+
+
+
+robfig/cron (MIT) - https://github.com/robfig/cron
+
+https://github.com/robfig/cron/blob/master/LICENSE

@@ -1,0 +1,15 @@
+package: github.com/edgexfoundry/core-metadata-go
+import:
+- package: github.com/edgexfoundry/consul-client-go
+- package: github.com/edgexfoundry/core-domain-go
+  subpackages:
+  - models
+- package: github.com/edgexfoundry/support-logging-client-go
+- package: github.com/edgexfoundry/support-notifications-client-go
+- package: github.com/gorilla/mux
+  version: ^1.6.0
+- package: github.com/robfig/cron
+  version: ^1.0.0
+- package: gopkg.in/mgo.v2
+  subpackages:
+  - bson
