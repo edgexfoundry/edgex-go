@@ -21,20 +21,20 @@ package enums
 /*
 This file is the Operating state enum for EdgeX
 Values are enabled or disabled
- */
+*/
 
 type OperatingStateType uint8
 
-const(
+const (
 	ENABLED OperatingStateType = iota
 	DISABLED
 )
 
-var operatingStateStringArray = [...]string{"ENABLED", "DISABLED"}	// Used for String() function
+var operatingStateStringArray = [...]string{"ENABLED", "DISABLED"} // Used for String() function
 
 /*
 String function for formatting
- */
-func (o OperatingStateType) String()string{
+*/
+func (o OperatingStateType) String() string {
 	return operatingStateStringArray[o]
 }

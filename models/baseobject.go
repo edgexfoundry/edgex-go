@@ -23,10 +23,11 @@ import (
 )
 
 type BaseObject struct {
-	Created 	int64		`bson:"created" json:"created"`
-	Modified 	int64		`bson:"modified" json:"modified"`
-	Origin 		int64		`bson:"origin" json:"origin"`
+	Created  int64 `bson:"created" json:"created"`
+	Modified int64 `bson:"modified" json:"modified"`
+	Origin   int64 `bson:"origin" json:"origin"`
 }
+
 /*
  * String function for representing a device
  */
@@ -37,10 +38,11 @@ func (o *BaseObject) String() string {
 	}
 	return string(out)
 }
+
 /*
  * Compare the Created of two objects to determine given is newer
  */
-func (ba *BaseObject)compareTo(i BaseObject) int {
+func (ba *BaseObject) compareTo(i BaseObject) int {
 	if i.Created > ba.Created {
 		return 1
 	}

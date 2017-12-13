@@ -21,9 +21,10 @@ package models
 import "encoding/json"
 
 type DescribedObject struct {
-	BaseObject		`bson:",inline" yaml:",inline"`
-	Description string	`bson:"description" json:"description" yaml:"description"`
+	BaseObject  `bson:",inline" yaml:",inline"`
+	Description string `bson:"description" json:"description" yaml:"description"`
 }
+
 /*
  * String function for DescribedObject
  */

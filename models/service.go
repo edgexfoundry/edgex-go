@@ -24,40 +24,44 @@ import (
 )
 
 type Service struct {
-	DescribedObject			`bson:",inline"`
-	Id		bson.ObjectId	`bson:"_id,omitempty" json:"id"`
-	Name 		string		`bson:"name" json:"name"`			// time in milliseconds that the device last provided any feedback or responded to any request
-	LastConnected 	int64 		`bson:"lastConnected" json:"lastConnected"`	// time in milliseconds that the device last reported data to the core
-	LastReported 	int64		`bson:"lastReported" json:"lastReported"`	// operational state - either enabled or disabled
-	OperatingState 	OperatingState	`bson:"operatingState" json:"operatingState"`	// operational state - ether enabled or disableddc
-	Labels 		[]string	`bson:"labels" json:"labels"`			// tags or other labels applied to the device service for search or other identification needs
-	Addressable 	Addressable	`bson:"addressable" json:"addressable"`		// address (MQTT topic, HTTP address, serial bus, etc.) for reaching the service
+	DescribedObject `bson:",inline"`
+	Id              bson.ObjectId  `bson:"_id,omitempty" json:"id"`
+	Name            string         `bson:"name" json:"name"`                     // time in milliseconds that the device last provided any feedback or responded to any request
+	LastConnected   int64          `bson:"lastConnected" json:"lastConnected"`   // time in milliseconds that the device last reported data to the core
+	LastReported    int64          `bson:"lastReported" json:"lastReported"`     // operational state - either enabled or disabled
+	OperatingState  OperatingState `bson:"operatingState" json:"operatingState"` // operational state - ether enabled or disableddc
+	Labels          []string       `bson:"labels" json:"labels"`                 // tags or other labels applied to the device service for search or other identification needs
+	Addressable     Addressable    `bson:"addressable" json:"addressable"`       // address (MQTT topic, HTTP address, serial bus, etc.) for reaching the service
 }
 
 // Custom Marshaling to make empty strings null
-func (s Service) MarshalJSON()([]byte, error){
-	test := struct{
-		DescribedObject			`bson:",inline"`
-		Id		*bson.ObjectId	`bson:"_id,omitempty" json:"id"`
-		Name 		*string		`bson:"name" json:"name"`			// time in milliseconds that the device last provided any feedback or responded to any request
-		LastConnected 	int64 		`bson:"lastConnected" json:"lastConnected"`	// time in milliseconds that the device last reported data to the core
-		LastReported 	int64		`bson:"lastReported" json:"lastReported"`	// operational state - either enabled or disabled
-		OperatingState 	OperatingState	`bson:"operatingState" json:"operatingState"`	// operational state - ether enabled or disableddc
-		Labels 		[]string	`bson:"labels" json:"labels"`			// tags or other labels applied to the device service for search or other identification needs
-		Addressable 	Addressable	`bson:"addressable" json:"addressable"`		// address (MQTT topic, HTTP address, serial bus, etc.) for reaching the service
+func (s Service) MarshalJSON() ([]byte, error) {
+	test := struct {
+		DescribedObject `bson:",inline"`
+		Id              *bson.ObjectId `bson:"_id,omitempty" json:"id"`
+		Name            *string        `bson:"name" json:"name"`                     // time in milliseconds that the device last provided any feedback or responded to any request
+		LastConnected   int64          `bson:"lastConnected" json:"lastConnected"`   // time in milliseconds that the device last reported data to the core
+		LastReported    int64          `bson:"lastReported" json:"lastReported"`     // operational state - either enabled or disabled
+		OperatingState  OperatingState `bson:"operatingState" json:"operatingState"` // operational state - ether enabled or disableddc
+		Labels          []string       `bson:"labels" json:"labels"`                 // tags or other labels applied to the device service for search or other identification needs
+		Addressable     Addressable    `bson:"addressable" json:"addressable"`       // address (MQTT topic, HTTP address, serial bus, etc.) for reaching the service
 	}{
-		DescribedObject : s.DescribedObject,
-		LastConnected : s.LastConnected,
-		LastReported : s.LastReported,
-		OperatingState : s.OperatingState,
-		Labels : s.Labels,
-		Addressable : s.Addressable,
+		DescribedObject: s.DescribedObject,
+		LastConnected:   s.LastConnected,
+		LastReported:    s.LastReported,
+		OperatingState:  s.OperatingState,
+		Labels:          s.Labels,
+		Addressable:     s.Addressable,
 	}
 
 	// Empty strings are null
-	if s.Name != "" {test.Name = &s.Name}
-	if s.Id != "" {test.Id = &s.Id}
-	
+	if s.Name != "" {
+		test.Name = &s.Name
+	}
+	if s.Id != "" {
+		test.Id = &s.Id
+	}
+
 	return json.Marshal(test)
 }
 

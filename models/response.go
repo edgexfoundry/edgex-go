@@ -20,9 +20,10 @@ package models
 
 import (
 	"encoding/json"
-	"strings"
 	"reflect"
+	"strings"
 )
+
 /*
  * Response for a Get or Put request to a service
  *
@@ -30,25 +31,29 @@ import (
  * Response Struct
  */
 type Response struct {
-	Code 		string			`bson:"code" json:"code" yaml:"code"`
-	Description string			`bson:"description" json:"description" yaml:"description"`
-	ExpectedValues 	[]string		`bson:"expectedValues" json:"expectedValues" yaml:"expectedValues"`
+	Code           string   `bson:"code" json:"code" yaml:"code"`
+	Description    string   `bson:"description" json:"description" yaml:"description"`
+	ExpectedValues []string `bson:"expectedValues" json:"expectedValues" yaml:"expectedValues"`
 }
 
 // Custom marshalling to make empty strings null
-func (r Response) MarshalJSON()([]byte, error){
-	test := struct{
-		Code 		*string			`json:"code"`
-		Description *string			`json:"description"`
-		ExpectedValues 	[]string		`json:"expectedValues"`
+func (r Response) MarshalJSON() ([]byte, error) {
+	test := struct {
+		Code           *string  `json:"code"`
+		Description    *string  `json:"description"`
+		ExpectedValues []string `json:"expectedValues"`
 	}{
-		ExpectedValues : r.ExpectedValues,
+		ExpectedValues: r.ExpectedValues,
 	}
-	
+
 	// Empty strings are null
-	if r.Code != "" {test.Code = &r.Code}
-	if r.Description != "" {test.Description = &r.Description}
-	
+	if r.Code != "" {
+		test.Code = &r.Code
+	}
+	if r.Description != "" {
+		test.Description = &r.Description
+	}
+
 	return json.Marshal(test)
 }
 
@@ -70,7 +75,7 @@ func (r Response) Equals(r2 Response) bool {
 	if strings.Compare(r.Description, r2.Description) != 0 {
 		return false
 	}
-	if len(r.ExpectedValues) != len (r2.ExpectedValues) {
+	if len(r.ExpectedValues) != len(r2.ExpectedValues) {
 		return false
 	}
 	if !reflect.DeepEqual(r.ExpectedValues, r2.ExpectedValues) {

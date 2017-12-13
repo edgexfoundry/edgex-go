@@ -22,28 +22,32 @@ import (
 	"encoding/json"
 )
 
-type CallbackAlert struct{
+type CallbackAlert struct {
 	ActionType ActionType `json:"type"`
-	Id string `json:"id"`
+	Id         string     `json:"id"`
 }
 
 // Custom JSON marshaling to turn empty strings into null pointers
-func (ca CallbackAlert)MarshalJSON()([]byte, error){
-	test := struct{
+func (ca CallbackAlert) MarshalJSON() ([]byte, error) {
+	test := struct {
 		ActionType ActionType `json:"type"`
-		Id *string `json:"id"`
+		Id         *string    `json:"id"`
 	}{
-		ActionType : ca.ActionType,
+		ActionType: ca.ActionType,
 	}
-	
-	if ca.Id != ""{test.Id = &ca.Id}
-	
+
+	if ca.Id != "" {
+		test.Id = &ca.Id
+	}
+
 	return json.Marshal(test)
 }
 
-func (ca CallbackAlert) String() string{
+func (ca CallbackAlert) String() string {
 	out, err := json.Marshal(ca)
-	if err != nil{return err.Error()}
-	
+	if err != nil {
+		return err.Error()
+	}
+
 	return string(out)
 }

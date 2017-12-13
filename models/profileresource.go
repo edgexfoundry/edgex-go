@@ -21,26 +21,32 @@ package models
 import "encoding/json"
 
 type ProfileResource struct {
-	Name 	string 			`bson:"name" json:"name"`
-	Get	[]ResourceOperation	`bson:"get" json:"get"`
-	Set	[]ResourceOperation	`bson:"set" json:"set"`
+	Name string              `bson:"name" json:"name"`
+	Get  []ResourceOperation `bson:"get" json:"get"`
+	Set  []ResourceOperation `bson:"set" json:"set"`
 }
 
 // Custom marshaling to make empty strings null
-func (pr ProfileResource) MarshalJSON()([]byte, error){
-	test := struct{
-		Name 	*string 			`json:"name"`
-		Get	[]ResourceOperation	`json:"get"`
-		Set	[]ResourceOperation	`json:"set"`
+func (pr ProfileResource) MarshalJSON() ([]byte, error) {
+	test := struct {
+		Name *string             `json:"name"`
+		Get  []ResourceOperation `json:"get"`
+		Set  []ResourceOperation `json:"set"`
 	}{}
-	
+
 	// Empty strings are null
-	if pr.Name != "" {test.Name = &pr.Name}
-	
+	if pr.Name != "" {
+		test.Name = &pr.Name
+	}
+
 	// Empty arrays are null
-	if len(pr.Get) > 0 {test.Get = pr.Get}
-	if len(pr.Set) > 0 {test.Set = pr.Set}
-	
+	if len(pr.Get) > 0 {
+		test.Get = pr.Get
+	}
+	if len(pr.Set) > 0 {
+		test.Set = pr.Set
+	}
+
 	return json.Marshal(test)
 }
 

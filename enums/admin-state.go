@@ -21,21 +21,21 @@ package enums
 /*
 This file is the AdminState enum for EdgeX
 Values are locked or unlocked
- */
+*/
 
 type AdminStateType uint8
 
 // The values of the enum - iota increments the value of each const
-const(
+const (
 	LOCKED AdminStateType = iota
 	UNLOCKED
 )
 
-var adminStateStringArray = [...]string{"LOCKED", "UNLOCKED"}	// Used for String function
+var adminStateStringArray = [...]string{"LOCKED", "UNLOCKED"} // Used for String function
 
 /*
 String() func for formatting
- */
-func (a AdminStateType) String() string{
+*/
+func (a AdminStateType) String() string {
 	return adminStateStringArray[a]
 }

@@ -19,31 +19,38 @@
 package models
 
 import "encoding/json"
+
 /*
  * This file is the model for Put commands in EdgeX
  *
  * Put Struct
  */
 type Put struct {
-	Action				`bson:",inline" yaml:",inline"`
-	ParameterNames []string		`bson:"parameterNames" json:"parameterNames" yaml:"parameterNames"`
+	Action         `bson:",inline" yaml:",inline"`
+	ParameterNames []string `bson:"parameterNames" json:"parameterNames" yaml:"parameterNames"`
 }
 
 // Custom marshaling to make empty strings null
-func (p Put) MarshalJSON()([]byte, error){
-	test := struct{
-		Path *string `json:"path"`
-		Responses []Response `json:"responses"`
-		ParameterNames []string `json:"parameterNames"`
+func (p Put) MarshalJSON() ([]byte, error) {
+	test := struct {
+		Path           *string    `json:"path"`
+		Responses      []Response `json:"responses"`
+		ParameterNames []string   `json:"parameterNames"`
 	}{}
-	
+
 	// Empty strings are null
-	if p.Path != ""{test.Path = &p.Path}
-	
+	if p.Path != "" {
+		test.Path = &p.Path
+	}
+
 	// Empty arrays are null
-	if len(p.Responses) > 0 {test.Responses = p.Responses}
-	if len(p.ParameterNames) > 0 {test.ParameterNames = p.ParameterNames}
-	
+	if len(p.Responses) > 0 {
+		test.Responses = p.Responses
+	}
+	if len(p.ParameterNames) > 0 {
+		test.ParameterNames = p.ParameterNames
+	}
+
 	return json.Marshal(test)
 }
 
@@ -59,10 +66,10 @@ func (p Put) String() string {
 }
 
 // Append the associated value descriptors to the list
-func (p *Put) AllAssociatedValueDescriptors(vdNames *map[string]string){
-	for _, pn := range p.ParameterNames{
+func (p *Put) AllAssociatedValueDescriptors(vdNames *map[string]string) {
+	for _, pn := range p.ParameterNames {
 		// Only add to the map if the value descriptor is NOT there
-		if _, ok := (*vdNames)[pn]; !ok{
+		if _, ok := (*vdNames)[pn]; !ok {
 			(*vdNames)[pn] = pn
 		}
 	}
