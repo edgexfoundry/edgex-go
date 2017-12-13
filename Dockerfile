@@ -28,7 +28,6 @@ ARG GOOS=linux
 ARG GOARCH=amd64
 ARG METADATA_EXE=$CORE_METADATA_GO
 
-#RUN go get -d
 RUN GOOS=$GOOS GOARCH=$GOARCH go build -o $METADATA_EXE
 
 # Next image - Copy built Go binary into new workspace
