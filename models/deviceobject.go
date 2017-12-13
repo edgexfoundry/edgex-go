@@ -23,38 +23,46 @@ import (
 )
 
 type DeviceObject struct {
-//	DescribedObject				`bson:",inline" yaml:",inline"`
-//	Id		bson.ObjectId		`bson:"_id,omitempty" json:"id"`
-	Description	string	`bson:"description" json:"description"`
-	Name 		string			`bson:"name" json:"name"`
-	Tag		string			`bson:"tag" json:"tag"`
-//	Properties 	ProfileProperty 	`bson:"profileProperty" json:"profileProperty"`
-	Properties 	ProfileProperty 	`bson:"properties" json:"properties" yaml:"properties"`
-	Attributes  map[string]string   `bson:"attributes" json:"attributes" yaml:"attributes"`
-//	Other 		string	`bson:"other" json:"other"`
-//	Other 		map[string]string	`bson:"other" json:"other"`
+	//	DescribedObject				`bson:",inline" yaml:",inline"`
+	//	Id		bson.ObjectId		`bson:"_id,omitempty" json:"id"`
+	Description string `bson:"description" json:"description"`
+	Name        string `bson:"name" json:"name"`
+	Tag         string `bson:"tag" json:"tag"`
+	//	Properties 	ProfileProperty 	`bson:"profileProperty" json:"profileProperty"`
+	Properties ProfileProperty   `bson:"properties" json:"properties" yaml:"properties"`
+	Attributes map[string]string `bson:"attributes" json:"attributes" yaml:"attributes"`
+	//	Other 		string	`bson:"other" json:"other"`
+	//	Other 		map[string]string	`bson:"other" json:"other"`
 }
 
 // Custom marshaling to make empty strings null
-func (do DeviceObject)MarshalJSON()([]byte, error){
-	test := struct{
-		Description	*string	`json:"description"`
-		Name 		*string			`json:"name"`
-		Tag		*string			`json:"tag"`
-		Properties 	ProfileProperty 	`json:"properties"`
-		Attributes  map[string]string   `json:"attributes"`
+func (do DeviceObject) MarshalJSON() ([]byte, error) {
+	test := struct {
+		Description *string           `json:"description"`
+		Name        *string           `json:"name"`
+		Tag         *string           `json:"tag"`
+		Properties  ProfileProperty   `json:"properties"`
+		Attributes  map[string]string `json:"attributes"`
 	}{
-		Properties : do.Properties,
+		Properties: do.Properties,
 	}
-	
+
 	// Empty strings are null
-	if do.Description != "" {test.Description = &do.Description}
-	if do.Name != "" {test.Name = &do.Name}
-	if do.Tag != "" {test.Tag = &do.Tag}
-	
+	if do.Description != "" {
+		test.Description = &do.Description
+	}
+	if do.Name != "" {
+		test.Name = &do.Name
+	}
+	if do.Tag != "" {
+		test.Tag = &do.Tag
+	}
+
 	// Empty maps are null
-	if len(do.Attributes) > 0 {test.Attributes = do.Attributes}
-	
+	if len(do.Attributes) > 0 {
+		test.Attributes = do.Attributes
+	}
+
 	return json.Marshal(test)
 }
 

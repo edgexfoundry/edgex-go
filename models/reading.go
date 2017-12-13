@@ -19,8 +19,8 @@
 package models
 
 import (
-	"gopkg.in/mgo.v2/bson"
 	"encoding/json"
+	"gopkg.in/mgo.v2/bson"
 )
 
 /*
@@ -30,50 +30,58 @@ import (
  *
  * Struct for the Reading object in EdgeX
  */
-type Reading struct{
-	Id bson.ObjectId 	`bson:"_id,omitempty"`
-	Pushed int64	 	`bson:"pushed" json:"pushed"`		// When the data was pushed out of EdgeX (0 - not pushed yet)
-	Created int64		`bson: "created" json:"created"`	// When the reading was created
-	Origin int64		`bson:"origin" json:"origin"`
-	Modified int64		`bson:"modified" json:"modified"`
-	Device string		`bson:"device" json:"device"`
-	Name string			`bson:"name" json:"name"`
-	Value string		`bson:"value" json:"value"`		// Device sensor data value
+type Reading struct {
+	Id       bson.ObjectId `bson:"_id,omitempty"`
+	Pushed   int64         `bson:"pushed" json:"pushed"`    // When the data was pushed out of EdgeX (0 - not pushed yet)
+	Created  int64         `bson: "created" json:"created"` // When the reading was created
+	Origin   int64         `bson:"origin" json:"origin"`
+	Modified int64         `bson:"modified" json:"modified"`
+	Device   string        `bson:"device" json:"device"`
+	Name     string        `bson:"name" json:"name"`
+	Value    string        `bson:"value" json:"value"` // Device sensor data value
 }
 
 // Custom marshaling to make empty strings null
-func (r Reading) MarshalJSON()([]byte, error){
-	test := struct{
-		Id bson.ObjectId 	`json:"id"`
-		Pushed int64	 	`json:"pushed"`		// When the data was pushed out of EdgeX (0 - not pushed yet)
-		Created int64		`json:"created"`	// When the reading was created
-		Origin int64		`json:"origin"`
-		Modified int64		`json:"modified"`
-		Device *string		`json:"device"`
-		Name *string			`json:"name"`
-		Value *string		`json:"value"`		// Device sensor data value
+func (r Reading) MarshalJSON() ([]byte, error) {
+	test := struct {
+		Id       bson.ObjectId `json:"id"`
+		Pushed   int64         `json:"pushed"`  // When the data was pushed out of EdgeX (0 - not pushed yet)
+		Created  int64         `json:"created"` // When the reading was created
+		Origin   int64         `json:"origin"`
+		Modified int64         `json:"modified"`
+		Device   *string       `json:"device"`
+		Name     *string       `json:"name"`
+		Value    *string       `json:"value"` // Device sensor data value
 	}{
-		Id : r.Id,
-		Pushed : r.Pushed,
-		Created : r.Created,
-		Origin : r.Origin,
-		Modified : r.Modified,
+		Id:       r.Id,
+		Pushed:   r.Pushed,
+		Created:  r.Created,
+		Origin:   r.Origin,
+		Modified: r.Modified,
 	}
-	
+
 	// Empty strings are null
-	if r.Device != "" {test.Device = &r.Device}
-	if r.Name != "" {test.Name = &r.Name}
-	if r.Value != "" {test.Value = &r.Value}
-	
+	if r.Device != "" {
+		test.Device = &r.Device
+	}
+	if r.Name != "" {
+		test.Name = &r.Name
+	}
+	if r.Value != "" {
+		test.Value = &r.Value
+	}
+
 	return json.Marshal(test)
 }
 
 /*
  * To String function for Reading Struct
  */
-func (r Reading) String() string{
+func (r Reading) String() string {
 	out, err := json.Marshal(r)
-	if err != nil{return err.Error()}
-	
+	if err != nil {
+		return err.Error()
+	}
+
 	return string(out)
 }

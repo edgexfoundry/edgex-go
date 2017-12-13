@@ -21,24 +21,30 @@ package models
 import "encoding/json"
 
 type Units struct {
-	Type 		string 	`bson:"type" json:"type"`
-	ReadWrite 	string 	`bson:"readWrite" json:"readWrite" yaml:"readWrite"`
-	DefaultValue 	string 	`bson:"defaultValue" json:"defaultValue" yaml:"defaultValue"`
+	Type         string `bson:"type" json:"type"`
+	ReadWrite    string `bson:"readWrite" json:"readWrite" yaml:"readWrite"`
+	DefaultValue string `bson:"defaultValue" json:"defaultValue" yaml:"defaultValue"`
 }
 
 // Custom marshaling to make empty strings null
-func (u Units) MarshalJSON()([]byte, error){
-	test := struct{
-		Type 		*string 	`json:"type"`
-		ReadWrite		*string 	`json:"readWrite"`
-		DefaultValue 	*string 	`json:"defaultValue"`
+func (u Units) MarshalJSON() ([]byte, error) {
+	test := struct {
+		Type         *string `json:"type"`
+		ReadWrite    *string `json:"readWrite"`
+		DefaultValue *string `json:"defaultValue"`
 	}{}
-	
+
 	// Empty strings are null
-	if u.Type != "" {test.Type = &u.Type}
-	if u.ReadWrite != "" {test.ReadWrite = &u.ReadWrite}
-	if u.DefaultValue != "" {test.DefaultValue = &u.DefaultValue}
-	
+	if u.Type != "" {
+		test.Type = &u.Type
+	}
+	if u.ReadWrite != "" {
+		test.ReadWrite = &u.ReadWrite
+	}
+	if u.DefaultValue != "" {
+		test.DefaultValue = &u.DefaultValue
+	}
+
 	return json.Marshal(test)
 }
 

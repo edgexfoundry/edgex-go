@@ -19,8 +19,8 @@
 package models
 
 import (
-	"gopkg.in/mgo.v2/bson"
 	"encoding/json"
+	"gopkg.in/mgo.v2/bson"
 )
 
 /*
@@ -29,52 +29,62 @@ import (
  *
  * Event struct to hold event data
  */
-type Event struct{
-	ID bson.ObjectId 	`bson:"_id,omitempty" json:"id"`
-	Pushed int64	`bson:"pushed" json:"pushed"`
-	Device string		`bson:"device" json:"device"`		// Device identifier (name or id)
-	Created int64	`bson:"created" json:"created"`
-	Modified int64 	`bson:"modified" json:"modified"`
-	Origin int64			`bson:"origin" json:"origin"`
-	Schedule string		`bson:"schedule,omitempty" json:"schedule"`	// Schedule identifier
-	Event string		`bson:"event",omitempty`		// Schedule event identifier
-	Readings []Reading	`bson:"readings" json:"readings"`	// List of readings
+type Event struct {
+	ID       bson.ObjectId `bson:"_id,omitempty" json:"id"`
+	Pushed   int64         `bson:"pushed" json:"pushed"`
+	Device   string        `bson:"device" json:"device"` // Device identifier (name or id)
+	Created  int64         `bson:"created" json:"created"`
+	Modified int64         `bson:"modified" json:"modified"`
+	Origin   int64         `bson:"origin" json:"origin"`
+	Schedule string        `bson:"schedule,omitempty" json:"schedule"` // Schedule identifier
+	Event    string        `bson:"event",omitempty`                    // Schedule event identifier
+	Readings []Reading     `bson:"readings" json:"readings"`           // List of readings
 }
 
 // Custom marshaling to make empty strings null
-func (e Event)MarshalJSON()([]byte, error){
-	test := struct{
-		ID bson.ObjectId 	`json:"id"`
-		Pushed int64	`json:"pushed"`
-		Device *string		`json:"device"`		// Device identifier (name or id)
-		Created int64	`json:"created"`
-		Modified int64 	`json:"modified"`
-		Origin int64			`json:"origin"`
-		Schedule *string		`json:"schedule"`	// Schedule identifier
-		Event *string		`json:"event"`		// Schedule event identifier
-		Readings []Reading	`json:"readings"`	// List of readings
+func (e Event) MarshalJSON() ([]byte, error) {
+	test := struct {
+		ID       bson.ObjectId `json:"id"`
+		Pushed   int64         `json:"pushed"`
+		Device   *string       `json:"device"` // Device identifier (name or id)
+		Created  int64         `json:"created"`
+		Modified int64         `json:"modified"`
+		Origin   int64         `json:"origin"`
+		Schedule *string       `json:"schedule"` // Schedule identifier
+		Event    *string       `json:"event"`    // Schedule event identifier
+		Readings []Reading     `json:"readings"` // List of readings
 	}{
-		ID : e.ID,
-		Pushed : e.Pushed,
-		Created : e.Created,
-		Modified : e.Modified,
-		Origin : e.Origin,
+		ID:       e.ID,
+		Pushed:   e.Pushed,
+		Created:  e.Created,
+		Modified: e.Modified,
+		Origin:   e.Origin,
 	}
-	
+
 	// Empty strings are null
-	if e.Device != "" {test.Device = &e.Device}
-	if e.Schedule != "" {test.Schedule = &e.Schedule}
-	if e.Event != "" {test.Event = &e.Event}
-	
+	if e.Device != "" {
+		test.Device = &e.Device
+	}
+	if e.Schedule != "" {
+		test.Schedule = &e.Schedule
+	}
+	if e.Event != "" {
+		test.Event = &e.Event
+	}
+
 	// Empty arrays are null
-	if len(e.Readings) > 0 {test.Readings = e.Readings}
-	
+	if len(e.Readings) > 0 {
+		test.Readings = e.Readings
+	}
+
 	return json.Marshal(test)
 }
 
-func (e Event) String() string{
+func (e Event) String() string {
 	out, err := json.Marshal(e)
-	if err != nil {return err.Error()}
-	
+	if err != nil {
+		return err.Error()
+	}
+
 	return string(out)
 }

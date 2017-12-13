@@ -26,24 +26,24 @@ TCP - for MQTT and other general TCP based communications
 MAC - MAC address - low level (example serial) communications
 ZMQ - Zero MQ communications
 SSL - for TLS encrypted sockets
- */
+*/
 
 type ProtocolType uint8
 
-const(
+const (
 	HTTP ProtocolType = iota
 	TCP
-    MAC
-    ZMQ
-    OTHER
-    SSL
+	MAC
+	ZMQ
+	OTHER
+	SSL
 )
 
 var protocolStringArray = [...]string{"HTTP", "TCP", "MAC", "ZMQ", "OTHER", "SSL"}
 
 /*
 String() function for formatting
- */
-func (p ProtocolType) String() string{
+*/
+func (p ProtocolType) String() string {
 	return protocolStringArray[p]
 }

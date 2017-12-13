@@ -21,9 +21,10 @@ package models
 import "encoding/json"
 
 type ProfileProperty struct {
-	Value PropertyValue	`bson:"value" json:"value"`
-	Units Units		`bson:"units" json:"units"`
+	Value PropertyValue `bson:"value" json:"value"`
+	Units Units         `bson:"units" json:"units"`
 }
+
 /*
  * To String function for DeviceService
  */

@@ -21,40 +21,52 @@ package models
 import "encoding/json"
 
 type ResourceOperation struct {
-	Index 		string			`bson:"index" json:"index"`
-	Operation 	string			`bson:"operation" json:"operation"`
-	Object		string			`bson:"object" json:"object"`
-	Property	string			`bson:"property" json:"property"`
-	Parameter	string 			`bson:"parameter" json:"parameter"`
-	Resource	string 			`bson:"resource" json:"resource"`
-	Secondary	[]string		`bson:"secondary" json:"secondary"`
-	Mappings	map[string]string 	`bson:"mappings" json:"mappings"`
+	Index     string            `bson:"index" json:"index"`
+	Operation string            `bson:"operation" json:"operation"`
+	Object    string            `bson:"object" json:"object"`
+	Property  string            `bson:"property" json:"property"`
+	Parameter string            `bson:"parameter" json:"parameter"`
+	Resource  string            `bson:"resource" json:"resource"`
+	Secondary []string          `bson:"secondary" json:"secondary"`
+	Mappings  map[string]string `bson:"mappings" json:"mappings"`
 }
 
 // Custom marshaling to make empty strings null
-func (ro ResourceOperation) MarshalJSON()([]byte, error){
-	test := struct{
-		Index 		*string			`json:"index"`
-		Operation 	*string			`json:"operation"`
-		Object		*string			`json:"object"`
-		Property	*string			`json:"property"`
-		Parameter	*string 			`json:"parameter"`
-		Resource	*string 			`json:"resource"`
-		Secondary	[]string		`json:"secondary"`
-		Mappings	map[string]string 	`json:"mappings"`
+func (ro ResourceOperation) MarshalJSON() ([]byte, error) {
+	test := struct {
+		Index     *string           `json:"index"`
+		Operation *string           `json:"operation"`
+		Object    *string           `json:"object"`
+		Property  *string           `json:"property"`
+		Parameter *string           `json:"parameter"`
+		Resource  *string           `json:"resource"`
+		Secondary []string          `json:"secondary"`
+		Mappings  map[string]string `json:"mappings"`
 	}{
-		Secondary : ro.Secondary,
-		Mappings : ro.Mappings,
+		Secondary: ro.Secondary,
+		Mappings:  ro.Mappings,
 	}
-	
+
 	// Empty strings are null
-	if ro.Index != "" {test.Index = &ro.Index}
-	if ro.Operation != "" {test.Operation = &ro.Operation}
-	if ro.Object != "" {test.Object = &ro.Object}
-	if ro.Property != "" {test.Property = &ro.Property}
-	if ro.Parameter != "" {test.Parameter = &ro.Parameter}
-	if ro.Resource != "" {test.Resource = &ro.Resource}
-	
+	if ro.Index != "" {
+		test.Index = &ro.Index
+	}
+	if ro.Operation != "" {
+		test.Operation = &ro.Operation
+	}
+	if ro.Object != "" {
+		test.Object = &ro.Object
+	}
+	if ro.Property != "" {
+		test.Property = &ro.Property
+	}
+	if ro.Parameter != "" {
+		test.Parameter = &ro.Parameter
+	}
+	if ro.Resource != "" {
+		test.Resource = &ro.Resource
+	}
+
 	return json.Marshal(test)
 }
 

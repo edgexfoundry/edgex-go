@@ -18,18 +18,13 @@
 
 package models
 
-import (
-
-)
+import ()
 
 type NotifyAction string
 
-const(
-	POST NotifyAction = "POST"
-	PUT NotifyAction = "PUT"
+const (
+	POST   NotifyAction = "POST"
+	PUT    NotifyAction = "PUT"
 	DELETE NotifyAction = "DELETE"
-    GET NotifyAction = "GET"
+	GET    NotifyAction = "GET"
 )
-
-
-

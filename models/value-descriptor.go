@@ -19,63 +19,73 @@
 package models
 
 import (
-	"gopkg.in/mgo.v2/bson"
 	"encoding/json"
+	"gopkg.in/mgo.v2/bson"
 )
 
 /*
  * Value Descriptor Struct
  */
-type ValueDescriptor struct{
-	Id bson.ObjectId	`json:"id" bson:"_id,omitempty"`
-	Created int64	`bson:"created" json:"created"`
-	Description	string	`bson:"description" json:"description"`
-	Modified int64	`bson:"modified" json:"modified"`
-	Origin int64	`bson:"origin" json:"origin"`
-	Name string		`bson:"name" json:"name"`
-	Min interface{}		`bson:"min,omitempty" json:"min"`
-	Max interface{}		`bson:"max,omitempty" json:"max"`
-	DefaultValue interface{}	`bson:"defaultValue,omitempty" json:"defaultValue"`
-	Type string		`bson:"type" json:"type"`
-	UomLabel string		`bson:"uomLabel,omitempty" json:"uomLabel"`
-	Formatting string	`bson:"formatting,omitempty" json:"formatting"`
-	Labels []string		`bson:"labels,omitempty" json:"labels"`
+type ValueDescriptor struct {
+	Id           bson.ObjectId `json:"id" bson:"_id,omitempty"`
+	Created      int64         `bson:"created" json:"created"`
+	Description  string        `bson:"description" json:"description"`
+	Modified     int64         `bson:"modified" json:"modified"`
+	Origin       int64         `bson:"origin" json:"origin"`
+	Name         string        `bson:"name" json:"name"`
+	Min          interface{}   `bson:"min,omitempty" json:"min"`
+	Max          interface{}   `bson:"max,omitempty" json:"max"`
+	DefaultValue interface{}   `bson:"defaultValue,omitempty" json:"defaultValue"`
+	Type         string        `bson:"type" json:"type"`
+	UomLabel     string        `bson:"uomLabel,omitempty" json:"uomLabel"`
+	Formatting   string        `bson:"formatting,omitempty" json:"formatting"`
+	Labels       []string      `bson:"labels,omitempty" json:"labels"`
 }
 
 // Custom marshaling to make empty strings null
-func (v ValueDescriptor) MarshalJSON()([]byte, error){
-	test := struct{
-		Id bson.ObjectId	`json:"id" bson:"_id,omitempty"`
-		Created int64	`bson:"created" json:"created"`
-		Description	*string	`bson:"description" json:"description"`
-		Modified int64	`bson:"modified" json:"modified"`
-		Origin int64	`bson:"origin" json:"origin"`
-		Name *string		`bson:"name" json:"name"`
-		Min interface{}		`bson:"min,omitempty" json:"min"`
-		Max interface{}		`bson:"max,omitempty" json:"max"`
-		DefaultValue interface{}	`bson:"defaultValue,omitempty" json:"defaultValue"`
-		Type *string		`bson:"type" json:"type"`
-		UomLabel *string		`bson:"uomLabel,omitempty" json:"uomLabel"`
-		Formatting *string	`bson:"formatting,omitempty" json:"formatting"`
-		Labels []string		`bson:"labels,omitempty" json:"labels"`
+func (v ValueDescriptor) MarshalJSON() ([]byte, error) {
+	test := struct {
+		Id           bson.ObjectId `json:"id" bson:"_id,omitempty"`
+		Created      int64         `bson:"created" json:"created"`
+		Description  *string       `bson:"description" json:"description"`
+		Modified     int64         `bson:"modified" json:"modified"`
+		Origin       int64         `bson:"origin" json:"origin"`
+		Name         *string       `bson:"name" json:"name"`
+		Min          interface{}   `bson:"min,omitempty" json:"min"`
+		Max          interface{}   `bson:"max,omitempty" json:"max"`
+		DefaultValue interface{}   `bson:"defaultValue,omitempty" json:"defaultValue"`
+		Type         *string       `bson:"type" json:"type"`
+		UomLabel     *string       `bson:"uomLabel,omitempty" json:"uomLabel"`
+		Formatting   *string       `bson:"formatting,omitempty" json:"formatting"`
+		Labels       []string      `bson:"labels,omitempty" json:"labels"`
 	}{
-		Id : v.Id,
-		Created : v.Created,
-		Modified : v.Modified,
-		Origin : v.Origin,
-		Min : v.Min,
-		Max : v.Max,
-		DefaultValue : v.DefaultValue,
-		Labels : v.Labels,
+		Id:           v.Id,
+		Created:      v.Created,
+		Modified:     v.Modified,
+		Origin:       v.Origin,
+		Min:          v.Min,
+		Max:          v.Max,
+		DefaultValue: v.DefaultValue,
+		Labels:       v.Labels,
 	}
-	
+
 	// Empty strings are null
-	if v.Name != "" {test.Name = &v.Name}
-	if v.Description != "" {test.Description = &v.Description}
-	if v.Type != "" {test.Type = &v.Type}
-	if v.UomLabel != "" {test.UomLabel = &v.UomLabel}
-	if v.Formatting != "" {test.Formatting = &v.Formatting}
-	
+	if v.Name != "" {
+		test.Name = &v.Name
+	}
+	if v.Description != "" {
+		test.Description = &v.Description
+	}
+	if v.Type != "" {
+		test.Type = &v.Type
+	}
+	if v.UomLabel != "" {
+		test.UomLabel = &v.UomLabel
+	}
+	if v.Formatting != "" {
+		test.Formatting = &v.Formatting
+	}
+
 	return json.Marshal(test)
 }
 

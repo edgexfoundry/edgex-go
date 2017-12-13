@@ -38,8 +38,9 @@ const (
 	MAC
 	ZMQ
 	OTHER
-    SSL
+	SSL
 )
+
 /*
  * Unmarshaller for enum type
  */
