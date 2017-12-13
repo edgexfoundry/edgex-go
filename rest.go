@@ -11,7 +11,7 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *
- * @microservice: core-command-go service
+ * @microservice: core-metadata-go service
  * @author: Spencer Bull & Ryan Comer, Dell
  * @version: 0.5.0
  *******************************************************************************/
@@ -29,7 +29,6 @@ func loadRestRoutes() http.Handler {
 	b.HandleFunc("/ping", ping)
 
 	loadDeviceRoutes(b)
-	//loadDeviceManagerRoutes(b)
 	loadDeviceProfileRoutes(b)
 	loadDeviceReportRoutes(b)
 	loadDeviceServiceRoutes(b)
@@ -78,38 +77,6 @@ func loadDeviceRoutes(b *mux.Router) {
 	n.HandleFunc("/{"+NAME+"}/"+URLLASTCONNECTED+"/{"+LASTCONNECTED+"}/{"+LASTCONNECTEDNOTIFY+"}", restSetDeviceLastConnectedByNameNotify).Methods(PUT)
 }
 
-/*func loadDeviceManagerRoutes(b *mux.Router) {
-	// /api/v1/" + DEVICEMANAGER
-	b.HandleFunc("/" + DEVICEMANAGER, restGetAllDeviceManagers).Methods(GET)
-	b.HandleFunc("/" + DEVICEMANAGER, restAddDeviceManager).Methods(POST)
-	b.HandleFunc("/" + DEVICEMANAGER, restUpdateDeviceManager).Methods(PUT)
-	dm := b.PathPrefix("/" + DEVICEMANAGER).Subrouter()
-	dm.HandleFunc("/" + ID + "/{" + ID + "}", restDeleteDeviceManagerById).Methods(DELETE)
-	dm.HandleFunc("/" + ADDRESSABLENAME + "/{" + ADDRESSABLENAME + "}", restGetDeviceManagersByAddressableName).Methods(GET)
-	dm.HandleFunc("/" + ADDRESSABLE + "/{" + ADDRESSABLEID + "}", restGetDeviceManagerByAddressableId).Methods(GET)
-	dm.HandleFunc("/{" + ID + "}", restGetDeviceManagerById).Methods(GET)
-	dm.HandleFunc("/{" + ID + "}/" + OPSTATE + "/{" + OPSTATE + "}", restUpdateDeviceManagerOpStateById).Methods(PUT)
-	dm.HandleFunc("/{" + ID + "}/" + URLADMINSTATE + "/{" + ADMINSTATE + "}", restUpdateDeviceManagerAdminStateById).Methods(PUT)
-	dm.HandleFunc("/{" + ID + "}/" + URLLASTREPORTED + "/{" + LASTREPORTED + "}", restUpdateDeviceManagerLastReportedById).Methods(PUT)
-	dm.HandleFunc("/{" + ID + "}/" + URLLASTCONNECTED + "/{" + LASTCONNECTED + "}", restUpdateDeviceManagerLastConnectedById).Methods(PUT)
-	dm.HandleFunc("/" + PROFILENAME + "/{" + PROFILENAME + "}", restGetDeviceManagersByProfileName).Methods(GET)
-	dm.HandleFunc("/" + PROFILE + "/{" + PROFILEID + "}", restGetDeviceManagersByProfileId).Methods(GET)
-	// /api/v1/" + DEVICEMANAGER/" + NAME + "
-	dmn := dm.PathPrefix("/" + NAME).Subrouter()
-	dmn.HandleFunc("/{" + NAME + "}", restDeleteDeviceManagerByName).Methods(DELETE)
-	dmn.HandleFunc("/{" + NAME + "}", restGetDeviceManagerByName).Methods(GET)
-	dmn.HandleFunc("/{" + NAME + "}/" + OPSTATE + "/{" + OPSTATE + "}", restUpdateDeviceManagerOpStateByName).Methods(PUT)
-	dmn.HandleFunc("/{" + NAME + "}/" + URLADMINSTATE + "/{" + ADMINSTATE + "}", restUpdateDeviceManagerAdminStateByName).Methods(PUT)
-	dmn.HandleFunc("/{" + NAME + "}/" + URLLASTREPORTED + "/{" + LASTREPORTED + "}", restUpdateDeviceManagerLastReportedByName).Methods(PUT)
-	dmn.HandleFunc("/{" + NAME + "}/" + URLLASTCONNECTED + "/{" + LASTCONNECTED + "}", restUpdateDeviceManagerLastConnectedByName).Methods(PUT)
-
-	// /api/v1/DEVICEMANAGER/SERVICENAME
-	dm.HandleFunc("/" + SERVICENAME + "/{" + SERVICENAME + "}", restGetDeviceManagersByServiceName).Methods(GET)
-	dm.HandleFunc("/" + SERVICE + "/{" + SERVICEID + "}", restGetDeviceManagersByServiceId).Methods(GET)
-
-	// /api/v1/" + DEVICEMANAGER/" + SERVICE + "
-	dm.HandleFunc("/" + LABEL+ "/{" + LABEL + "}", restGetDeviceManagerByLabel).Methods(GET)
-}*/
 func loadDeviceProfileRoutes(b *mux.Router) {
 	///api/v1/" + DEVICEPROFILE + "
 	b.HandleFunc("/"+DEVICEPROFILE+"", restGetAllDeviceProfiles).Methods(GET)

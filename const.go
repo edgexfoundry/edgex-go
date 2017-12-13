@@ -11,7 +11,7 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *
- * @microservice: core-command-go service
+ * @microservice: core-metadata-go service
  * @author: Spencer Bull & Ryan Comer, Dell
  * @version: 0.5.0
  *******************************************************************************/
@@ -60,12 +60,14 @@ var configuration ConfigurationStruct = ConfigurationStruct{} // Needs to be ini
 
 var (
 	/* -------------- CONFIG for METADATA -------------------- */
-	DATABASE    = "mongo"
-	PROTOCOL    = "http"
-	SERVERPORT  = "48081"
-	DOCKERMONGO = "fuse-mongo:27017"
-	DBUSER      = "meta"
-	DBPASS      = "password"
+	DATABASE            = "mongo"
+	PROTOCOL            = "http"
+	SERVERPORT          = "48081"
+	DOCKERMONGO         = "edgex-mongo:27017"
+	DBUSER              = "meta"
+	DBPASS              = "password"
+	CONFIG              = "res/configuration.json"
+	METADATASERVICENAME = "core-metadata"
 
 	MAX_LIMIT int = 1000
 
@@ -147,9 +149,9 @@ var (
 	ErrDuplicateCommandInProfile = errors.New("Duplicate name for command in device profile")
 	ErrCommandStillInUse         = errors.New("Command is still in use by device profiles")
 	/* TODO ENUM */
-	LOCKED   = "locked"
-	UNLOCKED = "unlocked"
-	ENABLED  = "enabled"
-	DISABLED = "disabled"
+	LOCKED   = "LOCKED"
+	UNLOCKED = "UNLOCKED"
+	ENABLED  = "ENABLED"
+	DISABLED = "ENABLED"
 	QUERYTS  = "-timestamp"
 )

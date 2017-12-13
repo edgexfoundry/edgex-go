@@ -11,7 +11,7 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *
- * @microservice: core-command-go service
+ * @microservice: core-metadata-go service
  * @author: Spencer Bull & Ryan Comer, Dell
  * @version: 0.5.0
  *******************************************************************************/
@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/edgexfoundry/core-domain-go/models"
+	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -56,93 +57,6 @@ func dbConnect() bool {
 	return false
 }
 
-/* --------------------------Device Manager ------------------------*/
-/*
-func getAllDeviceManagers(dm *[]models.DeviceManager) error  {
-	if strings.Compare(DATABASE, MONGOSTR) == 0 {
-		return mgoGetAllDeviceManagers(dm)
-	}
-	return nil
-}
-func getDeviceManagersByAssociatedManager(dm *[]models.DeviceManager, dmid string) error{
-	if strings.Compare(DATABASE, MONGOSTR) == 0 {
-		return mgoGetDeviceManagersByAssociatedManager(dm, dmid)
-	}
-	return nil
-}
-func getDeviceManagersByAssociatedDevice(dm *[]models.DeviceManager, did string) error{
-	if strings.Compare(DATABASE, MONGOSTR) == 0 {
-		return mgoGetDeviceManagersByAssociatedDevice(dm, did)
-	}
-	return nil
-}
-func getDeviceManagersByAddressableName(dm *[]models.DeviceManager, an string) error {
-	if strings.Compare(DATABASE, MONGOSTR) == 0 {
-		return mgoGetDeviceManagersByAddressableName(dm, an)
-	}
-	return nil
-}
-func getDeviceManagerByName(dm *models.DeviceManager, n string) error {
-	if strings.Compare(DATABASE, MONGOSTR) == 0 {
-		return mgoGetDeviceManagerByName(dm, n)
-	}
-	return nil
-}
-func getDeviceManagerById(dm *models.DeviceManager, id string) error {
-	if strings.Compare(DATABASE, MONGOSTR) == 0 {
-		return mgoGetDeviceManagersById(dm, id)
-	}
-	return nil
-}
-func getDeviceManagersByServiceName(dm *[]models.DeviceManager, n string) error {
-	if strings.Compare(DATABASE, MONGOSTR) == 0 {
-		return mgoGetDeviceManagerByServiceName(dm, n)
-	}
-	return nil
-}
-func getDeviceManagersByServiceId(dm *[]models.DeviceManager, n string) error {
-	if strings.Compare(DATABASE, MONGOSTR) == 0 {
-		return mgoGetDeviceManagerByServiceId(dm, n)
-	}
-	return nil
-}
-func getDeviceManagerByLabel(dm *[]models.DeviceManager, l []string) error {
-	if strings.Compare(DATABASE, MONGOSTR) == 0 {
-		return mgoGetDeviceManagersByLabel(dm, l)
-	}
-	return nil
-}
-func getDeviceManagersByProfileName(dm *[]models.DeviceManager, n string) error {
-	if strings.Compare(DATABASE, MONGOSTR) == 0 {
-		return mgoGetDeviceManagersByProfileName(dm, n)
-	}
-	return nil
-}
-func getDeviceManagersByAddressableId(dm *[]models.DeviceManager, id string) error {
-	if strings.Compare(DATABASE, MONGOSTR) == 0 {
-		return mgoGetDeviceManagersByAddressableId(dm, id)
-	}
-	return nil
-}
-func getDeviceManagersByProfileId(dm *[]models.DeviceManager, id string) error {
-	if strings.Compare(DATABASE, MONGOSTR) == 0 {
-		return mgoGetDeviceManagersByProfileId(dm, id)
-	}
-	return nil
-}
-func addDeviceManager(dm *models.DeviceManager) error {
-	if strings.Compare(DATABASE, MONGOSTR) == 0 {
-		return mgoAddDeviceManager(dm)
-	}
-	return nil
-}
-func UpdateDeviceManager(dm *models.DeviceManager)  error {
-	if strings.Compare(DATABASE, MONGOSTR) == 0 {
-		return mgoUpdateDeviceManager(dm)
-	}
-	return nil
-}
-*/
 /* ----------------------- Schedule Event ------------------------------*/
 func getAllScheduleEvents(se *[]models.ScheduleEvent) error {
 	if strings.Compare(DATABASE, MONGOSTR) == 0 {

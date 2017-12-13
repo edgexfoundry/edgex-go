@@ -11,7 +11,7 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *
- * @microservice: core-command-go service
+ * @microservice: core-metadata-go service
  * @author: Spencer Bull & Ryan Comer, Dell
  * @version: 0.5.0
  *******************************************************************************/
@@ -25,6 +25,7 @@ import (
 
 	"github.com/edgexfoundry/core-domain-go/models"
 	"github.com/gorilla/mux"
+	mgo "gopkg.in/mgo.v2"
 )
 
 func restGetAllDeviceReports(w http.ResponseWriter, _ *http.Request) {
@@ -388,7 +389,7 @@ func notifyDeviceReportAssociates(dr models.DeviceReport, action models.NotifyAc
 	services = append(services, ds)
 
 	// Notify the associating device services
-	if err := notifyAssociates(services, dr.Id.Hex(), action, models.MANAGER); err != nil {
+	if err := notifyAssociates(services, dr.Id.Hex(), action, models.REPORT); err != nil {
 		return err
 	}
 

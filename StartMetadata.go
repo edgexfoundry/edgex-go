@@ -26,20 +26,18 @@ import (
 	"time"
 
 	consulclient "github.com/edgexfoundry/consul-client-go"
-	logger "github.com/edgexfoundry/support-logging-client-go"
 	notifications "github.com/edgexfoundry/support-notifications-client-go"
 )
 
 // DS : DataStore to retrieve data from database.
 var DS DataStore
-var loggingClient = logger.NewClient("Metadata", "http://localhost:48061/api/v1/logs")
 var notificationsClient = notifications.NotificationsClient{}
 
 func main() {
 	start := time.Now()
 
 	// Load configuration data
-	readConfigurationFile("./res/configuration.json")
+	readConfigurationFile(CONFIG)
 
 	// Initialize service on Consul
 	err := consulclient.ConsulInit(consulclient.ConsulConfig{
@@ -52,8 +50,9 @@ func main() {
 		ConsulPort:     configuration.ConsulPort,
 	})
 	if err != nil {
-		loggingClient.Error("Connection to Consul could not be made: "+err.Error(), "")
+		fmt.Print("Connection to Consul could not be make: " + err.Error())
 	}
+	var loggingClient = logger.NewClient(configuration.ApplicationName, "")
 
 	// Update configuration data from Consul
 	consulclient.CheckKeyValuePairs(&configuration, configuration.ApplicationName, strings.Split(configuration.ConsulProfilesActive, ";"))

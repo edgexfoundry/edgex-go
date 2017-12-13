@@ -30,7 +30,7 @@ ARG METADATA_EXE=$CORE_METADATA_GO
 RUN GOOS=$GOOS GOARCH=$GOARCH go build -o $METADATA_EXE
 
 # Next image - Copy built Go binary into new workspace
-FROM alpine:3.4
+FROM alpine:3.6
 
 # environment variable
 ENV CORE_METADATA_GO=core-metadata-go
