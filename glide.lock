@@ -38,8 +38,6 @@ imports:
   subpackages:
   - bson
   - internal/json
-  - internal/sasl
-  - internal/scram
 - name: gopkg.in/yaml.v2
   version: 287cf08546ab5e7e37d55a84f7ed3fd1db036de5
 testImports: []
