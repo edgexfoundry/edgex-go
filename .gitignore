@@ -27,7 +27,6 @@ _testmain.go
 *.exe
 *.test
 *.prof
-fuse-core-metadata
 
 # python helper files
 *.pyc
