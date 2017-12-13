@@ -11,13 +11,13 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *
- * @microservice: core-command-go service
+ * @microservice: core-metadata-go service
  * @author: Spencer Bull & Ryan Comer, Dell
  * @version: 0.5.0
  *******************************************************************************/
 package main
 
-import "bitbucket.org/clientcto/go-core-domain/models"
+import "github.com/edgexfoundry/core-domain-go/models"
 
 func yamlDeviceProfile(dp *models.DeviceProfile) error {
 

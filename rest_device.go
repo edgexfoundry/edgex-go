@@ -25,10 +25,8 @@ import (
 	"strconv"
 	"time"
 
-	"bitbucket.org/clientcto/go-core-domain/models"
-	"bitbucket.org/clientcto/go-notifications-client"
+	"github.com/edgexfoundry/core-domain-go/models"
 	"github.com/gorilla/mux"
-	"gopkg.in/mgo.v2"
 )
 
 func restGetAllDevices(w http.ResponseWriter, _ *http.Request) {

@@ -23,9 +23,8 @@ import (
 	"net/http"
 	"net/url"
 
-	"bitbucket.org/clientcto/go-core-domain/models"
+	"github.com/edgexfoundry/core-domain-go/models"
 	"github.com/gorilla/mux"
-	"gopkg.in/mgo.v2"
 )
 
 func restGetProvisionWatchers(w http.ResponseWriter, _ *http.Request) {

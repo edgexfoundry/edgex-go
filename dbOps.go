@@ -21,8 +21,7 @@ import (
 	"strings"
 	"time"
 
-	"bitbucket.org/clientcto/go-core-domain/models"
-	"gopkg.in/mgo.v2"
+	"github.com/edgexfoundry/core-domain-go/models"
 	"gopkg.in/mgo.v2/bson"
 )
 

@@ -1,4 +1,4 @@
-# EdgeX Foundry Export Services
+# EdgeX Foundry Metadata Services
 [![license](https://img.shields.io/badge/license-Apache%20v2.0-blue.svg)](LICENSE)
 
 Go implementation of EdgeX Core Metadata.

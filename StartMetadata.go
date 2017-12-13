@@ -11,7 +11,7 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *
- * @microservice: core-command-go service
+ * @microservice: core-metadata-go service
  * @author: Spencer Bull & Ryan Comer, Dell
  * @version: 0.5.0
  *******************************************************************************/
@@ -25,9 +25,9 @@ import (
 	"strings"
 	"time"
 
-	"bitbucket.org/clientcto/go-consul-client"
-	"bitbucket.org/clientcto/go-logging-client"
-	"bitbucket.org/clientcto/go-notifications-client"
+	consulclient "github.com/edgexfoundry/consul-client-go"
+	logger "github.com/edgexfoundry/support-logging-client-go"
+	notifications "github.com/edgexfoundry/support-notifications-client-go"
 )
 
 // DS : DataStore to retrieve data from database.

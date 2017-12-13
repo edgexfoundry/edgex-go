@@ -26,10 +26,9 @@ import (
 	"regexp"
 	"time"
 
-	"bitbucket.org/clientcto/go-core-domain/models"
+	"github.com/edgexfoundry/core-domain-go/models"
 	"github.com/gorilla/mux"
 	"github.com/robfig/cron"
-	"gopkg.in/mgo.v2"
 )
 
 // Parse an ISO 8601 time interval into a time.duration
