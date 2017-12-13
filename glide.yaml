@@ -1,12 +1,11 @@
-package: bitbucket.org/clientcto/go-core-metadata
+package: github.com/edgexfoundry/core-metadata-go
 import:
-- package: bitbucket.org/clientcto/go-consul-client
-- package: bitbucket.org/clientcto/go-core-domain
+- package: github.com/edgexfoundry/consul-client-go
+- package: github.com/edgexfoundry/core-domain-go
   subpackages:
   - models
-- package: bitbucket.org/clientcto/go-logging-client
-- package: bitbucket.org/clientcto/go-notifications-client
-- package: github.com/go-yaml/yaml.git
+- package: github.com/edgexfoundry/support-logging-client-go
+- package: github.com/edgexfoundry/support-notifications-client-go
 - package: github.com/gorilla/mux
   version: ^1.6.0
 - package: github.com/robfig/cron
