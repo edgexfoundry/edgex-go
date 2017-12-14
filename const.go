@@ -28,7 +28,7 @@ type ConfigurationStruct struct {
 	MongoDBHost                         string
 	MongoDBPort                         int
 	MongoDBConnectTimeout               int
-	Readmaxlimit                        int
+	ReadMaxLimit                        int
 	Protocol                            string
 	ServiceName                         string
 	ServiceAddress                      string
@@ -39,17 +39,17 @@ type ConfigurationStruct struct {
 	AppOpenMsg                          string
 	CheckInterval                       string
 	ConsulProfilesActive                string
-	Consulhost                          string
-	Consulcheckaddress                  string
+	ConsulHost                          string
+	ConsulCheckAddress                  string
 	ConsulPort                          int
 	LoggingFile                         string
 	LoggingRemoteURL                    string
-	Notificationpostdevicechanges       bool
-	Notificationslug                    string
-	Notificationcontent                 string
-	Notificationsender                  string
-	Notificationdescription             string
-	Notificationlabel                   string
+	NotificationPostDeviceChanges       bool
+	NotificationsSlug                   string
+	NotificationContent                 string
+	NotificationSender                  string
+	NotificationDescription             string
+	NotificationLabel                   string
 	SupportNotificationsNotificationURL string
 	SupportNotificationsSubscriptionURL string
 	SupportNotificationsTransmissionURL string

@@ -26,8 +26,8 @@ import (
 	"time"
 
 	consulclient "github.com/edgexfoundry/consul-client-go"
-	notifications "github.com/edgexfoundry/support-notifications-client-go"
 	logger "github.com/edgexfoundry/support-logging-client-go"
+	notifications "github.com/edgexfoundry/support-notifications-client-go"
 )
 
 // DS : DataStore to retrieve data from database.
@@ -46,9 +46,9 @@ func main() {
 		ServiceName:    configuration.ServiceName,
 		ServicePort:    configuration.ServerPort,
 		ServiceAddress: configuration.ServiceAddress,
-		CheckAddress:   configuration.Consulcheckaddress,
+		CheckAddress:   configuration.ConsulCheckAddress,
 		CheckInterval:  configuration.CheckInterval,
-		ConsulAddress:  configuration.Consulhost,
+		ConsulAddress:  configuration.ConsulHost,
 		ConsulPort:     configuration.ConsulPort,
 	})
 	if err != nil {

@@ -27,7 +27,6 @@ import (
 	"github.com/edgexfoundry/core-domain-go/models"
 	"github.com/gorilla/mux"
 	"gopkg.in/mgo.v2"
-	"gopkg.in/yaml.v2"
 )
 
 func restGetAllDeviceProfiles(w http.ResponseWriter, _ *http.Request) {
@@ -38,7 +37,7 @@ func restGetAllDeviceProfiles(w http.ResponseWriter, _ *http.Request) {
 		return
 	}
 
-	if len(res) > configuration.Readmaxlimit {
+	if len(res) > configuration.ReadMaxLimit {
 		err := errors.New("Max limit exceeded with request for profiles")
 		http.Error(w, err.Error(), http.StatusRequestEntityTooLarge)
 		loggingClient.Error(err.Error(), "")

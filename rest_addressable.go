@@ -38,7 +38,7 @@ func restGetAllAddressables(w http.ResponseWriter, _ *http.Request) {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return
 	}
-	if len(results) > configuration.Readmaxlimit {
+	if len(results) > configuration.ReadMaxLimit {
 		err = errors.New("Max limit exceeded")
 		loggingClient.Error(err.Error(), "")
 		http.Error(w, err.Error(), http.StatusRequestEntityTooLarge)
