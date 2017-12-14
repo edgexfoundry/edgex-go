@@ -26,7 +26,6 @@ const (
 	PROFILE          ActionType = "PROFILE"
 	DEVICE                      = "DEVICE"
 	SERVICE                     = "SERVICE"
-	MANAGER                     = "MANAGER"
 	SCHEDULE                    = "SCHEDULE"
 	SCHEDULEEVENT               = "SCHEDULEEVENT"
 	ADDRESSABLE                 = "ADDRESSABLE"
