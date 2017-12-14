@@ -26,12 +26,12 @@ const (
 	PROFILE          ActionType = "PROFILE"
 	DEVICE                      = "DEVICE"
 	SERVICE                     = "SERVICE"
-	MANAGER                     = "MANAGER"
 	SCHEDULE                    = "SCHEDULE"
 	SCHEDULEEVENT               = "SCHEDULEEVENT"
 	ADDRESSABLE                 = "ADDRESSABLE"
 	VALUEDESCRIPTOR             = "VALUEDESCRIPTOR"
 	PROVISIONWATCHER            = "PROVISIONWATCHER"
+	REPORT                      = "REPORT"
 )
 
 //func (at *ActionType) UnmarshalJSON(data []byte) error {
