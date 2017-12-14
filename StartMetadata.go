@@ -27,11 +27,13 @@ import (
 
 	consulclient "github.com/edgexfoundry/consul-client-go"
 	notifications "github.com/edgexfoundry/support-notifications-client-go"
+	logger "github.com/edgexfoundry/support-logging-client-go"
 )
 
 // DS : DataStore to retrieve data from database.
 var DS DataStore
 var notificationsClient = notifications.NotificationsClient{}
+var loggingClient logger.LoggingClient
 
 func main() {
 	start := time.Now()
@@ -52,7 +54,7 @@ func main() {
 	if err != nil {
 		fmt.Print("Connection to Consul could not be make: " + err.Error())
 	}
-	var loggingClient = logger.NewClient(configuration.ApplicationName, "")
+	loggingClient = logger.NewClient(configuration.ApplicationName, "")
 
 	// Update configuration data from Consul
 	consulclient.CheckKeyValuePairs(&configuration, configuration.ApplicationName, strings.Split(configuration.ConsulProfilesActive, ";"))
