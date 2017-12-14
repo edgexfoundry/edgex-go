@@ -32,6 +32,7 @@ const (
 	ADDRESSABLE                 = "ADDRESSABLE"
 	VALUEDESCRIPTOR             = "VALUEDESCRIPTOR"
 	PROVISIONWATCHER            = "PROVISIONWATCHER"
+	REPORT                      = "REPORT"
 )
 
 //func (at *ActionType) UnmarshalJSON(data []byte) error {
