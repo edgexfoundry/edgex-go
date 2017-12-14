@@ -26,9 +26,9 @@ import (
 	"time"
 
 	"github.com/edgexfoundry/core-domain-go/models"
+	notifications "github.com/edgexfoundry/support-notifications-client-go"
 	"github.com/gorilla/mux"
 	"gopkg.in/mgo.v2"
-	notifications "github.com/edgexfoundry/support-notifications-client-go"
 )
 
 func restGetAllDevices(w http.ResponseWriter, _ *http.Request) {
@@ -41,7 +41,7 @@ func restGetAllDevices(w http.ResponseWriter, _ *http.Request) {
 	}
 
 	// Check the max length
-	if len(res) > configuration.Readmaxlimit {
+	if len(res) > configuration.ReadMaxLimit {
 		err = errors.New("Max limit exceeded")
 		loggingClient.Error(err.Error(), "")
 		http.Error(w, err.Error(), http.StatusRequestEntityTooLarge)
@@ -1179,15 +1179,15 @@ func notifyDeviceAssociates(d models.Device, action models.NotifyAction) error {
 
 func postNotification(name string, action models.NotifyAction) {
 	// Only post notification if the configuration is set
-	if configuration.Notificationpostdevicechanges {
+	if configuration.NotificationPostDeviceChanges {
 		// Make the notification
 		notification := notifications.Notification{
-			Slug:        configuration.Notificationslug + strconv.FormatInt((time.Now().UnixNano()/int64(time.Millisecond)), 10),
-			Content:     configuration.Notificationcontent + name + "-" + string(action),
+			Slug:        configuration.NotificationsSlug + strconv.FormatInt((time.Now().UnixNano()/int64(time.Millisecond)), 10),
+			Content:     configuration.NotificationContent + name + "-" + string(action),
 			Category:    notifications.SW_HEALTH,
-			Description: configuration.Notificationdescription,
-			Labels:      []string{configuration.Notificationlabel},
-			Sender:      configuration.Notificationsender,
+			Description: configuration.NotificationDescription,
+			Labels:      []string{configuration.NotificationLabel},
+			Sender:      configuration.NotificationSender,
 			Severity:    notifications.NORMAL,
 		}
 
