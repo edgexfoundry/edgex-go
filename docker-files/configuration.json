@@ -22,7 +22,7 @@
 	"datamongodbmaxWaitTime" : 120000,
 	"datamongodbsocketKeepAlive" : true,
 	"consulhost" : "edgex-core-consul",
-	"consulcheckaddress" : "http://coredata:48080/api/v1/ping",
+	"consulcheckaddress" : "http://edgex-core-data:48080/api/v1/ping",
 	"consulport" : 8500,
 	"loggingfile" : "./edgex-core-data.log",
 	"loggingremoteurl" : "http://edgex-support-logging:48061/api/v1/logs",
