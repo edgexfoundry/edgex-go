@@ -1,0 +1,15 @@
+package: github.com/edgexfoundry/core-data-go
+import:
+- package: github.com/edgexfoundry/consul-client-go
+- package: github.com/edgexfoundry/core-clients-go
+  subpackages:
+  - metadataclients
+- package: github.com/edgexfoundry/core-domain-go
+  subpackages:
+  - models
+- package: github.com/edgexfoundry/support-logging-client-go
+- package: github.com/gorilla/mux
+- package: github.com/pebbe/zmq4
+- package: gopkg.in/mgo.v2
+  subpackages:
+  - bson
