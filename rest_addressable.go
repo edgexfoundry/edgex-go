@@ -26,6 +26,7 @@ import (
 
 	"github.com/edgexfoundry/core-domain-go/models"
 	"github.com/gorilla/mux"
+	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
