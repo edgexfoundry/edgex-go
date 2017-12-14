@@ -18,7 +18,7 @@
 	"appopenmsg" : "This is the EdgeX Core MetaData Micro Service",
 	"consulhost" : "localhost",
 	"consulport" : 8500,
-	"consulcheckaddress" : "localhost",
+	"consulcheckaddress" : "http://localhost:48081/api/v1/ping",
 	"loggingfile" : "./metadata.log",
 	"loggingremoteurl" : "http://localhost:48061/api/v1/logs",
 	"notificationpostdevicechanges" : true,
