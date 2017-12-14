@@ -21,13 +21,13 @@ RUN mkdir -p $GOPATH/$CORE_METADATA_GOPATH
 WORKDIR $CORE_METADATA_GOPATH
 
 # Clone repo and install dependencies
-RUN git clone $GO_CORE_METADATA_REPO . && glide install
+COPY . .
+RUN glide install
 
 ARG GOOS=linux
 ARG GOARCH=amd64
 ARG METADATA_EXE=$CORE_METADATA_GO
 
-RUN go get -d
 RUN GOOS=$GOOS GOARCH=$GOARCH go build -o $METADATA_EXE
 
 # Next image - Copy built Go binary into new workspace
