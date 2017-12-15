@@ -1,11 +1,11 @@
 {
 	"ApplicationName": "Metadata",
 	"MongoDBName": "metadata",
-	"MongoDBUserName": "meta",
-	"MongoDBPassword": "password",
+	"MongoDBUserName": "",
+	"MongoDBPassword": "",
 	"MongoDBHost": "localhost",
 	"MongoDBPort": 27017,
-	"MongoDBConnectTimeout": 120000,
+	"MongoDBConnectTimeout": 5000,
 	"ReadMaxLimit": 100,
 	"Protocol": "http",
 	"ServiceName": "core-metadata",
@@ -18,7 +18,7 @@
 	"ConsulHost": "localhost",
 	"ConsulCheckAddress": "http://localhost:48081/api/v1/ping",
 	"CheckInterval": "10s",
-	"ConsulPort": "8500",
+	"ConsulPort": 8500,
 	"LoggingFile": "./metadata.log",
 	"LoggingRemoteURL": "http://localhost:48061/api/v1/logs",
 	"NotificationPostDeviceChanges": true,
@@ -29,5 +29,8 @@
 	"NotificationLabel": "metadata",
 	"SupportNotificationsNotificationURL": "http://localhost:48060/api/v1/notification",
 	"SupportNotificationsSubscriptionURL": "http://localhost:48060/api/v1/subscription",
-	"SupportNotificationsTransmissionURL": "http://localhost:48060/api/v1/transmission",
+	"SupportNotificationsTransmissionURL": "http://localhost:48060/api/v1/transmission"
 }
+
+
+
