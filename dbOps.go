@@ -46,11 +46,12 @@ func dbConnect() bool {
 			Password: DBPASS,
 		}
 		s, err := mgo.DialWithInfo(mongoDBDialInfo)
-		// Set timeout based on configuration
-		s.SetSocketTimeout(time.Duration(configuration.MongoDBConnectTimeout) * time.Millisecond)
 		if err != nil {
 			return false
 		}
+
+		// Set timeout based on configuration
+		s.SetSocketTimeout(time.Duration(configuration.MongoDBConnectTimeout) * time.Millisecond)
 		DS.s = s
 		return true
 	}

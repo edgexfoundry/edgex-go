@@ -66,6 +66,7 @@ var (
 	DOCKERMONGO         = "edgex-mongo:27017"
 	DBUSER              = "meta"
 	DBPASS              = "password"
+	MONGODATABASE       = "metadata"
 	CONFIG              = "res/configuration.json"
 	METADATASERVICENAME = "core-metadata"
 
