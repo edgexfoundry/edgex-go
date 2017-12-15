@@ -4,11 +4,8 @@
 FROM golang:1.9.1-alpine AS build-env
 
 RUN apk update
-RUN apk add zeromq-dev
-RUN apk add libsodium-dev
-RUN apk add pkgconfig
 # GCC compiler and build-tools
-RUN apk add build-base
+RUN apk add zeromq-dev libsodium-dev pkgconfig build-base git glide
 
 RUN mkdir -p /go/src \
  && mkdir -p /go/bin \
@@ -21,7 +18,8 @@ ENV PATH=$GOPATH/bin:$PATH
 WORKDIR src/github.com/edgexfoundry/core-data-go
 COPY . .
 
-RUN go build --ldflags '-extldflags "-lstdc++ -static -lsodium -static -lzmq"'
+RUN glide install \
+ && go build --ldflags '-extldflags "-lstdc++ -static -lsodium -static -lzmq"'
 
 #Next image - Copy built Go binary into new workspace
 FROM alpine:3.4
