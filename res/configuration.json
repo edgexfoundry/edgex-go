@@ -1,6 +1,7 @@
 {
-	"ApplicationName": "Metadata",
-	"MongoDBName": "metadata",
+	"ApplicationName": "core-metadata",
+	"DBType": "mongo",
+	"MongoDatabaseName": "metadata",
 	"MongoDBUserName": "",
 	"MongoDBPassword": "",
 	"MongoDBHost": "localhost",
@@ -16,6 +17,7 @@
 	"HeartBeatMsg": "Core Metadata heart beat",
 	"AppOpenMsg": "This is the EdgeX Core Metadata MicroService",
 	"ConsulHost": "localhost",
+	"ConsulProfilesActive": "go",
 	"ConsulCheckAddress": "http://localhost:48081/api/v1/ping",
 	"CheckInterval": "10s",
 	"ConsulPort": 8500,
@@ -31,6 +33,3 @@
 	"SupportNotificationsSubscriptionURL": "http://localhost:48060/api/v1/subscription",
 	"SupportNotificationsTransmissionURL": "http://localhost:48060/api/v1/transmission"
 }
-
-
-

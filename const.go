@@ -22,7 +22,8 @@ import "errors"
 // Struct used to pase the JSON configuration file
 type ConfigurationStruct struct {
 	ApplicationName                     string
-	MongoDBName                         string
+	DBType                              string
+	MongoDatabaseName                   string
 	MongoDBUserName                     string
 	MongoDBPassword                     string
 	MongoDBHost                         string
