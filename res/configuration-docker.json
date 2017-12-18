@@ -1,5 +1,5 @@
 {
-	"ApplicationName": "edgex-core-etadata",
+	"ApplicationName": "edgex-core-metadata",
 	"DBType": "mongo",
 	"MongoDatabaseName": "metadata",
 	"MongoDBUserName": "",
