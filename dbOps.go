@@ -41,7 +41,7 @@ func dbConnect() bool {
 		mongoDBDialInfo := &mgo.DialInfo{
 			Addrs:    []string{DOCKERMONGO},
 			Timeout:  time.Duration(configuration.MongoDBConnectTimeout) * time.Millisecond,
-			Database: DATABASE,
+			Database: MONGODATABASE,
 			Username: DBUSER,
 			Password: DBPASS,
 		}
