@@ -31,5 +31,5 @@
 	"NotificationLabel": "metadata",
 	"SupportNotificationsNotificationURL": "http://edgex-support-notifications:48060/api/v1/notification",
 	"SupportNotificationsSubscriptionURL": "http://edgex-support-notifications:48060/api/v1/subscription",
-	"SupportNotificationsTransmissionURL": "http://edgex-support-notifications:48060/api/v1/transmission",
+	"SupportNotificationsTransmissionURL": "http://edgex-support-notifications:48060/api/v1/transmission"
 }
