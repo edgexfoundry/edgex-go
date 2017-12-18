@@ -65,9 +65,10 @@ func main() {
 	// Update configuration data from Consul
 	consulclient.CheckKeyValuePairs(&configuration, configuration.ApplicationName, strings.Split(configuration.ConsulProfilesActive, ";"))
 	// Update Service CONSTANTS
-	MONGODATABASE = configuration.MongoDBName
+	MONGODATABASE = configuration.MongoDatabaseName
 	PROTOCOL = configuration.Protocol
 	SERVERPORT = strconv.Itoa(configuration.ServerPort)
+	DATABASE = configuration.DBType
 	DOCKERMONGO = configuration.MongoDBHost + ":" + strconv.Itoa(configuration.MongoDBPort)
 	DBUSER = configuration.MongoDBUserName
 	DBPASS = configuration.MongoDBPassword

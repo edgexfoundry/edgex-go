@@ -1,6 +1,6 @@
 {
 	"ApplicationName": "Metadata",
-	"MongoDBName": "metadata",
+	"MongoDatabaseName": "metadata",
 	"MongoDBUserName": "",
 	"MongoDBPassword": "",
 	"MongoDBHost": "localhost",

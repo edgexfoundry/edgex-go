@@ -1,6 +1,7 @@
 {
 	"ApplicationName": "edgex-core-etadata",
-	"MongoDBName": "metadata",
+	"DBType": "mongo",
+	"MongoDatabaseName": "metadata",
 	"MongoDBUserName": "meta",
 	"MongoDBPassword": "password",
 	"MongoDBHost": "edgex-mongo",
