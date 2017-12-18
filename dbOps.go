@@ -41,16 +41,17 @@ func dbConnect() bool {
 		mongoDBDialInfo := &mgo.DialInfo{
 			Addrs:    []string{DOCKERMONGO},
 			Timeout:  time.Duration(configuration.MongoDBConnectTimeout) * time.Millisecond,
-			Database: DATABASE,
+			Database: MONGODATABASE,
 			Username: DBUSER,
 			Password: DBPASS,
 		}
 		s, err := mgo.DialWithInfo(mongoDBDialInfo)
-		// Set timeout based on configuration
-		s.SetSocketTimeout(time.Duration(configuration.MongoDBConnectTimeout) * time.Millisecond)
 		if err != nil {
 			return false
 		}
+
+		// Set timeout based on configuration
+		s.SetSocketTimeout(time.Duration(configuration.MongoDBConnectTimeout) * time.Millisecond)
 		DS.s = s
 		return true
 	}

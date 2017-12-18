@@ -32,3 +32,5 @@ _testmain.go
 *.pyc
 .project
 *.exe
+
+core-metadata-go

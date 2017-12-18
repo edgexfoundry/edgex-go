@@ -22,6 +22,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -39,10 +41,14 @@ func main() {
 	start := time.Now()
 
 	// Load configuration data
-	readConfigurationFile(CONFIG)
+	err := readConfigurationFile(CONFIG)
+	if err != nil {
+		fmt.Printf("Could not read configuration file(%s): %#v\n", CONFIG, err)
+		os.Exit(1)
+	}
 
 	// Initialize service on Consul
-	err := consulclient.ConsulInit(consulclient.ConsulConfig{
+	err = consulclient.ConsulInit(consulclient.ConsulConfig{
 		ServiceName:    configuration.ServiceName,
 		ServicePort:    configuration.ServerPort,
 		ServiceAddress: configuration.ServiceAddress,
@@ -59,10 +65,10 @@ func main() {
 	// Update configuration data from Consul
 	consulclient.CheckKeyValuePairs(&configuration, configuration.ApplicationName, strings.Split(configuration.ConsulProfilesActive, ";"))
 	// Update Service CONSTANTS
-	DATABASE = configuration.MongoDBName
+	MONGODATABASE = configuration.MongoDBName
 	PROTOCOL = configuration.Protocol
-	SERVERPORT = string(configuration.ServerPort)
-	DOCKERMONGO = configuration.MongoDBHost + ":" + string(configuration.MongoDBPort)
+	SERVERPORT = strconv.Itoa(configuration.ServerPort)
+	DOCKERMONGO = configuration.MongoDBHost + ":" + strconv.Itoa(configuration.MongoDBPort)
 	DBUSER = configuration.MongoDBUserName
 	DBPASS = configuration.MongoDBPassword
 
@@ -114,14 +120,12 @@ func readConfigurationFile(path string) error {
 	// Read the configuration file
 	contents, err := ioutil.ReadFile(path)
 	if err != nil {
-		loggingClient.Error(err.Error(), "")
 		return err
 	}
 
 	// Decode the configuration as JSON
 	err = json.Unmarshal(contents, &configuration)
 	if err != nil {
-		loggingClient.Error(err.Error(), "")
 		return err
 	}
 
