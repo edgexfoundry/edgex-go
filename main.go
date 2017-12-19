@@ -83,7 +83,7 @@ func main() {
 		ServicePort:    configuration.Serverport,
 		ServiceAddress: configuration.Serviceaddress,
 		CheckAddress:   configuration.Consulcheckaddress,
-		CheckInterval:  "10s",
+		CheckInterval:  configuration.Checkinterval,
 		ConsulAddress:  configuration.Consulhost,
 		ConsulPort:     configuration.Consulport,
 	})

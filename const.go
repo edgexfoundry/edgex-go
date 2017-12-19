@@ -45,6 +45,7 @@ type ConfigurationStruct struct {
 	Consulhost                 string
 	Consulcheckaddress         string
 	Consulport                 int
+	Checkinterval              string
 	Loggingfile                string
 	Loggingremoteurl           string
 	Metadbaddressableurl       string
