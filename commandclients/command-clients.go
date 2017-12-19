@@ -115,7 +115,12 @@ func (cc *CommandClient) Put(id string, cID string, body string) (string, error)
 }
 
 func doReq(req *http.Request) (*http.Response, error) {
-	return nil, nil // TODO
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println(err)
+	}
+	return resp, err
 }
 
 func getBody(resp *http.Response) ([]byte, error) {
