@@ -18,22 +18,25 @@
 
 package models
 
-import (
-	"encoding/json"
-)
+import "testing"
 
-type Action struct {
-	Path      string     `bson:"path" json:"path"`           // path used by service for action on a device or sensor
-	Responses []Response `bson:"responses" json:"responses"` // responses from get or put requests to service
-}
-
-/*
- * String() function for formatting
- */
-func (a Action) String() string {
-	out, err := json.Marshal(a)
-	if err != nil {
-		return err.Error()
+func TestProtocol_UnmarshalJSON(t *testing.T) {
+	type args struct {
+		data []byte
 	}
-	return string(out)
+	tests := []struct {
+		name    string
+		p       *Protocol
+		args    args
+		wantErr bool
+	}{
+	// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := tt.p.UnmarshalJSON(tt.args.data); (err != nil) != tt.wantErr {
+				t.Errorf("Protocol.UnmarshalJSON() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
 }
