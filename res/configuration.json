@@ -1,4 +1,6 @@
 {
+	"Applicationname" : "core-command",
+	"Consulprofilesactive" : "go",
 	"ReadLimit" : 100,
 	"ServerPort" : 48082,
 	"HeartBeatTime" : 300000,
@@ -15,5 +17,14 @@
 	"ConsulHost" : "localhost",
 	"ConsulCheckAddress" : "http://localhost:48082/api/v1/ping",
 	"LogFile" : "./command.log",
+	"metadbaddressableurl" : "http://localhost:48081/api/v1/addressable",
+	"metadbdeviceserviceurl" : "http://localhost:48081/api/v1/deviceservice",
+	"metadbdeviceprofileurl" : "http://localhost:48081/api/v1/deviceprofile",
+	"metadbdeviceurl" : "http://localhost:48081/api/v1/device",
+	"metadbdevicereporturl" : "http://localhost:48081/api/v1/devicereport",
+	"metadbcommandurl" : "http://localhost:48081/api/v1/command",
+	"metadbeventurl" : "http://localhost:48081/api/v1/event",
+	"metadbscheduleurl" : "http://localhost:48081/api/v1/schedule",
+	"metadbprovisionwatcherurl" : "http://localhost:48081/api/v1/provisionwatcher",
 	"LoggingRemoteURL" : "http://localhost:48061/api/v1/logs"
 }
