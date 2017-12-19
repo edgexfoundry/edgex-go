@@ -17,28 +17,34 @@
  *******************************************************************************/
 package main
 
-
 import (
+	"io"
 	"net/http"
+	"strings"
 
 	"github.com/edgexfoundry/core-clients-go/metadataclients"
 	"github.com/edgexfoundry/core-domain-go/models"
 )
 
-func commandByDeviceID(did string, cid string, b string, p bool) (string, int) {
+func issueCommand(req *http.Request) (*http.Response, error) {
+	client := &http.Client{}
+	return client.Do(req)
+}
+
+func commandByDeviceID(did string, cid string, b string, p bool) (io.ReadCloser, int) {
 	var dc = metadataclients.NewDeviceClient(configuration.Metadbdeviceurl)
 	d, err := dc.Device(did)
 
 	if err != nil {
 		loggingClient.Error(err.Error(), "")
 		// send 403: no device exists by the id provided
-		return "", http.StatusForbidden
+		return nil, http.StatusForbidden
 	}
 
 	if p && (d.AdminState == models.Locked) {
 		loggingClient.Error(d.Name + " is in admin locked state")
 		// send 422: device is locked
-		return "", http.StatusUnprocessableEntity
+		return nil, http.StatusUnprocessableEntity
 	}
 
 	var cc = metadataclients.NewCommandClient(configuration.Metadbcommandurl)
@@ -46,22 +52,25 @@ func commandByDeviceID(did string, cid string, b string, p bool) (string, int) {
 	if err != nil {
 		loggingClient.Error(err.Error(), "")
 		// send 403 no command exists
-		return "", http.StatusForbidden
+		return nil, http.StatusForbidden
 	}
 	if p {
 		loggingClient.Info("Issuing PUT command to: " + string(c.Put.Action.Path))
-		body, status, err := issueCommand(c.Put.Action.Path, b, true)
+		req, err := http.NewRequest(PUT, c.Put.Action.Path, strings.NewReader(b))
+		resp, err := issueCommand(req)
 		if err != nil {
-			return "", http.StatusBadGateway
+			return nil, http.StatusBadGateway
 		}
-		return body, status
+		return resp.Body, resp.StatusCode
+	} else {
+		loggingClient.Info("Issuing GET command to: " + c.Get.Action.Path)
+		req, err := http.NewRequest(PUT, c.Get.Action.Path, nil)
+		resp, err := issueCommand(req)
+		if err != nil {
+			return nil, http.StatusBadGateway
+		}
+		return nil, resp.StatusCode
 	}
-	loggingClient.Info("Issuing GET command to: " + c.Get.Action.Path)
-	gbody, gstatus, gerr := issueCommand(c.Get.Action.Path, "", false)
-	if gerr != nil {
-		return "", http.StatusBadGateway
-	}
-	return gbody, gstatus
 }
 
 func putDeviceAdminState(did string, as string) (int, error) {
