@@ -12,8 +12,8 @@
 	"AppOpenMessage" : "This is the Core Command Micro Service",
 	"URLProtocol" : "http://",
 	"URLDevicePath" : "/api/v1/device",
-	"ConsulHost" : "loaclhost",
+	"ConsulHost" : "localhost",
 	"ConsulCheckAddress" : "http://localhost:48082/api/v1/ping",
-	"LogFile" : "edgex-core-command.log",
+	"LogFile" : "./command.log",
 	"LoggingRemoteURL" : "http://localhost:48061/api/v1/logs"
 }

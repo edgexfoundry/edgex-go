@@ -26,7 +26,7 @@ import (
 )
 
 func commandByDeviceID(did string, cid string, b string, p bool) (string, int) {
-	var dc = metadataclients.NewDeviceClient()
+	var dc = metadataclients.NewDeviceClient(configuration.Metadbdeviceurl)
 	d, err := dc.Device(did)
 
 	if err != nil {
@@ -35,13 +35,13 @@ func commandByDeviceID(did string, cid string, b string, p bool) (string, int) {
 		return "", http.StatusForbidden
 	}
 
-	if p && d.IsLocked() {
+	if p && (d.AdminState == models.Locked) {
 		loggingClient.Error(d.Name + " is in admin locked state")
 		// send 422: device is locked
 		return "", http.StatusUnprocessableEntity
 	}
 
-	var cc = metadataclients.NewCommandClient()
+	var cc = metadataclients.NewCommandClient(configuration.Metadbcommandurl)
 	c, err := cc.Command(cid)
 	if err != nil {
 		loggingClient.Error(err.Error(), "")
@@ -65,47 +65,47 @@ func commandByDeviceID(did string, cid string, b string, p bool) (string, int) {
 }
 
 func putDeviceAdminState(did string, as string) (int, error) {
-	var dc = metadataclients.NewDeviceClient()
-	status, err := dc.UpdateAdminState(did, as)
+	var dc = metadataclients.NewDeviceClient(configuration.Metadbdeviceurl)
+	err := dc.UpdateAdminState(did, as)
 	if err != nil {
 		loggingClient.Error(err.Error(), "")
 		return http.StatusServiceUnavailable, err
 	}
-	return status, err
+	return http.StatusOK, err
 }
 
 func putDeviceAdminStateByName(dn string, as string) (int, error) {
-	var dc = metadataclients.NewDeviceClient()
-	status, err := dc.UpdateAdminStateByName(dn, as)
+	var dc = metadataclients.NewDeviceClient(configuration.Metadbdeviceurl)
+	err := dc.UpdateAdminStateByName(dn, as)
 	if err != nil {
 		loggingClient.Error(err.Error(), "")
 		return http.StatusServiceUnavailable, err
 	}
-	return status, err
+	return http.StatusOK, err
 }
 
 func putDeviceOpState(did string, as string) (int, error) {
-	var dc = metadataclients.NewDeviceClient()
-	status, err := dc.UpdateOpState(did, as)
+	var dc = metadataclients.NewDeviceClient(configuration.Metadbdeviceurl)
+	err := dc.UpdateOpState(did, as)
 	if err != nil {
 		loggingClient.Error(err.Error(), "")
 		return http.StatusServiceUnavailable, err
 	}
-	return status, err
+	return http.StatusOK, err
 }
 
 func putDeviceOpStateByName(dn string, as string) (int, error) {
-	var dc = metadataclients.NewDeviceClient()
-	status, err := dc.UpdateOpStateByName(dn, as)
+	var dc = metadataclients.NewDeviceClient(configuration.Metadbdeviceurl)
+	err := dc.UpdateOpStateByName(dn, as)
 	if err != nil {
 		loggingClient.Error(err.Error(), "")
 		return http.StatusServiceUnavailable, err
 	}
-	return status, err
+	return http.StatusOK, err
 }
 
 func getCommands() (int, []models.Device, error) {
-	var dc = metadataclients.NewDeviceClient()
+	var dc = metadataclients.NewDeviceClient(configuration.Metadbdeviceurl)
 	devices, err := dc.Devices()
 	if err != nil {
 		// Need to Check if Device Exist TODO
@@ -116,7 +116,7 @@ func getCommands() (int, []models.Device, error) {
 }
 
 func getCommandsByDeviceID(did string) (int, models.Device, error) {
-	var dc = metadataclients.NewDeviceClient()
+	var dc = metadataclients.NewDeviceClient(configuration.Metadbdeviceurl)
 	d, err := dc.Device(did)
 	if err != nil {
 		return http.StatusServiceUnavailable, d, err
@@ -125,7 +125,7 @@ func getCommandsByDeviceID(did string) (int, models.Device, error) {
 }
 
 func getCommandsByDeviceName(dn string) (int, models.Device, error) {
-	var dc = metadataclients.NewDeviceClient()
+	var dc = metadataclients.NewDeviceClient(configuration.Metadbdeviceurl)
 	d, err := dc.DeviceForName(dn)
 	if err != nil {
 		return http.StatusServiceUnavailable, d, err

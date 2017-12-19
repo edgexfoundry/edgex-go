@@ -20,6 +20,8 @@ package main
 
 // ConfigurationStruct : Struct used to pase the JSON configuration file
 type ConfigurationStruct struct {
+	ApplicationName       string
+	ConsulProfilesActive  string
 	ReadMaxLimit          int
 	ServerPort            int
 	HeartBeatTime         int
@@ -37,6 +39,16 @@ type ConfigurationStruct struct {
 	ConsulCheckAddress    string
 	LogFile               string
 	LoggingRemoteURL      string
+	Metadbaddressableurl       string
+	Metadbdeviceserviceurl     string
+	Metadbdeviceprofileurl     string
+	Metadbdeviceurl            string
+	Metadbdevicereporturl      string
+	Metadbcommandurl           string
+	Metadbeventurl             string
+	Metadbscheduleurl          string
+	Metadbprovisionwatcherurl  string
+	Metadbpingurl              string
 }
 
 // Configuration data for the metadata service
@@ -105,9 +117,9 @@ const (
 	DEVICEADDRESSABLESBYNAME        = "deviceaddressablesbyname"
 
 	/* TODO ENUM */
-	LOCKED   string = "locked"
-	UNLOCKED string = "unlocked"
-	ENABLED  string = "enabled"
-	DISABLED string = "disabled"
+	LOCKED   string = "LOCKED"
+	UNLOCKED string = "UNLOCKED"
+	ENABLED  string = "ENABLED"
+	DISABLED string = "DISABLED"
 	QUERYTS  string = "-timestamp"
 )
