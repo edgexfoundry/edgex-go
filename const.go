@@ -30,6 +30,8 @@ type ConfigurationStruct struct {
 	Formatspecifier            string
 	Msgpubtype                 string
 	Serverport                 int
+	Serviceaddress             string
+	Servicename                string
 	Deviceupdatelastconnected  bool
 	Serviceupdatelastconnected bool
 	Datamongodbusername        string

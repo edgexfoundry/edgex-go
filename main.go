@@ -74,14 +74,14 @@ func main() {
 	readConfigurationFile("./res/configuration.json")
 
 	// Create Logger (Default Parameters)
-	loggingClient = logger.NewClient(configuration.Applicationname, configuration.Loggingremoteurl)
+	loggingClient = logger.NewClient(configuration.Servicename, configuration.Loggingremoteurl)
 	loggingClient.LogFilePath = configuration.Loggingfile
 
 	// Initialize service on Consul
 	err := consulclient.ConsulInit(consulclient.ConsulConfig{
-		ServiceName:    configuration.Applicationname,
+		ServiceName:    configuration.Servicename,
 		ServicePort:    configuration.Serverport,
-		ServiceAddress: configuration.Applicationname,
+		ServiceAddress: configuration.Serviceaddress,
 		CheckAddress:   configuration.Consulcheckaddress,
 		CheckInterval:  "10s",
 		ConsulAddress:  configuration.Consulhost,
@@ -93,7 +93,7 @@ func main() {
 	}
 
 	// Update configuration data from Consul
-	if err := consulclient.CheckKeyValuePairs(&configuration, configuration.Applicationname, strings.Split(configuration.Consulprofilesactive, ";")); err != nil {
+	if err := consulclient.CheckKeyValuePairs(&configuration, configuration.Servicename, strings.Split(configuration.Consulprofilesactive, ";")); err != nil {
 		loggingClient.Error("Error getting key/values from Consul: "+err.Error(), "")
 	}
 
