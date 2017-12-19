@@ -43,13 +43,13 @@ func loadDeviceRoutes(b *mux.Router) {
 	d.HandleFunc("/{"+ID+"}", restGetCommandsByDeviceID).Methods(GET)
 	d.HandleFunc("/{"+ID+"}/"+COMMAND+"/{CID}", restGetDeviceCommandByCommandID).Methods(GET)
 	d.HandleFunc("/{"+ID+"}/"+COMMAND+"/{CID}", restPutDeviceCommandByCommandID).Methods(PUT)
-	d.HandleFunc("/{"+ID+"}/"+ADMINSTATE+"/{"+ADMINSTATE+"}", restPutDeviceAdminState).Methods(PUT)
+	d.HandleFunc("/{"+ID+"}/"+URLADMINSTATE+"/{"+ADMINSTATE+"}", restPutDeviceAdminState).Methods(PUT)
 	d.HandleFunc("/{"+ID+"}/"+OPSTATE+"/{"+OPSTATE+"}", restPutDeviceOpState).Methods(PUT)
 
 	// /api/<version>/device/name
 	dn := d.PathPrefix("/" + NAME).Subrouter()
 
 	dn.HandleFunc("/{"+NAME+"}", restGetCommandsByDeviceName).Methods(GET)
-	dn.HandleFunc("/{"+NAME+"}/"+ADMINSTATE+"/{"+ADMINSTATE+"}", restPutDeviceAdminStateByDeviceName).Methods(PUT)
+	dn.HandleFunc("/{"+NAME+"}/"+URLADMINSTATE+"/{"+ADMINSTATE+"}", restPutDeviceAdminStateByDeviceName).Methods(PUT)
 	dn.HandleFunc("/{"+NAME+"}/"+OPSTATE+"/{"+OPSTATE+"}", restPutDeviceOpStateByDeviceName).Methods(PUT)
 }
