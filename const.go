@@ -17,46 +17,44 @@
  *******************************************************************************/
 package main
 
-
 // ConfigurationStruct : Struct used to pase the JSON configuration file
 type ConfigurationStruct struct {
-	ApplicationName       string
-	ConsulProfilesActive  string
-	ReadMaxLimit          int
-	ServerPort            int
-	HeartBeatTime         int
-	ConsulPort            int
-	ServiceTimeout        int
-	CheckInterval         string
-	ServiceAddress        string
-	ServiceName           string
-	DeviceServiceProtocol string
-	HeartBeatMessage      string
-	AppOpenMessage        string
-	URLProtocol           string
-	URLDevicePath         string
-	ConsulHost            string
-	ConsulCheckAddress    string
-	LogFile               string
-	LoggingRemoteURL      string
-	Metadbaddressableurl       string
-	Metadbdeviceserviceurl     string
-	Metadbdeviceprofileurl     string
-	Metadbdeviceurl            string
-	Metadbdevicereporturl      string
-	Metadbcommandurl           string
-	Metadbeventurl             string
-	Metadbscheduleurl          string
-	Metadbprovisionwatcherurl  string
-	Metadbpingurl              string
+	ApplicationName           string
+	ConsulProfilesActive      string
+	ReadMaxLimit              int
+	ServerPort                int
+	HeartBeatTime             int
+	ConsulPort                int
+	ServiceTimeout            int
+	CheckInterval             string
+	ServiceAddress            string
+	ServiceName               string
+	DeviceServiceProtocol     string
+	HeartBeatMessage          string
+	AppOpenMessage            string
+	URLProtocol               string
+	URLDevicePath             string
+	ConsulHost                string
+	ConsulCheckAddress        string
+	LogFile                   string
+	LoggingRemoteURL          string
+	Metadbaddressableurl      string
+	Metadbdeviceserviceurl    string
+	Metadbdeviceprofileurl    string
+	Metadbdeviceurl           string
+	Metadbdevicereporturl     string
+	Metadbcommandurl          string
+	Metadbeventurl            string
+	Metadbscheduleurl         string
+	Metadbprovisionwatcherurl string
+	Metadbpingurl             string
 }
 
 // Configuration data for the metadata service
 var configuration ConfigurationStruct = ConfigurationStruct{}
 
 const (
-	// CONFIG                   string = "res/configuration.json"
-	CONFIG string = "res/configuration_local.json"
+	CONFIG string = "res/configuration.json"
 	/* -------------- Constants for Command -------------------- */
 	MYSERVICENAME            string = "Command"
 	REST_HTTP                string = "http://"
