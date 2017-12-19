@@ -30,6 +30,8 @@ type ConfigurationStruct struct {
 	Formatspecifier            string
 	Msgpubtype                 string
 	Serverport                 int
+	Serviceaddress             string
+	Servicename                string
 	Deviceupdatelastconnected  bool
 	Serviceupdatelastconnected bool
 	Datamongodbusername        string
@@ -43,6 +45,7 @@ type ConfigurationStruct struct {
 	Consulhost                 string
 	Consulcheckaddress         string
 	Consulport                 int
+	Checkinterval              string
 	Loggingfile                string
 	Loggingremoteurl           string
 	Metadbaddressableurl       string

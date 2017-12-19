@@ -14,25 +14,40 @@ RUN mkdir -p /go/src \
 ENV GOPATH=/go
 ENV PATH=$GOPATH/bin:$PATH
 
-# RUN mkdir -p $GOPATH/src/bitbucket.org/clientcto/go-core-data
-WORKDIR src/github.com/edgexfoundry/core-data-go
+ENV CORE_DATA_GO=core-data-go
+ENV CORE_DATA_GOPATH=src/github.com/edgexfoundry/$CORE_DATA_GO
+ENV GO_CORE_DATA_REPO=https://github.com/edgexfoundry/core-data-go.git
+RUN mkdir -p $GOPATH/$CORE_DATA_GOPATH
+WORKDIR $CORE_DATA_GOPATH
+
 COPY . .
 
 RUN glide install \
  && go build --ldflags '-extldflags "-lstdc++ -static -lsodium -static -lzmq"'
 
+ARG GOOS=linux
+ARG GOARCH=amd64
+ARG DATA_EXE=$CORE_DATA_GO
+
+RUN go get -d
+RUN GOOS=$GOOS GOARCH=$GOARCH go build --ldflags '-extldflags "-lstdc++ -static -lsodium -static -lzmq"' -o $DATA_EXE
+
 #Next image - Copy built Go binary into new workspace
-FROM alpine:3.4
+FROM alpine:3.6
 
 # Environment variables
-ENV APP_DIR=/core-data-go
+ENV GOPATH=/go
+ENV CORE_DATA_GO=core-data-go
+ENV CORE_DATA_PATH=core-data-go
+ENV CORE_DATA_GOPATH=src/github.com/edgexfoundry/$CORE_DATA_GO
+ENV APP_DIR=/$CORE_DATA_GO
 ENV APP_PORT=48080
 
 # Expose data port
 EXPOSE $APP_PORT
 
 WORKDIR $APP_DIR
-COPY --from=build-env /go/src/github.com/edgexfoundry/core-data-go/core-data-go .
-COPY --from=build-env /go/src/github.com/edgexfoundry/core-data-go/docker-files ./res
+COPY --from=build-env $GOPATH/$CORE_DATA_GOPATH/$CORE_DATA_GO .
+COPY res/configuration-docker.json ./res/configuration.json
 
-ENTRYPOINT ./core-data-go
+ENTRYPOINT ./$CORE_DATA_GO
