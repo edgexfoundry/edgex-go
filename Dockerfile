@@ -45,8 +45,9 @@ ENV APP_PORT=48082
 #expose command port
 EXPOSE $APP_PORT
 
+ARG CONFIG_JSON=$GOPATH/$CORE_COMMAND_GOPATH/res/configuration-docker.json
 WORKDIR $APP_DIR
-COPY --from=build-env $GOPATH/$CORE_COMMAND_GOPATH/$CORE_COMMAND_GO .
-COPY $GOPATH/$CORE_COMMAND_GOPATH/res/configuration-docker.json ./res/configuration.json
+COPY --from=build-env $GOPATH/$CORE_METADATA_GOPATH/$CORE_COMMAND_GO .
+COPY --from=build-env $CONFIG_JSON ./res/configuration.json
 
 ENTRYPOINT ./$CORE_COMMAND_GO
