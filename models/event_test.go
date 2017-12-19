@@ -19,21 +19,46 @@
 package models
 
 import (
-	"encoding/json"
+	"reflect"
+	"testing"
 )
 
-type Action struct {
-	Path      string     `bson:"path" json:"path"`           // path used by service for action on a device or sensor
-	Responses []Response `bson:"responses" json:"responses"` // responses from get or put requests to service
+func TestEvent_MarshalJSON(t *testing.T) {
+	tests := []struct {
+		name    string
+		e       Event
+		want    []byte
+		wantErr bool
+	}{
+	// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := tt.e.MarshalJSON()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Event.MarshalJSON() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Event.MarshalJSON() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }
 
-/*
- * String() function for formatting
- */
-func (a Action) String() string {
-	out, err := json.Marshal(a)
-	if err != nil {
-		return err.Error()
+func TestEvent_String(t *testing.T) {
+	tests := []struct {
+		name string
+		e    Event
+		want string
+	}{
+	// TODO: Add test cases.
 	}
-	return string(out)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.e.String(); got != tt.want {
+				t.Errorf("Event.String() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }

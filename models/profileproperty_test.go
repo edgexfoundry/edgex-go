@@ -18,22 +18,21 @@
 
 package models
 
-import (
-	"encoding/json"
-)
+import "testing"
 
-type Action struct {
-	Path      string     `bson:"path" json:"path"`           // path used by service for action on a device or sensor
-	Responses []Response `bson:"responses" json:"responses"` // responses from get or put requests to service
-}
-
-/*
- * String() function for formatting
- */
-func (a Action) String() string {
-	out, err := json.Marshal(a)
-	if err != nil {
-		return err.Error()
+func TestProfileProperty_String(t *testing.T) {
+	tests := []struct {
+		name string
+		pp   ProfileProperty
+		want string
+	}{
+	// TODO: Add test cases.
 	}
-	return string(out)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.pp.String(); got != tt.want {
+				t.Errorf("ProfileProperty.String() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }

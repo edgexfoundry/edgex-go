@@ -19,21 +19,46 @@
 package models
 
 import (
-	"encoding/json"
+	"reflect"
+	"testing"
 )
 
-type Action struct {
-	Path      string     `bson:"path" json:"path"`           // path used by service for action on a device or sensor
-	Responses []Response `bson:"responses" json:"responses"` // responses from get or put requests to service
+func TestService_MarshalJSON(t *testing.T) {
+	tests := []struct {
+		name    string
+		s       Service
+		want    []byte
+		wantErr bool
+	}{
+	// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := tt.s.MarshalJSON()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Service.MarshalJSON() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Service.MarshalJSON() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }
 
-/*
- * String() function for formatting
- */
-func (a Action) String() string {
-	out, err := json.Marshal(a)
-	if err != nil {
-		return err.Error()
+func TestService_String(t *testing.T) {
+	tests := []struct {
+		name string
+		dp   Service
+		want string
+	}{
+	// TODO: Add test cases.
 	}
-	return string(out)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.dp.String(); got != tt.want {
+				t.Errorf("Service.String() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }
