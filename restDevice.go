@@ -19,7 +19,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 
@@ -133,7 +132,6 @@ func restGetAllCommands(w http.ResponseWriter, _ *http.Request) {
 	status, devices, err := getCommands()
 	if err != nil {
 		loggingClient.Error(err.Error(), "")
-		fmt.Print(err.Error())
 		w.WriteHeader(http.StatusServiceUnavailable)
 	} else if status != http.StatusOK {
 		w.WriteHeader(status)

@@ -17,7 +17,6 @@
  *******************************************************************************/
 package main
 
-
 import (
 	"net/http"
 
@@ -41,8 +40,8 @@ func loadDeviceRoutes(b *mux.Router) {
 
 	// /api/<version>/device
 	d.HandleFunc("/{"+ID+"}", restGetCommandsByDeviceID).Methods(GET)
-	d.HandleFunc("/{"+ID+"}/"+COMMAND+"/{CID}", restGetDeviceCommandByCommandID).Methods(GET)
-	d.HandleFunc("/{"+ID+"}/"+COMMAND+"/{CID}", restPutDeviceCommandByCommandID).Methods(PUT)
+	d.HandleFunc("/{"+ID+"}/"+COMMAND+"/{"+COMMANDID+"}", restGetDeviceCommandByCommandID).Methods(GET)
+	d.HandleFunc("/{"+ID+"}/"+COMMAND+"/{"+COMMANDID+"}", restPutDeviceCommandByCommandID).Methods(PUT)
 	d.HandleFunc("/{"+ID+"}/"+URLADMINSTATE+"/{"+ADMINSTATE+"}", restPutDeviceAdminState).Methods(PUT)
 	d.HandleFunc("/{"+ID+"}/"+OPSTATE+"/{"+OPSTATE+"}", restPutDeviceOpState).Methods(PUT)
 
