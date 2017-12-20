@@ -24,7 +24,7 @@ import (
 )
 
 type DeviceService struct {
-	Service    Service    `bson:",inline"`
+	Service
 	AdminState AdminState `bson:"adminState" json:"adminState"` // Device Service Admin State
 }
 
@@ -42,22 +42,22 @@ func (ds DeviceService) MarshalJSON() ([]byte, error) {
 		Addressable     Addressable    `json:"addressable"`    // address (MQTT topic, HTTP address, serial bus, etc.) for reaching the service
 		AdminState      AdminState     `json:"adminState"`     // Device Service Admin State
 	}{
-		DescribedObject: ds.Service.DescribedObject,
-		LastConnected:   ds.Service.LastConnected,
-		LastReported:    ds.Service.LastReported,
-		OperatingState:  ds.Service.OperatingState,
-		Labels:          ds.Service.Labels,
-		Addressable:     ds.Service.Addressable,
+		DescribedObject: ds.DescribedObject,
+		LastConnected:   ds.LastConnected,
+		LastReported:    ds.LastReported,
+		OperatingState:  ds.OperatingState,
+		Labels:          ds.Labels,
+		Addressable:     ds.Addressable,
 		AdminState:      ds.AdminState,
 	}
 
-	if ds.Service.Id != "" {
-		test.Id = &ds.Service.Id
+	if ds.Id != "" {
+		test.Id = &ds.Id
 	}
 
 	// Empty strings are null
-	if ds.Service.Name != "" {
-		test.Name = &ds.Service.Name
+	if ds.Name != "" {
+		test.Name = &ds.Name
 	}
 
 	return json.Marshal(test)
@@ -85,17 +85,17 @@ func (ds *DeviceService) UnmarshalJSON(data []byte) error {
 
 	// Set the fields
 	ds.AdminState = a.AdminState
-	ds.Service.DescribedObject = a.DescribedObject
-	ds.Service.LastConnected = a.LastConnected
-	ds.Service.LastReported = a.LastReported
-	ds.Service.OperatingState = a.OperatingState
-	ds.Service.Labels = a.Labels
-	ds.Service.Addressable = a.Addressable
-	ds.Service.Id = a.Id
+	ds.DescribedObject = a.DescribedObject
+	ds.LastConnected = a.LastConnected
+	ds.LastReported = a.LastReported
+	ds.OperatingState = a.OperatingState
+	ds.Labels = a.Labels
+	ds.Addressable = a.Addressable
+	ds.Id = a.Id
 
 	// Name can be nil
 	if a.Name != nil {
-		ds.Service.Name = *a.Name
+		ds.Name = *a.Name
 	}
 
 	return nil
