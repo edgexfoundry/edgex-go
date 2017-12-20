@@ -48,7 +48,9 @@ func main() {
 		ConsulPort:     configuration.ConsulPort,
 	})
 	// Update configuration data from Consul
-	consulclient.CheckKeyValuePairs(&configuration)
+	if err := consulclient.CheckKeyValuePairs(&configuration, configuration.ApplicationName, strings.Split(configuration.ConsulProfilesActive, ";")); err != nil {
+		loggingClient.Error("Error getting key/values from Consul: "+err.Error(), "")
+	}
 
 	// Setup Logging
 	loggingClient.RemoteUrl = configuration.LoggingRemoteURL
