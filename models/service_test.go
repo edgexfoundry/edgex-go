@@ -12,7 +12,7 @@
  * the License.
  *
  * @microservice: core-domain-go library
- * @author: Ryan Comer & Spencer Bull, Dell
+ * @author: Jim White, Dell
  * @version: 0.5.0
  *******************************************************************************/
 
@@ -20,8 +20,12 @@ package models
 
 import (
 	"reflect"
+	"strconv"
 	"testing"
 )
+
+var TestServiceName = "test service"
+var TestService = Service{DescribedObject: TestDescribedObject, Name: TestServiceName, LastConnected: TestLastConnected, LastReported: TestLastReported, OperatingState: "ENABLED", Labels: TestLabels, Addressable: TestAddressable}
 
 func TestService_MarshalJSON(t *testing.T) {
 	tests := []struct {
@@ -52,7 +56,17 @@ func TestService_String(t *testing.T) {
 		dp   Service
 		want string
 	}{
-	// TODO: Add test cases.
+		{"service to string", TestService,
+			"{\"created\":" + strconv.FormatInt(TestService.Created, 10) +
+				",\"modified\":" + strconv.FormatInt(TestService.Modified, 10) +
+				",\"origin\":" + strconv.FormatInt(TestService.Origin, 10) +
+				",\"description\":\"" + TestDescription + "\"" +
+				",\"id\":null,\"name\":\"" + TestServiceName + "\"" +
+				",\"lastConnected\":" + strconv.FormatInt(TestLastConnected, 10) +
+				",\"lastReported\":" + strconv.FormatInt(TestLastReported, 10) +
+				",\"operatingState\":\"ENABLED\"" +
+				",\"labels\":[\"MODBUS\",\"TEMP\"]" +
+				",\"addressable\":" + TestAddressable.String() + "}"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

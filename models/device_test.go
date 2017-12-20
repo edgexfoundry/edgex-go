@@ -12,7 +12,7 @@
  * the License.
  *
  * @microservice: core-domain-go library
- * @author: Ryan Comer & Spencer Bull, Dell
+ * @author: Jim White, Dell
  * @version: 0.5.0
  *******************************************************************************/
 
@@ -23,14 +23,23 @@ import (
 	"testing"
 )
 
+var TestDeviceName = "test device name"
+var TestLabels = []string{"MODBUS", "TEMP"}
+var TestLastConnected = int64(1000000)
+var TestLastReported = int64(1000000)
+var TestLocation = "{40lat;45long}"
+var TestDevice = Device{DescribedObject: TestDescribedObject, Name: TestDeviceName, AdminState: "UNLOCKED", OperatingState: "ENABLED", Addressable: TestAddressable, LastReported: TestLastReported, LastConnected: TestLastConnected, Labels: TestLabels, Location: TestLocation, Service: TestDeviceService}
+
 func TestDevice_MarshalJSON(t *testing.T) {
+	var testDeviceBytes = []byte(TestDevice.String())
+
 	tests := []struct {
 		name    string
 		d       Device
 		want    []byte
 		wantErr bool
 	}{
-	// TODO: Add test cases.
+		{"successful marshal", TestDevice, testDeviceBytes, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -52,7 +61,18 @@ func TestDevice_String(t *testing.T) {
 		d    Device
 		want string
 	}{
-	// TODO: Add test cases.
+	// {"device to string", TestDevice,
+	// 	"{\"created\":" + strconv.FormatInt(TestDevice.Created, 10) +
+	// 		",\"modified\":" + strconv.FormatInt(TestDevice.Modified, 10) +
+	// 		",\"origin\":" + strconv.FormatInt(TestDevice.Origin, 10) +
+	// 		",\"description\":\"" + TestDescription + "\"" +
+	// 		",\"id\":null,\"name\":\"" + TestDevice.Name + "\"" +
+	// 		",\"adminState\":\"UNLOCKED\",\"operatingState\":\"ENABLED\",\"addressable\":" + TestAddressable.String() +
+	// 		",\"lastConnected\":" + strconv.FormatInt(TestLastConnected, 10) +
+	// 		",\"lastReported\":[\"MODBUS\",\"TEMP\"]" +
+	// 		",\"labels\":" + strings.Join(TestLabels, ",") +
+	// 		",\"location\":\"" + TestLocation + "\"" +
+	// 		"}"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

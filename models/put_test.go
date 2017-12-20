@@ -12,7 +12,7 @@
  * the License.
  *
  * @microservice: core-domain-go library
- * @author: Ryan Comer & Spencer Bull, Dell
+ * @author: Jim White, Dell
  * @version: 0.5.0
  *******************************************************************************/
 
@@ -22,6 +22,8 @@ import (
 	"reflect"
 	"testing"
 )
+
+var TestPut = Put{Action: TestAction, ParameterNames: TestExpectedvalues}
 
 func TestPut_MarshalJSON(t *testing.T) {
 	tests := []struct {
@@ -52,7 +54,13 @@ func TestPut_String(t *testing.T) {
 		p    Put
 		want string
 	}{
-	// TODO: Add test cases.
+		{"put to string", TestPut,
+			"{\"path\":\"" + TestActionPath +
+				"\",\"responses\":[{\"code\":\"" + TestCode +
+				"\",\"description\":\"" + TestDescription +
+				"\",\"expectedValues\":[\"" + TestExpectedvalue1 +
+				"\",\"" + TestExpectedvalue2 +
+				"\"]}],\"parameterNames\":[\"" + TestExpectedvalue1 + "\",\"" + TestExpectedvalue2 + "\"]}"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

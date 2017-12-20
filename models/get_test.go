@@ -12,7 +12,7 @@
  * the License.
  *
  * @microservice: core-domain-go library
- * @author: Ryan Comer & Spencer Bull, Dell
+ * @author: Jim White, Dell
  * @version: 0.5.0
  *******************************************************************************/
 
@@ -22,6 +22,8 @@ import (
 	"reflect"
 	"testing"
 )
+
+var TestGet = Get{Action: TestAction}
 
 func TestGet_MarshalJSON(t *testing.T) {
 	tests := []struct {
@@ -52,7 +54,7 @@ func TestGet_String(t *testing.T) {
 		g    Get
 		want string
 	}{
-	// TODO: Add test cases.
+		{"get to string", TestGet, TestGet.Action.String()},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

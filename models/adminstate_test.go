@@ -21,6 +21,9 @@ package models
 import "testing"
 
 func TestAdminState_UnmarshalJSON(t *testing.T) {
+	// use the referenced AdminState as the expected results
+	var locked = AdminState("LOCKED")
+	var unlocked = AdminState("UNLOCKED")
 	var foo = AdminState("foo")
 	type args struct {
 		data []byte
@@ -31,16 +34,23 @@ func TestAdminState_UnmarshalJSON(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		{"LOCKED marshal", &foo, args{[]byte("\"LOCKED\"")}, false},
-		{"locked marshal", &foo, args{[]byte("\"locked\"")}, true},
-		{"Unlocked marshal", &foo, args{[]byte("\"UNLOCKED\"")}, false},
-		{"unlocked marshal", &foo, args{[]byte("\"unlocked\"")}, true},
-		{"bad marchal", &foo, args{[]byte("\"goo\"")}, true},
+		{"LOCKED marshal", &locked, args{[]byte("\"LOCKED\"")}, false},
+		{"locked marshal", &locked, args{[]byte("\"locked\"")}, true},
+		{"Unlocked marshal", &unlocked, args{[]byte("\"UNLOCKED\"")}, false},
+		{"unlocked marshal", &unlocked, args{[]byte("\"unlocked\"")}, true},
+		{"bad marshal", &foo, args{[]byte("\"goo\"")}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			var expected = string(*tt.as)
 			if err := tt.as.UnmarshalJSON(tt.args.data); (err != nil) != tt.wantErr {
 				t.Errorf("AdminState.UnmarshalJSON() error = %v, wantErr %v", err, tt.wantErr)
+			} else {
+				// if the bytes did unmarshal, make sure they unmarshaled to correct enum by comparing it to expected results
+				var unmarshaledResult = string(*tt.as)
+				if err == nil && !(IsAdminStateType(unmarshaledResult) && unmarshaledResult == expected) {
+					t.Errorf("Unmarshal did not result in expected admin state string.  Expected:  %s, got: %s", expected, unmarshaledResult)
+				}
 			}
 		})
 	}

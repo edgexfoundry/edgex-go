@@ -12,7 +12,7 @@
  * the License.
  *
  * @microservice: core-domain-go library
- * @author: Ryan Comer & Spencer Bull, Dell
+ * @author: Jim White, Dell
  * @version: 0.5.0
  *******************************************************************************/
 
@@ -23,14 +23,20 @@ import (
 	"testing"
 )
 
+var TestCallbackAlert = CallbackAlert{"DEVICE", "1234"}
+
 func TestCallbackAlert_MarshalJSON(t *testing.T) {
+	var testNoIDCallbackAlert = CallbackAlert{"DEVICE", ""}
+	var testCallbackAlertBytes = []byte(TestCallbackAlert.String())
+	var testNoIDCallbackAlertBytes = []byte(testNoIDCallbackAlert.String())
 	tests := []struct {
 		name    string
 		ca      CallbackAlert
 		want    []byte
 		wantErr bool
 	}{
-	// TODO: Add test cases.
+		{"successful marshal of callback", TestCallbackAlert, testCallbackAlertBytes, false},
+		{"successful marshal of no id callback", testNoIDCallbackAlert, testNoIDCallbackAlertBytes, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -52,7 +58,7 @@ func TestCallbackAlert_String(t *testing.T) {
 		ca   CallbackAlert
 		want string
 	}{
-	// TODO: Add test cases.
+		{"callback alert to string", TestCallbackAlert, "{\"type\":\"DEVICE\",\"id\":\"1234\"}"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

@@ -12,13 +12,19 @@
  * the License.
  *
  * @microservice: core-domain-go library
- * @author: Ryan Comer & Spencer Bull, Dell
+ * @author: Jim White, Dell
  * @version: 0.5.0
  *******************************************************************************/
 
 package models
 
-import "testing"
+import (
+	"strconv"
+	"testing"
+)
+
+var TestDscription = "test description"
+var TestDescribedObject = DescribedObject{BaseObject: TestBaseObject, Description: TestDescription}
 
 func TestDescribedObject_String(t *testing.T) {
 	tests := []struct {
@@ -26,7 +32,11 @@ func TestDescribedObject_String(t *testing.T) {
 		o    DescribedObject
 		want string
 	}{
-	// TODO: Add test cases.
+		{"described object to string", TestDescribedObject,
+			"{\"created\":" + strconv.FormatInt(TestDescribedObject.Created, 10) +
+				",\"modified\":" + strconv.FormatInt(TestDescribedObject.Modified, 10) +
+				",\"origin\":" + strconv.FormatInt(TestDescribedObject.Origin, 10) +
+				",\"description\":\"" + TestDescription + "\"}"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

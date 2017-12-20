@@ -12,7 +12,7 @@
  * the License.
  *
  * @microservice: core-domain-go library
- * @author: Ryan Comer & Spencer Bull, Dell
+ * @author: Jim White, Dell
  * @version: 0.5.0
  *******************************************************************************/
 
@@ -20,8 +20,11 @@ package models
 
 import (
 	"reflect"
+	"strconv"
 	"testing"
 )
+
+var TestDeviceService = DeviceService{Service: TestService, AdminState: "UNLOCKED"}
 
 func TestDeviceService_MarshalJSON(t *testing.T) {
 	tests := []struct {
@@ -73,7 +76,19 @@ func TestDeviceService_String(t *testing.T) {
 		ds   DeviceService
 		want string
 	}{
-	// TODO: Add test cases.
+		{"device service to string", TestDeviceService,
+			"{\"created\":" + strconv.FormatInt(TestService.Created, 10) +
+				",\"modified\":" + strconv.FormatInt(TestService.Modified, 10) +
+				",\"origin\":" + strconv.FormatInt(TestService.Origin, 10) +
+				",\"description\":\"" + TestDescription + "\"" +
+				",\"id\":null,\"name\":\"" + TestServiceName + "\"" +
+				",\"lastConnected\":" + strconv.FormatInt(TestLastConnected, 10) +
+				",\"lastReported\":" + strconv.FormatInt(TestLastReported, 10) +
+				",\"operatingState\":\"ENABLED\"" +
+				",\"labels\":[\"MODBUS\",\"TEMP\"]" +
+				",\"addressable\":" + TestAddressable.String() +
+				",\"adminState\":\"UNLOCKED\"" +
+				"}"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
