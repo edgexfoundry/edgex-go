@@ -18,6 +18,7 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -115,9 +116,9 @@ func putDeviceOpStateByName(dn string, as string) (int, error) {
 
 func getCommands() (int, []models.CommandResponse, error) {
 	var dc = metadataclients.NewDeviceClient(configuration.Metadbdeviceurl)
+	fmt.Print(configuration.Metadbdeviceurl)
 	devices, err := dc.Devices()
 	if err != nil {
-		// Need to Check if Device Exist TODO
 		return http.StatusServiceUnavailable, nil, err
 	}
 	var cr []models.CommandResponse
