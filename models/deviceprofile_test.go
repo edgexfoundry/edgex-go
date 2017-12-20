@@ -19,9 +19,20 @@
 package models
 
 import (
+	"encoding/json"
+	"fmt"
 	"reflect"
+	"strconv"
 	"testing"
 )
+
+var TestProfileName = "Test Profile.NAME"
+var TestManufacturer = "Test Manufacturer"
+var TestModel = "Test Model"
+var TestProfileLabels = []string{"labe1", "label2"}
+var TestProfileDescription = "Test Description"
+var TestObjects = "{key1:value1, key2:value2}"
+var TestProfile = DeviceProfile{DescribedObject: TestDescribedObject, Name: TestProfileName, Manufacturer: TestManufacturer, Model: TestModel, Labels: TestProfileLabels, Objects: TestObjects, DeviceResources: []DeviceObject{TestDeviceObject}, Resources: []ProfileResource{TestProfileResource}, Commands: []Command{TestCommand}}
 
 func TestDeviceProfile_MarshalJSON(t *testing.T) {
 	tests := []struct {
@@ -47,12 +58,27 @@ func TestDeviceProfile_MarshalJSON(t *testing.T) {
 }
 
 func TestDeviceProfile_String(t *testing.T) {
+	var labelSlice, _ = json.Marshal(TestProfileLabels)
 	tests := []struct {
 		name string
 		dp   DeviceProfile
 		want string
 	}{
-	// TODO: Add test cases.
+		{"device profile to string", TestProfile,
+			"{\"created\":" + strconv.FormatInt(TestDescribedObject.Created, 10) +
+				",\"modified\":" + strconv.FormatInt(TestDescribedObject.Modified, 10) +
+				",\"origin\":" + strconv.FormatInt(TestDescribedObject.Origin, 10) +
+				",\"description\":\"" + TestDescribedObject.Description + "\"" +
+				",\"id\":\"\"" +
+				",\"name\":\"" + TestProfileName + "\"" +
+				",\"manufacturer\":\"" + TestManufacturer + "\"" +
+				",\"model\":\"" + TestModel + "\"" +
+				",\"labels\":" + fmt.Sprint(string(labelSlice)) +
+				",\"objects\":\"" + TestObjects + "\"" +
+				",\"deviceResources\":[" + TestDeviceObject.String() + "]" +
+				",\"resources\":[" + TestProfileResource.String() + "]" +
+				",\"commands\":[" + TestCommand.String() + "]" +
+				"}"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

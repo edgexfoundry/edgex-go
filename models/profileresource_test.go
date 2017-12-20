@@ -12,7 +12,7 @@
  * the License.
  *
  * @microservice: core-domain-go library
- * @author: Ryan Comer & Spencer Bull, Dell
+ * @author: Jim White, Dell
  * @version: 0.5.0
  *******************************************************************************/
 
@@ -22,6 +22,9 @@ import (
 	"reflect"
 	"testing"
 )
+
+var TestProfileResourceName = "test profile resource name"
+var TestProfileResource = ProfileResource{Name: TestProfileResourceName, Get: []ResourceOperation{TestResourceOperation}, Set: []ResourceOperation{TestResourceOperation}}
 
 func TestProfileResource_MarshalJSON(t *testing.T) {
 	tests := []struct {
@@ -52,7 +55,10 @@ func TestProfileResource_String(t *testing.T) {
 		pr   ProfileResource
 		want string
 	}{
-	// TODO: Add test cases.
+		{"profile resource to string", TestProfileResource,
+			"{\"name\":\"" + TestProfileResourceName + "\"" +
+				",\"get\":[" + TestResourceOperation.String() +
+				"],\"set\":[" + TestResourceOperation.String() + "]}"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

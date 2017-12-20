@@ -19,7 +19,10 @@
 package models
 
 import (
+	"encoding/json"
+	"fmt"
 	"reflect"
+	"strconv"
 	"testing"
 )
 
@@ -28,7 +31,7 @@ var TestLabels = []string{"MODBUS", "TEMP"}
 var TestLastConnected = int64(1000000)
 var TestLastReported = int64(1000000)
 var TestLocation = "{40lat;45long}"
-var TestDevice = Device{DescribedObject: TestDescribedObject, Name: TestDeviceName, AdminState: "UNLOCKED", OperatingState: "ENABLED", Addressable: TestAddressable, LastReported: TestLastReported, LastConnected: TestLastConnected, Labels: TestLabels, Location: TestLocation, Service: TestDeviceService}
+var TestDevice = Device{DescribedObject: TestDescribedObject, Name: TestDeviceName, AdminState: "UNLOCKED", OperatingState: "ENABLED", Addressable: TestAddressable, LastReported: TestLastReported, LastConnected: TestLastConnected, Labels: TestLabels, Location: TestLocation, Service: TestDeviceService, Profile: TestProfile}
 
 func TestDevice_MarshalJSON(t *testing.T) {
 	var testDeviceBytes = []byte(TestDevice.String())
@@ -56,23 +59,26 @@ func TestDevice_MarshalJSON(t *testing.T) {
 }
 
 func TestDevice_String(t *testing.T) {
+	var labelSlice, _ = json.Marshal(TestDevice.Labels)
 	tests := []struct {
 		name string
 		d    Device
 		want string
 	}{
-	// {"device to string", TestDevice,
-	// 	"{\"created\":" + strconv.FormatInt(TestDevice.Created, 10) +
-	// 		",\"modified\":" + strconv.FormatInt(TestDevice.Modified, 10) +
-	// 		",\"origin\":" + strconv.FormatInt(TestDevice.Origin, 10) +
-	// 		",\"description\":\"" + TestDescription + "\"" +
-	// 		",\"id\":null,\"name\":\"" + TestDevice.Name + "\"" +
-	// 		",\"adminState\":\"UNLOCKED\",\"operatingState\":\"ENABLED\",\"addressable\":" + TestAddressable.String() +
-	// 		",\"lastConnected\":" + strconv.FormatInt(TestLastConnected, 10) +
-	// 		",\"lastReported\":[\"MODBUS\",\"TEMP\"]" +
-	// 		",\"labels\":" + strings.Join(TestLabels, ",") +
-	// 		",\"location\":\"" + TestLocation + "\"" +
-	// 		"}"},
+		{"device to string", TestDevice,
+			"{\"created\":" + strconv.FormatInt(TestDevice.Created, 10) +
+				",\"modified\":" + strconv.FormatInt(TestDevice.Modified, 10) +
+				",\"origin\":" + strconv.FormatInt(TestDevice.Origin, 10) +
+				",\"description\":\"" + TestDescription + "\"" +
+				",\"id\":null,\"name\":\"" + TestDevice.Name + "\"" +
+				",\"adminState\":\"UNLOCKED\",\"operatingState\":\"ENABLED\",\"addressable\":" + TestAddressable.String() +
+				",\"lastConnected\":" + strconv.FormatInt(TestLastConnected, 10) +
+				",\"lastReported\":" + strconv.FormatInt(TestLastReported, 10) +
+				",\"labels\":" + fmt.Sprint(string(labelSlice)) +
+				",\"location\":\"" + TestLocation + "\"" +
+				",\"service\":" + TestDevice.Service.String() +
+				",\"profile\":" + TestDevice.Profile.String() +
+				"}"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

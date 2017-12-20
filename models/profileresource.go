@@ -51,7 +51,7 @@ func (pr ProfileResource) MarshalJSON() ([]byte, error) {
 }
 
 /*
- * To String function for DeviceService
+ * To String function for Profile Resource
  */
 func (pr ProfileResource) String() string {
 	out, err := json.Marshal(pr)
