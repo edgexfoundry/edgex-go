@@ -20,6 +20,7 @@ package models
 
 import (
 	"encoding/json"
+
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -106,5 +107,22 @@ func (d *Device) AllAssociatedValueDescriptors(vdNames *[]string) {
 	// Add the map keys (value descriptor names) to the list
 	for vd, _ := range vdNamesMap {
 		*vdNames = append(*vdNames, vd)
+	}
+}
+
+/*
+ * Create a Command Response struct from the current Device Struct
+ */
+func (d *Device) CommandResponse() CommandResponse {
+	return CommandResponse{
+		Id:             d.Id,
+		Name:           d.Name,
+		AdminState:     d.AdminState,
+		OperatingState: d.OperatingState,
+		LastConnected:  d.LastConnected,
+		LastReported:   d.LastReported,
+		Labels:         d.Labels,
+		Location:       d.Location,
+		Commands:       d.Profile.Commands,
 	}
 }
