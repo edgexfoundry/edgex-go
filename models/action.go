@@ -25,6 +25,7 @@ import (
 type Action struct {
 	Path      string     `bson:"path" json:"path"`           // path used by service for action on a device or sensor
 	Responses []Response `bson:"responses" json:"responses"` // responses from get or put requests to service
+	Url       string     `json:"url,omitempty"`              // url for requests from command service
 }
 
 /*
