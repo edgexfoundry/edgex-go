@@ -19,7 +19,6 @@
 package models
 
 import (
-	"fmt"
 	"reflect"
 	"strconv"
 	"testing"
@@ -90,11 +89,9 @@ func TestCommand_AllAssociatedValueDescriptors(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.c.AllAssociatedValueDescriptors(tt.args.vdNames)
-			var foo = tt.args.vdNames
-			for key, value := range *foo {
-				fmt.Println("Key:", key, "Value:", value)
+			if len(*tt.args.vdNames) != 2 {
+				t.Error("Associated value descriptor size > than expected")
 			}
-			//t.Log("size of map is" + strconv.Itoa(len(tt.c.Get.Responses)+len(tt.c.Put.Responses)))
 		})
 	}
 }

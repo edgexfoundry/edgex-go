@@ -12,7 +12,7 @@
  * the License.
  *
  * @microservice: core-domain-go library
- * @author: Ryan Comer & Spencer Bull, Dell
+ * @author: Jim White, Dell
  * @version: 0.5.0
  *******************************************************************************/
 
@@ -22,6 +22,11 @@ import (
 	"reflect"
 	"testing"
 )
+
+var TestDeviceObjectDescription = "test device object description"
+var TestDeviceObjectName = "test device object name"
+var TestDeviceObjectTag = "test device object tag"
+var TestDeviceObject = DeviceObject{Description: TestDeviceObjectDescription, Name: TestDeviceObjectName, Tag: TestDeviceObjectTag}
 
 func TestDeviceObject_MarshalJSON(t *testing.T) {
 	tests := []struct {
@@ -52,7 +57,7 @@ func TestDeviceObject_String(t *testing.T) {
 		do   DeviceObject
 		want string
 	}{
-	// TODO: Add test cases.
+	// {"device object to string", TestDeviceObject, ""},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
