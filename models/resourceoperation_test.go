@@ -12,16 +12,28 @@
  * the License.
  *
  * @microservice: core-domain-go library
- * @author: Ryan Comer & Spencer Bull, Dell
+ * @author: Jim White, Dell
  * @version: 0.5.0
  *******************************************************************************/
 
 package models
 
 import (
+	"encoding/json"
+	"fmt"
 	"reflect"
 	"testing"
 )
+
+var TestResourceIndex = "test index"
+var TestOperation = "test operation"
+var TestResourceObject = "test resource object"
+var TestProperty = "test property"
+var TestParameter = "test parameter"
+var TestResource = "test resource"
+var TestSecondary = []string{"test secondary"}
+var TestMappings = make(map[string]string)
+var TestResourceOperation = ResourceOperation{Index: TestResourceIndex, Operation: TestOperation, Object: TestResourceObject, Property: TestProperty, Parameter: TestParameter, Resource: TestResource, Secondary: TestSecondary, Mappings: TestMappings}
 
 func TestResourceOperation_MarshalJSON(t *testing.T) {
 	tests := []struct {
@@ -47,12 +59,21 @@ func TestResourceOperation_MarshalJSON(t *testing.T) {
 }
 
 func TestResourceOperation_String(t *testing.T) {
+	var secondarySlice, _ = json.Marshal(TestSecondary)
 	tests := []struct {
 		name string
 		ro   ResourceOperation
 		want string
 	}{
-	// TODO: Add test cases.
+		{"resource operation to string", TestResourceOperation,
+			"{\"index\":\"" + TestResourceIndex + "\"" +
+				",\"operation\":\"" + TestOperation + "\"" +
+				",\"object\":\"" + TestResourceObject + "\"" +
+				",\"property\":\"" + TestProperty + "\"" +
+				",\"parameter\":\"" + TestParameter + "\"" +
+				",\"resource\":\"" + TestResource + "\"" +
+				",\"secondary\":" + fmt.Sprint(string(secondarySlice)) +
+				",\"mappings\":{}}"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

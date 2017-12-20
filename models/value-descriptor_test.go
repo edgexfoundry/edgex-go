@@ -12,25 +12,40 @@
  * the License.
  *
  * @microservice: core-domain-go library
- * @author: Ryan Comer & Spencer Bull, Dell
+ * @author: Jim White, Dell
  * @version: 0.5.0
  *******************************************************************************/
 
 package models
 
 import (
+	"encoding/json"
+	"fmt"
 	"reflect"
+	"strconv"
 	"testing"
 )
 
+var TestVDDescription = "test description"
+var TestVDName = "Temperature"
+var TestMin = -70
+var TestMax = 140
+var TestVDType = "I"
+var TestUoMLabel = "C"
+var TestDefaultValue = 32
+var TestFormatting = "%d"
+var TestVDLabels = []string{"temp", "room temp"}
+var TestValueDescriptor = ValueDescriptor{Created: 123, Modified: 123, Origin: 123, Name: TestVDName, Description: TestVDDescription, Min: TestMin, Max: TestMax, DefaultValue: TestDefaultValue, Formatting: TestFormatting, Labels: TestVDLabels, UomLabel: TestUoMLabel}
+
 func TestValueDescriptor_MarshalJSON(t *testing.T) {
+	var resultTestVDBytes = []byte(TestValueDescriptor.String())
 	tests := []struct {
 		name    string
 		v       ValueDescriptor
 		want    []byte
 		wantErr bool
 	}{
-	// TODO: Add test cases.
+		{"successful marshal", TestValueDescriptor, resultTestVDBytes, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -47,16 +62,29 @@ func TestValueDescriptor_MarshalJSON(t *testing.T) {
 }
 
 func TestValueDescriptor_String(t *testing.T) {
+	var labelSlice, _ = json.Marshal(TestValueDescriptor.Labels)
 	tests := []struct {
 		name string
-		a    ValueDescriptor
+		vd   ValueDescriptor
 		want string
 	}{
-	// TODO: Add test cases.
+		{"value descriptor to string", TestValueDescriptor,
+			"{\"id\":\"\",\"created\":" + strconv.FormatInt(TestValueDescriptor.Created, 10) +
+				",\"description\":\"" + TestValueDescriptor.Description + "\"" +
+				",\"modified\":" + strconv.FormatInt(TestValueDescriptor.Modified, 10) +
+				",\"origin\":" + strconv.FormatInt(TestValueDescriptor.Origin, 10) +
+				",\"name\":\"" + TestValueDescriptor.Name + "\"" +
+				",\"min\":" + strconv.Itoa(TestValueDescriptor.Min.(int)) +
+				",\"max\":" + strconv.Itoa(TestValueDescriptor.Max.(int)) +
+				",\"defaultValue\":" + strconv.Itoa(TestValueDescriptor.DefaultValue.(int)) +
+				",\"type\":null" +
+				",\"uomLabel\":\"" + TestValueDescriptor.UomLabel + "\"" +
+				",\"formatting\":\"" + TestValueDescriptor.Formatting + "\"" +
+				",\"labels\":" + fmt.Sprint(string(labelSlice)) + "}"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.a.String(); got != tt.want {
+			if got := tt.vd.String(); got != tt.want {
 				t.Errorf("ValueDescriptor.String() = %v, want %v", got, tt.want)
 			}
 		})

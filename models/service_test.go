@@ -19,6 +19,8 @@
 package models
 
 import (
+	"encoding/json"
+	"fmt"
 	"reflect"
 	"strconv"
 	"testing"
@@ -28,13 +30,14 @@ var TestServiceName = "test service"
 var TestService = Service{DescribedObject: TestDescribedObject, Name: TestServiceName, LastConnected: TestLastConnected, LastReported: TestLastReported, OperatingState: "ENABLED", Labels: TestLabels, Addressable: TestAddressable}
 
 func TestService_MarshalJSON(t *testing.T) {
+	var resultTestServiceBytes = []byte(TestService.String())
 	tests := []struct {
 		name    string
 		s       Service
 		want    []byte
 		wantErr bool
 	}{
-	// TODO: Add test cases.
+		{"successful marshal", TestService, resultTestServiceBytes, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -51,6 +54,7 @@ func TestService_MarshalJSON(t *testing.T) {
 }
 
 func TestService_String(t *testing.T) {
+	var labelSlice, _ = json.Marshal(TestService.Labels)
 	tests := []struct {
 		name string
 		dp   Service
@@ -65,7 +69,7 @@ func TestService_String(t *testing.T) {
 				",\"lastConnected\":" + strconv.FormatInt(TestLastConnected, 10) +
 				",\"lastReported\":" + strconv.FormatInt(TestLastReported, 10) +
 				",\"operatingState\":\"ENABLED\"" +
-				",\"labels\":[\"MODBUS\",\"TEMP\"]" +
+				",\"labels\":" + fmt.Sprint(string(labelSlice)) +
 				",\"addressable\":" + TestAddressable.String() + "}"},
 	}
 	for _, tt := range tests {

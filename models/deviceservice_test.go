@@ -19,6 +19,8 @@
 package models
 
 import (
+	"encoding/json"
+	"fmt"
 	"reflect"
 	"strconv"
 	"testing"
@@ -71,6 +73,7 @@ func TestDeviceService_UnmarshalJSON(t *testing.T) {
 }
 
 func TestDeviceService_String(t *testing.T) {
+	var labelSlice, _ = json.Marshal(TestService.Labels)
 	tests := []struct {
 		name string
 		ds   DeviceService
@@ -85,7 +88,7 @@ func TestDeviceService_String(t *testing.T) {
 				",\"lastConnected\":" + strconv.FormatInt(TestLastConnected, 10) +
 				",\"lastReported\":" + strconv.FormatInt(TestLastReported, 10) +
 				",\"operatingState\":\"ENABLED\"" +
-				",\"labels\":[\"MODBUS\",\"TEMP\"]" +
+				",\"labels\":" + fmt.Sprint(string(labelSlice)) +
 				",\"addressable\":" + TestAddressable.String() +
 				",\"adminState\":\"UNLOCKED\"" +
 				"}"},
