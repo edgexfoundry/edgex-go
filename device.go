@@ -113,31 +113,35 @@ func putDeviceOpStateByName(dn string, as string) (int, error) {
 	return http.StatusOK, err
 }
 
-func getCommands() (int, []models.Device, error) {
+func getCommands() (int, []models.CommandResponse, error) {
 	var dc = metadataclients.NewDeviceClient(configuration.Metadbdeviceurl)
 	devices, err := dc.Devices()
 	if err != nil {
 		// Need to Check if Device Exist TODO
 		return http.StatusServiceUnavailable, nil, err
 	}
-	return http.StatusOK, devices, err
+	var cr []models.CommandResponse
+	for _, d := range devices {
+		cr = append(cr, d.CommandResponse())
+	}
+	return http.StatusOK, cr, err
 
 }
 
-func getCommandsByDeviceID(did string) (int, models.Device, error) {
+func getCommandsByDeviceID(did string) (int, models.CommandResponse, error) {
 	var dc = metadataclients.NewDeviceClient(configuration.Metadbdeviceurl)
 	d, err := dc.Device(did)
 	if err != nil {
-		return http.StatusServiceUnavailable, d, err
+		return http.StatusServiceUnavailable, d.CommandResponse(), err
 	}
-	return http.StatusOK, d, err
+	return http.StatusOK, d.CommandResponse(), err
 }
 
-func getCommandsByDeviceName(dn string) (int, models.Device, error) {
+func getCommandsByDeviceName(dn string) (int, models.CommandResponse, error) {
 	var dc = metadataclients.NewDeviceClient(configuration.Metadbdeviceurl)
 	d, err := dc.DeviceForName(dn)
 	if err != nil {
-		return http.StatusServiceUnavailable, d, err
+		return http.StatusServiceUnavailable, d.CommandResponse(), err
 	}
-	return http.StatusOK, d, err
+	return http.StatusOK, d.CommandResponse(), err
 }
