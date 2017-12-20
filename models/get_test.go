@@ -23,6 +23,8 @@ import (
 	"testing"
 )
 
+var TestGet = Get{Action: TestAction}
+
 func TestGet_MarshalJSON(t *testing.T) {
 	tests := []struct {
 		name    string
@@ -52,7 +54,7 @@ func TestGet_String(t *testing.T) {
 		g    Get
 		want string
 	}{
-	// TODO: Add test cases.
+		{"get to string", TestGet, TestGet.Action.String()},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

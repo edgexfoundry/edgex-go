@@ -20,14 +20,15 @@ package models
 
 import "testing"
 
-const testCode = "200"
-const testDescription = "ok"
-const testExpectedvalue1 = "temperature"
-const testExpectedvalue2 = "humidity"
-const testActionPath = "test/path"
-const testFooBar = "foobar"
+const TestCode = "200"
+const TestDescription = "ok"
+const TestExpectedvalue1 = "temperature"
+const TestExpectedvalue2 = "humidity"
+const TestActionPath = "test/path"
+const TestFooBar = "foobar"
 
-var TestAction = Action{testActionPath, []Response{Response{testCode, testDescription, []string{testExpectedvalue1, testExpectedvalue2}}}}
+var TestExpectedvalues = []string{TestExpectedvalue1, TestExpectedvalue2}
+var TestAction = Action{TestActionPath, []Response{Response{TestCode, TestDescription, TestExpectedvalues}}}
 var EmptyAction = Action{}
 
 func TestAction_String(t *testing.T) {
@@ -37,7 +38,7 @@ func TestAction_String(t *testing.T) {
 		action Action
 		want   string
 	}{
-		{"full action", TestAction, "{\"path\":\"" + testActionPath + "\",\"responses\":[{\"code\":\"" + testCode + "\",\"description\":\"" + testDescription + "\",\"expectedValues\":[\"" + testExpectedvalue1 + "\",\"" + testExpectedvalue2 + "\"]}]}"},
+		{"full action", TestAction, "{\"path\":\"" + TestActionPath + "\",\"responses\":[{\"code\":\"" + TestCode + "\",\"description\":\"" + TestDescription + "\",\"expectedValues\":[\"" + TestExpectedvalue1 + "\",\"" + TestExpectedvalue2 + "\"]}]}"},
 		{"empty action", EmptyAction, "{\"path\":\"\",\"responses\":null}"},
 	}
 	for _, tt := range tests {

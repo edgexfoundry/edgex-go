@@ -12,25 +12,31 @@
  * the License.
  *
  * @microservice: core-domain-go library
- * @author: Ryan Comer & Spencer Bull, Dell
+ * @author: Jim White, Dell
  * @version: 0.5.0
  *******************************************************************************/
 
 package models
 
 import (
+	"fmt"
 	"reflect"
+	"strconv"
 	"testing"
 )
 
+var TestCommandName = "test command name"
+var TestCommand = Command{BaseObject: TestBaseObject, Name: TestCommandName, Get: &TestGet, Put: &TestPut}
+
 func TestCommand_MarshalJSON(t *testing.T) {
+	var testCommandBytes = []byte(TestCommand.String())
 	tests := []struct {
 		name    string
 		c       Command
 		want    []byte
 		wantErr bool
 	}{
-	// TODO: Add test cases.
+		{"successful marshalling", TestCommand, testCommandBytes, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -52,7 +58,13 @@ func TestCommand_String(t *testing.T) {
 		c    Command
 		want string
 	}{
-	// TODO: Add test cases.
+		{"command to string", TestCommand,
+			"{\"created\":" + strconv.FormatInt(TestCommand.Created, 10) +
+				",\"modified\":" + strconv.FormatInt(TestCommand.Modified, 10) +
+				",\"origin\":" + strconv.FormatInt(TestCommand.Origin, 10) +
+				",\"id\":null,\"name\":\"" + TestCommand.Name + "\"" +
+				",\"get\":" + TestGet.String() +
+				",\"put\":" + TestPut.String() + "}"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -64,6 +76,7 @@ func TestCommand_String(t *testing.T) {
 }
 
 func TestCommand_AllAssociatedValueDescriptors(t *testing.T) {
+	var testMap = make(map[string]string)
 	type args struct {
 		vdNames *map[string]string
 	}
@@ -72,11 +85,16 @@ func TestCommand_AllAssociatedValueDescriptors(t *testing.T) {
 		c    *Command
 		args args
 	}{
-	// TODO: Add test cases.
+		{"get assoc val descs", &TestCommand, args{vdNames: &testMap}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.c.AllAssociatedValueDescriptors(tt.args.vdNames)
+			var foo = tt.args.vdNames
+			for key, value := range *foo {
+				fmt.Println("Key:", key, "Value:", value)
+			}
+			//t.Log("size of map is" + strconv.Itoa(len(tt.c.Get.Responses)+len(tt.c.Put.Responses)))
 		})
 	}
 }
