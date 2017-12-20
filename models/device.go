@@ -114,9 +114,6 @@ func (d *Device) AllAssociatedValueDescriptors(vdNames *[]string) {
  * Create a Command Response struct from the current Device Struct
  */
 func (d *Device) CommandResponse() CommandResponse {
-	cp := CommandProfile{
-		Commands: d.Profile.Commands,
-	}
 	return CommandResponse{
 		Id:             d.Id,
 		Name:           d.Name,
@@ -126,6 +123,6 @@ func (d *Device) CommandResponse() CommandResponse {
 		LastReported:   d.LastReported,
 		Labels:         d.Labels,
 		Location:       d.Location,
-		Profile:        cp,
+		Commands:       d.Profile.Commands,
 	}
 }

@@ -38,7 +38,7 @@ type CommandResponse struct {
 	LastReported   int64          `json:"lastReported"`   // Time (milliseconds) that the device reported data to the core microservice
 	Labels         []string       `json:"labels"`         // Other labels applied to the device to help with searching
 	Location       interface{}    `json:"location"`       // Device service specific location (interface{} is an empty interface so it can be anything)
-	Profile        CommandProfile `json:"profile"`        // Associated Device Profile - Describes the device
+	Commands       []Command      `json:"commands"`       // Associated Device Profile - Describes the device
 }
 
 // Custom marshaling to make empty strings null
@@ -50,7 +50,7 @@ func (cr CommandResponse) MarshalJSON() ([]byte, error) {
 		LastReported:   cr.LastReported,
 		Labels:         cr.Labels,
 		Location:       cr.Location,
-		Profile:        cr.Profile,
+		Commands:       cr.Commands,
 	}
 
 	if cr.Id != "" {
