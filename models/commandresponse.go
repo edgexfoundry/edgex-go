@@ -43,7 +43,17 @@ type CommandResponse struct {
 
 // Custom marshaling to make empty strings null
 func (cr CommandResponse) MarshalJSON() ([]byte, error) {
-	test := CommandResponse{
+	res := struct {
+		Id             *bson.ObjectId `json:"id"`
+		Name           *string        `json:"name"`
+		AdminState     AdminState     `json:"adminState"`
+		OperatingState OperatingState `json:"operatingState"`
+		LastConnected  int64          `json:"lastConnected"`
+		LastReported   int64          `json:"lastReported"`
+		Labels         []string       `json:"labels"`
+		Location       interface{}    `json:"location"`
+		Commands       []Command      `json:"commands"`
+	}{
 		AdminState:     cr.AdminState,
 		OperatingState: cr.OperatingState,
 		LastConnected:  cr.LastConnected,
@@ -54,15 +64,15 @@ func (cr CommandResponse) MarshalJSON() ([]byte, error) {
 	}
 
 	if cr.Id != "" {
-		test.Id = cr.Id
+		res.Id = &cr.Id
 	}
 
 	// Empty strings are null
 	if cr.Name != "" {
-		test.Name = cr.Name
+		res.Name = &cr.Name
 	}
 
-	return json.Marshal(test)
+	return json.Marshal(res)
 }
 
 /*
