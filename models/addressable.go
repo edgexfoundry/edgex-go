@@ -159,3 +159,11 @@ func (a Addressable) String() string {
 	}
 	return string(out)
 }
+
+func (a Addressable) GetBaseURL() string {
+	protocol := a.Protocol
+	address := a.Address
+	port := strconv.Itoa(a.Port)
+	baseUrl := protocol + "://" + address + ":" + port
+	return baseUrl
+}
