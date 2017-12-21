@@ -19,6 +19,8 @@ package messaging
 
 import (
 	"encoding/json"
+	"sync"
+
 	"github.com/edgexfoundry/core-domain-go/models"
 	zmq "github.com/pebbe/zmq4"
 )
@@ -31,6 +33,7 @@ type ZeroMQConfiguration struct {
 // ZeroMQ implementation of the event publisher
 type zeroMQEventPublisher struct {
 	publisher *zmq.Socket
+	mux       sync.Mutex
 }
 
 func newZeroMQEventPublisher(config ZeroMQConfiguration) zeroMQEventPublisher {
@@ -47,7 +50,8 @@ func (zep *zeroMQEventPublisher) SendEventMessage(e models.Event) error {
 	if err != nil {
 		return err
 	}
-
+	zep.mux.Lock()
+	defer zep.mux.Unlock()
 	_, err = zep.publisher.SendBytes(s, 0)
 	if err != nil {
 		return err
