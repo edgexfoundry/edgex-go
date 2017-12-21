@@ -21,8 +21,10 @@ package models
 import (
 	"bytes"
 	"encoding/json"
-	"gopkg.in/mgo.v2/bson"
 	"strconv"
+	"strings"
+
+	"gopkg.in/mgo.v2/bson"
 )
 
 /*
@@ -161,7 +163,7 @@ func (a Addressable) String() string {
 }
 
 func (a Addressable) GetBaseURL() string {
-	protocol := a.Protocol
+	protocol := strings.ToLower(a.Protocol)
 	address := a.Address
 	port := strconv.Itoa(a.Port)
 	baseUrl := protocol + "://" + address + ":" + port
