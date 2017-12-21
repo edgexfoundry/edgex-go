@@ -36,7 +36,8 @@ func (p Put) MarshalJSON() ([]byte, error) {
 		Path           *string    `json:"path"`
 		Responses      []Response `json:"responses"`
 		ParameterNames []string   `json:"parameterNames"`
-	}{}
+		URL            string     `json:"url"`
+	}{URL: p.Action.URL}
 
 	// Empty strings are null
 	if p.Path != "" {
