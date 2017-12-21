@@ -49,7 +49,7 @@ func issueDeviceCommand(w http.ResponseWriter, r *http.Request, p bool) {
 		w.WriteHeader(status)
 	} else {
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(body)
+		w.Write([]byte(body))
 	}
 }
 
