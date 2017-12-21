@@ -18,7 +18,8 @@
 package main
 
 import (
-	"io"
+	"bytes"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -28,23 +29,27 @@ import (
 
 func issueCommand(req *http.Request) (*http.Response, error) {
 	client := &http.Client{}
-	return client.Do(req)
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	return resp, err
 }
 
-func commandByDeviceID(did string, cid string, b string, p bool) (io.ReadCloser, int) {
+func commandByDeviceID(did string, cid string, b string, p bool) (string, int) {
 	var dc = metadataclients.NewDeviceClient(configuration.Metadbdeviceurl)
 	d, err := dc.Device(did)
 
 	if err != nil {
 		loggingClient.Error(err.Error(), "")
 		// send 403: no device exists by the id provided
-		return nil, http.StatusForbidden
+		return "", http.StatusForbidden
 	}
 
 	if p && (d.AdminState == models.Locked) {
 		loggingClient.Error(d.Name + " is in admin locked state")
 		// send 422: device is locked
-		return nil, http.StatusUnprocessableEntity
+		return "", http.StatusUnprocessableEntity
 	}
 
 	var cc = metadataclients.NewCommandClient(configuration.Metadbcommandurl)
@@ -52,25 +57,35 @@ func commandByDeviceID(did string, cid string, b string, p bool) (io.ReadCloser,
 	if err != nil {
 		loggingClient.Error(err.Error(), "")
 		// send 403 no command exists
-		return nil, http.StatusForbidden
+		return "", http.StatusForbidden
 	}
-
+	url := d.Service.Addressable.GetBaseURL() + strings.Replace(c.Put.Action.Path, DEVICEIDURLPARAM, d.Id.Hex(), -1)
 	if p {
-		loggingClient.Info("Issuing PUT command to: " + string(c.Put.Action.Path))
-		req, err := http.NewRequest(PUT, c.Put.Action.Path, strings.NewReader(b))
+		loggingClient.Info("Issuing PUT command to: " + url)
+		req, err := http.NewRequest(PUT, url, strings.NewReader(b))
+		if err != nil {
+			return "", http.StatusInternalServerError
+		}
 		resp, err := issueCommand(req)
 		if err != nil {
-			return nil, http.StatusBadGateway
+			return "", http.StatusBadGateway
 		}
-		return resp.Body, resp.StatusCode
+		buf := new(bytes.Buffer)
+		buf.ReadFrom(resp.Body)
+		return buf.String(), resp.StatusCode
 	} else {
-		loggingClient.Info("Issuing GET command to: " + c.Get.Action.Path)
-		req, err := http.NewRequest(PUT, c.Get.Action.Path, nil)
+		loggingClient.Info("Issuing GET command to: " + url)
+		req, err := http.NewRequest(GET, url, nil)
+		if err != nil {
+			return "", http.StatusInternalServerError
+		}
 		resp, err := issueCommand(req)
 		if err != nil {
-			return nil, http.StatusBadGateway
+			return "", http.StatusBadGateway
 		}
-		return nil, resp.StatusCode
+		buf := new(bytes.Buffer)
+		buf.ReadFrom(resp.Body)
+		return buf.String(), resp.StatusCode
 	}
 }
 

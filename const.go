@@ -65,6 +65,7 @@ const (
 	ID                       string = "id"
 	_ID                      string = "_id"
 	NAME                     string = "name"
+	DEVICEIDURLPARAM         string = "{deviceId}"
 	OPSTATE                  string = "opstate"
 	URLADMINSTATE            string = "adminstate"
 	ADMINSTATE               string = "adminState"
