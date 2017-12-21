@@ -1,14 +1,14 @@
 hash: 5c1564adefe8310e74babfd6f0565b22528525a8e9aa2e208ba274283fe91a38
-updated: 2017-12-19T14:00:45.1118604-06:00
+updated: 2017-12-21T10:46:25.0076259-06:00
 imports:
 - name: github.com/edgexfoundry/consul-client-go
   version: 1791ee60ca82e37f0c49a93619af98430d93c5cd
 - name: github.com/edgexfoundry/core-clients-go
-  version: 3689cdb4c19cbfd6951ec081d064ea265c44073e
+  version: 2ba2ab3bd3e3e6ec669b00b2739ae2bc5847a433
   subpackages:
   - metadataclients
 - name: github.com/edgexfoundry/core-domain-go
-  version: 7a3ba5a9042c3161c43e771a889462faddb9d48d
+  version: d575eb0459a5bb598ad364e2194b73a815ed852c
   subpackages:
   - models
 - name: github.com/edgexfoundry/support-domain-go
