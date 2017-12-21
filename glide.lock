@@ -8,7 +8,7 @@ imports:
   subpackages:
   - metadataclients
 - name: github.com/edgexfoundry/core-domain-go
-  version: d575eb0459a5bb598ad364e2194b73a815ed852c
+  version: 2ac1de4d6c858a28a6ee92a1412213cb852c1fd7
   subpackages:
   - models
 - name: github.com/edgexfoundry/support-domain-go
