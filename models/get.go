@@ -29,7 +29,7 @@ func (g Get) MarshalJSON() ([]byte, error) {
 	test := struct {
 		Path      *string    `json:"path"`
 		Responses []Response `json:"responses"`
-		URL       string     `json:"url"`
+		URL       string     `json:"url,omitempty"`
 	}{URL: g.Action.URL}
 
 	// Empty strings are null
