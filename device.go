@@ -54,6 +54,7 @@ func commandByDeviceID(did string, cid string, b string, p bool) (io.ReadCloser,
 		// send 403 no command exists
 		return nil, http.StatusForbidden
 	}
+
 	if p {
 		loggingClient.Info("Issuing PUT command to: " + string(c.Put.Action.Path))
 		req, err := http.NewRequest(PUT, c.Put.Action.Path, strings.NewReader(b))
@@ -121,7 +122,7 @@ func getCommands() (int, []models.CommandResponse, error) {
 	}
 	var cr []models.CommandResponse
 	for _, d := range devices {
-		cr = append(cr, d.CommandResponse())
+		cr = append(cr, models.CommandResponseFromDevice(d, constructCommandURL()))
 	}
 	return http.StatusOK, cr, err
 
@@ -131,16 +132,16 @@ func getCommandsByDeviceID(did string) (int, models.CommandResponse, error) {
 	var dc = metadataclients.NewDeviceClient(configuration.Metadbdeviceurl)
 	d, err := dc.Device(did)
 	if err != nil {
-		return http.StatusServiceUnavailable, d.CommandResponse(), err
+		return http.StatusServiceUnavailable, models.CommandResponse{}, err
 	}
-	return http.StatusOK, d.CommandResponse(), err
+	return http.StatusOK, models.CommandResponseFromDevice(d, constructCommandURL()), err
 }
 
 func getCommandsByDeviceName(dn string) (int, models.CommandResponse, error) {
 	var dc = metadataclients.NewDeviceClient(configuration.Metadbdeviceurl)
 	d, err := dc.DeviceForName(dn)
 	if err != nil {
-		return http.StatusServiceUnavailable, d.CommandResponse(), err
+		return http.StatusServiceUnavailable, models.CommandResponse{}, err
 	}
-	return http.StatusOK, d.CommandResponse(), err
+	return http.StatusOK, models.CommandResponseFromDevice(d, constructCommandURL()), err
 }
