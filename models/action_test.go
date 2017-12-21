@@ -28,7 +28,7 @@ const TestActionPath = "test/path"
 const TestFooBar = "foobar"
 
 var TestExpectedvalues = []string{TestExpectedvalue1, TestExpectedvalue2}
-var TestAction = Action{TestActionPath, []Response{Response{TestCode, TestDescription, TestExpectedvalues}}}
+var TestAction = Action{TestActionPath, []Response{Response{TestCode, TestDescription, TestExpectedvalues}}, ""}
 var EmptyAction = Action{}
 
 func TestAction_String(t *testing.T) {
