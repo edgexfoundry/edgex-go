@@ -17,7 +17,6 @@
  *******************************************************************************/
 package main
 
-
 import (
 	"encoding/json"
 	"io/ioutil"
@@ -50,7 +49,7 @@ func issueDeviceCommand(w http.ResponseWriter, r *http.Request, p bool) {
 		w.WriteHeader(status)
 	} else {
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(body)
+		w.Write([]byte(body))
 	}
 }
 
@@ -82,8 +81,8 @@ func restPutDeviceAdminStateByDeviceName(w http.ResponseWriter, r *http.Request)
 func restPutDeviceOpState(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	did := vars[ID]
-	as := vars[ADMINSTATE]
-	status, err := putDeviceOpState(did, as)
+	os := vars[OPSTATE]
+	status, err := putDeviceOpState(did, os)
 	if err != nil {
 		loggingClient.Error(err.Error(), "")
 		w.WriteHeader(http.StatusServiceUnavailable)
@@ -94,8 +93,8 @@ func restPutDeviceOpState(w http.ResponseWriter, r *http.Request) {
 func restPutDeviceOpStateByDeviceName(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	dn := vars[NAME]
-	as := vars[ADMINSTATE]
-	status, err := putDeviceOpStateByName(dn, as)
+	os := vars[OPSTATE]
+	status, err := putDeviceOpStateByName(dn, os)
 	if err != nil {
 		loggingClient.Error(err.Error(), "")
 		w.WriteHeader(http.StatusServiceUnavailable)

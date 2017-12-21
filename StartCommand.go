@@ -106,3 +106,7 @@ func readConfigurationFile(path string) error {
 
 	return nil
 }
+
+func constructCommandURL() string {
+	return configuration.URLProtocol + configuration.ServiceAddress + ":" + strconv.Itoa(configuration.ServerPort)
+}
