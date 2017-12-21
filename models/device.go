@@ -109,20 +109,3 @@ func (d *Device) AllAssociatedValueDescriptors(vdNames *[]string) {
 		*vdNames = append(*vdNames, vd)
 	}
 }
-
-/*
- * Create a Command Response struct from the current Device Struct
- */
-func (d *Device) CommandResponse() CommandResponse {
-	return CommandResponse{
-		Id:             d.Id,
-		Name:           d.Name,
-		AdminState:     d.AdminState,
-		OperatingState: d.OperatingState,
-		LastConnected:  d.LastConnected,
-		LastReported:   d.LastReported,
-		Labels:         d.Labels,
-		Location:       d.Location,
-		Commands:       d.Profile.Commands,
-	}
-}

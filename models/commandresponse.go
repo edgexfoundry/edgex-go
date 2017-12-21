@@ -85,3 +85,40 @@ func (d CommandResponse) String() string {
 	}
 	return string(out)
 }
+
+func createUrl(basePath string, cmdId string) string {
+	return basePath + cmdId
+}
+
+/*
+ * Create a Command Response struct from a Device Struct
+ */
+func CommandResponseFromDevice(d Device) CommandResponse {
+	cmdResp := CommandResponse{
+		Id:             d.Id,
+		Name:           d.Name,
+		AdminState:     d.AdminState,
+		OperatingState: d.OperatingState,
+		LastConnected:  d.LastConnected,
+		LastReported:   d.LastReported,
+		Labels:         d.Labels,
+		Location:       d.Location,
+		Commands:       d.Profile.Commands,
+	}
+
+	baseUrl := d.Service.Addressable.GetBaseURL()
+	urlPath := "/api/v1/device/"
+	urlCmdPath := "/command/"
+	basePath := baseUrl + urlPath + d.Id.Hex() + urlCmdPath
+
+	for _, c := range cmdResp.Commands {
+	   if c.Get != nil {
+		   c.Get.Url = createUrl(basePath, c.Id.Hex())
+	   }
+	   if c.Put != nil {
+		   c.Put.Url = createUrl(basePath, c.Id.Hex())
+	   }
+	}
+
+	return cmdResp
+}
