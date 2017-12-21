@@ -26,15 +26,15 @@ These variables will tell the CGO compiler where to find the C dependecies.
 This project can be built using Docker, and a Dockerfile is included in the repo.  Make sure you have already run 'glide up' to update the dependecies.  To build using the Docker file, run the following:
 ```
 cd $GOPATH/src/github.com/edgexfoundry/core-data-go
-Docker build -t "[DOCKER_IMAGE_NAME]" .
+docker build -t "[DOCKER_IMAGE_NAME]" .
 ```
 
 To create a containter from the image run the following:
 ```
-Docker create --name "[DOCKER_CONTAINER_NAME]" --network "[DOCKER_NETWORK]" [DOCKER_IMAGE_NAME]
+docker create --name "[DOCKER_CONTAINER_NAME]" --network "[DOCKER_NETWORK]" [DOCKER_IMAGE_NAME]
 ```
 
 To run the container:
 ```
-Docker start [DOCKER_CONTAINER_NAME]
+docker start [DOCKER_CONTAINER_NAME]
 ```
