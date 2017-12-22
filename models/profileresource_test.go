@@ -27,13 +27,17 @@ var TestProfileResourceName = "test profile resource name"
 var TestProfileResource = ProfileResource{Name: TestProfileResourceName, Get: []ResourceOperation{TestResourceOperation}, Set: []ResourceOperation{TestResourceOperation}}
 
 func TestProfileResource_MarshalJSON(t *testing.T) {
+	var emptyProfileResource = ProfileResource{}
+	var resultTestBytes = []byte(TestProfileResource.String())
+	var emptyTestBytes = []byte(emptyProfileResource.String())
 	tests := []struct {
 		name    string
 		pr      ProfileResource
 		want    []byte
 		wantErr bool
 	}{
-	// TODO: Add test cases.
+		{"successful marshal", TestProfileResource, resultTestBytes, false},
+		{"successful empty marshal", emptyProfileResource, emptyTestBytes, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

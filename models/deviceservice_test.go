@@ -29,13 +29,18 @@ import (
 var TestDeviceService = DeviceService{Service: TestService, AdminState: "UNLOCKED"}
 
 func TestDeviceService_MarshalJSON(t *testing.T) {
+	var emptyDeviceService = DeviceService{}
+	var resultTestBytes = []byte(TestDeviceService.String())
+	var resultEmptyTestBytes = []byte(emptyDeviceService.String())
+
 	tests := []struct {
 		name    string
 		ds      DeviceService
 		want    []byte
 		wantErr bool
 	}{
-	// TODO: Add test cases.
+		{"successful marshal", TestDeviceService, resultTestBytes, false},
+		{"successful empty marshal", emptyDeviceService, resultEmptyTestBytes, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -52,6 +57,7 @@ func TestDeviceService_MarshalJSON(t *testing.T) {
 }
 
 func TestDeviceService_UnmarshalJSON(t *testing.T) {
+	var resultTestBytes = []byte(TestDeviceService.String())
 	type args struct {
 		data []byte
 	}
@@ -61,12 +67,20 @@ func TestDeviceService_UnmarshalJSON(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-	// TODO: Add test cases.
+		{"unmarshal normal device service with success", &TestDeviceService, args{resultTestBytes}, false},
+		{"unmarshal normal device service failed", &TestDeviceService, args{[]byte("{nonsense}")}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			var expected = *tt.ds
 			if err := tt.ds.UnmarshalJSON(tt.args.data); (err != nil) != tt.wantErr {
 				t.Errorf("DeviceService.UnmarshalJSON() error = %v, wantErr %v", err, tt.wantErr)
+			} else {
+				// if the bytes did unmarshal, make sure they unmarshaled to correct DS by comparing it to expected results
+				var unmarshaledResult = *tt.ds
+				if err == nil && !reflect.DeepEqual(expected, unmarshaledResult) {
+					t.Errorf("Unmarshal did not result in expected Device Service.")
+				}
 			}
 		})
 	}

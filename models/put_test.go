@@ -26,13 +26,14 @@ import (
 var TestPut = Put{Action: TestAction, ParameterNames: TestExpectedvalues}
 
 func TestPut_MarshalJSON(t *testing.T) {
+	var testPutBytes = []byte(TestPut.String())
 	tests := []struct {
 		name    string
 		p       Put
 		want    []byte
 		wantErr bool
 	}{
-	// TODO: Add test cases.
+		{"successful marshalling", TestPut, testPutBytes, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -72,6 +73,7 @@ func TestPut_String(t *testing.T) {
 }
 
 func TestPut_AllAssociatedValueDescriptors(t *testing.T) {
+	var testMap = make(map[string]string)
 	type args struct {
 		vdNames *map[string]string
 	}
@@ -80,11 +82,14 @@ func TestPut_AllAssociatedValueDescriptors(t *testing.T) {
 		p    *Put
 		args args
 	}{
-	// TODO: Add test cases.
+		{"put assoc val descs", &TestPut, args{vdNames: &testMap}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.p.AllAssociatedValueDescriptors(tt.args.vdNames)
+			if len(*tt.args.vdNames) != 2 {
+				t.Error("Associated value descriptor size > than expected")
+			}
 		})
 	}
 }

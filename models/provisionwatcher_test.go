@@ -19,18 +19,33 @@
 package models
 
 import (
+	"encoding/json"
+	"fmt"
 	"reflect"
+	"strconv"
 	"testing"
 )
 
+var TestPWName = "TestWatcher.NAME"
+var TestPWNameKey1 = "MAC"
+var TestPWNameKey2 = "HTTP"
+var TestPWVal1 = "00-05-1B-A1-99-99"
+var TestPWVal2 = "10.0.1.1"
+var TestIdentifiers = map[string]string{
+	TestPWNameKey1: TestPWVal1,
+	TestPWNameKey2: TestPWVal2,
+}
+var TestProvisionWatcher = ProvisionWatcher{BaseObject: TestBaseObject, Name: TestPWName, Identifiers: TestIdentifiers, Profile: TestProfile, Service: TestDeviceService}
+
 func TestProvisionWatcher_MarshalJSON(t *testing.T) {
+	var testPWBytes = []byte(TestProvisionWatcher.String())
 	tests := []struct {
 		name    string
 		pw      ProvisionWatcher
 		want    []byte
 		wantErr bool
 	}{
-	// TODO: Add test cases.
+		{"successful marshalling", TestProvisionWatcher, testPWBytes, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -47,12 +62,23 @@ func TestProvisionWatcher_MarshalJSON(t *testing.T) {
 }
 
 func TestProvisionWatcher_String(t *testing.T) {
+	data, _ := json.Marshal(TestIdentifiers)
 	tests := []struct {
 		name string
 		pw   ProvisionWatcher
 		want string
 	}{
-	// TODO: Add test cases.
+		{"provision watcher to string", TestProvisionWatcher,
+			"{\"created\":" + strconv.FormatInt(TestProvisionWatcher.Created, 10) +
+				",\"modified\":" + strconv.FormatInt(TestProvisionWatcher.Modified, 10) +
+				",\"origin\":" + strconv.FormatInt(TestProvisionWatcher.Origin, 10) +
+				",\"id\":\"\"" +
+				",\"name\":\"" + TestPWName + "\"" +
+				",\"identifiers\":" + fmt.Sprintf("%s", data) +
+				",\"profile\":" + TestProvisionWatcher.Profile.String() +
+				",\"service\":" + TestProvisionWatcher.Service.String() +
+				",\"operatingState\":\"\"" +
+				"}"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

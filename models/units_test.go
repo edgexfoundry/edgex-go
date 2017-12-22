@@ -23,14 +23,20 @@ import (
 	"testing"
 )
 
+var TestUnitsType = "String"
+var TestUnitsRW = "R"
+var TestUnitsDV = "Degrees Fahrenheit"
+var TestUnits = Units{Type: TestUnitsType, ReadWrite: TestUnitsRW, DefaultValue: TestUnitsDV}
+
 func TestUnits_MarshalJSON(t *testing.T) {
+	var testUnitsBytes = []byte(TestUnits.String())
 	tests := []struct {
 		name    string
 		u       Units
 		want    []byte
 		wantErr bool
 	}{
-	// TODO: Add test cases.
+		{"successful marshalling", TestUnits, testUnitsBytes, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -52,7 +58,10 @@ func TestUnits_String(t *testing.T) {
 		u    Units
 		want string
 	}{
-	// TODO: Add test cases.
+		{"units to string", TestUnits,
+			"{\"type\":\"" + TestUnitsType + "\"" +
+				",\"readWrite\":\"" + TestUnitsRW + "\"" +
+				",\"defaultValue\":\"" + TestUnitsDV + "\"}"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

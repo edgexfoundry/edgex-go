@@ -90,6 +90,7 @@ func TestDevice_String(t *testing.T) {
 }
 
 func TestDevice_AllAssociatedValueDescriptors(t *testing.T) {
+	var assocVD []string
 	type args struct {
 		vdNames *[]string
 	}
@@ -98,11 +99,14 @@ func TestDevice_AllAssociatedValueDescriptors(t *testing.T) {
 		d    *Device
 		args args
 	}{
-	// TODO: Add test cases.
+		{"get associated value descriptors", &TestDevice, args{vdNames: &assocVD}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.d.AllAssociatedValueDescriptors(tt.args.vdNames)
+			if len(*tt.args.vdNames) != 2 {
+				t.Error("Associated value descriptor size > than expected")
+			}
 		})
 	}
 }

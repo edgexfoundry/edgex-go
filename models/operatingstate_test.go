@@ -12,7 +12,7 @@
  * the License.
  *
  * @microservice: core-domain-go library
- * @author: Ryan Comer & Spencer Bull, Dell
+ * @author: Jim White, Dell
  * @version: 0.5.0
  *******************************************************************************/
 
@@ -21,6 +21,11 @@ package models
 import "testing"
 
 func TestOperatingState_UnmarshalJSON(t *testing.T) {
+	// use the referenced Operating Stated as the expected results
+	var enabled = OperatingState("ENABLED")
+	var disabled = OperatingState("DISABLED")
+	var foo = OperatingState("foo")
+
 	type args struct {
 		data []byte
 	}
@@ -30,12 +35,23 @@ func TestOperatingState_UnmarshalJSON(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-	// TODO: Add test cases.
+		{"DISABLED unmarshal", &disabled, args{[]byte("\"DISABLED\"")}, false},
+		{"disabled unmarshal", &disabled, args{[]byte("\"disabled\"")}, true},
+		{"ENABLED unmarshal", &enabled, args{[]byte("\"ENABLED\"")}, false},
+		{"enabled unmarshal", &enabled, args{[]byte("\"enabled\"")}, true},
+		{"bad unmarshal", &foo, args{[]byte("\"goo\"")}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			var expected = string(*tt.os)
 			if err := tt.os.UnmarshalJSON(tt.args.data); (err != nil) != tt.wantErr {
 				t.Errorf("OperatingState.UnmarshalJSON() error = %v, wantErr %v", err, tt.wantErr)
+			} else {
+				// if the bytes did unmarshal, make sure they unmarshaled to correct enum by comparing it to expected results
+				var unmarshaledResult = string(*tt.os)
+				if err == nil && !(IsOperatingStateType(unmarshaledResult) && unmarshaledResult == expected) {
+					t.Errorf("Unmarshal did not result in expected operating state string.  Expected:  %s, got: %s", expected, unmarshaledResult)
+				}
 			}
 		})
 	}
@@ -50,7 +66,11 @@ func TestIsOperatingStateType(t *testing.T) {
 		args args
 		want bool
 	}{
-	// TODO: Add test cases.
+		{"DISABLED", args{"DISABLED"}, true},
+		{"ENABLED", args{"ENABLED"}, true},
+		{"disabled", args{"disabled"}, false},
+		{"enabled", args{"enabled"}, false},
+		{"non valid", args{"junk"}, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

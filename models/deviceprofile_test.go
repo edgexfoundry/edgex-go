@@ -35,13 +35,17 @@ var TestObjects = "{key1:value1, key2:value2}"
 var TestProfile = DeviceProfile{DescribedObject: TestDescribedObject, Name: TestProfileName, Manufacturer: TestManufacturer, Model: TestModel, Labels: TestProfileLabels, Objects: TestObjects, DeviceResources: []DeviceObject{TestDeviceObject}, Resources: []ProfileResource{TestProfileResource}, Commands: []Command{TestCommand}}
 
 func TestDeviceProfile_MarshalJSON(t *testing.T) {
+	var emptyDeviceProfile = DeviceProfile{}
+	var resultTestBytes = []byte(TestProfile.String())
+	var resultEmptyTestBytes = []byte(emptyDeviceProfile.String())
 	tests := []struct {
 		name    string
 		dp      DeviceProfile
 		want    []byte
 		wantErr bool
 	}{
-	// TODO: Add test cases.
+		{"successful marshal", TestProfile, resultTestBytes, false},
+		{"successful empty marshal", emptyDeviceProfile, resultEmptyTestBytes, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

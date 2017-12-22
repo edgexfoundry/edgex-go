@@ -12,7 +12,7 @@
  * the License.
  *
  * @microservice: core-domain-go library
- * @author: Ryan Comer & Spencer Bull, Dell
+ * @author: Jim White, Dell
  * @version: 0.5.0
  *******************************************************************************/
 
@@ -20,13 +20,17 @@ package models
 
 import "testing"
 
+var TestProfileProperty = ProfileProperty{Value: TestPropertyValue, Units: TestUnits}
+
 func TestProfileProperty_String(t *testing.T) {
 	tests := []struct {
 		name string
 		pp   ProfileProperty
 		want string
 	}{
-	// TODO: Add test cases.
+		{"profile property to string", TestProfileProperty,
+			"{\"value\":" + TestPropertyValue.String() +
+				",\"units\":" + TestUnits.String() + "}"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

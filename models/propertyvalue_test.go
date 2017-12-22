@@ -12,7 +12,7 @@
  * the License.
  *
  * @microservice: core-domain-go library
- * @author: Ryan Comer & Spencer Bull, Dell
+ * @author: Jim White, Dell
  * @version: 0.5.0
  *******************************************************************************/
 
@@ -20,17 +20,41 @@ package models
 
 import (
 	"reflect"
+	"strconv"
 	"testing"
 )
 
+var TestPVType = "Float"
+var TestPVReadWrite = "RW"
+var TestPVMinimum = "-99.99"
+var TestPVMaximum = "199.99"
+var TestPVDefaultValue = "0.00"
+var TestPVSize = "8"
+var TestPVWord = "2"
+var TestPVLSB = "false"
+var TestPVMask = "0x00"
+var TestPVShift = "0"
+var TestPVScale = "1.0"
+var TestPVOffset = "0.0"
+var TestPVBase = "0"
+var TestPVAssertion = "0"
+var TestPVSigned = true
+var TestPVPrecision = "1"
+var TestPropertyValue = PropertyValue{Type: TestPVType, ReadWrite: TestPVReadWrite, Minimum: TestPVMinimum, Maximum: TestPVMaximum, DefaultValue: TestPVDefaultValue, Size: TestPVSize, Word: TestPVWord, LSB: TestPVLSB, Mask: TestPVMask, Shift: TestPVShift, Scale: TestPVScale, Offset: TestPVOffset, Base: TestPVBase, Assertion: TestPVAssertion, Signed: TestPVSigned, Precision: TestPVPrecision}
+
 func TestPropertyValue_MarshalJSON(t *testing.T) {
+	var emptyPropertyValue = PropertyValue{}
+	var resultTestBytes = []byte(TestPropertyValue.String())
+	var emptyTestBytes = []byte(emptyPropertyValue.String())
+
 	tests := []struct {
 		name    string
 		pv      PropertyValue
 		want    []byte
 		wantErr bool
 	}{
-	// TODO: Add test cases.
+		{"successful marshal", TestPropertyValue, resultTestBytes, false},
+		{"successful empty marshal", emptyPropertyValue, emptyTestBytes, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -52,7 +76,23 @@ func TestPropertyValue_String(t *testing.T) {
 		pv   PropertyValue
 		want string
 	}{
-	// TODO: Add test cases.
+		{"property value to string", TestPropertyValue,
+			"{\"type\":\"" + TestPVType + "\"" +
+				",\"readWrite\":\"" + TestPVReadWrite + "\"" +
+				",\"minimum\":\"" + TestPVMinimum + "\"" +
+				",\"maximum\":\"" + TestPVMaximum + "\"" +
+				",\"defaultValue\":\"" + TestPVDefaultValue + "\"" +
+				",\"size\":\"" + TestPVSize + "\"" +
+				",\"word\":\"" + TestPVWord + "\"" +
+				",\"lsb\":\"" + TestPVLSB + "\"" +
+				",\"mask\":\"" + TestPVMask + "\"" +
+				",\"shift\":\"" + TestPVShift + "\"" +
+				",\"scale\":\"" + TestPVScale + "\"" +
+				",\"offset\":\"" + TestPVOffset + "\"" +
+				",\"base\":\"" + TestPVBase + "\"" +
+				",\"assertion\":\"" + TestPVAssertion + "\"" +
+				",\"signed\":" + strconv.FormatBool(TestPVSigned) +
+				",\"precision\":\"" + TestPVPrecision + "\"}"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -64,6 +104,8 @@ func TestPropertyValue_String(t *testing.T) {
 }
 
 func TestPropertyValue_UnmarshalJSON(t *testing.T) {
+	var resultTestBytes = []byte(TestPropertyValue.String())
+
 	type args struct {
 		data []byte
 	}
@@ -73,7 +115,8 @@ func TestPropertyValue_UnmarshalJSON(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-	// TODO: Add test cases.
+		{"unmarshal normal property value with success", &TestPropertyValue, args{resultTestBytes}, false},
+		{"unmarshal normal property value failed", &TestPropertyValue, args{[]byte("{nonsense}")}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

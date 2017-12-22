@@ -1,0 +1,106 @@
+# Copyright 2016 Dell Inc. All rights reserved.
+name: "JC.RR5.NAE9.ConfRoom.Padre.Island"
+manufacturer: "JohnsonControls"
+model: "NAE-5510"
+labels: 
+    - "thermostat"
+    - "industrial"
+description: "US RR5-2 Padre Island Conference Room"
+deviceResources:
+    -   
+        name: AnalogInput_3000290
+        description: "US RR5-2 Padre Island Conference Room Current Temperature"
+        attributes: 
+            { type: "analogInput", instance: "3000290" }
+        properties: 
+            value:
+                { type: "Float", size: "4", readWrite: "R", defaultValue: "0.00", minimum: "-99.99", maximum: "199.99"  }
+            units:
+                { type: "String", readWrite: "R", defaultValue: "Degrees Fahrenheit" }
+
+    -
+        name: AnalogOutput_3000289
+        description: "US RR5-2 Padre Island Conference Room Temperature Set Point"
+        attributes: 
+            { type: "analogOutput", instance: "3000289" }
+        properties: 
+            value:
+                { type: "Float", size: "4", readWrite: "RW", defaultValue: "0.00", minimum: "-99.99", maximum: "199.99"  }
+            units:
+                { type: "String", readWrite: "R", defaultValue: "Degrees Fahrenheit" }
+
+resources:
+    -
+        name: CurrentTemperature
+        get:
+            -
+                { operation: "get", object: "AnalogInput_3000290", property: "value", parameter: "CurrentTemperature" }
+    -   
+        name: SetPoint
+        set:
+            -
+                { operation: "set", object: "AnalogOutput_3000289", property: "value", parameter: "SetPoint" }
+        get:
+            -
+                { operation: "get", object: "AnalogOutput_3000289", property: "value", parameter: "SetPoint" }
+
+commands: 
+  - 
+    name: CurrentTemperature
+    get: 
+        path: "/api/v1/device/{deviceId}/CurrentTemperature"
+        responses:
+          - 
+            code: "200"
+            description: ""
+            expectedValues: ["CurrentTemperature"]
+          -
+            code: "503"
+            description: "service unavailable"
+            expectedValues: []
+    put: 
+        path: "/api/v1/device/{deviceId}/CurrentTemperature"
+        parameterNames: ["enableRandomization","collectionFrequency"]
+        responses:
+          - 
+            code: "204"
+            description: "valid and accepted"
+            expectedValues: []
+          -
+            code: "400"
+            description: "bad request"
+            expectedValues: []
+          -
+            code: "503"
+            description: "service unavailable"
+            expectedValues: []
+  - 
+    name: SetPoint
+    get:
+        path: "/api/v1/device/{deviceId}/SetPoint"
+        responses:
+          -
+            code: "200"
+            description: ""
+            expectedValues: ["SetPoint"]
+          -
+            code: "503"
+            description: "service unavailable"
+            expectedValues: []
+    put: 
+        path: "/api/v1/device/{deviceId}/SetPoint"
+        parameterNames: ["enableRandomization","collectionFrequency"]
+        responses:
+          - 
+            code: "204"
+            description: "valid and accepted"
+            expectedValues: []
+          -
+            code: "400"
+            description: "bad request"
+            expectedValues: []
+          -
+            code: "503"
+            description: "service unavailable"
+            expectedValues: []
+
