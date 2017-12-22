@@ -33,7 +33,7 @@ import (
 )
 
 // Global variables
-var dbc *clients.DBClient
+var dbc clients.DBClient
 var loggingClient logger.LoggingClient
 var ep *messaging.EventPublisher
 var mdc metadataclients.DeviceClient
