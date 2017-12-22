@@ -26,16 +26,20 @@ import (
 var TestDeviceObjectDescription = "test device object description"
 var TestDeviceObjectName = "test device object name"
 var TestDeviceObjectTag = "test device object tag"
-var TestDeviceObject = DeviceObject{Description: TestDeviceObjectDescription, Name: TestDeviceObjectName, Tag: TestDeviceObjectTag}
+var TestDeviceObject = DeviceObject{Description: TestDeviceObjectDescription, Name: TestDeviceObjectName, Tag: TestDeviceObjectTag, Properties: TestProfileProperty}
 
 func TestDeviceObject_MarshalJSON(t *testing.T) {
+	var emptyDeviceObject = DeviceObject{}
+	var resultTestBytes = []byte(TestDeviceObject.String())
+	var resultEmptyTestBytes = []byte(emptyDeviceObject.String())
 	tests := []struct {
 		name    string
 		do      DeviceObject
 		want    []byte
 		wantErr bool
 	}{
-	// TODO: Add test cases.
+		{"successful marshal", TestDeviceObject, resultTestBytes, false},
+		{"successful empty marshal", emptyDeviceObject, resultEmptyTestBytes, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -57,7 +61,12 @@ func TestDeviceObject_String(t *testing.T) {
 		do   DeviceObject
 		want string
 	}{
-	// {"device object to string", TestDeviceObject, ""},
+		{"device object to string", TestDeviceObject,
+			"{\"description\":\"" + TestDeviceObjectDescription + "\"" +
+				",\"name\":\"" + TestDeviceObjectName + "\"" +
+				",\"tag\":\"" + TestDeviceObjectTag + "\"" +
+				",\"properties\":" + TestProfileProperty.String() +
+				",\"attributes\":null}"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

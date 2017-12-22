@@ -12,7 +12,7 @@
  * the License.
  *
  * @microservice: core-domain-go library
- * @author: Ryan Comer & Spencer Bull, Dell
+ * @author: Jim White, Dell
  * @version: 0.5.0
  *******************************************************************************/
 
@@ -22,6 +22,9 @@ import (
 	"reflect"
 	"testing"
 )
+
+var testReportName = "Test Report.NAME"
+var testExpected = []string{"vD1", "vD2"}
 
 func TestDeviceReport_MarshalJSON(t *testing.T) {
 	tests := []struct {

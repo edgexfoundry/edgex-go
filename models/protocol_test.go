@@ -12,7 +12,7 @@
  * the License.
  *
  * @microservice: core-domain-go library
- * @author: Ryan Comer & Spencer Bull, Dell
+ * @author: Jim White, Dell
  * @version: 0.5.0
  *******************************************************************************/
 
@@ -21,6 +21,13 @@ package models
 import "testing"
 
 func TestProtocol_UnmarshalJSON(t *testing.T) {
+	var http = HTTP
+	var tcp = TCP
+	var mac = MAC
+	var zmq = ZMQ
+	var other = OTHER
+	var ssl = SSL
+	var foo Protocol
 	type args struct {
 		data []byte
 	}
@@ -30,7 +37,13 @@ func TestProtocol_UnmarshalJSON(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-	// TODO: Add test cases.
+		{"HTTP unmarshal", &http, args{[]byte("\"HTTP\"")}, false},
+		{"TCP unmarshal", &tcp, args{[]byte("\"TCP\"")}, false},
+		{"MAC unmarshal", &mac, args{[]byte("\"MAC\"")}, false},
+		{"ZMQ unmarshal", &zmq, args{[]byte("\"ZMQ\"")}, false},
+		{"OTHER unmarshal", &other, args{[]byte("\"OTHER\"")}, false},
+		{"SSL unmarshal", &ssl, args{[]byte("\"SSL\"")}, false},
+		{"bad unmarshal", &foo, args{[]byte("\"foo\"")}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

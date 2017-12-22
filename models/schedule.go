@@ -20,6 +20,7 @@ package models
 
 import (
 	"encoding/json"
+
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -43,8 +44,8 @@ func (s Schedule) MarshalJSON() ([]byte, error) {
 		Start     *string       `json:"start"`     // Start time in ISO 8601 format YYYYMMDD'T'HHmmss 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyymmdd'T'HHmmss")
 		End       *string       `json:"end"`       // Start time in ISO 8601 format YYYYMMDD'T'HHmmss 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyymmdd'T'HHmmss")
 		Frequency *string       `json:"frequency"` // how frequently should the event occur
-		Cron      *string       `json:"-"`         // cron styled regular expression indicating how often the action under schedule should occur.  Use either runOnce, frequency or cron and not all.
-		RunOnce   bool          `json:"-"`         // boolean indicating that this schedules runs one time - at the time indicated by the start
+		Cron      *string       `json:"cron"`      // cron styled regular expression indicating how often the action under schedule should occur.  Use either runOnce, frequency or cron and not all.
+		RunOnce   bool          `json:"runOnce"`   // boolean indicating that this schedules runs one time - at the time indicated by the start
 	}{
 		Id:         s.Id,
 		BaseObject: s.BaseObject,

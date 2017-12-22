@@ -36,13 +36,14 @@ var TestMappings = make(map[string]string)
 var TestResourceOperation = ResourceOperation{Index: TestResourceIndex, Operation: TestOperation, Object: TestResourceObject, Property: TestProperty, Parameter: TestParameter, Resource: TestResource, Secondary: TestSecondary, Mappings: TestMappings}
 
 func TestResourceOperation_MarshalJSON(t *testing.T) {
+	var testResourceOperationBytes = []byte(TestResourceOperation.String())
 	tests := []struct {
 		name    string
 		ro      ResourceOperation
 		want    []byte
 		wantErr bool
 	}{
-	// TODO: Add test cases.
+		{"successful marshalling", TestResourceOperation, testResourceOperationBytes, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

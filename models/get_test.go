@@ -26,13 +26,14 @@ import (
 var TestGet = Get{Action: TestAction}
 
 func TestGet_MarshalJSON(t *testing.T) {
+	var testGetBytes = []byte(TestGet.String())
 	tests := []struct {
 		name    string
 		g       Get
 		want    []byte
 		wantErr bool
 	}{
-	// TODO: Add test cases.
+		{"successful marshalling", TestGet, testGetBytes, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -66,6 +67,7 @@ func TestGet_String(t *testing.T) {
 }
 
 func TestGet_AllAssociatedValueDescriptors(t *testing.T) {
+	var testMap = make(map[string]string)
 	type args struct {
 		vdNames *map[string]string
 	}
@@ -74,11 +76,14 @@ func TestGet_AllAssociatedValueDescriptors(t *testing.T) {
 		g    *Get
 		args args
 	}{
-	// TODO: Add test cases.
+		{"get assoc val descs", &TestGet, args{vdNames: &testMap}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.g.AllAssociatedValueDescriptors(tt.args.vdNames)
+			if len(*tt.args.vdNames) != 2 {
+				t.Error("Associated value descriptor size > than expected")
+			}
 		})
 	}
 }

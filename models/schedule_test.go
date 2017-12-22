@@ -12,7 +12,7 @@
  * the License.
  *
  * @microservice: core-domain-go library
- * @author: Ryan Comer & Spencer Bull, Dell
+ * @author: Jim White, Dell
  * @version: 0.5.0
  *******************************************************************************/
 
@@ -20,17 +20,31 @@ package models
 
 import (
 	"reflect"
+	"strconv"
 	"testing"
 )
 
+var TestScheduleID1 = "one"
+var TestScheduleID2 = "two"
+var TestScheduleName = "test schedule"
+var TestStart = "" // defaults to now
+var TestEnd = ""   // defaults to ZDT MAX
+var TestTime2015 = "20150101T000000"
+var TestFreq2S = "PT2S"
+var TestCRON = "0 0 12 * * ?"
+var TestRunOnce = true
+var TestSchedule = Schedule{BaseObject: TestBaseObject, Name: TestScheduleName, Start: TestStart, End: TestEnd, Frequency: TestFreq2S, Cron: TestCRON, RunOnce: TestRunOnce}
+
 func TestSchedule_MarshalJSON(t *testing.T) {
+	var testScheduleBytes = []byte(TestSchedule.String())
+
 	tests := []struct {
 		name    string
 		s       Schedule
 		want    []byte
 		wantErr bool
 	}{
-	// TODO: Add test cases.
+		{"successful marshalling", TestSchedule, testScheduleBytes, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -52,7 +66,17 @@ func TestSchedule_String(t *testing.T) {
 		dp   Schedule
 		want string
 	}{
-	// TODO: Add test cases.
+		{"schedule to string", TestSchedule,
+			"{\"created\":" + strconv.FormatInt(TestSchedule.Created, 10) +
+				",\"modified\":" + strconv.FormatInt(TestSchedule.Modified, 10) +
+				",\"origin\":" + strconv.FormatInt(TestSchedule.Origin, 10) +
+				",\"id\":\"\"" +
+				",\"name\":\"" + TestScheduleName + "\"" +
+				",\"start\":null" +
+				",\"end\":null" +
+				",\"frequency\":\"" + TestSchedule.Frequency + "\"" +
+				",\"cron\":\"" + TestSchedule.Cron + "\"" +
+				",\"runOnce\":" + strconv.FormatBool(TestSchedule.RunOnce) + "}"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
