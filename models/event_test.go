@@ -12,7 +12,7 @@
  * the License.
  *
  * @microservice: core-domain-go library
- * @author: Ryan Comer & Spencer Bull, Dell
+ * @author: Jim White, Dell
  * @version: 0.5.0
  *******************************************************************************/
 
@@ -20,17 +20,25 @@ package models
 
 import (
 	"reflect"
+	"strconv"
 	"testing"
 )
 
+var TestEvent = Event{Pushed: 123, Created: 123, Origin: 123, Modified: 123, Readings: []Reading{TestReading}}
+
 func TestEvent_MarshalJSON(t *testing.T) {
+	var emptyEvent = Event{}
+	var resultTestBytes = []byte(TestEvent.String())
+	var resultEmptyTestBytes = []byte(emptyEvent.String())
+
 	tests := []struct {
 		name    string
 		e       Event
 		want    []byte
 		wantErr bool
 	}{
-	// TODO: Add test cases.
+		{"successful marshal", TestEvent, resultTestBytes, false},
+		{"successful empty marshal", emptyEvent, resultEmptyTestBytes, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -52,7 +60,17 @@ func TestEvent_String(t *testing.T) {
 		e    Event
 		want string
 	}{
-	// TODO: Add test cases.
+		{"event to string", TestEvent,
+			"{\"id\":\"\"" +
+				",\"pushed\":" + strconv.FormatInt(TestEvent.Pushed, 10) +
+				",\"device\":null" +
+				",\"created\":" + strconv.FormatInt(TestEvent.Created, 10) +
+				",\"modified\":" + strconv.FormatInt(TestEvent.Modified, 10) +
+				",\"origin\":" + strconv.FormatInt(TestEvent.Origin, 10) +
+				",\"schedule\":null" +
+				",\"event\":null" +
+				",\"readings\":[" + TestReading.String() + "]" +
+				"}"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

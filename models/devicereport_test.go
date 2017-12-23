@@ -19,21 +19,30 @@
 package models
 
 import (
+	"encoding/json"
+	"fmt"
 	"reflect"
+	"strconv"
 	"testing"
 )
 
-var testReportName = "Test Report.NAME"
-var testExpected = []string{"vD1", "vD2"}
+var TestReportName = "Test Report.NAME"
+var TestReportExpected = []string{"vD1", "vD2"}
+var TestDeviceReport = DeviceReport{BaseObject: TestBaseObject, Name: TestReportName, Device: TestDeviceName, Event: TestScheduleEventName, Expected: TestReportExpected}
 
 func TestDeviceReport_MarshalJSON(t *testing.T) {
+	var emptyDeviceReport = DeviceReport{}
+	var resultTestBytes = []byte(TestDeviceReport.String())
+	var resultEmptyTestBytes = []byte(emptyDeviceReport.String())
+
 	tests := []struct {
 		name    string
 		dp      DeviceReport
 		want    []byte
 		wantErr bool
 	}{
-	// TODO: Add test cases.
+		{"successful marshal", TestDeviceReport, resultTestBytes, false},
+		{"successful empty marshal", emptyDeviceReport, resultEmptyTestBytes, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -50,12 +59,22 @@ func TestDeviceReport_MarshalJSON(t *testing.T) {
 }
 
 func TestDeviceReport_String(t *testing.T) {
+	var expectedlSlice, _ = json.Marshal(TestReportExpected)
 	tests := []struct {
 		name string
 		dr   DeviceReport
 		want string
 	}{
-	// TODO: Add test cases.
+		{"device report to string", TestDeviceReport,
+			"{\"created\":" + strconv.FormatInt(TestBaseObject.Created, 10) +
+				",\"modified\":" + strconv.FormatInt(TestBaseObject.Modified, 10) +
+				",\"origin\":" + strconv.FormatInt(TestBaseObject.Origin, 10) +
+				",\"id\":\"\"" +
+				",\"name\":\"" + TestReportName + "\"" +
+				",\"device\":\"" + TestDeviceName + "\"" +
+				",\"event\":\"" + TestScheduleEventName + "\"" +
+				",\"expected\":" + fmt.Sprint(string(expectedlSlice)) +
+				"}"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

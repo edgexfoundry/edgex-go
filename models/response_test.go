@@ -23,14 +23,21 @@ import (
 	"testing"
 )
 
+var TestResponse = Response{Code: TestCode, Description: TestDescription, ExpectedValues: TestExpectedvalues}
+
 func TestResponse_MarshalJSON(t *testing.T) {
+	var emptyResponse = Response{}
+	var resultTestBytes = []byte(TestResponse.String())
+	var resultEmptyTestBytes = []byte(emptyResponse.String())
+
 	tests := []struct {
 		name    string
 		r       Response
 		want    []byte
 		wantErr bool
 	}{
-	// TODO: Add test cases.
+		{"successful marshal", TestResponse, resultTestBytes, false},
+		{"successful empty marshal", emptyResponse, resultEmptyTestBytes, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -52,7 +59,10 @@ func TestResponse_String(t *testing.T) {
 		a    Response
 		want string
 	}{
-	// TODO: Add test cases.
+		{"resonse to string", TestResponse,
+			"{\"code\":\"" + TestCode + "\"" +
+				",\"description\":\"" + TestDescription + "\"" +
+				",\"expectedValues\":[\"" + TestExpectedvalue1 + "\",\"" + TestExpectedvalue2 + "\"]}"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -73,7 +83,10 @@ func TestResponse_Equals(t *testing.T) {
 		args args
 		want bool
 	}{
-	// TODO: Add test cases.
+		{"responses equal", TestResponse, args{Response{Code: TestCode, Description: TestDescription, ExpectedValues: TestExpectedvalues}}, true},
+		{"responses not equal", TestResponse, args{Response{Code: "foobar", Description: TestDescription, ExpectedValues: TestExpectedvalues}}, false},
+		{"responses not equal", TestResponse, args{Response{Code: TestCode, Description: "foobar", ExpectedValues: TestExpectedvalues}}, false},
+		{"responses not equal", TestResponse, args{Response{Code: TestCode, Description: TestDescription, ExpectedValues: []string{"foo", "bar"}}}, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

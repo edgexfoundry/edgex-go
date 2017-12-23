@@ -20,6 +20,7 @@ package models
 
 import (
 	"encoding/json"
+
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -59,7 +60,9 @@ func (se ScheduleEvent) MarshalJSON() ([]byte, error) {
 	if se.Parameters != "" {
 		test.Parameters = &se.Parameters
 	}
-	//if se.Service != "" {test.Service = &se.Service}
+	if se.Service != "" {
+		test.Service = &se.Service
+	}
 
 	return json.Marshal(test)
 }

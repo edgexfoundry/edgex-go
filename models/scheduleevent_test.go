@@ -12,7 +12,7 @@
  * the License.
  *
  * @microservice: core-domain-go library
- * @author: Ryan Comer & Spencer Bull, Dell
+ * @author: Jim White, Dell
  * @version: 0.5.0
  *******************************************************************************/
 
@@ -20,17 +20,27 @@ package models
 
 import (
 	"reflect"
+	"strconv"
 	"testing"
 )
 
+var TestScheduleEventName = "test schedule event"
+var TestParams = "{key1:value1}"
+var TestScheduleEvent = ScheduleEvent{BaseObject: TestBaseObject, Name: TestScheduleEventName, Schedule: TestSchedule.Name, Addressable: TestAddressable, Parameters: TestParams, Service: TestServiceName}
+
 func TestScheduleEvent_MarshalJSON(t *testing.T) {
+	var emptyScheduleEvent = ScheduleEvent{}
+	var resultTestBytes = []byte(TestScheduleEvent.String())
+	var resultEmptyTestBytes = []byte(emptyScheduleEvent.String())
+
 	tests := []struct {
 		name    string
 		se      ScheduleEvent
 		want    []byte
 		wantErr bool
 	}{
-	// TODO: Add test cases.
+		{"successful marshal", TestScheduleEvent, resultTestBytes, false},
+		{"successful empty marshal", emptyScheduleEvent, resultEmptyTestBytes, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -52,7 +62,16 @@ func TestScheduleEvent_String(t *testing.T) {
 		se   ScheduleEvent
 		want string
 	}{
-	// TODO: Add test cases.
+		{"schedule event to string", TestScheduleEvent,
+			"{\"created\":" + strconv.FormatInt(TestBaseObject.Created, 10) +
+				",\"modified\":" + strconv.FormatInt(TestBaseObject.Modified, 10) +
+				",\"origin\":" + strconv.FormatInt(TestBaseObject.Origin, 10) +
+				",\"id\":\"\"" +
+				",\"name\":\"" + TestScheduleEventName + "\"" +
+				",\"schedule\":\"" + TestScheduleName + "\"" +
+				",\"addressable\":" + TestAddressable.String() +
+				",\"parameters\":\"" + TestParams + "\"" +
+				",\"service\":\"" + TestServiceName + "\"}"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

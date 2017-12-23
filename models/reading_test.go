@@ -12,7 +12,7 @@
  * the License.
  *
  * @microservice: core-domain-go library
- * @author: Ryan Comer & Spencer Bull, Dell
+ * @author: Jim White, Dell
  * @version: 0.5.0
  *******************************************************************************/
 
@@ -20,17 +20,27 @@ package models
 
 import (
 	"reflect"
+	"strconv"
 	"testing"
 )
 
+var TestValueDescriptorName = "Temperature"
+var TestValue = "45"
+var TestReading = Reading{Pushed: 123, Created: 123, Origin: 123, Modified: 123, Device: TestDeviceName, Name: TestValueDescriptorName, Value: TestValue}
+
 func TestReading_MarshalJSON(t *testing.T) {
+	var emptyReading = Reading{}
+	var resultTestBytes = []byte(TestReading.String())
+	var resultEmptyTestBytes = []byte(emptyReading.String())
+
 	tests := []struct {
 		name    string
 		r       Reading
 		want    []byte
 		wantErr bool
 	}{
-	// TODO: Add test cases.
+		{"successful marshal", TestReading, resultTestBytes, false},
+		{"successful empty marshal", emptyReading, resultEmptyTestBytes, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -52,7 +62,16 @@ func TestReading_String(t *testing.T) {
 		r    Reading
 		want string
 	}{
-	// TODO: Add test cases.
+		{"reading to string", TestReading,
+			"{\"id\":\"\"" +
+				",\"pushed\":" + strconv.FormatInt(TestReading.Pushed, 10) +
+				",\"created\":" + strconv.FormatInt(TestReading.Created, 10) +
+				",\"origin\":" + strconv.FormatInt(TestReading.Origin, 10) +
+				",\"modified\":" + strconv.FormatInt(TestReading.Modified, 10) +
+				",\"device\":\"" + TestDeviceName + "\"" +
+				",\"name\":\"" + TestValueDescriptorName + "\"" +
+				",\"value\":\"" + TestValue + "\"" +
+				"}"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
