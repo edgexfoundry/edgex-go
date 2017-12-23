@@ -114,7 +114,7 @@ func (mc *MongoClient) AddEvent(e *models.Event) (bson.ObjectId, error) {
 	// Add the event
 	err := s.DB(mc.Database.Name).C(EVENTS_COLLECTION).Insert(me)
 	if err != nil {
-		return bson.NewObjectId(), err
+		return e.ID, err
 	}
 
 	return e.ID, err
@@ -453,23 +453,23 @@ func (mc *MongoClient) AddValueDescriptor(v models.ValueDescriptor) (bson.Object
 	s := mc.GetSessionCopy()
 	defer s.Close()
 
-	// See if the name is unique
-	count, err := s.DB(mc.Database.Name).C(VALUE_DESCRIPTOR_COLLECTION).Find(bson.M{"name": v.Name}).Count()
-	if err != nil {
-		return bson.NewObjectId(), err
-	}
-
-	// Duplicate name
-	if count > 0 {
-		return bson.NewObjectId(), ErrNotUnique
-	}
-
 	// Created/Modified now
 	v.Created = time.Now().Unix()
 
-	// Add the value descriptor
-	v.Id = bson.NewObjectId()
-	err = s.DB(mc.Database.Name).C(VALUE_DESCRIPTOR_COLLECTION).Insert(v)
+	// See if the name is unique and add the value descriptors
+	info, err := s.DB(mc.Database.Name).C(VALUE_DESCRIPTOR_COLLECTION).Upsert(bson.M{"name": v.Name}, v)
+	if err != nil {
+		return v.Id, err
+	}
+
+	// Duplicate name
+	if info.UpsertedId == nil {
+		return v.Id, ErrNotUnique
+	}
+
+	// Set ID	
+	v.Id = info.UpsertedId.(bson.ObjectId)
+
 	return v.Id, err
 }
 
