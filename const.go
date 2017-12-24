@@ -114,6 +114,10 @@ const (
 	VALUEDESCRIPTORSFOR             = "valueDescriptorsFor"
 	DEVICEADDRESSABLES              = "deviceaddressables"
 	DEVICEADDRESSABLESBYNAME        = "deviceaddressablesbyname"
+	PINGENDPOINT                    = "/ping"
+	PINGRESPONSE                    = "pong"
+	CONTENTTYPE                     = "Content-Type"
+	TEXTPLAIN                       = "text/plain"
 
 	/* TODO ENUM */
 	LOCKED   string = "LOCKED"

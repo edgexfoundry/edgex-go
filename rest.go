@@ -26,7 +26,7 @@ import (
 func loadRestRoutes() http.Handler {
 	r := mux.NewRouter()
 	b := r.PathPrefix("/api/v1").Subrouter()
-	// TODO b.HandleFunc("/ping", ping)
+	b.HandleFunc(PINGENDPOINT, ping)
 
 	loadDeviceRoutes(b)
 	return r
@@ -51,4 +51,10 @@ func loadDeviceRoutes(b *mux.Router) {
 	dn.HandleFunc("/{"+NAME+"}", restGetCommandsByDeviceName).Methods(GET)
 	dn.HandleFunc("/{"+NAME+"}/"+URLADMINSTATE+"/{"+ADMINSTATE+"}", restPutDeviceAdminStateByDeviceName).Methods(PUT)
 	dn.HandleFunc("/{"+NAME+"}/"+OPSTATE+"/{"+OPSTATE+"}", restPutDeviceOpStateByDeviceName).Methods(PUT)
+}
+
+// Respond with PINGRESPONSE to see if the service is alive
+func ping(w http.ResponseWriter, _ *http.Request) {
+	w.Header().Set(CONTENTTYPE, TEXTPLAIN)
+	w.Write([]byte(PINGRESPONSE))
 }
