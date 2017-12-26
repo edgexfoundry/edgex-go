@@ -23,47 +23,54 @@ import (
 
 func loadRestRoutes() *mux.Router {
 	r := mux.NewRouter()
-	baseUrl := "/api/v1"
+	b := r.PathPrefix("/api/v1").Subrouter()
 
 	// EVENTS
-	r.HandleFunc(baseUrl+"/event", eventHandler).Methods("GET", "PUT", "POST")
-	r.HandleFunc(baseUrl+"/event/scrub", scrubHandler).Methods("DELETE")
-	r.HandleFunc(baseUrl+"/event/scruball", scrubAllHandler).Methods("DELETE")
-	r.HandleFunc(baseUrl+"/event/count", eventCountHandler).Methods("GET")
-	r.HandleFunc(baseUrl+"/event/count/{deviceId}", eventCountByDeviceIdHandler).Methods("GET")
-	r.HandleFunc(baseUrl+"/event/{id}", getEventByIdHandler).Methods("GET")
-	r.HandleFunc(baseUrl+"/event/id/{id}", eventIdHandler).Methods("DELETE", "PUT")
-	r.HandleFunc(baseUrl+"/event/device/{deviceId}/{limit:[0-9]+}", getEventByDeviceHandler).Methods("GET")
-	r.HandleFunc(baseUrl+"/event/device/{deviceId}", deleteByDeviceIdHandler).Methods("DELETE")
-	r.HandleFunc(baseUrl+"/event/removeold/age/{age:[0-9]+}", eventByAgeHandler).Methods("DELETE")
-	r.HandleFunc(baseUrl+"/event/{start:[0-9]+}/{end:[0-9]+}/{limit:[0-9]+}", eventByCreationTimeHandler).Methods("GET")
-	r.HandleFunc(baseUrl+"/event/device/{deviceId}/valuedescriptor/{valueDescriptor}/{limit:[0-9]+}", readingByDeviceFilteredValueDescriptor).Methods("GET")
+	// /api/v1/event
+	b.HandleFunc("/event", eventHandler).Methods("GET", "PUT", "POST")
+	e := b.PathPrefix("/event").Subrouter()
+	e.HandleFunc("/scrub", scrubHandler).Methods("DELETE")
+	e.HandleFunc("/scruball", scrubAllHandler).Methods("DELETE")
+	e.HandleFunc("/count", eventCountHandler).Methods("GET")
+	e.HandleFunc("/count/{deviceId}", eventCountByDeviceIdHandler).Methods("GET")
+	e.HandleFunc("/{id}", getEventByIdHandler).Methods("GET")
+	e.HandleFunc("/id/{id}", eventIdHandler).Methods("DELETE", "PUT")
+	e.HandleFunc("/device/{deviceId}/{limit:[0-9]+}", getEventByDeviceHandler).Methods("GET")
+	e.HandleFunc("/device/{deviceId}", deleteByDeviceIdHandler).Methods("DELETE")
+	e.HandleFunc("/removeold/age/{age:[0-9]+}", eventByAgeHandler).Methods("DELETE")
+	e.HandleFunc("/{start:[0-9]+}/{end:[0-9]+}/{limit:[0-9]+}", eventByCreationTimeHandler).Methods("GET")
+	e.HandleFunc("/device/{deviceId}/valuedescriptor/{valueDescriptor}/{limit:[0-9]+}", readingByDeviceFilteredValueDescriptor).Methods("GET")
 
 	// READINGS
-	r.HandleFunc(baseUrl+"/reading", readingHandler).Methods("GET", "PUT", "POST")
-	r.HandleFunc(baseUrl+"/reading/count", readingCountHandler).Methods("GET")
-	r.HandleFunc(baseUrl+"/reading/id/{id}", deleteReadingByIdHandler).Methods("DELETE")
-	r.HandleFunc(baseUrl+"/reading/{id}", getReadingByIdHandler).Methods("GET")
-	r.HandleFunc(baseUrl+"/reading/device/{deviceId}/{limit:[0-9]+}", readingByDeviceHandler).Methods("GET")
-	r.HandleFunc(baseUrl+"/reading/name/{name}/{limit:[0-9]+}", readingbyValueDescriptorHandler).Methods("GET")
-	r.HandleFunc(baseUrl+"/reading/uomlabel/{uomLabel}/{limit:[0-9]+}", readingByUomLabelHandler).Methods("GET")
-	r.HandleFunc(baseUrl+"/reading/label/{label}/{limit:[0-9]+}", readingByLabelHandler).Methods("GET")
-	r.HandleFunc(baseUrl+"/reading/type/{type}/{limit:[0-9]+}", readingByTypeHandler).Methods("GET")
-	r.HandleFunc(baseUrl+"/reading/{start:[0-9]+}/{end:[0-9]+}/{limit:[0-9]+}", readingByCreationTimeHandler).Methods("GET")
-	r.HandleFunc(baseUrl+"/reading/name/{name}/device/{device}/{limit:[0-9]+}", readingByValueDescriptorAndDeviceHandler).Methods("GET")
+	// /api/v1/reading
+	b.HandleFunc("/reading", readingHandler).Methods("GET", "PUT", "POST")
+	rd := b.PathPrefix("/reading").Subrouter()
+	rd.HandleFunc("/count", readingCountHandler).Methods("GET")
+	rd.HandleFunc("/id/{id}", deleteReadingByIdHandler).Methods("DELETE")
+	rd.HandleFunc("/{id}", getReadingByIdHandler).Methods("GET")
+	rd.HandleFunc("/device/{deviceId}/{limit:[0-9]+}", readingByDeviceHandler).Methods("GET")
+	rd.HandleFunc("/name/{name}/{limit:[0-9]+}", readingbyValueDescriptorHandler).Methods("GET")
+	rd.HandleFunc("/uomlabel/{uomLabel}/{limit:[0-9]+}", readingByUomLabelHandler).Methods("GET")
+	rd.HandleFunc("/label/{label}/{limit:[0-9]+}", readingByLabelHandler).Methods("GET")
+	rd.HandleFunc("/type/{type}/{limit:[0-9]+}", readingByTypeHandler).Methods("GET")
+	rd.HandleFunc("/{start:[0-9]+}/{end:[0-9]+}/{limit:[0-9]+}", readingByCreationTimeHandler).Methods("GET")
+	rd.HandleFunc("/name/{name}/device/{device}/{limit:[0-9]+}", readingByValueDescriptorAndDeviceHandler).Methods("GET")
 
 	// VALUE DESCRIPTORS
-	r.HandleFunc(baseUrl+"/valuedescriptor", valueDescriptorHandler).Methods("GET", "PUT", "POST")
-	r.HandleFunc(baseUrl+"/valuedescriptor/id/{id}", deleteValueDescriptorByIdHandler).Methods("DELETE")
-	r.HandleFunc(baseUrl+"/valuedescriptor/name/{name}", valueDescriptorByNameHandler).Methods("GET", "DELETE")
-	r.HandleFunc(baseUrl+"/valuedescriptor/{id}", valueDescriptorByIdHandler).Methods("GET")
-	r.HandleFunc(baseUrl+"/valuedescriptor/uomlabel/{uomLabel}", valueDescriptorByUomLabelHandler).Methods("GET")
-	r.HandleFunc(baseUrl+"/valuedescriptor/label/{label}", valueDescriptorByLabelHandler).Methods("GET")
-	r.HandleFunc(baseUrl+"/valuedescriptor/devicename/{device}", valueDescriptorByDeviceHandler).Methods("GET")
-	r.HandleFunc(baseUrl+"/valuedescriptor/deviceid/{id}", valueDescriptorByDeviceIdHandler).Methods("GET")
+	// /api/v1/valuedescriptor
+	b.HandleFunc("/valuedescriptor", valueDescriptorHandler).Methods("GET", "PUT", "POST")
+	vd := b.PathPrefix("/valuedescriptor").Subrouter()
+	vd.HandleFunc("/id/{id}", deleteValueDescriptorByIdHandler).Methods("DELETE")
+	vd.HandleFunc("/name/{name}", valueDescriptorByNameHandler).Methods("GET", "DELETE")
+	vd.HandleFunc("/{id}", valueDescriptorByIdHandler).Methods("GET")
+	vd.HandleFunc("/uomlabel/{uomLabel}", valueDescriptorByUomLabelHandler).Methods("GET")
+	vd.HandleFunc("/label/{label}", valueDescriptorByLabelHandler).Methods("GET")
+	vd.HandleFunc("/devicename/{device}", valueDescriptorByDeviceHandler).Methods("GET")
+	vd.HandleFunc("/deviceid/{id}", valueDescriptorByDeviceIdHandler).Methods("GET")
 
 	// Ping Resource
-	r.HandleFunc(baseUrl+"/ping", pingHandler)
+	// /api/v1/ping
+	b.HandleFunc("/ping", pingHandler)
 
 	return r
 }
