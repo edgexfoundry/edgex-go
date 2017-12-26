@@ -18,7 +18,7 @@
 package support_domain
 
 type LogEntry struct {
-	Id            string   `json:"id"`
+	//Id            string   `json:"id"`
 	Level         LogLevel `json:"logLevel"`
 	Labels        []string `json:"labels"`
 	OriginService string   `json:"originService"`
