@@ -28,6 +28,7 @@ import (
 	"time"
 
 	consulclient "github.com/edgexfoundry/consul-client-go"
+	enums "github.com/edgexfoundry/core-domain-go/enums"
 	logger "github.com/edgexfoundry/support-logging-client-go"
 	notifications "github.com/edgexfoundry/support-notifications-client-go"
 )
@@ -68,7 +69,7 @@ func main() {
 	MONGODATABASE = configuration.MongoDatabaseName
 	PROTOCOL = configuration.Protocol
 	SERVERPORT = strconv.Itoa(configuration.ServerPort)
-	DATABASE = configuration.DBType
+	DBTYPE = configuration.DBType
 	DOCKERMONGO = configuration.MongoDBHost + ":" + strconv.Itoa(configuration.MongoDBPort)
 	DBUSER = configuration.MongoDBUserName
 	DBPASS = configuration.MongoDBPassword
@@ -81,6 +82,11 @@ func main() {
 	notificationsClient.RemoteUrl = configuration.SupportNotificationsNotificationURL
 
 	// Connect to the database
+	DATABASE, err = enums.GetDatabaseType(DBTYPE)
+	if err != nil {
+		loggingClient.Error(err.Error())
+		return
+	}
 	if !dbConnect() {
 		loggingClient.Error("Error connecting to Database")
 		return

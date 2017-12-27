@@ -1,6 +1,6 @@
 {
 	"ApplicationName": "core-metadata",
-	"DBType": "mongo",
+	"DBType": "mongodb",
 	"MongoDatabaseName": "metadata",
 	"MongoDBUserName": "",
 	"MongoDBPassword": "",

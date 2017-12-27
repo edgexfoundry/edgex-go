@@ -17,7 +17,11 @@
  *******************************************************************************/
 package main
 
-import "errors"
+import (
+	"errors"
+
+	"github.com/edgexfoundry/core-domain-go/enums"
+)
 
 // Struct used to pase the JSON configuration file
 type ConfigurationStruct struct {
@@ -61,7 +65,8 @@ var configuration ConfigurationStruct = ConfigurationStruct{} // Needs to be ini
 
 var (
 	/* -------------- CONFIG for METADATA -------------------- */
-	DATABASE            = "mongo"
+	DATABASE            enums.DATABASE
+	DBTYPE              = "mongodb"
 	PROTOCOL            = "http"
 	SERVERPORT          = "48081"
 	DOCKERMONGO         = "edgex-mongo:27017"
