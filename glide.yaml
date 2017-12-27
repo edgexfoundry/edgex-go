@@ -4,6 +4,9 @@ import:
 - package: github.com/edgexfoundry/core-domain-go
   subpackages:
   - models
+  - eunms
+  vcs: git
+  version: master
 - package: github.com/edgexfoundry/support-logging-client-go
 - package: github.com/edgexfoundry/support-notifications-client-go
 - package: github.com/gorilla/mux
