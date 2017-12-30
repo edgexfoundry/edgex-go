@@ -122,7 +122,7 @@ func restUpdateDeviceProfile(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return
 	}
-
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
 }
@@ -290,7 +290,7 @@ func restDeleteProfileByProfileId(w http.ResponseWriter, r *http.Request) {
 		loggingClient.Error(err.Error(), "")
 		return
 	}
-
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
 }
@@ -322,7 +322,7 @@ func restDeleteProfileByName(w http.ResponseWriter, r *http.Request) {
 		loggingClient.Error(err.Error(), "")
 		return
 	}
-
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
 }

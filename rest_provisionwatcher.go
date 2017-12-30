@@ -55,14 +55,9 @@ func restDeleteProvisionWatcherById(w http.ResponseWriter, r *http.Request) {
 	// Check if the provision watcher exists
 	var pw models.ProvisionWatcher
 	if err := getProvisionWatcherById(&pw, id); err != nil {
-		if err == mgo.ErrNotFound {
-			errMessage := "Provision Watcher not found by ID: " + err.Error()
-			loggingClient.Error(errMessage, "")
-			http.Error(w, errMessage, http.StatusNotFound)
-		} else {
-			loggingClient.Error(err.Error(), "")
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		}
+		errMessage := "Provision Watcher not found by ID: " + err.Error()
+		loggingClient.Error(errMessage, "")
+		http.Error(w, errMessage, http.StatusNotFound)
 		return
 	}
 
@@ -70,7 +65,7 @@ func restDeleteProvisionWatcherById(w http.ResponseWriter, r *http.Request) {
 		loggingClient.Error("Error deleting provision watcher", "")
 		return
 	}
-
+	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte("true"))
 }
 
@@ -101,7 +96,7 @@ func restDeleteProvisionWatcherByName(w http.ResponseWriter, r *http.Request) {
 		loggingClient.Error("Problem deleting provision watcher: "+err.Error(), "")
 		return
 	}
-
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
 }
@@ -173,13 +168,8 @@ func restGetProvisionWatchersByProfileId(w http.ResponseWriter, r *http.Request)
 	// Check if the device profile exists
 	var dp models.DeviceProfile
 	if err := getDeviceProfileById(&dp, pid); err != nil {
-		if err == mgo.ErrNotFound {
-			loggingClient.Error("Device profile not found: "+err.Error(), "")
-			http.Error(w, err.Error(), http.StatusNotFound)
-		} else {
-			loggingClient.Error(err.Error(), "")
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		}
+		loggingClient.Error("Device profile not found: "+err.Error(), "")
+		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
 
@@ -234,13 +224,8 @@ func restGetProvisionWatchersByServiceId(w http.ResponseWriter, r *http.Request)
 	// Check if the device service exists
 	var ds models.DeviceService
 	if err := getDeviceServiceById(&ds, sid); err != nil {
-		if err == mgo.ErrNotFound {
-			http.Error(w, "Device Service not found", http.StatusNotFound)
-			loggingClient.Error("Device service not found: "+err.Error(), "")
-		} else {
-			loggingClient.Error("Problem getting device service: "+err.Error(), "")
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		}
+		http.Error(w, "Device Service not found", http.StatusNotFound)
+		loggingClient.Error("Device service not found: "+err.Error(), "")
 		return
 	}
 
@@ -427,7 +412,7 @@ func restUpdateProvisionWatcher(w http.ResponseWriter, r *http.Request) {
 	if err := notifyProvisionWatcherAssociates(to, models.PUT); err != nil {
 		loggingClient.Error("Problem notifying associated device services for provision watcher: "+err.Error(), "")
 	}
-
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
 }

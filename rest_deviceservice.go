@@ -108,22 +108,13 @@ func restAddDeviceService(w http.ResponseWriter, r *http.Request) {
 	if !foundAddressable {
 		err := getAddressableById(&ds.Service.Addressable, ds.Service.Addressable.Id.Hex())
 		if err != nil {
-			if err != mgo.ErrNotFound {
-				http.Error(w, err.Error(), http.StatusServiceUnavailable)
-			}
-			loggingClient.Error(err.Error(), "")
+			http.Error(w, "Addressable not found by ID or Name", http.StatusNotFound)
+			loggingClient.Error("Addressable not found by ID or Name: "+err.Error(), "")
+			return
 		} else {
 			// There wasn't an error - found the addressable
 			foundAddressable = true
 		}
-	}
-
-	// Addressable couldn't be found by ID or Name
-	if !foundAddressable {
-		err := errors.New("Addressable not found by ID or Name")
-		http.Error(w, err.Error(), http.StatusConflict)
-		loggingClient.Error(err.Error(), "")
-		return
 	}
 
 	// Add the device service
@@ -244,11 +235,7 @@ func restUpdateDeviceService(w http.ResponseWriter, r *http.Request) {
 	if err = getDeviceServiceById(&to, from.Service.Id.Hex()); err != nil {
 		// Try by Name
 		if err = getDeviceServiceByName(&to, from.Service.Name); err != nil {
-			if err == mgo.ErrNotFound {
-				http.Error(w, "Device service not found", http.StatusNotFound)
-			} else {
-				http.Error(w, err.Error(), http.StatusServiceUnavailable)
-			}
+			http.Error(w, "Device service not found", http.StatusNotFound)
 			loggingClient.Error(err.Error(), "")
 			return
 		}
@@ -466,7 +453,7 @@ func restDeleteServiceById(w http.ResponseWriter, r *http.Request) {
 		loggingClient.Error(err.Error(), "")
 		return
 	}
-
+	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte("true"))
 }
 
@@ -496,7 +483,7 @@ func restDeleteServiceByName(w http.ResponseWriter, r *http.Request) {
 		loggingClient.Error(err.Error(), "")
 		return
 	}
-
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
 }
@@ -565,7 +552,7 @@ func restUpdateServiceLastConnectedById(w http.ResponseWriter, r *http.Request) 
 		loggingClient.Error(err.Error(), "")
 		return
 	}
-
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
 }
@@ -603,7 +590,7 @@ func restUpdateServiceLastConnectedByName(w http.ResponseWriter, r *http.Request
 		loggingClient.Error(err.Error(), "")
 		return
 	}
-
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
 }
@@ -666,7 +653,7 @@ func restUpdateServiceOpStateById(w http.ResponseWriter, r *http.Request) {
 		loggingClient.Error(err.Error(), "")
 		return
 	}
-
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
 }
@@ -705,7 +692,7 @@ func restUpdateServiceOpStateByName(w http.ResponseWriter, r *http.Request) {
 		loggingClient.Error(err.Error(), "")
 		return
 	}
-
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
 }
@@ -750,7 +737,7 @@ func restUpdateServiceAdminStateById(w http.ResponseWriter, r *http.Request) {
 		loggingClient.Error(err.Error(), "")
 		return
 	}
-
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
 }
@@ -790,7 +777,7 @@ func restUpdateServiceAdminStateByName(w http.ResponseWriter, r *http.Request) {
 		loggingClient.Error(err.Error(), "")
 		return
 	}
-
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
 }
@@ -832,7 +819,7 @@ func restUpdateServiceLastReportedById(w http.ResponseWriter, r *http.Request) {
 		loggingClient.Error(err.Error(), "")
 		return
 	}
-
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
 }
@@ -869,7 +856,7 @@ func restUpdateServiceLastReportedByName(w http.ResponseWriter, r *http.Request)
 		loggingClient.Error(err.Error(), "")
 		return
 	}
-
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
 }

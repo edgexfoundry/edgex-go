@@ -18,12 +18,11 @@
 package main
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
 	"net/http"
 	"net/url"
-	"regexp"
+	"strconv"
 	"time"
 
 	"github.com/edgexfoundry/core-domain-go/models"
@@ -32,18 +31,22 @@ import (
 	"gopkg.in/mgo.v2"
 )
 
-// Parse an ISO 8601 time interval into a time.duration
-// Error if the format is incorrect
-func isIntervalValid(interval string) bool {
-	exp := `P(?P<years>\d+Y)?(?P<months>\d+M)?(?P<days>\d+D)?T?(?P<hours>\d+H)?(?P<minutes>\d+M)?(?P<seconds>\d+S)?`
-	reg := regexp.MustCompile(exp)
-	result := reg.Find(bytes.NewBufferString(interval).Bytes())
-
-	if result == nil {
+func isIntervalValid(frequency string) bool {
+	_, err := strconv.Atoi("-42")
+	if err != nil {
 		return false
-	} else {
-		return true
 	}
+	return true
+}
+
+// convert millisecond string to Time
+func msToTime(ms string) (time.Time, error) {
+	msInt, err := strconv.ParseInt(ms, 10, 64)
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	return time.Unix(0, msInt*int64(time.Millisecond)), nil
 }
 
 func restGetAllScheduleEvents(w http.ResponseWriter, r *http.Request) {
@@ -74,6 +77,24 @@ func restAddScheduleEvent(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return
 	}
+	// Check the Schedule name
+	if se.Schedule == "" {
+		// Schedule wasn't passed
+		http.Error(w, "Schedule not passed", http.StatusConflict)
+		loggingClient.Error("Schedule not passed", "")
+		return
+	}
+	var s models.Schedule
+	if err := getScheduleByName(&s, se.Schedule); err != nil {
+		if err == mgo.ErrNotFound {
+			http.Error(w, "Schedule not found for schedule event", http.StatusNotFound)
+			loggingClient.Error("Schedule not found for schedule event: "+err.Error(), "")
+		} else {
+			loggingClient.Error("Problem getting schedule for schedule event: "+err.Error(), "")
+			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		}
+		return
+	}
 
 	// Check for the addressable
 	// Try by ID
@@ -81,13 +102,8 @@ func restAddScheduleEvent(w http.ResponseWriter, r *http.Request) {
 	if err := getAddressableById(&a, se.Addressable.Id.Hex()); err != nil {
 		// Try by Name
 		if err = getAddressableByName(&a, se.Addressable.Name); err != nil {
-			if err == mgo.ErrNotFound {
-				http.Error(w, err.Error(), http.StatusNotFound)
-				loggingClient.Error("Addressable for schedule event not found: "+err.Error(), "")
-			} else {
-				http.Error(w, err.Error(), http.StatusServiceUnavailable)
-				loggingClient.Error("Problem getting addressable for schedule event: "+err.Error(), "")
-			}
+			http.Error(w, "Address not found for schedule event", http.StatusNotFound)
+			loggingClient.Error("Addressable for schedule event not found: "+err.Error(), "")
 			return
 		}
 	}
@@ -120,25 +136,6 @@ func restAddScheduleEvent(w http.ResponseWriter, r *http.Request) {
 		LOGGER.Println("Unknown Addressable")
 		return
 	}*/
-
-	// Check the Schedule name
-	if se.Schedule == "" {
-		// Schedule wasn't passed
-		http.Error(w, "Schedule not passed", http.StatusConflict)
-		loggingClient.Error("Schedule not passed", "")
-		return
-	}
-	var s models.Schedule
-	if err := getScheduleByName(&s, se.Schedule); err != nil {
-		if err == mgo.ErrNotFound {
-			http.Error(w, "Schedule not found for schedule event", http.StatusNotFound)
-			loggingClient.Error("Schedule not found for schedule event: "+err.Error(), "")
-		} else {
-			loggingClient.Error("Problem getting schedule for schedule event: "+err.Error(), "")
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		}
-		return
-	}
 
 	if err := addScheduleEvent(&se); err != nil {
 		if err == ErrDuplicateName {
@@ -192,7 +189,7 @@ func restUpdateScheduleEvent(w http.ResponseWriter, r *http.Request) {
 	if err := notifyScheduleEventAssociates(to, models.PUT); err != nil {
 		loggingClient.Error("Problem notifying associated device services with the schedule event: "+err.Error(), "")
 	}
-
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
 }
@@ -349,14 +346,10 @@ func restDeleteScheduleEventById(w http.ResponseWriter, r *http.Request) {
 
 	// Check if the schedule event exists
 	var se models.ScheduleEvent
-	if err := getScheduleEventById(&se, id); err != nil {
-		if err == mgo.ErrNotFound {
-			http.Error(w, "Schedule event not found", http.StatusNotFound)
-			loggingClient.Error("Schedule event not found: "+err.Error(), "")
-		} else {
-			loggingClient.Error("Problem getting schedule event: "+err.Error(), "")
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		}
+	err := getScheduleEventById(&se, id)
+	if err != nil {
+		http.Error(w, "Schedule event not found", http.StatusNotFound)
+		loggingClient.Error("Schedule event not found: "+err.Error(), "")
 		return
 	}
 
@@ -365,7 +358,7 @@ func restDeleteScheduleEventById(w http.ResponseWriter, r *http.Request) {
 		loggingClient.Error("Problem deleting schedule event: "+err.Error(), "")
 		return
 	}
-
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
 }
@@ -397,7 +390,7 @@ func restDeleteScheduleEventByName(w http.ResponseWriter, r *http.Request) {
 		loggingClient.Error("Problem deleting schedule event: "+err.Error(), "")
 		return
 	}
-
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
 }
@@ -601,14 +594,14 @@ func restAddSchedule(w http.ResponseWriter, r *http.Request) {
 
 	// Validate the time format
 	if s.Start != "" {
-		if _, err := time.Parse(TIMELAYOUT, s.Start); err != nil {
+		if _, err := msToTime(s.Start); err != nil {
 			loggingClient.Error("Incorrect start time format: "+err.Error(), "")
 			http.Error(w, err.Error(), http.StatusConflict)
 			return
 		}
 	}
 	if s.End != "" {
-		if _, err := time.Parse(TIMELAYOUT, s.End); err != nil {
+		if _, err := msToTime(s.End); err != nil {
 			loggingClient.Error("Incorrect end time format: "+err.Error(), "")
 			http.Error(w, err.Error(), http.StatusConflict)
 			return
@@ -656,13 +649,8 @@ func restUpdateSchedule(w http.ResponseWriter, r *http.Request) {
 	if err := getScheduleById(&to, from.Id.Hex()); err != nil {
 		// Try by name
 		if err = getScheduleByName(&to, from.Name); err != nil {
-			if err == mgo.ErrNotFound {
-				loggingClient.Error("Schedule not found: "+err.Error(), "")
-				http.Error(w, "Schedule not found", http.StatusNotFound)
-			} else {
-				loggingClient.Error("Problem getting schedule: "+err.Error(), "")
-				http.Error(w, err.Error(), http.StatusServiceUnavailable)
-			}
+			loggingClient.Error("Schedule not found: "+err.Error(), "")
+			http.Error(w, "Schedule not found", http.StatusNotFound)
 			return
 		}
 	}
@@ -698,7 +686,7 @@ func updateScheduleFields(from models.Schedule, to *models.Schedule, w http.Resp
 		to.Cron = from.Cron
 	}
 	if from.End != "" {
-		if _, err := time.Parse(TIMELAYOUT, from.End); err != nil {
+		if _, err := msToTime(from.End); err != nil {
 			http.Error(w, err.Error(), http.StatusConflict)
 			return err
 		}
@@ -713,7 +701,7 @@ func updateScheduleFields(from models.Schedule, to *models.Schedule, w http.Resp
 		to.Frequency = from.Frequency
 	}
 	if from.Start != "" {
-		if _, err := time.Parse(TIMELAYOUT, from.Start); err != nil {
+		if _, err := msToTime(from.Start); err != nil {
 			http.Error(w, err.Error(), http.StatusConflict)
 			return err
 		}
@@ -823,7 +811,7 @@ func restDeleteScheduleById(w http.ResponseWriter, r *http.Request) {
 		loggingClient.Error("Problem deleting schedule: "+err.Error(), "")
 		return
 	}
-
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
 }
@@ -855,7 +843,7 @@ func restDeleteScheduleByName(w http.ResponseWriter, r *http.Request) {
 		loggingClient.Error("Problem deleting schedule: "+err.Error(), "")
 		return
 	}
-
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
 }

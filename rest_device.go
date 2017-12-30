@@ -707,8 +707,8 @@ func restDeleteDeviceById(w http.ResponseWriter, r *http.Request) {
 
 	// Check if the device exists
 	var d models.Device
-	err := getDeviceById(&d, did)
-	if err != nil {
+	//err := getDeviceById(&d, did)
+	if err := getDeviceById(&d, did); err != nil {
 		if err == mgo.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
 		} else {
@@ -748,7 +748,7 @@ func restDeleteDeviceByName(w http.ResponseWriter, r *http.Request) {
 		loggingClient.Error(err.Error(), "")
 		return
 	}
-
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
 }
