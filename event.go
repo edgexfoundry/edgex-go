@@ -46,7 +46,7 @@ func updateDeviceLastReportedConnected(device string) {
 		return
 	}
 
-	t := time.Now().Unix()
+	t := time.Now().UnixNano() / int64(time.Millisecond)
 
 	// Get the device by name
 	d, err := mdc.DeviceForName(device)
@@ -103,7 +103,7 @@ func updateDeviceServiceLastReportedConnected(device string) {
 		return
 	}
 
-	t := time.Now().Unix()
+	t := time.Now().UnixNano() / int64(time.Millisecond)
 
 	// Get the device
 	d, err := mdc.DeviceForName(device)
@@ -482,7 +482,7 @@ func eventIdHandler(w http.ResponseWriter, r *http.Request) {
 
 		loggingClient.Info("Updating event: " + e.ID.Hex())
 
-		e.Pushed = time.Now().Unix()
+		e.Pushed = time.Now().UnixNano() / int64(time.Millisecond)
 		err = dbc.UpdateEvent(e)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
