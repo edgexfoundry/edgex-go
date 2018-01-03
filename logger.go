@@ -128,6 +128,10 @@ func (lc LoggingClient) buildLogEntry(logLevel support_domain.LogLevel, msg stri
 
 // Send the log as an http request
 func (lc LoggingClient) sendLog(logEntry support_domain.LogEntry) error {
+	if lc.RemoteUrl == "" {
+		return nil
+	}
+
 	reqBody, err := json.Marshal(logEntry)
 	if err != nil {
 		fmt.Println(err.Error())
