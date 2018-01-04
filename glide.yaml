@@ -3,6 +3,9 @@ import:
 - package: github.com/edgexfoundry/core-domain-go
   subpackages:
   - models
+  vcs: git
+  version: master
+  repo: https://github.com/edgexfoundry/core-domain-go.git
 testImport:
 - package: gopkg.in/mgo.v2
   subpackages:
