@@ -20,13 +20,14 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"net/http"
+	"net/url"
+	"regexp"
+
 	"github.com/edgexfoundry/core-clients-go/metadataclients"
 	"github.com/edgexfoundry/core-data-go/clients"
 	"github.com/edgexfoundry/core-domain-go/models"
 	"github.com/gorilla/mux"
-	"net/http"
-	"net/url"
-	"regexp"
 )
 
 const (
@@ -197,8 +198,10 @@ func valueDescriptorHandler(w http.ResponseWriter, r *http.Request) {
 			loggingClient.Error(err.Error())
 			return
 		}
-
-		encode(true, w)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("true"))
+		//encode(true, w)
 	}
 }
 
@@ -227,8 +230,10 @@ func deleteValueDescriptorByIdHandler(w http.ResponseWriter, r *http.Request) {
 	if err = deleteValueDescriptor(vd, w); err != nil {
 		return
 	}
-
-	encode(true, w)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("true"))
+	//encode(true, w)
 }
 
 // Value descriptors based on name
@@ -276,8 +281,10 @@ func valueDescriptorByNameHandler(w http.ResponseWriter, r *http.Request) {
 		if err = deleteValueDescriptor(vd, w); err != nil {
 			return
 		}
-
-		encode(true, w)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("true"))
+		//encode(true, w)
 	}
 }
 
@@ -483,5 +490,3 @@ func valueDescriptorsForDevice(d models.Device, w http.ResponseWriter) ([]models
 
 	return vdList, nil
 }
-
-

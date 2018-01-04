@@ -19,13 +19,14 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/edgexfoundry/core-domain-go/models"
-	"github.com/edgexfoundry/core-data-go/clients"
-	"github.com/gorilla/mux"
 	"net/http"
 	"net/url"
 	"strconv"
 	"time"
+
+	"github.com/edgexfoundry/core-data-go/clients"
+	"github.com/edgexfoundry/core-domain-go/models"
+	"github.com/gorilla/mux"
 )
 
 // Put event on the message queue to be processed by the rules engine
@@ -46,7 +47,7 @@ func updateDeviceLastReportedConnected(device string) {
 		return
 	}
 
-	t := time.Now().UnixNano() / int64(time.Millisecond)
+	t := time.Now().Unix()
 
 	// Get the device by name
 	d, err := mdc.DeviceForName(device)
@@ -103,7 +104,7 @@ func updateDeviceServiceLastReportedConnected(device string) {
 		return
 	}
 
-	t := time.Now().UnixNano() / int64(time.Millisecond)
+	t := time.Now().Unix()
 
 	// Get the device
 	d, err := mdc.DeviceForName(device)
@@ -349,7 +350,10 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 			loggingClient.Error(err.Error())
 			return
 		}
-		encode(true, w)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("true"))
+		//encode(true, w)
 	}
 }
 
@@ -482,13 +486,17 @@ func eventIdHandler(w http.ResponseWriter, r *http.Request) {
 
 		loggingClient.Info("Updating event: " + e.ID.Hex())
 
-		e.Pushed = time.Now().UnixNano() / int64(time.Millisecond)
+		e.Pushed = time.Now().Unix()
 		err = dbc.UpdateEvent(e)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			loggingClient.Error(err.Error())
 			return
 		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("true"))
+		//encode(true, w)
 		break
 	// Delete the event and all of it's readings
 	case "DELETE":
@@ -511,8 +519,10 @@ func eventIdHandler(w http.ResponseWriter, r *http.Request) {
 			loggingClient.Error(err.Error())
 			return
 		}
-
-		encode(true, w)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("true"))
+		//encode(true, w)
 	}
 }
 
@@ -643,7 +653,7 @@ func deleteByDeviceIdHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
-
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(strconv.Itoa(count)))
 	}
@@ -834,6 +844,7 @@ func eventByAgeHandler(w http.ResponseWriter, r *http.Request) {
 		loggingClient.Info("Deleting events by age: " + vars["age"])
 
 		// Return the count
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(strconv.Itoa(count)))
 	}
@@ -866,7 +877,7 @@ func scrubHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
-
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(strconv.Itoa(count)))
 	}
