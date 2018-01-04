@@ -1,6 +1,0 @@
-hash: 8094893fa29b8d36d7529081782dd9efd93a292cc773b8b298042e281529f399
-updated: 2017-12-12T12:02:51.9801007-06:00
-imports:
-- name: github.com/edgexfoundry/support-domain-go
-  version: f5205ea2711b247e6ca51fa07301227d3a9a5649
-testImports: []
