@@ -105,7 +105,7 @@ func (mc *MongoClient) AddEvent(e *models.Event) (bson.ObjectId, error) {
 	s := mc.GetSessionCopy()
 	defer s.Close()
 
-	e.Created = time.Now().Unix()
+	e.Created = time.Now().UnixNano() / int64(time.Millisecond)
 	e.ID = bson.NewObjectId()
 
 	// Handle DBRefs
@@ -127,7 +127,7 @@ func (mc *MongoClient) UpdateEvent(e models.Event) error {
 	s := mc.GetSessionCopy()
 	defer s.Close()
 
-	e.Modified = time.Now().Unix()
+	e.Modified = time.Now().UnixNano() / int64(time.Millisecond)
 
 	// Handle DBRef
 	me := MongoEvent{Event: e}
@@ -194,7 +194,7 @@ func (mc *MongoClient) EventsByCreationTime(startTime, endTime int64, limit int)
 
 // Get Events that are older than the given age (defined by age = now - created)
 func (mc *MongoClient) EventsOlderThanAge(age int64) ([]models.Event, error) {
-	currentTime := time.Now().Unix()
+	currentTime := time.Now().UnixNano() / int64(time.Millisecond)
 	query := bson.M{}
 	events, err := mc.getEvents(query)
 	if err != nil {
@@ -312,7 +312,7 @@ func (mc *MongoClient) AddReading(r models.Reading) (bson.ObjectId, error) {
 
 	// Get the reading ready
 	r.Id = bson.NewObjectId()
-	r.Created = time.Now().Unix()
+	r.Created = time.Now().UnixNano() / int64(time.Millisecond)
 
 	err := s.DB(mc.Database.Name).C(READINGS_COLLECTION).Insert(&r)
 	return r.Id, err
@@ -326,7 +326,7 @@ func (mc *MongoClient) UpdateReading(r models.Reading) error {
 	s := mc.GetSessionCopy()
 	defer s.Close()
 
-	r.Modified = time.Now().Unix()
+	r.Modified = time.Now().UnixNano() / int64(time.Millisecond)
 
 	// Update the reading
 	err := s.DB(mc.Database.Name).C(READINGS_COLLECTION).UpdateId(r.Id, r)
@@ -465,7 +465,7 @@ func (mc *MongoClient) AddValueDescriptor(v models.ValueDescriptor) (bson.Object
 	}
 
 	// Created/Modified now
-	v.Created = time.Now().Unix()
+	v.Created = time.Now().UnixNano() / int64(time.Millisecond)
 
 	// Add the value descriptor
 	v.Id = bson.NewObjectId()
@@ -500,7 +500,7 @@ func (mc *MongoClient) UpdateValueDescriptor(v models.ValueDescriptor) error {
 		}
 	}
 
-	v.Modified = time.Now().Unix()
+	v.Modified = time.Now().UnixNano() / int64(time.Millisecond)
 
 	err = s.DB(mc.Database.Name).C(VALUE_DESCRIPTOR_COLLECTION).UpdateId(v.Id, v)
 	if err == mgo.ErrNotFound {
