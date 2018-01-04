@@ -108,10 +108,12 @@ func restGetCommandsByDeviceID(w http.ResponseWriter, r *http.Request) {
 	status, device, err := getCommandsByDeviceID(did)
 	if err != nil {
 		loggingClient.Error(err.Error(), "")
-		w.WriteHeader(http.StatusServiceUnavailable)
+		http.Error(w, "Device not found", http.StatusNotFound)
+		return
 	} else if status != http.StatusOK {
 		w.WriteHeader(status)
 	}
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(&device)
 }
 
@@ -121,10 +123,12 @@ func restGetCommandsByDeviceName(w http.ResponseWriter, r *http.Request) {
 	status, devices, err := getCommandsByDeviceName(dn)
 	if err != nil {
 		loggingClient.Error(err.Error(), "")
-		w.WriteHeader(http.StatusServiceUnavailable)
+		http.Error(w, "Device not found", http.StatusNotFound)
+		return
 	} else if status != http.StatusOK {
 		w.WriteHeader(status)
 	}
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(&devices)
 }
 
@@ -136,5 +140,6 @@ func restGetAllCommands(w http.ResponseWriter, _ *http.Request) {
 	} else if status != http.StatusOK {
 		w.WriteHeader(status)
 	}
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(devices)
 }
