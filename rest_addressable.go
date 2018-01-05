@@ -93,7 +93,9 @@ func restUpdateAddressable(w http.ResponseWriter, r *http.Request) {
 	var res models.Addressable
 	err := getAddressableById(&res, ra.Id.Hex())
 	if err != nil {
-		err = getAddressableByName(&res, ra.Name)
+		if ra.Id == "" {
+			err = getAddressableByName(&res, ra.Name)
+		}
 		if err != nil {
 			if err == mgo.ErrNotFound {
 				http.Error(w, err.Error(), http.StatusNotFound)
@@ -133,7 +135,7 @@ func restUpdateAddressable(w http.ResponseWriter, r *http.Request) {
 
 	// Notify Associates
 	notifyAddressableAssociates(res, models.PUT)
-
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
 }
@@ -194,6 +196,7 @@ func restDeleteAddressableById(w http.ResponseWriter, r *http.Request) {
 
 	// Notify Associates
 	notifyAddressableAssociates(a, models.DELETE)
+	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte("true"))
 }
 func restDeleteAddressableByName(w http.ResponseWriter, r *http.Request) {
@@ -241,7 +244,7 @@ func restDeleteAddressableByName(w http.ResponseWriter, r *http.Request) {
 
 	// Notify Associates
 	notifyAddressableAssociates(a, models.DELETE)
-
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
 }

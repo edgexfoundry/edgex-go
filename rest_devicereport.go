@@ -322,7 +322,7 @@ func restDeleteReportById(w http.ResponseWriter, r *http.Request) {
 		loggingClient.Error(err.Error(), "")
 		return
 	}
-
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
 }
@@ -352,7 +352,7 @@ func restDeleteReportByName(w http.ResponseWriter, r *http.Request) {
 		loggingClient.Error(err.Error(), "")
 		return
 	}
-
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
 }
