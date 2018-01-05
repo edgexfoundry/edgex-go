@@ -20,12 +20,13 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	"github.com/edgexfoundry/core-data-go/clients"
-	"github.com/edgexfoundry/core-domain-go/models"
-	"github.com/gorilla/mux"
 	"net/http"
 	"net/url"
 	"strconv"
+
+	"github.com/edgexfoundry/core-data-go/clients"
+	"github.com/edgexfoundry/core-domain-go/models"
+	"github.com/gorilla/mux"
 )
 
 // Check metadata if the device exists
@@ -174,7 +175,10 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		encode(true, w)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("true"))
+		//encode(true, w)
 	}
 }
 
@@ -254,8 +258,10 @@ func deleteReadingByIdHandler(w http.ResponseWriter, r *http.Request) {
 			loggingClient.Error(err.Error())
 			return
 		}
-
-		encode(true, w)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("true"))
+		//encode(true, w)
 	}
 }
 
