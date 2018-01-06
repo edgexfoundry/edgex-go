@@ -1,7 +1,7 @@
 # Docker image for Golang Core Meta Data micro service
 
 # Initial Image - for building Golang
-FROM golang:1.7.5-alpine AS build-env
+FROM golang:1.9.1-alpine AS build-env
 
 # Dependencies
 RUN apk add --update --no-cache \
