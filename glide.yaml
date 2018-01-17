@@ -1,0 +1,9 @@
+package: github.com/drasko/edgex-export
+import:
+- package: github.com/go-zoo/bone
+  version: ^1.2.0
+- package: go.uber.org/zap
+  version: ^1.7.1
+- package: gopkg.in/mgo.v2
+  subpackages:
+  - bson
