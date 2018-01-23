@@ -14,7 +14,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/edgexfoundry/export-go"
+	"github.com/edgexfoundry/core-domain-go/models"
 	"github.com/edgexfoundry/export-go/distro"
 
 	"go.uber.org/zap"
@@ -37,7 +37,7 @@ func main() {
 	cfg := loadConfig()
 
 	errs := make(chan error, 2)
-	eventCh := make(chan *export.Event, 10)
+	eventCh := make(chan *models.Event, 10)
 
 	go func() {
 		c := make(chan os.Signal)

@@ -9,6 +9,7 @@ package distro
 import (
 	"testing"
 
+	"github.com/edgexfoundry/core-domain-go/models"
 	"github.com/edgexfoundry/export-go"
 	"go.uber.org/zap"
 )
@@ -30,11 +31,11 @@ func TestFilterDevice(t *testing.T) {
 	f.DeviceIDs = append(f.DeviceIDs, "DEV1")
 
 	// Event from device 1
-	eventDev1 := export.Event{
+	eventDev1 := models.Event{
 		Device: deviceID1,
 	}
 	// Event from device 2
-	eventDev2 := export.Event{
+	eventDev2 := models.Event{
 		Device: deviceID2,
 	}
 
@@ -73,17 +74,17 @@ func TestFilterValue(t *testing.T) {
 	filter12 := newValueDescFilter(f12)
 
 	// event with a value descriptor 1
-	event1 := export.Event{}
-	event1.Readings = append(event1.Readings, export.Reading{Name: descriptor1})
+	event1 := models.Event{}
+	event1.Readings = append(event1.Readings, models.Reading{Name: descriptor1})
 
 	// event with a value descriptor 2
-	event2 := export.Event{}
-	event2.Readings = append(event2.Readings, export.Reading{Name: descriptor2})
+	event2 := models.Event{}
+	event2.Readings = append(event2.Readings, models.Reading{Name: descriptor2})
 
 	// event with a value descriptor 1 and another 2
-	event12 := export.Event{}
-	event12.Readings = append(event12.Readings, export.Reading{Name: descriptor1})
-	event12.Readings = append(event12.Readings, export.Reading{Name: descriptor2})
+	event12 := models.Event{}
+	event12.Readings = append(event12.Readings, models.Reading{Name: descriptor1})
+	event12.Readings = append(event12.Readings, models.Reading{Name: descriptor2})
 
 	accepted, res := filter1.Filter(nil)
 	if accepted {

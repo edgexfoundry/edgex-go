@@ -17,6 +17,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/edgexfoundry/core-domain-go/models"
 	"github.com/edgexfoundry/export-go"
 	"go.uber.org/zap"
 )
@@ -32,7 +33,7 @@ func newRegistrationInfo() *registrationInfo {
 	reg := &registrationInfo{}
 
 	reg.chRegistration = make(chan *export.Registration)
-	reg.chEvent = make(chan *export.Event)
+	reg.chEvent = make(chan *models.Event)
 	return reg
 }
 
@@ -113,7 +114,7 @@ func (reg *registrationInfo) update(newReg export.Registration) bool {
 	return true
 }
 
-func (reg registrationInfo) processEvent(event *export.Event) {
+func (reg registrationInfo) processEvent(event *models.Event) {
 	// Valid Event Filter, needed?
 
 	for _, f := range reg.filter {
@@ -217,7 +218,7 @@ func updateRunningRegistrations(running map[string]*registrationInfo,
 }
 
 // Loop - registration loop
-func Loop(config Config, errChan chan error, eventCh chan *export.Event) {
+func Loop(config Config, errChan chan error, eventCh chan *models.Event) {
 
 	cfg = config
 	go func() {

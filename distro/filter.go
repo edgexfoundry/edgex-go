@@ -7,6 +7,7 @@
 package distro
 
 import (
+	"github.com/edgexfoundry/core-domain-go/models"
 	"github.com/edgexfoundry/export-go"
 	"go.uber.org/zap"
 )
@@ -23,7 +24,7 @@ func newDevIdFilter(filter export.Filter) Filterer {
 	return filterer
 }
 
-func (filter devIdFilterDetails) Filter(event *export.Event) (bool, *export.Event) {
+func (filter devIdFilterDetails) Filter(event *models.Event) (bool, *models.Event) {
 
 	if event == nil {
 		return false, nil
@@ -49,19 +50,19 @@ func newValueDescFilter(filter export.Filter) Filterer {
 	return filterer
 }
 
-func (filter valueDescFilterDetails) Filter(event *export.Event) (bool, *export.Event) {
+func (filter valueDescFilterDetails) Filter(event *models.Event) (bool, *models.Event) {
 
 	if event == nil {
 		return false, nil
 	}
 
-	auxEvent := &export.Event{
+	auxEvent := &models.Event{
 		Pushed:   event.Pushed,
 		Device:   event.Device,
 		Created:  event.Created,
 		Modified: event.Modified,
 		Origin:   event.Origin,
-		Readings: []export.Reading{},
+		Readings: []models.Reading{},
 	}
 
 	for _, filterId := range filter.valueDescIDs {

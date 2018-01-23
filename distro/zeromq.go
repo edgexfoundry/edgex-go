@@ -12,7 +12,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/edgexfoundry/export-go"
+	"github.com/edgexfoundry/core-domain-go/models"
 	zmq "github.com/pebbe/zmq4"
 	"go.uber.org/zap"
 )
@@ -21,11 +21,11 @@ const (
 	zeroMQPort = 5563
 )
 
-func ZeroMQReceiver(eventCh chan *export.Event) {
+func ZeroMQReceiver(eventCh chan *models.Event) {
 	go initZmq(eventCh)
 }
 
-func initZmq(eventCh chan *export.Event) {
+func initZmq(eventCh chan *models.Event) {
 	q, _ := zmq.NewSocket(zmq.SUB)
 	defer q.Close()
 
@@ -50,8 +50,8 @@ func initZmq(eventCh chan *export.Event) {
 	}
 }
 
-func parseEvent(str string) *export.Event {
-	event := export.Event{}
+func parseEvent(str string) *models.Event {
+	event := models.Event{}
 
 	if err := json.Unmarshal([]byte(str), &event); err != nil {
 		logger.Error("Failed to parse event", zap.Error(err))

@@ -12,7 +12,7 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/edgexfoundry/export-go"
+	"github.com/edgexfoundry/core-domain-go/models"
 	"go.uber.org/zap"
 )
 
@@ -24,7 +24,7 @@ const sampleEvent string = `{"pushed":0,"device":"livingroomthermostat",
 	{"pushed":0,"name":"rpm","value":"58","id":"57ed24f0502fdf73bb637916","created":1475159280756,"modified":1475159280756,"origin":1471806386919}],
 	"id":"57ed24f0502fdf73bb637917","created":1475159280762,"modified":1475159280762,"origin":1471806386919}`
 
-func ZeroMQReceiver(eventCh chan *export.Event) {
+func ZeroMQReceiver(eventCh chan *models.Event) {
 	go func() {
 		ev := parseEvent(sampleEvent)
 		for {
@@ -35,8 +35,8 @@ func ZeroMQReceiver(eventCh chan *export.Event) {
 	}()
 }
 
-func parseEvent(str string) *export.Event {
-	event := export.Event{}
+func parseEvent(str string) *models.Event {
+	event := models.Event{}
 	if err := json.Unmarshal([]byte(str), &event); err != nil {
 		logger.Error("Failed to query add registration", zap.Error(err))
 		return nil

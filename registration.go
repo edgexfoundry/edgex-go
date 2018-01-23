@@ -7,6 +7,8 @@
 package export
 
 import (
+	"github.com/edgexfoundry/core-domain-go/models"
+
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -39,18 +41,18 @@ const (
 // Registration - Defines the registration details
 // on the part of north side export clients
 type Registration struct {
-	ID          bson.ObjectId     `bson:"_id,omitempty" json:"_id,omitempty"`
-	Created     int64             `json:"created"`
-	Modified    int64             `json:"modified"`
-	Origin      int64             `json:"origin"`
-	Name        string            `json:"name,omitempty"`
-	Addressable Addressable       `json:"addressable,omitempty"`
-	Format      string            `json:"format,omitempty"`
-	Filter      Filter            `json:"filter,omitempty"`
-	Encryption  EncryptionDetails `json:"encryption,omitempty"`
-	Compression string            `json:"compression,omitempty"`
-	Enable      bool              `json:"enable"`
-	Destination string            `json:"destination,omitempty"`
+	ID          bson.ObjectId      `bson:"_id,omitempty" json:"_id,omitempty"`
+	Created     int64              `json:"created"`
+	Modified    int64              `json:"modified"`
+	Origin      int64              `json:"origin"`
+	Name        string             `json:"name,omitempty"`
+	Addressable models.Addressable `json:"addressable,omitempty"`
+	Format      string             `json:"format,omitempty"`
+	Filter      Filter             `json:"filter,omitempty"`
+	Encryption  EncryptionDetails  `json:"encryption,omitempty"`
+	Compression string             `json:"compression,omitempty"`
+	Enable      bool               `json:"enable"`
+	Destination string             `json:"destination,omitempty"`
 }
 
 const (
