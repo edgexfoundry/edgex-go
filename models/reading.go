@@ -32,8 +32,8 @@ import (
  */
 type Reading struct {
 	Id       bson.ObjectId `bson:"_id,omitempty"`
-	Pushed   int64         `bson:"pushed" json:"pushed"`    // When the data was pushed out of EdgeX (0 - not pushed yet)
-	Created  int64         `bson: "created" json:"created"` // When the reading was created
+	Pushed   int64         `bson:"pushed" json:"pushed"`   // When the data was pushed out of EdgeX (0 - not pushed yet)
+	Created  int64         `bson:"created" json:"created"` // When the reading was created
 	Origin   int64         `bson:"origin" json:"origin"`
 	Modified int64         `bson:"modified" json:"modified"`
 	Device   string        `bson:"device" json:"device"`
