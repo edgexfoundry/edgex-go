@@ -17,9 +17,15 @@ import (
 	"net/http"
 	"time"
 
+	consulclient "github.com/edgexfoundry/consul-client-go"
 	"github.com/edgexfoundry/core-domain-go/models"
 	"github.com/edgexfoundry/export-go"
 	"go.uber.org/zap"
+)
+
+const (
+	applicationName string = "export-distro"
+	consulProfile   string = "go"
 )
 
 var registrationChanges chan export.NotifyUpdate = make(chan export.NotifyUpdate, 2)
@@ -221,6 +227,27 @@ func updateRunningRegistrations(running map[string]*registrationInfo,
 func Loop(config Config, errChan chan error, eventCh chan *models.Event) {
 
 	cfg = config
+
+	// Initialize service on Consul
+	err := consulclient.ConsulInit(consulclient.ConsulConfig{
+		ServiceName:    applicationName,
+		ServicePort:    cfg.Port,
+		ServiceAddress: "localhost",
+		CheckAddress:   "http://localhost:48070/api/v1/ping",
+		CheckInterval:  "10s",
+		ConsulAddress:  "localhost",
+		ConsulPort:     8500,
+	})
+
+	if err == nil {
+		consulProfiles := []string{consulProfile}
+		if err := consulclient.CheckKeyValuePairs(&cfg, applicationName, consulProfiles); err != nil {
+			logger.Warn("Error getting key/values from Consul", zap.Error(err))
+		}
+	} else {
+		logger.Warn("Error connecting to consul", zap.Error(err))
+	}
+
 	go func() {
 		p := fmt.Sprintf(":%d", cfg.Port)
 		logger.Info("Starting Export Distro", zap.String("url", p))
