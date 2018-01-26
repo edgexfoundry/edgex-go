@@ -27,10 +27,10 @@ import (
 	"strings"
 	"time"
 
-	consulclient "github.com/edgexfoundry/consul-client-go"
-	enums "github.com/edgexfoundry/core-domain-go/enums"
-	logger "github.com/edgexfoundry/support-logging-client-go"
-	notifications "github.com/edgexfoundry/support-notifications-client-go"
+	consulclient "github.com/edgexfoundry/edgex-go/support/consul-client"
+	enums "github.com/edgexfoundry/edgex-go/core/domain/enums"
+	logger "github.com/edgexfoundry/edgex-go/support/logging-client"
+	notifications "github.com/edgexfoundry/edgex-go/support/notifications-client"
 )
 
 // DS : DataStore to retrieve data from database.

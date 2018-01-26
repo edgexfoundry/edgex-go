@@ -25,8 +25,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/edgexfoundry/core-domain-go/models"
-	notifications "github.com/edgexfoundry/support-notifications-client-go"
+	"github.com/edgexfoundry/edgex-go/core/domain/models"
+	notifications "github.com/edgexfoundry/edgex-go/support/notifications-client"
 	"github.com/gorilla/mux"
 	"gopkg.in/mgo.v2"
 )

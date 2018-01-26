@@ -9,7 +9,7 @@
 package distro
 
 import (
-	"github.com/edgexfoundry/export-go"
+	"github.com/edgexfoundry/edgex-go/export"
 )
 
 const (
