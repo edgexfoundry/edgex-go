@@ -1,0 +1,12 @@
+*.exe
+*.test
+*.prof
+
+*.idea
+*.project
+*.iml
+
+*.log
+
+# Vendor
+vendor/
