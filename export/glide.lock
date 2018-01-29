@@ -1,0 +1,25 @@
+hash: cef7b6581e24e6f3ad3631716fe0976468b6ce66e4c63e12bf5a6a9c964bb446
+updated: 2017-10-13T16:47:58.453647607+13:00
+imports:
+- name: github.com/go-zoo/bone
+  version: fd0aebc74e908868b09ac140fb5a53cb363884c1
+- name: go.uber.org/atomic
+  version: 4e336646b2ef9fc6e47be8e21594178f98e5ebcf
+- name: go.uber.org/multierr
+  version: 3c4937480c32f4c13a875a1829af76c98ca3d40a
+- name: go.uber.org/zap
+  version: 35aad584952c3e7020db7b839f6b102de6271f89
+  subpackages:
+  - buffer
+  - internal/bufferpool
+  - internal/color
+  - internal/exit
+  - zapcore
+- name: gopkg.in/mgo.v2
+  version: 3f83fa5005286a7fe593b055f0d7771a7dce4655
+  subpackages:
+  - bson
+  - internal/json
+  - internal/sasl
+  - internal/scram
+testImports: []

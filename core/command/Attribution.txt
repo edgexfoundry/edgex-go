@@ -1,0 +1,4 @@
+The following open source projects are referenced by Core Command Go:
+
+gorilla/mux (BSD-3) - https://github.com/gorilla/mux
+https://github.com/gorilla/mux/blob/master/LICENSE
