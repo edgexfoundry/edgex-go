@@ -9,6 +9,7 @@
 package distro
 
 import (
+	"github.com/edgexfoundry/core-domain-go/models"
 	"github.com/edgexfoundry/export-go"
 )
 
@@ -25,7 +26,7 @@ type Sender interface {
 
 // Formater - Format interface
 type Formater interface {
-	Format(event *export.Event) []byte
+	Format(event *models.Event) []byte
 }
 
 // Transformer - Transform interface
@@ -35,7 +36,7 @@ type Transformer interface {
 
 // Filter - Filter interface
 type Filterer interface {
-	Filter(event *export.Event) (bool, *export.Event)
+	Filter(event *models.Event) (bool, *models.Event)
 }
 
 // RegistrationInfo - registration info
@@ -48,7 +49,7 @@ type registrationInfo struct {
 	filter       []Filterer
 
 	chRegistration chan *export.Registration
-	chEvent        chan *export.Event
+	chEvent        chan *models.Event
 
 	deleteMe bool
 }

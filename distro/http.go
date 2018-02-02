@@ -13,7 +13,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/edgexfoundry/export-go"
+	"github.com/edgexfoundry/core-domain-go/models"
 	"go.uber.org/zap"
 )
 
@@ -25,12 +25,12 @@ type httpSender struct {
 const mimeTypeJSON = "application/json"
 
 // NewHTTPSender - create http sender
-func NewHTTPSender(addr export.Addressable) Sender {
+func NewHTTPSender(addr models.Addressable) Sender {
 	// CHN: Should be added protocol from Addressable instead of include it the address param.
 	// CHN: We will maintain this behaviour for compatibility with Java
 	sender := httpSender{
 		url:    addr.Address + ":" + strconv.Itoa(addr.Port) + addr.Path,
-		method: addr.Method,
+		method: addr.HTTPMethod,
 	}
 	return sender
 }
@@ -38,7 +38,7 @@ func NewHTTPSender(addr export.Addressable) Sender {
 func (sender httpSender) Send(data []byte) {
 	switch sender.method {
 
-	case export.MethodGet:
+	case models.MethodGet:
 		response, err := http.Get(sender.url)
 		if err != nil {
 			logger.Error("Error: ", zap.Error(err))
@@ -47,7 +47,7 @@ func (sender httpSender) Send(data []byte) {
 		defer response.Body.Close()
 		logger.Info("Response: ", zap.String("status", response.Status))
 
-	case export.MethodPost:
+	case models.MethodPost:
 		response, err := http.Post(sender.url, mimeTypeJSON, bytes.NewReader(data))
 		if err != nil {
 			logger.Error("Error: ", zap.Error(err))

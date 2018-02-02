@@ -10,14 +10,14 @@ import (
 	"encoding/json"
 	"encoding/xml"
 
-	"github.com/edgexfoundry/export-go"
+	"github.com/edgexfoundry/core-domain-go/models"
 	"go.uber.org/zap"
 )
 
 type jsonFormater struct {
 }
 
-func (jsonTr jsonFormater) Format(event *export.Event) []byte {
+func (jsonTr jsonFormater) Format(event *models.Event) []byte {
 
 	b, err := json.Marshal(event)
 	if err != nil {
@@ -30,7 +30,7 @@ func (jsonTr jsonFormater) Format(event *export.Event) []byte {
 type xmlFormater struct {
 }
 
-func (xmlTr xmlFormater) Format(event *export.Event) []byte {
+func (xmlTr xmlFormater) Format(event *models.Event) []byte {
 	b, err := xml.Marshal(event)
 	if err != nil {
 		logger.Error("Error parsing XML", zap.Error(err))

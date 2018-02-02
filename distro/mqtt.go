@@ -12,7 +12,7 @@ import (
 	"strconv"
 
 	MQTT "github.com/eclipse/paho.mqtt.golang"
-	"github.com/edgexfoundry/export-go"
+	"github.com/edgexfoundry/core-domain-go/models"
 	"go.uber.org/zap"
 )
 
@@ -22,7 +22,7 @@ type mqttSender struct {
 }
 
 // NewMqttSender - create new mqtt sender
-func NewMqttSender(addr export.Addressable) Sender {
+func NewMqttSender(addr models.Addressable) Sender {
 	opts := MQTT.NewClientOptions()
 	broker := "tcp://" + addr.Address + ":" + strconv.Itoa(addr.Port)
 	opts.AddBroker(broker)

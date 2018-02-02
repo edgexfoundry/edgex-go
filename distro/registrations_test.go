@@ -7,6 +7,7 @@
 package distro
 
 import (
+	"github.com/edgexfoundry/core-domain-go/models"
 	"github.com/edgexfoundry/export-go"
 
 	// "go.uber.org/zap"
@@ -72,7 +73,7 @@ func (sender *dummyStruct) Send(data []byte) {
 	sender.count += 1
 }
 
-func (sender *dummyStruct) Format(ev *export.Event) []byte {
+func (sender *dummyStruct) Format(ev *models.Event) []byte {
 	return []byte("")
 }
 
@@ -83,7 +84,7 @@ func (sender *dummyStruct) Transform(data []byte) []byte {
 func TestRegistrationInfoEvent(t *testing.T) {
 	ri := newRegistrationInfo()
 	// no configured should not panic
-	ri.processEvent(&export.Event{})
+	ri.processEvent(&models.Event{})
 
 	dummy := &dummyStruct{}
 
@@ -92,7 +93,7 @@ func TestRegistrationInfoEvent(t *testing.T) {
 	ri.encrypt = dummy
 	ri.compression = dummy
 	ri.filter = nil
-	ri.processEvent(&export.Event{})
+	ri.processEvent(&models.Event{})
 	if dummy.count != 1 {
 		t.Fatal("It should send an event")
 	}
@@ -139,7 +140,7 @@ func TestRegistrationInfoLoop(t *testing.T) {
 	}
 
 	go func() {
-		ri.chEvent <- &export.Event{}
+		ri.chEvent <- &models.Event{}
 		ri.chRegistration <- nil
 	}()
 	ri.format = &dummyStruct{}
