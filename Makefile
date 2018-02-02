@@ -2,23 +2,29 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-.PHONY: build test vet prepare edgexclient edgexdistro edgexdistro_zmq docker
+BUILD_DIR := build
+
+.PHONY: buildall test vet prepare $(BUILD_DIR)/client $(BUILD_DIR)/distro \
+		$(BUILD_DIR)/distro_zmq docker
 
 # Make exec targets phony to not track changes in go files. Compilation is fast
 .PHONY: client distro distro_zmq
 
-default: build
+default: buildall
 
-client:
-	go build -o client cmd/client/main.go
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
 
-distro:
-	go build -o distro cmd/distro/main.go
+client: $(BUILD_DIR)
+	go build -o $(BUILD_DIR)/client cmd/client/main.go
 
-distro_zmq:
-	go build -o distro_zmq -tags zeromq cmd/distro/main.go
+distro: $(BUILD_DIR)
+	go build -o $(BUILD_DIR)/distro cmd/distro/main.go
 
-build: client distro distro_zmq
+distro_zmq: $(BUILD_DIR)
+	go build -o $(BUILD_DIR)/distro_zmq -tags zeromq cmd/distro/main.go
+
+buildall: client distro distro_zmq
 
 docker:
 	docker build -f Dockerfile.client  .
@@ -30,23 +36,22 @@ test:
 vet:
 	go vet `glide novendor` 
 
-coverage:
-	go test -covermode=count -coverprofile=cov.out ./distro
-	go tool cover -html=cov.out -o distroCoverage.html
-	go test -covermode=count -coverprofile=cov.out ./client
-	go tool cover -html=cov.out -o clientCoverage.html
-	rm cov.out
+coverage: $(BUILD_DIR)
+	go test -covermode=count -coverprofile=$(BUILD_DIR)/cov.out ./distro
+	go tool cover -html=$(BUILD_DIR)/cov.out -o $(BUILD_DIR)/distroCoverage.html
+	go test -covermode=count -coverprofile=$(BUILD_DIR)/cov.out ./client
+	go tool cover -html=$(BUILD_DIR)/cov.out -o $(BUILD_DIR)/clientCoverage.html
+	rm $(BUILD_DIR)/cov.out
 
-bench:
+bench: $(BUILD_DIR)
 	go test -run=XXX -bench=. ./distro
 
-profile:
-	go test -run=XXX -bench=.  -cpuprofile distro.cpu ./distro
-	go test -run=XXX -bench=.  -memprofile distro.mem ./distro
+profile: $(BUILD_DIR)
+	go test -run=XXX -bench=. -cpuprofile $(BUILD_DIR)/distro.cpu ./distro
+	go test -run=XXX -bench=. -memprofile $(BUILD_DIR)/distro.mem ./distro
 
 prepare:
 	glide install
 
 clean:
-	rm -f client distro distro_zmq cov.out distroCoverage.html \
-       clientCoverage.html distro.cpu distro.mem
+	rm -rf $(BUILD_DIR) distro.test
