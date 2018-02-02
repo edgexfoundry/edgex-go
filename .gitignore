@@ -3,6 +3,7 @@
 # see https://npmjs.org/doc/faq.html#Should-I-check-my-node_modules-folder-into-git
 node_modules
 vendor
+build
 
 # Visual Studio files
 *.sln
@@ -24,9 +25,4 @@ tags
 # Binary
 cmd/client/client
 cmd/distro/distro
-client
-distro
-distro_zmq
-cov.out
-distroCoverage.html
-clientCoverage.html
+distro.test
