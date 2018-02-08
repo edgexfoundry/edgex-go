@@ -24,7 +24,7 @@ type mqttSender struct {
 // NewMqttSender - create new mqtt sender
 func NewMqttSender(addr models.Addressable) Sender {
 	opts := MQTT.NewClientOptions()
-	broker := "tcp://" + addr.Address + ":" + strconv.Itoa(addr.Port)
+	broker := addr.Protocol + "://" + addr.Address + ":" + strconv.Itoa(addr.Port) + addr.Path
 	opts.AddBroker(broker)
 	opts.SetClientID(addr.Publisher)
 	opts.SetUsername(addr.User)
