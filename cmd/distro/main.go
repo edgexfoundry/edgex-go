@@ -23,8 +23,8 @@ import (
 const (
 	envClientHost string = "EXPORT_DISTRO_CLIENT_HOST"
 	envDataHost   string = "EXPORT_DISTRO_DATA_HOST"
-	envMQTTSCert  string = "MQTTS_CERT_FILE"
-	envMQTTSKey   string = "MQTTS_KEY_FILE"
+	envMQTTSCert  string = "EXPORT_DISTRO_MQTTS_CERT_FILE"
+	envMQTTSKey   string = "EXPORT_DISTRO_MQTTS_KEY_FILE"
 )
 
 var logger *zap.Logger
