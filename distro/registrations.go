@@ -17,9 +17,11 @@ import (
 	"net/http"
 	"time"
 
+	export "github.com/edgexfoundry/export-go"
 	consulclient "github.com/edgexfoundry/consul-client-go"
-	"github.com/edgexfoundry/core-domain-go/models"
-	"github.com/edgexfoundry/export-go"
+
+  "github.com/edgexfoundry/core-domain-go/models"
+
 	"go.uber.org/zap"
 )
 
@@ -94,6 +96,11 @@ func (reg *registrationInfo) update(newReg export.Registration) bool {
 		logger.Warn("Destination not supported: ", zap.String("destination", newReg.Destination))
 		return false
 	}
+
+	if reg.sender == nil {
+		return false
+	}
+
 	reg.encrypt = nil
 	switch newReg.Encryption.Algo {
 	case export.EncNone:
