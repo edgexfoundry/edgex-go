@@ -90,6 +90,11 @@ func (reg *registrationInfo) update(newReg export.Registration) bool {
 		logger.Warn("Destination not supported: ", zap.String("destination", newReg.Destination))
 		return false
 	}
+
+	if reg.sender == nil {
+		return false
+	}
+
 	reg.encrypt = nil
 	switch newReg.Encryption.Algo {
 	case export.EncNone:

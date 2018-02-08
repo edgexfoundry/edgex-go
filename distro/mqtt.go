@@ -43,8 +43,7 @@ func NewMqttSender(addr models.Addressable) Sender {
 		cert, err := tls.LoadX509KeyPair(cfg.MQTTSCert, cfg.MQTTSKey)
 
 		if err != nil {
-			logger.Fatal("Failed loading x509 data")
-			return nil
+			logger.Error("Failed loading x509 data")
 		}
 
 		tlsConfig := &tls.Config{
