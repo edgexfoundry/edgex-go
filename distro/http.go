@@ -29,7 +29,7 @@ func NewHTTPSender(addr models.Addressable) Sender {
 	// CHN: Should be added protocol from Addressable instead of include it the address param.
 	// CHN: We will maintain this behaviour for compatibility with Java
 	sender := httpSender{
-		url:    addr.Address + ":" + strconv.Itoa(addr.Port) + addr.Path,
+		url:    addr.Protocol + "://" + addr.Address + ":" + strconv.Itoa(addr.Port) + addr.Path,
 		method: addr.HTTPMethod,
 	}
 	return sender
