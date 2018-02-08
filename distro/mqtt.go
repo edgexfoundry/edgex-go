@@ -44,6 +44,7 @@ func NewMqttSender(addr models.Addressable) Sender {
 
 		if err != nil {
 			logger.Error("Failed loading x509 data")
+			return nil
 		}
 
 		tlsConfig := &tls.Config{
