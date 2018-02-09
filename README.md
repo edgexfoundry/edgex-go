@@ -15,8 +15,6 @@ Repo contains two microservices, `export-client` and `export-distro`.
 
 ## Install and Deploy
 
-Currently only `export-client` is functional.
-
 To fetch the code and start the microservice execute:
 
 ```
