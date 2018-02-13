@@ -1,5 +1,5 @@
-hash: b6807e20a814a55b6d3245bb5ab45c85d08c33382f2876bb0aee5b208f86261b
-updated: 2018-02-12T18:02:51.388824252+01:00
+hash: 3b490ad5528364eec2da00a93d9914a3dcb753d2e8708d4937dfe6e7989f614f
+updated: 2018-02-13T08:28:58.016493843+01:00
 imports:
 - name: github.com/eclipse/paho.mqtt.golang
   version: 750c97f293745e8220737ef933da2ec829d2fddd
@@ -8,7 +8,7 @@ imports:
 - name: github.com/edgexfoundry/consul-client-go
   version: 1791ee60ca82e37f0c49a93619af98430d93c5cd
 - name: github.com/edgexfoundry/core-domain-go
-  version: 036b01c8032ce1853b9c8edbb558109af58f4dd0
+  version: 7acdb6490aba88203245e4b07ceb6e54cafc08ee
   subpackages:
   - models
 - name: github.com/go-zoo/bone

@@ -8,3 +8,6 @@ import:
   subpackages:
   - bson
 - package: github.com/edgexfoundry/consul-client-go
+- package: github.com/edgexfoundry/core-domain-go
+  subpackages:
+  - models
