@@ -94,9 +94,10 @@ func BenchmarkGzip(b *testing.B) {
 	comp := gzipTransformer{}
 
 	var enc []byte
-	for i := 0; i < 1000; i++ {
+	for i := 0; i < b.N; i++ {
 		enc = comp.Transform([]byte(clearString))
 	}
+	b.SetBytes(int64(len(enc)))
 	result = enc
 }
 
@@ -105,8 +106,9 @@ func BenchmarkZlib(b *testing.B) {
 	comp := zlibTransformer{}
 
 	var enc []byte
-	for i := 0; i < 1000; i++ {
+	for i := 0; i < b.N; i++ {
 		enc = comp.Transform([]byte(clearString))
 	}
+	b.SetBytes(int64(len(enc)))
 	result = enc
 }
