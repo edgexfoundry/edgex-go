@@ -1,10 +1,36 @@
-hash: cef7b6581e24e6f3ad3631716fe0976468b6ce66e4c63e12bf5a6a9c964bb446
-updated: 2017-10-13T16:47:58.453647607+13:00
+hash: 3b490ad5528364eec2da00a93d9914a3dcb753d2e8708d4937dfe6e7989f614f
+updated: 2018-02-13T08:28:58.016493843+01:00
 imports:
+- name: github.com/eclipse/paho.mqtt.golang
+  version: 750c97f293745e8220737ef933da2ec829d2fddd
+  subpackages:
+  - packets
+- name: github.com/edgexfoundry/consul-client-go
+  version: 1791ee60ca82e37f0c49a93619af98430d93c5cd
+- name: github.com/edgexfoundry/core-domain-go
+  version: 7acdb6490aba88203245e4b07ceb6e54cafc08ee
+  subpackages:
+  - models
 - name: github.com/go-zoo/bone
   version: fd0aebc74e908868b09ac140fb5a53cb363884c1
+- name: github.com/hashicorp/consul
+  version: 6be97eb8bb3e9bacdee92562e48b398d6f116b57
+  subpackages:
+  - api
+- name: github.com/hashicorp/go-cleanhttp
+  version: 06c9ea3a335b7443026f8124b22619524420291b
+- name: github.com/hashicorp/go-rootcerts
+  version: 6bb64b370b90e7ef1fa532be9e591a81c3493e00
+- name: github.com/hashicorp/serf
+  version: a110af454b635c75adc2b7eee541af2c68666d97
+  subpackages:
+  - coordinate
+- name: github.com/mitchellh/go-homedir
+  version: b8bc1bf767474819792c23f32d8286a45736f1c6
+- name: github.com/pebbe/zmq4
+  version: 90d69e412a09549f2e90bac70fbb449081f1e5c1
 - name: go.uber.org/atomic
-  version: 4e336646b2ef9fc6e47be8e21594178f98e5ebcf
+  version: 8474b86a5a6f79c443ce4b2992817ff32cf208b8
 - name: go.uber.org/multierr
   version: 3c4937480c32f4c13a875a1829af76c98ca3d40a
 - name: go.uber.org/zap
@@ -15,6 +41,11 @@ imports:
   - internal/color
   - internal/exit
   - zapcore
+- name: golang.org/x/net
+  version: 5ccada7d0a7ba9aeb5d3aca8d3501b4c2a509fec
+  subpackages:
+  - proxy
+  - websocket
 - name: gopkg.in/mgo.v2
   version: 3f83fa5005286a7fe593b055f0d7771a7dce4655
   subpackages:
