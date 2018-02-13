@@ -1,5 +1,5 @@
 # EdgeX Foundry Export Services
-[![Go Report Card](https://goreportcard.com/badge/github.com/drasko/edgex-export)](https://goreportcard.com/report/github.com/drasko/edgex-export)
+[![Go Report Card](https://goreportcard.com/badge/github.com/edgexfoundry/export-go)](https://goreportcard.com/report/github.com/edgexfoundry/export-go)
 [![license](https://img.shields.io/badge/license-Apache%20v2.0-blue.svg)](LICENSE)
 
 Go implementation of EdgeX Export services.
@@ -18,8 +18,8 @@ Repo contains two microservices, `export-client` and `export-distro`.
 To fetch the code and start the microservice execute:
 
 ```
-go get github.com/drasko/edgex-export
-cd $GOPATH/src/github.com/drasko/edgex-export
+go get github.com/edgexfoundry/export-go
+cd $GOPATH/src/github.com/edgexfoundry/export-go
 glide install
 go run cmd/client/main.go
 ```
