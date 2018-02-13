@@ -4,11 +4,13 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-FROM golang:1.8-alpine AS builder
-WORKDIR /go/src/github.com/drasko/edgex-export
-COPY . .
-RUN cd cmd/distro && CGO_ENABLED=0 GOOS=linux go build -ldflags "-s" -a -installsuffix cgo -o exe
+FROM golang:1.9-alpine AS builder
+WORKDIR /go/src/github.com/edgexfoundry/export-go
+RUN apk update && apk add zeromq-dev libsodium-dev pkgconfig build-base
 
-FROM scratch
-COPY --from=builder /go/src/github.com/drasko/edgex-export/cmd/distro/exe /
+COPY . .
+RUN cd cmd/distro && CGO_ENABLED=1 GOOS=linux go build -tags zeromq -ldflags '-s -extldflags "-lstdc++ -static -lsodium -static -lzmq"' -a -o exe
+
+FROM alpine:3.6
+COPY --from=builder /go/src/github.com/edgexfoundry/export-go/cmd/distro/exe /
 ENTRYPOINT ["/exe"]
