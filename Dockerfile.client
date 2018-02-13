@@ -5,10 +5,10 @@
 #
 
 FROM golang:1.8-alpine AS builder
-WORKDIR /go/src/github.com/drasko/edgex-export
+WORKDIR /go/src/github.com/edgexfoundry/export-go
 COPY . .
 RUN cd cmd/client && CGO_ENABLED=0 GOOS=linux go build -ldflags "-s" -a -installsuffix cgo -o exe
 
 FROM scratch
-COPY --from=builder /go/src/github.com/drasko/edgex-export/cmd/client/exe /
+COPY --from=builder /go/src/github.com/edgexfoundry/export-go/cmd/client/exe /
 ENTRYPOINT ["/exe"]
