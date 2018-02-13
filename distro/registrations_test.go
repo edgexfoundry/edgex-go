@@ -9,6 +9,7 @@ package distro
 import (
 	"github.com/edgexfoundry/core-domain-go/models"
 	"github.com/edgexfoundry/export-go"
+	"go.uber.org/zap"
 
 	// "go.uber.org/zap"
 	"testing"
@@ -66,11 +67,13 @@ func TestRegistrationInfoUpdate(t *testing.T) {
 }
 
 type dummyStruct struct {
-	count int
+	count    int
+	lastSize int
 }
 
 func (sender *dummyStruct) Send(data []byte) {
 	sender.count += 1
+	sender.lastSize = len(data)
 }
 
 func (sender *dummyStruct) Format(ev *models.Event) []byte {
@@ -150,4 +153,39 @@ func TestRegistrationInfoLoop(t *testing.T) {
 	ri.filter = nil
 	// Process an event and terminate
 	registrationLoop(ri)
+}
+
+func BenchmarkProcessEvent(b *testing.B) {
+	var Dummy *dummyStruct = &dummyStruct{}
+	logger = zap.NewNop()
+	defer logger.Sync()
+
+	event := models.Event{}
+	event.Device = "dummyDev"
+
+	ri := newRegistrationInfo()
+	Dummy.count = 0
+
+	ri.format = Dummy
+	ri.sender = Dummy
+	ri.encrypt = Dummy
+	ri.compression = Dummy
+	ri.filter = nil
+
+	b.Run("nil", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			ri.processEvent(&event)
+		}
+		b.SetBytes(int64(Dummy.lastSize))
+	})
+
+	ri.format = jsonFormater{}
+	ri.compression = &gzipTransformer{}
+
+	b.Run("json_gzip", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			ri.processEvent(&event)
+		}
+		b.SetBytes(int64(Dummy.lastSize))
+	})
 }
