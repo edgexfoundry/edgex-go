@@ -1,0 +1,30 @@
+package: github.com/edgexfoundry/core-command-go
+import:
+- package: github.com/edgexfoundry/core-domain-go
+  subpackages:
+  - models
+  vcs: git
+  version: master
+  repo: https://github.com/edgexfoundry/core-domain-go.git
+- package: github.com/edgexfoundry/support-domain-go
+  vcs: git
+  version: master
+  repo: https://github.com/edgexfoundry/support-domain-go.git  
+- package: github.com/edgexfoundry/consul-client-go
+  vcs: git
+  version: master
+  repo: https://github.com/edgexfoundry/consul-client-go.git
+- package: github.com/edgexfoundry/core-clients-go
+  subpackages:
+  - metadataclients
+  vcs: git
+  version: master
+  repo: https://github.com/edgexfoundry/core-clients-go.git
+- package: github.com/edgexfoundry/support-logging-client-go
+  subpackages:
+  - metadataclients
+  vcs: git
+  version: master
+  repo: https://github.com/edgexfoundry/support-logging-client-go.git
+- package: github.com/gorilla/mux
+  version: ^1.6.0
