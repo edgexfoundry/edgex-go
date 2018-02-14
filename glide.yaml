@@ -1,0 +1,15 @@
+package: github.com/edgexfoundry/edgex-go
+import:
+- package: github.com/eclipse/paho.mqtt.golang
+- package: github.com/go-zoo/bone
+- package: github.com/gorilla/mux
+- package: github.com/hashicorp/consul
+  subpackages:
+  - api
+- package: github.com/pebbe/zmq4
+- package: github.com/robfig/cron
+- package: go.uber.org/zap
+- package: gopkg.in/mgo.v2
+  subpackages:
+  - bson
+- package: gopkg.in/yaml.v2
