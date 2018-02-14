@@ -1,0 +1,5 @@
+package: github.com/edgexfoundry/core-domain-go
+import:
+- package: gopkg.in/mgo.v2
+  subpackages:
+  - bson
