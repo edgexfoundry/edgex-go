@@ -17,10 +17,10 @@ import (
 	"net/http"
 	"time"
 
-	export "github.com/edgexfoundry/export-go"
-	consulclient "github.com/edgexfoundry/consul-client-go"
+	export "github.com/edgexfoundry/edgex-go/export"
+	consulclient "github.com/edgexfoundry/edgex-go/support/consul-client"
 
-  "github.com/edgexfoundry/core-domain-go/models"
+  "github.com/edgexfoundry/edgex-go/core/domain/models"
 
 	"go.uber.org/zap"
 )

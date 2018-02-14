@@ -7,7 +7,7 @@
 package export
 
 import (
-	"github.com/edgexfoundry/core-domain-go/models"
+	"github.com/edgexfoundry/edgex-go/core/domain/models"
 
 	"gopkg.in/mgo.v2/bson"
 )

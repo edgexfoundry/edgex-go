@@ -9,8 +9,8 @@
 package distro
 
 import (
-	"github.com/edgexfoundry/core-domain-go/models"
-	export "github.com/edgexfoundry/export-go"
+	"github.com/edgexfoundry/edgex-go/core/domain/models"
+	export "github.com/edgexfoundry/edgex-go/export"
 )
 
 const (

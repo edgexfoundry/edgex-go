@@ -12,7 +12,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/edgexfoundry/core-domain-go/models"
+	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	zmq "github.com/pebbe/zmq4"
 	"go.uber.org/zap"
 )

@@ -25,7 +25,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/edgexfoundry/core-domain-go/models"
+	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"github.com/gorilla/mux"
 	"github.com/robfig/cron"
 	"gopkg.in/mgo.v2"

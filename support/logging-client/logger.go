@@ -23,7 +23,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/edgexfoundry/support-domain-go"
+	"github.com/edgexfoundry/edgex-go/support/domain"
 	"log"
 	"net/http"
 	"os"

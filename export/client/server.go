@@ -11,7 +11,7 @@ import (
 	"io"
 	"net/http"
 
-	consulclient "github.com/edgexfoundry/consul-client-go"
+	consulclient "github.com/edgexfoundry/edgex-go/support/consul-client"
 
 	"github.com/go-zoo/bone"
 	"go.uber.org/zap"

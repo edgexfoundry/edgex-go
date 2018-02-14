@@ -20,8 +20,8 @@ package main
 import (
 	"time"
 
-	enums "github.com/edgexfoundry/core-domain-go/enums"
-	models "github.com/edgexfoundry/core-domain-go/models"
+	enums "github.com/edgexfoundry/edgex-go/core/domain/enums"
+	models "github.com/edgexfoundry/edgex-go/core/domain/models"
 	mgo "gopkg.in/mgo.v2"
 	bson "gopkg.in/mgo.v2/bson"
 )

@@ -24,9 +24,9 @@ import (
 	"net/url"
 	"regexp"
 
-	"github.com/edgexfoundry/core-clients-go/metadataclients"
-	"github.com/edgexfoundry/core-data-go/clients"
-	"github.com/edgexfoundry/core-domain-go/models"
+	"github.com/edgexfoundry/edgex-go/core/clients/metadataclients"
+	"github.com/edgexfoundry/edgex-go/core/data/clients"
+	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"github.com/gorilla/mux"
 )
 

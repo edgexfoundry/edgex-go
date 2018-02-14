@@ -24,8 +24,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/edgexfoundry/core-clients-go/metadataclients"
-	"github.com/edgexfoundry/core-domain-go/models"
+	"github.com/edgexfoundry/edgex-go/core/clients/metadataclients"
+	"github.com/edgexfoundry/edgex-go/core/domain/models"
 )
 
 // CommandClient : client to interact with core command

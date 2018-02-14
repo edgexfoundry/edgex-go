@@ -14,8 +14,8 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/edgexfoundry/core-domain-go/models"
-	"github.com/edgexfoundry/export-go/distro"
+	"github.com/edgexfoundry/edgex-go/core/domain/models"
+	"github.com/edgexfoundry/edgex-go/export/distro"
 
 	"go.uber.org/zap"
 )

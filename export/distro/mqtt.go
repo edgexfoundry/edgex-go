@@ -14,7 +14,7 @@ import (
 	"strings"
 
 	MQTT "github.com/eclipse/paho.mqtt.golang"
-	"github.com/edgexfoundry/core-domain-go/models"
+	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"go.uber.org/zap"
 )
 

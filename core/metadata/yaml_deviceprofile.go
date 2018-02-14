@@ -17,7 +17,7 @@
  *******************************************************************************/
 package main
 
-import "github.com/edgexfoundry/core-domain-go/models"
+import "github.com/edgexfoundry/edgex-go/core/domain/models"
 
 func yamlDeviceProfile(dp *models.DeviceProfile) error {
 
