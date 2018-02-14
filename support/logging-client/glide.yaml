@@ -1,6 +1,0 @@
-package: github.com/edgexfoundry/support-logging-client-go
-import:
-- package: github.com/edgexfoundry/support-domain-go
-  vcs: git
-  version: master
-  repo: https://github.com/edgexfoundry/support-domain-go.git

@@ -1,5 +1,0 @@
-package: github.com/edgexfoundry/consul-client-go
-import:
-- package: github.com/hashicorp/consul
-  subpackages:
-  - api
