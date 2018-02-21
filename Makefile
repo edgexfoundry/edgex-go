@@ -1,4 +1,4 @@
-.PHONY: build test 
+.PHONY: build test docker
 
 EXPORT_CLIENT_VERSION=$(shell cat export/client/VERSION)
 EXPORT_DISTRO_VERSION=$(shell cat export/distro/VERSION)
@@ -12,3 +12,7 @@ build:
 test:
 	go test `glide novendor`
 
+prepare:
+	glide install
+
+docker:
