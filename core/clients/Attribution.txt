@@ -1,0 +1,7 @@
+The following open source projects are referenced by Core Clients Go:
+
+mgo v2 (BSD-2) - https://github.com/go-mgo/mgo
+https://github.com/go-mgo/mgo/blob/v2-unstable/LICENSE
+
+mgo/bson v2 (unspecified) - https://github.com/go-mgo/mgo/tree/v2/bson
+https://github.com/go-mgo/mgo/blob/v2/bson/LICENSE
