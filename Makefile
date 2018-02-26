@@ -1,9 +1,8 @@
 .PHONY: build test docker
 
-EXPORT_CLIENT_VERSION=$(shell cat export/client/VERSION)
-EXPORT_DISTRO_VERSION=$(shell cat export/distro/VERSION)
+VERSION=$(shell cat VERSION)
 
-GOFLAGS=-ldflags "-X client.version=$(EXPORT_CLIENT_VERSION) -X distro.version=$(EXPORT_DISTRO_VERSION)"
+GOFLAGS=-ldflags "-X client.version=$(VERSION) -X distro.version=$(VERSION)"
 
 build:
 	go build $(GOFLAGS) ./cmd/export-client
