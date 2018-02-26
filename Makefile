@@ -1,3 +1,9 @@
+#
+# Copyright (c) 2018 Cavium
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
 .PHONY: build test docker
 
 EXPORT_CLIENT_VERSION=$(shell cat export/client/VERSION)
