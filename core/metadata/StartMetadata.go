@@ -27,8 +27,8 @@ import (
 	"strings"
 	"time"
 
-	consulclient "github.com/edgexfoundry/edgex-go/support/consul-client"
 	enums "github.com/edgexfoundry/edgex-go/core/domain/enums"
+	consulclient "github.com/edgexfoundry/edgex-go/support/consul-client"
 	logger "github.com/edgexfoundry/edgex-go/support/logging-client"
 	notifications "github.com/edgexfoundry/edgex-go/support/notifications-client"
 )
@@ -64,7 +64,9 @@ func main() {
 	loggingClient = logger.NewClient(configuration.ApplicationName, "")
 
 	// Update configuration data from Consul
-	consulclient.CheckKeyValuePairs(&configuration, configuration.ApplicationName, strings.Split(configuration.ConsulProfilesActive, ";"))
+	if err := consulclient.CheckKeyValuePairs(&configuration, configuration.ApplicationName, strings.Split(configuration.ConsulProfilesActive, ";")); err != nil {
+		loggingClient.Error("Error getting key/values from Consul: "+err.Error(), "")
+	}
 	// Update Service CONSTANTS
 	MONGODATABASE = configuration.MongoDatabaseName
 	PROTOCOL = configuration.Protocol
