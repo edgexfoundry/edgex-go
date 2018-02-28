@@ -23,10 +23,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/edgexfoundry/edgex-go/support/domain"
 	"log"
 	"net/http"
 	"os"
+
+	"github.com/edgexfoundry/edgex-go/support/domain"
 )
 
 type LoggingClient struct {
@@ -57,7 +58,7 @@ func NewClient(owningServiceName string, remoteUrl string) LoggingClient {
 }
 
 // Send the log out as a REST request
-func (lc LoggingClient) log(logLevel support_domain.LogLevel, msg string, labels []string) error {
+func (lc LoggingClient) log(logLevel string, msg string, labels []string) error {
 	// TODO: Find out if the log type is loggable (is it enabled)
 
 	// Save to logging file if path was set
@@ -116,7 +117,7 @@ func (lc LoggingClient) Error(msg string, labels ...string) error {
 }
 
 // Build the log entry object
-func (lc LoggingClient) buildLogEntry(logLevel support_domain.LogLevel, msg string, labels []string) support_domain.LogEntry {
+func (lc LoggingClient) buildLogEntry(logLevel string, msg string, labels []string) support_domain.LogEntry {
 	res := support_domain.LogEntry{}
 	res.Level = logLevel
 	res.Message = msg
