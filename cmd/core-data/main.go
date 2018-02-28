@@ -44,7 +44,7 @@ func readConfigurationFile(path string) (*data.ConfigurationStruct, error) {
 	// Read the configuration file
 	contents, err := ioutil.ReadFile(path)
 	if err != nil {
-		fmt.Println("Error reading configuration file: " + err.Error())
+		loggingClient.Error("Could not read configuration file(" + configFile + "): " + err.Error())
 		return nil, err
 	}
 
@@ -64,7 +64,7 @@ func main() {
 	// Load configuration data
 	configuration, err := readConfigurationFile(configFile)
 	if err != nil {
-		fmt.Println("Could not read config file: " + configFile)
+		loggingClient.Error("Could not read configuration file(" + configFile + "): " + err.Error())
 		return
 	}
 

@@ -20,7 +20,6 @@ package main
 import (
 	"encoding/json"
 	"io/ioutil"
-	"os"
 
 	"github.com/edgexfoundry/edgex-go/core/command"
 	logger "github.com/edgexfoundry/edgex-go/support/logging-client"
@@ -38,7 +37,7 @@ func main() {
 	err := readConfigurationFile(configFile)
 	if err != nil {
 		loggingClient.Error("Could not read config file(" + configFile + "): " + err.Error())
-		os.Exit(1)
+		return
 	}
 
 	// Setup Logging
