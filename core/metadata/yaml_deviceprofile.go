@@ -15,7 +15,7 @@
  * @author: Spencer Bull & Ryan Comer, Dell
  * @version: 0.5.0
  *******************************************************************************/
-package main
+package metadata
 
 import "github.com/edgexfoundry/edgex-go/core/domain/models"
 
