@@ -12,8 +12,11 @@
  * the License.
  *
  * @microservice: core-data-go library
- * @author: Ryan Comer, Dell
+ * @original author: Ryan Comer, Dell
  * @version: 0.5.0
+ * @updated by:  Jim White, Dell Technologies, Feb 27, 2108
+ * Changed func loadRestRoutes to LoadRestRoutes - keeping to Go naming standards (Fede C. initiated
+ * during mono repo work)
  *******************************************************************************/
 package data
 
@@ -21,7 +24,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func loadRestRoutes() *mux.Router {
+func LoadRestRoutes() *mux.Router {
 	r := mux.NewRouter()
 	b := r.PathPrefix("/api/v1").Subrouter()
 
