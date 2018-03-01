@@ -15,14 +15,11 @@
  * @author: Spencer Bull & Ryan Comer, Dell
  * @version: 0.5.0
  *******************************************************************************/
-package main
+package metadata
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
-	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -35,21 +32,24 @@ import (
 
 // DS : DataStore to retrieve data from database.
 var DS DataStore
-var notificationsClient = notifications.NotificationsClient{}
 var loggingClient logger.LoggingClient
+var notificationsClient = notifications.NotificationsClient{}
 
-func main() {
-	start := time.Now()
-
-	// Load configuration data
-	err := readConfigurationFile(CONFIG)
-	if err != nil {
-		fmt.Printf("Could not read configuration file(%s): %#v\n", CONFIG, err)
-		os.Exit(1)
+// Heartbeat for the metadata microservice - send a message to logging service
+func heartbeat() {
+	// Loop forever
+	for true {
+		loggingClient.Info(configuration.HeartBeatMsg, "")
+		time.Sleep(time.Millisecond * time.Duration(configuration.HeartBeatTime)) // Sleep based on configuration
 	}
+}
+
+func Start(conf ConfigurationStruct, l logger.LoggingClient) {
+	loggingClient = l
+	configuration = conf
 
 	// Initialize service on Consul
-	err = consulclient.ConsulInit(consulclient.ConsulConfig{
+	err := consulclient.ConsulInit(consulclient.ConsulConfig{
 		ServiceName:    configuration.ServiceName,
 		ServicePort:    configuration.ServerPort,
 		ServiceAddress: configuration.ServiceAddress,
@@ -59,14 +59,12 @@ func main() {
 		ConsulPort:     configuration.ConsulPort,
 	})
 	if err != nil {
-		fmt.Print("Connection to Consul could not be make: " + err.Error())
+		loggingClient.Error("Connection to Consul could not be make: " + err.Error())
+	} else {
+		// Update configuration data from Consul
+		consulclient.CheckKeyValuePairs(&configuration, configuration.ApplicationName, strings.Split(configuration.ConsulProfilesActive, ";"))
 	}
-	loggingClient = logger.NewClient(configuration.ApplicationName, "")
 
-	// Update configuration data from Consul
-	if err := consulclient.CheckKeyValuePairs(&configuration, configuration.ApplicationName, strings.Split(configuration.ConsulProfilesActive, ";")); err != nil {
-		loggingClient.Error("Error getting key/values from Consul: "+err.Error(), "")
-	}
 	// Update Service CONSTANTS
 	MONGODATABASE = configuration.MongoDatabaseName
 	PROTOCOL = configuration.Protocol
@@ -75,10 +73,6 @@ func main() {
 	DOCKERMONGO = configuration.MongoDBHost + ":" + strconv.Itoa(configuration.MongoDBPort)
 	DBUSER = configuration.MongoDBUserName
 	DBPASS = configuration.MongoDBPassword
-
-	// Update logging based on configuration
-	loggingClient.RemoteUrl = configuration.LoggingRemoteURL
-	loggingClient.LogFilePath = configuration.LoggingFile
 
 	// Update notificationsClient based on configuration
 	notificationsClient.RemoteUrl = configuration.SupportNotificationsNotificationURL
@@ -103,40 +97,7 @@ func main() {
 		loggingClient.Info(configuration.AppOpenMsg, "")
 		fmt.Println("Listening on port: " + SERVERPORT)
 
-		// Time it took to start service
-		loggingClient.Info("Service started in: "+time.Since(start).String(), "")
-
 		loggingClient.Error(http.ListenAndServe(":"+SERVERPORT, r).Error())
 	}
 
-}
-
-// Heartbeat for the metadata microservice - send a message to logging service
-func heartbeat() {
-	// Loop forever
-	for true {
-		loggingClient.Info(configuration.HeartBeatMsg, "")
-		time.Sleep(time.Millisecond * time.Duration(configuration.HeartBeatTime)) // Sleep based on configuration
-	}
-}
-
-func makeTimestamp() int64 {
-	return time.Now().UnixNano() / int64(time.Millisecond)
-}
-
-// Read the configuration file and
-func readConfigurationFile(path string) error {
-	// Read the configuration file
-	contents, err := ioutil.ReadFile(path)
-	if err != nil {
-		return err
-	}
-
-	// Decode the configuration as JSON
-	err = json.Unmarshal(contents, &configuration)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }

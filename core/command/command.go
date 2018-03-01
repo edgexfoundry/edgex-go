@@ -15,11 +15,9 @@
  * @author: Spencer Bull, Dell
  * @version: 0.5.0
  *******************************************************************************/
-package main
+package command
 
 import (
-	"encoding/json"
-	"io/ioutil"
 	"net/http"
 	"strconv"
 	"strings"
@@ -29,13 +27,18 @@ import (
 	logger "github.com/edgexfoundry/edgex-go/support/logging-client"
 )
 
-var loggingClient = logger.NewClient(SERVICENAME, "")
+var loggingClient logger.LoggingClient
 
-func main() {
-	start := time.Now()
+func heartbeat() {
+	for true {
+		loggingClient.Info(configuration.HeartBeatMessage, "")
+		time.Sleep(time.Millisecond * time.Duration(configuration.HeartBeatTime))
+	}
+}
 
-	// Load configuration data
-	readConfigurationFile(CONFIG)
+func Start(conf ConfigurationStruct, l logger.LoggingClient) {
+	loggingClient = l
+	configuration = conf
 
 	// Initialize service on Consul
 	err := consulclient.ConsulInit(consulclient.ConsulConfig{
@@ -47,18 +50,13 @@ func main() {
 		ConsulAddress:  configuration.ConsulHost,
 		ConsulPort:     configuration.ConsulPort,
 	})
-	// Update configuration data from Consul
-	if err := consulclient.CheckKeyValuePairs(&configuration, configuration.ApplicationName, strings.Split(configuration.ConsulProfilesActive, ";")); err != nil {
-		loggingClient.Error("Error getting key/values from Consul: "+err.Error(), "")
-	}
 
-	// Setup Logging
-	loggingClient.RemoteUrl = configuration.LoggingRemoteURL
-	loggingClient.LogFilePath = configuration.LogFile
-
-	if err != nil {
+	if err == nil { // Update configuration data from Consul
+		if err := consulclient.CheckKeyValuePairs(&configuration, configuration.ApplicationName, strings.Split(configuration.ConsulProfilesActive, ";")); err != nil {
+			loggingClient.Error("Error getting key/values from Consul: "+err.Error(), "")
+		}
+	} else {
 		loggingClient.Error("Connection to Consul could not be made: "+err.Error(), "")
-		return
 	}
 
 	// Start heartbeat
@@ -70,43 +68,6 @@ func main() {
 		loggingClient.Info(configuration.AppOpenMessage, "")
 		loggingClient.Info("Listening on port: "+strconv.Itoa(configuration.ServerPort), "")
 
-		// Time it took to start service
-		loggingClient.Info("Service started in: "+time.Since(start).String(), "")
-
 		loggingClient.Error(http.ListenAndServe(":"+strconv.Itoa(configuration.ServerPort), r).Error())
 	}
-
-}
-
-func heartbeat() {
-	for true {
-		loggingClient.Info(configuration.HeartBeatMessage, "")
-		time.Sleep(time.Millisecond * time.Duration(configuration.HeartBeatTime))
-	}
-}
-
-func makeTimestamp() int64 {
-	return time.Now().UnixNano() / int64(time.Millisecond)
-}
-
-func readConfigurationFile(path string) error {
-	// Read the configuration file
-	contents, err := ioutil.ReadFile(path)
-	if err != nil {
-		loggingClient.Error(err.Error(), "")
-		return err
-	}
-
-	// Decode the configuration as JSON
-	err = json.Unmarshal(contents, &configuration)
-	if err != nil {
-		loggingClient.Error(err.Error(), "")
-		return err
-	}
-
-	return nil
-}
-
-func constructCommandURL() string {
-	return configuration.URLProtocol + configuration.ServiceAddress + ":" + strconv.Itoa(configuration.ServerPort)
 }

@@ -22,6 +22,8 @@ Go to the installation directory for ZeroMQ and make sure there is a /bin folder
 
 These variables will tell the CGO compiler where to find the C dependecies.
 
+For convenience, you may want to check out this stackoverflow page for help:  https://stackoverflow.com/questions/41289619/how-to-install-zeromq-4-on-ubuntu-16-10-from-source
+
 ### Docker ###
 This project can be built using Docker, and a Dockerfile is included in the repo.  Make sure you have already run 'glide up' to update the dependecies.  To build using the Docker file, run the following:
 ```

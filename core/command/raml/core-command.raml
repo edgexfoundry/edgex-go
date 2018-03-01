@@ -1,0 +1,210 @@
+#%RAML 0.8
+title: core-comand
+version: "1.0.0"
+baseUri: "http://localhost:48082/api/v1"
+schemas: 
+    - 
+        device: '{"type":"object","$schema":"http://json-schema.org/draft-03/schema#","description":"device or sensor supplying data and taking actuation commands","title":"device","properties":{"id":{"type":"string","required":false,"title":"id"},"created":{"type":"integer","required":false,"title":"created"},"modified":{"type":"integer","required":false,"title":"modified"},"origin":{"type":"integer","required":false,"title":"origin"},"name":{"type":"string","required":false,"title":"name"},"description":{"type":"string","required":false,"title":"description"},"lastConnected":{"type":"integer","required":false,"title":"lastConnected"},"lastReported":{"type":"integer","required":false,"title":"lastReported"},"labels":{"type":"array","required":false,"title":"labels","items":{"type":"string","title":"labels"},"uniqueItems":false},"adminState":{"type":"string","required":false,"title":"adminState"},"operatingState":{"type":"string","required":false,"title":"operatingState"},"addressable":{"type":"object","properties":{"id":{"type":"string","required":false,"title":"id"},"created":{"type":"integer","required":false,"title":"created"},"modified":{"type":"integer","required":false,"title":"modified"},"origin":{"type":"integer","required":false,"title":"origin"},"name":{"type":"string","required":false,"title":"name"},"protocol":{"type":"string","required":false,"title":"protocol"},"address":{"type":"string","required":false,"title":"address"},"port":{"type":"integer","required":false,"title":"port"},"path":{"type":"string","required":false,"title":"path"},"publisher":{"type":"string","required":false,"title":"publisher"},"user":{"type":"string","required":false,"title":"user"},"password":{"type":"string","required":false,"title":"password"},"topic":{"type":"string","required":false,"title":"topic"}}}}}'
+    - 
+        addressable: '{"type":"object","$schema":"http://json-schema.org/draft-03/schema#","title":"addressable","properties":{"id":{"type":"string","required":false,"title":"id"},"created":{"type":"integer","required":false,"title":"created"},"modified":{"type":"integer","required":false,"title":"modified"},"origin":{"type":"integer","required":false,"title":"origin"},"name":{"type":"string","required":false,"title":"name"},"protocol":{"type":"string","required":false,"title":"protocol"},"address":{"type":"string","required":false,"title":"address"},"port":{"type":"integer","required":false,"title":"port"},"path":{"type":"string","required":false,"title":"path"},"publisher":{"type":"string","required":false,"title":"publisher"},"user":{"type":"string","required":false,"title":"user"},"password":{"type":"string","required":false,"title":"password"},"topic":{"type":"string","required":false,"title":"topic"}}}'
+    - 
+        commandresponse: '{"type":"object","$schema":"http://json-schema.org/draft-03/schema#","title":"commandresponse","properties":{"host":{"type":"string","required":false,"title":"host"},"device":{"type":"object","$ref":"#/schemas/device","required":false,"title":"device"}}}'
+/ping: 
+    displayName: Ping Resource
+    description: Example - http://localhost:48082/api/v1/ping
+    get: 
+        description: Test service providing an indication that the service is available.
+        responses: 
+            "200": 
+                description: pong as a string
+            "503": 
+                description: for unanticipated or unknown issues encountered.
+/device/{id}/command/{commandid}: 
+    displayName: Issue command
+    description: Example - http://localhost:48082/api/v1/device/57bd0f2d32d258ad3fcd2d4b/command/57bd0f1432d258ad3fcd2d49
+    uriParameters: 
+        id: 
+            displayName: id
+            type: string
+            required: false
+            repeat: false
+        commandid: 
+            displayName: commandid
+            type: string
+            required: false
+            repeat: false
+    get: 
+        description: Issue the get command referenced by the command id to the device/sensor (also referenced by database generated id) it is associated to via the device service. ServiceException (HTTP 503) for unanticipated or unknown issues encountered. Throws NotFoundException (HTTP 404) if no device exists by the id provided. Throws LockedException (HTTP 423) if the device is locked (admin state).
+        responses: 
+            "200": 
+                description: String as returned by the device/sensor via the device service.
+            "404": 
+                description: if no device exists by the id provided
+            "423": 
+                description: if the device is locked (admin state).
+            "503": 
+                description: for unanticipated or unknown issues encountered.
+    put: 
+        description: Issue the put command referenced by the command id to the device/sensor (also referenced by database generated id) it is associated to via the device service. ServiceException (HTTP 503) for unanticipated or unknown issues encountered. Throws NotFoundException (HTTP 404) if no device exists by the id provided. Throws LockedException (HTTP 423) if the device is locked (admin state).
+        body: 
+            application/json: 
+                example: '{"temp":72}'
+        responses: 
+            "200": 
+                description: String as returned by the device/sensor via the device service.
+            "404": 
+                description: if no device exists by the id provided
+            "423": 
+                description: if the device is locked (admin state)
+            "503": 
+                description: for unanticipated or unknown issues encountered.
+/device/{id}/adminstate/{adminState}: 
+    displayName: Admin state by device id
+    description: Example - http://localhost:48082/api/v1/device/57bd0f2d32d258ad3fcd2d4b/adminstate/unlocked
+    uriParameters: 
+        id: 
+            displayName: id
+            type: string
+            required: false
+            repeat: false
+        adminState: 
+            displayName: adminState
+            type: string
+            required: false
+            repeat: false
+    put: 
+        description: Set the admin state of the device (as referenced by the database generated id of the device) to the state provided (either locked or unlocked). ServiceException (HTTP 503) for unanticipated or unknown issues encountered. Throws NotFoundException (HTTP 404) if no device exists by the id provided.
+        responses: 
+            "200": 
+                description: boolean indicating the successful
+            "404": 
+                description: if no device exists by the id provided.
+            "503": 
+                description: for unanticipated or unknown issues encountered.
+/device/{id}/opstate/{opState}: 
+    displayName: Op state by device id
+    description: Example - http://localhost:48082/api/v1/device/57bd0f2d32d258ad3fcd2d4b/opstate/enabled
+    uriParameters: 
+        id: 
+            displayName: id
+            type: string
+            required: false
+            repeat: false
+        opState: 
+            displayName: opState
+            type: string
+            required: false
+            repeat: false
+    put: 
+        description: Set the op state of the device (as referenced by the database generated id of the device) to the state provided (either enabled or disabled). ServiceException (HTTP 503) for unanticipated or unknown issues encountered. Throws NotFoundException (HTTP 404) if no device exists by the id provided.
+        responses: 
+            "200": 
+                description: boolean indicating the successful
+            "404": 
+                description: if no device exists by the id provided.
+            "503": 
+                description: for unanticipated or unknown issues encountered.
+/device/{id}: 
+    displayName: Device & their commands by id
+    description: Example - http://localhost:48082/api/v1/device/57bd0f2d32d258ad3fcd2d4b
+    uriParameters: 
+        id: 
+            displayName: id
+            type: string
+            required: false
+            repeat: false
+    get: 
+        description: Retrieve a device (by database generated id) and its command offerings. Throws ServiceException (HTTP 503) for unanticipated or unknown issues encountered. Throws NotFoundException (HTTP 404) if no device exists by the id provided.
+        responses: 
+            "200": 
+                description: CommandResponse containing the device and its commands
+                body: 
+                    application/json: 
+                        schema: commandresponse
+                        example: '{"name":"livingroomthermostat","id":"57bd0f2d32d258ad3fcd2d4b","description":"living room HVAC thermostat","labels":["home","hvac","thermostat"],"adminState":"unlocked","opState":"enabled","lastConnected":0,"lastReported":0,"locationObject":"{lat:45.45,long:47.80}","commands":[{"id":"57bd0f1432d258ad3fcd2d49","name":"cooling point","get":{"url":"http://localhost:48082/api/v1/device/57bd0f2d32d258ad3fcd2d4b/api/v1/command/57bd0f1432d258ad3fcd2d49"},"put":{"url":"http://localhost:48082/api/v1/device/57bd0f2d32d258ad3fcd2d4b/api/v1/command/57bd0f1432d258ad3fcd2d49","parameters":[{"name":"coolingpoint","value":"72"}],"responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]}}]}'                               
+            "404": 
+                description: if no device exists by the id provided.
+            "503": 
+                description: for unanticipated or unknown issues encountered.
+/device/name/{name}/adminstate/{adminState}: 
+    displayName: Admin state by name
+    description: Example - http://localhost:48082/api/v1/device/name/livingroomthermostat/adminstate/unlocked
+    uriParameters: 
+        name: 
+            displayName: name
+            type: string
+            required: false
+            repeat: false
+        adminState: 
+            displayName: adminState
+            type: string
+            required: false
+            repeat: false
+    put: 
+        description: Set the admin state of the device (by name of the device) to the state provided (either locked or unlocked). ServiceException (HTTP 503) for unanticipated or unknown issues encountered. Throws NotFoundException (HTTP 404) if no device exists by the name provided.
+        responses: 
+            "200": 
+                description: boolean indicating the successful
+            "404": 
+                description: if no device exists by the name provided.
+            "503": 
+                description: for unanticipated or unknown issues encountered.
+/device/name/{name}/opstate/{opState}: 
+    displayName: Op state by name
+    description: Example - http://localhost:48082/api/v1/device/name/livingroomthermostat/opstate/disabled
+    uriParameters: 
+        opState: 
+            displayName: opState
+            type: string
+            required: false
+            repeat: false
+        name: 
+            displayName: name
+            type: string
+            required: false
+            repeat: false
+    put: 
+        description: Set the op state of the device (by name of the device) to the state provided (either enabled or disabled). ServiceException (HTTP 503) for unanticipated or unknown issues encountered. Throws NotFoundException (HTTP 404) if no device exists by the name provided.
+        responses: 
+            "200": 
+                description: boolean indicating the successful
+            "404": 
+                description: if no device exists by the name provided.
+            "503": 
+                description: for unanticipated or unknown issues encountered.
+/device/name/{name}: 
+    displayName: Device & their commands by name 
+    description: Example - http://localhost:48082/api/v1/device/name/livingroomthermostat
+    uriParameters: 
+        name: 
+            displayName: name
+            type: string
+            required: false
+            repeat: false
+    get: 
+        description: Retrieve a device (by name) and its command offerings. Throws ServiceException (HTTP 503) for unanticipated or unknown issues encountered. Throws NotFoundException (HTTP 404) if no device exists by the name provided.
+        responses: 
+            "200": 
+                description: CommandResponse containing the device and its commands
+                body: 
+                    application/json: 
+                        schema: commandresponse
+                        example: '{"name":"livingroomthermostat","id":"57bd0f2d32d258ad3fcd2d4b","description":"living room HVAC thermostat","labels":["home","hvac","thermostat"],"adminState":"unlocked","opState":"enabled","lastConnected":0,"lastReported":0,"locationObject":"{lat:45.45,long:47.80}","commands":[{"id":"57bd0f1432d258ad3fcd2d49","name":"cooling point","get":{"url":"http://localhost:48082/api/v1/device/57bd0f2d32d258ad3fcd2d4b/api/v1/command/57bd0f1432d258ad3fcd2d49"},"put":{"url":"http://localhost:48082/api/v1/device/57bd0f2d32d258ad3fcd2d4b/api/v1/command/57bd0f1432d258ad3fcd2d49","parameters":[{"name":"coolingpoint","value":"72"}],"responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]}}]}'                               
+            "404": 
+                description: if no device exists by the name provided.
+            "503": 
+                description: for unanticipated or unknown issues encountered.
+/device: 
+    displayName: Devices & their commands
+    description: Example - http://localhost:48082/api/v1/device
+    get: 
+        description: Retrieve a list of (all) devices and their command offerings. Throws ServiceException (HTTP 503) for unanticipated or unknown issues encountered.
+        responses: 
+            "200": 
+                description: List of CommandResponse (containing the devices and their commands)
+                body: 
+                    application/json: 
+                        schema: commandresponse
+                        example: '[{"name":"livingroomthermostat","id":"57bd0f2d32d258ad3fcd2d4b","description":"living room HVAC thermostat","labels":["home","hvac","thermostat"],"adminState":"unlocked","opState":"enabled","lastConnected":0,"lastReported":0,"locationObject":"{lat:45.45,long:47.80}","commands":[{"id":"57bd0f1432d258ad3fcd2d49","name":"cooling point","get":{"url":"http://localhost:48082/api/v1/device/57bd0f2d32d258ad3fcd2d4b/api/v1/command/57bd0f1432d258ad3fcd2d49"},"put":{"url":"http://localhost:48082/api/v1/device/57bd0f2d32d258ad3fcd2d4b/api/v1/command/57bd0f1432d258ad3fcd2d49","parameters":[{"name":"coolingpoint","value":"72"}],"responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]}}]}]'
+            "503": 
+                description: for unanticipated or unknown issues encountered.
