@@ -20,16 +20,12 @@ package consulclient
 
 import (
 	"errors"
-	consulapi "github.com/hashicorp/consul/api"
-	"log"
-	"os"
 	"reflect"
 	"strconv"
 	"strings"
-)
 
-// Logger for the consul client package
-var logger = log.New(os.Stdout, "consul-client", log.Ldate|log.Ltime|log.Lshortfile)
+	consulapi "github.com/hashicorp/consul/api"
+)
 
 // Configuration struct for consul - used to initialize the service
 type ConsulConfig struct {
@@ -53,7 +49,6 @@ func ConsulInit(config ConsulConfig) error {
 	defaultConfig.Address = config.ConsulAddress + ":" + strconv.Itoa(config.ConsulPort)
 	consul, err = consulapi.NewClient(defaultConfig)
 	if err != nil {
-		logger.Println(err.Error())
 		return err
 	}
 
@@ -64,7 +59,6 @@ func ConsulInit(config ConsulConfig) error {
 		Port:    config.ServicePort,
 	})
 	if err != nil {
-		logger.Println(err.Error())
 		return err
 	}
 
@@ -79,7 +73,6 @@ func ConsulInit(config ConsulConfig) error {
 		},
 	})
 	if err != nil {
-		logger.Println(err.Error())
 		return err
 	}
 
@@ -91,7 +84,6 @@ func CheckKeyValuePairs(configurationStruct interface{}, applicationName string,
 	// Consul wasn't initialized
 	if consul == nil {
 		err := errors.New("Consul wasn't initialized, can't check key/value pairs")
-		logger.Println(err.Error())
 		return err
 	}
 
@@ -114,7 +106,6 @@ func CheckKeyValuePairs(configurationStruct interface{}, applicationName string,
 			// Check if the key is already there
 			pair, _, err := kv.Get(keyPath, nil)
 			if err != nil {
-				logger.Println(err.Error())
 				return err
 			}
 			// Pair doesn't exist, create it
@@ -125,19 +116,16 @@ func CheckKeyValuePairs(configurationStruct interface{}, applicationName string,
 				}
 				_, err = kv.Put(pair, nil)
 				if err != nil {
-					logger.Println(err.Error())
 					return err
 				}
 			} else { // Pair does exist, get the new value
 				pair, _, err = kv.Get(keyPath, nil)
 				if err != nil {
-					logger.Println(err.Error())
 					return err
 				}
 
 				newValue, err := strconv.ParseBool(string(pair.Value))
 				if err != nil {
-					logger.Println(err.Error())
 					return err
 				}
 
@@ -150,7 +138,6 @@ func CheckKeyValuePairs(configurationStruct interface{}, applicationName string,
 			// Check if the key is already there
 			pair, _, err := kv.Get(keyPath, nil)
 			if err != nil {
-				logger.Println(err.Error())
 				return err
 			}
 			// Pair doesn't exist, create it
@@ -161,13 +148,11 @@ func CheckKeyValuePairs(configurationStruct interface{}, applicationName string,
 				}
 				_, err = kv.Put(pair, nil)
 				if err != nil {
-					logger.Println(err.Error())
 					return err
 				}
 			} else { // Pair does exist, get the new value
 				pair, _, err = kv.Get(keyPath, nil)
 				if err != nil {
-					logger.Println(err.Error())
 					return err
 				}
 
@@ -182,7 +167,6 @@ func CheckKeyValuePairs(configurationStruct interface{}, applicationName string,
 			// Check if the key is already there
 			pair, _, err := kv.Get(keyPath, nil)
 			if err != nil {
-				logger.Println(err.Error())
 				return err
 			}
 			// Pair doesn't exist, create it
@@ -193,19 +177,16 @@ func CheckKeyValuePairs(configurationStruct interface{}, applicationName string,
 				}
 				_, err = kv.Put(pair, nil)
 				if err != nil {
-					logger.Println(err.Error())
 					return err
 				}
 			} else { // Pair does exist, get the new value
 				pair, _, err = kv.Get(keyPath, nil)
 				if err != nil {
-					logger.Println(err.Error())
 					return err
 				}
 
 				newValue, err := strconv.ParseInt(string(pair.Value), 10, 64)
 				if err != nil {
-					logger.Println(err.Error())
 					return err
 				}
 
@@ -214,7 +195,6 @@ func CheckKeyValuePairs(configurationStruct interface{}, applicationName string,
 			break
 		default:
 			err := errors.New("Can't get the type of field: " + keyPath)
-			logger.Println(err.Error())
 			return err
 		}
 	}
