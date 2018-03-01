@@ -46,6 +46,15 @@ prepare:
 
 docker: $(DOCKERS)
 
+docker_core_metadata:
+	docker build -f docker/Dockerfile.metadata -t edgexfoundry/docker-core-metadata .
+
+docker_core_data:
+	docker build -f docker/Dockerfile.data -t edgexfoundry/docker-core-data .
+
+docker_core_command:
+	docker build -f docker/Dockerfile.command -t edgexfoundry/docker-core-command .
+
 docker_export_client:
 	docker build -f docker/Dockerfile.client -t edgexfoundry/docker-export-client .
 
