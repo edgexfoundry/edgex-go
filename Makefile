@@ -6,25 +6,46 @@
 
 .PHONY: build test docker
 
-EXPORT_CLIENT_VERSION=$(shell cat export/client/VERSION)
-EXPORT_DISTRO_VERSION=$(shell cat export/distro/VERSION)
-CORE_DATA_VERSION=$(shell cat core/data/VERSION)
-CORE_METADATA_VERSION=$(shell cat core/metadata/VERSION)
-CORE_COMMAND_VERSION=$(shell cat core/command/VERSION)
+GO=CGO_ENABLED=0 go
+GOCGO=CGO_ENABLED=1 go
 
-GOFLAGS=-ldflags "-X client.version=$(EXPORT_CLIENT_VERSION) -X distro.version=$(EXPORT_DISTRO_VERSION)"
+DOCKERS=
+.PHONY: $(DOCKERS)
 
-build:
-	go build $(GOFLAGS) ./cmd/export-client
-	go build $(GOFLAGS) ./cmd/export-distro
-	go build $(GOFLAGS) ./cmd/core-metadata
-	go build $(GOFLAGS) ./cmd/core-command
-	go build $(GOFLAGS) ./cmd/core-data
+MICROSERVICES=cmd/export-client/export-client cmd/export-distro/export-distro cmd/core-metadata/core-metadata cmd/core-data/core-data cmd/core-command/core-command
+.PHONY: $(MICROSERVICES)
+
+VERSION=$(shell cat ./VERSION)
+
+GOFLAGS=-ldflags "-X github.com/edgexfoundry/edgex-go.Version=$(VERSION)"
+
+build: $(MICROSERVICES)
+
+cmd/core-metadata/core-metadata:
+    $(GO) build $(GOFLAGS) -o $@ ./cmd/core-metadata
+
+cmd/core-data/core-data:
+    $(GOCGO) build $(GOFLAGS) -o $@ ./cmd/core-data
+
+cmd/core-command/core-command:
+    $(GO) build $(GOFLAGS) -o $@ ./cmd/core-command
+
+cmd/export-client/export-client:
+    $(GO) build $(GOFLAGS) -o $@ ./cmd/export-client
+
+cmd/export-distro/export-distro:
+    $(GOCGO) build $(GOFLAGS) -o $@ ./cmd/export-distro
 
 test:
-	go test `glide novendor`
+    go test `glide novendor`
 
 prepare:
-	glide install
+    glide install
 
-docker:
+docker: $(DOCKERS)
+
+docker_export_client:
+    docker build -f docker/Dockerfile.client -t edgexfoundry/docker-export-client .
+
+docker_export_distro:
+    docker build -f docker/Dockerfile.distro -t edgexfoundry/docker-export-distro .
