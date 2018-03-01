@@ -9,7 +9,7 @@
 GO=CGO_ENABLED=0 go
 GOCGO=CGO_ENABLED=1 go
 
-DOCKERS=docker_export_client docker_export_distro
+DOCKERS=
 .PHONY: $(DOCKERS)
 
 MICROSERVICES=cmd/export-client/export-client cmd/export-distro/export-distro
