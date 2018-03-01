@@ -15,6 +15,7 @@ import (
 	"strconv"
 	"syscall"
 
+	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"github.com/edgexfoundry/edgex-go/export/distro"
 	consulclient "github.com/edgexfoundry/edgex-go/support/consul-client"
@@ -50,6 +51,8 @@ var logger *zap.Logger
 func main() {
 	logger, _ = zap.NewProduction()
 	defer logger.Sync()
+
+	logger.Info("Starting edgex export client", zap.String("version", edgex.Version))
 
 	distro.InitLogger(logger)
 

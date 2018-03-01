@@ -16,6 +16,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/edgex-go/export/client"
 	"github.com/edgexfoundry/edgex-go/export/mongo"
 	consulclient "github.com/edgexfoundry/edgex-go/support/consul-client"
@@ -67,6 +68,8 @@ var logger *zap.Logger
 func main() {
 	logger, _ = zap.NewProduction()
 	defer logger.Sync()
+
+	logger.Info("Starting edgex export client", zap.String("version", edgex.Version))
 
 	client.InitLogger(logger)
 
