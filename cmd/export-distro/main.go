@@ -14,6 +14,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"github.com/edgexfoundry/edgex-go/export/distro"
 
@@ -32,6 +33,8 @@ var logger *zap.Logger
 func main() {
 	logger, _ = zap.NewProduction()
 	defer logger.Sync()
+
+	logger.Info("Starting edgex export client", zap.String("version", edgex.Version))
 
 	distro.InitLogger(logger)
 
