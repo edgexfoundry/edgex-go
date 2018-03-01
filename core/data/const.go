@@ -15,7 +15,7 @@
  * @author: Ryan Comer, Dell
  * @version: 0.5.0
  *******************************************************************************/
-package main
+package data
 
 type ConfigurationStruct struct {
 	Applicationname            string

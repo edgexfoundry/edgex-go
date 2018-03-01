@@ -15,7 +15,7 @@
  * @author: Spencer Bull, Dell
  * @version: 0.5.0
  *******************************************************************************/
-package main
+package command
 
 import (
 	"net/http"

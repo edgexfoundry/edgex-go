@@ -15,21 +15,17 @@
  * @author: Ryan Comer, Dell
  * @version: 0.5.0
  *******************************************************************************/
-package main
+package data
 
 import (
-	"encoding/json"
-	"fmt"
-	"github.com/edgexfoundry/edgex-go/support/consul-client"
+	"strings"
+	"time"
+
 	"github.com/edgexfoundry/edgex-go/core/clients/metadataclients"
 	"github.com/edgexfoundry/edgex-go/core/data/clients"
 	"github.com/edgexfoundry/edgex-go/core/data/messaging"
+	consulclient "github.com/edgexfoundry/edgex-go/support/consul-client"
 	"github.com/edgexfoundry/edgex-go/support/logging-client"
-	"io/ioutil"
-	"net/http"
-	"strconv"
-	"strings"
-	"time"
 )
 
 // Global variables
@@ -48,55 +44,11 @@ func heartbeat() {
 	}
 }
 
-// Read the configuration file and update configuration struct
-func readConfigurationFile(path string) error {
-	// Read the configuration file
-	contents, err := ioutil.ReadFile(path)
-	if err != nil {
-		fmt.Println("Error reading configuration file: " + err.Error())
-		return err
-	}
+func Init(conf ConfigurationStruct, logger logger.LoggingClient) error {
+	loggingClient = logger
+	configuration = conf
 
-	// Decode the configuration as JSON
-	err = json.Unmarshal(contents, &configuration)
-	if err != nil {
-		fmt.Println("Error reading configuration file: " + err.Error())
-		return err
-	}
-
-	return nil
-}
-
-func main() {
-	start := time.Now()
-
-	// Load configuration data
-	readConfigurationFile("./res/configuration.json")
-
-	// Create Logger (Default Parameters)
-	loggingClient = logger.NewClient(configuration.Servicename, configuration.Loggingremoteurl)
-	loggingClient.LogFilePath = configuration.Loggingfile
-
-	// Initialize service on Consul
-	err := consulclient.ConsulInit(consulclient.ConsulConfig{
-		ServiceName:    configuration.Servicename,
-		ServicePort:    configuration.Serverport,
-		ServiceAddress: configuration.Serviceaddress,
-		CheckAddress:   configuration.Consulcheckaddress,
-		CheckInterval:  configuration.Checkinterval,
-		ConsulAddress:  configuration.Consulhost,
-		ConsulPort:     configuration.Consulport,
-	})
-
-	if err != nil {
-		loggingClient.Error("Connection to Consul could not be made: "+err.Error(), "")
-	}
-
-	// Update configuration data from Consul
-	if err := consulclient.CheckKeyValuePairs(&configuration, configuration.Servicename, strings.Split(configuration.Consulprofilesactive, ";")); err != nil {
-		loggingClient.Error("Error getting key/values from Consul: "+err.Error(), "")
-	}
-
+	var err error
 	// Create a database client
 	dbc, err = clients.NewDBClient(clients.DBConfiguration{
 		DbType:       clients.MONGO,
@@ -109,7 +61,7 @@ func main() {
 	})
 	if err != nil {
 		loggingClient.Error("Couldn't connect to database: "+err.Error(), "")
-		return
+		return err
 	}
 
 	// Create metadata clients
@@ -121,16 +73,27 @@ func main() {
 		AddressPort: configuration.Zeromqaddressport,
 	})
 
+	// Initialize service on Consul
+	err = consulclient.ConsulInit(consulclient.ConsulConfig{
+		ServiceName:    configuration.Servicename,
+		ServicePort:    configuration.Serverport,
+		ServiceAddress: configuration.Serviceaddress,
+		CheckAddress:   configuration.Consulcheckaddress,
+		CheckInterval:  configuration.Checkinterval,
+		ConsulAddress:  configuration.Consulhost,
+		ConsulPort:     configuration.Consulport,
+	})
+
+	if err != nil {
+		loggingClient.Error("Connection to Consul could not be made: "+err.Error(), "")
+	} else {
+		// Update configuration data from Consul
+		if err := consulclient.CheckKeyValuePairs(&configuration, configuration.Servicename, strings.Split(configuration.Consulprofilesactive, ";")); err != nil {
+			loggingClient.Error("Error getting key/values from Consul: "+err.Error(), "")
+		}
+	}
+
 	// Start heartbeat
 	go heartbeat()
-
-	r := loadRestRoutes()
-	http.TimeoutHandler(nil, time.Millisecond*time.Duration(5000), "Request timed out")
-	loggingClient.Info(configuration.Appopenmsg, "")
-
-	// Time it took to start service
-	loggingClient.Info("Service started in: "+time.Since(start).String(), "")
-	loggingClient.Info("Listening on port: " + strconv.Itoa(configuration.Serverport))
-
-	loggingClient.Error(http.ListenAndServe(":"+strconv.Itoa(configuration.Serverport), r).Error())
+	return nil
 }

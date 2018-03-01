@@ -1,0 +1,152 @@
+#%RAML 0.8
+title: export-client
+version: "1.0.0"
+baseUri: "http://localhost:48071/api/v1"
+schemas: 
+    - 
+        ExportRegistration: '{"type":"object","$schema":"http://json-schema.org/draft-03/schema#","description":"Defines the registration details on the part of north side export clients","title":"ExportRegistration","properties":{"id":{"type":"string","required":false,"title":"id"},"created":{"type":"integer","required":false,"title":"created"},"modified":{"type":"integer","required":false,"title":"modified"},"origin":{"type":"integer","required":false,"title":"origin"},"name":{"type":"string","required":true,"title":"name"},"addressable":{"type":"object","properties":{"id":{"type":"string","required":false,"title":"id"},"created":{"type":"integer","required":false,"title":"created"},"modified":{"type":"integer","required":false,"title":"modified"},"origin":{"type":"integer","required":false,"title":"origin"},"name":{"type":"string","required":false,"title":"name"},"protocol":{"type":"string","required":false,"title":"protocol"},"address":{"type":"string","required":false,"title":"address"},"port":{"type":"integer","required":false,"title":"port"},"path":{"type":"string","required":false,"title":"path"},"publisher":{"type":"string","required":false,"title":"publisher"},"user":{"type":"string","required":false,"title":"user"},"password":{"type":"string","required":false,"title":"password"},"topic":{"type":"string","required":false,"title":"topic"}}},"format":{"type":"string","required":false,"title":"format"},"filter":{"type":"object","properties":{"deviceIdentifiers":{"type":"array","required":false,"title":"deviceIdentifiers","items":{"type":"string","title":"deviceIdentifiers"},"uniqueItems":false},"valueDescriptorIdentifiers":{"type":"array","required":false,"title":"valueDescriptorIdentifiers","items":{"type":"string","title":"valueDescriptorIdentifiers"},"uniqueItems":false}}},"encryption":{"type":"object","properties":{"encryptionAlgorithm":{"type":"string","required":false,"title":"encryptionAlgorithm"},"encryptionKey":{"type":"string","required":false,"title":"encryptionKey"},"initializingVector":{"type":"string","required":false,"title":"initializingVector"}}},"compression":{"type":"string","required":false,"title":"compression"},"enable":{"type":"boolean","required":false,"title":"enable"}}}'
+/registration/id/{id}: 
+    displayName: Export Registration Resource(by id)
+    description: "example - http://localhost:48071/api/v1/registration/id/57db5bd2add4d779d38ff066"
+    uriParameters: 
+        id: 
+            displayName: id
+            description: database generated id for the ExportRegistration
+            type: string
+            required: true
+            repeat: false
+    delete: 
+        description: Delete a client export registration by database id. Return NotFoundException (HTTP 404) if the existing export registration cannot be found by id. Return ServiceException (HTTP 503) for unknown or unanticipated issues.
+        displayName: delete an ExportRegistration by database generated id
+        responses: 
+            "200": 
+                description: boolean indicating success of the operation
+            "404": 
+                description: if the existing export registration cannot be found by id.
+            "503": 
+                description: for unknown or unanticipated issues.
+/registration/name/{name}: 
+    displayName: Export Registration Resource (by name)
+    description: "example - http://localhost:48071/api/v1/registration/name/OSIClient (where OSIClient is the name of an ExportRegistration)"
+    uriParameters: 
+        name: 
+            displayName: name
+            description: unique name of a client ExportRegistration
+            type: string
+            required: true
+            repeat: false
+    delete: 
+        description: Delete a client export registration by name.  Return NotFoundException (HTTP 404) if the existing export registration cannot be found by name. Return ServiceException (HTTP 503) for unknown or unanticipated issues.
+        displayName: delete an ExportRegistration by unique name
+        responses: 
+            "200": 
+                description: boolean indicating success of the operation
+            "404": 
+                description: if the existing export registration cannot be found by name
+            "503": 
+                description: or unknown or unanticipated issues
+    get: 
+        description: Fetch a client export registration by unique name. Response will be null if no export registration matches on name. Return ServiceException (HTTP 503) for unknown or unanticipated issues.
+        displayName: get an ExportRegistration by unique name
+        responses: 
+            "200": 
+                description: the export registration matching the identifier provided
+                body: 
+                    application/json: 
+                        schema: ExportRegistration
+                        example: '{"id":"57db5bd2add4d779d38ff066","created":1473993682339,"modified":1473993682339,"origin":1471806386919,"name":"OSIClient","addressable":{"id":null,"created":0,"modified":0,"origin":1471806386919,"name":"OSIMQTTBroker","protocol":"TCP","address":"m10.cloudmqtt.com","port":15421,"path":null,"publisher":"EdgeXExportPublisher","user":"hukfgtoh","password":"uP6hJLYW6Ji4","topic":"EdgeXDataTopic"},"format":"JSON","filter":{"deviceIdentifiers":["livingroomthermosat","hallwaythermostat"],"valueDescriptorIdentifiers":["temperature","humidity"]},"encryption":{"encryptionAlgorithm":"AES","encryptionKey":"123","initializingVector":"123"},"compression":"GZIP","enable":true}'
+            "503": 
+                description: for unknown or unanticipated issues
+/registration/{id}: 
+    displayName: Export Registration Resource (by id)
+    description: "example - http://localhost:48071/api/v1/registration/57db5bd2add4d779d38ff066"
+    uriParameters: 
+        id: 
+            displayName: id
+            description: database generated id for the ExportRegistration
+            type: string
+            required: false
+            repeat: false
+    get: 
+        description: Fetch a client export registration by id. Response will be null if no export registration matches on id. Return ServiceException (HTTP 503) for unknown or unanticipated issues.
+        displayName: get an ExportRegistration by database id
+        responses: 
+            "200": 
+                description: the export registration matching the identifier provided
+                body: 
+                    application/json: 
+                        schema: ExportRegistration
+                        example: '{"id":"57db5bd2add4d779d38ff066","created":1473993682339,"modified":1473993682339,"origin":1471806386919,"name":"OSIClient","addressable":{"id":null,"created":0,"modified":0,"origin":1471806386919,"name":"OSIMQTTBroker","protocol":"TCP","address":"m10.cloudmqtt.com","port":15421,"path":null,"publisher":"EdgeXExportPublisher","user":"hukfgtoh","password":"uP6hJLYW6Ji4","topic":"EdgeXDataTopic"},"format":"JSON","filter":{"deviceIdentifiers":["livingroomthermosat","hallwaythermostat"],"valueDescriptorIdentifiers":["temperature","humidity"]},"encryption":{"encryptionAlgorithm":"AES","encryptionKey":"123","initializingVector":"123"},"compression":"GZIP","enable":true}'
+            "503": 
+                description: for unknown or unanticipated issues
+/registration: 
+    displayName: Export Registration Resource
+    description: "example - http://localhost:48071/api/v1/registration"
+    post: 
+        description: Add a new client export registration. Name must be unique across the database. Return ServiceException (HTTP 503) for unknown or unanticipated issues.
+        displayName: add a new client ExportRegistration
+        body: 
+            application/json: 
+                schema: ExportRegistration
+                example: '{"origin":1471806386919,"name":"OSIClient","addressable":{"origin":1471806386919,"name":"OSIMQTTBroker","protocol":"TCP","address":"m10.cloudmqtt.com","port":15421,"publisher":"EdgeXExportPublisher","user":"hukfgtoh","password":"uP6hJLYW6Ji4","topic":"EdgeXDataTopic"},"format":"JSON","filter":{"deviceIdentifiers":["livingroomthermosat", "hallwaythermostat"],"valueDescriptorIdentifiers":["temperature", "humidity"]},"encryption":{"encryptionAlgorithm":"AES","encryptionKey":"123","initializingVector":"123"},"compression":"GZIP","enable":true}'
+        responses: 
+            "200": 
+                description: the database generated id for the new export registration.
+            "503": 
+                description: for unknown or unanticipated issues.
+    put: 
+        description: Update a client export registration. Name & id are not updated as they are identifiers. Return NotFoundException (HTTP 404) if the existing export registration cannot be found by id or name. Return ServiceException (HTTP 503) for unknown or unanticipated issues.
+        displayName: update an ExportRegistration
+        body: 
+            application/json: 
+                schema: ExportRegistration
+                example: '{"id":"57db5bd2add4d779d38ff066","enable":false} or {"name":"OSIClient","enable":false}'
+        responses: 
+            "200": 
+                description: boolean indicating success of the operation.
+            "404": 
+                description: if the existing export registration cannot be found by id or name.
+            "503": 
+                description: for unknown or unanticipated issues
+    get: 
+        description: Fetch all client export registrations. Return ServiceException (HTTP 503) for unknown or unanticipated issues. No limits are exercised on this query at this time. May need to add this in the future if the number of clients is huge.
+        displayName: get all ExportRegistrations
+        responses: 
+            "200": 
+                description: a list of all client export registrations
+                body: 
+                    application/json: 
+                        schema: ExportRegistration
+                        example: '[{"id":"57db5bd2add4d779d38ff066","created":1473993682339,"modified":1473993682339,"origin":1471806386919,"name":"OSIClient","addressable":{"id":null,"created":0,"modified":0,"origin":1471806386919,"name":"OSIMQTTBroker","protocol":"TCP","address":"m10.cloudmqtt.com","port":15421,"path":null,"publisher":"EdgeXExportPublisher","user":"hukfgtoh","password":"uP6hJLYW6Ji4","topic":"EdgeXDataTopic"},"format":"JSON","filter":{"deviceIdentifiers":["livingroomthermosat","hallwaythermostat"],"valueDescriptorIdentifiers":["temperature","humidity"]},"encryption":{"encryptionAlgorithm":"AES","encryptionKey":"123","initializingVector":"123"},"compression":"GZIP","enable":true}]'
+            "503": 
+                description: for unknown or unanticipated issues
+/registration/reference/{type}:
+    displayName: Export Registration Reference Options Resource
+    description: "example - http://localhost:48071/api/v1/registration/reference/compressions"
+    uriParameters: 
+        type: 
+            displayName: type
+            description: Export Client registration property type. Valid types are: "algorithms", "compressions", "formats", and "destinations".
+            type: string
+            required: true
+            repeat: false
+    get: 
+        description: Fetch all supported values for the specified Export Client registration property type. Types are algorithms, compressions, formats, and destinations. Return ServiceException (HTTP 503) for unknown type specifications.
+        displayName: get all supported values for the specified type
+        responses: 
+            "200": 
+                description: a list of all supported values for the specified client export registration property type
+                body: 
+                    application/json: 
+                        example: '["NONE","GZIP","ZIP"]'
+            "503": 
+                description: for unknown types or unanticipated issues
+/ping: 
+    displayName: Ping Resource
+    description: "example - http://localhost:48071/api/v1/ping"
+    get: 
+        description: Test service providing an indication that the service is available.
+        displayName: ping to test if service is up
+        responses: 
+            "200": 
+                description: pong as a string

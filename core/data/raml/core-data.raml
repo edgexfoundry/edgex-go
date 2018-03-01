@@ -1,0 +1,833 @@
+#%RAML 0.8
+title: core-data
+version: "1.0.0"
+baseUri: "http://localhost:48080/api/v1"
+schemas: 
+    - 
+        event: '{"type":"object","$schema":"http://json-schema.org/draft-03/schema#","description":"Core device/sensor event","title":"event","properties":{"id":{"type":"string","required":false,"title":"id"},"created":{"type":"integer","required":false,"title":"created"},"modified":{"type":"integer","required":false,"title":"modified"},"origin":{"type":"integer","required":false,"title":"origin"},"pushed":{"type":"integer","required":false,"title":"pushed"},"device":{"type":"string","required":false,"title":"device"},"readings":{"type":"array","required":false,"title":"readings","items":{"type":"object","$ref":"#/schemas/reading"},"uniqueItems":false}}}'
+    - 
+        reading: '{"type":"object","$schema":"http://json-schema.org/draft-03/schema#","description":"Core device/sensor reading","title":"reading","properties":{"id":{"type":"string","required":false,"title":"id"},"created":{"type":"integer","required":false,"title":"created"},"modified":{"type":"integer","required":false,"title":"modified"},"origin":{"type":"integer","required":false,"title":"origin"},"pushed":{"type":"integer","required":false,"title":"pushed"},"name":{"type":"string","required":false,"title":"name"},"value":{"type":"string","required":false,"title":"value"}}}'
+    - 
+        valueDescriptor: '{"type":"object","$schema":"http://json-schema.org/draft-03/schema#","description":"Core and MetaData value descriptor - describes device/sensor data sent and received","title":"valueDescriptor","properties":{"id":{"type":"string","required":false,"title":"id"},"created":{"type":"integer","required":false,"title":"created"},"modified":{"type":"integer","required":false,"title":"modified"},"origin":{"type":"integer","required":false,"title":"origin"},"name":{"type":"string","required":false,"title":"name"},"description":{"type":"string","required":false,"title":"description"},"min":{"type":"string","required":false,"title":"min"},"max":{"type":"string","required":false,"title":"max"},"type":{"type":"string","required":false,"title":"type"},"uomLabel":{"type":"string","required":false,"title":"uomLabel"},"defaultValue":{"type":"string","required":false,"title":"defaultValue"},"formatting":{"type":"string","required":false,"title":"formatting"},"labels":{"type":"array","required":false,"title":"labels","items":{"type":"string","title":"labels"},"uniqueItems":false}}}'
+/event: 
+    displayName: Event Resource
+    description: example - http://localhost:48080/api/v1/event
+    post: 
+        description: Add a new event (with its associated readings). Prefers the event device is a device name but can also be a device id (database generated). DataValidationException (HTTP 409) if the a reading is associated to a non-existent value descriptor. ServiceException (HTTP 503) for unknown or unanticipated issues.
+        displayName: add an event (and associated readings)
+        body: 
+            application/json: 
+                schema: event
+                example: '{"origin":1471806386919,"device":"livingroomthermostat","readings":[{"origin":1471806386919,"name":"temperature","value":"38"}]}'
+        responses: 
+            "200": 
+                description: new event database generated id
+            "409": 
+                description: if the a reading is associated to a non-existent value descriptor
+            "503": 
+                description: for unknown or unanticipated issues.
+    put: 
+        description: Update the event data (not including updating the readings). NotFoundException (HTTP 404) if the event cannot be found by id. ServcieException (HTTP 503) for unknown or unanticipated issues.
+        displayName: update an event
+        body: 
+            application/json: 
+                schema: event
+                example: '{"id":"57ba04a1189b95b8afcdafd7","pushed":1471806399999}'
+        responses: 
+            "200": 
+                description: boolean on success of update request
+            "404": 
+                description: if the event cannot be found by id.
+            "503": 
+                description: for unknown or unanticipated issues.
+    get: 
+        description: Fetch all events with their associated readings. LimitExceededException (HTTP 413) if the number of events exceeds the current max limit. ServcieException (HTTP 503) for unknown or unanticipated issues.
+        displayName: get all events
+        responses: 
+            "200": 
+                description: list of events
+                body: 
+                    application/json: 
+                        schema: event
+                        example: '[{"id":"5888dea1bd36573f4681d6f9","created":1485364897029,"modified":1485364897029,"origin":1471806386919,"pushed":0,"device":"livingroomthermostat","readings":[{"id":"5888dea0bd36573f4681d6f8","created":1485364896983,"modified":1485364896983,"origin":1471806386919,"pushed":0,"name":"temperature","value":"38","device":"livingroomthermostat"}]}]'
+            "413": 
+                description: if the number of events exceeds the current max limit.
+            "503": 
+                description: for unknown or unanticipated issues.
+/event/{id}: 
+    displayName: Event Resource (by id)
+    description: example - http://localhost:48080/api/v1/event/57ba04a1189b95b8afcdafd7
+    uriParameters: 
+        id: 
+            displayName: id
+            description: database generated id
+            type: string
+            required: false
+            repeat: false
+    get: 
+        description: "Fetch a specific event by database specified id - returning null if none are found. Note: does not yet handle device managers. ServcieException (HTTP 503) for unknown or unanticipated issues"
+        displayName: get event by id
+        responses: 
+            "200": 
+                description: event
+                body: 
+                    application/json: 
+                        schema: event
+                        example: '{"id":"5888dea1bd36573f4681d6f9","created":1485364897029,"modified":1485364897029,"origin":1471806386919,"pushed":0,"device":"livingroomthermostat","readings":[{"id":"5888dea0bd36573f4681d6f8","created":1485364896983,"modified":1485364896983,"origin":1471806386919,"pushed":0,"name":"temperature","value":"38","device":"livingroomthermostat"}]}'
+            "404": 
+                description: if the event cannot be found by id.                       
+            "503": 
+                description: for unknown or unanticipated issues.
+/event/count: 
+    displayName: Event Resource Count 
+    description: example - http://localhost:48080/api/v1/event/device/count
+    get: 
+        description: "Return a count of the number of events in core data.  ServcieException (HTTP 503) for unknown or unanticipated issues.."
+        displayName: get events in the collection
+        responses: 
+            "200": 
+                description: number of events in the collection
+            "503": 
+                description: for unknown or unanticipated issues.
+/event/count/{deviceId}: 
+    displayName: Event Resource Count for a given device 
+    description: example - http://localhost:48080/api/v1/event/count/livingroomthermostat
+    get: 
+        description: "Return a count of the number of events in core data for a given device - identified by id or name.  ServcieException (HTTP 503) for unknown or unanticipated issues.."
+        displayName: get event count associated to a device
+        responses: 
+            "200": 
+                description: number of events for the device
+            "503": 
+                description: for unknown or unanticipated issues.                
+/event/id/{id}: 
+    displayName: Event Resource (by id)
+    description: example - http://localhost:48080/api/v1/event/id/57ba05ca189b95b8afcdafd9
+    uriParameters: 
+        id: 
+            displayName: id
+            description: database generated id
+            type: string
+            required: false
+            repeat: false
+    delete: 
+        description: Delete an event and all its readings given its database generated id. NotFoundException (HTTP 404) if the event cannot be found by id. ServcieException (HTTP 503) for unknown or unanticipated issues.
+        displayName: delete an event by id
+        responses: 
+            "200": 
+                description: boolean on success of deletion request
+            "404": 
+                description: if the event cannot be found by id.
+            "503": 
+                description: for unknown or unanticipated issues.
+    put: 
+        description: Update the event to be pushed (out of EdgeX to an enterprise or cloud system) by setting the pushed timestamp to the current time. NotFoundException (HTTP 404) if the event cannot be found by id. ServcieException (HTTP 503) for unknown or unanticipated issues.
+        displayName: mark the event pushed
+        responses: 
+            "200": 
+                description: boolean on success of update request
+            "404": 
+                description: if the event cannot be found by id
+            "503": 
+                description: for unknown or unanticipated issues.
+/event/device/{deviceId}/{limit}: 
+    displayName: Event Resource (by device)
+    description: example - http://localhost:48080/api/v1/event/device/livingroomthermostat/10 (where livingroomthermostat is a device name)
+    uriParameters: 
+        limit: 
+            displayName: limit
+            description: maximum number of events to fetch, must be < max limit
+            type: integer
+            required: false
+            repeat: false
+        deviceId: 
+            displayName: deviceId
+            description: the id (database generated id) or name of the device associated to events
+            type: string
+            required: false
+            repeat: false
+    get: 
+        description: "Return list of events with their associated readings for a given device, sort by event creation date. May be an empty list if none are associated to the device.  Note: does not yet handle device managers. LimitExceededException (HTTP 413) if the number of events exceeds the current max limit. ServcieException (HTTP 503) for unknown or unanticipated issues.  NotFoundException (HTTP 404) if the meta data checks are on and no device is found for supplied id."
+        displayName: get events associated to a device
+        responses: 
+            "200": 
+                description: list of events associated to the matching device by id - limited in size by the limit parameter
+                body: 
+                    application/json: 
+                        schema: event
+                        example: '[{"id":"5888dea1bd36573f4681d6f9","created":1485364897029,"modified":1485364897029,"origin":1471806386919,"pushed":0,"device":"livingroomthermostat","readings":[{"id":"5888dea0bd36573f4681d6f8","created":1485364896983,"modified":1485364896983,"origin":1471806386919,"pushed":0,"name":"temperature","value":"38","device":"livingroomthermostat"}]}]'
+            "404": 
+                description: if the meta data checks are on and no device is found for supplied id.
+            "413": 
+                description: if the number of events exceeds the current max limit.
+            "503": 
+                description: for unknown or unanticipated issues.
+/event/device/{deviceId}: 
+    displayName: Event Resource (by device)
+    description: example - http://localhost:48080/api/v1/event/device/livingroomthermostat  (where livingroomthermostat is a device name)
+    uriParameters: 
+        deviceId: 
+            displayName: deviceId
+            description: the id (database generated id) or name of the device associated to events
+            type: string
+            required: false
+            repeat: false
+    delete: 
+        description: Delete all events (and their readings) associated to a device given the device's id (either database generated id or name). ServiceException (HTTP 503) for unknown or unanticipated issues.   NotFoundException (HTTP 404) if the meta data checks are on and no device is found for supplied id.
+        displayName: delete events associated to a device
+        responses: 
+            "200": 
+                description: count of the number of events deleted
+            "404": 
+                description: if the meta data checks are on and no device is found for supplied id.
+            "503": 
+                description: for unknown or unanticipated issues.
+/event/{start}/{end}/{limit}: 
+    displayName: Event Resource (by creation time)
+    description: example - http://localhost:48080/api/v1/event/1471809160000/1471809161000/10
+    uriParameters: 
+        limit: 
+            displayName: limit
+            description: maximum number of events to fetch, must be < max limit
+            type: integer
+            required: false
+            repeat: false
+        start: 
+            displayName: start
+            description: start date in long form
+            type: integer
+            required: false
+            repeat: false
+        end: 
+            displayName: end
+            description: end date in long form
+            type: integer
+            required: false
+            repeat: false
+    get: 
+        description: Return all events between a given begin and end date/time (in the form of longs). LimitExceededException (HTTP 413) if the number of events exceeds the current max limit. ServiceException (HTTP 503) for unknown or unanticipated issues.
+        displayName: get events created in a time range
+        responses: 
+            "200": 
+                description: list of events between the specified dates
+                body: 
+                    application/json: 
+                        schema: event
+                        example: '[{"id":"5888dea1bd36573f4681d6f9","created":1485364897029,"modified":1485364897029,"origin":1471806386919,"pushed":0,"device":"livingroomthermostat","readings":[{"id":"5888dea0bd36573f4681d6f8","created":1485364896983,"modified":1485364896983,"origin":1471806386919,"pushed":0,"name":"temperature","value":"38","device":"livingroomthermostat"}]}]'
+            "413": 
+                description: if the number of events exceeds the current max limit.
+            "503": 
+                description: for unknown or unanticipated issues.
+/event/device/{deviceId}/valuedescriptor/{valuedescriptor}/{limit}: 
+    displayName: Reading Resource (filtered for device and value descriptor)
+    description: example - http://localhost:48080/api/v1/event/device/livingroomthermostat/valuedescriptor/temperature/10
+    uriParameters: 
+        limit: 
+            displayName: limit
+            description: maximum number of events to fetch, must be < max limit
+            type: integer
+            required: false
+            repeat: false
+        deviceId: 
+            displayName: deviceId
+            description: the id (database generated id) or name of the device associated to events
+            type: string
+            required: false
+            repeat: false
+        valuedescriptor: 
+            displayName: valuedescriptor
+            description: value descriptor used to filter readings
+            type: string
+            required: false
+            repeat: false
+    get: 
+        description: Return all readings associated to the device via the event, and filtered by those readings associated to the provided value descriptor.  LimitExceededException (HTTP 413) if the number of events (associated to the device) exceeds the current max limit. ServiceException (HTTP 503) for unknown or unanticipated issues.
+        displayName: get readings by device and value descriptor
+        responses: 
+            "200": 
+                description: list of readings by device and value descriptor
+                body: 
+                    application/json: 
+                        schema: reading
+                        example: '[{"id":"5888dea1bd36573f4681d6f9","created":1485364897029,"modified":1485364897029,"origin":1471806386919,"pushed":0,"device":"livingroomthermostat","readings":[{"id":"5888dea0bd36573f4681d6f8","created":1485364896983,"modified":1485364896983,"origin":1471806386919,"pushed":0,"name":"temperature","value":"38","device":"livingroomthermostat"}]}]'
+            "413": 
+                description: if the number of events exceeds the current max limit.
+            "503": 
+                description: for unknown or unanticipated issues. 
+/event/removeold/age/{age}: 
+    displayName: Event Resource (by age)
+    description: example - http://localhost:48080/api/v1/event/removeold/age/14718091620000
+    uriParameters: 
+        age: 
+            displayName: age
+            description: minimum age in milliseconds (from created timestamp) an event should be in order to be removed
+            type: integer
+            required: false
+            repeat: false
+    delete: 
+        description: Remove all old events (and associated readings) based on delimiting age.  ServiceException (HTTP 503) for unknown or unanticipated issues.  Should only be used by the scrubber micro service
+        displayName: remove old events
+        responses: 
+            "200": 
+                description: count of the number of events removed
+            "503": 
+                description: for unknown or unanticipated issues.
+/event/scrub: 
+    displayName: Scrub Event Resource
+    description: example - http://localhost:48080/api/v1/event/scrub
+    delete: 
+        description: Remove all pushed events and their associated readings.ServiceException (HTTP 503) for unknown or unanticipated issues.  Should only be used by the scrubber micro service
+        displayName: remove all scrubbed events
+        responses: 
+            "200": 
+                description: count of the number of events scrubbed
+            "503": 
+                description: for unknown or unanticipated issues.
+/reading: 
+    displayName: Reading Resource
+    description: example - http://localhost:48080/api/v1/reading
+    post: 
+        description: Add a new reading. ServiceException (HTTP 503) for unknown or unanticipated issues. DataValidationException (HTTP 409) if the associated value descriptor is non-existent.
+        displayName: add a new reading
+        body: 
+            application/json: 
+                schema: reading
+                example: '{"origin":1471806386919,"name":"temperature","value":"38"}'
+        responses: 
+            "200": 
+                description: String id (database id) of the new Reading
+            "409": 
+                description: if the associated value descriptor is non-existent
+            "503": 
+                description: for unknown or unanticipated issues.
+    put: 
+        description: Update the reading.  Reading object needs to contain the database generated id of the existing reading. NotFoundException (HTTP 404) if the reading cannot be found by id. ServiceException (HTTP 503) for unknown or unanticipated issues. DataValidationException if the associated value descriptor is non-existent.
+        displayName: update a reading
+        body: 
+            application/json: 
+                schema: reading
+                example: '{"id":"57b9fe08189b95b8afcdafd4","value":"39"} or {"id":"57b9fe08189b95b8afcdafd4","pushed":1471806486919}'
+        responses: 
+            "200": 
+                description: boolean indicating success of the update operation
+            "404": 
+                description: if the reading cannot be found by id
+            "409": 
+                description: if the associated value descriptor is non-existent.
+            "503": 
+                description: for unknown or unanticipated issues
+    get: 
+        description: Return list of all readings. Sorts by reading id. LimitExceededException (HTTP 413) if the number of readings exceeds the current max limit. ServiceException (HTTP 503) for unknown or unanticipated issues.
+        displayName: get all readings
+        responses: 
+            "200": 
+                description: list of all readings
+                body: 
+                    application/json: 
+                        schema: reading
+                        example: '[{"id":"5888dea0bd36573f4681d6f8","created":1485364896983,"modified":1485364896983,"origin":1471806386919,"pushed":0,"name":"temperature","value":"38","device":"livingroomthermostat"}]'
+            "413": 
+                description: if the number of readings exceeds the current max limit.
+            "503": 
+                description: for unknown or unanticipated issues
+/reading/count: 
+    displayName: Reading Resource Count 
+    description: example - http://localhost:48080/api/v1/reading/count
+    get: 
+        description: "Return a count of the number of readings in core dataServcieException (HTTP 503) for unknown or unanticipated issues.."
+        displayName: get readings count
+        responses: 
+            "200": 
+                description: number of readings in the collection
+            "503": 
+                description: for unknown or unanticipated issues.
+/reading/{id}: 
+    displayName: Reading Resource (by id)
+    description: example - http://localhost:48080/api/v1/reading/57b9fe08189b95b8afcdafd4
+    uriParameters: 
+        id: 
+            displayName: id
+            description: reading database generated id
+            type: string
+            required: false
+            repeat: false
+    get: 
+        description: Retrieve a reading by its database generated id.  NotFoundException (HTTP 404) if reading not found by id.  ServiceException (HTTP 503) for unknown or unanticipated issues
+        displayName: get reading by database generated id
+        responses: 
+            "200": 
+                description: Reading
+                body: 
+                    application/json: 
+                        schema: reading
+                        example: '{"id":"5888dea0bd36573f4681d6f8","created":1485364896983,"modified":1485364896983,"origin":1471806386919,"pushed":0,"name":"temperature","value":"38","device":"livingroomthermostat"}'
+            "404": 
+                description: if the reading cannot be found by id                        
+            "503": 
+                description: for unknown or unanticipated issues
+/reading/id/{id}: 
+    displayName: Reading Resource (by id)
+    description: example - http://localhost:48080/api/v1/reading/id/57ba01f8189b95b8afcdafd5
+    uriParameters: 
+        id: 
+            displayName: id
+            description: database generated id of the reading to be deleted
+            type: string
+            required: false
+            repeat: false
+    delete: 
+        description: Delete the reading from persistent storage. NotFoundException (HTTP 404) if the reading cannot be found by id. ServiceException (HTTP 503) for unknown or unanticipated issues.
+        responses: 
+            "200": 
+                description: boolean indicating success of the delete operation
+            "404": 
+                description: if the reading cannot be found by id
+            "503": 
+                description: for unknown or unanticipated issues.
+/reading/device/{deviceId}/{limit}: 
+    displayName: Reading Resource (by device)
+    description: example - http://localhost:48080/api/v1/reading/device/livingroomthermostat/10  (where livingroomthermostat is the name of a device)
+    uriParameters: 
+        limit: 
+            displayName: limit
+            description: maximum number of readings requested (not to exceed max limit)
+            type: integer
+            required: false
+            repeat: false
+        deviceId: 
+            displayName: deviceId
+            description: device database generated id or device name
+            type: string
+            required: false
+            repeat: false
+    get: 
+        description: "Return list of all readings for a given device, sort by reading creation date. Note: does not yet handle device managers. LimitExceededException (HTTP 413) if the number of readings exceeds the current max limit. ServiceException (HTTP 503) for unknown or unanticipated issues. NotFoundException (HTTP 404) if meta checks are in place and if the device id or name does not match any existing devices."
+        displayName: get readings by device
+        responses: 
+            "200": 
+                description: List of readings for a device, could be an empty list if none match
+                body: 
+                    application/json: 
+                        schema: reading
+                        example: '[{"id":"5888dea0bd36573f4681d6f8","created":1485364896983,"modified":1485364896983,"origin":1471806386919,"pushed":0,"name":"temperature","value":"38","device":"livingroomthermostat"}]'
+            "404": 
+                description: if meta checks are in place and if the device id or name does not match any existing devices
+            "413": 
+                description: if the number of readings exceeds the current max limit.
+            "503": 
+                description: or unknown or unanticipated issues
+/reading/name/{name}/device/{device}/{limit}: 
+    displayName: Reading Resource (by value descriptor and device)
+    description: example - http://localhost:48080/api/v1/reading/name/temperature/device/livingroomthermostat/10  (where temperature is the name of a value descriptor and livingroomthermostat is the name of the device)
+    uriParameters: 
+        limit: 
+            displayName: limit
+            description: maximum number of readings to return (must not exceed max limit)
+            type: integer
+            required: true
+            repeat: false
+        name: 
+            displayName: name
+            description: name of the matching ValueDescriptor
+            type: string
+            required: true
+            repeat: false
+        device: 
+            displayName: device
+            description: name or id of the matching device (as the device is represented in the associated event)
+            type: string
+            required: true
+            repeat: false
+    get: 
+        description: Return a list of readings that are associated to a ValueDescripter by name and Device by name (or id). LimitExceededException (HTTP 413) if the number of readings exceeds the current max limit. ServiceException (HTTP 503) for unknown or unanticipated issues.
+        displayName: get readings by value descriptor and device
+        responses: 
+            "200": 
+                description: list of readings matching on the value descriptor name and device name (or id)
+                body: 
+                    application/json: 
+                        schema: reading
+                        example: '[{"id":"5888dea0bd36573f4681d6f8","created":1485364896983,"modified":1485364896983,"origin":1471806386919,"pushed":0,"name":"temperature","value":"38","device":"livingroomthermostat"}]'
+            "413": 
+                description: if the number of readings exceeds the current max limit.
+            "503": 
+                description: for unknown or unanticipated issues.
+/reading/name/{name}/{limit}: 
+    displayName: Reading Resource (by value descriptor)
+    description: example - http://localhost:48080/api/v1/reading/name/temperature/10  (where temperature is the name of a value descriptor)
+    uriParameters: 
+        limit: 
+            displayName: limit
+            description: maximum number of readings to return (must not exceed max limit)
+            type: integer
+            required: false
+            repeat: false
+        name: 
+            displayName: name
+            description: name of the matching ValueDescriptor
+            type: string
+            required: false
+            repeat: false
+    get: 
+        description: Return a list of readings that are associated to a ValueDescripter by name. LimitExceededException (HTTP 413) if the number of readings exceeds the current max limit. ServiceException (HTTP 503) for unknown or unanticipated issues.
+        displayName: get readings by value descriptor
+        responses: 
+            "200": 
+                description: list of readings matching on the value descriptor name
+                body: 
+                    application/json: 
+                        schema: reading
+                        example: '[{"id":"5888dea0bd36573f4681d6f8","created":1485364896983,"modified":1485364896983,"origin":1471806386919,"pushed":0,"name":"temperature","value":"38","device":"livingroomthermostat"}]'
+            "413": 
+                description: if the number of readings exceeds the current max limit.
+            "503": 
+                description: for unknown or unanticipated issues.
+/reading/uomlabel/{uomLabel}/{limit}: 
+    displayName: Reading Resource (by unit of measure)
+    description: example - http://localhost:48080/api/v1/reading/uomlabel/degree cel/10  (where degree cel is the unit of measure for an assocaited value descriptor)
+    uriParameters: 
+        limit: 
+            displayName: limit
+            description: exceed max limit)
+            type: integer
+            required: false
+            repeat: false
+        uomLabel: 
+            displayName: uomLabel
+            description: Unit of Measure label (UoMLabel) matching the ValueDescriptor associated to the reading
+            type: string
+            required: false
+            repeat: false
+    get: 
+        description: Return a list of readings with an associated value descriptor of the UoM label specified. LimitExceededException (HTTP 413) if the number of readings exceeds the current max limit. ServiceException (HTTP 503) for unknown or unanticipated issues.
+        displayName: get readings by unit of measure
+        responses: 
+            "200": 
+                description: list of matching readings having value descriptor with UoM label specified
+                body: 
+                    application/json: 
+                        schema: reading
+                        example: '[{"id":"5888dea0bd36573f4681d6f8","created":1485364896983,"modified":1485364896983,"origin":1471806386919,"pushed":0,"name":"temperature","value":"38","device":"livingroomthermostat"}]'
+            "413": 
+                description: if the number of readings exceeds the current max limit.
+            "503": 
+                description: for unknown or unanticipated issues.
+/reading/label/{label}/{limit}: 
+    displayName: Reading Resource (by label)
+    description: example - http://localhost:48080/api/v1/reading/label/hvac/10  (where hvac is a label on an associated value descriptor)
+    uriParameters: 
+        limit: 
+            displayName: limit
+            description: maximum number of readings to return (must not exceed max limit)
+            type: integer
+            required: false
+            repeat: false
+        label: 
+            displayName: label
+            description: label that should be in matching Value Descriptor's label array
+            type: string
+            required: false
+            repeat: false
+    get: 
+        description: Return a list of readings with an associated value descriptor of the label specified. LimitExceededException (HTTP 413) if the number of readings exceeds the current max limit. ServiceException (HTTP 503) for unknown or unanticipated issues.
+        displayName: get readings by label
+        responses: 
+            "200": 
+                description: list of matching readings having value descriptor with the associated label. Could be an empty list if none match.
+                body: 
+                    application/json: 
+                        schema: reading
+                        example: '[{"id":"5888dea0bd36573f4681d6f8","created":1485364896983,"modified":1485364896983,"origin":1471806386919,"pushed":0,"name":"temperature","value":"38","device":"livingroomthermostat"}]'
+            "413": 
+                description: if the number of readings exceeds the current max limit.
+            "503": 
+                description: for unknown or unanticipated issues.
+/reading/type/{type}/{limit}: 
+    displayName: Reading Resource (by value data type)
+    description: example - http://localhost:48080/api/v1/reading/type/F/10  (where F, which is IoTtype for float, is in the type for an associated value descriptor)
+    uriParameters: 
+        limit: 
+            displayName: limit
+            description: maximum number of readings to be allowed to be returned
+            type: integer
+            required: false
+            repeat: false
+        type: 
+            displayName: type
+            description: an IoTType in string form (one of I, B, F, S for integer, Boolean, Floating point or String)
+            type: string
+            required: false
+            repeat: false
+    get: 
+        description: Return a list of readings with an associated value descriptor of the type (IoTType) specified. LimitExceededException (HTTP 413) if the number of readings exceeds the current max limit. ServiceException (HTTP 503) for unknown or unanticipated issues.
+        displayName: get readings by type
+        responses: 
+            "200": 
+                description: list of matching readings having value descriptor of the types specified. Could be an empty list if none match.
+                body: 
+                    application/json: 
+                        schema: reading
+                        example: '[{"id":"5888dea0bd36573f4681d6f8","created":1485364896983,"modified":1485364896983,"origin":1471806386919,"pushed":0,"name":"temperature","value":"38","device":"livingroomthermostat"}]'
+            "413": 
+                description: if the number of readings exceeds the current max limit.
+            "503": 
+                description: for unknown or unanticipated issues.
+/reading/{start}/{end}/{limit}: 
+    displayName: Reading Resource (by creation time)
+    description: example - http://localhost:48080/api/v1/reading/1471806984000/14718069900000/10
+    uriParameters: 
+        limit: 
+            displayName: limit
+            description: maximum number of readings to be allowed to be returned
+            type: integer
+            required: false
+            repeat: false
+        start: 
+            displayName: start
+            description: millisecond (long) timestamp of the beginning of the time
+            type: integer
+            required: false
+            repeat: false
+        end: 
+            displayName: end
+            description: millisecond (long) timestamp of the end of the time rage
+            type: integer
+            required: false
+            repeat: false
+    get: 
+        description: Return a list of readings between two timestamps - limited by the number specified in the limit parameter. LimitExceededException (HTTP 413) if the number of readings exceeds the current max limit. ServiceException (HTTP 503) for unknown or unanticipated issues.
+        responses: 
+            "200": 
+                description: list of matching readings in this range (limited by the limit parameter)
+                body: 
+                    application/json: 
+                        schema: reading
+                        example: '[{"id":"5888dea0bd36573f4681d6f8","created":1485364896983,"modified":1485364896983,"origin":1471806386919,"pushed":0,"name":"temperature","value":"38","device":"livingroomthermostat"}]'
+            "413": 
+                description: if the number of readings exceeds the current max limit.
+            "503": 
+                description: for unknown or unanticipated issues.
+/valuedescriptor: 
+    displayName: Value Descriptor Resource
+    description: example - http://localhost:48080/api/v1/valuedescriptor
+    post: 
+        description: Add a new ValueDescriptor whose name must be unique. ServcieException (HTTP 503) for unknown or unanticipated issues. DataValidationException (HTTP 409) if the a formatting string of the value descriptor is not a valid printf format.
+        displayName: add a value descriptor
+        body: 
+            application/json: 
+                schema: valueDescriptor
+                example: '{"name":"temperature","description":"test description", "min":"-40","max":"140","type":"F","uomLabel":"degree cel","defaultValue":"0","formatting":"%s","labels":["temp","hvac"]}'
+        responses: 
+            "200": 
+                description: database generated id of the new ValueDescriptor
+            "409": 
+                description: if the a formatting string of the value descriptor is not a valid printf format or if the name is determined to not be unique with regard to other value descriptors.
+            "503": 
+                description: for unknown or unanticipated issues
+    put: 
+        description: Update the ValueDescriptor identified by the id or name in the object provided. Id is used first, name is used second for identification purposes. ServcieException (HTTP 503) for unknown or unanticipated issues. DataValidationException (HTTP 409) if the a formatting string of the value descriptor is not a valid printf format. NotFoundException (404) if the value descriptor cannot be located by the identifier.
+        displayName: update a value descriptor
+        body: 
+            application/json: 
+                schema: valueDescriptor
+                example: '{"id":"57b9f9f8189b95b8afcdafd1","min":"-100","max":"200"}  or {"name":"temperature","min":"-100","max":"200"}'
+        responses: 
+            "200": 
+                description: boolean indicating success of the update
+            "404": 
+                description: if the value descriptor cannot be located by the identifier.
+    get: 
+        description: Return all ValueDescriptor objects. LimitExceededException (HTTP 413) if the number of value descriptors exceeds the current max limit. ServcieException (HTTP 503) for unknown or unanticipated issues.
+        displayName: get all value descriptors
+        responses: 
+            "200": 
+                description: list of ValueDescriptors
+                body: 
+                    application/json: 
+                        schema: valueDescriptor
+                        example: '[{"id":"57b9fbb2189b95b8afcdafd2","created":1471806386919,"modified":1471806467057,"origin":0,"name":"temperature","description":"test description","min":"-100","max":"200","type":"F","uomLabel":"degree cel","defaultValue":"0","formatting":"%s","labels":["temp","hvac"]}]'
+            "413": 
+                description: if the number of value descriptors exceeds the current max limit
+            "503": 
+                description: for unknown or unanticipated issues.
+/valuedescriptor/id/{id}: 
+    displayName: Value Descriptor Resource (by id)
+    description: example - http://localhost:48080/api/v1/valuedescriptor/id/57b9fd0a189b95b8afcdafd3
+    uriParameters: 
+        id: 
+            displayName: id
+            description: Value descriptor database generated id
+            type: string
+            required: false
+            repeat: false
+    delete: 
+        description: Remove the ValueDescriptor designated by database generated identifier. ServcieException (HTTP 503) for unknown or unanticipated issues. DataValidationException (HTTP 409) if the value descriptor is still referenced in Readings. NotFoundException (404) if the value descriptor cannot be located by the identifier.
+        displayName: remove a value descriptor by id
+        responses: 
+            "200": 
+                description: boolean indicating success of the remove operation
+            "404": 
+                description: if the value descriptor cannot be located by the identifier.
+            "409": 
+                description: if the value descriptor is still referenced in Readings
+            "503": 
+                description: for unknown or unanticipated issues
+/valuedescriptor/name/{name}: 
+    displayName: Value Descriptor Resource (by name)
+    description: example - http://localhost:48080/api/v1/valuedescriptor/name/temperature  (where temperature is the unique name of a value descriptor)
+    uriParameters: 
+        name: 
+            displayName: name
+            description: Unique name of the value descriptor
+            type: string
+            required: false
+            repeat: false
+    get: 
+        description: Return ValueDescriptor object with given name. Could be null if no value descriptors found by the name (name is unique across all value descriptors).  NotFoundException (HTTP 404) if the value descriptor cannont be found by nmee.  ServcieException (HTTP 503) for unknown or unanticipated issues.
+        displayName: get a value descriptor by name
+        responses: 
+            "200": 
+                description: ValueDescriptor having the provided name, could be null if none are found.
+                body: 
+                    application/json: 
+                        schema: valueDescriptor
+                        example: '{"id":"57b9fbb2189b95b8afcdafd2","created":1471806386919,"modified":1471806467057,"origin":0,"name":"temperature","description":"test description","min":"-100","max":"200","type":"F","uomLabel":"degree cel","defaultValue":"0","formatting":"%s","labels":["temp","hvac"]}'
+            "404":
+                description: if the value descriptor cannot be located by the name                        
+            "503": 
+                description: for unknown or unanticipated issues.
+    delete: 
+        description: Remove the ValueDescriptor designated by name. ServcieException (HTTP 503) for unknown or unanticipated issues. DataValidationException (HTTP 409) if the value descriptor is still referenced in Readings. NotFoundException (404) if the value descriptor cannot be located by the identifier.
+        displayName: remove a value descriptor by name
+        responses: 
+            "200": 
+                description: boolean indicating success of the remove operation
+            "404": 
+                description: if the value descriptor cannot be located by the identifier
+            "409": 
+                description: if the value descriptor is still referenced in Readings
+            "503": 
+                description: for unknown or unanticipated issues.
+/valuedescriptor/{id}: 
+    displayName: Value Descriptor Resource (by id)
+    description: example - http://localhost:48080/api/v1/valuedescriptor/57b9fbb2189b95b8afcdafd2
+    uriParameters: 
+        id: 
+            displayName: id
+            description: database generated id for the value descriptor
+            type: string
+            required: false
+            repeat: false
+    get: 
+        description: Fetch a specific ValueDescriptor by its database generated id.  NotFoundException (HTTP 404) if the value descriptor cannot be found by id.  ServcieException (HTTP 503) for unknown or unanticipated issues
+        displayName: get a value descriptor by id
+        responses: 
+            "200": 
+                description: ValueDescriptor
+            "404":
+                description: if the value descriptor cannot be located by the identifier
+            "503": 
+                description: for unknown or unanticipated issues
+/valuedescriptor/devicename/{name}: 
+    displayName: Value Descriptor Resources associated to the device identified by name
+    description: example - http://localhost:48080/api/v1/valuedescriptor/devicename/hallthermostat (where hallthermostat is the name of a device)
+    uriParameters: 
+        name: 
+            displayName: name
+            description: unique name of the device
+            type: string
+            required: true
+            repeat: false
+    get: 
+        description: Fetch all ValueDescriptors that are associated to a Device's command set as either a put command parameter name or get/put response expected value.  NotFoundException (HTTP 404) if the Device cannot be found by name.  ServcieException (HTTP 503) for unknown or unanticipated issues
+        displayName: get value descriptors by device name
+        responses: 
+            "200": 
+                description: list of ValueDescriptors
+                body: 
+                    application/json: 
+                        schema: valueDescriptor
+                        example: '[{"id":"57b9fbb2189b95b8afcdafd2","created":1471806386919,"modified":1471806467057,"origin":0,"name":"temperature","description":"test description","min":"-100","max":"200","type":"F","uomLabel":"degree cel","defaultValue":"0","formatting":"%s","labels":["temp","hvac"]}]'
+            "404": 
+                description: if the device cannot be found by the name provided
+            "503": 
+                description: for unknown or unanticipated issues.
+/valuedescriptor/deviceid/{id}: 
+    displayName: Value Descriptor Resources associated to the device identified by id
+    description: example - http://localhost:48080/api/v1/valuedescriptor/deviceid/57b9fbb2189b95b8afcdabb1 (where 57b9fbb2189b95b8afcdabb1 is the id of a device)
+    uriParameters: 
+        id: 
+            displayName: id
+            description: database generated id of the device
+            type: string
+            required: true
+            repeat: false
+    get: 
+        description: Fetch all ValueDescriptors that are associated to a Device's command set as either a put command parameter name or get/put response expected value.  NotFoundException (HTTP 404) if the Device cannot be found by name.  ServcieException (HTTP 503) for unknown or unanticipated issues
+        displayName: get value descriptors by device name
+        responses: 
+            "200": 
+                description: list of ValueDescriptors
+                body: 
+                    application/json: 
+                        schema: valueDescriptor
+                        example: '[{"id":"57b9fbb2189b95b8afcdafd2","created":1471806386919,"modified":1471806467057,"origin":0,"name":"temperature","description":"test description","min":"-100","max":"200","type":"F","uomLabel":"degree cel","defaultValue":"0","formatting":"%s","labels":["temp","hvac"]}]'
+            "404": 
+                description: if the device cannot be found by the id provided
+            "503": 
+                description: for unknown or unanticipated issues.
+/valuedescriptor/uomlabel/{uomLabel}: 
+    displayName: Value Descriptor Resource (by unit of measure)
+    description: example - http://localhost:48080/api/v1/valuedescriptor/uomlabel/degree cel  (where degree cel is the UoM for value descriptors)
+    uriParameters: 
+        uomLabel: 
+            displayName: uomLabel
+            description: unit of measure
+            type: string
+            required: false
+            repeat: false
+    get: 
+        description: Return ValueDescriptor objects with given UoM label. ServcieException (HTTP 503) for unknown or unanticipated issues.
+        displayName: get value descriptors by unit of measure
+        responses: 
+            "200": 
+                description: list of ValueDescriptor matching UoM Label
+                body: 
+                    application/json: 
+                        schema: valueDescriptor
+                        example: '[{"id":"57b9fbb2189b95b8afcdafd2","created":1471806386919,"modified":1471806467057,"origin":0,"name":"temperature","description":"test description","min":"-100","max":"200","type":"F","uomLabel":"degree cel","defaultValue":"0","formatting":"%s","labels":["temp","hvac"]}]'
+            "503": 
+                description: for unknown or unanticipated issues.
+/valuedescriptor/label/{label}: 
+    displayName: Value Descriptor Resource (by label)
+    description: example - http://localhost:48080/api/v1/valuedescriptor/label/hvac  (where hvac is one of the labels for value descriptors)
+    uriParameters: 
+        label: 
+            displayName: label
+            description: tag or label
+            type: string
+            required: false
+            repeat: false
+    get: 
+        description: Return ValueDescriptor objects with given label. ServcieException (HTTP 503) for unknown or unanticipated issues.
+        displayName: get value descriptors by label
+        responses: 
+            "200": 
+                description: list of ValueDescriptor matching UoM Label
+                body: 
+                    application/json: 
+                        schema: valueDescriptor
+                        example: '[{"id":"57b9fbb2189b95b8afcdafd2","created":1471806386919,"modified":1471806467057,"origin":0,"name":"temperature","description":"test description","min":"-100","max":"200","type":"F","uomLabel":"degree cel","defaultValue":"0","formatting":"%s","labels":["temp","hvac"]}]'
+            "503": 
+                description: for unknown or unanticipated issues.
+/ping: 
+    displayName: Ping Resource
+    description: example - http://localhost:48080/api/v1/ping
+    get: 
+        description: Test service providing an indication that the service is available.
+        displayName: service up check
+        responses: 
+            "200": 
+                description: return value of "pong"
+            "503": 
+                description: for unknown or unanticipated issues

@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
+
 .PHONY: build test docker
 
 GO=CGO_ENABLED=0 go
@@ -12,7 +13,7 @@ GOCGO=CGO_ENABLED=1 go
 DOCKERS=
 .PHONY: $(DOCKERS)
 
-MICROSERVICES=cmd/export-client/export-client cmd/export-distro/export-distro
+MICROSERVICES=cmd/export-client/export-client cmd/export-distro/export-distro cmd/core-metadata/core-metadata cmd/core-data/core-data cmd/core-command/core-command
 .PHONY: $(MICROSERVICES)
 
 VERSION=$(shell cat ./VERSION)
@@ -20,6 +21,15 @@ VERSION=$(shell cat ./VERSION)
 GOFLAGS=-ldflags "-X github.com/edgexfoundry/edgex-go.Version=$(VERSION)"
 
 build: $(MICROSERVICES)
+
+cmd/core-metadata/core-metadata:
+	$(GO) build $(GOFLAGS) -o $@ ./cmd/core-metadata
+
+cmd/core-data/core-data:
+	$(GOCGO) build $(GOFLAGS) -o $@ ./cmd/core-data
+
+cmd/core-command/core-command:
+	$(GO) build $(GOFLAGS) -o $@ ./cmd/core-command
 
 cmd/export-client/export-client:
 	$(GO) build $(GOFLAGS) -o $@ ./cmd/export-client
@@ -32,6 +42,7 @@ test:
 
 prepare:
 	glide install
+
 
 docker: $(DOCKERS)
 
