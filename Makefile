@@ -28,7 +28,7 @@ cmd/export-distro/export-distro:
 	$(GOCGO) build $(GOFLAGS) -o $@ ./cmd/export-distro
 
 test:
-	go test ./...
+	go test `glide novendor`
 
 prepare:
 	glide install
