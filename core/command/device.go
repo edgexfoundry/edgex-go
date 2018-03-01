@@ -12,15 +12,18 @@
  * the License.
  *
  * @microservice: core-command-go service
- * @author: Spencer Bull, Dell
+ * @original author: Spencer Bull, Dell
  * @version: 0.5.0
+ * @updated by:  Jim White, Dell Technologies, Feb 27, 2108
+ * Added func makeTimestamp and import of time to support it (Fede C. initiated during mono repo work)
  *******************************************************************************/
-package main
+package command
 
 import (
 	"bytes"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/edgexfoundry/edgex-go/core/clients/metadataclients"
@@ -159,4 +162,8 @@ func getCommandsByDeviceName(dn string) (int, models.CommandResponse, error) {
 		return http.StatusServiceUnavailable, models.CommandResponse{}, err
 	}
 	return http.StatusOK, models.CommandResponseFromDevice(d, constructCommandURL()), err
+}
+
+func constructCommandURL() string {
+	return configuration.URLProtocol + configuration.ServiceAddress + ":" + strconv.Itoa(configuration.ServerPort)
 }

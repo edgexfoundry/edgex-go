@@ -12,20 +12,27 @@
  * the License.
  *
  * @microservice: core-metadata-go service
- * @author: Spencer Bull & Ryan Comer, Dell
+ * @original author: Spencer Bull & Ryan Comer, Dell
  * @version: 0.5.0
+ * @updated by:  Jim White, Dell Technologies, Feb 27, 2108
+ * Added func makeTimestamp and import of time to support it (Fede C. initiated during mono repo work)
  *******************************************************************************/
-package main
+package metadata
 
 import (
 	"errors"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
+
+func makeTimestamp() int64 {
+	return time.Now().UnixNano() / int64(time.Millisecond)
+}
 
 /* -----------------------Schedule Event ------------------------*/
 func mgoUpdateScheduleEvent(se models.ScheduleEvent) error {
