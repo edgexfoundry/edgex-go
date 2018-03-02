@@ -21,8 +21,8 @@ import (
 	"encoding/json"
 	"io/ioutil"
 
-	"github.com/tsconn23/edgex-go/core/metadata"
-	logger "github.com/tsconn23/edgex-go/support/logging-client"
+	"github.com/edgexfoundry/edgex-go/core/metadata"
+	logger "github.com/edgexfoundry/edgex-go/support/logging-client"
 	"fmt"
 )
 

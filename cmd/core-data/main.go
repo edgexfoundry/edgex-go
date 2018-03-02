@@ -25,8 +25,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/tsconn23/edgex-go/core/data"
-	"github.com/tsconn23/edgex-go/support/logging-client"
+	"github.com/edgexfoundry/edgex-go/core/data"
+	"github.com/edgexfoundry/edgex-go/support/logging-client"
 )
 
 const (
