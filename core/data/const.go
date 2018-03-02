@@ -46,6 +46,7 @@ type ConfigurationStruct struct {
 	Consulcheckaddress         string
 	Consulport                 int
 	Checkinterval              string
+	EnableRemoteLogging        bool
 	Loggingfile                string
 	Loggingremoteurl           string
 	Metadbaddressableurl       string
@@ -64,3 +65,7 @@ type ConfigurationStruct struct {
 }
 
 var configuration ConfigurationStruct = ConfigurationStruct{} //  Needs to be initialized before used
+
+var (
+	COREDATASERVICENAME = "core-data"
+)

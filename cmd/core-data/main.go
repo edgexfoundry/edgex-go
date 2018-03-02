@@ -44,7 +44,7 @@ func readConfigurationFile(path string) (*data.ConfigurationStruct, error) {
 	// Read the configuration file
 	contents, err := ioutil.ReadFile(path)
 	if err != nil {
-		loggingClient.Error("Could not read configuration file(" + configFile + "): " + err.Error())
+		fmt.Println("Error reading configuration file: " + err.Error())
 		return nil, err
 	}
 
@@ -58,19 +58,28 @@ func readConfigurationFile(path string) (*data.ConfigurationStruct, error) {
 	return &configuration, nil
 }
 
+func setLoggingTarget(conf data.ConfigurationStruct) string {
+	logTarget := conf.Loggingremoteurl
+	if !conf.EnableRemoteLogging {
+		return conf.Loggingfile
+	}
+	return logTarget
+}
+
 func main() {
 	start := time.Now()
 
 	// Load configuration data
 	configuration, err := readConfigurationFile(configFile)
 	if err != nil {
+		loggingClient = logger.NewClient(data.COREDATASERVICENAME, false, "")
 		loggingClient.Error("Could not read configuration file(" + configFile + "): " + err.Error())
 		return
 	}
 
+	logTarget := setLoggingTarget(*configuration)
 	// Create Logger (Default Parameters)
-	loggingClient = logger.NewClient(configuration.Servicename, configuration.Loggingremoteurl)
-	loggingClient.LogFilePath = configuration.Loggingfile
+	loggingClient = logger.NewClient(configuration.Applicationname, configuration.EnableRemoteLogging, logTarget)
 
 	loggingClient.Info("Starting core-data " + version)
 

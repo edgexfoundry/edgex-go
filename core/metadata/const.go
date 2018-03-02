@@ -47,6 +47,7 @@ type ConfigurationStruct struct {
 	ConsulHost                          string
 	ConsulCheckAddress                  string
 	ConsulPort                          int
+	EnableRemoteLogging                 bool
 	LoggingFile                         string
 	LoggingRemoteURL                    string
 	NotificationPostDeviceChanges       bool
