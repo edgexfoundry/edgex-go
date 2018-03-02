@@ -19,7 +19,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strconv"
@@ -36,22 +35,18 @@ const (
 // Set from the makefile
 var version string = "undefined"
 
-var loggingClient logger.LoggingClient
-
 // Read the configuration file and update configuration struct
 func readConfigurationFile(path string) (*data.ConfigurationStruct, error) {
 	var configuration data.ConfigurationStruct
 	// Read the configuration file
 	contents, err := ioutil.ReadFile(path)
 	if err != nil {
-		loggingClient.Error("Could not read configuration file(" + configFile + "): " + err.Error())
 		return nil, err
 	}
 
 	// Decode the configuration as JSON
 	err = json.Unmarshal(contents, &configuration)
 	if err != nil {
-		fmt.Println("Error reading configuration file: " + err.Error())
 		return nil, err
 	}
 
@@ -60,6 +55,8 @@ func readConfigurationFile(path string) (*data.ConfigurationStruct, error) {
 
 func main() {
 	start := time.Now()
+
+	loggingClient := logger.NewClient(data.ServiceName, "")
 
 	// Load configuration data
 	configuration, err := readConfigurationFile(configFile)
