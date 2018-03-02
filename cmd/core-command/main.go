@@ -23,7 +23,6 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/core/command"
 	logger "github.com/edgexfoundry/edgex-go/support/logging-client"
-	"fmt"
 )
 
 const (
