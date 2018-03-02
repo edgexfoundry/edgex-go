@@ -24,6 +24,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/edgex-go/core/data"
 	"github.com/edgexfoundry/edgex-go/support/logging-client"
 )
@@ -31,9 +32,6 @@ import (
 const (
 	configFile string = "./res/configuration.json"
 )
-
-// Set from the makefile
-var version string = "undefined"
 
 var loggingClient logger.LoggingClient
 
@@ -52,7 +50,7 @@ func main() {
 	// Create Logger (Default Parameters)
 	loggingClient = logger.NewClient(configuration.Applicationname, configuration.EnableRemoteLogging, logTarget)
 
-	loggingClient.Info("Starting core-data " + version)
+	loggingClient.Info("Starting core-data " + edgex.Version)
 
 	data.Init(*configuration, loggingClient)
 
