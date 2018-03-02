@@ -26,22 +26,23 @@ import (
 )
 
 const (
-	CONFIG = "res/configuration.json"
+	configFile = "res/configuration.json"
 )
 
-func main() {
-	var loggingClient = logger.NewClient(metadata.METADATASERVICENAME, "")
+var loggingClient logger.LoggingClient
 
+func main() {
 	// Load configuration data
-	configuration, err := readConfigurationFile(CONFIG)
+	configuration, err := readConfigurationFile(configFile)
 	if err != nil {
-		loggingClient.Error("Could not read configuration file(" + CONFIG + "): " + err.Error())
+		loggingClient = logger.NewClient(metadata.METADATASERVICENAME, false, "")
+		loggingClient.Error("Could not load configuration (" + configFile + "): " + err.Error())
 		return
 	}
 
-	// Update logging based on configuration
-	loggingClient.RemoteUrl = configuration.LoggingRemoteURL
-	loggingClient.LogFilePath = configuration.LoggingFile
+	logTarget := setLoggingTarget(*configuration)
+	// Create Logger (Default Parameters)
+	loggingClient = logger.NewClient(configuration.ApplicationName, configuration.EnableRemoteLogging, logTarget)
 
 	metadata.Start(*configuration, loggingClient)
 }
@@ -49,7 +50,6 @@ func main() {
 // Read the configuration file and
 func readConfigurationFile(path string) (*metadata.ConfigurationStruct, error) {
 	var configuration metadata.ConfigurationStruct
-
 	// Read the configuration file
 	contents, err := ioutil.ReadFile(path)
 	if err != nil {
@@ -63,4 +63,12 @@ func readConfigurationFile(path string) (*metadata.ConfigurationStruct, error) {
 	}
 
 	return &configuration, nil
+}
+
+func setLoggingTarget(conf metadata.ConfigurationStruct) string {
+	logTarget := conf.LoggingRemoteURL
+	if !conf.EnableRemoteLogging {
+		return conf.LoggingFile
+	}
+	return logTarget
 }
