@@ -16,7 +16,9 @@
 	"URLDevicePath" : "/api/v1/device",
 	"ConsulHost" : "localhost",
 	"ConsulCheckAddress" : "http://localhost:48082/api/v1/ping",
-	"LogFile" : "./command.log",
+	"EnableRemoteLogging" : false,
+	"LogFile" : "./logs/edgex-core-command.log",
+	"LoggingRemoteURL" : "http://localhost:48061/api/v1/logs",
 	"Metadbaddressableurl" : "http://localhost:48081/api/v1/addressable",
 	"Metadbdeviceserviceurl" : "http://localhost:48081/api/v1/deviceservice",
 	"Metadbdeviceprofileurl" : "http://localhost:48081/api/v1/deviceprofile",
@@ -25,6 +27,5 @@
 	"Metadbcommandurl" : "http://localhost:48081/api/v1/command",
 	"Metadbeventurl" : "http://localhost:48081/api/v1/event",
 	"Metadbscheduleurl" : "http://localhost:48081/api/v1/schedule",
-	"Metadbprovisionwatcherurl" : "http://localhost:48081/api/v1/provisionwatcher",
-	"LoggingRemoteURL" : "http://localhost:48061/api/v1/logs"
+	"Metadbprovisionwatcherurl" : "http://localhost:48081/api/v1/provisionwatcher"
 }
