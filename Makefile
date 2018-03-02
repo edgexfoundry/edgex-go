@@ -5,13 +5,16 @@
 #
 
 
-.PHONY: build test docker
+.PHONY: build clean test docker
 
 GO=CGO_ENABLED=0 go
 GOCGO=CGO_ENABLED=1 go
 
 DOCKERS=
 .PHONY: $(DOCKERS)
+
+EXECUTABLES=clean_core_metadata clean_core_data clean_core_command clean_export_client clean_export_distro
+.PHONY: $(EXECUTABLES)
 
 MICROSERVICES=cmd/export-client/export-client cmd/export-distro/export-distro cmd/core-metadata/core-metadata cmd/core-data/core-data cmd/core-command/core-command
 .PHONY: $(MICROSERVICES)
@@ -36,6 +39,23 @@ cmd/export-client/export-client:
 
 cmd/export-distro/export-distro:
 	$(GOCGO) build $(GOFLAGS) -o $@ ./cmd/export-distro
+
+clean: $(EXECUTABLES)
+
+clean_core_metadata:
+	rm -f ./cmd/core-metadata/core-metadata
+
+clean_core_data:
+	rm -f ./cmd/core-data/core-data
+
+clean_core_command:
+	rm -f ./cmd/core-command/core-command
+
+clean_export_client:
+	rm -f ./cmd/export-client/export-client
+
+clean_export_distro:
+	rm -f ./cmd/export-distro/export-distro
 
 test:
 	go test `glide novendor`
