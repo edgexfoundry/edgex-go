@@ -1,3 +1,11 @@
+#
+# Copyright (c) 2018
+# Dell
+# Cavium
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
 # Docker image for Golang Core Data micro service 
 FROM golang:1.9-alpine AS builder
 WORKDIR /go/src/github.com/edgexfoundry/edgex-go
