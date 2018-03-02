@@ -5,7 +5,7 @@
 #
 
 
-.PHONY: build test docker
+.PHONY: build clean test docker
 
 GO=CGO_ENABLED=0 go
 GOCGO=CGO_ENABLED=1 go
@@ -36,6 +36,9 @@ cmd/export-client/export-client:
 
 cmd/export-distro/export-distro:
 	$(GOCGO) build $(GOFLAGS) -o $@ ./cmd/export-distro
+
+clean:
+	rm -f $(MICROSERVICES)
 
 test:
 	go test `glide novendor`
