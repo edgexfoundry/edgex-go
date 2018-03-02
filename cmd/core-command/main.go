@@ -54,14 +54,12 @@ func readConfigurationFile(path string) (*command.ConfigurationStruct, error) {
 	// Read the configuration file
 	contents, err := ioutil.ReadFile(path)
 	if err != nil {
-		fmt.Println("Error reading configuration file: " + err.Error())
 		return nil, err
 	}
 
 	// Decode the configuration as JSON
 	err = json.Unmarshal(contents, &configuration)
 	if err != nil {
-		fmt.Println("Error parsing configuration file: " + err.Error())
 		return nil, err
 	}
 
