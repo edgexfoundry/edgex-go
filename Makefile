@@ -4,41 +4,41 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
+BUILD_DIR = $(PWD)/build
 
 .PHONY: build clean test docker
+GO = CGO_ENABLED=0 go
+GOCGO = CGO_ENABLED=1 go
 
-GO=CGO_ENABLED=0 go
-GOCGO=CGO_ENABLED=1 go
-
-DOCKERS=
+DOCKERS =
 .PHONY: $(DOCKERS)
 
-MICROSERVICES=cmd/export-client/export-client cmd/export-distro/export-distro cmd/core-metadata/core-metadata cmd/core-data/core-data cmd/core-command/core-command
+MICROSERVICES = export-client export-distro core-metadata core-data core-command
 .PHONY: $(MICROSERVICES)
 
-VERSION=$(shell cat ./VERSION)
+VERSION = $(shell cat ./VERSION)
 
-GOFLAGS=-ldflags "-X github.com/edgexfoundry/edgex-go.Version=$(VERSION)"
+GOFLAGS = -ldflags "-X github.com/edgexfoundry/edgex-go.Version=$(VERSION)"
 
 build: $(MICROSERVICES)
 
-cmd/core-metadata/core-metadata:
-	$(GO) build $(GOFLAGS) -o $@ ./cmd/core-metadata
+core-metadata:
+	$(GO) build $(GOFLAGS) -o $(BUILD_DIR)/$@ ./cmd/$@ 
 
-cmd/core-data/core-data:
-	$(GOCGO) build $(GOFLAGS) -o $@ ./cmd/core-data
+core-data:
+	$(GOCGO) build $(GOFLAGS) -o $(BUILD_DIR)/$@ ./cmd/$@
 
-cmd/core-command/core-command:
-	$(GO) build $(GOFLAGS) -o $@ ./cmd/core-command
+core-command:
+	$(GO) build $(GOFLAGS) -o $(BUILD_DIR)/$@ ./cmd/$@
 
-cmd/export-client/export-client:
-	$(GO) build $(GOFLAGS) -o $@ ./cmd/export-client
+export-client:
+	$(GO) build $(GOFLAGS) -o $(BUILD_DIR)/$@ ./cmd/$@
 
-cmd/export-distro/export-distro:
-	$(GOCGO) build $(GOFLAGS) -o $@ ./cmd/export-distro
+export-distro:
+	$(GOCGO) build $(GOFLAGS) -o $(BUILD_DIR)/$@ ./cmd/$@
 
 clean:
-	rm -f $(MICROSERVICES)
+	rm -rf $(BUILD_DIR)
 
 test:
 	go test `glide novendor`
