@@ -37,7 +37,7 @@ func main() {
 	configuration, err := readConfigurationFile(configFile)
 	if err != nil {
 		loggingClient = logger.NewClient(metadata.METADATASERVICENAME, false, "")
-		loggingClient.Error("Could not read configuration file(" + configFile + "): " + err.Error())
+		loggingClient.Error("Could not load configuration (" + configFile + "): " + err.Error())
 		return
 	}
 
@@ -61,7 +61,7 @@ func readConfigurationFile(path string) (*metadata.ConfigurationStruct, error) {
 	// Decode the configuration as JSON
 	err = json.Unmarshal(contents, &configuration)
 	if err != nil {
-		fmt.Println("Error reading configuration file: " + err.Error())
+		fmt.Println("Error parsing configuration file: " + err.Error())
 		return nil, err
 	}
 

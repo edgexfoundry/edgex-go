@@ -38,7 +38,7 @@ func main() {
 	configuration, err := readConfigurationFile(configFile)
 	if err != nil {
 		loggingClient = logger.NewClient(command.COMMANDSERVICENAME, false, "")
-		loggingClient.Error("Could not read config file(" + configFile + "): " + err.Error())
+		loggingClient.Error("Could not load configuration (" + configFile + "): " + err.Error())
 		return
 	}
 

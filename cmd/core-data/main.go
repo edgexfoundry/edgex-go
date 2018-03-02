@@ -38,34 +38,6 @@ var version string = "undefined"
 
 var loggingClient logger.LoggingClient
 
-// Read the configuration file and update configuration struct
-func readConfigurationFile(path string) (*data.ConfigurationStruct, error) {
-	var configuration data.ConfigurationStruct
-	// Read the configuration file
-	contents, err := ioutil.ReadFile(path)
-	if err != nil {
-		fmt.Println("Error reading configuration file: " + err.Error())
-		return nil, err
-	}
-
-	// Decode the configuration as JSON
-	err = json.Unmarshal(contents, &configuration)
-	if err != nil {
-		fmt.Println("Error reading configuration file: " + err.Error())
-		return nil, err
-	}
-
-	return &configuration, nil
-}
-
-func setLoggingTarget(conf data.ConfigurationStruct) string {
-	logTarget := conf.Loggingremoteurl
-	if !conf.EnableRemoteLogging {
-		return conf.Loggingfile
-	}
-	return logTarget
-}
-
 func main() {
 	start := time.Now()
 
@@ -73,7 +45,7 @@ func main() {
 	configuration, err := readConfigurationFile(configFile)
 	if err != nil {
 		loggingClient = logger.NewClient(data.COREDATASERVICENAME, false, "")
-		loggingClient.Error("Could not read configuration file(" + configFile + "): " + err.Error())
+		loggingClient.Error("Could not load configuration (" + configFile + "): " + err.Error())
 		return
 	}
 
@@ -94,4 +66,32 @@ func main() {
 	loggingClient.Info("Listening on port: " + strconv.Itoa(configuration.Serverport))
 
 	loggingClient.Error(http.ListenAndServe(":"+strconv.Itoa(configuration.Serverport), r).Error())
+}
+
+// Read the configuration file and update configuration struct
+func readConfigurationFile(path string) (*data.ConfigurationStruct, error) {
+	var configuration data.ConfigurationStruct
+	// Read the configuration file
+	contents, err := ioutil.ReadFile(path)
+	if err != nil {
+		fmt.Println("Error reading configuration file: " + err.Error())
+		return nil, err
+	}
+
+	// Decode the configuration as JSON
+	err = json.Unmarshal(contents, &configuration)
+	if err != nil {
+		fmt.Println("Error parsing configuration file: " + err.Error())
+		return nil, err
+	}
+
+	return &configuration, nil
+}
+
+func setLoggingTarget(conf data.ConfigurationStruct) string {
+	logTarget := conf.Loggingremoteurl
+	if !conf.EnableRemoteLogging {
+		return conf.Loggingfile
+	}
+	return logTarget
 }
