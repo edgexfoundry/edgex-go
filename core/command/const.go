@@ -36,6 +36,7 @@ type ConfigurationStruct struct {
 	URLDevicePath             string
 	ConsulHost                string
 	ConsulCheckAddress        string
+	EnableRemoteLogging       bool
 	LogFile                   string
 	LoggingRemoteURL          string
 	Metadbaddressableurl      string
@@ -56,7 +57,7 @@ var configuration ConfigurationStruct = ConfigurationStruct{}
 const (
 	CONFIG string = "res/configuration.json"
 	/* -------------- Constants for Command -------------------- */
-	MYSERVICENAME            string = "Command"
+	COMMANDSERVICENAME       string = "core-command"
 	REST_HTTP                string = "http://"
 	GET                      string = "GET"
 	PUT                      string = "PUT"

@@ -21,39 +21,57 @@ import (
 	"encoding/json"
 	"io/ioutil"
 
-	"github.com/edgexfoundry/edgex-go/core/command"
-	logger "github.com/edgexfoundry/edgex-go/support/logging-client"
+	"github.com/tsconn23/edgex-go/core/command"
+	logger "github.com/tsconn23/edgex-go/support/logging-client"
+	"fmt"
 )
 
 const (
 	configFile string = "res/configuration.json"
 )
 
-var configuration command.ConfigurationStruct
+var loggingClient logger.LoggingClient
 
 func main() {
-	var loggingClient = logger.NewClient(command.SERVICENAME, "")
+
 	// Load configuration data
-	err := readConfigurationFile(configFile)
+	configuration, err := readConfigurationFile(configFile)
 	if err != nil {
+		loggingClient = logger.NewClient(command.COMMANDSERVICENAME, false, "")
 		loggingClient.Error("Could not read config file(" + configFile + "): " + err.Error())
 		return
 	}
 
 	// Setup Logging
-	loggingClient.RemoteUrl = configuration.LoggingRemoteURL
-	loggingClient.LogFilePath = configuration.LogFile
+	logTarget := setLoggingTarget(*configuration)
+	var loggingClient = logger.NewClient(configuration.ApplicationName, configuration.EnableRemoteLogging, logTarget)
 
-	command.Start(configuration, loggingClient)
+	command.Start(*configuration, loggingClient)
 }
 
-func readConfigurationFile(path string) error {
+func readConfigurationFile(path string) (*command.ConfigurationStruct, error) {
+	var configuration command.ConfigurationStruct
 	// Read the configuration file
 	contents, err := ioutil.ReadFile(path)
 	if err != nil {
-		return err
+		fmt.Println("Error reading configuration file: " + err.Error())
+		return nil, err
 	}
 
 	// Decode the configuration as JSON
-	return json.Unmarshal(contents, &configuration)
+	err = json.Unmarshal(contents, &configuration)
+	if err != nil {
+		fmt.Println("Error parsing configuration file: " + err.Error())
+		return nil, err
+	}
+
+	return &configuration, nil
+}
+
+func setLoggingTarget(conf command.ConfigurationStruct) string {
+	logTarget := conf.LoggingRemoteURL
+	if !conf.EnableRemoteLogging {
+		return conf.LogFile
+	}
+	return logTarget
 }
