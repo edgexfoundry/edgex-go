@@ -28,6 +28,10 @@ import (
 	"github.com/edgexfoundry/edgex-go/support/logging-client"
 )
 
+const (
+	ServiceName string = "core-data"
+)
+
 // Global variables
 var dbc clients.DBClient
 var loggingClient logger.LoggingClient
