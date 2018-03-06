@@ -10,7 +10,8 @@
 GO=CGO_ENABLED=0 go
 GOCGO=CGO_ENABLED=1 go
 
-DOCKERS=docker_export_client docker_export_distro docker_core_data docker_core_metadata docker_core_command
+DOCKERS=
+#DOCKERS=docker_export_client docker_export_distro docker_core_data docker_core_metadata docker_core_command
 .PHONY: $(DOCKERS)
 
 MICROSERVICES=cmd/export-client/export-client cmd/export-distro/export-distro cmd/core-metadata/core-metadata cmd/core-data/core-data cmd/core-command/core-command
