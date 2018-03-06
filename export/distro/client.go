@@ -12,7 +12,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/edgexfoundry/edgex-go/export"
+	"github.com/tsconn23/edgex-go/export"
 	"go.uber.org/zap"
 )
 
