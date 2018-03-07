@@ -41,11 +41,10 @@ func main() {
 		return
 	}
 
-	loggingClient.Info("Starting core-metadata " + edgex.Version)
-
 	logTarget := setLoggingTarget(*configuration)
 	// Create Logger (Default Parameters)
 	loggingClient = logger.NewClient(configuration.ApplicationName, configuration.EnableRemoteLogging, logTarget)
+	loggingClient.Info("Starting core-metadata " + edgex.Version)
 
 	metadata.Start(*configuration, loggingClient)
 }
