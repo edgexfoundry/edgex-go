@@ -45,6 +45,7 @@ clean:
 
 test:
 	go test `glide novendor`
+	go vet `glide novendor`
 
 prepare:
 	glide install
