@@ -49,6 +49,27 @@ func Init(conf ConfigurationStruct, logger logger.LoggingClient) error {
 	configuration = conf
 
 	var err error
+
+	// Initialize service on Consul
+	err = consulclient.ConsulInit(consulclient.ConsulConfig{
+		ServiceName:    configuration.Servicename,
+		ServicePort:    configuration.Serverport,
+		ServiceAddress: configuration.Serviceaddress,
+		CheckAddress:   configuration.Consulcheckaddress,
+		CheckInterval:  configuration.Checkinterval,
+		ConsulAddress:  configuration.Consulhost,
+		ConsulPort:     configuration.Consulport,
+	})
+
+	if err != nil {
+		loggingClient.Error("Connection to Consul could not be made: "+err.Error(), "")
+	} else {
+		// Update configuration data from Consul
+		if err := consulclient.CheckKeyValuePairs(&configuration, configuration.Servicename, strings.Split(configuration.Consulprofilesactive, ";")); err != nil {
+			loggingClient.Error("Error getting key/values from Consul: "+err.Error(), "")
+		}
+	}
+	
 	// Create a database client
 	dbc, err = clients.NewDBClient(clients.DBConfiguration{
 		DbType:       clients.MONGO,
@@ -72,26 +93,6 @@ func Init(conf ConfigurationStruct, logger logger.LoggingClient) error {
 	ep = messaging.NewZeroMQPublisher(messaging.ZeroMQConfiguration{
 		AddressPort: configuration.Zeromqaddressport,
 	})
-
-	// Initialize service on Consul
-	err = consulclient.ConsulInit(consulclient.ConsulConfig{
-		ServiceName:    configuration.Servicename,
-		ServicePort:    configuration.Serverport,
-		ServiceAddress: configuration.Serviceaddress,
-		CheckAddress:   configuration.Consulcheckaddress,
-		CheckInterval:  configuration.Checkinterval,
-		ConsulAddress:  configuration.Consulhost,
-		ConsulPort:     configuration.Consulport,
-	})
-
-	if err != nil {
-		loggingClient.Error("Connection to Consul could not be made: "+err.Error(), "")
-	} else {
-		// Update configuration data from Consul
-		if err := consulclient.CheckKeyValuePairs(&configuration, configuration.Servicename, strings.Split(configuration.Consulprofilesactive, ";")); err != nil {
-			loggingClient.Error("Error getting key/values from Consul: "+err.Error(), "")
-		}
-	}
 
 	// Start heartbeat
 	go heartbeat()

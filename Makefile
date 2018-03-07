@@ -18,7 +18,7 @@ MICROSERVICES=cmd/export-client/export-client cmd/export-distro/export-distro cm
 
 VERSION=$(shell cat ./VERSION)
 
-GOFLAGS=-ldflags "-X github.com/edgexfoundry/edgex-go.Version=$(VERSION)"
+GOFLAGS=-ldflags "-X github.com/tsconn23/edgex-go.Version=$(VERSION)"
 
 build: $(MICROSERVICES)
 
