@@ -18,6 +18,7 @@
 package data
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
@@ -36,64 +37,68 @@ var mdc metadataclients.DeviceClient
 var msc metadataclients.ServiceClient
 
 // Heartbeat for the data microservice - send a message to logging service
-func heartbeat() {
+func Heartbeat(heartbeatMsg string, interval int, beats chan<- string) {
 	// Loop forever
 	for true {
-		loggingClient.Info(configuration.Heartbeatmsg, "")
-		time.Sleep(time.Millisecond * time.Duration(configuration.Heartbeattime)) // Sleep based on configuration
+		beats <- heartbeatMsg
+		time.Sleep(time.Millisecond * time.Duration(interval)) // Sleep based on supplied interval
 	}
 }
 
-func Init(conf ConfigurationStruct, logger logger.LoggingClient) error {
-	loggingClient = logger
-	configuration = conf
-
+func ConnectToConsul(conf ConfigurationStruct) error {
 	var err error
-	// Create a database client
-	dbc, err = clients.NewDBClient(clients.DBConfiguration{
-		DbType:       clients.MONGO,
-		Host:         configuration.Datamongodbhost,
-		Port:         configuration.Datamongodbport,
-		Timeout:      configuration.DatamongodbsocketTimeout,
-		DatabaseName: configuration.Datamongodbdatabase,
-		Username:     configuration.Datamongodbusername,
-		Password:     configuration.Datamongodbpassword,
-	})
-	if err != nil {
-		loggingClient.Error("Couldn't connect to database: "+err.Error(), "")
-		return err
-	}
-
-	// Create metadata clients
-	mdc = metadataclients.NewDeviceClient(configuration.Metadbdeviceurl)
-	msc = metadataclients.NewServiceClient(configuration.Metadbdeviceserviceurl)
-
-	// Create the event publisher
-	ep = messaging.NewZeroMQPublisher(messaging.ZeroMQConfiguration{
-		AddressPort: configuration.Zeromqaddressport,
-	})
 
 	// Initialize service on Consul
 	err = consulclient.ConsulInit(consulclient.ConsulConfig{
-		ServiceName:    configuration.Servicename,
-		ServicePort:    configuration.Serverport,
-		ServiceAddress: configuration.Serviceaddress,
-		CheckAddress:   configuration.Consulcheckaddress,
-		CheckInterval:  configuration.Checkinterval,
-		ConsulAddress:  configuration.Consulhost,
-		ConsulPort:     configuration.Consulport,
+		ServiceName:    conf.Servicename,
+		ServicePort:    conf.Serverport,
+		ServiceAddress: conf.Serviceaddress,
+		CheckAddress:   conf.Consulcheckaddress,
+		CheckInterval:  conf.Checkinterval,
+		ConsulAddress:  conf.Consulhost,
+		ConsulPort:     conf.Consulport,
 	})
 
 	if err != nil {
-		loggingClient.Error("Connection to Consul could not be made: "+err.Error(), "")
+		return fmt.Errorf("connection to Consul could not be made: %v", err.Error())
 	} else {
 		// Update configuration data from Consul
-		if err := consulclient.CheckKeyValuePairs(&configuration, configuration.Servicename, strings.Split(configuration.Consulprofilesactive, ";")); err != nil {
-			loggingClient.Error("Error getting key/values from Consul: "+err.Error(), "")
+		if err := consulclient.CheckKeyValuePairs(&conf, conf.Servicename, strings.Split(conf.Consulprofilesactive, ";")); err != nil {
+			return fmt.Errorf("error getting key/values from Consul: %v", err.Error())
 		}
 	}
+	return nil
+}
 
-	// Start heartbeat
-	go heartbeat()
+func Init(conf ConfigurationStruct, l logger.LoggingClient) error {
+	loggingClient = l
+	configuration = conf
+	//TODO: The above two are set due to global scope throughout the package. How can this be eliminated / refactored?
+	//TODO: I should not have to pass the LoggingClient in here. See Heartbeat method above and how it uses channel
+	var err error
+	
+	// Create a database client
+	dbc, err = clients.NewDBClient(clients.DBConfiguration{
+		DbType:       clients.MONGO,
+		Host:         conf.Datamongodbhost,
+		Port:         conf.Datamongodbport,
+		Timeout:      conf.DatamongodbsocketTimeout,
+		DatabaseName: conf.Datamongodbdatabase,
+		Username:     conf.Datamongodbusername,
+		Password:     conf.Datamongodbpassword,
+	})
+	if err != nil {
+		return fmt.Errorf("couldn't connect to database: %v", err.Error())
+	}
+
+	// Create metadata clients
+	mdc = metadataclients.NewDeviceClient(conf.Metadbdeviceurl)
+	msc = metadataclients.NewServiceClient(conf.Metadbdeviceserviceurl)
+
+	// Create the event publisher
+	ep = messaging.NewZeroMQPublisher(messaging.ZeroMQConfiguration{
+		AddressPort: conf.Zeromqaddressport,
+	})
+
 	return nil
 }
