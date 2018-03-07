@@ -19,6 +19,7 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -28,7 +29,6 @@ import (
 	"github.com/tsconn23/edgex-go"
 	"github.com/tsconn23/edgex-go/core/data"
 	"github.com/tsconn23/edgex-go/support/logging-client"
-	"flag"
 )
 
 const (
@@ -44,43 +44,69 @@ func main() {
 	)
 	flag.Parse()
 
-	// Load configuration data from file
+	// Load configuration data from file.
+	// Right now, we always do this first because it contains the Consul endpoint host/port
 	configuration, err := readConfigurationFile(configFile)
 	if err != nil {
-		loggingClient = logger.NewClient(data.COREDATASERVICENAME, false, "")
-		loggingClient.Error("Could not load configuration (" + configFile + "): " + err.Error())
+		logBeforeTermination(fmt.Errorf("could not load configuration file (%s): %v", configFile, err.Error()))
 		return
+	}
+
+	//Determine if configuration should be overridden from Consul
+	var consulMsg string
+	if *useConsul == "y" {
+		consulMsg = "Loading configuration from Consul..."
+		err := data.ConnectToConsul(*configuration)
+		if err != nil {
+			logBeforeTermination(err)
+			return //end program since user explicitly told us to use Consul.
+		}
+	} else {
+		consulMsg = "Bypassing Consul configuration..."
 	}
 
 	logTarget := setLoggingTarget(*configuration)
 	// Create Logger (Default Parameters)
 	loggingClient = logger.NewClient(configuration.Applicationname, configuration.EnableRemoteLogging, logTarget)
 
+	loggingClient.Info(consulMsg)
 	loggingClient.Info(fmt.Sprintf("Starting %s %s ", data.COREDATASERVICENAME, edgex.Version))
 
-	//Determine if configuration should be overridden from Consul
-	if *useConsul == "y" {
-		loggingClient.Info("Loading configuration from Consul...")
-		err := data.ConnectToConsul(*configuration)
-		if err != nil {
-			loggingClient.Error(err.Error())
-			return //end program since user explicitly told us to use Consul.
-		}
-	} else {
-		loggingClient.Info("Bypassing Consul configuration...")
+	err = data.Init(*configuration, loggingClient)
+	if err != nil {
+		loggingClient.Error(fmt.Sprintf("call to init() failed: %v", err.Error()))
+		return
 	}
-
-	data.Init(*configuration)
 
 	r := data.LoadRestRoutes()
 	http.TimeoutHandler(nil, time.Millisecond*time.Duration(5000), "Request timed out")
 	loggingClient.Info(configuration.Appopenmsg, "")
 
+	startHeartbeat(configuration.Heartbeatmsg, configuration.Heartbeattime)
 	// Time it took to start service
 	loggingClient.Info("Service started in: "+time.Since(start).String(), "")
 	loggingClient.Info("Listening on port: " + strconv.Itoa(configuration.Serverport))
-
 	loggingClient.Error(http.ListenAndServe(":"+strconv.Itoa(configuration.Serverport), r).Error())
+}
+
+func startHeartbeat(msg string, interval int) {
+	chBeats := make(chan string)
+	go data.Heartbeat(msg, interval, chBeats)
+	go func() {
+		for {
+			msg, ok := <-chBeats
+			if !ok {
+				break
+			}
+			loggingClient.Info(msg)
+		}
+		close(chBeats)
+	}()
+}
+
+func logBeforeTermination(err error) {
+	loggingClient = logger.NewClient(data.COREDATASERVICENAME, false, "")
+	loggingClient.Error(err.Error())
 }
 
 // Read the configuration file and update configuration struct

@@ -18,6 +18,7 @@
 package data
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
@@ -26,7 +27,6 @@ import (
 	"github.com/tsconn23/edgex-go/core/data/messaging"
 	consulclient "github.com/tsconn23/edgex-go/support/consul-client"
 	"github.com/tsconn23/edgex-go/support/logging-client"
-	"fmt"
 )
 
 // Global variables
@@ -37,11 +37,11 @@ var mdc metadataclients.DeviceClient
 var msc metadataclients.ServiceClient
 
 // Heartbeat for the data microservice - send a message to logging service
-func heartbeat() {
+func Heartbeat(heartbeatMsg string, interval int, beats chan<- string) {
 	// Loop forever
 	for true {
-		loggingClient.Info(configuration.Heartbeatmsg, "")
-		time.Sleep(time.Millisecond * time.Duration(configuration.Heartbeattime)) // Sleep based on configuration
+		beats <- heartbeatMsg
+		time.Sleep(time.Millisecond * time.Duration(interval)) // Sleep based on supplied interval
 	}
 }
 
@@ -60,18 +60,21 @@ func ConnectToConsul(conf ConfigurationStruct) error {
 	})
 
 	if err != nil {
-		return fmt.Errorf("Connection to Consul could not be made: %v", err.Error())
+		return fmt.Errorf("connection to Consul could not be made: %v", err.Error())
 	} else {
 		// Update configuration data from Consul
-		if err := consulclient.CheckKeyValuePairs(&configuration, configuration.Servicename, strings.Split(configuration.Consulprofilesactive, ";")); err != nil {
-			return fmt.Errorf("Error getting key/values from Consul: %v", err.Error())
+		if err := consulclient.CheckKeyValuePairs(&conf, conf.Servicename, strings.Split(conf.Consulprofilesactive, ";")); err != nil {
+			return fmt.Errorf("error getting key/values from Consul: %v", err.Error())
 		}
 	}
 	return nil
 }
 
-func Init(conf ConfigurationStruct) error {
-
+func Init(conf ConfigurationStruct, l logger.LoggingClient) error {
+	loggingClient = l
+	configuration = conf
+	//TODO: The above two are set due to global scope throughout the package. How can this be eliminated / refactored?
+	//TODO: I should not have to pass the LoggingClient in here. See Heartbeat method above and how it uses channel
 	var err error
 	
 	// Create a database client
@@ -85,7 +88,7 @@ func Init(conf ConfigurationStruct) error {
 		Password:     conf.Datamongodbpassword,
 	})
 	if err != nil {
-		return fmt.Errorf("Couldn't connect to database:  %v", err.Error())
+		return fmt.Errorf("couldn't connect to database: %v", err.Error())
 	}
 
 	// Create metadata clients
@@ -97,7 +100,5 @@ func Init(conf ConfigurationStruct) error {
 		AddressPort: conf.Zeromqaddressport,
 	})
 
-	// Start heartbeat
-	go heartbeat()
 	return nil
 }
