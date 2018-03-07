@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 
+	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/edgex-go/core/metadata"
 	logger "github.com/edgexfoundry/edgex-go/support/logging-client"
 )
@@ -39,6 +40,8 @@ func main() {
 		loggingClient.Error("Could not load configuration (" + configFile + "): " + err.Error())
 		return
 	}
+
+	loggingClient.Info("Starting core-metadata " + edgex.Version)
 
 	logTarget := setLoggingTarget(*configuration)
 	// Create Logger (Default Parameters)
