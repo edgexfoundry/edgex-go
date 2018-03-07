@@ -31,21 +31,19 @@ import (
 	"github.com/tsconn23/edgex-go/support/logging-client"
 )
 
-const (
-	configFile string = "./res/configuration.json"
-)
-
 var loggingClient logger.LoggingClient
 
 func main() {
 	start := time.Now()
 	var (
 		useConsul = flag.String("consul", "", "Should the service use consul?")
+		useProfile = flag.String("profile", "default", "Specify a profile other than default.")
 	)
 	flag.Parse()
 
 	// Load configuration data from file.
 	// Right now, we always do this first because it contains the Consul endpoint host/port
+	configFile := determineConfigFile(*useProfile)
 	configuration, err := readConfigurationFile(configFile)
 	if err != nil {
 		logBeforeTermination(fmt.Errorf("could not load configuration file (%s): %v", configFile, err.Error()))
@@ -107,6 +105,15 @@ func startHeartbeat(msg string, interval int) {
 func logBeforeTermination(err error) {
 	loggingClient = logger.NewClient(data.COREDATASERVICENAME, false, "")
 	loggingClient.Error(err.Error())
+}
+
+func determineConfigFile(profile string) string {
+	switch profile {
+		case "docker":
+			return "./res/configuration-docker.json"
+	    default:
+		    return "./res/configuration.json"
+	}
 }
 
 // Read the configuration file and update configuration struct
