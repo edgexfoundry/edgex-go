@@ -44,10 +44,7 @@ func (ep *EventPublisher) SendEventMessage(e models.Event) error {
 	switch ep.protocol {
 	case ZEROMQ:
 		return ep.zmq.SendEventMessage(e)
-		break
 	default:
 		return errors.UnsupportedPublisher{}
 	}
-
-	return nil
 }

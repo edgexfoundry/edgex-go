@@ -22,11 +22,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strconv"
+
+	"github.com/edgexfoundry/edgex-go/core/domain/models"
 )
 
 var (
@@ -193,7 +194,7 @@ func (a *AddressableClient) AddressableForName(name string) (models.Addressable,
 	}
 	defer resp.Body.Close()
 	if err != nil {
-		fmt.Println("AddressableForName makeRequest failed: %s", err)
+		fmt.Printf("AddressableForName makeRequest failed: %v\n", err)
 		return models.Addressable{}, err
 	}
 

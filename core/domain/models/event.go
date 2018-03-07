@@ -20,6 +20,7 @@ package models
 
 import (
 	"encoding/json"
+
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -37,7 +38,7 @@ type Event struct {
 	Modified int64         `bson:"modified" json:"modified"`
 	Origin   int64         `bson:"origin" json:"origin"`
 	Schedule string        `bson:"schedule,omitempty" json:"schedule"` // Schedule identifier
-	Event    string        `bson:"event",omitempty`                    // Schedule event identifier
+	Event    string        `bson:"event,omitempty"`                    // Schedule event identifier
 	Readings []Reading     `bson:"readings" json:"readings"`           // List of readings
 }
 
