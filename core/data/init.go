@@ -26,6 +26,7 @@ import (
 	"github.com/tsconn23/edgex-go/core/data/messaging"
 	consulclient "github.com/tsconn23/edgex-go/support/consul-client"
 	"github.com/tsconn23/edgex-go/support/logging-client"
+	"fmt"
 )
 
 // Global variables
@@ -44,54 +45,56 @@ func heartbeat() {
 	}
 }
 
-func Init(conf ConfigurationStruct, logger logger.LoggingClient) error {
-	loggingClient = logger
-	configuration = conf
-
+func ConnectToConsul(conf ConfigurationStruct) error {
 	var err error
 
 	// Initialize service on Consul
 	err = consulclient.ConsulInit(consulclient.ConsulConfig{
-		ServiceName:    configuration.Servicename,
-		ServicePort:    configuration.Serverport,
-		ServiceAddress: configuration.Serviceaddress,
-		CheckAddress:   configuration.Consulcheckaddress,
-		CheckInterval:  configuration.Checkinterval,
-		ConsulAddress:  configuration.Consulhost,
-		ConsulPort:     configuration.Consulport,
+		ServiceName:    conf.Servicename,
+		ServicePort:    conf.Serverport,
+		ServiceAddress: conf.Serviceaddress,
+		CheckAddress:   conf.Consulcheckaddress,
+		CheckInterval:  conf.Checkinterval,
+		ConsulAddress:  conf.Consulhost,
+		ConsulPort:     conf.Consulport,
 	})
 
 	if err != nil {
-		loggingClient.Error("Connection to Consul could not be made: "+err.Error(), "")
+		return fmt.Errorf("Connection to Consul could not be made: %v", err.Error())
 	} else {
 		// Update configuration data from Consul
 		if err := consulclient.CheckKeyValuePairs(&configuration, configuration.Servicename, strings.Split(configuration.Consulprofilesactive, ";")); err != nil {
-			loggingClient.Error("Error getting key/values from Consul: "+err.Error(), "")
+			return fmt.Errorf("Error getting key/values from Consul: %v", err.Error())
 		}
 	}
+	return nil
+}
+
+func Init(conf ConfigurationStruct) error {
+
+	var err error
 	
 	// Create a database client
 	dbc, err = clients.NewDBClient(clients.DBConfiguration{
 		DbType:       clients.MONGO,
-		Host:         configuration.Datamongodbhost,
-		Port:         configuration.Datamongodbport,
-		Timeout:      configuration.DatamongodbsocketTimeout,
-		DatabaseName: configuration.Datamongodbdatabase,
-		Username:     configuration.Datamongodbusername,
-		Password:     configuration.Datamongodbpassword,
+		Host:         conf.Datamongodbhost,
+		Port:         conf.Datamongodbport,
+		Timeout:      conf.DatamongodbsocketTimeout,
+		DatabaseName: conf.Datamongodbdatabase,
+		Username:     conf.Datamongodbusername,
+		Password:     conf.Datamongodbpassword,
 	})
 	if err != nil {
-		loggingClient.Error("Couldn't connect to database: "+err.Error(), "")
-		return err
+		return fmt.Errorf("Couldn't connect to database:  %v", err.Error())
 	}
 
 	// Create metadata clients
-	mdc = metadataclients.NewDeviceClient(configuration.Metadbdeviceurl)
-	msc = metadataclients.NewServiceClient(configuration.Metadbdeviceserviceurl)
+	mdc = metadataclients.NewDeviceClient(conf.Metadbdeviceurl)
+	msc = metadataclients.NewServiceClient(conf.Metadbdeviceserviceurl)
 
 	// Create the event publisher
 	ep = messaging.NewZeroMQPublisher(messaging.ZeroMQConfiguration{
-		AddressPort: configuration.Zeromqaddressport,
+		AddressPort: conf.Zeromqaddressport,
 	})
 
 	// Start heartbeat

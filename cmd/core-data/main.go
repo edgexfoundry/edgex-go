@@ -28,6 +28,7 @@ import (
 	"github.com/tsconn23/edgex-go"
 	"github.com/tsconn23/edgex-go/core/data"
 	"github.com/tsconn23/edgex-go/support/logging-client"
+	"flag"
 )
 
 const (
@@ -38,8 +39,12 @@ var loggingClient logger.LoggingClient
 
 func main() {
 	start := time.Now()
+	var (
+		useConsul = flag.String("consul", "", "Should the service use consul?")
+	)
+	flag.Parse()
 
-	// Load configuration data
+	// Load configuration data from file
 	configuration, err := readConfigurationFile(configFile)
 	if err != nil {
 		loggingClient = logger.NewClient(data.COREDATASERVICENAME, false, "")
@@ -53,7 +58,19 @@ func main() {
 
 	loggingClient.Info(fmt.Sprintf("Starting %s %s ", data.COREDATASERVICENAME, edgex.Version))
 
-	data.Init(*configuration, loggingClient)
+	//Determine if configuration should be overridden from Consul
+	if *useConsul == "y" {
+		loggingClient.Info("Loading configuration from Consul...")
+		err := data.ConnectToConsul(*configuration)
+		if err != nil {
+			loggingClient.Error(err.Error())
+			return //end program since user explicitly told us to use Consul.
+		}
+	} else {
+		loggingClient.Info("Bypassing Consul configuration...")
+	}
+
+	data.Init(*configuration)
 
 	r := data.LoadRestRoutes()
 	http.TimeoutHandler(nil, time.Millisecond*time.Duration(5000), "Request timed out")
