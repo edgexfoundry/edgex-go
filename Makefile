@@ -5,7 +5,7 @@
 #
 
 
-.PHONY: build clean test docker
+.PHONY: build build_microservices clean test docker
 
 GO=CGO_ENABLED=0 go
 GOCGO=CGO_ENABLED=1 go
@@ -20,7 +20,10 @@ VERSION=$(shell cat ./VERSION)
 
 GOFLAGS=-ldflags "-X github.com/edgexfoundry/edgex-go.Version=$(VERSION)"
 
-build: $(MICROSERVICES)
+build:
+	go build `glide novendor`
+
+build_microservices: $(MICROSERVICES)
 
 cmd/core-metadata/core-metadata:
 	$(GO) build $(GOFLAGS) -o $@ ./cmd/core-metadata
