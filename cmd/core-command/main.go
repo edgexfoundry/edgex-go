@@ -19,6 +19,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 
 	"github.com/edgexfoundry/edgex-go"
@@ -46,7 +47,7 @@ func main() {
 	logTarget := setLoggingTarget(*configuration)
 	var loggingClient = logger.NewClient(configuration.ApplicationName, configuration.EnableRemoteLogging, logTarget)
 
-	loggingClient.Info("Starting core-command " + edgex.Version)
+	loggingClient.Info(fmt.Sprintf("Starting %s %s ", command.COMMANDSERVICENAME, edgex.Version))
 
 	command.Start(*configuration, loggingClient)
 }
