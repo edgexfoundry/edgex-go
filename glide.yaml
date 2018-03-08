@@ -1,4 +1,4 @@
-package: github.com/edgexfoundry/edgex-go
+package: github.com/tsconn23/edgex-go
 import:
 - package: github.com/eclipse/paho.mqtt.golang
 - package: github.com/go-zoo/bone

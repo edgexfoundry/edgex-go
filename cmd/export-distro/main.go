@@ -15,10 +15,10 @@ import (
 	"strconv"
 	"syscall"
 
-	"github.com/edgexfoundry/edgex-go"
-	"github.com/edgexfoundry/edgex-go/core/domain/models"
-	"github.com/edgexfoundry/edgex-go/export/distro"
-	consulclient "github.com/edgexfoundry/edgex-go/support/consul-client"
+	"github.com/tsconn23/edgex-go"
+	"github.com/tsconn23/edgex-go/core/domain/models"
+	"github.com/tsconn23/edgex-go/export/distro"
+	consulclient "github.com/tsconn23/edgex-go/support/consul-client"
 
 	"go.uber.org/zap"
 )

@@ -3,7 +3,7 @@
 
 Go implementation of EdgeX Core Metadata.
 
-[core-metadata](https://github.com/edgexfoundry/core-metadata) has been duplicated in go.
+[core-metadata](https://github.com/tsconn23/core-metadata) has been duplicated in go.
 
 
 ## Install and Deploy
@@ -12,8 +12,8 @@ Repo contains `core-metadata-go` microservice
 To fetch the code and start the microservice execute:
 
 ```
-go get github.com/edgexfoundry/core-metadata-go
-cd $GOPATH/src/github.com/edgexfoundry/core-metadata-go
+go get github.com/tsconn23/core-metadata-go
+cd $GOPATH/src/github.com/tsconn23/core-metadata-go
 glide install
 go install
 core-metadata-go

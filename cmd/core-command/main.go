@@ -22,9 +22,9 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	"github.com/edgexfoundry/edgex-go"
-	"github.com/edgexfoundry/edgex-go/core/command"
-	logger "github.com/edgexfoundry/edgex-go/support/logging-client"
+	"github.com/tsconn23/edgex-go"
+	"github.com/tsconn23/edgex-go/core/command"
+	logger "github.com/tsconn23/edgex-go/support/logging-client"
 )
 
 const (

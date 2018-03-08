@@ -27,7 +27,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/edgexfoundry/edgex-go/support/domain"
+	"github.com/tsconn23/edgex-go/support/domain"
 	"path/filepath"
 	"strings"
 )
