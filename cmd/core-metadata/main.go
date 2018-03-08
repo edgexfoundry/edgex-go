@@ -24,6 +24,7 @@ import (
 
 	"github.com/tsconn23/edgex-go"
 	"github.com/tsconn23/edgex-go/core/metadata"
+	"github.com/tsconn23/edgex-go/support/heartbeat"
 	logger "github.com/tsconn23/edgex-go/support/logging-client"
 )
 
@@ -48,6 +49,8 @@ func main() {
 	loggingClient.Info("Starting core-metadata " + edgex.Version)
 
 	loggingClient.Info(fmt.Sprintf("Starting %s %s ", metadata.METADATASERVICENAME, edgex.Version))
+
+	heartbeat.Start(configuration.HeartBeatMsg, configuration.HeartBeatTime, loggingClient)
 
 	metadata.Init(*configuration, loggingClient)
 }

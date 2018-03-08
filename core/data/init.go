@@ -20,7 +20,6 @@ package data
 import (
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/tsconn23/edgex-go/core/clients/metadataclients"
 	"github.com/tsconn23/edgex-go/core/data/clients"
@@ -35,15 +34,6 @@ var loggingClient logger.LoggingClient
 var ep *messaging.EventPublisher
 var mdc metadataclients.DeviceClient
 var msc metadataclients.ServiceClient
-
-// Heartbeat for the data microservice - send a message to logging service
-func Heartbeat(heartbeatMsg string, interval int, beats chan<- string) {
-	// Loop forever
-	for true {
-		beats <- heartbeatMsg
-		time.Sleep(time.Millisecond * time.Duration(interval)) // Sleep based on supplied interval
-	}
-}
 
 func ConnectToConsul(conf ConfigurationStruct) error {
 	var err error
