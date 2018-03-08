@@ -201,7 +201,8 @@ func addReg(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	notifyUpdatedRegistrations(export.NotifyUpdate{reg.Name, "add"})
+	notifyUpdatedRegistrations(export.NotifyUpdate{Name: reg.Name,
+		Operation: "add"})
 }
 
 func updateReg(w http.ResponseWriter, r *http.Request) {
@@ -236,7 +237,8 @@ func updateReg(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	notifyUpdatedRegistrations(export.NotifyUpdate{name.(string), "update"})
+	notifyUpdatedRegistrations(export.NotifyUpdate{Name: name.(string),
+		Operation: "update"})
 }
 
 func delRegByID(w http.ResponseWriter, r *http.Request) {
@@ -264,7 +266,8 @@ func delRegByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	notifyUpdatedRegistrations(export.NotifyUpdate{reg.Name, "delete"})
+	notifyUpdatedRegistrations(export.NotifyUpdate{Name: reg.Name,
+		Operation: "delete"})
 }
 
 func delRegByName(w http.ResponseWriter, r *http.Request) {
@@ -282,7 +285,8 @@ func delRegByName(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	notifyUpdatedRegistrations(export.NotifyUpdate{name, "delete"})
+	notifyUpdatedRegistrations(export.NotifyUpdate{Name: name,
+		Operation: "delete"})
 }
 
 func notifyUpdatedRegistrations(update export.NotifyUpdate) {
