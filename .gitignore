@@ -1,2 +1,4 @@
+.idea/
 vendor
 *.exe
+glide.lock

@@ -20,6 +20,7 @@ package clients
 import (
 	"errors"
 	"fmt"
+
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -43,7 +44,7 @@ type DBClient interface {
 	// Update an event - do NOT update readings
 	// UnexpectedError - problem updating in database
 	// NotFound - no event with the ID was found
-	UpdateEvent(e models.Event) error 
+	UpdateEvent(e models.Event) error
 
 	// Get an event by id
 	EventById(id string) (models.Event, error)
@@ -88,7 +89,6 @@ type DBClient interface {
 
 	// Get events that are older than a age
 	EventsOlderThanAge(age int64) ([]models.Event, error)
-
 
 	// Remove all the events that have been pushed
 	//func (dbc *DBClient) ScrubEvents()(int, error)
@@ -206,7 +206,6 @@ var ErrNotUnique error = errors.New("Resource already exists")
 
 // Return the dbClient interface
 func NewDBClient(config DBConfiguration) (DBClient, error) {
-	var dbClient DBClient
 	switch config.DbType {
 	case MONGO:
 		// Create the mongo client
@@ -219,11 +218,4 @@ func NewDBClient(config DBConfiguration) (DBClient, error) {
 	default:
 		return nil, ErrUnsupportedDatabase
 	}
-
-	return dbClient, nil
 }
-
-
-
-
-

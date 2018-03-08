@@ -25,10 +25,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/edgexfoundry/core-domain-go/models"
 	"io/ioutil"
 	"net/http"
 	"net/url"
+
+	"github.com/edgexfoundry/edgex-go/core/domain/models"
 )
 
 var (
@@ -463,4 +464,3 @@ func (v *ValueDescriptorClient) DeleteByName(name string) error {
 
 	return nil
 }
-
