@@ -49,7 +49,7 @@ func main() {
 
 	loggingClient.Info(fmt.Sprintf("Starting %s %s ", command.COMMANDSERVICENAME, edgex.Version))
 
-	command.Start(*configuration, loggingClient)
+	command.Init(*configuration, loggingClient)
 }
 
 func readConfigurationFile(path string) (*command.ConfigurationStruct, error) {

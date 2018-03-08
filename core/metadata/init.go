@@ -44,7 +44,7 @@ func heartbeat() {
 	}
 }
 
-func Start(conf ConfigurationStruct, l logger.LoggingClient) {
+func Init(conf ConfigurationStruct, l logger.LoggingClient) {
 	loggingClient = l
 	configuration = conf
 

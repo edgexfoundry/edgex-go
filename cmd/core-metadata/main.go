@@ -49,7 +49,7 @@ func main() {
 
 	loggingClient.Info(fmt.Sprintf("Starting %s %s ", metadata.METADATASERVICENAME, edgex.Version))
 
-	metadata.Start(*configuration, loggingClient)
+	metadata.Init(*configuration, loggingClient)
 }
 
 // Read the configuration file and
