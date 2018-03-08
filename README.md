@@ -17,6 +17,14 @@ For example, in the case of Debian Linux system you can:
 sudo apt-get install libzmq3-dev
 ```
 
+And if you want to build project from source code, make sure that you have installed "pkg-config" tool before you build project.
+
+For Mac os x, you could use [Homebrew](https://docs.brew.sh/) to install it:
+
+```
+brew install pkgconfig
+```
+
 To fetch the code and compile the microservices execute:
 
 ```
