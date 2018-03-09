@@ -18,12 +18,15 @@
 package main
 
 import (
-	"encoding/json"
+	"flag"
 	"fmt"
-	"io/ioutil"
+	"net/http"
+	"strconv"
+	"time"
 
 	"github.com/tsconn23/edgex-go"
 	"github.com/tsconn23/edgex-go/core/command"
+	"github.com/tsconn23/edgex-go/pkg/config"
 	"github.com/tsconn23/edgex-go/pkg/heartbeat"
 	logger "github.com/tsconn23/edgex-go/support/logging-client"
 )
@@ -35,41 +38,58 @@ const (
 var loggingClient logger.LoggingClient
 
 func main() {
+	start := time.Now()
+	var (
+		useConsul = flag.String("consul", "", "Should the service use consul?")
+		useProfile = flag.String("profile", "default", "Specify a profile other than default.")
+	)
+	flag.Parse()
 
-	// Load configuration data
-	configuration, err := readConfigurationFile(configFile)
+	//Read Configuration
+	configuration := &command.ConfigurationStruct{}
+	err := config.LoadFromFile(*useProfile, configuration)
 	if err != nil {
-		loggingClient = logger.NewClient(command.COMMANDSERVICENAME, false, "")
-		loggingClient.Error("Could not load configuration (" + configFile + "): " + err.Error())
+		logBeforeTermination(err)
 		return
+	}
+
+	//Determine if configuration should be overridden from Consul
+	var consulMsg string
+	if *useConsul == "y" {
+		consulMsg = "Loading configuration from Consul..."
+		err := command.ConnectToConsul(*configuration)
+		if err != nil {
+			logBeforeTermination(err)
+			return //end program since user explicitly told us to use Consul.
+		}
+	} else {
+		consulMsg = "Bypassing Consul configuration..."
 	}
 
 	// Setup Logging
 	logTarget := setLoggingTarget(*configuration)
 	var loggingClient = logger.NewClient(configuration.ApplicationName, configuration.EnableRemoteLogging, logTarget)
 
+	loggingClient.Info(consulMsg)
 	loggingClient.Info(fmt.Sprintf("Starting %s %s ", command.COMMANDSERVICENAME, edgex.Version))
+
+	command.Init(*configuration, loggingClient)
+
+	r := command.LoadRestRoutes()
+	http.TimeoutHandler(nil, time.Millisecond*time.Duration(configuration.ServiceTimeout), "Request timed out")
+	loggingClient.Info(configuration.AppOpenMsg, "")
 
 	heartbeat.Start(configuration.HeartBeatMsg, configuration.HeartBeatTime, loggingClient)
 
-	command.Init(*configuration, loggingClient)
+	// Time it took to start service
+	loggingClient.Info("Service started in: "+time.Since(start).String(), "")
+	loggingClient.Info("Listening on port: "+strconv.Itoa(configuration.ServerPort), "")
+	loggingClient.Error(http.ListenAndServe(":"+strconv.Itoa(configuration.ServerPort), r).Error())
 }
 
-func readConfigurationFile(path string) (*command.ConfigurationStruct, error) {
-	var configuration command.ConfigurationStruct
-	// Read the configuration file
-	contents, err := ioutil.ReadFile(path)
-	if err != nil {
-		return nil, err
-	}
-
-	// Decode the configuration as JSON
-	err = json.Unmarshal(contents, &configuration)
-	if err != nil {
-		return nil, err
-	}
-
-	return &configuration, nil
+func logBeforeTermination(err error) {
+	loggingClient = logger.NewClient(command.COMMANDSERVICENAME, false, "")
+	loggingClient.Error(err.Error())
 }
 
 func setLoggingTarget(conf command.ConfigurationStruct) string {

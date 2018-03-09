@@ -18,16 +18,15 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/tsconn23/edgex-go"
 	"github.com/tsconn23/edgex-go/core/data"
+	"github.com/tsconn23/edgex-go/pkg/config"
 	"github.com/tsconn23/edgex-go/pkg/heartbeat"
 	"github.com/tsconn23/edgex-go/support/logging-client"
 )
@@ -42,12 +41,11 @@ func main() {
 	)
 	flag.Parse()
 
-	// Load configuration data from file.
-	// Right now, we always do this first because it contains the Consul endpoint host/port
-	configFile := determineConfigFile(*useProfile)
-	configuration, err := readConfigurationFile(configFile)
+	//Read Configuration
+	configuration := &data.ConfigurationStruct{}
+	err := config.LoadFromFile(*useProfile, configuration)
 	if err != nil {
-		logBeforeTermination(fmt.Errorf("could not load configuration file (%s): %v", configFile, err.Error()))
+		logBeforeTermination(err)
 		return
 	}
 
@@ -64,8 +62,8 @@ func main() {
 		consulMsg = "Bypassing Consul configuration..."
 	}
 
+	// Setup Logging
 	logTarget := setLoggingTarget(*configuration)
-	// Create Logger (Default Parameters)
 	loggingClient = logger.NewClient(configuration.Applicationname, configuration.EnableRemoteLogging, logTarget)
 
 	loggingClient.Info(consulMsg)
@@ -79,7 +77,7 @@ func main() {
 
 	r := data.LoadRestRoutes()
 	http.TimeoutHandler(nil, time.Millisecond*time.Duration(5000), "Request timed out")
-	loggingClient.Info(configuration.Appopenmsg, "")
+	loggingClient.Info(configuration.AppOpenMsg, "")
 
 	heartbeat.Start(configuration.HeartBeatMsg, configuration.HeartBeatTime, loggingClient)
 
@@ -92,33 +90,6 @@ func main() {
 func logBeforeTermination(err error) {
 	loggingClient = logger.NewClient(data.COREDATASERVICENAME, false, "")
 	loggingClient.Error(err.Error())
-}
-
-func determineConfigFile(profile string) string {
-	switch profile {
-		case "docker":
-			return "./res/configuration-docker.json"
-	    default:
-		    return "./res/configuration.json"
-	}
-}
-
-// Read the configuration file and update configuration struct
-func readConfigurationFile(path string) (*data.ConfigurationStruct, error) {
-	var configuration data.ConfigurationStruct
-	// Read the configuration file
-	contents, err := ioutil.ReadFile(path)
-	if err != nil {
-		return nil, err
-	}
-
-	// Decode the configuration as JSON
-	err = json.Unmarshal(contents, &configuration)
-	if err != nil {
-		return nil, err
-	}
-
-	return &configuration, nil
 }
 
 func setLoggingTarget(conf data.ConfigurationStruct) string {

@@ -15,23 +15,24 @@
  * @version: 0.5.0
  *******************************************************************************/
 
-package heartbeat
+package config
 
 import (
-	"time"
-
-	"github.com/tsconn23/edgex-go/support/logging-client"
+	"testing"
 )
 
-func Start(msg string, interval int, logger logger.LoggingClient) {
-	go sendBeats(msg, interval, logger)
+type TestConfigurationStruct struct {
+	ApplicationName	string
 }
 
-// Executes the basic heartbeat for all servicves. Writes entries to the supplied logger.
-func sendBeats(heartbeatMsg string, interval int, logger logger.LoggingClient) {
-	// Loop forever
-	for true {
-		logger.Info(heartbeatMsg)
-		time.Sleep(time.Millisecond * time.Duration(interval)) // Sleep based on supplied interval
+func TestLoadFromFile(t *testing.T) {
+	configuration := &TestConfigurationStruct{}
+	err := LoadFromFile("unit-test", configuration)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if len(configuration.ApplicationName) == 0 {
+		t.Errorf("configuration.ApplicationName is zero length.")
 	}
 }

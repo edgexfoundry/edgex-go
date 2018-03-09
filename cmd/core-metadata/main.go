@@ -19,11 +19,14 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io/ioutil"
+	"time"
 
 	"github.com/tsconn23/edgex-go"
 	"github.com/tsconn23/edgex-go/core/metadata"
+	"github.com/tsconn23/edgex-go/pkg/config"
 	"github.com/tsconn23/edgex-go/pkg/heartbeat"
 	logger "github.com/tsconn23/edgex-go/support/logging-client"
 )
@@ -35,11 +38,17 @@ const (
 var loggingClient logger.LoggingClient
 
 func main() {
-	// Load configuration data
-	configuration, err := readConfigurationFile(configFile)
+	start := time.Now()
+	var (
+		useConsul = flag.String("consul", "", "Should the service use consul?")
+		useProfile = flag.String("profile", "default", "Specify a profile other than default.")
+	)
+	flag.Parse()
+
+	configuration := &metadata.ConfigurationStruct{}
+	err := config.LoadFromFile(*useProfile, configuration)
 	if err != nil {
-		loggingClient = logger.NewClient(metadata.METADATASERVICENAME, false, "")
-		loggingClient.Error("Could not load configuration (" + configFile + "): " + err.Error())
+		logBeforeTermination(err)
 		return
 	}
 
@@ -55,23 +64,11 @@ func main() {
 	metadata.Init(*configuration, loggingClient)
 }
 
-// Read the configuration file and
-func readConfigurationFile(path string) (*metadata.ConfigurationStruct, error) {
-	var configuration metadata.ConfigurationStruct
-	// Read the configuration file
-	contents, err := ioutil.ReadFile(path)
-	if err != nil {
-		return nil, err
-	}
-
-	// Decode the configuration as JSON
-	err = json.Unmarshal(contents, &configuration)
-	if err != nil {
-		return nil, err
-	}
-
-	return &configuration, nil
+func logBeforeTermination(err error) {
+	loggingClient = logger.NewClient(metadata.METADATASERVICENAME, false, "")
+	loggingClient.Error(err.Error())
 }
+
 
 func setLoggingTarget(conf metadata.ConfigurationStruct) string {
 	logTarget := conf.LoggingRemoteURL

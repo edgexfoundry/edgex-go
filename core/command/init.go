@@ -18,10 +18,8 @@
 package command
 
 import (
-	"net/http"
-	"strconv"
+	"fmt"
 	"strings"
-	"time"
 
 	consulclient "github.com/tsconn23/edgex-go/support/consul-client"
 	logger "github.com/tsconn23/edgex-go/support/logging-client"
@@ -29,37 +27,33 @@ import (
 
 var loggingClient logger.LoggingClient
 
+func ConnectToConsul(conf ConfigurationStruct) error {
+
+	// Initialize service on Consul
+	err := consulclient.ConsulInit(consulclient.ConsulConfig{
+		ServiceName:    conf.ServiceName,
+		ServicePort:    conf.ServerPort,
+		ServiceAddress: conf.ServiceAddress,
+		CheckAddress:   conf.ConsulCheckAddress,
+		CheckInterval:  conf.CheckInterval,
+		ConsulAddress:  conf.ConsulHost,
+		ConsulPort:     conf.ConsulPort,
+	})
+
+	if err != nil {
+		return fmt.Errorf("connection to Consul could not be made: %v", err.Error())
+	} else {
+		// Update configuration data from Consul
+		if err := consulclient.CheckKeyValuePairs(&conf, conf.ApplicationName, strings.Split(conf.ConsulProfilesActive, ";")); err != nil {
+			return fmt.Errorf("error getting key/values from Consul: %v", err.Error())
+		}
+	}
+	return nil
+}
 
 func Init(conf ConfigurationStruct, l logger.LoggingClient) {
 	loggingClient = l
 	configuration = conf
+	//TODO: The above two are set due to global scope throughout the package. How can this be eliminated / refactored?
 
-	// Initialize service on Consul
-	err := consulclient.ConsulInit(consulclient.ConsulConfig{
-		ServiceName:    configuration.ServiceName,
-		ServicePort:    configuration.ServerPort,
-		ServiceAddress: configuration.ServiceAddress,
-		CheckAddress:   configuration.ConsulCheckAddress,
-		CheckInterval:  configuration.CheckInterval,
-		ConsulAddress:  configuration.ConsulHost,
-		ConsulPort:     configuration.ConsulPort,
-	})
-
-	if err == nil { // Update configuration data from Consul
-		if err := consulclient.CheckKeyValuePairs(&configuration, configuration.ApplicationName, strings.Split(configuration.ConsulProfilesActive, ";")); err != nil {
-			loggingClient.Error("Error getting key/values from Consul: "+err.Error(), "")
-		}
-	} else {
-		loggingClient.Error("Connection to Consul could not be made: "+err.Error(), "")
-	}
-
-
-	if strings.Compare(configuration.URLProtocol, REST_HTTP) == 0 {
-		r := loadRestRoutes()
-		http.TimeoutHandler(nil, time.Millisecond*time.Duration(configuration.ServiceTimeout), "Request timed out")
-		loggingClient.Info(configuration.AppOpenMessage, "")
-		loggingClient.Info("Listening on port: "+strconv.Itoa(configuration.ServerPort), "")
-
-		loggingClient.Error(http.ListenAndServe(":"+strconv.Itoa(configuration.ServerPort), r).Error())
-	}
 }

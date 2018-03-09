@@ -36,10 +36,9 @@ var mdc metadataclients.DeviceClient
 var msc metadataclients.ServiceClient
 
 func ConnectToConsul(conf ConfigurationStruct) error {
-	var err error
 
 	// Initialize service on Consul
-	err = consulclient.ConsulInit(consulclient.ConsulConfig{
+	err := consulclient.ConsulInit(consulclient.ConsulConfig{
 		ServiceName:    conf.Servicename,
 		ServicePort:    conf.Serverport,
 		ServiceAddress: conf.Serviceaddress,
@@ -64,7 +63,7 @@ func Init(conf ConfigurationStruct, l logger.LoggingClient) error {
 	loggingClient = l
 	configuration = conf
 	//TODO: The above two are set due to global scope throughout the package. How can this be eliminated / refactored?
-	//TODO: I should not have to pass the LoggingClient in here. See Heartbeat method above and how it uses channel
+
 	var err error
 	
 	// Create a database client
