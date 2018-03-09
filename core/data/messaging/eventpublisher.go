@@ -18,8 +18,8 @@
 package messaging
 
 import (
-	"github.com/tsconn23/edgex-go/core/data/errors"
-	"github.com/tsconn23/edgex-go/core/domain/models"
+	"github.com/edgexfoundry/edgex-go/core/data/errors"
+	"github.com/edgexfoundry/edgex-go/core/domain/models"
 )
 
 // Types of messaging protocols

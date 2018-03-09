@@ -24,7 +24,7 @@ package heartbeat
 import (
 	"time"
 
-	"github.com/tsconn23/edgex-go/support/logging-client"
+	"github.com/edgexfoundry/edgex-go/support/logging-client"
 )
 
 func Start(msg string, interval int, logger logger.LoggingClient) {

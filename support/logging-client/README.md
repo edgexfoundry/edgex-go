@@ -8,8 +8,8 @@ Support logging client library for the Go implementation of EdgeX microservices.
 This project uses glide for dependency management - https://glide.sh/
 After installing glide, run the following commands to install the logging client:
 ```
-go get github.com/tsconn23/support-logging-client-go
-cd $GOPATH/src/github.com/tsconn23/support-logging-client-go
+go get github.com/edgexfoundry/support-logging-client-go
+cd $GOPATH/src/github.com/edgexfoundry/support-logging-client-go
 glide install
 go install
 ```

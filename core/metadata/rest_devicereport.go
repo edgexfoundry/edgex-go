@@ -23,7 +23,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/tsconn23/edgex-go/core/domain/models"
+	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"github.com/gorilla/mux"
 	mgo "gopkg.in/mgo.v2"
 )
