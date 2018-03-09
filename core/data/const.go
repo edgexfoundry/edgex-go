@@ -22,6 +22,7 @@ type ConfigurationStruct struct {
 	Consulprofilesactive       string
 	Readmaxlimit               int
 	Metadatacheck              bool
+	Validatecheck              bool
 	Addtoeventqueue            bool
 	Persistdata                bool
 	HeartBeatTime              int
