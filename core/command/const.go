@@ -30,7 +30,7 @@ type ConfigurationStruct struct {
 	ServiceAddress            string
 	ServiceName               string
 	DeviceServiceProtocol     string
-	HeartBeatMessage          string
+	HeartBeatMsg              string
 	AppOpenMessage            string
 	URLProtocol               string
 	URLDevicePath             string

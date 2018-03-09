@@ -35,16 +35,8 @@ var DS DataStore
 var loggingClient logger.LoggingClient
 var notificationsClient = notifications.NotificationsClient{}
 
-// Heartbeat for the metadata microservice - send a message to logging service
-func heartbeat() {
-	// Loop forever
-	for true {
-		loggingClient.Info(configuration.HeartBeatMsg, "")
-		time.Sleep(time.Millisecond * time.Duration(configuration.HeartBeatTime)) // Sleep based on configuration
-	}
-}
 
-func Start(conf ConfigurationStruct, l logger.LoggingClient) {
+func Init(conf ConfigurationStruct, l logger.LoggingClient) {
 	loggingClient = l
 	configuration = conf
 
@@ -87,9 +79,6 @@ func Start(conf ConfigurationStruct, l logger.LoggingClient) {
 		loggingClient.Error("Error connecting to Database")
 		return
 	}
-
-	// Start heartbeat
-	go heartbeat()
 
 	if strings.Compare(PROTOCOL, REST) == 0 {
 		r := loadRestRoutes()

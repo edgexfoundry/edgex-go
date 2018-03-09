@@ -32,7 +32,15 @@ import (
 	"strings"
 )
 
-type LoggingClient struct {
+type LoggingClient  interface {
+	Debug(msg string, labels ...string) error
+	Error(msg string, labels ...string) error
+	Info(msg string, labels ...string) error
+	Trace(msg string, labels ...string) error
+	Warn(msg string, labels ...string) error
+}
+
+type EdgeXLogger struct {
 	owningServiceName string
 	remoteEnabled     bool
 	logTarget         string
@@ -43,7 +51,7 @@ type LoggingClient struct {
 // Create a new logging client for the owning service
 func NewClient(owningServiceName string, isRemote bool, logTarget string) LoggingClient {
 	// Set up logging client
-	lc := LoggingClient{
+	lc := EdgeXLogger{
 		owningServiceName: owningServiceName,
 		remoteEnabled:     isRemote,
 		logTarget:         logTarget,
@@ -63,7 +71,7 @@ func NewClient(owningServiceName string, isRemote bool, logTarget string) Loggin
 }
 
 // Send the log out as a REST request
-func (lc LoggingClient) log(logLevel string, msg string, labels []string) error {
+func (lc EdgeXLogger) log(logLevel string, msg string, labels []string) error {
 	if !lc.remoteEnabled {
 		// Save to logging file if path was set
 		return lc.saveToLogFile(string(logLevel), msg)
@@ -74,7 +82,7 @@ func (lc LoggingClient) log(logLevel string, msg string, labels []string) error 
 	return lc.sendLog(logEntry)
 }
 
-func (lc LoggingClient) saveToLogFile(prefix string, message string) error {
+func (lc EdgeXLogger) saveToLogFile(prefix string, message string) error {
 	if lc.logTarget == "" {
 		return nil
 	}
@@ -102,42 +110,42 @@ func verifyLogDirectory(path string) {
 }
 
 // Log an INFO level message
-func (lc LoggingClient) Info(msg string, labels ...string) error {
+func (lc EdgeXLogger) Info(msg string, labels ...string) error {
 	lc.stdOutLogger.SetPrefix("INFO: ")
 	lc.stdOutLogger.Println(msg)
 	return lc.log(support_domain.INFO, msg, labels)
 }
 
 // Log a TRACE level message
-func (lc LoggingClient) Trace(msg string, labels ...string) error {
+func (lc EdgeXLogger) Trace(msg string, labels ...string) error {
 	lc.stdOutLogger.SetPrefix("TRACE: ")
 	lc.stdOutLogger.Println(msg)
 	return lc.log(support_domain.TRACE, msg, labels)
 }
 
 // Log a DEBUG level message
-func (lc LoggingClient) Debug(msg string, labels ...string) error {
+func (lc EdgeXLogger) Debug(msg string, labels ...string) error {
 	lc.stdOutLogger.SetPrefix("DEBUG: ")
 	lc.stdOutLogger.Println(msg)
 	return lc.log(support_domain.DEBUG, msg, labels)
 }
 
 // Log a WARN level message
-func (lc LoggingClient) Warn(msg string, labels ...string) error {
+func (lc EdgeXLogger) Warn(msg string, labels ...string) error {
 	lc.stdOutLogger.SetPrefix("WARN: ")
 	lc.stdOutLogger.Println(msg)
 	return lc.log(support_domain.WARN, msg, labels)
 }
 
 // Log an ERROR level message
-func (lc LoggingClient) Error(msg string, labels ...string) error {
+func (lc EdgeXLogger) Error(msg string, labels ...string) error {
 	lc.stdOutLogger.SetPrefix("ERROR: ")
 	lc.stdOutLogger.Println(msg)
 	return lc.log(support_domain.ERROR, msg, labels)
 }
 
 // Build the log entry object
-func (lc LoggingClient) buildLogEntry(logLevel string, msg string, labels []string) support_domain.LogEntry {
+func (lc EdgeXLogger) buildLogEntry(logLevel string, msg string, labels []string) support_domain.LogEntry {
 	res := support_domain.LogEntry{}
 	res.Level = logLevel
 	res.Message = msg
@@ -148,7 +156,7 @@ func (lc LoggingClient) buildLogEntry(logLevel string, msg string, labels []stri
 }
 
 // Send the log as an http request
-func (lc LoggingClient) sendLog(logEntry support_domain.LogEntry) error {
+func (lc EdgeXLogger) sendLog(logEntry support_domain.LogEntry) error {
 	if lc.logTarget == "" {
 		return nil
 	}
@@ -174,7 +182,7 @@ func (lc LoggingClient) sendLog(logEntry support_domain.LogEntry) error {
 }
 
 // Function to call in a goroutine
-func (lc LoggingClient) makeRequest(client *http.Client, request *http.Request) {
+func (lc EdgeXLogger) makeRequest(client *http.Client, request *http.Request) {
 	resp, err := client.Do(request)
 	if err == nil {
 		defer resp.Body.Close()

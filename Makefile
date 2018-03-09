@@ -5,7 +5,7 @@
 #
 
 
-.PHONY: build build_microservices clean test docker
+.PHONY: build clean test docker run
 
 GO=CGO_ENABLED=0 go
 GOCGO=CGO_ENABLED=1 go
@@ -51,6 +51,8 @@ test:
 prepare:
 	glide install
 
+run:
+	cd bin && ./edgex-launch.sh
 
 docker: $(DOCKERS)
 

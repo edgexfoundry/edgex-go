@@ -10,7 +10,7 @@
 	"ServiceAddress" : "localhost",
 	"ServiceName" : "core-command",
 	"DeviceServiceProtocol" : "http",
-	"HeartBeatMesssage" : "Core Command heart beat",
+	"HeartBeatMsg" : "Core Command heart beat",
 	"AppOpenMessage" : "This is the Core Command Micro Service",
 	"URLProtocol" : "http://",
 	"URLDevicePath" : "/api/v1/device",
