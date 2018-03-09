@@ -20,7 +20,7 @@ package metadata
 import (
 	"errors"
 
-	"github.com/edgexfoundry/edgex-go/core/domain/enums"
+	"github.com/tsconn23/edgex-go/core/domain/enums"
 )
 
 // Struct used to pase the JSON configuration file

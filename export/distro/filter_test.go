@@ -9,8 +9,8 @@ package distro
 import (
 	"testing"
 
-	"github.com/edgexfoundry/edgex-go/core/domain/models"
-	"github.com/edgexfoundry/edgex-go/export"
+	"github.com/tsconn23/edgex-go/core/domain/models"
+	"github.com/tsconn23/edgex-go/export"
 	"go.uber.org/zap"
 )
 

@@ -9,8 +9,8 @@ Consul client library for the Go implementation of EdgeX microservices.  This pr
 consul-client-go uses the glide vendoring tool - https://glide.sh/
 To pull the dependecies into your workspace and build the project, make sure you are in the project directory and run:
 ```
-go get github.com/edgexfoundry/consul-client-go
-cd $GOPATH/src/github.com/edgexfoundry/consul-client-go
+go get github.com/tsconn23/consul-client-go
+cd $GOPATH/src/github.com/tsconn23/consul-client-go
 glide install
 go install
 ```

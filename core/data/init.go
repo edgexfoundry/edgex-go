@@ -21,11 +21,11 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/edgexfoundry/edgex-go/core/clients/metadataclients"
-	"github.com/edgexfoundry/edgex-go/core/data/clients"
-	"github.com/edgexfoundry/edgex-go/core/data/messaging"
-	consulclient "github.com/edgexfoundry/edgex-go/support/consul-client"
-	"github.com/edgexfoundry/edgex-go/support/logging-client"
+	"github.com/tsconn23/edgex-go/core/clients/metadataclients"
+	"github.com/tsconn23/edgex-go/core/data/clients"
+	"github.com/tsconn23/edgex-go/core/data/messaging"
+	consulclient "github.com/tsconn23/edgex-go/support/consul-client"
+	"github.com/tsconn23/edgex-go/support/logging-client"
 )
 
 // Global variables
