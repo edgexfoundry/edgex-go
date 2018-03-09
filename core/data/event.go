@@ -240,10 +240,11 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if configuration.Validatecheck {
-			loggingClient.Error("Validation enabled, parsing events")
+			loggingClient.Debug("Validation enabled, parsing events")
 			for reading := range e.Readings {
-				if !isValidValueDescriptor(e.Readings[reading], e) {
-					loggingClient.Error("Validation failed")
+				valid, err := isValidValueDescriptor(e.Readings[reading], e)
+				if !valid {
+					loggingClient.Error("Validation failed: %s", err.Error())
 					return
 				}
 			}
