@@ -26,7 +26,7 @@ type ConfigurationStruct struct {
 	Persistdata                bool
 	HeartBeatTime              int
 	HeartBeatMsg               string
-	Appopenmsg                 string
+	AppOpenMsg                 string
 	Formatspecifier            string
 	Msgpubtype                 string
 	Serverport                 int
