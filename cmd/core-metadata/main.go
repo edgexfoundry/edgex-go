@@ -18,10 +18,9 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
-	"io/ioutil"
+	"net/http"
 	"time"
 
 	"github.com/tsconn23/edgex-go"
@@ -29,6 +28,7 @@ import (
 	"github.com/tsconn23/edgex-go/pkg/config"
 	"github.com/tsconn23/edgex-go/pkg/heartbeat"
 	logger "github.com/tsconn23/edgex-go/support/logging-client"
+	"strconv"
 )
 
 const (
@@ -45,6 +45,7 @@ func main() {
 	)
 	flag.Parse()
 
+	//Read Configuration
 	configuration := &metadata.ConfigurationStruct{}
 	err := config.LoadFromFile(*useProfile, configuration)
 	if err != nil {
@@ -52,16 +53,42 @@ func main() {
 		return
 	}
 
-	logTarget := setLoggingTarget(*configuration)
-	// Create Logger (Default Parameters)
-	loggingClient = logger.NewClient(configuration.ApplicationName, configuration.EnableRemoteLogging, logTarget)
-	loggingClient.Info("Starting core-metadata " + edgex.Version)
+	//Determine if configuration should be overridden from Consul
+	var consulMsg string
+	if *useConsul == "y" {
+		consulMsg = "Loading configuration from Consul..."
+		err := metadata.ConnectToConsul(*configuration)
+		if err != nil {
+			logBeforeTermination(err)
+			return //end program since user explicitly told us to use Consul.
+		}
+	} else {
+		consulMsg = "Bypassing Consul configuration..."
+	}
 
+	// Setup Logging
+	logTarget := setLoggingTarget(*configuration)
+	loggingClient = logger.NewClient(configuration.ApplicationName, configuration.EnableRemoteLogging, logTarget)
+
+	loggingClient.Info(consulMsg)
 	loggingClient.Info(fmt.Sprintf("Starting %s %s ", metadata.METADATASERVICENAME, edgex.Version))
+
+	err = metadata.Init(*configuration, loggingClient)
+	if err != nil {
+		loggingClient.Error(fmt.Sprintf("call to init() failed: %v", err.Error()))
+		return
+	}
+
+	r := metadata.LoadRestRoutes()
+	http.TimeoutHandler(nil, time.Millisecond*time.Duration(configuration.ServerTimeout), "Request timed out")
+	loggingClient.Info(configuration.AppOpenMsg, "")
 
 	heartbeat.Start(configuration.HeartBeatMsg, configuration.HeartBeatTime, loggingClient)
 
-	metadata.Init(*configuration, loggingClient)
+	// Time it took to start service
+	loggingClient.Info("Service started in: "+time.Since(start).String(), "")
+	fmt.Println("Listening on port: " + strconv.Itoa(configuration.ServerPort))
+	loggingClient.Error(http.ListenAndServe(":"+strconv.Itoa(configuration.ServerPort), r).Error())
 }
 
 func logBeforeTermination(err error) {

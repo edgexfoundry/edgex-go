@@ -23,7 +23,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func loadRestRoutes() http.Handler {
+func LoadRestRoutes() http.Handler {
 	r := mux.NewRouter()
 	b := r.PathPrefix("/api/v1").Subrouter()
 	b.HandleFunc("/ping", ping)

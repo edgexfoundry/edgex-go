@@ -19,10 +19,8 @@ package metadata
 
 import (
 	"fmt"
-	"net/http"
 	"strconv"
 	"strings"
-	"time"
 
 	enums "github.com/tsconn23/edgex-go/core/domain/enums"
 	consulclient "github.com/tsconn23/edgex-go/support/consul-client"
@@ -35,27 +33,32 @@ var DS DataStore
 var loggingClient logger.LoggingClient
 var notificationsClient = notifications.NotificationsClient{}
 
-
-func Init(conf ConfigurationStruct, l logger.LoggingClient) {
-	loggingClient = l
-	configuration = conf
-
+func ConnectToConsul(conf ConfigurationStruct) error {
 	// Initialize service on Consul
 	err := consulclient.ConsulInit(consulclient.ConsulConfig{
-		ServiceName:    configuration.ServiceName,
-		ServicePort:    configuration.ServerPort,
-		ServiceAddress: configuration.ServiceAddress,
-		CheckAddress:   configuration.ConsulCheckAddress,
-		CheckInterval:  configuration.CheckInterval,
-		ConsulAddress:  configuration.ConsulHost,
-		ConsulPort:     configuration.ConsulPort,
+		ServiceName:    conf.ServiceName,
+		ServicePort:    conf.ServerPort,
+		ServiceAddress: conf.ServiceAddress,
+		CheckAddress:   conf.ConsulCheckAddress,
+		CheckInterval:  conf.CheckInterval,
+		ConsulAddress:  conf.ConsulHost,
+		ConsulPort:     conf.ConsulPort,
 	})
 	if err != nil {
-		loggingClient.Error("Connection to Consul could not be make: " + err.Error())
+		return fmt.Errorf("connection to Consul could not be made: %v", err.Error())
 	} else {
 		// Update configuration data from Consul
-		consulclient.CheckKeyValuePairs(&configuration, configuration.ApplicationName, strings.Split(configuration.ConsulProfilesActive, ";"))
+		if err := consulclient.CheckKeyValuePairs(&conf, conf.ApplicationName, strings.Split(conf.ConsulProfilesActive, ";")); err != nil {
+			return fmt.Errorf("error getting key/values from Consul: %v", err.Error())
+		}
 	}
+	return nil
+}
+
+func Init(conf ConfigurationStruct, l logger.LoggingClient) error {
+	loggingClient = l
+	configuration = conf
+	//TODO: The above two are set due to global scope throughout the package. How can this be eliminated / refactored?
 
 	// Update Service CONSTANTS
 	MONGODATABASE = configuration.MongoDatabaseName
@@ -69,24 +72,15 @@ func Init(conf ConfigurationStruct, l logger.LoggingClient) {
 	// Update notificationsClient based on configuration
 	notificationsClient.RemoteUrl = configuration.SupportNotificationsNotificationURL
 
+	var err error
 	// Connect to the database
 	DATABASE, err = enums.GetDatabaseType(DBTYPE)
 	if err != nil {
-		loggingClient.Error(err.Error())
-		return
+		return err
 	}
 	if !dbConnect() {
-		loggingClient.Error("Error connecting to Database")
-		return
+		return err
 	}
 
-	if strings.Compare(PROTOCOL, REST) == 0 {
-		r := loadRestRoutes()
-		http.TimeoutHandler(nil, time.Millisecond*time.Duration(configuration.ServerTimeout), "Request timed out")
-		loggingClient.Info(configuration.AppOpenMsg, "")
-		fmt.Println("Listening on port: " + SERVERPORT)
-
-		loggingClient.Error(http.ListenAndServe(":"+SERVERPORT, r).Error())
-	}
-
+	return nil
 }
