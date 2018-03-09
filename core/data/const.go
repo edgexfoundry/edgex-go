@@ -24,8 +24,8 @@ type ConfigurationStruct struct {
 	Metadatacheck              bool
 	Addtoeventqueue            bool
 	Persistdata                bool
-	Heartbeattime              int
-	Heartbeatmsg               string
+	HeartBeatTime              int
+	HeartBeatMsg               string
 	Appopenmsg                 string
 	Formatspecifier            string
 	Msgpubtype                 string

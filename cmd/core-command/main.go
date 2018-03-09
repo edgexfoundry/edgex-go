@@ -24,6 +24,7 @@ import (
 
 	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/edgex-go/core/command"
+	"github.com/edgexfoundry/edgex-go/support/heartbeat"
 	logger "github.com/edgexfoundry/edgex-go/support/logging-client"
 )
 
@@ -49,7 +50,9 @@ func main() {
 
 	loggingClient.Info(fmt.Sprintf("Starting %s %s ", command.COMMANDSERVICENAME, edgex.Version))
 
-	command.Start(*configuration, loggingClient)
+	heartbeat.Start(configuration.HeartBeatMsg, configuration.HeartBeatTime, loggingClient)
+
+	command.Init(*configuration, loggingClient)
 }
 
 func readConfigurationFile(path string) (*command.ConfigurationStruct, error) {

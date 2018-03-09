@@ -29,14 +29,8 @@ import (
 
 var loggingClient logger.LoggingClient
 
-func heartbeat() {
-	for true {
-		loggingClient.Info(configuration.HeartBeatMessage, "")
-		time.Sleep(time.Millisecond * time.Duration(configuration.HeartBeatTime))
-	}
-}
 
-func Start(conf ConfigurationStruct, l logger.LoggingClient) {
+func Init(conf ConfigurationStruct, l logger.LoggingClient) {
 	loggingClient = l
 	configuration = conf
 
@@ -59,8 +53,6 @@ func Start(conf ConfigurationStruct, l logger.LoggingClient) {
 		loggingClient.Error("Connection to Consul could not be made: "+err.Error(), "")
 	}
 
-	// Start heartbeat
-	go heartbeat()
 
 	if strings.Compare(configuration.URLProtocol, REST_HTTP) == 0 {
 		r := loadRestRoutes()

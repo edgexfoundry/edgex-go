@@ -28,6 +28,7 @@ import (
 
 	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/edgex-go/core/data"
+	"github.com/edgexfoundry/edgex-go/support/heartbeat"
 	"github.com/edgexfoundry/edgex-go/support/logging-client"
 )
 
@@ -80,26 +81,12 @@ func main() {
 	http.TimeoutHandler(nil, time.Millisecond*time.Duration(5000), "Request timed out")
 	loggingClient.Info(configuration.Appopenmsg, "")
 
-	startHeartbeat(configuration.Heartbeatmsg, configuration.Heartbeattime)
+	heartbeat.Start(configuration.HeartBeatMsg, configuration.HeartBeatTime, loggingClient)
+
 	// Time it took to start service
 	loggingClient.Info("Service started in: "+time.Since(start).String(), "")
 	loggingClient.Info("Listening on port: " + strconv.Itoa(configuration.Serverport))
 	loggingClient.Error(http.ListenAndServe(":"+strconv.Itoa(configuration.Serverport), r).Error())
-}
-
-func startHeartbeat(msg string, interval int) {
-	chBeats := make(chan string)
-	go data.Heartbeat(msg, interval, chBeats)
-	go func() {
-		for {
-			msg, ok := <-chBeats
-			if !ok {
-				break
-			}
-			loggingClient.Info(msg)
-		}
-		close(chBeats)
-	}()
 }
 
 func logBeforeTermination(err error) {
