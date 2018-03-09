@@ -28,25 +28,14 @@ import (
 )
 
 func Start(msg string, interval int, logger logger.LoggingClient) {
-	chBeats := make(chan string)
-	go sendBeats(msg, interval, chBeats)
-	go func() {
-		for {
-			msg, ok := <-chBeats
-			if !ok {
-				break
-			}
-			logger.Info(msg)
-		}
-		close(chBeats)
-	}()
+	go sendBeats(msg, interval, logger)
 }
 
-// Executes the basic heartbeat for all servicves. Writes entries to the supplied channel.
-func sendBeats(heartbeatMsg string, interval int, beats chan<- string) {
+// Executes the basic heartbeat for all servicves. Writes entries to the supplied logger.
+func sendBeats(heartbeatMsg string, interval int, logger logger.LoggingClient) {
 	// Loop forever
 	for true {
-		beats <- heartbeatMsg
+		logger.Info(heartbeatMsg)
 		time.Sleep(time.Millisecond * time.Duration(interval)) // Sleep based on supplied interval
 	}
 }

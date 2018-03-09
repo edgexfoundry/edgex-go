@@ -24,7 +24,7 @@ import (
 
 	"github.com/tsconn23/edgex-go"
 	"github.com/tsconn23/edgex-go/core/command"
-	"github.com/tsconn23/edgex-go/support/heartbeat"
+	"github.com/tsconn23/edgex-go/pkg/heartbeat"
 	logger "github.com/tsconn23/edgex-go/support/logging-client"
 )
 
