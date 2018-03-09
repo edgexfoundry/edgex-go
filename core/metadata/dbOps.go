@@ -20,8 +20,8 @@ package metadata
 import (
 	"time"
 
-	enums "github.com/tsconn23/edgex-go/core/domain/enums"
-	models "github.com/tsconn23/edgex-go/core/domain/models"
+	enums "github.com/edgexfoundry/edgex-go/core/domain/enums"
+	models "github.com/edgexfoundry/edgex-go/core/domain/models"
 	mgo "gopkg.in/mgo.v2"
 	bson "gopkg.in/mgo.v2/bson"
 )

@@ -5,11 +5,11 @@ This is Core Domain library for the Go implementation of the EdgeX microservices
 * Domain objects for EdgeX microservices
 
 ### How to use? ###
-Import the project using `go get https://github.com/tsconn23/core-domain-go`
+Import the project using `go get https://github.com/edgexfoundry/core-domain-go`
 
 You can also use [glide](https://glide.sh) to keep this library up to date by adding the following to your glide.yaml
 ```
-- package: github.com/tsconn23/core-domain-go
+- package: github.com/edgexfoundry/core-domain-go
   subpackages:
   - models
   - enums
