@@ -95,7 +95,7 @@ func TestSchedulerClient_SendSchedule(t *testing.T) {
 	uriPrefix := ts.URL
 
 	scheduleClient := SchedulerClient{
-		RemoteScheduleUrl: uriPrefix + "/api/v1/schedule",
+		RemoteScheduleUrl: uriPrefix + TestExpectedScheduleApiPath,
 		OwningService:     "notifications",
 	}
 
@@ -160,7 +160,7 @@ func TestSchedulerClient_SendScheduleEvent(t *testing.T) {
 	uriPrefix := ts.URL
 
 	scheduleClient := SchedulerClient{
-		RemoteScheduleEventUrl: uriPrefix + "/api/v1/scheduleevent",
+		RemoteScheduleEventUrl: uriPrefix + TestExpectedScheduleEventApiPath,
 		OwningService:          "notifications",
 	}
 
