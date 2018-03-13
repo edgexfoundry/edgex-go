@@ -8,7 +8,7 @@
 	"Persistdata" : true,
 	"HeartBeatTime" : 300000,
 	"HeartBeatMsg" : "Core data heart beat",
-	"Appopenmsg" : "This is the Core Data Micro Service",
+	"AppOpenMsg" : "This is the Core Data Micro Service",
 	"Formatspecifier" : "%(\\d+\\$)?([-#+ 0,(\\<]*)?(\\d+)?(\\.\\d+)?([tT])?([a-zA-Z%])",
 	"Msgpubtype" : "zero",
 	"Serverport" : 48080,
