@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -22,12 +23,6 @@ const (
 	TestUnexpectedMsg                    = "unexpected result"
 	TestUnexpectedMsgFormatStr           = "unexpected result, active: '%s' but expected: '%s'"
 	TestUnexpectedMsgFormatStrForBoolVal = "unexpected result, active: '%t' but expected: '%t'"
-)
-
-// Test comm api path
-const (
-	TestExpectedScheduleApiPath      = "/api/v1/schedule"
-	TestExpectedScheduleEventApiPath = "/api/v1/scheduleevent"
 )
 
 // Test Schedule model const fields
@@ -53,15 +48,15 @@ const (
 )
 
 // Test method : SendSchedule
-func TestSchedulerClient_SendSchedule(t *testing.T) {
+func TestSendSchedule(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("{ 'status' : 'OK' }"))
 		if r.Method != "POST" {
 			t.Errorf(TestUnexpectedMsgFormatStr, r.Method, "POST")
 		}
-		if r.URL.EscapedPath() != TestExpectedScheduleApiPath {
-			t.Errorf(TestUnexpectedMsgFormatStr, r.URL.EscapedPath(), TestExpectedScheduleApiPath)
+		if r.URL.EscapedPath() != ScheduleApiPath {
+			t.Errorf(TestUnexpectedMsgFormatStr, r.URL.EscapedPath(), ScheduleApiPath)
 		}
 
 		result, _ := ioutil.ReadAll(r.Body)
@@ -99,16 +94,20 @@ func TestSchedulerClient_SendSchedule(t *testing.T) {
 	defer ts.Close()
 
 	u, err := url.Parse(ts.URL)
-
 	if err != nil {
 		t.Error(err.Error())
 	}
 
 	h := strings.Split(u.Host, ":")
 
+	intPort, e := strconv.Atoi(h[1])
+	if e != nil {
+		t.Error(e)
+	}
+
 	scheduleClient := SchedulerClient{
 		SchedulerServiceHost: h[0],
-		SchedulerServicePort: h[1],
+		SchedulerServicePort: intPort,
 		OwningService:        "notifications",
 	}
 
@@ -122,19 +121,21 @@ func TestSchedulerClient_SendSchedule(t *testing.T) {
 	}
 
 	error := scheduleClient.SendSchedule(schedule)
-	println(error)
+	if error != nil {
+		t.Error(error)
+	}
 }
 
 // Test method : UpdateSchedule
-func TestSchedulerClient_UpdateSchedule(t *testing.T) {
+func TestUpdateSchedule(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("{ 'status' : 'OK' }"))
 		if r.Method != "PUT" {
 			t.Errorf(TestUnexpectedMsgFormatStr, r.Method, "PUT")
 		}
-		if r.URL.EscapedPath() != TestExpectedScheduleApiPath {
-			t.Errorf(TestUnexpectedMsgFormatStr, r.URL.EscapedPath(), TestExpectedScheduleApiPath)
+		if r.URL.EscapedPath() != ScheduleApiPath {
+			t.Errorf(TestUnexpectedMsgFormatStr, r.URL.EscapedPath(), ScheduleApiPath)
 		}
 
 		result, _ := ioutil.ReadAll(r.Body)
@@ -172,16 +173,20 @@ func TestSchedulerClient_UpdateSchedule(t *testing.T) {
 	defer ts.Close()
 
 	u, err := url.Parse(ts.URL)
-
 	if err != nil {
 		t.Error(err.Error())
 	}
 
 	h := strings.Split(u.Host, ":")
 
+	intPort, e := strconv.Atoi(h[1])
+	if e != nil {
+		t.Error(e)
+	}
+
 	scheduleClient := SchedulerClient{
 		SchedulerServiceHost: h[0],
-		SchedulerServicePort: h[1],
+		SchedulerServicePort: intPort,
 		OwningService:        "notifications",
 	}
 
@@ -195,11 +200,13 @@ func TestSchedulerClient_UpdateSchedule(t *testing.T) {
 	}
 
 	error := scheduleClient.UpdateSchedule(schedule)
-	println(error)
+	if error != nil {
+		t.Error(error)
+	}
 }
 
 // Test method : RemoveSchedule
-func TestSchedulerClient_RemoveSchedule(t *testing.T) {
+func TestRemoveSchedule(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("{ 'status' : 'OK' }"))
@@ -207,7 +214,7 @@ func TestSchedulerClient_RemoveSchedule(t *testing.T) {
 			t.Errorf(TestUnexpectedMsgFormatStr, r.Method, "DELETE")
 		}
 
-		if !strings.HasPrefix(r.URL.EscapedPath(), TestExpectedScheduleApiPath) {
+		if !strings.HasPrefix(r.URL.EscapedPath(), ScheduleApiPath) {
 			t.Errorf(TestUnexpectedMsg)
 		}
 
@@ -219,33 +226,39 @@ func TestSchedulerClient_RemoveSchedule(t *testing.T) {
 	defer ts.Close()
 
 	u, err := url.Parse(ts.URL)
-
 	if err != nil {
 		t.Error(err.Error())
 	}
 
 	h := strings.Split(u.Host, ":")
 
+	intPort, e := strconv.Atoi(h[1])
+	if e != nil {
+		t.Error(e)
+	}
+
 	scheduleClient := SchedulerClient{
 		SchedulerServiceHost: h[0],
-		SchedulerServicePort: h[1],
+		SchedulerServicePort: intPort,
 		OwningService:        "notifications",
 	}
 
 	error := scheduleClient.RemoveSchedule(TestScheduleIdForTest)
-	println(error)
+	if error != nil {
+		t.Error(error)
+	}
 }
 
 // Test method : SendScheduleEvent
-func TestSchedulerClient_SendScheduleEvent(t *testing.T) {
+func TestSendScheduleEvent(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("{ 'status' : 'OK' }"))
 		if r.Method != "POST" {
 			t.Errorf(TestUnexpectedMsgFormatStr, r.Method, "POST")
 		}
-		if r.URL.EscapedPath() != TestExpectedScheduleEventApiPath {
-			t.Errorf(TestUnexpectedMsgFormatStr, r.URL.EscapedPath(), TestExpectedScheduleEventApiPath)
+		if r.URL.EscapedPath() != ScheduleEventApiPath {
+			t.Errorf(TestUnexpectedMsgFormatStr, r.URL.EscapedPath(), ScheduleEventApiPath)
 		}
 
 		result, _ := ioutil.ReadAll(r.Body)
@@ -283,16 +296,20 @@ func TestSchedulerClient_SendScheduleEvent(t *testing.T) {
 	defer ts.Close()
 
 	u, err := url.Parse(ts.URL)
-
 	if err != nil {
 		t.Error(err.Error())
 	}
 
 	h := strings.Split(u.Host, ":")
 
+	intPort, e := strconv.Atoi(h[1])
+	if e != nil {
+		t.Error(e)
+	}
+
 	scheduleClient := SchedulerClient{
 		SchedulerServiceHost: h[0],
-		SchedulerServicePort: h[1],
+		SchedulerServicePort: intPort,
 		OwningService:        "notifications",
 	}
 
@@ -308,19 +325,21 @@ func TestSchedulerClient_SendScheduleEvent(t *testing.T) {
 	}
 
 	error := scheduleClient.SendScheduleEvent(scheduleEvent)
-	println(error)
+	if error != nil {
+		t.Error(error)
+	}
 }
 
 // Test method : UpdateScheduleEvent
-func TestSchedulerClient_UpdateScheduleEvent(t *testing.T) {
+func TestUpdateScheduleEvent(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("{ 'status' : 'OK' }"))
 		if r.Method != "PUT" {
 			t.Errorf(TestUnexpectedMsgFormatStr, r.Method, "PUT")
 		}
-		if r.URL.EscapedPath() != TestExpectedScheduleEventApiPath {
-			t.Errorf(TestUnexpectedMsgFormatStr, r.URL.EscapedPath(), TestExpectedScheduleEventApiPath)
+		if r.URL.EscapedPath() != ScheduleEventApiPath {
+			t.Errorf(TestUnexpectedMsgFormatStr, r.URL.EscapedPath(), ScheduleEventApiPath)
 		}
 
 		result, _ := ioutil.ReadAll(r.Body)
@@ -358,16 +377,20 @@ func TestSchedulerClient_UpdateScheduleEvent(t *testing.T) {
 	defer ts.Close()
 
 	u, err := url.Parse(ts.URL)
-
 	if err != nil {
 		t.Error(err.Error())
 	}
 
 	h := strings.Split(u.Host, ":")
 
+	intPort, e := strconv.Atoi(h[1])
+	if e != nil {
+		t.Error(e)
+	}
+
 	scheduleClient := SchedulerClient{
 		SchedulerServiceHost: h[0],
-		SchedulerServicePort: h[1],
+		SchedulerServicePort: intPort,
 		OwningService:        "notifications",
 	}
 
@@ -383,11 +406,13 @@ func TestSchedulerClient_UpdateScheduleEvent(t *testing.T) {
 	}
 
 	error := scheduleClient.UpdateScheduleEvent(scheduleEvent)
-	println(error)
+	if error != nil {
+		t.Error(error)
+	}
 }
 
 // Test method : RemoveScheduleEvent
-func TestSchedulerClient_RemoveScheduleEvent(t *testing.T) {
+func TestRemoveScheduleEvent(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("{ 'status' : 'OK' }"))
@@ -395,7 +420,7 @@ func TestSchedulerClient_RemoveScheduleEvent(t *testing.T) {
 			t.Errorf(TestUnexpectedMsgFormatStr, r.Method, "DELETE")
 		}
 
-		if !strings.HasPrefix(r.URL.EscapedPath(), TestExpectedScheduleEventApiPath) {
+		if !strings.HasPrefix(r.URL.EscapedPath(), ScheduleEventApiPath) {
 			t.Errorf(TestUnexpectedMsg)
 		}
 
@@ -407,19 +432,25 @@ func TestSchedulerClient_RemoveScheduleEvent(t *testing.T) {
 	defer ts.Close()
 
 	u, err := url.Parse(ts.URL)
-
 	if err != nil {
 		t.Error(err.Error())
 	}
 
 	h := strings.Split(u.Host, ":")
 
+	intPort, e := strconv.Atoi(h[1])
+	if e != nil {
+		t.Error(e)
+	}
+
 	scheduleClient := SchedulerClient{
 		SchedulerServiceHost: h[0],
-		SchedulerServicePort: h[1],
+		SchedulerServicePort: intPort,
 		OwningService:        "notifications",
 	}
 
 	error := scheduleClient.RemoveScheduleEvent(TestScheduleEventIdForTest)
-	println(error)
+	if error != nil {
+		t.Error(error)
+	}
 }

@@ -24,16 +24,15 @@ const (
 )
 
 const (
-	ScheduleApiPath       = "/api/v1/schedule"
-	ScheduleEventApiPath  = "/api/v1/scheduleevent"
-	UrlWithPortPattern    = "http://%s:%s%s"
-	UrlWithoutPortPattern = "http://%s%s"
+	ScheduleApiPath      = "/api/v1/schedule"
+	ScheduleEventApiPath = "/api/v1/scheduleevent"
+	UrlPattern           = "http://%s:%d%s"
 )
 
 // Struct to represent the scheduler client
 type SchedulerClient struct {
 	SchedulerServiceHost string
-	SchedulerServicePort string
+	SchedulerServicePort int
 	OwningService        string
 }
 
@@ -46,12 +45,7 @@ func (schedulerClient SchedulerClient) SendSchedule(schedule models.Schedule) er
 		return err
 	}
 
-	remoteScheduleUrl := ""
-	if schedulerClient.SchedulerServicePort != "" {
-		remoteScheduleUrl = fmt.Sprintf(UrlWithPortPattern, schedulerClient.SchedulerServiceHost, schedulerClient.SchedulerServicePort, ScheduleApiPath)
-	} else {
-		remoteScheduleUrl = fmt.Sprintf(UrlWithoutPortPattern, schedulerClient.SchedulerServiceHost, ScheduleApiPath)
-	}
+	remoteScheduleUrl := fmt.Sprintf(UrlPattern, schedulerClient.SchedulerServiceHost, schedulerClient.SchedulerServicePort, ScheduleApiPath)
 
 	return doPost(remoteScheduleUrl, bytes.NewBuffer(requestBody), client)
 }
@@ -65,12 +59,7 @@ func (schedulerClient SchedulerClient) UpdateSchedule(schedule models.Schedule) 
 		return err
 	}
 
-	remoteScheduleUrl := ""
-	if schedulerClient.SchedulerServicePort != "" {
-		remoteScheduleUrl = fmt.Sprintf(UrlWithPortPattern, schedulerClient.SchedulerServiceHost, schedulerClient.SchedulerServicePort, ScheduleApiPath)
-	} else {
-		remoteScheduleUrl = fmt.Sprintf(UrlWithoutPortPattern, schedulerClient.SchedulerServiceHost, ScheduleApiPath)
-	}
+	remoteScheduleUrl := fmt.Sprintf(UrlPattern, schedulerClient.SchedulerServiceHost, schedulerClient.SchedulerServicePort, ScheduleApiPath)
 
 	return doPut(remoteScheduleUrl, bytes.NewBuffer(requestBody), client)
 }
@@ -79,12 +68,7 @@ func (schedulerClient SchedulerClient) UpdateSchedule(schedule models.Schedule) 
 func (schedulerClient SchedulerClient) RemoveSchedule(id string) error {
 	client := &http.Client{}
 
-	remoteScheduleUrl := ""
-	if schedulerClient.SchedulerServicePort != "" {
-		remoteScheduleUrl = fmt.Sprintf(UrlWithPortPattern, schedulerClient.SchedulerServiceHost, schedulerClient.SchedulerServicePort, ScheduleApiPath)
-	} else {
-		remoteScheduleUrl = fmt.Sprintf(UrlWithoutPortPattern, schedulerClient.SchedulerServiceHost, ScheduleApiPath)
-	}
+	remoteScheduleUrl := fmt.Sprintf(UrlPattern, schedulerClient.SchedulerServiceHost, schedulerClient.SchedulerServicePort, ScheduleApiPath)
 	remoteScheduleUrl = remoteScheduleUrl + "/" + id
 
 	return doDelete(remoteScheduleUrl, client)
@@ -99,12 +83,7 @@ func (schedulerClient SchedulerClient) SendScheduleEvent(scheduleEvent models.Sc
 		return err
 	}
 
-	remoteScheduleEventUrl := ""
-	if schedulerClient.SchedulerServicePort != "" {
-		remoteScheduleEventUrl = fmt.Sprintf(UrlWithPortPattern, schedulerClient.SchedulerServiceHost, schedulerClient.SchedulerServicePort, ScheduleEventApiPath)
-	} else {
-		remoteScheduleEventUrl = fmt.Sprintf(UrlWithoutPortPattern, schedulerClient.SchedulerServiceHost, ScheduleEventApiPath)
-	}
+	remoteScheduleEventUrl := fmt.Sprintf(UrlPattern, schedulerClient.SchedulerServiceHost, schedulerClient.SchedulerServicePort, ScheduleEventApiPath)
 
 	return doPost(remoteScheduleEventUrl, bytes.NewBuffer(requestBody), client)
 }
@@ -118,12 +97,7 @@ func (schedulerClient SchedulerClient) UpdateScheduleEvent(scheduleEvent models.
 		return err
 	}
 
-	remoteScheduleEventUrl := ""
-	if schedulerClient.SchedulerServicePort != "" {
-		remoteScheduleEventUrl = fmt.Sprintf(UrlWithPortPattern, schedulerClient.SchedulerServiceHost, schedulerClient.SchedulerServicePort, ScheduleEventApiPath)
-	} else {
-		remoteScheduleEventUrl = fmt.Sprintf(UrlWithoutPortPattern, schedulerClient.SchedulerServiceHost, ScheduleEventApiPath)
-	}
+	remoteScheduleEventUrl := fmt.Sprintf(UrlPattern, schedulerClient.SchedulerServiceHost, schedulerClient.SchedulerServicePort, ScheduleEventApiPath)
 
 	return doPut(remoteScheduleEventUrl, bytes.NewBuffer(requestBody), client)
 }
@@ -132,12 +106,7 @@ func (schedulerClient SchedulerClient) UpdateScheduleEvent(scheduleEvent models.
 func (schedulerClient SchedulerClient) RemoveScheduleEvent(id string) error {
 	client := &http.Client{}
 
-	remoteScheduleEventUrl := ""
-	if schedulerClient.SchedulerServicePort != "" {
-		remoteScheduleEventUrl = fmt.Sprintf(UrlWithPortPattern, schedulerClient.SchedulerServiceHost, schedulerClient.SchedulerServicePort, ScheduleEventApiPath)
-	} else {
-		remoteScheduleEventUrl = fmt.Sprintf(UrlWithoutPortPattern, schedulerClient.SchedulerServiceHost, ScheduleEventApiPath)
-	}
+	remoteScheduleEventUrl := fmt.Sprintf(UrlPattern, schedulerClient.SchedulerServiceHost, schedulerClient.SchedulerServicePort, ScheduleEventApiPath)
 	remoteScheduleEventUrl = remoteScheduleEventUrl + "/" + id
 
 	return doDelete(remoteScheduleEventUrl, client)
