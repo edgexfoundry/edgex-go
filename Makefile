@@ -54,6 +54,9 @@ prepare:
 run:
 	cd bin && ./edgex-launch.sh
 
+run_docker:
+	cd bin && ./edgex-docker-launch.sh
+
 docker: $(DOCKERS)
 
 docker_core_metadata:
