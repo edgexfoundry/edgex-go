@@ -52,19 +52,26 @@ func TestValidFloat(t *testing.T) {
 		err    bool
 		result bool
 	}{
-		{"float", "-10.10", "-20", "20", false, true},
+		{"value", "-10.10", "-20", "20", false, true},
+
+		{"novalue", "", "-20", "20", true, false},
+		{"not_float", "data", "-20", "20", true, false},
+
 		{"minmaxEmpty", "-10.10", "", "", false, true},
 
-		{"nofloat", "data", "-20", "20", true, false},
+		{"min_lower", "-30", "-20", "20", true, true},
+		{"max_higher", "4000", "-20", "20", true, true},
 
-		{"min", "-30", "-20", "20", true, true},
-		{"max", "4000", "-20", "20", true, true},
+		{"notvalidmin", "-10.10", "true", "20", true, true},
+		{"notvalidmax", "-10.10", "", "data", true, true},
 
-		{"nomin", "-10.10", "true", "20", true, true},
-		{"nomax", "-10.10", "", "data", true, true},
+		{"notvalidminmax", "-10.10", "true", "false", true, true},
 
 		{"onlymin", "-10.10", "-20", "", false, true},
 		{"onlymax", "-10.10", "", "20", false, true},
+
+		{"onlymin_lower", "-110.1", "-20", "", true, true},
+		{"onlymax_higher", "110.2", "", "20.09", true, true},
 	}
 
 	for _, tt := range tests {
@@ -97,19 +104,25 @@ func TestValidInteger(t *testing.T) {
 		err    bool
 		result bool
 	}{
-		{"float", "-10", "-20", "20", false, true},
+		{"value", "-10", "-20", "20", false, true},
+		{"novalue", "", "", "", true, false},
+		{"no_integer", "data", "-20", "20", true, false},
+
 		{"minmaxEmpty", "-10", "", "", false, true},
 
-		{"nofloat", "data", "-20", "20", true, false},
-
-		{"min", "-30", "-20", "20", true, true},
-		{"max", "4000", "-20", "20", true, true},
-
-		{"nomin", "-10", "true", "20", true, true},
-		{"nomax", "-10", "", "data", true, true},
+		{"min_lower", "-30", "-20", "20", true, true},
+		{"max_higher", "4000", "-20", "20", true, true},
 
 		{"onlymin", "-10", "-20", "", false, true},
 		{"onlymax", "-10", "", "20", false, true},
+
+		{"notvalidmin", "-10", "true", "20", true, true},
+		{"notvalidmax", "-10", "", "data", true, true},
+
+		{"notvalidminmax", "-10", "true", "false", true, true},
+
+		{"onlymin_lower", "-110", "-20", "", true, true},
+		{"onlymax_higher", "110", "", "20", true, true},
 	}
 
 	for _, tt := range tests {
@@ -198,36 +211,35 @@ func TestValidJson(t *testing.T) {
 func TestIsValidValueDescriptor_private(t *testing.T) {
 
 	var tests = []struct {
-		name  string
 		value string
 		err   bool
 	}{
-		{"empty", "", true},
-		{"boolean_B", "B", false},
-		{"boolean_b", "b", true},
-		{"boolean_p", "P", true},
+		{"", true},
+		{"B", false},
+		{"b", true},
+		{"P", true},
 
-		{"float_F", "F", false},
-		{"float_f", "f", true},
-		{"float_p", "P", true},
+		{"F", false},
+		{"f", true},
+		{"P", true},
 
-		{"integer_I", "I", false},
-		{"integer_i", "i", true},
-		{"integer_p", "P", true},
+		{"I", false},
+		{"i", true},
+		{"P", true},
 
-		{"string_S", "S", false},
-		{"string_s", "s", true},
-		{"string_p", "P", true},
+		{"S", false},
+		{"s", true},
+		{"P", true},
 
-		{"json_J", "J", false},
-		{"json_j", "j", true},
-		{"json_p", "P", true},
+		{"J", false},
+		{"j", true},
+		{"P", true},
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+		t.Run(tt.value, func(t *testing.T) {
 			tvd := models.ValueDescriptor{Type: tt.value}
-			_, err := isValidValueDescriptor_private(tvd, models.Reading{}, models.Event{})
+			_, err := isValidValueDescriptor_private(tvd, models.Event{})
 			if err != nil {
 				if !tt.err {
 					t.Errorf("There should not be an error: %v", err)

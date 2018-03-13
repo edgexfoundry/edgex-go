@@ -15,7 +15,7 @@ import (
 	models "github.com/edgexfoundry/edgex-go/core/domain/models"
 )
 
-func isValidValueDescriptor_private(vd models.ValueDescriptor, reading models.Reading, ev models.Event) (bool, error) {
+func isValidValueDescriptor_private(vd models.ValueDescriptor, ev models.Event) (bool, error) {
 	switch vd.Type {
 	case "B": // boolean
 		return validBoolean(ev)
@@ -34,21 +34,7 @@ func isValidValueDescriptor_private(vd models.ValueDescriptor, reading models.Re
 
 func isValidValueDescriptor(reading models.Reading, ev models.Event) (bool, error) {
 	vd, _ := dbc.ValueDescriptorByName(reading.Name)
-
-	switch vd.Type {
-	case "B": // boolean
-		return validBoolean(ev)
-	case "F": // floating point
-		return validFloat(ev, vd)
-	case "I": // integer
-		return validInteger(ev, vd)
-	case "S": // string or character data
-		return validString(ev)
-	case "J": // JSON data
-		return validJSON(ev)
-	default:
-		return false, fmt.Errorf("Unknown type")
-	}
+	return isValidValueDescriptor_private(vd, ev)
 }
 
 func validBoolean(ev models.Event) (bool, error) {
@@ -73,11 +59,6 @@ func validFloat(ev models.Event, vd models.ValueDescriptor) (bool, error) {
 	minLimit := true
 	if (vd.Min == nil) || (vd.Min == "") {
 		minLimit = false
-	}
-
-	bothLimits := true
-	if !minLimit && !maxLimit {
-		bothLimits = false
 	}
 
 	var err error
@@ -106,15 +87,12 @@ func validFloat(ev models.Event, vd models.ValueDescriptor) (bool, error) {
 			return false, err
 		}
 
-		if !bothLimits {
-			return true, nil
-		}
-
 		if maxLimit {
 			if value > max {
 				return false, fmt.Errorf("Value is over the limits")
 			}
 		}
+
 		if minLimit {
 			if value < min {
 				return false, fmt.Errorf("Value is under the limits")
