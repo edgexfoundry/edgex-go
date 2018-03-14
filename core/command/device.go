@@ -26,8 +26,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/edgexfoundry/edgex-go/core/clients/metadataclients"
-	"github.com/edgexfoundry/edgex-go/core/domain/models"
+	"github.com/tsconn23/edgex-go/core/clients/metadataclients"
+	"github.com/tsconn23/edgex-go/core/domain/models"
 )
 
 func issueCommand(req *http.Request) (*http.Response, error) {

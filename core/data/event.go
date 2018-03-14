@@ -24,9 +24,10 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/edgexfoundry/edgex-go/core/data/clients"
-	"github.com/edgexfoundry/edgex-go/core/domain/models"
+	"github.com/tsconn23/edgex-go/core/data/clients"
+	"github.com/tsconn23/edgex-go/core/domain/models"
 	"github.com/gorilla/mux"
+	"fmt"
 )
 
 // Put event on the message queue to be processed by the rules engine
@@ -362,10 +363,13 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 ///api/v1/event/{id}
 //id - ID of the event to return
 func getEventByIdHandler(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
+	if r.Body != nil {
+		defer r.Body.Close()
+	}
 
 	switch r.Method {
 	case "GET":
+		fmt.Println("getEventByIdHandler called")
 		// URL parameters
 		vars := mux.Vars(r)
 		id := vars["id"]

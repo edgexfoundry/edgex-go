@@ -21,8 +21,8 @@ import (
 	"fmt"
 	"strings"
 
-	consulclient "github.com/edgexfoundry/edgex-go/support/consul-client"
-	logger "github.com/edgexfoundry/edgex-go/support/logging-client"
+	consulclient "github.com/tsconn23/edgex-go/support/consul-client"
+	logger "github.com/tsconn23/edgex-go/support/logging-client"
 )
 
 var loggingClient logger.LoggingClient

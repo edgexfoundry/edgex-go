@@ -7,7 +7,7 @@ Support domain library for the Go implementation of EdgeX microservices.  This p
 ### Installation ###
 There are no dependecies, so simply run:
 ```
-go get github.com/edgexfoundry/support-domain-go
-cd $GOPATH/src/github.com/edgexfoundry/support-domain-go
+go get github.com/tsconn23/support-domain-go
+cd $GOPATH/src/github.com/tsconn23/support-domain-go
 go install
 ```

@@ -6,7 +6,7 @@
 
 package client
 
-import "github.com/edgexfoundry/edgex-go/export/mongo"
+import "github.com/tsconn23/edgex-go/export/mongo"
 
 var repo *mongo.Repository
 
