@@ -23,6 +23,10 @@ type dummyPersist struct {
 	deleted  int
 }
 
+const (
+	numberOfLogs = 2
+)
+
 func (dummyPersist) add(le support_domain.LogEntry) {}
 
 func (dp *dummyPersist) remove(criteria matchCriteria) int {
@@ -33,7 +37,12 @@ func (dp *dummyPersist) remove(criteria matchCriteria) int {
 
 func (dp *dummyPersist) find(criteria matchCriteria) []support_domain.LogEntry {
 	dp.criteria = criteria
-	return nil
+
+	var retValue []support_domain.LogEntry
+	for i := 0; i < numberOfLogs; i++ {
+		retValue = append(retValue, support_domain.LogEntry{})
+	}
+	return retValue
 }
 
 func (dp dummyPersist) reset() {
@@ -108,6 +117,10 @@ func TestGetLogs(t *testing.T) {
 			"1000",
 			http.StatusOK,
 			matchCriteria{Limit: 1000}},
+		{"limitToLow",
+			"1",
+			http.StatusRequestEntityTooLarge,
+			matchCriteria{Limit: 1}},
 		{"invalidlimit",
 			"-1",
 			http.StatusBadRequest,
@@ -304,29 +317,4 @@ func TestRemoveLogs(t *testing.T) {
 		})
 	}
 
-}
-
-func TestIsValidLogLevel(t *testing.T) {
-	var tests = []struct {
-		level string
-		res   bool
-	}{
-		{support_domain.TRACE, true},
-		{support_domain.DEBUG, true},
-		{support_domain.INFO, true},
-		{support_domain.WARN, true},
-		{support_domain.ERROR, true},
-		{"EERROR", false},
-		{"ERRORR", false},
-		{"INF", false},
-	}
-	for _, tt := range tests {
-		t.Run(tt.level, func(t *testing.T) {
-			r := isValidLogLevel(tt.level)
-			if r != tt.res {
-				t.Errorf("Level %s labeled as %v and should be %v",
-					tt.level, r, tt.res)
-			}
-		})
-	}
 }
