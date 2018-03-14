@@ -2,3 +2,15 @@
 vendor
 *.exe
 glide.lock
+
+# binary files
+cmd/core-command/core-command
+cmd/core-data/core-data
+cmd/core-metadata/core-metadata
+cmd/export-client/export-client
+cmd/export-distro/export-distro
+
+# log dirs
+cmd/core-command/logs/
+cmd/core-data/logs/
+cmd/core-metadata/logs/
