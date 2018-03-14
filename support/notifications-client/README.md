@@ -7,21 +7,22 @@ This repository is for the notifications client for EdgeXFoundry written in the 
 ### Installation ###
 This project does not have any external dependencies.  To install, simply run:
 ```
-go get github.com/edgexfoundry/support-notifications-client-go
-cd $GOPATH/src/github.com/edgexfoundry/support-notifications-client-go
+go get github.com/edgexfoundry/edgex-go
+cd $GOPATH/src/github.com/edgexfoundry/edgex-go/support/notifications-client
 go install
 ```
 
 ### How To Use ###
 To use the support-notifications-client library you first need to import the library into your project:
 ```
-import "github.com/edgexfoundry/support-notifications-client-go"
+import "github.com/edgexfoundry/edgex-go/support/notifications-client"
 ```
 To send a notification you first need to create a NotificationsClient object:
 ```
 nc := notifications.NotificationsClient{
-    RemoteUrl : "http://localhost:48060/api/v1/notification",
-    OwningService : "My Service Name"
+    NotificationsServiceHost : "localhost",
+    NotificationsServicePort : 48060,
+    OwningService : "My Service Name",
 }
 ```
 This will create a client to hit the notifications endpoint running on localhost.  You can then post a notifications by creating a Notification object and call:
@@ -31,10 +32,10 @@ n := notifications.Notification{
 	Category : notifications.SW_HEALTH,
 	Severity : notifications.NORMAL,
 	Content : "This is a notification",
-	Description string : "This is a description",
-	Status StatusEnum : notifications.NEW,
-	Labels []string	: []string{"Label One", Label Two"}
+	Description : "This is a description",
+	Status : notifications.NEW,
+	Labels : []string{"Label One", Label Two"},
 }
-err := nc.ReceiveNotification(n)
+err := nc.SendNotification(n)
 ```
-This will send the notification to the notifications client and return an error.
+This will send the notification to the notifications service.
