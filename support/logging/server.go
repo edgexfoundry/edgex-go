@@ -40,15 +40,6 @@ func replyPing(w http.ResponseWriter, r *http.Request) {
 	io.WriteString(w, str)
 }
 
-// TODO move to a function in LogEntry
-func isValidLogLevel(l string) bool {
-	return l == support_domain.TRACE ||
-		l == support_domain.DEBUG ||
-		l == support_domain.WARN ||
-		l == support_domain.INFO ||
-		l == support_domain.ERROR
-}
-
 func addLog(w http.ResponseWriter, r *http.Request) {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -65,7 +56,7 @@ func addLog(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !isValidLogLevel(l.Level) {
+	if !support_domain.IsValidLogLevel(l.Level) {
 		s := fmt.Sprintf("Invalid level in LogEntry: %s", l.Level)
 		w.WriteHeader(http.StatusBadRequest)
 		io.WriteString(w, s)
@@ -154,7 +145,7 @@ func getCriteria(w http.ResponseWriter, r *http.Request) *matchCriteria {
 		criteria.LogLevels = append(criteria.LogLevels,
 			strings.Split(logLevels, ",")...)
 		for _, l := range criteria.LogLevels {
-			if !isValidLogLevel(l) {
+			if !support_domain.IsValidLogLevel(l) {
 				s := fmt.Sprintf("Invalid log level '%s'", l)
 				w.WriteHeader(http.StatusBadRequest)
 				io.WriteString(w, s)

@@ -305,28 +305,3 @@ func TestRemoveLogs(t *testing.T) {
 	}
 
 }
-
-func TestIsValidLogLevel(t *testing.T) {
-	var tests = []struct {
-		level string
-		res   bool
-	}{
-		{support_domain.TRACE, true},
-		{support_domain.DEBUG, true},
-		{support_domain.INFO, true},
-		{support_domain.WARN, true},
-		{support_domain.ERROR, true},
-		{"EERROR", false},
-		{"ERRORR", false},
-		{"INF", false},
-	}
-	for _, tt := range tests {
-		t.Run(tt.level, func(t *testing.T) {
-			r := isValidLogLevel(tt.level)
-			if r != tt.res {
-				t.Errorf("Level %s labeled as %v and should be %v",
-					tt.level, r, tt.res)
-			}
-		})
-	}
-}
