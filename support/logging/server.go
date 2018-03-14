@@ -164,18 +164,19 @@ func getLogs(w http.ResponseWriter, r *http.Request) {
 
 	logs := persist.find(*criteria)
 
-	// TODO return http.StatusRequestEntityTooLarge
-	// 413:
-	//   description: if the number of events exceeds the current max limit
-
-	// TODO return http.StatusServiceUnavailable instead of statusbadrequest ??
-	// 503:
-	//   description: for unknown or unanticipated issues.
+	if criteria.Limit > 0 && len(logs) > criteria.Limit {
+		w.WriteHeader(http.StatusRequestEntityTooLarge)
+		s := fmt.Sprintf("More logs than requested, %d with limit %d",
+			len(logs), criteria.Limit)
+		io.WriteString(w, s)
+		return
+	}
 
 	w.WriteHeader(http.StatusOK)
 
 	res, err := json.Marshal(logs)
 	if err != nil {
+		w.WriteHeader(http.StatusServiceUnavailable)
 		return
 	}
 	io.WriteString(w, string(res))
@@ -190,14 +191,6 @@ func delLogs(w http.ResponseWriter, r *http.Request) {
 	removed := persist.remove(*criteria)
 	w.WriteHeader(http.StatusOK)
 	io.WriteString(w, strconv.Itoa(removed))
-
-	// TODO return http.StatusRequestEntityTooLarge
-	// 413:
-	//   description: if the number of events exceeds the current max limit
-
-	// TODO return http.StatusServiceUnavailable instead of statusbadrequest ??
-	// 503:
-	//   description: for unknown or unanticipated issues.
 }
 
 // HTTPServer function
