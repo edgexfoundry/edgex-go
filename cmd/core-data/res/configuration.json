@@ -3,6 +3,7 @@
 	"Consulprofilesactive" : "go",
 	"Readmaxlimit" : 100,
 	"Metadatacheck" : false,
+	"Validatecheck" : false,
 	"Addtoeventqueue" : true,
 	"Persistdata" : true,
 	"HeartBeatTime" : 300000,
