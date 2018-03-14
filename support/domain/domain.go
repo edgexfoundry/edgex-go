@@ -28,8 +28,12 @@ type LogEntry struct {
 
 const (
 	TRACE = "TRACE"
-	DEBUG          = "DEBUG"
-	WARN           = "WARN"
-	INFO           = "INFO"
-	ERROR          = "ERROR"
+	DEBUG = "DEBUG"
+	WARN  = "WARN"
+	INFO  = "INFO"
+	ERROR = "ERROR"
 )
+
+func IsValidLogLevel(l string) bool {
+	return l == TRACE || l == DEBUG || l == WARN || l == INFO || l == ERROR
+}
