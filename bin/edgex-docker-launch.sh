@@ -19,6 +19,8 @@ docker-compose -f $COMPOSE_FILE up -d config-seed
 echo "Sleeping before launching remaining services"
 sleep 15
 
+echo "Starting support-logging"
+docker-compose -f $COMPOSE_FILE up -d logging
 echo "Starting core-metadata"
 docker-compose -f $COMPOSE_FILE up -d metadata
 echo "Starting core-data"
