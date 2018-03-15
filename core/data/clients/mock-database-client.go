@@ -24,14 +24,19 @@ import (
 )
 
 type MockParams struct {
-	EventId1 bson.ObjectId
+	EventId bson.ObjectId
+	Device string
+	Origin int64
 }
 
 var mockParams *MockParams
 
 func NewMockParams() *MockParams {
 	if mockParams == nil {
-		mockParams = &MockParams{EventId1:bson.NewObjectId()}
+		mockParams = &MockParams{
+			EventId:bson.NewObjectId(),
+			Device:"test device",
+			Origin:123456789}
 	}
 	return mockParams
 }
@@ -50,8 +55,8 @@ func (mc *MockDb) Events() ([]models.Event, error) {
 	events := []models.Event{}
 	params := NewMockParams()
 
-	evt1 := models.Event{params.EventId1, 1, "DeviceXYZ", ticks, ticks,
-		1471806386919, "TestScheduleA", "SampleEvent", []models.Reading{}}
+	evt1 := models.Event{params.EventId, 1, params.Device, ticks, ticks,
+		params.Origin, "TestScheduleA", "SampleEvent", []models.Reading{}}
 
 	events = append(events, evt1)
 	return events, nil
@@ -69,9 +74,9 @@ func (mc *MockDb) EventById(id string) (models.Event, error){
 	ticks := time.Now().Unix()
 	params := NewMockParams()
 
-	if id == params.EventId1.Hex() {
-		return models.Event{params.EventId1, 1, "DeviceXYZ", ticks, ticks,
-			1471806386919, "TestScheduleA", "SampleEvent", []models.Reading{}}, nil
+	if id == params.EventId.Hex() {
+		return models.Event{params.EventId, 1, params.Device, ticks, ticks,
+			params.Origin, "TestScheduleA", "SampleEvent", []models.Reading{}}, nil
 	}
 	return models.Event{}, nil
 }

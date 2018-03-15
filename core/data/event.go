@@ -27,7 +27,6 @@ import (
 	"github.com/tsconn23/edgex-go/core/data/clients"
 	"github.com/tsconn23/edgex-go/core/domain/models"
 	"github.com/gorilla/mux"
-	"fmt"
 )
 
 // Put event on the message queue to be processed by the rules engine
@@ -380,7 +379,6 @@ func getEventByIdHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case "GET":
-		fmt.Println("getEventByIdHandler called")
 		// URL parameters
 		vars := mux.Vars(r)
 		id := vars["id"]

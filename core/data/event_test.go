@@ -19,7 +19,6 @@ package data
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -36,20 +35,33 @@ func TestGetEventByIdHandler(t *testing.T) {
 	dbc, _ = clients.NewDBClient(clients.DBConfiguration{DbType: clients.MOCK})
 
 	r := LoadRestRoutes()
-	req, _ := http.NewRequest("GET", "/api/v1/event/" + params.EventId1.Hex(), nil)
+	req, _ := http.NewRequest("GET", "/api/v1/event/" + params.EventId.Hex(), nil)
 	w := httptest.NewRecorder()
 
 	r.ServeHTTP(w, req)
 
 	if w.Code != 200 {
 		t.Error("value expected, status code " + strconv.Itoa(w.Code) + " " + req.Method + " " + req.URL.Path)
-	} else {
-		event := models.Event{}
-		json.Unmarshal([]byte(w.Body.String()), &event)
-		if event.ID.Hex() != params.EventId1.Hex() {
-			t.Error("value mismatch. expected " + params.EventId1.Hex() + " received " + event.ID.Hex())
-		}
+		return
 	}
 
-	fmt.Println(w.Body.String())
+	if len(w.Body.String()) == 0 {
+		t.Error("response was empty " + strconv.Itoa(w.Code) + " " + req.Method + " " + req.URL.Path)
+		return
+	}
+
+	event := models.Event{}
+	json.Unmarshal([]byte(w.Body.String()), &event)
+	if event.ID.Hex() != params.EventId.Hex() {
+		t.Error("eventId mismatch. expected " + params.EventId.Hex() + " received " + event.ID.Hex())
+	}
+
+	if event.Device != params.Device {
+		t.Error("device mismatch. expected " + params.Device + " received " + event.Device)
+	}
+
+	if event.Origin != params.Origin {
+		t.Error("origin mismatch. expected " + strconv.FormatInt(params.Origin,10) + " received " + strconv.FormatInt(event.Origin, 10))
+	}
+	//fmt.Println(w.Body.String())
 }
