@@ -11,7 +11,7 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/edgexfoundry/edgex-go/support/domain"
+	support_domain "github.com/edgexfoundry/edgex-go/support/domain"
 )
 
 const (
@@ -22,12 +22,13 @@ const (
 	defaultLogFilename = "support-logging.log"
 
 	defaultMongoDB             = "logging"
+	defaultMongoCollection     = "logEntry"
 	defaultMongoURL            = "127.0.0.1"
 	defaultMongoPort           = 27017
 	defaultMongoConnectTimeout = 5000
 	defaultSocketTimeout       = 5000
-	defaultMongoUsername       = ""
-	defaultMongoPassword       = ""
+	defaultMongoUsername       = "logging"
+	defaultMongoPassword       = "password"
 
 	envMongoURL  = "EXPORT_CLIENT_MONGO_URL"
 	envMongoPort = "EXPORT_CLIENT_MONGO_PORT"
@@ -48,17 +49,11 @@ type Config struct {
 	MongoUser           string
 	MongoPass           string
 	MongoDatabase       string
+	MongoCollection     string
 	MongoPort           int
 	MongoConnectTimeout int
 	MongoSocketTimeout  int
 }
-
-// DBName - DB name
-// CollectionName - Collection name
-const (
-	DBName         string = "support"
-	CollectionName string = "logging"
-)
 
 type persistence interface {
 	add(logEntry support_domain.LogEntry)
@@ -90,6 +85,7 @@ func GetDefaultConfig() Config {
 		MongoUser:           defaultMongoUsername,
 		MongoPass:           defaultMongoPassword,
 		MongoDatabase:       defaultMongoDB,
+		MongoCollection:     defaultMongoCollection,
 		MongoConnectTimeout: defaultMongoConnectTimeout,
 		MongoSocketTimeout:  defaultSocketTimeout,
 	}

@@ -11,26 +11,19 @@ import (
 	"strconv"
 	"time"
 
+	support_domain "github.com/edgexfoundry/edgex-go/support/domain"
+
 	mgo "gopkg.in/mgo.v2"
-
-	"github.com/edgexfoundry/edgex-go/support/domain"
+	bson "gopkg.in/mgo.v2/bson"
 )
-
-type DataStore struct {
-	s *mgo.Session
-}
-
-// Repository - get Mongo session
-type Repository struct {
-	Session *mgo.Session
-}
 
 type mongoLog struct {
 	session *mgo.Session // Mongo database session
+	config  *Config
 }
 
 func connectToMongo(cfg *Config) (*mgo.Session, error) {
-	fmt.Println("connectin mongos")
+	fmt.Println("connecting mongos")
 
 	mongoDBDialInfo := &mgo.DialInfo{
 		Addrs:    []string{cfg.MongoURL + ":" + strconv.Itoa(cfg.MongoPort)},
@@ -51,23 +44,47 @@ func connectToMongo(cfg *Config) (*mgo.Session, error) {
 	return ms, nil
 }
 
-// NewRepository - create new Mongo repository
-func NewRepository(ms *mgo.Session) *Repository {
-	return &Repository{Session: ms}
-}
-
 func (ml *mongoLog) add(le support_domain.LogEntry) {
+
+	session := ml.session.Copy()
+	defer session.Close()
+
+	c := session.DB(ml.config.MongoDatabase).C(ml.config.MongoCollection)
+
+	if err := c.Insert(le); err != nil {
+		fmt.Println("Failed to add log", err)
+		return
+	}
 	fmt.Println("adding mongos")
 }
 
 func (ml *mongoLog) remove(criteria matchCriteria) int {
+
 	fmt.Println("removing mongos")
 	return 0
 }
 
 func (ml *mongoLog) find(criteria matchCriteria) []support_domain.LogEntry {
 	fmt.Println("finding mongos")
-	return nil
+	session := ml.session.Copy()
+	defer session.Close()
+
+	c := session.DB(ml.config.MongoDatabase).C(ml.config.MongoCollection)
+
+	le := []support_domain.LogEntry{}
+
+	//type M map[string]interface{}
+
+	//query := bson.M{"created": bson.M{"$gt": criteria.Start}}
+	fmt.Print(criteria)
+	if err := c.Find(bson.M{"created": bson.M{"$gt": 1}}).All(&le); err != nil {
+		fmt.Println("Failed to query by id %v", err)
+		return nil
+	}
+
+	fmt.Println("Returned value %v", le)
+
+	return le
 }
 
 func (ml *mongoLog) reset() {
