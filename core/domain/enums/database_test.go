@@ -18,33 +18,49 @@
 package enums
 
 import (
-	"reflect"
 	"testing"
 )
 
 func TestGetDatabaseType(t *testing.T) {
-	type args struct {
-		db string
-	}
 	tests := []struct {
 		name    string
-		args    args
+		args    string
 		want    DATABASE
 		wantErr bool
 	}{
-		{"type is mongo", args{"mongodb"}, MONGODB, false},
-		{"type is mysql", args{"mysql"}, MYSQL, false},
-		{"type is unknown", args{"foo"}, INVALID, true},
+		{"type is mongo", "mongodb", MONGODB, false},
+		{"type is mysql", "mysql", MYSQL, false},
+		{"type is unknown", "foo", INVALID, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := GetDatabaseType(tt.args.db)
+			got, err := GetDatabaseType(tt.args)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetDatabaseType() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
+			if got != tt.want {
 				t.Errorf("GetDatabaseType() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestStringDatabaseType(t *testing.T) {
+	tests := []struct {
+		name string
+		db   DATABASE
+	}{
+		{"mongo", MONGODB},
+		{"mysql", MYSQL},
+		{"unknown", INVALID},
+		{"invalid1", INVALID - 1},
+		{"invalid2", MYSQL + 1},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.db.String() == "" {
+				t.Errorf("String should not be empty")
 			}
 		})
 	}

@@ -19,32 +19,37 @@ package enums
 
 import (
 	"errors"
-	"strings"
 )
 
 type DATABASE int
 
 const (
-	INVALID DATABASE = -1
-	MONGODB DATABASE = iota
+	INVALID DATABASE = iota
+	MONGODB
 	MYSQL
 )
 
-var MONGODBSTR = "mongodb"
-var MYSQLSTR string = "mysql"
+const (
+	invalidStr = "invalid"
+	mongoStr   = "mongodb"
+	mysqlStr   = "mysql"
+)
 
 // DATABASEArr : Add in order declared in Struct for string value
-var DATABASEArr = [...]string{MONGODBSTR, MYSQLSTR}
+var databaseArr = [...]string{invalidStr, mongoStr, mysqlStr}
 
 func (db DATABASE) String() string {
-	return DATABASEArr[db]
+	if db >= INVALID && db <= MYSQL {
+		return databaseArr[db]
+	}
+	return invalidStr
 }
 
 // GetDatabaseType : Return enum valude of the Database Type
 func GetDatabaseType(db string) (DATABASE, error) {
-	if strings.Compare(MONGODBSTR, db) == 0 {
+	if mongoStr == db {
 		return MONGODB, nil
-	} else if strings.Compare(MYSQLSTR, db) == 0 {
+	} else if mysqlStr == db {
 		return MYSQL, nil
 	} else {
 		return INVALID, errors.New("Undefined Database Type")
