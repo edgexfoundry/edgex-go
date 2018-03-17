@@ -29,7 +29,6 @@ import (
 	"github.com/tsconn23/edgex-go/core/data/clients"
 	"github.com/tsconn23/edgex-go/core/domain/models"
 	"github.com/tsconn23/edgex-go/support/logging-client"
-	"fmt"
 )
 
 var globalMockParams *clients.MockParams
