@@ -34,7 +34,7 @@ func makeTimestamp() int64 {
 }
 
 func replyPing(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/text; charset=utf-8")
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 	str := `pong`
 	io.WriteString(w, str)
