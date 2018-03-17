@@ -13,7 +13,7 @@ GOCGO=CGO_ENABLED=1 go
 DOCKERS=docker_export_client docker_export_distro docker_core_data docker_core_metadata docker_core_command
 .PHONY: $(DOCKERS)
 
-MICROSERVICES=cmd/export-client/export-client cmd/export-distro/export-distro cmd/core-metadata/core-metadata cmd/core-data/core-data cmd/core-command/core-command cmd/support-logging/support-logging
+MICROSERVICES=cmd/export-client/export-client cmd/export-distro/export-distro cmd/core-metadata/core-metadata cmd/core-data/core-data cmd/core-command/core-command cmd/support-logging/support-logging cmd/support-scheduler/support-scheduler
 .PHONY: $(MICROSERVICES)
 
 VERSION=$(shell cat ./VERSION)
@@ -40,6 +40,9 @@ cmd/export-distro/export-distro:
 
 cmd/support-logging/support-logging:
 	$(GO) build $(GOFLAGS) -o $@ ./cmd/support-logging
+
+cmd/support-scheduler/support-scheduler:
+	$(GO) build $(GOFLAGS) -o $@ ./cmd/support-scheduler
 
 clean:
 	rm -f $(MICROSERVICES)
