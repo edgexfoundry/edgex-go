@@ -180,7 +180,9 @@ Status code 503 - unanticipated issues
 api/v1/event
 */
 func eventHandler(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
+	if r.Body != nil {
+		defer r.Body.Close()
+	}
 
 	switch r.Method {
 	// Get all events

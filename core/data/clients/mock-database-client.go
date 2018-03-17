@@ -53,10 +53,9 @@ func (mc *MockDb) AddReading(r models.Reading) (bson.ObjectId, error) {
 func (mc *MockDb) Events() ([]models.Event, error) {
 	ticks := time.Now().Unix()
 	events := []models.Event{}
-	params := NewMockParams()
 
-	evt1 := models.Event{params.EventId, 1, params.Device, ticks, ticks,
-		params.Origin, "TestScheduleA", "SampleEvent", []models.Reading{}}
+	evt1 := models.Event{mockParams.EventId, 1, mockParams.Device, ticks, ticks,
+		mockParams.Origin, "TestScheduleA", "SampleEvent", []models.Reading{}}
 
 	events = append(events, evt1)
 	return events, nil
@@ -72,11 +71,10 @@ func (mc *MockDb) UpdateEvent(e models.Event) error {
 
 func (mc *MockDb) EventById(id string) (models.Event, error){
 	ticks := time.Now().Unix()
-	params := NewMockParams()
 
-	if id == params.EventId.Hex() {
-		return models.Event{params.EventId, 1, params.Device, ticks, ticks,
-			params.Origin, "TestScheduleA", "SampleEvent", []models.Reading{}}, nil
+	if id == mockParams.EventId.Hex() {
+		return models.Event{mockParams.EventId, 1, mockParams.Device, ticks, ticks,
+			mockParams.Origin, "TestScheduleA", "SampleEvent", []models.Reading{}}, nil
 	}
 	return models.Event{}, nil
 }
