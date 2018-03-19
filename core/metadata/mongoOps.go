@@ -80,7 +80,7 @@ func mgoGetScheduleEventById(se *models.ScheduleEvent, id string) error {
 	if bson.IsObjectIdHex(id) {
 		return mgoGetScheduleEvent(se, bson.M{_ID: bson.ObjectIdHex(id)})
 	} else {
-		err := errors.New("Invalid Object ID")
+		err := errors.New("mgoGetScheduleEventById Invalid Object ID " + id)
 		return err
 	}
 }
@@ -91,7 +91,7 @@ func mgoGetScheduleEventsByAddressableId(se *[]models.ScheduleEvent, id string) 
 	if bson.IsObjectIdHex(id) {
 		return mgoGetScheduleEvents(se, bson.M{ADDRESSABLE + ".$id": bson.ObjectIdHex(id)})
 	} else {
-		err := errors.New("Invalid Object ID")
+		err := errors.New("mgoGetScheduleEventsByAddressableId Invalid Object ID" + id)
 		return err
 	}
 }
@@ -146,7 +146,7 @@ func mgoGetScheduleById(s *models.Schedule, id string) error {
 	if bson.IsObjectIdHex(id) {
 		return mgoGetSchedule(s, bson.M{_ID: bson.ObjectIdHex(id)})
 	} else {
-		err := errors.New("Invalid Object ID")
+		err := errors.New("mgoGetScheduleById Invalid Object ID " + id)
 		return err
 	}
 }
@@ -221,7 +221,7 @@ func mgoGetDeviceReportById(d *models.DeviceReport, id string) error {
 	if bson.IsObjectIdHex(id) {
 		return mgoGetDeviceReport(d, bson.M{_ID: bson.ObjectIdHex(id)})
 	} else {
-		err := errors.New("Invalid Object ID")
+		err := errors.New("mgoGetDeviceReportById Invalid Object ID " + id)
 		return err
 	}
 }
@@ -288,7 +288,7 @@ func mgoUpdateByIdInt(c string, did string, pv2 string, p2 int64) error {
 
 		return nil
 	} else {
-		err := errors.New("Invalid Object ID")
+		err := errors.New("mgoUpdateByIdInt Invalid Object ID " + did)
 		return err
 	}
 }
@@ -304,7 +304,7 @@ func mgoUpdateById(c string, did string, pv2 string, p2 string) error {
 
 		return nil
 	} else {
-		err := errors.New("Invalid Object ID")
+		err := errors.New("mgoUpdateById Invalid Object ID " + did)
 		return err
 	}
 }
@@ -342,7 +342,7 @@ func mgoDeleteById(c string, did string) error {
 
 		return nil
 	} else {
-		err := errors.New("Invalid Object ID")
+		err := errors.New("mgoDeleteById Invalid Object ID " + did)
 		return err
 	}
 }
@@ -404,7 +404,7 @@ func mgoGetDevicesByProfileId(d *[]models.Device, pid string) error {
 	if bson.IsObjectIdHex(pid) {
 		return mgoGetDevices(d, bson.M{PROFILE + "." + "$id": bson.ObjectIdHex(pid)})
 	} else {
-		err := errors.New("Invalid Object ID")
+		err := errors.New("mgoGetDevicesByProfileId Invalid Object ID " + pid)
 		return err
 	}
 }
@@ -412,7 +412,7 @@ func mgoGetDeviceById(d *models.Device, id string) error {
 	if bson.IsObjectIdHex(id) {
 		return mgoGetDevice(d, bson.M{_ID: bson.ObjectIdHex(id)})
 	} else {
-		err := errors.New("Invalid Object ID")
+		err := errors.New("mgoGetDeviceById Invalid Object ID " + id)
 		return err
 	}
 }
@@ -426,7 +426,7 @@ func mgoGetDevicesByServiceId(d *[]models.Device, sid string) error {
 	if bson.IsObjectIdHex(sid) {
 		return mgoGetDevices(d, bson.M{SERVICE + "." + "$id": bson.ObjectIdHex(sid)})
 	} else {
-		err := errors.New("Invalid Object ID")
+		err := errors.New("mgoGetDevicesByServiceId Invalid Object ID " + sid)
 		return err
 	}
 }
@@ -442,7 +442,7 @@ func mgoGetDevicesByAddressableId(d *[]models.Device, aid string) error {
 		}
 		return mgoGetDevices(d, bson.M{ADDRESSABLE + "." + "$id": bson.ObjectIdHex(aid)})
 	} else {
-		err := errors.New("Invalid Object ID")
+		err := errors.New("mgoGetDevicesByAddressableId Invalid Object ID " + aid)
 		return err
 	}
 }
@@ -530,7 +530,7 @@ func mgoGetDeviceProfileById(d *models.DeviceProfile, id string) error {
 	if bson.IsObjectIdHex(id) {
 		return mgoGetDeviceProfile(d, bson.M{_ID: bson.ObjectIdHex(id)})
 	} else {
-		err := errors.New("Invalid Object ID")
+		err := errors.New("mgoGetDeviceProfileById Invalid Object ID " + id)
 		return err
 	}
 }
@@ -693,7 +693,7 @@ func mgoGetAddressableById(a *models.Addressable, id string) error {
 	if bson.IsObjectIdHex(id) {
 		return getAddressable(a, bson.M{_ID: bson.ObjectIdHex(id)})
 	} else {
-		err := errors.New("Invalid Object ID")
+		err := errors.New("mgoGetAddressableById Invalid Object ID " + id)
 		return err
 	}
 }
@@ -787,7 +787,7 @@ func mgoGetDeviceServiceById(d *models.DeviceService, id string) error {
 	if bson.IsObjectIdHex(id) {
 		return mgoGetDeviceService(d, bson.M{_ID: bson.ObjectIdHex(id)})
 	} else {
-		err := errors.New("Invalid Object ID")
+		err := errors.New("mgoGetDeviceServiceByName Invalid Object ID " + id)
 		return err
 	}
 }
@@ -801,7 +801,7 @@ func mgoGetDeviceServicesByAddressableId(d *[]models.DeviceService, id string) e
 	if bson.IsObjectIdHex(id) {
 		return mgoGetDeviceServices(d, bson.M{ADDRESSABLE + ".$id": bson.ObjectIdHex(id)})
 	} else {
-		err := errors.New("Invalid Object ID")
+		err := errors.New("mgoGetDeviceServicesByAddressableId Invalid Object ID " + id)
 		return err
 	}
 }
@@ -893,7 +893,7 @@ func mgoGetProvisionWatchersByServiceId(pw *[]models.ProvisionWatcher, id string
 	if bson.IsObjectIdHex(id) {
 		return mgoGetProvisionWatchers(pw, bson.M{SERVICE + ".$id": bson.ObjectIdHex(id)})
 	} else {
-		err := errors.New("Invalid Object ID")
+		err := errors.New("mgoGetProvisionWatchersByServiceId Invalid Object ID " + id)
 		return err
 	}
 }
@@ -905,7 +905,7 @@ func mgoGetProvisionWatcherByProfileId(pw *[]models.ProvisionWatcher, id string)
 	if bson.IsObjectIdHex(id) {
 		return mgoGetProvisionWatchers(pw, bson.M{PROFILE + ".$id": bson.ObjectIdHex(id)})
 	} else {
-		err := errors.New("Invalid Object ID")
+		err := errors.New("mgoGetProvisionWatcherByProfileId Invalid Object ID " + id)
 		return err
 	}
 }
@@ -913,7 +913,7 @@ func mgoGetProvisionWatcherById(pw *models.ProvisionWatcher, id string) error {
 	if bson.IsObjectIdHex(id) {
 		return mgoGetProvisionWatcher(pw, bson.M{_ID: bson.ObjectIdHex(id)})
 	} else {
-		err := errors.New("Invalid Object ID")
+		err := errors.New("mgoGetProvisionWatcherById Invalid Object ID " + id)
 		return err
 	}
 }
@@ -1040,7 +1040,7 @@ func mgoGetCommandById(d *models.Command, id string) error {
 
 		return nil
 	} else {
-		err := errors.New("Invalid Object ID")
+		err := errors.New("mgoGetCommandById Invalid Object ID " + id)
 		return err
 	}
 }
