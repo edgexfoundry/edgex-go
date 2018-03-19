@@ -16,10 +16,10 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/tsconn23/edgex-go"
-	"github.com/tsconn23/edgex-go/export/client"
-	"github.com/tsconn23/edgex-go/export/mongo"
-	consulclient "github.com/tsconn23/edgex-go/support/consul-client"
+	"github.com/edgexfoundry/edgex-go"
+	"github.com/edgexfoundry/edgex-go/export/client"
+	"github.com/edgexfoundry/edgex-go/export/mongo"
+	consulclient "github.com/edgexfoundry/edgex-go/support/consul-client"
 
 	"go.uber.org/zap"
 	"gopkg.in/mgo.v2"

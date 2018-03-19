@@ -7,15 +7,15 @@ This repository is for the notifications client for EdgeXFoundry written in the 
 ### Installation ###
 This project does not have any external dependencies.  To install, simply run:
 ```
-go get github.com/tsconn23/support-notifications-client-go
-cd $GOPATH/src/github.com/tsconn23/support-notifications-client-go
+go get github.com/edgexfoundry/support-notifications-client-go
+cd $GOPATH/src/github.com/edgexfoundry/support-notifications-client-go
 go install
 ```
 
 ### How To Use ###
 To use the support-notifications-client library you first need to import the library into your project:
 ```
-import "github.com/tsconn23/support-notifications-client-go"
+import "github.com/edgexfoundry/support-notifications-client-go"
 ```
 To send a notification you first need to create a NotificationsClient object:
 ```

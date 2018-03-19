@@ -8,8 +8,8 @@ This repository is for the core data microservice for EdgeXFoundry written in th
 This project uses Glide for dependency management - https://glide.sh/
 To pull the dependencies and run the project, do the following:
 ```
-go get github.com/tsconn23/core-data-go
-cd $GOPATH/src/github.com/tsconn23/core-data-go
+go get github.com/edgexfoundry/core-data-go
+cd $GOPATH/src/github.com/edgexfoundry/core-data-go
 glide up
 ```
 This project also uses ZeroMQ for sending messages to the export distro microservice.  If you use the Dockerfile to build and run a Docker image, then you do not have to worry about this dependecy as Docker handles it for you.  If you want to build the project locally, then you need to install ZeroMQ on your computer.
@@ -27,7 +27,7 @@ For convenience, you may want to check out this stackoverflow page for help:  ht
 ### Docker ###
 This project can be built using Docker, and a Dockerfile is included in the repo.  Make sure you have already run 'glide up' to update the dependecies.  To build using the Docker file, run the following:
 ```
-cd $GOPATH/src/github.com/tsconn23/core-data-go
+cd $GOPATH/src/github.com/edgexfoundry/core-data-go
 docker build -t "[DOCKER_IMAGE_NAME]" .
 ```
 

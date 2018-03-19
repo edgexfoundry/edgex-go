@@ -12,7 +12,7 @@ import (
 	"fmt"
 	"strconv"
 
-	models "github.com/tsconn23/edgex-go/core/domain/models"
+	models "github.com/edgexfoundry/edgex-go/core/domain/models"
 )
 
 func isValidValueDescriptor_private(vd models.ValueDescriptor, ev models.Event) (bool, error) {

@@ -23,11 +23,11 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/tsconn23/edgex-go"
-	"github.com/tsconn23/edgex-go/core/metadata"
-	"github.com/tsconn23/edgex-go/pkg/config"
-	"github.com/tsconn23/edgex-go/pkg/heartbeat"
-	logger "github.com/tsconn23/edgex-go/support/logging-client"
+	"github.com/edgexfoundry/edgex-go"
+	"github.com/edgexfoundry/edgex-go/core/metadata"
+	"github.com/edgexfoundry/edgex-go/pkg/config"
+	"github.com/edgexfoundry/edgex-go/pkg/heartbeat"
+	logger "github.com/edgexfoundry/edgex-go/support/logging-client"
 	"strconv"
 )
 

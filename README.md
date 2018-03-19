@@ -3,7 +3,7 @@
 
 Go implementation of EdgeX services.
 
-All edgex go [repos](https://github.com/tsconn23/) have been merged into this repo.
+All edgex go [repos](https://github.com/edgexfoundry/) have been merged into this repo.
 
 The script [merge-edgex-go.sh](https://gist.github.com/feclare/8dba191e8cf77864fe5eed38b380f13a) has been used to generate this repo.
 
@@ -20,8 +20,8 @@ sudo apt-get install libzmq3-dev
 To fetch the code and compile the microservices execute:
 
 ```
-go get github.com/tsconn23/edgex-go
-cd $GOPATH/src/github.com/tsconn23/edgex-go
+go get github.com/edgexfoundry/edgex-go
+cd $GOPATH/src/github.com/edgexfoundry/edgex-go
 glide install
 make build
 ```

@@ -26,9 +26,9 @@ import (
 	"testing"
 
 	"github.com/gorilla/mux"
-	"github.com/tsconn23/edgex-go/core/data/clients"
-	"github.com/tsconn23/edgex-go/core/domain/models"
-	"github.com/tsconn23/edgex-go/support/logging-client"
+	"github.com/edgexfoundry/edgex-go/core/data/clients"
+	"github.com/edgexfoundry/edgex-go/core/domain/models"
+	"github.com/edgexfoundry/edgex-go/support/logging-client"
 )
 
 var globalMockParams *clients.MockParams

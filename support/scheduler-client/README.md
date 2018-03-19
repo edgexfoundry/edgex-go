@@ -8,8 +8,8 @@ This repository is for the scheduler client for EdgeXFoundry written in the Go p
 This project does not have any external dependencies.  To install, simply run:
 
 ```
-go get github.com/tsconn23/edgex-go
-cd $GOPATH/src/github.com/tsconn23/edgex-go/support/scheduler-client
+go get github.com/edgexfoundry/edgex-go
+cd $GOPATH/src/github.com/edgexfoundry/edgex-go/support/scheduler-client
 go install
 ```
 
@@ -23,7 +23,7 @@ go test
 To use the support-scheduler-client library you first need to import the library into your project:
 
 ```
-import "github.com/tsconn23/edgex-go/support/scheduler-client"
+import "github.com/edgexfoundry/edgex-go/support/scheduler-client"
 ```
 
 To send schedule, schedule event you first need to create a SchedulerClient object:

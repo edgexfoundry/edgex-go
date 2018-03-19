@@ -22,10 +22,10 @@ import (
 	"strconv"
 	"strings"
 
-	enums "github.com/tsconn23/edgex-go/core/domain/enums"
-	consulclient "github.com/tsconn23/edgex-go/support/consul-client"
-	logger "github.com/tsconn23/edgex-go/support/logging-client"
-	notifications "github.com/tsconn23/edgex-go/support/notifications-client"
+	enums "github.com/edgexfoundry/edgex-go/core/domain/enums"
+	consulclient "github.com/edgexfoundry/edgex-go/support/consul-client"
+	logger "github.com/edgexfoundry/edgex-go/support/logging-client"
+	notifications "github.com/edgexfoundry/edgex-go/support/notifications-client"
 )
 
 // DS : DataStore to retrieve data from database.

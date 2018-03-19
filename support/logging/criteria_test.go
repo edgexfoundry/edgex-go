@@ -9,7 +9,7 @@ package logging
 import (
 	"testing"
 
-	"github.com/tsconn23/edgex-go/support/domain"
+	"github.com/edgexfoundry/edgex-go/support/domain"
 )
 
 const ()

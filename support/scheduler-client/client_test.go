@@ -8,7 +8,7 @@ package scheduler
 
 import (
 	"encoding/json"
-	"github.com/tsconn23/edgex-go/core/domain/models"
+	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"

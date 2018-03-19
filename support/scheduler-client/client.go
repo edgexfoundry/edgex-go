@@ -9,7 +9,7 @@ package scheduler
 import (
 	"bytes"
 	"fmt"
-	"github.com/tsconn23/edgex-go/core/domain/models"
+	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"io"
 	"net/http"
 )
