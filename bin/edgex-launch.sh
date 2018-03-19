@@ -22,6 +22,15 @@ function cleanup {
 }
 
 ###
+# Support logging
+###
+printf "\n### Starting edgex-support-logging\n"
+cd $CMD/support-logging
+# Add `edgex-` prefix on start, so we can find the process family
+exec -a edgex-support-logging ./support-logging &
+cd $DIR
+
+###
 # Core Command
 ###
 printf "\n### Starting edgex-core-command\n"
