@@ -54,8 +54,8 @@ func (mc *MockDb) Events() ([]models.Event, error) {
 	ticks := time.Now().Unix()
 	events := []models.Event{}
 
-	evt1 := models.Event{mockParams.EventId, 1, mockParams.Device, ticks, ticks,
-		mockParams.Origin, "TestScheduleA", "SampleEvent", []models.Reading{}}
+	evt1 := models.Event{ID:mockParams.EventId, Pushed:1, Device:mockParams.Device, Created:ticks, Modified:ticks,
+		Origin:mockParams.Origin, Schedule:"TestScheduleA", Event:"SampleEvent", Readings:[]models.Reading{}}
 
 	events = append(events, evt1)
 	return events, nil
@@ -73,8 +73,8 @@ func (mc *MockDb) EventById(id string) (models.Event, error){
 	ticks := time.Now().Unix()
 
 	if id == mockParams.EventId.Hex() {
-		return models.Event{mockParams.EventId, 1, mockParams.Device, ticks, ticks,
-			mockParams.Origin, "TestScheduleA", "SampleEvent", []models.Reading{}}, nil
+		return models.Event{ID:mockParams.EventId, Pushed:1, Device:mockParams.Device, Created:ticks, Modified:ticks,
+			Origin:mockParams.Origin, Schedule:"TestScheduleA", Event:"SampleEvent", Readings:[]models.Reading{}}, nil
 	}
 	return models.Event{}, nil
 }
