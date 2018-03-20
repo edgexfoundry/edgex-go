@@ -63,9 +63,9 @@ func NewClient(owningServiceName string, isRemote bool, logTarget string) Loggin
 	}
 
 	// Set up the loggers
-	lc.stdOutLogger = log.New(os.Stdout, "", log.Ldate|log.Ltime|log.Lshortfile)
+	lc.stdOutLogger = log.New(os.Stdout, "", log.Ldate|log.Ltime)
 	lc.fileLogger = &log.Logger{}
-	lc.fileLogger.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
+	lc.fileLogger.SetFlags(log.Ldate | log.Ltime)
 
 	return lc
 }
