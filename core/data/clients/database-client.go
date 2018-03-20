@@ -28,6 +28,7 @@ import (
 type DatabaseType int8 // Database type enum
 const (
 	MONGO DatabaseType = iota
+	MOCK DatabaseType = 1
 )
 
 type DBClient interface {
@@ -215,6 +216,10 @@ func NewDBClient(config DBConfiguration) (DBClient, error) {
 			return nil, err
 		}
 		return mc, nil
+	case MOCK:
+		//Create the mock client
+		mock := &MockDb{}
+		return mock, nil
 	default:
 		return nil, ErrUnsupportedDatabase
 	}
