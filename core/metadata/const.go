@@ -81,10 +81,6 @@ var (
 
 	/* ----------------------- CONSTANTS ----------------------------*/
 	REST       = "http"
-	GET        = "GET"
-	PUT        = "PUT"
-	POST       = "POST"
-	DELETE     = "DELETE"
 	MONGOSTR   = "mongo"
 	DB         = "metadata"
 	DEVICECOL  = "device"

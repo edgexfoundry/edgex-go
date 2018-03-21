@@ -158,7 +158,7 @@ func scrubAllHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	switch r.Method {
-	case "DELETE":
+	case http.MethodDelete:
 		loggingClient.Info("Deleting all events from database")
 
 		err := dbc.ScrubAllEvents()
@@ -186,7 +186,7 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	// Get all events
-	case "GET":
+	case http.MethodGet:
 		events, err := dbc.Events()
 		if err != nil {
 			loggingClient.Error(err.Error())
@@ -204,7 +204,7 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 		encode(events, w)
 		break
 	// Post a new event
-	case "POST":
+	case http.MethodPost:
 		var e models.Event
 		dec := json.NewDecoder(r.Body)
 		err := dec.Decode(&e)
@@ -300,7 +300,7 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 
 		break
 	// Do not update the readings
-	case "PUT":
+	case http.MethodPut:
 		var from models.Event
 		dec := json.NewDecoder(r.Body)
 		err := dec.Decode(&from)
@@ -380,7 +380,7 @@ func getEventByIdHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	switch r.Method {
-	case "GET":
+	case http.MethodGet:
 		// URL parameters
 		vars := mux.Vars(r)
 		id := vars["id"]
@@ -410,7 +410,7 @@ func eventCountHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	switch r.Method {
-	case "GET":
+	case http.MethodGet:
 		count, err := dbc.EventCount()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -444,7 +444,7 @@ func eventCountByDeviceIdHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	switch r.Method {
-	case "GET":
+	case http.MethodGet:
 		// Get the device
 		// Try by ID
 		d, err := mdc.Device(id)
@@ -486,7 +486,7 @@ func eventIdHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	// Set the 'pushed' timestamp for the event to the current time - event is going to another (not fuse) service
-	case "PUT":
+	case http.MethodPut:
 		// Check if the event exists
 		e, err := dbc.EventById(id)
 		if err != nil {
@@ -514,7 +514,7 @@ func eventIdHandler(w http.ResponseWriter, r *http.Request) {
 		//encode(true, w)
 		break
 	// Delete the event and all of it's readings
-	case "DELETE":
+	case http.MethodDelete:
 		// Check if the event exists
 		e, err := dbc.EventById(id)
 		if err != nil {
@@ -592,7 +592,7 @@ func getEventByDeviceHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	switch r.Method {
-	case "GET":
+	case http.MethodGet:
 		if limitNum > configuration.Readmaxlimit {
 			http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
 			loggingClient.Error(maxExceededString)
@@ -648,7 +648,7 @@ func deleteByDeviceIdHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	switch r.Method {
-	case "DELETE":
+	case http.MethodDelete:
 		// Get the events by the device name
 		events, err := dbc.EventsForDevice(deviceId)
 		if err != nil {
@@ -709,7 +709,7 @@ func eventByCreationTimeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	switch r.Method {
-	case "GET":
+	case http.MethodGet:
 		if limit > configuration.Readmaxlimit {
 			http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
 			loggingClient.Error(maxExceededString)
@@ -761,7 +761,7 @@ func readingByDeviceFilteredValueDescriptor(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	switch r.Method {
-	case "GET":
+	case http.MethodGet:
 		if limitNum > configuration.Readmaxlimit {
 			http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
 			loggingClient.Error(maxExceededString)
@@ -837,7 +837,7 @@ func eventByAgeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	switch r.Method {
-	case "DELETE":
+	case http.MethodDelete:
 		// Get the events
 		events, err := dbc.EventsOlderThanAge(age)
 		if err != nil {
@@ -872,7 +872,7 @@ func scrubHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	switch r.Method {
-	case "DELETE":
+	case http.MethodDelete:
 		loggingClient.Info("Scrubbing events.  Deleting all events that have been pushed")
 
 		// Get the events

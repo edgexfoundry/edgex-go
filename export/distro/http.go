@@ -37,7 +37,7 @@ func NewHTTPSender(addr models.Addressable) Sender {
 func (sender httpSender) Send(data []byte) {
 	switch sender.method {
 
-	case models.MethodGet:
+	case http.MethodGet:
 		response, err := http.Get(sender.url)
 		if err != nil {
 			logger.Error("Error: ", zap.Error(err))
@@ -46,7 +46,7 @@ func (sender httpSender) Send(data []byte) {
 		defer response.Body.Close()
 		logger.Info("Response: ", zap.String("status", response.Status))
 
-	case models.MethodPost:
+	case http.MethodPost:
 		response, err := http.Post(sender.url, mimeTypeJSON, bytes.NewReader(data))
 		if err != nil {
 			logger.Error("Error: ", zap.Error(err))

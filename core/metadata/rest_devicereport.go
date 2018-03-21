@@ -97,7 +97,7 @@ func restAddDeviceReport(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Notify associates
-	if err := notifyDeviceReportAssociates(dr, models.POST); err != nil {
+	if err := notifyDeviceReportAssociates(dr, http.MethodPost); err != nil {
 		loggingClient.Error(err.Error(), "")
 	}
 
@@ -142,7 +142,7 @@ func restUpdateDeviceReport(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Notify Associates
-	if err := notifyDeviceReportAssociates(to, models.PUT); err != nil {
+	if err := notifyDeviceReportAssociates(to, http.MethodPut); err != nil {
 		loggingClient.Error(err.Error(), "")
 	}
 
@@ -364,7 +364,7 @@ func deleteDeviceReport(dr models.DeviceReport, w http.ResponseWriter) error {
 	}
 
 	// Notify Associates
-	if err := notifyDeviceReportAssociates(dr, models.DELETE); err != nil {
+	if err := notifyDeviceReportAssociates(dr, http.MethodDelete); err != nil {
 		return err
 	}
 
@@ -372,7 +372,7 @@ func deleteDeviceReport(dr models.DeviceReport, w http.ResponseWriter) error {
 }
 
 // Notify the associated device services to the device report
-func notifyDeviceReportAssociates(dr models.DeviceReport, action models.NotifyAction) error {
+func notifyDeviceReportAssociates(dr models.DeviceReport, action string) error {
 	// Get the device of the report
 	var d models.Device
 	if err := getDeviceByName(&d, dr.Device); err != nil {
