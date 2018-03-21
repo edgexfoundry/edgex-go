@@ -127,7 +127,7 @@ func restAddNewDevice(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Notify the associates
-	notifyDeviceAssociates(d, models.POST)
+	notifyDeviceAssociates(d, http.MethodPost)
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(d.Id.Hex()))
@@ -173,7 +173,7 @@ func restUpdateDevice(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Notify
-	notifyDeviceAssociates(oldDevice, models.PUT)
+	notifyDeviceAssociates(oldDevice, http.MethodPut)
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
@@ -605,7 +605,7 @@ func setOpState(d models.Device, os string, w http.ResponseWriter) error {
 	}
 
 	// Notify
-	notifyDeviceAssociates(d, models.PUT)
+	notifyDeviceAssociates(d, http.MethodPut)
 
 	return nil
 }
@@ -694,7 +694,7 @@ func setAdminState(d models.Device, as string, w http.ResponseWriter) error {
 		return err
 	}
 
-	if err := notifyDeviceAssociates(d, models.PUT); err != nil {
+	if err := notifyDeviceAssociates(d, http.MethodPut); err != nil {
 		return err
 	}
 
@@ -765,7 +765,7 @@ func deleteDevice(d models.Device, w http.ResponseWriter) error {
 	}
 
 	// Notify Associates
-	if err := notifyDeviceAssociates(d, models.DELETE); err != nil {
+	if err := notifyDeviceAssociates(d, http.MethodDelete); err != nil {
 		return err
 	}
 
@@ -788,7 +788,7 @@ func deleteAssociatedReportsForDevice(d models.Device, w http.ResponseWriter) er
 			loggingClient.Error(err.Error(), "")
 			return err
 		}
-		notifyDeviceReportAssociates(report, models.DELETE)
+		notifyDeviceReportAssociates(report, http.MethodDelete)
 	}
 
 	return nil
@@ -958,7 +958,7 @@ func setLastConnected(d models.Device, time int64, notify bool, w http.ResponseW
 	}
 
 	if notify {
-		notifyDeviceAssociates(d, models.PUT)
+		notifyDeviceAssociates(d, http.MethodPut)
 	}
 
 	return nil
@@ -1127,7 +1127,7 @@ func setLastReported(d models.Device, time int64, notify bool, w http.ResponseWr
 	}
 
 	if notify {
-		notifyDeviceAssociates(d, models.PUT)
+		notifyDeviceAssociates(d, http.MethodPut)
 	}
 
 	return nil
@@ -1157,7 +1157,7 @@ func restGetDeviceByName(w http.ResponseWriter, r *http.Request) {
 }
 
 // Notify the associated device service for the device
-func notifyDeviceAssociates(d models.Device, action models.NotifyAction) error {
+func notifyDeviceAssociates(d models.Device, action string) error {
 	// Post the notification to the notifications service
 	postNotification(d.Name, action)
 
@@ -1177,7 +1177,7 @@ func notifyDeviceAssociates(d models.Device, action models.NotifyAction) error {
 	return nil
 }
 
-func postNotification(name string, action models.NotifyAction) {
+func postNotification(name string, action string) {
 	// Only post notification if the configuration is set
 	if configuration.NotificationPostDeviceChanges {
 		// Make the notification

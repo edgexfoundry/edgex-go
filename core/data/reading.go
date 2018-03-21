@@ -52,7 +52,7 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	switch r.Method {
-	case "GET":
+	case http.MethodGet:
 		r, err := dbc.Readings()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -68,7 +68,7 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		encode(r, w)
-	case "POST":
+	case http.MethodPost:
 		reading := models.Reading{}
 		dec := json.NewDecoder(r.Body)
 		err := dec.Decode(&reading)
@@ -123,7 +123,7 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 			// Didn't save the reading in the database
 			encode("unsaved", w)
 		}
-	case "PUT":
+	case http.MethodPut:
 		from := models.Reading{}
 		dec := json.NewDecoder(r.Body)
 		err := dec.Decode(&from)
@@ -192,7 +192,7 @@ func getReadingByIdHandler(w http.ResponseWriter, r *http.Request) {
 	id := vars["id"]
 
 	switch r.Method {
-	case "GET":
+	case http.MethodGet:
 		reading, err := dbc.ReadingById(id)
 		if err != nil {
 			if err == clients.ErrNotFound {
@@ -214,7 +214,7 @@ func readingCountHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	switch r.Method {
-	case "GET":
+	case http.MethodGet:
 		count, err := dbc.ReadingCount()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -239,7 +239,7 @@ func deleteReadingByIdHandler(w http.ResponseWriter, r *http.Request) {
 	id := vars["id"]
 
 	switch r.Method {
-	case "DELETE":
+	case http.MethodDelete:
 		// Check if the reading exists
 		reading, err := dbc.ReadingById(id)
 		if err != nil {
@@ -289,7 +289,7 @@ func readingByDeviceHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	switch r.Method {
-	case "GET":
+	case http.MethodGet:
 		if limit > configuration.Readmaxlimit {
 			http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
 			loggingClient.Error(maxExceededString)
@@ -554,7 +554,7 @@ func readingByCreationTimeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	switch r.Method {
-	case "GET":
+	case http.MethodGet:
 		if l > configuration.Readmaxlimit {
 			loggingClient.Error(maxExceededString)
 			http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)

@@ -21,6 +21,8 @@
 package data
 
 import (
+	"net/http"
+
 	"github.com/gorilla/mux"
 )
 
@@ -30,46 +32,46 @@ func LoadRestRoutes() *mux.Router {
 
 	// EVENTS
 	// /api/v1/event
-	b.HandleFunc("/event", eventHandler).Methods("GET", "PUT", "POST")
+	b.HandleFunc("/event", eventHandler).Methods(http.MethodGet, http.MethodPut, http.MethodPost)
 	e := b.PathPrefix("/event").Subrouter()
-	e.HandleFunc("/scrub", scrubHandler).Methods("DELETE")
-	e.HandleFunc("/scruball", scrubAllHandler).Methods("DELETE")
-	e.HandleFunc("/count", eventCountHandler).Methods("GET")
-	e.HandleFunc("/count/{deviceId}", eventCountByDeviceIdHandler).Methods("GET")
-	e.HandleFunc("/{id}", getEventByIdHandler).Methods("GET")
-	e.HandleFunc("/id/{id}", eventIdHandler).Methods("DELETE", "PUT")
-	e.HandleFunc("/device/{deviceId}/{limit:[0-9]+}", getEventByDeviceHandler).Methods("GET")
-	e.HandleFunc("/device/{deviceId}", deleteByDeviceIdHandler).Methods("DELETE")
-	e.HandleFunc("/removeold/age/{age:[0-9]+}", eventByAgeHandler).Methods("DELETE")
-	e.HandleFunc("/{start:[0-9]+}/{end:[0-9]+}/{limit:[0-9]+}", eventByCreationTimeHandler).Methods("GET")
-	e.HandleFunc("/device/{deviceId}/valuedescriptor/{valueDescriptor}/{limit:[0-9]+}", readingByDeviceFilteredValueDescriptor).Methods("GET")
+	e.HandleFunc("/scrub", scrubHandler).Methods(http.MethodDelete)
+	e.HandleFunc("/scruball", scrubAllHandler).Methods(http.MethodDelete)
+	e.HandleFunc("/count", eventCountHandler).Methods(http.MethodGet)
+	e.HandleFunc("/count/{deviceId}", eventCountByDeviceIdHandler).Methods(http.MethodGet)
+	e.HandleFunc("/{id}", getEventByIdHandler).Methods(http.MethodGet)
+	e.HandleFunc("/id/{id}", eventIdHandler).Methods(http.MethodDelete, http.MethodPut)
+	e.HandleFunc("/device/{deviceId}/{limit:[0-9]+}", getEventByDeviceHandler).Methods(http.MethodGet)
+	e.HandleFunc("/device/{deviceId}", deleteByDeviceIdHandler).Methods(http.MethodDelete)
+	e.HandleFunc("/removeold/age/{age:[0-9]+}", eventByAgeHandler).Methods(http.MethodDelete)
+	e.HandleFunc("/{start:[0-9]+}/{end:[0-9]+}/{limit:[0-9]+}", eventByCreationTimeHandler).Methods(http.MethodGet)
+	e.HandleFunc("/device/{deviceId}/valuedescriptor/{valueDescriptor}/{limit:[0-9]+}", readingByDeviceFilteredValueDescriptor).Methods(http.MethodGet)
 
 	// READINGS
 	// /api/v1/reading
-	b.HandleFunc("/reading", readingHandler).Methods("GET", "PUT", "POST")
+	b.HandleFunc("/reading", readingHandler).Methods(http.MethodGet, http.MethodPut, http.MethodPost)
 	rd := b.PathPrefix("/reading").Subrouter()
-	rd.HandleFunc("/count", readingCountHandler).Methods("GET")
-	rd.HandleFunc("/id/{id}", deleteReadingByIdHandler).Methods("DELETE")
-	rd.HandleFunc("/{id}", getReadingByIdHandler).Methods("GET")
-	rd.HandleFunc("/device/{deviceId}/{limit:[0-9]+}", readingByDeviceHandler).Methods("GET")
-	rd.HandleFunc("/name/{name}/{limit:[0-9]+}", readingbyValueDescriptorHandler).Methods("GET")
-	rd.HandleFunc("/uomlabel/{uomLabel}/{limit:[0-9]+}", readingByUomLabelHandler).Methods("GET")
-	rd.HandleFunc("/label/{label}/{limit:[0-9]+}", readingByLabelHandler).Methods("GET")
-	rd.HandleFunc("/type/{type}/{limit:[0-9]+}", readingByTypeHandler).Methods("GET")
-	rd.HandleFunc("/{start:[0-9]+}/{end:[0-9]+}/{limit:[0-9]+}", readingByCreationTimeHandler).Methods("GET")
-	rd.HandleFunc("/name/{name}/device/{device}/{limit:[0-9]+}", readingByValueDescriptorAndDeviceHandler).Methods("GET")
+	rd.HandleFunc("/count", readingCountHandler).Methods(http.MethodGet)
+	rd.HandleFunc("/id/{id}", deleteReadingByIdHandler).Methods(http.MethodDelete)
+	rd.HandleFunc("/{id}", getReadingByIdHandler).Methods(http.MethodGet)
+	rd.HandleFunc("/device/{deviceId}/{limit:[0-9]+}", readingByDeviceHandler).Methods(http.MethodGet)
+	rd.HandleFunc("/name/{name}/{limit:[0-9]+}", readingbyValueDescriptorHandler).Methods(http.MethodGet)
+	rd.HandleFunc("/uomlabel/{uomLabel}/{limit:[0-9]+}", readingByUomLabelHandler).Methods(http.MethodGet)
+	rd.HandleFunc("/label/{label}/{limit:[0-9]+}", readingByLabelHandler).Methods(http.MethodGet)
+	rd.HandleFunc("/type/{type}/{limit:[0-9]+}", readingByTypeHandler).Methods(http.MethodGet)
+	rd.HandleFunc("/{start:[0-9]+}/{end:[0-9]+}/{limit:[0-9]+}", readingByCreationTimeHandler).Methods(http.MethodGet)
+	rd.HandleFunc("/name/{name}/device/{device}/{limit:[0-9]+}", readingByValueDescriptorAndDeviceHandler).Methods(http.MethodGet)
 
 	// VALUE DESCRIPTORS
 	// /api/v1/valuedescriptor
-	b.HandleFunc("/valuedescriptor", valueDescriptorHandler).Methods("GET", "PUT", "POST")
+	b.HandleFunc("/valuedescriptor", valueDescriptorHandler).Methods(http.MethodGet, http.MethodPut, http.MethodPost)
 	vd := b.PathPrefix("/valuedescriptor").Subrouter()
-	vd.HandleFunc("/id/{id}", deleteValueDescriptorByIdHandler).Methods("DELETE")
-	vd.HandleFunc("/name/{name}", valueDescriptorByNameHandler).Methods("GET", "DELETE")
-	vd.HandleFunc("/{id}", valueDescriptorByIdHandler).Methods("GET")
-	vd.HandleFunc("/uomlabel/{uomLabel}", valueDescriptorByUomLabelHandler).Methods("GET")
-	vd.HandleFunc("/label/{label}", valueDescriptorByLabelHandler).Methods("GET")
-	vd.HandleFunc("/devicename/{device}", valueDescriptorByDeviceHandler).Methods("GET")
-	vd.HandleFunc("/deviceid/{id}", valueDescriptorByDeviceIdHandler).Methods("GET")
+	vd.HandleFunc("/id/{id}", deleteValueDescriptorByIdHandler).Methods(http.MethodDelete)
+	vd.HandleFunc("/name/{name}", valueDescriptorByNameHandler).Methods(http.MethodGet, http.MethodDelete)
+	vd.HandleFunc("/{id}", valueDescriptorByIdHandler).Methods(http.MethodGet)
+	vd.HandleFunc("/uomlabel/{uomLabel}", valueDescriptorByUomLabelHandler).Methods(http.MethodGet)
+	vd.HandleFunc("/label/{label}", valueDescriptorByLabelHandler).Methods(http.MethodGet)
+	vd.HandleFunc("/devicename/{device}", valueDescriptorByDeviceHandler).Methods(http.MethodGet)
+	vd.HandleFunc("/deviceid/{id}", valueDescriptorByDeviceIdHandler).Methods(http.MethodGet)
 
 	// Ping Resource
 	// /api/v1/ping
