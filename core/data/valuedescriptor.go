@@ -51,7 +51,7 @@ func valueDescriptorHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	switch r.Method {
-	case "GET":
+	case http.MethodGet:
 		vList, err := dbc.ValueDescriptors()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -67,7 +67,7 @@ func valueDescriptorHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		encode(vList, w)
-	case "POST":
+	case http.MethodPost:
 		dec := json.NewDecoder(r.Body)
 		v := models.ValueDescriptor{}
 		err := dec.Decode(&v)
@@ -105,7 +105,7 @@ func valueDescriptorHandler(w http.ResponseWriter, r *http.Request) {
 
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(id.Hex()))
-	case "PUT":
+	case http.MethodPut:
 		dec := json.NewDecoder(r.Body)
 		from := models.ValueDescriptor{}
 		err := dec.Decode(&from)
@@ -252,7 +252,7 @@ func valueDescriptorByNameHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	switch r.Method {
-	case "GET":
+	case http.MethodGet:
 		v, err := dbc.ValueDescriptorByName(name)
 		if err != nil {
 			if err == clients.ErrNotFound {
@@ -265,7 +265,7 @@ func valueDescriptorByNameHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		encode(v, w)
-	case "DELETE":
+	case http.MethodDelete:
 		// Check if the value descriptor exists
 		vd, err := dbc.ValueDescriptorByName(name)
 		if err != nil {
@@ -323,7 +323,7 @@ func valueDescriptorByIdHandler(w http.ResponseWriter, r *http.Request) {
 	id := vars["id"]
 
 	switch r.Method {
-	case "GET":
+	case http.MethodGet:
 		v, err := dbc.ValueDescriptorById(id)
 		if err != nil {
 			if err == clients.ErrNotFound {
@@ -355,7 +355,7 @@ func valueDescriptorByUomLabelHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	switch r.Method {
-	case "GET":
+	case http.MethodGet:
 		v, err := dbc.ValueDescriptorsByUomLabel(uomLabel)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -383,7 +383,7 @@ func valueDescriptorByLabelHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	switch r.Method {
-	case "GET":
+	case http.MethodGet:
 		v, err := dbc.ValueDescriptorsByLabel(label)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)

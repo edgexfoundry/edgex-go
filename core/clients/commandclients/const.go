@@ -20,8 +20,6 @@ package commandclients
 import "errors"
 
 var (
-	PUT        = "PUT"
-	GET        = "GET"
 	COMMAND    = "command"
 	JSONHEADER = "application/json"
 

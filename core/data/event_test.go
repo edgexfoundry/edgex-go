@@ -25,10 +25,10 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/gorilla/mux"
 	"github.com/edgexfoundry/edgex-go/core/data/clients"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"github.com/edgexfoundry/edgex-go/support/logging-client"
+	"github.com/gorilla/mux"
 )
 
 var globalMockParams *clients.MockParams
@@ -43,10 +43,10 @@ func TestMain(m *testing.M) {
 }
 
 //Test methods
-func TestGetEventHandler(t *testing.T){
-	req, _ := http.NewRequest("GET", "/api/v1/event", nil)
+func TestGetEventHandler(t *testing.T) {
+	req, _ := http.NewRequest(http.MethodGet, "/api/v1/event", nil)
 	w := httptest.NewRecorder()
-    configuration.Readmaxlimit = 1
+	configuration.Readmaxlimit = 1
 	testRoutes.ServeHTTP(w, req)
 
 	if w.Code != 200 {
@@ -67,8 +67,8 @@ func TestGetEventHandler(t *testing.T){
 	configuration.Readmaxlimit = 0
 }
 
-func TestGetEventHandlerMaxExceeded(t *testing.T){
-	req, _ := http.NewRequest("GET", "/api/v1/event", nil)
+func TestGetEventHandlerMaxExceeded(t *testing.T) {
+	req, _ := http.NewRequest(http.MethodGet, "/api/v1/event", nil)
 	w := httptest.NewRecorder()
 	configuration.Readmaxlimit = 0
 	testRoutes.ServeHTTP(w, req)
@@ -80,7 +80,7 @@ func TestGetEventHandlerMaxExceeded(t *testing.T){
 }
 
 func TestGetEventByIdHandler(t *testing.T) {
-	req, _ := http.NewRequest("GET", "/api/v1/event/" + globalMockParams.EventId.Hex(), nil)
+	req, _ := http.NewRequest(http.MethodGet, "/api/v1/event/"+globalMockParams.EventId.Hex(), nil)
 	w := httptest.NewRecorder()
 
 	testRoutes.ServeHTTP(w, req)
@@ -100,7 +100,6 @@ func TestGetEventByIdHandler(t *testing.T) {
 	testEventWithoutReadings(event, t)
 }
 
-
 func testEventWithoutReadings(event models.Event, t *testing.T) {
 	if event.ID.Hex() != globalMockParams.EventId.Hex() {
 		t.Error("eventId mismatch. expected " + globalMockParams.EventId.Hex() + " received " + event.ID.Hex())
@@ -111,6 +110,6 @@ func testEventWithoutReadings(event models.Event, t *testing.T) {
 	}
 
 	if event.Origin != globalMockParams.Origin {
-		t.Error("origin mismatch. expected " + strconv.FormatInt(globalMockParams.Origin,10) + " received " + strconv.FormatInt(event.Origin, 10))
+		t.Error("origin mismatch. expected " + strconv.FormatInt(globalMockParams.Origin, 10) + " received " + strconv.FormatInt(event.Origin, 10))
 	}
 }

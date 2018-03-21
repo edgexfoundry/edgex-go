@@ -59,7 +59,7 @@ func (cc *CommandClient) DeviceByName(n string) (models.Device, error) {
 
 // Get : issue GET command
 func (cc *CommandClient) Get(id string, cID string) (string, error) {
-	req, err := http.NewRequest(GET, cc.url+"/"+id+"/"+COMMAND+"/"+cID, nil)
+	req, err := http.NewRequest(http.MethodGet, cc.url+"/"+id+"/"+COMMAND+"/"+cID, nil)
 	if err != nil {
 		fmt.Println(err.Error())
 		return "", err
@@ -85,7 +85,7 @@ func (cc *CommandClient) Get(id string, cID string) (string, error) {
 
 // Put : Issue PUT command
 func (cc *CommandClient) Put(id string, cID string, body string) (string, error) {
-	req, err := http.NewRequest(PUT, cc.url+"/"+id+"/"+COMMAND+"/"+cID, strings.NewReader(body))
+	req, err := http.NewRequest(http.MethodPut, cc.url+"/"+id+"/"+COMMAND+"/"+cID, strings.NewReader(body))
 	if err != nil {
 		fmt.Println(err.Error())
 		return "", err

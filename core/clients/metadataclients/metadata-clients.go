@@ -239,7 +239,7 @@ func (d *AddressableRestClient) decodeAddressable(resp *http.Response) (models.A
 
 // Get the addressable by name
 func (a *AddressableRestClient) AddressableForName(name string) (models.Addressable, error) {
-	req, err := http.NewRequest("GET", a.url+"/name/"+url.QueryEscape(name), nil)
+	req, err := http.NewRequest(http.MethodGet, a.url+"/name/"+url.QueryEscape(name), nil)
 	if err != nil {
 		fmt.Println(err)
 		return models.Addressable{}, err
@@ -303,7 +303,7 @@ func (d *DeviceRestClient) decodeDevice(resp *http.Response) (models.Device, err
 
 // Get the device by id
 func (d *DeviceRestClient) Device(id string) (models.Device, error) {
-	req, err := http.NewRequest("GET", d.url+"/"+id, nil)
+	req, err := http.NewRequest(http.MethodGet, d.url+"/"+id, nil)
 	if err != nil {
 		fmt.Println(err)
 		return models.Device{}, err
@@ -338,7 +338,7 @@ func (d *DeviceRestClient) Device(id string) (models.Device, error) {
 
 // Get a list of all devices
 func (d *DeviceRestClient) Devices() ([]models.Device, error) {
-	req, err := http.NewRequest("GET", d.url, nil)
+	req, err := http.NewRequest(http.MethodGet, d.url, nil)
 	if err != nil {
 		fmt.Println(err)
 		return []models.Device{}, err
@@ -372,7 +372,7 @@ func (d *DeviceRestClient) Devices() ([]models.Device, error) {
 
 // Get the device by name
 func (d *DeviceRestClient) DeviceForName(name string) (models.Device, error) {
-	req, err := http.NewRequest("GET", d.url+"/name/"+url.QueryEscape(name), nil)
+	req, err := http.NewRequest(http.MethodGet, d.url+"/name/"+url.QueryEscape(name), nil)
 	if err != nil {
 		fmt.Println(err)
 		return models.Device{}, err
@@ -406,7 +406,7 @@ func (d *DeviceRestClient) DeviceForName(name string) (models.Device, error) {
 
 // Get the device by label
 func (d *DeviceRestClient) DevicesByLabel(label string) ([]models.Device, error) {
-	req, err := http.NewRequest("GET", d.url+"/label/"+url.QueryEscape(label), nil)
+	req, err := http.NewRequest(http.MethodGet, d.url+"/label/"+url.QueryEscape(label), nil)
 	if err != nil {
 		fmt.Println(err)
 		return []models.Device{}, err
@@ -440,7 +440,7 @@ func (d *DeviceRestClient) DevicesByLabel(label string) ([]models.Device, error)
 
 // Get the devices that are on a service
 func (d *DeviceRestClient) DevicesForService(serviceId string) ([]models.Device, error) {
-	req, err := http.NewRequest("GET", d.url+"/service/"+serviceId, nil)
+	req, err := http.NewRequest(http.MethodGet, d.url+"/service/"+serviceId, nil)
 	if err != nil {
 		fmt.Println(err)
 		return []models.Device{}, err
@@ -474,7 +474,7 @@ func (d *DeviceRestClient) DevicesForService(serviceId string) ([]models.Device,
 
 // Get the devices that are on a service(by name)
 func (d *DeviceRestClient) DevicesForServiceByName(serviceName string) ([]models.Device, error) {
-	req, err := http.NewRequest("GET", d.url+"/servicename/"+url.QueryEscape(serviceName), nil)
+	req, err := http.NewRequest(http.MethodGet, d.url+"/servicename/"+url.QueryEscape(serviceName), nil)
 	if err != nil {
 		fmt.Println(err)
 		return []models.Device{}, err
@@ -508,7 +508,7 @@ func (d *DeviceRestClient) DevicesForServiceByName(serviceName string) ([]models
 
 // Get the devices for a profile
 func (d *DeviceRestClient) DevicesForProfile(profileId string) ([]models.Device, error) {
-	req, err := http.NewRequest("GET", d.url+"/profile/"+profileId, nil)
+	req, err := http.NewRequest(http.MethodGet, d.url+"/profile/"+profileId, nil)
 	if err != nil {
 		fmt.Println(err)
 		return []models.Device{}, err
@@ -542,7 +542,7 @@ func (d *DeviceRestClient) DevicesForProfile(profileId string) ([]models.Device,
 
 // Get the devices for a profile (by name)
 func (d *DeviceRestClient) DevicesForProfileByName(profileName string) ([]models.Device, error) {
-	req, err := http.NewRequest("GET", d.url+"/profilename/"+url.QueryEscape(profileName), nil)
+	req, err := http.NewRequest(http.MethodGet, d.url+"/profilename/"+url.QueryEscape(profileName), nil)
 	if err != nil {
 		fmt.Println(err)
 		return []models.Device{}, err
@@ -576,7 +576,7 @@ func (d *DeviceRestClient) DevicesForProfileByName(profileName string) ([]models
 
 // Get the devices for an addressable
 func (d *DeviceRestClient) DevicesForAddressable(addressableId string) ([]models.Device, error) {
-	req, err := http.NewRequest("GET", d.url+"/addressable/"+addressableId, nil)
+	req, err := http.NewRequest(http.MethodGet, d.url+"/addressable/"+addressableId, nil)
 	if err != nil {
 		fmt.Println(err)
 		return []models.Device{}, err
@@ -611,7 +611,7 @@ func (d *DeviceRestClient) DevicesForAddressable(addressableId string) ([]models
 
 // Get the devices for an addressable (by name)
 func (d *DeviceRestClient) DevicesForAddressableByName(addressableName string) ([]models.Device, error) {
-	req, err := http.NewRequest("GET", d.url+"/addressablename/"+url.QueryEscape(addressableName), nil)
+	req, err := http.NewRequest(http.MethodGet, d.url+"/addressablename/"+url.QueryEscape(addressableName), nil)
 	if err != nil {
 		fmt.Println(err)
 		return []models.Device{}, err
@@ -652,7 +652,7 @@ func (d *DeviceRestClient) Add(dev *models.Device) (string, error) {
 		return "", err
 	}
 
-	req, err := http.NewRequest("POST", d.url, bytes.NewReader(jsonStr))
+	req, err := http.NewRequest(http.MethodPost, d.url, bytes.NewReader(jsonStr))
 	if err != nil {
 		fmt.Println(err)
 		return "", err
@@ -693,7 +693,7 @@ func (d *DeviceRestClient) Update(dev models.Device) error {
 		return err
 	}
 
-	req, err := http.NewRequest("PUT", d.url, bytes.NewReader(jsonStr))
+	req, err := http.NewRequest(http.MethodPut, d.url, bytes.NewReader(jsonStr))
 	if err != nil {
 		fmt.Println(err)
 		return err
@@ -727,7 +727,7 @@ func (d *DeviceRestClient) Update(dev models.Device) error {
 
 // Update the lastConnected value for a device (specified by id)
 func (d *DeviceRestClient) UpdateLastConnected(id string, time int64) error {
-	req, err := http.NewRequest("PUT", d.url+"/"+id+"/lastconnected/"+strconv.FormatInt(time, 10), nil)
+	req, err := http.NewRequest(http.MethodPut, d.url+"/"+id+"/lastconnected/"+strconv.FormatInt(time, 10), nil)
 	if err != nil {
 		fmt.Println(err)
 		return err
@@ -761,7 +761,7 @@ func (d *DeviceRestClient) UpdateLastConnected(id string, time int64) error {
 
 // Update the lastConnected value for a device (specified by name)
 func (d *DeviceRestClient) UpdateLastConnectedByName(name string, time int64) error {
-	req, err := http.NewRequest("PUT", d.url+"/name/"+url.QueryEscape(name)+"/lastconnected/"+strconv.FormatInt(time, 10), nil)
+	req, err := http.NewRequest(http.MethodPut, d.url+"/name/"+url.QueryEscape(name)+"/lastconnected/"+strconv.FormatInt(time, 10), nil)
 	if err != nil {
 		fmt.Println(err)
 		return err
@@ -795,7 +795,7 @@ func (d *DeviceRestClient) UpdateLastConnectedByName(name string, time int64) er
 
 // Update the lastReported value for a device (specified by id)
 func (d *DeviceRestClient) UpdateLastReported(id string, time int64) error {
-	req, err := http.NewRequest("PUT", d.url+"/"+id+"/lastreported/"+strconv.FormatInt(time, 10), nil)
+	req, err := http.NewRequest(http.MethodPut, d.url+"/"+id+"/lastreported/"+strconv.FormatInt(time, 10), nil)
 	if err != nil {
 		fmt.Println(err)
 		return err
@@ -829,7 +829,7 @@ func (d *DeviceRestClient) UpdateLastReported(id string, time int64) error {
 
 // Update the lastReported value for a device (specified by name)
 func (d *DeviceRestClient) UpdateLastReportedByName(name string, time int64) error {
-	req, err := http.NewRequest("PUT", d.url+"/name/"+url.QueryEscape(name)+"/lastreported/"+strconv.FormatInt(time, 10), nil)
+	req, err := http.NewRequest(http.MethodPut, d.url+"/name/"+url.QueryEscape(name)+"/lastreported/"+strconv.FormatInt(time, 10), nil)
 	if err != nil {
 		fmt.Println(err)
 		return err
@@ -863,7 +863,7 @@ func (d *DeviceRestClient) UpdateLastReportedByName(name string, time int64) err
 
 // Update the opState value for a device (specified by id)
 func (d *DeviceRestClient) UpdateOpState(id string, opState string) error {
-	req, err := http.NewRequest("PUT", d.url+"/"+id+"/opstate/"+opState, nil)
+	req, err := http.NewRequest(http.MethodPut, d.url+"/"+id+"/opstate/"+opState, nil)
 	if err != nil {
 		fmt.Println(err.Error())
 		return err
@@ -897,7 +897,7 @@ func (d *DeviceRestClient) UpdateOpState(id string, opState string) error {
 
 // Update the opState value for a device (specified by name)
 func (d *DeviceRestClient) UpdateOpStateByName(name string, opState string) error {
-	req, err := http.NewRequest("PUT", d.url+"/name/"+url.QueryEscape(name)+"/opstate/"+opState, nil)
+	req, err := http.NewRequest(http.MethodPut, d.url+"/name/"+url.QueryEscape(name)+"/opstate/"+opState, nil)
 	if err != nil {
 		fmt.Println(err)
 		return err
@@ -931,7 +931,7 @@ func (d *DeviceRestClient) UpdateOpStateByName(name string, opState string) erro
 
 // Update the adminState value for a device (specified by id)
 func (d *DeviceRestClient) UpdateAdminState(id string, adminState string) error {
-	req, err := http.NewRequest("PUT", d.url+"/"+id+"/adminstate/"+adminState, nil)
+	req, err := http.NewRequest(http.MethodPut, d.url+"/"+id+"/adminstate/"+adminState, nil)
 	if err != nil {
 		fmt.Println(err)
 		return err
@@ -966,7 +966,7 @@ func (d *DeviceRestClient) UpdateAdminState(id string, adminState string) error 
 
 // Update the adminState value for a device (specified by name)
 func (d *DeviceRestClient) UpdateAdminStateByName(name string, adminState string) error {
-	req, err := http.NewRequest("PUT", d.url+"/name/"+url.QueryEscape(name)+"/adminstate/"+adminState, nil)
+	req, err := http.NewRequest(http.MethodPut, d.url+"/name/"+url.QueryEscape(name)+"/adminstate/"+adminState, nil)
 	if err != nil {
 		fmt.Println(err)
 		return err
@@ -1000,7 +1000,7 @@ func (d *DeviceRestClient) UpdateAdminStateByName(name string, adminState string
 
 // Delete a device (specified by id)
 func (d *DeviceRestClient) Delete(id string) error {
-	req, err := http.NewRequest("DELETE", d.url+"/id/"+id, nil)
+	req, err := http.NewRequest(http.MethodDelete, d.url+"/id/"+id, nil)
 	if err != nil {
 		fmt.Println(err)
 		return err
@@ -1034,7 +1034,7 @@ func (d *DeviceRestClient) Delete(id string) error {
 
 // Delete a device (specified by name)
 func (d *DeviceRestClient) DeleteByName(name string) error {
-	req, err := http.NewRequest("DELETE", d.url+"/name/"+url.QueryEscape(name), nil)
+	req, err := http.NewRequest(http.MethodDelete, d.url+"/name/"+url.QueryEscape(name), nil)
 	if err != nil {
 		fmt.Println(err)
 		return err
@@ -1094,7 +1094,7 @@ func (c *CommandRestClient) decodeCommandSlice(resp *http.Response) ([]models.Co
 
 // Get a command by id
 func (c *CommandRestClient) Command(id string) (models.Command, error) {
-	req, err := http.NewRequest("GET", c.url+"/"+id, nil)
+	req, err := http.NewRequest(http.MethodGet, c.url+"/"+id, nil)
 	if err != nil {
 		fmt.Println(err)
 		return models.Command{}, err
@@ -1128,7 +1128,7 @@ func (c *CommandRestClient) Command(id string) (models.Command, error) {
 
 // Get a list of all the commands
 func (c *CommandRestClient) Commands() ([]models.Command, error) {
-	req, err := http.NewRequest("GET", c.url, nil)
+	req, err := http.NewRequest(http.MethodGet, c.url, nil)
 	if err != nil {
 		fmt.Println(err)
 		return []models.Command{}, err
@@ -1161,7 +1161,7 @@ func (c *CommandRestClient) Commands() ([]models.Command, error) {
 
 // Get a list of commands for a certain name
 func (c *CommandRestClient) CommandsForName(name string) ([]models.Command, error) {
-	req, err := http.NewRequest("GET", c.url+"/name/"+name, nil)
+	req, err := http.NewRequest(http.MethodGet, c.url+"/name/"+name, nil)
 	if err != nil {
 		fmt.Println(err)
 		return []models.Command{}, err
@@ -1201,7 +1201,7 @@ func (c *CommandRestClient) Add(com *models.Command) (string, error) {
 		return "", err
 	}
 
-	req, err := http.NewRequest("POST", c.url, bytes.NewReader(jsonStr))
+	req, err := http.NewRequest(http.MethodPost, c.url, bytes.NewReader(jsonStr))
 	if err != nil {
 		fmt.Println(err)
 		return "", err
@@ -1241,7 +1241,7 @@ func (c *CommandRestClient) Update(com models.Command) error {
 		return err
 	}
 
-	req, err := http.NewRequest("PUT", c.url, bytes.NewReader(jsonStr))
+	req, err := http.NewRequest(http.MethodPut, c.url, bytes.NewReader(jsonStr))
 	if err != nil {
 		fmt.Println(err)
 		return err
@@ -1275,7 +1275,7 @@ func (c *CommandRestClient) Update(com models.Command) error {
 
 // Delete a command
 func (c *CommandRestClient) Delete(id string) error {
-	req, err := http.NewRequest("DELETE", c.url+"/id/"+id, nil)
+	req, err := http.NewRequest(http.MethodDelete, c.url+"/id/"+id, nil)
 	if err != nil {
 		fmt.Println(err)
 		return err
@@ -1322,7 +1322,7 @@ func (s *ServiceRestClient) decodeDeviceService(resp *http.Response) (models.Dev
 
 // Update the last connected time for the device service
 func (s *ServiceRestClient) UpdateLastConnected(id string, time int64) error {
-	req, err := http.NewRequest("PUT", s.url+"/"+id+"/lastconnected/"+strconv.FormatInt(time, 10), nil)
+	req, err := http.NewRequest(http.MethodPut, s.url+"/"+id+"/lastconnected/"+strconv.FormatInt(time, 10), nil)
 	if err != nil {
 		fmt.Println(err)
 		return err
@@ -1356,7 +1356,7 @@ func (s *ServiceRestClient) UpdateLastConnected(id string, time int64) error {
 
 // Update the last reported time for the device service
 func (s *ServiceRestClient) UpdateLastReported(id string, time int64) error {
-	req, err := http.NewRequest("PUT", s.url+"/"+id+"/lastreported/"+strconv.FormatInt(time, 10), nil)
+	req, err := http.NewRequest(http.MethodPut, s.url+"/"+id+"/lastreported/"+strconv.FormatInt(time, 10), nil)
 	if err != nil {
 		fmt.Println(err)
 		return err
@@ -1426,7 +1426,7 @@ func (s *ServiceRestClient) Add(ds *models.DeviceService) (string, error) {
 
 // Request deviceservice for specified name
 func (s *ServiceRestClient) DeviceServiceForName(name string) (models.DeviceService, error) {
-	req, err := http.NewRequest("GET", s.url+"/name/"+name, nil)
+	req, err := http.NewRequest(http.MethodGet, s.url+"/name/"+name, nil)
 	if err != nil {
 		fmt.Printf("DeviceServiceForName NewRequest failed: %v\n", err)
 		return models.DeviceService{}, err
