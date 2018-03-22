@@ -28,13 +28,20 @@ type OperatingStateType uint8
 const (
 	ENABLED OperatingStateType = iota
 	DISABLED
-)
 
-var operatingStateStringArray = [...]string{"ENABLED", "DISABLED"} // Used for String() function
+	enabledStr  = "ENABLED"
+	disabledStr = "DISABLED"
+)
 
 /*
 String function for formatting
 */
 func (o OperatingStateType) String() string {
-	return operatingStateStringArray[o]
+	switch o {
+	case ENABLED:
+		return enabledStr
+	case DISABLED:
+		return disabledStr
+	}
+	return invalidStr
 }
