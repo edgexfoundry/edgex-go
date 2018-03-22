@@ -85,6 +85,11 @@ func (sender *dummyStruct) Transform(data []byte) []byte {
 }
 
 func TestRegistrationInfoEvent(t *testing.T) {
+	const (
+		dummyDev     = "dummyDev"
+		filterOutDev = "filterOutDev"
+	)
+
 	ri := newRegistrationInfo()
 	// no configured should not panic
 	ri.processEvent(&models.Event{})
@@ -95,8 +100,18 @@ func TestRegistrationInfoEvent(t *testing.T) {
 	ri.sender = dummy
 	ri.encrypt = dummy
 	ri.compression = dummy
-	ri.filter = nil
-	ri.processEvent(&models.Event{})
+
+	// Filter only accepting events from dummyDev
+	f := export.Filter{}
+	f.DeviceIDs = append(f.DeviceIDs, dummyDev)
+	filter := newDevIdFilter(f)
+
+	ri.filter = append(ri.filter, filter)
+
+	ri.processEvent(&models.Event{
+		Device: dummyDev})
+	ri.processEvent(&models.Event{
+		Device: filterOutDev})
 	if dummy.count != 1 {
 		t.Fatal("It should send an event")
 	}
@@ -153,6 +168,27 @@ func TestRegistrationInfoLoop(t *testing.T) {
 	ri.filter = nil
 	// Process an event and terminate
 	registrationLoop(ri)
+}
+
+func TestUpdateRunningRegistrations(t *testing.T) {
+	running := make(map[string]*registrationInfo)
+
+	if updateRunningRegistrations(running, export.NotifyUpdate{}) == nil {
+		t.Error("Err should not be nil")
+	}
+	if updateRunningRegistrations(running, export.NotifyUpdate{
+		Operation: export.NotifyUpdateDelete}) == nil {
+		t.Error("Err should not be nil")
+	}
+	if updateRunningRegistrations(running, export.NotifyUpdate{
+		Operation: export.NotifyUpdateUpdate}) == nil {
+		t.Error("Err should not be nil")
+	}
+	if updateRunningRegistrations(running, export.NotifyUpdate{
+		Operation: export.NotifyUpdateAdd}) == nil {
+		t.Error("Err should not be nil")
+	}
+
 }
 
 func BenchmarkProcessEvent(b *testing.B) {

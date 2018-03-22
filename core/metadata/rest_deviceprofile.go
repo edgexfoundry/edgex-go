@@ -362,7 +362,7 @@ func deleteDeviceProfile(dp models.DeviceProfile, w http.ResponseWriter) error {
 	}
 
 	// TODO: Notify Associates
-	if err := notifyProfileAssociates(dp, models.DELETE); err != nil {
+	if err := notifyProfileAssociates(dp, http.MethodDelete); err != nil {
 		loggingClient.Error(err.Error(), "")
 	}
 
@@ -637,7 +637,7 @@ func restGetYamlProfileById(w http.ResponseWriter, r *http.Request) {
 }
 
 // Notify the associated device services for the addressable
-func notifyProfileAssociates(dp models.DeviceProfile, action models.NotifyAction) error {
+func notifyProfileAssociates(dp models.DeviceProfile, action string) error {
 	// Get the devices
 	var d []models.Device
 	if err := getDevicesByProfileId(&d, dp.Id.Hex()); err != nil {

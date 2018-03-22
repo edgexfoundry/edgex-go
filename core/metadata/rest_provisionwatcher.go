@@ -108,7 +108,7 @@ func deleteProvisionWatcher(pw models.ProvisionWatcher, w http.ResponseWriter) e
 		return err
 	}
 
-	if err := notifyProvisionWatcherAssociates(pw, models.DELETE); err != nil {
+	if err := notifyProvisionWatcherAssociates(pw, http.MethodDelete); err != nil {
 		loggingClient.Error("Problem notifying associated device services to provision watcher: "+err.Error(), "")
 	}
 
@@ -360,7 +360,7 @@ func restAddProvisionWatcher(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Notify Associates
-	if err := notifyProvisionWatcherAssociates(pw, models.POST); err != nil {
+	if err := notifyProvisionWatcherAssociates(pw, http.MethodPost); err != nil {
 		loggingClient.Error("Problem with notifying associating device services for the provision watcher: "+err.Error(), "")
 	}
 
@@ -409,7 +409,7 @@ func restUpdateProvisionWatcher(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Notify Associates
-	if err := notifyProvisionWatcherAssociates(to, models.PUT); err != nil {
+	if err := notifyProvisionWatcherAssociates(to, http.MethodPut); err != nil {
 		loggingClient.Error("Problem notifying associated device services for provision watcher: "+err.Error(), "")
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -450,7 +450,7 @@ func updateProvisionWatcherFields(from models.ProvisionWatcher, to *models.Provi
 }
 
 // Notify the associated device services for the provision watcher
-func notifyProvisionWatcherAssociates(pw models.ProvisionWatcher, action models.NotifyAction) error {
+func notifyProvisionWatcherAssociates(pw models.ProvisionWatcher, action string) error {
 	// Get the device service for the provision watcher
 	var ds models.DeviceService
 	if err := getDeviceServiceById(&ds, pw.Service.Service.Id.Hex()); err != nil {

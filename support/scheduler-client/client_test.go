@@ -8,7 +8,6 @@ package scheduler
 
 import (
 	"encoding/json"
-	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -16,6 +15,8 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+
+	"github.com/edgexfoundry/edgex-go/core/domain/models"
 )
 
 // Test common const
@@ -52,8 +53,8 @@ func TestSendSchedule(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("{ 'status' : 'OK' }"))
-		if r.Method != "POST" {
-			t.Errorf(TestUnexpectedMsgFormatStr, r.Method, "POST")
+		if r.Method != http.MethodPost {
+			t.Errorf(TestUnexpectedMsgFormatStr, r.Method, http.MethodPost)
 		}
 		if r.URL.EscapedPath() != ScheduleApiPath {
 			t.Errorf(TestUnexpectedMsgFormatStr, r.URL.EscapedPath(), ScheduleApiPath)
@@ -254,8 +255,8 @@ func TestSendScheduleEvent(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("{ 'status' : 'OK' }"))
-		if r.Method != "POST" {
-			t.Errorf(TestUnexpectedMsgFormatStr, r.Method, "POST")
+		if r.Method != http.MethodPost {
+			t.Errorf(TestUnexpectedMsgFormatStr, r.Method, http.MethodPost)
 		}
 		if r.URL.EscapedPath() != ScheduleEventApiPath {
 			t.Errorf(TestUnexpectedMsgFormatStr, r.URL.EscapedPath(), ScheduleEventApiPath)
