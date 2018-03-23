@@ -23,8 +23,6 @@ type mongoLog struct {
 }
 
 func connectToMongo(cfg *Config) (*mgo.Session, error) {
-	fmt.Println("connecting mongos")
-
 	mongoDBDialInfo := &mgo.DialInfo{
 		Addrs:    []string{cfg.MongoURL + ":" + strconv.Itoa(cfg.MongoPort)},
 		Timeout:  time.Duration(cfg.MongoConnectTimeout) * time.Millisecond,
@@ -52,47 +50,41 @@ func (ml *mongoLog) add(le support_domain.LogEntry) {
 	c := session.DB(ml.config.MongoDatabase).C(ml.config.MongoCollection)
 
 	if err := c.Insert(le); err != nil {
-		fmt.Println("Failed to add log", err)
 		return
 	}
-	fmt.Println("adding mongos")
 }
 
-func createQuery(criteria matchCriteria) interface{} {
+func createConditions(conditions []bson.M, field string, elements []string) []bson.M {
+	keyCond := []bson.M{}
+	for _, value := range elements {
+		keyCond = append(keyCond, bson.M{field: value})
+	}
+
+	return append(conditions, bson.M{"$or": keyCond})
+}
+
+func createQuery(criteria matchCriteria) bson.M {
 	conditions := []bson.M{}
 
 	if len(criteria.Labels) > 0 {
-		keyCond := []bson.M{}
-		for _, label := range criteria.Labels {
-			conditions = append(conditions, bson.M{"labels": label})
-		}
-		conditions = append(conditions, bson.M{"$or": keyCond})
+		conditions = createConditions(conditions, "labels", criteria.Labels)
 	}
 
 	if len(criteria.Keywords) > 0 {
 		keyCond := []bson.M{}
 		for _, key := range criteria.Keywords {
 			regex := fmt.Sprintf(".*%s.*", key)
-			conditions = append(conditions, bson.M{"message": bson.M{"$regex": regex}})
+			keyCond = append(keyCond, bson.M{"message": bson.M{"$regex": regex}})
 		}
 		conditions = append(conditions, bson.M{"$or": keyCond})
 	}
 
 	if len(criteria.OriginServices) > 0 {
-		keyCond := []bson.M{}
-		for _, svc := range criteria.OriginServices {
-			regex := fmt.Sprintf(".*%s.*", svc)
-			conditions = append(conditions, bson.M{"originservice": bson.M{"$regex": regex}})
-		}
-		conditions = append(conditions, bson.M{"$or": keyCond})
+		conditions = createConditions(conditions, "originservice", criteria.OriginServices)
 	}
 
 	if len(criteria.LogLevels) > 0 {
-		keyCond := []bson.M{}
-		for _, ll := range criteria.LogLevels {
-			keyCond = append(keyCond, bson.M{"level": ll})
-		}
-		conditions = append(conditions, bson.M{"$or": keyCond})
+		conditions = createConditions(conditions, "level", criteria.LogLevels)
 	}
 
 	if criteria.Start != 0 {
@@ -111,7 +103,6 @@ func createQuery(criteria matchCriteria) interface{} {
 
 func (ml *mongoLog) remove(criteria matchCriteria) int {
 
-	fmt.Println("removing mongos")
 	session := ml.session.Copy()
 	defer session.Close()
 
@@ -125,7 +116,6 @@ func (ml *mongoLog) remove(criteria matchCriteria) int {
 		return 0
 	}
 
-	fmt.Printf("info removed %d info matched %d ", info.Removed, info.Matched)
 	return info.Removed
 }
 
@@ -138,10 +128,8 @@ func (ml *mongoLog) find(criteria matchCriteria) []support_domain.LogEntry {
 	le := []support_domain.LogEntry{}
 
 	base := createQuery(criteria)
-	fmt.Println("criteria ", criteria)
 
 	q := c.Find(base)
-	fmt.Println("criteria ", q)
 
 	if criteria.Limit != 0 {
 		q = q.Limit(criteria.Limit)
@@ -155,5 +143,9 @@ func (ml *mongoLog) find(criteria matchCriteria) []support_domain.LogEntry {
 }
 
 func (ml *mongoLog) reset() {
-	fmt.Println("resetting mongos")
+	session := ml.session.Copy()
+	defer session.Close()
+
+	session.DB(ml.config.MongoDatabase).C(ml.config.MongoCollection).RemoveAll(bson.M{})
+	return
 }
