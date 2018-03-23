@@ -73,16 +73,69 @@ func (ml *mongoLog) find(criteria matchCriteria) []support_domain.LogEntry {
 
 	le := []support_domain.LogEntry{}
 
-	//type M map[string]interface{}
+	conditions := []bson.M{}
 
-	//query := bson.M{"created": bson.M{"$gt": criteria.Start}}
-	fmt.Print(criteria)
-	if err := c.Find(bson.M{"created": bson.M{"$gt": 1}}).All(&le); err != nil {
-		fmt.Println("Failed to query by id %v", err)
+	fmt.Println("criteria ", criteria)
+
+	if len(criteria.Labels) > 0 {
+		keyCond := []bson.M{}
+		for _, label := range criteria.Labels {
+			conditions = append(conditions, bson.M{"labels": label})
+		}
+		conditions = append(conditions, bson.M{"$or": keyCond})
+	}
+
+	if len(criteria.Keywords) > 0 {
+		keyCond := []bson.M{}
+		for _, key := range criteria.Keywords {
+			regex := fmt.Sprintf(".*%s.*", key)
+			conditions = append(conditions, bson.M{"message": bson.M{"$regex": regex}})
+		}
+		conditions = append(conditions, bson.M{"$or": keyCond})
+	}
+
+	if len(criteria.OriginServices) > 0 {
+		keyCond := []bson.M{}
+		for _, svc := range criteria.OriginServices {
+			regex := fmt.Sprintf(".*%s.*", svc)
+			conditions = append(conditions, bson.M{"originservice": bson.M{"$regex": regex}})
+		}
+		conditions = append(conditions, bson.M{"$or": keyCond})
+	}
+
+	if len(criteria.LogLevels) > 0 {
+		keyCond := []bson.M{}
+		for _, ll := range criteria.LogLevels {
+			keyCond = append(keyCond, bson.M{"level": ll})
+
+		}
+		conditions = append(conditions, bson.M{"$or": keyCond})
+	}
+
+	if criteria.Start != 0 {
+		conditions = append(conditions, bson.M{"created": bson.M{"$gt": criteria.Start}})
+	}
+
+	if criteria.End != 0 {
+		conditions = append(conditions, bson.M{"created": bson.M{"$lt": criteria.End}})
+	}
+
+	base := bson.M{"$and": conditions}
+
+	fmt.Println("conditions ", conditions)
+
+	q := c.Find(base)
+
+	if criteria.Limit != 0 {
+		q = q.Limit(criteria.Limit)
+	}
+
+	if err := q.All(&le); err != nil {
+		fmt.Println("Failed to query by id ", err)
 		return nil
 	}
 
-	fmt.Println("Returned value %v", le)
+	fmt.Println("Returned value ", le)
 
 	return le
 }
