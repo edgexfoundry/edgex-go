@@ -7,9 +7,15 @@
 #
 
 FROM golang:1.9-alpine AS builder
-WORKDIR /go/src/github.com/edgexfoundry/edgex-go
-RUN apk update && apk add zeromq-dev libsodium-dev pkgconfig build-base
+RUN apk --update add \
+    make \
+    git \
+    glide \
+    zeromq-dev \
+    build-base
+WORKDIR $GOPATH/src/github.com/edgexfoundry/edgex-go
 COPY . .
+RUN glide install
 RUN make cmd/export-distro/export-distro
 
 FROM alpine:3.7
