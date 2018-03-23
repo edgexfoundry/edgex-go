@@ -58,24 +58,8 @@ func (ml *mongoLog) add(le support_domain.LogEntry) {
 	fmt.Println("adding mongos")
 }
 
-func (ml *mongoLog) remove(criteria matchCriteria) int {
-
-	fmt.Println("removing mongos")
-	return 0
-}
-
-func (ml *mongoLog) find(criteria matchCriteria) []support_domain.LogEntry {
-	fmt.Println("finding mongos")
-	session := ml.session.Copy()
-	defer session.Close()
-
-	c := session.DB(ml.config.MongoDatabase).C(ml.config.MongoCollection)
-
-	le := []support_domain.LogEntry{}
-
+func createQuery(criteria matchCriteria) interface{} {
 	conditions := []bson.M{}
-
-	fmt.Println("criteria ", criteria)
 
 	if len(criteria.Labels) > 0 {
 		keyCond := []bson.M{}
@@ -107,7 +91,6 @@ func (ml *mongoLog) find(criteria matchCriteria) []support_domain.LogEntry {
 		keyCond := []bson.M{}
 		for _, ll := range criteria.LogLevels {
 			keyCond = append(keyCond, bson.M{"level": ll})
-
 		}
 		conditions = append(conditions, bson.M{"$or": keyCond})
 	}
@@ -122,20 +105,51 @@ func (ml *mongoLog) find(criteria matchCriteria) []support_domain.LogEntry {
 
 	base := bson.M{"$and": conditions}
 
-	fmt.Println("conditions ", conditions)
+	return base
+
+}
+
+func (ml *mongoLog) remove(criteria matchCriteria) int {
+
+	fmt.Println("removing mongos")
+	session := ml.session.Copy()
+	defer session.Close()
+
+	c := session.DB(ml.config.MongoDatabase).C(ml.config.MongoCollection)
+
+	base := createQuery(criteria)
+
+	info, err := c.RemoveAll(base)
+
+	if err != nil {
+		return 0
+	}
+
+	fmt.Printf("info removed %d info matched %d ", info.Removed, info.Matched)
+	return info.Removed
+}
+
+func (ml *mongoLog) find(criteria matchCriteria) []support_domain.LogEntry {
+	session := ml.session.Copy()
+	defer session.Close()
+
+	c := session.DB(ml.config.MongoDatabase).C(ml.config.MongoCollection)
+
+	le := []support_domain.LogEntry{}
+
+	base := createQuery(criteria)
+	fmt.Println("criteria ", criteria)
 
 	q := c.Find(base)
+	fmt.Println("criteria ", q)
 
 	if criteria.Limit != 0 {
 		q = q.Limit(criteria.Limit)
 	}
 
 	if err := q.All(&le); err != nil {
-		fmt.Println("Failed to query by id ", err)
 		return nil
 	}
-
-	fmt.Println("Returned value ", le)
 
 	return le
 }
