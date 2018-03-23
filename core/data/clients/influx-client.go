@@ -103,18 +103,12 @@ func (ic *InfluxClient) UpdateEvent(e models.Event) error {
 	e.Modified = time.Now().UnixNano() / int64(time.Millisecond)
 
 	// Delete event
-	err := ic.deleteById(EVENTS_COLLECTION, e.ID.Hex())
-	if err != nil {
-		return ErrNotFound
-	}
-
-	// Add the event
-	err = ic.addEventToDB(ic.Database, EVENTS_COLLECTION, &e)
-	if err != nil {
+	if err := ic.deleteById(EVENTS_COLLECTION, e.ID.Hex()); err != nil {
 		return err
 	}
 
-	return nil
+	// Add the event
+	return ic.addEventToDB(ic.Database, EVENTS_COLLECTION, &e)
 }
 
 // Get an event by id
@@ -146,11 +140,7 @@ func (ic *InfluxClient) EventCountByDeviceId(id string) (int, error) {
 // 404 - Event not found
 // 503 - Unexpected problems
 func (ic *InfluxClient) DeleteEventById(id string) error {
-	err := ic.deleteById(EVENTS_COLLECTION, id)
-	if err != nil {
-		return ErrNotFound
-	}
-	return nil
+	return ic.deleteById(EVENTS_COLLECTION, id)
 }
 
 // Get a list of events based on the device id and limit
@@ -204,12 +194,7 @@ func (ic *InfluxClient) ScrubAllEvents() error {
 		return err
 	}
 
-	err = ic.deleteAll(EVENTS_COLLECTION)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return ic.deleteAll(EVENTS_COLLECTION)
 }
 
 // Get events count
@@ -258,7 +243,7 @@ func (ic *InfluxClient) deleteById(collection string, id string) error {
 	q := fmt.Sprintf("DROP SERIES FROM %s WHERE id = '%s'", collection, id)
 	_, err := queryDB(ic.Client, q, ic.Database)
 	if err != nil {
-		return err
+		return ErrNotFound
 	}
 	return nil
 }
@@ -304,10 +289,7 @@ func (ic *InfluxClient) addEventToDB(db string, collection string, e *models.Eve
 		return err
 	}
 	bp.AddPoint(pt)
-	if err := ic.Client.Write(bp); err != nil {
-		return err
-	}
-	return nil
+	return ic.Client.Write(bp)
 }
 
 func parseEvent(res client.Result) (models.Event, error){
@@ -375,18 +357,12 @@ func (ic *InfluxClient) UpdateReading(r models.Reading) error {
 	r.Modified = time.Now().UnixNano() / int64(time.Millisecond)
 
 	// Delete reading
-	err := ic.deleteById(READINGS_COLLECTION, r.Id.Hex())
-	if err != nil {
-		return ErrNotFound
-	}
-
-	// Add the reading
-	err = ic.addReadingToDB(ic.Database, READINGS_COLLECTION, &r)
-	if err != nil {
+	if err := ic.deleteById(READINGS_COLLECTION, r.Id.Hex()); err != nil {
 		return err
 	}
 
-	return nil
+	// Add the reading
+	return ic.addReadingToDB(ic.Database, READINGS_COLLECTION, &r)
 }
 
 // Get a reading by ID
@@ -410,11 +386,7 @@ func (ic *InfluxClient) ReadingCount() (int, error) {
 // Delete a reading by ID
 // 404 - can't find the reading with the given id
 func (ic *InfluxClient) DeleteReadingById(id string) error {
-	err := ic.deleteById(READINGS_COLLECTION, id)
-	if err != nil {
-		return ErrNotFound
-	}
-	return nil
+	return ic.deleteById(READINGS_COLLECTION, id)
 }
 
 // Return a list of readings for the given device (id or name)
@@ -524,11 +496,7 @@ func (ic *InfluxClient) addReadingToDB(db string, collection string, r *models.R
 		return err
 	}
 	bp.AddPoint(pt)
-	if err := ic.Client.Write(bp); err != nil {
-		return err
-	}
-	return nil
-
+	return ic.Client.Write(bp)
 }
 
 func parseReading(res client.Result) (models.Reading, error){
@@ -642,11 +610,7 @@ func (ic *InfluxClient) UpdateValueDescriptor(v models.ValueDescriptor) error {
 	v.Modified = time.Now().UnixNano() / int64(time.Millisecond)
 	// Delete Value Descriptor
 	// Add Value Descriptor
-	err = ic.addValueDescriptorToDB(ic.Database, VALUE_DESCRIPTOR_COLLECTION, &v)
-	if err != nil {
-		return err
-	}
-	return err
+	return ic.addValueDescriptorToDB(ic.Database, VALUE_DESCRIPTOR_COLLECTION, &v)
 }
 
 // Delete the value descriptor based on the id
@@ -803,10 +767,7 @@ func (ic *InfluxClient) addValueDescriptorToDB(db string, collection string, v *
 		return err
 	}
 	bp.AddPoint(pt)
-	if err := ic.Client.Write(bp); err != nil {
-		return err
-	}
-	return nil
+	return ic.Client.Write(bp)
 }
 
 func parseValueDescriptor(res client.Result) (models.ValueDescriptor, error){
