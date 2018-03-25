@@ -20,9 +20,9 @@ package config
 import (
 	"io/ioutil"
 	"fmt"
+	"os"
 
 	"github.com/BurntSushi/toml"
-	"os"
 )
 
 const (
