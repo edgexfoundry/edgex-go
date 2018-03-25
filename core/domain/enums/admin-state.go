@@ -29,13 +29,20 @@ type AdminStateType uint8
 const (
 	LOCKED AdminStateType = iota
 	UNLOCKED
-)
 
-var adminStateStringArray = [...]string{"LOCKED", "UNLOCKED"} // Used for String function
+	lockedStr   = "LOCKED"
+	unlockedStr = "UNLOCKED"
+)
 
 /*
 String() func for formatting
 */
 func (a AdminStateType) String() string {
-	return adminStateStringArray[a]
+	switch a {
+	case LOCKED:
+		return lockedStr
+	case UNLOCKED:
+		return unlockedStr
+	}
+	return invalidStr
 }

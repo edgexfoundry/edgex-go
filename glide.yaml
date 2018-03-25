@@ -1,5 +1,6 @@
 package: github.com/edgexfoundry/edgex-go
 import:
+- package: github.com/BurntSushi/toml
 - package: github.com/eclipse/paho.mqtt.golang
 - package: github.com/go-zoo/bone
 - package: github.com/gorilla/mux

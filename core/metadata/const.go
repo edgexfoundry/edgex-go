@@ -74,17 +74,12 @@ var (
 	DBUSER              = "meta"
 	DBPASS              = "password"
 	MONGODATABASE       = "metadata"
-	CONFIG              = "res/configuration.json"
 	METADATASERVICENAME = "core-metadata"
 
 	MAX_LIMIT int = 1000
 
 	/* ----------------------- CONSTANTS ----------------------------*/
 	REST       = "http"
-	GET        = "GET"
-	PUT        = "PUT"
-	POST       = "POST"
-	DELETE     = "DELETE"
 	MONGOSTR   = "mongo"
 	DB         = "metadata"
 	DEVICECOL  = "device"

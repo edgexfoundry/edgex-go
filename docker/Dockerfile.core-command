@@ -20,5 +20,5 @@ EXPOSE $APP_PORT
 
 WORKDIR /
 COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/core-command/core-command /
-COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/core-command/res/configuration-docker.json /res/configuration.json
+COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/core-command/res/configuration-docker.toml /res/configuration.toml
 ENTRYPOINT ["/core-command"]

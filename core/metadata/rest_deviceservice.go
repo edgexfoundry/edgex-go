@@ -873,7 +873,7 @@ func updateServiceLastReported(ds models.DeviceService, lr int64, w http.Respons
 
 // Notify associates (associated device services)
 // This function is called when an object changes in metadata
-func notifyAssociates(deviceServices []models.DeviceService, id string, action models.NotifyAction, actionType models.ActionType) error {
+func notifyAssociates(deviceServices []models.DeviceService, id string, action string, actionType models.ActionType) error {
 	for _, ds := range deviceServices {
 		if err := callback(ds, id, action, actionType); err != nil {
 			return err
@@ -884,7 +884,7 @@ func notifyAssociates(deviceServices []models.DeviceService, id string, action m
 }
 
 // Make the callback for the device service
-func callback(service models.DeviceService, id string, action models.NotifyAction, actionType models.ActionType) error {
+func callback(service models.DeviceService, id string, action string, actionType models.ActionType) error {
 	client := &http.Client{}
 	url := getCallbackUrl(service.Service.Addressable)
 	body, err := getBody(id, actionType)

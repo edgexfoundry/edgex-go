@@ -31,7 +31,7 @@ type ConfigurationStruct struct {
 	ServiceName               string
 	DeviceServiceProtocol     string
 	HeartBeatMsg              string
-	AppOpenMsg            	  string
+	AppOpenMsg                string
 	URLProtocol               string
 	URLDevicePath             string
 	ConsulHost                string
@@ -55,14 +55,9 @@ type ConfigurationStruct struct {
 var configuration ConfigurationStruct = ConfigurationStruct{}
 
 const (
-	CONFIG string = "res/configuration.json"
 	/* -------------- Constants for Command -------------------- */
 	COMMANDSERVICENAME       string = "core-command"
 	REST_HTTP                string = "http://"
-	GET                      string = "GET"
-	PUT                      string = "PUT"
-	POST                     string = "POST"
-	DELETE                   string = "DELETE"
 	ID                       string = "id"
 	_ID                      string = "_id"
 	NAME                     string = "name"

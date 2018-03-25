@@ -72,7 +72,7 @@ func restAddAddressable(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Notify Associates
-	notifyAddressableAssociates(a, models.POST)
+	notifyAddressableAssociates(a, http.MethodPost)
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(a.Id.Hex()))
@@ -134,7 +134,7 @@ func restUpdateAddressable(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Notify Associates
-	notifyAddressableAssociates(res, models.PUT)
+	notifyAddressableAssociates(res, http.MethodPut)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
@@ -195,7 +195,7 @@ func restDeleteAddressableById(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Notify Associates
-	notifyAddressableAssociates(a, models.DELETE)
+	notifyAddressableAssociates(a, http.MethodDelete)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte("true"))
 }
@@ -243,7 +243,7 @@ func restDeleteAddressableByName(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Notify Associates
-	notifyAddressableAssociates(a, models.DELETE)
+	notifyAddressableAssociates(a, http.MethodDelete)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
@@ -380,7 +380,7 @@ func restGetAddressableByAddress(w http.ResponseWriter, r *http.Request) {
 }
 
 // Notify the associated device services for the addressable
-func notifyAddressableAssociates(a models.Addressable, action models.NotifyAction) error {
+func notifyAddressableAssociates(a models.Addressable, action string) error {
 	var ds []models.DeviceService
 	if err := getDeviceServicesByAddressableId(&ds, a.Id.Hex()); err != nil {
 		loggingClient.Error(err.Error(), "")

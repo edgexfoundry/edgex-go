@@ -17,6 +17,11 @@ import (
 	"go.uber.org/zap"
 )
 
+const (
+	apiV1NotifyRegistrations = "/api/v1/notify/registrations"
+	apiV1Ping                = "/api/v1/ping"
+)
+
 func replyPing(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
@@ -61,9 +66,8 @@ func replyNotifyRegistrations(w http.ResponseWriter, r *http.Request) {
 // HTTPServer function
 func httpServer() http.Handler {
 	mux := bone.New()
-
-	mux.Get("/api/v1/ping", http.HandlerFunc(replyPing))
-	mux.Put("/api/v1/notify/registrations", http.HandlerFunc(replyNotifyRegistrations))
+	mux.Get(apiV1Ping, http.HandlerFunc(replyPing))
+	mux.Put(apiV1NotifyRegistrations, http.HandlerFunc(replyNotifyRegistrations))
 
 	return mux
 }

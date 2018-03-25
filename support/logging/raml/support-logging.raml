@@ -40,43 +40,6 @@ schemas:
         },
         "required": ["originService","message","logLevel"]
       }
-  - MatchCriteria: |
-      {
-        "$schema": "http://json-schema.org/draft-04/schema#",
-        "title": "MatchCriteria Schema",
-        "type": "object",
-        "properties": {
-          "originServices": {
-            "type": "array",
-            "items": { "type": "string" },
-            "uniqueItems": false
-          },
-          "messageKeywords": {
-            "type": "array",
-            "items": { "type": "string" },
-            "uniqueItems": false
-          },
-          "logLevels": {
-            "type": "array",
-            "items": { "enum": ["TRACE","DEBUG","INFO","WARN","ERROR"] },
-            "uniqueItems": false
-          },
-          "labels": {
-            "type": "array",
-            "items": { "type": "string" },
-            "uniqueItems": true
-          },
-          "start": {
-            "type": "integer",
-            "minimum": 0
-          },
-          "end": {
-            "type": "integer",
-            "minimum": 0
-          }
-        },
-        "required": ["start","end"]
-      }
 /logs:
   post:
     description: Create a new LogEntry

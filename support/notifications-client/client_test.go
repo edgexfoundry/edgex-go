@@ -40,8 +40,8 @@ func TestReceiveNotification(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("{ 'status' : 'OK' }"))
-		if r.Method != "POST" {
-			t.Errorf(TestUnexpectedMsgFormatStr, r.Method, "POST")
+		if r.Method != http.MethodPost {
+			t.Errorf(TestUnexpectedMsgFormatStr, r.Method, http.MethodPost)
 		}
 		if r.URL.EscapedPath() != NotificationUrlPath {
 			t.Errorf(TestUnexpectedMsgFormatStr, r.URL.EscapedPath(), NotificationUrlPath)

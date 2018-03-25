@@ -183,7 +183,7 @@ func registrationLoop(reg *registrationInfo) {
 }
 
 func updateRunningRegistrations(running map[string]*registrationInfo,
-	update export.NotifyUpdate) {
+	update export.NotifyUpdate) error {
 
 	switch update.Operation {
 	case export.NotifyUpdateDelete:
@@ -191,36 +191,35 @@ func updateRunningRegistrations(running map[string]*registrationInfo,
 			if k == update.Name {
 				v.chRegistration <- nil
 				delete(running, k)
-				return
+				return nil
 			}
 		}
-		logger.Warn("delete update not processed")
+		return fmt.Errorf("delete update not processed")
 	case export.NotifyUpdateUpdate:
 		reg := getRegistrationByName(update.Name)
 		if reg == nil {
-			logger.Error("Could not find registration", zap.String("name", update.Name))
-			return
+			return fmt.Errorf("Could not find registration")
 		}
 		for k, v := range running {
 			if k == update.Name {
 				v.chRegistration <- reg
-				return
+				return nil
 			}
 		}
-		logger.Error("Could not find running registration", zap.String("name", update.Name))
+		return fmt.Errorf("Could not find running registration")
 	case export.NotifyUpdateAdd:
 		reg := getRegistrationByName(update.Name)
 		if reg == nil {
-			logger.Error("Could not find registration", zap.String("name", update.Name))
-			return
+			return fmt.Errorf("Could not find registration")
 		}
 		regInfo := newRegistrationInfo()
 		if regInfo.update(*reg) {
 			running[reg.Name] = regInfo
 			go registrationLoop(regInfo)
 		}
+		return nil
 	default:
-		logger.Error("Invalid update operation", zap.String("operation", update.Operation))
+		return fmt.Errorf("Invalid update operation")
 	}
 }
 
@@ -276,7 +275,11 @@ func Loop(config Config, errChan chan error, eventCh chan *models.Event) {
 
 		case update := <-registrationChanges:
 			logger.Info("Registration changes")
-			updateRunningRegistrations(registrations, update)
+			err := updateRunningRegistrations(registrations, update)
+			if err != nil {
+				logger.Warn("Error updating registration", zap.Error(err),
+					zap.Any("update", update))
+			}
 
 		case event := <-eventCh:
 			logger.Info("EVENT")

@@ -27,12 +27,13 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/edgexfoundry/edgex-go/support/domain"
 	"path/filepath"
 	"strings"
+
+	"github.com/edgexfoundry/edgex-go/support/domain"
 )
 
-type LoggingClient  interface {
+type LoggingClient interface {
 	Debug(msg string, labels ...string) error
 	Error(msg string, labels ...string) error
 	Info(msg string, labels ...string) error
@@ -102,7 +103,7 @@ func verifyLogDirectory(path string) {
 	//If a path to the log file was specified and it does not exist, create it.
 	dir := strings.TrimRight(prefix, "/")
 	if len(dir) > 0 {
-		if _, err := os.Stat(dir); os.IsNotExist(err){
+		if _, err := os.Stat(dir); os.IsNotExist(err) {
 			fmt.Println("Creating directory: " + dir)
 			os.MkdirAll(dir, 0766)
 		}
@@ -167,7 +168,7 @@ func (lc EdgeXLogger) sendLog(logEntry support_domain.LogEntry) error {
 		return err
 	}
 
-	req, err := http.NewRequest("POST", lc.logTarget, bytes.NewBuffer(reqBody))
+	req, err := http.NewRequest(http.MethodPost, lc.logTarget, bytes.NewBuffer(reqBody))
 	if err != nil {
 		fmt.Println(err.Error())
 		return err
