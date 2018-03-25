@@ -19,14 +19,15 @@ package config
 
 import (
 	"io/ioutil"
-	"encoding/json"
 	"fmt"
+
+	"github.com/BurntSushi/toml"
 )
 
 const (
-	configDefault = "./res/configuration.json"
-	configDocker = "./res/configuration-docker.json"
-	configUnitTest = "./res/configuration-test.json"
+	configDefault = "./res/configuration.toml"
+	configDocker = "./res/configuration-docker.toml"
+	configUnitTest = "./res/configuration-test.toml"
 )
 
 func LoadFromFile(profile string, configuration interface{}) error {
@@ -36,8 +37,8 @@ func LoadFromFile(profile string, configuration interface{}) error {
 		return fmt.Errorf("could not load configuration file (%s): %v", path, err.Error())
 	}
 
-	// Decode the configuration from JSON
-	err = json.Unmarshal(contents, configuration)
+	// Decode the configuration from TOML
+	err = toml.Unmarshal(contents, configuration)
 	if err != nil {
 		return fmt.Errorf("unable to parse configuration file (%s): %v", path, err.Error())
 	}

@@ -31,10 +31,6 @@ import (
 	"strconv"
 )
 
-const (
-	configFile = "res/configuration.json"
-)
-
 var loggingClient logger.LoggingClient
 
 func main() {

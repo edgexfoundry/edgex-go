@@ -55,7 +55,6 @@ type ConfigurationStruct struct {
 var configuration ConfigurationStruct = ConfigurationStruct{}
 
 const (
-	CONFIG string = "res/configuration.json"
 	/* -------------- Constants for Command -------------------- */
 	COMMANDSERVICENAME       string = "core-command"
 	REST_HTTP                string = "http://"
