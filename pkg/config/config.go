@@ -26,7 +26,7 @@ import (
 )
 
 const (
-	configDirectory = "./res/"
+	configDirectory = "./res"
 	configDefault = "configuration.toml"
 	configDocker = "configuration-docker.toml"
 	configUnitTest = "configuration-test.toml"
@@ -35,7 +35,7 @@ const (
 func LoadFromFile(profile string, configuration interface{}) error {
 	path := determinePath()
 	fileName := determineConfigFile(profile)
-	contents, err := ioutil.ReadFile(path + fileName)
+	contents, err := ioutil.ReadFile(path + "/" + fileName)
 	if err != nil {
 		return fmt.Errorf("could not load configuration file (%s): %v", path, err.Error())
 	}
@@ -69,8 +69,5 @@ func determinePath() string {
 		path = configDirectory
 	}
 
-	if path[len(path)-1:] != "/" {
-		path = path + "/"
-	}
 	return path
 }
