@@ -13,6 +13,7 @@ import (
 	"strconv"
 
 	"github.com/edgexfoundry/edgex-go/export"
+
 	"go.uber.org/zap"
 )
 
