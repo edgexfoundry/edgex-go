@@ -7,7 +7,6 @@
 package logging
 
 import (
-	"fmt"
 	"os"
 	"strconv"
 
@@ -30,8 +29,8 @@ const (
 	defaultMongoUsername       = "logging"
 	defaultMongoPassword       = "password"
 
-	envMongoURL  = "EXPORT_CLIENT_MONGO_URL"
-	envMongoPort = "EXPORT_CLIENT_MONGO_PORT"
+	envMongoURL  = "SUPPORT_LOGGING_MONGO_URL"
+	envMongoPort = "SUPPORT_LOGGING_MONGO_PORT"
 
 	PersistenceMongo = "mongodb"
 	PersistenceFile  = "file"
@@ -95,7 +94,7 @@ func GetDefaultConfig() Config {
 	if err == nil {
 		cfg.MongoPort = MongoPort
 	} else {
-		fmt.Println("Could not parse port", MongoPort)
+		cfg.MongoPort = defaultMongoPort
 	}
 
 	return cfg
