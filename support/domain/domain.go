@@ -19,11 +19,11 @@ package support_domain
 
 type LogEntry struct {
 	//Id            string   `json:"id"`
-	Level         string   `json:"logLevel" bson: "loglevel"`
-	Labels        []string `json:"labels" bson: "labels`
-	OriginService string   `json:"originService" bson: "originService"`
-	Message       string   `json:"message" bson: "message"`
-	Created       int64    `json:"created" bson: "created"`
+	Level         string   `bson:"logLevel" json:"loglevel"`
+	Labels        []string `bson:"labels" json:"labels"`
+	OriginService string   `bson:"originService" json:"originService"`
+	Message       string   `bson:"message" json:"message"`
+	Created       int64    `bson:"created" json:"created"`
 }
 
 const (
