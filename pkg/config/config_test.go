@@ -19,14 +19,28 @@ package config
 
 import (
 	"testing"
+	"os"
 )
 
 type TestConfigurationStruct struct {
 	ApplicationName	string
 }
 
-func TestLoadFromFile(t *testing.T) {
+func TestLoadFromDefault(t *testing.T) {
 	configuration := &TestConfigurationStruct{}
+	err := LoadFromFile("unit-test", configuration)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if len(configuration.ApplicationName) == 0 {
+		t.Errorf("configuration.ApplicationName is zero length.")
+	}
+}
+
+func TestLoadFromEnvironment(t *testing.T) {
+	configuration := &TestConfigurationStruct{}
+	os.Setenv("EDGEX_CONF_DIR", "./res")
 	err := LoadFromFile("unit-test", configuration)
 	if err != nil {
 		t.Error(err)

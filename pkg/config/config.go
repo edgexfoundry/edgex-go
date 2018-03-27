@@ -23,6 +23,7 @@ import (
 	"os"
 
 	"github.com/BurntSushi/toml"
+	"flag"
 )
 
 const (
@@ -31,6 +32,8 @@ const (
 	configDocker = "configuration-docker.toml"
 	configUnitTest = "configuration-test.toml"
 )
+
+var confDir = flag.String("confdir", "", "Specify local configuration directory")
 
 func LoadFromFile(profile string, configuration interface{}) error {
 	path := determinePath()
@@ -61,9 +64,15 @@ func determineConfigFile(profile string) string {
 }
 
 func determinePath() string {
-	//Assumption: one service per container means only one var is needed, set accordingly for each deployment.
-	//For local dev, do not set this variable since configs are all named the same.
-	path := os.Getenv("EDGEX_CONF_DIR")
+	flag.Parse()
+
+	path := *confDir
+
+	if len(path) == 0 { //No cmd line param passed
+		//Assumption: one service per container means only one var is needed, set accordingly for each deployment.
+		//For local dev, do not set this variable since configs are all named the same.
+		path = os.Getenv("EDGEX_CONF_DIR")
+	}
 
 	if len(path) == 0 { //Var is not set
 		path = configDirectory
