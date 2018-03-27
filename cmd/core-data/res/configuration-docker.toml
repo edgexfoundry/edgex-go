@@ -11,6 +11,7 @@ AppOpenMsg = 'This is the Core Data Micro Service'
 FormatSpecifier = '%(\\d+\\$)?([-#+ 0(\\<]*)?(\\d+)?(\\.\\d+)?([tT])?([a-zA-Z%])'
 MsgPubType = 'zero'
 ServicePort = 48080
+ServiceTimeout = 5000
 ServiceAddress = 'edgex-core-data'
 ServiceName = 'edgex-core-data'
 DeviceUpdateLastConnected = false

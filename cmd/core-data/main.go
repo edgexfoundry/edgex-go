@@ -76,7 +76,7 @@ func main() {
 	}
 
 	r := data.LoadRestRoutes()
-	http.TimeoutHandler(nil, time.Millisecond*time.Duration(5000), "Request timed out")
+	http.TimeoutHandler(nil, time.Millisecond*time.Duration(configuration.ServiceTimeout), "Request timed out")
 	loggingClient.Info(configuration.AppOpenMsg, "")
 
 	heartbeat.Start(configuration.HeartBeatMsg, configuration.HeartBeatTime, loggingClient)

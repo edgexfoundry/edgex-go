@@ -31,6 +31,7 @@ type ConfigurationStruct struct {
 	FormatSpecifier            string
 	MsgPubType                 string
 	ServicePort                int
+	ServiceTimeout             int
 	ServiceAddress             string
 	ServiceName                string
 	DeviceUpdateLastConnected  bool
