@@ -64,7 +64,7 @@ func createConditions(conditions []bson.M, field string, elements []string) []bs
 }
 
 func createQuery(criteria matchCriteria) bson.M {
-	conditions := []bson.M{}
+	conditions := []bson.M{bson.M{}}
 
 	if len(criteria.Labels) > 0 {
 		conditions = createConditions(conditions, "labels", criteria.Labels)
@@ -95,9 +95,7 @@ func createQuery(criteria matchCriteria) bson.M {
 		conditions = append(conditions, bson.M{"created": bson.M{"$lt": criteria.End}})
 	}
 
-	base := bson.M{"$and": conditions}
-
-	return base
+	return bson.M{"$and": conditions}
 
 }
 
@@ -131,11 +129,7 @@ func (ml *mongoLog) find(criteria matchCriteria) []support_domain.LogEntry {
 
 	q := c.Find(base)
 
-	if criteria.Limit != 0 {
-		q = q.Limit(criteria.Limit)
-	}
-
-	if err := q.All(&le); err != nil {
+	if err := q.Limit(criteria.Limit).All(&le); err != nil {
 		return nil
 	}
 
