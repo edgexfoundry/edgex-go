@@ -56,15 +56,6 @@ exec -a edgex-core-metadata ./core-metadata &
 cd $DIR
 
 ###
-# Support logging
-###
-printf "\n### Starting support-logging\n"
-cd $CMD/support-logging
-exec -a edgex-support-logging ./support-logging &
-cd $DIR
-
-
-###
 # Export Client
 ###
 printf "\n### Starting edgex-export-client\n"
