@@ -64,7 +64,7 @@ func main() {
 
 	// Setup Logging
 	logTarget := setLoggingTarget(*configuration)
-	loggingClient = logger.NewClient(configuration.Applicationname, configuration.EnableRemoteLogging, logTarget)
+	loggingClient = logger.NewClient(configuration.ApplicationName, configuration.EnableRemoteLogging, logTarget)
 
 	loggingClient.Info(consulMsg)
 	loggingClient.Info(fmt.Sprintf("Starting %s %s ", data.COREDATASERVICENAME, edgex.Version))
@@ -83,8 +83,8 @@ func main() {
 
 	// Time it took to start service
 	loggingClient.Info("Service started in: "+time.Since(start).String(), "")
-	loggingClient.Info("Listening on port: " + strconv.Itoa(configuration.Serverport))
-	loggingClient.Error(http.ListenAndServe(":"+strconv.Itoa(configuration.Serverport), r).Error())
+	loggingClient.Info("Listening on port: " + strconv.Itoa(configuration.ServicePort))
+	loggingClient.Error(http.ListenAndServe(":"+strconv.Itoa(configuration.ServicePort), r).Error())
 }
 
 func logBeforeTermination(err error) {
@@ -93,9 +93,9 @@ func logBeforeTermination(err error) {
 }
 
 func setLoggingTarget(conf data.ConfigurationStruct) string {
-	logTarget := conf.Loggingremoteurl
+	logTarget := conf.LoggingRemoteURL
 	if !conf.EnableRemoteLogging {
-		return conf.Loggingfile
+		return conf.LoggingFile
 	}
 	return logTarget
 }

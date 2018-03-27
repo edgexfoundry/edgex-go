@@ -76,15 +76,15 @@ func main() {
 	}
 
 	r := metadata.LoadRestRoutes()
-	http.TimeoutHandler(nil, time.Millisecond*time.Duration(configuration.ServerTimeout), "Request timed out")
+	http.TimeoutHandler(nil, time.Millisecond*time.Duration(configuration.ServiceTimeout), "Request timed out")
 	loggingClient.Info(configuration.AppOpenMsg, "")
 
 	heartbeat.Start(configuration.HeartBeatMsg, configuration.HeartBeatTime, loggingClient)
 
 	// Time it took to start service
 	loggingClient.Info("Service started in: "+time.Since(start).String(), "")
-	fmt.Println("Listening on port: " + strconv.Itoa(configuration.ServerPort))
-	loggingClient.Error(http.ListenAndServe(":"+strconv.Itoa(configuration.ServerPort), r).Error())
+	fmt.Println("Listening on port: " + strconv.Itoa(configuration.ServicePort))
+	loggingClient.Error(http.ListenAndServe(":"+strconv.Itoa(configuration.ServicePort), r).Error())
 }
 
 func logBeforeTermination(err error) {

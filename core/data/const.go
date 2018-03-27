@@ -18,51 +18,51 @@
 package data
 
 type ConfigurationStruct struct {
-	Applicationname            string
-	Consulprofilesactive       string
-	Readmaxlimit               int
-	Metadatacheck              bool
-	Validatecheck              bool
-	Addtoeventqueue            bool
-	Persistdata                bool
+	ApplicationName            string
+	ConsulProfilesActive       string
+	ReadMaxLimit               int
+	MetaDataCheck              bool
+	ValidateCheck              bool
+	AddToEventQueue            bool
+	PersistData                bool
 	HeartBeatTime              int
 	HeartBeatMsg               string
 	AppOpenMsg                 string
-	Formatspecifier            string
-	Msgpubtype                 string
-	Serverport                 int
-	Serviceaddress             string
-	Servicename                string
-	Deviceupdatelastconnected  bool
-	Serviceupdatelastconnected bool
-	Datamongodbusername        string
-	Datamongodbpassword        string
-	Datamongodbdatabase        string
-	Datamongodbhost            string
-	Datamongodbport            int
-	DatamongodbsocketTimeout   int
-	DatamongodbmaxWaitTime     int
-	DatamongodbsocketKeepAlive bool
-	Consulhost                 string
-	Consulcheckaddress         string
-	Consulport                 int
-	Checkinterval              string
+	FormatSpecifier            string
+	MsgPubType                 string
+	ServicePort                int
+	ServiceAddress             string
+	ServiceName                string
+	DeviceUpdateLastConnected  bool
+	ServiceUpdateLastConnected bool
+	MongoDBUserName            string
+	MongoDBPassword            string
+	MongoDatabaseName          string
+	MongoDBHost                string
+	MongoDBPort                int
+	MongoDBConnectTimeout      int
+	MongoDBMaxWaitTime         int
+	MongoDBKeepAlive           bool
+	ConsulHost                 string
+	ConsulCheckAddress         string
+	ConsulPort                 int
+	CheckInterval              string
 	EnableRemoteLogging        bool
-	Loggingfile                string
-	Loggingremoteurl           string
-	Metadbaddressableurl       string
-	Metadbdeviceserviceurl     string
-	Metadbdeviceprofileurl     string
-	Metadbdeviceurl            string
-	Metadbdevicereporturl      string
-	Metadbcommandurl           string
-	Metadbeventurl             string
-	Metadbscheduleurl          string
-	Metadbprovisionwatcherurl  string
-	Metadbpingurl              string
-	Activemqbroker             string
-	Zeromqaddressport          string
-	Amqbroker                  string
+	LoggingFile                string
+	LoggingRemoteURL           string
+	MetaAddressableURL         string
+	MetaDeviceServiceURL       string
+	MetaDeviceProfileURL       string
+	MetaDeviceURL              string
+	MetaDeviceReportURL        string
+	MetaCommandURL             string
+	MetaEventURL               string
+	MetaScheduleURL            string
+	MetaProvisionWatcherURL    string
+	MetaPingURL                string
+	ActiveMQBroker             string
+	ZeroMQAddressPort          string
+	AmqBroker                  string
 }
 
 var configuration ConfigurationStruct = ConfigurationStruct{} //  Needs to be initialized before used
