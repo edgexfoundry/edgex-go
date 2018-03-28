@@ -28,7 +28,8 @@ import (
 type DatabaseType int8 // Database type enum
 const (
 	MONGO DatabaseType = iota
-	MOCK DatabaseType = 1
+	MOCK
+	INFLUX
 )
 
 type DBClient interface {
@@ -216,6 +217,14 @@ func NewDBClient(config DBConfiguration) (DBClient, error) {
 			return nil, err
 		}
 		return mc, nil
+	case INFLUX:
+		// Create the influx client
+		ic, err := newInfluxClient(config)
+		if err != nil {
+			fmt.Println("Error creating the influx client: " + err.Error())
+			return nil, err
+		}
+		return ic, nil
 	case MOCK:
 		//Create the mock client
 		mock := &MockDb{}
