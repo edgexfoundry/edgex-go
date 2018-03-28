@@ -8,6 +8,7 @@ package scheduler
 
 import (
 	"encoding/json"
+	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -15,8 +16,6 @@ import (
 	"strconv"
 	"strings"
 	"testing"
-
-	"github.com/edgexfoundry/edgex-go/core/domain/models"
 )
 
 // Test common const
@@ -28,6 +27,7 @@ const (
 
 // Test Schedule model const fields
 const (
+	TestScheduleId        = "testScheduleId"
 	TestScheduleName      = "midnight-1"
 	TestScheduleStart     = "20000101T000000"
 	TestScheduleEnd       = ""
@@ -45,16 +45,16 @@ const (
 	TestScheduleEventSchedule            = "testSchedule"
 	TestScheduleEventAddressableName     = "MQTT"
 	TestScheduleEventAddressableProtocol = "MQTT"
-	TestScheduleEventIdForTest           = "testScheduleEventId"
+	TestScheduleEventId                  = "testScheduleEventId"
 )
 
-// Test method : SendSchedule
-func TestSendSchedule(t *testing.T) {
+// Test method : AddSchedule
+func TestAddSchedule(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("{ 'status' : 'OK' }"))
-		if r.Method != http.MethodPost {
-			t.Errorf(TestUnexpectedMsgFormatStr, r.Method, http.MethodPost)
+		if r.Method != "POST" {
+			t.Errorf(TestUnexpectedMsgFormatStr, r.Method, "POST")
 		}
 		if r.URL.EscapedPath() != ScheduleApiPath {
 			t.Errorf(TestUnexpectedMsgFormatStr, r.URL.EscapedPath(), ScheduleApiPath)
@@ -121,9 +121,187 @@ func TestSendSchedule(t *testing.T) {
 		RunOnce:   TestScheduleRunOnce,
 	}
 
-	error := scheduleClient.SendSchedule(schedule)
+	error := scheduleClient.AddSchedule(schedule)
 	if error != nil {
 		t.Error(error)
+	}
+}
+
+// Test method : QuerySchedule
+func TestQuerySchedule(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != "GET" {
+			t.Errorf(TestUnexpectedMsgFormatStr, r.Method, "GET")
+		}
+
+		urlWithIdPath := ScheduleApiPath + "/" + TestScheduleId
+
+		if r.URL.EscapedPath() != urlWithIdPath {
+			t.Errorf(TestUnexpectedMsgFormatStr, r.URL.EscapedPath(), urlWithIdPath)
+		}
+
+		id := strings.TrimPrefix(r.URL.EscapedPath(), ScheduleApiPath+"/")
+
+		if id != TestScheduleId {
+			t.Errorf(TestUnexpectedMsgFormatStr, id, TestScheduleId)
+		}
+
+		schedule := models.Schedule{
+			Name:      TestScheduleName,
+			Start:     TestScheduleStart,
+			End:       TestScheduleEnd,
+			Frequency: TestScheduleFrequency,
+			Cron:      TestScheduleCron,
+			RunOnce:   TestScheduleRunOnce,
+		}
+
+		w.WriteHeader(http.StatusOK)
+
+		jsonBytes, err := schedule.MarshalJSON()
+		if err != nil {
+			t.Error(err.Error())
+		}
+
+		w.WriteHeader(http.StatusOK)
+		w.Write(jsonBytes)
+	}))
+
+	defer ts.Close()
+
+	u, err := url.Parse(ts.URL)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	h := strings.Split(u.Host, ":")
+
+	intPort, e := strconv.Atoi(h[1])
+	if e != nil {
+		t.Error(e)
+	}
+
+	scheduleClient := SchedulerClient{
+		SchedulerServiceHost: h[0],
+		SchedulerServicePort: intPort,
+		OwningService:        "notifications",
+	}
+
+	receivedSchedule, err := scheduleClient.QuerySchedule(TestScheduleId)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	if receivedSchedule.Name != TestScheduleName {
+		t.Errorf(TestUnexpectedMsgFormatStr, receivedSchedule.Name, TestScheduleName)
+	}
+
+	if receivedSchedule.Start != TestScheduleStart {
+		t.Errorf(TestUnexpectedMsgFormatStr, receivedSchedule.Start, TestScheduleStart)
+	}
+
+	if receivedSchedule.End != TestScheduleEnd {
+		t.Errorf(TestUnexpectedMsgFormatStr, receivedSchedule.End, TestScheduleEnd)
+	}
+
+	if receivedSchedule.Frequency != TestScheduleFrequency {
+		t.Errorf(TestUnexpectedMsgFormatStr, receivedSchedule.Frequency, TestScheduleFrequency)
+	}
+
+	if receivedSchedule.Cron != TestScheduleCron {
+		t.Errorf(TestUnexpectedMsgFormatStr, receivedSchedule.Cron, TestScheduleCron)
+	}
+
+	if receivedSchedule.RunOnce != TestScheduleRunOnce {
+		t.Errorf(TestUnexpectedMsgFormatStrForBoolVal, receivedSchedule.RunOnce, TestScheduleRunOnce)
+	}
+}
+
+// Test method : QueryScheduleWithName
+func TestQueryScheduleWithName(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != "GET" {
+			t.Errorf(TestUnexpectedMsgFormatStr, r.Method, "GET")
+		}
+
+		urlWithNamePart := ScheduleApiPath + "/name/" + TestScheduleName
+
+		if r.URL.EscapedPath() != urlWithNamePart {
+			t.Errorf(TestUnexpectedMsgFormatStr, r.URL.EscapedPath(), urlWithNamePart)
+		}
+
+		name := strings.TrimPrefix(r.URL.EscapedPath(), ScheduleApiPath+"/name/")
+
+		if name != TestScheduleName {
+			t.Errorf(TestUnexpectedMsgFormatStr, name, TestScheduleName)
+		}
+
+		schedule := models.Schedule{
+			Name:      TestScheduleName,
+			Start:     TestScheduleStart,
+			End:       TestScheduleEnd,
+			Frequency: TestScheduleFrequency,
+			Cron:      TestScheduleCron,
+			RunOnce:   TestScheduleRunOnce,
+		}
+
+		w.WriteHeader(http.StatusOK)
+
+		jsonBytes, err := schedule.MarshalJSON()
+		if err != nil {
+			t.Error(err.Error())
+		}
+
+		w.WriteHeader(http.StatusOK)
+		w.Write(jsonBytes)
+	}))
+
+	defer ts.Close()
+
+	u, err := url.Parse(ts.URL)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	h := strings.Split(u.Host, ":")
+
+	intPort, e := strconv.Atoi(h[1])
+	if e != nil {
+		t.Error(e)
+	}
+
+	scheduleClient := SchedulerClient{
+		SchedulerServiceHost: h[0],
+		SchedulerServicePort: intPort,
+		OwningService:        "notifications",
+	}
+
+	receivedSchedule, err := scheduleClient.QueryScheduleWithName(TestScheduleName)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	if receivedSchedule.Name != TestScheduleName {
+		t.Errorf(TestUnexpectedMsgFormatStr, receivedSchedule.Name, TestScheduleName)
+	}
+
+	if receivedSchedule.Start != TestScheduleStart {
+		t.Errorf(TestUnexpectedMsgFormatStr, receivedSchedule.Start, TestScheduleStart)
+	}
+
+	if receivedSchedule.End != TestScheduleEnd {
+		t.Errorf(TestUnexpectedMsgFormatStr, receivedSchedule.End, TestScheduleEnd)
+	}
+
+	if receivedSchedule.Frequency != TestScheduleFrequency {
+		t.Errorf(TestUnexpectedMsgFormatStr, receivedSchedule.Frequency, TestScheduleFrequency)
+	}
+
+	if receivedSchedule.Cron != TestScheduleCron {
+		t.Errorf(TestUnexpectedMsgFormatStr, receivedSchedule.Cron, TestScheduleCron)
+	}
+
+	if receivedSchedule.RunOnce != TestScheduleRunOnce {
+		t.Errorf(TestUnexpectedMsgFormatStrForBoolVal, receivedSchedule.RunOnce, TestScheduleRunOnce)
 	}
 }
 
@@ -250,13 +428,13 @@ func TestRemoveSchedule(t *testing.T) {
 	}
 }
 
-// Test method : SendScheduleEvent
-func TestSendScheduleEvent(t *testing.T) {
+// Test method : AddScheduleEvent
+func TestAddScheduleEvent(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("{ 'status' : 'OK' }"))
-		if r.Method != http.MethodPost {
-			t.Errorf(TestUnexpectedMsgFormatStr, r.Method, http.MethodPost)
+		if r.Method != "POST" {
+			t.Errorf(TestUnexpectedMsgFormatStr, r.Method, "POST")
 		}
 		if r.URL.EscapedPath() != ScheduleEventApiPath {
 			t.Errorf(TestUnexpectedMsgFormatStr, r.URL.EscapedPath(), ScheduleEventApiPath)
@@ -325,10 +503,99 @@ func TestSendScheduleEvent(t *testing.T) {
 		},
 	}
 
-	error := scheduleClient.SendScheduleEvent(scheduleEvent)
+	error := scheduleClient.AddScheduleEvent(scheduleEvent)
 	if error != nil {
 		t.Error(error)
 	}
+}
+
+// Test method : QueryScheduleEvent
+func TestQueryScheduleEvent(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != "GET" {
+			t.Errorf(TestUnexpectedMsgFormatStr, r.Method, "GET")
+		}
+
+		urlWithIdPath := ScheduleEventApiPath + "/" + TestScheduleEventId
+
+		if r.URL.EscapedPath() != urlWithIdPath {
+			t.Errorf(TestUnexpectedMsgFormatStr, r.URL.EscapedPath(), urlWithIdPath)
+		}
+
+		id := strings.TrimPrefix(r.URL.EscapedPath(), ScheduleEventApiPath+"/")
+		if id != TestScheduleEventId {
+			t.Errorf(TestUnexpectedMsgFormatStr, id, TestScheduleEventId)
+		}
+
+		scheduleEvent := models.ScheduleEvent{
+			Name:       TestScheduleEventName,
+			Parameters: TestScheduleEventParameters,
+			Service:    TestScheduleEventService,
+			Schedule:   TestScheduleEventSchedule,
+			Addressable: models.Addressable{
+				Name:     TestScheduleEventAddressableName,
+				Protocol: TestScheduleEventAddressableProtocol,
+			},
+		}
+
+		jsonBytes, err := scheduleEvent.MarshalJSON()
+		if err != nil {
+			t.Error(err.Error())
+		}
+
+		w.WriteHeader(http.StatusOK)
+		w.Write(jsonBytes)
+	}))
+
+	defer ts.Close()
+
+	u, err := url.Parse(ts.URL)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	h := strings.Split(u.Host, ":")
+
+	intPort, e := strconv.Atoi(h[1])
+	if e != nil {
+		t.Error(e)
+	}
+
+	scheduleClient := SchedulerClient{
+		SchedulerServiceHost: h[0],
+		SchedulerServicePort: intPort,
+		OwningService:        "notifications",
+	}
+
+	receivedScheduleEvent, error := scheduleClient.QueryScheduleEvent(TestScheduleEventId)
+	if error != nil {
+		t.Error(error)
+	}
+
+	if receivedScheduleEvent.Name != TestScheduleEventName {
+		t.Errorf(TestUnexpectedMsgFormatStr, receivedScheduleEvent.Name, TestScheduleEventName)
+	}
+
+	if receivedScheduleEvent.Parameters != TestScheduleEventParameters {
+		t.Errorf(TestUnexpectedMsgFormatStr, receivedScheduleEvent.Parameters, TestScheduleEventParameters)
+	}
+
+	if receivedScheduleEvent.Service != TestScheduleEventService {
+		t.Errorf(TestUnexpectedMsgFormatStr, receivedScheduleEvent.Service, TestScheduleEventService)
+	}
+
+	if receivedScheduleEvent.Addressable == (models.Addressable{}) {
+		t.Errorf(TestUnexpectedMsgFormatStr, receivedScheduleEvent.Addressable, "nil")
+	}
+
+	if receivedScheduleEvent.Addressable.Name != TestScheduleEventAddressableName {
+		t.Errorf(TestUnexpectedMsgFormatStr, receivedScheduleEvent.Addressable.Name, TestScheduleEventAddressableName)
+	}
+
+	if receivedScheduleEvent.Addressable.Protocol != TestScheduleEventAddressableProtocol {
+		t.Errorf(TestUnexpectedMsgFormatStr, receivedScheduleEvent.Addressable.Protocol, TestScheduleEventAddressableProtocol)
+	}
+
 }
 
 // Test method : UpdateScheduleEvent
@@ -425,7 +692,7 @@ func TestRemoveScheduleEvent(t *testing.T) {
 			t.Errorf(TestUnexpectedMsg)
 		}
 
-		if !strings.HasSuffix(r.URL.EscapedPath(), TestScheduleEventIdForTest) {
+		if !strings.HasSuffix(r.URL.EscapedPath(), TestScheduleEventId) {
 			t.Errorf(TestUnexpectedMsg)
 		}
 	}))
@@ -450,7 +717,7 @@ func TestRemoveScheduleEvent(t *testing.T) {
 		OwningService:        "notifications",
 	}
 
-	error := scheduleClient.RemoveScheduleEvent(TestScheduleEventIdForTest)
+	error := scheduleClient.RemoveScheduleEvent(TestScheduleEventId)
 	if error != nil {
 		t.Error(error)
 	}

@@ -8,15 +8,20 @@ package scheduler
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
-
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
+	"io"
+	"io/ioutil"
+	"net/http"
 )
 
 // Common http const
 const (
+	HttpGetMethod      = "GET"
+	HttpPostMethod     = "POST"
+	HttpPutMethod      = "PUT"
+	HttpDeleteMethod   = "DELETE"
 	ContentType        = "Content-Type"
 	ContentTypeJsonVal = "application/json"
 )
@@ -34,8 +39,50 @@ type SchedulerClient struct {
 	OwningService        string
 }
 
+// Function to get a schedule from the remote scheduler server
+func (schedulerClient SchedulerClient) QuerySchedule(id string) (models.Schedule, error) {
+	client := &http.Client{}
+
+	remoteScheduleUrl := fmt.Sprintf(UrlPattern, schedulerClient.SchedulerServiceHost, schedulerClient.SchedulerServicePort, ScheduleApiPath)
+	remoteScheduleUrl = remoteScheduleUrl + "/" + id
+
+	jsonBytes, err := doGet(remoteScheduleUrl, client)
+	if err != nil {
+		return models.Schedule{}, err
+	}
+
+	schedule := models.Schedule{}
+
+	if err := json.Unmarshal(jsonBytes, &schedule); err != nil {
+		return models.Schedule{}, err
+	}
+
+	return schedule, nil
+}
+
+// Function to get a schedule with schedule name from the remote scheduler server
+func (schedulerClient SchedulerClient) QueryScheduleWithName(scheduleName string) (models.Schedule, error) {
+	client := &http.Client{}
+
+	remoteScheduleUrl := fmt.Sprintf(UrlPattern, schedulerClient.SchedulerServiceHost, schedulerClient.SchedulerServicePort, ScheduleApiPath)
+	remoteScheduleUrl = remoteScheduleUrl + "/name/" + scheduleName
+
+	jsonBytes, err := doGet(remoteScheduleUrl, client)
+	if err != nil {
+		return models.Schedule{}, err
+	}
+
+	schedule := models.Schedule{}
+
+	if err := json.Unmarshal(jsonBytes, &schedule); err != nil {
+		return models.Schedule{}, err
+	}
+
+	return schedule, nil
+}
+
 // Function to send a schedule to the remote scheduler server
-func (schedulerClient SchedulerClient) SendSchedule(schedule models.Schedule) error {
+func (schedulerClient SchedulerClient) AddSchedule(schedule models.Schedule) error {
 	client := &http.Client{}
 
 	requestBody, err := schedule.MarshalJSON()
@@ -72,8 +119,29 @@ func (schedulerClient SchedulerClient) RemoveSchedule(id string) error {
 	return doDelete(remoteScheduleUrl, client)
 }
 
+// Function to get a schedule event from the remote scheduler server
+func (schedulerClient SchedulerClient) QueryScheduleEvent(id string) (models.ScheduleEvent, error) {
+	client := &http.Client{}
+
+	remoteScheduleEventUrl := fmt.Sprintf(UrlPattern, schedulerClient.SchedulerServiceHost, schedulerClient.SchedulerServicePort, ScheduleEventApiPath)
+	remoteScheduleEventUrl = remoteScheduleEventUrl + "/" + id
+
+	jsonBytes, err := doGet(remoteScheduleEventUrl, client)
+	if err != nil {
+		return models.ScheduleEvent{}, err
+	}
+
+	scheduleEvent := models.ScheduleEvent{}
+
+	if err := json.Unmarshal(jsonBytes, &scheduleEvent); err != nil {
+		return models.ScheduleEvent{}, err
+	}
+
+	return scheduleEvent, nil
+}
+
 // Function to send a schedule event to the remote scheduler server
-func (schedulerClient SchedulerClient) SendScheduleEvent(scheduleEvent models.ScheduleEvent) error {
+func (schedulerClient SchedulerClient) AddScheduleEvent(scheduleEvent models.ScheduleEvent) error {
 	client := &http.Client{}
 
 	requestBody, err := scheduleEvent.MarshalJSON()
@@ -110,9 +178,20 @@ func (schedulerClient SchedulerClient) RemoveScheduleEvent(id string) error {
 	return doDelete(remoteScheduleEventUrl, client)
 }
 
+// Function to do get request
+func doGet(url string, client *http.Client) ([]byte, error) {
+	req, err := http.NewRequest(HttpGetMethod, url, nil)
+
+	if err != nil {
+		return []byte{}, err
+	}
+
+	return sendRequestAndGetRespone(client, req)
+}
+
 // Function to do post request
 func doPost(url string, binaryReqBody io.Reader, client *http.Client) error {
-	req, err := http.NewRequest(http.MethodPost, url, binaryReqBody)
+	req, err := http.NewRequest(HttpPostMethod, url, binaryReqBody)
 	req.Header.Add(ContentType, ContentTypeJsonVal)
 
 	if err != nil {
@@ -124,7 +203,7 @@ func doPost(url string, binaryReqBody io.Reader, client *http.Client) error {
 
 // Function to do put request
 func doPut(url string, binaryReqBody io.Reader, client *http.Client) error {
-	req, err := http.NewRequest(http.MethodPut, url, binaryReqBody)
+	req, err := http.NewRequest(HttpPutMethod, url, binaryReqBody)
 	req.Header.Add(ContentType, ContentTypeJsonVal)
 
 	if err != nil {
@@ -136,7 +215,7 @@ func doPut(url string, binaryReqBody io.Reader, client *http.Client) error {
 
 // Function to do delete request
 func doDelete(url string, client *http.Client) error {
-	req, err := http.NewRequest(http.MethodDelete, url, nil)
+	req, err := http.NewRequest(HttpDeleteMethod, url, nil)
 
 	if err != nil {
 		return err
@@ -155,4 +234,22 @@ func sendRequest(client *http.Client, req *http.Request) error {
 	} else {
 		return err
 	}
+}
+
+// Function to actually make the HTTP request and get the response body
+func sendRequestAndGetRespone(client *http.Client, req *http.Request) ([]byte, error) {
+	resp, err := client.Do(req)
+	if err != nil {
+		return []byte{}, err
+	}
+
+	defer resp.Body.Close()
+	resp.Close = true
+
+	bodyBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return []byte{}, err
+	}
+
+	return bodyBytes, nil
 }
