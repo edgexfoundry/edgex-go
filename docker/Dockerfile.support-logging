@@ -1,0 +1,23 @@
+#
+# Copyright (c) 2018
+# Cavium
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+FROM golang:1.9-alpine AS builder
+WORKDIR /go/src/github.com/edgexfoundry/edgex-go
+
+# The main mirrors are giving us timeout issues on builds periodically.
+# So we can try these.
+RUN echo http://nl.alpinelinux.org/alpine/v3.6/main > /etc/apk/repositories; \
+    echo http://nl.alpinelinux.org/alpine/v3.6/community >> /etc/apk/repositories
+
+
+RUN apk update && apk add make
+COPY . .
+RUN make cmd/support-logging/support-logging
+
+FROM scratch
+COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/support-logging/support-logging /
+ENTRYPOINT ["/support-logging"]

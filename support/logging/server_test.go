@@ -291,7 +291,7 @@ func TestRemoveLogs(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			req, err := http.NewRequest("DELETE", ts.URL+"/api/v1"+"/logs/"+tt.url, nil)
+			req, err := http.NewRequest(http.MethodDelete, ts.URL+"/api/v1"+"/logs/"+tt.url, nil)
 			if err != nil {
 				t.Errorf("Error creating request logs %v", err)
 			}

@@ -149,7 +149,7 @@ func restAddScheduleEvent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Notify Associates
-	if err := notifyScheduleEventAssociates(se, models.POST); err != nil {
+	if err := notifyScheduleEventAssociates(se, http.MethodPost); err != nil {
 		loggingClient.Error("Problem notifying associated device services for schedule event: "+err.Error(), "")
 	}
 
@@ -186,7 +186,7 @@ func restUpdateScheduleEvent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Notify Associates
-	if err := notifyScheduleEventAssociates(to, models.PUT); err != nil {
+	if err := notifyScheduleEventAssociates(to, http.MethodPut); err != nil {
 		loggingClient.Error("Problem notifying associated device services with the schedule event: "+err.Error(), "")
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -297,16 +297,16 @@ func updateScheduleEventFields(from models.ScheduleEvent, to *models.ScheduleEve
 	// Notify associates (based on if the service changed)
 	if serviceChanged {
 		// Delete from old
-		if err := notifyScheduleEventAssociates(models.ScheduleEvent{Name: oldService}, models.DELETE); err != nil {
+		if err := notifyScheduleEventAssociates(models.ScheduleEvent{Name: oldService}, http.MethodDelete); err != nil {
 			loggingClient.Error("Problem notifying associated device services for the schedule event: "+err.Error(), "")
 		}
 		// Add to new
-		if err := notifyScheduleEventAssociates(*to, models.POST); err != nil {
+		if err := notifyScheduleEventAssociates(*to, http.MethodPost); err != nil {
 			loggingClient.Error("Problem notifying associated device services for the schedule event: "+err.Error(), "")
 		}
 	} else {
 		// Changed schedule event
-		if err := notifyScheduleEventAssociates(*to, models.PUT); err != nil {
+		if err := notifyScheduleEventAssociates(*to, http.MethodPut); err != nil {
 			loggingClient.Error("Problem notifying associated device services for the schedule event: "+err.Error(), "")
 		}
 	}
@@ -416,7 +416,7 @@ func deleteScheduleEvent(se models.ScheduleEvent, w http.ResponseWriter) error {
 	}
 
 	// Notify Associates
-	if err := notifyScheduleEventAssociates(se, models.DELETE); err != nil {
+	if err := notifyScheduleEventAssociates(se, http.MethodDelete); err != nil {
 		loggingClient.Error("Problem notifying associated device services for the schedule event: "+err.Error(), "")
 	}
 
@@ -623,7 +623,7 @@ func restAddSchedule(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Notify Associates
-	if err := notifyScheduleAssociates(s, models.POST); err != nil {
+	if err := notifyScheduleAssociates(s, http.MethodPost); err != nil {
 		loggingClient.Error("Problem notifying associated device services for schedule: "+err.Error(), "")
 	}
 
@@ -667,7 +667,7 @@ func restUpdateSchedule(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Notify Associates
-	if err := notifyScheduleAssociates(to, models.PUT); err != nil {
+	if err := notifyScheduleAssociates(to, http.MethodPut); err != nil {
 		loggingClient.Error("Problem notifying associated device services for schedule: "+err.Error(), "")
 	}
 
@@ -867,7 +867,7 @@ func deleteSchedule(s models.Schedule, w http.ResponseWriter) error {
 	}
 
 	// Notify Associates
-	if err := notifyScheduleAssociates(s, models.DELETE); err != nil {
+	if err := notifyScheduleAssociates(s, http.MethodDelete); err != nil {
 		loggingClient.Error("Problem notifying associated device services for schedule: "+err.Error(), "")
 	}
 
@@ -888,7 +888,7 @@ func isScheduleStillInUse(s models.Schedule) (bool, error) {
 }
 
 // Notify the associated device services for the schedule
-func notifyScheduleAssociates(s models.Schedule, action models.NotifyAction) error {
+func notifyScheduleAssociates(s models.Schedule, action string) error {
 	// Get the associated schedule events
 	var events []models.ScheduleEvent
 	if err := getScheduleEventsByScheduleName(&events, s.Name); err != nil {
@@ -914,7 +914,7 @@ func notifyScheduleAssociates(s models.Schedule, action models.NotifyAction) err
 }
 
 // Notify the associated device service for the schedule event
-func notifyScheduleEventAssociates(se models.ScheduleEvent, action models.NotifyAction) error {
+func notifyScheduleEventAssociates(se models.ScheduleEvent, action string) error {
 	// Get the associated device service
 	var ds models.DeviceService
 	if err := getDeviceServiceByName(&ds, se.Service); err != nil {

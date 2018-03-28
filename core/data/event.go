@@ -42,7 +42,7 @@ func putEventOnQueue(e models.Event) {
 // Update when the device was last reported connected
 func updateDeviceLastReportedConnected(device string) {
 	// Config set to skip update last reported
-	if !configuration.Deviceupdatelastconnected {
+	if !configuration.DeviceUpdateLastConnected {
 		loggingClient.Debug("Skipping update of device connected/reported times for:  " + device)
 		return
 	}
@@ -99,7 +99,7 @@ func updateDeviceLastReportedConnected(device string) {
 
 // Update when the device service was last reported connected
 func updateDeviceServiceLastReportedConnected(device string) {
-	if !configuration.Serviceupdatelastconnected {
+	if !configuration.ServiceUpdateLastConnected {
 		loggingClient.Debug("Skipping update of device service connected/reported times for:  " + device)
 		return
 	}
@@ -158,7 +158,7 @@ func scrubAllHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	switch r.Method {
-	case "DELETE":
+	case http.MethodDelete:
 		loggingClient.Info("Deleting all events from database")
 
 		err := dbc.ScrubAllEvents()
@@ -180,11 +180,13 @@ Status code 503 - unanticipated issues
 api/v1/event
 */
 func eventHandler(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
+	if r.Body != nil {
+		defer r.Body.Close()
+	}
 
 	switch r.Method {
 	// Get all events
-	case "GET":
+	case http.MethodGet:
 		events, err := dbc.Events()
 		if err != nil {
 			loggingClient.Error(err.Error())
@@ -193,7 +195,7 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Check max limit
-		if len(events) > configuration.Readmaxlimit {
+		if len(events) > configuration.ReadMaxLimit {
 			http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
 			loggingClient.Error(maxExceededString)
 			return
@@ -202,7 +204,7 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 		encode(events, w)
 		break
 	// Post a new event
-	case "POST":
+	case http.MethodPost:
 		var e models.Event
 		dec := json.NewDecoder(r.Body)
 		err := dec.Decode(&e)
@@ -233,13 +235,13 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// See if metadata checking is enabled
-		if configuration.Metadatacheck && !deviceFound {
+		if configuration.MetaDataCheck && !deviceFound {
 			loggingClient.Error("Device not found for event: "+err.Error(), "")
 			http.Error(w, err.Error(), http.StatusNotFound)
 			return
 		}
 
-		if configuration.Validatecheck {
+		if configuration.ValidateCheck {
 			loggingClient.Debug("Validation enabled, parsing events")
 			for reading := range e.Readings {
 				valid, err := isValidValueDescriptor(e.Readings[reading], e)
@@ -251,7 +253,7 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Add the readings to the database
-		if configuration.Persistdata {
+		if configuration.PersistData {
 			for i, reading := range e.Readings {
 				// Check value descriptor
 				_, err := dbc.ValueDescriptorByName(reading.Name)
@@ -298,7 +300,7 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 
 		break
 	// Do not update the readings
-	case "PUT":
+	case http.MethodPut:
 		var from models.Event
 		dec := json.NewDecoder(r.Body)
 		err := dec.Decode(&from)
@@ -336,7 +338,7 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 			}
 
 			// See if we need to check metadata
-			if configuration.Metadatacheck && !deviceFound {
+			if configuration.MetaDataCheck && !deviceFound {
 				http.Error(w, "Error updating event: Device "+from.Device+" doesn't exist", http.StatusNotFound)
 				loggingClient.Error("Error updating device, device " + from.Device + " doesn't exist")
 				return
@@ -373,10 +375,12 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 ///api/v1/event/{id}
 //id - ID of the event to return
 func getEventByIdHandler(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
+	if r.Body != nil {
+		defer r.Body.Close()
+	}
 
 	switch r.Method {
-	case "GET":
+	case http.MethodGet:
 		// URL parameters
 		vars := mux.Vars(r)
 		id := vars["id"]
@@ -406,7 +410,7 @@ func eventCountHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	switch r.Method {
-	case "GET":
+	case http.MethodGet:
 		count, err := dbc.EventCount()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -440,7 +444,7 @@ func eventCountByDeviceIdHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	switch r.Method {
-	case "GET":
+	case http.MethodGet:
 		// Get the device
 		// Try by ID
 		d, err := mdc.Device(id)
@@ -482,7 +486,7 @@ func eventIdHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	// Set the 'pushed' timestamp for the event to the current time - event is going to another (not fuse) service
-	case "PUT":
+	case http.MethodPut:
 		// Check if the event exists
 		e, err := dbc.EventById(id)
 		if err != nil {
@@ -510,7 +514,7 @@ func eventIdHandler(w http.ResponseWriter, r *http.Request) {
 		//encode(true, w)
 		break
 	// Delete the event and all of it's readings
-	case "DELETE":
+	case http.MethodDelete:
 		// Check if the event exists
 		e, err := dbc.EventById(id)
 		if err != nil {
@@ -581,15 +585,15 @@ func getEventByDeviceHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// See if you need to check metadata for the device
-	if configuration.Metadatacheck && !deviceFound {
+	if configuration.MetaDataCheck && !deviceFound {
 		http.Error(w, "Error getting events for a device: The device '"+deviceId+"' doesn't exist", http.StatusNotFound)
 		loggingClient.Error("Error getting readings for a device: The device doesn't exist")
 		return
 	}
 
 	switch r.Method {
-	case "GET":
-		if limitNum > configuration.Readmaxlimit {
+	case http.MethodGet:
+		if limitNum > configuration.ReadMaxLimit {
 			http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
 			loggingClient.Error(maxExceededString)
 			return
@@ -637,14 +641,14 @@ func deleteByDeviceIdHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// See if you need to check metadata
-	if configuration.Metadatacheck && !deviceFound {
+	if configuration.MetaDataCheck && !deviceFound {
 		loggingClient.Error("Device not found for event: "+err.Error(), "")
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
 
 	switch r.Method {
-	case "DELETE":
+	case http.MethodDelete:
 		// Get the events by the device name
 		events, err := dbc.EventsForDevice(deviceId)
 		if err != nil {
@@ -705,8 +709,8 @@ func eventByCreationTimeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	switch r.Method {
-	case "GET":
-		if limit > configuration.Readmaxlimit {
+	case http.MethodGet:
+		if limit > configuration.ReadMaxLimit {
 			http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
 			loggingClient.Error(maxExceededString)
 			return
@@ -757,8 +761,8 @@ func readingByDeviceFilteredValueDescriptor(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	switch r.Method {
-	case "GET":
-		if limitNum > configuration.Readmaxlimit {
+	case http.MethodGet:
+		if limitNum > configuration.ReadMaxLimit {
 			http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
 			loggingClient.Error(maxExceededString)
 			return
@@ -781,7 +785,7 @@ func readingByDeviceFilteredValueDescriptor(w http.ResponseWriter, r *http.Reque
 		}
 
 		// See if you need to check metadata
-		if configuration.Metadatacheck && !deviceFound {
+		if configuration.MetaDataCheck && !deviceFound {
 			loggingClient.Error("Device not found for event: "+err.Error(), "")
 			http.Error(w, err.Error(), http.StatusNotFound)
 			return
@@ -833,7 +837,7 @@ func eventByAgeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	switch r.Method {
-	case "DELETE":
+	case http.MethodDelete:
 		// Get the events
 		events, err := dbc.EventsOlderThanAge(age)
 		if err != nil {
@@ -868,7 +872,7 @@ func scrubHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	switch r.Method {
-	case "DELETE":
+	case http.MethodDelete:
 		loggingClient.Info("Scrubbing events.  Deleting all events that have been pushed")
 
 		// Get the events

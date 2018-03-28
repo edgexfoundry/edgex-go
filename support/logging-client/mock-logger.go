@@ -11,39 +11,37 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *
- * @microservice: core-domain-go library
- * @author: Ryan Comer & Spencer Bull, Dell
+ * @microservice: support-logging-client-go library
+ * @author: Trevor Conn, Dell
  * @version: 0.5.0
  *******************************************************************************/
 
-package enums
+package logger
 
-/*
-This file is the protocol enum for EdgeX
-Current values: HTTP, TCP, MAC, ZMQ, OTHER, SSL
-HTTP - for REST communications
-TCP - for MQTT and other general TCP based communications
-MAC - MAC address - low level (example serial) communications
-ZMQ - Zero MQ communications
-SSL - for TLS encrypted sockets
-*/
+type MockLogger struct {
 
-type ProtocolType uint8
+}
 
-const (
-	HTTP ProtocolType = iota
-	TCP
-	MAC
-	ZMQ
-	OTHER
-	SSL
-)
+func NewMockClient() LoggingClient {
+	return MockLogger{}
+}
 
-var protocolStringArray = [...]string{"HTTP", "TCP", "MAC", "ZMQ", "OTHER", "SSL"}
+func (lc MockLogger) Info(msg string, labels ...string) error {
+	return nil
+}
 
-/*
-String() function for formatting
-*/
-func (p ProtocolType) String() string {
-	return protocolStringArray[p]
+func (lc MockLogger) Debug(msg string, labels ...string) error {
+	return nil
+}
+
+func (lc MockLogger) Error(msg string, labels ...string) error {
+	return nil
+}
+
+func (lc MockLogger) Trace(msg string, labels ...string) error {
+	return nil
+}
+
+func (lc MockLogger) Warn(msg string, labels ...string) error {
+	return nil
 }

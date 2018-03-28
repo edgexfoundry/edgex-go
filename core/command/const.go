@@ -22,7 +22,7 @@ type ConfigurationStruct struct {
 	ApplicationName           string
 	ConsulProfilesActive      string
 	ReadMaxLimit              int
-	ServerPort                int
+	ServicePort               int
 	HeartBeatTime             int
 	ConsulPort                int
 	ServiceTimeout            int
@@ -31,7 +31,7 @@ type ConfigurationStruct struct {
 	ServiceName               string
 	DeviceServiceProtocol     string
 	HeartBeatMsg              string
-	AppOpenMsg            	  string
+	AppOpenMsg                string
 	URLProtocol               string
 	URLDevicePath             string
 	ConsulHost                string
@@ -39,30 +39,24 @@ type ConfigurationStruct struct {
 	EnableRemoteLogging       bool
 	LogFile                   string
 	LoggingRemoteURL          string
-	Metadbaddressableurl      string
-	Metadbdeviceserviceurl    string
-	Metadbdeviceprofileurl    string
-	Metadbdeviceurl           string
-	Metadbdevicereporturl     string
-	Metadbcommandurl          string
-	Metadbeventurl            string
-	Metadbscheduleurl         string
-	Metadbprovisionwatcherurl string
-	Metadbpingurl             string
+	MetaAddressableURL        string
+	MetaDeviceServiceURL      string
+	MetaDeviceProfileURL      string
+	MetaDeviceURL             string
+	MetaDeviceReportURL       string
+	MetaCommandURL            string
+	MetaEventURL              string
+	MetaScheduleURL           string
+	MetaProvisionWatcherURL   string
 }
 
 // Configuration data for the metadata service
 var configuration ConfigurationStruct = ConfigurationStruct{}
 
 const (
-	CONFIG string = "res/configuration.json"
 	/* -------------- Constants for Command -------------------- */
 	COMMANDSERVICENAME       string = "core-command"
 	REST_HTTP                string = "http://"
-	GET                      string = "GET"
-	PUT                      string = "PUT"
-	POST                     string = "POST"
-	DELETE                   string = "DELETE"
 	ID                       string = "id"
 	_ID                      string = "_id"
 	NAME                     string = "name"

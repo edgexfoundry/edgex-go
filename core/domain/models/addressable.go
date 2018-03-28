@@ -27,11 +27,6 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
-const (
-	MethodGet  = "GET"
-	MethodPost = "POST"
-)
-
 /*
  * This file is the model for addressable in EdgeX
  * Addressable holds information about a specific address

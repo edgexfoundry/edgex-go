@@ -19,25 +19,29 @@ package config
 
 import (
 	"io/ioutil"
-	"encoding/json"
 	"fmt"
+	"os"
+
+	"github.com/BurntSushi/toml"
 )
 
 const (
-	configDefault = "./res/configuration.json"
-	configDocker = "./res/configuration-docker.json"
-	configUnitTest = "./res/configuration-test.json"
+	configDirectory = "./res"
+	configDefault = "configuration.toml"
+	configDocker = "configuration-docker.toml"
+	configUnitTest = "configuration-test.toml"
 )
 
 func LoadFromFile(profile string, configuration interface{}) error {
-	path := determineConfigFile(profile)
-	contents, err := ioutil.ReadFile(path)
+	path := determinePath()
+	fileName := determineConfigFile(profile)
+	contents, err := ioutil.ReadFile(path + "/" + fileName)
 	if err != nil {
 		return fmt.Errorf("could not load configuration file (%s): %v", path, err.Error())
 	}
 
-	// Decode the configuration from JSON
-	err = json.Unmarshal(contents, configuration)
+	// Decode the configuration from TOML
+	err = toml.Unmarshal(contents, configuration)
 	if err != nil {
 		return fmt.Errorf("unable to parse configuration file (%s): %v", path, err.Error())
 	}
@@ -54,4 +58,16 @@ func determineConfigFile(profile string) string {
 	default:
 		return configDefault
 	}
+}
+
+func determinePath() string {
+	//Assumption: one service per container means only one var is needed, set accordingly for each deployment.
+	//For local dev, do not set this variable since configs are all named the same.
+	path := os.Getenv("EDGEX_CONF_DIR")
+
+	if len(path) == 0 { //Var is not set
+		path = configDirectory
+	}
+
+	return path
 }

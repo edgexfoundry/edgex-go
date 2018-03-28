@@ -37,7 +37,7 @@ func ConnectToConsul(conf ConfigurationStruct) error {
 	// Initialize service on Consul
 	err := consulclient.ConsulInit(consulclient.ConsulConfig{
 		ServiceName:    conf.ServiceName,
-		ServicePort:    conf.ServerPort,
+		ServicePort:    conf.ServicePort,
 		ServiceAddress: conf.ServiceAddress,
 		CheckAddress:   conf.ConsulCheckAddress,
 		CheckInterval:  conf.CheckInterval,
@@ -63,7 +63,7 @@ func Init(conf ConfigurationStruct, l logger.LoggingClient) error {
 	// Update Service CONSTANTS
 	MONGODATABASE = configuration.MongoDatabaseName
 	PROTOCOL = configuration.Protocol
-	SERVERPORT = strconv.Itoa(configuration.ServerPort)
+	SERVERPORT = strconv.Itoa(configuration.ServicePort)
 	DBTYPE = configuration.DBType
 	DOCKERMONGO = configuration.MongoDBHost + ":" + strconv.Itoa(configuration.MongoDBPort)
 	DBUSER = configuration.MongoDBUserName

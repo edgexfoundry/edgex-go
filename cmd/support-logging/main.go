@@ -14,6 +14,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	edgex "github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/edgex-go/support/logging"
 )
 
@@ -22,6 +23,7 @@ const ()
 func main() {
 	cfg := loadConfig()
 
+	fmt.Printf("Starting support-logging %s\n", edgex.Version)
 	errs := make(chan error, 2)
 
 	go func() {

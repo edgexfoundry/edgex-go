@@ -1,0 +1,34 @@
+ApplicationName = 'edgex-core-metadata'
+DBType = 'mongodb'
+MongoDatabaseName = 'metadata'
+MongoDBUserName = 'meta'
+MongoDBPassword = 'password'
+MongoDBHost = 'edgex-mongo'
+MongoDBPort = 27017
+MongoDBConnectTimeout = 5000
+ReadMaxLimit = 100
+Protocol = 'http'
+ServiceName = 'edgex-core-metadata'
+ServiceAddress = 'edgex-core-metadata'
+ServicePort = 48081
+ServiceTimeout = 5000
+HeartBeatTime = 300000
+HeartBeatMsg = 'Core Metadata heart beat'
+AppOpenMsg = 'This is the EdgeX Core Metadata MicroService'
+ConsulHost = 'edgex-core-consul'
+ConsulProfilesActive = 'docker;go'
+ConsulCheckAddress = 'http://edgex-core-metadata=48081/api/v1/ping'
+CheckInterval = '10s'
+ConsulPort = 8500
+EnableRemoteLogging = true
+LoggingFile = './logs/edgex-core-metadata.log'
+LoggingRemoteURL = 'http://edgex-support-logging=48061/api/v1/logs'
+NotificationPostDeviceChanges = true
+NotificationsSlug = 'device-change-'
+NotificationContent = 'Device update: '
+NotificationSender = 'edgex-core-metadata'
+NotificationDescription = 'Metadata device notice'
+NotificationLabel = 'metadata'
+SupportNotificationsNotificationURL = 'http://edgex-support-notifications:48060/api/v1/notification'
+SupportNotificationsSubscriptionURL = 'http://edgex-support-notifications:48060/api/v1/subscription'
+SupportNotificationsTransmissionURL = 'http://edgex-support-notifications:48060/api/v1/transmission'

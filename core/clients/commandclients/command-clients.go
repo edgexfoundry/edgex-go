@@ -29,37 +29,46 @@ import (
 )
 
 // CommandClient : client to interact with core command
-type CommandClient struct {
+type CommandClient interface {
+	Devices() ([]models.Device, error)
+	Device(id string) (models.Device, error)
+	DeviceByName(n string) (models.Device, error)
+	Get(id string, cID string) (string, error)
+	Put(id string, cID string, body string) (string, error)
+}
+
+type CommandRestClient struct {
 	url string
 }
 
 // NewCommandClient : Create an instance of CommandClient
 func NewCommandClient(commandURL string) CommandClient {
-	return CommandClient{url: commandURL}
+	c := CommandRestClient{url: commandURL}
+	return &c
 }
 
 // Devices : return all Devices
-func (cc *CommandClient) Devices() ([]models.Device, error) {
+func (cc *CommandRestClient) Devices() ([]models.Device, error) {
 	dc := metadataclients.NewDeviceClient(cc.url)
 
 	return dc.Devices()
 }
 
 // Device : return device by id
-func (cc *CommandClient) Device(id string) (models.Device, error) {
+func (cc *CommandRestClient) Device(id string) (models.Device, error) {
 	dc := metadataclients.NewDeviceClient(cc.url)
 	return dc.Device(id)
 }
 
 // DeviceByName : return device by name
-func (cc *CommandClient) DeviceByName(n string) (models.Device, error) {
+func (cc *CommandRestClient) DeviceByName(n string) (models.Device, error) {
 	dc := metadataclients.NewDeviceClient(cc.url)
 	return dc.DeviceForName(n)
 }
 
 // Get : issue GET command
-func (cc *CommandClient) Get(id string, cID string) (string, error) {
-	req, err := http.NewRequest(GET, cc.url+"/"+id+"/"+COMMAND+"/"+cID, nil)
+func (cc *CommandRestClient) Get(id string, cID string) (string, error) {
+	req, err := http.NewRequest(http.MethodGet, cc.url+"/"+id+"/"+COMMAND+"/"+cID, nil)
 	if err != nil {
 		fmt.Println(err.Error())
 		return "", err
@@ -84,8 +93,8 @@ func (cc *CommandClient) Get(id string, cID string) (string, error) {
 }
 
 // Put : Issue PUT command
-func (cc *CommandClient) Put(id string, cID string, body string) (string, error) {
-	req, err := http.NewRequest(PUT, cc.url+"/"+id+"/"+COMMAND+"/"+cID, strings.NewReader(body))
+func (cc *CommandRestClient) Put(id string, cID string, body string) (string, error) {
+	req, err := http.NewRequest(http.MethodPut, cc.url+"/"+id+"/"+COMMAND+"/"+cID, strings.NewReader(body))
 	if err != nil {
 		fmt.Println(err.Error())
 		return "", err

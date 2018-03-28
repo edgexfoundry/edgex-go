@@ -52,7 +52,7 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	switch r.Method {
-	case "GET":
+	case http.MethodGet:
 		r, err := dbc.Readings()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -61,14 +61,14 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Check max limit
-		if len(r) > configuration.Readmaxlimit {
+		if len(r) > configuration.ReadMaxLimit {
 			http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
 			loggingClient.Error(maxExceededString)
 			return
 		}
 
 		encode(r, w)
-	case "POST":
+	case http.MethodPost:
 		reading := models.Reading{}
 		dec := json.NewDecoder(r.Body)
 		err := dec.Decode(&reading)
@@ -109,7 +109,7 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 			reading.Device = d.Name
 		}
 
-		if configuration.Persistdata {
+		if configuration.PersistData {
 			id, err := dbc.AddReading(reading)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -123,7 +123,7 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 			// Didn't save the reading in the database
 			encode("unsaved", w)
 		}
-	case "PUT":
+	case http.MethodPut:
 		from := models.Reading{}
 		dec := json.NewDecoder(r.Body)
 		err := dec.Decode(&from)
@@ -192,7 +192,7 @@ func getReadingByIdHandler(w http.ResponseWriter, r *http.Request) {
 	id := vars["id"]
 
 	switch r.Method {
-	case "GET":
+	case http.MethodGet:
 		reading, err := dbc.ReadingById(id)
 		if err != nil {
 			if err == clients.ErrNotFound {
@@ -214,7 +214,7 @@ func readingCountHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	switch r.Method {
-	case "GET":
+	case http.MethodGet:
 		count, err := dbc.ReadingCount()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -239,7 +239,7 @@ func deleteReadingByIdHandler(w http.ResponseWriter, r *http.Request) {
 	id := vars["id"]
 
 	switch r.Method {
-	case "DELETE":
+	case http.MethodDelete:
 		// Check if the reading exists
 		reading, err := dbc.ReadingById(id)
 		if err != nil {
@@ -289,8 +289,8 @@ func readingByDeviceHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	switch r.Method {
-	case "GET":
-		if limit > configuration.Readmaxlimit {
+	case http.MethodGet:
+		if limit > configuration.ReadMaxLimit {
 			http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
 			loggingClient.Error(maxExceededString)
 			return
@@ -304,7 +304,7 @@ func readingByDeviceHandler(w http.ResponseWriter, r *http.Request) {
 			// Then check by ID
 			d, err = mdc.Device(deviceId)
 			if err != nil {
-				if configuration.Metadatacheck {
+				if configuration.MetaDataCheck {
 					http.Error(w, "Device doesn't exist for the reading", http.StatusNotFound)
 					loggingClient.Error("Error getting readings for a device: The device doesn't exist")
 					return
@@ -356,7 +356,7 @@ func readingbyValueDescriptorHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Limit is too large
-	if limit > configuration.Readmaxlimit {
+	if limit > configuration.ReadMaxLimit {
 		http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
 		loggingClient.Error(maxExceededString)
 		return
@@ -396,7 +396,7 @@ func readingByUomLabelHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Limit was exceeded
-	if limit > configuration.Readmaxlimit {
+	if limit > configuration.ReadMaxLimit {
 		http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
 		loggingClient.Error(maxExceededString)
 		return
@@ -448,7 +448,7 @@ func readingByLabelHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Limit is too large
-	if limit > configuration.Readmaxlimit {
+	if limit > configuration.ReadMaxLimit {
 		loggingClient.Error(maxExceededString)
 		http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
 		return
@@ -500,7 +500,7 @@ func readingByTypeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Limit exceeds max limit
-	if l > configuration.Readmaxlimit {
+	if l > configuration.ReadMaxLimit {
 		http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
 		loggingClient.Error(maxExceededString)
 		return
@@ -554,8 +554,8 @@ func readingByCreationTimeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	switch r.Method {
-	case "GET":
-		if l > configuration.Readmaxlimit {
+	case http.MethodGet:
+		if l > configuration.ReadMaxLimit {
 			loggingClient.Error(maxExceededString)
 			http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
 			return
@@ -602,7 +602,7 @@ func readingByValueDescriptorAndDeviceHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	if limit > configuration.Readmaxlimit {
+	if limit > configuration.ReadMaxLimit {
 		loggingClient.Error(maxExceededString)
 		http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
 		return

@@ -80,7 +80,7 @@ func (nc NotificationsClient) RecieveNotification(n Notification) error {
 	}
 
 	// Create the request
-	req, err := http.NewRequest("POST", nc.RemoteUrl, bytes.NewBuffer(requestBody))
+	req, err := http.NewRequest(http.MethodPost, nc.RemoteUrl, bytes.NewBuffer(requestBody))
 	req.Header.Add("Content-Type", "application/json")
 	if err != nil {
 		fmt.Println(err.Error())

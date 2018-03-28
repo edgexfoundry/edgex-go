@@ -10,6 +10,7 @@ cmd/core-data/core-data
 cmd/core-metadata/core-metadata
 cmd/export-client/export-client
 cmd/export-distro/export-distro
+cmd/support-logging/support-logging
 
 # log dirs
 cmd/core-command/logs/
