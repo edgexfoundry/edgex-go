@@ -79,8 +79,8 @@ func main() {
 
 	// Time it took to start service
 	loggingClient.Info("Service started in: "+time.Since(start).String(), "")
-	loggingClient.Info("Listening on port: "+strconv.Itoa(configuration.ServerPort), "")
-	loggingClient.Error(http.ListenAndServe(":"+strconv.Itoa(configuration.ServerPort), r).Error())
+	loggingClient.Info("Listening on port: "+strconv.Itoa(configuration.ServicePort), "")
+	loggingClient.Error(http.ListenAndServe(":"+strconv.Itoa(configuration.ServicePort), r).Error())
 }
 
 func logBeforeTermination(err error) {

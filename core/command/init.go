@@ -32,7 +32,7 @@ func ConnectToConsul(conf ConfigurationStruct) error {
 	// Initialize service on Consul
 	err := consulclient.ConsulInit(consulclient.ConsulConfig{
 		ServiceName:    conf.ServiceName,
-		ServicePort:    conf.ServerPort,
+		ServicePort:    conf.ServicePort,
 		ServiceAddress: conf.ServiceAddress,
 		CheckAddress:   conf.ConsulCheckAddress,
 		CheckInterval:  conf.CheckInterval,

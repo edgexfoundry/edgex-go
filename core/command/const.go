@@ -22,7 +22,7 @@ type ConfigurationStruct struct {
 	ApplicationName           string
 	ConsulProfilesActive      string
 	ReadMaxLimit              int
-	ServerPort                int
+	ServicePort               int
 	HeartBeatTime             int
 	ConsulPort                int
 	ServiceTimeout            int
@@ -39,16 +39,15 @@ type ConfigurationStruct struct {
 	EnableRemoteLogging       bool
 	LogFile                   string
 	LoggingRemoteURL          string
-	Metadbaddressableurl      string
-	Metadbdeviceserviceurl    string
-	Metadbdeviceprofileurl    string
-	Metadbdeviceurl           string
-	Metadbdevicereporturl     string
-	Metadbcommandurl          string
-	Metadbeventurl            string
-	Metadbscheduleurl         string
-	Metadbprovisionwatcherurl string
-	Metadbpingurl             string
+	MetaAddressableURL        string
+	MetaDeviceServiceURL      string
+	MetaDeviceProfileURL      string
+	MetaDeviceURL             string
+	MetaDeviceReportURL       string
+	MetaCommandURL            string
+	MetaEventURL              string
+	MetaScheduleURL           string
+	MetaProvisionWatcherURL   string
 }
 
 // Configuration data for the metadata service

@@ -39,20 +39,20 @@ func ConnectToConsul(conf ConfigurationStruct) error {
 
 	// Initialize service on Consul
 	err := consulclient.ConsulInit(consulclient.ConsulConfig{
-		ServiceName:    conf.Servicename,
-		ServicePort:    conf.Serverport,
-		ServiceAddress: conf.Serviceaddress,
-		CheckAddress:   conf.Consulcheckaddress,
-		CheckInterval:  conf.Checkinterval,
-		ConsulAddress:  conf.Consulhost,
-		ConsulPort:     conf.Consulport,
+		ServiceName:    conf.ServiceName,
+		ServicePort:    conf.ServicePort,
+		ServiceAddress: conf.ServiceAddress,
+		CheckAddress:   conf.ConsulCheckAddress,
+		CheckInterval:  conf.CheckInterval,
+		ConsulAddress:  conf.ConsulHost,
+		ConsulPort:     conf.ConsulPort,
 	})
 
 	if err != nil {
 		return fmt.Errorf("connection to Consul could not be made: %v", err.Error())
 	} else {
 		// Update configuration data from Consul
-		if err := consulclient.CheckKeyValuePairs(&conf, conf.Servicename, strings.Split(conf.Consulprofilesactive, ";")); err != nil {
+		if err := consulclient.CheckKeyValuePairs(&conf, conf.ServiceName, strings.Split(conf.ConsulProfilesActive, ";")); err != nil {
 			return fmt.Errorf("error getting key/values from Consul: %v", err.Error())
 		}
 	}
@@ -69,24 +69,24 @@ func Init(conf ConfigurationStruct, l logger.LoggingClient) error {
 	// Create a database client
 	dbc, err = clients.NewDBClient(clients.DBConfiguration{
 		DbType:       clients.MONGO,
-		Host:         conf.Datamongodbhost,
-		Port:         conf.Datamongodbport,
-		Timeout:      conf.DatamongodbsocketTimeout,
-		DatabaseName: conf.Datamongodbdatabase,
-		Username:     conf.Datamongodbusername,
-		Password:     conf.Datamongodbpassword,
+		Host:         conf.MongoDBHost,
+		Port:         conf.MongoDBPort,
+		Timeout:      conf.MongoDBConnectTimeout,
+		DatabaseName: conf.MongoDatabaseName,
+		Username:     conf.MongoDBUserName,
+		Password:     conf.MongoDBPassword,
 	})
 	if err != nil {
 		return fmt.Errorf("couldn't connect to database: %v", err.Error())
 	}
 
 	// Create metadata clients
-	mdc = metadataclients.NewDeviceClient(conf.Metadbdeviceurl)
-	msc = metadataclients.NewServiceClient(conf.Metadbdeviceserviceurl)
+	mdc = metadataclients.NewDeviceClient(conf.MetaDeviceURL)
+	msc = metadataclients.NewServiceClient(conf.MetaDeviceServiceURL)
 
 	// Create the event publisher
 	ep = messaging.NewZeroMQPublisher(messaging.ZeroMQConfiguration{
-		AddressPort: conf.Zeromqaddressport,
+		AddressPort: conf.ZeroMQAddressPort,
 	})
 
 	return nil
