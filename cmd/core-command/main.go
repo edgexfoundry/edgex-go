@@ -31,10 +31,6 @@ import (
 	logger "github.com/edgexfoundry/edgex-go/support/logging-client"
 )
 
-const (
-	configFile string = "res/configuration.json"
-)
-
 var loggingClient logger.LoggingClient
 
 func main() {

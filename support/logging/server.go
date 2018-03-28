@@ -17,8 +17,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/edgexfoundry/edgex-go/support/domain"
 	"github.com/go-zoo/bone"
+
+	support_domain "github.com/edgexfoundry/edgex-go/support/domain"
 )
 
 const (
@@ -227,7 +228,10 @@ func getPersistence(config Config) persistence {
 	if config.Persistence == PersistenceFile {
 		retValue = &fileLog{filename: config.LogFilename}
 	} else if config.Persistence == PersistenceMongo {
-		// TODO
+		ms, err := connectToMongo(&config)
+		if err == nil {
+			retValue = &mongoLog{session: ms, config: &config}
+		}
 	}
 	return retValue
 }

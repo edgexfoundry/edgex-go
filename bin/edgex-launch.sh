@@ -71,6 +71,7 @@ cd $CMD/export-distro
 exec -a edgex-core-distro ./export-distro &
 cd $DIR
 
+
 trap cleanup EXIT
 
 while : ; do sleep 1 ; done
