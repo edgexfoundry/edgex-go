@@ -46,7 +46,7 @@ func TestMain(m *testing.M) {
 func TestGetEventHandler(t *testing.T) {
 	req, _ := http.NewRequest(http.MethodGet, "/api/v1/event", nil)
 	w := httptest.NewRecorder()
-	configuration.Readmaxlimit = 1
+	configuration.ReadMaxLimit = 1
 	testRoutes.ServeHTTP(w, req)
 
 	if w.Code != 200 {
@@ -64,13 +64,13 @@ func TestGetEventHandler(t *testing.T) {
 	for e := range events {
 		testEventWithoutReadings(events[e], t)
 	}
-	configuration.Readmaxlimit = 0
+	configuration.ReadMaxLimit = 0
 }
 
 func TestGetEventHandlerMaxExceeded(t *testing.T) {
 	req, _ := http.NewRequest(http.MethodGet, "/api/v1/event", nil)
 	w := httptest.NewRecorder()
-	configuration.Readmaxlimit = 0
+	configuration.ReadMaxLimit = 0
 	testRoutes.ServeHTTP(w, req)
 
 	if w.Code != 413 {
