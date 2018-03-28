@@ -18,10 +18,6 @@ import (
 
 // Common http const
 const (
-	HttpGetMethod      = "GET"
-	HttpPostMethod     = "POST"
-	HttpPutMethod      = "PUT"
-	HttpDeleteMethod   = "DELETE"
 	ContentType        = "Content-Type"
 	ContentTypeJsonVal = "application/json"
 )
@@ -180,7 +176,7 @@ func (schedulerClient SchedulerClient) RemoveScheduleEvent(id string) error {
 
 // Function to do get request
 func doGet(url string, client *http.Client) ([]byte, error) {
-	req, err := http.NewRequest(HttpGetMethod, url, nil)
+	req, err := http.NewRequest(http.MethodGet, url, nil)
 
 	if err != nil {
 		return []byte{}, err
@@ -191,7 +187,7 @@ func doGet(url string, client *http.Client) ([]byte, error) {
 
 // Function to do post request
 func doPost(url string, binaryReqBody io.Reader, client *http.Client) error {
-	req, err := http.NewRequest(HttpPostMethod, url, binaryReqBody)
+	req, err := http.NewRequest(http.MethodPost, url, binaryReqBody)
 	req.Header.Add(ContentType, ContentTypeJsonVal)
 
 	if err != nil {
@@ -203,7 +199,7 @@ func doPost(url string, binaryReqBody io.Reader, client *http.Client) error {
 
 // Function to do put request
 func doPut(url string, binaryReqBody io.Reader, client *http.Client) error {
-	req, err := http.NewRequest(HttpPutMethod, url, binaryReqBody)
+	req, err := http.NewRequest(http.MethodPut, url, binaryReqBody)
 	req.Header.Add(ContentType, ContentTypeJsonVal)
 
 	if err != nil {
@@ -215,7 +211,7 @@ func doPut(url string, binaryReqBody io.Reader, client *http.Client) error {
 
 // Function to do delete request
 func doDelete(url string, client *http.Client) error {
-	req, err := http.NewRequest(HttpDeleteMethod, url, nil)
+	req, err := http.NewRequest(http.MethodDelete, url, nil)
 
 	if err != nil {
 		return err
