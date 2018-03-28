@@ -38,12 +38,27 @@ var (
 )
 
 // Addressable client for interacting with the addressable section of metadata
-type ValueDescriptorClient struct {
+type ValueDescriptorClient interface {
+	ValueDescriptors() ([]models.ValueDescriptor, error)
+	ValueDescriptor(id string) (models.ValueDescriptor, error)
+	ValueDescriptorForName(name string) (models.ValueDescriptor, error)
+	ValueDescriptorsByLabel(label string) ([]models.ValueDescriptor, error)
+	ValueDescriptorsForDevice(deviceId string) ([]models.ValueDescriptor, error)
+	ValueDescriptorsForDeviceByName(deviceName string) ([]models.ValueDescriptor, error)
+	ValueDescriptorsByUomLabel(uomLabel string) ([]models.ValueDescriptor, error)
+	Add(vdr *models.ValueDescriptor) (string, error)
+	Update(vdr *models.ValueDescriptor) error
+	Delete(id string) error
+	DeleteByName(name string) error
+}
+
+type ValueDescriptorRestClient struct {
 	url string
 }
 
 func NewValueDescriptorClient(valueDescriptorUrl string) ValueDescriptorClient {
-	return ValueDescriptorClient{url: valueDescriptorUrl}
+	v := ValueDescriptorRestClient{url: valueDescriptorUrl}
+	return &v
 }
 
 // Helper method to get the body from the response after making the request
@@ -66,7 +81,7 @@ func makeRequest(req *http.Request) (*http.Response, error) {
 }
 
 // Help method to decode a valuedescriptor slice
-func (v *ValueDescriptorClient) decodeValueDescriptorSlice(resp *http.Response) ([]models.ValueDescriptor, error) {
+func (v *ValueDescriptorRestClient) decodeValueDescriptorSlice(resp *http.Response) ([]models.ValueDescriptor, error) {
 	dSlice := make([]models.ValueDescriptor, 0)
 
 	dec := json.NewDecoder(resp.Body)
@@ -79,7 +94,7 @@ func (v *ValueDescriptorClient) decodeValueDescriptorSlice(resp *http.Response) 
 }
 
 // Helper method to decode a device and return the device
-func (v *ValueDescriptorClient) decodeValueDescriptor(resp *http.Response) (models.ValueDescriptor, error) {
+func (v *ValueDescriptorRestClient) decodeValueDescriptor(resp *http.Response) (models.ValueDescriptor, error) {
 	dec := json.NewDecoder(resp.Body)
 	vdr := models.ValueDescriptor{}
 
@@ -92,7 +107,7 @@ func (v *ValueDescriptorClient) decodeValueDescriptor(resp *http.Response) (mode
 }
 
 // Get a list of all value descriptors
-func (v *ValueDescriptorClient) ValueDescriptors() ([]models.ValueDescriptor, error) {
+func (v *ValueDescriptorRestClient) ValueDescriptors() ([]models.ValueDescriptor, error) {
 	req, err := http.NewRequest(http.MethodGet, v.url, nil)
 	if err != nil {
 		fmt.Println(err.Error())
@@ -126,7 +141,7 @@ func (v *ValueDescriptorClient) ValueDescriptors() ([]models.ValueDescriptor, er
 }
 
 // Get the value descriptor by id
-func (v *ValueDescriptorClient) ValueDescriptor(id string) (models.ValueDescriptor, error) {
+func (v *ValueDescriptorRestClient) ValueDescriptor(id string) (models.ValueDescriptor, error) {
 	req, err := http.NewRequest(http.MethodGet, v.url+"/"+id, nil)
 	if err != nil {
 		fmt.Println(err)
@@ -159,7 +174,7 @@ func (v *ValueDescriptorClient) ValueDescriptor(id string) (models.ValueDescript
 }
 
 // Get the value descriptor by name
-func (v *ValueDescriptorClient) ValueDescriptorForName(name string) (models.ValueDescriptor, error) {
+func (v *ValueDescriptorRestClient) ValueDescriptorForName(name string) (models.ValueDescriptor, error) {
 	req, err := http.NewRequest(http.MethodGet, v.url+"/name/"+url.QueryEscape(name), nil)
 	if err != nil {
 		fmt.Println(err)
@@ -191,7 +206,7 @@ func (v *ValueDescriptorClient) ValueDescriptorForName(name string) (models.Valu
 }
 
 // Get the value descriptors by label
-func (v *ValueDescriptorClient) ValueDescriptorsByLabel(label string) ([]models.ValueDescriptor, error) {
+func (v *ValueDescriptorRestClient) ValueDescriptorsByLabel(label string) ([]models.ValueDescriptor, error) {
 	req, err := http.NewRequest(http.MethodGet, v.url+"/label/"+url.QueryEscape(label), nil)
 	if err != nil {
 		fmt.Println(err)
@@ -223,7 +238,7 @@ func (v *ValueDescriptorClient) ValueDescriptorsByLabel(label string) ([]models.
 }
 
 // Get the value descriptors for a device (by id)
-func (v *ValueDescriptorClient) ValueDescriptorsForDevice(deviceId string) ([]models.ValueDescriptor, error) {
+func (v *ValueDescriptorRestClient) ValueDescriptorsForDevice(deviceId string) ([]models.ValueDescriptor, error) {
 	req, err := http.NewRequest(http.MethodGet, v.url+"/deviceid/"+deviceId, nil)
 	if err != nil {
 		fmt.Println(err)
@@ -255,7 +270,7 @@ func (v *ValueDescriptorClient) ValueDescriptorsForDevice(deviceId string) ([]mo
 }
 
 // Get the value descriptors for a device (by name)
-func (v *ValueDescriptorClient) ValueDescriptorsForDeviceByName(deviceName string) ([]models.ValueDescriptor, error) {
+func (v *ValueDescriptorRestClient) ValueDescriptorsForDeviceByName(deviceName string) ([]models.ValueDescriptor, error) {
 	req, err := http.NewRequest(http.MethodGet, v.url+"/devicename/"+deviceName, nil)
 	if err != nil {
 		fmt.Println(err)
@@ -287,7 +302,7 @@ func (v *ValueDescriptorClient) ValueDescriptorsForDeviceByName(deviceName strin
 }
 
 // Get the value descriptors for a uomLabel
-func (v *ValueDescriptorClient) ValueDescriptorsByUomLabel(uomLabel string) ([]models.ValueDescriptor, error) {
+func (v *ValueDescriptorRestClient) ValueDescriptorsByUomLabel(uomLabel string) ([]models.ValueDescriptor, error) {
 	req, err := http.NewRequest(http.MethodGet, v.url+"/uomlabel/"+uomLabel, nil)
 	if err != nil {
 		fmt.Println(err)
@@ -319,7 +334,7 @@ func (v *ValueDescriptorClient) ValueDescriptorsByUomLabel(uomLabel string) ([]m
 }
 
 // Add a value descriptor
-func (v *ValueDescriptorClient) Add(vdr *models.ValueDescriptor) (string, error) {
+func (v *ValueDescriptorRestClient) Add(vdr *models.ValueDescriptor) (string, error) {
 	jsonStr, err := json.Marshal(vdr)
 	if err != nil {
 		fmt.Println(err)
@@ -360,7 +375,7 @@ func (v *ValueDescriptorClient) Add(vdr *models.ValueDescriptor) (string, error)
 }
 
 // update a value descriptor
-func (v *ValueDescriptorClient) Update(vdr *models.ValueDescriptor) error {
+func (v *ValueDescriptorRestClient) Update(vdr *models.ValueDescriptor) error {
 	jsonStr, err := json.Marshal(&vdr)
 	if err != nil {
 		fmt.Println(err)
@@ -400,7 +415,7 @@ func (v *ValueDescriptorClient) Update(vdr *models.ValueDescriptor) error {
 }
 
 // Delete a value descriptor (specified by id)
-func (v *ValueDescriptorClient) Delete(id string) error {
+func (v *ValueDescriptorRestClient) Delete(id string) error {
 	req, err := http.NewRequest(http.MethodDelete, v.url+"/id/"+id, nil)
 	if err != nil {
 		fmt.Println(err)
@@ -433,7 +448,7 @@ func (v *ValueDescriptorClient) Delete(id string) error {
 }
 
 // Delete a value descriptor (specified by name)
-func (v *ValueDescriptorClient) DeleteByName(name string) error {
+func (v *ValueDescriptorRestClient) DeleteByName(name string) error {
 	req, err := http.NewRequest(http.MethodDelete, v.url+"/name/"+name, nil)
 	if err != nil {
 		fmt.Println(err)

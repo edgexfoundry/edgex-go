@@ -17,8 +17,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/edgexfoundry/edgex-go/support/domain"
 	"github.com/go-zoo/bone"
+
+	support_domain "github.com/edgexfoundry/edgex-go/support/domain"
 )
 
 const (
@@ -34,9 +35,9 @@ func makeTimestamp() int64 {
 }
 
 func replyPing(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/text; charset=utf-8")
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
-	str := `pong`
+	str := `{"value" : "pong"}`
 	io.WriteString(w, str)
 }
 
@@ -227,7 +228,10 @@ func getPersistence(config Config) persistence {
 	if config.Persistence == PersistenceFile {
 		retValue = &fileLog{filename: config.LogFilename}
 	} else if config.Persistence == PersistenceMongo {
-		// TODO
+		ms, err := connectToMongo(&config)
+		if err == nil {
+			retValue = &mongoLog{session: ms, config: &config}
+		}
 	}
 	return retValue
 }
