@@ -60,7 +60,7 @@ cd $DIR
 ###
 printf "\n### Starting edgex-export-client\n"
 cd $CMD/export-client
-exec -a edgex-core-client ./export-client &
+exec -a edgex-export-client ./export-client &
 cd $DIR
 
 ###
@@ -68,7 +68,7 @@ cd $DIR
 ###
 printf "\n### Starting edgex-export-distro\n"
 cd $CMD/export-distro
-exec -a edgex-core-distro ./export-distro &
+exec -a edgex-export-distro ./export-distro &
 cd $DIR
 
 
