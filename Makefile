@@ -20,10 +20,8 @@ VERSION=$(shell cat ./VERSION)
 
 GOFLAGS=-ldflags "-X github.com/edgexfoundry/edgex-go.Version=$(VERSION)"
 
-build:
+build: $(MICROSERVICES)
 	go build ./...
-
-build_microservices: $(MICROSERVICES)
 
 cmd/core-metadata/core-metadata:
 	$(GO) build $(GOFLAGS) -o $@ ./cmd/core-metadata
