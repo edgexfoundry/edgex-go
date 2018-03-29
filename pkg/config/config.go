@@ -19,11 +19,11 @@ package config
 
 import (
 	"io/ioutil"
+	"flag"
 	"fmt"
 	"os"
 
 	"github.com/BurntSushi/toml"
-	"flag"
 )
 
 const (
