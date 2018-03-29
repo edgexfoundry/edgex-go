@@ -40,7 +40,7 @@ func TestLoadFromDefault(t *testing.T) {
 
 func TestLoadFromEnvironment(t *testing.T) {
 	configuration := &TestConfigurationStruct{}
-	os.Setenv("EDGEX_CONF_DIR", "./res")
+	os.Setenv("EDGEX_CONF_DIR", configDirectory)
 	err := LoadFromFile("unit-test", configuration)
 	if err != nil {
 		t.Error(err)
