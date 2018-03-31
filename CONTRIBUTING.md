@@ -87,7 +87,7 @@ Adhering to the following process is the best way to get your work included in t
 6. Push your topic branch up to your fork:
 
    ```bash
-   git push origin MF-[issue-number]
+   git push origin EF-[issue-number]
    ```
 
 7. [Open a Pull Request](https://help.github.com/articles/using-pull-requests/) with a clear title
