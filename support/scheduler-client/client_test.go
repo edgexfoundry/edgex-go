@@ -53,8 +53,8 @@ func TestAddSchedule(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("{ 'status' : 'OK' }"))
-		if r.Method != "POST" {
-			t.Errorf(TestUnexpectedMsgFormatStr, r.Method, "POST")
+		if r.Method != http.MethodPost {
+			t.Errorf(TestUnexpectedMsgFormatStr, r.Method, http.MethodPost)
 		}
 		if r.URL.EscapedPath() != ScheduleApiPath {
 			t.Errorf(TestUnexpectedMsgFormatStr, r.URL.EscapedPath(), ScheduleApiPath)
@@ -130,8 +130,8 @@ func TestAddSchedule(t *testing.T) {
 // Test method : QuerySchedule
 func TestQuerySchedule(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != "GET" {
-			t.Errorf(TestUnexpectedMsgFormatStr, r.Method, "GET")
+		if r.Method != http.MethodGet {
+			t.Errorf(TestUnexpectedMsgFormatStr, r.Method, http.MethodGet)
 		}
 
 		urlWithIdPath := ScheduleApiPath + "/" + TestScheduleId
@@ -219,8 +219,8 @@ func TestQuerySchedule(t *testing.T) {
 // Test method : QueryScheduleWithName
 func TestQueryScheduleWithName(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != "GET" {
-			t.Errorf(TestUnexpectedMsgFormatStr, r.Method, "GET")
+		if r.Method != http.MethodGet {
+			t.Errorf(TestUnexpectedMsgFormatStr, r.Method, http.MethodGet)
 		}
 
 		urlWithNamePart := ScheduleApiPath + "/name/" + TestScheduleName
@@ -310,8 +310,8 @@ func TestUpdateSchedule(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("{ 'status' : 'OK' }"))
-		if r.Method != "PUT" {
-			t.Errorf(TestUnexpectedMsgFormatStr, r.Method, "PUT")
+		if r.Method != http.MethodPut {
+			t.Errorf(TestUnexpectedMsgFormatStr, r.Method, http.MethodPut)
 		}
 		if r.URL.EscapedPath() != ScheduleApiPath {
 			t.Errorf(TestUnexpectedMsgFormatStr, r.URL.EscapedPath(), ScheduleApiPath)
@@ -389,8 +389,8 @@ func TestRemoveSchedule(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("{ 'status' : 'OK' }"))
-		if r.Method != "DELETE" {
-			t.Errorf(TestUnexpectedMsgFormatStr, r.Method, "DELETE")
+		if r.Method != http.MethodDelete {
+			t.Errorf(TestUnexpectedMsgFormatStr, r.Method, http.MethodDelete)
 		}
 
 		if !strings.HasPrefix(r.URL.EscapedPath(), ScheduleApiPath) {
@@ -433,8 +433,8 @@ func TestAddScheduleEvent(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("{ 'status' : 'OK' }"))
-		if r.Method != "POST" {
-			t.Errorf(TestUnexpectedMsgFormatStr, r.Method, "POST")
+		if r.Method != http.MethodPost {
+			t.Errorf(TestUnexpectedMsgFormatStr, r.Method, http.MethodPost)
 		}
 		if r.URL.EscapedPath() != ScheduleEventApiPath {
 			t.Errorf(TestUnexpectedMsgFormatStr, r.URL.EscapedPath(), ScheduleEventApiPath)
@@ -512,8 +512,8 @@ func TestAddScheduleEvent(t *testing.T) {
 // Test method : QueryScheduleEvent
 func TestQueryScheduleEvent(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != "GET" {
-			t.Errorf(TestUnexpectedMsgFormatStr, r.Method, "GET")
+		if r.Method != http.MethodGet {
+			t.Errorf(TestUnexpectedMsgFormatStr, r.Method, http.MethodGet)
 		}
 
 		urlWithIdPath := ScheduleEventApiPath + "/" + TestScheduleEventId
@@ -603,8 +603,8 @@ func TestUpdateScheduleEvent(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("{ 'status' : 'OK' }"))
-		if r.Method != "PUT" {
-			t.Errorf(TestUnexpectedMsgFormatStr, r.Method, "PUT")
+		if r.Method != http.MethodPut {
+			t.Errorf(TestUnexpectedMsgFormatStr, r.Method, http.MethodPut)
 		}
 		if r.URL.EscapedPath() != ScheduleEventApiPath {
 			t.Errorf(TestUnexpectedMsgFormatStr, r.URL.EscapedPath(), ScheduleEventApiPath)
@@ -684,8 +684,8 @@ func TestRemoveScheduleEvent(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("{ 'status' : 'OK' }"))
-		if r.Method != "DELETE" {
-			t.Errorf(TestUnexpectedMsgFormatStr, r.Method, "DELETE")
+		if r.Method != http.MethodDelete {
+			t.Errorf(TestUnexpectedMsgFormatStr, r.Method, http.MethodDelete)
 		}
 
 		if !strings.HasPrefix(r.URL.EscapedPath(), ScheduleEventApiPath) {

@@ -182,7 +182,7 @@ func doGet(url string, client *http.Client) ([]byte, error) {
 		return []byte{}, err
 	}
 
-	return sendRequestAndGetRespone(client, req)
+	return sendRequestAndGetResponse(client, req)
 }
 
 // Function to do post request
@@ -233,7 +233,7 @@ func sendRequest(client *http.Client, req *http.Request) error {
 }
 
 // Function to actually make the HTTP request and get the response body
-func sendRequestAndGetRespone(client *http.Client, req *http.Request) ([]byte, error) {
+func sendRequestAndGetResponse(client *http.Client, req *http.Request) ([]byte, error) {
 	resp, err := client.Do(req)
 	if err != nil {
 		return []byte{}, err
