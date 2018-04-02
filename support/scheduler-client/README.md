@@ -26,12 +26,12 @@ To use the support-scheduler-client library you first need to import the library
 import "github.com/edgexfoundry/edgex-go/support/scheduler-client"
 ```
 
-To send schedule, schedule event you first need to create a SchedulerClient object:
+To add schedule, schedule event you first need to create a SchedulerClient object:
 
 ```
 scheduleClient := scheduler.SchedulerClient{
-    RemoteScheduleUrl : "http://localhost:48081/api/v1/schedule",
-    RemoteScheduleEventUrl : "http://localhost:48081/api/v1/scheduleevent",
+    SchedulerServiceHost : "localhost",
+    SchedulerServicePort : 48081,
     OwningService : "My Service Name"
 }
 ```
@@ -47,7 +47,7 @@ schedule := models.Schedule{
 	Cron : "This is a description",
 	RunOnce : ""
 }
-err := scheduleClient.SendSchedule(schedule)
+err := scheduleClient.AddSchedule(schedule)
 ```
 
 And you can post a schedule event by creating a ScheduleEvent object and call:
@@ -64,7 +64,7 @@ scheduleEvent := models.ScheduleEvent{
 	},
 }
 
-err := scheduleClient.SendScheduleEvent(scheduleEvent)
+err := scheduleClient.AddScheduleEvent(scheduleEvent)
 ```
 
 
