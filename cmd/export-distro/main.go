@@ -121,10 +121,6 @@ func loadConfig() (distro.Config, config) {
 		ConsulPort: defConsulPort,
 		Hostname:   env(envDistroHost, defHostname),
 	}
-	hostname, err := os.Hostname()
-	if err == nil {
-		cfg.Hostname = hostname
-	}
 
 	portStr := env(envConsulPort, strconv.Itoa(cfg.ConsulPort))
 	port, err := strconv.Atoi(portStr)

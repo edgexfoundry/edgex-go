@@ -145,16 +145,10 @@ func loadConfig() (*config, *client.Config) {
 		MongoSocketTimeout:  defMongoSocketTimeout,
 		ConsulHost:          env(envConsulHost, defConsulHost),
 		ConsulPort:          defConsulPort,
+		Hostname:            env(envClientHost, defHostname),
 	}
-
-	hostname, err := os.Hostname()
-	if err == nil {
-		cfg.Hostname = hostname
-	}
-	cfg.Hostname = env(envClientHost, cfg.Hostname)
 
 	portStr := env(envConsulPort, strconv.Itoa(cfg.ConsulPort))
-
 	port, err := strconv.Atoi(portStr)
 	if err == nil {
 		cfg.ConsulPort = port
