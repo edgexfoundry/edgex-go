@@ -1,5 +1,7 @@
 //
-// Copyright (c) 2018 Tencent
+// Copyright (c) 2018
+
+// Dell, Tencent
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -56,12 +58,12 @@ func main() {
 	var loggingClient = logger.NewClient(configuration.ApplicationName, configuration.EnableRemoteLogging, logTarget)
 
 	loggingClient.Info(consulMsg)
-	loggingClient.Info(fmt.Sprintf("starting %s %s ", scheduler.SUPPORTSCHEDULERSERVICENAME, edgex.Version))
+	loggingClient.Info(fmt.Sprintf("starting %s %s ", scheduler.SupportScheduleServiceName, edgex.Version))
 
 	var schedulerClient = sc.SchedulerClient{
 		SchedulerServiceHost: configuration.ServiceHost,
 		SchedulerServicePort: 48081,
-		OwningService:scheduler.SUPPORTSCHEDULERSERVICENAME,
+		OwningService: scheduler.SupportScheduleServiceName,
 	}
 
 	scheduler.Init(*configuration, loggingClient, schedulerClient)
@@ -82,7 +84,7 @@ func main() {
 	scheduler.StopTicker()
 }
 func logBeforeTermination(err error) {
-	loggingClient = logger.NewClient(scheduler.SUPPORTSCHEDULERSERVICENAME, false, "")
+	loggingClient = logger.NewClient(scheduler.SupportScheduleServiceName, false, "")
 	loggingClient.Error(err.Error())
 }
 

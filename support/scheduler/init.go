@@ -16,6 +16,12 @@ import (
 	"time"
 )
 
+const (
+	HttpProtocol = "http://"
+	Colon = ":"
+	PingApiPath = "/api/v1/ping"
+)
+
 var (
 	loggingClient   logger.LoggingClient
 	schedulerClient scheduler.SchedulerClient
@@ -28,7 +34,7 @@ func ConnectToConsul(conf ConfigurationStruct) error {
 		ServiceName:    conf.ServiceName,
 		ServicePort:    conf.ServerPort,
 		ServiceAddress: conf.ServiceHost,
-		CheckAddress:   "http://" + conf.ServiceHost + ":" + strconv.Itoa(conf.ServerPort) + "/api/v1/ping",
+		CheckAddress:   HttpProtocol + conf.ServiceHost + Colon + strconv.Itoa(conf.ServerPort) + PingApiPath,
 		CheckInterval:  conf.CheckInterval,
 		ConsulAddress:  conf.ConsulHost,
 		ConsulPort:     conf.ConsulPort,
