@@ -17,8 +17,6 @@ import (
 )
 
 const (
-	HttpProtocol = "http://"
-	Colon = ":"
 	PingApiPath = "/api/v1/ping"
 )
 
@@ -34,7 +32,7 @@ func ConnectToConsul(conf ConfigurationStruct) error {
 		ServiceName:    conf.ServiceName,
 		ServicePort:    conf.ServerPort,
 		ServiceAddress: conf.ServiceHost,
-		CheckAddress:   HttpProtocol + conf.ServiceHost + Colon + strconv.Itoa(conf.ServerPort) + PingApiPath,
+		CheckAddress:   "http://" + conf.ServiceHost + ":" + strconv.Itoa(conf.ServerPort) + PingApiPath,
 		CheckInterval:  conf.CheckInterval,
 		ConsulAddress:  conf.ConsulHost,
 		ConsulPort:     conf.ConsulPort,
