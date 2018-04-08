@@ -1,0 +1,20 @@
+ApplicationName = 'export-client'
+port = 48071
+defHostname = '127.0.0.1'
+defMongoURL = '0.0.0.0'
+defMongoUsername = ''
+defMongoPassword = ''
+defMongoDatabase = 'coredata'
+defMongoPort = 27017
+defMongoConnectTimeout = 5000
+defMongoSocketTimeout = 5000
+defConsulHost ='127.0.0.1'
+defConsulPort = 8500
+
+envClientHost = 'EXPORT_CLIENT_HOST'
+envMongoURL = 'EXPORT_CLIENT_MONGO_URL'
+envDistroHost = 'EXPORT_CLIENT_DISTRO_HOST'
+envConsulHost = 'EXPORT_CLIENT_CONSUL_HOST'
+envConsulPort = 'EXPORT_CLIENT_CONSUL_PORT'
+
+consulProfile = 'go'
