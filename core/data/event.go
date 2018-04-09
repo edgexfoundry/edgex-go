@@ -42,7 +42,7 @@ func putEventOnQueue(e models.Event) {
 // Update when the device was last reported connected
 func updateDeviceLastReportedConnected(device string) {
 	// Config set to skip update last reported
-	if !configuration.Deviceupdatelastconnected {
+	if !configuration.DeviceUpdateLastConnected {
 		loggingClient.Debug("Skipping update of device connected/reported times for:  " + device)
 		return
 	}
@@ -99,7 +99,7 @@ func updateDeviceLastReportedConnected(device string) {
 
 // Update when the device service was last reported connected
 func updateDeviceServiceLastReportedConnected(device string) {
-	if !configuration.Serviceupdatelastconnected {
+	if !configuration.ServiceUpdateLastConnected {
 		loggingClient.Debug("Skipping update of device service connected/reported times for:  " + device)
 		return
 	}
@@ -195,7 +195,7 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Check max limit
-		if len(events) > configuration.Readmaxlimit {
+		if len(events) > configuration.ReadMaxLimit {
 			http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
 			loggingClient.Error(maxExceededString)
 			return
@@ -235,13 +235,13 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// See if metadata checking is enabled
-		if configuration.Metadatacheck && !deviceFound {
+		if configuration.MetaDataCheck && !deviceFound {
 			loggingClient.Error("Device not found for event: "+err.Error(), "")
 			http.Error(w, err.Error(), http.StatusNotFound)
 			return
 		}
 
-		if configuration.Validatecheck {
+		if configuration.ValidateCheck {
 			loggingClient.Debug("Validation enabled, parsing events")
 			for reading := range e.Readings {
 				valid, err := isValidValueDescriptor(e.Readings[reading], e)
@@ -253,7 +253,7 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Add the readings to the database
-		if configuration.Persistdata {
+		if configuration.PersistData {
 			for i, reading := range e.Readings {
 				// Check value descriptor
 				_, err := dbc.ValueDescriptorByName(reading.Name)
@@ -338,7 +338,7 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 			}
 
 			// See if we need to check metadata
-			if configuration.Metadatacheck && !deviceFound {
+			if configuration.MetaDataCheck && !deviceFound {
 				http.Error(w, "Error updating event: Device "+from.Device+" doesn't exist", http.StatusNotFound)
 				loggingClient.Error("Error updating device, device " + from.Device + " doesn't exist")
 				return
@@ -585,7 +585,7 @@ func getEventByDeviceHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// See if you need to check metadata for the device
-	if configuration.Metadatacheck && !deviceFound {
+	if configuration.MetaDataCheck && !deviceFound {
 		http.Error(w, "Error getting events for a device: The device '"+deviceId+"' doesn't exist", http.StatusNotFound)
 		loggingClient.Error("Error getting readings for a device: The device doesn't exist")
 		return
@@ -593,7 +593,7 @@ func getEventByDeviceHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodGet:
-		if limitNum > configuration.Readmaxlimit {
+		if limitNum > configuration.ReadMaxLimit {
 			http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
 			loggingClient.Error(maxExceededString)
 			return
@@ -641,7 +641,7 @@ func deleteByDeviceIdHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// See if you need to check metadata
-	if configuration.Metadatacheck && !deviceFound {
+	if configuration.MetaDataCheck && !deviceFound {
 		loggingClient.Error("Device not found for event: "+err.Error(), "")
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
@@ -710,7 +710,7 @@ func eventByCreationTimeHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodGet:
-		if limit > configuration.Readmaxlimit {
+		if limit > configuration.ReadMaxLimit {
 			http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
 			loggingClient.Error(maxExceededString)
 			return
@@ -762,7 +762,7 @@ func readingByDeviceFilteredValueDescriptor(w http.ResponseWriter, r *http.Reque
 	}
 	switch r.Method {
 	case http.MethodGet:
-		if limitNum > configuration.Readmaxlimit {
+		if limitNum > configuration.ReadMaxLimit {
 			http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
 			loggingClient.Error(maxExceededString)
 			return
@@ -785,7 +785,7 @@ func readingByDeviceFilteredValueDescriptor(w http.ResponseWriter, r *http.Reque
 		}
 
 		// See if you need to check metadata
-		if configuration.Metadatacheck && !deviceFound {
+		if configuration.MetaDataCheck && !deviceFound {
 			loggingClient.Error("Device not found for event: "+err.Error(), "")
 			http.Error(w, err.Error(), http.StatusNotFound)
 			return

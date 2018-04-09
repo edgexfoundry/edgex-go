@@ -37,8 +37,8 @@ type ConfigurationStruct struct {
 	Protocol                            string
 	ServiceName                         string
 	ServiceAddress                      string
-	ServerPort                          int
-	ServerTimeout                       int
+	ServicePort                          int
+	ServiceTimeout                       int
 	HeartBeatTime                       int
 	HeartBeatMsg                        string
 	AppOpenMsg                          string

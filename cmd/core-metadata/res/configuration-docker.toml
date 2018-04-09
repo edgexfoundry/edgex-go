@@ -9,20 +9,20 @@ MongoDBConnectTimeout = 5000
 ReadMaxLimit = 100
 Protocol = 'http'
 ServiceName = 'edgex-core-metadata'
-ServerAddress = 'edgex-core-metadata'
-ServerPort = 48081
-ServerTimeout = 5000
+ServiceAddress = 'edgex-core-metadata'
+ServicePort = 48081
+ServiceTimeout = 5000
 HeartBeatTime = 300000
 HeartBeatMsg = 'Core Metadata heart beat'
 AppOpenMsg = 'This is the EdgeX Core Metadata MicroService'
 ConsulHost = 'edgex-core-consul'
 ConsulProfilesActive = 'docker;go'
-ConsulCheckAddress = 'http://edgex-core-metadata=48081/api/v1/ping'
+ConsulCheckAddress = 'http://edgex-core-metadata:48081/api/v1/ping'
 CheckInterval = '10s'
 ConsulPort = 8500
 EnableRemoteLogging = true
 LoggingFile = './logs/edgex-core-metadata.log'
-LoggingRemoteURL = 'http://edgex-support-logging=48061/api/v1/logs'
+LoggingRemoteURL = 'http://edgex-support-logging:48061/api/v1/logs'
 NotificationPostDeviceChanges = true
 NotificationsSlug = 'device-change-'
 NotificationContent = 'Device update: '
