@@ -292,7 +292,7 @@ func delRegByName(w http.ResponseWriter, r *http.Request) {
 func notifyUpdatedRegistrations(update export.NotifyUpdate) {
 	go func() {
 		client := &http.Client{}
-		url := "http://" + cfg.DistroHost + ":" + strconv.Itoa(distroPort) +
+		url := "http://" + configuration.DistroHost + ":" + strconv.Itoa(configuration.DistroPort) +
 			"/api/v1/notify/registrations"
 
 		data, err := json.Marshal(update)
