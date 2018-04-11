@@ -224,12 +224,9 @@ func updateRunningRegistrations(running map[string]*registrationInfo,
 }
 
 // Loop - registration loop
-func Loop(config Config, errChan chan error, eventCh chan *models.Event) {
-
-	cfg = config
-
+func Loop(errChan chan error, eventCh chan *models.Event) {
 	go func() {
-		p := fmt.Sprintf(":%d", cfg.Port)
+		p := fmt.Sprintf(":%d", configuration.Port)
 		logger.Info("Starting Export Distro", zap.String("url", p))
 		errChan <- http.ListenAndServe(p, httpServer())
 	}()
