@@ -1,6 +1,6 @@
-#######################################
-Edge Foundry Microservices Architecture
-#######################################
+########################################
+EdgeX Foundry Microservices Architecture
+########################################
 
 .. toctree::
    :maxdepth: 2
