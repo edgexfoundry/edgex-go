@@ -22,10 +22,6 @@ import (
 	support_domain "github.com/edgexfoundry/edgex-go/support/domain"
 )
 
-const (
-	consulProfile string = "go"
-)
-
 var persist persistence
 
 // Copied from core/metadata/mongoOps.go
@@ -223,28 +219,28 @@ func httpServer() http.Handler {
 	return mux
 }
 
-func getPersistence(config Config) persistence {
+func getPersistence() persistence {
 	var retValue persistence
-	if config.Persistence == PersistenceFile {
-		retValue = &fileLog{filename: config.LogFilename}
-	} else if config.Persistence == PersistenceMongo {
-		ms, err := connectToMongo(&config)
+	if configuration.Persistence == PersistenceFile {
+		retValue = &fileLog{filename: configuration.LogFilename}
+	} else if configuration.Persistence == PersistenceMongo {
+		ms, err := connectToMongo()
 		if err == nil {
-			retValue = &mongoLog{session: ms, config: &config}
+			retValue = &mongoLog{session: ms}
 		}
 	}
 	return retValue
 }
 
-func StartHTTPServer(config Config, errChan chan error) {
+func StartHTTPServer(errChan chan error) {
 	go func() {
-		persist = getPersistence(config)
+		persist = getPersistence()
 		if persist == nil {
-			errChan <- errors.New("Could not configure persistance interface: " + config.Persistence)
+			errChan <- errors.New("Could not configure persistance interface: " + configuration.Persistence)
 			return
 		}
 
-		p := fmt.Sprintf(":%d", config.Port)
+		p := fmt.Sprintf(":%d", configuration.Port)
 		errChan <- http.ListenAndServe(p, httpServer())
 	}()
 }

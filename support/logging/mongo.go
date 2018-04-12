@@ -19,16 +19,15 @@ import (
 
 type mongoLog struct {
 	session *mgo.Session // Mongo database session
-	config  *Config
 }
 
-func connectToMongo(cfg *Config) (*mgo.Session, error) {
+func connectToMongo() (*mgo.Session, error) {
 	mongoDBDialInfo := &mgo.DialInfo{
-		Addrs:    []string{cfg.MongoURL + ":" + strconv.Itoa(cfg.MongoPort)},
-		Timeout:  time.Duration(cfg.MongoConnectTimeout) * time.Millisecond,
-		Database: cfg.MongoDatabase,
-		Username: cfg.MongoUser,
-		Password: cfg.MongoPass,
+		Addrs:    []string{configuration.MongoURL + ":" + strconv.Itoa(configuration.MongoPort)},
+		Timeout:  time.Duration(configuration.MongoConnectTimeout) * time.Millisecond,
+		Database: configuration.MongoDB,
+		Username: configuration.MongoUsername,
+		Password: configuration.MongoPassword,
 	}
 
 	ms, err := mgo.DialWithInfo(mongoDBDialInfo)
@@ -36,7 +35,7 @@ func connectToMongo(cfg *Config) (*mgo.Session, error) {
 		return nil, err
 	}
 
-	ms.SetSocketTimeout(time.Duration(cfg.MongoSocketTimeout) * time.Millisecond)
+	ms.SetSocketTimeout(time.Duration(configuration.SocketTimeout) * time.Millisecond)
 	ms.SetMode(mgo.Monotonic, true)
 
 	return ms, nil
@@ -47,7 +46,7 @@ func (ml *mongoLog) add(le support_domain.LogEntry) {
 	session := ml.session.Copy()
 	defer session.Close()
 
-	c := session.DB(ml.config.MongoDatabase).C(ml.config.MongoCollection)
+	c := session.DB(configuration.MongoDB).C(configuration.MongoCollection)
 
 	if err := c.Insert(le); err != nil {
 		return
@@ -104,7 +103,7 @@ func (ml *mongoLog) remove(criteria matchCriteria) int {
 	session := ml.session.Copy()
 	defer session.Close()
 
-	c := session.DB(ml.config.MongoDatabase).C(ml.config.MongoCollection)
+	c := session.DB(configuration.MongoDB).C(configuration.MongoCollection)
 
 	base := createQuery(criteria)
 
@@ -121,7 +120,7 @@ func (ml *mongoLog) find(criteria matchCriteria) []support_domain.LogEntry {
 	session := ml.session.Copy()
 	defer session.Close()
 
-	c := session.DB(ml.config.MongoDatabase).C(ml.config.MongoCollection)
+	c := session.DB(configuration.MongoDB).C(configuration.MongoCollection)
 
 	le := []support_domain.LogEntry{}
 
@@ -140,6 +139,6 @@ func (ml *mongoLog) reset() {
 	session := ml.session.Copy()
 	defer session.Close()
 
-	session.DB(ml.config.MongoDatabase).C(ml.config.MongoCollection).RemoveAll(bson.M{})
+	session.DB(configuration.MongoDB).C(configuration.MongoCollection).RemoveAll(bson.M{})
 	return
 }
