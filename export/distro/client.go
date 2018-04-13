@@ -47,8 +47,10 @@ func getRegistrationsURL(url string) []export.Registration {
 
 	results := registrations[:0]
 	for _, reg := range registrations {
-		if reg.Validate() {
+		if valid, err := reg.Validate(); valid {
 			results = append(results, reg)
+		} else {
+			logger.Warn("Could not validate registration", zap.Error(err))
 		}
 	}
 	return results
@@ -74,8 +76,8 @@ func getRegistrationByNameURL(url string) *export.Registration {
 		return nil
 	}
 
-	if !reg.Validate() {
-		logger.Error("Failed to validate registrations fields")
+	if valid, err := reg.Validate(); !valid {
+		logger.Error("Failed to validate registrations fields", zap.Error(err))
 		return nil
 	}
 	return &reg

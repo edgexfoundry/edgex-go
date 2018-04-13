@@ -7,6 +7,8 @@
 package export
 
 import (
+	"fmt"
+
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 
 	"gopkg.in/mgo.v2/bson"
@@ -66,7 +68,7 @@ type NotifyUpdate struct {
 	Operation string `json:"operation"`
 }
 
-func (reg *Registration) Validate() bool {
+func (reg *Registration) Validate() (bool, error) {
 
 	if reg.Compression == "" {
 		reg.Compression = CompNone
@@ -75,7 +77,7 @@ func (reg *Registration) Validate() bool {
 	if reg.Compression != CompNone &&
 		reg.Compression != CompGzip &&
 		reg.Compression != CompZip {
-		return false
+		return false, fmt.Errorf("Compression invalid: %s", reg.Compression)
 	}
 
 	if reg.Format != FormatJSON &&
@@ -84,7 +86,7 @@ func (reg *Registration) Validate() bool {
 		reg.Format != FormatIoTCoreJSON &&
 		reg.Format != FormatAzureJSON &&
 		reg.Format != FormatCSV {
-		return false
+		return false, fmt.Errorf("Format invalid: %s", reg.Format)
 	}
 
 	if reg.Destination != DestMQTT &&
@@ -92,7 +94,7 @@ func (reg *Registration) Validate() bool {
 		reg.Destination != DestIotCoreMQTT &&
 		reg.Destination != DestAzureMQTT &&
 		reg.Destination != DestRest {
-		return false
+		return false, fmt.Errorf("Destination invalid: %s", reg.Destination)
 	}
 
 	if reg.Encryption.Algo == "" {
@@ -101,8 +103,8 @@ func (reg *Registration) Validate() bool {
 
 	if reg.Encryption.Algo != EncNone &&
 		reg.Encryption.Algo != EncAes {
-		return false
+		return false, fmt.Errorf("Encryption invalid: %s", reg.Encryption.Algo)
 	}
 
-	return true
+	return true, nil
 }
