@@ -22,7 +22,6 @@ package metadata
 import (
 	"errors"
 	"reflect"
-	"strings"
 	"time"
 
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
@@ -649,7 +648,7 @@ func mgoUpdateAddressable(ra *models.Addressable, r *models.Addressable) error {
 	if ra.Name != "" {
 		r.Name = ra.Name
 	}
-	if strings.Compare(ra.Protocol, "HTTP") != 0 || strings.Compare(ra.Protocol, "TCP") != 0 { // TODO create ENUMS that can be unmarshalled by JSON
+	if ra.Protocol != "" {
 		r.Protocol = ra.Protocol
 	}
 	if ra.Address != "" {
