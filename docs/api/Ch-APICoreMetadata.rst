@@ -16,7 +16,7 @@ The Metadata microservice includes the device/sensor metadata database and APIs 
 
 https://github.com/edgexfoundry/edgex-go/blob/master/core/metadata/raml/core-metadata.raml
 
-.. _`Core Metadata API HTML Documentation`: file:core-metadata.html
+.. _`Core Metadata API HTML Documentation`: core-metadata.html
 ..
 
 `Core Metadata API HTML Documentation`_

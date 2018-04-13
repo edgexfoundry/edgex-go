@@ -4,6 +4,7 @@ set -x
 # Build documentation
 
 cd /docbuild
+mkdir _static
 make html
 
 # Add documentation for service interfaces
