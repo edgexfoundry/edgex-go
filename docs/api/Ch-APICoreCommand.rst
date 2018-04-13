@@ -19,7 +19,7 @@ EdgeX Foundry's Command microservice is a conduit for other services to trigger 
 
 https://github.com/edgexfoundry/edgex-go/blob/master/core/command/raml/core-command.raml
 
-.. _`Core Command API HTML Documentation`: file:core-command.html
+.. _`Core Command API HTML Documentation`: core-command.html
 ..
 
 `Core Command API HTML Documentation`_
