@@ -17,7 +17,7 @@ When a person or a system needs to be informed of something discovered on the no
 https://github.com/edgexfoundry/support-notifications/blob/master/raml/support-notifications.raml
 
 
-.. _`Alerts and Notifications API HTML Documentation`: file:support-notifications.html
+.. _`Alerts and Notifications API HTML Documentation`: support-notifications.html
 ..
 
 `Alerts and Notifications API HTML Documentation`_
