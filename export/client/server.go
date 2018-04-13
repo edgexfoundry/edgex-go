@@ -44,11 +44,9 @@ func httpServer() http.Handler {
 	return mux
 }
 
-func StartHTTPServer(config Config, errChan chan error) {
-	cfg = config
-
+func StartHTTPServer(config ConfigurationStruct, errChan chan error) {
 	go func() {
-		p := fmt.Sprintf(":%d", cfg.Port)
+		p := fmt.Sprintf(":%d", config.Port)
 		logger.Info("Starting Export Client", zap.String("url", p))
 		errChan <- http.ListenAndServe(p, httpServer())
 	}()
