@@ -169,8 +169,8 @@ func addReg(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !reg.Validate() {
-		logger.Error("Failed to validate registrations fields", zap.ByteString("data", data))
+	if valid, err := reg.Validate(); !valid {
+		logger.Error("Failed to validate registrations fields", zap.ByteString("data", data), zap.Error(err))
 		w.WriteHeader(http.StatusBadRequest)
 		io.WriteString(w, "Could not validate json fields")
 		return
