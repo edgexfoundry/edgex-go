@@ -23,7 +23,7 @@ The Virtual Device Service simulates different kinds of devices to generate Even
 https://github.com/edgexfoundry/device-virtual/blob/master/raml/device-virtual.raml
 
 
-.. _`Virtual Device API HTML Documentation`: file:device-virtual.html
+.. _`Virtual Device API HTML Documentation`: device-virtual.html
 ..
 
 `Virtual Device API HTML Documentation`_
