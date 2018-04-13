@@ -17,7 +17,7 @@ EdgeX Foundry Rules Engine Microservice receives data from the Export Service th
 https://github.com/edgexfoundry/support-rulesengine/blob/master/raml/support-rulesengine.raml
 
 
-.. _`Rules engine API HTML Documentation`: file:support-rulesengine.html
+.. _`Rules engine API HTML Documentation`: support-rulesengine.html
 ..
 
 `Rules engine API HTML Documentation`_
