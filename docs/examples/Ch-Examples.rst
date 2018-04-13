@@ -1,6 +1,6 @@
-###################################
-Edge Foundry Examples and Tutorials
-###################################
+####################################
+EdgeX Foundry Examples and Tutorials
+####################################
 
 .. toctree::
    :maxdepth: 2
