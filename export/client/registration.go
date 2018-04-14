@@ -169,8 +169,8 @@ func addReg(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !reg.Validate() {
-		logger.Error("Failed to validate registrations fields", zap.ByteString("data", data))
+	if valid, err := reg.Validate(); !valid {
+		logger.Error("Failed to validate registrations fields", zap.ByteString("data", data), zap.Error(err))
 		w.WriteHeader(http.StatusBadRequest)
 		io.WriteString(w, "Could not validate json fields")
 		return
@@ -292,7 +292,7 @@ func delRegByName(w http.ResponseWriter, r *http.Request) {
 func notifyUpdatedRegistrations(update export.NotifyUpdate) {
 	go func() {
 		client := &http.Client{}
-		url := "http://" + cfg.DistroHost + ":" + strconv.Itoa(distroPort) +
+		url := "http://" + configuration.DistroHost + ":" + strconv.Itoa(configuration.DistroPort) +
 			"/api/v1/notify/registrations"
 
 		data, err := json.Marshal(update)
