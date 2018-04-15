@@ -27,7 +27,6 @@ func main() {
 	)
 	flag.Parse()
 
-	//cfg := loadConfig()
 	configuration := &logging.ConfigurationStruct{}
 	err := config.LoadFromFile(*useProfile, configuration)
 	if err != nil {
