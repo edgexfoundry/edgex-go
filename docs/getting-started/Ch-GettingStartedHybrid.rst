@@ -53,24 +53,26 @@ Get and Run the Code In Eclipse
 
 	b. Open the rest-endpoint.properties file in the src/main/resources folder of the device-virtual project in Eclipse.  If the endpoints for meta data and core data URLs use localhost, and these services are running on same machine as the service you're running from Eclipse, then no change is necessary.  If however you're running the core services on a different machine, then change the endpoints to point to the IP address of the machine running these services.  For example, my Dockerized micro services are all running on another machine at 10.0.1.149.  So the meta and core URLs in rest-endpoint.properties would all be changed to reflect that location.
 
-	   | 	   #------------------- REST Endpoints ---------------------------------------
-	   |	   # EdgeX metadata database service connection information
-           |	   meta.db.addressable.url=http://10.0.1.149:48081/api/v1/addressable
-	   |   	   meta.db.deviceservice.url=http://10.0.1.149:48081/api/v1/deviceservice
-	   |       meta.db.deviceprofile.url=http://10.0.1.149:48081/api/v1/deviceprofile
-	   |       meta.db.device.url=http://10.0.1.149:48081/api/v1/device
-	   |       meta.db.devicemanager.url=http://10.0.1.149:48081/api/v1/devicemanager
-	   |       meta.db.devicereport.url=http://10.0.1.149:48081/api/v1/devicereport
-	   |       meta.db.command.url=http://10.0.1.149:48081/api/v1/command
-	   |       meta.db.event.url=http://10.0.1.149:48081/api/v1/scheduleevent		
-	   |       meta.db.schedule.url=http://10.0.1.149:48081/api/v1/schedule
-	   |       meta.db.provisionwatcher.url=http://10.0.1.149:48081/api/v1/provisionwatcher
-	   |       meta.db.ping.url=http://10.0.1.149:48081/api/v1/ping
-	   |       #IOT core database service connection information
-           |       core.db.event.url=http://10.0.1.149:48080/api/v1/event
-	   |       core.db.reading.url=http://10.0.1.149:48080/api/v1/reading
-	   |       core.db.valuedescriptor.url=http://10.0.1.149:48080/api/v1/valuedescriptor		
-	   |       core.db.ping.url=http://10.0.1.149:48080/api/v1/ping
+::
+
+   #------------------- REST Endpoints ---------------------------------------
+   # EdgeX metadata database service connection information
+   meta.db.addressable.url=http://10.0.1.149:48081/api/v1/addressable
+   meta.db.deviceservice.url=http://10.0.1.149:48081/api/v1/deviceservice
+   meta.db.deviceprofile.url=http://10.0.1.149:48081/api/v1/deviceprofile
+   meta.db.device.url=http://10.0.1.149:48081/api/v1/device
+   meta.db.devicemanager.url=http://10.0.1.149:48081/api/v1/devicemanager
+   meta.db.devicereport.url=http://10.0.1.149:48081/api/v1/devicereport
+   meta.db.command.url=http://10.0.1.149:48081/api/v1/command
+   meta.db.event.url=http://10.0.1.149:48081/api/v1/scheduleevent		
+   meta.db.schedule.url=http://10.0.1.149:48081/api/v1/schedule
+   meta.db.provisionwatcher.url=http://10.0.1.149:48081/api/v1/provisionwatcher
+   meta.db.ping.url=http://10.0.1.149:48081/api/v1/ping
+   #IOT core database service connection information
+   core.db.event.url=http://10.0.1.149:48080/api/v1/event
+   core.db.reading.url=http://10.0.1.149:48080/api/v1/reading
+   core.db.valuedescriptor.url=http://10.0.1.149:48080/api/v1/valuedescriptor		
+   core.db.ping.url=http://10.0.1.149:48080/api/v1/ping
 
 Now you can run the device-virtual in Eclipse.  Right click on the device-virtual project and select Run As → Java Application from the resulting menu.  Pick the main application class from the resulting "Select Java Application" window and watch the Console view for errors.
 
