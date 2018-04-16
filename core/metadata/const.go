@@ -37,8 +37,8 @@ type ConfigurationStruct struct {
 	Protocol                            string
 	ServiceName                         string
 	ServiceAddress                      string
-	ServicePort                          int
-	ServiceTimeout                       int
+	ServicePort                         int
+	ServiceTimeout                      int
 	HeartBeatTime                       int
 	HeartBeatMsg                        string
 	AppOpenMsg                          string
@@ -56,7 +56,8 @@ type ConfigurationStruct struct {
 	NotificationSender                  string
 	NotificationDescription             string
 	NotificationLabel                   string
-	SupportNotificationsNotificationURL string
+	SupportNotificationsHost            string
+	SupportNotificationsPort            int
 	SupportNotificationsSubscriptionURL string
 	SupportNotificationsTransmissionURL string
 }
