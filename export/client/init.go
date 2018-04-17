@@ -8,16 +8,20 @@ package client
 
 import (
 	"fmt"
-	"github.com/edgexfoundry/edgex-go/support/consul-client"
-	"go.uber.org/zap"
 	"strconv"
 	"strings"
+
+	"github.com/edgexfoundry/edgex-go/export/client/clients"
+	"github.com/edgexfoundry/edgex-go/support/consul-client"
+	"go.uber.org/zap"
 )
 
 const (
 	PingApiPath = "/api/v1/ping"
 )
 
+// Global variables
+var dbc clients.DBClient
 var logger *zap.Logger
 
 func ConnectToConsul(conf ConfigurationStruct) error {
@@ -46,6 +50,22 @@ func ConnectToConsul(conf ConfigurationStruct) error {
 func Init(conf ConfigurationStruct, l *zap.Logger) error {
 	configuration = conf
 	logger = l
+
+	var err error
+
+	// Create a database client
+	dbc, err = clients.NewDBClient(clients.DBConfiguration{
+		DbType:       clients.MONGO,
+		Host:         conf.MongoURL,
+		Port:         conf.MongoPort,
+		Timeout:      conf.MongoConnectTimeout,
+		DatabaseName: conf.MongoDatabase,
+		Username:     conf.MongoUsername,
+		Password:     conf.MongoPassword,
+	})
+	if err != nil {
+		return fmt.Errorf("couldn't connect to database: %v", err.Error())
+	}
 
 	return nil
 }

@@ -11,16 +11,14 @@ package client
 import (
 	"bytes"
 	"encoding/json"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"strconv"
 
 	"github.com/edgexfoundry/edgex-go/export"
-	"github.com/edgexfoundry/edgex-go/export/mongo"
+	"github.com/edgexfoundry/edgex-go/export/client/clients"
 	"github.com/go-zoo/bone"
 	"go.uber.org/zap"
-	"gopkg.in/mgo.v2/bson"
 )
 
 const (
@@ -28,37 +26,20 @@ const (
 )
 
 func getRegByID(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-
 	id := bone.GetValue(r, "id")
 
-	s := repo.Session.Copy()
-	defer s.Close()
-	c := s.DB(mongo.DBName).C(mongo.CollectionName)
-
-	reg := export.Registration{}
-	if err := c.Find(bson.M{"id": id}).One(&reg); err != nil {
-		logger.Error("Failed to query by id", zap.Error(err))
-		w.WriteHeader(http.StatusInternalServerError)
-		io.WriteString(w, err.Error())
-		return
-	}
-
-	res, err := json.Marshal(reg)
+	reg, err := dbc.RegistrationById(id)
 	if err != nil {
 		logger.Error("Failed to query by id", zap.Error(err))
-		w.WriteHeader(http.StatusInternalServerError)
-		io.WriteString(w, err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	io.WriteString(w, string(res))
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	json.NewEncoder(w).Encode(&reg)
 }
 
 func getRegList(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-
 	t := bone.GetValue(r, "type")
 
 	var list []string
@@ -79,214 +60,209 @@ func getRegList(w http.ResponseWriter, r *http.Request) {
 		list = append(list, export.DestRest)
 	default:
 		logger.Error("Unknown type: " + t)
-		w.WriteHeader(http.StatusBadRequest)
-		io.WriteString(w, "Unknown type: "+t)
+		http.Error(w, "Unknown type: "+t, http.StatusBadRequest)
 		return
 	}
 
-	res, err := json.Marshal(list)
-	if err != nil {
-		logger.Error("Failed to generate json", zap.Error(err))
-		w.WriteHeader(http.StatusInternalServerError)
-		io.WriteString(w, err.Error())
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	io.WriteString(w, string(res))
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	json.NewEncoder(w).Encode(&list)
 }
 
 func getAllReg(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-
-	s := repo.Session.Copy()
-	defer s.Close()
-	c := s.DB(mongo.DBName).C(mongo.CollectionName)
-
-	reg := []export.Registration{}
-	if err := c.Find(nil).All(&reg); err != nil {
-		logger.Error("Failed to query all registrations", zap.Error(err))
-		w.WriteHeader(http.StatusInternalServerError)
-		io.WriteString(w, err.Error())
-		return
-	}
-
-	res, err := json.Marshal(reg)
+	reg, err := dbc.Registrations()
 	if err != nil {
 		logger.Error("Failed to query all registrations", zap.Error(err))
-		w.WriteHeader(http.StatusInternalServerError)
-		io.WriteString(w, err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	io.WriteString(w, string(res))
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	json.NewEncoder(w).Encode(&reg)
 }
 
 func getRegByName(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-
 	name := bone.GetValue(r, "name")
 
-	s := repo.Session.Copy()
-	defer s.Close()
-	c := s.DB(mongo.DBName).C(mongo.CollectionName)
-
-	reg := export.Registration{}
-	if err := c.Find(bson.M{"name": name}).One(&reg); err != nil {
-		logger.Error("Failed to query by name", zap.Error(err))
-		w.WriteHeader(http.StatusInternalServerError)
-		io.WriteString(w, err.Error())
-		return
-	}
-
-	res, err := json.Marshal(reg)
+	reg, err := dbc.RegistrationByName(name)
 	if err != nil {
 		logger.Error("Failed to query by name", zap.Error(err))
-		w.WriteHeader(http.StatusInternalServerError)
-		io.WriteString(w, err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	io.WriteString(w, string(res))
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	json.NewEncoder(w).Encode(&reg)
 }
 
 func addReg(w http.ResponseWriter, r *http.Request) {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		logger.Error("Failed to query add registration", zap.Error(err))
-		w.WriteHeader(http.StatusBadRequest)
-		io.WriteString(w, err.Error())
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	reg := export.Registration{}
 	if err := json.Unmarshal(data, &reg); err != nil {
 		logger.Error("Failed to query add registration", zap.Error(err))
-		w.WriteHeader(http.StatusBadRequest)
-		io.WriteString(w, err.Error())
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	if valid, err := reg.Validate(); !valid {
 		logger.Error("Failed to validate registrations fields", zap.ByteString("data", data), zap.Error(err))
-		w.WriteHeader(http.StatusBadRequest)
-		io.WriteString(w, "Could not validate json fields")
+		http.Error(w, "Could not validate json fields", http.StatusBadRequest)
 		return
 	}
 
-	s := repo.Session.Copy()
-	defer s.Close()
-	c := s.DB(mongo.DBName).C(mongo.CollectionName)
+	_, err = dbc.RegistrationByName(reg.Name)
+	if err == nil {
+		logger.Error("Name already taken: " + reg.Name)
+		http.Error(w, "Name already taken", http.StatusBadRequest)
+		return
+	} else if err != clients.ErrNotFound {
+		logger.Error("Failed to query add registration", zap.Error(err))
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-	count, err := c.Find(bson.M{"name": reg.Name}).Count()
+	_, err = dbc.AddRegistration(&reg)
 	if err != nil {
 		logger.Error("Failed to query add registration", zap.Error(err))
-		w.WriteHeader(http.StatusInternalServerError)
-		io.WriteString(w, err.Error())
-		return
-	}
-	if count != 0 {
-		logger.Error("Username already taken: " + reg.Name)
-		w.WriteHeader(http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	if err := c.Insert(reg); err != nil {
-		logger.Error("Failed to query add registration", zap.Error(err))
-		w.WriteHeader(http.StatusInternalServerError)
-		io.WriteString(w, err.Error())
-		return
-	}
-
-	w.WriteHeader(http.StatusCreated)
 	notifyUpdatedRegistrations(export.NotifyUpdate{Name: reg.Name,
 		Operation: "add"})
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(reg.ID.Hex()))
 }
 
 func updateReg(w http.ResponseWriter, r *http.Request) {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		logger.Error("Failed to query update registration", zap.Error(err))
-		w.WriteHeader(http.StatusBadRequest)
-		io.WriteString(w, err.Error())
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	var body map[string]interface{}
-	if err := json.Unmarshal(data, &body); err != nil {
+	var fromReg export.Registration
+	if err := json.Unmarshal(data, &fromReg); err != nil {
 		logger.Error("Failed to query update registration", zap.Error(err))
-		w.WriteHeader(http.StatusInternalServerError)
-		io.WriteString(w, err.Error())
-	}
-
-	s := repo.Session.Copy()
-	defer s.Close()
-	c := s.DB(mongo.DBName).C(mongo.CollectionName)
-
-	name := body["name"]
-	query := bson.M{"name": name}
-	update := bson.M{"$set": body}
-
-	if err := c.Update(query, update); err != nil {
-		logger.Error("Failed to query update registration", zap.Error(err))
-		w.WriteHeader(http.StatusNotFound)
-		io.WriteString(w, err.Error())
+		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	notifyUpdatedRegistrations(export.NotifyUpdate{Name: name.(string),
+	// Check if the registration exists
+	var toReg export.Registration
+	if fromReg.ID != "" {
+		toReg, err = dbc.RegistrationById(fromReg.ID.Hex())
+	} else if fromReg.Name != "" {
+		toReg, err = dbc.RegistrationByName(fromReg.Name)
+	} else {
+		err = clients.ErrNotFound
+	}
+	if err != nil {
+		logger.Error("Failed to query update registration", zap.Error(err))
+		if err == clients.ErrNotFound {
+			http.Error(w, err.Error(), http.StatusNotFound)
+		} else {
+			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		}
+		return
+	}
+
+	if fromReg.Name != "" {
+		toReg.Name = fromReg.Name
+	}
+	if fromReg.Addressable.Name != "" {
+		toReg.Addressable = fromReg.Addressable
+	}
+	if fromReg.Format != "" {
+		toReg.Format = fromReg.Format
+	}
+	if fromReg.Filter.DeviceIDs != nil {
+		toReg.Filter.DeviceIDs = fromReg.Filter.DeviceIDs
+	}
+	if fromReg.Filter.ValueDescriptorIDs != nil {
+		toReg.Filter.ValueDescriptorIDs = fromReg.Filter.ValueDescriptorIDs
+	}
+	if fromReg.Encryption.Algo != "" {
+		toReg.Encryption = fromReg.Encryption
+	}
+	if fromReg.Compression != "" {
+		toReg.Compression = fromReg.Compression
+	}
+	if fromReg.Destination != "" {
+		toReg.Destination = fromReg.Destination
+	}
+
+	if valid, err := toReg.Validate(); !valid {
+		logger.Error("Failed to validate registrations fields", zap.ByteString("data", data), zap.Error(err))
+		http.Error(w, "Could not validate json fields", http.StatusBadRequest)
+		return
+	}
+
+	err = dbc.UpdateRegistration(toReg)
+	if err != nil {
+		logger.Error("Failed to query update registration", zap.Error(err))
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	notifyUpdatedRegistrations(export.NotifyUpdate{Name: toReg.Name,
 		Operation: "update"})
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("true"))
 }
 
 func delRegByID(w http.ResponseWriter, r *http.Request) {
 	id := bone.GetValue(r, "id")
 
-	s := repo.Session.Copy()
-	defer s.Close()
-	c := s.DB(mongo.DBName).C(mongo.CollectionName)
-
-	// Read the registration from mongo, the registration name is needed to
+	// Read the registration, the registration name is needed to
 	// notify distro of the deletion
-	reg := export.Registration{}
-	if err := c.Find(bson.M{"id": id}).One(&reg); err != nil {
+	reg, err := dbc.RegistrationById(id)
+	if err != nil {
 		logger.Error("Failed to query by id", zap.Error(err))
-		w.WriteHeader(http.StatusInternalServerError)
-		io.WriteString(w, err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	if err := c.Remove(bson.M{"id": id}); err != nil {
+	err = dbc.DeleteRegistrationById(id)
+	if err != nil {
 		logger.Error("Failed to query by id", zap.Error(err))
-		w.WriteHeader(http.StatusInternalServerError)
-		io.WriteString(w, err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
 	notifyUpdatedRegistrations(export.NotifyUpdate{Name: reg.Name,
 		Operation: "delete"})
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("true"))
 }
 
 func delRegByName(w http.ResponseWriter, r *http.Request) {
 	name := bone.GetValue(r, "name")
 
-	s := repo.Session.Copy()
-	defer s.Close()
-	c := s.DB(mongo.DBName).C(mongo.CollectionName)
-
-	if err := c.Remove(bson.M{"name": name}); err != nil {
+	err := dbc.DeleteRegistrationByName(name)
+	if err != nil {
 		logger.Error("Failed to query by name", zap.Error(err))
-		w.WriteHeader(http.StatusInternalServerError)
-		io.WriteString(w, err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
 	notifyUpdatedRegistrations(export.NotifyUpdate{Name: name,
 		Operation: "delete"})
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("true"))
 }
 
 func notifyUpdatedRegistrations(update export.NotifyUpdate) {
