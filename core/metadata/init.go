@@ -70,7 +70,8 @@ func Init(conf ConfigurationStruct, l logger.LoggingClient) error {
 	DBPASS = configuration.MongoDBPassword
 
 	// Update notificationsClient based on configuration
-	notificationsClient.RemoteUrl = configuration.SupportNotificationsNotificationURL
+	notificationsClient.NotificationServiceHost = configuration.SupportNotificationsHost
+	notificationsClient.NotificationServicePort = configuration.SupportNotificationsPort
 
 	var err error
 	// Connect to the database

@@ -13,6 +13,7 @@
  *
  * @microservice: support-notifications-client-go library
  * @author: Ryan Comer, Dell
+ * @modifier: Vino Yang, Tencent
  * @version: 0.5.0
  *******************************************************************************/
 package notifications
@@ -21,6 +22,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 )
 
@@ -47,10 +49,22 @@ const (
 	ESCALATED StatusEnum = "ESCALATED"
 )
 
+// Common http const
+const (
+	ContentType        = "Content-Type"
+	ContentTypeJsonVal = "application/json"
+)
+
+const (
+	NotificationApiPath = "/api/v1/notification"
+	UrlPattern          = "http://%s:%d%s"
+)
+
 // Struct to represent the notifications client
 type NotificationsClient struct {
-	RemoteUrl     string
-	OwningService string
+	NotificationServiceHost string
+	NotificationServicePort int
+	OwningService           string
 }
 
 // Struct to represent a notification being sent to the notifications service
@@ -68,38 +82,42 @@ type Notification struct {
 	Modified    int          `json:"modified,omitempty"` // The last modification timestamp
 }
 
-// Send a POST call to the notifications service
-func (nc NotificationsClient) RecieveNotification(n Notification) error {
+// Send a notification to the notifications service
+func (nc NotificationsClient) SendNotification(n Notification) error {
 	client := &http.Client{}
 
 	// Get the JSON request body
 	requestBody, err := json.Marshal(n)
 	if err != nil {
-		fmt.Println(err.Error())
 		return err
 	}
 
 	// Create the request
-	req, err := http.NewRequest(http.MethodPost, nc.RemoteUrl, bytes.NewBuffer(requestBody))
-	req.Header.Add("Content-Type", "application/json")
+	remoteNotificationServiceUrl := fmt.Sprintf(UrlPattern, nc.NotificationServiceHost, nc.NotificationServicePort, NotificationApiPath)
+
+	return doPost(remoteNotificationServiceUrl, bytes.NewBuffer(requestBody), client)
+}
+
+// Function to do post request
+func doPost(url string, binaryReqBody io.Reader, client *http.Client) error {
+	req, err := http.NewRequest(http.MethodPost, url, binaryReqBody)
+	req.Header.Add(ContentType, ContentTypeJsonVal)
+
 	if err != nil {
-		fmt.Println(err.Error())
 		return err
 	}
 
-	// Asynchronous call
-	go makeRequest(client, req)
-
-	return nil
+	return makeRequest(client, req)
 }
 
 // Function to actually make the HTTP request
-func makeRequest(client *http.Client, req *http.Request) {
+func makeRequest(client *http.Client, req *http.Request) error {
 	resp, err := client.Do(req)
-	if err == nil {
-		defer resp.Body.Close()
-		resp.Close = true
-	} else {
-		fmt.Println(err.Error())
+	if err != nil {
+		return err
 	}
+
+	defer resp.Body.Close()
+
+	return nil
 }
