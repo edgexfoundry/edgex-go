@@ -1,6 +1,7 @@
 ApplicationName = 'edgex-export-client'
 Hostname = 'edgex-export-client'
 Port = 48071
+DBType = 'mongodb'
 MongoURL = 'edgex-mongo'
 MongoUsername = 'export'
 MongoPassword = 'password'

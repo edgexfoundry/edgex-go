@@ -1,6 +1,7 @@
 ApplicationName = 'export-client'
 Hostname = '127.0.0.1'
 Port = 48071
+DBType = 'mongodb'
 MongoURL = '0.0.0.0'
 MongoUsername = ''
 MongoPassword = ''

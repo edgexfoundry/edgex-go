@@ -27,9 +27,37 @@ import (
 
 type DatabaseType int8 // Database type enum
 const (
-	MONGO DatabaseType = iota
+	INVALID DatabaseType = iota
+	MONGO
 	MOCK
 )
+
+const (
+	invalidStr = "invalid"
+	mongoStr   = "mongodb"
+	mockStr    = "mockdb"
+)
+
+// Add in order declared in Struct for string value
+var databaseArr = [...]string{invalidStr, mongoStr, mockStr}
+
+func (db DatabaseType) String() string {
+	if db >= INVALID && db <= MOCK {
+		return databaseArr[db]
+	}
+	return invalidStr
+}
+
+// Return enum value of the Database Type
+func GetDatabaseType(db string) DatabaseType {
+	if mongoStr == db {
+		return MONGO
+	} else if mockStr == db {
+		return MOCK
+	} else {
+		return INVALID
+	}
+}
 
 type DBClient interface {
 	// ********************** REGISTRATION FUNCTIONS *****************************
@@ -95,6 +123,7 @@ func NewDBClient(config DBConfiguration) (DBClient, error) {
 		return mc, nil
 	case MOCK:
 		// Create the mock client
+		NewMockParams()
 		mock := &MockDb{}
 		return mock, nil
 	default:
