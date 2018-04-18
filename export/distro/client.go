@@ -27,7 +27,7 @@ func getRegistrationBaseURL(host string) string {
 }
 
 func getRegistrations() []export.Registration {
-	url := getRegistrationBaseURL(cfg.ClientHost)
+	url := getRegistrationBaseURL(configuration.ClientHost)
 	return getRegistrationsURL(url)
 }
 
@@ -57,7 +57,7 @@ func getRegistrationsURL(url string) []export.Registration {
 }
 
 func getRegistrationByName(name string) *export.Registration {
-	url := getRegistrationBaseURL(cfg.ClientHost) + "/name/" + name
+	url := getRegistrationBaseURL(configuration.ClientHost) + "/name/" + name
 	return getRegistrationByNameURL(url)
 }
 

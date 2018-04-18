@@ -13,14 +13,6 @@ import (
 	export "github.com/edgexfoundry/edgex-go/export"
 )
 
-const (
-	defaultPort       = 48070
-	defaultClientHost = "127.0.0.1"
-	defaultDataHost   = "127.0.0.1"
-	defaultMQTTSCert  = "dummy.crt"
-	defaultMQTTSKey   = "dummy.key"
-)
-
 // Sender - Send interface
 type Sender interface {
 	Send(data []byte)
@@ -54,24 +46,4 @@ type registrationInfo struct {
 	chEvent        chan *models.Event
 
 	deleteMe bool
-}
-
-type Config struct {
-	Port       int
-	ClientHost string
-	DataHost   string
-	MQTTSCert  string
-	MQTTSKey   string
-}
-
-var cfg Config
-
-func GetDefaultConfig() Config {
-	return Config{
-		Port:       defaultPort,
-		ClientHost: defaultClientHost,
-		DataHost:   defaultDataHost,
-		MQTTSCert:  defaultMQTTSCert,
-		MQTTSKey:   defaultMQTTSKey,
-	}
 }
