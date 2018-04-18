@@ -20,6 +20,7 @@ package metadata
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -28,7 +29,6 @@ import (
 	"github.com/gorilla/mux"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
-	"fmt"
 )
 
 func restGetAllAddressables(w http.ResponseWriter, _ *http.Request) {
