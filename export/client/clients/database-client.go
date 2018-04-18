@@ -117,8 +117,7 @@ func NewDBClient(config DBConfiguration) (DBClient, error) {
 		// Create the mongo client
 		mc, err := newMongoClient(config)
 		if err != nil {
-			fmt.Println("Error creating the mongo client: " + err.Error())
-			return nil, err
+			return nil, fmt.Errorf("Error creating the mongo client: " + err.Error())
 		}
 		return mc, nil
 	case MOCK:
