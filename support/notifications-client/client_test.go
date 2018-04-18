@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-package notifications
+package notifications_client
 
 import (
 	"encoding/json"
@@ -104,11 +104,7 @@ func TestReceiveNotification(t *testing.T) {
 		t.Error(e)
 	}
 
-	notificationsClient := NotificationsClient{
-		NotificationServiceHost: h[0],
-		NotificationServicePort: intPort,
-		OwningService:           "scheduler",
-	}
+	SetConfiguration(h[0], intPort)
 
 	notification := Notification{
 		Sender:      TestNotificationSender,
@@ -120,5 +116,5 @@ func TestReceiveNotification(t *testing.T) {
 		Labels:      []string{TestNotificationLabel1, TestNotificationLabel2},
 	}
 
-	notificationsClient.SendNotification(notification)
+	GetNotificationsClient().SendNotification(notification)
 }
