@@ -23,7 +23,7 @@ Configuration
 
 `Configuration and Registry API Reference`_.
 
-.. _`Configuration and Registry API Reference`: https://wiki.edgexfoundry.org/display/FA/APIs--Core+Services--Configuration+and+Registry
+.. _`Configuration and Registry API Reference`: Ch-APICoreServiceConfiguration.html
 ..
 
 .. image:: EdgeX_ConfigurationHighlighted.png
