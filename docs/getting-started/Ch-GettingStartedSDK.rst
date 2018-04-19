@@ -165,44 +165,46 @@ The result: when the Device Service has nothing to which to connect, it fails.  
 
 Note: when running the service at this time, you will see the a default scheduling event fail if you watch the log output from the new device service.  It will look something like the following:
 
-| 2018-02-03 16:28:19.456 DEBUG 18672 --- [ool-16-thread-1] o.edgexfoundry.pkg.scheduling.Scheduler  : executing schedule 5a763773641a47658e75ebed 'Interval-15s' at 2018-02-03T16:28:19-06:00[America/Chicago]
-| 2018-02-03 16:28:19.456 DEBUG 18672 --- [ool-16-thread-1] o.e.p.scheduling.ScheduleEventExecutor   : schedule event list contains 1 events
-| 2018-02-03 16:28:19.456 DEBUG 18672 --- [ool-16-thread-1] o.e.p.scheduling.ScheduleEventExecutor   : executing event 5a763773641a47658e75ebef 'device-sdk-generated-Discovery'
-| 2018-02-03 16:28:20.286 ERROR 18672 --- [ool-16-thread-1] o.e.p.s.ScheduleEventHttpExecutor        : exception executing event 5a763773641a47658e75ebef 'device-sdk-generated-Discovery' url 'HTTP://device-sdk-generated:49997/api/v1/discovery' body '' exception device-sdk-generated
-| java.net.UnknownHostException: device-sdk-generated
-|   at java.net.AbstractPlainSocketImpl.connect(AbstractPlainSocketImpl.java:184)
-|   at java.net.PlainSocketImpl.connect(PlainSocketImpl.java:172)
-|   at java.net.SocksSocketImpl.connect(SocksSocketImpl.java:392)
-|   at java.net.Socket.connect(Socket.java:589)
-|   at sun.net.NetworkClient.doConnect(NetworkClient.java:175)
-|   at sun.net.www.http.HttpClient.openServer(HttpClient.java:432)
-|   at sun.net.www.http.HttpClient.openServer(HttpClient.java:527)
-|   at sun.net.www.http.HttpClient.<init>(HttpClient.java:211)
-|   at sun.net.www.http.HttpClient.New(HttpClient.java:308)
-|   at sun.net.www.http.HttpClient.New(HttpClient.java:326)
-|   at sun.net.www.protocol.http.HttpURLConnection.getNewHttpClient(HttpURLConnection.java:1168)
-|   at sun.net.www.protocol.http.HttpURLConnection.plainConnect0(HttpURLConnection.java:1104)
-|   at sun.net.www.protocol.http.HttpURLConnection.plainConnect(HttpURLConnection.java:998)
-|   at sun.net.www.protocol.http.HttpURLConnection.connect(HttpURLConnection.java:932)
-|   at sun.net.www.protocol.http.HttpURLConnection.getOutputStream0(HttpURLConnection.java:1282)
-|   at sun.net.www.protocol.http.HttpURLConnection.getOutputStream(HttpURLConnection.java:1257)
-|   at org.edgexfoundry.pkg.scheduling.ScheduleEventHttpExecutor.execute(ScheduleEventHttpExecutor.java:67)
-|   at org.edgexfoundry.pkg.scheduling.ScheduleEventExecutor.execute(ScheduleEventExecutor.java:57)
-|   at org.edgexfoundry.pkg.scheduling.ScheduleEventExecutor.execute(ScheduleEventExecutor.java:48)
-|   at org.edgexfoundry.pkg.scheduling.Scheduler.schedule(Scheduler.java:131)
-|   at sun.reflect.GeneratedMethodAccessor33.invoke(Unknown Source)
-|   at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
-|   at java.lang.reflect.Method.invoke(Method.java:497)
-|   at org.springframework.scheduling.support.ScheduledMethodRunnable.run(ScheduledMethodRunnable.java:65)
-|   at org.springframework.scheduling.support.DelegatingErrorHandlingRunnable.run(DelegatingErrorHandlingRunnable.java:54)
-|   at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)
-|   at java.util.concurrent.FutureTask.runAndReset(FutureTask.java:308)
-|   at java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.access$301(ScheduledThreadPoolExecutor.java:180)
-|   at java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:294)
-|   at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142)
-|   at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617)
-|   at java.lang.Thread.run(Thread.java:745)
-| 2018-02-03 16:28:20.293 DEBUG 18672 --- [ool-16-thread-1] o.edgexfoundry.pkg.scheduling.Scheduler  : queueing schedule 5a763773641a47658e75ebed 'Interval-15s'
+::
+
+   2018-02-03 16:28:19.456 DEBUG 18672 --- [ool-16-thread-1] o.edgexfoundry.pkg.scheduling.Scheduler  : executing schedule 5a763773641a47658e75ebed 'Interval-15s' at 2018-02-03T16:28:19-06:00[America/Chicago]
+   2018-02-03 16:28:19.456 DEBUG 18672 --- [ool-16-thread-1] o.e.p.scheduling.ScheduleEventExecutor   : schedule event list contains 1 events
+   2018-02-03 16:28:19.456 DEBUG 18672 --- [ool-16-thread-1] o.e.p.scheduling.ScheduleEventExecutor   : executing event 5a763773641a47658e75ebef 'device-sdk-generated-Discovery'
+   2018-02-03 16:28:20.286 ERROR 18672 --- [ool-16-thread-1] o.e.p.s.ScheduleEventHttpExecutor        : exception executing event 5a763773641a47658e75ebef 'device-sdk-generated-Discovery' url 'HTTP://device-sdk-generated:49997/api/v1/discovery' body '' exception device-sdk-generated
+  java.net.UnknownHostException: device-sdk-generated
+    at java.net.AbstractPlainSocketImpl.connect(AbstractPlainSocketImpl.java:184)
+    at java.net.PlainSocketImpl.connect(PlainSocketImpl.java:172)
+    at java.net.SocksSocketImpl.connect(SocksSocketImpl.java:392)
+    at java.net.Socket.connect(Socket.java:589)
+    at sun.net.NetworkClient.doConnect(NetworkClient.java:175)
+    at sun.net.www.http.HttpClient.openServer(HttpClient.java:432)
+    at sun.net.www.http.HttpClient.openServer(HttpClient.java:527)
+    at sun.net.www.http.HttpClient.<init>(HttpClient.java:211)
+    at sun.net.www.http.HttpClient.New(HttpClient.java:308)
+    at sun.net.www.http.HttpClient.New(HttpClient.java:326)
+    at sun.net.www.protocol.http.HttpURLConnection.getNewHttpClient(HttpURLConnection.java:1168)
+    at sun.net.www.protocol.http.HttpURLConnection.plainConnect0(HttpURLConnection.java:1104)
+    at sun.net.www.protocol.http.HttpURLConnection.plainConnect(HttpURLConnection.java:998)
+    at sun.net.www.protocol.http.HttpURLConnection.connect(HttpURLConnection.java:932)
+    at sun.net.www.protocol.http.HttpURLConnection.getOutputStream0(HttpURLConnection.java:1282)
+    at sun.net.www.protocol.http.HttpURLConnection.getOutputStream(HttpURLConnection.java:1257)
+    at org.edgexfoundry.pkg.scheduling.ScheduleEventHttpExecutor.execute(ScheduleEventHttpExecutor.java:67)
+    at org.edgexfoundry.pkg.scheduling.ScheduleEventExecutor.execute(ScheduleEventExecutor.java:57)
+    at org.edgexfoundry.pkg.scheduling.ScheduleEventExecutor.execute(ScheduleEventExecutor.java:48)
+    at org.edgexfoundry.pkg.scheduling.Scheduler.schedule(Scheduler.java:131)
+    at sun.reflect.GeneratedMethodAccessor33.invoke(Unknown Source)
+    at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+    at java.lang.reflect.Method.invoke(Method.java:497)
+    at org.springframework.scheduling.support.ScheduledMethodRunnable.run(ScheduledMethodRunnable.java:65)
+    at org.springframework.scheduling.support.DelegatingErrorHandlingRunnable.run(DelegatingErrorHandlingRunnable.java:54)
+    at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)
+    at java.util.concurrent.FutureTask.runAndReset(FutureTask.java:308)
+    at java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.access$301(ScheduledThreadPoolExecutor.java:180)
+    at java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:294)
+    at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142)
+    at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617)
+    at java.lang.Thread.run(Thread.java:745)
+  2018-02-03 16:28:20.293 DEBUG 18672 --- [ool-16-thread-1] o.edgexfoundry.pkg.scheduling.Scheduler  : queueing schedule 5a763773641a47658e75ebed 'Interval-15s'
 
 To avoid this issue, you can comment out the default schedule properties in the schedule.properties file:
 

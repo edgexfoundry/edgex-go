@@ -162,22 +162,24 @@ For a Java-based microservice, follow 4 steps to use Client Library for Java:
 
 Your application will need an SLF4J implementation.  If you are using Spring Boot as part of your project, this automatically brings in an SLF4J implementation into project.  In fact, you may find multiple implementations are brought into the project and you will have to use <exclusion> elements into the pom.xml to constrain the implementations used by the project.  See core-metadata's pom.xml for an example.  In the case where your project has no implementation, you will need to add one to the pom.xml in addition to the support-logging-client.  So, for example, if you create a simple Maven project (using no other frameworks/libraries other than support-logging-client) then you will also need to add some minimal SLF4J implementation.  Here is a simple set of dependencies to achieve a working logging implementation using support-logging-client.
 
-<properties>
-	<support-logging-client.version>1.0.0-SNAPSHOT</support-logging-client.version>
-</properties>
+::
 
-<dependencies>
-	<dependency>
-		<groupId>org.edgexfoundry</groupId>
-		<artifactId>support-logging-client</artifactId>
-		<version>${support-logging-client.version}</version>
-	</dependency>
-	<dependency>
-		<groupId>org.slf4j</groupId>
-		<artifactId>slf4j-simple</artifactId>
-		<version>1.8.0-alpha2</version>
-	</dependency>
-</dependencies>
+   <properties>
+   	   <support-logging-client.version>1.0.0-SNAPSHOT</support-logging-client.version>
+   </properties>
+
+   <dependencies>
+      	   <dependency>
+		   <groupId>org.edgexfoundry</groupId>
+		   <artifactId>support-logging-client</artifactId>
+		   <version>${support-logging-client.version}</version>
+	   </dependency>
+	   <dependency>
+		   <groupId>org.slf4j</groupId>
+		   <artifactId>slf4j-simple</artifactId>
+		   <version>1.8.0-alpha2</version>
+	   </dependency>
+   </dependencies>
 
 Without the SLF4J implementation (in this case slf4j-simple), you will see errors like that below:
 

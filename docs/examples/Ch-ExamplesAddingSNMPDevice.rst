@@ -332,10 +332,12 @@ Press Send
 
 You should see something similar to 
 
- {
+::
+
+   {
 
                "id": "5a1d6f8ae4b0c3936013120f",
-
+  
                "name": "diStatus0",
 
                "get": {
@@ -374,7 +376,7 @@ You should see something similar to
 
                "put": null
 
-           },
+    },
 
 
 Double click on the “url” and a new tab within Postman should open, Press Send

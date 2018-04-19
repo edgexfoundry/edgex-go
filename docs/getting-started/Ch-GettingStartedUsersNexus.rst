@@ -36,48 +36,52 @@ $ docker pull nexus3.edgexfoundry.org:10003/docker-core-config-seed
 
 A Docker Compose file that pulls the latest EdgeX container images from Nexus is available here:  EdgeX Foundry Docker Compose using images from Nexus.  If you are creating your own Docker Compose file or want to use and existing EdgeX Docker Compose file but selectively use Nexus images, replace the name/location of the Docker image in your docker-compose.yml file for the containers you want to get from Nexus versus Docker Hub.  For example, the config-seed item in docker-compose.yml might ordinarily look like this:
 
-  config-seed:
-    **image: edgexfoundry/docker-core-config-seed**
+::
+
+   config-seed:
+     **image: edgexfoundry/docker-core-config-seed**
     
-    ports:
-        \- "8400:8400"\
-        \- "8500:8500"\
-        \- "8600:8600"\
+     ports:
+         \- "8400:8400"\
+         \- "8500:8500"\
+         \- "8600:8600"\
     
-    container_name: edgex-config-seed
+     container_name: edgex-config-seed
     
-    hostname: edgex-core-config-seed
+     hostname: edgex-core-config-seed
     
-    networks:
-      edgex-network:
-        aliases:
-            \- edgex-core-consul\
-    volumes_from:
-      \- volume\
-    depends_on:
-      \- volume\
+     networks:
+       edgex-network:
+         aliases:
+             \- edgex-core-consul\
+     volumes_from:
+       \- volume\
+     depends_on:
+       \- volume\
 
 Change the "image" field to point to the Nexus Repos
 
-  config-seed:
-    **image: nexus3.edgexfoundry.org:10003/docker-core-config-seed**
-     ports:
-        \- "8400:8400"\
-        \- "8500:8500"\
-        \- "8600:8600"\
+::
+
+   config-seed:
+     **image: nexus3.edgexfoundry.org:10003/docker-core-config-seed**
+      ports:
+         \- "8400:8400"\
+         \- "8500:8500"\
+         \- "8600:8600"\
     
-    container_name: edgex-config-seed
+     container_name: edgex-config-seed
     
-    hostname: edgex-core-config-seed
+     hostname: edgex-core-config-seed
   
-    networks:
-      edgex-network:
-        aliases:
-            \- edgex-core-consul\
-    volumes_from:
-      \- volume\
-    depends_on:
-      \- volume\
+     networks:
+       edgex-network:
+         aliases:
+             \- edgex-core-consul\
+     volumes_from:
+       \- volume\
+     depends_on:
+       \- volume\
 
 Save the Docker Compose YAML file after you make any changes.
 

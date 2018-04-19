@@ -29,7 +29,10 @@ outbound.iotcore.algorithm=**RS256**
 
 Set up and register IoT Core as an Export Services client
 
-1) Follow the instructions under Setup only at https://wiki.edgexfoundry.org/display/FA/APIs--Export+Services--Client+Registration+API+Examples
+.. _`Client API Registration Examples`: Ch-APIExportServicesClientRegistrationExamples.html
+..
+
+1) Follow the instructions under Setup only at `Client API Registration Examples`_.
 
 * start services as indicated
 * register a value descriptor:
