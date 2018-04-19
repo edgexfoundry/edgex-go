@@ -45,7 +45,6 @@ type MongoClient struct {
 func newMongoClient(config DBConfiguration) (*MongoClient, error) {
 	// Create the dial info for the Mongo session
 	connectionString := config.Host + ":" + strconv.Itoa(config.Port)
-	fmt.Println("INFO: Connecting to mongo at: " + connectionString)
 	mongoDBDialInfo := &mgo.DialInfo{
 		Addrs:    []string{connectionString},
 		Timeout:  time.Duration(config.Timeout) * time.Millisecond,
@@ -55,8 +54,7 @@ func newMongoClient(config DBConfiguration) (*MongoClient, error) {
 	}
 	session, err := mgo.DialWithInfo(mongoDBDialInfo)
 	if err != nil {
-		fmt.Println("Error dialing the mongo server: " + err.Error())
-		return nil, err
+		return nil, fmt.Errorf("Error dialing the mongo server: " + err.Error())
 	}
 
 	mongoClient := &MongoClient{Session: session, Database: session.DB(config.DatabaseName)}
