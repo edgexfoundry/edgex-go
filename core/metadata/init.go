@@ -31,7 +31,6 @@ import (
 // DS : DataStore to retrieve data from database.
 var DS DataStore
 var loggingClient logger.LoggingClient
-var notificationsClient = notifications.NotificationsClient{}
 
 func ConnectToConsul(conf ConfigurationStruct) error {
 	// Initialize service on Consul
@@ -69,9 +68,8 @@ func Init(conf ConfigurationStruct, l logger.LoggingClient) error {
 	DBUSER = configuration.MongoDBUserName
 	DBPASS = configuration.MongoDBPassword
 
-	// Update notificationsClient based on configuration
-	notificationsClient.NotificationServiceHost = configuration.SupportNotificationsHost
-	notificationsClient.NotificationServicePort = configuration.SupportNotificationsPort
+	// Initialize notificationsClient based on configuration
+	notifications.SetConfiguration(configuration.SupportNotificationsHost, configuration.SupportNotificationsPort)
 
 	var err error
 	// Connect to the database
