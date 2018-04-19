@@ -20,7 +20,6 @@ package metadata
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -61,7 +60,7 @@ func restAddAddressable(w http.ResponseWriter, r *http.Request) {
 		return
 	} else {
 		if len(a.Name) == 0 {
-			err = fmt.Errorf("name is required for addressable")
+			err = errors.New("name is required for addressable")
 			loggingClient.Error(err.Error(), "")
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
