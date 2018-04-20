@@ -18,7 +18,7 @@ func TestRegistrationValid(t *testing.T) {
 		encryption  string
 		valid       bool
 	}{
-		{"empty", "reg", "", "", "", "", false},
+		{"empty", "", "", "", "", "", false},
 		{"valid", "reg", CompZip, FormatJSON, DestMQTT, EncAes, true},
 		{"defaultCompression", "reg", "", FormatJSON, DestMQTT, EncAes, true},
 		{"defaultEncryption", "reg", CompZip, FormatJSON, DestMQTT, "", true},
