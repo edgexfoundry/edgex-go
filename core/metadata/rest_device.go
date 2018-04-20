@@ -1191,6 +1191,6 @@ func postNotification(name string, action string) {
 			Severity:    notifications.NORMAL,
 		}
 
-		notificationsClient.SendNotification(notification)
+		notifications.GetNotificationsClient().SendNotification(notification)
 	}
 }

@@ -16,7 +16,7 @@
  * @modifier: Vino Yang, Tencent
  * @version: 0.5.0
  *******************************************************************************/
-package notifications
+package notifications_client
 
 import (
 	"bytes"
@@ -61,10 +61,12 @@ const (
 )
 
 // Struct to represent the notifications client
-type NotificationsClient struct {
-	NotificationServiceHost string
-	NotificationServicePort int
-	OwningService           string
+type NotificationsClient interface {
+	SendNotification(n Notification) error
+}
+
+type NotificationsHttpClient struct {
+
 }
 
 // Struct to represent a notification being sent to the notifications service
@@ -82,8 +84,16 @@ type Notification struct {
 	Modified    int          `json:"modified,omitempty"` // The last modification timestamp
 }
 
+var notificationsClient NotificationsClient
+func GetNotificationsClient() NotificationsClient {
+	if notificationsClient == nil {
+		notificationsClient = &NotificationsHttpClient{}
+	}
+	return notificationsClient
+}
+
 // Send a notification to the notifications service
-func (nc NotificationsClient) SendNotification(n Notification) error {
+func (nc *NotificationsHttpClient) SendNotification(n Notification) error {
 	client := &http.Client{}
 
 	// Get the JSON request body
@@ -93,7 +103,7 @@ func (nc NotificationsClient) SendNotification(n Notification) error {
 	}
 
 	// Create the request
-	remoteNotificationServiceUrl := fmt.Sprintf(UrlPattern, nc.NotificationServiceHost, nc.NotificationServicePort, NotificationApiPath)
+	remoteNotificationServiceUrl := fmt.Sprintf(UrlPattern, clientConfig.serviceHost, clientConfig.servicePort, NotificationApiPath)
 
 	return doPost(remoteNotificationServiceUrl, bytes.NewBuffer(requestBody), client)
 }

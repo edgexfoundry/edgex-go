@@ -105,7 +105,10 @@ command: 56325f6de4b05eaae5a89cdc (a command ID associated to the device per Met
 body:  {\\\"value\\\":\\\"3\\\"} (the JSON data supplied in the REST message body).
 
 When creating a Rule in JSON to be POST submitted through the Rules Engine client, the entire Rule would be represented as shown below:
-{"name":"motortoofastsignal", "condition": {"device":"562114e9e4b0385849b96cd8","checks":[ {"parameter":"RPM", "operand1":"Integer.parseInt(value)", "operation":">","operand2":"1200" } ] }, "action" : {"device":"56325f7ee4b05eaae5a89ce1","command":"56325f6de4b05eaae5a89cdc","body":"{\\\"value\\\":\\\"3\\\"}"},"log":"Patlite warning triggered for engine speed too high" }
+
+::
+
+   {"name":"motortoofastsignal", "condition": {"device":"562114e9e4b0385849b96cd8","checks":[ {"parameter":"RPM", "operand1":"Integer.parseInt(value)", "operation":">","operand2":"1200" } ] }, "action" : {"device":"56325f7ee4b05eaae5a89ce1","command":"56325f6de4b05eaae5a89cdc","body":"{\\\"value\\\":\\\"3\\\"}"},"log":"Patlite warning triggered for engine speed too high" }
 
 ==========================
 Rules Engine Configuration

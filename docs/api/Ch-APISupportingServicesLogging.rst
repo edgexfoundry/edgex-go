@@ -17,7 +17,7 @@ Logging Service is a microservice featuring REST API for other microservices to 
 https://github.com/edgexfoundry/edgex-go/blob/master/support/logging/raml/support-logging.raml
 
 
-.. _`Logging API HTML Documentation`: file:support-logging.html
+.. _`Logging API HTML Documentation`: support-logging.html
 ..
 
 `Logging API HTML Documentation`_

@@ -28,7 +28,7 @@ func initZmq(eventCh chan *models.Event) {
 	defer q.Close()
 
 	logger.Info("Connecting to zmq...")
-	url := fmt.Sprintf("tcp://%s:%d", cfg.DataHost, zeroMQPort)
+	url := fmt.Sprintf("tcp://%s:%d", configuration.DataHost, zeroMQPort)
 	q.Connect(url)
 	logger.Info("Connected to zmq")
 	q.SetSubscribe("")

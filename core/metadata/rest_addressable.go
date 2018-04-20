@@ -58,6 +58,13 @@ func restAddAddressable(w http.ResponseWriter, r *http.Request) {
 		loggingClient.Error(err.Error(), "")
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return
+	} else {
+		if len(a.Name) == 0 {
+			err = errors.New("name is required for addressable")
+			loggingClient.Error(err.Error(), "")
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
 	}
 
 	err = addAddressable(&a)

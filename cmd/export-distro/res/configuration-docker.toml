@@ -1,0 +1,12 @@
+ApplicationName = 'edgex-export-distro'
+Hostname = 'edgex-export-distro'
+Port = 48070
+DistroHost = 'edgex-export-distro'
+ClientHost = 'edgex-export-client'
+DataHost = 'edgex-core-data'
+MQTTSCert = 'dummy.crt'
+MQTTSKey = 'dummy.key'
+ConsulHost = 'edgex-core-consul'
+ConsulPort = 8500
+ConsulProfilesActive = 'go'
+CheckInterval = '10s'

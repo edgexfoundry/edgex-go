@@ -91,7 +91,11 @@ The second test application is the TestMqttDeviceCommandRec.java.  This applicat
 
 .. image:: EdgeX_ExamplesMQTTCommandTopic.png
 
-The TestMqttDeviceCommandRec application knows how to handle requests for the random number, ping and message get/set messages that come from Core Command.  To test commands, use a browser or Postman tool to first get the TestMQTTDevice commands.  Make a Get request to http://localhost:48082/api/v1/device/name/TestMQTTDevice to get all the commands for the device.  Find the URL for the testrandnum. 
+The TestMqttDeviceCommandRec application knows how to handle requests for the random number, ping and message get/set messages that come from Core Command.  To test commands, use a browser or Postman tool to first get the TestMQTTDevice commands.  
+
+::
+
+    Make a Get request to http://localhost:48082/api/v1/device/name/TestMQTTDevice to get all the commands for the device.  Find the URL for the testrandnum. 
 
 .. image:: EdgeX_ExamplesMQTTDeviceCommands.png
 
