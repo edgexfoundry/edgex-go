@@ -18,17 +18,22 @@ import (
 
 	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/edgex-go/support/logging"
+	"github.com/edgexfoundry/edgex-go/pkg/usage"
 )
 
 func main() {
-	var (
-		useConsul  = flag.String("consul", "", "Should the service use consul?")
-		useProfile = flag.String("profile", "default", "Specify a profile other than default.")
-	)
+	var useConsul, useProfile string
+
+	flag.StringVar(&useConsul, "consul", "n", "Should the service use consul?")
+	flag.StringVar(&useConsul, "c", "n", "Should the service use consul?")
+	flag.StringVar(&useProfile, "profile", "default", "Specify a profile other than default.")
+	flag.StringVar(&useProfile, "p", "default", "Specify a profile other than default.")
+	flag.Usage = usage.HelpCallback
+	flag.Parse()
 	flag.Parse()
 
 	configuration := &logging.ConfigurationStruct{}
-	err := config.LoadFromFile(*useProfile, configuration)
+	err := config.LoadFromFile(useProfile, configuration)
 	if err != nil {
 		fmt.Println(err.Error())
 		return
@@ -36,7 +41,7 @@ func main() {
 
 	//Determine if configuration should be overridden from Consul
 	var consulMsg string
-	if *useConsul == "y" {
+	if useConsul == "y" {
 		consulMsg = "Loading configuration from Consul..."
 		err := logging.ConnectToConsul(*configuration)
 		if err != nil {
