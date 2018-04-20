@@ -109,12 +109,6 @@ func addReg(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if reg.Name == "" {
-		logger.Error("Name is required")
-		http.Error(w, "Name is required", http.StatusBadRequest)
-		return
-	}
-
 	if valid, err := reg.Validate(); !valid {
 		logger.Error("Failed to validate registrations fields", zap.ByteString("data", data), zap.Error(err))
 		http.Error(w, "Could not validate json fields", http.StatusBadRequest)

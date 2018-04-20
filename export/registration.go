@@ -70,6 +70,10 @@ type NotifyUpdate struct {
 
 func (reg *Registration) Validate() (bool, error) {
 
+	if reg.Name == "" {
+		return false, fmt.Errorf("Name is required")
+	}
+
 	if reg.Compression == "" {
 		reg.Compression = CompNone
 	}

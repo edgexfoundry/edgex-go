@@ -11,25 +11,29 @@ import "testing"
 func TestRegistrationValid(t *testing.T) {
 	var tests = []struct {
 		name        string
+		regName     string
 		compression string
 		format      string
 		destination string
 		encryption  string
 		valid       bool
 	}{
-		{"empty", "", "", "", "", false},
-		{"valid", CompZip, FormatJSON, DestMQTT, EncAes, true},
-		{"defaultCompression", "", FormatJSON, DestMQTT, EncAes, true},
-		{"defaultEncryption", CompZip, FormatJSON, DestMQTT, "", true},
-		{"wrongCompresion", "INVALID", FormatJSON, DestMQTT, EncAes, false},
-		{"wrongFormat", CompZip, "INVALID", DestMQTT, EncAes, false},
-		{"wrongDestination", CompZip, FormatJSON, "INVALID", EncAes, false},
-		{"wrongEncryption", CompZip, FormatJSON, DestMQTT, "INVALID", false},
+		{"empty", "reg", "", "", "", "", false},
+		{"valid", "reg", CompZip, FormatJSON, DestMQTT, EncAes, true},
+		{"defaultCompression", "reg", "", FormatJSON, DestMQTT, EncAes, true},
+		{"defaultEncryption", "reg", CompZip, FormatJSON, DestMQTT, "", true},
+		{"withoutName", "", CompZip, FormatJSON, DestMQTT, EncAes, false},
+		{"wrongCompresion", "reg", "INVALID", FormatJSON, DestMQTT, EncAes, false},
+		{"wrongFormat", "reg", CompZip, "INVALID", DestMQTT, EncAes, false},
+		{"wrongDestination", "reg", CompZip, FormatJSON, "INVALID", EncAes, false},
+		{"wrongEncryption", "reg", CompZip, FormatJSON, DestMQTT, "INVALID", false},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r := Registration{}
+
+			r.Name = tt.regName
 
 			if tt.compression != "" {
 				r.Compression = tt.compression
