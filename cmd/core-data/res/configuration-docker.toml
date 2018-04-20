@@ -43,5 +43,4 @@ MetaProvisionWatcherURL = 'http://edgex-core-metadata:48081/api/v1/provisionwatc
 MetaPingURL = 'http://edgex-core-metadata:48081/api/v1/ping'
 ActiveMQBroker = 'tcp://localhost:61616'
 ZeroMQAddressPort = 'tcp://*:5563'
-AmqBroker = 'tcp://localhost:0'
 

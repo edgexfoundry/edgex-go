@@ -63,7 +63,6 @@ type ConfigurationStruct struct {
 	MetaPingURL                string
 	ActiveMQBroker             string
 	ZeroMQAddressPort          string
-	AmqBroker                  string
 }
 
 var configuration ConfigurationStruct = ConfigurationStruct{} //  Needs to be initialized before used
