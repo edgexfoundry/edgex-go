@@ -71,6 +71,13 @@ cd $CMD/export-distro
 exec -a edgex-export-distro ./export-distro &
 cd $DIR
 
+###
+# Support Scheduler
+###
+printf "\n### Starting edgex-support-scheduler\n"
+cd $CMD/support-scheduler
+exec -a edgex-support-scheduler ./support-scheduler &
+cd $DIR
 
 trap cleanup EXIT
 
