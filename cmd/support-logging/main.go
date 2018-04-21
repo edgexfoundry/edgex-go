@@ -11,15 +11,18 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/edgexfoundry/edgex-go/pkg/config"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/edgexfoundry/edgex-go"
-	"github.com/edgexfoundry/edgex-go/support/logging"
+	"github.com/edgexfoundry/edgex-go/pkg/config"
 	"github.com/edgexfoundry/edgex-go/pkg/usage"
+	"github.com/edgexfoundry/edgex-go/support/logging"
+	logger "github.com/edgexfoundry/edgex-go/support/logging-client"
 )
+
+var loggingClient logger.LoggingClient
 
 func main() {
 	var useConsul, useProfile string
@@ -35,7 +38,7 @@ func main() {
 	configuration := &logging.ConfigurationStruct{}
 	err := config.LoadFromFile(useProfile, configuration)
 	if err != nil {
-		fmt.Println(err.Error())
+		logBeforeTermination(err)
 		return
 	}
 
@@ -45,18 +48,19 @@ func main() {
 		consulMsg = "Loading configuration from Consul..."
 		err := logging.ConnectToConsul(*configuration)
 		if err != nil {
-			fmt.Println(err.Error())
+			logBeforeTermination(err)
 			return //end program since user explicitly told us to use Consul.
 		}
 	} else {
 		consulMsg = "Bypassing Consul configuration..."
 	}
 
-	fmt.Println(consulMsg)
+	loggingClient = logger.NewClient(configuration.ApplicationName, false, configuration.LoggingFile)
+	loggingClient.Info(consulMsg)
 
 	logging.Init(*configuration)
 
-	fmt.Printf("Starting support-logging %s\n", edgex.Version)
+	loggingClient.Info(fmt.Sprintf("Starting support-logging %s\n", edgex.Version))
 	errs := make(chan error, 2)
 
 	go func() {
@@ -69,4 +73,9 @@ func main() {
 
 	c := <-errs
 	fmt.Println("terminated: ", c)
+}
+
+func logBeforeTermination(err error) {
+	loggingClient = logger.NewClient(logging.SUPPORTLOGGINGSERVICENAME, false, "")
+	loggingClient.Error(err.Error())
 }

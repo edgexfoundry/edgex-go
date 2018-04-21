@@ -222,7 +222,7 @@ func httpServer() http.Handler {
 func getPersistence() persistence {
 	var retValue persistence
 	if configuration.Persistence == PersistenceFile {
-		retValue = &fileLog{filename: configuration.LogFilename}
+		retValue = &fileLog{filename: configuration.LoggingFile}
 	} else if configuration.Persistence == PersistenceMongo {
 		ms, err := connectToMongo()
 		if err == nil {
