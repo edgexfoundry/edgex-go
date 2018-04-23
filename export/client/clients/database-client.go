@@ -50,11 +50,12 @@ func (db DatabaseType) String() string {
 
 // Return enum value of the Database Type
 func GetDatabaseType(db string) DatabaseType {
-	if mongoStr == db {
+	switch db {
+	case mongoStr:
 		return MONGO
-	} else if mockStr == db {
+	case mockStr:
 		return MOCK
-	} else {
+	default:
 		return INVALID
 	}
 }
