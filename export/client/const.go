@@ -10,6 +10,7 @@ type ConfigurationStruct struct {
 	ApplicationName      string
 	Hostname             string
 	Port                 int
+	DBType               string
 	MongoURL             string
 	MongoUsername        string
 	MongoPassword        string
