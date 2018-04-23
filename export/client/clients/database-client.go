@@ -29,20 +29,20 @@ type DatabaseType int8 // Database type enum
 const (
 	INVALID DatabaseType = iota
 	MONGO
-	MOCK
+	MEMORY
 )
 
 const (
 	invalidStr = "invalid"
 	mongoStr   = "mongodb"
-	mockStr    = "mockdb"
+	memoryStr  = "memorydb"
 )
 
 // Add in order declared in Struct for string value
-var databaseArr = [...]string{invalidStr, mongoStr, mockStr}
+var databaseArr = [...]string{invalidStr, mongoStr, memoryStr}
 
 func (db DatabaseType) String() string {
-	if db >= INVALID && db <= MOCK {
+	if db >= INVALID && db <= MEMORY {
 		return databaseArr[db]
 	}
 	return invalidStr
@@ -53,8 +53,8 @@ func GetDatabaseType(db string) DatabaseType {
 	switch db {
 	case mongoStr:
 		return MONGO
-	case mockStr:
-		return MOCK
+	case memoryStr:
+		return MEMORY
 	default:
 		return INVALID
 	}
@@ -121,11 +121,8 @@ func NewDBClient(config DBConfiguration) (DBClient, error) {
 			return nil, fmt.Errorf("Error creating the mongo client: " + err.Error())
 		}
 		return mc, nil
-	case MOCK:
-		// Create the mock client
-		NewMockParams()
-		mock := &MockDb{}
-		return mock, nil
+	case MEMORY:
+		return &memDB{}, nil
 	default:
 		return nil, ErrUnsupportedDatabase
 	}
