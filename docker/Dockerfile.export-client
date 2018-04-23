@@ -21,4 +21,5 @@ RUN make cmd/export-client/export-client
 
 FROM scratch
 COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/export-client/export-client /
+COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/export-client/res/configuration-docker.toml /res/configuration.toml
 ENTRYPOINT ["/export-client"]

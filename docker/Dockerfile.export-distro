@@ -28,4 +28,5 @@ RUN echo http://nl.alpinelinux.org/alpine/v3.7/main > /etc/apk/repositories; \
 
 RUN apk --no-cache add zeromq
 COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/export-distro/export-distro /
+COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/export-distro/res/configuration-docker.toml /res/configuration.toml
 ENTRYPOINT ["/export-distro"]
