@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2018 
+ * Copyright 2018
  * Dell Inc.
  * Cavium
  *
@@ -19,7 +19,6 @@
 package clients
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/edgexfoundry/edgex-go/export"
@@ -47,7 +46,6 @@ func (mc *memDB) AddRegistration(reg *export.Registration) (bson.ObjectId, error
 
 func (mc *memDB) UpdateRegistration(reg export.Registration) error {
 	for i, r := range mc.regs {
-		fmt.Printf("updating %v <-> %v\n", r.ID, reg.ID)
 		if r.ID == reg.ID {
 			mc.regs[i] = reg
 			return nil
