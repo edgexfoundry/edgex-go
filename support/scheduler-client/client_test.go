@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-package scheduler
+package scheduler_client
 
 import (
 	"encoding/json"
@@ -106,11 +106,7 @@ func TestAddSchedule(t *testing.T) {
 		t.Error(e)
 	}
 
-	scheduleClient := SchedulerClient{
-		SchedulerServiceHost: h[0],
-		SchedulerServicePort: intPort,
-		OwningService:        "notifications",
-	}
+	SetConfiguration(h[0], intPort)
 
 	schedule := models.Schedule{
 		Name:      TestScheduleName,
@@ -121,7 +117,7 @@ func TestAddSchedule(t *testing.T) {
 		RunOnce:   TestScheduleRunOnce,
 	}
 
-	error := scheduleClient.AddSchedule(schedule)
+	error := GetSchedulerClient().AddSchedule(schedule)
 	if error != nil {
 		t.Error(error)
 	}
@@ -180,13 +176,9 @@ func TestQuerySchedule(t *testing.T) {
 		t.Error(e)
 	}
 
-	scheduleClient := SchedulerClient{
-		SchedulerServiceHost: h[0],
-		SchedulerServicePort: intPort,
-		OwningService:        "notifications",
-	}
+	SetConfiguration(h[0], intPort)
 
-	receivedSchedule, err := scheduleClient.QuerySchedule(TestScheduleId)
+	receivedSchedule, err := GetSchedulerClient().QuerySchedule(TestScheduleId)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -269,13 +261,9 @@ func TestQueryScheduleWithName(t *testing.T) {
 		t.Error(e)
 	}
 
-	scheduleClient := SchedulerClient{
-		SchedulerServiceHost: h[0],
-		SchedulerServicePort: intPort,
-		OwningService:        "notifications",
-	}
+	SetConfiguration(h[0], intPort)
 
-	receivedSchedule, err := scheduleClient.QueryScheduleWithName(TestScheduleName)
+	receivedSchedule, err := GetSchedulerClient().QueryScheduleWithName(TestScheduleName)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -363,11 +351,7 @@ func TestUpdateSchedule(t *testing.T) {
 		t.Error(e)
 	}
 
-	scheduleClient := SchedulerClient{
-		SchedulerServiceHost: h[0],
-		SchedulerServicePort: intPort,
-		OwningService:        "notifications",
-	}
+	SetConfiguration(h[0], intPort)
 
 	schedule := models.Schedule{
 		Name:      TestScheduleName,
@@ -378,7 +362,7 @@ func TestUpdateSchedule(t *testing.T) {
 		RunOnce:   TestScheduleRunOnce,
 	}
 
-	error := scheduleClient.UpdateSchedule(schedule)
+	error := GetSchedulerClient().UpdateSchedule(schedule)
 	if error != nil {
 		t.Error(error)
 	}
@@ -416,13 +400,9 @@ func TestRemoveSchedule(t *testing.T) {
 		t.Error(e)
 	}
 
-	scheduleClient := SchedulerClient{
-		SchedulerServiceHost: h[0],
-		SchedulerServicePort: intPort,
-		OwningService:        "notifications",
-	}
+	SetConfiguration(h[0], intPort)
 
-	error := scheduleClient.RemoveSchedule(TestScheduleIdForTest)
+	error := GetSchedulerClient().RemoveSchedule(TestScheduleIdForTest)
 	if error != nil {
 		t.Error(error)
 	}
@@ -486,11 +466,7 @@ func TestAddScheduleEvent(t *testing.T) {
 		t.Error(e)
 	}
 
-	scheduleClient := SchedulerClient{
-		SchedulerServiceHost: h[0],
-		SchedulerServicePort: intPort,
-		OwningService:        "notifications",
-	}
+	SetConfiguration(h[0], intPort)
 
 	scheduleEvent := models.ScheduleEvent{
 		Name:       TestScheduleEventName,
@@ -503,7 +479,7 @@ func TestAddScheduleEvent(t *testing.T) {
 		},
 	}
 
-	error := scheduleClient.AddScheduleEvent(scheduleEvent)
+	error := GetSchedulerClient().AddScheduleEvent(scheduleEvent)
 	if error != nil {
 		t.Error(error)
 	}
@@ -561,13 +537,9 @@ func TestQueryScheduleEvent(t *testing.T) {
 		t.Error(e)
 	}
 
-	scheduleClient := SchedulerClient{
-		SchedulerServiceHost: h[0],
-		SchedulerServicePort: intPort,
-		OwningService:        "notifications",
-	}
+	SetConfiguration(h[0], intPort)
 
-	receivedScheduleEvent, error := scheduleClient.QueryScheduleEvent(TestScheduleEventId)
+	receivedScheduleEvent, error := GetSchedulerClient().QueryScheduleEvent(TestScheduleEventId)
 	if error != nil {
 		t.Error(error)
 	}
@@ -656,11 +628,7 @@ func TestUpdateScheduleEvent(t *testing.T) {
 		t.Error(e)
 	}
 
-	scheduleClient := SchedulerClient{
-		SchedulerServiceHost: h[0],
-		SchedulerServicePort: intPort,
-		OwningService:        "notifications",
-	}
+	SetConfiguration(h[0], intPort)
 
 	scheduleEvent := models.ScheduleEvent{
 		Name:       TestScheduleEventName,
@@ -673,7 +641,7 @@ func TestUpdateScheduleEvent(t *testing.T) {
 		},
 	}
 
-	error := scheduleClient.UpdateScheduleEvent(scheduleEvent)
+	error := GetSchedulerClient().UpdateScheduleEvent(scheduleEvent)
 	if error != nil {
 		t.Error(error)
 	}
@@ -711,13 +679,9 @@ func TestRemoveScheduleEvent(t *testing.T) {
 		t.Error(e)
 	}
 
-	scheduleClient := SchedulerClient{
-		SchedulerServiceHost: h[0],
-		SchedulerServicePort: intPort,
-		OwningService:        "notifications",
-	}
+	SetConfiguration(h[0], intPort)
 
-	error := scheduleClient.RemoveScheduleEvent(TestScheduleEventId)
+	error := GetSchedulerClient().RemoveScheduleEvent(TestScheduleEventId)
 	if error != nil {
 		t.Error(error)
 	}

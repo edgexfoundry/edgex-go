@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-package scheduler
+package scheduler_client
 
 import (
 	"bytes"
@@ -29,17 +29,35 @@ const (
 )
 
 // Struct to represent the scheduler client
-type SchedulerClient struct {
-	SchedulerServiceHost string
-	SchedulerServicePort int
-	OwningService        string
+type SchedulerClient interface {
+	AddSchedule(schedule models.Schedule) error
+	AddScheduleEvent(scheduleEvent models.ScheduleEvent) error
+	QuerySchedule(id string) (models.Schedule, error)
+	QueryScheduleEvent(id string) (models.ScheduleEvent, error)
+	QueryScheduleWithName(scheduleName string) (models.Schedule, error)
+	RemoveSchedule(id string) error
+	RemoveScheduleEvent(id string) error
+	UpdateSchedule(schedule models.Schedule) error
+	UpdateScheduleEvent(scheduleEvent models.ScheduleEvent) error
+}
+
+type schedulerRestClient struct {
+
+}
+
+var schedulerClient SchedulerClient
+func GetSchedulerClient() SchedulerClient {
+	if schedulerClient == nil {
+		schedulerClient = &schedulerRestClient{}
+	}
+	return schedulerClient
 }
 
 // Function to get a schedule from the remote scheduler server
-func (schedulerClient SchedulerClient) QuerySchedule(id string) (models.Schedule, error) {
+func (schedulerClient *schedulerRestClient) QuerySchedule(id string) (models.Schedule, error) {
 	client := &http.Client{}
 
-	remoteScheduleUrl := fmt.Sprintf(UrlPattern, schedulerClient.SchedulerServiceHost, schedulerClient.SchedulerServicePort, ScheduleApiPath)
+	remoteScheduleUrl := fmt.Sprintf(UrlPattern, clientConfig.serviceHost, clientConfig.servicePort, ScheduleApiPath)
 	remoteScheduleUrl = remoteScheduleUrl + "/" + id
 
 	jsonBytes, err := doGet(remoteScheduleUrl, client)
@@ -57,10 +75,10 @@ func (schedulerClient SchedulerClient) QuerySchedule(id string) (models.Schedule
 }
 
 // Function to get a schedule with schedule name from the remote scheduler server
-func (schedulerClient SchedulerClient) QueryScheduleWithName(scheduleName string) (models.Schedule, error) {
+func (schedulerClient *schedulerRestClient) QueryScheduleWithName(scheduleName string) (models.Schedule, error) {
 	client := &http.Client{}
 
-	remoteScheduleUrl := fmt.Sprintf(UrlPattern, schedulerClient.SchedulerServiceHost, schedulerClient.SchedulerServicePort, ScheduleApiPath)
+	remoteScheduleUrl := fmt.Sprintf(UrlPattern, clientConfig.serviceHost, clientConfig.servicePort, ScheduleApiPath)
 	remoteScheduleUrl = remoteScheduleUrl + "/name/" + scheduleName
 
 	jsonBytes, err := doGet(remoteScheduleUrl, client)
@@ -78,7 +96,7 @@ func (schedulerClient SchedulerClient) QueryScheduleWithName(scheduleName string
 }
 
 // Function to send a schedule to the remote scheduler server
-func (schedulerClient SchedulerClient) AddSchedule(schedule models.Schedule) error {
+func (schedulerClient *schedulerRestClient) AddSchedule(schedule models.Schedule) error {
 	client := &http.Client{}
 
 	requestBody, err := schedule.MarshalJSON()
@@ -86,13 +104,13 @@ func (schedulerClient SchedulerClient) AddSchedule(schedule models.Schedule) err
 		return err
 	}
 
-	remoteScheduleUrl := fmt.Sprintf(UrlPattern, schedulerClient.SchedulerServiceHost, schedulerClient.SchedulerServicePort, ScheduleApiPath)
+	remoteScheduleUrl := fmt.Sprintf(UrlPattern, clientConfig.serviceHost, clientConfig.servicePort, ScheduleApiPath)
 
 	return doPost(remoteScheduleUrl, bytes.NewBuffer(requestBody), client)
 }
 
 // Function to update a schedule to the remote scheduler server
-func (schedulerClient SchedulerClient) UpdateSchedule(schedule models.Schedule) error {
+func (schedulerClient *schedulerRestClient) UpdateSchedule(schedule models.Schedule) error {
 	client := &http.Client{}
 
 	requestBody, err := schedule.MarshalJSON()
@@ -100,26 +118,26 @@ func (schedulerClient SchedulerClient) UpdateSchedule(schedule models.Schedule) 
 		return err
 	}
 
-	remoteScheduleUrl := fmt.Sprintf(UrlPattern, schedulerClient.SchedulerServiceHost, schedulerClient.SchedulerServicePort, ScheduleApiPath)
+	remoteScheduleUrl := fmt.Sprintf(UrlPattern, clientConfig.serviceHost, clientConfig.servicePort, ScheduleApiPath)
 
 	return doPut(remoteScheduleUrl, bytes.NewBuffer(requestBody), client)
 }
 
 // Function to remove a schedule to the remote scheduler server
-func (schedulerClient SchedulerClient) RemoveSchedule(id string) error {
+func (schedulerClient *schedulerRestClient) RemoveSchedule(id string) error {
 	client := &http.Client{}
 
-	remoteScheduleUrl := fmt.Sprintf(UrlPattern, schedulerClient.SchedulerServiceHost, schedulerClient.SchedulerServicePort, ScheduleApiPath)
+	remoteScheduleUrl := fmt.Sprintf(UrlPattern, clientConfig.serviceHost, clientConfig.servicePort, ScheduleApiPath)
 	remoteScheduleUrl = remoteScheduleUrl + "/" + id
 
 	return doDelete(remoteScheduleUrl, client)
 }
 
 // Function to get a schedule event from the remote scheduler server
-func (schedulerClient SchedulerClient) QueryScheduleEvent(id string) (models.ScheduleEvent, error) {
+func (schedulerClient *schedulerRestClient) QueryScheduleEvent(id string) (models.ScheduleEvent, error) {
 	client := &http.Client{}
 
-	remoteScheduleEventUrl := fmt.Sprintf(UrlPattern, schedulerClient.SchedulerServiceHost, schedulerClient.SchedulerServicePort, ScheduleEventApiPath)
+	remoteScheduleEventUrl := fmt.Sprintf(UrlPattern, clientConfig.serviceHost, clientConfig.servicePort, ScheduleEventApiPath)
 	remoteScheduleEventUrl = remoteScheduleEventUrl + "/" + id
 
 	jsonBytes, err := doGet(remoteScheduleEventUrl, client)
@@ -137,7 +155,7 @@ func (schedulerClient SchedulerClient) QueryScheduleEvent(id string) (models.Sch
 }
 
 // Function to send a schedule event to the remote scheduler server
-func (schedulerClient SchedulerClient) AddScheduleEvent(scheduleEvent models.ScheduleEvent) error {
+func (schedulerClient *schedulerRestClient) AddScheduleEvent(scheduleEvent models.ScheduleEvent) error {
 	client := &http.Client{}
 
 	requestBody, err := scheduleEvent.MarshalJSON()
@@ -145,13 +163,13 @@ func (schedulerClient SchedulerClient) AddScheduleEvent(scheduleEvent models.Sch
 		return err
 	}
 
-	remoteScheduleEventUrl := fmt.Sprintf(UrlPattern, schedulerClient.SchedulerServiceHost, schedulerClient.SchedulerServicePort, ScheduleEventApiPath)
+	remoteScheduleEventUrl := fmt.Sprintf(UrlPattern, clientConfig.serviceHost, clientConfig.servicePort, ScheduleEventApiPath)
 
 	return doPost(remoteScheduleEventUrl, bytes.NewBuffer(requestBody), client)
 }
 
 // Function to update a schedule event to the remote scheduler server
-func (schedulerClient SchedulerClient) UpdateScheduleEvent(scheduleEvent models.ScheduleEvent) error {
+func (schedulerClient *schedulerRestClient) UpdateScheduleEvent(scheduleEvent models.ScheduleEvent) error {
 	client := &http.Client{}
 
 	requestBody, err := scheduleEvent.MarshalJSON()
@@ -159,16 +177,16 @@ func (schedulerClient SchedulerClient) UpdateScheduleEvent(scheduleEvent models.
 		return err
 	}
 
-	remoteScheduleEventUrl := fmt.Sprintf(UrlPattern, schedulerClient.SchedulerServiceHost, schedulerClient.SchedulerServicePort, ScheduleEventApiPath)
+	remoteScheduleEventUrl := fmt.Sprintf(UrlPattern, clientConfig.serviceHost, clientConfig.servicePort, ScheduleEventApiPath)
 
 	return doPut(remoteScheduleEventUrl, bytes.NewBuffer(requestBody), client)
 }
 
 // Function to remove a schedule event to the remote scheduler server
-func (schedulerClient SchedulerClient) RemoveScheduleEvent(id string) error {
+func (schedulerClient *schedulerRestClient) RemoveScheduleEvent(id string) error {
 	client := &http.Client{}
 
-	remoteScheduleEventUrl := fmt.Sprintf(UrlPattern, schedulerClient.SchedulerServiceHost, schedulerClient.SchedulerServicePort, ScheduleEventApiPath)
+	remoteScheduleEventUrl := fmt.Sprintf(UrlPattern, clientConfig.serviceHost, clientConfig.servicePort, ScheduleEventApiPath)
 	remoteScheduleEventUrl = remoteScheduleEventUrl + "/" + id
 
 	return doDelete(remoteScheduleEventUrl, client)

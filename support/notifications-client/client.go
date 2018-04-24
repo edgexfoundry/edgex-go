@@ -65,7 +65,8 @@ type NotificationsClient interface {
 	SendNotification(n Notification) error
 }
 
-type NotificationsHttpClient struct {
+//Named HttpClient instead of RestClient on purpose since there is only one POST method
+type notificationsHttpClient struct {
 
 }
 
@@ -87,13 +88,13 @@ type Notification struct {
 var notificationsClient NotificationsClient
 func GetNotificationsClient() NotificationsClient {
 	if notificationsClient == nil {
-		notificationsClient = &NotificationsHttpClient{}
+		notificationsClient = &notificationsHttpClient{}
 	}
 	return notificationsClient
 }
 
 // Send a notification to the notifications service
-func (nc *NotificationsHttpClient) SendNotification(n Notification) error {
+func (nc *notificationsHttpClient) SendNotification(n Notification) error {
 	client := &http.Client{}
 
 	// Get the JSON request body

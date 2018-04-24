@@ -16,5 +16,6 @@ cmd/support-logging/support-logging
 cmd/core-command/logs/
 cmd/core-data/logs/
 cmd/core-metadata/logs/
+cmd/support-logging/logs/
 cmd/export-client/logs/
 cmd/export-distro/logs/
