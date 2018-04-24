@@ -206,7 +206,7 @@ The command steps to startup Consul and import the default configuration data ar
 
 4. Create the Consul container:
 
-  $ docker run -p 8400:8400 -p 8500:8500 -p 8600:8600 --name edgex-core-consul --hostname edgex-core-consul --net=edgex-network --volumes-from edgex-files -d edgex/docker-edgex-core-consul
+  $ docker run -p 8400:8400 -p 8500:8500 -p 8600:8600 --name edgex-core-consul --hostname edgex-core-consul --net=edgex-network --volumes-from edgex-files -d edgexfoundry/docker-core-consul
 
 5. Create a container to run core-config-seed to import the default configuration data:
 
