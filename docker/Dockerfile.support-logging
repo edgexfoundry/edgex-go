@@ -20,4 +20,5 @@ RUN make cmd/support-logging/support-logging
 
 FROM scratch
 COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/support-logging/support-logging /
-ENTRYPOINT ["/support-logging"]
+COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/support-logging/res/configuration-docker.toml /res/configuration-docker.toml
+ENTRYPOINT ["/support-logging","--consul","--profile=docker","--confdir=/res"]
