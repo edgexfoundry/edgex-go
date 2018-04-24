@@ -24,7 +24,7 @@ import (
 var usageStr = `
 Usage: %s [options]
 Server Options:
-    -c, --consul y                  "y" indicates service should use Consul
+    -c, --consul                    Indicates service should use Consul
     -p, --profile <name>            Indicate configuration profile other than default
 Common Options:
     -h, --help                      Show this message

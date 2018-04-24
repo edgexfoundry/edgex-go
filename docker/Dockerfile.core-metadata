@@ -27,5 +27,5 @@ EXPOSE $APP_PORT
 
 WORKDIR /
 COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/core-metadata/core-metadata /
-COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/core-metadata/res/configuration-docker.toml /res/configuration.toml
-ENTRYPOINT ["/core-metadata"]
+COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/core-metadata/res/configuration-docker.toml /res/configuration-docker.toml
+ENTRYPOINT ["/core-metadata","--consul","--profile=docker","--confdir=/res"]

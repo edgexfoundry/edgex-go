@@ -36,10 +36,11 @@ var loggingClient logger.LoggingClient
 
 func main() {
 	start := time.Now()
-	var useConsul, useProfile string
+	var useConsul bool
+	var useProfile string
 
-	flag.StringVar(&useConsul, "consul", "n", "Should the service use consul?")
-	flag.StringVar(&useConsul, "c", "n", "Should the service use consul?")
+	flag.BoolVar(&useConsul, "consul", false, "Indicates the service should use consul.")
+	flag.BoolVar(&useConsul, "c", false, "Indicates the service should use consul.")
 	flag.StringVar(&useProfile, "profile", "default", "Specify a profile other than default.")
 	flag.StringVar(&useProfile, "p", "default", "Specify a profile other than default.")
 	flag.Usage = usage.HelpCallback
@@ -55,7 +56,7 @@ func main() {
 
 	//Determine if configuration should be overridden from Consul
 	var consulMsg string
-	if useConsul == "y" {
+	if useConsul {
 		consulMsg = "Loading configuration from Consul..."
 		err := data.ConnectToConsul(*configuration)
 		if err != nil {
