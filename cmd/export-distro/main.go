@@ -19,6 +19,7 @@ import (
 	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"github.com/edgexfoundry/edgex-go/export/distro"
+	"github.com/edgexfoundry/edgex-go/pkg/usage"
 
 	"go.uber.org/zap"
 )
@@ -32,13 +33,18 @@ func main() {
 	logger.Info("Starting edgex export client", zap.String("version", edgex.Version))
 
 	var (
-		useConsul  = flag.String("consul", "", "Should the service use consul?")
-		useProfile = flag.String("profile", "default", "Specify a profile other than default.")
+		useConsul  bool
+		useProfile string
 	)
+	flag.BoolVar(&useConsul, "consul", false, "Indicates the service should use consul.")
+	flag.BoolVar(&useConsul, "c", false, "Indicates the service should use consul.")
+	flag.StringVar(&useProfile, "profile", "default", "Specify a profile other than default.")
+	flag.StringVar(&useProfile, "p", "default", "Specify a profile other than default.")
+	flag.Usage = usage.HelpCallback
 	flag.Parse()
 
 	configuration := &distro.ConfigurationStruct{}
-	err := config.LoadFromFile(*useProfile, configuration)
+	err := config.LoadFromFile(useProfile, configuration)
 	if err != nil {
 		logger.Error(err.Error(), zap.String("version", edgex.Version))
 		return
@@ -46,7 +52,7 @@ func main() {
 
 	//Determine if configuration should be overridden from Consul
 	var consulMsg string
-	if *useConsul == "y" {
+	if useConsul {
 		consulMsg = "Loading configuration from Consul..."
 		err := distro.ConnectToConsul(*configuration)
 		if err != nil {
