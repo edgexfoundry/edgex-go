@@ -45,7 +45,7 @@ func ConsulInit(config ConsulConfig) error {
 	var err error // Declare error to be used throughout function
 
 	// Connect to the Consul Agent
-	defaultConfig := consulapi.DefaultConfig()
+	defaultConfig := &consulapi.Config{}
 	defaultConfig.Address = config.ConsulAddress + ":" + strconv.Itoa(config.ConsulPort)
 	consul, err = consulapi.NewClient(defaultConfig)
 	if err != nil {
@@ -64,7 +64,7 @@ func ConsulInit(config ConsulConfig) error {
 
 	// Register the Health Check
 	err = consul.Agent().CheckRegister(&consulapi.AgentCheckRegistration{
-		Name:      "Health Check",
+		Name:      "Health Check: " + config.ServiceName,
 		Notes:     "Check the health of the API",
 		ServiceID: config.ServiceName,
 		AgentServiceCheck: consulapi.AgentServiceCheck{
