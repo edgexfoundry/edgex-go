@@ -20,8 +20,11 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
+	"os/signal"
 	"net/http"
 	"strconv"
+	"syscall"
 	"time"
 
 	"github.com/edgexfoundry/edgex-go"
@@ -30,9 +33,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/pkg/heartbeat"
 	"github.com/edgexfoundry/edgex-go/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/support/logging-client"
-	"os"
-	"os/signal"
-	"syscall"
 )
 
 var loggingClient logger.LoggingClient

@@ -20,11 +20,11 @@ package clients
 import (
 	"errors"
 	"fmt"
+	"strconv"
+	"time"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
-	"strconv"
-	"time"
 )
 
 const (
