@@ -30,6 +30,9 @@ import (
 	"github.com/edgexfoundry/edgex-go/pkg/heartbeat"
 	"github.com/edgexfoundry/edgex-go/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/support/logging-client"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
 var loggingClient logger.LoggingClient
@@ -80,16 +83,21 @@ func main() {
 		return
 	}
 
-	r := data.LoadRestRoutes()
 	http.TimeoutHandler(nil, time.Millisecond*time.Duration(configuration.ServiceTimeout), "Request timed out")
 	loggingClient.Info(configuration.AppOpenMsg, "")
 
 	heartbeat.Start(configuration.HeartBeatMsg, configuration.HeartBeatTime, loggingClient)
 
+	errs := make(chan error, 2)
+	listenForInterrupt(errs)
+	startHttpServer(errs, configuration.ServicePort)
+
 	// Time it took to start service
 	loggingClient.Info("Service started in: "+time.Since(start).String(), "")
 	loggingClient.Info("Listening on port: " + strconv.Itoa(configuration.ServicePort))
-	loggingClient.Error(http.ListenAndServe(":"+strconv.Itoa(configuration.ServicePort), r).Error())
+	c := <-errs
+	data.Destruct()
+	loggingClient.Warn(fmt.Sprintf("terminating: %v", c))
 }
 
 func logBeforeTermination(err error) {
@@ -103,4 +111,19 @@ func setLoggingTarget(conf data.ConfigurationStruct) string {
 		return conf.LoggingFile
 	}
 	return logTarget
+}
+
+func listenForInterrupt(errChan chan error) {
+	go func() {
+		c := make(chan os.Signal)
+		signal.Notify(c, syscall.SIGINT)
+		errChan <- fmt.Errorf("%s", <-c)
+	}()
+}
+
+func startHttpServer(errChan chan error, port int) {
+	go func() {
+		r := data.LoadRestRoutes()
+		errChan <- http.ListenAndServe(":"+strconv.Itoa(port), r)
+	}()
 }

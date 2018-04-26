@@ -71,6 +71,9 @@ func getCurrentInfluxClient() (*InfluxClient, error) {
 	return currentInfluxClient, nil
 }
 
+func (ic *InfluxClient) CloseSession() {
+	ic.Client.Close()
+}
 // ******************************* EVENTS **********************************
 
 // Return all the events

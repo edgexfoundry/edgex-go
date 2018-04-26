@@ -83,3 +83,10 @@ func Init(conf ConfigurationStruct, l logger.LoggingClient) error {
 
 	return nil
 }
+
+func Destruct() {
+	if DS.s != nil {
+		DS.s.Close()
+	}
+}
+
