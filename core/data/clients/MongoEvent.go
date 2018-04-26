@@ -14,7 +14,6 @@
 package clients
 
 import (
-	"fmt"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
@@ -88,7 +87,7 @@ func (me *MongoEvent) SetBSON(raw bson.Raw) error {
 	// De-reference the DBRef fields
 	mc, err := getCurrentMongoClient()
 	if err != nil {
-		fmt.Println("Error getting a mongo client: " + err.Error())
+		loggingClient.Error("Error getting a mongo client: " + err.Error())
 		return err
 	}
 
