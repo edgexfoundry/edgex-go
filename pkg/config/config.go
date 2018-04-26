@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 
 	"github.com/BurntSushi/toml"
 )
@@ -37,16 +38,17 @@ var confDir = flag.String("confdir", "", "Specify local configuration directory"
 
 func LoadFromFile(profile string, configuration interface{}) error {
 	path := determinePath()
-	fileName := determineConfigFile(profile)
-	contents, err := ioutil.ReadFile(path + "/" + fileName)
+	fileName := path + "/" + determineConfigFile(profile)
+
+	contents, err := ioutil.ReadFile(fileName)
 	if err != nil {
-		return fmt.Errorf("could not load configuration file (%s): %v", path, err.Error())
+		return fmt.Errorf("could not load configuration file (%s): %v", fileName, err.Error())
 	}
 
 	// Decode the configuration from TOML
 	err = toml.Unmarshal(contents, configuration)
 	if err != nil {
-		return fmt.Errorf("unable to parse configuration file (%s): %v", path, err.Error())
+		return fmt.Errorf("unable to parse configuration file (%s): %v", fileName, err.Error())
 	}
 
 	return nil
@@ -75,4 +77,24 @@ func determinePath() string {
 	}
 
 	return path
+}
+
+func VerifyTomlFiles(configuration interface{}) error {
+	files, err := filepath.Glob("res/configuration*.toml")
+	if err != nil {
+		return fmt.Errorf("There are no toml files")
+	}
+
+	for _, f := range files {
+		profile := f[len("res/configuration") : len(f)-len(".toml")]
+		if profile != "" {
+			// remove the dash
+			profile = profile[1:]
+		}
+		err := LoadFromFile(profile, configuration)
+		if err != nil {
+			return fmt.Errorf("Error loading toml file %s: %v", profile, err)
+		}
+	}
+	return nil
 }
