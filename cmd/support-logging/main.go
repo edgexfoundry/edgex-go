@@ -14,17 +14,20 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/edgex-go/pkg/config"
+	"github.com/edgexfoundry/edgex-go/pkg/heartbeat"
 	"github.com/edgexfoundry/edgex-go/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/support/logging"
-	logger "github.com/edgexfoundry/edgex-go/support/logging-client"
+	"github.com/edgexfoundry/edgex-go/support/logging-client"
 )
 
 var loggingClient logger.LoggingClient
 
 func main() {
+	start := time.Now()
 	var useConsul bool
 	var useProfile string
 
@@ -57,10 +60,11 @@ func main() {
 
 	loggingClient = logger.NewClient(configuration.ApplicationName, false, configuration.LoggingFile)
 	loggingClient.Info(consulMsg)
+	loggingClient.Info(fmt.Sprintf("Starting %s %s\n", logging.SUPPORTLOGGINGSERVICENAME, edgex.Version))
 
 	logging.Init(*configuration)
+	heartbeat.Start(configuration.HeartBeatMsg, configuration.HeartBeatTime, loggingClient)
 
-	loggingClient.Info(fmt.Sprintf("Starting support-logging %s\n", edgex.Version))
 	errs := make(chan error, 2)
 
 	go func() {
@@ -69,10 +73,12 @@ func main() {
 		errs <- fmt.Errorf("%s", <-c)
 	}()
 
+	// Time it took to start service
+	loggingClient.Info("Service started in: "+time.Since(start).String(), "")
 	logging.StartHTTPServer(errs)
 
 	c := <-errs
-	fmt.Println("terminated: ", c)
+	loggingClient.Warn(fmt.Sprintf("terminated %v", c))
 }
 
 func logBeforeTermination(err error) {
