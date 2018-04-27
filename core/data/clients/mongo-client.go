@@ -20,11 +20,11 @@ package clients
 import (
 	"errors"
 	"fmt"
+	"strconv"
+	"time"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
-	"strconv"
-	"time"
 )
 
 const (
@@ -85,8 +85,12 @@ func getCurrentMongoClient() (*MongoClient, error) {
 }
 
 // Get a copy of the session
-func (mc *MongoClient) GetSessionCopy() *mgo.Session {
+func (mc *MongoClient) getSessionCopy() *mgo.Session {
 	return mc.Session.Copy()
+}
+
+func (mc *MongoClient) CloseSession() {
+	mc.Session.Close()
 }
 
 // ******************************* EVENTS **********************************
@@ -102,7 +106,7 @@ func (mc *MongoClient) Events() ([]models.Event, error) {
 // UnexpectedError - failed to add to database
 // NoValueDescriptor - no existing value descriptor for a reading in the event
 func (mc *MongoClient) AddEvent(e *models.Event) (bson.ObjectId, error) {
-	s := mc.GetSessionCopy()
+	s := mc.getSessionCopy()
 	defer s.Close()
 
 	e.Created = time.Now().UnixNano() / int64(time.Millisecond)
@@ -124,7 +128,7 @@ func (mc *MongoClient) AddEvent(e *models.Event) (bson.ObjectId, error) {
 // UnexpectedError - problem updating in database
 // NotFound - no event with the ID was found
 func (mc *MongoClient) UpdateEvent(e models.Event) error {
-	s := mc.GetSessionCopy()
+	s := mc.getSessionCopy()
 	defer s.Close()
 
 	e.Modified = time.Now().UnixNano() / int64(time.Millisecond)
@@ -150,7 +154,7 @@ func (mc *MongoClient) EventById(id string) (models.Event, error) {
 
 // Get the number of events in Mongo
 func (mc *MongoClient) EventCount() (int, error) {
-	s := mc.GetSessionCopy()
+	s := mc.getSessionCopy()
 	defer s.Close()
 
 	return s.DB(mc.Database.Name).C(EVENTS_COLLECTION).Find(nil).Count()
@@ -158,7 +162,7 @@ func (mc *MongoClient) EventCount() (int, error) {
 
 // Get the number of events in Mongo for the device
 func (mc *MongoClient) EventCountByDeviceId(id string) (int, error) {
-	s := mc.GetSessionCopy()
+	s := mc.getSessionCopy()
 	defer s.Close()
 
 	query := bson.M{"device": id}
@@ -219,7 +223,7 @@ func (mc *MongoClient) EventsPushed() ([]models.Event, error) {
 
 // Delete all of the readings and all of the events
 func (mc *MongoClient) ScrubAllEvents() error {
-	s := mc.GetSessionCopy()
+	s := mc.getSessionCopy()
 	defer s.Close()
 
 	_, err := s.DB(mc.Database.Name).C(READINGS_COLLECTION).RemoveAll(nil)
@@ -237,7 +241,7 @@ func (mc *MongoClient) ScrubAllEvents() error {
 
 // Get events for the passed query
 func (mc *MongoClient) getEvents(q bson.M) ([]models.Event, error) {
-	s := mc.GetSessionCopy()
+	s := mc.getSessionCopy()
 	defer s.Close()
 
 	// Handle DBRefs
@@ -258,7 +262,7 @@ func (mc *MongoClient) getEvents(q bson.M) ([]models.Event, error) {
 
 // Get events with a limit
 func (mc *MongoClient) getEventsLimit(q bson.M, limit int) ([]models.Event, error) {
-	s := mc.GetSessionCopy()
+	s := mc.getSessionCopy()
 	defer s.Close()
 
 	// Handle DBRefs
@@ -285,7 +289,7 @@ func (mc *MongoClient) getEventsLimit(q bson.M, limit int) ([]models.Event, erro
 
 // Get a single event for the passed query
 func (mc *MongoClient) getEvent(q bson.M) (models.Event, error) {
-	s := mc.GetSessionCopy()
+	s := mc.getSessionCopy()
 	defer s.Close()
 
 	// Handle DBRef
@@ -307,7 +311,7 @@ func (mc *MongoClient) Readings() ([]models.Reading, error) {
 
 // Post a new reading
 func (mc *MongoClient) AddReading(r models.Reading) (bson.ObjectId, error) {
-	s := mc.GetSessionCopy()
+	s := mc.getSessionCopy()
 	defer s.Close()
 
 	// Get the reading ready
@@ -323,7 +327,7 @@ func (mc *MongoClient) AddReading(r models.Reading) (bson.ObjectId, error) {
 // 409 - Value descriptor doesn't exist
 // 503 - unknown issues
 func (mc *MongoClient) UpdateReading(r models.Reading) error {
-	s := mc.GetSessionCopy()
+	s := mc.getSessionCopy()
 	defer s.Close()
 
 	r.Modified = time.Now().UnixNano() / int64(time.Millisecond)
@@ -351,7 +355,7 @@ func (mc *MongoClient) ReadingById(id string) (models.Reading, error) {
 
 // Get the count of readings in Mongo
 func (mc *MongoClient) ReadingCount() (int, error) {
-	s := mc.GetSessionCopy()
+	s := mc.getSessionCopy()
 	defer s.Close()
 
 	return s.DB(mc.Database.Name).C(READINGS_COLLECTION).Find(bson.M{}).Count()
@@ -406,7 +410,7 @@ func (mc *MongoClient) ReadingsByDeviceAndValueDescriptor(deviceId, valueDescrip
 }
 
 func (mc *MongoClient) getReadingsLimit(q bson.M, limit int) ([]models.Reading, error) {
-	s := mc.GetSessionCopy()
+	s := mc.getSessionCopy()
 	defer s.Close()
 
 	readings := []models.Reading{}
@@ -422,7 +426,7 @@ func (mc *MongoClient) getReadingsLimit(q bson.M, limit int) ([]models.Reading, 
 
 // Get readings from the database
 func (mc *MongoClient) getReadings(q bson.M) ([]models.Reading, error) {
-	s := mc.GetSessionCopy()
+	s := mc.getSessionCopy()
 	defer s.Close()
 
 	readings := []models.Reading{}
@@ -432,7 +436,7 @@ func (mc *MongoClient) getReadings(q bson.M) ([]models.Reading, error) {
 
 // Get a reading from the database with the passed query
 func (mc *MongoClient) getReading(q bson.M) (models.Reading, error) {
-	s := mc.GetSessionCopy()
+	s := mc.getSessionCopy()
 	defer s.Close()
 
 	var res models.Reading
@@ -450,7 +454,7 @@ func (mc *MongoClient) getReading(q bson.M) (models.Reading, error) {
 // 503 - Unexpected
 // TODO: Check for valid printf formatting
 func (mc *MongoClient) AddValueDescriptor(v models.ValueDescriptor) (bson.ObjectId, error) {
-	s := mc.GetSessionCopy()
+	s := mc.getSessionCopy()
 	defer s.Close()
 
 	// Created/Modified now
@@ -484,7 +488,7 @@ func (mc *MongoClient) ValueDescriptors() ([]models.ValueDescriptor, error) {
 // TODO: Check for the valid printf formatting
 // 404 not found if the value descriptor cannot be found by the identifiers
 func (mc *MongoClient) UpdateValueDescriptor(v models.ValueDescriptor) error {
-	s := mc.GetSessionCopy()
+	s := mc.getSessionCopy()
 	defer s.Close()
 
 	// See if the name is unique if it changed
@@ -545,7 +549,7 @@ func (mc *MongoClient) ValueDescriptorsByName(names []string) ([]models.ValueDes
 // 404 - can't find the value descriptor
 // 409 - Value descriptor is still referenced by readings
 //func (mc *MongoClient) DeleteValueDescriptorByName(name string) error{
-//	s := mc.GetSessionCopy()
+//	s := mc.getSessionCopy()
 //	defer s.Close()
 //
 //	query := bson.M{"name" : name}
@@ -593,7 +597,7 @@ func (mc *MongoClient) ValueDescriptorsByType(t string) ([]models.ValueDescripto
 
 // Get value descriptors based on the query
 func (mc *MongoClient) getValueDescriptors(q bson.M) ([]models.ValueDescriptor, error) {
-	s := mc.GetSessionCopy()
+	s := mc.getSessionCopy()
 	defer s.Close()
 
 	v := []models.ValueDescriptor{}
@@ -604,7 +608,7 @@ func (mc *MongoClient) getValueDescriptors(q bson.M) ([]models.ValueDescriptor, 
 
 // Get value descriptors with a limit based on the query
 func (mc *MongoClient) getValueDescriptorsLimit(q bson.M, limit int) ([]models.ValueDescriptor, error) {
-	s := mc.GetSessionCopy()
+	s := mc.getSessionCopy()
 	defer s.Close()
 
 	v := []models.ValueDescriptor{}
@@ -615,7 +619,7 @@ func (mc *MongoClient) getValueDescriptorsLimit(q bson.M, limit int) ([]models.V
 
 // Get a value descriptor based on the query
 func (mc *MongoClient) getValueDescriptor(q bson.M) (models.ValueDescriptor, error) {
-	s := mc.GetSessionCopy()
+	s := mc.getSessionCopy()
 	defer s.Close()
 
 	var v models.ValueDescriptor
@@ -629,7 +633,7 @@ func (mc *MongoClient) getValueDescriptor(q bson.M) (models.ValueDescriptor, err
 
 // Delete from the collection based on ID
 func (mc *MongoClient) deleteById(id string, col string) error {
-	s := mc.GetSessionCopy()
+	s := mc.getSessionCopy()
 	defer s.Close()
 
 	// Check if id is a hexstring

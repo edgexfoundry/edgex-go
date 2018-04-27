@@ -33,6 +33,8 @@ const (
 )
 
 type DBClient interface {
+	CloseSession()
+
 	// ********************** EVENT FUNCTIONS *******************************
 	// Return all the events
 	// UnexpectedError - failed to retrieve events from the database
