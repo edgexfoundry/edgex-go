@@ -60,7 +60,7 @@ func main() {
 
 	loggingClient = logger.NewClient(configuration.ApplicationName, false, configuration.LoggingFile)
 	loggingClient.Info(consulMsg)
-	loggingClient.Info(fmt.Sprintf("Starting %s %s\n", logging.SUPPORTLOGGINGSERVICENAME, edgex.Version))
+	loggingClient.Info(fmt.Sprintf("Starting %s %s", logging.SUPPORTLOGGINGSERVICENAME, edgex.Version))
 
 	logging.Init(*configuration)
 	heartbeat.Start(configuration.HeartBeatMsg, configuration.HeartBeatTime, loggingClient)

@@ -28,3 +28,7 @@ type ConfigurationStruct struct {
 }
 
 var configuration ConfigurationStruct = ConfigurationStruct{} // Needs to be initialized before used
+
+var (
+	ExportClient = "export-client"
+)
