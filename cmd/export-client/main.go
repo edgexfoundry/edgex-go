@@ -28,6 +28,8 @@ func main() {
 	logger, _ = zap.NewProduction()
 	defer logger.Sync()
 
+	logger.Info(fmt.Sprintf("Starting %s %s", client.ExportClient, edgex.Version))
+
 	var (
 		useConsul  bool
 		useProfile string

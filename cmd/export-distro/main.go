@@ -30,7 +30,7 @@ func main() {
 	logger, _ = zap.NewProduction()
 	defer logger.Sync()
 
-	logger.Info("Starting edgex export client", zap.String("version", edgex.Version))
+	logger.Info("Starting edgex export distro", zap.String("version", edgex.Version))
 
 	var (
 		useConsul  bool
