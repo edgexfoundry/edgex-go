@@ -91,3 +91,7 @@ func Init(conf ConfigurationStruct, l logger.LoggingClient) error {
 
 	return nil
 }
+
+func Destruct() {
+	dbc.CloseSession()
+}

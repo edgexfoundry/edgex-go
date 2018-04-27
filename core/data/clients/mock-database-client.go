@@ -45,6 +45,10 @@ type MockDb struct {
 
 }
 
+func (mc *MockDb) CloseSession () {
+
+}
+
 func (mc *MockDb) AddReading(r models.Reading) (bson.ObjectId, error) {
 	return bson.NewObjectId(), nil
 }
