@@ -11,6 +11,8 @@ type ConfigurationStruct struct {
 	Hostname             string
 	Port                 int
 	Persistence          string
+	HeartBeatTime        int
+	HeartBeatMsg         string
 	LoggingFile          string
 	MongoDB              string
 	MongoCollection      string
