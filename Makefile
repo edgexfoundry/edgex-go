@@ -61,19 +61,43 @@ run_docker:
 docker: $(DOCKERS)
 
 docker_core_metadata:
-	docker build -f docker/Dockerfile.core-metadata -t edgexfoundry/core-metadata-go:$(VERSION) .
+	docker build \
+		-f docker/Dockerfile.core-metadata \
+		-t edgexfoundry/docker-core-metadata-go:latest \
+		-t edgexfoundry/docker-core-metadata-go:$(VERSION) \
+		.
 
 docker_core_data:
-	docker build -f docker/Dockerfile.core-data -t edgexfoundry/core-data-go:$(VERSION) .
+	docker build \
+		-f docker/Dockerfile.core-data \
+		-t edgexfoundry/docker-core-data-go:latest \
+		-t edgexfoundry/docker-core-data-go:$(VERSION) \
+		.
 
 docker_core_command:
-	docker build -f docker/Dockerfile.core-command -t edgexfoundry/core-command-go:$(VERSION) .
+	docker build \
+		-f docker/Dockerfile.core-command \
+		-t edgexfoundry/docker-core-command-go:latest \
+		-t edgexfoundry/docker-core-command-go:$(VERSION) \
+		.
 
 docker_export_client:
-	docker build -f docker/Dockerfile.export-client -t edgexfoundry/export-client-go:$(VERSION) .
+	docker build \
+		-f docker/Dockerfile.export-client \
+		-t edgexfoundry/docker-export-client-go:latest \
+		-t edgexfoundry/docker-export-client-go:$(VERSION) \
+		.
 
 docker_export_distro:
-	docker build -f docker/Dockerfile.export-distro -t edgexfoundry/export-distro-go:$(VERSION) .
+	docker build \
+		-f docker/Dockerfile.export-distro \
+		-t edgexfoundry/docker-export-distro-go:latest \
+		-t edgexfoundry/docker-export-distro-go:$(VERSION) \
+		.
 
 docker_support_logging:
-	docker build -f docker/Dockerfile.support-logging -t edgexfoundry/support-logging-go:$(VERSION) .
+	docker build \
+		-f docker/Dockerfile.support-logging \
+		-t edgexfoundry/docker-support-logging-go:latest \
+		-t edgexfoundry/docker-support-logging-go:$(VERSION) \
+		.
