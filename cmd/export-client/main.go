@@ -29,7 +29,7 @@ func main() {
 
 	var (
 		useConsul  = flag.String("consul", "", "Should the service use consul?")
-		useProfile = flag.String("profile", "default", "Specify a profile other than default.")
+		useProfile = flag.String("profile", "", "Specify a profile other than default.")
 	)
 	flag.Parse()
 
