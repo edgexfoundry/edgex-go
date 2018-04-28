@@ -44,8 +44,8 @@ func main() {
 
 	flag.BoolVar(&useConsul, "consul", false, "Indicates the service should use consul.")
 	flag.BoolVar(&useConsul, "c", false, "Indicates the service should use consul.")
-	flag.StringVar(&useProfile, "profile", "default", "Specify a profile other than default.")
-	flag.StringVar(&useProfile, "p", "default", "Specify a profile other than default.")
+	flag.StringVar(&useProfile, "profile", "", "Specify a profile other than default.")
+	flag.StringVar(&useProfile, "p", "", "Specify a profile other than default.")
 	flag.Usage = usage.HelpCallback
 	flag.Parse()
 

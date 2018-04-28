@@ -11,7 +11,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/edgexfoundry/edgex-go/pkg/config"
 	"os"
 	"os/signal"
 	"syscall"
@@ -19,6 +18,7 @@ import (
 	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"github.com/edgexfoundry/edgex-go/export/distro"
+	"github.com/edgexfoundry/edgex-go/pkg/config"
 	"github.com/edgexfoundry/edgex-go/pkg/usage"
 
 	"go.uber.org/zap"
@@ -38,8 +38,8 @@ func main() {
 	)
 	flag.BoolVar(&useConsul, "consul", false, "Indicates the service should use consul.")
 	flag.BoolVar(&useConsul, "c", false, "Indicates the service should use consul.")
-	flag.StringVar(&useProfile, "profile", "default", "Specify a profile other than default.")
-	flag.StringVar(&useProfile, "p", "default", "Specify a profile other than default.")
+	flag.StringVar(&useProfile, "profile", "", "Specify a profile other than default.")
+	flag.StringVar(&useProfile, "p", "", "Specify a profile other than default.")
 	flag.Usage = usage.HelpCallback
 	flag.Parse()
 
