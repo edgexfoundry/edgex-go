@@ -65,6 +65,7 @@ docker_core_metadata:
 		-f docker/Dockerfile.core-metadata \
 		-t edgexfoundry/docker-core-metadata-go:latest \
 		-t edgexfoundry/docker-core-metadata-go:$(VERSION) \
+		-t edgexfoundry/docker-core-metadata-go:$(VERSION)-dev \
 		.
 
 docker_core_data:
@@ -72,6 +73,7 @@ docker_core_data:
 		-f docker/Dockerfile.core-data \
 		-t edgexfoundry/docker-core-data-go:latest \
 		-t edgexfoundry/docker-core-data-go:$(VERSION) \
+		-t edgexfoundry/docker-core-data-go:$(VERSION)-dev \
 		.
 
 docker_core_command:
@@ -79,6 +81,7 @@ docker_core_command:
 		-f docker/Dockerfile.core-command \
 		-t edgexfoundry/docker-core-command-go:latest \
 		-t edgexfoundry/docker-core-command-go:$(VERSION) \
+		-t edgexfoundry/docker-core-command-go:$(VERSION)-dev \
 		.
 
 docker_export_client:
@@ -86,6 +89,7 @@ docker_export_client:
 		-f docker/Dockerfile.export-client \
 		-t edgexfoundry/docker-export-client-go:latest \
 		-t edgexfoundry/docker-export-client-go:$(VERSION) \
+		-t edgexfoundry/docker-export-client-go:$(VERSION)-dev \
 		.
 
 docker_export_distro:
@@ -93,6 +97,7 @@ docker_export_distro:
 		-f docker/Dockerfile.export-distro \
 		-t edgexfoundry/docker-export-distro-go:latest \
 		-t edgexfoundry/docker-export-distro-go:$(VERSION) \
+		-t edgexfoundry/docker-export-distro-go:$(VERSION)-dev \
 		.
 
 docker_support_logging:
@@ -100,4 +105,5 @@ docker_support_logging:
 		-f docker/Dockerfile.support-logging \
 		-t edgexfoundry/docker-support-logging-go:latest \
 		-t edgexfoundry/docker-support-logging-go:$(VERSION) \
+		-t edgexfoundry/docker-support-logging-go:$(VERSION)-dev \
 		.
