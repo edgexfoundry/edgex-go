@@ -18,17 +18,19 @@
 package config
 
 import (
-	"testing"
 	"os"
+	"testing"
 )
 
+const testProfile = "test"
+
 type TestConfigurationStruct struct {
-	ApplicationName	string
+	ApplicationName string
 }
 
 func TestLoadFromDefault(t *testing.T) {
 	configuration := &TestConfigurationStruct{}
-	err := LoadFromFile("unit-test", configuration)
+	err := LoadFromFile(testProfile, configuration)
 	if err != nil {
 		t.Error(err)
 	}
@@ -40,8 +42,8 @@ func TestLoadFromDefault(t *testing.T) {
 
 func TestLoadFromEnvironment(t *testing.T) {
 	configuration := &TestConfigurationStruct{}
-	os.Setenv("EDGEX_CONF_DIR", configDirectory)
-	err := LoadFromFile("unit-test", configuration)
+	os.Setenv(configDirEnv, configDirectory)
+	err := LoadFromFile(testProfile, configuration)
 	if err != nil {
 		t.Error(err)
 	}

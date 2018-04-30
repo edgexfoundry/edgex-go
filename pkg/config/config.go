@@ -18,49 +18,47 @@
 package config
 
 import (
-	"io/ioutil"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"os"
+	"path/filepath"
 
 	"github.com/BurntSushi/toml"
 )
 
 const (
 	configDirectory = "./res"
-	configDefault = "configuration.toml"
-	configDocker = "configuration-docker.toml"
-	configUnitTest = "configuration-test.toml"
+	configDefault   = "configuration.toml"
+
+	configDirEnv = "EDGEX_CONF_DIR"
 )
 
 var confDir = flag.String("confdir", "", "Specify local configuration directory")
 
 func LoadFromFile(profile string, configuration interface{}) error {
 	path := determinePath()
-	fileName := determineConfigFile(profile)
-	contents, err := ioutil.ReadFile(path + "/" + fileName)
+	fileName := path + "/" + determineConfigFile(profile)
+
+	contents, err := ioutil.ReadFile(fileName)
 	if err != nil {
-		return fmt.Errorf("could not load configuration file (%s): %v", path, err.Error())
+		return fmt.Errorf("could not load configuration file (%s): %v", fileName, err.Error())
 	}
 
 	// Decode the configuration from TOML
 	err = toml.Unmarshal(contents, configuration)
 	if err != nil {
-		return fmt.Errorf("unable to parse configuration file (%s): %v", path, err.Error())
+		return fmt.Errorf("unable to parse configuration file (%s): %v", fileName, err.Error())
 	}
 
 	return nil
 }
 
 func determineConfigFile(profile string) string {
-	switch profile {
-	case "docker":
-		return configDocker
-	case "unit-test":
-		return configUnitTest
-	default:
+	if profile == "" {
 		return configDefault
 	}
+	return "configuration-" + profile + ".toml"
 }
 
 func determinePath() string {
@@ -71,7 +69,7 @@ func determinePath() string {
 	if len(path) == 0 { //No cmd line param passed
 		//Assumption: one service per container means only one var is needed, set accordingly for each deployment.
 		//For local dev, do not set this variable since configs are all named the same.
-		path = os.Getenv("EDGEX_CONF_DIR")
+		path = os.Getenv(configDirEnv)
 	}
 
 	if len(path) == 0 { //Var is not set
@@ -79,4 +77,24 @@ func determinePath() string {
 	}
 
 	return path
+}
+
+func VerifyTomlFiles(configuration interface{}) error {
+	files, err := filepath.Glob("res/configuration*.toml")
+	if err != nil {
+		return fmt.Errorf("There are no toml files")
+	}
+
+	for _, f := range files {
+		profile := f[len("res/configuration") : len(f)-len(".toml")]
+		if profile != "" {
+			// remove the dash
+			profile = profile[1:]
+		}
+		err := LoadFromFile(profile, configuration)
+		if err != nil {
+			return fmt.Errorf("Error loading toml file %s: %v", profile, err)
+		}
+	}
+	return nil
 }
