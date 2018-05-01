@@ -30,11 +30,11 @@ In more time sensitive use cases or environment where a lot of data is being gen
 
 The rules engine has been programmed for this option.  By default, the rules engine micro service registers itself as a client of the export service.  This automatic registration can be turned off, and the rules engine can be connected directly to the ZeroMQ published data out of Core Data.  Note:  as the ZeroMQ pipe out of Core Data is a publish-subscribe mechanism, it allows for multiple subscribers.  When rules engine is connected as a subscriber, Core Data is actually publishing simultaneously to two clients or subscribers:  Export Services and Rules Engine.  In order to disconnect the Rules Engine from the Export Services (as a client) and connect it directly to Core Data, the following Rules Engine micro service configuration parameters (found in application.properties) must be changed:
 
-* export.client=true    # this is normally false by default and is the indication to the Rules Engine micro service to register itself with the Export Services
+::
 
-* export.zeromq.port=5563    # this port is set to 5566 when connecting to the ZeroMQ pipe out of Export Services.
-
-* export.zeromq.host=tcp://[core data host]    # this is set to the export distro host when connecting to the ZeroMQ pipe out of Export Services
+  export.client=true    # this is normally false by default and is the indication to the Rules Engine micro service to register itself with the Export Services  
+  export.zeromq.port=5563    # this port is set to 5566 when connecting to the ZeroMQ pipe out of Export Services.
+  export.zeromq.host=tcp://[core data host]    # this is set to the export distro host when connecting to the ZeroMQ pipe out of Export Services
 
 ===============================================
 Rules Client and High Level Interaction Diagram
@@ -72,23 +72,27 @@ The condition specifies which data (from the Event/Reading supplied through the 
 
 A value check specifies a parameter of the sensor to monitor and test to apply to the parameter. The ValueCheck parameter must match one of the the Reading names associated to the Event provided by CoreData (and is also the name of a legal ValueDescriptor). For example, on a thermostat sensor, the Reading may be reporting the current temperature. Therefore, the Reading name would be "temperature" and in order for rule to test the data from this sensor reading, a value check for the same device must contain a parameter of "temperature" as well. The operand1, operation, and operand2 must specify an equation around the parameter that the Rules Engine uses to determine whether to trigger the action. For example, a ValueCheck that wishes to specify to the Rules Engine to check all temperature reading "value" for any temperature above 72 degrees would specify it as follows:
 
-parameter:  temperature
+:: 
 
-operand1:  value
+  parameter:  temperature
 
-operation:  >
+  operand1:  value
 
-operand2: 72
+  operation:  >
+
+  operand2: 72
 
 Because the data in an Event's Reading may be reported in string form, the ValueCheck operands can and should be specified using Java syntax which is negotiated before the evaluation to create the appropriate type data for comparison. If temperature readings were represented as strings in Core Data, then the same ValueCheck would be specified as follows:
 
-parameter:  temperature
+::
 
-operand1:  Integer.parseInt(value)
+  parameter:  temperature
 
-operation:  >
+  operand1:  Integer.parseInt(value)
 
-operand2: 72
+  operation:  >
+
+  operand2: 72
 
 Lastly, the action specified in a rule specifies which command to trigger on a device or sensor and which data or parameters to send to the device as part of that call. The actual call is made through the Core Command microservice in REST form. Therefore, the action must specify the following items:
 
@@ -118,7 +122,9 @@ The Rules Engine microservice has several configuration properties that are spec
 
 **Automatic Rules Engine as an Export Distro client**
 
-* export.client=true
+::
+  
+  export.client=true
 
 When the rules engine microservice comes up, in order to receive data (the sensor Events/Readings) from EdgeX, it automatically registers as an export data client through the export client micro service.  If you do not want the rules engine to automatically receive that data from the export services (namely export distro), set export.client to false.
 
@@ -126,31 +132,36 @@ In particular, as outlined above, you may wish the rules engine microservice to 
 
 **Rules Engine Export Distribution Registration**
 
-* export.client.registration.url=http://localhost:48071/api/v1
-* export.client.registration.name=EdgeXRulesEngine
-* #how long to wait to retry registration
-* export.client.registration.retry.time=10000
-* #how many times to try registration before exiting
-* export.client.registration.retry.attempts=100
+::
+
+  export.client.registration.url=http://localhost:48071/api/v1export.client.registration.name=EdgeXRulesEngine
+  #how long to wait to retry registration
+  export.client.registration.retry.time=10000
+  #how many times to try registration before exiting
+  export.client.registration.retry.attempts=100
 
 If export.client is set to true to have the rules engine microservice be a client of the export services, then additional properties need to be specified to indicate the location of the export client registration microservice (this may vary per environment – like in a development versus docker environment), and the name to use for the rules engine with the export client when registering the rules engine.
 
 **Core Data’s Zero MQ Connection information**
 
-* export.zeromq.port=5566
-* export.zeromq.host=tcp://localhost
+::
+
+  export.zeromq.port=5566
+  export.zeromq.host=tcp://localhost
 
 As already indicated above in the Rules Engine Direct Connect to Core Data section, if Rules Engine is to be connected directly to the data feed (ZeroMQ) coming from Core Data, additional properties must be provided to specify the port and address for subscribing to the Core Data feed.  Again, these may differ per environment (for instance local development versus a Dockerized environment).
 
 **Location and Name of the Drools Template** 
 
-* #Drools drl resource path
-* rules.default.path=edgex/rules
-* rules.packagename=org.edgexfoundry.rules
-* rules.fileextension=.drl
-* rules.template.path=edgex/templates
-* rules.template.name=rule-template.drl
-* rules.template.encoding=UTF-8
+::
+
+  #Drools drl resource path
+  rules.default.path=edgex/rules
+  rules.packagename=org.edgexfoundry.rules
+  rules.fileextension=.drl
+  rules.template.path=edgex/templates
+  rules.template.name=rule-template.drl
+  rules.template.encoding=UTF-8
 
 The rules engine is using Drools under the covers.  When creating new rules via the rules engine microservice APIs, the rules engine must have access to a base template (a Drool file with a .drl extension by default) for creating new rules.  The template carries certain imports and EdgeX device command call structure that is used by the rules engine to monitor the incoming data and actuate devices/sensors via the Command microservice.  The location of the template, name of the template file and other properties associated to the template must be specified in the configuration properties.  Typically, only the location of the template file changes per environment.
 

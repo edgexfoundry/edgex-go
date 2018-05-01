@@ -29,6 +29,7 @@ Minimum Product Feature Set
 * Each log entry should be associated with its originating service.
 
 2. Provide RESTful APIs to query, clear, or prune log entries based on any combination of following parameters:
+
 * Timestamp from
 * Timestamp to
 * Log level
@@ -133,9 +134,6 @@ The default configuration file is in the /src/main/resources folder of source co
 | \**means the configuration value has to be replaced.
 | \***means the configuration value should NOT be changed.
 
-* The blue color means the configuration value could be changed if necessary.
-* The green color means the configuration value have to be replaced.
-* The red color means the configuration value should NOT be changed.
 
 =======================================
 Logging Service Client Library for Java
@@ -183,9 +181,11 @@ Your application will need an SLF4J implementation.  If you are using Spring Boo
 
 Without the SLF4J implementation (in this case slf4j-simple), you will see errors like that below:
 
-| SLF4J: Failed to load class "org.slf4j.impl.StaticLoggerBinder".
-| SLF4J: Defaulting to no-operation (NOP) logger implementation
-| SLF4J: See http://www.slf4j.org/codes.html#StaticLoggerBinder for further details.
+::
+
+  SLF4J: Failed to load class "org.slf4j.impl.StaticLoggerBinder".
+  SLF4J: Defaulting to no-operation (NOP) logger implementation
+  SLF4J: See http://www.slf4j.org/codes.html#StaticLoggerBinder for further details.
 
 
 
