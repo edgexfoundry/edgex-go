@@ -20,11 +20,11 @@ package clients
 import (
 	"errors"
 	"fmt"
-	"strconv"
-	"time"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
+	"strconv"
+	"time"
 )
 
 const (
@@ -471,7 +471,7 @@ func (mc *MongoClient) AddValueDescriptor(v models.ValueDescriptor) (bson.Object
 		return v.Id, ErrNotUnique
 	}
 
-	// Set ID	
+	// Set ID
 	v.Id = info.UpsertedId.(bson.ObjectId)
 
 	return v.Id, err
@@ -544,27 +544,6 @@ func (mc *MongoClient) ValueDescriptorsByName(names []string) ([]models.ValueDes
 
 	return vList, nil
 }
-
-// Delete a value descriptor based on the name
-// 404 - can't find the value descriptor
-// 409 - Value descriptor is still referenced by readings
-//func (mc *MongoClient) DeleteValueDescriptorByName(name string) error{
-//	s := mc.getSessionCopy()
-//	defer s.Close()
-//
-//	query := bson.M{"name" : name}
-//	var v models.ValueDescriptor
-//
-//	err := s.DB(mc.Database.Name).C(VALUE_DESCRIPTOR_COLLECTION).Find(query).One(&v)
-//	// Value descriptor not found
-//	if(err == mgo.ErrNotFound) {return ErrNotFound}
-//
-//	// Delete the value descriptor
-//	err = s.DB(mc.Database.Name).C(VALUE_DESCRIPTOR_COLLECTION).Remove(bson.M{"_id" : v.Id})
-//	if err != nil{return err}
-//
-//	return nil
-//}
 
 // Return a value descriptor based on the id
 // Return NotFoundError if there is no value descriptor for the id
