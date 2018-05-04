@@ -55,6 +55,8 @@ schemas:
                     application/json: 
                         schema: ExportRegistration
                         example: '{"id":"57db5bd2add4d779d38ff066","created":1473993682339,"modified":1473993682339,"origin":1471806386919,"name":"OSIClient","addressable":{"id":null,"created":0,"modified":0,"origin":1471806386919,"name":"OSIMQTTBroker","protocol":"TCP","address":"m10.cloudmqtt.com","port":15421,"path":null,"publisher":"EdgeXExportPublisher","user":"hukfgtoh","password":"uP6hJLYW6Ji4","topic":"EdgeXDataTopic"},"format":"JSON","filter":{"deviceIdentifiers":["livingroomthermosat","hallwaythermostat"],"valueDescriptorIdentifiers":["temperature","humidity"]},"encryption":{"encryptionAlgorithm":"AES","encryptionKey":"123","initializingVector":"123"},"compression":"GZIP","enable":true}'
+            "404": 
+                description: if the existing export registration cannot be found by name
             "503": 
                 description: for unknown or unanticipated issues
 /registration/{id}: 
@@ -88,10 +90,12 @@ schemas:
         body: 
             application/json: 
                 schema: ExportRegistration
-                example: '{"origin":1471806386919,"name":"OSIClient","addressable":{"origin":1471806386919,"name":"OSIMQTTBroker","protocol":"TCP","address":"m10.cloudmqtt.com","port":15421,"publisher":"EdgeXExportPublisher","user":"hukfgtoh","password":"uP6hJLYW6Ji4","topic":"EdgeXDataTopic"},"format":"JSON","filter":{"deviceIdentifiers":["livingroomthermosat", "hallwaythermostat"],"valueDescriptorIdentifiers":["temperature", "humidity"]},"encryption":{"encryptionAlgorithm":"AES","encryptionKey":"123","initializingVector":"123"},"compression":"GZIP","enable":true}'
+                example: '{"origin":1471806386919,"name":"OSIClient","addressable":{"origin":1471806386919,"name":"OSIMQTTBroker","protocol":"TCP","address":"m10.cloudmqtt.com","port":15421,"publisher":"EdgeXExportPublisher","user":"hukfgtoh","password":"uP6hJLYW6Ji4","topic":"EdgeXDataTopic"},"format":"JSON","filter":{"deviceIdentifiers":["livingroomthermosat", "hallwaythermostat"],"valueDescriptorIdentifiers":["temperature", "humidity"]},"encryption":{"encryptionAlgorithm":"AES","encryptionKey":"123","initializingVector":"123"},"compression":"GZIP","enable":true, "destination": "REST_ENDPOINT"}'
         responses: 
             "200": 
                 description: the database generated id for the new export registration.
+            "400":
+                description: Error reading request
             "503": 
                 description: for unknown or unanticipated issues.
     put: 
@@ -104,6 +108,8 @@ schemas:
         responses: 
             "200": 
                 description: boolean indicating success of the operation.
+            "400":
+                description: Error reading request
             "404": 
                 description: if the existing export registration cannot be found by id or name.
             "503": 
