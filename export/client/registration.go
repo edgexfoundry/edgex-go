@@ -25,17 +25,26 @@ const (
 	distroPort int = 48070
 )
 
+const (
+	typeAlgorithms   = "algorithms"
+	typeCompressions = "compressions"
+	typeFormats      = "formats"
+	typeDestinations = "destinations"
+
+	applicationJson = "application/json; charset=utf-8"
+)
+
 func getRegByID(w http.ResponseWriter, r *http.Request) {
 	id := bone.GetValue(r, "id")
 
 	reg, err := dbc.RegistrationById(id)
 	if err != nil {
 		logger.Error("Failed to query by id", zap.Error(err))
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("Content-Type", applicationJson)
 	json.NewEncoder(w).Encode(&reg)
 }
 
@@ -45,17 +54,17 @@ func getRegList(w http.ResponseWriter, r *http.Request) {
 	var list []string
 
 	switch t {
-	case "algorithms":
+	case typeAlgorithms:
 		list = append(list, export.EncNone)
 		list = append(list, export.EncAes)
-	case "compressions":
+	case typeCompressions:
 		list = append(list, export.CompNone)
 		list = append(list, export.CompGzip)
 		list = append(list, export.CompZip)
-	case "formats":
+	case typeFormats:
 		list = append(list, export.FormatJSON)
 		list = append(list, export.FormatXML)
-	case "destinations":
+	case typeDestinations:
 		list = append(list, export.DestMQTT)
 		list = append(list, export.DestRest)
 	default:
@@ -64,7 +73,7 @@ func getRegList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("Content-Type", applicationJson)
 	json.NewEncoder(w).Encode(&list)
 }
 
@@ -76,7 +85,7 @@ func getAllReg(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("Content-Type", applicationJson)
 	json.NewEncoder(w).Encode(&reg)
 }
 
@@ -86,11 +95,11 @@ func getRegByName(w http.ResponseWriter, r *http.Request) {
 	reg, err := dbc.RegistrationByName(name)
 	if err != nil {
 		logger.Error("Failed to query by name", zap.Error(err))
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("Content-Type", applicationJson)
 	json.NewEncoder(w).Encode(&reg)
 }
 
@@ -143,15 +152,15 @@ func addReg(w http.ResponseWriter, r *http.Request) {
 func updateReg(w http.ResponseWriter, r *http.Request) {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		logger.Error("Failed to query update registration", zap.Error(err))
+		logger.Error("Failed to read update registration", zap.Error(err))
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	var fromReg export.Registration
 	if err := json.Unmarshal(data, &fromReg); err != nil {
-		logger.Error("Failed to query update registration", zap.Error(err))
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		logger.Error("Failed to unmarshal update registration", zap.Error(err))
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -162,8 +171,10 @@ func updateReg(w http.ResponseWriter, r *http.Request) {
 	} else if fromReg.Name != "" {
 		toReg, err = dbc.RegistrationByName(fromReg.Name)
 	} else {
-		err = clients.ErrNotFound
+		http.Error(w, "Need id or name", http.StatusBadRequest)
+		return
 	}
+
 	if err != nil {
 		logger.Error("Failed to query update registration", zap.Error(err))
 		if err == clients.ErrNotFound {
@@ -215,7 +226,7 @@ func updateReg(w http.ResponseWriter, r *http.Request) {
 	notifyUpdatedRegistrations(export.NotifyUpdate{Name: toReg.Name,
 		Operation: "update"})
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", applicationJson)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
 }
@@ -228,7 +239,7 @@ func delRegByID(w http.ResponseWriter, r *http.Request) {
 	reg, err := dbc.RegistrationById(id)
 	if err != nil {
 		logger.Error("Failed to query by id", zap.Error(err))
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
 
@@ -242,7 +253,7 @@ func delRegByID(w http.ResponseWriter, r *http.Request) {
 	notifyUpdatedRegistrations(export.NotifyUpdate{Name: reg.Name,
 		Operation: "delete"})
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", applicationJson)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
 }
@@ -253,14 +264,14 @@ func delRegByName(w http.ResponseWriter, r *http.Request) {
 	err := dbc.DeleteRegistrationByName(name)
 	if err != nil {
 		logger.Error("Failed to query by name", zap.Error(err))
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
 
 	notifyUpdatedRegistrations(export.NotifyUpdate{Name: name,
 		Operation: "delete"})
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", applicationJson)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
 }

@@ -15,6 +15,11 @@ import (
 	"go.uber.org/zap"
 )
 
+const (
+	apiV1Registration = "/api/v1/registration"
+	apiV1Ping         = "/api/v1/ping"
+)
+
 func replyPing(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
@@ -26,20 +31,17 @@ func replyPing(w http.ResponseWriter, r *http.Request) {
 func httpServer() http.Handler {
 	mux := bone.New()
 
-	// Status
-	mux.Get("/status", http.HandlerFunc(getStatus))
-
-	mux.Get("/api/v1/ping", http.HandlerFunc(replyPing))
+	mux.Get(apiV1Ping, http.HandlerFunc(replyPing))
 
 	// Registration
-	mux.Get("/api/v1/registration/:id", http.HandlerFunc(getRegByID))
-	mux.Get("/api/v1/registration/reference/:type", http.HandlerFunc(getRegList))
-	mux.Get("/api/v1/registration", http.HandlerFunc(getAllReg))
-	mux.Get("/api/v1/registration/name/:name", http.HandlerFunc(getRegByName))
-	mux.Post("/api/v1/registration", http.HandlerFunc(addReg))
-	mux.Put("/api/v1/registration", http.HandlerFunc(updateReg))
-	mux.Delete("/api/v1/registration/id/:id", http.HandlerFunc(delRegByID))
-	mux.Delete("/api/v1/registration/name/:name", http.HandlerFunc(delRegByName))
+	mux.Get(apiV1Registration+"/:id", http.HandlerFunc(getRegByID))
+	mux.Get(apiV1Registration+"/reference/:type", http.HandlerFunc(getRegList))
+	mux.Get(apiV1Registration, http.HandlerFunc(getAllReg))
+	mux.Get(apiV1Registration+"/name/:name", http.HandlerFunc(getRegByName))
+	mux.Post(apiV1Registration, http.HandlerFunc(addReg))
+	mux.Put(apiV1Registration, http.HandlerFunc(updateReg))
+	mux.Delete(apiV1Registration+"/id/:id", http.HandlerFunc(delRegByID))
+	mux.Delete(apiV1Registration+"/name/:name", http.HandlerFunc(delRegByName))
 
 	return mux
 }
