@@ -61,6 +61,8 @@ func GetDatabaseType(db string) DatabaseType {
 }
 
 type DBClient interface {
+	CloseSession()
+
 	// ********************** REGISTRATION FUNCTIONS *****************************
 	// Return all the registrations
 	// UnexpectedError - failed to retrieve registrations from the database
