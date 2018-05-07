@@ -66,6 +66,10 @@ func (mc *MongoClient) GetSessionCopy() *mgo.Session {
 	return mc.Session.Copy()
 }
 
+func (mc *MongoClient) CloseSession() {
+	mc.Session.Close()
+}
+
 // ****************************** REGISTRATIONS ********************************
 
 // Return all the registrations

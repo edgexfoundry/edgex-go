@@ -69,3 +69,10 @@ func Init(conf ConfigurationStruct, l *zap.Logger) error {
 
 	return nil
 }
+
+func Destroy() {
+	if dbc != nil {
+		dbc.CloseSession()
+		dbc = nil
+	}
+}
