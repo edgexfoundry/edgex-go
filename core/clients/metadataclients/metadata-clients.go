@@ -32,8 +32,13 @@ import (
 
 var (
 	ErrResponseNil error = errors.New("Problem connecting to metadata - reponse was nil")
-	ErrNotFound    error = errors.New("Item not found")
 )
+
+type ErrNotFound struct {}
+
+func(e ErrNotFound) Error() string {
+	return "item not found"
+}
 
 /*
 Addressable client for interacting with the addressable section of metadata
@@ -324,19 +329,22 @@ func (d *DeviceRestClient) CheckForDevice(token string) (models.Device, error) {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
-		// Get the response body
-		bodyBytes, err := getBody(resp)
-		if err != nil {
-			fmt.Println(err.Error())
-			return models.Device{}, err
-		}
-		bodyString := string(bodyBytes)
-
-		return models.Device{}, errors.New(bodyString)
+	switch(resp.StatusCode) {
+	case 404:
+		return models.Device{}, ErrNotFound{}
+	case 200:
+		return d.decodeDevice(resp)
 	}
 
-	return d.decodeDevice(resp)
+	// Unexpected http status. Get the response body
+	bodyBytes, err := getBody(resp)
+	if err != nil {
+		fmt.Println(err.Error())
+		return models.Device{}, err
+	}
+	bodyString := string(bodyBytes)
+
+	return models.Device{}, errors.New(bodyString)
 }
 
 // Get the device by id
