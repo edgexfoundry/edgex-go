@@ -64,6 +64,7 @@ func loadDeviceRoutes(b *mux.Router) {
 	d.HandleFunc("/{"+ID+"}/"+URLLASTREPORTED+"/{"+LASTREPORTED+"}/{"+LASTREPORTEDNOTIFY+"}", restSetDeviceLastReportedByIdNotify).Methods(http.MethodPut)
 	d.HandleFunc("/{"+ID+"}/"+URLLASTCONNECTED+"/{"+LASTCONNECTED+"}", restSetDeviceLastConnectedById).Methods(http.MethodPut)
 	d.HandleFunc("/{"+ID+"}/"+URLLASTCONNECTED+"/{"+LASTCONNECTED+"}/{"+LASTCONNECTEDNOTIFY+"}", restSetLastConnectedByIdNotify).Methods(http.MethodPut)
+	d.HandleFunc("/"+CHECK+"/{"+ID+"}", restCheckForDevice).Methods(http.MethodGet)
 
 	// /api/v1/" + DEVICE/" + NAME + "
 	n := d.PathPrefix("/" + NAME).Subrouter()
