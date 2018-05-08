@@ -47,6 +47,24 @@ schemas:
                 description: for unknown or unanticipated issues.
             "404":
                 description: if the device cannot be found by the id provided.
+/device/check/{token}:
+    displayName: Device Resource by name (preferred) or id
+    description: Example - http://localhost:48081/api/v1/device/check/ohmmeter
+    uriParameters:
+        token:
+            displayName: token
+            type: string
+            required: true
+            repeat: false
+    get:
+        description: Obtain a device by either name (preferred) or id. Id must be a valid BSON identifier.
+        responses:
+            "200":
+                description: JSON payload representing the device
+            "500":
+                description: unexpected server error
+            "404"
+                description: device was not found
 /device/name/{name}/opstate/{opState}:
     displayName: Device Resource (set op state by name)
     description: Example - http://localhost:48081/api/v1/device/name/livingroomthermostat/opstate/locked (where livingroomthermostat is the device name)

@@ -24,11 +24,12 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/edgexfoundry/edgex-go/core/clients/types"
 	"github.com/edgexfoundry/edgex-go/core/data/clients"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"github.com/gorilla/mux"
 	"fmt"
-	"github.com/edgexfoundry/edgex-go/core/clients/metadataclients"
+
 )
 
 // Put event on the message queue to be processed by the rules engine
@@ -194,7 +195,7 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			loggingClient.Error(fmt.Sprintf("error checking device %s %v", e.Device, err))
 			switch err := err.(type) {
-				case metadataclients.ErrNotFound://ignore
+				case types.ErrNotFound://ignore
 			default: //return an error on everything else.
 			    loggingClient.Debug(fmt.Sprintf("error of type %v", err))
 				http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -302,7 +303,7 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				loggingClient.Error(fmt.Sprintf("error checking device %s %v", from.Device, err))
 				switch err := err.(type) {
-				case metadataclients.ErrNotFound://ignore
+				case types.ErrNotFound://ignore
 				default: //return an error on everything else.
 					http.Error(w, err.Error(), http.StatusServiceUnavailable)
 					return
@@ -420,7 +421,7 @@ func eventCountByDeviceIdHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			loggingClient.Error(fmt.Sprintf("error checking device %s %v", id, err))
 			switch err := err.(type) {
-			case metadataclients.ErrNotFound://ignore
+			case types.ErrNotFound://ignore
 				http.Error(w, err.Error(), http.StatusNotFound)
 			default: //return an error on everything else.
 				http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -543,7 +544,7 @@ func getEventByDeviceHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		loggingClient.Error(fmt.Sprintf("error checking device %s %v", deviceId, err))
 		switch err := err.(type) {
-		case metadataclients.ErrNotFound://ignore
+		case types.ErrNotFound://ignore
 		default: //return an error on everything else.
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			return
@@ -596,7 +597,7 @@ func deleteByDeviceIdHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		loggingClient.Error(fmt.Sprintf("error checking device %s %v", deviceId, err))
 		switch err := err.(type) {
-		case metadataclients.ErrNotFound://ignore
+		case types.ErrNotFound://ignore
 		default: //return an error on everything else.
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			return
@@ -733,9 +734,9 @@ func readingByDeviceFilteredValueDescriptor(w http.ResponseWriter, r *http.Reque
 		// Get the device
 		d, err := mdc.CheckForDevice(deviceId)
 		if err != nil {
-			loggingClient.Error(fmt.Sprintf("error checking device %s %v", deviceId, err))
+			loggingClient.Error(fmt.Sprintf("error checking device %s %v", deviceId, err), "readingByDeviceFilteredValueDescriptor")
 			switch err := err.(type) {
-			case metadataclients.ErrNotFound://ignore
+			case types.ErrNotFound://ignore
 			default: //return an error on everything else.
 				http.Error(w, err.Error(), http.StatusServiceUnavailable)
 				return

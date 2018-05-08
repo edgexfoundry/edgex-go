@@ -24,7 +24,7 @@ import (
 	"net/url"
 	"regexp"
 
-	"github.com/edgexfoundry/edgex-go/core/clients/metadataclients"
+	"github.com/edgexfoundry/edgex-go/core/clients/types"
 	"github.com/edgexfoundry/edgex-go/core/data/clients"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"github.com/gorilla/mux"
@@ -448,7 +448,7 @@ func valueDescriptorByDeviceIdHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		var msg string
 		switch err := err.(type) {
-		case metadataclients.ErrNotFound:
+		case types.ErrNotFound:
 			msg = fmt.Sprintf("Device not found: %v", err)
 			http.Error(w, msg, http.StatusNotFound)
 		default:

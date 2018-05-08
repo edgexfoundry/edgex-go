@@ -30,6 +30,7 @@ import (
 	"github.com/gorilla/mux"
 	"gopkg.in/mgo.v2"
 	"fmt"
+	"gopkg.in/mgo.v2/bson"
 )
 
 func restGetAllDevices(w http.ResponseWriter, _ *http.Request) {
@@ -528,11 +529,11 @@ func restCheckForDevice(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		} else {
-			loggingClient.Debug(fmt.Sprintf("device not found by name: %s %v", token, err),"restCheckForDevice")
+			loggingClient.Debug(fmt.Sprintf("device %s %v", token, err),"restCheckForDevice")
 		}
 	}
 	//If lookup by name failed, see if we were passed the ID
-	if len(dev.Name) == 0 {
+	if len(dev.Name) == 0 && bson.IsObjectIdHex(token) {
 		if err := getDeviceById(&dev, token); err != nil {
 			loggingClient.Error(err.Error(), "restCheckForDevice")
 			if err == mgo.ErrNotFound {
@@ -542,6 +543,9 @@ func restCheckForDevice(w http.ResponseWriter, r *http.Request) {
 			}
 			return
 		}
+	} else {
+		http.Error(w, "device not found: " + dev.Name, http.StatusNotFound)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")

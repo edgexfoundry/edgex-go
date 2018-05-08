@@ -27,18 +27,13 @@ import (
 	"net/url"
 	"strconv"
 
+	"github.com/edgexfoundry/edgex-go/core/clients/types"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 )
 
 var (
 	ErrResponseNil error = errors.New("Problem connecting to metadata - reponse was nil")
 )
-
-type ErrNotFound struct {}
-
-func(e ErrNotFound) Error() string {
-	return "item not found"
-}
 
 /*
 Addressable client for interacting with the addressable section of metadata
@@ -331,7 +326,7 @@ func (d *DeviceRestClient) CheckForDevice(token string) (models.Device, error) {
 
 	switch(resp.StatusCode) {
 	case 404:
-		return models.Device{}, ErrNotFound{}
+		return models.Device{}, types.ErrNotFound{}
 	case 200:
 		return d.decodeDevice(resp)
 	}

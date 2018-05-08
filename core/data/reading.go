@@ -20,10 +20,12 @@ package data
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
 
+	"github.com/edgexfoundry/edgex-go/core/clients/types"
 	"github.com/edgexfoundry/edgex-go/core/data/clients"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"github.com/gorilla/mux"
@@ -31,16 +33,10 @@ import (
 
 // Check metadata if the device exists
 func checkDevice(device string) bool {
-	// First check by name
-	_, err := mdc.DeviceForName(device)
+	_, err := mdc.CheckForDevice(device)
 	if err != nil {
-		// Then check by ID
-		_, err = mdc.Device(device)
-		if err != nil {
-			loggingClient.Error("Can't find device: " + device)
-			return false
-		}
-		return true
+		loggingClient.Error("Can't find device: " + device)
+		return false
 	}
 
 	return true
@@ -94,17 +90,12 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 
 		// Check device
 		if reading.Device != "" {
-			// Try by name
-			d, err := mdc.DeviceForName(reading.Device)
-			// Try by ID
+			d, err := mdc.CheckForDevice(reading.Device)
 			if err != nil {
-				d, err = mdc.Device(reading.Device)
-				if err != nil {
-					err = errors.New("Device not found for reading")
-					loggingClient.Error(err.Error(), "")
-					http.Error(w, err.Error(), http.StatusConflict)
-					return
-				}
+				err = errors.New("Device not found for reading")
+				loggingClient.Error(err.Error(), "")
+				http.Error(w, err.Error(), http.StatusConflict)
+				return
 			}
 			reading.Device = d.Name
 		}
@@ -299,16 +290,19 @@ func readingByDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		// Try to get device
 		// First check by name
 		var d models.Device
-		d, err := mdc.DeviceForName(deviceId)
+		d, err := mdc.CheckForDevice(deviceId)
 		if err != nil {
-			// Then check by ID
-			d, err = mdc.Device(deviceId)
-			if err != nil {
+			loggingClient.Error(fmt.Sprintf("error checking device %s %v", deviceId, err))
+			switch err := err.(type) {
+			case types.ErrNotFound:
 				if configuration.MetaDataCheck {
 					http.Error(w, "Device doesn't exist for the reading", http.StatusNotFound)
 					loggingClient.Error("Error getting readings for a device: The device doesn't exist")
 					return
 				}
+			default: //return an error on everything else.
+				http.Error(w, err.Error(), http.StatusServiceUnavailable)
+				return
 			}
 		}
 
