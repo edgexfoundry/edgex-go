@@ -305,12 +305,6 @@ func deleteDeviceProfileByName(n string) error {
 	return nil
 }
 
-//func getDeviceProfilesByCommandName(d *[]models.DeviceProfile, cn string) error {
-//	if DATABASE == enums.MONGODB {
-//		return mgoGetDeviceProfilesByCommandName(d, cn)
-//	}
-//	return nil
-//}
 func getDeviceProfilesByModel(dp *[]models.DeviceProfile, m string) error {
 	if DATABASE == enums.MONGODB {
 		return mgoGetDeviceProfilesByModel(dp, m)

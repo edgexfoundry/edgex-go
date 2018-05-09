@@ -33,6 +33,9 @@ func (mc *memDB) Registrations() ([]export.Registration, error) {
 	return mc.regs, nil
 }
 
+func (mc *memDB) CloseSession() {
+}
+
 func (mc *memDB) AddRegistration(reg *export.Registration) (bson.ObjectId, error) {
 	ticks := time.Now().Unix()
 	reg.Created = ticks

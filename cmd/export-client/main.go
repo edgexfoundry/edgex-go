@@ -77,5 +77,8 @@ func main() {
 	}()
 
 	c := <-errs
+
+	client.Destroy()
+
 	logger.Info("terminated", zap.String("error", c.Error()))
 }
