@@ -65,53 +65,47 @@ docker: $(DOCKERS)
 docker_core_metadata:
 	docker build \
 		-f docker/Dockerfile.core-metadata \
-		-t edgexfoundry/docker-core-metadata-go:latest \
+		--label "git_sha=$(GIT_SHA)" \
 		-t edgexfoundry/docker-core-metadata-go:$(GIT_SHA) \
-		-t edgexfoundry/docker-core-metadata-go:$(VERSION) \
 		-t edgexfoundry/docker-core-metadata-go:$(VERSION)-dev \
 		.
 
 docker_core_data:
 	docker build \
 		-f docker/Dockerfile.core-data \
-		-t edgexfoundry/docker-core-data-go:latest \
+		--label "git_sha=$(GIT_SHA)" \
 		-t edgexfoundry/docker-core-data-go:$(GIT_SHA) \
-		-t edgexfoundry/docker-core-data-go:$(VERSION) \
 		-t edgexfoundry/docker-core-data-go:$(VERSION)-dev \
 		.
 
 docker_core_command:
 	docker build \
 		-f docker/Dockerfile.core-command \
-		-t edgexfoundry/docker-core-command-go:latest \
+		--label "git_sha=$(GIT_SHA)" \
 		-t edgexfoundry/docker-core-command-go:$(GIT_SHA) \
-		-t edgexfoundry/docker-core-command-go:$(VERSION) \
 		-t edgexfoundry/docker-core-command-go:$(VERSION)-dev \
 		.
 
 docker_export_client:
 	docker build \
 		-f docker/Dockerfile.export-client \
-		-t edgexfoundry/docker-export-client-go:latest \
+		--label "git_sha=$(GIT_SHA)" \
 		-t edgexfoundry/docker-export-client-go:$(GIT_SHA) \
-		-t edgexfoundry/docker-export-client-go:$(VERSION) \
 		-t edgexfoundry/docker-export-client-go:$(VERSION)-dev \
 		.
 
 docker_export_distro:
 	docker build \
 		-f docker/Dockerfile.export-distro \
-		-t edgexfoundry/docker-export-distro-go:latest \
+		--label "git_sha=$(GIT_SHA)" \
 		-t edgexfoundry/docker-export-distro-go:$(GIT_SHA) \
-		-t edgexfoundry/docker-export-distro-go:$(VERSION) \
 		-t edgexfoundry/docker-export-distro-go:$(VERSION)-dev \
 		.
 
 docker_support_logging:
 	docker build \
 		-f docker/Dockerfile.support-logging \
-		-t edgexfoundry/docker-support-logging-go:latest \
+		--label "git_sha=$(GIT_SHA)" \
 		-t edgexfoundry/docker-support-logging-go:$(GIT_SHA) \
-		-t edgexfoundry/docker-support-logging-go:$(VERSION) \
 		-t edgexfoundry/docker-support-logging-go:$(VERSION)-dev \
 		.
