@@ -27,12 +27,12 @@ import (
 	"net/url"
 	"strconv"
 
+	"github.com/edgexfoundry/edgex-go/core/clients/types"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 )
 
 var (
 	ErrResponseNil error = errors.New("Problem connecting to metadata - reponse was nil")
-	ErrNotFound    error = errors.New("Item not found")
 )
 
 /*
@@ -54,6 +54,7 @@ type DeviceClient interface {
 	Add(dev *models.Device) (string, error)
 	Delete(id string) error
 	DeleteByName(name string) error
+	CheckForDevice(token string) (models.Device, error)
 	Device(id string) (models.Device, error)
 	DeviceForName(name string) (models.Device, error)
 	Devices() ([]models.Device, error)
@@ -299,6 +300,46 @@ func (d *DeviceRestClient) decodeDevice(resp *http.Response) (models.Device, err
 	}
 
 	return dev, err
+}
+
+//Use the models.Event.Device property for the supplied token parameter.
+//The above property is currently double-purposed and needs to be refactored.
+//This call replaces the previous two calls necessary to lookup a device by id followed by name.
+func (d *DeviceRestClient) CheckForDevice(token string) (models.Device, error) {
+	req, err := http.NewRequest(http.MethodGet, d.url+"/check/"+token, nil)
+	if err != nil {
+		fmt.Println(err)
+		return models.Device{}, err
+	}
+
+	// Make the request and get response
+	resp, err := makeRequest(req)
+	if err != nil {
+		fmt.Println(err.Error())
+		return models.Device{}, err
+	}
+	if resp == nil {
+		fmt.Println(ErrResponseNil)
+		return models.Device{}, ErrResponseNil
+	}
+	defer resp.Body.Close()
+
+	switch(resp.StatusCode) {
+	case 404:
+		return models.Device{}, types.ErrNotFound{}
+	case 200:
+		return d.decodeDevice(resp)
+	}
+
+	// Unexpected http status. Get the response body
+	bodyBytes, err := getBody(resp)
+	if err != nil {
+		fmt.Println(err.Error())
+		return models.Device{}, err
+	}
+	bodyString := string(bodyBytes)
+
+	return models.Device{}, errors.New(bodyString)
 }
 
 // Get the device by id
