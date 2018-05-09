@@ -398,101 +398,106 @@ Got to http://localhost:48082/api/v1/device
 
 Look for the id or the device that you want to schedule an event for
 
-[
+::
 
-   {
+  [
 
-       "name": "moxa-e2210-device",
+     {
 
-       "id": "5a280a0be4b0c39393ec7780",  <--- This
+         "name": "moxa-e2210-device",
 
-       "description": "snmp smart ethernet io",
+         "id": "5a280a0be4b0c39393ec7780",  <--- This
 
-       "labels": [
+         "description": "snmp smart ethernet io",
 
-           "snmp",
+         "labels": [
 
-           "rtu",
+             "snmp",
 
-           "io"
+             "rtu",
 
-       ],
+             "io"
 
-       "adminState": "unlocked",
+         ],
+
+         "adminState": "unlocked",
+
 
 In this case the id is “5a280a0be4b0c39393ec7780”
 
 Next you want to get the “name” of the command you want to schedule an event for
 
-"commands": [
+::
 
-           {
+  "commands": [
 
-               "id": "5a2808e6e4b0c39393ec777c",
+             {
 
-               "name": "serverModel",
+                 "id": "5a2808e6e4b0c39393ec777c",
 
-               "get": {
+                 "name": "serverModel",
 
-                   "url": "http://localhost:48082/api/v1/device/5a280a0be4b0c39393ec7780/command/5a2808e6e4b0c39393ec777c",
+                 "get": {
 
-                   "responses": [
+                     "url": "http://localhost:48082/api/v1/device/5a280a0be4b0c39393ec7780/command/5a2808e6e4b0c39393ec777c",
 
-                       {
+                     "responses": [
 
-                           "code": "200",
+                         {
 
-                           "description": "Get server model number.",
+                             "code": "200",
 
-                           "expectedValues": [
+                             "description": "Get server model number.",
 
-                               "serverModel"
+                             "expectedValues": [
 
-                           ]
+                                 "serverModel"
 
-                       },
+                             ]
 
-                       {
+                         },
 
-                           "code": "503",
+                         {
 
-                           "description": "service unavailable",
+                             "code": "503",
 
-                           "expectedValues": []
+                             "description": "service unavailable",
 
-                       }
+                             "expectedValues": []
 
-                   ]
+                         }
 
-               },
+                     ]
 
-               "put": null
+                 },
 
-           },
+                 "put": null
 
-           {
+             },
 
-               "id": "5a2808e6e4b0c39393ec777d",
+             {
 
-               "name": "diStatus0",  <--- This
+                 "id": "5a2808e6e4b0c39393ec777d",
 
-               "get": {
+                 "name": "diStatus0",  <--- This
 
-                   "url": "http://localhost:48082/api/v1/device/5a280a0be4b0c39393ec7780/command/5a2808e6e4b0c39393ec777d",
+                 "get": {
 
-                   "responses": [
+                     "url": "http://localhost:48082/api/v1/device/5a280a0be4b0c39393ec7780/command/5a2808e6e4b0c39393ec777d",
 
-                       {
+                     "responses": [
 
-                           "code": "200",
+                         {
 
-                           "description": "Get di 0 Status.",
+                             "code": "200",
 
-                           "expectedValues": [
+                             "description": "Get di 0 Status.",
 
-                               "diStatus0"
+                             "expectedValues": [
 
-                           ]
+                                 "diStatus0"
+
+                             ]
 
 In this example the name is "diStatus0".
 
@@ -506,45 +511,51 @@ The path outline is:
 
 In this case, the address would be
 
-/api/v1/device/XXXX/diStatus0
+::
 
-\/POST addressable
+  /api/v1/device/XXXX/diStatus0
 
-    “name”: ”schedule-moxa-di”
+  /POST addressable
 
-    “protocol”: “HTTP”
+      “name”: ”schedule-moxa-di”
 
-    “address”: “edgex-device-snmp”
+      “protocol”: “HTTP”
 
-    “port”: “xxxxx”
+      “address”: “edgex-device-snmp”
 
-    “path”: ”/api/v1/device/{device id}/{command name}”
+      “port”: “xxxxx”
 
-    “method”: “GET”  *** This will need to be added ***
+      “path”: ”/api/v1/device/{device id}/{command name}”
+
+      “method”: “GET”  *** This will need to be added ***
 
 **Create a schedule**
 
-\/POST schedule
+::
 
-    “name”: ”interval-moxa-di0”
+  /POST schedule
 
-    “start”: null (remove parenthesis and replace)
+      “name”: ”interval-moxa-di0”
 
-    “end”: null (remove parenthesis and replace)
+      “start”: null (remove parenthesis and replace)
 
-    “frequency”: “PT5S”
+      “end”: null (remove parenthesis and replace)
+
+      “frequency”: “PT5S”
 
 **Create an event that will use the schedule**
 
-\/POST scheduleevent
+::
 
-    “name”: “device-moxa-di0”
+  /POST scheduleevent
 
-    “addressable”:{“name”:”schedule-moxa-di”}
+      “name”: “device-moxa-di0”
 
-    “schedule”: ”interval-moxa-di0”
+      “addressable”:{“name”:”schedule-moxa-di”}
 
-    “service”: “edgex-device-snmp” *** This will need to be added ***
+      “schedule”: ”interval-moxa-di0”
+
+      “service”: “edgex-device-snmp” *** This will need to be added ***
 
 
 

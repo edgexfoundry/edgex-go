@@ -8,8 +8,6 @@ Alerts & Notifications
 Introduction
 ============
 
-Introduction
-
 When notification to another system or to a person, needs to occur to notify of something discovered on the node by another microservice, the Alerts and Notifications microservice delivers that information. Examples of Alerts and Notifications that other services could need to broadcast, include sensor data detected outside of certain parameters (usually detected by a Rules Engine service) or system or service malfunctions (usually detected by System Management services).
 Terminology
 
@@ -174,15 +172,17 @@ Before using Gmail to send Alerts and Notifications, configure the sign-in secur
 
 Then, use the following settings for the mail server properties:
 
-* spring.mail.port=25
-* spring.mail.host=smtp.gmail.com
-* spring.mail.username=${Gmail account}
-* spring.mail.password=${Gmail password or App password}
-* spring.mail.properties.mail.smtp.ssl.enable=true
-* spring.mail.properties.mail.smtp.auth=true
-* spring.mail.properties.mail.smtp.socketFactory.port=465
-* spring.mail.properties.mail.smtp.socketFactory.class=javax.net.ssl.SSLSocketFactory
-* spring.mail.properties.mail.smtp.socketFactory.fallback=false
+::
+
+  spring.mail.port=25
+  spring.mail.host=smtp.gmail.com
+  spring.mail.username=${Gmail account}
+  spring.mail.password=${Gmail password or App password}
+  spring.mail.properties.mail.smtp.ssl.enable=true
+  spring.mail.properties.mail.smtp.auth=true
+  spring.mail.properties.mail.smtp.socketFactory.port=465
+  spring.mail.properties.mail.smtp.socketFactory.class=javax.net.ssl.SSLSocketFactory
+  spring.mail.properties.mail.smtp.socketFactory.fallback=false
 
 ----------
 Yahoo Mail
@@ -195,15 +195,17 @@ Similar to Gmail, configure the sign-in security settings for Yahoo through one 
 
 Then, use the following settings for the mail server properties:
 
-* spring.mail.port=25
-* spring.mail.host=smtp.mail.yahoo.com
-* spring.mail.username=${Yahoo account}
-* spring.mail.password=${Yahoo password or App password}
-* spring.mail.properties.mail.smtp.ssl.enable=true
-* spring.mail.properties.mail.smtp.auth=true
-* spring.mail.properties.mail.smtp.socketFactory.port=465
-* spring.mail.properties.mail.smtp.socketFactory.class=javax.net.ssl.SSLSocketFactory
-* spring.mail.properties.mail.smtp.socketFactory.fallback=false
+::
+
+  spring.mail.port=25
+  spring.mail.host=smtp.mail.yahoo.com
+  spring.mail.username=${Yahoo account}
+  spring.mail.password=${Yahoo password or App password}
+  spring.mail.properties.mail.smtp.ssl.enable=true
+  spring.mail.properties.mail.smtp.auth=true
+  spring.mail.properties.mail.smtp.socketFactory.port=465
+  spring.mail.properties.mail.smtp.socketFactory.class=javax.net.ssl.SSLSocketFactory
+  spring.mail.properties.mail.smtp.socketFactory.fallback=false
 
 
 
