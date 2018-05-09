@@ -288,24 +288,22 @@ func readingByDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Try to get device
-		// First check by name
-		var d models.Device
-		d, err := mdc.CheckForDevice(deviceId)
-		if err != nil {
-			loggingClient.Error(fmt.Sprintf("error checking device %s %v", deviceId, err))
-			switch err := err.(type) {
-			case types.ErrNotFound:
-				if configuration.MetaDataCheck {
+		if configuration.MetaDataCheck {
+			_, err := mdc.CheckForDevice(deviceId)
+			if err != nil {
+				loggingClient.Error(fmt.Sprintf("error checking device %s %v", deviceId, err))
+				switch err := err.(type) {
+				case types.ErrNotFound:
 					http.Error(w, err.Error(), http.StatusNotFound)
 					return
+				default: //return an error on everything else.
+					http.Error(w, err.Error(), http.StatusServiceUnavailable)
+					return
 				}
-			default: //return an error on everything else.
-				http.Error(w, err.Error(), http.StatusServiceUnavailable)
-				return
 			}
 		}
 
-		readings, err := dbc.ReadingsByDevice(d.Name, limit)
+		readings, err := dbc.ReadingsByDevice(deviceId, limit)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			loggingClient.Error(err.Error())
