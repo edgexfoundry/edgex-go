@@ -50,7 +50,6 @@ func updateDeviceLastReportedConnected(device string) {
 		return
 	}
 
-	// Get the device by name
 	d, err := mdc.CheckForDevice(device)
 	if err != nil {
 		loggingClient.Error("Error getting device " + device + ": " + err.Error())
@@ -191,25 +190,19 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 		loggingClient.Info("Posting Event: " + e.String())
 
 		// Get device from metadata
-		d, err := mdc.CheckForDevice(e.Device)
-		if err != nil {
-			loggingClient.Error(fmt.Sprintf("error checking device %s %v", e.Device, err))
-			switch err := err.(type) {
-				case types.ErrNotFound://ignore
-			default: //return an error on everything else.
-			    loggingClient.Debug(fmt.Sprintf("error of type %v", err))
-				http.Error(w, err.Error(), http.StatusServiceUnavailable)
-				return
+		if configuration.MetaDataCheck {
+			_, err := mdc.CheckForDevice(e.Device)
+			if err != nil {
+				loggingClient.Error(fmt.Sprintf("error checking device %s %v", e.Device, err))
+				switch err := err.(type) {
+				case types.ErrNotFound:
+					http.Error(w, err.Error(), http.StatusNotFound)
+					return
+				default: //return an error on everything else.
+					http.Error(w, err.Error(), http.StatusServiceUnavailable)
+					return
+				}
 			}
-		}
-
-		// Set the device name on the event
-		if len(d.Name) > 0 {
-			e.Device = d.Name
-		} else if configuration.MetaDataCheck {
-			loggingClient.Error("Device not found for event: "+err.Error(), "")
-			http.Error(w, err.Error(), http.StatusNotFound)
-			return
 		}
 
 		if configuration.ValidateCheck {
@@ -298,12 +291,15 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 		loggingClient.Info("Updating event: " + from.ID.Hex())
 
 		// Update the fields
-		if from.Device != "" {
-			d, err := mdc.CheckForDevice(from.Device)
+		if len(from.Device) > 0 && configuration.MetaDataCheck {
+			_, err := mdc.CheckForDevice(from.Device)
 			if err != nil {
-				loggingClient.Error(fmt.Sprintf("error checking device %s %v", from.Device, err))
+				msg := fmt.Sprintf("error checking device %s %v", from.Device, err)
+				loggingClient.Error(msg)
 				switch err := err.(type) {
-				case types.ErrNotFound://ignore
+				case types.ErrNotFound:
+					http.Error(w, msg, http.StatusNotFound)
+					return
 				default: //return an error on everything else.
 					http.Error(w, err.Error(), http.StatusServiceUnavailable)
 					return
@@ -311,16 +307,7 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 			}
 
 			// Set the device name on the event
-			if len(d.Name) > 0 {
-				to.Device = d.Name
-			} else if configuration.MetaDataCheck {
-				http.Error(w, "Error updating event: Device "+from.Device+" doesn't exist", http.StatusNotFound)
-				loggingClient.Error("Error updating device, device " + from.Device + " doesn't exist")
-				return
-			} else {
-				//Preserving old behavior, but why would we do this if from.Device wasn't found above?
-				to.Device = from.Device
-			}
+			to.Device = from.Device
 		}
 		if from.Pushed != 0 {
 			to.Pushed = from.Pushed
@@ -421,7 +408,7 @@ func eventCountByDeviceIdHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			loggingClient.Error(fmt.Sprintf("error checking device %s %v", id, err))
 			switch err := err.(type) {
-			case types.ErrNotFound://ignore
+			case types.ErrNotFound:
 				http.Error(w, err.Error(), http.StatusNotFound)
 			default: //return an error on everything else.
 				http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -540,21 +527,19 @@ func getEventByDeviceHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get the device
-	d, err := mdc.CheckForDevice(deviceId)
-	if err != nil {
-		loggingClient.Error(fmt.Sprintf("error checking device %s %v", deviceId, err))
-		switch err := err.(type) {
-		case types.ErrNotFound://ignore
-		default: //return an error on everything else.
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-			return
+	if(configuration.MetaDataCheck) {
+		_, err := mdc.CheckForDevice(deviceId)
+		if err != nil {
+			loggingClient.Error(fmt.Sprintf("error checking device %s %v", deviceId, err))
+			switch err := err.(type) {
+			case types.ErrNotFound:
+				http.Error(w, err.Error(), http.StatusNotFound)
+			    return
+			default: //return an error on everything else.
+				http.Error(w, err.Error(), http.StatusServiceUnavailable)
+				return
+			}
 		}
-	}
-
-	if len(d.Name) == 0 && configuration.MetaDataCheck {
-		http.Error(w, "Error getting events for a device: The device '"+deviceId+"' doesn't exist", http.StatusNotFound)
-		loggingClient.Error("Error getting readings for a device: The device doesn't exist")
-		return
 	}
 
 	switch r.Method {
@@ -593,21 +578,19 @@ func deleteByDeviceIdHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get the device
-	d, err := mdc.CheckForDevice(deviceId)
-	if err != nil {
-		loggingClient.Error(fmt.Sprintf("error checking device %s %v", deviceId, err))
-		switch err := err.(type) {
-		case types.ErrNotFound://ignore
-		default: //return an error on everything else.
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-			return
+	if configuration.MetaDataCheck {
+		_, err := mdc.CheckForDevice(deviceId)
+		if err != nil {
+			loggingClient.Error(fmt.Sprintf("error checking device %s %v", deviceId, err))
+			switch err := err.(type) {
+			case types.ErrNotFound:
+				http.Error(w, err.Error(), http.StatusNotFound)
+				return
+			default: //return an error on everything else.
+				http.Error(w, err.Error(), http.StatusServiceUnavailable)
+				return
+			}
 		}
-	}
-
-	if len(d.Name) == 0 && configuration.MetaDataCheck {
-		loggingClient.Error("Device not found for event: "+err.Error(), "")
-		http.Error(w, err.Error(), http.StatusNotFound)
-		return
 	}
 
 	switch r.Method {
@@ -732,21 +715,19 @@ func readingByDeviceFilteredValueDescriptor(w http.ResponseWriter, r *http.Reque
 		}
 
 		// Get the device
-		d, err := mdc.CheckForDevice(deviceId)
-		if err != nil {
-			loggingClient.Error(fmt.Sprintf("error checking device %s %v", deviceId, err), "readingByDeviceFilteredValueDescriptor")
-			switch err := err.(type) {
-			case types.ErrNotFound://ignore
-			default: //return an error on everything else.
-				http.Error(w, err.Error(), http.StatusServiceUnavailable)
-				return
+		if configuration.MetaDataCheck {
+			_, err := mdc.CheckForDevice(deviceId)
+			if err != nil {
+				loggingClient.Error(fmt.Sprintf("error checking device %s %v", deviceId, err), "readingByDeviceFilteredValueDescriptor")
+				switch err := err.(type) {
+				case types.ErrNotFound:
+					http.Error(w, err.Error(), http.StatusNotFound)
+				    return
+				default: //return an error on everything else.
+					http.Error(w, err.Error(), http.StatusServiceUnavailable)
+					return
+				}
 			}
-		}
-
-		if len(d.Name) == 0 && configuration.MetaDataCheck {
-			loggingClient.Error("Device not found for event: "+err.Error(), "")
-			http.Error(w, err.Error(), http.StatusNotFound)
-			return
 		}
 
 		// Get all the events for the device

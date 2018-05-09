@@ -544,7 +544,7 @@ func restCheckForDevice(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	} else {
-		http.Error(w, "device not found: " + dev.Name, http.StatusNotFound)
+		http.Error(w, "device not found: " + token, http.StatusNotFound)
 		return
 	}
 

@@ -296,8 +296,7 @@ func readingByDeviceHandler(w http.ResponseWriter, r *http.Request) {
 			switch err := err.(type) {
 			case types.ErrNotFound:
 				if configuration.MetaDataCheck {
-					http.Error(w, "Device doesn't exist for the reading", http.StatusNotFound)
-					loggingClient.Error("Error getting readings for a device: The device doesn't exist")
+					http.Error(w, err.Error(), http.StatusNotFound)
 					return
 				}
 			default: //return an error on everything else.
