@@ -352,45 +352,49 @@ Got to http://localhost:48082/api/v1/device
 
 Look for the id or the device that you want to schedule an event for
 
-[
+::
 
-   {
+  [
 
-       "name": "mbus-rth-lcd-device",
+     {
 
-       "id": "5a1dd585e4b0c3936013123d",  <--- This
+         "name": "mbus-rth-lcd-device",
 
-       "description": "living room HVAC thermostat",
+         "id": "5a1dd585e4b0c3936013123d",  <--- This
 
-       "labels": [
+         "description": "living room HVAC thermostat",
 
-           "temperature",
+         "labels": [
 
-           "modbus",
+             "temperature",
 
-           "industrial"
+             "modbus",
 
-       ],
+             "industrial"
 
-       "adminState": "unlocked",
+         ],
+
+         "adminState": "unlocked",
 
 In this example the id is “5a1dd585e4b0c3936013123d”
 
 Next you want to get the “name” of the command you want to schedule an event for
 
-"commands": [
-           {
-               "id": "5a1dcdfce4b0c39360131239",
-               "name": "TemperatureDegF", <--- This
-               "get": {
-                   "url": "http://localhost:48082/api/v1/device/5a1dd585e4b0c3936013123d/command/5a1dcdfce4b0c39360131239",
-                   "responses": [
-                       {
-                           "code": "200",
-                           "description": "Get the temperature in degrees F",
-                           "expectedValues": [
-                               "TemperatureDegF"
-                           ]
+::
+
+  "commands": [
+              {
+                 "id": "5a1dcdfce4b0c39360131239",
+                 "name": "TemperatureDegF", <--- This
+                 "get": {
+                     "url": "http://localhost:48082/api/v1/device/5a1dd585e4b0c3936013123d/command/5a1dcdfce4b0c39360131239",
+                     "responses": [
+                         {
+                             "code": "200",
+                             "description": "Get the temperature in degrees F",
+                             "expectedValues": [
+                                 "TemperatureDegF"
+                             ]
 
 
 
@@ -406,45 +410,51 @@ The path outline is:
 
 In this case, the address would be
 
-/api/v1/device/5a1dd585e4b0c3936013123d/TemperatureDegF
+::
+ 
+  /api/v1/device/5a1dd585e4b0c3936013123d/TemperatureDegF
 
-\/POST addressable
+  /POST addressable
 
-    “name”: “schedule-mbus-rth-lcd”
+      “name”: “schedule-mbus-rth-lcd”
 
-    “protocol”: “HTTP”
+      “protocol”: “HTTP”
 
-    “address”: “edgex-device-modbus”
+      “address”: “edgex-device-modbus”
 
-    “port”: “49991”
+      “port”: “49991”
 
-    “path”: “/api/v1/device/5a1dd585e4b0c3936013123d/TemperatureDegF”
-
-    “method”: “GET”  *** This will need to be added ***
+      “path”: “/api/v1/device/5a1dd585e4b0c3936013123d/TemperatureDegF”
+ 
+      “method”: “GET”  *** This will need to be added ***
 
 **Create a schedule**
 
-\/POST schedule
+::
 
-    “name”: “interval-mbus-rth-lcd”
+  /POST schedule
 
-    “start”: null (remove parenthesis and replace)
+      “name”: “interval-mbus-rth-lcd”
 
-    “end”: null (remove parenthesis and replace)
+      “start”: null (remove parenthesis and replace)
 
-    “frequency”: “PT5S”
+      “end”: null (remove parenthesis and replace)
+
+      “frequency”: “PT5S”
 
 **Create an event that will use the schedule**
 
-\/POST scheduleevent
+::
 
-    “name”: “device-mbus-rth-lcd”
+  /POST scheduleevent
 
-    “addressable”:{“name”:”schedule-mbus-rth-lcd”}
+      “name”: “device-mbus-rth-lcd”
 
-    “schedule”: “interval-mbus-rth-lcd”
+      “addressable”:{“name”:”schedule-mbus-rth-lcd”}
 
-    “service”: “edgex-device-modbus” *** This will need to be added ***
+      “schedule”: “interval-mbus-rth-lcd”
+
+      “service”: “edgex-device-modbus” *** This will need to be added ***
 
 
 
