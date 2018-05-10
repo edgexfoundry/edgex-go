@@ -13,6 +13,5 @@ ConsulHost = 'localhost'
 ConsulPort = 8500
 CheckInterval = '10s'
 ConsulProfilesActive = 'go'
-ClientHost = 'edgex-export-client'
-DistroHost = 'edgex-export-distro'
+DistroHost = 'localhost'
 DistroPort = 48070
