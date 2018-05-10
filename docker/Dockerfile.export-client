@@ -20,6 +20,10 @@ COPY . .
 RUN make cmd/export-client/export-client
 
 FROM scratch
+
+LABEL license='SPDX-License-Identifier: Apache-2.0' \
+      copyright='Copyright (c) 2017-2018: Mainflux, Cavium'
+
 COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/export-client/export-client /
 COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/export-client/res/configuration-docker.toml /res/configuration-docker.toml
 ENTRYPOINT ["/export-client","--consul","--profile=docker","--confdir=/res"]

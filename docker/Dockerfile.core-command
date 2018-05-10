@@ -7,6 +7,7 @@
 #
 
 FROM golang:1.9-alpine AS builder
+
 WORKDIR /go/src/github.com/edgexfoundry/edgex-go
 
 # The main mirrors are giving us timeout issues on builds periodically.
@@ -19,6 +20,9 @@ COPY . .
 RUN make cmd/core-command/core-command
 
 FROM scratch
+
+LABEL license='SPDX-License-Identifier: Apache-2.0' \
+      copyright='Copyright (c) 2018: Dell, Cavium'
 
 ENV APP_PORT=48082
 #expose command data port
