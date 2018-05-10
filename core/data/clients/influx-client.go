@@ -19,14 +19,15 @@
 package clients
 
 import (
-	"errors"
-	"fmt"
 	"encoding/json"
-	"github.com/edgexfoundry/edgex-go/core/domain/models"
-	"gopkg.in/mgo.v2/bson"
-	"github.com/influxdata/influxdb/client/v2"
+	"fmt"
 	"strconv"
+	"strings"
 	"time"
+
+	"github.com/edgexfoundry/edgex-go/core/domain/models"
+	"github.com/influxdata/influxdb/client/v2"
+	"gopkg.in/mgo.v2/bson"
 )
 
 var currentInfluxClient *InfluxClient // Singleton used so that InfluxEvent can use it to de-reference readings
@@ -36,10 +37,9 @@ Core data client
 Has functions for interacting with the core data influxdb
 */
 
-
 type InfluxClient struct {
-	Client   client.Client  // Influxdb client
-	Database string // Influxdb database name
+	Client   client.Client // Influxdb client
+	Database string        // Influxdb database name
 }
 
 // Return a pointer to the InfluxClient
@@ -62,18 +62,46 @@ func newInfluxClient(config DBConfiguration) (*InfluxClient, error) {
 	return influxClient, nil
 }
 
-// Get the current Influxdb Client
-func getCurrentInfluxClient() (*InfluxClient, error) {
-	if currentInfluxClient == nil {
-		return nil, errors.New("No current influx client, please create a new client before requesting it")
+// Perform an Influxdb query
+func (ic *InfluxClient) queryDB(cmd string) (res []client.Result, err error) {
+	q := client.Query{
+		Command:  cmd,
+		Database: ic.Database,
 	}
+	response, err := ic.Client.Query(q)
+	if err != nil {
+		return res, err
+	}
+	if response.Error() != nil {
+		return res, response.Error()
+	}
+	res = response.Results
+	return response.Results, nil
+}
 
-	return currentInfluxClient, nil
+// Get count
+func (ic *InfluxClient) getCount(query string) (int, error) {
+	res, err := ic.queryDB(query)
+	if err != nil {
+		return 0, err
+	}
+	var n int64
+	n = 0
+	if len(res) == 1 {
+		if len(res[0].Series) == 1 {
+			n, err = res[0].Series[0].Values[0][1].(json.Number).Int64()
+			if err != nil {
+				return 0, err
+			}
+		}
+	}
+	return int(n), nil
 }
 
 func (ic *InfluxClient) CloseSession() {
 	ic.Client.Close()
 }
+
 // ******************************* EVENTS **********************************
 
 // Return all the events
@@ -119,7 +147,7 @@ func (ic *InfluxClient) EventById(id string) (models.Event, error) {
 	if !bson.IsObjectIdHex(id) {
 		return models.Event{}, ErrInvalidObjectId
 	}
-	q := fmt.Sprintf("WHERE id = '%s'", id )
+	q := fmt.Sprintf("WHERE id = '%s'", id)
 	events, err := ic.getEvents(q)
 	if len(events) < 1 {
 		return models.Event{}, nil
@@ -130,13 +158,13 @@ func (ic *InfluxClient) EventById(id string) (models.Event, error) {
 // Get the number of events in Influx
 func (ic *InfluxClient) EventCount() (int, error) {
 	query := fmt.Sprintf("SELECT COUNT(*) FROM %s", EVENTS_COLLECTION)
-	return ic.getEventsCount(query)
+	return ic.getCount(query)
 }
 
 // Get the number of events in Influx for the device
 func (ic *InfluxClient) EventCountByDeviceId(id string) (int, error) {
 	query := fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE device = '%s'", EVENTS_COLLECTION, id)
-	return ic.getEventsCount(query)
+	return ic.getCount(query)
 }
 
 // Delete an event by ID and all of its readings
@@ -148,13 +176,13 @@ func (ic *InfluxClient) DeleteEventById(id string) error {
 
 // Get a list of events based on the device id and limit
 func (ic *InfluxClient) EventsForDeviceLimit(id string, limit int) ([]models.Event, error) {
-	query := fmt.Sprintf("WHERE device = '%s' LIMIT %d",id ,limit)
+	query := fmt.Sprintf("WHERE device = '%s' LIMIT %d", id, limit)
 	return ic.getEvents(query)
 }
 
 // Get a list of events based on the device id
 func (ic *InfluxClient) EventsForDevice(id string) ([]models.Event, error) {
-	query := fmt.Sprintf("WHERE device = '%s'",id)
+	query := fmt.Sprintf("WHERE device = '%s'", id)
 	return ic.getEvents(query)
 }
 
@@ -200,43 +228,22 @@ func (ic *InfluxClient) ScrubAllEvents() error {
 	return ic.deleteAll(EVENTS_COLLECTION)
 }
 
-// Get events count
-func (ic *InfluxClient) getEventsCount(query string)(int, error) {
-	res, err := queryDB(ic.Client, query, ic.Database)
-	if err != nil {
-		return 0, err
-	}
-	n, err := res[0].Series[0].Values[0][1].(json.Number).Int64()
-	if err != nil {
-		return 0, err
-	}
-	return int(n), nil
-}
-
 // Get events for the passed query
 func (ic *InfluxClient) getEvents(q string) ([]models.Event, error) {
-	// Handle DBRefs
-	var ie []InfluxEvent
 	events := []models.Event{}
 	query := fmt.Sprintf("SELECT * FROM %s %s", EVENTS_COLLECTION, q)
-	res, err := queryDB(ic.Client, query, ic.Database)
-	if err != nil{
+	res, err := ic.queryDB(query)
+	if err != nil {
 		return events, err
 	}
-	for k:=0; k < len(res); k++ {
-		if len(res[k].Series) < 1 {
-			continue
+
+	if len(res) == 1 {
+		if len(res[0].Series) == 1 {
+			events, err = parseEvents(res[0])
+			if err != nil {
+				return events, err
+			}
 		}
-		event, err := parseEvent(res[k])
-		if err != nil {
-			return events, err
-		}
-		events = append(events, event)
-	}
-	
-	// Append all the events
-	for _, e := range ie {
-		events = append(events, e.Event)
 	}
 
 	return events, nil
@@ -244,7 +251,7 @@ func (ic *InfluxClient) getEvents(q string) ([]models.Event, error) {
 
 func (ic *InfluxClient) deleteById(collection string, id string) error {
 	q := fmt.Sprintf("DROP SERIES FROM %s WHERE id = '%s'", collection, id)
-	_, err := queryDB(ic.Client, q, ic.Database)
+	_, err := ic.queryDB(q)
 	if err != nil {
 		return ErrNotFound
 	}
@@ -252,8 +259,8 @@ func (ic *InfluxClient) deleteById(collection string, id string) error {
 }
 
 func (ic *InfluxClient) deleteAll(collection string) error {
-	q := fmt.Sprintf("DELETE * FROM %s", collection)
-	_, err := queryDB(ic.Client, q, ic.Database)
+	q := fmt.Sprintf("DELETE FROM %s", collection)
+	_, err := ic.queryDB(q)
 	if err != nil {
 		return err
 	}
@@ -268,18 +275,27 @@ func (ic *InfluxClient) addEventToDB(db string, collection string, e *models.Eve
 	if err != nil {
 		return err
 	}
+
+	// Turn the readings into array of strings
+	var stringArray []string
+	for _, reading := range e.Readings {
+		stringArray = append(stringArray, reading.Id.Hex())
+	}
+	readings := strings.Join(stringArray, " ")
+
 	fields := map[string]interface{}{
 		"pushed":   e.Pushed,
 		"created":  e.Created,
 		"origin":   e.Origin,
 		"modified": e.Modified,
+		"schedule": e.Schedule,
+		"readings": readings,
 	}
 
 	tags := map[string]string{
-		"id" : e.ID.Hex(),
-		"schedule": e.Schedule,
-		"device":   e.Device,
-		"event":    e.Event,
+		"id":     e.ID.Hex(),
+		"device": e.Device,
+		"event":  e.Event,
 	}
 
 	pt, err := client.NewPoint(
@@ -295,45 +311,69 @@ func (ic *InfluxClient) addEventToDB(db string, collection string, e *models.Eve
 	return ic.Client.Write(bp)
 }
 
-func parseEvent(res client.Result) (models.Event, error){
-	var event models.Event
-	for i, col := range res.Series[0].Columns {
-		switch col {
-		case "id":
-			event.ID = bson.ObjectIdHex(res.Series[0].Values[0][i].(string))
-		case "pushed":
-			n, err := res.Series[0].Values[0][i].(json.Number).Int64()
-			if err != nil {
-				return event, err
+func parseEvents(res client.Result) ([]models.Event, error) {
+	var events []models.Event
+	for i, _ := range res.Series[0].Values {
+		var event models.Event
+		var readings []string
+		for j, col := range res.Series[0].Columns {
+			switch col {
+			case "id":
+				event.ID = bson.ObjectIdHex(res.Series[0].Values[i][j].(string))
+			case "pushed":
+				n, err := res.Series[0].Values[i][j].(json.Number).Int64()
+				if err != nil {
+					return events, err
+				}
+				event.Pushed = n
+			case "created":
+				n, err := res.Series[0].Values[i][j].(json.Number).Int64()
+				if err != nil {
+					return events, err
+				}
+				event.Created = n
+			case "origin":
+				n, err := res.Series[0].Values[i][j].(json.Number).Int64()
+				if err != nil {
+					return events, err
+				}
+				event.Origin = n
+			case "modified":
+				n, err := res.Series[0].Values[i][j].(json.Number).Int64()
+				if err != nil {
+					return events, err
+				}
+				event.Modified = n
+			case "device":
+				if res.Series[0].Values[i][j] != nil {
+					event.Device = res.Series[0].Values[i][j].(string)
+				}
+			case "event":
+				if res.Series[0].Values[i][j] != nil {
+					event.Event = res.Series[0].Values[i][j].(string)
+				}
+			case "schedule":
+				if res.Series[0].Values[i][j] != nil {
+					event.Schedule = res.Series[0].Values[i][j].(string)
+				}
+			case "readings":
+				if res.Series[0].Values[i][j] != nil {
+					s := res.Series[0].Values[i][j].(string)
+					readings = strings.Split(s, " ")
+				}
 			}
-			event.Pushed = n
-		case "created":
-			n, err := res.Series[0].Values[0][i].(json.Number).Int64()
-			if err != nil {
-				return event, err
-			}
-			event.Created = n
-		case "origin":
-			n, err := res.Series[0].Values[0][i].(json.Number).Int64()
-			if err != nil {
-				return event, err
-			}
-			event.Origin = n
-		case "modified":
-			n, err := res.Series[0].Values[0][i].(json.Number).Int64()
-			if err != nil {
-				return event, err
-			}
-			event.Modified = n
-		case "device":
-			event.Device = res.Series[0].Values[0][i].(string)
-		case "event":
-			event.Event = res.Series[0].Values[0][i].(string)
-		case "schedule":
-			event.Schedule = res.Series[0].Values[0][i].(string)
 		}
+		for _, id := range readings {
+			reading, err := currentInfluxClient.ReadingById(id)
+			if err != nil {
+				return events, nil
+			}
+			event.Readings = append(event.Readings, reading)
+		}
+
+		events = append(events, event)
 	}
-	return event, nil
+	return events, nil
 }
 
 // ************************ READINGS ************************************
@@ -383,7 +423,7 @@ func (ic *InfluxClient) ReadingById(id string) (models.Reading, error) {
 // Get the count of readings in Influx
 func (ic *InfluxClient) ReadingCount() (int, error) {
 	query := fmt.Sprintf("SELECT COUNT(*) FROM %s", READINGS_COLLECTION)
-	return ic.getReadingsCount(query)
+	return ic.getCount(query)
 }
 
 // Delete a reading by ID
@@ -395,14 +435,14 @@ func (ic *InfluxClient) DeleteReadingById(id string) error {
 // Return a list of readings for the given device (id or name)
 // Sort the list of readings on creation date
 func (ic *InfluxClient) ReadingsByDevice(id string, limit int) ([]models.Reading, error) {
-	query := fmt.Sprintf("WHERE device = '%s' LIMIT %d", id, limit) 
+	query := fmt.Sprintf("WHERE device = '%s' LIMIT %d", id, limit)
 	return ic.getReadings(query)
 }
 
 // Return a list of readings for the given value descriptor
 // Limit by the given limit
 func (ic *InfluxClient) ReadingsByValueDescriptor(name string, limit int) ([]models.Reading, error) {
-	query := fmt.Sprintf("WHERE name = '%s' LIMIT %d", name, limit) 
+	query := fmt.Sprintf("WHERE name = '%s' LIMIT %d", name, limit)
 	return ic.getReadings(query)
 }
 
@@ -410,7 +450,7 @@ func (ic *InfluxClient) ReadingsByValueDescriptor(name string, limit int) ([]mod
 func (ic *InfluxClient) ReadingsByValueDescriptorNames(names []string, limit int) ([]models.Reading, error) {
 	var readings []models.Reading
 	for _, name := range names {
-		query := fmt.Sprintf("WHERE name = '%s' LIMIT %d", name, limit) 
+		query := fmt.Sprintf("WHERE name = '%s' LIMIT %d", name, limit)
 		rlist, err := ic.getReadings(query)
 		if err != nil {
 			return readings, err
@@ -436,35 +476,23 @@ func (ic *InfluxClient) ReadingsByDeviceAndValueDescriptor(deviceId, valueDescri
 
 // Get readings for the passed query
 func (ic *InfluxClient) getReadings(q string) ([]models.Reading, error) {
-	// Handle DBRefs
 	readings := []models.Reading{}
 	query := fmt.Sprintf("SELECT * FROM %s %s", READINGS_COLLECTION, q)
-	res, err := queryDB(ic.Client, query, ic.Database)
+	res, err := ic.queryDB(query)
 	if err != nil {
 		return readings, err
 	}
-	for k:=0; k < len(res); k++ {
-		reading, err := parseReading(res[k])
-		if err != nil {
-			return readings, err
-		}
-		readings = append(readings, reading)
-	}
-	
-	return readings, nil
-}
 
-// Get readings count
-func (ic *InfluxClient) getReadingsCount(query string)(int, error) {
-	res, err := queryDB(ic.Client, query, ic.Database)
-	if err != nil {
-		return 0, err
+	if len(res) == 1 {
+		if len(res[0].Series) == 1 {
+			readings, err = parseReadings(res[0])
+			if err != nil {
+				return readings, err
+			}
+		}
 	}
-	n, err := res[0].Series[0].Values[0][1].(json.Number).Int64()
-	if err != nil {
-		return 0, err
-	}
-	return int(n), nil
+
+	return readings, nil
 }
 
 func (ic *InfluxClient) addReadingToDB(db string, collection string, r *models.Reading) error {
@@ -483,10 +511,10 @@ func (ic *InfluxClient) addReadingToDB(db string, collection string, r *models.R
 	}
 
 	tags := map[string]string{
-		"id" : r.Id.Hex(),
-		"device":   r.Device,
-		"name":     r.Name,
-		"value":    r.Value,
+		"id":     r.Id.Hex(),
+		"device": r.Device,
+		"name":   r.Name,
+		"value":  r.Value,
 	}
 
 	pt, err := client.NewPoint(
@@ -502,47 +530,57 @@ func (ic *InfluxClient) addReadingToDB(db string, collection string, r *models.R
 	return ic.Client.Write(bp)
 }
 
-func parseReading(res client.Result) (models.Reading, error){
-	var reading models.Reading
-	for i, col := range res.Series[0].Columns {
-		switch col {
-		case "id":
-			reading.Id = bson.ObjectIdHex(res.Series[0].Values[0][i].(string))
-		case "pushed":
-			n, err := res.Series[0].Values[0][i].(json.Number).Int64()
-			if err != nil {
-				return reading, err
+func parseReadings(res client.Result) ([]models.Reading, error) {
+	var readings []models.Reading
+	for i, _ := range res.Series[0].Values {
+		var reading models.Reading
+		for j, col := range res.Series[0].Columns {
+			switch col {
+			case "id":
+				reading.Id = bson.ObjectIdHex(res.Series[0].Values[i][j].(string))
+			case "pushed":
+				n, err := res.Series[0].Values[i][j].(json.Number).Int64()
+				if err != nil {
+					return readings, err
+				}
+				reading.Pushed = n
+			case "created":
+				n, err := res.Series[0].Values[i][j].(json.Number).Int64()
+				if err != nil {
+					return readings, err
+				}
+				reading.Created = n
+			case "origin":
+				n, err := res.Series[0].Values[i][j].(json.Number).Int64()
+				if err != nil {
+					return readings, err
+				}
+				reading.Origin = n
+			case "modified":
+				n, err := res.Series[0].Values[i][j].(json.Number).Int64()
+				if err != nil {
+					return readings, err
+				}
+				reading.Modified = n
+			case "device":
+				if res.Series[0].Values[i][j] != nil {
+					reading.Device = res.Series[0].Values[i][j].(string)
+				}
+			case "name":
+				if res.Series[0].Values[i][j] != nil {
+					reading.Name = res.Series[0].Values[i][j].(string)
+				}
+			case "value":
+				if res.Series[0].Values[i][j] != nil {
+					reading.Value = res.Series[0].Values[i][j].(string)
+				}
 			}
-			reading.Pushed = n
-		case "created":
-			n, err := res.Series[0].Values[0][i].(json.Number).Int64()
-			if err != nil {
-				return reading, err
-			}
-			reading.Created = n
-		case "origin":
-			n, err := res.Series[0].Values[0][i].(json.Number).Int64()
-			if err != nil {
-				return reading, err
-			}
-			reading.Origin = n
-		case "modified":
-			n, err := res.Series[0].Values[0][i].(json.Number).Int64()
-			if err != nil {
-				return reading, err
-			}
-			reading.Modified = n
-		case "device":
-			reading.Device = res.Series[0].Values[0][i].(string)
-		case "name":
-			reading.Name = res.Series[0].Values[0][i].(string)
-		case "value":
-			reading.Value = res.Series[0].Values[0][i].(string)
 		}
-	}
-	return reading, nil
-}
 
+		readings = append(readings, reading)
+	}
+	return readings, nil
+}
 
 // ************************* VALUE DESCRIPTORS *****************************
 
@@ -556,7 +594,7 @@ func (ic *InfluxClient) AddValueDescriptor(v models.ValueDescriptor) (bson.Objec
 
 	// See if the name is unique and add the value descriptors
 	query := fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE 'name' = '%s'", VALUE_DESCRIPTOR_COLLECTION, v.Name)
-	num, err := ic.getValueDescriptorsCount(query)
+	num, err := ic.getCount(query)
 	if err != nil {
 		return v.Id, err
 	}
@@ -591,7 +629,7 @@ func (ic *InfluxClient) ValueDescriptors() ([]models.ValueDescriptor, error) {
 func (ic *InfluxClient) UpdateValueDescriptor(v models.ValueDescriptor) error {
 	// See if the name is unique if it changed
 	query := fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE id = '%s'", VALUE_DESCRIPTOR_COLLECTION, v.Id)
-	num, err := ic.getValueDescriptorsCount(query)
+	num, err := ic.getCount(query)
 	if err != nil {
 		return err
 	}
@@ -599,7 +637,7 @@ func (ic *InfluxClient) UpdateValueDescriptor(v models.ValueDescriptor) error {
 		return ErrNotUnique
 	}
 	query = fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE name = '%s'", VALUE_DESCRIPTOR_COLLECTION, v.Name)
-	num, err = ic.getValueDescriptorsCount(query)
+	num, err = ic.getCount(query)
 	if err != nil {
 		return err
 	}
@@ -628,7 +666,7 @@ func (ic *InfluxClient) DeleteValueDescriptorById(id string) error {
 // Can return null if no value descriptor is found
 func (ic *InfluxClient) ValueDescriptorByName(name string) (models.ValueDescriptor, error) {
 	query := fmt.Sprintf("WHERE \"name\" = '%s'", name)
-	v, err :=  ic.getValueDescriptors(query)
+	v, err := ic.getValueDescriptors(query)
 	if err != nil || len(v) < 1 {
 		var vret models.ValueDescriptor
 		return vret, err
@@ -685,21 +723,9 @@ func (ic *InfluxClient) ValueDescriptorsByType(t string) ([]models.ValueDescript
 	return ic.getValueDescriptors(query)
 }
 
-// Get valuedescriptors count
-func (ic *InfluxClient) getValueDescriptorsCount(query string)(int, error) {
-	res, err := queryDB(ic.Client, query, ic.Database)
-	if err != nil {
-		return 0, err
-	}
-	if len(res[0].Series) < 1 {
-		return 0, nil
-	}
-	return res[0].Series[0].Values[0][1].(int), nil
-}
-
 func (ic *InfluxClient) deleteValueDescriptorBy(query string) error {
 	q := fmt.Sprintf("DELETE  FROM %s %s", VALUE_DESCRIPTOR_COLLECTION, query)
-	_, err := queryDB(ic.Client, q, ic.Database)
+	_, err := ic.queryDB(q)
 	if err != nil {
 		return err
 	}
@@ -708,29 +734,23 @@ func (ic *InfluxClient) deleteValueDescriptorBy(query string) error {
 
 // Get value descriptors for the passed query
 func (ic *InfluxClient) getValueDescriptors(q string) ([]models.ValueDescriptor, error) {
-	// Handle DBRefs
-	valuedescriptors := []models.ValueDescriptor{}
+	vds := []models.ValueDescriptor{}
 	query := fmt.Sprintf("SELECT * FROM %s %s", VALUE_DESCRIPTOR_COLLECTION, q)
-	res, err := queryDB(ic.Client, query, ic.Database)
+	res, err := ic.queryDB(query)
 	if err != nil {
-		return valuedescriptors, err
-	}
-	for k:=0; k < len(res); k++ {
-		if len(res[k].Series) < 1 {
-			continue
-		}
-		valuedescriptor, err := parseValueDescriptor(res[k])
-		if err != nil {
-			return valuedescriptors, err
-		}
-		valuedescriptors = append(valuedescriptors, valuedescriptor)
+		return vds, err
 	}
 
-	if len(valuedescriptors) < 1 {
-		return valuedescriptors, ErrNotFound
+	if len(res) == 1 {
+		if len(res[0].Series) == 1 {
+			vds, err = parseValueDescriptors(res[0])
+			if err != nil {
+				return vds, err
+			}
+		}
 	}
-	
-	return valuedescriptors, nil
+
+	return vds, nil
 }
 
 func (ic *InfluxClient) addValueDescriptorToDB(db string, collection string, v *models.ValueDescriptor) error {
@@ -742,22 +762,22 @@ func (ic *InfluxClient) addValueDescriptorToDB(db string, collection string, v *
 		return err
 	}
 	fields := map[string]interface{}{
-		"description":   v.Description,
-		"created":  v.Created,
-		"origin":   v.Origin,
-		"modified": v.Modified,
-		"min":   v.Min,
-		"max":   v.Max,
-		"defaultvalue":   v.DefaultValue,
-		"Labels":    v.Labels,
+		"description":  v.Description,
+		"created":      v.Created,
+		"origin":       v.Origin,
+		"modified":     v.Modified,
+		"min":          v.Min,
+		"max":          v.Max,
+		"defaultvalue": v.DefaultValue,
+		"Labels":       v.Labels,
 	}
 
 	tags := map[string]string{
-		"id" : v.Id.Hex(),
-		"name":     v.Name,
-		"UomLabel": v.UomLabel,
-		"type":   v.Type,
-		"formatting":    v.Formatting,
+		"id":         v.Id.Hex(),
+		"name":       v.Name,
+		"UomLabel":   v.UomLabel,
+		"type":       v.Type,
+		"formatting": v.Formatting,
 	}
 
 	pt, err := client.NewPoint(
@@ -773,49 +793,68 @@ func (ic *InfluxClient) addValueDescriptorToDB(db string, collection string, v *
 	return ic.Client.Write(bp)
 }
 
-func parseValueDescriptor(res client.Result) (models.ValueDescriptor, error){
-	var valuedescriptors models.ValueDescriptor
-	for i, col := range res.Series[0].Columns {
-		switch col {
-		case "id":
-			valuedescriptors.Id = bson.ObjectIdHex(res.Series[0].Values[0][i].(string))
-		case "created":
-			n, err := res.Series[0].Values[0][i].(json.Number).Int64()
-			if err != nil {
-				return valuedescriptors, err
+func parseValueDescriptors(res client.Result) ([]models.ValueDescriptor, error) {
+	var vds []models.ValueDescriptor
+	for i, _ := range res.Series[0].Values {
+		var vd models.ValueDescriptor
+		for j, col := range res.Series[0].Columns {
+			switch col {
+			case "id":
+				vd.Id = bson.ObjectIdHex(res.Series[0].Values[i][j].(string))
+			case "created":
+				n, err := res.Series[0].Values[i][j].(json.Number).Int64()
+				if err != nil {
+					return vds, err
+				}
+				vd.Created = n
+			case "origin":
+				n, err := res.Series[0].Values[i][j].(json.Number).Int64()
+				if err != nil {
+					return vds, err
+				}
+				vd.Origin = n
+			case "modified":
+				n, err := res.Series[0].Values[i][j].(json.Number).Int64()
+				if err != nil {
+					return vds, err
+				}
+				vd.Modified = n
+			case "name":
+				if res.Series[0].Values[i][j] != nil {
+					vd.Name = res.Series[0].Values[i][j].(string)
+				}
+			case "description":
+				if res.Series[0].Values[i][j] != nil {
+					vd.Description = res.Series[0].Values[i][j].(string)
+				}
+			case "min":
+				if res.Series[0].Values[i][j] != nil {
+					vd.Min = res.Series[0].Values[i][j].(string)
+				}
+			case "max":
+				if res.Series[0].Values[i][j] != nil {
+					vd.Max = res.Series[0].Values[i][j].(string)
+				}
+			case "type":
+				if res.Series[0].Values[i][j] != nil {
+					vd.Type = res.Series[0].Values[i][j].(string)
+				}
+			case "uomLabel":
+				if res.Series[0].Values[i][j] != nil {
+					vd.UomLabel = res.Series[0].Values[i][j].(string)
+				}
+			case "labels":
+				// ToDo set labels
+				strings := []string{"dummy"}
+				vd.Labels = strings
+			case "defalutvalue":
+				if res.Series[0].Values[i][j] != nil {
+					vd.DefaultValue = res.Series[0].Values[i][j].(string)
+				}
 			}
-			valuedescriptors.Created = n
-		case "description":
-			valuedescriptors.Description = res.Series[0].Values[0][i].(string)
-		case "origin":
-			n, err := res.Series[0].Values[0][i].(json.Number).Int64()
-			if err != nil {
-				return valuedescriptors, err
-			}
-			valuedescriptors.Origin = n
-		case "modified":
-			n, err := res.Series[0].Values[0][i].(json.Number).Int64()
-			if err != nil {
-				return valuedescriptors, err
-			}
-			valuedescriptors.Modified = n
-		case "name":
-			valuedescriptors.Name = res.Series[0].Values[0][i].(string)
-		case "min":
-			valuedescriptors.Min = res.Series[0].Values[0][i].(string)
-		case "max":
-			valuedescriptors.Max = res.Series[0].Values[0][i].(string)
-		case "type":
-			valuedescriptors.Type = res.Series[0].Values[0][i].(string)
-		case "uomLabel":
-			valuedescriptors.UomLabel = res.Series[0].Values[0][i].(string)
-		case "labels":
-			// ToDo set labels
-			strings := []string{"dummy"}
-			valuedescriptors.Labels = strings
-		case "defalutvalue":
-			valuedescriptors.DefaultValue = res.Series[0].Values[0][i].(string)
 		}
+
+		vds = append(vds, vd)
 	}
-	return valuedescriptors, nil
+	return vds, nil
 }

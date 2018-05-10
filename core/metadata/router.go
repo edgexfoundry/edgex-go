@@ -23,7 +23,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func LoadRestRoutes() http.Handler {
+func LoadRestRoutes() *mux.Router {
 	r := mux.NewRouter()
 	b := r.PathPrefix("/api/v1").Subrouter()
 	b.HandleFunc("/ping", ping)
@@ -64,6 +64,7 @@ func loadDeviceRoutes(b *mux.Router) {
 	d.HandleFunc("/{"+ID+"}/"+URLLASTREPORTED+"/{"+LASTREPORTED+"}/{"+LASTREPORTEDNOTIFY+"}", restSetDeviceLastReportedByIdNotify).Methods(http.MethodPut)
 	d.HandleFunc("/{"+ID+"}/"+URLLASTCONNECTED+"/{"+LASTCONNECTED+"}", restSetDeviceLastConnectedById).Methods(http.MethodPut)
 	d.HandleFunc("/{"+ID+"}/"+URLLASTCONNECTED+"/{"+LASTCONNECTED+"}/{"+LASTCONNECTEDNOTIFY+"}", restSetLastConnectedByIdNotify).Methods(http.MethodPut)
+	d.HandleFunc("/"+CHECK+"/{"+ID+"}", restCheckForDevice).Methods(http.MethodGet)
 
 	// /api/v1/" + DEVICE/" + NAME + "
 	n := d.PathPrefix("/" + NAME).Subrouter()
