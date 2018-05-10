@@ -22,6 +22,10 @@ RUN make cmd/core-data/core-data
 
 #Next image - Copy built Go binary into new workspace
 FROM alpine:3.7
+
+LABEL license='SPDX-License-Identifier: Apache-2.0' \
+      copyright='Copyright (c) 2018: Dell, Cavium'
+
 # The main mirrors are giving us timeout issues on builds periodically.
 # So we can try these.
 RUN echo http://nl.alpinelinux.org/alpine/v3.7/main > /etc/apk/repositories; \
