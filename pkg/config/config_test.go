@@ -52,3 +52,31 @@ func TestLoadFromEnvironment(t *testing.T) {
 		t.Errorf("configuration.ApplicationName is zero length.")
 	}
 }
+
+func TestVerify(t *testing.T) {
+	configuration := &TestConfigurationStruct{}
+	err := VerifyTomlFiles(configuration)
+	if err != nil {
+		t.Errorf("Error parsing sample configuration files: %v", err)
+	}
+}
+
+func TestDetermineConfigFile(t *testing.T) {
+	var tests = []struct {
+		profile string
+		file    string
+	}{
+		{"", configDefault},
+		{"go", "configuration-go.toml"},
+		{"another", "configuration-another.toml"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.profile, func(t *testing.T) {
+			file := determineConfigFile(tt.profile)
+			if tt.file != file {
+				t.Errorf("filename for profile %s should be %s, not %s", tt.profile, tt.file, file)
+			}
+		})
+	}
+
+}
