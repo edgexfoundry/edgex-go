@@ -110,6 +110,7 @@ var (
 	ADDRESSABLE              = "addressable"
 	ADDRESSABLENAME          = "addressablename"
 	ADDRESSABLEID            = "addressableid"
+	CHECK					 = "check"
 	SERVICE                  = "service"
 	SERVICENAME              = "servicename"
 	SERVICEID                = "serviceid"

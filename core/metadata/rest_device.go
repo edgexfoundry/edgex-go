@@ -29,6 +29,8 @@ import (
 	notifications "github.com/edgexfoundry/edgex-go/support/notifications-client"
 	"github.com/gorilla/mux"
 	"gopkg.in/mgo.v2"
+	"fmt"
+	"gopkg.in/mgo.v2/bson"
 )
 
 func restGetAllDevices(w http.ResponseWriter, _ *http.Request) {
@@ -513,6 +515,41 @@ func restGetDeviceById(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(res)
+}
+
+//Shouldn't need "rest" in any of these methods. Adding it here for consistency right now.
+func restCheckForDevice(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	token := vars[ID] //referring to this as "token" for now since the source variable is double purposed
+	dev := models.Device{}
+	//Check for name first since we're using that meaning by default.
+	if err := getDeviceByName(&dev, token); err != nil {
+		if err != mgo.ErrNotFound {
+			loggingClient.Error(err.Error(), "restCheckForDevice")
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		} else {
+			loggingClient.Debug(fmt.Sprintf("device %s %v", token, err),"restCheckForDevice")
+		}
+	}
+	//If lookup by name failed, see if we were passed the ID
+	if len(dev.Name) == 0 && bson.IsObjectIdHex(token) {
+		if err := getDeviceById(&dev, token); err != nil {
+			loggingClient.Error(err.Error(), "restCheckForDevice")
+			if err == mgo.ErrNotFound {
+				http.Error(w, err.Error(), http.StatusNotFound)
+			} else {
+				http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			}
+			return
+		}
+	} else {
+		http.Error(w, "device not found: " + token, http.StatusNotFound)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(dev)
 }
 
 func restSetDeviceOpStateById(w http.ResponseWriter, r *http.Request) {
