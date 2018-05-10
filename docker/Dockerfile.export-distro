@@ -20,6 +20,10 @@ COPY . .
 RUN make cmd/export-distro/export-distro
 
 FROM alpine:3.7
+
+LABEL license='SPDX-License-Identifier: Apache-2.0' \
+      copyright='Copyright (c) 2017-2018: Mainflux, Cavium'
+
 # The main mirrors are giving us timeout issues on builds periodically.
 # So we can try these.
 RUN echo http://nl.alpinelinux.org/alpine/v3.7/main > /etc/apk/repositories; \
