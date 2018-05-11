@@ -13,6 +13,5 @@ ConsulHost = 'localhost'
 ConsulPort = 8500
 CheckInterval = '10s'
 ConsulProfilesActive = 'go'
-ClientHost = 'EXPORT_CLIENT_HOST'
-DistroHost = 'EXPORT_CLIENT_DISTRO_HOST'
+DistroHost = 'localhost'
 DistroPort = 48070

@@ -22,7 +22,6 @@ type ConfigurationStruct struct {
 	ConsulPort           int
 	CheckInterval        string
 	ConsulProfilesActive string
-	ClientHost           string
 	DistroHost           string
 	DistroPort           int
 }
