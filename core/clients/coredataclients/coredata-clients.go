@@ -10,13 +10,6 @@
  * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
- *
- * @microservice: core-clients-go library
- * @original author: Ryan Comer, Dell
- * @version: 0.5.0
- * updated for Kei Ohmura.  Kei made the original contribution in the core-clients-go repo
- * fix - moves `decodeValueDescriptorSlice()` method to the ValueDescriptorClient.
- * added - methods to the ValueDescriptorClient
  *******************************************************************************/
 package coredataclients
 
