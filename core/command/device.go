@@ -10,12 +10,6 @@
  * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
- *
- * @microservice: core-command-go service
- * @original author: Spencer Bull, Dell
- * @version: 0.5.0
- * @updated by:  Jim White, Dell Technologies, Feb 27, 2108
- * Added func makeTimestamp and import of time to support it (Fede C. initiated during mono repo work)
  *******************************************************************************/
 package command
 
