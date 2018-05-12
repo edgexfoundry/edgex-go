@@ -88,6 +88,9 @@ func (reg *registrationInfo) update(newReg export.Registration) bool {
 		// TODO reg.sender = distro.NewAzureSender("TODO URL")
 	case export.DestRest:
 		reg.sender = NewHTTPSender(newReg.Addressable)
+	case export.DestXMPP:
+		reg.sender = NewXmppSender(newReg.Addressable)
+
 	default:
 		logger.Warn("Destination not supported: ", zap.String("destination", newReg.Destination))
 		return false
