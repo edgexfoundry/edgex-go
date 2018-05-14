@@ -10,11 +10,6 @@
  * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
- *
- * @microservice: support-notifications-client-go library
- * @author: Ryan Comer, Dell
- * @modifier: Vino Yang, Tencent
- * @version: 0.5.0
  *******************************************************************************/
 package notifications_client
 
