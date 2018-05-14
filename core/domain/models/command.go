@@ -70,6 +70,27 @@ func (c Command) String() string {
 	return string(out)
 }
 
+func(c *Command) UnmarshalJSON(b []byte) error {
+	type Alias Command
+	alias := &struct {
+		*Alias
+	} {
+		Alias: (*Alias)(c),
+	}
+
+	if err := json.Unmarshal(b, &alias); err != nil {
+		return err
+	}
+	c = (*Command)(alias.Alias)
+	if c.Get == nil {
+		c.Get = &Get{}
+	}
+	if c.Put == nil {
+		c.Put = &Put{}
+	}
+	return nil
+}
+
 // Append all the associated value descriptors to the list
 // Associated by PUT command parameters and PUT/GET command return values
 func (c *Command) AllAssociatedValueDescriptors(vdNames *map[string]string) {
