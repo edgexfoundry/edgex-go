@@ -13,9 +13,8 @@
  *******************************************************************************/
 package internal
 
-var (
-	CommandServiceKey            = "core-command"
-	CoreDataServiceKey 		     = "core-data"
-	MetaDataServiceKey           = "core-metadata"
-	SupportLoggingServiceKey     = "support-logging"
-)
+
+const CommandServiceKey            = "core-command"
+const CoreDataServiceKey           = "core-data"
+const MetaDataServiceKey           = "core-metadata"
+const SupportLoggingServiceKey     = "support-logging"
