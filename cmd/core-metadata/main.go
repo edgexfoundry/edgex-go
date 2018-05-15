@@ -25,6 +25,7 @@ import (
 
 	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/edgex-go/core/metadata"
+	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/heartbeat"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
@@ -71,7 +72,7 @@ func main() {
 	loggingClient = logger.NewClient(configuration.ApplicationName, configuration.EnableRemoteLogging, logTarget)
 
 	loggingClient.Info(consulMsg)
-	loggingClient.Info(fmt.Sprintf("Starting %s %s ", metadata.METADATASERVICENAME, edgex.Version))
+	loggingClient.Info(fmt.Sprintf("Starting %s %s ", internal.MetaDataServiceKey, edgex.Version))
 
 	err = metadata.Init(*configuration, loggingClient)
 	if err != nil {
@@ -97,7 +98,7 @@ func main() {
 }
 
 func logBeforeTermination(err error) {
-	loggingClient = logger.NewClient(metadata.METADATASERVICENAME, false, "")
+	loggingClient = logger.NewClient(internal.MetaDataServiceKey, false, "")
 	loggingClient.Error(err.Error())
 }
 

@@ -71,7 +71,6 @@ var (
 	DBUSER              = "meta"
 	DBPASS              = "password"
 	MONGODATABASE       = "metadata"
-	METADATASERVICENAME = "core-metadata"
 
 	MAX_LIMIT int = 1000
 

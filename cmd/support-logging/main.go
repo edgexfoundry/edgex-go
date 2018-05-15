@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/edgexfoundry/edgex-go"
+	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/heartbeat"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
@@ -60,7 +61,7 @@ func main() {
 
 	loggingClient = logger.NewClient(configuration.ApplicationName, false, configuration.LoggingFile)
 	loggingClient.Info(consulMsg)
-	loggingClient.Info(fmt.Sprintf("Starting %s %s", logging.SUPPORTLOGGINGSERVICENAME, edgex.Version))
+	loggingClient.Info(fmt.Sprintf("Starting %s %s", internal.SupportLoggingServiceKey, edgex.Version))
 
 	logging.Init(*configuration)
 	heartbeat.Start(configuration.HeartBeatMsg, configuration.HeartBeatTime, loggingClient)
@@ -82,6 +83,6 @@ func main() {
 }
 
 func logBeforeTermination(err error) {
-	loggingClient = logger.NewClient(logging.SUPPORTLOGGINGSERVICENAME, false, "")
+	loggingClient = logger.NewClient(internal.SupportLoggingServiceKey, false, "")
 	loggingClient.Error(err.Error())
 }

@@ -25,6 +25,7 @@ import (
 
 	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/edgex-go/core/command"
+	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/heartbeat"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
@@ -71,7 +72,7 @@ func main() {
 	var loggingClient= logger.NewClient(configuration.ApplicationName, configuration.EnableRemoteLogging, logTarget)
 
 	loggingClient.Info(consulMsg)
-	loggingClient.Info(fmt.Sprintf("Starting %s %s ", command.COMMANDSERVICENAME, edgex.Version))
+	loggingClient.Info(fmt.Sprintf("Starting %s %s ", internal.CommandServiceKey, edgex.Version))
 
 	command.Init(*configuration, loggingClient)
 
@@ -91,7 +92,7 @@ func main() {
 }
 
 func logBeforeTermination(err error) {
-	loggingClient = logger.NewClient(command.COMMANDSERVICENAME, false, "")
+	loggingClient = logger.NewClient(internal.CommandServiceKey, false, "")
 	loggingClient.Error(err.Error())
 }
 
