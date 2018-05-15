@@ -10,7 +10,7 @@ package main
 import (
 	"testing"
 
-	"github.com/edgexfoundry/edgex-go/pkg/config"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/support/logging"
 )
 
