@@ -26,6 +26,8 @@ import (
 	"github.com/edgexfoundry/edgex-go/core/clients/types"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"github.com/edgexfoundry/edgex-go/support/logging-client"
+	"github.com/edgexfoundry/edgex-go/support/consul-client"
+	"github.com/edgexfoundry/edgex-go/core/metadata"
 )
 
 var (
@@ -131,10 +133,22 @@ func NewAddressableClient(metaDbAddressableUrl string) AddressableClient {
 /*
 Return an instance of DeviceClient
 */
-func NewDeviceClient(metaDbDeviceUrl string) DeviceClient {
+func NewDeviceClient(metaDbDeviceUrl string, metaDevicePath string) (DeviceClient, error) {
 	d := DeviceRestClient{url: metaDbDeviceUrl}
+	err := d.loadEndpoint(metaDevicePath)
+	if err != nil {
+		return &DeviceRestClient{}, err
+	}
+	return &d, nil
+}
 
-	return &d
+func(d *DeviceRestClient) loadEndpoint(metaDevicePath string) error {
+	endpoint, err := consulclient.GetServiceEndpoint(metadata.METADATASERVICENAME)
+	if err != nil {
+		return err
+	}
+	d.url = fmt.Sprintf("http://%s:%v%s", endpoint.Address, endpoint.Port, metaDevicePath)
+	return nil
 }
 
 /*

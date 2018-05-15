@@ -77,7 +77,10 @@ func Init(conf ConfigurationStruct, l logger.LoggingClient) error {
 	}
 
 	// Create metadata clients
-	mdc = metadataclients.NewDeviceClient(conf.MetaDeviceURL)
+	mdc, err = metadataclients.NewDeviceClient(conf.MetaDeviceURL, conf.MetaDevicePath)
+	if err != nil {
+		loggingClient.Error(err.Error())
+	}
 	msc = metadataclients.NewServiceClient(conf.MetaDeviceServiceURL)
 
 	// Create the event publisher
