@@ -27,6 +27,8 @@ import (
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"github.com/edgexfoundry/edgex-go/support/logging-client"
 	"github.com/edgexfoundry/edgex-go/support/consul-client"
+	"time"
+	"os"
 )
 
 var (
@@ -132,25 +134,42 @@ func NewAddressableClient(metaDbAddressableUrl string) AddressableClient {
 /*
 Return an instance of DeviceClient
 */
-//func NewDeviceClient(metaDbDeviceUrl string, metaDevicePath string) (DeviceClient, error) {
 func NewDeviceClient(params types.EndpointParams) (DeviceClient, error) {
-	d := DeviceRestClient{url: params.Url}
-	if params.UseRegistry {
-		err := d.loadEndpoint(params)
-		if err != nil {
-			return &DeviceRestClient{}, err
-		}
-	}
+	d := DeviceRestClient{}
+	d.init(params)
 	return &d, nil
 }
 
-func(d *DeviceRestClient) loadEndpoint(params types.EndpointParams) error {
-	endpoint, err := consulclient.GetServiceEndpoint(params.ServiceKey)
-	if err != nil {
-		return err
+func(d *DeviceRestClient) init(params types.EndpointParams) {
+	if params.UseRegistry {
+		ch := make(chan consulclient.ServiceEndpoint, 1)
+		go func(p types.EndpointParams) {
+			check := time.Now()
+			for true {
+				if time.Now().After(check) {
+					endpoint, err := consulclient.GetServiceEndpoint(p.ServiceKey)
+					if err != nil {
+						fmt.Fprintln(os.Stdout, err.Error())
+					}
+					ch <- endpoint
+					fmt.Fprintf(os.Stdout, "loaded service %s\r\n", endpoint.Key)
+					check = check.Add(time.Second * time.Duration(15))
+				}
+			}
+		}(params)
+
+		go func() {
+			for true {
+				select {
+				case endpoint := <-ch:
+					d.url = fmt.Sprintf("http://%s:%v%s", endpoint.Address, endpoint.Port, params.Path)
+					fmt.Fprintf(os.Stdout, "loaded: %s\r\n", d.url)
+				}
+			}
+		}()
+	} else {
+		d.url = params.Url
 	}
-	d.url = fmt.Sprintf("http://%s:%v%s", endpoint.Address, endpoint.Port, params.Path)
-	return nil
 }
 
 /*

@@ -28,9 +28,6 @@ var loggingClient = logger.NewClient(COMMAND, false, "")
 
 // CommandClient : client to interact with core command
 type CommandClient interface {
-	Devices() ([]models.Device, error)
-	Device(id string) (models.Device, error)
-	DeviceByName(n string) (models.Device, error)
 	Get(id string, cID string) (string, error)
 	Put(id string, cID string, body string) (string, error)
 }
@@ -43,25 +40,6 @@ type CommandRestClient struct {
 func NewCommandClient(commandURL string) CommandClient {
 	c := CommandRestClient{url: commandURL}
 	return &c
-}
-
-// Devices : return all Devices
-func (cc *CommandRestClient) Devices() ([]models.Device, error) {
-	dc := metadataclients.NewDeviceClient(cc.url)
-
-	return dc.Devices()
-}
-
-// Device : return device by id
-func (cc *CommandRestClient) Device(id string) (models.Device, error) {
-	dc := metadataclients.NewDeviceClient(cc.url)
-	return dc.Device(id)
-}
-
-// DeviceByName : return device by name
-func (cc *CommandRestClient) DeviceByName(n string) (models.Device, error) {
-	dc := metadataclients.NewDeviceClient(cc.url)
-	return dc.DeviceForName(n)
 }
 
 // Get : issue GET command

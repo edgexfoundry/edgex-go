@@ -18,11 +18,12 @@ import (
 	"strings"
 
 	"github.com/edgexfoundry/edgex-go/core/clients/metadataclients"
+	"github.com/edgexfoundry/edgex-go/core/clients/types"
 	"github.com/edgexfoundry/edgex-go/core/data/clients"
 	"github.com/edgexfoundry/edgex-go/core/data/messaging"
+	"github.com/edgexfoundry/edgex-go/internal"
 	consulclient "github.com/edgexfoundry/edgex-go/support/consul-client"
 	"github.com/edgexfoundry/edgex-go/support/logging-client"
-	"github.com/edgexfoundry/edgex-go/core/clients/types"
 )
 
 // Global variables
@@ -79,7 +80,7 @@ func Init(conf ConfigurationStruct, l logger.LoggingClient, useConsul bool) erro
 
 	// Create metadata clients
 	params := types.EndpointParams{
-						ServiceKey:"core-metadata",
+						ServiceKey:internal.MetaDataServiceKey,
 						Path:conf.MetaDevicePath,
 						UseRegistry:useConsul,
 						Url:conf.MetaDeviceURL}
