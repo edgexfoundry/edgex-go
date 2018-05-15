@@ -51,7 +51,6 @@ var configuration ConfigurationStruct = ConfigurationStruct{}
 
 const (
 	/* -------------- Constants for Command -------------------- */
-	COMMANDSERVICENAME       string = "core-command"
 	REST_HTTP                string = "http://"
 	ID                       string = "id"
 	_ID                      string = "_id"

@@ -31,6 +31,3 @@ type ConfigurationStruct struct {
 // Configuration data for the support logging service
 var configuration ConfigurationStruct = ConfigurationStruct{}
 
-var (
-	SUPPORTLOGGINGSERVICENAME = "support-logging"
-)
