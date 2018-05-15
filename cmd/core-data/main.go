@@ -74,7 +74,7 @@ func main() {
 	loggingClient.Info(consulMsg)
 	loggingClient.Info(fmt.Sprintf("Starting %s %s ", internal.CoreDataServiceKey, edgex.Version))
 
-	err = data.Init(*configuration, loggingClient)
+	err = data.Init(*configuration, loggingClient, useConsul)
 	if err != nil {
 		loggingClient.Error(fmt.Sprintf("call to init() failed: %v", err.Error()))
 		return

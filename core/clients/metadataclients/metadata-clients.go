@@ -27,7 +27,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"github.com/edgexfoundry/edgex-go/support/logging-client"
 	"github.com/edgexfoundry/edgex-go/support/consul-client"
-	"github.com/edgexfoundry/edgex-go/core/metadata"
 )
 
 var (
@@ -133,21 +132,24 @@ func NewAddressableClient(metaDbAddressableUrl string) AddressableClient {
 /*
 Return an instance of DeviceClient
 */
-func NewDeviceClient(metaDbDeviceUrl string, metaDevicePath string) (DeviceClient, error) {
-	d := DeviceRestClient{url: metaDbDeviceUrl}
-	err := d.loadEndpoint(metaDevicePath)
-	if err != nil {
-		return &DeviceRestClient{}, err
+//func NewDeviceClient(metaDbDeviceUrl string, metaDevicePath string) (DeviceClient, error) {
+func NewDeviceClient(params types.EndpointParams) (DeviceClient, error) {
+	d := DeviceRestClient{url: params.Url}
+	if params.UseRegistry {
+		err := d.loadEndpoint(params)
+		if err != nil {
+			return &DeviceRestClient{}, err
+		}
 	}
 	return &d, nil
 }
 
-func(d *DeviceRestClient) loadEndpoint(metaDevicePath string) error {
-	endpoint, err := consulclient.GetServiceEndpoint(metadata.METADATASERVICENAME)
+func(d *DeviceRestClient) loadEndpoint(params types.EndpointParams) error {
+	endpoint, err := consulclient.GetServiceEndpoint(params.ServiceKey)
 	if err != nil {
 		return err
 	}
-	d.url = fmt.Sprintf("http://%s:%v%s", endpoint.Address, endpoint.Port, metaDevicePath)
+	d.url = fmt.Sprintf("http://%s:%v%s", endpoint.Address, endpoint.Port, params.Path)
 	return nil
 }
 
