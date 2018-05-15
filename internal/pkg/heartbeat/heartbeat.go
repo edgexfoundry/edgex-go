@@ -10,29 +10,25 @@
  * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
- *
- * @author: Trevor Conn, Dell
- * @version: 0.5.0
  *******************************************************************************/
-package usage
+
+package heartbeat
 
 import (
-	"fmt"
-	"os"
+	"time"
+
+	"github.com/edgexfoundry/edgex-go/support/logging-client"
 )
 
-var usageStr = `
-Usage: %s [options]
-Server Options:
-    -c, --consul                    Indicates service should use Consul
-    -p, --profile <name>            Indicate configuration profile other than default
-Common Options:
-    -h, --help                      Show this message
-`
+func Start(msg string, interval int, logger logger.LoggingClient) {
+	go sendBeats(msg, interval, logger)
+}
 
-// usage will print out the flag options for the server.
-func HelpCallback() {
-	msg := fmt.Sprintf(usageStr, os.Args[0])
-	fmt.Printf("%s\n", msg)
-	os.Exit(0)
+// Executes the basic heartbeat for all servicves. Writes entries to the supplied logger.
+func sendBeats(heartbeatMsg string, interval int, logger logger.LoggingClient) {
+	// Loop forever
+	for true {
+		logger.Info(heartbeatMsg)
+		time.Sleep(time.Millisecond * time.Duration(interval)) // Sleep based on supplied interval
+	}
 }

@@ -11,7 +11,7 @@ import (
 	"testing"
 
 	"github.com/edgexfoundry/edgex-go/core/data"
-	"github.com/edgexfoundry/edgex-go/pkg/config"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 )
 
 func TestToml(t *testing.T) {
