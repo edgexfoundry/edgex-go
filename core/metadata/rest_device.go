@@ -529,19 +529,21 @@ func restCheckForDevice(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	//If lookup by name failed, see if we were passed the ID
-	if len(dev.Name) == 0 && bson.IsObjectIdHex(token) {
-		if err := getDeviceById(&dev, token); err != nil {
-			loggingClient.Error(err.Error(), "restCheckForDevice")
-			if err == mgo.ErrNotFound {
-				http.Error(w, err.Error(), http.StatusNotFound)
-			} else {
-				http.Error(w, err.Error(), http.StatusServiceUnavailable)
+	if len(dev.Name) == 0 {
+		if bson.IsObjectIdHex(token) {
+			if err := getDeviceById(&dev, token); err != nil {
+				loggingClient.Error(err.Error(), "restCheckForDevice")
+				if err == mgo.ErrNotFound {
+					http.Error(w, err.Error(), http.StatusNotFound)
+				} else {
+					http.Error(w, err.Error(), http.StatusServiceUnavailable)
+				}
+				return
 			}
+		} else {
+			http.Error(w, "device not found: " + token, http.StatusNotFound)
 			return
 		}
-	} else {
-		http.Error(w, "device not found: " + token, http.StatusNotFound)
-		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
