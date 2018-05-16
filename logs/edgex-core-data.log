@@ -1,0 +1,32 @@
+INFO: 2018/05/16 15:02:24 Loading configuration from Consul...
+INFO: 2018/05/16 15:02:24 Starting core-data master 
+INFO: 2018/05/16 15:02:27 This is the Core Data Micro Service
+INFO: 2018/05/16 15:02:27 Service started in: 2.848421995s
+INFO: 2018/05/16 15:02:27 Core data heart beat
+INFO: 2018/05/16 15:02:27 Listening on port: 48080
+INFO: 2018/05/16 15:02:37 Posting Event: {"id":"","pushed":0,"device":"nebulizer","created":0,"modified":0,"origin":1471806386919,"schedule":null,"event":null,"readings":[{"id":"","pushed":0,"created":0,"origin":1471806386919,"modified":0,"device":null,"name":"luminousIntensity","value":"40"}]}
+INFO: 2018/05/16 17:30:23 Loading configuration from Consul...
+INFO: 2018/05/16 17:30:23 Starting core-data master 
+INFO: 2018/05/16 17:30:23 This is the Core Data Micro Service
+INFO: 2018/05/16 17:30:23 Service started in: 59.575682ms
+INFO: 2018/05/16 17:30:23 Listening on port: 48080
+INFO: 2018/05/16 17:30:31 Posting Event: {"id":"","pushed":0,"device":"nebulizer","created":0,"modified":0,"origin":1471806386919,"schedule":null,"event":null,"readings":[{"id":"","pushed":0,"created":0,"origin":1471806386919,"modified":0,"device":null,"name":"luminousIntensity","value":"40"}]}
+ERROR: 2018/05/16 17:30:31 error checking device nebulizer invalid AdminState "unlocked"
+WARN: 2018/05/16 17:30:49 terminating: interrupt
+INFO: 2018/05/16 17:31:41 Loading configuration from Consul...
+INFO: 2018/05/16 17:31:41 Starting core-data master 
+INFO: 2018/05/16 17:31:41 This is the Core Data Micro Service
+INFO: 2018/05/16 17:31:41 Core data heart beat
+INFO: 2018/05/16 17:31:41 Service started in: 95.418367ms
+INFO: 2018/05/16 17:31:41 Listening on port: 48080
+INFO: 2018/05/16 17:31:47 Posting Event: {"id":"","pushed":0,"device":"nebulizer","created":0,"modified":0,"origin":1471806386919,"schedule":null,"event":null,"readings":[{"id":"","pushed":0,"created":0,"origin":1471806386919,"modified":0,"device":null,"name":"luminousIntensity","value":"40"}]}
+ERROR: 2018/05/16 17:31:47 Item not found
+WARN: 2018/05/16 17:32:02 terminating: interrupt
+INFO: 2018/05/16 17:57:19 Loading configuration from Consul...
+INFO: 2018/05/16 17:57:19 Starting core-data master 
+INFO: 2018/05/16 17:57:19 This is the Core Data Micro Service
+INFO: 2018/05/16 17:57:19 Core data heart beat
+INFO: 2018/05/16 17:57:19 Service started in: 99.752551ms
+INFO: 2018/05/16 17:57:19 Listening on port: 48080
+INFO: 2018/05/16 17:57:24 Posting Event: {"id":"","pushed":0,"device":"nebulizer","created":0,"modified":0,"origin":1471806386919,"schedule":null,"event":null,"readings":[{"id":"","pushed":0,"created":0,"origin":1471806386919,"modified":0,"device":null,"name":"luminousIntensity","value":"40"}]}
+ERROR: 2018/05/16 17:57:24 Item not found
