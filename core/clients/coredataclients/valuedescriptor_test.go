@@ -14,22 +14,62 @@
 package coredataclients
 
 import (
-	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 )
 
+const (
+	ValueDescriptorUriPath         = "/api/v1/valuedescriptor"
+	TestValueDesciptorDescription1 = "value descriptor1"
+	TestValueDesciptorDescription2 = "value descriptor2"
+)
+
 func TestGetvaluedescriptors(t *testing.T) {
-	v, err := vdc.ValueDescriptors()
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+
+		if r.Method != http.MethodGet {
+			t.Errorf("expected http method is GET, active http method is : %s", r.Method)
+		}
+
+		if r.URL.EscapedPath() != ValueDescriptorUriPath {
+			t.Errorf("expected uri path is %s, actual uri path is %s", ValueDescriptorUriPath, r.URL.EscapedPath())
+		}
+
+		w.Write([]byte("[" +
+			"{" +
+			"\"Description\" : \"" + TestValueDesciptorDescription1 + "\"" +
+			"}," +
+			"{" +
+			"\"Description\" : \"" + TestValueDesciptorDescription2 + "\"" +
+			"}" +
+			"]"))
+
+	}))
+
+	defer ts.Close()
+
+	url := ts.URL + ValueDescriptorUriPath
+
+	vdc := NewValueDescriptorClient(url)
+
+	vdArr, err := vdc.ValueDescriptors()
 	if err != nil {
 		t.FailNow()
 	}
-	fmt.Println(v)
-}
 
-var vdc ValueDescriptorClient
+	if len(vdArr) != 2 {
+		t.Errorf("expected value descriptor array's length is 2, actual array's length is : %d", len(vdArr))
+	}
 
-func TestMain(m *testing.M) {
-	vdc = NewValueDescriptorClient("http://localhost:48080/api/v1/valuedescriptor")
+	vd1 := vdArr[0]
+	if vd1.Description != TestValueDesciptorDescription1 {
+		t.Errorf("expected first value descriptor's description is : %s, actual description is : %s", TestValueDesciptorDescription1, vd1.Description)
+	}
 
-	m.Run()
+	vd2 := vdArr[1]
+	if vd2.Description != TestValueDesciptorDescription2 {
+		t.Errorf("expected second value descriptor's description is : %s, actual description is : %s ", TestValueDesciptorDescription2, vd2.Description)
+	}
 }
