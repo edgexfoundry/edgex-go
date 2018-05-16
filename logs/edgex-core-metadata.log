@@ -1,0 +1,5 @@
+INFO: 2018/05/16 15:00:40 Loading configuration from Consul...
+INFO: 2018/05/16 15:00:40 Starting core-metadata master 
+INFO: 2018/05/16 15:00:40 This is the EdgeX Core Metadata MicroService
+INFO: 2018/05/16 15:00:40 Service started in: 42.588227ms
+INFO: 2018/05/16 15:00:40 Core Metadata heart beat
