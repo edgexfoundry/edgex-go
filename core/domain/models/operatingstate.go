@@ -17,6 +17,7 @@ package models
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 )
 
 // OperatingState Constant String
@@ -25,14 +26,10 @@ type OperatingState string
 /*
 	Enabled  : ENABLED
 	Disabled : DISABLED
-	enabled  : TODO rename all ref to Enabled
-	disabled : TODO rename all ref to Disabled
 */
 const (
 	Enabled  = "ENABLED"
 	Disabled = "DISABLED"
-	enabled  = "enabled"
-	disabled = "disabled"
 )
 
 // UnmarshalJSON : Struct into json
@@ -43,6 +40,7 @@ func (os *OperatingState) UnmarshalJSON(data []byte) error {
 		return fmt.Errorf("OperatingState should be a string, got %s", data)
 	}
 
+	s = strings.ToUpper(s)
 	got, err := map[string]OperatingState{"ENABLED": Enabled, "DISABLED": Disabled}[s]
 	if !err {
 		return fmt.Errorf("invalid OperatingState %q", s)
@@ -53,6 +51,7 @@ func (os *OperatingState) UnmarshalJSON(data []byte) error {
 
 // IsOperatingStateType : return if ostype
 func IsOperatingStateType(os string) bool {
+	os = strings.ToUpper(os)
 	_, err := map[string]OperatingState{"ENABLED": Enabled, "DISABLED": Disabled}[os]
 	if !err {
 		return false
