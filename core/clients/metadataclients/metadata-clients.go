@@ -142,33 +142,36 @@ func NewDeviceClient(params types.EndpointParams) (DeviceClient, error) {
 
 func(d *DeviceRestClient) init(params types.EndpointParams) {
 	if params.UseRegistry {
-		ch := make(chan consulclient.ServiceEndpoint, 1)
-		go func(p types.EndpointParams) {
-			check := time.Now()
-			for true {
-				if time.Now().After(check) {
-					endpoint, err := consulclient.GetServiceEndpoint(p.ServiceKey)
-					if err != nil {
-						fmt.Fprintln(os.Stdout, err.Error())
-					}
-					ch <- endpoint
-					fmt.Fprintf(os.Stdout, "loaded service %s\r\n", endpoint.Key)
-					check = check.Add(time.Second * time.Duration(15))
-				}
-			}
-		}(params)
-
-		go func() {
+		ch := make(chan string, 1)
+		go endpointGetter(params, ch)
+		go func(ch chan string) {
 			for true {
 				select {
-				case endpoint := <-ch:
-					d.url = fmt.Sprintf("http://%s:%v%s", endpoint.Address, endpoint.Port, params.Path)
-					fmt.Fprintf(os.Stdout, "loaded: %s\r\n", d.url)
+				case url := <- ch:
+					d.url = url
 				}
 			}
-		}()
+		}(ch)
 	} else {
 		d.url = params.Url
+	}
+}
+
+func endpointGetter(p types.EndpointParams, ch chan string) {
+	check := time.Now()
+	for true {
+		if time.Now().After(check) {
+			fmt.Fprintf(os.Stdout, "now:%s\r\ncheck:%s\r\n", time.Now().Format(time.RFC3339Nano), check.Format(time.RFC3339Nano))
+			endpoint, err := consulclient.GetServiceEndpoint(p.ServiceKey)
+			if err != nil {
+				fmt.Fprintln(os.Stdout, err.Error())
+			}
+			url := fmt.Sprintf("http://%s:%v%s", endpoint.Address, endpoint.Port, p.Path)
+			ch <- url
+			fmt.Fprintf(os.Stdout, "endpoint loaded %s\r\n", url)
+			check = time.Now().Add(time.Second * time.Duration(15))
+			fmt.Fprintf(os.Stdout, "setting check:%s\r\n", check.Format(time.RFC3339Nano))
+		}
 	}
 }
 
