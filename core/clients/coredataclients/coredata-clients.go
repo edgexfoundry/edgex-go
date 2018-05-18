@@ -23,7 +23,6 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"github.com/edgexfoundry/edgex-go/support/logging-client"
-	"github.com/edgexfoundry/edgex-go/core/clients/types"
 )
 
 var (
@@ -50,10 +49,6 @@ type ValueDescriptorClient interface {
 
 type ValueDescriptorRestClient struct {
 	url string
-}
-
-type Endpointer interface {
-	Monitor(params types.EndpointParams, ch chan string)
 }
 
 func NewValueDescriptorClient(valueDescriptorUrl string) ValueDescriptorClient {

@@ -23,6 +23,7 @@ import (
 	"net/url"
 	"strconv"
 
+	"github.com/edgexfoundry/edgex-go/core/clients"
 	"github.com/edgexfoundry/edgex-go/core/clients/types"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"github.com/edgexfoundry/edgex-go/support/logging-client"
@@ -79,13 +80,9 @@ type DeviceClient interface {
 	UpdateOpStateByName(name string, opState string) error
 }
 
-type Endpointer interface {
-	Monitor(params types.EndpointParams, ch chan string)
-}
-
 type DeviceRestClient struct {
 	url string
-	endpoint Endpointer
+	endpoint clients.Endpointer
 }
 
 /*
@@ -139,7 +136,7 @@ func NewAddressableClient(metaDbAddressableUrl string) AddressableClient {
 /*
 Return an instance of DeviceClient
 */
-func NewDeviceClient(params types.EndpointParams, m Endpointer) (DeviceClient, error) {
+func NewDeviceClient(params types.EndpointParams, m clients.Endpointer) (DeviceClient, error) {
 	d := DeviceRestClient{endpoint:m}
 	d.init(params)
 	return &d, nil
