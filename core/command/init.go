@@ -17,7 +17,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/edgexfoundry/edgex-go/core/clients/metadataclients"
+	"github.com/edgexfoundry/edgex-go/core/clients/metadata"
 	"github.com/edgexfoundry/edgex-go/core/clients/types"
 	"github.com/edgexfoundry/edgex-go/internal"
 	consulclient "github.com/edgexfoundry/edgex-go/support/consul-client"
@@ -25,7 +25,7 @@ import (
 )
 
 var loggingClient logger.LoggingClient
-var mdc metadataclients.DeviceClient
+var mdc metadata.DeviceClient
 
 func ConnectToConsul(conf ConfigurationStruct) error {
 
@@ -64,7 +64,7 @@ func Init(conf ConfigurationStruct, l logger.LoggingClient, useConsul bool) {
 		Url:conf.MetaDeviceURL}
 
 	var err error
-	mdc, err = metadataclients.NewDeviceClient(params, types.Endpoint{})
+	mdc, err = metadata.NewDeviceClient(params, types.Endpoint{})
 	if err != nil {
 		loggingClient.Error(err.Error())
 	}

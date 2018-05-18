@@ -17,7 +17,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/edgexfoundry/edgex-go/core/clients/metadataclients"
+	"github.com/edgexfoundry/edgex-go/core/clients/metadata"
 	"github.com/edgexfoundry/edgex-go/core/clients/types"
 	"github.com/edgexfoundry/edgex-go/core/data/clients"
 	"github.com/edgexfoundry/edgex-go/core/data/messaging"
@@ -30,8 +30,8 @@ import (
 var dbc clients.DBClient
 var loggingClient logger.LoggingClient
 var ep *messaging.EventPublisher
-var mdc metadataclients.DeviceClient
-var msc metadataclients.ServiceClient
+var mdc metadata.DeviceClient
+var msc metadata.ServiceClient
 
 func ConnectToConsul(conf ConfigurationStruct) error {
 
@@ -85,11 +85,11 @@ func Init(conf ConfigurationStruct, l logger.LoggingClient, useConsul bool) erro
 						UseRegistry:useConsul,
 						Url:conf.MetaDeviceURL}
 
-	mdc, err = metadataclients.NewDeviceClient(params, types.Endpoint{})
+	mdc, err = metadata.NewDeviceClient(params, types.Endpoint{})
 	if err != nil {
 		loggingClient.Error(err.Error())
 	}
-	msc = metadataclients.NewServiceClient(conf.MetaDeviceServiceURL)
+	msc = metadata.NewServiceClient(conf.MetaDeviceServiceURL)
 
 	// Create the event publisher
 	ep = messaging.NewZeroMQPublisher(messaging.ZeroMQConfiguration{

@@ -11,7 +11,7 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
-package metadataclients
+package metadata
 
 import (
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
@@ -109,7 +109,7 @@ func TestNewDeviceClientWithConsul(t *testing.T) {
 }
 
 type MockEndpoint struct {
-	
+
 }
 
 func(e MockEndpoint) Monitor(params types.EndpointParams, ch chan string) {
