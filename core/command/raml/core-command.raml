@@ -76,7 +76,7 @@ schemas:
         description: Set the admin state of the device (as referenced by the database generated id of the device) to the state provided (either locked or unlocked). ServiceException (HTTP 503) for unanticipated or unknown issues encountered. Throws NotFoundException (HTTP 404) if no device exists by the id provided.
         responses: 
             "200": 
-                description: boolean indicating the successful
+                description: status code indicating success
             "404": 
                 description: if no device exists by the id provided.
             "503": 
@@ -99,7 +99,7 @@ schemas:
         description: Set the op state of the device (as referenced by the database generated id of the device) to the state provided (either enabled or disabled). ServiceException (HTTP 503) for unanticipated or unknown issues encountered. Throws NotFoundException (HTTP 404) if no device exists by the id provided.
         responses: 
             "200": 
-                description: boolean indicating the successful
+                description: status code indicating success
             "404": 
                 description: if no device exists by the id provided.
             "503": 
@@ -144,7 +144,7 @@ schemas:
         description: Set the admin state of the device (by name of the device) to the state provided (either locked or unlocked). ServiceException (HTTP 503) for unanticipated or unknown issues encountered. Throws NotFoundException (HTTP 404) if no device exists by the name provided.
         responses: 
             "200": 
-                description: boolean indicating the successful
+                description: status code indicating success
             "404": 
                 description: if no device exists by the name provided.
             "503": 
@@ -167,7 +167,7 @@ schemas:
         description: Set the op state of the device (by name of the device) to the state provided (either enabled or disabled). ServiceException (HTTP 503) for unanticipated or unknown issues encountered. Throws NotFoundException (HTTP 404) if no device exists by the name provided.
         responses: 
             "200": 
-                description: boolean indicating the successful
+                description: status code indicating success
             "404": 
                 description: if no device exists by the name provided.
             "503": 
