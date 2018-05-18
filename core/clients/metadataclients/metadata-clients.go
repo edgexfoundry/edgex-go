@@ -79,8 +79,13 @@ type DeviceClient interface {
 	UpdateOpStateByName(name string, opState string) error
 }
 
+type Endpointer interface {
+	Monitor(params types.EndpointParams, ch chan string)
+}
+
 type DeviceRestClient struct {
 	url string
+	endpoint Endpointer
 }
 
 /*
@@ -134,8 +139,8 @@ func NewAddressableClient(metaDbAddressableUrl string) AddressableClient {
 /*
 Return an instance of DeviceClient
 */
-func NewDeviceClient(params types.EndpointParams) (DeviceClient, error) {
-	d := DeviceRestClient{}
+func NewDeviceClient(params types.EndpointParams, m Endpointer) (DeviceClient, error) {
+	d := DeviceRestClient{endpoint:m}
 	d.init(params)
 	return &d, nil
 }
@@ -143,7 +148,7 @@ func NewDeviceClient(params types.EndpointParams) (DeviceClient, error) {
 func(d *DeviceRestClient) init(params types.EndpointParams) {
 	if params.UseRegistry {
 		ch := make(chan string, 1)
-		go endpointGetter(params, ch)
+		go d.endpoint.Monitor(params, ch)
 		go func(ch chan string) {
 			for true {
 				select {
@@ -154,24 +159,6 @@ func(d *DeviceRestClient) init(params types.EndpointParams) {
 		}(ch)
 	} else {
 		d.url = params.Url
-	}
-}
-
-func endpointGetter(p types.EndpointParams, ch chan string) {
-	check := time.Now()
-	for true {
-		if time.Now().After(check) {
-			fmt.Fprintf(os.Stdout, "now:%s\r\ncheck:%s\r\n", time.Now().Format(time.RFC3339Nano), check.Format(time.RFC3339Nano))
-			endpoint, err := consulclient.GetServiceEndpoint(p.ServiceKey)
-			if err != nil {
-				fmt.Fprintln(os.Stdout, err.Error())
-			}
-			url := fmt.Sprintf("http://%s:%v%s", endpoint.Address, endpoint.Port, p.Path)
-			ch <- url
-			fmt.Fprintf(os.Stdout, "endpoint loaded %s\r\n", url)
-			check = time.Now().Add(time.Second * time.Duration(15))
-			fmt.Fprintf(os.Stdout, "setting check:%s\r\n", check.Format(time.RFC3339Nano))
-		}
 	}
 }
 

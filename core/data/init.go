@@ -85,7 +85,7 @@ func Init(conf ConfigurationStruct, l logger.LoggingClient, useConsul bool) erro
 						UseRegistry:useConsul,
 						Url:conf.MetaDeviceURL}
 
-	mdc, err = metadataclients.NewDeviceClient(params)
+	mdc, err = metadataclients.NewDeviceClient(params, types.Endpoint{})
 	if err != nil {
 		loggingClient.Error(err.Error())
 	}
