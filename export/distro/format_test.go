@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
@@ -56,5 +57,22 @@ func TestXml(t *testing.T) {
 	}
 	if !reflect.DeepEqual(eventIn, eventOut) {
 		t.Fatalf("Objects should be equals: %v %v", eventIn, eventOut)
+	}
+}
+
+func TestThingsBoardJson(t *testing.T) {
+	eventIn := models.Event{
+		Device: devID1,
+	}
+
+	tbjf := thingsboardJSONFormater{}
+	out := tbjf.Format(&eventIn)
+	if out == nil {
+		t.Fatal("out should not be nil")
+	}
+
+	s := string(out[:])
+	if strings.HasPrefix(s, "{\""+devID1+"\":[{\"ts\":") == false {
+		t.Fatalf("Invalid ThingsBoard JSON format: %v", s)
 	}
 }

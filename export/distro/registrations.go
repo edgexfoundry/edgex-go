@@ -56,6 +56,8 @@ func (reg *registrationInfo) update(newReg export.Registration) bool {
 		// TODO reg.format = distro.NewAzureFormat()
 	case export.FormatCSV:
 		// TODO reg.format = distro.NewCsvFormat()
+	case export.FormatThingsBoardJSON:
+		reg.format = thingsboardJSONFormater{}
 	default:
 		logger.Warn("Format not supported: ", zap.String("format", newReg.Format))
 		return false
