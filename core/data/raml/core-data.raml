@@ -22,8 +22,8 @@ schemas:
         responses: 
             "200": 
                 description: new event database generated id
-            "409": 
-                description: if the a reading is associated to a non-existent value descriptor
+            "404":
+                description: if the a reading is associated to a non-existent value descriptor, or if device verification is enabled and the device is not found.
             "503": 
                 description: for unknown or unanticipated issues.
     put: 

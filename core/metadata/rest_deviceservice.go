@@ -82,7 +82,7 @@ func restAddDeviceService(w http.ResponseWriter, r *http.Request) {
 	// No ID or Name given for addressable
 	if ds.Service.Addressable.Id.Hex() == "" && ds.Service.Addressable.Name == "" {
 		err = errors.New("Must provide an Addressable for Device Service")
-		http.Error(w, err.Error(), http.StatusConflict)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		loggingClient.Error(err.Error(), "")
 		return
 	}
