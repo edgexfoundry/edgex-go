@@ -1361,10 +1361,14 @@ schemas:
         responses:
             "200":
                 description: database generated identifier for the new device service
+            "400":
+                description: no addressable was provided for the new device service
+            "404":
+                description: if an associated addressable (by id or name) is not found
+            "409":
+                description: if the addressable name is determined to not be unique with regard to others
             "503":
                 description: for unknown or unanticipated issues
-            "409":
-                description: if an associated addressable (by id or name) is not found or if the name is determined to not be unique with regard to others
     put:
         description: Update the DeviceServcie identified by the id or name stored in the object provided. Id is used first, name is used second for identification purposes. Returns ServiceException (HTTP 503) for unknown or unanticipated issues. Returns NotFoundException (HTTP 404) if the device service cannot be found by the identifier provided.
         body:
