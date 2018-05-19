@@ -61,8 +61,7 @@ func TestAddDevice(t *testing.T) {
 
 	receivedDeviceId, err := dc.Add(&d)
 	if err != nil {
-		t.Log(err.Error())
-		t.FailNow()
+		t.Error(err.Error())
 	}
 
 	if receivedDeviceId != addingDeviceId {
