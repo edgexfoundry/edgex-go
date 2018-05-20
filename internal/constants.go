@@ -14,7 +14,7 @@
 package internal
 
 
-const CommandServiceKey            = "core-command"
-const CoreDataServiceKey           = "core-data"
-const MetaDataServiceKey           = "core-metadata"
-const SupportLoggingServiceKey     = "support-logging"
+const CommandServiceKey            = "edgex-core-command"
+const CoreDataServiceKey           = "edgex-core-data"
+const MetaDataServiceKey           = "edgex-core-metadata"
+const SupportLoggingServiceKey     = "edgex-support-logging"
