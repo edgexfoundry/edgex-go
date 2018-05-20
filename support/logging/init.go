@@ -8,10 +8,11 @@ package logging
 
 import (
 	"fmt"
-	"github.com/edgexfoundry/edgex-go/support/consul-client"
 	"strconv"
 	"strings"
+
 	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/support/consul-client"
 )
 
 const (
