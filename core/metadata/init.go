@@ -19,10 +19,10 @@ import (
 	"strings"
 
 	enums "github.com/edgexfoundry/edgex-go/core/domain/enums"
+	"github.com/edgexfoundry/edgex-go/internal"
 	consulclient "github.com/edgexfoundry/edgex-go/support/consul-client"
 	logger "github.com/edgexfoundry/edgex-go/support/logging-client"
 	notifications "github.com/edgexfoundry/edgex-go/support/notifications-client"
-	"github.com/edgexfoundry/edgex-go/internal"
 )
 
 // DS : DataStore to retrieve data from database.
