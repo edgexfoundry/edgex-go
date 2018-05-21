@@ -7,7 +7,6 @@
 package client
 
 type ConfigurationStruct struct {
-	ApplicationName      string
 	Hostname             string
 	Port                 int
 	DBType               string

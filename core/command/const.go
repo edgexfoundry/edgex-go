@@ -15,7 +15,6 @@ package command
 
 // ConfigurationStruct : Struct used to pase the JSON configuration file
 type ConfigurationStruct struct {
-	ApplicationName           string
 	ConsulProfilesActive      string
 	ReadMaxLimit              int
 	ServicePort               int
@@ -24,7 +23,6 @@ type ConfigurationStruct struct {
 	ServiceTimeout            int
 	CheckInterval             string
 	ServiceAddress            string
-	ServiceName               string
 	DeviceServiceProtocol     string
 	HeartBeatMsg              string
 	AppOpenMsg                string

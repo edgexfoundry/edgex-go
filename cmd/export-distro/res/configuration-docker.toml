@@ -1,4 +1,3 @@
-ApplicationName = 'edgex-export-distro'
 Hostname = 'edgex-export-distro'
 Port = 48070
 DistroHost = 'edgex-export-distro'
