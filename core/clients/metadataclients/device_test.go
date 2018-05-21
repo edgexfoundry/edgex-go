@@ -14,88 +14,57 @@
 package metadataclients
 
 import (
-	"fmt"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
-	"gopkg.in/mgo.v2/bson"
-	"os"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 )
 
 const (
-	deviceUrl        = "http://localhost:48081/api/v1/device"
-	addressableUrl   = "http://localhost:48081/api/v1/addressable"
-	deviceServiceUrl = "http://localhost:48081/api/v1/deviceservice"
-	deviceProfileUrl = "http://localhost:48081/api/v1/deviceprofile"
+	DeviceUriPath = "/api/v1/device"
 )
 
 // Test adding a device using the device client
 func TestAddDevice(t *testing.T) {
 	d := models.Device{
-		Addressable:    a,
+		Id:             "1234",
+		Addressable:    models.Addressable{},
 		AdminState:     "UNLOCKED",
 		Name:           "Test name for device",
 		OperatingState: "ENABLED",
-		Profile:        dp,
-		Service:        ds,
+		Profile:        models.DeviceProfile{},
+		Service:        models.DeviceService{},
 	}
 
-	_, err := dc.Add(&d)
+	addingDeviceId := d.Id.Hex()
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+
+		if r.Method != http.MethodPost {
+			t.Errorf("expected http method is %s, active http method is : %s", http.MethodPost, r.Method)
+		}
+
+		if r.URL.EscapedPath() != DeviceUriPath {
+			t.Errorf("expected uri path is %s, actual uri path is %s", DeviceUriPath, r.URL.EscapedPath())
+		}
+
+		w.Write([]byte(addingDeviceId))
+
+	}))
+
+	defer ts.Close()
+
+	url := ts.URL + DeviceUriPath
+
+	dc := NewDeviceClient(url)
+
+	receivedDeviceId, err := dc.Add(&d)
 	if err != nil {
-		t.Log(err.Error())
-		t.FailNow()
+		t.Error(err.Error())
 	}
-}
 
-var dc DeviceClient
-var a models.Addressable
-var ds models.DeviceService
-var dp models.DeviceProfile
-
-// Main method for the tests
-func TestMain(m *testing.M) {
-	dc = NewDeviceClient(deviceUrl)
-	ac := NewAddressableClient(addressableUrl)
-	dsc := NewServiceClient(deviceServiceUrl)
-	dpc := NewDeviceProfileClient(deviceProfileUrl)
-
-	a = models.Addressable{
-		Address: "http://localhost",
-		Name:    "Test Addressable",
-		Port:    3000,
+	if receivedDeviceId != addingDeviceId {
+		t.Errorf("expected device id : %s, actual device id : %s", receivedDeviceId, addingDeviceId)
 	}
-	id, err := ac.Add(&a)
-	if err != nil {
-		fmt.Println("Error posting addressable: " + err.Error())
-		return
-	}
-	a.Id = bson.ObjectIdHex(id)
-
-	ds = models.DeviceService{
-		AdminState: "UNLOCKED",
-		Service: models.Service{
-			Addressable:    a,
-			Name:           "Test device service",
-			OperatingState: "ENABLED",
-		},
-	}
-	id, err = dsc.Add(&ds)
-	if err != nil {
-		fmt.Println("Error posting device service: " + err.Error())
-		return
-	}
-	ds.Service.Id = bson.ObjectIdHex(id)
-
-	dp = models.DeviceProfile{
-		Manufacturer: "Test manufacturer for device profile",
-		Model:        "Test model for device profile",
-		Name:         "Test name for device profile",
-	}
-	id, err = dpc.Add(&dp)
-	if err != nil {
-		fmt.Println("Error posting new device profile: " + err.Error())
-		return
-	}
-	dp.Id = bson.ObjectIdHex(id)
-
-	os.Exit(m.Run())
 }
