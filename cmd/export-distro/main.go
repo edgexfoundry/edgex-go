@@ -18,6 +18,7 @@ import (
 	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"github.com/edgexfoundry/edgex-go/export/distro"
+	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 
@@ -30,7 +31,7 @@ func main() {
 	logger, _ = zap.NewProduction()
 	defer logger.Sync()
 
-	logger.Info("Starting edgex export distro", zap.String("version", edgex.Version))
+	logger.Info(fmt.Sprintf("Starting %s %s", internal.ExportDistroServiceKey, edgex.Version))
 
 	var (
 		useConsul  bool

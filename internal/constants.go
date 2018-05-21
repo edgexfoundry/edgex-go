@@ -16,5 +16,7 @@ package internal
 
 const CommandServiceKey            = "edgex-core-command"
 const CoreDataServiceKey           = "edgex-core-data"
+const ExportClientServiceKey       = "edgex-export-client"
+const ExportDistroServiceKey       = "edgex-export-distro"
 const MetaDataServiceKey           = "edgex-core-metadata"
 const SupportLoggingServiceKey     = "edgex-support-logging"
