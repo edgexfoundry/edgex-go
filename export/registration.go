@@ -23,12 +23,13 @@ const (
 
 // Data format types
 const (
-	FormatJSON        = "JSON"
-	FormatXML         = "XML"
-	FormatSerialized  = "SERIALIZED"
-	FormatIoTCoreJSON = "IOTCORE_JSON"
-	FormatAzureJSON   = "AZURE_JSON"
-	FormatCSV         = "CSV"
+	FormatJSON            = "JSON"
+	FormatXML             = "XML"
+	FormatSerialized      = "SERIALIZED"
+	FormatIoTCoreJSON     = "IOTCORE_JSON"
+	FormatAzureJSON       = "AZURE_JSON"
+	FormatCSV             = "CSV"
+	FormatThingsBoardJSON = "THINGSBOARD_JSON"
 )
 
 // Export destination types
@@ -89,7 +90,8 @@ func (reg *Registration) Validate() (bool, error) {
 		reg.Format != FormatSerialized &&
 		reg.Format != FormatIoTCoreJSON &&
 		reg.Format != FormatAzureJSON &&
-		reg.Format != FormatCSV {
+		reg.Format != FormatCSV &&
+		reg.Format != FormatThingsBoardJSON {
 		return false, fmt.Errorf("Format invalid: %s", reg.Format)
 	}
 
