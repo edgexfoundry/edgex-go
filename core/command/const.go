@@ -15,35 +15,44 @@ package command
 
 // ConfigurationStruct : Struct used to pase the JSON configuration file
 type ConfigurationStruct struct {
-	ApplicationName           string
-	ConsulProfilesActive      string
-	ReadMaxLimit              int
-	ServicePort               int
-	HeartBeatTime             int
-	ConsulPort                int
-	ServiceTimeout            int
-	CheckInterval             string
-	ServiceAddress            string
-	ServiceName               string
-	DeviceServiceProtocol     string
-	HeartBeatMsg              string
-	AppOpenMsg                string
-	URLProtocol               string
-	URLDevicePath             string
-	ConsulHost                string
-	ConsulCheckAddress        string
-	EnableRemoteLogging       bool
-	LogFile                   string
-	LoggingRemoteURL          string
-	MetaAddressableURL        string
-	MetaDeviceServiceURL      string
-	MetaDeviceProfileURL      string
-	MetaDeviceURL             string
-	MetaDeviceReportURL       string
-	MetaCommandURL            string
-	MetaEventURL              string
-	MetaScheduleURL           string
-	MetaProvisionWatcherURL   string
+	ApplicationName            string
+	ConsulProfilesActive       string
+	ReadMaxLimit               int
+	ServicePort                int
+	HeartBeatTime              int
+	ConsulPort                 int
+	ServiceTimeout             int
+	CheckInterval              string
+	ServiceAddress             string
+	ServiceName                string
+	DeviceServiceProtocol      string
+	HeartBeatMsg               string
+	AppOpenMsg                 string
+	URLProtocol                string
+	URLDevicePath              string
+	ConsulHost                 string
+	ConsulCheckAddress         string
+	EnableRemoteLogging        bool
+	LogFile                    string
+	LoggingRemoteURL           string
+	MetaAddressableURL         string
+	MetaAddressablePath        string
+	MetaDeviceServiceURL       string
+	MetaDeviceServicePath	   string
+	MetaDeviceProfileURL       string
+	MetaDeviceProfilePath	   string
+	MetaDeviceURL              string
+	MetaDevicePath             string
+	MetaDeviceReportURL        string
+	MetaDeviceReportPath       string
+	MetaCommandURL             string
+	MetaCommandPath            string
+	MetaEventURL               string
+	MetaEventPath              string
+	MetaScheduleURL            string
+	MetaSchedulePath           string
+	MetaProvisionWatcherURL    string
+	MetaProvisionWatcherPath   string
 }
 
 // Configuration data for the metadata service

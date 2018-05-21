@@ -15,12 +15,11 @@ package clients
 
 import (
 	"errors"
-	"fmt"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
-	"strconv"
 	"time"
+	"strconv"
 )
 
 const (
@@ -52,7 +51,7 @@ type MongoClient struct {
 func newMongoClient(config DBConfiguration) (*MongoClient, error) {
 	// Create the dial info for the Mongo session
 	connectionString := config.Host + ":" + strconv.Itoa(config.Port)
-	fmt.Println("INFO: Connecting to mongo at: " + connectionString)
+	loggingClient.Info("INFO: Connecting to mongo at: " + connectionString)
 	mongoDBDialInfo := &mgo.DialInfo{
 		Addrs:    []string{connectionString},
 		Timeout:  time.Duration(config.Timeout) * time.Millisecond,
@@ -62,7 +61,7 @@ func newMongoClient(config DBConfiguration) (*MongoClient, error) {
 	}
 	session, err := mgo.DialWithInfo(mongoDBDialInfo)
 	if err != nil {
-		fmt.Println("Error dialing the mongo server: " + err.Error())
+		loggingClient.Error("Error dialing the mongo server: " + err.Error())
 		return nil, err
 	}
 

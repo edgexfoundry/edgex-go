@@ -17,9 +17,11 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/edgexfoundry/edgex-go/core/clients/metadataclients"
+	"github.com/edgexfoundry/edgex-go/core/clients/metadata"
+	"github.com/edgexfoundry/edgex-go/core/clients/types"
 	"github.com/edgexfoundry/edgex-go/core/data/clients"
 	"github.com/edgexfoundry/edgex-go/core/data/messaging"
+	"github.com/edgexfoundry/edgex-go/internal"
 	consulclient "github.com/edgexfoundry/edgex-go/support/consul-client"
 	"github.com/edgexfoundry/edgex-go/support/logging-client"
 )
@@ -28,8 +30,8 @@ import (
 var dbc clients.DBClient
 var loggingClient logger.LoggingClient
 var ep *messaging.EventPublisher
-var mdc metadataclients.DeviceClient
-var msc metadataclients.ServiceClient
+var mdc metadata.DeviceClient
+var msc metadata.ServiceClient
 
 func ConnectToConsul(conf ConfigurationStruct) error {
 
@@ -55,13 +57,13 @@ func ConnectToConsul(conf ConfigurationStruct) error {
 	return nil
 }
 
-func Init(conf ConfigurationStruct, l logger.LoggingClient) error {
+func Init(conf ConfigurationStruct, l logger.LoggingClient, useConsul bool) error {
 	loggingClient = l
 	configuration = conf
 	//TODO: The above two are set due to global scope throughout the package. How can this be eliminated / refactored?
 
 	var err error
-	
+
 	// Create a database client
 	dbc, err = clients.NewDBClient(clients.DBConfiguration{
 		DbType:       clients.MONGO,
@@ -77,8 +79,17 @@ func Init(conf ConfigurationStruct, l logger.LoggingClient) error {
 	}
 
 	// Create metadata clients
-	mdc = metadataclients.NewDeviceClient(conf.MetaDeviceURL)
-	msc = metadataclients.NewServiceClient(conf.MetaDeviceServiceURL)
+	params := types.EndpointParams{
+						ServiceKey:internal.MetaDataServiceKey,
+						Path:conf.MetaDevicePath,
+						UseRegistry:useConsul,
+						Url:conf.MetaDeviceURL}
+
+	mdc, err = metadata.NewDeviceClient(params, types.Endpoint{})
+	if err != nil {
+		loggingClient.Error(err.Error())
+	}
+	msc = metadata.NewServiceClient(conf.MetaDeviceServiceURL)
 
 	// Create the event publisher
 	ep = messaging.NewZeroMQPublisher(messaging.ZeroMQConfiguration{

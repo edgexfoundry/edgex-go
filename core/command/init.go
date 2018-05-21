@@ -17,11 +17,15 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/edgexfoundry/edgex-go/core/clients/metadata"
+	"github.com/edgexfoundry/edgex-go/core/clients/types"
+	"github.com/edgexfoundry/edgex-go/internal"
 	consulclient "github.com/edgexfoundry/edgex-go/support/consul-client"
 	logger "github.com/edgexfoundry/edgex-go/support/logging-client"
 )
 
 var loggingClient logger.LoggingClient
+var mdc metadata.DeviceClient
 
 func ConnectToConsul(conf ConfigurationStruct) error {
 
@@ -47,9 +51,21 @@ func ConnectToConsul(conf ConfigurationStruct) error {
 	return nil
 }
 
-func Init(conf ConfigurationStruct, l logger.LoggingClient) {
+func Init(conf ConfigurationStruct, l logger.LoggingClient, useConsul bool) {
 	loggingClient = l
 	configuration = conf
 	//TODO: The above two are set due to global scope throughout the package. How can this be eliminated / refactored?
 
+	// Create metadata clients
+	params := types.EndpointParams{
+		ServiceKey:internal.MetaDataServiceKey,
+		Path:conf.MetaDevicePath,
+		UseRegistry:useConsul,
+		Url:conf.MetaDeviceURL}
+
+	var err error
+	mdc, err = metadata.NewDeviceClient(params, types.Endpoint{})
+	if err != nil {
+		loggingClient.Error(err.Error())
+	}
 }
