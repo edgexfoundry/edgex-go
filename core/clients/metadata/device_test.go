@@ -14,16 +14,15 @@
 package metadata
 
 import (
-	"github.com/edgexfoundry/edgex-go/core/domain/models"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"fmt"
 	"testing"
+	"time"
 
 	"github.com/edgexfoundry/edgex-go/core/clients/types"
+	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"github.com/edgexfoundry/edgex-go/internal"
-
-	"time"
 )
 
 const (
@@ -114,7 +113,7 @@ type MockEndpoint struct {
 
 func(e MockEndpoint) Monitor(params types.EndpointParams, ch chan string) {
 	switch (params.ServiceKey) {
-	case "core-metadata":
+	case internal.MetaDataServiceKey:
 		url := fmt.Sprintf("http://%s:%v%s", "localhost", 48081, params.Path)
 		ch <- url
 		break
