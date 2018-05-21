@@ -14,10 +14,10 @@ import (
 	"go.uber.org/zap"
 )
 
-type jsonFormater struct {
+type jsonFormatter struct {
 }
 
-func (jsonTr jsonFormater) Format(event *models.Event) []byte {
+func (jsonTr jsonFormatter) Format(event *models.Event) []byte {
 
 	b, err := json.Marshal(event)
 	if err != nil {
@@ -27,10 +27,10 @@ func (jsonTr jsonFormater) Format(event *models.Event) []byte {
 	return b
 }
 
-type xmlFormater struct {
+type xmlFormatter struct {
 }
 
-func (xmlTr xmlFormater) Format(event *models.Event) []byte {
+func (xmlTr xmlFormatter) Format(event *models.Event) []byte {
 	b, err := xml.Marshal(event)
 	if err != nil {
 		logger.Error("Error parsing XML", zap.Error(err))
@@ -39,12 +39,12 @@ func (xmlTr xmlFormater) Format(event *models.Event) []byte {
 	return b
 }
 
-type thingsboardJSONFormater struct {
+type thingsboardJSONFormatter struct {
 }
 
-// ThingsBoard JSON formater
+// ThingsBoard JSON formatter
 // https://thingsboard.io/docs/reference/gateway-mqtt-api/#telemetry-upload-api
-func (thingsboardjsonTr thingsboardJSONFormater) Format(event *models.Event) []byte {
+func (thingsboardjsonTr thingsboardJSONFormatter) Format(event *models.Event) []byte {
 
 	type Device struct {
 		Ts     int64             `json:"ts"`

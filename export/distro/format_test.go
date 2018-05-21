@@ -25,7 +25,7 @@ func TestJson(t *testing.T) {
 		Device: devID1,
 	}
 
-	jf := jsonFormater{}
+	jf := jsonFormatter{}
 	out := jf.Format(&eventIn)
 	if out == nil {
 		t.Fatal("out should not be nil")
@@ -45,7 +45,7 @@ func TestXml(t *testing.T) {
 		Device: devID1,
 	}
 
-	xf := xmlFormater{}
+	xf := xmlFormatter{}
 	out := xf.Format(&eventIn)
 	if out == nil {
 		t.Fatal("out should not be nil")
@@ -65,7 +65,7 @@ func TestThingsBoardJson(t *testing.T) {
 		Device: devID1,
 	}
 
-	tbjf := thingsboardJSONFormater{}
+	tbjf := thingsboardJSONFormatter{}
 	out := tbjf.Format(&eventIn)
 	if out == nil {
 		t.Fatal("out should not be nil")

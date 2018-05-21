@@ -45,9 +45,9 @@ func (reg *registrationInfo) update(newReg export.Registration) bool {
 	reg.format = nil
 	switch newReg.Format {
 	case export.FormatJSON:
-		reg.format = jsonFormater{}
+		reg.format = jsonFormatter{}
 	case export.FormatXML:
-		reg.format = xmlFormater{}
+		reg.format = xmlFormatter{}
 	case export.FormatSerialized:
 		// TODO reg.format = distro.NewSerializedFormat()
 	case export.FormatIoTCoreJSON:
@@ -57,7 +57,7 @@ func (reg *registrationInfo) update(newReg export.Registration) bool {
 	case export.FormatCSV:
 		// TODO reg.format = distro.NewCsvFormat()
 	case export.FormatThingsBoardJSON:
-		reg.format = thingsboardJSONFormater{}
+		reg.format = thingsboardJSONFormatter{}
 	default:
 		logger.Warn("Format not supported: ", zap.String("format", newReg.Format))
 		return false
