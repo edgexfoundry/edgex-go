@@ -15,14 +15,16 @@ package commandclients
 
 import (
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strings"
 
 	"github.com/edgexfoundry/edgex-go/core/clients/metadataclients"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
+	"github.com/edgexfoundry/edgex-go/support/logging-client"
 )
+
+var loggingClient = logger.NewClient(COMMAND, false, "")
 
 // CommandClient : client to interact with core command
 type CommandClient interface {
@@ -66,13 +68,13 @@ func (cc *CommandRestClient) DeviceByName(n string) (models.Device, error) {
 func (cc *CommandRestClient) Get(id string, cID string) (string, error) {
 	req, err := http.NewRequest(http.MethodGet, cc.url+"/"+id+"/"+COMMAND+"/"+cID, nil)
 	if err != nil {
-		fmt.Println(err.Error())
+		loggingClient.Error(err.Error())
 		return "", err
 	}
 
 	resp, err := doReq(req)
 	if err != nil {
-		fmt.Println(err.Error())
+		loggingClient.Error(err.Error())
 		return "", err
 	}
 	defer resp.Body.Close()
@@ -80,7 +82,7 @@ func (cc *CommandRestClient) Get(id string, cID string) (string, error) {
 	json, err := getBody(resp)
 	if resp.StatusCode != http.StatusOK {
 		if err != nil {
-			fmt.Println(err.Error())
+			loggingClient.Error(err.Error())
 			return "", err
 		}
 		return "", errors.New(string(json))
@@ -92,27 +94,27 @@ func (cc *CommandRestClient) Get(id string, cID string) (string, error) {
 func (cc *CommandRestClient) Put(id string, cID string, body string) (string, error) {
 	req, err := http.NewRequest(http.MethodPut, cc.url+"/"+id+"/"+COMMAND+"/"+cID, strings.NewReader(body))
 	if err != nil {
-		fmt.Println(err.Error())
+		loggingClient.Error(err.Error())
 		return "", err
 	}
 
 	resp, err := doReq(req)
 	if err != nil {
-		fmt.Println(err.Error())
+		loggingClient.Error(err.Error())
 		return "", err
 	}
 	if resp == nil {
-		fmt.Println(ErrResponseNil)
+		loggingClient.Error(ErrResponseNil.Error())
 		return "", ErrResponseNil
 	}
 	defer resp.Body.Close()
 
 	json, err := getBody(resp)
 	if err != nil {
-		fmt.Println(err.Error())
+		loggingClient.Error(err.Error())
 		return "", err
 	} else if resp.StatusCode != http.StatusOK {
-		fmt.Println(errors.New(string(json)))
+		loggingClient.Error(string(json))
 		return "", errors.New(string(json))
 	}
 
@@ -123,7 +125,7 @@ func doReq(req *http.Request) (*http.Response, error) {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Println(err)
+		loggingClient.Error(err.Error())
 	}
 	return resp, err
 }
@@ -131,7 +133,7 @@ func doReq(req *http.Request) (*http.Response, error) {
 func getBody(resp *http.Response) ([]byte, error) {
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		fmt.Println(err)
+		loggingClient.Error(err.Error())
 		return []byte{}, err
 	}
 
