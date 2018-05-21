@@ -1,11 +1,9 @@
-ApplicationName = 'core-command'
 ConsulProfilesActive = 'go'
 ReadLimit = 100
 HeartBeatTime = 300000
 ConsulPort = 8500
 ServiceTimeout = 5000
 CheckInterval = '10s'
-ServiceName = 'core-command'
 ServiceAddress = 'localhost'
 ServicePort = 48082
 DeviceServiceProtocol = 'http'
