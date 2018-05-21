@@ -31,7 +31,7 @@ func ConnectToConsul(conf ConfigurationStruct) error {
 
 	// Initialize service on Consul
 	err := consulclient.ConsulInit(consulclient.ConsulConfig{
-		ServiceName:    conf.ServiceName,
+		ServiceName:    internal.CoreCommandServiceKey,
 		ServicePort:    conf.ServicePort,
 		ServiceAddress: conf.ServiceAddress,
 		CheckAddress:   conf.ConsulCheckAddress,
@@ -44,7 +44,7 @@ func ConnectToConsul(conf ConfigurationStruct) error {
 		return fmt.Errorf("connection to Consul could not be made: %v", err.Error())
 	} else {
 		// Update configuration data from Consul
-		if err := consulclient.CheckKeyValuePairs(&conf, conf.ApplicationName, strings.Split(conf.ConsulProfilesActive, ";")); err != nil {
+		if err := consulclient.CheckKeyValuePairs(&conf, internal.CoreCommandServiceKey, strings.Split(conf.ConsulProfilesActive, ";")); err != nil {
 			return fmt.Errorf("error getting key/values from Consul: %v", err.Error())
 		}
 	}
@@ -58,7 +58,7 @@ func Init(conf ConfigurationStruct, l logger.LoggingClient, useConsul bool) {
 
 	// Create metadata clients
 	params := types.EndpointParams{
-		ServiceKey:internal.MetaDataServiceKey,
+		ServiceKey:internal.CoreMetaDataServiceKey,
 		Path:conf.MetaDevicePath,
 		UseRegistry:useConsul,
 		Url:conf.MetaDeviceURL}

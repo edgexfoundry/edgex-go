@@ -1,4 +1,3 @@
-ApplicationName = 'edgex-core-metadata'
 DBType = 'mongodb'
 MongoDatabaseName = 'metadata'
 MongoDBUserName = 'meta'
@@ -8,7 +7,6 @@ MongoDBPort = 27017
 MongoDBConnectTimeout = 5000
 ReadMaxLimit = 100
 Protocol = 'http'
-ServiceName = 'edgex-core-metadata'
 ServiceAddress = 'edgex-core-metadata'
 ServicePort = 48081
 ServiceTimeout = 5000

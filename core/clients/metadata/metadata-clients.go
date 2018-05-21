@@ -21,20 +21,16 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"os"
 	"strconv"
 
 	"github.com/edgexfoundry/edgex-go/core/clients"
 	"github.com/edgexfoundry/edgex-go/core/clients/types"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
-	"github.com/edgexfoundry/edgex-go/support/logging-client"
 )
 
 var (
 	ErrResponseNil error = errors.New("Problem connecting to metadata - reponse was nil")
 	ErrNotFound    error = errors.New("Item not found")
-	MetaData             = "metadata"
-	loggingClient        = logger.NewClient(MetaData, false, "")
 )
 
 /*
@@ -148,7 +144,6 @@ func(d *DeviceRestClient) init(params types.EndpointParams) {
 			for true {
 				select {
 				case url := <- ch:
-					fmt.Fprintln(os.Stdout,"endpoint loaded: " + url)
 					d.url = url
 				}
 			}
@@ -187,21 +182,14 @@ func NewDeviceProfileClient(metaDbDeviceProfileUrl string) DeviceProfileClient {
 func makeRequest(req *http.Request) (*http.Response, error) {
 	client := &http.Client{}
 	resp, err := client.Do(req)
-	if err != nil {
-		loggingClient.Error(err.Error())
-	}
 	return resp, err
 }
 
 // Helper method to get the body from the response after making the request
 func getBody(resp *http.Response) ([]byte, error) {
 	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		loggingClient.Error(err.Error())
-		return []byte{}, err
-	}
 
-	return body, nil
+	return body, err
 }
 
 // ***************** ADDRESSABLE CLIENT METHODS ***********************
@@ -212,18 +200,15 @@ func (a *AddressableRestClient) Add(addr *models.Addressable) (string, error) {
 	// Marshal the addressable to JSON
 	jsonStr, err := json.Marshal(addr)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return "", err
 	}
 
 	client := &http.Client{}
 	resp, err := client.Post(a.url, "application/json", bytes.NewReader(jsonStr))
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return "", err
 	}
 	if resp == nil {
-		loggingClient.Error(ErrResponseNil.Error())
 		return "", ErrResponseNil
 	}
 	defer resp.Body.Close()
@@ -231,7 +216,6 @@ func (a *AddressableRestClient) Add(addr *models.Addressable) (string, error) {
 	// Get the response body
 	bodyBytes, err := getBody(resp)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return "", err
 	}
 	bodyString := string(bodyBytes)
@@ -250,7 +234,7 @@ func (d *AddressableRestClient) decodeAddressable(resp *http.Response) (models.A
 
 	err := dec.Decode(&addr)
 	if err != nil {
-		loggingClient.Error(err.Error())
+		return models.Addressable{}, err
 	}
 
 	return addr, err
@@ -263,7 +247,6 @@ func (d *AddressableRestClient) decodeAddressable(resp *http.Response) (models.A
 func (a *AddressableRestClient) AddressableForName(name string) (models.Addressable, error) {
 	req, err := http.NewRequest(http.MethodGet, a.url+"/name/"+url.QueryEscape(name), nil)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return models.Addressable{}, err
 	}
 
@@ -271,7 +254,6 @@ func (a *AddressableRestClient) AddressableForName(name string) (models.Addressa
 
 	// Check response
 	if resp == nil {
-		loggingClient.Error(ErrResponseNil.Error())
 		return models.Addressable{}, ErrResponseNil
 	}
 	defer resp.Body.Close()
@@ -284,12 +266,10 @@ func (a *AddressableRestClient) AddressableForName(name string) (models.Addressa
 		// Get the response body
 		bodyBytes, err := getBody(resp)
 		if err != nil {
-			loggingClient.Error(err.Error())
 			return models.Addressable{}, err
 		}
 		bodyString := string(bodyBytes)
 
-		loggingClient.Debug(bodyString)
 		return models.Addressable{}, errors.New(bodyString)
 	}
 
@@ -304,7 +284,7 @@ func (d *DeviceRestClient) decodeDeviceSlice(resp *http.Response) ([]models.Devi
 
 	err := dec.Decode(&dSlice)
 	if err != nil {
-		loggingClient.Error(err.Error())
+		return []models.Device{}, err
 	}
 
 	return dSlice, err
@@ -317,7 +297,7 @@ func (d *DeviceRestClient) decodeDevice(resp *http.Response) (models.Device, err
 
 	err := dec.Decode(&dev)
 	if err != nil {
-		loggingClient.Error(err.Error())
+		return models.Device{}, err
 	}
 
 	return dev, err
@@ -367,18 +347,15 @@ func (d *DeviceRestClient) CheckForDevice(token string) (models.Device, error) {
 func (d *DeviceRestClient) Device(id string) (models.Device, error) {
 	req, err := http.NewRequest(http.MethodGet, d.url+"/"+id, nil)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return models.Device{}, err
 	}
 
 	// Make the request and get response
 	resp, err := makeRequest(req)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return models.Device{}, err
 	}
 	if resp == nil {
-		loggingClient.Error(ErrResponseNil.Error())
 		return models.Device{}, ErrResponseNil
 	}
 	defer resp.Body.Close()
@@ -387,7 +364,6 @@ func (d *DeviceRestClient) Device(id string) (models.Device, error) {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
 		if err != nil {
-			loggingClient.Error(err.Error())
 			return models.Device{}, err
 		}
 		bodyString := string(bodyBytes)
@@ -402,18 +378,15 @@ func (d *DeviceRestClient) Device(id string) (models.Device, error) {
 func (d *DeviceRestClient) Devices() ([]models.Device, error) {
 	req, err := http.NewRequest(http.MethodGet, d.url, nil)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return []models.Device{}, err
 	}
 
 	// Make the request and get response
 	resp, err := makeRequest(req)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return []models.Device{}, err
 	}
 	if resp == nil {
-		loggingClient.Error(ErrResponseNil.Error())
 		return []models.Device{}, ErrResponseNil
 	}
 	defer resp.Body.Close()
@@ -422,7 +395,6 @@ func (d *DeviceRestClient) Devices() ([]models.Device, error) {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
 		if err != nil {
-			loggingClient.Error(err.Error())
 			return []models.Device{}, err
 		}
 		bodyString := string(bodyBytes)
@@ -436,18 +408,15 @@ func (d *DeviceRestClient) Devices() ([]models.Device, error) {
 func (d *DeviceRestClient) DeviceForName(name string) (models.Device, error) {
 	req, err := http.NewRequest(http.MethodGet, d.url+"/name/"+url.QueryEscape(name), nil)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return models.Device{}, err
 	}
 
 	// Make the request and get response
 	resp, err := makeRequest(req)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return models.Device{}, err
 	}
 	if resp == nil {
-		loggingClient.Error(ErrResponseNil.Error())
 		return models.Device{}, ErrResponseNil
 	}
 	defer resp.Body.Close()
@@ -456,7 +425,6 @@ func (d *DeviceRestClient) DeviceForName(name string) (models.Device, error) {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
 		if err != nil {
-			loggingClient.Error(err.Error())
 			return models.Device{}, err
 		}
 		bodyString := string(bodyBytes)
@@ -470,18 +438,15 @@ func (d *DeviceRestClient) DeviceForName(name string) (models.Device, error) {
 func (d *DeviceRestClient) DevicesByLabel(label string) ([]models.Device, error) {
 	req, err := http.NewRequest(http.MethodGet, d.url+"/label/"+url.QueryEscape(label), nil)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return []models.Device{}, err
 	}
 
 	// Make the request and get response
 	resp, err := makeRequest(req)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return []models.Device{}, err
 	}
 	if resp == nil {
-		loggingClient.Error(ErrResponseNil.Error())
 		return []models.Device{}, ErrResponseNil
 	}
 	defer resp.Body.Close()
@@ -490,7 +455,6 @@ func (d *DeviceRestClient) DevicesByLabel(label string) ([]models.Device, error)
 		// Get the response body
 		bodyBytes, err := getBody(resp)
 		if err != nil {
-			loggingClient.Error(err.Error())
 			return []models.Device{}, err
 		}
 		bodyString := string(bodyBytes)
@@ -504,18 +468,15 @@ func (d *DeviceRestClient) DevicesByLabel(label string) ([]models.Device, error)
 func (d *DeviceRestClient) DevicesForService(serviceId string) ([]models.Device, error) {
 	req, err := http.NewRequest(http.MethodGet, d.url+"/service/"+serviceId, nil)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return []models.Device{}, err
 	}
 
 	// Make the request and get response
 	resp, err := makeRequest(req)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return []models.Device{}, err
 	}
 	if resp == nil {
-		loggingClient.Error(ErrResponseNil.Error())
 		return []models.Device{}, ErrResponseNil
 	}
 	defer resp.Body.Close()
@@ -524,7 +485,6 @@ func (d *DeviceRestClient) DevicesForService(serviceId string) ([]models.Device,
 		// Get the response body
 		bodyBytes, err := getBody(resp)
 		if err != nil {
-			loggingClient.Error(err.Error())
 			return []models.Device{}, err
 		}
 		bodyString := string(bodyBytes)
@@ -538,18 +498,15 @@ func (d *DeviceRestClient) DevicesForService(serviceId string) ([]models.Device,
 func (d *DeviceRestClient) DevicesForServiceByName(serviceName string) ([]models.Device, error) {
 	req, err := http.NewRequest(http.MethodGet, d.url+"/servicename/"+url.QueryEscape(serviceName), nil)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return []models.Device{}, err
 	}
 
 	// Make the request and get response
 	resp, err := makeRequest(req)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return []models.Device{}, err
 	}
 	if resp == nil {
-		loggingClient.Error(ErrResponseNil.Error())
 		return []models.Device{}, ErrResponseNil
 	}
 	defer resp.Body.Close()
@@ -558,7 +515,6 @@ func (d *DeviceRestClient) DevicesForServiceByName(serviceName string) ([]models
 		// Get the response body
 		bodyBytes, err := getBody(resp)
 		if err != nil {
-			loggingClient.Error(err.Error())
 			return []models.Device{}, err
 		}
 		bodyString := string(bodyBytes)
@@ -572,18 +528,15 @@ func (d *DeviceRestClient) DevicesForServiceByName(serviceName string) ([]models
 func (d *DeviceRestClient) DevicesForProfile(profileId string) ([]models.Device, error) {
 	req, err := http.NewRequest(http.MethodGet, d.url+"/profile/"+profileId, nil)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return []models.Device{}, err
 	}
 
 	// Make the request and get response
 	resp, err := makeRequest(req)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return []models.Device{}, err
 	}
 	if resp == nil {
-		loggingClient.Error(ErrResponseNil.Error())
 		return []models.Device{}, ErrResponseNil
 	}
 	defer resp.Body.Close()
@@ -592,7 +545,6 @@ func (d *DeviceRestClient) DevicesForProfile(profileId string) ([]models.Device,
 		// Get the response body
 		bodyBytes, err := getBody(resp)
 		if err != nil {
-			loggingClient.Error(err.Error())
 			return []models.Device{}, err
 		}
 		bodyString := string(bodyBytes)
@@ -606,18 +558,15 @@ func (d *DeviceRestClient) DevicesForProfile(profileId string) ([]models.Device,
 func (d *DeviceRestClient) DevicesForProfileByName(profileName string) ([]models.Device, error) {
 	req, err := http.NewRequest(http.MethodGet, d.url+"/profilename/"+url.QueryEscape(profileName), nil)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return []models.Device{}, err
 	}
 
 	// Make the request and get response
 	resp, err := makeRequest(req)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return []models.Device{}, err
 	}
 	if resp == nil {
-		loggingClient.Error(ErrResponseNil.Error())
 		return []models.Device{}, ErrResponseNil
 	}
 	defer resp.Body.Close()
@@ -626,7 +575,6 @@ func (d *DeviceRestClient) DevicesForProfileByName(profileName string) ([]models
 		// Get the response body
 		bodyBytes, err := getBody(resp)
 		if err != nil {
-			loggingClient.Error(err.Error())
 			return []models.Device{}, err
 		}
 		bodyString := string(bodyBytes)
@@ -640,18 +588,15 @@ func (d *DeviceRestClient) DevicesForProfileByName(profileName string) ([]models
 func (d *DeviceRestClient) DevicesForAddressable(addressableId string) ([]models.Device, error) {
 	req, err := http.NewRequest(http.MethodGet, d.url+"/addressable/"+addressableId, nil)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return []models.Device{}, err
 	}
 
 	// Make the request and get response
 	resp, err := makeRequest(req)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return []models.Device{}, err
 	}
 	if resp == nil {
-		loggingClient.Error(ErrResponseNil.Error())
 		return []models.Device{}, ErrResponseNil
 	}
 	defer resp.Body.Close()
@@ -660,7 +605,6 @@ func (d *DeviceRestClient) DevicesForAddressable(addressableId string) ([]models
 		// Get the response body
 		bodyBytes, err := getBody(resp)
 		if err != nil {
-			loggingClient.Error(err.Error())
 			return []models.Device{}, err
 		}
 		bodyString := string(bodyBytes)
@@ -675,18 +619,15 @@ func (d *DeviceRestClient) DevicesForAddressable(addressableId string) ([]models
 func (d *DeviceRestClient) DevicesForAddressableByName(addressableName string) ([]models.Device, error) {
 	req, err := http.NewRequest(http.MethodGet, d.url+"/addressablename/"+url.QueryEscape(addressableName), nil)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return []models.Device{}, err
 	}
 
 	// Make the request and get response
 	resp, err := makeRequest(req)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return []models.Device{}, err
 	}
 	if resp == nil {
-		loggingClient.Error(ErrResponseNil.Error())
 		return []models.Device{}, ErrResponseNil
 	}
 	defer resp.Body.Close()
@@ -695,7 +636,6 @@ func (d *DeviceRestClient) DevicesForAddressableByName(addressableName string) (
 		// Get the response body
 		bodyBytes, err := getBody(resp)
 		if err != nil {
-			loggingClient.Error(err.Error())
 			return []models.Device{}, err
 		}
 		bodyString := string(bodyBytes)
@@ -710,23 +650,19 @@ func (d *DeviceRestClient) DevicesForAddressableByName(addressableName string) (
 func (d *DeviceRestClient) Add(dev *models.Device) (string, error) {
 	jsonStr, err := json.Marshal(dev)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return "", err
 	}
 
 	req, err := http.NewRequest(http.MethodPost, d.url, bytes.NewReader(jsonStr))
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return "", err
 	}
 
 	resp, err := makeRequest(req)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return "", err
 	}
 	if resp == nil {
-		loggingClient.Error(ErrResponseNil.Error())
 		return "", ErrResponseNil
 	}
 	defer resp.Body.Close()
@@ -734,13 +670,11 @@ func (d *DeviceRestClient) Add(dev *models.Device) (string, error) {
 	// Get the body
 	bodyBytes, err := getBody(resp)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return "", err
 	}
 	bodyString := string(bodyBytes)
 
 	if resp.StatusCode != 200 {
-		loggingClient.Debug(bodyString)
 		return "", errors.New(bodyString)
 	}
 
@@ -751,23 +685,19 @@ func (d *DeviceRestClient) Add(dev *models.Device) (string, error) {
 func (d *DeviceRestClient) Update(dev models.Device) error {
 	jsonStr, err := json.Marshal(&dev)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return err
 	}
 
 	req, err := http.NewRequest(http.MethodPut, d.url, bytes.NewReader(jsonStr))
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return err
 	}
 
 	resp, err := makeRequest(req)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return err
 	}
 	if resp == nil {
-		loggingClient.Error(ErrResponseNil.Error())
 		return ErrResponseNil
 	}
 	defer resp.Body.Close()
@@ -776,7 +706,6 @@ func (d *DeviceRestClient) Update(dev models.Device) error {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
 		if err != nil {
-			loggingClient.Error(err.Error())
 			return err
 		}
 		bodyString := string(bodyBytes)
@@ -791,17 +720,14 @@ func (d *DeviceRestClient) Update(dev models.Device) error {
 func (d *DeviceRestClient) UpdateLastConnected(id string, time int64) error {
 	req, err := http.NewRequest(http.MethodPut, d.url+"/"+id+"/lastconnected/"+strconv.FormatInt(time, 10), nil)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return err
 	}
 
 	resp, err := makeRequest(req)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return err
 	}
 	if resp == nil {
-		loggingClient.Error(ErrResponseNil.Error())
 		return ErrResponseNil
 	}
 	defer resp.Body.Close()
@@ -810,7 +736,6 @@ func (d *DeviceRestClient) UpdateLastConnected(id string, time int64) error {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
 		if err != nil {
-			loggingClient.Error(err.Error())
 			return err
 		}
 		bodyString := string(bodyBytes)
@@ -825,17 +750,14 @@ func (d *DeviceRestClient) UpdateLastConnected(id string, time int64) error {
 func (d *DeviceRestClient) UpdateLastConnectedByName(name string, time int64) error {
 	req, err := http.NewRequest(http.MethodPut, d.url+"/name/"+url.QueryEscape(name)+"/lastconnected/"+strconv.FormatInt(time, 10), nil)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return err
 	}
 
 	resp, err := makeRequest(req)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return err
 	}
 	if resp == nil {
-		loggingClient.Error(ErrResponseNil.Error())
 		return ErrResponseNil
 	}
 	defer resp.Body.Close()
@@ -844,7 +766,6 @@ func (d *DeviceRestClient) UpdateLastConnectedByName(name string, time int64) er
 		// Get the response body
 		bodyBytes, err := getBody(resp)
 		if err != nil {
-			loggingClient.Error(err.Error())
 			return err
 		}
 		bodyString := string(bodyBytes)
@@ -859,17 +780,14 @@ func (d *DeviceRestClient) UpdateLastConnectedByName(name string, time int64) er
 func (d *DeviceRestClient) UpdateLastReported(id string, time int64) error {
 	req, err := http.NewRequest(http.MethodPut, d.url+"/"+id+"/lastreported/"+strconv.FormatInt(time, 10), nil)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return err
 	}
 
 	resp, err := makeRequest(req)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return err
 	}
 	if resp == nil {
-		loggingClient.Error(ErrResponseNil.Error())
 		return ErrResponseNil
 	}
 	defer resp.Body.Close()
@@ -878,7 +796,6 @@ func (d *DeviceRestClient) UpdateLastReported(id string, time int64) error {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
 		if err != nil {
-			loggingClient.Error(err.Error())
 			return err
 		}
 		bodyString := string(bodyBytes)
@@ -893,17 +810,14 @@ func (d *DeviceRestClient) UpdateLastReported(id string, time int64) error {
 func (d *DeviceRestClient) UpdateLastReportedByName(name string, time int64) error {
 	req, err := http.NewRequest(http.MethodPut, d.url+"/name/"+url.QueryEscape(name)+"/lastreported/"+strconv.FormatInt(time, 10), nil)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return err
 	}
 
 	resp, err := makeRequest(req)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return err
 	}
 	if resp == nil {
-		loggingClient.Error(ErrResponseNil.Error())
 		return ErrResponseNil
 	}
 	defer resp.Body.Close()
@@ -912,7 +826,6 @@ func (d *DeviceRestClient) UpdateLastReportedByName(name string, time int64) err
 		// Get the response body
 		bodyBytes, err := getBody(resp)
 		if err != nil {
-			loggingClient.Error(err.Error())
 			return err
 		}
 		bodyString := string(bodyBytes)
@@ -927,17 +840,14 @@ func (d *DeviceRestClient) UpdateLastReportedByName(name string, time int64) err
 func (d *DeviceRestClient) UpdateOpState(id string, opState string) error {
 	req, err := http.NewRequest(http.MethodPut, d.url+"/"+id+"/opstate/"+opState, nil)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return err
 	}
 
 	resp, err := makeRequest(req)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return err
 	}
 	if resp == nil {
-		loggingClient.Error(ErrResponseNil.Error())
 		return ErrResponseNil
 	}
 	defer resp.Body.Close()
@@ -946,7 +856,6 @@ func (d *DeviceRestClient) UpdateOpState(id string, opState string) error {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
 		if err != nil {
-			loggingClient.Error(err.Error())
 			return err
 		}
 		bodyString := string(bodyBytes)
@@ -961,17 +870,14 @@ func (d *DeviceRestClient) UpdateOpState(id string, opState string) error {
 func (d *DeviceRestClient) UpdateOpStateByName(name string, opState string) error {
 	req, err := http.NewRequest(http.MethodPut, d.url+"/name/"+url.QueryEscape(name)+"/opstate/"+opState, nil)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return err
 	}
 
 	resp, err := makeRequest(req)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return err
 	}
 	if resp == nil {
-		loggingClient.Error(ErrResponseNil.Error())
 		return ErrResponseNil
 	}
 	defer resp.Body.Close()
@@ -980,7 +886,6 @@ func (d *DeviceRestClient) UpdateOpStateByName(name string, opState string) erro
 		// Get the response body
 		bodyBytes, err := getBody(resp)
 		if err != nil {
-			loggingClient.Error(err.Error())
 			return err
 		}
 		bodyString := string(bodyBytes)
@@ -995,17 +900,14 @@ func (d *DeviceRestClient) UpdateOpStateByName(name string, opState string) erro
 func (d *DeviceRestClient) UpdateAdminState(id string, adminState string) error {
 	req, err := http.NewRequest(http.MethodPut, d.url+"/"+id+"/adminstate/"+adminState, nil)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return err
 	}
 
 	resp, err := makeRequest(req)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return err
 	}
 	if resp == nil {
-		loggingClient.Error(ErrResponseNil.Error())
 		return ErrResponseNil
 	}
 
@@ -1015,7 +917,6 @@ func (d *DeviceRestClient) UpdateAdminState(id string, adminState string) error 
 		// Get the response body
 		bodyBytes, err := getBody(resp)
 		if err != nil {
-			loggingClient.Error(err.Error())
 			return err
 		}
 		bodyString := string(bodyBytes)
@@ -1030,17 +931,14 @@ func (d *DeviceRestClient) UpdateAdminState(id string, adminState string) error 
 func (d *DeviceRestClient) UpdateAdminStateByName(name string, adminState string) error {
 	req, err := http.NewRequest(http.MethodPut, d.url+"/name/"+url.QueryEscape(name)+"/adminstate/"+adminState, nil)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return err
 	}
 
 	resp, err := makeRequest(req)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return err
 	}
 	if resp == nil {
-		loggingClient.Error(ErrResponseNil.Error())
 		return ErrResponseNil
 	}
 	defer resp.Body.Close()
@@ -1049,7 +947,6 @@ func (d *DeviceRestClient) UpdateAdminStateByName(name string, adminState string
 		// Get the response body
 		bodyBytes, err := getBody(resp)
 		if err != nil {
-			loggingClient.Error(err.Error())
 			return err
 		}
 		bodyString := string(bodyBytes)
@@ -1064,17 +961,14 @@ func (d *DeviceRestClient) UpdateAdminStateByName(name string, adminState string
 func (d *DeviceRestClient) Delete(id string) error {
 	req, err := http.NewRequest(http.MethodDelete, d.url+"/id/"+id, nil)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return err
 	}
 
 	resp, err := makeRequest(req)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return err
 	}
 	if resp == nil {
-		loggingClient.Error(ErrResponseNil.Error())
 		return ErrResponseNil
 	}
 	defer resp.Body.Close()
@@ -1083,7 +977,6 @@ func (d *DeviceRestClient) Delete(id string) error {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
 		if err != nil {
-			loggingClient.Error(err.Error())
 			return err
 		}
 		bodyString := string(bodyBytes)
@@ -1098,17 +991,14 @@ func (d *DeviceRestClient) Delete(id string) error {
 func (d *DeviceRestClient) DeleteByName(name string) error {
 	req, err := http.NewRequest(http.MethodDelete, d.url+"/name/"+url.QueryEscape(name), nil)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return err
 	}
 
 	resp, err := makeRequest(req)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return err
 	}
 	if resp == nil {
-		loggingClient.Error(ErrResponseNil.Error())
 		return ErrResponseNil
 	}
 	defer resp.Body.Close()
@@ -1117,7 +1007,6 @@ func (d *DeviceRestClient) DeleteByName(name string) error {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
 		if err != nil {
-			loggingClient.Error(err.Error())
 			return err
 		}
 		bodyString := string(bodyBytes)
@@ -1136,7 +1025,7 @@ func (c *CommandRestClient) decodeCommand(resp *http.Response) (models.Command, 
 	com := models.Command{}
 	err := dec.Decode(&com)
 	if err != nil {
-		loggingClient.Error(err.Error())
+		return models.Command{}, err
 	}
 
 	return com, err
@@ -1148,7 +1037,7 @@ func (c *CommandRestClient) decodeCommandSlice(resp *http.Response) ([]models.Co
 	comSlice := []models.Command{}
 	err := dec.Decode(&comSlice)
 	if err != nil {
-		loggingClient.Error(err.Error())
+		return []models.Command{}, err
 	}
 
 	return comSlice, err
@@ -1158,17 +1047,14 @@ func (c *CommandRestClient) decodeCommandSlice(resp *http.Response) ([]models.Co
 func (c *CommandRestClient) Command(id string) (models.Command, error) {
 	req, err := http.NewRequest(http.MethodGet, c.url+"/"+id, nil)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return models.Command{}, err
 	}
 
 	resp, err := makeRequest(req)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return models.Command{}, err
 	}
 	if resp == nil {
-		loggingClient.Error(ErrResponseNil.Error())
 		return models.Command{}, ErrResponseNil
 	}
 	defer resp.Body.Close()
@@ -1177,7 +1063,6 @@ func (c *CommandRestClient) Command(id string) (models.Command, error) {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
 		if err != nil {
-			loggingClient.Error(err.Error())
 			return models.Command{}, err
 		}
 		bodyString := string(bodyBytes)
@@ -1192,17 +1077,14 @@ func (c *CommandRestClient) Command(id string) (models.Command, error) {
 func (c *CommandRestClient) Commands() ([]models.Command, error) {
 	req, err := http.NewRequest(http.MethodGet, c.url, nil)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return []models.Command{}, err
 	}
 
 	resp, err := makeRequest(req)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return []models.Command{}, err
 	}
 	if resp == nil {
-		loggingClient.Error(ErrResponseNil.Error())
 		return []models.Command{}, ErrResponseNil
 	}
 
@@ -1210,7 +1092,6 @@ func (c *CommandRestClient) Commands() ([]models.Command, error) {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
 		if err != nil {
-			loggingClient.Error(err.Error())
 			return []models.Command{}, err
 		}
 		bodyString := string(bodyBytes)
@@ -1225,17 +1106,14 @@ func (c *CommandRestClient) Commands() ([]models.Command, error) {
 func (c *CommandRestClient) CommandsForName(name string) ([]models.Command, error) {
 	req, err := http.NewRequest(http.MethodGet, c.url+"/name/"+name, nil)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return []models.Command{}, err
 	}
 
 	resp, err := makeRequest(req)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return []models.Command{}, err
 	}
 	if resp == nil {
-		loggingClient.Error(ErrResponseNil.Error())
 		return []models.Command{}, ErrResponseNil
 	}
 	defer resp.Body.Close()
@@ -1244,7 +1122,6 @@ func (c *CommandRestClient) CommandsForName(name string) ([]models.Command, erro
 		// Get the response body
 		bodyBytes, err := getBody(resp)
 		if err != nil {
-			loggingClient.Error(err.Error())
 			return []models.Command{}, err
 		}
 		bodyString := string(bodyBytes)
@@ -1259,23 +1136,19 @@ func (c *CommandRestClient) CommandsForName(name string) ([]models.Command, erro
 func (c *CommandRestClient) Add(com *models.Command) (string, error) {
 	jsonStr, err := json.Marshal(com)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return "", err
 	}
 
 	req, err := http.NewRequest(http.MethodPost, c.url, bytes.NewReader(jsonStr))
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return "", err
 	}
 
 	resp, err := makeRequest(req)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return "", err
 	}
 	if resp == nil {
-		loggingClient.Error(ErrResponseNil.Error())
 		return "", ErrResponseNil
 	}
 	defer resp.Body.Close()
@@ -1283,7 +1156,6 @@ func (c *CommandRestClient) Add(com *models.Command) (string, error) {
 	// Get the response body
 	bodyBytes, err := getBody(resp)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return "", err
 	}
 	bodyString := string(bodyBytes)
@@ -1299,23 +1171,19 @@ func (c *CommandRestClient) Add(com *models.Command) (string, error) {
 func (c *CommandRestClient) Update(com models.Command) error {
 	jsonStr, err := json.Marshal(&com)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return err
 	}
 
 	req, err := http.NewRequest(http.MethodPut, c.url, bytes.NewReader(jsonStr))
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return err
 	}
 
 	resp, err := makeRequest(req)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return err
 	}
 	if resp == nil {
-		loggingClient.Error(ErrResponseNil.Error())
 		return ErrResponseNil
 	}
 	defer resp.Body.Close()
@@ -1324,7 +1192,6 @@ func (c *CommandRestClient) Update(com models.Command) error {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
 		if err != nil {
-			loggingClient.Error(err.Error())
 			return err
 		}
 		bodyString := string(bodyBytes)
@@ -1339,17 +1206,14 @@ func (c *CommandRestClient) Update(com models.Command) error {
 func (c *CommandRestClient) Delete(id string) error {
 	req, err := http.NewRequest(http.MethodDelete, c.url+"/id/"+id, nil)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return err
 	}
 
 	resp, err := makeRequest(req)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return err
 	}
 	if resp == nil {
-		loggingClient.Error(ErrResponseNil.Error())
 		return ErrResponseNil
 	}
 	defer resp.Body.Close()
@@ -1358,7 +1222,6 @@ func (c *CommandRestClient) Delete(id string) error {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
 		if err != nil {
-			loggingClient.Error(err.Error())
 			return err
 		}
 		bodyString := string(bodyBytes)
@@ -1376,7 +1239,7 @@ func (s *ServiceRestClient) decodeDeviceService(resp *http.Response) (models.Dev
 	ds := models.DeviceService{}
 	err := dec.Decode(&ds)
 	if err != nil {
-		loggingClient.Error(err.Error())
+		return models.DeviceService{}, err
 	}
 
 	return ds, err
@@ -1386,17 +1249,14 @@ func (s *ServiceRestClient) decodeDeviceService(resp *http.Response) (models.Dev
 func (s *ServiceRestClient) UpdateLastConnected(id string, time int64) error {
 	req, err := http.NewRequest(http.MethodPut, s.url+"/"+id+"/lastconnected/"+strconv.FormatInt(time, 10), nil)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return err
 	}
 
 	resp, err := makeRequest(req)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return err
 	}
 	if resp == nil {
-		loggingClient.Error(ErrResponseNil.Error())
 		return ErrResponseNil
 	}
 	defer resp.Body.Close()
@@ -1405,7 +1265,6 @@ func (s *ServiceRestClient) UpdateLastConnected(id string, time int64) error {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
 		if err != nil {
-			loggingClient.Error(err.Error())
 			return err
 		}
 		bodyString := string(bodyBytes)
@@ -1420,17 +1279,14 @@ func (s *ServiceRestClient) UpdateLastConnected(id string, time int64) error {
 func (s *ServiceRestClient) UpdateLastReported(id string, time int64) error {
 	req, err := http.NewRequest(http.MethodPut, s.url+"/"+id+"/lastreported/"+strconv.FormatInt(time, 10), nil)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return err
 	}
 
 	resp, err := makeRequest(req)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return err
 	}
 	if resp == nil {
-		loggingClient.Error(ErrResponseNil.Error())
 		return ErrResponseNil
 	}
 	defer resp.Body.Close()
@@ -1439,7 +1295,6 @@ func (s *ServiceRestClient) UpdateLastReported(id string, time int64) error {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
 		if err != nil {
-			loggingClient.Error(err.Error())
 			return err
 		}
 		bodyString := string(bodyBytes)
@@ -1454,18 +1309,15 @@ func (s *ServiceRestClient) UpdateLastReported(id string, time int64) error {
 func (s *ServiceRestClient) Add(ds *models.DeviceService) (string, error) {
 	jsonStr, err := json.Marshal(ds)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return "", err
 	}
 
 	client := &http.Client{}
 	resp, err := client.Post(s.url, "application/json", bytes.NewReader(jsonStr))
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return "", err
 	}
 	if resp == nil {
-		loggingClient.Error(ErrResponseNil.Error())
 		return "", ErrResponseNil
 	}
 	defer resp.Body.Close()
@@ -1473,13 +1325,11 @@ func (s *ServiceRestClient) Add(ds *models.DeviceService) (string, error) {
 	// Get the response body
 	bodyBytes, err := getBody(resp)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return "", err
 	}
 	bodyString := string(bodyBytes)
 
 	if resp.StatusCode != 200 {
-		loggingClient.Debug(bodyString)
 		return "", errors.New(bodyString)
 	}
 
@@ -1496,7 +1346,6 @@ func (s *ServiceRestClient) DeviceServiceForName(name string) (models.DeviceServ
 
 	resp, err := makeRequest(req)
 	if resp == nil {
-		loggingClient.Error(ErrResponseNil.Error())
 		return models.DeviceService{}, ErrResponseNil
 	}
 	defer resp.Body.Close()
@@ -1509,7 +1358,6 @@ func (s *ServiceRestClient) DeviceServiceForName(name string) (models.DeviceServ
 		// Get the response body
 		bodyBytes, err := getBody(resp)
 		if err != nil {
-			loggingClient.Error(err.Error())
 			return models.DeviceService{}, err
 		}
 		bodyString := string(bodyBytes)
@@ -1526,18 +1374,15 @@ func (s *ServiceRestClient) DeviceServiceForName(name string) (models.DeviceServ
 func (dpc *DeviceProfileRestClient) Add(dp *models.DeviceProfile) (string, error) {
 	jsonStr, err := json.Marshal(dp)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return "", err
 	}
 
 	client := &http.Client{}
 	resp, err := client.Post(dpc.url, "application/json", bytes.NewReader(jsonStr))
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return "", err
 	}
 	if resp == nil {
-		loggingClient.Error(ErrResponseNil.Error())
 		return "", ErrResponseNil
 	}
 	defer resp.Body.Close()
@@ -1545,14 +1390,12 @@ func (dpc *DeviceProfileRestClient) Add(dp *models.DeviceProfile) (string, error
 	// Get the response
 	bodyBytes, err := getBody(resp)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return "", err
 	}
 	bodyString := string(bodyBytes)
 
 	// Check the response code
 	if resp.StatusCode != 200 {
-		loggingClient.Debug(bodyString)
 		return "", errors.New(bodyString)
 	}
 

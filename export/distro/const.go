@@ -7,7 +7,6 @@
 package distro
 
 type ConfigurationStruct struct {
-	ApplicationName      string
 	Hostname             string
 	Port                 int
 	DistroHost           string

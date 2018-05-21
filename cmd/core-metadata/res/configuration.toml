@@ -1,4 +1,3 @@
-ApplicationName = 'core-metadata'
 DBType = 'mongodb'
 MongoDatabaseName = 'metadata'
 MongoDBUserName = ''
@@ -8,7 +7,6 @@ MongoDBPort = 27017
 MongoDBConnectTimeout = 5000
 ReadMaxLimit = 100
 Protocol = 'http'
-ServiceName = 'core-metadata'
 ServiceAddress = 'localhost'
 ServicePort = 48081
 ServiceTimeout = 5000
