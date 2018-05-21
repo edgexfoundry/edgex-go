@@ -15,7 +15,6 @@ package command
 
 import (
 	"bytes"
-	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -28,7 +27,7 @@ func issueCommand(req *http.Request) (*http.Response, error) {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Println(err.Error())
+		loggingClient.Error(err.Error())
 	}
 	return resp, err
 }

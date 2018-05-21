@@ -91,7 +91,7 @@ func main() {
 
 	// Time it took to start service
 	loggingClient.Info("Service started in: "+time.Since(start).String(), "")
-	fmt.Println("Listening on port: " + strconv.Itoa(configuration.ServicePort))
+	loggingClient.Info("Listening on port: " + strconv.Itoa(configuration.ServicePort))
 	c := <-errs
 	metadata.Destruct()
 	loggingClient.Warn(fmt.Sprintf("terminating: %v", c))

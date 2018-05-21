@@ -62,7 +62,7 @@ func Init(conf ConfigurationStruct, l logger.LoggingClient) error {
 	//TODO: The above two are set due to global scope throughout the package. How can this be eliminated / refactored?
 
 	var err error
-	
+
 	// Create a database client
 	dbc, err = clients.NewDBClient(clients.DBConfiguration{
 		DbType:       clients.MONGO,
