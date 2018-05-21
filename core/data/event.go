@@ -15,6 +15,7 @@ package data
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -24,9 +25,27 @@ import (
 	"github.com/edgexfoundry/edgex-go/core/data/clients"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"github.com/gorilla/mux"
-	"fmt"
-
 )
+
+// Check metadata if the device exists
+func checkDevice(device string, w http.ResponseWriter) bool {
+	if configuration.MetaDataCheck {
+		_, err := mdc.CheckForDevice(device)
+		if err != nil {
+			loggingClient.Error(fmt.Sprintf("error checking device %s %v", device, err))
+			switch err := err.(type) {
+			case types.ErrNotFound:
+				http.Error(w, err.Error(), http.StatusNotFound)
+				return false
+			default: //return an error on everything else.
+				http.Error(w, err.Error(), http.StatusServiceUnavailable)
+				return false
+			}
+		}
+	}
+
+	return true
+}
 
 // Put event on the message queue to be processed by the rules engine
 func putEventOnQueue(e models.Event) {
@@ -185,38 +204,16 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 
 		loggingClient.Info("Posting Event: " + e.String())
 
-		// Get device from metadata
-		if configuration.MetaDataCheck {
-			_, err := mdc.CheckForDevice(e.Device)
-			if err != nil {
-				loggingClient.Error(fmt.Sprintf("error checking device %s %v", e.Device, err))
-				switch err := err.(type) {
-				case types.ErrNotFound:
-					http.Error(w, err.Error(), http.StatusNotFound)
-					return
-				default: //return an error on everything else.
-					http.Error(w, err.Error(), http.StatusServiceUnavailable)
-					return
-				}
-			}
+		// Check device
+		if checkDevice(e.Device, w) == false {
+			return
 		}
 
 		if configuration.ValidateCheck {
 			loggingClient.Debug("Validation enabled, parsing events")
 			for reading := range e.Readings {
-				valid, err := isValidValueDescriptor(e.Readings[reading], e)
-				if !valid {
-					loggingClient.Error("Validation failed: %s", err.Error())
-					return
-				}
-			}
-		}
-
-		// Add the readings to the database
-		if configuration.PersistData {
-			for i, reading := range e.Readings {
 				// Check value descriptor
-				_, err := dbc.ValueDescriptorByName(reading.Name)
+				vd, err := dbc.ValueDescriptorByName(e.Readings[reading].Name)
 				if err != nil {
 					if err == clients.ErrNotFound {
 						http.Error(w, "Value descriptor for a reading not found", http.StatusNotFound)
@@ -227,6 +224,18 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 
+				valid, err := isValidValueDescriptor(vd, e.Readings[reading])
+				if !valid {
+					http.Error(w, "Validation failed", http.StatusConflict)
+					loggingClient.Error("Validation failed")
+					return
+				}
+			}
+		}
+
+		// Add the readings to the database
+		if configuration.PersistData {
+			for i, reading := range e.Readings {
 				reading.Device = e.Device // Update the device for the reading
 
 				// Add the reading
@@ -287,19 +296,10 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 		loggingClient.Info("Updating event: " + from.ID.Hex())
 
 		// Update the fields
-		if len(from.Device) > 0 && configuration.MetaDataCheck {
-			_, err := mdc.CheckForDevice(from.Device)
-			if err != nil {
-				msg := fmt.Sprintf("error checking device %s %v", from.Device, err)
-				loggingClient.Error(msg)
-				switch err := err.(type) {
-				case types.ErrNotFound:
-					http.Error(w, msg, http.StatusNotFound)
-					return
-				default: //return an error on everything else.
-					http.Error(w, err.Error(), http.StatusServiceUnavailable)
-					return
-				}
+		if len(from.Device) > 0 {
+			// Check device
+			if checkDevice(from.Device, w) == false {
+				return
 			}
 
 			// Set the device name on the event
@@ -399,20 +399,12 @@ func eventCountByDeviceIdHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodGet:
-		// Get the device
-		d, err := mdc.CheckForDevice(id)
-		if err != nil {
-			loggingClient.Error(fmt.Sprintf("error checking device %s %v", id, err))
-			switch err := err.(type) {
-			case types.ErrNotFound:
-				http.Error(w, err.Error(), http.StatusNotFound)
-			default: //return an error on everything else.
-				http.Error(w, err.Error(), http.StatusServiceUnavailable)
-			}
+		// Check device
+		if checkDevice(id, w) == false {
 			return
 		}
 
-		count, err := dbc.EventCountByDeviceId(d.Name)
+		count, err := dbc.EventCountByDeviceId(id)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			loggingClient.Error(err.Error())
@@ -465,7 +457,6 @@ func eventIdHandler(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("true"))
-		//encode(true, w)
 		break
 	// Delete the event and all of it's readings
 	case http.MethodDelete:
@@ -491,7 +482,6 @@ func eventIdHandler(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("true"))
-		//encode(true, w)
 	}
 }
 
@@ -522,20 +512,9 @@ func getEventByDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get the device
-	if(configuration.MetaDataCheck) {
-		_, err := mdc.CheckForDevice(deviceId)
-		if err != nil {
-			loggingClient.Error(fmt.Sprintf("error checking device %s %v", deviceId, err))
-			switch err := err.(type) {
-			case types.ErrNotFound:
-				http.Error(w, err.Error(), http.StatusNotFound)
-			    return
-			default: //return an error on everything else.
-				http.Error(w, err.Error(), http.StatusServiceUnavailable)
-				return
-			}
-		}
+	// Check device
+	if checkDevice(deviceId, w) == false {
+		return
 	}
 
 	switch r.Method {
@@ -573,20 +552,9 @@ func deleteByDeviceIdHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get the device
-	if configuration.MetaDataCheck {
-		_, err := mdc.CheckForDevice(deviceId)
-		if err != nil {
-			loggingClient.Error(fmt.Sprintf("error checking device %s %v", deviceId, err))
-			switch err := err.(type) {
-			case types.ErrNotFound:
-				http.Error(w, err.Error(), http.StatusNotFound)
-				return
-			default: //return an error on everything else.
-				http.Error(w, err.Error(), http.StatusServiceUnavailable)
-				return
-			}
-		}
+	// Check device
+	if checkDevice(deviceId, w) == false {
+		return
 	}
 
 	switch r.Method {
@@ -710,20 +678,9 @@ func readingByDeviceFilteredValueDescriptor(w http.ResponseWriter, r *http.Reque
 			return
 		}
 
-		// Get the device
-		if configuration.MetaDataCheck {
-			_, err := mdc.CheckForDevice(deviceId)
-			if err != nil {
-				loggingClient.Error(fmt.Sprintf("error checking device %s %v", deviceId, err), "readingByDeviceFilteredValueDescriptor")
-				switch err := err.(type) {
-				case types.ErrNotFound:
-					http.Error(w, err.Error(), http.StatusNotFound)
-				    return
-				default: //return an error on everything else.
-					http.Error(w, err.Error(), http.StatusServiceUnavailable)
-					return
-				}
-			}
+		// Check device
+		if checkDevice(deviceId, w) == false {
+			return
 		}
 
 		// Get all the events for the device
