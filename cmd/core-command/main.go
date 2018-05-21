@@ -74,7 +74,7 @@ func main() {
 	loggingClient.Info(consulMsg)
 	loggingClient.Info(fmt.Sprintf("Starting %s %s ", internal.CommandServiceKey, edgex.Version))
 
-	command.Init(*configuration, loggingClient)
+	command.Init(*configuration, loggingClient, useConsul)
 
 	http.TimeoutHandler(nil, time.Millisecond*time.Duration(configuration.ServiceTimeout), "Request timed out")
 	loggingClient.Info(configuration.AppOpenMsg, "")

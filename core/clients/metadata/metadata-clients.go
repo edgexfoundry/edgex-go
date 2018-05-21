@@ -11,7 +11,7 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
-package metadataclients
+package metadata
 
 import (
 	"bytes"
@@ -21,8 +21,10 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 
+	"github.com/edgexfoundry/edgex-go/core/clients"
 	"github.com/edgexfoundry/edgex-go/core/clients/types"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"github.com/edgexfoundry/edgex-go/support/logging-client"
@@ -78,6 +80,7 @@ type DeviceClient interface {
 
 type DeviceRestClient struct {
 	url string
+	endpoint clients.Endpointer
 }
 
 /*
@@ -131,10 +134,28 @@ func NewAddressableClient(metaDbAddressableUrl string) AddressableClient {
 /*
 Return an instance of DeviceClient
 */
-func NewDeviceClient(metaDbDeviceUrl string) DeviceClient {
-	d := DeviceRestClient{url: metaDbDeviceUrl}
+func NewDeviceClient(params types.EndpointParams, m clients.Endpointer) (DeviceClient, error) {
+	d := DeviceRestClient{endpoint:m}
+	d.init(params)
+	return &d, nil
+}
 
-	return &d
+func(d *DeviceRestClient) init(params types.EndpointParams) {
+	if params.UseRegistry {
+		ch := make(chan string, 1)
+		go d.endpoint.Monitor(params, ch)
+		go func(ch chan string) {
+			for true {
+				select {
+				case url := <- ch:
+					fmt.Fprintln(os.Stdout,"endpoint loaded: " + url)
+					d.url = url
+				}
+			}
+		}(ch)
+	} else {
+		d.url = params.Url
+	}
 }
 
 /*

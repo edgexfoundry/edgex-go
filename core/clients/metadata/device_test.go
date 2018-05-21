@@ -11,18 +11,26 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
-package metadataclients
+package metadata
 
 import (
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"net/http"
 	"net/http/httptest"
+	"fmt"
 	"testing"
+
+	"github.com/edgexfoundry/edgex-go/core/clients/types"
+	"github.com/edgexfoundry/edgex-go/internal"
+
+	"time"
 )
 
 const (
-	DeviceUriPath = "/api/v1/device"
+	deviceUriPath = "/api/v1/device"
 )
+
+// Test adding a device using the device client
 
 // Test adding a device using the device client
 func TestAddDevice(t *testing.T) {
@@ -45,8 +53,8 @@ func TestAddDevice(t *testing.T) {
 			t.Errorf("expected http method is %s, active http method is : %s", http.MethodPost, r.Method)
 		}
 
-		if r.URL.EscapedPath() != DeviceUriPath {
-			t.Errorf("expected uri path is %s, actual uri path is %s", DeviceUriPath, r.URL.EscapedPath())
+		if r.URL.EscapedPath() != deviceUriPath {
+			t.Errorf("expected uri path is %s, actual uri path is %s", deviceUriPath, r.URL.EscapedPath())
 		}
 
 		w.Write([]byte(addingDeviceId))
@@ -55,9 +63,14 @@ func TestAddDevice(t *testing.T) {
 
 	defer ts.Close()
 
-	url := ts.URL + DeviceUriPath
+	url := ts.URL + deviceUriPath
 
-	dc := NewDeviceClient(url)
+	params := types.EndpointParams{
+		ServiceKey:internal.MetaDataServiceKey,
+		Path:deviceUriPath,
+		UseRegistry:false,
+		Url:url}
+	dc, err := NewDeviceClient(params, MockEndpoint{})
 
 	receivedDeviceId, err := dc.Add(&d)
 	if err != nil {
@@ -66,5 +79,46 @@ func TestAddDevice(t *testing.T) {
 
 	if receivedDeviceId != addingDeviceId {
 		t.Errorf("expected device id : %s, actual device id : %s", receivedDeviceId, addingDeviceId)
+	}
+}
+
+
+func TestNewDeviceClientWithConsul(t *testing.T) {
+	deviceUrl := "http://localhost:48081" + deviceUriPath
+	params := types.EndpointParams{
+		ServiceKey:internal.MetaDataServiceKey,
+		Path:deviceUriPath,
+		UseRegistry:true,
+		Url:deviceUrl}
+
+	dc, err := NewDeviceClient(params, MockEndpoint{})
+	if err != nil {
+		t.Error(err)
+	}
+	r, ok := dc.(*DeviceRestClient)
+	if !ok {
+		t.Error("dc is not of expected type")
+	}
+
+	time.Sleep(25 * time.Millisecond)
+	if len(r.url) == 0 {
+		t.Error("url was not initialized")
+	} else if r.url != deviceUrl {
+		t.Errorf("unexpected url value %s", r.url)
+	}
+}
+
+type MockEndpoint struct {
+
+}
+
+func(e MockEndpoint) Monitor(params types.EndpointParams, ch chan string) {
+	switch (params.ServiceKey) {
+	case "core-metadata":
+		url := fmt.Sprintf("http://%s:%v%s", "localhost", 48081, params.Path)
+		ch <- url
+		break
+	default:
+		ch <- ""
 	}
 }
