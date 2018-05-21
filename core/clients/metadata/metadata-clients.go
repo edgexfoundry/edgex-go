@@ -21,15 +21,13 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 
 	"github.com/edgexfoundry/edgex-go/core/clients"
 	"github.com/edgexfoundry/edgex-go/core/clients/types"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"github.com/edgexfoundry/edgex-go/support/logging-client"
-	"github.com/edgexfoundry/edgex-go/support/consul-client"
-	"time"
-	"os"
 )
 
 var (
@@ -150,6 +148,7 @@ func(d *DeviceRestClient) init(params types.EndpointParams) {
 			for true {
 				select {
 				case url := <- ch:
+					fmt.Fprintln(os.Stdout,"endpoint loaded: " + url)
 					d.url = url
 				}
 			}

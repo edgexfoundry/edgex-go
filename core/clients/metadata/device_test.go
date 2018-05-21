@@ -68,7 +68,7 @@ func TestAddDevice(t *testing.T) {
 	params := types.EndpointParams{
 		ServiceKey:internal.MetaDataServiceKey,
 		Path:deviceUriPath,
-		UseRegistry:true,
+		UseRegistry:false,
 		Url:url}
 	dc, err := NewDeviceClient(params, MockEndpoint{})
 
