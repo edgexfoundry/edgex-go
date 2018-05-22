@@ -15,28 +15,15 @@ package data
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
 
-	"github.com/edgexfoundry/edgex-go/core/clients/types"
 	"github.com/edgexfoundry/edgex-go/core/data/clients"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"github.com/gorilla/mux"
 )
-
-// Check metadata if the device exists
-func checkDevice(device string) bool {
-	_, err := mdc.CheckForDevice(device)
-	if err != nil {
-		loggingClient.Error("Can't find device: " + device)
-		return false
-	}
-
-	return true
-}
 
 // Reading handler
 // GET, PUT, and POST readings
@@ -72,28 +59,32 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// Check the value descriptor
-		_, err = dbc.ValueDescriptorByName(reading.Name)
-		if err != nil {
-			if err == clients.ErrNotFound {
-				http.Error(w, "Value descriptor not found for reading", http.StatusConflict)
-			} else {
-				http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		if configuration.ValidateCheck {
+			// Check the value descriptor
+			vd, err := dbc.ValueDescriptorByName(reading.Name)
+			if err != nil {
+				if err == clients.ErrNotFound {
+					http.Error(w, "Value descriptor not found for reading", http.StatusConflict)
+				} else {
+					http.Error(w, err.Error(), http.StatusServiceUnavailable)
+				}
+				loggingClient.Error(err.Error())
+				return
 			}
-			loggingClient.Error(err.Error())
-			return
+
+			valid, err := isValidValueDescriptor(vd, reading)
+			if !valid {
+				http.Error(w, "Validation failed", http.StatusConflict)
+				loggingClient.Error("Validation failed")
+				return
+			}
 		}
 
 		// Check device
 		if reading.Device != "" {
-			d, err := mdc.CheckForDevice(reading.Device)
-			if err != nil {
-				err = errors.New("Device not found for reading")
-				loggingClient.Error(err.Error(), "")
-				http.Error(w, err.Error(), http.StatusConflict)
+			if checkDevice(reading.Device, w) == false {
 				return
 			}
-			reading.Device = d.Name
 		}
 
 		if configuration.PersistData {
@@ -134,25 +125,40 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		//Update the fields
+		// Update the fields
 		if from.Value != "" {
 			to.Value = from.Value
 		}
 		if from.Name != "" {
-			_, err := dbc.ValueDescriptorByName(from.Name)
-			if err != nil {
-				if err == clients.ErrNotFound {
-					http.Error(w, "Value descriptor not found for reading", http.StatusConflict)
-				} else {
-					http.Error(w, err.Error(), http.StatusServiceUnavailable)
-				}
-				loggingClient.Error(err.Error())
-				return
-			}
 			to.Name = from.Name
 		}
 		if from.Origin != 0 {
 			to.Origin = from.Origin
+		}
+
+		if from.Value != "" || from.Name != "" {
+			if configuration.ValidateCheck {
+				// Check the value descriptor
+				vd, err := dbc.ValueDescriptorByName(to.Name)
+				if err != nil {
+					if err == clients.ErrNotFound {
+						http.Error(w, "Value descriptor not found for reading", http.StatusConflict)
+					} else {
+						http.Error(w, err.Error(), http.StatusServiceUnavailable)
+					}
+					loggingClient.Error(err.Error())
+					return
+				}
+
+				fmt.Println(to)
+
+				valid, err := isValidValueDescriptor(vd, to)
+				if !valid {
+					http.Error(w, "Validation failed", http.StatusConflict)
+					loggingClient.Error("Validation failed")
+					return
+				}
+			}
 		}
 
 		err = dbc.UpdateReading(to)
@@ -165,7 +171,6 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("true"))
-		//encode(true, w)
 	}
 }
 
@@ -248,7 +253,6 @@ func deleteReadingByIdHandler(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("true"))
-		//encode(true, w)
 	}
 }
 
@@ -283,20 +287,9 @@ func readingByDeviceHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// Try to get device
-		if configuration.MetaDataCheck {
-			_, err := mdc.CheckForDevice(deviceId)
-			if err != nil {
-				loggingClient.Error(fmt.Sprintf("error checking device %s %v", deviceId, err))
-				switch err := err.(type) {
-				case types.ErrNotFound:
-					http.Error(w, err.Error(), http.StatusNotFound)
-					return
-				default: //return an error on everything else.
-					http.Error(w, err.Error(), http.StatusServiceUnavailable)
-					return
-				}
-			}
+		// Check device
+		if checkDevice(deviceId, w) == false {
+			return
 		}
 
 		readings, err := dbc.ReadingsByDevice(deviceId, limit)
@@ -333,11 +326,15 @@ func readingbyValueDescriptorHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check for value descriptor
-	_, err = dbc.ValueDescriptorByName(name)
-	if err != nil {
-		if err == clients.ErrNotFound {
-			loggingClient.Error("Value Descriptor not found for Reading", "")
-			http.Error(w, "Value Descriptor not found for Reading", http.StatusNotFound)
+	if configuration.ValidateCheck {
+		_, err = dbc.ValueDescriptorByName(name)
+		if err != nil {
+			if err == clients.ErrNotFound {
+				http.Error(w, "Value descriptor not found for reading", http.StatusConflict)
+			} else {
+				http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			}
+			loggingClient.Error(err.Error())
 			return
 		}
 	}
@@ -595,19 +592,21 @@ func readingByValueDescriptorAndDeviceHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	// Check for the device
-	if !checkDevice(device) {
-		loggingClient.Error("Device not found for reading", "")
-		http.Error(w, "Device not found for reading", http.StatusNotFound)
+	// Check device
+	if checkDevice(device, w) == false {
 		return
 	}
 
 	// Check for value descriptor
-	_, err = dbc.ValueDescriptorByName(name)
-	if err != nil {
-		if err == clients.ErrNotFound {
-			loggingClient.Error("Value Descriptor not found for Reading", "")
-			http.Error(w, "Value Descriptor not found for Reading", http.StatusNotFound)
+	if configuration.ValidateCheck {
+		_, err = dbc.ValueDescriptorByName(name)
+		if err != nil {
+			if err == clients.ErrNotFound {
+				http.Error(w, "Value descriptor not found for reading", http.StatusConflict)
+			} else {
+				http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			}
+			loggingClient.Error(err.Error())
 			return
 		}
 	}

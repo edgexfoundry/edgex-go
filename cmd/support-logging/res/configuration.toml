@@ -1,4 +1,3 @@
-ApplicationName = 'support-logging'
 Hostname = 'localhost'
 Port = 48061
 Persistence = 'mongodb'

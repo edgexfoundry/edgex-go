@@ -17,6 +17,7 @@ import (
 
 	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/edgex-go/export/client"
+	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"go.uber.org/zap"
@@ -28,7 +29,7 @@ func main() {
 	logger, _ = zap.NewProduction()
 	defer logger.Sync()
 
-	logger.Info(fmt.Sprintf("Starting %s %s", client.ExportClient, edgex.Version))
+	logger.Info(fmt.Sprintf("Starting %s %s", internal.ExportClientServiceKey, edgex.Version))
 
 	var (
 		useConsul  bool

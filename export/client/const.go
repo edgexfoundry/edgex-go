@@ -7,7 +7,6 @@
 package client
 
 type ConfigurationStruct struct {
-	ApplicationName      string
 	Hostname             string
 	Port                 int
 	DBType               string
@@ -28,6 +27,3 @@ type ConfigurationStruct struct {
 
 var configuration ConfigurationStruct = ConfigurationStruct{} // Needs to be initialized before used
 
-var (
-	ExportClient = "export-client"
-)
