@@ -603,6 +603,8 @@ func testDB(t *testing.T, db DBClient) {
 	testDBValueDescriptors(t, db)
 
 	db.CloseSession()
+	// Calling CloseSession twice to test that there is no panic when closing an
+	// already closed db
 	db.CloseSession()
 }
 
