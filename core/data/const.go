@@ -14,7 +14,6 @@
 package data
 
 type ConfigurationStruct struct {
-	ApplicationName            string
 	ConsulProfilesActive       string
 	ReadMaxLimit               int
 	MetaDataCheck              bool
@@ -29,7 +28,6 @@ type ConfigurationStruct struct {
 	ServicePort                int
 	ServiceTimeout             int
 	ServiceAddress             string
-	ServiceName                string
 	DeviceUpdateLastConnected  bool
 	ServiceUpdateLastConnected bool
 	MongoDBUserName            string
@@ -48,15 +46,25 @@ type ConfigurationStruct struct {
 	LoggingFile                string
 	LoggingRemoteURL           string
 	MetaAddressableURL         string
+	MetaAddressablePath        string
 	MetaDeviceServiceURL       string
+	MetaDeviceServicePath	   string
 	MetaDeviceProfileURL       string
+	MetaDeviceProfilePath	   string
 	MetaDeviceURL              string
+	MetaDevicePath             string
 	MetaDeviceReportURL        string
+	MetaDeviceReportPath       string
 	MetaCommandURL             string
+	MetaCommandPath            string
 	MetaEventURL               string
+	MetaEventPath              string
 	MetaScheduleURL            string
+	MetaSchedulePath           string
 	MetaProvisionWatcherURL    string
+	MetaProvisionWatcherPath   string
 	MetaPingURL                string
+	MetaPingPath               string
 	ActiveMQBroker             string
 	ZeroMQAddressPort          string
 }

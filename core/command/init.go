@@ -17,17 +17,21 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/edgexfoundry/edgex-go/core/clients/metadata"
+	"github.com/edgexfoundry/edgex-go/core/clients/types"
+	"github.com/edgexfoundry/edgex-go/internal"
 	consulclient "github.com/edgexfoundry/edgex-go/support/consul-client"
 	logger "github.com/edgexfoundry/edgex-go/support/logging-client"
 )
 
 var loggingClient logger.LoggingClient
+var mdc metadata.DeviceClient
 
 func ConnectToConsul(conf ConfigurationStruct) error {
 
 	// Initialize service on Consul
 	err := consulclient.ConsulInit(consulclient.ConsulConfig{
-		ServiceName:    conf.ServiceName,
+		ServiceName:    internal.CoreCommandServiceKey,
 		ServicePort:    conf.ServicePort,
 		ServiceAddress: conf.ServiceAddress,
 		CheckAddress:   conf.ConsulCheckAddress,
@@ -40,16 +44,28 @@ func ConnectToConsul(conf ConfigurationStruct) error {
 		return fmt.Errorf("connection to Consul could not be made: %v", err.Error())
 	} else {
 		// Update configuration data from Consul
-		if err := consulclient.CheckKeyValuePairs(&conf, conf.ApplicationName, strings.Split(conf.ConsulProfilesActive, ";")); err != nil {
+		if err := consulclient.CheckKeyValuePairs(&conf, internal.CoreCommandServiceKey, strings.Split(conf.ConsulProfilesActive, ";")); err != nil {
 			return fmt.Errorf("error getting key/values from Consul: %v", err.Error())
 		}
 	}
 	return nil
 }
 
-func Init(conf ConfigurationStruct, l logger.LoggingClient) {
+func Init(conf ConfigurationStruct, l logger.LoggingClient, useConsul bool) {
 	loggingClient = l
 	configuration = conf
 	//TODO: The above two are set due to global scope throughout the package. How can this be eliminated / refactored?
 
+	// Create metadata clients
+	params := types.EndpointParams{
+		ServiceKey:internal.CoreMetaDataServiceKey,
+		Path:conf.MetaDevicePath,
+		UseRegistry:useConsul,
+		Url:conf.MetaDeviceURL}
+
+	var err error
+	mdc, err = metadata.NewDeviceClient(params, types.Endpoint{})
+	if err != nil {
+		loggingClient.Error(err.Error())
+	}
 }

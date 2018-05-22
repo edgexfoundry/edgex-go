@@ -15,12 +15,10 @@ package data
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
 )
-
 
 // Helper function for encoding things for returning from REST calls
 func encode(i interface{}, w http.ResponseWriter) {
@@ -43,10 +41,10 @@ func printBody(r io.ReadCloser) {
 	bodyString := string(body)
 
 	if err != nil {
-		fmt.Println(err)
+		loggingClient.Error(err.Error())
 	}
 
-	fmt.Println(bodyString)
+	loggingClient.Info(bodyString)
 }
 
 // Test if the service is working

@@ -11,12 +11,18 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
-package internal
+package types
 
-
-const CoreCommandServiceKey        = "edgex-core-command"
-const CoreDataServiceKey           = "edgex-core-data"
-const CoreMetaDataServiceKey       = "edgex-core-metadata"
-const ExportClientServiceKey       = "edgex-export-client"
-const ExportDistroServiceKey       = "edgex-export-distro"
-const SupportLoggingServiceKey     = "edgex-support-logging"
+// EndpointParams is a type that allows for the passing of common parameters to service clients
+// for initialization. As defined, they are:
+// * ServiceKey = the key of the service as found in the service registry (e.g. Consul)
+// * Path = the path to the service's endpoint following port number in the URL
+// * UseRegistry = an indication of whether or not endpoint information should be obtained from
+//                 a service registry provider.
+// * Url = if a service registry is not being used, then provide the full URL endpoint
+type EndpointParams struct {
+	ServiceKey string
+	Path string
+	UseRegistry bool
+	Url string
+}

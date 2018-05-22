@@ -69,12 +69,12 @@ func main() {
 
 	// Setup Logging
 	logTarget := setLoggingTarget(*configuration)
-	var loggingClient= logger.NewClient(configuration.ApplicationName, configuration.EnableRemoteLogging, logTarget)
+	var loggingClient= logger.NewClient(internal.CoreCommandServiceKey, configuration.EnableRemoteLogging, logTarget)
 
 	loggingClient.Info(consulMsg)
-	loggingClient.Info(fmt.Sprintf("Starting %s %s ", internal.CommandServiceKey, edgex.Version))
+	loggingClient.Info(fmt.Sprintf("Starting %s %s ", internal.CoreCommandServiceKey, edgex.Version))
 
-	command.Init(*configuration, loggingClient)
+	command.Init(*configuration, loggingClient, useConsul)
 
 	http.TimeoutHandler(nil, time.Millisecond*time.Duration(configuration.ServiceTimeout), "Request timed out")
 	loggingClient.Info(configuration.AppOpenMsg, "")
@@ -92,7 +92,7 @@ func main() {
 }
 
 func logBeforeTermination(err error) {
-	loggingClient = logger.NewClient(internal.CommandServiceKey, false, "")
+	loggingClient = logger.NewClient(internal.CoreCommandServiceKey, false, "")
 	loggingClient.Error(err.Error())
 }
 
