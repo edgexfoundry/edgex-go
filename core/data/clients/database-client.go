@@ -25,6 +25,7 @@ const (
 	MONGO DatabaseType = iota
 	MOCK
 	INFLUX
+	MEMORY
 )
 
 type DBClient interface {
@@ -228,6 +229,10 @@ func NewDBClient(config DBConfiguration) (DBClient, error) {
 		//Create the mock client
 		mock := &MockDb{}
 		return mock, nil
+	case MEMORY:
+		//Create the memory client
+		mem := &memDB{}
+		return mem, nil
 	default:
 		return nil, ErrUnsupportedDatabase
 	}
