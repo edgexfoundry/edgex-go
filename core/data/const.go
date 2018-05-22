@@ -48,15 +48,25 @@ type ConfigurationStruct struct {
 	LoggingFile                string
 	LoggingRemoteURL           string
 	MetaAddressableURL         string
+	MetaAddressablePath        string
 	MetaDeviceServiceURL       string
+	MetaDeviceServicePath	   string
 	MetaDeviceProfileURL       string
+	MetaDeviceProfilePath	   string
 	MetaDeviceURL              string
+	MetaDevicePath             string
 	MetaDeviceReportURL        string
+	MetaDeviceReportPath       string
 	MetaCommandURL             string
+	MetaCommandPath            string
 	MetaEventURL               string
+	MetaEventPath              string
 	MetaScheduleURL            string
+	MetaSchedulePath           string
 	MetaProvisionWatcherURL    string
+	MetaProvisionWatcherPath   string
 	MetaPingURL                string
+	MetaPingPath               string
 	ActiveMQBroker             string
 	ZeroMQAddressPort          string
 }

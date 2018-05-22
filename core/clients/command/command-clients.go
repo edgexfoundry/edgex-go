@@ -11,7 +11,7 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
-package commandclients
+package command
 
 import (
 	"errors"
@@ -19,8 +19,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/edgexfoundry/edgex-go/core/clients/metadataclients"
-	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"github.com/edgexfoundry/edgex-go/support/logging-client"
 )
 
@@ -28,9 +26,6 @@ var loggingClient = logger.NewClient(COMMAND, false, "")
 
 // CommandClient : client to interact with core command
 type CommandClient interface {
-	Devices() ([]models.Device, error)
-	Device(id string) (models.Device, error)
-	DeviceByName(n string) (models.Device, error)
 	Get(id string, cID string) (string, error)
 	Put(id string, cID string, body string) (string, error)
 }
@@ -43,25 +38,6 @@ type CommandRestClient struct {
 func NewCommandClient(commandURL string) CommandClient {
 	c := CommandRestClient{url: commandURL}
 	return &c
-}
-
-// Devices : return all Devices
-func (cc *CommandRestClient) Devices() ([]models.Device, error) {
-	dc := metadataclients.NewDeviceClient(cc.url)
-
-	return dc.Devices()
-}
-
-// Device : return device by id
-func (cc *CommandRestClient) Device(id string) (models.Device, error) {
-	dc := metadataclients.NewDeviceClient(cc.url)
-	return dc.Device(id)
-}
-
-// DeviceByName : return device by name
-func (cc *CommandRestClient) DeviceByName(n string) (models.Device, error) {
-	dc := metadataclients.NewDeviceClient(cc.url)
-	return dc.DeviceForName(n)
 }
 
 // Get : issue GET command

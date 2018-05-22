@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2017 Dell Inc.
+ * Copyright 2018 Dell Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -11,14 +11,16 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
-package commandclients
+package clients
 
-import "errors"
+import "github.com/edgexfoundry/edgex-go/core/clients/types"
 
-var (
-	COMMAND    = "command"
-	JSONHEADER = "application/json"
-
-	ErrResponseNil       = errors.New("Response was nil")
-	ErrorCommandNotFound = errors.New("Command not found")
-)
+//Endpointer is the interface for types that need to implement or simulate integration
+//with a service discovery provider.
+type Endpointer interface {
+	//Monitor is responsible for looking up information about the service endpoint corresponding
+	//to the params.ServiceKey property. The name "Monitor" implies that this lookup will be done
+	//at a regular interval. Information about the service from the discovery provider should be
+	//used to construct a URL which will then be pushed to the supplied channel.
+	Monitor(params types.EndpointParams, ch chan string)
+}

@@ -215,7 +215,7 @@ func BenchmarkProcessEvent(b *testing.B) {
 		b.SetBytes(int64(Dummy.lastSize))
 	})
 
-	ri.format = jsonFormater{}
+	ri.format = jsonFormatter{}
 	ri.compression = &gzipTransformer{}
 
 	b.Run("json_gzip", func(b *testing.B) {

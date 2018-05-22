@@ -34,6 +34,12 @@ type ConsulConfig struct {
 	CheckInterval  string
 }
 
+type ServiceEndpoint struct {
+	Key string
+	Address string
+	Port int
+}
+
 var consul *consulapi.Client = nil // Call consulInit to initialize this variable
 
 // Initialize consul by connecting to the agent and registering the service/check
@@ -73,6 +79,23 @@ func ConsulInit(config ConsulConfig) error {
 	}
 
 	return nil
+}
+
+func GetServiceEndpoint(serviceKey string) (ServiceEndpoint, error) {
+	services, err := consul.Agent().Services()
+	if err != nil {
+		return ServiceEndpoint{}, err
+	}
+
+	endpoint := ServiceEndpoint{}
+	for key, service := range services {
+		if key == serviceKey {
+			endpoint.Port = service.Port
+			endpoint.Key = key
+			endpoint.Address = service.Address
+		}
+	}
+	return endpoint, nil
 }
 
 // Look at the key/value pairs to update configuration
