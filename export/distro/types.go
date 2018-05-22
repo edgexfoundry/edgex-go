@@ -18,8 +18,8 @@ type Sender interface {
 	Send(data []byte)
 }
 
-// Formater - Format interface
-type Formater interface {
+// Formatter - Format interface
+type Formatter interface {
 	Format(event *models.Event) []byte
 }
 
@@ -36,7 +36,7 @@ type Filterer interface {
 // RegistrationInfo - registration info
 type registrationInfo struct {
 	registration export.Registration
-	format       Formater
+	format       Formatter
 	compression  Transformer
 	encrypt      Transformer
 	sender       Sender
