@@ -7,7 +7,6 @@
 package logging
 
 type ConfigurationStruct struct {
-	ApplicationName      string
 	Hostname             string
 	Port                 int
 	Persistence          string

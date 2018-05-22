@@ -15,170 +15,106 @@ import (
 	models "github.com/edgexfoundry/edgex-go/core/domain/models"
 )
 
-func isValidValueDescriptor_private(vd models.ValueDescriptor, ev models.Event) (bool, error) {
+func isValidValueDescriptor(vd models.ValueDescriptor, reading models.Reading) (bool, error) {
 	switch vd.Type {
 	case "B": // boolean
-		return validBoolean(ev)
+		return validBoolean(reading)
 	case "F": // floating point
-		return validFloat(ev, vd)
+		return validFloat(reading, vd)
 	case "I": // integer
-		return validInteger(ev, vd)
+		return validInteger(reading, vd)
 	case "S": // string or character data
-		return validString(ev)
+		return validString(reading)
 	case "J": // JSON data
-		return validJSON(ev)
+		return validJSON(reading)
 	default:
 		return false, fmt.Errorf("Unknown type")
 	}
 }
 
-func isValidValueDescriptor(reading models.Reading, ev models.Event) (bool, error) {
-	vd, _ := dbc.ValueDescriptorByName(reading.Name)
-	return isValidValueDescriptor_private(vd, ev)
-}
-
-func validBoolean(ev models.Event) (bool, error) {
-
-	for i := range ev.Readings {
-		_, err := strconv.ParseBool(ev.Readings[i].Value)
-		if err != nil {
-			return false, err
-		}
+func validBoolean(reading models.Reading) (bool, error) {
+	_, err := strconv.ParseBool(reading.Value)
+	if err != nil {
+		return false, err
 	}
 	return true, nil
 }
 
-func validFloat(ev models.Event, vd models.ValueDescriptor) (bool, error) {
-
-	//check for empty limits
-	maxLimit := true
-	if (vd.Max == nil) || (vd.Max == "") {
-		maxLimit = false
+func validFloat(reading models.Reading, vd models.ValueDescriptor) (bool, error) {
+	value, err := strconv.ParseFloat(reading.Value, 64)
+	if err != nil {
+		return false, err
 	}
 
-	minLimit := true
-	if (vd.Min == nil) || (vd.Min == "") {
-		minLimit = false
-	}
-
-	var err error
-
-	min := 0.0
-	max := 0.0
-
-	if minLimit {
-		min, err = strconv.ParseFloat(vd.Min.(string), 64)
-		if err != nil {
-			return false, err
-		}
-	}
-
-	if maxLimit {
-		max, err = strconv.ParseFloat(vd.Max.(string), 64)
+	if (vd.Max != nil) && (vd.Max != "") {
+		max, err := strconv.ParseFloat(vd.Max.(string), 64)
 		if err != nil {
 			return false, err
 		}
 
+		if value > max {
+			return false, fmt.Errorf("Value is over the limits")
+		}
 	}
 
-	for i := range ev.Readings {
-		value, err := strconv.ParseFloat(ev.Readings[i].Value, 64)
+	if (vd.Min != nil) && (vd.Min != "") {
+		min, err := strconv.ParseFloat(vd.Min.(string), 64)
 		if err != nil {
 			return false, err
 		}
 
-		if maxLimit {
-			if value > max {
-				return false, fmt.Errorf("Value is over the limits")
-			}
-		}
-
-		if minLimit {
-			if value < min {
-				return false, fmt.Errorf("Value is under the limits")
-			}
-		}
-	}
-	return true, nil
-}
-
-func validInteger(ev models.Event, vd models.ValueDescriptor) (bool, error) {
-	//check for empty limits
-	maxLimit := true
-	if (vd.Max == nil) || (vd.Max == "") {
-		maxLimit = false
-	}
-
-	minLimit := true
-	if (vd.Min == nil) || (vd.Min == "") {
-		minLimit = false
-	}
-
-	bothLimits := true
-	if !minLimit && !maxLimit {
-		bothLimits = false
-	}
-
-	var err error
-
-	min := int64(0)
-	max := int64(0)
-
-	if minLimit {
-		min, err = strconv.ParseInt(vd.Min.(string), 10, 64)
-		if err != nil {
-			return false, err
-		}
-	}
-
-	if maxLimit {
-		max, err = strconv.ParseInt(vd.Max.(string), 10, 64)
-		if err != nil {
-			return false, err
-		}
-
-	}
-
-	for i := range ev.Readings {
-		value, err := strconv.ParseInt(ev.Readings[i].Value, 10, 64)
-		if err != nil {
-			return false, err
-		}
-
-		if !bothLimits {
-			return true, nil
-		}
-
-		if maxLimit {
-			if value > max {
-				return false, fmt.Errorf("Value is over the limits")
-			}
-		}
-		if minLimit {
-			if value < min {
-				return false, fmt.Errorf("Value is under the limits")
-			}
-		}
-	}
-	return true, nil
-}
-
-func validString(ev models.Event) (bool, error) {
-	for i := range ev.Readings {
-		if ev.Readings[i].Value == "" {
-			return false, fmt.Errorf("Value is empty")
+		if value < min {
+			return false, fmt.Errorf("Value is under the limits")
 		}
 	}
 
 	return true, nil
 }
-func validJSON(ev models.Event) (bool, error) {
+
+func validInteger(reading models.Reading, vd models.ValueDescriptor) (bool, error) {
+	value, err := strconv.ParseInt(reading.Value, 10, 64)
+	if err != nil {
+		return false, err
+	}
+
+	if (vd.Max != nil) && (vd.Max != "") {
+		max, err := strconv.ParseInt(vd.Max.(string), 10, 64)
+		if err != nil {
+			return false, err
+		}
+
+		if value > max {
+			return false, fmt.Errorf("Value is over the limits")
+		}
+	}
+
+	if (vd.Min != nil) && (vd.Min != "") {
+		min, err := strconv.ParseInt(vd.Min.(string), 10, 64)
+		if err != nil {
+			return false, err
+		}
+
+		if value < min {
+			return false, fmt.Errorf("Value is under the limits")
+		}
+	}
+
+	return true, nil
+}
+
+func validString(reading models.Reading) (bool, error) {
+	if reading.Value == "" {
+		return false, fmt.Errorf("Value is empty")
+	}
+
+	return true, nil
+}
+
+func validJSON(reading models.Reading) (bool, error) {
 	var js interface{}
-	for i := range ev.Readings {
-		err := json.Unmarshal([]byte(ev.Readings[i].Value), &js)
-		if err != nil {
-			return false, err
-		}
+	err := json.Unmarshal([]byte(reading.Value), &js)
+	if err != nil {
+		return false, err
 	}
 	return true, nil
 }

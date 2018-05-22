@@ -59,7 +59,7 @@ func main() {
 		consulMsg = "Bypassing Consul configuration..."
 	}
 
-	loggingClient = logger.NewClient(configuration.ApplicationName, false, configuration.LoggingFile)
+	loggingClient = logger.NewClient(internal.SupportLoggingServiceKey, false, configuration.LoggingFile)
 	loggingClient.Info(consulMsg)
 	loggingClient.Info(fmt.Sprintf("Starting %s %s", internal.SupportLoggingServiceKey, edgex.Version))
 

@@ -1,4 +1,3 @@
-ApplicationName = 'core-data'
 ConsulProfilesActive = 'go'
 ReadMaxLimit = 100
 MetaDataCheck = false
@@ -13,7 +12,6 @@ MsgPubType = 'zero'
 ServicePort = 48080
 ServiceTimeout = 5000
 ServiceAddress = 'localhost'
-ServiceName = 'core-data'
 DeviceUpdateLastConnected = false
 ServiceUpdateLastConnected = false
 MongoDBUserName = 'core'

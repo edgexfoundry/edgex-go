@@ -66,7 +66,7 @@ func TestAddDevice(t *testing.T) {
 	url := ts.URL + deviceUriPath
 
 	params := types.EndpointParams{
-		ServiceKey:internal.MetaDataServiceKey,
+		ServiceKey:internal.CoreMetaDataServiceKey,
 		Path:deviceUriPath,
 		UseRegistry:false,
 		Url:url}
@@ -86,7 +86,7 @@ func TestAddDevice(t *testing.T) {
 func TestNewDeviceClientWithConsul(t *testing.T) {
 	deviceUrl := "http://localhost:48081" + deviceUriPath
 	params := types.EndpointParams{
-		ServiceKey:internal.MetaDataServiceKey,
+		ServiceKey:internal.CoreMetaDataServiceKey,
 		Path:deviceUriPath,
 		UseRegistry:true,
 		Url:deviceUrl}
@@ -114,7 +114,7 @@ type MockEndpoint struct {
 
 func(e MockEndpoint) Monitor(params types.EndpointParams, ch chan string) {
 	switch (params.ServiceKey) {
-	case "core-metadata":
+	case internal.CoreMetaDataServiceKey:
 		url := fmt.Sprintf("http://%s:%v%s", "localhost", 48081, params.Path)
 		ch <- url
 		break
