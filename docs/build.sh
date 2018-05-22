@@ -14,6 +14,7 @@ cp ../export/client/raml/*.raml ./export/client/
 docker build -t doc-builder:latest -f Dockerfile.build .
 rm -rf _build
 mkdir _build
+chmod 777 _build
 
 # Build documentation in container
 
