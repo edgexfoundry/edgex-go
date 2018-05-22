@@ -1,4 +1,3 @@
-ApplicationName = 'edgex-support-logging'
 Hostname = 'edgex-support-logging'
 Port = 48061
 Persistence = 'mongodb'
