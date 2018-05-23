@@ -31,7 +31,7 @@ var dbc clients.DBClient
 var loggingClient logger.LoggingClient
 var ep *messaging.EventPublisher
 var mdc metadata.DeviceClient
-var msc metadata.ServiceClient
+var msc metadata.DeviceServiceClient
 
 func ConnectToConsul(conf ConfigurationStruct) error {
 
