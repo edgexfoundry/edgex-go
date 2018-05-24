@@ -13,7 +13,7 @@
  * the License.
  *
  *******************************************************************************/
-package coredataclients
+package coredata
 
 import (
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
