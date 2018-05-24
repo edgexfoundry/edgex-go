@@ -13,7 +13,7 @@
  * the License.
  *
  *******************************************************************************/
-package coredataclients
+package coredata
 
 import (
 	"bytes"
