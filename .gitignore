@@ -1,7 +1,5 @@
 .idea/
-vendor
 *.exe
-glide.lock
 *.DS_Store
 
 # binary files
