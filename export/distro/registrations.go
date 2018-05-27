@@ -89,7 +89,7 @@ func (reg *registrationInfo) update(newReg export.Registration) bool {
 	case export.DestRest:
 		reg.sender = NewHTTPSender(newReg.Addressable)
 	case export.DestXMPP:
-		reg.sender = NewXmppSender(newReg.Addressable)
+		reg.sender = NewXMPPSender(newReg.Addressable)
 
 	default:
 		logger.Warn("Destination not supported: ", zap.String("destination", newReg.Destination))

@@ -24,7 +24,7 @@ type xmppSender struct {
 	stamp   time.Time
 }
 
-func NewXmppSender(addr models.Addressable) Sender {
+func NewXMPPSender(addr models.Addressable) Sender {
 	protocol := strings.ToLower(addr.Protocol)
 
 	if protocol == "tls" {
