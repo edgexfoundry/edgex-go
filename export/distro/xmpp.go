@@ -8,7 +8,6 @@ package distro
 
 import (
 	"crypto/tls"
-	"fmt"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"github.com/mattn/go-xmpp"
 	"strings"
@@ -46,7 +45,7 @@ func NewXmppSender(addr models.Addressable) Sender {
 
 	xmppClient, err := options.NewClient()
 	if err != nil {
-		fmt.Errorf(err.Error())
+		logger.Error(err.Error())
 	}
 
 	sender := &xmppSender{
