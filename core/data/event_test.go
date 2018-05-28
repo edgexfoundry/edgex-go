@@ -28,12 +28,14 @@ import (
 	"github.com/gorilla/mux"
 )
 
-var globalMockParams *clients.MockParams
+var testEvent models.Event
 var testRoutes *mux.Router
 
 func TestMain(m *testing.M) {
-	globalMockParams = clients.NewMockParams()
-	dbc, _ = clients.NewDBClient(clients.DBConfiguration{DbType: clients.MOCK})
+	testEvent.Device = "test device"
+	testEvent.Origin = 123456789
+	dbc, _ = clients.NewDBClient(clients.DBConfiguration{DbType: clients.MEMORY})
+	testEvent.ID, _ = dbc.AddEvent(&testEvent)
 	testRoutes = LoadRestRoutes()
 	loggingClient = logger.NewMockClient()
 	os.Exit(m.Run())
@@ -77,7 +79,7 @@ func TestGetEventHandlerMaxExceeded(t *testing.T) {
 }
 
 func TestGetEventByIdHandler(t *testing.T) {
-	req, _ := http.NewRequest(http.MethodGet, "/api/v1/event/"+globalMockParams.EventId.Hex(), nil)
+	req, _ := http.NewRequest(http.MethodGet, "/api/v1/event/"+testEvent.ID.Hex(), nil)
 	w := httptest.NewRecorder()
 
 	testRoutes.ServeHTTP(w, req)
@@ -98,15 +100,15 @@ func TestGetEventByIdHandler(t *testing.T) {
 }
 
 func testEventWithoutReadings(event models.Event, t *testing.T) {
-	if event.ID.Hex() != globalMockParams.EventId.Hex() {
-		t.Error("eventId mismatch. expected " + globalMockParams.EventId.Hex() + " received " + event.ID.Hex())
+	if event.ID.Hex() != testEvent.ID.Hex() {
+		t.Error("eventId mismatch. expected " + testEvent.ID.Hex() + " received " + event.ID.Hex())
 	}
 
-	if event.Device != globalMockParams.Device {
-		t.Error("device mismatch. expected " + globalMockParams.Device + " received " + event.Device)
+	if event.Device != testEvent.Device {
+		t.Error("device mismatch. expected " + testEvent.Device + " received " + event.Device)
 	}
 
-	if event.Origin != globalMockParams.Origin {
-		t.Error("origin mismatch. expected " + strconv.FormatInt(globalMockParams.Origin, 10) + " received " + strconv.FormatInt(event.Origin, 10))
+	if event.Origin != testEvent.Origin {
+		t.Error("origin mismatch. expected " + strconv.FormatInt(testEvent.Origin, 10) + " received " + strconv.FormatInt(event.Origin, 10))
 	}
 }
