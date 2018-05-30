@@ -719,6 +719,11 @@ func (ic *InfluxClient) ValueDescriptorsByType(t string) ([]models.ValueDescript
 	return ic.getValueDescriptors(query)
 }
 
+// Delete all of the value descriptors
+func (ic *InfluxClient) ScrubAllValueDescriptors() error {
+	return ic.deleteAll(VALUE_DESCRIPTOR_COLLECTION)
+}
+
 func (ic *InfluxClient) deleteValueDescriptorBy(query string) error {
 	q := fmt.Sprintf("DELETE  FROM %s %s", VALUE_DESCRIPTOR_COLLECTION, query)
 	_, err := ic.queryDB(q)
