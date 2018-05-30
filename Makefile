@@ -52,7 +52,7 @@ test:
 	go vet ./...
 
 prepare:
-	glide install
+	@echo "preparing..."
 
 run:
 	cd bin && ./edgex-launch.sh
