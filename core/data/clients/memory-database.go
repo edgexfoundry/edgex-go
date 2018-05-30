@@ -185,6 +185,7 @@ func (m *memDB) EventsPushed() ([]models.Event, error) {
 
 func (m *memDB) ScrubAllEvents() error {
 	m.events = nil
+	m.readings = nil
 	return nil
 }
 
@@ -391,4 +392,9 @@ func (m *memDB) ValueDescriptorsByType(t string) ([]models.ValueDescriptor, erro
 		}
 	}
 	return vds, nil
+}
+
+func (m *memDB) ScrubAllValueDescriptors() error {
+	m.vDescriptors = nil
+	return nil
 }

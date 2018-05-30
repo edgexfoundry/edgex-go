@@ -39,6 +39,7 @@ const (
 	DestIotCoreMQTT = "IOTCORE_TOPIC"
 	DestAzureMQTT   = "AZURE_TOPIC"
 	DestRest        = "REST_ENDPOINT"
+	DestXMPP        = "XMPP_TOPIC"
 )
 
 // Registration - Defines the registration details
