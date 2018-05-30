@@ -15,6 +15,7 @@ package clients
 
 import (
 	"errors"
+
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"github.com/edgexfoundry/edgex-go/support/logging-client"
 	"gopkg.in/mgo.v2/bson"
@@ -23,7 +24,6 @@ import (
 type DatabaseType int8 // Database type enum
 const (
 	MONGO DatabaseType = iota
-	MOCK
 	INFLUX
 	MEMORY
 )
@@ -96,6 +96,7 @@ type DBClient interface {
 	// Get events that have been pushed (pushed field is not 0)
 	EventsPushed() ([]models.Event, error)
 
+	// Delete all readings and events
 	ScrubAllEvents() error
 
 	// ********************* READING FUNCTIONS *************************
@@ -187,6 +188,9 @@ type DBClient interface {
 
 	// Return a list of value descriptors based on their type
 	ValueDescriptorsByType(t string) ([]models.ValueDescriptor, error)
+
+	// Delete all value descriptors
+	ScrubAllValueDescriptors() error
 }
 
 type DBConfiguration struct {
@@ -225,12 +229,8 @@ func NewDBClient(config DBConfiguration) (DBClient, error) {
 			return nil, err
 		}
 		return ic, nil
-	case MOCK:
-		//Create the mock client
-		mock := &MockDb{}
-		return mock, nil
 	case MEMORY:
-		//Create the memory client
+		// Create the memory client
 		mem := &memDB{}
 		return mem, nil
 	default:
