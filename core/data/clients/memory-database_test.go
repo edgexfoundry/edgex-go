@@ -70,6 +70,11 @@ func populateDbEvents(db DBClient, count int, pushed int64) (bson.ObjectId, erro
 }
 
 func testDBReadings(t *testing.T, db DBClient) {
+	err := db.ScrubAllEvents()
+	if err != nil {
+		t.Fatalf("Error removing all readings")
+	}
+
 	beforeTime := time.Now().UnixNano() / int64(time.Millisecond)
 	id, err := populateDbReadings(db, 100)
 	if err != nil {
@@ -259,6 +264,11 @@ func testDBReadings(t *testing.T, db DBClient) {
 }
 
 func testDBEvents(t *testing.T, db DBClient) {
+	err := db.ScrubAllEvents()
+	if err != nil {
+		t.Fatalf("Error removing all events")
+	}
+
 	beforeTime := time.Now().UnixNano() / int64(time.Millisecond)
 	id, err := populateDbEvents(db, 100, 0)
 	if err != nil {
@@ -457,12 +467,17 @@ func testDBEvents(t *testing.T, db DBClient) {
 }
 
 func testDBValueDescriptors(t *testing.T, db DBClient) {
+	err := db.ScrubAllValueDescriptors()
+	if err != nil {
+		t.Fatalf("Error removing all value descriptors")
+	}
+
 	id, err := populateDbValues(db, 110)
 	if err != nil {
 		t.Fatalf("Error populating db: %v\n", err)
 	}
 
-	id, err = populateDbValues(db, 110)
+	_, err = populateDbValues(db, 110)
 	if err == nil {
 		t.Fatalf("Should be an error adding a new ValueDescriptor with the same name\n")
 	}
@@ -594,6 +609,11 @@ func testDBValueDescriptors(t *testing.T, db DBClient) {
 	err = db.UpdateValueDescriptor(v)
 	if err == nil {
 		t.Fatalf("Update should return error")
+	}
+
+	err = db.ScrubAllValueDescriptors()
+	if err != nil {
+		t.Fatalf("Error removing all value descriptors")
 	}
 }
 
