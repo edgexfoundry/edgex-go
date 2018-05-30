@@ -22,6 +22,9 @@ import (
 	"strconv"
 
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
+	"github.com/edgexfoundry/edgex-go/core/clients"
+	"github.com/edgexfoundry/edgex-go/core/clients/types"
+	"os"
 )
 /*
 Service client for interacting with the device service section of metadata
@@ -35,15 +38,34 @@ type DeviceServiceClient interface {
 
 type DeviceServiceRestClient struct {
 	url string
+	endpoint clients.Endpointer
 }
 
 /*
-Return an instance of ServiceClient
+Return an instance of DeviceServiceClient
 */
-func NewServiceClient(metaDbServiceUrl string) DeviceServiceClient {
-	s := DeviceServiceRestClient{url: metaDbServiceUrl}
-
+func NewDeviceServiceClient(params types.EndpointParams, m clients.Endpointer) DeviceServiceClient {
+	s := DeviceServiceRestClient{endpoint:m}
+	s.init(params)
 	return &s
+}
+
+func(d *DeviceServiceRestClient) init(params types.EndpointParams) {
+	if params.UseRegistry {
+		ch := make(chan string, 1)
+		go d.endpoint.Monitor(params, ch)
+		go func(ch chan string) {
+			for true {
+				select {
+				case url := <- ch:
+					fmt.Fprintln(os.Stdout, "device_service: " + url)
+					d.url = url
+				}
+			}
+		}(ch)
+	} else {
+		d.url = params.Url
+	}
 }
 
 // Helper method to decode and return a deviceservice
