@@ -67,7 +67,7 @@ Return an instance of DeviceClient
 func NewDeviceClient(params types.EndpointParams, m clients.Endpointer) (DeviceClient, error) {
 	d := DeviceRestClient{endpoint:m}
 	d.init(params)
-	return &d, nil
+	return &d, nil //TODO: Since we explicitly return nil here, no need to return error above.
 }
 
 func(d *DeviceRestClient) init(params types.EndpointParams) {
