@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2017 Dell Inc.
+ * Copyright 2018 Dell Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -14,20 +14,20 @@
 package metadata
 
 import (
-	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"net/http"
 	"net/http/httptest"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/edgexfoundry/edgex-go/core/clients/types"
+	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"github.com/edgexfoundry/edgex-go/internal"
-
-	"time"
 )
 
 const (
 	deviceUriPath = "/api/v1/device"
+	commandUriPath = "/api/v1/command"
 )
 
 // Test adding a device using the device client
