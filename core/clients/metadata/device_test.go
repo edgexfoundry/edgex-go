@@ -28,6 +28,7 @@ import (
 const (
 	deviceUriPath = "/api/v1/device"
 	commandUriPath = "/api/v1/command"
+	deviceServiceUriPath = "/api/v1/deviceservice"
 )
 
 // Test adding a device using the device client
