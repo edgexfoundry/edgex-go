@@ -24,7 +24,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"github.com/edgexfoundry/edgex-go/core/clients"
 	"github.com/edgexfoundry/edgex-go/core/clients/types"
-	"os"
 )
 /*
 Service client for interacting with the device service section of metadata
@@ -58,7 +57,6 @@ func(d *DeviceServiceRestClient) init(params types.EndpointParams) {
 			for true {
 				select {
 				case url := <- ch:
-					fmt.Fprintln(os.Stdout, "device_service: " + url)
 					d.url = url
 				}
 			}

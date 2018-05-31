@@ -25,7 +25,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/core/clients"
 	"github.com/edgexfoundry/edgex-go/core/clients/types"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
-	"os"
 )
 
 /*
@@ -79,7 +78,6 @@ func(d *DeviceRestClient) init(params types.EndpointParams) {
 			for true {
 				select {
 				case url := <- ch:
-					fmt.Fprintln(os.Stdout, "device: " + url)
 					d.url = url
 				}
 			}
