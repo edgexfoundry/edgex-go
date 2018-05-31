@@ -85,10 +85,7 @@ func Init(conf ConfigurationStruct, l logger.LoggingClient, useConsul bool) erro
 						UseRegistry:useConsul,
 						Url:conf.MetaDeviceURL}
 
-	mdc, err = metadata.NewDeviceClient(params, types.Endpoint{})
-	if err != nil {
-		loggingClient.Error(err.Error())
-	}
+	mdc = metadata.NewDeviceClient(params, types.Endpoint{})
 	msc = metadata.NewServiceClient(conf.MetaDeviceServiceURL)
 
 	// Create the event publisher

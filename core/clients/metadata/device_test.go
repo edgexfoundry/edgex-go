@@ -70,7 +70,7 @@ func TestAddDevice(t *testing.T) {
 		Path:deviceUriPath,
 		UseRegistry:false,
 		Url:url}
-	dc, err := NewDeviceClient(params, MockEndpoint{})
+	dc := NewDeviceClient(params, MockEndpoint{})
 
 	receivedDeviceId, err := dc.Add(&d)
 	if err != nil {
@@ -91,10 +91,8 @@ func TestNewDeviceClientWithConsul(t *testing.T) {
 		UseRegistry:true,
 		Url:deviceUrl}
 
-	dc, err := NewDeviceClient(params, MockEndpoint{})
-	if err != nil {
-		t.Error(err)
-	}
+	dc := NewDeviceClient(params, MockEndpoint{})
+
 	r, ok := dc.(*DeviceRestClient)
 	if !ok {
 		t.Error("dc is not of expected type")
