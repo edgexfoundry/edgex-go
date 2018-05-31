@@ -66,6 +66,10 @@ func main() {
 	logger.Info(consulMsg, zap.String("version", edgex.Version))
 
 	err = client.Init(*configuration, logger)
+	if err != nil {
+		logger.Error("Could not initialize export client", zap.Error(err))
+		return
+	}
 
 	errs := make(chan error, 2)
 
