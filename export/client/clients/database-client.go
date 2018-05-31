@@ -15,7 +15,6 @@ package clients
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/edgexfoundry/edgex-go/export"
 	"gopkg.in/mgo.v2/bson"
@@ -114,11 +113,7 @@ func NewDBClient(config DBConfiguration) (DBClient, error) {
 	switch config.DbType {
 	case MONGO:
 		// Create the mongo client
-		mc, err := newMongoClient(config)
-		if err != nil {
-			return nil, fmt.Errorf("Error creating the mongo client: " + err.Error())
-		}
-		return mc, nil
+		return newMongoClient(config)
 	case MEMORY:
 		return &memDB{}, nil
 	default:
