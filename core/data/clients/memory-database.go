@@ -46,6 +46,15 @@ func (m *memDB) Events() ([]models.Event, error) {
 
 func (m *memDB) AddEvent(e *models.Event) (bson.ObjectId, error) {
 	currentTime := time.Now().UnixNano() / int64(time.Millisecond)
+
+	for i := range e.Readings {
+		e.Readings[i].Id = bson.NewObjectId()
+		e.Readings[i].Created = currentTime
+		e.Readings[i].Modified = currentTime
+		e.Readings[i].Device = e.Device
+		m.readings = append(m.readings, e.Readings[i])
+	}
+
 	e.Created = currentTime
 	e.Modified = currentTime
 	e.ID = bson.NewObjectId()
