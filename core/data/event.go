@@ -233,23 +233,8 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		// Add the readings to the database
+		// Add the event and readings to the database
 		if configuration.PersistData {
-			for i, reading := range e.Readings {
-				reading.Device = e.Device // Update the device for the reading
-
-				// Add the reading
-				id, err := dbc.AddReading(reading)
-				if err != nil {
-					http.Error(w, err.Error(), http.StatusServiceUnavailable)
-					loggingClient.Error(err.Error())
-					return
-				}
-
-				e.Readings[i].Id = id // Set the ID for referencing later
-			}
-
-			// Add the event to the database
 			id, err := dbc.AddEvent(&e)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusServiceUnavailable)
