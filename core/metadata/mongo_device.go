@@ -93,12 +93,13 @@ func (md *MongoDevice) SetBSON(raw bson.Raw) error {
 	md.Location = decoded.Location
 
 	// De-reference the DBRef fields
-	ds := DS.dataStore()
-	defer ds.s.Close()
 
-	addCol := ds.s.DB(DB).C(ADDCOL)
-	dsCol := ds.s.DB(DB).C(DSCOL)
-	dpCol := ds.s.DB(DB).C(DPCOL)
+	s := getMongoSessionCopy()
+	defer s.Close()
+
+	addCol := s.DB(DB).C(ADDCOL)
+	dsCol := s.DB(DB).C(DSCOL)
+	dpCol := s.DB(DB).C(DPCOL)
 
 	var a models.Addressable
 	var mdp MongoDeviceProfile

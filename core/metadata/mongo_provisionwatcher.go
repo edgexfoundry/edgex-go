@@ -71,11 +71,11 @@ func (mpw *MongoProvisionWatcher) SetBSON(raw bson.Raw) error {
 	mpw.OperatingState = decoded.OperatingState
 
 	// De-reference the DBRef fields
-	ds := DS.dataStore()
-	defer ds.s.Close()
+	s := getMongoSessionCopy()
+	defer s.Close()
 
-	profCol := ds.s.DB(DB).C(DPCOL)
-	servCol := ds.s.DB(DB).C(DSCOL)
+	profCol := s.DB(DB).C(DPCOL)
+	servCol := s.DB(DB).C(DSCOL)
 
 	var mdp MongoDeviceProfile
 	var mds MongoDeviceService

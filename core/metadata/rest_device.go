@@ -20,18 +20,18 @@ import (
 	"net/url"
 	"strconv"
 	"time"
+	"fmt"
 
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	notifications "github.com/edgexfoundry/edgex-go/support/notifications-client"
 	"github.com/gorilla/mux"
 	"gopkg.in/mgo.v2"
-	"fmt"
 	"gopkg.in/mgo.v2/bson"
 )
 
 func restGetAllDevices(w http.ResponseWriter, _ *http.Request) {
 	res := make([]models.Device, 0)
-	err := getAllDevices(&res)
+	err := db.getAllDevices(&res)
 	if err != nil {
 		loggingClient.Error(err.Error(), "")
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -67,10 +67,10 @@ func restAddNewDevice(w http.ResponseWriter, r *http.Request) {
 
 	// Addressable check
 	// Try by name
-	err = getAddressableByName(&d.Addressable, d.Addressable.Name)
+	err = db.getAddressableByName(&d.Addressable, d.Addressable.Name)
 	if err != nil {
 		// Try by ID
-		err = getAddressableById(&d.Addressable, d.Addressable.Id.Hex())
+		err = db.getAddressableById(&d.Addressable, d.Addressable.Id.Hex())
 		if err != nil {
 			loggingClient.Error(err.Error(), "")
 			http.Error(w, err.Error()+": A device must be associated to an Addressable", http.StatusConflict)
@@ -80,10 +80,10 @@ func restAddNewDevice(w http.ResponseWriter, r *http.Request) {
 
 	// Service Check
 	// Try by name
-	err = getDeviceServiceByName(&d.Service, d.Service.Service.Name)
+	err = db.getDeviceServiceByName(&d.Service, d.Service.Service.Name)
 	if err != nil {
 		// Try by ID
-		err = getDeviceServiceById(&d.Service, d.Service.Service.Id.Hex())
+		err = db.getDeviceServiceById(&d.Service, d.Service.Service.Id.Hex())
 		if err != nil {
 			loggingClient.Error(err.Error(), "")
 			http.Error(w, err.Error()+": A device must be associated with a device service", http.StatusConflict)
@@ -93,10 +93,10 @@ func restAddNewDevice(w http.ResponseWriter, r *http.Request) {
 
 	// Profile Check
 	// Try by name
-	err = getDeviceProfileByName(&d.Profile, d.Profile.Name)
+	err = db.getDeviceProfileByName(&d.Profile, d.Profile.Name)
 	if err != nil {
 		// Try by ID
-		err = getDeviceProfileById(&d.Profile, d.Profile.Id.Hex())
+		err = db.getDeviceProfileById(&d.Profile, d.Profile.Id.Hex())
 		if err != nil {
 			loggingClient.Error(err.Error(), "")
 			http.Error(w, err.Error()+": A device must be associated with a device profile", http.StatusConflict)
@@ -113,7 +113,7 @@ func restAddNewDevice(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Add the device
-	err = addDevice(&d)
+	err = db.addDevice(&d)
 	if err != nil {
 		if err == ErrDuplicateName {
 			http.Error(w, "Duplicate name for device", http.StatusConflict)
@@ -147,10 +147,10 @@ func restUpdateDevice(w http.ResponseWriter, r *http.Request) {
 	// Check if the device exists
 	var oldDevice models.Device
 	// First try ID
-	err = getDeviceById(&oldDevice, rd.Id.Hex())
+	err = db.getDeviceById(&oldDevice, rd.Id.Hex())
 	if err != nil {
 		// Then try name
-		err = getDeviceByName(&oldDevice, rd.Name)
+		err = db.getDeviceByName(&oldDevice, rd.Name)
 		if err != nil {
 			loggingClient.Error(err.Error(), "")
 			http.Error(w, err.Error(), http.StatusNotFound)
@@ -164,7 +164,7 @@ func restUpdateDevice(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err = UpdateDevice(oldDevice); err != nil {
+	if err = db.updateDevice(oldDevice); err != nil {
 		loggingClient.Error(err.Error(), "")
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return
@@ -183,10 +183,10 @@ func updateDeviceFields(from models.Device, to *models.Device) error {
 		// Check if the new addressable exists
 		var a models.Addressable
 		// Try ID first
-		err := getAddressableById(&a, from.Addressable.Id.Hex())
+		err := db.getAddressableById(&a, from.Addressable.Id.Hex())
 		if err != nil {
 			// Then try name
-			err = getAddressableByName(&a, from.Addressable.Name)
+			err = db.getAddressableByName(&a, from.Addressable.Name)
 			if err != nil {
 				return errors.New("Addressable not found for updated device")
 			}
@@ -198,10 +198,10 @@ func updateDeviceFields(from models.Device, to *models.Device) error {
 		// Check if the new service exists
 		var ds models.DeviceService
 		// Try ID first
-		err := getDeviceServiceById(&ds, from.Service.Service.Id.Hex())
+		err := db.getDeviceServiceById(&ds, from.Service.Service.Id.Hex())
 		if err != nil {
 			// Then try name
-			err = getDeviceServiceByName(&ds, from.Service.Service.Name)
+			err = db.getDeviceServiceByName(&ds, from.Service.Service.Name)
 			if err != nil {
 				return errors.New("Device service not found for updated device")
 			}
@@ -213,10 +213,10 @@ func updateDeviceFields(from models.Device, to *models.Device) error {
 		// Check if the new profile exists
 		var dp models.DeviceProfile
 		// Try ID first
-		err := getDeviceProfileById(&dp, from.Profile.Id.Hex())
+		err := db.getDeviceProfileById(&dp, from.Profile.Id.Hex())
 		if err != nil {
 			// Then try Name
-			err = getDeviceProfileByName(&dp, from.Profile.Name)
+			err = db.getDeviceProfileByName(&dp, from.Profile.Name)
 			if err != nil {
 				return errors.New("Device profile not found for updated device")
 			}
@@ -253,7 +253,7 @@ func updateDeviceFields(from models.Device, to *models.Device) error {
 
 		// Check if the name is unique
 		var checkD models.Device
-		err := getDeviceByName(&checkD, from.Name)
+		err := db.getDeviceByName(&checkD, from.Name)
 		if err != nil {
 			// A problem occured accessing database
 			if err != mgo.ErrNotFound {
@@ -289,7 +289,7 @@ func restGetDevicesWithLabel(w http.ResponseWriter, r *http.Request) {
 	labels = append(labels, label)
 
 	res := make([]models.Device, 0)
-	err = getDevicesWithLabel(&res, labels)
+	err = db.getDevicesWithLabel(&res, labels)
 	if err != nil {
 		loggingClient.Error(err.Error(), "")
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -306,7 +306,7 @@ func restGetDeviceByProfileId(w http.ResponseWriter, r *http.Request) {
 
 	// Check if the device profile exists
 	var dp models.DeviceProfile
-	err := getDeviceProfileById(&dp, pid)
+	err := db.getDeviceProfileById(&dp, pid)
 	if err != nil {
 		if err == mgo.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
@@ -318,7 +318,7 @@ func restGetDeviceByProfileId(w http.ResponseWriter, r *http.Request) {
 	}
 
 	res := make([]models.Device, 0)
-	err = getDevicesByProfileId(&res, pid)
+	err = db.getDevicesByProfileId(&res, pid)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		loggingClient.Error(err.Error(), "")
@@ -336,7 +336,7 @@ func restGetDeviceByServiceId(w http.ResponseWriter, r *http.Request) {
 
 	// Check if the device service exists
 	var ds models.DeviceService
-	err := getDeviceServiceById(&ds, sid)
+	err := db.getDeviceServiceById(&ds, sid)
 	if err != nil {
 		if err == mgo.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
@@ -347,7 +347,7 @@ func restGetDeviceByServiceId(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = getDevicesByServiceId(&res, sid)
+	err = db.getDevicesByServiceId(&res, sid)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		loggingClient.Error(err.Error(), "")
@@ -370,7 +370,7 @@ func restGetDeviceByServiceName(w http.ResponseWriter, r *http.Request) {
 
 	// Check if the device service exists
 	var ds models.DeviceService
-	err = getDeviceServiceByName(&ds, sn)
+	err = db.getDeviceServiceByName(&ds, sn)
 	if err != nil {
 		if err == mgo.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
@@ -384,7 +384,7 @@ func restGetDeviceByServiceName(w http.ResponseWriter, r *http.Request) {
 	res := make([]models.Device, 0)
 
 	// Find devices by service ID now that you have the Service object (and therefor the ID)
-	err = getDevicesByServiceId(&res, ds.Service.Id.Hex())
+	err = db.getDevicesByServiceId(&res, ds.Service.Id.Hex())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		loggingClient.Error(err.Error(), "")
@@ -406,7 +406,7 @@ func restGetDeviceByAddressableName(w http.ResponseWriter, r *http.Request) {
 
 	// Check if the addressable exists
 	var a models.Addressable
-	err = getAddressableByName(&a, an)
+	err = db.getAddressableByName(&a, an)
 	if err != nil {
 		if err == mgo.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
@@ -420,7 +420,7 @@ func restGetDeviceByAddressableName(w http.ResponseWriter, r *http.Request) {
 	res := make([]models.Device, 0)
 
 	// Use the addressable ID now that you have the addressable object
-	err = getDevicesByAddressableId(&res, a.Id.Hex())
+	err = db.getDevicesByAddressableId(&res, a.Id.Hex())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		loggingClient.Error(err.Error(), "")
@@ -442,7 +442,7 @@ func restGetDeviceByProfileName(w http.ResponseWriter, r *http.Request) {
 
 	// Check if the device profile exists
 	var dp models.DeviceProfile
-	err = getDeviceProfileByName(&dp, pn)
+	err = db.getDeviceProfileByName(&dp, pn)
 	if err != nil {
 		if err == mgo.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
@@ -456,7 +456,7 @@ func restGetDeviceByProfileName(w http.ResponseWriter, r *http.Request) {
 	res := make([]models.Device, 0)
 
 	// Use profile ID now that you have the profile object
-	err = getDevicesByProfileId(&res, dp.Id.Hex())
+	err = db.getDevicesByProfileId(&res, dp.Id.Hex())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		loggingClient.Error(err.Error(), "")
@@ -473,7 +473,7 @@ func restGetDeviceByAddressableId(w http.ResponseWriter, r *http.Request) {
 
 	// Check if the addressable exists
 	var a models.Addressable
-	err := getAddressableById(&a, aid)
+	err := db.getAddressableById(&a, aid)
 	if err != nil {
 		if err == mgo.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
@@ -485,7 +485,7 @@ func restGetDeviceByAddressableId(w http.ResponseWriter, r *http.Request) {
 	}
 
 	res := make([]models.Device, 0)
-	err = getDevicesByAddressableId(&res, aid)
+	err = db.getDevicesByAddressableId(&res, aid)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		loggingClient.Error(err.Error(), "")
@@ -500,7 +500,7 @@ func restGetDeviceById(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	var did string = vars[ID]
 	var res models.Device
-	if err := getDeviceById(&res, did); err != nil {
+	if err := db.getDeviceById(&res, did); err != nil {
 		loggingClient.Error(err.Error(), "")
 		if err == mgo.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
@@ -519,19 +519,19 @@ func restCheckForDevice(w http.ResponseWriter, r *http.Request) {
 	token := vars[ID] //referring to this as "token" for now since the source variable is double purposed
 	dev := models.Device{}
 	//Check for name first since we're using that meaning by default.
-	if err := getDeviceByName(&dev, token); err != nil {
+	if err := db.getDeviceByName(&dev, token); err != nil {
 		if err != mgo.ErrNotFound {
 			loggingClient.Error(err.Error(), "restCheckForDevice")
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		} else {
-			loggingClient.Debug(fmt.Sprintf("device %s %v", token, err),"restCheckForDevice")
+			loggingClient.Debug(fmt.Sprintf("device %s %v", token, err), "restCheckForDevice")
 		}
 	}
 	//If lookup by name failed, see if we were passed the ID
 	if len(dev.Name) == 0 {
 		if bson.IsObjectIdHex(token) {
-			if err := getDeviceById(&dev, token); err != nil {
+			if err := db.getDeviceById(&dev, token); err != nil {
 				loggingClient.Error(err.Error(), "restCheckForDevice")
 				if err == mgo.ErrNotFound {
 					http.Error(w, err.Error(), http.StatusNotFound)
@@ -541,7 +541,7 @@ func restCheckForDevice(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		} else {
-			http.Error(w, "device not found: " + token, http.StatusNotFound)
+			http.Error(w, "device not found: "+token, http.StatusNotFound)
 			return
 		}
 	}
@@ -554,7 +554,7 @@ func restSetDeviceOpStateById(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	var did string = vars[ID] // TODO check if DID needs to be a bson
 	var os string = vars[OPSTATE]
-	f := models.IsOperatingStateType(os)
+	newOs, f := models.GetOperatingState(os)
 	if !f {
 		err := errors.New("Invalid State: " + os + " Must be 'ENABLED' or 'DISABLED'")
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -564,7 +564,7 @@ func restSetDeviceOpStateById(w http.ResponseWriter, r *http.Request) {
 
 	// Check if the device exists
 	var d models.Device
-	err := getDeviceById(&d, did)
+	err := db.getDeviceById(&d, did)
 	if err != nil {
 		if err == mgo.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
@@ -576,7 +576,8 @@ func restSetDeviceOpStateById(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Update OpState
-	if err = setOpState(d, os, w); err != nil {
+	d.OperatingState = newOs
+	if err = db.updateDevice(d); err != nil {
 		return
 	}
 	if err != nil {
@@ -584,6 +585,9 @@ func restSetDeviceOpStateById(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return
 	}
+
+	// Notify
+	notifyDeviceAssociates(d, http.MethodPut)
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
@@ -599,7 +603,7 @@ func restSetDeviceOpStateByName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var os string = vars[OPSTATE]
-	f := models.IsOperatingStateType(os)
+	newOs, f := models.GetOperatingState(os)
 	// Opstate is invalid
 	if !f {
 		err := errors.New("Invalid State: " + os + " Must be 'ENABLED' or 'DISABLED'")
@@ -610,7 +614,7 @@ func restSetDeviceOpStateByName(w http.ResponseWriter, r *http.Request) {
 
 	// Check if the device exists
 	var d models.Device
-	err = getDeviceByName(&d, n)
+	err = db.getDeviceByName(&d, n)
 	if err != nil {
 		if err == mgo.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
@@ -622,34 +626,25 @@ func restSetDeviceOpStateByName(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Update OpState
-	if err = setOpState(d, os, w); err != nil {
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("true"))
-}
-
-// Update the opstate of the device
-func setOpState(d models.Device, os string, w http.ResponseWriter) error {
-	err := setById(DEVICECOL, d.Id.Hex(), "operatingState", os)
-	if err != nil {
+	d.OperatingState = newOs
+	if err = db.updateDevice(d); err != nil {
 		loggingClient.Error(err.Error(), "")
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		return err
+		return
 	}
 
 	// Notify
 	notifyDeviceAssociates(d, http.MethodPut)
 
-	return nil
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("true"))
 }
 
 func restSetDeviceAdminStateById(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	var did string = vars[ID]
 	var as string = vars[ADMINSTATE]
-	f := models.IsAdminStateType(as)
+	newAs, f := models.GetAdminState(as)
 	if !f {
 		err := errors.New("Invalid State: " + as + " Must be 'LOCKED' or 'UNLOCKED'")
 		loggingClient.Error(err.Error(), "")
@@ -659,7 +654,7 @@ func restSetDeviceAdminStateById(w http.ResponseWriter, r *http.Request) {
 
 	// Check if the device exists
 	var d models.Device
-	err := getDeviceById(&d, did)
+	err := db.getDeviceById(&d, did)
 	if err != nil {
 		if err == mgo.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
@@ -671,7 +666,16 @@ func restSetDeviceAdminStateById(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Update the AdminState
-	if err = setAdminState(d, as, w); err != nil {
+	d.AdminState = newAs
+	if err = db.updateDevice(d); err != nil {
+		loggingClient.Error(err.Error(), "")
+		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		return
+	}
+
+	if err := notifyDeviceAssociates(d, http.MethodPut); err != nil {
+		loggingClient.Error(err.Error(), "")
+		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return
 	}
 
@@ -690,7 +694,7 @@ func restSetDeviceAdminStateByName(w http.ResponseWriter, r *http.Request) {
 	}
 	var as string = vars[ADMINSTATE]
 
-	f := models.IsAdminStateType(as)
+	newAs, f := models.GetAdminState(as)
 	if !f {
 		err = errors.New("Invalid State: " + as + " Must be 'LOCKED' or 'UNLOCKED'")
 		loggingClient.Error(err.Error(), "")
@@ -700,7 +704,7 @@ func restSetDeviceAdminStateByName(w http.ResponseWriter, r *http.Request) {
 
 	// Check if the device exists
 	var d models.Device
-	err = getDeviceByName(&d, n)
+	err = db.getDeviceByName(&d, n)
 	if err != nil {
 		if err == mgo.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
@@ -711,29 +715,23 @@ func restSetDeviceAdminStateByName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	d.AdminState = newAs
 	// Update the admin state
-	if err = setAdminState(d, as, w); err != nil {
+	if err = db.updateDevice(d); err != nil {
+		loggingClient.Error(err.Error(), "")
+		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		return
+	}
+
+	if err := notifyDeviceAssociates(d, http.MethodPut); err != nil {
+		loggingClient.Error(err.Error(), "")
+		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
 	return
-}
-
-// Update the admin state for the device
-func setAdminState(d models.Device, as string, w http.ResponseWriter) error {
-	if err := setById(DEVICECOL, d.Id.Hex(), ADMINSTATE, as); err != nil {
-		loggingClient.Error(err.Error(), "")
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		return err
-	}
-
-	if err := notifyDeviceAssociates(d, http.MethodPut); err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func restDeleteDeviceById(w http.ResponseWriter, r *http.Request) {
@@ -743,7 +741,7 @@ func restDeleteDeviceById(w http.ResponseWriter, r *http.Request) {
 	// Check if the device exists
 	var d models.Device
 	//err := getDeviceById(&d, did)
-	if err := getDeviceById(&d, did); err != nil {
+	if err := db.getDeviceById(&d, did); err != nil {
 		if err == mgo.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
 		} else {
@@ -772,7 +770,7 @@ func restDeleteDeviceByName(w http.ResponseWriter, r *http.Request) {
 
 	// Check if the device exists
 	var d models.Device
-	err = getDeviceByName(&d, n)
+	err = db.getDeviceByName(&d, n)
 	if err != nil {
 		loggingClient.Error(err.Error(), "")
 		http.Error(w, err.Error(), http.StatusNotFound)
@@ -791,16 +789,18 @@ func restDeleteDeviceByName(w http.ResponseWriter, r *http.Request) {
 // Delete the device
 func deleteDevice(d models.Device, w http.ResponseWriter) error {
 	if err := deleteAssociatedReportsForDevice(d, w); err != nil {
+		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return err
 	}
 
-	if err := deleteById(DEVICECOL, d.Id.Hex()); err != nil {
+	if err := db.deleteDevice(d); err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return err
 	}
 
 	// Notify Associates
 	if err := notifyDeviceAssociates(d, http.MethodDelete); err != nil {
+		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return err
 	}
 
@@ -810,7 +810,7 @@ func deleteDevice(d models.Device, w http.ResponseWriter) error {
 // Delete the associated device reports for the device
 func deleteAssociatedReportsForDevice(d models.Device, w http.ResponseWriter) error {
 	var reports []models.DeviceReport
-	if err := getDeviceReportByDeviceName(&reports, d.Name); err != nil {
+	if err := db.getDeviceReportByDeviceName(&reports, d.Name); err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		loggingClient.Error(err.Error(), "")
 		return err
@@ -818,7 +818,7 @@ func deleteAssociatedReportsForDevice(d models.Device, w http.ResponseWriter) er
 
 	// Delete the associated reports
 	for _, report := range reports {
-		if err := deleteById(DRCOL, report.Id.Hex()); err != nil {
+		if err := db.deleteDeviceReport(report); err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			loggingClient.Error(err.Error(), "")
 			return err
@@ -842,7 +842,7 @@ func restSetDeviceLastConnectedById(w http.ResponseWriter, r *http.Request) {
 
 	// Check if the device exists
 	var d models.Device
-	err = getDeviceById(&d, did)
+	err = db.getDeviceById(&d, did)
 	if err != nil {
 		if err == mgo.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
@@ -882,7 +882,7 @@ func restSetLastConnectedByIdNotify(w http.ResponseWriter, r *http.Request) {
 
 	// Check if the device exists
 	var d models.Device
-	err = getDeviceById(&d, did)
+	err = db.getDeviceById(&d, did)
 	if err != nil {
 		if err == mgo.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
@@ -920,7 +920,7 @@ func restSetDeviceLastConnectedByName(w http.ResponseWriter, r *http.Request) {
 
 	// Check if the device exists
 	var d models.Device
-	err = getDeviceByName(&d, n)
+	err = db.getDeviceByName(&d, n)
 	if err != nil {
 		if err == mgo.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
@@ -964,7 +964,7 @@ func restSetDeviceLastConnectedByNameNotify(w http.ResponseWriter, r *http.Reque
 
 	// Check if the device exists
 	var d models.Device
-	err = getDeviceByName(&d, n)
+	err = db.getDeviceByName(&d, n)
 	if err != nil {
 		if err == mgo.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
@@ -986,7 +986,8 @@ func restSetDeviceLastConnectedByNameNotify(w http.ResponseWriter, r *http.Reque
 
 // Update the last connected value for the device
 func setLastConnected(d models.Device, time int64, notify bool, w http.ResponseWriter) error {
-	if err := setByIdInt(DEVICECOL, d.Id.Hex(), LASTCONNECTED, time); err != nil {
+	d.LastConnected = time
+	if err := db.updateDevice(d); err != nil {
 		loggingClient.Error(err.Error(), "")
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return err
@@ -1012,7 +1013,7 @@ func restSetDeviceLastReportedById(w http.ResponseWriter, r *http.Request) {
 
 	// Check if the device exists
 	var d models.Device
-	err = getDeviceById(&d, did)
+	err = db.getDeviceById(&d, did)
 	if err != nil {
 		if err == mgo.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
@@ -1051,7 +1052,7 @@ func restSetDeviceLastReportedByIdNotify(w http.ResponseWriter, r *http.Request)
 
 	// Check if the device exists
 	var d models.Device
-	err = getDeviceById(&d, did)
+	err = db.getDeviceById(&d, did)
 	if err != nil {
 		if err == mgo.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
@@ -1089,7 +1090,7 @@ func restSetDeviceLastReportedByName(w http.ResponseWriter, r *http.Request) {
 
 	// Check if the device exists
 	var d models.Device
-	err = getDeviceByName(&d, n)
+	err = db.getDeviceByName(&d, n)
 	if err != nil {
 		if err == mgo.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
@@ -1133,7 +1134,7 @@ func restSetDeviceLastReportedByNameNotify(w http.ResponseWriter, r *http.Reques
 
 	// Check if the device exists
 	var d models.Device
-	err = getDeviceByName(&d, n)
+	err = db.getDeviceByName(&d, n)
 	if err != nil {
 		if err == mgo.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
@@ -1155,7 +1156,8 @@ func restSetDeviceLastReportedByNameNotify(w http.ResponseWriter, r *http.Reques
 
 // Update the last reported field of the device
 func setLastReported(d models.Device, time int64, notify bool, w http.ResponseWriter) error {
-	if err := setByIdInt(DEVICECOL, d.Id.Hex(), LASTREPORTED, time); err != nil {
+	d.LastReported = time
+	if err := db.updateDevice(d); err != nil {
 		loggingClient.Error(err.Error(), "")
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return err
@@ -1177,7 +1179,7 @@ func restGetDeviceByName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var res models.Device
-	err = getDeviceByName(&res, dn)
+	err = db.getDeviceByName(&res, dn)
 	if err != nil {
 		if err == mgo.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
@@ -1198,7 +1200,7 @@ func notifyDeviceAssociates(d models.Device, action string) error {
 
 	// Callback for device service
 	var ds models.DeviceService
-	if err := getDeviceServiceById(&ds, d.Service.Service.Id.Hex()); err != nil {
+	if err := db.getDeviceServiceById(&ds, d.Service.Service.Id.Hex()); err != nil {
 		loggingClient.Error(err.Error(), "")
 		return err
 	}

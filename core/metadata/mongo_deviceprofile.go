@@ -104,9 +104,9 @@ func (mdp *MongoDeviceProfile) SetBSON(raw bson.Raw) error {
 	mdp.Resources = decoded.Resources
 
 	// De-reference the DBRef fields
-	ds := DS.dataStore()
-	defer ds.s.Close()
-	comCol := ds.s.DB(DB).C(COMCOL)
+	s := getMongoSessionCopy()
+	defer s.Close()
+	comCol := s.DB(DB).C(COMCOL)
 
 	var commands []models.Command
 

@@ -25,7 +25,7 @@ func TestGetDatabaseType(t *testing.T) {
 		wantErr bool
 	}{
 		{"type is mongo", "mongodb", MONGODB, false},
-		{"type is mysql", "mysql", MYSQL, false},
+		{"type is memorydb", "memorydb", MEMORYDB, false},
 		{"type is unknown", "foo", INVALID, true},
 	}
 	for _, tt := range tests {
@@ -48,10 +48,10 @@ func TestStringDatabaseType(t *testing.T) {
 		db   DATABASE
 	}{
 		{"mongo", MONGODB},
-		{"mysql", MYSQL},
+		{"memory", MEMORYDB},
 		{"unknown", INVALID},
 		{"invalid1", INVALID - 1},
-		{"invalid2", MYSQL + 1},
+		{"invalid2", MEMORYDB + 1},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

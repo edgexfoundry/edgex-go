@@ -15,7 +15,6 @@ package metadata
 
 import (
 	"errors"
-	"reflect"
 	"time"
 
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
@@ -27,11 +26,46 @@ func makeTimestamp() int64 {
 	return time.Now().UnixNano() / int64(time.Millisecond)
 }
 
+type mongoDB struct {
+	s *mgo.Session
+}
+
+func getMongoSessionCopy() *mgo.Session {
+	m := db.(*mongoDB)
+	return m.s.Copy()
+}
+
+func (m *mongoDB) Connect() error {
+	mongoDBDialInfo := &mgo.DialInfo{
+		Addrs:    []string{DOCKERMONGO},
+		Timeout:  time.Duration(configuration.MongoDBConnectTimeout) * time.Millisecond,
+		Database: MONGODATABASE,
+		Username: DBUSER,
+		Password: DBPASS,
+	}
+	var err error
+	m.s, err = mgo.DialWithInfo(mongoDBDialInfo)
+	if err != nil {
+		return err
+	}
+
+	// Set timeout based on configuration
+	m.s.SetSocketTimeout(time.Duration(configuration.MongoDBConnectTimeout) * time.Millisecond)
+	return nil
+}
+
+func (m *mongoDB) CloseSession() {
+	if m.s != nil {
+		m.s.Close()
+		m.s = nil
+	}
+}
+
 /* -----------------------Schedule Event ------------------------*/
-func mgoUpdateScheduleEvent(se models.ScheduleEvent) error {
-	ds := DS.dataStore()
-	defer ds.s.Close()
-	col := ds.s.DB(DB).C(SECOL)
+func (m *mongoDB) updateScheduleEvent(se models.ScheduleEvent) error {
+	s := m.s.Copy()
+	defer s.Close()
+	col := s.DB(DB).C(SECOL)
 
 	se.Modified = makeTimestamp()
 
@@ -40,10 +74,11 @@ func mgoUpdateScheduleEvent(se models.ScheduleEvent) error {
 
 	return col.UpdateId(se.Id, mse)
 }
-func mgoAddScheduleEvent(se *models.ScheduleEvent) error {
-	ds := DS.dataStore()
-	defer ds.s.Close()
-	col := ds.s.DB(DB).C(SECOL)
+
+func (m *mongoDB) addScheduleEvent(se *models.ScheduleEvent) error {
+	s := m.s.Copy()
+	defer s.Close()
+	col := s.DB(DB).C(SECOL)
 	count, err := col.Find(bson.M{NAME: se.Name}).Count()
 	if err != nil {
 		return err
@@ -58,43 +93,47 @@ func mgoAddScheduleEvent(se *models.ScheduleEvent) error {
 	// Handle DBRefs
 	mse := MongoScheduleEvent{ScheduleEvent: *se}
 
-	if err := col.Insert(mse); err != nil {
-		return err
-	}
-	return nil
+	return col.Insert(mse)
 }
-func mgoGetAllScheduleEvents(se *[]models.ScheduleEvent) error {
-	return mgoGetScheduleEvents(se, bson.M{})
+
+func (m *mongoDB) getAllScheduleEvents(se *[]models.ScheduleEvent) error {
+	return m.getScheduleEvents(se, bson.M{})
 }
-func mgoGetScheduleEventByName(se *models.ScheduleEvent, n string) error {
-	return mgoGetScheduleEvent(se, bson.M{NAME: n})
+
+func (m *mongoDB) getScheduleEventByName(se *models.ScheduleEvent, n string) error {
+	return m.getScheduleEvent(se, bson.M{NAME: n})
 }
-func mgoGetScheduleEventById(se *models.ScheduleEvent, id string) error {
+
+func (m *mongoDB) getScheduleEventById(se *models.ScheduleEvent, id string) error {
 	if bson.IsObjectIdHex(id) {
-		return mgoGetScheduleEvent(se, bson.M{_ID: bson.ObjectIdHex(id)})
+		return m.getScheduleEvent(se, bson.M{_ID: bson.ObjectIdHex(id)})
 	} else {
 		err := errors.New("mgoGetScheduleEventById Invalid Object ID " + id)
 		return err
 	}
 }
-func mgoGetScheduleEventsByScheduleName(se *[]models.ScheduleEvent, n string) error {
-	return mgoGetScheduleEvents(se, bson.M{SCHEDULE: n})
+
+func (m *mongoDB) getScheduleEventsByScheduleName(se *[]models.ScheduleEvent, n string) error {
+	return m.getScheduleEvents(se, bson.M{SCHEDULE: n})
 }
-func mgoGetScheduleEventsByAddressableId(se *[]models.ScheduleEvent, id string) error {
+
+func (m *mongoDB) getScheduleEventsByAddressableId(se *[]models.ScheduleEvent, id string) error {
 	if bson.IsObjectIdHex(id) {
-		return mgoGetScheduleEvents(se, bson.M{ADDRESSABLE + ".$id": bson.ObjectIdHex(id)})
+		return m.getScheduleEvents(se, bson.M{ADDRESSABLE + ".$id": bson.ObjectIdHex(id)})
 	} else {
 		err := errors.New("mgoGetScheduleEventsByAddressableId Invalid Object ID" + id)
 		return err
 	}
 }
-func mgoGetScheduleEventsByServiceName(se *[]models.ScheduleEvent, n string) error {
-	return mgoGetScheduleEvents(se, bson.M{SERVICE: n})
+
+func (m *mongoDB) getScheduleEventsByServiceName(se *[]models.ScheduleEvent, n string) error {
+	return m.getScheduleEvents(se, bson.M{SERVICE: n})
 }
-func mgoGetScheduleEvent(se *models.ScheduleEvent, q bson.M) error {
-	ds := DS.dataStore()
-	defer ds.s.Close()
-	col := ds.s.DB(DB).C(SECOL)
+
+func (m *mongoDB) getScheduleEvent(se *models.ScheduleEvent, q bson.M) error {
+	s := m.s.Copy()
+	defer s.Close()
+	col := s.DB(DB).C(SECOL)
 
 	// Handle DBRef
 	var mse MongoScheduleEvent
@@ -108,10 +147,11 @@ func mgoGetScheduleEvent(se *models.ScheduleEvent, q bson.M) error {
 
 	return err
 }
-func mgoGetScheduleEvents(se *[]models.ScheduleEvent, q bson.M) error {
-	ds := DS.dataStore()
-	defer ds.s.Close()
-	col := ds.s.DB(DB).C(SECOL)
+
+func (m *mongoDB) getScheduleEvents(se *[]models.ScheduleEvent, q bson.M) error {
+	s := m.s.Copy()
+	defer s.Close()
+	col := s.DB(DB).C(SECOL)
 
 	// Handle the DBRef
 	var mses []MongoScheduleEvent
@@ -128,26 +168,33 @@ func mgoGetScheduleEvents(se *[]models.ScheduleEvent, q bson.M) error {
 	return nil
 }
 
-/* --------------------------Schedule ---------------------------*/
-func mgoGetAllSchedules(s *[]models.Schedule) error {
-	return mgoGetSchedules(s, bson.M{})
+func (m *mongoDB) deleteScheduleEvent(se models.ScheduleEvent) error {
+	return m.deleteById(SECOL, se.Id.Hex())
 }
-func mgoGetScheduleByName(s *models.Schedule, n string) error {
-	return mgoGetSchedule(s, bson.M{NAME: n})
+
+//  --------------------------Schedule ---------------------------*/
+func (m *mongoDB) getAllSchedules(s *[]models.Schedule) error {
+	return m.getSchedules(s, bson.M{})
 }
-func mgoGetScheduleById(s *models.Schedule, id string) error {
+
+func (m *mongoDB) getScheduleByName(s *models.Schedule, n string) error {
+	return m.getSchedule(s, bson.M{NAME: n})
+}
+
+func (m *mongoDB) getScheduleById(s *models.Schedule, id string) error {
 	if bson.IsObjectIdHex(id) {
-		return mgoGetSchedule(s, bson.M{_ID: bson.ObjectIdHex(id)})
+		return m.getSchedule(s, bson.M{_ID: bson.ObjectIdHex(id)})
 	} else {
 		err := errors.New("mgoGetScheduleById Invalid Object ID " + id)
 		return err
 	}
 }
-func mgoAddSchedule(s *models.Schedule) error {
-	ds := DS.dataStore()
-	defer ds.s.Close()
-	col := ds.s.DB(DB).C(SCOL)
-	count, err := col.Find(bson.M{NAME: s.Name}).Count()
+
+func (m *mongoDB) addSchedule(sch *models.Schedule) error {
+	s := m.s.Copy()
+	defer s.Close()
+	col := s.DB(DB).C(SCOL)
+	count, err := col.Find(bson.M{NAME: sch.Name}).Count()
 	if err != nil {
 		return err
 	} else if count > 0 {
@@ -156,97 +203,88 @@ func mgoAddSchedule(s *models.Schedule) error {
 	}
 
 	ts := makeTimestamp()
-	s.Created = ts
-	s.Modified = ts
-	s.Id = bson.NewObjectId()
-	if err := col.Insert(s); err != nil {
-		return err
-	}
-	return nil
+	sch.Created = ts
+	sch.Modified = ts
+	sch.Id = bson.NewObjectId()
+	return col.Insert(s)
 }
-func mgoUpdateSchedule(s models.Schedule) error {
-	ds := DS.dataStore()
-	defer ds.s.Close()
-	col := ds.s.DB(DB).C(SCOL)
 
-	s.Modified = makeTimestamp()
+func (m *mongoDB) updateSchedule(sch models.Schedule) error {
+	s := m.s.Copy()
+	defer s.Close()
+	col := s.DB(DB).C(SCOL)
 
-	if err := col.UpdateId(s.Id, s); err != nil {
+	sch.Modified = makeTimestamp()
+
+	if err := col.UpdateId(sch.Id, sch); err != nil {
 		return err
 	}
 
 	return nil
 }
-func mgoGetSchedule(s *models.Schedule, q bson.M) error {
-	ds := DS.dataStore()
-	defer ds.s.Close()
-	col := ds.s.DB(DB).C(SCOL)
-	err := col.Find(q).One(s)
-	if err != nil {
-		return err
-	}
 
-	return nil
+func (m *mongoDB) deleteSchedule(s models.Schedule) error {
+	return m.deleteById(SCOL, s.Id.Hex())
 }
-func mgoGetSchedules(s *[]models.Schedule, q bson.M) error {
-	ds := DS.dataStore()
-	defer ds.s.Close()
-	col := ds.s.DB(DB).C(SCOL)
-	err := col.Find(q).Sort(QUERYTS).All(s)
-	if err != nil {
-		return err
-	}
 
-	return nil
+func (m *mongoDB) getSchedule(sch *models.Schedule, q bson.M) error {
+	s := m.s.Copy()
+	defer s.Close()
+	col := s.DB(DB).C(SCOL)
+	return col.Find(q).One(sch)
+}
+
+func (m *mongoDB) getSchedules(sch *[]models.Schedule, q bson.M) error {
+	s := m.s.Copy()
+	defer s.Close()
+	col := s.DB(DB).C(SCOL)
+	return col.Find(q).Sort(QUERYTS).All(sch)
 }
 
 /* ----------------------Device Report --------------------------*/
-func mgoGetAllDeviceReports(d *[]models.DeviceReport) error {
-	return mgoGetDeviceReports(d, bson.M{})
+func (m *mongoDB) getAllDeviceReports(d *[]models.DeviceReport) error {
+	return m.getDeviceReports(d, bson.M{})
 }
-func mgoGetDeviceReportByName(d *models.DeviceReport, n string) error {
-	return mgoGetDeviceReport(d, bson.M{NAME: n})
+
+func (m *mongoDB) getDeviceReportByName(d *models.DeviceReport, n string) error {
+	return m.getDeviceReport(d, bson.M{NAME: n})
 }
-func mgoGetDeviceReportByDeviceName(d *[]models.DeviceReport, n string) error {
-	return mgoGetDeviceReports(d, bson.M{DEVICE: n})
+
+func (m *mongoDB) getDeviceReportByDeviceName(d *[]models.DeviceReport, n string) error {
+	return m.getDeviceReports(d, bson.M{DEVICE: n})
 }
-func mgoGetDeviceReportById(d *models.DeviceReport, id string) error {
+
+func (m *mongoDB) getDeviceReportById(d *models.DeviceReport, id string) error {
 	if bson.IsObjectIdHex(id) {
-		return mgoGetDeviceReport(d, bson.M{_ID: bson.ObjectIdHex(id)})
+		return m.getDeviceReport(d, bson.M{_ID: bson.ObjectIdHex(id)})
 	} else {
 		err := errors.New("mgoGetDeviceReportById Invalid Object ID " + id)
 		return err
 	}
 }
-func mgoGetDeviceReportsByScheduleEventName(d *[]models.DeviceReport, n string) error {
-	return mgoGetDeviceReports(d, bson.M{"event": n})
-}
-func mgoGetDeviceReports(d *[]models.DeviceReport, q bson.M) error {
-	ds := DS.dataStore()
-	defer ds.s.Close()
-	col := ds.s.DB(DB).C(DRCOL)
-	err := col.Find(q).Sort(QUERYTS).All(d)
-	if err != nil {
-		return err
-	}
 
-	return nil
+func (m *mongoDB) getDeviceReportsByScheduleEventName(d *[]models.DeviceReport, n string) error {
+	return m.getDeviceReports(d, bson.M{"event": n})
 }
-func mgoGetDeviceReport(d *models.DeviceReport, q bson.M) error {
-	ds := DS.dataStore()
-	defer ds.s.Close()
-	col := ds.s.DB(DB).C(DRCOL)
-	err := col.Find(q).One(d)
-	if err != nil {
-		return err
-	}
 
-	return nil
+func (m *mongoDB) getDeviceReports(d *[]models.DeviceReport, q bson.M) error {
+	s := m.s.Copy()
+	defer s.Close()
+	col := s.DB(DB).C(DRCOL)
+	return col.Find(q).Sort(QUERYTS).All(d)
 }
-func mgoAddDeviceReport(d *models.DeviceReport) error {
-	ds := DS.dataStore()
-	defer ds.s.Close()
-	col := ds.s.DB(DB).C(DRCOL)
+
+func (m *mongoDB) getDeviceReport(d *models.DeviceReport, q bson.M) error {
+	s := m.s.Copy()
+	defer s.Close()
+	col := s.DB(DB).C(DRCOL)
+	return col.Find(q).One(d)
+}
+
+func (m *mongoDB) addDeviceReport(d *models.DeviceReport) error {
+	s := m.s.Copy()
+	defer s.Close()
+	col := s.DB(DB).C(DRCOL)
 	count, err := col.Find(bson.M{NAME: d.Name}).Count()
 	if err != nil {
 		return err
@@ -256,106 +294,26 @@ func mgoAddDeviceReport(d *models.DeviceReport) error {
 	ts := makeTimestamp()
 	d.Created = ts
 	d.Id = bson.NewObjectId()
-	if err := col.Insert(d); err != nil {
-		return err
-	}
-
-	return nil
+	return col.Insert(d)
 }
-func mgoUpdateDeviceReport(dr *models.DeviceReport) error {
-	ds := DS.dataStore()
-	defer ds.s.Close()
-	col := ds.s.DB(DB).C(DRCOL)
+
+func (m *mongoDB) updateDeviceReport(dr *models.DeviceReport) error {
+	s := m.s.Copy()
+	defer s.Close()
+	col := s.DB(DB).C(DRCOL)
 
 	return col.UpdateId(dr.Id, dr)
 }
-func mgoUpdateByIdInt(c string, did string, pv2 string, p2 int64) error {
-	if bson.IsObjectIdHex(did) {
-		ds := DS.dataStore()
-		defer ds.s.Close()
-		col := ds.s.DB(DB).C(c)
-		err := col.UpdateId(bson.ObjectIdHex(did), bson.M{"$set": bson.M{pv2: p2, "modified": makeTimestamp()}})
-		if err != nil {
-			return err
-		}
 
-		return nil
-	} else {
-		err := errors.New("mgoUpdateByIdInt Invalid Object ID " + did)
-		return err
-	}
-}
-func mgoUpdateById(c string, did string, pv2 string, p2 string) error {
-	if bson.IsObjectIdHex(did) {
-		ds := DS.dataStore()
-		defer ds.s.Close()
-		col := ds.s.DB(DB).C(c)
-		err := col.UpdateId(bson.ObjectIdHex(did), bson.M{"$set": bson.M{pv2: p2, "modified": makeTimestamp()}})
-		if err != nil {
-			return err
-		}
-
-		return nil
-	} else {
-		err := errors.New("mgoUpdateById Invalid Object ID " + did)
-		return err
-	}
-}
-func mgoUpdateByNameInt(c string, n string, pv2 string, p2 int64) error {
-	ds := DS.dataStore()
-	defer ds.s.Close()
-	col := ds.s.DB(DB).C(c)
-	err := col.Update(bson.M{"name": n}, bson.M{"$set": bson.M{pv2: p2, "modified": makeTimestamp()}})
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-func mgoUpdateByName(c string, n string, pv2 string, p2 string) error {
-	ds := DS.dataStore()
-	defer ds.s.Close()
-	col := ds.s.DB(DB).C(c)
-	err := col.Update(bson.M{"name": n}, bson.M{"$set": bson.M{pv2: p2, "modified": makeTimestamp()}})
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-func mgoDeleteById(c string, did string) error {
-	if bson.IsObjectIdHex(did) {
-		ds := DS.dataStore()
-		defer ds.s.Close()
-		col := ds.s.DB(DB).C(c)
-		err := col.RemoveId(bson.ObjectIdHex(did))
-		if err != nil {
-			return err
-		}
-
-		return nil
-	} else {
-		err := errors.New("mgoDeleteById Invalid Object ID " + did)
-		return err
-	}
-}
-func mgoDeleteByName(c string, n string) error {
-	ds := DS.dataStore()
-	defer ds.s.Close()
-	col := ds.s.DB(DB).C(c)
-	err := col.Remove(bson.M{NAME: n})
-	if err != nil {
-		return err
-	}
-
-	return nil
+func (m *mongoDB) deleteDeviceReport(dr models.DeviceReport) error {
+	return m.deleteById(DRCOL, dr.Id.Hex())
 }
 
 /* ----------------------------- Device ---------------------------------- */
-func mgoAddNewDevice(d *models.Device) error {
-	ds := DS.dataStore()
-	defer ds.s.Close()
-	col := ds.s.DB(DB).C(DEVICECOL)
+func (m *mongoDB) addDevice(d *models.Device) error {
+	s := m.s.Copy()
+	defer s.Close()
+	col := s.DB(DB).C(DEVICECOL)
 
 	// Check if the name exist (Device names must be unique)
 	count, err := col.Find(bson.M{NAME: d.Name}).Count()
@@ -373,82 +331,81 @@ func mgoAddNewDevice(d *models.Device) error {
 	// Wrap the device in MongoDevice (For DBRefs)
 	md := MongoDevice{Device: *d}
 
-	err = col.Insert(md)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return col.Insert(md)
 }
-func mgoUpdateDevice(rd models.Device) error {
-	ds := DS.dataStore()
-	defer ds.s.Close()
-	c := ds.s.DB(DB).C(DEVICECOL)
+
+func (m *mongoDB) updateDevice(rd models.Device) error {
+	s := m.s.Copy()
+	defer s.Close()
+	c := s.DB(DB).C(DEVICECOL)
 
 	// Copy over the DBRefs
 	md := MongoDevice{Device: rd}
 
 	return c.UpdateId(rd.Id, md)
 }
-func mgoGetAllDevices(d *[]models.Device) error {
-	return mgoGetDevices(d, nil)
+
+func (m *mongoDB) deleteDevice(d models.Device) error {
+	return m.deleteById(DEVICECOL, d.Id.Hex())
 }
-func mgoGetDevicesByProfileId(d *[]models.Device, pid string) error {
+
+func (m *mongoDB) getAllDevices(d *[]models.Device) error {
+	return m.getDevices(d, nil)
+}
+
+func (m *mongoDB) getDevicesByProfileId(d *[]models.Device, pid string) error {
 	if bson.IsObjectIdHex(pid) {
-		return mgoGetDevices(d, bson.M{PROFILE + "." + "$id": bson.ObjectIdHex(pid)})
+		return m.getDevices(d, bson.M{PROFILE + "." + "$id": bson.ObjectIdHex(pid)})
 	} else {
 		err := errors.New("mgoGetDevicesByProfileId Invalid Object ID " + pid)
 		return err
 	}
 }
-func mgoGetDeviceById(d *models.Device, id string) error {
+
+func (m *mongoDB) getDeviceById(d *models.Device, id string) error {
 	if bson.IsObjectIdHex(id) {
-		return mgoGetDevice(d, bson.M{_ID: bson.ObjectIdHex(id)})
+		return m.getDevice(d, bson.M{_ID: bson.ObjectIdHex(id)})
 	} else {
 		err := errors.New("mgoGetDeviceById Invalid Object ID " + id)
 		return err
 	}
 }
-func mgoGetDeviceByName(d *models.Device, n string) error {
-	return mgoGetDevice(d, bson.M{NAME: n})
+
+func (m *mongoDB) getDeviceByName(d *models.Device, n string) error {
+	return m.getDevice(d, bson.M{NAME: n})
 }
-func mgoGetDevicesByProfileName(d *[]models.Device, pn string) error {
-	return mgoGetDevices(d, bson.M{PROFILE + "." + NAME: pn})
-}
-func mgoGetDevicesByServiceId(d *[]models.Device, sid string) error {
+
+func (m *mongoDB) getDevicesByServiceId(d *[]models.Device, sid string) error {
 	if bson.IsObjectIdHex(sid) {
-		return mgoGetDevices(d, bson.M{SERVICE + "." + "$id": bson.ObjectIdHex(sid)})
+		return m.getDevices(d, bson.M{SERVICE + "." + "$id": bson.ObjectIdHex(sid)})
 	} else {
 		err := errors.New("mgoGetDevicesByServiceId Invalid Object ID " + sid)
 		return err
 	}
 }
-func mgoGetDevicesByServiceName(d *[]models.Device, sn string) error {
-	return mgoGetDevices(d, bson.M{SERVICE + "." + NAME: sn})
-}
-func mgoGetDevicesByAddressableId(d *[]models.Device, aid string) error {
+
+func (m *mongoDB) getDevicesByAddressableId(d *[]models.Device, aid string) error {
 	if bson.IsObjectIdHex(aid) {
 		// Check if the addressable exists
 		var a *models.Addressable
-		if mgoGetAddressableById(a, aid) == mgo.ErrNotFound {
+		if m.getAddressableById(a, aid) == mgo.ErrNotFound {
 			return mgo.ErrNotFound
 		}
-		return mgoGetDevices(d, bson.M{ADDRESSABLE + "." + "$id": bson.ObjectIdHex(aid)})
+		return m.getDevices(d, bson.M{ADDRESSABLE + "." + "$id": bson.ObjectIdHex(aid)})
 	} else {
 		err := errors.New("mgoGetDevicesByAddressableId Invalid Object ID " + aid)
 		return err
 	}
 }
-func mgoGetDevicesByAddressableName(d *[]models.Device, an string) error {
-	return mgoGetDevices(d, bson.M{ADDRESSABLE + "." + NAME: an})
+
+func (m *mongoDB) getDevicesWithLabel(d *[]models.Device, l []string) error {
+	return m.getDevices(d, bson.M{LABELS: bson.M{"$in": l}})
 }
-func mgoGetDevicesWithLabel(d *[]models.Device, l []string) error {
-	return mgoGetDevices(d, bson.M{LABELS: bson.M{"$in": l}})
-}
-func mgoGetDevices(d *[]models.Device, q bson.M) error {
-	ds := DS.dataStore()
-	defer ds.s.Close()
-	col := ds.s.DB(DB).C(DEVICECOL)
+
+func (m *mongoDB) getDevices(d *[]models.Device, q bson.M) error {
+	s := m.s.Copy()
+	defer s.Close()
+	col := s.DB(DB).C(DEVICECOL)
 	mds := []MongoDevice{}
 
 	err := col.Find(q).Sort(QUERYTS).All(&mds)
@@ -462,10 +419,11 @@ func mgoGetDevices(d *[]models.Device, q bson.M) error {
 
 	return nil
 }
-func mgoGetDevice(d *models.Device, q bson.M) error {
-	ds := DS.dataStore()
-	defer ds.s.Close()
-	col := ds.s.DB(DB).C(DEVICECOL)
+
+func (m *mongoDB) getDevice(d *models.Device, q bson.M) error {
+	s := m.s.Copy()
+	defer s.Close()
+	col := s.DB(DB).C(DEVICECOL)
 	md := MongoDevice{}
 
 	err := col.Find(q).One(&md)
@@ -478,76 +436,42 @@ func mgoGetDevice(d *models.Device, q bson.M) error {
 	return nil
 }
 
-// Query for the aux and de-reference the DBRefs
-func query(colStr string, q bson.M, aux interface{}, model interface{}) error {
-	ds := DS.dataStore()
-	defer ds.s.Close()
-	col := ds.s.DB(DB).C(colStr)
-
-	err := col.Find(q).One(aux)
-	if err != nil {
-		return err
-	}
-
-	// Copy over fields and de-reference the references
-	refAux := reflect.ValueOf(aux).Elem()
-	refModel := reflect.ValueOf(model).Elem()
-	for i := 0; i < refAux.NumField(); i++ {
-		// Get the fields for Aux and Real
-		name := refAux.Type().Field(i).Name
-		fAux := refAux.FieldByName(name)
-		fReal := refModel.FieldByName(name)
-
-		// DBRef type - dereference
-		if fAux.Type() == reflect.TypeOf(mgo.DBRef{}) {
-			var aux2 interface{}
-			model2 := reflect.Zero(reflect.TypeOf(fReal.Interface())).Interface()
-
-			// Make a recursive call to de-reference
-			query(fAux.Interface().(mgo.DBRef).Collection, bson.M{"_id": fAux.Interface().(mgo.DBRef).Id}, &aux2, &model2)
-
-			// Set the returned value into the Real field
-			fReal.Set(reflect.ValueOf(model2))
-			continue
-		}
-
-		// Not a DBRef, just copy over the field
-		fReal.Set(refAux.FieldByName(name))
-	}
-
-	return nil
-}
-
 /* -----------------------------Device Profile -----------------------------*/
-func mgoGetDeviceProfileById(d *models.DeviceProfile, id string) error {
+func (m *mongoDB) getDeviceProfileById(d *models.DeviceProfile, id string) error {
 	if bson.IsObjectIdHex(id) {
-		return mgoGetDeviceProfile(d, bson.M{_ID: bson.ObjectIdHex(id)})
+		return m.getDeviceProfile(d, bson.M{_ID: bson.ObjectIdHex(id)})
 	} else {
 		err := errors.New("mgoGetDeviceProfileById Invalid Object ID " + id)
 		return err
 	}
 }
-func mgoGetDeviceProfilesByModel(dp *[]models.DeviceProfile, m string) error {
-	return mgoGetDeviceProfiles(dp, bson.M{MODEL: m})
+
+func (m *mongoDB) getAllDeviceProfiles(dp *[]models.DeviceProfile) error {
+	return m.getDeviceProfiles(dp, nil)
 }
-func mgoGetDeviceProfilesWithLabel(dp *[]models.DeviceProfile, l []string) error {
-	return mgoGetDeviceProfiles(dp, bson.M{LABELS: bson.M{"$in": l}})
+
+func (m *mongoDB) getDeviceProfilesByModel(dp *[]models.DeviceProfile, model string) error {
+	return m.getDeviceProfiles(dp, bson.M{MODEL: model})
 }
-func mgoGetDeviceProfilesByManufacturerModel(dp *[]models.DeviceProfile, man string, mod string) error {
-	return mgoGetDeviceProfiles(dp, bson.M{MANUFACTURER: man, MODEL: mod})
+
+func (m *mongoDB) getDeviceProfilesWithLabel(dp *[]models.DeviceProfile, l []string) error {
+	return m.getDeviceProfiles(dp, bson.M{LABELS: bson.M{"$in": l}})
 }
-func mgoGetDeviceProfilesByManufacturer(dp *[]models.DeviceProfile, man string) error {
-	return mgoGetDeviceProfiles(dp, bson.M{MANUFACTURER: man})
+func (m *mongoDB) getDeviceProfilesByManufacturerModel(dp *[]models.DeviceProfile, man string, mod string) error {
+	return m.getDeviceProfiles(dp, bson.M{MANUFACTURER: man, MODEL: mod})
 }
-func mgoGetDeviceProfileByName(dp *models.DeviceProfile, n string) error {
-	return mgoGetDeviceProfile(dp, bson.M{NAME: n})
+func (m *mongoDB) getDeviceProfilesByManufacturer(dp *[]models.DeviceProfile, man string) error {
+	return m.getDeviceProfiles(dp, bson.M{MANUFACTURER: man})
+}
+func (m *mongoDB) getDeviceProfileByName(dp *models.DeviceProfile, n string) error {
+	return m.getDeviceProfile(dp, bson.M{NAME: n})
 }
 
 // Get device profiles with the passed query
-func mgoGetDeviceProfiles(d *[]models.DeviceProfile, q bson.M) error {
-	ds := DS.dataStore()
-	defer ds.s.Close()
-	col := ds.s.DB(DB).C(DPCOL)
+func (m *mongoDB) getDeviceProfiles(d *[]models.DeviceProfile, q bson.M) error {
+	s := m.s.Copy()
+	defer s.Close()
+	col := s.DB(DB).C(DPCOL)
 
 	// Handle the DBRefs
 	var mdps []MongoDeviceProfile
@@ -564,10 +488,10 @@ func mgoGetDeviceProfiles(d *[]models.DeviceProfile, q bson.M) error {
 }
 
 // Get device profile with the passed query
-func mgoGetDeviceProfile(d *models.DeviceProfile, q bson.M) error {
-	ds := DS.dataStore()
-	defer ds.s.Close()
-	col := ds.s.DB(DB).C(DPCOL)
+func (m *mongoDB) getDeviceProfile(d *models.DeviceProfile, q bson.M) error {
+	s := m.s.Copy()
+	defer s.Close()
+	col := s.DB(DB).C(DPCOL)
 
 	// Handle the DBRefs
 	var mdp MongoDeviceProfile
@@ -580,10 +504,11 @@ func mgoGetDeviceProfile(d *models.DeviceProfile, q bson.M) error {
 
 	return err
 }
-func mgoAddNewDeviceProfile(dp *models.DeviceProfile) error {
-	ds := DS.dataStore()
-	defer ds.s.Close()
-	col := ds.s.DB(DB).C(DPCOL)
+
+func (m *mongoDB) addDeviceProfile(dp *models.DeviceProfile) error {
+	s := m.s.Copy()
+	defer s.Close()
+	col := s.DB(DB).C(DPCOL)
 	count, err := col.Find(bson.M{NAME: dp.Name}).Count()
 	if err != nil {
 		return err
@@ -591,7 +516,7 @@ func mgoAddNewDeviceProfile(dp *models.DeviceProfile) error {
 		return ErrDuplicateName
 	}
 	for i := 0; i < len(dp.Commands); i++ {
-		if err := addCommand(&dp.Commands[i]); err != nil {
+		if err := m.addCommand(&dp.Commands[i]); err != nil {
 			return err
 		}
 	}
@@ -602,40 +527,36 @@ func mgoAddNewDeviceProfile(dp *models.DeviceProfile) error {
 
 	mdp := MongoDeviceProfile{DeviceProfile: *dp}
 
-	err = col.Insert(mdp)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return col.Insert(mdp)
 }
-func mgoUpdateDeviceProfile(dp *models.DeviceProfile) error {
-	ds := DS.dataStore()
-	defer ds.s.Close()
-	c := ds.s.DB(DB).C(DPCOL)
+
+func (m *mongoDB) updateDeviceProfile(dp *models.DeviceProfile) error {
+	s := m.s.Copy()
+	defer s.Close()
+	c := s.DB(DB).C(DPCOL)
 
 	mdp := MongoDeviceProfile{DeviceProfile: *dp}
 	mdp.Modified = makeTimestamp()
 
-	if err := c.UpdateId(mdp.Id, mdp); err != nil {
-		return err
-	}
-
-	return nil
+	return c.UpdateId(mdp.Id, mdp)
 }
 
 // Get the device profiles that are currently using the command
-func mgoGetDeviceProfilesUsingCommand(dp *[]models.DeviceProfile, c models.Command) error {
+func (m *mongoDB) getDeviceProfilesUsingCommand(dp *[]models.DeviceProfile, c models.Command) error {
 	query := bson.M{"commands": bson.M{"$elemMatch": bson.M{"$id": c.Id}}}
-	return mgoGetDeviceProfiles(dp, query)
+	return m.getDeviceProfiles(dp, query)
 }
 
-/* -----------------------------------Addressable --------------------------*/
-func mgoUpdateAddressable(ra *models.Addressable, r *models.Addressable) error {
-	ds := DS.dataStore()
+func (m *mongoDB) deleteDeviceProfile(dp models.DeviceProfile) error {
+	return m.deleteById(DPCOL, dp.Id.Hex())
+}
 
-	defer ds.s.Close()
-	c := ds.s.DB(DB).C(ADDCOL)
+//  -----------------------------------Addressable --------------------------*/
+func (m *mongoDB) updateAddressable(ra *models.Addressable, r *models.Addressable) error {
+	s := m.s.Copy()
+
+	defer s.Close()
+	c := s.DB(DB).C(ADDCOL)
 	if ra == nil {
 		return nil
 	}
@@ -671,10 +592,15 @@ func mgoUpdateAddressable(ra *models.Addressable, r *models.Addressable) error {
 	}
 	return nil
 }
-func mgoGetAddressables(d *[]models.Addressable, q bson.M) error {
-	ds := DS.dataStore()
-	defer ds.s.Close()
-	col := ds.s.DB(DB).C(ADDCOL)
+
+func (m *mongoDB) getAddressables(d *[]models.Addressable) error {
+	return m.getAddressablesQuery(d, bson.M{})
+}
+
+func (m *mongoDB) getAddressablesQuery(d *[]models.Addressable, q bson.M) error {
+	s := m.s.Copy()
+	defer s.Close()
+	col := s.DB(DB).C(ADDCOL)
 	err := col.Find(q).Sort(QUERYTS).All(d)
 	if err != nil {
 		return err
@@ -682,18 +608,20 @@ func mgoGetAddressables(d *[]models.Addressable, q bson.M) error {
 
 	return nil
 }
-func mgoGetAddressableById(a *models.Addressable, id string) error {
+
+func (m *mongoDB) getAddressableById(a *models.Addressable, id string) error {
 	if bson.IsObjectIdHex(id) {
-		return getAddressable(a, bson.M{_ID: bson.ObjectIdHex(id)})
+		return m.getAddressable(a, bson.M{_ID: bson.ObjectIdHex(id)})
 	} else {
 		err := errors.New("mgoGetAddressableById Invalid Object ID " + id)
 		return err
 	}
 }
-func mgoAddNewAddressable(a *models.Addressable) error {
-	ds := DS.dataStore()
-	defer ds.s.Close()
-	col := ds.s.DB(DB).C(ADDCOL)
+
+func (m *mongoDB) addAddressable(a *models.Addressable) error {
+	s := m.s.Copy()
+	defer s.Close()
+	col := s.DB(DB).C(ADDCOL)
 
 	// check if the name exist
 	count, err := col.Find(bson.M{NAME: a.Name}).Count()
@@ -713,25 +641,31 @@ func mgoAddNewAddressable(a *models.Addressable) error {
 
 	return nil
 }
-func mgoGetAddressableByName(a *models.Addressable, n string) error {
-	return mgoGetAddressable(a, bson.M{NAME: n})
+
+func (m *mongoDB) getAddressableByName(a *models.Addressable, n string) error {
+	return m.getAddressable(a, bson.M{NAME: n})
 }
-func mgoGetAddressablesByTopic(a *[]models.Addressable, t string) error {
-	return mgoGetAddressables(a, bson.M{TOPIC: t})
+
+func (m *mongoDB) getAddressablesByTopic(a *[]models.Addressable, t string) error {
+	return m.getAddressablesQuery(a, bson.M{TOPIC: t})
 }
-func mgoGetAddressablesByPort(a *[]models.Addressable, p int) error {
-	return mgoGetAddressables(a, bson.M{PORT: p})
+
+func (m *mongoDB) getAddressablesByPort(a *[]models.Addressable, p int) error {
+	return m.getAddressablesQuery(a, bson.M{PORT: p})
 }
-func mgoGetAddressablesByPublisher(a *[]models.Addressable, p string) error {
-	return mgoGetAddressables(a, bson.M{PUBLISHER: p})
+
+func (m *mongoDB) getAddressablesByPublisher(a *[]models.Addressable, p string) error {
+	return m.getAddressablesQuery(a, bson.M{PUBLISHER: p})
 }
-func mgoGetAddressablesByAddress(a *[]models.Addressable, add string) error {
-	return mgoGetAddressables(a, bson.M{ADDRESS: add})
+
+func (m *mongoDB) getAddressablesByAddress(a *[]models.Addressable, add string) error {
+	return m.getAddressablesQuery(a, bson.M{ADDRESS: add})
 }
-func mgoGetAddressable(d *models.Addressable, q bson.M) error {
-	ds := DS.dataStore()
-	defer ds.s.Close()
-	col := ds.s.DB(DB).C(ADDCOL)
+
+func (m *mongoDB) getAddressable(d *models.Addressable, q bson.M) error {
+	s := m.s.Copy()
+	defer s.Close()
+	col := s.DB(DB).C(ADDCOL)
 	err := col.Find(q).One(d)
 	if err != nil {
 		return err
@@ -739,72 +673,46 @@ func mgoGetAddressable(d *models.Addressable, q bson.M) error {
 
 	return nil
 }
-func mgoIsAddressableAssociatedToDevice(a models.Addressable) (bool, error) {
-	ds := DS.dataStore()
-	defer ds.s.Close()
-	col := ds.s.DB(DB).C(DEVICECOL)
-	query := bson.M{ADDRESSABLE + ".$id": a.Id}
-	count, err := col.Find(query).Count()
-	if err != nil {
-		return false, err
-	}
 
-	if count > 0 {
-		return true, nil
-	} else {
-		return false, nil
-	}
-}
-func mgoIsAddressableAssociatedToDeviceService(a models.Addressable) (bool, error) {
-	ds := DS.dataStore()
-	defer ds.s.Close()
-	col := ds.s.DB(DB).C(DSCOL)
-	query := bson.M{ADDRESSABLE + ".$id": a.Id}
-	count, err := col.Find(query).Count()
-	if err != nil {
-		return false, err
-	}
-
-	if count > 0 {
-		return true, nil
-	} else {
-		return false, nil
-	}
+func (m *mongoDB) deleteAddressable(a models.Addressable) error {
+	return m.deleteById(ADDCOL, a.Id.Hex())
 }
 
 /* ----------------------------- Device Service ----------------------------------*/
-func mgoGetDeviceServiceByName(d *models.DeviceService, n string) error {
-	return mgoGetDeviceService(d, bson.M{NAME: n})
+func (m *mongoDB) getDeviceServiceByName(d *models.DeviceService, n string) error {
+	return m.getDeviceService(d, bson.M{NAME: n})
 }
-func mgoGetDeviceServiceById(d *models.DeviceService, id string) error {
+
+func (m *mongoDB) getDeviceServiceById(d *models.DeviceService, id string) error {
 	if bson.IsObjectIdHex(id) {
-		return mgoGetDeviceService(d, bson.M{_ID: bson.ObjectIdHex(id)})
+		return m.getDeviceService(d, bson.M{_ID: bson.ObjectIdHex(id)})
 	} else {
 		err := errors.New("mgoGetDeviceServiceByName Invalid Object ID " + id)
 		return err
 	}
 }
-func mgoGetAllDeviceServices(d *[]models.DeviceService) error {
-	return mgoGetDeviceServices(d, bson.M{})
+
+func (m *mongoDB) getAllDeviceServices(d *[]models.DeviceService) error {
+	return m.getDeviceServices(d, bson.M{})
 }
-func mgoGetDeviceServicesByAddressableName(d *[]models.DeviceService, an string) error {
-	return mgoGetDeviceServices(d, bson.M{ADDRESSABLE + "." + NAME: an})
-}
-func mgoGetDeviceServicesByAddressableId(d *[]models.DeviceService, id string) error {
+
+func (m *mongoDB) getDeviceServicesByAddressableId(d *[]models.DeviceService, id string) error {
 	if bson.IsObjectIdHex(id) {
-		return mgoGetDeviceServices(d, bson.M{ADDRESSABLE + ".$id": bson.ObjectIdHex(id)})
+		return m.getDeviceServices(d, bson.M{ADDRESSABLE + ".$id": bson.ObjectIdHex(id)})
 	} else {
 		err := errors.New("mgoGetDeviceServicesByAddressableId Invalid Object ID " + id)
 		return err
 	}
 }
-func mgoGetDeviceServicesWithLabel(d *[]models.DeviceService, l []string) error {
-	return mgoGetDeviceServices(d, bson.M{LABELS: bson.M{"$in": l}})
+
+func (m *mongoDB) getDeviceServicesWithLabel(d *[]models.DeviceService, l []string) error {
+	return m.getDeviceServices(d, bson.M{LABELS: bson.M{"$in": l}})
 }
-func mgoGetDeviceServices(d *[]models.DeviceService, q bson.M) error {
-	ds := DS.dataStore()
-	defer ds.s.Close()
-	col := ds.s.DB(DB).C(DSCOL)
+
+func (m *mongoDB) getDeviceServices(d *[]models.DeviceService, q bson.M) error {
+	s := m.s.Copy()
+	defer s.Close()
+	col := s.DB(DB).C(DSCOL)
 	mdss := []MongoDeviceService{}
 	err := col.Find(q).Sort(QUERYTS).All(&mdss)
 	if err != nil {
@@ -816,10 +724,11 @@ func mgoGetDeviceServices(d *[]models.DeviceService, q bson.M) error {
 
 	return nil
 }
-func mgoGetDeviceService(d *models.DeviceService, q bson.M) error {
-	ds := DS.dataStore()
-	defer ds.s.Close()
-	col := ds.s.DB(DB).C(DSCOL)
+
+func (m *mongoDB) getDeviceService(d *models.DeviceService, q bson.M) error {
+	s := m.s.Copy()
+	defer s.Close()
+	col := s.DB(DB).C(DSCOL)
 	mds := MongoDeviceService{}
 	err := col.Find(q).One(&mds)
 	if err != nil {
@@ -829,10 +738,11 @@ func mgoGetDeviceService(d *models.DeviceService, q bson.M) error {
 
 	return nil
 }
-func mgoAddNewDeviceService(d *models.DeviceService) error {
-	ds := DS.dataStore()
-	defer ds.s.Close()
-	col := ds.s.DB(DB).C(DSCOL)
+
+func (m *mongoDB) addDeviceService(d *models.DeviceService) error {
+	s := m.s.Copy()
+	defer s.Close()
+	col := s.DB(DB).C(DSCOL)
 
 	// check if the name exist
 	count, err := col.Find(bson.M{NAME: d.Service.Name}).Count()
@@ -849,17 +759,13 @@ func mgoAddNewDeviceService(d *models.DeviceService) error {
 
 	// MongoDeviceService handles the DBRefs
 	mds := MongoDeviceService{DeviceService: *d}
-	err = col.Insert(mds)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return col.Insert(mds)
 }
-func mgoUpdateDeviceService(deviceService models.DeviceService) error {
-	ds := DS.dataStore()
-	defer ds.s.Close()
-	c := ds.s.DB(DB).C(DSCOL)
+
+func (m *mongoDB) updateDeviceService(deviceService models.DeviceService) error {
+	s := m.s.Copy()
+	defer s.Close()
+	c := s.DB(DB).C(DSCOL)
 
 	deviceService.Service.Modified = makeTimestamp()
 
@@ -869,51 +775,53 @@ func mgoUpdateDeviceService(deviceService models.DeviceService) error {
 	return c.UpdateId(deviceService.Service.Id, mds)
 }
 
-/* ----------------------Provision Watcher -----------------------------*/
-func mgoGetAllProvisionWatchers(pw *[]models.ProvisionWatcher) error {
-	return mgoGetProvisionWatchers(pw, bson.M{})
+func (m *mongoDB) deleteDeviceService(ds models.DeviceService) error {
+	return m.deleteById(DSCOL, ds.Id.Hex())
 }
-func mgoGetProvisionWatcherByName(pw *models.ProvisionWatcher, n string) error {
-	return mgoGetProvisionWatcher(pw, bson.M{NAME: n})
+
+//  ----------------------Provision Watcher -----------------------------*/
+func (m *mongoDB) getAllProvisionWatchers(pw *[]models.ProvisionWatcher) error {
+	return m.getProvisionWatchers(pw, bson.M{})
 }
-func mgoGetProvisionWatchersByProfileName(pw *[]models.ProvisionWatcher, n string) error {
-	return mgoGetProvisionWatchers(pw, bson.M{PROFILE + "." + NAME: n})
+
+func (m *mongoDB) getProvisionWatcherByName(pw *models.ProvisionWatcher, n string) error {
+	return m.getProvisionWatcher(pw, bson.M{NAME: n})
 }
-func mgoGetProvisionWatchersByIdentifier(pw *[]models.ProvisionWatcher, k string, v string) error {
-	return mgoGetProvisionWatchers(pw, bson.M{IDENTIFIERS + "." + k: v})
+
+func (m *mongoDB) getProvisionWatchersByIdentifier(pw *[]models.ProvisionWatcher, k string, v string) error {
+	return m.getProvisionWatchers(pw, bson.M{IDENTIFIERS + "." + k: v})
 }
-func mgoGetProvisionWatchersByServiceId(pw *[]models.ProvisionWatcher, id string) error {
+
+func (m *mongoDB) getProvisionWatchersByServiceId(pw *[]models.ProvisionWatcher, id string) error {
 	if bson.IsObjectIdHex(id) {
-		return mgoGetProvisionWatchers(pw, bson.M{SERVICE + ".$id": bson.ObjectIdHex(id)})
+		return m.getProvisionWatchers(pw, bson.M{SERVICE + ".$id": bson.ObjectIdHex(id)})
 	} else {
-		err := errors.New("mgoGetProvisionWatchersByServiceId Invalid Object ID " + id)
-		return err
+		return errors.New("mgoGetProvisionWatchersByServiceId Invalid Object ID " + id)
 	}
 }
-func mgoGetProvisionWatchersByServiceName(pw *[]models.ProvisionWatcher, n string) error {
-	return mgoGetProvisionWatchers(pw, bson.M{SERVICE + "." + NAME: n})
 
-}
-func mgoGetProvisionWatcherByProfileId(pw *[]models.ProvisionWatcher, id string) error {
+func (m *mongoDB) getProvisionWatcherByProfileId(pw *[]models.ProvisionWatcher, id string) error {
 	if bson.IsObjectIdHex(id) {
-		return mgoGetProvisionWatchers(pw, bson.M{PROFILE + ".$id": bson.ObjectIdHex(id)})
+		return m.getProvisionWatchers(pw, bson.M{PROFILE + ".$id": bson.ObjectIdHex(id)})
 	} else {
 		err := errors.New("mgoGetProvisionWatcherByProfileId Invalid Object ID " + id)
 		return err
 	}
 }
-func mgoGetProvisionWatcherById(pw *models.ProvisionWatcher, id string) error {
+
+func (m *mongoDB) getProvisionWatcherById(pw *models.ProvisionWatcher, id string) error {
 	if bson.IsObjectIdHex(id) {
-		return mgoGetProvisionWatcher(pw, bson.M{_ID: bson.ObjectIdHex(id)})
+		return m.getProvisionWatcher(pw, bson.M{_ID: bson.ObjectIdHex(id)})
 	} else {
 		err := errors.New("mgoGetProvisionWatcherById Invalid Object ID " + id)
 		return err
 	}
 }
-func mgoGetProvisionWatcher(pw *models.ProvisionWatcher, q bson.M) error {
-	ds := DS.dataStore()
-	defer ds.s.Close()
-	col := ds.s.DB(DB).C(PWCOL)
+
+func (m *mongoDB) getProvisionWatcher(pw *models.ProvisionWatcher, q bson.M) error {
+	s := m.s.Copy()
+	defer s.Close()
+	col := s.DB(DB).C(PWCOL)
 
 	// Handle DBRefs
 	var mpw MongoProvisionWatcher
@@ -927,10 +835,11 @@ func mgoGetProvisionWatcher(pw *models.ProvisionWatcher, q bson.M) error {
 
 	return err
 }
-func mgoGetProvisionWatchers(pw *[]models.ProvisionWatcher, q bson.M) error {
-	ds := DS.dataStore()
-	defer ds.s.Close()
-	col := ds.s.DB(DB).C(PWCOL)
+
+func (m *mongoDB) getProvisionWatchers(pw *[]models.ProvisionWatcher, q bson.M) error {
+	s := m.s.Copy()
+	defer s.Close()
+	col := s.DB(DB).C(PWCOL)
 
 	// Handle DBRefs
 	var mpws []MongoProvisionWatcher
@@ -946,10 +855,11 @@ func mgoGetProvisionWatchers(pw *[]models.ProvisionWatcher, q bson.M) error {
 
 	return nil
 }
-func mgoAddProvisionWatcher(pw *models.ProvisionWatcher) error {
-	ds := DS.dataStore()
-	defer ds.s.Close()
-	col := ds.s.DB(DB).C(PWCOL)
+
+func (m *mongoDB) addProvisionWatcher(pw *models.ProvisionWatcher) error {
+	s := m.s.Copy()
+	defer s.Close()
+	col := s.DB(DB).C(PWCOL)
 	count, err := col.Find(bson.M{NAME: pw.Name}).Count()
 	if err != nil {
 		return err
@@ -960,9 +870,9 @@ func mgoAddProvisionWatcher(pw *models.ProvisionWatcher) error {
 	// get Device Service
 	var dev models.DeviceService
 	if pw.Service.Service.Id.Hex() != "" {
-		mgoGetDeviceServiceById(&dev, pw.Service.Service.Id.Hex())
+		m.getDeviceServiceById(&dev, pw.Service.Service.Id.Hex())
 	} else if pw.Service.Service.Name != "" {
-		mgoGetDeviceServiceByName(&dev, pw.Service.Service.Name)
+		m.getDeviceServiceByName(&dev, pw.Service.Service.Name)
 	} else {
 		return errors.New("Device Service ID or Name is required")
 	}
@@ -971,9 +881,9 @@ func mgoAddProvisionWatcher(pw *models.ProvisionWatcher) error {
 	// get Device Profile
 	var dp models.DeviceProfile
 	if pw.Profile.Id.Hex() != "" {
-		mgoGetDeviceProfileById(&dp, pw.Profile.Id.Hex())
+		m.getDeviceProfileById(&dp, pw.Profile.Id.Hex())
 	} else if pw.Profile.Name != "" {
-		mgoGetDeviceProfileByName(&dp, pw.Profile.Name)
+		m.getDeviceProfileByName(&dp, pw.Profile.Name)
 	} else {
 		return errors.New("Device Profile ID or Name is required")
 	}
@@ -988,16 +898,13 @@ func mgoAddProvisionWatcher(pw *models.ProvisionWatcher) error {
 	// Handle DBRefs
 	mpw := MongoProvisionWatcher{ProvisionWatcher: *pw}
 
-	if err := col.Insert(mpw); err != nil {
-		return err
-	}
-
-	return nil
+	return col.Insert(mpw)
 }
-func mgoUpdateProvisionWatcher(pw models.ProvisionWatcher) error {
-	ds := DS.dataStore()
-	defer ds.s.Close()
-	c := ds.s.DB(DB).C(PWCOL)
+
+func (m *mongoDB) updateProvisionWatcher(pw models.ProvisionWatcher) error {
+	s := m.s.Copy()
+	defer s.Close()
+	c := s.DB(DB).C(PWCOL)
 
 	pw.Modified = makeTimestamp()
 
@@ -1007,74 +914,63 @@ func mgoUpdateProvisionWatcher(pw models.ProvisionWatcher) error {
 	return c.UpdateId(mpw.Id, mpw)
 }
 
-/* ------------------------Command -------------------------------------*/
-func mgoGetAllCommands(d *[]models.Command) error {
-	return mgoGetCommands(d, bson.M{})
+func (m *mongoDB) deleteProvisionWatcher(pw models.ProvisionWatcher) error {
+	return m.deleteById(PWCOL, pw.Id.Hex())
 }
 
-func mgoGetCommands(d *[]models.Command, q bson.M) error {
-	ds := DS.dataStore()
-	defer ds.s.Close()
-	col := ds.s.DB(DB).C(COMCOL)
-	err := col.Find(q).Sort(QUERYTS).All(d)
-	if err != nil {
-		return err
-	}
-	return nil
+//  ------------------------Command -------------------------------------*/
+func (m *mongoDB) getAllCommands(d *[]models.Command) error {
+	return m.getCommands(d, bson.M{})
 }
-func mgoGetCommandById(d *models.Command, id string) error {
+
+func (m *mongoDB) getCommands(d *[]models.Command, q bson.M) error {
+	s := m.s.Copy()
+	defer s.Close()
+	col := s.DB(DB).C(COMCOL)
+	return col.Find(q).Sort(QUERYTS).All(d)
+}
+
+func (m *mongoDB) getCommandById(d *models.Command, id string) error {
 	if bson.IsObjectIdHex(id) {
-		ds := DS.dataStore()
-		defer ds.s.Close()
-		col := ds.s.DB(DB).C(COMCOL)
-		if err := col.Find(bson.M{_ID: bson.ObjectIdHex(id)}).One(d); err != nil {
-			return err
-		}
-
-		return nil
+		s := m.s.Copy()
+		defer s.Close()
+		col := s.DB(DB).C(COMCOL)
+		return col.Find(bson.M{_ID: bson.ObjectIdHex(id)}).One(d)
 	} else {
-		err := errors.New("mgoGetCommandById Invalid Object ID " + id)
-		return err
+		return errors.New("mgoGetCommandById Invalid Object ID " + id)
 	}
 }
-func mgoGetCommandByName(c *[]models.Command, n string) error {
-	ds := DS.dataStore()
-	defer ds.s.Close()
-	col := ds.s.DB(DB).C(COMCOL)
-	if err := col.Find(bson.M{NAME: n}).All(c); err != nil {
-		return err
-	}
 
-	return nil
+func (m *mongoDB) getCommandByName(c *[]models.Command, n string) error {
+	s := m.s.Copy()
+	defer s.Close()
+	col := s.DB(DB).C(COMCOL)
+	return col.Find(bson.M{NAME: n}).All(c)
 }
-func mgoAddCommand(c *models.Command) error {
-	ds := DS.dataStore()
-	defer ds.s.Close()
-	col := ds.s.DB(DB).C(COMCOL)
+
+func (m *mongoDB) addCommand(c *models.Command) error {
+	s := m.s.Copy()
+	defer s.Close()
+	col := s.DB(DB).C(COMCOL)
 
 	ts := makeTimestamp()
 	c.Created = ts
 	c.Id = bson.NewObjectId()
-	if err := col.Insert(c); err != nil {
-		return err
-	}
-
-	return nil
+	return col.Insert(c)
 }
 
 // Update command uses the ID of the command for identification
-func mgoUpdateCommand(c *models.Command, r *models.Command) error {
-	ds := DS.dataStore()
-	defer ds.s.Close()
-	col := ds.s.DB(DB).C(COMCOL)
+func (m *mongoDB) updateCommand(c *models.Command, r *models.Command) error {
+	s := m.s.Copy()
+	defer s.Close()
+	col := s.DB(DB).C(COMCOL)
 	if c == nil {
 		return nil
 	}
 
 	// Check if the command has a valid ID
 	if len(c.Id.Hex()) == 0 || !bson.IsObjectIdHex(c.Id.Hex()) {
-		err := errors.New("ID required for updating a command")
-		return err
+		return errors.New("ID required for updating a command")
 	}
 
 	// Update the fields
@@ -1093,18 +989,15 @@ func mgoUpdateCommand(c *models.Command, r *models.Command) error {
 		r.Origin = c.Origin
 	}
 
-	if err := col.UpdateId(r.Id, r); err != nil {
-		return err
-	}
-	return nil
+	return col.UpdateId(r.Id, r)
 }
 
 // Delete the command by ID
 // Check if the command is still in use by device profiles
-func mgoDeleteCommandById(id string) error {
-	ds := DS.dataStore()
-	defer ds.s.Close()
-	col := ds.s.DB(DB).C(COMCOL)
+func (m *mongoDB) deleteCommandById(id string) error {
+	s := m.s.Copy()
+	defer s.Close()
+	col := s.DB(DB).C(COMCOL)
 
 	if !bson.IsObjectIdHex(id) {
 		return errors.New("Invalid ID")
@@ -1112,7 +1005,7 @@ func mgoDeleteCommandById(id string) error {
 
 	// Check if the command is still in use
 	query := bson.M{"commands": bson.M{"$elemMatch": bson.M{"_id": bson.ObjectIdHex(id)}}}
-	count, err := ds.s.DB(DB).C(DPCOL).Find(query).Count()
+	count, err := s.DB(DB).C(DPCOL).Find(query).Count()
 	if err != nil {
 		return err
 	}
@@ -1121,4 +1014,33 @@ func mgoDeleteCommandById(id string) error {
 	}
 
 	return col.RemoveId(bson.ObjectIdHex(id))
+}
+
+func (m *mongoDB) deleteById(c string, did string) error {
+	if bson.IsObjectIdHex(did) {
+		s := m.s.Copy()
+		defer s.Close()
+		col := s.DB(DB).C(c)
+		err := col.RemoveId(bson.ObjectIdHex(did))
+		if err != nil {
+			return err
+		}
+
+		return nil
+	} else {
+		err := errors.New("Invalid object ID " + did)
+		return err
+	}
+}
+
+func (m *mongoDB) deleteByName(c string, n string) error {
+	s := m.s.Copy()
+	defer s.Close()
+	col := s.DB(DB).C(c)
+	err := col.Remove(bson.M{NAME: n})
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

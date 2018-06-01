@@ -15,8 +15,6 @@ package metadata
 
 import (
 	"errors"
-
-	"github.com/edgexfoundry/edgex-go/core/domain/enums"
 )
 
 // Struct used to pase the JSON configuration file
@@ -59,14 +57,13 @@ var configuration ConfigurationStruct = ConfigurationStruct{} // Needs to be ini
 
 var (
 	/* -------------- CONFIG for METADATA -------------------- */
-	DATABASE            enums.DATABASE
-	DBTYPE              = "mongodb"
-	PROTOCOL            = "http"
-	SERVERPORT          = "48081"
-	DOCKERMONGO         = "edgex-mongo:27017"
-	DBUSER              = "meta"
-	DBPASS              = "password"
-	MONGODATABASE       = "metadata"
+	db            DBClient
+	PROTOCOL      = "http"
+	SERVERPORT    = "48081"
+	DOCKERMONGO   = "edgex-mongo:27017"
+	DBUSER        = "meta"
+	DBPASS        = "password"
+	MONGODATABASE = "metadata"
 
 	MAX_LIMIT int = 1000
 
@@ -101,7 +98,7 @@ var (
 	ADDRESSABLE              = "addressable"
 	ADDRESSABLENAME          = "addressablename"
 	ADDRESSABLEID            = "addressableid"
-	CHECK					 = "check"
+	CHECK                    = "check"
 	SERVICE                  = "service"
 	SERVICENAME              = "servicename"
 	SERVICEID                = "serviceid"

@@ -72,10 +72,10 @@ func (mse *MongoScheduleEvent) SetBSON(raw bson.Raw) error {
 	mse.Service = decoded.Service
 
 	// De-reference the DBRef fields
-	ds := DS.dataStore()
-	defer ds.s.Close()
+	s := getMongoSessionCopy()
+	defer s.Close()
 
-	addCol := ds.s.DB(DB).C(ADDCOL)
+	addCol := s.DB(DB).C(ADDCOL)
 
 	var a models.Addressable
 

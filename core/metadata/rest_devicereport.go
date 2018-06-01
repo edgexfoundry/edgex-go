@@ -26,7 +26,7 @@ import (
 
 func restGetAllDeviceReports(w http.ResponseWriter, _ *http.Request) {
 	res := make([]models.DeviceReport, 0)
-	err := getAllDeviceReports(&res)
+	err := db.getAllDeviceReports(&res)
 	if err != nil {
 		loggingClient.Error(err.Error(), "")
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -59,7 +59,7 @@ func restAddDeviceReport(w http.ResponseWriter, r *http.Request) {
 
 	// Check if the device exists
 	var d models.Device
-	if err := getDeviceByName(&d, dr.Device); err != nil {
+	if err := db.getDeviceByName(&d, dr.Device); err != nil {
 		if err == mgo.ErrNotFound {
 			http.Error(w, "Device referenced by Device Report doesn't exist", http.StatusNotFound)
 		} else {
@@ -71,7 +71,7 @@ func restAddDeviceReport(w http.ResponseWriter, r *http.Request) {
 
 	// Check if the Schedule Event exists
 	var se models.ScheduleEvent
-	if err := getScheduleEventByName(&se, dr.Event); err != nil {
+	if err := db.getScheduleEventByName(&se, dr.Event); err != nil {
 		if err == mgo.ErrNotFound {
 			http.Error(w, "Schedule Event referenced by Device Report doesn't exist", http.StatusNotFound)
 		} else {
@@ -82,7 +82,7 @@ func restAddDeviceReport(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Add the device report
-	if err := addDeviceReport(&dr); err != nil {
+	if err := db.addDeviceReport(&dr); err != nil {
 		if err == ErrDuplicateName {
 			http.Error(w, "Duplicate Name for the device report", http.StatusConflict)
 		} else {
@@ -113,9 +113,9 @@ func restUpdateDeviceReport(w http.ResponseWriter, r *http.Request) {
 	// Check if the device report exists
 	var to models.DeviceReport
 	// First try ID
-	if err := getDeviceReportById(&to, from.Id.Hex()); err != nil {
+	if err := db.getDeviceReportById(&to, from.Id.Hex()); err != nil {
 		// Try by name
-		if err = getDeviceReportByName(&to, from.Name); err != nil {
+		if err = db.getDeviceReportByName(&to, from.Name); err != nil {
 			if err == mgo.ErrNotFound {
 				http.Error(w, err.Error(), http.StatusNotFound)
 			} else {
@@ -131,7 +131,7 @@ func restUpdateDeviceReport(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := updateDeviceReport(&to); err != nil {
+	if err := db.updateDeviceReport(&to); err != nil {
 		loggingClient.Error(err.Error(), "")
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return
@@ -177,7 +177,7 @@ func updateDeviceReportFields(from models.DeviceReport, to *models.DeviceReport,
 // Validate that the device exists
 func validateDevice(d string, w http.ResponseWriter) error {
 	var device models.Device
-	if err := getDeviceByName(&device, d); err != nil {
+	if err := db.getDeviceByName(&device, d); err != nil {
 		if err == mgo.ErrNotFound {
 			http.Error(w, "Device was not found", http.StatusNotFound)
 		} else {
@@ -192,7 +192,7 @@ func validateDevice(d string, w http.ResponseWriter) error {
 // Validate that the schedule event exists
 func validateEvent(e string, w http.ResponseWriter) error {
 	var event models.ScheduleEvent
-	if err := getScheduleEventByName(&event, e); err != nil {
+	if err := db.getScheduleEventByName(&event, e); err != nil {
 		if err == mgo.ErrNotFound {
 			http.Error(w, "Event was not found", http.StatusNotFound)
 		} else {
@@ -208,7 +208,7 @@ func restGetReportById(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	var did string = vars[ID]
 	var res models.DeviceReport
-	err := getDeviceReportById(&res, did)
+	err := db.getDeviceReportById(&res, did)
 	if err != nil {
 		if err == mgo.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
@@ -233,7 +233,7 @@ func restGetReportByName(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var res models.DeviceReport
-	err = getDeviceReportByName(&res, n)
+	err = db.getDeviceReportByName(&res, n)
 	if err != nil {
 		if err == mgo.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
@@ -261,7 +261,7 @@ func restGetValueDescriptorsForDeviceName(w http.ResponseWriter, r *http.Request
 
 	// Get all the associated device reports
 	var reports []models.DeviceReport
-	if err = getDeviceReportByDeviceName(&reports, n); err != nil {
+	if err = db.getDeviceReportByDeviceName(&reports, n); err != nil {
 		loggingClient.Error(err.Error(), "")
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return
@@ -287,7 +287,7 @@ func restGetDeviceReportByDeviceName(w http.ResponseWriter, r *http.Request) {
 	}
 
 	res := make([]models.DeviceReport, 0)
-	err = getDeviceReportByDeviceName(&res, n)
+	err = db.getDeviceReportByDeviceName(&res, n)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		loggingClient.Error(err.Error(), "")
@@ -304,7 +304,7 @@ func restDeleteReportById(w http.ResponseWriter, r *http.Request) {
 
 	// Check if the device report exists
 	var dr models.DeviceReport
-	if err := getDeviceReportById(&dr, id); err != nil {
+	if err := db.getDeviceReportById(&dr, id); err != nil {
 		if err == mgo.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
 		} else {
@@ -334,7 +334,7 @@ func restDeleteReportByName(w http.ResponseWriter, r *http.Request) {
 
 	// Check if the device report exists
 	var dr models.DeviceReport
-	if err = getDeviceReportByName(&dr, n); err != nil {
+	if err = db.getDeviceReportByName(&dr, n); err != nil {
 		if err == mgo.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
 		} else {
@@ -354,7 +354,7 @@ func restDeleteReportByName(w http.ResponseWriter, r *http.Request) {
 }
 
 func deleteDeviceReport(dr models.DeviceReport, w http.ResponseWriter) error {
-	if err := deleteById(DRCOL, dr.Id.Hex()); err != nil {
+	if err := db.deleteDeviceReport(dr); err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return err
 	}
@@ -371,13 +371,13 @@ func deleteDeviceReport(dr models.DeviceReport, w http.ResponseWriter) error {
 func notifyDeviceReportAssociates(dr models.DeviceReport, action string) error {
 	// Get the device of the report
 	var d models.Device
-	if err := getDeviceByName(&d, dr.Device); err != nil {
+	if err := db.getDeviceByName(&d, dr.Device); err != nil {
 		return err
 	}
 
 	// Get the device service for the device
 	var ds models.DeviceService
-	if err := getDeviceServiceById(&ds, d.Service.Service.Id.Hex()); err != nil {
+	if err := db.getDeviceServiceById(&ds, d.Service.Service.Id.Hex()); err != nil {
 		return err
 	}
 

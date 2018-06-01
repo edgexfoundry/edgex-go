@@ -48,11 +48,14 @@ func (as *AdminState) UnmarshalJSON(data []byte) error {
 	*as = got
 	return nil
 }
+
 func IsAdminStateType(as string) bool {
+	_, found := GetAdminState(as)
+	return found
+}
+
+func GetAdminState(as string) (AdminState, bool) {
 	as = strings.ToUpper(as)
-	_, err := map[string]AdminState{"LOCKED": Locked, "UNLOCKED": Unlocked}[as]
-	if !err {
-		return false
-	}
-	return true
+	retValue, err := map[string]AdminState{"LOCKED": Locked, "UNLOCKED": Unlocked}[as]
+	return retValue, err
 }

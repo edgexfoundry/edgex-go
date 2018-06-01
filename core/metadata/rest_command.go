@@ -26,7 +26,7 @@ import (
 
 func restGetAllCommands(w http.ResponseWriter, _ *http.Request) {
 	results := make([]models.Command, 0)
-	err := getAllCommands(&results)
+	err := db.getAllCommands(&results)
 	if err != nil {
 		loggingClient.Error(err.Error(), "")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -52,7 +52,7 @@ func restAddCommand(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := addCommand(&c); err != nil {
+	if err := db.addCommand(&c); err != nil {
 		loggingClient.Error(err.Error(), "")
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return
@@ -76,7 +76,7 @@ func restUpdateCommand(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check if command exists (By ID)
-	err := getCommandById(&res, c.Id.Hex())
+	err := db.getCommandById(&res, c.Id.Hex())
 	if err != nil {
 		loggingClient.Error(err.Error(), "")
 		http.Error(w, err.Error(), http.StatusNotFound)
@@ -86,7 +86,7 @@ func restUpdateCommand(w http.ResponseWriter, r *http.Request) {
 	// Name is changed, make sure the new name doesn't conflict with device profile
 	if c.Name != "" {
 		var dp []models.DeviceProfile
-		err = getDeviceProfilesUsingCommand(&dp, c)
+		err = db.getDeviceProfilesUsingCommand(&dp, c)
 		if err != nil {
 			loggingClient.Error(err.Error(), "")
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -106,7 +106,7 @@ func restUpdateCommand(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if err := updateCommand(&c, &res); err != nil {
+	if err := db.updateCommand(&c, &res); err != nil {
 		loggingClient.Error(err.Error(), "")
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return
@@ -120,7 +120,7 @@ func restGetCommandById(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	var did string = vars[ID]
 	var res models.Command
-	err := getCommandById(&res, did)
+	err := db.getCommandById(&res, did)
 	if err != nil {
 		if err == ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
@@ -144,7 +144,7 @@ func restGetCommandByName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	results := []models.Command{}
-	err = getCommandByName(&results, n)
+	err = db.getCommandByName(&results, n)
 	if err != nil {
 		loggingClient.Error(err.Error(), "")
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -162,7 +162,7 @@ func restDeleteCommandById(w http.ResponseWriter, r *http.Request) {
 
 	// Check if the command exists
 	var c models.Command
-	err := getCommandById(&c, id)
+	err := db.getCommandById(&c, id)
 	if err != nil {
 		loggingClient.Error(err.Error(), "")
 		http.Error(w, err.Error(), http.StatusNotFound)
@@ -183,7 +183,7 @@ func restDeleteCommandById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := deleteCommandById(id); err != nil {
+	if err := db.deleteCommandById(id); err != nil {
 		loggingClient.Error(err.Error(), "")
 		if err == mgo.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
@@ -202,7 +202,7 @@ func restDeleteCommandById(w http.ResponseWriter, r *http.Request) {
 // Helper function to determine if the command is still in use by device profiles
 func isCommandStillInUse(c models.Command) (bool, error) {
 	var dp []models.DeviceProfile
-	err := getDeviceProfilesUsingCommand(&dp, c)
+	err := db.getDeviceProfilesUsingCommand(&dp, c)
 	if err != nil {
 		return false, err
 	}

@@ -18,15 +18,12 @@ import (
 	"strconv"
 	"strings"
 
-	enums "github.com/edgexfoundry/edgex-go/core/domain/enums"
+	"github.com/edgexfoundry/edgex-go/internal"
 	consulclient "github.com/edgexfoundry/edgex-go/support/consul-client"
 	logger "github.com/edgexfoundry/edgex-go/support/logging-client"
 	notifications "github.com/edgexfoundry/edgex-go/support/notifications-client"
-	"github.com/edgexfoundry/edgex-go/internal"
 )
 
-// DS : DataStore to retrieve data from database.
-var DS DataStore
 var loggingClient logger.LoggingClient
 
 func ConnectToConsul(conf ConfigurationStruct) error {
@@ -60,7 +57,7 @@ func Init(conf ConfigurationStruct, l logger.LoggingClient) error {
 	MONGODATABASE = configuration.MongoDatabaseName
 	PROTOCOL = configuration.Protocol
 	SERVERPORT = strconv.Itoa(configuration.ServicePort)
-	DBTYPE = configuration.DBType
+	dbType := configuration.DBType
 	DOCKERMONGO = configuration.MongoDBHost + ":" + strconv.Itoa(configuration.MongoDBPort)
 	DBUSER = configuration.MongoDBUserName
 	DBPASS = configuration.MongoDBPassword
@@ -70,20 +67,17 @@ func Init(conf ConfigurationStruct, l logger.LoggingClient) error {
 
 	var err error
 	// Connect to the database
-	DATABASE, err = enums.GetDatabaseType(DBTYPE)
+	db, err = getDatabase(dbType)
 	if err != nil {
 		return err
 	}
-	if !dbConnect() {
-		return err
-	}
 
-	return nil
+	return db.Connect()
 }
 
 func Destruct() {
-	if DS.s != nil {
-		DS.s.Close()
+	if db != nil {
+		db.CloseSession()
+		db = nil
 	}
 }
-
