@@ -21,15 +21,14 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/edgexfoundry/edgex-go/core/clients"
+	"github.com/edgexfoundry/edgex-go/core/clients/types"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
-	"github.com/edgexfoundry/edgex-go/support/logging-client"
 )
 
 var (
 	ErrResponseNil       = errors.New("Response was nil")
 	ErrNotFound    error = errors.New("Item not found")
-	CoreData             = "coredata"
-	loggingClient        = logger.NewClient(CoreData, false, "")
 )
 
 // Addressable client for interacting with the addressable section of metadata
@@ -49,19 +48,35 @@ type ValueDescriptorClient interface {
 
 type ValueDescriptorRestClient struct {
 	url string
+	endpoint clients.Endpointer
 }
 
-func NewValueDescriptorClient(valueDescriptorUrl string) ValueDescriptorClient {
-	v := ValueDescriptorRestClient{url: valueDescriptorUrl}
+func NewValueDescriptorClient(params types.EndpointParams, m clients.Endpointer) ValueDescriptorClient {
+	v := ValueDescriptorRestClient{endpoint:m}
+	v.init(params)
 	return &v
+}
+
+func(d *ValueDescriptorRestClient) init(params types.EndpointParams) {
+	if params.UseRegistry {
+		ch := make(chan string, 1)
+		go d.endpoint.Monitor(params, ch)
+		go func(ch chan string) {
+			for true {
+				select {
+				case url := <- ch:
+					d.url = url
+				}
+			}
+		}(ch)
+	} else {
+		d.url = params.Url
+	}
 }
 
 // Helper method to get the body from the response after making the request
 func getBody(resp *http.Response) ([]byte, error) {
 	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		loggingClient.Error(err.Error())
-	}
 	return body, err
 }
 
@@ -69,9 +84,7 @@ func getBody(resp *http.Response) ([]byte, error) {
 func makeRequest(req *http.Request) (*http.Response, error) {
 	client := &http.Client{}
 	resp, err := client.Do(req)
-	if err != nil {
-		loggingClient.Error(err.Error())
-	}
+
 	return resp, err
 }
 
@@ -81,9 +94,6 @@ func (v *ValueDescriptorRestClient) decodeValueDescriptorSlice(resp *http.Respon
 
 	dec := json.NewDecoder(resp.Body)
 	err := dec.Decode(&dSlice)
-	if err != nil {
-		loggingClient.Error(err.Error())
-	}
 
 	return dSlice, err
 }
@@ -94,9 +104,6 @@ func (v *ValueDescriptorRestClient) decodeValueDescriptor(resp *http.Response) (
 	vdr := models.ValueDescriptor{}
 
 	err := dec.Decode(&vdr)
-	if err != nil {
-		loggingClient.Error(err.Error())
-	}
 
 	return vdr, err
 }
@@ -105,17 +112,14 @@ func (v *ValueDescriptorRestClient) decodeValueDescriptor(resp *http.Response) (
 func (v *ValueDescriptorRestClient) ValueDescriptors() ([]models.ValueDescriptor, error) {
 	req, err := http.NewRequest(http.MethodGet, v.url, nil)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return []models.ValueDescriptor{}, err
 	}
 
 	resp, err := makeRequest(req)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return []models.ValueDescriptor{}, err
 	}
 	if resp == nil {
-		loggingClient.Error(ErrResponseNil.Error())
 		return []models.ValueDescriptor{}, ErrResponseNil
 	}
 	defer resp.Body.Close()
@@ -125,7 +129,6 @@ func (v *ValueDescriptorRestClient) ValueDescriptors() ([]models.ValueDescriptor
 		// Get the response body
 		bodyBytes, err := getBody(resp)
 		if err != nil {
-			loggingClient.Error(err.Error())
 			return []models.ValueDescriptor{}, err
 		}
 		bodyString := string(bodyBytes)
@@ -139,17 +142,14 @@ func (v *ValueDescriptorRestClient) ValueDescriptors() ([]models.ValueDescriptor
 func (v *ValueDescriptorRestClient) ValueDescriptor(id string) (models.ValueDescriptor, error) {
 	req, err := http.NewRequest(http.MethodGet, v.url+"/"+id, nil)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return models.ValueDescriptor{}, err
 	}
 
 	resp, err := makeRequest(req)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return models.ValueDescriptor{}, err
 	}
 	if resp == nil {
-		loggingClient.Error(ErrResponseNil.Error())
 		return models.ValueDescriptor{}, ErrResponseNil
 	}
 	defer resp.Body.Close()
@@ -157,7 +157,6 @@ func (v *ValueDescriptorRestClient) ValueDescriptor(id string) (models.ValueDesc
 	if resp.StatusCode != 200 {
 		bodyBytes, err := getBody(resp)
 		if err != nil {
-			loggingClient.Error(err.Error())
 			return models.ValueDescriptor{}, err
 		}
 		bodyString := string(bodyBytes)
@@ -172,17 +171,14 @@ func (v *ValueDescriptorRestClient) ValueDescriptor(id string) (models.ValueDesc
 func (v *ValueDescriptorRestClient) ValueDescriptorForName(name string) (models.ValueDescriptor, error) {
 	req, err := http.NewRequest(http.MethodGet, v.url+"/name/"+url.QueryEscape(name), nil)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return models.ValueDescriptor{}, err
 	}
 
 	resp, err := makeRequest(req)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return models.ValueDescriptor{}, err
 	}
 	if resp == nil {
-		loggingClient.Error(ErrResponseNil.Error())
 		return models.ValueDescriptor{}, ErrResponseNil
 	}
 	defer resp.Body.Close()
@@ -190,7 +186,6 @@ func (v *ValueDescriptorRestClient) ValueDescriptorForName(name string) (models.
 	if resp.StatusCode != 200 {
 		bodyBytes, err := getBody(resp)
 		if err != nil {
-			loggingClient.Error(err.Error())
 			return models.ValueDescriptor{}, err
 		}
 		bodyString := string(bodyBytes)
@@ -204,17 +199,14 @@ func (v *ValueDescriptorRestClient) ValueDescriptorForName(name string) (models.
 func (v *ValueDescriptorRestClient) ValueDescriptorsByLabel(label string) ([]models.ValueDescriptor, error) {
 	req, err := http.NewRequest(http.MethodGet, v.url+"/label/"+url.QueryEscape(label), nil)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return []models.ValueDescriptor{}, err
 	}
 
 	resp, err := makeRequest(req)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return []models.ValueDescriptor{}, err
 	}
 	if resp == nil {
-		loggingClient.Error(ErrResponseNil.Error())
 		return []models.ValueDescriptor{}, ErrResponseNil
 	}
 	defer resp.Body.Close()
@@ -222,7 +214,6 @@ func (v *ValueDescriptorRestClient) ValueDescriptorsByLabel(label string) ([]mod
 	if resp.StatusCode != 200 {
 		bodyBytes, err := getBody(resp)
 		if err != nil {
-			loggingClient.Error(err.Error())
 			return []models.ValueDescriptor{}, err
 		}
 		bodyString := string(bodyBytes)
@@ -236,17 +227,14 @@ func (v *ValueDescriptorRestClient) ValueDescriptorsByLabel(label string) ([]mod
 func (v *ValueDescriptorRestClient) ValueDescriptorsForDevice(deviceId string) ([]models.ValueDescriptor, error) {
 	req, err := http.NewRequest(http.MethodGet, v.url+"/deviceid/"+deviceId, nil)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return []models.ValueDescriptor{}, err
 	}
 
 	resp, err := makeRequest(req)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return []models.ValueDescriptor{}, err
 	}
 	if resp == nil {
-		loggingClient.Error(ErrResponseNil.Error())
 		return []models.ValueDescriptor{}, ErrResponseNil
 	}
 	defer resp.Body.Close()
@@ -254,7 +242,6 @@ func (v *ValueDescriptorRestClient) ValueDescriptorsForDevice(deviceId string) (
 	if resp.StatusCode != 200 {
 		bodyBytes, err := getBody(resp)
 		if err != nil {
-			loggingClient.Error(err.Error())
 			return []models.ValueDescriptor{}, err
 		}
 		bodyString := string(bodyBytes)
@@ -268,17 +255,14 @@ func (v *ValueDescriptorRestClient) ValueDescriptorsForDevice(deviceId string) (
 func (v *ValueDescriptorRestClient) ValueDescriptorsForDeviceByName(deviceName string) ([]models.ValueDescriptor, error) {
 	req, err := http.NewRequest(http.MethodGet, v.url+"/devicename/"+deviceName, nil)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return []models.ValueDescriptor{}, err
 	}
 
 	resp, err := makeRequest(req)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return []models.ValueDescriptor{}, err
 	}
 	if resp == nil {
-		loggingClient.Error(ErrResponseNil.Error())
 		return []models.ValueDescriptor{}, ErrResponseNil
 	}
 	defer resp.Body.Close()
@@ -286,7 +270,6 @@ func (v *ValueDescriptorRestClient) ValueDescriptorsForDeviceByName(deviceName s
 	if resp.StatusCode != 200 {
 		bodyBytes, err := getBody(resp)
 		if err != nil {
-			loggingClient.Error(err.Error())
 			return []models.ValueDescriptor{}, err
 		}
 		bodyString := string(bodyBytes)
@@ -300,17 +283,14 @@ func (v *ValueDescriptorRestClient) ValueDescriptorsForDeviceByName(deviceName s
 func (v *ValueDescriptorRestClient) ValueDescriptorsByUomLabel(uomLabel string) ([]models.ValueDescriptor, error) {
 	req, err := http.NewRequest(http.MethodGet, v.url+"/uomlabel/"+uomLabel, nil)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return []models.ValueDescriptor{}, err
 	}
 
 	resp, err := makeRequest(req)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return []models.ValueDescriptor{}, err
 	}
 	if resp == nil {
-		loggingClient.Error(ErrResponseNil.Error())
 		return []models.ValueDescriptor{}, ErrResponseNil
 	}
 	defer resp.Body.Close()
@@ -318,7 +298,6 @@ func (v *ValueDescriptorRestClient) ValueDescriptorsByUomLabel(uomLabel string) 
 	if resp.StatusCode != 200 {
 		bodyBytes, err := getBody(resp)
 		if err != nil {
-			loggingClient.Error(err.Error())
 			return []models.ValueDescriptor{}, err
 		}
 		bodyString := string(bodyBytes)
@@ -332,24 +311,20 @@ func (v *ValueDescriptorRestClient) ValueDescriptorsByUomLabel(uomLabel string) 
 func (v *ValueDescriptorRestClient) Add(vdr *models.ValueDescriptor) (string, error) {
 	jsonStr, err := json.Marshal(vdr)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return "", err
 	}
 
 	req, err := http.NewRequest(http.MethodPost, v.url, bytes.NewReader(jsonStr))
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return "", err
 	}
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := makeRequest(req)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return "", err
 	}
 	if resp == nil {
-		loggingClient.Error(ErrResponseNil.Error())
 		return "", ErrResponseNil
 	}
 	defer resp.Body.Close()
@@ -357,7 +332,6 @@ func (v *ValueDescriptorRestClient) Add(vdr *models.ValueDescriptor) (string, er
 	// Get the response body
 	bodyBytes, err := getBody(resp)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return "", err
 	}
 	bodyString := string(bodyBytes)
@@ -373,24 +347,20 @@ func (v *ValueDescriptorRestClient) Add(vdr *models.ValueDescriptor) (string, er
 func (v *ValueDescriptorRestClient) Update(vdr *models.ValueDescriptor) error {
 	jsonStr, err := json.Marshal(&vdr)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return err
 	}
 
 	req, err := http.NewRequest(http.MethodPut, v.url, bytes.NewReader(jsonStr))
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return err
 	}
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := makeRequest(req)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return err
 	}
 	if resp == nil {
-		loggingClient.Error(ErrResponseNil.Error())
 		return ErrResponseNil
 	}
 	defer resp.Body.Close()
@@ -398,7 +368,6 @@ func (v *ValueDescriptorRestClient) Update(vdr *models.ValueDescriptor) error {
 	if resp.StatusCode != 200 {
 		bodyBytes, err := getBody(resp)
 		if err != nil {
-			loggingClient.Error(err.Error())
 			return err
 		}
 		bodyString := string(bodyBytes)
@@ -413,17 +382,14 @@ func (v *ValueDescriptorRestClient) Update(vdr *models.ValueDescriptor) error {
 func (v *ValueDescriptorRestClient) Delete(id string) error {
 	req, err := http.NewRequest(http.MethodDelete, v.url+"/id/"+id, nil)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return err
 	}
 
 	resp, err := makeRequest(req)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return err
 	}
 	if resp == nil {
-		loggingClient.Error(ErrResponseNil.Error())
 		return ErrResponseNil
 	}
 	defer resp.Body.Close()
@@ -431,7 +397,6 @@ func (v *ValueDescriptorRestClient) Delete(id string) error {
 	if resp.StatusCode != 200 {
 		bodyBytes, err := getBody(resp)
 		if err != nil {
-			loggingClient.Error(err.Error())
 			return err
 		}
 		bodyString := string(bodyBytes)
@@ -446,17 +411,14 @@ func (v *ValueDescriptorRestClient) Delete(id string) error {
 func (v *ValueDescriptorRestClient) DeleteByName(name string) error {
 	req, err := http.NewRequest(http.MethodDelete, v.url+"/name/"+name, nil)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return err
 	}
 
 	resp, err := makeRequest(req)
 	if err != nil {
-		loggingClient.Error(err.Error())
 		return err
 	}
 	if resp == nil {
-		loggingClient.Error(ErrResponseNil.Error())
 		return ErrResponseNil
 	}
 	defer resp.Body.Close()
@@ -464,7 +426,6 @@ func (v *ValueDescriptorRestClient) DeleteByName(name string) error {
 	if resp.StatusCode != 200 {
 		bodyBytes, err := getBody(resp)
 		if err != nil {
-			loggingClient.Error(err.Error())
 			return err
 		}
 		bodyString := string(bodyBytes)

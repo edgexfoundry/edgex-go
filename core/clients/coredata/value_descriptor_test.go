@@ -14,9 +14,14 @@
 package coredata
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
+
+	"github.com/edgexfoundry/edgex-go/core/clients/types"
+	"github.com/edgexfoundry/edgex-go/internal"
 )
 
 const (
@@ -52,7 +57,13 @@ func TestGetvaluedescriptors(t *testing.T) {
 
 	url := ts.URL + ValueDescriptorUriPath
 
-	vdc := NewValueDescriptorClient(url)
+	params := types.EndpointParams{
+		ServiceKey:internal.CoreDataServiceKey,
+		Path:ValueDescriptorUriPath,
+		UseRegistry:false,
+		Url:url}
+
+	vdc := NewValueDescriptorClient(params, mockEndpoint{})
 
 	vdArr, err := vdc.ValueDescriptors()
 	if err != nil {
@@ -71,5 +82,43 @@ func TestGetvaluedescriptors(t *testing.T) {
 	vd2 := vdArr[1]
 	if vd2.Description != TestValueDesciptorDescription2 {
 		t.Errorf("expected second value descriptor's description is : %s, actual description is : %s ", TestValueDesciptorDescription2, vd2.Description)
+	}
+}
+
+func TestNewValueDescriptorClientWithConsul(t *testing.T) {
+	deviceUrl := "http://localhost:48080" + ValueDescriptorUriPath
+	params := types.EndpointParams{
+		ServiceKey:internal.CoreDataServiceKey,
+		Path:ValueDescriptorUriPath,
+		UseRegistry:true,
+		Url:deviceUrl}
+
+	vdc := NewValueDescriptorClient(params, mockEndpoint{})
+
+	r, ok := vdc.(*ValueDescriptorRestClient)
+	if !ok {
+		t.Error("vdc is not of expected type")
+	}
+
+	time.Sleep(25 * time.Millisecond)
+	if len(r.url) == 0 {
+		t.Error("url was not initialized")
+	} else if r.url != deviceUrl {
+		t.Errorf("unexpected url value %s", r.url)
+	}
+}
+
+type mockEndpoint struct {
+
+}
+
+func(e mockEndpoint) Monitor(params types.EndpointParams, ch chan string) {
+	switch (params.ServiceKey) {
+	case internal.CoreDataServiceKey:
+		url := fmt.Sprintf("http://%s:%v%s", "localhost", 48080, params.Path)
+		ch <- url
+		break
+	default:
+		ch <- ""
 	}
 }
