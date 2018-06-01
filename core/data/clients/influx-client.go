@@ -191,21 +191,9 @@ func (ic *InfluxClient) EventsByCreationTime(startTime, endTime int64, limit int
 
 // Get Events that are older than the given age (defined by age = now - created)
 func (ic *InfluxClient) EventsOlderThanAge(age int64) ([]models.Event, error) {
-	currentTime := time.Now().UnixNano() / int64(time.Millisecond)
-	events, err := ic.getEvents("")
-	if err != nil {
-		return nil, err
-	}
-
-	// Find each event that meets the age criteria
-	newEventList := []models.Event{}
-	for _, event := range events {
-		if (currentTime - event.Created) > age {
-			newEventList = append(newEventList, event)
-		}
-	}
-
-	return newEventList, nil
+	expireDate := (time.Now().UnixNano() / int64(time.Millisecond)) - age
+	query := fmt.Sprintf("WHERE created < %d", expireDate)
+	return ic.getEvents(query)
 }
 
 // Get all of the events that have been pushed
