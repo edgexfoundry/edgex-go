@@ -8,10 +8,11 @@ package distro
 
 import (
 	"crypto/tls"
-	"github.com/edgexfoundry/edgex-go/core/domain/models"
-	"github.com/mattn/go-xmpp"
 	"strings"
 	"time"
+
+	"github.com/edgexfoundry/edgex-go/core/domain/models"
+	"github.com/mattn/go-xmpp"
 )
 
 type xmppSender struct {
@@ -55,7 +56,7 @@ func NewXMPPSender(addr models.Addressable) Sender {
 	return sender
 }
 
-func (sender *xmppSender) Send(data []byte) {
+func (sender *xmppSender) Send(data []byte, event *models.Event) {
 	stringData := string(data)
 
 	sender.client.Send(xmpp.Chat{
