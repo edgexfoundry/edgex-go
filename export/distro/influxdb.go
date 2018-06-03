@@ -70,13 +70,12 @@ func (sender *influxdbSender) Send(data []byte, event *models.Event) {
 		}
 
 		tags := map[string]string{
-			"event":       event.Event,
 			"device":      reading.Device,
 			"sensor_name": reading.Name,
 		}
 
 		pt, err := client.NewPoint(
-			"reading",
+			"readings",
 			tags,
 			fields,
 			time.Now(),
