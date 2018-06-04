@@ -14,6 +14,8 @@
 package metadata
 
 import (
+	"fmt"
+
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
@@ -81,6 +83,9 @@ func (mds *MongoDeviceService) SetBSON(raw bson.Raw) error {
 
 	// De-reference the DBRef fields
 	s := getMongoSessionCopy()
+	if s == nil {
+		return fmt.Errorf("Could not obtain a mongo session")
+	}
 	defer s.Close()
 
 	addCol := s.DB(DB).C(ADDCOL)

@@ -31,8 +31,12 @@ type mongoDB struct {
 }
 
 func getMongoSessionCopy() *mgo.Session {
-	m := db.(*mongoDB)
-	return m.s.Copy()
+	m, ok := db.(*mongoDB)
+	if ok {
+		return m.s.Copy()
+	} else {
+		return nil
+	}
 }
 
 func (m *mongoDB) Connect() error {
