@@ -8,6 +8,7 @@ package clients
 
 import (
 	"fmt"
+	"strconv"
 	"testing"
 	"time"
 
@@ -631,4 +632,156 @@ func testDB(t *testing.T, db DBClient) {
 func TestMemoryDB(t *testing.T) {
 	memory := &memDB{}
 	testDB(t, memory)
+}
+
+func BenchmarkMemoryDB(b *testing.B) {
+	config := DBConfiguration{
+		DbType: MEMORY,
+	}
+
+	benchmarkDB(b, config)
+}
+
+func benchmarkDB(b *testing.B, config DBConfiguration) {
+	db, err := NewDBClient(config)
+	if err != nil {
+		b.Fatalf("Could not connect with database: %v", err)
+	}
+
+	benchmarkReadings(b, db)
+	benchmarkEvents(b, db)
+	db.CloseSession()
+}
+
+func benchmarkReadings(b *testing.B, db DBClient) {
+
+	// Remove previous events and readings
+	db.ScrubAllEvents()
+
+	var readings []string
+
+	b.Run("AddReading", func(b *testing.B) {
+		reading := models.Reading{}
+		for i := 0; i < b.N; i++ {
+			reading.Name = "test" + strconv.Itoa(i)
+			reading.Device = "device" + strconv.Itoa(i/100)
+			id, err := db.AddReading(reading)
+			if err != nil {
+				b.Fatalf("Error add reading: %v", err)
+			}
+			readings = append(readings, id.Hex())
+		}
+	})
+
+	b.Run("Readings", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			_, err := db.Readings()
+			if err != nil {
+				b.Fatalf("Error readings: %v", err)
+			}
+		}
+	})
+
+	b.Run("ReadingCount", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			_, err := db.ReadingCount()
+			if err != nil {
+				b.Fatalf("Error reading count: %v", err)
+			}
+		}
+	})
+
+	b.Run("ReadingById", func(b *testing.B) {
+		if b.N > len(readings) {
+			b.N = len(readings)
+		}
+		for i := 0; i < b.N; i++ {
+			_, err := db.ReadingById(readings[i])
+			if err != nil {
+				b.Fatalf("Error reading by ID: %v", err)
+			}
+		}
+	})
+
+	b.Run("ReadingsByDevice", func(b *testing.B) {
+		if b.N > len(readings)/10 {
+			b.N = len(readings) / 10
+		}
+		for i := 0; i < b.N; i++ {
+			device := "device" + strconv.Itoa(i)
+			_, err := db.ReadingsByDevice(device, 100)
+			if err != nil {
+				b.Fatalf("Error reading by device: %v", err)
+			}
+		}
+	})
+}
+
+func benchmarkEvents(b *testing.B, db DBClient) {
+
+	// Remove previous events and readings
+	db.ScrubAllEvents()
+
+	var events []string
+
+	b.Run("AddEvent", func(b *testing.B) {
+		event := models.Event{}
+		reading := models.Reading{}
+		event.Readings = append(event.Readings, reading)
+		event.Readings = append(event.Readings, reading)
+		event.Readings = append(event.Readings, reading)
+		event.Readings = append(event.Readings, reading)
+		event.Readings = append(event.Readings, reading)
+		for i := 0; i < b.N; i++ {
+			event.Device = "device" + strconv.Itoa(i/100)
+			id, err := db.AddEvent(&event)
+			if err != nil {
+				b.Fatalf("Error add event: %v", err)
+			}
+			events = append(events, id.Hex())
+		}
+	})
+
+	b.Run("Events", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			_, err := db.Events()
+			if err != nil {
+				b.Fatalf("Error events: %v", err)
+			}
+		}
+	})
+
+	b.Run("EventCount", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			_, err := db.EventCount()
+			if err != nil {
+				b.Fatalf("Error event count: %v", err)
+			}
+		}
+	})
+
+	b.Run("EventById", func(b *testing.B) {
+		if b.N > len(events) {
+			b.N = len(events)
+		}
+		for i := 0; i < b.N; i++ {
+			_, err := db.EventById(events[i])
+			if err != nil {
+				b.Fatalf("Error event by ID: %v", err)
+			}
+		}
+	})
+
+	b.Run("EventsForDevice", func(b *testing.B) {
+		if b.N > len(events)/10 {
+			b.N = len(events) / 10
+		}
+		for i := 0; i < b.N; i++ {
+			device := "device" + strconv.Itoa(i)
+			_, err := db.EventsForDevice(device)
+			if err != nil {
+				b.Fatalf("Error events for device: %v", err)
+			}
+		}
+	})
 }
