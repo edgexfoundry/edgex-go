@@ -10,30 +10,32 @@
 // the tests with a command like:
 // go test -tags mongoRunning
 
-package clients
+package mongo
 
 import (
 	"testing"
+
+	"github.com/edgexfoundry/edgex-go/core/db"
+	"github.com/edgexfoundry/edgex-go/core/db/test"
 )
 
 func TestMongoDB(t *testing.T) {
 
 	t.Log("This test needs to have a running mongo on localhost")
 
-	config := DBConfiguration{
-		DbType:       MONGO,
+	config := db.Configuration{
 		Host:         "0.0.0.0",
 		Port:         27017,
 		DatabaseName: "coredata",
 		Timeout:      1000,
 	}
 
-	mongo, err := newMongoClient(config)
+	mongo, err := NewClient(config)
 	if err != nil {
 		t.Fatalf("Could not connect with mongodb: %v", err)
 	}
 
-	testDB(t, mongo)
+	test.TestDataDB(t, mongo)
 }
 
 func BenchmarkMongoDB(b *testing.B) {

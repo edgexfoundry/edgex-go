@@ -14,10 +14,7 @@
 package clients
 
 import (
-	"errors"
-
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
-	"github.com/edgexfoundry/edgex-go/support/logging-client"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -193,47 +190,3 @@ type DBClient interface {
 	ScrubAllValueDescriptors() error
 }
 
-type DBConfiguration struct {
-	DbType       DatabaseType
-	Host         string
-	Port         int
-	Timeout      int
-	DatabaseName string
-	Username     string
-	Password     string
-}
-
-var ErrNotFound error = errors.New("Item not found")
-var ErrUnsupportedDatabase error = errors.New("Unsuppored database type")
-var ErrInvalidObjectId error = errors.New("Invalid object ID")
-var ErrNotUnique error = errors.New("Resource already exists")
-var DataClient = "dataClient"
-var loggingClient = logger.NewClient(DataClient, false, "")
-
-// Return the dbClient interface
-func NewDBClient(config DBConfiguration) (DBClient, error) {
-	switch config.DbType {
-	case MONGO:
-		// Create the mongo client
-		mc, err := newMongoClient(config)
-		if err != nil {
-			loggingClient.Error("Error creating the mongo client: " + err.Error())
-			return nil, err
-		}
-		return mc, nil
-	case INFLUX:
-		// Create the influx client
-		ic, err := newInfluxClient(config)
-		if err != nil {
-			loggingClient.Error("Error creating the influx client: " + err.Error())
-			return nil, err
-		}
-		return ic, nil
-	case MEMORY:
-		// Create the memory client
-		mem := &memDB{}
-		return mem, nil
-	default:
-		return nil, ErrUnsupportedDatabase
-	}
-}

@@ -21,6 +21,10 @@ import (
 	"github.com/edgexfoundry/edgex-go/core/clients/types"
 	"github.com/edgexfoundry/edgex-go/core/data/clients"
 	"github.com/edgexfoundry/edgex-go/core/data/messaging"
+	"github.com/edgexfoundry/edgex-go/core/db"
+	"github.com/edgexfoundry/edgex-go/core/db/influx"
+	"github.com/edgexfoundry/edgex-go/core/db/memory"
+	"github.com/edgexfoundry/edgex-go/core/db/mongo"
 	"github.com/edgexfoundry/edgex-go/internal"
 	consulclient "github.com/edgexfoundry/edgex-go/support/consul-client"
 	"github.com/edgexfoundry/edgex-go/support/logging-client"
@@ -57,6 +61,34 @@ func ConnectToConsul(conf ConfigurationStruct) error {
 	return nil
 }
 
+// Return the dbClient interface
+func newDBClient(dbType clients.DatabaseType, config db.Configuration) (clients.DBClient, error) {
+	switch dbType {
+	case clients.MONGO:
+		// Create the mongo client
+		mc, err := mongo.NewClient(config)
+		if err != nil {
+			loggingClient.Error("Error creating the mongo client: " + err.Error())
+			return nil, err
+		}
+		return mc, nil
+	case clients.INFLUX:
+		// Create the influx client
+		ic, err := influx.NewClient(config)
+		if err != nil {
+			loggingClient.Error("Error creating the influx client: " + err.Error())
+			return nil, err
+		}
+		return ic, nil
+	case clients.MEMORY:
+		// Create the memory client
+		mem := &memory.MemDB{}
+		return mem, nil
+	default:
+		return nil, db.ErrUnsupportedDatabase
+	}
+}
+
 func Init(conf ConfigurationStruct, l logger.LoggingClient, useConsul bool) error {
 	loggingClient = l
 	configuration = conf
@@ -65,8 +97,7 @@ func Init(conf ConfigurationStruct, l logger.LoggingClient, useConsul bool) erro
 	var err error
 
 	// Create a database client
-	dbc, err = clients.NewDBClient(clients.DBConfiguration{
-		DbType:       clients.MONGO,
+	dbc, err = newDBClient(clients.MONGO, db.Configuration{
 		Host:         conf.MongoDBHost,
 		Port:         conf.MongoDBPort,
 		Timeout:      conf.MongoDBConnectTimeout,
@@ -80,10 +111,10 @@ func Init(conf ConfigurationStruct, l logger.LoggingClient, useConsul bool) erro
 
 	// Create metadata clients
 	params := types.EndpointParams{
-						ServiceKey:internal.CoreMetaDataServiceKey,
-						Path:conf.MetaDevicePath,
-						UseRegistry:useConsul,
-						Url:conf.MetaDeviceURL}
+		ServiceKey:  internal.CoreMetaDataServiceKey,
+		Path:        conf.MetaDevicePath,
+		UseRegistry: useConsul,
+		Url:         conf.MetaDeviceURL}
 
 	mdc = metadata.NewDeviceClient(params, types.Endpoint{})
 
