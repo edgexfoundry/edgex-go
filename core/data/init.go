@@ -66,12 +66,7 @@ func newDBClient(dbType clients.DatabaseType, config db.Configuration) (clients.
 	switch dbType {
 	case clients.MONGO:
 		// Create the mongo client
-		mc, err := mongo.NewClient(config)
-		if err != nil {
-			loggingClient.Error("Error creating the mongo client: " + err.Error())
-			return nil, err
-		}
-		return mc, nil
+		return mongo.NewClient(config), nil
 	case clients.INFLUX:
 		// Create the influx client
 		ic, err := influx.NewClient(config)
@@ -82,8 +77,7 @@ func newDBClient(dbType clients.DatabaseType, config db.Configuration) (clients.
 		return ic, nil
 	case clients.MEMORY:
 		// Create the memory client
-		mem := &memory.MemDB{}
-		return mem, nil
+		return &memory.MemDB{}, nil
 	default:
 		return nil, db.ErrUnsupportedDatabase
 	}
@@ -105,6 +99,11 @@ func Init(conf ConfigurationStruct, l logger.LoggingClient, useConsul bool) erro
 		Username:     conf.MongoDBUserName,
 		Password:     conf.MongoDBPassword,
 	})
+	if err != nil {
+		return fmt.Errorf("couldn't create database client: %v", err.Error())
+	}
+
+	err = dbc.Connect()
 	if err != nil {
 		return fmt.Errorf("couldn't connect to database: %v", err.Error())
 	}

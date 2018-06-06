@@ -11,11 +11,10 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
-package metadata
+package mongo
 
 import (
-	"fmt"
-
+	"github.com/edgexfoundry/edgex-go/core/db"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
@@ -32,7 +31,7 @@ func (mdp MongoDeviceProfile) GetBSON() (interface{}, error) {
 	// Get the commands from the device profile and turn them into DBRef objects
 	var dbRefs []mgo.DBRef
 	for _, command := range mdp.Commands {
-		dbRefs = append(dbRefs, mgo.DBRef{Collection: COMCOL, Id: command.Id})
+		dbRefs = append(dbRefs, mgo.DBRef{Collection: db.Command, Id: command.Id})
 	}
 
 	return struct {
@@ -106,12 +105,14 @@ func (mdp *MongoDeviceProfile) SetBSON(raw bson.Raw) error {
 	mdp.Resources = decoded.Resources
 
 	// De-reference the DBRef fields
-	s := getMongoSessionCopy()
-	if s == nil {
-		return fmt.Errorf("Could not obtain a mongo session")
+	m, err := getCurrentMongoClient()
+	if err != nil {
+		return err
 	}
+	s := m.session.Copy()
 	defer s.Close()
-	comCol := s.DB(DB).C(COMCOL)
+
+	comCol := s.DB(m.database.Name).C(db.Command)
 
 	var commands []models.Command
 

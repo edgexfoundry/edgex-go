@@ -17,15 +17,30 @@ package db
 import "errors"
 
 const (
+	// Data
 	EventsCollection          = "event"
 	ReadingsCollection        = "reading"
 	ValueDescriptorCollection = "valueDescriptor"
+
+	// Metadata
+	Device           = "device"
+	DeviceProfile    = "deviceProfile"
+	DeviceService    = "deviceService"
+	Addressable      = "addressable"
+	Command          = "command"
+	DeviceReport     = "deviceReport"
+	ScheduleEvent    = "scheduleEvent"
+	Schedule         = "schedule"
+	ProvisionWatcher = "provisionWatcher"
 )
 
-var ErrNotFound error = errors.New("Item not found")
-var ErrUnsupportedDatabase error = errors.New("Unsuppored database type")
-var ErrInvalidObjectId error = errors.New("Invalid object ID")
-var ErrNotUnique error = errors.New("Resource already exists")
+var (
+	ErrNotFound            = errors.New("Item not found")
+	ErrUnsupportedDatabase = errors.New("Unsuppored database type")
+	ErrInvalidObjectId     = errors.New("Invalid object ID")
+	ErrNotUnique           = errors.New("Resource already exists")
+	ErrCommandStillInUse   = errors.New("Command is still in use by device profiles")
+)
 
 type Configuration struct {
 	Host         string

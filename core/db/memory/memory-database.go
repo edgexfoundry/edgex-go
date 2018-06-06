@@ -30,6 +30,10 @@ type MemDB struct {
 func (m *MemDB) CloseSession() {
 }
 
+func (m *MemDB) Connect() error {
+	return nil
+}
+
 func (m *MemDB) AddReading(r models.Reading) (bson.ObjectId, error) {
 	currentTime := time.Now().UnixNano() / int64(time.Millisecond)
 	r.Created = currentTime

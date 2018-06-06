@@ -11,11 +11,10 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
-package metadata
+package mongo
 
 import (
-	"fmt"
-
+	"github.com/edgexfoundry/edgex-go/core/db"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
@@ -44,7 +43,7 @@ func (mse MongoScheduleEvent) GetBSON() (interface{}, error) {
 		Schedule:    mse.Schedule,
 		Parameters:  mse.Parameters,
 		Service:     mse.Service,
-		Addressable: mgo.DBRef{Collection: ADDCOL, Id: mse.Addressable.Id},
+		Addressable: mgo.DBRef{Collection: db.Addressable, Id: mse.Addressable.Id},
 	}, nil
 }
 
@@ -74,13 +73,14 @@ func (mse *MongoScheduleEvent) SetBSON(raw bson.Raw) error {
 	mse.Service = decoded.Service
 
 	// De-reference the DBRef fields
-	s := getMongoSessionCopy()
-	if s == nil {
-		return fmt.Errorf("Could not obtain a mongo session")
+	m, err := getCurrentMongoClient()
+	if err != nil {
+		return err
 	}
+	s := m.session.Copy()
 	defer s.Close()
 
-	addCol := s.DB(DB).C(ADDCOL)
+	addCol := s.DB(m.database.Name).C(db.Addressable)
 
 	var a models.Addressable
 

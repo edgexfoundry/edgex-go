@@ -28,6 +28,8 @@ const (
 type DBClient interface {
 	CloseSession()
 
+	Connect() error
+
 	// ********************** EVENT FUNCTIONS *******************************
 	// Return all the events
 	// UnexpectedError - failed to retrieve events from the database
@@ -189,4 +191,3 @@ type DBClient interface {
 	// Delete all value descriptors
 	ScrubAllValueDescriptors() error
 }
-

@@ -20,6 +20,7 @@ import (
 	"net/url"
 	"strconv"
 
+	"github.com/edgexfoundry/edgex-go/core/db"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"github.com/gorilla/mux"
 	"gopkg.in/mgo.v2"
@@ -27,7 +28,7 @@ import (
 
 func restGetAllAddressables(w http.ResponseWriter, _ *http.Request) {
 	results := make([]models.Addressable, 0)
-	err := db.getAddressables(&results)
+	err := dbClient.GetAddressables(&results)
 	if err != nil {
 		loggingClient.Error(err.Error(), "")
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -62,9 +63,9 @@ func restAddAddressable(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	err = db.addAddressable(&a)
+	err = dbClient.AddAddressable(&a)
 	if err != nil {
-		if err == ErrDuplicateName {
+		if err == db.ErrNotUnique {
 			http.Error(w, "Duplicate name for addressable", http.StatusConflict)
 		} else {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -93,10 +94,10 @@ func restUpdateAddressable(w http.ResponseWriter, r *http.Request) {
 
 	// Check if the addressable exists
 	var res models.Addressable
-	err := db.getAddressableById(&res, ra.Id.Hex())
+	err := dbClient.GetAddressableById(&res, ra.Id.Hex())
 	if err != nil {
 		if ra.Id == "" {
-			err = db.getAddressableByName(&res, ra.Name)
+			err = dbClient.GetAddressableByName(&res, ra.Name)
 		}
 		if err != nil {
 			if err == mgo.ErrNotFound {
@@ -125,7 +126,7 @@ func restUpdateAddressable(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if err := db.updateAddressable(&ra, &res); err != nil {
+	if err := dbClient.UpdateAddressable(&ra, &res); err != nil {
 		loggingClient.Error(err.Error(), "")
 		if err == mgo.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
@@ -146,7 +147,7 @@ func restGetAddressableById(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	var id string = vars["id"]
 	var result models.Addressable
-	if err := db.getAddressableById(&result, id); err != nil {
+	if err := dbClient.GetAddressableById(&result, id); err != nil {
 		if err == mgo.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
 		} else {
@@ -164,7 +165,7 @@ func restDeleteAddressableById(w http.ResponseWriter, r *http.Request) {
 
 	// Check if the addressable exists
 	var a models.Addressable
-	err := db.getAddressableById(&a, id)
+	err := dbClient.GetAddressableById(&a, id)
 	if err != nil {
 		loggingClient.Error(err.Error(), "")
 		http.Error(w, err.Error(), http.StatusNotFound)
@@ -185,7 +186,7 @@ func restDeleteAddressableById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = db.deleteAddressable(a)
+	err = dbClient.DeleteAddressable(a)
 	if err != nil {
 		if err == mgo.ErrNotFound {
 			loggingClient.Error(err.Error(), "")
@@ -214,7 +215,7 @@ func restDeleteAddressableByName(w http.ResponseWriter, r *http.Request) {
 
 	// Check if the addressable exists
 	var a models.Addressable
-	err = db.getAddressableByName(&a, n)
+	err = dbClient.GetAddressableByName(&a, n)
 	if err != nil {
 		loggingClient.Error(err.Error(), "")
 		http.Error(w, err.Error(), http.StatusNotFound)
@@ -235,7 +236,7 @@ func restDeleteAddressableByName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := db.deleteAddressable(a); err != nil {
+	if err := dbClient.DeleteAddressable(a); err != nil {
 		loggingClient.Error(err.Error(), "")
 		if err == mgo.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
@@ -256,7 +257,7 @@ func restDeleteAddressableByName(w http.ResponseWriter, r *http.Request) {
 func isAddressableStillInUse(a models.Addressable) (bool, error) {
 	// Check devices
 	var d []models.Device
-	err := db.getDevicesByAddressableId(&d, a.Id.Hex())
+	err := dbClient.GetDevicesByAddressableId(&d, a.Id.Hex())
 	if err != nil {
 		return false, err
 	}
@@ -266,7 +267,7 @@ func isAddressableStillInUse(a models.Addressable) (bool, error) {
 
 	// Check device services
 	var ds []models.DeviceService
-	err = db.getDeviceServicesByAddressableId(&ds, a.Id.Hex())
+	err = dbClient.GetDeviceServicesByAddressableId(&ds, a.Id.Hex())
 	if err != nil {
 		return false, err
 	}
@@ -285,7 +286,7 @@ func restGetAddressableByName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var result models.Addressable
-	if err := db.getAddressableByName(&result, dn); err != nil {
+	if err := dbClient.GetAddressableByName(&result, dn); err != nil {
 		loggingClient.Error(err.Error(), "")
 		if err == mgo.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
@@ -309,7 +310,7 @@ func restGetAddressableByTopic(w http.ResponseWriter, r *http.Request) {
 	}
 	res := make([]models.Addressable, 0)
 
-	err = db.getAddressablesByTopic(&res, t)
+	err = dbClient.GetAddressablesByTopic(&res, t)
 	if err != nil {
 		loggingClient.Error(err.Error(), "")
 		if err == mgo.ErrNotFound {
@@ -334,7 +335,7 @@ func restGetAddressableByPort(w http.ResponseWriter, r *http.Request) {
 	}
 
 	res := make([]models.Addressable, 0)
-	if err := db.getAddressablesByPort(&res, p); err != nil {
+	if err := dbClient.GetAddressablesByPort(&res, p); err != nil {
 		loggingClient.Error(err.Error(), "")
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return
@@ -352,7 +353,7 @@ func restGetAddressableByPublisher(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	res := make([]models.Addressable, 0)
-	err = db.getAddressablesByPublisher(&res, p)
+	err = dbClient.GetAddressablesByPublisher(&res, p)
 	if err != nil {
 		loggingClient.Error(err.Error(), "")
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -371,7 +372,7 @@ func restGetAddressableByAddress(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	res := make([]models.Addressable, 0)
-	err = db.getAddressablesByAddress(&res, a)
+	err = dbClient.GetAddressablesByAddress(&res, a)
 	if err != nil {
 		loggingClient.Error(err.Error(), "")
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -385,7 +386,7 @@ func restGetAddressableByAddress(w http.ResponseWriter, r *http.Request) {
 // Notify the associated device services for the addressable
 func notifyAddressableAssociates(a models.Addressable, action string) error {
 	var ds []models.DeviceService
-	if err := db.getDeviceServicesByAddressableId(&ds, a.Id.Hex()); err != nil {
+	if err := dbClient.GetDeviceServicesByAddressableId(&ds, a.Id.Hex()); err != nil {
 		loggingClient.Error(err.Error(), "")
 		return err
 	}

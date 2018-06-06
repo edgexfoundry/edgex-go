@@ -11,11 +11,10 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
-package metadata
+package mongo
 
 import (
-	"fmt"
-
+	"github.com/edgexfoundry/edgex-go/core/db"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
@@ -52,13 +51,13 @@ func (md MongoDevice) GetBSON() (interface{}, error) {
 		Name:            md.Name,
 		AdminState:      md.AdminState,
 		OperatingState:  md.OperatingState,
-		Addressable:     mgo.DBRef{Collection: ADDCOL, Id: md.Addressable.Id},
+		Addressable:     mgo.DBRef{Collection: db.Addressable, Id: md.Addressable.Id},
 		LastConnected:   md.LastConnected,
 		LastReported:    md.LastReported,
 		Labels:          md.Labels,
 		Location:        md.Location,
-		Service:         mgo.DBRef{Collection: DSCOL, Id: md.Service.Service.Id},
-		Profile:         mgo.DBRef{Collection: DPCOL, Id: md.Profile.Id},
+		Service:         mgo.DBRef{Collection: db.DeviceService, Id: md.Service.Service.Id},
+		Profile:         mgo.DBRef{Collection: db.DeviceProfile, Id: md.Profile.Id},
 	}, nil
 }
 
@@ -96,21 +95,22 @@ func (md *MongoDevice) SetBSON(raw bson.Raw) error {
 
 	// De-reference the DBRef fields
 
-	s := getMongoSessionCopy()
-	if s == nil {
-		return fmt.Errorf("Could not obtain a mongo session")
+	m, err := getCurrentMongoClient()
+	if err != nil {
+		return err
 	}
+	s := m.session.Copy()
 	defer s.Close()
 
-	addCol := s.DB(DB).C(ADDCOL)
-	dsCol := s.DB(DB).C(DSCOL)
-	dpCol := s.DB(DB).C(DPCOL)
+	addCol := s.DB(m.database.Name).C(db.Addressable)
+	dsCol := s.DB(m.database.Name).C(db.DeviceService)
+	dpCol := s.DB(m.database.Name).C(db.DeviceProfile)
 
 	var a models.Addressable
 	var mdp MongoDeviceProfile
 	var mds MongoDeviceService
 
-	err := addCol.Find(bson.M{"_id": decoded.Addressable.Id}).One(&a)
+	err = addCol.Find(bson.M{"_id": decoded.Addressable.Id}).One(&a)
 	if err != nil {
 		return err
 	}

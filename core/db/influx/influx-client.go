@@ -59,6 +59,10 @@ func NewClient(config db.Configuration) (*InfluxClient, error) {
 	return influxClient, nil
 }
 
+func (ic *InfluxClient) Connect() error {
+	return nil
+}
+
 // Perform an Influxdb query
 func (ic *InfluxClient) queryDB(cmd string) (res []client.Result, err error) {
 	q := client.Query{

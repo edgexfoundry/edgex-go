@@ -11,11 +11,10 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
-package metadata
+package mongo
 
 import (
-	"fmt"
-
+	"github.com/edgexfoundry/edgex-go/core/db"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
@@ -45,7 +44,7 @@ func (mds MongoDeviceService) GetBSON() (interface{}, error) {
 		Name:            mds.Service.Name,
 		AdminState:      mds.AdminState,
 		OperatingState:  mds.Service.OperatingState,
-		Addressable:     mgo.DBRef{Collection: ADDCOL, Id: mds.Service.Addressable.Id},
+		Addressable:     mgo.DBRef{Collection: db.Addressable, Id: mds.Service.Addressable.Id},
 		LastConnected:   mds.Service.LastConnected,
 		LastReported:    mds.Service.LastReported,
 		Labels:          mds.Service.Labels,
@@ -82,17 +81,18 @@ func (mds *MongoDeviceService) SetBSON(raw bson.Raw) error {
 	mds.Service.Labels = decoded.Labels
 
 	// De-reference the DBRef fields
-	s := getMongoSessionCopy()
-	if s == nil {
-		return fmt.Errorf("Could not obtain a mongo session")
+	m, err := getCurrentMongoClient()
+	if err != nil {
+		return err
 	}
+	s := m.session.Copy()
 	defer s.Close()
 
-	addCol := s.DB(DB).C(ADDCOL)
+	addCol := s.DB(m.database.Name).C(db.Addressable)
 
 	var a models.Addressable
 
-	err := addCol.Find(bson.M{"_id": decoded.Addressable.Id}).One(&a)
+	err = addCol.Find(bson.M{"_id": decoded.Addressable.Id}).One(&a)
 	if err != nil {
 		return err
 	}

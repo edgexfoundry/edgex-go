@@ -94,7 +94,7 @@ func (me *MongoEvent) SetBSON(raw bson.Raw) error {
 	// Get all of the reading objects
 	for _, rRef := range decoded.Readings {
 		var reading models.Reading
-		err := mc.Database.C(db.ReadingsCollection).FindId(rRef.Id).One(&reading)
+		err := mc.database.C(db.ReadingsCollection).FindId(rRef.Id).One(&reading)
 		if err != nil {
 			return err
 		}

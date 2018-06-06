@@ -30,11 +30,7 @@ func TestMongoDB(t *testing.T) {
 		Timeout:      1000,
 	}
 
-	mongo, err := NewClient(config)
-	if err != nil {
-		t.Fatalf("Could not connect with mongodb: %v", err)
-	}
-
+	mongo := NewClient(config)
 	test.TestDataDB(t, mongo)
 }
 

@@ -15,9 +15,9 @@ package metadata
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 
+	"github.com/edgexfoundry/edgex-go/core/db"
 	"github.com/edgexfoundry/edgex-go/internal"
 	consulclient "github.com/edgexfoundry/edgex-go/support/consul-client"
 	logger "github.com/edgexfoundry/edgex-go/support/logging-client"
@@ -53,31 +53,31 @@ func Init(conf ConfigurationStruct, l logger.LoggingClient) error {
 	configuration = conf
 	//TODO: The above two are set due to global scope throughout the package. How can this be eliminated / refactored?
 
-	// Update Service CONSTANTS
-	MONGODATABASE = configuration.MongoDatabaseName
-	PROTOCOL = configuration.Protocol
-	SERVERPORT = strconv.Itoa(configuration.ServicePort)
-	dbType := configuration.DBType
-	DOCKERMONGO = configuration.MongoDBHost + ":" + strconv.Itoa(configuration.MongoDBPort)
-	DBUSER = configuration.MongoDBUserName
-	DBPASS = configuration.MongoDBPassword
-
 	// Initialize notificationsClient based on configuration
 	notifications.SetConfiguration(configuration.SupportNotificationsHost, configuration.SupportNotificationsPort)
 
 	var err error
-	// Connect to the database
-	db, err = getDatabase(dbType)
+	dbConfig := db.Configuration{
+		Host:         configuration.MongoDBHost,
+		Port:         configuration.MongoDBPort,
+		Timeout:      0,
+		DatabaseName: configuration.MongoDatabaseName,
+		Username:     configuration.MongoDBUserName,
+		Password:     configuration.MongoDBPassword,
+	}
+	// Create database client
+	dbClient, err = getDatabase(configuration.DBType, dbConfig)
 	if err != nil {
 		return err
 	}
 
-	return db.Connect()
+	// Connect to the database
+	return dbClient.Connect()
 }
 
 func Destruct() {
-	if db != nil {
-		db.CloseSession()
-		db = nil
+	if dbClient != nil {
+		dbClient.CloseSession()
+		dbClient = nil
 	}
 }

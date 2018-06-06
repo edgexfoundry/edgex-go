@@ -63,6 +63,7 @@ func populateDbEvents(db clients.DBClient, count int, pushed int64) (bson.Object
 		e.Pushed = pushed
 		var err error
 		id, err = db.AddEvent(&e)
+		fmt.Printf("%s -> %v\n", name, err)
 		if err != nil {
 			return id, err
 		}
@@ -619,6 +620,12 @@ func testDBValueDescriptors(t *testing.T, db clients.DBClient) {
 }
 
 func TestDataDB(t *testing.T, db clients.DBClient) {
+
+	err := db.Connect()
+	if err != nil {
+		t.Fatalf("Could not connect with mongodb: %v", err)
+	}
+
 	testDBReadings(t, db)
 	testDBEvents(t, db)
 	testDBValueDescriptors(t, db)
