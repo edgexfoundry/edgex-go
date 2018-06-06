@@ -19,7 +19,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/edgexfoundry/edgex-go/core/clients/metadata"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 )
 
@@ -47,7 +46,6 @@ func commandByDeviceID(did string, cid string, b string, p bool) (string, int) {
 		return "", http.StatusUnprocessableEntity
 	}
 
-	var cc = metadata.NewCommandClient(configuration.MetaCommandURL)
 	c, err := cc.Command(cid)
 	if err != nil {
 		loggingClient.Error(err.Error(), "")

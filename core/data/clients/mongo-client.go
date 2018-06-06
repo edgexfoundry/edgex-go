@@ -108,11 +108,24 @@ func (mc *MongoClient) AddEvent(e *models.Event) (bson.ObjectId, error) {
 	e.Created = time.Now().UnixNano() / int64(time.Millisecond)
 	e.ID = bson.NewObjectId()
 
+	// Insert readings
+	var ui []interface{}
+	for i := range e.Readings {
+		e.Readings[i].Id = bson.NewObjectId()
+		e.Readings[i].Created = e.Created
+		e.Readings[i].Device = e.Device
+		ui = append(ui, e.Readings[i])
+	}
+	err := s.DB(mc.Database.Name).C(READINGS_COLLECTION).Insert(ui...)
+	if err != nil {
+		return e.ID, err
+	}
+
 	// Handle DBRefs
 	me := MongoEvent{Event: *e}
 
 	// Add the event
-	err := s.DB(mc.Database.Name).C(EVENTS_COLLECTION).Insert(me)
+	err = s.DB(mc.Database.Name).C(EVENTS_COLLECTION).Insert(me)
 	if err != nil {
 		return e.ID, err
 	}
@@ -194,22 +207,8 @@ func (mc *MongoClient) EventsByCreationTime(startTime, endTime int64, limit int)
 
 // Get Events that are older than the given age (defined by age = now - created)
 func (mc *MongoClient) EventsOlderThanAge(age int64) ([]models.Event, error) {
-	currentTime := time.Now().UnixNano() / int64(time.Millisecond)
-	query := bson.M{}
-	events, err := mc.getEvents(query)
-	if err != nil {
-		return nil, err
-	}
-
-	// Find each event that meets the age criteria
-	newEventList := []models.Event{}
-	for _, event := range events {
-		if (currentTime - event.Created) > age {
-			newEventList = append(newEventList, event)
-		}
-	}
-
-	return newEventList, nil
+	expireDate := (time.Now().UnixNano() / int64(time.Millisecond)) - age
+	return mc.getEvents(bson.M{"created": bson.M{"$lt": expireDate}})
 }
 
 // Get all of the events that have been pushed

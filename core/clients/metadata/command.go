@@ -20,6 +20,8 @@ import (
 	"net/http"
 
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
+	"github.com/edgexfoundry/edgex-go/core/clients/types"
+	"github.com/edgexfoundry/edgex-go/core/clients"
 )
 /*
 Command client for interacting with the command section of metadata
@@ -35,15 +37,33 @@ type CommandClient interface {
 
 type CommandRestClient struct {
 	url string
+	endpoint clients.Endpointer
 }
 
 /*
 Return an instance of CommandClient
 */
-func NewCommandClient(metaDbCommandUrl string) CommandClient {
-	c := CommandRestClient{url: metaDbCommandUrl}
-
+func NewCommandClient(params types.EndpointParams, m clients.Endpointer) CommandClient {
+	c := CommandRestClient{endpoint:m}
+	c.init(params)
 	return &c
+}
+
+func(c *CommandRestClient) init(params types.EndpointParams) {
+	if params.UseRegistry {
+		ch := make(chan string, 1)
+		go c.endpoint.Monitor(params, ch)
+		go func(ch chan string) {
+			for true {
+				select {
+				case url := <- ch:
+					c.url = url
+				}
+			}
+		}(ch)
+	} else {
+		c.url = params.Url
+	}
 }
 
 // Helper method to decode and return a command

@@ -85,11 +85,10 @@ func Init(conf ConfigurationStruct, l logger.LoggingClient, useConsul bool) erro
 						UseRegistry:useConsul,
 						Url:conf.MetaDeviceURL}
 
-	mdc, err = metadata.NewDeviceClient(params, types.Endpoint{})
-	if err != nil {
-		loggingClient.Error(err.Error())
-	}
-	msc = metadata.NewServiceClient(conf.MetaDeviceServiceURL)
+	mdc = metadata.NewDeviceClient(params, types.Endpoint{})
+
+	params.Path = conf.MetaDeviceServicePath
+	msc = metadata.NewDeviceServiceClient(params, types.Endpoint{})
 
 	// Create the event publisher
 	ep = messaging.NewZeroMQPublisher(messaging.ZeroMQConfiguration{
