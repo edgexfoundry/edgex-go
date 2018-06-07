@@ -110,22 +110,24 @@ func (mc *MongoClient) AddEvent(e *models.Event) (bson.ObjectId, error) {
 
 	// Insert readings
 	var ui []interface{}
-	for i := range e.Readings {
-		e.Readings[i].Id = bson.NewObjectId()
-		e.Readings[i].Created = e.Created
-		e.Readings[i].Device = e.Device
-		ui = append(ui, e.Readings[i])
-	}
-	err := s.DB(mc.Database.Name).C(READINGS_COLLECTION).Insert(ui...)
-	if err != nil {
-		return e.ID, err
+	if len(e.Readings) != 0 {
+		for i := range e.Readings {
+			e.Readings[i].Id = bson.NewObjectId()
+			e.Readings[i].Created = e.Created
+			e.Readings[i].Device = e.Device
+			ui = append(ui, e.Readings[i])
+		}
+		err := s.DB(mc.Database.Name).C(READINGS_COLLECTION).Insert(ui...)
+		if err != nil {
+			return e.ID, err
+		}
 	}
 
 	// Handle DBRefs
 	me := MongoEvent{Event: *e}
 
 	// Add the event
-	err = s.DB(mc.Database.Name).C(EVENTS_COLLECTION).Insert(me)
+	err := s.DB(mc.Database.Name).C(EVENTS_COLLECTION).Insert(me)
 	if err != nil {
 		return e.ID, err
 	}
