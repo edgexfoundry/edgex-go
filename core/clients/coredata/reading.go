@@ -24,6 +24,8 @@ import (
 	"strconv"
 	"net/url"
 	"bytes"
+	"github.com/edgexfoundry/edgex-go/core/clients/types"
+	"github.com/edgexfoundry/edgex-go/core/clients"
 )
 
 type ReadingClient interface {
@@ -43,11 +45,30 @@ type ReadingClient interface {
 
 type ReadingRestClient struct {
 	url string
+	endpoint clients.Endpointer
 }
 
-func NewReadingClient(readingUrl string) ReadingClient {
-	reading := ReadingRestClient{url: readingUrl}
-	return &reading
+func NewReadingClient(params types.EndpointParams, m clients.Endpointer) ReadingClient {
+	r := ReadingRestClient{endpoint: m}
+	r.init(params)
+	return &r
+}
+
+func(r *ReadingRestClient) init(params types.EndpointParams) {
+	if params.UseRegistry {
+		ch := make(chan string, 1)
+		go r.endpoint.Monitor(params, ch)
+		go func(ch chan string) {
+			for true {
+				select {
+				case url := <- ch:
+					r.url = url
+				}
+			}
+		}(ch)
+	} else {
+		r.url = params.Url
+	}
 }
 
 // Help method to decode a reading slice

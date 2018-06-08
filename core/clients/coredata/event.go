@@ -25,6 +25,8 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"strconv"
+	"github.com/edgexfoundry/edgex-go/core/clients/types"
+	"github.com/edgexfoundry/edgex-go/core/clients"
 )
 
 type EventClient interface {
@@ -43,11 +45,30 @@ type EventClient interface {
 
 type EventRestClient struct {
 	url string
+	endpoint clients.Endpointer
 }
 
-func NewEventClient(eventUrl string) EventClient {
-	event := EventRestClient{url: eventUrl}
-	return &event
+func NewEventClient(params types.EndpointParams, m clients.Endpointer) EventClient {
+	e := EventRestClient{endpoint: m}
+	e.init(params)
+	return &e
+}
+
+func(e *EventRestClient) init(params types.EndpointParams) {
+	if params.UseRegistry {
+		ch := make(chan string, 1)
+		go e.endpoint.Monitor(params, ch)
+		go func(ch chan string) {
+			for true {
+				select {
+				case url := <- ch:
+					e.url = url
+				}
+			}
+		}(ch)
+	} else {
+		e.url = params.Url
+	}
 }
 
 // Helper method to decode an event slice
