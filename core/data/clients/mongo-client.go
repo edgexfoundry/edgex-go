@@ -15,11 +15,12 @@ package clients
 
 import (
 	"errors"
+	"strconv"
+	"time"
+
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
-	"time"
-	"strconv"
 )
 
 const (
@@ -107,6 +108,21 @@ func (mc *MongoClient) AddEvent(e *models.Event) (bson.ObjectId, error) {
 	e.Created = time.Now().UnixNano() / int64(time.Millisecond)
 	e.ID = bson.NewObjectId()
 
+	// Insert readings
+	var ui []interface{}
+	if len(e.Readings) != 0 {
+		for i := range e.Readings {
+			e.Readings[i].Id = bson.NewObjectId()
+			e.Readings[i].Created = e.Created
+			e.Readings[i].Device = e.Device
+			ui = append(ui, e.Readings[i])
+		}
+		err := s.DB(mc.Database.Name).C(READINGS_COLLECTION).Insert(ui...)
+		if err != nil {
+			return e.ID, err
+		}
+	}
+
 	// Handle DBRefs
 	me := MongoEvent{Event: *e}
 
@@ -185,30 +201,16 @@ func (mc *MongoClient) EventsForDevice(id string) ([]models.Event, error) {
 // Limit the number of results by limit
 func (mc *MongoClient) EventsByCreationTime(startTime, endTime int64, limit int) ([]models.Event, error) {
 	query := bson.M{"created": bson.M{
-		"$gt": startTime,
-		"$lt": endTime,
+		"$gte": startTime,
+		"$lte": endTime,
 	}}
 	return mc.getEventsLimit(query, limit)
 }
 
 // Get Events that are older than the given age (defined by age = now - created)
 func (mc *MongoClient) EventsOlderThanAge(age int64) ([]models.Event, error) {
-	currentTime := time.Now().UnixNano() / int64(time.Millisecond)
-	query := bson.M{}
-	events, err := mc.getEvents(query)
-	if err != nil {
-		return nil, err
-	}
-
-	// Find each event that meets the age criteria
-	newEventList := []models.Event{}
-	for _, event := range events {
-		if (currentTime - event.Created) > age {
-			newEventList = append(newEventList, event)
-		}
-	}
-
-	return newEventList, nil
+	expireDate := (time.Now().UnixNano() / int64(time.Millisecond)) - age
+	return mc.getEvents(bson.M{"created": bson.M{"$lt": expireDate}})
 }
 
 // Get all of the events that have been pushed
@@ -391,8 +393,8 @@ func (mc *MongoClient) ReadingsByValueDescriptorNames(names []string, limit int)
 // Limit by the limit parameter
 func (mc *MongoClient) ReadingsByCreationTime(start, end int64, limit int) ([]models.Reading, error) {
 	query := bson.M{"created": bson.M{
-		"$gt": start,
-		"$lt": end,
+		"$gte": start,
+		"$lte": end,
 	}}
 	return mc.getReadingsLimit(query, limit)
 }
@@ -531,10 +533,12 @@ func (mc *MongoClient) ValueDescriptorsByName(names []string) ([]models.ValueDes
 
 	for _, name := range names {
 		v, err := mc.ValueDescriptorByName(name)
-		if err != nil {
+		if err != nil && err != ErrNotFound {
 			return []models.ValueDescriptor{}, err
 		}
-		vList = append(vList, v)
+		if err == nil {
+			vList = append(vList, v)
+		}
 	}
 
 	return vList, nil
@@ -567,6 +571,19 @@ func (mc *MongoClient) ValueDescriptorsByLabel(label string) ([]models.ValueDesc
 func (mc *MongoClient) ValueDescriptorsByType(t string) ([]models.ValueDescriptor, error) {
 	query := bson.M{"type": t}
 	return mc.getValueDescriptors(query)
+}
+
+// Delete all of the value descriptors
+func (mc *MongoClient) ScrubAllValueDescriptors() error {
+	s := mc.getSessionCopy()
+	defer s.Close()
+
+	_, err := s.DB(mc.Database.Name).C(VALUE_DESCRIPTOR_COLLECTION).RemoveAll(nil)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Get value descriptors based on the query

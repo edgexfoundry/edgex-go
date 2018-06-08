@@ -21,6 +21,8 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/edgexfoundry/edgex-go/core/clients"
+	"github.com/edgexfoundry/edgex-go/core/clients/types"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 )
 /*
@@ -33,15 +35,33 @@ type AddressableClient interface {
 
 type AddressableRestClient struct {
 	url string
+	endpoint clients.Endpointer
 }
 
 /*
 Return an instance of AddressableClient
 */
-func NewAddressableClient(metaDbAddressableUrl string) AddressableClient {
-	a := AddressableRestClient{url: metaDbAddressableUrl}
-
+func NewAddressableClient(params types.EndpointParams, m clients.Endpointer) AddressableClient {
+	a := AddressableRestClient{endpoint:m}
+	a.init(params)
 	return &a
+}
+
+func(a *AddressableRestClient) init(params types.EndpointParams) {
+	if params.UseRegistry {
+		ch := make(chan string, 1)
+		go a.endpoint.Monitor(params, ch)
+		go func(ch chan string) {
+			for true {
+				select {
+				case url := <- ch:
+					a.url = url
+				}
+			}
+		}(ch)
+	} else {
+		a.url = params.Url
+	}
 }
 
 // Add an addressable - handle error codes

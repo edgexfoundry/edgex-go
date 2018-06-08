@@ -26,7 +26,7 @@ type DeviceObject struct {
 	Tag         string `bson:"tag" json:"tag"`
 	//	Properties 	ProfileProperty 	`bson:"profileProperty" json:"profileProperty"`
 	Properties ProfileProperty   `bson:"properties" json:"properties" yaml:"properties"`
-	Attributes map[string]string `bson:"attributes" json:"attributes" yaml:"attributes"`
+	Attributes map[string]interface{} `bson:"attributes" json:"attributes" yaml:"attributes"`
 	//	Other 		string	`bson:"other" json:"other"`
 	//	Other 		map[string]string	`bson:"other" json:"other"`
 }
@@ -38,7 +38,7 @@ func (do DeviceObject) MarshalJSON() ([]byte, error) {
 		Name        *string           `json:"name"`
 		Tag         *string           `json:"tag"`
 		Properties  ProfileProperty   `json:"properties"`
-		Attributes  map[string]string `json:"attributes"`
+		Attributes  map[string]interface{} `json:"attributes"`
 	}{
 		Properties: do.Properties,
 	}

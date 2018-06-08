@@ -26,6 +26,7 @@ import (
 
 var loggingClient logger.LoggingClient
 var mdc metadata.DeviceClient
+var cc metadata.CommandClient
 
 func ConnectToConsul(conf ConfigurationStruct) error {
 
@@ -63,9 +64,7 @@ func Init(conf ConfigurationStruct, l logger.LoggingClient, useConsul bool) {
 		UseRegistry:useConsul,
 		Url:conf.MetaDeviceURL}
 
-	var err error
-	mdc, err = metadata.NewDeviceClient(params, types.Endpoint{})
-	if err != nil {
-		loggingClient.Error(err.Error())
-	}
+	mdc = metadata.NewDeviceClient(params, types.Endpoint{})
+	params.Path = conf.MetaCommandPath
+	cc = metadata.NewCommandClient(params, types.Endpoint{})
 }

@@ -64,10 +64,10 @@ type DeviceRestClient struct {
 /*
 Return an instance of DeviceClient
 */
-func NewDeviceClient(params types.EndpointParams, m clients.Endpointer) (DeviceClient, error) {
+func NewDeviceClient(params types.EndpointParams, m clients.Endpointer) DeviceClient {
 	d := DeviceRestClient{endpoint:m}
 	d.init(params)
-	return &d, nil
+	return &d
 }
 
 func(d *DeviceRestClient) init(params types.EndpointParams) {

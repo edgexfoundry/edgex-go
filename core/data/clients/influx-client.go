@@ -115,7 +115,7 @@ func (ic *InfluxClient) AddEvent(e *models.Event) (bson.ObjectId, error) {
 	e.ID = bson.NewObjectId()
 
 	// Add the event
-	err := ic.addEventToDB(ic.Database, EVENTS_COLLECTION, e)
+	err := ic.eventToDB(ic.Database, EVENTS_COLLECTION, e, true)
 	if err != nil {
 		return e.ID, err
 	}
@@ -135,7 +135,7 @@ func (ic *InfluxClient) UpdateEvent(e models.Event) error {
 	}
 
 	// Add the event
-	return ic.addEventToDB(ic.Database, EVENTS_COLLECTION, &e)
+	return ic.eventToDB(ic.Database, EVENTS_COLLECTION, &e, false)
 }
 
 // Get an event by id
@@ -191,21 +191,9 @@ func (ic *InfluxClient) EventsByCreationTime(startTime, endTime int64, limit int
 
 // Get Events that are older than the given age (defined by age = now - created)
 func (ic *InfluxClient) EventsOlderThanAge(age int64) ([]models.Event, error) {
-	currentTime := time.Now().UnixNano() / int64(time.Millisecond)
-	events, err := ic.getEvents("")
-	if err != nil {
-		return nil, err
-	}
-
-	// Find each event that meets the age criteria
-	newEventList := []models.Event{}
-	for _, event := range events {
-		if (currentTime - event.Created) > age {
-			newEventList = append(newEventList, event)
-		}
-	}
-
-	return newEventList, nil
+	expireDate := (time.Now().UnixNano() / int64(time.Millisecond)) - age
+	query := fmt.Sprintf("WHERE created < %d", expireDate)
+	return ic.getEvents(query)
 }
 
 // Get all of the events that have been pushed
@@ -263,7 +251,7 @@ func (ic *InfluxClient) deleteAll(collection string) error {
 	return nil
 }
 
-func (ic *InfluxClient) addEventToDB(db string, collection string, e *models.Event) error {
+func (ic *InfluxClient) eventToDB(db string, collection string, e *models.Event, addReadings bool) error {
 	bp, err := client.NewBatchPoints(client.BatchPointsConfig{
 		Database:  db,
 		Precision: "us",
@@ -272,10 +260,39 @@ func (ic *InfluxClient) addEventToDB(db string, collection string, e *models.Eve
 		return err
 	}
 
-	// Turn the readings into array of strings
 	var stringArray []string
-	for _, reading := range e.Readings {
-		stringArray = append(stringArray, reading.Id.Hex())
+	for i := range e.Readings {
+		if addReadings == true {
+			e.Readings[i].Id = bson.NewObjectId()
+			e.Readings[i].Created = e.Created
+			e.Readings[i].Device = e.Device
+
+			fields := map[string]interface{}{
+				"pushed":   e.Readings[i].Pushed,
+				"created":  e.Readings[i].Created,
+				"origin":   e.Readings[i].Origin,
+				"modified": e.Readings[i].Modified,
+			}
+
+			tags := map[string]string{
+				"id":     e.Readings[i].Id.Hex(),
+				"device": e.Readings[i].Device,
+				"name":   e.Readings[i].Name,
+				"value":  e.Readings[i].Value,
+			}
+
+			pt, err := client.NewPoint(
+				READINGS_COLLECTION,
+				tags,
+				fields,
+				time.Now(),
+			)
+			if err != nil {
+				return err
+			}
+			bp.AddPoint(pt)
+		}
+		stringArray = append(stringArray, e.Readings[i].Id.Hex())
 	}
 	readings := strings.Join(stringArray, " ")
 
@@ -717,6 +734,11 @@ func (ic *InfluxClient) ValueDescriptorsByLabel(label string) ([]models.ValueDes
 func (ic *InfluxClient) ValueDescriptorsByType(t string) ([]models.ValueDescriptor, error) {
 	query := fmt.Sprintf("WHERE type = '%s'", t)
 	return ic.getValueDescriptors(query)
+}
+
+// Delete all of the value descriptors
+func (ic *InfluxClient) ScrubAllValueDescriptors() error {
+	return ic.deleteAll(VALUE_DESCRIPTOR_COLLECTION)
 }
 
 func (ic *InfluxClient) deleteValueDescriptorBy(query string) error {

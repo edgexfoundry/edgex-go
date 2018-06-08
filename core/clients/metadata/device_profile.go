@@ -19,8 +19,9 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/edgexfoundry/edgex-go/core/clients"
+	"github.com/edgexfoundry/edgex-go/core/clients/types"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
-
 )
 
 // Device Profile client for interacting with the device profile section of metadata
@@ -30,13 +31,31 @@ type DeviceProfileClient interface {
 
 type DeviceProfileRestClient struct {
 	url string
+	endpoint clients.Endpointer
 }
 
 // Return an instance of DeviceProfileClient
-func NewDeviceProfileClient(metaDbDeviceProfileUrl string) DeviceProfileClient {
-	d := DeviceProfileRestClient{url: metaDbDeviceProfileUrl}
-
+func NewDeviceProfileClient(params types.EndpointParams, m clients.Endpointer) DeviceProfileClient {
+	d := DeviceProfileRestClient{endpoint:m}
+	d.init(params)
 	return &d
+}
+
+func(d *DeviceProfileRestClient) init(params types.EndpointParams) {
+	if params.UseRegistry {
+		ch := make(chan string, 1)
+		go d.endpoint.Monitor(params, ch)
+		go func(ch chan string) {
+			for true {
+				select {
+				case url := <- ch:
+					d.url = url
+				}
+			}
+		}(ch)
+	} else {
+		d.url = params.Url
+	}
 }
 
 // Add a new device profile to metadata
