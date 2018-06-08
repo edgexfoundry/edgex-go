@@ -13,6 +13,6 @@ SocketTimeout = 5000
 MongoUsername = 'logging'
 MongoPassword = 'password'
 CheckInterval = '10s'
-ConsulHost = 'edgex-core-consul'
+ConsulHost = 'docker-core-consul'
 ConsulPort = 8500
 ConsulProfilesActive = 'docker;go'
