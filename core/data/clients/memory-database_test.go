@@ -58,7 +58,6 @@ func populateDbEvents(db DBClient, count int, pushed int64) (bson.ObjectId, erro
 		name := fmt.Sprintf("name%d", i)
 		e := models.Event{}
 		e.Device = name
-		e.Schedule = name
 		e.Event = name
 		e.Pushed = pushed
 		var err error
