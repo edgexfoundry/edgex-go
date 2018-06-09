@@ -49,7 +49,6 @@ func (me MongoEvent) GetBSON() (interface{}, error) {
 		Created:  me.Created,
 		Modified: me.Modified,
 		Origin:   me.Origin,
-		Schedule: me.Schedule,
 		Event:    me.Event.Event,
 		Readings: readings,
 	}, nil
@@ -81,7 +80,6 @@ func (me *MongoEvent) SetBSON(raw bson.Raw) error {
 	me.Created = decoded.Created
 	me.Modified = decoded.Modified
 	me.Origin = decoded.Origin
-	me.Schedule = decoded.Schedule
 	me.Event.Event = decoded.Event
 
 	// De-reference the DBRef fields
