@@ -301,7 +301,6 @@ func (ic *InfluxClient) eventToDB(db string, collection string, e *models.Event,
 		"created":  e.Created,
 		"origin":   e.Origin,
 		"modified": e.Modified,
-		"schedule": e.Schedule,
 		"readings": readings,
 	}
 
@@ -364,10 +363,6 @@ func parseEvents(res client.Result) ([]models.Event, error) {
 			case "event":
 				if res.Series[0].Values[i][j] != nil {
 					event.Event = res.Series[0].Values[i][j].(string)
-				}
-			case "schedule":
-				if res.Series[0].Values[i][j] != nil {
-					event.Schedule = res.Series[0].Values[i][j].(string)
 				}
 			case "readings":
 				if res.Series[0].Values[i][j] != nil {
