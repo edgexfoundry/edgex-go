@@ -78,14 +78,12 @@ func (reg *registrationInfo) update(newReg export.Registration) bool {
 
 	reg.sender = nil
 	switch newReg.Destination {
-	case export.DestMQTT:
+	case export.DestMQTT, export.DestAzureMQTT:
 		reg.sender = NewMqttSender(newReg.Addressable)
 	case export.DestZMQ:
 		logger.Info("Destination ZMQ is not supported")
 	case export.DestIotCoreMQTT:
 		reg.sender = NewIoTCoreSender(newReg.Addressable)
-	case export.DestAzureMQTT:
-		reg.sender = NewMqttSender(newReg.Addressable)
 	case export.DestRest:
 		reg.sender = NewHTTPSender(newReg.Addressable)
 	case export.DestXMPP:
