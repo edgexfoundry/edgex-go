@@ -4,8 +4,6 @@ MetaDataCheck = false
 ValidateCheck = false
 AddToEventQueue = true
 PersistData = true
-HeartBeatTime = 300000
-HeartBeatMsg = 'Core data heart beat'
 AppOpenMsg = 'This is the Core Data Micro Service'
 FormatSpecifier = '%(\\d=\\$)?([-#= 0(\\<]*)?(\\d=)?(\\.\\d=)?([tT])?([a-zA-Z%])'
 MsgPubType = 'zero'
