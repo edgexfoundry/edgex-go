@@ -1,6 +1,7 @@
 //
 // Copyright (c) 2017
 // Cavium
+// Mainflux
 //
 // SPDX-License-Identifier: Apache-2.0
 
