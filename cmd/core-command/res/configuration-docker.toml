@@ -1,13 +1,11 @@
 ConsulProfilesActive = 'docker;go'
 ReadLimit = 100
-HeartBeatTime = 300000
 ConsulPort = 8500
 ServiceTimeout = 5000
 CheckInterval = '10s'
 ServiceAddress = 'edgex-core-command'
 ServicePort = 48082
 DeviceServiceProtocol = 'http'
-HeartBeatMsg = 'Core Command heart beat'
 AppOpenMsg = 'This is the Core Command Micro Service'
 URLProtocol = 'http://'
 URLDevicePath = '/api/v1/device'
