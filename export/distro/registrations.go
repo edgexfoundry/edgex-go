@@ -53,7 +53,7 @@ func (reg *registrationInfo) update(newReg export.Registration) bool {
 	case export.FormatIoTCoreJSON:
 		reg.format = jsonFormatter{}
 	case export.FormatAzureJSON:
-		// TODO reg.format = distro.NewAzureFormat()
+		reg.format = azureFormatter{}
 	case export.FormatCSV:
 		// TODO reg.format = distro.NewCsvFormat()
 	case export.FormatThingsBoardJSON:
@@ -85,7 +85,7 @@ func (reg *registrationInfo) update(newReg export.Registration) bool {
 	case export.DestIotCoreMQTT:
 		reg.sender = NewIoTCoreSender(newReg.Addressable)
 	case export.DestAzureMQTT:
-		// TODO reg.sender = distro.NewAzureSender("TODO URL")
+		reg.sender = NewMqttSender(newReg.Addressable)
 	case export.DestRest:
 		reg.sender = NewHTTPSender(newReg.Addressable)
 	case export.DestXMPP:
