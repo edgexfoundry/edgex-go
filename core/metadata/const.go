@@ -33,8 +33,6 @@ type ConfigurationStruct struct {
 	ServiceAddress                      string
 	ServicePort                         int
 	ServiceTimeout                      int
-	HeartBeatTime                       int
-	HeartBeatMsg                        string
 	AppOpenMsg                          string
 	CheckInterval                       string
 	ConsulProfilesActive                string

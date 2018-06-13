@@ -20,8 +20,6 @@ type ConfigurationStruct struct {
 	ValidateCheck              bool
 	AddToEventQueue            bool
 	PersistData                bool
-	HeartBeatTime              int
-	HeartBeatMsg               string
 	AppOpenMsg                 string
 	FormatSpecifier            string
 	MsgPubType                 string
