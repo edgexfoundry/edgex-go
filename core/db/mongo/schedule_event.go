@@ -22,12 +22,12 @@ import (
 
 // Internal version of the schedule event struct
 // Use this to handle DBRef
-type MongoScheduleEvent struct {
+type mongoScheduleEvent struct {
 	models.ScheduleEvent
 }
 
 // Custom marshaling into mongo
-func (mse MongoScheduleEvent) GetBSON() (interface{}, error) {
+func (mse mongoScheduleEvent) GetBSON() (interface{}, error) {
 	return struct {
 		models.BaseObject `bson:",inline"`
 		Id                bson.ObjectId `bson:"_id,omitempty"`
@@ -48,7 +48,7 @@ func (mse MongoScheduleEvent) GetBSON() (interface{}, error) {
 }
 
 // Custom unmarshaling out of mongo
-func (mse *MongoScheduleEvent) SetBSON(raw bson.Raw) error {
+func (mse *mongoScheduleEvent) SetBSON(raw bson.Raw) error {
 	decoded := new(struct {
 		models.BaseObject `bson:",inline"`
 		Id                bson.ObjectId `bson:"_id,omitempty"`

@@ -21,12 +21,12 @@ import (
 )
 
 // Struct that wraps an event to handle DBRefs
-type MongoEvent struct {
+type mongoEvent struct {
 	models.Event
 }
 
 // Custom marshaling into mongo
-func (me MongoEvent) GetBSON() (interface{}, error) {
+func (me mongoEvent) GetBSON() (interface{}, error) {
 	// Turn the readings into DBRef objects
 	var readings []mgo.DBRef
 	for _, reading := range me.Readings {
@@ -56,7 +56,7 @@ func (me MongoEvent) GetBSON() (interface{}, error) {
 }
 
 // Custom unmarshaling out of mongo
-func (me *MongoEvent) SetBSON(raw bson.Raw) error {
+func (me *mongoEvent) SetBSON(raw bson.Raw) error {
 	decoded := new(struct {
 		ID       bson.ObjectId `bson:"_id,omitempty"`
 		Pushed   int64         `bson:"pushed"`

@@ -66,7 +66,7 @@ func (m *MongoClient) UpdateScheduleEvent(se models.ScheduleEvent) error {
 	se.Modified = makeTimestamp()
 
 	// Handle DBRefs
-	mse := MongoScheduleEvent{ScheduleEvent: se}
+	mse := mongoScheduleEvent{ScheduleEvent: se}
 
 	return col.UpdateId(se.Id, mse)
 }
@@ -87,7 +87,7 @@ func (m *MongoClient) AddScheduleEvent(se *models.ScheduleEvent) error {
 	se.Id = bson.NewObjectId()
 
 	// Handle DBRefs
-	mse := MongoScheduleEvent{ScheduleEvent: *se}
+	mse := mongoScheduleEvent{ScheduleEvent: *se}
 
 	return col.Insert(mse)
 }
@@ -132,7 +132,7 @@ func (m *MongoClient) GetScheduleEvent(se *models.ScheduleEvent, q bson.M) error
 	col := s.DB(m.database.Name).C(db.ScheduleEvent)
 
 	// Handle DBRef
-	var mse MongoScheduleEvent
+	var mse mongoScheduleEvent
 
 	err := col.Find(q).One(&mse)
 	if err != nil {
@@ -150,7 +150,7 @@ func (m *MongoClient) GetScheduleEvents(se *[]models.ScheduleEvent, q bson.M) er
 	col := s.DB(m.database.Name).C(db.ScheduleEvent)
 
 	// Handle the DBRef
-	var mses []MongoScheduleEvent
+	var mses []mongoScheduleEvent
 
 	err := col.Find(q).Sort("queryts").All(&mses)
 	if err != nil {
@@ -325,7 +325,7 @@ func (m *MongoClient) AddDevice(d *models.Device) error {
 	d.Id = bson.NewObjectId()
 
 	// Wrap the device in MongoDevice (For DBRefs)
-	md := MongoDevice{Device: *d}
+	md := mongoDevice{Device: *d}
 
 	return col.Insert(md)
 }
@@ -336,7 +336,7 @@ func (m *MongoClient) UpdateDevice(rd models.Device) error {
 	c := s.DB(m.database.Name).C(db.Device)
 
 	// Copy over the DBRefs
-	md := MongoDevice{Device: rd}
+	md := mongoDevice{Device: rd}
 
 	return c.UpdateId(rd.Id, md)
 }
@@ -399,7 +399,7 @@ func (m *MongoClient) GetDevices(d *[]models.Device, q bson.M) error {
 	s := m.session.Copy()
 	defer s.Close()
 	col := s.DB(m.database.Name).C(db.Device)
-	mds := []MongoDevice{}
+	mds := []mongoDevice{}
 
 	err := col.Find(q).Sort("queryts").All(&mds)
 	if err != nil {
@@ -418,7 +418,7 @@ func (m *MongoClient) GetDevice(d *models.Device, q bson.M) error {
 	s := m.session.Copy()
 	defer s.Close()
 	col := s.DB(m.database.Name).C(db.Device)
-	md := MongoDevice{}
+	md := mongoDevice{}
 
 	err := col.Find(q).One(&md)
 	if err != nil {
@@ -470,7 +470,7 @@ func (m *MongoClient) GetDeviceProfiles(d *[]models.DeviceProfile, q bson.M) err
 	col := s.DB(m.database.Name).C(db.DeviceProfile)
 
 	// Handle the DBRefs
-	var mdps []MongoDeviceProfile
+	var mdps []mongoDeviceProfile
 	err := col.Find(q).Sort("queryts").All(&mdps)
 	if err != nil {
 		return err
@@ -491,7 +491,7 @@ func (m *MongoClient) GetDeviceProfile(d *models.DeviceProfile, q bson.M) error 
 	col := s.DB(m.database.Name).C(db.DeviceProfile)
 
 	// Handle the DBRefs
-	var mdp MongoDeviceProfile
+	var mdp mongoDeviceProfile
 	err := col.Find(q).One(&mdp)
 	if err != nil {
 		return err
@@ -522,7 +522,7 @@ func (m *MongoClient) AddDeviceProfile(dp *models.DeviceProfile) error {
 	dp.Modified = ts
 	dp.Id = bson.NewObjectId()
 
-	mdp := MongoDeviceProfile{DeviceProfile: *dp}
+	mdp := mongoDeviceProfile{DeviceProfile: *dp}
 
 	return col.Insert(mdp)
 }
@@ -532,7 +532,7 @@ func (m *MongoClient) UpdateDeviceProfile(dp *models.DeviceProfile) error {
 	defer s.Close()
 	c := s.DB(m.database.Name).C(db.DeviceProfile)
 
-	mdp := MongoDeviceProfile{DeviceProfile: *dp}
+	mdp := mongoDeviceProfile{DeviceProfile: *dp}
 	mdp.Modified = makeTimestamp()
 
 	return c.UpdateId(mdp.Id, mdp)
@@ -708,7 +708,7 @@ func (m *MongoClient) GetDeviceServices(d *[]models.DeviceService, q bson.M) err
 	s := m.session.Copy()
 	defer s.Close()
 	col := s.DB(m.database.Name).C(db.DeviceService)
-	mdss := []MongoDeviceService{}
+	mdss := []mongoDeviceService{}
 	err := col.Find(q).Sort("queryts").All(&mdss)
 	if err != nil {
 		return err
@@ -724,7 +724,7 @@ func (m *MongoClient) GetDeviceService(d *models.DeviceService, q bson.M) error 
 	s := m.session.Copy()
 	defer s.Close()
 	col := s.DB(m.database.Name).C(db.DeviceService)
-	mds := MongoDeviceService{}
+	mds := mongoDeviceService{}
 	err := col.Find(q).One(&mds)
 	if err != nil {
 		return err
@@ -745,8 +745,8 @@ func (m *MongoClient) AddDeviceService(d *models.DeviceService) error {
 	d.Modified = ts
 	d.Id = bson.NewObjectId()
 
-	// MongoDeviceService handles the DBRefs
-	mds := MongoDeviceService{DeviceService: *d}
+	// mongoDeviceService handles the DBRefs
+	mds := mongoDeviceService{DeviceService: *d}
 	return col.Insert(mds)
 }
 
@@ -758,7 +758,7 @@ func (m *MongoClient) UpdateDeviceService(deviceService models.DeviceService) er
 	deviceService.Modified = makeTimestamp()
 
 	// Handle DBRefs
-	mds := MongoDeviceService{DeviceService: deviceService}
+	mds := mongoDeviceService{DeviceService: deviceService}
 
 	return c.UpdateId(deviceService.Id, mds)
 }
@@ -812,7 +812,7 @@ func (m *MongoClient) GetProvisionWatcher(pw *models.ProvisionWatcher, q bson.M)
 	col := s.DB(m.database.Name).C(db.ProvisionWatcher)
 
 	// Handle DBRefs
-	var mpw MongoProvisionWatcher
+	var mpw mongoProvisionWatcher
 
 	err := col.Find(q).One(&mpw)
 	if err != nil {
@@ -830,7 +830,7 @@ func (m *MongoClient) GetProvisionWatchers(pw *[]models.ProvisionWatcher, q bson
 	col := s.DB(m.database.Name).C(db.ProvisionWatcher)
 
 	// Handle DBRefs
-	var mpws []MongoProvisionWatcher
+	var mpws []mongoProvisionWatcher
 
 	err := col.Find(q).Sort("queryts").All(&mpws)
 	if err != nil {
@@ -885,7 +885,7 @@ func (m *MongoClient) AddProvisionWatcher(pw *models.ProvisionWatcher) error {
 	pw.Id = bson.NewObjectId()
 
 	// Handle DBRefs
-	mpw := MongoProvisionWatcher{ProvisionWatcher: *pw}
+	mpw := mongoProvisionWatcher{ProvisionWatcher: *pw}
 
 	return col.Insert(mpw)
 }
@@ -898,7 +898,7 @@ func (m *MongoClient) UpdateProvisionWatcher(pw models.ProvisionWatcher) error {
 	pw.Modified = makeTimestamp()
 
 	// Handle DBRefs
-	mpw := MongoProvisionWatcher{ProvisionWatcher: pw}
+	mpw := mongoProvisionWatcher{ProvisionWatcher: pw}
 
 	return c.UpdateId(mpw.Id, mpw)
 }

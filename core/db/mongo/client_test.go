@@ -81,13 +81,13 @@ func BenchmarkMongoDB(b *testing.B) {
 
 	b.Log("This benchmark needs to have a running mongo on localhost")
 
-	config := DBConfiguration{
-		DbType:       MONGO,
+	config := db.Configuration{
 		Host:         "0.0.0.0",
 		Port:         27017,
 		DatabaseName: "coredata",
 		Timeout:      1000,
 	}
+	mongo := NewClient(config)
 
-	benchmarkDB(b, config)
+	test.BenchmarkDB(b, mongo)
 }

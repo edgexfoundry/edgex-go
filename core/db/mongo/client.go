@@ -23,7 +23,7 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
-var currentMongoClient *MongoClient // Singleton used so that MongoEvent can use it to de-reference readings
+var currentMongoClient *MongoClient // Singleton used so that mongoEvent can use it to de-reference readings
 
 /*
 Core data client
@@ -99,7 +99,7 @@ func (mc *MongoClient) AddEvent(e *models.Event) (bson.ObjectId, error) {
 	}
 
 	// Handle DBRefs
-	me := MongoEvent{Event: *e}
+	me := mongoEvent{Event: *e}
 
 	// Add the event
 	err := s.DB(mc.database.Name).C(db.EventsCollection).Insert(me)
@@ -120,7 +120,7 @@ func (mc *MongoClient) UpdateEvent(e models.Event) error {
 	e.Modified = time.Now().UnixNano() / int64(time.Millisecond)
 
 	// Handle DBRef
-	me := MongoEvent{Event: e}
+	me := mongoEvent{Event: e}
 
 	err := s.DB(mc.database.Name).C(db.EventsCollection).UpdateId(me.ID, me)
 	if err == mgo.ErrNotFound {
@@ -217,7 +217,7 @@ func (mc *MongoClient) getEvents(q bson.M) ([]models.Event, error) {
 	defer s.Close()
 
 	// Handle DBRefs
-	var me []MongoEvent
+	var me []mongoEvent
 	events := []models.Event{}
 	err := s.DB(mc.database.Name).C(db.EventsCollection).Find(q).All(&me)
 	if err != nil {
@@ -238,7 +238,7 @@ func (mc *MongoClient) getEventsLimit(q bson.M, limit int) ([]models.Event, erro
 	defer s.Close()
 
 	// Handle DBRefs
-	var me []MongoEvent
+	var me []mongoEvent
 	events := []models.Event{}
 
 	// Check if limit is 0
@@ -265,7 +265,7 @@ func (mc *MongoClient) getEvent(q bson.M) (models.Event, error) {
 	defer s.Close()
 
 	// Handle DBRef
-	var me MongoEvent
+	var me mongoEvent
 	err := s.DB(mc.database.Name).C(db.EventsCollection).Find(q).One(&me)
 	if err == mgo.ErrNotFound {
 		return me.Event, db.ErrNotFound

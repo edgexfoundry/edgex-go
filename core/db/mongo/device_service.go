@@ -22,12 +22,12 @@ import (
 
 // Internal version of the device service struct
 // Use this to handle DBRef
-type MongoDeviceService struct {
+type mongoDeviceService struct {
 	models.DeviceService
 }
 
 // Custom marshaling into mongo
-func (mds MongoDeviceService) GetBSON() (interface{}, error) {
+func (mds mongoDeviceService) GetBSON() (interface{}, error) {
 	return struct {
 		models.DescribedObject `bson:",inline"`
 		Id                     bson.ObjectId         `bson:"_id,omitempty"`
@@ -52,7 +52,7 @@ func (mds MongoDeviceService) GetBSON() (interface{}, error) {
 }
 
 // Custom unmarshaling out of mongo
-func (mds *MongoDeviceService) SetBSON(raw bson.Raw) error {
+func (mds *mongoDeviceService) SetBSON(raw bson.Raw) error {
 	decoded := new(struct {
 		models.DescribedObject `bson:",inline"`
 		Id                     bson.ObjectId         `bson:"_id,omitempty"`

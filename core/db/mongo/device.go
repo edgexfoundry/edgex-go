@@ -22,13 +22,13 @@ import (
 
 // Internal version of the device struct
 // Use this to handle DBRef
-type MongoDevice struct {
+type mongoDevice struct {
 	models.Device `bson:",inline"`
 }
 
 // Struct to hold the result of GetBSON
 // This struct is used by MongoDeviceManager so that it can call GetBSON explicitly on MongoDevice
-type MongoDeviceBSON struct {
+type mongoDeviceBSON struct {
 	models.DescribedObject `bson:",inline"`
 	Id                     bson.ObjectId         `bson:"_id,omitempty"`
 	Name                   string                `bson:"name"`           // Unique name for identifying a device
@@ -44,8 +44,8 @@ type MongoDeviceBSON struct {
 }
 
 // Custom marshaling into mongo
-func (md MongoDevice) GetBSON() (interface{}, error) {
-	return MongoDeviceBSON{
+func (md mongoDevice) GetBSON() (interface{}, error) {
+	return mongoDeviceBSON{
 		DescribedObject: md.DescribedObject,
 		Id:              md.Id,
 		Name:            md.Name,
@@ -62,7 +62,7 @@ func (md MongoDevice) GetBSON() (interface{}, error) {
 }
 
 // Custom unmarshaling out of mongo
-func (md *MongoDevice) SetBSON(raw bson.Raw) error {
+func (md *mongoDevice) SetBSON(raw bson.Raw) error {
 	decoded := new(struct {
 		models.DescribedObject `bson:",inline"`
 		Id                     bson.ObjectId         `bson:"_id,omitempty"`
@@ -107,8 +107,8 @@ func (md *MongoDevice) SetBSON(raw bson.Raw) error {
 	dpCol := s.DB(m.database.Name).C(db.DeviceProfile)
 
 	var a models.Addressable
-	var mdp MongoDeviceProfile
-	var mds MongoDeviceService
+	var mdp mongoDeviceProfile
+	var mds mongoDeviceService
 
 	err = addCol.Find(bson.M{"_id": decoded.Addressable.Id}).One(&a)
 	if err != nil {

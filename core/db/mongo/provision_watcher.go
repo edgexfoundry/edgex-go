@@ -22,12 +22,12 @@ import (
 
 // Internal version of the provision watcher struct
 // Use this to handle DBRef
-type MongoProvisionWatcher struct {
+type mongoProvisionWatcher struct {
 	models.ProvisionWatcher
 }
 
 // Custom marshaling into mongo
-func (mpw MongoProvisionWatcher) GetBSON() (interface{}, error) {
+func (mpw mongoProvisionWatcher) GetBSON() (interface{}, error) {
 	return struct {
 		models.BaseObject `bson:",inline"`
 		Id                bson.ObjectId         `bson:"_id,omitempty"`
@@ -48,7 +48,7 @@ func (mpw MongoProvisionWatcher) GetBSON() (interface{}, error) {
 }
 
 // Custom unmarshaling out of mongo
-func (mpw *MongoProvisionWatcher) SetBSON(raw bson.Raw) error {
+func (mpw *mongoProvisionWatcher) SetBSON(raw bson.Raw) error {
 	decoded := new(struct {
 		models.BaseObject `bson:",inline"`
 		Id                bson.ObjectId         `bson:"_id,omitempty"`
@@ -82,8 +82,8 @@ func (mpw *MongoProvisionWatcher) SetBSON(raw bson.Raw) error {
 	profCol := s.DB(m.database.Name).C(db.DeviceProfile)
 	servCol := s.DB(m.database.Name).C(db.DeviceService)
 
-	var mdp MongoDeviceProfile
-	var mds MongoDeviceService
+	var mdp mongoDeviceProfile
+	var mds mongoDeviceService
 
 	if err := profCol.FindId(decoded.Profile.Id).One(&mdp); err != nil {
 		return err
