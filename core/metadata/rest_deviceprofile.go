@@ -342,7 +342,7 @@ func deleteDeviceProfile(dp models.DeviceProfile, w http.ResponseWriter) error {
 
 	// Check if the device profile is still in use by provision watchers
 	var pw []models.ProvisionWatcher
-	if err := dbClient.GetProvisionWatcherByProfileId(&pw, dp.Id.Hex()); err != nil {
+	if err := dbClient.GetProvisionWatchersByProfileId(&pw, dp.Id.Hex()); err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return err
 	}
@@ -474,10 +474,8 @@ func restGetProfileWithLabel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var labels []string
-	labels = append(labels, label)
 	res := make([]models.DeviceProfile, 0)
-	if err := dbClient.GetDeviceProfilesWithLabel(&res, labels); err != nil {
+	if err := dbClient.GetDeviceProfilesWithLabel(&res, label); err != nil {
 		loggingClient.Error(err.Error(), "")
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return

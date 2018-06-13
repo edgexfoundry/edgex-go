@@ -157,6 +157,7 @@ func (m *MongoClient) GetScheduleEvents(se *[]models.ScheduleEvent, q bson.M) er
 		return err
 	}
 
+	*se = []models.ScheduleEvent{}
 	for _, mse := range mses {
 		*se = append(*se, mse.ScheduleEvent)
 	}
@@ -194,15 +195,14 @@ func (m *MongoClient) AddSchedule(sch *models.Schedule) error {
 	if err != nil {
 		return err
 	} else if count > 0 {
-		err := errors.New("Schedule already exist")
-		return err
+		return db.ErrNotUnique
 	}
 
 	ts := makeTimestamp()
 	sch.Created = ts
 	sch.Modified = ts
 	sch.Id = bson.NewObjectId()
-	return col.Insert(s)
+	return col.Insert(sch)
 }
 
 func (m *MongoClient) UpdateSchedule(sch models.Schedule) error {
@@ -382,11 +382,6 @@ func (m *MongoClient) GetDevicesByServiceId(d *[]models.Device, sid string) erro
 
 func (m *MongoClient) GetDevicesByAddressableId(d *[]models.Device, aid string) error {
 	if bson.IsObjectIdHex(aid) {
-		// Check if the addressable exists
-		var a *models.Addressable
-		if m.GetAddressableById(a, aid) == mgo.ErrNotFound {
-			return mgo.ErrNotFound
-		}
 		return m.GetDevices(d, bson.M{"addressable.$id": bson.ObjectIdHex(aid)})
 	} else {
 		err := errors.New("mgoGetDevicesByAddressableId Invalid Object ID " + aid)
@@ -394,8 +389,10 @@ func (m *MongoClient) GetDevicesByAddressableId(d *[]models.Device, aid string) 
 	}
 }
 
-func (m *MongoClient) GetDevicesWithLabel(d *[]models.Device, l []string) error {
-	return m.GetDevices(d, bson.M{"labels": bson.M{"$in": l}})
+func (m *MongoClient) GetDevicesWithLabel(d *[]models.Device, l string) error {
+	var ls []string
+	ls = append(ls, l)
+	return m.GetDevices(d, bson.M{"labels": bson.M{"$in": ls}})
 }
 
 func (m *MongoClient) GetDevices(d *[]models.Device, q bson.M) error {
@@ -409,6 +406,7 @@ func (m *MongoClient) GetDevices(d *[]models.Device, q bson.M) error {
 		return err
 	}
 
+	*d = []models.Device{}
 	for _, md := range mds {
 		*d = append(*d, md.Device)
 	}
@@ -450,8 +448,10 @@ func (m *MongoClient) GetDeviceProfilesByModel(dp *[]models.DeviceProfile, model
 	return m.GetDeviceProfiles(dp, bson.M{"model": model})
 }
 
-func (m *MongoClient) GetDeviceProfilesWithLabel(dp *[]models.DeviceProfile, l []string) error {
-	return m.GetDeviceProfiles(dp, bson.M{"labels": bson.M{"$in": l}})
+func (m *MongoClient) GetDeviceProfilesWithLabel(dp *[]models.DeviceProfile, l string) error {
+	var ls []string
+	ls = append(ls, l)
+	return m.GetDeviceProfiles(dp, bson.M{"labels": bson.M{"$in": ls}})
 }
 func (m *MongoClient) GetDeviceProfilesByManufacturerModel(dp *[]models.DeviceProfile, man string, mod string) error {
 	return m.GetDeviceProfiles(dp, bson.M{"manufacturer": man, "model": mod})
@@ -476,6 +476,7 @@ func (m *MongoClient) GetDeviceProfiles(d *[]models.DeviceProfile, q bson.M) err
 		return err
 	}
 
+	*d = []models.DeviceProfile{}
 	for _, mdp := range mdps {
 		*d = append(*d, mdp.DeviceProfile)
 	}
@@ -614,7 +615,7 @@ func (m *MongoClient) GetAddressableById(a *models.Addressable, id string) error
 	}
 }
 
-func (m *MongoClient) AddAddressable(a *models.Addressable) error {
+func (m *MongoClient) AddAddressable(a *models.Addressable) (bson.ObjectId, error) {
 	s := m.session.Copy()
 	defer s.Close()
 	col := s.DB(m.database.Name).C(db.Addressable)
@@ -622,20 +623,16 @@ func (m *MongoClient) AddAddressable(a *models.Addressable) error {
 	// check if the name exist
 	count, err := col.Find(bson.M{"name": a.Name}).Count()
 	if err != nil {
-		return err
+		return a.Id, err
 	} else if count > 0 {
-		return db.ErrNotUnique
+		return a.Id, db.ErrNotUnique
 	}
 
 	ts := makeTimestamp()
 	a.Created = ts
 	a.Id = bson.NewObjectId()
 	err = col.Insert(a)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return a.Id, err
 }
 
 func (m *MongoClient) GetAddressableByName(a *models.Addressable, n string) error {
@@ -701,8 +698,10 @@ func (m *MongoClient) GetDeviceServicesByAddressableId(d *[]models.DeviceService
 	}
 }
 
-func (m *MongoClient) GetDeviceServicesWithLabel(d *[]models.DeviceService, l []string) error {
-	return m.GetDeviceServices(d, bson.M{"labels": bson.M{"$in": l}})
+func (m *MongoClient) GetDeviceServicesWithLabel(d *[]models.DeviceService, l string) error {
+	var ls []string
+	ls = append(ls, l)
+	return m.GetDeviceServices(d, bson.M{"labels": bson.M{"$in": ls}})
 }
 
 func (m *MongoClient) GetDeviceServices(d *[]models.DeviceService, q bson.M) error {
@@ -714,10 +713,10 @@ func (m *MongoClient) GetDeviceServices(d *[]models.DeviceService, q bson.M) err
 	if err != nil {
 		return err
 	}
+	*d = []models.DeviceService{}
 	for _, mds := range mdss {
 		*d = append(*d, mds.DeviceService)
 	}
-
 	return nil
 }
 
@@ -738,20 +737,13 @@ func (m *MongoClient) GetDeviceService(d *models.DeviceService, q bson.M) error 
 func (m *MongoClient) AddDeviceService(d *models.DeviceService) error {
 	s := m.session.Copy()
 	defer s.Close()
+
 	col := s.DB(m.database.Name).C(db.DeviceService)
 
-	// check if the name exist
-	count, err := col.Find(bson.M{"name": d.Service.Name}).Count()
-	if err != nil {
-		return err
-	} else if count > 0 {
-		return db.ErrNotUnique
-	}
-
 	ts := makeTimestamp()
-	d.Service.Created = ts
-	d.Service.Modified = ts
-	d.Service.Id = bson.NewObjectId()
+	d.Created = ts
+	d.Modified = ts
+	d.Id = bson.NewObjectId()
 
 	// MongoDeviceService handles the DBRefs
 	mds := MongoDeviceService{DeviceService: *d}
@@ -763,12 +755,12 @@ func (m *MongoClient) UpdateDeviceService(deviceService models.DeviceService) er
 	defer s.Close()
 	c := s.DB(m.database.Name).C(db.DeviceService)
 
-	deviceService.Service.Modified = makeTimestamp()
+	deviceService.Modified = makeTimestamp()
 
 	// Handle DBRefs
 	mds := MongoDeviceService{DeviceService: deviceService}
 
-	return c.UpdateId(deviceService.Service.Id, mds)
+	return c.UpdateId(deviceService.Id, mds)
 }
 
 func (m *MongoClient) DeleteDeviceService(ds models.DeviceService) error {
@@ -796,7 +788,7 @@ func (m *MongoClient) GetProvisionWatchersByServiceId(pw *[]models.ProvisionWatc
 	}
 }
 
-func (m *MongoClient) GetProvisionWatcherByProfileId(pw *[]models.ProvisionWatcher, id string) error {
+func (m *MongoClient) GetProvisionWatchersByProfileId(pw *[]models.ProvisionWatcher, id string) error {
 	if bson.IsObjectIdHex(id) {
 		return m.GetProvisionWatchers(pw, bson.M{"profile.$id": bson.ObjectIdHex(id)})
 	} else {
@@ -845,6 +837,7 @@ func (m *MongoClient) GetProvisionWatchers(pw *[]models.ProvisionWatcher, q bson
 		return err
 	}
 
+	*pw = []models.ProvisionWatcher{}
 	for _, mpw := range mpws {
 		*pw = append(*pw, mpw.ProvisionWatcher)
 	}
@@ -865,10 +858,10 @@ func (m *MongoClient) AddProvisionWatcher(pw *models.ProvisionWatcher) error {
 
 	// get Device Service
 	var dev models.DeviceService
-	if pw.Service.Service.Id.Hex() != "" {
-		m.GetDeviceServiceById(&dev, pw.Service.Service.Id.Hex())
-	} else if pw.Service.Service.Name != "" {
-		m.GetDeviceServiceByName(&dev, pw.Service.Service.Name)
+	if pw.Service.Id.Hex() != "" {
+		m.GetDeviceServiceById(&dev, pw.Service.Id.Hex())
+	} else if pw.Service.Name != "" {
+		m.GetDeviceServiceByName(&dev, pw.Service.Name)
 	} else {
 		return errors.New("Device Service ID or Name is required")
 	}
@@ -1010,16 +1003,4 @@ func (m *MongoClient) DeleteCommandById(id string) error {
 	}
 
 	return col.RemoveId(bson.ObjectIdHex(id))
-}
-
-func (m *MongoClient) DeleteByName(c string, n string) error {
-	s := m.session.Copy()
-	defer s.Close()
-	col := s.DB(m.database.Name).C(c)
-	err := col.Remove(bson.M{"name": n})
-	if err != nil {
-		return err
-	}
-
-	return nil
 }

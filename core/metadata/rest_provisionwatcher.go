@@ -171,7 +171,7 @@ func restGetProvisionWatchersByProfileId(w http.ResponseWriter, r *http.Request)
 	}
 
 	res := make([]models.ProvisionWatcher, 0)
-	err := dbClient.GetProvisionWatcherByProfileId(&res, pid)
+	err := dbClient.GetProvisionWatchersByProfileId(&res, pid)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		loggingClient.Error("Problem getting provision watcher: "+err.Error(), "")
@@ -204,7 +204,7 @@ func restGetProvisionWatchersByProfileName(w http.ResponseWriter, r *http.Reques
 	}
 
 	res := make([]models.ProvisionWatcher, 0)
-	err = dbClient.GetProvisionWatcherByProfileId(&res, dp.Id.Hex())
+	err = dbClient.GetProvisionWatchersByProfileId(&res, dp.Id.Hex())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		loggingClient.Error("Problem getting provision watcher: "+err.Error(), "")

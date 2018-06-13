@@ -92,7 +92,7 @@ func (mc *MongoClient) AddEvent(e *models.Event) (bson.ObjectId, error) {
 			e.Readings[i].Device = e.Device
 			ui = append(ui, e.Readings[i])
 		}
-		err := s.DB(mc.Database.Name).C(db.ReadingsCollection).Insert(ui...)
+		err := s.DB(mc.database.Name).C(db.ReadingsCollection).Insert(ui...)
 		if err != nil {
 			return e.ID, err
 		}
@@ -102,7 +102,7 @@ func (mc *MongoClient) AddEvent(e *models.Event) (bson.ObjectId, error) {
 	me := MongoEvent{Event: *e}
 
 	// Add the event
-	err := s.DB(mc.Database.Name).C(db.EventsCollection).Insert(me)
+	err := s.DB(mc.database.Name).C(db.EventsCollection).Insert(me)
 	if err != nil {
 		return e.ID, err
 	}

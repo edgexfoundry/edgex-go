@@ -18,6 +18,10 @@ import (
 	"strings"
 
 	"github.com/edgexfoundry/edgex-go/core/db"
+	"github.com/edgexfoundry/edgex-go/core/db/memory"
+	"github.com/edgexfoundry/edgex-go/core/db/mongo"
+	"github.com/edgexfoundry/edgex-go/core/domain/enums"
+	"github.com/edgexfoundry/edgex-go/core/metadata/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal"
 	consulclient "github.com/edgexfoundry/edgex-go/support/consul-client"
 	logger "github.com/edgexfoundry/edgex-go/support/logging-client"
@@ -46,6 +50,16 @@ func ConnectToConsul(conf ConfigurationStruct) error {
 		}
 	}
 	return nil
+}
+
+func getDatabase(dbType string, config db.Configuration) (interfaces.DBClient, error) {
+	switch dbType {
+	case enums.MongoStr:
+		return mongo.NewClient(config), nil
+	case enums.MemoryStr:
+		return &memory.MemDB{}, nil
+	}
+	return nil, db.ErrNotFound
 }
 
 func Init(conf ConfigurationStruct, l logger.LoggingClient) error {

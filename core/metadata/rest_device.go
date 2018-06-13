@@ -286,11 +286,8 @@ func restGetDevicesWithLabel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var labels []string
-	labels = append(labels, label)
-
 	res := make([]models.Device, 0)
-	err = dbClient.GetDevicesWithLabel(&res, labels)
+	err = dbClient.GetDevicesWithLabel(&res, label)
 	if err != nil {
 		loggingClient.Error(err.Error(), "")
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)

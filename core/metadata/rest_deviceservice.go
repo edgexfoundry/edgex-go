@@ -94,8 +94,8 @@ func restAddDeviceService(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if err != mgo.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			loggingClient.Error(err.Error(), "")
 		}
-		loggingClient.Error(err.Error(), "")
 	} else {
 		// There wasn't an error - found the addressable
 		foundAddressable = true
@@ -391,11 +391,9 @@ func restGetServiceWithLabel(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return
 	}
-	var ls []string
-	ls = append(ls, l)
 	res := make([]models.DeviceService, 0)
 
-	if err := dbClient.GetDeviceServicesWithLabel(&res, ls); err != nil {
+	if err := dbClient.GetDeviceServicesWithLabel(&res, l); err != nil {
 		loggingClient.Error(err.Error(), "")
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return

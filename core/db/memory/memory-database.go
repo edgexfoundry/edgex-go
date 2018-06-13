@@ -22,9 +22,21 @@ import (
 )
 
 type MemDB struct {
+	// Data
 	readings     []models.Reading
 	events       []models.Event
 	vDescriptors []models.ValueDescriptor
+
+	// Metadata
+	addressables      []models.Addressable
+	commands          []models.Command
+	deviceServices    []models.DeviceService
+	schedules         []models.Schedule
+	scheduleEvents    []models.ScheduleEvent
+	provisionWatchers []models.ProvisionWatcher
+	deviceReports     []models.DeviceReport
+	deviceProfiles    []models.DeviceProfile
+	devices           []models.Device
 }
 
 func (m *MemDB) CloseSession() {

@@ -11,13 +11,11 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
-package metadata
+package interfaces
 
 import (
-	"github.com/edgexfoundry/edgex-go/core/db"
-	"github.com/edgexfoundry/edgex-go/core/db/mongo"
-	"github.com/edgexfoundry/edgex-go/core/domain/enums"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
+	"gopkg.in/mgo.v2/bson"
 )
 
 type DBClient interface {
@@ -62,7 +60,7 @@ type DBClient interface {
 	GetDevicesByProfileId(d *[]models.Device, pid string) error
 	GetDevicesByServiceId(d *[]models.Device, sid string) error
 	GetDevicesByAddressableId(d *[]models.Device, aid string) error
-	GetDevicesWithLabel(d *[]models.Device, l []string) error
+	GetDevicesWithLabel(d *[]models.Device, l string) error
 	AddDevice(d *models.Device) error
 	DeleteDevice(d models.Device) error
 	UpdateDeviceProfile(dp *models.DeviceProfile) error
@@ -71,13 +69,15 @@ type DBClient interface {
 	GetDeviceProfileById(d *models.DeviceProfile, id string) error
 	DeleteDeviceProfile(dp models.DeviceProfile) error
 	GetDeviceProfilesByModel(dp *[]models.DeviceProfile, m string) error
-	GetDeviceProfilesWithLabel(dp *[]models.DeviceProfile, l []string) error
+	GetDeviceProfilesWithLabel(dp *[]models.DeviceProfile, l string) error
 	GetDeviceProfilesByManufacturerModel(dp *[]models.DeviceProfile, man string, mod string) error
 	GetDeviceProfilesByManufacturer(dp *[]models.DeviceProfile, man string) error
 	GetDeviceProfileByName(dp *models.DeviceProfile, n string) error
+	GetDeviceProfilesUsingCommand(dp *[]models.DeviceProfile, c models.Command) error
 
+	// Addressable
 	UpdateAddressable(ra *models.Addressable, r *models.Addressable) error
-	AddAddressable(a *models.Addressable) error
+	AddAddressable(a *models.Addressable) (bson.ObjectId, error)
 	GetAddressableById(a *models.Addressable, id string) error
 	GetAddressableByName(a *models.Addressable, n string) error
 	GetAddressablesByTopic(a *[]models.Addressable, t string) error
@@ -90,7 +90,7 @@ type DBClient interface {
 	// Device service
 	UpdateDeviceService(ds models.DeviceService) error
 	GetDeviceServicesByAddressableId(d *[]models.DeviceService, id string) error
-	GetDeviceServicesWithLabel(d *[]models.DeviceService, l []string) error
+	GetDeviceServicesWithLabel(d *[]models.DeviceService, l string) error
 	GetDeviceServiceById(d *models.DeviceService, id string) error
 	GetDeviceServiceByName(d *models.DeviceService, n string) error
 	GetAllDeviceServices(d *[]models.DeviceService) error
@@ -101,7 +101,7 @@ type DBClient interface {
 	GetProvisionWatcherById(pw *models.ProvisionWatcher, id string) error
 	GetAllProvisionWatchers(pw *[]models.ProvisionWatcher) error
 	GetProvisionWatcherByName(pw *models.ProvisionWatcher, n string) error
-	GetProvisionWatcherByProfileId(pw *[]models.ProvisionWatcher, id string) error
+	GetProvisionWatchersByProfileId(pw *[]models.ProvisionWatcher, id string) error
 	GetProvisionWatchersByServiceId(pw *[]models.ProvisionWatcher, id string) error
 	GetProvisionWatchersByIdentifier(pw *[]models.ProvisionWatcher, k string, v string) error
 	AddProvisionWatcher(pw *models.ProvisionWatcher) error
@@ -110,20 +110,9 @@ type DBClient interface {
 
 	// Command
 	GetCommandById(c *models.Command, id string) error
-	GetCommandByName(d *[]models.Command, id string) error
+	GetCommandByName(c *[]models.Command, id string) error
 	AddCommand(c *models.Command) error
 	GetAllCommands(d *[]models.Command) error
 	UpdateCommand(c *models.Command, r *models.Command) error
 	DeleteCommandById(id string) error
-
-	GetDeviceProfilesUsingCommand(dp *[]models.DeviceProfile, c models.Command) error
-}
-
-func getDatabase(dbType string, config db.Configuration) (DBClient, error) {
-	switch dbType {
-	case enums.MongoStr:
-		return mongo.NewClient(config), nil
-	case enums.MemoryStr:
-	}
-	return nil, db.ErrNotFound
 }

@@ -13,6 +13,8 @@
  *******************************************************************************/
 package metadata
 
+import "github.com/edgexfoundry/edgex-go/core/metadata/interfaces"
+
 // Struct used to pase the JSON configuration file
 type ConfigurationStruct struct {
 	DBType                              string
@@ -53,7 +55,7 @@ var configuration ConfigurationStruct = ConfigurationStruct{} // Needs to be ini
 
 var (
 	/* -------------- CONFIG for METADATA -------------------- */
-	dbClient DBClient
+	dbClient interfaces.DBClient
 )
 
 const (

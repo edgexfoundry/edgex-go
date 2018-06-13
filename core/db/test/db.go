@@ -63,7 +63,6 @@ func populateDbEvents(db clients.DBClient, count int, pushed int64) (bson.Object
 		e.Pushed = pushed
 		var err error
 		id, err = db.AddEvent(&e)
-		fmt.Printf("%s -> %v\n", name, err)
 		if err != nil {
 			return id, err
 		}
@@ -226,7 +225,7 @@ func testDBReadings(t *testing.T, db clients.DBClient) {
 	if len(readings) != 110 {
 		t.Fatalf("There should be 110 readings, not %d", len(readings))
 	}
-	readings, err = db.ReadingsByCreationTime(beforeTime, beforeTime+10, 100)
+	readings, err = db.ReadingsByCreationTime(beforeTime, beforeTime+30, 100)
 	if err != nil {
 		t.Fatalf("Error getting ReadingsByCreationTime: %v", err)
 	}
@@ -636,31 +635,14 @@ func TestDataDB(t *testing.T, db clients.DBClient) {
 	db.CloseSession()
 }
 
-func TestMemoryDB(t *testing.T) {
-	memory := &memDB{}
-	testDB(t, memory)
-}
-
-func BenchmarkMemoryDB(b *testing.B) {
-	config := DBConfiguration{
-		DbType: MEMORY,
-	}
-
-	benchmarkDB(b, config)
-}
-
-func benchmarkDB(b *testing.B, config DBConfiguration) {
-	db, err := NewDBClient(config)
-	if err != nil {
-		b.Fatalf("Could not connect with database: %v", err)
-	}
+func BenchmarkDB(b *testing.B, db clients.DBClient) {
 
 	benchmarkReadings(b, db)
 	benchmarkEvents(b, db)
 	db.CloseSession()
 }
 
-func benchmarkReadings(b *testing.B, db DBClient) {
+func benchmarkReadings(b *testing.B, db clients.DBClient) {
 
 	// Remove previous events and readings
 	db.ScrubAllEvents()
@@ -724,7 +706,7 @@ func benchmarkReadings(b *testing.B, db DBClient) {
 	})
 }
 
-func benchmarkEvents(b *testing.B, db DBClient) {
+func benchmarkEvents(b *testing.B, db clients.DBClient) {
 
 	// Remove previous events and readings
 	db.ScrubAllEvents()

@@ -24,6 +24,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"github.com/gorilla/mux"
 	"gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
 )
 
 func restGetAllAddressables(w http.ResponseWriter, _ *http.Request) {
@@ -62,8 +63,8 @@ func restAddAddressable(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-
-	err = dbClient.AddAddressable(&a)
+	var id bson.ObjectId
+	id, err = dbClient.AddAddressable(&a)
 	if err != nil {
 		if err == db.ErrNotUnique {
 			http.Error(w, "Duplicate name for addressable", http.StatusConflict)
@@ -78,7 +79,7 @@ func restAddAddressable(w http.ResponseWriter, r *http.Request) {
 	notifyAddressableAssociates(a, http.MethodPost)
 
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(a.Id.Hex()))
+	w.Write([]byte(id.Hex()))
 }
 
 // Update addressable by ID or name (ID used first)
