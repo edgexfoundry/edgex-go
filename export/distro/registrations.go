@@ -51,7 +51,7 @@ func (reg *registrationInfo) update(newReg export.Registration) bool {
 	case export.FormatSerialized:
 		// TODO reg.format = distro.NewSerializedFormat()
 	case export.FormatIoTCoreJSON:
-		// TODO reg.format = distro.NewIotCoreFormat()
+		reg.format = jsonFormatter{}
 	case export.FormatAzureJSON:
 		// TODO reg.format = distro.NewAzureFormat()
 	case export.FormatCSV:
@@ -83,7 +83,7 @@ func (reg *registrationInfo) update(newReg export.Registration) bool {
 	case export.DestZMQ:
 		logger.Info("Destination ZMQ is not supported")
 	case export.DestIotCoreMQTT:
-		// TODO reg.sender = distro.NewIotCoreSender("TODO URL")
+		reg.sender = NewIoTCoreSender(newReg.Addressable)
 	case export.DestAzureMQTT:
 		// TODO reg.sender = distro.NewAzureSender("TODO URL")
 	case export.DestRest:
