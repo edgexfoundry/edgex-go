@@ -72,7 +72,7 @@ func populateDbEvents(db DBClient, count int, pushed int64) (bson.ObjectId, erro
 func testDBReadings(t *testing.T, db DBClient) {
 	err := db.ScrubAllEvents()
 	if err != nil {
-		t.Fatalf("Error removing all readings")
+		t.Fatalf("Error removing all readings: %v\n", err)
 	}
 
 	beforeTime := time.Now().UnixNano() / int64(time.Millisecond)
@@ -217,14 +217,14 @@ func testDBReadings(t *testing.T, db DBClient) {
 		t.Fatalf("There should be 1 readings, not %d", len(readings))
 	}
 
-	readings, err = db.ReadingsByCreationTime(beforeTime, afterTime+10, 200)
+	readings, err = db.ReadingsByCreationTime(beforeTime, afterTime, 200)
 	if err != nil {
 		t.Fatalf("Error getting ReadingsByCreationTime: %v", err)
 	}
 	if len(readings) != 110 {
 		t.Fatalf("There should be 110 readings, not %d", len(readings))
 	}
-	readings, err = db.ReadingsByCreationTime(beforeTime, beforeTime+10, 100)
+	readings, err = db.ReadingsByCreationTime(beforeTime, afterTime, 100)
 	if err != nil {
 		t.Fatalf("Error getting ReadingsByCreationTime: %v", err)
 	}
@@ -384,14 +384,14 @@ func testDBEvents(t *testing.T, db DBClient) {
 		t.Fatalf("There should be 0 events, not %d", len(events))
 	}
 
-	events, err = db.EventsByCreationTime(beforeTime, afterTime+10, 200)
+	events, err = db.EventsByCreationTime(beforeTime, afterTime, 200)
 	if err != nil {
 		t.Fatalf("Error getting EventsByCreationTime: %v", err)
 	}
 	if len(events) != 110 {
 		t.Fatalf("There should be 110 events, not %d", len(events))
 	}
-	events, err = db.EventsByCreationTime(beforeTime, afterTime+10, 100)
+	events, err = db.EventsByCreationTime(beforeTime, afterTime, 100)
 	if err != nil {
 		t.Fatalf("Error getting EventsByCreationTime: %v", err)
 	}
@@ -516,21 +516,21 @@ func testDBValueDescriptors(t *testing.T, db DBClient) {
 
 	values, err = db.ValueDescriptorsByName([]string{"name1", "name2"})
 	if err != nil {
-		t.Fatalf("Error getting ValuesByValueDescriptorNames: %v", err)
+		t.Fatalf("Error getting ValueDescriptorsByName: %v", err)
 	}
 	if len(values) != 2 {
 		t.Fatalf("There should be 2 Values, not %d", len(values))
 	}
 	values, err = db.ValueDescriptorsByName([]string{"name1", "name"})
 	if err != nil {
-		t.Fatalf("Error getting ValuesByValueDescriptorNames: %v", err)
+		t.Fatalf("Error getting ValueDescriptorsByName: %v", err)
 	}
 	if len(values) != 1 {
 		t.Fatalf("There should be 1 Values, not %d", len(values))
 	}
 	values, err = db.ValueDescriptorsByName([]string{"name", "INVALID"})
 	if err != nil {
-		t.Fatalf("Error getting ValuesByValueDescriptorNames: %v", err)
+		t.Fatalf("Error getting ValueDescriptorsByName: %v", err)
 	}
 	if len(values) != 0 {
 		t.Fatalf("There should be 0 Values, not %d", len(values))
@@ -538,14 +538,14 @@ func testDBValueDescriptors(t *testing.T, db DBClient) {
 
 	values, err = db.ValueDescriptorsByUomLabel("name1")
 	if err != nil {
-		t.Fatalf("Error getting ValuesByValueDescriptorNames: %v", err)
+		t.Fatalf("Error getting ValueDescriptorsByUomLabel: %v", err)
 	}
 	if len(values) != 1 {
 		t.Fatalf("There should be 1 Values, not %d", len(values))
 	}
 	values, err = db.ValueDescriptorsByUomLabel("INVALID")
 	if err != nil {
-		t.Fatalf("Error getting ValuesByValueDescriptorNames: %v", err)
+		t.Fatalf("Error getting ValueDescriptorsByUomLabel: %v", err)
 	}
 	if len(values) != 0 {
 		t.Fatalf("There should be 0 Values, not %d", len(values))
@@ -553,14 +553,14 @@ func testDBValueDescriptors(t *testing.T, db DBClient) {
 
 	values, err = db.ValueDescriptorsByLabel("name1")
 	if err != nil {
-		t.Fatalf("Error getting ValuesByValueDescriptorNames: %v", err)
+		t.Fatalf("Error getting ValueDescriptorsByLabel: %v", err)
 	}
 	if len(values) != 1 {
 		t.Fatalf("There should be 1 Values, not %d", len(values))
 	}
 	values, err = db.ValueDescriptorsByLabel("INVALID")
 	if err != nil {
-		t.Fatalf("Error getting ValuesByValueDescriptorNames: %v", err)
+		t.Fatalf("Error getting ValueDescriptorsByLabel: %v", err)
 	}
 	if len(values) != 0 {
 		t.Fatalf("There should be 0 Values, not %d", len(values))
@@ -568,14 +568,14 @@ func testDBValueDescriptors(t *testing.T, db DBClient) {
 
 	values, err = db.ValueDescriptorsByType("name1")
 	if err != nil {
-		t.Fatalf("Error getting ValuesByValueDescriptorNames: %v", err)
+		t.Fatalf("Error getting ValueDescriptorsByType: %v", err)
 	}
 	if len(values) != 1 {
 		t.Fatalf("There should be 1 Values, not %d", len(values))
 	}
 	values, err = db.ValueDescriptorsByType("INVALID")
 	if err != nil {
-		t.Fatalf("Error getting ValuesByValueDescriptorNames: %v", err)
+		t.Fatalf("Error getting ValueDescriptorsByType: %v", err)
 	}
 	if len(values) != 0 {
 		t.Fatalf("There should be 0 Values, not %d", len(values))
