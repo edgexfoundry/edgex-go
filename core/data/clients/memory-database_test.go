@@ -217,14 +217,14 @@ func testDBReadings(t *testing.T, db DBClient) {
 		t.Fatalf("There should be 1 readings, not %d", len(readings))
 	}
 
-	readings, err = db.ReadingsByCreationTime(beforeTime, afterTime+10, 200)
+	readings, err = db.ReadingsByCreationTime(beforeTime, afterTime, 200)
 	if err != nil {
 		t.Fatalf("Error getting ReadingsByCreationTime: %v", err)
 	}
 	if len(readings) != 110 {
 		t.Fatalf("There should be 110 readings, not %d", len(readings))
 	}
-	readings, err = db.ReadingsByCreationTime(beforeTime, afterTime+10, 100)
+	readings, err = db.ReadingsByCreationTime(beforeTime, afterTime, 100)
 	if err != nil {
 		t.Fatalf("Error getting ReadingsByCreationTime: %v", err)
 	}
@@ -384,14 +384,14 @@ func testDBEvents(t *testing.T, db DBClient) {
 		t.Fatalf("There should be 0 events, not %d", len(events))
 	}
 
-	events, err = db.EventsByCreationTime(beforeTime, afterTime+10, 200)
+	events, err = db.EventsByCreationTime(beforeTime, afterTime, 200)
 	if err != nil {
 		t.Fatalf("Error getting EventsByCreationTime: %v", err)
 	}
 	if len(events) != 110 {
 		t.Fatalf("There should be 110 events, not %d", len(events))
 	}
-	events, err = db.EventsByCreationTime(beforeTime, afterTime+10, 100)
+	events, err = db.EventsByCreationTime(beforeTime, afterTime, 100)
 	if err != nil {
 		t.Fatalf("Error getting EventsByCreationTime: %v", err)
 	}
