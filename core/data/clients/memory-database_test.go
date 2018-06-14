@@ -224,7 +224,7 @@ func testDBReadings(t *testing.T, db DBClient) {
 	if len(readings) != 110 {
 		t.Fatalf("There should be 110 readings, not %d", len(readings))
 	}
-	readings, err = db.ReadingsByCreationTime(beforeTime, beforeTime+10, 100)
+	readings, err = db.ReadingsByCreationTime(beforeTime, afterTime+10, 100)
 	if err != nil {
 		t.Fatalf("Error getting ReadingsByCreationTime: %v", err)
 	}
