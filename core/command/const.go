@@ -18,13 +18,11 @@ type ConfigurationStruct struct {
 	ConsulProfilesActive       string
 	ReadMaxLimit               int
 	ServicePort                int
-	HeartBeatTime              int
 	ConsulPort                 int
 	ServiceTimeout             int
 	CheckInterval              string
 	ServiceAddress             string
 	DeviceServiceProtocol      string
-	HeartBeatMsg               string
 	AppOpenMsg                 string
 	URLProtocol                string
 	URLDevicePath              string

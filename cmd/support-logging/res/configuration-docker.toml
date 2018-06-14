@@ -1,8 +1,6 @@
 Hostname = 'edgex-support-logging'
 Port = 48061
 Persistence = 'mongodb'
-HeartBeatTime = 300000
-HeartBeatMsg = 'Support logging heart beat'
 LoggingFile = './logs/edgex-support-logging.log'
 MongoDB = 'logging'
 MongoCollection = 'logEntry'
