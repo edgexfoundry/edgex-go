@@ -39,10 +39,12 @@ func (sender *influxdbSender) Send(data []byte, event *models.Event) {
 	if sender.client == nil {
 		logger.Info("Connecting to InfluxDB server")
 		c, err := client.NewHTTPClient(sender.httpInfo)
+
 		if err != nil {
 			logger.Error("Failed to connec to InfluxDB server")
 			return
 		}
+
 		sender.client = c
 	}
 
@@ -60,6 +62,7 @@ func (sender *influxdbSender) Send(data []byte, event *models.Event) {
 		value, err := strconv.ParseFloat(reading.Value, 64)
 
 		if err != nil {
+			// not a valid numerical reading value, just ignore it
 			continue
 		}
 
@@ -80,10 +83,12 @@ func (sender *influxdbSender) Send(data []byte, event *models.Event) {
 			fields,
 			time.Now(),
 		)
+
 		if err != nil {
 			logger.Error("Failed to add data point")
 			return
 		}
+
 		bp.AddPoint(pt)
 	}
 
