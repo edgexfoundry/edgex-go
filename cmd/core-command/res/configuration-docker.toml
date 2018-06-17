@@ -1,5 +1,5 @@
 ConsulProfilesActive = 'docker;go'
-ReadLimit = 100
+ReadMaxLimit = 100
 ConsulPort = 8500
 ServiceTimeout = 5000
 CheckInterval = '10s'
