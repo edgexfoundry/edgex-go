@@ -39,7 +39,7 @@ func (ic *InfluxClient) Events() ([]models.Event, error) {
 // UnexpectedError - failed to add to database
 // NoValueDescriptor - no existing value descriptor for a reading in the event
 func (ic *InfluxClient) AddEvent(e *models.Event) (bson.ObjectId, error) {
-	e.Created = time.Now().UnixNano() / int64(time.Millisecond)
+	e.Created = db.MakeTimestamp()
 	e.ID = bson.NewObjectId()
 
 	// Add the event
@@ -55,7 +55,7 @@ func (ic *InfluxClient) AddEvent(e *models.Event) (bson.ObjectId, error) {
 // UnexpectedError - problem updating in database
 // NotFound - no event with the ID was found
 func (ic *InfluxClient) UpdateEvent(e models.Event) error {
-	e.Modified = time.Now().UnixNano() / int64(time.Millisecond)
+	e.Modified = db.MakeTimestamp()
 
 	// Delete event
 	if err := ic.deleteById(db.EventsCollection, e.ID.Hex()); err != nil {
@@ -119,7 +119,7 @@ func (ic *InfluxClient) EventsByCreationTime(startTime, endTime int64, limit int
 
 // Get Events that are older than the given age (defined by age = now - created)
 func (ic *InfluxClient) EventsOlderThanAge(age int64) ([]models.Event, error) {
-	expireDate := (time.Now().UnixNano() / int64(time.Millisecond)) - age
+	expireDate := db.MakeTimestamp() - age
 	query := fmt.Sprintf("WHERE created < %d", expireDate)
 	return ic.getEvents(query)
 }
@@ -305,7 +305,7 @@ func (ic *InfluxClient) Readings() ([]models.Reading, error) {
 func (ic *InfluxClient) AddReading(r models.Reading) (bson.ObjectId, error) {
 	// Get the reading ready
 	r.Id = bson.NewObjectId()
-	r.Created = time.Now().UnixNano() / int64(time.Millisecond)
+	r.Created = db.MakeTimestamp()
 	err := ic.addReadingToDB(ic.Database, db.ReadingsCollection, &r)
 	return r.Id, err
 }
@@ -315,7 +315,7 @@ func (ic *InfluxClient) AddReading(r models.Reading) (bson.ObjectId, error) {
 // 409 - Value descriptor doesn't exist
 // 503 - unknown issues
 func (ic *InfluxClient) UpdateReading(r models.Reading) error {
-	r.Modified = time.Now().UnixNano() / int64(time.Millisecond)
+	r.Modified = db.MakeTimestamp()
 
 	// Delete reading
 	if err := ic.deleteById(db.ReadingsCollection, r.Id.Hex()); err != nil {
@@ -508,7 +508,7 @@ func parseReadings(res client.Result) ([]models.Reading, error) {
 // TODO: Check for valid printf formatting
 func (ic *InfluxClient) AddValueDescriptor(v models.ValueDescriptor) (bson.ObjectId, error) {
 	// Created/Modified now
-	v.Created = time.Now().UnixNano() / int64(time.Millisecond)
+	v.Created = db.MakeTimestamp()
 
 	// See if the name is unique and add the value descriptors
 	query := fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE 'name' = '%s'", db.ValueDescriptorCollection, v.Name)
@@ -566,7 +566,7 @@ func (ic *InfluxClient) UpdateValueDescriptor(v models.ValueDescriptor) error {
 			return err
 		}
 	}
-	v.Modified = time.Now().UnixNano() / int64(time.Millisecond)
+	v.Modified = db.MakeTimestamp()
 	// Delete Value Descriptor
 	// Add Value Descriptor
 	return ic.addValueDescriptorToDB(ic.Database, db.ValueDescriptorCollection, &v)

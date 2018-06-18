@@ -14,15 +14,13 @@
 package memory
 
 import (
-	"time"
-
 	"github.com/edgexfoundry/edgex-go/core/db"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"gopkg.in/mgo.v2/bson"
 )
 
 func (m *MemDB) AddReading(r models.Reading) (bson.ObjectId, error) {
-	currentTime := time.Now().UnixNano() / int64(time.Millisecond)
+	currentTime := db.MakeTimestamp()
 	r.Created = currentTime
 	r.Modified = currentTime
 	r.Id = bson.NewObjectId()
@@ -37,7 +35,7 @@ func (m *MemDB) Events() ([]models.Event, error) {
 }
 
 func (m *MemDB) AddEvent(e *models.Event) (bson.ObjectId, error) {
-	currentTime := time.Now().UnixNano() / int64(time.Millisecond)
+	currentTime := db.MakeTimestamp()
 
 	for i := range e.Readings {
 		e.Readings[i].Id = bson.NewObjectId()
@@ -155,7 +153,7 @@ func (m *MemDB) ReadingsByDeviceAndValueDescriptor(deviceId, valueDescriptor str
 }
 
 func (m *MemDB) EventsOlderThanAge(age int64) ([]models.Event, error) {
-	currentTime := time.Now().UnixNano() / int64(time.Millisecond)
+	currentTime := db.MakeTimestamp()
 	events := []models.Event{}
 	for _, e := range m.events {
 		if currentTime-e.Created >= age {
@@ -279,7 +277,7 @@ func (m *MemDB) ReadingsByCreationTime(start, end int64, limit int) ([]models.Re
 }
 
 func (m *MemDB) AddValueDescriptor(value models.ValueDescriptor) (bson.ObjectId, error) {
-	currentTime := time.Now().UnixNano() / int64(time.Millisecond)
+	currentTime := db.MakeTimestamp()
 	value.Created = currentTime
 	value.Modified = currentTime
 	value.Id = bson.NewObjectId()

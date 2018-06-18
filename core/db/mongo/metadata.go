@@ -15,16 +15,11 @@ package mongo
 
 import (
 	"errors"
-	"time"
 
 	"github.com/edgexfoundry/edgex-go/core/db"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"gopkg.in/mgo.v2/bson"
 )
-
-func makeTimestamp() int64 {
-	return time.Now().UnixNano() / int64(time.Millisecond)
-}
 
 /* -----------------------Schedule Event ------------------------*/
 func (m *MongoClient) UpdateScheduleEvent(se models.ScheduleEvent) error {
@@ -32,7 +27,7 @@ func (m *MongoClient) UpdateScheduleEvent(se models.ScheduleEvent) error {
 	defer s.Close()
 	col := s.DB(m.database.Name).C(db.ScheduleEvent)
 
-	se.Modified = makeTimestamp()
+	se.Modified = db.MakeTimestamp()
 
 	// Handle DBRefs
 	mse := mongoScheduleEvent{ScheduleEvent: se}
@@ -50,7 +45,7 @@ func (m *MongoClient) AddScheduleEvent(se *models.ScheduleEvent) error {
 	} else if count > 0 {
 		return db.ErrNotUnique
 	}
-	ts := makeTimestamp()
+	ts := db.MakeTimestamp()
 	se.Created = ts
 	se.Modified = ts
 	se.Id = bson.NewObjectId()
@@ -167,7 +162,7 @@ func (m *MongoClient) AddSchedule(sch *models.Schedule) error {
 		return db.ErrNotUnique
 	}
 
-	ts := makeTimestamp()
+	ts := db.MakeTimestamp()
 	sch.Created = ts
 	sch.Modified = ts
 	sch.Id = bson.NewObjectId()
@@ -179,7 +174,7 @@ func (m *MongoClient) UpdateSchedule(sch models.Schedule) error {
 	defer s.Close()
 	col := s.DB(m.database.Name).C(db.Schedule)
 
-	sch.Modified = makeTimestamp()
+	sch.Modified = db.MakeTimestamp()
 
 	if err := col.UpdateId(sch.Id, sch); err != nil {
 		return err
@@ -256,7 +251,7 @@ func (m *MongoClient) AddDeviceReport(d *models.DeviceReport) error {
 	} else if count > 0 {
 		return db.ErrNotUnique
 	}
-	ts := makeTimestamp()
+	ts := db.MakeTimestamp()
 	d.Created = ts
 	d.Id = bson.NewObjectId()
 	return col.Insert(d)
@@ -288,7 +283,7 @@ func (m *MongoClient) AddDevice(d *models.Device) error {
 	if count > 0 {
 		return db.ErrNotUnique
 	}
-	ts := makeTimestamp()
+	ts := db.MakeTimestamp()
 	d.Created = ts
 	d.Modified = ts
 	d.Id = bson.NewObjectId()
@@ -486,7 +481,7 @@ func (m *MongoClient) AddDeviceProfile(dp *models.DeviceProfile) error {
 			return err
 		}
 	}
-	ts := makeTimestamp()
+	ts := db.MakeTimestamp()
 	dp.Created = ts
 	dp.Modified = ts
 	dp.Id = bson.NewObjectId()
@@ -502,7 +497,7 @@ func (m *MongoClient) UpdateDeviceProfile(dp *models.DeviceProfile) error {
 	c := s.DB(m.database.Name).C(db.DeviceProfile)
 
 	mdp := mongoDeviceProfile{DeviceProfile: *dp}
-	mdp.Modified = makeTimestamp()
+	mdp.Modified = db.MakeTimestamp()
 
 	return c.UpdateId(mdp.Id, mdp)
 }
@@ -597,7 +592,7 @@ func (m *MongoClient) AddAddressable(a *models.Addressable) (bson.ObjectId, erro
 		return a.Id, db.ErrNotUnique
 	}
 
-	ts := makeTimestamp()
+	ts := db.MakeTimestamp()
 	a.Created = ts
 	a.Id = bson.NewObjectId()
 	err = col.Insert(a)
@@ -709,7 +704,7 @@ func (m *MongoClient) AddDeviceService(d *models.DeviceService) error {
 
 	col := s.DB(m.database.Name).C(db.DeviceService)
 
-	ts := makeTimestamp()
+	ts := db.MakeTimestamp()
 	d.Created = ts
 	d.Modified = ts
 	d.Id = bson.NewObjectId()
@@ -724,7 +719,7 @@ func (m *MongoClient) UpdateDeviceService(deviceService models.DeviceService) er
 	defer s.Close()
 	c := s.DB(m.database.Name).C(db.DeviceService)
 
-	deviceService.Modified = makeTimestamp()
+	deviceService.Modified = db.MakeTimestamp()
 
 	// Handle DBRefs
 	mds := mongoDeviceService{DeviceService: deviceService}
@@ -848,7 +843,7 @@ func (m *MongoClient) AddProvisionWatcher(pw *models.ProvisionWatcher) error {
 	pw.Profile = dp
 
 	// Set data
-	ts := makeTimestamp()
+	ts := db.MakeTimestamp()
 	pw.Created = ts
 	pw.Modified = ts
 	pw.Id = bson.NewObjectId()
@@ -864,7 +859,7 @@ func (m *MongoClient) UpdateProvisionWatcher(pw models.ProvisionWatcher) error {
 	defer s.Close()
 	c := s.DB(m.database.Name).C(db.ProvisionWatcher)
 
-	pw.Modified = makeTimestamp()
+	pw.Modified = db.MakeTimestamp()
 
 	// Handle DBRefs
 	mpw := mongoProvisionWatcher{ProvisionWatcher: pw}
@@ -911,7 +906,7 @@ func (m *MongoClient) AddCommand(c *models.Command) error {
 	defer s.Close()
 	col := s.DB(m.database.Name).C(db.Command)
 
-	ts := makeTimestamp()
+	ts := db.MakeTimestamp()
 	c.Created = ts
 	c.Id = bson.NewObjectId()
 	return col.Insert(c)

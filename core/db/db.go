@@ -14,7 +14,10 @@
 
 package db
 
-import "errors"
+import (
+	"errors"
+	"time"
+)
 
 const (
 	// Data
@@ -49,4 +52,8 @@ type Configuration struct {
 	DatabaseName string
 	Username     string
 	Password     string
+}
+
+func MakeTimestamp() int64 {
+	return time.Now().UnixNano() / int64(time.Millisecond)
 }

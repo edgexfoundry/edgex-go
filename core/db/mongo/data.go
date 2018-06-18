@@ -14,8 +14,6 @@
 package mongo
 
 import (
-	"time"
-
 	"github.com/edgexfoundry/edgex-go/core/db"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	mgo "gopkg.in/mgo.v2"
@@ -43,7 +41,7 @@ func (mc *MongoClient) AddEvent(e *models.Event) (bson.ObjectId, error) {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
-	e.Created = time.Now().UnixNano() / int64(time.Millisecond)
+	e.Created = db.MakeTimestamp()
 	e.ID = bson.NewObjectId()
 
 	// Insert readings
@@ -80,7 +78,7 @@ func (mc *MongoClient) UpdateEvent(e models.Event) error {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
-	e.Modified = time.Now().UnixNano() / int64(time.Millisecond)
+	e.Modified = db.MakeTimestamp()
 
 	// Handle DBRef
 	me := mongoEvent{Event: e}
@@ -147,7 +145,7 @@ func (mc *MongoClient) EventsByCreationTime(startTime, endTime int64, limit int)
 
 // Get Events that are older than the given age (defined by age = now - created)
 func (mc *MongoClient) EventsOlderThanAge(age int64) ([]models.Event, error) {
-	expireDate := (time.Now().UnixNano() / int64(time.Millisecond)) - age
+	expireDate := (db.MakeTimestamp()) - age
 	return mc.getEvents(bson.M{"created": bson.M{"$lt": expireDate}})
 }
 
@@ -251,7 +249,7 @@ func (mc *MongoClient) AddReading(r models.Reading) (bson.ObjectId, error) {
 
 	// Get the reading ready
 	r.Id = bson.NewObjectId()
-	r.Created = time.Now().UnixNano() / int64(time.Millisecond)
+	r.Created = db.MakeTimestamp()
 
 	err := s.DB(mc.database.Name).C(db.ReadingsCollection).Insert(&r)
 	return r.Id, err
@@ -265,7 +263,7 @@ func (mc *MongoClient) UpdateReading(r models.Reading) error {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
-	r.Modified = time.Now().UnixNano() / int64(time.Millisecond)
+	r.Modified = db.MakeTimestamp()
 
 	// Update the reading
 	err := s.DB(mc.database.Name).C(db.ReadingsCollection).UpdateId(r.Id, r)
@@ -393,7 +391,7 @@ func (mc *MongoClient) AddValueDescriptor(v models.ValueDescriptor) (bson.Object
 	defer s.Close()
 
 	// Created/Modified now
-	v.Created = time.Now().UnixNano() / int64(time.Millisecond)
+	v.Created = db.MakeTimestamp()
 
 	// See if the name is unique and add the value descriptors
 	info, err := s.DB(mc.database.Name).C(db.ValueDescriptorCollection).Upsert(bson.M{"name": v.Name}, v)
@@ -439,7 +437,7 @@ func (mc *MongoClient) UpdateValueDescriptor(v models.ValueDescriptor) error {
 		}
 	}
 
-	v.Modified = time.Now().UnixNano() / int64(time.Millisecond)
+	v.Modified = db.MakeTimestamp()
 
 	err = s.DB(mc.database.Name).C(db.ValueDescriptorCollection).UpdateId(v.Id, v)
 	if err == mgo.ErrNotFound {

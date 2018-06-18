@@ -17,7 +17,6 @@ package memory
 import (
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/edgexfoundry/edgex-go/core/db"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
@@ -33,7 +32,7 @@ func (m *MemDB) GetAllScheduleEvents(se *[]models.ScheduleEvent) error {
 }
 
 func (m *MemDB) AddScheduleEvent(se *models.ScheduleEvent) error {
-	currentTime := time.Now().UnixNano() / int64(time.Millisecond)
+	currentTime := db.MakeTimestamp()
 	se.Created = currentTime
 	se.Modified = currentTime
 	se.Id = bson.NewObjectId()
@@ -172,7 +171,7 @@ func (m *MemDB) GetAllSchedules(s *[]models.Schedule) error {
 }
 
 func (m *MemDB) AddSchedule(s *models.Schedule) error {
-	currentTime := time.Now().UnixNano() / int64(time.Millisecond)
+	currentTime := db.MakeTimestamp()
 	s.Created = currentTime
 	s.Modified = currentTime
 	s.Id = bson.NewObjectId()
@@ -198,7 +197,7 @@ func (m *MemDB) GetScheduleByName(s *models.Schedule, n string) error {
 }
 
 func (m *MemDB) UpdateSchedule(s models.Schedule) error {
-	s.Modified = time.Now().UnixNano() / int64(time.Millisecond)
+	s.Modified = db.MakeTimestamp()
 	for i, ss := range m.schedules {
 		if ss.Id == s.Id {
 			m.schedules[i] = s
@@ -269,7 +268,7 @@ func (m *MemDB) GetDeviceReportById(dr *models.DeviceReport, id string) error {
 }
 
 func (m *MemDB) AddDeviceReport(dr *models.DeviceReport) error {
-	currentTime := time.Now().UnixNano() / int64(time.Millisecond)
+	currentTime := db.MakeTimestamp()
 	dr.Created = currentTime
 	dr.Modified = currentTime
 	dr.Id = bson.NewObjectId()
@@ -424,7 +423,7 @@ func (m *MemDB) GetDevicesWithLabel(d *[]models.Device, l string) error {
 }
 
 func (m *MemDB) AddDevice(d *models.Device) error {
-	currentTime := time.Now().UnixNano() / int64(time.Millisecond)
+	currentTime := db.MakeTimestamp()
 	d.Created = currentTime
 	d.Modified = currentTime
 	d.Id = bson.NewObjectId()
@@ -477,7 +476,7 @@ func (m *MemDB) UpdateDeviceProfile(dp *models.DeviceProfile) error {
 }
 
 func (m *MemDB) AddDeviceProfile(d *models.DeviceProfile) error {
-	currentTime := time.Now().UnixNano() / int64(time.Millisecond)
+	currentTime := db.MakeTimestamp()
 	d.Created = currentTime
 	d.Modified = currentTime
 	d.Id = bson.NewObjectId()
@@ -617,7 +616,7 @@ func (m *MemDB) UpdateAddressable(updated *models.Addressable, orig *models.Addr
 }
 
 func (m *MemDB) AddAddressable(a *models.Addressable) (bson.ObjectId, error) {
-	currentTime := time.Now().UnixNano() / int64(time.Millisecond)
+	currentTime := db.MakeTimestamp()
 	a.Created = currentTime
 	a.Modified = currentTime
 	a.Id = bson.NewObjectId()
@@ -805,7 +804,7 @@ func (m *MemDB) GetAllDeviceServices(d *[]models.DeviceService) error {
 }
 
 func (m *MemDB) AddDeviceService(ds *models.DeviceService) error {
-	currentTime := time.Now().UnixNano() / int64(time.Millisecond)
+	currentTime := db.MakeTimestamp()
 	ds.Created = currentTime
 	ds.Modified = currentTime
 	ds.Id = bson.NewObjectId()
@@ -974,7 +973,7 @@ func (m *MemDB) updateProvisionWatcherValues(pw *models.ProvisionWatcher) error 
 }
 
 func (m *MemDB) AddProvisionWatcher(pw *models.ProvisionWatcher) error {
-	currentTime := time.Now().UnixNano() / int64(time.Millisecond)
+	currentTime := db.MakeTimestamp()
 	pw.Created = currentTime
 	pw.Modified = currentTime
 	pw.Id = bson.NewObjectId()
@@ -992,7 +991,7 @@ func (m *MemDB) AddProvisionWatcher(pw *models.ProvisionWatcher) error {
 }
 
 func (m *MemDB) UpdateProvisionWatcher(pw models.ProvisionWatcher) error {
-	pw.Modified = time.Now().UnixNano() / int64(time.Millisecond)
+	pw.Modified = db.MakeTimestamp()
 
 	if err := m.updateProvisionWatcherValues(&pw); err != nil {
 		return err
@@ -1039,7 +1038,7 @@ func (m *MemDB) GetCommandByName(d *[]models.Command, name string) error {
 }
 
 func (m *MemDB) AddCommand(c *models.Command) error {
-	currentTime := time.Now().UnixNano() / int64(time.Millisecond)
+	currentTime := db.MakeTimestamp()
 	c.Created = currentTime
 	c.Modified = currentTime
 	c.Id = bson.NewObjectId()

@@ -10,9 +10,9 @@ import (
 	"fmt"
 	"strconv"
 	"testing"
-	"time"
 
 	"github.com/edgexfoundry/edgex-go/core/data/clients"
+	dbp "github.com/edgexfoundry/edgex-go/core/db"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -76,7 +76,7 @@ func testDBReadings(t *testing.T, db clients.DBClient) {
 		t.Fatalf("Error removing all readings")
 	}
 
-	beforeTime := time.Now().UnixNano() / int64(time.Millisecond)
+	beforeTime := dbp.MakeTimestamp()
 	id, err := populateDbReadings(db, 100)
 	if err != nil {
 		t.Fatalf("Error populating db: %v\n", err)
@@ -87,7 +87,7 @@ func testDBReadings(t *testing.T, db clients.DBClient) {
 	if err != nil {
 		t.Fatalf("Error populating db: %v\n", err)
 	}
-	afterTime := time.Now().UnixNano() / int64(time.Millisecond)
+	afterTime := dbp.MakeTimestamp()
 
 	count, err := db.ReadingCount()
 	if err != nil {
@@ -270,7 +270,7 @@ func testDBEvents(t *testing.T, db clients.DBClient) {
 		t.Fatalf("Error removing all events")
 	}
 
-	beforeTime := time.Now().UnixNano() / int64(time.Millisecond)
+	beforeTime := dbp.MakeTimestamp()
 	id, err := populateDbEvents(db, 100, 0)
 	if err != nil {
 		t.Fatalf("Error populating db: %v\n", err)
@@ -281,7 +281,7 @@ func testDBEvents(t *testing.T, db clients.DBClient) {
 	if err != nil {
 		t.Fatalf("Error populating db: %v\n", err)
 	}
-	afterTime := time.Now().UnixNano() / int64(time.Millisecond)
+	afterTime := dbp.MakeTimestamp()
 
 	count, err := db.EventCount()
 	if err != nil {
