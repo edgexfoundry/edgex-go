@@ -15,46 +15,15 @@ package mongo
 
 import (
 	"errors"
-	"strconv"
 	"time"
 
 	"github.com/edgexfoundry/edgex-go/core/db"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
-	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
 func makeTimestamp() int64 {
 	return time.Now().UnixNano() / int64(time.Millisecond)
-}
-
-func (m *MongoClient) Connect() error {
-	// Create the dial info for the Mongo session
-	connectionString := m.config.Host + ":" + strconv.Itoa(m.config.Port)
-	mongoDBDialInfo := &mgo.DialInfo{
-		Addrs:    []string{connectionString},
-		Timeout:  time.Duration(m.config.Timeout) * time.Millisecond,
-		Database: m.config.DatabaseName,
-		Username: m.config.Username,
-		Password: m.config.Password,
-	}
-	session, err := mgo.DialWithInfo(mongoDBDialInfo)
-	if err != nil {
-		return err
-	}
-
-	m.session = session
-	m.database = session.DB(m.config.DatabaseName)
-	currentMongoClient = m // Set the singleton
-
-	return nil
-}
-
-func (m *MongoClient) CloseSession() {
-	if m.session != nil {
-		m.session.Close()
-		m.session = nil
-	}
 }
 
 /* -----------------------Schedule Event ------------------------*/

@@ -21,31 +21,6 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
-type MemDB struct {
-	// Data
-	readings     []models.Reading
-	events       []models.Event
-	vDescriptors []models.ValueDescriptor
-
-	// Metadata
-	addressables      []models.Addressable
-	commands          []models.Command
-	deviceServices    []models.DeviceService
-	schedules         []models.Schedule
-	scheduleEvents    []models.ScheduleEvent
-	provisionWatchers []models.ProvisionWatcher
-	deviceReports     []models.DeviceReport
-	deviceProfiles    []models.DeviceProfile
-	devices           []models.Device
-}
-
-func (m *MemDB) CloseSession() {
-}
-
-func (m *MemDB) Connect() error {
-	return nil
-}
-
 func (m *MemDB) AddReading(r models.Reading) (bson.ObjectId, error) {
 	currentTime := time.Now().UnixNano() / int64(time.Millisecond)
 	r.Created = currentTime
@@ -271,15 +246,6 @@ func (m *MemDB) ReadingsByValueDescriptor(name string, limit int) ([]models.Read
 		}
 	}
 	return readings, nil
-}
-
-func stringInSlice(a string, list []string) bool {
-	for _, b := range list {
-		if b == a {
-			return true
-		}
-	}
-	return false
 }
 
 func (m *MemDB) ReadingsByValueDescriptorNames(names []string, limit int) ([]models.Reading, error) {
