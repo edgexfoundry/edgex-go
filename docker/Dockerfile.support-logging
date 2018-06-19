@@ -5,7 +5,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-FROM golang:1.9-alpine AS builder
+FROM golang:1.9-alpine
 WORKDIR /go/src/github.com/edgexfoundry/edgex-go
 
 # The main mirrors are giving us timeout issues on builds periodically.
@@ -21,6 +21,6 @@ RUN make cmd/support-logging/support-logging
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
       copyright='Copyright (c) 2018: Cavium'
 
-COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/support-logging/support-logging /
-COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/support-logging/res/configuration-docker.toml /res/configuration-docker.toml
+COPY /go/src/github.com/edgexfoundry/edgex-go/cmd/support-logging/support-logging /
+COPY /go/src/github.com/edgexfoundry/edgex-go/cmd/support-logging/res/configuration-docker.toml /res/configuration-docker.toml
 ENTRYPOINT ["/support-logging","--consul","--profile=docker","--confdir=/res"]
