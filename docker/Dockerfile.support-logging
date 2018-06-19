@@ -18,8 +18,6 @@ RUN apk update && apk add make
 COPY . .
 RUN make cmd/support-logging/support-logging
 
-FROM scratch
-
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
       copyright='Copyright (c) 2018: Cavium'
 
