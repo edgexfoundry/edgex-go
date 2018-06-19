@@ -11,13 +11,13 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/edgexfoundry/edgex-go/core/data/clients"
+	"github.com/edgexfoundry/edgex-go/core/data/interfaces"
 	dbp "github.com/edgexfoundry/edgex-go/core/db"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"gopkg.in/mgo.v2/bson"
 )
 
-func populateDbReadings(db clients.DBClient, count int) (bson.ObjectId, error) {
+func populateDbReadings(db interfaces.DBClient, count int) (bson.ObjectId, error) {
 	var id bson.ObjectId
 	for i := 0; i < count; i++ {
 		name := fmt.Sprintf("name%d", i)
@@ -34,7 +34,7 @@ func populateDbReadings(db clients.DBClient, count int) (bson.ObjectId, error) {
 	return id, nil
 }
 
-func populateDbValues(db clients.DBClient, count int) (bson.ObjectId, error) {
+func populateDbValues(db interfaces.DBClient, count int) (bson.ObjectId, error) {
 	var id bson.ObjectId
 	for i := 0; i < count; i++ {
 		name := fmt.Sprintf("name%d", i)
@@ -53,7 +53,7 @@ func populateDbValues(db clients.DBClient, count int) (bson.ObjectId, error) {
 	return id, nil
 }
 
-func populateDbEvents(db clients.DBClient, count int, pushed int64) (bson.ObjectId, error) {
+func populateDbEvents(db interfaces.DBClient, count int, pushed int64) (bson.ObjectId, error) {
 	var id bson.ObjectId
 	for i := 0; i < count; i++ {
 		name := fmt.Sprintf("name%d", i)
@@ -70,7 +70,7 @@ func populateDbEvents(db clients.DBClient, count int, pushed int64) (bson.Object
 	return id, nil
 }
 
-func testDBReadings(t *testing.T, db clients.DBClient) {
+func testDBReadings(t *testing.T, db interfaces.DBClient) {
 	err := db.ScrubAllEvents()
 	if err != nil {
 		t.Fatalf("Error removing all readings")
@@ -264,7 +264,7 @@ func testDBReadings(t *testing.T, db clients.DBClient) {
 	}
 }
 
-func testDBEvents(t *testing.T, db clients.DBClient) {
+func testDBEvents(t *testing.T, db interfaces.DBClient) {
 	err := db.ScrubAllEvents()
 	if err != nil {
 		t.Fatalf("Error removing all events")
@@ -467,7 +467,7 @@ func testDBEvents(t *testing.T, db clients.DBClient) {
 	}
 }
 
-func testDBValueDescriptors(t *testing.T, db clients.DBClient) {
+func testDBValueDescriptors(t *testing.T, db interfaces.DBClient) {
 	err := db.ScrubAllValueDescriptors()
 	if err != nil {
 		t.Fatalf("Error removing all value descriptors")
@@ -618,7 +618,7 @@ func testDBValueDescriptors(t *testing.T, db clients.DBClient) {
 	}
 }
 
-func TestDataDB(t *testing.T, db clients.DBClient) {
+func TestDataDB(t *testing.T, db interfaces.DBClient) {
 
 	err := db.Connect()
 	if err != nil {
@@ -635,14 +635,14 @@ func TestDataDB(t *testing.T, db clients.DBClient) {
 	db.CloseSession()
 }
 
-func BenchmarkDB(b *testing.B, db clients.DBClient) {
+func BenchmarkDB(b *testing.B, db interfaces.DBClient) {
 
 	benchmarkReadings(b, db)
 	benchmarkEvents(b, db)
 	db.CloseSession()
 }
 
-func benchmarkReadings(b *testing.B, db clients.DBClient) {
+func benchmarkReadings(b *testing.B, db interfaces.DBClient) {
 
 	// Remove previous events and readings
 	db.ScrubAllEvents()
@@ -706,7 +706,7 @@ func benchmarkReadings(b *testing.B, db clients.DBClient) {
 	})
 }
 
-func benchmarkEvents(b *testing.B, db clients.DBClient) {
+func benchmarkEvents(b *testing.B, db interfaces.DBClient) {
 
 	// Remove previous events and readings
 	db.ScrubAllEvents()

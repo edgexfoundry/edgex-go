@@ -11,7 +11,7 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
-package clients
+package interfaces
 
 import (
 	"github.com/edgexfoundry/edgex-go/core/domain/models"

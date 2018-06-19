@@ -19,7 +19,7 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/core/clients/metadata"
 	"github.com/edgexfoundry/edgex-go/core/clients/types"
-	"github.com/edgexfoundry/edgex-go/core/data/clients"
+	"github.com/edgexfoundry/edgex-go/core/data/interfaces"
 	"github.com/edgexfoundry/edgex-go/core/data/messaging"
 	"github.com/edgexfoundry/edgex-go/core/db"
 	"github.com/edgexfoundry/edgex-go/core/db/influx"
@@ -31,7 +31,7 @@ import (
 )
 
 // Global variables
-var dbc clients.DBClient
+var dbc interfaces.DBClient
 var loggingClient logger.LoggingClient
 var ep *messaging.EventPublisher
 var mdc metadata.DeviceClient
@@ -62,12 +62,12 @@ func ConnectToConsul(conf ConfigurationStruct) error {
 }
 
 // Return the dbClient interface
-func newDBClient(dbType clients.DatabaseType, config db.Configuration) (clients.DBClient, error) {
+func newDBClient(dbType interfaces.DatabaseType, config db.Configuration) (interfaces.DBClient, error) {
 	switch dbType {
-	case clients.MONGO:
+	case interfaces.MONGO:
 		// Create the mongo client
 		return mongo.NewClient(config), nil
-	case clients.INFLUX:
+	case interfaces.INFLUX:
 		// Create the influx client
 		ic, err := influx.NewClient(config)
 		if err != nil {
@@ -75,7 +75,7 @@ func newDBClient(dbType clients.DatabaseType, config db.Configuration) (clients.
 			return nil, err
 		}
 		return ic, nil
-	case clients.MEMORY:
+	case interfaces.MEMORY:
 		// Create the memory client
 		return &memory.MemDB{}, nil
 	default:
@@ -91,7 +91,7 @@ func Init(conf ConfigurationStruct, l logger.LoggingClient, useConsul bool) erro
 	var err error
 
 	// Create a database client
-	dbc, err = newDBClient(clients.MONGO, db.Configuration{
+	dbc, err = newDBClient(interfaces.MONGO, db.Configuration{
 		Host:         conf.MongoDBHost,
 		Port:         conf.MongoDBPort,
 		Timeout:      conf.MongoDBConnectTimeout,
