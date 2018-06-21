@@ -7,6 +7,7 @@ All edgex go [repos](https://github.com/edgexfoundry/) have been merged into thi
 
 The script [merge-edgex-go.sh](https://gist.github.com/feclare/8dba191e8cf77864fe5eed38b380f13a) has been used to generate this repo.
 
+Specifically, launching the beginnings of this Git branch (whose purpose it is to bring in the support-notifications Go package into the EdgeX monorepo) with this preliminary update (to this README.md file).
 ## Install and Deploy
 
 EdgeX Go code depends on ZMQ library. Make sure that you have dev version of the library
