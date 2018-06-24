@@ -23,10 +23,10 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/edgexfoundry/edgex-go/core/clients"
+	"github.com/edgexfoundry/edgex-go/core/clients/types"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"strconv"
-	"github.com/edgexfoundry/edgex-go/core/clients/types"
-	"github.com/edgexfoundry/edgex-go/core/clients"
 )
 
 type EventClient interface {
@@ -41,10 +41,11 @@ type EventClient interface {
 	DeleteForDevice(id string) error
 	DeleteOld(age int) error
 	Delete(id string) error
+	MarkPushed(id string) error
 }
 
 type EventRestClient struct {
-	url string
+	url      string
 	endpoint clients.Endpointer
 }
 
@@ -54,14 +55,14 @@ func NewEventClient(params types.EndpointParams, m clients.Endpointer) EventClie
 	return &e
 }
 
-func(e *EventRestClient) init(params types.EndpointParams) {
+func (e *EventRestClient) init(params types.EndpointParams) {
 	if params.UseRegistry {
 		ch := make(chan string, 1)
 		go e.endpoint.Monitor(params, ch)
 		go func(ch chan string) {
 			for true {
 				select {
-				case url := <- ch:
+				case url := <-ch:
 					e.url = url
 				}
 			}
@@ -453,6 +454,41 @@ func (e *EventRestClient) DeleteOld(age int) error {
 		fmt.Println(ErrResponseNil)
 		return ErrResponseNil
 	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, err := getBody(resp)
+		if err != nil {
+			fmt.Println(err.Error())
+			return err
+		}
+		bodyString := string(bodyBytes)
+
+		return errors.New(bodyString)
+	}
+
+	return nil
+}
+
+// Mark event as pushed
+func (e *EventRestClient) MarkPushed(id string) error {
+	req, err := http.NewRequest(http.MethodPut, e.url+"/id/"+id, nil)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+
+	resp, err := makeRequest(req)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+
+	if resp == nil {
+		fmt.Println(ErrResponseNil)
+		return ErrResponseNil
+	}
+
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
