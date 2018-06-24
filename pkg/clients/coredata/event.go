@@ -25,6 +25,8 @@ import (
 
 	"strconv"
 
+	"github.com/edgexfoundry/edgex-go/core/clients"
+	"github.com/edgexfoundry/edgex-go/core/clients/types"
 	"github.com/edgexfoundry/edgex-go/pkg/clients"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
@@ -42,6 +44,7 @@ type EventClient interface {
 	DeleteForDevice(id string) error
 	DeleteOld(age int) error
 	Delete(id string) error
+	MarkPushed(id string) error
 }
 
 type EventRestClient struct {
@@ -454,6 +457,41 @@ func (e *EventRestClient) DeleteOld(age int) error {
 		fmt.Println(ErrResponseNil)
 		return ErrResponseNil
 	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, err := getBody(resp)
+		if err != nil {
+			fmt.Println(err.Error())
+			return err
+		}
+		bodyString := string(bodyBytes)
+
+		return errors.New(bodyString)
+	}
+
+	return nil
+}
+
+// Mark event as pushed
+func (e *EventRestClient) MarkPushed(id string) error {
+	req, err := http.NewRequest(http.MethodPut, e.url+"/id/"+id, nil)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+
+	resp, err := makeRequest(req)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+
+	if resp == nil {
+		fmt.Println(ErrResponseNil)
+		return ErrResponseNil
+	}
+
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
