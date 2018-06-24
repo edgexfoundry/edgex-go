@@ -1,5 +1,7 @@
 //
-// Copyright (c) 2018 Tencent
+// Copyright (c) 2018
+// Tencent
+// IOTech
 //
 // SPDX-License-Identifier: Apache-2.0
 //

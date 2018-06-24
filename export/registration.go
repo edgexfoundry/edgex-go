@@ -1,5 +1,7 @@
 //
-// Copyright (c) 2017 Mainflux
+// Copyright (c) 2017
+// Mainflux
+// IOTech
 //
 // SPDX-License-Identifier: Apache-2.0
 //
