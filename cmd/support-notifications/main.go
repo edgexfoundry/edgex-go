@@ -19,16 +19,17 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"net/http"
 	"strconv"
 	"time"
 
+	"flag"
 	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/edgex-go/core/data"
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/support/logging-client"
 	"github.com/edgexfoundry/edgex-go/support/notifications"
 	"os"
@@ -40,15 +41,19 @@ var loggingClient logger.LoggingClient
 
 func main() {
 	start := time.Now()
-	var (
-		useConsul  = flag.String("consul", "", "Should the service use consul?")
-		useProfile = flag.String("profile", "default", "Specify a profile other than default.")
-	)
+	var useConsul bool
+	var useProfile string
+
+	flag.BoolVar(&useConsul, "consul", false, "Indicates the service should use consul.")
+	flag.BoolVar(&useConsul, "c", false, "Indicates the service should use consul.")
+	flag.StringVar(&useProfile, "profile", "", "Specify a profile other than default.")
+	flag.StringVar(&useProfile, "p", "", "Specify a profile other than default.")
+	flag.Usage = usage.HelpCallback
 	flag.Parse()
 
 	//Read Configuration
 	configuration := &notifications.ConfigurationStruct{}
-	err := config.LoadFromFile(*useProfile, configuration)
+	err := config.LoadFromFile(useProfile, configuration)
 	if err != nil {
 		logBeforeTermination(err)
 		return
@@ -56,7 +61,7 @@ func main() {
 
 	//Determine if configuration should be overridden from Consul
 	var consulMsg string
-	if *useConsul == "y" {
+	if useConsul {
 		consulMsg = "Loading configuration from Consul..."
 		err := notifications.ConnectToConsul(*configuration)
 		if err != nil {
