@@ -5308,3 +5308,323 @@ DEBUG: 2018/05/28 00:01:59 Processed 0 resend transmissions
 INFO: 2018/05/28 00:01:59 Normal severity resend scheduler has completed.
 DEBUG: 2018/05/28 00:01:59 Processed 0 new notifications
 INFO: 2018/05/28 00:01:59 Normal severity scheduler has completed.
+INFO: 2018/06/25 14:56:53 Bypassing Consul configuration...
+INFO: 2018/06/25 14:56:53 Starting edgex-support-logging master 
+ERROR: 2018/06/25 14:57:54 call to init() failed: couldn't connect to database: no reachable servers
+INFO: 2018/06/25 15:02:29 Bypassing Consul configuration...
+INFO: 2018/06/25 15:02:29 Starting edgex-support-logging master 
+DEBUG: 2018/06/25 15:02:29 Normal distribution occuring on cron schedule: 59 * * * * *
+DEBUG: 2018/06/25 15:02:29 Normal resend occuring on cron schedule: 59 * * * * *
+INFO: 2018/06/25 15:02:29 This is the Support Notifications Micro Service
+INFO: 2018/06/25 15:02:29 Service started in: 21.306296ms
+INFO: 2018/06/25 15:02:29 Listening on port: 48060
+INFO: 2018/06/25 15:03:14 Bypassing Consul configuration...
+INFO: 2018/06/25 15:03:14 Starting edgex-support-logging master 
+DEBUG: 2018/06/25 15:03:14 Normal distribution occuring on cron schedule: 59 * * * * *
+DEBUG: 2018/06/25 15:03:14 Normal resend occuring on cron schedule: 59 * * * * *
+INFO: 2018/06/25 15:03:14 This is the Support Notifications Micro Service
+INFO: 2018/06/25 15:03:14 Service started in: 19.805182ms
+INFO: 2018/06/25 15:03:14 Listening on port: 48060
+ERROR: 2018/06/25 15:03:14 listen tcp :48060: bind: address already in use
+INFO: 2018/06/25 15:05:33 Normal severity scheduler is triggered.
+INFO: 2018/06/25 15:05:33 Normal severity resend scheduler is triggered.
+DEBUG: 2018/06/25 15:05:33 Processed 0 resend transmissions
+INFO: 2018/06/25 15:05:33 Normal severity resend scheduler has completed.
+DEBUG: 2018/06/25 15:05:33 Processed 0 new notifications
+INFO: 2018/06/25 15:05:33 Normal severity scheduler has completed.
+INFO: 2018/06/25 15:05:59 Normal severity resend scheduler is triggered.
+INFO: 2018/06/25 15:05:59 Normal severity scheduler is triggered.
+DEBUG: 2018/06/25 15:05:59 Processed 0 new notifications
+INFO: 2018/06/25 15:05:59 Normal severity scheduler has completed.
+DEBUG: 2018/06/25 15:05:59 Processed 0 resend transmissions
+INFO: 2018/06/25 15:05:59 Normal severity resend scheduler has completed.
+INFO: 2018/06/25 15:06:59 Normal severity resend scheduler is triggered.
+INFO: 2018/06/25 15:06:59 Normal severity scheduler is triggered.
+DEBUG: 2018/06/25 15:06:59 Processed 0 new notifications
+INFO: 2018/06/25 15:06:59 Normal severity scheduler has completed.
+DEBUG: 2018/06/25 15:06:59 Processed 0 resend transmissions
+INFO: 2018/06/25 15:06:59 Normal severity resend scheduler has completed.
+INFO: 2018/06/25 15:07:59 Normal severity scheduler is triggered.
+INFO: 2018/06/25 15:07:59 Normal severity resend scheduler is triggered.
+DEBUG: 2018/06/25 15:07:59 Processed 0 resend transmissions
+INFO: 2018/06/25 15:07:59 Normal severity resend scheduler has completed.
+DEBUG: 2018/06/25 15:07:59 Processed 0 new notifications
+INFO: 2018/06/25 15:07:59 Normal severity scheduler has completed.
+INFO: 2018/06/25 15:08:59 Normal severity scheduler is triggered.
+INFO: 2018/06/25 15:08:59 Normal severity resend scheduler is triggered.
+DEBUG: 2018/06/25 15:08:59 Processed 0 resend transmissions
+INFO: 2018/06/25 15:08:59 Normal severity resend scheduler has completed.
+DEBUG: 2018/06/25 15:08:59 Processed 0 new notifications
+INFO: 2018/06/25 15:08:59 Normal severity scheduler has completed.
+INFO: 2018/06/25 15:09:59 Normal severity resend scheduler is triggered.
+DEBUG: 2018/06/25 15:09:59 Processed 0 new notifications
+INFO: 2018/06/25 15:09:59 Normal severity scheduler has completed.
+DEBUG: 2018/06/25 15:09:59 Processed 0 resend transmissions
+INFO: 2018/06/25 15:09:59 Normal severity resend scheduler has completed.
+INFO: 2018/06/25 15:10:59 Normal severity scheduler is triggered.
+INFO: 2018/06/25 15:10:59 Normal severity resend scheduler is triggered.
+DEBUG: 2018/06/25 15:10:59 Processed 0 resend transmissions
+INFO: 2018/06/25 15:10:59 Normal severity resend scheduler has completed.
+DEBUG: 2018/06/25 15:10:59 Processed 0 new notifications
+INFO: 2018/06/25 15:10:59 Normal severity scheduler has completed.
+INFO: 2018/06/25 15:11:59 Normal severity resend scheduler is triggered.
+INFO: 2018/06/25 15:11:59 Normal severity scheduler is triggered.
+DEBUG: 2018/06/25 15:11:59 Processed 0 new notifications
+INFO: 2018/06/25 15:11:59 Normal severity scheduler has completed.
+DEBUG: 2018/06/25 15:11:59 Processed 0 resend transmissions
+INFO: 2018/06/25 15:11:59 Normal severity resend scheduler has completed.
+INFO: 2018/06/25 15:12:59 Normal severity resend scheduler is triggered.
+INFO: 2018/06/25 15:12:59 Normal severity scheduler is triggered.
+DEBUG: 2018/06/25 15:12:59 Processed 0 new notifications
+INFO: 2018/06/25 15:12:59 Normal severity scheduler has completed.
+DEBUG: 2018/06/25 15:12:59 Processed 0 resend transmissions
+INFO: 2018/06/25 15:12:59 Normal severity resend scheduler has completed.
+INFO: 2018/06/25 15:13:59 Normal severity scheduler is triggered.
+INFO: 2018/06/25 15:13:59 Normal severity resend scheduler is triggered.
+DEBUG: 2018/06/25 15:13:59 Processed 0 resend transmissions
+INFO: 2018/06/25 15:13:59 Normal severity resend scheduler has completed.
+DEBUG: 2018/06/25 15:13:59 Processed 0 new notifications
+INFO: 2018/06/25 15:13:59 Normal severity scheduler has completed.
+INFO: 2018/06/25 15:14:59 Normal severity resend scheduler is triggered.
+INFO: 2018/06/25 15:14:59 Normal severity scheduler is triggered.
+DEBUG: 2018/06/25 15:14:59 Processed 0 new notifications
+INFO: 2018/06/25 15:14:59 Normal severity scheduler has completed.
+DEBUG: 2018/06/25 15:14:59 Processed 0 resend transmissions
+INFO: 2018/06/25 15:14:59 Normal severity resend scheduler has completed.
+INFO: 2018/06/25 15:15:59 Normal severity resend scheduler is triggered.
+INFO: 2018/06/25 15:15:59 Normal severity scheduler is triggered.
+DEBUG: 2018/06/25 15:15:59 Processed 0 new notifications
+INFO: 2018/06/25 15:15:59 Normal severity scheduler has completed.
+DEBUG: 2018/06/25 15:15:59 Processed 0 resend transmissions
+INFO: 2018/06/25 15:15:59 Normal severity resend scheduler has completed.
+INFO: 2018/06/25 15:16:59 Normal severity scheduler is triggered.
+INFO: 2018/06/25 15:16:59 Normal severity resend scheduler is triggered.
+DEBUG: 2018/06/25 15:16:59 Processed 0 resend transmissions
+INFO: 2018/06/25 15:16:59 Normal severity resend scheduler has completed.
+DEBUG: 2018/06/25 15:16:59 Processed 0 new notifications
+INFO: 2018/06/25 15:16:59 Normal severity scheduler has completed.
+INFO: 2018/06/25 15:17:59 Normal severity scheduler is triggered.
+INFO: 2018/06/25 15:17:59 Normal severity resend scheduler is triggered.
+DEBUG: 2018/06/25 15:17:59 Processed 0 resend transmissions
+INFO: 2018/06/25 15:17:59 Normal severity resend scheduler has completed.
+DEBUG: 2018/06/25 15:17:59 Processed 0 new notifications
+INFO: 2018/06/25 15:17:59 Normal severity scheduler has completed.
+INFO: 2018/06/25 15:18:59 Normal severity scheduler is triggered.
+INFO: 2018/06/25 15:18:59 Normal severity resend scheduler is triggered.
+DEBUG: 2018/06/25 15:18:59 Processed 0 resend transmissions
+INFO: 2018/06/25 15:18:59 Normal severity resend scheduler has completed.
+DEBUG: 2018/06/25 15:18:59 Processed 0 new notifications
+INFO: 2018/06/25 15:18:59 Normal severity scheduler has completed.
+INFO: 2018/06/25 15:19:59 Normal severity scheduler is triggered.
+INFO: 2018/06/25 15:19:59 Normal severity resend scheduler is triggered.
+DEBUG: 2018/06/25 15:19:59 Processed 0 resend transmissions
+INFO: 2018/06/25 15:19:59 Normal severity resend scheduler has completed.
+DEBUG: 2018/06/25 15:19:59 Processed 0 new notifications
+INFO: 2018/06/25 15:19:59 Normal severity scheduler has completed.
+INFO: 2018/06/25 15:20:59 Normal severity resend scheduler is triggered.
+INFO: 2018/06/25 15:20:59 Normal severity scheduler is triggered.
+DEBUG: 2018/06/25 15:20:59 Processed 0 new notifications
+INFO: 2018/06/25 15:20:59 Normal severity scheduler has completed.
+DEBUG: 2018/06/25 15:20:59 Processed 0 resend transmissions
+INFO: 2018/06/25 15:20:59 Normal severity resend scheduler has completed.
+INFO: 2018/06/25 15:21:59 Normal severity scheduler is triggered.
+INFO: 2018/06/25 15:21:59 Normal severity resend scheduler is triggered.
+DEBUG: 2018/06/25 15:21:59 Processed 0 resend transmissions
+INFO: 2018/06/25 15:21:59 Normal severity resend scheduler has completed.
+DEBUG: 2018/06/25 15:21:59 Processed 0 new notifications
+INFO: 2018/06/25 15:21:59 Normal severity scheduler has completed.
+INFO: 2018/06/25 15:22:59 Normal severity resend scheduler is triggered.
+INFO: 2018/06/25 15:22:59 Normal severity scheduler is triggered.
+DEBUG: 2018/06/25 15:22:59 Processed 0 new notifications
+INFO: 2018/06/25 15:22:59 Normal severity scheduler has completed.
+DEBUG: 2018/06/25 15:22:59 Processed 0 resend transmissions
+INFO: 2018/06/25 15:22:59 Normal severity resend scheduler has completed.
+INFO: 2018/06/25 15:23:59 Normal severity scheduler is triggered.
+DEBUG: 2018/06/25 15:23:59 Processed 0 new notifications
+INFO: 2018/06/25 15:23:59 Normal severity scheduler has completed.
+DEBUG: 2018/06/25 15:23:59 Processed 0 resend transmissions
+INFO: 2018/06/25 15:23:59 Normal severity resend scheduler has completed.
+INFO: 2018/06/25 15:24:59 Normal severity resend scheduler is triggered.
+INFO: 2018/06/25 15:24:59 Normal severity scheduler is triggered.
+DEBUG: 2018/06/25 15:24:59 Processed 0 new notifications
+INFO: 2018/06/25 15:24:59 Normal severity scheduler has completed.
+DEBUG: 2018/06/25 15:24:59 Processed 0 resend transmissions
+INFO: 2018/06/25 15:24:59 Normal severity resend scheduler has completed.
+INFO: 2018/06/25 15:25:59 Normal severity resend scheduler is triggered.
+INFO: 2018/06/25 15:25:59 Normal severity scheduler is triggered.
+DEBUG: 2018/06/25 15:25:59 Processed 0 new notifications
+INFO: 2018/06/25 15:25:59 Normal severity scheduler has completed.
+DEBUG: 2018/06/25 15:25:59 Processed 0 resend transmissions
+INFO: 2018/06/25 15:25:59 Normal severity resend scheduler has completed.
+INFO: 2018/06/25 15:26:59 Normal severity resend scheduler is triggered.
+INFO: 2018/06/25 15:26:59 Normal severity scheduler is triggered.
+DEBUG: 2018/06/25 15:26:59 Processed 0 new notifications
+INFO: 2018/06/25 15:26:59 Normal severity scheduler has completed.
+DEBUG: 2018/06/25 15:26:59 Processed 0 resend transmissions
+INFO: 2018/06/25 15:26:59 Normal severity resend scheduler has completed.
+INFO: 2018/06/25 15:27:59 Normal severity scheduler is triggered.
+INFO: 2018/06/25 15:27:59 Normal severity resend scheduler is triggered.
+DEBUG: 2018/06/25 15:27:59 Processed 0 resend transmissions
+INFO: 2018/06/25 15:27:59 Normal severity resend scheduler has completed.
+DEBUG: 2018/06/25 15:27:59 Processed 0 new notifications
+INFO: 2018/06/25 15:27:59 Normal severity scheduler has completed.
+INFO: 2018/06/25 15:28:59 Normal severity scheduler is triggered.
+INFO: 2018/06/25 15:28:59 Normal severity resend scheduler is triggered.
+DEBUG: 2018/06/25 15:28:59 Processed 0 resend transmissions
+INFO: 2018/06/25 15:28:59 Normal severity resend scheduler has completed.
+DEBUG: 2018/06/25 15:28:59 Processed 0 new notifications
+INFO: 2018/06/25 15:28:59 Normal severity scheduler has completed.
+INFO: 2018/06/25 15:29:59 Normal severity resend scheduler is triggered.
+INFO: 2018/06/25 15:29:59 Normal severity scheduler is triggered.
+DEBUG: 2018/06/25 15:29:59 Processed 0 new notifications
+INFO: 2018/06/25 15:29:59 Normal severity scheduler has completed.
+DEBUG: 2018/06/25 15:29:59 Processed 0 resend transmissions
+INFO: 2018/06/25 15:29:59 Normal severity resend scheduler has completed.
+INFO: 2018/06/25 15:30:59 Normal severity scheduler is triggered.
+INFO: 2018/06/25 15:30:59 Normal severity resend scheduler is triggered.
+DEBUG: 2018/06/25 15:30:59 Processed 0 resend transmissions
+INFO: 2018/06/25 15:30:59 Normal severity resend scheduler has completed.
+DEBUG: 2018/06/25 15:30:59 Processed 0 new notifications
+INFO: 2018/06/25 15:30:59 Normal severity scheduler has completed.
+INFO: 2018/06/25 15:31:59 Normal severity resend scheduler is triggered.
+INFO: 2018/06/25 15:31:59 Normal severity scheduler is triggered.
+DEBUG: 2018/06/25 15:31:59 Processed 0 new notifications
+INFO: 2018/06/25 15:31:59 Normal severity scheduler has completed.
+DEBUG: 2018/06/25 15:31:59 Processed 0 resend transmissions
+INFO: 2018/06/25 15:31:59 Normal severity resend scheduler has completed.
+INFO: 2018/06/25 15:32:59 Normal severity scheduler is triggered.
+INFO: 2018/06/25 15:32:59 Normal severity resend scheduler is triggered.
+DEBUG: 2018/06/25 15:32:59 Processed 0 resend transmissions
+INFO: 2018/06/25 15:32:59 Normal severity resend scheduler has completed.
+DEBUG: 2018/06/25 15:32:59 Processed 0 new notifications
+INFO: 2018/06/25 15:32:59 Normal severity scheduler has completed.
+INFO: 2018/06/25 15:33:59 Normal severity resend scheduler is triggered.
+INFO: 2018/06/25 15:33:59 Normal severity scheduler is triggered.
+DEBUG: 2018/06/25 15:33:59 Processed 0 new notifications
+INFO: 2018/06/25 15:33:59 Normal severity scheduler has completed.
+DEBUG: 2018/06/25 15:33:59 Processed 0 resend transmissions
+INFO: 2018/06/25 15:33:59 Normal severity resend scheduler has completed.
+INFO: 2018/06/25 15:34:59 Normal severity resend scheduler is triggered.
+INFO: 2018/06/25 15:34:59 Normal severity scheduler is triggered.
+DEBUG: 2018/06/25 15:34:59 Processed 0 new notifications
+INFO: 2018/06/25 15:34:59 Normal severity scheduler has completed.
+DEBUG: 2018/06/25 15:34:59 Processed 0 resend transmissions
+INFO: 2018/06/25 15:34:59 Normal severity resend scheduler has completed.
+INFO: 2018/06/25 15:35:59 Normal severity scheduler is triggered.
+INFO: 2018/06/25 15:35:59 Normal severity resend scheduler is triggered.
+DEBUG: 2018/06/25 15:35:59 Processed 0 resend transmissions
+INFO: 2018/06/25 15:35:59 Normal severity resend scheduler has completed.
+DEBUG: 2018/06/25 15:35:59 Processed 0 new notifications
+INFO: 2018/06/25 15:35:59 Normal severity scheduler has completed.
+INFO: 2018/06/25 15:36:59 Normal severity scheduler is triggered.
+INFO: 2018/06/25 15:36:59 Normal severity resend scheduler is triggered.
+DEBUG: 2018/06/25 15:36:59 Processed 0 resend transmissions
+INFO: 2018/06/25 15:36:59 Normal severity resend scheduler has completed.
+DEBUG: 2018/06/25 15:36:59 Processed 0 new notifications
+INFO: 2018/06/25 15:36:59 Normal severity scheduler has completed.
+INFO: 2018/06/25 15:37:59 Normal severity scheduler is triggered.
+INFO: 2018/06/25 15:37:59 Normal severity resend scheduler is triggered.
+DEBUG: 2018/06/25 15:37:59 Processed 0 resend transmissions
+INFO: 2018/06/25 15:37:59 Normal severity resend scheduler has completed.
+DEBUG: 2018/06/25 15:37:59 Processed 0 new notifications
+INFO: 2018/06/25 15:37:59 Normal severity scheduler has completed.
+INFO: 2018/06/25 15:38:59 Normal severity resend scheduler is triggered.
+INFO: 2018/06/25 15:38:59 Normal severity scheduler is triggered.
+DEBUG: 2018/06/25 15:38:59 Processed 0 new notifications
+INFO: 2018/06/25 15:38:59 Normal severity scheduler has completed.
+DEBUG: 2018/06/25 15:38:59 Processed 0 resend transmissions
+INFO: 2018/06/25 15:38:59 Normal severity resend scheduler has completed.
+INFO: 2018/06/25 15:39:59 Normal severity scheduler is triggered.
+INFO: 2018/06/25 15:39:59 Normal severity resend scheduler is triggered.
+DEBUG: 2018/06/25 15:39:59 Processed 0 resend transmissions
+INFO: 2018/06/25 15:39:59 Normal severity resend scheduler has completed.
+DEBUG: 2018/06/25 15:39:59 Processed 0 new notifications
+INFO: 2018/06/25 15:39:59 Normal severity scheduler has completed.
+INFO: 2018/06/25 15:40:59 Normal severity scheduler is triggered.
+INFO: 2018/06/25 15:40:59 Normal severity resend scheduler is triggered.
+DEBUG: 2018/06/25 15:40:59 Processed 0 resend transmissions
+INFO: 2018/06/25 15:40:59 Normal severity resend scheduler has completed.
+DEBUG: 2018/06/25 15:40:59 Processed 0 new notifications
+INFO: 2018/06/25 15:40:59 Normal severity scheduler has completed.
+INFO: 2018/06/25 15:41:59 Normal severity scheduler is triggered.
+DEBUG: 2018/06/25 15:41:59 Processed 0 resend transmissions
+INFO: 2018/06/25 15:41:59 Normal severity resend scheduler has completed.
+DEBUG: 2018/06/25 15:41:59 Processed 0 new notifications
+INFO: 2018/06/25 15:41:59 Normal severity scheduler has completed.
+INFO: 2018/06/25 15:42:59 Normal severity scheduler is triggered.
+INFO: 2018/06/25 15:42:59 Normal severity resend scheduler is triggered.
+DEBUG: 2018/06/25 15:42:59 Processed 0 resend transmissions
+INFO: 2018/06/25 15:42:59 Normal severity resend scheduler has completed.
+DEBUG: 2018/06/25 15:42:59 Processed 0 new notifications
+INFO: 2018/06/25 15:42:59 Normal severity scheduler has completed.
+INFO: 2018/06/25 15:43:59 Normal severity scheduler is triggered.
+INFO: 2018/06/25 15:43:59 Normal severity resend scheduler is triggered.
+DEBUG: 2018/06/25 15:43:59 Processed 0 resend transmissions
+INFO: 2018/06/25 15:43:59 Normal severity resend scheduler has completed.
+DEBUG: 2018/06/25 15:43:59 Processed 0 new notifications
+INFO: 2018/06/25 15:43:59 Normal severity scheduler has completed.
+INFO: 2018/06/25 15:44:59 Normal severity scheduler is triggered.
+INFO: 2018/06/25 15:44:59 Normal severity resend scheduler is triggered.
+DEBUG: 2018/06/25 15:44:59 Processed 0 resend transmissions
+INFO: 2018/06/25 15:44:59 Normal severity resend scheduler has completed.
+DEBUG: 2018/06/25 15:44:59 Processed 0 new notifications
+INFO: 2018/06/25 15:44:59 Normal severity scheduler has completed.
+INFO: 2018/06/25 15:45:59 Normal severity resend scheduler is triggered.
+INFO: 2018/06/25 15:45:59 Normal severity scheduler is triggered.
+DEBUG: 2018/06/25 15:45:59 Processed 0 new notifications
+INFO: 2018/06/25 15:45:59 Normal severity scheduler has completed.
+DEBUG: 2018/06/25 15:45:59 Processed 0 resend transmissions
+INFO: 2018/06/25 15:45:59 Normal severity resend scheduler has completed.
+INFO: 2018/06/25 15:46:59 Normal severity resend scheduler is triggered.
+INFO: 2018/06/25 15:46:59 Normal severity scheduler is triggered.
+DEBUG: 2018/06/25 15:46:59 Processed 0 new notifications
+INFO: 2018/06/25 15:46:59 Normal severity scheduler has completed.
+DEBUG: 2018/06/25 15:46:59 Processed 0 resend transmissions
+INFO: 2018/06/25 15:46:59 Normal severity resend scheduler has completed.
+INFO: 2018/06/25 15:47:59 Normal severity scheduler is triggered.
+INFO: 2018/06/25 15:47:59 Normal severity resend scheduler is triggered.
+DEBUG: 2018/06/25 15:47:59 Processed 0 resend transmissions
+INFO: 2018/06/25 15:47:59 Normal severity resend scheduler has completed.
+DEBUG: 2018/06/25 15:47:59 Processed 0 new notifications
+INFO: 2018/06/25 15:47:59 Normal severity scheduler has completed.
+INFO: 2018/06/25 15:48:59 Normal severity scheduler is triggered.
+INFO: 2018/06/25 15:48:59 Normal severity resend scheduler is triggered.
+DEBUG: 2018/06/25 15:48:59 Processed 0 resend transmissions
+INFO: 2018/06/25 15:48:59 Normal severity resend scheduler has completed.
+DEBUG: 2018/06/25 15:48:59 Processed 0 new notifications
+INFO: 2018/06/25 15:48:59 Normal severity scheduler has completed.
+INFO: 2018/06/25 15:49:59 Normal severity scheduler is triggered.
+INFO: 2018/06/25 15:49:59 Normal severity resend scheduler is triggered.
+DEBUG: 2018/06/25 15:49:59 Processed 0 resend transmissions
+INFO: 2018/06/25 15:49:59 Normal severity resend scheduler has completed.
+DEBUG: 2018/06/25 15:49:59 Processed 0 new notifications
+INFO: 2018/06/25 15:49:59 Normal severity scheduler has completed.
+INFO: 2018/06/25 15:50:59 Normal severity scheduler is triggered.
+INFO: 2018/06/25 15:50:59 Normal severity resend scheduler is triggered.
+DEBUG: 2018/06/25 15:50:59 Processed 0 resend transmissions
+INFO: 2018/06/25 15:50:59 Normal severity resend scheduler has completed.
+DEBUG: 2018/06/25 15:50:59 Processed 0 new notifications
+INFO: 2018/06/25 15:50:59 Normal severity scheduler has completed.
+INFO: 2018/06/25 15:51:59 Normal severity resend scheduler is triggered.
+DEBUG: 2018/06/25 15:51:59 Processed 0 resend transmissions
+INFO: 2018/06/25 15:51:59 Normal severity resend scheduler has completed.
+DEBUG: 2018/06/25 15:51:59 Processed 0 new notifications
+INFO: 2018/06/25 15:51:59 Normal severity scheduler has completed.
+INFO: 2018/06/25 15:52:59 Normal severity resend scheduler is triggered.
+INFO: 2018/06/25 15:52:59 Normal severity scheduler is triggered.
+DEBUG: 2018/06/25 15:52:59 Processed 0 new notifications
+INFO: 2018/06/25 15:52:59 Normal severity scheduler has completed.
+DEBUG: 2018/06/25 15:52:59 Processed 0 resend transmissions
+INFO: 2018/06/25 15:52:59 Normal severity resend scheduler has completed.
+INFO: 2018/06/25 15:53:59 Normal severity resend scheduler is triggered.
+INFO: 2018/06/25 15:53:59 Normal severity scheduler is triggered.
+DEBUG: 2018/06/25 15:53:59 Processed 0 new notifications
+INFO: 2018/06/25 15:53:59 Normal severity scheduler has completed.
+DEBUG: 2018/06/25 15:53:59 Processed 0 resend transmissions
+INFO: 2018/06/25 15:53:59 Normal severity resend scheduler has completed.
+INFO: 2018/06/25 15:54:59 Normal severity resend scheduler is triggered.
+INFO: 2018/06/25 15:54:59 Normal severity scheduler is triggered.
+DEBUG: 2018/06/25 15:54:59 Processed 0 new notifications
+INFO: 2018/06/25 15:54:59 Normal severity scheduler has completed.
+DEBUG: 2018/06/25 15:54:59 Processed 0 resend transmissions
+INFO: 2018/06/25 15:54:59 Normal severity resend scheduler has completed.
