@@ -26,14 +26,14 @@ import (
 	"time"
 
 	"github.com/edgexfoundry/edgex-go"
+	"github.com/edgexfoundry/edgex-go/core/data"
+	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/support/logging-client"
 	"github.com/edgexfoundry/edgex-go/support/notifications"
-	"github.com/edgexfoundry/edgex-go/internal"
 	"os"
 	"os/signal"
 	"syscall"
-	"github.com/edgexfoundry/edgex-go/core/data"
 )
 
 var loggingClient logger.LoggingClient
@@ -109,7 +109,6 @@ func setLoggingTarget(conf notifications.ConfigurationStruct) string {
 	}
 	return logTarget
 }
-
 
 func listenForInterrupt(errChan chan error) {
 	go func() {
