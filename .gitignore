@@ -11,6 +11,7 @@ cmd/core-metadata/core-metadata
 cmd/export-client/export-client
 cmd/export-distro/export-distro
 cmd/support-logging/support-logging
+cmd/support-notifications
 
 # log dirs
 cmd/core-command/logs/
@@ -19,3 +20,4 @@ cmd/core-metadata/logs/
 cmd/support-logging/logs/
 cmd/export-client/logs/
 cmd/export-distro/logs/
+cmd/support-notifications/logs/
