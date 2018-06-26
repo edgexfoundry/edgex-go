@@ -90,6 +90,11 @@ parts:
       gunzip "./$PACKAGE.gz"
       tar xvf "./$PACKAGE" --strip-components=1
       popd
+    stage:
+     - glide
+     - -*.tar
+    prime:
+     - -*
   consul:
     plugin: shell
     source: https://github.com/hashicorp/consul.git
@@ -140,7 +145,7 @@ parts:
     shell: bash
     shell-flags: ['-eux', '-o', 'pipefail']
     shell-command: |
-      export GOROOT="$SNAPDIR/parts/go/install"
+      export GOROOT=$("$SNAPCRAFT_STAGE/bin/go" env GOROOT)
       export PATH="$GOROOT/bin:$PATH"
 
       export XC_ARCH=`dpkg --print-architecture`
@@ -150,7 +155,7 @@ parts:
 
       mkdir -p .gopath/src/github.com/edgexfoundry
       export GOPATH="$PWD/.gopath"
-      export PATH="$GOPATH/bin:$PATH:$SNAPDIR/parts/glide/install"
+      export PATH="$GOPATH/bin:$PATH:$SNAPCRAFT_STAGE"
       ln -s "$PWD" .gopath/src/github.com/edgexfoundry/core-config-seed-go
 
       pushd .gopath/src/github.com/edgexfoundry/core-config-seed-go
@@ -279,7 +284,7 @@ parts:
     shell: bash
     shell-flags: ['-eux', '-o', 'pipefail']
     shell-command: |
-      export GOROOT="$SNAPDIR/parts/go/install"
+      export GOROOT=$("$SNAPCRAFT_STAGE/bin/go" env GOROOT)
       export PATH="$GOROOT/bin:$PATH"
 
       export XC_ARCH=`dpkg --print-architecture`
@@ -289,7 +294,7 @@ parts:
 
       mkdir -p .gopath/src/github.com/edgexfoundry
       export GOPATH="$PWD/.gopath"
-      export PATH="$GOPATH/bin:$PATH:$SNAPDIR/parts/glide/install"
+      export PATH="$GOPATH/bin:$PATH:$SNAPCRAFT_STAGE"
       ln -s "$PWD" .gopath/src/github.com/edgexfoundry/edgex-go
 
       pushd .gopath/src/github.com/edgexfoundry/edgex-go
