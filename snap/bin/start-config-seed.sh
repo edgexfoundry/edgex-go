@@ -32,7 +32,7 @@ done
 if [ $CONSUL_RUNNING != "[]" ] ; then
     cd $SNAP/config/core-config-seed-go
 
-    $SNAP/bin/core-config-seed-go -consul &
+    $SNAP/bin/core-config-seed-go --consul &
 fi
 
     
