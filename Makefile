@@ -45,7 +45,7 @@ cmd/support-logging/support-logging:
 	$(GO) build $(GOFLAGS) -o $@ ./cmd/support-logging
 
 cmd/support-notifications/support-notifications:
-	$(GO) build $(GOFLAGS) -o $@ ./cmd/support-notifications
+	$(GOCGO) build $(GOFLAGS) -o $@ ./cmd/support-notifications
 
 clean:
 	rm -f $(MICROSERVICES)
