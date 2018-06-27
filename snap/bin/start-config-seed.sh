@@ -10,8 +10,6 @@ else
     exit 1
 fi
 
-JAVA="$SNAP/usr/lib/jvm/java-8-openjdk-$ARCH/jre/bin/java"
-
 MAX_TRIES=10
 
 while [ "$MAX_TRIES" -gt 0 ] ; do
@@ -32,12 +30,9 @@ done
 #
 # TODO: this success check could be improved...
 if [ $CONSUL_RUNNING != "[]" ] ; then
-    cd $SNAP/jar/config-seed/
+    cd $SNAP/config/core-config-seed-go
 
-    $JAVA -jar -Djava.security.egd=file:/dev/urandom -Xmx100M \
-        $SNAP/jar/config-seed/core-config-seed.jar
-
-
+    $SNAP/bin/core-config-seed-go -consul &
 fi
 
     
