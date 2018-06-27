@@ -1,0 +1,541 @@
+name: edgexfoundry
+version: '0.5.2'
+version-script: |
+    echo $SNAPCRAFT_PROJECT_VERSION-$(date +%Y%m%d)+$(git rev-parse --short HEAD)
+summary: Provides a full set of Edgex Foundry core microservices.
+description: |
+ This snap provides a full set of EdgeX Foundry core micro services.
+ It's based on the 'California ' release of EdgeX, in which all of
+ the core, and export services have been re-written in Go.
+ In addition to Mongodb and Consul, this snap also includes a shared
+ OpenJDK JRE for use by the device-virtual service. The packaging for
+ this snap can be found at:
+ https://github.com/edgexfoundry/edgex-go
+
+# TODO: upgrade to stable before releasing to beta/candidate/stable
+grade: devel
+confinement: strict
+#
+# TODO: still a few bugs to work out for confinement;
+# seems that there are apparmor denials being generated
+# for open calls to the directory: /var/lib/snapd/void/.
+# Prior to the changes to the start-edgex script, each
+# service's log files were being written here, so not
+# sure why denials are still being generated.  This
+# be caused by the fact that the current working dir
+# may be defaulting to this dir...
+
+apps:
+  consul:
+    command: bin/start-consul.sh
+    # TODO: add stop-command
+    plugs: [network, network-bind]
+  core-config-seed:
+    command: bin/start-config-seed.sh
+    plugs: [network, network-bind]
+  start-edgex:
+    command: bin/start-edgex.sh
+    plugs: [network, network-bind]
+  stop-edgex:
+    command: bin/stop-edgex.sh
+    plugs: [system-observe, process-control]
+  mongo:
+    command: bin/mongo
+    plugs: [network]
+  mongod:
+    command: mongo/launch-edgex-mongo.sh
+    plugs: [hardware-observe, network, network-bind, system-observe]
+  mongostat:
+    command: bin/mongostat
+    plugs: [network]
+  mongodump:
+    command: bin/mongodump
+    plugs: [network]
+  consul-cli:
+    command: bin/consul
+    plugs: [network, network-bind]
+  curl:
+    command: usr/bin/curl
+    plugs: [network]
+
+parts:
+  curl:
+    plugin: nil
+    stage-packages:
+      - curl
+  go:
+    source-tag: go1.9.2
+    source-depth: 1
+  glide:
+    plugin: shell
+    source: .
+    shell: bash
+    shell-flags: ['-eux', '-o', 'pipefail']
+    build-packages: [wget]
+    shell-command: |
+      export ARCH=`arch`
+
+      if [ $ARCH = "x86_64" ] ; then
+        export PACKAGE="glide-v0.12.3-linux-amd64.tar"
+      elif [ $ARCH = "armhf" ] ; then
+        export PACKAGE="glide-v0.12.3-linux-armv7.tar"
+      elif [ $ARCH = "aarch64" ] ; then
+        export PACKAGE="glide-v0.12.3-linux-arm64.tar"
+      elif [ $ARCH = "i386" ] ; then
+        export PACKAGE="glide-v0.12.3-linux-386.tar"
+      fi
+
+      pushd $SNAPCRAFT_PART_INSTALL
+      wget "https://github.com/Masterminds/glide/releases/download/v0.12.3/$PACKAGE.gz"
+      gunzip "./$PACKAGE.gz"
+      tar xvf "./$PACKAGE" --strip-components=1
+      popd
+  consul:
+    plugin: shell
+    source: https://github.com/hashicorp/consul.git
+    source-tag: v1.2.0
+    shell: bash
+    shell-flags: ['-eux', '-o', 'pipefail']
+    shell-command: |
+      export GOPATH=$(readlink -f $(pwd)/../go)
+      export GOIMPORTPATH=$GOPATH/src/github.com/hashicorp/consul/
+      export PATH="$GOPATH/bin:$PATH"
+      mkdir -p $GOIMPORTPATH
+      cp -r ./* $GOIMPORTPATH
+      cd $GOIMPORTPATH
+      go get -u github.com/kardianos/govendor
+      govendor sync
+      make
+
+      # install the consul binary
+      install -DT bin/consul "$SNAPCRAFT_PART_INSTALL/bin/consul"
+
+      # handle consul LICENSE
+      # TODO: do PATENT files need copying?
+      install -DT "$GOIMPORTPATH/LICENSE" \
+                 "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/hashicorp/consul/LICENSE"
+
+      # handle vendor LICENSE files
+      cd $GOIMPORTPATH/vendor
+      for i in `find . -type f -name "LICENSE"`; do
+        install -DT "$i" \
+                 "$SNAPCRAFT_PART_INSTALL/usr/share/doc/$i"; done
+
+      # TODO: some LICENSE files fall under .gopath too
+      cd $GOPATH/src
+      for i in `find . -type f -name "LICENSE"`; do
+        install -DT "$i" \
+                 "$SNAPCRAFT_PART_INSTALL/usr/share/doc/$i"; done
+    after:
+      - go
+    build-packages:
+      - make
+      - zip
+  config-seed:
+    source: https://github.com/edgexfoundry/core-config-seed.git
+    source-commit: 79faf75
+    plugin: maven
+    override-build: |
+      snapcraftctl build
+      echo "Installing config files"
+
+      # The logic following logic is all handled by DockerFile for
+      # the EdgeX core-config-seed docker image.
+      install -d "$SNAPCRAFT_PART_INSTALL/jar/config-seed"
+      mv "$SNAPCRAFT_PART_INSTALL/jar/core-config-seed-0.5.0-SNAPSHOT.jar" \
+         "$SNAPCRAFT_PART_INSTALL/jar/config-seed/core-config-seed.jar"
+
+      # FIXME:
+      # copy config-seed license into /usr/share/java/doc, because the
+      # jdk plugin has a bug which prevents any files from /usr/share/doc
+      # to be staged or primed.
+      install -DT "./Attribution.txt" \
+                 "$SNAPCRAFT_PART_INSTALL/usr/share/java/doc/core-config-seed/Attribution.txt"
+      install -DT "./LICENSE-2.0.txt" \
+                 "$SNAPCRAFT_PART_INSTALL/usr/share/java/doc/core-config-seed/LICENSE-2.0.txt"
+
+      for i in `ls ./config`; do
+        install -DT "./config/$i/application.properties" \
+           "$SNAPCRAFT_PART_INSTALL/jar/config-seed/config/$i/application.properties"; done
+    build-packages:
+      - ca-certificates-java
+
+    # Since snapcraft jdk plugin blanket blacklists usr/share/doc from stage,
+    # move JRE changelog & copyright to usr/share/java/doc
+    organize:
+      usr/share/doc/openjdk-8-jre-headless/changelog.Debian.gz: usr/share/java/doc/openjdk-8-jre-headless/changelog.Debian.gz
+      usr/share/doc/openjdk-8-jre-headless/copyright: usr/share/java/doc/openjdk-8-jre-headless/copyright
+
+    # TODO (applies to all edgex parts):
+    #   * a custom plugin could simplify the duplication of prime rules across
+    #     EdgeX service parts
+    #   * remove remaining license files from:
+    #     usr/lib/jvm/java-8-openjdk-`arch`/jre/
+    prime:
+      - -etc/fonts
+      - -etc/fonts/X11
+      - -usr/lib/jvm/*/ASSEMBLY_EXCEPTION
+      - -usr/lib/jvm/*/THIRD_PARTY_README
+      - -usr/lib/jvm/*/jre/ASSEMBLY_EXCEPTION
+      - -usr/lib/jvm/*/jre/THIRD_PARTY_README
+      - -usr/lib/jvm/*/man
+      - -usr/lib/jvm/*/jre/man
+      - -usr/lib/jvm/*/jre/lib/images
+      - -usr/lib/jvm/*/include
+      - -usr/lib/jvm/*/bin
+      - -usr/lib/jvm/*/lib
+      - -usr/lib/jvm/*/docs
+      - -usr/lib/jvm/*/src.zip
+      - -usr/share/X11
+      - -usr/share/man
+      - -usr/share/fonts
+      - -usr/share/alsa
+  config-common:
+    plugin: dump
+    source: ./snap
+    stage:
+      - bin/start-consul.sh
+      - bin/start-config-seed.sh
+      - bin/start-edgex.sh
+      - bin/stop-edgex.sh
+      - config/edgex-services-env
+  mongodb:
+    plugin: shell
+    source: .
+    shell: bash
+    shell-flags: ['-eux', '-o', 'pipefail']
+    build-packages: [wget]
+    shell-command: |
+      export ARCH=`arch`
+
+      if [ $ARCH = "x86_64" ] ; then
+        export PACKAGE="mongodb-linux-x86_64-ubuntu1604-3.4.10.tgz"
+      elif [ $ARCH = "aarch64" ] ; then
+        export PACKAGE="mongodb-linux-arm64-ubuntu1604-3.4.10.tgz"
+      fi
+
+      pushd $SNAPCRAFT_PART_INSTALL
+      wget "https://fastdl.mongodb.org/linux/$PACKAGE"
+      tar xvf "./$PACKAGE" --strip-components=1
+      popd
+    organize:
+      GNU-AGPL-3.0: usr/share/doc/mongodb/GNU-AGPL-3.0
+      MPL-2: usr/share/doc/mongodb/MPL-2
+      README: usr/share/doc/mongodb/README
+      THIRD-PARTY-NOTICES: usr/share/doc/mongodb/THIRD-PARTY-NOTICES
+    stage-packages:
+    - libssl1.0.0
+    stage:
+      - -bin/bsondump
+      - -bin/mongoexport
+      - -bin/mongofiles
+      - -bin/mongoimport
+      - -bin/mongooplog
+      - -bin/mongoperf
+      - -bin/mongoreplay
+      - -bin/mongorestore
+      - -bin/mongos
+      - -bin/mongotop
+      - -mongodb-linux-*-ubuntu1604-3.4.10.tgz
+  mongo-config:
+    source: https://github.com/edgexfoundry/docker-edgex-mongo.git
+    source-depth: 1
+    plugin: dump
+    # NOTE - both the mongo-config & go install README.md to root-dir of the snap
+    # which breaks when 'stage' runs.  The only workaround so far is
+    # is to not stage these files.  This needs a better solution long-term.
+    stage:
+      - -README.md
+      - -Dockerfile*
+    override-build: |
+      snapcraftctl build
+      echo "Installing mongo-config files"
+      echo "DIR=`pwd`"
+      echo "SNAPCRAFT_PART_INSTALL=$SNAPCRAFT_PART_INSTALL"
+      install -d "$SNAPCRAFT_PART_INSTALL/mongo"
+      cat ./launch-edgex-mongo.sh | \
+        sed -e s/\$SLEEP_TIME_BEFORE_CONFIG/10/ \
+            -e s:mongod:mongod\ --dbpath\ \$SNAP_DATA/mongo/db\ --logpath\ /var/snap/edgexfoundry/common/mongodb.log: \
+            -e '/wait/ d' \
+            -e s:/edgex/mongo/config/:\$SNAP/mongo/: > \
+         "$SNAPCRAFT_PART_INSTALL/mongo/launch-edgex-mongo.sh"
+      mv "$SNAPCRAFT_PART_INSTALL/init_mongo.js" \
+         "$SNAPCRAFT_PART_INSTALL/mongo/init_mongo.js"
+      chmod 755 "$SNAPCRAFT_PART_INSTALL/mongo/launch-edgex-mongo.sh"
+      install -DT "./LICENSE-2.0.TXT" \
+         "$SNAPCRAFT_PART_INSTALL/usr/share/doc/mongo-config/LICENSE-2.0.TXT"
+    prime:
+      - -launch-edgex-mongo.sh
+      - -LICENSE-2.0.TXT
+  edgex-go:
+    source: .
+    plugin: shell
+    after:
+      - glide
+      - go
+    shell: bash
+    shell-flags: ['-eux', '-o', 'pipefail']
+    shell-command: |
+      export GOROOT="$SNAPDIR/parts/go/install"
+      export PATH="$GOROOT/bin:$PATH"
+
+      export XC_ARCH=`dpkg --print-architecture`
+      export XC_OS="linux"
+
+      go version
+
+      mkdir -p .gopath/src/github.com/edgexfoundry
+      export GOPATH="$PWD/.gopath"
+      export PATH="$GOPATH/bin:$PATH:$SNAPDIR/parts/glide/install"
+      ln -s "$PWD" .gopath/src/github.com/edgexfoundry/edgex-go
+
+      pushd .gopath/src/github.com/edgexfoundry/edgex-go
+
+      make prepare
+      make build
+      popd
+
+      install -DT "./cmd/core-command/core-command" "$SNAPCRAFT_PART_INSTALL/bin/core-command"
+      install -DT "./cmd/core-data/core-data" "$SNAPCRAFT_PART_INSTALL/bin/core-data"
+      install -DT "./cmd/core-metadata/core-metadata" "$SNAPCRAFT_PART_INSTALL/bin/core-metadata"
+      install -DT "./cmd/export-distro/export-distro" "$SNAPCRAFT_PART_INSTALL/bin/export-distro"
+      install -DT "./cmd/export-client/export-client" "$SNAPCRAFT_PART_INSTALL/bin/export-client"
+      install -DT "./cmd/support-logging/support-logging" "$SNAPCRAFT_PART_INSTALL/bin/support-logging"
+
+      # FIXME: settings can't be overridden from the cmd-line!
+      # Override 'LogFile' and 'LoggingRemoteURL'
+      install -d "$SNAPCRAFT_PART_INSTALL/config/core-command/res/"
+      install -d "$SNAPCRAFT_PART_INSTALL/config/core-data/res/"
+      install -d "$SNAPCRAFT_PART_INSTALL/config/core-metadata/res/"
+      install -d "$SNAPCRAFT_PART_INSTALL/config/export-client/res/"
+      install -d "$SNAPCRAFT_PART_INSTALL/config/export-distro/res/"
+      install -d "$SNAPCRAFT_PART_INSTALL/config/support-logging/res/"
+
+      cat "./cmd/core-command/res/configuration.toml" | \
+        sed -e s:./logs/edgex-core-command.log:/var/snap/edgexfoundry/common/core-command.log: \
+            -e s:'http\://localhost\:48061/api/v1/logs':: > \
+       "$SNAPCRAFT_PART_INSTALL/config/core-command/res/configuration.toml"
+
+      cat "./cmd/core-data/res/configuration.toml" | \
+        sed -e s:./logs/edgex-core-data.log:/var/snap/edgexfoundry/common/core-data.log: \
+            -e s:'http\://localhost\:48061/api/v1/logs':: > \
+       "$SNAPCRAFT_PART_INSTALL/config/core-data/res/configuration.toml"
+
+      cat "./cmd/core-metadata/res/configuration.toml" | \
+        sed -e s:./logs/edgex-core-metadata.log:/var/snap/edgexfoundry/common/core-metadata.log: \
+            -e s:'http\://localhost\:48061/api/v1/logs':: > \
+       "$SNAPCRAFT_PART_INSTALL/config/core-metadata/res/configuration.toml"
+
+      cat "./cmd/export-client/res/configuration.toml" | \
+        sed -e s:./logs/edgex-export-client.log:/var/snap/edgexfoundry/common/export-client.log: \
+            -e s:'http\://localhost\:48061/api/v1/logs':: > \
+       "$SNAPCRAFT_PART_INSTALL/config/export-client/res/configuration.toml"
+
+      cat "./cmd/export-distro/res/configuration.toml" | \
+        sed -e s:./logs/edgex-export-distro.log:/var/snap/edgexfoundry/common/export-distro.log: \
+            -e s:'http\://localhost\:48061/api/v1/logs':: > \
+       "$SNAPCRAFT_PART_INSTALL/config/export-distro/res/configuration.toml"
+
+      cat "./cmd/support-logging/res/configuration.toml" | \
+        sed -e s:./logs/edgex-support-logging.log:/var/snap/edgexfoundry/common/support-logging.log: \
+            -e s:'http\://localhost\:48061/api/v1/logs':: > \
+       "$SNAPCRAFT_PART_INSTALL/config/support-logging/res/configuration.toml"
+
+      # handle license files
+      install -DT "./core/command/Attribution.txt" \
+              "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/core-command/Attribution.txt"
+      install -DT "./LICENSE" \
+              "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/core-command/LICENSE"
+      install -DT "./core/data/Attribution.txt" \
+             "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/core-data/Attribution.txt"
+      install -DT "./LICENSE" \
+              "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/core-data/LICENSE"
+      install -DT "./core/metadata/Attribution.txt" \
+              "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/core-metadata/Attribution.txt"
+      install -DT "./LICENSE" \
+              "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/core-metdata/LICENSE"
+      install -DT "./LICENSE" \
+              "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/export-distro/LICENSE"
+      install -DT "./LICENSE" \
+              "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/export-client/LICENSE"
+      install -DT "./LICENSE" \
+              "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/support-logging/LICENSE"
+    build-packages:
+      - zip
+      - pkg-config
+    stage-packages:
+      - libzmq3-dev
+  support-notifications:
+    source: https://github.com/edgexfoundry/support-notifications.git
+    # the following commit == 0.5.0 version plus a few fixes
+    source-commit: "ddebc1b"
+    plugin: maven
+    override-build: |
+      snapcraftctl build
+      echo "Installing support-notifications files"
+
+      # The logic following logic is all handled by DockerFile for
+      # the EdgeX support-notifications docker image.
+      install -d "$SNAPCRAFT_PART_INSTALL/jar/support-notifications"
+      mv "$SNAPCRAFT_PART_INSTALL/jar/support-notifications-0.5.0-SNAPSHOT.jar" \
+         "$SNAPCRAFT_PART_INSTALL/jar/support-notifications/support-notifications.jar"
+
+      # FIXME:
+      # copy service license into /usr/share/java/doc, because the
+      # jdk plugin has a bug which prevents any files from /usr/share/doc
+      # to be staged or primed.
+      install -DT "./Attribution.txt" \
+         "$SNAPCRAFT_PART_INSTALL/usr/share/java/doc/support-notifications/Attribution.txt"
+      install -DT "./LICENSE-2.0.txt" \
+         "$SNAPCRAFT_PART_INSTALL/usr/share/java/doc/support-notifications/LICENSE-2.0.txt"
+    prime:
+      - -etc/fonts
+      - -etc/fonts/X11
+      - -usr/lib/jvm/*/ASSEMBLY_EXCEPTION
+      - -usr/lib/jvm/*/THIRD_PARTY_README
+      - -usr/lib/jvm/*/jre/ASSEMBLY_EXCEPTION
+      - -usr/lib/jvm/*/jre/THIRD_PARTY_README
+      - -usr/lib/jvm/*/man
+      - -usr/lib/jvm/*/jre/man
+      - -usr/lib/jvm/*/jre/lib/images
+      - -usr/lib/jvm/*/include
+      - -usr/lib/jvm/*/bin
+      - -usr/lib/jvm/*/lib
+      - -usr/lib/jvm/*/docs
+      - -usr/lib/jvm/*/src.zip
+      - -usr/share/X11
+      - -usr/share/man
+      - -usr/share/fonts
+      - -usr/share/alsa
+  support-scheduler:
+    source: https://github.com/edgexfoundry/support-scheduler.git
+    # the following commit == 0.5.0 version update +1 (core-domain fix)
+    source-commit: "00707ae"
+    plugin: maven
+    override-build: |
+      snapcraftctl build
+      echo "Installing support-scheduler files"
+
+      # The logic following logic is all handled by DockerFile for
+      # the EdgeX support-scheduler docker image.
+      install -d "$SNAPCRAFT_PART_INSTALL/jar/support-scheduler"
+      mv "$SNAPCRAFT_PART_INSTALL/jar/support-scheduler-0.5.0-SNAPSHOT.jar" \
+         "$SNAPCRAFT_PART_INSTALL/jar/support-scheduler/support-scheduler.jar"
+
+      # FIXME:
+      # copy service license into /usr/share/java/doc, because the
+      # jdk plugin has a bug which prevents any files from /usr/share/doc
+      # to be staged or primed.
+      install -DT "./Attribution.txt" \
+         "$SNAPCRAFT_PART_INSTALL/usr/share/java/doc/support-scheduler/Attribution.txt"
+      install -DT "./LICENSE-2.0.txt" \
+         "$SNAPCRAFT_PART_INSTALL/usr/share/java/doc/support-scheduler/LICENSE-2.0.txt"
+    prime:
+      - -etc/fonts
+      - -etc/fonts/X11
+      - -usr/lib/jvm/*/ASSEMBLY_EXCEPTION
+      - -usr/lib/jvm/*/THIRD_PARTY_README
+      - -usr/lib/jvm/*/jre/ASSEMBLY_EXCEPTION
+      - -usr/lib/jvm/*/jre/THIRD_PARTY_README
+      - -usr/lib/jvm/*/man
+      - -usr/lib/jvm/*/jre/man
+      - -usr/lib/jvm/*/jre/lib/images
+      - -usr/lib/jvm/*/include
+      - -usr/lib/jvm/*/bin
+      - -usr/lib/jvm/*/lib
+      - -usr/lib/jvm/*/docs
+      - -usr/lib/jvm/*/src.zip
+      - -usr/share/X11
+      - -usr/share/man
+      - -usr/share/fonts
+      - -usr/share/
+  support-rulesengine:
+    source: https://github.com/edgexfoundry/support-rulesengine.git
+    # the following commit == 0.5.0 version update
+    source-commit: "2e282f5"
+    plugin: maven
+    override-build: |
+      snapcraftctl build
+      echo "Installing support-rulesengine files"
+
+      # The logic following logic is all handled by DockerFile for
+      # the EdgeX support-rulesengine docker image.
+      install -d "$SNAPCRAFT_PART_INSTALL/jar/support-rulesengine"
+      mv "$SNAPCRAFT_PART_INSTALL/jar/support-rulesengine-0.5.0-SNAPSHOT.jar" \
+         "$SNAPCRAFT_PART_INSTALL/jar/support-rulesengine/support-rulesengine.jar"
+
+      # FIXME:
+      # copy service license into /usr/share/java/doc, because the
+      # jdk plugin has a bug which prevents any files from /usr/share/doc
+      # to be staged or primed.
+      install -DT "./Attribution.txt" \
+         "$SNAPCRAFT_PART_INSTALL/usr/share/java/doc/support-rulesengine/Attribution.txt"
+      install -DT "./LICENSE-2.0.txt" \
+         "$SNAPCRAFT_PART_INSTALL/usr/share/java/doc/support-rulesengine/LICENSE-2.0.txt"
+    prime:
+      - -etc/fonts
+      - -etc/fonts/X11
+      - -usr/lib/jvm/*/ASSEMBLY_EXCEPTION
+      - -usr/lib/jvm/*/THIRD_PARTY_README
+      - -usr/lib/jvm/*/jre/ASSEMBLY_EXCEPTION
+      - -usr/lib/jvm/*/jre/THIRD_PARTY_README
+      - -usr/lib/jvm/*/man
+      - -usr/lib/jvm/*/jre/man
+      - -usr/lib/jvm/*/jre/lib/images
+      - -usr/lib/jvm/*/include
+      - -usr/lib/jvm/*/bin
+      - -usr/lib/jvm/*/lib
+      - -usr/lib/jvm/*/docs
+      - -usr/lib/jvm/*/src.zip
+      - -usr/share/X11
+      - -usr/share/man
+      - -usr/share/fonts
+      - -usr/share/alsa
+  device-virtual:
+    source: https://github.com/edgexfoundry/device-virtual.git
+    # the following commit == 0.5.0 version update +1 (core-domain fix)
+    source-commit: "2033429"
+    plugin: maven
+    override-build: |
+      snapcraftctl build
+      echo "Installing device-virtual files"
+
+      # The logic following logic is all handled by DockerFile for
+      # the EdgeX device-virtual docker image.
+      install -d "$SNAPCRAFT_PART_INSTALL/jar/device-virtual"
+      install -d "$SNAPCRAFT_PART_INSTALL/jar/device-virtual/bacnet_sample_profiles"
+      install -d "$SNAPCRAFT_PART_INSTALL/jar/device-virtual/modbus_sample_profiles"
+      mv "$SNAPCRAFT_PART_INSTALL/jar/device-virtual-0.5.0-SNAPSHOT.jar" \
+         "$SNAPCRAFT_PART_INSTALL/jar/device-virtual/device-virtual.jar"
+      cp ./bacnet_sample_profiles/*.yaml \
+         "$SNAPCRAFT_PART_INSTALL/jar/device-virtual/bacnet_sample_profiles/"
+      cp ./modbus_sample_profiles/*.yaml \
+         "$SNAPCRAFT_PART_INSTALL/jar/device-virtual/modbus_sample_profiles/"
+
+      # FIXME:
+      # copy service license into /usr/share/java/doc, because the
+      # jdk plugin has a bug which prevents any files from /usr/share/doc
+      # to be staged or primed.
+      install -DT "./Attribution.txt" \
+         "$SNAPCRAFT_PART_INSTALL/usr/share/java/doc/device-virtual/Attribution.txt"
+      install -DT "./LICENSE-2.0.txt" \
+         "$SNAPCRAFT_PART_INSTALL/usr/share/java/doc/device-virtual/LICENSE-2.0.txt"
+    prime:
+      - -etc/fonts
+      - -etc/fonts/X11
+      - -usr/lib/jvm/*/ASSEMBLY_EXCEPTION
+      - -usr/lib/jvm/*/THIRD_PARTY_README
+      - -usr/lib/jvm/*/jre/ASSEMBLY_EXCEPTION
+      - -usr/lib/jvm/*/jre/THIRD_PARTY_README
+      - -usr/lib/jvm/*/man
+      - -usr/lib/jvm/*/jre/man
+      - -usr/lib/jvm/*/jre/lib/images
+      - -usr/lib/jvm/*/include
+      - -usr/lib/jvm/*/bin
+      - -usr/lib/jvm/*/lib
+      - -usr/lib/jvm/*/docs
+      - -usr/lib/jvm/*/src.zip
+      - -usr/share/X11
+      - -usr/share/man
+      - -usr/share/fonts
+      - -usr/share/alsa

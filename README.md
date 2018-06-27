@@ -25,6 +25,10 @@ cd $GOPATH/src/github.com/edgexfoundry/edgex-go
 glide install
 make build
 ```
+## Snap Package
+Edgex Foundry is also available as a snap package, for more details
+on the snap, including how to install it, please refer to [EdgeX snap](https://github.com/edgexfoundry/edgex-go/snap/README.md)
+
 
 ## Community
 - Chat: https://chat.edgexfoundry.org/home
