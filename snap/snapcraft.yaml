@@ -64,7 +64,7 @@ parts:
     stage-packages:
       - curl
   go:
-    source-tag: go1.9.2
+    source-tag: go1.10.2
     source-depth: 1
   glide:
     plugin: shell
