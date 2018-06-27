@@ -1,7 +1,7 @@
 Hostname = 'edgex-support-logging'
 Port = 48061
 Persistence = 'mongodb'
-LoggingFile = './logs/edgex-support-logging.log'
+LoggingFile = '/edgex/logs/edgex-support-logging.log'
 MongoDB = 'logging'
 MongoCollection = 'logEntry'
 MongoURL = 'edgex-mongo'
