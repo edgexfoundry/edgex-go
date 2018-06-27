@@ -25,6 +25,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/core/clients/types"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 )
+
 /*
 Addressable client for interacting with the addressable section of metadata
 */
@@ -34,7 +35,7 @@ type AddressableClient interface {
 }
 
 type AddressableRestClient struct {
-	url string
+	url      string
 	endpoint clients.Endpointer
 }
 
@@ -42,19 +43,19 @@ type AddressableRestClient struct {
 Return an instance of AddressableClient
 */
 func NewAddressableClient(params types.EndpointParams, m clients.Endpointer) AddressableClient {
-	a := AddressableRestClient{endpoint:m}
+	a := AddressableRestClient{endpoint: m}
 	a.init(params)
 	return &a
 }
 
-func(a *AddressableRestClient) init(params types.EndpointParams) {
+func (a *AddressableRestClient) init(params types.EndpointParams) {
 	if params.UseRegistry {
 		ch := make(chan string, 1)
 		go a.endpoint.Monitor(params, ch)
 		go func(ch chan string) {
-			for true {
+			for {
 				select {
-				case url := <- ch:
+				case url := <-ch:
 					a.url = url
 				}
 			}
@@ -90,7 +91,7 @@ func (a *AddressableRestClient) Add(addr *models.Addressable) (string, error) {
 	}
 	bodyString := string(bodyBytes)
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		return "", errors.New(string(bodyString))
 	}
 
@@ -132,7 +133,7 @@ func (a *AddressableRestClient) AddressableForName(name string) (models.Addressa
 		return models.Addressable{}, err
 	}
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
 		if err != nil {

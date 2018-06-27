@@ -41,7 +41,7 @@ func issueDeviceCommand(w http.ResponseWriter, r *http.Request, p bool) {
 		return
 	}
 	body, status := commandByDeviceID(did, cid, string(b), p)
-	if status != 200 {
+	if status != http.StatusOK {
 		w.WriteHeader(status)
 	} else {
 		w.Header().Set("Content-Type", "application/json")

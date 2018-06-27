@@ -52,7 +52,7 @@ func (d *DeviceProfileRestClient) init(params types.EndpointParams) {
 		ch := make(chan string, 1)
 		go d.endpoint.Monitor(params, ch)
 		go func(ch chan string) {
-			for true {
+			for {
 				select {
 				case url := <-ch:
 					d.url = url
@@ -93,7 +93,7 @@ func (dpc *DeviceProfileRestClient) Add(dp *models.DeviceProfile) (string, error
 	bodyString := string(bodyBytes)
 
 	// Check the response code
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		return "", errors.New(bodyString)
 	}
 
@@ -116,7 +116,7 @@ func (dpc *DeviceProfileRestClient) Delete(id string) error {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
 		if err != nil {
@@ -146,7 +146,7 @@ func (dpc *DeviceProfileRestClient) DeleteByName(name string) error {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
 		if err != nil {
@@ -177,7 +177,7 @@ func (dpc *DeviceProfileRestClient) DeviceProfile(id string) (models.DeviceProfi
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
 		if err != nil {
@@ -208,7 +208,7 @@ func (dpc *DeviceProfileRestClient) DeviceProfiles() ([]models.DeviceProfile, er
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
 		if err != nil {
@@ -238,7 +238,7 @@ func (dpc *DeviceProfileRestClient) DeviceProfileForName(name string) (models.De
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
 		if err != nil {

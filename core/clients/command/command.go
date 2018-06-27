@@ -38,25 +38,25 @@ type CommandClient interface {
 }
 
 type CommandRestClient struct {
-	url string
+	url      string
 	endpoint clients.Endpointer
 }
 
 // NewCommandClient : Create an instance of CommandClient
 func NewCommandClient(params types.EndpointParams, m clients.Endpointer) CommandClient {
-	c := CommandRestClient{endpoint:m}
+	c := CommandRestClient{endpoint: m}
 	c.init(params)
 	return &c
 }
 
-func(c *CommandRestClient) init(params types.EndpointParams) {
+func (c *CommandRestClient) init(params types.EndpointParams) {
 	if params.UseRegistry {
 		ch := make(chan string, 1)
 		go c.endpoint.Monitor(params, ch)
 		go func(ch chan string) {
-			for true {
+			for {
 				select {
-				case url := <- ch:
+				case url := <-ch:
 					c.url = url
 				}
 			}

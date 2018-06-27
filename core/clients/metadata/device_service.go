@@ -21,10 +21,11 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"github.com/edgexfoundry/edgex-go/core/clients"
 	"github.com/edgexfoundry/edgex-go/core/clients/types"
+	"github.com/edgexfoundry/edgex-go/core/domain/models"
 )
+
 /*
 Service client for interacting with the device service section of metadata
 */
@@ -36,7 +37,7 @@ type DeviceServiceClient interface {
 }
 
 type DeviceServiceRestClient struct {
-	url string
+	url      string
 	endpoint clients.Endpointer
 }
 
@@ -44,19 +45,19 @@ type DeviceServiceRestClient struct {
 Return an instance of DeviceServiceClient
 */
 func NewDeviceServiceClient(params types.EndpointParams, m clients.Endpointer) DeviceServiceClient {
-	s := DeviceServiceRestClient{endpoint:m}
+	s := DeviceServiceRestClient{endpoint: m}
 	s.init(params)
 	return &s
 }
 
-func(d *DeviceServiceRestClient) init(params types.EndpointParams) {
+func (d *DeviceServiceRestClient) init(params types.EndpointParams) {
 	if params.UseRegistry {
 		ch := make(chan string, 1)
 		go d.endpoint.Monitor(params, ch)
 		go func(ch chan string) {
-			for true {
+			for {
 				select {
-				case url := <- ch:
+				case url := <-ch:
 					d.url = url
 				}
 			}
@@ -94,7 +95,7 @@ func (s *DeviceServiceRestClient) UpdateLastConnected(id string, time int64) err
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
 		if err != nil {
@@ -124,7 +125,7 @@ func (s *DeviceServiceRestClient) UpdateLastReported(id string, time int64) erro
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
 		if err != nil {
@@ -162,7 +163,7 @@ func (s *DeviceServiceRestClient) Add(ds *models.DeviceService) (string, error) 
 	}
 	bodyString := string(bodyBytes)
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		return "", errors.New(bodyString)
 	}
 
@@ -187,7 +188,7 @@ func (s *DeviceServiceRestClient) DeviceServiceForName(name string) (models.Devi
 		return models.DeviceService{}, err
 	}
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
 		if err != nil {

@@ -57,7 +57,7 @@ type DeviceClient interface {
 }
 
 type DeviceRestClient struct {
-	url string
+	url      string
 	endpoint clients.Endpointer
 }
 
@@ -65,19 +65,19 @@ type DeviceRestClient struct {
 Return an instance of DeviceClient
 */
 func NewDeviceClient(params types.EndpointParams, m clients.Endpointer) DeviceClient {
-	d := DeviceRestClient{endpoint:m}
+	d := DeviceRestClient{endpoint: m}
 	d.init(params)
 	return &d
 }
 
-func(d *DeviceRestClient) init(params types.EndpointParams) {
+func (d *DeviceRestClient) init(params types.EndpointParams) {
 	if params.UseRegistry {
 		ch := make(chan string, 1)
 		go d.endpoint.Monitor(params, ch)
 		go func(ch chan string) {
-			for true {
+			for {
 				select {
-				case url := <- ch:
+				case url := <-ch:
 					d.url = url
 				}
 			}
@@ -135,10 +135,10 @@ func (d *DeviceRestClient) CheckForDevice(token string) (models.Device, error) {
 	}
 	defer resp.Body.Close()
 
-	switch(resp.StatusCode) {
-	case 404:
+	switch resp.StatusCode {
+	case http.StatusNotFound:
 		return models.Device{}, types.ErrNotFound{}
-	case 200:
+	case http.StatusOK:
 		return d.decodeDevice(resp)
 	}
 
@@ -170,7 +170,7 @@ func (d *DeviceRestClient) Device(id string) (models.Device, error) {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
 		if err != nil {
@@ -201,7 +201,7 @@ func (d *DeviceRestClient) Devices() ([]models.Device, error) {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
 		if err != nil {
@@ -231,7 +231,7 @@ func (d *DeviceRestClient) DeviceForName(name string) (models.Device, error) {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
 		if err != nil {
@@ -261,7 +261,7 @@ func (d *DeviceRestClient) DevicesByLabel(label string) ([]models.Device, error)
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
 		if err != nil {
@@ -291,7 +291,7 @@ func (d *DeviceRestClient) DevicesForService(serviceId string) ([]models.Device,
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
 		if err != nil {
@@ -321,7 +321,7 @@ func (d *DeviceRestClient) DevicesForServiceByName(serviceName string) ([]models
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
 		if err != nil {
@@ -351,7 +351,7 @@ func (d *DeviceRestClient) DevicesForProfile(profileId string) ([]models.Device,
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
 		if err != nil {
@@ -381,7 +381,7 @@ func (d *DeviceRestClient) DevicesForProfileByName(profileName string) ([]models
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
 		if err != nil {
@@ -411,7 +411,7 @@ func (d *DeviceRestClient) DevicesForAddressable(addressableId string) ([]models
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
 		if err != nil {
@@ -442,7 +442,7 @@ func (d *DeviceRestClient) DevicesForAddressableByName(addressableName string) (
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
 		if err != nil {
@@ -484,7 +484,7 @@ func (d *DeviceRestClient) Add(dev *models.Device) (string, error) {
 	}
 	bodyString := string(bodyBytes)
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		return "", errors.New(bodyString)
 	}
 
@@ -512,7 +512,7 @@ func (d *DeviceRestClient) Update(dev models.Device) error {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
 		if err != nil {
@@ -542,7 +542,7 @@ func (d *DeviceRestClient) UpdateLastConnected(id string, time int64) error {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
 		if err != nil {
@@ -572,7 +572,7 @@ func (d *DeviceRestClient) UpdateLastConnectedByName(name string, time int64) er
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
 		if err != nil {
@@ -602,7 +602,7 @@ func (d *DeviceRestClient) UpdateLastReported(id string, time int64) error {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
 		if err != nil {
@@ -632,7 +632,7 @@ func (d *DeviceRestClient) UpdateLastReportedByName(name string, time int64) err
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
 		if err != nil {
@@ -662,7 +662,7 @@ func (d *DeviceRestClient) UpdateOpState(id string, opState string) error {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
 		if err != nil {
@@ -692,7 +692,7 @@ func (d *DeviceRestClient) UpdateOpStateByName(name string, opState string) erro
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
 		if err != nil {
@@ -723,7 +723,7 @@ func (d *DeviceRestClient) UpdateAdminState(id string, adminState string) error 
 
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
 		if err != nil {
@@ -753,7 +753,7 @@ func (d *DeviceRestClient) UpdateAdminStateByName(name string, adminState string
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
 		if err != nil {
@@ -783,7 +783,7 @@ func (d *DeviceRestClient) Delete(id string) error {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
 		if err != nil {
@@ -813,7 +813,7 @@ func (d *DeviceRestClient) DeleteByName(name string) error {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
 		if err != nil {
