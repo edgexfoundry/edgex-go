@@ -47,24 +47,24 @@ type ValueDescriptorClient interface {
 }
 
 type ValueDescriptorRestClient struct {
-	url string
+	url      string
 	endpoint clients.Endpointer
 }
 
 func NewValueDescriptorClient(params types.EndpointParams, m clients.Endpointer) ValueDescriptorClient {
-	v := ValueDescriptorRestClient{endpoint:m}
+	v := ValueDescriptorRestClient{endpoint: m}
 	v.init(params)
 	return &v
 }
 
-func(d *ValueDescriptorRestClient) init(params types.EndpointParams) {
+func (d *ValueDescriptorRestClient) init(params types.EndpointParams) {
 	if params.UseRegistry {
 		ch := make(chan string, 1)
 		go d.endpoint.Monitor(params, ch)
 		go func(ch chan string) {
-			for true {
+			for {
 				select {
-				case url := <- ch:
+				case url := <-ch:
 					d.url = url
 				}
 			}
@@ -125,7 +125,7 @@ func (v *ValueDescriptorRestClient) ValueDescriptors() ([]models.ValueDescriptor
 	defer resp.Body.Close()
 
 	// Reponse was not OK
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		// Get the response body
 		bodyBytes, err := getBody(resp)
 		if err != nil {
@@ -154,7 +154,7 @@ func (v *ValueDescriptorRestClient) ValueDescriptor(id string) (models.ValueDesc
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		bodyBytes, err := getBody(resp)
 		if err != nil {
 			return models.ValueDescriptor{}, err
@@ -183,7 +183,7 @@ func (v *ValueDescriptorRestClient) ValueDescriptorForName(name string) (models.
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		bodyBytes, err := getBody(resp)
 		if err != nil {
 			return models.ValueDescriptor{}, err
@@ -211,7 +211,7 @@ func (v *ValueDescriptorRestClient) ValueDescriptorsByLabel(label string) ([]mod
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		bodyBytes, err := getBody(resp)
 		if err != nil {
 			return []models.ValueDescriptor{}, err
@@ -239,7 +239,7 @@ func (v *ValueDescriptorRestClient) ValueDescriptorsForDevice(deviceId string) (
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		bodyBytes, err := getBody(resp)
 		if err != nil {
 			return []models.ValueDescriptor{}, err
@@ -267,7 +267,7 @@ func (v *ValueDescriptorRestClient) ValueDescriptorsForDeviceByName(deviceName s
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		bodyBytes, err := getBody(resp)
 		if err != nil {
 			return []models.ValueDescriptor{}, err
@@ -295,7 +295,7 @@ func (v *ValueDescriptorRestClient) ValueDescriptorsByUomLabel(uomLabel string) 
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		bodyBytes, err := getBody(resp)
 		if err != nil {
 			return []models.ValueDescriptor{}, err
@@ -336,7 +336,7 @@ func (v *ValueDescriptorRestClient) Add(vdr *models.ValueDescriptor) (string, er
 	}
 	bodyString := string(bodyBytes)
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		return "", errors.New(bodyString)
 	}
 
@@ -365,7 +365,7 @@ func (v *ValueDescriptorRestClient) Update(vdr *models.ValueDescriptor) error {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		bodyBytes, err := getBody(resp)
 		if err != nil {
 			return err
@@ -394,7 +394,7 @@ func (v *ValueDescriptorRestClient) Delete(id string) error {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		bodyBytes, err := getBody(resp)
 		if err != nil {
 			return err
@@ -423,7 +423,7 @@ func (v *ValueDescriptorRestClient) DeleteByName(name string) error {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		bodyBytes, err := getBody(resp)
 		if err != nil {
 			return err
