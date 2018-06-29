@@ -101,7 +101,7 @@ func TestHttpSender(t *testing.T) {
 				addressableTest.Port = port
 			}
 			sender := NewHTTPSender(addressableTest)
-			sender.Send(msg)
+			sender.Send(msg, nil)
 		})
 	}
 }
