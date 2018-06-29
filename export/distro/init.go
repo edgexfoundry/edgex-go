@@ -13,10 +13,15 @@ import (
 	"go.uber.org/zap"
 	"strconv"
 	"strings"
+
+	"github.com/edgexfoundry/edgex-go/core/clients/coredata"
+	"github.com/edgexfoundry/edgex-go/core/clients/types"
+	"github.com/edgexfoundry/edgex-go/internal"
 )
 
 const (
-	PingApiPath = "/api/v1/ping"
+	PingApiPath  = "/api/v1/ping"
+	EventUriPath = "/api/v1/event"
 )
 
 var logger *zap.Logger
@@ -47,6 +52,17 @@ func ConnectToConsul(conf ConfigurationStruct) error {
 func Init(conf ConfigurationStruct, l *zap.Logger) error {
 	configuration = conf
 	logger = l
+
+	deviceURL := "http://localhost:48080" + EventUriPath
+
+	params := types.EndpointParams{
+		ServiceKey:  internal.CoreDataServiceKey,
+		Path:        EventUriPath,
+		UseRegistry: false,
+		Url:         deviceURL,
+	}
+
+	ec = coredata.NewEventClient(params, nil)
 
 	return nil
 }
