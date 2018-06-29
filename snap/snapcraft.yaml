@@ -64,7 +64,7 @@ parts:
     stage-packages:
       - curl
   go:
-    source-tag: go1.9.2
+    source-tag: go1.10.2
     source-depth: 1
   glide:
     plugin: shell
@@ -93,7 +93,7 @@ parts:
   consul:
     plugin: shell
     source: https://github.com/hashicorp/consul.git
-    source-tag: v0.7.3
+    source-tag: v1.1.0
     shell: bash
     shell-flags: ['-eux', '-o', 'pipefail']
     shell-command: |
