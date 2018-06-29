@@ -14,6 +14,10 @@ import (
 	"github.com/influxdata/influxdb/client/v2"
 )
 
+const (
+	influxDBTimeout = 60000
+)
+
 type influxdbSender struct {
 	client   client.Client
 	httpInfo client.HTTPConfig
@@ -25,7 +29,7 @@ func NewInfluxDBSender(addr models.Addressable) Sender {
 
 	influxdbHTTPInfo := client.HTTPConfig{
 		Addr:     connStr,
-		Timeout:  time.Duration(60000) * time.Millisecond,
+		Timeout:  time.Duration(influxDBTimeout) * time.Millisecond,
 		Username: addr.User,
 		Password: addr.Password,
 	}
@@ -79,7 +83,7 @@ func (sender *influxdbSender) Send(data []byte, event *models.Event) {
 		}
 
 		tags := map[string]string{
-			"device":      reading.Device,
+			"device":        reading.Device,
 			"resource_name": reading.Name,
 		}
 

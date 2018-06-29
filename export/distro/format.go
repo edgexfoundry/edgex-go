@@ -172,7 +172,6 @@ func (af azureFormatter) Format(event *models.Event) []byte {
 type noopFormatter struct {
 }
 
-func (noopTr noopFormatter) Format(event *models.Event) []byte {
-	var ret []byte
-	return ret
+func (noopFmt noopFormatter) Format(event *models.Event) []byte {
+	return []byte{}
 }
