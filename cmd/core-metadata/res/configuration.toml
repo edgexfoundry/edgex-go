@@ -1,7 +1,7 @@
 DBType = 'mongodb'
 MongoDatabaseName = 'metadata'
-MongoDBUserName = 'meta'
-MongoDBPassword = 'password'
+MongoDBUserName = ''
+MongoDBPassword = ''
 MongoDBHost = 'localhost'
 MongoDBPort = 27017
 MongoDBConnectTimeout = 5000

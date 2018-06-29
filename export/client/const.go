@@ -13,7 +13,7 @@ type ConfigurationStruct struct {
 	MongoURL             string
 	MongoUsername        string
 	MongoPassword        string
-	MongoDatabase        string
+	MongoDatabaseName    string
 	MongoPort            int
 	MongoConnectTimeout  int
 	MongoSocketTimeout   int
@@ -26,4 +26,3 @@ type ConfigurationStruct struct {
 }
 
 var configuration ConfigurationStruct = ConfigurationStruct{} // Needs to be initialized before used
-
