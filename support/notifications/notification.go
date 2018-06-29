@@ -37,7 +37,7 @@ func notificationHandler(w http.ResponseWriter, r *http.Request) {
 		err := dec.Decode(&n)
 
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			loggingClient.Error("Error decoding notification: " + err.Error())
 			return
 		}
@@ -46,7 +46,7 @@ func notificationHandler(w http.ResponseWriter, r *http.Request) {
 		n.Status = models.NotificationsStatus(models.New)
 		id, err := dbc.AddNotification(&n)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			loggingClient.Error(err.Error())
 			return
 		}
@@ -83,7 +83,7 @@ func notificationBySlugHandler(w http.ResponseWriter, r *http.Request) {
 			if err == clients.ErrNotFound {
 				http.Error(w, "Notification not found", http.StatusNotFound)
 			} else {
-				http.Error(w, err.Error(), http.StatusServiceUnavailable)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 			loggingClient.Error(err.Error())
 			return
@@ -96,7 +96,7 @@ func notificationBySlugHandler(w http.ResponseWriter, r *http.Request) {
 			if err == clients.ErrNotFound {
 				http.Error(w, "Notification not found", http.StatusNotFound)
 			} else {
-				http.Error(w, err.Error(), http.StatusServiceUnavailable)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 			loggingClient.Error(err.Error())
 			return
@@ -105,7 +105,7 @@ func notificationBySlugHandler(w http.ResponseWriter, r *http.Request) {
 		loggingClient.Info("Deleting notification (and associated transmissions) by slug: " + slug)
 
 		if err = dbc.DeleteNotificationBySlug(slug); err != nil {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			loggingClient.Error(err.Error())
 			return
 		}
@@ -131,7 +131,7 @@ func notificationByIDHandler(w http.ResponseWriter, r *http.Request) {
 			if err == clients.ErrNotFound {
 				http.Error(w, "Notification not found", http.StatusNotFound)
 			} else {
-				http.Error(w, err.Error(), http.StatusServiceUnavailable)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 			loggingClient.Error(err.Error())
 			return
@@ -144,7 +144,7 @@ func notificationByIDHandler(w http.ResponseWriter, r *http.Request) {
 			if err == clients.ErrNotFound {
 				http.Error(w, "Notification not found", http.StatusNotFound)
 			} else {
-				http.Error(w, err.Error(), http.StatusServiceUnavailable)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 			loggingClient.Error(err.Error())
 			return
@@ -153,7 +153,7 @@ func notificationByIDHandler(w http.ResponseWriter, r *http.Request) {
 		loggingClient.Info("Deleting notification (and associated transmissions): " + id)
 
 		if err = dbc.DeleteNotificationById(id); err != nil {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			loggingClient.Error(err.Error())
 			return
 		}
@@ -172,7 +172,7 @@ func notificationOldHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	age, err := strconv.ParseInt(vars["age"], 10, 64)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		loggingClient.Error("Error converting the age to an integer")
 		return
 	}
@@ -184,7 +184,7 @@ func notificationOldHandler(w http.ResponseWriter, r *http.Request) {
 			if err == clients.ErrNotFound {
 				http.Error(w, "Notifications not found", http.StatusNotFound)
 			} else {
-				http.Error(w, err.Error(), http.StatusServiceUnavailable)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 			loggingClient.Error(err.Error())
 			return
@@ -204,7 +204,7 @@ func notificationBySenderHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	limitNum, err := strconv.Atoi(vars["limit"])
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		loggingClient.Error("Error converting limit to integer: " + err.Error())
 		return
 	}
@@ -223,7 +223,7 @@ func notificationBySenderHandler(w http.ResponseWriter, r *http.Request) {
 			if err == clients.ErrNotFound {
 				http.Error(w, "Notification not found", http.StatusNotFound)
 			} else {
-				http.Error(w, err.Error(), http.StatusServiceUnavailable)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 			loggingClient.Error(err.Error())
 			return
@@ -242,19 +242,19 @@ func notificationByStartEndHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	start, err := strconv.ParseInt(vars["start"], 10, 64)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		loggingClient.Error("Error converting the start to an integer")
 		return
 	}
 	end, err := strconv.ParseInt(vars["end"], 10, 64)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		loggingClient.Error("Error converting the end to an integer")
 		return
 	}
 	limitNum, err := strconv.Atoi(vars["limit"])
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		loggingClient.Error("Error converting limit to integer: " + err.Error())
 		return
 	}
@@ -273,7 +273,7 @@ func notificationByStartEndHandler(w http.ResponseWriter, r *http.Request) {
 			if err == clients.ErrNotFound {
 				http.Error(w, "Notification not found", http.StatusNotFound)
 			} else {
-				http.Error(w, err.Error(), http.StatusServiceUnavailable)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 			loggingClient.Error(err.Error())
 			return
@@ -290,13 +290,13 @@ func notificationByStartHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	start, err := strconv.ParseInt(vars["start"], 10, 64)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		loggingClient.Error("Error converting the start to an integer")
 		return
 	}
 	limitNum, err := strconv.Atoi(vars["limit"])
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		loggingClient.Error("Error converting limit to integer: " + err.Error())
 		return
 	}
@@ -314,7 +314,7 @@ func notificationByStartHandler(w http.ResponseWriter, r *http.Request) {
 			if err == clients.ErrNotFound {
 				http.Error(w, "Notification not found", http.StatusNotFound)
 			} else {
-				http.Error(w, err.Error(), http.StatusServiceUnavailable)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 			loggingClient.Error(err.Error())
 			return
@@ -333,13 +333,13 @@ func notificationByEndHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	end, err := strconv.ParseInt(vars["end"], 10, 64)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		loggingClient.Error("Error converting the end to an integer")
 		return
 	}
 	limitNum, err := strconv.Atoi(vars["limit"])
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		loggingClient.Error("Error converting limit to integer: " + err.Error())
 		return
 	}
@@ -358,7 +358,7 @@ func notificationByEndHandler(w http.ResponseWriter, r *http.Request) {
 			if err == clients.ErrNotFound {
 				http.Error(w, "Notification not found", http.StatusNotFound)
 			} else {
-				http.Error(w, err.Error(), http.StatusServiceUnavailable)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 			loggingClient.Error(err.Error())
 			return
@@ -377,7 +377,7 @@ func notificationsByLabelsHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	limitNum, err := strconv.Atoi(vars["limit"])
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		loggingClient.Error("Error converting limit to integer: " + err.Error())
 		return
 	}
@@ -398,7 +398,7 @@ func notificationsByLabelsHandler(w http.ResponseWriter, r *http.Request) {
 			if err == clients.ErrNotFound {
 				http.Error(w, "Notification not found", http.StatusNotFound)
 			} else {
-				http.Error(w, err.Error(), http.StatusServiceUnavailable)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 			loggingClient.Error(err.Error())
 			return
@@ -417,7 +417,7 @@ func notificationsNewHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	limitNum, err := strconv.Atoi(vars["limit"])
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		loggingClient.Error("Error converting limit to integer: " + err.Error())
 		return
 	}
@@ -436,7 +436,7 @@ func notificationsNewHandler(w http.ResponseWriter, r *http.Request) {
 			if err == clients.ErrNotFound {
 				http.Error(w, "Notification not found", http.StatusNotFound)
 			} else {
-				http.Error(w, err.Error(), http.StatusServiceUnavailable)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 			loggingClient.Error(err.Error())
 			return

@@ -34,7 +34,7 @@ func cleanupHandler(w http.ResponseWriter, r *http.Request) {
 		err := dbc.Cleanup()
 
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			loggingClient.Error(err.Error())
 			return
 		}
@@ -53,7 +53,7 @@ func cleanupAgeHandler(w http.ResponseWriter, r *http.Request) {
 	age, err := strconv.ParseInt(vars["age"], 10, 64)
 	// Problem converting age
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		loggingClient.Error("Error converting the age to an integer")
 		return
 	}
@@ -62,7 +62,7 @@ func cleanupAgeHandler(w http.ResponseWriter, r *http.Request) {
 		loggingClient.Info("Cleaning up of old notifications and transmissions")
 
 		if err = dbc.CleanupOld(age); err != nil {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			loggingClient.Error(err.Error())
 			return
 		}

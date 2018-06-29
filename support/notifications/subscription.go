@@ -37,7 +37,7 @@ func subscriptionHandler(w http.ResponseWriter, r *http.Request) {
 		err := dec.Decode(&s)
 
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			loggingClient.Error("Error decoding subscription: " + err.Error())
 			return
 		}
@@ -45,7 +45,7 @@ func subscriptionHandler(w http.ResponseWriter, r *http.Request) {
 		loggingClient.Info("Posting Subscription: " + s.String())
 		id, err := dbc.AddSubscription(&s)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			loggingClient.Error(err.Error())
 			return
 		}
@@ -72,7 +72,7 @@ func subscriptionByIDHandler(w http.ResponseWriter, r *http.Request) {
 			if err == clients.ErrNotFound {
 				http.Error(w, "Subscription not found", http.StatusNotFound)
 			} else {
-				http.Error(w, err.Error(), http.StatusServiceUnavailable)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 			loggingClient.Error(err.Error())
 			return
@@ -98,7 +98,7 @@ func subscriptionsBySlugHandler(w http.ResponseWriter, r *http.Request) {
 			if err == clients.ErrNotFound {
 				http.Error(w, "Subscription not found", http.StatusNotFound)
 			} else {
-				http.Error(w, err.Error(), http.StatusServiceUnavailable)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 			loggingClient.Error(err.Error())
 			return
@@ -111,7 +111,7 @@ func subscriptionsBySlugHandler(w http.ResponseWriter, r *http.Request) {
 			if err == clients.ErrNotFound {
 				http.Error(w, "Subscription not found", http.StatusNotFound)
 			} else {
-				http.Error(w, err.Error(), http.StatusServiceUnavailable)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 			loggingClient.Error(err.Error())
 			return
@@ -120,7 +120,7 @@ func subscriptionsBySlugHandler(w http.ResponseWriter, r *http.Request) {
 		loggingClient.Info("Deleting subscription by slug: " + slug)
 
 		if err = dbc.DeleteSubscriptionBySlug(slug); err != nil {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			loggingClient.Error(err.Error())
 			return
 		}
@@ -147,7 +147,7 @@ func subscriptionsByCategoriesHandler(w http.ResponseWriter, r *http.Request) {
 			if err == clients.ErrNotFound {
 				http.Error(w, "Subscription not found", http.StatusNotFound)
 			} else {
-				http.Error(w, err.Error(), http.StatusServiceUnavailable)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 			loggingClient.Error(err.Error())
 			return
@@ -174,7 +174,7 @@ func subscriptionsByLabelsHandler(w http.ResponseWriter, r *http.Request) {
 			if err == clients.ErrNotFound {
 				http.Error(w, "Subscription not found", http.StatusNotFound)
 			} else {
-				http.Error(w, err.Error(), http.StatusServiceUnavailable)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 			loggingClient.Error(err.Error())
 			return
@@ -202,7 +202,7 @@ func subscriptionsByCategoriesLabelsHandler(w http.ResponseWriter, r *http.Reque
 			if err == clients.ErrNotFound {
 				http.Error(w, "Subscription not found", http.StatusNotFound)
 			} else {
-				http.Error(w, err.Error(), http.StatusServiceUnavailable)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 			loggingClient.Error(err.Error())
 			return
@@ -231,7 +231,7 @@ func subscriptionsByReceiverHandler(w http.ResponseWriter, r *http.Request) {
 			if err == clients.ErrNotFound {
 				http.Error(w, "Subscription not found", http.StatusNotFound)
 			} else {
-				http.Error(w, err.Error(), http.StatusServiceUnavailable)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 			loggingClient.Error(err.Error())
 			return

@@ -33,7 +33,7 @@ func encode(i interface{}, w http.ResponseWriter) {
 	// Problems encoding
 	if err != nil {
 		loggingClient.Error("Error encoding the data: " + err.Error())
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 }
