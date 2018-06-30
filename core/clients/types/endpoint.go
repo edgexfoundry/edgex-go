@@ -1,17 +1,18 @@
 package types
 
 import (
-	"time"
 	"fmt"
 	"os"
+	"time"
+
 	"github.com/edgexfoundry/edgex-go/support/consul-client"
 )
 
-type Endpoint struct {}
+type Endpoint struct{}
 
-func(e Endpoint) Monitor(params EndpointParams, ch chan string) {
+func (e Endpoint) Monitor(params EndpointParams, ch chan string) {
 	check := time.Now()
-	for true {
+	for {
 		if time.Now().After(check) {
 			data, err := consulclient.GetServiceEndpoint(params.ServiceKey)
 			if err != nil {

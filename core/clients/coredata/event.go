@@ -23,10 +23,11 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"strconv"
-	"github.com/edgexfoundry/edgex-go/core/clients/types"
+
 	"github.com/edgexfoundry/edgex-go/core/clients"
+	"github.com/edgexfoundry/edgex-go/core/clients/types"
+	"github.com/edgexfoundry/edgex-go/core/domain/models"
 )
 
 type EventClient interface {
@@ -44,7 +45,7 @@ type EventClient interface {
 }
 
 type EventRestClient struct {
-	url string
+	url      string
 	endpoint clients.Endpointer
 }
 
@@ -54,14 +55,14 @@ func NewEventClient(params types.EndpointParams, m clients.Endpointer) EventClie
 	return &e
 }
 
-func(e *EventRestClient) init(params types.EndpointParams) {
+func (e *EventRestClient) init(params types.EndpointParams) {
 	if params.UseRegistry {
 		ch := make(chan string, 1)
 		go e.endpoint.Monitor(params, ch)
 		go func(ch chan string) {
-			for true {
+			for {
 				select {
-				case url := <- ch:
+				case url := <-ch:
 					e.url = url
 				}
 			}

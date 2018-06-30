@@ -16,16 +16,17 @@
 package coredata
 
 import (
-	"github.com/edgexfoundry/edgex-go/core/domain/models"
-	"net/http"
-	"encoding/json"
-	"fmt"
-	"errors"
-	"strconv"
-	"net/url"
 	"bytes"
-	"github.com/edgexfoundry/edgex-go/core/clients/types"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"net/http"
+	"net/url"
+	"strconv"
+
 	"github.com/edgexfoundry/edgex-go/core/clients"
+	"github.com/edgexfoundry/edgex-go/core/clients/types"
+	"github.com/edgexfoundry/edgex-go/core/domain/models"
 )
 
 type ReadingClient interface {
@@ -44,7 +45,7 @@ type ReadingClient interface {
 }
 
 type ReadingRestClient struct {
-	url string
+	url      string
 	endpoint clients.Endpointer
 }
 
@@ -54,14 +55,14 @@ func NewReadingClient(params types.EndpointParams, m clients.Endpointer) Reading
 	return &r
 }
 
-func(r *ReadingRestClient) init(params types.EndpointParams) {
+func (r *ReadingRestClient) init(params types.EndpointParams) {
 	if params.UseRegistry {
 		ch := make(chan string, 1)
 		go r.endpoint.Monitor(params, ch)
 		go func(ch chan string) {
-			for true {
+			for {
 				select {
-				case url := <- ch:
+				case url := <-ch:
 					r.url = url
 				}
 			}
