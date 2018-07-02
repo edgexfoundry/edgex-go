@@ -22,7 +22,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/edgexfoundry/edgex-go/core/data/clients"
+	"github.com/edgexfoundry/edgex-go/core/db/memory"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"github.com/edgexfoundry/edgex-go/support/logging-client"
 	"github.com/gorilla/mux"
@@ -34,7 +34,7 @@ var testRoutes *mux.Router
 func TestMain(m *testing.M) {
 	testEvent.Device = "test device"
 	testEvent.Origin = 123456789
-	dbc, _ = clients.NewDBClient(clients.DBConfiguration{DbType: clients.MEMORY})
+	dbc = &memory.MemDB{}
 	testEvent.ID, _ = dbc.AddEvent(&testEvent)
 	testRoutes = LoadRestRoutes()
 	loggingClient = logger.NewMockClient()

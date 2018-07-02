@@ -11,25 +11,26 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
-package clients
+package mongo
 
 import (
+	"github.com/edgexfoundry/edgex-go/core/db"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
 // Struct that wraps an event to handle DBRefs
-type MongoEvent struct {
+type mongoEvent struct {
 	models.Event
 }
 
 // Custom marshaling into mongo
-func (me MongoEvent) GetBSON() (interface{}, error) {
+func (me mongoEvent) GetBSON() (interface{}, error) {
 	// Turn the readings into DBRef objects
 	var readings []mgo.DBRef
 	for _, reading := range me.Readings {
-		readings = append(readings, mgo.DBRef{Collection: READINGS_COLLECTION, Id: reading.Id})
+		readings = append(readings, mgo.DBRef{Collection: db.ReadingsCollection, Id: reading.Id})
 	}
 
 	return struct {
@@ -55,7 +56,7 @@ func (me MongoEvent) GetBSON() (interface{}, error) {
 }
 
 // Custom unmarshaling out of mongo
-func (me *MongoEvent) SetBSON(raw bson.Raw) error {
+func (me *mongoEvent) SetBSON(raw bson.Raw) error {
 	decoded := new(struct {
 		ID       bson.ObjectId `bson:"_id,omitempty"`
 		Pushed   int64         `bson:"pushed"`
@@ -85,7 +86,6 @@ func (me *MongoEvent) SetBSON(raw bson.Raw) error {
 	// De-reference the DBRef fields
 	mc, err := getCurrentMongoClient()
 	if err != nil {
-		loggingClient.Error("Error getting a mongo client: " + err.Error())
 		return err
 	}
 
@@ -94,7 +94,7 @@ func (me *MongoEvent) SetBSON(raw bson.Raw) error {
 	// Get all of the reading objects
 	for _, rRef := range decoded.Readings {
 		var reading models.Reading
-		err := mc.Database.C(READINGS_COLLECTION).FindId(rRef.Id).One(&reading)
+		err := mc.database.C(db.ReadingsCollection).FindId(rRef.Id).One(&reading)
 		if err != nil {
 			return err
 		}

@@ -19,15 +19,19 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/core/clients/metadata"
 	"github.com/edgexfoundry/edgex-go/core/clients/types"
-	"github.com/edgexfoundry/edgex-go/core/data/clients"
+	"github.com/edgexfoundry/edgex-go/core/data/interfaces"
 	"github.com/edgexfoundry/edgex-go/core/data/messaging"
+	"github.com/edgexfoundry/edgex-go/core/db"
+	"github.com/edgexfoundry/edgex-go/core/db/influx"
+	"github.com/edgexfoundry/edgex-go/core/db/memory"
+	"github.com/edgexfoundry/edgex-go/core/db/mongo"
 	"github.com/edgexfoundry/edgex-go/internal"
 	consulclient "github.com/edgexfoundry/edgex-go/support/consul-client"
 	"github.com/edgexfoundry/edgex-go/support/logging-client"
 )
 
 // Global variables
-var dbc clients.DBClient
+var dbc interfaces.DBClient
 var loggingClient logger.LoggingClient
 var ep *messaging.EventPublisher
 var mdc metadata.DeviceClient
@@ -57,6 +61,28 @@ func ConnectToConsul(conf ConfigurationStruct) error {
 	return nil
 }
 
+// Return the dbClient interface
+func newDBClient(dbType interfaces.DatabaseType, config db.Configuration) (interfaces.DBClient, error) {
+	switch dbType {
+	case interfaces.MONGO:
+		// Create the mongo client
+		return mongo.NewClient(config), nil
+	case interfaces.INFLUX:
+		// Create the influx client
+		ic, err := influx.NewClient(config)
+		if err != nil {
+			loggingClient.Error("Error creating the influx client: " + err.Error())
+			return nil, err
+		}
+		return ic, nil
+	case interfaces.MEMORY:
+		// Create the memory client
+		return &memory.MemDB{}, nil
+	default:
+		return nil, db.ErrUnsupportedDatabase
+	}
+}
+
 func Init(conf ConfigurationStruct, l logger.LoggingClient, useConsul bool) error {
 	loggingClient = l
 	configuration = conf
@@ -65,8 +91,7 @@ func Init(conf ConfigurationStruct, l logger.LoggingClient, useConsul bool) erro
 	var err error
 
 	// Create a database client
-	dbc, err = clients.NewDBClient(clients.DBConfiguration{
-		DbType:       clients.MONGO,
+	dbc, err = newDBClient(interfaces.MONGO, db.Configuration{
 		Host:         conf.MongoDBHost,
 		Port:         conf.MongoDBPort,
 		Timeout:      conf.MongoDBConnectTimeout,
@@ -75,15 +100,20 @@ func Init(conf ConfigurationStruct, l logger.LoggingClient, useConsul bool) erro
 		Password:     conf.MongoDBPassword,
 	})
 	if err != nil {
+		return fmt.Errorf("couldn't create database client: %v", err.Error())
+	}
+
+	err = dbc.Connect()
+	if err != nil {
 		return fmt.Errorf("couldn't connect to database: %v", err.Error())
 	}
 
 	// Create metadata clients
 	params := types.EndpointParams{
-						ServiceKey:internal.CoreMetaDataServiceKey,
-						Path:conf.MetaDevicePath,
-						UseRegistry:useConsul,
-						Url:conf.MetaDeviceURL}
+		ServiceKey:  internal.CoreMetaDataServiceKey,
+		Path:        conf.MetaDevicePath,
+		UseRegistry: useConsul,
+		Url:         conf.MetaDeviceURL}
 
 	mdc = metadata.NewDeviceClient(params, types.Endpoint{})
 

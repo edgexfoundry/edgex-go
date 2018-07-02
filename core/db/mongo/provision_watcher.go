@@ -11,9 +11,10 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
-package metadata
+package mongo
 
 import (
+	"github.com/edgexfoundry/edgex-go/core/db"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
@@ -21,12 +22,12 @@ import (
 
 // Internal version of the provision watcher struct
 // Use this to handle DBRef
-type MongoProvisionWatcher struct {
+type mongoProvisionWatcher struct {
 	models.ProvisionWatcher
 }
 
 // Custom marshaling into mongo
-func (mpw MongoProvisionWatcher) GetBSON() (interface{}, error) {
+func (mpw mongoProvisionWatcher) GetBSON() (interface{}, error) {
 	return struct {
 		models.BaseObject `bson:",inline"`
 		Id                bson.ObjectId         `bson:"_id,omitempty"`
@@ -40,14 +41,14 @@ func (mpw MongoProvisionWatcher) GetBSON() (interface{}, error) {
 		Id:             mpw.Id,
 		Name:           mpw.Name,
 		Identifiers:    mpw.Identifiers,
-		Profile:        mgo.DBRef{Collection: DPCOL, Id: mpw.Profile.Id},
-		Service:        mgo.DBRef{Collection: DSCOL, Id: mpw.Service.Service.Id},
+		Profile:        mgo.DBRef{Collection: db.DeviceProfile, Id: mpw.Profile.Id},
+		Service:        mgo.DBRef{Collection: db.DeviceService, Id: mpw.Service.Service.Id},
 		OperatingState: mpw.OperatingState,
 	}, nil
 }
 
 // Custom unmarshaling out of mongo
-func (mpw *MongoProvisionWatcher) SetBSON(raw bson.Raw) error {
+func (mpw *mongoProvisionWatcher) SetBSON(raw bson.Raw) error {
 	decoded := new(struct {
 		models.BaseObject `bson:",inline"`
 		Id                bson.ObjectId         `bson:"_id,omitempty"`
@@ -71,14 +72,18 @@ func (mpw *MongoProvisionWatcher) SetBSON(raw bson.Raw) error {
 	mpw.OperatingState = decoded.OperatingState
 
 	// De-reference the DBRef fields
-	ds := DS.dataStore()
-	defer ds.s.Close()
+	m, err := getCurrentMongoClient()
+	if err != nil {
+		return err
+	}
+	s := m.session.Copy()
+	defer s.Close()
 
-	profCol := ds.s.DB(DB).C(DPCOL)
-	servCol := ds.s.DB(DB).C(DSCOL)
+	profCol := s.DB(m.database.Name).C(db.DeviceProfile)
+	servCol := s.DB(m.database.Name).C(db.DeviceService)
 
-	var mdp MongoDeviceProfile
-	var mds MongoDeviceService
+	var mdp mongoDeviceProfile
+	var mds mongoDeviceService
 
 	if err := profCol.FindId(decoded.Profile.Id).One(&mdp); err != nil {
 		return err

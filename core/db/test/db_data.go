@@ -4,19 +4,20 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-package clients
+package test
 
 import (
 	"fmt"
 	"strconv"
 	"testing"
-	"time"
 
+	"github.com/edgexfoundry/edgex-go/core/data/interfaces"
+	dbp "github.com/edgexfoundry/edgex-go/core/db"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"gopkg.in/mgo.v2/bson"
 )
 
-func populateDbReadings(db DBClient, count int) (bson.ObjectId, error) {
+func populateDbReadings(db interfaces.DBClient, count int) (bson.ObjectId, error) {
 	var id bson.ObjectId
 	for i := 0; i < count; i++ {
 		name := fmt.Sprintf("name%d", i)
@@ -33,7 +34,7 @@ func populateDbReadings(db DBClient, count int) (bson.ObjectId, error) {
 	return id, nil
 }
 
-func populateDbValues(db DBClient, count int) (bson.ObjectId, error) {
+func populateDbValues(db interfaces.DBClient, count int) (bson.ObjectId, error) {
 	var id bson.ObjectId
 	for i := 0; i < count; i++ {
 		name := fmt.Sprintf("name%d", i)
@@ -52,7 +53,7 @@ func populateDbValues(db DBClient, count int) (bson.ObjectId, error) {
 	return id, nil
 }
 
-func populateDbEvents(db DBClient, count int, pushed int64) (bson.ObjectId, error) {
+func populateDbEvents(db interfaces.DBClient, count int, pushed int64) (bson.ObjectId, error) {
 	var id bson.ObjectId
 	for i := 0; i < count; i++ {
 		name := fmt.Sprintf("name%d", i)
@@ -69,13 +70,13 @@ func populateDbEvents(db DBClient, count int, pushed int64) (bson.ObjectId, erro
 	return id, nil
 }
 
-func testDBReadings(t *testing.T, db DBClient) {
+func testDBReadings(t *testing.T, db interfaces.DBClient) {
 	err := db.ScrubAllEvents()
 	if err != nil {
 		t.Fatalf("Error removing all readings")
 	}
 
-	beforeTime := time.Now().UnixNano() / int64(time.Millisecond)
+	beforeTime := dbp.MakeTimestamp()
 	id, err := populateDbReadings(db, 100)
 	if err != nil {
 		t.Fatalf("Error populating db: %v\n", err)
@@ -86,7 +87,7 @@ func testDBReadings(t *testing.T, db DBClient) {
 	if err != nil {
 		t.Fatalf("Error populating db: %v\n", err)
 	}
-	afterTime := time.Now().UnixNano() / int64(time.Millisecond)
+	afterTime := dbp.MakeTimestamp()
 
 	count, err := db.ReadingCount()
 	if err != nil {
@@ -224,7 +225,7 @@ func testDBReadings(t *testing.T, db DBClient) {
 	if len(readings) != 110 {
 		t.Fatalf("There should be 110 readings, not %d", len(readings))
 	}
-	readings, err = db.ReadingsByCreationTime(beforeTime, beforeTime+10, 100)
+	readings, err = db.ReadingsByCreationTime(beforeTime, beforeTime+30, 100)
 	if err != nil {
 		t.Fatalf("Error getting ReadingsByCreationTime: %v", err)
 	}
@@ -263,13 +264,13 @@ func testDBReadings(t *testing.T, db DBClient) {
 	}
 }
 
-func testDBEvents(t *testing.T, db DBClient) {
+func testDBEvents(t *testing.T, db interfaces.DBClient) {
 	err := db.ScrubAllEvents()
 	if err != nil {
 		t.Fatalf("Error removing all events")
 	}
 
-	beforeTime := time.Now().UnixNano() / int64(time.Millisecond)
+	beforeTime := dbp.MakeTimestamp()
 	id, err := populateDbEvents(db, 100, 0)
 	if err != nil {
 		t.Fatalf("Error populating db: %v\n", err)
@@ -280,7 +281,7 @@ func testDBEvents(t *testing.T, db DBClient) {
 	if err != nil {
 		t.Fatalf("Error populating db: %v\n", err)
 	}
-	afterTime := time.Now().UnixNano() / int64(time.Millisecond)
+	afterTime := dbp.MakeTimestamp()
 
 	count, err := db.EventCount()
 	if err != nil {
@@ -466,7 +467,7 @@ func testDBEvents(t *testing.T, db DBClient) {
 	}
 }
 
-func testDBValueDescriptors(t *testing.T, db DBClient) {
+func testDBValueDescriptors(t *testing.T, db interfaces.DBClient) {
 	err := db.ScrubAllValueDescriptors()
 	if err != nil {
 		t.Fatalf("Error removing all value descriptors")
@@ -617,7 +618,13 @@ func testDBValueDescriptors(t *testing.T, db DBClient) {
 	}
 }
 
-func testDB(t *testing.T, db DBClient) {
+func TestDataDB(t *testing.T, db interfaces.DBClient) {
+
+	err := db.Connect()
+	if err != nil {
+		t.Fatalf("Could not connect with mongodb: %v", err)
+	}
+
 	testDBReadings(t, db)
 	testDBEvents(t, db)
 	testDBValueDescriptors(t, db)
@@ -628,31 +635,14 @@ func testDB(t *testing.T, db DBClient) {
 	db.CloseSession()
 }
 
-func TestMemoryDB(t *testing.T) {
-	memory := &memDB{}
-	testDB(t, memory)
-}
-
-func BenchmarkMemoryDB(b *testing.B) {
-	config := DBConfiguration{
-		DbType: MEMORY,
-	}
-
-	benchmarkDB(b, config)
-}
-
-func benchmarkDB(b *testing.B, config DBConfiguration) {
-	db, err := NewDBClient(config)
-	if err != nil {
-		b.Fatalf("Could not connect with database: %v", err)
-	}
+func BenchmarkDB(b *testing.B, db interfaces.DBClient) {
 
 	benchmarkReadings(b, db)
 	benchmarkEvents(b, db)
 	db.CloseSession()
 }
 
-func benchmarkReadings(b *testing.B, db DBClient) {
+func benchmarkReadings(b *testing.B, db interfaces.DBClient) {
 
 	// Remove previous events and readings
 	db.ScrubAllEvents()
@@ -716,7 +706,7 @@ func benchmarkReadings(b *testing.B, db DBClient) {
 	})
 }
 
-func benchmarkEvents(b *testing.B, db DBClient) {
+func benchmarkEvents(b *testing.B, db interfaces.DBClient) {
 
 	// Remove previous events and readings
 	db.ScrubAllEvents()

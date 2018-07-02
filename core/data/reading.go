@@ -20,7 +20,7 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/edgexfoundry/edgex-go/core/data/clients"
+	"github.com/edgexfoundry/edgex-go/core/db"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"github.com/gorilla/mux"
 )
@@ -63,7 +63,7 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 			// Check the value descriptor
 			vd, err := dbc.ValueDescriptorByName(reading.Name)
 			if err != nil {
-				if err == clients.ErrNotFound {
+				if err == db.ErrNotFound {
 					http.Error(w, "Value descriptor not found for reading", http.StatusConflict)
 				} else {
 					http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -116,7 +116,7 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 		// Check if the reading exists
 		to, err := dbc.ReadingById(from.Id.Hex())
 		if err != nil {
-			if err == clients.ErrNotFound {
+			if err == db.ErrNotFound {
 				http.Error(w, "Reading not found", http.StatusNotFound)
 			} else {
 				http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -141,7 +141,7 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 				// Check the value descriptor
 				vd, err := dbc.ValueDescriptorByName(to.Name)
 				if err != nil {
-					if err == clients.ErrNotFound {
+					if err == db.ErrNotFound {
 						http.Error(w, "Value descriptor not found for reading", http.StatusConflict)
 					} else {
 						http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -187,7 +187,7 @@ func getReadingByIdHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		reading, err := dbc.ReadingById(id)
 		if err != nil {
-			if err == clients.ErrNotFound {
+			if err == db.ErrNotFound {
 				http.Error(w, "Reading not found", http.StatusNotFound)
 			} else {
 				http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -235,7 +235,7 @@ func deleteReadingByIdHandler(w http.ResponseWriter, r *http.Request) {
 		// Check if the reading exists
 		reading, err := dbc.ReadingById(id)
 		if err != nil {
-			if err == clients.ErrNotFound {
+			if err == db.ErrNotFound {
 				http.Error(w, "Reading not found", http.StatusNotFound)
 			} else {
 				http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -329,7 +329,7 @@ func readingbyValueDescriptorHandler(w http.ResponseWriter, r *http.Request) {
 	if configuration.ValidateCheck {
 		_, err = dbc.ValueDescriptorByName(name)
 		if err != nil {
-			if err == clients.ErrNotFound {
+			if err == db.ErrNotFound {
 				http.Error(w, "Value descriptor not found for reading", http.StatusConflict)
 			} else {
 				http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -601,7 +601,7 @@ func readingByValueDescriptorAndDeviceHandler(w http.ResponseWriter, r *http.Req
 	if configuration.ValidateCheck {
 		_, err = dbc.ValueDescriptorByName(name)
 		if err != nil {
-			if err == clients.ErrNotFound {
+			if err == db.ErrNotFound {
 				http.Error(w, "Value descriptor not found for reading", http.StatusConflict)
 			} else {
 				http.Error(w, err.Error(), http.StatusServiceUnavailable)

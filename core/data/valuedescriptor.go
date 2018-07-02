@@ -20,11 +20,12 @@ import (
 	"net/url"
 	"regexp"
 
+	"fmt"
+
 	"github.com/edgexfoundry/edgex-go/core/clients/types"
-	"github.com/edgexfoundry/edgex-go/core/data/clients"
+	"github.com/edgexfoundry/edgex-go/core/db"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"github.com/gorilla/mux"
-	"fmt"
 )
 
 const (
@@ -91,7 +92,7 @@ func valueDescriptorHandler(w http.ResponseWriter, r *http.Request) {
 
 		id, err := dbc.AddValueDescriptor(v)
 		if err != nil {
-			if err == clients.ErrNotUnique {
+			if err == db.ErrNotUnique {
 				http.Error(w, "Value Descriptor already exists", http.StatusConflict)
 			} else {
 				http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -118,7 +119,7 @@ func valueDescriptorHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			to, err = dbc.ValueDescriptorByName(from.Name)
 			if err != nil {
-				if err == clients.ErrNotFound {
+				if err == db.ErrNotFound {
 					http.Error(w, "Value descriptor not found", http.StatusNotFound)
 				} else {
 					http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -187,7 +188,7 @@ func valueDescriptorHandler(w http.ResponseWriter, r *http.Request) {
 		// Push the updated valuedescriptor to the database
 		err = dbc.UpdateValueDescriptor(to)
 		if err != nil {
-			if err == clients.ErrNotUnique {
+			if err == db.ErrNotUnique {
 				http.Error(w, "Value descriptor name is not unique", http.StatusConflict)
 			} else {
 				http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -215,7 +216,7 @@ func deleteValueDescriptorByIdHandler(w http.ResponseWriter, r *http.Request) {
 	// Check if the value descriptor exists
 	vd, err := dbc.ValueDescriptorById(id)
 	if err != nil {
-		if err == clients.ErrNotFound {
+		if err == db.ErrNotFound {
 			http.Error(w, "Value descriptor not found", http.StatusNotFound)
 		} else {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -252,7 +253,7 @@ func valueDescriptorByNameHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		v, err := dbc.ValueDescriptorByName(name)
 		if err != nil {
-			if err == clients.ErrNotFound {
+			if err == db.ErrNotFound {
 				http.Error(w, "Value Descriptor not found", http.StatusNotFound)
 			} else {
 				http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -266,7 +267,7 @@ func valueDescriptorByNameHandler(w http.ResponseWriter, r *http.Request) {
 		// Check if the value descriptor exists
 		vd, err := dbc.ValueDescriptorByName(name)
 		if err != nil {
-			if err == clients.ErrNotFound {
+			if err == db.ErrNotFound {
 				http.Error(w, "Value Descriptor not found", http.StatusNotFound)
 			} else {
 				http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -323,7 +324,7 @@ func valueDescriptorByIdHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		v, err := dbc.ValueDescriptorById(id)
 		if err != nil {
-			if err == clients.ErrNotFound {
+			if err == db.ErrNotFound {
 				http.Error(w, "Value descriptor not found", http.StatusNotFound)
 			} else {
 				http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -476,7 +477,7 @@ func valueDescriptorsForDevice(d models.Device, w http.ResponseWriter) ([]models
 		vd, err := dbc.ValueDescriptorByName(name)
 
 		// Not an error if not found
-		if err == clients.ErrNotFound {
+		if err == db.ErrNotFound {
 			continue
 		}
 
