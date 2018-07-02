@@ -109,7 +109,7 @@ parts:
       cp -r ./* $GOIMPORTPATH
       cd $GOIMPORTPATH
       go get -u github.com/kardianos/govendor
-      govendor sync
+      govendor install
       make
 
       # install the consul binary
