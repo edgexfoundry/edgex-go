@@ -34,8 +34,8 @@ var testRoutes *mux.Router
 func TestMain(m *testing.M) {
 	testEvent.Device = "test device"
 	testEvent.Origin = 123456789
-	dbc = &memory.MemDB{}
-	testEvent.ID, _ = dbc.AddEvent(&testEvent)
+	dbClient = &memory.MemDB{}
+	testEvent.ID, _ = dbClient.AddEvent(&testEvent)
 	testRoutes = LoadRestRoutes()
 	loggingClient = logger.NewMockClient()
 	os.Exit(m.Run())

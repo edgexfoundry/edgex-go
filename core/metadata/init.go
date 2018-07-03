@@ -20,7 +20,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/core/db"
 	"github.com/edgexfoundry/edgex-go/core/db/memory"
 	"github.com/edgexfoundry/edgex-go/core/db/mongo"
-	"github.com/edgexfoundry/edgex-go/core/domain/enums"
 	"github.com/edgexfoundry/edgex-go/core/metadata/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal"
 	consulclient "github.com/edgexfoundry/edgex-go/support/consul-client"
@@ -28,6 +27,8 @@ import (
 	notifications "github.com/edgexfoundry/edgex-go/support/notifications-client"
 )
 
+// Global variables
+var dbClient interfaces.DBClient
 var loggingClient logger.LoggingClient
 
 func ConnectToConsul(conf ConfigurationStruct) error {
@@ -52,14 +53,16 @@ func ConnectToConsul(conf ConfigurationStruct) error {
 	return nil
 }
 
-func getDatabase(dbType string, config db.Configuration) (interfaces.DBClient, error) {
+// Return the dbClient interface
+func newDBClient(dbType string, config db.Configuration) (interfaces.DBClient, error) {
 	switch dbType {
-	case enums.MongoStr:
+	case db.MongoDB:
 		return mongo.NewClient(config), nil
-	case enums.MemoryStr:
+	case db.MemoryDB:
 		return &memory.MemDB{}, nil
+	default:
+		return nil, db.ErrUnsupportedDatabase
 	}
-	return nil, db.ErrNotFound
 }
 
 func Init(conf ConfigurationStruct, l logger.LoggingClient) error {
@@ -70,23 +73,28 @@ func Init(conf ConfigurationStruct, l logger.LoggingClient) error {
 	// Initialize notificationsClient based on configuration
 	notifications.SetConfiguration(configuration.SupportNotificationsHost, configuration.SupportNotificationsPort)
 
+	// Create a database client
 	var err error
 	dbConfig := db.Configuration{
-		Host:         configuration.MongoDBHost,
-		Port:         configuration.MongoDBPort,
-		Timeout:      0,
-		DatabaseName: configuration.MongoDatabaseName,
-		Username:     configuration.MongoDBUserName,
-		Password:     configuration.MongoDBPassword,
+		Host:         conf.MongoDBHost,
+		Port:         conf.MongoDBPort,
+		Timeout:      conf.MongoDBConnectTimeout,
+		DatabaseName: conf.MongoDatabaseName,
+		Username:     conf.MongoDBUserName,
+		Password:     conf.MongoDBPassword,
 	}
-	// Create database client
-	dbClient, err = getDatabase(configuration.DBType, dbConfig)
+	dbClient, err = newDBClient(conf.DBType, dbConfig)
 	if err != nil {
-		return err
+		return fmt.Errorf("couldn't create database client: %v", err.Error())
 	}
 
 	// Connect to the database
-	return dbClient.Connect()
+	err = dbClient.Connect()
+	if err != nil {
+		return fmt.Errorf("couldn't connect to database: %v", err.Error())
+	}
+
+	return nil
 }
 
 func Destruct() {

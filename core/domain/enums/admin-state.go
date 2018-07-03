@@ -26,6 +26,7 @@ const (
 	LOCKED AdminStateType = iota
 	UNLOCKED
 
+	invalidStr  = "invalid"
 	lockedStr   = "LOCKED"
 	unlockedStr = "UNLOCKED"
 )

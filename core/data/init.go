@@ -31,7 +31,7 @@ import (
 )
 
 // Global variables
-var dbc interfaces.DBClient
+var dbClient interfaces.DBClient
 var loggingClient logger.LoggingClient
 var ep *messaging.EventPublisher
 var mdc metadata.DeviceClient
@@ -62,21 +62,13 @@ func ConnectToConsul(conf ConfigurationStruct) error {
 }
 
 // Return the dbClient interface
-func newDBClient(dbType interfaces.DatabaseType, config db.Configuration) (interfaces.DBClient, error) {
+func newDBClient(dbType string, config db.Configuration) (interfaces.DBClient, error) {
 	switch dbType {
-	case interfaces.MONGO:
-		// Create the mongo client
+	case db.MongoDB:
 		return mongo.NewClient(config), nil
-	case interfaces.INFLUX:
-		// Create the influx client
-		ic, err := influx.NewClient(config)
-		if err != nil {
-			loggingClient.Error("Error creating the influx client: " + err.Error())
-			return nil, err
-		}
-		return ic, nil
-	case interfaces.MEMORY:
-		// Create the memory client
+	case db.InfluxDB:
+		return influx.NewClient(config)
+	case db.MemoryDB:
 		return &memory.MemDB{}, nil
 	default:
 		return nil, db.ErrUnsupportedDatabase
@@ -88,22 +80,23 @@ func Init(conf ConfigurationStruct, l logger.LoggingClient, useConsul bool) erro
 	configuration = conf
 	//TODO: The above two are set due to global scope throughout the package. How can this be eliminated / refactored?
 
-	var err error
-
 	// Create a database client
-	dbc, err = newDBClient(interfaces.MONGO, db.Configuration{
+	var err error
+	dbConfig := db.Configuration{
 		Host:         conf.MongoDBHost,
 		Port:         conf.MongoDBPort,
 		Timeout:      conf.MongoDBConnectTimeout,
 		DatabaseName: conf.MongoDatabaseName,
 		Username:     conf.MongoDBUserName,
 		Password:     conf.MongoDBPassword,
-	})
+	}
+	dbClient, err = newDBClient(db.MongoDB, dbConfig)
 	if err != nil {
 		return fmt.Errorf("couldn't create database client: %v", err.Error())
 	}
 
-	err = dbc.Connect()
+	// Connect to the database
+	err = dbClient.Connect()
 	if err != nil {
 		return fmt.Errorf("couldn't connect to database: %v", err.Error())
 	}
@@ -129,5 +122,8 @@ func Init(conf ConfigurationStruct, l logger.LoggingClient, useConsul bool) erro
 }
 
 func Destruct() {
-	dbc.CloseSession()
+	if dbClient != nil {
+		dbClient.CloseSession()
+		dbClient = nil
+	}
 }
