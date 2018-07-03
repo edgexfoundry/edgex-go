@@ -256,7 +256,7 @@ func updateDeviceFields(from models.Device, to *models.Device) error {
 		var checkD models.Device
 		err := dbClient.GetDeviceByName(&checkD, from.Name)
 		if err != nil {
-			// A problem occured accessing database
+			// A problem occurred accessing database
 			if err != mgo.ErrNotFound {
 				loggingClient.Error(err.Error(), "")
 				return err
@@ -265,7 +265,7 @@ func updateDeviceFields(from models.Device, to *models.Device) error {
 
 		// Found a device, make sure its the one we're trying to update
 		if err != mgo.ErrNotFound {
-			// Differnt IDs -> Name is not unique
+			// Different IDs -> Name is not unique
 			if checkD.Id != to.Id {
 				err = errors.New("Duplicate name for Device")
 				loggingClient.Error(err.Error(), "")

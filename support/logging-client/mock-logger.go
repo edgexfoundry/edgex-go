@@ -15,7 +15,6 @@
 package logger
 
 type MockLogger struct {
-
 }
 
 func NewMockClient() LoggingClient {

@@ -63,7 +63,7 @@ func createConditions(conditions []bson.M, field string, elements []string) []bs
 }
 
 func createQuery(criteria matchCriteria) bson.M {
-	conditions := []bson.M{bson.M{}}
+	conditions := []bson.M{{}}
 
 	if len(criteria.Labels) > 0 {
 		conditions = createConditions(conditions, "labels", criteria.Labels)

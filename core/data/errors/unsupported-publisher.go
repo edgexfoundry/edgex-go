@@ -13,8 +13,6 @@
  *******************************************************************************/
 package errors
 
-import ()
-
 type UnsupportedPublisher struct {
 }
 

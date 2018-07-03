@@ -70,11 +70,11 @@ func (c Command) String() string {
 	return string(out)
 }
 
-func(c *Command) UnmarshalJSON(b []byte) error {
+func (c *Command) UnmarshalJSON(b []byte) error {
 	type Alias Command
 	alias := &struct {
 		*Alias
-	} {
+	}{
 		Alias: (*Alias)(c),
 	}
 

@@ -85,7 +85,7 @@ func (fl *fileLog) remove(criteria matchCriteria) int {
 		return 0
 	}
 
-	// Close old file to open the new one when writting next log
+	// Close old file to open the new one when writing next log
 	fl.out.Close()
 	fl.out = nil
 	return count

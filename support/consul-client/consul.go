@@ -35,9 +35,9 @@ type ConsulConfig struct {
 }
 
 type ServiceEndpoint struct {
-	Key string
+	Key     string
 	Address string
-	Port int
+	Port    int
 }
 
 var consul *consulapi.Client = nil // Call consulInit to initialize this variable

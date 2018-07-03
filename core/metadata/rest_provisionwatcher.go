@@ -338,7 +338,7 @@ func restAddProvisionWatcher(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, "Device service not found for provision watcher", http.StatusConflict)
 				loggingClient.Error("Device service not found for provision watcher: "+err.Error(), "")
 			} else {
-				loggingClient.Error("Problem getting device service for provision wathcer: "+err.Error(), "")
+				loggingClient.Error("Problem getting device service for provision watcher: "+err.Error(), "")
 				http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			}
 			return

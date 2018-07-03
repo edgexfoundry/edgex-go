@@ -235,7 +235,7 @@ func (ic *InfluxClient) eventToDB(dbStr string, collection string, e *models.Eve
 
 func parseEvents(res client.Result) ([]models.Event, error) {
 	var events []models.Event
-	for i, _ := range res.Series[0].Values {
+	for i := range res.Series[0].Values {
 		var event models.Event
 		var readings []string
 		for j, col := range res.Series[0].Columns {
@@ -450,7 +450,7 @@ func (ic *InfluxClient) addReadingToDB(db string, collection string, r *models.R
 
 func parseReadings(res client.Result) ([]models.Reading, error) {
 	var readings []models.Reading
-	for i, _ := range res.Series[0].Values {
+	for i := range res.Series[0].Values {
 		var reading models.Reading
 		for j, col := range res.Series[0].Columns {
 			switch col {
@@ -718,7 +718,7 @@ func (ic *InfluxClient) addValueDescriptorToDB(db string, collection string, v *
 
 func parseValueDescriptors(res client.Result) ([]models.ValueDescriptor, error) {
 	var vds []models.ValueDescriptor
-	for i, _ := range res.Series[0].Values {
+	for i := range res.Series[0].Values {
 		var vd models.ValueDescriptor
 		for j, col := range res.Series[0].Columns {
 			switch col {
