@@ -108,9 +108,6 @@ func restAddDeviceService(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Addressable not found by ID or Name", http.StatusNotFound)
 			loggingClient.Error("Addressable not found by ID or Name: "+err.Error(), "")
 			return
-		} else {
-			// There wasn't an error - found the addressable
-			foundAddressable = true
 		}
 	}
 

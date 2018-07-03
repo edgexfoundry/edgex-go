@@ -53,7 +53,7 @@ func createRegistration(t *testing.T, serverUrl string) string {
 		t.Errorf("Returned status %d, should be %d", response.StatusCode, http.StatusOK)
 	}
 	var data []byte
-	data, err = ioutil.ReadAll(response.Body)
+	data, _ = ioutil.ReadAll(response.Body)
 	return string(data)
 }
 
@@ -334,7 +334,7 @@ func getRegistrations(t *testing.T, serverUrl string) []export.Registration {
 	}
 
 	var data []byte
-	data, err = ioutil.ReadAll(response.Body)
+	data, _ = ioutil.ReadAll(response.Body)
 	var regs []export.Registration
 	if err := json.Unmarshal(data, &regs); err != nil {
 		t.Errorf("Registrations could not be parsed: %v", err)
