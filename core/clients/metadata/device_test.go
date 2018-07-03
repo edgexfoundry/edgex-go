@@ -14,9 +14,9 @@
 package metadata
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"fmt"
 	"testing"
 	"time"
 
@@ -26,8 +26,8 @@ import (
 )
 
 const (
-	deviceUriPath = "/api/v1/device"
-	commandUriPath = "/api/v1/command"
+	deviceUriPath        = "/api/v1/device"
+	commandUriPath       = "/api/v1/command"
 	deviceServiceUriPath = "/api/v1/deviceservice"
 )
 
@@ -67,10 +67,10 @@ func TestAddDevice(t *testing.T) {
 	url := ts.URL + deviceUriPath
 
 	params := types.EndpointParams{
-		ServiceKey:internal.CoreMetaDataServiceKey,
-		Path:deviceUriPath,
-		UseRegistry:false,
-		Url:url}
+		ServiceKey:  internal.CoreMetaDataServiceKey,
+		Path:        deviceUriPath,
+		UseRegistry: false,
+		Url:         url}
 	dc := NewDeviceClient(params, MockEndpoint{})
 
 	receivedDeviceId, err := dc.Add(&d)
@@ -83,14 +83,13 @@ func TestAddDevice(t *testing.T) {
 	}
 }
 
-
 func TestNewDeviceClientWithConsul(t *testing.T) {
 	deviceUrl := "http://localhost:48081" + deviceUriPath
 	params := types.EndpointParams{
-		ServiceKey:internal.CoreMetaDataServiceKey,
-		Path:deviceUriPath,
-		UseRegistry:true,
-		Url:deviceUrl}
+		ServiceKey:  internal.CoreMetaDataServiceKey,
+		Path:        deviceUriPath,
+		UseRegistry: true,
+		Url:         deviceUrl}
 
 	dc := NewDeviceClient(params, MockEndpoint{})
 
@@ -108,11 +107,10 @@ func TestNewDeviceClientWithConsul(t *testing.T) {
 }
 
 type MockEndpoint struct {
-
 }
 
-func(e MockEndpoint) Monitor(params types.EndpointParams, ch chan string) {
-	switch (params.ServiceKey) {
+func (e MockEndpoint) Monitor(params types.EndpointParams, ch chan string) {
+	switch params.ServiceKey {
 	case internal.CoreMetaDataServiceKey:
 		url := fmt.Sprintf("http://%s:%v%s", "localhost", 48081, params.Path)
 		ch <- url

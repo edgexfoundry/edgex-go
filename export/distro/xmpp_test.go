@@ -21,8 +21,10 @@ const (
 )
 
 var server = flag.String("server", "talk.google.com:443", "server")
+
 //your gmail account, eg: xxx@gmail.com
 var username = flag.String("username", "", "username")
+
 //your Gmail password
 var password = flag.String("password", "", "password")
 var status = flag.String("status", "xa", "status")

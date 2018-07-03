@@ -19,6 +19,7 @@ type schedulerConfig struct {
 }
 
 var clientConfig schedulerConfig
+
 func SetConfiguration(host string, port int) {
-	clientConfig = schedulerConfig{serviceHost:host, servicePort:port}
+	clientConfig = schedulerConfig{serviceHost: host, servicePort: port}
 }

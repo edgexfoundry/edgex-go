@@ -21,8 +21,8 @@ package types
 //                 a service registry provider.
 // * Url = if a service registry is not being used, then provide the full URL endpoint
 type EndpointParams struct {
-	ServiceKey string
-	Path string
+	ServiceKey  string
+	Path        string
 	UseRegistry bool
-	Url string
+	Url         string
 }

@@ -101,7 +101,7 @@ func (d *Device) AllAssociatedValueDescriptors(vdNames *[]string) {
 	}
 
 	// Add the map keys (value descriptor names) to the list
-	for vd, _ := range vdNamesMap {
+	for vd := range vdNamesMap {
 		*vdNames = append(*vdNames, vd)
 	}
 }

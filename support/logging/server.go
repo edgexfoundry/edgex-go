@@ -236,7 +236,7 @@ func StartHTTPServer(errChan chan error) {
 	go func() {
 		persist = getPersistence()
 		if persist == nil {
-			errChan <- errors.New("Could not configure persistance interface: " + configuration.Persistence)
+			errChan <- errors.New("Could not configure persistence interface: " + configuration.Persistence)
 			return
 		}
 

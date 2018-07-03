@@ -25,7 +25,7 @@ type DeviceObject struct {
 	Name        string `bson:"name" json:"name"`
 	Tag         string `bson:"tag" json:"tag"`
 	//	Properties 	ProfileProperty 	`bson:"profileProperty" json:"profileProperty"`
-	Properties ProfileProperty   `bson:"properties" json:"properties" yaml:"properties"`
+	Properties ProfileProperty        `bson:"properties" json:"properties" yaml:"properties"`
 	Attributes map[string]interface{} `bson:"attributes" json:"attributes" yaml:"attributes"`
 	//	Other 		string	`bson:"other" json:"other"`
 	//	Other 		map[string]string	`bson:"other" json:"other"`
@@ -34,10 +34,10 @@ type DeviceObject struct {
 // Custom marshaling to make empty strings null
 func (do DeviceObject) MarshalJSON() ([]byte, error) {
 	test := struct {
-		Description *string           `json:"description"`
-		Name        *string           `json:"name"`
-		Tag         *string           `json:"tag"`
-		Properties  ProfileProperty   `json:"properties"`
+		Description *string                `json:"description"`
+		Name        *string                `json:"name"`
+		Tag         *string                `json:"tag"`
+		Properties  ProfileProperty        `json:"properties"`
 		Attributes  map[string]interface{} `json:"attributes"`
 	}{
 		Properties: do.Properties,

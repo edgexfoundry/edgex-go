@@ -20,7 +20,7 @@ import (
 )
 
 var (
-	ErrResponseNil error = errors.New("Problem connecting to metadata - reponse was nil")
+	ErrResponseNil error = errors.New("Problem connecting to metadata - response was nil")
 	ErrNotFound    error = errors.New("Item not found")
 )
 
@@ -37,4 +37,3 @@ func getBody(resp *http.Response) ([]byte, error) {
 
 	return body, err
 }
-

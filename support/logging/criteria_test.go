@@ -12,8 +12,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/support/domain"
 )
 
-const ()
-
 func TestCriteriaMatch(t *testing.T) {
 	var services = []string{"service1", "service2"}
 	var levels = []string{support_domain.TRACE, support_domain.DEBUG}
