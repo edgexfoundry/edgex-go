@@ -2,6 +2,7 @@
 // Copyright (c) 2017
 // Cavium
 // Mainflux
+// IOTech
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -34,7 +35,7 @@ func NewHTTPSender(addr models.Addressable) Sender {
 	return sender
 }
 
-func (sender httpSender) Send(data []byte) {
+func (sender httpSender) Send(data []byte, event *models.Event) {
 	switch sender.method {
 	case http.MethodPost:
 		response, err := http.Post(sender.url, mimeTypeJSON, bytes.NewReader(data))

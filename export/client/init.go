@@ -60,7 +60,7 @@ func Init(conf ConfigurationStruct, l *zap.Logger) error {
 		Host:         conf.MongoURL,
 		Port:         conf.MongoPort,
 		Timeout:      conf.MongoConnectTimeout,
-		DatabaseName: conf.MongoDatabase,
+		DatabaseName: conf.MongoDatabaseName,
 		Username:     conf.MongoUsername,
 		Password:     conf.MongoPassword,
 	})

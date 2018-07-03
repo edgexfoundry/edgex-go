@@ -2,6 +2,7 @@
 // Copyright (c) 2017
 // Cavium
 // Mainflux
+// IOTech
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -166,4 +167,11 @@ func (af azureFormatter) Format(event *models.Event) []byte {
 		return []byte{}
 	}
 	return msg
+}
+
+type noopFormatter struct {
+}
+
+func (noopFmt noopFormatter) Format(event *models.Event) []byte {
+	return []byte{}
 }

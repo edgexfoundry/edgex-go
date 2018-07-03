@@ -2,6 +2,7 @@
 // Copyright (c) 2017
 // Cavium
 // Mainflux
+// IOTech
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -15,7 +16,7 @@ import (
 
 // Sender - Send interface
 type Sender interface {
-	Send(data []byte)
+	Send(data []byte, event *models.Event)
 }
 
 // Formatter - Format interface
