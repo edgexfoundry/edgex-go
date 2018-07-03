@@ -11,26 +11,16 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
-package clients
+package memory
 
 import (
-	"time"
-
+	"github.com/edgexfoundry/edgex-go/core/db"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"gopkg.in/mgo.v2/bson"
 )
 
-type memDB struct {
-	readings     []models.Reading
-	events       []models.Event
-	vDescriptors []models.ValueDescriptor
-}
-
-func (m *memDB) CloseSession() {
-}
-
-func (m *memDB) AddReading(r models.Reading) (bson.ObjectId, error) {
-	currentTime := time.Now().UnixNano() / int64(time.Millisecond)
+func (m *MemDB) AddReading(r models.Reading) (bson.ObjectId, error) {
+	currentTime := db.MakeTimestamp()
 	r.Created = currentTime
 	r.Modified = currentTime
 	r.Id = bson.NewObjectId()
@@ -40,12 +30,12 @@ func (m *memDB) AddReading(r models.Reading) (bson.ObjectId, error) {
 	return r.Id, nil
 }
 
-func (m *memDB) Events() ([]models.Event, error) {
+func (m *MemDB) Events() ([]models.Event, error) {
 	return m.events, nil
 }
 
-func (m *memDB) AddEvent(e *models.Event) (bson.ObjectId, error) {
-	currentTime := time.Now().UnixNano() / int64(time.Millisecond)
+func (m *MemDB) AddEvent(e *models.Event) (bson.ObjectId, error) {
+	currentTime := db.MakeTimestamp()
 
 	for i := range e.Readings {
 		e.Readings[i].Id = bson.NewObjectId()
@@ -64,30 +54,30 @@ func (m *memDB) AddEvent(e *models.Event) (bson.ObjectId, error) {
 	return e.ID, nil
 }
 
-func (m *memDB) UpdateEvent(event models.Event) error {
+func (m *MemDB) UpdateEvent(event models.Event) error {
 	for i, e := range m.events {
 		if e.ID == event.ID {
 			m.events[i] = event
 			return nil
 		}
 	}
-	return ErrNotFound
+	return db.ErrNotFound
 }
 
-func (m *memDB) EventById(id string) (models.Event, error) {
+func (m *MemDB) EventById(id string) (models.Event, error) {
 	for _, e := range m.events {
 		if e.ID.Hex() == id {
 			return e, nil
 		}
 	}
-	return models.Event{}, ErrNotFound
+	return models.Event{}, db.ErrNotFound
 }
 
-func (m *memDB) EventCount() (int, error) {
+func (m *MemDB) EventCount() (int, error) {
 	return len(m.events), nil
 }
 
-func (m *memDB) EventCountByDeviceId(id string) (int, error) {
+func (m *MemDB) EventCountByDeviceId(id string) (int, error) {
 	count := 0
 	for _, e := range m.events {
 		if e.Device == id {
@@ -97,17 +87,17 @@ func (m *memDB) EventCountByDeviceId(id string) (int, error) {
 	return count, nil
 }
 
-func (m *memDB) DeleteEventById(id string) error {
+func (m *MemDB) DeleteEventById(id string) error {
 	for i, e := range m.events {
 		if e.ID.Hex() == id {
 			m.events = append(m.events[:i], m.events[i+1:]...)
 			return nil
 		}
 	}
-	return ErrNotFound
+	return db.ErrNotFound
 }
 
-func (m *memDB) EventsForDeviceLimit(id string, limit int) ([]models.Event, error) {
+func (m *MemDB) EventsForDeviceLimit(id string, limit int) ([]models.Event, error) {
 	events := []models.Event{}
 	count := 0
 	for _, e := range m.events {
@@ -122,7 +112,7 @@ func (m *memDB) EventsForDeviceLimit(id string, limit int) ([]models.Event, erro
 	return events, nil
 }
 
-func (m *memDB) EventsForDevice(id string) ([]models.Event, error) {
+func (m *MemDB) EventsForDevice(id string) ([]models.Event, error) {
 	events := []models.Event{}
 	for _, e := range m.events {
 		if e.Device == id {
@@ -132,7 +122,7 @@ func (m *memDB) EventsForDevice(id string) ([]models.Event, error) {
 	return events, nil
 }
 
-func (m *memDB) EventsByCreationTime(startTime, endTime int64, limit int) ([]models.Event, error) {
+func (m *MemDB) EventsByCreationTime(startTime, endTime int64, limit int) ([]models.Event, error) {
 	events := []models.Event{}
 	count := 0
 	for _, e := range m.events {
@@ -147,7 +137,7 @@ func (m *memDB) EventsByCreationTime(startTime, endTime int64, limit int) ([]mod
 	return events, nil
 }
 
-func (m *memDB) ReadingsByDeviceAndValueDescriptor(deviceId, valueDescriptor string, limit int) ([]models.Reading, error) {
+func (m *MemDB) ReadingsByDeviceAndValueDescriptor(deviceId, valueDescriptor string, limit int) ([]models.Reading, error) {
 	readings := []models.Reading{}
 	count := 0
 	for _, r := range m.readings {
@@ -162,8 +152,8 @@ func (m *memDB) ReadingsByDeviceAndValueDescriptor(deviceId, valueDescriptor str
 	return readings, nil
 }
 
-func (m *memDB) EventsOlderThanAge(age int64) ([]models.Event, error) {
-	currentTime := time.Now().UnixNano() / int64(time.Millisecond)
+func (m *MemDB) EventsOlderThanAge(age int64) ([]models.Event, error) {
+	currentTime := db.MakeTimestamp()
 	events := []models.Event{}
 	for _, e := range m.events {
 		if currentTime-e.Created >= age {
@@ -173,7 +163,7 @@ func (m *memDB) EventsOlderThanAge(age int64) ([]models.Event, error) {
 	return events, nil
 }
 
-func (m *memDB) EventsPushed() ([]models.Event, error) {
+func (m *MemDB) EventsPushed() ([]models.Event, error) {
 	events := []models.Event{}
 	for _, e := range m.events {
 		if e.Pushed != 0 {
@@ -183,50 +173,50 @@ func (m *memDB) EventsPushed() ([]models.Event, error) {
 	return events, nil
 }
 
-func (m *memDB) ScrubAllEvents() error {
+func (m *MemDB) ScrubAllEvents() error {
 	m.events = nil
 	m.readings = nil
 	return nil
 }
 
-func (m *memDB) Readings() ([]models.Reading, error) {
+func (m *MemDB) Readings() ([]models.Reading, error) {
 	return m.readings, nil
 }
 
-func (m *memDB) UpdateReading(reading models.Reading) error {
+func (m *MemDB) UpdateReading(reading models.Reading) error {
 	for i, r := range m.readings {
 		if r.Id == reading.Id {
 			m.readings[i] = reading
 			return nil
 		}
 	}
-	return ErrNotFound
+	return db.ErrNotFound
 }
 
-func (m *memDB) ReadingById(id string) (models.Reading, error) {
+func (m *MemDB) ReadingById(id string) (models.Reading, error) {
 	for _, r := range m.readings {
 		if r.Id.Hex() == id {
 			return r, nil
 		}
 	}
-	return models.Reading{}, ErrNotFound
+	return models.Reading{}, db.ErrNotFound
 }
 
-func (m *memDB) ReadingCount() (int, error) {
+func (m *MemDB) ReadingCount() (int, error) {
 	return len(m.readings), nil
 }
 
-func (m *memDB) DeleteReadingById(id string) error {
+func (m *MemDB) DeleteReadingById(id string) error {
 	for i, r := range m.readings {
 		if r.Id.Hex() == id {
 			m.readings = append(m.readings[:i], m.readings[i+1:]...)
 			return nil
 		}
 	}
-	return ErrNotFound
+	return db.ErrNotFound
 }
 
-func (m *memDB) ReadingsByDevice(id string, limit int) ([]models.Reading, error) {
+func (m *MemDB) ReadingsByDevice(id string, limit int) ([]models.Reading, error) {
 	readings := []models.Reading{}
 	count := 0
 	for _, r := range m.readings {
@@ -241,7 +231,7 @@ func (m *memDB) ReadingsByDevice(id string, limit int) ([]models.Reading, error)
 	return readings, nil
 }
 
-func (m *memDB) ReadingsByValueDescriptor(name string, limit int) ([]models.Reading, error) {
+func (m *MemDB) ReadingsByValueDescriptor(name string, limit int) ([]models.Reading, error) {
 	readings := []models.Reading{}
 	count := 0
 	for _, r := range m.readings {
@@ -256,16 +246,7 @@ func (m *memDB) ReadingsByValueDescriptor(name string, limit int) ([]models.Read
 	return readings, nil
 }
 
-func stringInSlice(a string, list []string) bool {
-	for _, b := range list {
-		if b == a {
-			return true
-		}
-	}
-	return false
-}
-
-func (m *memDB) ReadingsByValueDescriptorNames(names []string, limit int) ([]models.Reading, error) {
+func (m *MemDB) ReadingsByValueDescriptorNames(names []string, limit int) ([]models.Reading, error) {
 	readings := []models.Reading{}
 	count := 0
 	for _, r := range m.readings {
@@ -280,7 +261,7 @@ func (m *memDB) ReadingsByValueDescriptorNames(names []string, limit int) ([]mod
 	return readings, nil
 }
 
-func (m *memDB) ReadingsByCreationTime(start, end int64, limit int) ([]models.Reading, error) {
+func (m *MemDB) ReadingsByCreationTime(start, end int64, limit int) ([]models.Reading, error) {
 	readings := []models.Reading{}
 	count := 0
 	for _, r := range m.readings {
@@ -295,15 +276,15 @@ func (m *memDB) ReadingsByCreationTime(start, end int64, limit int) ([]models.Re
 	return readings, nil
 }
 
-func (m *memDB) AddValueDescriptor(value models.ValueDescriptor) (bson.ObjectId, error) {
-	currentTime := time.Now().UnixNano() / int64(time.Millisecond)
+func (m *MemDB) AddValueDescriptor(value models.ValueDescriptor) (bson.ObjectId, error) {
+	currentTime := db.MakeTimestamp()
 	value.Created = currentTime
 	value.Modified = currentTime
 	value.Id = bson.NewObjectId()
 
 	for _, v := range m.vDescriptors {
 		if v.Name == value.Name {
-			return v.Id, ErrNotUnique
+			return v.Id, db.ErrNotUnique
 		}
 	}
 
@@ -312,40 +293,40 @@ func (m *memDB) AddValueDescriptor(value models.ValueDescriptor) (bson.ObjectId,
 	return value.Id, nil
 }
 
-func (m *memDB) ValueDescriptors() ([]models.ValueDescriptor, error) {
+func (m *MemDB) ValueDescriptors() ([]models.ValueDescriptor, error) {
 	return m.vDescriptors, nil
 }
 
-func (m *memDB) UpdateValueDescriptor(value models.ValueDescriptor) error {
+func (m *MemDB) UpdateValueDescriptor(value models.ValueDescriptor) error {
 	for i, v := range m.vDescriptors {
 		if v.Id == value.Id {
 			m.vDescriptors[i] = value
 			return nil
 		}
 	}
-	return ErrNotFound
+	return db.ErrNotFound
 }
 
-func (m *memDB) DeleteValueDescriptorById(id string) error {
+func (m *MemDB) DeleteValueDescriptorById(id string) error {
 	for i, v := range m.vDescriptors {
 		if v.Id.Hex() == id {
 			m.vDescriptors = append(m.vDescriptors[:i], m.vDescriptors[i+1:]...)
 			return nil
 		}
 	}
-	return ErrNotFound
+	return db.ErrNotFound
 }
 
-func (m *memDB) ValueDescriptorByName(name string) (models.ValueDescriptor, error) {
+func (m *MemDB) ValueDescriptorByName(name string) (models.ValueDescriptor, error) {
 	for _, v := range m.vDescriptors {
 		if v.Name == name {
 			return v, nil
 		}
 	}
-	return models.ValueDescriptor{}, ErrNotFound
+	return models.ValueDescriptor{}, db.ErrNotFound
 }
 
-func (m *memDB) ValueDescriptorsByName(names []string) ([]models.ValueDescriptor, error) {
+func (m *MemDB) ValueDescriptorsByName(names []string) ([]models.ValueDescriptor, error) {
 	vds := []models.ValueDescriptor{}
 	for _, v := range m.vDescriptors {
 		if stringInSlice(v.Name, names) {
@@ -355,16 +336,16 @@ func (m *memDB) ValueDescriptorsByName(names []string) ([]models.ValueDescriptor
 	return vds, nil
 }
 
-func (m *memDB) ValueDescriptorById(id string) (models.ValueDescriptor, error) {
+func (m *MemDB) ValueDescriptorById(id string) (models.ValueDescriptor, error) {
 	for _, v := range m.vDescriptors {
 		if v.Id.Hex() == id {
 			return v, nil
 		}
 	}
-	return models.ValueDescriptor{}, ErrNotFound
+	return models.ValueDescriptor{}, db.ErrNotFound
 }
 
-func (m *memDB) ValueDescriptorsByUomLabel(uomLabel string) ([]models.ValueDescriptor, error) {
+func (m *MemDB) ValueDescriptorsByUomLabel(uomLabel string) ([]models.ValueDescriptor, error) {
 	vds := []models.ValueDescriptor{}
 	for _, v := range m.vDescriptors {
 		if v.UomLabel == uomLabel {
@@ -374,7 +355,7 @@ func (m *memDB) ValueDescriptorsByUomLabel(uomLabel string) ([]models.ValueDescr
 	return vds, nil
 }
 
-func (m *memDB) ValueDescriptorsByLabel(label string) ([]models.ValueDescriptor, error) {
+func (m *MemDB) ValueDescriptorsByLabel(label string) ([]models.ValueDescriptor, error) {
 	vds := []models.ValueDescriptor{}
 	for _, v := range m.vDescriptors {
 		if stringInSlice(label, v.Labels) {
@@ -384,7 +365,7 @@ func (m *memDB) ValueDescriptorsByLabel(label string) ([]models.ValueDescriptor,
 	return vds, nil
 }
 
-func (m *memDB) ValueDescriptorsByType(t string) ([]models.ValueDescriptor, error) {
+func (m *MemDB) ValueDescriptorsByType(t string) ([]models.ValueDescriptor, error) {
 	vds := []models.ValueDescriptor{}
 	for _, v := range m.vDescriptors {
 		if v.Type == t {
@@ -394,7 +375,7 @@ func (m *memDB) ValueDescriptorsByType(t string) ([]models.ValueDescriptor, erro
 	return vds, nil
 }
 
-func (m *memDB) ScrubAllValueDescriptors() error {
+func (m *MemDB) ScrubAllValueDescriptors() error {
 	m.vDescriptors = nil
 	return nil
 }

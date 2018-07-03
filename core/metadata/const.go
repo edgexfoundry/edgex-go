@@ -13,11 +13,7 @@
  *******************************************************************************/
 package metadata
 
-import (
-	"errors"
-
-	"github.com/edgexfoundry/edgex-go/core/domain/enums"
-)
+import "github.com/edgexfoundry/edgex-go/core/metadata/interfaces"
 
 // Struct used to pase the JSON configuration file
 type ConfigurationStruct struct {
@@ -59,35 +55,14 @@ var configuration ConfigurationStruct = ConfigurationStruct{} // Needs to be ini
 
 var (
 	/* -------------- CONFIG for METADATA -------------------- */
-	DATABASE            enums.DATABASE
-	DBTYPE              = "mongodb"
-	PROTOCOL            = "http"
-	SERVERPORT          = "48081"
-	DOCKERMONGO         = "edgex-mongo:27017"
-	DBUSER              = "meta"
-	DBPASS              = "password"
-	MONGODATABASE       = "metadata"
+	dbClient interfaces.DBClient
+)
 
+const (
 	MAX_LIMIT int = 1000
-
-	/* ----------------------- CONSTANTS ----------------------------*/
-	REST       = "http"
-	MONGOSTR   = "mongo"
-	DB         = "metadata"
-	DEVICECOL  = "device"
-	DPCOL      = "deviceProfile"
-	DSCOL      = "deviceService"
-	ADDCOL     = "addressable"
-	COMCOL     = "command"
-	DRCOL      = "deviceReport"
-	SECOL      = "scheduleEvent"
-	SCOL       = "schedule"
-	PWCOL      = "provisionWatcher"
-	TIMELAYOUT = "20060102T150405"
 
 	/* ---------------- URL PARAM NAMES -----------------------*/
 	ID                       = "id"
-	_ID                      = "_id"
 	NAME                     = "name"
 	OPSTATE                  = "opstate"
 	URLADMINSTATE            = "adminstate"
@@ -101,12 +76,11 @@ var (
 	ADDRESSABLE              = "addressable"
 	ADDRESSABLENAME          = "addressablename"
 	ADDRESSABLEID            = "addressableid"
-	CHECK					 = "check"
+	CHECK                    = "check"
 	SERVICE                  = "service"
 	SERVICENAME              = "servicename"
 	SERVICEID                = "serviceid"
 	LABEL                    = "label"
-	LABELS                   = "labels"
 	PROFILE                  = "profile"
 	PROFILEID                = "profileid"
 	PROFILENAME              = "profilename"
@@ -127,21 +101,14 @@ var (
 	ADDRESS                  = "address"
 	COMMAND                  = "command"
 	DEVICE                   = "device"
-	OPERATINGSTATE           = "operatingState"
 	PROVISIONWATCHER         = "provisionwatcher"
 	IDENTIFIER               = "identifier"
-	IDENTIFIERS              = "identifiers"
 	KEY                      = "key"
 	VALUE                    = "value"
 	VALUEDESCRIPTORSFOR      = "valueDescriptorsFor"
 	DEVICEADDRESSABLES       = "deviceaddressables"
 	DEVICEADDRESSABLESBYNAME = "deviceaddressablesbyname"
 
-	/* ----------------------- ERRORS ----------------------------*/
-	ErrNotFound                  = errors.New("Not found")
-	ErrDuplicateName             = errors.New("Duplicate name for the resource")
-	ErrDuplicateCommandInProfile = errors.New("Duplicate name for command in device profile")
-	ErrCommandStillInUse         = errors.New("Command is still in use by device profiles")
 	/* TODO ENUM */
 	LOCKED   = "LOCKED"
 	UNLOCKED = "UNLOCKED"

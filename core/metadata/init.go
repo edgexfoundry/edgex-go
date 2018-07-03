@@ -15,18 +15,19 @@ package metadata
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 
-	enums "github.com/edgexfoundry/edgex-go/core/domain/enums"
+	"github.com/edgexfoundry/edgex-go/core/db"
+	"github.com/edgexfoundry/edgex-go/core/db/memory"
+	"github.com/edgexfoundry/edgex-go/core/db/mongo"
+	"github.com/edgexfoundry/edgex-go/core/domain/enums"
+	"github.com/edgexfoundry/edgex-go/core/metadata/interfaces"
+	"github.com/edgexfoundry/edgex-go/internal"
 	consulclient "github.com/edgexfoundry/edgex-go/support/consul-client"
 	logger "github.com/edgexfoundry/edgex-go/support/logging-client"
 	notifications "github.com/edgexfoundry/edgex-go/support/notifications-client"
-	"github.com/edgexfoundry/edgex-go/internal"
 )
 
-// DS : DataStore to retrieve data from database.
-var DS DataStore
 var loggingClient logger.LoggingClient
 
 func ConnectToConsul(conf ConfigurationStruct) error {
@@ -51,39 +52,46 @@ func ConnectToConsul(conf ConfigurationStruct) error {
 	return nil
 }
 
+func getDatabase(dbType string, config db.Configuration) (interfaces.DBClient, error) {
+	switch dbType {
+	case enums.MongoStr:
+		return mongo.NewClient(config), nil
+	case enums.MemoryStr:
+		return &memory.MemDB{}, nil
+	}
+	return nil, db.ErrNotFound
+}
+
 func Init(conf ConfigurationStruct, l logger.LoggingClient) error {
 	loggingClient = l
 	configuration = conf
 	//TODO: The above two are set due to global scope throughout the package. How can this be eliminated / refactored?
 
-	// Update Service CONSTANTS
-	MONGODATABASE = configuration.MongoDatabaseName
-	PROTOCOL = configuration.Protocol
-	SERVERPORT = strconv.Itoa(configuration.ServicePort)
-	DBTYPE = configuration.DBType
-	DOCKERMONGO = configuration.MongoDBHost + ":" + strconv.Itoa(configuration.MongoDBPort)
-	DBUSER = configuration.MongoDBUserName
-	DBPASS = configuration.MongoDBPassword
-
 	// Initialize notificationsClient based on configuration
 	notifications.SetConfiguration(configuration.SupportNotificationsHost, configuration.SupportNotificationsPort)
 
 	var err error
-	// Connect to the database
-	DATABASE, err = enums.GetDatabaseType(DBTYPE)
+	dbConfig := db.Configuration{
+		Host:         configuration.MongoDBHost,
+		Port:         configuration.MongoDBPort,
+		Timeout:      0,
+		DatabaseName: configuration.MongoDatabaseName,
+		Username:     configuration.MongoDBUserName,
+		Password:     configuration.MongoDBPassword,
+	}
+	// Create database client
+	dbClient, err = getDatabase(configuration.DBType, dbConfig)
 	if err != nil {
 		return err
 	}
-	if !dbConnect() {
-		return err
-	}
 
-	return nil
+	// Connect to the database
+	return dbClient.Connect()
 }
 
 func Destruct() {
-	if DS.s != nil {
-		DS.s.Close()
+	if dbClient != nil {
+		dbClient.CloseSession()
+		dbClient = nil
 	}
 }
-

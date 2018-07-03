@@ -11,9 +11,10 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
-package metadata
+package mongo
 
 import (
+	"github.com/edgexfoundry/edgex-go/core/db"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
@@ -21,12 +22,12 @@ import (
 
 // Internal version of the device service struct
 // Use this to handle DBRef
-type MongoDeviceService struct {
+type mongoDeviceService struct {
 	models.DeviceService
 }
 
 // Custom marshaling into mongo
-func (mds MongoDeviceService) GetBSON() (interface{}, error) {
+func (mds mongoDeviceService) GetBSON() (interface{}, error) {
 	return struct {
 		models.DescribedObject `bson:",inline"`
 		Id                     bson.ObjectId         `bson:"_id,omitempty"`
@@ -43,7 +44,7 @@ func (mds MongoDeviceService) GetBSON() (interface{}, error) {
 		Name:            mds.Service.Name,
 		AdminState:      mds.AdminState,
 		OperatingState:  mds.Service.OperatingState,
-		Addressable:     mgo.DBRef{Collection: ADDCOL, Id: mds.Service.Addressable.Id},
+		Addressable:     mgo.DBRef{Collection: db.Addressable, Id: mds.Service.Addressable.Id},
 		LastConnected:   mds.Service.LastConnected,
 		LastReported:    mds.Service.LastReported,
 		Labels:          mds.Service.Labels,
@@ -51,7 +52,7 @@ func (mds MongoDeviceService) GetBSON() (interface{}, error) {
 }
 
 // Custom unmarshaling out of mongo
-func (mds *MongoDeviceService) SetBSON(raw bson.Raw) error {
+func (mds *mongoDeviceService) SetBSON(raw bson.Raw) error {
 	decoded := new(struct {
 		models.DescribedObject `bson:",inline"`
 		Id                     bson.ObjectId         `bson:"_id,omitempty"`
@@ -80,14 +81,18 @@ func (mds *MongoDeviceService) SetBSON(raw bson.Raw) error {
 	mds.Service.Labels = decoded.Labels
 
 	// De-reference the DBRef fields
-	ds := DS.dataStore()
-	defer ds.s.Close()
+	m, err := getCurrentMongoClient()
+	if err != nil {
+		return err
+	}
+	s := m.session.Copy()
+	defer s.Close()
 
-	addCol := ds.s.DB(DB).C(ADDCOL)
+	addCol := s.DB(m.database.Name).C(db.Addressable)
 
 	var a models.Addressable
 
-	err := addCol.Find(bson.M{"_id": decoded.Addressable.Id}).One(&a)
+	err = addCol.Find(bson.M{"_id": decoded.Addressable.Id}).One(&a)
 	if err != nil {
 		return err
 	}

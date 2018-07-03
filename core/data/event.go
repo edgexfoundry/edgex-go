@@ -22,7 +22,7 @@ import (
 	"time"
 
 	"github.com/edgexfoundry/edgex-go/core/clients/types"
-	"github.com/edgexfoundry/edgex-go/core/data/clients"
+	"github.com/edgexfoundry/edgex-go/core/db"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"github.com/gorilla/mux"
 )
@@ -215,7 +215,7 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 				// Check value descriptor
 				vd, err := dbc.ValueDescriptorByName(e.Readings[reading].Name)
 				if err != nil {
-					if err == clients.ErrNotFound {
+					if err == db.ErrNotFound {
 						http.Error(w, "Value descriptor for a reading not found", http.StatusNotFound)
 					} else {
 						http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -269,7 +269,7 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 		// Check if the event exists
 		to, err := dbc.EventById(from.ID.Hex())
 		if err != nil {
-			if err == clients.ErrNotFound {
+			if err == db.ErrNotFound {
 				http.Error(w, "Event not found", http.StatusNotFound)
 			} else {
 				http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -327,7 +327,7 @@ func getEventByIdHandler(w http.ResponseWriter, r *http.Request) {
 		// Get the event
 		e, err := dbc.EventById(id)
 		if err != nil {
-			if err == clients.ErrNotFound {
+			if err == db.ErrNotFound {
 				http.Error(w, "Event not found", http.StatusNotFound)
 			} else {
 				http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -421,7 +421,7 @@ func eventIdHandler(w http.ResponseWriter, r *http.Request) {
 		// Check if the event exists
 		e, err := dbc.EventById(id)
 		if err != nil {
-			if err == clients.ErrNotFound {
+			if err == db.ErrNotFound {
 				http.Error(w, "Event not found", http.StatusNotFound)
 			} else {
 				http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -448,7 +448,7 @@ func eventIdHandler(w http.ResponseWriter, r *http.Request) {
 		// Check if the event exists
 		e, err := dbc.EventById(id)
 		if err != nil {
-			if err == clients.ErrNotFound {
+			if err == db.ErrNotFound {
 				http.Error(w, "Event not found", http.StatusNotFound)
 			} else {
 				http.Error(w, err.Error(), http.StatusServiceUnavailable)

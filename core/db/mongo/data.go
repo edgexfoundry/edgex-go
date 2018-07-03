@@ -11,83 +11,19 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
-package clients
+package mongo
 
 import (
-	"errors"
-	"strconv"
-	"time"
-
+	"github.com/edgexfoundry/edgex-go/core/db"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
-	"gopkg.in/mgo.v2"
+	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
-
-const (
-	EVENTS_COLLECTION           = "event"
-	READINGS_COLLECTION         = "reading"
-	VALUE_DESCRIPTOR_COLLECTION = "valueDescriptor"
-)
-
-var currentMongoClient *MongoClient // Singleton used so that MongoEvent can use it to de-reference readings
 
 /*
 Core data client
 Has functions for interacting with the core data mongo database
 */
-
-// Type used to sort the readings by creation date
-type ByReadingCreationDate []models.Reading
-
-func (a ByReadingCreationDate) Len() int           { return len(a) }
-func (a ByReadingCreationDate) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a ByReadingCreationDate) Less(i, j int) bool { return (a[i].Created < a[j].Created) }
-
-type MongoClient struct {
-	Session  *mgo.Session  // Mongo database session
-	Database *mgo.Database // Mongo database
-}
-
-// Return a pointer to the MongoClient
-func newMongoClient(config DBConfiguration) (*MongoClient, error) {
-	// Create the dial info for the Mongo session
-	connectionString := config.Host + ":" + strconv.Itoa(config.Port)
-	loggingClient.Info("INFO: Connecting to mongo at: " + connectionString)
-	mongoDBDialInfo := &mgo.DialInfo{
-		Addrs:    []string{connectionString},
-		Timeout:  time.Duration(config.Timeout) * time.Millisecond,
-		Database: config.DatabaseName,
-		Username: config.Username,
-		Password: config.Password,
-	}
-	session, err := mgo.DialWithInfo(mongoDBDialInfo)
-	if err != nil {
-		loggingClient.Error("Error dialing the mongo server: " + err.Error())
-		return nil, err
-	}
-
-	mongoClient := &MongoClient{Session: session, Database: session.DB(config.DatabaseName)}
-	currentMongoClient = mongoClient // Set the singleton
-	return mongoClient, nil
-}
-
-// Get the current Mongo Client
-func getCurrentMongoClient() (*MongoClient, error) {
-	if currentMongoClient == nil {
-		return nil, errors.New("No current mongo client, please create a new client before requesting it")
-	}
-
-	return currentMongoClient, nil
-}
-
-// Get a copy of the session
-func (mc *MongoClient) getSessionCopy() *mgo.Session {
-	return mc.Session.Copy()
-}
-
-func (mc *MongoClient) CloseSession() {
-	mc.Session.Close()
-}
 
 // ******************************* EVENTS **********************************
 
@@ -105,7 +41,7 @@ func (mc *MongoClient) AddEvent(e *models.Event) (bson.ObjectId, error) {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
-	e.Created = time.Now().UnixNano() / int64(time.Millisecond)
+	e.Created = db.MakeTimestamp()
 	e.ID = bson.NewObjectId()
 
 	// Insert readings
@@ -117,17 +53,17 @@ func (mc *MongoClient) AddEvent(e *models.Event) (bson.ObjectId, error) {
 			e.Readings[i].Device = e.Device
 			ui = append(ui, e.Readings[i])
 		}
-		err := s.DB(mc.Database.Name).C(READINGS_COLLECTION).Insert(ui...)
+		err := s.DB(mc.database.Name).C(db.ReadingsCollection).Insert(ui...)
 		if err != nil {
 			return e.ID, err
 		}
 	}
 
 	// Handle DBRefs
-	me := MongoEvent{Event: *e}
+	me := mongoEvent{Event: *e}
 
 	// Add the event
-	err := s.DB(mc.Database.Name).C(EVENTS_COLLECTION).Insert(me)
+	err := s.DB(mc.database.Name).C(db.EventsCollection).Insert(me)
 	if err != nil {
 		return e.ID, err
 	}
@@ -142,14 +78,14 @@ func (mc *MongoClient) UpdateEvent(e models.Event) error {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
-	e.Modified = time.Now().UnixNano() / int64(time.Millisecond)
+	e.Modified = db.MakeTimestamp()
 
 	// Handle DBRef
-	me := MongoEvent{Event: e}
+	me := mongoEvent{Event: e}
 
-	err := s.DB(mc.Database.Name).C(EVENTS_COLLECTION).UpdateId(me.ID, me)
+	err := s.DB(mc.database.Name).C(db.EventsCollection).UpdateId(me.ID, me)
 	if err == mgo.ErrNotFound {
-		return ErrNotFound
+		return db.ErrNotFound
 	}
 
 	return err
@@ -158,7 +94,7 @@ func (mc *MongoClient) UpdateEvent(e models.Event) error {
 // Get an event by id
 func (mc *MongoClient) EventById(id string) (models.Event, error) {
 	if !bson.IsObjectIdHex(id) {
-		return models.Event{}, ErrInvalidObjectId
+		return models.Event{}, db.ErrInvalidObjectId
 	}
 	return mc.getEvent(bson.M{"_id": bson.ObjectIdHex(id)})
 }
@@ -168,7 +104,7 @@ func (mc *MongoClient) EventCount() (int, error) {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
-	return s.DB(mc.Database.Name).C(EVENTS_COLLECTION).Find(nil).Count()
+	return s.DB(mc.database.Name).C(db.EventsCollection).Find(nil).Count()
 }
 
 // Get the number of events in Mongo for the device
@@ -177,14 +113,14 @@ func (mc *MongoClient) EventCountByDeviceId(id string) (int, error) {
 	defer s.Close()
 
 	query := bson.M{"device": id}
-	return s.DB(mc.Database.Name).C(EVENTS_COLLECTION).Find(query).Count()
+	return s.DB(mc.database.Name).C(db.EventsCollection).Find(query).Count()
 }
 
 // Delete an event by ID and all of its readings
 // 404 - Event not found
 // 503 - Unexpected problems
 func (mc *MongoClient) DeleteEventById(id string) error {
-	return mc.deleteById(id, EVENTS_COLLECTION)
+	return mc.deleteById(db.EventsCollection, id)
 }
 
 // Get a list of events based on the device id and limit
@@ -209,7 +145,7 @@ func (mc *MongoClient) EventsByCreationTime(startTime, endTime int64, limit int)
 
 // Get Events that are older than the given age (defined by age = now - created)
 func (mc *MongoClient) EventsOlderThanAge(age int64) ([]models.Event, error) {
-	expireDate := (time.Now().UnixNano() / int64(time.Millisecond)) - age
+	expireDate := (db.MakeTimestamp()) - age
 	return mc.getEvents(bson.M{"created": bson.M{"$lt": expireDate}})
 }
 
@@ -223,12 +159,12 @@ func (mc *MongoClient) ScrubAllEvents() error {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
-	_, err := s.DB(mc.Database.Name).C(READINGS_COLLECTION).RemoveAll(nil)
+	_, err := s.DB(mc.database.Name).C(db.ReadingsCollection).RemoveAll(nil)
 	if err != nil {
 		return err
 	}
 
-	_, err = s.DB(mc.Database.Name).C(EVENTS_COLLECTION).RemoveAll(nil)
+	_, err = s.DB(mc.database.Name).C(db.EventsCollection).RemoveAll(nil)
 	if err != nil {
 		return err
 	}
@@ -242,9 +178,9 @@ func (mc *MongoClient) getEvents(q bson.M) ([]models.Event, error) {
 	defer s.Close()
 
 	// Handle DBRefs
-	var me []MongoEvent
+	var me []mongoEvent
 	events := []models.Event{}
-	err := s.DB(mc.Database.Name).C(EVENTS_COLLECTION).Find(q).All(&me)
+	err := s.DB(mc.database.Name).C(db.EventsCollection).Find(q).All(&me)
 	if err != nil {
 		return events, err
 	}
@@ -263,7 +199,7 @@ func (mc *MongoClient) getEventsLimit(q bson.M, limit int) ([]models.Event, erro
 	defer s.Close()
 
 	// Handle DBRefs
-	var me []MongoEvent
+	var me []mongoEvent
 	events := []models.Event{}
 
 	// Check if limit is 0
@@ -271,7 +207,7 @@ func (mc *MongoClient) getEventsLimit(q bson.M, limit int) ([]models.Event, erro
 		return events, nil
 	}
 
-	err := s.DB(mc.Database.Name).C(EVENTS_COLLECTION).Find(q).Limit(limit).All(&me)
+	err := s.DB(mc.database.Name).C(db.EventsCollection).Find(q).Limit(limit).All(&me)
 	if err != nil {
 		return events, err
 	}
@@ -290,10 +226,10 @@ func (mc *MongoClient) getEvent(q bson.M) (models.Event, error) {
 	defer s.Close()
 
 	// Handle DBRef
-	var me MongoEvent
-	err := s.DB(mc.Database.Name).C(EVENTS_COLLECTION).Find(q).One(&me)
+	var me mongoEvent
+	err := s.DB(mc.database.Name).C(db.EventsCollection).Find(q).One(&me)
 	if err == mgo.ErrNotFound {
-		return me.Event, ErrNotFound
+		return me.Event, db.ErrNotFound
 	}
 
 	return me.Event, err
@@ -313,9 +249,9 @@ func (mc *MongoClient) AddReading(r models.Reading) (bson.ObjectId, error) {
 
 	// Get the reading ready
 	r.Id = bson.NewObjectId()
-	r.Created = time.Now().UnixNano() / int64(time.Millisecond)
+	r.Created = db.MakeTimestamp()
 
-	err := s.DB(mc.Database.Name).C(READINGS_COLLECTION).Insert(&r)
+	err := s.DB(mc.database.Name).C(db.ReadingsCollection).Insert(&r)
 	return r.Id, err
 }
 
@@ -327,12 +263,12 @@ func (mc *MongoClient) UpdateReading(r models.Reading) error {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
-	r.Modified = time.Now().UnixNano() / int64(time.Millisecond)
+	r.Modified = db.MakeTimestamp()
 
 	// Update the reading
-	err := s.DB(mc.Database.Name).C(READINGS_COLLECTION).UpdateId(r.Id, r)
+	err := s.DB(mc.database.Name).C(db.ReadingsCollection).UpdateId(r.Id, r)
 	if err == mgo.ErrNotFound {
-		return ErrNotFound
+		return db.ErrNotFound
 	}
 
 	return err
@@ -342,7 +278,7 @@ func (mc *MongoClient) UpdateReading(r models.Reading) error {
 func (mc *MongoClient) ReadingById(id string) (models.Reading, error) {
 	// Check if the id is a id hex
 	if !bson.IsObjectIdHex(id) {
-		return models.Reading{}, ErrInvalidObjectId
+		return models.Reading{}, db.ErrInvalidObjectId
 	}
 
 	query := bson.M{"_id": bson.ObjectIdHex(id)}
@@ -355,7 +291,7 @@ func (mc *MongoClient) ReadingCount() (int, error) {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
-	return s.DB(mc.Database.Name).C(READINGS_COLLECTION).Find(bson.M{}).Count()
+	return s.DB(mc.database.Name).C(db.ReadingsCollection).Find(bson.M{}).Count()
 }
 
 // Delete a reading by ID
@@ -363,10 +299,10 @@ func (mc *MongoClient) ReadingCount() (int, error) {
 func (mc *MongoClient) DeleteReadingById(id string) error {
 	// Check if the id is a bson id
 	if !bson.IsObjectIdHex(id) {
-		return ErrInvalidObjectId
+		return db.ErrInvalidObjectId
 	}
 
-	return mc.deleteById(id, READINGS_COLLECTION)
+	return mc.deleteById(db.ReadingsCollection, id)
 }
 
 // Return a list of readings for the given device (id or name)
@@ -417,7 +353,7 @@ func (mc *MongoClient) getReadingsLimit(q bson.M, limit int) ([]models.Reading, 
 		return readings, nil
 	}
 
-	err := s.DB(mc.Database.Name).C(READINGS_COLLECTION).Find(q).Limit(limit).All(&readings)
+	err := s.DB(mc.database.Name).C(db.ReadingsCollection).Find(q).Limit(limit).All(&readings)
 	return readings, err
 }
 
@@ -427,7 +363,7 @@ func (mc *MongoClient) getReadings(q bson.M) ([]models.Reading, error) {
 	defer s.Close()
 
 	readings := []models.Reading{}
-	err := s.DB(mc.Database.Name).C(READINGS_COLLECTION).Find(q).All(&readings)
+	err := s.DB(mc.database.Name).C(db.ReadingsCollection).Find(q).All(&readings)
 	return readings, err
 }
 
@@ -437,9 +373,9 @@ func (mc *MongoClient) getReading(q bson.M) (models.Reading, error) {
 	defer s.Close()
 
 	var res models.Reading
-	err := s.DB(mc.Database.Name).C(READINGS_COLLECTION).Find(q).One(&res)
+	err := s.DB(mc.database.Name).C(db.ReadingsCollection).Find(q).One(&res)
 	if err == mgo.ErrNotFound {
-		return res, ErrNotFound
+		return res, db.ErrNotFound
 	}
 	return res, err
 }
@@ -455,17 +391,17 @@ func (mc *MongoClient) AddValueDescriptor(v models.ValueDescriptor) (bson.Object
 	defer s.Close()
 
 	// Created/Modified now
-	v.Created = time.Now().UnixNano() / int64(time.Millisecond)
+	v.Created = db.MakeTimestamp()
 
 	// See if the name is unique and add the value descriptors
-	info, err := s.DB(mc.Database.Name).C(VALUE_DESCRIPTOR_COLLECTION).Upsert(bson.M{"name": v.Name}, v)
+	info, err := s.DB(mc.database.Name).C(db.ValueDescriptorCollection).Upsert(bson.M{"name": v.Name}, v)
 	if err != nil {
 		return v.Id, err
 	}
 
 	// Duplicate name
 	if info.UpsertedId == nil {
-		return v.Id, ErrNotUnique
+		return v.Id, db.ErrNotUnique
 	}
 
 	// Set ID
@@ -490,22 +426,22 @@ func (mc *MongoClient) UpdateValueDescriptor(v models.ValueDescriptor) error {
 
 	// See if the name is unique if it changed
 	vd, err := mc.getValueDescriptor(bson.M{"name": v.Name})
-	if err != ErrNotFound {
+	if err != db.ErrNotFound {
 		if err != nil {
 			return err
 		}
 
 		// IDs are different -> name not unique
 		if vd.Id != v.Id {
-			return ErrNotUnique
+			return db.ErrNotUnique
 		}
 	}
 
-	v.Modified = time.Now().UnixNano() / int64(time.Millisecond)
+	v.Modified = db.MakeTimestamp()
 
-	err = s.DB(mc.Database.Name).C(VALUE_DESCRIPTOR_COLLECTION).UpdateId(v.Id, v)
+	err = s.DB(mc.database.Name).C(db.ValueDescriptorCollection).UpdateId(v.Id, v)
 	if err == mgo.ErrNotFound {
-		return ErrNotFound
+		return db.ErrNotFound
 	}
 	return err
 }
@@ -515,9 +451,9 @@ func (mc *MongoClient) UpdateValueDescriptor(v models.ValueDescriptor) error {
 // ValueDescriptorStillInUse if the value descriptor is still referenced by readings
 func (mc *MongoClient) DeleteValueDescriptorById(id string) error {
 	if !bson.IsObjectIdHex(id) {
-		return ErrInvalidObjectId
+		return db.ErrInvalidObjectId
 	}
-	return mc.deleteById(id, VALUE_DESCRIPTOR_COLLECTION)
+	return mc.deleteById(db.ValueDescriptorCollection, id)
 }
 
 // Return a value descriptor based on the name
@@ -533,7 +469,7 @@ func (mc *MongoClient) ValueDescriptorsByName(names []string) ([]models.ValueDes
 
 	for _, name := range names {
 		v, err := mc.ValueDescriptorByName(name)
-		if err != nil && err != ErrNotFound {
+		if err != nil && err != db.ErrNotFound {
 			return []models.ValueDescriptor{}, err
 		}
 		if err == nil {
@@ -548,7 +484,7 @@ func (mc *MongoClient) ValueDescriptorsByName(names []string) ([]models.ValueDes
 // Return NotFoundError if there is no value descriptor for the id
 func (mc *MongoClient) ValueDescriptorById(id string) (models.ValueDescriptor, error) {
 	if !bson.IsObjectIdHex(id) {
-		return models.ValueDescriptor{}, ErrInvalidObjectId
+		return models.ValueDescriptor{}, db.ErrInvalidObjectId
 	}
 
 	query := bson.M{"_id": bson.ObjectIdHex(id)}
@@ -578,7 +514,7 @@ func (mc *MongoClient) ScrubAllValueDescriptors() error {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
-	_, err := s.DB(mc.Database.Name).C(VALUE_DESCRIPTOR_COLLECTION).RemoveAll(nil)
+	_, err := s.DB(mc.database.Name).C(db.ValueDescriptorCollection).RemoveAll(nil)
 	if err != nil {
 		return err
 	}
@@ -592,7 +528,7 @@ func (mc *MongoClient) getValueDescriptors(q bson.M) ([]models.ValueDescriptor, 
 	defer s.Close()
 
 	v := []models.ValueDescriptor{}
-	err := s.DB(mc.Database.Name).C(VALUE_DESCRIPTOR_COLLECTION).Find(q).All(&v)
+	err := s.DB(mc.database.Name).C(db.ValueDescriptorCollection).Find(q).All(&v)
 
 	return v, err
 }
@@ -603,7 +539,7 @@ func (mc *MongoClient) getValueDescriptorsLimit(q bson.M, limit int) ([]models.V
 	defer s.Close()
 
 	v := []models.ValueDescriptor{}
-	err := s.DB(mc.Database.Name).C(VALUE_DESCRIPTOR_COLLECTION).Find(q).Limit(limit).All(&v)
+	err := s.DB(mc.database.Name).C(db.ValueDescriptorCollection).Find(q).Limit(limit).All(&v)
 
 	return v, err
 }
@@ -614,27 +550,10 @@ func (mc *MongoClient) getValueDescriptor(q bson.M) (models.ValueDescriptor, err
 	defer s.Close()
 
 	var v models.ValueDescriptor
-	err := s.DB(mc.Database.Name).C(VALUE_DESCRIPTOR_COLLECTION).Find(q).One(&v)
+	err := s.DB(mc.database.Name).C(db.ValueDescriptorCollection).Find(q).One(&v)
 	if err == mgo.ErrNotFound {
-		return v, ErrNotFound
+		return v, db.ErrNotFound
 	}
 
 	return v, err
-}
-
-// Delete from the collection based on ID
-func (mc *MongoClient) deleteById(id string, col string) error {
-	s := mc.getSessionCopy()
-	defer s.Close()
-
-	// Check if id is a hexstring
-	if !bson.IsObjectIdHex(id) {
-		return ErrInvalidObjectId
-	}
-
-	err := s.DB(mc.Database.Name).C(col).RemoveId(bson.ObjectIdHex(id))
-	if err == mgo.ErrNotFound {
-		return ErrNotFound
-	}
-	return err
 }

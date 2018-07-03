@@ -51,10 +51,12 @@ func (os *OperatingState) UnmarshalJSON(data []byte) error {
 
 // IsOperatingStateType : return if ostype
 func IsOperatingStateType(os string) bool {
+	_, found := GetOperatingState(os)
+	return found
+}
+
+func GetOperatingState(os string) (OperatingState, bool) {
 	os = strings.ToUpper(os)
-	_, err := map[string]OperatingState{"ENABLED": Enabled, "DISABLED": Disabled}[os]
-	if !err {
-		return false
-	}
-	return true
+	o, err := map[string]OperatingState{"ENABLED": Enabled, "DISABLED": Disabled}[os]
+	return o, err
 }

@@ -12,91 +12,19 @@
  * the License.
  *******************************************************************************/
 
-package clients
+package influx
 
 import (
 	"encoding/json"
 	"fmt"
-	"strconv"
 	"strings"
 	"time"
 
+	"github.com/edgexfoundry/edgex-go/core/db"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
-	"github.com/influxdata/influxdb/client/v2"
+	client "github.com/influxdata/influxdb/client/v2"
 	"gopkg.in/mgo.v2/bson"
 )
-
-var currentInfluxClient *InfluxClient // Singleton used so that InfluxEvent can use it to de-reference readings
-
-/*
-Core data client
-Has functions for interacting with the core data influxdb
-*/
-
-type InfluxClient struct {
-	Client   client.Client // Influxdb client
-	Database string        // Influxdb database name
-}
-
-// Return a pointer to the InfluxClient
-func newInfluxClient(config DBConfiguration) (*InfluxClient, error) {
-	// Create the dial info for the Influx session
-	connectionString := "http://" + config.Host + ":" + strconv.Itoa(config.Port)
-	influxdbHTTPInfo := client.HTTPConfig{
-		Addr:     connectionString,
-		Timeout:  time.Duration(config.Timeout) * time.Millisecond,
-		Username: config.Username,
-		Password: config.Password,
-	}
-	c, err := client.NewHTTPClient(influxdbHTTPInfo)
-	if err != nil {
-		return nil, err
-	}
-
-	influxClient := &InfluxClient{Client: c, Database: config.DatabaseName}
-	currentInfluxClient = influxClient // Set the singleton
-	return influxClient, nil
-}
-
-// Perform an Influxdb query
-func (ic *InfluxClient) queryDB(cmd string) (res []client.Result, err error) {
-	q := client.Query{
-		Command:  cmd,
-		Database: ic.Database,
-	}
-	response, err := ic.Client.Query(q)
-	if err != nil {
-		return res, err
-	}
-	if response.Error() != nil {
-		return res, response.Error()
-	}
-	res = response.Results
-	return response.Results, nil
-}
-
-// Get count
-func (ic *InfluxClient) getCount(query string) (int, error) {
-	res, err := ic.queryDB(query)
-	if err != nil {
-		return 0, err
-	}
-	var n int64
-	n = 0
-	if len(res) == 1 {
-		if len(res[0].Series) == 1 {
-			n, err = res[0].Series[0].Values[0][1].(json.Number).Int64()
-			if err != nil {
-				return 0, err
-			}
-		}
-	}
-	return int(n), nil
-}
-
-func (ic *InfluxClient) CloseSession() {
-	ic.Client.Close()
-}
 
 // ******************************* EVENTS **********************************
 
@@ -111,11 +39,11 @@ func (ic *InfluxClient) Events() ([]models.Event, error) {
 // UnexpectedError - failed to add to database
 // NoValueDescriptor - no existing value descriptor for a reading in the event
 func (ic *InfluxClient) AddEvent(e *models.Event) (bson.ObjectId, error) {
-	e.Created = time.Now().UnixNano() / int64(time.Millisecond)
+	e.Created = db.MakeTimestamp()
 	e.ID = bson.NewObjectId()
 
 	// Add the event
-	err := ic.eventToDB(ic.Database, EVENTS_COLLECTION, e, true)
+	err := ic.eventToDB(ic.Database, db.EventsCollection, e, true)
 	if err != nil {
 		return e.ID, err
 	}
@@ -127,21 +55,21 @@ func (ic *InfluxClient) AddEvent(e *models.Event) (bson.ObjectId, error) {
 // UnexpectedError - problem updating in database
 // NotFound - no event with the ID was found
 func (ic *InfluxClient) UpdateEvent(e models.Event) error {
-	e.Modified = time.Now().UnixNano() / int64(time.Millisecond)
+	e.Modified = db.MakeTimestamp()
 
 	// Delete event
-	if err := ic.deleteById(EVENTS_COLLECTION, e.ID.Hex()); err != nil {
+	if err := ic.deleteById(db.EventsCollection, e.ID.Hex()); err != nil {
 		return err
 	}
 
 	// Add the event
-	return ic.eventToDB(ic.Database, EVENTS_COLLECTION, &e, false)
+	return ic.eventToDB(ic.Database, db.EventsCollection, &e, false)
 }
 
 // Get an event by id
 func (ic *InfluxClient) EventById(id string) (models.Event, error) {
 	if !bson.IsObjectIdHex(id) {
-		return models.Event{}, ErrInvalidObjectId
+		return models.Event{}, db.ErrInvalidObjectId
 	}
 	q := fmt.Sprintf("WHERE id = '%s'", id)
 	events, err := ic.getEvents(q)
@@ -153,13 +81,13 @@ func (ic *InfluxClient) EventById(id string) (models.Event, error) {
 
 // Get the number of events in Influx
 func (ic *InfluxClient) EventCount() (int, error) {
-	query := fmt.Sprintf("SELECT COUNT(*) FROM %s", EVENTS_COLLECTION)
+	query := fmt.Sprintf("SELECT COUNT(*) FROM %s", db.EventsCollection)
 	return ic.getCount(query)
 }
 
 // Get the number of events in Influx for the device
 func (ic *InfluxClient) EventCountByDeviceId(id string) (int, error) {
-	query := fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE device = '%s'", EVENTS_COLLECTION, id)
+	query := fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE device = '%s'", db.EventsCollection, id)
 	return ic.getCount(query)
 }
 
@@ -167,7 +95,7 @@ func (ic *InfluxClient) EventCountByDeviceId(id string) (int, error) {
 // 404 - Event not found
 // 503 - Unexpected problems
 func (ic *InfluxClient) DeleteEventById(id string) error {
-	return ic.deleteById(EVENTS_COLLECTION, id)
+	return ic.deleteById(db.EventsCollection, id)
 }
 
 // Get a list of events based on the device id and limit
@@ -191,7 +119,7 @@ func (ic *InfluxClient) EventsByCreationTime(startTime, endTime int64, limit int
 
 // Get Events that are older than the given age (defined by age = now - created)
 func (ic *InfluxClient) EventsOlderThanAge(age int64) ([]models.Event, error) {
-	expireDate := (time.Now().UnixNano() / int64(time.Millisecond)) - age
+	expireDate := db.MakeTimestamp() - age
 	query := fmt.Sprintf("WHERE created < %d", expireDate)
 	return ic.getEvents(query)
 }
@@ -204,18 +132,18 @@ func (ic *InfluxClient) EventsPushed() ([]models.Event, error) {
 
 // Delete all of the readings and all of the events
 func (ic *InfluxClient) ScrubAllEvents() error {
-	err := ic.deleteAll(READINGS_COLLECTION)
+	err := ic.deleteAll(db.ReadingsCollection)
 	if err != nil {
 		return err
 	}
 
-	return ic.deleteAll(EVENTS_COLLECTION)
+	return ic.deleteAll(db.EventsCollection)
 }
 
 // Get events for the passed query
 func (ic *InfluxClient) getEvents(q string) ([]models.Event, error) {
 	events := []models.Event{}
-	query := fmt.Sprintf("SELECT * FROM %s %s", EVENTS_COLLECTION, q)
+	query := fmt.Sprintf("SELECT * FROM %s %s", db.EventsCollection, q)
 	res, err := ic.queryDB(query)
 	if err != nil {
 		return events, err
@@ -233,27 +161,9 @@ func (ic *InfluxClient) getEvents(q string) ([]models.Event, error) {
 	return events, nil
 }
 
-func (ic *InfluxClient) deleteById(collection string, id string) error {
-	q := fmt.Sprintf("DROP SERIES FROM %s WHERE id = '%s'", collection, id)
-	_, err := ic.queryDB(q)
-	if err != nil {
-		return ErrNotFound
-	}
-	return nil
-}
-
-func (ic *InfluxClient) deleteAll(collection string) error {
-	q := fmt.Sprintf("DELETE FROM %s", collection)
-	_, err := ic.queryDB(q)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (ic *InfluxClient) eventToDB(db string, collection string, e *models.Event, addReadings bool) error {
+func (ic *InfluxClient) eventToDB(dbStr string, collection string, e *models.Event, addReadings bool) error {
 	bp, err := client.NewBatchPoints(client.BatchPointsConfig{
-		Database:  db,
+		Database:  dbStr,
 		Precision: "us",
 	})
 	if err != nil {
@@ -282,7 +192,7 @@ func (ic *InfluxClient) eventToDB(db string, collection string, e *models.Event,
 			}
 
 			pt, err := client.NewPoint(
-				READINGS_COLLECTION,
+				db.ReadingsCollection,
 				tags,
 				fields,
 				time.Now(),
@@ -395,8 +305,8 @@ func (ic *InfluxClient) Readings() ([]models.Reading, error) {
 func (ic *InfluxClient) AddReading(r models.Reading) (bson.ObjectId, error) {
 	// Get the reading ready
 	r.Id = bson.NewObjectId()
-	r.Created = time.Now().UnixNano() / int64(time.Millisecond)
-	err := ic.addReadingToDB(ic.Database, READINGS_COLLECTION, &r)
+	r.Created = db.MakeTimestamp()
+	err := ic.addReadingToDB(ic.Database, db.ReadingsCollection, &r)
 	return r.Id, err
 }
 
@@ -405,22 +315,22 @@ func (ic *InfluxClient) AddReading(r models.Reading) (bson.ObjectId, error) {
 // 409 - Value descriptor doesn't exist
 // 503 - unknown issues
 func (ic *InfluxClient) UpdateReading(r models.Reading) error {
-	r.Modified = time.Now().UnixNano() / int64(time.Millisecond)
+	r.Modified = db.MakeTimestamp()
 
 	// Delete reading
-	if err := ic.deleteById(READINGS_COLLECTION, r.Id.Hex()); err != nil {
+	if err := ic.deleteById(db.ReadingsCollection, r.Id.Hex()); err != nil {
 		return err
 	}
 
 	// Add the reading
-	return ic.addReadingToDB(ic.Database, READINGS_COLLECTION, &r)
+	return ic.addReadingToDB(ic.Database, db.ReadingsCollection, &r)
 }
 
 // Get a reading by ID
 func (ic *InfluxClient) ReadingById(id string) (models.Reading, error) {
 	// Check if the id is a id hex
 	if !bson.IsObjectIdHex(id) {
-		return models.Reading{}, ErrInvalidObjectId
+		return models.Reading{}, db.ErrInvalidObjectId
 	}
 
 	query := fmt.Sprintf("WHERE id = '%s'", id)
@@ -430,14 +340,14 @@ func (ic *InfluxClient) ReadingById(id string) (models.Reading, error) {
 
 // Get the count of readings in Influx
 func (ic *InfluxClient) ReadingCount() (int, error) {
-	query := fmt.Sprintf("SELECT COUNT(*) FROM %s", READINGS_COLLECTION)
+	query := fmt.Sprintf("SELECT COUNT(*) FROM %s", db.ReadingsCollection)
 	return ic.getCount(query)
 }
 
 // Delete a reading by ID
 // 404 - can't find the reading with the given id
 func (ic *InfluxClient) DeleteReadingById(id string) error {
-	return ic.deleteById(READINGS_COLLECTION, id)
+	return ic.deleteById(db.ReadingsCollection, id)
 }
 
 // Return a list of readings for the given device (id or name)
@@ -485,7 +395,7 @@ func (ic *InfluxClient) ReadingsByDeviceAndValueDescriptor(deviceId, valueDescri
 // Get readings for the passed query
 func (ic *InfluxClient) getReadings(q string) ([]models.Reading, error) {
 	readings := []models.Reading{}
-	query := fmt.Sprintf("SELECT * FROM %s %s", READINGS_COLLECTION, q)
+	query := fmt.Sprintf("SELECT * FROM %s %s", db.ReadingsCollection, q)
 	res, err := ic.queryDB(query)
 	if err != nil {
 		return readings, err
@@ -598,10 +508,10 @@ func parseReadings(res client.Result) ([]models.Reading, error) {
 // TODO: Check for valid printf formatting
 func (ic *InfluxClient) AddValueDescriptor(v models.ValueDescriptor) (bson.ObjectId, error) {
 	// Created/Modified now
-	v.Created = time.Now().UnixNano() / int64(time.Millisecond)
+	v.Created = db.MakeTimestamp()
 
 	// See if the name is unique and add the value descriptors
-	query := fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE 'name' = '%s'", VALUE_DESCRIPTOR_COLLECTION, v.Name)
+	query := fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE 'name' = '%s'", db.ValueDescriptorCollection, v.Name)
 	num, err := ic.getCount(query)
 	if err != nil {
 		return v.Id, err
@@ -609,14 +519,14 @@ func (ic *InfluxClient) AddValueDescriptor(v models.ValueDescriptor) (bson.Objec
 
 	// Duplicate name
 	if num != 0 {
-		return v.Id, ErrNotUnique
+		return v.Id, db.ErrNotUnique
 	}
 
 	// Set id
 	v.Id = bson.NewObjectId()
 
 	// Add Value Descriptor
-	err = ic.addValueDescriptorToDB(ic.Database, VALUE_DESCRIPTOR_COLLECTION, &v)
+	err = ic.addValueDescriptorToDB(ic.Database, db.ValueDescriptorCollection, &v)
 	if err != nil {
 		return v.Id, err
 	}
@@ -636,15 +546,15 @@ func (ic *InfluxClient) ValueDescriptors() ([]models.ValueDescriptor, error) {
 // 404 not found if the value descriptor cannot be found by the identifiers
 func (ic *InfluxClient) UpdateValueDescriptor(v models.ValueDescriptor) error {
 	// See if the name is unique if it changed
-	query := fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE id = '%s'", VALUE_DESCRIPTOR_COLLECTION, v.Id)
+	query := fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE id = '%s'", db.ValueDescriptorCollection, v.Id)
 	num, err := ic.getCount(query)
 	if err != nil {
 		return err
 	}
 	if num != 0 {
-		return ErrNotUnique
+		return db.ErrNotUnique
 	}
-	query = fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE name = '%s'", VALUE_DESCRIPTOR_COLLECTION, v.Name)
+	query = fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE name = '%s'", db.ValueDescriptorCollection, v.Name)
 	num, err = ic.getCount(query)
 	if err != nil {
 		return err
@@ -656,10 +566,10 @@ func (ic *InfluxClient) UpdateValueDescriptor(v models.ValueDescriptor) error {
 			return err
 		}
 	}
-	v.Modified = time.Now().UnixNano() / int64(time.Millisecond)
+	v.Modified = db.MakeTimestamp()
 	// Delete Value Descriptor
 	// Add Value Descriptor
-	return ic.addValueDescriptorToDB(ic.Database, VALUE_DESCRIPTOR_COLLECTION, &v)
+	return ic.addValueDescriptorToDB(ic.Database, db.ValueDescriptorCollection, &v)
 }
 
 // Delete the value descriptor based on the id
@@ -702,7 +612,7 @@ func (ic *InfluxClient) ValueDescriptorsByName(names []string) ([]models.ValueDe
 // Return NotFoundError if there is no value descriptor for the id
 func (ic *InfluxClient) ValueDescriptorById(id string) (models.ValueDescriptor, error) {
 	if !bson.IsObjectIdHex(id) {
-		return models.ValueDescriptor{}, ErrInvalidObjectId
+		return models.ValueDescriptor{}, db.ErrInvalidObjectId
 	}
 
 	query := fmt.Sprintf("WHERE id = '%s'", id)
@@ -733,11 +643,11 @@ func (ic *InfluxClient) ValueDescriptorsByType(t string) ([]models.ValueDescript
 
 // Delete all of the value descriptors
 func (ic *InfluxClient) ScrubAllValueDescriptors() error {
-	return ic.deleteAll(VALUE_DESCRIPTOR_COLLECTION)
+	return ic.deleteAll(db.ValueDescriptorCollection)
 }
 
 func (ic *InfluxClient) deleteValueDescriptorBy(query string) error {
-	q := fmt.Sprintf("DELETE  FROM %s %s", VALUE_DESCRIPTOR_COLLECTION, query)
+	q := fmt.Sprintf("DELETE  FROM %s %s", db.ValueDescriptorCollection, query)
 	_, err := ic.queryDB(q)
 	if err != nil {
 		return err
@@ -748,7 +658,7 @@ func (ic *InfluxClient) deleteValueDescriptorBy(query string) error {
 // Get value descriptors for the passed query
 func (ic *InfluxClient) getValueDescriptors(q string) ([]models.ValueDescriptor, error) {
 	vds := []models.ValueDescriptor{}
-	query := fmt.Sprintf("SELECT * FROM %s %s", VALUE_DESCRIPTOR_COLLECTION, q)
+	query := fmt.Sprintf("SELECT * FROM %s %s", db.ValueDescriptorCollection, q)
 	res, err := ic.queryDB(query)
 	if err != nil {
 		return vds, err

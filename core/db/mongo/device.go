@@ -11,9 +11,10 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
-package metadata
+package mongo
 
 import (
+	"github.com/edgexfoundry/edgex-go/core/db"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
@@ -21,13 +22,13 @@ import (
 
 // Internal version of the device struct
 // Use this to handle DBRef
-type MongoDevice struct {
+type mongoDevice struct {
 	models.Device `bson:",inline"`
 }
 
 // Struct to hold the result of GetBSON
 // This struct is used by MongoDeviceManager so that it can call GetBSON explicitly on MongoDevice
-type MongoDeviceBSON struct {
+type mongoDeviceBSON struct {
 	models.DescribedObject `bson:",inline"`
 	Id                     bson.ObjectId         `bson:"_id,omitempty"`
 	Name                   string                `bson:"name"`           // Unique name for identifying a device
@@ -43,25 +44,25 @@ type MongoDeviceBSON struct {
 }
 
 // Custom marshaling into mongo
-func (md MongoDevice) GetBSON() (interface{}, error) {
-	return MongoDeviceBSON{
+func (md mongoDevice) GetBSON() (interface{}, error) {
+	return mongoDeviceBSON{
 		DescribedObject: md.DescribedObject,
 		Id:              md.Id,
 		Name:            md.Name,
 		AdminState:      md.AdminState,
 		OperatingState:  md.OperatingState,
-		Addressable:     mgo.DBRef{Collection: ADDCOL, Id: md.Addressable.Id},
+		Addressable:     mgo.DBRef{Collection: db.Addressable, Id: md.Addressable.Id},
 		LastConnected:   md.LastConnected,
 		LastReported:    md.LastReported,
 		Labels:          md.Labels,
 		Location:        md.Location,
-		Service:         mgo.DBRef{Collection: DSCOL, Id: md.Service.Service.Id},
-		Profile:         mgo.DBRef{Collection: DPCOL, Id: md.Profile.Id},
+		Service:         mgo.DBRef{Collection: db.DeviceService, Id: md.Service.Service.Id},
+		Profile:         mgo.DBRef{Collection: db.DeviceProfile, Id: md.Profile.Id},
 	}, nil
 }
 
 // Custom unmarshaling out of mongo
-func (md *MongoDevice) SetBSON(raw bson.Raw) error {
+func (md *mongoDevice) SetBSON(raw bson.Raw) error {
 	decoded := new(struct {
 		models.DescribedObject `bson:",inline"`
 		Id                     bson.ObjectId         `bson:"_id,omitempty"`
@@ -93,18 +94,23 @@ func (md *MongoDevice) SetBSON(raw bson.Raw) error {
 	md.Location = decoded.Location
 
 	// De-reference the DBRef fields
-	ds := DS.dataStore()
-	defer ds.s.Close()
 
-	addCol := ds.s.DB(DB).C(ADDCOL)
-	dsCol := ds.s.DB(DB).C(DSCOL)
-	dpCol := ds.s.DB(DB).C(DPCOL)
+	m, err := getCurrentMongoClient()
+	if err != nil {
+		return err
+	}
+	s := m.session.Copy()
+	defer s.Close()
+
+	addCol := s.DB(m.database.Name).C(db.Addressable)
+	dsCol := s.DB(m.database.Name).C(db.DeviceService)
+	dpCol := s.DB(m.database.Name).C(db.DeviceProfile)
 
 	var a models.Addressable
-	var mdp MongoDeviceProfile
-	var mds MongoDeviceService
+	var mdp mongoDeviceProfile
+	var mds mongoDeviceService
 
-	err := addCol.Find(bson.M{"_id": decoded.Addressable.Id}).One(&a)
+	err = addCol.Find(bson.M{"_id": decoded.Addressable.Id}).One(&a)
 	if err != nil {
 		return err
 	}
