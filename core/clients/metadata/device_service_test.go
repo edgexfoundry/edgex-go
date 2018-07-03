@@ -24,10 +24,10 @@ import (
 func TestNewDeviceServiceClientWithConsul(t *testing.T) {
 	deviceServiceUrl := "http://localhost:48081" + deviceServiceUriPath
 	params := types.EndpointParams{
-		ServiceKey:internal.CoreMetaDataServiceKey,
-		Path:deviceServiceUriPath,
-		UseRegistry:true,
-		Url:deviceServiceUrl}
+		ServiceKey:  internal.CoreMetaDataServiceKey,
+		Path:        deviceServiceUriPath,
+		UseRegistry: true,
+		Url:         deviceServiceUrl}
 
 	dsc := NewDeviceServiceClient(params, MockEndpoint{})
 	r, ok := dsc.(*DeviceServiceRestClient)

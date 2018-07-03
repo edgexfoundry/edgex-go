@@ -19,8 +19,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 )
 
-const ()
-
 func TestHttpSender(t *testing.T) {
 	const (
 		msgStr = "test message"

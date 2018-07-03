@@ -12,8 +12,8 @@ import (
 	"strings"
 
 	"github.com/edgexfoundry/edgex-go/export/client/clients"
-	"github.com/edgexfoundry/edgex-go/support/consul-client"
 	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/support/consul-client"
 	"go.uber.org/zap"
 )
 

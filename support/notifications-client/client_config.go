@@ -19,6 +19,7 @@ type notificationConfig struct {
 }
 
 var clientConfig notificationConfig
+
 func SetConfiguration(host string, port int) {
-	clientConfig = notificationConfig{serviceHost:host, servicePort:port}
+	clientConfig = notificationConfig{serviceHost: host, servicePort: port}
 }

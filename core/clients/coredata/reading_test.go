@@ -16,13 +16,13 @@
 package coredata
 
 import (
-"testing"
-"net/http/httptest"
-"net/http"
-"github.com/edgexfoundry/edgex-go/core/clients/types"
-"github.com/edgexfoundry/edgex-go/internal"
-"time"
-"fmt"
+	"fmt"
+	"github.com/edgexfoundry/edgex-go/core/clients/types"
+	"github.com/edgexfoundry/edgex-go/internal"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+	"time"
 )
 
 const (
@@ -113,7 +113,7 @@ type mockReadingEndpoint struct {
 }
 
 func (r mockReadingEndpoint) Monitor(params types.EndpointParams, ch chan string) {
-	switch (params.ServiceKey) {
+	switch params.ServiceKey {
 	case internal.CoreDataServiceKey:
 		url := fmt.Sprintf("http://%s:%v%s", "localhost", 48080, params.Path)
 		ch <- url

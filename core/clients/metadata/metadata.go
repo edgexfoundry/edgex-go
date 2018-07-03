@@ -37,4 +37,3 @@ func getBody(resp *http.Response) ([]byte, error) {
 
 	return body, err
 }
-

@@ -46,9 +46,9 @@ type ConfigurationStruct struct {
 	MetaAddressableURL         string
 	MetaAddressablePath        string
 	MetaDeviceServiceURL       string
-	MetaDeviceServicePath	   string
+	MetaDeviceServicePath      string
 	MetaDeviceProfileURL       string
-	MetaDeviceProfilePath	   string
+	MetaDeviceProfilePath      string
 	MetaDeviceURL              string
 	MetaDevicePath             string
 	MetaDeviceReportURL        string
@@ -68,4 +68,3 @@ type ConfigurationStruct struct {
 }
 
 var configuration ConfigurationStruct = ConfigurationStruct{} //  Needs to be initialized before used
-

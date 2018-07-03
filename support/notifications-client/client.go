@@ -62,7 +62,6 @@ type NotificationsClient interface {
 
 //Named HttpClient instead of RestClient on purpose since there is only one POST method
 type notificationsHttpClient struct {
-
 }
 
 // Struct to represent a notification being sent to the notifications service
@@ -81,6 +80,7 @@ type Notification struct {
 }
 
 var notificationsClient NotificationsClient
+
 func GetNotificationsClient() NotificationsClient {
 	if notificationsClient == nil {
 		notificationsClient = &notificationsHttpClient{}

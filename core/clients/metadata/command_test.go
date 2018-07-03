@@ -24,10 +24,10 @@ import (
 func TestNewCommandClientWithConsul(t *testing.T) {
 	deviceUrl := "http://localhost:48081" + commandUriPath
 	params := types.EndpointParams{
-		ServiceKey:internal.CoreMetaDataServiceKey,
-		Path:commandUriPath,
-		UseRegistry:true,
-		Url:deviceUrl}
+		ServiceKey:  internal.CoreMetaDataServiceKey,
+		Path:        commandUriPath,
+		UseRegistry: true,
+		Url:         deviceUrl}
 
 	cc := NewCommandClient(params, MockEndpoint{})
 

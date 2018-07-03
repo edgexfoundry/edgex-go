@@ -42,10 +42,10 @@ type SchedulerClient interface {
 }
 
 type schedulerRestClient struct {
-
 }
 
 var schedulerClient SchedulerClient
+
 func GetSchedulerClient() SchedulerClient {
 	if schedulerClient == nil {
 		schedulerClient = &schedulerRestClient{}

@@ -58,10 +58,10 @@ func TestGetvaluedescriptors(t *testing.T) {
 	url := ts.URL + ValueDescriptorUriPath
 
 	params := types.EndpointParams{
-		ServiceKey:internal.CoreDataServiceKey,
-		Path:ValueDescriptorUriPath,
-		UseRegistry:false,
-		Url:url}
+		ServiceKey:  internal.CoreDataServiceKey,
+		Path:        ValueDescriptorUriPath,
+		UseRegistry: false,
+		Url:         url}
 
 	vdc := NewValueDescriptorClient(params, mockEndpoint{})
 
@@ -88,10 +88,10 @@ func TestGetvaluedescriptors(t *testing.T) {
 func TestNewValueDescriptorClientWithConsul(t *testing.T) {
 	deviceUrl := "http://localhost:48080" + ValueDescriptorUriPath
 	params := types.EndpointParams{
-		ServiceKey:internal.CoreDataServiceKey,
-		Path:ValueDescriptorUriPath,
-		UseRegistry:true,
-		Url:deviceUrl}
+		ServiceKey:  internal.CoreDataServiceKey,
+		Path:        ValueDescriptorUriPath,
+		UseRegistry: true,
+		Url:         deviceUrl}
 
 	vdc := NewValueDescriptorClient(params, mockEndpoint{})
 
@@ -109,11 +109,10 @@ func TestNewValueDescriptorClientWithConsul(t *testing.T) {
 }
 
 type mockEndpoint struct {
-
 }
 
-func(e mockEndpoint) Monitor(params types.EndpointParams, ch chan string) {
-	switch (params.ServiceKey) {
+func (e mockEndpoint) Monitor(params types.EndpointParams, ch chan string) {
+	switch params.ServiceKey {
 	case internal.CoreDataServiceKey:
 		url := fmt.Sprintf("http://%s:%v%s", "localhost", 48080, params.Path)
 		ch <- url

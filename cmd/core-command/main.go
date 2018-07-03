@@ -68,7 +68,7 @@ func main() {
 
 	// Setup Logging
 	logTarget := setLoggingTarget(*configuration)
-	var loggingClient= logger.NewClient(internal.CoreCommandServiceKey, configuration.EnableRemoteLogging, logTarget)
+	var loggingClient = logger.NewClient(internal.CoreCommandServiceKey, configuration.EnableRemoteLogging, logTarget)
 
 	loggingClient.Info(consulMsg)
 	loggingClient.Info(fmt.Sprintf("Starting %s %s ", internal.CoreCommandServiceKey, edgex.Version))

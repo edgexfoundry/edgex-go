@@ -13,8 +13,8 @@
  *******************************************************************************/
 package types
 
-type ErrNotFound struct {}
+type ErrNotFound struct{}
 
-func(e ErrNotFound) Error() string {
+func (e ErrNotFound) Error() string {
 	return "item not found"
 }
