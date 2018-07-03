@@ -2,6 +2,7 @@
 // Copyright (c) 2017
 // Cavium
 // Mainflux
+// IOTech
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -65,7 +66,7 @@ func NewMqttSender(addr models.Addressable) Sender {
 	return sender
 }
 
-func (sender *mqttSender) Send(data []byte) {
+func (sender *mqttSender) Send(data []byte, event *models.Event) {
 	if !sender.client.IsConnected() {
 		logger.Info("Connecting to mqtt server")
 		if token := sender.client.Connect(); token.Wait() && token.Error() != nil {

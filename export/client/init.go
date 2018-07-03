@@ -12,8 +12,8 @@ import (
 	"strings"
 
 	"github.com/edgexfoundry/edgex-go/export/client/clients"
-	"github.com/edgexfoundry/edgex-go/support/consul-client"
 	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/support/consul-client"
 	"go.uber.org/zap"
 )
 
@@ -60,7 +60,7 @@ func Init(conf ConfigurationStruct, l *zap.Logger) error {
 		Host:         conf.MongoURL,
 		Port:         conf.MongoPort,
 		Timeout:      conf.MongoConnectTimeout,
-		DatabaseName: conf.MongoDatabase,
+		DatabaseName: conf.MongoDatabaseName,
 		Username:     conf.MongoUsername,
 		Password:     conf.MongoPassword,
 	})

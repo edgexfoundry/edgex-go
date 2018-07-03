@@ -2,6 +2,7 @@
 // Copyright (c) 2017
 // Cavium
 // Mainflux
+// IOTech
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -58,6 +59,8 @@ func (reg *registrationInfo) update(newReg export.Registration) bool {
 		// TODO reg.format = distro.NewCsvFormat()
 	case export.FormatThingsBoardJSON:
 		reg.format = thingsboardJSONFormatter{}
+	case export.FormatNOOP:
+		reg.format = noopFormatter{}
 	default:
 		logger.Warn("Format not supported: ", zap.String("format", newReg.Format))
 		return false
@@ -88,6 +91,8 @@ func (reg *registrationInfo) update(newReg export.Registration) bool {
 		reg.sender = NewHTTPSender(newReg.Addressable)
 	case export.DestXMPP:
 		reg.sender = NewXMPPSender(newReg.Addressable)
+	case export.DestInfluxDB:
+		reg.sender = NewInfluxDBSender(newReg.Addressable)
 
 	default:
 		logger.Warn("Destination not supported: ", zap.String("destination", newReg.Destination))
@@ -152,7 +157,7 @@ func (reg registrationInfo) processEvent(event *models.Event) {
 		encrypted = reg.encrypt.Transform(compressed)
 	}
 
-	reg.sender.Send(encrypted)
+	reg.sender.Send(encrypted, event)
 	logger.Debug("Sent event with registration:",
 		zap.Any("Event", event),
 		zap.String("Name", reg.registration.Name))
