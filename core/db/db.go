@@ -20,6 +20,11 @@ import (
 )
 
 const (
+	// Databases
+	MongoDB  = "mongodb"
+	InfluxDB = "influxdb"
+	MemoryDB = "memorydb"
+
 	// Data
 	EventsCollection          = "event"
 	ReadingsCollection        = "reading"

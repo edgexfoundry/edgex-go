@@ -50,7 +50,7 @@ func valueDescriptorHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodGet:
-		vList, err := dbc.ValueDescriptors()
+		vList, err := dbClient.ValueDescriptors()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			loggingClient.Error(err.Error())
@@ -90,7 +90,7 @@ func valueDescriptorHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		id, err := dbc.AddValueDescriptor(v)
+		id, err := dbClient.AddValueDescriptor(v)
 		if err != nil {
 			if err == db.ErrNotUnique {
 				http.Error(w, "Value Descriptor already exists", http.StatusConflict)
@@ -115,9 +115,9 @@ func valueDescriptorHandler(w http.ResponseWriter, r *http.Request) {
 
 		// Find the value descriptor thats being updated
 		// Try by ID
-		to, err := dbc.ValueDescriptorById(from.Id.Hex())
+		to, err := dbClient.ValueDescriptorById(from.Id.Hex())
 		if err != nil {
-			to, err = dbc.ValueDescriptorByName(from.Name)
+			to, err = dbClient.ValueDescriptorByName(from.Name)
 			if err != nil {
 				if err == db.ErrNotFound {
 					http.Error(w, "Value descriptor not found", http.StatusNotFound)
@@ -160,7 +160,7 @@ func valueDescriptorHandler(w http.ResponseWriter, r *http.Request) {
 		if from.Name != "" {
 			// Check if value descriptor is still in use by readings if the name changes
 			if from.Name != to.Name {
-				r, err := dbc.ReadingsByValueDescriptor(to.Name, 10) // Arbitrary limit, we're just checking if there are any readings
+				r, err := dbClient.ReadingsByValueDescriptor(to.Name, 10) // Arbitrary limit, we're just checking if there are any readings
 				if err != nil {
 					http.Error(w, err.Error(), http.StatusServiceUnavailable)
 					loggingClient.Error("Error checking the readings for the value descriptor: " + err.Error())
@@ -186,7 +186,7 @@ func valueDescriptorHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Push the updated valuedescriptor to the database
-		err = dbc.UpdateValueDescriptor(to)
+		err = dbClient.UpdateValueDescriptor(to)
 		if err != nil {
 			if err == db.ErrNotUnique {
 				http.Error(w, "Value descriptor name is not unique", http.StatusConflict)
@@ -214,7 +214,7 @@ func deleteValueDescriptorByIdHandler(w http.ResponseWriter, r *http.Request) {
 	id := vars["id"]
 
 	// Check if the value descriptor exists
-	vd, err := dbc.ValueDescriptorById(id)
+	vd, err := dbClient.ValueDescriptorById(id)
 	if err != nil {
 		if err == db.ErrNotFound {
 			http.Error(w, "Value descriptor not found", http.StatusNotFound)
@@ -251,7 +251,7 @@ func valueDescriptorByNameHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodGet:
-		v, err := dbc.ValueDescriptorByName(name)
+		v, err := dbClient.ValueDescriptorByName(name)
 		if err != nil {
 			if err == db.ErrNotFound {
 				http.Error(w, "Value Descriptor not found", http.StatusNotFound)
@@ -265,7 +265,7 @@ func valueDescriptorByNameHandler(w http.ResponseWriter, r *http.Request) {
 		encode(v, w)
 	case http.MethodDelete:
 		// Check if the value descriptor exists
-		vd, err := dbc.ValueDescriptorByName(name)
+		vd, err := dbClient.ValueDescriptorByName(name)
 		if err != nil {
 			if err == db.ErrNotFound {
 				http.Error(w, "Value Descriptor not found", http.StatusNotFound)
@@ -288,7 +288,7 @@ func valueDescriptorByNameHandler(w http.ResponseWriter, r *http.Request) {
 
 func deleteValueDescriptor(vd models.ValueDescriptor, w http.ResponseWriter) error {
 	// Check if the value descriptor is still in use by readings
-	readings, err := dbc.ReadingsByValueDescriptor(vd.Name, 10)
+	readings, err := dbClient.ReadingsByValueDescriptor(vd.Name, 10)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		loggingClient.Error(err.Error())
@@ -302,7 +302,7 @@ func deleteValueDescriptor(vd models.ValueDescriptor, w http.ResponseWriter) err
 	}
 
 	// Delete the value descriptor
-	if err = dbc.DeleteValueDescriptorById(vd.Id.Hex()); err != nil {
+	if err = dbClient.DeleteValueDescriptorById(vd.Id.Hex()); err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		loggingClient.Error(err.Error())
 		return err
@@ -322,7 +322,7 @@ func valueDescriptorByIdHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodGet:
-		v, err := dbc.ValueDescriptorById(id)
+		v, err := dbClient.ValueDescriptorById(id)
 		if err != nil {
 			if err == db.ErrNotFound {
 				http.Error(w, "Value descriptor not found", http.StatusNotFound)
@@ -354,7 +354,7 @@ func valueDescriptorByUomLabelHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodGet:
-		v, err := dbc.ValueDescriptorsByUomLabel(uomLabel)
+		v, err := dbClient.ValueDescriptorsByUomLabel(uomLabel)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			loggingClient.Error(err.Error())
@@ -382,7 +382,7 @@ func valueDescriptorByLabelHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodGet:
-		v, err := dbc.ValueDescriptorsByLabel(label)
+		v, err := dbClient.ValueDescriptorsByLabel(label)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			loggingClient.Error(err.Error())
@@ -474,7 +474,7 @@ func valueDescriptorsForDevice(d models.Device, w http.ResponseWriter) ([]models
 	// Get the value descriptors
 	vdList := []models.ValueDescriptor{}
 	for _, name := range vdNames {
-		vd, err := dbc.ValueDescriptorByName(name)
+		vd, err := dbClient.ValueDescriptorByName(name)
 
 		// Not an error if not found
 		if err == db.ErrNotFound {

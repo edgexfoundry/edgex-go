@@ -32,7 +32,7 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodGet:
-		r, err := dbc.Readings()
+		r, err := dbClient.Readings()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			loggingClient.Error(err.Error())
@@ -61,7 +61,7 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 
 		if configuration.ValidateCheck {
 			// Check the value descriptor
-			vd, err := dbc.ValueDescriptorByName(reading.Name)
+			vd, err := dbClient.ValueDescriptorByName(reading.Name)
 			if err != nil {
 				if err == db.ErrNotFound {
 					http.Error(w, "Value descriptor not found for reading", http.StatusConflict)
@@ -88,7 +88,7 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if configuration.PersistData {
-			id, err := dbc.AddReading(reading)
+			id, err := dbClient.AddReading(reading)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusServiceUnavailable)
 				loggingClient.Error(err.Error())
@@ -114,7 +114,7 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Check if the reading exists
-		to, err := dbc.ReadingById(from.Id.Hex())
+		to, err := dbClient.ReadingById(from.Id.Hex())
 		if err != nil {
 			if err == db.ErrNotFound {
 				http.Error(w, "Reading not found", http.StatusNotFound)
@@ -139,7 +139,7 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 		if from.Value != "" || from.Name != "" {
 			if configuration.ValidateCheck {
 				// Check the value descriptor
-				vd, err := dbc.ValueDescriptorByName(to.Name)
+				vd, err := dbClient.ValueDescriptorByName(to.Name)
 				if err != nil {
 					if err == db.ErrNotFound {
 						http.Error(w, "Value descriptor not found for reading", http.StatusConflict)
@@ -161,7 +161,7 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		err = dbc.UpdateReading(to)
+		err = dbClient.UpdateReading(to)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			loggingClient.Error(err.Error())
@@ -185,7 +185,7 @@ func getReadingByIdHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodGet:
-		reading, err := dbc.ReadingById(id)
+		reading, err := dbClient.ReadingById(id)
 		if err != nil {
 			if err == db.ErrNotFound {
 				http.Error(w, "Reading not found", http.StatusNotFound)
@@ -207,7 +207,7 @@ func readingCountHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodGet:
-		count, err := dbc.ReadingCount()
+		count, err := dbClient.ReadingCount()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			loggingClient.Error(err.Error())
@@ -233,7 +233,7 @@ func deleteReadingByIdHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodDelete:
 		// Check if the reading exists
-		reading, err := dbc.ReadingById(id)
+		reading, err := dbClient.ReadingById(id)
 		if err != nil {
 			if err == db.ErrNotFound {
 				http.Error(w, "Reading not found", http.StatusNotFound)
@@ -244,7 +244,7 @@ func deleteReadingByIdHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		err = dbc.DeleteReadingById(reading.Id.Hex())
+		err = dbClient.DeleteReadingById(reading.Id.Hex())
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			loggingClient.Error(err.Error())
@@ -292,7 +292,7 @@ func readingByDeviceHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		readings, err := dbc.ReadingsByDevice(deviceId, limit)
+		readings, err := dbClient.ReadingsByDevice(deviceId, limit)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			loggingClient.Error(err.Error())
@@ -327,7 +327,7 @@ func readingbyValueDescriptorHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Check for value descriptor
 	if configuration.ValidateCheck {
-		_, err = dbc.ValueDescriptorByName(name)
+		_, err = dbClient.ValueDescriptorByName(name)
 		if err != nil {
 			if err == db.ErrNotFound {
 				http.Error(w, "Value descriptor not found for reading", http.StatusConflict)
@@ -346,7 +346,7 @@ func readingbyValueDescriptorHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	read, err := dbc.ReadingsByValueDescriptor(name, limit)
+	read, err := dbClient.ReadingsByValueDescriptor(name, limit)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		loggingClient.Error(err.Error())
@@ -387,7 +387,7 @@ func readingByUomLabelHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get the value descriptors
-	vList, err := dbc.ValueDescriptorsByUomLabel(uomLabel)
+	vList, err := dbClient.ValueDescriptorsByUomLabel(uomLabel)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		loggingClient.Error(err.Error())
@@ -399,7 +399,7 @@ func readingByUomLabelHandler(w http.ResponseWriter, r *http.Request) {
 		vNames = append(vNames, v.Name)
 	}
 
-	readings, err := dbc.ReadingsByValueDescriptorNames(vNames, limit)
+	readings, err := dbClient.ReadingsByValueDescriptorNames(vNames, limit)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		loggingClient.Error(err.Error())
@@ -439,7 +439,7 @@ func readingByLabelHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get the value descriptors
-	vdList, err := dbc.ValueDescriptorsByLabel(label)
+	vdList, err := dbClient.ValueDescriptorsByLabel(label)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		loggingClient.Error(err.Error())
@@ -450,7 +450,7 @@ func readingByLabelHandler(w http.ResponseWriter, r *http.Request) {
 		vdNames = append(vdNames, vd.Name)
 	}
 
-	readings, err := dbc.ReadingsByValueDescriptorNames(vdNames, limit)
+	readings, err := dbClient.ReadingsByValueDescriptorNames(vdNames, limit)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		loggingClient.Error(err.Error())
@@ -491,7 +491,7 @@ func readingByTypeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get the value descriptors
-	vdList, err := dbc.ValueDescriptorsByType(t)
+	vdList, err := dbClient.ValueDescriptorsByType(t)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		loggingClient.Error(err.Error())
@@ -502,7 +502,7 @@ func readingByTypeHandler(w http.ResponseWriter, r *http.Request) {
 		vdNames = append(vdNames, vd.Name)
 	}
 
-	readings, err := dbc.ReadingsByValueDescriptorNames(vdNames, l)
+	readings, err := dbClient.ReadingsByValueDescriptorNames(vdNames, l)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		loggingClient.Error(err.Error())
@@ -545,7 +545,7 @@ func readingByCreationTimeHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		readings, err := dbc.ReadingsByCreationTime(s, e, l)
+		readings, err := dbClient.ReadingsByCreationTime(s, e, l)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			loggingClient.Error(err.Error())
@@ -599,7 +599,7 @@ func readingByValueDescriptorAndDeviceHandler(w http.ResponseWriter, r *http.Req
 
 	// Check for value descriptor
 	if configuration.ValidateCheck {
-		_, err = dbc.ValueDescriptorByName(name)
+		_, err = dbClient.ValueDescriptorByName(name)
 		if err != nil {
 			if err == db.ErrNotFound {
 				http.Error(w, "Value descriptor not found for reading", http.StatusConflict)
@@ -611,7 +611,7 @@ func readingByValueDescriptorAndDeviceHandler(w http.ResponseWriter, r *http.Req
 		}
 	}
 
-	readings, err := dbc.ReadingsByDeviceAndValueDescriptor(device, name, limit)
+	readings, err := dbClient.ReadingsByDeviceAndValueDescriptor(device, name, limit)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		loggingClient.Error(err.Error())

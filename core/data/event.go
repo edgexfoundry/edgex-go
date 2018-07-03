@@ -127,11 +127,11 @@ func updateDeviceServiceLastReportedConnected(device string) {
 // Delete the event and readings
 func deleteEvent(e models.Event) error {
 	for _, reading := range e.Readings {
-		if err := dbc.DeleteReadingById(reading.Id.Hex()); err != nil {
+		if err := dbClient.DeleteReadingById(reading.Id.Hex()); err != nil {
 			return err
 		}
 	}
-	if err := dbc.DeleteEventById(e.ID.Hex()); err != nil {
+	if err := dbClient.DeleteEventById(e.ID.Hex()); err != nil {
 		return err
 	}
 
@@ -147,7 +147,7 @@ func scrubAllHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodDelete:
 		loggingClient.Info("Deleting all events from database")
 
-		err := dbc.ScrubAllEvents()
+		err := dbClient.ScrubAllEvents()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			loggingClient.Error("Error scrubbing all events/readings: " + err.Error())
@@ -173,7 +173,7 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	// Get all events
 	case http.MethodGet:
-		events, err := dbc.Events()
+		events, err := dbClient.Events()
 		if err != nil {
 			loggingClient.Error(err.Error())
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -213,7 +213,7 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 			loggingClient.Debug("Validation enabled, parsing events")
 			for reading := range e.Readings {
 				// Check value descriptor
-				vd, err := dbc.ValueDescriptorByName(e.Readings[reading].Name)
+				vd, err := dbClient.ValueDescriptorByName(e.Readings[reading].Name)
 				if err != nil {
 					if err == db.ErrNotFound {
 						http.Error(w, "Value descriptor for a reading not found", http.StatusNotFound)
@@ -235,7 +235,7 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 
 		// Add the event and readings to the database
 		if configuration.PersistData {
-			id, err := dbc.AddEvent(&e)
+			id, err := dbClient.AddEvent(&e)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusServiceUnavailable)
 				loggingClient.Error(err.Error())
@@ -267,7 +267,7 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Check if the event exists
-		to, err := dbc.EventById(from.ID.Hex())
+		to, err := dbClient.EventById(from.ID.Hex())
 		if err != nil {
 			if err == db.ErrNotFound {
 				http.Error(w, "Event not found", http.StatusNotFound)
@@ -298,7 +298,7 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Update
-		if err = dbc.UpdateEvent(to); err != nil {
+		if err = dbClient.UpdateEvent(to); err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			loggingClient.Error(err.Error())
 			return
@@ -325,7 +325,7 @@ func getEventByIdHandler(w http.ResponseWriter, r *http.Request) {
 		id := vars["id"]
 
 		// Get the event
-		e, err := dbc.EventById(id)
+		e, err := dbClient.EventById(id)
 		if err != nil {
 			if err == db.ErrNotFound {
 				http.Error(w, "Event not found", http.StatusNotFound)
@@ -350,7 +350,7 @@ func eventCountHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodGet:
-		count, err := dbc.EventCount()
+		count, err := dbClient.EventCount()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			loggingClient.Error(err.Error(), "")
@@ -389,7 +389,7 @@ func eventCountByDeviceIdHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		count, err := dbc.EventCountByDeviceId(id)
+		count, err := dbClient.EventCountByDeviceId(id)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			loggingClient.Error(err.Error())
@@ -419,7 +419,7 @@ func eventIdHandler(w http.ResponseWriter, r *http.Request) {
 	// Set the 'pushed' timestamp for the event to the current time - event is going to another (not fuse) service
 	case http.MethodPut:
 		// Check if the event exists
-		e, err := dbc.EventById(id)
+		e, err := dbClient.EventById(id)
 		if err != nil {
 			if err == db.ErrNotFound {
 				http.Error(w, "Event not found", http.StatusNotFound)
@@ -433,7 +433,7 @@ func eventIdHandler(w http.ResponseWriter, r *http.Request) {
 		loggingClient.Info("Updating event: " + e.ID.Hex())
 
 		e.Pushed = time.Now().UnixNano() / int64(time.Millisecond)
-		err = dbc.UpdateEvent(e)
+		err = dbClient.UpdateEvent(e)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			loggingClient.Error(err.Error())
@@ -446,7 +446,7 @@ func eventIdHandler(w http.ResponseWriter, r *http.Request) {
 	// Delete the event and all of it's readings
 	case http.MethodDelete:
 		// Check if the event exists
-		e, err := dbc.EventById(id)
+		e, err := dbClient.EventById(id)
 		if err != nil {
 			if err == db.ErrNotFound {
 				http.Error(w, "Event not found", http.StatusNotFound)
@@ -510,7 +510,7 @@ func getEventByDeviceHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		eventList, err := dbc.EventsForDeviceLimit(deviceId, limitNum)
+		eventList, err := dbClient.EventsForDeviceLimit(deviceId, limitNum)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			loggingClient.Error(err.Error())
@@ -545,7 +545,7 @@ func deleteByDeviceIdHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodDelete:
 		// Get the events by the device name
-		events, err := dbc.EventsForDevice(deviceId)
+		events, err := dbClient.EventsForDevice(deviceId)
 		if err != nil {
 			loggingClient.Error(err.Error())
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -611,7 +611,7 @@ func eventByCreationTimeHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		e, err := dbc.EventsByCreationTime(start, end, limit)
+		e, err := dbClient.EventsByCreationTime(start, end, limit)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			loggingClient.Error(err.Error())
@@ -669,7 +669,7 @@ func readingByDeviceFilteredValueDescriptor(w http.ResponseWriter, r *http.Reque
 		}
 
 		// Get all the events for the device
-		e, err := dbc.EventsForDevice(deviceId)
+		e, err := dbClient.EventsForDevice(deviceId)
 		if err != nil {
 			loggingClient.Error(err.Error())
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -716,7 +716,7 @@ func eventByAgeHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodDelete:
 		// Get the events
-		events, err := dbc.EventsOlderThanAge(age)
+		events, err := dbClient.EventsOlderThanAge(age)
 		if err != nil {
 			loggingClient.Error(err.Error())
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -753,7 +753,7 @@ func scrubHandler(w http.ResponseWriter, r *http.Request) {
 		loggingClient.Info("Scrubbing events.  Deleting all events that have been pushed")
 
 		// Get the events
-		events, err := dbc.EventsPushed()
+		events, err := dbClient.EventsPushed()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			loggingClient.Error(err.Error())

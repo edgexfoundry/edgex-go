@@ -13,8 +13,6 @@
  *******************************************************************************/
 package metadata
 
-import "github.com/edgexfoundry/edgex-go/core/metadata/interfaces"
-
 // Struct used to pase the JSON configuration file
 type ConfigurationStruct struct {
 	DBType                              string
@@ -52,11 +50,6 @@ type ConfigurationStruct struct {
 
 // Configuration data for the metadata service
 var configuration ConfigurationStruct = ConfigurationStruct{} // Needs to be initialized before used
-
-var (
-	/* -------------- CONFIG for METADATA -------------------- */
-	dbClient interfaces.DBClient
-)
 
 const (
 	MAX_LIMIT int = 1000
