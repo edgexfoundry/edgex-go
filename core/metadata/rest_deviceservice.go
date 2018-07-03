@@ -287,7 +287,7 @@ func updateDeviceServiceFields(from models.DeviceService, to *models.DeviceServi
 		var checkDS models.DeviceService
 		err := dbClient.GetDeviceServiceByName(&checkDS, from.Service.Name)
 		if err != nil {
-			// A problem occured accessing database
+			// A problem occurred accessing database
 			if err != mgo.ErrNotFound {
 				http.Error(w, err.Error(), http.StatusServiceUnavailable)
 				return err
@@ -296,7 +296,7 @@ func updateDeviceServiceFields(from models.DeviceService, to *models.DeviceServi
 
 		// Found a device service, make sure its the one we're trying to update
 		if err != mgo.ErrNotFound {
-			// Differnt IDs -> Name is not unique
+			// Different IDs -> Name is not unique
 			if checkDS.Service.Id != to.Service.Id {
 				err = errors.New("Duplicate name for Device Service")
 				http.Error(w, err.Error(), http.StatusConflict)

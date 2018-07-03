@@ -117,7 +117,7 @@ func (r *ReadingRestClient) Readings() ([]models.Reading, error) {
 	}
 	defer resp.Body.Close()
 
-	// Reponse was not OK
+	// Response was not OK
 	if resp.StatusCode != http.StatusOK {
 		// Get the response body
 		bodyBytes, err := getBody(resp)

@@ -393,7 +393,7 @@ func valueDescriptorByLabelHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Return the value descriptors that are asociated with a device
+// Return the value descriptors that are associated with a device
 // The value descriptor is expected parameters on puts or expected values on get/put commands
 // api/v1/valuedescriptor/devicename/{device}
 func valueDescriptorByDeviceHandler(w http.ResponseWriter, r *http.Request) {
