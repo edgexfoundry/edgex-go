@@ -90,7 +90,7 @@ func Init(conf ConfigurationStruct, l logger.LoggingClient, useConsul bool) erro
 		Username:     conf.MongoDBUserName,
 		Password:     conf.MongoDBPassword,
 	}
-	dbClient, err = newDBClient(db.MongoDB, dbConfig)
+	dbClient, err = newDBClient(conf.DBType, dbConfig)
 	if err != nil {
 		return fmt.Errorf("couldn't create database client: %v", err.Error())
 	}
