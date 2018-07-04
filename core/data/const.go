@@ -28,14 +28,13 @@ type ConfigurationStruct struct {
 	ServiceAddress             string
 	DeviceUpdateLastConnected  bool
 	ServiceUpdateLastConnected bool
+	DBType                     string
 	MongoDBUserName            string
 	MongoDBPassword            string
 	MongoDatabaseName          string
 	MongoDBHost                string
 	MongoDBPort                int
 	MongoDBConnectTimeout      int
-	MongoDBMaxWaitTime         int
-	MongoDBKeepAlive           bool
 	ConsulHost                 string
 	ConsulCheckAddress         string
 	ConsulPort                 int
