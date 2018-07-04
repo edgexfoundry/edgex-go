@@ -23,7 +23,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/core/db"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"github.com/gorilla/mux"
-	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -101,7 +100,7 @@ func restUpdateAddressable(w http.ResponseWriter, r *http.Request) {
 			err = dbClient.GetAddressableByName(&res, ra.Name)
 		}
 		if err != nil {
-			if err == mgo.ErrNotFound {
+			if err == db.ErrNotFound {
 				http.Error(w, err.Error(), http.StatusNotFound)
 			} else {
 				http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -129,7 +128,7 @@ func restUpdateAddressable(w http.ResponseWriter, r *http.Request) {
 
 	if err := dbClient.UpdateAddressable(&ra, &res); err != nil {
 		loggingClient.Error(err.Error(), "")
-		if err == mgo.ErrNotFound {
+		if err == db.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
 		} else {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -149,7 +148,7 @@ func restGetAddressableById(w http.ResponseWriter, r *http.Request) {
 	var id string = vars["id"]
 	var result models.Addressable
 	if err := dbClient.GetAddressableById(&result, id); err != nil {
-		if err == mgo.ErrNotFound {
+		if err == db.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
 		} else {
 			loggingClient.Error(err.Error(), "")
@@ -189,7 +188,7 @@ func restDeleteAddressableById(w http.ResponseWriter, r *http.Request) {
 
 	err = dbClient.DeleteAddressable(a)
 	if err != nil {
-		if err == mgo.ErrNotFound {
+		if err == db.ErrNotFound {
 			loggingClient.Error(err.Error(), "")
 			http.Error(w, err.Error(), http.StatusNotFound)
 			return
@@ -239,7 +238,7 @@ func restDeleteAddressableByName(w http.ResponseWriter, r *http.Request) {
 
 	if err := dbClient.DeleteAddressable(a); err != nil {
 		loggingClient.Error(err.Error(), "")
-		if err == mgo.ErrNotFound {
+		if err == db.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
 		} else {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -289,7 +288,7 @@ func restGetAddressableByName(w http.ResponseWriter, r *http.Request) {
 	var result models.Addressable
 	if err := dbClient.GetAddressableByName(&result, dn); err != nil {
 		loggingClient.Error(err.Error(), "")
-		if err == mgo.ErrNotFound {
+		if err == db.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
 		} else {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -314,7 +313,7 @@ func restGetAddressableByTopic(w http.ResponseWriter, r *http.Request) {
 	err = dbClient.GetAddressablesByTopic(&res, t)
 	if err != nil {
 		loggingClient.Error(err.Error(), "")
-		if err == mgo.ErrNotFound {
+		if err == db.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
 		} else {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)

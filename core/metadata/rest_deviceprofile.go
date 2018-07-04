@@ -23,7 +23,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/core/db"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"github.com/gorilla/mux"
-	"gopkg.in/mgo.v2"
 	"gopkg.in/yaml.v2"
 )
 
@@ -254,7 +253,7 @@ func restGetProfileByProfileId(w http.ResponseWriter, r *http.Request) {
 	var did string = vars["id"]
 	var res models.DeviceProfile
 	if err := dbClient.GetDeviceProfileById(&res, did); err != nil {
-		if err == mgo.ErrNotFound {
+		if err == db.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
 		} else {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -273,7 +272,7 @@ func restDeleteProfileByProfileId(w http.ResponseWriter, r *http.Request) {
 	// Check if the device profile exists
 	var dp models.DeviceProfile
 	if err := dbClient.GetDeviceProfileById(&dp, did); err != nil {
-		if err == mgo.ErrNotFound {
+		if err == db.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
 		} else {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -305,7 +304,7 @@ func restDeleteProfileByName(w http.ResponseWriter, r *http.Request) {
 	// Check if the device profile exists
 	var dp models.DeviceProfile
 	if err = dbClient.GetDeviceProfileByName(&dp, n); err != nil {
-		if err == mgo.ErrNotFound {
+		if err == db.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
 		} else {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -544,7 +543,7 @@ func restGetProfileByName(w http.ResponseWriter, r *http.Request) {
 	// Get the device
 	var res models.DeviceProfile
 	if err := dbClient.GetDeviceProfileByName(&res, dn); err != nil {
-		if err == mgo.ErrNotFound {
+		if err == db.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
 		} else {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -571,7 +570,7 @@ func restGetYamlProfileByName(w http.ResponseWriter, r *http.Request) {
 	err = dbClient.GetDeviceProfileByName(&dp, name)
 	if err != nil {
 		// Not found, return nil
-		if err == mgo.ErrNotFound {
+		if err == db.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
 		} else {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -608,7 +607,7 @@ func restGetYamlProfileById(w http.ResponseWriter, r *http.Request) {
 	var dp models.DeviceProfile
 	err := dbClient.GetDeviceProfileById(&dp, id)
 	if err != nil {
-		if err == mgo.ErrNotFound {
+		if err == db.ErrNotFound {
 			w.WriteHeader(http.StatusNotFound)
 			w.Write([]byte(nil))
 			return
