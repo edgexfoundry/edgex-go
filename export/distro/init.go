@@ -16,7 +16,6 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/core/clients/coredata"
 	"github.com/edgexfoundry/edgex-go/core/clients/types"
-	"github.com/edgexfoundry/edgex-go/internal"
 )
 
 const (
