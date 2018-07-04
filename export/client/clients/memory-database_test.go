@@ -13,15 +13,25 @@ import (
 )
 
 func testDB(t *testing.T, db DBClient) {
+	regs, err := db.Registrations()
+	if err != nil {
+		t.Fatalf("Error getting registrations %v", err)
+	}
+	if regs == nil {
+		t.Fatalf("Should return an empty array")
+	}
+	if len(regs) != 0 {
+		t.Fatalf("There should not be no registrations instead of %d", len(regs))
+	}
+
 	r := export.Registration{}
 	r.Name = "name"
-
 	id, err := db.AddRegistration(&r)
 	if err != nil {
 		t.Fatalf("Error adding registration %v: %v", r, err)
 	}
 
-	regs, err := db.Registrations()
+	regs, err = db.Registrations()
 	if err != nil {
 		t.Fatalf("Error getting registrations %v", err)
 	}
@@ -92,6 +102,6 @@ func testDB(t *testing.T, db DBClient) {
 }
 
 func TestMemoryDB(t *testing.T) {
-	memory := &memDB{}
+	memory := newMemoryClient()
 	testDB(t, memory)
 }

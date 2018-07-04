@@ -26,6 +26,12 @@ type memDB struct {
 	regs []export.Registration
 }
 
+func newMemoryClient() *memDB {
+	return &memDB{
+		regs: make([]export.Registration, 0),
+	}
+}
+
 func (mc *memDB) Registrations() ([]export.Registration, error) {
 	return mc.regs, nil
 }
