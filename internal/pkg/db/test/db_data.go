@@ -76,6 +76,17 @@ func testDBReadings(t *testing.T, db interfaces.DBClient) {
 		t.Fatalf("Error removing all readings")
 	}
 
+	readings, err := db.Readings()
+	if err != nil {
+		t.Fatalf("Error getting readings %v", err)
+	}
+	if readings == nil {
+		t.Fatalf("Should return an empty array")
+	}
+	if len(readings) != 0 {
+		t.Fatalf("There should be 0 readings instead of %d", len(readings))
+	}
+
 	beforeTime := dbp.MakeTimestamp()
 	id, err := populateDbReadings(db, 100)
 	if err != nil {
@@ -97,7 +108,7 @@ func testDBReadings(t *testing.T, db interfaces.DBClient) {
 		t.Fatalf("There should be 110 readings instead of %d", count)
 	}
 
-	readings, err := db.Readings()
+	readings, err = db.Readings()
 	if err != nil {
 		t.Fatalf("Error getting readings %v", err)
 	}
@@ -270,6 +281,17 @@ func testDBEvents(t *testing.T, db interfaces.DBClient) {
 		t.Fatalf("Error removing all events")
 	}
 
+	events, err := db.Events()
+	if err != nil {
+		t.Fatalf("Error getting events %v", err)
+	}
+	if events == nil {
+		t.Fatalf("Should return an empty array")
+	}
+	if len(events) != 0 {
+		t.Fatalf("There should be 0 events instead of %d", len(events))
+	}
+
 	beforeTime := dbp.MakeTimestamp()
 	id, err := populateDbEvents(db, 100, 0)
 	if err != nil {
@@ -315,7 +337,7 @@ func testDBEvents(t *testing.T, db interfaces.DBClient) {
 		t.Fatalf("There should be 0 events instead of %d", count)
 	}
 
-	events, err := db.Events()
+	events, err = db.Events()
 	if err != nil {
 		t.Fatalf("Error getting events %v", err)
 	}
@@ -473,6 +495,17 @@ func testDBValueDescriptors(t *testing.T, db interfaces.DBClient) {
 		t.Fatalf("Error removing all value descriptors")
 	}
 
+	values, err := db.ValueDescriptors()
+	if err != nil {
+		t.Fatalf("Error getting events %v", err)
+	}
+	if values == nil {
+		t.Fatalf("Should return an empty array")
+	}
+	if len(values) != 0 {
+		t.Fatalf("There should be 0 values instead of %d", len(values))
+	}
+
 	id, err := populateDbValues(db, 110)
 	if err != nil {
 		t.Fatalf("Error populating db: %v\n", err)
@@ -483,7 +516,7 @@ func testDBValueDescriptors(t *testing.T, db interfaces.DBClient) {
 		t.Fatalf("Should be an error adding a new ValueDescriptor with the same name\n")
 	}
 
-	values, err := db.ValueDescriptors()
+	values, err = db.ValueDescriptors()
 	if err != nil {
 		t.Fatalf("Error getting Values %v", err)
 	}

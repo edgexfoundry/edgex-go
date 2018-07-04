@@ -31,7 +31,9 @@ func (m *MemDB) AddReading(r models.Reading) (bson.ObjectId, error) {
 }
 
 func (m *MemDB) Events() ([]models.Event, error) {
-	return m.events, nil
+	cpy := make([]models.Event, len(m.events))
+	copy(cpy, m.events)
+	return cpy, nil
 }
 
 func (m *MemDB) AddEvent(e *models.Event) (bson.ObjectId, error) {
@@ -180,7 +182,9 @@ func (m *MemDB) ScrubAllEvents() error {
 }
 
 func (m *MemDB) Readings() ([]models.Reading, error) {
-	return m.readings, nil
+	cpy := make([]models.Reading, len(m.readings))
+	copy(cpy, m.readings)
+	return cpy, nil
 }
 
 func (m *MemDB) UpdateReading(reading models.Reading) error {
@@ -294,7 +298,9 @@ func (m *MemDB) AddValueDescriptor(value models.ValueDescriptor) (bson.ObjectId,
 }
 
 func (m *MemDB) ValueDescriptors() ([]models.ValueDescriptor, error) {
-	return m.vDescriptors, nil
+	cpy := make([]models.ValueDescriptor, len(m.vDescriptors))
+	copy(cpy, m.vDescriptors)
+	return cpy, nil
 }
 
 func (m *MemDB) UpdateValueDescriptor(value models.ValueDescriptor) error {
