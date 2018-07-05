@@ -2,6 +2,7 @@
 vendor
 *.exe
 *.DS_Store
+docker/docker-compose.yml
 
 # binary files
 cmd/core-command/core-command
