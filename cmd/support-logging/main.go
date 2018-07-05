@@ -22,6 +22,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/support/logging"
 	"github.com/edgexfoundry/edgex-go/support/logging-client"
+	"strconv"
 )
 
 var loggingClient logger.LoggingClient
@@ -74,6 +75,7 @@ func main() {
 
 	// Time it took to start service
 	loggingClient.Info("Service started in: "+time.Since(start).String(), "")
+	loggingClient.Info("Listening on port: "+strconv.Itoa(configuration.Port), "")
 	logging.StartHTTPServer(errs)
 
 	c := <-errs
