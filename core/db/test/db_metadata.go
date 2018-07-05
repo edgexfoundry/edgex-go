@@ -307,7 +307,7 @@ func clearAddressables(t *testing.T, db interfaces.DBClient) {
 		t.Fatalf("Error getting addressables %v", err)
 	}
 	for _, a := range addrs {
-		if err = db.DeleteAddressable(a); err != nil {
+		if err = db.DeleteAddressableById(a.Id.Hex()); err != nil {
 			t.Fatalf("Error removing addressable %v: %v", a, err)
 		}
 	}
@@ -320,7 +320,7 @@ func clearDevices(t *testing.T, db interfaces.DBClient) {
 		t.Fatalf("Error getting devices %v", err)
 	}
 	for _, d := range ds {
-		if err = db.DeleteDevice(d); err != nil {
+		if err = db.DeleteDeviceById(d.Id.Hex()); err != nil {
 			t.Fatalf("Error removing device %v: %v", d, err)
 		}
 	}
@@ -333,7 +333,7 @@ func clearSchedules(t *testing.T, db interfaces.DBClient) {
 		t.Fatalf("Error getting schedule %v", err)
 	}
 	for _, s := range ss {
-		if err = db.DeleteSchedule(s); err != nil {
+		if err = db.DeleteScheduleById(s.Id.Hex()); err != nil {
 			t.Fatalf("Error removing schedule %v: %v", s, err)
 		}
 	}
@@ -346,7 +346,7 @@ func clearScheduleEvents(t *testing.T, db interfaces.DBClient) {
 		t.Fatalf("Error getting schedule %v", err)
 	}
 	for _, s := range ss {
-		if err = db.DeleteScheduleEvent(s); err != nil {
+		if err = db.DeleteScheduleEventById(s.Id.Hex()); err != nil {
 			t.Fatalf("Error removing schedule %v: %v", s, err)
 		}
 	}
@@ -359,7 +359,7 @@ func clearDeviceServices(t *testing.T, db interfaces.DBClient) {
 		t.Fatalf("Error getting deviceServices %v", err)
 	}
 	for _, ds := range dss {
-		if err = db.DeleteDeviceService(ds); err != nil {
+		if err = db.DeleteDeviceServiceById(ds.Id.Hex()); err != nil {
 			t.Fatalf("Error removing deviceService %v: %v", ds, err)
 		}
 	}
@@ -372,7 +372,7 @@ func clearDeviceReports(t *testing.T, db interfaces.DBClient) {
 		t.Fatalf("Error getting deviceReports %v", err)
 	}
 	for _, ds := range drs {
-		if err = db.DeleteDeviceReport(ds); err != nil {
+		if err = db.DeleteDeviceReportById(ds.Id.Hex()); err != nil {
 			t.Fatalf("Error removing deviceReport %v: %v", ds, err)
 		}
 	}
@@ -386,7 +386,7 @@ func clearDeviceProfiles(t *testing.T, db interfaces.DBClient) {
 	}
 
 	for _, ds := range dps {
-		if err = db.DeleteDeviceProfile(ds); err != nil {
+		if err = db.DeleteDeviceProfileById(ds.Id.Hex()); err != nil {
 			t.Fatalf("Error removing deviceProfile %v: %v", ds, err)
 		}
 	}
@@ -536,7 +536,7 @@ func testDBAddressables(t *testing.T, db interfaces.DBClient) {
 
 	a.Id = "INVALID"
 	a.Name = "INVALID"
-	err = db.DeleteAddressable(a)
+	err = db.DeleteAddressableById(a.Id.Hex())
 	if err == nil {
 		t.Fatalf("Addressable should not be deleted")
 	}
@@ -545,7 +545,7 @@ func testDBAddressables(t *testing.T, db interfaces.DBClient) {
 	if err != nil {
 		t.Fatalf("Error getting addressable")
 	}
-	err = db.DeleteAddressable(a)
+	err = db.DeleteAddressableById(a.Id.Hex())
 	if err != nil {
 		t.Fatalf("Addressable should be deleted: %v", err)
 	}
@@ -722,13 +722,13 @@ func testDBDeviceService(t *testing.T, db interfaces.DBClient) {
 		t.Fatalf("Should return error")
 	}
 
-	err = db.DeleteDeviceService(ds)
+	err = db.DeleteDeviceServiceById(ds.Id.Hex())
 	if err == nil {
 		t.Fatalf("DeviceService should not be deleted")
 	}
 
 	ds.Id = id
-	err = db.DeleteDeviceService(ds)
+	err = db.DeleteDeviceServiceById(ds.Id.Hex())
 	if err != nil {
 		t.Fatalf("DeviceService should be deleted: %v", err)
 	}
@@ -798,13 +798,13 @@ func testDBSchedule(t *testing.T, db interfaces.DBClient) {
 		t.Fatalf("Should return error")
 	}
 
-	err = db.DeleteSchedule(e2)
+	err = db.DeleteScheduleById(e2.Id.Hex())
 	if err == nil {
 		t.Fatalf("Schedule should not be deleted")
 	}
 
 	e2.Id = id
-	err = db.DeleteSchedule(e2)
+	err = db.DeleteScheduleById(e2.Id.Hex())
 	if err != nil {
 		t.Fatalf("Schedule should be deleted: %v", err)
 	}
@@ -905,13 +905,13 @@ func testDBDeviceReport(t *testing.T, db interfaces.DBClient) {
 		t.Fatalf("Should return error")
 	}
 
-	err = db.DeleteDeviceReport(e2)
+	err = db.DeleteDeviceReportById(e2.Id.Hex())
 	if err == nil {
 		t.Fatalf("DeviceReport should not be deleted")
 	}
 
 	e2.Id = id
-	err = db.DeleteDeviceReport(e2)
+	err = db.DeleteDeviceReportById(e2.Id.Hex())
 	if err != nil {
 		t.Fatalf("DeviceReport should be deleted: %v", err)
 	}
@@ -1033,13 +1033,13 @@ func testDBScheduleEvent(t *testing.T, db interfaces.DBClient) {
 		t.Fatalf("Should return error")
 	}
 
-	err = db.DeleteScheduleEvent(e)
+	err = db.DeleteScheduleEventById(e.Id.Hex())
 	if err == nil {
 		t.Fatalf("ScheduleEvent should not be deleted")
 	}
 
 	e.Id = id
-	err = db.DeleteScheduleEvent(e)
+	err = db.DeleteScheduleEventById(e.Id.Hex())
 	if err != nil {
 		t.Fatalf("ScheduleEvent should be deleted: %v", err)
 	}
@@ -1192,13 +1192,13 @@ func testDBDeviceProfile(t *testing.T, db interfaces.DBClient) {
 		t.Fatalf("Should return error")
 	}
 
-	err = db.DeleteDeviceProfile(d2)
+	err = db.DeleteDeviceProfileById(d2.Id.Hex())
 	if err == nil {
 		t.Fatalf("DeviceProfile should not be deleted")
 	}
 
 	d2.Id = id
-	err = db.DeleteDeviceProfile(d2)
+	err = db.DeleteDeviceProfileById(d2.Id.Hex())
 	if err != nil {
 		t.Fatalf("DeviceProfile should be deleted: %v", err)
 	}
@@ -1334,13 +1334,13 @@ func testDBDevice(t *testing.T, db interfaces.DBClient) {
 		t.Fatalf("Should return error")
 	}
 
-	err = db.DeleteDevice(d)
+	err = db.DeleteDeviceById(d.Id.Hex())
 	if err == nil {
 		t.Fatalf("Device should not be deleted")
 	}
 
 	d.Id = id
-	err = db.DeleteDevice(d)
+	err = db.DeleteDeviceById(d.Id.Hex())
 	if err != nil {
 		t.Fatalf("Device should be deleted: %v", err)
 	}
@@ -1456,13 +1456,13 @@ func testDBProvisionWatcher(t *testing.T, db interfaces.DBClient) {
 		t.Fatalf("Should return error")
 	}
 
-	err = db.DeleteProvisionWatcher(pw)
+	err = db.DeleteProvisionWatcherById(pw.Id.Hex())
 	if err == nil {
 		t.Fatalf("ProvisionWatcher should not be deleted")
 	}
 
 	pw.Id = id
-	err = db.DeleteProvisionWatcher(pw)
+	err = db.DeleteProvisionWatcherById(pw.Id.Hex())
 	if err != nil {
 		t.Fatalf("ProvisionWatcher should be deleted: %v", err)
 	}

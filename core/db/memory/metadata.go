@@ -152,9 +152,9 @@ func (m *MemDB) GetScheduleEventsByServiceName(ses *[]models.ScheduleEvent, n st
 	return nil
 }
 
-func (m *MemDB) DeleteScheduleEvent(se models.ScheduleEvent) error {
+func (m *MemDB) DeleteScheduleEventById(id string) error {
 	for i, s := range m.scheduleEvents {
-		if s.Id == se.Id {
+		if s.Id.Hex() == id {
 			m.scheduleEvents = append(m.scheduleEvents[:i], m.scheduleEvents[i+1:]...)
 			return nil
 		}
@@ -218,9 +218,9 @@ func (m *MemDB) GetScheduleById(s *models.Schedule, id string) error {
 	return db.ErrNotFound
 }
 
-func (m *MemDB) DeleteSchedule(s models.Schedule) error {
+func (m *MemDB) DeleteScheduleById(id string) error {
 	for i, ss := range m.schedules {
-		if ss.Id.Hex() == s.Id.Hex() {
+		if ss.Id.Hex() == id {
 			m.schedules = append(m.schedules[:i], m.schedules[i+1:]...)
 			return nil
 		}
@@ -304,9 +304,9 @@ func (m *MemDB) GetDeviceReportsByScheduleEventName(drs *[]models.DeviceReport, 
 	return nil
 }
 
-func (m *MemDB) DeleteDeviceReport(dr models.DeviceReport) error {
+func (m *MemDB) DeleteDeviceReportById(id string) error {
 	for i, c := range m.deviceReports {
-		if c.Id == dr.Id {
+		if c.Id.Hex() == id {
 			m.deviceReports = append(m.deviceReports[:i], m.deviceReports[i+1:]...)
 			return nil
 		}
@@ -455,9 +455,9 @@ func (m *MemDB) AddDevice(d *models.Device) error {
 	return nil
 }
 
-func (m *MemDB) DeleteDevice(d models.Device) error {
+func (m *MemDB) DeleteDeviceById(id string) error {
 	for i, dd := range m.devices {
-		if dd.Id.Hex() == d.Id.Hex() {
+		if dd.Id.Hex() == id {
 			m.devices = append(m.devices[:i], m.devices[i+1:]...)
 			return nil
 		}
@@ -508,9 +508,9 @@ func (m *MemDB) GetDeviceProfileById(d *models.DeviceProfile, id string) error {
 	return db.ErrNotFound
 }
 
-func (m *MemDB) DeleteDeviceProfile(dp models.DeviceProfile) error {
+func (m *MemDB) DeleteDeviceProfileById(id string) error {
 	for i, d := range m.deviceProfiles {
-		if d.Id == dp.Id {
+		if d.Id.Hex() == id {
 			m.deviceProfiles = append(m.deviceProfiles[:i], m.deviceProfiles[i+1:]...)
 			return nil
 		}
@@ -706,9 +706,9 @@ func (m *MemDB) GetAddressables(d *[]models.Addressable) error {
 	return nil
 }
 
-func (m *MemDB) DeleteAddressable(a models.Addressable) error {
+func (m *MemDB) DeleteAddressableById(id string) error {
 	for i, aa := range m.addressables {
-		if aa.Id.Hex() == a.Id.Hex() {
+		if aa.Id.Hex() == id {
 			m.addressables = append(m.addressables[:i], m.addressables[i+1:]...)
 			return nil
 		}
@@ -836,9 +836,9 @@ func (m *MemDB) AddDeviceService(ds *models.DeviceService) error {
 	return nil
 }
 
-func (m *MemDB) DeleteDeviceService(ds models.DeviceService) error {
+func (m *MemDB) DeleteDeviceServiceById(id string) error {
 	for i, d := range m.deviceServices {
-		if d.Id == ds.Id {
+		if d.Id.Hex() == id {
 			m.deviceServices = append(m.deviceServices[:i], m.deviceServices[i+1:]...)
 			return nil
 		}
@@ -1005,9 +1005,9 @@ func (m *MemDB) UpdateProvisionWatcher(pw models.ProvisionWatcher) error {
 	return db.ErrNotFound
 }
 
-func (m *MemDB) DeleteProvisionWatcher(pw models.ProvisionWatcher) error {
+func (m *MemDB) DeleteProvisionWatcherById(id string) error {
 	for i, p := range m.provisionWatchers {
-		if p.Id.Hex() == pw.Id.Hex() {
+		if p.Id.Hex() == id {
 			m.provisionWatchers = append(m.provisionWatchers[:i], m.provisionWatchers[i+1:]...)
 			return nil
 		}
