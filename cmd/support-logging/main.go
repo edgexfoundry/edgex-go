@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 
@@ -74,6 +75,7 @@ func main() {
 
 	// Time it took to start service
 	loggingClient.Info("Service started in: "+time.Since(start).String(), "")
+	loggingClient.Info("Listening on port: "+strconv.Itoa(configuration.Port), "")
 	logging.StartHTTPServer(errs)
 
 	c := <-errs
