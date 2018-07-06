@@ -16,7 +16,6 @@ package mongo
 import (
 	"github.com/edgexfoundry/edgex-go/core/db"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
-	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -84,11 +83,7 @@ func (mc *MongoClient) UpdateEvent(e models.Event) error {
 	me := mongoEvent{Event: e}
 
 	err := s.DB(mc.database.Name).C(db.EventsCollection).UpdateId(me.ID, me)
-	if err == mgo.ErrNotFound {
-		return db.ErrNotFound
-	}
-
-	return err
+	return errorMap(err)
 }
 
 // Get an event by id
@@ -228,10 +223,7 @@ func (mc *MongoClient) getEvent(q bson.M) (models.Event, error) {
 	// Handle DBRef
 	var me mongoEvent
 	err := s.DB(mc.database.Name).C(db.EventsCollection).Find(q).One(&me)
-	if err == mgo.ErrNotFound {
-		return me.Event, db.ErrNotFound
-	}
-
+	err = errorMap(err)
 	return me.Event, err
 }
 
@@ -267,11 +259,7 @@ func (mc *MongoClient) UpdateReading(r models.Reading) error {
 
 	// Update the reading
 	err := s.DB(mc.database.Name).C(db.ReadingsCollection).UpdateId(r.Id, r)
-	if err == mgo.ErrNotFound {
-		return db.ErrNotFound
-	}
-
-	return err
+	return errorMap(err)
 }
 
 // Get a reading by ID
@@ -374,9 +362,7 @@ func (mc *MongoClient) getReading(q bson.M) (models.Reading, error) {
 
 	var res models.Reading
 	err := s.DB(mc.database.Name).C(db.ReadingsCollection).Find(q).One(&res)
-	if err == mgo.ErrNotFound {
-		return res, db.ErrNotFound
-	}
+	err = errorMap(err)
 	return res, err
 }
 
@@ -440,10 +426,7 @@ func (mc *MongoClient) UpdateValueDescriptor(v models.ValueDescriptor) error {
 	v.Modified = db.MakeTimestamp()
 
 	err = s.DB(mc.database.Name).C(db.ValueDescriptorCollection).UpdateId(v.Id, v)
-	if err == mgo.ErrNotFound {
-		return db.ErrNotFound
-	}
-	return err
+	return errorMap(err)
 }
 
 // Delete the value descriptor based on the id
@@ -551,9 +534,6 @@ func (mc *MongoClient) getValueDescriptor(q bson.M) (models.ValueDescriptor, err
 
 	var v models.ValueDescriptor
 	err := s.DB(mc.database.Name).C(db.ValueDescriptorCollection).Find(q).One(&v)
-	if err == mgo.ErrNotFound {
-		return v, db.ErrNotFound
-	}
-
+	err = errorMap(err)
 	return v, err
 }

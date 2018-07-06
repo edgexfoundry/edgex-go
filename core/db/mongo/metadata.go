@@ -18,7 +18,6 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/core/db"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
-	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -100,15 +99,11 @@ func (m *MongoClient) GetScheduleEvent(se *models.ScheduleEvent, q bson.M) error
 	var mse mongoScheduleEvent
 
 	err := col.Find(q).One(&mse)
-	if err == mgo.ErrNotFound {
-		return db.ErrNotFound
-	} else if err != nil {
-		return err
+	if err != nil {
+		return errorMap(err)
 	}
-
 	*se = mse.ScheduleEvent
-
-	return err
+	return nil
 }
 
 func (m *MongoClient) GetScheduleEvents(se *[]models.ScheduleEvent, q bson.M) error {
@@ -195,10 +190,7 @@ func (m *MongoClient) GetSchedule(sch *models.Schedule, q bson.M) error {
 	defer s.Close()
 	col := s.DB(m.database.Name).C(db.Schedule)
 	err := col.Find(q).One(sch)
-	if err == mgo.ErrNotFound {
-		return db.ErrNotFound
-	}
-	return err
+	return errorMap(err)
 }
 
 func (m *MongoClient) GetSchedules(sch *[]models.Schedule, q bson.M) error {
@@ -246,10 +238,7 @@ func (m *MongoClient) GetDeviceReport(d *models.DeviceReport, q bson.M) error {
 	defer s.Close()
 	col := s.DB(m.database.Name).C(db.DeviceReport)
 	err := col.Find(q).One(d)
-	if err == mgo.ErrNotFound {
-		return db.ErrNotFound
-	}
-	return err
+	return errorMap(err)
 }
 
 func (m *MongoClient) AddDeviceReport(d *models.DeviceReport) error {
@@ -396,14 +385,10 @@ func (m *MongoClient) GetDevice(d *models.Device, q bson.M) error {
 	md := mongoDevice{}
 
 	err := col.Find(q).One(&md)
-	if err == mgo.ErrNotFound {
-		return db.ErrNotFound
-	} else if err != nil {
-		return err
+	if err != nil {
+		return errorMap(err)
 	}
-
 	*d = md.Device
-
 	return nil
 }
 
@@ -470,15 +455,11 @@ func (m *MongoClient) GetDeviceProfile(d *models.DeviceProfile, q bson.M) error 
 	// Handle the DBRefs
 	var mdp mongoDeviceProfile
 	err := col.Find(q).One(&mdp)
-	if err == mgo.ErrNotFound {
-		return db.ErrNotFound
-	} else if err != nil {
-		return err
+	if err != nil {
+		return errorMap(err)
 	}
-
 	*d = mdp.DeviceProfile
-
-	return err
+	return nil
 }
 
 func (m *MongoClient) AddDeviceProfile(dp *models.DeviceProfile) error {
@@ -639,10 +620,7 @@ func (m *MongoClient) GetAddressable(d *models.Addressable, q bson.M) error {
 	defer s.Close()
 	col := s.DB(m.database.Name).C(db.Addressable)
 	err := col.Find(q).One(d)
-	if err == mgo.ErrNotFound {
-		return db.ErrNotFound
-	}
-	return err
+	return errorMap(err)
 }
 
 func (m *MongoClient) DeleteAddressable(a models.Addressable) error {
@@ -704,13 +682,10 @@ func (m *MongoClient) GetDeviceService(d *models.DeviceService, q bson.M) error 
 	col := s.DB(m.database.Name).C(db.DeviceService)
 	mds := mongoDeviceService{}
 	err := col.Find(q).One(&mds)
-	if err == mgo.ErrNotFound {
-		return db.ErrNotFound
-	} else if err != nil {
-		return err
+	if err != nil {
+		return errorMap(err)
 	}
 	*d = mds.DeviceService
-
 	return nil
 }
 
@@ -795,15 +770,11 @@ func (m *MongoClient) GetProvisionWatcher(pw *models.ProvisionWatcher, q bson.M)
 	var mpw mongoProvisionWatcher
 
 	err := col.Find(q).One(&mpw)
-	if err == mgo.ErrNotFound {
-		return db.ErrNotFound
-	} else if err != nil {
-		return err
+	if err != nil {
+		return errorMap(err)
 	}
-
 	*pw = mpw.ProvisionWatcher
-
-	return err
+	return nil
 }
 
 func (m *MongoClient) GetProvisionWatchers(pw *[]models.ProvisionWatcher, q bson.M) error {
@@ -907,10 +878,7 @@ func (m *MongoClient) GetCommandById(d *models.Command, id string) error {
 		defer s.Close()
 		col := s.DB(m.database.Name).C(db.Command)
 		err := col.Find(bson.M{"_id": bson.ObjectIdHex(id)}).One(d)
-		if err == mgo.ErrNotFound {
-			return db.ErrNotFound
-		}
-		return err
+		return errorMap(err)
 	} else {
 		return errors.New("mgoGetCommandById Invalid Object ID " + id)
 	}
