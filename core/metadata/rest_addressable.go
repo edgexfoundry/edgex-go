@@ -187,7 +187,7 @@ func restDeleteAddressableById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = dbClient.DeleteAddressable(a)
+	err = dbClient.DeleteAddressableById(a.Id.Hex())
 	if err != nil {
 		if err == mgo.ErrNotFound {
 			loggingClient.Error(err.Error(), "")
@@ -237,7 +237,7 @@ func restDeleteAddressableByName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := dbClient.DeleteAddressable(a); err != nil {
+	if err := dbClient.DeleteAddressableById(a.Id.Hex()); err != nil {
 		loggingClient.Error(err.Error(), "")
 		if err == mgo.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)

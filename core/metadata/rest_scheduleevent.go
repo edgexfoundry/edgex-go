@@ -407,7 +407,7 @@ func deleteScheduleEvent(se models.ScheduleEvent, w http.ResponseWriter) error {
 		return err
 	}
 
-	if err := dbClient.DeleteScheduleEvent(se); err != nil {
+	if err := dbClient.DeleteScheduleEventById(se.Id.Hex()); err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return err
 	}
@@ -858,7 +858,7 @@ func deleteSchedule(s models.Schedule, w http.ResponseWriter) error {
 		return err
 	}
 
-	if err := dbClient.DeleteSchedule(s); err != nil {
+	if err := dbClient.DeleteScheduleById(s.Id.Hex()); err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return err
 	}

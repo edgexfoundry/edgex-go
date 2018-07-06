@@ -353,7 +353,7 @@ func deleteDeviceProfile(dp models.DeviceProfile, w http.ResponseWriter) error {
 	}
 
 	// Delete the profile
-	if err := dbClient.DeleteDeviceProfile(dp); err != nil {
+	if err := dbClient.DeleteDeviceProfileById(dp.Id.Hex()); err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return err
 	}

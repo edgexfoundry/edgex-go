@@ -32,7 +32,7 @@ type DBClient interface {
 	GetScheduleEventsByScheduleName(se *[]models.ScheduleEvent, n string) error
 	GetScheduleEventsByAddressableId(se *[]models.ScheduleEvent, id string) error
 	GetScheduleEventsByServiceName(se *[]models.ScheduleEvent, n string) error
-	DeleteScheduleEvent(se models.ScheduleEvent) error
+	DeleteScheduleEventById(id string) error
 
 	// Schedule
 	GetAllSchedules(s *[]models.Schedule) error
@@ -40,7 +40,7 @@ type DBClient interface {
 	GetScheduleByName(s *models.Schedule, n string) error
 	UpdateSchedule(s models.Schedule) error
 	GetScheduleById(s *models.Schedule, id string) error
-	DeleteSchedule(s models.Schedule) error
+	DeleteScheduleById(id string) error
 
 	// Device Report
 	GetAllDeviceReports(dr *[]models.DeviceReport) error
@@ -50,7 +50,7 @@ type DBClient interface {
 	AddDeviceReport(dr *models.DeviceReport) error
 	UpdateDeviceReport(dr *models.DeviceReport) error
 	GetDeviceReportsByScheduleEventName(dr *[]models.DeviceReport, n string) error
-	DeleteDeviceReport(dr models.DeviceReport) error
+	DeleteDeviceReportById(id string) error
 
 	// Device
 	UpdateDevice(d models.Device) error
@@ -62,12 +62,12 @@ type DBClient interface {
 	GetDevicesByAddressableId(d *[]models.Device, aid string) error
 	GetDevicesWithLabel(d *[]models.Device, l string) error
 	AddDevice(d *models.Device) error
-	DeleteDevice(d models.Device) error
+	DeleteDeviceById(id string) error
 	UpdateDeviceProfile(dp *models.DeviceProfile) error
 	AddDeviceProfile(d *models.DeviceProfile) error
 	GetAllDeviceProfiles(d *[]models.DeviceProfile) error
 	GetDeviceProfileById(d *models.DeviceProfile, id string) error
-	DeleteDeviceProfile(dp models.DeviceProfile) error
+	DeleteDeviceProfileById(id string) error
 	GetDeviceProfilesByModel(dp *[]models.DeviceProfile, m string) error
 	GetDeviceProfilesWithLabel(dp *[]models.DeviceProfile, l string) error
 	GetDeviceProfilesByManufacturerModel(dp *[]models.DeviceProfile, man string, mod string) error
@@ -85,7 +85,7 @@ type DBClient interface {
 	GetAddressablesByPublisher(a *[]models.Addressable, p string) error
 	GetAddressablesByAddress(a *[]models.Addressable, add string) error
 	GetAddressables(d *[]models.Addressable) error
-	DeleteAddressable(a models.Addressable) error
+	DeleteAddressableById(id string) error
 
 	// Device service
 	UpdateDeviceService(ds models.DeviceService) error
@@ -95,7 +95,7 @@ type DBClient interface {
 	GetDeviceServiceByName(d *models.DeviceService, n string) error
 	GetAllDeviceServices(d *[]models.DeviceService) error
 	AddDeviceService(ds *models.DeviceService) error
-	DeleteDeviceService(ds models.DeviceService) error
+	DeleteDeviceServiceById(id string) error
 
 	// Provision watcher
 	GetProvisionWatcherById(pw *models.ProvisionWatcher, id string) error
@@ -106,7 +106,7 @@ type DBClient interface {
 	GetProvisionWatchersByIdentifier(pw *[]models.ProvisionWatcher, k string, v string) error
 	AddProvisionWatcher(pw *models.ProvisionWatcher) error
 	UpdateProvisionWatcher(pw models.ProvisionWatcher) error
-	DeleteProvisionWatcher(pw models.ProvisionWatcher) error
+	DeleteProvisionWatcherById(id string) error
 
 	// Command
 	GetCommandById(c *models.Command, id string) error
