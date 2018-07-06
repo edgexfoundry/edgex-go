@@ -81,6 +81,13 @@ func (mc *MongoClient) getSessionCopy() *mgo.Session {
 	return mc.session.Copy()
 }
 
+func errorMap(err error) error {
+	if err == mgo.ErrNotFound {
+		err = db.ErrNotFound
+	}
+	return err
+}
+
 // Delete from the collection based on ID
 func (mc *MongoClient) deleteById(col string, id string) error {
 	// Check if id is a hexstring
@@ -92,8 +99,5 @@ func (mc *MongoClient) deleteById(col string, id string) error {
 	defer s.Close()
 
 	err := s.DB(mc.database.Name).C(col).RemoveId(bson.ObjectIdHex(id))
-	if err == mgo.ErrNotFound {
-		return db.ErrNotFound
-	}
-	return err
+	return errorMap(err)
 }

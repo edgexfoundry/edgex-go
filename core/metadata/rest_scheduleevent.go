@@ -25,7 +25,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"github.com/gorilla/mux"
 	"github.com/robfig/cron"
-	"gopkg.in/mgo.v2"
 )
 
 func isIntervalValid(frequency string) bool {
@@ -83,7 +82,7 @@ func restAddScheduleEvent(w http.ResponseWriter, r *http.Request) {
 	}
 	var s models.Schedule
 	if err := dbClient.GetScheduleByName(&s, se.Schedule); err != nil {
-		if err == mgo.ErrNotFound {
+		if err == db.ErrNotFound {
 			http.Error(w, "Schedule not found for schedule event", http.StatusNotFound)
 			loggingClient.Error("Schedule not found for schedule event: "+err.Error(), "")
 		} else {
@@ -108,7 +107,7 @@ func restAddScheduleEvent(w http.ResponseWriter, r *http.Request) {
 
 	/*if len(se.Addressable.Name) != 0 {
 		if err := getAddressableByName(&se.Addressable, se.Addressable.Name); err != nil {
-			if err == mgo.ErrNotFound {
+			if err == db.ErrNotFound {
 				http.Error(w, "Unknown Addressable", http.StatusNotFound)
 				LOGGER.Println(err.Error())
 				return
@@ -119,7 +118,7 @@ func restAddScheduleEvent(w http.ResponseWriter, r *http.Request) {
 		}
 	} else if len(se.Addressable.Id.Hex()) != 0 {
 		if err := getAddressableById(&se.Addressable, se.Addressable.Id.Hex()); err != nil {
-			if err == mgo.ErrNotFound {
+			if err == db.ErrNotFound {
 				http.Error(w, "Unknown Addressable", http.StatusNotFound)
 				LOGGER.Println(err.Error())
 				return
@@ -198,7 +197,7 @@ func getScheduleEventByIdOrName(from models.ScheduleEvent, w http.ResponseWriter
 	if err := dbClient.GetScheduleEventById(&se, from.Id.Hex()); err != nil {
 		// Try by Name
 		if err = dbClient.GetScheduleEventByName(&se, from.Name); err != nil {
-			if err == mgo.ErrNotFound {
+			if err == db.ErrNotFound {
 				http.Error(w, "Schedule Event not found", http.StatusNotFound)
 				loggingClient.Error(err.Error(), "")
 			} else {
@@ -225,7 +224,7 @@ func updateScheduleEventFields(from models.ScheduleEvent, to *models.ScheduleEve
 		if err := dbClient.GetAddressableById(&from.Addressable, from.Addressable.Id.Hex()); err != nil {
 			// Try by name
 			if err = dbClient.GetAddressableByName(&from.Addressable, from.Addressable.Name); err != nil {
-				if err == mgo.ErrNotFound {
+				if err == db.ErrNotFound {
 					http.Error(w, "Addressable not found for schedule event", http.StatusNotFound)
 				} else {
 					http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -242,7 +241,7 @@ func updateScheduleEventFields(from models.ScheduleEvent, to *models.ScheduleEve
 			// Verify that the new service exists
 			var checkDS models.DeviceService
 			if err := dbClient.GetDeviceServiceByName(&checkDS, from.Service); err != nil {
-				if err == mgo.ErrNotFound {
+				if err == db.ErrNotFound {
 					http.Error(w, "Device Service not found for schedule event", http.StatusNotFound)
 				} else {
 					http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -259,7 +258,7 @@ func updateScheduleEventFields(from models.ScheduleEvent, to *models.ScheduleEve
 			// Verify that the new schedule exists
 			var checkS models.Schedule
 			if err := dbClient.GetScheduleByName(&checkS, from.Schedule); err != nil {
-				if err == mgo.ErrNotFound {
+				if err == db.ErrNotFound {
 					http.Error(w, "Schedule not found for schedule event", http.StatusNotFound)
 				} else {
 					http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -323,7 +322,7 @@ func restGetScheduleEventByName(w http.ResponseWriter, r *http.Request) {
 	var res models.ScheduleEvent
 	err = dbClient.GetScheduleEventByName(&res, n)
 	if err != nil {
-		if err == mgo.ErrNotFound {
+		if err == db.ErrNotFound {
 			http.Error(w, "Schedule event not found", http.StatusNotFound)
 			loggingClient.Error("Schedule event not found: "+err.Error(), "")
 		} else {
@@ -372,7 +371,7 @@ func restDeleteScheduleEventByName(w http.ResponseWriter, r *http.Request) {
 	// Check if the schedule event exists
 	var se models.ScheduleEvent
 	if err := dbClient.GetScheduleEventByName(&se, n); err != nil {
-		if err == mgo.ErrNotFound {
+		if err == db.ErrNotFound {
 			http.Error(w, "Schedule event not found", http.StatusNotFound)
 			loggingClient.Error("Schedule event not found: "+err.Error(), "")
 		} else {
@@ -426,7 +425,7 @@ func restGetScheduleEventById(w http.ResponseWriter, r *http.Request) {
 	var res models.ScheduleEvent
 	err := dbClient.GetScheduleEventById(&res, did)
 	if err != nil {
-		if err == mgo.ErrNotFound {
+		if err == db.ErrNotFound {
 			http.Error(w, "Schedule event not found", http.StatusNotFound)
 			loggingClient.Error("Schedule event not found: "+err.Error(), "")
 		} else {
@@ -449,7 +448,7 @@ func restGetScheduleEventByAddressableId(w http.ResponseWriter, r *http.Request)
 	// Check if the addressable exists
 	var a models.Addressable
 	if err := dbClient.GetAddressableById(&a, aid); err != nil {
-		if err == mgo.ErrNotFound {
+		if err == db.ErrNotFound {
 			http.Error(w, "Addressable not found for schedule event", http.StatusNotFound)
 			loggingClient.Error("Addressable not found for schedule event: "+err.Error(), "")
 		} else {
@@ -485,7 +484,7 @@ func restGetScheduleEventByAddressableName(w http.ResponseWriter, r *http.Reques
 	// Check if the addressable exists
 	var a models.Addressable
 	if err = dbClient.GetAddressableByName(&a, an); err != nil {
-		if err == mgo.ErrNotFound {
+		if err == db.ErrNotFound {
 			loggingClient.Error("Addressable not found for schedule event: "+err.Error(), "")
 			http.Error(w, "Addressable not found for schedule event", http.StatusNotFound)
 		} else {
@@ -521,7 +520,7 @@ func restGetScheduleEventsByServiceName(w http.ResponseWriter, r *http.Request) 
 	// Check if the service exists
 	var ds models.DeviceService
 	if err = dbClient.GetDeviceServiceByName(&ds, sn); err != nil {
-		if err == mgo.ErrNotFound {
+		if err == db.ErrNotFound {
 			http.Error(w, "Service not found for schedule event", http.StatusNotFound)
 			loggingClient.Error("Device service not found for schedule event: "+err.Error(), "")
 		} else {
@@ -577,7 +576,7 @@ func restAddSchedule(w http.ResponseWriter, r *http.Request) {
 	// Check if the name is unique
 	var checkS models.Schedule
 	if err := dbClient.GetScheduleByName(&checkS, s.Name); err != nil {
-		if err != mgo.ErrNotFound {
+		if err != db.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			loggingClient.Error("Schedule not found: "+err.Error(), "")
 			return
@@ -711,7 +710,7 @@ func updateScheduleFields(from models.Schedule, to *models.Schedule, w http.Resp
 		// Check if new name is unique
 		var checkS models.Schedule
 		if err := dbClient.GetScheduleByName(&checkS, from.Name); err != nil {
-			if err != mgo.ErrNotFound {
+			if err != db.ErrNotFound {
 				http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			}
 		} else {
@@ -747,7 +746,7 @@ func restGetScheduleById(w http.ResponseWriter, r *http.Request) {
 	var res models.Schedule
 	err := dbClient.GetScheduleById(&res, sid)
 	if err != nil {
-		if err == mgo.ErrNotFound {
+		if err == db.ErrNotFound {
 			http.Error(w, "Schedule not found", http.StatusNotFound)
 			loggingClient.Error("Schedule not found: "+err.Error(), "")
 		} else {
@@ -773,7 +772,7 @@ func restGetScheduleByName(w http.ResponseWriter, r *http.Request) {
 	var res models.Schedule
 	err = dbClient.GetScheduleByName(&res, n)
 	if err != nil {
-		if err == mgo.ErrNotFound {
+		if err == db.ErrNotFound {
 			http.Error(w, "Schedule not found", http.StatusNotFound)
 			loggingClient.Error("Schedule not found: "+err.Error(), "")
 		} else {
@@ -794,7 +793,7 @@ func restDeleteScheduleById(w http.ResponseWriter, r *http.Request) {
 	// Check if the schedule exists
 	var s models.Schedule
 	if err := dbClient.GetScheduleById(&s, id); err != nil {
-		if err == mgo.ErrNotFound {
+		if err == db.ErrNotFound {
 			http.Error(w, "Schedule not found", http.StatusNotFound)
 			loggingClient.Error("Schedule not found: "+err.Error(), "")
 		} else {
@@ -825,7 +824,7 @@ func restDeleteScheduleByName(w http.ResponseWriter, r *http.Request) {
 	// Check if the schedule exists
 	var s models.Schedule
 	if err = dbClient.GetScheduleByName(&s, n); err != nil {
-		if err == mgo.ErrNotFound {
+		if err == db.ErrNotFound {
 			loggingClient.Error("Schedule not found: "+err.Error(), "")
 			http.Error(w, "Schedule not found", http.StatusNotFound)
 		} else {

@@ -22,7 +22,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/core/db"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"github.com/gorilla/mux"
-	"gopkg.in/mgo.v2"
 )
 
 func restGetAllCommands(w http.ResponseWriter, _ *http.Request) {
@@ -186,9 +185,7 @@ func restDeleteCommandById(w http.ResponseWriter, r *http.Request) {
 
 	if err := dbClient.DeleteCommandById(id); err != nil {
 		loggingClient.Error(err.Error(), "")
-		if err == mgo.ErrNotFound {
-			http.Error(w, err.Error(), http.StatusNotFound)
-		} else if err == db.ErrCommandStillInUse {
+		if err == db.ErrCommandStillInUse {
 			http.Error(w, err.Error(), http.StatusConflict)
 		} else {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)

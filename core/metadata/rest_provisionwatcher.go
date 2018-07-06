@@ -22,7 +22,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/core/db"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"github.com/gorilla/mux"
-	"gopkg.in/mgo.v2"
 )
 
 func restGetProvisionWatchers(w http.ResponseWriter, _ *http.Request) {
@@ -78,7 +77,7 @@ func restDeleteProvisionWatcherByName(w http.ResponseWriter, r *http.Request) {
 	// Check if the provision watcher exists
 	var pw models.ProvisionWatcher
 	if err = dbClient.GetProvisionWatcherByName(&pw, n); err != nil {
-		if err == mgo.ErrNotFound {
+		if err == db.ErrNotFound {
 			errMessage := "Provision watcher not found: " + err.Error()
 			http.Error(w, errMessage, http.StatusNotFound)
 			loggingClient.Error(errMessage, "")
@@ -118,7 +117,7 @@ func restGetProvisionWatcherById(w http.ResponseWriter, r *http.Request) {
 	var res models.ProvisionWatcher
 
 	if err := dbClient.GetProvisionWatcherById(&res, id); err != nil {
-		if err == mgo.ErrNotFound {
+		if err == db.ErrNotFound {
 			errMessage := "Problem getting provision watcher by ID: " + err.Error()
 			loggingClient.Error(errMessage, "")
 			http.Error(w, errMessage, http.StatusNotFound)
@@ -145,7 +144,7 @@ func restGetProvisionWatcherByName(w http.ResponseWriter, r *http.Request) {
 
 	err = dbClient.GetProvisionWatcherByName(&res, n)
 	if err != nil {
-		if err == mgo.ErrNotFound {
+		if err == db.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
 			loggingClient.Error("Provision watcher not found: "+err.Error(), "")
 		} else {
@@ -193,7 +192,7 @@ func restGetProvisionWatchersByProfileName(w http.ResponseWriter, r *http.Reques
 	// Check if the device profile exists
 	var dp models.DeviceProfile
 	if err = dbClient.GetDeviceProfileByName(&dp, pn); err != nil {
-		if err == mgo.ErrNotFound {
+		if err == db.ErrNotFound {
 			http.Error(w, "Device profile not found", http.StatusNotFound)
 			loggingClient.Error("Device profile not found: "+err.Error(), "")
 		} else {
@@ -249,7 +248,7 @@ func restGetProvisionWatchersByServiceName(w http.ResponseWriter, r *http.Reques
 	// Check if the device service exists
 	var ds models.DeviceService
 	if err = dbClient.GetDeviceServiceByName(&ds, sn); err != nil {
-		if err == mgo.ErrNotFound {
+		if err == db.ErrNotFound {
 			http.Error(w, "Device service not found", http.StatusNotFound)
 			loggingClient.Error("Device service not found: "+err.Error(), "")
 		} else {
@@ -318,7 +317,7 @@ func restAddProvisionWatcher(w http.ResponseWriter, r *http.Request) {
 	if err := dbClient.GetDeviceProfileById(&pw.Profile, pw.Profile.Id.Hex()); err != nil {
 		// Try by name
 		if err = dbClient.GetDeviceProfileByName(&pw.Profile, pw.Profile.Name); err != nil {
-			if err == mgo.ErrNotFound {
+			if err == db.ErrNotFound {
 				loggingClient.Error("Device profile not found for provision watcher: "+err.Error(), "")
 				http.Error(w, "Device profile not found for provision watcher", http.StatusConflict)
 			} else {
@@ -334,7 +333,7 @@ func restAddProvisionWatcher(w http.ResponseWriter, r *http.Request) {
 	if err := dbClient.GetDeviceServiceById(&pw.Service, pw.Service.Service.Id.Hex()); err != nil {
 		// Try by name
 		if err = dbClient.GetDeviceServiceByName(&pw.Service, pw.Service.Service.Name); err != nil {
-			if err == mgo.ErrNotFound {
+			if err == db.ErrNotFound {
 				http.Error(w, "Device service not found for provision watcher", http.StatusConflict)
 				loggingClient.Error("Device service not found for provision watcher: "+err.Error(), "")
 			} else {
@@ -383,7 +382,7 @@ func restUpdateProvisionWatcher(w http.ResponseWriter, r *http.Request) {
 	if err := dbClient.GetProvisionWatcherById(&to, from.Id.Hex()); err != nil {
 		// Try by name
 		if err = dbClient.GetProvisionWatcherByName(&to, from.Name); err != nil {
-			if err == mgo.ErrNotFound {
+			if err == db.ErrNotFound {
 				http.Error(w, "Provision watcher not found", http.StatusNotFound)
 				loggingClient.Error("Provision watcher not found: "+err.Error(), "")
 			} else {
@@ -427,13 +426,13 @@ func updateProvisionWatcherFields(from models.ProvisionWatcher, to *models.Provi
 		var checkPW models.ProvisionWatcher
 		err := dbClient.GetProvisionWatcherByName(&checkPW, from.Name)
 		if err != nil {
-			if err != mgo.ErrNotFound {
+			if err != db.ErrNotFound {
 				http.Error(w, err.Error(), http.StatusServiceUnavailable)
 				return err
 			}
 		}
 		// Found one, compare the IDs to see if its another provision watcher
-		if err != mgo.ErrNotFound {
+		if err != db.ErrNotFound {
 			if checkPW.Id != to.Id {
 				err = errors.New("Duplicate name for the provision watcher")
 				http.Error(w, err.Error(), http.StatusConflict)
