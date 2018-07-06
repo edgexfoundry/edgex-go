@@ -22,7 +22,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/core/db"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"github.com/gorilla/mux"
-	mgo "gopkg.in/mgo.v2"
 )
 
 func restGetAllDeviceReports(w http.ResponseWriter, _ *http.Request) {
@@ -61,7 +60,7 @@ func restAddDeviceReport(w http.ResponseWriter, r *http.Request) {
 	// Check if the device exists
 	var d models.Device
 	if err := dbClient.GetDeviceByName(&d, dr.Device); err != nil {
-		if err == mgo.ErrNotFound {
+		if err == db.ErrNotFound {
 			http.Error(w, "Device referenced by Device Report doesn't exist", http.StatusNotFound)
 		} else {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -73,7 +72,7 @@ func restAddDeviceReport(w http.ResponseWriter, r *http.Request) {
 	// Check if the Schedule Event exists
 	var se models.ScheduleEvent
 	if err := dbClient.GetScheduleEventByName(&se, dr.Event); err != nil {
-		if err == mgo.ErrNotFound {
+		if err == db.ErrNotFound {
 			http.Error(w, "Schedule Event referenced by Device Report doesn't exist", http.StatusNotFound)
 		} else {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -117,7 +116,7 @@ func restUpdateDeviceReport(w http.ResponseWriter, r *http.Request) {
 	if err := dbClient.GetDeviceReportById(&to, from.Id.Hex()); err != nil {
 		// Try by name
 		if err = dbClient.GetDeviceReportByName(&to, from.Name); err != nil {
-			if err == mgo.ErrNotFound {
+			if err == db.ErrNotFound {
 				http.Error(w, err.Error(), http.StatusNotFound)
 			} else {
 				http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -179,7 +178,7 @@ func updateDeviceReportFields(from models.DeviceReport, to *models.DeviceReport,
 func validateDevice(d string, w http.ResponseWriter) error {
 	var device models.Device
 	if err := dbClient.GetDeviceByName(&device, d); err != nil {
-		if err == mgo.ErrNotFound {
+		if err == db.ErrNotFound {
 			http.Error(w, "Device was not found", http.StatusNotFound)
 		} else {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -194,7 +193,7 @@ func validateDevice(d string, w http.ResponseWriter) error {
 func validateEvent(e string, w http.ResponseWriter) error {
 	var event models.ScheduleEvent
 	if err := dbClient.GetScheduleEventByName(&event, e); err != nil {
-		if err == mgo.ErrNotFound {
+		if err == db.ErrNotFound {
 			http.Error(w, "Event was not found", http.StatusNotFound)
 		} else {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -211,7 +210,7 @@ func restGetReportById(w http.ResponseWriter, r *http.Request) {
 	var res models.DeviceReport
 	err := dbClient.GetDeviceReportById(&res, did)
 	if err != nil {
-		if err == mgo.ErrNotFound {
+		if err == db.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
 		} else {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -236,7 +235,7 @@ func restGetReportByName(w http.ResponseWriter, r *http.Request) {
 	var res models.DeviceReport
 	err = dbClient.GetDeviceReportByName(&res, n)
 	if err != nil {
-		if err == mgo.ErrNotFound {
+		if err == db.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
 		} else {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -306,7 +305,7 @@ func restDeleteReportById(w http.ResponseWriter, r *http.Request) {
 	// Check if the device report exists
 	var dr models.DeviceReport
 	if err := dbClient.GetDeviceReportById(&dr, id); err != nil {
-		if err == mgo.ErrNotFound {
+		if err == db.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
 		} else {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -336,7 +335,7 @@ func restDeleteReportByName(w http.ResponseWriter, r *http.Request) {
 	// Check if the device report exists
 	var dr models.DeviceReport
 	if err = dbClient.GetDeviceReportByName(&dr, n); err != nil {
-		if err == mgo.ErrNotFound {
+		if err == db.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
 		} else {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
