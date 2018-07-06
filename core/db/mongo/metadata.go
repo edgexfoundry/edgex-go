@@ -920,11 +920,7 @@ func (m *MongoClient) GetCommandByName(c *[]models.Command, n string) error {
 	s := m.session.Copy()
 	defer s.Close()
 	col := s.DB(m.database.Name).C(db.Command)
-	err := col.Find(bson.M{"name": n}).All(c)
-	if err == mgo.ErrNotFound {
-		return db.ErrNotFound
-	}
-	return err
+	return col.Find(bson.M{"name": n}).All(c)
 }
 
 func (m *MongoClient) AddCommand(c *models.Command) error {
