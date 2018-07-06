@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 
@@ -22,7 +23,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/support/logging"
 	"github.com/edgexfoundry/edgex-go/support/logging-client"
-	"strconv"
 )
 
 var loggingClient logger.LoggingClient
