@@ -99,7 +99,7 @@ func restDeleteProvisionWatcherByName(w http.ResponseWriter, r *http.Request) {
 
 // Delete the provision watcher
 func deleteProvisionWatcher(pw models.ProvisionWatcher, w http.ResponseWriter) error {
-	if err := dbClient.DeleteProvisionWatcher(pw); err != nil {
+	if err := dbClient.DeleteProvisionWatcherById(pw.Id.Hex()); err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return err
 	}

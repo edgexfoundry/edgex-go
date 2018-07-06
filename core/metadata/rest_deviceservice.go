@@ -508,7 +508,7 @@ func deleteDeviceService(ds models.DeviceService, w http.ResponseWriter) error {
 	}
 
 	// Delete the device service
-	if err := dbClient.DeleteDeviceService(ds); err != nil {
+	if err := dbClient.DeleteDeviceServiceById(ds.Id.Hex()); err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return err
 	}

@@ -354,7 +354,7 @@ func restDeleteReportByName(w http.ResponseWriter, r *http.Request) {
 }
 
 func deleteDeviceReport(dr models.DeviceReport, w http.ResponseWriter) error {
-	if err := dbClient.DeleteDeviceReport(dr); err != nil {
+	if err := dbClient.DeleteDeviceReportById(dr.Id.Hex()); err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return err
 	}

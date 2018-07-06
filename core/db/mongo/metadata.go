@@ -127,8 +127,8 @@ func (m *MongoClient) GetScheduleEvents(se *[]models.ScheduleEvent, q bson.M) er
 	return nil
 }
 
-func (m *MongoClient) DeleteScheduleEvent(se models.ScheduleEvent) error {
-	return m.deleteById(db.ScheduleEvent, se.Id.Hex())
+func (m *MongoClient) DeleteScheduleEventById(id string) error {
+	return m.deleteById(db.ScheduleEvent, id)
 }
 
 //  --------------------------Schedule ---------------------------*/
@@ -181,8 +181,8 @@ func (m *MongoClient) UpdateSchedule(sch models.Schedule) error {
 	return nil
 }
 
-func (m *MongoClient) DeleteSchedule(s models.Schedule) error {
-	return m.deleteById(db.Schedule, s.Id.Hex())
+func (m *MongoClient) DeleteScheduleById(id string) error {
+	return m.deleteById(db.Schedule, id)
 }
 
 func (m *MongoClient) GetSchedule(sch *models.Schedule, q bson.M) error {
@@ -265,8 +265,8 @@ func (m *MongoClient) UpdateDeviceReport(dr *models.DeviceReport) error {
 	return col.UpdateId(dr.Id, dr)
 }
 
-func (m *MongoClient) DeleteDeviceReport(dr models.DeviceReport) error {
-	return m.deleteById(db.DeviceReport, dr.Id.Hex())
+func (m *MongoClient) DeleteDeviceReportById(id string) error {
+	return m.deleteById(db.DeviceReport, id)
 }
 
 /* ----------------------------- Device ---------------------------------- */
@@ -305,8 +305,8 @@ func (m *MongoClient) UpdateDevice(rd models.Device) error {
 	return c.UpdateId(rd.Id, md)
 }
 
-func (m *MongoClient) DeleteDevice(d models.Device) error {
-	return m.deleteById(db.Device, d.Id.Hex())
+func (m *MongoClient) DeleteDeviceById(id string) error {
+	return m.deleteById(db.Device, id)
 }
 
 func (m *MongoClient) GetAllDevices(d *[]models.Device) error {
@@ -504,8 +504,8 @@ func (m *MongoClient) GetDeviceProfilesUsingCommand(dp *[]models.DeviceProfile, 
 	return m.GetDeviceProfiles(dp, query)
 }
 
-func (m *MongoClient) DeleteDeviceProfile(dp models.DeviceProfile) error {
-	return m.deleteById(db.DeviceProfile, dp.Id.Hex())
+func (m *MongoClient) DeleteDeviceProfileById(id string) error {
+	return m.deleteById(db.DeviceProfile, id)
 }
 
 //  -----------------------------------Addressable --------------------------*/
@@ -623,8 +623,8 @@ func (m *MongoClient) GetAddressable(d *models.Addressable, q bson.M) error {
 	return errorMap(err)
 }
 
-func (m *MongoClient) DeleteAddressable(a models.Addressable) error {
-	return m.deleteById(db.Addressable, a.Id.Hex())
+func (m *MongoClient) DeleteAddressableById(id string) error {
+	return m.deleteById(db.Addressable, id)
 }
 
 /* ----------------------------- Device Service ----------------------------------*/
@@ -718,8 +718,8 @@ func (m *MongoClient) UpdateDeviceService(deviceService models.DeviceService) er
 	return c.UpdateId(deviceService.Id, mds)
 }
 
-func (m *MongoClient) DeleteDeviceService(ds models.DeviceService) error {
-	return m.deleteById(db.DeviceService, ds.Id.Hex())
+func (m *MongoClient) DeleteDeviceServiceById(id string) error {
+	return m.deleteById(db.DeviceService, id)
 }
 
 //  ----------------------Provision Watcher -----------------------------*/
@@ -856,8 +856,8 @@ func (m *MongoClient) UpdateProvisionWatcher(pw models.ProvisionWatcher) error {
 	return c.UpdateId(mpw.Id, mpw)
 }
 
-func (m *MongoClient) DeleteProvisionWatcher(pw models.ProvisionWatcher) error {
-	return m.deleteById(db.ProvisionWatcher, pw.Id.Hex())
+func (m *MongoClient) DeleteProvisionWatcherById(id string) error {
+	return m.deleteById(db.ProvisionWatcher, id)
 }
 
 //  ------------------------Command -------------------------------------*/
