@@ -18,8 +18,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"gopkg.in/mgo.v2/bson"
 )
 
