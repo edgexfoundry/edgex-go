@@ -583,3 +583,9 @@ func (mc *MongoClient) deleteAll(q bson.M, col string) error {
 	}
 	return err
 }
+
+// Return all the subscriptions
+// UnexpectedError - failed to retrieve subscriptions from the database
+func (mc *MongoClient) Subscriptions() ([]models.Subscription, error) {
+	return mc.getSubscriptions(bson.M{})
+}

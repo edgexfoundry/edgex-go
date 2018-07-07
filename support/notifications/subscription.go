@@ -25,12 +25,36 @@ import (
 	"github.com/gorilla/mux"
 )
 
+const (
+	maxExceededString string = "Error, exceeded the max limit as defined in config"
+	applicationJson          = "application/json; charset=utf-8"
+)
+
 func subscriptionHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Body != nil {
 		defer r.Body.Close()
 	}
 
 	switch r.Method {
+
+	// Get all subscriptions
+	case http.MethodGet:
+		events, err := dbc.Subscriptions()
+		if err != nil {
+			loggingClient.Error(err.Error())
+			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			return
+		}
+		// Check max limit
+		if len(events) > configuration.ReadMaxLimit {
+			http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
+			loggingClient.Error(maxExceededString)
+			return
+		}
+		w.Header().Set("Content-Type", applicationJson)
+		encode(events, w)
+		break
+
 	case http.MethodPost:
 		var s models.Subscription
 		dec := json.NewDecoder(r.Body)

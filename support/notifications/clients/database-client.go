@@ -61,6 +61,8 @@ type DBClient interface {
 
 	DeleteNotificationsOld(age int64) error
 
+	Subscriptions() ([]models.Subscription, error)
+
 	SubscriptionById(id string) (models.Subscription, error)
 
 	SubscriptionBySlug(slug string) (models.Subscription, error)
