@@ -16,6 +16,7 @@ type ConfigurationStruct struct {
 	DistroHost           string
 	ClientHost           string
 	DataHost             string
+	DataPort			 int
 	ConsulHost           string
 	ConsulPort           int
 	ConsulProfilesActive string
