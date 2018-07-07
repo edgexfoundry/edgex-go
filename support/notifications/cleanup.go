@@ -39,7 +39,7 @@ func cleanupHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
+		w.WriteHeader(http.StatusAccepted)
 		w.Write([]byte("true"))
 
 	}
@@ -67,7 +67,7 @@ func cleanupAgeHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
+		w.WriteHeader(http.StatusAccepted)
 		w.Write([]byte("true"))
 
 	}
