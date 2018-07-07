@@ -22,6 +22,7 @@ type ConfigurationStruct struct {
 	CheckInterval        string
 	MQTTSCert            string
 	MQTTSKey             string
+	MarkPushed           bool
 }
 
 var configuration ConfigurationStruct = ConfigurationStruct{} // Needs to be initialized before used
