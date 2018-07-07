@@ -52,13 +52,13 @@ func Init(conf ConfigurationStruct, l *zap.Logger) error {
 	configuration = conf
 	logger = l
 
-	deviceURL := "http://localhost:48080" + EventUriPath
+	coreDataEventURL := "http://" + conf.DataHost + ":" + strconv.Itoa(conf.DataPort) + EventUriPath
 
 	params := types.EndpointParams{
 		ServiceKey:  internal.CoreDataServiceKey,
 		Path:        EventUriPath,
 		UseRegistry: false,
-		Url:         deviceURL,
+		Url:         coreDataEventURL,
 	}
 
 	ec = coredata.NewEventClient(params, nil)
