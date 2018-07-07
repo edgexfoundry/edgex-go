@@ -60,7 +60,8 @@ func notificationHandler(w http.ResponseWriter, r *http.Request) {
 			loggingClient.Info("Critical severity scheduler has completed for: " + n.Slug)
 		}
 
-		w.WriteHeader(http.StatusOK)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusAccepted)
 		w.Write([]byte(id.Hex()))
 
 		break
