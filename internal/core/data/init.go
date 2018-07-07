@@ -19,9 +19,9 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/core/clients/metadata"
 	"github.com/edgexfoundry/edgex-go/core/clients/types"
-	"github.com/edgexfoundry/edgex-go/core/data/interfaces"
-	"github.com/edgexfoundry/edgex-go/core/data/messaging"
 	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/internal/core/data/interfaces"
+	"github.com/edgexfoundry/edgex-go/internal/core/data/messaging"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/influx"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/memory"
