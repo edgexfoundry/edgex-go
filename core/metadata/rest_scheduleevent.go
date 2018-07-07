@@ -21,8 +21,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/edgexfoundry/edgex-go/core/db"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/gorilla/mux"
 	"github.com/robfig/cron"
 )

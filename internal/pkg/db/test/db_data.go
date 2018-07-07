@@ -12,7 +12,7 @@ import (
 	"testing"
 
 	"github.com/edgexfoundry/edgex-go/core/data/interfaces"
-	dbp "github.com/edgexfoundry/edgex-go/core/db"
+	dbp "github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"gopkg.in/mgo.v2/bson"
 )

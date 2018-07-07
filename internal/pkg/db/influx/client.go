@@ -20,7 +20,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/edgexfoundry/edgex-go/core/db"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/influxdata/influxdb/client/v2"
 )
 

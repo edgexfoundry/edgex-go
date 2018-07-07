@@ -9,7 +9,7 @@ package memory
 import (
 	"testing"
 
-	"github.com/edgexfoundry/edgex-go/core/db/test"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db/test"
 )
 
 func TestMemoryDB(t *testing.T) {
