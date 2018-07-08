@@ -99,7 +99,7 @@ func subscriptionHandler(w http.ResponseWriter, r *http.Request) {
 		loggingClient.Info("Posting Subscription: " + s.String())
 		id, err := dbc.AddSubscription(&s)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, err.Error(), http.StatusConflict)
 			loggingClient.Error(err.Error())
 			return
 		}
