@@ -60,7 +60,7 @@ func notificationHandler(w http.ResponseWriter, r *http.Request) {
 			loggingClient.Info("Critical severity scheduler has completed for: " + n.Slug)
 		}
 
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		w.WriteHeader(http.StatusAccepted)
 		w.Write([]byte(id.Hex()))
 
@@ -87,6 +87,8 @@ func notificationBySlugHandler(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 			loggingClient.Error(err.Error())
+			w.Header().Set("Content-Type", applicationJson)
+			encode(n, w)
 			return
 		}
 
@@ -280,6 +282,8 @@ func notificationByStartEndHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		loggingClient.Error(err.Error())
+		w.Header().Set("Content-Type", applicationJson)
 		encode(n, w)
 	}
 }
