@@ -211,12 +211,22 @@ func (mc *MongoClient) AddSubscription(s *models.Subscription) (bson.ObjectId, e
 	return mc.addSubscription(s)
 }
 
+func (mc *MongoClient) UpdateSubscription(s models.Subscription) error {
+	return mc.updateSubscription(s)
+}
+
 func (mc *MongoClient) DeleteSubscriptionBySlug(slug string) error {
 	ms, err := mc.SubscriptionBySlug(slug)
 	if err == mgo.ErrNotFound {
 		return ErrNotFound
 	}
 	return mc.deleteByObjectID(ms.ID, SUBSCRIPTION_COLLECTION)
+}
+
+// Return all the subscriptions
+// UnexpectedError - failed to retrieve subscriptions from the database
+func (mc *MongoClient) Subscriptions() ([]models.Subscription, error) {
+	return mc.getSubscriptions(bson.M{})
 }
 
 // ******************************* TRANSMISSIONS  **********************************
@@ -582,10 +592,4 @@ func (mc *MongoClient) deleteAll(q bson.M, col string) error {
 		return ErrNotFound
 	}
 	return err
-}
-
-// Return all the subscriptions
-// UnexpectedError - failed to retrieve subscriptions from the database
-func (mc *MongoClient) Subscriptions() ([]models.Subscription, error) {
-	return mc.getSubscriptions(bson.M{})
 }

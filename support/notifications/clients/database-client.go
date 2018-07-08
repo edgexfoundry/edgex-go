@@ -77,6 +77,8 @@ type DBClient interface {
 
 	AddSubscription(s *models.Subscription) (bson.ObjectId, error)
 
+	UpdateSubscription(s models.Subscription) error
+
 	DeleteSubscriptionBySlug(id string) error
 
 	AddTransmission(t *models.Transmission) (bson.ObjectId, error)

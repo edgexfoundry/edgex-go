@@ -35,6 +35,9 @@ func subscriptionHandler(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
 	}
 
+	vars := mux.Vars(r)
+	slug := vars["slug"]
+
 	switch r.Method {
 
 	// Get all subscriptions
@@ -53,6 +56,33 @@ func subscriptionHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		w.Header().Set("Content-Type", applicationJson)
 		encode(events, w)
+		break
+
+		// Modify (an existing) subscription
+	case http.MethodPut:
+		// Check if the subscription exists
+		s, err := dbc.SubscriptionBySlug(slug)
+		if err != nil {
+			if err == clients.ErrNotFound {
+				http.Error(w, "Subscription not found", http.StatusNotFound)
+			} else {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
+			loggingClient.Error(err.Error())
+			return
+		}
+
+		loggingClient.Info("Updating subscription by slug: " + slug)
+
+		if err = dbc.UpdateSubscription(s);
+			err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			loggingClient.Error(err.Error())
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("true"))
 		break
 
 	case http.MethodPost:
