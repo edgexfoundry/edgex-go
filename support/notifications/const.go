@@ -58,8 +58,15 @@ type ConfigurationStruct struct {
 var configuration = ConfigurationStruct{} //  Needs to be initialized before used
 
 var (
+	/* ----------------------- CONSTANTS ----------------------------*/
 	SUPPORTNOTIFICATIONSSERVICENAME = "support-notifications"
 	ESCALATIONSUBSCRIPTIONSLUG      = "ESCALATION"
 	ESCALATIONPREFIX                = "escalated-"
 	ESCALATEDCONTENTNOTICE          = "This notificaiton is escalated by the transmission"
+
+	/* ---------------- URL PARAM NAMES -----------------------*/
+	NOTIFICATION = "notification"
+	START        = "start"
+	END          = "end"
+	LIMIT        = "limit"
 )
