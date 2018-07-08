@@ -125,7 +125,7 @@ func listenForInterrupt(errChan chan error) {
 
 func startHttpServer(errChan chan error, port int) {
 	go func() {
-		r := data.LoadRestRoutes()
+		r := notifications.LoadRestRoutes()
 		errChan <- http.ListenAndServe(":"+strconv.Itoa(port), r)
 	}()
 }
