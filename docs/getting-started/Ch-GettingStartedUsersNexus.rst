@@ -14,27 +14,16 @@ c) you are working in a Windows or non-Linux environment and you are unable to b
 
 In order to get containers from the Nexus Repository, follow these steps:
 
-**Login**
-
-Login to the Nexus Repository (nexus3.edgexfoundry.org:10003) with username and password of docker.
-
-$ docker login nexus3.edgexfoundry.org:10003
-
-Username: docker
-
-Password: docker
-
-Login Succeeded
-
 **Pull the container(s)**
 
-Pull the container(s) from Nexus into your local environment.  In the example below, the docker-core-config-seed container image is pulled from Nexus.
+Pull the container(s) from Nexus into your local environment.  In the example below, the docker-core-config-seed container image is pulled from Nexus.  Note the host name (nexus3.edgexfoundry.org) and port (10004) for pulling
 
-$ docker pull nexus3.edgexfoundry.org:10003/docker-core-config-seed
+$ docker pull nexus3.edgexfoundry.org:10004/docker-core-config-seed
 
 **Replace the image(s) in docker-compose.yml**
 
-A Docker Compose file that pulls the latest EdgeX container images from Nexus is available here:  EdgeX Foundry Docker Compose using images from Nexus.  If you are creating your own Docker Compose file or want to use and existing EdgeX Docker Compose file but selectively use Nexus images, replace the name/location of the Docker image in your docker-compose.yml file for the containers you want to get from Nexus versus Docker Hub.  For example, the config-seed item in docker-compose.yml might ordinarily look like this:
+A Docker Compose file that pulls the latest EdgeX container images from Nexus is available here:  https://github.com/edgexfoundry/developer-scripts/blob/master/compose-files/docker-compose-nexus.yml.
+If you are creating your own Docker Compose file or want to use and existing EdgeX Docker Compose file but selectively use Nexus images, replace the name/location of the Docker image in your docker-compose.yml file for the containers you want to get from Nexus versus Docker Hub.  For example, the config-seed item in docker-compose.yml might ordinarily look like this:
 
 ::
 
@@ -64,7 +53,7 @@ Change the "image" field to point to the Nexus Repos
 ::
 
    config-seed:
-     **image: nexus3.edgexfoundry.org:10003/docker-core-config-seed**
+     **image: nexus3.edgexfoundry.org:10004/docker-core-config-seed**
       ports:
          \- "8400:8400"\
          \- "8500:8500"\
@@ -89,5 +78,5 @@ Save the Docker Compose YAML file after you make any changes.
 
 Now start your container(s) as you would normally with Docker Compose
 
-$ docker-compose up -d
+$ docker-compose up -d [container_name]
 
