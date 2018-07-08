@@ -32,7 +32,7 @@ func LoadRestRoutes() *mux.Router {
 	b.HandleFunc("/notification/slug/{slug}", notificationBySlugHandler).Methods(http.MethodGet, http.MethodDelete)
 	b.HandleFunc("/notification/age/{age:[0-9]+}", notificationOldHandler).Methods(http.MethodDelete)
 	b.HandleFunc("/notification/sender/{sender}/{limit:[0-9]+}", notificationBySenderHandler).Methods(http.MethodGet)
-	b.HandleFunc("/"+NOTIFICATION+"/"+START+"/{"+START+"}/"+END+"/{"+END+"}/{"+LIMIT+":[0-9]+}", notificationByStartEndHandler).Methods(http.MethodGet)
+	b.HandleFunc("/notification/start/{start}/end/{end}/{limit:[0-9]+}", notificationByStartEndHandler).Methods(http.MethodGet)
 	b.HandleFunc("/notification/start/{start}/{limit:[0-9]+}", notificationByStartHandler).Methods(http.MethodGet)
 	b.HandleFunc("/notification/end/{end}/{limit:[0-9]+}", notificationByEndHandler).Methods(http.MethodGet)
 	b.HandleFunc("/notification/labels/{labels}/{limit:[0-9]+}", notificationsByLabelsHandler).Methods(http.MethodGet)
