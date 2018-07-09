@@ -19,7 +19,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/edgexfoundry/edgex-go/core/domain/models"
+	"github.com/edgexfoundry/edgex-go/external/domain/models"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/gorilla/mux"
 )

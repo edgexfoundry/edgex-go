@@ -19,8 +19,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/edgexfoundry/edgex-go/core/clients"
-	"github.com/edgexfoundry/edgex-go/core/clients/types"
+	"github.com/edgexfoundry/edgex-go/external/clients"
+	"github.com/edgexfoundry/edgex-go/external/clients/types"
 )
 
 var (

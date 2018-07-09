@@ -22,7 +22,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/edgexfoundry/edgex-go/core/domain/models"
+	"github.com/edgexfoundry/edgex-go/external/domain/models"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	notifications "github.com/edgexfoundry/edgex-go/support/notifications-client"
 	"github.com/gorilla/mux"

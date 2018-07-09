@@ -14,7 +14,7 @@
 package messaging
 
 import (
-	"github.com/edgexfoundry/edgex-go/core/domain/models"
+	"github.com/edgexfoundry/edgex-go/external/domain/models"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
 )
 

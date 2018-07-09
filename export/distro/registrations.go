@@ -20,7 +20,7 @@ import (
 
 	export "github.com/edgexfoundry/edgex-go/export"
 
-	"github.com/edgexfoundry/edgex-go/core/domain/models"
+	"github.com/edgexfoundry/edgex-go/external/domain/models"
 
 	"go.uber.org/zap"
 )

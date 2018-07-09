@@ -14,7 +14,7 @@
 package interfaces
 
 import (
-	"github.com/edgexfoundry/edgex-go/core/domain/models"
+	"github.com/edgexfoundry/edgex-go/external/domain/models"
 	"gopkg.in/mgo.v2/bson"
 )
 

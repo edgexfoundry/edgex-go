@@ -17,7 +17,7 @@ import (
 	"encoding/json"
 	"sync"
 
-	"github.com/edgexfoundry/edgex-go/core/domain/models"
+	"github.com/edgexfoundry/edgex-go/external/domain/models"
 	zmq "github.com/pebbe/zmq4"
 )
 

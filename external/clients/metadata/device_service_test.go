@@ -17,29 +17,28 @@ import (
 	"testing"
 	"time"
 
-	"github.com/edgexfoundry/edgex-go/core/clients/types"
+	"github.com/edgexfoundry/edgex-go/external/clients/types"
 	"github.com/edgexfoundry/edgex-go/internal"
 )
 
-func TestNewCommandClientWithConsul(t *testing.T) {
-	deviceUrl := "http://localhost:48081" + commandUriPath
+func TestNewDeviceServiceClientWithConsul(t *testing.T) {
+	deviceServiceUrl := "http://localhost:48081" + deviceServiceUriPath
 	params := types.EndpointParams{
 		ServiceKey:  internal.CoreMetaDataServiceKey,
-		Path:        commandUriPath,
+		Path:        deviceServiceUriPath,
 		UseRegistry: true,
-		Url:         deviceUrl}
+		Url:         deviceServiceUrl}
 
-	cc := NewCommandClient(params, MockEndpoint{})
-
-	r, ok := cc.(*CommandRestClient)
+	dsc := NewDeviceServiceClient(params, MockEndpoint{})
+	r, ok := dsc.(*DeviceServiceRestClient)
 	if !ok {
-		t.Error("cc is not of expected type")
+		t.Error("dsc is not of expected type")
 	}
 
 	time.Sleep(25 * time.Millisecond)
 	if len(r.url) == 0 {
 		t.Error("url was not initialized")
-	} else if r.url != deviceUrl {
+	} else if r.url != deviceServiceUrl {
 		t.Errorf("unexpected url value %s", r.url)
 	}
 }

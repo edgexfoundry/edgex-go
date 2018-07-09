@@ -13,7 +13,7 @@
  *******************************************************************************/
 package clients
 
-import "github.com/edgexfoundry/edgex-go/core/clients/types"
+import "github.com/edgexfoundry/edgex-go/external/clients/types"
 
 //Endpointer is the interface for types that need to implement or simulate integration
 //with a service discovery provider.

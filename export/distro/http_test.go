@@ -16,7 +16,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/edgexfoundry/edgex-go/core/domain/models"
+	"github.com/edgexfoundry/edgex-go/external/domain/models"
 )
 
 func TestHttpSender(t *testing.T) {

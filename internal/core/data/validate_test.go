@@ -16,7 +16,7 @@ package data
 import (
 	"testing"
 
-	"github.com/edgexfoundry/edgex-go/core/domain/models"
+	"github.com/edgexfoundry/edgex-go/external/domain/models"
 )
 
 func TestValidBoolean(t *testing.T) {

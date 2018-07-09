@@ -1,5 +1,6 @@
 /*******************************************************************************
- * Copyright 2017 Dell Inc.
+ * Copyright 1995-2018 Hitachi Vantara Corporation. All rights reserved.
+ *
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -10,27 +11,27 @@
  * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
+ *
  *******************************************************************************/
 package coredata
 
 import (
 	"fmt"
+	"github.com/edgexfoundry/edgex-go/external/clients/types"
+	"github.com/edgexfoundry/edgex-go/internal"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
-
-	"github.com/edgexfoundry/edgex-go/core/clients/types"
-	"github.com/edgexfoundry/edgex-go/internal"
 )
 
 const (
-	ValueDescriptorUriPath         = "/api/v1/valuedescriptor"
-	TestValueDesciptorDescription1 = "value descriptor1"
-	TestValueDesciptorDescription2 = "value descriptor2"
+	EventUriPath     = "/api/v1/event"
+	TestEventDevice1 = "device1"
+	TestEventDevice2 = "device2"
 )
 
-func TestGetvaluedescriptors(t *testing.T) {
+func TestGetEvents(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 
@@ -38,16 +39,16 @@ func TestGetvaluedescriptors(t *testing.T) {
 			t.Errorf("expected http method is GET, active http method is : %s", r.Method)
 		}
 
-		if r.URL.EscapedPath() != ValueDescriptorUriPath {
-			t.Errorf("expected uri path is %s, actual uri path is %s", ValueDescriptorUriPath, r.URL.EscapedPath())
+		if r.URL.EscapedPath() != EventUriPath {
+			t.Errorf("expected uri path is %s, actual uri path is %s", EventUriPath, r.URL.EscapedPath())
 		}
 
 		w.Write([]byte("[" +
 			"{" +
-			"\"Description\" : \"" + TestValueDesciptorDescription1 + "\"" +
+			"\"Device\" : \"" + TestEventDevice1 + "\"" +
 			"}," +
 			"{" +
-			"\"Description\" : \"" + TestValueDesciptorDescription2 + "\"" +
+			"\"Device\" : \"" + TestEventDevice2 + "\"" +
 			"}" +
 			"]"))
 
@@ -55,49 +56,49 @@ func TestGetvaluedescriptors(t *testing.T) {
 
 	defer ts.Close()
 
-	url := ts.URL + ValueDescriptorUriPath
+	url := ts.URL + EventUriPath
 
 	params := types.EndpointParams{
 		ServiceKey:  internal.CoreDataServiceKey,
-		Path:        ValueDescriptorUriPath,
+		Path:        EventUriPath,
 		UseRegistry: false,
 		Url:         url}
 
-	vdc := NewValueDescriptorClient(params, mockEndpoint{})
+	ec := NewEventClient(params, mockEventEndpoint{})
 
-	vdArr, err := vdc.ValueDescriptors()
+	eArr, err := ec.Events()
 	if err != nil {
 		t.FailNow()
 	}
 
-	if len(vdArr) != 2 {
-		t.Errorf("expected value descriptor array's length is 2, actual array's length is : %d", len(vdArr))
+	if len(eArr) != 2 {
+		t.Errorf("expected event array's length is 2, actual array's length is : %d", len(eArr))
 	}
 
-	vd1 := vdArr[0]
-	if vd1.Description != TestValueDesciptorDescription1 {
-		t.Errorf("expected first value descriptor's description is : %s, actual description is : %s", TestValueDesciptorDescription1, vd1.Description)
+	e1 := eArr[0]
+	if e1.Device != TestEventDevice1 {
+		t.Errorf("expected first events's device is : %s, actual device is : %s", TestEventDevice1, e1.Device)
 	}
 
-	vd2 := vdArr[1]
-	if vd2.Description != TestValueDesciptorDescription2 {
-		t.Errorf("expected second value descriptor's description is : %s, actual description is : %s ", TestValueDesciptorDescription2, vd2.Description)
+	e2 := eArr[1]
+	if e2.Device != TestEventDevice2 {
+		t.Errorf("expected second events's device is : %s, actual device is : %s ", TestEventDevice2, e2.Device)
 	}
 }
 
-func TestNewValueDescriptorClientWithConsul(t *testing.T) {
-	deviceUrl := "http://localhost:48080" + ValueDescriptorUriPath
+func TestNewEventClientWithConsul(t *testing.T) {
+	deviceUrl := "http://localhost:48080" + EventUriPath
 	params := types.EndpointParams{
 		ServiceKey:  internal.CoreDataServiceKey,
-		Path:        ValueDescriptorUriPath,
+		Path:        EventUriPath,
 		UseRegistry: true,
 		Url:         deviceUrl}
 
-	vdc := NewValueDescriptorClient(params, mockEndpoint{})
+	ec := NewEventClient(params, mockEventEndpoint{})
 
-	r, ok := vdc.(*ValueDescriptorRestClient)
+	r, ok := ec.(*EventRestClient)
 	if !ok {
-		t.Error("vdc is not of expected type")
+		t.Error("ec is not of expected type")
 	}
 
 	time.Sleep(25 * time.Millisecond)
@@ -108,10 +109,10 @@ func TestNewValueDescriptorClientWithConsul(t *testing.T) {
 	}
 }
 
-type mockEndpoint struct {
+type mockEventEndpoint struct {
 }
 
-func (e mockEndpoint) Monitor(params types.EndpointParams, ch chan string) {
+func (e mockEventEndpoint) Monitor(params types.EndpointParams, ch chan string) {
 	switch params.ServiceKey {
 	case internal.CoreDataServiceKey:
 		url := fmt.Sprintf("http://%s:%v%s", "localhost", 48080, params.Path)
