@@ -10,8 +10,8 @@
 package distro
 
 import (
-	"github.com/edgexfoundry/edgex-go/external/domain/models"
 	export "github.com/edgexfoundry/edgex-go/export"
+	"github.com/edgexfoundry/edgex-go/external/domain/models"
 )
 
 // Sender - Send interface
