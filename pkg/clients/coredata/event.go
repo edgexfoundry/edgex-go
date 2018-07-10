@@ -25,9 +25,9 @@ import (
 
 	"strconv"
 
-	"github.com/edgexfoundry/edgex-go/external/clients"
-	"github.com/edgexfoundry/edgex-go/external/clients/types"
-	"github.com/edgexfoundry/edgex-go/external/domain/models"
+	"github.com/edgexfoundry/edgex-go/pkg/clients"
+	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
+	"github.com/edgexfoundry/edgex-go/pkg/domain/models"
 )
 
 type EventClient interface {

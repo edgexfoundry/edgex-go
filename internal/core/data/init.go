@@ -17,8 +17,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/edgexfoundry/edgex-go/external/clients/metadata"
-	"github.com/edgexfoundry/edgex-go/external/clients/types"
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/messaging"
@@ -26,6 +24,8 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/influx"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/memory"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo"
+	"github.com/edgexfoundry/edgex-go/pkg/clients/metadata"
+	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
 	consulclient "github.com/edgexfoundry/edgex-go/support/consul-client"
 	"github.com/edgexfoundry/edgex-go/support/logging-client"
 )

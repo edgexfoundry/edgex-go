@@ -20,8 +20,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/edgexfoundry/edgex-go/external/domain/models"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+	"github.com/edgexfoundry/edgex-go/pkg/domain/models"
 	client "github.com/influxdata/influxdb/client/v2"
 	"gopkg.in/mgo.v2/bson"
 )

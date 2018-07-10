@@ -13,7 +13,7 @@
  *******************************************************************************/
 package metadata
 
-import "github.com/edgexfoundry/edgex-go/external/domain/models"
+import "github.com/edgexfoundry/edgex-go/pkg/domain/models"
 
 func yamlDeviceProfile(dp *models.DeviceProfile) error {
 

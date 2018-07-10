@@ -8,7 +8,7 @@ package distro
 
 import (
 	"github.com/edgexfoundry/edgex-go/export"
-	"github.com/edgexfoundry/edgex-go/external/domain/models"
+	"github.com/edgexfoundry/edgex-go/pkg/domain/models"
 	"go.uber.org/zap"
 
 	// "go.uber.org/zap"

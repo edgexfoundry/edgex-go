@@ -8,7 +8,7 @@ package scheduler_client
 
 import (
 	"encoding/json"
-	"github.com/edgexfoundry/edgex-go/external/domain/models"
+	"github.com/edgexfoundry/edgex-go/pkg/domain/models"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"

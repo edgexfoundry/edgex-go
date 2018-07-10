@@ -14,8 +14,8 @@
 package memory
 
 import (
-	"github.com/edgexfoundry/edgex-go/external/domain/models"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+	"github.com/edgexfoundry/edgex-go/pkg/domain/models"
 	"gopkg.in/mgo.v2/bson"
 )
 

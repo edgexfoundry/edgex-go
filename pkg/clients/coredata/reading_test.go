@@ -17,7 +17,7 @@ package coredata
 
 import (
 	"fmt"
-	"github.com/edgexfoundry/edgex-go/external/clients/types"
+	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
 	"github.com/edgexfoundry/edgex-go/internal"
 	"net/http"
 	"net/http/httptest"

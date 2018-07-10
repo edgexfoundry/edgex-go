@@ -17,7 +17,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/edgexfoundry/edgex-go/external/clients/types"
+	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
 	"github.com/edgexfoundry/edgex-go/internal"
 )
 

@@ -17,9 +17,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/edgexfoundry/edgex-go/external/clients/metadata"
-	"github.com/edgexfoundry/edgex-go/external/clients/types"
 	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/pkg/clients/metadata"
+	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
 	consulclient "github.com/edgexfoundry/edgex-go/support/consul-client"
 	logger "github.com/edgexfoundry/edgex-go/support/logging-client"
 )

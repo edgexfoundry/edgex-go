@@ -14,8 +14,8 @@
 package messaging
 
 import (
-	"github.com/edgexfoundry/edgex-go/external/domain/models"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
+	"github.com/edgexfoundry/edgex-go/pkg/domain/models"
 )
 
 // Types of messaging protocols
