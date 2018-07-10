@@ -138,6 +138,7 @@ parts:
       - zip
   config-seed:
     source: https://github.com/edgexfoundry/core-config-seed-go.git
+    source-branch: california
     plugin: shell
     after:
       - glide
@@ -247,6 +248,7 @@ parts:
       - -mongodb-linux-*-ubuntu1604-3.4.10.tgz
   mongo-config:
     source: https://github.com/edgexfoundry/docker-edgex-mongo.git
+    source-branch: california
     source-depth: 1
     plugin: dump
     # NOTE - both the mongo-config & go install README.md to root-dir of the snap
@@ -375,8 +377,7 @@ parts:
       - libzmq3-dev
   support-notifications:
     source: https://github.com/edgexfoundry/support-notifications.git
-    # the following commit == 0.5.0 version plus a few fixes
-    source-commit: "ddebc1b"
+    source-branch: california
     plugin: maven
     override-build: |
       snapcraftctl build
@@ -385,7 +386,7 @@ parts:
       # The logic following logic is all handled by DockerFile for
       # the EdgeX support-notifications docker image.
       install -d "$SNAPCRAFT_PART_INSTALL/jar/support-notifications"
-      mv "$SNAPCRAFT_PART_INSTALL/jar/support-notifications-0.5.0-SNAPSHOT.jar" \
+      mv "$SNAPCRAFT_PART_INSTALL/jar/support-notifications-0.6.0-SNAPSHOT.jar" \
          "$SNAPCRAFT_PART_INSTALL/jar/support-notifications/support-notifications.jar"
 
       # FIXME:
@@ -417,8 +418,7 @@ parts:
       - -usr/share/alsa
   support-scheduler:
     source: https://github.com/edgexfoundry/support-scheduler.git
-    # the following commit == 0.5.0 version update +1 (core-domain fix)
-    source-commit: "00707ae"
+    source-branch: california
     plugin: maven
     override-build: |
       snapcraftctl build
@@ -427,7 +427,7 @@ parts:
       # The logic following logic is all handled by DockerFile for
       # the EdgeX support-scheduler docker image.
       install -d "$SNAPCRAFT_PART_INSTALL/jar/support-scheduler"
-      mv "$SNAPCRAFT_PART_INSTALL/jar/support-scheduler-0.5.0-SNAPSHOT.jar" \
+      mv "$SNAPCRAFT_PART_INSTALL/jar/support-scheduler-0.6.0-SNAPSHOT.jar" \
          "$SNAPCRAFT_PART_INSTALL/jar/support-scheduler/support-scheduler.jar"
 
       # FIXME:
@@ -459,8 +459,7 @@ parts:
       - -usr/share/
   support-rulesengine:
     source: https://github.com/edgexfoundry/support-rulesengine.git
-    # the following commit == 0.5.0 version update
-    source-commit: "2e282f5"
+    source-branch: california
     plugin: maven
     override-build: |
       snapcraftctl build
@@ -469,7 +468,7 @@ parts:
       # The logic following logic is all handled by DockerFile for
       # the EdgeX support-rulesengine docker image.
       install -d "$SNAPCRAFT_PART_INSTALL/jar/support-rulesengine"
-      mv "$SNAPCRAFT_PART_INSTALL/jar/support-rulesengine-0.5.0-SNAPSHOT.jar" \
+      mv "$SNAPCRAFT_PART_INSTALL/jar/support-rulesengine-0.6.0-SNAPSHOT.jar" \
          "$SNAPCRAFT_PART_INSTALL/jar/support-rulesengine/support-rulesengine.jar"
 
       # FIXME:
@@ -501,8 +500,7 @@ parts:
       - -usr/share/alsa
   device-virtual:
     source: https://github.com/edgexfoundry/device-virtual.git
-    # the following commit == 0.5.0 version update +1 (core-domain fix)
-    source-commit: "2033429"
+    source-branch: california
     plugin: maven
     override-build: |
       snapcraftctl build
@@ -513,7 +511,7 @@ parts:
       install -d "$SNAPCRAFT_PART_INSTALL/jar/device-virtual"
       install -d "$SNAPCRAFT_PART_INSTALL/jar/device-virtual/bacnet_sample_profiles"
       install -d "$SNAPCRAFT_PART_INSTALL/jar/device-virtual/modbus_sample_profiles"
-      mv "$SNAPCRAFT_PART_INSTALL/jar/device-virtual-0.5.0-SNAPSHOT.jar" \
+      mv "$SNAPCRAFT_PART_INSTALL/jar/device-virtual-0.6.0-SNAPSHOT.jar" \
          "$SNAPCRAFT_PART_INSTALL/jar/device-virtual/device-virtual.jar"
       cp ./bacnet_sample_profiles/*.yaml \
          "$SNAPCRAFT_PART_INSTALL/jar/device-virtual/bacnet_sample_profiles/"
