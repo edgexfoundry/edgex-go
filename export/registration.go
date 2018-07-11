@@ -11,7 +11,7 @@ package export
 import (
 	"fmt"
 
-	"github.com/edgexfoundry/edgex-go/core/domain/models"
+	"github.com/edgexfoundry/edgex-go/pkg/models"
 
 	"gopkg.in/mgo.v2/bson"
 )

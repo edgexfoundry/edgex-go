@@ -10,7 +10,7 @@ package main
 import (
 	"testing"
 
-	"github.com/edgexfoundry/edgex-go/core/metadata"
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 )
 

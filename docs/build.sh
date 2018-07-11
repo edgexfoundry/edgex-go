@@ -3,9 +3,9 @@ set -e
 
 # Copy in service RAML files 
 
-cp ../core/data/raml/*.raml ./core/data/
-cp ../core/metadata/raml/*.raml ./core/metadata/
-cp ../core/command/raml/*.raml ./core/command/
+cp ../api/raml/core-data.raml ./core/data/
+cp ../api/raml/core-metadata.raml ./core/metadata/
+cp ../api/raml/core-command.raml ./core/command/
 cp ../support/logging/raml/*.raml ./support/logging/
 cp ../export/client/raml/*.raml ./export/client/
 
