@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/edgexfoundry/edgex-go/pkg/domain/models"
+	"github.com/edgexfoundry/edgex-go/pkg/models"
 	"github.com/mattn/go-xmpp"
 )
 

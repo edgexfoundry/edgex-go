@@ -10,7 +10,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/edgexfoundry/edgex-go/pkg/domain/models"
+	"github.com/edgexfoundry/edgex-go/pkg/models"
 	"io"
 	"io/ioutil"
 	"net/http"

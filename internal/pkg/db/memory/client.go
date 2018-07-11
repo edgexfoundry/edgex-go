@@ -13,7 +13,7 @@
  *******************************************************************************/
 package memory
 
-import "github.com/edgexfoundry/edgex-go/pkg/domain/models"
+import "github.com/edgexfoundry/edgex-go/pkg/models"
 
 type MemDB struct {
 	// Data

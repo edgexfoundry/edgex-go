@@ -19,7 +19,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/edgexfoundry/edgex-go/pkg/domain/models"
+	"github.com/edgexfoundry/edgex-go/pkg/models"
 )
 
 func issueCommand(req *http.Request) (*http.Response, error) {

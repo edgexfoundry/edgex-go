@@ -12,7 +12,7 @@ import (
 	"fmt"
 	"strconv"
 
-	models "github.com/edgexfoundry/edgex-go/pkg/domain/models"
+	models "github.com/edgexfoundry/edgex-go/pkg/models"
 )
 
 func isValidValueDescriptor(vd models.ValueDescriptor, reading models.Reading) (bool, error) {

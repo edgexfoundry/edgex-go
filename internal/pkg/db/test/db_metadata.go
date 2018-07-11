@@ -11,7 +11,7 @@ import (
 	"testing"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces"
-	"github.com/edgexfoundry/edgex-go/pkg/domain/models"
+	"github.com/edgexfoundry/edgex-go/pkg/models"
 	"gopkg.in/mgo.v2/bson"
 )
 

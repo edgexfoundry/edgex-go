@@ -23,7 +23,7 @@ import (
 	"testing"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/memory"
-	"github.com/edgexfoundry/edgex-go/pkg/domain/models"
+	"github.com/edgexfoundry/edgex-go/pkg/models"
 	"github.com/edgexfoundry/edgex-go/support/logging-client"
 	"github.com/gorilla/mux"
 )
