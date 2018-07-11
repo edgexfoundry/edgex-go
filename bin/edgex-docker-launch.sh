@@ -10,10 +10,16 @@
 # https://wiki.edgexfoundry.org/display/FA/Get+EdgeX+Foundry+-+Users
 
 COMPOSE_FILE=../docker/docker-compose.yml
+COMPOSE_URL=https://raw.githubusercontent.com/edgexfoundry/developer-scripts/master/compose-files/docker-compose-california-0.6.0.yml
+
+echo "Pulling latest compose file..."
+curl -o $COMPOSE_FILE $COMPOSE_URL
 
 echo "Starting mongo"
 docker-compose -f $COMPOSE_FILE up -d mongo
 echo "Starting consul"
+docker-compose -f $COMPOSE_FILE up -d consul
+echo "Populating configuration"
 docker-compose -f $COMPOSE_FILE up -d config-seed
 
 echo "Sleeping before launching remaining services"
