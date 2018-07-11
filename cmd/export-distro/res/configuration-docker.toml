@@ -9,3 +9,4 @@ ConsulHost = 'edgex-core-consul'
 ConsulPort = 8500
 ConsulProfilesActive = 'go'
 CheckInterval = '10s'
+MarkPushed = false
