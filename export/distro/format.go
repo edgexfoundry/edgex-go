@@ -14,7 +14,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/edgexfoundry/edgex-go/core/domain/models"
+	"github.com/edgexfoundry/edgex-go/pkg/models"
 	uuid "github.com/satori/go.uuid"
 	"go.uber.org/zap"
 )
