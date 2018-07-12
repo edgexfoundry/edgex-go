@@ -352,15 +352,15 @@ parts:
        "$SNAPCRAFT_PART_INSTALL/config/support-logging/res/configuration.toml"
 
       # handle license files
-      install -DT "./core/command/Attribution.txt" \
+      install -DT "./cmd/core-command/Attribution.txt" \
               "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/core-command/Attribution.txt"
       install -DT "./LICENSE" \
               "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/core-command/LICENSE"
-      install -DT "./core/data/Attribution.txt" \
+      install -DT "./cmd/core-data/Attribution.txt" \
              "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/core-data/Attribution.txt"
       install -DT "./LICENSE" \
               "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/core-data/LICENSE"
-      install -DT "./core/metadata/Attribution.txt" \
+      install -DT "./cmd/core-metadata/Attribution.txt" \
               "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/core-metadata/Attribution.txt"
       install -DT "./LICENSE" \
               "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/core-metdata/LICENSE"
