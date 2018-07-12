@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-package notifications_client
+package notifications
 
 import (
 	"encoding/json"

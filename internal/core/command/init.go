@@ -18,10 +18,10 @@ import (
 	"strings"
 
 	"github.com/edgexfoundry/edgex-go/internal"
+	consulclient "github.com/edgexfoundry/edgex-go/internal/pkg/consul"
+	logger "github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/metadata"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
-	consulclient "github.com/edgexfoundry/edgex-go/support/consul-client"
-	logger "github.com/edgexfoundry/edgex-go/support/logging-client"
 )
 
 var loggingClient logger.LoggingClient

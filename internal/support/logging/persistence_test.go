@@ -10,7 +10,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/edgexfoundry/edgex-go/support/domain"
+	"github.com/edgexfoundry/edgex-go/internal/support/logging/models"
 )
 
 const (
@@ -44,8 +44,8 @@ func testPersistenceFind(t *testing.T, persistence persistence) {
 		{"labels12", matchCriteria{Labels: labels12}, 6},
 	}
 
-	le := support_domain.LogEntry{
-		Level:         support_domain.TRACE,
+	le := models.LogEntry{
+		Level:         models.TRACE,
 		OriginService: sampleService1,
 		Message:       message1,
 		Labels:        labels1,
@@ -117,8 +117,8 @@ func testPersistenceRemove(t *testing.T, persistence persistence) {
 		t.Run(tt.name, func(t *testing.T) {
 			persistence.reset()
 
-			le := support_domain.LogEntry{
-				Level:         support_domain.TRACE,
+			le := models.LogEntry{
+				Level:         models.TRACE,
 				OriginService: sampleService1,
 				Message:       message1,
 				Labels:        labels1,

@@ -28,7 +28,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/core/command"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
-	"github.com/edgexfoundry/edgex-go/support/logging-client"
+	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 )
 
 var loggingClient logger.LoggingClient
