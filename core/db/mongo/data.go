@@ -194,17 +194,25 @@ func (mc *MongoClient) getEventsLimit(q bson.M, limit int) ([]models.Event, erro
 	defer s.Close()
 
 	// Handle DBRefs
-	var events []models.Event
+	var me []mongoEvent
+	events := []models.Event{}
 
 	// Check if limit is 0
 	if limit == 0 {
 		return events, nil
 	}
 
+	err := s.DB(mc.database.Name).C(db.EventsCollection).Find(q).Limit(limit).All(&me)
+	if err != nil {
+		return events, err
+	}
 
-	err := s.DB(mc.database.Name).C(db.EventsCollection).Find(q).Limit(limit).All(&events)
+	// Append all the events
+	for _, e := range me {
+		events = append(events, e.Event)
+	}
 
-	return events, err
+	return events, nil
 }
 
 // Get a single event for the passed query
