@@ -115,7 +115,7 @@ func NewDBClient(config DBConfiguration) (DBClient, error) {
 		// Create the mongo client
 		return newMongoClient(config)
 	case MEMORY:
-		return &memDB{}, nil
+		return newMemoryClient(), nil
 	default:
 		return nil, ErrUnsupportedDatabase
 	}
