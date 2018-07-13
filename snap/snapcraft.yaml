@@ -105,6 +105,8 @@ parts:
       export GOPATH=$(readlink -f $(pwd)/../go)
       export GOIMPORTPATH=$GOPATH/src/github.com/hashicorp/consul/
       export PATH="$GOPATH/bin:$PATH"
+      # limit build to native OS/architecture
+      export CONSUL_DEV=1
       mkdir -p $GOIMPORTPATH
       cp -r ./* $GOIMPORTPATH
       cd $GOIMPORTPATH
