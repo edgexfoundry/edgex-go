@@ -10,6 +10,7 @@ The script [merge-edgex-go.sh](https://gist.github.com/feclare/8dba191e8cf77864f
 
 ## Install
 
+### From Source
 EdgeX Go code depends on ZMQ library. Make sure that you have dev version of the library
 installed on your host.
 
@@ -26,6 +27,10 @@ cd $GOPATH/src/github.com/edgexfoundry/edgex-go
 glide install
 make build
 ```
+
+### Snap Package
+EdgeX Foundry is also available as a snap package, for more details
+on the snap, including how to install it, please refer to [EdgeX snap](https://github.com/edgexfoundry/edgex-go/snap/README.md)
 
 ## Deploy
 EdgeX system can be deployed as a set of Docker containers or a previously compiler binaries.
