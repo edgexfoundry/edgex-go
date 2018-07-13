@@ -75,7 +75,7 @@ func subscriptionHandler(w http.ResponseWriter, r *http.Request) {
 			loggingClient.Error(err.Error())
 			return
 		} else {
-			s2 = s
+			s.ID = s2.ID
 		}
 
 		loggingClient.Info("Updating subscription by slug: " + slug)
