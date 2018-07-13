@@ -44,9 +44,9 @@ func notificationHandler(w http.ResponseWriter, r *http.Request) {
 
 		loggingClient.Info("Posting Notification: " + n.String())
 		n.Status = models.NotificationsStatus(models.New)
-		id, err := dbc.AddNotification(&n)
+		_, err = dbc.AddNotification(&n)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, err.Error(), http.StatusConflict)
 			loggingClient.Error(err.Error())
 			return
 		}
@@ -62,7 +62,7 @@ func notificationHandler(w http.ResponseWriter, r *http.Request) {
 
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		w.WriteHeader(http.StatusAccepted)
-		w.Write([]byte(id.Hex()))
+		w.Write([]byte(n.Slug))
 
 		break
 	}
@@ -137,6 +137,8 @@ func notificationByIDHandler(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 			loggingClient.Error(err.Error())
+			w.Header().Set("Content-Type", applicationJson)
+			encode(n, w)
 			return
 		}
 
@@ -229,6 +231,8 @@ func notificationBySenderHandler(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 			loggingClient.Error(err.Error())
+			w.Header().Set("Content-Type", applicationJson)
+			encode(n, w)
 			return
 		}
 
@@ -322,6 +326,8 @@ func notificationByStartHandler(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 			loggingClient.Error(err.Error())
+			w.Header().Set("Content-Type", applicationJson)
+			encode(n, w)
 			return
 		}
 
@@ -366,6 +372,8 @@ func notificationByEndHandler(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 			loggingClient.Error(err.Error())
+			w.Header().Set("Content-Type", applicationJson)
+			encode(n, w)
 			return
 		}
 
@@ -406,6 +414,8 @@ func notificationsByLabelsHandler(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 			loggingClient.Error(err.Error())
+			w.Header().Set("Content-Type", applicationJson)
+			encode(n, w)
 			return
 		}
 
@@ -444,6 +454,8 @@ func notificationsNewHandler(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 			loggingClient.Error(err.Error())
+			w.Header().Set("Content-Type", applicationJson)
+			encode(n, w)
 			return
 		}
 

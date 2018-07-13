@@ -54,14 +54,18 @@ func subscriptionHandler(w http.ResponseWriter, r *http.Request) {
 			loggingClient.Error(maxExceededString)
 			return
 		}
-		w.Header().Set("Content-Type", applicationJson)
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		encode(events, w)
 		break
 
 		// Modify (an existing) subscription
 	case http.MethodPut:
+		var s models.Subscription
+		dec := json.NewDecoder(r.Body)
+		err := dec.Decode(&s)
+
 		// Check if the subscription exists
-		s, err := dbc.SubscriptionBySlug(slug)
+		s2, err := dbc.SubscriptionBySlug(s.Slug)
 		if err != nil {
 			if err == clients.ErrNotFound {
 				http.Error(w, "Subscription not found", http.StatusNotFound)
@@ -70,11 +74,13 @@ func subscriptionHandler(w http.ResponseWriter, r *http.Request) {
 			}
 			loggingClient.Error(err.Error())
 			return
+		} else {
+			s2 = s
 		}
 
 		loggingClient.Info("Updating subscription by slug: " + slug)
 
-		if err = dbc.UpdateSubscription(s);
+		if err = dbc.UpdateSubscription(s2);
 			err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			loggingClient.Error(err.Error())
@@ -97,7 +103,7 @@ func subscriptionHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		loggingClient.Info("Posting Subscription: " + s.String())
-		id, err := dbc.AddSubscription(&s)
+		_, err = dbc.AddSubscription(&s)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusConflict)
 			loggingClient.Error(err.Error())
@@ -105,7 +111,7 @@ func subscriptionHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		w.WriteHeader(http.StatusCreated)
-		w.Write([]byte(id.Hex()))
+		w.Write([]byte(s.Slug))
 
 		break
 	}
@@ -155,6 +161,8 @@ func subscriptionsBySlugHandler(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 			loggingClient.Error(err.Error())
+			w.Header().Set("Content-Type", applicationJson)
+			encode(s, w)
 			return
 		}
 
