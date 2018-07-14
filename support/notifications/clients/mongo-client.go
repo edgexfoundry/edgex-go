@@ -463,7 +463,23 @@ func (mc *MongoClient) getSubscription(q bson.M) (models.Subscription, error) {
 }
 
 func (mc *MongoClient) getSubscriptions(q bson.M) ([]models.Subscription, error) {
-	return mc.getSubscriptionsLimit(q, currentReadMaxLimit)
+	s := mc.GetSessionCopy()
+	defer s.Close()
+
+	// Handle DBRefs
+	var ms []MongoSubscription
+	subscriptions := []models.Subscription{}
+	err := s.DB(mc.Database.Name).C(SUBSCRIPTION_COLLECTION).Find(q).All(&ms)
+	if err != nil {
+		return subscriptions, err
+	}
+
+	// Append all the subscriptions
+	for _, s := range ms {
+		subscriptions = append(subscriptions, s.Subscription)
+	}
+
+	return subscriptions, nil
 }
 
 func (mc *MongoClient) getSubscriptionsLimit(q bson.M, limit int) ([]models.Subscription, error) {
