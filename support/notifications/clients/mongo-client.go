@@ -475,8 +475,8 @@ func (mc *MongoClient) getSubscriptions(q bson.M) ([]models.Subscription, error)
 	}
 
 	// Append all the subscriptions
-	for _, s := range ms {
-		subscriptions = append(subscriptions, s.Subscription)
+	for _, subs := range ms {
+		subscriptions = append(subscriptions, subs.Subscription)
 	}
 
 	return subscriptions, nil
