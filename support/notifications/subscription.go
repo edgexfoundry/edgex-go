@@ -42,20 +42,19 @@ func subscriptionHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Get all subscriptions
 	case http.MethodGet:
-		events, err := dbc.Subscriptions()
+		subscriptions, err := dbc.Subscriptions()
 		if err != nil {
 			loggingClient.Error(err.Error())
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			return
 		}
 		// Check max limit
-		if len(events) > configuration.ReadMaxLimit {
+		if len(subscriptions) > configuration.ReadMaxLimit {
 			http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
 			loggingClient.Error(maxExceededString)
 			return
 		}
-		w.Header().Set("Content-Type", "application/json; charset=utf-8")
-		encode(events, w)
+		encodeWithUTF8(subscriptions, w)
 		break
 
 		// Modify (an existing) subscription
@@ -161,12 +160,11 @@ func subscriptionsBySlugHandler(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 			loggingClient.Error(err.Error())
-			w.Header().Set("Content-Type", applicationJson)
-			encode(s, w)
+			encodeWithUTF8(s, w)
 			return
 		}
 
-		encode(s, w)
+		encodeWithUTF8(s, w)
 	case http.MethodDelete:
 		_, err := dbc.SubscriptionBySlug(slug)
 		if err != nil {
@@ -215,7 +213,7 @@ func subscriptionsByCategoriesHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		encode(s, w)
+		encodeWithUTF8(s, w)
 	}
 }
 
@@ -298,7 +296,6 @@ func subscriptionsByReceiverHandler(w http.ResponseWriter, r *http.Request) {
 			loggingClient.Error(err.Error())
 			return
 		}
-
-		encode(s, w)
+		encodeWithUTF8(s, w)
 	}
 }

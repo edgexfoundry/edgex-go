@@ -287,8 +287,7 @@ func notificationByStartEndHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		loggingClient.Error(err.Error())
-		w.Header().Set("Content-Type", "application/json; charset=utf-8")
-		encode(n, w)
+		encodeWithUTF8(n, w)
 	}
 }
 
