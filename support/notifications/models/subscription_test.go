@@ -59,7 +59,7 @@ func TestSubscription_String(t *testing.T) {
 		want string
 	}{
 		{"test string empty subscription", &TestEmptySubscription, "{\"created\":0,\"modified\":0,\"id\":null}"},
-		{"test subscription", &TestSubscription, "{\"created\":123,\"modified\":123,\"id\":null,\"slug\":\"test slug\",\"receiver\":\"test receiver\",\"description\":\"test description\",\"subscribedcategories\":[\"SW_HEALTH\"],\"subscribedlabels\":[\"test label\"],\"channels\":[{\"channeltype\":\"EMAIL\",\"mailaddresses\":[\"jpwhite_mn@yahoo.com\",\"james_white2@dell.com\"]},{\"channeltype\":\"REST\",\"url\":\"http://www.someendpoint.com/notifications\"}]}"},
+		{"test subscription", &TestSubscription, "{\"created\":123,\"modified\":123,\"id\":null,\"slug\":\"test slug\",\"receiver\":\"test receiver\",\"description\":\"test description\",\"subscribedcategories\":[\"SW_HEALTH\"],\"subscribedlabels\":[\"test label\"],\"channels\":[{\"type\":\"EMAIL\",\"mailAddresses\":[\"jpwhite_mn@yahoo.com\",\"james_white2@dell.com\"]},{\"type\":\"REST\",\"url\":\"http://www.someendpoint.com/notifications\"}]}"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

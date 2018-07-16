@@ -20,8 +20,8 @@ import (
 
 //TODO - this is ugly and I want to someday have two different structs of EMailChannel and RESTChannel
 type Channel struct {
-	Type          ChannelType `bson:"channeltype,omitempty" json:"channeltype,omitempty"`
-	MailAddresses []string    `bson:"mailaddresses,omitempty" json:"mailaddresses,omitempty"`
+	Type          ChannelType `bson:"type,omitempty" json:"type,omitempty"`
+	MailAddresses []string    `bson:"mailAddresses,omitempty" json:"mailAddresses,omitempty"`
 	Url           string      `bson:"url,omitempty" json:"url,omitempty"`
 }
 

@@ -28,7 +28,7 @@ import (
  * Subscription struct
  */
 type Subscription struct {
-	BaseObject           `bson:",inline"`
+	BaseObject                                   `bson:",inline"`
 	ID                   bson.ObjectId           `bson:"_id,omitempty" json:"id"`
 	Slug                 string                  `bson:"slug" json:"slug,omitempty"`
 	Receiver             string                  `bson:"receiver" json:"receiver,omitempty"`
