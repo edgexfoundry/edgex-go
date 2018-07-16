@@ -168,13 +168,13 @@ func getLogs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-
 	res, err := json.Marshal(logs)
 	if err != nil {
 		w.WriteHeader(http.StatusServiceUnavailable)
 		return
 	}
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
 	io.WriteString(w, string(res))
 }
 
