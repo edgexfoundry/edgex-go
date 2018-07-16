@@ -15,7 +15,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/edgexfoundry/edgex-go/support/domain"
+	"github.com/edgexfoundry/edgex-go/internal/support/logging/models"
 )
 
 type dummyPersist struct {
@@ -27,7 +27,7 @@ const (
 	numberOfLogs = 2
 )
 
-func (dummyPersist) add(le support_domain.LogEntry) {}
+func (dummyPersist) add(le models.LogEntry) {}
 
 func (dp *dummyPersist) remove(criteria matchCriteria) int {
 	dp.criteria = criteria
@@ -35,12 +35,12 @@ func (dp *dummyPersist) remove(criteria matchCriteria) int {
 	return dp.deleted
 }
 
-func (dp *dummyPersist) find(criteria matchCriteria) []support_domain.LogEntry {
+func (dp *dummyPersist) find(criteria matchCriteria) []models.LogEntry {
 	dp.criteria = criteria
 
-	var retValue []support_domain.LogEntry
+	var retValue []models.LogEntry
 	for i := 0; i < numberOfLogs; i++ {
-		retValue = append(retValue, support_domain.LogEntry{})
+		retValue = append(retValue, models.LogEntry{})
 	}
 	return retValue
 }
@@ -101,8 +101,8 @@ func TestGetLogs(t *testing.T) {
 	var labels = []string{"label1", "label2"}
 	var services = []string{"service1", "service2"}
 	var keywords = []string{"keyword1", "keyword2"}
-	var logLevels = []string{support_domain.TRACE, support_domain.DEBUG, support_domain.WARN,
-		support_domain.INFO, support_domain.ERROR}
+	var logLevels = []string{models.TRACE, models.DEBUG, models.WARN,
+		models.INFO, models.ERROR}
 	var tests = []struct {
 		name     string
 		url      string
@@ -217,8 +217,8 @@ func TestRemoveLogs(t *testing.T) {
 	var labels = []string{"label1", "label2"}
 	var services = []string{"service1", "service2"}
 	var keywords = []string{"keyword1", "keyword2"}
-	var logLevels = []string{support_domain.TRACE, support_domain.DEBUG, support_domain.WARN,
-		support_domain.INFO, support_domain.ERROR}
+	var logLevels = []string{models.TRACE, models.DEBUG, models.WARN,
+		models.INFO, models.ERROR}
 	var tests = []struct {
 		name     string
 		url      string

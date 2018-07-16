@@ -4,16 +4,17 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-package scheduler_client
+package scheduler
 
 import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/edgexfoundry/edgex-go/pkg/models"
 	"io"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/edgexfoundry/edgex-go/pkg/models"
 )
 
 // Common http const

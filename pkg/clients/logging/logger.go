@@ -22,11 +22,18 @@ import (
 	"log"
 	"net/http"
 	"os"
-
 	"path/filepath"
 	"strings"
 
-	"github.com/edgexfoundry/edgex-go/support/domain"
+	"github.com/edgexfoundry/edgex-go/pkg/models"
+)
+
+const (
+	TRACE = "TRACE"
+	DEBUG = "DEBUG"
+	WARN  = "WARN"
+	INFO  = "INFO"
+	ERROR = "ERROR"
 )
 
 type LoggingClient interface {
@@ -110,40 +117,40 @@ func verifyLogDirectory(path string) {
 func (lc EdgeXLogger) Info(msg string, labels ...string) error {
 	lc.stdOutLogger.SetPrefix("INFO: ")
 	lc.stdOutLogger.Println(msg)
-	return lc.log(support_domain.INFO, msg, labels)
+	return lc.log(INFO, msg, labels)
 }
 
 // Log a TRACE level message
 func (lc EdgeXLogger) Trace(msg string, labels ...string) error {
 	lc.stdOutLogger.SetPrefix("TRACE: ")
 	lc.stdOutLogger.Println(msg)
-	return lc.log(support_domain.TRACE, msg, labels)
+	return lc.log(TRACE, msg, labels)
 }
 
 // Log a DEBUG level message
 func (lc EdgeXLogger) Debug(msg string, labels ...string) error {
 	lc.stdOutLogger.SetPrefix("DEBUG: ")
 	lc.stdOutLogger.Println(msg)
-	return lc.log(support_domain.DEBUG, msg, labels)
+	return lc.log(DEBUG, msg, labels)
 }
 
 // Log a WARN level message
 func (lc EdgeXLogger) Warn(msg string, labels ...string) error {
 	lc.stdOutLogger.SetPrefix("WARN: ")
 	lc.stdOutLogger.Println(msg)
-	return lc.log(support_domain.WARN, msg, labels)
+	return lc.log(WARN, msg, labels)
 }
 
 // Log an ERROR level message
 func (lc EdgeXLogger) Error(msg string, labels ...string) error {
 	lc.stdOutLogger.SetPrefix("ERROR: ")
 	lc.stdOutLogger.Println(msg)
-	return lc.log(support_domain.ERROR, msg, labels)
+	return lc.log(ERROR, msg, labels)
 }
 
 // Build the log entry object
-func (lc EdgeXLogger) buildLogEntry(logLevel string, msg string, labels []string) support_domain.LogEntry {
-	res := support_domain.LogEntry{}
+func (lc EdgeXLogger) buildLogEntry(logLevel string, msg string, labels []string) models.LogEntry {
+	res := models.LogEntry{}
 	res.Level = logLevel
 	res.Message = msg
 	res.Labels = labels
@@ -153,7 +160,7 @@ func (lc EdgeXLogger) buildLogEntry(logLevel string, msg string, labels []string
 }
 
 // Send the log as an http request
-func (lc EdgeXLogger) sendLog(logEntry support_domain.LogEntry) error {
+func (lc EdgeXLogger) sendLog(logEntry models.LogEntry) error {
 	if lc.logTarget == "" {
 		return nil
 	}

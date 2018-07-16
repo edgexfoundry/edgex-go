@@ -17,9 +17,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/edgexfoundry/edgex-go/internal/support/logging/models"
 	"github.com/go-zoo/bone"
-
-	support_domain "github.com/edgexfoundry/edgex-go/support/domain"
 )
 
 var persist persistence
@@ -45,7 +44,7 @@ func addLog(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	l := support_domain.LogEntry{}
+	l := models.LogEntry{}
 	if err := json.Unmarshal(data, &l); err != nil {
 		fmt.Println("Failed to parse LogEntry: ", err)
 		w.WriteHeader(http.StatusBadRequest)
@@ -53,7 +52,7 @@ func addLog(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !support_domain.IsValidLogLevel(l.Level) {
+	if !models.IsValidLogLevel(l.Level) {
 		s := fmt.Sprintf("Invalid level in LogEntry: %s", l.Level)
 		w.WriteHeader(http.StatusBadRequest)
 		io.WriteString(w, s)
@@ -142,7 +141,7 @@ func getCriteria(w http.ResponseWriter, r *http.Request) *matchCriteria {
 		criteria.LogLevels = append(criteria.LogLevels,
 			strings.Split(logLevels, ",")...)
 		for _, l := range criteria.LogLevels {
-			if !support_domain.IsValidLogLevel(l) {
+			if !models.IsValidLogLevel(l) {
 				s := fmt.Sprintf("Invalid log level '%s'", l)
 				w.WriteHeader(http.StatusBadRequest)
 				io.WriteString(w, s)

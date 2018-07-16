@@ -6,9 +6,7 @@
 
 package logging
 
-import (
-	"github.com/edgexfoundry/edgex-go/support/domain"
-)
+import "github.com/edgexfoundry/edgex-go/internal/support/logging/models"
 
 const (
 	PersistenceMongo = "mongodb"
@@ -16,9 +14,9 @@ const (
 )
 
 type persistence interface {
-	add(logEntry support_domain.LogEntry)
+	add(logEntry models.LogEntry)
 	remove(criteria matchCriteria) int
-	find(criteria matchCriteria) []support_domain.LogEntry
+	find(criteria matchCriteria) []models.LogEntry
 
 	// Needed for the tests. Reset the instance (closing files, sessions...)
 	// and clear the logs.

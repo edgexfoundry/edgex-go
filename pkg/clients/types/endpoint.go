@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/edgexfoundry/edgex-go/support/consul-client"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/consul"
 )
 
 type Endpoint struct{}
