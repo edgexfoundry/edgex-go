@@ -207,6 +207,7 @@ func httpServer() http.Handler {
 	mv1.Get("/logs/logLevels/:levels/originServices/:services/:start/:end/:limit", http.HandlerFunc(getLogs))
 	mv1.Get("/logs/logLevels/:levels/originServices/:services/labels/:labels/:start/:end/:limit", http.HandlerFunc(getLogs))
 	mv1.Get("/logs/logLevels/:levels/originServices/:services/labels/:labels/keywords/:keywords/:start/:end/:limit", http.HandlerFunc(getLogs))
+	mv1.Get("/logs/logLevels/:levels/originServices/:services/keywords/:keywords/:start/:end/:limit", http.HandlerFunc(getLogs))
 
 	mv1.Delete("/logs/:start/:end", http.HandlerFunc(delLogs))
 	mv1.Delete("/logs/keywords/:keywords/:start/:end", http.HandlerFunc(delLogs))
