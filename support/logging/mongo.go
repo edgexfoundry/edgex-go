@@ -79,11 +79,11 @@ func createQuery(criteria matchCriteria) bson.M {
 	}
 
 	if len(criteria.OriginServices) > 0 {
-		conditions = createConditions(conditions, "originservice", criteria.OriginServices)
+		conditions = createConditions(conditions, "originService", criteria.OriginServices)
 	}
 
 	if len(criteria.LogLevels) > 0 {
-		conditions = createConditions(conditions, "level", criteria.LogLevels)
+		conditions = createConditions(conditions, "logLevel", criteria.LogLevels)
 	}
 
 	if criteria.Start != 0 {
