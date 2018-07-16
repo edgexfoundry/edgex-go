@@ -59,8 +59,8 @@ func (ms *MongoSubscription) SetBSON(raw bson.Raw) error {
 		Slug                 string                         `bson:"slug"`
 		Receiver             string                         `bson:"receiver"`
 		Description          string                         `bson:"description"`
-		SubscribedCategories []models.NotificationsCategory `bson:"subscribedcategories,omitempty"`
-		SubscribedLabels     []string                       `bson:"subscribedlabels,omitempty"`
+		SubscribedCategories []models.NotificationsCategory `bson:"subscribedCategories,omitempty"`
+		SubscribedLabels     []string                       `bson:"subscribedLabels,omitempty"`
 		Channels             []models.Channel               `bson:"channels,omitempty"`
 	})
 
