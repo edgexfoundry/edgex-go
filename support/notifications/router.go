@@ -32,7 +32,7 @@ func LoadRestRoutes() *mux.Router {
 	b.HandleFunc("/notification/slug/{slug:.+}", notificationBySlugHandler).Methods(http.MethodGet, http.MethodDelete)
 	b.HandleFunc("/notification/age/{age:[0-9]+}", notificationOldHandler).Methods(http.MethodDelete)
 	b.HandleFunc("/notification/sender/{sender}/{limit:[0-9]+}", notificationBySenderHandler).Methods(http.MethodGet)
-	b.HandleFunc("/notification/start/{start}/end/{end}/{limit:[0-9]+}", notificationByStartEndHandler).Methods(http.MethodGet)
+	b.HandleFunc("/notification/{start}/{end}/{limit:[0-9]+}", notificationByStartEndHandler).Methods(http.MethodGet)
 	b.HandleFunc("/notification/start/{start}/{limit:[0-9]+}", notificationByStartHandler).Methods(http.MethodGet)
 	b.HandleFunc("/notification/end/{end}/{limit:[0-9]+}", notificationByEndHandler).Methods(http.MethodGet)
 	b.HandleFunc("/notification/labels/{labels}/{limit:[0-9]+}", notificationsByLabelsHandler).Methods(http.MethodGet)
@@ -50,7 +50,7 @@ func LoadRestRoutes() *mux.Router {
 	// Transmissions
 	b.HandleFunc("/transmission", transmissionHandler).Methods(http.MethodPost)
 	b.HandleFunc("/transmission/slug/{slug}/{limit:[0-9]+}", transmissionBySlugHandler).Methods(http.MethodGet)
-	b.HandleFunc("/transmission/start/{start}/end/{end}/{limit:[0-9]+}", transmissionByStartEndHandler).Methods(http.MethodGet)
+	b.HandleFunc("/transmission/{start}/{end}/{limit:[0-9]+}", transmissionByStartEndHandler).Methods(http.MethodGet)
 	b.HandleFunc("/transmission/start/{start}/{limit:[0-9]+}", transmissionByStartHandler).Methods(http.MethodGet)
 	b.HandleFunc("/transmission/end/{end}/{limit:[0-9]+}", transmissionByEndHandler).Methods(http.MethodGet)
 	b.HandleFunc("/transmission/escalated/{limit:[0-9]+}", transmissionByEscalatedHandler).Methods(http.MethodGet)

@@ -285,8 +285,6 @@ func notificationByStartEndHandler(w http.ResponseWriter, r *http.Request) {
 			loggingClient.Error(err.Error())
 			return
 		}
-
-		loggingClient.Error(err.Error())
 		encodeWithUTF8(n, w)
 	}
 }

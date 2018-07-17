@@ -565,6 +565,7 @@ func (mc *MongoClient) getTransmissionsLimit(q bson.M) ([]models.Transmission, e
 	var mt []MongoTransmission
 	trans := []models.Transmission{}
 	err := s.DB(mc.Database.Name).C(TRANSMISSION_COLLECTION).Find(q).All(&mt)
+	//err := s.DB(mc.Database.Name).C(NOTIFICATION_COLLECTION).Find(q).Limit(limit).All(&mt)
 	if err != nil {
 		return trans, err
 	}
