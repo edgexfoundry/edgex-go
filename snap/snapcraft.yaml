@@ -177,30 +177,22 @@ parts:
                   "$SNAPCRAFT_PART_INSTALL/usr/share/doc/core-config-seed-go/LICENSE-2.0.txt"
 
       # install core-config-seed's config
-      install -d "$SNAPCRAFT_PART_INSTALL/config/core-config-seed-go/res/"
       install -DT "./res/configuration.toml" \
                   "$SNAPCRAFT_PART_INSTALL/config/core-config-seed-go/res/configuration.toml"
       install -DT "./res/banner.txt" \
                   "$SNAPCRAFT_PART_INSTALL/config/core-config-seed-go/res/banner.txt"
 
       # now install config files for other services
-      install -d "$SNAPCRAFT_PART_INSTALL/config/core-config-seed-go/config/"
-      install -d "$SNAPCRAFT_PART_INSTALL/config/core-config-seed-go/config/core-command"
-      install -d "$SNAPCRAFT_PART_INSTALL/config/core-config-seed-go/config/core-data"
-      install -d "$SNAPCRAFT_PART_INSTALL/config/core-config-seed-go/config/core-metadata"
-      install -d "$SNAPCRAFT_PART_INSTALL/config/core-config-seed-go/config/device-virtual"
-      install -d "$SNAPCRAFT_PART_INSTALL/config/core-config-seed-go/config/support-logging"
-
-      install -DT "./config/core-command/configuration.toml" \
-                  "$SNAPCRAFT_PART_INSTALL/config/core-config-seed-go/config/core-command/configuration.toml"
-      install -DT "./config/core-data/configuration.toml" \
-                  "$SNAPCRAFT_PART_INSTALL/config/core-config-seed-go/config/core-data/configuration.toml"
-      install -DT "./config/core-metadata/configuration.toml" \
-                  "$SNAPCRAFT_PART_INSTALL/config/core-config-seed-go/config/core-metadata/configuration.toml"
+      install -DT "./config/edgex-core-command;go/configuration.toml" \
+                  "$SNAPCRAFT_PART_INSTALL/config/core-config-seed-go/config/edgex-core-command;go/configuration.toml"
+      install -DT "./config/edgex-core-data;go/configuration.toml" \
+                  "$SNAPCRAFT_PART_INSTALL/config/core-config-seed-go/config/edgex-core-data;go/configuration.toml"
+      install -DT "./config/edgex-core-metadata;go/configuration.toml" \
+                  "$SNAPCRAFT_PART_INSTALL/config/core-config-seed-go/config/edgex-core-metadata;go/configuration.toml"
       install -DT "./config/device-virtual/application.properties" \
                   "$SNAPCRAFT_PART_INSTALL/config/core-config-seed-go/config/device-virtual/application.properties"
-      install -DT "./config/support-logging/configuration.toml" \
-                  "$SNAPCRAFT_PART_INSTALL/config/core-config-seed-go/config/support-logging/configuration.toml"
+      install -DT "./config/edgex-support-logging;go/configuration.toml" \
+                  "$SNAPCRAFT_PART_INSTALL/config/core-config-seed-go/config/edgex-support-logging;go/configuration.toml"
   config-common:
     plugin: dump
     source: ./snap
