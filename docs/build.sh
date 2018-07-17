@@ -6,7 +6,7 @@ set -e
 cp ../api/raml/core-data.raml ./core/data/
 cp ../api/raml/core-metadata.raml ./core/metadata/
 cp ../api/raml/core-command.raml ./core/command/
-cp ../support/logging/raml/*.raml ./support/logging/
+cp ../api/raml/support-logging.raml ./support/logging/
 cp ../export/client/raml/*.raml ./export/client/
 
 # Build image (copying in documentation sources)

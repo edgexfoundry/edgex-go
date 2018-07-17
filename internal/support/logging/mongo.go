@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"time"
 
-	support_domain "github.com/edgexfoundry/edgex-go/support/domain"
+	"github.com/edgexfoundry/edgex-go/internal/support/logging/models"
 
 	mgo "gopkg.in/mgo.v2"
 	bson "gopkg.in/mgo.v2/bson"
@@ -41,7 +41,7 @@ func connectToMongo() (*mgo.Session, error) {
 	return ms, nil
 }
 
-func (ml *mongoLog) add(le support_domain.LogEntry) {
+func (ml *mongoLog) add(le models.LogEntry) {
 
 	session := ml.session.Copy()
 	defer session.Close()
@@ -116,13 +116,13 @@ func (ml *mongoLog) remove(criteria matchCriteria) int {
 	return info.Removed
 }
 
-func (ml *mongoLog) find(criteria matchCriteria) []support_domain.LogEntry {
+func (ml *mongoLog) find(criteria matchCriteria) []models.LogEntry {
 	session := ml.session.Copy()
 	defer session.Close()
 
 	c := session.DB(configuration.MongoDB).C(configuration.MongoCollection)
 
-	le := []support_domain.LogEntry{}
+	le := []models.LogEntry{}
 
 	base := createQuery(criteria)
 

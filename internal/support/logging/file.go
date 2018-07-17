@@ -13,7 +13,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/edgexfoundry/edgex-go/support/domain"
+	"github.com/edgexfoundry/edgex-go/internal/support/logging/models"
 )
 
 const (
@@ -25,7 +25,7 @@ type fileLog struct {
 	out      io.WriteCloser
 }
 
-func (fl *fileLog) add(le support_domain.LogEntry) {
+func (fl *fileLog) add(le models.LogEntry) {
 	if fl.out == nil {
 		var err error
 		fl.out, err = os.OpenFile(fl.filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
@@ -64,7 +64,7 @@ func (fl *fileLog) remove(criteria matchCriteria) int {
 	count := 0
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
-		var le support_domain.LogEntry
+		var le models.LogEntry
 
 		line := scanner.Bytes()
 		err := json.Unmarshal(line, &le)
@@ -91,8 +91,8 @@ func (fl *fileLog) remove(criteria matchCriteria) int {
 	return count
 }
 
-func (fl *fileLog) find(criteria matchCriteria) []support_domain.LogEntry {
-	var logs []support_domain.LogEntry
+func (fl *fileLog) find(criteria matchCriteria) []models.LogEntry {
+	var logs []models.LogEntry
 	f, err := os.Open(fl.filename)
 	if err != nil {
 		//fmt.Println("Error opening log file: ", fl.filename, err)
@@ -100,7 +100,7 @@ func (fl *fileLog) find(criteria matchCriteria) []support_domain.LogEntry {
 	}
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
-		var le support_domain.LogEntry
+		var le models.LogEntry
 
 		line := scanner.Bytes()
 		err := json.Unmarshal(line, &le)

@@ -9,7 +9,7 @@ package logging
 import (
 	"strings"
 
-	"github.com/edgexfoundry/edgex-go/support/domain"
+	"github.com/edgexfoundry/edgex-go/internal/support/logging/models"
 )
 
 type matchCriteria struct {
@@ -34,7 +34,7 @@ func matchStringInSlice(s string, l []string) bool {
 	return true
 }
 
-func (criteria matchCriteria) match(le support_domain.LogEntry) bool {
+func (criteria matchCriteria) match(le models.LogEntry) bool {
 	if !matchStringInSlice(le.OriginService, criteria.OriginServices) {
 		return false
 	}

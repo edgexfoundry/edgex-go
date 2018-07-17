@@ -46,7 +46,7 @@ schemas:
             "503": 
                 description: or unknown or unanticipated issues
     get: 
-        description: Fetch a client export registration by unique name. Response will be null if no export registration matches on name. Return ServiceException (HTTP 503) for unknown or unanticipated issues.
+        description: Fetch a client export registration by unique name. Return NotFoundException (HTTP 404) if no export registration matches on name. Return ServiceException (HTTP 503) for unknown or unanticipated issues.
         displayName: get an ExportRegistration by unique name
         responses: 
             "200": 
@@ -70,7 +70,7 @@ schemas:
             required: false
             repeat: false
     get: 
-        description: Fetch a client export registration by id. Response will be null if no export registration matches on id. Return ServiceException (HTTP 503) for unknown or unanticipated issues.
+        description: Fetch a client export registration by id. Return NotFoundException (HTTP 404) if no export registration matches on id. Return ServiceException (HTTP 503) for unknown or unanticipated issues.
         displayName: get an ExportRegistration by database id
         responses: 
             "200": 
@@ -79,6 +79,8 @@ schemas:
                     application/json: 
                         schema: ExportRegistration
                         example: '{"id":"57db5bd2add4d779d38ff066","created":1473993682339,"modified":1473993682339,"origin":1471806386919,"name":"OSIClient","addressable":{"id":null,"created":0,"modified":0,"origin":1471806386919,"name":"OSIMQTTBroker","protocol":"TCP","address":"m10.cloudmqtt.com","port":15421,"path":null,"publisher":"EdgeXExportPublisher","user":"hukfgtoh","password":"uP6hJLYW6Ji4","topic":"EdgeXDataTopic"},"format":"JSON","filter":{"deviceIdentifiers":["livingroomthermosat","hallwaythermostat"],"valueDescriptorIdentifiers":["temperature","humidity"]},"encryption":{"encryptionAlgorithm":"AES","encryptionKey":"123","initializingVector":"123"},"compression":"GZIP","enable":true}'
+            "404": 
+                description: if the existing export registration cannot be found by id
             "503": 
                 description: for unknown or unanticipated issues
 /registration: 

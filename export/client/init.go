@@ -13,7 +13,7 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/export/client/clients"
 	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/support/consul-client"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/consul"
 	"go.uber.org/zap"
 )
 
