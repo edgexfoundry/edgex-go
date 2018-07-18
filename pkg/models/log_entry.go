@@ -11,15 +11,12 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
-package notifications_client
+package models
 
-type notificationConfig struct {
-	serviceHost string
-	servicePort int
-}
-
-var clientConfig notificationConfig
-
-func SetConfiguration(host string, port int) {
-	clientConfig = notificationConfig{serviceHost: host, servicePort: port}
+type LogEntry struct {
+	Level         string   `json:"logLevel"`
+	Labels        []string `json:"labels"`
+	OriginService string   `json:"originService"`
+	Message       string   `json:"message"`
+	Created       int64    `json:"created"`
 }

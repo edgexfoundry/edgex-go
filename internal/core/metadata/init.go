@@ -17,14 +17,14 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces"
+	consulclient "github.com/edgexfoundry/edgex-go/internal/pkg/consul"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/memory"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo"
-	consulclient "github.com/edgexfoundry/edgex-go/support/consul-client"
-	logger "github.com/edgexfoundry/edgex-go/support/logging-client"
-	notifications "github.com/edgexfoundry/edgex-go/support/notifications-client"
+	logger "github.com/edgexfoundry/edgex-go/pkg/clients/logging"
+	notifications "github.com/edgexfoundry/edgex-go/pkg/clients/notifications"
 )
 
 // Global variables
