@@ -1,6 +1,6 @@
-##############################
-Get EdgeX Foundry - Developers
-##############################
+#################################
+Get EdgeX Foundry - Go Developers
+#################################
 
 ============
 Introduction
@@ -125,5 +125,6 @@ With all the microservices built, you can now run EdgeX.  You may first want to 
 
 .. image:: EdgeX_GoLandMakeRun.png
 
-You can now call on the service APIs to make sure they are running correctly.  Namely, call on http://localhost:[service port]/api/v1/ping to see each service respond to the simplest of requests.
+
+You can now call on the service APIs to make sure they are running correctly.  Namely, call on localhost:[service port]/api/v1/ping to see each service respond to the simplest of requests.
 

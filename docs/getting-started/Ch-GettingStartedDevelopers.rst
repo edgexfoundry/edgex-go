@@ -33,11 +33,12 @@ Developers will need to install the following software in order to get, run and 
 
 **git** - a free and open source version control (SVC) system used to download (and upload) the EdgeX Foundry source code from the project's GitHub repository.  See https://git-scm.com/downloads for download and install instructions.  Alternative tools (Easy Git for example) could be used, but this document assumes use of git and leaves how to use alternative SVC tools to the reader.
 
-**MongoDB** - by default, EdgeX Foundry uses MongoDB as the persistence mechanism for sensor data as well as metadata about the devices/sensors that are connected.  See https://www.mongodb.com/download-center?jmp=nav#community for download and installation instructions.  As an alternative to installing MongoDB directly, you can use a MongoDB on another server or in the cloud.  This document will explain how to setup MongoDB for use with your development environment. 
+**MongoDB** - by default, EdgeX Foundry uses MongoDB as the persistence mechanism for sensor data as well as metadata about the devices/sensors that are connected.  See https://www.mongodb.com/download-center?jmp=nav#community for download and installation instructions.  As an alternative to installing MongoDB directly, you can use a MongoDB on another server or in the cloud.  This document will explain how to setup MongoDB for use with your development environment.
 
 .. toctree::
    :maxdepth: 1
 
-   Ch-GettingStartedGoDevelopers
    Ch-GettingStartedJavaDevelopers
+   Ch-GettingStartedGoDevelopers
+
   
