@@ -238,3 +238,39 @@ EdgeX Foundry Consul Registry
 EdgeX Foundry uses the open source Consul project as its registry service. All EdgeX Foundry microservices are expected to register with the Consul registry as they come up. Going to Consul's dashboard UI enables you to see which services are up. Find the Consul UI at http://[host]:8500/ui.
 
 .. image:: EdgeX_GettingStartedUsrConsul.png
+
+====================================
+Running EdgeX Foundry with Security Service
+====================================
+
+The security service is integrated into EdgeX architecture since california release. Secret Store and API Proxy gateway are two major components that implement the security service. It provides protection for secrtes, credentials and REST API endpoints of EdgeX. With security service enabled, it is required to create an account and obtain JWT (Json Web Token) and use such JWT to access the protected resources, such as "ping" URLs of micro services. The details of Secret Store and Reverse Proxy can be found at https://github.com/edgexfoundry/security-secret-store and https://github.com/edgexfoundry/security-api-gateway under EdgeX project.
+
+-----------------------------
+Start Security Service
+-----------------------------
+The security service is implemented within a couple of docker containers. To start the security service, go to developer-scripts folder of EdgeX and run the following commands:
+cd compose-files/security
+docker-compose up -d vault
+docker-compose up -d vault-worker
+docker-compose up -d kong-db
+docker-compose up -d kong-migrations
+docker-compose up -d kong
+docker-compose up -d edgex-proxy
+
+-----------------------------
+Access Protected URLs through Security Service
+-----------------------------
+1. An account needs to be created to access the protected resources. Here is an example to create an account name "mike":
+
+docker run --network=edgex_edgex-network edgexfoundry/docker-edgex-proxy-go:0.1.0 --useradd=mike
+
+The command above will return a JWT that needs to be used in the next step. 
+
+2. When security service is enabled, all the accesses of URLs of micro services need to be passed through the proxy (which is named "kong" in the container list) along with JWT as the credential. 
+
+E.g, we were able to access the "ping" REST API of command previously with curl command like this: 
+curl http://edgex-core-command-ip:48082/api/v1/ping. 
+
+Now we need to use https with slightly different URL to access the "ping" REST API of command with security service enabled as below:
+curl -k -v -H "host: edgex" https://edgex-proxy-ip:8443/command/api/v1/ping?jwt=<Json-Web-Token-From-Step1>
+
