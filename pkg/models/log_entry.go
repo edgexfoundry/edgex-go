@@ -14,7 +14,7 @@
 package models
 
 type LogEntry struct {
-	Level         string   `json:"loglevel"`
+	Level         string   `json:"logLevel"`
 	Labels        []string `json:"labels"`
 	OriginService string   `json:"originService"`
 	Message       string   `json:"message"`
