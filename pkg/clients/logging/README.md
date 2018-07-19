@@ -1,28 +1,17 @@
 # README #
-Support logging client library for the Go implementation of EdgeX microservices.  This project contains a logging client used to log messages.  Logging a message will send the log to the logging microservice, print the log to stdout and (optionally) write the log to a log file.
-
-### What is this repository for? ###
-* Logging client for logging messages
-
-### Installation ###
-This project uses glide for dependency management - https://glide.sh/
-After installing glide, run the following commands to install the logging client:
-```
-go get github.com/edgexfoundry/support-logging-client-go
-cd $GOPATH/src/github.com/edgexfoundry/support-logging-client-go
-glide install
-go install
-```
+This package contains the logging client written in the Go programming language.  The logging client is used by Go services or other Go code to communicate with the EdgeX support-logging microservice (regardless of underlying implemenation type) by sending REST requests to the service's API endpoints.
 
 ### How To Use ###
-To make logging calls, you need to have an instance of the LoggingClient struct.  Do not create manually.  Instead, call:
+To use the support-logging client package you first need to import the library into your project:
 ```
-func NewClient(owningServiceName string, remoteUrl string) LoggingClient{...}
+import "github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 ```
-* owningServiceName - Name of your microservice (used in logs)
-* remoteUrl - Full path to the logging service api
-* 
+To send a log message to the centralized logging service, you first need to get a LoggingClient and then you can send logging messages into the service (indicating the level with the various log function call.
+```
+  logTarget := setLoggingTarget(*configuration)
+	loggingClient = logger.NewClient(internal.CoreDataServiceKey, configuration.EnableRemoteLogging, logTarget)
 
-You can optionally define a logging file for logs to be written to.  To do this, set the LogFilePath property on the LoggingClient instance.  The default path is an empty string which signifies that no log file will be created.
-
-To log messages, call the respective commands (Info, Error, Debug, Warn)
+  loggingClient.Info(consulMsg)
+	loggingClient.Info(fmt.Sprintf("Starting %s %s ", internal.CoreDataServiceKey, edgex.Version))
+```
+Log messages can be logged as Info, Error, Debug, or Warn.

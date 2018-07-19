@@ -1,33 +1,12 @@
 # README #
-This repository is for the scheduler client for EdgeXFoundry written in the Go programming language.  The scheduler client is used to communicate with the scheduler micro service by sending REST requests to the service's API endpoints.
-
-### What is this repository for? ###
-* Client library for interacting with the scheduler microservice
-
-### Installation ###
-This project does not have any external dependencies.  To install, simply run:
-
-```
-go get github.com/edgexfoundry/edgex-go
-cd $GOPATH/src/github.com/edgexfoundry/edgex-go/support/scheduler-client
-go install
-```
-
-To test, simple run:
-
-```
-go test
-```
+This package contains the scheduler client written in the Go programming language.  The scheduler client is used by Go services or other Go code to communicate with the EdgeX support-scheduler microservice (regardless of underlying implemenation type) by sending REST requests to the service's API endpoints.
 
 ### How To Use ###
-To use the support-scheduler-client library you first need to import the library into your project:
-
+To use the support-scheduler client package you first need to import the library into your project:
 ```
-import "github.com/edgexfoundry/edgex-go/support/scheduler-client"
+import "github.com/edgexfoundry/edgex-go/pkg/clients/scheduler"
 ```
-
-To add schedule, schedule event you first need to create a SchedulerClient object:
-
+To work with schedules you first need to get a ScheduleClient:
 ```
 scheduleClient := scheduler.SchedulerClient{
     SchedulerServiceHost : "localhost",
@@ -36,7 +15,7 @@ scheduleClient := scheduler.SchedulerClient{
 }
 ```
 
-This will create a client to hit the scheduler endpoint running on localhost.  You can then post a schedule by creating a Schedule object and call:
+This will create a client to hit the scheduler endpoint.  You can then post a schedule by creating a Schedule struct and call:
 
 ```
 schedule := models.Schedule{
@@ -66,6 +45,3 @@ scheduleEvent := models.ScheduleEvent{
 
 err := scheduleClient.AddScheduleEvent(scheduleEvent)
 ```
-
-
-more API details please see the [EdgeXFoundry's API Wiki - APIs--Supporting Services--Scheduling](https://wiki.edgexfoundry.org/display/FA/APIs--Supporting+Services--Scheduling)
