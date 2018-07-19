@@ -1,7 +1,7 @@
-# EdgeX Foundry Core Data Service
+# EdgeX Foundry Export Distro Service
 [![license](https://img.shields.io/badge/license-Apache%20v2.0-blue.svg)](LICENSE)
 
-Core Data provides a centralized persistence facility for data readings collected by devices and sensors. Device services for devices and sensors that collect data, call on the Core Data service to store the device and sensor data on the edge system (such as in a gateway) until the data can be moved "north" and then exported to Enterprise and cloud systems.
+Export Distribution Micro Service receives data from core data (via Q) and then filters, transforms, formats the data per client request and finally distributes it via REST, MQTT or 0MQ. Built on the concept of EAI or pipe and filter archtitecture.
 
 # Install and Deploy Native #
 
@@ -20,11 +20,11 @@ cd $GOPATH/src/github.com/edgexfoundry/edgex-go
 # pull the 3rd party / vendor packages
 make prepare
 # build the microservice
-make cmd/core-data/core-data
-# get to the core data microservice executable
-cd cmd/core-data
+make cmd/export-distro/export-distro
+# get to the export distro microservice executable
+cd cmd/export-distro
 # run the microservice (may require other dependent services to run correctly)
-./core-data
+./export-distro
 ```
 
 # Install and Deploy via Docker Container #
@@ -40,7 +40,7 @@ cd $GOPATH/src
 go get github.com/edgexfoundry/edgex-go
 cd $GOPATH/src/github.com/edgexfoundry/edgex-go
 # To create the Docker image
-sudo make docker_core_data
+sudo make docker_export_distro
 # To create a containter from the image
 sudo docker create --name "[DOCKER_CONTAINER_NAME]" --network "[DOCKER_NETWORK]" [DOCKER_IMAGE_NAME]
 # To run the container

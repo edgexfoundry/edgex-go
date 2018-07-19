@@ -1,7 +1,7 @@
-# EdgeX Foundry Core Data Service
+# EdgeX Foundry Support Logging Service
 [![license](https://img.shields.io/badge/license-Apache%20v2.0-blue.svg)](LICENSE)
 
-Core Data provides a centralized persistence facility for data readings collected by devices and sensors. Device services for devices and sensors that collect data, call on the Core Data service to store the device and sensor data on the edge system (such as in a gateway) until the data can be moved "north" and then exported to Enterprise and cloud systems.
+Support Logging provides a centralized logging facility for all EdgeX microservices.  Logging service features a REST API for other micro services to add/query/delete logging requests. Two options of persistence--file or mongodb--are supported and are configurable.
 
 # Install and Deploy Native #
 
@@ -20,11 +20,11 @@ cd $GOPATH/src/github.com/edgexfoundry/edgex-go
 # pull the 3rd party / vendor packages
 make prepare
 # build the microservice
-make cmd/core-data/core-data
-# get to the core data microservice executable
-cd cmd/core-data
+make cmd/support-logging/support-logging
+# get to the support logging microservice executable
+cd cmd/support-logging
 # run the microservice (may require other dependent services to run correctly)
-./core-data
+./support-logging
 ```
 
 # Install and Deploy via Docker Container #
@@ -40,7 +40,7 @@ cd $GOPATH/src
 go get github.com/edgexfoundry/edgex-go
 cd $GOPATH/src/github.com/edgexfoundry/edgex-go
 # To create the Docker image
-sudo make docker_core_data
+sudo make docker_support_logging
 # To create a containter from the image
 sudo docker create --name "[DOCKER_CONTAINER_NAME]" --network "[DOCKER_NETWORK]" [DOCKER_IMAGE_NAME]
 # To run the container

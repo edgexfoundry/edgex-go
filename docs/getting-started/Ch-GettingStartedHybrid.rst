@@ -2,7 +2,7 @@
 Working in a Hybrid Environment
 ###############################
 
-In some cases, as a developer, you want to work on a particular micro service, but you don't want to have to download all the source code for all the micro services and run all the micro services in Eclipse.  In this case, you can download and run the EdgeX Docker containers for the other micro services you need and run your single micro service (the one you are presumably working on) from Eclipse and have it point to the other micro services by appropriate IP address.  Within EdgeX, we call this a "hybrid" environment - where part of your EdgeX platform is running from a development environment, while other parts are running from the Dockerized containers.  This page outlines how to do hybrid development. 
+In some cases, as a developer, you want to work on a particular micro service, but you don't want to have to download all the source code for all the micro services and run all the micro services in the development tool(s) like Go Land or Eclipse.  In this case, you can download and run the EdgeX Docker containers for all the micro services you need and run your single micro service (the one you are presumably working on) from the developer tool of choice and have it point to the other micro services by appropriate address.  Within EdgeX, we call this a "hybrid" environment - where part of your EdgeX platform is running from a development environment, while other parts are running from the Dockerized containers.  This page outlines how to do hybrid development.
 
 As an example of this process, let's say you want to do coding work with/on the Virtual Device service in Eclipse.  You want the rest of the EdgeX environment up and running via Docker containers.  How would you set up this hybrid environment?  Let's take a look.
 
@@ -10,40 +10,42 @@ As an example of this process, let's say you want to do coding work with/on the 
 Get and Run the EdgeX Docker Containers
 =======================================
 
-1. Per Get EdgeX Foundry - Users, get Docker, Docker Compose setup and then pull the EdgeX docker containers.
-2. Since you are working with the virtual device, you probably don't need or want to run all the micro services.  You just need the few that the Virtual Device will be communication with or that will be required to run a minimal EdgeX environment.  So you will need to run Consul, Mongo, Core Data, Core Metadata, Core Command, Support Logging, and Support Notifications running.  After pulling the EdgeX containers, start these containers with the following commands in order
+1. Per :doc:`../Ch-GettingStartedUsers`, get Docker, Docker Compose setup and then pull the EdgeX docker containers.
+2. Since you are working with the virtual device, you probably don't need or want to run all the micro services.  You just need the few that the Virtual Device will be communicating with or that will be required to run a minimal EdgeX environment.  So you will need to run Consul, Mongo, Core Data, Core Metadata, Core Command, Support Logging, and Support Notifications.  After pulling the EdgeX containers, start these containers with the following commands in order
 
 
 +------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
 |   **Docker Command**               |   **Description**                                                                   |  **Suggested Waiti Time After Completing**     |
-+====================================+=====================================================================================+================================================+ 
-| docker-compose up -d volume        |  Start the EdgeX Foundry file volume--must be done before the other services are    | A couple of seconds                            |
-|                                    |  started                                                                            |                                                |   
++====================================+=====================================================================================+================================================+
+| docker-compose up -d volume        |  Start the EdgeX Foundry file volume--must be done before the other services are    | A couple of seconds.  In the time it takes to  |
+|                                    |  started                                                                            | type the next command it shoud be ready.       |
 +------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-| docker-compose up -d consul        |  Start the configuration/registry microservice which all services must register     | 60 seconds                                     |
-|                                    |  with and get their configuration from                                              |                                                |
+| docker-compose up -d consul        |  Start the configuration and registry microservice which all services must          | A couple of seconds                            |
+|                                    |  register with and get their configuration from                                     |                                                |
 +------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-| docker-compose up -d config-seed   |  Populate the configuration database for the configuration service (started above). | Blocking script completes within seconds       |
-|                                    |  This work can only be accomplished after the Consul service is up                  |                                                | 
+| docker-compose up -d config-seed   |  Populate the configuration/registry microservice                                   | A couple of seconds                            |
 +------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-| docker-compose up -d mongo         |  Start the NoSQL MongoDB container                                                  | 10 seconds                                     | 
+| docker-compose up -d mongo         |  Start the NoSQL MongoDB container                                                  | 10 seconds                                     |
 +------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-| docker-compose up -d logging       |  Start the logging microservice - used by all micro services that make log entries  | 1 minute                                       | 
+| docker-compose up -d logging       |  Start the logging microservice - used by all micro services that make log entries  | A couple of seconds                            |
 +------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-| docker-compose up -d notifications |  Start the notifications and alerts microservice--used by many of the microservices | 30 seconds                                     | 
+| docker-compose up -d notifications |  Start the notifications and alerts microservice--used by many of the microservices | 30 seconds                                     |
+|                                    |  Note: this service is still implemented in Java and takes more time to start       |                                                |
 +------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-| docker-compose up -d metadata      |  Start the Core Metadata microservice                                               | 1 minute                                       | 
+| docker-compose up -d metadata      |  Start the Core Metadata microservice                                               | A couple of seconds                            |
 +------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-| docker-compose up -d data          |  Start the Core Data microservice                                                   | 1 minute                                       | 
+| docker-compose up -d data          |  Start the Core Data microservice                                                   | A couple of seconds                            |
 +------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-| docker-compose up -d command       |  Start the Core Command microservice                                                | 1 minute                                       | 
+| docker-compose up -d command       |  Start the Core Command microservice                                                | A couple of seconds                            |
 +------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
 
+Run a **"docker-compose ps"** command to confirm that all the containers have been downloaded and started.  (Note: initialization or seed containers, like config-seed, will have exited as there job is just to initialize the associated service and then exit.)
 
 Note:  If you prefer, you can also use the run-it.sh script found in the developer-scripts repository to start these containers.  Just note that you will need to edit run-it.sh and remove any containers (like the device-virtual container) that you don't want running.
+
 Get and Run the Code In Eclipse
 
-1. Per Get EdgeX Foundry - Developers, get your development environment (Eclipse et. al) setup and pull the micro service code you want to work on from GitHub.  In this example, we assume you want to get the device-virtual project and import that as a Maven project into Eclipse.
+1. Per :doc:`../Ch-GettingStartedJavaDevelopers`, get your development environment (Eclipse et. al) setup and pull the micro service code you want to work on from GitHub.  In this example, we assume you want to get the device-virtual project and import that as a Maven project into Eclipse.
 
 2. Next, configure the device-virtual project loaded into Eclipse to use the other Dockerized micro services and allow the other containers to see/find your Eclipse-based micro service (in this case the device-virtual micro service) running in Eclipse.
 
