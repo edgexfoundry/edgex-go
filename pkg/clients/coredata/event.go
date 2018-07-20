@@ -25,8 +25,6 @@ import (
 
 	"strconv"
 
-	"github.com/edgexfoundry/edgex-go/core/clients"
-	"github.com/edgexfoundry/edgex-go/core/clients/types"
 	"github.com/edgexfoundry/edgex-go/pkg/clients"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
 	"github.com/edgexfoundry/edgex-go/pkg/models"

@@ -7,7 +7,7 @@
 package distro
 
 import (
-	"github.com/edgexfoundry/edgex-go/core/clients/coredata"
+	"github.com/edgexfoundry/edgex-go/pkg/clients/coredata"
 )
 
 type ConfigurationStruct struct {
