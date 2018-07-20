@@ -8,14 +8,15 @@ package distro
 
 import (
 	"fmt"
-	"github.com/edgexfoundry/edgex-go/support/consul-client"
-	"go.uber.org/zap"
-	"strconv"
-	"strings"
 
 	"github.com/edgexfoundry/edgex-go/core/clients/coredata"
 	"github.com/edgexfoundry/edgex-go/core/clients/types"
 	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/support/consul-client"
+
+	"go.uber.org/zap"
+	"strconv"
+	"strings"
 )
 
 const (
