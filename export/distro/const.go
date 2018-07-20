@@ -6,10 +6,6 @@
 
 package distro
 
-import (
-	"github.com/edgexfoundry/edgex-go/pkg/clients/coredata"
-)
-
 type ConfigurationStruct struct {
 	Hostname             string
 	Port                 int
@@ -27,5 +23,3 @@ type ConfigurationStruct struct {
 }
 
 var configuration ConfigurationStruct = ConfigurationStruct{} // Needs to be initialized before used
-
-var ec coredata.EventClient

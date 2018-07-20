@@ -23,6 +23,7 @@ const (
 )
 
 var logger *zap.Logger
+var ec coredata.EventClient
 
 func ConnectToConsul(conf ConfigurationStruct) error {
 	// Initialize service on Consul
@@ -47,7 +48,7 @@ func ConnectToConsul(conf ConfigurationStruct) error {
 	return nil
 }
 
-func Init(conf ConfigurationStruct, l *zap.Logger) error {
+func Init(conf ConfigurationStruct, l *zap.Logger, useConsul bool) error {
 	configuration = conf
 	logger = l
 
@@ -56,11 +57,11 @@ func Init(conf ConfigurationStruct, l *zap.Logger) error {
 	params := types.EndpointParams{
 		ServiceKey:  internal.CoreDataServiceKey,
 		Path:        EventUriPath,
-		UseRegistry: false,
+		UseRegistry: useConsul,
 		Url:         coreDataEventURL,
 	}
 
-	ec = coredata.NewEventClient(params, nil)
+	ec = coredata.NewEventClient(params, types.Endpoint{})
 
 	return nil
 }
