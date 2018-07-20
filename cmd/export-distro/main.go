@@ -66,7 +66,7 @@ func main() {
 
 	logger.Info(consulMsg, zap.String("version", edgex.Version))
 
-	err = distro.Init(*configuration, logger)
+	err = distro.Init(*configuration, logger, useConsul)
 
 	logger.Info("Starting distro")
 	errs := make(chan error, 2)
