@@ -152,9 +152,7 @@ func (reg registrationInfo) processEvent(event *models.Event) {
 		encrypted = reg.encrypt.Transform(compressed)
 	}
 
-	reg.sender.Send(encrypted)
-
-	if configuration.MarkPushed {
+	if reg.sender.Send(encrypted) && configuration.MarkPushed {
 		go func() {
 			id := event.ID.Hex()
 			err := ec.MarkPushed(id)

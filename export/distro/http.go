@@ -34,20 +34,21 @@ func NewHTTPSender(addr models.Addressable) Sender {
 	return sender
 }
 
-func (sender httpSender) Send(data []byte) {
+func (sender httpSender) Send(data []byte) bool {
 	switch sender.method {
 	case http.MethodPost:
 		response, err := http.Post(sender.url, mimeTypeJSON, bytes.NewReader(data))
 		if err != nil {
 			logger.Error("Error: ", zap.Error(err))
-			return
+			return false
 		}
 		defer response.Body.Close()
 		logger.Info("Response: ", zap.String("status", response.Status))
 	default:
 		logger.Info("Unsupported method: ", zap.String("method", sender.method))
-		return
+		return false
 	}
 
 	logger.Info("Sent data: ", zap.ByteString("data", data))
+	return true
 }
