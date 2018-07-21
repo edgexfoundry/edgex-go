@@ -160,7 +160,7 @@ func (reg registrationInfo) processEvent(event *models.Event) {
 			err := ec.MarkPushed(id)
 
 			if err != nil {
-				logger.Error(fmt.Sprintf("Failed to mark event as pushed : event ID = %d: %s", id, err))
+				logger.Error(fmt.Sprintf("Failed to mark event as pushed : event ID = %s: %s", id, err))
 			}
 		}()
 	}
