@@ -155,13 +155,14 @@ func (reg registrationInfo) processEvent(event *models.Event) {
 	reg.sender.Send(encrypted)
 
 	if configuration.MarkPushed {
-		go func(id string) {
+		go func() {
+			id := event.ID.Hex()
 			err := ec.MarkPushed(id)
 
 			if err != nil {
-				logger.Error("Failed to mark event as pushed : event ID = " + id)
+				logger.Error(fmt.Sprintf("Failed to mark event as pushed : event ID = %d: %s", id, err))
 			}
-		}(event.ID.Hex())
+		}()
 	}
 
 	logger.Debug("Sent event with registration:",
