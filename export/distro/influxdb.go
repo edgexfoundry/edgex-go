@@ -46,14 +46,14 @@ func NewInfluxDBSender(addr models.Addressable) Sender {
 	return sender
 }
 
-func (sender *influxdbSender) Send(data []byte, event *models.Event) {
+func (sender *influxdbSender) Send(data []byte, event *models.Event) bool {
 	if sender.client == nil {
 		logger.Info("Connecting to InfluxDB server")
 		c, err := client.NewHTTPClient(sender.httpInfo)
 
 		if err != nil {
 			logger.Error(fmt.Sprintf("Failed to connect to InfluxDB server: %s", err))
-			return
+			return false
 		}
 
 		sender.client = c
@@ -66,7 +66,7 @@ func (sender *influxdbSender) Send(data []byte, event *models.Event) {
 
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to craete batch points: %s", err))
-		return
+		return false
 	}
 
 	for _, reading := range event.Readings {
@@ -98,7 +98,7 @@ func (sender *influxdbSender) Send(data []byte, event *models.Event) {
 
 		if err != nil {
 			logger.Error(fmt.Sprintf("Failed to add data point: %s", err))
-			return
+			return false
 		}
 
 		bp.AddPoint(pt)
@@ -109,5 +109,8 @@ func (sender *influxdbSender) Send(data []byte, event *models.Event) {
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to write data points to InfluxDB server: %s", err))
 		sender.client = nil // Reset the client
+		return false
 	}
+
+	return true
 }
