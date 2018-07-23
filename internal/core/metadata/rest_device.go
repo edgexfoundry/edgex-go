@@ -39,7 +39,7 @@ func restGetAllDevices(w http.ResponseWriter, _ *http.Request) {
 	}
 
 	// Check the max length
-	if len(res) > configuration.ReadMaxLimit {
+	if len(res) > Configuration.ReadMaxLimit {
 		err = errors.New("Max limit exceeded")
 		loggingClient.Error(err.Error(), "")
 		http.Error(w, err.Error(), http.StatusRequestEntityTooLarge)
@@ -1213,15 +1213,15 @@ func notifyDeviceAssociates(d models.Device, action string) error {
 
 func postNotification(name string, action string) {
 	// Only post notification if the configuration is set
-	if configuration.NotificationPostDeviceChanges {
+	if Configuration.NotificationPostDeviceChanges {
 		// Make the notification
 		notification := notifications.Notification{
-			Slug:        configuration.NotificationsSlug + strconv.FormatInt((time.Now().UnixNano()/int64(time.Millisecond)), 10),
-			Content:     configuration.NotificationContent + name + "-" + string(action),
+			Slug:        Configuration.NotificationsSlug + strconv.FormatInt((time.Now().UnixNano()/int64(time.Millisecond)), 10),
+			Content:     Configuration.NotificationContent + name + "-" + string(action),
 			Category:    notifications.SW_HEALTH,
-			Description: configuration.NotificationDescription,
-			Labels:      []string{configuration.NotificationLabel},
-			Sender:      configuration.NotificationSender,
+			Description: Configuration.NotificationDescription,
+			Labels:      []string{Configuration.NotificationLabel},
+			Sender:      Configuration.NotificationSender,
 			Severity:    notifications.NORMAL,
 		}
 

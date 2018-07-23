@@ -20,18 +20,19 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
+	"sync"
 	"syscall"
 	"time"
 
 	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 )
 
 var loggingClient logger.LoggingClient
+var serviceTimeout int = 30000
 
 func main() {
 	start := time.Now()
@@ -45,50 +46,31 @@ func main() {
 	flag.Usage = usage.HelpCallback
 	flag.Parse()
 
-	//Read Configuration
-	configuration := &metadata.ConfigurationStruct{}
-	err := config.LoadFromFile(useProfile, configuration)
-	if err != nil {
-		logBeforeTermination(err)
-		return
-	}
-
-	//Determine if configuration should be overridden from Consul
-	var consulMsg string
-	if useConsul {
-		consulMsg = "Loading configuration from Consul..."
-		err := metadata.ConnectToConsul(*configuration)
-		if err != nil {
-			logBeforeTermination(err)
-			return //end program since user explicitly told us to use Consul.
-		}
-	} else {
-		consulMsg = "Bypassing Consul configuration..."
-	}
+	bootstrap(useConsul, useProfile)
 
 	// Setup Logging
-	logTarget := setLoggingTarget(*configuration)
-	loggingClient = logger.NewClient(internal.CoreMetaDataServiceKey, configuration.EnableRemoteLogging, logTarget)
+	logTarget := setLoggingTarget(*metadata.Configuration)
+	loggingClient = logger.NewClient(internal.CoreMetaDataServiceKey, metadata.Configuration.EnableRemoteLogging, logTarget)
 
-	loggingClient.Info(consulMsg)
+	loggingClient.Info("Service dependencies resolved...")
 	loggingClient.Info(fmt.Sprintf("Starting %s %s ", internal.CoreMetaDataServiceKey, edgex.Version))
 
-	err = metadata.Init(*configuration, loggingClient)
+	err := metadata.Init(loggingClient)
 	if err != nil {
 		loggingClient.Error(fmt.Sprintf("call to init() failed: %v", err.Error()))
 		return
 	}
 
-	http.TimeoutHandler(nil, time.Millisecond*time.Duration(configuration.ServiceTimeout), "Request timed out")
-	loggingClient.Info(configuration.AppOpenMsg, "")
+	http.TimeoutHandler(nil, time.Millisecond*time.Duration(metadata.Configuration.ServiceTimeout), "Request timed out")
+	loggingClient.Info(metadata.Configuration.AppOpenMsg, "")
 
 	errs := make(chan error, 2)
 	listenForInterrupt(errs)
-	startHttpServer(errs, configuration.ServicePort)
+	startHttpServer(errs, metadata.Configuration.ServicePort)
 
 	// Time it took to start service
 	loggingClient.Info("Service started in: "+time.Since(start).String(), "")
-	loggingClient.Info("Listening on port: " + strconv.Itoa(configuration.ServicePort))
+	loggingClient.Info("Listening on port: " + strconv.Itoa(metadata.Configuration.ServicePort))
 	c := <-errs
 	metadata.Destruct()
 	loggingClient.Warn(fmt.Sprintf("terminating: %v", c))
@@ -120,4 +102,25 @@ func startHttpServer(errChan chan error, port int) {
 		r := metadata.LoadRestRoutes()
 		errChan <- http.ListenAndServe(":"+strconv.Itoa(port), r)
 	}()
+}
+
+func bootstrap(useConsul bool, useProfile string) {
+	deps := make(chan error, 2)
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	go metadata.ResolveDependencies(useConsul, useProfile, serviceTimeout, &wg, deps)
+	go func(ch chan error) {
+		for {
+			select {
+			case e, ok := <-ch:
+				if ok {
+					logBeforeTermination(e)
+				} else {
+					return
+				}
+			}
+		}
+	}(deps)
+
+	wg.Wait()
 }

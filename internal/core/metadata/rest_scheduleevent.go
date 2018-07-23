@@ -54,7 +54,7 @@ func restGetAllScheduleEvents(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(res) > configuration.ReadMaxLimit {
+	if len(res) > Configuration.ReadMaxLimit {
 		err = errors.New("Max limit exceeded")
 		http.Error(w, err.Error(), http.StatusRequestEntityTooLarge)
 		loggingClient.Error(err.Error(), "")
