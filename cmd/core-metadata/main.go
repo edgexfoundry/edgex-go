@@ -32,7 +32,7 @@ import (
 )
 
 var loggingClient logger.LoggingClient
-var serviceTimeout int = 30000
+var bootTimeout int = 30000
 
 func main() {
 	start := time.Now()
@@ -108,7 +108,7 @@ func bootstrap(useConsul bool, useProfile string) {
 	deps := make(chan error, 2)
 	wg := sync.WaitGroup{}
 	wg.Add(1)
-	go metadata.ResolveDependencies(useConsul, useProfile, serviceTimeout, &wg, deps)
+	go metadata.ResolveDependencies(useConsul, useProfile, bootTimeout, &wg, deps)
 	go func(ch chan error) {
 		for {
 			select {
