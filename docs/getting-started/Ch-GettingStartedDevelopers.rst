@@ -6,9 +6,9 @@ Get EdgeX Foundry - Developers
 Introduction
 ============
 
-These instructions are for Developers to obtain and run EdgeX Foundry.  (Users should read:  Get EdgeX Foundry - Users)
+These instructions are for Developers to obtain and run EdgeX Foundry.  (Users should read: :doc:`../Ch-GettingStartedUsers`) 
 
-EdgeX Foundry is a collection of more than a dozen microservices that are deployed to provide minimal edge platform capability.  EdgeX Foundry consists of a collection of microservices and an SDK tool.  The microservices and SDK currently released by the project's founders were originally written in Java.  Today, the services and SDK are being migrated to Go and C.  These documentation pages provide a developer with the information and instructions to get and run EdgeX Foundry in either the Java or Go development environments.
+EdgeX Foundry is a collection of more than a dozen microservices that can be deployed to provide a minimal edge platform capability.  EdgeX Foundry consists of a collection of microservices and an SDK tool.  The microservices and SDK currently released by the project's founders were originally written in Java.  Today, the services and SDK are being migrated to Go and C.  These documentation pages provide a developer with the information and instructions to get and run EdgeX Foundry in either the Java or Go development environments.
 
 =============
 What You Need

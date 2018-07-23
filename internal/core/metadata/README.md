@@ -1,7 +1,7 @@
 # EdgeX Foundry Core Metadata Service
 [![license](https://img.shields.io/badge/license-Apache%20v2.0-blue.svg)](LICENSE)
 
-The Metadata retains and provides access to the knowledge about the devices and sensors connected to EdgeX and how to communicate with them. More specifically,it manages information about the devices and sensors connected to, and operated by, EdgeX Foundry, knows the type, and organization of data reported by the devices and sensors, and it knows how to command the devices and sensors.  This service may also hold and manage other configuration metadata used by other services on the gateway – such as clean up schedules, hardware configuration (Wi-Fi connection info, MQTT queues, etc.). Non-device metadata may need to be held in a different database and/or managed by another service – depending on implementation.
+Metadata retains and provides access to the knowledge about the devices and sensors connected to EdgeX and how to communicate with them. More specifically,it manages information about the devices and sensors connected to, and operated by, EdgeX Foundry, knows the type, and organization of data reported by the devices and sensors, and it knows how to command the devices and sensors.  This service may also hold and manage other configuration metadata used by other services on the gateway – such as clean up schedules, hardware configuration (Wi-Fi connection info, MQTT queues, etc.). Non-device metadata may need to be held in a different database and/or managed by another service – depending on implementation.
 
 # Install and Deploy Native #
 

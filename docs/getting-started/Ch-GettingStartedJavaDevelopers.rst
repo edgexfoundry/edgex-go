@@ -6,7 +6,7 @@ Get EdgeX Foundry - Java Developers
 Introduction
 ============
 
-These instructions are for Java Developers to obtain and run Java-based EdgeX Foundry microservices.  (Users should read:  Get EdgeX Foundry - Users)
+These instructions are for Java Developers to obtain and run Java-based EdgeX Foundry microservices.  (Users should read: :doc:`../Ch-GettingStartedUsers`) 
 It should be noted that EdgeX Foundry is migrating from Java to Go and C (and other compiled languages) in order to improve the performance and footprint of the platform.  While the Java services still function today, the Go versions of the microservices are considered to be the reference implementation.  Java versions of the services will be archived in the future unless organizations and individuals in the community decide to maintain and keep these services consistent with the reference implementations.
 
 ==================================
@@ -167,7 +167,7 @@ If you want to bring up a minimal EdgeX application in Eclipse to see data creat
 
 1. Mongo (started and initialized per the documentation above)
 2. Import the EdgeX projects into Eclipse (building and installing all the projects per documentation above)
-3. Start core-metadata (per documentation above) and wait for it to complete its startup/initialization (look for "This is the Core Command Micro Service." in the Console view)
+3. Start core-metadata (per documentation above) and wait for it to complete its startup/initialization (look for "This is the Core Metadata Micro Service." in the Console view)
 4. Start core-data (per documentation above) and wait for it to complete its startup/initialization (look for "This is the Core Data Micro Service." in the Console view)
 5. Start core-command (per documentation above) and wait for it to complete its startup/initialization (look for "This is the Core Command Micro Service." in the Console view)
 6. Edit the application.properties of the device-virtual and change the service.name and service.host name to both match your systems name.  In the example below, the PC's name is Test-PC
