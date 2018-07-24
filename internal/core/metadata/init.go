@@ -33,7 +33,7 @@ import (
 // Global variables
 var Configuration *ConfigurationStruct
 var dbClient interfaces.DBClient
-var loggingClient logger.LoggingClient
+var LoggingClient logger.LoggingClient
 
 func ResolveDependencies(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup, ch chan error) {
 	until := time.Now().Add(time.Millisecond * time.Duration(timeout))
@@ -49,6 +49,12 @@ func ResolveDependencies(useConsul bool, useProfile string, timeout int, wait *s
 					close(ch)
 					wait.Done()
 				}
+			} else {
+				// Initialize notificationsClient based on configuration
+				notifications.SetConfiguration(Configuration.SupportNotificationsHost, Configuration.SupportNotificationsPort)
+				// Setup Logging
+				logTarget := setLoggingTarget()
+				LoggingClient = logger.NewClient(internal.CoreMetaDataServiceKey, Configuration.EnableRemoteLogging, logTarget)
 			}
 		}
 
@@ -69,13 +75,11 @@ func ResolveDependencies(useConsul bool, useProfile string, timeout int, wait *s
 	return
 }
 
-func Init(l logger.LoggingClient) error {
-	loggingClient = l
-
-	// Initialize notificationsClient based on configuration
-	notifications.SetConfiguration(Configuration.SupportNotificationsHost, Configuration.SupportNotificationsPort)
-
-	return nil
+func Init() bool {
+	if Configuration == nil || dbClient == nil {
+		return false
+	}
+	return true
 }
 
 func Destruct() {
@@ -136,12 +140,14 @@ func connectToDatabase() error {
 	var err error
 	dbClient, err = newDBClient(Configuration.DBType, dbConfig)
 	if err != nil {
+		dbClient = nil
 		return fmt.Errorf("couldn't create database client: %v", err.Error())
 	}
 
 	// Connect to the database
 	err = dbClient.Connect()
 	if err != nil {
+		dbClient = nil
 		return fmt.Errorf("couldn't connect to database: %v", err.Error())
 	}
 	return nil
@@ -157,4 +163,12 @@ func newDBClient(dbType string, config db.Configuration) (interfaces.DBClient, e
 	default:
 		return nil, db.ErrUnsupportedDatabase
 	}
+}
+
+func setLoggingTarget() string {
+	logTarget := Configuration.LoggingRemoteURL
+	if !Configuration.EnableRemoteLogging {
+		return Configuration.LoggingFile
+	}
+	return logTarget
 }

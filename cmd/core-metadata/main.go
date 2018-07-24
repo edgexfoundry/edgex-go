@@ -31,7 +31,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 )
 
-var loggingClient logger.LoggingClient
 var bootTimeout int = 30000
 
 func main() {
@@ -48,45 +47,33 @@ func main() {
 
 	bootstrap(useConsul, useProfile)
 
-	// Setup Logging
-	logTarget := setLoggingTarget(*metadata.Configuration)
-	loggingClient = logger.NewClient(internal.CoreMetaDataServiceKey, metadata.Configuration.EnableRemoteLogging, logTarget)
-
-	loggingClient.Info("Service dependencies resolved...")
-	loggingClient.Info(fmt.Sprintf("Starting %s %s ", internal.CoreMetaDataServiceKey, edgex.Version))
-
-	err := metadata.Init(loggingClient)
-	if err != nil {
-		loggingClient.Error(fmt.Sprintf("call to init() failed: %v", err.Error()))
+	ok := metadata.Init()
+	if !ok {
+		logBeforeInit(fmt.Errorf("%s: Service bootstrap failed!", internal.CoreMetaDataServiceKey))
 		return
 	}
 
+	metadata.LoggingClient.Info("Service dependencies resolved...")
+	metadata.LoggingClient.Info(fmt.Sprintf("Starting %s %s ", internal.CoreMetaDataServiceKey, edgex.Version))
+
 	http.TimeoutHandler(nil, time.Millisecond*time.Duration(metadata.Configuration.ServiceTimeout), "Request timed out")
-	loggingClient.Info(metadata.Configuration.AppOpenMsg, "")
+	metadata.LoggingClient.Info(metadata.Configuration.AppOpenMsg, "")
 
 	errs := make(chan error, 2)
 	listenForInterrupt(errs)
 	startHttpServer(errs, metadata.Configuration.ServicePort)
 
 	// Time it took to start service
-	loggingClient.Info("Service started in: "+time.Since(start).String(), "")
-	loggingClient.Info("Listening on port: " + strconv.Itoa(metadata.Configuration.ServicePort))
+	metadata.LoggingClient.Info("Service started in: "+time.Since(start).String(), "")
+	metadata.LoggingClient.Info("Listening on port: " + strconv.Itoa(metadata.Configuration.ServicePort))
 	c := <-errs
 	metadata.Destruct()
-	loggingClient.Warn(fmt.Sprintf("terminating: %v", c))
+	metadata.LoggingClient.Warn(fmt.Sprintf("terminating: %v", c))
 }
 
-func logBeforeTermination(err error) {
-	loggingClient = logger.NewClient(internal.CoreMetaDataServiceKey, false, "")
-	loggingClient.Error(err.Error())
-}
-
-func setLoggingTarget(conf metadata.ConfigurationStruct) string {
-	logTarget := conf.LoggingRemoteURL
-	if !conf.EnableRemoteLogging {
-		return conf.LoggingFile
-	}
-	return logTarget
+func logBeforeInit(err error) {
+	l := logger.NewClient(internal.CoreMetaDataServiceKey, false, "")
+	l.Error(err.Error())
 }
 
 func listenForInterrupt(errChan chan error) {
@@ -114,7 +101,7 @@ func bootstrap(useConsul bool, useProfile string) {
 			select {
 			case e, ok := <-ch:
 				if ok {
-					logBeforeTermination(e)
+					logBeforeInit(e)
 				} else {
 					return
 				}

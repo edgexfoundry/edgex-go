@@ -28,7 +28,7 @@ func restGetAllDeviceReports(w http.ResponseWriter, _ *http.Request) {
 	res := make([]models.DeviceReport, 0)
 	err := dbClient.GetAllDeviceReports(&res)
 	if err != nil {
-		loggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error(), "")
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return
 	}
@@ -37,7 +37,7 @@ func restGetAllDeviceReports(w http.ResponseWriter, _ *http.Request) {
 	if len(res) > Configuration.ReadMaxLimit {
 		err = errors.New("Max limit exceeded")
 		http.Error(w, err.Error(), http.StatusRequestEntityTooLarge)
-		loggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error(), "")
 		return
 	}
 
@@ -52,7 +52,7 @@ func restAddDeviceReport(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	var dr models.DeviceReport
 	if err := json.NewDecoder(r.Body).Decode(&dr); err != nil {
-		loggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error(), "")
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return
 	}
@@ -65,7 +65,7 @@ func restAddDeviceReport(w http.ResponseWriter, r *http.Request) {
 		} else {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		}
-		loggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error(), "")
 		return
 	}
 
@@ -77,7 +77,7 @@ func restAddDeviceReport(w http.ResponseWriter, r *http.Request) {
 		} else {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		}
-		loggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error(), "")
 		return
 	}
 
@@ -88,13 +88,13 @@ func restAddDeviceReport(w http.ResponseWriter, r *http.Request) {
 		} else {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		}
-		loggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error(), "")
 		return
 	}
 
 	// Notify associates
 	if err := notifyDeviceReportAssociates(dr, http.MethodPost); err != nil {
-		loggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error(), "")
 	}
 
 	w.WriteHeader(http.StatusOK)
@@ -105,7 +105,7 @@ func restUpdateDeviceReport(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	var from models.DeviceReport
 	if err := json.NewDecoder(r.Body).Decode(&from); err != nil {
-		loggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error(), "")
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return
 	}
@@ -121,25 +121,25 @@ func restUpdateDeviceReport(w http.ResponseWriter, r *http.Request) {
 			} else {
 				http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			}
-			loggingClient.Error(err.Error(), "")
+			LoggingClient.Error(err.Error(), "")
 			return
 		}
 	}
 
 	if err := updateDeviceReportFields(from, &to, w); err != nil {
-		loggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error(), "")
 		return
 	}
 
 	if err := dbClient.UpdateDeviceReport(&to); err != nil {
-		loggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error(), "")
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return
 	}
 
 	// Notify Associates
 	if err := notifyDeviceReportAssociates(to, http.MethodPut); err != nil {
-		loggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error(), "")
 	}
 
 	w.WriteHeader(http.StatusOK)
@@ -215,7 +215,7 @@ func restGetReportById(w http.ResponseWriter, r *http.Request) {
 		} else {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		}
-		loggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error(), "")
 		return
 	}
 
@@ -228,7 +228,7 @@ func restGetReportByName(w http.ResponseWriter, r *http.Request) {
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		loggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error(), "")
 		return
 	}
 
@@ -240,7 +240,7 @@ func restGetReportByName(w http.ResponseWriter, r *http.Request) {
 		} else {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		}
-		loggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error(), "")
 		return
 	}
 
@@ -255,14 +255,14 @@ func restGetValueDescriptorsForDeviceName(w http.ResponseWriter, r *http.Request
 	n, err := url.QueryUnescape(vars[DEVICENAME])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		loggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error(), "")
 		return
 	}
 
 	// Get all the associated device reports
 	var reports []models.DeviceReport
 	if err = dbClient.GetDeviceReportByDeviceName(&reports, n); err != nil {
-		loggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error(), "")
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return
 	}
@@ -281,7 +281,7 @@ func restGetDeviceReportByDeviceName(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[DEVICENAME])
 	if err != nil {
-		loggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error(), "")
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return
 	}
@@ -290,7 +290,7 @@ func restGetDeviceReportByDeviceName(w http.ResponseWriter, r *http.Request) {
 	err = dbClient.GetDeviceReportByDeviceName(&res, n)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		loggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error(), "")
 		return
 	}
 
@@ -310,12 +310,12 @@ func restDeleteReportById(w http.ResponseWriter, r *http.Request) {
 		} else {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		}
-		loggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error(), "")
 		return
 	}
 
 	if err := deleteDeviceReport(dr, w); err != nil {
-		loggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error(), "")
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -327,7 +327,7 @@ func restDeleteReportByName(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
-		loggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error(), "")
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return
 	}
@@ -340,12 +340,12 @@ func restDeleteReportByName(w http.ResponseWriter, r *http.Request) {
 		} else {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		}
-		loggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error(), "")
 		return
 	}
 
 	if err = deleteDeviceReport(dr, w); err != nil {
-		loggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error(), "")
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")

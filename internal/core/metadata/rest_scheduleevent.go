@@ -49,7 +49,7 @@ func restGetAllScheduleEvents(w http.ResponseWriter, r *http.Request) {
 	res := make([]models.ScheduleEvent, 0)
 	err := dbClient.GetAllScheduleEvents(&res)
 	if err != nil {
-		loggingClient.Error("Problem getting schedule events: "+err.Error(), "")
+		LoggingClient.Error("Problem getting schedule events: "+err.Error(), "")
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return
 	}
@@ -57,7 +57,7 @@ func restGetAllScheduleEvents(w http.ResponseWriter, r *http.Request) {
 	if len(res) > Configuration.ReadMaxLimit {
 		err = errors.New("Max limit exceeded")
 		http.Error(w, err.Error(), http.StatusRequestEntityTooLarge)
-		loggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error(), "")
 		return
 	}
 
@@ -69,7 +69,7 @@ func restAddScheduleEvent(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	var se models.ScheduleEvent
 	if err := json.NewDecoder(r.Body).Decode(&se); err != nil {
-		loggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error(), "")
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return
 	}
@@ -77,16 +77,16 @@ func restAddScheduleEvent(w http.ResponseWriter, r *http.Request) {
 	if se.Schedule == "" {
 		// Schedule wasn't passed
 		http.Error(w, "Schedule not passed", http.StatusConflict)
-		loggingClient.Error("Schedule not passed", "")
+		LoggingClient.Error("Schedule not passed", "")
 		return
 	}
 	var s models.Schedule
 	if err := dbClient.GetScheduleByName(&s, se.Schedule); err != nil {
 		if err == db.ErrNotFound {
 			http.Error(w, "Schedule not found for schedule event", http.StatusNotFound)
-			loggingClient.Error("Schedule not found for schedule event: "+err.Error(), "")
+			LoggingClient.Error("Schedule not found for schedule event: "+err.Error(), "")
 		} else {
-			loggingClient.Error("Problem getting schedule for schedule event: "+err.Error(), "")
+			LoggingClient.Error("Problem getting schedule for schedule event: "+err.Error(), "")
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		}
 		return
@@ -99,7 +99,7 @@ func restAddScheduleEvent(w http.ResponseWriter, r *http.Request) {
 		// Try by Name
 		if err = dbClient.GetAddressableByName(&a, se.Addressable.Name); err != nil {
 			http.Error(w, "Address not found for schedule event", http.StatusNotFound)
-			loggingClient.Error("Addressable for schedule event not found: "+err.Error(), "")
+			LoggingClient.Error("Addressable for schedule event not found: "+err.Error(), "")
 			return
 		}
 	}
@@ -136,17 +136,17 @@ func restAddScheduleEvent(w http.ResponseWriter, r *http.Request) {
 	if err := dbClient.AddScheduleEvent(&se); err != nil {
 		if err == db.ErrNotUnique {
 			http.Error(w, "Duplicate name for schedule event", http.StatusConflict)
-			loggingClient.Error("Duplicate name for schedule event: "+err.Error(), "")
+			LoggingClient.Error("Duplicate name for schedule event: "+err.Error(), "")
 		} else {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-			loggingClient.Error("Problem adding schedule event: "+err.Error(), "")
+			LoggingClient.Error("Problem adding schedule event: "+err.Error(), "")
 		}
 		return
 	}
 
 	// Notify Associates
 	if err := notifyScheduleEventAssociates(se, http.MethodPost); err != nil {
-		loggingClient.Error("Problem notifying associated device services for schedule event: "+err.Error(), "")
+		LoggingClient.Error("Problem notifying associated device services for schedule event: "+err.Error(), "")
 	}
 
 	w.WriteHeader(http.StatusOK)
@@ -157,7 +157,7 @@ func restUpdateScheduleEvent(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	var from models.ScheduleEvent
 	if err := json.NewDecoder(r.Body).Decode(&from); err != nil {
-		loggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error(), "")
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return
 	}
@@ -166,24 +166,24 @@ func restUpdateScheduleEvent(w http.ResponseWriter, r *http.Request) {
 	var to models.ScheduleEvent
 	to, err := getScheduleEventByIdOrName(from, w)
 	if err != nil {
-		loggingClient.Error("Problem getting schedule event: "+err.Error(), "")
+		LoggingClient.Error("Problem getting schedule event: "+err.Error(), "")
 		return
 	}
 
 	if err := updateScheduleEventFields(from, &to, w); err != nil {
-		loggingClient.Error("Problem updating schedule event: "+err.Error(), "")
+		LoggingClient.Error("Problem updating schedule event: "+err.Error(), "")
 		return
 	}
 
 	if err := dbClient.UpdateScheduleEvent(to); err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		loggingClient.Error("Problem updating schedule event: "+err.Error(), "")
+		LoggingClient.Error("Problem updating schedule event: "+err.Error(), "")
 		return
 	}
 
 	// Notify Associates
 	if err := notifyScheduleEventAssociates(to, http.MethodPut); err != nil {
-		loggingClient.Error("Problem notifying associated device services with the schedule event: "+err.Error(), "")
+		LoggingClient.Error("Problem notifying associated device services with the schedule event: "+err.Error(), "")
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -199,9 +199,9 @@ func getScheduleEventByIdOrName(from models.ScheduleEvent, w http.ResponseWriter
 		if err = dbClient.GetScheduleEventByName(&se, from.Name); err != nil {
 			if err == db.ErrNotFound {
 				http.Error(w, "Schedule Event not found", http.StatusNotFound)
-				loggingClient.Error(err.Error(), "")
+				LoggingClient.Error(err.Error(), "")
 			} else {
-				loggingClient.Error("Problem getting schedule event: "+err.Error(), "")
+				LoggingClient.Error("Problem getting schedule event: "+err.Error(), "")
 				http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			}
 			return se, err
@@ -294,16 +294,16 @@ func updateScheduleEventFields(from models.ScheduleEvent, to *models.ScheduleEve
 	if serviceChanged {
 		// Delete from old
 		if err := notifyScheduleEventAssociates(models.ScheduleEvent{Name: oldService}, http.MethodDelete); err != nil {
-			loggingClient.Error("Problem notifying associated device services for the schedule event: "+err.Error(), "")
+			LoggingClient.Error("Problem notifying associated device services for the schedule event: "+err.Error(), "")
 		}
 		// Add to new
 		if err := notifyScheduleEventAssociates(*to, http.MethodPost); err != nil {
-			loggingClient.Error("Problem notifying associated device services for the schedule event: "+err.Error(), "")
+			LoggingClient.Error("Problem notifying associated device services for the schedule event: "+err.Error(), "")
 		}
 	} else {
 		// Changed schedule event
 		if err := notifyScheduleEventAssociates(*to, http.MethodPut); err != nil {
-			loggingClient.Error("Problem notifying associated device services for the schedule event: "+err.Error(), "")
+			LoggingClient.Error("Problem notifying associated device services for the schedule event: "+err.Error(), "")
 		}
 	}
 
@@ -315,7 +315,7 @@ func restGetScheduleEventByName(w http.ResponseWriter, r *http.Request) {
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		loggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error(), "")
 		return
 	}
 
@@ -324,10 +324,10 @@ func restGetScheduleEventByName(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if err == db.ErrNotFound {
 			http.Error(w, "Schedule event not found", http.StatusNotFound)
-			loggingClient.Error("Schedule event not found: "+err.Error(), "")
+			LoggingClient.Error("Schedule event not found: "+err.Error(), "")
 		} else {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-			loggingClient.Error("Problem getting schedule event: "+err.Error(), "")
+			LoggingClient.Error("Problem getting schedule event: "+err.Error(), "")
 		}
 		return
 	}
@@ -345,13 +345,13 @@ func restDeleteScheduleEventById(w http.ResponseWriter, r *http.Request) {
 	err := dbClient.GetScheduleEventById(&se, id)
 	if err != nil {
 		http.Error(w, "Schedule event not found", http.StatusNotFound)
-		loggingClient.Error("Schedule event not found: "+err.Error(), "")
+		LoggingClient.Error("Schedule event not found: "+err.Error(), "")
 		return
 	}
 
 	// Delete the schedule event
 	if err := deleteScheduleEvent(se, w); err != nil {
-		loggingClient.Error("Problem deleting schedule event: "+err.Error(), "")
+		LoggingClient.Error("Problem deleting schedule event: "+err.Error(), "")
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -364,7 +364,7 @@ func restDeleteScheduleEventByName(w http.ResponseWriter, r *http.Request) {
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		loggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error(), "")
 		return
 	}
 
@@ -373,9 +373,9 @@ func restDeleteScheduleEventByName(w http.ResponseWriter, r *http.Request) {
 	if err := dbClient.GetScheduleEventByName(&se, n); err != nil {
 		if err == db.ErrNotFound {
 			http.Error(w, "Schedule event not found", http.StatusNotFound)
-			loggingClient.Error("Schedule event not found: "+err.Error(), "")
+			LoggingClient.Error("Schedule event not found: "+err.Error(), "")
 		} else {
-			loggingClient.Error("Problem getting schedule event: "+err.Error(), "")
+			LoggingClient.Error("Problem getting schedule event: "+err.Error(), "")
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		}
 		return
@@ -383,7 +383,7 @@ func restDeleteScheduleEventByName(w http.ResponseWriter, r *http.Request) {
 
 	// Delete the schedule event
 	if err := deleteScheduleEvent(se, w); err != nil {
-		loggingClient.Error("Problem deleting schedule event: "+err.Error(), "")
+		LoggingClient.Error("Problem deleting schedule event: "+err.Error(), "")
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -413,7 +413,7 @@ func deleteScheduleEvent(se models.ScheduleEvent, w http.ResponseWriter) error {
 
 	// Notify Associates
 	if err := notifyScheduleEventAssociates(se, http.MethodDelete); err != nil {
-		loggingClient.Error("Problem notifying associated device services for the schedule event: "+err.Error(), "")
+		LoggingClient.Error("Problem notifying associated device services for the schedule event: "+err.Error(), "")
 	}
 
 	return nil
@@ -427,9 +427,9 @@ func restGetScheduleEventById(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if err == db.ErrNotFound {
 			http.Error(w, "Schedule event not found", http.StatusNotFound)
-			loggingClient.Error("Schedule event not found: "+err.Error(), "")
+			LoggingClient.Error("Schedule event not found: "+err.Error(), "")
 		} else {
-			loggingClient.Error("Problem getting schedule event: "+err.Error(), "")
+			LoggingClient.Error("Problem getting schedule event: "+err.Error(), "")
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		}
 		return
@@ -450,9 +450,9 @@ func restGetScheduleEventByAddressableId(w http.ResponseWriter, r *http.Request)
 	if err := dbClient.GetAddressableById(&a, aid); err != nil {
 		if err == db.ErrNotFound {
 			http.Error(w, "Addressable not found for schedule event", http.StatusNotFound)
-			loggingClient.Error("Addressable not found for schedule event: "+err.Error(), "")
+			LoggingClient.Error("Addressable not found for schedule event: "+err.Error(), "")
 		} else {
-			loggingClient.Error(err.Error(), "")
+			LoggingClient.Error(err.Error(), "")
 			http.Error(w, "Problem getting addressable for schedule event: "+err.Error(), http.StatusServiceUnavailable)
 		}
 		return
@@ -461,7 +461,7 @@ func restGetScheduleEventByAddressableId(w http.ResponseWriter, r *http.Request)
 	// Get the schedule events
 	if err := dbClient.GetScheduleEventsByAddressableId(&res, aid); err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		loggingClient.Error("Problem getting schedule events: "+err.Error(), "")
+		LoggingClient.Error("Problem getting schedule events: "+err.Error(), "")
 		return
 	}
 
@@ -476,7 +476,7 @@ func restGetScheduleEventByAddressableName(w http.ResponseWriter, r *http.Reques
 	an, err := url.QueryUnescape(vars[ADDRESSABLENAME])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		loggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error(), "")
 		return
 	}
 	var res []models.ScheduleEvent = make([]models.ScheduleEvent, 0)
@@ -485,10 +485,10 @@ func restGetScheduleEventByAddressableName(w http.ResponseWriter, r *http.Reques
 	var a models.Addressable
 	if err = dbClient.GetAddressableByName(&a, an); err != nil {
 		if err == db.ErrNotFound {
-			loggingClient.Error("Addressable not found for schedule event: "+err.Error(), "")
+			LoggingClient.Error("Addressable not found for schedule event: "+err.Error(), "")
 			http.Error(w, "Addressable not found for schedule event", http.StatusNotFound)
 		} else {
-			loggingClient.Error("Problem getting addressable for schedule event: "+err.Error(), "")
+			LoggingClient.Error("Problem getting addressable for schedule event: "+err.Error(), "")
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		}
 		return
@@ -497,7 +497,7 @@ func restGetScheduleEventByAddressableName(w http.ResponseWriter, r *http.Reques
 	// Get the schedule events
 	if err = dbClient.GetScheduleEventsByAddressableId(&res, a.Id.Hex()); err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		loggingClient.Error("Problem getting schedule events: "+err.Error(), "")
+		LoggingClient.Error("Problem getting schedule events: "+err.Error(), "")
 		return
 	}
 
@@ -512,7 +512,7 @@ func restGetScheduleEventsByServiceName(w http.ResponseWriter, r *http.Request) 
 	sn, err := url.QueryUnescape(vars[SERVICENAME])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		loggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error(), "")
 		return
 	}
 	var res []models.ScheduleEvent = make([]models.ScheduleEvent, 0)
@@ -522,10 +522,10 @@ func restGetScheduleEventsByServiceName(w http.ResponseWriter, r *http.Request) 
 	if err = dbClient.GetDeviceServiceByName(&ds, sn); err != nil {
 		if err == db.ErrNotFound {
 			http.Error(w, "Service not found for schedule event", http.StatusNotFound)
-			loggingClient.Error("Device service not found for schedule event: "+err.Error(), "")
+			LoggingClient.Error("Device service not found for schedule event: "+err.Error(), "")
 		} else {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-			loggingClient.Error("Problem getting device service for schedule event: "+err.Error(), "")
+			LoggingClient.Error("Problem getting device service for schedule event: "+err.Error(), "")
 		}
 		return
 	}
@@ -533,7 +533,7 @@ func restGetScheduleEventsByServiceName(w http.ResponseWriter, r *http.Request) 
 	// Get the schedule events
 	if err = dbClient.GetScheduleEventsByServiceName(&res, sn); err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		loggingClient.Error("Problem getting schedule events: "+err.Error(), "")
+		LoggingClient.Error("Problem getting schedule events: "+err.Error(), "")
 		return
 	}
 
@@ -545,7 +545,7 @@ func restGetAllSchedules(w http.ResponseWriter, _ *http.Request) {
 	res := make([]models.Schedule, 0)
 	err := dbClient.GetAllSchedules(&res)
 	if err != nil {
-		loggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error(), "")
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return
 	}
@@ -554,7 +554,7 @@ func restGetAllSchedules(w http.ResponseWriter, _ *http.Request) {
 	if len(res) > MAX_LIMIT {
 		err = errors.New("Max limit exceeded")
 		http.Error(w, err.Error(), http.StatusRequestEntityTooLarge)
-		loggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error(), "")
 		return
 	}
 
@@ -568,7 +568,7 @@ func restAddSchedule(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	var s models.Schedule
 	if err := json.NewDecoder(r.Body).Decode(&s); err != nil {
-		loggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error(), "")
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return
 	}
@@ -578,12 +578,12 @@ func restAddSchedule(w http.ResponseWriter, r *http.Request) {
 	if err := dbClient.GetScheduleByName(&checkS, s.Name); err != nil {
 		if err != db.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-			loggingClient.Error("Schedule not found: "+err.Error(), "")
+			LoggingClient.Error("Schedule not found: "+err.Error(), "")
 			return
 		}
 	} else {
 		err := errors.New("Schedule already exists with name: " + s.Name)
-		loggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error(), "")
 		http.Error(w, err.Error(), http.StatusConflict)
 		return
 	}
@@ -591,14 +591,14 @@ func restAddSchedule(w http.ResponseWriter, r *http.Request) {
 	// Validate the time format
 	if s.Start != "" {
 		if _, err := msToTime(s.Start); err != nil {
-			loggingClient.Error("Incorrect start time format: "+err.Error(), "")
+			LoggingClient.Error("Incorrect start time format: "+err.Error(), "")
 			http.Error(w, err.Error(), http.StatusConflict)
 			return
 		}
 	}
 	if s.End != "" {
 		if _, err := msToTime(s.End); err != nil {
-			loggingClient.Error("Incorrect end time format: "+err.Error(), "")
+			LoggingClient.Error("Incorrect end time format: "+err.Error(), "")
 			http.Error(w, err.Error(), http.StatusConflict)
 			return
 		}
@@ -606,7 +606,7 @@ func restAddSchedule(w http.ResponseWriter, r *http.Request) {
 	if s.Frequency != "" {
 		if !isIntervalValid(s.Frequency) {
 			err := errors.New("Frequency format incorrect: " + s.Frequency)
-			loggingClient.Error("Frequency format is incorrect: "+err.Error(), "")
+			LoggingClient.Error("Frequency format is incorrect: "+err.Error(), "")
 			http.Error(w, err.Error(), http.StatusConflict)
 			return
 		}
@@ -614,13 +614,13 @@ func restAddSchedule(w http.ResponseWriter, r *http.Request) {
 
 	if err := dbClient.AddSchedule(&s); err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		loggingClient.Error("Problem adding schedule: "+err.Error(), "")
+		LoggingClient.Error("Problem adding schedule: "+err.Error(), "")
 		return
 	}
 
 	// Notify Associates
 	if err := notifyScheduleAssociates(s, http.MethodPost); err != nil {
-		loggingClient.Error("Problem notifying associated device services for schedule: "+err.Error(), "")
+		LoggingClient.Error("Problem notifying associated device services for schedule: "+err.Error(), "")
 	}
 
 	w.WriteHeader(http.StatusOK)
@@ -634,7 +634,7 @@ func restUpdateSchedule(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	var from models.Schedule
 	if err := json.NewDecoder(r.Body).Decode(&from); err != nil {
-		loggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error(), "")
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return
 	}
@@ -645,26 +645,26 @@ func restUpdateSchedule(w http.ResponseWriter, r *http.Request) {
 	if err := dbClient.GetScheduleById(&to, from.Id.Hex()); err != nil {
 		// Try by name
 		if err = dbClient.GetScheduleByName(&to, from.Name); err != nil {
-			loggingClient.Error("Schedule not found: "+err.Error(), "")
+			LoggingClient.Error("Schedule not found: "+err.Error(), "")
 			http.Error(w, "Schedule not found", http.StatusNotFound)
 			return
 		}
 	}
 
 	if err := updateScheduleFields(from, &to, w); err != nil {
-		loggingClient.Error("Problem updating schedule: "+err.Error(), "")
+		LoggingClient.Error("Problem updating schedule: "+err.Error(), "")
 		return
 	}
 
 	if err := dbClient.UpdateSchedule(to); err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		loggingClient.Error("Problem updating schedule: "+err.Error(), "")
+		LoggingClient.Error("Problem updating schedule: "+err.Error(), "")
 		return
 	}
 
 	// Notify Associates
 	if err := notifyScheduleAssociates(to, http.MethodPut); err != nil {
-		loggingClient.Error("Problem notifying associated device services for schedule: "+err.Error(), "")
+		LoggingClient.Error("Problem notifying associated device services for schedule: "+err.Error(), "")
 	}
 
 	w.WriteHeader(http.StatusOK)
@@ -748,9 +748,9 @@ func restGetScheduleById(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if err == db.ErrNotFound {
 			http.Error(w, "Schedule not found", http.StatusNotFound)
-			loggingClient.Error("Schedule not found: "+err.Error(), "")
+			LoggingClient.Error("Schedule not found: "+err.Error(), "")
 		} else {
-			loggingClient.Error("Problem getting schedule: "+err.Error(), "")
+			LoggingClient.Error("Problem getting schedule: "+err.Error(), "")
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		}
 		return
@@ -765,7 +765,7 @@ func restGetScheduleByName(w http.ResponseWriter, r *http.Request) {
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		loggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error(), "")
 		return
 	}
 
@@ -774,10 +774,10 @@ func restGetScheduleByName(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if err == db.ErrNotFound {
 			http.Error(w, "Schedule not found", http.StatusNotFound)
-			loggingClient.Error("Schedule not found: "+err.Error(), "")
+			LoggingClient.Error("Schedule not found: "+err.Error(), "")
 		} else {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-			loggingClient.Error("Problem getting schedule: "+err.Error(), "")
+			LoggingClient.Error("Problem getting schedule: "+err.Error(), "")
 		}
 
 		return
@@ -795,16 +795,16 @@ func restDeleteScheduleById(w http.ResponseWriter, r *http.Request) {
 	if err := dbClient.GetScheduleById(&s, id); err != nil {
 		if err == db.ErrNotFound {
 			http.Error(w, "Schedule not found", http.StatusNotFound)
-			loggingClient.Error("Schedule not found: "+err.Error(), "")
+			LoggingClient.Error("Schedule not found: "+err.Error(), "")
 		} else {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-			loggingClient.Error("Problem getting schedule: "+err.Error(), "")
+			LoggingClient.Error("Problem getting schedule: "+err.Error(), "")
 		}
 		return
 	}
 
 	if err := deleteSchedule(s, w); err != nil {
-		loggingClient.Error("Problem deleting schedule: "+err.Error(), "")
+		LoggingClient.Error("Problem deleting schedule: "+err.Error(), "")
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -817,7 +817,7 @@ func restDeleteScheduleByName(w http.ResponseWriter, r *http.Request) {
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		loggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error(), "")
 		return
 	}
 
@@ -825,10 +825,10 @@ func restDeleteScheduleByName(w http.ResponseWriter, r *http.Request) {
 	var s models.Schedule
 	if err = dbClient.GetScheduleByName(&s, n); err != nil {
 		if err == db.ErrNotFound {
-			loggingClient.Error("Schedule not found: "+err.Error(), "")
+			LoggingClient.Error("Schedule not found: "+err.Error(), "")
 			http.Error(w, "Schedule not found", http.StatusNotFound)
 		} else {
-			loggingClient.Error("Problem getting schedule: "+err.Error(), "")
+			LoggingClient.Error("Problem getting schedule: "+err.Error(), "")
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		}
 		return
@@ -836,7 +836,7 @@ func restDeleteScheduleByName(w http.ResponseWriter, r *http.Request) {
 
 	// Delete the schedule
 	if err = deleteSchedule(s, w); err != nil {
-		loggingClient.Error("Problem deleting schedule: "+err.Error(), "")
+		LoggingClient.Error("Problem deleting schedule: "+err.Error(), "")
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -864,7 +864,7 @@ func deleteSchedule(s models.Schedule, w http.ResponseWriter) error {
 
 	// Notify Associates
 	if err := notifyScheduleAssociates(s, http.MethodDelete); err != nil {
-		loggingClient.Error("Problem notifying associated device services for schedule: "+err.Error(), "")
+		LoggingClient.Error("Problem notifying associated device services for schedule: "+err.Error(), "")
 	}
 
 	return nil
