@@ -46,10 +46,8 @@ type ConfigurationStruct struct {
 	SupportNotificationsPort            int
 	SupportNotificationsSubscriptionURL string
 	SupportNotificationsTransmissionURL string
+	StartupTimeout                      int
 }
-
-// Configuration data for the metadata service
-var configuration ConfigurationStruct = ConfigurationStruct{} // Needs to be initialized before used
 
 const (
 	MAX_LIMIT int = 1000
