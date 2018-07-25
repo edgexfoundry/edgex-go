@@ -69,8 +69,8 @@ schemas:
         example: 10
     get:
       responses:
-        413: 
-          description: if the number of events exceeds the current max limit
+        400: 
+          description: request is malformed
         500: 
           description: for unknown or unanticipated issues.
         200:

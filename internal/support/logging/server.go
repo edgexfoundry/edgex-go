@@ -149,6 +149,8 @@ func getCriteria(w http.ResponseWriter, r *http.Request) *matchCriteria {
 			}
 		}
 	}
+
+	w.WriteHeader(http.StatusOK)
 	return &criteria
 }
 
