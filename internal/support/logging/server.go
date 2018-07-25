@@ -149,6 +149,8 @@ func getCriteria(w http.ResponseWriter, r *http.Request) *matchCriteria {
 			}
 		}
 	}
+
+	w.WriteHeader(http.StatusOK)
 	return &criteria
 }
 
@@ -170,7 +172,7 @@ func getLogs(w http.ResponseWriter, r *http.Request) {
 
 	res, err := json.Marshal(logs)
 	if err != nil {
-		w.WriteHeader(http.StatusServiceUnavailable)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")

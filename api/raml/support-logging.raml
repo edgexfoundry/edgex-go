@@ -58,7 +58,9 @@ schemas:
           }
     responses:
       202:
-        description: return 202 Accepted to clients with timestamp being accepted.
+        description: accepted to clients with timestamp being accepted.
+      503:
+        description: creation request is malformed
   /{limit}:
     uriParameters:
       limit:
@@ -67,10 +69,8 @@ schemas:
         example: 10
     get:
       responses:
-        413: 
-          description: if the number of events exceeds the current max limit
-        503: 
-          description: for unknown or unanticipated issues.
+        400: 
+          description: request is malformed
         200:
           description: list a collection of LogEntry - limited in size by the limit parameter
           body:
@@ -117,7 +117,7 @@ schemas:
       responses:
         413: 
           description: if the number of events exceeds the current max limit
-        503: 
+        500: 
           description: for unknown or unanticipated issues.
         200:
           description: list a collection of LogEntry created between the specified start and end dates - limited in size by the limit parameter
@@ -169,7 +169,7 @@ schemas:
       responses:
         413: 
           description: if the number of events exceeds the current max limit
-        503: 
+        500: 
           description: for unknown or unanticipated issues.
         200:
           description: list a collection of LogEntry matching any of the specified labels and being created between the specified start and end dates - limited in size by the limit parameter
@@ -221,7 +221,7 @@ schemas:
       responses:
         413: 
           description: if the number of events exceeds the current max limit
-        503: 
+        500: 
           description: for unknown or unanticipated issues.
         200:
           description: list a collection of LogEntry matching any of the specified originServices and being created between the specified start and end dates - limited in size by the limit parameter
@@ -273,7 +273,7 @@ schemas:
       responses:
         413: 
           description: if the number of events exceeds the current max limit
-        503: 
+        500: 
           description: for unknown or unanticipated issues.
         200:
           description: list a collection of LogEntry whose message containing any of the specified keywords and being created between the specified start and end dates - limited in size by the limit parameter
@@ -325,7 +325,7 @@ schemas:
       responses:
         413: 
           description: if the number of events exceeds the current max limit
-        503: 
+        500: 
           description: for unknown or unanticipated issues.
         200:
           description: list a collection of LogEntry matching any of the specified logLevels and being created between the specified start and end dates - limited in size by the limit parameter
@@ -381,7 +381,7 @@ schemas:
       responses:
         413: 
           description: if the number of events exceeds the current max limit
-        503: 
+        500: 
           description: for unknown or unanticipated issues.
         200:
           description: list a collection of LogEntry matching any of the specified logLevels, originServices, and also being created between the specified start and end dates - limited in size by the limit parameter
@@ -441,7 +441,7 @@ schemas:
       responses:
         413: 
           description: if the number of events exceeds the current max limit
-        503: 
+        500: 
           description: for unknown or unanticipated issues.
         200:
           description: list a collection of LogEntry matching any of the specified logLevels, originServices, labels, and also being created between the specified start and end dates - limited in size by the limit parameter
@@ -505,7 +505,7 @@ schemas:
       responses:
         413: 
           description: if the number of events exceeds the current max limit
-        503: 
+        500: 
           description: for unknown or unanticipated issues.
         200:
           description: list a collection of LogEntry whose message containing any of the specified keywords, matching any of the specified logLevels, originServices, labels, and also being created between the specified start and end dates - limited in size by the limit parameter
@@ -567,8 +567,6 @@ schemas:
         example: 1469175499899
     delete:
       responses:
-        503: 
-          description: for unknown or unanticipated issues.
         200:
           description: count of the number of LogEntry being deleted
   /originServices/{originServices}/{start}/{end}:
@@ -587,8 +585,6 @@ schemas:
         example: 1469175499899
     delete:
       responses:
-        503: 
-          description: for unknown or unanticipated issues.
         200:
           description: count of the number of LogEntry being deleted
   /keywords/{keywords}/{start}/{end}:
@@ -607,8 +603,6 @@ schemas:
         example: 1469175499899
     delete:
       responses:
-        503: 
-          description: for unknown or unanticipated issues.
         200:
           description: count of the number of LogEntry being deleted
   /logLevels/{logLevels}/{start}/{end}:
@@ -627,8 +621,6 @@ schemas:
         example: 1469175499899
     delete:
       responses:
-        503: 
-          description: for unknown or unanticipated issues.
         200:
           description: count of the number of LogEntry being deleted
   /logLevels/{logLevels}/originServices/{originServices}/{start}/{end}:
@@ -651,8 +643,6 @@ schemas:
         example: 1469175499899
     delete:
       responses:
-        503: 
-          description: for unknown or unanticipated issues.
         200:
           description: count of the number of LogEntry being deleted
   /logLevels/{logLevels}/originServices/{originServices}/labels/{labels}/{start}/{end}:
@@ -679,8 +669,6 @@ schemas:
         example: 1469175499899
     delete:
       responses:
-        503: 
-          description: for unknown or unanticipated issues.
         200:
           description: count of the number of LogEntry being deleted
   /logLevels/{logLevels}/originServices/{originServices}/labels/{labels}/keywords/{keywords}/{start}/{end}:
@@ -711,7 +699,5 @@ schemas:
         example: 1469175499899
     delete:
       responses:
-        503: 
-          description: for unknown or unanticipated issues.
         200:
           description: count of the number of LogEntry being deleted
