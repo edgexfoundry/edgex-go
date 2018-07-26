@@ -59,7 +59,7 @@ schemas:
     responses:
       202:
         description: accepted to clients with timestamp being accepted.
-      503:
+      400:
         description: creation request is malformed
   /{limit}:
     uriParameters:
@@ -69,8 +69,10 @@ schemas:
         example: 10
     get:
       responses:
-        400: 
-          description: request is malformed
+        413: 
+          description: if the number of events exceeds the current max limit
+        500: 
+          description: for unknown or unanticipated issues.
         200:
           description: list a collection of LogEntry - limited in size by the limit parameter
           body:
