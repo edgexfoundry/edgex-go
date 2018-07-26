@@ -6,7 +6,7 @@ Get EdgeX Foundry - Go Developers
 Introduction
 ============
 
-These instructions are for Go Lang Developers to obtain and run Go-based EdgeX Foundry microservices.  (Users should read:  Get EdgeX Foundry - Users)
+These instructions are for Go Lang Developers to obtain and run Go-based EdgeX Foundry microservices. (Users should read: :doc:`../Ch-GettingStartedUsers`) 
 It should be noted that EdgeX Foundry is migrating from Java to Go and C (and other compiled languages) in order to improve the performance and footprint of the platform.  While the Java services still function today, the Go versions of the microservices are considered to be the reference implementation.  Java versions of the services will be archived in the future unless organizations and individuals in the community decide to maintain and keep these services consistent with the reference implementations.
 
 ================================
@@ -17,7 +17,7 @@ In additional to the hardware and software listed in the Developers page, you wi
 
 **Go** - The open sourced microservices of EdgeX Foundry are written in Go 1.9. See https://golang.org/dl/ for download and installation instructions.  Newer versions of Go are available and may work, but the project has not thorougly built and tested to these newer versions of the language.  Older versions of Go, especially 1.6 or older, are likely to cause issues.
 
-It is suggested that you create a set a directory for Go work (including a /bin and /src folder) and set the GOPATH env variable to that directory. This will assist in getting your environment setup and allow tools to more easily understand how to find code, tools and 3rd party packages more easily.
+It is suggested that you create a set of directories for your Go work (including a /bin and /src folder) and set the GOPATH env variable to that directory. This will assist in getting your environment setup and makes it easier to understand how to find code, tools and 3rd party packages.
 
 **Glide** - Glide is the package manager for Go (actually there are many options in Go, but this is the package manager the EdgeX project is currently using).  Find instructions on how to install it (after installing Go itself) here:  https://glide.readthedocs.io/en/latest/.
 

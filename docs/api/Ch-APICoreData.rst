@@ -6,7 +6,7 @@ APIs - Core Services - Core Data
 Architecture Reference
 ======================
 
-For a description of the architecture, see :doc:`../Ch-Metadata` 
+For a description of the architecture, see :doc:`../Ch-CoreData` 
 
 ============
 Introduction
