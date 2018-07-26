@@ -7,6 +7,7 @@
 package distro
 
 import (
+	"fmt"
 	"strconv"
 	"time"
 
@@ -51,7 +52,7 @@ func (sender *influxdbSender) Send(data []byte, event *models.Event) {
 		c, err := client.NewHTTPClient(sender.httpInfo)
 
 		if err != nil {
-			logger.Error("Failed to connec to InfluxDB server")
+			logger.Error(fmt.Sprintf("Failed to connect to InfluxDB server: %s", err))
 			return
 		}
 
@@ -64,7 +65,7 @@ func (sender *influxdbSender) Send(data []byte, event *models.Event) {
 	})
 
 	if err != nil {
-		logger.Error("Failed to craete batch points")
+		logger.Error(fmt.Sprintf("Failed to craete batch points: %s", err))
 		return
 	}
 
@@ -95,7 +96,7 @@ func (sender *influxdbSender) Send(data []byte, event *models.Event) {
 		)
 
 		if err != nil {
-			logger.Error("Failed to add data point")
+			logger.Error(fmt.Sprintf("Failed to add data point: %s", err))
 			return
 		}
 
@@ -105,7 +106,7 @@ func (sender *influxdbSender) Send(data []byte, event *models.Event) {
 	err = sender.client.Write(bp)
 
 	if err != nil {
-		logger.Error("Failed to write data points to InfluxDB server")
+		logger.Error(fmt.Sprintf("Failed to write data points to InfluxDB server: %s", err))
 		sender.client = nil // Reset the client
 	}
 }
