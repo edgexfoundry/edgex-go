@@ -33,8 +33,8 @@ type Subscription struct {
 	Slug                 string                  `bson:"slug" json:"slug,omitempty"`
 	Receiver             string                  `bson:"receiver" json:"receiver,omitempty"`
 	Description          string                  `bson:"description" json:"description,omitempty"`
-	SubscribedCategories []NotificationsCategory `bson:"subscribedcategories,omitempty" json:"subscribedcategories,omitempty"`
-	SubscribedLabels     []string                `bson:"subscribedlabels,omitempty" json:"subscribedlabels,omitempty"`
+	SubscribedCategories []NotificationsCategory `bson:"subscribedCategories,omitempty" json:"subscribedCategories,omitempty"`
+	SubscribedLabels     []string                `bson:"subscribedLabels,omitempty" json:"subscribedLabels,omitempty"`
 	Channels             []Channel               `bson:"channels,omitempty" json:"channels,omitempty"`
 }
 
@@ -46,8 +46,8 @@ func (s Subscription) MarshalJSON() ([]byte, error) {
 		Slug                 *string                 `json:"slug,omitempty"`
 		Receiver             *string                 `json:"receiver,omitempty"`
 		Description          *string                 `json:"description,omitempty"`
-		SubscribedCategories []NotificationsCategory `json:"subscribedcategories,omitempty"`
-		SubscribedLabels     []string                `json:"subscribedlabels,omitempty"`
+		SubscribedCategories []NotificationsCategory `json:"subscribedCategories,omitempty"`
+		SubscribedLabels     []string                `json:"subscribedLabels,omitempty"`
 		Channels             []Channel               `json:"channels,omitempty"`
 	}{
 		BaseObject:           s.BaseObject,
