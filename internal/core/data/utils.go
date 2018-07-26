@@ -28,7 +28,7 @@ func encode(i interface{}, w http.ResponseWriter) {
 	err := enc.Encode(i)
 	// Problems encoding
 	if err != nil {
-		loggingClient.Error("Error encoding the data: " + err.Error())
+		LoggingClient.Error("Error encoding the data: " + err.Error())
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return
 	}
@@ -41,10 +41,10 @@ func printBody(r io.ReadCloser) {
 	bodyString := string(body)
 
 	if err != nil {
-		loggingClient.Error(err.Error())
+		LoggingClient.Error(err.Error())
 	}
 
-	loggingClient.Info(bodyString)
+	LoggingClient.Info(bodyString)
 }
 
 // Test if the service is working
@@ -53,6 +53,6 @@ func pingHandler(w http.ResponseWriter, r *http.Request) {
 
 	_, err := w.Write([]byte("pong"))
 	if err != nil {
-		loggingClient.Error("Error writing pong: " + err.Error())
+		LoggingClient.Error("Error writing pong: " + err.Error())
 	}
 }
