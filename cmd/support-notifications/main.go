@@ -84,7 +84,6 @@ func main() {
 		return
 	}
 
-	//r := notifications.LoadRestRoutes()
 	http.TimeoutHandler(nil, time.Millisecond*time.Duration(configuration.ServiceTimeout), "Request timed out")
 	loggingClient.Info(configuration.AppOpenMsg, "")
 
