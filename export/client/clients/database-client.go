@@ -25,12 +25,14 @@ const (
 	INVALID DatabaseType = iota
 	MONGO
 	MEMORY
+	COUCH
 )
 
 const (
 	invalidStr = "invalid"
 	mongoStr   = "mongodb"
 	memoryStr  = "memorydb"
+	couchStr   = "couchdb"
 )
 
 // Add in order declared in Struct for string value
@@ -50,6 +52,8 @@ func GetDatabaseType(db string) DatabaseType {
 		return MONGO
 	case memoryStr:
 		return MEMORY
+	case couchStr:
+		return COUCH
 	default:
 		return INVALID
 	}
@@ -115,7 +119,9 @@ func NewDBClient(config DBConfiguration) (DBClient, error) {
 		// Create the mongo client
 		return newMongoClient(config)
 	case MEMORY:
-		return newMemoryClient(), nil
+		return &memDB{}, nil
+	case COUCH:
+		return newCouchClient(config)
 	default:
 		return nil, ErrUnsupportedDatabase
 	}

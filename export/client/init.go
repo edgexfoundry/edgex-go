@@ -13,8 +13,8 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/export/client/clients"
 	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/consul"
 	"go.uber.org/zap"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/consul"
 )
 
 const (
@@ -57,12 +57,12 @@ func Init(conf ConfigurationStruct, l *zap.Logger) error {
 	// Create a database client
 	dbc, err = clients.NewDBClient(clients.DBConfiguration{
 		DbType:       clients.GetDatabaseType(conf.DBType),
-		Host:         conf.MongoURL,
-		Port:         conf.MongoPort,
-		Timeout:      conf.MongoConnectTimeout,
-		DatabaseName: conf.MongoDatabaseName,
-		Username:     conf.MongoUsername,
-		Password:     conf.MongoPassword,
+		Host:         conf.DBURL,
+		Port:         conf.DBPort,
+		Timeout:      conf.DBConnectTimeout,
+		DatabaseName: conf.DBDatabase,
+		Username:     conf.DBUsername,
+		Password:     conf.DBPassword,
 	})
 	if err != nil {
 		return fmt.Errorf("couldn't connect to database: %v", err.Error())
