@@ -59,12 +59,13 @@ func Init(conf ConfigurationStruct, l logger.LoggingClient, useConsul bool) {
 
 	// Create metadata clients
 	params := types.EndpointParams{
-		ServiceKey:internal.CoreMetaDataServiceKey,
-		Path:conf.MetaDevicePath,
-		UseRegistry:useConsul,
-		Url:conf.MetaDeviceURL}
+		ServiceKey:  internal.CoreMetaDataServiceKey,
+		Path:        conf.MetaDevicePath,
+		UseRegistry: useConsul,
+		Url:         conf.MetaDeviceURL}
 
 	mdc = metadata.NewDeviceClient(params, types.Endpoint{})
 	params.Path = conf.MetaCommandPath
+	params.Url = conf.MetaCommandURL
 	cc = metadata.NewCommandClient(params, types.Endpoint{})
 }

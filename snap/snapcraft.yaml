@@ -1,5 +1,5 @@
 name: edgexfoundry
-version: '0.5.2'
+version: '0.6.0'
 version-script: |
     echo $SNAPCRAFT_PROJECT_VERSION-$(date +%Y%m%d)+$(git rev-parse --short HEAD)
 summary: Provides a full set of Edgex Foundry core microservices.
@@ -64,7 +64,7 @@ parts:
     stage-packages:
       - curl
   go:
-    source-tag: go1.9.2
+    source-tag: go1.10.2
     source-depth: 1
   glide:
     plugin: shell
@@ -90,21 +90,28 @@ parts:
       gunzip "./$PACKAGE.gz"
       tar xvf "./$PACKAGE" --strip-components=1
       popd
+    stage:
+     - glide
+     - -*.tar
+    prime:
+     - -*
   consul:
     plugin: shell
     source: https://github.com/hashicorp/consul.git
-    source-tag: v0.7.3
+    source-tag: v1.1.0
     shell: bash
     shell-flags: ['-eux', '-o', 'pipefail']
     shell-command: |
       export GOPATH=$(readlink -f $(pwd)/../go)
       export GOIMPORTPATH=$GOPATH/src/github.com/hashicorp/consul/
       export PATH="$GOPATH/bin:$PATH"
+      # limit build to native OS/architecture
+      export CONSUL_DEV=1
       mkdir -p $GOIMPORTPATH
       cp -r ./* $GOIMPORTPATH
       cd $GOIMPORTPATH
       go get -u github.com/kardianos/govendor
-      govendor sync
+      govendor install
       make
 
       # install the consul binary
@@ -132,64 +139,60 @@ parts:
       - make
       - zip
   config-seed:
-    source: https://github.com/edgexfoundry/core-config-seed.git
-    source-commit: 79faf75
-    plugin: maven
-    override-build: |
-      snapcraftctl build
+    source: https://github.com/edgexfoundry/core-config-seed-go.git
+    source-branch: california
+    plugin: shell
+    after:
+      - glide
+      - go
+    shell: bash
+    shell-flags: ['-eux', '-o', 'pipefail']
+    shell-command: |
+      export GOROOT=$("$SNAPCRAFT_STAGE/bin/go" env GOROOT)
+      export PATH="$GOROOT/bin:$PATH"
+
+      export XC_ARCH=`dpkg --print-architecture`
+      export XC_OS="linux"
+
+      go version
+
+      mkdir -p .gopath/src/github.com/edgexfoundry
+      export GOPATH="$PWD/.gopath"
+      export PATH="$GOPATH/bin:$PATH:$SNAPCRAFT_STAGE"
+      ln -s "$PWD" .gopath/src/github.com/edgexfoundry/core-config-seed-go
+
+      pushd .gopath/src/github.com/edgexfoundry/core-config-seed-go
+
+      glide update
+      go build
+      popd
+
+      install -DT "./core-config-seed-go" "$SNAPCRAFT_PART_INSTALL/bin/core-config-seed-go"
+
       echo "Installing config files"
 
-      # The logic following logic is all handled by DockerFile for
-      # the EdgeX core-config-seed docker image.
-      install -d "$SNAPCRAFT_PART_INSTALL/jar/config-seed"
-      mv "$SNAPCRAFT_PART_INSTALL/jar/core-config-seed-0.5.0-SNAPSHOT.jar" \
-         "$SNAPCRAFT_PART_INSTALL/jar/config-seed/core-config-seed.jar"
-
-      # FIXME:
-      # copy config-seed license into /usr/share/java/doc, because the
-      # jdk plugin has a bug which prevents any files from /usr/share/doc
-      # to be staged or primed.
-      install -DT "./Attribution.txt" \
-                 "$SNAPCRAFT_PART_INSTALL/usr/share/java/doc/core-config-seed/Attribution.txt"
+      #install -DT "./Attribution.txt" \
+      #           "$SNAPCRAFT_PART_INSTALL/usr/share/java/doc/core-config-seed/Attribution.txt"
       install -DT "./LICENSE-2.0.txt" \
-                 "$SNAPCRAFT_PART_INSTALL/usr/share/java/doc/core-config-seed/LICENSE-2.0.txt"
+                  "$SNAPCRAFT_PART_INSTALL/usr/share/doc/core-config-seed-go/LICENSE-2.0.txt"
 
-      for i in `ls ./config`; do
-        install -DT "./config/$i/application.properties" \
-           "$SNAPCRAFT_PART_INSTALL/jar/config-seed/config/$i/application.properties"; done
-    build-packages:
-      - ca-certificates-java
+      # install core-config-seed's config
+      install -DT "./res/configuration.toml" \
+                  "$SNAPCRAFT_PART_INSTALL/config/core-config-seed-go/res/configuration.toml"
+      install -DT "./res/banner.txt" \
+                  "$SNAPCRAFT_PART_INSTALL/config/core-config-seed-go/res/banner.txt"
 
-    # Since snapcraft jdk plugin blanket blacklists usr/share/doc from stage,
-    # move JRE changelog & copyright to usr/share/java/doc
-    organize:
-      usr/share/doc/openjdk-8-jre-headless/changelog.Debian.gz: usr/share/java/doc/openjdk-8-jre-headless/changelog.Debian.gz
-      usr/share/doc/openjdk-8-jre-headless/copyright: usr/share/java/doc/openjdk-8-jre-headless/copyright
-
-    # TODO (applies to all edgex parts):
-    #   * a custom plugin could simplify the duplication of prime rules across
-    #     EdgeX service parts
-    #   * remove remaining license files from:
-    #     usr/lib/jvm/java-8-openjdk-`arch`/jre/
-    prime:
-      - -etc/fonts
-      - -etc/fonts/X11
-      - -usr/lib/jvm/*/ASSEMBLY_EXCEPTION
-      - -usr/lib/jvm/*/THIRD_PARTY_README
-      - -usr/lib/jvm/*/jre/ASSEMBLY_EXCEPTION
-      - -usr/lib/jvm/*/jre/THIRD_PARTY_README
-      - -usr/lib/jvm/*/man
-      - -usr/lib/jvm/*/jre/man
-      - -usr/lib/jvm/*/jre/lib/images
-      - -usr/lib/jvm/*/include
-      - -usr/lib/jvm/*/bin
-      - -usr/lib/jvm/*/lib
-      - -usr/lib/jvm/*/docs
-      - -usr/lib/jvm/*/src.zip
-      - -usr/share/X11
-      - -usr/share/man
-      - -usr/share/fonts
-      - -usr/share/alsa
+      # now install config files for other services
+      install -DT "./config/edgex-core-command;go/configuration.toml" \
+                  "$SNAPCRAFT_PART_INSTALL/config/core-config-seed-go/config/edgex-core-command;go/configuration.toml"
+      install -DT "./config/edgex-core-data;go/configuration.toml" \
+                  "$SNAPCRAFT_PART_INSTALL/config/core-config-seed-go/config/edgex-core-data;go/configuration.toml"
+      install -DT "./config/edgex-core-metadata;go/configuration.toml" \
+                  "$SNAPCRAFT_PART_INSTALL/config/core-config-seed-go/config/edgex-core-metadata;go/configuration.toml"
+      install -DT "./config/device-virtual/application.properties" \
+                  "$SNAPCRAFT_PART_INSTALL/config/core-config-seed-go/config/device-virtual/application.properties"
+      install -DT "./config/edgex-support-logging;go/configuration.toml" \
+                  "$SNAPCRAFT_PART_INSTALL/config/core-config-seed-go/config/edgex-support-logging;go/configuration.toml"
   config-common:
     plugin: dump
     source: ./snap
@@ -239,6 +242,7 @@ parts:
       - -mongodb-linux-*-ubuntu1604-3.4.10.tgz
   mongo-config:
     source: https://github.com/edgexfoundry/docker-edgex-mongo.git
+    source-branch: california
     source-depth: 1
     plugin: dump
     # NOTE - both the mongo-config & go install README.md to root-dir of the snap
@@ -276,7 +280,7 @@ parts:
     shell: bash
     shell-flags: ['-eux', '-o', 'pipefail']
     shell-command: |
-      export GOROOT="$SNAPDIR/parts/go/install"
+      export GOROOT=$("$SNAPCRAFT_STAGE/bin/go" env GOROOT)
       export PATH="$GOROOT/bin:$PATH"
 
       export XC_ARCH=`dpkg --print-architecture`
@@ -286,7 +290,7 @@ parts:
 
       mkdir -p .gopath/src/github.com/edgexfoundry
       export GOPATH="$PWD/.gopath"
-      export PATH="$GOPATH/bin:$PATH:$SNAPDIR/parts/glide/install"
+      export PATH="$GOPATH/bin:$PATH:$SNAPCRAFT_STAGE"
       ln -s "$PWD" .gopath/src/github.com/edgexfoundry/edgex-go
 
       pushd .gopath/src/github.com/edgexfoundry/edgex-go
@@ -367,8 +371,7 @@ parts:
       - libzmq3-dev
   support-notifications:
     source: https://github.com/edgexfoundry/support-notifications.git
-    # the following commit == 0.5.0 version plus a few fixes
-    source-commit: "ddebc1b"
+    source-branch: california
     plugin: maven
     override-build: |
       snapcraftctl build
@@ -377,7 +380,7 @@ parts:
       # The logic following logic is all handled by DockerFile for
       # the EdgeX support-notifications docker image.
       install -d "$SNAPCRAFT_PART_INSTALL/jar/support-notifications"
-      mv "$SNAPCRAFT_PART_INSTALL/jar/support-notifications-0.5.0-SNAPSHOT.jar" \
+      mv "$SNAPCRAFT_PART_INSTALL/jar/support-notifications-0.6.0-SNAPSHOT.jar" \
          "$SNAPCRAFT_PART_INSTALL/jar/support-notifications/support-notifications.jar"
 
       # FIXME:
@@ -409,8 +412,7 @@ parts:
       - -usr/share/alsa
   support-scheduler:
     source: https://github.com/edgexfoundry/support-scheduler.git
-    # the following commit == 0.5.0 version update +1 (core-domain fix)
-    source-commit: "00707ae"
+    source-branch: california
     plugin: maven
     override-build: |
       snapcraftctl build
@@ -419,7 +421,7 @@ parts:
       # The logic following logic is all handled by DockerFile for
       # the EdgeX support-scheduler docker image.
       install -d "$SNAPCRAFT_PART_INSTALL/jar/support-scheduler"
-      mv "$SNAPCRAFT_PART_INSTALL/jar/support-scheduler-0.5.0-SNAPSHOT.jar" \
+      mv "$SNAPCRAFT_PART_INSTALL/jar/support-scheduler-0.6.0-SNAPSHOT.jar" \
          "$SNAPCRAFT_PART_INSTALL/jar/support-scheduler/support-scheduler.jar"
 
       # FIXME:
@@ -451,8 +453,7 @@ parts:
       - -usr/share/
   support-rulesengine:
     source: https://github.com/edgexfoundry/support-rulesengine.git
-    # the following commit == 0.5.0 version update
-    source-commit: "2e282f5"
+    source-branch: california
     plugin: maven
     override-build: |
       snapcraftctl build
@@ -461,7 +462,7 @@ parts:
       # The logic following logic is all handled by DockerFile for
       # the EdgeX support-rulesengine docker image.
       install -d "$SNAPCRAFT_PART_INSTALL/jar/support-rulesengine"
-      mv "$SNAPCRAFT_PART_INSTALL/jar/support-rulesengine-0.5.0-SNAPSHOT.jar" \
+      mv "$SNAPCRAFT_PART_INSTALL/jar/support-rulesengine-0.6.0-SNAPSHOT.jar" \
          "$SNAPCRAFT_PART_INSTALL/jar/support-rulesengine/support-rulesengine.jar"
 
       # FIXME:
@@ -493,8 +494,7 @@ parts:
       - -usr/share/alsa
   device-virtual:
     source: https://github.com/edgexfoundry/device-virtual.git
-    # the following commit == 0.5.0 version update +1 (core-domain fix)
-    source-commit: "2033429"
+    source-branch: california
     plugin: maven
     override-build: |
       snapcraftctl build
@@ -505,7 +505,7 @@ parts:
       install -d "$SNAPCRAFT_PART_INSTALL/jar/device-virtual"
       install -d "$SNAPCRAFT_PART_INSTALL/jar/device-virtual/bacnet_sample_profiles"
       install -d "$SNAPCRAFT_PART_INSTALL/jar/device-virtual/modbus_sample_profiles"
-      mv "$SNAPCRAFT_PART_INSTALL/jar/device-virtual-0.5.0-SNAPSHOT.jar" \
+      mv "$SNAPCRAFT_PART_INSTALL/jar/device-virtual-0.6.0-SNAPSHOT.jar" \
          "$SNAPCRAFT_PART_INSTALL/jar/device-virtual/device-virtual.jar"
       cp ./bacnet_sample_profiles/*.yaml \
          "$SNAPCRAFT_PART_INSTALL/jar/device-virtual/bacnet_sample_profiles/"
