@@ -29,6 +29,8 @@ import (
 // Global variables
 var dbc clients.DBClient
 var loggingClient logger.LoggingClient
+var cronDistro *cron.Cron
+var cronResend *cron.Cron
 var normalDuration string
 var resendDuration string
 var criticalResendDelay int
@@ -100,16 +102,26 @@ func Init(conf ConfigurationStruct, l logger.LoggingClient) error {
 	return nil
 }
 
+func Destruct() {
+	if cronDistro != nil {
+		cronDistro.Stop()
+	}
+
+	if cronResend != nil {
+		cronResend.Stop()
+	}
+}
+
 func initNormalDistribution() {
 	loggingClient.Debug("Normal distribution occuring on cron schedule: " + normalDuration)
-	c := cron.New()
-	c.AddFunc(normalDuration, func() { startNormalDistributing() })
-	c.Start()
+	cronDistro := cron.New()
+	cronDistro.AddFunc(normalDuration, func() { startNormalDistributing() })
+	cronDistro.Start()
 }
 
 func initNormalResend() {
 	loggingClient.Debug("Normal resend occuring on cron schedule: " + resendDuration)
-	c := cron.New()
-	c.AddFunc(resendDuration, func() { startNormalResend() })
-	c.Start()
+	cronResend := cron.New()
+	cronResend.AddFunc(resendDuration, func() { startNormalResend() })
+	cronResend.Start()
 }

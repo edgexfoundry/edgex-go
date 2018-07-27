@@ -19,22 +19,21 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"net/http"
+	"os"
+	"os/signal"
 	"strconv"
+	"syscall"
 	"time"
 
-	"flag"
 	"github.com/edgexfoundry/edgex-go"
-	"github.com/edgexfoundry/edgex-go/core/data"
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/support/logging-client"
 	"github.com/edgexfoundry/edgex-go/support/notifications"
-	"os"
-	"os/signal"
-	"syscall"
 )
 
 var loggingClient logger.LoggingClient
@@ -85,7 +84,7 @@ func main() {
 		return
 	}
 
-	r := notifications.LoadRestRoutes()
+	//r := notifications.LoadRestRoutes()
 	http.TimeoutHandler(nil, time.Millisecond*time.Duration(configuration.ServiceTimeout), "Request timed out")
 	loggingClient.Info(configuration.AppOpenMsg, "")
 
@@ -96,9 +95,8 @@ func main() {
 	// Time it took to start service
 	loggingClient.Info("Service started in: "+time.Since(start).String(), "")
 	loggingClient.Info("Listening on port: " + strconv.Itoa(configuration.ServicePort))
-	loggingClient.Error(http.ListenAndServe(":"+strconv.Itoa(configuration.ServicePort), r).Error())
 	c := <-errs
-	data.Destruct()
+	notifications.Destruct()
 	loggingClient.Warn(fmt.Sprintf("terminating: %v", c))
 }
 
