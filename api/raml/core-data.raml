@@ -22,6 +22,8 @@ schemas:
         responses: 
             "200": 
                 description: new event database generated id
+            "400":
+                description: creation request is invalid
             "404":
                 description: if the a reading is associated to a non-existent value descriptor, or if device verification is enabled and the device is not found.
             "503": 
@@ -36,6 +38,8 @@ schemas:
         responses: 
             "200": 
                 description: boolean on success of update request
+            "400":
+                description: update request is invalid
             "404": 
                 description: if the event cannot be found by id.
             "503": 
@@ -98,6 +102,8 @@ schemas:
         responses: 
             "200": 
                 description: number of events for the device
+            "400":
+                description: query request is invalid
             "503": 
                 description: for unknown or unanticipated issues.                
 /event/id/{id}: 
@@ -156,6 +162,8 @@ schemas:
                     application/json: 
                         schema: event
                         example: '[{"id":"5888dea1bd36573f4681d6f9","created":1485364897029,"modified":1485364897029,"origin":1471806386919,"pushed":0,"device":"livingroomthermostat","readings":[{"id":"5888dea0bd36573f4681d6f8","created":1485364896983,"modified":1485364896983,"origin":1471806386919,"pushed":0,"name":"temperature","value":"38","device":"livingroomthermostat"}]}]'
+            "400":
+                description: request is invalid or unparseable
             "404": 
                 description: if the meta data checks are on and no device is found for supplied id.
             "413": 

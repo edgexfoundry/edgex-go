@@ -197,7 +197,7 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 
 		// Problem Decoding Event
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			LoggingClient.Error("Error decoding event: " + err.Error())
 			return
 		}
@@ -261,7 +261,7 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 
 		// Problem decoding event
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			LoggingClient.Error("Error decoding the event: " + err.Error())
 			return
 		}
@@ -377,7 +377,7 @@ func eventCountByDeviceIdHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := url.QueryUnescape(vars["deviceId"])
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		LoggingClient.Error("Problem unescaping URL: " + err.Error())
 		return
 	}
@@ -484,7 +484,7 @@ func getEventByDeviceHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Problems unescaping URL
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		LoggingClient.Error("Error unescaping URL: " + err.Error())
 		return
 	}
@@ -492,7 +492,7 @@ func getEventByDeviceHandler(w http.ResponseWriter, r *http.Request) {
 	// Convert limit to int
 	limitNum, err := strconv.Atoi(limit)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		LoggingClient.Error("Error converting to integer: " + err.Error())
 		return
 	}
