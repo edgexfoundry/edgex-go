@@ -27,3 +27,4 @@ COPY --from=builder /bin/bash /bin/bash
 COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/support-notifications/support-notifications /
 COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/support-notifications/res/configuration-docker.toml /res/configuration-docker.toml
 ENTRYPOINT ["/support-notifications","--consul","--profile=docker","--confdir=/res"]
+CMD ["--verbose"]
