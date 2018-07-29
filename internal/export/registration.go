@@ -25,6 +25,7 @@ const (
 	DestAzureMQTT   = "AZURE_TOPIC"
 	DestRest        = "REST_ENDPOINT"
 	DestXMPP        = "XMPP_TOPIC"
+	DestAWSMQTT     = "AWS_TOPIC"
 	DestInfluxDB    = "INFLUXDB_ENDPOINT"
 )
 
@@ -42,6 +43,7 @@ const (
 	FormatSerialized      = "SERIALIZED"
 	FormatIoTCoreJSON     = "IOTCORE_JSON"
 	FormatAzureJSON       = "AZURE_JSON"
+	FormatAWSJSON         = "AWS_JSON"
 	FormatCSV             = "CSV"
 	FormatThingsBoardJSON = "THINGSBOARD_JSON"
 	FormatNOOP            = "NOOP"
@@ -102,6 +104,7 @@ func (reg Registration) Validate() (bool, error) {
 		reg.Format != FormatSerialized &&
 		reg.Format != FormatIoTCoreJSON &&
 		reg.Format != FormatAzureJSON &&
+		reg.Format != FormatAWSJSON &&
 		reg.Format != FormatCSV &&
 		reg.Format != FormatThingsBoardJSON &&
 		reg.Format != FormatNOOP {
@@ -112,6 +115,7 @@ func (reg Registration) Validate() (bool, error) {
 		reg.Destination != DestZMQ &&
 		reg.Destination != DestIotCoreMQTT &&
 		reg.Destination != DestAzureMQTT &&
+		reg.Destination != DestAWSMQTT &&
 		reg.Destination != DestRest &&
 		reg.Destination != DestInfluxDB {
 		return false, fmt.Errorf("Destination invalid: %s", reg.Destination)

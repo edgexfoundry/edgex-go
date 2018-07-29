@@ -69,6 +69,8 @@ func (reg *registrationInfo) update(newReg export.Registration) bool {
 		reg.format = jsonFormatter{}
 	case export.FormatAzureJSON:
 		reg.format = azureFormatter{}
+	case export.FormatAWSJSON:
+		reg.format = awsFormatter{}
 	case export.FormatCSV:
 		// TODO reg.format = distro.NewCsvFormat()
 	case export.FormatThingsBoardJSON:
@@ -97,6 +99,8 @@ func (reg *registrationInfo) update(newReg export.Registration) bool {
 	switch newReg.Destination {
 	case export.DestMQTT, export.DestAzureMQTT:
 		reg.sender = NewMqttSender(newReg.Addressable)
+	case export.DestAWSMQTT:
+		reg.sender = NewAWSIoTSender(newReg.Addressable)
 	case export.DestZMQ:
 		logger.Info("Destination ZMQ is not supported")
 	case export.DestIotCoreMQTT:
