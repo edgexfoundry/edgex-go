@@ -25,6 +25,12 @@ type fileLog struct {
 	out      io.WriteCloser
 }
 
+func (fl *fileLog) closeSession() {
+	if fl.out != nil {
+		fl.out.Close()
+	}
+}
+
 func (fl *fileLog) add(le models.LogEntry) error {
 	if fl.out == nil {
 		var err error
