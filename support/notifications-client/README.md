@@ -3,6 +3,7 @@ This repository is for the notifications client for EdgeXFoundry written in the 
 
 ### What is this repository for? ###
 * Client library for interacting with the notifications microservice
+* When bringing over the notifications-related source code into the mono repo, the existing code in the 'support/notifications-client' (in the mono repo) is being utilized, as-is.
 
 ### Installation ###
 This project does not have any external dependencies.  To install, simply run:

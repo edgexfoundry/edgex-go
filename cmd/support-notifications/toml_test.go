@@ -10,12 +10,12 @@ package main
 import (
 	"testing"
 
-	"github.com/edgexfoundry/edgex-go/support/logging"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
+	"github.com/edgexfoundry/edgex-go/support/notifications"
 )
 
 func TestToml(t *testing.T) {
-	configuration := &logging.ConfigurationStruct{}
+	configuration := &notifications.ConfigurationStruct{}
 	if err := config.VerifyTomlFiles(configuration); err != nil {
 		t.Fatalf("%v", err)
 	}

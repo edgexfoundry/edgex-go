@@ -1,0 +1,45 @@
+ApplicationName = 'edgex-support-notifications'
+ConsulProfilesActive = 'docker;go'
+HeartBeatTime = 300000
+HeartBeatMsg = 'Support Notifications heart beat'
+AppOpenMsg = 'This is the Support Notifications Micro Service'
+FormatSpecifier = '%(\\d=\\$)?([-#= 0(\\<]*)?(\\d=)?(\\.\\d=)?([tT])?([a-zA-Z%])'
+ServicePort = 48060
+ServiceTimeout = 5000
+ServiceAddress = 'localhost'
+ServiceName = 'edgex-support-notifications'
+ConsulHost = 'edgex-core-consul'
+ConsulCheckAddress = 'http://edgex-support-notifications:48060/api/v1/ping'
+ConsulPort = 8500
+CheckInterval = '10s'
+EnableRemoteLogging = false
+LoggingFile = './logs/edgex-support-notifications.log'
+LoggingRemoteURL = 'http://edgex-support-logging:48061/api/v1/logs'
+MongoDBUserName = 'notifications'
+MongoDBPassword = 'password'
+MongoDatabaseName = 'notifications'
+MongoDBHost = 'edgex-mongo'
+MongoDBPort = 27017
+MongoDBConnectTimeout = 60000
+MongoDBMaxWaitTime = 120000
+MongoDBKeepAlive = true
+# Max number of notification documents that can be read out of Mongo
+ReadMaxLimit = 1000
+# Number of retries allowed before giving up on a Notification
+ResendLimit=2
+# Age any notification to be removed by clean up routine
+CleanupDefaultAge=86400001
+# How often, by CRON string, the normal notification send occurs
+SchedulerNormalDuration='59 * * * * *'
+# How often, by CRON string, the normal resent notification send occurs
+SchedulerNormalResendDuration='59 * * * * *'
+# How soon after a failed critical notfication send does the retry happen, expressed in seconds
+SchedulerCriticalResendDelay = 10
+# TODO - apply your email account names and passwords
+# Edit to use your SMTP Server  GMAIL examples shown here
+SMTPPort = '587'
+SMTPHost = 'smtp.gmail.com'
+SMTPSender = 'jdoe@gmail.com'
+#account password or app password
+SMTPPassword = 'mypassword'
+SMTPSubject = 'EdgeX Notification'
