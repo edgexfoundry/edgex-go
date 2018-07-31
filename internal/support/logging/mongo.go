@@ -41,7 +41,7 @@ func connectToMongo() (*mgo.Session, error) {
 	return ms, nil
 }
 
-func (ml *mongoLog) add(le models.LogEntry) {
+func (ml *mongoLog) add(le models.LogEntry) error {
 
 	session := ml.session.Copy()
 	defer session.Close()
@@ -49,8 +49,10 @@ func (ml *mongoLog) add(le models.LogEntry) {
 	c := session.DB(configuration.MongoDB).C(configuration.MongoCollection)
 
 	if err := c.Insert(le); err != nil {
-		return
+		return err
 	}
+
+	return nil
 }
 
 func createConditions(conditions []bson.M, field string, elements []string) []bson.M {
@@ -129,7 +131,7 @@ func (ml *mongoLog) find(criteria matchCriteria) ([]models.LogEntry, error) {
 	q := c.Find(base)
 
 	if err := q.Limit(criteria.Limit).All(&le); err != nil {
-		return nil, err
+		return le, err
 	}
 
 	return le, nil
