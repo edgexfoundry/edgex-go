@@ -98,7 +98,7 @@ func createQuery(criteria matchCriteria) bson.M {
 
 }
 
-func (ml *mongoLog) remove(criteria matchCriteria) int {
+func (ml *mongoLog) remove(criteria matchCriteria) (int, error) {
 
 	session := ml.session.Copy()
 	defer session.Close()
@@ -110,13 +110,13 @@ func (ml *mongoLog) remove(criteria matchCriteria) int {
 	info, err := c.RemoveAll(base)
 
 	if err != nil {
-		return 0
+		return 0, err
 	}
 
-	return info.Removed
+	return info.Removed, nil
 }
 
-func (ml *mongoLog) find(criteria matchCriteria) []models.LogEntry {
+func (ml *mongoLog) find(criteria matchCriteria) ([]models.LogEntry, error) {
 	session := ml.session.Copy()
 	defer session.Close()
 
@@ -129,10 +129,10 @@ func (ml *mongoLog) find(criteria matchCriteria) []models.LogEntry {
 	q := c.Find(base)
 
 	if err := q.Limit(criteria.Limit).All(&le); err != nil {
-		return nil
+		return nil, err
 	}
 
-	return le
+	return le, nil
 }
 
 func (ml *mongoLog) reset() {
