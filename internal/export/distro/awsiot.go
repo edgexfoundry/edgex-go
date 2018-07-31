@@ -7,11 +7,17 @@ package distro
 import (
 	"crypto/tls"
 	"fmt"
+	"strconv"
 
 	MQTT "github.com/eclipse/paho.mqtt.golang"
 	"github.com/edgexfoundry/edgex-go/internal/export/interfaces"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 	"go.uber.org/zap"
+)
+
+const (
+	awsMQTTPort         int    = 8883
+	awsThingUpdateTopic string = "$aws/things/%s/shadow/update"
 )
 
 type awsiotSender struct {
@@ -34,9 +40,9 @@ func NewAWSIoTSender(addr models.Addressable) interfaces.Sender {
 
 	tlsConfig.BuildNameToCertificate()
 
-	serverURL := "tls://" + addr.Address + ":8883"
+	serverURL := "tls://" + addr.Address + ":" + strconv.Itoa(awsMQTTPort)
 
-	topic := fmt.Sprintf("$aws/things/%s/shadow/update", addr.Topic)
+	topic := fmt.Sprintf(awsThingUpdateTopic, addr.Topic)
 
 	opts := MQTT.NewClientOptions()
 	opts.AddBroker(serverURL)
