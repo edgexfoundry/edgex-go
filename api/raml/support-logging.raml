@@ -571,6 +571,8 @@ schemas:
       responses:
         200:
           description: count of the number of LogEntry being deleted
+        500:
+          description: for unknown or unanticipated issues.
   /originServices/{originServices}/{start}/{end}:
     uriParameters:
       originServices:
@@ -607,6 +609,8 @@ schemas:
       responses:
         200:
           description: count of the number of LogEntry being deleted
+        500:
+          description: for unknown or unanticipated issues.
   /logLevels/{logLevels}/{start}/{end}:
     uriParameters:
       logLevels:
@@ -625,6 +629,8 @@ schemas:
       responses:
         200:
           description: count of the number of LogEntry being deleted
+        500:
+          description: for unknown or unanticipated issues.
   /logLevels/{logLevels}/originServices/{originServices}/{start}/{end}:
     uriParameters:
       logLevels:
@@ -647,6 +653,8 @@ schemas:
       responses:
         200:
           description: count of the number of LogEntry being deleted
+        500:
+          description: for unknown or unanticipated issues.
   /logLevels/{logLevels}/originServices/{originServices}/labels/{labels}/{start}/{end}:
     uriParameters:
       logLevels:
@@ -703,3 +711,5 @@ schemas:
       responses:
         200:
           description: count of the number of LogEntry being deleted
+        500:
+          description: for unknown or unanticipated issues.
