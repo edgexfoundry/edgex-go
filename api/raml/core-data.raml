@@ -186,6 +186,8 @@ schemas:
         responses: 
             "200": 
                 description: count of the number of events deleted
+            "400":
+                description: could not unescape URL
             "404": 
                 description: if the meta data checks are on and no device is found for supplied id.
             "503": 
@@ -222,6 +224,8 @@ schemas:
                     application/json: 
                         schema: event
                         example: '[{"id":"5888dea1bd36573f4681d6f9","created":1485364897029,"modified":1485364897029,"origin":1471806386919,"pushed":0,"device":"livingroomthermostat","readings":[{"id":"5888dea0bd36573f4681d6f8","created":1485364896983,"modified":1485364896983,"origin":1471806386919,"pushed":0,"name":"temperature","value":"38","device":"livingroomthermostat"}]}]'
+            "400":
+                description: request is invalid or unparseable
             "413": 
                 description: if the number of events exceeds the current max limit.
             "503": 
@@ -258,6 +262,8 @@ schemas:
                     application/json: 
                         schema: reading
                         example: '[{"id":"5888dea1bd36573f4681d6f9","created":1485364897029,"modified":1485364897029,"origin":1471806386919,"pushed":0,"device":"livingroomthermostat","readings":[{"id":"5888dea0bd36573f4681d6f8","created":1485364896983,"modified":1485364896983,"origin":1471806386919,"pushed":0,"name":"temperature","value":"38","device":"livingroomthermostat"}]}]'
+            "400":
+                description: request is invalid or unparseable
             "413": 
                 description: if the number of events exceeds the current max limit.
             "503": 
@@ -278,6 +284,8 @@ schemas:
         responses: 
             "200": 
                 description: count of the number of events removed
+            "400":
+                description: request is invalid or unparseable
             "503": 
                 description: for unknown or unanticipated issues.
 /event/scrub: 
