@@ -591,6 +591,8 @@ schemas:
       responses:
         200:
           description: count of the number of LogEntry being deleted
+        500:
+          description: for unknown or unanticipated issues.
   /keywords/{keywords}/{start}/{end}:
     uriParameters:
       keywords:
@@ -681,6 +683,8 @@ schemas:
       responses:
         200:
           description: count of the number of LogEntry being deleted
+        500:
+          description: for unknown or unanticipated issues
   /logLevels/{logLevels}/originServices/{originServices}/labels/{labels}/keywords/{keywords}/{start}/{end}:
     uriParameters:
       logLevels:
