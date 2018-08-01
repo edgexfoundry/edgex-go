@@ -17,8 +17,6 @@ package interfaces
 
 import (
 	"errors"
-	"fmt"
-
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -29,6 +27,10 @@ const (
 )
 
 type DBClient interface {
+	CloseSession()
+
+	Connect() error
+
 	Notifications() ([]models.Notification, error)
 
 	NotificationById(id string) (models.Notification, error)
@@ -122,17 +124,17 @@ var ErrNotUnique error = errors.New("Resource already exists")
 var ErrSlugEmpty error = errors.New("Slug is nil or empty")
 
 // Return the dbClient interface
-func NewDBClient(config DBConfiguration) (DBClient, error) {
-	switch config.DbType {
-	case MONGO:
-		// Create the mongo client
-		mc, err := newMongoClient(config)
-		if err != nil {
-			fmt.Println("Error creating the mongo client: " + err.Error())
-			return nil, err
-		}
-		return mc, nil
-	default:
-		return nil, ErrUnsupportedDatabase
-	}
-}
+//func NewDBClient(config DBConfiguration) (DBClient, error) {
+//	switch config.DbType {
+//	case MONGO:
+//		// Create the mongo client
+//		mc, err := newMongoClient(config)
+//		if err != nil {
+//			fmt.Println("Error creating the mongo client: " + err.Error())
+//			return nil, err
+//		}
+//		return mc, nil
+//	default:
+//		return nil, ErrUnsupportedDatabase
+//	}
+//}

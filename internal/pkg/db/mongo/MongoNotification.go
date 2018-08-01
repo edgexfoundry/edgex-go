@@ -12,7 +12,7 @@
 * the License.
 *
 *******************************************************************************/
-package notifications
+package mongo
 
 import (
 	"github.com/edgexfoundry/edgex-go/pkg/models"

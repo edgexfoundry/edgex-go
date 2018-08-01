@@ -34,9 +34,12 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 )
 
 var loggingClient logger.LoggingClient
+
+var bootTimeout int = 30000 //Once we start the V2 configuration rework, this will be config driven
 
 func main() {
 	start := time.Now()
@@ -58,45 +61,36 @@ func main() {
 		return
 	}
 
-	//Determine if configuration should be overridden from Consul
-	var consulMsg string
-	if useConsul {
-		consulMsg = "Loading configuration from Consul..."
-		err := notifications.ConnectToConsul(*configuration)
-		if err != nil {
-			logBeforeTermination(err)
-			return //end program since user explicitly told us to use Consul.
-		}
-	} else {
-		consulMsg = "Bypassing Consul configuration..."
-	}
+	params := startup.BootParams{UseConsul: useConsul, UseProfile: useProfile, BootTimeout: bootTimeout}
+	startup.Bootstrap(params, notifications.Retry, logBeforeInit)
 
-	// Setup Logging
-	logTarget := setLoggingTarget(*configuration)
-	loggingClient = logger.NewClient(internal.SupportNotificationsServiceKey, configuration.EnableRemoteLogging, logTarget)
-
-	loggingClient.Info(consulMsg)
-	loggingClient.Info(fmt.Sprintf("Starting %s %s ", internal.SupportNotificationsServiceKey, edgex.Version))
-
-	err = notifications.Init(*configuration, loggingClient)
-	if err != nil {
-		loggingClient.Error(fmt.Sprintf("call to init() failed: %v", err.Error()))
+	ok := notifications.Init()
+	if !ok {
+		logBeforeInit(fmt.Errorf("%s: Service bootstrap failed!", internal.SupportNotificationsServiceKey))
 		return
 	}
 
-	http.TimeoutHandler(nil, time.Millisecond*time.Duration(configuration.ServiceTimeout), "Request timed out")
-	loggingClient.Info(configuration.AppOpenMsg, "")
+	notifications.LoggingClient.Info("Service dependencies resolved...")
+	notifications.LoggingClient.Info(fmt.Sprintf("Starting %s %s ", internal.SupportNotificationsServiceKey, edgex.Version))
+
+	http.TimeoutHandler(nil, time.Millisecond*time.Duration(notifications.Configuration.ServiceTimeout), "Request timed out")
+	notifications.LoggingClient.Info(notifications.Configuration.AppOpenMsg, "")
 
 	errs := make(chan error, 2)
 	listenForInterrupt(errs)
-	startHttpServer(errs, configuration.ServicePort)
+	startHttpServer(errs, notifications.Configuration.ServicePort)
 
 	// Time it took to start service
-	loggingClient.Info("Service started in: "+time.Since(start).String(), "")
-	loggingClient.Info("Listening on port: " + strconv.Itoa(configuration.ServicePort))
+	notifications.LoggingClient.Info("Service started in: "+time.Since(start).String(), "")
+	notifications.LoggingClient.Info("Listening on port: " + strconv.Itoa(notifications.Configuration.ServicePort))
 	c := <-errs
 	notifications.Destruct()
-	loggingClient.Warn(fmt.Sprintf("terminating: %v", c))
+	notifications.LoggingClient.Warn(fmt.Sprintf("terminating: %v", c))
+}
+
+func logBeforeInit(err error) {
+	l := logger.NewClient(internal.SupportNotificationsServiceKey, false, "")
+	l.Error(err.Error())
 }
 
 func logBeforeTermination(err error) {
