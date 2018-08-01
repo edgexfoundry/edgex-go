@@ -13,7 +13,7 @@
  *
  *******************************************************************************/
 
-package notifications
+package interfaces
 
 import (
 	"errors"

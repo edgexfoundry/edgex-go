@@ -24,6 +24,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
+	"github.com/edgexfoundry/edgex-go/internal/support/notifications/interfaces"
 )
 
 const (
