@@ -22,11 +22,8 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 	"github.com/gorilla/mux"
-	"github.com/edgexfoundry/edgex-go/internal/support/notifications/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 )
-
-var dbc interfaces.DBClient
 
 func notificationHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Body != nil {
@@ -41,26 +38,26 @@ func notificationHandler(w http.ResponseWriter, r *http.Request) {
 
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
-			loggingClient.Error("Error decoding notification: " + err.Error())
+			LoggingClient.Error("Error decoding notification: " + err.Error())
 			return
 		}
 
-		loggingClient.Info("Posting Notification: " + n.String())
+		LoggingClient.Info("Posting Notification: " + n.String())
 		n.Status = models.NotificationsStatus(models.New)
-		_, err = dbc.AddNotification(&n)
+		_, err = dbClient.AddNotification(&n)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusConflict)
-			loggingClient.Error(err.Error())
+			LoggingClient.Error(err.Error())
 			return
 		}
 
 		if n.Severity == models.NotificationsSeverity(models.Critical) {
-			loggingClient.Info("Critical severity scheduler is triggered for: " + n.Slug)
+			LoggingClient.Info("Critical severity scheduler is triggered for: " + n.Slug)
 			err := distributeAndMark(n)
 			if err != nil {
 				return
 			}
-			loggingClient.Info("Critical severity scheduler has completed for: " + n.Slug)
+			LoggingClient.Info("Critical severity scheduler has completed for: " + n.Slug)
 		}
 
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
@@ -82,14 +79,14 @@ func notificationBySlugHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 
-		n, err := dbc.NotificationBySlug(slug)
+		n, err := dbClient.NotificationBySlug(slug)
 		if err != nil {
 			if err == db.ErrNotFound {
 				http.Error(w, "Notification not found", http.StatusNotFound)
 			} else {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
-			loggingClient.Error(err.Error())
+			LoggingClient.Error(err.Error())
 			w.Header().Set("Content-Type", applicationJson)
 			encode(n, w)
 			return
@@ -97,22 +94,22 @@ func notificationBySlugHandler(w http.ResponseWriter, r *http.Request) {
 
 		encode(n, w)
 	case http.MethodDelete:
-		_, err := dbc.NotificationBySlug(slug)
+		_, err := dbClient.NotificationBySlug(slug)
 		if err != nil {
 			if err == db.ErrNotFound {
 				http.Error(w, "Notification not found", http.StatusNotFound)
 			} else {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
-			loggingClient.Error(err.Error())
+			LoggingClient.Error(err.Error())
 			return
 		}
 
-		loggingClient.Info("Deleting notification (and associated transmissions) by slug: " + slug)
+		LoggingClient.Info("Deleting notification (and associated transmissions) by slug: " + slug)
 
-		if err = dbc.DeleteNotificationBySlug(slug); err != nil {
+		if err = dbClient.DeleteNotificationBySlug(slug); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
-			loggingClient.Error(err.Error())
+			LoggingClient.Error(err.Error())
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
@@ -132,14 +129,14 @@ func notificationByIDHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 
-		n, err := dbc.NotificationById(id)
+		n, err := dbClient.NotificationById(id)
 		if err != nil {
 			if err == db.ErrNotFound {
 				http.Error(w, "Notification not found", http.StatusNotFound)
 			} else {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
-			loggingClient.Error(err.Error())
+			LoggingClient.Error(err.Error())
 			w.Header().Set("Content-Type", applicationJson)
 			encode(n, w)
 			return
@@ -147,22 +144,22 @@ func notificationByIDHandler(w http.ResponseWriter, r *http.Request) {
 
 		encode(n, w)
 	case http.MethodDelete:
-		_, err := dbc.NotificationById(id)
+		_, err := dbClient.NotificationById(id)
 		if err != nil {
 			if err == db.ErrNotFound {
 				http.Error(w, "Notification not found", http.StatusNotFound)
 			} else {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
-			loggingClient.Error(err.Error())
+			LoggingClient.Error(err.Error())
 			return
 		}
 
-		loggingClient.Info("Deleting notification (and associated transmissions): " + id)
+		LoggingClient.Info("Deleting notification (and associated transmissions): " + id)
 
-		if err = dbc.DeleteNotificationById(id); err != nil {
+		if err = dbClient.DeleteNotificationById(id); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
-			loggingClient.Error(err.Error())
+			LoggingClient.Error(err.Error())
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
@@ -181,20 +178,20 @@ func notificationOldHandler(w http.ResponseWriter, r *http.Request) {
 	age, err := strconv.ParseInt(vars["age"], 10, 64)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		loggingClient.Error("Error converting the age to an integer")
+		LoggingClient.Error("Error converting the age to an integer")
 		return
 	}
 	switch r.Method {
 	case http.MethodDelete:
-		loggingClient.Info("Deleting old notifications (and associated transmissions): " + vars["age"])
-		err := dbc.DeleteNotificationsOld(age)
+		LoggingClient.Info("Deleting old notifications (and associated transmissions): " + vars["age"])
+		err := dbClient.DeleteNotificationsOld(age)
 		if err != nil {
 			if err == db.ErrNotFound {
 				http.Error(w, "Notifications not found", http.StatusNotFound)
 			} else {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
-			loggingClient.Error(err.Error())
+			LoggingClient.Error(err.Error())
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
@@ -213,7 +210,7 @@ func notificationBySenderHandler(w http.ResponseWriter, r *http.Request) {
 	limitNum, err := strconv.Atoi(vars["limit"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		loggingClient.Error("Error converting limit to integer: " + err.Error())
+		LoggingClient.Error("Error converting limit to integer: " + err.Error())
 		return
 	}
 
@@ -222,18 +219,18 @@ func notificationBySenderHandler(w http.ResponseWriter, r *http.Request) {
 
 		if limitNum > configuration.ReadMaxLimit {
 			http.Error(w, "Exceeded max limit", http.StatusRequestEntityTooLarge)
-			loggingClient.Error("Exceeded max limit")
+			LoggingClient.Error("Exceeded max limit")
 			return
 		}
 
-		n, err := dbc.NotificationBySender(vars["sender"], limitNum)
+		n, err := dbClient.NotificationBySender(vars["sender"], limitNum)
 		if err != nil {
 			if err == db.ErrNotFound {
 				http.Error(w, "Notification not found", http.StatusNotFound)
 			} else {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
-			loggingClient.Error(err.Error())
+			LoggingClient.Error(err.Error())
 			w.Header().Set("Content-Type", applicationJson)
 			encode(n, w)
 			return
@@ -253,19 +250,19 @@ func notificationByStartEndHandler(w http.ResponseWriter, r *http.Request) {
 	start, err := strconv.ParseInt(vars["start"], 10, 64)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		loggingClient.Error("Error converting the start to an integer")
+		LoggingClient.Error("Error converting the start to an integer")
 		return
 	}
 	end, err := strconv.ParseInt(vars["end"], 10, 64)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		loggingClient.Error("Error converting the end to an integer")
+		LoggingClient.Error("Error converting the end to an integer")
 		return
 	}
 	limitNum, err := strconv.Atoi(vars["limit"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		loggingClient.Error("Error converting limit to integer: " + err.Error())
+		LoggingClient.Error("Error converting limit to integer: " + err.Error())
 		return
 	}
 
@@ -274,18 +271,18 @@ func notificationByStartEndHandler(w http.ResponseWriter, r *http.Request) {
 
 		if limitNum > configuration.ReadMaxLimit {
 			http.Error(w, "Exceeded max limit", http.StatusRequestEntityTooLarge)
-			loggingClient.Error("Exceeded max limit")
+			LoggingClient.Error("Exceeded max limit")
 			return
 		}
 
-		n, err := dbc.NotificationsByStartEnd(start, end, limitNum)
+		n, err := dbClient.NotificationsByStartEnd(start, end, limitNum)
 		if err != nil {
 			if err == db.ErrNotFound {
 				http.Error(w, "Notification not found", http.StatusNotFound)
 			} else {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
-			loggingClient.Error(err.Error())
+			LoggingClient.Error(err.Error())
 			return
 		}
 		encodeWithUTF8(n, w)
@@ -300,13 +297,13 @@ func notificationByStartHandler(w http.ResponseWriter, r *http.Request) {
 	start, err := strconv.ParseInt(vars["start"], 10, 64)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		loggingClient.Error("Error converting the start to an integer")
+		LoggingClient.Error("Error converting the start to an integer")
 		return
 	}
 	limitNum, err := strconv.Atoi(vars["limit"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		loggingClient.Error("Error converting limit to integer: " + err.Error())
+		LoggingClient.Error("Error converting limit to integer: " + err.Error())
 		return
 	}
 	switch r.Method {
@@ -314,18 +311,18 @@ func notificationByStartHandler(w http.ResponseWriter, r *http.Request) {
 
 		if limitNum > configuration.ReadMaxLimit {
 			http.Error(w, "Exceeded max limit", http.StatusRequestEntityTooLarge)
-			loggingClient.Error("Exceeded max limit")
+			LoggingClient.Error("Exceeded max limit")
 			return
 		}
 
-		n, err := dbc.NotificationsByStart(start, limitNum)
+		n, err := dbClient.NotificationsByStart(start, limitNum)
 		if err != nil {
 			if err == db.ErrNotFound {
 				http.Error(w, "Notification not found", http.StatusNotFound)
 			} else {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
-			loggingClient.Error(err.Error())
+			LoggingClient.Error(err.Error())
 			w.Header().Set("Content-Type", applicationJson)
 			encode(n, w)
 			return
@@ -345,13 +342,13 @@ func notificationByEndHandler(w http.ResponseWriter, r *http.Request) {
 	end, err := strconv.ParseInt(vars["end"], 10, 64)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		loggingClient.Error("Error converting the end to an integer")
+		LoggingClient.Error("Error converting the end to an integer")
 		return
 	}
 	limitNum, err := strconv.Atoi(vars["limit"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		loggingClient.Error("Error converting limit to integer: " + err.Error())
+		LoggingClient.Error("Error converting limit to integer: " + err.Error())
 		return
 	}
 
@@ -360,18 +357,18 @@ func notificationByEndHandler(w http.ResponseWriter, r *http.Request) {
 
 		if limitNum > configuration.ReadMaxLimit {
 			http.Error(w, "Exceeded max limit", http.StatusRequestEntityTooLarge)
-			loggingClient.Error("Exceeded max limit")
+			LoggingClient.Error("Exceeded max limit")
 			return
 		}
 
-		n, err := dbc.NotificationsByEnd(end, limitNum)
+		n, err := dbClient.NotificationsByEnd(end, limitNum)
 		if err != nil {
 			if err == db.ErrNotFound {
 				http.Error(w, "Notification not found", http.StatusNotFound)
 			} else {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
-			loggingClient.Error(err.Error())
+			LoggingClient.Error(err.Error())
 			w.Header().Set("Content-Type", applicationJson)
 			encode(n, w)
 			return
@@ -391,7 +388,7 @@ func notificationsByLabelsHandler(w http.ResponseWriter, r *http.Request) {
 	limitNum, err := strconv.Atoi(vars["limit"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		loggingClient.Error("Error converting limit to integer: " + err.Error())
+		LoggingClient.Error("Error converting limit to integer: " + err.Error())
 		return
 	}
 
@@ -400,20 +397,20 @@ func notificationsByLabelsHandler(w http.ResponseWriter, r *http.Request) {
 
 		if limitNum > configuration.ReadMaxLimit {
 			http.Error(w, "Exceeded max limit", http.StatusRequestEntityTooLarge)
-			loggingClient.Error("Exceeded max limit")
+			LoggingClient.Error("Exceeded max limit")
 			return
 		}
 
 		labels := splitVars(vars["labels"])
 
-		n, err := dbc.NotificationsByLabels(labels, limitNum)
+		n, err := dbClient.NotificationsByLabels(labels, limitNum)
 		if err != nil {
 			if err == db.ErrNotFound {
 				http.Error(w, "Notification not found", http.StatusNotFound)
 			} else {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
-			loggingClient.Error(err.Error())
+			LoggingClient.Error(err.Error())
 			w.Header().Set("Content-Type", applicationJson)
 			encode(n, w)
 			return
@@ -433,7 +430,7 @@ func notificationsNewHandler(w http.ResponseWriter, r *http.Request) {
 	limitNum, err := strconv.Atoi(vars["limit"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		loggingClient.Error("Error converting limit to integer: " + err.Error())
+		LoggingClient.Error("Error converting limit to integer: " + err.Error())
 		return
 	}
 
@@ -442,18 +439,18 @@ func notificationsNewHandler(w http.ResponseWriter, r *http.Request) {
 
 		if limitNum > configuration.ReadMaxLimit {
 			http.Error(w, "Exceeded max limit", http.StatusRequestEntityTooLarge)
-			loggingClient.Error("Exceeded max limit")
+			LoggingClient.Error("Exceeded max limit")
 			return
 		}
 
-		n, err := dbc.NotificationsNew(limitNum)
+		n, err := dbClient.NotificationsNew(limitNum)
 		if err != nil {
 			if err == db.ErrNotFound {
 				http.Error(w, "Notification not found", http.StatusNotFound)
 			} else {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
-			loggingClient.Error(err.Error())
+			LoggingClient.Error(err.Error())
 			w.Header().Set("Content-Type", applicationJson)
 			encode(n, w)
 			return

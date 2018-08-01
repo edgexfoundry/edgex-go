@@ -29,13 +29,13 @@ func cleanupHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodDelete:
-		loggingClient.Info("Cleaning up of notifications and transmissions")
+		LoggingClient.Info("Cleaning up of notifications and transmissions")
 
-		err := dbc.Cleanup()
+		err := dbClient.Cleanup()
 
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
-			loggingClient.Error(err.Error())
+			LoggingClient.Error(err.Error())
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
@@ -54,16 +54,16 @@ func cleanupAgeHandler(w http.ResponseWriter, r *http.Request) {
 	// Problem converting age
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		loggingClient.Error("Error converting the age to an integer")
+		LoggingClient.Error("Error converting the age to an integer")
 		return
 	}
 	switch r.Method {
 	case http.MethodDelete:
-		loggingClient.Info("Cleaning up of old notifications and transmissions")
+		LoggingClient.Info("Cleaning up of old notifications and transmissions")
 
-		if err = dbc.CleanupOld(age); err != nil {
+		if err = dbClient.CleanupOld(age); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
-			loggingClient.Error(err.Error())
+			LoggingClient.Error(err.Error())
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")

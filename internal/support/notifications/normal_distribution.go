@@ -22,10 +22,10 @@ import (
 )
 
 func startNormalDistributing() error {
-	loggingClient.Info("Normal severity scheduler is triggered.")
-	nm, err := dbc.NotificationsNewNormal(limitMax)
+	LoggingClient.Info("Normal severity scheduler is triggered.")
+	nm, err := dbClient.NotificationsNewNormal(limitMax)
 	if err != nil {
-		loggingClient.Error("Normal distribution of notifications failed: unable to get NEW notifications")
+		LoggingClient.Error("Normal distribution of notifications failed: unable to get NEW notifications")
 	}
 	for _, n := range nm {
 		err = distributeAndMark(n)
@@ -33,20 +33,20 @@ func startNormalDistributing() error {
 			return err
 		}
 	}
-	loggingClient.Debug("Processed " + strconv.Itoa(len(nm)) + " new notifications")
-	loggingClient.Info("Normal severity scheduler has completed.")
+	LoggingClient.Debug("Processed " + strconv.Itoa(len(nm)) + " new notifications")
+	LoggingClient.Info("Normal severity scheduler has completed.")
 	return nil
 }
 
 func distributeAndMark(n models.Notification) error {
 	err := distribute(n)
 	if err != nil {
-		loggingClient.Error("Trouble on distribution of notification: " + n.Slug)
+		LoggingClient.Error("Trouble on distribution of notification: " + n.Slug)
 		return err
 	}
-	err = dbc.MarkNotificationProcessed(n)
+	err = dbClient.MarkNotificationProcessed(n)
 	if err != nil {
-		loggingClient.Error("Trouble updating notification to Processed for: " + n.Slug)
+		LoggingClient.Error("Trouble updating notification to Processed for: " + n.Slug)
 		return err
 	}
 	return nil
