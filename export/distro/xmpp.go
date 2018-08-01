@@ -58,7 +58,7 @@ func NewXMPPSender(addr models.Addressable) Sender {
 	return sender
 }
 
-func (sender *xmppSender) Send(data []byte, event *models.Event) {
+func (sender *xmppSender) Send(data []byte, event *models.Event) bool {
 	stringData := string(data)
 
 	sender.client.Send(xmpp.Chat{
@@ -69,6 +69,8 @@ func (sender *xmppSender) Send(data []byte, event *models.Event) {
 		Other:   sender.other,
 		Stamp:   sender.stamp,
 	})
+
+	return true
 }
 
 func serverName(host string) string {
