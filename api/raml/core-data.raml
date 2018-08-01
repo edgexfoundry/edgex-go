@@ -284,8 +284,7 @@ schemas:
         responses: 
             "200": 
                 description: count of the number of events removed
-            "400":
-                description: request is invalid or unparseable
+            
             "503": 
                 description: for unknown or unanticipated issues.
 /event/scrub: 
@@ -312,6 +311,8 @@ schemas:
         responses: 
             "200": 
                 description: String id (database id) of the new Reading
+            "400":
+                description: request is invalid or unparseable
             "409": 
                 description: if the associated value descriptor is non-existent
             "503": 
@@ -326,6 +327,8 @@ schemas:
         responses: 
             "200": 
                 description: boolean indicating success of the update operation
+            "400":
+                description: request is invalid or unparseable
             "404": 
                 description: if the reading cannot be found by id
             "409": 
@@ -426,6 +429,8 @@ schemas:
                     application/json: 
                         schema: reading
                         example: '[{"id":"5888dea0bd36573f4681d6f8","created":1485364896983,"modified":1485364896983,"origin":1471806386919,"pushed":0,"name":"temperature","value":"38","device":"livingroomthermostat"}]'
+            "400":
+                description: request is invalid or unparseable
             "404": 
                 description: if meta checks are in place and if the device id or name does not match any existing devices
             "413": 
@@ -464,6 +469,8 @@ schemas:
                     application/json: 
                         schema: reading
                         example: '[{"id":"5888dea0bd36573f4681d6f8","created":1485364896983,"modified":1485364896983,"origin":1471806386919,"pushed":0,"name":"temperature","value":"38","device":"livingroomthermostat"}]'
+            "400":
+                description: request is invalid or unparseable
             "413": 
                 description: if the number of readings exceeds the current max limit.
             "503": 
@@ -494,6 +501,8 @@ schemas:
                     application/json: 
                         schema: reading
                         example: '[{"id":"5888dea0bd36573f4681d6f8","created":1485364896983,"modified":1485364896983,"origin":1471806386919,"pushed":0,"name":"temperature","value":"38","device":"livingroomthermostat"}]'
+            "400":
+                description: request is invalid or unparseable
             "413": 
                 description: if the number of readings exceeds the current max limit.
             "503": 
@@ -524,6 +533,8 @@ schemas:
                     application/json: 
                         schema: reading
                         example: '[{"id":"5888dea0bd36573f4681d6f8","created":1485364896983,"modified":1485364896983,"origin":1471806386919,"pushed":0,"name":"temperature","value":"38","device":"livingroomthermostat"}]'
+            "400":
+                description: request is invalid or unparseable
             "413": 
                 description: if the number of readings exceeds the current max limit.
             "503": 
@@ -554,6 +565,8 @@ schemas:
                     application/json: 
                         schema: reading
                         example: '[{"id":"5888dea0bd36573f4681d6f8","created":1485364896983,"modified":1485364896983,"origin":1471806386919,"pushed":0,"name":"temperature","value":"38","device":"livingroomthermostat"}]'
+            "400":
+                description: request is invalid or unparseable
             "413": 
                 description: if the number of readings exceeds the current max limit.
             "503": 
@@ -584,6 +597,8 @@ schemas:
                     application/json: 
                         schema: reading
                         example: '[{"id":"5888dea0bd36573f4681d6f8","created":1485364896983,"modified":1485364896983,"origin":1471806386919,"pushed":0,"name":"temperature","value":"38","device":"livingroomthermostat"}]'
+            "400":
+                description: request is invalid or unparseable
             "413": 
                 description: if the number of readings exceeds the current max limit.
             "503": 
@@ -619,6 +634,8 @@ schemas:
                     application/json: 
                         schema: reading
                         example: '[{"id":"5888dea0bd36573f4681d6f8","created":1485364896983,"modified":1485364896983,"origin":1471806386919,"pushed":0,"name":"temperature","value":"38","device":"livingroomthermostat"}]'
+            "400":
+                description: request is invalid or unparseable
             "413": 
                 description: if the number of readings exceeds the current max limit.
             "503": 

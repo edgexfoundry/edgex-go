@@ -54,7 +54,7 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 
 		// Problem decoding
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			LoggingClient.Error("Error decoding the reading: " + err.Error())
 			return
 		}
@@ -108,7 +108,7 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 
 		// Problem decoding
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			LoggingClient.Error("Error decoding the reading: " + err.Error())
 			return
 		}
@@ -267,14 +267,14 @@ func readingByDeviceHandler(w http.ResponseWriter, r *http.Request) {
 	limit, err := strconv.Atoi(vars["limit"])
 	// Problems converting limit to int
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		LoggingClient.Error("Error converting the limit to an integer: " + err.Error())
 		return
 	}
 	deviceId, err := url.QueryUnescape(vars["deviceId"])
 	// Problems unescaping URL
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		LoggingClient.Error("Error unescaping the device ID: " + err.Error())
 		return
 	}
@@ -313,14 +313,14 @@ func readingbyValueDescriptorHandler(w http.ResponseWriter, r *http.Request) {
 	name, err := url.QueryUnescape(vars["name"])
 	// Problems with unescaping URL
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		LoggingClient.Error("Error unescaping value descriptor name: " + err.Error())
 		return
 	}
 	limit, err := strconv.Atoi(vars["limit"])
 	// Problems converting limit to int
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		LoggingClient.Error("Error converting the limit to an integer: " + err.Error())
 		return
 	}
@@ -366,7 +366,7 @@ func readingByUomLabelHandler(w http.ResponseWriter, r *http.Request) {
 	uomLabel, err := url.QueryUnescape(vars["uomLabel"])
 	// Problems unescaping URL
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		LoggingClient.Error("Error unescaping the UOM Label: " + err.Error())
 		return
 	}
@@ -374,7 +374,7 @@ func readingByUomLabelHandler(w http.ResponseWriter, r *http.Request) {
 	limit, err := strconv.Atoi(vars["limit"])
 	// Problems converting limit to int
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		LoggingClient.Error("Error converting the limit to an integer: " + err.Error())
 		return
 	}
@@ -419,14 +419,14 @@ func readingByLabelHandler(w http.ResponseWriter, r *http.Request) {
 	label, err := url.QueryUnescape(vars["label"])
 	// Problem unescaping
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		LoggingClient.Error("Error unescaping the label of the value descriptor: " + err.Error())
 		return
 	}
 	limit, err := strconv.Atoi(vars["limit"])
 	// Problems converting to int
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		LoggingClient.Error("Error converting the limit to an integer: " + err.Error())
 		return
 	}
@@ -470,7 +470,7 @@ func readingByTypeHandler(w http.ResponseWriter, r *http.Request) {
 
 	t, err := url.QueryUnescape(vars["type"])
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		LoggingClient.Error("Error escaping the type: " + err.Error())
 		return
 	}
@@ -478,7 +478,7 @@ func readingByTypeHandler(w http.ResponseWriter, r *http.Request) {
 	l, err := strconv.Atoi(vars["limit"])
 	// Problem converting to int
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		LoggingClient.Error("Error converting the limit to an integer: " + err.Error())
 		return
 	}
@@ -520,19 +520,19 @@ func readingByCreationTimeHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	s, err := strconv.ParseInt((vars["start"]), 10, 64)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		LoggingClient.Error("Error converting the start time to an integer: " + err.Error())
 		return
 	}
 	e, err := strconv.ParseInt((vars["end"]), 10, 64)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		LoggingClient.Error("Error converting the end time to an integer: " + err.Error())
 		return
 	}
 	l, err := strconv.Atoi(vars["limit"])
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		LoggingClient.Error("Error converting the limit to an integer: " + err.Error())
 		return
 	}
@@ -567,21 +567,21 @@ func readingByValueDescriptorAndDeviceHandler(w http.ResponseWriter, r *http.Req
 	// Get the variables from the URL
 	name, err := url.QueryUnescape(vars["name"])
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		LoggingClient.Error("Error unescaping the value descriptor name: " + err.Error())
 		return
 	}
 
 	device, err := url.QueryUnescape(vars["device"])
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		LoggingClient.Error("Error unescaping the device: " + err.Error())
 		return
 	}
 
 	limit, err := strconv.Atoi(vars["limit"])
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		LoggingClient.Error("Error converting limit to an integer: " + err.Error())
 		return
 	}
