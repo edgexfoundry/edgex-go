@@ -20,9 +20,9 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/edgexfoundry/edgex-go/support/notifications/clients"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 	"github.com/gorilla/mux"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 )
 
 func transmissionHandler(w http.ResponseWriter, r *http.Request) {
@@ -77,7 +77,7 @@ func transmissionBySlugHandler(w http.ResponseWriter, r *http.Request) {
 
 		t, err := dbc.TransmissionsByNotificationSlug(vars["slug"], resendLimit)
 		if err != nil {
-			if err == clients.ErrNotFound {
+			if err == db.ErrNotFound {
 				http.Error(w, "Transmission not found", http.StatusNotFound)
 			} else {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -122,7 +122,7 @@ func transmissionByStartEndHandler(w http.ResponseWriter, r *http.Request) {
 
 		t, err := dbc.TransmissionsByStartEnd(start, end, resendLimit)
 		if err != nil {
-			if err == clients.ErrNotFound {
+			if err == db.ErrNotFound {
 				http.Error(w, "Transmission not found", http.StatusNotFound)
 			} else {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -158,7 +158,7 @@ func transmissionByStartHandler(w http.ResponseWriter, r *http.Request) {
 
 		t, err := dbc.TransmissionsByStart(start, resendLimit)
 		if err != nil {
-			if err == clients.ErrNotFound {
+			if err == db.ErrNotFound {
 				http.Error(w, "Transmission not found", http.StatusNotFound)
 			} else {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -197,7 +197,7 @@ func transmissionByEndHandler(w http.ResponseWriter, r *http.Request) {
 
 		t, err := dbc.TransmissionsByEnd(end, resendLimit)
 		if err != nil {
-			if err == clients.ErrNotFound {
+			if err == db.ErrNotFound {
 				http.Error(w, "Transmission not found", http.StatusNotFound)
 			} else {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -237,7 +237,7 @@ func transmissionByStatusHandler(w http.ResponseWriter, r *http.Request, status 
 
 		t, err := dbc.TransmissionsByStatus(resendLimit, status)
 		if err != nil {
-			if err == clients.ErrNotFound {
+			if err == db.ErrNotFound {
 				http.Error(w, "Transmission not found", http.StatusNotFound)
 			} else {
 				http.Error(w, err.Error(), http.StatusInternalServerError)

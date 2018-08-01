@@ -20,15 +20,18 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/edgexfoundry/edgex-go/support/notifications/clients"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 	"github.com/gorilla/mux"
+	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 )
 
 const (
 	maxExceededString string = "Error, exceeded the max limit as defined in config"
 	applicationJson          = "application/json; charset=utf-8"
 )
+
+var loggingClient logger.LoggingClient
 
 func subscriptionHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Body != nil {
@@ -66,7 +69,7 @@ func subscriptionHandler(w http.ResponseWriter, r *http.Request) {
 		// Check if the subscription exists
 		s2, err := dbc.SubscriptionBySlug(s.Slug)
 		if err != nil {
-			if err == clients.ErrNotFound {
+			if err == db.ErrNotFound {
 				http.Error(w, "Subscription not found", http.StatusNotFound)
 			} else {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -128,7 +131,7 @@ func subscriptionByIDHandler(w http.ResponseWriter, r *http.Request) {
 
 		s, err := dbc.SubscriptionById(vars["id"])
 		if err != nil {
-			if err == clients.ErrNotFound {
+			if err == db.ErrNotFound {
 				http.Error(w, "Subscription not found", http.StatusNotFound)
 			} else {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -154,7 +157,7 @@ func subscriptionsBySlugHandler(w http.ResponseWriter, r *http.Request) {
 
 		s, err := dbc.SubscriptionBySlug(slug)
 		if err != nil {
-			if err == clients.ErrNotFound {
+			if err == db.ErrNotFound {
 				http.Error(w, "Subscription not found", http.StatusNotFound)
 			} else {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -168,7 +171,7 @@ func subscriptionsBySlugHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodDelete:
 		_, err := dbc.SubscriptionBySlug(slug)
 		if err != nil {
-			if err == clients.ErrNotFound {
+			if err == db.ErrNotFound {
 				http.Error(w, "Subscription not found", http.StatusNotFound)
 			} else {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -204,7 +207,7 @@ func subscriptionsByCategoriesHandler(w http.ResponseWriter, r *http.Request) {
 
 		s, err := dbc.SubscriptionByCategories(categories)
 		if err != nil {
-			if err == clients.ErrNotFound {
+			if err == db.ErrNotFound {
 				http.Error(w, "Subscription not found", http.StatusNotFound)
 			} else {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -231,7 +234,7 @@ func subscriptionsByLabelsHandler(w http.ResponseWriter, r *http.Request) {
 
 		s, err := dbc.SubscriptionByLabels(labels)
 		if err != nil {
-			if err == clients.ErrNotFound {
+			if err == db.ErrNotFound {
 				http.Error(w, "Subscription not found", http.StatusNotFound)
 			} else {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -259,7 +262,7 @@ func subscriptionsByCategoriesLabelsHandler(w http.ResponseWriter, r *http.Reque
 
 		s, err := dbc.SubscriptionByCategoriesLabels(categories, labels)
 		if err != nil {
-			if err == clients.ErrNotFound {
+			if err == db.ErrNotFound {
 				http.Error(w, "Subscription not found", http.StatusNotFound)
 			} else {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -288,7 +291,7 @@ func subscriptionsByReceiverHandler(w http.ResponseWriter, r *http.Request) {
 
 		s, err := dbc.SubscriptionByReceiver(vars["receiver"])
 		if err != nil {
-			if err == clients.ErrNotFound {
+			if err == db.ErrNotFound {
 				http.Error(w, "Subscription not found", http.StatusNotFound)
 			} else {
 				http.Error(w, err.Error(), http.StatusInternalServerError)

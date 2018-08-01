@@ -23,16 +23,20 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/consul"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 	"github.com/robfig/cron"
-	"github.com/edgexfoundry/core-data-go/clients"
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
+	"github.com/edgexfoundry/edgex-go/internal"
+	"sync"
+	"time"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo"
 )
 
 // Global variables
-var dbnotifications interfaces.DBClient
-var dbc clients.DBClient
 var Configuration *ConfigurationStruct
-var loggingClient logger.LoggingClient
+var dbClient interfaces.DBClient
+//var dbc clients.DBClient
+var LoggingClient logger.LoggingClient
 var cronDistro *cron.Cron
 var cronResend *cron.Cron
 var normalDuration string
@@ -46,64 +50,52 @@ var smtpSender string
 var smtpPassword string
 var smtpSubject string
 
-func ConnectToConsul(conf ConfigurationStruct) error {
+func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup, ch chan error) {
+	until := time.Now().Add(time.Millisecond * time.Duration(timeout))
+	for time.Now().Before(until) {
+		var err error
+		//When looping, only handle configuration if it hasn't already been set.
+		if Configuration == nil {
+			Configuration, err = initializeConfiguration(useConsul, useProfile)
+			if err != nil {
+				ch <- err
+				if !useConsul {
+					//Error occurred when attempting to read from local filesystem. Fail fast.
+					close(ch)
+					wait.Done()
+					return
+				}
+			} else {
+				// Setup Logging
+				logTarget := setLoggingTarget()
+				LoggingClient = logger.NewClient(internal.CoreDataServiceKey, Configuration.EnableRemoteLogging, logTarget)
+				//Initialize service clients
+				//initializeClients(useConsul)
+			}
+		}
 
-	// Initialize service on Consul
-	err := consulclient.ConsulInit(consulclient.ConsulConfig{
-		ServiceName:    conf.ServiceName,
-		ServicePort:    conf.ServicePort,
-		ServiceAddress: conf.ServiceAddress,
-		CheckAddress:   conf.ConsulCheckAddress,
-		CheckInterval:  conf.CheckInterval,
-		ConsulAddress:  conf.ConsulHost,
-		ConsulPort:     conf.ConsulPort,
-	})
+		//Only attempt to connect to database if configuration has been populated
+		if Configuration != nil {
+			err := connectToDatabase()
+			if err != nil {
+				ch <- err
+			} else {
+				break
+			}
+		}
+		time.Sleep(time.Second * time.Duration(1))
+	}
+	close(ch)
+	wait.Done()
 
-	if err != nil {
-		return fmt.Errorf("connection to Consul could not be made: %v", err.Error())
-	}
-	if err := consulclient.CheckKeyValuePairs(&conf, conf.ServiceName, strings.Split(conf.ConsulProfilesActive, ";")); err != nil {
-		return fmt.Errorf("error getting key/values from Consul: %v", err.Error())
-	}
-	return nil
+	return
 }
 
-func Init(conf ConfigurationStruct, l logger.LoggingClient) error {
-	loggingClient = l
-	configuration = conf
-	normalDuration = conf.SchedulerNormalDuration
-	resendDuration = conf.SchedulerNormalResendDuration
-	criticalResendDelay = conf.SchedulerCriticalResendDelay
-	limitMax = conf.ReadMaxLimit
-	resendLimit = conf.ResendLimit
-	smtpPort = conf.SMTPPort
-	smtpHost = conf.SMTPHost
-	smtpSender = conf.SMTPSender
-	smtpPassword = conf.SMTPPassword
-	smtpSubject = conf.SMTPSubject
-
-	var err error
-
-	// Create a database client
-	dbc, err = clients.NewDBClient(clients.DBConfiguration{
-		DbType:            clients.MONGO,
-		Host:              conf.MongoDBHost,
-		Port:              conf.MongoDBPort,
-		Timeout:           conf.MongoDBConnectTimeout,
-		DatabaseName:      conf.MongoDatabaseName,
-		Username:          conf.MongoDBUserName,
-		Password:          conf.MongoDBPassword,
-		ReadMax:           conf.ReadMaxLimit,
-		ResendLimit:       conf.ResendLimit,
-		CleanupDefaultAge: conf.CleanupDefaultAge,
-	})
-	if err != nil {
-		return fmt.Errorf("couldn't connect to database: %v", err.Error())
+func Init() bool {
+	if Configuration == nil || dbClient == nil {
+		return false
 	}
-
-	initNormalDistribution()
-	initNormalResend()
-	return nil
+	return true
 }
 
 func Destruct() {
@@ -139,16 +131,80 @@ func connectToDatabase() error {
 	}
 	return nil
 }
-func initNormalDistribution() {
-	loggingClient.Debug("Normal distribution occuring on cron schedule: " + normalDuration)
-	cronDistro := cron.New()
-	cronDistro.AddFunc(normalDuration, func() { startNormalDistributing() })
-	cronDistro.Start()
+
+// Return the dbClient interface
+func newDBClient(dbType string, config db.Configuration) (interfaces.DBClient, error) {
+	switch dbType {
+	case db.MongoDB:
+		return mongo.NewClient(config), nil
+	default:
+		return nil, db.ErrUnsupportedDatabase
+	}
 }
 
-func initNormalResend() {
-	loggingClient.Debug("Normal resend occuring on cron schedule: " + resendDuration)
-	cronResend := cron.New()
-	cronResend.AddFunc(resendDuration, func() { startNormalResend() })
-	cronResend.Start()
+func initializeConfiguration(useConsul bool, useProfile string) (*ConfigurationStruct, error) {
+	//We currently have to load configuration from filesystem first in order to obtain ConsulHost/Port
+	conf := &ConfigurationStruct{}
+	err := config.LoadFromFile(useProfile, conf)
+	if err != nil {
+		return nil, err
+	}
+
+	if useConsul {
+		err := connectToConsul(conf)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return conf, nil
 }
+
+func connectToConsul(conf *ConfigurationStruct) error {
+	// Initialize service on Consul
+	err := consulclient.ConsulInit(consulclient.ConsulConfig{
+		ServiceName:    internal.SupportNotificationsServiceKey,
+		ServicePort:    conf.ServicePort,
+		ServiceAddress: conf.ServiceAddress,
+		CheckAddress:   conf.ConsulCheckAddress,
+		CheckInterval:  conf.CheckInterval,
+		ConsulAddress:  conf.ConsulHost,
+		ConsulPort:     conf.ConsulPort,
+	})
+
+	if err != nil {
+		return fmt.Errorf("connection to Consul could not be made: %v", err.Error())
+	} else {
+		// Update configuration data from Consul
+		if err := consulclient.CheckKeyValuePairs(conf, internal.SupportNotificationsServiceKey, strings.Split(conf.ConsulProfilesActive, ";")); err != nil {
+			return fmt.Errorf("error getting key/values from Consul: %v", err.Error())
+		}
+	}
+	return nil
+}
+
+func setLoggingTarget() string {
+	logTarget := Configuration.LoggingRemoteURL
+	if !Configuration.EnableRemoteLogging {
+		return Configuration.LoggingFile
+	}
+	return logTarget
+}
+
+//func initializeClients(useConsul bool) {
+//	// Create metadata clients
+//	params := types.EndpointParams{
+//		ServiceKey:  internal.CoreMetaDataServiceKey,
+//		Path:        Configuration.MetaDevicePath,
+//		UseRegistry: useConsul,
+//		Url:         Configuration.MetaDeviceURL}
+//
+//	mdc = metadata.NewDeviceClient(params, types.Endpoint{})
+//
+//	params.Path = Configuration.MetaDeviceServicePath
+//	msc = metadata.NewDeviceServiceClient(params, types.Endpoint{})
+//
+//	// Create the event publisher
+//	ep = messaging.NewZeroMQPublisher(messaging.ZeroMQConfiguration{
+//		AddressPort: Configuration.ZeroMQAddressPort,
+//	})
+//}

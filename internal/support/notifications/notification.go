@@ -20,10 +20,13 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/edgexfoundry/edgex-go/pkg/clients/notifications"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 	"github.com/gorilla/mux"
+	"github.com/edgexfoundry/edgex-go/internal/support/notifications/interfaces"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 )
+
+var dbc interfaces.DBClient
 
 func notificationHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Body != nil {
@@ -81,7 +84,7 @@ func notificationBySlugHandler(w http.ResponseWriter, r *http.Request) {
 
 		n, err := dbc.NotificationBySlug(slug)
 		if err != nil {
-			if err == clients.ErrNotFound {
+			if err == db.ErrNotFound {
 				http.Error(w, "Notification not found", http.StatusNotFound)
 			} else {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -96,7 +99,7 @@ func notificationBySlugHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodDelete:
 		_, err := dbc.NotificationBySlug(slug)
 		if err != nil {
-			if err == clients.ErrNotFound {
+			if err == db.ErrNotFound {
 				http.Error(w, "Notification not found", http.StatusNotFound)
 			} else {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -131,7 +134,7 @@ func notificationByIDHandler(w http.ResponseWriter, r *http.Request) {
 
 		n, err := dbc.NotificationById(id)
 		if err != nil {
-			if err == clients.ErrNotFound {
+			if err == db.ErrNotFound {
 				http.Error(w, "Notification not found", http.StatusNotFound)
 			} else {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -146,7 +149,7 @@ func notificationByIDHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodDelete:
 		_, err := dbc.NotificationById(id)
 		if err != nil {
-			if err == clients.ErrNotFound {
+			if err == db.ErrNotFound {
 				http.Error(w, "Notification not found", http.StatusNotFound)
 			} else {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -186,7 +189,7 @@ func notificationOldHandler(w http.ResponseWriter, r *http.Request) {
 		loggingClient.Info("Deleting old notifications (and associated transmissions): " + vars["age"])
 		err := dbc.DeleteNotificationsOld(age)
 		if err != nil {
-			if err == clients.ErrNotFound {
+			if err == db.ErrNotFound {
 				http.Error(w, "Notifications not found", http.StatusNotFound)
 			} else {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -225,7 +228,7 @@ func notificationBySenderHandler(w http.ResponseWriter, r *http.Request) {
 
 		n, err := dbc.NotificationBySender(vars["sender"], limitNum)
 		if err != nil {
-			if err == clients.ErrNotFound {
+			if err == db.ErrNotFound {
 				http.Error(w, "Notification not found", http.StatusNotFound)
 			} else {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -277,7 +280,7 @@ func notificationByStartEndHandler(w http.ResponseWriter, r *http.Request) {
 
 		n, err := dbc.NotificationsByStartEnd(start, end, limitNum)
 		if err != nil {
-			if err == clients.ErrNotFound {
+			if err == db.ErrNotFound {
 				http.Error(w, "Notification not found", http.StatusNotFound)
 			} else {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -317,7 +320,7 @@ func notificationByStartHandler(w http.ResponseWriter, r *http.Request) {
 
 		n, err := dbc.NotificationsByStart(start, limitNum)
 		if err != nil {
-			if err == clients.ErrNotFound {
+			if err == db.ErrNotFound {
 				http.Error(w, "Notification not found", http.StatusNotFound)
 			} else {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -363,7 +366,7 @@ func notificationByEndHandler(w http.ResponseWriter, r *http.Request) {
 
 		n, err := dbc.NotificationsByEnd(end, limitNum)
 		if err != nil {
-			if err == clients.ErrNotFound {
+			if err == db.ErrNotFound {
 				http.Error(w, "Notification not found", http.StatusNotFound)
 			} else {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -405,7 +408,7 @@ func notificationsByLabelsHandler(w http.ResponseWriter, r *http.Request) {
 
 		n, err := dbc.NotificationsByLabels(labels, limitNum)
 		if err != nil {
-			if err == clients.ErrNotFound {
+			if err == db.ErrNotFound {
 				http.Error(w, "Notification not found", http.StatusNotFound)
 			} else {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -445,7 +448,7 @@ func notificationsNewHandler(w http.ResponseWriter, r *http.Request) {
 
 		n, err := dbc.NotificationsNew(limitNum)
 		if err != nil {
-			if err == clients.ErrNotFound {
+			if err == db.ErrNotFound {
 				http.Error(w, "Notification not found", http.StatusNotFound)
 			} else {
 				http.Error(w, err.Error(), http.StatusInternalServerError)

@@ -13,18 +13,14 @@
  *
  *******************************************************************************/
 
-package notifications
+package mongo
 
 import (
-	"errors"
-	"fmt"
-	"strconv"
 	"time"
 
 	"github.com/edgexfoundry/edgex-go/pkg/models"
-	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
-	"github.com/edgexfoundry/edgex-go/internal/support/notifications/interfaces"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 )
 
 const (
@@ -33,56 +29,56 @@ const (
 	TRANSMISSION_COLLECTION = "transmission"
 )
 
-var currentMongoClient *MongoClient // Singleton used so that MongoEvent can use it to de-reference readings
+//var currentMongoClient *MongoClient // Singleton used so that MongoEvent can use it to de-reference readings
 var currentReadMaxLimit int         // configuration read max limit
 var currentResendLimit int          // configuration transmission resent count limit
 var cleanupDefaultAge int64
 
-type MongoClient struct {
-	Session  *mgo.Session  // Mongo database session
-	Database *mgo.Database // Mongo database
-}
+//type MongoClient struct {
+//	Session  *mgo.Session  // Mongo database session
+//	Database *mgo.Database // Mongo database
+//}
 
 // Return a pointer to the MongoClient
-func newMongoClient(config DBConfiguration) (*MongoClient, error) {
-	// Create the dial info for the Mongo session
-	connectionString := config.Host + ":" + strconv.Itoa(config.Port)
-	fmt.Println("INFO: Connecting to mongo at: " + connectionString)
-	mongoDBDialInfo := &mgo.DialInfo{
-		Addrs:    []string{connectionString},
-		Timeout:  time.Duration(config.Timeout) * time.Millisecond,
-		Database: config.DatabaseName,
-		Username: config.Username,
-		Password: config.Password,
-	}
-	session, err := mgo.DialWithInfo(mongoDBDialInfo)
-	if err != nil {
-		fmt.Println("Error dialing the mongo server: " + err.Error())
-		return nil, err
-	}
-
-	mongoClient := &MongoClient{Session: session, Database: session.DB(config.DatabaseName)}
-	currentMongoClient = mongoClient             // Set the singleton
-	currentReadMaxLimit = config.ReadMax         // Set the read max
-	currentResendLimit = config.ResendLimit      // Set the transmission resend count limit
-	cleanupDefaultAge = config.CleanupDefaultAge //Set the default clean up age
-
-	return mongoClient, nil
-}
+//func newMongoClient(config DBConfiguration) (*MongoClient, error) {
+//	// Create the dial info for the Mongo session
+//	connectionString := config.Host + ":" + strconv.Itoa(config.Port)
+//	fmt.Println("INFO: Connecting to mongo at: " + connectionString)
+//	mongoDBDialInfo := &mgo.DialInfo{
+//		Addrs:    []string{connectionString},
+//		Timeout:  time.Duration(config.Timeout) * time.Millisecond,
+//		Database: config.DatabaseName,
+//		Username: config.Username,
+//		Password: config.Password,
+//	}
+//	session, err := mgo.DialWithInfo(mongoDBDialInfo)
+//	if err != nil {
+//		fmt.Println("Error dialing the mongo server: " + err.Error())
+//		return nil, err
+//	}
+//
+//	mongoClient := &MongoClient{Session: session, Database: session.DB(config.DatabaseName)}
+//	currentMongoClient = mongoClient             // Set the singleton
+//	currentReadMaxLimit = config.ReadMax         // Set the read max
+//	currentResendLimit = config.ResendLimit      // Set the transmission resend count limit
+//	cleanupDefaultAge = config.CleanupDefaultAge //Set the default clean up age
+//
+//	return mongoClient, nil
+//}
 
 // Get the current Mongo Client
-func getCurrentMongoClient() (*MongoClient, error) {
-	if currentMongoClient == nil {
-		return nil, errors.New("No current mongo client, please create a new client before requesting it")
-	}
-
-	return currentMongoClient, nil
-}
+//func getCurrentMongoClient() (*MongoClient, error) {
+//	if currentMongoClient == nil {
+//		return nil, errors.New("No current mongo client, please create a new client before requesting it")
+//	}
+//
+//	return currentMongoClient, nil
+//}
 
 // Get a copy of the session
-func (mc *MongoClient) GetSessionCopy() *mgo.Session {
-	return mc.Session.Copy()
-}
+//func (mc *MongoClient) getSessionCopy() *mgo.Session {
+//	return mc.Session.Copy()
+//}
 
 // ******************************* NOTIFICATIONS **********************************
 
@@ -92,7 +88,7 @@ func (mc *MongoClient) Notifications() ([]models.Notification, error) {
 
 func (mc *MongoClient) NotificationById(id string) (models.Notification, error) {
 	if !bson.IsObjectIdHex(id) {
-		return models.Notification{}, ErrInvalidObjectId
+		return models.Notification{}, db.ErrInvalidObjectId
 	}
 	return mc.getNotificaiton(bson.M{"_id": bson.ObjectIdHex(id)})
 }
@@ -147,16 +143,16 @@ func (mc *MongoClient) MarkNotificationProcessed(n models.Notification) error {
 
 func (mc *MongoClient) DeleteNotificationById(id string) error {
 	mn, err := mc.NotificationById(id)
-	if err == mgo.ErrNotFound {
-		return ErrNotFound
+	if err == db.ErrNotFound {
+		return db.ErrNotFound
 	}
 	return mc.deleteNotificationAndAssociatedTransmissions(mn)
 }
 
 func (mc *MongoClient) DeleteNotificationBySlug(slug string) error {
 	mn, err := mc.NotificationBySlug(slug)
-	if err == mgo.ErrNotFound {
-		return ErrNotFound
+	if err == db.ErrNotFound {
+		return db.ErrNotFound
 	}
 	return mc.deleteNotificationAndAssociatedTransmissions(mn)
 }
@@ -167,8 +163,8 @@ func (mc *MongoClient) DeleteNotificationsOld(age int64) error {
 	query := bson.M{"modified": bson.M{
 		"$lt": end}, "status": "PROCESSED"}
 	mns, err := mc.getNotifications(query)
-	if err == mgo.ErrNotFound {
-		return ErrNotFound
+	if err == db.ErrNotFound {
+		return db.ErrNotFound
 	}
 	for _, mn := range mns {
 		err = mc.deleteNotificationAndAssociatedTransmissions(mn)
@@ -203,7 +199,7 @@ func (mc *MongoClient) SubscriptionByReceiver(receiver string) ([]models.Subscri
 
 func (mc *MongoClient) SubscriptionById(id string) (models.Subscription, error) {
 	if !bson.IsObjectIdHex(id) {
-		return models.Subscription{}, ErrInvalidObjectId
+		return models.Subscription{}, db.ErrInvalidObjectId
 	}
 	return mc.getSubscription(bson.M{"_id": bson.ObjectIdHex(id)})
 }
@@ -218,8 +214,8 @@ func (mc *MongoClient) UpdateSubscription(s models.Subscription) error {
 
 func (mc *MongoClient) DeleteSubscriptionBySlug(slug string) error {
 	ms, err := mc.SubscriptionBySlug(slug)
-	if err == mgo.ErrNotFound {
-		return ErrNotFound
+	if err == db.ErrNotFound {
+		return db.ErrNotFound
 	}
 	return mc.deleteByObjectID(ms.ID, SUBSCRIPTION_COLLECTION)
 }
@@ -278,8 +274,8 @@ func (mc *MongoClient) CleanupOld(age int64) error {
 	end := currentTime - age
 	query := bson.M{"modified": bson.M{"$lt": end}}
 	mns, err := mc.getNotifications(query)
-	if err == mgo.ErrNotFound {
-		return ErrNotFound
+	if err == db.ErrNotFound {
+		return db.ErrNotFound
 	}
 	for _, mn := range mns {
 		err = mc.deleteNotificationAndAssociatedTransmissions(mn)
@@ -304,7 +300,7 @@ func (mc *MongoClient) deleteNotificationAndAssociatedTransmissions(n models.Not
 }
 
 func (mc *MongoClient) addNotification(n *models.Notification) (bson.ObjectId, error) {
-	s := mc.GetSessionCopy()
+	s := mc.getSessionCopy()
 	defer s.Close()
 
 	n.Created = time.Now().UnixNano() / int64(time.Millisecond)
@@ -318,7 +314,7 @@ func (mc *MongoClient) addNotification(n *models.Notification) (bson.ObjectId, e
 		return n.ID, err
 	}
 
-	err = s.DB(mc.Database.Name).C(NOTIFICATION_COLLECTION).Insert(mn)
+	err = s.DB(mc.database.Name).C(NOTIFICATION_COLLECTION).Insert(mn)
 	if err != nil {
 		return n.ID, err
 	}
@@ -328,17 +324,17 @@ func (mc *MongoClient) addNotification(n *models.Notification) (bson.ObjectId, e
 
 func (mc *MongoClient) checkNotificationSlugIntegrity(slug string) error {
 	if slug == "" {
-		return ErrSlugEmpty
+		return db.ErrSlugEmpty
 	}
 	_, err := mc.getNotificaiton(bson.M{"slug": slug})
 	if err == nil {
-		return ErrNotUnique
+		return db.ErrNotUnique
 	}
 	return nil
 }
 
 func (mc *MongoClient) updateNotification(n models.Notification) error {
-	s := mc.GetSessionCopy()
+	s := mc.getSessionCopy()
 	defer s.Close()
 
 	n.Modified = time.Now().UnixNano() / int64(time.Millisecond)
@@ -346,23 +342,23 @@ func (mc *MongoClient) updateNotification(n models.Notification) error {
 	// Handle DBRef
 	mn := MongoNotification{Notification: n}
 
-	err := s.DB(mc.Database.Name).C(NOTIFICATION_COLLECTION).UpdateId(mn.ID, mn)
-	if err == mgo.ErrNotFound {
-		return ErrNotFound
+	err := s.DB(mc.database.Name).C(NOTIFICATION_COLLECTION).UpdateId(mn.ID, mn)
+	if err == db.ErrNotFound {
+		return db.ErrNotFound
 	}
 
 	return err
 }
 
 func (mc *MongoClient) getNotificaiton(q bson.M) (models.Notification, error) {
-	s := mc.GetSessionCopy()
+	s := mc.getSessionCopy()
 	defer s.Close()
 
 	// Handle DBRef
 	var mn MongoNotification
-	err := s.DB(mc.Database.Name).C(NOTIFICATION_COLLECTION).Find(q).One(&mn)
-	if err == mgo.ErrNotFound {
-		return mn.Notification, ErrNotFound
+	err := s.DB(mc.database.Name).C(NOTIFICATION_COLLECTION).Find(q).One(&mn)
+	if err == db.ErrNotFound {
+		return mn.Notification, db.ErrNotFound
 	}
 
 	return mn.Notification, err
@@ -374,7 +370,7 @@ func (mc *MongoClient) getNotifications(q bson.M) ([]models.Notification, error)
 
 func (mc *MongoClient) getNotificationsLimit(q bson.M, limit int) ([]models.Notification, error) {
 
-	s := mc.GetSessionCopy()
+	s := mc.getSessionCopy()
 	defer s.Close()
 
 	// Handle DBRefs
@@ -384,7 +380,7 @@ func (mc *MongoClient) getNotificationsLimit(q bson.M, limit int) ([]models.Noti
 	if limit == 0 {
 		return notifications, nil
 	}
-	err := s.DB(mc.Database.Name).C(NOTIFICATION_COLLECTION).Find(q).Limit(limit).All(&mn)
+	err := s.DB(mc.database.Name).C(NOTIFICATION_COLLECTION).Find(q).Limit(limit).All(&mn)
 	if err != nil {
 		return notifications, err
 	}
@@ -399,7 +395,7 @@ func (mc *MongoClient) getNotificationsLimit(q bson.M, limit int) ([]models.Noti
 // ******************************* SUBSCRIPTIONS **********************************
 
 func (mc *MongoClient) addSubscription(sub *models.Subscription) (bson.ObjectId, error) {
-	s := mc.GetSessionCopy()
+	s := mc.getSessionCopy()
 	defer s.Close()
 
 	sub.Created = time.Now().UnixNano() / int64(time.Millisecond)
@@ -413,7 +409,7 @@ func (mc *MongoClient) addSubscription(sub *models.Subscription) (bson.ObjectId,
 		return sub.ID, err
 	}
 
-	err = s.DB(mc.Database.Name).C(SUBSCRIPTION_COLLECTION).Insert(ms)
+	err = s.DB(mc.database.Name).C(SUBSCRIPTION_COLLECTION).Insert(ms)
 	if err != nil {
 		return sub.ID, err
 	}
@@ -423,17 +419,17 @@ func (mc *MongoClient) addSubscription(sub *models.Subscription) (bson.ObjectId,
 
 func (mc *MongoClient) checkSubscriptionSlugIntegrity(slug string) error {
 	if slug == "" {
-		return ErrSlugEmpty
+		return db.ErrSlugEmpty
 	}
 	_, err := mc.getSubscription(bson.M{"slug": slug})
 	if err == nil {
-		return ErrNotUnique
+		return db.ErrNotUnique
 	}
 	return nil
 }
 
 func (mc *MongoClient) updateSubscription(sub models.Subscription) error {
-	s := mc.GetSessionCopy()
+	s := mc.getSessionCopy()
 	defer s.Close()
 
 	sub.Modified = time.Now().UnixNano() / int64(time.Millisecond)
@@ -441,36 +437,36 @@ func (mc *MongoClient) updateSubscription(sub models.Subscription) error {
 	// Handle DBRef
 	ms := MongoSubscription{Subscription: sub}
 
-	err := s.DB(mc.Database.Name).C(SUBSCRIPTION_COLLECTION).UpdateId(ms.ID, ms)
-	if err == mgo.ErrNotFound {
-		return ErrNotFound
+	err := s.DB(mc.database.Name).C(SUBSCRIPTION_COLLECTION).UpdateId(ms.ID, ms)
+	if err == db.ErrNotFound {
+		return db.ErrNotFound
 	}
 
 	return err
 }
 
 func (mc *MongoClient) getSubscription(q bson.M) (models.Subscription, error) {
-	s := mc.GetSessionCopy()
+	s := mc.getSessionCopy()
 	defer s.Close()
 
 	// Handle DBRef
 	var ms MongoSubscription
-	err := s.DB(mc.Database.Name).C(SUBSCRIPTION_COLLECTION).Find(q).One(&ms)
-	if err == mgo.ErrNotFound {
-		return ms.Subscription, ErrNotFound
+	err := s.DB(mc.database.Name).C(SUBSCRIPTION_COLLECTION).Find(q).One(&ms)
+	if err == db.ErrNotFound {
+		return ms.Subscription, db.ErrNotFound
 	}
 
 	return ms.Subscription, err
 }
 
 func (mc *MongoClient) getSubscriptions(q bson.M) ([]models.Subscription, error) {
-	s := mc.GetSessionCopy()
+	s := mc.getSessionCopy()
 	defer s.Close()
 
 	// Handle DBRefs
 	var ms []MongoSubscription
 	subscriptions := []models.Subscription{}
-	err := s.DB(mc.Database.Name).C(SUBSCRIPTION_COLLECTION).Find(q).All(&ms)
+	err := s.DB(mc.database.Name).C(SUBSCRIPTION_COLLECTION).Find(q).All(&ms)
 	if err != nil {
 		return subscriptions, err
 	}
@@ -485,7 +481,7 @@ func (mc *MongoClient) getSubscriptions(q bson.M) ([]models.Subscription, error)
 
 func (mc *MongoClient) getSubscriptionsLimit(q bson.M, limit int) ([]models.Subscription, error) {
 
-	s := mc.GetSessionCopy()
+	s := mc.getSessionCopy()
 	defer s.Close()
 
 	// Handle DBRefs
@@ -495,7 +491,7 @@ func (mc *MongoClient) getSubscriptionsLimit(q bson.M, limit int) ([]models.Subs
 	if limit == 0 {
 		return subscriptions, nil
 	}
-	err := s.DB(mc.Database.Name).C(SUBSCRIPTION_COLLECTION).Find(q).Limit(limit).All(&ms)
+	err := s.DB(mc.database.Name).C(SUBSCRIPTION_COLLECTION).Find(q).Limit(limit).All(&ms)
 	if err != nil {
 		return subscriptions, err
 	}
@@ -510,7 +506,7 @@ func (mc *MongoClient) getSubscriptionsLimit(q bson.M, limit int) ([]models.Subs
 // ******************************* TRANSMISSIONS **********************************
 
 func (mc *MongoClient) addTransmission(tran *models.Transmission) (bson.ObjectId, error) {
-	s := mc.GetSessionCopy()
+	s := mc.getSessionCopy()
 	defer s.Close()
 
 	tran.Created = time.Now().UnixNano() / int64(time.Millisecond)
@@ -519,7 +515,7 @@ func (mc *MongoClient) addTransmission(tran *models.Transmission) (bson.ObjectId
 	// Handle DBRefs
 	mt := MongoTransmission{Transmission: *tran}
 
-	err := s.DB(mc.Database.Name).C(TRANSMISSION_COLLECTION).Insert(mt)
+	err := s.DB(mc.database.Name).C(TRANSMISSION_COLLECTION).Insert(mt)
 	if err != nil {
 		return tran.ID, err
 	}
@@ -528,7 +524,7 @@ func (mc *MongoClient) addTransmission(tran *models.Transmission) (bson.ObjectId
 }
 
 func (mc *MongoClient) updateTransmission(tran models.Transmission) error {
-	s := mc.GetSessionCopy()
+	s := mc.getSessionCopy()
 	defer s.Close()
 
 	tran.Modified = time.Now().UnixNano() / int64(time.Millisecond)
@@ -536,37 +532,37 @@ func (mc *MongoClient) updateTransmission(tran models.Transmission) error {
 	// Handle DBRef
 	mt := MongoTransmission{Transmission: tran}
 
-	err := s.DB(mc.Database.Name).C(TRANSMISSION_COLLECTION).UpdateId(mt.ID, mt)
-	if err == mgo.ErrNotFound {
-		return ErrNotFound
+	err := s.DB(mc.database.Name).C(TRANSMISSION_COLLECTION).UpdateId(mt.ID, mt)
+	if err == db.ErrNotFound {
+		return db.ErrNotFound
 	}
 
 	return err
 }
 
 func (mc *MongoClient) getTransmission(q bson.M) (models.Transmission, error) {
-	s := mc.GetSessionCopy()
+	s := mc.getSessionCopy()
 	defer s.Close()
 
 	// Handle DBRef
 	var mt MongoTransmission
-	err := s.DB(mc.Database.Name).C(TRANSMISSION_COLLECTION).Find(q).One(&mt)
-	if err == mgo.ErrNotFound {
-		return mt.Transmission, ErrNotFound
+	err := s.DB(mc.database.Name).C(TRANSMISSION_COLLECTION).Find(q).One(&mt)
+	if err == db.ErrNotFound {
+		return mt.Transmission, db.ErrNotFound
 	}
 
 	return mt.Transmission, err
 }
 
 func (mc *MongoClient) getTransmissionsLimit(q bson.M) ([]models.Transmission, error) {
-	s := mc.GetSessionCopy()
+	s := mc.getSessionCopy()
 	defer s.Close()
 
 	// Handle DBRefs
 	var mt []MongoTransmission
 	trans := []models.Transmission{}
-	err := s.DB(mc.Database.Name).C(TRANSMISSION_COLLECTION).Find(q).All(&mt)
-	//err := s.DB(mc.Database.Name).C(NOTIFICATION_COLLECTION).Find(q).Limit(limit).All(&mt)
+	err := s.DB(mc.database.Name).C(TRANSMISSION_COLLECTION).Find(q).All(&mt)
+	//err := s.DB(mc.database.Name).C(NOTIFICATION_COLLECTION).Find(q).Limit(limit).All(&mt)
 	if err != nil {
 		return trans, err
 	}
@@ -583,7 +579,7 @@ func (mc *MongoClient) getTransmissionsLimit(q bson.M) ([]models.Transmission, e
 func (mc *MongoClient) deleteByID(id string, col string) error {
 
 	if !bson.IsObjectIdHex(id) {
-		return ErrInvalidObjectId
+		return db.ErrInvalidObjectId
 	}
 
 	return mc.deleteByObjectID(bson.ObjectIdHex(id), col)
@@ -591,23 +587,23 @@ func (mc *MongoClient) deleteByID(id string, col string) error {
 }
 
 func (mc *MongoClient) deleteByObjectID(id bson.ObjectId, col string) error {
-	s := mc.GetSessionCopy()
+	s := mc.getSessionCopy()
 	defer s.Close()
 
-	err := s.DB(mc.Database.Name).C(col).RemoveId(id)
-	if err == mgo.ErrNotFound {
-		return ErrNotFound
+	err := s.DB(mc.database.Name).C(col).RemoveId(id)
+	if err == db.ErrNotFound {
+		return db.ErrNotFound
 	}
 	return err
 }
 
 func (mc *MongoClient) deleteAll(q bson.M, col string) error {
-	s := mc.GetSessionCopy()
+	s := mc.getSessionCopy()
 	defer s.Close()
 
-	_, err := s.DB(mc.Database.Name).C(col).RemoveAll(q)
-	if err == mgo.ErrNotFound {
-		return ErrNotFound
+	_, err := s.DB(mc.database.Name).C(col).RemoveAll(q)
+	if err == db.ErrNotFound {
+		return db.ErrNotFound
 	}
 	return err
 }

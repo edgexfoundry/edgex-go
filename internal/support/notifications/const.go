@@ -53,6 +53,7 @@ type ConfigurationStruct struct {
 	SMTPSender                    string
 	SMTPPassword                  string
 	SMTPSubject                   string
+	DBType                        string
 }
 
 var configuration = ConfigurationStruct{} //  Needs to be initialized before used
