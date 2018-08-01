@@ -345,7 +345,7 @@ func valueDescriptorByUomLabelHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	uomLabel, err := url.QueryUnescape(vars["uomLabel"])
 
-	// Prolem unescaping
+	// Problem unescaping
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		LoggingClient.Error("Error unescaping the UOM Label of the value descriptor: " + err.Error())
