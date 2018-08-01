@@ -35,13 +35,9 @@ import (
 // Global variables
 var Configuration *ConfigurationStruct
 var dbClient interfaces.DBClient
-//var dbc clients.DBClient
 var LoggingClient logger.LoggingClient
 var cronDistro *cron.Cron
 var cronResend *cron.Cron
-var normalDuration string
-var resendDuration string
-var criticalResendDelay int
 var limitMax int
 var resendLimit int
 var smtpPort string
@@ -68,7 +64,7 @@ func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup,
 			} else {
 				// Setup Logging
 				logTarget := setLoggingTarget()
-				LoggingClient = logger.NewClient(internal.CoreDataServiceKey, Configuration.EnableRemoteLogging, logTarget)
+				LoggingClient = logger.NewClient(internal.SupportNotificationsServiceKey, Configuration.EnableRemoteLogging, logTarget)
 				//Initialize service clients
 				//initializeClients(useConsul)
 			}
@@ -99,12 +95,9 @@ func Init() bool {
 }
 
 func Destruct() {
-	if cronDistro != nil {
-		cronDistro.Stop()
-	}
-
-	if cronResend != nil {
-		cronResend.Stop()
+	if dbClient != nil {
+		dbClient.CloseSession()
+		dbClient = nil
 	}
 }
 

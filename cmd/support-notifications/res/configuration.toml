@@ -15,6 +15,7 @@ CheckInterval = '10s'
 EnableRemoteLogging = false
 LoggingFile = './logs/edgex-support-notifications.log'
 LoggingRemoteURL = 'http://localhost:48061/api/v1/logs'
+DBType = 'mongodb'
 MongoDBUserName = 'notifications'
 MongoDBPassword = 'password'
 MongoDatabaseName = 'notifications'
