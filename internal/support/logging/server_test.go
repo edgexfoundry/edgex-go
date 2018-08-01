@@ -27,22 +27,24 @@ const (
 	numberOfLogs = 2
 )
 
-func (dummyPersist) add(le models.LogEntry) {}
-
-func (dp *dummyPersist) remove(criteria matchCriteria) int {
-	dp.criteria = criteria
-	dp.deleted = 42
-	return dp.deleted
+func (dummyPersist) add(le models.LogEntry) error {
+	return nil
 }
 
-func (dp *dummyPersist) find(criteria matchCriteria) []models.LogEntry {
+func (dp *dummyPersist) remove(criteria matchCriteria) (int, error) {
+	dp.criteria = criteria
+	dp.deleted = 42
+	return dp.deleted, nil
+}
+
+func (dp *dummyPersist) find(criteria matchCriteria) ([]models.LogEntry, error) {
 	dp.criteria = criteria
 
 	var retValue []models.LogEntry
 	for i := 0; i < numberOfLogs; i++ {
 		retValue = append(retValue, models.LogEntry{})
 	}
-	return retValue
+	return retValue, nil
 }
 
 func (dp dummyPersist) reset() {
