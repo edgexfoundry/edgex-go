@@ -24,10 +24,14 @@ import (
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 	"github.com/robfig/cron"
 	"github.com/edgexfoundry/core-data-go/clients"
+	"github.com/edgexfoundry/edgex-go/internal/support/notifications/interfaces"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 )
 
 // Global variables
+var dbnotifications interfaces.DBClient
 var dbc clients.DBClient
+var Configuration *ConfigurationStruct
 var loggingClient logger.LoggingClient
 var cronDistro *cron.Cron
 var cronResend *cron.Cron
@@ -112,6 +116,29 @@ func Destruct() {
 	}
 }
 
+func connectToDatabase() error {
+	// Create a database client
+	var err error
+	dbConfig := db.Configuration{
+		Host:         Configuration.MongoDBHost,
+		Port:         Configuration.MongoDBPort,
+		Timeout:      Configuration.MongoDBConnectTimeout,
+		DatabaseName: Configuration.MongoDatabaseName,
+		Username:     Configuration.MongoDBUserName,
+		Password:     Configuration.MongoDBPassword,
+	}
+	dbClient, err = newDBClient(Configuration.DBType, dbConfig)
+	if err != nil {
+		return fmt.Errorf("couldn't create database client: %v", err.Error())
+	}
+
+	// Connect to the database
+	err = dbClient.Connect()
+	if err != nil {
+		return fmt.Errorf("couldn't connect to database: %v", err.Error())
+	}
+	return nil
+}
 func initNormalDistribution() {
 	loggingClient.Debug("Normal distribution occuring on cron schedule: " + normalDuration)
 	cronDistro := cron.New()
