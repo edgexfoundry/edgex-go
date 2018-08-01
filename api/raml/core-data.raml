@@ -653,6 +653,8 @@ schemas:
         responses: 
             "200": 
                 description: database generated id of the new ValueDescriptor
+            "400":
+                description: request is invalid or unparseable
             "409": 
                 description: if the a formatting string of the value descriptor is not a valid printf format or if the name is determined to not be unique with regard to other value descriptors.
             "503": 
@@ -667,6 +669,8 @@ schemas:
         responses: 
             "200": 
                 description: boolean indicating success of the update
+            "400":
+                description: request is invalid or unparseable
             "404": 
                 description: if the value descriptor cannot be located by the identifier.
     get: 
@@ -725,6 +729,8 @@ schemas:
                     application/json: 
                         schema: valueDescriptor
                         example: '{"id":"57b9fbb2189b95b8afcdafd2","created":1471806386919,"modified":1471806467057,"origin":0,"name":"temperature","description":"test description","min":"-100","max":"200","type":"F","uomLabel":"degree cel","defaultValue":"0","formatting":"%s","labels":["temp","hvac"]}'
+            "400":
+                description: request is invalid or unparseable
             "404":
                 description: if the value descriptor cannot be located by the name                        
             "503": 
@@ -735,6 +741,8 @@ schemas:
         responses: 
             "200": 
                 description: boolean indicating success of the remove operation
+            "400":
+                description: request is invalid or unparseable
             "404": 
                 description: if the value descriptor cannot be located by the identifier
             "409": 
@@ -829,6 +837,8 @@ schemas:
                     application/json: 
                         schema: valueDescriptor
                         example: '[{"id":"57b9fbb2189b95b8afcdafd2","created":1471806386919,"modified":1471806467057,"origin":0,"name":"temperature","description":"test description","min":"-100","max":"200","type":"F","uomLabel":"degree cel","defaultValue":"0","formatting":"%s","labels":["temp","hvac"]}]'
+            "400":
+                description: request is invalid or unparseable
             "503": 
                 description: for unknown or unanticipated issues.
 /valuedescriptor/label/{label}: 
@@ -851,6 +861,8 @@ schemas:
                     application/json: 
                         schema: valueDescriptor
                         example: '[{"id":"57b9fbb2189b95b8afcdafd2","created":1471806386919,"modified":1471806467057,"origin":0,"name":"temperature","description":"test description","min":"-100","max":"200","type":"F","uomLabel":"degree cel","defaultValue":"0","formatting":"%s","labels":["temp","hvac"]}]'
+            "400":
+                description: request is invalid or unparseable
             "503": 
                 description: for unknown or unanticipated issues.
 /ping: 
