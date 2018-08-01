@@ -53,14 +53,14 @@ func valueDescriptorHandler(w http.ResponseWriter, r *http.Request) {
 		vList, err := dbClient.ValueDescriptors()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-			loggingClient.Error(err.Error())
+			LoggingClient.Error(err.Error())
 			return
 		}
 
 		// Check the limit
 		if len(vList) > configuration.ReadMaxLimit {
 			http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
-			loggingClient.Error(maxExceededString)
+			LoggingClient.Error(maxExceededString)
 			return
 		}
 
@@ -72,7 +72,7 @@ func valueDescriptorHandler(w http.ResponseWriter, r *http.Request) {
 		// Problems decoding
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-			loggingClient.Error("Error decoding the value descriptor: " + err.Error())
+			LoggingClient.Error("Error decoding the value descriptor: " + err.Error())
 			return
 		}
 
@@ -80,13 +80,13 @@ func valueDescriptorHandler(w http.ResponseWriter, r *http.Request) {
 		match, err := validateFormatString(v)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-			loggingClient.Error("Error checking for format string for POSTed value descriptor")
+			LoggingClient.Error("Error checking for format string for POSTed value descriptor")
 			return
 		}
 		if !match {
 			err := errors.New("Error posting value descriptor. Format is not a valid printf format.")
 			http.Error(w, err.Error(), http.StatusConflict)
-			loggingClient.Error(err.Error())
+			LoggingClient.Error(err.Error())
 			return
 		}
 
@@ -97,7 +97,7 @@ func valueDescriptorHandler(w http.ResponseWriter, r *http.Request) {
 			} else {
 				http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			}
-			loggingClient.Error(err.Error())
+			LoggingClient.Error(err.Error())
 			return
 		}
 
@@ -109,7 +109,7 @@ func valueDescriptorHandler(w http.ResponseWriter, r *http.Request) {
 		err := dec.Decode(&from)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-			loggingClient.Error("Error decoding the value descriptor: " + err.Error())
+			LoggingClient.Error("Error decoding the value descriptor: " + err.Error())
 			return
 		}
 
@@ -124,7 +124,7 @@ func valueDescriptorHandler(w http.ResponseWriter, r *http.Request) {
 				} else {
 					http.Error(w, err.Error(), http.StatusServiceUnavailable)
 				}
-				loggingClient.Error(err.Error())
+				LoggingClient.Error(err.Error())
 				return
 			}
 		}
@@ -137,12 +137,12 @@ func valueDescriptorHandler(w http.ResponseWriter, r *http.Request) {
 			match, err := regexp.MatchString(formatSpecifier, from.Formatting)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusServiceUnavailable)
-				loggingClient.Error("Error checking formatting for updated value descriptor")
+				LoggingClient.Error("Error checking formatting for updated value descriptor")
 				return
 			}
 			if !match {
 				http.Error(w, "Value descriptor's format string doesn't fit the required pattern", http.StatusConflict)
-				loggingClient.Error("Value descriptor's format string doesn't fit the required pattern: " + formatSpecifier)
+				LoggingClient.Error("Value descriptor's format string doesn't fit the required pattern: " + formatSpecifier)
 				return
 			}
 			to.Formatting = from.Formatting
@@ -163,13 +163,13 @@ func valueDescriptorHandler(w http.ResponseWriter, r *http.Request) {
 				r, err := dbClient.ReadingsByValueDescriptor(to.Name, 10) // Arbitrary limit, we're just checking if there are any readings
 				if err != nil {
 					http.Error(w, err.Error(), http.StatusServiceUnavailable)
-					loggingClient.Error("Error checking the readings for the value descriptor: " + err.Error())
+					LoggingClient.Error("Error checking the readings for the value descriptor: " + err.Error())
 					return
 				}
 				// Value descriptor is still in use
 				if len(r) != 0 {
 					http.Error(w, "Data integrity issue. Value Descriptor still in use by readings", http.StatusConflict)
-					loggingClient.Error("Data integrity issue.  Value Descriptor with name:  " + from.Name + " is still referenced by existing readings.")
+					LoggingClient.Error("Data integrity issue.  Value Descriptor with name:  " + from.Name + " is still referenced by existing readings.")
 					return
 				}
 			}
@@ -193,7 +193,7 @@ func valueDescriptorHandler(w http.ResponseWriter, r *http.Request) {
 			} else {
 				http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			}
-			loggingClient.Error(err.Error())
+			LoggingClient.Error(err.Error())
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
@@ -221,7 +221,7 @@ func deleteValueDescriptorByIdHandler(w http.ResponseWriter, r *http.Request) {
 		} else {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		}
-		loggingClient.Error(err.Error())
+		LoggingClient.Error(err.Error())
 		return
 	}
 
@@ -245,7 +245,7 @@ func valueDescriptorByNameHandler(w http.ResponseWriter, r *http.Request) {
 	// Problems unescaping
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		loggingClient.Error("Error unescaping the value descriptor name: " + err.Error())
+		LoggingClient.Error("Error unescaping the value descriptor name: " + err.Error())
 		return
 	}
 
@@ -258,7 +258,7 @@ func valueDescriptorByNameHandler(w http.ResponseWriter, r *http.Request) {
 			} else {
 				http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			}
-			loggingClient.Error(err.Error())
+			LoggingClient.Error(err.Error())
 			return
 		}
 
@@ -272,7 +272,7 @@ func valueDescriptorByNameHandler(w http.ResponseWriter, r *http.Request) {
 			} else {
 				http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			}
-			loggingClient.Error(err.Error())
+			LoggingClient.Error(err.Error())
 			return
 		}
 
@@ -291,20 +291,20 @@ func deleteValueDescriptor(vd models.ValueDescriptor, w http.ResponseWriter) err
 	readings, err := dbClient.ReadingsByValueDescriptor(vd.Name, 10)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		loggingClient.Error(err.Error())
+		LoggingClient.Error(err.Error())
 		return err
 	}
 	if len(readings) > 0 {
 		err = errors.New("Data integrity issue.  Value Descriptor is still referenced by existing readings.")
 		http.Error(w, err.Error(), http.StatusConflict)
-		loggingClient.Error(err.Error())
+		LoggingClient.Error(err.Error())
 		return err
 	}
 
 	// Delete the value descriptor
 	if err = dbClient.DeleteValueDescriptorById(vd.Id.Hex()); err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		loggingClient.Error(err.Error())
+		LoggingClient.Error(err.Error())
 		return err
 	}
 
@@ -329,7 +329,7 @@ func valueDescriptorByIdHandler(w http.ResponseWriter, r *http.Request) {
 			} else {
 				http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			}
-			loggingClient.Error(err.Error())
+			LoggingClient.Error(err.Error())
 			return
 		}
 
@@ -348,7 +348,7 @@ func valueDescriptorByUomLabelHandler(w http.ResponseWriter, r *http.Request) {
 	// Prolem unescaping
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		loggingClient.Error("Error unescaping the UOM Label of the value descriptor: " + err.Error())
+		LoggingClient.Error("Error unescaping the UOM Label of the value descriptor: " + err.Error())
 		return
 	}
 
@@ -357,7 +357,7 @@ func valueDescriptorByUomLabelHandler(w http.ResponseWriter, r *http.Request) {
 		v, err := dbClient.ValueDescriptorsByUomLabel(uomLabel)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-			loggingClient.Error(err.Error())
+			LoggingClient.Error(err.Error())
 			return
 		}
 
@@ -376,7 +376,7 @@ func valueDescriptorByLabelHandler(w http.ResponseWriter, r *http.Request) {
 	// Problem unescaping
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		loggingClient.Error("Error unescaping label for the value descriptor: " + err.Error())
+		LoggingClient.Error("Error unescaping label for the value descriptor: " + err.Error())
 		return
 	}
 
@@ -385,7 +385,7 @@ func valueDescriptorByLabelHandler(w http.ResponseWriter, r *http.Request) {
 		v, err := dbClient.ValueDescriptorsByLabel(label)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-			loggingClient.Error(err.Error())
+			LoggingClient.Error(err.Error())
 			return
 		}
 
@@ -404,7 +404,7 @@ func valueDescriptorByDeviceHandler(w http.ResponseWriter, r *http.Request) {
 	device, err := url.QueryUnescape(vars["device"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		loggingClient.Error("Error unescaping the device: " + err.Error())
+		LoggingClient.Error("Error unescaping the device: " + err.Error())
 		return
 	}
 
@@ -412,7 +412,7 @@ func valueDescriptorByDeviceHandler(w http.ResponseWriter, r *http.Request) {
 	d, err := mdc.DeviceForName(device)
 	if err != nil {
 		http.Error(w, "Device not found", http.StatusNotFound)
-		loggingClient.Error("Device not found: " + err.Error())
+		LoggingClient.Error("Device not found: " + err.Error())
 		return
 	}
 
@@ -436,7 +436,7 @@ func valueDescriptorByDeviceIdHandler(w http.ResponseWriter, r *http.Request) {
 	deviceId, err := url.QueryUnescape(vars["id"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		loggingClient.Error("Error unescaping the device ID: " + err.Error())
+		LoggingClient.Error("Error unescaping the device ID: " + err.Error())
 		return
 	}
 
@@ -452,7 +452,7 @@ func valueDescriptorByDeviceIdHandler(w http.ResponseWriter, r *http.Request) {
 			msg = fmt.Sprintf("Problem getting device from metadata: %v", err)
 			http.Error(w, msg, http.StatusServiceUnavailable)
 		}
-		loggingClient.Error(msg)
+		LoggingClient.Error(msg)
 		return
 	}
 
@@ -483,7 +483,7 @@ func valueDescriptorsForDevice(d models.Device, w http.ResponseWriter) ([]models
 
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-			loggingClient.Error(err.Error())
+			LoggingClient.Error(err.Error())
 			return vdList, err
 		}
 

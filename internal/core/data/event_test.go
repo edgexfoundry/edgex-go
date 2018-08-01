@@ -37,7 +37,7 @@ func TestMain(m *testing.M) {
 	dbClient = &memory.MemDB{}
 	testEvent.ID, _ = dbClient.AddEvent(&testEvent)
 	testRoutes = LoadRestRoutes()
-	loggingClient = logger.NewMockClient()
+	LoggingClient = logger.NewMockClient()
 	os.Exit(m.Run())
 }
 
