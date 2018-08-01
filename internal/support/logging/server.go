@@ -158,7 +158,11 @@ func getLogs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logs := persist.find(*criteria)
+	logs, err := persist.find(*criteria)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
 	if criteria.Limit > 0 && len(logs) > criteria.Limit {
 		w.WriteHeader(http.StatusRequestEntityTooLarge)
@@ -170,7 +174,7 @@ func getLogs(w http.ResponseWriter, r *http.Request) {
 
 	res, err := json.Marshal(logs)
 	if err != nil {
-		w.WriteHeader(http.StatusServiceUnavailable)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
@@ -184,7 +188,11 @@ func delLogs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	removed := persist.remove(*criteria)
+	removed, err := persist.remove(*criteria)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 	w.WriteHeader(http.StatusOK)
 	io.WriteString(w, strconv.Itoa(removed))
 }
