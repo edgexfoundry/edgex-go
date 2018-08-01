@@ -32,7 +32,7 @@ func encode(i interface{}, w http.ResponseWriter) {
 	err := enc.Encode(i)
 	// Problems encoding
 	if err != nil {
-		loggingClient.Error("Error encoding the data: " + err.Error())
+		LoggingClient.Error("Error encoding the data: " + err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -46,7 +46,7 @@ func encodeWithUTF8(i interface{}, w http.ResponseWriter) {
 	err := enc.Encode(i)
 	// Problems encoding
 	if err != nil {
-		loggingClient.Error("Error encoding the data: " + err.Error())
+		LoggingClient.Error("Error encoding the data: " + err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -71,6 +71,6 @@ func pingHandler(w http.ResponseWriter, r *http.Request) {
 
 	_, err := w.Write([]byte("pong"))
 	if err != nil {
-		loggingClient.Error("Error writing pong: " + err.Error())
+		LoggingClient.Error("Error writing pong: " + err.Error())
 	}
 }

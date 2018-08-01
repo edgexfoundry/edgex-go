@@ -22,15 +22,15 @@ import (
 )
 
 func startNormalResend() error {
-	loggingClient.Info("Normal severity resend scheduler is triggered.")
-	trxs, err := dbc.TransmissionsByStatus(resendLimit, models.TransmissionStatus(models.Failed))
+	LoggingClient.Info("Normal severity resend scheduler is triggered.")
+	trxs, err := dbClient.TransmissionsByStatus(resendLimit, models.TransmissionStatus(models.Failed))
 	if err != nil {
-		loggingClient.Error("Normal resend failed: unable to get FAILED transmissions")
+		LoggingClient.Error("Normal resend failed: unable to get FAILED transmissions")
 	}
 	for _, t := range trxs {
 		resend(t)
 	}
-	loggingClient.Debug("Processed " + strconv.Itoa(len(trxs)) + " resend transmissions")
-	loggingClient.Info("Normal severity resend scheduler has completed.")
+	LoggingClient.Debug("Processed " + strconv.Itoa(len(trxs)) + " resend transmissions")
+	LoggingClient.Info("Normal severity resend scheduler has completed.")
 	return nil
 }

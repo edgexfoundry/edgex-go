@@ -39,15 +39,15 @@ func transmissionHandler(w http.ResponseWriter, r *http.Request) {
 		// Problem Decoding Transmission
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
-			loggingClient.Error("Error decoding transmission: " + err.Error())
+			LoggingClient.Error("Error decoding transmission: " + err.Error())
 			return
 		}
 
-		loggingClient.Info("Posting Transmission: " + t.String())
-		id, err := dbc.AddTransmission(&t)
+		LoggingClient.Info("Posting Transmission: " + t.String())
+		id, err := dbClient.AddTransmission(&t)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
-			loggingClient.Error(err.Error())
+			LoggingClient.Error(err.Error())
 			return
 		}
 
@@ -68,21 +68,21 @@ func transmissionBySlugHandler(w http.ResponseWriter, r *http.Request) {
 	resendLimit, err := strconv.Atoi(vars["limit"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		loggingClient.Error("Error converting limit to integer: " + err.Error())
+		LoggingClient.Error("Error converting limit to integer: " + err.Error())
 		return
 	}
 
 	switch r.Method {
 	case http.MethodGet:
 
-		t, err := dbc.TransmissionsByNotificationSlug(vars["slug"], resendLimit)
+		t, err := dbClient.TransmissionsByNotificationSlug(vars["slug"], resendLimit)
 		if err != nil {
 			if err == db.ErrNotFound {
 				http.Error(w, "Transmission not found", http.StatusNotFound)
 			} else {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
-			loggingClient.Error(err.Error())
+			LoggingClient.Error(err.Error())
 			return
 		}
 
@@ -101,33 +101,33 @@ func transmissionByStartEndHandler(w http.ResponseWriter, r *http.Request) {
 	// Problem converting start
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		loggingClient.Error("Error converting the start to an integer")
+		LoggingClient.Error("Error converting the start to an integer")
 		return
 	}
 	end, err := strconv.ParseInt(vars["end"], 10, 64)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		loggingClient.Error("Error converting the end to an integer")
+		LoggingClient.Error("Error converting the end to an integer")
 		return
 	}
 	resendLimit, err := strconv.Atoi(vars["limit"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		loggingClient.Error("Error converting limit to integer: " + err.Error())
+		LoggingClient.Error("Error converting limit to integer: " + err.Error())
 		return
 	}
 
 	switch r.Method {
 	case http.MethodGet:
 
-		t, err := dbc.TransmissionsByStartEnd(start, end, resendLimit)
+		t, err := dbClient.TransmissionsByStartEnd(start, end, resendLimit)
 		if err != nil {
 			if err == db.ErrNotFound {
 				http.Error(w, "Transmission not found", http.StatusNotFound)
 			} else {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
-			loggingClient.Error(err.Error())
+			LoggingClient.Error(err.Error())
 			return
 		}
 
@@ -144,26 +144,26 @@ func transmissionByStartHandler(w http.ResponseWriter, r *http.Request) {
 	// Problem converting start
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		loggingClient.Error("Error converting the start to an integer")
+		LoggingClient.Error("Error converting the start to an integer")
 		return
 	}
 	resendLimit, err := strconv.Atoi(vars["limit"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		loggingClient.Error("Error converting limit to integer: " + err.Error())
+		LoggingClient.Error("Error converting limit to integer: " + err.Error())
 		return
 	}
 	switch r.Method {
 	case http.MethodGet:
 
-		t, err := dbc.TransmissionsByStart(start, resendLimit)
+		t, err := dbClient.TransmissionsByStart(start, resendLimit)
 		if err != nil {
 			if err == db.ErrNotFound {
 				http.Error(w, "Transmission not found", http.StatusNotFound)
 			} else {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
-			loggingClient.Error(err.Error())
+			LoggingClient.Error(err.Error())
 			return
 		}
 
@@ -182,27 +182,27 @@ func transmissionByEndHandler(w http.ResponseWriter, r *http.Request) {
 	// Problem converting start
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		loggingClient.Error("Error converting the end to an integer")
+		LoggingClient.Error("Error converting the end to an integer")
 		return
 	}
 	resendLimit, err := strconv.Atoi(vars["limit"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		loggingClient.Error("Error converting limit to integer: " + err.Error())
+		LoggingClient.Error("Error converting limit to integer: " + err.Error())
 		return
 	}
 
 	switch r.Method {
 	case http.MethodGet:
 
-		t, err := dbc.TransmissionsByEnd(end, resendLimit)
+		t, err := dbClient.TransmissionsByEnd(end, resendLimit)
 		if err != nil {
 			if err == db.ErrNotFound {
 				http.Error(w, "Transmission not found", http.StatusNotFound)
 			} else {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
-			loggingClient.Error(err.Error())
+			LoggingClient.Error(err.Error())
 			return
 		}
 
@@ -228,21 +228,21 @@ func transmissionByStatusHandler(w http.ResponseWriter, r *http.Request, status 
 	resendLimit, err := strconv.Atoi(vars["limit"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		loggingClient.Error("Error converting limit to integer: " + err.Error())
+		LoggingClient.Error("Error converting limit to integer: " + err.Error())
 		return
 	}
 
 	switch r.Method {
 	case http.MethodGet:
 
-		t, err := dbc.TransmissionsByStatus(resendLimit, status)
+		t, err := dbClient.TransmissionsByStatus(resendLimit, status)
 		if err != nil {
 			if err == db.ErrNotFound {
 				http.Error(w, "Transmission not found", http.StatusNotFound)
 			} else {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
-			loggingClient.Error(err.Error())
+			LoggingClient.Error(err.Error())
 			return
 		}
 
@@ -277,17 +277,17 @@ func transmissionByAgeStatusHandler(w http.ResponseWriter, r *http.Request, stat
 	// Problem converting age
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		loggingClient.Error("Error converting the age to an integer")
+		LoggingClient.Error("Error converting the age to an integer")
 		return
 	}
 
 	switch r.Method {
 	case http.MethodDelete:
 
-		err := dbc.DeleteTransmission(age, status)
+		err := dbClient.DeleteTransmission(age, status)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
-			loggingClient.Error(err.Error())
+			LoggingClient.Error(err.Error())
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
