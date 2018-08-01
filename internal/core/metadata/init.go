@@ -35,7 +35,7 @@ var Configuration *ConfigurationStruct
 var dbClient interfaces.DBClient
 var LoggingClient logger.LoggingClient
 
-func ResolveDependencies(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup, ch chan error) {
+func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup, ch chan error) {
 	until := time.Now().Add(time.Millisecond * time.Duration(timeout))
 	for time.Now().Before(until) {
 		var err error
@@ -48,6 +48,7 @@ func ResolveDependencies(useConsul bool, useProfile string, timeout int, wait *s
 					//Error occurred when attempting to read from local filesystem. Fail fast.
 					close(ch)
 					wait.Done()
+					return
 				}
 			} else {
 				// Initialize notificationsClient based on configuration

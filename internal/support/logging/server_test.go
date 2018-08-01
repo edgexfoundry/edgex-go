@@ -27,30 +27,35 @@ const (
 	numberOfLogs = 2
 )
 
-func (dummyPersist) add(le models.LogEntry) {}
-
-func (dp *dummyPersist) remove(criteria matchCriteria) int {
-	dp.criteria = criteria
-	dp.deleted = 42
-	return dp.deleted
+func (dummyPersist) add(le models.LogEntry) error {
+	return nil
 }
 
-func (dp *dummyPersist) find(criteria matchCriteria) []models.LogEntry {
+func (dp *dummyPersist) remove(criteria matchCriteria) (int, error) {
+	dp.criteria = criteria
+	dp.deleted = 42
+	return dp.deleted, nil
+}
+
+func (dp *dummyPersist) find(criteria matchCriteria) ([]models.LogEntry, error) {
 	dp.criteria = criteria
 
 	var retValue []models.LogEntry
 	for i := 0; i < numberOfLogs; i++ {
 		retValue = append(retValue, models.LogEntry{})
 	}
-	return retValue
+	return retValue, nil
 }
 
 func (dp dummyPersist) reset() {
 }
 
+func (dp *dummyPersist) closeSession() {
+}
+
 func TestPing(t *testing.T) {
 	// create test server with handler
-	ts := httptest.NewServer(httpServer())
+	ts := httptest.NewServer(HttpServer())
 	defer ts.Close()
 
 	response, err := http.Get(ts.URL + "/api/v1" + "/ping")
@@ -78,10 +83,10 @@ func TestAddLog(t *testing.T) {
 			http.StatusBadRequest},
 	}
 	// create test server with handler
-	ts := httptest.NewServer(httpServer())
+	ts := httptest.NewServer(HttpServer())
 	defer ts.Close()
 
-	persist = &dummyPersist{}
+	dbClient = &dummyPersist{}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -187,11 +192,11 @@ func TestGetLogs(t *testing.T) {
 			matchCriteria{LogLevels: logLevels, OriginServices: services, Labels: labels, Keywords: keywords, Start: 1, End: 2, Limit: 3}},
 	}
 	// create test server with handler
-	ts := httptest.NewServer(httpServer())
+	ts := httptest.NewServer(HttpServer())
 	defer ts.Close()
 
 	dummy := &dummyPersist{}
-	persist = dummy
+	dbClient = dummy
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -283,11 +288,11 @@ func TestRemoveLogs(t *testing.T) {
 			matchCriteria{LogLevels: logLevels, OriginServices: services, Labels: labels, Keywords: keywords, Start: 1, End: 2}},
 	}
 	// create test server with handler
-	ts := httptest.NewServer(httpServer())
+	ts := httptest.NewServer(HttpServer())
 	defer ts.Close()
 
 	dummy := &dummyPersist{}
-	persist = dummy
+	dbClient = dummy
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

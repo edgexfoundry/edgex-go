@@ -20,18 +20,18 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
-	"sync"
 	"syscall"
 	"time"
 
 	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 )
 
-var bootTimeout int = 30000
+var bootTimeout int = 30000 //Once we start the V2 configuration rework, this will be config driven
 
 func main() {
 	start := time.Now()
@@ -45,7 +45,8 @@ func main() {
 	flag.Usage = usage.HelpCallback
 	flag.Parse()
 
-	bootstrap(useConsul, useProfile)
+	params := startup.BootParams{UseConsul: useConsul, UseProfile: useProfile, BootTimeout: bootTimeout}
+	startup.Bootstrap(params, metadata.Retry, logBeforeInit)
 
 	ok := metadata.Init()
 	if !ok {
@@ -89,25 +90,4 @@ func startHttpServer(errChan chan error, port int) {
 		r := metadata.LoadRestRoutes()
 		errChan <- http.ListenAndServe(":"+strconv.Itoa(port), r)
 	}()
-}
-
-func bootstrap(useConsul bool, useProfile string) {
-	deps := make(chan error, 2)
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-	go metadata.ResolveDependencies(useConsul, useProfile, bootTimeout, &wg, deps)
-	go func(ch chan error) {
-		for {
-			select {
-			case e, ok := <-ch:
-				if ok {
-					logBeforeInit(e)
-				} else {
-					return
-				}
-			}
-		}
-	}(deps)
-
-	wg.Wait()
 }

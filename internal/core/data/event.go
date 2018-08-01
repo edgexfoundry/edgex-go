@@ -32,7 +32,7 @@ func checkDevice(device string, w http.ResponseWriter) bool {
 	if configuration.MetaDataCheck {
 		_, err := mdc.CheckForDevice(device)
 		if err != nil {
-			loggingClient.Error(fmt.Sprintf("error checking device %s %v", device, err))
+			LoggingClient.Error(fmt.Sprintf("error checking device %s %v", device, err))
 			switch err := err.(type) {
 			case types.ErrNotFound:
 				http.Error(w, err.Error(), http.StatusNotFound)
@@ -49,11 +49,11 @@ func checkDevice(device string, w http.ResponseWriter) bool {
 
 // Put event on the message queue to be processed by the rules engine
 func putEventOnQueue(e models.Event) {
-	loggingClient.Info("Putting event on message queue", "")
+	LoggingClient.Info("Putting event on message queue", "")
 	//	Have multiple implementations (start with ZeroMQ)
 	err := ep.SendEventMessage(e)
 	if err != nil {
-		loggingClient.Error("Unable to send message for event: " + e.String())
+		LoggingClient.Error("Unable to send message for event: " + e.String())
 	}
 }
 
@@ -61,19 +61,19 @@ func putEventOnQueue(e models.Event) {
 func updateDeviceLastReportedConnected(device string) {
 	// Config set to skip update last reported
 	if !configuration.DeviceUpdateLastConnected {
-		loggingClient.Debug("Skipping update of device connected/reported times for:  " + device)
+		LoggingClient.Debug("Skipping update of device connected/reported times for:  " + device)
 		return
 	}
 
 	d, err := mdc.CheckForDevice(device)
 	if err != nil {
-		loggingClient.Error("Error getting device " + device + ": " + err.Error())
+		LoggingClient.Error("Error getting device " + device + ": " + err.Error())
 		return
 	}
 
 	// Couldn't find device
 	if len(d.Name) == 0 {
-		loggingClient.Error("Error updating device connected/reported times.  Unknown device with identifier of:  " + device)
+		LoggingClient.Error("Error updating device connected/reported times.  Unknown device with identifier of:  " + device)
 		return
 	}
 
@@ -81,12 +81,12 @@ func updateDeviceLastReportedConnected(device string) {
 	// Found device, now update lastReported
 	err = mdc.UpdateLastConnectedByName(d.Name, t)
 	if err != nil {
-		loggingClient.Error("Problems updating last connected value for device: " + d.Name)
+		LoggingClient.Error("Problems updating last connected value for device: " + d.Name)
 		return
 	}
 	err = mdc.UpdateLastReportedByName(d.Name, t)
 	if err != nil {
-		loggingClient.Error("Problems updating last reported value for device: " + d.Name)
+		LoggingClient.Error("Problems updating last reported value for device: " + d.Name)
 	}
 	return
 }
@@ -94,7 +94,7 @@ func updateDeviceLastReportedConnected(device string) {
 // Update when the device service was last reported connected
 func updateDeviceServiceLastReportedConnected(device string) {
 	if !configuration.ServiceUpdateLastConnected {
-		loggingClient.Debug("Skipping update of device service connected/reported times for:  " + device)
+		LoggingClient.Debug("Skipping update of device service connected/reported times for:  " + device)
 		return
 	}
 
@@ -103,20 +103,20 @@ func updateDeviceServiceLastReportedConnected(device string) {
 	// Get the device
 	d, err := mdc.CheckForDevice(device)
 	if err != nil {
-		loggingClient.Error("Error getting device " + device + ": " + err.Error())
+		LoggingClient.Error("Error getting device " + device + ": " + err.Error())
 		return
 	}
 
 	// Couldn't find device
 	if len(d.Name) == 0 {
-		loggingClient.Error("Error updating device connected/reported times.  Unknown device with identifier of:  " + device)
+		LoggingClient.Error("Error updating device connected/reported times.  Unknown device with identifier of:  " + device)
 		return
 	}
 
 	// Get the device service
 	s := d.Service
 	if &s == nil {
-		loggingClient.Error("Error updating device service connected/reported times.  Unknown device service in device:  " + d.Name)
+		LoggingClient.Error("Error updating device service connected/reported times.  Unknown device service in device:  " + d.Name)
 		return
 	}
 
@@ -145,12 +145,12 @@ func scrubAllHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodDelete:
-		loggingClient.Info("Deleting all events from database")
+		LoggingClient.Info("Deleting all events from database")
 
 		err := dbClient.ScrubAllEvents()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-			loggingClient.Error("Error scrubbing all events/readings: " + err.Error())
+			LoggingClient.Error("Error scrubbing all events/readings: " + err.Error())
 			return
 		}
 
@@ -175,7 +175,7 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		events, err := dbClient.Events()
 		if err != nil {
-			loggingClient.Error(err.Error())
+			LoggingClient.Error(err.Error())
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			return
 		}
@@ -183,7 +183,7 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 		// Check max limit
 		if len(events) > configuration.ReadMaxLimit {
 			http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
-			loggingClient.Error(maxExceededString)
+			LoggingClient.Error(maxExceededString)
 			return
 		}
 
@@ -198,11 +198,11 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 		// Problem Decoding Event
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-			loggingClient.Error("Error decoding event: " + err.Error())
+			LoggingClient.Error("Error decoding event: " + err.Error())
 			return
 		}
 
-		loggingClient.Info("Posting Event: " + e.String())
+		LoggingClient.Info("Posting Event: " + e.String())
 
 		// Check device
 		if checkDevice(e.Device, w) == false {
@@ -210,7 +210,7 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if configuration.ValidateCheck {
-			loggingClient.Debug("Validation enabled, parsing events")
+			LoggingClient.Debug("Validation enabled, parsing events")
 			for reading := range e.Readings {
 				// Check value descriptor
 				vd, err := dbClient.ValueDescriptorByName(e.Readings[reading].Name)
@@ -220,14 +220,14 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 					} else {
 						http.Error(w, err.Error(), http.StatusServiceUnavailable)
 					}
-					loggingClient.Error(err.Error())
+					LoggingClient.Error(err.Error())
 					return
 				}
 
 				valid, err := isValidValueDescriptor(vd, e.Readings[reading])
 				if !valid {
 					http.Error(w, "Validation failed", http.StatusConflict)
-					loggingClient.Error("Validation failed")
+					LoggingClient.Error("Validation failed")
 					return
 				}
 			}
@@ -238,7 +238,7 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 			id, err := dbClient.AddEvent(&e)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusServiceUnavailable)
-				loggingClient.Error(err.Error())
+				LoggingClient.Error(err.Error())
 				return
 			}
 
@@ -262,7 +262,7 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 		// Problem decoding event
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-			loggingClient.Error("Error decoding the event: " + err.Error())
+			LoggingClient.Error("Error decoding the event: " + err.Error())
 			return
 		}
 
@@ -274,11 +274,11 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 			} else {
 				http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			}
-			loggingClient.Error(err.Error())
+			LoggingClient.Error(err.Error())
 			return
 		}
 
-		loggingClient.Info("Updating event: " + from.ID.Hex())
+		LoggingClient.Info("Updating event: " + from.ID.Hex())
 
 		// Update the fields
 		if len(from.Device) > 0 {
@@ -300,7 +300,7 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 		// Update
 		if err = dbClient.UpdateEvent(to); err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-			loggingClient.Error(err.Error())
+			LoggingClient.Error(err.Error())
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
@@ -332,7 +332,7 @@ func getEventByIdHandler(w http.ResponseWriter, r *http.Request) {
 			} else {
 				http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			}
-			loggingClient.Error(err.Error())
+			LoggingClient.Error(err.Error())
 			return
 		}
 
@@ -353,7 +353,7 @@ func eventCountHandler(w http.ResponseWriter, r *http.Request) {
 		count, err := dbClient.EventCount()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-			loggingClient.Error(err.Error(), "")
+			LoggingClient.Error(err.Error(), "")
 			return
 		}
 
@@ -361,7 +361,7 @@ func eventCountHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, err = w.Write([]byte(strconv.Itoa(count)))
 		if err != nil {
-			loggingClient.Error(err.Error(), "")
+			LoggingClient.Error(err.Error(), "")
 		}
 	}
 }
@@ -378,7 +378,7 @@ func eventCountByDeviceIdHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := url.QueryUnescape(vars["deviceId"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		loggingClient.Error("Problem unescaping URL: " + err.Error())
+		LoggingClient.Error("Problem unescaping URL: " + err.Error())
 		return
 	}
 
@@ -392,7 +392,7 @@ func eventCountByDeviceIdHandler(w http.ResponseWriter, r *http.Request) {
 		count, err := dbClient.EventCountByDeviceId(id)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-			loggingClient.Error(err.Error())
+			LoggingClient.Error(err.Error())
 			return
 		}
 
@@ -426,17 +426,17 @@ func eventIdHandler(w http.ResponseWriter, r *http.Request) {
 			} else {
 				http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			}
-			loggingClient.Error(err.Error())
+			LoggingClient.Error(err.Error())
 			return
 		}
 
-		loggingClient.Info("Updating event: " + e.ID.Hex())
+		LoggingClient.Info("Updating event: " + e.ID.Hex())
 
 		e.Pushed = time.Now().UnixNano() / int64(time.Millisecond)
 		err = dbClient.UpdateEvent(e)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-			loggingClient.Error(err.Error())
+			LoggingClient.Error(err.Error())
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
@@ -453,15 +453,15 @@ func eventIdHandler(w http.ResponseWriter, r *http.Request) {
 			} else {
 				http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			}
-			loggingClient.Error(err.Error())
+			LoggingClient.Error(err.Error())
 			return
 		}
 
-		loggingClient.Info("Deleting event: " + e.ID.Hex())
+		LoggingClient.Info("Deleting event: " + e.ID.Hex())
 
 		if err = deleteEvent(e); err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-			loggingClient.Error(err.Error())
+			LoggingClient.Error(err.Error())
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
@@ -485,7 +485,7 @@ func getEventByDeviceHandler(w http.ResponseWriter, r *http.Request) {
 	// Problems unescaping URL
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		loggingClient.Error("Error unescaping URL: " + err.Error())
+		LoggingClient.Error("Error unescaping URL: " + err.Error())
 		return
 	}
 
@@ -493,7 +493,7 @@ func getEventByDeviceHandler(w http.ResponseWriter, r *http.Request) {
 	limitNum, err := strconv.Atoi(limit)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		loggingClient.Error("Error converting to integer: " + err.Error())
+		LoggingClient.Error("Error converting to integer: " + err.Error())
 		return
 	}
 
@@ -506,14 +506,14 @@ func getEventByDeviceHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		if limitNum > configuration.ReadMaxLimit {
 			http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
-			loggingClient.Error(maxExceededString)
+			LoggingClient.Error(maxExceededString)
 			return
 		}
 
 		eventList, err := dbClient.EventsForDeviceLimit(deviceId, limitNum)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-			loggingClient.Error(err.Error())
+			LoggingClient.Error(err.Error())
 			return
 		}
 
@@ -533,7 +533,7 @@ func deleteByDeviceIdHandler(w http.ResponseWriter, r *http.Request) {
 	// Problems unescaping URL
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		loggingClient.Error("Error unescaping the URL: " + err.Error())
+		LoggingClient.Error("Error unescaping the URL: " + err.Error())
 		return
 	}
 
@@ -547,18 +547,18 @@ func deleteByDeviceIdHandler(w http.ResponseWriter, r *http.Request) {
 		// Get the events by the device name
 		events, err := dbClient.EventsForDevice(deviceId)
 		if err != nil {
-			loggingClient.Error(err.Error())
+			LoggingClient.Error(err.Error())
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			return
 		}
 
-		loggingClient.Info("Deleting the events for device: " + deviceId)
+		LoggingClient.Info("Deleting the events for device: " + deviceId)
 
 		// Delete the events
 		count := len(events)
 		for _, event := range events {
 			if err = deleteEvent(event); err != nil {
-				loggingClient.Error(err.Error())
+				LoggingClient.Error(err.Error())
 				http.Error(w, err.Error(), http.StatusServiceUnavailable)
 				return
 			}
@@ -583,7 +583,7 @@ func eventByCreationTimeHandler(w http.ResponseWriter, r *http.Request) {
 	// Problems converting start time
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		loggingClient.Error("Problem converting start time: " + err.Error())
+		LoggingClient.Error("Problem converting start time: " + err.Error())
 		return
 	}
 
@@ -591,7 +591,7 @@ func eventByCreationTimeHandler(w http.ResponseWriter, r *http.Request) {
 	// Problems converting end time
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		loggingClient.Error("Problem converting end time: " + err.Error())
+		LoggingClient.Error("Problem converting end time: " + err.Error())
 		return
 	}
 
@@ -599,7 +599,7 @@ func eventByCreationTimeHandler(w http.ResponseWriter, r *http.Request) {
 	// Problems converting limit
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		loggingClient.Error("Problem converting limit: " + strconv.Itoa(limit))
+		LoggingClient.Error("Problem converting limit: " + strconv.Itoa(limit))
 		return
 	}
 
@@ -607,14 +607,14 @@ func eventByCreationTimeHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		if limit > configuration.ReadMaxLimit {
 			http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
-			loggingClient.Error(maxExceededString)
+			LoggingClient.Error(maxExceededString)
 			return
 		}
 
 		e, err := dbClient.EventsByCreationTime(start, end, limit)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-			loggingClient.Error(err.Error())
+			LoggingClient.Error(err.Error())
 			return
 		}
 
@@ -636,7 +636,7 @@ func readingByDeviceFilteredValueDescriptor(w http.ResponseWriter, r *http.Reque
 	// Problems unescaping URL
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		loggingClient.Error("Problem unescaping value descriptor: " + err.Error())
+		LoggingClient.Error("Problem unescaping value descriptor: " + err.Error())
 		return
 	}
 
@@ -644,7 +644,7 @@ func readingByDeviceFilteredValueDescriptor(w http.ResponseWriter, r *http.Reque
 	// Problems unescaping URL
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		loggingClient.Error("Problem unescaping device ID: " + err.Error())
+		LoggingClient.Error("Problem unescaping device ID: " + err.Error())
 		return
 	}
 
@@ -652,14 +652,14 @@ func readingByDeviceFilteredValueDescriptor(w http.ResponseWriter, r *http.Reque
 	// Problem converting the limit
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		loggingClient.Error("Problem converting limit to integer: " + err.Error())
+		LoggingClient.Error("Problem converting limit to integer: " + err.Error())
 		return
 	}
 	switch r.Method {
 	case http.MethodGet:
 		if limitNum > configuration.ReadMaxLimit {
 			http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
-			loggingClient.Error(maxExceededString)
+			LoggingClient.Error(maxExceededString)
 			return
 		}
 
@@ -671,7 +671,7 @@ func readingByDeviceFilteredValueDescriptor(w http.ResponseWriter, r *http.Reque
 		// Get all the events for the device
 		e, err := dbClient.EventsForDevice(deviceId)
 		if err != nil {
-			loggingClient.Error(err.Error())
+			LoggingClient.Error(err.Error())
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			return
 		}
@@ -709,7 +709,7 @@ func eventByAgeHandler(w http.ResponseWriter, r *http.Request) {
 	// Problem converting age
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		loggingClient.Error("Error converting the age to an integer")
+		LoggingClient.Error("Error converting the age to an integer")
 		return
 	}
 
@@ -718,7 +718,7 @@ func eventByAgeHandler(w http.ResponseWriter, r *http.Request) {
 		// Get the events
 		events, err := dbClient.EventsOlderThanAge(age)
 		if err != nil {
-			loggingClient.Error(err.Error())
+			LoggingClient.Error(err.Error())
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			return
 		}
@@ -727,13 +727,13 @@ func eventByAgeHandler(w http.ResponseWriter, r *http.Request) {
 		count := len(events)
 		for _, event := range events {
 			if err = deleteEvent(event); err != nil {
-				loggingClient.Error(err.Error())
+				LoggingClient.Error(err.Error())
 				http.Error(w, err.Error(), http.StatusServiceUnavailable)
 				return
 			}
 		}
 
-		loggingClient.Info("Deleting events by age: " + vars["age"])
+		LoggingClient.Info("Deleting events by age: " + vars["age"])
 
 		// Return the count
 		w.Header().Set("Content-Type", "application/json")
@@ -750,13 +750,13 @@ func scrubHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodDelete:
-		loggingClient.Info("Scrubbing events.  Deleting all events that have been pushed")
+		LoggingClient.Info("Scrubbing events.  Deleting all events that have been pushed")
 
 		// Get the events
 		events, err := dbClient.EventsPushed()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-			loggingClient.Error(err.Error())
+			LoggingClient.Error(err.Error())
 			return
 		}
 
@@ -765,7 +765,7 @@ func scrubHandler(w http.ResponseWriter, r *http.Request) {
 		for _, event := range events {
 			if err = deleteEvent(event); err != nil {
 				http.Error(w, err.Error(), http.StatusServiceUnavailable)
-				loggingClient.Error(err.Error())
+				LoggingClient.Error(err.Error())
 				return
 			}
 		}

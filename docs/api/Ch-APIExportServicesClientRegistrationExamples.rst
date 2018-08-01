@@ -8,27 +8,21 @@ Introduction
 
 This page of Export Services Client Registration API Examples contains various export service registrations to show how to get data from the EdgeX Foundry export distribution service in the format that is wanted and on the output channel that is wanted (MQTT or REST).  Example Core Data Event/Readings are used to show the expected output by the export clients.
 
-The following examples at this time shows the older development name of "fuse."  The EdgeX Foundry name in the software will be updated soon from "fuse" to "edgexfoundry." 
-
 =====
 Setup
 =====
 
-* Start the following Fuse Microservices
-  
-  * Fuse Core Data
-  * Fuse Export Client
-  * Fuse Export Distro
+* Start the EdgeX Microservices via the User Guide ( )
 
-* Start an HTTP Server App to listen for posts on port 8111 of the local box or start the Fuse HTTP Test Server found in Fuse Developer Tools
+* Start an HTTP Server App to listen for posts on port 8111 of the local box
 * Start an MQTT Broker and Topic listener.  The following examples use Cloud MQTT with the listed properties: 
         
   * Address:  m10.cloudmqtt.com
   * port:15421
-  * publisher: FuseExportPublisher
+  * publisher: EdgeXExportPublisher
   * user:hukfgtoh
   * password: uP6hJLYW6Ji4
-  * topic:  FuseDataTopic
+  * topic:  EdgeXDataTopic
 
 The following Value Descriptors need to be added (posted) to Core Data before running the tests or examples
 
@@ -53,14 +47,12 @@ Post the following Event/Reading message to Core Data in order to test each of t
 
 Receive all exported Core Data Event/Readings with valid value descriptors in the reading, uncompressed, unencrypted, and with no filters in place (that is with no device filters in place and no value descriptor filters in place).
 
-The following example at this time shows the older development name of "fuse."  The EdgeX Foundry name in the software will be updated soon to "edgexfoundry." 
-
 **Register for JSON formatted data to be sent to MQTT topic**
 
 ::
 
    POST to http://localhost:48071/api/v1/registration
-   {"origin":1471806386919,"name":"MQTTClient","addressable":{"origin":1471806386919,"name":"FuseTestMQTTBroker","protocol":"TCP","address":"m10.cloudmqtt.com","port":15421,"publisher":"FuseExportPublisher","user":"hukfgtoh", "password":"uP6hJLYW6Ji4","topic":"FuseDataTopic"},"format":"JSON","enable":true,"destination":"MQTT_TOPIC"}   
+   {"origin":1471806386919,"name":"MQTTClient","addressable":{"origin":1471806386919,"name":"EdgeXTestMQTTBroker","protocol":"TCP","address":"m10.cloudmqtt.com","port":15421,"publisher":"EdgeXExportPublisher","user":"hukfgtoh", "password":"uP6hJLYW6Ji4","topic":"EdgeXDataTopic"},"format":"JSON","enable":true,"destination":"MQTT_TOPIC"}   
 
 **Result:**
 
@@ -74,20 +66,20 @@ The following example at this time shows the older development name of "fuse."  
 ::
 
    POST to http://localhost:48071/api/v1/registration
-   {"origin":1471806386919,"name":"MQTTXMLClient","addressable":{"origin":1471806386919,"name":"FuseTestMQTTXMLBroker","protocol":"TCP","address":"m10.cloudmqtt.com","port":15421,"publisher":"FuseExportPublisher", "user":"hukfgtoh","password":"uP6hJLYW6Ji4","topic":"FuseXMLDataTopic"},"format":"XML","enable":true,"destination":"REST_ENDPOINT"}
+   {"origin":1471806386919,"name":"MQTTXMLClient","addressable":{"origin":1471806386919,"name":"EdgeXTestMQTTXMLBroker","protocol":"TCP","address":"m10.cloudmqtt.com","port":15421,"publisher":"EdgeXExportPublisher", "user":"hukfgtoh","password":"uP6hJLYW6Ji4","topic":"EdgeXXMLDataTopic"},"format":"XML","enable":true,"destination":"REST_ENDPOINT"}
 
 **Result:**
 
 ::
 
-   {"origin":1471806386919,"name":"RESTClient","addressable":{"origin":1471806386919,"name":"FuseTestREST","protocol":"HTTP","address":"http://localhost","port":8111,"path":"/rest"},"format":"JSON","enable":true}
+   {"origin":1471806386919,"name":"RESTClient","addressable":{"origin":1471806386919,"name":"EdgeXTestREST","protocol":"HTTP","address":"http://localhost","port":8111,"path":"/rest"},"format":"JSON","enable":true}
 
 **Register for XML formatted data to be sent to MQTT topic**
 
 ::
 
    POST to http://localhost:48071/api/v1/registration
-   {"origin":1471806386919,"name":"MQTTXMLClient","addressable":{"origin":1471806386919,"name":"FuseTestMQTTXMLBroker","protocol":"TCP","address":"m10.cloudmqtt.com","port":15421,"publisher":"FuseExportPublisher", "user":"hukfgtoh","password":"uP6hJLYW6Ji4","topic":"FuseXMLDataTopic"},"format":"XML","enable":true,"destination":"MQTT_TOPIC"}
+   {"origin":1471806386919,"name":"MQTTXMLClient","addressable":{"origin":1471806386919,"name":"EdgeXTestMQTTXMLBroker","protocol":"TCP","address":"m10.cloudmqtt.com","port":15421,"publisher":"EdgeXExportPublisher", "user":"hukfgtoh","password":"uP6hJLYW6Ji4","topic":"EdgeXXMLDataTopic"},"format":"XML","enable":true,"destination":"MQTT_TOPIC"}
 
 **Result:**
 
@@ -100,7 +92,7 @@ The following example at this time shows the older development name of "fuse."  
 ::
 
    POST to http://localhost:48071/api/v1/registration
-   {"origin":1471806386919,"name":"RESTXMLClient","addressable":{"origin":1471806386919,"name":"FuseTestRESTXML","protocol":"HTTP","address":"http://localhost","port":8111,"path":"/rest"},"format":"XML","enable":true,"destination":"REST_ENDPOINT"} 
+   {"origin":1471806386919,"name":"RESTXMLClient","addressable":{"origin":1471806386919,"name":"EdgeXTestRESTXML","protocol":"HTTP","address":"http://localhost","port":8111,"path":"/rest"},"format":"XML","enable":true,"destination":"REST_ENDPOINT"} 
 
 
 **Result:**
@@ -367,13 +359,11 @@ Look for the RejectedEventsServiceActivator: Rejected Event:  Event [... message
 
 With the value descriptor check turned off, receive all exported core data Event/Readings regardless of the fact that the readings have values that fall outside the value descriptors for temperature and humidity.
 
-The following example at this time shows the older development name of "fuse."  The EdgeX Foundry name in the software will be updated soon to "edgexfoundry." 
-
 **Setup**
 
-* Stop the Fuse Export Distro Service
+* Stop the EdgeX Export Distro Service
 * In the application.properties file of the microservice, **change** the valuedescriptor.check=true to **false**
-* Restart the Fuse Export Distro Service
+* Restart the EdgeX Export Distro Service
 
 **No client registration changes are required for these tests.**
 
@@ -390,9 +380,9 @@ The following example at this time shows the older development name of "fuse."  
 
 **Cleanup**
 
-* Stop the Fuse Export Distro Service
+* Stop the EdgeX Export Distro Service
 * In the application.properties file of the microservice, return the valuedescriptor.check=true
-* Restart the Fuse Export Distro Service
+* Restart the EdgeX Export Distro Service
 * Remove all existing client registrations with the following DELETE calls
   
  * http://localhost:48071/api/v1/registration/name/RESTClient
@@ -404,13 +394,12 @@ The following example at this time shows the older development name of "fuse."  
 
 Receive all exported Core Data Event/Readings with valid value descriptors in the reading, uncompressed, unencrypted, but with a device filter (but no value descriptor filter) in place.  In this example, the device filter will not match any devices on the incoming events.
 
-The following example at this time shows the older development name of "fuse."  The EdgeX Foundry name in the software will be updated soon to "edgexfoundry." 
 Register for JSON formatted data to be sent to MQTT topic
 
 ::
 
    POST to http://localhost:48071/api/v1/registration
-   {"origin":1471806386919,"name":"MQTTClient","addressable":{"origin":1471806386919,"name":"FuseTestMQTTBroker","protocol":"TCP","address":"m10.cloudmqtt.com","port":15421,"publisher":"FuseExportPublisher","user":"hukfgtoh","password":"uP6hJLYW6Ji4","topic":"FuseDataTopic"},"format":"JSON","filter":{"deviceIdentifiers":["motorrpm"]},"enable":true,"destination":"MQTT_TOPIC"}
+   {"origin":1471806386919,"name":"MQTTClient","addressable":{"origin":1471806386919,"name":"EdgeXTestMQTTBroker","protocol":"TCP","address":"m10.cloudmqtt.com","port":15421,"publisher":"EdgeXExportPublisher","user":"hukfgtoh","password":"uP6hJLYW6Ji4","topic":"EdgeXDataTopic"},"format":"JSON","filter":{"deviceIdentifiers":["motorrpm"]},"enable":true,"destination":"MQTT_TOPIC"}
 
 
 **Result:**
@@ -422,7 +411,7 @@ No data should be received by the client
 ::
 
    POST to http://localhost:48071/api/v1/registration
-   {"origin":1471806386919,"name":"RESTClient","addressable":{"origin":1471806386919,"name":"FuseTestREST","protocol":"HTTP","address":"http://localhost","port":8111,"path":"/rest"},"format":"JSON","filter":{"deviceIdentifiers":["motorrpm"]},"enable":true,"destination":"REST_ENDPOINT"} 
+   {"origin":1471806386919,"name":"RESTClient","addressable":{"origin":1471806386919,"name":"EdgeXTestREST","protocol":"HTTP","address":"http://localhost","port":8111,"path":"/rest"},"format":"JSON","filter":{"deviceIdentifiers":["motorrpm"]},"enable":true,"destination":"REST_ENDPOINT"} 
 
 
 **Result:**
@@ -434,7 +423,7 @@ No data should be received by the client
 ::
 
    POST to http://localhost:48071/api/v1/registration
-   {"origin":1471806386919,"name":"MQTTXMLClient","addressable":{"origin":1471806386919,"name":"FuseTestMQTTXMLBroker","protocol":"TCP","address":"m10.cloudmqtt.com","port":15421,"publisher":"FuseExportPublisher","user":"hukfgtoh","password":"uP6hJLYW6Ji4","topic":"FuseXMLDataTopic"},"format":"XML","filter":{"deviceIdentifiers":["motorrpm"]},"enable":true,"destination":"MQTT_TOPIC"}
+   {"origin":1471806386919,"name":"MQTTXMLClient","addressable":{"origin":1471806386919,"name":"EdgeXTestMQTTXMLBroker","protocol":"TCP","address":"m10.cloudmqtt.com","port":15421,"publisher":"EdgeXExportPublisher","user":"hukfgtoh","password":"uP6hJLYW6Ji4","topic":"EdgeXXMLDataTopic"},"format":"XML","filter":{"deviceIdentifiers":["motorrpm"]},"enable":true,"destination":"MQTT_TOPIC"}
 
 
 **Result:**
@@ -446,7 +435,7 @@ No data should be received by the client
 ::
 
    POST to http://localhost:48071/api/v1/registration
-   {"origin":1471806386919,"name":"RESTXMLClient","addressable":{"origin":1471806386919,"name":"FuseTestRESTXML","protocol":"HTTP","address":"http://localhost","port":8111,"path":"/rest"},"format":"XML","filter":{"deviceIdentifiers":["motorrpm"]},"enable":true,"destination":"REST_ENDPOINT"}
+   {"origin":1471806386919,"name":"RESTXMLClient","addressable":{"origin":1471806386919,"name":"EdgeXTestRESTXML","protocol":"HTTP","address":"http://localhost","port":8111,"path":"/rest"},"format":"XML","filter":{"deviceIdentifiers":["motorrpm"]},"enable":true,"destination":"REST_ENDPOINT"}
 
 
 **Result:**

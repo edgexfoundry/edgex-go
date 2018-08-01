@@ -51,9 +51,6 @@ type ConfigurationStruct struct {
 	MetaProvisionWatcherPath string
 }
 
-// Configuration data for the metadata service
-var configuration ConfigurationStruct = ConfigurationStruct{}
-
 const (
 	/* -------------- Constants for Command -------------------- */
 	REST_HTTP                string = "http://"

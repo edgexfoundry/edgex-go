@@ -35,14 +35,14 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 		r, err := dbClient.Readings()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-			loggingClient.Error(err.Error())
+			LoggingClient.Error(err.Error())
 			return
 		}
 
 		// Check max limit
 		if len(r) > configuration.ReadMaxLimit {
 			http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
-			loggingClient.Error(maxExceededString)
+			LoggingClient.Error(maxExceededString)
 			return
 		}
 
@@ -55,7 +55,7 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 		// Problem decoding
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-			loggingClient.Error("Error decoding the reading: " + err.Error())
+			LoggingClient.Error("Error decoding the reading: " + err.Error())
 			return
 		}
 
@@ -68,14 +68,14 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 				} else {
 					http.Error(w, err.Error(), http.StatusServiceUnavailable)
 				}
-				loggingClient.Error(err.Error())
+				LoggingClient.Error(err.Error())
 				return
 			}
 
 			valid, err := isValidValueDescriptor(vd, reading)
 			if !valid {
 				http.Error(w, "Validation failed", http.StatusConflict)
-				loggingClient.Error("Validation failed")
+				LoggingClient.Error("Validation failed")
 				return
 			}
 		}
@@ -91,7 +91,7 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 			id, err := dbClient.AddReading(reading)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusServiceUnavailable)
-				loggingClient.Error(err.Error())
+				LoggingClient.Error(err.Error())
 				return
 			}
 
@@ -109,7 +109,7 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 		// Problem decoding
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-			loggingClient.Error("Error decoding the reading: " + err.Error())
+			LoggingClient.Error("Error decoding the reading: " + err.Error())
 			return
 		}
 
@@ -121,7 +121,7 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 			} else {
 				http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			}
-			loggingClient.Error(err.Error())
+			LoggingClient.Error(err.Error())
 			return
 		}
 
@@ -146,7 +146,7 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 					} else {
 						http.Error(w, err.Error(), http.StatusServiceUnavailable)
 					}
-					loggingClient.Error(err.Error())
+					LoggingClient.Error(err.Error())
 					return
 				}
 
@@ -155,7 +155,7 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 				valid, err := isValidValueDescriptor(vd, to)
 				if !valid {
 					http.Error(w, "Validation failed", http.StatusConflict)
-					loggingClient.Error("Validation failed")
+					LoggingClient.Error("Validation failed")
 					return
 				}
 			}
@@ -164,7 +164,7 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 		err = dbClient.UpdateReading(to)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-			loggingClient.Error(err.Error())
+			LoggingClient.Error(err.Error())
 			return
 		}
 
@@ -192,7 +192,7 @@ func getReadingByIdHandler(w http.ResponseWriter, r *http.Request) {
 			} else {
 				http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			}
-			loggingClient.Error(err.Error())
+			LoggingClient.Error(err.Error())
 			return
 		}
 
@@ -210,14 +210,14 @@ func readingCountHandler(w http.ResponseWriter, r *http.Request) {
 		count, err := dbClient.ReadingCount()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-			loggingClient.Error(err.Error())
+			LoggingClient.Error(err.Error())
 			return
 		}
 
 		w.WriteHeader(http.StatusOK)
 		_, err = w.Write([]byte(strconv.Itoa(count)))
 		if err != nil {
-			loggingClient.Error(err.Error(), "")
+			LoggingClient.Error(err.Error(), "")
 		}
 	}
 }
@@ -240,14 +240,14 @@ func deleteReadingByIdHandler(w http.ResponseWriter, r *http.Request) {
 			} else {
 				http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			}
-			loggingClient.Error(err.Error())
+			LoggingClient.Error(err.Error())
 			return
 		}
 
 		err = dbClient.DeleteReadingById(reading.Id.Hex())
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-			loggingClient.Error(err.Error())
+			LoggingClient.Error(err.Error())
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
@@ -268,14 +268,14 @@ func readingByDeviceHandler(w http.ResponseWriter, r *http.Request) {
 	// Problems converting limit to int
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		loggingClient.Error("Error converting the limit to an integer: " + err.Error())
+		LoggingClient.Error("Error converting the limit to an integer: " + err.Error())
 		return
 	}
 	deviceId, err := url.QueryUnescape(vars["deviceId"])
 	// Problems unescaping URL
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		loggingClient.Error("Error unescaping the device ID: " + err.Error())
+		LoggingClient.Error("Error unescaping the device ID: " + err.Error())
 		return
 	}
 
@@ -283,7 +283,7 @@ func readingByDeviceHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		if limit > configuration.ReadMaxLimit {
 			http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
-			loggingClient.Error(maxExceededString)
+			LoggingClient.Error(maxExceededString)
 			return
 		}
 
@@ -295,7 +295,7 @@ func readingByDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		readings, err := dbClient.ReadingsByDevice(deviceId, limit)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-			loggingClient.Error(err.Error())
+			LoggingClient.Error(err.Error())
 			return
 		}
 
@@ -314,14 +314,14 @@ func readingbyValueDescriptorHandler(w http.ResponseWriter, r *http.Request) {
 	// Problems with unescaping URL
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		loggingClient.Error("Error unescaping value descriptor name: " + err.Error())
+		LoggingClient.Error("Error unescaping value descriptor name: " + err.Error())
 		return
 	}
 	limit, err := strconv.Atoi(vars["limit"])
 	// Problems converting limit to int
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		loggingClient.Error("Error converting the limit to an integer: " + err.Error())
+		LoggingClient.Error("Error converting the limit to an integer: " + err.Error())
 		return
 	}
 
@@ -334,7 +334,7 @@ func readingbyValueDescriptorHandler(w http.ResponseWriter, r *http.Request) {
 			} else {
 				http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			}
-			loggingClient.Error(err.Error())
+			LoggingClient.Error(err.Error())
 			return
 		}
 	}
@@ -342,14 +342,14 @@ func readingbyValueDescriptorHandler(w http.ResponseWriter, r *http.Request) {
 	// Limit is too large
 	if limit > configuration.ReadMaxLimit {
 		http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
-		loggingClient.Error(maxExceededString)
+		LoggingClient.Error(maxExceededString)
 		return
 	}
 
 	read, err := dbClient.ReadingsByValueDescriptor(name, limit)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		loggingClient.Error(err.Error())
+		LoggingClient.Error(err.Error())
 		return
 	}
 
@@ -367,7 +367,7 @@ func readingByUomLabelHandler(w http.ResponseWriter, r *http.Request) {
 	// Problems unescaping URL
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		loggingClient.Error("Error unescaping the UOM Label: " + err.Error())
+		LoggingClient.Error("Error unescaping the UOM Label: " + err.Error())
 		return
 	}
 
@@ -375,14 +375,14 @@ func readingByUomLabelHandler(w http.ResponseWriter, r *http.Request) {
 	// Problems converting limit to int
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		loggingClient.Error("Error converting the limit to an integer: " + err.Error())
+		LoggingClient.Error("Error converting the limit to an integer: " + err.Error())
 		return
 	}
 
 	// Limit was exceeded
 	if limit > configuration.ReadMaxLimit {
 		http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
-		loggingClient.Error(maxExceededString)
+		LoggingClient.Error(maxExceededString)
 		return
 	}
 
@@ -390,7 +390,7 @@ func readingByUomLabelHandler(w http.ResponseWriter, r *http.Request) {
 	vList, err := dbClient.ValueDescriptorsByUomLabel(uomLabel)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		loggingClient.Error(err.Error())
+		LoggingClient.Error(err.Error())
 		return
 	}
 
@@ -402,7 +402,7 @@ func readingByUomLabelHandler(w http.ResponseWriter, r *http.Request) {
 	readings, err := dbClient.ReadingsByValueDescriptorNames(vNames, limit)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		loggingClient.Error(err.Error())
+		LoggingClient.Error(err.Error())
 		return
 	}
 
@@ -420,20 +420,20 @@ func readingByLabelHandler(w http.ResponseWriter, r *http.Request) {
 	// Problem unescaping
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		loggingClient.Error("Error unescaping the label of the value descriptor: " + err.Error())
+		LoggingClient.Error("Error unescaping the label of the value descriptor: " + err.Error())
 		return
 	}
 	limit, err := strconv.Atoi(vars["limit"])
 	// Problems converting to int
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		loggingClient.Error("Error converting the limit to an integer: " + err.Error())
+		LoggingClient.Error("Error converting the limit to an integer: " + err.Error())
 		return
 	}
 
 	// Limit is too large
 	if limit > configuration.ReadMaxLimit {
-		loggingClient.Error(maxExceededString)
+		LoggingClient.Error(maxExceededString)
 		http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
 		return
 	}
@@ -442,7 +442,7 @@ func readingByLabelHandler(w http.ResponseWriter, r *http.Request) {
 	vdList, err := dbClient.ValueDescriptorsByLabel(label)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		loggingClient.Error(err.Error())
+		LoggingClient.Error(err.Error())
 		return
 	}
 	var vdNames []string
@@ -453,7 +453,7 @@ func readingByLabelHandler(w http.ResponseWriter, r *http.Request) {
 	readings, err := dbClient.ReadingsByValueDescriptorNames(vdNames, limit)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		loggingClient.Error(err.Error())
+		LoggingClient.Error(err.Error())
 		return
 	}
 
@@ -471,7 +471,7 @@ func readingByTypeHandler(w http.ResponseWriter, r *http.Request) {
 	t, err := url.QueryUnescape(vars["type"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		loggingClient.Error("Error escaping the type: " + err.Error())
+		LoggingClient.Error("Error escaping the type: " + err.Error())
 		return
 	}
 
@@ -479,14 +479,14 @@ func readingByTypeHandler(w http.ResponseWriter, r *http.Request) {
 	// Problem converting to int
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		loggingClient.Error("Error converting the limit to an integer: " + err.Error())
+		LoggingClient.Error("Error converting the limit to an integer: " + err.Error())
 		return
 	}
 
 	// Limit exceeds max limit
 	if l > configuration.ReadMaxLimit {
 		http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
-		loggingClient.Error(maxExceededString)
+		LoggingClient.Error(maxExceededString)
 		return
 	}
 
@@ -494,7 +494,7 @@ func readingByTypeHandler(w http.ResponseWriter, r *http.Request) {
 	vdList, err := dbClient.ValueDescriptorsByType(t)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		loggingClient.Error(err.Error())
+		LoggingClient.Error(err.Error())
 		return
 	}
 	var vdNames []string
@@ -505,7 +505,7 @@ func readingByTypeHandler(w http.ResponseWriter, r *http.Request) {
 	readings, err := dbClient.ReadingsByValueDescriptorNames(vdNames, l)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		loggingClient.Error(err.Error())
+		LoggingClient.Error(err.Error())
 		return
 	}
 
@@ -521,26 +521,26 @@ func readingByCreationTimeHandler(w http.ResponseWriter, r *http.Request) {
 	s, err := strconv.ParseInt((vars["start"]), 10, 64)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		loggingClient.Error("Error converting the start time to an integer: " + err.Error())
+		LoggingClient.Error("Error converting the start time to an integer: " + err.Error())
 		return
 	}
 	e, err := strconv.ParseInt((vars["end"]), 10, 64)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		loggingClient.Error("Error converting the end time to an integer: " + err.Error())
+		LoggingClient.Error("Error converting the end time to an integer: " + err.Error())
 		return
 	}
 	l, err := strconv.Atoi(vars["limit"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		loggingClient.Error("Error converting the limit to an integer: " + err.Error())
+		LoggingClient.Error("Error converting the limit to an integer: " + err.Error())
 		return
 	}
 
 	switch r.Method {
 	case http.MethodGet:
 		if l > configuration.ReadMaxLimit {
-			loggingClient.Error(maxExceededString)
+			LoggingClient.Error(maxExceededString)
 			http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
 			return
 		}
@@ -548,7 +548,7 @@ func readingByCreationTimeHandler(w http.ResponseWriter, r *http.Request) {
 		readings, err := dbClient.ReadingsByCreationTime(s, e, l)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-			loggingClient.Error(err.Error())
+			LoggingClient.Error(err.Error())
 			return
 		}
 
@@ -568,26 +568,26 @@ func readingByValueDescriptorAndDeviceHandler(w http.ResponseWriter, r *http.Req
 	name, err := url.QueryUnescape(vars["name"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		loggingClient.Error("Error unescaping the value descriptor name: " + err.Error())
+		LoggingClient.Error("Error unescaping the value descriptor name: " + err.Error())
 		return
 	}
 
 	device, err := url.QueryUnescape(vars["device"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		loggingClient.Error("Error unescaping the device: " + err.Error())
+		LoggingClient.Error("Error unescaping the device: " + err.Error())
 		return
 	}
 
 	limit, err := strconv.Atoi(vars["limit"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		loggingClient.Error("Error converting limit to an integer: " + err.Error())
+		LoggingClient.Error("Error converting limit to an integer: " + err.Error())
 		return
 	}
 
 	if limit > configuration.ReadMaxLimit {
-		loggingClient.Error(maxExceededString)
+		LoggingClient.Error(maxExceededString)
 		http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
 		return
 	}
@@ -606,7 +606,7 @@ func readingByValueDescriptorAndDeviceHandler(w http.ResponseWriter, r *http.Req
 			} else {
 				http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			}
-			loggingClient.Error(err.Error())
+			LoggingClient.Error(err.Error())
 			return
 		}
 	}
@@ -614,7 +614,7 @@ func readingByValueDescriptorAndDeviceHandler(w http.ResponseWriter, r *http.Req
 	readings, err := dbClient.ReadingsByDeviceAndValueDescriptor(device, name, limit)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		loggingClient.Error(err.Error())
+		LoggingClient.Error(err.Error())
 		return
 	}
 
