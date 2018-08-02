@@ -59,7 +59,7 @@ func subscriptionHandler(w http.ResponseWriter, r *http.Request) {
 		// Check if the subscription exists
 		s2, err := dbClient.SubscriptionBySlug(s.Slug)
 		if err != nil {
-			if err == db.ErrNotFound {
+			if err == db.ErrNotFoundVariant {
 				http.Error(w, "Subscription not found", http.StatusNotFound)
 			} else {
 				http.Error(w, err.Error(), http.StatusInternalServerError)

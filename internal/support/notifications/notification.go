@@ -96,7 +96,7 @@ func notificationBySlugHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodDelete:
 		_, err := dbClient.NotificationBySlug(slug)
 		if err != nil {
-			if err == db.ErrNotFound {
+			if err == db.ErrNotFoundVariant {
 				http.Error(w, "Notification not found", http.StatusNotFound)
 			} else {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
