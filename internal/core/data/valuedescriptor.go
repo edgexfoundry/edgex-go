@@ -71,7 +71,7 @@ func valueDescriptorHandler(w http.ResponseWriter, r *http.Request) {
 		err := dec.Decode(&v)
 		// Problems decoding
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			LoggingClient.Error("Error decoding the value descriptor: " + err.Error())
 			return
 		}
@@ -79,7 +79,7 @@ func valueDescriptorHandler(w http.ResponseWriter, r *http.Request) {
 		// Check the formatting
 		match, err := validateFormatString(v)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			LoggingClient.Error("Error checking for format string for POSTed value descriptor")
 			return
 		}
@@ -108,7 +108,7 @@ func valueDescriptorHandler(w http.ResponseWriter, r *http.Request) {
 		from := models.ValueDescriptor{}
 		err := dec.Decode(&from)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			LoggingClient.Error("Error decoding the value descriptor: " + err.Error())
 			return
 		}
@@ -244,7 +244,7 @@ func valueDescriptorByNameHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Problems unescaping
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		LoggingClient.Error("Error unescaping the value descriptor name: " + err.Error())
 		return
 	}
@@ -345,9 +345,9 @@ func valueDescriptorByUomLabelHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	uomLabel, err := url.QueryUnescape(vars["uomLabel"])
 
-	// Prolem unescaping
+	// Problem unescaping
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		LoggingClient.Error("Error unescaping the UOM Label of the value descriptor: " + err.Error())
 		return
 	}
@@ -375,7 +375,7 @@ func valueDescriptorByLabelHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Problem unescaping
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		LoggingClient.Error("Error unescaping label for the value descriptor: " + err.Error())
 		return
 	}

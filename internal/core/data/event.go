@@ -197,7 +197,7 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 
 		// Problem Decoding Event
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			LoggingClient.Error("Error decoding event: " + err.Error())
 			return
 		}
@@ -261,7 +261,7 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 
 		// Problem decoding event
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			LoggingClient.Error("Error decoding the event: " + err.Error())
 			return
 		}
@@ -377,7 +377,7 @@ func eventCountByDeviceIdHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := url.QueryUnescape(vars["deviceId"])
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		LoggingClient.Error("Problem unescaping URL: " + err.Error())
 		return
 	}
@@ -484,7 +484,7 @@ func getEventByDeviceHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Problems unescaping URL
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		LoggingClient.Error("Error unescaping URL: " + err.Error())
 		return
 	}
@@ -492,7 +492,7 @@ func getEventByDeviceHandler(w http.ResponseWriter, r *http.Request) {
 	// Convert limit to int
 	limitNum, err := strconv.Atoi(limit)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		LoggingClient.Error("Error converting to integer: " + err.Error())
 		return
 	}
@@ -532,7 +532,7 @@ func deleteByDeviceIdHandler(w http.ResponseWriter, r *http.Request) {
 	deviceId, err := url.QueryUnescape(vars["deviceId"])
 	// Problems unescaping URL
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		LoggingClient.Error("Error unescaping the URL: " + err.Error())
 		return
 	}
@@ -582,7 +582,7 @@ func eventByCreationTimeHandler(w http.ResponseWriter, r *http.Request) {
 	start, err := strconv.ParseInt(vars["start"], 10, 64)
 	// Problems converting start time
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		LoggingClient.Error("Problem converting start time: " + err.Error())
 		return
 	}
@@ -590,7 +590,7 @@ func eventByCreationTimeHandler(w http.ResponseWriter, r *http.Request) {
 	end, err := strconv.ParseInt(vars["end"], 10, 64)
 	// Problems converting end time
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		LoggingClient.Error("Problem converting end time: " + err.Error())
 		return
 	}
@@ -598,7 +598,7 @@ func eventByCreationTimeHandler(w http.ResponseWriter, r *http.Request) {
 	limit, err := strconv.Atoi(vars["limit"])
 	// Problems converting limit
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		LoggingClient.Error("Problem converting limit: " + strconv.Itoa(limit))
 		return
 	}
@@ -635,7 +635,7 @@ func readingByDeviceFilteredValueDescriptor(w http.ResponseWriter, r *http.Reque
 	valueDescriptor, err := url.QueryUnescape(vars["valueDescriptor"])
 	// Problems unescaping URL
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		LoggingClient.Error("Problem unescaping value descriptor: " + err.Error())
 		return
 	}
@@ -643,7 +643,7 @@ func readingByDeviceFilteredValueDescriptor(w http.ResponseWriter, r *http.Reque
 	deviceId, err := url.QueryUnescape(vars["deviceId"])
 	// Problems unescaping URL
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		LoggingClient.Error("Problem unescaping device ID: " + err.Error())
 		return
 	}
@@ -651,7 +651,7 @@ func readingByDeviceFilteredValueDescriptor(w http.ResponseWriter, r *http.Reque
 	limitNum, err := strconv.Atoi(limit)
 	// Problem converting the limit
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		LoggingClient.Error("Problem converting limit to integer: " + err.Error())
 		return
 	}
@@ -708,7 +708,7 @@ func eventByAgeHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Problem converting age
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		LoggingClient.Error("Error converting the age to an integer")
 		return
 	}

@@ -22,6 +22,8 @@ schemas:
         responses: 
             "200": 
                 description: new event database generated id
+            "400":
+                description: creation request is invalid
             "404":
                 description: if the a reading is associated to a non-existent value descriptor, or if device verification is enabled and the device is not found.
             "503": 
@@ -36,6 +38,8 @@ schemas:
         responses: 
             "200": 
                 description: boolean on success of update request
+            "400":
+                description: update request is invalid
             "404": 
                 description: if the event cannot be found by id.
             "503": 
@@ -98,6 +102,8 @@ schemas:
         responses: 
             "200": 
                 description: number of events for the device
+            "400":
+                description: query request is invalid
             "503": 
                 description: for unknown or unanticipated issues.                
 /event/id/{id}: 
@@ -156,6 +162,8 @@ schemas:
                     application/json: 
                         schema: event
                         example: '[{"id":"5888dea1bd36573f4681d6f9","created":1485364897029,"modified":1485364897029,"origin":1471806386919,"pushed":0,"device":"livingroomthermostat","readings":[{"id":"5888dea0bd36573f4681d6f8","created":1485364896983,"modified":1485364896983,"origin":1471806386919,"pushed":0,"name":"temperature","value":"38","device":"livingroomthermostat"}]}]'
+            "400":
+                description: request is invalid or unparseable
             "404": 
                 description: if the meta data checks are on and no device is found for supplied id.
             "413": 
@@ -178,6 +186,8 @@ schemas:
         responses: 
             "200": 
                 description: count of the number of events deleted
+            "400":
+                description: could not unescape URL
             "404": 
                 description: if the meta data checks are on and no device is found for supplied id.
             "503": 
@@ -214,6 +224,8 @@ schemas:
                     application/json: 
                         schema: event
                         example: '[{"id":"5888dea1bd36573f4681d6f9","created":1485364897029,"modified":1485364897029,"origin":1471806386919,"pushed":0,"device":"livingroomthermostat","readings":[{"id":"5888dea0bd36573f4681d6f8","created":1485364896983,"modified":1485364896983,"origin":1471806386919,"pushed":0,"name":"temperature","value":"38","device":"livingroomthermostat"}]}]'
+            "400":
+                description: request is invalid or unparseable
             "413": 
                 description: if the number of events exceeds the current max limit.
             "503": 
@@ -250,6 +262,8 @@ schemas:
                     application/json: 
                         schema: reading
                         example: '[{"id":"5888dea1bd36573f4681d6f9","created":1485364897029,"modified":1485364897029,"origin":1471806386919,"pushed":0,"device":"livingroomthermostat","readings":[{"id":"5888dea0bd36573f4681d6f8","created":1485364896983,"modified":1485364896983,"origin":1471806386919,"pushed":0,"name":"temperature","value":"38","device":"livingroomthermostat"}]}]'
+            "400":
+                description: request is invalid or unparseable
             "413": 
                 description: if the number of events exceeds the current max limit.
             "503": 
@@ -270,6 +284,7 @@ schemas:
         responses: 
             "200": 
                 description: count of the number of events removed
+            
             "503": 
                 description: for unknown or unanticipated issues.
 /event/scrub: 
@@ -296,6 +311,8 @@ schemas:
         responses: 
             "200": 
                 description: String id (database id) of the new Reading
+            "400":
+                description: request is invalid or unparseable
             "409": 
                 description: if the associated value descriptor is non-existent
             "503": 
@@ -310,6 +327,8 @@ schemas:
         responses: 
             "200": 
                 description: boolean indicating success of the update operation
+            "400":
+                description: request is invalid or unparseable
             "404": 
                 description: if the reading cannot be found by id
             "409": 
@@ -410,6 +429,8 @@ schemas:
                     application/json: 
                         schema: reading
                         example: '[{"id":"5888dea0bd36573f4681d6f8","created":1485364896983,"modified":1485364896983,"origin":1471806386919,"pushed":0,"name":"temperature","value":"38","device":"livingroomthermostat"}]'
+            "400":
+                description: request is invalid or unparseable
             "404": 
                 description: if meta checks are in place and if the device id or name does not match any existing devices
             "413": 
@@ -448,6 +469,8 @@ schemas:
                     application/json: 
                         schema: reading
                         example: '[{"id":"5888dea0bd36573f4681d6f8","created":1485364896983,"modified":1485364896983,"origin":1471806386919,"pushed":0,"name":"temperature","value":"38","device":"livingroomthermostat"}]'
+            "400":
+                description: request is invalid or unparseable
             "413": 
                 description: if the number of readings exceeds the current max limit.
             "503": 
@@ -478,6 +501,8 @@ schemas:
                     application/json: 
                         schema: reading
                         example: '[{"id":"5888dea0bd36573f4681d6f8","created":1485364896983,"modified":1485364896983,"origin":1471806386919,"pushed":0,"name":"temperature","value":"38","device":"livingroomthermostat"}]'
+            "400":
+                description: request is invalid or unparseable
             "413": 
                 description: if the number of readings exceeds the current max limit.
             "503": 
@@ -508,6 +533,8 @@ schemas:
                     application/json: 
                         schema: reading
                         example: '[{"id":"5888dea0bd36573f4681d6f8","created":1485364896983,"modified":1485364896983,"origin":1471806386919,"pushed":0,"name":"temperature","value":"38","device":"livingroomthermostat"}]'
+            "400":
+                description: request is invalid or unparseable
             "413": 
                 description: if the number of readings exceeds the current max limit.
             "503": 
@@ -538,6 +565,8 @@ schemas:
                     application/json: 
                         schema: reading
                         example: '[{"id":"5888dea0bd36573f4681d6f8","created":1485364896983,"modified":1485364896983,"origin":1471806386919,"pushed":0,"name":"temperature","value":"38","device":"livingroomthermostat"}]'
+            "400":
+                description: request is invalid or unparseable
             "413": 
                 description: if the number of readings exceeds the current max limit.
             "503": 
@@ -568,6 +597,8 @@ schemas:
                     application/json: 
                         schema: reading
                         example: '[{"id":"5888dea0bd36573f4681d6f8","created":1485364896983,"modified":1485364896983,"origin":1471806386919,"pushed":0,"name":"temperature","value":"38","device":"livingroomthermostat"}]'
+            "400":
+                description: request is invalid or unparseable
             "413": 
                 description: if the number of readings exceeds the current max limit.
             "503": 
@@ -603,6 +634,8 @@ schemas:
                     application/json: 
                         schema: reading
                         example: '[{"id":"5888dea0bd36573f4681d6f8","created":1485364896983,"modified":1485364896983,"origin":1471806386919,"pushed":0,"name":"temperature","value":"38","device":"livingroomthermostat"}]'
+            "400":
+                description: request is invalid or unparseable
             "413": 
                 description: if the number of readings exceeds the current max limit.
             "503": 
@@ -620,6 +653,8 @@ schemas:
         responses: 
             "200": 
                 description: database generated id of the new ValueDescriptor
+            "400":
+                description: request is invalid or unparseable
             "409": 
                 description: if the a formatting string of the value descriptor is not a valid printf format or if the name is determined to not be unique with regard to other value descriptors.
             "503": 
@@ -634,6 +669,8 @@ schemas:
         responses: 
             "200": 
                 description: boolean indicating success of the update
+            "400":
+                description: request is invalid or unparseable
             "404": 
                 description: if the value descriptor cannot be located by the identifier.
     get: 
@@ -692,6 +729,8 @@ schemas:
                     application/json: 
                         schema: valueDescriptor
                         example: '{"id":"57b9fbb2189b95b8afcdafd2","created":1471806386919,"modified":1471806467057,"origin":0,"name":"temperature","description":"test description","min":"-100","max":"200","type":"F","uomLabel":"degree cel","defaultValue":"0","formatting":"%s","labels":["temp","hvac"]}'
+            "400":
+                description: request is invalid or unparseable
             "404":
                 description: if the value descriptor cannot be located by the name                        
             "503": 
@@ -702,6 +741,8 @@ schemas:
         responses: 
             "200": 
                 description: boolean indicating success of the remove operation
+            "400":
+                description: request is invalid or unparseable
             "404": 
                 description: if the value descriptor cannot be located by the identifier
             "409": 
@@ -796,6 +837,8 @@ schemas:
                     application/json: 
                         schema: valueDescriptor
                         example: '[{"id":"57b9fbb2189b95b8afcdafd2","created":1471806386919,"modified":1471806467057,"origin":0,"name":"temperature","description":"test description","min":"-100","max":"200","type":"F","uomLabel":"degree cel","defaultValue":"0","formatting":"%s","labels":["temp","hvac"]}]'
+            "400":
+                description: request is invalid or unparseable
             "503": 
                 description: for unknown or unanticipated issues.
 /valuedescriptor/label/{label}: 
@@ -818,6 +861,8 @@ schemas:
                     application/json: 
                         schema: valueDescriptor
                         example: '[{"id":"57b9fbb2189b95b8afcdafd2","created":1471806386919,"modified":1471806467057,"origin":0,"name":"temperature","description":"test description","min":"-100","max":"200","type":"F","uomLabel":"degree cel","defaultValue":"0","formatting":"%s","labels":["temp","hvac"]}]'
+            "400":
+                description: request is invalid or unparseable
             "503": 
                 description: for unknown or unanticipated issues.
 /ping: 
