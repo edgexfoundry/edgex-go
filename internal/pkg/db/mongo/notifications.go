@@ -29,56 +29,9 @@ const (
 	TRANSMISSION_COLLECTION = "transmission"
 )
 
-//var currentMongoClient *MongoClient // Singleton used so that MongoEvent can use it to de-reference readings
-var currentReadMaxLimit int         // configuration read max limit
-var currentResendLimit int          // configuration transmission resent count limit
+var currentReadMaxLimit int // configuration read max limit
+var currentResendLimit int  // configuration transmission resent count limit
 var cleanupDefaultAge int64
-
-//type MongoClient struct {
-//	Session  *mgo.Session  // Mongo database session
-//	Database *mgo.Database // Mongo database
-//}
-
-// Return a pointer to the MongoClient
-//func newMongoClient(config DBConfiguration) (*MongoClient, error) {
-//	// Create the dial info for the Mongo session
-//	connectionString := config.Host + ":" + strconv.Itoa(config.Port)
-//	fmt.Println("INFO: Connecting to mongo at: " + connectionString)
-//	mongoDBDialInfo := &mgo.DialInfo{
-//		Addrs:    []string{connectionString},
-//		Timeout:  time.Duration(config.Timeout) * time.Millisecond,
-//		Database: config.DatabaseName,
-//		Username: config.Username,
-//		Password: config.Password,
-//	}
-//	session, err := mgo.DialWithInfo(mongoDBDialInfo)
-//	if err != nil {
-//		fmt.Println("Error dialing the mongo server: " + err.Error())
-//		return nil, err
-//	}
-//
-//	mongoClient := &MongoClient{Session: session, Database: session.DB(config.DatabaseName)}
-//	currentMongoClient = mongoClient             // Set the singleton
-//	currentReadMaxLimit = config.ReadMax         // Set the read max
-//	currentResendLimit = config.ResendLimit      // Set the transmission resend count limit
-//	cleanupDefaultAge = config.CleanupDefaultAge //Set the default clean up age
-//
-//	return mongoClient, nil
-//}
-
-// Get the current Mongo Client
-//func getCurrentMongoClient() (*MongoClient, error) {
-//	if currentMongoClient == nil {
-//		return nil, errors.New("No current mongo client, please create a new client before requesting it")
-//	}
-//
-//	return currentMongoClient, nil
-//}
-
-// Get a copy of the session
-//func (mc *MongoClient) getSessionCopy() *mgo.Session {
-//	return mc.Session.Copy()
-//}
 
 // ******************************* NOTIFICATIONS **********************************
 
