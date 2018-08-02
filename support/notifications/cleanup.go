@@ -61,7 +61,7 @@ func cleanupAgeHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodDelete:
 		loggingClient.Info("Cleaning up of old notifications and transmissions")
 
-		if err = dbc.CleanupOld(age); err != nil {
+		if err = dbc.CleanupOld(int(age)); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			loggingClient.Error(err.Error())
 			return
