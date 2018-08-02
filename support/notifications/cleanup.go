@@ -50,7 +50,7 @@ func cleanupAgeHandler(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
 	}
 	vars := mux.Vars(r)
-	age, err := strconv.ParseInt(vars["age"], 10, 64)
+	age, err := strconv.Atoi(vars["age"])
 	// Problem converting age
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -61,7 +61,7 @@ func cleanupAgeHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodDelete:
 		loggingClient.Info("Cleaning up of old notifications and transmissions")
 
-		if err = dbc.CleanupOld(int(age)); err != nil {
+		if err = dbc.CleanupOld(age); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			loggingClient.Error(err.Error())
 			return
