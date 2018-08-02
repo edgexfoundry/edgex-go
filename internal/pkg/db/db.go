@@ -44,7 +44,6 @@ const (
 
 var (
 	ErrNotFound            = errors.New("Item not found")
-	ErrNotFoundVariant     = errors.New("not found")
 	ErrUnsupportedDatabase = errors.New("Unsuppored database type")
 	ErrInvalidObjectId     = errors.New("Invalid object ID")
 	ErrNotUnique           = errors.New("Resource already exists")
