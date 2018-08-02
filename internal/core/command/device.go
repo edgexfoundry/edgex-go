@@ -87,7 +87,7 @@ func putDeviceAdminState(did string, as string) (int, error) {
 	err := mdc.UpdateAdminState(did, as)
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
-		return http.StatusServiceUnavailable, err
+		return http.StatusInternalServerError, err
 	}
 	return http.StatusOK, err
 }
@@ -96,7 +96,7 @@ func putDeviceAdminStateByName(dn string, as string) (int, error) {
 	err := mdc.UpdateAdminStateByName(dn, as)
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
-		return http.StatusServiceUnavailable, err
+		return http.StatusInternalServerError, err
 	}
 	return http.StatusOK, err
 }
@@ -105,7 +105,7 @@ func putDeviceOpState(did string, as string) (int, error) {
 	err := mdc.UpdateOpState(did, as)
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
-		return http.StatusServiceUnavailable, err
+		return http.StatusInternalServerError, err
 	}
 	return http.StatusOK, err
 }
@@ -114,7 +114,7 @@ func putDeviceOpStateByName(dn string, as string) (int, error) {
 	err := mdc.UpdateOpStateByName(dn, as)
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
-		return http.StatusServiceUnavailable, err
+		return http.StatusInternalServerError, err
 	}
 	return http.StatusOK, err
 }
@@ -122,7 +122,7 @@ func putDeviceOpStateByName(dn string, as string) (int, error) {
 func getCommands() (int, []models.CommandResponse, error) {
 	devices, err := mdc.Devices()
 	if err != nil {
-		return http.StatusServiceUnavailable, nil, err
+		return http.StatusInternalServerError, nil, err
 	}
 	var cr []models.CommandResponse
 	for _, d := range devices {
@@ -135,7 +135,7 @@ func getCommands() (int, []models.CommandResponse, error) {
 func getCommandsByDeviceID(did string) (int, models.CommandResponse, error) {
 	d, err := mdc.Device(did)
 	if err != nil {
-		return http.StatusServiceUnavailable, models.CommandResponse{}, err
+		return http.StatusInternalServerError, models.CommandResponse{}, err
 	}
 	return http.StatusOK, models.CommandResponseFromDevice(d, constructCommandURL()), err
 }
@@ -143,7 +143,7 @@ func getCommandsByDeviceID(did string) (int, models.CommandResponse, error) {
 func getCommandsByDeviceName(dn string) (int, models.CommandResponse, error) {
 	d, err := mdc.DeviceForName(dn)
 	if err != nil {
-		return http.StatusServiceUnavailable, models.CommandResponse{}, err
+		return http.StatusInternalServerError, models.CommandResponse{}, err
 	}
 	return http.StatusOK, models.CommandResponseFromDevice(d, constructCommandURL()), err
 }
