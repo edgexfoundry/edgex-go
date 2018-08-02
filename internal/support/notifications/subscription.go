@@ -26,8 +26,7 @@ import (
 )
 
 const (
-	maxExceededString string = "Error, exceeded the max limit as defined in config"
-	applicationJson          = "application/json; charset=utf-8"
+	applicationJson = "application/json; charset=utf-8"
 )
 
 func subscriptionHandler(w http.ResponseWriter, r *http.Request) {
@@ -46,12 +45,6 @@ func subscriptionHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			LoggingClient.Error(err.Error())
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-			return
-		}
-		// Check max limit
-		if len(subscriptions) > configuration.ReadMaxLimit {
-			http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
-			LoggingClient.Error(maxExceededString)
 			return
 		}
 		encodeWithUTF8(subscriptions, w)
