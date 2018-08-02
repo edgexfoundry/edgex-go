@@ -176,7 +176,7 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 		events, err := dbClient.Events()
 		if err != nil {
 			LoggingClient.Error(err.Error())
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
@@ -218,7 +218,7 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 					if err == db.ErrNotFound {
 						http.Error(w, "Value descriptor for a reading not found", http.StatusNotFound)
 					} else {
-						http.Error(w, err.Error(), http.StatusServiceUnavailable)
+						http.Error(w, err.Error(), http.StatusInternalServerError)
 					}
 					LoggingClient.Error(err.Error())
 					return
@@ -237,7 +237,7 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 		if configuration.PersistData {
 			id, err := dbClient.AddEvent(&e)
 			if err != nil {
-				http.Error(w, err.Error(), http.StatusServiceUnavailable)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
 				LoggingClient.Error(err.Error())
 				return
 			}
@@ -272,7 +272,7 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 			if err == db.ErrNotFound {
 				http.Error(w, "Event not found", http.StatusNotFound)
 			} else {
-				http.Error(w, err.Error(), http.StatusServiceUnavailable)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 			LoggingClient.Error(err.Error())
 			return
@@ -299,7 +299,7 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 
 		// Update
 		if err = dbClient.UpdateEvent(to); err != nil {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			LoggingClient.Error(err.Error())
 			return
 		}
@@ -330,7 +330,7 @@ func getEventByIdHandler(w http.ResponseWriter, r *http.Request) {
 			if err == db.ErrNotFound {
 				http.Error(w, "Event not found", http.StatusNotFound)
 			} else {
-				http.Error(w, err.Error(), http.StatusServiceUnavailable)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 			LoggingClient.Error(err.Error())
 			return
@@ -352,7 +352,7 @@ func eventCountHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		count, err := dbClient.EventCount()
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			LoggingClient.Error(err.Error(), "")
 			return
 		}
@@ -391,7 +391,7 @@ func eventCountByDeviceIdHandler(w http.ResponseWriter, r *http.Request) {
 
 		count, err := dbClient.EventCountByDeviceId(id)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			LoggingClient.Error(err.Error())
 			return
 		}
@@ -424,7 +424,7 @@ func eventIdHandler(w http.ResponseWriter, r *http.Request) {
 			if err == db.ErrNotFound {
 				http.Error(w, "Event not found", http.StatusNotFound)
 			} else {
-				http.Error(w, err.Error(), http.StatusServiceUnavailable)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 			LoggingClient.Error(err.Error())
 			return
@@ -435,7 +435,7 @@ func eventIdHandler(w http.ResponseWriter, r *http.Request) {
 		e.Pushed = time.Now().UnixNano() / int64(time.Millisecond)
 		err = dbClient.UpdateEvent(e)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			LoggingClient.Error(err.Error())
 			return
 		}
@@ -451,7 +451,7 @@ func eventIdHandler(w http.ResponseWriter, r *http.Request) {
 			if err == db.ErrNotFound {
 				http.Error(w, "Event not found", http.StatusNotFound)
 			} else {
-				http.Error(w, err.Error(), http.StatusServiceUnavailable)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 			LoggingClient.Error(err.Error())
 			return
@@ -460,7 +460,7 @@ func eventIdHandler(w http.ResponseWriter, r *http.Request) {
 		LoggingClient.Info("Deleting event: " + e.ID.Hex())
 
 		if err = deleteEvent(e); err != nil {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			LoggingClient.Error(err.Error())
 			return
 		}
@@ -512,7 +512,7 @@ func getEventByDeviceHandler(w http.ResponseWriter, r *http.Request) {
 
 		eventList, err := dbClient.EventsForDeviceLimit(deviceId, limitNum)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			LoggingClient.Error(err.Error())
 			return
 		}
@@ -548,7 +548,7 @@ func deleteByDeviceIdHandler(w http.ResponseWriter, r *http.Request) {
 		events, err := dbClient.EventsForDevice(deviceId)
 		if err != nil {
 			LoggingClient.Error(err.Error())
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
@@ -559,7 +559,7 @@ func deleteByDeviceIdHandler(w http.ResponseWriter, r *http.Request) {
 		for _, event := range events {
 			if err = deleteEvent(event); err != nil {
 				LoggingClient.Error(err.Error())
-				http.Error(w, err.Error(), http.StatusServiceUnavailable)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
 		}
@@ -613,7 +613,7 @@ func eventByCreationTimeHandler(w http.ResponseWriter, r *http.Request) {
 
 		e, err := dbClient.EventsByCreationTime(start, end, limit)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			LoggingClient.Error(err.Error())
 			return
 		}
@@ -672,7 +672,7 @@ func readingByDeviceFilteredValueDescriptor(w http.ResponseWriter, r *http.Reque
 		e, err := dbClient.EventsForDevice(deviceId)
 		if err != nil {
 			LoggingClient.Error(err.Error())
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
@@ -719,7 +719,7 @@ func eventByAgeHandler(w http.ResponseWriter, r *http.Request) {
 		events, err := dbClient.EventsOlderThanAge(age)
 		if err != nil {
 			LoggingClient.Error(err.Error())
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
@@ -728,7 +728,7 @@ func eventByAgeHandler(w http.ResponseWriter, r *http.Request) {
 		for _, event := range events {
 			if err = deleteEvent(event); err != nil {
 				LoggingClient.Error(err.Error())
-				http.Error(w, err.Error(), http.StatusServiceUnavailable)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
 		}
@@ -755,7 +755,7 @@ func scrubHandler(w http.ResponseWriter, r *http.Request) {
 		// Get the events
 		events, err := dbClient.EventsPushed()
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			LoggingClient.Error(err.Error())
 			return
 		}
@@ -764,7 +764,7 @@ func scrubHandler(w http.ResponseWriter, r *http.Request) {
 		count := len(events)
 		for _, event := range events {
 			if err = deleteEvent(event); err != nil {
-				http.Error(w, err.Error(), http.StatusServiceUnavailable)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
 				LoggingClient.Error(err.Error())
 				return
 			}
