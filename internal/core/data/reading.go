@@ -34,7 +34,7 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		r, err := dbClient.Readings()
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			LoggingClient.Error(err.Error())
 			return
 		}
@@ -66,7 +66,7 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 				if err == db.ErrNotFound {
 					http.Error(w, "Value descriptor not found for reading", http.StatusConflict)
 				} else {
-					http.Error(w, err.Error(), http.StatusServiceUnavailable)
+					http.Error(w, err.Error(), http.StatusInternalServerError)
 				}
 				LoggingClient.Error(err.Error())
 				return
@@ -90,7 +90,7 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 		if configuration.PersistData {
 			id, err := dbClient.AddReading(reading)
 			if err != nil {
-				http.Error(w, err.Error(), http.StatusServiceUnavailable)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
 				LoggingClient.Error(err.Error())
 				return
 			}
@@ -119,7 +119,7 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 			if err == db.ErrNotFound {
 				http.Error(w, "Reading not found", http.StatusNotFound)
 			} else {
-				http.Error(w, err.Error(), http.StatusServiceUnavailable)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 			LoggingClient.Error(err.Error())
 			return
@@ -144,7 +144,7 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 					if err == db.ErrNotFound {
 						http.Error(w, "Value descriptor not found for reading", http.StatusConflict)
 					} else {
-						http.Error(w, err.Error(), http.StatusServiceUnavailable)
+						http.Error(w, err.Error(), http.StatusInternalServerError)
 					}
 					LoggingClient.Error(err.Error())
 					return
@@ -163,7 +163,7 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 
 		err = dbClient.UpdateReading(to)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			LoggingClient.Error(err.Error())
 			return
 		}
@@ -190,7 +190,7 @@ func getReadingByIdHandler(w http.ResponseWriter, r *http.Request) {
 			if err == db.ErrNotFound {
 				http.Error(w, "Reading not found", http.StatusNotFound)
 			} else {
-				http.Error(w, err.Error(), http.StatusServiceUnavailable)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 			LoggingClient.Error(err.Error())
 			return
@@ -209,7 +209,7 @@ func readingCountHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		count, err := dbClient.ReadingCount()
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			LoggingClient.Error(err.Error())
 			return
 		}
@@ -238,7 +238,7 @@ func deleteReadingByIdHandler(w http.ResponseWriter, r *http.Request) {
 			if err == db.ErrNotFound {
 				http.Error(w, "Reading not found", http.StatusNotFound)
 			} else {
-				http.Error(w, err.Error(), http.StatusServiceUnavailable)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 			LoggingClient.Error(err.Error())
 			return
@@ -246,7 +246,7 @@ func deleteReadingByIdHandler(w http.ResponseWriter, r *http.Request) {
 
 		err = dbClient.DeleteReadingById(reading.Id.Hex())
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			LoggingClient.Error(err.Error())
 			return
 		}
@@ -294,7 +294,7 @@ func readingByDeviceHandler(w http.ResponseWriter, r *http.Request) {
 
 		readings, err := dbClient.ReadingsByDevice(deviceId, limit)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			LoggingClient.Error(err.Error())
 			return
 		}
@@ -332,7 +332,7 @@ func readingbyValueDescriptorHandler(w http.ResponseWriter, r *http.Request) {
 			if err == db.ErrNotFound {
 				http.Error(w, "Value descriptor not found for reading", http.StatusConflict)
 			} else {
-				http.Error(w, err.Error(), http.StatusServiceUnavailable)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 			LoggingClient.Error(err.Error())
 			return
@@ -348,7 +348,7 @@ func readingbyValueDescriptorHandler(w http.ResponseWriter, r *http.Request) {
 
 	read, err := dbClient.ReadingsByValueDescriptor(name, limit)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		LoggingClient.Error(err.Error())
 		return
 	}
@@ -389,7 +389,7 @@ func readingByUomLabelHandler(w http.ResponseWriter, r *http.Request) {
 	// Get the value descriptors
 	vList, err := dbClient.ValueDescriptorsByUomLabel(uomLabel)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		LoggingClient.Error(err.Error())
 		return
 	}
@@ -401,7 +401,7 @@ func readingByUomLabelHandler(w http.ResponseWriter, r *http.Request) {
 
 	readings, err := dbClient.ReadingsByValueDescriptorNames(vNames, limit)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		LoggingClient.Error(err.Error())
 		return
 	}
@@ -441,7 +441,7 @@ func readingByLabelHandler(w http.ResponseWriter, r *http.Request) {
 	// Get the value descriptors
 	vdList, err := dbClient.ValueDescriptorsByLabel(label)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		LoggingClient.Error(err.Error())
 		return
 	}
@@ -452,7 +452,7 @@ func readingByLabelHandler(w http.ResponseWriter, r *http.Request) {
 
 	readings, err := dbClient.ReadingsByValueDescriptorNames(vdNames, limit)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		LoggingClient.Error(err.Error())
 		return
 	}
@@ -493,7 +493,7 @@ func readingByTypeHandler(w http.ResponseWriter, r *http.Request) {
 	// Get the value descriptors
 	vdList, err := dbClient.ValueDescriptorsByType(t)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		LoggingClient.Error(err.Error())
 		return
 	}
@@ -504,7 +504,7 @@ func readingByTypeHandler(w http.ResponseWriter, r *http.Request) {
 
 	readings, err := dbClient.ReadingsByValueDescriptorNames(vdNames, l)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		LoggingClient.Error(err.Error())
 		return
 	}
@@ -547,7 +547,7 @@ func readingByCreationTimeHandler(w http.ResponseWriter, r *http.Request) {
 
 		readings, err := dbClient.ReadingsByCreationTime(s, e, l)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			LoggingClient.Error(err.Error())
 			return
 		}
@@ -604,7 +604,7 @@ func readingByValueDescriptorAndDeviceHandler(w http.ResponseWriter, r *http.Req
 			if err == db.ErrNotFound {
 				http.Error(w, "Value descriptor not found for reading", http.StatusConflict)
 			} else {
-				http.Error(w, err.Error(), http.StatusServiceUnavailable)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 			LoggingClient.Error(err.Error())
 			return
@@ -613,7 +613,7 @@ func readingByValueDescriptorAndDeviceHandler(w http.ResponseWriter, r *http.Req
 
 	readings, err := dbClient.ReadingsByDeviceAndValueDescriptor(device, name, limit)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		LoggingClient.Error(err.Error())
 		return
 	}
