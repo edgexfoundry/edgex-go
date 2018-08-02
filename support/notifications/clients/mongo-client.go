@@ -35,7 +35,7 @@ const (
 var currentMongoClient *MongoClient // Singleton used so that MongoEvent can use it to de-reference readings
 var currentReadMaxLimit int         // configuration read max limit
 var currentResendLimit int          // configuration transmission resent count limit
-var cleanupDefaultAge int64
+var cleanupDefaultAge int
 
 type MongoClient struct {
 	Session  *mgo.Session  // Mongo database session
@@ -272,9 +272,9 @@ func (mc *MongoClient) Cleanup() error {
 	return mc.CleanupOld(cleanupDefaultAge)
 }
 
-func (mc *MongoClient) CleanupOld(age int64) error {
+func (mc *MongoClient) CleanupOld(age int) error {
 	currentTime := time.Now().UnixNano() / int64(time.Millisecond)
-	end := currentTime - age
+	end := int(currentTime) - age
 	query := bson.M{"modified": bson.M{"$lt": end}}
 	mns, err := mc.getNotifications(query)
 	if err == mgo.ErrNotFound {

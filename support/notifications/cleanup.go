@@ -50,7 +50,7 @@ func cleanupAgeHandler(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
 	}
 	vars := mux.Vars(r)
-	age, err := strconv.ParseInt(vars["age"], 10, 64)
+	age, err := strconv.Atoi(vars["age"])
 	// Problem converting age
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
