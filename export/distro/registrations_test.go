@@ -71,9 +71,11 @@ type dummyStruct struct {
 	lastSize int
 }
 
-func (sender *dummyStruct) Send(data []byte, event *models.Event) {
+func (sender *dummyStruct) Send(data []byte, event *models.Event) bool {
 	sender.count += 1
 	sender.lastSize = len(data)
+
+	return true
 }
 
 func (sender *dummyStruct) Format(ev *models.Event) []byte {

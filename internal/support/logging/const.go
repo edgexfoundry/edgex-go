@@ -24,6 +24,3 @@ type ConfigurationStruct struct {
 	ConsulPort           int
 	ConsulProfilesActive string
 }
-
-// Configuration data for the support logging service
-var configuration ConfigurationStruct = ConfigurationStruct{}

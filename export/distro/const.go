@@ -12,12 +12,14 @@ type ConfigurationStruct struct {
 	DistroHost           string
 	ClientHost           string
 	DataHost             string
+	DataPort             int
 	ConsulHost           string
 	ConsulPort           int
 	ConsulProfilesActive string
 	CheckInterval        string
 	MQTTSCert            string
 	MQTTSKey             string
+	MarkPushed           bool
 }
 
 var configuration ConfigurationStruct = ConfigurationStruct{} // Needs to be initialized before used

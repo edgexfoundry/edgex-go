@@ -8,7 +8,6 @@ package logging
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -20,8 +19,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/support/logging/models"
 	"github.com/go-zoo/bone"
 )
-
-var persist persistence
 
 // Copied from core/metadata/mongoOps.go
 // FIXME share instead of copy
@@ -63,7 +60,7 @@ func addLog(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusAccepted)
 
-	persist.add(l)
+	dbClient.add(l)
 }
 
 func getCriteria(w http.ResponseWriter, r *http.Request) *matchCriteria {
@@ -158,7 +155,11 @@ func getLogs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logs := persist.find(*criteria)
+	logs, err := dbClient.find(*criteria)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
 	if criteria.Limit > 0 && len(logs) > criteria.Limit {
 		w.WriteHeader(http.StatusRequestEntityTooLarge)
@@ -170,7 +171,7 @@ func getLogs(w http.ResponseWriter, r *http.Request) {
 
 	res, err := json.Marshal(logs)
 	if err != nil {
-		w.WriteHeader(http.StatusServiceUnavailable)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
@@ -184,13 +185,18 @@ func delLogs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	removed := persist.remove(*criteria)
+	removed, err := dbClient.remove(*criteria)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
 	w.WriteHeader(http.StatusOK)
 	io.WriteString(w, strconv.Itoa(removed))
 }
 
 // HTTPServer function
-func httpServer() http.Handler {
+func HttpServer() http.Handler {
 	mux := bone.New()
 	mv1 := mux.Prefix("/api/v1")
 
@@ -216,30 +222,4 @@ func httpServer() http.Handler {
 	mv1.Delete("/logs/logLevels/:levels/originServices/:services/labels/:labels/:start/:end", http.HandlerFunc(delLogs))
 	mv1.Delete("/logs/logLevels/:levels/originServices/:services/labels/:labels/keywords/:keywords/:start/:end", http.HandlerFunc(delLogs))
 	return mux
-}
-
-func getPersistence() persistence {
-	var retValue persistence
-	if configuration.Persistence == PersistenceFile {
-		retValue = &fileLog{filename: configuration.LoggingFile}
-	} else if configuration.Persistence == PersistenceMongo {
-		ms, err := connectToMongo()
-		if err == nil {
-			retValue = &mongoLog{session: ms}
-		}
-	}
-	return retValue
-}
-
-func StartHTTPServer(errChan chan error) {
-	go func() {
-		persist = getPersistence()
-		if persist == nil {
-			errChan <- errors.New("Could not configure persistence interface: " + configuration.Persistence)
-			return
-		}
-
-		p := fmt.Sprintf(":%d", configuration.Port)
-		errChan <- http.ListenAndServe(p, httpServer())
-	}()
 }

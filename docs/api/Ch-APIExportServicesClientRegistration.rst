@@ -29,6 +29,7 @@ Examples
 .. toctree::
    :maxdepth: 2
 
+   Ch-APIExportClientRegistration-MQTT
    Ch-APIExportServicesClientRegistrationExamples
 
 

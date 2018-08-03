@@ -14,9 +14,10 @@ const (
 )
 
 type persistence interface {
-	add(logEntry models.LogEntry)
-	remove(criteria matchCriteria) int
-	find(criteria matchCriteria) []models.LogEntry
+	add(logEntry models.LogEntry) error
+    closeSession()
+	remove(criteria matchCriteria) (int, error)
+	find(criteria matchCriteria) ([]models.LogEntry, error)
 
 	// Needed for the tests. Reset the instance (closing files, sessions...)
 	// and clear the logs.

@@ -16,7 +16,7 @@ import (
 
 // Sender - Send interface
 type Sender interface {
-	Send(data []byte, event *models.Event)
+	Send(data []byte, event *models.Event) bool
 }
 
 // Formatter - Format interface

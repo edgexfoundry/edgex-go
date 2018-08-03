@@ -25,31 +25,39 @@ type fileLog struct {
 	out      io.WriteCloser
 }
 
-func (fl *fileLog) add(le models.LogEntry) {
+func (fl *fileLog) closeSession() {
+	if fl.out != nil {
+		fl.out.Close()
+	}
+}
+
+func (fl *fileLog) add(le models.LogEntry) error {
 	if fl.out == nil {
 		var err error
 		fl.out, err = os.OpenFile(fl.filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 		if err != nil {
 			//fmt.Println("Error opening log file: ", fl.filename, err)
 			fl.out = nil
-			return
+			return err
 		}
 	}
 
 	res, err := json.Marshal(le)
 	if err != nil {
-		return
+		return err
 	}
 	fl.out.Write(res)
 	fl.out.Write([]byte("\n"))
+
+	return nil
 }
 
-func (fl *fileLog) remove(criteria matchCriteria) int {
+func (fl *fileLog) remove(criteria matchCriteria) (int, error) {
 	tmpFilename := fl.filename + rmFileSuffix
 	tmpFile, err := os.OpenFile(tmpFilename, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		//fmt.Println("Error creating tmp log file: ", tmpFilename, err)
-		return 0
+		return 0, err
 	}
 
 	defer os.Remove(tmpFilename)
@@ -58,7 +66,7 @@ func (fl *fileLog) remove(criteria matchCriteria) int {
 	if err != nil {
 		fmt.Println("Error opening log file: ", fl.filename, err)
 		tmpFile.Close()
-		return 0
+		return 0, err
 	}
 	defer f.Close()
 	count := 0
@@ -82,21 +90,21 @@ func (fl *fileLog) remove(criteria matchCriteria) int {
 	err = os.Rename(tmpFilename, fl.filename)
 	if err != nil {
 		//fmt.Printf("Error renaming %s to %s: %v", tmpFilename, fl.filename, err)
-		return 0
+		return 0, err
 	}
 
 	// Close old file to open the new one when writing next log
 	fl.out.Close()
 	fl.out = nil
-	return count
+	return count, nil
 }
 
-func (fl *fileLog) find(criteria matchCriteria) []models.LogEntry {
+func (fl *fileLog) find(criteria matchCriteria) ([]models.LogEntry, error) {
 	var logs []models.LogEntry
 	f, err := os.Open(fl.filename)
 	if err != nil {
 		//fmt.Println("Error opening log file: ", fl.filename, err)
-		return nil
+		return nil, err
 	}
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
@@ -110,7 +118,7 @@ func (fl *fileLog) find(criteria matchCriteria) []models.LogEntry {
 			}
 		}
 	}
-	return logs
+	return logs, err
 }
 
 func (fl *fileLog) reset() {

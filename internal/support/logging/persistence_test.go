@@ -67,7 +67,10 @@ func testPersistenceFind(t *testing.T, persistence persistence) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			logs := persistence.find(tt.criteria)
+			logs, err := persistence.find(tt.criteria)
+			if err != nil {
+				t.Errorf("Error thrown: %s", err.Error())
+			}
 			if logs == nil {
 				t.Errorf("Should not be nil")
 			}
@@ -138,14 +141,17 @@ func testPersistenceRemove(t *testing.T, persistence persistence) {
 			le.Labels = labels2
 			persistence.add(le)
 
-			removed := persistence.remove(tt.criteria)
+			removed, err := persistence.remove(tt.criteria)
+			if err != nil {
+				t.Errorf("Error thrown: %s", err.Error())
+			}
 			if removed != tt.result {
 				t.Errorf("Should return %d log entries, returned %d",
 					tt.result, removed)
 			}
 			// we add a new log
 			persistence.add(le)
-			logs := persistence.find(matchCriteria{})
+			logs, err := persistence.find(matchCriteria{})
 			if len(logs) != 6-tt.result+1 {
 				t.Errorf("Should return %d log entries, returned %d",
 					6-tt.result+1, len(logs))
