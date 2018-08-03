@@ -21,7 +21,7 @@ VERSION=$(shell cat ./VERSION)
 
 GOFLAGS=-ldflags "-X github.com/edgexfoundry/edgex-go.Version=$(VERSION)"
 
-GIT_SHA=$(shell git rev-parse --short HEAD)
+GIT_SHA=$(shell git rev-parse HEAD)
 
 build: $(MICROSERVICES)
 	go build ./...
