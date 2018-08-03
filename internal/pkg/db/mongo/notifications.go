@@ -310,6 +310,7 @@ func (mc *MongoClient) getNotificaiton(q bson.M) (models.Notification, error) {
 	// Handle DBRef
 	var mn MongoNotification
 	err := s.DB(mc.database.Name).C(NOTIFICATION_COLLECTION).Find(q).One(&mn)
+	err = errorMap(err)
 	if err == db.ErrNotFound {
 		return mn.Notification, db.ErrNotFound
 	}
@@ -405,6 +406,7 @@ func (mc *MongoClient) getSubscription(q bson.M) (models.Subscription, error) {
 	// Handle DBRef
 	var ms MongoSubscription
 	err := s.DB(mc.database.Name).C(SUBSCRIPTION_COLLECTION).Find(q).One(&ms)
+	err = errorMap(err)
 	if err == db.ErrNotFound {
 		return ms.Subscription, db.ErrNotFound
 	}
