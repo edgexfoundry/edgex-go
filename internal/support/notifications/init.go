@@ -22,7 +22,6 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/consul"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
-	"github.com/robfig/cron"
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
@@ -36,8 +35,6 @@ import (
 var Configuration *ConfigurationStruct
 var dbClient interfaces.DBClient
 var LoggingClient logger.LoggingClient
-var cronDistro *cron.Cron
-var cronResend *cron.Cron
 var limitMax int
 var resendLimit int
 var smtpPort string
@@ -65,8 +62,6 @@ func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup,
 				// Setup Logging
 				logTarget := setLoggingTarget()
 				LoggingClient = logger.NewClient(internal.SupportNotificationsServiceKey, Configuration.EnableRemoteLogging, logTarget)
-				//Initialize service clients
-				//initializeClients(useConsul)
 			}
 		}
 
@@ -182,22 +177,3 @@ func setLoggingTarget() string {
 	}
 	return logTarget
 }
-
-//func initializeClients(useConsul bool) {
-//	// Create metadata clients
-//	params := types.EndpointParams{
-//		ServiceKey:  internal.CoreMetaDataServiceKey,
-//		Path:        Configuration.MetaDevicePath,
-//		UseRegistry: useConsul,
-//		Url:         Configuration.MetaDeviceURL}
-//
-//	mdc = metadata.NewDeviceClient(params, types.Endpoint{})
-//
-//	params.Path = Configuration.MetaDeviceServicePath
-//	msc = metadata.NewDeviceServiceClient(params, types.Endpoint{})
-//
-//	// Create the event publisher
-//	ep = messaging.NewZeroMQPublisher(messaging.ZeroMQConfiguration{
-//		AddressPort: Configuration.ZeroMQAddressPort,
-//	})
-//}
