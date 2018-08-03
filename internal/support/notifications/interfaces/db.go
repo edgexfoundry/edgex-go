@@ -61,7 +61,7 @@ type DBClient interface {
 
 	DeleteNotificationBySlug(id string) error
 
-	DeleteNotificationsOld(age int64) error
+	DeleteNotificationsOld(age int) error
 
 	Subscriptions() ([]models.Subscription, error)
 
@@ -101,7 +101,7 @@ type DBClient interface {
 
 	Cleanup() error
 
-	CleanupOld(age int64) error
+	CleanupOld(age int) error
 }
 
 type DBConfiguration struct {
@@ -114,7 +114,7 @@ type DBConfiguration struct {
 	Password          string
 	ReadMax           int
 	ResendLimit       int
-	CleanupDefaultAge int64
+	CleanupDefaultAge int
 }
 
 var ErrNotFound error = errors.New("Item not found")

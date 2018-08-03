@@ -175,7 +175,7 @@ func notificationOldHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	vars := mux.Vars(r)
-	age, err := strconv.ParseInt(vars["age"], 10, 64)
+	age, err := strconv.Atoi(vars["age"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		LoggingClient.Error("Error converting the age to an integer")
