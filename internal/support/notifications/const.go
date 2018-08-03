@@ -44,7 +44,7 @@ type ConfigurationStruct struct {
 	MongoDBKeepAlive              bool
 	ReadMaxLimit                  int
 	ResendLimit                   int
-	CleanupDefaultAge             int64
+	CleanupDefaultAge             int
 	SchedulerNormalDuration       string
 	SchedulerNormalResendDuration string
 	SchedulerCriticalResendDelay  int
