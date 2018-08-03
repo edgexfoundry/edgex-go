@@ -17,7 +17,7 @@ EdgeX Foundry Core Data Service includes the device and sensor collected data da
 .. _`Core Data API HTML Documentation`: core-data.html
 ..
 
-https://github.com/edgexfoundry/edgex-go/blob/master/core/data/raml/core-data.raml
+https://github.com/edgexfoundry/edgex-go/blob/master/api/raml/core-data.raml
 
 `Core Data API HTML Documentation`_
 
