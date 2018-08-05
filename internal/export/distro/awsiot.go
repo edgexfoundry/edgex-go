@@ -69,6 +69,7 @@ func (sender *awsiotSender) Send(data []byte, event *models.Event) bool {
 
 	if token := client.Publish(topic, 0, false, data); token.Wait() && token.Error() != nil {
 		logger.Error("Failed to publish thing state to update topic: %v", zap.Error(token.Error()))
+		return false
 	}
 
 	return true
