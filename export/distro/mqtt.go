@@ -65,12 +65,12 @@ func NewMqttSender(addr models.Addressable) Sender {
 	return sender
 }
 
-func (sender *mqttSender) Send(data []byte) {
+func (sender *mqttSender) Send(data []byte) bool {
 	if !sender.client.IsConnected() {
 		logger.Info("Connecting to mqtt server")
 		if token := sender.client.Connect(); token.Wait() && token.Error() != nil {
 			logger.Warn("Could not connect to mqtt server, drop event", zap.Error(token.Error()))
-			return
+			return false
 		}
 	}
 
@@ -79,7 +79,9 @@ func (sender *mqttSender) Send(data []byte) {
 	token.Wait()
 	if token.Error() != nil {
 		logger.Warn("mqtt error: ", zap.Error(token.Error()))
+		return false
 	} else {
 		logger.Debug("Sent data: ", zap.ByteString("data", data))
+		return true
 	}
 }
