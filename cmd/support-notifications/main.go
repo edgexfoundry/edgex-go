@@ -36,8 +36,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 )
 
-var loggingClient logger.LoggingClient
-
 var bootTimeout int = 30000 //Once we start the V2 configuration rework, this will be config driven
 
 func main() {
@@ -82,19 +80,6 @@ func main() {
 func logBeforeInit(err error) {
 	l := logger.NewClient(internal.SupportNotificationsServiceKey, false, "")
 	l.Error(err.Error())
-}
-
-func logBeforeTermination(err error) {
-	loggingClient = logger.NewClient(internal.SupportNotificationsServiceKey, false, "")
-	loggingClient.Error(err.Error())
-}
-
-func setLoggingTarget(conf notifications.ConfigurationStruct) string {
-	logTarget := conf.LoggingRemoteURL
-	if !conf.EnableRemoteLogging {
-		return conf.LoggingFile
-	}
-	return logTarget
 }
 
 func listenForInterrupt(errChan chan error) {

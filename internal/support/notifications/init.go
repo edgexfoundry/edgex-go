@@ -19,6 +19,8 @@ package notifications
 import (
 	"fmt"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/consul"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
@@ -26,8 +28,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal"
-	"sync"
-	"time"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo"
 )
 
