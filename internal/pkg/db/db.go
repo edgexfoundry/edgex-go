@@ -48,6 +48,7 @@ var (
 	ErrInvalidObjectId     = errors.New("Invalid object ID")
 	ErrNotUnique           = errors.New("Resource already exists")
 	ErrCommandStillInUse   = errors.New("Command is still in use by device profiles")
+	ErrSlugEmpty           = errors.New("Slug is nil or empty")
 )
 
 type Configuration struct {

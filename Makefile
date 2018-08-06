@@ -11,10 +11,10 @@
 GO=CGO_ENABLED=0 go
 GOCGO=CGO_ENABLED=1 go
 
-DOCKERS=docker_export_client docker_export_distro docker_core_data docker_core_metadata docker_core_command docker_support_logging
+DOCKERS=docker_export_client docker_export_distro docker_core_data docker_core_metadata docker_core_command docker_support_logging docker_support_notifications
 .PHONY: $(DOCKERS)
 
-MICROSERVICES=cmd/export-client/export-client cmd/export-distro/export-distro cmd/core-metadata/core-metadata cmd/core-data/core-data cmd/core-command/core-command cmd/support-logging/support-logging
+MICROSERVICES=cmd/export-client/export-client cmd/export-distro/export-distro cmd/core-metadata/core-metadata cmd/core-data/core-data cmd/core-command/core-command cmd/support-logging/support-logging cmd/support-notifications/support-notifications
 .PHONY: $(MICROSERVICES)
 
 VERSION=$(shell cat ./VERSION)
@@ -43,6 +43,9 @@ cmd/export-distro/export-distro:
 
 cmd/support-logging/support-logging:
 	$(GO) build $(GOFLAGS) -o $@ ./cmd/support-logging
+
+cmd/support-notifications/support-notifications:
+	$(GO) build $(GOFLAGS) -o $@ ./cmd/support-notifications
 
 clean:
 	rm -f $(MICROSERVICES)
@@ -108,4 +111,12 @@ docker_support_logging:
 		--label "git_sha=$(GIT_SHA)" \
 		-t edgexfoundry/docker-support-logging-go:$(GIT_SHA) \
 		-t edgexfoundry/docker-support-logging-go:$(VERSION)-dev \
+		.
+
+docker_support_notifications:
+	docker build \
+		-f docker/Dockerfile.support-notifications \
+		--label "git_sha=$(GIT_SHA)" \
+		-t edgexfoundry/docker-support-notifications-go:$(GIT_SHA) \
+		-t edgexfoundry/docker-support-notifications-go:$(VERSION)-dev \
 		.

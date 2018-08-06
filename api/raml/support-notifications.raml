@@ -1,0 +1,1368 @@
+#%RAML 0.8
+---
+title: Alerts and Notifcations Micro Service
+baseUri: http://localhost/api/{version}
+version: v1
+protocols: [ HTTP ]
+mediaType:  application/json
+
+documentation:
+  - title: Welcome
+    content: |
+      Welcome to the Alerts and Notifcations Microservice API Documentation.
+
+schemas:
+  - Notification: |
+      {
+        "$schema": "http://json-schema.org/draft-04/schema#",
+        "title": "Notification Schema",
+        "type": "object",
+        "properties": {
+          "id": {
+              "description": "generated and used by system, and users can ignore this property",
+              "type": "string"
+          },
+          "slug": {
+              "description": "A meaningful identifier provided by client",
+              "type": "string"
+          },
+          "sender": {
+            "type": "string"
+          },
+          "category": {
+            "enum": ["SECURITY","HW_HEALTH","SW_HEALTH"]
+          },
+          "severity": {
+            "enum": ["CRITICAL","NORMAL"]
+          },
+          "content": {
+              "type": "string"
+          },
+          "description": {
+              "type": "string"
+          },
+          "status": {
+            "enum": ["NEW","PROCESSED","ESCALATED"]
+          },
+          "labels": {
+              "type": "array",
+              "items": { "type": "string" },
+              "uniqueItems": true
+          },
+          "created": {
+              "description": "The creation timestamp",
+              "type": "integer",
+              "minimum": 0
+          },
+          "modified": {
+              "description": "The last modification timestamp",
+              "type": "integer",
+              "minimum": 0
+          }
+        },
+        "required": ["slug","sender","category","severity","content"]
+      }
+  - NotificationArray: |
+      {
+        "$schema": "http://json-schema.org/draft-04/schema#",
+        "title": "The Array of Notification",
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/Notification"
+        },
+        "definitions": {
+          "Notification":
+            {
+              "$schema": "http://json-schema.org/draft-04/schema#",
+              "title": "Notification Schema",
+              "type": "object",
+              "properties": {
+                "id": {
+                    "description": "generated and used by system, and users can ignore this property",
+                    "type": "string"
+                },
+                "slug": {
+                    "description": "A meaningful identifier provided by client",
+                    "type": "string"
+                },
+                "sender": {
+                  "type": "string"
+                },
+                "category": {
+                  "enum": ["SECURITY","HW_HEALTH","SW_HEALTH"]
+                },
+                "severity": {
+                  "enum": ["CRITICAL","NORMAL"]
+                },
+                "content": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "status": {
+                  "enum": ["NEW","PROCESSED","ESCALATED"]
+                },
+                "labels": {
+                    "type": "array",
+                    "items": { "type": "string" },
+                    "uniqueItems": true
+                },
+                "created": {
+                    "description": "The creation timestamp",
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "modified": {
+                    "description": "The last modification timestamp",
+                    "type": "integer",
+                    "minimum": 0
+                }
+              },
+              "required": ["slug","sender","category","severity","content"]
+            }
+        }
+      }
+  - Subscription: |
+      {
+        "$schema": "http://json-schema.org/draft-04/schema#",
+        "title": "Subscription Schema",
+        "type": "object",
+        "properties": {
+          "id": {
+              "type": "string"
+          },
+          "slug": {
+              "description": "A meaningful identifier provided by client",
+              "type": "string"
+          },
+          "receiver": {
+            "type": "string"
+          },
+          "description": {
+              "type": "string"
+          },
+          "subscribedCategories": {
+            "type": "array",
+            "items": { "enum": ["SECURITY","HW_HEALTH","SW_HEALTH"] },
+            "uniqueItems": true
+          },
+          "subscribedLabels": {
+            "type": "array",
+            "items": { "type": "string" },
+            "uniqueItems": true
+          },
+          "channels": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "anyOf": [
+                { "$ref": "#/definitions/RESTfulChannel" },
+                { "$ref": "#/definitions/EMAILChannel" }
+              ]
+            },
+            "uniqueItems": true
+          },
+          "created": {
+              "description": "The creation timestamp",
+              "type": "integer",
+              "minimum": 0
+          },
+          "modified": {
+              "description": "The last modification timestamp",
+              "type": "integer",
+              "minimum": 0
+          }
+        },
+        "required": ["slug","receiver","channels"],
+        "definitions": {
+          "RESTfulChannel": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "enum": ["REST"]
+              },
+              "url": {
+                "type": "string"
+              },
+              "httpMethod": {
+                "enum": ["POST","PUT"]
+              },
+              "contentType": {
+                "type": "string"
+              }
+            },
+            "required": ["type","url"]
+          },
+          "EMAILChannel": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "enum": ["EMAIL"]
+              },
+              "mailAddresses": {
+                "type": "array",
+                "minItems": 1,
+                "items": { "type": "string" },
+                "uniqueItems": true
+              }
+            },
+            "required": ["type","mailAddresses"]
+          }
+        }
+      }
+  - SubscriptionArray: |
+      {
+        "$schema": "http://json-schema.org/draft-04/schema#",
+        "title": "The Array of Subscription",
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/Subscription"
+        },
+        "definitions": {
+            "Subscription":
+              {
+                "$schema": "http://json-schema.org/draft-04/schema#",
+                "title": "Subscription Schema",
+                "type": "object",
+                "properties": {
+                  "id": {
+                      "type": "string"
+                  },
+                  "slug": {
+                      "description": "A meaningful identifier provided by client",
+                      "type": "string"
+                  },
+                  "receiver": {
+                    "type": "string"
+                  },
+                  "description": {
+                      "type": "string"
+                  },
+                  "subscribedCategories": {
+                    "type": "array",
+                    "items": { "enum": ["SECURITY","HW_HEALTH","SW_HEALTH"] },
+                    "uniqueItems": true
+                  },
+                  "subscribedLabels": {
+                    "type": "array",
+                    "items": { "type": "string" },
+                    "uniqueItems": true
+                  },
+                  "channels": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "anyOf": [
+                        { "$ref": "#/definitions/RESTfulChannel" },
+                        { "$ref": "#/definitions/EMAILChannel" }
+                      ]
+                    },
+                    "uniqueItems": true
+                  },
+                  "created": {
+                      "description": "The creation timestamp",
+                      "type": "integer",
+                      "minimum": 0
+                  },
+                  "modified": {
+                      "description": "The last modification timestamp",
+                      "type": "integer",
+                      "minimum": 0
+                  }
+                },
+                "required": ["slug","receiver","channels"]
+              },
+              "RESTfulChannel": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "enum": ["REST"]
+                  },
+                  "url": {
+                    "type": "string"
+                  },
+                  "httpMethod": {
+                    "enum": ["POST","PUT"]
+                  },
+                  "contentType": {
+                    "type": "string"
+                  }
+                },
+                "required": ["type","url"]
+              },
+              "EMAILChannel": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "enum": ["EMAIL"]
+                  },
+                  "mailAddresses": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": { "type": "string" },
+                    "uniqueItems": true
+                  }
+                },
+                "required": ["type","mailAddresses"]
+              }
+        }
+      }
+  - Transmission: |
+      {
+        "$schema": "http://json-schema.org/draft-04/schema#",
+        "title": "Transmission Schema",
+        "type": "object",
+        "properties": {
+          "id": {
+              "type": "string"
+          },
+          "notification": {
+            "$ref": "#/definitions/Notification"
+          },
+          "receiver": {
+            "type": "string"
+          },
+          "channel": {
+            "type": "object",
+            "oneOf": [
+              { "$ref": "#/definitions/RESTfulChannel" },
+              { "$ref": "#/definitions/EMAILChannel" }
+            ]
+          },
+          "status": {
+            "enum": ["FAILED","SENT","ACKNOWLEDGED","ESCALATED"]
+          },
+          "resendCount": {
+              "type": "integer",
+              "minimum": 0
+          },
+          "records": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/definitions/TransmissionRecord"
+            },
+            "uniqueItems": true
+          },
+          "created": {
+              "description": "The creation timestamp",
+              "type": "integer",
+              "minimum": 0
+          },
+          "modified": {
+              "description": "The last modification timestamp",
+              "type": "integer",
+              "minimum": 0
+          }
+        },
+        "required": ["notification","receiver","channel","status","resendCount","records"],
+        "definitions": {
+          "Notification": { "$ref": "Notification.json" },
+          "RESTfulChannel": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "enum": ["REST"]
+              },
+              "url": {
+                "type": "string"
+              },
+              "httpMethod": {
+                "enum": ["POST","PUT"]
+              }
+            },
+            "required": ["type","url"]
+          },
+          "EMAILChannel": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "enum": ["EMAIL"]
+              },
+              "mailAddresses": {
+                "type": "array",
+                "minItems": 1,
+                "items": { "type": "string" },
+                "uniqueItems": true
+              }
+            },
+            "required": ["type","mailAddresses"]
+          },
+          "TransmissionRecord": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "enum": ["FAILED","SENT","ACKNOWLEDGED"]
+              },
+              "response": {
+                "type": "string"
+              },
+              "sent": {
+                "description": "The sending timestamp",
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "required": ["status","sent"]
+          }
+        }
+      }
+  - TransmissionArray: |
+      {
+        "$schema": "http://json-schema.org/draft-04/schema#",
+        "title": "The Array of Transmission",
+        "type": "array",
+        "items": {
+          "$ref": "types/Transmission.json"
+        },
+        "definitions": {
+          "Transmission": {
+              "$schema": "http://json-schema.org/draft-04/schema#",
+              "title": "Transmission Schema",
+              "type": "object",
+              "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "notification": {
+                  "$ref": "#/definitions/Notification"
+                },
+                "receiver": {
+                  "type": "string"
+                },
+                "channel": {
+                  "type": "object",
+                  "oneOf": [
+                    { "$ref": "#/definitions/RESTfulChannel" },
+                    { "$ref": "#/definitions/EMAILChannel" }
+                  ]
+                },
+                "status": {
+                  "enum": ["FAILED","SENT","ACKNOWLEDGED","ESCALATED"]
+                },
+                "resendCount": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "records": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "$ref": "#/definitions/TransmissionRecord"
+                  },
+                  "uniqueItems": true
+                },
+                "created": {
+                    "description": "The creation timestamp",
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "modified": {
+                    "description": "The last modification timestamp",
+                    "type": "integer",
+                    "minimum": 0
+                }
+              },
+              "required": ["notification","receiver","channel","status","resendCount","records"]
+            },
+            "Notification":
+              {
+                "$schema": "http://json-schema.org/draft-04/schema#",
+                "title": "Notification Schema",
+                "type": "object",
+                "properties": {
+                  "id": {
+                      "description": "generated and used by system, and users can ignore this property",
+                      "type": "string"
+                  },
+                  "slug": {
+                      "description": "A meaningful identifier provided by client",
+                      "type": "string"
+                  },
+                  "sender": {
+                    "type": "string"
+                  },
+                  "category": {
+                    "enum": ["SECURITY","HW_HEALTH","SW_HEALTH"]
+                  },
+                  "severity": {
+                    "enum": ["CRITICAL","NORMAL"]
+                  },
+                  "content": {
+                      "type": "string"
+                  },
+                  "description": {
+                      "type": "string"
+                  },
+                  "status": {
+                    "enum": ["NEW","PROCESSED","ESCALATED"]
+                  },
+                  "labels": {
+                      "type": "array",
+                      "items": { "type": "string" },
+                      "uniqueItems": true
+                  },
+                  "created": {
+                      "description": "The creation timestamp",
+                      "type": "integer",
+                      "minimum": 0
+                  },
+                  "modified": {
+                      "description": "The last modification timestamp",
+                      "type": "integer",
+                      "minimum": 0
+                  }
+                },
+                "required": ["slug","sender","category","severity","content"]
+              },
+            "RESTfulChannel": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "enum": ["REST"]
+                },
+                "url": {
+                  "type": "string"
+                },
+                "httpMethod": {
+                  "enum": ["POST","PUT"]
+                }
+              },
+              "required": ["type","url"]
+            },
+            "EMAILChannel": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "enum": ["EMAIL"]
+                },
+                "mailAddresses": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": { "type": "string" },
+                  "uniqueItems": true
+                }
+              },
+              "required": ["type","mailAddresses"]
+            },
+            "TransmissionRecord": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "enum": ["FAILED","SENT","ACKNOWLEDGED"]
+                },
+                "response": {
+                  "type": "string"
+                },
+                "sent": {
+                  "description": "The sending timestamp",
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "required": ["status","sent"]
+            }
+        }
+      }
+  - Error: |
+      {
+        "$schema": "http://json-schema.org/draft-04/schema#",
+        "title": "Error Schema",
+        "type": "object",
+        "properties": {
+          "timestamp": {
+              "type": "integer"
+          },
+          "status": {
+              "description": "HTTP status code",
+              "type": "integer"
+          },
+          "error": {
+            "type": "string"
+          },
+          "exception": {
+              "description": "The exception class in the code",
+              "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          }
+        },
+        "required": ["timestamp","status","error"]
+      }
+
+resourceTypes:
+  - queryWithLimit:
+      uriParameters:
+        limit:
+          type: number
+          description: The maximum number of records to fetch.
+          example: 10
+      get:
+        is: [ return<<typeName>>Array, hasServiceError, hasLimitExceededError ]
+  - deleteByAge:
+      uriParameters:
+        age:
+          type: number
+          description: Specify the age of <<typeName>>, and the format is in milliseconds.
+          example: 2592000000
+      delete:
+        is: [ returnBoolean, hasServiceError ]
+        description: Delete all the <<typeName|!pluralize>> if the current timestamp minus their last modification timestamp is less than the age parameter.
+
+traits:
+  - returnNotificationArray:
+      responses:
+        200:
+          description: Return a Notification array.
+          body:
+            application/json:
+              schema: NotificationArray
+              example: |
+                [
+                  {
+                    "id": "578e06c40600bd13b3b41d95",
+                    "slug": "notice-test-001",
+                    "sender": "System Management",
+                    "category": "SECURITY",
+                    "severity": "NORMAL",
+                    "content": "Hello, Notification!",
+                    "status": "PROCESSED",
+                    "labels": [
+                      "cool",
+                      "test"
+                    ],
+                    "created": 1469175494527,
+                    "modified": 1469175494527
+                  },
+                  {
+                    "id": "578e06c40600bd13b3b41d7e",
+                    "slug": "notice-test-002",
+                    "sender": "System Management",
+                    "category": "SECURITY",
+                    "severity": "NORMAL",
+                    "content": "Hello, Notification Again!",
+                    "status": "PROCESSED",
+                    "labels": [
+                      "cool",
+                      "test"
+                    ],
+                    "created": 1469175499898,
+                    "modified": 1469175499898
+                  }
+                ]
+  - returnSubscriptionArray:
+      responses:
+        200:
+          description: Return a Subscription array.
+          body:
+            application/json:
+              schema: SubscriptionArray
+              example: |
+                [
+                  {
+                    "id": "57becbf1d100761ca72c7cb5",
+                    "slug": "sys-admin",
+                    "receiver": "System Administrator",
+                    "description": "The system administrator",
+                    "subscribedCategories": [
+                      "SECURITY",
+                      "HW_HEALTH",
+                      "SW_HEALTH"
+                    ],
+                    "subscribedLabels": [
+                      "Dell",
+                      "IoT",
+                      "test"
+                    ],
+                    "channels": [
+                      {
+                        "type": "REST",
+                        "url": "http://abc.def/alert",
+                        "httpMethod": "POST"
+                      },
+                      {
+                        "type": "EMAIL",
+                        "mailAddresses": [
+                          "cloud@abc.def",
+                          "jack@abc.def"
+                        ]
+                      }
+                    ],
+                    "created": 1472121841753,
+                    "modified": 1472121841753
+                  },
+                  {
+                    "id": "57becbfad100761ca72c7cb6",
+                    "slug": "sw-admin",
+                    "receiver": "Software Administrator",
+                    "description": "The software administrator",
+                    "subscribedCategories": [
+                      "SW_HEALTH"
+                    ],
+                    "subscribedLabels": [
+                      "IoT"
+                    ],
+                    "channels": [
+                      {
+                        "type": "EMAIL",
+                        "mailAddresses": [
+                          "david@abc.def"
+                        ]
+                      }
+                    ],
+                    "created": 1472121850240,
+                    "modified": 1472121850240
+                  }
+                ]
+  - returnTransmissionArray:
+      responses:
+        200:
+          description: Return a Transmission array.
+          body:
+            application/json:
+              schema: TransmissionArray
+              example: |
+                [
+                  {
+                    "id": "57c3a66b825cf5f2ce7e20b6",
+                    "notification": {
+                      "id": "57c3a64e825c9afe36b63d9a",
+                      "slug": "notice-test-007",
+                      "sender": "Emily",
+                      "category": "SECURITY",
+                      "severity": "NORMAL",
+                      "content": "Hello, Notification!",
+                      "description": "New Notification",
+                      "status": "PROCESSED",
+                      "labels": [
+                        "cool",
+                        "test"
+                      ],
+                      "contentType": "text/plain",
+                      "created": 1472439886874,
+                      "modified": 1472439914688
+                    },
+                    "receiver": "Jack",
+                    "channel": {
+                      "type": "REST",
+                      "url": "http://localhost:5566/test",
+                      "httpMethod": "POST"
+                    },
+                    "status": "FAILED",
+                    "resendCount": 0,
+                    "records": [
+                      {
+                        "status": "FAILED",
+                        "response": "I/O error on POST request for \"http://localhost:5566/test\": Connection refused: connect; nested exception is java.net.ConnectException: Connection refused: connect",
+                        "sent": 1472439914709
+                      }
+                    ],
+                    "created": 1472439915730,
+                    "modified": 1472439915730
+                  },
+                  {
+                    "id": "57c3a61f825c9afe36b63d99",
+                    "notification": {
+                      "id": "57c3a64e825c9afe36b63d9a",
+                      "slug": "notice-test-007",
+                      "sender": "Emily",
+                      "category": "SECURITY",
+                      "severity": "NORMAL",
+                      "content": "Hello, Notification!",
+                      "description": "New Notification",
+                      "status": "PROCESSED",
+                      "labels": [
+                        "cool",
+                        "test"
+                      ],
+                      "contentType": "text/plain",
+                      "created": 1472439886874,
+                      "modified": 1472439914688
+                    },
+                    "receiver": "Jack",
+                    "channel": {
+                      "type": "EMAIL",
+                      "mailAddresses": [
+                        "jack@abc.com",
+                        "jack@yahoo.com.tw"
+                      ]
+                    },
+                    "status": "SENT",
+                    "resendCount": 0,
+                    "records": [
+                      {
+                        "status": "SENT",
+                        "response": "SMTP server received",
+                        "sent": 1472439834192
+                      }
+                    ],
+                    "created": 1472439839027,
+                    "modified": 1472439839027
+                  }
+                ]
+  - returnBoolean:
+      responses:
+        200:
+          description: Return "True" to represent successful.
+          body:
+            application/json:
+              example: "true"
+  - hasDuplicateSlugError:
+      responses:
+        409:
+          description: The slug is duplicate.  Please try another one.
+          body:
+            application/json:
+              schema: Error
+  - hasNotFoundError:
+      responses:
+        404:
+          description: The targeted resource is not found.
+          body:
+            application/json:
+              schema: Error
+  - hasLimitExceededError:
+      responses:
+        413:
+          description: The assigned limit perameter exceeds the current max limit.
+          body:
+            application/json:
+              schema: Error
+  - hasServiceError:
+      responses:
+        503:
+          description: For unanticipated or unknown issues encountered.
+          body:
+            application/json:
+              schema: Error
+
+/notification:
+  displayName: Notification
+  post:
+    is: [ hasServiceError, hasDuplicateSlugError ]
+    description: Receive Alerts or Notifications.  If the severity is CRITICAL, the Notifications are processed (distributed) immediately.  Or, the Notification is processed in batch.
+    body:
+      application/json:
+        schema: Notification
+        example: |
+          {
+            "slug": "notice-test-001",
+            "sender": "System Management",
+            "category": "SECURITY",
+            "severity": "NORMAL",
+            "content": "Hello, Notification!",
+            "labels": [
+              "cool",
+              "test"
+            ]
+          }
+    responses:
+      202:
+        description: If Alerts and Notifications Service is available, it always returns 202 Accepted to clients with the slug to indicate the Notification has been received.
+        body:
+          text/plain:
+            example: notice-test-001
+  /slug/{slug}:
+    uriParameters:
+      slug:
+        type: string
+        description: Slug is a meaningful identifier provided by client, and is case insensitive for query.
+        example: notice-test-001
+    get:
+      is: [ hasServiceError, hasNotFoundError ]
+      description: Query a specific Notification by slug.
+      responses:
+        200:
+          description: Return a Notification
+          body:
+            application/json:
+              schema: Notification
+              example: |
+                {
+                  "id": "578e06c40600bd13b3b41d95",
+                  "slug": "notice-test-001",
+                  "sender": "System Management",
+                  "category": "SECURITY",
+                  "severity": "NORMAL",
+                  "content": "Hello, Notification!",
+                  "status": "PROCESSED",
+                  "labels": [
+                    "cool",
+                    "test"
+                  ],
+                  "created": 1469175494527,
+                  "modified": 1469175494527
+                }
+    delete:
+      is: [ returnBoolean, hasServiceError, hasNotFoundError ]
+      description: Delete a specific Notification by slug.
+  /age/{age}:
+    type: { deleteByAge: { typeName: Notification } }
+    delete:
+      description: Delete the proccessed Notifications if the current timestamp minus their last modification timestamp is less than the age parameter, and the corresponding Transmissions will also be deteled.  Please notice this API is only for proccessed Notifications (status = PROCCESSED).  If the deletion purpose includes each kind of Notifications, please refer to /cleanup API.
+  /sender/{sender}/{limit}:
+    type: { queryWithLimit: { typeName: Notification } }
+    uriParameters:
+      sender:
+        type: string
+        description: The sender name of the Subscription, which could be partially matched, and is case insensitive for query.
+        example: Management
+    get:
+      description: Query the Notifications by sender name with limited returned records.
+  /start/{start}/end/{end}/{limit}:
+    type: { queryWithLimit: { typeName: Notification } }
+    uriParameters:
+      start:
+        type: number
+        description: Start date in long form.
+        example: 1469175494521
+      end:
+        type: number
+        description: End date in long form.
+        example: 1469175499899
+    get:
+      description: Query the Notifications by creation timestamp between start date and end date.
+  /start/{start}/{limit}:
+    type: { queryWithLimit: { typeName: Notification } }
+    uriParameters:
+      start:
+        type: number
+        description: Start date in long form.
+        example: 1469175494521
+    get:
+      description: Query the Notifications by creation timestamp after start date.
+  /end/{end}/{limit}:
+    type: { queryWithLimit: { typeName: Notification } }
+    uriParameters:
+      end:
+        type: number
+        description: End date in long form.
+        example: 1469175499899
+    get:
+      description: Query the Notifications by creation timestamp before end date.
+  /labels/{labels}/{limit}:
+    type: { queryWithLimit: { typeName: Notification } }
+    uriParameters:
+      labels:
+        type: string
+        description: Accept multiple labels separated by comma.
+        example: test,Dell,IoT
+    get:
+      description: Query the Notifications by labels matching any one of them.
+  /new/{limit}:
+    type: { queryWithLimit: { typeName: Notification } }
+    get:
+      description: Fetch the unprocessed Notifications (status = NEW).
+      responses:
+        200:
+          body:
+            application/json:
+              example: |
+                [
+                  {
+                    "id": "578e06c40600bd13b3b41d95",
+                    "slug": "notice-test-001",
+                    "sender": "System Management",
+                    "category": "SECURITY",
+                    "severity": "NORMAL",
+                    "content": "Hello, Notification!",
+                    "status": "NEW",
+                    "labels": [
+                      "cool",
+                      "test"
+                    ],
+                    "created": 1469175494527,
+                    "modified": 1469175494527
+                  },
+                  {
+                    "id": "578e06c40600bd13b3b41d7e",
+                    "slug": "notice-test-002",
+                    "sender": "System Management",
+                    "category": "SECURITY",
+                    "severity": "NORMAL",
+                    "content": "Hello, Notification Again!",
+                    "status": "NEW",
+                    "labels": [
+                      "cool",
+                      "test"
+                    ],
+                    "created": 1469175499898,
+                    "modified": 1469175499898
+                  }
+                ]
+
+/subscription:
+  displayName: Subscription
+  get:
+    is: [returnSubscriptionArray]
+    description: List all Subscriptions.
+  post:
+    is: [ hasServiceError, hasDuplicateSlugError ]
+    description: Create a new Subscritpion.
+    body:
+      application/json:
+        schema: Subscription
+        example: |
+          {
+            "slug": "sys-admin",
+            "receiver": "System Administrator",
+            "subscribedCategories": [
+              "SECURITY",
+              "HW_HEALTH",
+              "SW_HEALTH"
+            ],
+            "subscribedLabels": [
+              "Dell",
+              "IoT",
+              "test"
+            ],
+            "channels": [
+              {
+                "type": "REST",
+                "url": "http://abc.def/alert"
+              },
+              {
+                "type": "EMAIL",
+                "mailAddresses": [
+                  "cloud@abc.def",
+                  "jack@abc.def"
+                ]
+              }
+            ]
+          }
+    responses:
+      201:
+        description: Return the slug when the Subscription has been created successfully.
+        body:
+          text/plain:
+            example: sys-admin
+  put:
+    is: [ returnBoolean, hasServiceError ]
+    description: Update a specific Subscription according to the slug in request body, and the Boolean value "true" will be returned to indicate updating successfully.  If the slug doesn't exit, the 404 NotFound error will be returned.
+    body:
+      application/json:
+        schema: Subscription
+        example: |
+          {
+            "slug": "sys-admin",
+            "receiver": "System Administrator",
+            "subscribedCategories": [
+              "SECURITY",
+              "HW_HEALTH",
+              "SW_HEALTH"
+            ],
+            "subscribedLabels": [
+              "Dell",
+              "IoT",
+              "test"
+            ],
+            "channels": [
+              {
+                "type": "REST",
+                "url": "http://abc.def/alert"
+              },
+              {
+                "type": "EMAIL",
+                "mailAddresses": [
+                  "cloud@abc.def",
+                  "jack@abc.def"
+                ]
+              }
+            ]
+          }
+  /slug/{slug}:
+    uriParameters:
+      slug:
+        type: string
+        description: Slug is a meaningful identifier provided by client, and is case insensitive for query.
+        example: sys-admin
+    get:
+      is: [ hasServiceError, hasNotFoundError ]
+      description: Query a specific Subscription by slug.
+      responses:
+        200:
+          description: Return a Subscription.
+          body:
+            application/json:
+              schema: Subscription
+              example: |
+                {
+                  "id": "578e06c40600bd13b3b41d95",
+                  "slug": "sys-admin",
+                  "receiver": "System Administrator",
+                  "subscribedCategories": [
+                    "SECURITY",
+                    "HW_HEALTH",
+                    "SW_HEALTH"
+                  ],
+                  "channels": [
+                    {
+                      "type": "REST",
+                      "url": "http://abc.def/alert"
+                    },
+                    {
+                      "type": "EMAIL",
+                      "mailAddresses": [
+                        "cloud@abc.def",
+                        "jack@abc.def"
+                      ]
+                    }
+                  ],
+                  "created": 1469679383646,
+                  "modified": 1469679383646
+                }
+    delete:
+      is: [ returnBoolean, hasServiceError, hasNotFoundError ]
+      description: Delete a specific Subscription by slug.
+  /categories/{categories}/labels/{labels}:
+    uriParameters:
+      categories:
+        type: string
+        description: The subscribed categories, accepting multiple categories separated by comma.
+        example: SECURITY,HW-HEALTH,SW-HEALTH
+      labels:
+        type: string
+        description: The subscribed labels, accepting multiple labels separated by comma.
+        example: test,Dell,IoT
+    get:
+      is: [ returnSubscriptionArray, hasServiceError ]
+      description: Query the Subscription by subscribed categories and labels matching any one of them.
+  /categories/{categories}:
+    uriParameters:
+      categories:
+        type: string
+        description: The subscribed categories, accepting multiple categories separated by comma.
+        example: SECURITY,HW-HEALTH,SW-HEALTH
+    get:
+      is: [ returnSubscriptionArray, hasServiceError ]
+      description: Query the Subscription by subscribed categories matching any one of them.
+  /labels/{labels}:
+    uriParameters:
+      labels:
+        type: string
+        description: The subscribed labels, accepting multiple labels separated by comma.
+        example: test,Dell,IoT
+    get:
+      is: [ returnSubscriptionArray, hasServiceError ]
+      description: Query the Subscription by subscribed labels matching any one of them.
+  /receiver/{receiver}:
+    uriParameters:
+      receiver:
+        type: string
+        description: The receiver name of the Subscription, which could be partially matched, and is case insensitive for query.
+        example: Administrator
+    get:
+      is: [ returnSubscriptionArray, hasServiceError ]
+      description: Query the Subscriptions by Receiver Name.
+
+/transmission:
+  displayName: Transmission
+  /slug/{slug}/{limit}:
+    type: { queryWithLimit: { typeName: Transmission } }
+    uriParameters:
+      slug:
+        type: string
+        description: This is a Notification slug which is a meaningful identifier provided by client, and it is case insensitive for query.
+        example: notice-test-007
+    get:
+      description: Query the Transmissions associating a specific Notification by the Notification slug.
+  /start/{start}/end/{end}/{limit}:
+    type: { queryWithLimit: { typeName: Transmission } }
+    uriParameters:
+      start:
+        type: number
+        description: Start date in long form.
+        example: 1469175494521
+      end:
+        type: number
+        description: End date in long form.
+        example: 1472439915731
+    get:
+      description: Query the Transmissions by creation timestamp between start date and end date.
+  /start/{start}/{limit}:
+    type: { queryWithLimit: { typeName: Transmission } }
+    uriParameters:
+      start:
+        type: number
+        description: Start date in long form.
+        example: 1469175494521
+    get:
+      description: Query the Transmissions by creation timestamp after start date.
+  /end/{end}/{limit}:
+    type: { queryWithLimit: { typeName: Transmission } }
+    uriParameters:
+      end:
+        type: number
+        description: End date in long form.
+        example: 1472439915731
+    get:
+      description: Query the Transmissions by creation timestamp before end date.
+  /escalated/{limit}:
+    type: { queryWithLimit: { typeName: Transmission } }
+    get:
+      description: Query the escalated Transmissions (status = ESCALATED)
+      responses:
+        200:
+          body:
+            application/json:
+              example: |
+                [
+                  {
+                    "id": "57a9d4e5825ce73d03712b6a",
+                    "notification": {
+                      "id": "57a9d4e3825ce73d03712b69",
+                      "slug": "notice-test-001",
+                      "sender": "Emily",
+                      "category": "SECURITY",
+                      "severity": "CRITICAL",
+                      "content": "Hello, Notification!",
+                      "description": "New Notification",
+                      "status": "PROCESSED",
+                      "labels": [
+                        "cool",
+                        "test"
+                      ],
+                      "contentType": "text/plain",
+                      "created": 1470747875968,
+                      "modified": 1470747875974
+                    },
+                    "receiver": "Jack",
+                    "channel": {
+                      "type": "REST",
+                      "url": "http://localhost:7000/test",
+                      "httpMethod": "POST"
+                    },
+                    "status": "ESCALATED",
+                    "resendCount": 3,
+                    "records": [
+                      {
+                        "status": "FAILED",
+                        "response": "I/O error on POST request for \"http://localhost:7000/test\": Connection refused: connect; nested exception is java.net.ConnectException: Connection refused: connect",
+                        "sent": 1470747876034
+                      },
+                      {
+                        "status": "FAILED",
+                        "response": "I/O error on POST request for \"http://localhost:7000/test\": Connection refused: connect; nested exception is java.net.ConnectException: Connection refused: connect",
+                        "sent": 1470747887135
+                      },
+                      {
+                        "status": "FAILED",
+                        "response": "I/O error on POST request for \"http://localhost:7000/test\": Connection refused: connect; nested exception is java.net.ConnectException: Connection refused: connect",
+                        "sent": 1470747898180
+                      },
+                      {
+                        "status": "FAILED",
+                        "response": "I/O error on POST request for \"http://localhost:7000/test\": Connection refused: connect; nested exception is java.net.ConnectException: Connection refused: connect",
+                        "sent": 1470747909193
+                      }
+                    ],
+                    "created": 1470747877127,
+                    "modified": 1470747910256
+                  }
+                ]
+  /failed/{limit}:
+    type: { queryWithLimit: { typeName: Transmission } }
+    get:
+      description: Query the failed Transmissions (status = FAILED)
+      responses:
+        200:
+          body:
+            application/json:
+              example: |
+                [
+                  {
+                    "id": "57c3a66b825cf5f2ce7e20b6",
+                    "notification": {
+                      "id": "57c3a64e825c9afe36b63d9a",
+                      "slug": "notice-test-007",
+                      "sender": "Emily",
+                      "category": "SECURITY",
+                      "severity": "NORMAL",
+                      "content": "Hello, Notification!",
+                      "description": "New Notification",
+                      "status": "PROCESSED",
+                      "labels": [
+                        "cool",
+                        "test"
+                      ],
+                      "contentType": "text/plain",
+                      "created": 1472439886874,
+                      "modified": 1472439914688
+                    },
+                    "receiver": "Jack",
+                    "channel": {
+                      "type": "REST",
+                      "url": "http://localhost:5566/test",
+                      "httpMethod": "POST"
+                    },
+                    "status": "FAILED",
+                    "resendCount": 1,
+                    "records": [
+                      {
+                        "status": "FAILED",
+                        "response": "I/O error on POST request for \"http://localhost:5566/test\": Connection refused: connect; nested exception is java.net.ConnectException: Connection refused: connect",
+                        "sent": 1472439914709
+                      },
+                      {
+                        "status": "FAILED",
+                        "response": "I/O error on POST request for \"http://localhost:5566/test\": Connection refused: connect; nested exception is java.net.ConnectException: Connection refused: connect",
+                        "sent": 1472443514521
+                      }
+                    ],
+                    "created": 1472439915730,
+                    "modified": 1472443515554
+                  }
+                ]
+  /sent/age/{age}:
+    type: { deleteByAge: { typeName: Transmission } }
+    delete:
+      description: Delete all the sent Transmissions (status = SENT) if the current timestamp minus their last modification timestamp is less than the age parameter.
+  /escalated/age/{age}:
+    type: { deleteByAge: { typeName: Transmission } }
+    delete:
+      description: Delete all the escalated Transmissions (status = ESCALATED) if the current timestamp minus their last modification timestamp is less than the age parameter.
+  /acknowledged/age/{age}:
+    type: { deleteByAge: { typeName: Transmission } }
+    delete:
+      description: Delete all the acknowledged Transmissions (status = ACKNOWLEDGED) if the current timestamp minus their last modification timestamp is less than the age parameter.
+  /failed/age/{age}:
+    type: { deleteByAge: { typeName: Transmission } }
+    delete:
+      description: Delete all the failed Transmissions (status = FAILED and resendCount >= resend limit) if the current timestamp minus their last modification timestamp is less than the age parameter.
+
+/cleanup:
+  displayName: Cleanup
+  delete:
+    is: [ hasServiceError ]
+    description: Delete all the Notifications if the current timestamp minus their last modification timestamp is less than a default age setting, and the corresponding Transmissions will also be deleted.
+    responses:
+      202:
+        description: Return 202 Accepted status code without content when receiving the request, because it is an asynchronous operation.
+  /age/{age}:
+    uriParameters:
+        age:
+          type: number
+          description: Specify the age of <<typeName>>, and the format is in milliseconds.
+    delete:
+      is: [ hasServiceError ]
+      description: Delete all the Notifications if the current timestamp minus their last modification timestamp is less than the age parameter, and the corresponding Transmissions will also be deleted.
+      responses:
+        202:
+          description: Return 202 Accepted status code without content when receiving the request, because it is an asynchronous operation.
+
+/ping:
+  displayName: Ping
+  get:
+    is: [ hasServiceError ]
+    description: Test service providing an indication that the service is available.
+    responses:
+      200:
+        description: Return value of "pong."
+        body:
+          text/plain:
+            example: pong
