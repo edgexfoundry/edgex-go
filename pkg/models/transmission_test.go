@@ -56,8 +56,8 @@ func TestTransmission_String(t *testing.T) {
 		trans *Transmission
 		want  string
 	}{
-		{"test string of empty transmission", &TestEmptyTransmission, "{\"created\":0,\"modified\":0,\"id\":null,\"notification\":{\"created\":0,\"modified\":0,\"id\":null},\"channel\":{},\"resendcount\":0}"},
-		{"test string of transmission", &TestTransmission, "{\"created\":123,\"modified\":123,\"id\":null,\"notification\":{\"created\":123,\"modified\":123,\"id\":null,\"slug\":\"test slug\",\"sender\":\"test sender\",\"category\":\"SECURITY\",\"severity\":\"CRITICAL\",\"content\":\"test content\",\"description\":\"test description\",\"status\":\"NEW\",\"labels\":[\"label1\",\"labe2\"]},\"receiver\":\"test receiver\",\"channel\":{\"type\":\"EMAIL\",\"mailAddresses\":[\"jpwhite_mn@yahoo.com\",\"james_white2@dell.com\"]},\"status\":\"SENT\",\"resendcount\":0,\"records\":[{\"status\":\"SENT\",\"response\":\"ok\",\"sent\":123}]}"},
+		{"test string of empty transmission", &TestEmptyTransmission, "{\"created\":0,\"modified\":0,\"origin\":0,\"id\":null,\"notification\":{\"created\":0,\"modified\":0,\"origin\":0,\"id\":null},\"channel\":{},\"resendcount\":0}"},
+		{"test string of transmission", &TestTransmission, "{\"created\":123,\"modified\":123,\"origin\":123,\"id\":null,\"notification\":{\"created\":123,\"modified\":123,\"origin\":0,\"id\":null,\"slug\":\"test slug\",\"sender\":\"test sender\",\"category\":\"SECURITY\",\"severity\":\"CRITICAL\",\"content\":\"test content\",\"description\":\"test description\",\"status\":\"NEW\",\"labels\":[\"label1\",\"labe2\"]},\"receiver\":\"test receiver\",\"channel\":{\"type\":\"EMAIL\",\"mailAddresses\":[\"jpwhite_mn@yahoo.com\",\"james_white2@dell.com\"]},\"status\":\"SENT\",\"resendcount\":0,\"records\":[{\"status\":\"SENT\",\"response\":\"ok\",\"sent\":123}]}"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
