@@ -40,6 +40,7 @@ func (mn MongoNotification) GetBSON() (interface{}, error) {
 		Status      models.NotificationsStatus   `bson:"status"`
 		Labels      []string                     `bson:"labels,omitempty"`
 		ContentType string                       `bson:"contenttype"`
+		Origin      int64                        `bson:"origin"`
 	}{
 		ID:          mn.ID,
 		Created:     mn.Created,
@@ -53,6 +54,7 @@ func (mn MongoNotification) GetBSON() (interface{}, error) {
 		Status:      mn.Status,
 		Labels:      mn.Labels,
 		ContentType: mn.ContentType,
+		Origin:      mn.Origin,
 	}, nil
 }
 
@@ -71,6 +73,7 @@ func (mn *MongoNotification) SetBSON(raw bson.Raw) error {
 		Status      models.NotificationsStatus   `bson:"status"`
 		Labels      []string                     `bson:"labels,omitempty"`
 		ContentType string                       `bson:"contenttype"`
+		Origin      int64                        `bson:"origin"`
 	})
 
 	bsonErr := raw.Unmarshal(decoded)
@@ -91,6 +94,7 @@ func (mn *MongoNotification) SetBSON(raw bson.Raw) error {
 	mn.Status = decoded.Status
 	mn.Labels = decoded.Labels
 	mn.ContentType = decoded.ContentType
+	mn.Origin = decoded.Origin
 
 	return nil
 }

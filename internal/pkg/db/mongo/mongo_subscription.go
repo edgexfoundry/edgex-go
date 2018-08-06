@@ -37,6 +37,7 @@ func (ms MongoSubscription) GetBSON() (interface{}, error) {
 		SubscribedCategories []models.NotificationsCategory `bson:"subscribedCategories,omitempty"`
 		SubscribedLabels     []string                       `bson:"subscribedLabels,omitempty"`
 		Channels             []models.Channel               `bson:"channels,omitempty"`
+		Origin               int64                          `bson:"origin"`
 	}{
 		ID:                   ms.ID,
 		Created:              ms.Created,
@@ -47,6 +48,7 @@ func (ms MongoSubscription) GetBSON() (interface{}, error) {
 		SubscribedCategories: ms.SubscribedCategories,
 		SubscribedLabels:     ms.SubscribedLabels,
 		Channels:             ms.Channels,
+		Origin:               ms.Origin,
 	}, nil
 }
 
@@ -62,6 +64,7 @@ func (ms *MongoSubscription) SetBSON(raw bson.Raw) error {
 		SubscribedCategories []models.NotificationsCategory `bson:"subscribedCategories,omitempty"`
 		SubscribedLabels     []string                       `bson:"subscribedLabels,omitempty"`
 		Channels             []models.Channel               `bson:"channels,omitempty"`
+		Origin               int64                          `bson:"origin"`
 	})
 
 	bsonErr := raw.Unmarshal(decoded)
@@ -79,6 +82,7 @@ func (ms *MongoSubscription) SetBSON(raw bson.Raw) error {
 	ms.SubscribedCategories = decoded.SubscribedCategories
 	ms.SubscribedLabels = decoded.SubscribedLabels
 	ms.Channels = decoded.Channels
+	ms.Origin = decoded.Origin
 
 	return nil
 }

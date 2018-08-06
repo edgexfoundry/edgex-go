@@ -37,6 +37,7 @@ func (mt MongoTransmission) GetBSON() (interface{}, error) {
 		Status       models.TransmissionStatus   `bson:"status"`
 		ResendCount  int                         `bson:"resendcount"`
 		Records      []models.TransmissionRecord `bson:"records,omitempty"`
+		Origin       int64                       `bson:"origin"`
 	}{
 		ID:           mt.ID,
 		Created:      mt.Created,
@@ -47,6 +48,7 @@ func (mt MongoTransmission) GetBSON() (interface{}, error) {
 		Status:       mt.Status,
 		ResendCount:  mt.ResendCount,
 		Records:      mt.Records,
+		Origin:       mt.Origin,
 	}, nil
 }
 
@@ -62,6 +64,7 @@ func (mt *MongoTransmission) SetBSON(raw bson.Raw) error {
 		Status       models.TransmissionStatus   `bson:"status"`
 		ResendCount  int                         `bson:"resendcount"`
 		Records      []models.TransmissionRecord `bson:"records,omitempty"`
+		Origin       int64                       `bson:"origin"`
 	})
 
 	bsonErr := raw.Unmarshal(decoded)
@@ -79,6 +82,7 @@ func (mt *MongoTransmission) SetBSON(raw bson.Raw) error {
 	mt.Status = decoded.Status
 	mt.ResendCount = decoded.ResendCount
 	mt.Records = decoded.Records
+	mt.Origin = decoded.Origin
 
 	return nil
 }
