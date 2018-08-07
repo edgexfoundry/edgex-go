@@ -30,6 +30,17 @@ apps:
     command: bin/start-consul.sh
     # TODO: add stop-command
     plugs: [network, network-bind]
+  cassandra:
+    command: bin/cassandra-wrapper.sh
+    daemon: forking
+    # mount-observe needs to be manually connected post-install:
+    # `sudo snap connect cassandra:mount-observe ubuntu-core:mount-observe`
+    plugs:
+      - network
+      - network-bind
+      # Needed for checking available space in the data directories
+      # (java.io.File.getTotalSpace).
+      - mount-observe
   core-config-seed:
     command: bin/start-config-seed.sh
     plugs: [network, network-bind]
@@ -485,3 +496,40 @@ parts:
       - -usr/share/man
       - -usr/share/fonts
       - -usr/share/alsa
+  cassandra:
+    plugin: dump
+    source: http://apache.claz.org/cassandra/3.11.3/apache-cassandra-3.11.3-bin.tar.gz
+    source-type: tar
+    build-packages:
+      - ant-optional
+      - build-essential
+      - python
+      - sed
+    stage-packages:
+      # Copy some packages into the stage directory to steal their
+      # pre-built binaries.
+      - mawk
+      - grep
+      # For free(1)
+      - procps
+      - openjdk-8-jdk
+    organize:
+      # Rename directories into their expected locations. Analogous to
+      # Debian's .install files.
+      conf: etc/cassandra
+      bin/cassandra: usr/sbin/cassandra
+      lib: usr/share/cassandra/lib
+      # Rename mawk to awk instead of shipping a symlink.
+      usr/bin/mawk: usr/bin/awk
+    prime:
+      # Files from the stage directory to include in the snap.
+      - bin/nodetool
+      - etc/cassandra
+      - usr/sbin/cassandra
+      - usr/share/cassandra/lib/*.jar
+      - usr/lib/jvm
+      # awk, grep, and free are needed by cassandra-env.sh
+      - usr/bin/awk
+      - bin/grep
+      - usr/bin/free
+
