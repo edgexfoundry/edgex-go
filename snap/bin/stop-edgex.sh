@@ -7,13 +7,13 @@ set -ex
 # all micro services becomes snap daemons.
 kill_service() {
 	echo "sending SIGKILL to $2 ($1) service"
-	kill -9 "$1"
+	kill -9 "$1" || true
 }
 
 # send SIGINT to consul
 int_service() {
 	echo "sending SIGINT to $2 ($1) service"
-	kill -INT "$1"
+	kill -INT "$1" || true
 }
 
 # Bootstrap service env vars
@@ -100,7 +100,7 @@ if [ "$CORE_DATA" = "y" ] || [ "$CORE_METADATA" = "y" ] ; then
 
     if [ ! -z "$pid" ] && [ "$pid" != "" ] ; then
 	echo "shutting down mongod..."
-	"$SNAP"/bin/mongod --shutdown --dbpath "$SNAP_DATA"/mongo/db
+	"$SNAP/bin/mongod" --shutdown --dbpath "$SNAP_DATA/mongo/db" || true
     fi
 fi
 
