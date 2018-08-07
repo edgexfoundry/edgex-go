@@ -14,8 +14,12 @@
 package data
 
 import (
+	"fmt"
 	"net/http"
+	"net/url"
+	"strconv"
 
+	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
 	"github.com/gorilla/mux"
 )
 
@@ -71,4 +75,68 @@ func LoadRestRoutes() *mux.Router {
 	b.HandleFunc("/ping", pingHandler)
 
 	return r
+}
+
+/*
+Return number of events in Core Data
+/api/v1/event/count
+*/
+func eventCountHandler(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+
+	switch r.Method {
+	case http.MethodGet:
+		count, err := count()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			LoggingClient.Error(err.Error(), "")
+			return
+		}
+
+		// Return result
+		w.WriteHeader(http.StatusOK)
+		_, err = w.Write([]byte(strconv.Itoa(count)))
+		if err != nil {
+			LoggingClient.Error(err.Error(), "")
+		}
+	}
+}
+
+/*
+Return number of events for a given device in Core Data
+deviceID - ID of the device to get count for
+/api/v1/event/count/{deviceId}
+*/
+func eventCountByDeviceIdHandler(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+
+	vars := mux.Vars(r)
+	id, err := url.QueryUnescape(vars["deviceId"])
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		LoggingClient.Error("Problem unescaping URL: " + err.Error())
+		return
+	}
+
+	switch r.Method {
+	case http.MethodGet:
+		// Check device
+		count, err := countByDevice(id)
+		if err != nil {
+			LoggingClient.Error(fmt.Sprintf("error checking device %s %v", id, err))
+			switch err := err.(type) {
+			case types.ErrNotFound:
+				http.Error(w, err.Error(), http.StatusNotFound)
+				return
+			default: //return an error on everything else.
+				http.Error(w, err.Error(), http.StatusServiceUnavailable)
+				return
+			}
+		}
+
+		// Return result
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(strconv.Itoa(count)))
+		break
+	}
 }

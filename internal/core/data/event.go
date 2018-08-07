@@ -26,6 +26,37 @@ import (
 	"github.com/gorilla/mux"
 )
 
+func count() (int, error) {
+	count, err := dbClient.EventCount()
+	if err != nil {
+		return -1, err
+	}
+	return count, nil
+}
+
+func countByDevice(device string) (int, error) {
+	err := newCheckDevice(device)
+	if err != nil {
+		return -1, err
+	}
+
+	count, err := dbClient.EventCountByDeviceId(device)
+	if err != nil {
+		return -1, fmt.Errorf("error obtaining count for device %s: %v", device, err)
+	}
+	return count, err
+}
+
+func newCheckDevice(device string) error {
+	if configuration.MetaDataCheck {
+		_, err := mdc.CheckForDevice(device)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // Check metadata if the device exists
 func checkDevice(device string, w http.ResponseWriter) bool {
 	if configuration.MetaDataCheck {
@@ -337,68 +368,6 @@ func getEventByIdHandler(w http.ResponseWriter, r *http.Request) {
 
 		// Return the result
 		encode(e, w)
-	}
-}
-
-/*
-Return number of events in Core Data
-/api/v1/event/count
-*/
-func eventCountHandler(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
-
-	switch r.Method {
-	case http.MethodGet:
-		count, err := dbClient.EventCount()
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			LoggingClient.Error(err.Error(), "")
-			return
-		}
-
-		// Return result
-		w.WriteHeader(http.StatusOK)
-		_, err = w.Write([]byte(strconv.Itoa(count)))
-		if err != nil {
-			LoggingClient.Error(err.Error(), "")
-		}
-	}
-}
-
-/*
-Return number of events for a given device in Core Data
-deviceID - ID of the device to get count for
-/api/v1/event/count/{deviceId}
-*/
-func eventCountByDeviceIdHandler(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
-
-	vars := mux.Vars(r)
-	id, err := url.QueryUnescape(vars["deviceId"])
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		LoggingClient.Error("Problem unescaping URL: " + err.Error())
-		return
-	}
-
-	switch r.Method {
-	case http.MethodGet:
-		// Check device
-		if checkDevice(id, w) == false {
-			return
-		}
-
-		count, err := dbClient.EventCountByDeviceId(id)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			LoggingClient.Error(err.Error())
-			return
-		}
-
-		// Return result
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(strconv.Itoa(count)))
-		break
 	}
 }
 

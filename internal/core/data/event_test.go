@@ -16,6 +16,7 @@ package data
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -24,24 +25,92 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/memory"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
+	"github.com/edgexfoundry/edgex-go/pkg/clients/metadata/mocks"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 	"github.com/gorilla/mux"
+	"github.com/stretchr/testify/mock"
+	"gopkg.in/mgo.v2/bson"
 )
 
 var testEvent models.Event
 var testRoutes *mux.Router
 
 func TestMain(m *testing.M) {
+	testEvent.ID = bson.NewObjectId()
 	testEvent.Device = "test device"
 	testEvent.Origin = 123456789
 	dbClient = &memory.MemDB{}
 	testEvent.ID, _ = dbClient.AddEvent(&testEvent)
 	testRoutes = LoadRestRoutes()
 	LoggingClient = logger.NewMockClient()
+	mdc = NewMockDeviceClient()
 	os.Exit(m.Run())
 }
 
+func NewMockDeviceClient() *mocks.DeviceClient {
+	client := &mocks.DeviceClient{}
+
+	mockAddressable := models.Addressable{
+		Address:  "localhost",
+		Name:     "Test Addressable",
+		Port:     3000,
+		Protocol: "http"}
+
+	mockDeviceResultFn := func(id string) models.Device {
+		if bson.IsObjectIdHex(id) {
+			return models.Device{Id: bson.ObjectIdHex(id), Name: testEvent.Device, Addressable: mockAddressable}
+		}
+		return models.Device{}
+	}
+	client.On("Device", mock.MatchedBy(func(id string) bool {
+		return bson.IsObjectIdHex(id)
+	})).Return(mockDeviceResultFn, nil)
+	client.On("Device", mock.MatchedBy(func(id string) bool {
+		return !bson.IsObjectIdHex(id)
+	})).Return(mockDeviceResultFn, fmt.Errorf("id is not bson ObjectIdHex"))
+
+	mockDeviceForNameResultFn := func(name string) models.Device {
+		device := models.Device{Id: bson.NewObjectId(), Name: name, Addressable: mockAddressable}
+
+		return device
+	}
+	client.On("DeviceForName", mock.MatchedBy(func(name string) bool {
+		return name == testEvent.Device
+	})).Return(mockDeviceForNameResultFn, nil)
+	client.On("DeviceForName", mock.MatchedBy(func(name string) bool {
+		return name != testEvent.Device
+	})).Return(mockDeviceForNameResultFn, fmt.Errorf("no device found for name"))
+
+	return client
+}
+
 //Test methods
+func TestCount(t *testing.T) {
+	c, err := count()
+	if err != nil {
+		t.Errorf(err.Error())
+		return
+	}
+
+	if c != 1 {
+		t.Errorf("expected event count 1, received: %s", strconv.Itoa(c))
+		return
+	}
+}
+
+func TestCountByDevice(t *testing.T) {
+	count, err := countByDevice(testEvent.Device)
+	if err != nil {
+		t.Errorf(err.Error())
+		return
+	}
+
+	if count == 0 {
+		t.Errorf("no events found")
+		return
+	}
+}
+
 func TestGetEventHandler(t *testing.T) {
 	req, _ := http.NewRequest(http.MethodGet, "/api/v1/event", nil)
 	w := httptest.NewRecorder()
