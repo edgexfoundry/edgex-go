@@ -95,6 +95,24 @@ if [ $SUPPORT_LOGGING = "y" ] ; then
     fi
 fi
 
+if [ $SECURITY ]; then
+    # stop kong - note this might fail, so we just force it to always succeed with "|| true"
+    $SNAP/bin/kong-wrapper.sh stop -p $SNAP_DATA/kong || true
+
+    # killing nginx is tricky, as we need to make sure we don't inadvertantly kill any other nginx
+    # processes, so we use egrep with a more specific pattern
+    nginxppid=`ps -ef | egrep "nginx.*${SNAP_DATA}/kong" | grep -v grep | awk '{print $2}'`
+    int_service $nginxppid "nginx parent"
+
+    # kill vault-worker, as it might get stuck in an infinite loop trying to unseal the vault
+    pid=`ps -ef | grep $SNAP/bin/vault-worker.sh | grep -v grep | awk '{print $2}'`
+    kill_service $pid "vault worker"
+
+    # send sigint to vault to shut it down
+    pid=`ps -ef | grep $SNAP/bin/vault | grep -v grep | awk '{print $2}'`
+    int_service $pid "vault worker"
+fi
+
 if [ $CORE_DATA = "y" ] || [ $CORE_METADATA = "y" ] ; then
     pid=`ps -ef | grep mongod | grep -v grep | awk '{print $2}'`
 
