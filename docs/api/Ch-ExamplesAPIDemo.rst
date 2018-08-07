@@ -89,7 +89,7 @@ After the initial start of a Device Service, these steps are not duplicated.  Fo
 
 There is a lot of background information that EdgeX needs to know about the Device and Device Service before it can start collecting data from the Device or send actuation commands to the Device.  Say, for example, the camera Device wanted to report its human and canine counts.  If it was just to start sending numbers into EdgeX, EdgeX would have no idea of what those numbers represented or even where they came from.  Further, if someone/something wanted to send a command to the camera, it would not know how to reach the camera without some additional information like where the camera is located on the network.  This background or reference information is what a Device Service must first setup in / with other EdgeX micro services when it comes up.  The API calls here give you a glimpse of this communication between the fledgling Device Service and the other EdgeX micro services.  By the way, the order in which these calls are shown may not be the exact order that a Device Service does them.  As you become more familiar with Device Services and the Device Service SDK, the small nuances and differences will become clear.
 
-.. _`APIs Core Services Metadata`: https://github.com/edgexfoundry/edgex-go/blob/master/core/metadata/raml/core-metadata.raml
+.. _`APIs Core Services Metadata`: https://github.com/edgexfoundry/edgex-go/blob/master/api/raml/core-metadata.raml
 ..
 
 **Addressables**
@@ -126,7 +126,7 @@ It is assumed that for the purposes of this walk through demonstration
 * all API micro services are running on "localhost".  If this is not the case, substitute your hostname for localhost.
 * any POST call has the associated CONTENT-TYPE=application/JSON header associated to it unless explicitly stated otherwise.
 
-.. _`APIs Core Services Core Data`: https://github.com/edgexfoundry/edgex-go/blob/master/core/data/raml/core-data.raml
+.. _`APIs Core Services Core Data`: https://github.com/edgexfoundry/edgex-go/blob/master/api/raml/core-data.raml
 ..
 
 **Value Descriptors** 
