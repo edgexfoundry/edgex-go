@@ -50,7 +50,7 @@ func main() {
 
 	ok := data.Init()
 	if !ok {
-		logBeforeInit(fmt.Errorf("%s: Service bootstrap failed!", internal.CoreMetaDataServiceKey))
+		logBeforeInit(fmt.Errorf("%s: Service bootstrap failed!", internal.CoreDataServiceKey))
 		return
 	}
 
@@ -75,14 +75,6 @@ func main() {
 func logBeforeInit(err error) {
 	l := logger.NewClient(internal.CoreDataServiceKey, false, "")
 	l.Error(err.Error())
-}
-
-func setLoggingTarget(conf data.ConfigurationStruct) string {
-	logTarget := conf.LoggingRemoteURL
-	if !conf.EnableRemoteLogging {
-		return conf.LoggingFile
-	}
-	return logTarget
 }
 
 func listenForInterrupt(errChan chan error) {
