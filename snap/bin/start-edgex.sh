@@ -38,6 +38,11 @@ fi
 
 "$SNAP"/mongo/launch-edgex-mongo.sh
 
+if [ "$SECURITY" = "y" ] ; then
+    echo "Starting up security services"
+    $SNAP/bin/security-start.sh
+fi
+
 if [ "$SUPPORT_LOGGING" = "y" ] ; then
     sleep 60
     echo "Starting logging"
