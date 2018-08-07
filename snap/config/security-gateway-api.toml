@@ -1,0 +1,93 @@
+#################################################################################
+# Copyright 2018 Dell Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+# in compliance with the License. You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software distributed under the License
+# is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+# or implied. See the License for the specific language governing permissions and limitations under
+# the License.
+#
+# @author: Tingyu Zeng, Dell
+# @version: 0.1.0
+#################################################################################
+
+# This is a TOML config file for edgexsecurity service.
+
+title = "EdgeX security service config file"
+
+[kongurl]
+server = "localhost"
+adminport = "8001"
+applicationport = "8000"
+
+[kongadmin]
+username = "administrator"
+password = "changeme"
+
+[secretservice]
+server = "localhost"
+port = "8200"
+healthcheckpath = "v1/sys/health"
+certpath = "v1/secret/edgex/pki/tls/edgex-kong"
+tokenpath = "res/resp-init.json"
+snis = "edgex.com"
+
+[edgexservices]
+	[edgexservices.coredata]
+		name = "coredata"
+		host = "edgex-core-data"
+		port = "48080"
+		protocol = "http"
+	
+	[edgexservices.metadata]
+		name = "metadata"
+		host = "edgex-core-metadata"
+		port = "48081"
+		protocol = "http"
+	
+	[edgexservices.command]
+		name = "command"
+		host = "edgex-core-command"
+		port = "48082"
+		protocol = "http"
+	
+	[edgexservices.notifcations]
+		name = "notifications"
+		host = "edgex-support-notifications"
+		port = "48060"
+		protocol = "http"
+		
+	[edgexservices.supportlogging]
+		name = "supportlogging"
+		host = "edgex-support-logging"
+		port = "48061"
+		protocol = "http"
+
+	[edgexservices.exportdistro]
+		name = "exportdistro"
+		host = "edgex-export-distro"
+		port = "48070"
+		protocol = "http"
+	
+	[edgexservices.exportclient]
+		name = "exportclient"
+		host = "edgex-export-client"
+		port = "48071"
+		protocol = "http"
+	
+	[edgexservices.rulesengine]
+		name = "rulesengine"
+		host = "edgex-support-rulesengine"
+		port = "48075"
+		protocol = "http"
+	
+	[edgexservices.virtualdevice]
+		name = "virtualdevice"
+		host = "edgex-device-virtual"
+		port = "49990"
+		protocol = "http"
+	
