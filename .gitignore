@@ -27,3 +27,9 @@ cmd/support-logging/logs/
 cmd/export-client/logs/
 cmd/export-distro/logs/
 cmd/support-notifications/logs/
+
+*.snap
+
+*.bz2
+
+*.pyc
