@@ -109,12 +109,14 @@ func connectToDatabase() error {
 	}
 	dbClient, err = newDBClient(Configuration.DBType, dbConfig)
 	if err != nil {
+		dbClient = nil
 		return fmt.Errorf("couldn't create database client: %v", err.Error())
 	}
 
 	// Connect to the database
 	err = dbClient.Connect()
 	if err != nil {
+		dbClient = nil
 		return fmt.Errorf("couldn't connect to database: %v", err.Error())
 	}
 	return nil
