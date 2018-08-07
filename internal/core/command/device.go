@@ -36,8 +36,20 @@ func commandByDeviceID(did string, cid string, b string, p bool) (string, int) {
 
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
-		// send 403: no device exists by the id provided
-		return "", http.StatusForbidden
+
+		// Attempt to marshal code from response. If unsucessful or unknown, throw 500.
+		responseCode, convErr:= strconv.Atoi(strings.Split(err.Error(), " ")[0])
+		if convErr != nil {
+			return "", http.StatusInternalServerError
+		}
+		switch responseCode {
+		case http.StatusBadRequest:
+			return "", http.StatusBadRequest
+		case http.StatusNotFound:
+			return "", http.StatusNotFound
+		default:
+			return "", http.StatusInternalServerError
+		}
 	}
 
 	if p && (d.AdminState == models.Locked) {
@@ -49,8 +61,8 @@ func commandByDeviceID(did string, cid string, b string, p bool) (string, int) {
 	c, err := cc.Command(cid)
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
-		// send 403 no command exists
-		return "", http.StatusForbidden
+		// send 400 no command exists
+		return "", http.StatusBadRequest
 	}
 	if p {
 		url := d.Service.Addressable.GetBaseURL() + strings.Replace(c.Put.Action.Path, DEVICEIDURLPARAM, d.Id.Hex(), -1)

@@ -22,6 +22,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/pkg/clients"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
+	"fmt"
 )
 
 /*
@@ -113,9 +114,8 @@ func (c *CommandRestClient) Command(id string) (models.Command, error) {
 		if err != nil {
 			return models.Command{}, err
 		}
-		bodyString := string(bodyBytes)
 
-		return models.Command{}, errors.New(bodyString)
+		return models.Command{}, fmt.Errorf("%d - %s", resp.StatusCode, bodyBytes)
 	}
 
 	return c.decodeCommand(resp)
@@ -142,9 +142,8 @@ func (c *CommandRestClient) Commands() ([]models.Command, error) {
 		if err != nil {
 			return []models.Command{}, err
 		}
-		bodyString := string(bodyBytes)
 
-		return []models.Command{}, errors.New(bodyString)
+		return []models.Command{}, fmt.Errorf("%d - %s", resp.StatusCode, bodyBytes)
 	}
 
 	return c.decodeCommandSlice(resp)
@@ -172,9 +171,8 @@ func (c *CommandRestClient) CommandsForName(name string) ([]models.Command, erro
 		if err != nil {
 			return []models.Command{}, err
 		}
-		bodyString := string(bodyBytes)
 
-		return []models.Command{}, errors.New(bodyString)
+		return []models.Command{}, fmt.Errorf("%d - %s", resp.StatusCode, bodyBytes)
 	}
 
 	return c.decodeCommandSlice(resp)
@@ -206,13 +204,12 @@ func (c *CommandRestClient) Add(com *models.Command) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	bodyString := string(bodyBytes)
 
 	if resp.StatusCode != http.StatusOK {
-		return "", errors.New(bodyString)
+		return "", fmt.Errorf("%d - %s", resp.StatusCode, bodyBytes)
 	}
 
-	return bodyString, nil
+	return string(bodyBytes), nil
 }
 
 // Update a command
@@ -242,9 +239,8 @@ func (c *CommandRestClient) Update(com models.Command) error {
 		if err != nil {
 			return err
 		}
-		bodyString := string(bodyBytes)
 
-		return errors.New(bodyString)
+		return fmt.Errorf("%d - %s", resp.StatusCode, bodyBytes)
 	}
 
 	return nil
@@ -272,9 +268,8 @@ func (c *CommandRestClient) Delete(id string) error {
 		if err != nil {
 			return err
 		}
-		bodyString := string(bodyBytes)
 
-		return errors.New(bodyString)
+		return fmt.Errorf("%d - %s", resp.StatusCode, bodyBytes)
 	}
 
 	return nil
