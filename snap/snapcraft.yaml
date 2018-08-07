@@ -697,3 +697,21 @@ parts:
     prime:
       - bin/*
       - config/*
+  security-api-gateway:
+    after: [go, glide]
+    source: https://github.com/edgexfoundry/security-api-gateway.git
+    source-branch: california
+    plugin: make
+    stage-packages:
+      - openssl
+      - jq
+      - bind9utils
+      - dnsutils
+    override-build: |
+      . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
+      gopartbootstrap github.com/edgexfoundry/security-api-gateway
+
+      glide install
+      make build 
+
+      install -DT core/edgexproxy "$SNAPCRAFT_PART_INSTALL/bin/edgexproxy"
