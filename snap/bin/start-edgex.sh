@@ -47,7 +47,7 @@ if [ $SUPPORT_LOGGING = "y" ] ; then
     sleep 60
     echo "Starting logging"
 
-    cd $SNAP/config/support-logging
+    cd $SNAP_DATA/config/support-logging
     $SNAP/bin/support-logging --consul &
 fi
 
@@ -57,7 +57,7 @@ if [ $SUPPORT_NOTIFICATIONS = "y" ] ; then
 
     $JAVA -jar -Djava.security.egd=file:/dev/urandom -Xmx100M \
                -Dspring.cloud.consul.enabled=true \
-               -Dlogging.file=$SNAP_COMMON/edgex-notifications.log \
+               -Dlogging.file=$SNAP_COMMON/logs/edgex-notifications.log \
                $SNAP/jar/support-notifications/support-notifications.jar &
 fi
 
@@ -66,7 +66,7 @@ if [ $CORE_METADATA = "y" ] ; then
     sleep 33
     echo "Starting metadata"
 
-    cd $SNAP/config/core-metadata
+    cd $SNAP_DATA/config/core-metadata
     $SNAP/bin/core-metadata --consul &
 fi
 
@@ -74,7 +74,7 @@ if [ $CORE_DATA = "y" ] ; then
     sleep 60
     echo "Starting core-data"
 
-    cd $SNAP/config/core-data
+    cd $SNAP_DATA/config/core-data
     $SNAP/bin/core-data --consul &
 fi
 
@@ -83,7 +83,7 @@ if [ $CORE_COMMAND = "y" ] ; then
     sleep 60
     echo "Starting command"
 
-    cd $SNAP/config/core-command
+    cd $SNAP_DATA/config/core-command
     $SNAP/bin/core-command --consul &
 fi
 
@@ -98,7 +98,7 @@ if [ $SUPPORT_SCHEDULER = "y" ] ; then
     $JAVA -jar -Djava.security.egd=file:/dev/urandom -Xmx100M \
                -Dspring.cloud.consul.enabled=true \
                -Dspring.cloud.consul.host=localhost \
-               -Dlogging.file=$SNAP_COMMON/edgex-support-scheduler.log \
+               -Dlogging.file=$SNAP_COMMON/logs/edgex-support-scheduler.log \
                $SNAP/jar/support-scheduler/support-scheduler.jar &
 fi
 
@@ -107,7 +107,7 @@ if [ $EXPORT_CLIENT = "y" ] ; then
     echo "Starting export-client"
 
     # TODO: fix log file in res/configuration.json
-    cd $SNAP/config/export-client
+    cd $SNAP_DATA/config/export-client
     $SNAP/bin/export-client --consul &
 fi
 
@@ -116,7 +116,7 @@ if [ $EXPORT_DISTRO = "y" ] ; then
     echo "Starting export-distro"
 
     # TODO: fix log file in res/configuration.json
-    cd $SNAP/config/export-distro
+    cd $SNAP_DATA/config/export-distro
     $SNAP/bin/export-distro --consul &
 fi
 
@@ -141,7 +141,7 @@ if [ $DEVICE_VIRTUAL = "y" ] ; then
     $JAVA -jar -Djava.security.egd=file:/dev/urandom -Xmx100M \
                -Dspring.cloud.consul.enabled=false \
                -Dlogging.level.org.edgexfoundry=DEBUG \
-               -Dlogging.file=$SNAP_COMMON/edgex-device-virtual.log \
+               -Dlogging.file=$SNAP_COMMON/logs/edgex-device-virtual.log \
                -Dapplication.device-profile-paths=$SNAP_COMMON/bacnet_profiles,$SNAP_COMMON/modbus_profiles \
                $SNAP/jar/device-virtual/device-virtual.jar &
 fi
