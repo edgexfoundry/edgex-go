@@ -679,3 +679,19 @@ parts:
 
       # install everything from stage into the part install for kong
       cp -r $SNAPCRAFT_STAGE/* $SNAPCRAFT_PART_INSTALL/
+
+# SECURITY SERVICES PARTS
+
+  security-secret-store:
+    source: https://github.com/edgexfoundry/security-secret-store.git
+    source-branch: california
+    plugin: dump
+    organize:
+      pki-setup.sh: bin/pki-setup.sh
+      vault-init-unseal.sh: bin/vault-init-unseal.sh
+      vault-kong.sh: bin/vault-kong.sh
+      vault-setup.sh: bin/vault-setup.sh
+      vault-worker.sh: bin/vault-worker.sh
+    prime:
+      - bin/*
+      - config/*
