@@ -239,13 +239,15 @@ parts:
     shell-flags: ['-eux', '-o', 'pipefail']
     build-packages: [wget]
     shell-command: |
-      export ARCH=`arch`
-
-      if [ $ARCH = "x86_64" ] ; then
-        export PACKAGE="mongodb-linux-x86_64-ubuntu1604-3.4.10.tgz"
-      elif [ $ARCH = "aarch64" ] ; then
-        export PACKAGE="mongodb-linux-arm64-ubuntu1604-3.4.10.tgz"
-      fi
+      case $SNAPCRAFT_ARCH_TRIPLET in
+        x86_64*)
+          export PACKAGE="mongodb-linux-x86_64-ubuntu1604-3.4.10.tgz";;
+        aarch64*)
+          export PACKAGE="mongodb-linux-arm64-ubuntu1604-3.4.10.tgz";;
+        *)
+          echo "Unsupported arch for mongodb: $SNAPCRAFT_ARCH_TRIPLET"
+          exit 1
+      esac
 
       pushd $SNAPCRAFT_PART_INSTALL
       wget "https://fastdl.mongodb.org/linux/$PACKAGE"
