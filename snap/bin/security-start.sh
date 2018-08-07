@@ -4,14 +4,16 @@ export KONG_SNAP="${SNAP}/bin/kong-wrapper.sh"
 
 export LOG_DIR=${SNAP_COMMON}/logs
 export CONFIG_DIR=${SNAP_DATA}/config
+export SEC_SEC_STORE_CONFIG_DIR=${CONFIG_DIR}/security-secret-store
+export SEC_GATEWAY_API_CONFIG_DIR=${CONFIG_DIR}/security-gateway-api
 
 # security-secret-store environment variables
 export _VAULT_SCRIPT_DIR=${SNAP}/bin
 export _VAULT_DIR=${SNAP_DATA}/vault
 export _VAULT_SVC=localhost
 export _KONG_SVC=localhost
-export _PKI_SETUP_VAULT_ENV=${CONFIG_DIR}/pki-setup-config-vault.env
-export _PKI_SETUP_KONG_ENV=${CONFIG_DIR}/pki-setup-config-kong.env
+export _PKI_SETUP_VAULT_ENV=${SEC_SEC_STORE_CONFIG_DIR}/pki-setup-config-vault.env
+export _PKI_SETUP_KONG_ENV=${SEC_SEC_STORE_CONFIG_DIR}/pki-setup-config-kong.env
 export WATCHDOG_DELAY=10s
 
 # security-gateway-api environment variables
@@ -31,14 +33,10 @@ for log in ${KONG_PROXY_ACCESS_LOG} ${KONG_ADMIN_ACCESS_LOG} ${KONG_PROXY_ERROR_
 done
 
 # run kong migrations up to bootstrap the cassandra database
-$KONG_SNAP migrations up --yes --conf ${CONFIG_DIR}/kong.conf
+$KONG_SNAP migrations up --yes --conf ${SEC_GATEWAY_API_CONFIG_DIR}/kong.conf
 
 # now start kong normally
-$KONG_SNAP start --conf ${CONFIG_DIR}/kong.conf
-
-# ensure the vault/file directory exists before continuing
-# as the vault-init-unseal script assumes it exists before continuing
-mkdir -p ${_VAULT_DIR}/file
+$KONG_SNAP start --conf ${SEC_GATEWAY_API_CONFIG_DIR}/kong.conf
 
 # setup key generation for vault before starting vault up
 # note that the vault setup scripts will put the generated keys inside
@@ -52,7 +50,7 @@ popd
 # execute the vault binary in the background, logging 
 # all output to $SNAP_COMMONG
 $SNAP/bin/vault server \
-     --config="${CONFIG_DIR}/vault-config.json" \
+     --config="${SEC_SEC_STORE_CONFIG_DIR}/vault-config.json" \
      | tee ${LOG_DIR}/vault.log &
 
 # now that vault is up and running we need to initialize it
@@ -70,4 +68,4 @@ mkdir -p res
 cp resp-init.json res/
 
 # now finally start the security proxy
-$SNAP/bin/edgexproxy --configfile=${CONFIG_DIR}/security-gateway-api.toml init=true
+$SNAP/bin/edgexproxy --configfile=${SEC_GATEWAY_API_CONFIG_DIR}/res/configuration.toml init=true
