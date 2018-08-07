@@ -26,6 +26,10 @@ confinement: strict
 # may be defaulting to this dir...
 
 apps:
+  kong:
+    command: bin/kong-wrapper.sh
+    plugs:
+      - network-bind
   consul:
     command: bin/start-consul.sh
     # TODO: add stop-command
@@ -587,3 +591,91 @@ parts:
       - bin/grep
       - usr/bin/free
 
+# KONG / LUA PARTS
+
+  openresty:
+    plugin: autotools
+    source: https://openresty.org/download/openresty-1.11.2.5.tar.gz
+    install-via: prefix
+    # configure options here from https://getkong.org/install/source/
+    configflags:
+      - --with-pcre-jit
+      - --with-ipv6
+      - --with-http_realip_module
+      - --with-http_ssl_module
+      - --with-http_stub_status_module
+      - --with-http_v2_module
+    build-packages: 
+      - build-essential
+      - libpcre3-dev
+      - perl
+      - curl
+      - libssl-dev
+    stage-packages:
+      - perl
+    override-build: |
+      snapcraftctl build
+      # openresty will make an absolute symbolic link of openresty to the nginx binary, so we need to clean that up to be relative
+      cd $SNAPCRAFT_PART_INSTALL/bin
+      rm -rf openresty
+      ln -s ../nginx/sbin/nginx openresty
+      ln -s ../nginx/sbin/nginx nginx
+  kong:
+    after: [openresty]
+    source: https://github.com/kong/kong.git  
+    plugin: nil
+    source-tag: 0.13.1
+    source-depth: 1
+    build-packages: 
+      - unzip
+      - libssl-dev
+      - libpcre3-dev
+    stage-packages:
+      - luarocks
+    override-build: |
+      # install luarocks first
+      apt update && apt install -y -qq luarocks
+      # handle the location of openssl + libcrypto by architecture
+      # cause luarocks is silly and hardcodes /usr/lib/x86_64-linux-gnu as the lib search path
+      case $SNAPCRAFT_ARCH_TRIPLET in
+      aarch64*)
+        luarocks make --tree=$SNAPCRAFT_STAGE kong \
+          CRYPTO_LIBDIR=/usr/lib/aarch64-linux-gnu \
+          CRYPTO_INCDIR=/usr/include \
+          OPENSSL_LIBDIR=/usr/lib/aarch64-linux-gnu \
+          OPENSSL_INCDIR=/usr/include
+        ;;
+      arm*)
+        luarocks make --tree=$SNAPCRAFT_STAGE \
+          CRYPTO_LIBDIR=/usr/lib/arm-linux-gnueabihf \
+          CRYPTO_INCDIR=/usr/include \
+          OPENSSL_LIBDIR=/usr/lib/arm-linux-gnueabihf \
+          OPENSSL_INCDIR=/usr/include
+        ;;
+      i386*|i686*)
+        luarocks make --tree=$SNAPCRAFT_STAGE \
+          CRYPTO_LIBDIR=/usr/lib/i386-linux-gnu \
+          CRYPTO_INCDIR=/usr/include \
+          OPENSSL_LIBDIR=/usr/lib/i386-linux-gnu \
+          OPENSSL_INCDIR=/usr/include
+        ;;
+      x86_64*)
+        # x64 is the only arch that luarocks can properly find libs for :-/
+        luarocks make --tree=$SNAPCRAFT_STAGE
+        ;;
+      *)
+        echo "Unsupported arch $ARCH"
+        exit 1
+        ;;
+      esac
+      
+      mkdir -p $SNAPCRAFT_STAGE/bin
+      cp bin/kong $SNAPCRAFT_STAGE/bin/kong
+      # make all the things inside the cmd directory executable because they for some reason aren't executable by default...
+      cd $SNAPCRAFT_STAGE/share/lua/5.1/kong/cmd
+      for cmd in $(ls *.lua); do
+        chmod +x $cmd
+      done
+
+      # install everything from stage into the part install for kong
+      cp -r $SNAPCRAFT_STAGE/* $SNAPCRAFT_PART_INSTALL/
