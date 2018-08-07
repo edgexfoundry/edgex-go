@@ -184,6 +184,15 @@ parts:
       for i in `find . -type f -name "LICENSE"`; do
         install -DT "$i" \
                  "$SNAPCRAFT_PART_INSTALL/usr/share/doc/$i"; done
+
+      # delete duplicated license files between vault + consul
+      # as snapcraft will fail we attempt to install duplicated files into the snap
+      rm -rf $SNAPCRAFT_PART_INSTALL/usr/share/doc/cloud.google.com/go/LICENSE
+      rm -rf $SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/golang/protobuf/LICENSE
+      rm -rf $SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/sean-/seed/LICENSE
+      rm -rf $SNAPCRAFT_PART_INSTALL/usr/share/doc/golang.org/x/oauth2/LICENSE
+      rm -rf $SNAPCRAFT_PART_INSTALL/usr/share/doc/google.golang.org/grpc/LICENSE
+
   config-seed:
     source: https://github.com/edgexfoundry/core-config-seed-go.git
     source-branch: california
