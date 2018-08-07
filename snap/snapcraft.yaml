@@ -34,6 +34,9 @@ apps:
     command: bin/start-consul.sh
     # TODO: add stop-command
     plugs: [network, network-bind]
+  vault:
+    command: bin/vault
+    plugs: [network, network-bind]
   cassandra:
     command: bin/cassandra-wrapper.sh
     daemon: forking
@@ -145,6 +148,37 @@ parts:
     build-packages:
       - make
       - zip
+  vault:
+    after: [go]
+    plugin: make
+    source: https://github.com/hashicorp/vault.git
+    source-tag: v0.10.2
+    override-build: |
+      . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
+      gopartbootstrap github.com/hashicorp/vault
+
+      make bootstrap
+      make dev
+      
+      # install the vault binary
+      install -DT bin/vault "$SNAPCRAFT_PART_INSTALL/bin/vault" 
+
+      # handle vault LICENSE
+      # TODO: do PATENT files need copying?
+      install -DT "$GOIMPORTPATH/LICENSE" \
+                 "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/hashicorp/vault/LICENSE"
+
+      # handle vendor LICENSE files
+      cd $GOIMPORTPATH/vendor
+      for i in `find . -type f -name "LICENSE"`; do
+        install -DT "$i" \
+                 "$SNAPCRAFT_PART_INSTALL/usr/share/doc/$i"; done
+
+      # TODO: some LICENSE files fall under .gopath too
+      cd $GOPATH/src
+      for i in `find . -type f -name "LICENSE"`; do
+        install -DT "$i" \
+                 "$SNAPCRAFT_PART_INSTALL/usr/share/doc/$i"; done
   config-seed:
     source: https://github.com/edgexfoundry/core-config-seed-go.git
     source-branch: california

@@ -1,0 +1,21 @@
+listener "tcp" { 
+    address = "localhost:8200" 
+    tls_disable = "0" 
+    cluster_address = "localhost:8201"
+    tls_min_version = "tls12"
+    tls_client_ca_file ="$SNAP_DATA/vault/pki/EdgeXFoundryTrustCA/EdgeXFoundryTrustCA.pem"
+    tls_cert_file ="$SNAP_DATA/vault/pki/EdgeXFoundryTrustCA/localhost.pem"
+    tls_key_file = "$SNAP_DATA/vault/pki/EdgeXFoundryTrustCA/localhost.priv.key"
+  }
+  
+  backend "consul" {
+    path = "vault/"
+    address = "localhost:8500"
+    scheme = "http"
+    redirect_addr = "https://localhost:8200"
+    cluster_addr = "https://localhost:8201"
+  }
+  
+  default_lease_ttl = "168h"
+  max_lease_ttl = "720h"
+  
