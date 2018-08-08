@@ -57,6 +57,7 @@ done
 if [ ! -f "${SNAP_DATA}/config/security-secret-store/vault-config.json" ]; then
     mkdir -p ${SNAP_DATA}/config/security-secret-store
     sed "s@\$SNAP_DATA@$SNAP_DATA@g" ${SNAP}/config/security-secret-store/vault-config.json.in > ${SNAP_DATA}/config/security-secret-store/vault-config.json
+    chmod 644 ${SNAP_DATA}/config/security-secret-store/vault-config.json
 fi
 
 # the kong config file needs to be generated - it needs absolute paths, but we specify $SNAP_DATA 
