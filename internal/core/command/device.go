@@ -223,8 +223,6 @@ func getCommands() (int, []models.CommandResponse, error) {
 func getCommandsByDeviceID(did string) (int, models.CommandResponse, error) {
 	d, err := mdc.Device(did)
 	if err != nil {
-		return http.StatusInternalServerError, models.CommandResponse{}, err
-
 		// Attempt to marshal code from response. If unsucessful or unknown, throw 500.
 		responseCode, convErr:= strconv.Atoi(strings.Split(err.Error(), " ")[0])
 		if convErr != nil {
