@@ -202,6 +202,16 @@ func (ic *InfluxClient) EventsPushed() ([]models.Event, error) {
 	return ic.getEvents(query)
 }
 
+func (ic *InfluxClient) EventsPushedLimit(time int64, limit int) ([]models.Event, error) {
+	query := fmt.Sprintf("WHERE pushed > 0 AND created <= %d LIMIT %d", time, limit)
+	return ic.getEvents(query)
+}
+
+func (ic *InfluxClient) EventsPushedCount(time int64) (int, error) {
+	query := fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE pushed > 0 AND created <= %d",  EVENTS_COLLECTION, time)
+	return ic.getCount(query)
+}
+
 // Delete all of the readings and all of the events
 func (ic *InfluxClient) ScrubAllEvents() error {
 	err := ic.deleteAll(READINGS_COLLECTION)

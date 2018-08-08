@@ -750,27 +750,45 @@ func scrubHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodDelete:
-		loggingClient.Info("Scrubbing events.  Deleting all events that have been pushed")
+		current := time.Now().UnixNano() / int64(time.Millisecond)
+		loggingClient.Info(fmt.Sprintf("Scrubbing events before time: %d", current))
 
-		// Get the events
-		events, err := dbc.EventsPushed()
+		count, err := dbc.EventsPushedCount(current)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-			loggingClient.Error(err.Error())
+
 			return
 		}
 
-		// Delete all the events
-		count := len(events)
-		for _, event := range events {
-			if err = deleteEvent(event); err != nil {
-				http.Error(w, err.Error(), http.StatusServiceUnavailable)
-				loggingClient.Error(err.Error())
-				return
-			}
-		}
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(strconv.Itoa(count)))
+
+		// Get the events
+		go func() {
+			for {
+				events, err := dbc.EventsPushedLimit(current, configuration.ScrubNumber)
+				if err != nil {
+					loggingClient.Error(err.Error())
+					return
+				}
+
+				if len(events) <= 0 {
+					break
+				}
+
+				for _, event := range events {
+					if err = deleteEvent(event); err != nil {
+						loggingClient.Error(err.Error())
+						return
+					}
+				}
+
+				//sleep for Reducing the impact on normal operations
+				time.Sleep(configuration.ScrubSleepTime * time.Second)
+			}
+
+			loggingClient.Info("Scrubbing events done" )
+		}()
 	}
 }
