@@ -16,8 +16,7 @@ package metadata
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
-	"net/http"
+		"net/http"
 
 	"github.com/edgexfoundry/edgex-go/pkg/clients"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/types"

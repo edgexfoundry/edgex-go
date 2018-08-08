@@ -61,8 +61,20 @@ func commandByDeviceID(did string, cid string, b string, p bool) (string, int) {
 	c, err := cc.Command(cid)
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
-		// send 400 no command exists
-		return "", http.StatusBadRequest
+
+		// Attempt to marshal code from response. If unsucessful or unknown, throw 500.
+		responseCode, convErr:= strconv.Atoi(strings.Split(err.Error(), " ")[0])
+		if convErr != nil {
+			return "", http.StatusInternalServerError
+		}
+		switch responseCode {
+		case http.StatusBadRequest:
+			return "", http.StatusBadRequest
+		case http.StatusNotFound:
+			return "", http.StatusNotFound
+		default:
+			return "", http.StatusInternalServerError
+		}
 	}
 	if p {
 		url := d.Service.Addressable.GetBaseURL() + strings.Replace(c.Put.Action.Path, DEVICEIDURLPARAM, d.Id.Hex(), -1)
@@ -99,7 +111,20 @@ func putDeviceAdminState(did string, as string) (int, error) {
 	err := mdc.UpdateAdminState(did, as)
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
-		return http.StatusInternalServerError, err
+
+		// Attempt to marshal code from response. If unsucessful or unknown, throw 500.
+		responseCode, convErr:= strconv.Atoi(strings.Split(err.Error(), " ")[0])
+		if convErr != nil {
+			return http.StatusInternalServerError, convErr
+		}
+		switch responseCode {
+		case http.StatusBadRequest:
+			return http.StatusBadRequest, err
+		case http.StatusNotFound:
+			return http.StatusNotFound, err
+		default:
+			return http.StatusInternalServerError, err
+		}
 	}
 	return http.StatusOK, err
 }
@@ -108,7 +133,20 @@ func putDeviceAdminStateByName(dn string, as string) (int, error) {
 	err := mdc.UpdateAdminStateByName(dn, as)
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
-		return http.StatusInternalServerError, err
+
+		// Attempt to marshal code from response. If unsucessful or unknown, throw 500.
+		responseCode, convErr:= strconv.Atoi(strings.Split(err.Error(), " ")[0])
+		if convErr != nil {
+			return http.StatusInternalServerError, convErr
+		}
+		switch responseCode {
+		case http.StatusBadRequest:
+			return http.StatusBadRequest, err
+		case http.StatusNotFound:
+			return http.StatusNotFound, err
+		default:
+			return http.StatusInternalServerError, err
+		}
 	}
 	return http.StatusOK, err
 }
@@ -117,7 +155,20 @@ func putDeviceOpState(did string, as string) (int, error) {
 	err := mdc.UpdateOpState(did, as)
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
-		return http.StatusInternalServerError, err
+
+		// Attempt to marshal code from response. If unsucessful or unknown, throw 500.
+		responseCode, convErr:= strconv.Atoi(strings.Split(err.Error(), " ")[0])
+		if convErr != nil {
+			return http.StatusInternalServerError, convErr
+		}
+		switch responseCode {
+		case http.StatusBadRequest:
+			return http.StatusBadRequest, err
+		case http.StatusNotFound:
+			return http.StatusNotFound, err
+		default:
+			return http.StatusInternalServerError, err
+		}
 	}
 	return http.StatusOK, err
 }
@@ -126,7 +177,20 @@ func putDeviceOpStateByName(dn string, as string) (int, error) {
 	err := mdc.UpdateOpStateByName(dn, as)
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
-		return http.StatusInternalServerError, err
+
+		// Attempt to marshal code from response. If unsucessful or unknown, throw 500.
+		responseCode, convErr:= strconv.Atoi(strings.Split(err.Error(), " ")[0])
+		if convErr != nil {
+			return http.StatusInternalServerError, convErr
+		}
+		switch responseCode {
+		case http.StatusBadRequest:
+			return http.StatusBadRequest, err
+		case http.StatusNotFound:
+			return http.StatusNotFound, err
+		default:
+			return http.StatusInternalServerError, err
+		}
 	}
 	return http.StatusOK, err
 }
@@ -134,7 +198,19 @@ func putDeviceOpStateByName(dn string, as string) (int, error) {
 func getCommands() (int, []models.CommandResponse, error) {
 	devices, err := mdc.Devices()
 	if err != nil {
-		return http.StatusInternalServerError, nil, err
+		// Attempt to marshal code from response. If unsucessful or unknown, throw 500.
+		responseCode, convErr:= strconv.Atoi(strings.Split(err.Error(), " ")[0])
+		if convErr != nil {
+			return http.StatusInternalServerError, nil, convErr
+		}
+		switch responseCode {
+		case http.StatusBadRequest:
+			return http.StatusBadRequest, nil, err
+		case http.StatusNotFound:
+			return http.StatusNotFound, nil, err
+		default:
+			return http.StatusInternalServerError, nil, err
+		}
 	}
 	var cr []models.CommandResponse
 	for _, d := range devices {
@@ -148,6 +224,20 @@ func getCommandsByDeviceID(did string) (int, models.CommandResponse, error) {
 	d, err := mdc.Device(did)
 	if err != nil {
 		return http.StatusInternalServerError, models.CommandResponse{}, err
+
+		// Attempt to marshal code from response. If unsucessful or unknown, throw 500.
+		responseCode, convErr:= strconv.Atoi(strings.Split(err.Error(), " ")[0])
+		if convErr != nil {
+			return http.StatusInternalServerError, models.CommandResponse{}, convErr
+		}
+		switch responseCode {
+		case http.StatusBadRequest:
+			return http.StatusBadRequest, models.CommandResponse{}, err
+		case http.StatusNotFound:
+			return http.StatusNotFound, models.CommandResponse{}, err
+		default:
+			return http.StatusInternalServerError, models.CommandResponse{}, err
+		}
 	}
 	return http.StatusOK, models.CommandResponseFromDevice(d, constructCommandURL()), err
 }
@@ -155,7 +245,19 @@ func getCommandsByDeviceID(did string) (int, models.CommandResponse, error) {
 func getCommandsByDeviceName(dn string) (int, models.CommandResponse, error) {
 	d, err := mdc.DeviceForName(dn)
 	if err != nil {
-		return http.StatusInternalServerError, models.CommandResponse{}, err
+		// Attempt to marshal code from response. If unsucessful or unknown, throw 500.
+		responseCode, convErr:= strconv.Atoi(strings.Split(err.Error(), " ")[0])
+		if convErr != nil {
+			return http.StatusInternalServerError, models.CommandResponse{}, convErr
+		}
+		switch responseCode {
+		case http.StatusBadRequest:
+			return http.StatusBadRequest, models.CommandResponse{}, err
+		case http.StatusNotFound:
+			return http.StatusNotFound, models.CommandResponse{}, err
+		default:
+			return http.StatusInternalServerError, models.CommandResponse{}, err
+		}
 	}
 	return http.StatusOK, models.CommandResponseFromDevice(d, constructCommandURL()), err
 }
