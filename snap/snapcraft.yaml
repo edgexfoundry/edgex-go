@@ -722,6 +722,7 @@ parts:
       - openssl
       - jq
       - bind9utils
+      # for dig
       - dnsutils
     override-build: |
       . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
@@ -731,3 +732,12 @@ parts:
       make build 
 
       install -DT core/edgexproxy "$SNAPCRAFT_PART_INSTALL/bin/edgexproxy"
+  base64:
+    # TODO: the core snap currently ships base64, but doesn't allow it in the default apparmor:
+    # https://forum.snapcraft.io/t/adding-base64-command-to-default-snap-apparmor/6744
+    # when/if it gets added to the apparmor we can remove this part
+    plugin: nil
+    prime: 
+    - usr/bin/base64
+    stage-packages:
+      - coreutils
