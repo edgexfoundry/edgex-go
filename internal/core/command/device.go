@@ -20,6 +20,7 @@ import (
 	"strings"
 
 	"github.com/edgexfoundry/edgex-go/pkg/models"
+	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
 )
 
 func issueCommand(req *http.Request) (*http.Response, error) {
@@ -37,6 +38,13 @@ func commandByDeviceID(did string, cid string, b string, p bool) (string, int) {
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
 
+		chk, ok := err.(*types.ErrRestClient)
+		if ok {
+			return "", chk.StatusCode
+		} else {
+			return "", http.StatusInternalServerError
+		}
+		/*
 		// Attempt to marshal code from response. If unsucessful or unknown, throw 500.
 		responseCode, convErr:= strconv.Atoi(strings.Split(err.Error(), " ")[0])
 		if convErr != nil {
@@ -50,6 +58,7 @@ func commandByDeviceID(did string, cid string, b string, p bool) (string, int) {
 		default:
 			return "", http.StatusInternalServerError
 		}
+		*/
 	}
 
 	if p && (d.AdminState == models.Locked) {

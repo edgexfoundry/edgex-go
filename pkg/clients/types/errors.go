@@ -13,8 +13,26 @@
  *******************************************************************************/
 package types
 
+import "fmt"
+
 type ErrNotFound struct{}
 
 func (e ErrNotFound) Error() string {
 	return "item not found"
+}
+
+// In need of a better type name.
+type ErrRestClient struct{
+	StatusCode int
+	bodyBytes []byte
+	errMsg string
+}
+
+func NewErrRestClient(statusCode int, body []byte) error {
+	e := &ErrRestClient{StatusCode:statusCode, bodyBytes:body}
+	return e
+}
+
+func (e ErrRestClient) Error() string {
+	return fmt.Sprintf("%d - %s", e.StatusCode, e.bodyBytes)
 }

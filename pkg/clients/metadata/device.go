@@ -177,7 +177,8 @@ func (d *DeviceRestClient) Device(id string) (models.Device, error) {
 			return models.Device{}, err
 		}
 
-		return models.Device{}, fmt.Errorf("%d - %s", resp.StatusCode, bodyBytes)
+		//return models.Device{}, fmt.Errorf("%d - %s", resp.StatusCode, bodyBytes)
+		return models.Device{}, types.NewErrRestClient(resp.StatusCode, bodyBytes)
 	}
 
 	return d.decodeDevice(resp)
