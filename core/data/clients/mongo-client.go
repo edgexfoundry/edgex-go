@@ -218,6 +218,18 @@ func (mc *MongoClient) EventsPushed() ([]models.Event, error) {
 	return mc.getEvents(bson.M{"pushed": bson.M{"$gt": int64(0)}})
 }
 
+//Get pushed events by limit and created time
+func (mc *MongoClient) EventsPushedLimit(time int64, limit int) ([]models.Event, error) {
+	return mc.getEventsLimit(bson.M{"pushed": bson.M{"$gt": int64(0)}, "created": bson.M{"$lte": time}}, limit)
+}
+
+func (mc *MongoClient) EventsPushedCount(time int64) (int, error) {
+	s := mc.getSessionCopy()
+	defer s.Close()
+
+	return s.DB(mc.Database.Name).C(EVENTS_COLLECTION).Find(bson.M{"pushed": bson.M{"$gt": int64(0)}, "created": bson.M{"$lte": time}}).Count()
+}
+
 // Delete all of the readings and all of the events
 func (mc *MongoClient) ScrubAllEvents() error {
 	s := mc.getSessionCopy()

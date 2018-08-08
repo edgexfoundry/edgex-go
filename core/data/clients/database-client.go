@@ -98,6 +98,9 @@ type DBClient interface {
 
 	// Delete all readings and events
 	ScrubAllEvents() error
+	
+	EventsPushedLimit(time int64, limit int) ([]models.Event, error)
+	EventsPushedCount(time int64) (int, error)
 
 	// ********************* READING FUNCTIONS *************************
 	// Return a list of readings sorted by reading id

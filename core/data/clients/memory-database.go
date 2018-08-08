@@ -183,6 +183,32 @@ func (m *memDB) EventsPushed() ([]models.Event, error) {
 	return events, nil
 }
 
+func (m *memDB) EventsPushedLimit(time int64, limit int) ([]models.Event, error) {
+	events := []models.Event{}
+	count := 0
+	for _, e := range m.events {
+		if (e.Pushed != 0) && (e.Created <= time) {
+			events = append(events, e)
+			if count == limit {
+				break
+			}
+		}
+	}
+	return events, nil
+}
+
+func (m *memDB) EventsPushedCount(time int64) (int, error) {
+	count := 0
+	for _, e := range m.events {
+		if (e.Pushed != 0) && (e.Created <= time) {
+			count++
+		}
+	}
+
+	return count, nil
+}
+
+
 func (m *memDB) ScrubAllEvents() error {
 	m.events = nil
 	m.readings = nil

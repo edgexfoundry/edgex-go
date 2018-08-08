@@ -49,3 +49,5 @@ MetaPingURL = 'http://localhost:48081/api/v1/ping'
 MetaPingPath = '/api/v1/ping'
 ActiveMQBroker = 'tcp://localhost:61616'
 ZeroMQAddressPort = 'tcp://*:5563'
+ScrubNumber = 2000
+ScrubSleepTime = 5
