@@ -27,7 +27,12 @@ esac
 export PERL5LIB="$SNAP/usr/local/lib/$archLibName/perl/5.22.1:$SNAP/usr/local/share/perl/5.22.1:$SNAP/usr/lib/$archLibName/perl5/5.22:$SNAP/usr/share/perl5:$SNAP/usr/lib/$archLibName/perl/5.22:$SNAP/usr/share/perl/5.22:$SNAP/usr/local/lib/site_perl:$SNAP/usr/lib/$archLibName/perl-base"
 
 # lua paths so that luarocks can work
-export LUA_PATH="$SNAP/lualib/?.lua;$SNAP/lualib/?/init.lua;$SNAP/usr/share/lua/5.1/?.lua;$SNAP/usr/share/lua/5.1/?/init.lua;$SNAP/lib/lua/5.1/?.lua;$SNAP/lib/lua/5.1/?/init.lua;$SNAP/share/lua/5.1/?.lua;$SNAP/share/lua/5.1/?/init.lua;;"
-export LUA_CPATH="$SNAP/lualib/?.so;$SNAP/lib/lua/5.1/?.so;$SNAP/lib/$archLibName/lua/5.1/?.so;;"
+export LUA_VERSION=5.1
+export LUA_PATH="$SNAP/lualib/?.lua;$SNAP/lualib/?/init.lua;$SNAP/usr/share/lua/$LUA_VERSION/?.lua;$SNAP/usr/share/lua/$LUA_VERSION/?/init.lua;$SNAP/lib/lua/$LUA_VERSION/?.lua;$SNAP/lib/lua/$LUA_VERSION/?/init.lua;$SNAP/share/lua/$LUA_VERSION/?.lua;$SNAP/share/lua/$LUA_VERSION/?/init.lua;;"
+export LUA_CPATH="$SNAP/lualib/?.so;$SNAP/lib/lua/$LUA_VERSION/?.so;$SNAP/lib/$archLibName/lua/$LUA_VERSION/?.so;;"
+
+# vars that make perl warnings go away
+export LC_ALL=C.UTF-8
+export LANG=C.UTF-8
 
 exec "$SNAP/bin/kong" "$@"
