@@ -567,7 +567,30 @@ parts:
       - usr/bin/free
 
 # KONG / LUA PARTS
-
+  lua:
+    source: https://www.lua.org/ftp/lua-5.1.5.tar.gz
+    source-type: tar
+    plugin: make
+    make-parameters: [linux]
+    build-packages:
+      - libreadline-dev
+      - libncurses5-dev
+    override-build: |
+      # patch the Makefile to use $SNAPCRAFT_STAGE for the INSTALL_TOP variable
+      # which unfortunately is not settable using an environment variable and thus needs 
+      # this manual patch
+      sed -i "s@INSTALL_TOP= /usr/local@INSTALL_TOP=$SNAPCRAFT_STAGE@" Makefile
+      snapcraftctl build
+  luarocks:
+    after: [lua]
+    plugin: autotools
+    source: https://github.com/luarocks/luarocks.git
+    source-branch: 2.4.3
+    source-depth: 1
+    override-build: |
+      ./configure --prefix=$SNAPCRAFT_STAGE --with-lua=$SNAPCRAFT_STAGE --lua-version=5.1
+      make build
+      make install
   openresty:
     plugin: autotools
     source: https://openresty.org/download/openresty-1.11.2.5.tar.gz
@@ -590,13 +613,15 @@ parts:
       - perl
     override-build: |
       snapcraftctl build
-      # openresty will make an absolute symbolic link of openresty to the nginx binary, so we need to clean that up to be relative
-      cd $SNAPCRAFT_PART_INSTALL/bin
+      # openresty will make an absolute symbolic link of openresty to the nginx binary, so we need to delete that
+      # note that this is already handled in the kong part
+      cd $SNAPCRAFT_STAGE/bin
       rm -rf openresty
-      ln -s ../nginx/sbin/nginx openresty
       ln -s ../nginx/sbin/nginx nginx
   kong:
-    after: [openresty]
+    after: 
+      - openresty
+      - luarocks
     source: https://github.com/kong/kong.git  
     plugin: nil
     source-tag: 0.13.1
@@ -608,8 +633,6 @@ parts:
     stage-packages:
       - luarocks
     override-build: |
-      # install luarocks first
-      apt update && apt install -y -qq luarocks
       # handle the location of openssl + libcrypto by architecture
       # cause luarocks is silly and hardcodes /usr/lib/x86_64-linux-gnu as the lib search path
       case $SNAPCRAFT_ARCH_TRIPLET in
