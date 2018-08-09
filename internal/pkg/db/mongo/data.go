@@ -33,6 +33,13 @@ func (mc *MongoClient) Events() ([]models.Event, error) {
 	return mc.getEvents(bson.M{})
 }
 
+// Return events up to the max number specified
+// UnexpectedError - failed to retrieve events from the database
+// Sort the events in descending order by ID
+func (mc *MongoClient) EventsWithLimit(limit int) ([]models.Event, error) {
+	return mc.getEventsLimit(bson.M{}, limit)
+}
+
 // Add a new event
 // UnexpectedError - failed to add to database
 // NoValueDescriptor - no existing value descriptor for a reading in the event

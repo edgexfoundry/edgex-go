@@ -23,6 +23,7 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/memory"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/metadata/mocks"
@@ -30,24 +31,33 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/mock"
 	"gopkg.in/mgo.v2/bson"
+	"time"
 )
 
 var testEvent models.Event
 var testRoutes *mux.Router
 
+const (
+	TEST_DEVICE_NAME string = "Test Device"
+	TEST_ORIGIN      int64  = 123456789
+)
+
 func TestMain(m *testing.M) {
-	testEvent.ID = bson.NewObjectId()
-	testEvent.Device = "test device"
-	testEvent.Origin = 123456789
-	dbClient = &memory.MemDB{}
-	testEvent.ID, _ = dbClient.AddEvent(&testEvent)
 	testRoutes = LoadRestRoutes()
 	LoggingClient = logger.NewMockClient()
-	mdc = NewMockDeviceClient()
+	mdc = newMockDeviceClient()
 	os.Exit(m.Run())
 }
 
-func NewMockDeviceClient() *mocks.DeviceClient {
+func prepareDB() {
+	testEvent.Device = TEST_DEVICE_NAME
+	testEvent.Origin = TEST_ORIGIN
+	testEvent.Readings = buildListOfMockReadings()
+	dbClient = &memory.MemDB{}
+	testEvent.ID, _ = dbClient.AddEvent(&testEvent)
+}
+
+func newMockDeviceClient() *mocks.DeviceClient {
 	client := &mocks.DeviceClient{}
 
 	mockAddressable := models.Addressable{
@@ -84,8 +94,33 @@ func NewMockDeviceClient() *mocks.DeviceClient {
 	return client
 }
 
+func buildListOfMockReadings() []models.Reading {
+	ticks := db.MakeTimestamp()
+	r1 := models.Reading{Id: bson.NewObjectId(),
+		Name:     "Temperature",
+		Value:    "45",
+		Origin:   TEST_ORIGIN,
+		Created:  ticks,
+		Modified: ticks,
+		Pushed:   ticks,
+		Device:   TEST_DEVICE_NAME}
+
+	r2 := models.Reading{Id: bson.NewObjectId(),
+		Name:     "Pressure",
+		Value:    "1.01325",
+		Origin:   TEST_ORIGIN,
+		Created:  ticks,
+		Modified: ticks,
+		Pushed:   ticks,
+		Device:   TEST_DEVICE_NAME}
+	readings := []models.Reading{}
+	readings = append(readings, r1, r2)
+	return readings
+}
+
 //Test methods
 func TestCount(t *testing.T) {
+	prepareDB()
 	c, err := count()
 	if err != nil {
 		t.Errorf(err.Error())
@@ -99,6 +134,7 @@ func TestCount(t *testing.T) {
 }
 
 func TestCountByDevice(t *testing.T) {
+	prepareDB()
 	count, err := countByDevice(testEvent.Device)
 	if err != nil {
 		t.Errorf(err.Error())
@@ -111,6 +147,64 @@ func TestCountByDevice(t *testing.T) {
 	}
 }
 
+func TestDeleteByAge(t *testing.T) {
+	prepareDB()
+	time.Sleep(time.Millisecond * time.Duration(5))
+	age := db.MakeTimestamp()
+	count, err := deleteByAge(age)
+	if err != nil {
+		t.Errorf(err.Error())
+		return
+	}
+
+	if count == 0 {
+		t.Errorf("no events found")
+		return
+	}
+}
+
+func TestGetEvents(t *testing.T) {
+	prepareDB()
+	events, err := getEvents(0)
+	if err != nil {
+		t.Errorf(err.Error())
+		return
+	}
+
+	if len(events) == 0 {
+		t.Errorf("no events found")
+		return
+	}
+
+	if len(events) != 1 {
+		t.Errorf("expected 1 event")
+		return
+	}
+
+	for e := range events {
+		testEventWithoutReadings(events[e], t)
+	}
+}
+
+func TestGetEventsWithLimit(t *testing.T) {
+	prepareDB()
+	//Put an extra dummy event in the DB
+	evt := models.Event{Device: TEST_DEVICE_NAME, Origin: TEST_ORIGIN}
+	dbClient.AddEvent(&evt)
+
+	events, err := getEvents(1)
+	if err != nil {
+		t.Errorf(err.Error())
+		return
+	}
+
+	if len(events) != 1 {
+		t.Errorf("expected 1 event")
+		return
+	}
+}
+
+/*
 func TestGetEventHandler(t *testing.T) {
 	req, _ := http.NewRequest(http.MethodGet, "/api/v1/event", nil)
 	w := httptest.NewRecorder()
@@ -146,6 +240,7 @@ func TestGetEventHandlerMaxExceeded(t *testing.T) {
 		return
 	}
 }
+*/
 
 func TestGetEventByIdHandler(t *testing.T) {
 	req, _ := http.NewRequest(http.MethodGet, "/api/v1/event/"+testEvent.ID.Hex(), nil)
@@ -174,7 +269,7 @@ func testEventWithoutReadings(event models.Event, t *testing.T) {
 	}
 
 	if event.Device != testEvent.Device {
-		t.Error("device mismatch. expected " + testEvent.Device + " received " + event.Device)
+		t.Error("device mismatch. expected " + TEST_DEVICE_NAME + " received " + event.Device)
 	}
 
 	if event.Origin != testEvent.Origin {

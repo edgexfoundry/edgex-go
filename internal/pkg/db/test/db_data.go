@@ -15,6 +15,7 @@ import (
 	dbp "github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 	"gopkg.in/mgo.v2/bson"
+	"time"
 )
 
 func populateDbReadings(db interfaces.DBClient, count int) (bson.ObjectId, error) {
@@ -58,6 +59,7 @@ func populateDbEvents(db interfaces.DBClient, count int, pushed int64) (bson.Obj
 	for i := 0; i < count; i++ {
 		name := fmt.Sprintf("name%d", i)
 		e := models.Event{}
+		e.Created = time.Now().Unix()
 		e.Device = name
 		e.Event = name
 		e.Pushed = pushed
@@ -422,7 +424,7 @@ func testDBEvents(t *testing.T, db interfaces.DBClient) {
 		t.Fatalf("There should be 100 events, not %d", len(events))
 	}
 
-	events, err = db.EventsOlderThanAge(0)
+	events, err = db.EventsOlderThanAge(afterTime + 10)
 	if err != nil {
 		t.Fatalf("Error getting EventsOlderThanAge: %v", err)
 	}

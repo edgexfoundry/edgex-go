@@ -14,12 +14,15 @@
 package data
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
 
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
+	"github.com/edgexfoundry/edgex-go/pkg/models"
 	"github.com/gorilla/mux"
 )
 
@@ -138,5 +141,182 @@ func eventCountByDeviceIdHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(strconv.Itoa(count)))
 		break
+	}
+}
+
+// Remove all the old events and associated readings (by age)
+// event/removeold/age/{age}
+func eventByAgeHandler(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+
+	vars := mux.Vars(r)
+	age, err := strconv.ParseInt(vars["age"], 10, 64)
+
+	// Problem converting age
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		LoggingClient.Error("Error converting the age to an integer")
+		return
+	}
+
+	switch r.Method {
+	case http.MethodDelete:
+		LoggingClient.Info("Deleting events by age: " + vars["age"])
+
+		count, err := deleteByAge(age)
+		if err != nil {
+			LoggingClient.Error(err.Error())
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		// Return the count
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(strconv.Itoa(count)))
+	}
+}
+
+/*
+Handler for the event API
+Status code 404 - event not found
+Status code 413 - number of events exceeds limit
+Status code 503 - unanticipated issues
+api/v1/event
+*/
+func eventHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Body != nil {
+		defer r.Body.Close()
+	}
+
+	switch r.Method {
+	// Get all events
+	case http.MethodGet:
+		events, err := getEvents(configuration.ReadMaxLimit)
+		if err != nil {
+			LoggingClient.Error(err.Error())
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		encode(events, w)
+		break
+		// Post a new event
+	case http.MethodPost:
+		var e models.Event
+		dec := json.NewDecoder(r.Body)
+		err := dec.Decode(&e)
+
+		// Problem Decoding Event
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			LoggingClient.Error("Error decoding event: " + err.Error())
+			return
+		}
+
+		LoggingClient.Info("Posting Event: " + e.String())
+
+		// Check device
+		if checkDevice(e.Device, w) == false {
+			return
+		}
+
+		if configuration.ValidateCheck {
+			LoggingClient.Debug("Validation enabled, parsing events")
+			for reading := range e.Readings {
+				// Check value descriptor
+				vd, err := dbClient.ValueDescriptorByName(e.Readings[reading].Name)
+				if err != nil {
+					if err == db.ErrNotFound {
+						http.Error(w, "Value descriptor for a reading not found", http.StatusNotFound)
+					} else {
+						http.Error(w, err.Error(), http.StatusInternalServerError)
+					}
+					LoggingClient.Error(err.Error())
+					return
+				}
+
+				valid, err := isValidValueDescriptor(vd, e.Readings[reading])
+				if !valid {
+					http.Error(w, "Validation failed", http.StatusConflict)
+					LoggingClient.Error("Validation failed")
+					return
+				}
+			}
+		}
+
+		// Add the event and readings to the database
+		if configuration.PersistData {
+			id, err := dbClient.AddEvent(&e)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				LoggingClient.Error(err.Error())
+				return
+			}
+
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(id.Hex()))
+		} else {
+			encode("unsaved", w)
+		}
+
+		putEventOnQueue(e)                                 // Push the aux struct to export service (It has the actual readings)
+		updateDeviceLastReportedConnected(e.Device)        // update last reported connected (device)
+		updateDeviceServiceLastReportedConnected(e.Device) // update last reported connected (device service)
+
+		break
+		// Do not update the readings
+	case http.MethodPut:
+		var from models.Event
+		dec := json.NewDecoder(r.Body)
+		err := dec.Decode(&from)
+
+		// Problem decoding event
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			LoggingClient.Error("Error decoding the event: " + err.Error())
+			return
+		}
+
+		// Check if the event exists
+		to, err := dbClient.EventById(from.ID.Hex())
+		if err != nil {
+			if err == db.ErrNotFound {
+				http.Error(w, "Event not found", http.StatusNotFound)
+			} else {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
+			LoggingClient.Error(err.Error())
+			return
+		}
+
+		LoggingClient.Info("Updating event: " + from.ID.Hex())
+
+		// Update the fields
+		if len(from.Device) > 0 {
+			// Check device
+			if checkDevice(from.Device, w) == false {
+				return
+			}
+
+			// Set the device name on the event
+			to.Device = from.Device
+		}
+		if from.Pushed != 0 {
+			to.Pushed = from.Pushed
+		}
+		if from.Origin != 0 {
+			to.Origin = from.Origin
+		}
+
+		// Update
+		if err = dbClient.UpdateEvent(to); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			LoggingClient.Error(err.Error())
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("true"))
 	}
 }
