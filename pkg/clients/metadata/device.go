@@ -177,8 +177,7 @@ func (d *DeviceRestClient) Device(id string) (models.Device, error) {
 			return models.Device{}, err
 		}
 
-		//return models.Device{}, fmt.Errorf("%d - %s", resp.StatusCode, bodyBytes)
-		return models.Device{}, types.NewErrRestClient(resp.StatusCode, bodyBytes)
+		return models.Device{}, types.NewErrClientServices(resp.StatusCode, bodyBytes)
 	}
 
 	return d.decodeDevice(resp)
@@ -208,7 +207,7 @@ func (d *DeviceRestClient) Devices() ([]models.Device, error) {
 			return []models.Device{}, err
 		}
 
-		return []models.Device{}, fmt.Errorf("%d - %s", resp.StatusCode, bodyBytes)
+		return []models.Device{}, types.NewErrClientServices(resp.StatusCode, bodyBytes)
 	}
 	return d.decodeDeviceSlice(resp)
 }
@@ -237,7 +236,7 @@ func (d *DeviceRestClient) DeviceForName(name string) (models.Device, error) {
 			return models.Device{}, err
 		}
 
-		return models.Device{}, fmt.Errorf("%d - %s", resp.StatusCode, bodyBytes)
+		return models.Device{}, types.NewErrClientServices(resp.StatusCode, bodyBytes)
 	}
 	return d.decodeDevice(resp)
 }
@@ -266,7 +265,7 @@ func (d *DeviceRestClient) DevicesByLabel(label string) ([]models.Device, error)
 			return []models.Device{}, err
 		}
 
-		return []models.Device{}, fmt.Errorf("%d - %s", resp.StatusCode, bodyBytes)
+		return []models.Device{}, types.NewErrClientServices(resp.StatusCode, bodyBytes)
 	}
 	return d.decodeDeviceSlice(resp)
 }
@@ -295,7 +294,7 @@ func (d *DeviceRestClient) DevicesForService(serviceId string) ([]models.Device,
 			return []models.Device{}, err
 		}
 
-		return []models.Device{}, fmt.Errorf("%d - %s", resp.StatusCode, bodyBytes)
+		return []models.Device{}, types.NewErrClientServices(resp.StatusCode, bodyBytes)
 	}
 	return d.decodeDeviceSlice(resp)
 }
@@ -324,7 +323,7 @@ func (d *DeviceRestClient) DevicesForServiceByName(serviceName string) ([]models
 			return []models.Device{}, err
 		}
 
-		return []models.Device{}, fmt.Errorf("%d - %s", resp.StatusCode, bodyBytes)
+		return []models.Device{}, types.NewErrClientServices(resp.StatusCode, bodyBytes)
 	}
 	return d.decodeDeviceSlice(resp)
 }
@@ -353,7 +352,7 @@ func (d *DeviceRestClient) DevicesForProfile(profileId string) ([]models.Device,
 			return []models.Device{}, err
 		}
 
-		return []models.Device{}, fmt.Errorf("%d - %s", resp.StatusCode, bodyBytes)
+		return []models.Device{}, types.NewErrClientServices(resp.StatusCode, bodyBytes)
 	}
 	return d.decodeDeviceSlice(resp)
 }
@@ -382,7 +381,7 @@ func (d *DeviceRestClient) DevicesForProfileByName(profileName string) ([]models
 			return []models.Device{}, err
 		}
 
-		return []models.Device{}, fmt.Errorf("%d - %s", resp.StatusCode, bodyBytes)
+		return []models.Device{}, types.NewErrClientServices(resp.StatusCode, bodyBytes)
 	}
 	return d.decodeDeviceSlice(resp)
 }
@@ -411,7 +410,7 @@ func (d *DeviceRestClient) DevicesForAddressable(addressableId string) ([]models
 			return []models.Device{}, err
 		}
 
-		return []models.Device{}, fmt.Errorf("%d - %s", resp.StatusCode, bodyBytes)
+		return []models.Device{}, types.NewErrClientServices(resp.StatusCode, bodyBytes)
 	}
 
 	return d.decodeDeviceSlice(resp)
@@ -441,7 +440,7 @@ func (d *DeviceRestClient) DevicesForAddressableByName(addressableName string) (
 			return []models.Device{}, err
 		}
 
-		return []models.Device{}, fmt.Errorf("%d - %s", resp.StatusCode, bodyBytes)
+		return []models.Device{}, types.NewErrClientServices(resp.StatusCode, bodyBytes)
 	}
 
 	return d.decodeDeviceSlice(resp)
@@ -475,7 +474,7 @@ func (d *DeviceRestClient) Add(dev *models.Device) (string, error) {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("%d - %s", resp.StatusCode, bodyBytes)
+		return "", types.NewErrClientServices(resp.StatusCode, bodyBytes)
 	}
 
 	return string(bodyBytes), nil
@@ -509,7 +508,7 @@ func (d *DeviceRestClient) Update(dev models.Device) error {
 			return err
 		}
 
-		return fmt.Errorf("%d - %s", resp.StatusCode, bodyBytes)
+		return types.NewErrClientServices(resp.StatusCode, bodyBytes)
 	}
 
 	return nil
@@ -538,7 +537,7 @@ func (d *DeviceRestClient) UpdateLastConnected(id string, time int64) error {
 			return err
 		}
 
-		return fmt.Errorf("%d - %s", resp.StatusCode, bodyBytes)
+		return types.NewErrClientServices(resp.StatusCode, bodyBytes)
 	}
 
 	return nil
@@ -567,7 +566,7 @@ func (d *DeviceRestClient) UpdateLastConnectedByName(name string, time int64) er
 			return err
 		}
 
-		return fmt.Errorf("%d - %s", resp.StatusCode, bodyBytes)
+		return types.NewErrClientServices(resp.StatusCode, bodyBytes)
 	}
 
 	return nil
@@ -596,7 +595,7 @@ func (d *DeviceRestClient) UpdateLastReported(id string, time int64) error {
 			return err
 		}
 
-		return fmt.Errorf("%d - %s", resp.StatusCode, bodyBytes)
+		return types.NewErrClientServices(resp.StatusCode, bodyBytes)
 	}
 
 	return nil
@@ -625,7 +624,7 @@ func (d *DeviceRestClient) UpdateLastReportedByName(name string, time int64) err
 			return err
 		}
 
-		return fmt.Errorf("%d - %s", resp.StatusCode, bodyBytes)
+		return types.NewErrClientServices(resp.StatusCode, bodyBytes)
 	}
 
 	return err
@@ -654,7 +653,7 @@ func (d *DeviceRestClient) UpdateOpState(id string, opState string) error {
 			return err
 		}
 
-		return fmt.Errorf("%d - %s", resp.StatusCode, bodyBytes)
+		return types.NewErrClientServices(resp.StatusCode, bodyBytes)
 	}
 
 	return err
@@ -683,7 +682,7 @@ func (d *DeviceRestClient) UpdateOpStateByName(name string, opState string) erro
 			return err
 		}
 
-		return fmt.Errorf("%d - %s", resp.StatusCode, bodyBytes)
+		return types.NewErrClientServices(resp.StatusCode, bodyBytes)
 	}
 
 	return nil
@@ -713,7 +712,7 @@ func (d *DeviceRestClient) UpdateAdminState(id string, adminState string) error 
 			return err
 		}
 
-		return fmt.Errorf("%d - %s", resp.StatusCode, bodyBytes)
+		return types.NewErrClientServices(resp.StatusCode, bodyBytes)
 	}
 
 	return nil
@@ -742,7 +741,7 @@ func (d *DeviceRestClient) UpdateAdminStateByName(name string, adminState string
 			return err
 		}
 
-		return fmt.Errorf("%d - %s", resp.StatusCode, bodyBytes)
+		return types.NewErrClientServices(resp.StatusCode, bodyBytes)
 	}
 
 	return err
@@ -771,7 +770,7 @@ func (d *DeviceRestClient) Delete(id string) error {
 			return err
 		}
 
-		return fmt.Errorf("%d - %s", resp.StatusCode, bodyBytes)
+		return types.NewErrClientServices(resp.StatusCode, bodyBytes)
 	}
 
 	return nil
@@ -800,7 +799,7 @@ func (d *DeviceRestClient) DeleteByName(name string) error {
 			return err
 		}
 
-		return fmt.Errorf("%d - %s", resp.StatusCode, bodyBytes)
+		return types.NewErrClientServices(resp.StatusCode, bodyBytes)
 	}
 
 	return nil
