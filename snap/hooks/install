@@ -39,7 +39,13 @@ for tlsEnvFile in pki-setup-config-kong.env pki-setup-config-vault.env; do
     if [ ! -f "${SNAP_DATA}/config/security-secret-store/${tlsEnvFile}" ]; then
         mkdir -p ${SNAP_DATA}/config/security-secret-store
         newpw=$(openssl rand -base64 32)
-        sed "s@PKCS12_PASSWORD=\"REPLACE_ME_IN_INSTALL_HOOK\"@PKCS12_PASSWORD=\"$newpw\"@g" ${SNAP}/config/security-secret-store/${tlsEnvFile} > "${SNAP_DATA}/config/security-secret-store/${tlsEnvFile}"
+        cp ${SNAP}/config/security-secret-store/${tlsEnvFile} "${SNAP_DATA}/config/security-secret-store/${tlsEnvFile}"
+        sed -i "s@PKCS12_PASSWORD=\"s3cr3tp4th\"@PKCS12_PASSWORD=\"$newpw\"@g" "${SNAP_DATA}/config/security-secret-store/${tlsEnvFile}"
+
+        # these 2 sed command make look contradictory, but the kong env file will have HOST=edgex-kong, and the vault
+        # env file will have HOST=edgex-vault, so only one of these will actually do anything
+        sed -i "s@HOST=edgex-kong@HOST=localhost@" "${SNAP_DATA}/config/security-secret-store/${tlsEnvFile}"
+        sed -i "s@HOST=edgex-vault@HOST=localhost@" "${SNAP_DATA}/config/security-secret-store/${tlsEnvFile}"
         chmod 600 "${SNAP_DATA}/config/security-secret-store/${tlsEnvFile}"
     fi
 done

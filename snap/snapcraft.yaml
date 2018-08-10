@@ -737,6 +737,8 @@ parts:
     plugin: dump
     organize:
       pki-setup.sh: bin/pki-setup.sh
+      pki-setup-config-kong.env: config/security-secret-store/pki-setup-config-kong.env
+      pki-setup-config-vault.env: config/security-secret-store/pki-setup-config-vault.env
       vault-init-unseal.sh: bin/vault-init-unseal.sh
       vault-kong.sh: bin/vault-kong.sh
       vault-setup.sh: bin/vault-setup.sh
