@@ -34,7 +34,7 @@ func restGetAllDevices(w http.ResponseWriter, _ *http.Request) {
 	err := dbClient.GetAllDevices(&res)
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -61,7 +61,7 @@ func restAddNewDevice(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&d)
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -73,7 +73,7 @@ func restAddNewDevice(w http.ResponseWriter, r *http.Request) {
 		err = dbClient.GetAddressableById(&d.Addressable, d.Addressable.Id.Hex())
 		if err != nil {
 			LoggingClient.Error(err.Error(), "")
-			http.Error(w, err.Error()+": A device must be associated to an Addressable", http.StatusConflict)
+			http.Error(w, err.Error()+": A device must be associated to an Addressable", http.StatusBadRequest)
 			return
 		}
 	}
@@ -86,7 +86,7 @@ func restAddNewDevice(w http.ResponseWriter, r *http.Request) {
 		err = dbClient.GetDeviceServiceById(&d.Service, d.Service.Service.Id.Hex())
 		if err != nil {
 			LoggingClient.Error(err.Error(), "")
-			http.Error(w, err.Error()+": A device must be associated with a device service", http.StatusConflict)
+			http.Error(w, err.Error()+": A device must be associated with a device service", http.StatusBadRequest)
 			return
 		}
 	}
@@ -99,7 +99,7 @@ func restAddNewDevice(w http.ResponseWriter, r *http.Request) {
 		err = dbClient.GetDeviceProfileById(&d.Profile, d.Profile.Id.Hex())
 		if err != nil {
 			LoggingClient.Error(err.Error(), "")
-			http.Error(w, err.Error()+": A device must be associated with a device profile", http.StatusConflict)
+			http.Error(w, err.Error()+": A device must be associated with a device profile", http.StatusBadRequest)
 			return
 		}
 	}
@@ -108,7 +108,7 @@ func restAddNewDevice(w http.ResponseWriter, r *http.Request) {
 	if d.OperatingState == models.OperatingState("") || d.AdminState == models.AdminState("") {
 		err = errors.New("Device can't have null operating state or admin state")
 		LoggingClient.Error(err.Error(), "")
-		http.Error(w, err.Error(), http.StatusConflict)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -118,7 +118,7 @@ func restAddNewDevice(w http.ResponseWriter, r *http.Request) {
 		if err == db.ErrNotUnique {
 			http.Error(w, "Duplicate name for device", http.StatusConflict)
 		} else {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		LoggingClient.Error(err.Error(), "")
 		return
@@ -281,7 +281,7 @@ func restGetDevicesWithLabel(w http.ResponseWriter, r *http.Request) {
 	label, err := url.QueryUnescape(vars[LABEL])
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -289,7 +289,7 @@ func restGetDevicesWithLabel(w http.ResponseWriter, r *http.Request) {
 	err = dbClient.GetDevicesWithLabel(&res, label)
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -308,7 +308,7 @@ func restGetDeviceByProfileId(w http.ResponseWriter, r *http.Request) {
 		if err == db.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
 		} else {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		LoggingClient.Error(err.Error(), "")
 		return
@@ -317,7 +317,7 @@ func restGetDeviceByProfileId(w http.ResponseWriter, r *http.Request) {
 	res := make([]models.Device, 0)
 	err = dbClient.GetDevicesByProfileId(&res, pid)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		LoggingClient.Error(err.Error(), "")
 		return
 	}
@@ -502,7 +502,7 @@ func restGetDeviceById(w http.ResponseWriter, r *http.Request) {
 		if err == db.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
 		} else {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusBadRequest)
 		}
 		return
 	}
@@ -596,7 +596,7 @@ func restSetDeviceOpStateByName(w http.ResponseWriter, r *http.Request) {
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	var os string = vars[OPSTATE]
@@ -605,7 +605,7 @@ func restSetDeviceOpStateByName(w http.ResponseWriter, r *http.Request) {
 	if !f {
 		err := errors.New("Invalid State: " + os + " Must be 'ENABLED' or 'DISABLED'")
 		LoggingClient.Error(err.Error(), "")
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -616,7 +616,7 @@ func restSetDeviceOpStateByName(w http.ResponseWriter, r *http.Request) {
 		if err == db.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
 		} else {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		LoggingClient.Error(err.Error(), "")
 		return
@@ -626,7 +626,7 @@ func restSetDeviceOpStateByName(w http.ResponseWriter, r *http.Request) {
 	d.OperatingState = newOs
 	if err = dbClient.UpdateDevice(d); err != nil {
 		LoggingClient.Error(err.Error(), "")
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -686,7 +686,7 @@ func restSetDeviceAdminStateByName(w http.ResponseWriter, r *http.Request) {
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	var as string = vars[ADMINSTATE]
@@ -695,7 +695,7 @@ func restSetDeviceAdminStateByName(w http.ResponseWriter, r *http.Request) {
 	if !f {
 		err = errors.New("Invalid State: " + as + " Must be 'LOCKED' or 'UNLOCKED'")
 		LoggingClient.Error(err.Error(), "")
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -706,7 +706,7 @@ func restSetDeviceAdminStateByName(w http.ResponseWriter, r *http.Request) {
 		if err == db.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
 		} else {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		LoggingClient.Error(err.Error(), "")
 		return
@@ -716,13 +716,13 @@ func restSetDeviceAdminStateByName(w http.ResponseWriter, r *http.Request) {
 	// Update the admin state
 	if err = dbClient.UpdateDevice(d); err != nil {
 		LoggingClient.Error(err.Error(), "")
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	if err := notifyDeviceAssociates(d, http.MethodPut); err != nil {
 		LoggingClient.Error(err.Error(), "")
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -737,12 +737,12 @@ func restDeleteDeviceById(w http.ResponseWriter, r *http.Request) {
 
 	// Check if the device exists
 	var d models.Device
-	//err := getDeviceById(&d, did)
+
 	if err := dbClient.GetDeviceById(&d, did); err != nil {
 		if err == db.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
 		} else {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusBadRequest)
 		}
 		LoggingClient.Error(err.Error(), "")
 		return
@@ -761,7 +761,7 @@ func restDeleteDeviceByName(w http.ResponseWriter, r *http.Request) {
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -833,7 +833,7 @@ func restSetDeviceLastConnectedById(w http.ResponseWriter, r *http.Request) {
 	lc, err := strconv.ParseInt(vlc, 10, 64)
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -844,7 +844,7 @@ func restSetDeviceLastConnectedById(w http.ResponseWriter, r *http.Request) {
 		if err == db.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
 		} else {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		LoggingClient.Error(err.Error(), "")
 		return
@@ -867,13 +867,13 @@ func restSetLastConnectedByIdNotify(w http.ResponseWriter, r *http.Request) {
 	notify, err := strconv.ParseBool(vars[LASTCONNECTEDNOTIFY])
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	lc, err := strconv.ParseInt(vlc, 10, 64)
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -884,7 +884,7 @@ func restSetLastConnectedByIdNotify(w http.ResponseWriter, r *http.Request) {
 		if err == db.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
 		} else {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		LoggingClient.Error(err.Error(), "")
 		return
@@ -1074,14 +1074,14 @@ func restSetDeviceLastReportedByName(w http.ResponseWriter, r *http.Request) {
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	var vlr string = vars[LASTREPORTED]
 	lr, err := strconv.ParseInt(vlr, 10, 64)
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -1092,7 +1092,7 @@ func restSetDeviceLastReportedByName(w http.ResponseWriter, r *http.Request) {
 		if err == db.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
 		} else {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		LoggingClient.Error(err.Error(), "")
 		return
@@ -1112,20 +1112,20 @@ func restSetDeviceLastReportedByNameNotify(w http.ResponseWriter, r *http.Reques
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	var vlr string = vars[LASTREPORTED]
 	lr, err := strconv.ParseInt(vlr, 10, 64)
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	notify, err := strconv.ParseBool(vars[LASTREPORTEDNOTIFY])
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -1136,7 +1136,7 @@ func restSetDeviceLastReportedByNameNotify(w http.ResponseWriter, r *http.Reques
 		if err == db.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
 		} else {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		LoggingClient.Error(err.Error(), "")
 		return
@@ -1172,7 +1172,7 @@ func restGetDeviceByName(w http.ResponseWriter, r *http.Request) {
 	dn, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	var res models.Device
@@ -1181,7 +1181,7 @@ func restGetDeviceByName(w http.ResponseWriter, r *http.Request) {
 		if err == db.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
 		} else {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		LoggingClient.Error(err.Error(), "")
 		return

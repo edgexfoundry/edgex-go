@@ -48,13 +48,13 @@ func restAddCommand(w http.ResponseWriter, r *http.Request) {
 	var c models.Command
 	if err := json.NewDecoder(r.Body).Decode(&c); err != nil {
 		LoggingClient.Error(err.Error(), "")
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	if err := dbClient.AddCommand(&c); err != nil {
 		LoggingClient.Error(err.Error(), "")
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -71,7 +71,7 @@ func restUpdateCommand(w http.ResponseWriter, r *http.Request) {
 	var res models.Command
 	if err := json.NewDecoder(r.Body).Decode(&c); err != nil {
 		LoggingClient.Error(err.Error(), "")
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -89,7 +89,7 @@ func restUpdateCommand(w http.ResponseWriter, r *http.Request) {
 		err = dbClient.GetDeviceProfilesUsingCommand(&dp, c)
 		if err != nil {
 			LoggingClient.Error(err.Error(), "")
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
@@ -108,7 +108,7 @@ func restUpdateCommand(w http.ResponseWriter, r *http.Request) {
 
 	if err := dbClient.UpdateCommand(&c, &res); err != nil {
 		LoggingClient.Error(err.Error(), "")
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -125,7 +125,7 @@ func restGetCommandById(w http.ResponseWriter, r *http.Request) {
 		if err == db.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
 		} else {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 
 		LoggingClient.Error(err.Error(), "")
@@ -140,14 +140,14 @@ func restGetCommandByName(w http.ResponseWriter, r *http.Request) {
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	results := []models.Command{}
 	err = dbClient.GetCommandByName(&results, n)
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -173,7 +173,7 @@ func restDeleteCommandById(w http.ResponseWriter, r *http.Request) {
 	isStillInUse, err := isCommandStillInUse(c)
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	if isStillInUse {
@@ -188,7 +188,7 @@ func restDeleteCommandById(w http.ResponseWriter, r *http.Request) {
 		if err == db.ErrCommandStillInUse {
 			http.Error(w, err.Error(), http.StatusConflict)
 		} else {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		return
 	}

@@ -50,7 +50,7 @@ func restAddDeviceProfile(w http.ResponseWriter, r *http.Request) {
 
 	if err := json.NewDecoder(r.Body).Decode(&dp); err != nil {
 		LoggingClient.Error(err.Error(), "")
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -74,7 +74,7 @@ func restAddDeviceProfile(w http.ResponseWriter, r *http.Request) {
 		if err == db.ErrNotUnique {
 			http.Error(w, "Duplicate name for device profile", http.StatusConflict)
 		} else {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		LoggingClient.Error(err.Error(), "")
 		return
@@ -90,7 +90,7 @@ func restUpdateDeviceProfile(w http.ResponseWriter, r *http.Request) {
 	var from models.DeviceProfile
 	if err := json.NewDecoder(r.Body).Decode(&from); err != nil {
 		LoggingClient.Error(err.Error(), "")
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -115,7 +115,7 @@ func restUpdateDeviceProfile(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := dbClient.UpdateDeviceProfile(&to); err != nil {
 		LoggingClient.Error(err.Error(), "")
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -256,7 +256,7 @@ func restGetProfileByProfileId(w http.ResponseWriter, r *http.Request) {
 		if err == db.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
 		} else {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		LoggingClient.Error(err.Error(), "")
 		return
@@ -297,7 +297,7 @@ func restDeleteProfileByName(w http.ResponseWriter, r *http.Request) {
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -307,7 +307,7 @@ func restDeleteProfileByName(w http.ResponseWriter, r *http.Request) {
 		if err == db.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
 		} else {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		LoggingClient.Error(err.Error(), "")
 		return
@@ -376,13 +376,13 @@ func restAddProfileByYaml(w http.ResponseWriter, r *http.Request) {
 		LoggingClient.Error(err.Error(), "")
 		return
 	default:
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		LoggingClient.Error(err.Error(), "")
 		return
 	}
 	data, err := ioutil.ReadAll(f)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		LoggingClient.Error(err.Error(), "")
 		return
 	}
@@ -397,7 +397,7 @@ func restAddProfileByYamlRaw(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -449,14 +449,14 @@ func restGetProfileByModel(w http.ResponseWriter, r *http.Request) {
 	an, err := url.QueryUnescape(vars[MODEL])
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	res := make([]models.DeviceProfile, 0)
 	if err := dbClient.GetDeviceProfilesByModel(&res, an); err != nil {
 		LoggingClient.Error(err.Error(), "")
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -469,14 +469,14 @@ func restGetProfileWithLabel(w http.ResponseWriter, r *http.Request) {
 	label, err := url.QueryUnescape(vars[LABEL])
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	res := make([]models.DeviceProfile, 0)
 	if err := dbClient.GetDeviceProfilesWithLabel(&res, label); err != nil {
 		LoggingClient.Error(err.Error(), "")
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -489,21 +489,21 @@ func restGetProfileByManufacturerModel(w http.ResponseWriter, r *http.Request) {
 	man, err := url.QueryUnescape(vars[MANUFACTURER])
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	mod, err := url.QueryUnescape(vars[MODEL])
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	res := make([]models.DeviceProfile, 0)
 	if err := dbClient.GetDeviceProfilesByManufacturerModel(&res, man, mod); err != nil {
 		LoggingClient.Error(err.Error(), "")
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -516,14 +516,14 @@ func restGetProfileByManufacturer(w http.ResponseWriter, r *http.Request) {
 	man, err := url.QueryUnescape(vars[MANUFACTURER])
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	res := make([]models.DeviceProfile, 0)
 	if err := dbClient.GetDeviceProfilesByManufacturer(&res, man); err != nil {
 		LoggingClient.Error(err.Error(), "")
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -535,7 +535,7 @@ func restGetProfileByName(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	dn, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		LoggingClient.Error(err.Error(), "")
 		return
 	}
@@ -546,7 +546,7 @@ func restGetProfileByName(w http.ResponseWriter, r *http.Request) {
 		if err == db.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
 		} else {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		LoggingClient.Error(err.Error(), "")
 		return
@@ -560,7 +560,7 @@ func restGetYamlProfileByName(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	name, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		LoggingClient.Error(err.Error(), "")
 		return
 	}
@@ -573,7 +573,7 @@ func restGetYamlProfileByName(w http.ResponseWriter, r *http.Request) {
 		if err == db.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
 		} else {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		LoggingClient.Error(err.Error(), "")
 		return
@@ -583,7 +583,7 @@ func restGetYamlProfileByName(w http.ResponseWriter, r *http.Request) {
 	out, err := yaml.Marshal(dp)
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -612,7 +612,7 @@ func restGetYamlProfileById(w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte(nil))
 			return
 		} else {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		LoggingClient.Error(err.Error(), "")
 		return
@@ -621,7 +621,7 @@ func restGetYamlProfileById(w http.ResponseWriter, r *http.Request) {
 	// Marshal the device profile into YAML
 	out, err := yaml.Marshal(dp)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		LoggingClient.Error(err.Error(), "")
 		return
 	}
