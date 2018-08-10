@@ -669,6 +669,11 @@ parts:
     stage-packages:
       - luarocks
     override-build: |
+      # first copy the default config file provided and install it into $SNAPCRAFT_PART_INSTALL
+      # it will be generated/configured during the install hook
+      mkdir -p $SNAPCRAFT_PART_INSTALL/config/security-api-gateway
+      cp kong.conf.default $SNAPCRAFT_PART_INSTALL/config/security-api-gateway/kong.conf
+
       # handle the location of openssl + libcrypto by architecture
       # cause luarocks is silly and hardcodes /usr/lib/x86_64-linux-gnu as the lib search path
       case $SNAPCRAFT_ARCH_TRIPLET in
