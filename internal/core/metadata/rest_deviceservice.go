@@ -667,7 +667,7 @@ func restUpdateServiceOpStateByName(w http.ResponseWriter, r *http.Request) {
 	if !f {
 		err = errors.New("Invalid State: " + os + " Must be 'ENABLED' or 'DISABLED'")
 		LoggingClient.Error(err.Error(), "")
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -835,7 +835,7 @@ func restUpdateServiceLastReportedByName(w http.ResponseWriter, r *http.Request)
 	lr, err := strconv.ParseInt(vlr, 10, 64)
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 

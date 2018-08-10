@@ -54,7 +54,7 @@ func restAddCommand(w http.ResponseWriter, r *http.Request) {
 
 	if err := dbClient.AddCommand(&c); err != nil {
 		LoggingClient.Error(err.Error(), "")
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
