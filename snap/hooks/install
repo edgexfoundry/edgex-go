@@ -3,7 +3,7 @@
 # install all the config files from $SNAP/config/SERVICE/res/configuration.toml 
 # into $SNAP_DATA/config
 mkdir -p ${SNAP_DATA}/config
-for service in security-gateway-api core-command core-config-seed-go core-data core-metadata export-client export-distro support-logging; do
+for service in security-api-gateway core-command core-config-seed-go core-data core-metadata export-client export-distro support-logging; do
     if [ ! -f "${SNAP_DATA}/config/${service}/res/configuration.toml" ]; then
         mkdir -p "${SNAP_DATA}/config/${service}/res"
         cp ${SNAP}/config/${service}/res/configuration.toml "${SNAP_DATA}/config/${service}/res/configuration.toml"

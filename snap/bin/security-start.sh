@@ -5,7 +5,7 @@ export KONG_SNAP="${SNAP}/bin/kong-wrapper.sh"
 export LOG_DIR=${SNAP_COMMON}/logs
 export CONFIG_DIR=${SNAP_DATA}/config
 export SEC_SEC_STORE_CONFIG_DIR=${CONFIG_DIR}/security-secret-store
-export SEC_GATEWAY_API_CONFIG_DIR=${CONFIG_DIR}/security-gateway-api
+export SEC_API_GATEWAY_CONFIG_DIR=${CONFIG_DIR}/security-api-gateway
 
 # security-secret-store environment variables
 export _VAULT_SCRIPT_DIR=${SNAP}/bin
@@ -16,7 +16,7 @@ export _PKI_SETUP_VAULT_ENV=${SEC_SEC_STORE_CONFIG_DIR}/pki-setup-config-vault.e
 export _PKI_SETUP_KONG_ENV=${SEC_SEC_STORE_CONFIG_DIR}/pki-setup-config-kong.env
 export WATCHDOG_DELAY=10s
 
-# security-gateway-api environment variables
+# security-api-gateway environment variables
 export KONG_PROXY_ACCESS_LOG=${LOG_DIR}/kong-proxy-access.log
 export KONG_ADMIN_ACCESS_LOG=${LOG_DIR}/kong-admin-access.log
 export KONG_PROXY_ERROR_LOG=${LOG_DIR}/kong-admin-error.log
@@ -33,10 +33,10 @@ for log in ${KONG_PROXY_ACCESS_LOG} ${KONG_ADMIN_ACCESS_LOG} ${KONG_PROXY_ERROR_
 done
 
 # run kong migrations up to bootstrap the cassandra database
-$KONG_SNAP migrations up --yes --conf ${SEC_GATEWAY_API_CONFIG_DIR}/kong.conf
+$KONG_SNAP migrations up --yes --conf ${SEC_API_GATEWAY_CONFIG_DIR}/kong.conf
 
 # now start kong normally
-$KONG_SNAP start --conf ${SEC_GATEWAY_API_CONFIG_DIR}/kong.conf
+$KONG_SNAP start --conf ${SEC_API_GATEWAY_CONFIG_DIR}/kong.conf
 
 # setup key generation for vault before starting vault up
 # note that the vault setup scripts will put the generated keys inside
@@ -68,4 +68,4 @@ mkdir -p res
 cp resp-init.json res/
 
 # now finally start the security proxy
-$SNAP/bin/edgexproxy --configfile=${SEC_GATEWAY_API_CONFIG_DIR}/res/configuration.toml init=true
+$SNAP/bin/edgexproxy --configfile=${SEC_API_GATEWAY_CONFIG_DIR}/res/configuration.toml init=true
