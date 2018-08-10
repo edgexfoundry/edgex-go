@@ -1,4 +1,4 @@
-ConsulProfilesActive = 'docker;go'
+ConsulProfilesActive = 'docker'
 ReadMaxLimit = 100
 MetaDataCheck = false
 ValidateCheck = false

@@ -1,4 +1,4 @@
-ConsulProfilesActive = 'docker;go'
+ConsulProfilesActive = 'docker'
 ReadMaxLimit = 100
 ConsulPort = 8500
 ServiceTimeout = 5000

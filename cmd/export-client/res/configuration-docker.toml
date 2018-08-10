@@ -11,6 +11,6 @@ MongoSocketTimeout = 5000
 ConsulHost = 'edgex-core-consul'
 ConsulPort = 8500
 CheckInterval = '10s'
-ConsulProfilesActive = 'docker;go'
+ConsulProfilesActive = 'docker'
 DistroHost = 'edgex-export-distro'
 DistroPort = 48070
