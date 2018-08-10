@@ -755,6 +755,7 @@ parts:
       - bind9utils
       # for dig
       - dnsutils
+      - libdb5.3
     override-build: |
       . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
       gopartbootstrap github.com/edgexfoundry/security-api-gateway
