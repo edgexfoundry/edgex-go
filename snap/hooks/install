@@ -60,9 +60,20 @@ if [ ! -f "${SNAP_DATA}/config/security-secret-store/vault-config.json" ]; then
     chmod 644 ${SNAP_DATA}/config/security-secret-store/vault-config.json
 fi
 
-# the kong config file needs to be generated - it needs absolute paths, but we specify $SNAP_DATA 
-# in the config file, so we just perform that replacement now
-# see note above about usage of "@" here
-if [ ! -f ${SNAP_DATA}/config/security-gateway-api/kong.conf ]; then
-    sed "s@\$SNAP_DATA@$SNAP_DATA@g" ${SNAP}/config/security-gateway-api/kong.conf.in > ${SNAP_DATA}/config/security-gateway-api/kong.conf
+# the kong config file needs to be generated with 3 changes from the default one included in the snap
+# - we set the prefix to be $SNAP_DATA/kong as an absolute path (note that this has to be done here in the install hook)
+# - we set the nginx user to be root
+# - we set the database used to cassandra
+if [ ! -f ${SNAP_DATA}/config/security-api-gateway/kong.conf ]; then
+    mkdir -p "${SNAP_DATA}/config/security-api-gateway"
+    cp "${SNAP}/config/security-api-gateway/kong.conf" "${SNAP_DATA}/config/security-api-gateway/kong.conf"
+    # replace the default prefix setting with an absolute path using $SNAP_DATA
+    # note that if anyone ever has a "@" in their $SNAP_DATA this will likely fail
+    sed -i "s@#prefix = /usr/local/kong/@prefix = ${SNAP_DATA}/kong@" ${SNAP_DATA}/config/security-api-gateway/kong.conf
+
+    # also replace the default nginx user/group to be root
+    sed -i "s@#nginx_user = nobody nobody@nginx_user = root root@" ${SNAP_DATA}/config/security-api-gateway/kong.conf
+
+    # finally set the make database to be cassandra
+    sed -i "s@#database = postgres@database = cassandra@" ${SNAP_DATA}/config/security-api-gateway/kong.conf
 fi
