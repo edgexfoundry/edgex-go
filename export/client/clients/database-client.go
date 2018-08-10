@@ -24,12 +24,14 @@ type DatabaseType int8 // Database type enum
 const (
 	INVALID DatabaseType = iota
 	MONGO
+	REDIS
 	MEMORY
 )
 
 const (
 	invalidStr = "invalid"
 	mongoStr   = "mongodb"
+	redisStr   = "redisdb"
 	memoryStr  = "memorydb"
 )
 
@@ -48,6 +50,8 @@ func GetDatabaseType(db string) DatabaseType {
 	switch db {
 	case mongoStr:
 		return MONGO
+	case redisStr:
+		return REDIS
 	case memoryStr:
 		return MEMORY
 	default:
@@ -114,6 +118,9 @@ func NewDBClient(config DBConfiguration) (DBClient, error) {
 	case MONGO:
 		// Create the mongo client
 		return newMongoClient(config)
+	case REDIS:
+		// Create the Redis client
+		return newRedisClient(config)
 	case MEMORY:
 		return newMemoryClient(), nil
 	default:
