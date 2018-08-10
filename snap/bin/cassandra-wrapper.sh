@@ -9,7 +9,7 @@ if [ -z "$SNAP_COMMON" ]; then
 fi
 
 # note: this was changed to force all cassandra data to live inside a cassandra subfolder
-# inside SNAP_DATA - this is mainly for cleanliness with other edgex services
+# inside SNAP_DATA - this is mainly for separation of data from other edgex services
 export CASSANDRA_HOME="$SNAP_DATA/cassandra"
 export STATIC_CONF="$SNAP/etc/cassandra"
 
