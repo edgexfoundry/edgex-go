@@ -723,9 +723,9 @@ parts:
       install -DT core/edgexproxy "$SNAPCRAFT_PART_INSTALL/bin/edgexproxy"
 
       # also modify the configuration file to use "/" instead of "\" in the file
-      mkdir -p $SNAPCRAFT_PART_INSTALL/config/security-api-gateway/config/res
-      cp core/res/configuration.toml $SNAPCRAFT_PART_INSTALL/config/security-api-gateway/config/res/configuration.toml
-      sed -i "s@tokenpath = \"res\\\\\\\\resp-init.json\"@tokenpath = \"res/resp-init.json\"@" $SNAPCRAFT_PART_INSTALL/config/security-api-gateway/config/res/configuration.toml
+      mkdir -p $SNAPCRAFT_PART_INSTALL/config/security-api-gateway/res
+      cp core/res/configuration.toml $SNAPCRAFT_PART_INSTALL/config/security-api-gateway/res/configuration.toml
+      sed -i "s@tokenpath = \"res\\\\\\\\resp-init.json\"@tokenpath = \"res/resp-init.json\"@" $SNAPCRAFT_PART_INSTALL/config/security-api-gateway/res/configuration.toml
   base64:
     # TODO: the core snap currently ships base64, but doesn't allow it in the default apparmor:
     # https://forum.snapcraft.io/t/adding-base64-command-to-default-snap-apparmor/6744
