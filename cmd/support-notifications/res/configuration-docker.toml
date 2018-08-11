@@ -1,5 +1,5 @@
 ApplicationName = 'edgex-support-notifications'
-ConsulProfilesActive = 'docker;go'
+ConsulProfilesActive = 'docker'
 HeartBeatTime = 300000
 HeartBeatMsg = 'Support Notifications heart beat'
 AppOpenMsg = 'This is the Support Notifications Micro Service'
@@ -23,6 +23,7 @@ MongoDBPort = 27017
 MongoDBConnectTimeout = 60000
 MongoDBMaxWaitTime = 120000
 MongoDBKeepAlive = true
+DBType = 'mongodb'
 # Max number of notification documents that can be read out of Mongo
 ReadMaxLimit = 1000
 # Number of retries allowed before giving up on a Notification
