@@ -25,8 +25,8 @@ type awsiotSender struct {
 	topic  string
 }
 
+// NewAWSIoTSender : Create an AWS IoT Sender
 func NewAWSIoTSender(addr models.Addressable) interfaces.Sender {
-
 	cert, err := tls.LoadX509KeyPair(configuration.AWSCert, configuration.AWSKey)
 
 	if err != nil {
@@ -47,6 +47,7 @@ func NewAWSIoTSender(addr models.Addressable) interfaces.Sender {
 	opts := MQTT.NewClientOptions()
 	opts.AddBroker(serverURL)
 	opts.SetClientID(addr.Publisher).SetTLSConfig(tlsConfig)
+	opts.SetAutoReconnect(true)
 
 	client := MQTT.NewClient(opts)
 
