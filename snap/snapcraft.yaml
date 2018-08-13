@@ -611,6 +611,15 @@ parts:
 
 # KONG / LUA PARTS
   lua:
+    # this dependency is somewhat artificial, because 
+    # when iterating on the openresty parts if you just rebuild openresty,
+    # without also rebuilding lua, then kong will fail because it can't find
+    # luarocks.cfg somewhere...
+    # not sure why re-building openresty causes the luarocks config file to be messed
+    # up, but if we order it like so then rebuilding any one of them will always work
+    # openresty -> lua -> luarocks -> kong
+    # this may have to do with installing lua and luarocks into $SNAPCRAFT_STAGE
+    after: [openresty]
     source: https://www.lua.org/ftp/lua-5.1.5.tar.gz
     source-type: tar
     plugin: make
