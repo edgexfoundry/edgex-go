@@ -3,11 +3,6 @@
 # this script combined from https://github.com/snapcrafters/cassandra/blob/3df209fafb7b3dd341ec7412be4725d7104c5a54/common
 # and from https://github.com/snapcrafters/cassandra/blob/3df209fafb7b3dd341ec7412be4725d7104c5a54/wrapper-cassandra
 
-if [ -z "$SNAP_COMMON" ]; then
-    # https://github.com/snapcore/snapd/commit/da9fa37
-    export SNAP_COMMON="$SNAP_DATA/../common"
-fi
-
 # note: this was changed to force all cassandra data to live inside a cassandra subfolder
 # inside SNAP_DATA - this is mainly for separation of data from other edgex services
 export CASSANDRA_HOME="$SNAP_DATA/cassandra"
