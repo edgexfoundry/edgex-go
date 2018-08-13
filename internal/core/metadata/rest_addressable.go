@@ -52,7 +52,7 @@ func restAddAddressable(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&a)
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	} else {
 		if len(a.Name) == 0 {
