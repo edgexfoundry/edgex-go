@@ -14,7 +14,7 @@ export _VAULT_SVC=localhost
 export _KONG_SVC=localhost
 export _PKI_SETUP_VAULT_ENV=${SEC_SEC_STORE_CONFIG_DIR}/pki-setup-config-vault.env
 export _PKI_SETUP_KONG_ENV=${SEC_SEC_STORE_CONFIG_DIR}/pki-setup-config-kong.env
-export WATCHDOG_DELAY=10s
+export WATCHDOG_DELAY=3m
 
 # security-api-gateway environment variables
 export KONG_PROXY_ACCESS_LOG=${LOG_DIR}/kong-proxy-access.log
@@ -25,6 +25,7 @@ export KONG_ADMIN_LISTEN="0.0.0.0:8001, 0.0.0.0:8444 ssl"
 export VAULT_ADDR=https://localhost:8200
 export VAULT_CONFIG_DIR=${_VAULT_DIR}/config
 export VAULT_UI=true
+export MAX_VAULT_UNSEAL_TRIES=10
 
 # touch all the kong log files to ensure they exist
 mkdir -p ${LOG_DIR}
@@ -57,7 +58,39 @@ $SNAP/bin/vault server \
 # same situation as for vault when setting up - we need to be in the vault folder
 # for this to work
 pushd ${_VAULT_DIR}
-$SNAP/bin/vault-worker.sh
+while true; do
+    # Init/Unseal processes
+    set +e
+    ${_VAULT_SCRIPT_DIR}/vault-init-unseal.sh
+    init_res=$?
+    set -e
+    
+    # If Vault init/unseal was OK break out of the loop
+    # to start the vault-worker running in the background indefinitely
+    if [ "$init_res" -eq 0 ];  then
+        break
+    fi
+
+    # increment number of tries
+    num_tries=$((num_tries+1))
+    if (( num_tries > MAX_VAULT_UNSEAL_TRIES )); then
+        echo "max tries attempting to unseal vault"
+        exit 1
+    fi
+
+    # we sleep for 1 second each time in this first loop to check that it quickly comes up
+    # the background loop sleeps for 3 minutes each iteration
+    sleep 1
+done
+
+# now that we are done unsealing the vault, we can start the 
+# vault-worker in the background
+# NOTE: for Delhi we want to change this to not just always run and 
+# have a better restarting mechanism in case vault goes down
+# see discussion on https://github.com/edgexfoundry/security-secret-store/pull/15#issuecomment-412043938
+# also note that the process vault-init-unseal will probably immediately get run again here, but that's
+# fine, as there's no harm in unsealing vault when it's already unsealed
+$SNAP/bin/vault-worker.sh &
 popd
 
 # go into the snap folder
