@@ -678,7 +678,7 @@ parts:
       # cause luarocks is silly and hardcodes /usr/lib/x86_64-linux-gnu as the lib search path
       case $SNAPCRAFT_ARCH_TRIPLET in
       aarch64*)
-        luarocks make --tree=$SNAPCRAFT_STAGE kong \
+        luarocks make --tree=$SNAPCRAFT_STAGE \
           CRYPTO_LIBDIR=/usr/lib/aarch64-linux-gnu \
           CRYPTO_INCDIR=/usr/include \
           OPENSSL_LIBDIR=/usr/lib/aarch64-linux-gnu \
