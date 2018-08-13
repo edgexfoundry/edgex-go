@@ -654,6 +654,10 @@ parts:
       - libssl-dev
     stage-packages:
       - perl
+    override-build: |
+      snapcraftctl build
+      # remove the openresy link, we will handle that in the kong part
+      rm -rf $SNAPCRAFT_PART_INSTALL/bin/openresty
   kong:
     after: 
       - openresty
@@ -721,9 +725,6 @@ parts:
         chmod +x $cmd
       done
 
-      # install everything from stage into the part install for kong
-      cp -r $SNAPCRAFT_STAGE/* $SNAPCRAFT_PART_INSTALL/
-
       # openresty will make an absolute symbolic link of openresty to the nginx binary, so we need to delete that
       # note that the reason we do this in the kong part rather than the openresty is that kong will create it's own
       # absolute symlink, so we want to delete that one too, and doing that here fixes both openresty's symlink as well
@@ -733,6 +734,8 @@ parts:
       ln -s ../nginx/sbin/nginx openresty
       ln -s ../nginx/sbin/nginx nginx
 
+      # install everything from stage into the part install for kong
+      cp -r $SNAPCRAFT_STAGE/* $SNAPCRAFT_PART_INSTALL/
 
 # SECURITY SERVICES PARTS
 
