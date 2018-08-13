@@ -101,16 +101,22 @@ if [ "$SECURITY" ]; then
 
     # killing nginx is tricky, as we need to make sure we don't inadvertantly kill any other nginx
     # processes, so we use egrep with a more specific pattern
-    nginxppid=`pgrep -f "nginx.*${SNAP_DATA}/kong"`
-    int_service $nginxppid "nginx parent"
+    pid=`pgrep -f "nginx.*${SNAP_DATA}/kong"` || true
+    if [ ! -z $pid ] && [ $pid != "" ] ; then
+        int_service $pid "nginx parent"
+    fi
 
     # kill vault-worker, as it might get stuck in an infinite loop trying to unseal the vault
-    pid=`pgrep -f "${SNAP}/bin/vault-worker.sh"`
-    kill_service $pid "vault worker"
+    pid=`pgrep -f "${SNAP}/bin/vault-worker.sh"` || true
+    if [ ! -z $pid ] && [ $pid != "" ] ; then
+        kill_service $pid "vault worker"
+    fi
 
     # send sigint to vault to shut it down
-    pid=`pgrep ${SNAP}/bin/vault`
-    int_service $pid "vault"
+    pid=`pgrep ${SNAP}/bin/vault` || true
+    if [ ! -z $pid ] && [ $pid != "" ] ; then
+        int_service $pid "vault"
+    fi
 fi
 
 if [ "$CORE_DATA" = "y" ] || [ "$CORE_METADATA" = "y" ] ; then
