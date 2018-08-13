@@ -1,21 +1,29 @@
+# TODO for Delhi: use upstream vault config file and process it
+# using sed
+# this file maintains a number of changes, i.e. all
+# hostnames are localhost instead of the docker hostnames, 
+# the tls cert and key files reference localhost as the common name,
+# and the location of the files uses reference to $SNAP_DATA
+# (but note that these paths have to be absolute, so we process the env
+#  vars during the install hook)
+
 listener "tcp" { 
-    address = "localhost:8200" 
-    tls_disable = "0" 
-    cluster_address = "localhost:8201"
-    tls_min_version = "tls12"
-    tls_client_ca_file ="$SNAP_DATA/vault/pki/EdgeXFoundryTrustCA/EdgeXFoundryTrustCA.pem"
-    tls_cert_file ="$SNAP_DATA/vault/pki/EdgeXFoundryTrustCA/localhost.pem"
-    tls_key_file = "$SNAP_DATA/vault/pki/EdgeXFoundryTrustCA/localhost.priv.key"
-  }
-  
-  backend "consul" {
-    path = "vault/"
-    address = "localhost:8500"
-    scheme = "http"
-    redirect_addr = "https://localhost:8200"
-    cluster_addr = "https://localhost:8201"
-  }
-  
-  default_lease_ttl = "168h"
-  max_lease_ttl = "720h"
-  
+  address = "localhost:8200" 
+  tls_disable = "0" 
+  cluster_address = "localhost:8201"
+  tls_min_version = "tls12"
+  tls_client_ca_file ="$SNAP_DATA/vault/pki/EdgeXFoundryTrustCA/EdgeXFoundryTrustCA.pem"
+  tls_cert_file ="$SNAP_DATA/vault/pki/EdgeXFoundryTrustCA/localhost.pem"
+  tls_key_file = "$SNAP_DATA/vault/pki/EdgeXFoundryTrustCA/localhost.priv.key"
+}
+
+backend "consul" {
+  path = "vault/"
+  address = "localhost:8500"
+  scheme = "http"
+  redirect_addr = "https://localhost:8200"
+  cluster_addr = "https://localhost:8201"
+}
+
+default_lease_ttl = "168h"
+max_lease_ttl = "720h"
