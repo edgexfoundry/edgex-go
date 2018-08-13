@@ -16,12 +16,11 @@ package metadata
 import (
 	"bytes"
 	"encoding/json"
-		"net/http"
+	"net/http"
 
 	"github.com/edgexfoundry/edgex-go/pkg/clients"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
-	"fmt"
 )
 
 /*
@@ -114,7 +113,7 @@ func (c *CommandRestClient) Command(id string) (models.Command, error) {
 			return models.Command{}, err
 		}
 
-		return models.Command{}, fmt.Errorf("%d - %s", resp.StatusCode, bodyBytes)
+		return models.Command{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 
 	return c.decodeCommand(resp)
@@ -142,7 +141,7 @@ func (c *CommandRestClient) Commands() ([]models.Command, error) {
 			return []models.Command{}, err
 		}
 
-		return []models.Command{}, fmt.Errorf("%d - %s", resp.StatusCode, bodyBytes)
+		return []models.Command{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 
 	return c.decodeCommandSlice(resp)
@@ -171,7 +170,7 @@ func (c *CommandRestClient) CommandsForName(name string) ([]models.Command, erro
 			return []models.Command{}, err
 		}
 
-		return []models.Command{}, fmt.Errorf("%d - %s", resp.StatusCode, bodyBytes)
+		return []models.Command{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 
 	return c.decodeCommandSlice(resp)
@@ -205,7 +204,7 @@ func (c *CommandRestClient) Add(com *models.Command) (string, error) {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("%d - %s", resp.StatusCode, bodyBytes)
+		return "", types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 
 	return string(bodyBytes), nil
@@ -239,7 +238,7 @@ func (c *CommandRestClient) Update(com models.Command) error {
 			return err
 		}
 
-		return fmt.Errorf("%d - %s", resp.StatusCode, bodyBytes)
+		return types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 
 	return nil
@@ -268,7 +267,7 @@ func (c *CommandRestClient) Delete(id string) error {
 			return err
 		}
 
-		return fmt.Errorf("%d - %s", resp.StatusCode, bodyBytes)
+		return types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 
 	return nil

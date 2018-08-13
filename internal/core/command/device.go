@@ -19,8 +19,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/edgexfoundry/edgex-go/pkg/models"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
+	"github.com/edgexfoundry/edgex-go/pkg/models"
 )
 
 func issueCommand(req *http.Request) (*http.Response, error) {
@@ -38,7 +38,7 @@ func commandByDeviceID(did string, cid string, b string, p bool) (string, int) {
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
 
-		chk, ok := err.(*types.ErrClientServices)
+		chk, ok := err.(*types.ErrServiceClient)
 		if ok {
 			return "", chk.StatusCode
 		} else {
@@ -56,7 +56,7 @@ func commandByDeviceID(did string, cid string, b string, p bool) (string, int) {
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
 
-		chk, ok := err.(*types.ErrClientServices)
+		chk, ok := err.(*types.ErrServiceClient)
 		if ok {
 			return "", chk.StatusCode
 		} else {
@@ -99,7 +99,7 @@ func putDeviceAdminState(did string, as string) (int, error) {
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
 
-		chk, ok := err.(*types.ErrClientServices)
+		chk, ok := err.(*types.ErrServiceClient)
 		if ok {
 			return chk.StatusCode, chk
 		} else {
@@ -114,7 +114,7 @@ func putDeviceAdminStateByName(dn string, as string) (int, error) {
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
 
-		chk, ok := err.(*types.ErrClientServices)
+		chk, ok := err.(*types.ErrServiceClient)
 		if ok {
 			return chk.StatusCode, chk
 		} else {
@@ -129,7 +129,7 @@ func putDeviceOpState(did string, as string) (int, error) {
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
 
-		chk, ok := err.(*types.ErrClientServices)
+		chk, ok := err.(*types.ErrServiceClient)
 		if ok {
 			return chk.StatusCode, chk
 		} else {
@@ -144,7 +144,7 @@ func putDeviceOpStateByName(dn string, as string) (int, error) {
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
 
-		chk, ok := err.(*types.ErrClientServices)
+		chk, ok := err.(*types.ErrServiceClient)
 		if ok {
 			return chk.StatusCode, chk
 		} else {
@@ -157,7 +157,7 @@ func putDeviceOpStateByName(dn string, as string) (int, error) {
 func getCommands() (int, []models.CommandResponse, error) {
 	devices, err := mdc.Devices()
 	if err != nil {
-		chk, ok := err.(*types.ErrClientServices)
+		chk, ok := err.(*types.ErrServiceClient)
 		if ok {
 			return chk.StatusCode, nil, chk
 		} else {
@@ -175,7 +175,7 @@ func getCommands() (int, []models.CommandResponse, error) {
 func getCommandsByDeviceID(did string) (int, models.CommandResponse, error) {
 	d, err := mdc.Device(did)
 	if err != nil {
-		chk, ok := err.(*types.ErrClientServices)
+		chk, ok := err.(*types.ErrServiceClient)
 		if ok {
 			return chk.StatusCode, models.CommandResponse{}, chk
 		} else {
@@ -188,17 +188,10 @@ func getCommandsByDeviceID(did string) (int, models.CommandResponse, error) {
 func getCommandsByDeviceName(dn string) (int, models.CommandResponse, error) {
 	d, err := mdc.DeviceForName(dn)
 	if err != nil {
-		// Attempt to marshal code from response. If unsucessful or unknown, throw 500.
-		responseCode, convErr:= strconv.Atoi(strings.Split(err.Error(), " ")[0])
-		if convErr != nil {
-			return http.StatusInternalServerError, models.CommandResponse{}, convErr
-		}
-		switch responseCode {
-		case http.StatusBadRequest:
-			return http.StatusBadRequest, models.CommandResponse{}, err
-		case http.StatusNotFound:
-			return http.StatusNotFound, models.CommandResponse{}, err
-		default:
+		chk, ok := err.(*types.ErrServiceClient)
+		if ok {
+			return chk.StatusCode, models.CommandResponse{}, err
+		} else {
 			return http.StatusInternalServerError, models.CommandResponse{}, err
 		}
 	}

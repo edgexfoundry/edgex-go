@@ -21,17 +21,17 @@ func (e ErrNotFound) Error() string {
 	return "item not found"
 }
 
-type ErrClientServices struct{
+type ErrServiceClient struct{
 	StatusCode int
 	bodyBytes []byte
 	errMsg string
 }
 
-func NewErrClientServices(statusCode int, body []byte) error {
-	e := &ErrClientServices{StatusCode: statusCode, bodyBytes:body}
+func NewErrServiceClient(statusCode int, body []byte) error {
+	e := &ErrServiceClient{StatusCode: statusCode, bodyBytes:body}
 	return e
 }
 
-func (e ErrClientServices) Error() string {
+func (e ErrServiceClient) Error() string {
 	return fmt.Sprintf("%d - %s", e.StatusCode, e.bodyBytes)
 }
