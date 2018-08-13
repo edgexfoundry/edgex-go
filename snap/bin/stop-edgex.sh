@@ -110,7 +110,7 @@ if [ "$SECURITY" ]; then
 
     # send sigint to vault to shut it down
     pid=`pgrep ${SNAP}/bin/vault`
-    int_service $pid "vault worker"
+    int_service $pid "vault"
 fi
 
 if [ "$CORE_DATA" = "y" ] || [ "$CORE_METADATA" = "y" ] ; then
