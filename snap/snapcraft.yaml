@@ -91,6 +91,10 @@ parts:
     source-tag: go1.10.2
     source-depth: 1
   glide:
+    after:
+      # setting go to build after config-common ensures that it will get re-added to SNAPCRAFT_STAGE
+      # if config-common is rebuilt
+      - config-common
     plugin: shell
     source: .
     shell: bash
