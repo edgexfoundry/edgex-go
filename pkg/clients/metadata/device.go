@@ -176,9 +176,8 @@ func (d *DeviceRestClient) Device(id string) (models.Device, error) {
 		if err != nil {
 			return models.Device{}, err
 		}
-		bodyString := string(bodyBytes)
 
-		return models.Device{}, errors.New(bodyString)
+		return models.Device{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 
 	return d.decodeDevice(resp)
@@ -207,9 +206,8 @@ func (d *DeviceRestClient) Devices() ([]models.Device, error) {
 		if err != nil {
 			return []models.Device{}, err
 		}
-		bodyString := string(bodyBytes)
 
-		return []models.Device{}, errors.New(bodyString)
+		return []models.Device{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 	return d.decodeDeviceSlice(resp)
 }
@@ -237,9 +235,8 @@ func (d *DeviceRestClient) DeviceForName(name string) (models.Device, error) {
 		if err != nil {
 			return models.Device{}, err
 		}
-		bodyString := string(bodyBytes)
 
-		return models.Device{}, errors.New(bodyString)
+		return models.Device{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 	return d.decodeDevice(resp)
 }
@@ -267,9 +264,8 @@ func (d *DeviceRestClient) DevicesByLabel(label string) ([]models.Device, error)
 		if err != nil {
 			return []models.Device{}, err
 		}
-		bodyString := string(bodyBytes)
 
-		return []models.Device{}, errors.New(bodyString)
+		return []models.Device{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 	return d.decodeDeviceSlice(resp)
 }
@@ -297,9 +293,8 @@ func (d *DeviceRestClient) DevicesForService(serviceId string) ([]models.Device,
 		if err != nil {
 			return []models.Device{}, err
 		}
-		bodyString := string(bodyBytes)
 
-		return []models.Device{}, errors.New(bodyString)
+		return []models.Device{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 	return d.decodeDeviceSlice(resp)
 }
@@ -327,9 +322,8 @@ func (d *DeviceRestClient) DevicesForServiceByName(serviceName string) ([]models
 		if err != nil {
 			return []models.Device{}, err
 		}
-		bodyString := string(bodyBytes)
 
-		return []models.Device{}, errors.New(bodyString)
+		return []models.Device{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 	return d.decodeDeviceSlice(resp)
 }
@@ -357,9 +351,8 @@ func (d *DeviceRestClient) DevicesForProfile(profileId string) ([]models.Device,
 		if err != nil {
 			return []models.Device{}, err
 		}
-		bodyString := string(bodyBytes)
 
-		return []models.Device{}, errors.New(bodyString)
+		return []models.Device{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 	return d.decodeDeviceSlice(resp)
 }
@@ -387,9 +380,8 @@ func (d *DeviceRestClient) DevicesForProfileByName(profileName string) ([]models
 		if err != nil {
 			return []models.Device{}, err
 		}
-		bodyString := string(bodyBytes)
 
-		return []models.Device{}, errors.New(bodyString)
+		return []models.Device{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 	return d.decodeDeviceSlice(resp)
 }
@@ -417,9 +409,8 @@ func (d *DeviceRestClient) DevicesForAddressable(addressableId string) ([]models
 		if err != nil {
 			return []models.Device{}, err
 		}
-		bodyString := string(bodyBytes)
 
-		return []models.Device{}, errors.New(bodyString)
+		return []models.Device{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 
 	return d.decodeDeviceSlice(resp)
@@ -448,9 +439,8 @@ func (d *DeviceRestClient) DevicesForAddressableByName(addressableName string) (
 		if err != nil {
 			return []models.Device{}, err
 		}
-		bodyString := string(bodyBytes)
 
-		return []models.Device{}, errors.New(bodyString)
+		return []models.Device{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 
 	return d.decodeDeviceSlice(resp)
@@ -482,13 +472,12 @@ func (d *DeviceRestClient) Add(dev *models.Device) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	bodyString := string(bodyBytes)
 
 	if resp.StatusCode != http.StatusOK {
-		return "", errors.New(bodyString)
+		return "", types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 
-	return bodyString, nil
+	return string(bodyBytes), nil
 }
 
 // Update a device - handle error codes
@@ -518,9 +507,8 @@ func (d *DeviceRestClient) Update(dev models.Device) error {
 		if err != nil {
 			return err
 		}
-		bodyString := string(bodyBytes)
 
-		return errors.New(bodyString)
+		return types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 
 	return nil
@@ -548,9 +536,8 @@ func (d *DeviceRestClient) UpdateLastConnected(id string, time int64) error {
 		if err != nil {
 			return err
 		}
-		bodyString := string(bodyBytes)
 
-		return errors.New(bodyString)
+		return types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 
 	return nil
@@ -578,9 +565,8 @@ func (d *DeviceRestClient) UpdateLastConnectedByName(name string, time int64) er
 		if err != nil {
 			return err
 		}
-		bodyString := string(bodyBytes)
 
-		return errors.New(bodyString)
+		return types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 
 	return nil
@@ -608,9 +594,8 @@ func (d *DeviceRestClient) UpdateLastReported(id string, time int64) error {
 		if err != nil {
 			return err
 		}
-		bodyString := string(bodyBytes)
 
-		return errors.New(bodyString)
+		return types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 
 	return nil
@@ -638,9 +623,8 @@ func (d *DeviceRestClient) UpdateLastReportedByName(name string, time int64) err
 		if err != nil {
 			return err
 		}
-		bodyString := string(bodyBytes)
 
-		return errors.New(bodyString)
+		return types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 
 	return err
@@ -668,9 +652,8 @@ func (d *DeviceRestClient) UpdateOpState(id string, opState string) error {
 		if err != nil {
 			return err
 		}
-		bodyString := string(bodyBytes)
 
-		return errors.New(bodyString)
+		return types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 
 	return err
@@ -698,9 +681,8 @@ func (d *DeviceRestClient) UpdateOpStateByName(name string, opState string) erro
 		if err != nil {
 			return err
 		}
-		bodyString := string(bodyBytes)
 
-		return errors.New(bodyString)
+		return types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 
 	return nil
@@ -729,9 +711,8 @@ func (d *DeviceRestClient) UpdateAdminState(id string, adminState string) error 
 		if err != nil {
 			return err
 		}
-		bodyString := string(bodyBytes)
 
-		return errors.New(bodyString)
+		return types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 
 	return nil
@@ -759,9 +740,8 @@ func (d *DeviceRestClient) UpdateAdminStateByName(name string, adminState string
 		if err != nil {
 			return err
 		}
-		bodyString := string(bodyBytes)
 
-		return errors.New(bodyString)
+		return types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 
 	return err
@@ -789,9 +769,8 @@ func (d *DeviceRestClient) Delete(id string) error {
 		if err != nil {
 			return err
 		}
-		bodyString := string(bodyBytes)
 
-		return errors.New(bodyString)
+		return types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 
 	return nil
@@ -819,9 +798,8 @@ func (d *DeviceRestClient) DeleteByName(name string) error {
 		if err != nil {
 			return err
 		}
-		bodyString := string(bodyBytes)
 
-		return errors.New(bodyString)
+		return types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 
 	return nil
