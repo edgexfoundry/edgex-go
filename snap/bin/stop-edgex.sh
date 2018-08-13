@@ -107,13 +107,13 @@ if [ "$SECURITY" ]; then
     fi
 
     # kill vault-worker, as it might get stuck in an infinite loop trying to unseal the vault
-    pid=`pgrep -f "${SNAP}/bin/vault-worker.sh"` || true
+    pid=`pgrep -f "bin/vault-worker.sh"` || true
     if [ ! -z $pid ] && [ $pid != "" ] ; then
         kill_service $pid "vault worker"
     fi
 
     # send sigint to vault to shut it down
-    pid=`pgrep ${SNAP}/bin/vault` || true
+    pid=`pgrep -f "bin/vault.*config/security-secret-store/vault-config.json"` || true
     if [ ! -z $pid ] && [ $pid != "" ] ; then
         int_service $pid "vault"
     fi
