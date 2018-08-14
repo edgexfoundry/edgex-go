@@ -75,7 +75,7 @@ func unmarshalDevice(o []byte, d interface{}) (err error) {
 		x.Labels = s.Labels
 		x.Location = s.Location
 
-		conn, err := GetConnection()
+		conn, err := getConnection()
 		if err != nil {
 			return err
 		}

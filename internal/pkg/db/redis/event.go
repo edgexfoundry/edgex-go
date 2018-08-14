@@ -74,7 +74,7 @@ func unmarshalEvent(o []byte, event *models.Event) (err error) {
 	event.Origin = s.Origin
 	event.Event = s.Event
 
-	conn, err := GetConnection()
+	conn, err := getConnection()
 	if err != nil {
 		return err
 	}

@@ -61,7 +61,7 @@ func unmarshalScheduleEvent(o []byte, se interface{}) (err error) {
 		x.Schedule = s.Schedule
 		x.Parameters = s.Parameters
 		x.Service = s.Service
-		conn, err := GetConnection()
+		conn, err := getConnection()
 		if err != nil {
 			return err
 		}

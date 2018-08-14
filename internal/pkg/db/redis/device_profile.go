@@ -71,7 +71,7 @@ func unmarshalDeviceProfile(o []byte, dp interface{}) (err error) {
 		x.Objects = s.Objects
 		x.DeviceResources = s.DeviceResources
 		x.Resources = s.Resources
-		conn, err := GetConnection()
+		conn, err := getConnection()
 		if err != nil {
 			return err
 		}

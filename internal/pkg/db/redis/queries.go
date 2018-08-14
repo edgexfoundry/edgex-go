@@ -26,12 +26,7 @@ func getObjectById(conn redis.Conn, id string, unmarshal unmarshalFunc, out inte
 		return err
 	}
 
-	err = unmarshal(object, out)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return unmarshal(object, out)
 }
 
 func getObjectByHash(conn redis.Conn, hash string, field string, unmarshal unmarshalFunc, out interface{}) error {
@@ -47,13 +42,7 @@ func getObjectByHash(conn redis.Conn, hash string, field string, unmarshal unmar
 		return err
 	}
 
-	err = unmarshal(object, out)
-	if err != nil {
-		return err
-	}
-
-	return nil
-
+	return unmarshal(object, out)
 }
 
 func getObjectsByValue(conn redis.Conn, v string) (objects [][]byte, err error) {

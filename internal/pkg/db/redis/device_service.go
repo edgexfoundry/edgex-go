@@ -67,7 +67,7 @@ func unmarshalDeviceService(o []byte, ds interface{}) (err error) {
 		x.OperatingState = s.OperatingState
 		x.Labels = s.Labels
 		x.AdminState = s.AdminState
-		conn, err := GetConnection()
+		conn, err := getConnection()
 		if err != nil {
 			return err
 		}

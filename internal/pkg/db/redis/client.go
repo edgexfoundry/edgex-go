@@ -25,9 +25,9 @@ import (
 type connectionType int
 
 const (
-	conntypeTCP connectionType = 1 << iota
-	conntypeUDS
-	conntypeEredis
+	connTypeTCP connectionType = 1 << iota
+	connTypeUDS
+	connTypeEredis
 )
 
 var currClients = make([]*Client, 3) // A singleton per connection type (for benchmarking)
@@ -44,11 +44,11 @@ func NewClient(config db.Configuration) (*Client, error) {
 	// Identify the connection's type
 	var conntype connectionType
 	if config.Host == "" {
-		conntype = conntypeEredis
+		conntype = connTypeEredis
 	} else if string(config.Host[0]) == "/" {
-		conntype = conntypeUDS
+		conntype = connTypeUDS
 	} else {
-		conntype = conntypeTCP
+		conntype = connTypeTCP
 	}
 
 	if currClients[conntype] == nil {
@@ -59,13 +59,13 @@ func NewClient(config db.Configuration) (*Client, error) {
 			conntype: conntype,
 		}
 		switch c.conntype {
-		case conntypeEredis:
+		case connTypeEredis:
 			proto = "eredis"
 			addr = ""
-		case conntypeUDS:
+		case connTypeUDS:
 			proto = "unix"
 			addr = config.Host
-		case conntypeTCP:
+		case connTypeTCP:
 			proto = "tcp"
 			addr = connectionString
 		default:
@@ -114,8 +114,7 @@ func (c *Client) CloseSession() {
 	currClient = nil
 }
 
-// GetConnection returns a Redis connection from the current client's pool
-func GetConnection() (conn redis.Conn, err error) {
+func getConnection() (conn redis.Conn, err error) {
 	if currClient == nil {
 		return nil, errors.New("No current Redis client, please create a new client before requesting it")
 	}

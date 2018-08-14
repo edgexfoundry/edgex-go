@@ -61,7 +61,7 @@ func unmarshalProvisionWatcher(o []byte, pw interface{}) (err error) {
 		x.Identifiers = s.Identifiers
 		x.OperatingState = s.OperatingState
 
-		conn, err := GetConnection()
+		conn, err := getConnection()
 		if err != nil {
 			return err
 		}

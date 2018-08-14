@@ -502,16 +502,6 @@ func (c *Client) ReadingsByValueDescriptorNames(names []string, limit int) (read
 	return readings, nil
 }
 
-// Return a list of readings specified by the UOM label
-//ReadingsByUomLabel(uomLabel string, limit int)([]models.Reading, error)
-
-// Return a list of readings based on the label (value descriptor)
-// 413 - limit exceeded
-//ReadingsByLabel(label string, limit int) ([]models.Reading, error)
-
-// Return a list of readings who's value descriptor has the type
-//ReadingsByType(typeString string, limit int) ([]models.Reading, error)
-
 // Return a list of readings whos created time is between the start and end times
 func (c *Client) ReadingsByCreationTime(start, end int64, limit int) (readings []models.Reading, err error) {
 	conn := c.Pool.Get()
