@@ -26,10 +26,28 @@ confinement: strict
 # may be defaulting to this dir...
 
 apps:
+  kong:
+    command: bin/kong-wrapper.sh
+    plugs:
+      - network-bind
   consul:
     command: bin/start-consul.sh
     # TODO: add stop-command
     plugs: [network, network-bind]
+  vault:
+    command: bin/vault
+    plugs: [network, network-bind]
+  cassandra:
+    command: bin/cassandra-wrapper.sh
+    daemon: forking
+    # mount-observe needs to be manually connected post-install:
+    # `sudo snap connect cassandra:mount-observe ubuntu-core:mount-observe`
+    plugs:
+      - network
+      - network-bind
+      # Needed for checking available space in the data directories
+      # (java.io.File.getTotalSpace).
+      - mount-observe
   core-config-seed:
     command: bin/start-config-seed.sh
     plugs: [network, network-bind]
@@ -39,6 +57,11 @@ apps:
   stop-edgex:
     command: bin/stop-edgex.sh
     plugs: [system-observe, process-control]
+  security-start:
+    command: bin/security-start.sh
+    plugs:
+      - network
+      - network-bind
   mongo:
     command: bin/mongo
     plugs: [network]
@@ -64,55 +87,53 @@ parts:
     stage-packages:
       - curl
   go:
+    after: [config-common]
     source-tag: go1.10.2
     source-depth: 1
   glide:
+    after:
+      # setting go to build after config-common ensures that it will get re-added to SNAPCRAFT_STAGE
+      # if config-common is rebuilt
+      - config-common
     plugin: shell
     source: .
     shell: bash
     shell-flags: ['-eux', '-o', 'pipefail']
     build-packages: [wget]
     shell-command: |
-      export ARCH=`arch`
+      case $SNAPCRAFT_ARCH_TRIPLET in
+        aarch64*)
+          export PACKAGE="glide-v0.12.3-linux-arm64.tar.gz";;
+        arm*)
+          export PACKAGE="glide-v0.12.3-linux-armv7.tar.gz";;
+        i386*|i686*)
+          export PACKAGE="glide-v0.12.3-linux-386.tar.gz";;
+        x86_64*)
+          export PACKAGE="glide-v0.12.3-linux-amd64.tar.gz";;
+        *)
+          echo "Unsupported arch $SNAPCRAFT_ARCH_TRIPLET"
+          exit 1;;
+      esac
 
-      if [ $ARCH = "x86_64" ] ; then
-        export PACKAGE="glide-v0.12.3-linux-amd64.tar"
-      elif [ $ARCH = "armhf" ] ; then
-        export PACKAGE="glide-v0.12.3-linux-armv7.tar"
-      elif [ $ARCH = "aarch64" ] ; then
-        export PACKAGE="glide-v0.12.3-linux-arm64.tar"
-      elif [ $ARCH = "i386" ] ; then
-        export PACKAGE="glide-v0.12.3-linux-386.tar"
-      fi
-
-      pushd $SNAPCRAFT_PART_INSTALL
-      wget "https://github.com/Masterminds/glide/releases/download/v0.12.3/$PACKAGE.gz"
-      gunzip "./$PACKAGE.gz"
-      tar xvf "./$PACKAGE" --strip-components=1
-      popd
-    stage:
-     - glide
-     - -*.tar
+      wget "https://github.com/Masterminds/glide/releases/download/v0.12.3/$PACKAGE"
+      tar xvf "$PACKAGE" --strip-components=1
+      install -DT glide $SNAPCRAFT_STAGE/bin/glide
     prime:
      - -*
   consul:
+    after: [go]
     plugin: shell
     source: https://github.com/hashicorp/consul.git
     source-tag: v1.1.0
     shell: bash
     shell-flags: ['-eux', '-o', 'pipefail']
     shell-command: |
-      export GOPATH=$(readlink -f $(pwd)/../go)
-      export GOIMPORTPATH=$GOPATH/src/github.com/hashicorp/consul/
-      export PATH="$GOPATH/bin:$PATH"
-      # limit build to native OS/architecture
-      export CONSUL_DEV=1
-      mkdir -p $GOIMPORTPATH
-      cp -r ./* $GOIMPORTPATH
-      cd $GOIMPORTPATH
+      . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
+      gopartbootstrap github.com/hashicorp/consul
+
       go get -u github.com/kardianos/govendor
       govendor install
-      make
+      CONSUL_DEV=1 make
 
       # install the consul binary
       install -DT bin/consul "$SNAPCRAFT_PART_INSTALL/bin/consul"
@@ -133,11 +154,49 @@ parts:
       for i in `find . -type f -name "LICENSE"`; do
         install -DT "$i" \
                  "$SNAPCRAFT_PART_INSTALL/usr/share/doc/$i"; done
-    after:
-      - go
     build-packages:
       - make
       - zip
+  vault:
+    after: [go]
+    plugin: make
+    source: https://github.com/hashicorp/vault.git
+    source-tag: v0.10.2
+    override-build: |
+      . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
+      gopartbootstrap github.com/hashicorp/vault
+
+      make bootstrap
+      make dev
+      
+      # install the vault binary
+      install -DT bin/vault "$SNAPCRAFT_PART_INSTALL/bin/vault" 
+
+      # handle vault LICENSE
+      # TODO: do PATENT files need copying?
+      install -DT "$GOIMPORTPATH/LICENSE" \
+                 "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/hashicorp/vault/LICENSE"
+
+      # handle vendor LICENSE files
+      cd $GOIMPORTPATH/vendor
+      for i in `find . -type f -name "LICENSE"`; do
+        install -DT "$i" \
+                 "$SNAPCRAFT_PART_INSTALL/usr/share/doc/$i"; done
+
+      # TODO: some LICENSE files fall under .gopath too
+      cd $GOPATH/src
+      for i in `find . -type f -name "LICENSE"`; do
+        install -DT "$i" \
+                 "$SNAPCRAFT_PART_INSTALL/usr/share/doc/$i"; done
+
+      # delete duplicated license files between vault + consul
+      # as snapcraft will fail we attempt to install duplicated files into the snap
+      rm -rf $SNAPCRAFT_PART_INSTALL/usr/share/doc/cloud.google.com/go/LICENSE
+      rm -rf $SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/golang/protobuf/LICENSE
+      rm -rf $SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/sean-/seed/LICENSE
+      rm -rf $SNAPCRAFT_PART_INSTALL/usr/share/doc/golang.org/x/oauth2/LICENSE
+      rm -rf $SNAPCRAFT_PART_INSTALL/usr/share/doc/google.golang.org/grpc/LICENSE
+
   config-seed:
     source: https://github.com/edgexfoundry/core-config-seed-go.git
     source-branch: california
@@ -148,24 +207,11 @@ parts:
     shell: bash
     shell-flags: ['-eux', '-o', 'pipefail']
     shell-command: |
-      export GOROOT=$("$SNAPCRAFT_STAGE/bin/go" env GOROOT)
-      export PATH="$GOROOT/bin:$PATH"
+      . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
+      gopartbootstrap github.com/edgexfoundry/core-config-seed-go
 
-      export XC_ARCH=`dpkg --print-architecture`
-      export XC_OS="linux"
-
-      go version
-
-      mkdir -p .gopath/src/github.com/edgexfoundry
-      export GOPATH="$PWD/.gopath"
-      export PATH="$GOPATH/bin:$PATH:$SNAPCRAFT_STAGE"
-      ln -s "$PWD" .gopath/src/github.com/edgexfoundry/core-config-seed-go
-
-      pushd .gopath/src/github.com/edgexfoundry/core-config-seed-go
-
-      glide update
+      glide install
       go build
-      popd
 
       install -DT "./core-config-seed-go" "$SNAPCRAFT_PART_INSTALL/bin/core-config-seed-go"
 
@@ -197,11 +243,13 @@ parts:
     plugin: dump
     source: ./snap
     stage:
-      - bin/start-consul.sh
-      - bin/start-config-seed.sh
-      - bin/start-edgex.sh
-      - bin/stop-edgex.sh
-      - config/edgex-services-env
+      - bin/go-build-helper.sh
+      - config/*
+      - bin/*
+    prime:
+      - -bin/go-build-helper.sh
+      - bin/*
+      - config/*
   mongodb:
     plugin: shell
     source: .
@@ -209,13 +257,15 @@ parts:
     shell-flags: ['-eux', '-o', 'pipefail']
     build-packages: [wget]
     shell-command: |
-      export ARCH=`arch`
-
-      if [ $ARCH = "x86_64" ] ; then
-        export PACKAGE="mongodb-linux-x86_64-ubuntu1604-3.4.10.tgz"
-      elif [ $ARCH = "aarch64" ] ; then
-        export PACKAGE="mongodb-linux-arm64-ubuntu1604-3.4.10.tgz"
-      fi
+      case $SNAPCRAFT_ARCH_TRIPLET in
+        x86_64*)
+          export PACKAGE="mongodb-linux-x86_64-ubuntu1604-3.4.10.tgz";;
+        aarch64*)
+          export PACKAGE="mongodb-linux-arm64-ubuntu1604-3.4.10.tgz";;
+        *)
+          echo "Unsupported arch for mongodb: $SNAPCRAFT_ARCH_TRIPLET"
+          exit 1
+      esac
 
       pushd $SNAPCRAFT_PART_INSTALL
       wget "https://fastdl.mongodb.org/linux/$PACKAGE"
@@ -280,24 +330,11 @@ parts:
     shell: bash
     shell-flags: ['-eux', '-o', 'pipefail']
     shell-command: |
-      export GOROOT=$("$SNAPCRAFT_STAGE/bin/go" env GOROOT)
-      export PATH="$GOROOT/bin:$PATH"
-
-      export XC_ARCH=`dpkg --print-architecture`
-      export XC_OS="linux"
-
-      go version
-
-      mkdir -p .gopath/src/github.com/edgexfoundry
-      export GOPATH="$PWD/.gopath"
-      export PATH="$GOPATH/bin:$PATH:$SNAPCRAFT_STAGE"
-      ln -s "$PWD" .gopath/src/github.com/edgexfoundry/edgex-go
-
-      pushd .gopath/src/github.com/edgexfoundry/edgex-go
-
+      . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
+      gopartbootstrap github.com/edgexfoundry/edgex-go
+      
       make prepare
       make build
-      popd
 
       install -DT "./cmd/core-command/core-command" "$SNAPCRAFT_PART_INSTALL/bin/core-command"
       install -DT "./cmd/core-data/core-data" "$SNAPCRAFT_PART_INSTALL/bin/core-data"
@@ -539,3 +576,228 @@ parts:
       - -usr/share/man
       - -usr/share/fonts
       - -usr/share/alsa
+  cassandra:
+    plugin: dump
+    source: http://apache.claz.org/cassandra/3.11.3/apache-cassandra-3.11.3-bin.tar.gz
+    source-type: tar
+    build-packages:
+      - ant-optional
+      - build-essential
+      - python
+      - sed
+    stage-packages:
+      # Copy some packages into the stage directory to steal their
+      # pre-built binaries.
+      - mawk
+      - grep
+      # For free(1)
+      - procps
+      - openjdk-8-jdk
+    organize:
+      # Rename directories into their expected locations. Analogous to
+      # Debian's .install files.
+      conf: etc/cassandra
+      bin/cassandra: usr/sbin/cassandra
+      lib: usr/share/cassandra/lib
+      # Rename mawk to awk instead of shipping a symlink.
+      usr/bin/mawk: usr/bin/awk
+    prime:
+      # Files from the stage directory to include in the snap.
+      - bin/nodetool
+      - etc/cassandra
+      - usr/sbin/cassandra
+      - usr/share/cassandra/lib/*.jar
+      - usr/lib/jvm
+      # awk, grep, and free are needed by cassandra-env.sh
+      - usr/bin/awk
+      - bin/grep
+      - usr/bin/free
+
+# KONG / LUA PARTS
+  lua:
+    # this dependency is somewhat artificial, because 
+    # when iterating on the openresty parts if you just rebuild openresty,
+    # without also rebuilding lua, then kong will fail because it can't find
+    # luarocks.cfg somewhere...
+    # not sure why re-building openresty causes the luarocks config file to be messed
+    # up, but if we order it like so then rebuilding any one of them will always work
+    # openresty -> lua -> luarocks -> kong
+    # this may have to do with installing lua and luarocks into $SNAPCRAFT_STAGE
+    after: [openresty]
+    source: https://www.lua.org/ftp/lua-5.1.5.tar.gz
+    source-type: tar
+    plugin: make
+    make-parameters: [linux]
+    build-packages:
+      - libreadline-dev
+      - libncurses5-dev
+    override-build: |
+      # patch the Makefile to use $SNAPCRAFT_STAGE for the INSTALL_TOP variable
+      # which unfortunately is not settable using an environment variable and thus needs 
+      # this manual patch
+      sed -i "s@INSTALL_TOP= /usr/local@INSTALL_TOP=$SNAPCRAFT_STAGE@" Makefile
+      snapcraftctl build
+  luarocks:
+    after: [lua]
+    plugin: autotools
+    source: https://github.com/luarocks/luarocks.git
+    source-branch: 2.4.3
+    source-depth: 1
+    override-build: |
+      ./configure --prefix=$SNAPCRAFT_STAGE --with-lua=$SNAPCRAFT_STAGE --lua-version=5.1
+      make build
+      make install
+  openresty:
+    plugin: autotools
+    source: https://openresty.org/download/openresty-1.11.2.5.tar.gz
+    install-via: prefix
+    # configure options here from https://getkong.org/install/source/
+    configflags:
+      - --with-pcre-jit
+      - --with-ipv6
+      - --with-http_realip_module
+      - --with-http_ssl_module
+      - --with-http_stub_status_module
+      - --with-http_v2_module
+    build-packages: 
+      - build-essential
+      - libpcre3-dev
+      - perl
+      - curl
+      - libssl-dev
+    stage-packages:
+      - perl
+    override-build: |
+      snapcraftctl build
+      # remove the openresy link, we will handle that in the kong part
+      rm -rf $SNAPCRAFT_PART_INSTALL/bin/openresty
+  kong:
+    after: 
+      - openresty
+      - luarocks
+    source: https://github.com/kong/kong.git  
+    plugin: nil
+    source-tag: 0.13.1
+    source-depth: 1
+    build-packages: 
+      - unzip
+      - libssl-dev
+      - libpcre3-dev
+    stage-packages:
+      - luarocks
+    override-build: |
+      # first copy the default config file provided and install it into $SNAPCRAFT_PART_INSTALL
+      # it will be generated/configured during the install hook
+      mkdir -p $SNAPCRAFT_PART_INSTALL/config/security-api-gateway
+      cp kong.conf.default $SNAPCRAFT_PART_INSTALL/config/security-api-gateway/kong.conf
+
+      # first have luarocks purge any rocks that may have been previously installed in stage
+      if [ -d $SNAPCRAFT_STAGE/lib/luarocks/rocks ]; then
+        luarocks purge --tree=$SNAPCRAFT_STAGE
+      fi
+      
+      # handle the location of openssl + libcrypto by architecture
+      # cause luarocks is silly and hardcodes /usr/lib/x86_64-linux-gnu as the lib search path
+      case $SNAPCRAFT_ARCH_TRIPLET in
+      aarch64*)
+        luarocks make --tree=$SNAPCRAFT_STAGE \
+          CRYPTO_LIBDIR=/usr/lib/aarch64-linux-gnu \
+          CRYPTO_INCDIR=/usr/include \
+          OPENSSL_LIBDIR=/usr/lib/aarch64-linux-gnu \
+          OPENSSL_INCDIR=/usr/include
+        ;;
+      arm*)
+        luarocks make --tree=$SNAPCRAFT_STAGE \
+          CRYPTO_LIBDIR=/usr/lib/arm-linux-gnueabihf \
+          CRYPTO_INCDIR=/usr/include \
+          OPENSSL_LIBDIR=/usr/lib/arm-linux-gnueabihf \
+          OPENSSL_INCDIR=/usr/include
+        ;;
+      i386*|i686*)
+        luarocks make --tree=$SNAPCRAFT_STAGE \
+          CRYPTO_LIBDIR=/usr/lib/i386-linux-gnu \
+          CRYPTO_INCDIR=/usr/include \
+          OPENSSL_LIBDIR=/usr/lib/i386-linux-gnu \
+          OPENSSL_INCDIR=/usr/include
+        ;;
+      x86_64*)
+        # x64 is the only arch that luarocks can properly find libs for :-/
+        luarocks make --tree=$SNAPCRAFT_STAGE
+        ;;
+      *)
+        echo "Unsupported arch $ARCH"
+        exit 1
+        ;;
+      esac
+      
+      mkdir -p $SNAPCRAFT_STAGE/bin
+      cp bin/kong $SNAPCRAFT_STAGE/bin/kong
+      # make all the things inside the cmd directory executable because they for some reason aren't executable by default...
+      cd $SNAPCRAFT_STAGE/share/lua/5.1/kong/cmd
+      for cmd in $(ls *.lua); do
+        chmod +x $cmd
+      done
+
+      # openresty will make an absolute symbolic link of openresty to the nginx binary, so we need to delete that
+      # note that the reason we do this in the kong part rather than the openresty is that kong will create it's own
+      # absolute symlink, so we want to delete that one too, and doing that here fixes both openresty's symlink as well
+      # as kong's
+      cd $SNAPCRAFT_STAGE/bin
+      rm -rf openresty
+      ln -s ../nginx/sbin/nginx openresty
+      ln -s ../nginx/sbin/nginx nginx
+
+      # install everything from stage into the part install for kong
+      cp -r $SNAPCRAFT_STAGE/* $SNAPCRAFT_PART_INSTALL/
+
+# SECURITY SERVICES PARTS
+
+  security-secret-store:
+    source: https://github.com/edgexfoundry/security-secret-store.git
+    source-branch: california
+    plugin: dump
+    organize:
+      pki-setup.sh: bin/pki-setup.sh
+      pki-setup-config-kong.env: config/security-secret-store/pki-setup-config-kong.env
+      pki-setup-config-vault.env: config/security-secret-store/pki-setup-config-vault.env
+      vault-init-unseal.sh: bin/vault-init-unseal.sh
+      vault-kong.sh: bin/vault-kong.sh
+      vault-setup.sh: bin/vault-setup.sh
+      vault-worker.sh: bin/vault-worker.sh
+    prime:
+      - bin/*
+      - config/*
+  security-api-gateway:
+    after: [go, glide]
+    source: https://github.com/edgexfoundry/security-api-gateway.git
+    source-branch: california
+    plugin: make
+    stage-packages:
+      - openssl
+      - jq
+      - bind9utils
+      # for dig
+      - dnsutils
+      - libdb5.3
+    override-build: |
+      . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
+      gopartbootstrap github.com/edgexfoundry/security-api-gateway
+
+      glide install
+      make build
+
+      install -DT core/edgexproxy "$SNAPCRAFT_PART_INSTALL/bin/edgexproxy"
+
+      # also modify the configuration file to use "/" instead of "\" in the file
+      mkdir -p $SNAPCRAFT_PART_INSTALL/config/security-api-gateway/res
+      cp core/res/configuration.toml $SNAPCRAFT_PART_INSTALL/config/security-api-gateway/res/configuration.toml
+      sed -i "s@tokenpath = \"res\\\\\\\\resp-init.json\"@tokenpath = \"res/resp-init.json\"@" $SNAPCRAFT_PART_INSTALL/config/security-api-gateway/res/configuration.toml
+  base64:
+    # TODO: the core snap currently ships base64, but doesn't allow it in the default apparmor:
+    # https://forum.snapcraft.io/t/adding-base64-command-to-default-snap-apparmor/6744
+    # when/if it gets added to the apparmor we can remove this part
+    plugin: nil
+    prime: 
+    - usr/bin/base64
+    stage-packages:
+      - coreutils
