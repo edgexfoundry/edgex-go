@@ -23,6 +23,7 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/edgexfoundry/edgex-go/internal/core/data/messaging"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/memory"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
@@ -31,6 +32,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/mock"
 	"gopkg.in/mgo.v2/bson"
+	"sync"
 	"time"
 )
 
@@ -46,76 +48,9 @@ func TestMain(m *testing.M) {
 	testRoutes = LoadRestRoutes()
 	LoggingClient = logger.NewMockClient()
 	mdc = newMockDeviceClient()
+	ep, _ = messaging.NewEventPublisher(messaging.MOCK, messaging.PubSubConfiguration{})
+	chEvents = make(chan interface{}, 10)
 	os.Exit(m.Run())
-}
-
-func prepareDB() {
-	testEvent.Device = TEST_DEVICE_NAME
-	testEvent.Origin = TEST_ORIGIN
-	testEvent.Readings = buildListOfMockReadings()
-	dbClient = &memory.MemDB{}
-	testEvent.ID, _ = dbClient.AddEvent(&testEvent)
-}
-
-func newMockDeviceClient() *mocks.DeviceClient {
-	client := &mocks.DeviceClient{}
-
-	mockAddressable := models.Addressable{
-		Address:  "localhost",
-		Name:     "Test Addressable",
-		Port:     3000,
-		Protocol: "http"}
-
-	mockDeviceResultFn := func(id string) models.Device {
-		if bson.IsObjectIdHex(id) {
-			return models.Device{Id: bson.ObjectIdHex(id), Name: testEvent.Device, Addressable: mockAddressable}
-		}
-		return models.Device{}
-	}
-	client.On("Device", mock.MatchedBy(func(id string) bool {
-		return bson.IsObjectIdHex(id)
-	})).Return(mockDeviceResultFn, nil)
-	client.On("Device", mock.MatchedBy(func(id string) bool {
-		return !bson.IsObjectIdHex(id)
-	})).Return(mockDeviceResultFn, fmt.Errorf("id is not bson ObjectIdHex"))
-
-	mockDeviceForNameResultFn := func(name string) models.Device {
-		device := models.Device{Id: bson.NewObjectId(), Name: name, Addressable: mockAddressable}
-
-		return device
-	}
-	client.On("DeviceForName", mock.MatchedBy(func(name string) bool {
-		return name == testEvent.Device
-	})).Return(mockDeviceForNameResultFn, nil)
-	client.On("DeviceForName", mock.MatchedBy(func(name string) bool {
-		return name != testEvent.Device
-	})).Return(mockDeviceForNameResultFn, fmt.Errorf("no device found for name"))
-
-	return client
-}
-
-func buildListOfMockReadings() []models.Reading {
-	ticks := db.MakeTimestamp()
-	r1 := models.Reading{Id: bson.NewObjectId(),
-		Name:     "Temperature",
-		Value:    "45",
-		Origin:   TEST_ORIGIN,
-		Created:  ticks,
-		Modified: ticks,
-		Pushed:   ticks,
-		Device:   TEST_DEVICE_NAME}
-
-	r2 := models.Reading{Id: bson.NewObjectId(),
-		Name:     "Pressure",
-		Value:    "1.01325",
-		Origin:   TEST_ORIGIN,
-		Created:  ticks,
-		Modified: ticks,
-		Pushed:   ticks,
-		Device:   TEST_DEVICE_NAME}
-	readings := []models.Reading{}
-	readings = append(readings, r1, r2)
-	return readings
 }
 
 //Test methods
@@ -204,6 +139,61 @@ func TestGetEventsWithLimit(t *testing.T) {
 	}
 }
 
+func TestAddEventWithPersistence(t *testing.T) {
+	prepareDB()
+	configuration.PersistData = true
+	evt := models.Event{Device: TEST_DEVICE_NAME, Origin: TEST_ORIGIN, Readings: buildListOfMockReadings()}
+	//wire up handlers to listen for device events
+	bitEvents := make([]bool, 2)
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	go handleDomainEvents(bitEvents, &wg, t)
+
+	newId, err := addNew(evt)
+	configuration.PersistData = false
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	if !bson.IsObjectIdHex(newId) {
+		t.Errorf("invalid bson id: %s", newId)
+	}
+
+	wg.Wait()
+	for i, val := range bitEvents {
+		if !val {
+			t.Errorf("event not received in timely fashion, index %v, TestAddEventWithPersistence", i)
+			return
+		}
+	}
+}
+
+func TestAddEventNoPersistence(t *testing.T) {
+	prepareDB()
+	configuration.PersistData = false
+	evt := models.Event{Device: TEST_DEVICE_NAME, Origin: TEST_ORIGIN, Readings: buildListOfMockReadings()}
+	//wire up handlers to listen for device events
+	bitEvents := make([]bool, 2)
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	go handleDomainEvents(bitEvents, &wg, t)
+
+	newId, err := addNew(evt)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	if bson.IsObjectIdHex(newId) {
+		t.Errorf("unexpected bson id %s received", newId)
+	}
+
+	wg.Wait()
+	for i, val := range bitEvents {
+		if !val {
+			t.Errorf("event not received in timely fashion, index %v, TestAddEventNoPersistence", i)
+			return
+		}
+	}
+}
+
 /*
 func TestGetEventHandler(t *testing.T) {
 	req, _ := http.NewRequest(http.MethodGet, "/api/v1/event", nil)
@@ -263,6 +253,76 @@ func TestGetEventByIdHandler(t *testing.T) {
 	testEventWithoutReadings(event, t)
 }
 
+// Supporting methods
+func prepareDB() {
+	testEvent.Device = TEST_DEVICE_NAME
+	testEvent.Origin = TEST_ORIGIN
+	testEvent.Readings = buildListOfMockReadings()
+	dbClient = &memory.MemDB{}
+	testEvent.ID, _ = dbClient.AddEvent(&testEvent)
+}
+
+func newMockDeviceClient() *mocks.DeviceClient {
+	client := &mocks.DeviceClient{}
+
+	mockAddressable := models.Addressable{
+		Address:  "localhost",
+		Name:     "Test Addressable",
+		Port:     3000,
+		Protocol: "http"}
+
+	mockDeviceResultFn := func(id string) models.Device {
+		if bson.IsObjectIdHex(id) {
+			return models.Device{Id: bson.ObjectIdHex(id), Name: testEvent.Device, Addressable: mockAddressable}
+		}
+		return models.Device{}
+	}
+	client.On("Device", mock.MatchedBy(func(id string) bool {
+		return bson.IsObjectIdHex(id)
+	})).Return(mockDeviceResultFn, nil)
+	client.On("Device", mock.MatchedBy(func(id string) bool {
+		return !bson.IsObjectIdHex(id)
+	})).Return(mockDeviceResultFn, fmt.Errorf("id is not bson ObjectIdHex"))
+
+	mockDeviceForNameResultFn := func(name string) models.Device {
+		device := models.Device{Id: bson.NewObjectId(), Name: name, Addressable: mockAddressable}
+
+		return device
+	}
+	client.On("DeviceForName", mock.MatchedBy(func(name string) bool {
+		return name == testEvent.Device
+	})).Return(mockDeviceForNameResultFn, nil)
+	client.On("DeviceForName", mock.MatchedBy(func(name string) bool {
+		return name != testEvent.Device
+	})).Return(mockDeviceForNameResultFn, fmt.Errorf("no device found for name"))
+
+	return client
+}
+
+func buildListOfMockReadings() []models.Reading {
+	ticks := db.MakeTimestamp()
+	r1 := models.Reading{Id: bson.NewObjectId(),
+		Name:     "Temperature",
+		Value:    "45",
+		Origin:   TEST_ORIGIN,
+		Created:  ticks,
+		Modified: ticks,
+		Pushed:   ticks,
+		Device:   TEST_DEVICE_NAME}
+
+	r2 := models.Reading{Id: bson.NewObjectId(),
+		Name:     "Pressure",
+		Value:    "1.01325",
+		Origin:   TEST_ORIGIN,
+		Created:  ticks,
+		Modified: ticks,
+		Pushed:   ticks,
+		Device:   TEST_DEVICE_NAME}
+	readings := []models.Reading{}
+	readings = append(readings, r1, r2)
+	return readings
+}
+
 func testEventWithoutReadings(event models.Event, t *testing.T) {
 	if event.ID.Hex() != testEvent.ID.Hex() {
 		t.Error("eventId mismatch. expected " + testEvent.ID.Hex() + " received " + event.ID.Hex())
@@ -274,5 +334,47 @@ func testEventWithoutReadings(event models.Event, t *testing.T) {
 
 	if event.Origin != testEvent.Origin {
 		t.Error("origin mismatch. expected " + strconv.FormatInt(testEvent.Origin, 10) + " received " + strconv.FormatInt(event.Origin, 10))
+	}
+}
+
+func handleDomainEvents(bitEvents []bool, wait *sync.WaitGroup, t *testing.T) {
+	until := time.Now().Add(250 * time.Millisecond) //Kill this loop after quarter second.
+	for time.Now().Before(until) {
+		select {
+		case evt := <-chEvents:
+			switch evt.(type) {
+			case DeviceLastReported:
+				fmt.Println("DeviceLastReported received")
+				e := evt.(DeviceLastReported)
+				if e.DeviceName != TEST_DEVICE_NAME {
+					t.Errorf("DeviceLastReported name mistmatch %s", e.DeviceName)
+					return
+				}
+				setEventBit(0, true, bitEvents)
+				break
+			case DeviceServiceLastReported:
+				fmt.Println("DeviceServiceLastReported received")
+				e := evt.(DeviceServiceLastReported)
+				if e.DeviceName != TEST_DEVICE_NAME {
+					t.Errorf("DeviceLastReported name mistmatch %s", e.DeviceName)
+					return
+				}
+				setEventBit(1, true, bitEvents)
+				break
+			}
+		default:
+			//	Without a default case in here, the select block will hang.
+		}
+	}
+	wait.Done()
+}
+
+func setEventBit(index int, value bool, source []bool) {
+	for i, oldVal := range source {
+		if i == index {
+			source[i] = value
+		} else {
+			source[i] = oldVal
+		}
 	}
 }

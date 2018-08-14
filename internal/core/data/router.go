@@ -20,6 +20,7 @@ import (
 	"net/url"
 	"strconv"
 
+	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
@@ -216,53 +217,21 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 
 		LoggingClient.Info("Posting Event: " + e.String())
 
-		// Check device
-		if checkDevice(e.Device, w) == false {
+		newId, err := addNew(e)
+		if err != nil {
+			switch t := err.(type) {
+			case errors.ErrValueDescriptorNotFound:
+			case errors.ErrValueDescriptorInvalid:
+				http.Error(w, t.Error(), http.StatusBadRequest)
+			default:
+				http.Error(w, t.Error(), http.StatusInternalServerError)
+			}
+			LoggingClient.Error(err.Error())
 			return
 		}
 
-		if configuration.ValidateCheck {
-			LoggingClient.Debug("Validation enabled, parsing events")
-			for reading := range e.Readings {
-				// Check value descriptor
-				vd, err := dbClient.ValueDescriptorByName(e.Readings[reading].Name)
-				if err != nil {
-					if err == db.ErrNotFound {
-						http.Error(w, "Value descriptor for a reading not found", http.StatusNotFound)
-					} else {
-						http.Error(w, err.Error(), http.StatusInternalServerError)
-					}
-					LoggingClient.Error(err.Error())
-					return
-				}
-
-				valid, err := isValidValueDescriptor(vd, e.Readings[reading])
-				if !valid {
-					http.Error(w, "Validation failed", http.StatusConflict)
-					LoggingClient.Error("Validation failed")
-					return
-				}
-			}
-		}
-
-		// Add the event and readings to the database
-		if configuration.PersistData {
-			id, err := dbClient.AddEvent(&e)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				LoggingClient.Error(err.Error())
-				return
-			}
-
-			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(id.Hex()))
-		} else {
-			encode("unsaved", w)
-		}
-
-		putEventOnQueue(e)                                 // Push the aux struct to export service (It has the actual readings)
-		updateDeviceLastReportedConnected(e.Device)        // update last reported connected (device)
-		updateDeviceServiceLastReportedConnected(e.Device) // update last reported connected (device service)
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(newId))
 
 		break
 		// Do not update the readings

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2017 Dell Inc.
+ * Copyright 2018 Dell Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -11,12 +11,21 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
-package errors
+package messaging
 
-type UnexpectedError struct {
-	Message string
+import "github.com/edgexfoundry/edgex-go/pkg/models"
+
+// Mock implementation of the event publisher for testing purposes
+type mockEventPublisher struct {
+	pubType int
 }
 
-func (e UnexpectedError) Error() string {
-	return e.Message
+func newMockEventPublisher(config PubSubConfiguration) EventPublisher {
+	return &mockEventPublisher{
+		pubType:   MOCK,
+	}
+}
+
+func (zep *mockEventPublisher) SendEventMessage(e models.Event) error {
+	return nil
 }

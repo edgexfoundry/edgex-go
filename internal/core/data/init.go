@@ -37,7 +37,8 @@ import (
 var Configuration *ConfigurationStruct
 var dbClient interfaces.DBClient
 var LoggingClient logger.LoggingClient
-var ep *messaging.EventPublisher
+var chEvents chan interface{} //A channel for "domain events" sourced from event operations
+var ep messaging.EventPublisher
 var mdc metadata.DeviceClient
 var msc metadata.DeviceServiceClient
 
@@ -61,7 +62,10 @@ func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup,
 				logTarget := setLoggingTarget()
 				LoggingClient = logger.NewClient(internal.CoreDataServiceKey, Configuration.EnableRemoteLogging, logTarget)
 				//Initialize service clients
-				initializeClients(useConsul)
+				err := initializeClients(useConsul)
+				if err != nil {
+					LoggingClient.Error(err.Error())
+				}
 			}
 		}
 
@@ -86,6 +90,8 @@ func Init() bool {
 	if Configuration == nil || dbClient == nil {
 		return false
 	}
+	chEvents = make(chan interface{}, 100)
+	initEventHandlers()
 	return true
 }
 
@@ -93,6 +99,9 @@ func Destruct() {
 	if dbClient != nil {
 		dbClient.CloseSession()
 		dbClient = nil
+	}
+	if chEvents != nil {
+		close(chEvents)
 	}
 }
 
@@ -176,7 +185,7 @@ func connectToConsul(conf *ConfigurationStruct) error {
 	return nil
 }
 
-func initializeClients(useConsul bool) {
+func initializeClients(useConsul bool) error {
 	// Create metadata clients
 	params := types.EndpointParams{
 		ServiceKey:  internal.CoreMetaDataServiceKey,
@@ -190,9 +199,11 @@ func initializeClients(useConsul bool) {
 	msc = metadata.NewDeviceServiceClient(params, types.Endpoint{})
 
 	// Create the event publisher
-	ep = messaging.NewZeroMQPublisher(messaging.ZeroMQConfiguration{
+	var err error
+	ep, err = messaging.NewEventPublisher(messaging.ZEROMQ, messaging.PubSubConfiguration{
 		AddressPort: Configuration.ZeroMQAddressPort,
 	})
+	return err
 }
 
 func setLoggingTarget() string {
