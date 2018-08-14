@@ -29,7 +29,7 @@ func restGetAllDeviceReports(w http.ResponseWriter, _ *http.Request) {
 	err := dbClient.GetAllDeviceReports(&res)
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -53,7 +53,7 @@ func restAddDeviceReport(w http.ResponseWriter, r *http.Request) {
 	var dr models.DeviceReport
 	if err := json.NewDecoder(r.Body).Decode(&dr); err != nil {
 		LoggingClient.Error(err.Error(), "")
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -63,7 +63,7 @@ func restAddDeviceReport(w http.ResponseWriter, r *http.Request) {
 		if err == db.ErrNotFound {
 			http.Error(w, "Device referenced by Device Report doesn't exist", http.StatusNotFound)
 		} else {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		LoggingClient.Error(err.Error(), "")
 		return
@@ -75,7 +75,7 @@ func restAddDeviceReport(w http.ResponseWriter, r *http.Request) {
 		if err == db.ErrNotFound {
 			http.Error(w, "Schedule Event referenced by Device Report doesn't exist", http.StatusNotFound)
 		} else {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		LoggingClient.Error(err.Error(), "")
 		return
@@ -86,7 +86,7 @@ func restAddDeviceReport(w http.ResponseWriter, r *http.Request) {
 		if err == db.ErrNotUnique {
 			http.Error(w, "Duplicate Name for the device report", http.StatusConflict)
 		} else {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		LoggingClient.Error(err.Error(), "")
 		return
@@ -106,7 +106,7 @@ func restUpdateDeviceReport(w http.ResponseWriter, r *http.Request) {
 	var from models.DeviceReport
 	if err := json.NewDecoder(r.Body).Decode(&from); err != nil {
 		LoggingClient.Error(err.Error(), "")
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -119,7 +119,7 @@ func restUpdateDeviceReport(w http.ResponseWriter, r *http.Request) {
 			if err == db.ErrNotFound {
 				http.Error(w, err.Error(), http.StatusNotFound)
 			} else {
-				http.Error(w, err.Error(), http.StatusServiceUnavailable)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 			LoggingClient.Error(err.Error(), "")
 			return
@@ -133,7 +133,7 @@ func restUpdateDeviceReport(w http.ResponseWriter, r *http.Request) {
 
 	if err := dbClient.UpdateDeviceReport(&to); err != nil {
 		LoggingClient.Error(err.Error(), "")
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -213,7 +213,7 @@ func restGetReportById(w http.ResponseWriter, r *http.Request) {
 		if err == db.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
 		} else {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		LoggingClient.Error(err.Error(), "")
 		return
@@ -227,7 +227,7 @@ func restGetReportByName(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		LoggingClient.Error(err.Error(), "")
 		return
 	}
@@ -238,7 +238,7 @@ func restGetReportByName(w http.ResponseWriter, r *http.Request) {
 		if err == db.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
 		} else {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		LoggingClient.Error(err.Error(), "")
 		return
@@ -254,7 +254,7 @@ func restGetValueDescriptorsForDeviceName(w http.ResponseWriter, r *http.Request
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[DEVICENAME])
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		LoggingClient.Error(err.Error(), "")
 		return
 	}
@@ -263,7 +263,7 @@ func restGetValueDescriptorsForDeviceName(w http.ResponseWriter, r *http.Request
 	var reports []models.DeviceReport
 	if err = dbClient.GetDeviceReportByDeviceName(&reports, n); err != nil {
 		LoggingClient.Error(err.Error(), "")
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -282,14 +282,14 @@ func restGetDeviceReportByDeviceName(w http.ResponseWriter, r *http.Request) {
 	n, err := url.QueryUnescape(vars[DEVICENAME])
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	res := make([]models.DeviceReport, 0)
 	err = dbClient.GetDeviceReportByDeviceName(&res, n)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		LoggingClient.Error(err.Error(), "")
 		return
 	}
@@ -308,7 +308,7 @@ func restDeleteReportById(w http.ResponseWriter, r *http.Request) {
 		if err == db.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
 		} else {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		LoggingClient.Error(err.Error(), "")
 		return
@@ -328,7 +328,7 @@ func restDeleteReportByName(w http.ResponseWriter, r *http.Request) {
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -338,7 +338,7 @@ func restDeleteReportByName(w http.ResponseWriter, r *http.Request) {
 		if err == db.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
 		} else {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		LoggingClient.Error(err.Error(), "")
 		return

@@ -13,4 +13,4 @@ MongoPassword = 'password'
 CheckInterval = '10s'
 ConsulHost = 'edgex-core-consul'
 ConsulPort = 8500
-ConsulProfilesActive = 'docker;go'
+ConsulProfilesActive = 'docker'

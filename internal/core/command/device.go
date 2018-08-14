@@ -19,6 +19,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 )
 
@@ -36,21 +37,31 @@ func commandByDeviceID(did string, cid string, b string, p bool) (string, int) {
 
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
-		// send 403: no device exists by the id provided
-		return "", http.StatusForbidden
+
+		chk, ok := err.(*types.ErrServiceClient)
+		if ok {
+			return "", chk.StatusCode
+		} else {
+			return "", http.StatusInternalServerError
+		}
 	}
 
 	if p && (d.AdminState == models.Locked) {
 		LoggingClient.Error(d.Name + " is in admin locked state")
-		// send 422: device is locked
-		return "", http.StatusUnprocessableEntity
+
+		return "", http.StatusLocked
 	}
 
 	c, err := cc.Command(cid)
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
-		// send 403 no command exists
-		return "", http.StatusForbidden
+
+		chk, ok := err.(*types.ErrServiceClient)
+		if ok {
+			return "", chk.StatusCode
+		} else {
+			return "", http.StatusInternalServerError
+		}
 	}
 	if p {
 		url := d.Service.Addressable.GetBaseURL() + strings.Replace(c.Put.Action.Path, DEVICEIDURLPARAM, d.Id.Hex(), -1)
@@ -87,7 +98,13 @@ func putDeviceAdminState(did string, as string) (int, error) {
 	err := mdc.UpdateAdminState(did, as)
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
-		return http.StatusInternalServerError, err
+
+		chk, ok := err.(*types.ErrServiceClient)
+		if ok {
+			return chk.StatusCode, chk
+		} else {
+			return http.StatusInternalServerError, err
+		}
 	}
 	return http.StatusOK, err
 }
@@ -96,7 +113,13 @@ func putDeviceAdminStateByName(dn string, as string) (int, error) {
 	err := mdc.UpdateAdminStateByName(dn, as)
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
-		return http.StatusInternalServerError, err
+
+		chk, ok := err.(*types.ErrServiceClient)
+		if ok {
+			return chk.StatusCode, chk
+		} else {
+			return http.StatusInternalServerError, err
+		}
 	}
 	return http.StatusOK, err
 }
@@ -105,7 +128,13 @@ func putDeviceOpState(did string, as string) (int, error) {
 	err := mdc.UpdateOpState(did, as)
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
-		return http.StatusInternalServerError, err
+
+		chk, ok := err.(*types.ErrServiceClient)
+		if ok {
+			return chk.StatusCode, chk
+		} else {
+			return http.StatusInternalServerError, err
+		}
 	}
 	return http.StatusOK, err
 }
@@ -114,7 +143,13 @@ func putDeviceOpStateByName(dn string, as string) (int, error) {
 	err := mdc.UpdateOpStateByName(dn, as)
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
-		return http.StatusInternalServerError, err
+
+		chk, ok := err.(*types.ErrServiceClient)
+		if ok {
+			return chk.StatusCode, chk
+		} else {
+			return http.StatusInternalServerError, err
+		}
 	}
 	return http.StatusOK, err
 }
@@ -122,7 +157,12 @@ func putDeviceOpStateByName(dn string, as string) (int, error) {
 func getCommands() (int, []models.CommandResponse, error) {
 	devices, err := mdc.Devices()
 	if err != nil {
-		return http.StatusInternalServerError, nil, err
+		chk, ok := err.(*types.ErrServiceClient)
+		if ok {
+			return chk.StatusCode, nil, chk
+		} else {
+			return http.StatusInternalServerError, nil, err
+		}
 	}
 	var cr []models.CommandResponse
 	for _, d := range devices {
@@ -135,7 +175,12 @@ func getCommands() (int, []models.CommandResponse, error) {
 func getCommandsByDeviceID(did string) (int, models.CommandResponse, error) {
 	d, err := mdc.Device(did)
 	if err != nil {
-		return http.StatusInternalServerError, models.CommandResponse{}, err
+		chk, ok := err.(*types.ErrServiceClient)
+		if ok {
+			return chk.StatusCode, models.CommandResponse{}, chk
+		} else {
+			return http.StatusInternalServerError, models.CommandResponse{}, err
+		}
 	}
 	return http.StatusOK, models.CommandResponseFromDevice(d, constructCommandURL()), err
 }
@@ -143,7 +188,12 @@ func getCommandsByDeviceID(did string) (int, models.CommandResponse, error) {
 func getCommandsByDeviceName(dn string) (int, models.CommandResponse, error) {
 	d, err := mdc.DeviceForName(dn)
 	if err != nil {
-		return http.StatusInternalServerError, models.CommandResponse{}, err
+		chk, ok := err.(*types.ErrServiceClient)
+		if ok {
+			return chk.StatusCode, models.CommandResponse{}, err
+		} else {
+			return http.StatusInternalServerError, models.CommandResponse{}, err
+		}
 	}
 	return http.StatusOK, models.CommandResponseFromDevice(d, constructCommandURL()), err
 }

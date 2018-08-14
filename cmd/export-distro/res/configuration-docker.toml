@@ -7,6 +7,6 @@ MQTTSCert = 'dummy.crt'
 MQTTSKey = 'dummy.key'
 ConsulHost = 'edgex-core-consul'
 ConsulPort = 8500
-ConsulProfilesActive = 'go'
+ConsulProfilesActive = 'docker'
 CheckInterval = '10s'
 MarkPushed = false

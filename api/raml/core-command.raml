@@ -38,6 +38,8 @@ schemas:
         responses: 
             "200": 
                 description: String as returned by the device/sensor via the device service.
+            "400":
+                description: if the request is malformed or unparsable
             "404": 
                 description: if no device exists by the id provided
             "423": 
@@ -52,6 +54,8 @@ schemas:
         responses: 
             "200": 
                 description: String as returned by the device/sensor via the device service.
+            "400":
+                description: if the request is malformed or unparsable
             "404": 
                 description: if no device exists by the id provided
             "423": 
