@@ -239,6 +239,8 @@ parts:
                   "$SNAPCRAFT_PART_INSTALL/config/core-config-seed-go/config/device-virtual/application.properties"
       install -DT "./config/edgex-support-logging;go/configuration.toml" \
                   "$SNAPCRAFT_PART_INSTALL/config/core-config-seed-go/config/edgex-support-logging;go/configuration.toml"
+      install -DT "./config/edgex-support-notifications;go/configuration.toml" \
+                  "$SNAPCRAFT_PART_INSTALL/config/core-config-seed-go/config/edgex-support-notifications;go/configuration.toml"
   config-common:
     plugin: dump
     source: ./snap
@@ -342,6 +344,7 @@ parts:
       install -DT "./cmd/export-distro/export-distro" "$SNAPCRAFT_PART_INSTALL/bin/export-distro"
       install -DT "./cmd/export-client/export-client" "$SNAPCRAFT_PART_INSTALL/bin/export-client"
       install -DT "./cmd/support-logging/support-logging" "$SNAPCRAFT_PART_INSTALL/bin/support-logging"
+      install -DT "./cmd/support-notifications/support-notifications" "$SNAPCRAFT_PART_INSTALL/bin/support-notifications"
 
       # FIXME: settings can't be overridden from the cmd-line!
       # Override 'LogFile' and 'LoggingRemoteURL'
@@ -351,6 +354,7 @@ parts:
       install -d "$SNAPCRAFT_PART_INSTALL/config/export-client/res/"
       install -d "$SNAPCRAFT_PART_INSTALL/config/export-distro/res/"
       install -d "$SNAPCRAFT_PART_INSTALL/config/support-logging/res/"
+      install -d "$SNAPCRAFT_PART_INSTALL/config/support-notifications/res/"
 
       cat "./cmd/core-command/res/configuration.toml" | \
         sed -e s:./logs/edgex-core-command.log:/var/snap/edgexfoundry/common/core-command.log: \
@@ -382,6 +386,11 @@ parts:
             -e s:'http\://localhost\:48061/api/v1/logs':: > \
        "$SNAPCRAFT_PART_INSTALL/config/support-logging/res/configuration.toml"
 
+      cat "./cmd/support-notifications/res/configuration.toml" | \
+        sed -e s:./logs/edgex-support-notifications.log:/var/snap/edgexfoundry/common/support-notifications.log: \
+            -e s:'http\://localhost\:48061/api/v1/logs':: > \
+       "$SNAPCRAFT_PART_INSTALL/config/support-notifications/res/configuration.toml"
+
       # handle license files
       install -DT "./core/command/Attribution.txt" \
               "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/core-command/Attribution.txt"
@@ -401,52 +410,13 @@ parts:
               "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/export-client/LICENSE"
       install -DT "./LICENSE" \
               "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/support-logging/LICENSE"
+      install -DT "./LICENSE" \
+              "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/support-notifications/LICENSE"
     build-packages:
       - zip
       - pkg-config
     stage-packages:
       - libzmq3-dev
-  support-notifications:
-    source: https://github.com/edgexfoundry/support-notifications.git
-    source-branch: california
-    plugin: maven
-    override-build: |
-      snapcraftctl build
-      echo "Installing support-notifications files"
-
-      # The logic following logic is all handled by DockerFile for
-      # the EdgeX support-notifications docker image.
-      install -d "$SNAPCRAFT_PART_INSTALL/jar/support-notifications"
-      mv "$SNAPCRAFT_PART_INSTALL/jar/support-notifications-0.6.0-SNAPSHOT.jar" \
-         "$SNAPCRAFT_PART_INSTALL/jar/support-notifications/support-notifications.jar"
-
-      # FIXME:
-      # copy service license into /usr/share/java/doc, because the
-      # jdk plugin has a bug which prevents any files from /usr/share/doc
-      # to be staged or primed.
-      install -DT "./Attribution.txt" \
-         "$SNAPCRAFT_PART_INSTALL/usr/share/java/doc/support-notifications/Attribution.txt"
-      install -DT "./LICENSE-2.0.txt" \
-         "$SNAPCRAFT_PART_INSTALL/usr/share/java/doc/support-notifications/LICENSE-2.0.txt"
-    prime:
-      - -etc/fonts
-      - -etc/fonts/X11
-      - -usr/lib/jvm/*/ASSEMBLY_EXCEPTION
-      - -usr/lib/jvm/*/THIRD_PARTY_README
-      - -usr/lib/jvm/*/jre/ASSEMBLY_EXCEPTION
-      - -usr/lib/jvm/*/jre/THIRD_PARTY_README
-      - -usr/lib/jvm/*/man
-      - -usr/lib/jvm/*/jre/man
-      - -usr/lib/jvm/*/jre/lib/images
-      - -usr/lib/jvm/*/include
-      - -usr/lib/jvm/*/bin
-      - -usr/lib/jvm/*/lib
-      - -usr/lib/jvm/*/docs
-      - -usr/lib/jvm/*/src.zip
-      - -usr/share/X11
-      - -usr/share/man
-      - -usr/share/fonts
-      - -usr/share/alsa
   support-scheduler:
     source: https://github.com/edgexfoundry/support-scheduler.git
     source-branch: california
