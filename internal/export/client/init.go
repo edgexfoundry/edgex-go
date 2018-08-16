@@ -22,7 +22,7 @@ const (
 )
 
 // Global variables
-var dbc clients.DBClient
+var dbc clients.ExportDBClient
 var logger *zap.Logger
 
 func ConnectToConsul(conf ConfigurationStruct) error {
@@ -55,7 +55,7 @@ func Init(conf ConfigurationStruct, l *zap.Logger) error {
 	var err error
 
 	// Create a database client
-	dbc, err = clients.NewDBClient(clients.DBConfiguration{
+	dbc, err = clients.NewExportDBClient(clients.DBConfiguration{
 		DbType:       clients.GetDatabaseType(conf.DBType),
 		Host:         conf.MongoURL,
 		Port:         conf.MongoPort,

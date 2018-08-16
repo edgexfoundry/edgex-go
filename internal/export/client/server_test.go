@@ -33,7 +33,7 @@ func prepareTest(t *testing.T) *httptest.Server {
 	defer logger.Sync()
 
 	var err error
-	dbc, err = clients.NewDBClient(clients.DBConfiguration{
+	dbc, err = clients.NewExportDBClient(clients.DBConfiguration{
 		DbType: clients.MEMORY,
 	})
 	if err != nil {
