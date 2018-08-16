@@ -3,31 +3,17 @@
 # install all the config files from $SNAP/config/SERVICE/res/configuration.toml 
 # into $SNAP_DATA/config
 mkdir -p ${SNAP_DATA}/config
-for service in security-api-gateway core-command core-config-seed-go core-data core-metadata export-client export-distro support-logging; do
+for service in security-api-gateway core-command config-seed core-data core-metadata export-client export-distro support-logging; do
     if [ ! -f "${SNAP_DATA}/config/${service}/res/configuration.toml" ]; then
         mkdir -p "${SNAP_DATA}/config/${service}/res"
         cp ${SNAP}/config/${service}/res/configuration.toml "${SNAP_DATA}/config/${service}/res/configuration.toml"
     fi
 done
 
-# special handling for additional core-config-seed-go config toml files
-for configType in "edgex-core-command;go" "edgex-core-data;go" "edgex-core-metadata;go" "edgex-support-logging;go"; do
-    if [ ! -f "${SNAP_DATA}/config/core-config-seed-go/config/${configType}/configuration.toml" ]; then
-        mkdir -p "${SNAP_DATA}/config/core-config-seed-go/config/${configType}"
-        cp "${SNAP}/config/core-config-seed-go/config/${configType}/configuration.toml" "${SNAP_DATA}/config/core-config-seed-go/config/${configType}/configuration.toml"
-    fi
-done
-
-# also handle core-config-seed-go/device-virtual/application.properties
-if [ ! -f "${SNAP_DATA}/config/core-config-seed-go/config/device-virtual/application.properties" ]; then
-    mkdir -p "${SNAP_DATA}/config/core-config-seed-go/config/device-virtual"
-    cp "${SNAP}/config/core-config-seed-go/config/device-virtual/application.properties" "${SNAP_DATA}/config/core-config-seed-go/config/device-virtual/application.properties"
-fi
-
-# lastly handle the banner.txt for core-config-seed-go
-if [ ! -f "${SNAP_DATA}/config/core-config-seed-go/res/banner.txt" ]; then
-    mkdir -p "${SNAP_DATA}/config/core-config-seed-go/res"
-    cp "${SNAP}/config/core-config-seed-go/res/banner.txt" "${SNAP_DATA}/config/core-config-seed-go/res/banner.txt"
+# also handle config-seed/device-virtual/application.properties
+if [ ! -f "${SNAP_DATA}/config/config-seed/res/properties/device-virtual/application.properties" ]; then
+    mkdir -p "${SNAP_DATA}/config/config-seed/res/properties/device-virtual"
+    cp "${SNAP}/config/config-seed/res/properties/device-virtual/application.properties" "${SNAP_DATA}/config/config-seed/res/properties/device-virtual/application.properties"
 fi
 
 # for the pki setup files from security services, we replace the password at install time with a psuedorandomly generated password from openssl
