@@ -1,5 +1,5 @@
 name: edgexfoundry
-version: '0.6.0'
+version: '0.6.1~pre1'
 version-script: |
     echo $SNAPCRAFT_PROJECT_VERSION-$(date +%Y%m%d)+$(git rev-parse --short HEAD)
 summary: Provides a full set of Edgex Foundry core microservices.
