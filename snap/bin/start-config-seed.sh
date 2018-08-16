@@ -21,13 +21,7 @@ done
 #
 # TODO: this success check could be improved...
 if [ "$CONSUL_RUNNING" != "[]" ] ; then
-    cd "$SNAP"/config/core-config-seed-go
+    cd "$SNAP"/config/config-seed
 
-    "$SNAP"/bin/core-config-seed-go -consul &
+    "$SNAP"/bin/config-seed -consul &
 fi
-
-    
-
-
-
-
