@@ -10,7 +10,7 @@ package main
 import (
 	"testing"
 
-	"github.com/edgexfoundry/edgex-go/export/distro"
+	"github.com/edgexfoundry/edgex-go/internal/export/distro"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 )
 

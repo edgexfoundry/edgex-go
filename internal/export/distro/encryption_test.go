@@ -12,7 +12,7 @@ import (
 	"crypto/sha1"
 	"encoding/base64"
 
-	"github.com/edgexfoundry/edgex-go/export"
+	"github.com/edgexfoundry/edgex-go/internal/export"
 
 	"testing"
 )

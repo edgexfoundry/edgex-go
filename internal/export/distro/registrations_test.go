@@ -7,7 +7,7 @@
 package distro
 
 import (
-	"github.com/edgexfoundry/edgex-go/export"
+	"github.com/edgexfoundry/edgex-go/internal/export"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 	"go.uber.org/zap"
 
@@ -194,7 +194,7 @@ func TestUpdateRunningRegistrations(t *testing.T) {
 }
 
 func BenchmarkProcessEvent(b *testing.B) {
-	var Dummy *dummyStruct = &dummyStruct{}
+	var Dummy = &dummyStruct{}
 	logger = zap.NewNop()
 	defer logger.Sync()
 

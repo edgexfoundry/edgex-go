@@ -17,9 +17,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/edgexfoundry/edgex-go/export"
-	"github.com/edgexfoundry/edgex-go/export/client/clients"
+	"github.com/edgexfoundry/edgex-go/internal/export"
 	"go.uber.org/zap"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 )
 
 const regJson = `{"origin":1471806386919,"name":"OSIClient","addressable":{"origin":1471806386919,"name":"OSIMQTTBroker","protocol":"TCP","address":"m10.cloudmqtt.com","port":15421,"publisher":"EdgeXExportPublisher","user":"hukfgtoh","password":"uP6hJLYW6Ji4","topic":"EdgeXDataTopic"},"format":"JSON","filter":{"deviceIdentifiers":["livingroomthermosat", "hallwaythermostat"],"valueDescriptorIdentifiers":["temperature", "humidity"]},"encryption":{"encryptionAlgorithm":"AES","encryptionKey":"123","initializingVector":"123"},"compression":"GZIP","enable":true, "destination": "REST_ENDPOINT"}`
@@ -33,8 +33,8 @@ func prepareTest(t *testing.T) *httptest.Server {
 	defer logger.Sync()
 
 	var err error
-	dbc, err = clients.NewExportDBClient(clients.DBConfiguration{
-		DbType: clients.MEMORY,
+	dbc, err = NewDBClient(db.Configuration{
+		DbType: db.MemoryDB,
 	})
 	if err != nil {
 		t.Errorf("Error getting a memory client: %v", err)

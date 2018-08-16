@@ -13,33 +13,34 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
-package clients
+package memory
 
 import (
 	"time"
 
-	"github.com/edgexfoundry/edgex-go/export"
 	"gopkg.in/mgo.v2/bson"
+	"github.com/edgexfoundry/edgex-go/internal/export"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 )
 
-type memDB struct {
+type ExportMemoryDB struct {
 	regs []export.Registration
 }
 
-func newMemoryClient() *memDB {
-	return &memDB{
+func NewExportMemoryClient() *ExportMemoryDB {
+	return &ExportMemoryDB{
 		regs: make([]export.Registration, 0),
 	}
 }
 
-func (mc *memDB) Registrations() ([]export.Registration, error) {
+func (mc *ExportMemoryDB) Registrations() ([]export.Registration, error) {
 	return mc.regs, nil
 }
 
-func (mc *memDB) CloseSession() {
+func (mc *ExportMemoryDB) CloseSession() {
 }
 
-func (mc *memDB) AddRegistration(reg *export.Registration) (bson.ObjectId, error) {
+func (mc *ExportMemoryDB) AddRegistration(reg *export.Registration) (bson.ObjectId, error) {
 	ticks := time.Now().Unix()
 	reg.Created = ticks
 	reg.Modified = ticks
@@ -50,52 +51,52 @@ func (mc *memDB) AddRegistration(reg *export.Registration) (bson.ObjectId, error
 	return reg.ID, nil
 }
 
-func (mc *memDB) UpdateRegistration(reg export.Registration) error {
+func (mc *ExportMemoryDB) UpdateRegistration(reg export.Registration) error {
 	for i, r := range mc.regs {
 		if r.ID == reg.ID {
 			mc.regs[i] = reg
 			return nil
 		}
 	}
-	return ErrNotFound
+	return db.ErrNotFound
 }
 
-func (mc *memDB) RegistrationById(id string) (export.Registration, error) {
+func (mc *ExportMemoryDB) RegistrationById(id string) (export.Registration, error) {
 	for _, reg := range mc.regs {
 		if reg.ID.Hex() == id {
 			return reg, nil
 		}
 	}
 
-	return export.Registration{}, ErrNotFound
+	return export.Registration{}, db.ErrNotFound
 }
 
-func (mc *memDB) RegistrationByName(name string) (export.Registration, error) {
+func (mc *ExportMemoryDB) RegistrationByName(name string) (export.Registration, error) {
 	for _, reg := range mc.regs {
 		if reg.Name == name {
 			return reg, nil
 		}
 	}
 
-	return export.Registration{}, ErrNotFound
+	return export.Registration{}, db.ErrNotFound
 }
 
-func (mc *memDB) DeleteRegistrationById(id string) error {
+func (mc *ExportMemoryDB) DeleteRegistrationById(id string) error {
 	for i, reg := range mc.regs {
 		if reg.ID.Hex() == id {
 			mc.regs = append(mc.regs[:i], mc.regs[i+1:]...)
 			return nil
 		}
 	}
-	return ErrNotFound
+	return db.ErrNotFound
 }
 
-func (mc *memDB) DeleteRegistrationByName(name string) error {
+func (mc *ExportMemoryDB) DeleteRegistrationByName(name string) error {
 	for i, reg := range mc.regs {
 		if reg.Name == name {
 			mc.regs = append(mc.regs[:i], mc.regs[i+1:]...)
 			return nil
 		}
 	}
-	return ErrNotFound
+	return db.ErrNotFound
 }

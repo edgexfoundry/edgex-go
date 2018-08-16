@@ -4,15 +4,16 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-package clients
+package memory
 
 import (
 	"testing"
 
-	"github.com/edgexfoundry/edgex-go/export"
+	"github.com/edgexfoundry/edgex-go/internal/export"
+	"github.com/edgexfoundry/edgex-go/internal/export/interfaces"
 )
 
-func testDB(t *testing.T, db DBClient) {
+func testDB(t *testing.T, db interfaces.DBClient) {
 	regs, err := db.Registrations()
 	if err != nil {
 		t.Fatalf("Error getting registrations %v", err)
@@ -101,7 +102,7 @@ func testDB(t *testing.T, db DBClient) {
 
 }
 
-func TestMemoryDB(t *testing.T) {
-	memory := newMemoryClient()
+func TestExportMemoryDB(t *testing.T) {
+	memory := NewExportMemoryClient()
 	testDB(t, memory)
 }

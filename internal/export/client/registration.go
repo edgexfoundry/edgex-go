@@ -15,10 +15,10 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/edgexfoundry/edgex-go/export"
-	"github.com/edgexfoundry/edgex-go/export/client/clients"
+	"github.com/edgexfoundry/edgex-go/internal/export"
 	"github.com/go-zoo/bone"
 	"go.uber.org/zap"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 )
 
 const (
@@ -129,7 +129,7 @@ func addReg(w http.ResponseWriter, r *http.Request) {
 		logger.Error("Name already taken: " + reg.Name)
 		http.Error(w, "Name already taken", http.StatusBadRequest)
 		return
-	} else if err != clients.ErrNotFound {
+	} else if err != db.ErrNotFound {
 		logger.Error("Failed to query add registration", zap.Error(err))
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -177,7 +177,7 @@ func updateReg(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		logger.Error("Failed to query update registration", zap.Error(err))
-		if err == clients.ErrNotFound {
+		if err == db.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
 		} else {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)

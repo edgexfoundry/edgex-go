@@ -12,7 +12,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/edgexfoundry/edgex-go/export"
+	"github.com/edgexfoundry/edgex-go/internal/export"
 
 	"go.uber.org/zap"
 )
@@ -39,7 +39,7 @@ func getRegistrationsURL(url string) []export.Registration {
 	}
 	defer response.Body.Close()
 
-	registrations := []export.Registration{}
+	var registrations []export.Registration
 	if err := json.NewDecoder(response.Body).Decode(&registrations); err != nil {
 		logger.Warn("Could not parse json", zap.Error(err))
 		return nil

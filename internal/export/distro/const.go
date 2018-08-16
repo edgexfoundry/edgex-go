@@ -22,4 +22,4 @@ type ConfigurationStruct struct {
 	MarkPushed           bool
 }
 
-var configuration ConfigurationStruct = ConfigurationStruct{} // Needs to be initialized before used
+var configuration = ConfigurationStruct{} // Needs to be initialized before used

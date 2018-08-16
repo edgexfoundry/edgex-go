@@ -11,49 +11,12 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
-package clients
+package interfaces
 
 import (
-	"errors"
-
-	"github.com/edgexfoundry/edgex-go/export"
+	"github.com/edgexfoundry/edgex-go/internal/export"
 	"gopkg.in/mgo.v2/bson"
 )
-
-type DatabaseType int8 // Database type enum
-const (
-	INVALID DatabaseType = iota
-	MONGO
-	MEMORY
-)
-
-const (
-	invalidStr = "invalid"
-	mongoStr   = "mongodb"
-	memoryStr  = "memorydb"
-)
-
-// Add in order declared in Struct for string value
-var databaseArr = [...]string{invalidStr, mongoStr, memoryStr}
-
-func (db DatabaseType) String() string {
-	if db >= INVALID && db <= MEMORY {
-		return databaseArr[db]
-	}
-	return invalidStr
-}
-
-// Return enum value of the Database Type
-func GetDatabaseType(db string) DatabaseType {
-	switch db {
-	case mongoStr:
-		return MONGO
-	case memoryStr:
-		return MEMORY
-	default:
-		return INVALID
-	}
-}
 
 type DBClient interface {
 	CloseSession()
@@ -93,30 +56,3 @@ type DBClient interface {
 	DeleteRegistrationByName(name string) error
 }
 
-type DBConfiguration struct {
-	DbType       DatabaseType
-	Host         string
-	Port         int
-	Timeout      int
-	DatabaseName string
-	Username     string
-	Password     string
-}
-
-var ErrNotFound error = errors.New("Item not found")
-var ErrUnsupportedDatabase error = errors.New("Unsuppored database type")
-var ErrInvalidObjectId error = errors.New("Invalid object ID")
-var ErrNotUnique error = errors.New("Resource already exists")
-
-// Return the dbClient interface
-func NewDBClient(config DBConfiguration) (DBClient, error) {
-	switch config.DbType {
-	case MONGO:
-		// Create the mongo client
-		return newMongoClient(config)
-	case MEMORY:
-		return newMemoryClient(), nil
-	default:
-		return nil, ErrUnsupportedDatabase
-	}
-}

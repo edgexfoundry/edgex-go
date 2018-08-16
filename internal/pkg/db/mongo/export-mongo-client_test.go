@@ -10,7 +10,7 @@
 // the tests with a command like:
 // go test -tags mongoRunning
 
-package clients
+package mongo
 
 import (
 	"testing"
@@ -28,7 +28,7 @@ func TestMongoDB(t *testing.T) {
 		Timeout:      1000,
 	}
 
-	mongo, err := newMongoClient(config)
+	mongo, err := NewExportMongoClient(config)
 	if err != nil {
 		t.Fatalf("Could not connect with mongodb: %v", err)
 	}

@@ -18,7 +18,7 @@ import (
 	"net/http"
 	"time"
 
-	export "github.com/edgexfoundry/edgex-go/export"
+	"github.com/edgexfoundry/edgex-go/internal/export"
 
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 

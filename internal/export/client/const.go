@@ -25,4 +25,4 @@ type ConfigurationStruct struct {
 	DistroPort           int
 }
 
-var configuration ConfigurationStruct = ConfigurationStruct{} // Needs to be initialized before used
+var configuration = ConfigurationStruct{} // Needs to be initialized before used
