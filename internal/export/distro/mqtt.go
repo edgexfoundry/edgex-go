@@ -26,8 +26,7 @@ type mqttSender struct {
 }
 
 // NewMqttSender - create new mqtt sender
-func NewMqttSender(addr models.Addressable) interfaces.Sender {
-
+func NewMqttSender(addr models.Addressable, cert string, key string) interfaces.Sender {
 	protocol := strings.ToLower(addr.Protocol)
 
 	opts := MQTT.NewClientOptions()
@@ -42,7 +41,7 @@ func NewMqttSender(addr models.Addressable) interfaces.Sender {
 		protocol == "ssl" ||
 		protocol == "tls" {
 
-		cert, err := tls.LoadX509KeyPair(configuration.MQTTSCert, configuration.MQTTSKey)
+		cert, err := tls.LoadX509KeyPair(cert, key)
 
 		if err != nil {
 			logger.Error("Failed loading x509 data")

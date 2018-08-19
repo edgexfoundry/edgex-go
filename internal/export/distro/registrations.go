@@ -24,6 +24,11 @@ import (
 	"go.uber.org/zap"
 )
 
+const (
+	awsMQTTPort         int    = 8883
+	awsThingUpdateTopic string = "$aws/things/%s/shadow/update"
+)
+
 var registrationChanges chan export.NotifyUpdate = make(chan export.NotifyUpdate, 2)
 
 // RegistrationInfo - registration info
@@ -98,9 +103,13 @@ func (reg *registrationInfo) update(newReg export.Registration) bool {
 	reg.sender = nil
 	switch newReg.Destination {
 	case export.DestMQTT, export.DestAzureMQTT:
-		reg.sender = NewMqttSender(newReg.Addressable)
+		reg.sender = NewMqttSender(newReg.Addressable, configuration.MQTTSCert, configuration.MQTTSKey)
 	case export.DestAWSMQTT:
-		reg.sender = NewAWSIoTSender(newReg.Addressable)
+		newReg.Addressable.Protocol = "tls"
+		newReg.Addressable.Path = ""
+		newReg.Addressable.Topic = fmt.Sprintf(awsThingUpdateTopic, newReg.Addressable.Topic)
+		newReg.Addressable.Port = awsMQTTPort
+		reg.sender = NewMqttSender(newReg.Addressable, configuration.AWSCert, configuration.AWSKey)
 	case export.DestZMQ:
 		logger.Info("Destination ZMQ is not supported")
 	case export.DestIotCoreMQTT:
