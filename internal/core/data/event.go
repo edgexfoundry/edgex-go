@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2017 Dell Inc.
+ * Copyright 2018 Dell Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -11,498 +11,175 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
-package data
+package clients
 
 import (
 	"fmt"
-	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
-	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
-	"github.com/edgexfoundry/edgex-go/pkg/models"
-	"github.com/gorilla/mux"
-	"net/http"
-	"net/url"
 	"strconv"
 	"time"
+
+	"github.com/edgexfoundry/edgex-go/export"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+	"gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
 )
 
-func count() (int, error) {
-	count, err := dbClient.EventCount()
-	if err != nil {
-		return -1, err
-	}
-	return count, nil
+const (
+	EXPORT_COLLECTION = "exportConfiguration"
+)
+
+/*
+Export client client
+Has functions for interacting with the export client mongo database
+*/
+
+type MongoClient struct {
+	Session  *mgo.Session  // Mongo database session
+	Database *mgo.Database // Mongo database
 }
 
-func countByDevice(device string) (int, error) {
-	err := newCheckDevice(device)
+// Return a pointer to the MongoClient
+func newMongoClient(config DBConfiguration) (*MongoClient, error) {
+	// Create the dial info for the Mongo session
+	connectionString := config.Host + ":" + strconv.Itoa(config.Port)
+	mongoDBDialInfo := &mgo.DialInfo{
+		Addrs:    []string{connectionString},
+		Timeout:  time.Duration(config.Timeout) * time.Millisecond,
+		Database: config.DatabaseName,
+		Username: config.Username,
+		Password: config.Password,
+	}
+	session, err := mgo.DialWithInfo(mongoDBDialInfo)
 	if err != nil {
-		return -1, err
+		return nil, fmt.Errorf("Error dialing the mongo server: " + err.Error())
 	}
 
-	count, err := dbClient.EventCountByDeviceId(device)
-	if err != nil {
-		return -1, fmt.Errorf("error obtaining count for device %s: %v", device, err)
-	}
-	return count, err
+	mongoClient := &MongoClient{Session: session, Database: session.DB(config.DatabaseName)}
+	return mongoClient, nil
 }
 
-//TODO: Eliminate checkDevice below and make this checkDevice
-func newCheckDevice(device string) error {
-	if Configuration.MetaDataCheck {
-		_, err := mdc.CheckForDevice(device)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
+// Get a copy of the session
+func (mc *MongoClient) GetSessionCopy() *mgo.Session {
+	return mc.Session.Copy()
 }
 
-//TODO: Get rid of this method
-// Check metadata if the device exists
-func checkDevice(device string, w http.ResponseWriter) bool {
-	if Configuration.MetaDataCheck {
-		_, err := mdc.CheckForDevice(device)
-		if err != nil {
-			LoggingClient.Error(fmt.Sprintf("error checking device %s %v", device, err))
-			switch err := err.(type) {
-			case types.ErrNotFound:
-				http.Error(w, err.Error(), http.StatusNotFound)
-				return false
-			default: //return an error on everything else.
-				http.Error(w, err.Error(), http.StatusServiceUnavailable)
-				return false
-			}
-		}
-	}
-
-	return true
+func (mc *MongoClient) CloseSession() {
+	mc.Session.Close()
 }
 
-func deleteByAge(age int64) (int, error) {
-	events, err := dbClient.EventsOlderThanAge(age)
-	if err != nil {
-		return -1, err
-	}
+// ****************************** REGISTRATIONS ********************************
 
-	// Delete all the events
-	count := len(events)
-	for _, event := range events {
-		if err = deleteEvent(event); err != nil {
-			return -1, err
-		}
-	}
-	return count, nil
+// Return all the registrations
+// UnexpectedError - failed to retrieve registrations from the database
+func (mc *MongoClient) Registrations() ([]export.Registration, error) {
+	return mc.getRegistrations(bson.M{})
 }
 
-func getEvents(limit int) ([]models.Event, error) {
-	var err error
-	var events []models.Event
+// Add a new registration
+// UnexpectedError - failed to add to database
+func (mc *MongoClient) AddRegistration(reg *export.Registration) (bson.ObjectId, error) {
+	s := mc.GetSessionCopy()
+	defer s.Close()
 
-	if limit <= 0 {
-		events, err = dbClient.Events()
-	} else {
-		events, err = dbClient.EventsWithLimit(limit)
-	}
+	reg.Created = db.MakeTimestamp()
+	reg.ID = bson.NewObjectId()
 
+	// Add the registration
+	err := s.DB(mc.Database.Name).C(EXPORT_COLLECTION).Insert(reg)
 	if err != nil {
-		return nil, err
+		return reg.ID, err
 	}
-	return events, err
+
+	return reg.ID, err
 }
 
-func addNew(e models.Event) (string, error) {
-	retVal := "unsaved"
-	err := newCheckDevice(e.Device)
-	if err != nil {
-		return "", err
+// Update a registration
+// UnexpectedError - problem updating in database
+// NotFound - no registration with the ID was found
+func (mc *MongoClient) UpdateRegistration(reg export.Registration) error {
+	s := mc.GetSessionCopy()
+	defer s.Close()
+
+	reg.Modified = db.MakeTimestamp()
+
+	err := s.DB(mc.Database.Name).C(EXPORT_COLLECTION).UpdateId(reg.ID, reg)
+	if err == mgo.ErrNotFound {
+		return ErrNotFound
 	}
 
-	if Configuration.ValidateCheck {
-		LoggingClient.Debug("Validation enabled, parsing events")
-		for reading := range e.Readings {
-			// Check value descriptor
-			name := e.Readings[reading].Name
-			vd, err := dbClient.ValueDescriptorByName(name)
-			if err != nil {
-				if err == db.ErrNotFound {
-					return "", errors.NewErrValueDescriptorNotFound(name)
-				} else {
-					return "", err
-				}
-			}
-			valid, err := isValidValueDescriptor(vd, e.Readings[reading])
-			if !valid {
-				return "", errors.NewErrValueDescriptorInvalid(vd.Name)
-			}
-		}
-	}
-
-	// Add the event and readings to the database
-	if Configuration.PersistData {
-		id, err := dbClient.AddEvent(&e)
-		if err != nil {
-			return "", err
-		}
-		retVal = id.Hex() //Coupling to Mongo in the model
-	}
-
-	putEventOnQueue(e)                              // Push the aux struct to export service (It has the actual readings)
-	chEvents <- DeviceLastReported{e.Device}        // update last reported connected (device)
-	chEvents <- DeviceServiceLastReported{e.Device} // update last reported connected (device service)
-
-	return retVal, nil
+	return err
 }
 
-func updateEvent(from models.Event) error {
-	to, err := dbClient.EventById(from.ID.Hex())
-	if err != nil {
-		return errors.NewErrEventNotFound(from.ID.Hex())
+// Get a registration by ID
+// UnexpectedError - problem getting in database
+// NotFound - no registration with the ID was found
+func (mc *MongoClient) RegistrationById(id string) (export.Registration, error) {
+	if !bson.IsObjectIdHex(id) {
+		return export.Registration{}, ErrInvalidObjectId
 	}
-
-	// Update the fields
-	if len(from.Device) > 0 {
-		// Check device
-		err = newCheckDevice(from.Device)
-		if err != nil {
-			return err
-		}
-
-		// Set the device name on the event
-		to.Device = from.Device
-	}
-	if from.Pushed != 0 {
-		to.Pushed = from.Pushed
-	}
-	if from.Origin != 0 {
-		to.Origin = from.Origin
-	}
-	return dbClient.UpdateEvent(to)
+	return mc.getRegistration(bson.M{"_id": bson.ObjectIdHex(id)})
 }
 
-func deleteEventById(id string) error {
-	e, err := getById(id)
-	if err != nil {
-		return err
-	}
-
-	err = deleteEvent(e)
-	if err != nil {
-		return err
-	}
-	return nil
+// Get a registration by name
+// UnexpectedError - problem getting in database
+// NotFound - no registration with the name was found
+func (mc *MongoClient) RegistrationByName(name string) (export.Registration, error) {
+	return mc.getRegistration(bson.M{"name": name})
 }
 
-// Delete the event and readings
-func deleteEvent(e models.Event) error {
-	for _, reading := range e.Readings {
-		if err := dbClient.DeleteReadingById(reading.Id.Hex()); err != nil {
-			return err
-		}
+// Delete a registration by ID
+// UnexpectedError - problem getting in database
+// NotFound - no registration with the ID was found
+func (mc *MongoClient) DeleteRegistrationById(id string) error {
+	if !bson.IsObjectIdHex(id) {
+		return ErrInvalidObjectId
 	}
-	if err := dbClient.DeleteEventById(e.ID.Hex()); err != nil {
-		return err
-	}
-
-	return nil
+	return mc.deleteRegistration(bson.M{"_id": bson.ObjectIdHex(id)})
 }
 
-func deleteAll() error {
-	return dbClient.ScrubAllEvents()
+// Delete a registration by name
+// UnexpectedError - problem getting in database
+// NotFound - no registration with the ID was found
+func (mc *MongoClient) DeleteRegistrationByName(name string) error {
+	return mc.deleteRegistration(bson.M{"name": name})
 }
 
-func getById(id string) (models.Event, error) {
-	e, err := dbClient.EventById(id)
+// Get registrations for the passed query
+func (mc *MongoClient) getRegistrations(q bson.M) ([]export.Registration, error) {
+	s := mc.GetSessionCopy()
+	defer s.Close()
+
+	regs := []export.Registration{}
+	err := s.DB(mc.Database.Name).C(EXPORT_COLLECTION).Find(q).All(&regs)
 	if err != nil {
-		if err == db.ErrNotFound {
-			err = errors.NewErrEventNotFound(id)
-		}
-		return models.Event{}, err
+		return regs, err
 	}
-	return e, nil
+
+	return regs, nil
 }
 
-func updatePushDate(id string) error {
-	e, err := getById(id)
-	if err != nil {
-		return err
+// Get a single registration for the passed query
+func (mc *MongoClient) getRegistration(q bson.M) (export.Registration, error) {
+	s := mc.GetSessionCopy()
+	defer s.Close()
+
+	var reg export.Registration
+	err := s.DB(mc.Database.Name).C(EXPORT_COLLECTION).Find(q).One(&reg)
+	if err == mgo.ErrNotFound {
+		return reg, ErrNotFound
 	}
 
-	e.Pushed = db.MakeTimestamp()
-	err = updateEvent(e)
-	if err != nil {
-		return err
-	}
-	return nil
+	return reg, err
 }
 
-// Get event by device id
-// Returns the events for the given device sorted by creation date and limited by 'limit'
-// {deviceId} - the device that the events are for
-// {limit} - the limit of events
-// api/v1/event/device/{deviceId}/{limit}
-func getEventByDeviceHandler(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
+// Delete from the collection based on ID
+func (mc *MongoClient) deleteRegistration(q bson.M) error {
+	s := mc.GetSessionCopy()
+	defer s.Close()
 
-	vars := mux.Vars(r)
-	limit := vars["limit"]
-	deviceId, err := url.QueryUnescape(vars["deviceId"])
-
-	// Problems unescaping URL
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		LoggingClient.Error("Error unescaping URL: " + err.Error())
-		return
+	err := s.DB(mc.Database.Name).C(EXPORT_COLLECTION).Remove(q)
+	if err == mgo.ErrNotFound {
+		return ErrNotFound
 	}
-
-	// Convert limit to int
-	limitNum, err := strconv.Atoi(limit)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		LoggingClient.Error("Error converting to integer: " + err.Error())
-		return
-	}
-
-	// Check device
-	if checkDevice(deviceId, w) == false {
-		return
-	}
-
-	switch r.Method {
-	case http.MethodGet:
-		if limitNum > Configuration.ReadMaxLimit {
-			http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
-			LoggingClient.Error(maxExceededString)
-			return
-		}
-
-		eventList, err := dbClient.EventsForDeviceLimit(deviceId, limitNum)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			LoggingClient.Error(err.Error())
-			return
-		}
-
-		encode(eventList, w)
-	}
-}
-
-// Delete all of the events associated with a device
-// api/v1/event/device/{deviceId}
-// 404 - device ID not found in metadata
-// 503 - service unavailable
-func deleteByDeviceIdHandler(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
-
-	vars := mux.Vars(r)
-	deviceId, err := url.QueryUnescape(vars["deviceId"])
-	// Problems unescaping URL
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		LoggingClient.Error("Error unescaping the URL: " + err.Error())
-		return
-	}
-
-	// Check device
-	if checkDevice(deviceId, w) == false {
-		return
-	}
-
-	switch r.Method {
-	case http.MethodDelete:
-		// Get the events by the device name
-		events, err := dbClient.EventsForDevice(deviceId)
-		if err != nil {
-			LoggingClient.Error(err.Error())
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		LoggingClient.Info("Deleting the events for device: " + deviceId)
-
-		// Delete the events
-		count := len(events)
-		for _, event := range events {
-			if err = deleteEvent(event); err != nil {
-				LoggingClient.Error(err.Error())
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(strconv.Itoa(count)))
-	}
-}
-
-// Get events by creation time
-// {start} - start time, {end} - end time, {limit} - max number of results
-// Sort the events by creation date
-// 413 - number of results exceeds limit
-// 503 - service unavailable
-// api/v1/event/{start}/{end}/{limit}
-func eventByCreationTimeHandler(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
-
-	vars := mux.Vars(r)
-	start, err := strconv.ParseInt(vars["start"], 10, 64)
-	// Problems converting start time
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		LoggingClient.Error("Problem converting start time: " + err.Error())
-		return
-	}
-
-	end, err := strconv.ParseInt(vars["end"], 10, 64)
-	// Problems converting end time
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		LoggingClient.Error("Problem converting end time: " + err.Error())
-		return
-	}
-
-	limit, err := strconv.Atoi(vars["limit"])
-	// Problems converting limit
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		LoggingClient.Error("Problem converting limit: " + strconv.Itoa(limit))
-		return
-	}
-
-	switch r.Method {
-	case http.MethodGet:
-		if limit > Configuration.ReadMaxLimit {
-			http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
-			LoggingClient.Error(maxExceededString)
-			return
-		}
-
-		e, err := dbClient.EventsByCreationTime(start, end, limit)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			LoggingClient.Error(err.Error())
-			return
-		}
-
-		encode(e, w)
-	}
-}
-
-// Get the readings for a device and filter them based on the value descriptor
-// Only those readings whos name is the value descriptor should get through
-// /event/device/{deviceId}/valuedescriptor/{valueDescriptor}/{limit}
-// 413 - number exceeds limit
-func readingByDeviceFilteredValueDescriptor(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
-
-	vars := mux.Vars(r)
-	limit := vars["limit"]
-
-	valueDescriptor, err := url.QueryUnescape(vars["valueDescriptor"])
-	// Problems unescaping URL
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		LoggingClient.Error("Problem unescaping value descriptor: " + err.Error())
-		return
-	}
-
-	deviceId, err := url.QueryUnescape(vars["deviceId"])
-	// Problems unescaping URL
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		LoggingClient.Error("Problem unescaping device ID: " + err.Error())
-		return
-	}
-
-	limitNum, err := strconv.Atoi(limit)
-	// Problem converting the limit
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		LoggingClient.Error("Problem converting limit to integer: " + err.Error())
-		return
-	}
-	switch r.Method {
-	case http.MethodGet:
-		if limitNum > Configuration.ReadMaxLimit {
-			http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
-			LoggingClient.Error(maxExceededString)
-			return
-		}
-
-		// Check device
-		if checkDevice(deviceId, w) == false {
-			return
-		}
-
-		// Get all the events for the device
-		e, err := dbClient.EventsForDevice(deviceId)
-		if err != nil {
-			LoggingClient.Error(err.Error())
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		// Only pick the readings who match the value descriptor
-		readings := []models.Reading{}
-		count := 0 // Make sure we stay below the limit
-		for _, event := range e {
-			if count >= limitNum {
-				break
-			}
-			for _, reading := range event.Readings {
-				if count >= limitNum {
-					break
-				}
-				if reading.Name == valueDescriptor {
-					readings = append(readings, reading)
-					count += 1
-				}
-			}
-		}
-
-		encode(readings, w)
-	}
-}
-
-// Scrub all the events that have been pushed
-// Also remove the readings associated with the events
-// api/v1/event/scrub
-func scrubHandler(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
-
-	switch r.Method {
-	case http.MethodDelete:
-		LoggingClient.Info("Scrubbing events.  Deleting all events that have been pushed")
-
-		// Get the events
-		events, err := dbClient.EventsPushed()
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			LoggingClient.Error(err.Error())
-			return
-		}
-
-		// Delete all the events
-		count := len(events)
-		for _, event := range events {
-			if err = deleteEvent(event); err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				LoggingClient.Error(err.Error())
-				return
-			}
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(strconv.Itoa(count)))
-	}
-}
-
-// Put event on the message queue to be processed by the rules engine
-func putEventOnQueue(e models.Event) {
-	LoggingClient.Info("Putting event on message queue", "")
-	//	Have multiple implementations (start with ZeroMQ)
-	err := ep.SendEventMessage(e)
-	if err != nil {
-		LoggingClient.Error("Unable to send message for event: " + e.String())
-	}
+	return err
 }

@@ -182,7 +182,7 @@ func eventByAgeHandler(w http.ResponseWriter, r *http.Request) {
 Handler for the event API
 Status code 404 - event not found
 Status code 413 - number of events exceeds limit
-Status code 503 - unanticipated issues
+Status code 500 - unanticipated issues
 api/v1/event
 */
 func eventHandler(w http.ResponseWriter, r *http.Request) {
@@ -193,7 +193,7 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	// Get all events
 	case http.MethodGet:
-		events, err := getEvents(configuration.ReadMaxLimit)
+		events, err := getEvents(Configuration.ReadMaxLimit)
 		if err != nil {
 			LoggingClient.Error(err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -220,8 +220,9 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 		newId, err := addNew(e)
 		if err != nil {
 			switch t := err.(type) {
-			case errors.ErrValueDescriptorNotFound:
-			case errors.ErrValueDescriptorInvalid:
+			case *errors.ErrValueDescriptorNotFound:
+				http.Error(w, t.Error(), http.StatusBadRequest)
+			case *errors.ErrValueDescriptorInvalid:
 				http.Error(w, t.Error(), http.StatusBadRequest)
 			default:
 				http.Error(w, t.Error(), http.StatusInternalServerError)
@@ -247,8 +248,62 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// Check if the event exists
-		to, err := dbClient.EventById(from.ID.Hex())
+		LoggingClient.Info("Updating event: " + from.ID.Hex())
+		err = updateEvent(from)
+		if err != nil {
+			switch t := err.(type) {
+			case *errors.ErrEventNotFound:
+				http.Error(w, t.Error(), http.StatusNotFound)
+			default:
+				http.Error(w, t.Error(), http.StatusInternalServerError)
+			}
+			LoggingClient.Error(err.Error())
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("true"))
+	}
+}
+
+// Undocumented feature to remove all readings and events from the database
+// This should primarily be used for debugging purposes
+func scrubAllHandler(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+
+	switch r.Method {
+	case http.MethodDelete:
+		LoggingClient.Info("Deleting all events from database")
+
+		err := deleteAll()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			LoggingClient.Error(err.Error())
+			return
+		}
+
+		encode(true, w)
+	}
+}
+
+//GET
+//Return the event specified by the event ID
+///api/v1/event/{id}
+//id - ID of the event to return
+func getEventByIdHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Body != nil {
+		defer r.Body.Close()
+	}
+
+	switch r.Method {
+	case http.MethodGet:
+		// URL parameters
+		vars := mux.Vars(r)
+		id := vars["id"]
+
+		// Get the event
+		e, err := dbClient.EventById(id)
 		if err != nil {
 			if err == db.ErrNotFound {
 				http.Error(w, "Event not found", http.StatusNotFound)
@@ -259,33 +314,7 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		LoggingClient.Info("Updating event: " + from.ID.Hex())
-
-		// Update the fields
-		if len(from.Device) > 0 {
-			// Check device
-			if checkDevice(from.Device, w) == false {
-				return
-			}
-
-			// Set the device name on the event
-			to.Device = from.Device
-		}
-		if from.Pushed != 0 {
-			to.Pushed = from.Pushed
-		}
-		if from.Origin != 0 {
-			to.Origin = from.Origin
-		}
-
-		// Update
-		if err = dbClient.UpdateEvent(to); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			LoggingClient.Error(err.Error())
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("true"))
+		// Return the result
+		encode(e, w)
 	}
 }

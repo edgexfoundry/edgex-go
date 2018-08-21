@@ -15,6 +15,18 @@ package errors
 
 import "fmt"
 
+type ErrEventNotFound struct {
+	id string
+}
+
+func (e ErrEventNotFound) Error() string {
+	return fmt.Sprintf("no event found for id %s", e.id)
+}
+
+func NewErrEventNotFound(id string) error {
+	return &ErrEventNotFound{id: id}
+}
+
 type ErrValueDescriptorInvalid struct {
 	name string
 }

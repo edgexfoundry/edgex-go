@@ -65,5 +65,3 @@ type ConfigurationStruct struct {
 	ActiveMQBroker             string
 	ZeroMQAddressPort          string
 }
-
-var configuration ConfigurationStruct = ConfigurationStruct{} //  Needs to be initialized before used

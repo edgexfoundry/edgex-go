@@ -18,7 +18,7 @@ import "time"
 // Update when the device was last reported connected
 func updateDeviceLastReportedConnected(device string) {
 	// Config set to skip update last reported
-	if !configuration.DeviceUpdateLastConnected {
+	if !Configuration.DeviceUpdateLastConnected {
 		LoggingClient.Debug("Skipping update of device connected/reported times for:  " + device)
 		return
 	}
@@ -51,7 +51,7 @@ func updateDeviceLastReportedConnected(device string) {
 
 // Update when the device service was last reported connected
 func updateDeviceServiceLastReportedConnected(device string) {
-	if !configuration.ServiceUpdateLastConnected {
+	if !Configuration.ServiceUpdateLastConnected {
 		LoggingClient.Debug("Skipping update of device service connected/reported times for:  " + device)
 		return
 	}

@@ -15,14 +15,12 @@
 package data
 
 import (
-	"encoding/json"
 	"fmt"
-	"net/http"
-	"net/http/httptest"
 	"os"
 	"strconv"
 	"testing"
 
+	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/messaging"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/memory"
@@ -45,6 +43,7 @@ const (
 )
 
 func TestMain(m *testing.M) {
+	Configuration = &ConfigurationStruct{}
 	testRoutes = LoadRestRoutes()
 	LoggingClient = logger.NewMockClient()
 	mdc = newMockDeviceClient()
@@ -141,7 +140,7 @@ func TestGetEventsWithLimit(t *testing.T) {
 
 func TestAddEventWithPersistence(t *testing.T) {
 	prepareDB()
-	configuration.PersistData = true
+	Configuration.PersistData = true
 	evt := models.Event{Device: TEST_DEVICE_NAME, Origin: TEST_ORIGIN, Readings: buildListOfMockReadings()}
 	//wire up handlers to listen for device events
 	bitEvents := make([]bool, 2)
@@ -150,7 +149,7 @@ func TestAddEventWithPersistence(t *testing.T) {
 	go handleDomainEvents(bitEvents, &wg, t)
 
 	newId, err := addNew(evt)
-	configuration.PersistData = false
+	Configuration.PersistData = false
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -169,7 +168,7 @@ func TestAddEventWithPersistence(t *testing.T) {
 
 func TestAddEventNoPersistence(t *testing.T) {
 	prepareDB()
-	configuration.PersistData = false
+	Configuration.PersistData = false
 	evt := models.Event{Device: TEST_DEVICE_NAME, Origin: TEST_ORIGIN, Readings: buildListOfMockReadings()}
 	//wire up handlers to listen for device events
 	bitEvents := make([]bool, 2)
@@ -191,6 +190,54 @@ func TestAddEventNoPersistence(t *testing.T) {
 			t.Errorf("event not received in timely fashion, index %v, TestAddEventNoPersistence", i)
 			return
 		}
+	}
+}
+
+func TestUpdateEventNotFound(t *testing.T) {
+	prepareDB()
+	evt := models.Event{ID: bson.NewObjectId(), Device: "Not Found", Origin: TEST_ORIGIN}
+	err := updateEvent(evt)
+	if err != nil {
+		if x, ok := err.(*errors.ErrEventNotFound); !ok {
+			t.Errorf("unexpected error type: %s", x.Error())
+		}
+	} else {
+		t.Errorf("expected ErrEventNotFound")
+	}
+}
+
+func TestUpdateEventDeviceNotFound(t *testing.T) {
+	Configuration.MetaDataCheck = true
+	prepareDB()
+	evt := models.Event{ID: bson.NewObjectId(), Device: "Not Found", Origin: TEST_ORIGIN}
+	err := updateEvent(evt)
+	if err == nil {
+		t.Errorf("error expected")
+	}
+	Configuration.MetaDataCheck = false
+}
+
+func TestUpdateEvent(t *testing.T) {
+	prepareDB()
+	evt := models.Event{ID: testEvent.ID, Device: "Some Value", Origin: TEST_ORIGIN}
+	err := updateEvent(evt)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	chk, err := dbClient.EventById(testEvent.ID.Hex())
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	if chk.Device != "Some Value" {
+		t.Errorf("unexpected device value %s", chk.Device)
+	}
+}
+
+func TestDeleteAll(t *testing.T) {
+	prepareDB()
+	err := deleteAll()
+	if err != nil {
+		t.Errorf(err.Error())
 	}
 }
 
@@ -230,7 +277,7 @@ func TestGetEventHandlerMaxExceeded(t *testing.T) {
 		return
 	}
 }
-*/
+
 
 func TestGetEventByIdHandler(t *testing.T) {
 	req, _ := http.NewRequest(http.MethodGet, "/api/v1/event/"+testEvent.ID.Hex(), nil)
@@ -252,7 +299,7 @@ func TestGetEventByIdHandler(t *testing.T) {
 	json.Unmarshal([]byte(w.Body.String()), &event)
 	testEventWithoutReadings(event, t)
 }
-
+*/
 // Supporting methods
 func prepareDB() {
 	testEvent.Device = TEST_DEVICE_NAME
@@ -344,7 +391,6 @@ func handleDomainEvents(bitEvents []bool, wait *sync.WaitGroup, t *testing.T) {
 		case evt := <-chEvents:
 			switch evt.(type) {
 			case DeviceLastReported:
-				fmt.Println("DeviceLastReported received")
 				e := evt.(DeviceLastReported)
 				if e.DeviceName != TEST_DEVICE_NAME {
 					t.Errorf("DeviceLastReported name mistmatch %s", e.DeviceName)
@@ -353,7 +399,6 @@ func handleDomainEvents(bitEvents []bool, wait *sync.WaitGroup, t *testing.T) {
 				setEventBit(0, true, bitEvents)
 				break
 			case DeviceServiceLastReported:
-				fmt.Println("DeviceServiceLastReported received")
 				e := evt.(DeviceServiceLastReported)
 				if e.DeviceName != TEST_DEVICE_NAME {
 					t.Errorf("DeviceLastReported name mistmatch %s", e.DeviceName)
