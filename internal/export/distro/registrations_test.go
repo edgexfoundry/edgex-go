@@ -7,10 +7,10 @@
 package distro
 
 import (
-	"go.uber.org/zap"
-
-	// "go.uber.org/zap"
 	"testing"
+
+	"github.com/edgexfoundry/edgex-go/pkg/models"
+	"go.uber.org/zap"
 )
 
 func validRegistration() models.Registration {
@@ -104,7 +104,7 @@ func TestRegistrationInfoEvent(t *testing.T) {
 	// Filter only accepting events from dummyDev
 	f := models.Filter{}
 	f.DeviceIDs = append(f.DeviceIDs, dummyDev)
-	filter := newDevIdFilter(f)
+	filter := models.NewDevIdFilter(f)
 
 	ri.filter = append(ri.filter, filter)
 
