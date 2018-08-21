@@ -13,8 +13,6 @@ import (
 	"strconv"
 	"strings"
 	"testing"
-
-	"github.com/edgexfoundry/edgex-go/pkg/models"
 )
 
 const (
@@ -22,7 +20,7 @@ const (
 )
 
 func TestJson(t *testing.T) {
-	eventIn := models.Event{
+	eventIn := Event{
 		Device: devID1,
 	}
 
@@ -32,7 +30,7 @@ func TestJson(t *testing.T) {
 		t.Fatal("out should not be nil")
 	}
 
-	var eventOut models.Event
+	var eventOut Event
 	if err := json.Unmarshal(out, &eventOut); err != nil {
 		t.Fatalf("Error unmarshalling event: %v", err)
 	}
@@ -42,7 +40,7 @@ func TestJson(t *testing.T) {
 }
 
 func TestXml(t *testing.T) {
-	eventIn := models.Event{
+	eventIn := Event{
 		Device: devID1,
 	}
 
@@ -52,7 +50,7 @@ func TestXml(t *testing.T) {
 		t.Fatal("out should not be nil")
 	}
 
-	var eventOut models.Event
+	var eventOut Event
 	if err := xml.Unmarshal(out, &eventOut); err != nil {
 		t.Fatalf("Error unmarshalling event: %v", err)
 	}
@@ -62,7 +60,7 @@ func TestXml(t *testing.T) {
 }
 
 func TestThingsBoardJson(t *testing.T) {
-	eventIn := models.Event{
+	eventIn := Event{
 		Device: devID1,
 	}
 
@@ -79,7 +77,7 @@ func TestThingsBoardJson(t *testing.T) {
 }
 
 func TestNoop(t *testing.T) {
-	eventIn := models.Event{
+	eventIn := Event{
 		Device: devID1,
 	}
 

@@ -18,16 +18,28 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/edgexfoundry/edgex-go/internal/export"
-
-	"github.com/edgexfoundry/edgex-go/pkg/models"
-
 	"go.uber.org/zap"
+	"github.com/edgexfoundry/edgex-go/pkg/models"
 )
 
-var registrationChanges chan export.NotifyUpdate = make(chan export.NotifyUpdate, 2)
+var registrationChanges chan models.NotifyUpdate = make(chan models.NotifyUpdate, 2)
 
-func RefreshRegistrations(update export.NotifyUpdate) {
+// RegistrationInfo - registration info
+type registrationInfo struct {
+	registration models.Registration
+	format       models.Formatter
+	compression  models.Transformer
+	encrypt      models.Transformer
+	sender       models.Sender
+	filter       []models.Filterer
+
+	chRegistration chan *models.Registration
+	chEvent        chan *models.Event
+
+	deleteMe bool
+}
+
+func RefreshRegistrations(update models.NotifyUpdate) {
 	// TODO make it not blocking, return bool?
 	registrationChanges <- update
 }
@@ -35,31 +47,31 @@ func RefreshRegistrations(update export.NotifyUpdate) {
 func newRegistrationInfo() *registrationInfo {
 	reg := &registrationInfo{}
 
-	reg.chRegistration = make(chan *export.Registration)
+	reg.chRegistration = make(chan *models.Registration)
 	reg.chEvent = make(chan *models.Event)
 	return reg
 }
 
-func (reg *registrationInfo) update(newReg export.Registration) bool {
+func (reg *registrationInfo) update(newReg models.Registration) bool {
 	reg.registration = newReg
 
 	reg.format = nil
 	switch newReg.Format {
-	case export.FormatJSON:
+	case models.FormatJSON:
 		reg.format = jsonFormatter{}
-	case export.FormatXML:
+	case models.FormatXML:
 		reg.format = xmlFormatter{}
-	case export.FormatSerialized:
+	case models.FormatSerialized:
 		// TODO reg.format = distro.NewSerializedFormat()
-	case export.FormatIoTCoreJSON:
+	case models.FormatIoTCoreJSON:
 		reg.format = jsonFormatter{}
-	case export.FormatAzureJSON:
+	case models.FormatAzureJSON:
 		reg.format = azureFormatter{}
-	case export.FormatCSV:
+	case models.FormatCSV:
 		// TODO reg.format = distro.NewCsvFormat()
-	case export.FormatThingsBoardJSON:
+	case models.FormatThingsBoardJSON:
 		reg.format = thingsboardJSONFormatter{}
-	case export.FormatNOOP:
+	case models.FormatNOOP:
 		reg.format = noopFormatter{}
 	default:
 		logger.Warn("Format not supported: ", zap.String("format", newReg.Format))
@@ -68,11 +80,11 @@ func (reg *registrationInfo) update(newReg export.Registration) bool {
 
 	reg.compression = nil
 	switch newReg.Compression {
-	case export.CompNone:
+	case models.CompNone:
 		reg.compression = nil
-	case export.CompGzip:
+	case models.CompGzip:
 		reg.compression = &gzipTransformer{}
-	case export.CompZip:
+	case models.CompZip:
 		reg.compression = &zlibTransformer{}
 	default:
 		logger.Warn("Compression not supported: ", zap.String("compression", newReg.Compression))
@@ -81,18 +93,18 @@ func (reg *registrationInfo) update(newReg export.Registration) bool {
 
 	reg.sender = nil
 	switch newReg.Destination {
-	case export.DestMQTT, export.DestAzureMQTT:
+	case models.DestMQTT, models.DestAzureMQTT:
 		reg.sender = NewMqttSender(newReg.Addressable)
-	case export.DestZMQ:
+	case models.DestZMQ:
 		logger.Info("Destination ZMQ is not supported")
-	case export.DestIotCoreMQTT:
+	case models.DestIotCoreMQTT:
 		reg.sender = NewIoTCoreSender(newReg.Addressable)
-	case export.DestRest:
-		reg.sender = NewHTTPSender(newReg.Addressable)
-	case export.DestXMPP:
-		reg.sender = NewXMPPSender(newReg.Addressable)
-	case export.DestInfluxDB:
-		reg.sender = NewInfluxDBSender(newReg.Addressable)
+	case models.DestRest:
+		reg.sender = models.NewHTTPSender(newReg.Addressable)
+	case models.DestXMPP:
+		reg.sender = models.NewXMPPSender(newReg.Addressable)
+	case models.DestInfluxDB:
+		reg.sender = models.NewInfluxDBSender(newReg.Addressable)
 
 	default:
 		logger.Warn("Destination not supported: ", zap.String("destination", newReg.Destination))
@@ -105,10 +117,10 @@ func (reg *registrationInfo) update(newReg export.Registration) bool {
 
 	reg.encrypt = nil
 	switch newReg.Encryption.Algo {
-	case export.EncNone:
+	case models.EncNone:
 		reg.encrypt = nil
-	case export.EncAes:
-		reg.encrypt = NewAESEncryption(newReg.Encryption)
+	case models.EncAes:
+		reg.encrypt = models.NewAESEncryption(newReg.Encryption)
 	default:
 		logger.Warn("Encryption not supported: ", zap.String("Algorithm", newReg.Encryption.Algo))
 		return false
@@ -117,12 +129,12 @@ func (reg *registrationInfo) update(newReg export.Registration) bool {
 	reg.filter = nil
 
 	if len(newReg.Filter.DeviceIDs) > 0 {
-		reg.filter = append(reg.filter, newDevIdFilter(newReg.Filter))
+		reg.filter = append(reg.filter, models.NewDevIdFilter(newReg.Filter))
 		logger.Debug("Device ID filter added: ", zap.Any("filters", newReg.Filter.DeviceIDs))
 	}
 
 	if len(newReg.Filter.ValueDescriptorIDs) > 0 {
-		reg.filter = append(reg.filter, newValueDescFilter(newReg.Filter))
+		reg.filter = append(reg.filter, models.NewValueDescFilter(newReg.Filter))
 		logger.Debug("Value descriptor filter added: ", zap.Any("filters", newReg.Filter.ValueDescriptorIDs))
 	}
 
@@ -199,10 +211,10 @@ func registrationLoop(reg *registrationInfo) {
 }
 
 func updateRunningRegistrations(running map[string]*registrationInfo,
-	update export.NotifyUpdate) error {
+	update models.NotifyUpdate) error {
 
 	switch update.Operation {
-	case export.NotifyUpdateDelete:
+	case models.NotifyUpdateDelete:
 		for k, v := range running {
 			if k == update.Name {
 				v.chRegistration <- nil
@@ -211,8 +223,8 @@ func updateRunningRegistrations(running map[string]*registrationInfo,
 			}
 		}
 		return fmt.Errorf("delete update not processed")
-	case export.NotifyUpdateUpdate:
-		reg := getRegistrationByName(update.Name)
+	case models.NotifyUpdateUpdate:
+		reg := GetRegistrationByName(update.Name)
 		if reg == nil {
 			return fmt.Errorf("Could not find registration")
 		}
@@ -223,8 +235,8 @@ func updateRunningRegistrations(running map[string]*registrationInfo,
 			}
 		}
 		return fmt.Errorf("Could not find running registration")
-	case export.NotifyUpdateAdd:
-		reg := getRegistrationByName(update.Name)
+	case models.NotifyUpdateAdd:
+		reg := GetRegistrationByName(update.Name)
 		if reg == nil {
 			return fmt.Errorf("Could not find registration")
 		}
@@ -249,7 +261,7 @@ func Loop(errChan chan error, eventCh chan *models.Event) {
 
 	registrations := make(map[string]*registrationInfo)
 
-	allRegs := getRegistrations()
+	allRegs := GetRegistrations()
 
 	for allRegs == nil {
 		logger.Info("Waiting for client microservice")
@@ -259,7 +271,7 @@ func Loop(errChan chan error, eventCh chan *models.Event) {
 			return
 		case <-time.After(time.Second):
 		}
-		allRegs = getRegistrations()
+		allRegs = GetRegistrations()
 	}
 
 	// Create new goroutines for each registration

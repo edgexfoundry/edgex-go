@@ -30,7 +30,7 @@ type iotCoreSender struct {
 }
 
 // NewIoTCoreSender returns new Google IoT Core sender instance.
-func NewIoTCoreSender(addr models.Addressable) Sender {
+func NewIoTCoreSender(addr models.Addressable) models.Sender {
 	protocol := strings.ToLower(addr.Protocol)
 	broker := fmt.Sprintf("%s%s", addr.GetBaseURL(), addr.Path)
 	deviceID := extractDeviceID(addr.Publisher)

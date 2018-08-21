@@ -4,15 +4,13 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-package distro
+package models
 
 import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/sha1"
 	"encoding/base64"
-
-	"github.com/edgexfoundry/edgex-go/internal/export"
 
 	"testing"
 )
@@ -23,7 +21,7 @@ const (
 	key         = "aquqweoruqwpeoruqwpoeruqwpoierupqoweiurpoqwiuerpqowieurqpowieurpoqiweuroipwqure"
 )
 
-func aesDecrypt(crypt []byte, aesData export.EncryptionDetails) []byte {
+func aesDecrypt(crypt []byte, aesData EncryptionDetails) []byte {
 	hash := sha1.New()
 
 	hash.Write([]byte((aesData.Key)))
@@ -56,7 +54,7 @@ func pkcs5Trimming(encrypt []byte) []byte {
 
 func TestAES(t *testing.T) {
 
-	aesData := export.EncryptionDetails{
+	aesData := EncryptionDetails{
 		Algo:       "AES",
 		Key:        key,
 		InitVector: iv,

@@ -11,13 +11,14 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/edgexfoundry/edgex-go/internal/export/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/internal/export/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/consul"
-	"go.uber.org/zap"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/memory"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo"
+
+	"go.uber.org/zap"
 )
 
 const (

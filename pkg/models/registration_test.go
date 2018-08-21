@@ -4,11 +4,10 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-package export
+package models
 
 import (
 	"testing"
-	"github.com/edgexfoundry/edgex-go/pkg/models"
 )
 
 func TestRegistrationValid(t *testing.T) {
@@ -22,19 +21,19 @@ func TestRegistrationValid(t *testing.T) {
 		valid       bool
 	}{
 		{"empty", "", "", "", "", "", false},
-		{"valid", "reg", CompZip, FormatJSON, models.DestMQTT, EncAes, true},
-		{"defaultCompression", "reg", "", FormatJSON, models.DestMQTT, EncAes, true},
-		{"defaultEncryption", "reg", CompZip, FormatJSON, models.DestMQTT, "", true},
-		{"withoutName", "", CompZip, FormatJSON, models.DestMQTT, EncAes, false},
-		{"wrongCompresion", "reg", "INVALID", FormatJSON, models.DestMQTT, EncAes, false},
-		{"wrongFormat", "reg", CompZip, "INVALID", models.DestMQTT, EncAes, false},
+		{"valid", "reg", CompZip, FormatJSON, DestMQTT, EncAes, true},
+		{"defaultCompression", "reg", "", FormatJSON, DestMQTT, EncAes, true},
+		{"defaultEncryption", "reg", CompZip, FormatJSON, DestMQTT, "", true},
+		{"withoutName", "", CompZip, FormatJSON, DestMQTT, EncAes, false},
+		{"wrongCompresion", "reg", "INVALID", FormatJSON, DestMQTT, EncAes, false},
+		{"wrongFormat", "reg", CompZip, "INVALID", DestMQTT, EncAes, false},
 		{"wrongDestination", "reg", CompZip, FormatJSON, "INVALID", EncAes, false},
-		{"wrongEncryption", "reg", CompZip, FormatJSON, models.DestMQTT, "INVALID", false},
+		{"wrongEncryption", "reg", CompZip, FormatJSON, DestMQTT, "INVALID", false},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := models.Registration{}
+			r := Registration{}
 
 			r.Name = tt.regName
 

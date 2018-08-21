@@ -4,14 +4,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package distro
+package models
 
 import (
 	"fmt"
 	"strconv"
 	"time"
 
-	"github.com/edgexfoundry/edgex-go/pkg/models"
 	"github.com/influxdata/influxdb/client/v2"
 )
 
@@ -25,7 +24,7 @@ type influxdbSender struct {
 	database string
 }
 
-func NewInfluxDBSender(addr models.Addressable) Sender {
+func NewInfluxDBSender(addr Addressable) Sender {
 	connStr := "http://" + addr.Address + ":" + strconv.Itoa(addr.Port)
 
 	influxdbHTTPInfo := client.HTTPConfig{
@@ -46,7 +45,7 @@ func NewInfluxDBSender(addr models.Addressable) Sender {
 	return sender
 }
 
-func (sender *influxdbSender) Send(data []byte, event *models.Event) bool {
+func (sender *influxdbSender) Send(data []byte, event *Event) bool {
 	if sender.client == nil {
 		logger.Info("Connecting to InfluxDB server")
 		c, err := client.NewHTTPClient(sender.httpInfo)

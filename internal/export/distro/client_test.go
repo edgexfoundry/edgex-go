@@ -35,7 +35,7 @@ func TestClientRegistrationsEmpty(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(handler))
 	defer ts.Close()
 
-	regs := getRegistrationsURL(ts.URL)
+	regs := GetRegistrationsURL(ts.URL)
 	if regs == nil {
 		t.Fatal("nil registration list")
 	}
@@ -56,7 +56,7 @@ func TestClientRegistrations(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(handler))
 	defer ts.Close()
 
-	regs := getRegistrationsURL(ts.URL)
+	regs := GetRegistrationsURL(ts.URL)
 	if regs == nil {
 		t.Fatal("nil registration list")
 	}
@@ -82,7 +82,7 @@ func TestClientRegistrationsInvalid(t *testing.T) {
 	defer ts.Close()
 
 	for range invalidList {
-		regs := getRegistrationsURL(ts.URL)
+		regs := GetRegistrationsURL(ts.URL)
 		if regs != nil {
 			t.Fatal("Registration list should be nil", regs)
 		}
@@ -108,7 +108,7 @@ func TestClientRegistrationsInvalidRegistration(t *testing.T) {
 	defer ts.Close()
 
 	for _, v := range invalidList {
-		regs := getRegistrationsURL(ts.URL)
+		regs := GetRegistrationsURL(ts.URL)
 		if regs == nil {
 			t.Fatal("nil registration list")
 		}
@@ -127,7 +127,7 @@ func TestClientRegistrationsInvalidRegistration2(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(handler))
 	defer ts.Close()
 
-	regs := getRegistrationsURL(ts.URL)
+	regs := GetRegistrationsURL(ts.URL)
 	if regs == nil {
 		t.Fatal("nil registration list")
 	}
@@ -145,7 +145,7 @@ func TestClientRegistrationByName(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(handler))
 	defer ts.Close()
 
-	reg := getRegistrationByNameURL(ts.URL)
+	reg := GetRegistrationByNameURL(ts.URL)
 	if reg == nil {
 		t.Fatal("nil registration")
 	}
@@ -165,7 +165,7 @@ func TestClientRegistrationByNameError(t *testing.T) {
 	defer ts.Close()
 
 	for range invalidList {
-		reg := getRegistrationByNameURL(ts.URL)
+		reg := GetRegistrationByNameURL(ts.URL)
 		if reg != nil {
 			t.Fatal("Registration should be nil")
 		}

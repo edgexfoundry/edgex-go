@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-package export
+package models
 
 // Filter - Specifies the client filters on reading data
 type Filter struct {

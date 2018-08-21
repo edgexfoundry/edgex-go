@@ -14,8 +14,8 @@ import (
 	"strconv"
 	"strings"
 
-	MQTT "github.com/eclipse/paho.mqtt.golang"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
+	MQTT "github.com/eclipse/paho.mqtt.golang"
 	"go.uber.org/zap"
 )
 
@@ -25,7 +25,7 @@ type mqttSender struct {
 }
 
 // NewMqttSender - create new mqtt sender
-func NewMqttSender(addr models.Addressable) Sender {
+func NewMqttSender(addr models.Addressable) models.Sender {
 
 	protocol := strings.ToLower(addr.Protocol)
 

@@ -7,14 +7,13 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-package distro
+package models
 
 import (
 	"bytes"
 	"net/http"
 	"strconv"
 
-	"github.com/edgexfoundry/edgex-go/pkg/models"
 	"go.uber.org/zap"
 )
 
@@ -26,7 +25,7 @@ type httpSender struct {
 const mimeTypeJSON = "application/json"
 
 // NewHTTPSender - create http sender
-func NewHTTPSender(addr models.Addressable) Sender {
+func NewHTTPSender(addr Addressable) Sender {
 
 	sender := httpSender{
 		url:    addr.Protocol + "://" + addr.Address + ":" + strconv.Itoa(addr.Port) + addr.Path,
@@ -35,7 +34,8 @@ func NewHTTPSender(addr models.Addressable) Sender {
 	return sender
 }
 
-func (sender httpSender) Send(data []byte, event *models.Event) bool {
+func (sender httpSender) Send(data []byte, event *Event) bool {
+
 	switch sender.method {
 	case http.MethodPost:
 		response, err := http.Post(sender.url, mimeTypeJSON, bytes.NewReader(data))

@@ -7,20 +7,18 @@
 package distro
 
 import (
-	"github.com/edgexfoundry/edgex-go/internal/export"
-	"github.com/edgexfoundry/edgex-go/pkg/models"
 	"go.uber.org/zap"
 
 	// "go.uber.org/zap"
 	"testing"
 )
 
-func validRegistration() export.Registration {
-	r := export.Registration{}
-	r.Format = export.FormatJSON
-	r.Compression = export.CompNone
-	r.Destination = export.DestMQTT
-	r.Encryption.Algo = export.EncNone
+func validRegistration() models.Registration {
+	r := models.Registration{}
+	r.Format = models.FormatJSON
+	r.Compression = models.CompNone
+	r.Destination = models.DestMQTT
+	r.Encryption.Algo = models.EncNone
 	r.Filter.DeviceIDs = append(r.Filter.DeviceIDs, "dummy1")
 	r.Filter.ValueDescriptorIDs = append(r.Filter.DeviceIDs, "dummy1")
 	return r
@@ -32,7 +30,7 @@ func TestRegistrationInfoUpdate(t *testing.T) {
 		t.Fatal("RegistrationInfo should not be nil")
 	}
 
-	r := export.Registration{}
+	r := models.Registration{}
 	if ri.update(r) {
 		t.Fatal("An empty registration is not valid")
 	}
@@ -104,7 +102,7 @@ func TestRegistrationInfoEvent(t *testing.T) {
 	ri.compression = dummy
 
 	// Filter only accepting events from dummyDev
-	f := export.Filter{}
+	f := models.Filter{}
 	f.DeviceIDs = append(f.DeviceIDs, dummyDev)
 	filter := newDevIdFilter(f)
 
@@ -175,19 +173,19 @@ func TestRegistrationInfoLoop(t *testing.T) {
 func TestUpdateRunningRegistrations(t *testing.T) {
 	running := make(map[string]*registrationInfo)
 
-	if updateRunningRegistrations(running, export.NotifyUpdate{}) == nil {
+	if updateRunningRegistrations(running, models.NotifyUpdate{}) == nil {
 		t.Error("Err should not be nil")
 	}
-	if updateRunningRegistrations(running, export.NotifyUpdate{
-		Operation: export.NotifyUpdateDelete}) == nil {
+	if updateRunningRegistrations(running, models.NotifyUpdate{
+		Operation: models.NotifyUpdateDelete}) == nil {
 		t.Error("Err should not be nil")
 	}
-	if updateRunningRegistrations(running, export.NotifyUpdate{
-		Operation: export.NotifyUpdateUpdate}) == nil {
+	if updateRunningRegistrations(running, models.NotifyUpdate{
+		Operation: models.NotifyUpdateUpdate}) == nil {
 		t.Error("Err should not be nil")
 	}
-	if updateRunningRegistrations(running, export.NotifyUpdate{
-		Operation: export.NotifyUpdateAdd}) == nil {
+	if updateRunningRegistrations(running, models.NotifyUpdate{
+		Operation: models.NotifyUpdateAdd}) == nil {
 		t.Error("Err should not be nil")
 	}
 

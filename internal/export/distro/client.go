@@ -12,8 +12,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/edgexfoundry/edgex-go/internal/export"
-
+	"github.com/edgexfoundry/edgex-go/pkg/models"
 	"go.uber.org/zap"
 )
 
@@ -26,12 +25,12 @@ func getRegistrationBaseURL(host string) string {
 		"/api/v1/registration"
 }
 
-func getRegistrations() []export.Registration {
+func GetRegistrations() []models.Registration {
 	url := getRegistrationBaseURL(configuration.ClientHost)
-	return getRegistrationsURL(url)
+	return GetRegistrationsURL(url)
 }
 
-func getRegistrationsURL(url string) []export.Registration {
+func GetRegistrationsURL(url string) []models.Registration {
 	response, err := http.Get(url)
 	if err != nil {
 		logger.Warn("Error getting all registrations", zap.String("url", url))
@@ -39,7 +38,7 @@ func getRegistrationsURL(url string) []export.Registration {
 	}
 	defer response.Body.Close()
 
-	var registrations []export.Registration
+	var registrations []models.Registration
 	if err := json.NewDecoder(response.Body).Decode(&registrations); err != nil {
 		logger.Warn("Could not parse json", zap.Error(err))
 		return nil
@@ -56,12 +55,12 @@ func getRegistrationsURL(url string) []export.Registration {
 	return results
 }
 
-func getRegistrationByName(name string) *export.Registration {
+func GetRegistrationByName(name string) *models.Registration {
 	url := getRegistrationBaseURL(configuration.ClientHost) + "/name/" + name
-	return getRegistrationByNameURL(url)
+	return GetRegistrationByNameURL(url)
 }
 
-func getRegistrationByNameURL(url string) *export.Registration {
+func GetRegistrationByNameURL(url string) *models.Registration {
 
 	response, err := http.Get(url)
 	if err != nil {
@@ -70,7 +69,7 @@ func getRegistrationByNameURL(url string) *export.Registration {
 	}
 	defer response.Body.Close()
 
-	reg := export.Registration{}
+	reg := models.Registration{}
 	if err := json.NewDecoder(response.Body).Decode(&reg); err != nil {
 		logger.Error("Could not parse json", zap.Error(err))
 		return nil

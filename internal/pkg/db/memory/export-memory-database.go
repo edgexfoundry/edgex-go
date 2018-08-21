@@ -19,28 +19,28 @@ import (
 	"time"
 
 	"gopkg.in/mgo.v2/bson"
-	"github.com/edgexfoundry/edgex-go/internal/export"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+	"github.com/edgexfoundry/edgex-go/pkg/models"
 )
 
 type ExportMemoryDB struct {
-	regs []export.Registration
+	regs []models.Registration
 }
 
 func NewExportMemoryClient() *ExportMemoryDB {
 	return &ExportMemoryDB{
-		regs: make([]export.Registration, 0),
+		regs: make([]models.Registration, 0),
 	}
 }
 
-func (mc *ExportMemoryDB) Registrations() ([]export.Registration, error) {
+func (mc *ExportMemoryDB) Registrations() ([]models.Registration, error) {
 	return mc.regs, nil
 }
 
 func (mc *ExportMemoryDB) CloseSession() {
 }
 
-func (mc *ExportMemoryDB) AddRegistration(reg *export.Registration) (bson.ObjectId, error) {
+func (mc *ExportMemoryDB) AddRegistration(reg *models.Registration) (bson.ObjectId, error) {
 	ticks := time.Now().Unix()
 	reg.Created = ticks
 	reg.Modified = ticks
@@ -51,7 +51,7 @@ func (mc *ExportMemoryDB) AddRegistration(reg *export.Registration) (bson.Object
 	return reg.ID, nil
 }
 
-func (mc *ExportMemoryDB) UpdateRegistration(reg export.Registration) error {
+func (mc *ExportMemoryDB) UpdateRegistration(reg models.Registration) error {
 	for i, r := range mc.regs {
 		if r.ID == reg.ID {
 			mc.regs[i] = reg
@@ -61,24 +61,24 @@ func (mc *ExportMemoryDB) UpdateRegistration(reg export.Registration) error {
 	return db.ErrNotFound
 }
 
-func (mc *ExportMemoryDB) RegistrationById(id string) (export.Registration, error) {
+func (mc *ExportMemoryDB) RegistrationById(id string) (models.Registration, error) {
 	for _, reg := range mc.regs {
 		if reg.ID.Hex() == id {
 			return reg, nil
 		}
 	}
 
-	return export.Registration{}, db.ErrNotFound
+	return models.Registration{}, db.ErrNotFound
 }
 
-func (mc *ExportMemoryDB) RegistrationByName(name string) (export.Registration, error) {
+func (mc *ExportMemoryDB) RegistrationByName(name string) (models.Registration, error) {
 	for _, reg := range mc.regs {
 		if reg.Name == name {
 			return reg, nil
 		}
 	}
 
-	return export.Registration{}, db.ErrNotFound
+	return models.Registration{}, db.ErrNotFound
 }
 
 func (mc *ExportMemoryDB) DeleteRegistrationById(id string) error {

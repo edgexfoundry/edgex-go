@@ -4,13 +4,11 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-package distro
+package models
 
 import (
 	"testing"
 
-	"github.com/edgexfoundry/edgex-go/internal/export"
-	"github.com/edgexfoundry/edgex-go/pkg/models"
 	"go.uber.org/zap"
 )
 
@@ -27,19 +25,19 @@ func TestFilterDevice(t *testing.T) {
 	defer logger.Sync()
 
 	// Filter only accepting events from device 1
-	f := export.Filter{}
+	f := Filter{}
 	f.DeviceIDs = append(f.DeviceIDs, "DEV1")
 
 	// Event from device 1
-	eventDev1 := models.Event{
+	eventDev1 := Event{
 		Device: deviceID1,
 	}
 	// Event from device 2
-	eventDev2 := models.Event{
+	eventDev2 := Event{
 		Device: deviceID2,
 	}
 
-	filter := newDevIdFilter(f)
+	filter := NewDevIdFilter(f)
 	accepted, _ := filter.Filter(nil)
 	if accepted {
 		t.Fatal("Event should be filtered out")
@@ -61,30 +59,30 @@ func TestFilterValue(t *testing.T) {
 	logger = zap.NewNop()
 	defer logger.Sync()
 
-	f1 := export.Filter{}
+	f1 := Filter{}
 	f1.ValueDescriptorIDs = append(f1.ValueDescriptorIDs, descriptor1)
 
-	f12 := export.Filter{}
+	f12 := Filter{}
 	f12.ValueDescriptorIDs = append(f12.ValueDescriptorIDs, descriptor1)
 	f12.ValueDescriptorIDs = append(f12.ValueDescriptorIDs, descriptor2)
 
 	// only accepts value descriptor 1
-	filter1 := newValueDescFilter(f1)
+	filter1 := NewValueDescFilter(f1)
 	// accepts value descriptor 1 and 2
-	filter12 := newValueDescFilter(f12)
+	filter12 := NewValueDescFilter(f12)
 
 	// event with a value descriptor 1
-	event1 := models.Event{}
-	event1.Readings = append(event1.Readings, models.Reading{Name: descriptor1})
+	event1 := Event{}
+	event1.Readings = append(event1.Readings, Reading{Name: descriptor1})
 
 	// event with a value descriptor 2
-	event2 := models.Event{}
-	event2.Readings = append(event2.Readings, models.Reading{Name: descriptor2})
+	event2 := Event{}
+	event2.Readings = append(event2.Readings, Reading{Name: descriptor2})
 
 	// event with a value descriptor 1 and another 2
-	event12 := models.Event{}
-	event12.Readings = append(event12.Readings, models.Reading{Name: descriptor1})
-	event12.Readings = append(event12.Readings, models.Reading{Name: descriptor2})
+	event12 := Event{}
+	event12.Readings = append(event12.Readings, Reading{Name: descriptor1})
+	event12.Readings = append(event12.Readings, Reading{Name: descriptor2})
 
 	accepted, res := filter1.Filter(nil)
 	if accepted {

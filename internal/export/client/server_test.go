@@ -17,9 +17,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/edgexfoundry/edgex-go/internal/export"
 	"go.uber.org/zap"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+	"github.com/edgexfoundry/edgex-go/pkg/models"
 )
 
 const regJson = `{"origin":1471806386919,"name":"OSIClient","addressable":{"origin":1471806386919,"name":"OSIMQTTBroker","protocol":"TCP","address":"m10.cloudmqtt.com","port":15421,"publisher":"EdgeXExportPublisher","user":"hukfgtoh","password":"uP6hJLYW6Ji4","topic":"EdgeXDataTopic"},"format":"JSON","filter":{"deviceIdentifiers":["livingroomthermosat", "hallwaythermostat"],"valueDescriptorIdentifiers":["temperature", "humidity"]},"encryption":{"encryptionAlgorithm":"AES","encryptionKey":"123","initializingVector":"123"},"compression":"GZIP","enable":true, "destination": "REST_ENDPOINT"}`
@@ -323,7 +323,7 @@ func TestRegistrationGetList(t *testing.T) {
 	}
 }
 
-func getRegistrations(t *testing.T, serverUrl string) []export.Registration {
+func getRegistrations(t *testing.T, serverUrl string) []models.Registration {
 	response, err := http.Get(serverUrl + apiV1Registration)
 	if err != nil {
 		t.Errorf("Error getting registrations: %v", err)
@@ -335,7 +335,7 @@ func getRegistrations(t *testing.T, serverUrl string) []export.Registration {
 
 	var data []byte
 	data, _ = ioutil.ReadAll(response.Body)
-	var regs []export.Registration
+	var regs []models.Registration
 	if err := json.Unmarshal(data, &regs); err != nil {
 		t.Errorf("Registrations could not be parsed: %v", err)
 	}

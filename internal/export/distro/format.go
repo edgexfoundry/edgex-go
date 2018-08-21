@@ -14,9 +14,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/edgexfoundry/edgex-go/pkg/models"
 	"github.com/satori/go.uuid"
 	"go.uber.org/zap"
+	"github.com/edgexfoundry/edgex-go/pkg/models"
 )
 
 type jsonFormatter struct {
