@@ -21,8 +21,16 @@ import "github.com/gomodule/redigo/redis"
 // * assumes a single instance
 // * `get*`` scripts are implementations for range operations. To be used when the server is remote
 
+const (
+	scriptGetObjectsByRange       = "getObjectsByRange"
+	scriptGetObjectsByRangeFilter = "getObjectsByRangeFilter"
+	scriptGetObjectsByScore       = "getObjectsByScore"
+	scriptUnlinkZsetMembers       = "unlinkZsetMembers"
+	scriptUnlinkCollection        = "unlinkCollection"
+)
+
 var scripts = map[string]redis.Script{
-	"getObjectsByRange": *redis.NewScript(1, `
+	scriptGetObjectsByRange: *redis.NewScript(1, `
 		local magic = 4096
 		local ids = redis.call('ZRANGE', KEYS[1], ARGV[1], ARGV[2])
 		local rep = {}
@@ -38,7 +46,7 @@ var scripts = map[string]redis.Script{
 			return nil
 		end
 		`),
-	"getObjectsByRangeFilter": *redis.NewScript(2, `
+	scriptGetObjectsByRangeFilter: *redis.NewScript(2, `
 		local magic = 4096
 		local ids = redis.call('ZRANGE', KEYS[1], ARGV[1], ARGV[2])
 		local rep = {}
@@ -60,7 +68,7 @@ var scripts = map[string]redis.Script{
 		end
 		return rep
 		`),
-	"getObjectsByScore": *redis.NewScript(1, `
+	scriptGetObjectsByScore: *redis.NewScript(1, `
 		local magic = 4096
 		local cmd = {
 			'ZRANGEBYSCORE', KEYS[1], ARGV[1],
@@ -85,7 +93,7 @@ var scripts = map[string]redis.Script{
 		end
 		return rep
 		`),
-	"unlinkZsetMembers": *redis.NewScript(1, `
+	scriptUnlinkZsetMembers: *redis.NewScript(1, `
 		local magic = 4096
 		local ids = redis.call('ZRANGE', KEYS[1], 0, -1)
 		if #ids > 0 then
@@ -94,7 +102,7 @@ var scripts = map[string]redis.Script{
 			end
 		end
 		`),
-	"unlinkCollection": *redis.NewScript(0, `
+	scriptUnlinkCollection: *redis.NewScript(0, `
 		local magic = 4096
 		redis.replicate_commands()
 		local c = 0
@@ -109,7 +117,7 @@ var scripts = map[string]redis.Script{
 }
 
 func getObjectsByRangeLua(conn redis.Conn, key string, start, end int) (objects [][]byte, err error) {
-	s := scripts["getObjectsByRange"]
+	s := scripts[scriptGetObjectsByRange]
 	objects, err = redis.ByteSlices(s.Do(conn, key, start, end))
 	if err != nil {
 		return nil, err
@@ -119,7 +127,7 @@ func getObjectsByRangeLua(conn redis.Conn, key string, start, end int) (objects 
 }
 
 func getObjectsByRangeFilterLua(conn redis.Conn, key string, filter string, start, end int) (objects [][]byte, err error) {
-	s := scripts["getObjectsByRangeFilter"]
+	s := scripts[scriptGetObjectsByRangeFilter]
 	objects, err = redis.ByteSlices(s.Do(conn, key, filter, start, end))
 	if err != nil {
 		return nil, err
@@ -132,7 +140,7 @@ func getObjectsByRangeFilterLua(conn redis.Conn, key string, filter string, star
 // if limit is 0, all are returned
 // if end is negative, it is considered as positive infinity
 func getObjectsByScoreLua(conn redis.Conn, key string, start, end int64, limit int) (objects [][]byte, err error) {
-	s := scripts["getObjectsByScore"]
+	s := scripts[scriptGetObjectsByScore]
 	objects, err = redis.ByteSlices(s.Do(conn, key, start, end, limit))
 	if err != nil {
 		return nil, err

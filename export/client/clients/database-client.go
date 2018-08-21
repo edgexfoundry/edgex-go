@@ -116,10 +116,8 @@ var ErrNotUnique error = errors.New("Resource already exists")
 func NewDBClient(config DBConfiguration) (DBClient, error) {
 	switch config.DbType {
 	case MONGO:
-		// Create the mongo client
 		return newMongoClient(config)
 	case REDIS:
-		// Create the Redis client
 		return newRedisClient(config)
 	case MEMORY:
 		return newMemoryClient(), nil

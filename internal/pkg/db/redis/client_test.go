@@ -32,13 +32,18 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/test"
 )
 
+const (
+	REDIS_HOST = "0.0.0.0"
+	REDIS_PORT = 6379
+)
+
 func TestRedisDB(t *testing.T) {
 
 	t.Log("This test needs to have a running Redis on localhost")
 
 	config := db.Configuration{
-		Host: "0.0.0.0",
-		Port: 6379,
+		Host: REDIS_HOST,
+		Port: REDIS_PORT,
 	}
 
 	rc, err := NewClient(config)
@@ -61,40 +66,8 @@ func BenchmarkRedisDB_TCP(b *testing.B) {
 	b.Log("This benchmark needs to have a running Redis on localhost")
 
 	config := db.Configuration{
-		Host: "0.0.0.0",
-		Port: 6379,
-	}
-
-	rc, err := NewClient(config)
-	if err != nil {
-		b.Fatalf("Could not connect with Redis: %v", err)
-	}
-
-	test.BenchmarkDB(b, rc)
-}
-
-func BenchmarkRedisDB_UDS(b *testing.B) {
-
-	b.Log("This benchmark needs to have a running Redis listening /tmp/redis.sock")
-
-	config := db.Configuration{
-		Host: "/tmp/redis.sock",
-	}
-
-	rc, err := NewClient(config)
-	if err != nil {
-		b.Fatalf("Could not connect with Redis: %v", err)
-	}
-
-	test.BenchmarkDB(b, rc)
-}
-
-func BenchmarkRedisDB_Embedded(b *testing.B) {
-
-	b.Log("This benchmark needs to have liberedis.so at LD_LIBRARY_PATH=$GOROOT/src/github.com/redislabs/eredis/redis/src")
-
-	config := db.Configuration{
-		Host: "",
+		Host: REDIS_HOST,
+		Port: REDIS_PORT,
 	}
 
 	rc, err := NewClient(config)

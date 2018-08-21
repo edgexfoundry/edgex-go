@@ -15,7 +15,7 @@ package redis
 
 import (
 	"errors"
-	"strconv"
+	"fmt"
 	"time"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
@@ -28,6 +28,12 @@ const (
 	connTypeTCP connectionType = 1 << iota
 	connTypeUDS
 	connTypeEredis
+)
+
+const (
+	protoTCP    = "tcp"
+	protoUDS    = "unix"
+	protoEredis = "eredis"
 )
 
 var currClients = make([]*Client, 3) // A singleton per connection type (for benchmarking)
@@ -52,7 +58,7 @@ func NewClient(config db.Configuration) (*Client, error) {
 	}
 
 	if currClients[conntype] == nil {
-		connectionString := config.Host + ":" + strconv.Itoa(config.Port)
+		connectionString := fmt.Sprintf("%s:%d", config.Host, config.Port)
 
 		var proto, addr string
 		c := Client{
@@ -60,13 +66,12 @@ func NewClient(config db.Configuration) (*Client, error) {
 		}
 		switch c.conntype {
 		case connTypeEredis:
-			proto = "eredis"
-			addr = ""
+			proto = protoEredis
 		case connTypeUDS:
-			proto = "unix"
+			proto = protoUDS
 			addr = config.Host
 		case connTypeTCP:
-			proto = "tcp"
+			proto = protoTCP
 			addr = connectionString
 		default:
 			return nil, db.ErrUnsupportedDatabase
@@ -88,7 +93,7 @@ func NewClient(config db.Configuration) (*Client, error) {
 		}
 
 		c.Pool = &redis.Pool{
-			MaxIdle:     10,
+			MaxIdle:     1,
 			IdleTimeout: 0,
 			Dial:        dialFunc,
 		}

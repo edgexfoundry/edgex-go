@@ -29,14 +29,19 @@ import (
 	"testing"
 )
 
+const (
+	REDIS_HOST = "0.0.0.0"
+	REDIS_PORT = 6379
+)
+
 func TestRedisDB(t *testing.T) {
 
 	t.Log("This test needs to have a running Redis on localhost")
 
 	config := DBConfiguration{
 		DbType: REDIS,
-		Host:   "0.0.0.0",
-		Port:   6379,
+		Host:   REDIS_HOST,
+		Port:   REDIS_PORT,
 	}
 
 	rc, err := newRedisClient(config)

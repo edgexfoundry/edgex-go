@@ -14,7 +14,7 @@
 package clients
 
 import (
-	"strconv"
+	"fmt"
 	"time"
 
 	"github.com/edgexfoundry/edgex-go/export"
@@ -28,6 +28,12 @@ const (
 	connTypeTCP connectionType = 1 << iota
 	connTypeUDS
 	connTypeEredis
+)
+
+const (
+	protoTCP    = "tcp"
+	protoUDS    = "unix"
+	protoEredis = "eredis"
 )
 
 var currClients = make([]*Client, 3) // A singleton per connection type (for benchmarking)
@@ -52,7 +58,7 @@ func newRedisClient(config DBConfiguration) (*Client, error) {
 	}
 
 	if currClients[conntype] == nil {
-		connectionString := config.Host + ":" + strconv.Itoa(config.Port)
+		connectionString := fmt.Sprintf("%s:%d", config.Host, config.Port)
 
 		var proto, addr string
 		c := Client{
@@ -60,13 +66,12 @@ func newRedisClient(config DBConfiguration) (*Client, error) {
 		}
 		switch c.conntype {
 		case connTypeEredis:
-			proto = "eredis"
-			addr = ""
+			proto = protoEredis
 		case connTypeUDS:
-			proto = "unix"
+			proto = protoUDS
 			addr = config.Host
 		case connTypeTCP:
-			proto = "tcp"
+			proto = protoTCP
 			addr = connectionString
 		default:
 			return nil, ErrUnsupportedDatabase
@@ -88,7 +93,7 @@ func newRedisClient(config DBConfiguration) (*Client, error) {
 		}
 
 		c.Pool = &redis.Pool{
-			MaxIdle:     10,
+			MaxIdle:     1,
 			IdleTimeout: 0,
 			Dial:        dialFunc,
 		}
@@ -264,9 +269,13 @@ func deleteRegistration(conn redis.Conn, id string) error {
 }
 
 // ------------------------------------ "imports" ------------------------------
+const (
+	scriptUnlinkZsetMembers = "unlinkZsetMembers"
+	scriptUnlinkCollection  = "unlinkCollection"
+)
 
 var scripts = map[string]redis.Script{
-	"unlinkZsetMembers": *redis.NewScript(1, `
+	scriptUnlinkZsetMembers: *redis.NewScript(1, `
 		local magic = 4096
 		local ids = redis.call('ZRANGE', KEYS[1], 0, -1)
 		if #ids > 0 then
@@ -275,7 +284,7 @@ var scripts = map[string]redis.Script{
 			end
 		end
 		`),
-	"unlinkCollection": *redis.NewScript(0, `
+	scriptUnlinkCollection: *redis.NewScript(0, `
 		local magic = 4096
 		redis.replicate_commands()
 		local c = 0
@@ -344,9 +353,9 @@ func getObjectByHash(conn redis.Conn, hash string, field string, unmarshal unmar
 
 func unlinkCollection(conn redis.Conn, col string) error {
 	conn.Send("MULTI")
-	s := scripts["unlinkZsetMembers"]
+	s := scripts[scriptUnlinkZsetMembers]
 	s.Send(conn, col)
-	s = scripts["unlinkCollection"]
+	s = scripts[scriptUnlinkCollection]
 	s.Send(conn, col)
 	_, err := conn.Do("EXEC")
 	return err
