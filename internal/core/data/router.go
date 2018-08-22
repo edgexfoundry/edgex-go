@@ -315,3 +315,58 @@ func getEventByIdHandler(w http.ResponseWriter, r *http.Request) {
 		encode(e, w)
 	}
 }
+
+/*
+DELETE, PUT
+Handle events specified by an ID
+/api/v1/event/id/{id}
+404 - ID not found
+*/
+func eventIdHandler(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	switch r.Method {
+	// Set the 'pushed' timestamp for the event to the current time - event is going to another (not fuse) service
+	case http.MethodPut:
+		LoggingClient.Info("Updating event: " + id)
+
+		err := updatePushDate(id)
+		if err != nil {
+			switch x := err.(type) {
+			case *errors.ErrEventNotFound:
+				http.Error(w, x.Error(), http.StatusNotFound)
+			default:
+				http.Error(w, x.Error(), http.StatusInternalServerError)
+			}
+
+			LoggingClient.Error(err.Error())
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("true"))
+		break
+		// Delete the event and all of it's readings
+	case http.MethodDelete:
+		LoggingClient.Info("Deleting event: " + id)
+		err := deleteEventById(id)
+		if err != nil {
+			switch x := err.(type) {
+			case *errors.ErrEventNotFound:
+				http.Error(w, x.Error(), http.StatusNotFound)
+			default:
+				http.Error(w, x.Error(), http.StatusInternalServerError)
+			}
+
+			LoggingClient.Error(err.Error())
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("true"))
+	}
+}

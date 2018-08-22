@@ -15,6 +15,7 @@ package clients
 
 import (
 	"fmt"
+<<<<<<< HEAD
 	"strconv"
 	"time"
 
@@ -23,6 +24,17 @@ import (
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 	"net/http"
+=======
+	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
+	"github.com/edgexfoundry/edgex-go/pkg/models"
+	"github.com/gorilla/mux"
+	"net/http"
+	"net/url"
+	"strconv"
+	"time"
+>>>>>>> Add tests: deleteEventById, updatePushDate
 )
 
 const (
@@ -125,12 +137,38 @@ func (mc *MongoClient) AddRegistration(reg *export.Registration) (bson.ObjectId,
 	return reg.ID, err
 }
 
+<<<<<<< HEAD
 // Update a registration
 // UnexpectedError - problem updating in database
 // NotFound - no registration with the ID was found
 func (mc *MongoClient) UpdateRegistration(reg export.Registration) error {
 	s := mc.GetSessionCopy()
 	defer s.Close()
+=======
+func deleteEventById(id string) error {
+	e, err := getById(id)
+	if err != nil {
+		return err
+	}
+
+	err = deleteEvent(e)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// Delete the event and readings
+func deleteEvent(e models.Event) error {
+	for _, reading := range e.Readings {
+		if err := dbClient.DeleteReadingById(reading.Id.Hex()); err != nil {
+			return err
+		}
+	}
+	if err := dbClient.DeleteEventById(e.ID.Hex()); err != nil {
+		return err
+	}
+>>>>>>> Add tests: deleteEventById, updatePushDate
 
 	reg.Modified = db.MakeTimestamp()
 
@@ -146,61 +184,12 @@ func getById(id string) (models.Event, error) {
 	return e, nil
 }
 
-/*
-DELETE, PUT
-Handle events specified by an ID
-/api/v1/event/id/{id}
-404 - ID not found
-*/
-func eventIdHandler(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
+func updatePushDate(id string) error {
+	e, err := getById(id)
+	if err != nil {
+		return err
+	}
 
-	vars := mux.Vars(r)
-	id := vars["id"]
-
-	switch r.Method {
-	// Set the 'pushed' timestamp for the event to the current time - event is going to another (not fuse) service
-	case http.MethodPut:
-		// Check if the event exists
-		e, err := dbClient.EventById(id)
-		if err != nil {
-			if err == db.ErrNotFound {
-				http.Error(w, "Event not found", http.StatusNotFound)
-			} else {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			}
-			LoggingClient.Error(err.Error())
-			return
-		}
-
-		LoggingClient.Info("Updating event: " + e.ID.Hex())
-
-		e.Pushed = time.Now().UnixNano() / int64(time.Millisecond)
-		err = dbClient.UpdateEvent(e)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			LoggingClient.Error(err.Error())
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("true"))
-		break
-	// Delete the event and all of it's readings
-	case http.MethodDelete:
-		// Check if the event exists
-		e, err := dbClient.EventById(id)
-		if err != nil {
-			if err == db.ErrNotFound {
-				http.Error(w, "Event not found", http.StatusNotFound)
-			} else {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			}
-			LoggingClient.Error(err.Error())
-			return
-		}
-
-		LoggingClient.Info("Deleting event: " + e.ID.Hex())
 
 // Get a registration by ID
 // UnexpectedError - problem getting in database
@@ -210,6 +199,7 @@ func (mc *MongoClient) RegistrationById(id string) (export.Registration, error) 
 		return export.Registration{}, ErrInvalidObjectId
 	}
 	return mc.getRegistration(bson.M{"_id": bson.ObjectIdHex(id)})
+
 }
 
 // Get a registration by name

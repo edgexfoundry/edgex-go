@@ -18,7 +18,9 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"sync"
 	"testing"
+	"time"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/messaging"
@@ -30,8 +32,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/mock"
 	"gopkg.in/mgo.v2/bson"
-	"sync"
-	"time"
 )
 
 var testEvent models.Event
@@ -276,6 +276,37 @@ func TestGetEventById(t *testing.T) {
 func TestGetEventByIdNotFound(t *testing.T) {
 	reset()
 	_, err := getById("abcxyz")
+	if err != nil {
+		if x, ok := err.(*errors.ErrEventNotFound); !ok {
+			t.Errorf(x.Error())
+		}
+	}
+}
+
+func TestUpdateEventPushDate(t *testing.T) {
+	reset()
+	old := testEvent.Pushed
+	err := updatePushDate(testEvent.ID.Hex())
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	e, err := getById(testEvent.ID.Hex())
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	if old == e.Pushed {
+		t.Errorf("event.pushed was not updated.")
+	}
+}
+
+func TestDeleteEventById(t *testing.T) {
+	reset()
+	err := deleteEventById(testEvent.ID.Hex())
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+
+	_, err = getById(testEvent.ID.Hex())
 	if err != nil {
 		if x, ok := err.(*errors.ErrEventNotFound); !ok {
 			t.Errorf(x.Error())
