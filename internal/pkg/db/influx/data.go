@@ -174,12 +174,10 @@ func (ic *InfluxClient) getEventsWithLimit(q string, limit int) ([]models.Event,
 		return events, err
 	}
 
-	if len(res) == 1 {
-		if len(res[0].Series) == 1 {
-			events, err = parseEvents(res[0])
-			if err != nil {
-				return events, err
-			}
+	if len(res) == 1 && len(res[0].Series) == 1 {
+		events, err = parseEvents(res[0])
+		if err != nil {
+			return events, err
 		}
 	}
 

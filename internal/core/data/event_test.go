@@ -38,23 +38,33 @@ var testEvent models.Event
 var testRoutes *mux.Router
 
 const (
-	TEST_DEVICE_NAME string = "Test Device"
-	TEST_ORIGIN      int64  = 123456789
+	testDeviceName string = "Test Device"
+	testOrigin     int64  = 123456789
 )
 
+// Mock implementation of the event publisher for testing purposes
+type mockEventPublisher struct{}
+
+func newMockEventPublisher(config messaging.PubSubConfiguration) messaging.EventPublisher {
+	return &mockEventPublisher{}
+}
+
+func (zep *mockEventPublisher) SendEventMessage(e models.Event) error {
+	return nil
+}
+
 func TestMain(m *testing.M) {
-	Configuration = &ConfigurationStruct{}
 	testRoutes = LoadRestRoutes()
 	LoggingClient = logger.NewMockClient()
 	mdc = newMockDeviceClient()
-	ep, _ = messaging.NewEventPublisher(messaging.MOCK, messaging.PubSubConfiguration{})
+	ep = newMockEventPublisher(messaging.PubSubConfiguration{})
 	chEvents = make(chan interface{}, 10)
 	os.Exit(m.Run())
 }
 
 //Test methods
 func TestCount(t *testing.T) {
-	prepareDB()
+	reset()
 	c, err := count()
 	if err != nil {
 		t.Errorf(err.Error())
@@ -62,13 +72,13 @@ func TestCount(t *testing.T) {
 	}
 
 	if c != 1 {
-		t.Errorf("expected event count 1, received: %s", strconv.Itoa(c))
+		t.Errorf("expected event count 1, received: %d", c)
 		return
 	}
 }
 
 func TestCountByDevice(t *testing.T) {
-	prepareDB()
+	reset()
 	count, err := countByDevice(testEvent.Device)
 	if err != nil {
 		t.Errorf(err.Error())
@@ -82,7 +92,7 @@ func TestCountByDevice(t *testing.T) {
 }
 
 func TestDeleteByAge(t *testing.T) {
-	prepareDB()
+	reset()
 	time.Sleep(time.Millisecond * time.Duration(5))
 	age := db.MakeTimestamp()
 	count, err := deleteByAge(age)
@@ -92,13 +102,13 @@ func TestDeleteByAge(t *testing.T) {
 	}
 
 	if count == 0 {
-		t.Errorf("no events found")
+		t.Errorf("no events deleted")
 		return
 	}
 }
 
 func TestGetEvents(t *testing.T) {
-	prepareDB()
+	reset()
 	events, err := getEvents(0)
 	if err != nil {
 		t.Errorf(err.Error())
@@ -121,9 +131,9 @@ func TestGetEvents(t *testing.T) {
 }
 
 func TestGetEventsWithLimit(t *testing.T) {
-	prepareDB()
+	reset()
 	//Put an extra dummy event in the DB
-	evt := models.Event{Device: TEST_DEVICE_NAME, Origin: TEST_ORIGIN}
+	evt := models.Event{Device: testDeviceName, Origin: testOrigin}
 	dbClient.AddEvent(&evt)
 
 	events, err := getEvents(1)
@@ -139,9 +149,9 @@ func TestGetEventsWithLimit(t *testing.T) {
 }
 
 func TestAddEventWithPersistence(t *testing.T) {
-	prepareDB()
+	reset()
 	Configuration.PersistData = true
-	evt := models.Event{Device: TEST_DEVICE_NAME, Origin: TEST_ORIGIN, Readings: buildListOfMockReadings()}
+	evt := models.Event{Device: testDeviceName, Origin: testOrigin, Readings: buildReadings()}
 	//wire up handlers to listen for device events
 	bitEvents := make([]bool, 2)
 	wg := sync.WaitGroup{}
@@ -164,12 +174,18 @@ func TestAddEventWithPersistence(t *testing.T) {
 			return
 		}
 	}
+
+	//verify we can load the new event from the database
+	_, err = getById(newId)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
 }
 
 func TestAddEventNoPersistence(t *testing.T) {
-	prepareDB()
+	reset()
 	Configuration.PersistData = false
-	evt := models.Event{Device: TEST_DEVICE_NAME, Origin: TEST_ORIGIN, Readings: buildListOfMockReadings()}
+	evt := models.Event{Device: testDeviceName, Origin: testOrigin, Readings: buildReadings()}
 	//wire up handlers to listen for device events
 	bitEvents := make([]bool, 2)
 	wg := sync.WaitGroup{}
@@ -191,11 +207,19 @@ func TestAddEventNoPersistence(t *testing.T) {
 			return
 		}
 	}
+
+	//event was not persisted so we should not find it in the database
+	_, err = getById(newId)
+	if err != nil {
+		if x, ok := err.(*errors.ErrEventNotFound); !ok {
+			t.Errorf(x.Error())
+		}
+	}
 }
 
 func TestUpdateEventNotFound(t *testing.T) {
-	prepareDB()
-	evt := models.Event{ID: bson.NewObjectId(), Device: "Not Found", Origin: TEST_ORIGIN}
+	reset()
+	evt := models.Event{ID: bson.NewObjectId(), Device: "Not Found", Origin: testOrigin}
 	err := updateEvent(evt)
 	if err != nil {
 		if x, ok := err.(*errors.ErrEventNotFound); !ok {
@@ -208,8 +232,8 @@ func TestUpdateEventNotFound(t *testing.T) {
 
 func TestUpdateEventDeviceNotFound(t *testing.T) {
 	Configuration.MetaDataCheck = true
-	prepareDB()
-	evt := models.Event{ID: bson.NewObjectId(), Device: "Not Found", Origin: TEST_ORIGIN}
+	reset()
+	evt := models.Event{ID: bson.NewObjectId(), Device: "Not Found", Origin: testOrigin}
 	err := updateEvent(evt)
 	if err == nil {
 		t.Errorf("error expected")
@@ -218,8 +242,8 @@ func TestUpdateEventDeviceNotFound(t *testing.T) {
 }
 
 func TestUpdateEvent(t *testing.T) {
-	prepareDB()
-	evt := models.Event{ID: testEvent.ID, Device: "Some Value", Origin: TEST_ORIGIN}
+	reset()
+	evt := models.Event{ID: testEvent.ID, Device: "Some Value", Origin: testOrigin}
 	err := updateEvent(evt)
 	if err != nil {
 		t.Errorf(err.Error())
@@ -234,77 +258,38 @@ func TestUpdateEvent(t *testing.T) {
 }
 
 func TestDeleteAll(t *testing.T) {
-	prepareDB()
+	reset()
 	err := deleteAll()
 	if err != nil {
 		t.Errorf(err.Error())
 	}
 }
 
-/*
-func TestGetEventHandler(t *testing.T) {
-	req, _ := http.NewRequest(http.MethodGet, "/api/v1/event", nil)
-	w := httptest.NewRecorder()
-	configuration.ReadMaxLimit = 1
-	testRoutes.ServeHTTP(w, req)
-
-	if w.Code != 200 {
-		t.Error("value expected, status code " + strconv.Itoa(w.Code) + " " + req.Method + " " + req.URL.Path)
-		return
-	}
-
-	if len(w.Body.String()) == 0 {
-		t.Error("response was empty " + strconv.Itoa(w.Code) + " " + req.Method + " " + req.URL.Path)
-		return
-	}
-
-	events := []models.Event{}
-	json.Unmarshal([]byte(w.Body.String()), &events)
-	for e := range events {
-		testEventWithoutReadings(events[e], t)
-	}
-	configuration.ReadMaxLimit = 0
-}
-
-func TestGetEventHandlerMaxExceeded(t *testing.T) {
-	req, _ := http.NewRequest(http.MethodGet, "/api/v1/event", nil)
-	w := httptest.NewRecorder()
-	configuration.ReadMaxLimit = 0
-	testRoutes.ServeHTTP(w, req)
-
-	if w.Code != 413 {
-		t.Error("413 exceeded, status code " + strconv.Itoa(w.Code) + " " + req.Method + " " + req.URL.Path)
-		return
+func TestGetEventById(t *testing.T) {
+	reset()
+	_, err := getById(testEvent.ID.Hex())
+	if err != nil {
+		t.Errorf(err.Error())
 	}
 }
 
-
-func TestGetEventByIdHandler(t *testing.T) {
-	req, _ := http.NewRequest(http.MethodGet, "/api/v1/event/"+testEvent.ID.Hex(), nil)
-	w := httptest.NewRecorder()
-
-	testRoutes.ServeHTTP(w, req)
-
-	if w.Code != 200 {
-		t.Error("value expected, status code " + strconv.Itoa(w.Code) + " " + req.Method + " " + req.URL.Path)
-		return
+func TestGetEventByIdNotFound(t *testing.T) {
+	reset()
+	_, err := getById("abcxyz")
+	if err != nil {
+		if x, ok := err.(*errors.ErrEventNotFound); !ok {
+			t.Errorf(x.Error())
+		}
 	}
-
-	if len(w.Body.String()) == 0 {
-		t.Error("response was empty " + strconv.Itoa(w.Code) + " " + req.Method + " " + req.URL.Path)
-		return
-	}
-
-	event := models.Event{}
-	json.Unmarshal([]byte(w.Body.String()), &event)
-	testEventWithoutReadings(event, t)
 }
-*/
+
 // Supporting methods
-func prepareDB() {
-	testEvent.Device = TEST_DEVICE_NAME
-	testEvent.Origin = TEST_ORIGIN
-	testEvent.Readings = buildListOfMockReadings()
+// Reset() re-initializes dependencies for each test
+func reset() {
+	Configuration = &ConfigurationStruct{}
+	testEvent.Device = testDeviceName
+	testEvent.Origin = testOrigin
+	testEvent.Readings = buildReadings()
 	dbClient = &memory.MemDB{}
 	testEvent.ID, _ = dbClient.AddEvent(&testEvent)
 }
@@ -346,25 +331,25 @@ func newMockDeviceClient() *mocks.DeviceClient {
 	return client
 }
 
-func buildListOfMockReadings() []models.Reading {
+func buildReadings() []models.Reading {
 	ticks := db.MakeTimestamp()
 	r1 := models.Reading{Id: bson.NewObjectId(),
 		Name:     "Temperature",
 		Value:    "45",
-		Origin:   TEST_ORIGIN,
+		Origin:   testOrigin,
 		Created:  ticks,
 		Modified: ticks,
 		Pushed:   ticks,
-		Device:   TEST_DEVICE_NAME}
+		Device:   testDeviceName}
 
 	r2 := models.Reading{Id: bson.NewObjectId(),
 		Name:     "Pressure",
 		Value:    "1.01325",
-		Origin:   TEST_ORIGIN,
+		Origin:   testOrigin,
 		Created:  ticks,
 		Modified: ticks,
 		Pushed:   ticks,
-		Device:   TEST_DEVICE_NAME}
+		Device:   testDeviceName}
 	readings := []models.Reading{}
 	readings = append(readings, r1, r2)
 	return readings
@@ -376,7 +361,7 @@ func testEventWithoutReadings(event models.Event, t *testing.T) {
 	}
 
 	if event.Device != testEvent.Device {
-		t.Error("device mismatch. expected " + TEST_DEVICE_NAME + " received " + event.Device)
+		t.Error("device mismatch. expected " + testDeviceName + " received " + event.Device)
 	}
 
 	if event.Origin != testEvent.Origin {
@@ -392,19 +377,19 @@ func handleDomainEvents(bitEvents []bool, wait *sync.WaitGroup, t *testing.T) {
 			switch evt.(type) {
 			case DeviceLastReported:
 				e := evt.(DeviceLastReported)
-				if e.DeviceName != TEST_DEVICE_NAME {
+				if e.DeviceName != testDeviceName {
 					t.Errorf("DeviceLastReported name mistmatch %s", e.DeviceName)
 					return
 				}
-				setEventBit(0, true, bitEvents)
+				bitEvents[0] = true
 				break
 			case DeviceServiceLastReported:
 				e := evt.(DeviceServiceLastReported)
-				if e.DeviceName != TEST_DEVICE_NAME {
+				if e.DeviceName != testDeviceName {
 					t.Errorf("DeviceLastReported name mistmatch %s", e.DeviceName)
 					return
 				}
-				setEventBit(1, true, bitEvents)
+				bitEvents[1] = true
 				break
 			}
 		default:
@@ -412,14 +397,4 @@ func handleDomainEvents(bitEvents []bool, wait *sync.WaitGroup, t *testing.T) {
 		}
 	}
 	wait.Done()
-}
-
-func setEventBit(index int, value bool, source []bool) {
-	for i, oldVal := range source {
-		if i == index {
-			source[i] = value
-		} else {
-			source[i] = oldVal
-		}
-	}
 }

@@ -18,6 +18,8 @@ import (
 	"time"
 )
 
+const extraTime int64 = 10
+
 func populateDbReadings(db interfaces.DBClient, count int) (bson.ObjectId, error) {
 	var id bson.ObjectId
 	for i := 0; i < count; i++ {
@@ -409,14 +411,14 @@ func testDBEvents(t *testing.T, db interfaces.DBClient) {
 		t.Fatalf("There should be 0 events, not %d", len(events))
 	}
 
-	events, err = db.EventsByCreationTime(beforeTime, afterTime+10, 200)
+	events, err = db.EventsByCreationTime(beforeTime, afterTime+extraTime, 200)
 	if err != nil {
 		t.Fatalf("Error getting EventsByCreationTime: %v", err)
 	}
 	if len(events) != 110 {
 		t.Fatalf("There should be 110 events, not %d", len(events))
 	}
-	events, err = db.EventsByCreationTime(beforeTime, afterTime+10, 100)
+	events, err = db.EventsByCreationTime(beforeTime, afterTime+extraTime, 100)
 	if err != nil {
 		t.Fatalf("Error getting EventsByCreationTime: %v", err)
 	}
@@ -424,7 +426,7 @@ func testDBEvents(t *testing.T, db interfaces.DBClient) {
 		t.Fatalf("There should be 100 events, not %d", len(events))
 	}
 
-	events, err = db.EventsOlderThanAge(afterTime + 10)
+	events, err = db.EventsOlderThanAge(afterTime + extraTime)
 	if err != nil {
 		t.Fatalf("Error getting EventsOlderThanAge: %v", err)
 	}

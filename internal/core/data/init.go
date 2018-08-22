@@ -62,10 +62,7 @@ func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup,
 				logTarget := setLoggingTarget()
 				LoggingClient = logger.NewClient(internal.CoreDataServiceKey, Configuration.EnableRemoteLogging, logTarget)
 				//Initialize service clients
-				err := initializeClients(useConsul)
-				if err != nil {
-					LoggingClient.Error(err.Error())
-				}
+				initializeClients(useConsul)
 			}
 		}
 
@@ -185,7 +182,7 @@ func connectToConsul(conf *ConfigurationStruct) error {
 	return nil
 }
 
-func initializeClients(useConsul bool) error {
+func initializeClients(useConsul bool) {
 	// Create metadata clients
 	params := types.EndpointParams{
 		ServiceKey:  internal.CoreMetaDataServiceKey,
@@ -199,11 +196,9 @@ func initializeClients(useConsul bool) error {
 	msc = metadata.NewDeviceServiceClient(params, types.Endpoint{})
 
 	// Create the event publisher
-	var err error
-	ep, err = messaging.NewEventPublisher(messaging.ZEROMQ, messaging.PubSubConfiguration{
+	ep = messaging.NewEventPublisher(messaging.PubSubConfiguration{
 		AddressPort: Configuration.ZeroMQAddressPort,
 	})
-	return err
 }
 
 func setLoggingTarget() string {

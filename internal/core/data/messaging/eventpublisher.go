@@ -14,17 +14,7 @@
 package messaging
 
 import (
-	"strconv"
-
-	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
-)
-
-// Types of messaging protocols
-const (
-	ZEROMQ int = iota
-	MQTT
-	MOCK
 )
 
 // Configuration struct for PubSub
@@ -36,13 +26,6 @@ type EventPublisher interface {
 	SendEventMessage(e models.Event) error
 }
 
-func NewEventPublisher(pubType int, conf PubSubConfiguration) (EventPublisher, error) {
-	switch pubType {
-	case ZEROMQ:
-		return newZeroMQEventPublisher(conf), nil
-	case MOCK:
-		return newMockEventPublisher(conf), nil
-	default:
-		return nil, errors.NewErrUnsupportedPublisher(strconv.Itoa(pubType))
-	}
+func NewEventPublisher(conf PubSubConfiguration) EventPublisher {
+	return newZeroMQEventPublisher(conf)
 }

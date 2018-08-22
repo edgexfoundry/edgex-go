@@ -21,7 +21,6 @@ import (
 	"strconv"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 	"github.com/gorilla/mux"
@@ -138,7 +137,6 @@ func eventCountByDeviceIdHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		// Return result
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(strconv.Itoa(count)))
 		break
@@ -153,7 +151,6 @@ func eventByAgeHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	age, err := strconv.ParseInt(vars["age"], 10, 64)
 
-	// Problem converting age
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		LoggingClient.Error("Error converting the age to an integer")
@@ -171,7 +168,6 @@ func eventByAgeHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// Return the count
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(strconv.Itoa(count)))
@@ -303,18 +299,19 @@ func getEventByIdHandler(w http.ResponseWriter, r *http.Request) {
 		id := vars["id"]
 
 		// Get the event
-		e, err := dbClient.EventById(id)
+		e, err := getById(id)
 		if err != nil {
-			if err == db.ErrNotFound {
-				http.Error(w, "Event not found", http.StatusNotFound)
-			} else {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
+			switch x := err.(type) {
+			case *errors.ErrEventNotFound:
+				http.Error(w, x.Error(), http.StatusNotFound)
+			default:
+				http.Error(w, x.Error(), http.StatusInternalServerError)
 			}
+
 			LoggingClient.Error(err.Error())
 			return
 		}
 
-		// Return the result
 		encode(e, w)
 	}
 }

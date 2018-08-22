@@ -23,7 +23,6 @@ import (
 
 // ZeroMQ implementation of the event publisher
 type zeroMQEventPublisher struct {
-	pubType   int
 	publisher *zmq.Socket
 	mux       sync.Mutex
 }
@@ -33,7 +32,6 @@ func newZeroMQEventPublisher(config PubSubConfiguration) EventPublisher {
 	newPublisher.Bind(config.AddressPort)
 
 	return &zeroMQEventPublisher{
-		pubType:   ZEROMQ,
 		publisher: newPublisher,
 	}
 }
