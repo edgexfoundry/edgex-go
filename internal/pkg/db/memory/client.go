@@ -31,6 +31,9 @@ type MemDB struct {
 	deviceReports     []models.DeviceReport
 	deviceProfiles    []models.DeviceProfile
 	devices           []models.Device
+
+	// Export
+	regs []models.Registration
 }
 
 func (m *MemDB) CloseSession() {
@@ -48,3 +51,4 @@ func stringInSlice(a string, list []string) bool {
 	}
 	return false
 }
+

@@ -15,7 +15,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/export/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/consul"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db/memory"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo"
 
 	"go.uber.org/zap"
@@ -59,8 +58,8 @@ func Init(conf ConfigurationStruct, l *zap.Logger) error {
 	var err error
 
 	// Create a database client
-	dbc, err = NewDBClient(db.Configuration{
-		DbType:       conf.DBType,
+	mongo.NewClient(db.Configuration{
+		DbType:       "mongo",
 		Host:         conf.MongoURL,
 		Port:         conf.MongoPort,
 		Timeout:      conf.MongoConnectTimeout,
@@ -79,18 +78,5 @@ func Destroy() {
 	if dbc != nil {
 		dbc.CloseSession()
 		dbc = nil
-	}
-}
-
-// Return the dbClient interface
-func NewDBClient(config db.Configuration) (interfaces.DBClient, error) {
-	switch config.DbType {
-	case db.MongoDB:
-		// Create the mongo client
-		return mongo.NewExportMongoClient(config)
-	case db.MemoryDB:
-		return memory.NewExportMemoryClient(), nil
-	default:
-		return nil, db.ErrUnsupportedDatabase
 	}
 }

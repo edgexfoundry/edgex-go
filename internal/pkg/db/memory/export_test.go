@@ -18,11 +18,9 @@ func testDB(t *testing.T, db interfaces.DBClient) {
 	if err != nil {
 		t.Fatalf("Error getting registrations %v", err)
 	}
-	if regs == nil {
-		t.Fatalf("Should return an empty array")
-	}
+
 	if len(regs) != 0 {
-		t.Fatalf("There should not be no registrations instead of %d", len(regs))
+		t.Fatalf("Error: expected 0 registrations; found %d", len(regs))
 	}
 
 	r := models.Registration{}
@@ -103,6 +101,6 @@ func testDB(t *testing.T, db interfaces.DBClient) {
 }
 
 func TestExportMemoryDB(t *testing.T) {
-	memory := NewExportMemoryClient()
+	memory := &MemDB{}
 	testDB(t, memory)
 }

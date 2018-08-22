@@ -14,8 +14,6 @@
 package mongo
 
 import (
-	"fmt"
-	"strconv"
 	"time"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
@@ -29,64 +27,25 @@ const (
 	EXPORT_COLLECTION = "exportConfiguration"
 )
 
-/*
-Export client client
-Has functions for interacting with the export client mongo database
-*/
-
-type ExportMongoClient struct {
-	Session  *mgo.Session  // Mongo database session
-	Database *mgo.Database // Mongo database
-}
-
-// Return a pointer to the ExportMongoClient
-func NewExportMongoClient(config db.Configuration) (*ExportMongoClient, error) {
-	// Create the dial info for the Mongo session
-	connectionString := config.Host + ":" + strconv.Itoa(config.Port)
-	mongoDBDialInfo := &mgo.DialInfo{
-		Addrs:    []string{connectionString},
-		Timeout:  time.Duration(config.Timeout) * time.Millisecond,
-		Database: config.DatabaseName,
-		Username: config.Username,
-		Password: config.Password,
-	}
-	session, err := mgo.DialWithInfo(mongoDBDialInfo)
-	if err != nil {
-		return nil, fmt.Errorf("Error dialing the mongo server: " + err.Error())
-	}
-
-	mongoClient := &ExportMongoClient{Session: session, Database: session.DB(config.DatabaseName)}
-	return mongoClient, nil
-}
-
-// Get a copy of the session
-func (mc *ExportMongoClient) GetSessionCopy() *mgo.Session {
-	return mc.Session.Copy()
-}
-
-func (mc *ExportMongoClient) CloseSession() {
-	mc.Session.Close()
-}
-
 // ****************************** REGISTRATIONS ********************************
 
 // Return all the registrations
 // UnexpectedError - failed to retrieve registrations from the database
-func (mc *ExportMongoClient) Registrations() ([]models.Registration, error) {
+func (mc *MongoClient) Registrations() ([]models.Registration, error) {
 	return mc.getRegistrations(bson.M{})
 }
 
 // Add a new registration
 // UnexpectedError - failed to add to database
-func (mc *ExportMongoClient) AddRegistration(reg *models.Registration) (bson.ObjectId, error) {
-	s := mc.GetSessionCopy()
+func (mc *MongoClient) AddRegistration(reg *models.Registration) (bson.ObjectId, error) {
+	s := mc.getSessionCopy()
 	defer s.Close()
 
 	reg.Created = db.MakeTimestamp()
 	reg.ID = bson.NewObjectId()
 
 	// Add the registration
-	err := s.DB(mc.Database.Name).C(EXPORT_COLLECTION).Insert(reg)
+	err := s.DB(mc.database.Name).C(EXPORT_COLLECTION).Insert(reg)
 	if err != nil {
 		return reg.ID, err
 	}
@@ -97,13 +56,13 @@ func (mc *ExportMongoClient) AddRegistration(reg *models.Registration) (bson.Obj
 // Update a registration
 // UnexpectedError - problem updating in database
 // NotFound - no registration with the ID was found
-func (mc *ExportMongoClient) UpdateRegistration(reg models.Registration) error {
-	s := mc.GetSessionCopy()
+func (mc *MongoClient) UpdateRegistration(reg models.Registration) error {
+	s := mc.getSessionCopy()
 	defer s.Close()
 
 	reg.Modified = db.MakeTimestamp()
 
-	err := s.DB(mc.Database.Name).C(EXPORT_COLLECTION).UpdateId(reg.ID, reg)
+	err := s.DB(mc.database.Name).C(EXPORT_COLLECTION).UpdateId(reg.ID, reg)
 	if err == mgo.ErrNotFound {
 		return db.ErrNotFound
 	}
@@ -114,7 +73,7 @@ func (mc *ExportMongoClient) UpdateRegistration(reg models.Registration) error {
 // Get a registration by ID
 // UnexpectedError - problem getting in database
 // NotFound - no registration with the ID was found
-func (mc *ExportMongoClient) RegistrationById(id string) (models.Registration, error) {
+func (mc *MongoClient) RegistrationById(id string) (models.Registration, error) {
 	if !bson.IsObjectIdHex(id) {
 		return models.Registration{}, db.ErrInvalidObjectId
 	}
@@ -124,14 +83,14 @@ func (mc *ExportMongoClient) RegistrationById(id string) (models.Registration, e
 // Get a registration by name
 // UnexpectedError - problem getting in database
 // NotFound - no registration with the name was found
-func (mc *ExportMongoClient) RegistrationByName(name string) (models.Registration, error) {
+func (mc *MongoClient) RegistrationByName(name string) (models.Registration, error) {
 	return mc.getRegistration(bson.M{"name": name})
 }
 
 // Delete a registration by ID
 // UnexpectedError - problem getting in database
 // NotFound - no registration with the ID was found
-func (mc *ExportMongoClient) DeleteRegistrationById(id string) error {
+func (mc *MongoClient) DeleteRegistrationById(id string) error {
 	if !bson.IsObjectIdHex(id) {
 		return db.ErrInvalidObjectId
 	}
@@ -141,17 +100,17 @@ func (mc *ExportMongoClient) DeleteRegistrationById(id string) error {
 // Delete a registration by name
 // UnexpectedError - problem getting in database
 // NotFound - no registration with the ID was found
-func (mc *ExportMongoClient) DeleteRegistrationByName(name string) error {
+func (mc *MongoClient) DeleteRegistrationByName(name string) error {
 	return mc.deleteRegistration(bson.M{"name": name})
 }
 
 // Get registrations for the passed query
-func (mc *ExportMongoClient) getRegistrations(q bson.M) ([]models.Registration, error) {
-	s := mc.GetSessionCopy()
+func (mc *MongoClient) getRegistrations(q bson.M) ([]models.Registration, error) {
+	s := mc.getSessionCopy()
 	defer s.Close()
 
 	var regs []models.Registration
-	err := s.DB(mc.Database.Name).C(EXPORT_COLLECTION).Find(q).All(&regs)
+	err := s.DB(mc.database.Name).C(EXPORT_COLLECTION).Find(q).All(&regs)
 	if err != nil {
 		return regs, err
 	}
@@ -160,12 +119,12 @@ func (mc *ExportMongoClient) getRegistrations(q bson.M) ([]models.Registration, 
 }
 
 // Get a single registration for the passed query
-func (mc *ExportMongoClient) getRegistration(q bson.M) (models.Registration, error) {
-	s := mc.GetSessionCopy()
+func (mc *MongoClient) getRegistration(q bson.M) (models.Registration, error) {
+	s := mc.getSessionCopy()
 	defer s.Close()
 
 	var reg models.Registration
-	err := s.DB(mc.Database.Name).C(EXPORT_COLLECTION).Find(q).One(&reg)
+	err := s.DB(mc.database.Name).C(EXPORT_COLLECTION).Find(q).One(&reg)
 	if err == mgo.ErrNotFound {
 		return reg, db.ErrNotFound
 	}
@@ -174,11 +133,11 @@ func (mc *ExportMongoClient) getRegistration(q bson.M) (models.Registration, err
 }
 
 // Delete from the collection based on ID
-func (mc *ExportMongoClient) deleteRegistration(q bson.M) error {
-	s := mc.GetSessionCopy()
+func (mc *MongoClient) deleteRegistration(q bson.M) error {
+	s := mc.getSessionCopy()
 	defer s.Close()
 
-	err := s.DB(mc.Database.Name).C(EXPORT_COLLECTION).Remove(q)
+	err := s.DB(mc.database.Name).C(EXPORT_COLLECTION).Remove(q)
 	if err == mgo.ErrNotFound {
 		return db.ErrNotFound
 	}

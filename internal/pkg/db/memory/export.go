@@ -23,24 +23,11 @@ import (
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 )
 
-type ExportMemoryDB struct {
-	regs []models.Registration
-}
-
-func NewExportMemoryClient() *ExportMemoryDB {
-	return &ExportMemoryDB{
-		regs: make([]models.Registration, 0),
-	}
-}
-
-func (mc *ExportMemoryDB) Registrations() ([]models.Registration, error) {
+func (mc *MemDB) Registrations() ([]models.Registration, error) {
 	return mc.regs, nil
 }
 
-func (mc *ExportMemoryDB) CloseSession() {
-}
-
-func (mc *ExportMemoryDB) AddRegistration(reg *models.Registration) (bson.ObjectId, error) {
+func (mc *MemDB) AddRegistration(reg *models.Registration) (bson.ObjectId, error) {
 	ticks := time.Now().Unix()
 	reg.Created = ticks
 	reg.Modified = ticks
@@ -51,7 +38,7 @@ func (mc *ExportMemoryDB) AddRegistration(reg *models.Registration) (bson.Object
 	return reg.ID, nil
 }
 
-func (mc *ExportMemoryDB) UpdateRegistration(reg models.Registration) error {
+func (mc *MemDB) UpdateRegistration(reg models.Registration) error {
 	for i, r := range mc.regs {
 		if r.ID == reg.ID {
 			mc.regs[i] = reg
@@ -61,7 +48,7 @@ func (mc *ExportMemoryDB) UpdateRegistration(reg models.Registration) error {
 	return db.ErrNotFound
 }
 
-func (mc *ExportMemoryDB) RegistrationById(id string) (models.Registration, error) {
+func (mc *MemDB) RegistrationById(id string) (models.Registration, error) {
 	for _, reg := range mc.regs {
 		if reg.ID.Hex() == id {
 			return reg, nil
@@ -71,7 +58,7 @@ func (mc *ExportMemoryDB) RegistrationById(id string) (models.Registration, erro
 	return models.Registration{}, db.ErrNotFound
 }
 
-func (mc *ExportMemoryDB) RegistrationByName(name string) (models.Registration, error) {
+func (mc *MemDB) RegistrationByName(name string) (models.Registration, error) {
 	for _, reg := range mc.regs {
 		if reg.Name == name {
 			return reg, nil
@@ -81,7 +68,7 @@ func (mc *ExportMemoryDB) RegistrationByName(name string) (models.Registration, 
 	return models.Registration{}, db.ErrNotFound
 }
 
-func (mc *ExportMemoryDB) DeleteRegistrationById(id string) error {
+func (mc *MemDB) DeleteRegistrationById(id string) error {
 	for i, reg := range mc.regs {
 		if reg.ID.Hex() == id {
 			mc.regs = append(mc.regs[:i], mc.regs[i+1:]...)
@@ -91,7 +78,7 @@ func (mc *ExportMemoryDB) DeleteRegistrationById(id string) error {
 	return db.ErrNotFound
 }
 
-func (mc *ExportMemoryDB) DeleteRegistrationByName(name string) error {
+func (mc *MemDB) DeleteRegistrationByName(name string) error {
 	for i, reg := range mc.regs {
 		if reg.Name == name {
 			mc.regs = append(mc.regs[:i], mc.regs[i+1:]...)

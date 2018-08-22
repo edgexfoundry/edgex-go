@@ -9,21 +9,13 @@ package client
 import (
 	"testing"
 
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db/memory"
 )
 
 func TestDestroy(t *testing.T) {
 	// Set global state
-	dbc = nil
-	Destroy()
+	dbc = &memory.MemDB{}
 
-	var err error
-	dbc, err = NewDBClient(db.Configuration{
-		DbType: db.MemoryDB,
-	})
-	if err != nil {
-		t.Errorf("Error getting a memory client: %v", err)
-	}
 	Destroy()
 
 	// Call it twice does not fail
