@@ -13,6 +13,13 @@ import (
 	"go.uber.org/zap"
 )
 
+func init() {
+	if logger == nil {
+		logger = zap.NewExample()
+		_ = logger
+	}
+}
+
 func validRegistration() models.Registration {
 	r := models.Registration{}
 	r.Format = models.FormatJSON
