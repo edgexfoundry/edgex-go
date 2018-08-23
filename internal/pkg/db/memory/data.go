@@ -128,7 +128,7 @@ func (m *MemDB) EventsByCreationTime(startTime, endTime int64, limit int) ([]mod
 	events := []models.Event{}
 	count := 0
 	for _, e := range m.events {
-		if e.Created >= startTime && e.Created < endTime {
+		if e.Created >= startTime && e.Created <= endTime {
 			events = append(events, e)
 			count += 1
 			if count == limit {
@@ -269,7 +269,7 @@ func (m *MemDB) ReadingsByCreationTime(start, end int64, limit int) ([]models.Re
 	readings := []models.Reading{}
 	count := 0
 	for _, r := range m.readings {
-		if r.Created >= start && r.Created < end {
+		if r.Created >= start && r.Created <= end {
 			readings = append(readings, r)
 			count += 1
 			if count == limit {
