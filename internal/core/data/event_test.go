@@ -68,12 +68,10 @@ func TestCount(t *testing.T) {
 	c, err := count()
 	if err != nil {
 		t.Errorf(err.Error())
-		return
 	}
 
 	if c != 1 {
 		t.Errorf("expected event count 1, received: %d", c)
-		return
 	}
 }
 
@@ -82,12 +80,10 @@ func TestCountByDevice(t *testing.T) {
 	count, err := countByDevice(testEvent.Device)
 	if err != nil {
 		t.Errorf(err.Error())
-		return
 	}
 
 	if count == 0 {
 		t.Errorf("no events found")
-		return
 	}
 }
 
@@ -98,12 +94,10 @@ func TestDeleteByAge(t *testing.T) {
 	count, err := deleteByAge(age)
 	if err != nil {
 		t.Errorf(err.Error())
-		return
 	}
 
 	if count == 0 {
 		t.Errorf("no events deleted")
-		return
 	}
 }
 
@@ -112,17 +106,14 @@ func TestGetEvents(t *testing.T) {
 	events, err := getEvents(0)
 	if err != nil {
 		t.Errorf(err.Error())
-		return
 	}
 
 	if len(events) == 0 {
 		t.Errorf("no events found")
-		return
 	}
 
 	if len(events) != 1 {
 		t.Errorf("expected 1 event")
-		return
 	}
 
 	for e := range events {
@@ -139,12 +130,10 @@ func TestGetEventsWithLimit(t *testing.T) {
 	events, err := getEvents(1)
 	if err != nil {
 		t.Errorf(err.Error())
-		return
 	}
 
 	if len(events) != 1 {
 		t.Errorf("expected 1 event")
-		return
 	}
 }
 
@@ -171,7 +160,6 @@ func TestAddEventWithPersistence(t *testing.T) {
 	for i, val := range bitEvents {
 		if !val {
 			t.Errorf("event not received in timely fashion, index %v, TestAddEventWithPersistence", i)
-			return
 		}
 	}
 
@@ -204,7 +192,6 @@ func TestAddEventNoPersistence(t *testing.T) {
 	for i, val := range bitEvents {
 		if !val {
 			t.Errorf("event not received in timely fashion, index %v, TestAddEventNoPersistence", i)
-			return
 		}
 	}
 
