@@ -3,7 +3,7 @@
 # install all the config files from $SNAP/config/SERVICE/res/configuration.toml 
 # into $SNAP_DATA/config
 mkdir -p ${SNAP_DATA}/config
-for service in security-api-gateway core-command core-config-seed-go core-data core-metadata export-client export-distro support-logging; do
+for service in security-api-gateway core-command core-config-seed-go core-data core-metadata export-client export-distro support-logging support-notifications; do
     if [ ! -f "${SNAP_DATA}/config/${service}/res/configuration.toml" ]; then
         mkdir -p "${SNAP_DATA}/config/${service}/res"
         cp ${SNAP}/config/${service}/res/configuration.toml "${SNAP_DATA}/config/${service}/res/configuration.toml"
@@ -11,7 +11,7 @@ for service in security-api-gateway core-command core-config-seed-go core-data c
 done
 
 # special handling for additional core-config-seed-go config toml files
-for configType in "edgex-core-command;go" "edgex-core-data;go" "edgex-core-metadata;go" "edgex-support-logging;go"; do
+for configType in "edgex-core-command;go" "edgex-core-data;go" "edgex-core-metadata;go" "edgex-support-logging;go" "edgex-support-notifications;go"; do
     if [ ! -f "${SNAP_DATA}/config/core-config-seed-go/config/${configType}/configuration.toml" ]; then
         mkdir -p "${SNAP_DATA}/config/core-config-seed-go/config/${configType}"
         cp "${SNAP}/config/core-config-seed-go/config/${configType}/configuration.toml" "${SNAP_DATA}/config/core-config-seed-go/config/${configType}/configuration.toml"
