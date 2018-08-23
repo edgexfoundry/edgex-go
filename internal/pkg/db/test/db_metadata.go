@@ -53,7 +53,7 @@ func getDeviceService(db interfaces.DBClient, i int) (models.DeviceService, erro
 	name := fmt.Sprintf("name%d", i)
 	ds := models.DeviceService{}
 	ds.Name = name
-	ds.AdminState = "ENABLED"
+	ds.AdminState = "UNLOCKED"
 	ds.Addressable = getAddressable(i, "ds_")
 	ds.Labels = append(ds.Labels, name)
 	ds.OperatingState = "ENABLED"
@@ -211,7 +211,7 @@ func populateDevice(db interfaces.DBClient, count int) (bson.ObjectId, error) {
 		name := fmt.Sprintf("name%d", i)
 		d := models.Device{}
 		d.Name = name
-		d.AdminState = "ENABLED"
+		d.AdminState = "UNLOCKED"
 		d.OperatingState = "ENABLED"
 		d.LastConnected = 4
 		d.LastReported = 4
