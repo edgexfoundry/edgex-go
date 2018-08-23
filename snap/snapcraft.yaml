@@ -1,5 +1,5 @@
 name: edgexfoundry
-version: '0.6.0'
+version: '0.6.1~pre1'
 version-script: |
     echo $SNAPCRAFT_PROJECT_VERSION-$(date +%Y%m%d)+$(git rev-parse --short HEAD)
 summary: Provides a full set of Edgex Foundry core microservices.
@@ -12,8 +12,7 @@ description: |
  this snap can be found at:
  https://github.com/edgexfoundry/edgex-go
 
-# TODO: upgrade to stable before releasing to beta/candidate/stable
-grade: devel
+grade: stable
 confinement: strict
 #
 # TODO: still a few bugs to work out for confinement;
