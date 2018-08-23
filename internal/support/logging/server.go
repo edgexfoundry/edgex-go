@@ -14,17 +14,11 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
 
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/support/logging/models"
 	"github.com/go-zoo/bone"
 )
-
-// Copied from core/metadata/mongoOps.go
-// FIXME share instead of copy
-func makeTimestamp() int64 {
-	return time.Now().UnixNano() / int64(time.Millisecond)
-}
 
 func replyPing(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
@@ -56,7 +50,7 @@ func addLog(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	l.Created = makeTimestamp()
+	l.Created = db.MakeTimestamp()
 
 	w.WriteHeader(http.StatusAccepted)
 

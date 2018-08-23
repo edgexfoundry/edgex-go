@@ -20,7 +20,6 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
-	"time"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	notifications "github.com/edgexfoundry/edgex-go/pkg/clients/notifications"
@@ -1216,7 +1215,7 @@ func postNotification(name string, action string) {
 	if Configuration.NotificationPostDeviceChanges {
 		// Make the notification
 		notification := notifications.Notification{
-			Slug:        Configuration.NotificationsSlug + strconv.FormatInt((time.Now().UnixNano()/int64(time.Millisecond)), 10),
+			Slug:        Configuration.NotificationsSlug + strconv.FormatInt(db.MakeTimestamp(), 10),
 			Content:     Configuration.NotificationContent + name + "-" + string(action),
 			Category:    notifications.SW_HEALTH,
 			Description: Configuration.NotificationDescription,

@@ -19,7 +19,6 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
-	"time"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
@@ -77,7 +76,7 @@ func updateDeviceLastReportedConnected(device string) {
 		return
 	}
 
-	t := time.Now().UnixNano() / int64(time.Millisecond)
+	t := db.MakeTimestamp()
 	// Found device, now update lastReported
 	err = mdc.UpdateLastConnectedByName(d.Name, t)
 	if err != nil {
@@ -98,7 +97,7 @@ func updateDeviceServiceLastReportedConnected(device string) {
 		return
 	}
 
-	t := time.Now().UnixNano() / int64(time.Millisecond)
+	t := db.MakeTimestamp()
 
 	// Get the device
 	d, err := mdc.CheckForDevice(device)
@@ -432,7 +431,7 @@ func eventIdHandler(w http.ResponseWriter, r *http.Request) {
 
 		LoggingClient.Info("Updating event: " + e.ID.Hex())
 
-		e.Pushed = time.Now().UnixNano() / int64(time.Millisecond)
+		e.Pushed = db.MakeTimestamp()
 		err = dbClient.UpdateEvent(e)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)

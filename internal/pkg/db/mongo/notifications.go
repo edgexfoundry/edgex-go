@@ -16,11 +16,9 @@
 package mongo
 
 import (
-	"time"
-
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 	"gopkg.in/mgo.v2/bson"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 )
 
 const (
@@ -111,7 +109,7 @@ func (mc *MongoClient) DeleteNotificationBySlug(slug string) error {
 }
 
 func (mc *MongoClient) DeleteNotificationsOld(age int) error {
-	currentTime := time.Now().UnixNano() / int64(time.Millisecond)
+	currentTime := db.MakeTimestamp()
 	end := int(currentTime) - age
 	query := bson.M{"modified": bson.M{
 		"$lt": end}, "status": "PROCESSED"}
@@ -190,7 +188,7 @@ func (mc *MongoClient) UpdateTransmission(t models.Transmission) error {
 }
 
 func (mc *MongoClient) DeleteTransmission(age int64, status models.TransmissionStatus) error {
-	currentTime := time.Now().UnixNano() / int64(time.Millisecond)
+	currentTime := db.MakeTimestamp()
 	end := currentTime - age
 	query := bson.M{"modified": bson.M{"$lt": end}, "status": status}
 	return mc.deleteAll(query, TRANSMISSION_COLLECTION)
@@ -223,7 +221,7 @@ func (mc *MongoClient) Cleanup() error {
 }
 
 func (mc *MongoClient) CleanupOld(age int) error {
-	currentTime := time.Now().UnixNano() / int64(time.Millisecond)
+	currentTime := db.MakeTimestamp()
 	end := int(currentTime) - age
 	query := bson.M{"modified": bson.M{"$lt": end}}
 	mns, err := mc.getNotifications(query)
@@ -256,7 +254,7 @@ func (mc *MongoClient) addNotification(n *models.Notification) (bson.ObjectId, e
 	s := mc.getSessionCopy()
 	defer s.Close()
 
-	n.Created = time.Now().UnixNano() / int64(time.Millisecond)
+	n.Created = db.MakeTimestamp()
 	n.ID = bson.NewObjectId()
 
 	// Handle DBRefs
@@ -290,7 +288,7 @@ func (mc *MongoClient) updateNotification(n models.Notification) error {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
-	n.Modified = time.Now().UnixNano() / int64(time.Millisecond)
+	n.Modified = db.MakeTimestamp()
 
 	// Handle DBRef
 	mn := MongoNotification{Notification: n}
@@ -352,7 +350,7 @@ func (mc *MongoClient) addSubscription(sub *models.Subscription) (bson.ObjectId,
 	s := mc.getSessionCopy()
 	defer s.Close()
 
-	sub.Created = time.Now().UnixNano() / int64(time.Millisecond)
+	sub.Created = db.MakeTimestamp()
 	sub.ID = bson.NewObjectId()
 
 	// Handle DBRefs
@@ -386,7 +384,7 @@ func (mc *MongoClient) updateSubscription(sub models.Subscription) error {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
-	sub.Modified = time.Now().UnixNano() / int64(time.Millisecond)
+	sub.Modified = db.MakeTimestamp()
 
 	// Handle DBRef
 	ms := MongoSubscription{Subscription: sub}
@@ -464,7 +462,7 @@ func (mc *MongoClient) addTransmission(tran *models.Transmission) (bson.ObjectId
 	s := mc.getSessionCopy()
 	defer s.Close()
 
-	tran.Created = time.Now().UnixNano() / int64(time.Millisecond)
+	tran.Created = db.MakeTimestamp()
 	tran.ID = bson.NewObjectId()
 
 	// Handle DBRefs
@@ -482,7 +480,7 @@ func (mc *MongoClient) updateTransmission(tran models.Transmission) error {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
-	tran.Modified = time.Now().UnixNano() / int64(time.Millisecond)
+	tran.Modified = db.MakeTimestamp()
 
 	// Handle DBRef
 	mt := MongoTransmission{Transmission: tran}
