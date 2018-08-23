@@ -13,7 +13,9 @@
  *******************************************************************************/
 package data
 
-import "time"
+import (
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+)
 
 // Update when the device was last reported connected
 func updateDeviceLastReportedConnected(device string) {
@@ -35,7 +37,7 @@ func updateDeviceLastReportedConnected(device string) {
 		return
 	}
 
-	t := time.Now().UnixNano() / int64(time.Millisecond)
+	t := db.MakeTimestamp()
 	// Found device, now update lastReported
 	err = mdc.UpdateLastConnectedByName(d.Name, t)
 	if err != nil {
@@ -56,7 +58,7 @@ func updateDeviceServiceLastReportedConnected(device string) {
 		return
 	}
 
-	t := time.Now().UnixNano() / int64(time.Millisecond)
+	t := db.MakeTimestamp()
 
 	// Get the device
 	d, err := mdc.CheckForDevice(device)

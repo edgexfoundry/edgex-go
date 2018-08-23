@@ -15,10 +15,7 @@ import (
 	dbp "github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 	"gopkg.in/mgo.v2/bson"
-	"time"
 )
-
-const extraTime int64 = 10
 
 func populateDbReadings(db interfaces.DBClient, count int) (bson.ObjectId, error) {
 	var id bson.ObjectId
@@ -61,7 +58,6 @@ func populateDbEvents(db interfaces.DBClient, count int, pushed int64) (bson.Obj
 	for i := 0; i < count; i++ {
 		name := fmt.Sprintf("name%d", i)
 		e := models.Event{}
-		e.Created = time.Now().Unix()
 		e.Device = name
 		e.Event = name
 		e.Pushed = pushed
@@ -411,14 +407,14 @@ func testDBEvents(t *testing.T, db interfaces.DBClient) {
 		t.Fatalf("There should be 0 events, not %d", len(events))
 	}
 
-	events, err = db.EventsByCreationTime(beforeTime, afterTime+extraTime, 200)
+	events, err = db.EventsByCreationTime(beforeTime, afterTime, 200)
 	if err != nil {
 		t.Fatalf("Error getting EventsByCreationTime: %v", err)
 	}
 	if len(events) != 110 {
 		t.Fatalf("There should be 110 events, not %d", len(events))
 	}
-	events, err = db.EventsByCreationTime(beforeTime, afterTime+extraTime, 100)
+	events, err = db.EventsByCreationTime(beforeTime, afterTime, 100)
 	if err != nil {
 		t.Fatalf("Error getting EventsByCreationTime: %v", err)
 	}
@@ -426,7 +422,7 @@ func testDBEvents(t *testing.T, db interfaces.DBClient) {
 		t.Fatalf("There should be 100 events, not %d", len(events))
 	}
 
-	events, err = db.EventsOlderThanAge(afterTime + extraTime)
+	events, err = db.EventsOlderThanAge(0)
 	if err != nil {
 		t.Fatalf("Error getting EventsOlderThanAge: %v", err)
 	}

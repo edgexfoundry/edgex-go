@@ -87,21 +87,18 @@ Return number of events in Core Data
 func eventCountHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
-	switch r.Method {
-	case http.MethodGet:
-		count, err := count()
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			LoggingClient.Error(err.Error(), "")
-			return
-		}
+	count, err := countEvents()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		LoggingClient.Error(err.Error(), "")
+		return
+	}
 
-		// Return result
-		w.WriteHeader(http.StatusOK)
-		_, err = w.Write([]byte(strconv.Itoa(count)))
-		if err != nil {
-			LoggingClient.Error(err.Error(), "")
-		}
+	// Return result
+	w.WriteHeader(http.StatusOK)
+	_, err = w.Write([]byte(strconv.Itoa(count)))
+	if err != nil {
+		LoggingClient.Error(err.Error(), "")
 	}
 }
 
@@ -121,26 +118,22 @@ func eventCountByDeviceIdHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	switch r.Method {
-	case http.MethodGet:
-		// Check device
-		count, err := countByDevice(id)
-		if err != nil {
-			LoggingClient.Error(fmt.Sprintf("error checking device %s %v", id, err))
-			switch err := err.(type) {
-			case types.ErrNotFound:
-				http.Error(w, err.Error(), http.StatusNotFound)
-				return
-			default: //return an error on everything else.
-				http.Error(w, err.Error(), http.StatusServiceUnavailable)
-				return
-			}
+	// Check device
+	count, err := countEventsByDevice(id)
+	if err != nil {
+		LoggingClient.Error(fmt.Sprintf("error checking device %s %v", id, err))
+		switch err := err.(type) {
+		case types.ErrNotFound:
+			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		default: //return an error on everything else.
+			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			return
 		}
-
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(strconv.Itoa(count)))
-		break
 	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(strconv.Itoa(count)))
 }
 
 // Remove all the old events and associated readings (by age)
@@ -157,21 +150,18 @@ func eventByAgeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	switch r.Method {
-	case http.MethodDelete:
-		LoggingClient.Info("Deleting events by age: " + vars["age"])
+	LoggingClient.Info("Deleting events by age: " + vars["age"])
 
-		count, err := deleteByAge(age)
-		if err != nil {
-			LoggingClient.Error(err.Error())
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(strconv.Itoa(count)))
+	count, err := deleteEventsByAge(age)
+	if err != nil {
+		LoggingClient.Error(err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(strconv.Itoa(count)))
 }
 
 /*
@@ -268,19 +258,16 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 func scrubAllHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
-	switch r.Method {
-	case http.MethodDelete:
-		LoggingClient.Info("Deleting all events from database")
+	LoggingClient.Info("Deleting all events from database")
 
-		err := deleteAll()
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			LoggingClient.Error(err.Error())
-			return
-		}
-
-		encode(true, w)
+	err := deleteAllEvents()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		LoggingClient.Error(err.Error())
+		return
 	}
+
+	encode(true, w)
 }
 
 //GET
@@ -292,28 +279,25 @@ func getEventByIdHandler(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
 	}
 
-	switch r.Method {
-	case http.MethodGet:
-		// URL parameters
-		vars := mux.Vars(r)
-		id := vars["id"]
+	// URL parameters
+	vars := mux.Vars(r)
+	id := vars["id"]
 
-		// Get the event
-		e, err := getById(id)
-		if err != nil {
-			switch x := err.(type) {
-			case *errors.ErrEventNotFound:
-				http.Error(w, x.Error(), http.StatusNotFound)
-			default:
-				http.Error(w, x.Error(), http.StatusInternalServerError)
-			}
-
-			LoggingClient.Error(err.Error())
-			return
+	// Get the event
+	e, err := getEventById(id)
+	if err != nil {
+		switch x := err.(type) {
+		case *errors.ErrEventNotFound:
+			http.Error(w, x.Error(), http.StatusNotFound)
+		default:
+			http.Error(w, x.Error(), http.StatusInternalServerError)
 		}
 
-		encode(e, w)
+		LoggingClient.Error(err.Error())
+		return
 	}
+
+	encode(e, w)
 }
 
 /*
@@ -329,11 +313,11 @@ func eventIdHandler(w http.ResponseWriter, r *http.Request) {
 	id := vars["id"]
 
 	switch r.Method {
-	// Set the 'pushed' timestamp for the event to the current time - event is going to another (not fuse) service
+	// Set the 'pushed' timestamp for the event to the current time - event is going to another (not EdgeX) service
 	case http.MethodPut:
 		LoggingClient.Info("Updating event: " + id)
 
-		err := updatePushDate(id)
+		err := updateEventPushDate(id)
 		if err != nil {
 			switch x := err.(type) {
 			case *errors.ErrEventNotFound:

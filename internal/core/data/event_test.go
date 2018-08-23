@@ -65,7 +65,7 @@ func TestMain(m *testing.M) {
 //Test methods
 func TestCount(t *testing.T) {
 	reset()
-	c, err := count()
+	c, err := countEvents()
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -77,7 +77,7 @@ func TestCount(t *testing.T) {
 
 func TestCountByDevice(t *testing.T) {
 	reset()
-	count, err := countByDevice(testEvent.Device)
+	count, err := countEventsByDevice(testEvent.Device)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -89,9 +89,7 @@ func TestCountByDevice(t *testing.T) {
 
 func TestDeleteByAge(t *testing.T) {
 	reset()
-	time.Sleep(time.Millisecond * time.Duration(5))
-	age := db.MakeTimestamp()
-	count, err := deleteByAge(age)
+	count, err := deleteEventsByAge(-1)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -164,7 +162,7 @@ func TestAddEventWithPersistence(t *testing.T) {
 	}
 
 	//verify we can load the new event from the database
-	_, err = getById(newId)
+	_, err = getEventById(newId)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -196,7 +194,7 @@ func TestAddEventNoPersistence(t *testing.T) {
 	}
 
 	//event was not persisted so we should not find it in the database
-	_, err = getById(newId)
+	_, err = getEventById(newId)
 	if err != nil {
 		if x, ok := err.(*errors.ErrEventNotFound); !ok {
 			t.Errorf(x.Error())
@@ -246,7 +244,7 @@ func TestUpdateEvent(t *testing.T) {
 
 func TestDeleteAll(t *testing.T) {
 	reset()
-	err := deleteAll()
+	err := deleteAllEvents()
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -254,7 +252,7 @@ func TestDeleteAll(t *testing.T) {
 
 func TestGetEventById(t *testing.T) {
 	reset()
-	_, err := getById(testEvent.ID.Hex())
+	_, err := getEventById(testEvent.ID.Hex())
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -262,7 +260,7 @@ func TestGetEventById(t *testing.T) {
 
 func TestGetEventByIdNotFound(t *testing.T) {
 	reset()
-	_, err := getById("abcxyz")
+	_, err := getEventById("abcxyz")
 	if err != nil {
 		if x, ok := err.(*errors.ErrEventNotFound); !ok {
 			t.Errorf(x.Error())
@@ -273,11 +271,11 @@ func TestGetEventByIdNotFound(t *testing.T) {
 func TestUpdateEventPushDate(t *testing.T) {
 	reset()
 	old := testEvent.Pushed
-	err := updatePushDate(testEvent.ID.Hex())
+	err := updateEventPushDate(testEvent.ID.Hex())
 	if err != nil {
 		t.Errorf(err.Error())
 	}
-	e, err := getById(testEvent.ID.Hex())
+	e, err := getEventById(testEvent.ID.Hex())
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -293,7 +291,7 @@ func TestDeleteEventById(t *testing.T) {
 		t.Errorf(err.Error())
 	}
 
-	_, err = getById(testEvent.ID.Hex())
+	_, err = getEventById(testEvent.ID.Hex())
 	if err != nil {
 		if x, ok := err.(*errors.ErrEventNotFound); !ok {
 			t.Errorf(x.Error())

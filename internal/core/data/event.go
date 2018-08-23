@@ -15,17 +15,18 @@ package data
 
 import (
 	"fmt"
+	"net/http"
+	"net/url"
+	"strconv"
+
 	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 	"github.com/gorilla/mux"
-	"net/http"
-	"net/url"
-	"strconv"
 )
 
-func count() (int, error) {
+func countEvents() (int, error) {
 	count, err := dbClient.EventCount()
 	if err != nil {
 		return -1, err
@@ -33,7 +34,7 @@ func count() (int, error) {
 	return count, nil
 }
 
-func countByDevice(device string) (int, error) {
+func countEventsByDevice(device string) (int, error) {
 	err := newCheckDevice(device)
 	if err != nil {
 		return -1, err
@@ -78,7 +79,7 @@ func checkDevice(device string, w http.ResponseWriter) bool {
 	return true
 }
 
-func deleteByAge(age int64) (int, error) {
+func deleteEventsByAge(age int64) (int, error) {
 	events, err := dbClient.EventsOlderThanAge(age)
 	if err != nil {
 		return -1, err
@@ -180,7 +181,7 @@ func updateEvent(from models.Event) error {
 }
 
 func deleteEventById(id string) error {
-	e, err := getById(id)
+	e, err := getEventById(id)
 	if err != nil {
 		return err
 	}
@@ -206,11 +207,11 @@ func deleteEvent(e models.Event) error {
 	return nil
 }
 
-func deleteAll() error {
+func deleteAllEvents() error {
 	return dbClient.ScrubAllEvents()
 }
 
-func getById(id string) (models.Event, error) {
+func getEventById(id string) (models.Event, error) {
 	e, err := dbClient.EventById(id)
 	if err != nil {
 		if err == db.ErrNotFound {
@@ -221,8 +222,8 @@ func getById(id string) (models.Event, error) {
 	return e, nil
 }
 
-func updatePushDate(id string) error {
-	e, err := getById(id)
+func updateEventPushDate(id string) error {
+	e, err := getEventById(id)
 	if err != nil {
 		return err
 	}

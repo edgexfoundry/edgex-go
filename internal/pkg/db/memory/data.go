@@ -143,7 +143,7 @@ func (m *MemDB) EventsByCreationTime(startTime, endTime int64, limit int) ([]mod
 	events := []models.Event{}
 	count := 0
 	for _, e := range m.events {
-		if e.Created >= startTime && e.Created < endTime {
+		if e.Created >= startTime && e.Created <= endTime {
 			events = append(events, e)
 			count += 1
 			if count == limit {
@@ -170,9 +170,10 @@ func (m *MemDB) ReadingsByDeviceAndValueDescriptor(deviceId, valueDescriptor str
 }
 
 func (m *MemDB) EventsOlderThanAge(age int64) ([]models.Event, error) {
+	currentTime := db.MakeTimestamp()
 	events := []models.Event{}
 	for _, e := range m.events {
-		if e.Created < age {
+		if currentTime-e.Created >= age {
 			events = append(events, e)
 		}
 	}
