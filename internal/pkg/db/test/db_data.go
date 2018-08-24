@@ -407,14 +407,14 @@ func testDBEvents(t *testing.T, db interfaces.DBClient) {
 		t.Fatalf("There should be 0 events, not %d", len(events))
 	}
 
-	events, err = db.EventsByCreationTime(beforeTime, afterTime+10, 200)
+	events, err = db.EventsByCreationTime(beforeTime, afterTime, 200)
 	if err != nil {
 		t.Fatalf("Error getting EventsByCreationTime: %v", err)
 	}
 	if len(events) != 110 {
 		t.Fatalf("There should be 110 events, not %d", len(events))
 	}
-	events, err = db.EventsByCreationTime(beforeTime, afterTime+10, 100)
+	events, err = db.EventsByCreationTime(beforeTime, afterTime, 100)
 	if err != nil {
 		t.Fatalf("Error getting EventsByCreationTime: %v", err)
 	}
