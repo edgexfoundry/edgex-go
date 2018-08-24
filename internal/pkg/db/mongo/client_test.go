@@ -89,5 +89,13 @@ func BenchmarkMongoDB(b *testing.B) {
 	}
 	mongo := NewClient(config)
 
+	err := mongo.Connect()
+	if err != nil {
+		b.Fatalf("Could not connect with mongodb: %v", err)
+	}
+
+	s := mongo.getSessionCopy()
+	defer s.Close()
+
 	test.BenchmarkDB(b, mongo)
 }

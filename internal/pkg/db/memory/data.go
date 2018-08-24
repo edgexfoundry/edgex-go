@@ -284,7 +284,7 @@ func (m *MemDB) ReadingsByCreationTime(start, end int64, limit int) ([]models.Re
 	readings := []models.Reading{}
 	count := 0
 	for _, r := range m.readings {
-		if r.Created >= start && r.Created < end {
+		if r.Created >= start && r.Created <= end {
 			readings = append(readings, r)
 			count += 1
 			if count == limit {
