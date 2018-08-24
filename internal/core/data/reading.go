@@ -72,10 +72,10 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			valid, err := isValidValueDescriptor(vd, reading)
-			if !valid {
-				http.Error(w, "Validation failed", http.StatusConflict)
-				LoggingClient.Error("Validation failed")
+			err = isValidValueDescriptor(vd, reading)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusConflict)
+				LoggingClient.Error(err.Error())
 				return
 			}
 		}
@@ -152,10 +152,10 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 
 				fmt.Println(to)
 
-				valid, err := isValidValueDescriptor(vd, to)
-				if !valid {
-					http.Error(w, "Validation failed", http.StatusConflict)
-					LoggingClient.Error("Validation failed")
+				err = isValidValueDescriptor(vd, to)
+				if err != nil {
+					http.Error(w, err.Error(), http.StatusConflict)
+					LoggingClient.Error(err.Error())
 					return
 				}
 			}

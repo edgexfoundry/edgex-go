@@ -18,7 +18,7 @@ package models
 import "testing"
 
 func TestNotificationsSeverity_UnmarshalJSON(t *testing.T) {
-	var crtical = NotificationsSeverity(Critical)
+	var critical = NotificationsSeverity(Critical)
 	var normal = NotificationsSeverity(Normal)
 
 	tests := []struct {
@@ -27,7 +27,7 @@ func TestNotificationsSeverity_UnmarshalJSON(t *testing.T) {
 		arg     []byte
 		wantErr bool
 	}{
-		{"test marshal of critical", &crtical, []byte("\"CRITICAL\""), false},
+		{"test marshal of critical", &critical, []byte("\"CRITICAL\""), false},
 		{"test marshal of normal", &normal, []byte("\"NORMAL\""), false},
 	}
 	for _, tt := range tests {

@@ -15,7 +15,7 @@ const (
 
 type persistence interface {
 	add(logEntry models.LogEntry) error
-    closeSession()
+	closeSession()
 	remove(criteria matchCriteria) (int, error)
 	find(criteria matchCriteria) ([]models.LogEntry, error)
 

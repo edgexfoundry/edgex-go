@@ -131,9 +131,9 @@ func addNew(e models.Event) (string, error) {
 					return "", err
 				}
 			}
-			valid, err := isValidValueDescriptor(vd, e.Readings[reading])
-			if !valid {
-				return "", errors.NewErrValueDescriptorInvalid(vd.Name)
+			err = isValidValueDescriptor(vd, e.Readings[reading])
+			if err != nil {
+				return "", err
 			}
 		}
 	}
