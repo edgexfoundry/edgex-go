@@ -133,7 +133,7 @@ func addNew(e models.Event) (string, error) {
 			}
 			err = isValidValueDescriptor(vd, e.Readings[reading])
 			if err != nil {
-				return "", errors.NewErrValueDescriptorInvalid(vd.Name, err)
+				return "", err
 			}
 		}
 	}

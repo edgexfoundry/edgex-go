@@ -20,7 +20,6 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 	"github.com/gorilla/mux"
@@ -75,7 +74,6 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 
 			err = isValidValueDescriptor(vd, reading)
 			if err != nil {
-				err = errors.NewErrValueDescriptorInvalid(vd.Name, err)
 				http.Error(w, err.Error(), http.StatusConflict)
 				LoggingClient.Error(err.Error())
 				return
@@ -156,7 +154,6 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 
 				err = isValidValueDescriptor(vd, to)
 				if err != nil {
-					err = errors.NewErrValueDescriptorInvalid(vd.Name, err)
 					http.Error(w, err.Error(), http.StatusConflict)
 					LoggingClient.Error(err.Error())
 					return

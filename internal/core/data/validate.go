@@ -12,24 +12,30 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
 	models "github.com/edgexfoundry/edgex-go/pkg/models"
 )
 
 func isValidValueDescriptor(vd models.ValueDescriptor, reading models.Reading) error {
+	var err error
 	switch vd.Type {
 	case "B": // boolean
-		return validBoolean(reading)
+		err = validBoolean(reading)
 	case "F": // floating point
-		return validFloat(reading, vd)
+		err = validFloat(reading, vd)
 	case "I": // integer
-		return validInteger(reading, vd)
+		err = validInteger(reading, vd)
 	case "S": // string or character data
-		return validString(reading)
+		err = validString(reading)
 	case "J": // JSON data
-		return validJSON(reading)
+		err = validJSON(reading)
 	default:
-		return fmt.Errorf("Unknown type")
+		err = fmt.Errorf("Unknown type")
 	}
+	if err != nil {
+		return errors.NewErrValueDescriptorInvalid(vd.Name, err)
+	}
+	return nil
 }
 
 func validBoolean(reading models.Reading) error {
