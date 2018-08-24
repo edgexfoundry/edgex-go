@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/edgexfoundry/edgex-go/export"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -80,7 +81,7 @@ func (mc *MongoClient) AddRegistration(reg *export.Registration) (bson.ObjectId,
 	s := mc.GetSessionCopy()
 	defer s.Close()
 
-	reg.Created = time.Now().UnixNano() / int64(time.Millisecond)
+	reg.Created = db.MakeTimestamp()
 	reg.ID = bson.NewObjectId()
 
 	// Add the registration
@@ -99,7 +100,7 @@ func (mc *MongoClient) UpdateRegistration(reg export.Registration) error {
 	s := mc.GetSessionCopy()
 	defer s.Close()
 
-	reg.Modified = time.Now().UnixNano() / int64(time.Millisecond)
+	reg.Modified = db.MakeTimestamp()
 
 	err := s.DB(mc.Database.Name).C(EXPORT_COLLECTION).UpdateId(reg.ID, reg)
 	if err == mgo.ErrNotFound {

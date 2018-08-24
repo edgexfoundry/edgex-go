@@ -36,6 +36,21 @@ func (m *MemDB) Events() ([]models.Event, error) {
 	return cpy, nil
 }
 
+func (m *MemDB) EventsWithLimit(limit int) ([]models.Event, error) {
+	if limit > len(m.events) {
+		limit = len(m.events)
+	}
+
+	cpy := []models.Event{}
+	for i := range m.events {
+		if i >= limit {
+			break
+		}
+		cpy = append(cpy, m.events[i])
+	}
+	return cpy, nil
+}
+
 func (m *MemDB) AddEvent(e *models.Event) (bson.ObjectId, error) {
 	currentTime := db.MakeTimestamp()
 

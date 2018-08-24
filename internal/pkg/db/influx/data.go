@@ -35,6 +35,10 @@ func (ic *InfluxClient) Events() ([]models.Event, error) {
 	return ic.getEvents("")
 }
 
+func (ic *InfluxClient) EventsWithLimit(limit int) ([]models.Event, error) {
+	return ic.getEventsWithLimit("", limit)
+}
+
 // Add a new event
 // UnexpectedError - failed to add to database
 // NoValueDescriptor - no existing value descriptor for a reading in the event
@@ -155,6 +159,25 @@ func (ic *InfluxClient) getEvents(q string) ([]models.Event, error) {
 			if err != nil {
 				return events, err
 			}
+		}
+	}
+
+	return events, nil
+}
+
+// Get events for the passed query
+func (ic *InfluxClient) getEventsWithLimit(q string, limit int) ([]models.Event, error) {
+	events := []models.Event{}
+	query := fmt.Sprintf("SELECT * FROM %s %s LIMIT %v", db.EventsCollection, q, limit)
+	res, err := ic.queryDB(query)
+	if err != nil {
+		return events, err
+	}
+
+	if len(res) == 1 && len(res[0].Series) == 1 {
+		events, err = parseEvents(res[0])
+		if err != nil {
+			return events, err
 		}
 	}
 

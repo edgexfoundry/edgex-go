@@ -40,7 +40,7 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Check max limit
-		if len(r) > configuration.ReadMaxLimit {
+		if len(r) > Configuration.ReadMaxLimit {
 			http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
 			LoggingClient.Error(maxExceededString)
 			return
@@ -59,7 +59,7 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if configuration.ValidateCheck {
+		if Configuration.ValidateCheck {
 			// Check the value descriptor
 			vd, err := dbClient.ValueDescriptorByName(reading.Name)
 			if err != nil {
@@ -87,7 +87,7 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		if configuration.PersistData {
+		if Configuration.PersistData {
 			id, err := dbClient.AddReading(reading)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -137,7 +137,7 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if from.Value != "" || from.Name != "" {
-			if configuration.ValidateCheck {
+			if Configuration.ValidateCheck {
 				// Check the value descriptor
 				vd, err := dbClient.ValueDescriptorByName(to.Name)
 				if err != nil {
@@ -281,7 +281,7 @@ func readingByDeviceHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodGet:
-		if limit > configuration.ReadMaxLimit {
+		if limit > Configuration.ReadMaxLimit {
 			http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
 			LoggingClient.Error(maxExceededString)
 			return
@@ -326,7 +326,7 @@ func readingbyValueDescriptorHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check for value descriptor
-	if configuration.ValidateCheck {
+	if Configuration.ValidateCheck {
 		_, err = dbClient.ValueDescriptorByName(name)
 		if err != nil {
 			if err == db.ErrNotFound {
@@ -340,7 +340,7 @@ func readingbyValueDescriptorHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Limit is too large
-	if limit > configuration.ReadMaxLimit {
+	if limit > Configuration.ReadMaxLimit {
 		http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
 		LoggingClient.Error(maxExceededString)
 		return
@@ -380,7 +380,7 @@ func readingByUomLabelHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Limit was exceeded
-	if limit > configuration.ReadMaxLimit {
+	if limit > Configuration.ReadMaxLimit {
 		http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
 		LoggingClient.Error(maxExceededString)
 		return
@@ -432,7 +432,7 @@ func readingByLabelHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Limit is too large
-	if limit > configuration.ReadMaxLimit {
+	if limit > Configuration.ReadMaxLimit {
 		LoggingClient.Error(maxExceededString)
 		http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
 		return
@@ -484,7 +484,7 @@ func readingByTypeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Limit exceeds max limit
-	if l > configuration.ReadMaxLimit {
+	if l > Configuration.ReadMaxLimit {
 		http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
 		LoggingClient.Error(maxExceededString)
 		return
@@ -539,7 +539,7 @@ func readingByCreationTimeHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodGet:
-		if l > configuration.ReadMaxLimit {
+		if l > Configuration.ReadMaxLimit {
 			LoggingClient.Error(maxExceededString)
 			http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
 			return
@@ -586,7 +586,7 @@ func readingByValueDescriptorAndDeviceHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	if limit > configuration.ReadMaxLimit {
+	if limit > Configuration.ReadMaxLimit {
 		LoggingClient.Error(maxExceededString)
 		http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
 		return
@@ -598,7 +598,7 @@ func readingByValueDescriptorAndDeviceHandler(w http.ResponseWriter, r *http.Req
 	}
 
 	// Check for value descriptor
-	if configuration.ValidateCheck {
+	if Configuration.ValidateCheck {
 		_, err = dbClient.ValueDescriptorByName(name)
 		if err != nil {
 			if err == db.ErrNotFound {

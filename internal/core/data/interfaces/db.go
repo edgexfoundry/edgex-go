@@ -28,6 +28,10 @@ type DBClient interface {
 	// UnexpectedError - failed to retrieve events from the database
 	Events() ([]models.Event, error)
 
+	// Return events up to the number specified
+	// UnexpectedError - failed to retrieve events from the database
+	EventsWithLimit(limit int) ([]models.Event, error)
+
 	// Add a new event
 	// UnexpectedError - failed to add to database
 	// NoValueDescriptor - no existing value descriptor for a reading in the event
