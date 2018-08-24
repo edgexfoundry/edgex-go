@@ -106,6 +106,9 @@ if [ "$SECURITY" ]; then
         int_service $pid "nginx parent"
     fi
 
+    # finally for kong also remove the kong_env file so that file doesn't stop the start script from working again
+    rm -f $SNAP_DATA/kong/.kong_env
+
     # kill vault-worker, as it might get stuck in an infinite loop trying to unseal the vault
     pid=`pgrep -f "bin/vault-worker.sh"` || true
     if [ ! -z $pid ] && [ $pid != "" ] ; then
