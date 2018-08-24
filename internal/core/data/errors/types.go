@@ -29,14 +29,15 @@ func NewErrEventNotFound(id string) error {
 
 type ErrValueDescriptorInvalid struct {
 	name string
+	err  error
 }
 
 func (b ErrValueDescriptorInvalid) Error() string {
-	return fmt.Sprintf("value descriptor '%s' is either not unique or not formatted properly", b.name)
+	return fmt.Sprintf("invalid value descriptor '%s': %v", b.name, b.err)
 }
 
-func NewErrValueDescriptorInvalid(name string) error {
-	return &ErrValueDescriptorInvalid{name: name}
+func NewErrValueDescriptorInvalid(name string, err error) error {
+	return &ErrValueDescriptorInvalid{name: name, err: err}
 }
 
 type ErrValueDescriptorNotFound struct {
