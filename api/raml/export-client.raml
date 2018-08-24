@@ -17,7 +17,6 @@ schemas:
             repeat: false
     delete: 
         description: Delete a client export registration by database id. Return NotFoundException (HTTP 404) if the existing export registration cannot be found by id. Return ServiceException (HTTP 503) for unknown or unanticipated issues.
-        displayName: delete an ExportRegistration by database generated id
         responses: 
             "200": 
                 description: boolean indicating success of the operation
@@ -37,7 +36,6 @@ schemas:
             repeat: false
     delete: 
         description: Delete a client export registration by name.  Return NotFoundException (HTTP 404) if the existing export registration cannot be found by name. Return ServiceException (HTTP 503) for unknown or unanticipated issues.
-        displayName: delete an ExportRegistration by unique name
         responses: 
             "200": 
                 description: boolean indicating success of the operation
@@ -47,7 +45,6 @@ schemas:
                 description: or unknown or unanticipated issues
     get: 
         description: Fetch a client export registration by unique name. Return NotFoundException (HTTP 404) if no export registration matches on name. Return ServiceException (HTTP 503) for unknown or unanticipated issues.
-        displayName: get an ExportRegistration by unique name
         responses: 
             "200": 
                 description: the export registration matching the identifier provided
@@ -71,7 +68,6 @@ schemas:
             repeat: false
     get: 
         description: Fetch a client export registration by id. Return NotFoundException (HTTP 404) if no export registration matches on id. Return ServiceException (HTTP 503) for unknown or unanticipated issues.
-        displayName: get an ExportRegistration by database id
         responses: 
             "200": 
                 description: the export registration matching the identifier provided
@@ -88,7 +84,6 @@ schemas:
     description: "example - http://localhost:48071/api/v1/registration"
     post: 
         description: Add a new client export registration. Name must be unique across the database. Return ServiceException (HTTP 503) for unknown or unanticipated issues.
-        displayName: add a new client ExportRegistration
         body: 
             application/json: 
                 schema: ExportRegistration
@@ -102,7 +97,6 @@ schemas:
                 description: for unknown or unanticipated issues.
     put: 
         description: Update a client export registration. Name & id are not updated as they are identifiers. Return NotFoundException (HTTP 404) if the existing export registration cannot be found by id or name. Return ServiceException (HTTP 503) for unknown or unanticipated issues.
-        displayName: update an ExportRegistration
         body: 
             application/json: 
                 schema: ExportRegistration
@@ -118,7 +112,6 @@ schemas:
                 description: for unknown or unanticipated issues
     get: 
         description: Fetch all client export registrations. Return ServiceException (HTTP 503) for unknown or unanticipated issues. No limits are exercised on this query at this time. May need to add this in the future if the number of clients is huge.
-        displayName: get all ExportRegistrations
         responses: 
             "200": 
                 description: a list of all client export registrations
@@ -140,7 +133,6 @@ schemas:
             repeat: false
     get: 
         description: Fetch all supported values for the specified Export Client registration property type. Types are algorithms, compressions, formats, and destinations. Return ServiceException (HTTP 503) for unknown type specifications.
-        displayName: get all supported values for the specified type
         responses: 
             "200": 
                 description: a list of all supported values for the specified client export registration property type
@@ -154,7 +146,6 @@ schemas:
     description: "example - http://localhost:48071/api/v1/ping"
     get: 
         description: Test service providing an indication that the service is available.
-        displayName: ping to test if service is up
         responses: 
             "200": 
                 description: pong as a string
