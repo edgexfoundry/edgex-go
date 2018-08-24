@@ -8,14 +8,14 @@ package distro
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
+
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/consul"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/coredata"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
-	"github.com/edgexfoundry/edgex-go/pkg/models"
 	"go.uber.org/zap"
-	"strconv"
-	"strings"
 )
 
 const (
@@ -25,9 +25,26 @@ const (
 
 var logger *zap.Logger
 var ec coredata.EventClient
-var configuration = models.ConfigurationStruct{} // Needs to be initialized before used
+var configuration = ConfigurationStruct{} // Needs to be initialized before used
 
-func ConnectToConsul(conf models.ConfigurationStruct) error {
+
+type ConfigurationStruct struct {
+	Hostname             string
+	Port                 int
+	DistroHost           string
+	ClientHost           string
+	DataHost             string
+	DataPort             int
+	ConsulHost           string
+	ConsulPort           int
+	ConsulProfilesActive string
+	CheckInterval        string
+	MQTTSCert            string
+	MQTTSKey             string
+	MarkPushed           bool
+}
+
+func ConnectToConsul(conf ConfigurationStruct) error {
 	// Initialize service on Consul
 	err := consulclient.ConsulInit(consulclient.ConsulConfig{
 		ServiceName:    internal.ExportDistroServiceKey,
@@ -50,7 +67,7 @@ func ConnectToConsul(conf models.ConfigurationStruct) error {
 	return nil
 }
 
-func Init(conf models.ConfigurationStruct, l *zap.Logger, useConsul bool) error {
+func Init(conf ConfigurationStruct, l *zap.Logger, useConsul bool) error {
 	configuration = conf
 	logger = l
 

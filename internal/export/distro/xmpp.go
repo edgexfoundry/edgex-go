@@ -6,12 +6,15 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-package models
+package distro
 
 import (
 	"crypto/tls"
 	"strings"
 	"time"
+
+	"github.com/edgexfoundry/edgex-go/internal/export/interfaces"
+	"github.com/edgexfoundry/edgex-go/pkg/models"
 
 	"github.com/mattn/go-xmpp"
 )
@@ -26,7 +29,7 @@ type xmppSender struct {
 	stamp   time.Time
 }
 
-func NewXMPPSender(addr Addressable) Sender {
+func NewXMPPSender(addr models.Addressable) interfaces.Sender {
 	protocol := strings.ToLower(addr.Protocol)
 
 	if protocol == "tls" {
@@ -57,7 +60,7 @@ func NewXMPPSender(addr Addressable) Sender {
 	return sender
 }
 
-func (sender *xmppSender) Send(data []byte, event *Event) bool {
+func (sender *xmppSender) Send(data []byte, event *models.Event) bool {
 	stringData := string(data)
 
 	sender.client.Send(xmpp.Chat{

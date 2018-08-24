@@ -4,9 +4,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package models
+package distro
 
 import (
+	"github.com/edgexfoundry/edgex-go/internal/export"
+	"github.com/edgexfoundry/edgex-go/internal/export/interfaces"
+	"github.com/edgexfoundry/edgex-go/pkg/models"
 	"go.uber.org/zap"
 )
 
@@ -14,7 +17,7 @@ type devIdFilterDetails struct {
 	deviceIDs []string
 }
 
-func NewDevIdFilter(filter Filter) Filterer {
+func NewDevIdFilter(filter export.Filter) interfaces.Filterer {
 
 	filterer := devIdFilterDetails{
 		deviceIDs: filter.DeviceIDs,
@@ -22,7 +25,7 @@ func NewDevIdFilter(filter Filter) Filterer {
 	return filterer
 }
 
-func (filter devIdFilterDetails) Filter(event *Event) (bool, *Event) {
+func (filter devIdFilterDetails) Filter(event *models.Event) (bool, *models.Event) {
 
 	if event == nil {
 		return false, nil
@@ -41,26 +44,26 @@ type valueDescFilterDetails struct {
 	valueDescIDs []string
 }
 
-func NewValueDescFilter(filter Filter) Filterer {
+func NewValueDescFilter(filter export.Filter) interfaces.Filterer {
 	filterer := valueDescFilterDetails{
 		valueDescIDs: filter.ValueDescriptorIDs,
 	}
 	return filterer
 }
 
-func (filter valueDescFilterDetails) Filter(event *Event) (bool, *Event) {
+func (filter valueDescFilterDetails) Filter(event *models.Event) (bool, *models.Event) {
 
 	if event == nil {
 		return false, nil
 	}
 
-	auxEvent := &Event{
+	auxEvent := &models.Event{
 		Pushed:   event.Pushed,
 		Device:   event.Device,
 		Created:  event.Created,
 		Modified: event.Modified,
 		Origin:   event.Origin,
-		Readings: []Reading{},
+		Readings: []models.Reading{},
 	}
 
 	for _, filterId := range filter.valueDescIDs {

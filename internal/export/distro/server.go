@@ -12,9 +12,10 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/edgexfoundry/edgex-go/internal/export"
+
 	"github.com/go-zoo/bone"
 	"go.uber.org/zap"
-	"github.com/edgexfoundry/edgex-go/pkg/models"
 )
 
 const (
@@ -38,7 +39,7 @@ func replyNotifyRegistrations(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	update := models.NotifyUpdate{}
+	update := export.NotifyUpdate{}
 	if err := json.Unmarshal(data, &update); err != nil {
 		logger.Error("Failed to parse", zap.ByteString("json", data))
 		w.WriteHeader(http.StatusBadRequest)
@@ -50,9 +51,9 @@ func replyNotifyRegistrations(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	if update.Operation != models.NotifyUpdateAdd &&
-		update.Operation != models.NotifyUpdateUpdate &&
-		update.Operation != models.NotifyUpdateDelete {
+	if update.Operation != export.NotifyUpdateAdd &&
+		update.Operation != export.NotifyUpdateUpdate &&
+		update.Operation != export.NotifyUpdateDelete {
 		logger.Error("Invalid value for operation",
 			zap.String("operation", update.Operation))
 		w.WriteHeader(http.StatusBadRequest)

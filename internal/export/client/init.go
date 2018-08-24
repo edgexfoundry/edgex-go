@@ -12,7 +12,7 @@ import (
 	"strings"
 
 	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/export/interfaces"
+	"github.com/edgexfoundry/edgex-go/internal/export"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/consul"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo"
@@ -25,7 +25,7 @@ const (
 )
 
 // Global variables
-var dbc interfaces.DBClient
+var dbc export.DBClient
 var logger *zap.Logger
 
 func ConnectToConsul(conf ConfigurationStruct) error {

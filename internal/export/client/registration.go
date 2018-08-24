@@ -15,10 +15,11 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/edgexfoundry/edgex-go/internal/export"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/go-zoo/bone"
 	"go.uber.org/zap"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
-	"github.com/edgexfoundry/edgex-go/pkg/models"
+
 )
 
 const (
@@ -55,18 +56,18 @@ func getRegList(w http.ResponseWriter, r *http.Request) {
 
 	switch t {
 	case typeAlgorithms:
-		list = append(list, models.EncNone)
-		list = append(list, models.EncAes)
+		list = append(list, export.EncNone)
+		list = append(list, export.EncAes)
 	case typeCompressions:
-		list = append(list, models.CompNone)
-		list = append(list, models.CompGzip)
-		list = append(list, models.CompZip)
+		list = append(list, export.CompNone)
+		list = append(list, export.CompGzip)
+		list = append(list, export.CompZip)
 	case typeFormats:
-		list = append(list, models.FormatJSON)
-		list = append(list, models.FormatXML)
+		list = append(list, export.FormatJSON)
+		list = append(list, export.FormatXML)
 	case typeDestinations:
-		list = append(list, models.DestMQTT)
-		list = append(list, models.DestRest)
+		list = append(list, export.DestMQTT)
+		list = append(list, export.DestRest)
 	default:
 		logger.Error("Unknown type: " + t)
 		http.Error(w, "Unknown type: "+t, http.StatusBadRequest)
@@ -111,7 +112,7 @@ func addReg(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	reg := models.Registration{}
+	reg := export.Registration{}
 	if err := json.Unmarshal(data, &reg); err != nil {
 		logger.Error("Failed to query add registration", zap.Error(err))
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -142,7 +143,7 @@ func addReg(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	notifyUpdatedRegistrations(models.NotifyUpdate{Name: reg.Name,
+	notifyUpdatedRegistrations(export.NotifyUpdate{Name: reg.Name,
 		Operation: "add"})
 
 	w.WriteHeader(http.StatusOK)
@@ -157,7 +158,7 @@ func updateReg(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var fromReg models.Registration
+	var fromReg export.Registration
 	if err := json.Unmarshal(data, &fromReg); err != nil {
 		logger.Error("Failed to unmarshal update registration", zap.Error(err))
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -165,7 +166,7 @@ func updateReg(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check if the registration exists
-	var toReg models.Registration
+	var toReg export.Registration
 	if fromReg.ID != "" {
 		toReg, err = dbc.RegistrationById(fromReg.ID.Hex())
 	} else if fromReg.Name != "" {
@@ -231,7 +232,7 @@ func updateReg(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	notifyUpdatedRegistrations(models.NotifyUpdate{Name: toReg.Name,
+	notifyUpdatedRegistrations(export.NotifyUpdate{Name: toReg.Name,
 		Operation: "update"})
 
 	w.Header().Set("Content-Type", applicationJson)
@@ -258,7 +259,7 @@ func delRegByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	notifyUpdatedRegistrations(models.NotifyUpdate{Name: reg.Name,
+	notifyUpdatedRegistrations(export.NotifyUpdate{Name: reg.Name,
 		Operation: "delete"})
 
 	w.Header().Set("Content-Type", applicationJson)
@@ -276,7 +277,7 @@ func delRegByName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	notifyUpdatedRegistrations(models.NotifyUpdate{Name: name,
+	notifyUpdatedRegistrations(export.NotifyUpdate{Name: name,
 		Operation: "delete"})
 
 	w.Header().Set("Content-Type", applicationJson)
@@ -284,7 +285,7 @@ func delRegByName(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("true"))
 }
 
-func notifyUpdatedRegistrations(update models.NotifyUpdate) {
+func notifyUpdatedRegistrations(update export.NotifyUpdate) {
 	go func() {
 		client := &http.Client{}
 		url := "http://" + configuration.DistroHost + ":" + strconv.Itoa(configuration.DistroPort) +

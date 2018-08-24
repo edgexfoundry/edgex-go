@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	MQTT "github.com/eclipse/paho.mqtt.golang"
+	"github.com/edgexfoundry/edgex-go/internal/export/interfaces"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 	"go.uber.org/zap"
 )
@@ -30,7 +31,7 @@ type iotCoreSender struct {
 }
 
 // NewIoTCoreSender returns new Google IoT Core sender instance.
-func NewIoTCoreSender(addr models.Addressable) models.Sender {
+func NewIoTCoreSender(addr models.Addressable) interfaces.Sender {
 	protocol := strings.ToLower(addr.Protocol)
 	broker := fmt.Sprintf("%s%s", addr.GetBaseURL(), addr.Path)
 	deviceID := extractDeviceID(addr.Publisher)

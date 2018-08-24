@@ -18,28 +18,31 @@ import (
 	"net/http"
 	"time"
 
-	"go.uber.org/zap"
+	"github.com/edgexfoundry/edgex-go/internal/export"
+	"github.com/edgexfoundry/edgex-go/internal/export/interfaces"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
+
+	"go.uber.org/zap"
 )
 
-var registrationChanges chan models.NotifyUpdate = make(chan models.NotifyUpdate, 2)
+var registrationChanges chan export.NotifyUpdate = make(chan export.NotifyUpdate, 2)
 
 // RegistrationInfo - registration info
 type registrationInfo struct {
-	registration models.Registration
-	format       models.Formatter
-	compression  models.Transformer
-	encrypt      models.Transformer
-	sender       models.Sender
-	filter       []models.Filterer
+	registration export.Registration
+	format       interfaces.Formatter
+	compression  interfaces.Transformer
+	encrypt      interfaces.Transformer
+	sender       interfaces.Sender
+	filter       []interfaces.Filterer
 
-	chRegistration chan *models.Registration
+	chRegistration chan *export.Registration
 	chEvent        chan *models.Event
 
 	deleteMe bool
 }
 
-func RefreshRegistrations(update models.NotifyUpdate) {
+func RefreshRegistrations(update export.NotifyUpdate) {
 	// TODO make it not blocking, return bool?
 	registrationChanges <- update
 }
@@ -47,31 +50,31 @@ func RefreshRegistrations(update models.NotifyUpdate) {
 func newRegistrationInfo() *registrationInfo {
 	reg := &registrationInfo{}
 
-	reg.chRegistration = make(chan *models.Registration)
+	reg.chRegistration = make(chan *export.Registration)
 	reg.chEvent = make(chan *models.Event)
 	return reg
 }
 
-func (reg *registrationInfo) update(newReg models.Registration) bool {
+func (reg *registrationInfo) update(newReg export.Registration) bool {
 	reg.registration = newReg
 
 	reg.format = nil
 	switch newReg.Format {
-	case models.FormatJSON:
+	case export.FormatJSON:
 		reg.format = jsonFormatter{}
-	case models.FormatXML:
+	case export.FormatXML:
 		reg.format = xmlFormatter{}
-	case models.FormatSerialized:
+	case export.FormatSerialized:
 		// TODO reg.format = distro.NewSerializedFormat()
-	case models.FormatIoTCoreJSON:
+	case export.FormatIoTCoreJSON:
 		reg.format = jsonFormatter{}
-	case models.FormatAzureJSON:
+	case export.FormatAzureJSON:
 		reg.format = azureFormatter{}
-	case models.FormatCSV:
+	case export.FormatCSV:
 		// TODO reg.format = distro.NewCsvFormat()
-	case models.FormatThingsBoardJSON:
+	case export.FormatThingsBoardJSON:
 		reg.format = thingsboardJSONFormatter{}
-	case models.FormatNOOP:
+	case export.FormatNOOP:
 		reg.format = noopFormatter{}
 	default:
 		logger.Warn("Format not supported: ", zap.String("format", newReg.Format))
@@ -80,11 +83,11 @@ func (reg *registrationInfo) update(newReg models.Registration) bool {
 
 	reg.compression = nil
 	switch newReg.Compression {
-	case models.CompNone:
+	case export.CompNone:
 		reg.compression = nil
-	case models.CompGzip:
+	case export.CompGzip:
 		reg.compression = &gzipTransformer{}
-	case models.CompZip:
+	case export.CompZip:
 		reg.compression = &zlibTransformer{}
 	default:
 		logger.Warn("Compression not supported: ", zap.String("compression", newReg.Compression))
@@ -93,18 +96,18 @@ func (reg *registrationInfo) update(newReg models.Registration) bool {
 
 	reg.sender = nil
 	switch newReg.Destination {
-	case models.DestMQTT, models.DestAzureMQTT:
+	case export.DestMQTT, export.DestAzureMQTT:
 		reg.sender = NewMqttSender(newReg.Addressable)
-	case models.DestZMQ:
+	case export.DestZMQ:
 		logger.Info("Destination ZMQ is not supported")
-	case models.DestIotCoreMQTT:
+	case export.DestIotCoreMQTT:
 		reg.sender = NewIoTCoreSender(newReg.Addressable)
-	case models.DestRest:
-		reg.sender = models.NewHTTPSender(newReg.Addressable)
-	case models.DestXMPP:
-		reg.sender = models.NewXMPPSender(newReg.Addressable)
-	case models.DestInfluxDB:
-		reg.sender = models.NewInfluxDBSender(newReg.Addressable)
+	case export.DestRest:
+		reg.sender = NewHTTPSender(newReg.Addressable)
+	case export.DestXMPP:
+		reg.sender = NewXMPPSender(newReg.Addressable)
+	case export.DestInfluxDB:
+		reg.sender = NewInfluxDBSender(newReg.Addressable)
 
 	default:
 		logger.Warn("Destination not supported: ", zap.String("destination", newReg.Destination))
@@ -117,10 +120,10 @@ func (reg *registrationInfo) update(newReg models.Registration) bool {
 
 	reg.encrypt = nil
 	switch newReg.Encryption.Algo {
-	case models.EncNone:
+	case export.EncNone:
 		reg.encrypt = nil
-	case models.EncAes:
-		reg.encrypt = models.NewAESEncryption(newReg.Encryption)
+	case export.EncAes:
+		reg.encrypt = export.NewAESEncryption(newReg.Encryption)
 	default:
 		logger.Warn("Encryption not supported: ", zap.String("Algorithm", newReg.Encryption.Algo))
 		return false
@@ -129,12 +132,12 @@ func (reg *registrationInfo) update(newReg models.Registration) bool {
 	reg.filter = nil
 
 	if len(newReg.Filter.DeviceIDs) > 0 {
-		reg.filter = append(reg.filter, models.NewDevIdFilter(newReg.Filter))
+		reg.filter = append(reg.filter, NewDevIdFilter(newReg.Filter))
 		logger.Debug("Device ID filter added: ", zap.Any("filters", newReg.Filter.DeviceIDs))
 	}
 
 	if len(newReg.Filter.ValueDescriptorIDs) > 0 {
-		reg.filter = append(reg.filter, models.NewValueDescFilter(newReg.Filter))
+		reg.filter = append(reg.filter, NewValueDescFilter(newReg.Filter))
 		logger.Debug("Value descriptor filter added: ", zap.Any("filters", newReg.Filter.ValueDescriptorIDs))
 	}
 
@@ -211,10 +214,10 @@ func registrationLoop(reg *registrationInfo) {
 }
 
 func updateRunningRegistrations(running map[string]*registrationInfo,
-	update models.NotifyUpdate) error {
+	update export.NotifyUpdate) error {
 
 	switch update.Operation {
-	case models.NotifyUpdateDelete:
+	case export.NotifyUpdateDelete:
 		for k, v := range running {
 			if k == update.Name {
 				v.chRegistration <- nil
@@ -223,7 +226,7 @@ func updateRunningRegistrations(running map[string]*registrationInfo,
 			}
 		}
 		return fmt.Errorf("delete update not processed")
-	case models.NotifyUpdateUpdate:
+	case export.NotifyUpdateUpdate:
 		reg := GetRegistrationByName(update.Name)
 		if reg == nil {
 			return fmt.Errorf("Could not find registration")
@@ -235,7 +238,7 @@ func updateRunningRegistrations(running map[string]*registrationInfo,
 			}
 		}
 		return fmt.Errorf("Could not find running registration")
-	case models.NotifyUpdateAdd:
+	case export.NotifyUpdateAdd:
 		reg := GetRegistrationByName(update.Name)
 		if reg == nil {
 			return fmt.Errorf("Could not find registration")

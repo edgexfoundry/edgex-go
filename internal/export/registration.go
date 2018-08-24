@@ -1,8 +1,23 @@
-package models
+/*******************************************************************************
+ * Copyright 2018 Dell Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
+ *******************************************************************************/
+package export
 
 import (
 	"fmt"
+
 	"github.com/edgexfoundry/edgex-go/pkg/models"
+
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -52,7 +67,7 @@ type Registration struct {
 	Addressable models.Addressable              `json:"addressable,omitempty"`
 	Format      string                   `json:"format,omitempty"`
 	Filter      Filter                   `json:"filter,omitempty"`
-	Encryption  models.EncryptionDetails        `json:"encryption,omitempty"`
+	Encryption  EncryptionDetails        `json:"encryption,omitempty"`
 	Compression string                   `json:"compression,omitempty"`
 	Enable      bool                     `json:"enable"`
 	Destination string                   `json:"destination,omitempty"`
@@ -67,6 +82,14 @@ type NotifyUpdate struct {
 type Filter struct {
 	DeviceIDs          []string `bson:"deviceIdentifiers,omitempty" json:"deviceIdentifiers,omitempty"`
 	ValueDescriptorIDs []string `bson:"valueDescriptorIdentifiers,omitempty" json:"valueDescriptorIdentifiers,omitempty"`
+}
+
+// EncryptionDetails - Provides details for encryption
+// of export data per client request
+type EncryptionDetails struct {
+	Algo       string `bson:"encryptionAlgorithm,omitempty" json:"encryptionAlgorithm,omitempty"`
+	Key        string `bson:"encryptionKey,omitempty" json:"encryptionKey,omitempty"`
+	InitVector string `bson:"initializingVector,omitempty" json:"initializingVector,omitempty"`
 }
 
 func (reg Registration) Validate() (bool, error) {
@@ -106,11 +129,11 @@ func (reg Registration) Validate() (bool, error) {
 	}
 
 	if reg.Encryption.Algo == "" {
-		reg.Encryption.Algo = models.EncNone
+		reg.Encryption.Algo = EncNone
 	}
 
-	if reg.Encryption.Algo != models.EncNone &&
-		reg.Encryption.Algo != models.EncAes {
+	if reg.Encryption.Algo != EncNone &&
+		reg.Encryption.Algo != EncAes {
 		return false, fmt.Errorf("Encryption invalid: %s", reg.Encryption.Algo)
 	}
 

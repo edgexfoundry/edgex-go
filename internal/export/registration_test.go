@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-package models
+package export
 
 import (
 	"testing"
@@ -27,7 +27,7 @@ func TestRegistrationValid(t *testing.T) {
 		{"withoutName", "", CompZip, FormatJSON, DestMQTT, EncAes, false},
 		{"wrongCompresion", "reg", "INVALID", FormatJSON, DestMQTT, EncAes, false},
 		{"wrongFormat", "reg", CompZip, "INVALID", DestMQTT, EncAes, false},
-		{"wrongDestination", "reg", CompZip, FormatJSON, "INVALID", EncAes, false},
+		{"wrongDestination", "reg", CompZip, FormatJSON, "INVALID",  EncAes, false},
 		{"wrongEncryption", "reg", CompZip, FormatJSON, DestMQTT, "INVALID", false},
 	}
 

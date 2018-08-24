@@ -19,15 +19,15 @@ import (
 	"time"
 
 	"gopkg.in/mgo.v2/bson"
+	"github.com/edgexfoundry/edgex-go/internal/export"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
-	"github.com/edgexfoundry/edgex-go/pkg/models"
 )
 
-func (mc *MemDB) Registrations() ([]models.Registration, error) {
+func (mc *MemDB) Registrations() ([]export.Registration, error) {
 	return mc.regs, nil
 }
 
-func (mc *MemDB) AddRegistration(reg *models.Registration) (bson.ObjectId, error) {
+func (mc *MemDB) AddRegistration(reg *export.Registration) (bson.ObjectId, error) {
 	ticks := time.Now().Unix()
 	reg.Created = ticks
 	reg.Modified = ticks
@@ -38,7 +38,7 @@ func (mc *MemDB) AddRegistration(reg *models.Registration) (bson.ObjectId, error
 	return reg.ID, nil
 }
 
-func (mc *MemDB) UpdateRegistration(reg models.Registration) error {
+func (mc *MemDB) UpdateRegistration(reg export.Registration) error {
 	for i, r := range mc.regs {
 		if r.ID == reg.ID {
 			mc.regs[i] = reg
@@ -48,24 +48,24 @@ func (mc *MemDB) UpdateRegistration(reg models.Registration) error {
 	return db.ErrNotFound
 }
 
-func (mc *MemDB) RegistrationById(id string) (models.Registration, error) {
+func (mc *MemDB) RegistrationById(id string) (export.Registration, error) {
 	for _, reg := range mc.regs {
 		if reg.ID.Hex() == id {
 			return reg, nil
 		}
 	}
 
-	return models.Registration{}, db.ErrNotFound
+	return export.Registration{}, db.ErrNotFound
 }
 
-func (mc *MemDB) RegistrationByName(name string) (models.Registration, error) {
+func (mc *MemDB) RegistrationByName(name string) (export.Registration, error) {
 	for _, reg := range mc.regs {
 		if reg.Name == name {
 			return reg, nil
 		}
 	}
 
-	return models.Registration{}, db.ErrNotFound
+	return export.Registration{}, db.ErrNotFound
 }
 
 func (mc *MemDB) DeleteRegistrationById(id string) error {

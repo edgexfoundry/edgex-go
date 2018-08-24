@@ -9,11 +9,10 @@ package memory
 import (
 	"testing"
 
-	"github.com/edgexfoundry/edgex-go/internal/export/interfaces"
-	"github.com/edgexfoundry/edgex-go/pkg/models"
+	"github.com/edgexfoundry/edgex-go/internal/export"
 )
 
-func testDB(t *testing.T, db interfaces.DBClient) {
+func testDB(t *testing.T, db export.DBClient) {
 	regs, err := db.Registrations()
 	if err != nil {
 		t.Fatalf("Error getting registrations %v", err)
@@ -23,7 +22,7 @@ func testDB(t *testing.T, db interfaces.DBClient) {
 		t.Fatalf("Error: expected 0 registrations; found %d", len(regs))
 	}
 
-	r := models.Registration{}
+	r := export.Registration{}
 	r.Name = "name"
 	id, err := db.AddRegistration(&r)
 	if err != nil {

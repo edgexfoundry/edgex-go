@@ -44,7 +44,7 @@ func main() {
 	flag.Usage = usage.HelpCallback
 	flag.Parse()
 
-	configuration := &models.ConfigurationStruct{}
+	configuration := &distro.ConfigurationStruct{}
 	err := config.LoadFromFile(useProfile, configuration)
 	if err != nil {
 		logger.Error(err.Error(), zap.String("version", edgex.Version))

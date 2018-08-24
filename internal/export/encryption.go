@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-package distro
+package export
 
 import (
 	"bytes"
@@ -12,8 +12,7 @@ import (
 	"crypto/cipher"
 	"crypto/sha1"
 	"encoding/base64"
-
-	"github.com/edgexfoundry/edgex-go/pkg/models"
+	"github.com/edgexfoundry/edgex-go/internal/export/interfaces"
 
 	"go.uber.org/zap"
 )
@@ -26,7 +25,7 @@ type aesEncryption struct {
 // IV and KEY must be 16 bytes
 const blockSize = 16
 
-func NewAESEncryption(encData models.EncryptionDetails) Transformer {
+func NewAESEncryption(encData EncryptionDetails) interfaces.Transformer {
 	aesData := aesEncryption{
 		key: encData.Key,
 		iv:  encData.InitVector,

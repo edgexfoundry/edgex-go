@@ -13,7 +13,10 @@
  *******************************************************************************/
 package memory
 
-import "github.com/edgexfoundry/edgex-go/pkg/models"
+import (
+	"github.com/edgexfoundry/edgex-go/internal/export"
+	"github.com/edgexfoundry/edgex-go/pkg/models"
+)
 
 type MemDB struct {
 	// Data
@@ -33,7 +36,7 @@ type MemDB struct {
 	devices           []models.Device
 
 	// Export
-	regs []models.Registration
+	regs []export.Registration
 }
 
 func (m *MemDB) CloseSession() {

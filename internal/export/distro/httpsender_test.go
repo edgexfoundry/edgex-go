@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-package models
+package distro
 
 import (
 	"bytes"
@@ -15,6 +15,8 @@ import (
 	"net/url"
 	"strconv"
 	"testing"
+	
+	"github.com/edgexfoundry/edgex-go/pkg/models"
 )
 
 func TestHttpSender(t *testing.T) {
@@ -25,27 +27,27 @@ func TestHttpSender(t *testing.T) {
 
 	var tests = []struct {
 		name string
-		addr Addressable
+		addr models.Addressable
 	}{
-		{"noMethod", Addressable{
+		{"noMethod", models.Addressable{
 			Protocol: "http",
 			Path:     path}},
-		{"get", Addressable{
+		{"get", models.Addressable{
 			Protocol:   "http",
 			HTTPMethod: http.MethodGet,
 			Path:       path}},
-		{"post", Addressable{
+		{"post", models.Addressable{
 			Protocol:   "http",
 			HTTPMethod: http.MethodPost,
 			Path:       path}},
-		{"postInvalidPort", Addressable{
+		{"postInvalidPort", models.Addressable{
 			Protocol:   "http",
 			HTTPMethod: http.MethodPost,
 			Path:       path,
 			Port:       -1}},
 	}
 
-	var addressableTest Addressable
+	var addressableTest models.Addressable
 	var msg = []byte(msgStr)
 
 	for _, tt := range tests {
