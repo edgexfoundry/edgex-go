@@ -20,9 +20,9 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 	"github.com/gorilla/mux"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 )
 
 const (
@@ -72,8 +72,7 @@ func subscriptionHandler(w http.ResponseWriter, r *http.Request) {
 
 		LoggingClient.Info("Updating subscription by slug: " + slug)
 
-		if err = dbClient.UpdateSubscription(s2);
-			err != nil {
+		if err = dbClient.UpdateSubscription(s2); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			LoggingClient.Error(err.Error())
 			return

@@ -22,13 +22,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/edgexfoundry/edgex-go/internal/pkg/consul"
-	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
-	"github.com/edgexfoundry/edgex-go/internal/support/notifications/interfaces"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/consul"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo"
+	"github.com/edgexfoundry/edgex-go/internal/support/notifications/interfaces"
+	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 )
 
 // Global variables

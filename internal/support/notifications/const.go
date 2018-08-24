@@ -63,7 +63,7 @@ var (
 	SUPPORTNOTIFICATIONSSERVICENAME = "support-notifications"
 	ESCALATIONSUBSCRIPTIONSLUG      = "ESCALATION"
 	ESCALATIONPREFIX                = "escalated-"
-	ESCALATEDCONTENTNOTICE          = "This notificaiton is escalated by the transmission"
+	ESCALATEDCONTENTNOTICE          = "This notification is escalated by the transmission"
 
 	/* ---------------- URL PARAM NAMES -----------------------*/
 	NOTIFICATION = "notification"

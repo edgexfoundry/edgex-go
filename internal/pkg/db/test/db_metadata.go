@@ -521,11 +521,11 @@ func testDBAddressables(t *testing.T, db interfaces.DBClient) {
 	}
 	err = db.GetAddressableByName(&a, "name1")
 	if err == nil {
-		t.Fatalf("Addresable name1 should be renamed")
+		t.Fatalf("Addressable name1 should be renamed")
 	}
 	err = db.GetAddressableByName(&a, "name")
 	if err != nil {
-		t.Fatalf("Addresable name should be renamed")
+		t.Fatalf("Addressable name should be renamed")
 	}
 
 	// aa.Name = "name2"

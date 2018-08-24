@@ -21,14 +21,14 @@ func (e ErrNotFound) Error() string {
 	return "item not found"
 }
 
-type ErrServiceClient struct{
+type ErrServiceClient struct {
 	StatusCode int
-	bodyBytes []byte
-	errMsg string
+	bodyBytes  []byte
+	errMsg     string
 }
 
 func NewErrServiceClient(statusCode int, body []byte) error {
-	e := &ErrServiceClient{StatusCode: statusCode, bodyBytes:body}
+	e := &ErrServiceClient{StatusCode: statusCode, bodyBytes: body}
 	return e
 }
 
