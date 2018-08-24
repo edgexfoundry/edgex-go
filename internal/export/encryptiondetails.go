@@ -6,13 +6,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-package models
-
-// Encryption types
-const (
-	EncNone = "NONE"
-	EncAes  = "AES"
-)
+package distro
 
 // EncryptionDetails - Provides details for encryption
 // of export data per client request

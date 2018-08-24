@@ -1,8 +1,9 @@
 package models
 
 import (
-	"gopkg.in/mgo.v2/bson"
 	"fmt"
+	"github.com/edgexfoundry/edgex-go/pkg/models"
+	"gopkg.in/mgo.v2/bson"
 )
 
 // Export destination types
@@ -34,6 +35,12 @@ const (
 	FormatNOOP            = "NOOP"
 )
 
+const (
+	NotifyUpdateAdd    = "add"
+	NotifyUpdateUpdate = "update"
+	NotifyUpdateDelete = "delete"
+)
+
 // Registration - Defines the registration details
 // on the part of north side export clients
 type Registration struct {
@@ -42,13 +49,24 @@ type Registration struct {
 	Modified    int64                    `json:"modified"`
 	Origin      int64                    `json:"origin"`
 	Name        string                   `json:"name,omitempty"`
-	Addressable Addressable              `json:"addressable,omitempty"`
+	Addressable models.Addressable              `json:"addressable,omitempty"`
 	Format      string                   `json:"format,omitempty"`
 	Filter      Filter                   `json:"filter,omitempty"`
-	Encryption  EncryptionDetails        `json:"encryption,omitempty"`
+	Encryption  models.EncryptionDetails        `json:"encryption,omitempty"`
 	Compression string                   `json:"compression,omitempty"`
 	Enable      bool                     `json:"enable"`
 	Destination string                   `json:"destination,omitempty"`
+}
+
+type NotifyUpdate struct {
+	Name      string `json:"name"`
+	Operation string `json:"operation"`
+}
+
+// Filter - Specifies the client filters on reading data
+type Filter struct {
+	DeviceIDs          []string `bson:"deviceIdentifiers,omitempty" json:"deviceIdentifiers,omitempty"`
+	ValueDescriptorIDs []string `bson:"valueDescriptorIdentifiers,omitempty" json:"valueDescriptorIdentifiers,omitempty"`
 }
 
 func (reg Registration) Validate() (bool, error) {
@@ -88,11 +106,11 @@ func (reg Registration) Validate() (bool, error) {
 	}
 
 	if reg.Encryption.Algo == "" {
-		reg.Encryption.Algo = EncNone
+		reg.Encryption.Algo = models.EncNone
 	}
 
-	if reg.Encryption.Algo != EncNone &&
-		reg.Encryption.Algo != EncAes {
+	if reg.Encryption.Algo != models.EncNone &&
+		reg.Encryption.Algo != models.EncAes {
 		return false, fmt.Errorf("Encryption invalid: %s", reg.Encryption.Algo)
 	}
 

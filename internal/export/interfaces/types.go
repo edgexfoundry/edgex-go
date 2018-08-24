@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2017
+// Copyright (c) 2018
 // Cavium
 // Mainflux
 // IOTech
@@ -7,16 +7,18 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-package models
+package distro
+
+import "github.com/edgexfoundry/edgex-go/pkg/models"
 
 // Sender - Send interface
 type Sender interface {
-	Send(data []byte, event *Event) bool
+	Send(data []byte, event *models.Event) bool
 }
 
 // Formatter - Format interface
 type Formatter interface {
-	Format(event *Event) []byte
+	Format(event *models.Event) []byte
 }
 
 // Transformer - Transform interface
@@ -26,5 +28,5 @@ type Transformer interface {
 
 // Filter - Filter interface
 type Filterer interface {
-	Filter(event *Event) (bool, *Event)
+	Filter(event *models.Event) (bool, *models.Event)
 }

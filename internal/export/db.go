@@ -14,8 +14,8 @@
 package interfaces
 
 import (
+	"github.com/edgexfoundry/edgex-go/internal/export"
 	"gopkg.in/mgo.v2/bson"
-	"github.com/edgexfoundry/edgex-go/pkg/models"
 )
 
 type DBClient interface {
@@ -24,26 +24,26 @@ type DBClient interface {
 	// ********************** REGISTRATION FUNCTIONS *****************************
 	// Return all the registrations
 	// UnexpectedError - failed to retrieve registrations from the database
-	Registrations() ([]models.Registration, error)
+	Registrations() ([]export.Registration, error)
 
 	// Add a new registration
 	// UnexpectedError - failed to add to database
-	AddRegistration(reg *models.Registration) (bson.ObjectId, error)
+	AddRegistration(reg *export.Registration) (bson.ObjectId, error)
 
 	// Update a registration
 	// UnexpectedError - problem updating in database
 	// NotFound - no registration with the ID was found
-	UpdateRegistration(reg models.Registration) error
+	UpdateRegistration(reg export.Registration) error
 
 	// Get a registration by ID
 	// UnexpectedError - problem getting in database
 	// NotFound - no registration with the ID was found
-	RegistrationById(id string) (models.Registration, error)
+	RegistrationById(id string) (export.Registration, error)
 
 	// Get a registration by name
 	// UnexpectedError - problem getting in database
 	// NotFound - no registration with the name was found
-	RegistrationByName(name string) (models.Registration, error)
+	RegistrationByName(name string) (export.Registration, error)
 
 	// Delete a registration by ID
 	// UnexpectedError - problem getting in database
