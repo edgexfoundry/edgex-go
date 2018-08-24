@@ -6,7 +6,6 @@ EdgeX Foundry Examples and Tutorials
    :maxdepth: 2
 
   
-   Ch-ExamplesAPIDemo
    Ch-ExamplesProvisionDevice
    Ch-ExamplesAddingModbusDevice
    Ch-ExamplesAddingSNMPDevice
