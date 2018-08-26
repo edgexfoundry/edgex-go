@@ -20,7 +20,7 @@ The EdgeX Foundry Device Services layer at this time, includes the following mic
 
 Requirements for the device service are provided below.  These requirements are being used to define what functionality needs to be offered via any Device Service SDK to produce the device service scaffolding code.  They may also help the reader understand the duties and role of a device service.
 
-.. _`DS-SDK Requirements`: https://wiki.edgexfoundry.org/display/FA/Architecture--Device+Services+Microservices?preview=/328052/4587926/DS-SDK-Requirements-v3.xlsx
+.. _`DS-SDK Requirements`: https://wiki.edgexfoundry.org/download/attachments/7602423/edgex-cali-delhi-device-requirements-v8.pdf?version=1&modificationDate=1533761857957&api=v2
 ..
 
 `DS-SDK Requirements`_
