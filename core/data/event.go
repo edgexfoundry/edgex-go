@@ -731,7 +731,7 @@ func eventByAgeHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodDelete:
 		expireTime := (time.Now().UnixNano() / int64(time.Millisecond)) - age
-		loggingClient.Info(fmt.Sprintf("Deleting old events by before time %d", expireTime))
+		loggingClient.Info(fmt.Sprintf("Deleting old events before time %d", expireTime))
 
 		count, err := dbc.EventsCountOlderThanAge(expireTime)
 		if err != nil {
