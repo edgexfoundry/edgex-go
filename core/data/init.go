@@ -32,6 +32,8 @@ var loggingClient logger.LoggingClient
 var ep *messaging.EventPublisher
 var mdc metadata.DeviceClient
 var msc metadata.DeviceServiceClient
+var scrubPushedCh chan int64
+var deleteOldCh chan int64
 
 func ConnectToConsul(conf ConfigurationStruct) error {
 
@@ -95,9 +97,20 @@ func Init(conf ConfigurationStruct, l logger.LoggingClient, useConsul bool) erro
 		AddressPort: conf.ZeroMQAddressPort,
 	})
 
+	dataScrubInit()
 	return nil
 }
 
 func Destruct() {
 	dbc.CloseSession()
+}
+func dataScrubInit() {
+	//Create scrub pushed events long go routine and channel
+	scrubPushedCh = make(chan int64, 5)
+	go DeletePushedEvents()
+
+
+	//Create delete old events long go routine and channel
+	deleteOldCh = make(chan int64, 5)
+	go DeleteOldEvents()
 }
