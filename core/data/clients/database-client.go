@@ -98,8 +98,13 @@ type DBClient interface {
 
 	// Delete all readings and events
 	ScrubAllEvents() error
-	
-	EventsPushedLimit(time int64, limit int) ([]models.Event, error)
+
+	//Delete expired readings and events
+	EventsCountOlderThanAge(time int64) (int, error)
+	DeleteOldEvents(age int64) error
+
+	//Delete pushed readings and events
+	DeletePushedEvents(time int64) error
 	EventsPushedCount(time int64) (int, error)
 
 	// ********************* READING FUNCTIONS *************************

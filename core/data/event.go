@@ -124,6 +124,23 @@ func updateDeviceServiceLastReportedConnected(device string) {
 	msc.UpdateLastReported(s.Service.Id.Hex(), t)
 }
 
+// Update the event to be pushed by setting the pushed timestamp to the current time.
+func markPushed(e models.Event) error {
+	e.Pushed = time.Now().UnixNano() / int64(time.Millisecond)
+	for _, reading := range e.Readings {
+		reading.Pushed = e.Pushed
+		if err := dbc.UpdateReading(reading); err != nil {
+			return err
+		}
+	}
+
+	if err := dbc.UpdateEvent(e); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // Delete the event and readings
 func deleteEvent(e models.Event) error {
 	for _, reading := range e.Readings {
@@ -432,9 +449,7 @@ func eventIdHandler(w http.ResponseWriter, r *http.Request) {
 
 		loggingClient.Info("Updating event: " + e.ID.Hex())
 
-		e.Pushed = time.Now().UnixNano() / int64(time.Millisecond)
-		err = dbc.UpdateEvent(e)
-		if err != nil {
+		if err = markPushed(e); err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			loggingClient.Error(err.Error())
 			return
@@ -715,30 +730,31 @@ func eventByAgeHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodDelete:
-		// Get the events
-		events, err := dbc.EventsOlderThanAge(age)
+		expireTime := (time.Now().UnixNano() / int64(time.Millisecond)) - age
+		loggingClient.Info(fmt.Sprintf("Deleting old events by before time %d", expireTime))
+
+		count, err := dbc.EventsCountOlderThanAge(expireTime)
 		if err != nil {
-			loggingClient.Error(err.Error())
+			loggingClient.Error(fmt.Sprintf("Events  counts by age %d failed, error: %s", expireTime, err.Error()))
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-			return
 		}
 
-		// Delete all the events
-		count := len(events)
-		for _, event := range events {
-			if err = deleteEvent(event); err != nil {
-				loggingClient.Error(err.Error())
-				http.Error(w, err.Error(), http.StatusServiceUnavailable)
-				return
-			}
-		}
+		deleteOldCh <- expireTime
 
-		loggingClient.Info("Deleting events by age: " + vars["age"])
-
-		// Return the count
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(strconv.Itoa(count)))
+	}
+}
+
+func DeleteOldEvents() {
+	for {
+		expireTime := <- deleteOldCh
+
+		err := dbc.DeleteOldEvents(expireTime)
+		if err != nil {
+			loggingClient.Error(err.Error())
+		}
 	}
 }
 
@@ -760,35 +776,28 @@ func scrubHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		scrubPushedCh <- current
+
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(strconv.Itoa(count)))
 
-		// Get the events
-		go func() {
-			for {
-				events, err := dbc.EventsPushedLimit(current, configuration.ScrubNumber)
-				if err != nil {
-					loggingClient.Error(err.Error())
-					return
+	}
+}
+
+func DeletePushedEvents() {
+	for {
+		time := <-scrubPushedCh
+
+		err := dbc.DeletePushedEvents(time)
+		if err != nil {
+			loggingClient.Error(err.Error())
+		}
+
+		loggingClient.Debug("Delete pushed events successfully")
+	}
+}
 				}
-
-				if len(events) <= 0 {
-					break
-				}
-
-				for _, event := range events {
-					if err = deleteEvent(event); err != nil {
-						loggingClient.Error(err.Error())
-						return
-					}
-				}
-
-				//sleep for Reducing the impact on normal operations
-				time.Sleep(configuration.ScrubSleepTime * time.Second)
-			}
-
-			loggingClient.Info("Scrubbing events done" )
 		}()
 	}
 }

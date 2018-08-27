@@ -202,9 +202,18 @@ func (ic *InfluxClient) EventsPushed() ([]models.Event, error) {
 	return ic.getEvents(query)
 }
 
-func (ic *InfluxClient) EventsPushedLimit(time int64, limit int) ([]models.Event, error) {
-	query := fmt.Sprintf("WHERE pushed > 0 AND created <= %d LIMIT %d", time, limit)
-	return ic.getEvents(query)
+//Delete pushed events by created time
+func (ic *InfluxClient) DeletePushedEvents(time int64) error {
+	q := fmt.Sprintf("DELETE FROM %s where pushed > 0 AND create <= %d", READINGS_COLLECTION, time)
+	_, err := ic.queryDB(q)
+	if err != nil {
+		return err
+	}
+
+	q = fmt.Sprintf("DELETE FROM %s where pushed > 0 AND create <= %d", EVENTS_COLLECTION, time)
+	_, err = ic.queryDB(q)
+
+	return err
 }
 
 func (ic *InfluxClient) EventsPushedCount(time int64) (int, error) {
@@ -220,6 +229,26 @@ func (ic *InfluxClient) ScrubAllEvents() error {
 	}
 
 	return ic.deleteAll(EVENTS_COLLECTION)
+}
+
+// Get count of events number before expire time
+func (ic *InfluxClient) EventsCountOlderThanAge(time int64) (int, error) {
+	query := fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE created <= %d",  EVENTS_COLLECTION, time)
+	return ic.getCount(query)
+}
+
+// Delete all of the readings and all of the events before expire time
+func (ic *InfluxClient) DeleteOldEvents(time int64) error {
+	q := fmt.Sprintf("DELETE FROM %s where create <= %d", READINGS_COLLECTION, time)
+	_, err := ic.queryDB(q)
+	if err != nil {
+		return err
+	}
+
+	q = fmt.Sprintf("DELETE FROM %s where create <= %d", EVENTS_COLLECTION, time)
+	_, err = ic.queryDB(q)
+
+	return err
 }
 
 // Get events for the passed query

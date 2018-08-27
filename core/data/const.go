@@ -13,8 +13,6 @@
  *******************************************************************************/
 package data
 
-import "time"
-
 type ConfigurationStruct struct {
 	ConsulProfilesActive       string
 	ReadMaxLimit               int
@@ -68,8 +66,6 @@ type ConfigurationStruct struct {
 	ActiveMQBroker             string
 	ZeroMQAddressPort          string
 	ReExportZeroMQAddressPort  string
-	ScrubNumber                int
-	ScrubSleepTime			   time.Duration
 }
 
 var configuration ConfigurationStruct = ConfigurationStruct{} //  Needs to be initialized before used
