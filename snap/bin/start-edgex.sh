@@ -1,6 +1,8 @@
 #!/bin/sh
 set -ex
 
+cd $SNAP_DATA
+
 if [ `arch` = "aarch64" ] ; then
     ARCH="arm64"
 elif [ `arch` = "x86_64" ] ; then
