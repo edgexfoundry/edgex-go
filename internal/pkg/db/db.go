@@ -52,7 +52,6 @@ var (
 )
 
 type Configuration struct {
-	DbType       string
 	Host         string
 	Port         int
 	Timeout      int

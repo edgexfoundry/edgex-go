@@ -59,7 +59,6 @@ func Init(conf ConfigurationStruct, l *zap.Logger) error {
 
 	// Create a database client
 	dbc = mongo.NewClient(db.Configuration{
-		DbType:       "mongo",
 		Host:         conf.MongoURL,
 		Port:         conf.MongoPort,
 		Timeout:      conf.MongoConnectTimeout,

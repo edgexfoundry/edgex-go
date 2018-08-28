@@ -26,7 +26,7 @@ func getRegistrationBaseURL(host string) string {
 		"/api/v1/registration"
 }
 
-func GetRegistrations() []export.Registration {
+func getRegistrations() []export.Registration {
 	url := getRegistrationBaseURL(configuration.ClientHost)
 	return GetRegistrationsURL(url)
 }

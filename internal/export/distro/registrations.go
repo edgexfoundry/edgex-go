@@ -264,7 +264,7 @@ func Loop(errChan chan error, eventCh chan *models.Event) {
 
 	registrations := make(map[string]*registrationInfo)
 
-	allRegs := GetRegistrations()
+	allRegs := getRegistrations()
 
 	for allRegs == nil {
 		logger.Info("Waiting for client microservice")
@@ -274,7 +274,7 @@ func Loop(errChan chan error, eventCh chan *models.Event) {
 			return
 		case <-time.After(time.Second):
 		}
-		allRegs = GetRegistrations()
+		allRegs = getRegistrations()
 	}
 
 	// Create new goroutines for each registration
