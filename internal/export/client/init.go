@@ -58,7 +58,7 @@ func Init(conf ConfigurationStruct, l *zap.Logger) error {
 	var err error
 
 	// Create a database client
-	mongo.NewClient(db.Configuration{
+	dbc = mongo.NewClient(db.Configuration{
 		DbType:       "mongo",
 		Host:         conf.MongoURL,
 		Port:         conf.MongoPort,
@@ -67,6 +67,11 @@ func Init(conf ConfigurationStruct, l *zap.Logger) error {
 		Username:     conf.MongoUsername,
 		Password:     conf.MongoPassword,
 	})
+	if err != nil {
+		return fmt.Errorf("couldn't create database: %v", err.Error())
+	}
+
+	err = dbc.Connect()
 	if err != nil {
 		return fmt.Errorf("couldn't connect to database: %v", err.Error())
 	}
