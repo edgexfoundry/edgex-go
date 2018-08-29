@@ -26,6 +26,8 @@ import:
   version: eb3733d160e74a9c7e442f435eb3bea458e1d19f
 - package: github.com/mattn/go-xmpp
   version: e543ad3fcd51155e4b39f7487bdfcb5e3772f1ce
+- package: github.com/magiconair/properties
+  version: =1.8.0
 - package: github.com/satori/go.uuid
   version: =1.2.0
 - package: github.com/stretchr/testify

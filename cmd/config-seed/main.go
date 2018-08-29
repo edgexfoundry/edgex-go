@@ -28,9 +28,13 @@ var bootTimeout int = 30000 //Once we start the V2 configuration rework, this wi
 
 func main() {
 	var useProfile string
+	var dirProperties string
 
 	flag.StringVar(&useProfile, "profile", "", "Specify a profile other than default.")
 	flag.StringVar(&useProfile, "p", "", "Specify a profile other than default.")
+	flag.StringVar(&dirProperties, "props", "./res/properties", "Specify alternate properties location")
+	flag.StringVar(&dirProperties, "r", "./res/properties", "Specify alternate properties location")
+
 	flag.Usage = usage.HelpCallback
 	flag.Parse()
 
@@ -41,6 +45,7 @@ func main() {
 		return
 	}
 	config.LoggingClient.Info("Service dependencies resolved...")
+	config.ImportProperties(dirProperties)
 }
 
 func bootstrap(profile string) {
