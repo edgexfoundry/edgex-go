@@ -13,6 +13,7 @@
  *******************************************************************************/
 package internal
 
+const ConfigSeedServiceKey = "edgex-config-seed"
 const CoreCommandServiceKey = "edgex-core-command"
 const CoreDataServiceKey = "edgex-core-data"
 const CoreMetaDataServiceKey = "edgex-core-metadata"
