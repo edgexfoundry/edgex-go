@@ -209,6 +209,11 @@ func updateReg(w http.ResponseWriter, r *http.Request) {
 	if fromReg.Destination != "" {
 		toReg.Destination = fromReg.Destination
 	}
+	var objmap map[string]*json.RawMessage
+	json.Unmarshal(data, &objmap)
+	if objmap["enable"] != nil {
+		toReg.Enable = fromReg.Enable
+	}
 
 	if valid, err := toReg.Validate(); !valid {
 		logger.Error("Failed to validate registrations fields", zap.ByteString("data", data), zap.Error(err))
