@@ -1,0 +1,11 @@
+ApplicationName = 'edgex-sys-mgmt-agent'
+ConsulProfilesActive = 'go'
+ValidateCheck = false
+AppOpenMsg = 'This is the System Management Agent Service'
+FormatSpecifier = '%(\\d+\\$)?([-#+ 0(\\<]*)?(\\d+)?(\\.\\d+)?([tT])?([a-zA-Z%])'
+ServicePort = 48090
+ServiceTimeout = 5000
+ServiceAddress = 'localhost'
+CheckInterval = '10s'
+EnableRemoteLogging = false
+LoggingFile = './logs/edgex-sys-mgmt-agent.log'

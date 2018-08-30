@@ -1,0 +1,11 @@
+ApplicationName = 'edgex-sys-mgmt-agent'
+ConsulProfilesActive = 'docker'
+ValidateCheck = false
+AppOpenMsg = 'This is the System Management Agent Service'
+FormatSpecifier = '%(\\d+\\$)?([-#+ 0(\\<]*)?(\\d+)?(\\.\\d+)?([tT])?([a-zA-Z%])'
+ServicePort = 48090
+ServiceTimeout = 5000
+ServiceAddress = 'edgex-sys-mgmt-agent'
+CheckInterval = '10s'
+LoggingFile = '/edgex/logs/edgex-sys-mgmt-agent.log'
+LoggingRemoteURL = 'http://edgex-support-logging:48061/api/v1/logs'
