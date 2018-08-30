@@ -64,10 +64,20 @@ func getRegList(w http.ResponseWriter, r *http.Request) {
 	case typeFormats:
 		list = append(list, export.FormatJSON)
 		list = append(list, export.FormatXML)
+		list = append(list, export.FormatSerialized)
+		list = append(list, export.FormatIoTCoreJSON)
+		list = append(list, export.FormatAzureJSON)
 		list = append(list, export.FormatAWSJSON)
+		list = append(list, export.FormatCSV)
+		list = append(list, export.FormatThingsBoardJSON)
+		list = append(list, export.FormatNOOP)
 	case typeDestinations:
 		list = append(list, export.DestMQTT)
+		list = append(list, export.DestZMQ)
+		list = append(list, export.DestIotCoreMQTT)
+		list = append(list, export.DestAzureMQTT)
 		list = append(list, export.DestRest)
+		list = append(list, export.DestXMPP)
 		list = append(list, export.DestAWSMQTT)
 	default:
 		logger.Error("Unknown type: " + t)
