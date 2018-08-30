@@ -19,8 +19,10 @@ import (
 )
 
 type httpSender struct {
-	url    string
-	method string
+	url      string
+	method   string
+	user     string
+	password string
 }
 
 const mimeTypeJSON = "application/json"
@@ -29,16 +31,25 @@ const mimeTypeJSON = "application/json"
 func NewHTTPSender(addr models.Addressable) Sender {
 
 	sender := httpSender{
-		url:    addr.Protocol + "://" + addr.Address + ":" + strconv.Itoa(addr.Port) + addr.Path,
-		method: addr.HTTPMethod,
+		url:      addr.Protocol + "://" + addr.Address + ":" + strconv.Itoa(addr.Port) + addr.Path,
+		method:   addr.HTTPMethod,
+		user:     addr.User,
+		password: addr.Password,
 	}
+
 	return sender
 }
 
 func (sender httpSender) Send(data []byte, event *models.Event) bool {
 	switch sender.method {
 	case http.MethodPost:
-		response, err := http.Post(sender.url, mimeTypeJSON, bytes.NewReader(data))
+		client := &http.Client{}
+		request, _ := http.NewRequest("POST", sender.url, bytes.NewReader(data))
+		request.Header.Set("Content-Type", mimeTypeJSON)
+		if sender.user != "" {
+			request.SetBasicAuth(sender.user, sender.password)
+		}
+		response, err := client.Do(request)
 		if err != nil {
 			logger.Error("Error: ", zap.Error(err))
 			return false
