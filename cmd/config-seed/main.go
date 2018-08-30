@@ -15,13 +15,16 @@ package main
 
 import (
 	"flag"
-
 	"fmt"
+	"os"
+	"os/signal"
+	"sync"
+	"syscall"
+
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/internal/seed/config"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
-	"sync"
 )
 
 var bootTimeout int = 30000 //Once we start the V2 configuration rework, this will be config driven
@@ -72,4 +75,12 @@ func bootstrap(profile string) {
 func logBeforeInit(err error) {
 	l := logger.NewClient(internal.ConfigSeedServiceKey, false, "")
 	l.Error(err.Error())
+}
+
+func listenForInterrupt(errChan chan error) {
+	go func() {
+		c := make(chan os.Signal)
+		signal.Notify(c, syscall.SIGINT)
+		errChan <- fmt.Errorf("%s", <-c)
+	}()
 }
