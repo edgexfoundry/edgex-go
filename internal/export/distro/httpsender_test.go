@@ -15,7 +15,7 @@ import (
 	"net/url"
 	"strconv"
 	"testing"
-	
+
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 )
 

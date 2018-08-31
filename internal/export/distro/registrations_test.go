@@ -161,7 +161,7 @@ func TestRegistrationInfoLoop(t *testing.T) {
 	// update invalid registration,
 	ri.filter = nil
 	registrationLoop(ri)
-	if !ri.deleteMe {
+	if !ri.deleteFlag {
 		t.Fatal("deleteme flag should be enabled after an invalid registration")
 	}
 

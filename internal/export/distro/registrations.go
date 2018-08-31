@@ -37,7 +37,7 @@ type registrationInfo struct {
 	chRegistration chan *export.Registration
 	chEvent        chan *models.Event
 
-	deleteMe bool
+	deleteFlag bool
 }
 
 func RefreshRegistrations(update export.NotifyUpdate) {
@@ -203,7 +203,7 @@ func registrationLoop(reg *registrationInfo) {
 				} else {
 					logger.Info("Registration updated: KO, terminating goroutine",
 						zap.String("Name", reg.registration.Name))
-					reg.deleteMe = true
+					reg.deleteFlag = true
 					return
 				}
 			}
@@ -284,7 +284,7 @@ func Loop(errChan chan error, eventCh chan *models.Event) {
 		case e := <-errChan:
 			// kill all registration goroutines
 			for k, reg := range registrations {
-				if !reg.deleteMe {
+				if !reg.deleteFlag {
 					// Do not write in channel that will not be read
 					reg.chRegistration <- nil
 				}
@@ -304,7 +304,7 @@ func Loop(errChan chan error, eventCh chan *models.Event) {
 		case event := <-eventCh:
 			logger.Info("EVENT")
 			for k, reg := range registrations {
-				if reg.deleteMe {
+				if reg.deleteFlag {
 					delete(registrations, k)
 				} else {
 					// TODO only sent event if it is not blocking
