@@ -19,16 +19,18 @@ import (
 	"net/http"
 	"github.com/gorilla/mux"
 	"fmt"
+	"encoding/json"
+	"strings"
+	"github.com/edgexfoundry/edgex-go/pkg/models"
 )
 
 func LoadRestRoutes() *mux.Router {
 	r := mux.NewRouter()
 	b := r.PathPrefix("/api/v1").Subrouter()
 
-	// Notifications
-	b.HandleFunc("/operation", operationServiceHandler).Methods(http.MethodPost)
-	b.HandleFunc("/config", configHandler).Methods(http.MethodGet)
-	b.HandleFunc("/metric", metricHandler).Methods(http.MethodGet)
+	b.HandleFunc("/operation", operationHandler).Methods(http.MethodPost)
+	b.HandleFunc("/config/{services}", configHandler).Methods(http.MethodGet)
+	b.HandleFunc("/metrics/{services}", metricsHandler).Methods(http.MethodGet)
 
 	// Ping Resource
 	// /api/v1/ping
@@ -37,43 +39,53 @@ func LoadRestRoutes() *mux.Router {
 	return r
 }
 
-func operationServiceHandler(w http.ResponseWriter, r *http.Request) {
+func operationHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Body != nil {
 		defer r.Body.Close()
 	}
 
 	// TODO: Work with parsing mux.Vars(r) and assigning to vars.
-	//vars := mux.Vars(r)
-	//action := vars["ops"]
-	//params :vars["params"]
-	//services := vars["services"]
-	var action string
-	var params map[string]string
 	var services []string
+	vars := mux.Vars(r)
+	action := vars["action"]
+
+	var params []string
+	var o models.Operation
+	dec := json.NewDecoder(r.Body)
+	err := dec.Decode(&o)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		LoggingClient.Error("Error decoding operation: " + err.Error())
+		return
+	}
+
+	action = o.Action
+	services = o.Services
+	params = o.Params
 
 	switch action {
 
-	// Make asynchronous call(s) to the appropriate internal function (to stop, start, or restart the service(s).
-
-	case START:
-		go invokeAction(START, services, params)
-		w.WriteHeader(http.StatusCreated)
-		w.Write([]byte("Response"))
+	// Make asynchronous goroutine call(s) to the appropriate internal function (respectively, to stop, start, or restart the service(s).
+	case STOP:
+		InvokeOperation(STOP, services, params)
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("Done. Stopped the requested services."))
 		break
 
-	case STOP:
-		go invokeAction(STOP, services, params)
-		w.WriteHeader(http.StatusCreated)
-		w.Write([]byte("Response"))
+	case START:
+		InvokeOperation(START, services, params)
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("Done. Started the requested services."))
 		break
 
 	case RESTART:
 		// First, stop the requested services.
-		go invokeAction(STOP, services, params)
+		InvokeOperation(STOP, services, params)
 		// Second, start the requested services (thereby effectively restarting those services).
-		go invokeAction(START, services, params)
+		InvokeOperation(START, services, params)
 		w.WriteHeader(http.StatusCreated)
-		w.Write([]byte("Response"))
+		w.Write([]byte("Done. Restarted the requested services."))
 		break
 
 	default:
@@ -83,79 +95,56 @@ func operationServiceHandler(w http.ResponseWriter, r *http.Request) {
 
 func configHandler(w http.ResponseWriter, r *http.Request) {
 
-	// Example Request: { “services”: [“edgex-core-data”, “edgex-core-metadata”, …] }
 	if r.Body != nil {
 		defer r.Body.Close()
 	}
 
-	// TODO: Work with parsing mux.Vars(r) and assigning to vars.
-	//vars := mux.Vars(r)
-	//services := vars["services"]
+	vars := mux.Vars(r)
+	LoggingClient.Debug(fmt.Sprintf("It is for these micro-service that their configuration data has been requested: %v", vars))
+
+	list := vars["services"]
 	var services []string
+	services = strings.Split(list, ",")
 
-	// Make asynchronous call to the microservices' API for configuration.
-	go getConfig(services)
+	var send = RespMap{}
+	send, _ = getConfig(services)
 
-	// Example Response:
-	/*
-          [
-          {
-             "service":"edgex-core-data",
-             "config":[
-                "port":48080,
-                "loggingLevel":"debug"         …
-             ]
-          },
-          {
-             "service":"edgex-core-metdata",
-             "config":[
-                "port":48081,
-                "loggingLevel":"error"         …
-             ]
-          }
-          ]
-	*/
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Example Response..."))
-
+	w.Header().Add("Content-Type", "application/json")
+	encode(send, w)
+	return
 }
 
-func metricHandler(w http.ResponseWriter, r *http.Request) {
+func metricsHandler(w http.ResponseWriter, r *http.Request) {
 
-	// Example Request: {“metrics”:[“memory”, “CPU”], “services”: [“edgex-core-data”, “edgex-core-metadata”, …] }
 	if r.Body != nil {
 		defer r.Body.Close()
 	}
 
-	// TODO: Work with parsing mux.Vars(r) and assigning to vars.
-	//vars := mux.Vars(r)
-	//metrics := vars["metrics"]
-	//services := vars["services"]
+	vars := mux.Vars(r)
+	LoggingClient.Debug(fmt.Sprintf("It is for these micro-service that their metrics data has been requested: %v", vars))
+
+	list := vars["services"]
 	var services []string
-	var metrics []string
+	services = strings.Split(list, ",")
 
-	// Make asynchronous call to the microservices' API for metrics.
-	go getMetric(services, metrics)
-	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte("Response"))
+	var send = RespMap{}
+	send, _ = getMetrics(services)
 
-	/* Example Response:
-	    [
-            {
-               "service":"edgex-core-data",
-               "metrics":[
-                  "memory":"34MB",
-                  "CPU":"3%"
-               ]
-            },
-            {
-               "service":"edgex-core-metdata",
-               "metrics":[
-                  "memory":"31MB",
-                  "CPU":"2%"
-               ]
-            },
-            …
-        ]
-	*/
+	w.Header().Add("Content-Type", "application/json")
+	encode(send, w)
+	return
+}
+
+// Helper function for encoding things for returning from REST calls
+func encode(i interface{}, w http.ResponseWriter) {
+	w.Header().Add("Content-Type", "application/json")
+
+	enc := json.NewEncoder(w)
+	err := enc.Encode(i)
+
+	if err != nil {
+		LoggingClient.Error("Error encoding the data: " + err.Error())
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 }

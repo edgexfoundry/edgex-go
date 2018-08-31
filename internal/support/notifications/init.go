@@ -29,6 +29,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo"
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/interfaces"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
+	"github.com/edgexfoundry/support-notifications-client-go"
 )
 
 // Global variables
@@ -42,6 +43,7 @@ var smtpHost string
 var smtpSender string
 var smtpPassword string
 var smtpSubject string
+var nc notifications.NotificationsClient
 
 func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup, ch chan error) {
 	until := time.Now().Add(time.Millisecond * time.Duration(timeout))

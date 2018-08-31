@@ -16,7 +16,11 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/pkg/clients"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
+	"fmt"
+	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 )
+
+// var nc notifications.NotificationsClient
 
 // Test common const
 const (
@@ -129,5 +133,40 @@ func (e mockNotificationEndpoint) Monitor(params types.EndpointParams, ch chan s
 		break
 	default:
 		ch <- ""
+	}
+}
+
+func TestGetConfig(t *testing.T) {
+
+	LoggingClient := logger.NewMockClient()
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("{ 'status' : 'OK' }"))
+		if r.Method != http.MethodGet {
+			t.Errorf(TestUnexpectedMsgFormatStr, r.Method, http.MethodGet)
+		}
+		if r.URL.EscapedPath() != clients.ApiConfigRoute {
+			t.Errorf(TestUnexpectedMsgFormatStr, r.URL.EscapedPath(), clients.ApiNotificationRoute)
+		}
+	}))
+
+	defer ts.Close()
+
+	url := ts.URL + clients.ApiConfigRoute
+
+	params := types.EndpointParams{
+		ServiceKey:  internal.SupportNotificationsServiceKey,
+		Path:        clients.ApiConfigRoute,
+		UseRegistry: false,
+		Url:         url,
+		Interval:    clients.ClientMonitorDefault,
+	}
+
+	nc := NewNotificationsClient(params, mockNotificationEndpoint{})
+
+	responseJSON, err := nc.FetchConfiguration()
+	if err != nil {
+		LoggingClient.Error(fmt.Sprintf("Fetched this for its configuration: {%v}", responseJSON))
 	}
 }
