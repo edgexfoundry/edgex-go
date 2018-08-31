@@ -20,10 +20,11 @@ import (
 	"fmt"
 	"strings"
 
-	consulclient "github.com/edgexfoundry/edgex-go/support/consul-client"
+	"github.com/edgexfoundry/edgex-go/support/consul-client"
 	"github.com/edgexfoundry/edgex-go/support/logging-client"
 	"github.com/edgexfoundry/edgex-go/support/notifications/clients"
 	"github.com/robfig/cron"
+	"github.com/edgexfoundry/edgex-go/internal"
 )
 
 // Global variables
@@ -46,7 +47,7 @@ func ConnectToConsul(conf ConfigurationStruct) error {
 
 	// Initialize service on Consul
 	err := consulclient.ConsulInit(consulclient.ConsulConfig{
-		ServiceName:    conf.ServiceName,
+		ServiceName:    internal.SupportNotificationsServiceKey,
 		ServicePort:    conf.ServicePort,
 		ServiceAddress: conf.ServiceAddress,
 		CheckAddress:   conf.ConsulCheckAddress,
@@ -57,9 +58,11 @@ func ConnectToConsul(conf ConfigurationStruct) error {
 
 	if err != nil {
 		return fmt.Errorf("connection to Consul could not be made: %v", err.Error())
-	}
-	if err := consulclient.CheckKeyValuePairs(&conf, conf.ServiceName, strings.Split(conf.ConsulProfilesActive, ";")); err != nil {
-		return fmt.Errorf("error getting key/values from Consul: %v", err.Error())
+	} else {
+		// Update configuration data from Consul
+		if err := consulclient.CheckKeyValuePairs(&conf, internal.SupportNotificationsServiceKey, strings.Split(conf.ConsulProfilesActive, ";")); err != nil {
+			return fmt.Errorf("error getting key/values from Consul: %v", err.Error())
+		}
 	}
 	return nil
 }

@@ -24,7 +24,7 @@ The snap can be installed using this command:
 **Note** - this snap has only been tested on Ubuntu 16.04 LTS Desktop/Server and Ubuntu Core 16.
 
 ## Configuration
-The hardware-observe, process-control, and system-observe snap interfaces needs to be
+The hardware-observe, process-control, mount-observe, and system-observe snap interfaces needs to be
 connected after installation using the following commands:
 
 `$ snap connect edgexfoundry-core:hardware-observe core:hardware-observe`
@@ -32,6 +32,9 @@ connected after installation using the following commands:
 `$ snap connect edgexfoundry-core:process-control core:process-control`
 
 `$ snap connect edgexfoundry-core:system-observe core:system-observe`
+
+`$ snap connect edgexfoundry-core:system-observe core:mount-observe`
+
 
 ## Starting/Stopping EdgeX
 To start all the EdgeX microservices, use the following command:

@@ -18,6 +18,7 @@ Welcome to the EdgeX documentation
    Ch-Intro
    Ch-Architecture
    Ch-GettingStarted
+   Ch-Walkthrough
    Ch-Examples
    Ch-APIReference
 

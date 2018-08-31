@@ -8,18 +8,24 @@ package distro
 
 import (
 	"fmt"
+
+	"github.com/edgexfoundry/edgex-go/core/clients/coredata"
+	"github.com/edgexfoundry/edgex-go/core/clients/types"
+	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/support/consul-client"
+
 	"go.uber.org/zap"
 	"strconv"
 	"strings"
-	"github.com/edgexfoundry/edgex-go/internal"
 )
 
 const (
-	PingApiPath = "/api/v1/ping"
+	PingApiPath  = "/api/v1/ping"
+	EventUriPath = "/api/v1/event"
 )
 
 var logger *zap.Logger
+var ec coredata.EventClient
 
 func ConnectToConsul(conf ConfigurationStruct) error {
 	// Initialize service on Consul
@@ -44,9 +50,20 @@ func ConnectToConsul(conf ConfigurationStruct) error {
 	return nil
 }
 
-func Init(conf ConfigurationStruct, l *zap.Logger) error {
+func Init(conf ConfigurationStruct, l *zap.Logger, useConsul bool) error {
 	configuration = conf
 	logger = l
+
+	coreDataEventURL := "http://" + conf.DataHost + ":" + strconv.Itoa(conf.DataPort) + EventUriPath
+
+	params := types.EndpointParams{
+		ServiceKey:  internal.CoreDataServiceKey,
+		Path:        EventUriPath,
+		UseRegistry: useConsul,
+		Url:         coreDataEventURL,
+	}
+
+	ec = coredata.NewEventClient(params, types.Endpoint{})
 
 	return nil
 }
