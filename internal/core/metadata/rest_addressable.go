@@ -74,9 +74,6 @@ func restAddAddressable(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Notify Associates
-	notifyAddressableAssociates(a, http.MethodPost)
-
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(id.Hex()))
 }
@@ -134,6 +131,7 @@ func restUpdateAddressable(w http.ResponseWriter, r *http.Request) {
 
 	// Notify Associates
 	notifyAddressableAssociates(res, http.MethodPut)
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
@@ -189,8 +187,6 @@ func restDeleteAddressableById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Notify Associates
-	notifyAddressableAssociates(a, http.MethodDelete)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte("true"))
 }
@@ -233,8 +229,6 @@ func restDeleteAddressableByName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Notify Associates
-	notifyAddressableAssociates(a, http.MethodDelete)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
