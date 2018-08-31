@@ -210,6 +210,14 @@ func updateReg(w http.ResponseWriter, r *http.Request) {
 		toReg.Destination = fromReg.Destination
 	}
 
+	// In order to know if 'enable' parameter have been sent or not, we unmarshal again
+	// the registration in a map[string] and then check if the parameter is present or not
+	var objmap map[string]*json.RawMessage
+	json.Unmarshal(data, &objmap)
+	if objmap["enable"] != nil {
+		toReg.Enable = fromReg.Enable
+	}
+
 	if valid, err := toReg.Validate(); !valid {
 		logger.Error("Failed to validate registrations fields", zap.ByteString("data", data), zap.Error(err))
 		http.Error(w, "Could not validate json fields", http.StatusBadRequest)
