@@ -181,6 +181,7 @@ func CheckKeyValuePairs(configurationStruct interface{}, applicationName string,
 			}
 			break
 		case reflect.Int:
+		case reflect.Int64:
 			byteValue = []byte(strconv.FormatInt(fieldValue.Int(), 10))
 
 			// Check if the key is already there
