@@ -3,10 +3,12 @@ Port = 48070
 DistroHost = '127.0.0.1'
 ClientHost = '127.0.0.1'
 DataHost = '127.0.0.1'
+DataPort = 48080
 MQTTSCert = 'dummy.crt'
 MQTTSKey = 'dummy.key'
 ConsulHost = 'localhost'
 ConsulPort = 8500
 ConsulProfilesActive = 'go'
 CheckInterval = '10s'
+MarkPushed = false
 

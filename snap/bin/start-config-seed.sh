@@ -34,9 +34,3 @@ if [ $CONSUL_RUNNING != "[]" ] ; then
 
     $SNAP/bin/core-config-seed-go --consul &
 fi
-
-    
-
-
-
-

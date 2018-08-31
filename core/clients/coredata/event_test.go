@@ -16,20 +16,53 @@
 package coredata
 
 import (
-	"testing"
-	"net/http/httptest"
-	"net/http"
+	"fmt"
 	"github.com/edgexfoundry/edgex-go/core/clients/types"
 	"github.com/edgexfoundry/edgex-go/internal"
+	"net/http"
+	"net/http/httptest"
+	"testing"
 	"time"
-	"fmt"
 )
 
 const (
-	EventUriPath     = "/api/v1/event"
-	TestEventDevice1 = "device1"
-	TestEventDevice2 = "device2"
+	MarkPushedUriPath = "/api/v1/event/id/5aae1f4fe4b0d019b26a56b8"
+	EventUriPath      = "/api/v1/event"
+	TestEventDevice1  = "device1"
+	TestEventDevice2  = "device2"
 )
+
+func TestMarkPushed(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+
+		if r.Method != http.MethodPut {
+			t.Errorf("expected http method is PUT, active http method is : %s", r.Method)
+		}
+
+		if r.URL.EscapedPath() != MarkPushedUriPath {
+			t.Errorf("expected uri path is %s, actual uri path is %s", MarkPushedUriPath, r.URL.EscapedPath())
+		}
+	}))
+
+	defer ts.Close()
+
+	url := ts.URL + EventUriPath
+
+	params := types.EndpointParams{
+		ServiceKey:  internal.CoreDataServiceKey,
+		Path:        EventUriPath,
+		UseRegistry: false,
+		Url:         url}
+
+	ec := NewEventClient(params, mockEventEndpoint{})
+
+	err := ec.MarkPushed("5aae1f4fe4b0d019b26a56b8")
+
+	if err != nil {
+		t.FailNow()
+	}
+}
 
 func TestGetEvents(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -113,7 +146,7 @@ type mockEventEndpoint struct {
 }
 
 func (e mockEventEndpoint) Monitor(params types.EndpointParams, ch chan string) {
-	switch (params.ServiceKey) {
+	switch params.ServiceKey {
 	case internal.CoreDataServiceKey:
 		url := fmt.Sprintf("http://%s:%v%s", "localhost", 48080, params.Path)
 		ch <- url
