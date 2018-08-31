@@ -26,26 +26,27 @@ func getRegistrationBaseURL(host string) string {
 		"/api/v1/registration"
 }
 
-func getRegistrations() []export.Registration {
+func getRegistrations() ([]export.Registration, error) {
 	url := getRegistrationBaseURL(configuration.ClientHost)
-	return GetRegistrationsURL(url)
+	return getRegistrationsURL(url)
 }
 
-func GetRegistrationsURL(url string) []export.Registration {
+func getRegistrationsURL(url string) ([]export.Registration, error) {
 	response, err := http.Get(url)
 	if err != nil {
 		logger.Warn("Error getting all registrations", zap.String("url", url))
-		return nil
+		return nil, err
 	}
 	defer response.Body.Close()
 
-	var registrations []export.Registration
+	// ensure we have an empty slice instead of a nil slice for better handling of JSON
+	registrations := make([]export.Registration, 0)
 	if err := json.NewDecoder(response.Body).Decode(&registrations); err != nil {
 		logger.Warn("Could not parse json", zap.Error(err))
-		return nil
+		return nil, err
 	}
 
-	results := registrations[:0]
+	results := make([]export.Registration, 0)
 	for _, reg := range registrations {
 		if valid, err := reg.Validate(); valid {
 			results = append(results, reg)
@@ -53,7 +54,7 @@ func GetRegistrationsURL(url string) []export.Registration {
 			logger.Warn("Could not validate registration", zap.Error(err))
 		}
 	}
-	return results
+	return results, nil
 }
 
 func GetRegistrationByName(name string) *export.Registration {

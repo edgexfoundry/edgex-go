@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"go.uber.org/zap"
@@ -35,7 +36,10 @@ func TestClientRegistrationsEmpty(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(handler))
 	defer ts.Close()
 
-	regs := GetRegistrationsURL(ts.URL)
+	regs, err := getRegistrationsURL(ts.URL)
+	if err != nil {
+		t.Error(err)
+	}
 	if regs == nil {
 		t.Fatal("nil registration list")
 	}
@@ -56,7 +60,10 @@ func TestClientRegistrations(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(handler))
 	defer ts.Close()
 
-	regs := GetRegistrationsURL(ts.URL)
+	regs, err := getRegistrationsURL(ts.URL)
+	if err != nil {
+		t.Error(err)
+	}
 	if regs == nil {
 		t.Fatal("nil registration list")
 	}
@@ -82,9 +89,16 @@ func TestClientRegistrationsInvalid(t *testing.T) {
 	defer ts.Close()
 
 	for range invalidList {
-		regs := GetRegistrationsURL(ts.URL)
+		regs, err := getRegistrationsURL(ts.URL)
 		if regs != nil {
 			t.Fatal("Registration list should be nil", regs)
+		}
+		if err == nil {
+			t.Fatal("error should exist")
+		}
+		if !strings.Contains(strings.ToLower(err.Error()), "json") &&
+			!strings.Contains(strings.ToLower(err.Error()), "eof"){
+			t.Fatalf("unexpected error: %s", err.Error())
 		}
 	}
 }
@@ -108,7 +122,10 @@ func TestClientRegistrationsInvalidRegistration(t *testing.T) {
 	defer ts.Close()
 
 	for _, v := range invalidList {
-		regs := GetRegistrationsURL(ts.URL)
+		regs, err := getRegistrationsURL(ts.URL)
+		if err != nil {
+			t.Error(err)
+		}
 		if regs == nil {
 			t.Fatal("nil registration list")
 		}
@@ -127,7 +144,10 @@ func TestClientRegistrationsInvalidRegistration2(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(handler))
 	defer ts.Close()
 
-	regs := GetRegistrationsURL(ts.URL)
+	regs, err := getRegistrationsURL(ts.URL)
+	if err != nil {
+		t.Error(err)
+	}
 	if regs == nil {
 		t.Fatal("nil registration list")
 	}
