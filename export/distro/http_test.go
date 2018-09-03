@@ -45,6 +45,17 @@ func TestHttpSender(t *testing.T) {
 			HTTPMethod: http.MethodPost,
 			Path:       path,
 			Port:       -1}},
+		{"postAuthenticated", models.Addressable{
+			Protocol:   "http",
+			HTTPMethod: http.MethodPost,
+			Path:       path,
+			User:       "user1",
+			Password:   "user1password"}},
+		{"postAuthenticatedNoPassword", models.Addressable{
+			Protocol:   "http",
+			HTTPMethod: http.MethodPost,
+			Path:       path,
+			User:       "user1"}},
 	}
 
 	var addressableTest models.Addressable
@@ -70,6 +81,12 @@ func TestHttpSender(t *testing.T) {
 				if r.URL.EscapedPath() != path {
 					t.Errorf("Invalid path received %s, expected %s",
 						r.URL.EscapedPath(), path)
+				}
+
+				user, password, _ := r.BasicAuth()
+				if addressableTest.User != user || addressableTest.Password != password {
+					t.Errorf("Invalid authentication received %s:%s, expected %s:%s",
+						user, password, addressableTest.User, addressableTest.Password)
 				}
 
 			}
