@@ -14,6 +14,7 @@ cmd/export-client/export-client
 cmd/export-distro/export-distro
 cmd/support-logging/support-logging
 cmd/support-notifications/support-notifications
+cmd/sys-mgmt-agent/sys-mgmt-agent
 
 # log dirs
 cmd/core-command/logs/
