@@ -37,7 +37,7 @@ func main() {
 	flag.StringVar(&dirCmd, "cmd", "../cmd", "Specify alternate cmd location as absolute path")
 	flag.StringVar(&dirCmd, "c", "../cmd", "Specify alternate cmd location as absolute path")
 
-	flag.Usage = usage.HelpCallback
+	flag.Usage = usage.HelpCallbackConfigSeed
 	flag.Parse()
 
 	bootstrap(useProfile)
