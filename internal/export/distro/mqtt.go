@@ -37,10 +37,7 @@ func NewMqttSender(addr models.Addressable, cert string, key string) interfaces.
 	opts.SetPassword(addr.Password)
 	opts.SetAutoReconnect(false)
 
-	if protocol == "tcps" ||
-		protocol == "ssl" ||
-		protocol == "tls" {
-
+	if protocol == "tcps" || protocol == "ssl" || protocol == "tls" {
 		cert, err := tls.LoadX509KeyPair(cert, key)
 
 		if err != nil {
