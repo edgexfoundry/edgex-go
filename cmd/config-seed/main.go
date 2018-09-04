@@ -16,27 +16,26 @@ package main
 import (
 	"flag"
 	"fmt"
-	"os"
-	"os/signal"
-	"sync"
-	"syscall"
-
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/internal/seed/config"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
+	"sync"
 )
 
 var bootTimeout int = 30000 //Once we start the V2 configuration rework, this will be config driven
 
 func main() {
 	var useProfile string
+	var dirCmd string
 	var dirProperties string
 
 	flag.StringVar(&useProfile, "profile", "", "Specify a profile other than default.")
 	flag.StringVar(&useProfile, "p", "", "Specify a profile other than default.")
-	flag.StringVar(&dirProperties, "props", "./res/properties", "Specify alternate properties location")
-	flag.StringVar(&dirProperties, "r", "./res/properties", "Specify alternate properties location")
+	flag.StringVar(&dirProperties, "props", "./res/properties", "Specify alternate properties location as absolute path")
+	flag.StringVar(&dirProperties, "r", "./res/properties", "Specify alternate properties location as absolute path")
+	flag.StringVar(&dirCmd, "cmd", "../cmd", "Specify alternate cmd location as absolute path")
+	flag.StringVar(&dirCmd, "c", "../cmd", "Specify alternate cmd location as absolute path")
 
 	flag.Usage = usage.HelpCallback
 	flag.Parse()
@@ -48,7 +47,14 @@ func main() {
 		return
 	}
 	config.LoggingClient.Info("Service dependencies resolved...")
-	config.ImportProperties(dirProperties)
+	err := config.ImportProperties(dirProperties)
+	if err != nil {
+		config.LoggingClient.Error(err.Error())
+	}
+	err = config.ImportConfiguration(dirCmd)
+	if err != nil {
+		config.LoggingClient.Error(err.Error())
+	}
 }
 
 func bootstrap(profile string) {
@@ -75,12 +81,4 @@ func bootstrap(profile string) {
 func logBeforeInit(err error) {
 	l := logger.NewClient(internal.ConfigSeedServiceKey, false, "")
 	l.Error(err.Error())
-}
-
-func listenForInterrupt(errChan chan error) {
-	go func() {
-		c := make(chan os.Signal)
-		signal.Notify(c, syscall.SIGINT)
-		errChan <- fmt.Errorf("%s", <-c)
-	}()
 }

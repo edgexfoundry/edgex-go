@@ -58,4 +58,4 @@ COPY --from=build-env $GOPATH/src/github.com/edgexfoundry/edgex-go/cmd/export-di
 COPY --from=build-env $GOPATH/src/github.com/edgexfoundry/edgex-go/cmd/support-logging/res /edgex/cmd/support-logging/res
 COPY --from=build-env $GOPATH/src/github.com/edgexfoundry/edgex-go/cmd/support-notifications/res /edgex/cmd/support-notifications/res
 
-ENTRYPOINT /edgex/cmd/config-seed/config-seed --profile=docker
+ENTRYPOINT /edgex/cmd/config-seed/config-seed --profile=docker --cmd=/edgex/cmd
