@@ -97,7 +97,7 @@ func TestClientRegistrationsInvalid(t *testing.T) {
 			t.Fatal("error should exist")
 		}
 		if !strings.Contains(strings.ToLower(err.Error()), "json") &&
-			!strings.Contains(strings.ToLower(err.Error()), "eof"){
+			!strings.Contains(strings.ToLower(err.Error()), "eof") {
 			t.Fatalf("unexpected error: %s", err.Error())
 		}
 	}
@@ -165,7 +165,7 @@ func TestClientRegistrationByName(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(handler))
 	defer ts.Close()
 
-	reg := GetRegistrationByNameURL(ts.URL)
+	reg := getRegistrationByNameURL(ts.URL)
 	if reg == nil {
 		t.Fatal("nil registration")
 	}
@@ -185,7 +185,7 @@ func TestClientRegistrationByNameError(t *testing.T) {
 	defer ts.Close()
 
 	for range invalidList {
-		reg := GetRegistrationByNameURL(ts.URL)
+		reg := getRegistrationByNameURL(ts.URL)
 		if reg != nil {
 			t.Fatal("Registration should be nil")
 		}

@@ -14,9 +14,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/edgexfoundry/edgex-go/pkg/models"
 	"github.com/satori/go.uuid"
 	"go.uber.org/zap"
-	"github.com/edgexfoundry/edgex-go/pkg/models"
 )
 
 type jsonFormatter struct {
@@ -120,10 +120,16 @@ func NewAzureMessage() (*AzureMessage, error) {
 		Created:    time.Now(),
 	}
 
-	id := uuid.NewV4()
+	id, err := uuid.NewV4()
+	if err != nil {
+		return nil, err
+	}
 	msg.ID = id.String()
 
-	correlationID := uuid.NewV4()
+	correlationID, err := uuid.NewV4()
+	if err != nil {
+		return nil, err
+	}
 	msg.CorrelationID = correlationID.String()
 
 	return msg, nil

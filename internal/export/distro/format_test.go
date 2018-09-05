@@ -9,11 +9,11 @@ package distro
 import (
 	"encoding/json"
 	"encoding/xml"
+	"github.com/edgexfoundry/edgex-go/pkg/models"
 	"reflect"
 	"strconv"
 	"strings"
 	"testing"
-	"github.com/edgexfoundry/edgex-go/pkg/models"
 )
 
 const (

@@ -225,7 +225,7 @@ func updateRunningRegistrations(running map[string]*registrationInfo,
 		}
 		return fmt.Errorf("delete update not processed")
 	case export.NotifyUpdateUpdate:
-		reg := GetRegistrationByName(update.Name)
+		reg := getRegistrationByName(update.Name)
 		if reg == nil {
 			return fmt.Errorf("Could not find registration")
 		}
@@ -237,7 +237,7 @@ func updateRunningRegistrations(running map[string]*registrationInfo,
 		}
 		return fmt.Errorf("Could not find running registration")
 	case export.NotifyUpdateAdd:
-		reg := GetRegistrationByName(update.Name)
+		reg := getRegistrationByName(update.Name)
 		if reg == nil {
 			return fmt.Errorf("Could not find registration")
 		}

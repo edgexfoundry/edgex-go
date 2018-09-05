@@ -27,7 +27,6 @@ var logger *zap.Logger
 var ec coredata.EventClient
 var configuration = ConfigurationStruct{} // Needs to be initialized before used
 
-
 type ConfigurationStruct struct {
 	Hostname             string
 	Port                 int

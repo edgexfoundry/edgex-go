@@ -20,7 +20,7 @@ import (
 type DBClient interface {
 	CloseSession()
 
-	Connect() (error)
+	Connect() error
 
 	// ********************** REGISTRATION FUNCTIONS *****************************
 	// Return all the registrations
@@ -56,4 +56,3 @@ type DBClient interface {
 	// NotFound - no registration with the ID was found
 	DeleteRegistrationByName(name string) error
 }
-

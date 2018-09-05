@@ -4,9 +4,10 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-package memory
+package test
 
 import (
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db/memory"
 	"testing"
 
 	"github.com/edgexfoundry/edgex-go/internal/export"
@@ -100,6 +101,6 @@ func testDB(t *testing.T, db export.DBClient) {
 }
 
 func TestExportMemoryDB(t *testing.T) {
-	memory := &MemDB{}
+	memory := &memory.MemDB{}
 	testDB(t, memory)
 }

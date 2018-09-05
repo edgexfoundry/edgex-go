@@ -57,12 +57,12 @@ func getRegistrationsURL(url string) ([]export.Registration, error) {
 	return results, nil
 }
 
-func GetRegistrationByName(name string) *export.Registration {
+func getRegistrationByName(name string) *export.Registration {
 	url := getRegistrationBaseURL(configuration.ClientHost) + "/name/" + name
-	return GetRegistrationByNameURL(url)
+	return getRegistrationByNameURL(url)
 }
 
-func GetRegistrationByNameURL(url string) *export.Registration {
+func getRegistrationByNameURL(url string) *export.Registration {
 
 	response, err := http.Get(url)
 	if err != nil {

@@ -14,9 +14,9 @@ import (
 	"strconv"
 	"strings"
 
+	MQTT "github.com/eclipse/paho.mqtt.golang"
 	"github.com/edgexfoundry/edgex-go/internal/export/interfaces"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
-	MQTT "github.com/eclipse/paho.mqtt.golang"
 	"go.uber.org/zap"
 )
 

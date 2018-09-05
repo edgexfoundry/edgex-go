@@ -39,7 +39,7 @@ func pkcs5Padding(ciphertext []byte, blockSize int) []byte {
 	return append(ciphertext, padtext...)
 }
 
-func (aesData aesEncryption) Transform(data []byte,) []byte {
+func (aesData aesEncryption) Transform(data []byte) []byte {
 	iv := make([]byte, blockSize)
 	copy(iv, []byte(aesData.iv))
 
