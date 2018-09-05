@@ -52,7 +52,7 @@ apps:
     plugs: [network, network-bind]
   start-edgex:
     command: bin/start-edgex.sh
-    plugs: [network, network-bind]
+    plugs: [network, network-bind, system-observe, process-control, hardware-observe]
   stop-edgex:
     command: bin/stop-edgex.sh
     plugs: [system-observe, process-control]

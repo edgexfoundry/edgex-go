@@ -27,6 +27,11 @@ export VAULT_CONFIG_DIR=${_VAULT_DIR}/config
 export VAULT_UI=true
 export MAX_VAULT_UNSEAL_TRIES=10
 
+# before running anything else go into a snap writable directory
+# this prevents issues later on with popd, as we may not have permission to go back to the directory we came from
+# on some systems. See issue #509 for more details
+cd $SNAP_DATA
+
 # touch all the kong log files to ensure they exist
 mkdir -p ${LOG_DIR}
 for log in ${KONG_PROXY_ACCESS_LOG} ${KONG_ADMIN_ACCESS_LOG} ${KONG_PROXY_ERROR_LOG} ${KONG_ADMIN_ERROR_LOG}; do
