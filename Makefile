@@ -11,10 +11,11 @@
 GO=CGO_ENABLED=0 go
 GOCGO=CGO_ENABLED=1 go
 
-DOCKERS=docker_export_client docker_export_distro docker_core_data docker_core_metadata docker_core_command docker_support_logging docker_support_notifications docker_sys_mgmt_agent
+DOCKERS=docker_config-seed docker_export_client docker_export_distro docker_core_data docker_core_metadata docker_core_command docker_support_logging docker_support_notifications docker_sys_mgmt_agent
 .PHONY: $(DOCKERS)
 
-MICROSERVICES=cmd/export-client/export-client cmd/export-distro/export-distro cmd/core-metadata/core-metadata cmd/core-data/core-data cmd/core-command/core-command cmd/support-logging/support-logging cmd/support-notifications/support-notifications cmd/sys-mgmt-agent/sys-mgmt-agent
+MICROSERVICES=cmd/config-seed/config-seed cmd/export-client/export-client cmd/export-distro/export-distro cmd/core-metadata/core-metadata cmd/core-data/core-data cmd/core-command/core-command cmd/support-logging/support-logging cmd/support-notifications/support-notifications cmd/sys-mgmt-agent/sys-mgmt-agent
+
 .PHONY: $(MICROSERVICES)
 
 VERSION=$(shell cat ./VERSION)
@@ -25,6 +26,9 @@ GIT_SHA=$(shell git rev-parse HEAD)
 
 build: $(MICROSERVICES)
 	go build ./...
+
+cmd/config-seed/config-seed:
+	$(GO) build $(GOFLAGS) -o $@ ./cmd/config-seed
 
 cmd/core-metadata/core-metadata:
 	$(GO) build $(GOFLAGS) -o $@ ./cmd/core-metadata
@@ -67,6 +71,14 @@ run_docker:
 	cd bin && ./edgex-docker-launch.sh
 
 docker: $(DOCKERS)
+
+docker_config-seed:
+	docker build \
+		-f docker/Dockerfile.config-seed \
+		--label "git_sha=$(GIT_SHA)" \
+		-t edgexfoundry/docker-core-config-seed-go:$(GIT_SHA) \
+		-t edgexfoundry/docker-core-config-seed-go:$(VERSION)-dev \
+		.
 
 docker_core_metadata:
 	docker build \
