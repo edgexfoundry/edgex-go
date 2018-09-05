@@ -35,6 +35,10 @@ var msc metadata.DeviceServiceClient
 var scrubPushedCh chan int64
 var deleteOldCh chan int64
 
+//Constant
+const scrubPushedChSize = 5
+const deleteOldChSize = 5
+
 func ConnectToConsul(conf ConfigurationStruct) error {
 
 	// Initialize service on Consul
@@ -106,11 +110,11 @@ func Destruct() {
 }
 func dataScrubInit() {
 	//Create scrub pushed events long go routine and channel
-	scrubPushedCh = make(chan int64, 5)
+	scrubPushedCh = make(chan int64, scrubPushedChSize)
 	go DeletePushedEvents()
 
 
 	//Create delete old events long go routine and channel
-	deleteOldCh = make(chan int64, 5)
+	deleteOldCh = make(chan int64, deleteOldChSize)
 	go DeleteOldEvents()
 }
