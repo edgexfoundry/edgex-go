@@ -120,16 +120,10 @@ func NewAzureMessage() (*AzureMessage, error) {
 		Created:    time.Now(),
 	}
 
-	id, err := uuid.NewV4()
-	if err != nil {
-		return nil, err
-	}
+	id:= uuid.NewV4()
 	msg.ID = id.String()
 
-	correlationID, err := uuid.NewV4()
-	if err != nil {
-		return nil, err
-	}
+	correlationID := uuid.NewV4()
 	msg.CorrelationID = correlationID.String()
 
 	return msg, nil

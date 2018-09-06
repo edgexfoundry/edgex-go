@@ -23,3 +23,8 @@ func BenchmarkMemoryDB(b *testing.B) {
 
 	test.BenchmarkDB(b, memory)
 }
+
+func TestExportMemoryDB(t *testing.T) {
+	memory := &MemDB{}
+	test.ExportTestDB(t, memory)
+}

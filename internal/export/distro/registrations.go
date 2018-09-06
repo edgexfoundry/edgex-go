@@ -19,6 +19,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/export/interfaces"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 	"net/http"
+	"time"
 
 	"go.uber.org/zap"
 )
@@ -264,9 +265,18 @@ func Loop(errChan chan error, eventCh chan *models.Event) {
 
 	allRegs, err := getRegistrations()
 
-	if err != nil {
-		logger.Error(err.Error())
-		return
+	for allRegs == nil {
+		logger.Info("Waiting for client microservice")
+		select {
+		case e := <-errChan:
+			logger.Error("exit msg", zap.Error(e))
+			if err != nil {
+				logger.Error("with error: ",  zap.Error(err))
+			}
+			return
+		case <-time.After(time.Second):
+		}
+		allRegs, err = getRegistrations()
 	}
 
 	// Create new goroutines for each registration

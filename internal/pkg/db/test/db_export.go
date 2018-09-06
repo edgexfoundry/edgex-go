@@ -7,13 +7,12 @@
 package test
 
 import (
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db/memory"
 	"testing"
 
 	"github.com/edgexfoundry/edgex-go/internal/export"
 )
 
-func testDB(t *testing.T, db export.DBClient) {
+func ExportTestDB(t *testing.T, db export.DBClient) {
 	regs, err := db.Registrations()
 	if err != nil {
 		t.Fatalf("Error getting registrations %v", err)
@@ -97,10 +96,4 @@ func testDB(t *testing.T, db export.DBClient) {
 	if err == nil {
 		t.Fatalf("Update should return error")
 	}
-
-}
-
-func TestExportMemoryDB(t *testing.T) {
-	memory := &memory.MemDB{}
-	testDB(t, memory)
 }
