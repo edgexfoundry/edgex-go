@@ -23,5 +23,5 @@ done
 if [ "$CONSUL_RUNNING" != "[]" ] ; then
     cd "$SNAP"/config/config-seed
 
-    "$SNAP"/bin/config-seed -consul &
+    "$SNAP"/bin/config-seed -c "$SNAP"/config &
 fi
