@@ -115,4 +115,7 @@ type DBClient interface {
 	GetAllCommands(d *[]models.Command) error
 	UpdateCommand(c *models.Command, r *models.Command) error
 	DeleteCommandById(id string) error
+
+	// Scrub all metadata (only used in test)
+	ScrubMetadata() error
 }

@@ -18,9 +18,9 @@ package memory
 import (
 	"time"
 
-	"gopkg.in/mgo.v2/bson"
 	"github.com/edgexfoundry/edgex-go/internal/export"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+	"gopkg.in/mgo.v2/bson"
 )
 
 func (mc *MemDB) Registrations() ([]export.Registration, error) {
@@ -86,4 +86,9 @@ func (mc *MemDB) DeleteRegistrationByName(name string) error {
 		}
 	}
 	return db.ErrNotFound
+}
+
+func (mc *MemDB) ScrubAllRegistrations() error {
+	mc.regs = make([]export.Registration, 0)
+	return nil
 }

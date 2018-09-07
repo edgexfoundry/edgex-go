@@ -12,7 +12,15 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/export"
 )
 
-func ExportTestDB(t *testing.T, db export.DBClient) {
+func TestExportDB(t *testing.T, db export.DBClient) {
+	err := db.Connect()
+	if err != nil {
+		t.Fatalf("Could not connect: %v", err)
+	}
+
+	// Remove previous registrations
+	db.ScrubAllRegistrations()
+
 	regs, err := db.Registrations()
 	if err != nil {
 		t.Fatalf("Error getting registrations %v", err)
@@ -96,4 +104,9 @@ func ExportTestDB(t *testing.T, db export.DBClient) {
 	if err == nil {
 		t.Fatalf("Update should return error")
 	}
+
+	db.CloseSession()
+	// Calling CloseSession twice to test that there is no panic when closing an
+	// already closed db
+	db.CloseSession()
 }

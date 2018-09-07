@@ -16,6 +16,13 @@ import (
 )
 
 func TestMetadataDB(t *testing.T, db interfaces.DBClient) {
+	err := db.Connect()
+	if err != nil {
+		t.Fatalf("Could not connect: %v", err)
+	}
+
+	// Remove previous metadata
+	db.ScrubMetadata()
 
 	testDBAddressables(t, db)
 	testDBCommand(t, db)

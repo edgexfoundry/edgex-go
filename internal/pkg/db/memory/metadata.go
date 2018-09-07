@@ -1104,3 +1104,16 @@ func (m *MemDB) GetDeviceProfilesUsingCommand(dps *[]models.DeviceProfile, c mod
 	*dps = l
 	return nil
 }
+
+func (m *MemDB) ScrubMetadata() error {
+	m.addressables = nil
+	m.commands = nil
+	m.deviceServices = nil
+	m.schedules = nil
+	m.scheduleEvents = nil
+	m.provisionWatchers = nil
+	m.deviceReports = nil
+	m.deviceProfiles = nil
+	m.devices = nil
+	return nil
+}

@@ -15,6 +15,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/export"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/consul"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db/memory"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo"
 
 	"go.uber.org/zap"
@@ -55,24 +56,26 @@ func Init(conf ConfigurationStruct, l *zap.Logger) error {
 	configuration = conf
 	logger = l
 
-	var err error
-
 	// Create a database client
-	dbc = mongo.NewClient(db.Configuration{
-		DbType:       conf.DBType,
+	dbConfig := db.Configuration{
 		Host:         conf.MongoURL,
 		Port:         conf.MongoPort,
 		Timeout:      conf.MongoConnectTimeout,
 		DatabaseName: conf.MongoDatabaseName,
 		Username:     conf.MongoUsername,
 		Password:     conf.MongoPassword,
-	})
+	}
+	var err error
+	dbc, err = newDBClient(conf.DBType, dbConfig)
 	if err != nil {
-		return fmt.Errorf("couldn't create database: %v", err.Error())
+		dbc = nil
+		return fmt.Errorf("couldn't create database client: %v", err.Error())
 	}
 
+	// Connect to the database
 	err = dbc.Connect()
 	if err != nil {
+		dbc = nil
 		return fmt.Errorf("couldn't connect to database: %v", err.Error())
 	}
 
@@ -83,5 +86,17 @@ func Destroy() {
 	if dbc != nil {
 		dbc.CloseSession()
 		dbc = nil
+	}
+}
+
+// Return the dbClient interface
+func newDBClient(dbType string, config db.Configuration) (export.DBClient, error) {
+	switch dbType {
+	case db.MongoDB:
+		return mongo.NewClient(config), nil
+	case db.MemoryDB:
+		return &memory.MemDB{}, nil
+	default:
+		return nil, db.ErrUnsupportedDatabase
 	}
 }
