@@ -183,9 +183,69 @@ func (m *memDB) EventsPushed() ([]models.Event, error) {
 	return events, nil
 }
 
+func (m *memDB) EventsPushedLimit(time int64, limit int) ([]models.Event, error) {
+	events := []models.Event{}
+	count := 0
+	for _, e := range m.events {
+		if (e.Pushed != 0) && (e.Created <= time) {
+			events = append(events, e)
+			if count == limit {
+				break
+			}
+		}
+	}
+	return events, nil
+}
+
+//Delete pushed events by created time
+func (m *memDB) DeletePushedEvents(time int64) error {
+	for _, e := range m.events {
+		if (e.Pushed != 0) && (e.Created <= time) {
+			m.DeleteEventById(e.ID.Hex())
+		}
+	}
+
+	return nil
+}
+
+func (m *memDB) EventsPushedCount(time int64) (int, error) {
+	count := 0
+	for _, e := range m.events {
+		if (e.Pushed != 0) && (e.Created <= time) {
+			count++
+		}
+	}
+
+	return count, nil
+}
+
+
 func (m *memDB) ScrubAllEvents() error {
 	m.events = nil
 	m.readings = nil
+	return nil
+}
+
+// Get count of events number before expire time
+func (m *memDB) EventsCountOlderThanAge(time int64) (int, error) {
+	count := 0
+	for _, e := range m.events {
+		if e.Created <= time {
+			count++
+		}
+	}
+
+	return count, nil
+}
+
+// Delete all of the readings and all of the events before expire time
+func (m *memDB) DeleteOldEvents(time int64) error {
+	for _, e := range m.events {
+		if e.Created <= time {
+			m.DeleteEventById(e.ID.Hex())
+		}
+	}
+
 	return nil
 }
 
