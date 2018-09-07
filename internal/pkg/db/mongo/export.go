@@ -102,6 +102,15 @@ func (mc *MongoClient) DeleteRegistrationByName(name string) error {
 	return mc.deleteRegistration(bson.M{"name": name})
 }
 
+// Delete all registrations
+func (mc *MongoClient) ScrubAllRegistrations() error {
+	s := mc.getSessionCopy()
+	defer s.Close()
+
+	_, err := s.DB(mc.database.Name).C(EXPORT_COLLECTION).RemoveAll(nil)
+	return err
+}
+
 // Get registrations for the passed query
 func (mc *MongoClient) getRegistrations(q bson.M) ([]export.Registration, error) {
 	s := mc.getSessionCopy()

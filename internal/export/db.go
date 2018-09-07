@@ -55,4 +55,7 @@ type DBClient interface {
 	// UnexpectedError - problem getting in database
 	// NotFound - no registration with the ID was found
 	DeleteRegistrationByName(name string) error
+
+	// Delete all registrations
+	ScrubAllRegistrations() error
 }

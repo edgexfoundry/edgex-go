@@ -29,52 +29,16 @@ func TestMongoDB(t *testing.T) {
 		DatabaseName: "coredata",
 		Timeout:      1000,
 	}
-
 	mongo := NewClient(config)
 	test.TestDataDB(t, mongo)
 
 	config.DatabaseName = "metadata"
 	mongo = NewClient(config)
-
-	err := mongo.Connect()
-	if err != nil {
-		t.Fatalf("Could not connect with mongodb: %v", err)
-	}
-
-	s := mongo.getSessionCopy()
-	defer s.Close()
-
-	_, err = s.DB(mongo.database.Name).C(db.Addressable).RemoveAll(nil)
-	if err != nil {
-		t.Fatalf("Error removing previous data: %v", err)
-	}
-
-	_, err = s.DB(mongo.database.Name).C(db.DeviceService).RemoveAll(nil)
-	if err != nil {
-		t.Fatalf("Error removing previous data: %v", err)
-	}
-	_, err = s.DB(mongo.database.Name).C(db.DeviceProfile).RemoveAll(nil)
-	if err != nil {
-		t.Fatalf("Error removing previous data: %v", err)
-	}
-	_, err = s.DB(mongo.database.Name).C(db.DeviceReport).RemoveAll(nil)
-	if err != nil {
-		t.Fatalf("Error removing previous data: %v", err)
-	}
-	_, err = s.DB(mongo.database.Name).C(db.ScheduleEvent).RemoveAll(nil)
-	if err != nil {
-		t.Fatalf("Error removing previous data: %v", err)
-	}
-	_, err = s.DB(mongo.database.Name).C(db.Device).RemoveAll(nil)
-	if err != nil {
-		t.Fatalf("Error removing previous data: %v", err)
-	}
-	_, err = s.DB(mongo.database.Name).C(db.ProvisionWatcher).RemoveAll(nil)
-	if err != nil {
-		t.Fatalf("Error removing previous data: %v", err)
-	}
-
 	test.TestMetadataDB(t, mongo)
+
+	config.DatabaseName = "export"
+	mongo = NewClient(config)
+	test.TestExportDB(t, mongo)
 }
 
 func BenchmarkMongoDB(b *testing.B) {
