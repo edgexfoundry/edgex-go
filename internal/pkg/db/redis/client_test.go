@@ -51,17 +51,25 @@ func TestRedisDB(t *testing.T) {
 		t.Fatalf("Could not connect with Redis: %v", err)
 	}
 	test.TestDataDB(t, rc)
+	rc.CloseSession()
 
 	rc, err = NewClient(config)
 	if err != nil {
 		t.Fatalf("Could not connect with Redis: %v", err)
 	}
-
-	rc.ScrubAllMetadata()
 	test.TestMetadataDB(t, rc)
+	rc.CloseSession()
+
+	rc, err = NewClient(config)
+	if err != nil {
+		t.Fatalf("Could not connect with Redis: %v", err)
+	}
+	test.TestExportDB(t, rc)
+	rc.CloseSession()
+
 }
 
-func BenchmarkRedisDB_TCP(b *testing.B) {
+func BenchmarkRedisDB(b *testing.B) {
 
 	b.Log("This benchmark needs to have a running Redis on localhost")
 

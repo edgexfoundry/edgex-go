@@ -46,6 +46,27 @@ func (c *Client) Events() (events []models.Event, err error) {
 	return events, nil
 }
 
+// Return events up to the number specified
+// UnexpectedError - failed to retrieve events from the database
+func (c *Client) EventsWithLimit(limit int) (events []models.Event, err error) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	objects, err := getObjectsByRange(conn, db.EventsCollection, 0, limit-1)
+	if err != nil {
+		if err != redis.ErrNil {
+			return events, err
+		}
+	}
+	events = make([]models.Event, len(objects))
+	err = unmarshalEvents(objects, events)
+	if err != nil {
+		return events, err
+	}
+
+	return events, nil
+}
+
 // Add a new event
 // UnexpectedError - failed to add to database
 // NoValueDescriptor - no existing value descriptor for a reading in the event

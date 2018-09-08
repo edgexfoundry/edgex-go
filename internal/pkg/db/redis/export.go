@@ -11,160 +11,18 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
-package clients
+package redis
 
 import (
-	"fmt"
-	"sync"
-	"time"
-
-	"github.com/edgexfoundry/edgex-go/export"
+	"github.com/edgexfoundry/edgex-go/internal/export"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/gomodule/redigo/redis"
 	"gopkg.in/mgo.v2/bson"
 )
 
-// ------------------------------------ "imports" ------------------------------
 const (
-	scriptUnlinkZsetMembers = `
-	local magic = 4096
-	local ids = redis.call('ZRANGE', KEYS[1], 0, -1)
-	if #ids > 0 then
-		for i = 1, #ids, magic do
-			redis.call('UNLINK', unpack(ids, i, i+magic < #ids and i+magic or #ids))
-		end
-	end
-	`
-	scriptUnlinkCollection = `
-	local magic = 4096
-	redis.replicate_commands()
-	local c = 0
-	repeat
-		local s = redis.call('SCAN', c, 'MATCH', ARGV[1] .. '*')
-		c = tonumber(s[1])
-		if #s[2] > 0 then
-			redis.call('UNLINK', unpack(s[2]))
-		end
-	until c == 0
-	`
+	EXPORT_COLLECTION = "exportConfiguration"
 )
-
-var scripts = map[string]redis.Script{
-	"unlinkZsetMembers": *redis.NewScript(1, scriptUnlinkZsetMembers),
-	"unlinkCollection":  *redis.NewScript(0, scriptUnlinkCollection),
-}
-
-var currClient *Client // a singleton so Readings can be de-referenced
-var once sync.Once
-
-type marshalFunc func(in interface{}) (out []byte, err error)
-type unmarshalFunc func(in []byte, out interface{}) (err error)
-
-func marshalObject(in interface{}) (out []byte, err error) {
-	return bson.Marshal(in)
-}
-
-func unmarshalObject(in []byte, out interface{}) (err error) {
-	return bson.Unmarshal(in, out)
-}
-
-func getObjectsByRange(conn redis.Conn, key string, start, end int) (objects [][]byte, err error) {
-	ids, err := redis.Values(conn.Do("ZRANGE", key, start, end))
-	if err != nil && err != redis.ErrNil {
-		return nil, err
-	}
-
-	if len(ids) > 0 {
-		objects, err = redis.ByteSlices(conn.Do("MGET", ids...))
-		if err != nil {
-			return nil, err
-		}
-	}
-	return objects, nil
-}
-
-func getObjectById(conn redis.Conn, id string, unmarshal unmarshalFunc, out interface{}) error {
-	object, err := redis.Bytes(conn.Do("GET", id))
-	if err == redis.ErrNil {
-		return ErrNotFound
-	} else if err != nil {
-		return err
-	}
-
-	return unmarshal(object, out)
-}
-
-func getObjectByHash(conn redis.Conn, hash string, field string, unmarshal unmarshalFunc, out interface{}) error {
-	id, err := redis.String(conn.Do("HGET", hash, field))
-	if err == redis.ErrNil {
-		return ErrNotFound
-	} else if err != nil {
-		return err
-	}
-
-	object, err := redis.Bytes(conn.Do("GET", id))
-	if err != nil {
-		return err
-	}
-
-	return unmarshal(object, out)
-}
-
-func unlinkCollection(conn redis.Conn, col string) error {
-	conn.Send("MULTI")
-	s := scripts["unlinkZsetMembers"]
-	s.Send(conn, col)
-	s = scripts["unlinkCollection"]
-	s.Send(conn, col)
-	_, err := conn.Do("EXEC")
-	return err
-}
-
-// Client represents a Redis client
-type Client struct {
-	Pool *redis.Pool // A thread-safe pool of connections to Redis
-}
-
-// Return a pointer to the RedisClient
-func newRedisClient(config DBConfiguration) (*Client, error) {
-	once.Do(func() {
-		connectionString := fmt.Sprintf("%s:%d", config.Host, config.Port)
-		opts := []redis.DialOption{
-			redis.DialPassword(config.Password),
-			redis.DialConnectTimeout(time.Duration(config.Timeout) * time.Millisecond),
-		}
-
-		dialFunc := func() (redis.Conn, error) {
-			conn, err := redis.Dial(
-				"tcp", connectionString, opts...,
-			)
-			if err != nil {
-				return nil, fmt.Errorf("Could not dial Redis: %s", err)
-			}
-			return conn, nil
-		}
-
-		currClient = &Client{
-			Pool: &redis.Pool{
-				IdleTimeout: 0,
-				MaxIdle:     1,
-				Dial:        dialFunc,
-			},
-		}
-	})
-	return currClient, nil
-}
-
-// Connect connects to Redis
-func (c *Client) Connect() error {
-	return nil
-}
-
-// CloseSession closes the connections to Redis
-func (c *Client) CloseSession() {
-	c.Pool.Close()
-	currClient = nil
-	once = sync.Once{}
-}
 
 // ********************** REGISTRATION FUNCTIONS *****************************
 // Return all the registrations
@@ -255,7 +113,7 @@ func (c *Client) DeleteRegistrationByName(name string) error {
 
 	id, err := redis.String(conn.Do("HGET", EXPORT_COLLECTION+":name", name))
 	if err == redis.ErrNil {
-		return ErrNotFound
+		return db.ErrNotFound
 	} else if err != nil {
 		return err
 	}
@@ -263,8 +121,8 @@ func (c *Client) DeleteRegistrationByName(name string) error {
 	return deleteRegistration(conn, id)
 }
 
-// ScrubAllExports deletes all export related data
-func (c *Client) ScrubAllExports() (err error) {
+//  ScrubAllRegistrations deletes all export related data
+func (c *Client) ScrubAllRegistrations() (err error) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
@@ -278,7 +136,7 @@ func addRegistration(conn redis.Conn, r *export.Registration) (id bson.ObjectId,
 	id = r.ID
 	rid := r.ID.Hex()
 
-	ts := time.Now().UnixNano() / int64(time.Millisecond) //MakeTimestamp()
+	ts := db.MakeTimestamp()
 	if r.Created == 0 {
 		r.Created = ts
 	}
@@ -300,7 +158,7 @@ func addRegistration(conn redis.Conn, r *export.Registration) (id bson.ObjectId,
 func deleteRegistration(conn redis.Conn, id string) error {
 	object, err := redis.Bytes(conn.Do("GET", id))
 	if err == redis.ErrNil {
-		return ErrNotFound
+		return db.ErrNotFound
 	} else if err != nil {
 		return err
 	}

@@ -1569,7 +1569,7 @@ func deleteCommand(conn redis.Conn, id string) error {
 	return err
 }
 
-func (c *Client) ScrubAllMetadata() (err error) {
+func (c *Client) ScrubMetadata() (err error) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
