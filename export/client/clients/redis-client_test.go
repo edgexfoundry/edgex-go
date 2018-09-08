@@ -30,8 +30,8 @@ import (
 )
 
 const (
-	REDIS_HOST = "0.0.0.0"
-	REDIS_PORT = 6379
+	redisHost = "0.0.0.0"
+	redisPort = 6379
 )
 
 func TestRedisDB(t *testing.T) {
@@ -40,8 +40,8 @@ func TestRedisDB(t *testing.T) {
 
 	config := DBConfiguration{
 		DbType: REDIS,
-		Host:   REDIS_HOST,
-		Port:   REDIS_PORT,
+		Host:   redisHost,
+		Port:   redisPort,
 	}
 
 	rc, err := newRedisClient(config)

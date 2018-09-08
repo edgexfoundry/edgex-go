@@ -41,8 +41,7 @@ func marshalProvisionWatcher(pw models.ProvisionWatcher) (out []byte, err error)
 		OperatingState: pw.OperatingState,
 	}
 
-	out, err = marshalObject(s)
-	return out, err
+	return marshalObject(s)
 }
 
 func unmarshalProvisionWatcher(o []byte, pw interface{}) (err error) {

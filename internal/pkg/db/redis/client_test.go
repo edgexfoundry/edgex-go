@@ -33,8 +33,8 @@ import (
 )
 
 const (
-	REDIS_HOST = "0.0.0.0"
-	REDIS_PORT = 6379
+	redisHost = "0.0.0.0"
+	redisPort = 6379
 )
 
 func TestRedisDB(t *testing.T) {
@@ -42,8 +42,8 @@ func TestRedisDB(t *testing.T) {
 	t.Log("This test needs to have a running Redis on localhost")
 
 	config := db.Configuration{
-		Host: REDIS_HOST,
-		Port: REDIS_PORT,
+		Host: redisHost,
+		Port: redisPort,
 	}
 
 	rc, err := NewClient(config)
@@ -66,8 +66,8 @@ func BenchmarkRedisDB_TCP(b *testing.B) {
 	b.Log("This benchmark needs to have a running Redis on localhost")
 
 	config := db.Configuration{
-		Host: REDIS_HOST,
-		Port: REDIS_PORT,
+		Host: redisHost,
+		Port: redisPort,
 	}
 
 	rc, err := NewClient(config)

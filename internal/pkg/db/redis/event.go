@@ -41,8 +41,7 @@ func marshalEvent(event models.Event) (out []byte, err error) {
 		Event:    event.Event,
 	}
 
-	out, err = marshalObject(s)
-	return out, err
+	return marshalObject(s)
 }
 
 func unmarshalEvents(objects [][]byte, events []models.Event) (err error) {

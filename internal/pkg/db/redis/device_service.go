@@ -45,8 +45,7 @@ func marshalDeviceService(ds models.DeviceService) (out []byte, err error) {
 		AdminState:      ds.AdminState,
 	}
 
-	out, err = marshalObject(s)
-	return out, err
+	return marshalObject(s)
 }
 
 func unmarshalDeviceService(o []byte, ds interface{}) (err error) {

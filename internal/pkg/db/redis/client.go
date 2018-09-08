@@ -16,67 +16,25 @@ package redis
 import (
 	"errors"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/gomodule/redigo/redis"
 )
 
-type connectionType int
+var currClient *Client // a singleton so Readings can be de-referenced
+var once sync.Once
 
-const (
-	connTypeTCP connectionType = 1 << iota
-	connTypeUDS
-	connTypeEredis
-)
-
-const (
-	protoTCP    = "tcp"
-	protoUDS    = "unix"
-	protoEredis = "eredis"
-)
-
-var currClients = make([]*Client, 3) // A singleton per connection type (for benchmarking)
-var currClient *Client               // a singleton so Readings can be de-referenced
-
-// Client represents a client
+// Client represents a Redis client
 type Client struct {
-	Pool     *redis.Pool // Connections to Redis
-	conntype connectionType
+	Pool *redis.Pool // A thread-safe pool of connections to Redis
 }
 
-// Return a pointer to the RedisClient
+// Return a pointer to the Redis client
 func NewClient(config db.Configuration) (*Client, error) {
-	// Identify the connection's type
-	var conntype connectionType
-	if config.Host == "" {
-		conntype = connTypeEredis
-	} else if string(config.Host[0]) == "/" {
-		conntype = connTypeUDS
-	} else {
-		conntype = connTypeTCP
-	}
-
-	if currClients[conntype] == nil {
+	once.Do(func() {
 		connectionString := fmt.Sprintf("%s:%d", config.Host, config.Port)
-
-		var proto, addr string
-		c := Client{
-			conntype: conntype,
-		}
-		switch c.conntype {
-		case connTypeEredis:
-			proto = protoEredis
-		case connTypeUDS:
-			proto = protoUDS
-			addr = config.Host
-		case connTypeTCP:
-			proto = protoTCP
-			addr = connectionString
-		default:
-			return nil, db.ErrUnsupportedDatabase
-		}
-
 		opts := []redis.DialOption{
 			redis.DialPassword(config.Password),
 			redis.DialConnectTimeout(time.Duration(config.Timeout) * time.Millisecond),
@@ -84,26 +42,29 @@ func NewClient(config db.Configuration) (*Client, error) {
 
 		dialFunc := func() (redis.Conn, error) {
 			conn, err := redis.Dial(
-				proto, addr, opts...,
+				"tcp", connectionString, opts...,
 			)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("Could not dial Redis: %s", err)
 			}
 			return conn, nil
 		}
 
-		c.Pool = &redis.Pool{
-			MaxIdle:     1,
-			IdleTimeout: 0,
-			Dial:        dialFunc,
+		currClient = &Client{
+			Pool: &redis.Pool{
+				IdleTimeout: 0,
+				/* The current implementation processes nested structs using concurrent connections.
+				 * With the deepest nesting level being 3, three shall be the number of maximum open
+				 * idle connections in the pool, to allow reuse.
+				 * TODO: Once we have a concurrent benchmark, this should be revisited.
+				 * TODO: Longer term, once the objects are clean of external dependencies, the use
+				 * of another serializer should make this moot.
+				 */
+				MaxIdle: 10,
+				Dial:    dialFunc,
+			},
 		}
-
-		currClients[conntype] = &c
-		currClient = &c
-	} else {
-		currClient = currClients[conntype]
-	}
-
+	})
 	return currClient, nil
 }
 
@@ -115,13 +76,14 @@ func (c *Client) Connect() error {
 // CloseSession closes the connections to Redis
 func (c *Client) CloseSession() {
 	c.Pool.Close()
-	currClients[c.conntype] = nil
 	currClient = nil
+	once = sync.Once{}
 }
 
+// getConnection gets a connection from the pool
 func getConnection() (conn redis.Conn, err error) {
 	if currClient == nil {
-		return nil, errors.New("No current Redis client, please create a new client before requesting it")
+		return nil, errors.New("No current Redis client: create a new client before getting a connection from it")
 	}
 
 	conn = currClient.Pool.Get()

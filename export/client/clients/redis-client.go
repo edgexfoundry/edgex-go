@@ -15,6 +15,7 @@ package clients
 
 import (
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/edgexfoundry/edgex-go/export"
@@ -22,61 +23,111 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
-type connectionType int
-
+// ------------------------------------ "imports" ------------------------------
 const (
-	connTypeTCP connectionType = 1 << iota
-	connTypeUDS
-	connTypeEredis
+	scriptUnlinkZsetMembers = `
+	local magic = 4096
+	local ids = redis.call('ZRANGE', KEYS[1], 0, -1)
+	if #ids > 0 then
+		for i = 1, #ids, magic do
+			redis.call('UNLINK', unpack(ids, i, i+magic < #ids and i+magic or #ids))
+		end
+	end
+	`
+	scriptUnlinkCollection = `
+	local magic = 4096
+	redis.replicate_commands()
+	local c = 0
+	repeat
+		local s = redis.call('SCAN', c, 'MATCH', ARGV[1] .. '*')
+		c = tonumber(s[1])
+		if #s[2] > 0 then
+			redis.call('UNLINK', unpack(s[2]))
+		end
+	until c == 0
+	`
 )
 
-const (
-	protoTCP    = "tcp"
-	protoUDS    = "unix"
-	protoEredis = "eredis"
-)
+var scripts = map[string]redis.Script{
+	"unlinkZsetMembers": *redis.NewScript(1, scriptUnlinkZsetMembers),
+	"unlinkCollection":  *redis.NewScript(0, scriptUnlinkCollection),
+}
 
-var currClients = make([]*Client, 3) // A singleton per connection type (for benchmarking)
-var currClient *Client               // a singleton so Readings can be de-referenced
+var currClient *Client // a singleton so Readings can be de-referenced
+var once sync.Once
 
-// Client represents a client
+type marshalFunc func(in interface{}) (out []byte, err error)
+type unmarshalFunc func(in []byte, out interface{}) (err error)
+
+func marshalObject(in interface{}) (out []byte, err error) {
+	return bson.Marshal(in)
+}
+
+func unmarshalObject(in []byte, out interface{}) (err error) {
+	return bson.Unmarshal(in, out)
+}
+
+func getObjectsByRange(conn redis.Conn, key string, start, end int) (objects [][]byte, err error) {
+	ids, err := redis.Values(conn.Do("ZRANGE", key, start, end))
+	if err != nil && err != redis.ErrNil {
+		return nil, err
+	}
+
+	if len(ids) > 0 {
+		objects, err = redis.ByteSlices(conn.Do("MGET", ids...))
+		if err != nil {
+			return nil, err
+		}
+	}
+	return objects, nil
+}
+
+func getObjectById(conn redis.Conn, id string, unmarshal unmarshalFunc, out interface{}) error {
+	object, err := redis.Bytes(conn.Do("GET", id))
+	if err == redis.ErrNil {
+		return ErrNotFound
+	} else if err != nil {
+		return err
+	}
+
+	return unmarshal(object, out)
+}
+
+func getObjectByHash(conn redis.Conn, hash string, field string, unmarshal unmarshalFunc, out interface{}) error {
+	id, err := redis.String(conn.Do("HGET", hash, field))
+	if err == redis.ErrNil {
+		return ErrNotFound
+	} else if err != nil {
+		return err
+	}
+
+	object, err := redis.Bytes(conn.Do("GET", id))
+	if err != nil {
+		return err
+	}
+
+	return unmarshal(object, out)
+}
+
+func unlinkCollection(conn redis.Conn, col string) error {
+	conn.Send("MULTI")
+	s := scripts["unlinkZsetMembers"]
+	s.Send(conn, col)
+	s = scripts["unlinkCollection"]
+	s.Send(conn, col)
+	_, err := conn.Do("EXEC")
+	return err
+}
+
+// Client represents a Redis client
 type Client struct {
-	Pool     *redis.Pool // Connections to Redis
-	conntype connectionType
+	Pool *redis.Pool // A thread-safe pool of connections to Redis
 }
 
 // Return a pointer to the RedisClient
 func newRedisClient(config DBConfiguration) (*Client, error) {
-	// Identify the connection's type
-	var conntype connectionType
-	if config.Host == "" {
-		conntype = connTypeEredis
-	} else if string(config.Host[0]) == "/" {
-		conntype = connTypeUDS
-	} else {
-		conntype = connTypeTCP
-	}
-
-	if currClients[conntype] == nil {
+	once.Do(func() {
 		connectionString := fmt.Sprintf("%s:%d", config.Host, config.Port)
-
-		var proto, addr string
-		c := Client{
-			conntype: conntype,
-		}
-		switch c.conntype {
-		case connTypeEredis:
-			proto = protoEredis
-		case connTypeUDS:
-			proto = protoUDS
-			addr = config.Host
-		case connTypeTCP:
-			proto = protoTCP
-			addr = connectionString
-		default:
-			return nil, ErrUnsupportedDatabase
-		}
-
 		opts := []redis.DialOption{
 			redis.DialPassword(config.Password),
 			redis.DialConnectTimeout(time.Duration(config.Timeout) * time.Millisecond),
@@ -84,26 +135,22 @@ func newRedisClient(config DBConfiguration) (*Client, error) {
 
 		dialFunc := func() (redis.Conn, error) {
 			conn, err := redis.Dial(
-				proto, addr, opts...,
+				"tcp", connectionString, opts...,
 			)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("Could not dial Redis: %s", err)
 			}
 			return conn, nil
 		}
 
-		c.Pool = &redis.Pool{
-			MaxIdle:     1,
-			IdleTimeout: 0,
-			Dial:        dialFunc,
+		currClient = &Client{
+			Pool: &redis.Pool{
+				IdleTimeout: 0,
+				MaxIdle:     1,
+				Dial:        dialFunc,
+			},
 		}
-
-		currClients[conntype] = &c
-		currClient = &c
-	} else {
-		currClient = currClients[conntype]
-	}
-
+	})
 	return currClient, nil
 }
 
@@ -115,8 +162,8 @@ func (c *Client) Connect() error {
 // CloseSession closes the connections to Redis
 func (c *Client) CloseSession() {
 	c.Pool.Close()
-	currClients[c.conntype] = nil
 	currClient = nil
+	once = sync.Once{}
 }
 
 // ********************** REGISTRATION FUNCTIONS *****************************
@@ -216,6 +263,7 @@ func (c *Client) DeleteRegistrationByName(name string) error {
 	return deleteRegistration(conn, id)
 }
 
+// ScrubAllExports deletes all export related data
 func (c *Client) ScrubAllExports() (err error) {
 	conn := c.Pool.Get()
 	defer conn.Close()
@@ -265,98 +313,5 @@ func deleteRegistration(conn redis.Conn, id string) error {
 	conn.Send("ZREM", EXPORT_COLLECTION, id)
 	conn.Send("HDEL", EXPORT_COLLECTION+":name", r.Name)
 	_, err = conn.Do("EXEC")
-	return err
-}
-
-// ------------------------------------ "imports" ------------------------------
-const (
-	scriptUnlinkZsetMembers = "unlinkZsetMembers"
-	scriptUnlinkCollection  = "unlinkCollection"
-)
-
-var scripts = map[string]redis.Script{
-	scriptUnlinkZsetMembers: *redis.NewScript(1, `
-		local magic = 4096
-		local ids = redis.call('ZRANGE', KEYS[1], 0, -1)
-		if #ids > 0 then
-			for i = 1, #ids, magic do
-				redis.call('UNLINK', unpack(ids, i, i+magic < #ids and i+magic or #ids))
-			end
-		end
-		`),
-	scriptUnlinkCollection: *redis.NewScript(0, `
-		local magic = 4096
-		redis.replicate_commands()
-		local c = 0
-		repeat
-			local s = redis.call('SCAN', c, 'MATCH', ARGV[1] .. '*')
-			c = tonumber(s[1])
-			if #s[2] > 0 then
-				redis.call('UNLINK', unpack(s[2]))
-			end
-		until c == 0
-		`),
-}
-
-type marshalFunc func(in interface{}) (out []byte, err error)
-type unmarshalFunc func(in []byte, out interface{}) (err error)
-
-func marshalObject(in interface{}) (out []byte, err error) {
-	return bson.Marshal(in)
-}
-
-func unmarshalObject(in []byte, out interface{}) (err error) {
-	return bson.Unmarshal(in, out)
-}
-
-func getObjectsByRange(conn redis.Conn, key string, start, end int) (objects [][]byte, err error) {
-	ids, err := redis.Values(conn.Do("ZRANGE", key, start, end))
-	if err != nil && err != redis.ErrNil {
-		return nil, err
-	}
-
-	if len(ids) > 0 {
-		objects, err = redis.ByteSlices(conn.Do("MGET", ids...))
-		if err != nil {
-			return nil, err
-		}
-	}
-	return objects, nil
-}
-
-func getObjectById(conn redis.Conn, id string, unmarshal unmarshalFunc, out interface{}) error {
-	object, err := redis.Bytes(conn.Do("GET", id))
-	if err == redis.ErrNil {
-		return ErrNotFound
-	} else if err != nil {
-		return err
-	}
-
-	return unmarshal(object, out)
-}
-
-func getObjectByHash(conn redis.Conn, hash string, field string, unmarshal unmarshalFunc, out interface{}) error {
-	id, err := redis.String(conn.Do("HGET", hash, field))
-	if err == redis.ErrNil {
-		return ErrNotFound
-	} else if err != nil {
-		return err
-	}
-
-	object, err := redis.Bytes(conn.Do("GET", id))
-	if err != nil {
-		return err
-	}
-
-	return unmarshal(object, out)
-}
-
-func unlinkCollection(conn redis.Conn, col string) error {
-	conn.Send("MULTI")
-	s := scripts[scriptUnlinkZsetMembers]
-	s.Send(conn, col)
-	s = scripts[scriptUnlinkCollection]
-	s.Send(conn, col)
-	_, err := conn.Do("EXEC")
 	return err
 }

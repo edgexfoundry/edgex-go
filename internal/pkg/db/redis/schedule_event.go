@@ -41,8 +41,7 @@ func marshalScheduleEvent(se models.ScheduleEvent) (out []byte, err error) {
 		Service:     se.Service,
 	}
 
-	out, err = marshalObject(s)
-	return out, err
+	return marshalObject(s)
 }
 
 func unmarshalScheduleEvent(o []byte, se interface{}) (err error) {

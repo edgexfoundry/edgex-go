@@ -51,8 +51,7 @@ func marshalDevice(d models.Device) (out []byte, err error) {
 		Profile:         d.Profile.Id.Hex(),
 	}
 
-	out, err = marshalObject(s)
-	return out, err
+	return marshalObject(s)
 }
 
 func unmarshalDevice(o []byte, d interface{}) (err error) {

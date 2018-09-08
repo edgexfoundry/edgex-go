@@ -48,8 +48,7 @@ func marshalDeviceProfile(dp models.DeviceProfile) (out []byte, err error) {
 		Resources:       dp.Resources,
 	}
 
-	out, err = marshalObject(s)
-	return out, err
+	return marshalObject(s)
 }
 
 func unmarshalDeviceProfile(o []byte, dp interface{}) (err error) {
