@@ -73,7 +73,7 @@ func populateDbEvents(db interfaces.DBClient, count int, pushed int64) (bson.Obj
 func testDBReadings(t *testing.T, db interfaces.DBClient) {
 	err := db.ScrubAllEvents()
 	if err != nil {
-		t.Fatalf("Error removing all readings")
+		t.Fatalf("Error removing all readings: %v\n", err)
 	}
 
 	readings, err := db.Readings()
@@ -229,14 +229,14 @@ func testDBReadings(t *testing.T, db interfaces.DBClient) {
 		t.Fatalf("There should be 1 readings, not %d", len(readings))
 	}
 
-	readings, err = db.ReadingsByCreationTime(beforeTime, afterTime+10, 200)
+	readings, err = db.ReadingsByCreationTime(beforeTime, afterTime, 200)
 	if err != nil {
 		t.Fatalf("Error getting ReadingsByCreationTime: %v", err)
 	}
 	if len(readings) != 110 {
 		t.Fatalf("There should be 110 readings, not %d", len(readings))
 	}
-	readings, err = db.ReadingsByCreationTime(beforeTime, beforeTime+30, 100)
+	readings, err = db.ReadingsByCreationTime(beforeTime, afterTime, 100)
 	if err != nil {
 		t.Fatalf("Error getting ReadingsByCreationTime: %v", err)
 	}
@@ -407,14 +407,14 @@ func testDBEvents(t *testing.T, db interfaces.DBClient) {
 		t.Fatalf("There should be 0 events, not %d", len(events))
 	}
 
-	events, err = db.EventsByCreationTime(beforeTime, afterTime+10, 200)
+	events, err = db.EventsByCreationTime(beforeTime, afterTime, 200)
 	if err != nil {
 		t.Fatalf("Error getting EventsByCreationTime: %v", err)
 	}
 	if len(events) != 110 {
 		t.Fatalf("There should be 110 events, not %d", len(events))
 	}
-	events, err = db.EventsByCreationTime(beforeTime, afterTime+10, 100)
+	events, err = db.EventsByCreationTime(beforeTime, afterTime, 100)
 	if err != nil {
 		t.Fatalf("Error getting EventsByCreationTime: %v", err)
 	}
@@ -550,21 +550,21 @@ func testDBValueDescriptors(t *testing.T, db interfaces.DBClient) {
 
 	values, err = db.ValueDescriptorsByName([]string{"name1", "name2"})
 	if err != nil {
-		t.Fatalf("Error getting ValuesByValueDescriptorNames: %v", err)
+		t.Fatalf("Error getting ValueDescriptorsByName: %v", err)
 	}
 	if len(values) != 2 {
 		t.Fatalf("There should be 2 Values, not %d", len(values))
 	}
 	values, err = db.ValueDescriptorsByName([]string{"name1", "name"})
 	if err != nil {
-		t.Fatalf("Error getting ValuesByValueDescriptorNames: %v", err)
+		t.Fatalf("Error getting ValueDescriptorsByName: %v", err)
 	}
 	if len(values) != 1 {
 		t.Fatalf("There should be 1 Values, not %d", len(values))
 	}
 	values, err = db.ValueDescriptorsByName([]string{"name", "INVALID"})
 	if err != nil {
-		t.Fatalf("Error getting ValuesByValueDescriptorNames: %v", err)
+		t.Fatalf("Error getting ValueDescriptorsByName: %v", err)
 	}
 	if len(values) != 0 {
 		t.Fatalf("There should be 0 Values, not %d", len(values))
@@ -572,14 +572,14 @@ func testDBValueDescriptors(t *testing.T, db interfaces.DBClient) {
 
 	values, err = db.ValueDescriptorsByUomLabel("name1")
 	if err != nil {
-		t.Fatalf("Error getting ValuesByValueDescriptorNames: %v", err)
+		t.Fatalf("Error getting ValueDescriptorsByUomLabel: %v", err)
 	}
 	if len(values) != 1 {
 		t.Fatalf("There should be 1 Values, not %d", len(values))
 	}
 	values, err = db.ValueDescriptorsByUomLabel("INVALID")
 	if err != nil {
-		t.Fatalf("Error getting ValuesByValueDescriptorNames: %v", err)
+		t.Fatalf("Error getting ValueDescriptorsByLabel: %v", err)
 	}
 	if len(values) != 0 {
 		t.Fatalf("There should be 0 Values, not %d", len(values))
@@ -587,14 +587,14 @@ func testDBValueDescriptors(t *testing.T, db interfaces.DBClient) {
 
 	values, err = db.ValueDescriptorsByLabel("name1")
 	if err != nil {
-		t.Fatalf("Error getting ValuesByValueDescriptorNames: %v", err)
+		t.Fatalf("Error getting ValueDescriptorsByLabel: %v", err)
 	}
 	if len(values) != 1 {
 		t.Fatalf("There should be 1 Values, not %d", len(values))
 	}
 	values, err = db.ValueDescriptorsByLabel("INVALID")
 	if err != nil {
-		t.Fatalf("Error getting ValuesByValueDescriptorNames: %v", err)
+		t.Fatalf("Error getting ValueDescriptorsByLabel: %v", err)
 	}
 	if len(values) != 0 {
 		t.Fatalf("There should be 0 Values, not %d", len(values))
@@ -602,14 +602,14 @@ func testDBValueDescriptors(t *testing.T, db interfaces.DBClient) {
 
 	values, err = db.ValueDescriptorsByType("name1")
 	if err != nil {
-		t.Fatalf("Error getting ValuesByValueDescriptorNames: %v", err)
+		t.Fatalf("Error getting ValueDescriptorsByType: %v", err)
 	}
 	if len(values) != 1 {
 		t.Fatalf("There should be 1 Values, not %d", len(values))
 	}
 	values, err = db.ValueDescriptorsByType("INVALID")
 	if err != nil {
-		t.Fatalf("Error getting ValuesByValueDescriptorNames: %v", err)
+		t.Fatalf("Error getting ValueDescriptorsByType: %v", err)
 	}
 	if len(values) != 0 {
 		t.Fatalf("There should be 0 Values, not %d", len(values))
@@ -652,10 +652,9 @@ func testDBValueDescriptors(t *testing.T, db interfaces.DBClient) {
 }
 
 func TestDataDB(t *testing.T, db interfaces.DBClient) {
-
 	err := db.Connect()
 	if err != nil {
-		t.Fatalf("Could not connect with mongodb: %v", err)
+		t.Fatalf("Could not connect: %v", err)
 	}
 
 	testDBReadings(t, db)
@@ -680,20 +679,33 @@ func benchmarkReadings(b *testing.B, db interfaces.DBClient) {
 	// Remove previous events and readings
 	db.ScrubAllEvents()
 
-	var readings []string
-
 	b.Run("AddReading", func(b *testing.B) {
 		reading := models.Reading{}
 		for i := 0; i < b.N; i++ {
 			reading.Name = "test" + strconv.Itoa(i)
 			reading.Device = "device" + strconv.Itoa(i/100)
-			id, err := db.AddReading(reading)
+			_, err := db.AddReading(reading)
 			if err != nil {
 				b.Fatalf("Error add reading: %v", err)
 			}
-			readings = append(readings, id.Hex())
 		}
 	})
+
+	// Remove previous events and readings
+	db.ScrubAllEvents()
+	// prepare to benchmark n readings
+	n := 1000
+	readings := make([]string, n)
+	reading := models.Reading{}
+	for i := 0; i < n; i++ {
+		reading.Name = "test" + strconv.Itoa(i)
+		reading.Device = "device" + strconv.Itoa(i/100)
+		id, err := db.AddReading(reading)
+		if err != nil {
+			b.Fatalf("Error add reading: %v", err)
+		}
+		readings[i] = id.Hex()
+	}
 
 	b.Run("Readings", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
@@ -714,11 +726,8 @@ func benchmarkReadings(b *testing.B, db interfaces.DBClient) {
 	})
 
 	b.Run("ReadingById", func(b *testing.B) {
-		if b.N > len(readings) {
-			b.N = len(readings)
-		}
 		for i := 0; i < b.N; i++ {
-			_, err := db.ReadingById(readings[i])
+			_, err := db.ReadingById(readings[i%len(readings)])
 			if err != nil {
 				b.Fatalf("Error reading by ID: %v", err)
 			}
@@ -726,11 +735,8 @@ func benchmarkReadings(b *testing.B, db interfaces.DBClient) {
 	})
 
 	b.Run("ReadingsByDevice", func(b *testing.B) {
-		if b.N > len(readings)/10 {
-			b.N = len(readings) / 10
-		}
 		for i := 0; i < b.N; i++ {
-			device := "device" + strconv.Itoa(i)
+			device := "device" + strconv.Itoa((i%len(readings))/100)
 			_, err := db.ReadingsByDevice(device, 100)
 			if err != nil {
 				b.Fatalf("Error reading by device: %v", err)
@@ -744,25 +750,49 @@ func benchmarkEvents(b *testing.B, db interfaces.DBClient) {
 	// Remove previous events and readings
 	db.ScrubAllEvents()
 
-	var events []string
-
 	b.Run("AddEvent", func(b *testing.B) {
-		event := models.Event{}
-		reading := models.Reading{}
-		event.Readings = append(event.Readings, reading)
-		event.Readings = append(event.Readings, reading)
-		event.Readings = append(event.Readings, reading)
-		event.Readings = append(event.Readings, reading)
-		event.Readings = append(event.Readings, reading)
 		for i := 0; i < b.N; i++ {
-			event.Device = "device" + strconv.Itoa(i/100)
-			id, err := db.AddEvent(&event)
+			device := fmt.Sprintf("device" + strconv.Itoa(i/100))
+			e := models.Event{
+				Device: device,
+			}
+			for j := 0; j < 5; j++ {
+				r := models.Reading{
+					Device: device,
+					Name:   fmt.Sprintf("name%d", j),
+				}
+				e.Readings = append(e.Readings, r)
+			}
+			_, err := db.AddEvent(&e)
 			if err != nil {
 				b.Fatalf("Error add event: %v", err)
 			}
-			events = append(events, id.Hex())
 		}
 	})
+
+	// Remove previous events and readings
+	db.ScrubAllEvents()
+	// prepare to benchmark n events (5 readings each)
+	n := 1000
+	events := make([]string, n)
+	for i := 0; i < n; i++ {
+		device := fmt.Sprintf("device" + strconv.Itoa(i/100))
+		e := models.Event{
+			Device: device,
+		}
+		for j := 0; j < 5; j++ {
+			r := models.Reading{
+				Device: device,
+				Name:   fmt.Sprintf("name%d", j),
+			}
+			e.Readings = append(e.Readings, r)
+		}
+		id, err := db.AddEvent(&e)
+		if err != nil {
+			b.Fatalf("Error add event: %v", err)
+		}
+		events[i] = id.Hex()
+	}
 
 	b.Run("Events", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
@@ -783,11 +813,8 @@ func benchmarkEvents(b *testing.B, db interfaces.DBClient) {
 	})
 
 	b.Run("EventById", func(b *testing.B) {
-		if b.N > len(events) {
-			b.N = len(events)
-		}
 		for i := 0; i < b.N; i++ {
-			_, err := db.EventById(events[i])
+			_, err := db.EventById(events[i%len(events)])
 			if err != nil {
 				b.Fatalf("Error event by ID: %v", err)
 			}
@@ -795,11 +822,8 @@ func benchmarkEvents(b *testing.B, db interfaces.DBClient) {
 	})
 
 	b.Run("EventsForDevice", func(b *testing.B) {
-		if b.N > len(events)/10 {
-			b.N = len(events) / 10
-		}
 		for i := 0; i < b.N; i++ {
-			device := "device" + strconv.Itoa(i)
+			device := "device" + strconv.Itoa(i%len(events)/100)
 			_, err := db.EventsForDevice(device)
 			if err != nil {
 				b.Fatalf("Error events for device: %v", err)

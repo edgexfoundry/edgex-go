@@ -30,10 +30,10 @@ import (
 
 	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
-	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
-	"github.com/edgexfoundry/edgex-go/internal/support/notifications"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
+	"github.com/edgexfoundry/edgex-go/internal/support/notifications"
+	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 )
 
 var bootTimeout int = 30000 //Once we start the V2 configuration rework, this will be config driven

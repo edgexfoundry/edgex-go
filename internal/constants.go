@@ -13,6 +13,11 @@
  *******************************************************************************/
 package internal
 
+const ConfigFileDefaultProfile = "configuration.toml"
+const ConfigFileDockerProfile = "configuration-docker.toml"
+
+const ServiceKeyPrefix = "edgex-"
+const ConfigSeedServiceKey = "edgex-config-seed"
 const CoreCommandServiceKey = "edgex-core-command"
 const CoreDataServiceKey = "edgex-core-data"
 const CoreMetaDataServiceKey = "edgex-core-metadata"
@@ -20,3 +25,4 @@ const ExportClientServiceKey = "edgex-export-client"
 const ExportDistroServiceKey = "edgex-export-distro"
 const SupportLoggingServiceKey = "edgex-support-logging"
 const SupportNotificationsServiceKey = "edgex-support-notifications"
+const SystemManagementAgentServiceKey = "edgex-sys-mgmt-agent"

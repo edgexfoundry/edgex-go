@@ -14,33 +14,18 @@
 package messaging
 
 import (
-	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 )
 
-// Types of messaging protocols
-const (
-	ZEROMQ int = iota
-	MQTT
-)
-
-// Publisher to send events to northbound services
-type EventPublisher struct {
-	protocol int
-	zmq      zeroMQEventPublisher
+// Configuration struct for PubSub
+type PubSubConfiguration struct {
+	AddressPort string
 }
 
-func NewZeroMQPublisher(configuration ZeroMQConfiguration) *EventPublisher {
-	return &EventPublisher{protocol: ZEROMQ, zmq: newZeroMQEventPublisher(configuration)}
+type EventPublisher interface {
+	SendEventMessage(e models.Event) error
 }
 
-// Send the event
-func (ep *EventPublisher) SendEventMessage(e models.Event) error {
-	// Switch based on the protocol you're using
-	switch ep.protocol {
-	case ZEROMQ:
-		return ep.zmq.SendEventMessage(e)
-	default:
-		return errors.UnsupportedPublisher{}
-	}
+func NewEventPublisher(conf PubSubConfiguration) EventPublisher {
+	return newZeroMQEventPublisher(conf)
 }

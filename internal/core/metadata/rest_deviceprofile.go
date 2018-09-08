@@ -118,6 +118,10 @@ func restUpdateDeviceProfile(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	// Notify Associates
+	notifyProfileAssociates(to, http.MethodPut)
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
@@ -355,11 +359,6 @@ func deleteDeviceProfile(dp models.DeviceProfile, w http.ResponseWriter) error {
 	if err := dbClient.DeleteDeviceProfileById(dp.Id.Hex()); err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return err
-	}
-
-	// TODO: Notify Associates
-	if err := notifyProfileAssociates(dp, http.MethodDelete); err != nil {
-		LoggingClient.Error(err.Error(), "")
 	}
 
 	return nil

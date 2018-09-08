@@ -23,6 +23,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 )
 
@@ -58,7 +59,7 @@ func resendViaChannel(t models.Transmission) {
 
 func getTransmissionRecord(msg string, st models.TransmissionStatus) models.TransmissionRecord {
 	tr := models.TransmissionRecord{}
-	tr.Sent = time.Now().UnixNano() / int64(time.Millisecond)
+	tr.Sent = db.MakeTimestamp()
 	tr.Status = st
 	tr.Response = msg
 	return tr

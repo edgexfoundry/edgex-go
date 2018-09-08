@@ -958,3 +958,41 @@ func (m *MongoClient) DeleteCommandById(id string) error {
 
 	return col.RemoveId(bson.ObjectIdHex(id))
 }
+
+// Scrub all metadata
+func (m *MongoClient) ScrubMetadata() error {
+	s := m.session.Copy()
+	defer s.Close()
+
+	_, err := s.DB(m.database.Name).C(db.Addressable).RemoveAll(nil)
+	if err != nil {
+		return err
+	}
+
+	_, err = s.DB(m.database.Name).C(db.DeviceService).RemoveAll(nil)
+	if err != nil {
+		return err
+	}
+	_, err = s.DB(m.database.Name).C(db.DeviceProfile).RemoveAll(nil)
+	if err != nil {
+		return err
+	}
+	_, err = s.DB(m.database.Name).C(db.DeviceReport).RemoveAll(nil)
+	if err != nil {
+		return err
+	}
+	_, err = s.DB(m.database.Name).C(db.ScheduleEvent).RemoveAll(nil)
+	if err != nil {
+		return err
+	}
+	_, err = s.DB(m.database.Name).C(db.Device).RemoveAll(nil)
+	if err != nil {
+		return err
+	}
+	_, err = s.DB(m.database.Name).C(db.ProvisionWatcher).RemoveAll(nil)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

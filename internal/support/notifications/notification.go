@@ -20,9 +20,9 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 	"github.com/gorilla/mux"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 )
 
 func notificationHandler(w http.ResponseWriter, r *http.Request) {

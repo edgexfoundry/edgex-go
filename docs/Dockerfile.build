@@ -41,6 +41,7 @@ COPY support/rulesengine/* ./
 COPY examples ./
 COPY general ./
 COPY getting-started ./
+COPY walk-through ./
 
 COPY entrypoint.sh /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]

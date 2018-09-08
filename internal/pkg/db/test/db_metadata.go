@@ -16,6 +16,13 @@ import (
 )
 
 func TestMetadataDB(t *testing.T, db interfaces.DBClient) {
+	err := db.Connect()
+	if err != nil {
+		t.Fatalf("Could not connect: %v", err)
+	}
+
+	// Remove previous metadata
+	db.ScrubMetadata()
 
 	testDBAddressables(t, db)
 	testDBCommand(t, db)
@@ -53,7 +60,7 @@ func getDeviceService(db interfaces.DBClient, i int) (models.DeviceService, erro
 	name := fmt.Sprintf("name%d", i)
 	ds := models.DeviceService{}
 	ds.Name = name
-	ds.AdminState = "ENABLED"
+	ds.AdminState = "UNLOCKED"
 	ds.Addressable = getAddressable(i, "ds_")
 	ds.Labels = append(ds.Labels, name)
 	ds.OperatingState = "ENABLED"
@@ -211,7 +218,7 @@ func populateDevice(db interfaces.DBClient, count int) (bson.ObjectId, error) {
 		name := fmt.Sprintf("name%d", i)
 		d := models.Device{}
 		d.Name = name
-		d.AdminState = "ENABLED"
+		d.AdminState = "UNLOCKED"
 		d.OperatingState = "ENABLED"
 		d.LastConnected = 4
 		d.LastReported = 4
@@ -521,11 +528,11 @@ func testDBAddressables(t *testing.T, db interfaces.DBClient) {
 	}
 	err = db.GetAddressableByName(&a, "name1")
 	if err == nil {
-		t.Fatalf("Addresable name1 should be renamed")
+		t.Fatalf("Addressable name1 should be renamed")
 	}
 	err = db.GetAddressableByName(&a, "name")
 	if err != nil {
-		t.Fatalf("Addresable name should be renamed")
+		t.Fatalf("Addressable name should be renamed")
 	}
 
 	// aa.Name = "name2"

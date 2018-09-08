@@ -21,22 +21,17 @@ import (
 	zmq "github.com/pebbe/zmq4"
 )
 
-// Configuration struct for ZeroMQ
-type ZeroMQConfiguration struct {
-	AddressPort string
-}
-
 // ZeroMQ implementation of the event publisher
 type zeroMQEventPublisher struct {
 	publisher *zmq.Socket
 	mux       sync.Mutex
 }
 
-func newZeroMQEventPublisher(config ZeroMQConfiguration) zeroMQEventPublisher {
+func newZeroMQEventPublisher(config PubSubConfiguration) EventPublisher {
 	newPublisher, _ := zmq.NewSocket(zmq.PUB)
 	newPublisher.Bind(config.AddressPort)
 
-	return zeroMQEventPublisher{
+	return &zeroMQEventPublisher{
 		publisher: newPublisher,
 	}
 }

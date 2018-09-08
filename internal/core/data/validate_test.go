@@ -21,28 +21,27 @@ import (
 
 func TestValidBoolean(t *testing.T) {
 	var tests = []struct {
-		name   string
-		value  string
-		err    bool
-		result bool
+		name  string
+		value string
+		err   bool
 	}{
-		{"false, nil", "false", false, true},
-		{"true, nil", "true", false, true},
-		{"True", "True", false, true},
-		{"TRUE", "TRUE", false, true},
-		{"false", "false", false, true},
+		{"false, nil", "false", false},
+		{"true, nil", "true", false},
+		{"True", "True", false},
+		{"TRUE", "TRUE", false},
+		{"false", "false", false},
 
-		{"dummy, not nil ", "dummy", true, false},
-		{"void", "", true, false},
+		{"dummy, not nil ", "dummy", true},
+		{"void", "", true},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var reading = models.Reading{Value: tt.value}
-			val, err := validBoolean(reading)
+			err := validBoolean(reading)
 			if err == nil {
-				if tt.result != val {
-					t.Errorf("expecting %v, returned %v", tt.result, val)
+				if tt.err {
+					t.Errorf("There should be an error: %v", err)
 				}
 			} else {
 				if !tt.err {
@@ -57,43 +56,42 @@ func TestValidBoolean(t *testing.T) {
 func TestValidFloat(t *testing.T) {
 
 	var tests = []struct {
-		name   string
-		value  string
-		min    string
-		max    string
-		err    bool
-		result bool
+		name  string
+		value string
+		min   string
+		max   string
+		err   bool
 	}{
-		{"value", "-10.10", "-20", "20", false, true},
+		{"value", "-10.10", "-20", "20", false},
 
-		{"novalue", "", "-20", "20", true, false},
-		{"not_float", "data", "-20", "20", true, false},
+		{"novalue", "", "-20", "20", true},
+		{"not_float", "data", "-20", "20", true},
 
-		{"minmaxEmpty", "-10.10", "", "", false, true},
+		{"minmaxEmpty", "-10.10", "", "", false},
 
-		{"min_lower", "-30", "-20", "20", true, true},
-		{"max_higher", "4000", "-20", "20", true, true},
+		{"min_lower", "-30", "-20", "20", true},
+		{"max_higher", "4000", "-20", "20", true},
 
-		{"notvalidmin", "-10.10", "true", "20", true, true},
-		{"notvalidmax", "-10.10", "", "data", true, true},
+		{"notvalidmin", "-10.10", "true", "20", true},
+		{"notvalidmax", "-10.10", "", "data", true},
 
-		{"notvalidminmax", "-10.10", "true", "false", true, true},
+		{"notvalidminmax", "-10.10", "true", "false", true},
 
-		{"onlymin", "-10.10", "-20", "", false, true},
-		{"onlymax", "-10.10", "", "20", false, true},
+		{"onlymin", "-10.10", "-20", "", false},
+		{"onlymax", "-10.10", "", "20", false},
 
-		{"onlymin_lower", "-110.1", "-20", "", true, true},
-		{"onlymax_higher", "110.2", "", "20.09", true, true},
+		{"onlymin_lower", "-110.1", "-20", "", true},
+		{"onlymax_higher", "110.2", "", "20.09", true},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var reading = models.Reading{Value: tt.value}
 			tvd := models.ValueDescriptor{Min: tt.min, Max: tt.max}
-			val, err := validFloat(reading, tvd)
+			err := validFloat(reading, tvd)
 			if err == nil {
-				if tt.result != val {
-					t.Errorf("expecting %v, returned %v", tt.result, val)
+				if tt.err {
+					t.Errorf("There should be an error: %v", err)
 				}
 			} else {
 				if !tt.err {
@@ -108,42 +106,41 @@ func TestValidFloat(t *testing.T) {
 func TestValidInteger(t *testing.T) {
 
 	var tests = []struct {
-		name   string
-		value  string
-		min    string
-		max    string
-		err    bool
-		result bool
+		name  string
+		value string
+		min   string
+		max   string
+		err   bool
 	}{
-		{"value", "-10", "-20", "20", false, true},
-		{"novalue", "", "", "", true, false},
-		{"no_integer", "data", "-20", "20", true, false},
+		{"value", "-10", "-20", "20", false},
+		{"novalue", "", "", "", true},
+		{"no_integer", "data", "-20", "20", true},
 
-		{"minmaxEmpty", "-10", "", "", false, true},
+		{"minmaxEmpty", "-10", "", "", false},
 
-		{"min_lower", "-30", "-20", "20", true, true},
-		{"max_higher", "4000", "-20", "20", true, true},
+		{"min_lower", "-30", "-20", "20", true},
+		{"max_higher", "4000", "-20", "20", true},
 
-		{"onlymin", "-10", "-20", "", false, true},
-		{"onlymax", "-10", "", "20", false, true},
+		{"onlymin", "-10", "-20", "", false},
+		{"onlymax", "-10", "", "20", false},
 
-		{"notvalidmin", "-10", "true", "20", true, true},
-		{"notvalidmax", "-10", "", "data", true, true},
+		{"notvalidmin", "-10", "true", "20", true},
+		{"notvalidmax", "-10", "", "data", true},
 
-		{"notvalidminmax", "-10", "true", "false", true, true},
+		{"notvalidminmax", "-10", "true", "false", true},
 
-		{"onlymin_lower", "-110", "-20", "", true, true},
-		{"onlymax_higher", "110", "", "20", true, true},
+		{"onlymin_lower", "-110", "-20", "", true},
+		{"onlymax_higher", "110", "", "20", true},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var reading = models.Reading{Value: tt.value}
 			tvd := models.ValueDescriptor{Min: tt.min, Max: tt.max}
-			val, err := validInteger(reading, tvd)
+			err := validInteger(reading, tvd)
 			if err == nil {
-				if tt.result != val {
-					t.Errorf("expecting %v, returned %v", tt.result, val)
+				if tt.err {
+					t.Errorf("There should be an error: %v", err)
 				}
 			} else {
 				if !tt.err {
@@ -158,21 +155,20 @@ func TestValidInteger(t *testing.T) {
 func TestValidString(t *testing.T) {
 
 	var tests = []struct {
-		name   string
-		value  string
-		err    bool
-		result bool
+		name  string
+		value string
+		err   bool
 	}{
-		{"empty", "", true, true},
-		{"valid", "test string", false, true},
+		{"empty", "", true},
+		{"valid", "test string", false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var reading = models.Reading{Value: tt.value}
-			val, err := validString(reading)
+			err := validString(reading)
 			if err == nil {
-				if tt.result != val {
-					t.Errorf("expecting %v, returned %v", tt.result, val)
+				if tt.err {
+					t.Errorf("There should be an error: %v", err)
 				}
 			} else {
 				if !tt.err {
@@ -187,23 +183,22 @@ func TestValidString(t *testing.T) {
 func TestValidJson(t *testing.T) {
 
 	var tests = []struct {
-		name   string
-		value  string
-		err    bool
-		result bool
+		name  string
+		value string
+		err   bool
 	}{
-		{"empty", "", true, true},
-		{"valid", "{\"test\": \"string\"}", false, true},
-		{"novalid", "test string", true, true},
+		{"empty", "", true},
+		{"valid", "{\"test\": \"string\"}", false},
+		{"novalid", "test string", true},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var reading = models.Reading{Value: tt.value}
-			val, err := validJSON(reading)
+			err := validJSON(reading)
 			if err == nil {
-				if tt.result != val {
-					t.Errorf("expecting %v, returned %v", tt.result, val)
+				if tt.err {
+					t.Errorf("There should be an error: %v", err)
 				}
 			} else {
 				if !tt.err {
@@ -248,8 +243,12 @@ func TestIsValidValueDescriptor_private(t *testing.T) {
 		t.Run(tt.value, func(t *testing.T) {
 			tvd := models.ValueDescriptor{Type: tt.tvd}
 			var reading = models.Reading{Value: tt.value}
-			_, err := isValidValueDescriptor(tvd, reading)
-			if err != nil {
+			err := isValidValueDescriptor(tvd, reading)
+			if err == nil {
+				if tt.err {
+					t.Errorf("There should be an error: %v", err)
+				}
+			} else {
 				if !tt.err {
 					t.Errorf("There should not be an error: %v", err)
 				}

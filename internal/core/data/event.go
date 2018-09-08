@@ -14,22 +14,54 @@
 package data
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
-	"time"
 
+	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 	"github.com/gorilla/mux"
 )
 
+func countEvents() (int, error) {
+	count, err := dbClient.EventCount()
+	if err != nil {
+		return -1, err
+	}
+	return count, nil
+}
+
+func countEventsByDevice(device string) (int, error) {
+	err := newCheckDevice(device)
+	if err != nil {
+		return -1, err
+	}
+
+	count, err := dbClient.EventCountByDeviceId(device)
+	if err != nil {
+		return -1, fmt.Errorf("error obtaining count for device %s: %v", device, err)
+	}
+	return count, err
+}
+
+//TODO: Eliminate checkDevice below and make this checkDevice
+func newCheckDevice(device string) error {
+	if Configuration.MetaDataCheck {
+		_, err := mdc.CheckForDevice(device)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+//TODO: Get rid of this method
 // Check metadata if the device exists
 func checkDevice(device string, w http.ResponseWriter) bool {
-	if configuration.MetaDataCheck {
+	if Configuration.MetaDataCheck {
 		_, err := mdc.CheckForDevice(device)
 		if err != nil {
 			LoggingClient.Error(fmt.Sprintf("error checking device %s %v", device, err))
@@ -47,81 +79,118 @@ func checkDevice(device string, w http.ResponseWriter) bool {
 	return true
 }
 
-// Put event on the message queue to be processed by the rules engine
-func putEventOnQueue(e models.Event) {
-	LoggingClient.Info("Putting event on message queue", "")
-	//	Have multiple implementations (start with ZeroMQ)
-	err := ep.SendEventMessage(e)
+func deleteEventsByAge(age int64) (int, error) {
+	events, err := dbClient.EventsOlderThanAge(age)
 	if err != nil {
-		LoggingClient.Error("Unable to send message for event: " + e.String())
+		return -1, err
 	}
+
+	// Delete all the events
+	count := len(events)
+	for _, event := range events {
+		if err = deleteEvent(event); err != nil {
+			return -1, err
+		}
+	}
+	return count, nil
 }
 
-// Update when the device was last reported connected
-func updateDeviceLastReportedConnected(device string) {
-	// Config set to skip update last reported
-	if !configuration.DeviceUpdateLastConnected {
-		LoggingClient.Debug("Skipping update of device connected/reported times for:  " + device)
-		return
+func getEvents(limit int) ([]models.Event, error) {
+	var err error
+	var events []models.Event
+
+	if limit <= 0 {
+		events, err = dbClient.Events()
+	} else {
+		events, err = dbClient.EventsWithLimit(limit)
 	}
 
-	d, err := mdc.CheckForDevice(device)
 	if err != nil {
-		LoggingClient.Error("Error getting device " + device + ": " + err.Error())
-		return
+		return nil, err
 	}
-
-	// Couldn't find device
-	if len(d.Name) == 0 {
-		LoggingClient.Error("Error updating device connected/reported times.  Unknown device with identifier of:  " + device)
-		return
-	}
-
-	t := time.Now().UnixNano() / int64(time.Millisecond)
-	// Found device, now update lastReported
-	err = mdc.UpdateLastConnectedByName(d.Name, t)
-	if err != nil {
-		LoggingClient.Error("Problems updating last connected value for device: " + d.Name)
-		return
-	}
-	err = mdc.UpdateLastReportedByName(d.Name, t)
-	if err != nil {
-		LoggingClient.Error("Problems updating last reported value for device: " + d.Name)
-	}
-	return
+	return events, err
 }
 
-// Update when the device service was last reported connected
-func updateDeviceServiceLastReportedConnected(device string) {
-	if !configuration.ServiceUpdateLastConnected {
-		LoggingClient.Debug("Skipping update of device service connected/reported times for:  " + device)
-		return
-	}
-
-	t := time.Now().UnixNano() / int64(time.Millisecond)
-
-	// Get the device
-	d, err := mdc.CheckForDevice(device)
+func addNew(e models.Event) (string, error) {
+	retVal := "unsaved"
+	err := newCheckDevice(e.Device)
 	if err != nil {
-		LoggingClient.Error("Error getting device " + device + ": " + err.Error())
-		return
+		return "", err
 	}
 
-	// Couldn't find device
-	if len(d.Name) == 0 {
-		LoggingClient.Error("Error updating device connected/reported times.  Unknown device with identifier of:  " + device)
-		return
+	if Configuration.ValidateCheck {
+		LoggingClient.Debug("Validation enabled, parsing events")
+		for reading := range e.Readings {
+			// Check value descriptor
+			name := e.Readings[reading].Name
+			vd, err := dbClient.ValueDescriptorByName(name)
+			if err != nil {
+				if err == db.ErrNotFound {
+					return "", errors.NewErrValueDescriptorNotFound(name)
+				} else {
+					return "", err
+				}
+			}
+			err = isValidValueDescriptor(vd, e.Readings[reading])
+			if err != nil {
+				return "", err
+			}
+		}
 	}
 
-	// Get the device service
-	s := d.Service
-	if &s == nil {
-		LoggingClient.Error("Error updating device service connected/reported times.  Unknown device service in device:  " + d.Name)
-		return
+	// Add the event and readings to the database
+	if Configuration.PersistData {
+		id, err := dbClient.AddEvent(&e)
+		if err != nil {
+			return "", err
+		}
+		retVal = id.Hex() //Coupling to Mongo in the model
 	}
 
-	msc.UpdateLastConnected(s.Service.Id.Hex(), t)
-	msc.UpdateLastReported(s.Service.Id.Hex(), t)
+	putEventOnQueue(e)                              // Push the aux struct to export service (It has the actual readings)
+	chEvents <- DeviceLastReported{e.Device}        // update last reported connected (device)
+	chEvents <- DeviceServiceLastReported{e.Device} // update last reported connected (device service)
+
+	return retVal, nil
+}
+
+func updateEvent(from models.Event) error {
+	to, err := dbClient.EventById(from.ID.Hex())
+	if err != nil {
+		return errors.NewErrEventNotFound(from.ID.Hex())
+	}
+
+	// Update the fields
+	if len(from.Device) > 0 {
+		// Check device
+		err = newCheckDevice(from.Device)
+		if err != nil {
+			return err
+		}
+
+		// Set the device name on the event
+		to.Device = from.Device
+	}
+	if from.Pushed != 0 {
+		to.Pushed = from.Pushed
+	}
+	if from.Origin != 0 {
+		to.Origin = from.Origin
+	}
+	return dbClient.UpdateEvent(to)
+}
+
+func deleteEventById(id string) error {
+	e, err := getEventById(id)
+	if err != nil {
+		return err
+	}
+
+	err = deleteEvent(e)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // Delete the event and readings
@@ -138,336 +207,33 @@ func deleteEvent(e models.Event) error {
 	return nil
 }
 
-// Undocumented feature to remove all readings and events from the database
-// This should primarily be used for debugging purposes
-func scrubAllHandler(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
-
-	switch r.Method {
-	case http.MethodDelete:
-		LoggingClient.Info("Deleting all events from database")
-
-		err := dbClient.ScrubAllEvents()
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-			LoggingClient.Error("Error scrubbing all events/readings: " + err.Error())
-			return
-		}
-
-		encode(true, w)
-	}
+func deleteAllEvents() error {
+	return dbClient.ScrubAllEvents()
 }
 
-/*
-Handler for the event API
-Status code 404 - event not found
-Status code 413 - number of events exceeds limit
-Status code 503 - unanticipated issues
-api/v1/event
-*/
-func eventHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Body != nil {
-		defer r.Body.Close()
-	}
-
-	switch r.Method {
-	// Get all events
-	case http.MethodGet:
-		events, err := dbClient.Events()
-		if err != nil {
-			LoggingClient.Error(err.Error())
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		// Check max limit
-		if len(events) > configuration.ReadMaxLimit {
-			http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
-			LoggingClient.Error(maxExceededString)
-			return
-		}
-
-		encode(events, w)
-		break
-	// Post a new event
-	case http.MethodPost:
-		var e models.Event
-		dec := json.NewDecoder(r.Body)
-		err := dec.Decode(&e)
-
-		// Problem Decoding Event
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			LoggingClient.Error("Error decoding event: " + err.Error())
-			return
-		}
-
-		LoggingClient.Info("Posting Event: " + e.String())
-
-		// Check device
-		if checkDevice(e.Device, w) == false {
-			return
-		}
-
-		if configuration.ValidateCheck {
-			LoggingClient.Debug("Validation enabled, parsing events")
-			for reading := range e.Readings {
-				// Check value descriptor
-				vd, err := dbClient.ValueDescriptorByName(e.Readings[reading].Name)
-				if err != nil {
-					if err == db.ErrNotFound {
-						http.Error(w, "Value descriptor for a reading not found", http.StatusNotFound)
-					} else {
-						http.Error(w, err.Error(), http.StatusInternalServerError)
-					}
-					LoggingClient.Error(err.Error())
-					return
-				}
-
-				valid, err := isValidValueDescriptor(vd, e.Readings[reading])
-				if !valid {
-					http.Error(w, "Validation failed", http.StatusConflict)
-					LoggingClient.Error("Validation failed")
-					return
-				}
-			}
-		}
-
-		// Add the event and readings to the database
-		if configuration.PersistData {
-			id, err := dbClient.AddEvent(&e)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				LoggingClient.Error(err.Error())
-				return
-			}
-
-			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(id.Hex()))
-		} else {
-			encode("unsaved", w)
-		}
-
-		putEventOnQueue(e)                                 // Push the aux struct to export service (It has the actual readings)
-		updateDeviceLastReportedConnected(e.Device)        // update last reported connected (device)
-		updateDeviceServiceLastReportedConnected(e.Device) // update last reported connected (device service)
-
-		break
-	// Do not update the readings
-	case http.MethodPut:
-		var from models.Event
-		dec := json.NewDecoder(r.Body)
-		err := dec.Decode(&from)
-
-		// Problem decoding event
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			LoggingClient.Error("Error decoding the event: " + err.Error())
-			return
-		}
-
-		// Check if the event exists
-		to, err := dbClient.EventById(from.ID.Hex())
-		if err != nil {
-			if err == db.ErrNotFound {
-				http.Error(w, "Event not found", http.StatusNotFound)
-			} else {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			}
-			LoggingClient.Error(err.Error())
-			return
-		}
-
-		LoggingClient.Info("Updating event: " + from.ID.Hex())
-
-		// Update the fields
-		if len(from.Device) > 0 {
-			// Check device
-			if checkDevice(from.Device, w) == false {
-				return
-			}
-
-			// Set the device name on the event
-			to.Device = from.Device
-		}
-		if from.Pushed != 0 {
-			to.Pushed = from.Pushed
-		}
-		if from.Origin != 0 {
-			to.Origin = from.Origin
-		}
-
-		// Update
-		if err = dbClient.UpdateEvent(to); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			LoggingClient.Error(err.Error())
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("true"))
-	}
-}
-
-//GET
-//Return the event specified by the event ID
-///api/v1/event/{id}
-//id - ID of the event to return
-func getEventByIdHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Body != nil {
-		defer r.Body.Close()
-	}
-
-	switch r.Method {
-	case http.MethodGet:
-		// URL parameters
-		vars := mux.Vars(r)
-		id := vars["id"]
-
-		// Get the event
-		e, err := dbClient.EventById(id)
-		if err != nil {
-			if err == db.ErrNotFound {
-				http.Error(w, "Event not found", http.StatusNotFound)
-			} else {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			}
-			LoggingClient.Error(err.Error())
-			return
-		}
-
-		// Return the result
-		encode(e, w)
-	}
-}
-
-/*
-Return number of events in Core Data
-/api/v1/event/count
-*/
-func eventCountHandler(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
-
-	switch r.Method {
-	case http.MethodGet:
-		count, err := dbClient.EventCount()
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			LoggingClient.Error(err.Error(), "")
-			return
-		}
-
-		// Return result
-		w.WriteHeader(http.StatusOK)
-		_, err = w.Write([]byte(strconv.Itoa(count)))
-		if err != nil {
-			LoggingClient.Error(err.Error(), "")
-		}
-	}
-}
-
-/*
-Return number of events for a given device in Core Data
-deviceID - ID of the device to get count for
-/api/v1/event/count/{deviceId}
-*/
-func eventCountByDeviceIdHandler(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
-
-	vars := mux.Vars(r)
-	id, err := url.QueryUnescape(vars["deviceId"])
+func getEventById(id string) (models.Event, error) {
+	e, err := dbClient.EventById(id)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		LoggingClient.Error("Problem unescaping URL: " + err.Error())
-		return
-	}
-
-	switch r.Method {
-	case http.MethodGet:
-		// Check device
-		if checkDevice(id, w) == false {
-			return
+		if err == db.ErrNotFound {
+			err = errors.NewErrEventNotFound(id)
 		}
-
-		count, err := dbClient.EventCountByDeviceId(id)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			LoggingClient.Error(err.Error())
-			return
-		}
-
-		// Return result
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(strconv.Itoa(count)))
-		break
+		return models.Event{}, err
 	}
+	return e, nil
 }
 
-/*
-DELETE, PUT
-Handle events specified by an ID
-/api/v1/event/id/{id}
-404 - ID not found
-*/
-func eventIdHandler(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
-
-	vars := mux.Vars(r)
-	id := vars["id"]
-
-	switch r.Method {
-	// Set the 'pushed' timestamp for the event to the current time - event is going to another (not fuse) service
-	case http.MethodPut:
-		// Check if the event exists
-		e, err := dbClient.EventById(id)
-		if err != nil {
-			if err == db.ErrNotFound {
-				http.Error(w, "Event not found", http.StatusNotFound)
-			} else {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			}
-			LoggingClient.Error(err.Error())
-			return
-		}
-
-		LoggingClient.Info("Updating event: " + e.ID.Hex())
-
-		e.Pushed = time.Now().UnixNano() / int64(time.Millisecond)
-		err = dbClient.UpdateEvent(e)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			LoggingClient.Error(err.Error())
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("true"))
-		break
-	// Delete the event and all of it's readings
-	case http.MethodDelete:
-		// Check if the event exists
-		e, err := dbClient.EventById(id)
-		if err != nil {
-			if err == db.ErrNotFound {
-				http.Error(w, "Event not found", http.StatusNotFound)
-			} else {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			}
-			LoggingClient.Error(err.Error())
-			return
-		}
-
-		LoggingClient.Info("Deleting event: " + e.ID.Hex())
-
-		if err = deleteEvent(e); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			LoggingClient.Error(err.Error())
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("true"))
+func updateEventPushDate(id string) error {
+	e, err := getEventById(id)
+	if err != nil {
+		return err
 	}
+
+	e.Pushed = db.MakeTimestamp()
+	err = updateEvent(e)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // Get event by device id
@@ -504,7 +270,7 @@ func getEventByDeviceHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodGet:
-		if limitNum > configuration.ReadMaxLimit {
+		if limitNum > Configuration.ReadMaxLimit {
 			http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
 			LoggingClient.Error(maxExceededString)
 			return
@@ -605,7 +371,7 @@ func eventByCreationTimeHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodGet:
-		if limit > configuration.ReadMaxLimit {
+		if limit > Configuration.ReadMaxLimit {
 			http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
 			LoggingClient.Error(maxExceededString)
 			return
@@ -657,7 +423,7 @@ func readingByDeviceFilteredValueDescriptor(w http.ResponseWriter, r *http.Reque
 	}
 	switch r.Method {
 	case http.MethodGet:
-		if limitNum > configuration.ReadMaxLimit {
+		if limitNum > Configuration.ReadMaxLimit {
 			http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
 			LoggingClient.Error(maxExceededString)
 			return
@@ -698,50 +464,6 @@ func readingByDeviceFilteredValueDescriptor(w http.ResponseWriter, r *http.Reque
 	}
 }
 
-// Remove all the old events and associated readings (by age)
-// event/removeold/age/{age}
-func eventByAgeHandler(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
-
-	vars := mux.Vars(r)
-	age, err := strconv.ParseInt(vars["age"], 10, 64)
-
-	// Problem converting age
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		LoggingClient.Error("Error converting the age to an integer")
-		return
-	}
-
-	switch r.Method {
-	case http.MethodDelete:
-		// Get the events
-		events, err := dbClient.EventsOlderThanAge(age)
-		if err != nil {
-			LoggingClient.Error(err.Error())
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		// Delete all the events
-		count := len(events)
-		for _, event := range events {
-			if err = deleteEvent(event); err != nil {
-				LoggingClient.Error(err.Error())
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-		}
-
-		LoggingClient.Info("Deleting events by age: " + vars["age"])
-
-		// Return the count
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(strconv.Itoa(count)))
-	}
-}
-
 // Scrub all the events that have been pushed
 // Also remove the readings associated with the events
 // api/v1/event/scrub
@@ -772,5 +494,15 @@ func scrubHandler(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(strconv.Itoa(count)))
+	}
+}
+
+// Put event on the message queue to be processed by the rules engine
+func putEventOnQueue(e models.Event) {
+	LoggingClient.Info("Putting event on message queue", "")
+	//	Have multiple implementations (start with ZeroMQ)
+	err := ep.SendEventMessage(e)
+	if err != nil {
+		LoggingClient.Error("Unable to send message for event: " + e.String())
 	}
 }

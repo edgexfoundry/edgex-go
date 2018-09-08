@@ -20,9 +20,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
-	"github.com/edgexfoundry/edgex-go/internal"
 )
 
 const (

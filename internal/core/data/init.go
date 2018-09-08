@@ -37,7 +37,8 @@ import (
 var Configuration *ConfigurationStruct
 var dbClient interfaces.DBClient
 var LoggingClient logger.LoggingClient
-var ep *messaging.EventPublisher
+var chEvents chan interface{} //A channel for "domain events" sourced from event operations
+var ep messaging.EventPublisher
 var mdc metadata.DeviceClient
 var msc metadata.DeviceServiceClient
 
@@ -86,6 +87,8 @@ func Init() bool {
 	if Configuration == nil || dbClient == nil {
 		return false
 	}
+	chEvents = make(chan interface{}, 100)
+	initEventHandlers()
 	return true
 }
 
@@ -93,6 +96,9 @@ func Destruct() {
 	if dbClient != nil {
 		dbClient.CloseSession()
 		dbClient = nil
+	}
+	if chEvents != nil {
+		close(chEvents)
 	}
 }
 
@@ -190,7 +196,7 @@ func initializeClients(useConsul bool) {
 	msc = metadata.NewDeviceServiceClient(params, types.Endpoint{})
 
 	// Create the event publisher
-	ep = messaging.NewZeroMQPublisher(messaging.ZeroMQConfiguration{
+	ep = messaging.NewEventPublisher(messaging.PubSubConfiguration{
 		AddressPort: Configuration.ZeroMQAddressPort,
 	})
 }

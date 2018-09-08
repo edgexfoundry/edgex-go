@@ -73,6 +73,14 @@ cd $CMD/support-notifications
 exec -a edgex-support-notifications ./support-notifications &
 cd $DIR
 
+###
+# System Management Agent
+###
+cd $CMD/sys-mgmt-agent
+# Add `edgex-` prefix on start, so we can find the process family
+exec -a edgex-sys-mgmt-agent ./sys-mgmt-agent &
+cd $DIR
+
 trap cleanup EXIT
 
 while : ; do sleep 1 ; done
