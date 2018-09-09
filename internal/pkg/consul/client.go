@@ -16,11 +16,12 @@ package consulclient
 
 import (
 	"errors"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
+	consulapi "github.com/hashicorp/consul/api"
+	"github.com/mitchellh/consulstructure"
 	"reflect"
 	"strconv"
 	"strings"
-
-	consulapi "github.com/hashicorp/consul/api"
 )
 
 // Configuration struct for consul - used to initialize the service
@@ -41,6 +42,28 @@ type ServiceEndpoint struct {
 }
 
 var consul *consulapi.Client = nil // Call consulInit to initialize this variable
+
+func NewConsulConfig(reg config.RegistryInfo, svc config.ServiceInfo, key string) ConsulConfig {
+	c := ConsulConfig{
+			ServiceName:    key,
+			ServicePort:    svc.Port,
+			ServiceAddress: svc.Host,
+			CheckAddress:   svc.HealthCheck(),
+			CheckInterval:  svc.CheckInterval,
+			ConsulAddress:  reg.Host,
+			ConsulPort:     reg.Port,
+		}
+	return c
+}
+
+func NewConsulDecoder(reg config.RegistryInfo) *consulstructure.Decoder {
+	cfg := &consulapi.Config{}
+	cfg.Address = reg.Host + ":" + strconv.Itoa(reg.Port)
+	d := &consulstructure.Decoder{
+		Consul:cfg,
+	}
+	return d
+}
 
 // Initialize consul by connecting to the agent and registering the service/check
 func ConsulInit(config ConsulConfig) error {

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2017 Dell Inc.
+ * Copyright 2018 Dell Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -56,7 +56,7 @@ func restPutDeviceAdminState(w http.ResponseWriter, r *http.Request) {
 	status, err := putDeviceAdminState(did, as)
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
-		w.WriteHeader(http.StatusServiceUnavailable)
+		w.WriteHeader(http.StatusInternalServerError)
 	}
 	w.WriteHeader(status)
 
@@ -69,7 +69,7 @@ func restPutDeviceAdminStateByDeviceName(w http.ResponseWriter, r *http.Request)
 	status, err := putDeviceAdminStateByName(dn, as)
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
-		w.WriteHeader(http.StatusServiceUnavailable)
+		w.WriteHeader(http.StatusInternalServerError)
 	}
 	w.WriteHeader(status)
 }
@@ -81,7 +81,7 @@ func restPutDeviceOpState(w http.ResponseWriter, r *http.Request) {
 	status, err := putDeviceOpState(did, os)
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
-		w.WriteHeader(http.StatusServiceUnavailable)
+		w.WriteHeader(http.StatusInternalServerError)
 	}
 	w.WriteHeader(status)
 }
@@ -93,7 +93,7 @@ func restPutDeviceOpStateByDeviceName(w http.ResponseWriter, r *http.Request) {
 	status, err := putDeviceOpStateByName(dn, os)
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
-		w.WriteHeader(http.StatusServiceUnavailable)
+		w.WriteHeader(http.StatusInternalServerError)
 	}
 	w.WriteHeader(status)
 }
@@ -132,7 +132,7 @@ func restGetAllCommands(w http.ResponseWriter, _ *http.Request) {
 	status, devices, err := getCommands()
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
-		w.WriteHeader(http.StatusServiceUnavailable)
+		w.WriteHeader(http.StatusInternalServerError)
 	} else if status != http.StatusOK {
 		w.WriteHeader(status)
 	}

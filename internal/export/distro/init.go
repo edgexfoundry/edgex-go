@@ -79,6 +79,7 @@ func Init(conf ConfigurationStruct, l *zap.Logger, useConsul bool) error {
 		Path:        EventUriPath,
 		UseRegistry: useConsul,
 		Url:         coreDataEventURL,
+		Interval:    internal.ClientMonitorDefault,
 	}
 
 	ec = coredata.NewEventClient(params, types.Endpoint{})

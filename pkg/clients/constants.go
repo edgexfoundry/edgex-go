@@ -11,25 +11,16 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
-package command
+package clients
+
+const ClientMonitorDefault = 15000
 
 const (
-	ID               = "id"
-	NAME             = "name"
-	DEVICEIDURLPARAM = "{deviceId}"
-	OPSTATE          = "opstate"
-	URLADMINSTATE    = "adminstate"
-	ADMINSTATE       = "adminState"
-	YAML             = "yaml"
-	COMMAND          = "command"
-	COMMANDID        = "commandid"
-	DEVICE           = "device"
-	KEY              = "key"
-	VALUE            = "value"
-	PINGENDPOINT     = "/ping"
-	PINGRESPONSE     = "pong"
-	CONTENTTYPE      = "Content-Type"
-	TEXTPLAIN        = "text/plain"
-	UNLOCKED         = "UNLOCKED"
-	ENABLED          = "ENABLED"
+	ApiAddressableRoute   = "/api/v1/addressable"
+	ApiCommandRoute       = "/api/v1/command"
+	ApiDeviceRoute        = "/api/v1/device"
+	ApiDeviceServiceRoute = "/api/v1/deviceservice"
+	ApiEventRoute         = "/api/v1/event"
+	ApiLoggingRoute       = "/api/v1/logs"
+	ApiScheduleRoute      = "/api/v1/schedule"
 )

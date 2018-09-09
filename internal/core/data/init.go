@@ -185,7 +185,9 @@ func initializeClients(useConsul bool) {
 		ServiceKey:  internal.CoreMetaDataServiceKey,
 		Path:        Configuration.MetaDevicePath,
 		UseRegistry: useConsul,
-		Url:         Configuration.MetaDeviceURL}
+		Url:         Configuration.MetaDeviceURL,
+		Interval:    internal.ClientMonitorDefault,
+	}
 
 	mdc = metadata.NewDeviceClient(params, types.Endpoint{})
 

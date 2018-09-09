@@ -18,16 +18,18 @@ import (
 	"time"
 
 	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/pkg/clients"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
 )
 
 func TestNewCommandClientWithConsul(t *testing.T) {
-	deviceUrl := "http://localhost:48081" + commandUriPath
+	deviceUrl := "http://localhost:48081" + clients.ApiCommandRoute
 	params := types.EndpointParams{
 		ServiceKey:  internal.CoreMetaDataServiceKey,
-		Path:        commandUriPath,
+		Path:        clients.ApiCommandRoute,
 		UseRegistry: true,
-		Url:         deviceUrl}
+		Url:         deviceUrl,
+		Interval:    clients.ClientMonitorDefault}
 
 	cc := NewCommandClient(params, MockEndpoint{})
 

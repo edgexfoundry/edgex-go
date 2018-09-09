@@ -16,7 +16,6 @@ package command
 import (
 	"bytes"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
@@ -166,7 +165,7 @@ func getCommands() (int, []models.CommandResponse, error) {
 	}
 	var cr []models.CommandResponse
 	for _, d := range devices {
-		cr = append(cr, models.CommandResponseFromDevice(d, constructCommandURL()))
+		cr = append(cr, models.CommandResponseFromDevice(d, Configuration.Service.Url()))
 	}
 	return http.StatusOK, cr, err
 
@@ -182,7 +181,7 @@ func getCommandsByDeviceID(did string) (int, models.CommandResponse, error) {
 			return http.StatusInternalServerError, models.CommandResponse{}, err
 		}
 	}
-	return http.StatusOK, models.CommandResponseFromDevice(d, constructCommandURL()), err
+	return http.StatusOK, models.CommandResponseFromDevice(d, Configuration.Service.Url()), err
 }
 
 func getCommandsByDeviceName(dn string) (int, models.CommandResponse, error) {
@@ -195,9 +194,5 @@ func getCommandsByDeviceName(dn string) (int, models.CommandResponse, error) {
 			return http.StatusInternalServerError, models.CommandResponse{}, err
 		}
 	}
-	return http.StatusOK, models.CommandResponseFromDevice(d, constructCommandURL()), err
-}
-
-func constructCommandURL() string {
-	return Configuration.URLProtocol + Configuration.ServiceAddress + ":" + strconv.Itoa(Configuration.ServicePort)
+	return http.StatusOK, models.CommandResponseFromDevice(d, Configuration.Service.Url()), err
 }
