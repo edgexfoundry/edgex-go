@@ -89,6 +89,8 @@ func (reg *registrationInfo) update(newReg export.Registration) bool {
 
 	reg.compression = nil
 	switch newReg.Compression {
+	case "":
+		fallthrough
 	case export.CompNone:
 		reg.compression = nil
 	case export.CompGzip:
@@ -132,6 +134,8 @@ func (reg *registrationInfo) update(newReg export.Registration) bool {
 
 	reg.encrypt = nil
 	switch newReg.Encryption.Algo {
+	case "":
+		fallthrough
 	case export.EncNone:
 		reg.encrypt = nil
 	case export.EncAes:
