@@ -15,7 +15,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/consul"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/coredata"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
-	"go.uber.org/zap"
+
 )
 
 const (
@@ -23,7 +23,7 @@ const (
 	EventUriPath = "/api/v1/event"
 )
 
-var logger *zap.Logger
+var logger *logger.Logger
 var ec coredata.EventClient
 var configuration = ConfigurationStruct{} // Needs to be initialized before used
 
@@ -68,7 +68,7 @@ func ConnectToConsul(conf ConfigurationStruct) error {
 	return nil
 }
 
-func Init(conf ConfigurationStruct, l *zap.Logger, useConsul bool) error {
+func Init(conf ConfigurationStruct, l *logger.Logger, useConsul bool) error {
 	configuration = conf
 	logger = l
 

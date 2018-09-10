@@ -13,8 +13,6 @@ import (
 	"crypto/sha1"
 	"encoding/base64"
 	"github.com/edgexfoundry/edgex-go/internal/export/interfaces"
-
-	"go.uber.org/zap"
 )
 
 type aesEncryption struct {
@@ -51,7 +49,6 @@ func (aesData aesEncryption) Transform(data []byte) []byte {
 
 	block, err := aes.NewCipher(key)
 	if err != nil {
-		logger.Error("Error", zap.Error(err))
 		return nil
 	}
 

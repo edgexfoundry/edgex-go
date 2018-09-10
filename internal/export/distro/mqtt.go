@@ -17,7 +17,6 @@ import (
 	MQTT "github.com/eclipse/paho.mqtt.golang"
 	"github.com/edgexfoundry/edgex-go/internal/export/interfaces"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
-	"go.uber.org/zap"
 )
 
 type mqttSender struct {
@@ -67,7 +66,7 @@ func (sender *mqttSender) Send(data []byte, event *models.Event) bool {
 	if !sender.client.IsConnected() {
 		logger.Info("Connecting to mqtt server")
 		if token := sender.client.Connect(); token.Wait() && token.Error() != nil {
-			logger.Warn("Could not connect to mqtt server, drop event", zap.Error(token.Error()))
+			logger.Warn("Could not connect to mqtt server, drop event", logger.Error(token.Error()))
 			return false
 		}
 	}
@@ -76,10 +75,10 @@ func (sender *mqttSender) Send(data []byte, event *models.Event) bool {
 	// FIXME: could be removed? set of tokens?
 	token.Wait()
 	if token.Error() != nil {
-		logger.Warn("mqtt error: ", zap.Error(token.Error()))
+		logger.Warn("mqtt error: ", logger.Error(token.Error()))
 		return false
 	} else {
-		logger.Debug("Sent data: ", zap.ByteString("data", data))
+		logger.Debug("Sent data: ", logger.ByteString("data", data))
 		return true
 	}
 }

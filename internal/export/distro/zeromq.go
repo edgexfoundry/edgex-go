@@ -12,7 +12,7 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 	zmq "github.com/pebbe/zmq4"
-	"go.uber.org/zap"
+
 )
 
 const (
@@ -37,11 +37,11 @@ func initZmq(eventCh chan *models.Event) {
 		msg, err := q.RecvMessage(0)
 		if err != nil {
 			id, _ := q.GetIdentity()
-			logger.Error("Error getting mesage", zap.String("id", id))
+			logger.Error("Error getting mesage", logger.String("id", id))
 		} else {
 			for _, str := range msg {
 				event := parseEvent(str)
-				logger.Info("Event received", zap.Any("event", event))
+				logger.Info("Event received", logger.Any("event", event))
 				eventCh <- event
 			}
 		}
@@ -52,7 +52,7 @@ func parseEvent(str string) *models.Event {
 	event := models.Event{}
 
 	if err := json.Unmarshal([]byte(str), &event); err != nil {
-		logger.Error("Failed to parse event", zap.Error(err))
+		logger.Error("Failed to parse event", logger.Error(err))
 		return nil
 	}
 	return &event

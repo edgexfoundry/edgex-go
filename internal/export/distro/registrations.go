@@ -21,7 +21,7 @@ import (
 	"net/http"
 	"time"
 
-	"go.uber.org/zap"
+
 )
 
 const (
@@ -83,7 +83,7 @@ func (reg *registrationInfo) update(newReg export.Registration) bool {
 	case export.FormatNOOP:
 		reg.format = noopFormatter{}
 	default:
-		logger.Warn("Format not supported: ", zap.String("format", newReg.Format))
+		logger.Warn("Format not supported: ", logger.String("format", newReg.Format))
 		return false
 	}
 
@@ -98,7 +98,7 @@ func (reg *registrationInfo) update(newReg export.Registration) bool {
 	case export.CompZip:
 		reg.compression = &zlibTransformer{}
 	default:
-		logger.Warn("Compression not supported: ", zap.String("compression", newReg.Compression))
+		logger.Warn("Compression not supported: ", logger.String("compression", newReg.Compression))
 		return false
 	}
 
@@ -124,7 +124,7 @@ func (reg *registrationInfo) update(newReg export.Registration) bool {
 		reg.sender = NewInfluxDBSender(newReg.Addressable)
 
 	default:
-		logger.Warn("Destination not supported: ", zap.String("destination", newReg.Destination))
+		logger.Warn("Destination not supported: ", logger.String("destination", newReg.Destination))
 		return false
 	}
 
@@ -141,7 +141,7 @@ func (reg *registrationInfo) update(newReg export.Registration) bool {
 	case export.EncAes:
 		reg.encrypt = export.NewAESEncryption(newReg.Encryption)
 	default:
-		logger.Warn("Encryption not supported: ", zap.String("Algorithm", newReg.Encryption.Algo))
+		logger.Warn("Encryption not supported: ", logger.String("Algorithm", newReg.Encryption.Algo))
 		return false
 	}
 
@@ -149,12 +149,12 @@ func (reg *registrationInfo) update(newReg export.Registration) bool {
 
 	if len(newReg.Filter.DeviceIDs) > 0 {
 		reg.filter = append(reg.filter, NewDevIdFilter(newReg.Filter))
-		logger.Debug("Device ID filter added: ", zap.Any("filters", newReg.Filter.DeviceIDs))
+		logger.Debug("Device ID filter added: ", logger.Any("filters", newReg.Filter.DeviceIDs))
 	}
 
 	if len(newReg.Filter.ValueDescriptorIDs) > 0 {
 		reg.filter = append(reg.filter, NewValueDescFilter(newReg.Filter))
-		logger.Debug("Value descriptor filter added: ", zap.Any("filters", newReg.Filter.ValueDescriptorIDs))
+		logger.Debug("Value descriptor filter added: ", logger.Any("filters", newReg.Filter.ValueDescriptorIDs))
 	}
 
 	return true
@@ -198,13 +198,13 @@ func (reg registrationInfo) processEvent(event *models.Event) {
 	}
 
 	logger.Debug("Sent event with registration:",
-		zap.Any("Event", event),
-		zap.String("Name", reg.registration.Name))
+		logger.Any("Event", event),
+		logger.String("Name", reg.registration.Name))
 }
 
 func registrationLoop(reg *registrationInfo) {
 	logger.Info("registration loop started",
-		zap.String("Name", reg.registration.Name))
+		logger.String("Name", reg.registration.Name))
 	for {
 		select {
 		case event := <-reg.chEvent:
@@ -217,10 +217,10 @@ func registrationLoop(reg *registrationInfo) {
 			} else {
 				if reg.update(*newReg) {
 					logger.Info("Registration updated: OK",
-						zap.String("Name", reg.registration.Name))
+						logger.String("Name", reg.registration.Name))
 				} else {
 					logger.Info("Registration updated: KO, terminating goroutine",
-						zap.String("Name", reg.registration.Name))
+						logger.String("Name", reg.registration.Name))
 					reg.deleteFlag = true
 					return
 				}
@@ -274,7 +274,7 @@ func updateRunningRegistrations(running map[string]*registrationInfo,
 func Loop(errChan chan error, eventCh chan *models.Event) {
 	go func() {
 		p := fmt.Sprintf(":%d", configuration.Port)
-		logger.Info("Starting Export Distro", zap.String("url", p))
+		logger.Info("Starting Export Distro", logger.String("url", p))
 		errChan <- http.ListenAndServe(p, httpServer())
 	}()
 
@@ -286,9 +286,9 @@ func Loop(errChan chan error, eventCh chan *models.Event) {
 		logger.Info("Waiting for client microservice")
 		select {
 		case e := <-errChan:
-			logger.Error("exit msg", zap.Error(e))
+			logger.Error("exit msg", logger.Error(e))
 			if err != nil {
-				logger.Error("with error: ",  zap.Error(err))
+				logger.Error("with error: ",  logger.Error(err))
 			}
 			return
 		case <-time.After(time.Second):
@@ -317,15 +317,15 @@ func Loop(errChan chan error, eventCh chan *models.Event) {
 				}
 				delete(registrations, k)
 			}
-			logger.Info("exit msg", zap.Error(e))
+			logger.Info("exit msg", logger.Error(e))
 			return
 
 		case update := <-registrationChanges:
 			logger.Info("Registration changes")
 			err := updateRunningRegistrations(registrations, update)
 			if err != nil {
-				logger.Warn("Error updating registration", zap.Error(err),
-					zap.Any("update", update))
+				logger.Warn("Error updating registration", logger.Error(err),
+					logger.Any("update", update))
 			}
 
 		case event := <-eventCh:

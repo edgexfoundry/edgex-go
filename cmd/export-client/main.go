@@ -11,6 +11,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	logger "github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 	"os"
 	"os/signal"
 	"syscall"
@@ -20,13 +21,12 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/export/client"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
-	"go.uber.org/zap"
 )
 
-var logger *zap.Logger
+var logger *logger.LoggingClient
 
 func main() {
-	logger, _ = zap.NewProduction()
+	logger= logger.EdgeXLogger{}
 	defer logger.Sync()
 
 	logger.Info(fmt.Sprintf("Starting %s %s", internal.ExportClientServiceKey, edgex.Version))
@@ -46,7 +46,7 @@ func main() {
 	configuration := &client.ConfigurationStruct{}
 	err := config.LoadFromFile(useProfile, configuration)
 	if err != nil {
-		logger.Error(err.Error(), zap.String("version", edgex.Version))
+		logger.Error(err.Error(), logger.String("version", edgex.Version))
 		return
 	}
 
@@ -56,18 +56,18 @@ func main() {
 		consulMsg = "Loading configuration from Consul..."
 		err := client.ConnectToConsul(*configuration)
 		if err != nil {
-			logger.Error(err.Error(), zap.String("version", edgex.Version))
+			logger.Error(err.Error(), logger.String("version", edgex.Version))
 			return //end program since user explicitly told us to use Consul.
 		}
 	} else {
 		consulMsg = "Bypassing Consul configuration..."
 	}
 
-	logger.Info(consulMsg, zap.String("version", edgex.Version))
+	logger.Info(consulMsg, logger.String("version", edgex.Version))
 
 	err = client.Init(*configuration, logger)
 	if err != nil {
-		logger.Error("Could not initialize export client", zap.Error(err))
+		logger.Error("Could not initialize export client", logger.Error(err))
 		return
 	}
 
@@ -85,5 +85,5 @@ func main() {
 
 	client.Destroy()
 
-	logger.Info("terminated", zap.String("error", c.Error()))
+	logger.Info("terminated", logger.String("error", c.Error()))
 }

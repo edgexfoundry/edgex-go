@@ -15,7 +15,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/export"
 
 	"github.com/go-zoo/bone"
-	"go.uber.org/zap"
+
 )
 
 const (
@@ -33,7 +33,7 @@ func replyPing(w http.ResponseWriter, r *http.Request) {
 func replyNotifyRegistrations(w http.ResponseWriter, r *http.Request) {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		logger.Error("Failed read body", zap.Error(err))
+		logger.Error("Failed read body", logger.Error(err))
 		w.WriteHeader(http.StatusBadRequest)
 		io.WriteString(w, err.Error())
 		return
@@ -41,13 +41,13 @@ func replyNotifyRegistrations(w http.ResponseWriter, r *http.Request) {
 
 	update := export.NotifyUpdate{}
 	if err := json.Unmarshal(data, &update); err != nil {
-		logger.Error("Failed to parse", zap.ByteString("json", data))
+		logger.Error("Failed to parse", logger.ByteString("json", data))
 		w.WriteHeader(http.StatusBadRequest)
 		io.WriteString(w, err.Error())
 		return
 	}
 	if update.Name == "" || update.Operation == "" {
-		logger.Error("Missing json field", zap.Any("update", update))
+		logger.Error("Missing json field", logger.Any("update", update))
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -55,7 +55,7 @@ func replyNotifyRegistrations(w http.ResponseWriter, r *http.Request) {
 		update.Operation != export.NotifyUpdateUpdate &&
 		update.Operation != export.NotifyUpdateDelete {
 		logger.Error("Invalid value for operation",
-			zap.String("operation", update.Operation))
+			logger.String("operation", update.Operation))
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}

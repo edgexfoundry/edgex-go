@@ -17,7 +17,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/export/interfaces"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 
-	"go.uber.org/zap"
+
 )
 
 type httpSender struct {
@@ -43,16 +43,16 @@ func (sender httpSender) Send(data []byte, event *models.Event) bool {
 	case http.MethodPost:
 		response, err := http.Post(sender.url, mimeTypeJSON, bytes.NewReader(data))
 		if err != nil {
-			logger.Error("Error: ", zap.Error(err))
+			logger.Error("Error: ", logger.Error(err))
 			return false
 		}
 		defer response.Body.Close()
-		logger.Info("Response: ", zap.String("status", response.Status))
+		logger.Info("Response: ", logger.String("status", response.Status))
 	default:
-		logger.Info("Unsupported method: ", zap.String("method", sender.method))
+		logger.Info("Unsupported method: ", logger.String("method", sender.method))
 		return false
 	}
 
-	logger.Info("Sent data: ", zap.ByteString("data", data))
+	logger.Info("Sent data: ", logger.ByteString("data", data))
 	return true
 }

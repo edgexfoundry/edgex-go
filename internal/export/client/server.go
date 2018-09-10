@@ -12,7 +12,7 @@ import (
 	"net/http"
 
 	"github.com/go-zoo/bone"
-	"go.uber.org/zap"
+
 )
 
 const (
@@ -49,7 +49,7 @@ func httpServer() http.Handler {
 func StartHTTPServer(config ConfigurationStruct, errChan chan error) {
 	go func() {
 		p := fmt.Sprintf(":%d", config.Port)
-		logger.Info("Starting Export Client", zap.String("url", p))
+		logger.Info("Starting Export Client", logger.String("url", p))
 		errChan <- http.ListenAndServe(p, httpServer())
 	}()
 }

@@ -18,7 +18,7 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 	"github.com/satori/go.uuid"
-	"go.uber.org/zap"
+
 )
 
 type jsonFormatter struct {
@@ -38,7 +38,7 @@ func (jsonTr jsonFormatter) Format(event *models.Event) []byte {
 
 	b, err := json.Marshal(event)
 	if err != nil {
-		logger.Error("Error parsing JSON", zap.Error(err))
+		logger.Error("Error parsing JSON", logger.Error(err))
 		return nil
 	}
 	return b
@@ -50,7 +50,7 @@ type xmlFormatter struct {
 func (xmlTr xmlFormatter) Format(event *models.Event) []byte {
 	b, err := xml.Marshal(event)
 	if err != nil {
-		logger.Error("Error parsing XML", zap.Error(err))
+		logger.Error("Error parsing XML", logger.Error(err))
 		return nil
 	}
 	return b
@@ -81,7 +81,7 @@ func (thingsboardjsonTr thingsboardJSONFormatter) Format(event *models.Event) []
 
 	b, err := json.Marshal(device)
 	if err != nil {
-		logger.Error("Error parsing ThingsBoard JSON", zap.Error(err))
+		logger.Error("Error parsing ThingsBoard JSON", logger.Error(err))
 		return nil
 	}
 	return b

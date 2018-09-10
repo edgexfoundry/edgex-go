@@ -13,7 +13,7 @@ import (
 	"strings"
 	"testing"
 
-	"go.uber.org/zap"
+
 )
 
 const (
@@ -49,7 +49,7 @@ func TestClientRegistrationsEmpty(t *testing.T) {
 }
 
 func TestClientRegistrations(t *testing.T) {
-	logger = zap.NewNop()
+	logger = logger.NewNop()
 	defer logger.Sync()
 
 	handler := func(w http.ResponseWriter, r *http.Request) {
@@ -73,7 +73,7 @@ func TestClientRegistrations(t *testing.T) {
 }
 
 func TestClientRegistrationsInvalid(t *testing.T) {
-	logger = zap.NewNop()
+	logger = logger.NewNop()
 	defer logger.Sync()
 
 	invalidList := []string{invalidReply1, invalidReply2}

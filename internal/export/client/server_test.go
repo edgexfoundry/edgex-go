@@ -19,16 +19,16 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/export"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/memory"
-	"go.uber.org/zap"
+
 )
 
 const regJson = `{"origin":1471806386919,"name":"OSIClient","addressable":{"origin":1471806386919,"name":"OSIMQTTBroker","protocol":"TCP","address":"m10.cloudmqtt.com","port":15421,"publisher":"EdgeXExportPublisher","user":"hukfgtoh","password":"uP6hJLYW6Ji4","topic":"EdgeXDataTopic"},"format":"JSON","filter":{"deviceIdentifiers":["livingroomthermosat", "hallwaythermostat"],"valueDescriptorIdentifiers":["temperature", "humidity"]},"encryption":{"encryptionAlgorithm":"AES","encryptionKey":"123","initializingVector":"123"},"compression":"GZIP","enable":true, "destination": "REST_ENDPOINT"}`
 
 func prepareTest(t *testing.T) *httptest.Server {
 	if testing.Verbose() {
-		logger, _ = zap.NewProduction()
+		logger, _ = logger.NewProduction()
 	} else {
-		logger = zap.NewNop()
+		logger = logger.NewNop()
 	}
 	defer logger.Sync()
 

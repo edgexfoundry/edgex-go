@@ -11,6 +11,7 @@ package client
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strconv"
@@ -18,7 +19,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/export"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/go-zoo/bone"
-	"go.uber.org/zap"
+
 )
 
 const (
@@ -39,7 +40,8 @@ func getRegByID(w http.ResponseWriter, r *http.Request) {
 
 	reg, err := dbc.RegistrationById(id)
 	if err != nil {
-		logger.Error("Failed to query by id", zap.Error(err))
+		LoggingClient.Error(err.Error())
+		LoggingClient.Debug(fmt.Sprintf("Failed to query by id: %s", id))
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
@@ -77,7 +79,7 @@ func getRegList(w http.ResponseWriter, r *http.Request) {
 		list = append(list, export.DestXMPP)
 		list = append(list, export.DestAWSMQTT)
 	default:
-		logger.Error("Unknown type: " + t)
+		LoggingClient.Error("Unknown type: " + t)
 		http.Error(w, "Unknown type: "+t, http.StatusBadRequest)
 		return
 	}
@@ -89,7 +91,8 @@ func getRegList(w http.ResponseWriter, r *http.Request) {
 func getAllReg(w http.ResponseWriter, r *http.Request) {
 	reg, err := dbc.Registrations()
 	if err != nil {
-		logger.Error("Failed to query all registrations", zap.Error(err))
+		LoggingClient.Error(err.Error())
+		LoggingClient.Debug("Failed to query all registrations")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -103,7 +106,8 @@ func getRegByName(w http.ResponseWriter, r *http.Request) {
 
 	reg, err := dbc.RegistrationByName(name)
 	if err != nil {
-		logger.Error("Failed to query by name", zap.Error(err))
+		LoggingClient.Error(err.Error())
+		LoggingClient.Debug("Failed to query by name")
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
@@ -115,38 +119,43 @@ func getRegByName(w http.ResponseWriter, r *http.Request) {
 func addReg(w http.ResponseWriter, r *http.Request) {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		logger.Error("Failed to query add registration", zap.Error(err))
+		LoggingClient.Error(err.Error())
+		LoggingClient.Debug("Failed to query add registration")
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	reg := export.Registration{}
 	if err := json.Unmarshal(data, &reg); err != nil {
-		logger.Error("Failed to query add registration", zap.Error(err))
+		LoggingClient.Error(err.Error())
+		LoggingClient.Debug("Failed to query add registration")
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	if valid, err := reg.Validate(); !valid {
-		logger.Error("Failed to validate registrations fields", zap.ByteString("data", data), zap.Error(err))
+		LoggingClient.Error(err.Error())
+		LoggingClient.Error(fmt.Sprintf("Failed to validate registrations fields: %X", data))
 		http.Error(w, "Could not validate json fields", http.StatusBadRequest)
 		return
 	}
 
 	_, err = dbc.RegistrationByName(reg.Name)
 	if err == nil {
-		logger.Error("Name already taken: " + reg.Name)
+		LoggingClient.Error("Name already taken: " + reg.Name)
 		http.Error(w, "Name already taken", http.StatusBadRequest)
 		return
 	} else if err != db.ErrNotFound {
-		logger.Error("Failed to query add registration", zap.Error(err))
+		LoggingClient.Error(err.Error())
+		LoggingClient.Debug("Failed to query add registration")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	_, err = dbc.AddRegistration(&reg)
 	if err != nil {
-		logger.Error("Failed to query add registration", zap.Error(err))
+		LoggingClient.Error(err.Error())
+		LoggingClient.Debug("Failed to query add registration")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -161,14 +170,16 @@ func addReg(w http.ResponseWriter, r *http.Request) {
 func updateReg(w http.ResponseWriter, r *http.Request) {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		logger.Error("Failed to read update registration", zap.Error(err))
+		LoggingClient.Error(err.Error())
+		LoggingClient.Debug("Failed to read update registration")
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	var fromReg export.Registration
 	if err := json.Unmarshal(data, &fromReg); err != nil {
-		logger.Error("Failed to unmarshal update registration", zap.Error(err))
+		LoggingClient.Error(err.Error())
+		LoggingClient.Debug("Failed to unmarshal update registration")
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -185,7 +196,8 @@ func updateReg(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		logger.Error("Failed to query update registration", zap.Error(err))
+		LoggingClient.Error(err.Error())
+		LoggingClient.Debug("Failed to query update registration")
 		if err == db.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
 		} else {
@@ -228,14 +240,16 @@ func updateReg(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if valid, err := toReg.Validate(); !valid {
-		logger.Error("Failed to validate registrations fields", zap.ByteString("data", data), zap.Error(err))
+		LoggingClient.Error(err.Error())
+		LoggingClient.Debug(fmt.Sprintf("Failed to validate registrations fields: %X", data))
 		http.Error(w, "Could not validate json fields", http.StatusBadRequest)
 		return
 	}
 
 	err = dbc.UpdateRegistration(toReg)
 	if err != nil {
-		logger.Error("Failed to query update registration", zap.Error(err))
+		LoggingClient.Error(err.Error())
+		LoggingClient.Debug("Failed to query update registration")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -255,14 +269,16 @@ func delRegByID(w http.ResponseWriter, r *http.Request) {
 	// notify distro of the deletion
 	reg, err := dbc.RegistrationById(id)
 	if err != nil {
-		logger.Error("Failed to query by id", zap.Error(err))
+		LoggingClient.Error(err.Error())
+		LoggingClient.Debug(fmt.Sprintf("Failed to query by id: %s", id))
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
 
 	err = dbc.DeleteRegistrationById(id)
 	if err != nil {
-		logger.Error("Failed to query by id", zap.Error(err))
+		LoggingClient.Error(err.Error())
+		LoggingClient.Debug(fmt.Sprintf("Failed to query by id: %s", id))
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -280,7 +296,8 @@ func delRegByName(w http.ResponseWriter, r *http.Request) {
 
 	err := dbc.DeleteRegistrationByName(name)
 	if err != nil {
-		logger.Error("Failed to query by name", zap.Error(err))
+		LoggingClient.Error(err.Error())
+		LoggingClient.Debug(fmt.Sprintf("Failed to query by name: %s", name))
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
@@ -301,18 +318,21 @@ func notifyUpdatedRegistrations(update export.NotifyUpdate) {
 
 		data, err := json.Marshal(update)
 		if err != nil {
-			logger.Error("Error generating update json", zap.Error(err))
+			LoggingClient.Error(err.Error())
+			LoggingClient.Debug("Error generating update json")
 			return
 		}
 
 		req, err := http.NewRequest(http.MethodPut, url, bytes.NewBuffer([]byte(data)))
 		if err != nil {
-			logger.Error("Error creating http request")
+			LoggingClient.Error(err.Error())
+			LoggingClient.Debug("Error creating http request")
 			return
 		}
 		_, err = client.Do(req)
 		if err != nil {
-			logger.Error("Error notifying updated registrations to distro", zap.String("url", url))
+			LoggingClient.Error(err.Error())
+			LoggingClient.Debug(fmt.Sprintf("Error notifying updated registrations to distro: %s", url))
 		}
 	}()
 }
