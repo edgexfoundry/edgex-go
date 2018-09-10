@@ -17,20 +17,18 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/export"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/memory"
-
+	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 )
 
 const regJson = `{"origin":1471806386919,"name":"OSIClient","addressable":{"origin":1471806386919,"name":"OSIMQTTBroker","protocol":"TCP","address":"m10.cloudmqtt.com","port":15421,"publisher":"EdgeXExportPublisher","user":"hukfgtoh","password":"uP6hJLYW6Ji4","topic":"EdgeXDataTopic"},"format":"JSON","filter":{"deviceIdentifiers":["livingroomthermosat", "hallwaythermostat"],"valueDescriptorIdentifiers":["temperature", "humidity"]},"encryption":{"encryptionAlgorithm":"AES","encryptionKey":"123","initializingVector":"123"},"compression":"GZIP","enable":true, "destination": "REST_ENDPOINT"}`
 
 func prepareTest(t *testing.T) *httptest.Server {
-	if testing.Verbose() {
-		logger, _ = logger.NewProduction()
-	} else {
-		logger = logger.NewNop()
+	if LoggingClient == nil {
+		LoggingClient = logger.NewClient(internal.ExportClientServiceKey, false, "")
 	}
-	defer logger.Sync()
 
 	dbc = &memory.MemDB{}
 	return httptest.NewServer(httpServer())

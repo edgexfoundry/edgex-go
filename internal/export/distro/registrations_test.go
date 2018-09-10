@@ -9,15 +9,16 @@ package distro
 import (
 	"testing"
 
+	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/export"
-	"github.com/edgexfoundry/edgex-go/pkg/models"
 
+	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
+	"github.com/edgexfoundry/edgex-go/pkg/models"
 )
 
 func init() {
-	if logger == nil {
-		logger = logger.NewExample()
-		_ = logger
+	if LoggingClient == nil {
+		LoggingClient = logger.NewClient(internal.ExportDistroServiceKey, false, "")
 	}
 }
 
@@ -201,8 +202,6 @@ func TestUpdateRunningRegistrations(t *testing.T) {
 
 func BenchmarkProcessEvent(b *testing.B) {
 	var Dummy = &dummyStruct{}
-	logger = logger.NewNop()
-	defer logger.Sync()
 
 	event := models.Event{}
 	event.Device = "dummyDev"

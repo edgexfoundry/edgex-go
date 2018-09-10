@@ -7,11 +7,12 @@
 package distro
 
 import (
+	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 	"testing"
 
 	"github.com/edgexfoundry/edgex-go/internal/export"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
-
 )
 
 const (
@@ -22,10 +23,13 @@ const (
 	descriptor2 = "Descriptor2"
 )
 
-func TestFilterDevice(t *testing.T) {
-	logger = logger.NewNop()
-	defer logger.Sync()
+func init() {
+	if LoggingClient == nil {
+		LoggingClient = logger.NewClient(internal.ExportDistroServiceKey, false, "")
+	}
+}
 
+func TestFilterDevice(t *testing.T) {
 	// Filter only accepting events from device 1
 	f := export.Filter{}
 	f.DeviceIDs = append(f.DeviceIDs, "DEV1")
@@ -58,9 +62,6 @@ func TestFilterDevice(t *testing.T) {
 }
 
 func TestFilterValue(t *testing.T) {
-	logger = logger.NewNop()
-	defer logger.Sync()
-
 	f1 := export.Filter{}
 	f1.ValueDescriptorIDs = append(f1.ValueDescriptorIDs, descriptor1)
 

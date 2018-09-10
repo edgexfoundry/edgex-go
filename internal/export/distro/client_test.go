@@ -13,7 +13,8 @@ import (
 	"strings"
 	"testing"
 
-
+	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 )
 
 const (
@@ -26,6 +27,12 @@ const (
 	invalidRegistrationList1 = "[" + registrationInvalidStr + "]"
 	invalidRegistrationList2 = "[" + registrationInvalidStr + "," + registrationStr + "]"
 )
+
+func init() {
+	if LoggingClient == nil {
+		LoggingClient = logger.NewClient(internal.ExportDistroServiceKey, false, "")
+	}
+}
 
 func TestClientRegistrationsEmpty(t *testing.T) {
 	handler := func(w http.ResponseWriter, r *http.Request) {
@@ -49,9 +56,6 @@ func TestClientRegistrationsEmpty(t *testing.T) {
 }
 
 func TestClientRegistrations(t *testing.T) {
-	logger = logger.NewNop()
-	defer logger.Sync()
-
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, oneRegistrationList)
 	}
@@ -73,9 +77,6 @@ func TestClientRegistrations(t *testing.T) {
 }
 
 func TestClientRegistrationsInvalid(t *testing.T) {
-	logger = logger.NewNop()
-	defer logger.Sync()
-
 	invalidList := []string{invalidReply1, invalidReply2}
 
 	handler := func(w http.ResponseWriter, r *http.Request) {
