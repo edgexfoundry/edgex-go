@@ -18,7 +18,6 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 	"github.com/satori/go.uuid"
-
 )
 
 type jsonFormatter struct {
@@ -38,7 +37,8 @@ func (jsonTr jsonFormatter) Format(event *models.Event) []byte {
 
 	b, err := json.Marshal(event)
 	if err != nil {
-		logger.Error("Error parsing JSON", logger.Error(err))
+		LoggingClient.Error(err.Error())
+		LoggingClient.Debug("Error parsing JSON")
 		return nil
 	}
 	return b
@@ -50,7 +50,8 @@ type xmlFormatter struct {
 func (xmlTr xmlFormatter) Format(event *models.Event) []byte {
 	b, err := xml.Marshal(event)
 	if err != nil {
-		logger.Error("Error parsing XML", logger.Error(err))
+		LoggingClient.Error(err.Error())
+		LoggingClient.Debug("Error parsing XML")
 		return nil
 	}
 	return b
@@ -81,7 +82,8 @@ func (thingsboardjsonTr thingsboardJSONFormatter) Format(event *models.Event) []
 
 	b, err := json.Marshal(device)
 	if err != nil {
-		logger.Error("Error parsing ThingsBoard JSON", logger.Error(err))
+		LoggingClient.Error(err.Error())
+		LoggingClient.Debug("Error parsing ThingsBoard JSON")
 		return nil
 	}
 	return b
@@ -146,20 +148,20 @@ type azureFormatter struct {
 func (af azureFormatter) Format(event *models.Event) []byte {
 	am, err := NewAzureMessage()
 	if err != nil {
-		logger.Error(fmt.Sprintf("error creating a new Azure message: %s", err))
+		LoggingClient.Error(fmt.Sprintf("error creating a new Azure message: %s", err))
 		return []byte{}
 	}
 	am.ConnDevID = event.Device
 	am.UserID = string(event.Origin)
 	data, err := json.Marshal(event)
 	if err != nil {
-		logger.Error(fmt.Sprintf("error parsing Event data: %s", err))
+		LoggingClient.Error(fmt.Sprintf("error parsing Event data: %s", err))
 		return []byte{}
 	}
 	am.Body = data
 	msg, err := json.Marshal(am)
 	if err != nil {
-		logger.Error(fmt.Sprintf("error parsing AzureMessage data: %s", err))
+		LoggingClient.Error(fmt.Sprintf("error parsing AzureMessage data: %s", err))
 		return []byte{}
 	}
 	return msg
@@ -201,7 +203,7 @@ func (af awsFormatter) Format(event *models.Event) []byte {
 	msg, err := json.Marshal(currState)
 
 	if err != nil {
-		logger.Error(fmt.Sprintf("Error generating AWS shadow document: %s", err))
+		LoggingClient.Error(fmt.Sprintf("Error generating AWS shadow document: %s", err))
 		return []byte{}
 	}
 

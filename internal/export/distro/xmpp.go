@@ -50,7 +50,7 @@ func NewXMPPSender(addr models.Addressable) interfaces.Sender {
 
 	xmppClient, err := options.NewClient()
 	if err != nil {
-		logger.Error(err.Error())
+		LoggingClient.Error(err.Error())
 	}
 
 	sender := &xmppSender{

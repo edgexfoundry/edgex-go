@@ -11,29 +11,20 @@ package main
 import (
 	"flag"
 	"fmt"
-	logger2 "github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/edgexfoundry/edgex-go"
-	"github.com/edgexfoundry/edgex-go/internal/export/distro"
 	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/internal/export/distro"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
+	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
-
-
 )
 
-var logger *logger2.LoggingClient
-
 func main() {
-	logger = logger2.EdgeXLogger{}
-	defer logger.Sync()
-
-	logger.Info("Starting "+internal.ExportDistroServiceKey, logger.String("version", edgex.Version))
-
 	var (
 		useConsul  bool
 		useProfile string
@@ -48,28 +39,21 @@ func main() {
 	configuration := &distro.ConfigurationStruct{}
 	err := config.LoadFromFile(useProfile, configuration)
 	if err != nil {
-		logger.Error(err.Error(), logger.String("version", edgex.Version))
+		logBeforeInit(fmt.Errorf("%s: version: %s: err: %s", internal.ExportClientServiceKey, edgex.Version, err.Error()))
 		return
 	}
 
 	//Determine if configuration should be overridden from Consul
-	var consulMsg string
 	if useConsul {
-		consulMsg = "Loading configuration from Consul..."
 		err := distro.ConnectToConsul(*configuration)
 		if err != nil {
-			logger.Error(err.Error(), logger.String("version", edgex.Version))
+			logBeforeInit(fmt.Errorf("%s: version: %s: err: %s", internal.ExportClientServiceKey, edgex.Version, err.Error()))
 			return //end program since user explicitly told us to use Consul.
 		}
-	} else {
-		consulMsg = "Bypassing Consul configuration..."
 	}
 
-	logger.Info(consulMsg, logger.String("version", edgex.Version))
+	err = distro.Init(*configuration, useConsul)
 
-	err = distro.Init(*configuration, logger, useConsul)
-
-	logger.Info("Starting distro")
 	errs := make(chan error, 2)
 	eventCh := make(chan *models.Event, 10)
 
@@ -79,10 +63,15 @@ func main() {
 		errs <- fmt.Errorf("%s", <-c)
 	}()
 
-	// There can be another receivers that can be initialiced here
+	// There can be another receivers that can be initialized here
 	distro.ZeroMQReceiver(eventCh)
 
 	distro.Loop(errs, eventCh)
 
-	logger.Info("terminated")
+	logBeforeInit(fmt.Errorf("%s: terminated", internal.ExportClientServiceKey))
+}
+
+func logBeforeInit(err error) {
+	l := logger.NewClient(internal.ExportDistroServiceKey, false, "")
+	l.Error(err.Error())
 }

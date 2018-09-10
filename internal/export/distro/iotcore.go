@@ -15,7 +15,6 @@ import (
 	MQTT "github.com/eclipse/paho.mqtt.golang"
 	"github.com/edgexfoundry/edgex-go/internal/export/interfaces"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
-
 )
 
 const (
@@ -46,7 +45,7 @@ func NewIoTCoreSender(addr models.Addressable) interfaces.Sender {
 	if validateProtocol(protocol) {
 		cert, err := tls.LoadX509KeyPair(configuration.MQTTSCert, configuration.MQTTSKey)
 		if err != nil {
-			logger.Error("Failed loading x509 data")
+			LoggingClient.Error("Failed loading x509 data")
 			return nil
 		}
 
@@ -69,11 +68,12 @@ func NewIoTCoreSender(addr models.Addressable) interfaces.Sender {
 
 func (sender *iotCoreSender) Send(data []byte) bool {
 	if !sender.client.IsConnected() {
-		logger.Info("Connecting to mqtt server")
+		LoggingClient.Info("Connecting to mqtt server")
 		token := sender.client.Connect()
 		token.Wait()
 		if token.Error() != nil {
-			logger.Warn("Could not connect to mqtt server, drop event", logger.Error(token.Error()))
+			LoggingClient.Error(token.Error().Error())
+			LoggingClient.Warn("Could not connect to mqtt server, drop event")
 			return false
 		}
 	}
@@ -81,11 +81,11 @@ func (sender *iotCoreSender) Send(data []byte) bool {
 	token := sender.client.Publish(sender.topic, 0, false, data)
 	token.Wait()
 	if token.Error() != nil {
-		logger.Warn("mqtt error: ", logger.Error(token.Error()))
+		LoggingClient.Error(token.Error().Error())
 		return false
 	}
 
-	logger.Debug("Sent data: ", logger.ByteString("data", data))
+	LoggingClient.Debug(fmt.Sprintf("Sent data: %X", data))
 	return true
 }
 

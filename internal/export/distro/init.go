@@ -11,11 +11,12 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
+
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/consul"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/coredata"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
-
 )
 
 const (
@@ -23,7 +24,7 @@ const (
 	EventUriPath = "/api/v1/event"
 )
 
-var logger *logger.Logger
+var LoggingClient logger.LoggingClient
 var ec coredata.EventClient
 var configuration = ConfigurationStruct{} // Needs to be initialized before used
 
@@ -43,6 +44,9 @@ type ConfigurationStruct struct {
 	MarkPushed           bool
 	AWSCert              string
 	AWSKey               string
+	EnableRemoteLogging  bool
+	LoggingRemoteURL     string
+	LogFile              string
 }
 
 func ConnectToConsul(conf ConfigurationStruct) error {
@@ -68,9 +72,9 @@ func ConnectToConsul(conf ConfigurationStruct) error {
 	return nil
 }
 
-func Init(conf ConfigurationStruct, l *logger.Logger, useConsul bool) error {
+func Init(conf ConfigurationStruct, useConsul bool) error {
 	configuration = conf
-	logger = l
+	LoggingClient = logger.NewClient(internal.ExportDistroServiceKey, conf.EnableRemoteLogging, getLoggingTarget(conf))
 
 	coreDataEventURL := "http://" + conf.DataHost + ":" + strconv.Itoa(conf.DataPort) + EventUriPath
 
@@ -85,4 +89,12 @@ func Init(conf ConfigurationStruct, l *logger.Logger, useConsul bool) error {
 	ec = coredata.NewEventClient(params, types.Endpoint{})
 
 	return nil
+}
+
+func getLoggingTarget(conf ConfigurationStruct) string {
+	logTarget := conf.LoggingRemoteURL
+	if !conf.EnableRemoteLogging {
+		return conf.LogFile
+	}
+	return logTarget
 }

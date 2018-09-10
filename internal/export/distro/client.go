@@ -9,12 +9,11 @@ package distro
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/edgexfoundry/edgex-go/internal/export"
-
-
 )
 
 const (
@@ -34,7 +33,8 @@ func getRegistrations() ([]export.Registration, error) {
 func getRegistrationsURL(url string) ([]export.Registration, error) {
 	response, err := http.Get(url)
 	if err != nil {
-		logger.Warn("Error getting all registrations", logger.String("url", url))
+		LoggingClient.Error(err.Error())
+		LoggingClient.Warn(fmt.Sprintf("Error getting all registrations: %s",  url))
 		return nil, err
 	}
 	defer response.Body.Close()
@@ -42,7 +42,8 @@ func getRegistrationsURL(url string) ([]export.Registration, error) {
 	// ensure we have an empty slice instead of a nil slice for better handling of JSON
 	registrations := make([]export.Registration, 0)
 	if err := json.NewDecoder(response.Body).Decode(&registrations); err != nil {
-		logger.Warn("Could not parse json", logger.Error(err))
+		LoggingClient.Error(err.Error())
+		LoggingClient.Warn("Could not parse json")
 		return nil, err
 	}
 
@@ -51,7 +52,8 @@ func getRegistrationsURL(url string) ([]export.Registration, error) {
 		if valid, err := reg.Validate(); valid {
 			results = append(results, reg)
 		} else {
-			logger.Warn("Could not validate registration", logger.Error(err))
+			LoggingClient.Error(err.Error())
+			LoggingClient.Warn("Could not validate registration")
 		}
 	}
 	return results, nil
@@ -66,19 +68,22 @@ func getRegistrationByNameURL(url string) *export.Registration {
 
 	response, err := http.Get(url)
 	if err != nil {
-		logger.Error("Error getting all registrations", logger.String("url", url))
+		LoggingClient.Error(err.Error())
+		LoggingClient.Error(fmt.Sprintf("Error getting all registrations: %s", url))
 		return nil
 	}
 	defer response.Body.Close()
 
 	reg := export.Registration{}
 	if err := json.NewDecoder(response.Body).Decode(&reg); err != nil {
-		logger.Error("Could not parse json", logger.Error(err))
+		LoggingClient.Error(err.Error())
+		LoggingClient.Error("Could not parse json")
 		return nil
 	}
 
 	if valid, err := reg.Validate(); !valid {
-		logger.Error("Failed to validate registrations fields", logger.Error(err))
+		LoggingClient.Error(err.Error())
+		LoggingClient.Error("Failed to validate registrations fields")
 		return nil
 	}
 	return &reg

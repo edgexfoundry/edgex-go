@@ -11,6 +11,7 @@ package distro
 
 import (
 	"crypto/tls"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -40,7 +41,7 @@ func NewMqttSender(addr models.Addressable, cert string, key string) interfaces.
 		cert, err := tls.LoadX509KeyPair(cert, key)
 
 		if err != nil {
-			logger.Error("Failed loading x509 data")
+			LoggingClient.Error("Failed loading x509 data")
 			return nil
 		}
 
@@ -64,9 +65,10 @@ func NewMqttSender(addr models.Addressable, cert string, key string) interfaces.
 
 func (sender *mqttSender) Send(data []byte, event *models.Event) bool {
 	if !sender.client.IsConnected() {
-		logger.Info("Connecting to mqtt server")
+		LoggingClient.Info("Connecting to mqtt server")
 		if token := sender.client.Connect(); token.Wait() && token.Error() != nil {
-			logger.Warn("Could not connect to mqtt server, drop event", logger.Error(token.Error()))
+			LoggingClient.Error(token.Error().Error())
+			LoggingClient.Warn("Could not connect to mqtt server, drop event")
 			return false
 		}
 	}
@@ -75,10 +77,10 @@ func (sender *mqttSender) Send(data []byte, event *models.Event) bool {
 	// FIXME: could be removed? set of tokens?
 	token.Wait()
 	if token.Error() != nil {
-		logger.Warn("mqtt error: ", logger.Error(token.Error()))
+		LoggingClient.Error(token.Error().Error())
 		return false
 	} else {
-		logger.Debug("Sent data: ", logger.ByteString("data", data))
+		LoggingClient.Debug(fmt.Sprintf("Sent data: %X", data))
 		return true
 	}
 }

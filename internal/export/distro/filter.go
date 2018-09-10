@@ -7,10 +7,10 @@
 package distro
 
 import (
+	"fmt"
 	"github.com/edgexfoundry/edgex-go/internal/export"
 	"github.com/edgexfoundry/edgex-go/internal/export/interfaces"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
-
 )
 
 type devIdFilterDetails struct {
@@ -33,7 +33,7 @@ func (filter devIdFilterDetails) Filter(event *models.Event) (bool, *models.Even
 
 	for _, devId := range filter.deviceIDs {
 		if event.Device == devId {
-			logger.Debug("Event accepted", logger.Any("Event", event))
+			LoggingClient.Debug(fmt.Sprintf("Event accepted: %s", event.Device))
 			return true, event
 		}
 	}
@@ -69,7 +69,7 @@ func (filter valueDescFilterDetails) Filter(event *models.Event) (bool, *models.
 	for _, filterId := range filter.valueDescIDs {
 		for _, reading := range event.Readings {
 			if reading.Name == filterId {
-				logger.Debug("Reading filtered", logger.Any("Reading", reading))
+				LoggingClient.Debug(fmt.Sprintf("Reading filtered: %s", reading.Name))
 				auxEvent.Readings = append(auxEvent.Readings, reading)
 			}
 		}
