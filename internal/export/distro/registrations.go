@@ -24,6 +24,11 @@ import (
 	"go.uber.org/zap"
 )
 
+const (
+	awsMQTTPort         int    = 8883
+	awsThingUpdateTopic string = "$aws/things/%s/shadow/update"
+)
+
 var registrationChanges chan export.NotifyUpdate = make(chan export.NotifyUpdate, 2)
 
 // RegistrationInfo - registration info
@@ -69,6 +74,8 @@ func (reg *registrationInfo) update(newReg export.Registration) bool {
 		reg.format = jsonFormatter{}
 	case export.FormatAzureJSON:
 		reg.format = azureFormatter{}
+	case export.FormatAWSJSON:
+		reg.format = awsFormatter{}
 	case export.FormatCSV:
 		// TODO reg.format = distro.NewCsvFormat()
 	case export.FormatThingsBoardJSON:
@@ -82,6 +89,8 @@ func (reg *registrationInfo) update(newReg export.Registration) bool {
 
 	reg.compression = nil
 	switch newReg.Compression {
+	case "":
+		fallthrough
 	case export.CompNone:
 		reg.compression = nil
 	case export.CompGzip:
@@ -96,7 +105,13 @@ func (reg *registrationInfo) update(newReg export.Registration) bool {
 	reg.sender = nil
 	switch newReg.Destination {
 	case export.DestMQTT, export.DestAzureMQTT:
-		reg.sender = NewMqttSender(newReg.Addressable)
+		reg.sender = NewMqttSender(newReg.Addressable, configuration.MQTTSCert, configuration.MQTTSKey)
+	case export.DestAWSMQTT:
+		newReg.Addressable.Protocol = "tls"
+		newReg.Addressable.Path = ""
+		newReg.Addressable.Topic = fmt.Sprintf(awsThingUpdateTopic, newReg.Addressable.Topic)
+		newReg.Addressable.Port = awsMQTTPort
+		reg.sender = NewMqttSender(newReg.Addressable, configuration.AWSCert, configuration.AWSKey)
 	case export.DestZMQ:
 		logger.Info("Destination ZMQ is not supported")
 	case export.DestIotCoreMQTT:
@@ -119,6 +134,8 @@ func (reg *registrationInfo) update(newReg export.Registration) bool {
 
 	reg.encrypt = nil
 	switch newReg.Encryption.Algo {
+	case "":
+		fallthrough
 	case export.EncNone:
 		reg.encrypt = nil
 	case export.EncAes:

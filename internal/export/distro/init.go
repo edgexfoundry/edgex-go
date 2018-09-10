@@ -41,6 +41,8 @@ type ConfigurationStruct struct {
 	MQTTSCert            string
 	MQTTSKey             string
 	MarkPushed           bool
+	AWSCert              string
+	AWSKey               string
 }
 
 func ConnectToConsul(conf ConfigurationStruct) error {

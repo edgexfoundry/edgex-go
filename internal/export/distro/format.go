@@ -12,6 +12,8 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/edgexfoundry/edgex-go/pkg/models"
@@ -160,6 +162,49 @@ func (af azureFormatter) Format(event *models.Event) []byte {
 		logger.Error(fmt.Sprintf("error parsing AzureMessage data: %s", err))
 		return []byte{}
 	}
+	return msg
+}
+
+// converting event to AWS shadow message in bytes
+type awsFormatter struct {
+}
+
+func (af awsFormatter) Format(event *models.Event) []byte {
+	reported := map[string]interface{}{}
+
+	for _, reading := range event.Readings {
+		value, err := strconv.ParseFloat(reading.Value, 64)
+
+		if err != nil {
+			strVal := reading.Value
+			// not a valid numerical reading value, see if it's boolean
+			if strings.Compare(strings.ToLower(strVal), "true") == 0 {
+				reported[reading.Name] = true
+			} else if strings.Compare(strings.ToLower(strVal), "false") == 0 {
+				reported[reading.Name] = false
+			} else {
+				reported[reading.Name] = strVal
+			}
+
+			continue
+		}
+
+		reported[reading.Name] = value
+	}
+
+	currState := map[string]interface{}{
+		"state": map[string]interface{}{
+			"reported": reported,
+		},
+	}
+
+	msg, err := json.Marshal(currState)
+
+	if err != nil {
+		logger.Error(fmt.Sprintf("Error generating AWS shadow document: %s", err))
+		return []byte{}
+	}
+
 	return msg
 }
 

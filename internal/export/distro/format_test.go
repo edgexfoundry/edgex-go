@@ -17,7 +17,9 @@ import (
 )
 
 const (
-	devID1 = "id1"
+	devID1        = "id1"
+	readingName1  = "sensor1"
+	readingValue1 = "123.45"
 )
 
 func TestJson(t *testing.T) {
@@ -91,5 +93,37 @@ func TestNoop(t *testing.T) {
 
 	if len(out) != 0 {
 		t.Fatal("Formmated array length is not zero, length = " + strconv.Itoa(len(out)))
+	}
+}
+
+func TestAWSIoTJson(t *testing.T) {
+	eventIn := models.Event{}
+
+	eventIn.Readings = append(eventIn.Readings, models.Reading{Device: devID1, Name: readingName1, Value: readingValue1})
+
+	af := awsFormatter{}
+	out := af.Format(&eventIn)
+
+	if out == nil {
+		t.Fatal("out should not be nil")
+	}
+
+	var sd interface{}
+	err := json.Unmarshal(out, &sd)
+
+	if err != nil {
+		t.Fatalf("Error unmarshal the formatted string: %v %v", err, out)
+	}
+
+	shadow := sd.(map[string]interface{})
+
+	state := shadow["state"].(map[string]interface{})
+
+	reported := state["reported"].(map[string]interface{})
+
+	val, err := strconv.ParseFloat(readingValue1, 64)
+
+	if reported[readingName1] != val {
+		t.Fatalf("Unmshalred json is not correct: %v", reported)
 	}
 }
