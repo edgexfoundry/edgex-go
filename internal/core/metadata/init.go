@@ -26,6 +26,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/memory"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db/redis"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/notifications"
 )
@@ -130,16 +131,8 @@ func connectToConsul(conf *ConfigurationStruct) error {
 }
 
 func connectToDatabase() error {
-	dbConfig := db.Configuration{
-		Host:         Configuration.MongoDBHost,
-		Port:         Configuration.MongoDBPort,
-		Timeout:      Configuration.MongoDBConnectTimeout,
-		DatabaseName: Configuration.MongoDatabaseName,
-		Username:     Configuration.MongoDBUserName,
-		Password:     Configuration.MongoDBPassword,
-	}
 	var err error
-	dbClient, err = newDBClient(Configuration.DBType, dbConfig)
+	dbClient, err = newDBClient(Configuration.DBType)
 	if err != nil {
 		dbClient = nil
 		return fmt.Errorf("couldn't create database client: %v", err.Error())
@@ -155,12 +148,23 @@ func connectToDatabase() error {
 }
 
 // Return the dbClient interface
-func newDBClient(dbType string, config db.Configuration) (interfaces.DBClient, error) {
+func newDBClient(dbType string) (interfaces.DBClient, error) {
+	dbConfig := db.Configuration{}
 	switch dbType {
 	case db.MongoDB:
-		return mongo.NewClient(config), nil
+		dbConfig.Host = Configuration.MongoDBHost
+		dbConfig.Port = Configuration.MongoDBPort
+		dbConfig.Timeout = Configuration.MongoDBConnectTimeout
+		dbConfig.DatabaseName = Configuration.MongoDatabaseName
+		dbConfig.Username = Configuration.MongoDBUserName
+		dbConfig.Password = Configuration.MongoDBPassword
+		return mongo.NewClient(dbConfig), nil
 	case db.MemoryDB:
 		return &memory.MemDB{}, nil
+	case db.RedisDB:
+		dbConfig.Host = Configuration.RedisHost
+		dbConfig.Port = Configuration.RedisPort
+		return redis.NewClient(dbConfig)
 	default:
 		return nil, db.ErrUnsupportedDatabase
 	}

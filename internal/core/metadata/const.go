@@ -22,6 +22,8 @@ type ConfigurationStruct struct {
 	MongoDBHost                         string
 	MongoDBPort                         int
 	MongoDBConnectTimeout               int
+	RedisHost                           string
+	RedisPort                           int
 	ReadMaxLimit                        int
 	Protocol                            string
 	ServiceAddress                      string

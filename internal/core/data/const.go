@@ -35,6 +35,8 @@ type ConfigurationStruct struct {
 	MongoDBHost                string
 	MongoDBPort                int
 	MongoDBConnectTimeout      int
+	RedisHost                  string
+	RedisPort                  int
 	ConsulHost                 string
 	ConsulCheckAddress         string
 	ConsulPort                 int
