@@ -52,14 +52,10 @@ func ConnectToConsul(conf ConfigurationStruct) error {
 	return nil
 }
 
-func Init(conf ConfigurationStruct, l *logger.LoggingClient) error {
+func Init(conf ConfigurationStruct) error {
 	configuration = conf
 
-	if l != nil {
-		LoggingClient = *l
-	} else {
-		LoggingClient = logger.NewClient(internal.ExportClientServiceKey, conf.EnableRemoteLogging, getLoggingTarget(conf))
-	}
+	LoggingClient = logger.NewClient(internal.ExportClientServiceKey, conf.EnableRemoteLogging, getLoggingTarget(conf))
 
 	// Create a database client
 	dbConfig := db.Configuration{

@@ -49,7 +49,7 @@ func httpServer() http.Handler {
 func StartHTTPServer(config ConfigurationStruct, errChan chan error) {
 	go func() {
 		p := fmt.Sprintf(":%d", config.Port)
-		logger.Info("Starting Export Client", logger.String("url", p))
+		LoggingClient.Info(fmt.Sprintf("Starting Export Client: %s", p))
 		errChan <- http.ListenAndServe(p, httpServer())
 	}()
 }
