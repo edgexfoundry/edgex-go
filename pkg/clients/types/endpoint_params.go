@@ -20,9 +20,11 @@ package types
 // * UseRegistry = an indication of whether or not endpoint information should be obtained from
 //                 a service registry provider.
 // * Url = if a service registry is not being used, then provide the full URL endpoint
+// * Interval = the interval in milliseconds governing how often the client polls to keep the endpoint current
 type EndpointParams struct {
 	ServiceKey  string
 	Path        string
 	UseRegistry bool
 	Url         string
+	Interval    int
 }

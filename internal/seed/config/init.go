@@ -14,6 +14,7 @@
 package config
 
 import (
+	"io/ioutil"
 	"net/http"
 	"strconv"
 	"sync"
@@ -24,7 +25,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
 	consulapi "github.com/hashicorp/consul/api"
-	"io/ioutil"
 )
 
 // Global variables

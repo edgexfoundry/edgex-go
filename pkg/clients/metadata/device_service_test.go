@@ -18,16 +18,18 @@ import (
 	"time"
 
 	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/pkg/clients"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
 )
 
 func TestNewDeviceServiceClientWithConsul(t *testing.T) {
-	deviceServiceUrl := "http://localhost:48081" + deviceServiceUriPath
+	deviceServiceUrl := "http://localhost:48081" + clients.ApiDeviceServiceRoute
 	params := types.EndpointParams{
 		ServiceKey:  internal.CoreMetaDataServiceKey,
-		Path:        deviceServiceUriPath,
+		Path:        clients.ApiDeviceServiceRoute,
 		UseRegistry: true,
-		Url:         deviceServiceUrl}
+		Url:         deviceServiceUrl,
+		Interval:    clients.ClientMonitorDefault}
 
 	dsc := NewDeviceServiceClient(params, MockEndpoint{})
 	r, ok := dsc.(*DeviceServiceRestClient)

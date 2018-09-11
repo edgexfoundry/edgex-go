@@ -13,23 +13,8 @@
  *******************************************************************************/
 package command
 
-const (
-	ID               = "id"
-	NAME             = "name"
-	DEVICEIDURLPARAM = "{deviceId}"
-	OPSTATE          = "opstate"
-	URLADMINSTATE    = "adminstate"
-	ADMINSTATE       = "adminState"
-	YAML             = "yaml"
-	COMMAND          = "command"
-	COMMANDID        = "commandid"
-	DEVICE           = "device"
-	KEY              = "key"
-	VALUE            = "value"
-	PINGENDPOINT     = "/ping"
-	PINGRESPONSE     = "pong"
-	CONTENTTYPE      = "Content-Type"
-	TEXTPLAIN        = "text/plain"
-	UNLOCKED         = "UNLOCKED"
-	ENABLED          = "ENABLED"
-)
+import "github.com/edgexfoundry/edgex-go/internal/pkg/config"
+
+type ConfigurationStruct struct {
+	config.BaseConfig
+}

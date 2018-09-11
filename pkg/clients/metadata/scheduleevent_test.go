@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/pkg/clients"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 )
@@ -65,7 +66,8 @@ func TestAddScheduleEvent(t *testing.T) {
 		ServiceKey:  internal.CoreMetaDataServiceKey,
 		Path:        scheduleEventUriPath,
 		UseRegistry: false,
-		Url:         url}
+		Url:         url,
+		Interval:    clients.ClientMonitorDefault}
 	sc := NewScheduleEventClient(params, MockEndpoint{})
 
 	receivedScheduleEventId, err := sc.Add(&se)
@@ -84,7 +86,8 @@ func TestNewScheduleEventClientWithConsul(t *testing.T) {
 		ServiceKey:  internal.CoreMetaDataServiceKey,
 		Path:        scheduleEventUriPath,
 		UseRegistry: true,
-		Url:         scheduleEventUrl}
+		Url:         scheduleEventUrl,
+		Interval:    clients.ClientMonitorDefault}
 
 	sc := NewScheduleEventClient(params, MockEndpoint{})
 

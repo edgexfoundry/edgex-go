@@ -55,6 +55,10 @@ func main() {
 	if err != nil {
 		config.LoggingClient.Error(err.Error())
 	}
+	err = config.ImportV2Configuration(dirCmd, useProfile)
+	if err != nil {
+		config.LoggingClient.Error(err.Error())
+	}
 }
 
 func bootstrap(profile string) {

@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/pkg/clients"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
 )
 
@@ -63,7 +64,8 @@ func TestGetReadings(t *testing.T) {
 		ServiceKey:  internal.CoreDataServiceKey,
 		Path:        ReadingUriPath,
 		UseRegistry: false,
-		Url:         url}
+		Url:         url,
+		Interval:    clients.ClientMonitorDefault}
 
 	rc := NewReadingClient(params, mockReadingEndpoint{})
 
@@ -93,7 +95,8 @@ func TestNewReadingClientWithConsul(t *testing.T) {
 		ServiceKey:  internal.CoreDataServiceKey,
 		Path:        ReadingUriPath,
 		UseRegistry: true,
-		Url:         deviceUrl}
+		Url:         deviceUrl,
+		Interval:    clients.ClientMonitorDefault}
 
 	rc := NewReadingClient(params, mockReadingEndpoint{})
 

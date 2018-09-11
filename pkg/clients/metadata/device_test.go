@@ -21,14 +21,9 @@ import (
 	"time"
 
 	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/pkg/clients"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
-)
-
-const (
-	deviceUriPath        = "/api/v1/device"
-	commandUriPath       = "/api/v1/command"
-	deviceServiceUriPath = "/api/v1/deviceservice"
 )
 
 // Test adding a device using the device client
@@ -54,8 +49,8 @@ func TestAddDevice(t *testing.T) {
 			t.Errorf("expected http method is %s, active http method is : %s", http.MethodPost, r.Method)
 		}
 
-		if r.URL.EscapedPath() != deviceUriPath {
-			t.Errorf("expected uri path is %s, actual uri path is %s", deviceUriPath, r.URL.EscapedPath())
+		if r.URL.EscapedPath() != clients.ApiDeviceRoute {
+			t.Errorf("expected uri path is %s, actual uri path is %s", clients.ApiDeviceRoute, r.URL.EscapedPath())
 		}
 
 		w.Write([]byte(addingDeviceId))
@@ -64,13 +59,14 @@ func TestAddDevice(t *testing.T) {
 
 	defer ts.Close()
 
-	url := ts.URL + deviceUriPath
+	url := ts.URL + clients.ApiDeviceRoute
 
 	params := types.EndpointParams{
 		ServiceKey:  internal.CoreMetaDataServiceKey,
-		Path:        deviceUriPath,
+		Path:        clients.ApiDeviceRoute,
 		UseRegistry: false,
-		Url:         url}
+		Url:         url,
+		Interval:    clients.ClientMonitorDefault}
 	dc := NewDeviceClient(params, MockEndpoint{})
 
 	receivedDeviceId, err := dc.Add(&d)
@@ -84,12 +80,13 @@ func TestAddDevice(t *testing.T) {
 }
 
 func TestNewDeviceClientWithConsul(t *testing.T) {
-	deviceUrl := "http://localhost:48081" + deviceUriPath
+	deviceUrl := "http://localhost:48081" + clients.ApiDeviceRoute
 	params := types.EndpointParams{
 		ServiceKey:  internal.CoreMetaDataServiceKey,
-		Path:        deviceUriPath,
+		Path:        clients.ApiDeviceRoute,
 		UseRegistry: true,
-		Url:         deviceUrl}
+		Url:         deviceUrl,
+		Interval:    clients.ClientMonitorDefault}
 
 	dc := NewDeviceClient(params, MockEndpoint{})
 
