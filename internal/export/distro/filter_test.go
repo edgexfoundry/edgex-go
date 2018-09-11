@@ -7,8 +7,6 @@
 package distro
 
 import (
-	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 	"testing"
 
 	"github.com/edgexfoundry/edgex-go/internal/export"
@@ -22,12 +20,6 @@ const (
 	descriptor1 = "Descriptor1"
 	descriptor2 = "Descriptor2"
 )
-
-func init() {
-	if LoggingClient == nil {
-		LoggingClient = logger.NewClient(internal.ExportDistroServiceKey, false, "")
-	}
-}
 
 func TestFilterDevice(t *testing.T) {
 	// Filter only accepting events from device 1

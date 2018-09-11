@@ -73,7 +73,7 @@ func main() {
 
 	client.Destroy()
 
-	logBeforeInit(fmt.Errorf("%s: terminated: %s", internal.ExportClientServiceKey, c.Error()))
+	client.LoggingClient.Error(fmt.Sprintf("%s: terminated with error(s): %s", internal.ExportClientServiceKey, c.Error()))
 }
 
 func logBeforeInit(err error) {

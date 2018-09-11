@@ -10,10 +10,10 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 
-	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 )
 
@@ -28,10 +28,9 @@ const (
 	invalidRegistrationList2 = "[" + registrationInvalidStr + "," + registrationStr + "]"
 )
 
-func init() {
-	if LoggingClient == nil {
-		LoggingClient = logger.NewClient(internal.ExportDistroServiceKey, false, "")
-	}
+func TestMain(m *testing.M) {
+	LoggingClient = logger.NewMockClient()
+	os.Exit(m.Run())
 }
 
 func TestClientRegistrationsEmpty(t *testing.T) {

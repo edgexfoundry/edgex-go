@@ -33,8 +33,7 @@ func replyPing(w http.ResponseWriter, r *http.Request) {
 func replyNotifyRegistrations(w http.ResponseWriter, r *http.Request) {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		LoggingClient.Error(err.Error())
-		LoggingClient.Debug("Failed read body")
+		LoggingClient.Error(fmt.Sprintf("Failed read body. Error: %s", err.Error()))
 		w.WriteHeader(http.StatusBadRequest)
 		io.WriteString(w, err.Error())
 		return

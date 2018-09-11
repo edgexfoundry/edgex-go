@@ -33,8 +33,7 @@ func getRegistrations() ([]export.Registration, error) {
 func getRegistrationsURL(url string) ([]export.Registration, error) {
 	response, err := http.Get(url)
 	if err != nil {
-		LoggingClient.Error(err.Error())
-		LoggingClient.Warn(fmt.Sprintf("Error getting all registrations: %s",  url))
+		LoggingClient.Error(fmt.Sprintf("Error getting all registrations: %s. Error: %s", url, err.Error()))
 		return nil, err
 	}
 	defer response.Body.Close()
@@ -42,8 +41,7 @@ func getRegistrationsURL(url string) ([]export.Registration, error) {
 	// ensure we have an empty slice instead of a nil slice for better handling of JSON
 	registrations := make([]export.Registration, 0)
 	if err := json.NewDecoder(response.Body).Decode(&registrations); err != nil {
-		LoggingClient.Error(err.Error())
-		LoggingClient.Warn("Could not parse json")
+		LoggingClient.Error(fmt.Sprintf("Could not parse json. Error: %s", err.Error()))
 		return nil, err
 	}
 
@@ -52,8 +50,7 @@ func getRegistrationsURL(url string) ([]export.Registration, error) {
 		if valid, err := reg.Validate(); valid {
 			results = append(results, reg)
 		} else {
-			LoggingClient.Error(err.Error())
-			LoggingClient.Warn("Could not validate registration")
+			LoggingClient.Error(fmt.Sprintf("Could not validate registration. Error: %s", err.Error()))
 		}
 	}
 	return results, nil
@@ -68,22 +65,19 @@ func getRegistrationByNameURL(url string) *export.Registration {
 
 	response, err := http.Get(url)
 	if err != nil {
-		LoggingClient.Error(err.Error())
-		LoggingClient.Error(fmt.Sprintf("Error getting all registrations: %s", url))
+		LoggingClient.Error(fmt.Sprintf("Error getting all registrations: %s. Error: %s", url, err.Error()))
 		return nil
 	}
 	defer response.Body.Close()
 
 	reg := export.Registration{}
 	if err := json.NewDecoder(response.Body).Decode(&reg); err != nil {
-		LoggingClient.Error(err.Error())
-		LoggingClient.Error("Could not parse json")
+		LoggingClient.Error(fmt.Sprintf("Could not parse json. Error: %s", err.Error()))
 		return nil
 	}
 
 	if valid, err := reg.Validate(); !valid {
-		LoggingClient.Error(err.Error())
-		LoggingClient.Error("Failed to validate registrations fields")
+		LoggingClient.Error(fmt.Sprintf("Failed to validate registrations fields. Error: %s", err.Error()))
 		return nil
 	}
 	return &reg

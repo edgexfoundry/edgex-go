@@ -9,18 +9,10 @@ package distro
 import (
 	"testing"
 
-	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/export"
 
-	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 )
-
-func init() {
-	if LoggingClient == nil {
-		LoggingClient = logger.NewClient(internal.ExportDistroServiceKey, false, "")
-	}
-}
 
 func validRegistration() export.Registration {
 	r := export.Registration{}

@@ -39,7 +39,7 @@ func main() {
 	configuration := &distro.ConfigurationStruct{}
 	err := config.LoadFromFile(useProfile, configuration)
 	if err != nil {
-		logBeforeInit(fmt.Errorf("%s: version: %s: err: %s", internal.ExportClientServiceKey, edgex.Version, err.Error()))
+		logBeforeInit(fmt.Errorf("%s: version: %s: err: %s", internal.ExportDistroServiceKey, edgex.Version, err.Error()))
 		return
 	}
 
@@ -47,7 +47,7 @@ func main() {
 	if useConsul {
 		err := distro.ConnectToConsul(*configuration)
 		if err != nil {
-			logBeforeInit(fmt.Errorf("%s: version: %s: err: %s", internal.ExportClientServiceKey, edgex.Version, err.Error()))
+			logBeforeInit(fmt.Errorf("%s: version: %s: err: %s", internal.ExportDistroServiceKey, edgex.Version, err.Error()))
 			return //end program since user explicitly told us to use Consul.
 		}
 	}
@@ -68,7 +68,7 @@ func main() {
 
 	distro.Loop(errs, eventCh)
 
-	logBeforeInit(fmt.Errorf("%s: terminated", internal.ExportClientServiceKey))
+	distro.LoggingClient.Info(fmt.Sprintf("%s: terminated", internal.ExportDistroServiceKey))
 }
 
 func logBeforeInit(err error) {
