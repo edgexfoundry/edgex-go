@@ -237,12 +237,20 @@ parts:
                   "$SNAPCRAFT_PART_INSTALL/config/core-config-seed-go/config/edgex-core-data;go/configuration.toml"
       install -DT "./config/edgex-core-metadata;go/configuration.toml" \
                   "$SNAPCRAFT_PART_INSTALL/config/core-config-seed-go/config/edgex-core-metadata;go/configuration.toml"
+
       install -DT "./config/device-virtual/application.properties" \
                   "$SNAPCRAFT_PART_INSTALL/config/core-config-seed-go/config/device-virtual/application.properties"
       install -DT "./config/edgex-support-logging;go/configuration.toml" \
                   "$SNAPCRAFT_PART_INSTALL/config/core-config-seed-go/config/edgex-support-logging;go/configuration.toml"
       install -DT "./config/edgex-support-notifications;go/configuration.toml" \
                   "$SNAPCRAFT_PART_INSTALL/config/core-config-seed-go/config/edgex-support-notifications;go/configuration.toml"
+
+      mkdir -p "$SNAPCRAFT_PART_INSTALL/config/core-config-seed-go/config/edgex-support-rulesengine"
+
+      cat "./config/edgex-support-rulesengine/application.properties" | \
+        sed -e s:edgex/rules:/var/snap/edgexfoundry/current/support-rulesengine/rules: \
+            -e s:edgex/templates:/var/snap/edgexfoundry/current/support-rulesengine/templates: > \
+       "$SNAPCRAFT_PART_INSTALL/config/core-config-seed-go/config/edgex-support-rulesengine/application.properties"
   config-common:
     plugin: dump
     source: ./snap
@@ -481,6 +489,8 @@ parts:
          "$SNAPCRAFT_PART_INSTALL/usr/share/java/doc/support-rulesengine/Attribution.txt"
       install -DT "./LICENSE-2.0.txt" \
          "$SNAPCRAFT_PART_INSTALL/usr/share/java/doc/support-rulesengine/LICENSE-2.0.txt"
+      install -DT "./src/main/resources/rule-template.drl" \
+         "$SNAPCRAFT_PART_INSTALL/jar/support-rulesengine/templates/rule-template.drl"
     prime:
       - -etc/fonts
       - -etc/fonts/X11

@@ -18,16 +18,34 @@ for configType in "edgex-core-command;go" "edgex-core-data;go" "edgex-core-metad
     fi
 done
 
-# also handle core-config-seed-go/device-virtual/application.properties
+# also handle core-config-seed-go/device-virtual & support-rulesengine application.properties
 if [ ! -f "${SNAP_DATA}/config/core-config-seed-go/config/device-virtual/application.properties" ]; then
     mkdir -p "${SNAP_DATA}/config/core-config-seed-go/config/device-virtual"
+
     cp "${SNAP}/config/core-config-seed-go/config/device-virtual/application.properties" "${SNAP_DATA}/config/core-config-seed-go/config/device-virtual/application.properties"
+fi
+
+if [ ! -f "${SNAP_DATA}/config/core-config-seed-go/config/support-rulesengine/application.properties" ]; then
+    mkdir -p "${SNAP_DATA}/config/core-config-seed-go/config/edgex-support-rulesengine"
+
+    cp "${SNAP}/config/core-config-seed-go/config/edgex-support-rulesengine/application.properties" "${SNAP_DATA}/config/core-config-seed-go/config/edgex-support-rulesengine/application.properties"
 fi
 
 # lastly handle the banner.txt for core-config-seed-go
 if [ ! -f "${SNAP_DATA}/config/core-config-seed-go/res/banner.txt" ]; then
     mkdir -p "${SNAP_DATA}/config/core-config-seed-go/res"
     cp "${SNAP}/config/core-config-seed-go/res/banner.txt" "${SNAP_DATA}/config/core-config-seed-go/res/banner.txt"
+fi
+
+# create support-rulesengine directories
+if [ ! -f "${SNAP_DATA}/support-rulesengine/templates" ]; then
+    mkdir -p "${SNAP_DATA}/support-rulesengine/templates"
+
+    cp "${SNAP}/jar/support-rulesengine/templates/rule-template.drl" "${SNAP_DATA}/support-rulesengine/templates/rule-template.drl"
+fi
+
+if [ ! -f "${SNAP_DATA}/support-rulesengine/rules" ]; then
+    mkdir -p "${SNAP_DATA}/support-rulesengine/templates"
 fi
 
 # for the pki setup files from security services, we replace the password at install time with a psuedorandomly generated password from openssl

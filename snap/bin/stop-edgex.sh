@@ -55,6 +55,14 @@ if [ $SUPPORT_SCHEDULER = "y" ] ; then
     fi
 fi
 
+if [ $SUPPORT_RULESENGINE = "y" ] ; then
+    pid=`ps -ef | grep support-rulesengine | grep -v grep | awk '{print $2}'`
+
+    if [ ! -z $pid ] && [ $pid != "" ] ; then
+	kill_service $pid "support-rulesengine"
+    fi
+fi
+
 if [ $CORE_COMMAND = "y" ] ; then
     pid=`ps -ef | grep core-command | grep -v grep | awk '{print $2}'`
 
