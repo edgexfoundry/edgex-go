@@ -64,7 +64,7 @@ apps:
       - network-bind
   mongo:
     command: bin/mongo
-    plugs: [network]
+    plugs: [home, network]
   mongod:
     command: mongo/launch-edgex-mongo.sh
     plugs: [hardware-observe, network, network-bind, system-observe]
