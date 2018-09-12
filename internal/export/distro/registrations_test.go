@@ -10,7 +10,6 @@ import (
 	"testing"
 
 	"github.com/edgexfoundry/edgex-go/internal/export"
-
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 )
 

@@ -67,8 +67,7 @@ func (sender *mqttSender) Send(data []byte, event *models.Event) bool {
 	if !sender.client.IsConnected() {
 		LoggingClient.Info("Connecting to mqtt server")
 		if token := sender.client.Connect(); token.Wait() && token.Error() != nil {
-			LoggingClient.Error(token.Error().Error())
-			LoggingClient.Warn("Could not connect to mqtt server, drop event")
+			LoggingClient.Error(fmt.Sprintf("Could not connect to mqtt server, drop event. Error: %s", token.Error().Error()))
 			return false
 		}
 	}

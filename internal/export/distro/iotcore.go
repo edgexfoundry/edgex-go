@@ -72,8 +72,7 @@ func (sender *iotCoreSender) Send(data []byte) bool {
 		token := sender.client.Connect()
 		token.Wait()
 		if token.Error() != nil {
-			LoggingClient.Error(token.Error().Error())
-			LoggingClient.Warn("Could not connect to mqtt server, drop event")
+			LoggingClient.Error(fmt.Sprintf("Could not connect to mqtt server, drop event. Error: %s", token.Error().Error()))
 			return false
 		}
 	}
