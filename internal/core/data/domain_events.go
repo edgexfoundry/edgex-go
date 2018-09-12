@@ -25,23 +25,24 @@ type DeviceServiceLastReported struct {
 
 func initEventHandlers() {
 	go func() {
-		select {
-		case e, ok := <-chEvents:
-			if ok {
-				switch e.(type) {
-				case DeviceLastReported:
-					dlr := e.(DeviceLastReported)
-					updateDeviceLastReportedConnected(dlr.DeviceName)
-					break
-				case DeviceServiceLastReported:
-					dslr := e.(DeviceServiceLastReported)
-					updateDeviceServiceLastReportedConnected(dslr.DeviceName)
-					break
+		for {
+			select {
+			case e, ok := <-chEvents:
+				if ok {
+					switch e.(type) {
+					case DeviceLastReported:
+						dlr := e.(DeviceLastReported)
+						updateDeviceLastReportedConnected(dlr.DeviceName)
+						break
+					case DeviceServiceLastReported:
+						dslr := e.(DeviceServiceLastReported)
+						updateDeviceServiceLastReportedConnected(dslr.DeviceName)
+						break
+					}
+				} else {
+					return
 				}
-			} else {
-				return
 			}
-
 		}
 	}()
 }

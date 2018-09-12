@@ -75,7 +75,23 @@ type RegistryInfo struct {
 type LoggingInfo struct {
 	EnableRemote bool
 	File         string
-	RemoteURL    string
+}
+
+// MessageQueueInfo provides parameters related to connecting to a message queue
+type MessageQueueInfo struct {
+	// Host is the hostname or IP address of the broker, if applicable.
+	Host string
+	// Port defines the port on which to access the message queue.
+	Port int
+	// Protocol indicates the protocol to use when accessing the message queue.
+	Protocol string
+	// Indicates the message queue platform being used.
+	Type string
+}
+
+func (m MessageQueueInfo) Uri() string {
+	uri := fmt.Sprintf("%s://%s:%v", m.Protocol, m.Host, m.Port)
+	return uri
 }
 
 // DatabaseInfo defines the parameters necessary for connecting to the desired persistence layer.
@@ -89,8 +105,8 @@ type DatabaseInfo struct {
 	Name     string
 }
 
-// clientInfo provides the host and port of another service in the eco-system.
-type clientInfo struct {
+// ClientInfo provides the host and port of another service in the eco-system.
+type ClientInfo struct {
 	// Host is the hostname or IP address of a service.
 	Host string
 	// Port defines the port on which to access a given service
@@ -99,20 +115,7 @@ type clientInfo struct {
 	Protocol string
 }
 
-func (c clientInfo) Url() string {
+func (c ClientInfo) Url() string {
 	url := fmt.Sprintf("%s://%s:%v", c.Protocol, c.Host, c.Port)
 	return url
-}
-
-// BaseConfig is a struct which provides the basic types that all services will need
-// for operation. Extend/wrap this type according to the needs of your service.
-type BaseConfig struct {
-	// Clients is a map of services used by a DS.
-	Clients map[string]clientInfo
-	// Logging contains logging-specific configuration settings.
-	Logging LoggingInfo
-	// Registry contains registry-specific settings.
-	Registry RegistryInfo
-	// Service contains settings specific to the service being run.
-	Service ServiceInfo
 }

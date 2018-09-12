@@ -33,6 +33,7 @@ var Configuration *ConfigurationStruct
 var LoggingClient logger.LoggingClient
 var mdc metadata.DeviceClient
 var cc metadata.CommandClient
+var chConfig chan interface{} //A channel for use by ConsulDecoder in detecting configuration mods.
 
 func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup, ch chan error) {
 	now := time.Now()
@@ -74,11 +75,22 @@ func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup,
 	return
 }
 
-func Init() bool {
+func Init(useConsul bool) bool {
 	if Configuration == nil {
 		return false
 	}
+
+	if useConsul {
+		chConfig = make(chan interface{})
+		go listenForConfigChanges()
+	}
 	return true
+}
+
+func Destruct() {
+	if chConfig != nil {
+		close(chConfig)
+	}
 }
 
 func initializeConfiguration(useConsul bool, useProfile string) (*ConfigurationStruct, error) {
@@ -111,25 +123,27 @@ func connectToConsul(conf *ConfigurationStruct) error {
 		updateCh := make(chan interface{})
 		errCh := make(chan error)
 		dec := consulclient.NewConsulDecoder(conf.Registry)
-		dec.Target = conf
-		dec.Prefix = internal.ConfigV2Stem
+		dec.Target = &ConfigurationStruct{}
+		dec.Prefix = internal.ConfigV2Stem + internal.CoreCommandServiceKey
+		dec.ErrCh = errCh
 		dec.UpdateCh = updateCh
 
 		defer dec.Close()
+		defer close(updateCh)
+		defer close(errCh)
 		go dec.Run()
 
-		var raw interface{}
 		select {
 		case <-time.After(2 * time.Second):
 			err = errors.New("timeout loading config from registry")
 		case ex := <-errCh:
 			err = errors.New(ex.Error())
-		case raw = <-updateCh:
-		}
-
-		actual := raw.(*ConfigurationStruct)
-		if actual == nil {
-			err = errors.New("type check failed")
+		case raw := <-updateCh:
+			actual, ok := raw.(*ConfigurationStruct)
+			if !ok {
+				return errors.New("type check failed")
+			}
+			Configuration = actual
 		}
 
 		if err != nil {
@@ -137,6 +151,36 @@ func connectToConsul(conf *ConfigurationStruct) error {
 		}
 	}
 	return nil
+}
+
+func listenForConfigChanges() {
+	errCh := make(chan error)
+	dec := consulclient.NewConsulDecoder(Configuration.Registry)
+	dec.Target = &ConfigurationStruct{}
+	dec.Prefix = internal.ConfigV2Stem + internal.CoreCommandServiceKey
+	dec.ErrCh = errCh
+	dec.UpdateCh = chConfig
+
+	defer dec.Close()
+	defer close(errCh)
+
+	go dec.Run()
+	for {
+		select {
+		case ex := <-errCh:
+			LoggingClient.Error(ex.Error())
+		case raw, ok := <-chConfig:
+			if ok {
+				actual, ok := raw.(*ConfigurationStruct)
+				if !ok {
+					LoggingClient.Error("listenForConfigChanges() type check failed")
+				}
+				Configuration = actual //Mutex needed?
+			} else {
+				return
+			}
+		}
+	}
 }
 
 func initializeClients(useConsul bool) {
