@@ -15,7 +15,9 @@ package models
 
 import (
 	"encoding/json"
+	"fmt"
 
+	"github.com/edgexfoundry/edgex-go/pkg/clients"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -102,9 +104,7 @@ func CommandResponseFromDevice(d Device, cmdURL string) CommandResponse {
 		Commands:       d.Profile.Commands,
 	}
 
-	urlPath := "/api/v1/device/"
-	urlCmdPath := "/command/"
-	basePath := cmdURL + urlPath + d.Id.Hex() + urlCmdPath
+	basePath := fmt.Sprintf("%s%s/%s/command/", cmdURL, clients.ApiDeviceRoute, d.Id.Hex())
 
 	for _, c := range cmdResp.Commands {
 		if c.Get != nil {

@@ -25,7 +25,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/consul"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db/influx"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/memory"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
@@ -133,8 +132,6 @@ func newDBClient(dbType string, config db.Configuration) (interfaces.DBClient, e
 	switch dbType {
 	case db.MongoDB:
 		return mongo.NewClient(config), nil
-	case db.InfluxDB:
-		return influx.NewClient(config)
 	case db.MemoryDB:
 		return &memory.MemDB{}, nil
 	default:
@@ -188,7 +185,9 @@ func initializeClients(useConsul bool) {
 		ServiceKey:  internal.CoreMetaDataServiceKey,
 		Path:        Configuration.MetaDevicePath,
 		UseRegistry: useConsul,
-		Url:         Configuration.MetaDeviceURL}
+		Url:         Configuration.MetaDeviceURL,
+		Interval:    internal.ClientMonitorDefault,
+	}
 
 	mdc = metadata.NewDeviceClient(params, types.Endpoint{})
 

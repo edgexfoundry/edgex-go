@@ -15,16 +15,17 @@ package command
 
 import (
 	"fmt"
-	"strings"
 	"sync"
 	"time"
 
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/consul"
+	"github.com/edgexfoundry/edgex-go/pkg/clients"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/metadata"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
+	"github.com/pkg/errors"
 )
 
 var Configuration *ConfigurationStruct
@@ -33,7 +34,8 @@ var mdc metadata.DeviceClient
 var cc metadata.CommandClient
 
 func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup, ch chan error) {
-	until := time.Now().Add(time.Millisecond * time.Duration(timeout))
+	now := time.Now()
+	until := now.Add(time.Millisecond * time.Duration(timeout))
 	for time.Now().Before(until) {
 		var err error
 		//When looping, only handle configuration if it hasn't already been set.
@@ -48,9 +50,13 @@ func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup,
 					return
 				}
 			} else {
+				//Check against boot timeout default
+				if Configuration.Service.BootTimeout != timeout {
+					until = now.Add(time.Millisecond * time.Duration(Configuration.Service.BootTimeout))
+				}
 				// Setup Logging
 				logTarget := setLoggingTarget()
-				LoggingClient = logger.NewClient(internal.CoreCommandServiceKey, Configuration.EnableRemoteLogging, logTarget)
+				LoggingClient = logger.NewClient(internal.CoreCommandServiceKey, Configuration.Logging.EnableRemote, logTarget)
 				//Initialize service clients
 				initializeClients(useConsul)
 			}
@@ -77,7 +83,7 @@ func Init() bool {
 func initializeConfiguration(useConsul bool, useProfile string) (*ConfigurationStruct, error) {
 	//We currently have to load configuration from filesystem first in order to obtain ConsulHost/Port
 	conf := &ConfigurationStruct{}
-	err := config.LoadFromFile(useProfile, conf)
+	err := config.LoadFromFileV2(useProfile, conf)
 	if err != nil {
 		return nil, err
 	}
@@ -92,23 +98,41 @@ func initializeConfiguration(useConsul bool, useProfile string) (*ConfigurationS
 }
 
 func connectToConsul(conf *ConfigurationStruct) error {
-	// Initialize service on Consul
-	err := consulclient.ConsulInit(consulclient.ConsulConfig{
-		ServiceName:    internal.CoreCommandServiceKey,
-		ServicePort:    conf.ServicePort,
-		ServiceAddress: conf.ServiceAddress,
-		CheckAddress:   conf.ConsulCheckAddress,
-		CheckInterval:  conf.CheckInterval,
-		ConsulAddress:  conf.ConsulHost,
-		ConsulPort:     conf.ConsulPort,
-	})
+	//Obtain ConsulConfig
+	cfg := consulclient.NewConsulConfig(conf.Registry, conf.Service, internal.CoreCommandServiceKey)
+	// Register the service in Consul
+	err := consulclient.ConsulInit(cfg)
 
 	if err != nil {
 		return fmt.Errorf("connection to Consul could not be made: %v", err.Error())
 	} else {
 		// Update configuration data from Consul
-		if err := consulclient.CheckKeyValuePairs(conf, internal.CoreCommandServiceKey, strings.Split(conf.ConsulProfilesActive, ";")); err != nil {
-			return fmt.Errorf("error getting key/values from Consul: %v", err.Error())
+		updateCh := make(chan interface{})
+		errCh := make(chan error)
+		dec := consulclient.NewConsulDecoder(conf.Registry)
+		dec.Target = conf
+		dec.Prefix = internal.ConfigV2Stem
+		dec.UpdateCh = updateCh
+
+		defer dec.Close()
+		go dec.Run()
+
+		var raw interface{}
+		select {
+		case <-time.After(2 * time.Second):
+			err = errors.New("timeout loading config from registry")
+		case ex := <-errCh:
+			err = errors.New(ex.Error())
+		case raw = <-updateCh:
+		}
+
+		actual := raw.(*ConfigurationStruct)
+		if actual == nil {
+			err = errors.New("type check failed")
+		}
+
+		if err != nil {
+			return err
 		}
 	}
 	return nil
@@ -118,20 +142,21 @@ func initializeClients(useConsul bool) {
 	// Create metadata clients
 	params := types.EndpointParams{
 		ServiceKey:  internal.CoreMetaDataServiceKey,
-		Path:        Configuration.MetaDevicePath,
+		Path:        clients.ApiDeviceRoute,
 		UseRegistry: useConsul,
-		Url:         Configuration.MetaDeviceURL}
+		Url:         Configuration.Clients["Metadata"].Url() + clients.ApiDeviceRoute,
+		Interval:    Configuration.Service.ClientMonitor,
+	}
 
 	mdc = metadata.NewDeviceClient(params, types.Endpoint{})
-	params.Path = Configuration.MetaCommandPath
-	params.Url = Configuration.MetaCommandURL
+	params.Path = clients.ApiCommandRoute
+	params.Url = Configuration.Clients["Metadata"].Url() + clients.ApiCommandRoute
 	cc = metadata.NewCommandClient(params, types.Endpoint{})
 }
 
 func setLoggingTarget() string {
-	logTarget := Configuration.LoggingRemoteURL
-	if !Configuration.EnableRemoteLogging {
-		return Configuration.LogFile
+	if Configuration.Logging.EnableRemote {
+		return Configuration.Clients["Logging"].Url() + clients.ApiLoggingRoute
 	}
-	return logTarget
+	return Configuration.Logging.File
 }

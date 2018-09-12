@@ -17,6 +17,7 @@ package config
 import (
 	"flag"
 	"fmt"
+	"github.com/edgexfoundry/edgex-go/internal"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -37,6 +38,28 @@ func LoadFromFile(profile string, configuration interface{}) error {
 	path := determinePath()
 	fileName := path + "/" + determineConfigFile(profile)
 
+	contents, err := ioutil.ReadFile(fileName)
+	if err != nil {
+		return fmt.Errorf("could not load configuration file (%s): %v", fileName, err.Error())
+	}
+
+	// Decode the configuration from TOML
+	err = toml.Unmarshal(contents, configuration)
+	if err != nil {
+		return fmt.Errorf("unable to parse configuration file (%s): %v", fileName, err.Error())
+	}
+
+	return nil
+}
+
+// This function will eventually replace the above function. Note the difference in how the configuration file
+// is located based on the supplied profile.
+func LoadFromFileV2(profile string, configuration interface{}) error {
+	path := determinePath()
+	fileName := path + "/" + internal.ConfigFileName //default profile
+	if len(profile) > 0 {
+		fileName = path + "/" + profile + "/" + internal.ConfigFileName
+	}
 	contents, err := ioutil.ReadFile(fileName)
 	if err != nil {
 		return fmt.Errorf("could not load configuration file (%s): %v", fileName, err.Error())
