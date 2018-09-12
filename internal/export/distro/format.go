@@ -214,3 +214,66 @@ type noopFormatter struct {
 func (noopFmt noopFormatter) Format(event *models.Event) []byte {
 	return []byte{}
 }
+
+// BIoTMessage represents Brightics IoT messages.
+type BIoTMessage struct {
+	version       		string            `json:"version"`		
+	msgType             string            `json:"msgType"`		
+	funcType            string            `json:"funcType"`		
+	sId             	string            `json:"sId"`
+	tpId           		string            `json:"tpId"`
+	tId          		string            `json:"tId"`
+	msgCode             string            `json:"msgCode"`
+	msgId             	string            `json:"msgId"`
+	msgDate				int64             `json:"msgDate"`
+	resCode          	string            `json:"resCode"`
+	resMsg          	string            `json:"resMsg"`
+	severity          	string            `json:"severity"`
+	dataformat          string            `json:"dataformat"`
+	encType             string            `json:"encType"`
+	authToken           string            `json:"authToken"`
+	data           		[]byte            `json:"data"`
+	
+}
+
+// NewBIoTMessage creates a new Brightics IoT message and sets
+// Body and default fields values.
+func NewBIoTMessage() (*BIoTMessage, error) {
+	msg := &NewBIoTMessage{
+		severity: "1",
+		msgType: "Q"
+	}
+
+	id:= uuid.NewV1()
+	msg.msgId = id.String()
+
+	return msg, nil
+}
+
+// brighticsiotFormatter is used to convert Event to BIoT message and
+// BIoT message to bytes.
+type biotFormatter struct {
+}
+
+// Format method does all foramtting job.
+func (af biotFormatter) Format(event *models.Event) []byte {
+	bm, err := BIoTMessage()
+	if err != nil {
+		logger.Error(fmt.Sprintf("error creating a new BIoT message: %s", err))
+		return []byte{}
+	}
+	bm.tpId = event.Device
+	bm.tId = string(event.Origin)
+	rawdata, err := json.Marshal(event)
+	if err != nil {
+		logger.Error(fmt.Sprintf("error parsing Event data to BIoTMessage : %s", err))
+		return []byte{}
+	}
+	bm.data = rawdata
+	msg, err := json.Marshal(bm)
+	if err != nil {
+		logger.Error(fmt.Sprintf("error parsing BIoTMessage to data: %s", err))
+		return []byte{}
+	}
+	return msg
+}
