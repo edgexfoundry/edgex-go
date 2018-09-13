@@ -138,68 +138,6 @@ parts:
     build-packages:
       - make
       - zip
-  config-seed:
-    source: https://github.com/edgexfoundry/core-config-seed-go.git
-    plugin: shell
-    after:
-      - glide
-      - go
-    shell: bash
-    shell-flags: ['-eux', '-o', 'pipefail']
-    shell-command: |
-      export GOROOT=$("$SNAPCRAFT_STAGE/bin/go" env GOROOT)
-      export PATH="$GOROOT/bin:$PATH"
-
-      export XC_ARCH=`dpkg --print-architecture`
-      export XC_OS="linux"
-
-      go version
-
-      mkdir -p .gopath/src/github.com/edgexfoundry
-      export GOPATH="$PWD/.gopath"
-      export PATH="$GOPATH/bin:$PATH:$SNAPCRAFT_STAGE"
-      ln -s "$PWD" .gopath/src/github.com/edgexfoundry/core-config-seed-go
-
-      pushd .gopath/src/github.com/edgexfoundry/core-config-seed-go
-
-      glide update
-      go build
-      popd
-
-      install -DT "./core-config-seed-go" "$SNAPCRAFT_PART_INSTALL/bin/core-config-seed-go"
-
-      echo "Installing config files"
-
-      #install -DT "./Attribution.txt" \
-      #           "$SNAPCRAFT_PART_INSTALL/usr/share/java/doc/core-config-seed/Attribution.txt"
-      install -DT "./LICENSE-2.0.txt" \
-                  "$SNAPCRAFT_PART_INSTALL/usr/share/doc/core-config-seed-go/LICENSE-2.0.txt"
-
-      # install core-config-seed's config
-      install -d "$SNAPCRAFT_PART_INSTALL/config/core-config-seed-go/res/"
-      install -DT "./res/configuration.toml" \
-                  "$SNAPCRAFT_PART_INSTALL/config/core-config-seed-go/res/configuration.toml"
-      install -DT "./res/banner.txt" \
-                  "$SNAPCRAFT_PART_INSTALL/config/core-config-seed-go/res/banner.txt"
-
-      # now install config files for other services
-      install -d "$SNAPCRAFT_PART_INSTALL/config/core-config-seed-go/config/"
-      install -d "$SNAPCRAFT_PART_INSTALL/config/core-config-seed-go/config/core-command"
-      install -d "$SNAPCRAFT_PART_INSTALL/config/core-config-seed-go/config/core-data"
-      install -d "$SNAPCRAFT_PART_INSTALL/config/core-config-seed-go/config/core-metadata"
-      install -d "$SNAPCRAFT_PART_INSTALL/config/core-config-seed-go/config/device-virtual"
-      install -d "$SNAPCRAFT_PART_INSTALL/config/core-config-seed-go/config/support-logging"
-
-      install -DT "./config/core-command/configuration.toml" \
-                  "$SNAPCRAFT_PART_INSTALL/config/core-config-seed-go/config/core-command/configuration.toml"
-      install -DT "./config/core-data/configuration.toml" \
-                  "$SNAPCRAFT_PART_INSTALL/config/core-config-seed-go/config/core-data/configuration.toml"
-      install -DT "./config/core-metadata/configuration.toml" \
-                  "$SNAPCRAFT_PART_INSTALL/config/core-config-seed-go/config/core-metadata/configuration.toml"
-      install -DT "./config/device-virtual/application.properties" \
-                  "$SNAPCRAFT_PART_INSTALL/config/core-config-seed-go/config/device-virtual/application.properties"
-      install -DT "./config/support-logging/configuration.toml" \
-                  "$SNAPCRAFT_PART_INSTALL/config/core-config-seed-go/config/support-logging/configuration.toml"
   config-common:
     plugin: dump
     source: ./snap
@@ -306,6 +244,7 @@ parts:
       popd
 
       install -DT "./cmd/core-command/core-command" "$SNAPCRAFT_PART_INSTALL/bin/core-command"
+      install -DT "./cmd/config-seed/config-seed" "$SNAPCRAFT_PART_INSTALL/bin/config-seed"
       install -DT "./cmd/core-data/core-data" "$SNAPCRAFT_PART_INSTALL/bin/core-data"
       install -DT "./cmd/core-metadata/core-metadata" "$SNAPCRAFT_PART_INSTALL/bin/core-metadata"
       install -DT "./cmd/export-distro/export-distro" "$SNAPCRAFT_PART_INSTALL/bin/export-distro"
@@ -319,7 +258,17 @@ parts:
       install -d "$SNAPCRAFT_PART_INSTALL/config/core-metadata/res/"
       install -d "$SNAPCRAFT_PART_INSTALL/config/export-client/res/"
       install -d "$SNAPCRAFT_PART_INSTALL/config/export-distro/res/"
+      install -d "$SNAPCRAFT_PART_INSTALL/config/config-seed/res/properties/device-virtual/"
       install -d "$SNAPCRAFT_PART_INSTALL/config/support-logging/res/"
+
+      install -DT "./cmd/config-seed/res/properties/device-virtual/application.properties" \
+        "$SNAPCRAFT_PART_INSTALL/config/config-seed/res/properties/device-virtual/application.properties"
+
+      cat "./cmd/config-seed/res/configuration.toml" | \
+        sed -e s:./logs/config-seed.log:/var/snap/edgexfoundry/common/config-seed.log: \
+            -e s:'http\://localhost\:48061/api/v1/logs':: > \
+       "$SNAPCRAFT_PART_INSTALL/config/config-seed/res/configuration.toml"
+
 
       cat "./cmd/core-command/res/configuration.toml" | \
         sed -e s:./logs/edgex-core-command.log:/var/snap/edgexfoundry/common/core-command.log: \
@@ -347,7 +296,7 @@ parts:
        "$SNAPCRAFT_PART_INSTALL/config/export-distro/res/configuration.toml"
 
       cat "./cmd/support-logging/res/configuration.toml" | \
-        sed -e s:./logs/edgex-support-logging.log:/var/snap/edgexfoundry/common/support-logging.log: \
+        sed -e s:./logs/support-logging.log:/var/snap/edgexfoundry/common/support-logging.log: \
             -e s:'http\://localhost\:48061/api/v1/logs':: > \
        "$SNAPCRAFT_PART_INSTALL/config/support-logging/res/configuration.toml"
 
