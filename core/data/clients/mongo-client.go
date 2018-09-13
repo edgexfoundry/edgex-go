@@ -21,6 +21,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/core/domain/models"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
+	"fmt"
 )
 
 const (
@@ -218,6 +219,23 @@ func (mc *MongoClient) EventsPushed() ([]models.Event, error) {
 	return mc.getEvents(bson.M{"pushed": bson.M{"$gt": int64(0)}})
 }
 
+
+//Delete pushed events by created time
+func (mc *MongoClient) DeletePushedEvents(time int64) error {
+	loggingClient.Info(fmt.Sprintf("Delete pushed events before time: %d", time))
+
+	err := mc.deleteEvents(bson.M{"pushed": bson.M{"$gt": int64(0)}, "created": bson.M{"$lte": time}})
+
+	return err
+}
+
+func (mc *MongoClient) EventsPushedCount(time int64) (int, error) {
+	s := mc.getSessionCopy()
+	defer s.Close()
+
+	return s.DB(mc.Database.Name).C(EVENTS_COLLECTION).Find(bson.M{"pushed": bson.M{"$gt": int64(0)}, "created": bson.M{"$lte": time}}).Count()
+}
+
 // Delete all of the readings and all of the events
 func (mc *MongoClient) ScrubAllEvents() error {
 	s := mc.getSessionCopy()
@@ -234,6 +252,21 @@ func (mc *MongoClient) ScrubAllEvents() error {
 	}
 
 	return nil
+}
+
+// Get count of events number before expire time
+func (mc *MongoClient) EventsCountOlderThanAge(time int64) (int, error) {
+	s := mc.getSessionCopy()
+	defer s.Close()
+
+	return s.DB(mc.Database.Name).C(EVENTS_COLLECTION).Find(bson.M{"created": bson.M{"$lte": time}}).Count()
+}
+
+// Delete all of the readings and all of the events before expire time
+func (mc *MongoClient) DeleteOldEvents(time int64) error {
+	err := mc.deleteEvents(bson.M{"created": bson.M{"$lt": time}})
+
+	return err
 }
 
 // Get events for the passed query
@@ -297,6 +330,20 @@ func (mc *MongoClient) getEvent(q bson.M) (models.Event, error) {
 	}
 
 	return me.Event, err
+}
+
+//delete events
+func (mc *MongoClient) deleteEvents(q bson.M) error {
+	s := mc.getSessionCopy()
+	defer s.Close()
+
+	_, err := s.DB(mc.Database.Name).C(READINGS_COLLECTION).RemoveAll(q)
+	if err != nil {
+		return err
+	}
+
+	_, err = s.DB(mc.Database.Name).C(EVENTS_COLLECTION).RemoveAll(q)
+	return err
 }
 
 // ************************ READINGS ************************************8
