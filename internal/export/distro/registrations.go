@@ -20,8 +20,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 	"net/http"
 	"time"
-
-	"go.uber.org/zap"
 )
 
 const (
@@ -83,7 +81,7 @@ func (reg *registrationInfo) update(newReg export.Registration) bool {
 	case export.FormatNOOP:
 		reg.format = noopFormatter{}
 	default:
-		logger.Warn("Format not supported: ", zap.String("format", newReg.Format))
+		LoggingClient.Warn(fmt.Sprintf("Format not supported: %s", newReg.Format))
 		return false
 	}
 
@@ -98,7 +96,7 @@ func (reg *registrationInfo) update(newReg export.Registration) bool {
 	case export.CompZip:
 		reg.compression = &zlibTransformer{}
 	default:
-		logger.Warn("Compression not supported: ", zap.String("compression", newReg.Compression))
+		LoggingClient.Warn(fmt.Sprintf("Compression not supported: %s", newReg.Compression))
 		return false
 	}
 
@@ -113,7 +111,7 @@ func (reg *registrationInfo) update(newReg export.Registration) bool {
 		newReg.Addressable.Port = awsMQTTPort
 		reg.sender = NewMqttSender(newReg.Addressable, configuration.AWSCert, configuration.AWSKey)
 	case export.DestZMQ:
-		logger.Info("Destination ZMQ is not supported")
+		LoggingClient.Info("Destination ZMQ is not supported")
 	case export.DestIotCoreMQTT:
 		reg.sender = NewIoTCoreSender(newReg.Addressable)
 	case export.DestRest:
@@ -124,7 +122,7 @@ func (reg *registrationInfo) update(newReg export.Registration) bool {
 		reg.sender = NewInfluxDBSender(newReg.Addressable)
 
 	default:
-		logger.Warn("Destination not supported: ", zap.String("destination", newReg.Destination))
+		LoggingClient.Warn(fmt.Sprintf("Destination not supported: %s", newReg.Destination))
 		return false
 	}
 
@@ -141,7 +139,7 @@ func (reg *registrationInfo) update(newReg export.Registration) bool {
 	case export.EncAes:
 		reg.encrypt = export.NewAESEncryption(newReg.Encryption)
 	default:
-		logger.Warn("Encryption not supported: ", zap.String("Algorithm", newReg.Encryption.Algo))
+		LoggingClient.Warn(fmt.Sprintf("Encryption not supported: %s", newReg.Encryption.Algo))
 		return false
 	}
 
@@ -149,12 +147,12 @@ func (reg *registrationInfo) update(newReg export.Registration) bool {
 
 	if len(newReg.Filter.DeviceIDs) > 0 {
 		reg.filter = append(reg.filter, NewDevIdFilter(newReg.Filter))
-		logger.Debug("Device ID filter added: ", zap.Any("filters", newReg.Filter.DeviceIDs))
+		LoggingClient.Debug(fmt.Sprintf("Device ID filter added: %s", newReg.Filter.DeviceIDs))
 	}
 
 	if len(newReg.Filter.ValueDescriptorIDs) > 0 {
 		reg.filter = append(reg.filter, NewValueDescFilter(newReg.Filter))
-		logger.Debug("Value descriptor filter added: ", zap.Any("filters", newReg.Filter.ValueDescriptorIDs))
+		LoggingClient.Debug(fmt.Sprintf("Value descriptor filter added: %s", newReg.Filter.ValueDescriptorIDs))
 	}
 
 	return true
@@ -167,13 +165,13 @@ func (reg registrationInfo) processEvent(event *models.Event) {
 		var accepted bool
 		accepted, event = f.Filter(event)
 		if !accepted {
-			logger.Info("Event filtered")
+			LoggingClient.Info("Event filtered")
 			return
 		}
 	}
 
 	if reg.format == nil {
-		logger.Warn("registrationInfo with nil format")
+		LoggingClient.Warn("registrationInfo with nil format")
 		return
 	}
 	formated := reg.format.Format(event)
@@ -193,18 +191,15 @@ func (reg registrationInfo) processEvent(event *models.Event) {
 		err := ec.MarkPushed(id)
 
 		if err != nil {
-			logger.Error(fmt.Sprintf("Failed to mark event as pushed : event ID = %s: %s", id, err))
+			LoggingClient.Error(fmt.Sprintf("Failed to mark event as pushed : event ID = %s: %s", id, err))
 		}
 	}
 
-	logger.Debug("Sent event with registration:",
-		zap.Any("Event", event),
-		zap.String("Name", reg.registration.Name))
+	LoggingClient.Debug(fmt.Sprintf("Sent event with registration: %s", reg.registration.Name))
 }
 
 func registrationLoop(reg *registrationInfo) {
-	logger.Info("registration loop started",
-		zap.String("Name", reg.registration.Name))
+	LoggingClient.Info(fmt.Sprintf("registration loop started: %s", reg.registration.Name))
 	for {
 		select {
 		case event := <-reg.chEvent:
@@ -212,15 +207,13 @@ func registrationLoop(reg *registrationInfo) {
 
 		case newReg := <-reg.chRegistration:
 			if newReg == nil {
-				logger.Info("Terminating registration goroutine")
+				LoggingClient.Info("Terminating registration goroutine")
 				return
 			} else {
 				if reg.update(*newReg) {
-					logger.Info("Registration updated: OK",
-						zap.String("Name", reg.registration.Name))
+					LoggingClient.Info(fmt.Sprintf("Registration %s updated: OK", reg.registration.Name))
 				} else {
-					logger.Info("Registration updated: KO, terminating goroutine",
-						zap.String("Name", reg.registration.Name))
+					LoggingClient.Info(fmt.Sprintf("Registration %s updated: OK, terminating goroutine", reg.registration.Name))
 					reg.deleteFlag = true
 					return
 				}
@@ -274,7 +267,7 @@ func updateRunningRegistrations(running map[string]*registrationInfo,
 func Loop(errChan chan error, eventCh chan *models.Event) {
 	go func() {
 		p := fmt.Sprintf(":%d", configuration.Port)
-		logger.Info("Starting Export Distro", zap.String("url", p))
+		LoggingClient.Info(fmt.Sprintf("Starting Export Distro %s", p))
 		errChan <- http.ListenAndServe(p, httpServer())
 	}()
 
@@ -283,12 +276,12 @@ func Loop(errChan chan error, eventCh chan *models.Event) {
 	allRegs, err := getRegistrations()
 
 	for allRegs == nil {
-		logger.Info("Waiting for client microservice")
+		LoggingClient.Info("Waiting for client microservice")
 		select {
 		case e := <-errChan:
-			logger.Error("exit msg", zap.Error(e))
+			LoggingClient.Error(fmt.Sprintf("exit msg: %s", e.Error()))
 			if err != nil {
-				logger.Error("with error: ",  zap.Error(err))
+				LoggingClient.Error(fmt.Sprintf("with error: %s",  err.Error()))
 			}
 			return
 		case <-time.After(time.Second):
@@ -305,7 +298,7 @@ func Loop(errChan chan error, eventCh chan *models.Event) {
 		}
 	}
 
-	logger.Info("Starting registration loop")
+	LoggingClient.Info("Starting registration loop")
 	for {
 		select {
 		case e := <-errChan:
@@ -317,19 +310,19 @@ func Loop(errChan chan error, eventCh chan *models.Event) {
 				}
 				delete(registrations, k)
 			}
-			logger.Info("exit msg", zap.Error(e))
+			LoggingClient.Error(fmt.Sprintf("exit msg: %s", e.Error()))
 			return
 
 		case update := <-registrationChanges:
-			logger.Info("Registration changes")
+			LoggingClient.Info("Registration changes")
 			err := updateRunningRegistrations(registrations, update)
 			if err != nil {
-				logger.Warn("Error updating registration", zap.Error(err),
-					zap.Any("update", update))
+				LoggingClient.Error(err.Error())
+				LoggingClient.Warn(fmt.Sprintf("Error updating registration %s", update.Name))
 			}
 
 		case event := <-eventCh:
-			logger.Info("EVENT")
+			LoggingClient.Info("EVENT")
 			for k, reg := range registrations {
 				if reg.deleteFlag {
 					delete(registrations, k)

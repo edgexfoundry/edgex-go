@@ -1,7 +1,7 @@
 The following open source projects are referenced by Export Distro Go:
 
-zap v1.8.0 (MIT) - https://github.com/uber-go/zap
-https://github.com/uber-go/zap/blob/v1.8.0/LICENSE.txt
+logger v1.8.0 (MIT) - https://github.com/uber-go/logger
+https://github.com/uber-go/logger/blob/v1.8.0/LICENSE.txt
 
 paho.mqtt.golang v1.1.1 (EPL-1.0) - https://github.com/eclipse/paho.mqtt.golang
 https://github.com/eclipse/paho.mqtt.golang/blob/v1.1.1/LICENSE

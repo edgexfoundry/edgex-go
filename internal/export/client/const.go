@@ -23,6 +23,9 @@ type ConfigurationStruct struct {
 	ConsulProfilesActive string
 	DistroHost           string
 	DistroPort           int
+	EnableRemoteLogging  bool
+	LoggingRemoteURL     string
+	LogFile              string
 }
 
 var configuration = ConfigurationStruct{} // Needs to be initialized before used
