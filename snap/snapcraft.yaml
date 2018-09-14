@@ -711,6 +711,7 @@ parts:
 
   security-secret-store:
     source: https://github.com/edgexfoundry/security-secret-store.git
+    source-branch: california
     plugin: dump
     organize:
       pki-setup.sh: bin/pki-setup.sh
@@ -726,6 +727,7 @@ parts:
   security-api-gateway:
     after: [go, glide]
     source: https://github.com/edgexfoundry/security-api-gateway.git
+    source-branch: california
     plugin: make
     stage-packages:
       - openssl
