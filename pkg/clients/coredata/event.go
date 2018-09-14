@@ -18,7 +18,6 @@ package coredata
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -122,8 +121,7 @@ func (e *EventRestClient) Events() ([]models.Event, error) {
 			fmt.Println(err.Error())
 			return []models.Event{}, err
 		}
-		bodyString := string(bodyBytes)
-		return []models.Event{}, errors.New(string(bodyString))
+		return []models.Event{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 
 	return e.decodeEventSlice(resp)
@@ -154,9 +152,8 @@ func (e *EventRestClient) Event(id string) (models.Event, error) {
 			fmt.Println(err.Error())
 			return models.Event{}, err
 		}
-		bodyString := string(bodyBytes)
 
-		return models.Event{}, errors.New(bodyString)
+		return models.Event{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 
 	return e.decodeEvent(resp)
@@ -189,7 +186,7 @@ func (e *EventRestClient) EventCount() (int, error) {
 	bodyString := string(bodyBytes)
 
 	if resp.StatusCode != http.StatusOK {
-		return 0, errors.New(bodyString)
+		return 0, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 	count, err := strconv.Atoi(bodyString)
 	if err != nil {
@@ -225,7 +222,7 @@ func (e *EventRestClient) EventCountForDevice(deviceId string) (int, error) {
 	bodyString := string(bodyBytes)
 
 	if resp.StatusCode != http.StatusOK {
-		return 0, errors.New(bodyString)
+		return 0, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 
 	count, err := strconv.Atoi(bodyString)
@@ -260,9 +257,8 @@ func (e *EventRestClient) EventsForDevice(deviceId string, limit int) ([]models.
 			fmt.Println(err.Error())
 			return []models.Event{}, err
 		}
-		bodyString := string(bodyBytes)
 
-		return []models.Event{}, errors.New(bodyString)
+		return []models.Event{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 	return e.decodeEventSlice(resp)
 }
@@ -292,9 +288,8 @@ func (e *EventRestClient) EventsForInterval(start int, end int, limit int) ([]mo
 			fmt.Println(err.Error())
 			return []models.Event{}, err
 		}
-		bodyString := string(bodyBytes)
 
-		return []models.Event{}, errors.New(bodyString)
+		return []models.Event{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 	return e.decodeEventSlice(resp)
 }
@@ -324,9 +319,8 @@ func (e *EventRestClient) EventsForDeviceAndValueDescriptor(deviceId string, vd 
 			fmt.Println(err.Error())
 			return []models.Event{}, err
 		}
-		bodyString := string(bodyBytes)
 
-		return []models.Event{}, errors.New(bodyString)
+		return []models.Event{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 	return e.decodeEventSlice(resp)
 }
@@ -366,7 +360,7 @@ func (e *EventRestClient) Add(event *models.Event) (string, error) {
 	bodyString := string(bodyBytes)
 
 	if resp.StatusCode != http.StatusOK {
-		return "", errors.New(bodyString)
+		return "", types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 
 	return bodyString, nil
@@ -397,9 +391,8 @@ func (e *EventRestClient) Delete(id string) error {
 			fmt.Println(err.Error())
 			return err
 		}
-		bodyString := string(bodyBytes)
 
-		return errors.New(bodyString)
+		return types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 
 	return nil
@@ -430,9 +423,8 @@ func (e *EventRestClient) DeleteForDevice(deviceId string) error {
 			fmt.Println(err.Error())
 			return err
 		}
-		bodyString := string(bodyBytes)
 
-		return errors.New(bodyString)
+		return types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 
 	return nil
@@ -463,9 +455,8 @@ func (e *EventRestClient) DeleteOld(age int) error {
 			fmt.Println(err.Error())
 			return err
 		}
-		bodyString := string(bodyBytes)
 
-		return errors.New(bodyString)
+		return types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 
 	return nil
@@ -498,9 +489,8 @@ func (e *EventRestClient) MarkPushed(id string) error {
 			fmt.Println(err.Error())
 			return err
 		}
-		bodyString := string(bodyBytes)
 
-		return errors.New(bodyString)
+		return types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 
 	return nil

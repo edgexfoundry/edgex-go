@@ -16,7 +16,6 @@ package metadata
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"net/http"
 	"net/url"
 
@@ -94,7 +93,7 @@ func (dpc *DeviceProfileRestClient) Add(dp *models.DeviceProfile) (string, error
 
 	// Check the response code
 	if resp.StatusCode != http.StatusOK {
-		return "", errors.New(bodyString)
+		return "", types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 
 	return bodyString, nil
@@ -122,9 +121,8 @@ func (dpc *DeviceProfileRestClient) Delete(id string) error {
 		if err != nil {
 			return err
 		}
-		bodyString := string(bodyBytes)
 
-		return errors.New(bodyString)
+		return types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 
 	return nil
@@ -152,9 +150,8 @@ func (dpc *DeviceProfileRestClient) DeleteByName(name string) error {
 		if err != nil {
 			return err
 		}
-		bodyString := string(bodyBytes)
 
-		return errors.New(bodyString)
+		return types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 
 	return nil
@@ -183,9 +180,8 @@ func (dpc *DeviceProfileRestClient) DeviceProfile(id string) (models.DeviceProfi
 		if err != nil {
 			return models.DeviceProfile{}, err
 		}
-		bodyString := string(bodyBytes)
 
-		return models.DeviceProfile{}, errors.New(bodyString)
+		return models.DeviceProfile{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 
 	return dpc.decodeDeviceProfile(resp)
@@ -214,9 +210,8 @@ func (dpc *DeviceProfileRestClient) DeviceProfiles() ([]models.DeviceProfile, er
 		if err != nil {
 			return []models.DeviceProfile{}, err
 		}
-		bodyString := string(bodyBytes)
 
-		return []models.DeviceProfile{}, errors.New(bodyString)
+		return []models.DeviceProfile{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 	return dpc.decodeDeviceProfileSlice(resp)
 }
@@ -244,9 +239,8 @@ func (dpc *DeviceProfileRestClient) DeviceProfileForName(name string) (models.De
 		if err != nil {
 			return models.DeviceProfile{}, err
 		}
-		bodyString := string(bodyBytes)
 
-		return models.DeviceProfile{}, errors.New(bodyString)
+		return models.DeviceProfile{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 
 	return dpc.decodeDeviceProfile(resp)

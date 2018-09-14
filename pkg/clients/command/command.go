@@ -84,7 +84,7 @@ func (cc *CommandRestClient) Get(id string, cID string) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		return "", errors.New(string(json))
+		return "", types.NewErrServiceClient(resp.StatusCode, json)
 	}
 	return string(json), err
 }
@@ -109,7 +109,7 @@ func (cc *CommandRestClient) Put(id string, cID string, body string) (string, er
 	if err != nil {
 		return "", err
 	} else if resp.StatusCode != http.StatusOK {
-		return "", errors.New(string(json))
+		return "", types.NewErrServiceClient(resp.StatusCode, json)
 	}
 
 	return string(json), err

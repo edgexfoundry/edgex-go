@@ -16,7 +16,6 @@ package metadata
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -101,9 +100,8 @@ func (s *DeviceServiceRestClient) UpdateLastConnected(id string, time int64) err
 		if err != nil {
 			return err
 		}
-		bodyString := string(bodyBytes)
 
-		return errors.New(bodyString)
+		return types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 
 	return nil
@@ -131,9 +129,8 @@ func (s *DeviceServiceRestClient) UpdateLastReported(id string, time int64) erro
 		if err != nil {
 			return err
 		}
-		bodyString := string(bodyBytes)
 
-		return errors.New(bodyString)
+		return types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 
 	return nil
@@ -164,7 +161,7 @@ func (s *DeviceServiceRestClient) Add(ds *models.DeviceService) (string, error) 
 	bodyString := string(bodyBytes)
 
 	if resp.StatusCode != http.StatusOK {
-		return "", errors.New(bodyString)
+		return "", types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 
 	return bodyString, nil
@@ -194,9 +191,8 @@ func (s *DeviceServiceRestClient) DeviceServiceForName(name string) (models.Devi
 		if err != nil {
 			return models.DeviceService{}, err
 		}
-		bodyString := string(bodyBytes)
 
-		return models.DeviceService{}, errors.New(bodyString)
+		return models.DeviceService{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 
 	return s.decodeDeviceService(resp)
