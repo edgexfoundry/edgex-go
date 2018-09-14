@@ -28,8 +28,11 @@ cmd/export-client/logs/
 cmd/export-distro/logs/
 cmd/support-notifications/logs/
 
+# snap files
 *.snap
-
 *.bz2
-
 *.pyc
+parts/*
+prime/*
+stage/*
+snap/.snapcraft/*
