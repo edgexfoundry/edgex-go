@@ -1,0 +1,7 @@
+FROM snapcore/snapcraft:stable
+
+VOLUME [ "/build" ]
+
+WORKDIR /build
+
+CMD ["bash", "-c", "snapcraft clean && snapcraft"]
