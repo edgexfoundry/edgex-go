@@ -131,8 +131,7 @@ func (v *ValueDescriptorRestClient) ValueDescriptors() ([]models.ValueDescriptor
 		if err != nil {
 			return []models.ValueDescriptor{}, err
 		}
-		bodyString := string(bodyBytes)
-		return []models.ValueDescriptor{}, errors.New(string(bodyString))
+		return []models.ValueDescriptor{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 
 	return v.decodeValueDescriptorSlice(resp)
@@ -159,9 +158,8 @@ func (v *ValueDescriptorRestClient) ValueDescriptor(id string) (models.ValueDesc
 		if err != nil {
 			return models.ValueDescriptor{}, err
 		}
-		bodyString := string(bodyBytes)
 
-		return models.ValueDescriptor{}, errors.New(bodyString)
+		return models.ValueDescriptor{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 
 	return v.decodeValueDescriptor(resp)
@@ -188,9 +186,8 @@ func (v *ValueDescriptorRestClient) ValueDescriptorForName(name string) (models.
 		if err != nil {
 			return models.ValueDescriptor{}, err
 		}
-		bodyString := string(bodyBytes)
 
-		return models.ValueDescriptor{}, errors.New(bodyString)
+		return models.ValueDescriptor{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 	return v.decodeValueDescriptor(resp)
 }
@@ -216,9 +213,8 @@ func (v *ValueDescriptorRestClient) ValueDescriptorsByLabel(label string) ([]mod
 		if err != nil {
 			return []models.ValueDescriptor{}, err
 		}
-		bodyString := string(bodyBytes)
 
-		return []models.ValueDescriptor{}, errors.New(bodyString)
+		return []models.ValueDescriptor{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 	return v.decodeValueDescriptorSlice(resp)
 }
@@ -244,9 +240,8 @@ func (v *ValueDescriptorRestClient) ValueDescriptorsForDevice(deviceId string) (
 		if err != nil {
 			return []models.ValueDescriptor{}, err
 		}
-		bodyString := string(bodyBytes)
 
-		return []models.ValueDescriptor{}, errors.New(bodyString)
+		return []models.ValueDescriptor{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 	return v.decodeValueDescriptorSlice(resp)
 }
@@ -272,9 +267,8 @@ func (v *ValueDescriptorRestClient) ValueDescriptorsForDeviceByName(deviceName s
 		if err != nil {
 			return []models.ValueDescriptor{}, err
 		}
-		bodyString := string(bodyBytes)
 
-		return []models.ValueDescriptor{}, errors.New(bodyString)
+		return []models.ValueDescriptor{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 	return v.decodeValueDescriptorSlice(resp)
 }
@@ -300,9 +294,8 @@ func (v *ValueDescriptorRestClient) ValueDescriptorsByUomLabel(uomLabel string) 
 		if err != nil {
 			return []models.ValueDescriptor{}, err
 		}
-		bodyString := string(bodyBytes)
 
-		return []models.ValueDescriptor{}, errors.New(bodyString)
+		return []models.ValueDescriptor{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 	return v.decodeValueDescriptorSlice(resp)
 }
@@ -337,7 +330,7 @@ func (v *ValueDescriptorRestClient) Add(vdr *models.ValueDescriptor) (string, er
 	bodyString := string(bodyBytes)
 
 	if resp.StatusCode != http.StatusOK {
-		return "", errors.New(bodyString)
+		return "", types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 
 	return bodyString, nil
@@ -370,9 +363,9 @@ func (v *ValueDescriptorRestClient) Update(vdr *models.ValueDescriptor) error {
 		if err != nil {
 			return err
 		}
-		bodyString := string(bodyBytes)
 
-		return errors.New(bodyString)
+
+		return types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 
 	return nil
@@ -399,9 +392,8 @@ func (v *ValueDescriptorRestClient) Delete(id string) error {
 		if err != nil {
 			return err
 		}
-		bodyString := string(bodyBytes)
 
-		return errors.New(bodyString)
+		return types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 
 	return nil
@@ -428,9 +420,8 @@ func (v *ValueDescriptorRestClient) DeleteByName(name string) error {
 		if err != nil {
 			return err
 		}
-		bodyString := string(bodyBytes)
 
-		return errors.New(bodyString)
+		return types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 
 	return nil

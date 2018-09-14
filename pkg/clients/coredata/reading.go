@@ -18,7 +18,6 @@ package coredata
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -125,8 +124,7 @@ func (r *ReadingRestClient) Readings() ([]models.Reading, error) {
 			fmt.Println(err.Error())
 			return []models.Reading{}, err
 		}
-		bodyString := string(bodyBytes)
-		return []models.Reading{}, errors.New(string(bodyString))
+		return []models.Reading{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 
 	return r.decodeReadingSlice(resp)
@@ -157,9 +155,8 @@ func (r *ReadingRestClient) Reading(id string) (models.Reading, error) {
 			fmt.Println(err.Error())
 			return models.Reading{}, err
 		}
-		bodyString := string(bodyBytes)
 
-		return models.Reading{}, errors.New(bodyString)
+		return models.Reading{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 
 	return r.decodeReading(resp)
@@ -192,7 +189,7 @@ func (r *ReadingRestClient) ReadingCount() (int, error) {
 	bodyString := string(bodyBytes)
 
 	if resp.StatusCode != http.StatusOK {
-		return 0, errors.New(bodyString)
+		return 0, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 	count, err := strconv.Atoi(bodyString)
 	if err != nil {
@@ -226,9 +223,8 @@ func (r *ReadingRestClient) ReadingsForDevice(deviceId string, limit int) ([]mod
 			fmt.Println(err.Error())
 			return []models.Reading{}, err
 		}
-		bodyString := string(bodyBytes)
 
-		return []models.Reading{}, errors.New(bodyString)
+		return []models.Reading{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 	return r.decodeReadingSlice(resp)
 }
@@ -258,9 +254,8 @@ func (r *ReadingRestClient) ReadingsForNameAndDevice(name string, deviceId strin
 			fmt.Println(err.Error())
 			return []models.Reading{}, err
 		}
-		bodyString := string(bodyBytes)
 
-		return []models.Reading{}, errors.New(bodyString)
+		return []models.Reading{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 	return r.decodeReadingSlice(resp)
 }
@@ -290,9 +285,8 @@ func (r *ReadingRestClient) ReadingsForName(name string, limit int) ([]models.Re
 			fmt.Println(err.Error())
 			return []models.Reading{}, err
 		}
-		bodyString := string(bodyBytes)
 
-		return []models.Reading{}, errors.New(bodyString)
+		return []models.Reading{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 	return r.decodeReadingSlice(resp)
 }
@@ -322,9 +316,8 @@ func (r *ReadingRestClient) ReadingsForUOMLabel(uomLabel string, limit int) ([]m
 			fmt.Println(err.Error())
 			return []models.Reading{}, err
 		}
-		bodyString := string(bodyBytes)
 
-		return []models.Reading{}, errors.New(bodyString)
+		return []models.Reading{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 	return r.decodeReadingSlice(resp)
 }
@@ -354,9 +347,8 @@ func (r *ReadingRestClient) ReadingsForLabel(label string, limit int) ([]models.
 			fmt.Println(err.Error())
 			return []models.Reading{}, err
 		}
-		bodyString := string(bodyBytes)
 
-		return []models.Reading{}, errors.New(bodyString)
+		return []models.Reading{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 	return r.decodeReadingSlice(resp)
 }
@@ -386,9 +378,8 @@ func (r *ReadingRestClient) ReadingsForType(readingType string, limit int) ([]mo
 			fmt.Println(err.Error())
 			return []models.Reading{}, err
 		}
-		bodyString := string(bodyBytes)
 
-		return []models.Reading{}, errors.New(bodyString)
+		return []models.Reading{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 	return r.decodeReadingSlice(resp)
 }
@@ -418,9 +409,8 @@ func (r *ReadingRestClient) ReadingsForInterval(start int, end int, limit int) (
 			fmt.Println(err.Error())
 			return []models.Reading{}, err
 		}
-		bodyString := string(bodyBytes)
 
-		return []models.Reading{}, errors.New(bodyString)
+		return []models.Reading{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 	return r.decodeReadingSlice(resp)
 }
@@ -450,9 +440,8 @@ func (r *ReadingRestClient) ReadingsForDeviceAndValueDescriptor(deviceId string,
 			fmt.Println(err.Error())
 			return []models.Reading{}, err
 		}
-		bodyString := string(bodyBytes)
 
-		return []models.Reading{}, errors.New(bodyString)
+		return []models.Reading{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 	return r.decodeReadingSlice(resp)
 }
@@ -492,7 +481,7 @@ func (r *ReadingRestClient) Add(reading *models.Reading) (string, error) {
 	bodyString := string(bodyBytes)
 
 	if resp.StatusCode != http.StatusOK {
-		return "", errors.New(bodyString)
+		return "", types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 
 	return bodyString, nil
@@ -523,9 +512,8 @@ func (r *ReadingRestClient) Delete(id string) error {
 			fmt.Println(err.Error())
 			return err
 		}
-		bodyString := string(bodyBytes)
 
-		return errors.New(bodyString)
+		return types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 
 	return nil

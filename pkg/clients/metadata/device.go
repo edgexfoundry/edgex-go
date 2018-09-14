@@ -16,7 +16,6 @@ package metadata
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -148,9 +147,8 @@ func (d *DeviceRestClient) CheckForDevice(token string) (models.Device, error) {
 		fmt.Println(err.Error())
 		return models.Device{}, err
 	}
-	bodyString := string(bodyBytes)
 
-	return models.Device{}, errors.New(bodyString)
+	return models.Device{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 }
 
 // Get the device by id

@@ -16,7 +16,6 @@ package metadata
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -92,7 +91,7 @@ func (a *AddressableRestClient) Add(addr *models.Addressable) (string, error) {
 	bodyString := string(bodyBytes)
 
 	if resp.StatusCode != http.StatusOK {
-		return "", errors.New(string(bodyString))
+		return "", types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 
 	return bodyString, err
@@ -139,9 +138,8 @@ func (a *AddressableRestClient) AddressableForName(name string) (models.Addressa
 		if err != nil {
 			return models.Addressable{}, err
 		}
-		bodyString := string(bodyBytes)
 
-		return models.Addressable{}, errors.New(bodyString)
+		return models.Addressable{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 
 	return a.decodeAddressable(resp)
