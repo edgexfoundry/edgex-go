@@ -27,6 +27,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/memory"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/metadata"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
@@ -189,10 +190,10 @@ func initializeClients(useConsul bool) {
 		Interval:    internal.ClientMonitorDefault,
 	}
 
-	mdc = metadata.NewDeviceClient(params, types.Endpoint{})
+	mdc = metadata.NewDeviceClient(params, startup.Endpoint{})
 
 	params.Path = Configuration.MetaDeviceServicePath
-	msc = metadata.NewDeviceServiceClient(params, types.Endpoint{})
+	msc = metadata.NewDeviceServiceClient(params, startup.Endpoint{})
 
 	// Create the event publisher
 	ep = messaging.NewEventPublisher(messaging.PubSubConfiguration{
