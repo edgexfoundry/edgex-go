@@ -368,8 +368,8 @@ parts:
       - libzmq3-dev
   support-scheduler:
     source: https://github.com/edgexfoundry/support-scheduler.git
-    # the following commit == 0.5.0 version update +1 (core-domain fix)
-    source-commit: "00707ae"
+    # the following commit == 0.7.0 version update
+    source-commit: "194094a3cf2a0a3a2cc608cec7cd3c4904ac6b5b"
     plugin: maven
     override-build: |
       snapcraftctl build
@@ -378,7 +378,7 @@ parts:
       # The logic following logic is all handled by DockerFile for
       # the EdgeX support-scheduler docker image.
       install -d "$SNAPCRAFT_PART_INSTALL/jar/support-scheduler"
-      mv "$SNAPCRAFT_PART_INSTALL/jar/support-scheduler-0.5.0-SNAPSHOT.jar" \
+      mv "$SNAPCRAFT_PART_INSTALL/jar/support-scheduler-0.7.0-SNAPSHOT.jar" \
          "$SNAPCRAFT_PART_INSTALL/jar/support-scheduler/support-scheduler.jar"
 
       # FIXME:
@@ -410,8 +410,8 @@ parts:
       - -usr/share/
   support-rulesengine:
     source: https://github.com/edgexfoundry/support-rulesengine.git
-    # the following commit == 0.5.0 version update
-    source-commit: "2e282f5"
+    # the following commit == 0.7.0 version update
+    source-commit: "3aca4a7bf9774ad07b9b74c7b05c45deb74412f2"
     plugin: maven
     override-build: |
       snapcraftctl build
@@ -420,7 +420,7 @@ parts:
       # The logic following logic is all handled by DockerFile for
       # the EdgeX support-rulesengine docker image.
       install -d "$SNAPCRAFT_PART_INSTALL/jar/support-rulesengine"
-      mv "$SNAPCRAFT_PART_INSTALL/jar/support-rulesengine-0.5.0-SNAPSHOT.jar" \
+      mv "$SNAPCRAFT_PART_INSTALL/jar/support-rulesengine-0.7.0-SNAPSHOT.jar" \
          "$SNAPCRAFT_PART_INSTALL/jar/support-rulesengine/support-rulesengine.jar"
 
       # FIXME:
