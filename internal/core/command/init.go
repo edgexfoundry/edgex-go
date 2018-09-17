@@ -21,6 +21,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/consul"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 	"github.com/edgexfoundry/edgex-go/pkg/clients"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/metadata"
@@ -148,10 +149,10 @@ func initializeClients(useConsul bool) {
 		Interval:    Configuration.Service.ClientMonitor,
 	}
 
-	mdc = metadata.NewDeviceClient(params, types.Endpoint{})
+	mdc = metadata.NewDeviceClient(params, startup.Endpoint{})
 	params.Path = clients.ApiCommandRoute
 	params.Url = Configuration.Clients["Metadata"].Url() + clients.ApiCommandRoute
-	cc = metadata.NewCommandClient(params, types.Endpoint{})
+	cc = metadata.NewCommandClient(params, startup.Endpoint{})
 }
 
 func setLoggingTarget() string {
