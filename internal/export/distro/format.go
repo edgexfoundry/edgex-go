@@ -217,35 +217,34 @@ func (noopFmt noopFormatter) Format(event *models.Event) []byte {
 
 // BIoTMessage represents Brightics IoT messages.
 type BIoTMessage struct {
-	version       		string            `json:"version"`		
-	msgType             string            `json:"msgType"`		
-	funcType            string            `json:"funcType"`		
-	sId             	string            `json:"sId"`
-	tpId           		string            `json:"tpId"`
-	tId          		string            `json:"tId"`
-	msgCode             string            `json:"msgCode"`
-	msgId             	string            `json:"msgId"`
-	msgDate				int64             `json:"msgDate"`
-	resCode          	string            `json:"resCode"`
-	resMsg          	string            `json:"resMsg"`
-	severity          	string            `json:"severity"`
-	dataformat          string            `json:"dataformat"`
-	encType             string            `json:"encType"`
-	authToken           string            `json:"authToken"`
-	data           		[]byte            `json:"data"`
-	
+	Version		string            `json:"version"`
+	MsgType         string            `json:"msgType"`
+	FuncType        string            `json:"funcType"`
+	SId		string            `json:"sId"`
+	TpId		string            `json:"tpId"`
+	TId		string            `json:"tId"`
+	MsgCode         string            `json:"msgCode"`
+	MsgId		string            `json:"msgId"`
+	MsgDate		int64             `json:"msgDate"`
+	ResCode		string            `json:"resCode"`
+	ResMsg		string            `json:"resMsg"`
+	Severity	string            `json:"severity"`
+	Dataformat      string            `json:"dataformat"`
+	EncType         string            `json:"encType"`
+	AuthToken       string            `json:"authToken"`
+	Data		[]byte            `json:"data"`
 }
 
 // NewBIoTMessage creates a new Brightics IoT message and sets
 // Body and default fields values.
 func NewBIoTMessage() (*BIoTMessage, error) {
-	msg := &NewBIoTMessage{
-		severity: "1",
-		msgType: "Q"
+	msg := &BIoTMessage{
+		Severity: "1",
+		MsgType: "Q",
 	}
 
 	id:= uuid.NewV1()
-	msg.msgId = id.String()
+	msg.MsgId = id.String()
 
 	return msg, nil
 }
@@ -257,19 +256,19 @@ type biotFormatter struct {
 
 // Format method does all foramtting job.
 func (af biotFormatter) Format(event *models.Event) []byte {
-	bm, err := BIoTMessage()
+	bm, err := NewBIoTMessage()
 	if err != nil {
 		logger.Error(fmt.Sprintf("error creating a new BIoT message: %s", err))
 		return []byte{}
 	}
-	bm.tpId = event.Device
-	bm.tId = string(event.Origin)
+	bm.TpId = event.Device
+	bm.TId = string(event.Origin)
 	rawdata, err := json.Marshal(event)
 	if err != nil {
 		logger.Error(fmt.Sprintf("error parsing Event data to BIoTMessage : %s", err))
 		return []byte{}
 	}
-	bm.data = rawdata
+	bm.Data = rawdata
 	msg, err := json.Marshal(bm)
 	if err != nil {
 		logger.Error(fmt.Sprintf("error parsing BIoTMessage to data: %s", err))
