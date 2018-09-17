@@ -15,22 +15,15 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/export/client"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
-	"go.uber.org/zap"
 )
 
-var logger *zap.Logger
-
 func main() {
-	logger, _ = zap.NewProduction()
-	defer logger.Sync()
-
-	logger.Info(fmt.Sprintf("Starting %s %s", internal.ExportClientServiceKey, edgex.Version))
-
 	var (
 		useConsul  bool
 		useProfile string
@@ -46,28 +39,22 @@ func main() {
 	configuration := &client.ConfigurationStruct{}
 	err := config.LoadFromFile(useProfile, configuration)
 	if err != nil {
-		logger.Error(err.Error(), zap.String("version", edgex.Version))
+		logBeforeInit(fmt.Errorf("%s: version: %s: err: %s", internal.ExportClientServiceKey, edgex.Version, err.Error()))
 		return
 	}
 
 	//Determine if configuration should be overridden from Consul
-	var consulMsg string
 	if useConsul {
-		consulMsg = "Loading configuration from Consul..."
 		err := client.ConnectToConsul(*configuration)
 		if err != nil {
-			logger.Error(err.Error(), zap.String("version", edgex.Version))
+			logBeforeInit(fmt.Errorf("%s: version: %s: err: %s", internal.ExportClientServiceKey, edgex.Version, err.Error()))
 			return //end program since user explicitly told us to use Consul.
 		}
-	} else {
-		consulMsg = "Bypassing Consul configuration..."
 	}
 
-	logger.Info(consulMsg, zap.String("version", edgex.Version))
-
-	err = client.Init(*configuration, logger)
+	err = client.Init(*configuration)
 	if err != nil {
-		logger.Error("Could not initialize export client", zap.Error(err))
+		logBeforeInit(fmt.Errorf("%s: could not initialize export client: %s", internal.ExportClientServiceKey, err.Error()))
 		return
 	}
 
@@ -85,5 +72,10 @@ func main() {
 
 	client.Destroy()
 
-	logger.Info("terminated", zap.String("error", c.Error()))
+	client.LoggingClient.Error(fmt.Sprintf("%s: terminated with error(s): %s", internal.ExportClientServiceKey, c.Error()))
+}
+
+func logBeforeInit(err error) {
+	l := logger.NewClient(internal.ExportClientServiceKey, false, "")
+	l.Error(err.Error())
 }

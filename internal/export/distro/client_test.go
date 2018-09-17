@@ -10,10 +10,11 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 
-	"go.uber.org/zap"
+	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 )
 
 const (
@@ -26,6 +27,11 @@ const (
 	invalidRegistrationList1 = "[" + registrationInvalidStr + "]"
 	invalidRegistrationList2 = "[" + registrationInvalidStr + "," + registrationStr + "]"
 )
+
+func TestMain(m *testing.M) {
+	LoggingClient = logger.NewMockClient()
+	os.Exit(m.Run())
+}
 
 func TestClientRegistrationsEmpty(t *testing.T) {
 	handler := func(w http.ResponseWriter, r *http.Request) {
@@ -49,9 +55,6 @@ func TestClientRegistrationsEmpty(t *testing.T) {
 }
 
 func TestClientRegistrations(t *testing.T) {
-	logger = zap.NewNop()
-	defer logger.Sync()
-
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, oneRegistrationList)
 	}
@@ -73,9 +76,6 @@ func TestClientRegistrations(t *testing.T) {
 }
 
 func TestClientRegistrationsInvalid(t *testing.T) {
-	logger = zap.NewNop()
-	defer logger.Sync()
-
 	invalidList := []string{invalidReply1, invalidReply2}
 
 	handler := func(w http.ResponseWriter, r *http.Request) {

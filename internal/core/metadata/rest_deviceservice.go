@@ -886,19 +886,22 @@ func notifyAssociates(deviceServices []models.DeviceService, id string, action s
 // Make the callback for the device service
 func callback(service models.DeviceService, id string, action string, actionType models.ActionType) error {
 	client := &http.Client{}
-	url := getCallbackUrl(service.Service.Addressable)
-	body, err := getBody(id, actionType)
-	if err != nil {
-		return err
-	}
-	req, err := http.NewRequest(string(action), url, bytes.NewReader(body))
-	if err != nil {
-		return err
-	}
-	req.Header.Add("Content-Type", "application/json")
+	url := service.Service.Addressable.GetCallbackURL()
+	if len(url) > 0 {
+		body, err := getBody(id, actionType)
+		if err != nil {
+			return err
+		}
+		req, err := http.NewRequest(string(action), url, bytes.NewReader(body))
+		if err != nil {
+			return err
+		}
+		req.Header.Add("Content-Type", "application/json")
 
-	go makeRequest(client, req)
-
+		go makeRequest(client, req)
+	} else {
+		LoggingClient.Info("callback::no addressable for " + service.Name)
+	}
 	return nil
 }
 
@@ -917,15 +920,4 @@ func makeRequest(client *http.Client, req *http.Request) {
 // Turn the ID and ActionType into the JSON body that will be passed
 func getBody(id string, actionType models.ActionType) ([]byte, error) {
 	return json.Marshal(models.CallbackAlert{ActionType: actionType, Id: id})
-}
-
-// Get the callback url for the addressable
-func getCallbackUrl(a models.Addressable) string {
-	urlBuffer := bytes.NewBufferString(a.Protocol)
-	urlBuffer.WriteString("://")
-	urlBuffer.WriteString(a.Address)
-	urlBuffer.WriteString(":")
-	urlBuffer.WriteString(strconv.Itoa(a.Port))
-	urlBuffer.WriteString(a.Path)
-	return urlBuffer.String()
 }

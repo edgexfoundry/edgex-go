@@ -11,14 +11,13 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/export"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/consul"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/memory"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo"
-
-	"go.uber.org/zap"
 )
 
 const (
@@ -27,7 +26,7 @@ const (
 
 // Global variables
 var dbc export.DBClient
-var logger *zap.Logger
+var LoggingClient logger.LoggingClient
 
 func ConnectToConsul(conf ConfigurationStruct) error {
 	// Initialize service on Consul
@@ -52,12 +51,14 @@ func ConnectToConsul(conf ConfigurationStruct) error {
 	return nil
 }
 
-func Init(conf ConfigurationStruct, l *zap.Logger) error {
+func Init(conf ConfigurationStruct) error {
 	configuration = conf
-	logger = l
+
+	LoggingClient = logger.NewClient(internal.ExportClientServiceKey, conf.EnableRemoteLogging, getLoggingTarget(conf))
 
 	// Create a database client
 	dbConfig := db.Configuration{
+		DbType:       conf.DBType,
 		Host:         conf.MongoURL,
 		Port:         conf.MongoPort,
 		Timeout:      conf.MongoConnectTimeout,
@@ -99,4 +100,12 @@ func newDBClient(dbType string, config db.Configuration) (export.DBClient, error
 	default:
 		return nil, db.ErrUnsupportedDatabase
 	}
+}
+
+func getLoggingTarget(conf ConfigurationStruct) string {
+	logTarget := conf.LoggingRemoteURL
+	if !conf.EnableRemoteLogging {
+		return conf.LogFile
+	}
+	return logTarget
 }

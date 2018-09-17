@@ -13,4 +13,6 @@ ConsulPort = 8500
 ConsulProfilesActive = 'go'
 CheckInterval = '10s'
 MarkPushed = false
-
+EnableRemoteLogging = false
+LoggingFile = './logs/edgex-export-distro.log'
+LoggingRemoteURL = 'http://localhost:48061/api/v1/logs'

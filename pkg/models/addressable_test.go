@@ -91,3 +91,17 @@ func TestAddressable_String(t *testing.T) {
 		})
 	}
 }
+
+func TestAddressableWithCallback(t *testing.T) {
+	url := TestAddressable.GetCallbackURL()
+	if len(url) == 0 {
+		t.Errorf("url was expected")
+	}
+}
+
+func TestAddressableNoCallback(t *testing.T) {
+	url := EmptyAddressable.GetCallbackURL()
+	if len(url) > 0 {
+		t.Errorf("url was not expected")
+	}
+}

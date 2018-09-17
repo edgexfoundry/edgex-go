@@ -11,7 +11,6 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/export"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
-	"go.uber.org/zap"
 )
 
 const (
@@ -23,9 +22,6 @@ const (
 )
 
 func TestFilterDevice(t *testing.T) {
-	logger = zap.NewNop()
-	defer logger.Sync()
-
 	// Filter only accepting events from device 1
 	f := export.Filter{}
 	f.DeviceIDs = append(f.DeviceIDs, "DEV1")
@@ -58,9 +54,6 @@ func TestFilterDevice(t *testing.T) {
 }
 
 func TestFilterValue(t *testing.T) {
-	logger = zap.NewNop()
-	defer logger.Sync()
-
 	f1 := export.Filter{}
 	f1.ValueDescriptorIDs = append(f1.ValueDescriptorIDs, descriptor1)
 

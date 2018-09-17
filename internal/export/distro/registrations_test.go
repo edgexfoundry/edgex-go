@@ -11,15 +11,7 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/export"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
-	"go.uber.org/zap"
 )
-
-func init() {
-	if logger == nil {
-		logger = zap.NewExample()
-		_ = logger
-	}
-}
 
 func validRegistration() export.Registration {
 	r := export.Registration{}
@@ -201,8 +193,6 @@ func TestUpdateRunningRegistrations(t *testing.T) {
 
 func BenchmarkProcessEvent(b *testing.B) {
 	var Dummy = &dummyStruct{}
-	logger = zap.NewNop()
-	defer logger.Sync()
 
 	event := models.Event{}
 	event.Device = "dummyDev"

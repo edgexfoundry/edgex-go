@@ -165,3 +165,14 @@ func (a Addressable) GetBaseURL() string {
 	baseUrl := protocol + "://" + address + ":" + port
 	return baseUrl
 }
+
+// Get the callback url for the addressable if all relevant tokens have values.
+// If any token is missing, string will be empty
+func (a Addressable) GetCallbackURL() string {
+	url := ""
+	if len(a.Protocol) > 0 && len(a.Address) > 0 && a.Port > 0 && len(a.Path) > 0 {
+		url = a.GetBaseURL() + a.Path
+	}
+
+	return url
+}

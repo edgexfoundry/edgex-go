@@ -12,7 +12,7 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 	zmq "github.com/pebbe/zmq4"
-	"go.uber.org/zap"
+
 )
 
 const (
@@ -27,21 +27,21 @@ func initZmq(eventCh chan *models.Event) {
 	q, _ := zmq.NewSocket(zmq.SUB)
 	defer q.Close()
 
-	logger.Info("Connecting to zmq...")
+	LoggingClient.Info("Connecting to zmq...")
 	url := fmt.Sprintf("tcp://%s:%d", configuration.DataHost, zeroMQPort)
 	q.Connect(url)
-	logger.Info("Connected to zmq")
+	LoggingClient.Info("Connected to zmq")
 	q.SetSubscribe("")
 
 	for {
 		msg, err := q.RecvMessage(0)
 		if err != nil {
 			id, _ := q.GetIdentity()
-			logger.Error("Error getting mesage", zap.String("id", id))
+			LoggingClient.Error(fmt.Sprintf("Error getting message %s", id))
 		} else {
 			for _, str := range msg {
 				event := parseEvent(str)
-				logger.Info("Event received", zap.Any("event", event))
+				LoggingClient.Info(fmt.Sprintf("Event received: %s", str))
 				eventCh <- event
 			}
 		}
@@ -52,7 +52,8 @@ func parseEvent(str string) *models.Event {
 	event := models.Event{}
 
 	if err := json.Unmarshal([]byte(str), &event); err != nil {
-		logger.Error("Failed to parse event", zap.Error(err))
+		LoggingClient.Error(err.Error())
+		LoggingClient.Warn("Failed to parse event")
 		return nil
 	}
 	return &event
