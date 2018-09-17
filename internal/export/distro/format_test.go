@@ -127,3 +127,23 @@ func TestAWSIoTJson(t *testing.T) {
 		t.Fatalf("Unmshalred json is not correct: %v", reported)
 	}
 }
+
+func TestBIoT(t *testing.T) {
+	eventIn := models.Event{}
+
+        eventIn.Readings = append(eventIn.Readings, models.Reading{Device: devID1, Name: readingName1, Value: readingValue1})
+
+        xf := biotFormatter{}
+        out := xf.Format(&eventIn)
+
+        if out == nil {
+                t.Fatal("out should not be nil")
+        }
+
+	var sd interface{}
+        err := json.Unmarshal(out, &sd)
+
+        if err != nil {
+                t.Fatalf("Error unmarshal the formatted string: %v %v", err, out)
+        }
+}
