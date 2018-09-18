@@ -38,7 +38,7 @@ const (
 func getRegByID(w http.ResponseWriter, r *http.Request) {
 	id := bone.GetValue(r, "id")
 
-	reg, err := dbc.RegistrationById(id)
+	reg, err := dbClient.RegistrationById(id)
 	if err != nil {
 		LoggingClient.Error(fmt.Sprintf("Failed to query by id: %s. Error: %s", id, err.Error()))
 		http.Error(w, err.Error(), http.StatusNotFound)
@@ -88,7 +88,7 @@ func getRegList(w http.ResponseWriter, r *http.Request) {
 }
 
 func getAllReg(w http.ResponseWriter, r *http.Request) {
-	reg, err := dbc.Registrations()
+	reg, err := dbClient.Registrations()
 	if err != nil {
 		LoggingClient.Error(fmt.Sprintf("Failed to query all registrations. Error: %s", err.Error()))
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -102,7 +102,7 @@ func getAllReg(w http.ResponseWriter, r *http.Request) {
 func getRegByName(w http.ResponseWriter, r *http.Request) {
 	name := bone.GetValue(r, "name")
 
-	reg, err := dbc.RegistrationByName(name)
+	reg, err := dbClient.RegistrationByName(name)
 	if err != nil {
 		LoggingClient.Error(fmt.Sprintf("Failed to query by name. Error: %s", err.Error()))
 		http.Error(w, err.Error(), http.StatusNotFound)
@@ -134,7 +134,7 @@ func addReg(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = dbc.RegistrationByName(reg.Name)
+	_, err = dbClient.RegistrationByName(reg.Name)
 	if err == nil {
 		LoggingClient.Error("Name already taken: " + reg.Name)
 		http.Error(w, "Name already taken", http.StatusBadRequest)
@@ -145,7 +145,7 @@ func addReg(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = dbc.AddRegistration(&reg)
+	_, err = dbClient.AddRegistration(&reg)
 	if err != nil {
 		LoggingClient.Error(fmt.Sprintf("Failed to query add registration. Error: %s", err.Error()))
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -177,9 +177,9 @@ func updateReg(w http.ResponseWriter, r *http.Request) {
 	// Check if the registration exists
 	var toReg export.Registration
 	if fromReg.ID != "" {
-		toReg, err = dbc.RegistrationById(fromReg.ID.Hex())
+		toReg, err = dbClient.RegistrationById(fromReg.ID.Hex())
 	} else if fromReg.Name != "" {
-		toReg, err = dbc.RegistrationByName(fromReg.Name)
+		toReg, err = dbClient.RegistrationByName(fromReg.Name)
 	} else {
 		http.Error(w, "Need id or name", http.StatusBadRequest)
 		return
@@ -234,7 +234,7 @@ func updateReg(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = dbc.UpdateRegistration(toReg)
+	err = dbClient.UpdateRegistration(toReg)
 	if err != nil {
 		LoggingClient.Error(fmt.Sprintf("Failed to query update registration. Error: %s", err.Error()))
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -254,14 +254,14 @@ func delRegByID(w http.ResponseWriter, r *http.Request) {
 
 	// Read the registration, the registration name is needed to
 	// notify distro of the deletion
-	reg, err := dbc.RegistrationById(id)
+	reg, err := dbClient.RegistrationById(id)
 	if err != nil {
 		LoggingClient.Error(fmt.Sprintf("Failed to query by id: %s. Error: %s", id, err.Error()))
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
 
-	err = dbc.DeleteRegistrationById(id)
+	err = dbClient.DeleteRegistrationById(id)
 	if err != nil {
 		LoggingClient.Error(fmt.Sprintf("Failed to query by id: %s. Error: %s", id, err.Error()))
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -279,7 +279,7 @@ func delRegByID(w http.ResponseWriter, r *http.Request) {
 func delRegByName(w http.ResponseWriter, r *http.Request) {
 	name := bone.GetValue(r, "name")
 
-	err := dbc.DeleteRegistrationByName(name)
+	err := dbClient.DeleteRegistrationByName(name)
 	if err != nil {
 		LoggingClient.Error(fmt.Sprintf("Failed to query by name: %s. Error: %s", name, err.Error()))
 		http.Error(w, err.Error(), http.StatusNotFound)

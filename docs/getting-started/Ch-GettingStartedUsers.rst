@@ -213,7 +213,7 @@ Each EdgeX Foundry microservice has been built to respond to a "ping" HTTP reque
 Below is a list of the EdgeX Foundry microservices, their ports, and "ping" URLs.
 
 +---------------------------------+------------------------------+----------------------------+-------------+-----------------------------------+
-| **EdgeX Foundry MicroService**  | **Docker Compose Container** | **Container Name**         | **Port**    |  **Ping URL**                     |
+| **EdgeX Foundry Microservice**  | **Docker Compose Container** | **Container Name**         | **Port**    |  **Ping URL**                     |
 +=================================+==============================+============================+=============+===================================+
 | Core Command                    |  command                     | edgex-core-command         | 48082       | http://[host]:48082/api/v1/ping   |    
 +---------------------------------+------------------------------+----------------------------+-------------+-----------------------------------+

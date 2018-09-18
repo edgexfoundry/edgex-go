@@ -1,7 +1,7 @@
 # EdgeX Foundry Export Distro Service
 [![license](https://img.shields.io/badge/license-Apache%20v2.0-blue.svg)](LICENSE)
 
-Export Distribution Micro Service receives data from core data (via Q) and then filters, transforms, formats the data per client request and finally distributes it via REST, MQTT or 0MQ. Built on the concept of EAI or pipe and filter archtitecture.
+Export Distribution Microservice receives data from core data (via Q) and then filters, transforms, formats the data per client request and finally distributes it via REST, MQTT or 0MQ. Built on the concept of EAI or pipe and filter archtitecture.
 
 # Install and Deploy Native #
 
