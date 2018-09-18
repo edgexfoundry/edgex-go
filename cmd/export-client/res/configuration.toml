@@ -1,5 +1,6 @@
 Hostname = '127.0.0.1'
 Port = 48071
+Timeout = 50000
 DBType = 'mongodb'
 MongoURL = '0.0.0.0'
 MongoUsername = ''
@@ -17,3 +18,4 @@ DistroPort = 48070
 EnableRemoteLogging = false
 LoggingFile = './logs/edgex-export-client.log'
 LoggingRemoteURL = 'http://localhost:48061/api/v1/logs'
+AppOpenMsg = 'This is the Export Client Microservice'

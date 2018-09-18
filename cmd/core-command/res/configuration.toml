@@ -6,7 +6,7 @@ Host = 'localhost'
 Port = 48082
 Protocol = 'http'
 ReadMaxLimit = 100
-StartupMsg = 'This is the Core Command Micro Service'
+StartupMsg = 'This is the Core Command Microservice'
 Timeout = 5000
 
 [Registry]

@@ -2,7 +2,7 @@ ApplicationName = 'edgex-support-notifications'
 ConsulProfilesActive = 'docker'
 HeartBeatTime = 300000
 HeartBeatMsg = 'Support Notifications heart beat'
-AppOpenMsg = 'This is the Support Notifications Micro Service'
+AppOpenMsg = 'This is the Support Notifications Microservice'
 FormatSpecifier = '%(\\d=\\$)?([-#= 0(\\<]*)?(\\d=)?(\\.\\d=)?([tT])?([a-zA-Z%])'
 ServicePort = 48060
 ServiceTimeout = 5000

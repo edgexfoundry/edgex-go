@@ -21,10 +21,6 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
-const (
-	EXPORT_COLLECTION = "exportConfiguration"
-)
-
 // ****************************** REGISTRATIONS ********************************
 
 // Return all the registrations
@@ -43,7 +39,7 @@ func (mc *MongoClient) AddRegistration(reg *export.Registration) (bson.ObjectId,
 	reg.ID = bson.NewObjectId()
 
 	// Add the registration
-	err := s.DB(mc.database.Name).C(EXPORT_COLLECTION).Insert(reg)
+	err := s.DB(mc.database.Name).C(db.ExportCollection).Insert(reg)
 	if err != nil {
 		return reg.ID, err
 	}
@@ -60,7 +56,7 @@ func (mc *MongoClient) UpdateRegistration(reg export.Registration) error {
 
 	reg.Modified = db.MakeTimestamp()
 
-	err := s.DB(mc.database.Name).C(EXPORT_COLLECTION).UpdateId(reg.ID, reg)
+	err := s.DB(mc.database.Name).C(db.ExportCollection).UpdateId(reg.ID, reg)
 	if err == mgo.ErrNotFound {
 		return db.ErrNotFound
 	}
@@ -107,7 +103,7 @@ func (mc *MongoClient) ScrubAllRegistrations() error {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
-	_, err := s.DB(mc.database.Name).C(EXPORT_COLLECTION).RemoveAll(nil)
+	_, err := s.DB(mc.database.Name).C(db.ExportCollection).RemoveAll(nil)
 	return err
 }
 
@@ -117,7 +113,7 @@ func (mc *MongoClient) getRegistrations(q bson.M) ([]export.Registration, error)
 	defer s.Close()
 
 	var regs []export.Registration
-	err := s.DB(mc.database.Name).C(EXPORT_COLLECTION).Find(q).All(&regs)
+	err := s.DB(mc.database.Name).C(db.ExportCollection).Find(q).All(&regs)
 	if err != nil {
 		return regs, err
 	}
@@ -131,7 +127,7 @@ func (mc *MongoClient) getRegistration(q bson.M) (export.Registration, error) {
 	defer s.Close()
 
 	var reg export.Registration
-	err := s.DB(mc.database.Name).C(EXPORT_COLLECTION).Find(q).One(&reg)
+	err := s.DB(mc.database.Name).C(db.ExportCollection).Find(q).One(&reg)
 	if err == mgo.ErrNotFound {
 		return reg, db.ErrNotFound
 	}
@@ -144,7 +140,7 @@ func (mc *MongoClient) deleteRegistration(q bson.M) error {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
-	err := s.DB(mc.database.Name).C(EXPORT_COLLECTION).Remove(q)
+	err := s.DB(mc.database.Name).C(db.ExportCollection).Remove(q)
 	if err == mgo.ErrNotFound {
 		return db.ErrNotFound
 	}
