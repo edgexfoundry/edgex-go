@@ -9,7 +9,7 @@ package scheduler
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/edgexfoundry/edgex-go/core/domain/models"
+	"github.com/edgexfoundry/edgex-go/pkg/models"
 	mux "github.com/gorilla/mux"
 	"io"
 	"io/ioutil"

@@ -9,7 +9,7 @@ package scheduler
 import (
 	"errors"
 	"fmt"
-	"github.com/edgexfoundry/edgex-go/core/domain/models"
+	"github.com/edgexfoundry/edgex-go/pkg/models"
 	"gopkg.in/eapache/queue.v1"
 	"io/ioutil"
 	"net/http"

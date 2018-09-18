@@ -1,0 +1,107 @@
+INFO: 2018/09/18 16:38:26 ----------- test schedule lifecycle start ------------
+INFO: 2018/09/18 16:38:42 adding the schedule with id : 5ba17058fea0f11f1c97af9e
+DEBUG: 2018/09/18 16:38:49 resetting the schedule with id : 5ba17058fea0f11f1c97af9e
+INFO: 2018/09/18 16:38:52 added the schedule with id : 5ba17058fea0f11f1c97af9e
+DEBUG: 2018/09/18 16:38:56 1 item in schedule queue.
+DEBUG: 2018/09/18 16:39:01 check schedule with id : 5ba17058fea0f11f1c97af9e
+INFO: 2018/09/18 16:39:07 updating the schedule with id : 5ba17058fea0f11f1c97af9e
+DEBUG: 2018/09/18 16:39:07 schedule with id : 5ba17058fea0f11f1c97af9e next schedule time is : 2000-01-01 00:00:00 +0000 UTC
+DEBUG: 2018/09/18 16:39:07 resetting the schedule whit id 5ba17058fea0f11f1c97af9e
+INFO: 2018/09/18 16:39:07 updated the schedule with id : 5ba17058fea0f11f1c97af9e
+INFO: 2018/09/18 16:39:12 executing schedule, detail : {{"created":0,"modified":0,"origin":0,"id":"5ba17058fea0f11f1c97af9e","name":"midnight-1","start":"20000101T000000","end":null,"frequency":"P1D","cron":"This is a description","runOnce":true}} , at : 2000-01-01 00:00:00 +0000 UTC
+INFO: 2018/09/18 16:39:12 removing the schedule with id : 5ba17058fea0f11f1c97af9e
+DEBUG: 2018/09/18 16:39:12 0 schedule event need to be executed.
+DEBUG: 2018/09/18 16:39:12 removing all the mappings of schedule event id to schedule id : 5ba17058fea0f11f1c97af9e
+INFO: 2018/09/18 16:39:12 completed schedule, detail : {"created":0,"modified":0,"origin":0,"id":"5ba17058fea0f11f1c97af9e","name":"midnight-2","start":"20000101T000000","end":null,"frequency":"P1D","cron":"This is a description","runOnce":true}
+INFO: 2018/09/18 16:39:12 removed the schedule with id : 5ba17058fea0f11f1c97af9e
+WARN: 2018/09/18 16:39:13 can not find a schedule context with schedule id : 5ba17058fea0f11f1c97af9e
+INFO: 2018/09/18 16:39:20 ----------- test schedule lifecycle end ------------
+INFO: 2018/09/18 16:39:29 ----------- test schedule lifecycle start ------------
+INFO: 2018/09/18 16:39:29 adding the schedule with id : 5ba17091fea0f11f40f3da94
+DEBUG: 2018/09/18 16:39:29 resetting the schedule with id : 5ba17091fea0f11f40f3da94
+INFO: 2018/09/18 16:39:29 added the schedule with id : 5ba17091fea0f11f40f3da94
+INFO: 2018/09/18 16:39:29 updating the schedule with id : 5ba17091fea0f11f40f3da94
+DEBUG: 2018/09/18 16:39:29 resetting the schedule whit id 5ba17091fea0f11f40f3da94
+INFO: 2018/09/18 16:39:29 updated the schedule with id : 5ba17091fea0f11f40f3da94
+INFO: 2018/09/18 16:39:29 removing the schedule with id : 5ba17091fea0f11f40f3da94
+DEBUG: 2018/09/18 16:39:29 removing all the mappings of schedule event id to schedule id : 5ba17091fea0f11f40f3da94
+INFO: 2018/09/18 16:39:29 removed the schedule with id : 5ba17091fea0f11f40f3da94
+WARN: 2018/09/18 16:39:29 can not find a schedule context with schedule id : 5ba17091fea0f11f40f3da94
+INFO: 2018/09/18 16:39:29 ----------- test schedule lifecycle end ------------
+INFO: 2018/09/18 16:41:29 ----------- test schedule lifecycle start ------------
+INFO: 2018/09/18 16:41:29 adding the schedule with id : 5ba17109fea0f11f913fb5c1
+DEBUG: 2018/09/18 16:41:29 resetting the schedule with id : 5ba17109fea0f11f913fb5c1
+INFO: 2018/09/18 16:41:29 added the schedule with id : 5ba17109fea0f11f913fb5c1
+INFO: 2018/09/18 16:41:29 updating the schedule with id : 5ba17109fea0f11f913fb5c1
+DEBUG: 2018/09/18 16:41:29 resetting the schedule whit id 5ba17109fea0f11f913fb5c1
+INFO: 2018/09/18 16:41:29 updated the schedule with id : 5ba17109fea0f11f913fb5c1
+INFO: 2018/09/18 16:41:29 removing the schedule with id : 5ba17109fea0f11f913fb5c1
+DEBUG: 2018/09/18 16:41:29 removing all the mappings of schedule event id to schedule id : 5ba17109fea0f11f913fb5c1
+INFO: 2018/09/18 16:41:29 removed the schedule with id : 5ba17109fea0f11f913fb5c1
+WARN: 2018/09/18 16:41:29 can not find a schedule context with schedule id : 5ba17109fea0f11f913fb5c1
+INFO: 2018/09/18 16:41:29 ----------- test schedule lifecycle end ------------
+INFO: 2018/09/18 16:44:55 ----------- test schedule event lifecycle start ------------
+INFO: 2018/09/18 16:45:07 adding the schedule with id : 5ba171defea0f1200acc36c7
+INFO: 2018/09/18 16:45:13 ----------- test schedule event lifecycle start ------------
+INFO: 2018/09/18 16:45:13 adding the schedule with id : 5ba171e9fea0f1202d5f3bd8
+DEBUG: 2018/09/18 16:45:13 resetting the schedule with id : 5ba171e9fea0f1202d5f3bd8
+INFO: 2018/09/18 16:45:13 added the schedule with id : 5ba171e9fea0f1202d5f3bd8
+INFO: 2018/09/18 16:45:13 adding the schedule event with id 746573745363686564756c654576656e744964 to schedule : midnight-1
+INFO: 2018/09/18 16:45:13 check the schedule with id : 5ba171e9fea0f1202d5f3bd8 exists.
+INFO: 2018/09/18 16:45:13 added the schedule event with id : 746573745363686564756c654576656e744964 to schedule : midnight-1
+INFO: 2018/09/18 16:45:13 updating the schedule event with id : 746573745363686564756c654576656e744964
+INFO: 2018/09/18 16:45:13 updated the schedule event with id 746573745363686564756c654576656e744964 to schedule id : 5ba171e9fea0f1202d5f3bd8
+INFO: 2018/09/18 16:45:13 removing the schedule event with id 746573745363686564756c654576656e744964
+INFO: 2018/09/18 16:45:13 there are no more events for the schedule : 5ba171e9fea0f1202d5f3bd8, remove it.
+INFO: 2018/09/18 16:45:13 removed the schedule event with id 746573745363686564756c654576656e744964
+INFO: 2018/09/18 16:45:13 ----------- test schedule event lifecycle end ------------
+INFO: 2018/09/18 16:45:58 ----------- test schedule lifecycle start ------------
+INFO: 2018/09/18 16:45:58 adding the schedule with id : 5ba17216fea0f1205422135d
+DEBUG: 2018/09/18 16:45:58 resetting the schedule with id : 5ba17216fea0f1205422135d
+INFO: 2018/09/18 16:45:58 added the schedule with id : 5ba17216fea0f1205422135d
+INFO: 2018/09/18 16:45:58 updating the schedule with id : 5ba17216fea0f1205422135d
+DEBUG: 2018/09/18 16:45:58 resetting the schedule whit id 5ba17216fea0f1205422135d
+INFO: 2018/09/18 16:45:58 updated the schedule with id : 5ba17216fea0f1205422135d
+INFO: 2018/09/18 16:45:58 removing the schedule with id : 5ba17216fea0f1205422135d
+DEBUG: 2018/09/18 16:45:58 removing all the mappings of schedule event id to schedule id : 5ba17216fea0f1205422135d
+INFO: 2018/09/18 16:45:58 removed the schedule with id : 5ba17216fea0f1205422135d
+WARN: 2018/09/18 16:45:58 can not find a schedule context with schedule id : 5ba17216fea0f1205422135d
+INFO: 2018/09/18 16:45:58 ----------- test schedule lifecycle end ------------
+INFO: 2018/09/18 16:45:58 ----------- test schedule event lifecycle start ------------
+INFO: 2018/09/18 16:45:58 adding the schedule with id : 5ba17216fea0f1205422135e
+DEBUG: 2018/09/18 16:45:58 resetting the schedule with id : 5ba17216fea0f1205422135e
+INFO: 2018/09/18 16:45:58 added the schedule with id : 5ba17216fea0f1205422135e
+INFO: 2018/09/18 16:45:58 adding the schedule event with id 746573745363686564756c654576656e744964 to schedule : midnight-1
+INFO: 2018/09/18 16:45:58 check the schedule with id : 5ba17216fea0f1205422135e exists.
+INFO: 2018/09/18 16:45:58 added the schedule event with id : 746573745363686564756c654576656e744964 to schedule : midnight-1
+INFO: 2018/09/18 16:45:58 updating the schedule event with id : 746573745363686564756c654576656e744964
+INFO: 2018/09/18 16:45:58 updated the schedule event with id 746573745363686564756c654576656e744964 to schedule id : 5ba17216fea0f1205422135e
+INFO: 2018/09/18 16:45:58 removing the schedule event with id 746573745363686564756c654576656e744964
+INFO: 2018/09/18 16:45:58 there are no more events for the schedule : 5ba17216fea0f1205422135e, remove it.
+INFO: 2018/09/18 16:45:58 removed the schedule event with id 746573745363686564756c654576656e744964
+INFO: 2018/09/18 16:45:58 ----------- test schedule event lifecycle end ------------
+INFO: 2018/09/18 16:46:23 ----------- test schedule lifecycle start ------------
+INFO: 2018/09/18 16:46:23 adding the schedule with id : 5ba1722ffea0f12078133afb
+DEBUG: 2018/09/18 16:46:23 resetting the schedule with id : 5ba1722ffea0f12078133afb
+INFO: 2018/09/18 16:46:23 added the schedule with id : 5ba1722ffea0f12078133afb
+INFO: 2018/09/18 16:46:23 updating the schedule with id : 5ba1722ffea0f12078133afb
+DEBUG: 2018/09/18 16:46:23 resetting the schedule whit id 5ba1722ffea0f12078133afb
+INFO: 2018/09/18 16:46:23 updated the schedule with id : 5ba1722ffea0f12078133afb
+INFO: 2018/09/18 16:46:23 removing the schedule with id : 5ba1722ffea0f12078133afb
+DEBUG: 2018/09/18 16:46:23 removing all the mappings of schedule event id to schedule id : 5ba1722ffea0f12078133afb
+INFO: 2018/09/18 16:46:23 removed the schedule with id : 5ba1722ffea0f12078133afb
+WARN: 2018/09/18 16:46:23 can not find a schedule context with schedule id : 5ba1722ffea0f12078133afb
+INFO: 2018/09/18 16:46:23 ----------- test schedule lifecycle end ------------
+INFO: 2018/09/18 16:46:23 ----------- test schedule event lifecycle start ------------
+INFO: 2018/09/18 16:46:23 adding the schedule with id : 5ba1722ffea0f12078133afc
+DEBUG: 2018/09/18 16:46:23 resetting the schedule with id : 5ba1722ffea0f12078133afc
+INFO: 2018/09/18 16:46:23 added the schedule with id : 5ba1722ffea0f12078133afc
+INFO: 2018/09/18 16:46:23 adding the schedule event with id 746573745363686564756c654576656e744964 to schedule : midnight-1
+INFO: 2018/09/18 16:46:23 check the schedule with id : 5ba1722ffea0f12078133afc exists.
+INFO: 2018/09/18 16:46:23 added the schedule event with id : 746573745363686564756c654576656e744964 to schedule : midnight-1
+INFO: 2018/09/18 16:46:23 updating the schedule event with id : 746573745363686564756c654576656e744964
+INFO: 2018/09/18 16:46:23 updated the schedule event with id 746573745363686564756c654576656e744964 to schedule id : 5ba1722ffea0f12078133afc
+INFO: 2018/09/18 16:46:23 removing the schedule event with id 746573745363686564756c654576656e744964
+INFO: 2018/09/18 16:46:23 there are no more events for the schedule : 5ba1722ffea0f12078133afc, remove it.
+INFO: 2018/09/18 16:46:23 removed the schedule event with id 746573745363686564756c654576656e744964
+INFO: 2018/09/18 16:46:23 ----------- test schedule event lifecycle end ------------
