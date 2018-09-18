@@ -11,26 +11,41 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
-package command
+package scheduler
 
 // ConfigurationStruct : Struct used to pase the JSON configuration file
 type ConfigurationStruct struct {
-	ConsulProfilesActive     string
-	ReadMaxLimit             int
-	ServicePort              int
-	ConsulPort               int
-	ServiceTimeout           int
-	CheckInterval            string
-	ServiceAddress           string
-	DeviceServiceProtocol    string
-	AppOpenMsg               string
-	URLProtocol              string
-	URLDevicePath            string
-	ConsulHost               string
-	ConsulCheckAddress       string
-	EnableRemoteLogging      bool
-	LogFile                  string
-	LoggingRemoteURL         string
+	ConsulProfilesActive          string
+	ReadMaxLimit                  int
+	ServicePort                   int
+	ConsulPort                    int
+	ServiceTimeout                int
+	CheckInterval                 string
+	ServiceAddress                string
+	DeviceServiceProtocol         string
+	AppOpenMsg                    string
+	URLProtocol                   string
+	URLDevicePath                 string
+	ConsulHost                    string
+	ConsulCheckAddress            string
+	EnableRemoteLogging           bool
+	LogFile                       string
+	LoggingRemoteURL              string
+	ServiceLabels                 string
+	ServiceCallBack               string
+	ServiceConnectionReties       int
+	ServiceConnectionInterval     int
+	ScheduleInterval              int
+	DefaultScheduleName           string
+	DefaultScheduleFrequency      string
+	DefaultScheduleStart          string
+	DefaultScheduleEventName      string
+	DefaultScheduleEventMethod    string
+	DefaultScheduleEventService   string
+	DefaultScheduleEventPath      string
+	DefaultScheduleEventSchedule  string
+	DefaultScheduleEventScheduler string
+
 	MetaAddressableURL       string
 	MetaAddressablePath      string
 	MetaDeviceServiceURL     string
@@ -50,6 +65,10 @@ type ConfigurationStruct struct {
 	MetaProvisionWatcherURL  string
 	MetaProvisionWatcherPath string
 }
+
+const (
+	PingApiPath = "/api/v1/ping"
+)
 
 // Configuration data for the metadata service
 var configuration ConfigurationStruct = ConfigurationStruct{}

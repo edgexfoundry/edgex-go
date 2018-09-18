@@ -7,9 +7,10 @@
 package scheduler
 
 import (
-	"github.com/edgexfoundry/edgex-go/core/domain/models"
-	"github.com/edgexfoundry/edgex-go/support/logging-client"
-	"github.com/edgexfoundry/edgex-go/support/scheduler-client"
+	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/pkg/models"
+	logger "github.com/edgexfoundry/edgex-go/pkg/clients/logging"
+	"github.com/edgexfoundry/edgex-go/pkg/clients/scheduler"
 	"gopkg.in/mgo.v2/bson"
 	"net/http"
 	"net/http/httptest"
@@ -57,13 +58,16 @@ func setup(t *testing.T) {
 }
 
 func mockInit(host string, port int) {
-	var loggingClient = logger.NewClient(configuration.ApplicationName, configuration.EnableRemoteLogging, "")
+
+	var loggingClient = logger.NewClient(internal.SupportSchedulerServiceKey, false, "./logs/edgex-core-suppor-scheduler.log")
+
+	var sc = scheduler.GetSchedulerClient()
+	scheduler.SetConfiguration(host,port)
+
 	Init(ConfigurationStruct{
 		ScheduleInterval: 500,
-	}, loggingClient, scheduler.SchedulerClient{
-		SchedulerServiceHost: host,
-		SchedulerServicePort: port,
-	})
+	},  sc,loggingClient,false)
+
 	StartTicker()
 }
 
@@ -164,6 +168,7 @@ func TestScheduleLifeCycle(t *testing.T) {
 
 func TestScheduleEventLifeCycle(t *testing.T) {
 	setup(t)
+	mockInit("", -1)
 
 	//parent schedule model
 	testSchedule := models.Schedule{
@@ -174,6 +179,7 @@ func TestScheduleEventLifeCycle(t *testing.T) {
 		Cron:      TestScheduleCron,
 		RunOnce:   TestScheduleRunOnce,
 	}
+
 
 	loggingClient.Info("----------- test schedule event lifecycle start ------------")
 
