@@ -132,6 +132,7 @@ const (
 	PINGRESPONSE                    = "pong"
 	CONTENTTYPE                     = "Content-Type"
 	TEXTPLAIN                       = "text/plain"
+	TIMELAYOUT               = "20060102T150405"
 
 	/* TODO ENUM */
 	LOCKED   string = "LOCKED"
