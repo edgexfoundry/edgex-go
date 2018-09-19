@@ -17,7 +17,7 @@ make cmd/support-scheduler/support-scheduler
 # get to the support logging microservice executable
 cd cmd/support-scheduler
 # run the microservice (may require other dependent services to run correctly)
-./support-schduler
+./support-scheduler
 ```
 To test, simple run:
 
