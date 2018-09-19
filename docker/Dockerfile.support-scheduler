@@ -14,7 +14,7 @@ WORKDIR /go/src/github.com/edgexfoundry/edgex-go
 RUN echo http://nl.alpinelinux.org/alpine/v3.6/main > /etc/apk/repositories; \
     echo http://nl.alpinelinux.org/alpine/v3.6/community >> /etc/apk/repositories
 
-RUN apk update && apk add make && add bash
+RUN apk update && apk add make
 COPY . .
 RUN make cmd/support-scheduler/support-scheduler
 
@@ -27,7 +27,6 @@ ENV APP_PORT=48085
 #expose support scheduler port
 EXPOSE $APP_PORT
 
-COPY --from=builder /bin/bash /bin/bash
 COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/support-scheduler/support-scheduler /
 COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/support-scheduler/res/configuration-docker.toml /res/configuration-docker.toml
 ENTRYPOINT ["/support-scheduler","--consul","--profile=docker","--confdir=/res"]
