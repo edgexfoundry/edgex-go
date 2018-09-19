@@ -11,26 +11,21 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
-package command
+package config
 
-const (
-	ID               = "id"
-	NAME             = "name"
-	DEVICEIDURLPARAM = "{deviceId}"
-	OPSTATE          = "opstate"
-	URLADMINSTATE    = "adminstate"
-	ADMINSTATE       = "adminState"
-	YAML             = "yaml"
-	COMMAND          = "command"
-	COMMANDID        = "commandid"
-	DEVICE           = "device"
-	KEY              = "key"
-	VALUE            = "value"
-	CONFIGENDPOINT   = "/config"
-	PINGENDPOINT     = "/ping"
-	PINGRESPONSE     = "pong"
-	CONTENTTYPE      = "Content-Type"
-	TEXTPLAIN        = "text/plain"
-	UNLOCKED         = "UNLOCKED"
-	ENABLED          = "ENABLED"
-)
+type ConfigurationStruct struct {
+	ConfigPath                   string
+	GlobalPrefix                 string
+	ConsulProtocol               string
+	ConsulHost                   string
+	ConsulPort                   int
+	IsReset                      bool
+	FailLimit                    int
+	FailWaitTime                 int
+	AcceptablePropertyExtensions []string
+	YamlExtensions               []string
+	TomlExtensions               []string
+	EnableRemoteLogging          bool
+	LoggingFile                  string
+	LoggingRemoteURL             string
+}

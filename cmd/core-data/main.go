@@ -29,6 +29,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
+	"github.com/gorilla/context"
 )
 
 var bootTimeout int = 30000 //Once we start the V2 configuration rework, this will be config driven
@@ -48,7 +49,7 @@ func main() {
 	params := startup.BootParams{UseConsul: useConsul, UseProfile: useProfile, BootTimeout: bootTimeout}
 	startup.Bootstrap(params, data.Retry, logBeforeInit)
 
-	ok := data.Init()
+	ok := data.Init(useConsul)
 	if !ok {
 		logBeforeInit(fmt.Errorf("%s: Service bootstrap failed!", internal.CoreDataServiceKey))
 		return
@@ -57,16 +58,16 @@ func main() {
 	data.LoggingClient.Info("Service dependencies resolved...")
 	data.LoggingClient.Info(fmt.Sprintf("Starting %s %s ", internal.CoreDataServiceKey, edgex.Version))
 
-	http.TimeoutHandler(nil, time.Millisecond*time.Duration(data.Configuration.ServiceTimeout), "Request timed out")
-	data.LoggingClient.Info(data.Configuration.AppOpenMsg, "")
+	http.TimeoutHandler(nil, time.Millisecond*time.Duration(data.Configuration.Service.Timeout), "Request timed out")
+	data.LoggingClient.Info(data.Configuration.Service.StartupMsg, "")
 
 	errs := make(chan error, 2)
 	listenForInterrupt(errs)
-	startHttpServer(errs, data.Configuration.ServicePort)
+	startHttpServer(errs, data.Configuration.Service.Port)
 
 	// Time it took to start service
 	data.LoggingClient.Info("Service started in: "+time.Since(start).String(), "")
-	data.LoggingClient.Info("Listening on port: " + strconv.Itoa(data.Configuration.ServicePort))
+	data.LoggingClient.Info("Listening on port: " + strconv.Itoa(data.Configuration.Service.Port))
 	c := <-errs
 	data.Destruct()
 	data.LoggingClient.Warn(fmt.Sprintf("terminating: %v", c))
@@ -88,6 +89,6 @@ func listenForInterrupt(errChan chan error) {
 func startHttpServer(errChan chan error, port int) {
 	go func() {
 		r := data.LoadRestRoutes()
-		errChan <- http.ListenAndServe(":"+strconv.Itoa(port), r)
+		errChan <- http.ListenAndServe(":"+strconv.Itoa(port), context.ClearHandler(r))
 	}()
 }

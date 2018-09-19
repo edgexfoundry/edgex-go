@@ -77,6 +77,10 @@ func LoadRestRoutes() *mux.Router {
 	// /api/v1/ping
 	b.HandleFunc("/ping", pingHandler)
 
+	//Config Resource
+	// /api/v1/config
+	b.HandleFunc("/config", configHandler)
+
 	return r
 }
 

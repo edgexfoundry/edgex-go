@@ -14,6 +14,7 @@
 package command
 
 import (
+	"encoding/json"
 	"net/http"
 
 	mux "github.com/gorilla/mux"
@@ -23,6 +24,9 @@ func LoadRestRoutes() http.Handler {
 	r := mux.NewRouter()
 	b := r.PathPrefix("/api/v1").Subrouter()
 	b.HandleFunc(PINGENDPOINT, ping)
+	//Config Resource
+	// /api/v1/config
+	b.HandleFunc(CONFIGENDPOINT, configHandler)
 
 	loadDeviceRoutes(b)
 	return r
@@ -53,4 +57,17 @@ func loadDeviceRoutes(b *mux.Router) {
 func ping(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set(CONTENTTYPE, TEXTPLAIN)
 	w.Write([]byte(PINGRESPONSE))
+}
+func configHandler(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+
+	w.Header().Add("Content-Type", "application/json")
+
+	enc := json.NewEncoder(w)
+	err := enc.Encode(Configuration)
+	// Problems encoding
+	if err != nil {
+		LoggingClient.Error("Error encoding the data: " + err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }
