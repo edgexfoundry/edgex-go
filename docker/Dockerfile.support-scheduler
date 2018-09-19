@@ -24,7 +24,7 @@ FROM scratch
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
       copyright='Copyright (c) 2018: Dell, Cavium'
 
-ENV APP_PORT=48082
+ENV APP_PORT=48085
 #expose support scheduler port
 EXPOSE $APP_PORT
 
