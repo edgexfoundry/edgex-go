@@ -29,7 +29,7 @@ func encode(i interface{}, w http.ResponseWriter) {
 	// Problems encoding
 	if err != nil {
 		LoggingClient.Error("Error encoding the data: " + err.Error())
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 }
@@ -55,4 +55,10 @@ func pingHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		LoggingClient.Error("Error writing pong: " + err.Error())
 	}
+}
+
+func configHandler(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+
+	encode(Configuration, w)
 }

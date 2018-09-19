@@ -16,11 +16,12 @@ package clients
 const ClientMonitorDefault = 15000
 
 const (
-	ApiAddressableRoute   = "/api/v1/addressable"
-	ApiCommandRoute       = "/api/v1/command"
-	ApiDeviceRoute        = "/api/v1/device"
-	ApiDeviceServiceRoute = "/api/v1/deviceservice"
-	ApiEventRoute         = "/api/v1/event"
-	ApiLoggingRoute       = "/api/v1/logs"
-	ApiScheduleRoute      = "/api/v1/schedule"
+	ApiAddressableRoute      = "/api/v1/addressable"
+	ApiCommandRoute          = "/api/v1/command"
+	ApiDeviceRoute           = "/api/v1/device"
+	ApiDeviceServiceRoute    = "/api/v1/deviceservice"
+	ApiEventRoute            = "/api/v1/event"
+	ApiLoggingRoute          = "/api/v1/logs"
+	ApiProvisionWatcherRoute = "/api/v1/provisionwatcher"
+	ApiScheduleRoute         = "/api/v1/schedule"
 )

@@ -11,26 +11,21 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
-package command
+package data
 
-const (
-	ID               = "id"
-	NAME             = "name"
-	DEVICEIDURLPARAM = "{deviceId}"
-	OPSTATE          = "opstate"
-	URLADMINSTATE    = "adminstate"
-	ADMINSTATE       = "adminState"
-	YAML             = "yaml"
-	COMMAND          = "command"
-	COMMANDID        = "commandid"
-	DEVICE           = "device"
-	KEY              = "key"
-	VALUE            = "value"
-	CONFIGENDPOINT   = "/config"
-	PINGENDPOINT     = "/ping"
-	PINGRESPONSE     = "pong"
-	CONTENTTYPE      = "Content-Type"
-	TEXTPLAIN        = "text/plain"
-	UNLOCKED         = "UNLOCKED"
-	ENABLED          = "ENABLED"
-)
+import "github.com/edgexfoundry/edgex-go/internal/pkg/config"
+
+type ConfigurationStruct struct {
+	DeviceUpdateLastConnected  bool
+	MetaDataCheck              bool
+	PersistData                bool
+	ReadMaxLimit               int
+	ServiceUpdateLastConnected bool
+	ValidateCheck              bool
+	MessageQueue               config.MessageQueueInfo
+	Clients                    map[string]config.ClientInfo
+	Databases                  map[string]config.DatabaseInfo
+	Logging                    config.LoggingInfo
+	Registry                   config.RegistryInfo
+	Service                    config.ServiceInfo
+}

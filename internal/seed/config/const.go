@@ -13,26 +13,4 @@
  *******************************************************************************/
 package config
 
-// Configuration struct populated from local TOML during service bootstrap
-// NOTE: I am only following the existing pattern of putting this struct into
-//       a file named "const.go". I do not think this properly belongs in a
-//       file whose intent by name is for constants. If I were to move this,
-//       then other services should also have their struct moved in a single PR.
-type ConfigurationStruct struct {
-	ConfigPath                   string
-	GlobalPrefix                 string
-	ConsulProtocol               string
-	ConsulHost                   string
-	ConsulPort                   int
-	IsReset                      bool
-	FailLimit                    int
-	FailWaitTime                 int
-	AcceptablePropertyExtensions []string
-	YamlExtensions               []string
-	TomlExtensions               []string
-	EnableRemoteLogging          bool
-	LoggingFile                  string
-	LoggingRemoteURL             string
-}
-
 const consulStatusPath = "/v1/agent/self"
