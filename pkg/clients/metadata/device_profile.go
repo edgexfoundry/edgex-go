@@ -32,6 +32,7 @@ type DeviceProfileClient interface {
 	DeviceProfile(id string) (models.DeviceProfile, error)
 	DeviceProfiles() ([]models.DeviceProfile, error)
 	DeviceProfileForName(name string) (models.DeviceProfile, error)
+	Upload(yamlString string) (string, error)
 }
 
 type DeviceProfileRestClient struct {
@@ -269,4 +270,34 @@ func (dpc *DeviceProfileRestClient) decodeDeviceProfile(resp *http.Response) (mo
 	}
 
 	return ds, err
+}
+
+func (dpc *DeviceProfileRestClient) Upload(yamlString string) (string, error) {
+	req, err := http.NewRequest(http.MethodPost, dpc.url+"/upload", bytes.NewReader([]byte(yamlString)))
+	if err != nil {
+		return "", err
+	}
+
+	resp, err := makeRequest(req)
+	if err != nil {
+		return "", err
+	}
+	if resp == nil {
+		return "", ErrResponseNil
+	}
+	defer resp.Body.Close()
+
+	// Get the body
+	bodyBytes, err := getBody(resp)
+	if err != nil {
+		return "", err
+	}
+	bodyString := string(bodyBytes)
+
+	// Check the response code
+	if resp.StatusCode != http.StatusOK {
+		return "", types.NewErrServiceClient(resp.StatusCode, bodyBytes)
+	}
+
+	return bodyString, nil
 }
