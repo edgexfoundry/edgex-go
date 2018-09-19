@@ -10,7 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
-	"gopkg.in/eapache/queue.v1"
+	queueV1 "gopkg.in/eapache/queue.v1"
 	"io/ioutil"
 	"net/http"
 	"sync"
@@ -25,7 +25,7 @@ const (
 //the schedule specific shared variables
 var (
 	mutex                          sync.Mutex
-	scheduleQueue                  = queue.New()                       // global schedule queue
+	scheduleQueue                  = queueV1.New()                       // global schedule queue
 	scheduleIdToContextMap         = make(map[string]*ScheduleContext) // map : schedule id -> schedule context
 	scheduleEventIdToScheduleIdMap = make(map[string]string)           // map : schedule event id -> schedule id
 )
