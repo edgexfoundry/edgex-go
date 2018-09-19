@@ -121,7 +121,7 @@ func NewAzureMessage() (*AzureMessage, error) {
 		Created:    time.Now(),
 	}
 
-	id:= uuid.NewV4()
+	id := uuid.NewV4()
 	msg.ID = id.String()
 
 	correlationID := uuid.NewV4()
@@ -212,4 +212,66 @@ type noopFormatter struct {
 
 func (noopFmt noopFormatter) Format(event *models.Event) []byte {
 	return []byte{}
+}
+
+// BIoTMessage represents Brightics IoT(Samsung SDS IoT platform)  messages.
+type BIoTMessage struct {
+	Version    string `json:"version"`
+	MsgType    string `json:"msgType"`
+	FuncType   string `json:"funcType"`
+	SId        string `json:"sId"`
+	TpId       string `json:"tpId"`
+	TId        string `json:"tId"`
+	MsgCode    string `json:"msgCode"`
+	MsgId      string `json:"msgId"`
+	MsgDate    int64  `json:"msgDate"`
+	ResCode    string `json:"resCode"`
+	ResMsg     string `json:"resMsg"`
+	Severity   string `json:"severity"`
+	Dataformat string `json:"dataformat"`
+	EncType    string `json:"encType"`
+	AuthToken  string `json:"authToken"`
+	Data       []byte `json:"data"`
+}
+
+// NewBIoTMessage creates a new Brightics IoT message and sets
+// Body and default fields values.
+func NewBIoTMessage() (*BIoTMessage, error) {
+	msg := &BIoTMessage{
+		Severity: "1",
+		MsgType:  "Q",
+	}
+
+	id := uuid.NewV1()
+	msg.MsgId = id.String()
+
+	return msg, nil
+}
+
+// brighticsiotFormatter is used to convert Event to BIoT message and
+// BIoT message to bytes.
+type biotFormatter struct {
+}
+
+// Format method does all foramtting job.
+func (af biotFormatter) Format(event *models.Event) []byte {
+	bm, err := NewBIoTMessage()
+	if err != nil {
+		LoggingClient.Error(fmt.Sprintf("error creating a new BIoT message: %s", err))
+		return []byte{}
+	}
+	bm.TpId = event.Device
+	bm.TId = string(event.Origin)
+	rawdata, err := json.Marshal(event)
+	if err != nil {
+		LoggingClient.Error(fmt.Sprintf("error parsing Event data to BIoTMessage : %s", err))
+		return []byte{}
+	}
+	bm.Data = rawdata
+	msg, err := json.Marshal(bm)
+	if err != nil {
+		LoggingClient.Error(fmt.Sprintf("error parsing BIoTMessage to data: %s", err))
+		return []byte{}
+	}
+	return msg
 }
