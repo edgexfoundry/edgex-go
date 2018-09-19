@@ -131,7 +131,6 @@ docker_support_logging:
 		-t edgexfoundry/docker-support-logging-go:$(VERSION)-dev \
 		.
 
-<<<<<<< HEAD
 docker_support_notifications:
 	docker build \
 		-f docker/Dockerfile.support-notifications \
@@ -146,12 +145,12 @@ docker_sys_mgmt_agent:
 		--label "git_sha=$(GIT_SHA)" \
 		-t edgexfoundry/docker-sys-mgmt-agent-go:$(GIT_SHA) \
 		-t edgexfoundry/docker-sys-mgmt-agent-go:$(VERSION)-dev \
-=======
+		.
+
 docker_support_scheduler:
 	docker build \
 		-f docker/Dockerfile.support-scheduler \
 		--label "git_sha=$(GIT_SHA)" \
 		-t edgexfoundry/docker-support-scheduler-go:$(GIT_SHA) \
 		-t edgexfoundry/docker-support-scheduler-go:$(VERSION)-dev \
->>>>>>> updating schduler commit.  seeing potential issues with conflicts in usage of queue.v1 and potentially zmq4
 		.
