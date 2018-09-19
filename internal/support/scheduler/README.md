@@ -1,4 +1,4 @@
-# EdgeX Foundry Support Scheduler Services
+# EdgeX Foundry Support Scheduler Service
 
 Go implementation of EdgeX Support Scheduler.
 
