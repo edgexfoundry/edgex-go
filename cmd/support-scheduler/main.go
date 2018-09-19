@@ -3,23 +3,18 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/edgexfoundry/edgex-go/internal/core/data"
 
 	"net/http"
-	"os"
-	"os/signal"
 	"strconv"
-	"syscall"
 	"time"
 
 	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/support/scheduler"
-	client "github.com/edgexfoundry/edgex-go/pkg/clients/scheduler"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
+	"github.com/edgexfoundry/edgex-go/internal/support/scheduler"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
-
+	client "github.com/edgexfoundry/edgex-go/pkg/clients/scheduler"
 )
 
 var loggingClient logger.LoggingClient
@@ -78,16 +73,11 @@ func main() {
 	http.TimeoutHandler(nil, time.Millisecond*time.Duration(configuration.ServiceTimeout), "Request timed out")
 	loggingClient.Info(configuration.AppOpenMsg, "")
 
-	errs := make(chan error, 2)
-	listenForInterrupt(errs)
-	startHttpServer(errs, configuration.ServicePort)
 
 	// Time it took to start service
 	loggingClient.Info("Service started in: "+time.Since(start).String(), "")
 	loggingClient.Info("Listening on port: " + strconv.Itoa(configuration.ServicePort))
-	c := <-errs
-	data.Destruct()
-	loggingClient.Warn(fmt.Sprintf("terminating: %v", c))
+
 
 	// Start the Scheduler Service
 	r := scheduler.LoadRestRoutes()
@@ -116,19 +106,4 @@ func setLoggingTarget(conf scheduler.ConfigurationStruct) string {
 		return conf.LogFile
 	}
 	return logTarget
-}
-
-func listenForInterrupt(errChan chan error) {
-	go func() {
-		c := make(chan os.Signal)
-		signal.Notify(c, syscall.SIGINT)
-		errChan <- fmt.Errorf("%s", <-c)
-	}()
-}
-
-func startHttpServer(errChan chan error, port int) {
-	go func() {
-		r := data.LoadRestRoutes()
-		errChan <- http.ListenAndServe(":"+strconv.Itoa(port), r)
-	}()
 }
