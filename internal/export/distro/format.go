@@ -121,7 +121,7 @@ func NewAzureMessage() (*AzureMessage, error) {
 		Created:    time.Now(),
 	}
 
-	id:= uuid.NewV4()
+	id := uuid.NewV4()
 	msg.ID = id.String()
 
 	correlationID := uuid.NewV4()
@@ -213,24 +213,25 @@ type noopFormatter struct {
 func (noopFmt noopFormatter) Format(event *models.Event) []byte {
 	return []byte{}
 }
-// BIoTMessage represents Brightics IoT messages.
+
+// BIoTMessage represents Brightics IoT(Samsung SDS IoT platform)  messages.
 type BIoTMessage struct {
-	Version		string            `json:"version"`
-	MsgType         string            `json:"msgType"`
-	FuncType        string            `json:"funcType"`
-	SId		string            `json:"sId"`
-	TpId		string            `json:"tpId"`
-	TId		string            `json:"tId"`
-	MsgCode         string            `json:"msgCode"`
-	MsgId		string            `json:"msgId"`
-	MsgDate		int64             `json:"msgDate"`
-	ResCode		string            `json:"resCode"`
-	ResMsg		string            `json:"resMsg"`
-	Severity	string            `json:"severity"`
-	Dataformat      string            `json:"dataformat"`
-	EncType         string            `json:"encType"`
-	AuthToken       string            `json:"authToken"`
-	Data		[]byte            `json:"data"`
+	Version    string `json:"version"`
+	MsgType    string `json:"msgType"`
+	FuncType   string `json:"funcType"`
+	SId        string `json:"sId"`
+	TpId       string `json:"tpId"`
+	TId        string `json:"tId"`
+	MsgCode    string `json:"msgCode"`
+	MsgId      string `json:"msgId"`
+	MsgDate    int64  `json:"msgDate"`
+	ResCode    string `json:"resCode"`
+	ResMsg     string `json:"resMsg"`
+	Severity   string `json:"severity"`
+	Dataformat string `json:"dataformat"`
+	EncType    string `json:"encType"`
+	AuthToken  string `json:"authToken"`
+	Data       []byte `json:"data"`
 }
 
 // NewBIoTMessage creates a new Brightics IoT message and sets
@@ -238,10 +239,10 @@ type BIoTMessage struct {
 func NewBIoTMessage() (*BIoTMessage, error) {
 	msg := &BIoTMessage{
 		Severity: "1",
-		MsgType: "Q",
+		MsgType:  "Q",
 	}
 
-	id:= uuid.NewV1()
+	id := uuid.NewV1()
 	msg.MsgId = id.String()
 
 	return msg, nil
@@ -274,4 +275,3 @@ func (af biotFormatter) Format(event *models.Event) []byte {
 	}
 	return msg
 }
-
