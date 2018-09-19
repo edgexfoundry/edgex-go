@@ -8,7 +8,7 @@ package scheduler
 
 import (
 	"github.com/edgexfoundry/edgex-go/pkg/models"
-	"github.com/edgexfoundry/edgex-go/internal/core/metadata"
+
 	"regexp"
 	"strconv"
 	"time"
@@ -46,7 +46,7 @@ func (sc *ScheduleContext) Reset(schedule models.Schedule) {
 	if sc.Schedule.Start == "" {
 		sc.StartTime = time.Now()
 	} else {
-		t, err := time.Parse(metadata.TIMELAYOUT, sc.Schedule.Start)
+		t, err := time.Parse(TIMELAYOUT, sc.Schedule.Start)
 		if err != nil {
 			loggingClient.Error("parse time error, the original time string is : " + sc.Schedule.Start)
 		}
@@ -58,7 +58,7 @@ func (sc *ScheduleContext) Reset(schedule models.Schedule) {
 		//use max time
 		sc.EndTime = time.Unix(1<<63-62135596801, 999999999)
 	} else {
-		t, err := time.Parse(metadata.TIMELAYOUT, sc.Schedule.End)
+		t, err := time.Parse(TIMELAYOUT, sc.Schedule.End)
 		if err != nil {
 			loggingClient.Error("parse time error, the original time string is : " + sc.Schedule.End)
 		}
