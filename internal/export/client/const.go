@@ -9,6 +9,7 @@ package client
 type ConfigurationStruct struct {
 	Hostname             string
 	Port                 int
+	Timeout              int
 	DBType               string
 	MongoURL             string
 	MongoUsername        string
@@ -26,6 +27,7 @@ type ConfigurationStruct struct {
 	EnableRemoteLogging  bool
 	LoggingRemoteURL     string
 	LogFile              string
+	AppOpenMsg           string
 }
 
 var configuration = ConfigurationStruct{} // Needs to be initialized before used

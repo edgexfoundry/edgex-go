@@ -1,7 +1,7 @@
 name: edgexfoundry
-version: '0.5.2'
+version: 'replace-me'
 version-script: |
-    echo $SNAPCRAFT_PROJECT_VERSION-$(date +%Y%m%d)+$(git rev-parse --short HEAD)
+    echo $(cat VERSION)-$(date +%Y%m%d)+$(git rev-parse --short HEAD)
 summary: Provides a full set of Edgex Foundry core microservices.
 description: |
  This snap provides a full set of EdgeX Foundry core micro services.
@@ -148,24 +148,12 @@ parts:
       - bin/stop-edgex.sh
       - config/edgex-services-env
   mongodb:
-    plugin: shell
-    source: .
-    shell: bash
-    shell-flags: ['-eux', '-o', 'pipefail']
-    build-packages: [wget]
-    shell-command: |
-      export ARCH=`arch`
-
-      if [ $ARCH = "x86_64" ] ; then
-        export PACKAGE="mongodb-linux-x86_64-ubuntu1604-3.4.10.tgz"
-      elif [ $ARCH = "aarch64" ] ; then
-        export PACKAGE="mongodb-linux-arm64-ubuntu1604-3.4.10.tgz"
-      fi
-
-      pushd $SNAPCRAFT_PART_INSTALL
-      wget "https://fastdl.mongodb.org/linux/$PACKAGE"
-      tar xvf "./$PACKAGE" --strip-components=1
-      popd
+    plugin: dump
+    source: 
+      - on amd64: https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-ubuntu1604-3.4.10.tgz
+      - else:
+        - on arm64: https://fastdl.mongodb.org/linux/mongodb-linux-arm64-ubuntu1604-3.4.10.tgz
+      - else fail
     organize:
       GNU-AGPL-3.0: usr/share/doc/mongodb/GNU-AGPL-3.0
       MPL-2: usr/share/doc/mongodb/MPL-2
@@ -184,7 +172,6 @@ parts:
       - -bin/mongorestore
       - -bin/mongos
       - -bin/mongotop
-      - -mongodb-linux-*-ubuntu1604-3.4.10.tgz
   mongo-config:
     source: https://github.com/edgexfoundry/docker-edgex-mongo.git
     source-depth: 1

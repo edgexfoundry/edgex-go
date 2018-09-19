@@ -11,10 +11,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/consul"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/coredata"
+	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
 )
 
@@ -85,7 +86,7 @@ func Init(conf ConfigurationStruct, useConsul bool) error {
 		Interval:    internal.ClientMonitorDefault,
 	}
 
-	ec = coredata.NewEventClient(params, types.Endpoint{})
+	ec = coredata.NewEventClient(params, startup.Endpoint{})
 
 	return nil
 }

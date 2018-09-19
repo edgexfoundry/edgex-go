@@ -30,7 +30,7 @@ func prepareTest(t *testing.T) *httptest.Server {
 		LoggingClient = logger.NewClient(internal.ExportClientServiceKey, false, "")
 	}
 
-	dbc = &memory.MemDB{}
+	dbClient = &memory.MemDB{}
 	return httptest.NewServer(httpServer())
 }
 

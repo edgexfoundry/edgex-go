@@ -11,19 +11,25 @@ package main
 import (
 	"flag"
 	"fmt"
+	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
+	"time"
 
-	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/export/client"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
+	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 )
 
+var bootTimeout = 30000 //Once we start the V2 configuration rework, this will be config driven
+
 func main() {
+	start := time.Now()
 	var (
 		useConsul  bool
 		useProfile string
@@ -36,46 +42,42 @@ func main() {
 	flag.Usage = usage.HelpCallback
 	flag.Parse()
 
-	configuration := &client.ConfigurationStruct{}
-	err := config.LoadFromFile(useProfile, configuration)
-	if err != nil {
-		logBeforeInit(fmt.Errorf("%s: version: %s: err: %s", internal.ExportClientServiceKey, edgex.Version, err.Error()))
+	params := startup.BootParams{UseConsul: useConsul, UseProfile: useProfile, BootTimeout: bootTimeout}
+	startup.Bootstrap(params, client.Retry, logBeforeInit)
+
+	ok := client.Init()
+	if !ok {
+		logBeforeInit(fmt.Errorf("%s: Service bootstrap failed", internal.ExportClientServiceKey))
 		return
 	}
 
-	//Determine if configuration should be overridden from Consul
-	if useConsul {
-		err := client.ConnectToConsul(*configuration)
-		if err != nil {
-			logBeforeInit(fmt.Errorf("%s: version: %s: err: %s", internal.ExportClientServiceKey, edgex.Version, err.Error()))
-			return //end program since user explicitly told us to use Consul.
-		}
-	}
+	client.LoggingClient.Info("Service dependencies resolved...")
+	client.LoggingClient.Info(fmt.Sprintf("Starting %s %s ", internal.ExportClientServiceKey, edgex.Version))
 
-	err = client.Init(*configuration)
-	if err != nil {
-		logBeforeInit(fmt.Errorf("%s: could not initialize export client: %s", internal.ExportClientServiceKey, err.Error()))
-		return
-	}
+	http.TimeoutHandler(nil, time.Millisecond*time.Duration(client.Configuration.Timeout), "Request timed out")
+	client.LoggingClient.Info(client.Configuration.AppOpenMsg, "")
 
 	errs := make(chan error, 2)
+	listenForInterrupt(errs)
+	client.StartHTTPServer(*client.Configuration, errs)
 
-	client.StartHTTPServer(*configuration, errs)
-
-	go func() {
-		c := make(chan os.Signal)
-		signal.Notify(c, syscall.SIGINT)
-		errs <- fmt.Errorf("%s", <-c)
-	}()
-
+	// Time it took to start service
+	client.LoggingClient.Info("Service started in: "+time.Since(start).String(), "")
+	client.LoggingClient.Info("Listening on port: " + strconv.Itoa(client.Configuration.Port))
 	c := <-errs
-
 	client.Destroy()
-
-	client.LoggingClient.Error(fmt.Sprintf("%s: terminated with error(s): %s", internal.ExportClientServiceKey, c.Error()))
+	client.LoggingClient.Warn(fmt.Sprintf("terminating: %v", c))
 }
 
 func logBeforeInit(err error) {
 	l := logger.NewClient(internal.ExportClientServiceKey, false, "")
 	l.Error(err.Error())
+}
+
+func listenForInterrupt(errChan chan error) {
+	go func() {
+		c := make(chan os.Signal)
+		signal.Notify(c, syscall.SIGINT)
+		errChan <- fmt.Errorf("%s", <-c)
+	}()
 }
