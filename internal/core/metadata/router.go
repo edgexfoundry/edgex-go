@@ -14,6 +14,7 @@
 package metadata
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -23,6 +24,7 @@ func LoadRestRoutes() *mux.Router {
 	r := mux.NewRouter()
 	b := r.PathPrefix("/api/v1").Subrouter()
 	b.HandleFunc("/ping", ping)
+	b.HandleFunc("/config", configHandler)
 
 	loadDeviceRoutes(b)
 	loadDeviceProfileRoutes(b)
@@ -248,4 +250,18 @@ func loadCommandRoutes(b *mux.Router) {
 func ping(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
 	w.Write([]byte("pong"))
+}
+
+func configHandler(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+
+	w.Header().Add("Content-Type", "application/json")
+
+	enc := json.NewEncoder(w)
+	err := enc.Encode(Configuration)
+	// Problems encoding
+	if err != nil {
+		LoggingClient.Error("Error encoding the data: " + err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }

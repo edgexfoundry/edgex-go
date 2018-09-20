@@ -19,7 +19,6 @@ type ConfigurationStruct struct {
 	DeviceUpdateLastConnected  bool
 	MetaDataCheck              bool
 	PersistData                bool
-	ReadMaxLimit               int
 	ServiceUpdateLastConnected bool
 	ValidateCheck              bool
 	MessageQueue               config.MessageQueueInfo

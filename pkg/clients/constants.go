@@ -22,6 +22,9 @@ const (
 	ApiDeviceServiceRoute    = "/api/v1/deviceservice"
 	ApiEventRoute            = "/api/v1/event"
 	ApiLoggingRoute          = "/api/v1/logs"
+	ApiNotificationRoute     = "/api/v1/notification"
 	ApiProvisionWatcherRoute = "/api/v1/provisionwatcher"
 	ApiScheduleRoute         = "/api/v1/schedule"
+	ApiSubscriptionRoute     = "/api/v1/subscription"
+	ApiTransmissionRoute     = "/api/v1/transmission"
 )

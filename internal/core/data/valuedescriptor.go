@@ -58,7 +58,7 @@ func valueDescriptorHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Check the limit
-		if len(vList) > Configuration.ReadMaxLimit {
+		if len(vList) > Configuration.Service.ReadMaxLimit {
 			http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
 			LoggingClient.Error(maxExceededString)
 			return
