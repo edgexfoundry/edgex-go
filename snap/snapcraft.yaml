@@ -73,6 +73,9 @@ apps:
   mongodump:
     command: bin/mongodump
     plugs: [network]
+  mongoimport:
+    command: bin/mongoimport
+    plugs: [home, network]
   consul-cli:
     command: bin/consul
     plugs: [network, network-bind]
@@ -283,7 +286,6 @@ parts:
       - -bin/bsondump
       - -bin/mongoexport
       - -bin/mongofiles
-      - -bin/mongoimport
       - -bin/mongooplog
       - -bin/mongoperf
       - -bin/mongoreplay
