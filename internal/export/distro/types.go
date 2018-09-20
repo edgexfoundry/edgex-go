@@ -7,26 +7,26 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-package interfaces
+package distro
 
 import "github.com/edgexfoundry/edgex-go/pkg/models"
 
 // Sender - Send interface
-type Sender interface {
+type sender interface {
 	Send(data []byte, event *models.Event) bool
 }
 
 // Formatter - Format interface
-type Formatter interface {
+type formatter interface {
 	Format(event *models.Event) []byte
 }
 
 // Transformer - Transform interface
-type Transformer interface {
+type transformer interface {
 	Transform(data []byte) []byte
 }
 
 // Filter - Filter interface
-type Filterer interface {
+type filterer interface {
 	Filter(event *models.Event) (bool, *models.Event)
 }

@@ -9,11 +9,12 @@ package distro
 import (
 	"crypto/tls"
 	"flag"
-	"github.com/mattn/go-xmpp"
 	"log"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/mattn/go-xmpp"
 )
 
 const (
