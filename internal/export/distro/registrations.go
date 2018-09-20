@@ -15,11 +15,12 @@ package distro
 
 import (
 	"fmt"
+	"net/http"
+	"time"
+
 	"github.com/edgexfoundry/edgex-go/internal/export"
 	"github.com/edgexfoundry/edgex-go/internal/export/interfaces"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
-	"net/http"
-	"time"
 )
 
 const (
@@ -281,7 +282,7 @@ func Loop(errChan chan error, eventCh chan *models.Event) {
 		case e := <-errChan:
 			LoggingClient.Error(fmt.Sprintf("exit msg: %s", e.Error()))
 			if err != nil {
-				LoggingClient.Error(fmt.Sprintf("with error: %s",  err.Error()))
+				LoggingClient.Error(fmt.Sprintf("with error: %s", err.Error()))
 			}
 			return
 		case <-time.After(time.Second):
@@ -322,7 +323,6 @@ func Loop(errChan chan error, eventCh chan *models.Event) {
 			}
 
 		case event := <-eventCh:
-			LoggingClient.Info("EVENT")
 			for k, reg := range registrations {
 				if reg.deleteFlag {
 					delete(registrations, k)
