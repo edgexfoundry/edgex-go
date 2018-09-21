@@ -103,13 +103,13 @@ func (reg *registrationInfo) update(newReg export.Registration) bool {
 	reg.sender = nil
 	switch newReg.Destination {
 	case export.DestMQTT, export.DestAzureMQTT:
-		reg.sender = newMqttSender(newReg.Addressable, configuration.MQTTSCert, configuration.MQTTSKey)
+		reg.sender = newMqttSender(newReg.Addressable, Configuration.MQTTSCert, Configuration.MQTTSKey)
 	case export.DestAWSMQTT:
 		newReg.Addressable.Protocol = "tls"
 		newReg.Addressable.Path = ""
 		newReg.Addressable.Topic = fmt.Sprintf(awsThingUpdateTopic, newReg.Addressable.Topic)
 		newReg.Addressable.Port = awsMQTTPort
-		reg.sender = newMqttSender(newReg.Addressable, configuration.AWSCert, configuration.AWSKey)
+		reg.sender = newMqttSender(newReg.Addressable, Configuration.AWSCert, Configuration.AWSKey)
 	case export.DestZMQ:
 		LoggingClient.Info("Destination ZMQ is not supported")
 	case export.DestIotCoreMQTT:
@@ -186,7 +186,7 @@ func (reg registrationInfo) processEvent(event *models.Event) {
 		encrypted = reg.encrypt.Transform(compressed)
 	}
 
-	if reg.sender.Send(encrypted, event) && configuration.MarkPushed {
+	if reg.sender.Send(encrypted, event) && Configuration.MarkPushed {
 		id := event.ID.Hex()
 		err := ec.MarkPushed(id)
 
@@ -266,7 +266,7 @@ func updateRunningRegistrations(running map[string]*registrationInfo,
 // Loop - registration loop
 func Loop(errChan chan error, eventCh chan *models.Event) {
 	go func() {
-		p := fmt.Sprintf(":%d", configuration.Port)
+		p := fmt.Sprintf(":%d", Configuration.Port)
 		LoggingClient.Info(fmt.Sprintf("Starting Export Distro %s", p))
 		errChan <- http.ListenAndServe(p, httpServer())
 	}()
