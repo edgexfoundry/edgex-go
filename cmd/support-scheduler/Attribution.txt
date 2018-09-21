@@ -2,3 +2,6 @@ The following open source projects are referenced by Support-Scheduler Go:
 
 eapache queue (MIT) - https://github.com/eapache/queue
 https://github.com/eapache/queue/blob/master/LICENSE
+
+gorilla/mux (BSD-3) - https://github.com/gorilla/mux
+https://github.com/gorilla/mux/blob/master/LICENSE

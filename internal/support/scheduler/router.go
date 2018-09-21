@@ -23,6 +23,9 @@ func LoadRestRoutes() http.Handler {
 	//ping
 	b.HandleFunc("/ping", ping).Methods(http.MethodGet)
 
+	// meta
+	b.HandleFunc("/info/{name}", info).Methods(http.MethodGet)
+
 	// callback
 	b.HandleFunc("/callbacks", addCallbackAlert).Methods(http.MethodPost)
 	b.HandleFunc("/callbacks", updateCallbackAlert).Methods(http.MethodPut)
@@ -42,6 +45,27 @@ func ping(rw http.ResponseWriter, req *http.Request) {
 	rw.WriteHeader(http.StatusOK)
 	str := `{"value" : "pong"}`
 	io.WriteString(rw, str)
+}
+
+func info(rw http.ResponseWriter, req *http.Request){
+	rw.Header().Set(ContentTypeKey, ContentTypeJsonValue)
+	rw.WriteHeader(http.StatusOK)
+
+	vars := mux.Vars(req)
+
+
+	scheduleEvent, err := schedulerClient.QueryScheduleWithName(vars["name"])
+	if err != nil{
+		loggingClient.Error("read info request error" + err.Error())
+		return
+	}
+
+	str := `{"name"}: {"` + scheduleEvent.Name + `"}"`
+	str1 :=`{"frequency"}:{"` + scheduleEvent.Frequency + `"}"`
+
+	io.WriteString(rw, str + str1)
+	// iterate over the current schedulers
+
 }
 
 func addCallbackAlert(rw http.ResponseWriter, r *http.Request) {

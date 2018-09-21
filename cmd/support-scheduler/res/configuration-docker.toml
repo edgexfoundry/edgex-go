@@ -1,12 +1,14 @@
 ConsulProfilesActive = 'docker;go'
 ReadLimit = 100
-ServicePort = 48085
+ServerPort =
+ServiceAddress = 'localhost'
+ServicePort = 48081
 ConsulPort = 8500
 ServiceTimeout = 5000
 ConsulHost = 'localhost'
 ConsulCheckAddress = 'http://localhost:48085/api/v1/ping'
 CheckInterval = '10s'
-ServiceAddress = 'localhost'
+
 AppOpenMsg = 'This is the Core Scheduler Micro Service'
 EnableRemoteLogging = false
 LoggingFile = './logs/edgex-core-suppor-scheduler.log'
@@ -22,6 +24,7 @@ DefaultScheduleStart = '20180101T000000'
 DefaultScheduleEventName = 'scrub-pushed-events,scrube-aged-events'
 DefaultScheduleEventMethod = 'DELETE,DELETE'
 DefaultScheduleEventService = 'core-data,core-data'
+DefaultScheduleEventParameters = ''
 DefaultScheduleEventPath = '/api/v1/event/scrub,/api/v1/event/removeold/age/604800000'
 DefaultScheduleEventSchedule = 'midnight,midnight'
 DefaultScheduleEventScheduler = 'support-scheduler,support-scheduler'

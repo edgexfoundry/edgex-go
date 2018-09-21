@@ -15,55 +15,56 @@ package scheduler
 
 // ConfigurationStruct : Struct used to pase the JSON configuration file
 type ConfigurationStruct struct {
-	ConsulProfilesActive          string
-	ReadMaxLimit                  int
-	ServicePort                   int
-	ConsulPort                    int
-	ServiceTimeout                int
-	CheckInterval                 string
-	ServiceAddress                string
-	DeviceServiceProtocol         string
-	AppOpenMsg                    string
-	URLProtocol                   string
-	URLDevicePath                 string
-	ConsulHost                    string
-	ConsulCheckAddress            string
-	EnableRemoteLogging           bool
-	LogFile                       string
-	LoggingRemoteURL              string
-	ServiceLabels                 string
-	ServiceCallBack               string
-	ServiceConnectionReties       int
-	ServiceConnectionInterval     int
-	ScheduleInterval              int
-	DefaultScheduleName           string
-	DefaultScheduleFrequency      string
-	DefaultScheduleStart          string
-	DefaultScheduleEventName      string
-	DefaultScheduleEventMethod    string
-	DefaultScheduleEventService   string
-	DefaultScheduleEventPath      string
-	DefaultScheduleEventSchedule  string
-	DefaultScheduleEventScheduler string
-
-	MetaAddressableURL       string
-	MetaAddressablePath      string
-	MetaDeviceServiceURL     string
-	MetaDeviceServicePath    string
-	MetaDeviceProfileURL     string
-	MetaDeviceProfilePath    string
-	MetaDeviceURL            string
-	MetaDevicePath           string
-	MetaDeviceReportURL      string
-	MetaDeviceReportPath     string
-	MetaCommandURL           string
-	MetaCommandPath          string
-	MetaEventURL             string
-	MetaEventPath            string
-	MetaScheduleURL          string
-	MetaSchedulePath         string
-	MetaProvisionWatcherURL  string
-	MetaProvisionWatcherPath string
+	ConsulProfilesActive           string
+	ReadMaxLimit                   int
+	Host                           string
+	ServicePort                    int
+	ConsulPort                     int
+	ServiceTimeout                 int
+	CheckInterval                  string
+	ServiceAddress                 string
+	DeviceServiceProtocol          string
+	AppOpenMsg                     string
+	URLProtocol                    string
+	URLDevicePath                  string
+	ConsulHost                     string
+	ConsulCheckAddress             string
+	EnableRemoteLogging            bool
+	LogFile                        string
+	LoggingRemoteURL               string
+	ServiceLabels                  string
+	ServiceCallBack                string
+	ServiceConnectionReties        int
+	ServiceConnectionInterval      int
+	ScheduleInterval               int
+	DefaultScheduleName            string
+	DefaultScheduleFrequency       string
+	DefaultScheduleStart           string
+	DefaultScheduleEventName       string
+	DefaultScheduleEventMethod     string
+	DefaultScheduleEventService    string
+	DefaultScheduleEventParameters string
+	DefaultScheduleEventPath       string
+	DefaultScheduleEventSchedule   string
+	DefaultScheduleEventScheduler  string
+	MetaAddressableURL             string
+	MetaAddressablePath            string
+	MetaDeviceServiceURL           string
+	MetaDeviceServicePath          string
+	MetaDeviceProfileURL           string
+	MetaDeviceProfilePath          string
+	MetaDeviceURL                  string
+	MetaDevicePath                 string
+	MetaDeviceReportURL            string
+	MetaDeviceReportPath           string
+	MetaCommandURL                 string
+	MetaCommandPath                string
+	MetaEventURL                   string
+	MetaEventPath                  string
+	MetaScheduleURL                string
+	MetaSchedulePath               string
+	MetaProvisionWatcherURL        string
+	MetaProvisionWatcherPath       string
 }
 
 const (
@@ -132,7 +133,7 @@ const (
 	PINGRESPONSE                    = "pong"
 	CONTENTTYPE                     = "Content-Type"
 	TEXTPLAIN                       = "text/plain"
-	TIMELAYOUT               = "20060102T150405"
+	TIMELAYOUT                      = "20060102T150405"
 
 	/* TODO ENUM */
 	LOCKED   string = "LOCKED"

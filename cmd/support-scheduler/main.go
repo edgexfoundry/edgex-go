@@ -61,7 +61,7 @@ func main() {
 	loggingClient.Info(fmt.Sprintf("Starting %s %s ", internal.SupportSchedulerServiceKey, edgex.Version))
 
 
-	client.SetConfiguration(configuration.ConsulHost,configuration.ConsulPort)
+	client.SetConfiguration(configuration.Host,configuration.ServicePort)
 	var schedulerClient = client.GetSchedulerClient()
 
 	err = scheduler.Init(*configuration, schedulerClient, loggingClient, useConsul)
@@ -69,15 +69,6 @@ func main() {
 		loggingClient.Error(fmt.Sprintf("call to init() failed: %v", err.Error()))
 		return
 	}
-
-	http.TimeoutHandler(nil, time.Millisecond*time.Duration(configuration.ServiceTimeout), "Request timed out")
-	loggingClient.Info(configuration.AppOpenMsg, "")
-
-
-	// Time it took to start service
-	loggingClient.Info("Service started in: "+time.Since(start).String(), "")
-	loggingClient.Info("Listening on port: " + strconv.Itoa(configuration.ServicePort))
-
 
 	// Start the Scheduler Service
 	r := scheduler.LoadRestRoutes()

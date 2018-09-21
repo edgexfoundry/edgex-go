@@ -209,7 +209,7 @@ func addScheduleEvent(scheduleEvent models.ScheduleEvent) error {
 
 	schedule, err := schedulerClient.QueryScheduleWithName(scheduleName)
 	if err != nil {
-		loggingClient.Error("query the schedule with name : " + scheduleName + " occurs a error : " + err.Error())
+		loggingClient.Error("query the schedule with name : " + scheduleName + " occurs with an error : " + err.Error())
 		return err
 	}
 

@@ -1,6 +1,7 @@
 ConsulProfilesActive = 'go'
 ReadLimit = 100
 ServicePort = 48085
+Host = 'localhost'
 ConsulPort = 8500
 ServiceTimeout = 5000
 ConsulHost = 'localhost'
@@ -22,6 +23,7 @@ DefaultScheduleStart = '20180101T000000'
 DefaultScheduleEventName = 'scrub-pushed-events,scrube-aged-events'
 DefaultScheduleEventMethod = 'DELETE,DELETE'
 DefaultScheduleEventService = 'core-data,core-data'
+DefaultScheduleEventParameters = ','
 DefaultScheduleEventPath = '/api/v1/event/scrub,/api/v1/event/removeold/age/604800000'
 DefaultScheduleEventSchedule = 'midnight,midnight'
 DefaultScheduleEventScheduler = 'support-scheduler,support-scheduler'
