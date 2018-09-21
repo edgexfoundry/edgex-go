@@ -113,12 +113,10 @@ parts:
       - bin/glide
   consul:
     after: [go]
-    plugin: shell
+    plugin: go
     source: https://github.com/hashicorp/consul.git
     source-tag: v1.1.0
-    shell: bash
-    shell-flags: ['-eux', '-o', 'pipefail']
-    shell-command: |
+    override-build: |
       . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
       gopartbootstrap github.com/hashicorp/consul
 
@@ -256,13 +254,11 @@ parts:
       - -LICENSE-2.0.TXT
   edgex-go:
     source: .
-    plugin: shell
+    plugin: go
     after:
       - glide
       - go
-    shell: bash
-    shell-flags: ['-eux', '-o', 'pipefail']
-    shell-command: |
+    override-build: |
       . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
       gopartbootstrap github.com/edgexfoundry/edgex-go
       
