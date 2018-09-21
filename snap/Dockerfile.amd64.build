@@ -1,3 +1,4 @@
+# for x86, we can just use the upstream snapcraft image
 FROM snapcore/snapcraft:stable
 
 VOLUME [ "/build" ]

@@ -1,0 +1,28 @@
+# for armhf, we need to use the base ubuntu image
+# as there isn't currently a snapcraft image published for architectures other than amd64
+# see request on the forum: https://forum.snapcraft.io/t/docker-images-for-non-amd64-architectures/7466
+
+# alos note that snaps are only supported on armv7+, so we don't support for example
+# the raspberry pi 1 or raspberry pi zero, as those are both armv6 devices
+FROM arm32v7/ubuntu:16.04
+
+# this is basically the same as the amd64 upstream:
+# https://github.com/snapcore/snapcraft/blob/master/Dockerfile
+RUN apt-get update && \
+  apt-get dist-upgrade --yes && \
+  apt-get install --yes \
+  git \
+  snapcraft \
+  && \
+  apt-get autoclean --yes && \
+  apt-get clean --yes
+
+# Required by click.
+ENV LC_ALL C.UTF-8
+ENV SNAPCRAFT_SETUP_CORE 1
+
+VOLUME [ "/build" ]
+
+WORKDIR /build
+
+CMD ["bash", "-c", "snapcraft clean && snapcraft"]
