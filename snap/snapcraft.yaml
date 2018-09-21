@@ -95,31 +95,22 @@ parts:
       # setting go to build after config-common ensures that it will get re-added to SNAPCRAFT_STAGE
       # if config-common is rebuilt
       - config-common
-    plugin: shell
-    source: .
-    shell: bash
-    shell-flags: ['-eux', '-o', 'pipefail']
-    build-packages: [wget]
-    shell-command: |
-      case $SNAPCRAFT_ARCH_TRIPLET in
-        aarch64*)
-          export PACKAGE="glide-v0.12.3-linux-arm64.tar.gz";;
-        arm*)
-          export PACKAGE="glide-v0.12.3-linux-armv7.tar.gz";;
-        i386*|i686*)
-          export PACKAGE="glide-v0.12.3-linux-386.tar.gz";;
-        x86_64*)
-          export PACKAGE="glide-v0.12.3-linux-amd64.tar.gz";;
-        *)
-          echo "Unsupported arch $SNAPCRAFT_ARCH_TRIPLET"
-          exit 1;;
-      esac
-
-      wget "https://github.com/Masterminds/glide/releases/download/v0.12.3/$PACKAGE"
-      tar xvf "$PACKAGE" --strip-components=1
-      install -DT glide $SNAPCRAFT_STAGE/bin/glide
+    plugin: dump
+    source: 
+      - on amd64: https://github.com/Masterminds/glide/releases/download/v0.12.3/glide-v0.12.3-linux-amd64.tar.gz
+      - else:
+        - on arm64: https://github.com/Masterminds/glide/releases/download/v0.12.3/glide-v0.12.3-linux-arm64.tar.gz
+        - else:
+          - on armhf: https://github.com/Masterminds/glide/releases/download/v0.12.3/glide-v0.12.3-linux-armv7.tar.gz
+          - else:
+            - on i386: https://github.com/Masterminds/glide/releases/download/v0.12.3/glide-v0.12.3-linux-386.tar.gz
+      - else fail
     prime:
-     - -*
+      - -*
+    organize:
+      glide: bin/glide
+    stage:
+      - bin/glide
   consul:
     after: [go]
     plugin: shell
