@@ -188,7 +188,7 @@ parts:
 
   config-common:
     plugin: dump
-    source: ./snap
+    source: ./snap/local
     stage:
       - bin/go-build-helper.sh
       - config/*
