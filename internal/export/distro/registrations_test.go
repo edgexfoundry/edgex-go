@@ -104,7 +104,7 @@ func TestRegistrationInfoEvent(t *testing.T) {
 	// Filter only accepting events from dummyDev
 	f := export.Filter{}
 	f.DeviceIDs = append(f.DeviceIDs, dummyDev)
-	filter := NewDevIdFilter(f)
+	filter := newDevIdFilter(f)
 
 	ri.filter = append(ri.filter, filter)
 

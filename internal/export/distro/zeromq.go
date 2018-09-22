@@ -12,7 +12,6 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 	zmq "github.com/pebbe/zmq4"
-
 )
 
 const (

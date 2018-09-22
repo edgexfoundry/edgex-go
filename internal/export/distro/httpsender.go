@@ -15,7 +15,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/edgexfoundry/edgex-go/internal/export/interfaces"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 )
 
@@ -26,8 +25,8 @@ type httpSender struct {
 
 const mimeTypeJSON = "application/json"
 
-// NewHTTPSender - create http sender
-func NewHTTPSender(addr models.Addressable) interfaces.Sender {
+// newHTTPSender - create http sender
+func newHTTPSender(addr models.Addressable) sender {
 
 	sender := httpSender{
 		url:    addr.Protocol + "://" + addr.Address + ":" + strconv.Itoa(addr.Port) + addr.Path,

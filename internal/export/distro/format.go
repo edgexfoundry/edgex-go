@@ -112,9 +112,9 @@ type AzureMessage struct {
 	Properties     map[string]string `json:"properties"`
 }
 
-// NewAzureMessage creates a new Azure message and sets
+// newAzureMessage creates a new Azure message and sets
 // Body and default fields values.
-func NewAzureMessage() (*AzureMessage, error) {
+func newAzureMessage() (*AzureMessage, error) {
 	msg := &AzureMessage{
 		Ack:        none,
 		Properties: make(map[string]string),
@@ -143,7 +143,7 @@ type azureFormatter struct {
 
 // Format method does all foramtting job.
 func (af azureFormatter) Format(event *models.Event) []byte {
-	am, err := NewAzureMessage()
+	am, err := newAzureMessage()
 	if err != nil {
 		LoggingClient.Error(fmt.Sprintf("Error creating a new Azure message: %s", err))
 		return []byte{}
@@ -234,9 +234,9 @@ type BIoTMessage struct {
 	Data       []byte `json:"data"`
 }
 
-// NewBIoTMessage creates a new Brightics IoT message and sets
+// newBIoTMessage creates a new Brightics IoT message and sets
 // Body and default fields values.
-func NewBIoTMessage() (*BIoTMessage, error) {
+func newBIoTMessage() (*BIoTMessage, error) {
 	msg := &BIoTMessage{
 		Severity: "1",
 		MsgType:  "Q",
@@ -255,7 +255,7 @@ type biotFormatter struct {
 
 // Format method does all foramtting job.
 func (af biotFormatter) Format(event *models.Event) []byte {
-	bm, err := NewBIoTMessage()
+	bm, err := newBIoTMessage()
 	if err != nil {
 		LoggingClient.Error(fmt.Sprintf("error creating a new BIoT message: %s", err))
 		return []byte{}
