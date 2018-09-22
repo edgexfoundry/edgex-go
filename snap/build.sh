@@ -38,5 +38,12 @@ elif [ $ARCH = "i386" ] ; then
     docker build -t edgex-snap-builder:latest -f ${SCRIPT_DIR}/Dockerfile.i386.build $GIT_ROOT
 fi
 
+# delete the login file we copied to the git root so it doesn't persist around
+rm $GIT_ROOT/edgex-snap-store-login
+
 # now run the build with the environment variables 
 docker run --rm -e "IS_RELEASE_JOB=$IS_RELEASE_JOB" -e "RELEASE=$RELEASE" -e "SNAP_CHANNEL=$SNAP_CHANNEL" edgex-snap-builder:latest
+
+# also delete the image we created so that it doesn't persist on the system as it contains credentials
+docker image rm --force edgex-snap-builder:latest
+docker image prune
