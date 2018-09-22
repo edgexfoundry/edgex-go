@@ -113,7 +113,7 @@ parts:
       - bin/glide
   consul:
     after: [go]
-    plugin: go
+    plugin: make
     source: https://github.com/hashicorp/consul.git
     source-tag: v1.1.0
     override-build: |
@@ -254,7 +254,7 @@ parts:
       - -LICENSE-2.0.TXT
   edgex-go:
     source: .
-    plugin: go
+    plugin: make
     after:
       - glide
       - go
