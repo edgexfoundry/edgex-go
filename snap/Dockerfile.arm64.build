@@ -15,12 +15,9 @@ RUN apt-get update && \
   apt-get autoclean --yes && \
   apt-get clean --yes
 
-# Required by click.
-ENV LC_ALL C.UTF-8
-ENV SNAPCRAFT_SETUP_CORE 1
+# include all of the build context inside /build
+COPY . /build
 
-VOLUME [ "/build" ]
-
+# run the entrypoint.sh script to actually perform the build when the container is run
 WORKDIR /build
-
-CMD ["bash", "-c", "snapcraft clean && snapcraft"]
+ENTRYPOINT [ "/build/snap/entrypoint.sh" ]
