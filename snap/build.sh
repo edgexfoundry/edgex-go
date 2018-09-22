@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash
 
 # get the directory of this script
 # snippet from https://stackoverflow.com/a/246128/10102404
