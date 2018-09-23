@@ -251,7 +251,7 @@ parts:
       install -d "$SNAPCRAFT_PART_INSTALL/mongo"
       cat ./launch-edgex-mongo.sh | \
         sed -e s/\$SLEEP_TIME_BEFORE_CONFIG/10/ \
-            -e s:mongod:mongod\ --dbpath\ \$SNAP_DATA/mongo/db\ --logpath\ /var/snap/edgexfoundry/common/mongodb.log: \
+            -e s:mongod:mongod\ --dbpath\ \$SNAP_DATA/mongo/db\ --logpath\ \$SNAP_COMMON/mongodb.log: \
             -e '/wait/ d' \
             -e s:/edgex/mongo/config/:\$SNAP/mongo/: > \
          "$SNAPCRAFT_PART_INSTALL/mongo/launch-edgex-mongo.sh"
