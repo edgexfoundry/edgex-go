@@ -300,38 +300,37 @@ parts:
         "$SNAPCRAFT_PART_INSTALL/config/config-seed/res/properties/device-virtual/application.properties"
 
       cat "./cmd/config-seed/res/configuration.toml" | \
-        sed -e s:./logs/config-seed.log:/var/snap/edgexfoundry/common/config-seed.log: \
+        sed -e s:./logs/config-seed.log:\$SNAP_COMMON/config-seed.log: \
             -e s:'http\://localhost\:48061/api/v1/logs':: > \
        "$SNAPCRAFT_PART_INSTALL/config/config-seed/res/configuration.toml"
 
-
       cat "./cmd/core-command/res/configuration.toml" | \
-        sed -e s:./logs/edgex-core-command.log:/var/snap/edgexfoundry/common/core-command.log: \
+        sed -e s:./logs/edgex-core-command.log:\$SNAP_COMMON/core-command.log: \
             -e s:'http\://localhost\:48061/api/v1/logs':: > \
        "$SNAPCRAFT_PART_INSTALL/config/core-command/res/configuration.toml"
 
       cat "./cmd/core-data/res/configuration.toml" | \
-        sed -e s:./logs/edgex-core-data.log:/var/snap/edgexfoundry/common/core-data.log: \
+        sed -e s:./logs/edgex-core-data.log:\$SNAP_COMMON/core-data.log: \
             -e s:'http\://localhost\:48061/api/v1/logs':: > \
        "$SNAPCRAFT_PART_INSTALL/config/core-data/res/configuration.toml"
 
       cat "./cmd/core-metadata/res/configuration.toml" | \
-        sed -e s:./logs/edgex-core-metadata.log:/var/snap/edgexfoundry/common/core-metadata.log: \
+        sed -e s:./logs/edgex-core-metadata.log:\$SNAP_COMMON/core-metadata.log: \
             -e s:'http\://localhost\:48061/api/v1/logs':: > \
        "$SNAPCRAFT_PART_INSTALL/config/core-metadata/res/configuration.toml"
 
       cat "./cmd/export-client/res/configuration.toml" | \
-        sed -e s:./logs/edgex-export-client.log:/var/snap/edgexfoundry/common/export-client.log: \
+        sed -e s:./logs/edgex-export-client.log:\$SNAP_COMMON/export-client.log: \
             -e s:'http\://localhost\:48061/api/v1/logs':: > \
        "$SNAPCRAFT_PART_INSTALL/config/export-client/res/configuration.toml"
 
       cat "./cmd/export-distro/res/configuration.toml" | \
-        sed -e s:./logs/edgex-export-distro.log:/var/snap/edgexfoundry/common/export-distro.log: \
+        sed -e s:./logs/edgex-export-distro.log:\$SNAP_COMMON/export-distro.log: \
             -e s:'http\://localhost\:48061/api/v1/logs':: > \
        "$SNAPCRAFT_PART_INSTALL/config/export-distro/res/configuration.toml"
 
       cat "./cmd/support-logging/res/configuration.toml" | \
-        sed -e s:./logs/support-logging.log:/var/snap/edgexfoundry/common/support-logging.log: \
+        sed -e s:./logs/support-logging.log:\$SNAP_COMMON/support-logging.log: \
             -e s:'http\://localhost\:48061/api/v1/logs':: > \
        "$SNAPCRAFT_PART_INSTALL/config/support-logging/res/configuration.toml"
 

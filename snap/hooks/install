@@ -7,6 +7,8 @@ for service in security-api-gateway core-command config-seed core-data core-meta
     if [ ! -f "${SNAP_DATA}/config/${service}/res/configuration.toml" ]; then
         mkdir -p "${SNAP_DATA}/config/${service}/res"
         cp ${SNAP}/config/${service}/res/configuration.toml "${SNAP_DATA}/config/${service}/res/configuration.toml"
+        # do replacement of the SNAP_DATA and SNAP_COMMON environment variables in the config files
+        sed -i -e "s@\$SNAP_COMMON@$SNAP_COMMON@g" -e "s@\$SNAP_DATA@$SNAP_DATA@g" "${SNAP_DATA}/config/${service}/res/configuration.toml"
     fi
 done
 
