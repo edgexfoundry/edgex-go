@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2017 Dell Inc.
+ * Copyright 2018 Dell Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -13,9 +13,16 @@
  *******************************************************************************/
 package metadata
 
-import "github.com/edgexfoundry/edgex-go/pkg/models"
+import (
+	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
+)
 
-func yamlDeviceProfile(dp *models.DeviceProfile) error {
-
-	return nil
+// Struct used to parse the JSON configuration file
+type ConfigurationStruct struct {
+	Clients       map[string]config.ClientInfo
+	Databases     map[string]config.DatabaseInfo
+	Logging       config.LoggingInfo
+	Notifications config.NotificationInfo
+	Registry      config.RegistryInfo
+	Service       config.ServiceInfo
 }

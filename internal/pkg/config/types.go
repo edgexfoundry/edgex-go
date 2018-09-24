@@ -119,3 +119,13 @@ func (c ClientInfo) Url() string {
 	url := fmt.Sprintf("%s://%s:%v", c.Protocol, c.Host, c.Port)
 	return url
 }
+
+// Notification Info provides properties related to the assembly of notification content
+type NotificationInfo struct {
+	Content           string
+	Description       string
+	Label             string
+	PostDeviceChanges bool
+	Sender            string
+	Slug              string
+}

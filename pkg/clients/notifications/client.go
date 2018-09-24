@@ -16,9 +16,10 @@ package notifications
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
-	"io"
 	"net/http"
+
+	"github.com/edgexfoundry/edgex-go/pkg/clients"
+	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
 )
 
 type CategoryEnum string
@@ -50,18 +51,15 @@ const (
 	ContentTypeJsonVal = "application/json"
 )
 
-const (
-	NotificationApiPath = "/api/v1/notification"
-	UrlPattern          = "http://%s:%d%s"
-)
-
-// Struct to represent the notifications client
+// Interface defining behavior for the notifications client
 type NotificationsClient interface {
 	SendNotification(n Notification) error
 }
 
-//Named HttpClient instead of RestClient on purpose since there is only one POST method
-type notificationsHttpClient struct {
+// Type struct for REST-specific implementation of NotificationsClient interface
+type notificationsRestClient struct {
+	url      string
+	endpoint clients.Endpointer
 }
 
 // Struct to represent a notification being sent to the notifications service
@@ -79,17 +77,31 @@ type Notification struct {
 	Modified    int          `json:"modified,omitempty"` // The last modification timestamp
 }
 
-var notificationsClient NotificationsClient
+func NewNotificationsClient(params types.EndpointParams, m clients.Endpointer) NotificationsClient {
+	n := notificationsRestClient{endpoint: m}
+	n.init(params)
+	return &n
+}
 
-func GetNotificationsClient() NotificationsClient {
-	if notificationsClient == nil {
-		notificationsClient = &notificationsHttpClient{}
+func (n *notificationsRestClient) init(params types.EndpointParams) {
+	if params.UseRegistry {
+		ch := make(chan string, 1)
+		go n.endpoint.Monitor(params, ch)
+		go func(ch chan string) {
+			for {
+				select {
+				case url := <-ch:
+					n.url = url
+				}
+			}
+		}(ch)
+	} else {
+		n.url = params.Url
 	}
-	return notificationsClient
 }
 
 // Send a notification to the notifications service
-func (nc *notificationsHttpClient) SendNotification(n Notification) error {
+func (nc *notificationsRestClient) SendNotification(n Notification) error {
 	client := &http.Client{}
 
 	// Get the JSON request body
@@ -98,26 +110,9 @@ func (nc *notificationsHttpClient) SendNotification(n Notification) error {
 		return err
 	}
 
-	// Create the request
-	remoteNotificationServiceUrl := fmt.Sprintf(UrlPattern, clientConfig.serviceHost, clientConfig.servicePort, NotificationApiPath)
-
-	return doPost(remoteNotificationServiceUrl, bytes.NewBuffer(requestBody), client)
-}
-
-// Function to do post request
-func doPost(url string, binaryReqBody io.Reader, client *http.Client) error {
-	req, err := http.NewRequest(http.MethodPost, url, binaryReqBody)
+	req, err := http.NewRequest(http.MethodPost, nc.url, bytes.NewBuffer(requestBody))
 	req.Header.Add(ContentType, ContentTypeJsonVal)
 
-	if err != nil {
-		return err
-	}
-
-	return makeRequest(client, req)
-}
-
-// Function to actually make the HTTP request
-func makeRequest(client *http.Client, req *http.Request) error {
 	resp, err := client.Do(req)
 	if err != nil {
 		return err

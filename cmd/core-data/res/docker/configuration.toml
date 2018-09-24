@@ -1,10 +1,7 @@
 DeviceUpdateLastConnected = false
 MetaDataCheck = false
 PersistData = true
-ReadMaxLimit = 100
 ServiceUpdateLastConnected = false
-StartupMsg = 'This is the Core Data Microservice'
-Timeout = 5000
 ValidateCheck = false
 
 [Service]
@@ -14,6 +11,9 @@ CheckInterval = '10s'
 Host = 'edgex-core-data'
 Port = 48080
 Protocol = 'http'
+ReadMaxLimit = 100
+StartupMsg = 'This is the Core Data Microservice'
+Timeout = 5000
 
 [Registry]
 Host = 'edgex-core-consul'

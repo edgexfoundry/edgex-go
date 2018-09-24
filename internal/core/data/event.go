@@ -270,7 +270,7 @@ func getEventByDeviceHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodGet:
-		if limitNum > Configuration.ReadMaxLimit {
+		if limitNum > Configuration.Service.ReadMaxLimit {
 			http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
 			LoggingClient.Error(maxExceededString)
 			return
@@ -371,7 +371,7 @@ func eventByCreationTimeHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodGet:
-		if limit > Configuration.ReadMaxLimit {
+		if limit > Configuration.Service.ReadMaxLimit {
 			http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
 			LoggingClient.Error(maxExceededString)
 			return
@@ -423,7 +423,7 @@ func readingByDeviceFilteredValueDescriptor(w http.ResponseWriter, r *http.Reque
 	}
 	switch r.Method {
 	case http.MethodGet:
-		if limitNum > Configuration.ReadMaxLimit {
+		if limitNum > Configuration.Service.ReadMaxLimit {
 			http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
 			LoggingClient.Error(maxExceededString)
 			return
