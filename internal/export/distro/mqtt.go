@@ -16,7 +16,6 @@ import (
 	"strings"
 
 	MQTT "github.com/eclipse/paho.mqtt.golang"
-	"github.com/edgexfoundry/edgex-go/internal/export/interfaces"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 )
 
@@ -25,8 +24,8 @@ type mqttSender struct {
 	topic  string
 }
 
-// NewMqttSender - create new mqtt sender
-func NewMqttSender(addr models.Addressable, cert string, key string) interfaces.Sender {
+// newMqttSender - create new mqtt sender
+func newMqttSender(addr models.Addressable, cert string, key string) sender {
 	protocol := strings.ToLower(addr.Protocol)
 
 	opts := MQTT.NewClientOptions()

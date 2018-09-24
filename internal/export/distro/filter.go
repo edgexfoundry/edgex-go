@@ -8,8 +8,8 @@ package distro
 
 import (
 	"fmt"
+
 	"github.com/edgexfoundry/edgex-go/internal/export"
-	"github.com/edgexfoundry/edgex-go/internal/export/interfaces"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 )
 
@@ -17,7 +17,7 @@ type devIdFilterDetails struct {
 	deviceIDs []string
 }
 
-func NewDevIdFilter(filter export.Filter) interfaces.Filterer {
+func newDevIdFilter(filter export.Filter) filterer {
 
 	filterer := devIdFilterDetails{
 		deviceIDs: filter.DeviceIDs,
@@ -44,7 +44,7 @@ type valueDescFilterDetails struct {
 	valueDescIDs []string
 }
 
-func NewValueDescFilter(filter export.Filter) interfaces.Filterer {
+func newValueDescFilter(filter export.Filter) filterer {
 	filterer := valueDescFilterDetails{
 		valueDescIDs: filter.ValueDescriptorIDs,
 	}

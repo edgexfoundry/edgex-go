@@ -1,5 +1,6 @@
 Hostname = 'edgex-export-distro'
 Port = 48070
+Timeout = 5000
 DistroHost = 'edgex-export-distro'
 ClientHost = 'edgex-export-client'
 DataHost = 'edgex-core-data'
@@ -15,3 +16,4 @@ MarkPushed = false
 EnableRemoteLogging = false
 LoggingFile = './logs/edgex-export-distro.log'
 LoggingRemoteURL = 'http://localhost:48061/api/v1/logs'
+AppOpenMsg = 'This is the Export Distro Microservice'

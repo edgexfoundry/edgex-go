@@ -98,7 +98,7 @@ func TestHttpSender(t *testing.T) {
 			if addressableTest.Port == 0 {
 				addressableTest.Port = port
 			}
-			sender := NewHTTPSender(addressableTest)
+			sender := newHTTPSender(addressableTest)
 			sender.Send(msg, nil)
 		})
 	}
