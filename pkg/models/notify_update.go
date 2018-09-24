@@ -11,21 +11,9 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
-package clients
+package models
 
-const ClientMonitorDefault = 15000
-
-const (
-	ApiAddressableRoute        = "/api/v1/addressable"
-	ApiCommandRoute            = "/api/v1/command"
-	ApiDeviceRoute             = "/api/v1/device"
-	ApiDeviceServiceRoute      = "/api/v1/deviceservice"
-	ApiEventRoute              = "/api/v1/event"
-	ApiLoggingRoute            = "/api/v1/logs"
-	ApiNotificationRoute       = "/api/v1/notification"
-	ApiNotifyRegistrationRoute = "/api/v1/notify/registrations"
-	ApiProvisionWatcherRoute   = "/api/v1/provisionwatcher"
-	ApiScheduleRoute           = "/api/v1/schedule"
-	ApiSubscriptionRoute       = "/api/v1/subscription"
-	ApiTransmissionRoute       = "/api/v1/transmission"
-)
+type NotifyUpdate struct {
+	Name      string `json:"name"`
+	Operation string `json:"operation"`
+}

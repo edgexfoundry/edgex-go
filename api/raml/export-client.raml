@@ -149,3 +149,11 @@ schemas:
         responses: 
             "200": 
                 description: pong as a string
+/config:
+    displayName: Config Resource
+    description: Example - http://localhost:48071/api/v1/config
+    get:
+        description: Fetch the current state of the service's configuration.
+        responses:
+            "200":
+                description: The service's configuration as JSON document

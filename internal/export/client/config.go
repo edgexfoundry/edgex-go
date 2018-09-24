@@ -11,21 +11,14 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
-package clients
+package client
 
-const ClientMonitorDefault = 15000
+import "github.com/edgexfoundry/edgex-go/internal/pkg/config"
 
-const (
-	ApiAddressableRoute        = "/api/v1/addressable"
-	ApiCommandRoute            = "/api/v1/command"
-	ApiDeviceRoute             = "/api/v1/device"
-	ApiDeviceServiceRoute      = "/api/v1/deviceservice"
-	ApiEventRoute              = "/api/v1/event"
-	ApiLoggingRoute            = "/api/v1/logs"
-	ApiNotificationRoute       = "/api/v1/notification"
-	ApiNotifyRegistrationRoute = "/api/v1/notify/registrations"
-	ApiProvisionWatcherRoute   = "/api/v1/provisionwatcher"
-	ApiScheduleRoute           = "/api/v1/schedule"
-	ApiSubscriptionRoute       = "/api/v1/subscription"
-	ApiTransmissionRoute       = "/api/v1/transmission"
-)
+type ConfigurationStruct struct {
+	Clients   map[string]config.ClientInfo
+	Databases map[string]config.DatabaseInfo
+	Logging   config.LoggingInfo
+	Registry  config.RegistryInfo
+	Service   config.ServiceInfo
+}

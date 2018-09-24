@@ -72,11 +72,6 @@ type Registration struct {
 	Destination string             `json:"destination,omitempty"`
 }
 
-type NotifyUpdate struct {
-	Name      string `json:"name"`
-	Operation string `json:"operation"`
-}
-
 // Filter - Specifies the client filters on reading data
 type Filter struct {
 	DeviceIDs          []string `bson:"deviceIdentifiers,omitempty" json:"deviceIdentifiers,omitempty"`

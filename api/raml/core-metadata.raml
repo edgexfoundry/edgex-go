@@ -29,6 +29,14 @@ schemas:
         responses:
             "200":
                 description: Successful Response
+/config:
+    displayName: Config Resource
+    description: Example - http://localhost:48081/api/v1/config
+    get:
+        description: Fetch the current state of the service's configuration.
+        responses:
+            "200":
+                description: The service's configuration as JSON document
 /device/id/{id}:
     displayName: Device Resource (by id)
     description: Example - http://localhost:48081/api/v1/device/id/57bc6d80555e5218873e5a30
