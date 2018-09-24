@@ -33,7 +33,7 @@ func restGetProvisionWatchers(w http.ResponseWriter, _ *http.Request) {
 	}
 
 	// Check the length
-	if len(res) > Configuration.ReadMaxLimit {
+	if len(res) > Configuration.Service.ReadMaxLimit {
 		err := errors.New("Max limit exceeded")
 		LoggingClient.Error(err.Error(), "")
 		http.Error(w, err.Error(), http.StatusRequestEntityTooLarge)

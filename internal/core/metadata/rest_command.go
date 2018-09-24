@@ -33,7 +33,7 @@ func restGetAllCommands(w http.ResponseWriter, _ *http.Request) {
 		return
 	}
 
-	if len(results) > Configuration.ReadMaxLimit {
+	if len(results) > Configuration.Service.ReadMaxLimit {
 		LoggingClient.Error(err.Error(), "")
 		http.Error(w, errors.New("Max limit exceeded").Error(), http.StatusRequestEntityTooLarge)
 		return
