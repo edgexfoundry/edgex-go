@@ -21,13 +21,15 @@ import (
 type dummyPersist struct {
 	criteria matchCriteria
 	deleted  int
+	added    int
 }
 
 const (
 	numberOfLogs = 2
 )
 
-func (dummyPersist) add(le models.LogEntry) error {
+func (dp *dummyPersist) add(le models.LogEntry) error {
+	dp.added += 1
 	return nil
 }
 
