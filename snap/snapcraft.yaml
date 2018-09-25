@@ -53,7 +53,7 @@ apps:
     plugs: [network, network-bind]
   start-edgex:
     command: bin/start-edgex.sh
-    plugs: [network, network-bind]
+    plugs: [network, network-bind, system-observe, process-control, hardware-observe]
   stop-edgex:
     command: bin/stop-edgex.sh
     plugs: [system-observe, process-control]
@@ -749,12 +749,3 @@ parts:
       mkdir -p $SNAPCRAFT_PART_INSTALL/config/security-api-gateway/res
       cp core/res/configuration.toml $SNAPCRAFT_PART_INSTALL/config/security-api-gateway/res/configuration.toml
       sed -i "s@tokenpath = \"res\\\\\\\\resp-init.json\"@tokenpath = \"res/resp-init.json\"@" $SNAPCRAFT_PART_INSTALL/config/security-api-gateway/res/configuration.toml
-  base64:
-    # TODO: the core snap currently ships base64, but doesn't allow it in the default apparmor:
-    # https://forum.snapcraft.io/t/adding-base64-command-to-default-snap-apparmor/6744
-    # when/if it gets added to the apparmor we can remove this part
-    plugin: nil
-    prime: 
-    - usr/bin/base64
-    stage-packages:
-      - coreutils
