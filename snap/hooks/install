@@ -1,5 +1,10 @@
 #!/bin/bash -e
 
+# install the edgex-services-env file into $SNAP_DATA
+if [ ! -f ${SNAP_DATA}/edgex-services-env ]; then
+    cp "${SNAP}/config/edgex-services-env" "${SNAP_DATA}/edgex-services-env"
+fi
+
 # install all the config files from $SNAP/config/SERVICE/res/configuration.toml 
 # into $SNAP_DATA/config
 mkdir -p ${SNAP_DATA}/config
