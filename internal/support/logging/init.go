@@ -28,6 +28,7 @@ var dbClient persistence
 var LoggingClient logger.LoggingClient
 
 func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup, ch chan error) {
+	LoggingClient = privLogger{}
 	until := time.Now().Add(time.Millisecond * time.Duration(timeout))
 	for time.Now().Before(until) {
 		var err error
@@ -42,9 +43,6 @@ func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup,
 					wait.Done()
 					return
 				}
-			} else {
-				// Setup local service logging to file.
-				LoggingClient = logger.NewClient(internal.SupportLoggingServiceKey, false, Configuration.LoggingFile)
 			}
 		}
 
