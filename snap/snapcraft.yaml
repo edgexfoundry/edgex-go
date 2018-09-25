@@ -642,6 +642,9 @@ parts:
       snapcraftctl build
       # remove the openresy link, we will handle that in the kong part
       rm -rf $SNAPCRAFT_PART_INSTALL/bin/openresty
+
+      mkdir -p $SNAPCRAFT_PART_INSTALL/usr/share/doc/openresty.org/openresty/
+      cp COPYRIGHT "$SNAPCRAFT_PART_INSTALL/usr/share/doc/openresty.org/openresty/COPYRIGHT"
   kong:
     after: 
       - openresty
