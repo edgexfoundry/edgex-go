@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-
 	"net/http"
 	"strconv"
 	"time"
@@ -14,7 +13,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
-	client "github.com/edgexfoundry/edgex-go/pkg/clients/scheduler"
 )
 
 var loggingClient logger.LoggingClient
@@ -60,11 +58,7 @@ func main() {
 	loggingClient.Info(consulMsg)
 	loggingClient.Info(fmt.Sprintf("Starting %s %s ", internal.SupportSchedulerServiceKey, edgex.Version))
 
-
-	client.SetConfiguration(configuration.Host,configuration.ServicePort)
-	var schedulerClient = client.GetSchedulerClient()
-
-	err = scheduler.Init(*configuration, schedulerClient, loggingClient, useConsul)
+	err = scheduler.Init(*configuration, loggingClient, useConsul)
 	if err != nil {
 		loggingClient.Error(fmt.Sprintf("call to init() failed: %v", err.Error()))
 		return
@@ -75,7 +69,6 @@ func main() {
 	http.TimeoutHandler(nil, time.Millisecond*time.Duration(configuration.ServiceTimeout), "Request timed out")
 	loggingClient.Info(configuration.AppOpenMsg, "")
 
-
 	scheduler.StartTicker()
 
 	// Time it took to start service
@@ -83,6 +76,7 @@ func main() {
 	loggingClient.Info("listening on port: "+strconv.Itoa(configuration.ServicePort), "")
 	loggingClient.Error(http.ListenAndServe(":"+strconv.Itoa(configuration.ServicePort), r).Error())
 
+	// stop the ticker
 	scheduler.StopTicker()
 }
 

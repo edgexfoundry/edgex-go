@@ -49,15 +49,16 @@ func ConnectToConsul(conf ConfigurationStruct) error {
 	return nil
 }
 
-func Init(conf ConfigurationStruct, sc scheduler.SchedulerClient, l logger.LoggingClient, useConsul bool) error {
+func Init(conf ConfigurationStruct, l logger.LoggingClient, useConsul bool) error {
+
 	loggingClient = l
 	configuration = conf
 
-	// Create scheduler client
-	schedulerClient = sc
-
-	// Add default scheduled events
-	AddDefaultSchedules(configuration, sc)
+	// Check if we have default schedules to add
+	if len(configuration.DefaultScheduleName) > 0  {
+		// Add default scheduled events
+		AddDefaultSchedules(configuration)
+	}
 
 	// Start ticker ('legacy')
 	ticker = time.NewTicker(time.Duration(conf.ScheduleInterval) * time.Millisecond)
@@ -65,7 +66,7 @@ func Init(conf ConfigurationStruct, sc scheduler.SchedulerClient, l logger.Loggi
 	return nil
 }
 
-func AddDefaultSchedules(conf ConfigurationStruct, sc scheduler.SchedulerClient) {
+func AddDefaultSchedules(conf ConfigurationStruct) {
 
 	// Default number of attempts
 	initializeAttempts++
@@ -80,7 +81,7 @@ func AddDefaultSchedules(conf ConfigurationStruct, sc scheduler.SchedulerClient)
 		End:        "",
 		Frequency:  conf.DefaultScheduleFrequency,
 		Cron:       "",
-		RunOnce:    true,
+		RunOnce:    false,
 	}
 
 	//var err = sc.AddSchedule(defaultSchedule)  // Java version uses the schedulerClient to do this.
@@ -101,10 +102,7 @@ func AddDefaultSchedules(conf ConfigurationStruct, sc scheduler.SchedulerClient)
 	eParameters := strings.Split(conf.DefaultScheduleEventParameters, ",")
 	eServices := strings.Split(conf.DefaultScheduleEventService, ",")
 	ePaths := strings.Split(conf.DefaultScheduleEventPath, ",")
-	eMethods := strings.Split(conf.DefaultScheduleEventMethod,",")
-
-	// TODO: The scheduler "support-scheduler" name is no longer used
-	//eSchedulers := strings.Split(conf.DefaultScheduleEventScheduler, ",")
+	eMethods := strings.Split(conf.DefaultScheduleEventMethod, ",")
 
 	for i := range eNames {
 		defScheduleEvent := models.ScheduleEvent{}
@@ -119,9 +117,10 @@ func AddDefaultSchedules(conf ConfigurationStruct, sc scheduler.SchedulerClient)
 		addressable := models.Addressable{}
 		addressable.Name = "Schedule-" + eNames[i]
 		addressable.Path = ePaths[i]
-		addressable.Port = 48080
+		addressable.Port = conf.DefaultScheduleServicePort
+		addressable.Protocol = conf.DefaultScheduleServiceProtocol
 		addressable.HTTPMethod = eMethods[i]
-
+		addressable.Address = conf.DefaultSchedulerServiceAddress
 
 		// TODO: need a better method to create unique addressable.Id values  (java version uses client utility to obtain the objectId)
 		addressable.Id = bson.NewObjectId() // will be unique every time system starts up not desirable
@@ -140,6 +139,4 @@ func AddDefaultSchedules(conf ConfigurationStruct, sc scheduler.SchedulerClient)
 		// Reference the MetaData service
 		// Call the metadata service as required to get the full path for dispatch
 	}
-
 }
-

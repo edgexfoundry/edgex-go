@@ -16,9 +16,9 @@
 package agent
 
 import (
-	"testing"
-	"github.com/gorilla/mux"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
+	"github.com/gorilla/mux"
+	"testing"
 )
 
 var testRoutes *mux.Router

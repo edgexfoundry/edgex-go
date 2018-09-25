@@ -19,7 +19,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/export"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/go-zoo/bone"
-
 )
 
 const (

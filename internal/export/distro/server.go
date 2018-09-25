@@ -47,7 +47,7 @@ func replyNotifyRegistrations(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if update.Name == "" || update.Operation == "" {
-		LoggingClient.Error(fmt.Sprintf("Missing json field: %s",  update.Name))
+		LoggingClient.Error(fmt.Sprintf("Missing json field: %s", update.Name))
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}

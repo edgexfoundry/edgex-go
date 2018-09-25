@@ -45,14 +45,14 @@ var consul *consulapi.Client = nil // Call consulInit to initialize this variabl
 
 func NewConsulConfig(reg config.RegistryInfo, svc config.ServiceInfo, key string) ConsulConfig {
 	c := ConsulConfig{
-			ServiceName:    key,
-			ServicePort:    svc.Port,
-			ServiceAddress: svc.Host,
-			CheckAddress:   svc.HealthCheck(),
-			CheckInterval:  svc.CheckInterval,
-			ConsulAddress:  reg.Host,
-			ConsulPort:     reg.Port,
-		}
+		ServiceName:    key,
+		ServicePort:    svc.Port,
+		ServiceAddress: svc.Host,
+		CheckAddress:   svc.HealthCheck(),
+		CheckInterval:  svc.CheckInterval,
+		ConsulAddress:  reg.Host,
+		ConsulPort:     reg.Port,
+	}
 	return c
 }
 
@@ -60,7 +60,7 @@ func NewConsulDecoder(reg config.RegistryInfo) *consulstructure.Decoder {
 	cfg := &consulapi.Config{}
 	cfg.Address = reg.Host + ":" + strconv.Itoa(reg.Port)
 	d := &consulstructure.Decoder{
-		Consul:cfg,
+		Consul: cfg,
 	}
 	return d
 }

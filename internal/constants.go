@@ -13,7 +13,6 @@
  *******************************************************************************/
 package internal
 
-
 const (
 	ApiPingRoute             = "/api/v1/ping"
 	BootTimeoutDefault       = 30000
@@ -34,6 +33,6 @@ const (
 	ExportDistroServiceKey          = "edgex-export-distro"
 	SupportLoggingServiceKey        = "edgex-support-logging"
 	SupportNotificationsServiceKey  = "edgex-support-notifications"
-	SupportSchedulerServiceKey ="edgex-support-scheduler"
+	SupportSchedulerServiceKey      = "edgex-support-scheduler"
 	SystemManagementAgentServiceKey = "edgex-sys-mgmt-agent"
 )

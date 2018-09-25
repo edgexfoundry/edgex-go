@@ -13,6 +13,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"time"
 
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 )
@@ -56,7 +57,9 @@ func GetSchedulerClient() SchedulerClient {
 
 // Function to get a schedule from the remote scheduler server
 func (schedulerClient *schedulerRestClient) QuerySchedule(id string) (models.Schedule, error) {
-	client := &http.Client{}
+	client := &http.Client{
+		Timeout: time.Second * 10,
+	}
 
 	remoteScheduleUrl := fmt.Sprintf(UrlPattern, clientConfig.serviceHost, clientConfig.servicePort, ScheduleApiPath)
 	remoteScheduleUrl = remoteScheduleUrl + "/" + id
@@ -77,7 +80,9 @@ func (schedulerClient *schedulerRestClient) QuerySchedule(id string) (models.Sch
 
 // Function to get a schedule with schedule name from the remote scheduler server
 func (schedulerClient *schedulerRestClient) QueryScheduleWithName(scheduleName string) (models.Schedule, error) {
-	client := &http.Client{}
+	client := &http.Client{
+		Timeout: time.Second * 10,
+	}
 
 	remoteScheduleUrl := fmt.Sprintf(UrlPattern, clientConfig.serviceHost, clientConfig.servicePort, ScheduleApiPath)
 	remoteScheduleUrl = remoteScheduleUrl + "/name/" + scheduleName
@@ -98,7 +103,9 @@ func (schedulerClient *schedulerRestClient) QueryScheduleWithName(scheduleName s
 
 // Function to send a schedule to the remote scheduler server
 func (schedulerClient *schedulerRestClient) AddSchedule(schedule models.Schedule) error {
-	client := &http.Client{}
+	client := &http.Client{
+		Timeout: time.Second * 10,
+	}
 
 	requestBody, err := schedule.MarshalJSON()
 	if err != nil {
@@ -112,7 +119,9 @@ func (schedulerClient *schedulerRestClient) AddSchedule(schedule models.Schedule
 
 // Function to update a schedule to the remote scheduler server
 func (schedulerClient *schedulerRestClient) UpdateSchedule(schedule models.Schedule) error {
-	client := &http.Client{}
+	client := &http.Client{
+		Timeout: time.Second * 10,
+	}
 
 	requestBody, err := schedule.MarshalJSON()
 	if err != nil {
@@ -126,7 +135,9 @@ func (schedulerClient *schedulerRestClient) UpdateSchedule(schedule models.Sched
 
 // Function to remove a schedule to the remote scheduler server
 func (schedulerClient *schedulerRestClient) RemoveSchedule(id string) error {
-	client := &http.Client{}
+	client := &http.Client{
+		Timeout: time.Second * 10,
+	}
 
 	remoteScheduleUrl := fmt.Sprintf(UrlPattern, clientConfig.serviceHost, clientConfig.servicePort, ScheduleApiPath)
 	remoteScheduleUrl = remoteScheduleUrl + "/" + id
@@ -136,7 +147,9 @@ func (schedulerClient *schedulerRestClient) RemoveSchedule(id string) error {
 
 // Function to get a schedule event from the remote scheduler server
 func (schedulerClient *schedulerRestClient) QueryScheduleEvent(id string) (models.ScheduleEvent, error) {
-	client := &http.Client{}
+	client := &http.Client{
+		Timeout: time.Second * 10,
+	}
 
 	remoteScheduleEventUrl := fmt.Sprintf(UrlPattern, clientConfig.serviceHost, clientConfig.servicePort, ScheduleEventApiPath)
 	remoteScheduleEventUrl = remoteScheduleEventUrl + "/" + id
@@ -157,7 +170,9 @@ func (schedulerClient *schedulerRestClient) QueryScheduleEvent(id string) (model
 
 // Function to send a schedule event to the remote scheduler server
 func (schedulerClient *schedulerRestClient) AddScheduleEvent(scheduleEvent models.ScheduleEvent) error {
-	client := &http.Client{}
+	client := &http.Client{
+		Timeout: time.Second * 10,
+	}
 
 	requestBody, err := scheduleEvent.MarshalJSON()
 	if err != nil {
@@ -171,7 +186,9 @@ func (schedulerClient *schedulerRestClient) AddScheduleEvent(scheduleEvent model
 
 // Function to update a schedule event to the remote scheduler server
 func (schedulerClient *schedulerRestClient) UpdateScheduleEvent(scheduleEvent models.ScheduleEvent) error {
-	client := &http.Client{}
+	client := &http.Client{
+		Timeout: time.Second * 10,
+	}
 
 	requestBody, err := scheduleEvent.MarshalJSON()
 	if err != nil {
@@ -185,7 +202,9 @@ func (schedulerClient *schedulerRestClient) UpdateScheduleEvent(scheduleEvent mo
 
 // Function to remove a schedule event to the remote scheduler server
 func (schedulerClient *schedulerRestClient) RemoveScheduleEvent(id string) error {
-	client := &http.Client{}
+	client := &http.Client{
+		Timeout: time.Second * 10,
+	}
 
 	remoteScheduleEventUrl := fmt.Sprintf(UrlPattern, clientConfig.serviceHost, clientConfig.servicePort, ScheduleEventApiPath)
 	remoteScheduleEventUrl = remoteScheduleEventUrl + "/" + id

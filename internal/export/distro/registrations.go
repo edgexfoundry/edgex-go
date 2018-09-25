@@ -281,7 +281,7 @@ func Loop(errChan chan error, eventCh chan *models.Event) {
 		case e := <-errChan:
 			LoggingClient.Error(fmt.Sprintf("exit msg: %s", e.Error()))
 			if err != nil {
-				LoggingClient.Error(fmt.Sprintf("with error: %s",  err.Error()))
+				LoggingClient.Error(fmt.Sprintf("with error: %s", err.Error()))
 			}
 			return
 		case <-time.After(time.Second):

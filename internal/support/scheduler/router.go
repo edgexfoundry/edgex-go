@@ -47,23 +47,22 @@ func ping(rw http.ResponseWriter, req *http.Request) {
 	io.WriteString(rw, str)
 }
 
-func info(rw http.ResponseWriter, req *http.Request){
+func info(rw http.ResponseWriter, req *http.Request) {
 	rw.Header().Set(ContentTypeKey, ContentTypeJsonValue)
 	rw.WriteHeader(http.StatusOK)
 
 	vars := mux.Vars(req)
 
-
 	scheduleEvent, err := schedulerClient.QueryScheduleWithName(vars["name"])
-	if err != nil{
+	if err != nil {
 		loggingClient.Error("read info request error" + err.Error())
 		return
 	}
 
 	str := `{"name"}: {"` + scheduleEvent.Name + `"}"`
-	str1 :=`{"frequency"}:{"` + scheduleEvent.Frequency + `"}"`
+	str1 := `{"frequency"}:{"` + scheduleEvent.Frequency + `"}"`
 
-	io.WriteString(rw, str + str1)
+	io.WriteString(rw, str+str1)
 	// iterate over the current schedulers
 
 }

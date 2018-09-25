@@ -37,6 +37,9 @@ type ConfigurationStruct struct {
 	ServiceConnectionReties        int
 	ServiceConnectionInterval      int
 	ScheduleInterval               int
+	DefaultScheduleServiceProtocol string
+	DefaultScheduleServicePort     int
+	DefaultSchedulerServiceAddress string
 	DefaultScheduleName            string
 	DefaultScheduleFrequency       string
 	DefaultScheduleStart           string

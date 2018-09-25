@@ -105,3 +105,591 @@ INFO: 2018/09/18 16:46:23 removing the schedule event with id 746573745363686564
 INFO: 2018/09/18 16:46:23 there are no more events for the schedule : 5ba1722ffea0f12078133afc, remove it.
 INFO: 2018/09/18 16:46:23 removed the schedule event with id 746573745363686564756c654576656e744964
 INFO: 2018/09/18 16:46:23 ----------- test schedule event lifecycle end ------------
+INFO: 2018/09/21 22:45:20 bootstrapping default schedule attempt 1
+INFO: 2018/09/21 22:45:20 adding the schedule with id : 5ba5bad0fea0f1cf833430ea
+DEBUG: 2018/09/21 22:45:20 resetting the schedule with id : 5ba5bad0fea0f1cf833430ea
+INFO: 2018/09/21 22:47:28 bootstrapping default schedule attempt 1
+INFO: 2018/09/21 22:47:28 adding the schedule with id : 5ba5bb50fea0f1cfc924ae0d
+DEBUG: 2018/09/21 22:47:28 resetting the schedule with id : 5ba5bb50fea0f1cfc924ae0d
+INFO: 2018/09/21 22:47:52 bootstrapping default schedule attempt 1
+INFO: 2018/09/21 22:47:52 adding the schedule with id : 5ba5bb68fea0f1cfe1768f07
+DEBUG: 2018/09/21 22:47:52 resetting the schedule with id : 5ba5bb68fea0f1cfe1768f07
+INFO: 2018/09/24 09:54:43 bootstrapping default schedule attempt 1
+INFO: 2018/09/24 09:54:43 adding the schedule with id : 5ba8fab3fea0f1d6fe18e1cf
+DEBUG: 2018/09/24 09:54:43 resetting the schedule with id : 5ba8fab3fea0f1d6fe18e1cf
+INFO: 2018/09/24 10:47:48 bootstrapping default schedule attempt 1
+INFO: 2018/09/24 10:47:48 adding the schedule with id : 5ba90724fea0f1d7741a0857
+DEBUG: 2018/09/24 10:47:48 resetting the schedule with id : 5ba90724fea0f1d7741a0857
+INFO: 2018/09/25 11:38:19 bootstrapping default schedule attempt 1
+INFO: 2018/09/25 11:38:19 adding the schedule with id : 5baa647bfea0f1db447825b9
+DEBUG: 2018/09/25 11:38:19 resetting the schedule with id : 5baa647bfea0f1db447825b9
+INFO: 2018/09/25 11:54:42 bootstrapping default schedule attempt 1
+INFO: 2018/09/25 11:54:42 adding the schedule with id : 5baa6852fea0f1dd2de3cd47
+DEBUG: 2018/09/25 11:54:42 resetting the schedule with id : 5baa6852fea0f1dd2de3cd47
+INFO: 2018/09/25 11:57:44 bootstrapping default schedule attempt 1
+INFO: 2018/09/25 11:57:44 adding the schedule with id : 5baa6908fea0f1dd49361513
+DEBUG: 2018/09/25 11:57:44 resetting the schedule with id : 5baa6908fea0f1dd49361513
+INFO: 2018/09/25 11:59:24 bootstrapping default schedule attempt 1
+INFO: 2018/09/25 11:59:24 adding the schedule with id : 5baa696cfea0f1dd615ee4cd
+DEBUG: 2018/09/25 11:59:24 resetting the schedule with id : 5baa696cfea0f1dd615ee4cd
+INFO: 2018/09/25 12:02:27 ----------- test schedule lifecycle start ------------
+INFO: 2018/09/25 12:02:34 ----------- test schedule lifecycle start ------------
+INFO: 2018/09/25 12:02:34 adding the schedule with id : 5baa6a2afea0f1dda13a13f8
+DEBUG: 2018/09/25 12:02:34 resetting the schedule with id : 5baa6a2afea0f1dda13a13f8
+INFO: 2018/09/25 12:02:34 added the schedule with id : 5baa6a2afea0f1dda13a13f8
+INFO: 2018/09/25 12:02:34 updating the schedule with id : 5baa6a2afea0f1dda13a13f8
+DEBUG: 2018/09/25 12:02:34 resetting the schedule whit id 5baa6a2afea0f1dda13a13f8
+INFO: 2018/09/25 12:02:34 updated the schedule with id : 5baa6a2afea0f1dda13a13f8
+INFO: 2018/09/25 12:02:34 removing the schedule with id : 5baa6a2afea0f1dda13a13f8
+DEBUG: 2018/09/25 12:02:34 removing all the mappings of schedule event id to schedule id : 5baa6a2afea0f1dda13a13f8
+INFO: 2018/09/25 12:02:34 removed the schedule with id : 5baa6a2afea0f1dda13a13f8
+WARN: 2018/09/25 12:02:34 can not find a schedule context with schedule id : 5baa6a2afea0f1dda13a13f8
+INFO: 2018/09/25 12:02:34 ----------- test schedule lifecycle end ------------
+INFO: 2018/09/25 12:02:46 ----------- test schedule lifecycle start ------------
+INFO: 2018/09/25 12:02:46 adding the schedule with id : 5baa6a36fea0f1ddc15f02b9
+DEBUG: 2018/09/25 12:02:46 resetting the schedule with id : 5baa6a36fea0f1ddc15f02b9
+INFO: 2018/09/25 12:02:46 added the schedule with id : 5baa6a36fea0f1ddc15f02b9
+INFO: 2018/09/25 12:02:46 updating the schedule with id : 5baa6a36fea0f1ddc15f02b9
+DEBUG: 2018/09/25 12:02:46 resetting the schedule whit id 5baa6a36fea0f1ddc15f02b9
+INFO: 2018/09/25 12:02:46 updated the schedule with id : 5baa6a36fea0f1ddc15f02b9
+INFO: 2018/09/25 12:02:46 removing the schedule with id : 5baa6a36fea0f1ddc15f02b9
+DEBUG: 2018/09/25 12:02:46 removing all the mappings of schedule event id to schedule id : 5baa6a36fea0f1ddc15f02b9
+INFO: 2018/09/25 12:02:46 removed the schedule with id : 5baa6a36fea0f1ddc15f02b9
+WARN: 2018/09/25 12:02:46 can not find a schedule context with schedule id : 5baa6a36fea0f1ddc15f02b9
+INFO: 2018/09/25 12:02:46 ----------- test schedule lifecycle end ------------
+INFO: 2018/09/25 12:02:56 ----------- test schedule event lifecycle start ------------
+INFO: 2018/09/25 12:02:56 adding the schedule with id : 5baa6a40fea0f1dde3f105f7
+DEBUG: 2018/09/25 12:02:56 resetting the schedule with id : 5baa6a40fea0f1dde3f105f7
+INFO: 2018/09/25 12:02:56 added the schedule with id : 5baa6a40fea0f1dde3f105f7
+INFO: 2018/09/25 12:02:56 adding the schedule event with id 746573745363686564756c654576656e744964 to schedule : midnight-1
+INFO: 2018/09/25 12:02:56 check the schedule with id : 5baa6a40fea0f1dde3f105f7 exists.
+INFO: 2018/09/25 12:02:56 added the schedule event with id : 746573745363686564756c654576656e744964 to schedule : midnight-1
+INFO: 2018/09/25 12:02:56 updating the schedule event with id : 746573745363686564756c654576656e744964
+INFO: 2018/09/25 12:20:52 ----------- test schedule event lifecycle start ------------
+INFO: 2018/09/25 12:20:52 adding the schedule with id : 5baa6e74fea0f1de149a3f5e
+DEBUG: 2018/09/25 12:20:52 resetting the schedule with id : 5baa6e74fea0f1de149a3f5e
+INFO: 2018/09/25 12:20:52 added the schedule with id : 5baa6e74fea0f1de149a3f5e
+INFO: 2018/09/25 12:20:52 adding the schedule event with id 746573745363686564756c654576656e744964 to schedule : midnight-1
+INFO: 2018/09/25 12:20:52 check the schedule with id : 5baa6e74fea0f1de149a3f5e exists.
+INFO: 2018/09/25 12:20:52 added the schedule event with id : 746573745363686564756c654576656e744964 to schedule : midnight-1
+INFO: 2018/09/25 12:20:52 updating the schedule event with id : 746573745363686564756c654576656e744964
+DEBUG: 2018/09/25 12:20:52 1 item in schedule queue.
+DEBUG: 2018/09/25 12:20:52 1 item in schedule queue.
+DEBUG: 2018/09/25 12:20:52 check schedule with id : 5baa6e74fea0f1de149a3f5e
+DEBUG: 2018/09/25 12:20:52 schedule with id : 5baa6e74fea0f1de149a3f5e next schedule time is : 2000-01-01 00:00:00 +0000 UTC
+INFO: 2018/09/25 12:20:52 executing schedule, detail : {{"created":0,"modified":0,"origin":0,"id":"5baa6e74fea0f1de149a3f5e","name":"midnight-1","start":"20000101T000000","end":null,"frequency":"P1D","cron":"This is a description","runOnce":true}} , at : 2000-01-01 00:00:00 +0000 UTC
+DEBUG: 2018/09/25 12:20:52 1 schedule event need to be executed.
+INFO: 2018/09/25 12:20:52 the event with id : 746573745363686564756c654576656e744964 belongs to schedule : 5baa6e74fea0f1de149a3f5e will be executing!
+DEBUG: 2018/09/25 12:20:52 the event with id : 746573745363686564756c654576656e744964 will request url : mqtt://:0
+DEBUG: 2018/09/25 12:20:52 execution returns status code : 500
+DEBUG: 2018/09/25 12:20:52 execution returns response content : 
+INFO: 2018/09/25 12:20:52 completed schedule, detail : {"created":0,"modified":0,"origin":0,"id":"5baa6e74fea0f1de149a3f5e","name":"midnight-1","start":"20000101T000000","end":null,"frequency":"P1D","cron":"This is a description","runOnce":true}
+INFO: 2018/09/25 12:21:30 ----------- test schedule lifecycle start ------------
+INFO: 2018/09/25 12:21:30 adding the schedule with id : 5baa6e9afea0f1de36cce28e
+DEBUG: 2018/09/25 12:21:30 resetting the schedule with id : 5baa6e9afea0f1de36cce28e
+INFO: 2018/09/25 12:21:30 added the schedule with id : 5baa6e9afea0f1de36cce28e
+INFO: 2018/09/25 12:21:30 updating the schedule with id : 5baa6e9afea0f1de36cce28e
+DEBUG: 2018/09/25 12:21:30 resetting the schedule whit id 5baa6e9afea0f1de36cce28e
+INFO: 2018/09/25 12:21:30 updated the schedule with id : 5baa6e9afea0f1de36cce28e
+INFO: 2018/09/25 12:21:30 removing the schedule with id : 5baa6e9afea0f1de36cce28e
+DEBUG: 2018/09/25 12:21:30 removing all the mappings of schedule event id to schedule id : 5baa6e9afea0f1de36cce28e
+INFO: 2018/09/25 12:21:30 removed the schedule with id : 5baa6e9afea0f1de36cce28e
+WARN: 2018/09/25 12:21:30 can not find a schedule context with schedule id : 5baa6e9afea0f1de36cce28e
+INFO: 2018/09/25 12:21:30 ----------- test schedule lifecycle end ------------
+INFO: 2018/09/25 12:52:52 adding the schedule with id : 5baa75f0fea0f1efdf6cca89
+DEBUG: 2018/09/25 12:53:03 resetting the schedule with id : 5baa75f0fea0f1efdf6cca89
+INFO: 2018/09/25 12:53:30 adding the schedule with id : 5baa761afea0f1f003c3eb2c
+DEBUG: 2018/09/25 12:53:30 resetting the schedule with id : 5baa761afea0f1f003c3eb2c
+INFO: 2018/09/25 12:55:46 adding the schedule with id : 5baa769cfea0f1f01e7376c9
+DEBUG: 2018/09/25 12:56:07 resetting the schedule with id : 5baa769cfea0f1f01e7376c9
+INFO: 2018/09/25 12:56:55 adding the schedule with id : 5baa76e4fea0f1f0395cf085
+DEBUG: 2018/09/25 12:56:59 resetting the schedule with id : 5baa76e4fea0f1f0395cf085
+INFO: 2018/09/25 12:59:57 ----------- test schedule lifecycle start ------------
+INFO: 2018/09/25 12:59:57 adding the schedule with id : 5baa779dfea0f1f0604dd0da
+DEBUG: 2018/09/25 12:59:57 resetting the schedule with id : 5baa779dfea0f1f0604dd0da
+INFO: 2018/09/25 12:59:57 added the schedule with id : 5baa779dfea0f1f0604dd0da
+INFO: 2018/09/25 13:11:52 ----------- test remove schedule start ------------
+INFO: 2018/09/25 13:11:52 adding the schedule with id : 5baa7a68fea0f1f09158965c
+DEBUG: 2018/09/25 13:11:52 resetting the schedule with id : 5baa7a68fea0f1f09158965c
+INFO: 2018/09/25 13:11:52 added the schedule with id : 5baa7a68fea0f1f09158965c
+INFO: 2018/09/25 13:11:52 removing the schedule with id : 5baa7a68fea0f1f09158965c
+DEBUG: 2018/09/25 13:11:52 removing all the mappings of schedule event id to schedule id : 5baa7a68fea0f1f09158965c
+INFO: 2018/09/25 13:11:52 removed the schedule with id : 5baa7a68fea0f1f09158965c
+INFO: 2018/09/25 13:11:52 ----------- test remove schedule end ------------
+INFO: 2018/09/25 13:21:42 ----------- test query schedule start ------------
+INFO: 2018/09/25 13:21:42 adding the schedule with id : 5baa7cb6fea0f1f0c4f29442
+DEBUG: 2018/09/25 13:21:42 resetting the schedule with id : 5baa7cb6fea0f1f0c4f29442
+INFO: 2018/09/25 13:21:42 added the schedule with id : 5baa7cb6fea0f1f0c4f29442
+INFO: 2018/09/25 13:21:42 ----------- test query schedule end ------------
+INFO: 2018/09/25 13:23:06 ----------- test query schedule start ------------
+INFO: 2018/09/25 13:23:06 adding the schedule with id : 5baa7d0afea0f1f0ed13ed17
+DEBUG: 2018/09/25 13:23:06 resetting the schedule with id : 5baa7d0afea0f1f0ed13ed17
+INFO: 2018/09/25 13:23:06 added the schedule with id : 5baa7d0afea0f1f0ed13ed17
+INFO: 2018/09/25 13:23:06 querying found the schedule with id : 5baa7d0afea0f1f0ed13ed17
+INFO: 2018/09/25 13:23:06 ----------- test query schedule end ------------
+INFO: 2018/09/25 13:53:52 ----------- test update schedule start ------------
+INFO: 2018/09/25 13:53:52 adding the schedule with id : 5baa8440fea0f1f1288d06b6
+DEBUG: 2018/09/25 13:53:52 resetting the schedule with id : 5baa8440fea0f1f1288d06b6
+INFO: 2018/09/25 13:53:52 added the schedule with id : 5baa8440fea0f1f1288d06b6
+INFO: 2018/09/25 13:53:52 updating the schedule with id : 
+ERROR: 2018/09/25 13:53:52 the schedule context with id  does not exist 
+INFO: 2018/09/25 14:01:33 ----------- test update schedule start ------------
+INFO: 2018/09/25 14:01:33 adding the schedule with id : 5baa860dfea0f1f15433cbfb
+DEBUG: 2018/09/25 14:01:33 resetting the schedule with id : 5baa860dfea0f1f15433cbfb
+INFO: 2018/09/25 14:01:33 added the schedule with id : 5baa860dfea0f1f15433cbfb
+INFO: 2018/09/25 14:01:33 updating the schedule with id : 5baa860dfea0f1f15433cbfb
+DEBUG: 2018/09/25 14:01:33 resetting the schedule with id 5baa860dfea0f1f15433cbfb
+INFO: 2018/09/25 14:01:33 updated the schedule with id : 5baa860dfea0f1f15433cbfb
+INFO: 2018/09/25 14:01:33 ----------- test update schedule end ------------
+INFO: 2018/09/25 14:05:12 ----------- test schedule lifecycle start ------------
+INFO: 2018/09/25 14:05:12 adding the schedule with id : 5baa86e8fea0f1f185501002
+DEBUG: 2018/09/25 14:05:12 resetting the schedule with id : 5baa86e8fea0f1f185501002
+INFO: 2018/09/25 14:05:12 added the schedule with id : 5baa86e8fea0f1f185501002
+INFO: 2018/09/25 14:05:12 querying found the schedule with id : 5baa86e8fea0f1f185501002
+INFO: 2018/09/25 14:05:12 updating the schedule with id : 5baa86e8fea0f1f185501002
+DEBUG: 2018/09/25 14:05:12 resetting the schedule with id 5baa86e8fea0f1f185501002
+INFO: 2018/09/25 14:05:12 updated the schedule with id : 5baa86e8fea0f1f185501002
+INFO: 2018/09/25 14:05:12 querying found the schedule with id : 5baa86e8fea0f1f185501002
+INFO: 2018/09/25 14:05:12 removing the schedule with id : 5baa86e8fea0f1f185501002
+DEBUG: 2018/09/25 14:05:12 removing all the mappings of schedule event id to schedule id : 5baa86e8fea0f1f185501002
+INFO: 2018/09/25 14:05:12 removed the schedule with id : 5baa86e8fea0f1f185501002
+WARN: 2018/09/25 14:05:12 can not find a schedule context with schedule id : 5baa86e8fea0f1f185501002
+INFO: 2018/09/25 14:05:12 ----------- test schedule lifecycle end ------------
+INFO: 2018/09/25 14:05:12 ----------- test schedule event lifecycle start ------------
+INFO: 2018/09/25 14:05:12 adding the schedule with id : 5baa86e8fea0f1f185501003
+DEBUG: 2018/09/25 14:05:12 resetting the schedule with id : 5baa86e8fea0f1f185501003
+INFO: 2018/09/25 14:05:12 added the schedule with id : 5baa86e8fea0f1f185501003
+INFO: 2018/09/25 14:05:12 adding the schedule event with id 746573745363686564756c654576656e744964 to schedule : midnight-1
+INFO: 2018/09/25 14:05:12 check the schedule with id : 5baa86e8fea0f1f185501003 exists.
+INFO: 2018/09/25 14:05:12 added the schedule event with id : 746573745363686564756c654576656e744964 to schedule : midnight-1
+INFO: 2018/09/25 14:05:12 updating the schedule event with id : 746573745363686564756c654576656e744964
+DEBUG: 2018/09/25 14:05:12 1 item in schedule queue.
+DEBUG: 2018/09/25 14:05:12 1 item in schedule queue.
+DEBUG: 2018/09/25 14:05:12 check schedule with id : 5baa86e8fea0f1f185501003
+DEBUG: 2018/09/25 14:05:12 schedule with id : 5baa86e8fea0f1f185501003 next schedule time is : 2000-01-01 00:00:00 +0000 UTC
+INFO: 2018/09/25 14:05:12 executing schedule, detail : {{"created":0,"modified":0,"origin":0,"id":"5baa86e8fea0f1f185501003","name":"midnight-1","start":"20000101T000000","end":null,"frequency":"P1D","cron":"This is a description","runOnce":true}} , at : 2000-01-01 00:00:00 +0000 UTC
+DEBUG: 2018/09/25 14:05:12 1 schedule event need to be executed.
+INFO: 2018/09/25 14:05:12 the event with id : 746573745363686564756c654576656e744964 belongs to schedule : 5baa86e8fea0f1f185501003 will be executing!
+DEBUG: 2018/09/25 14:05:12 the event with id : 746573745363686564756c654576656e744964 will request url : mqtt://:0
+DEBUG: 2018/09/25 14:05:12 execution returns status code : 500
+DEBUG: 2018/09/25 14:05:12 execution returns response content : 
+INFO: 2018/09/25 14:05:12 completed schedule, detail : {"created":0,"modified":0,"origin":0,"id":"5baa86e8fea0f1f185501003","name":"midnight-1","start":"20000101T000000","end":null,"frequency":"P1D","cron":"This is a description","runOnce":true}
+INFO: 2018/09/25 14:06:26 ----------- test schedule lifecycle start ------------
+INFO: 2018/09/25 14:06:26 adding the schedule with id : 5baa8732fea0f1f1a8cfe4e9
+DEBUG: 2018/09/25 14:06:26 resetting the schedule with id : 5baa8732fea0f1f1a8cfe4e9
+INFO: 2018/09/25 14:06:26 added the schedule with id : 5baa8732fea0f1f1a8cfe4e9
+INFO: 2018/09/25 14:06:26 querying found the schedule with id : 5baa8732fea0f1f1a8cfe4e9
+INFO: 2018/09/25 14:06:26 updating the schedule with id : 5baa8732fea0f1f1a8cfe4e9
+DEBUG: 2018/09/25 14:06:26 resetting the schedule with id 5baa8732fea0f1f1a8cfe4e9
+INFO: 2018/09/25 14:06:26 updated the schedule with id : 5baa8732fea0f1f1a8cfe4e9
+INFO: 2018/09/25 14:06:26 querying found the schedule with id : 5baa8732fea0f1f1a8cfe4e9
+INFO: 2018/09/25 14:06:26 removing the schedule with id : 5baa8732fea0f1f1a8cfe4e9
+DEBUG: 2018/09/25 14:06:26 removing all the mappings of schedule event id to schedule id : 5baa8732fea0f1f1a8cfe4e9
+INFO: 2018/09/25 14:06:26 removed the schedule with id : 5baa8732fea0f1f1a8cfe4e9
+WARN: 2018/09/25 14:06:26 can not find a schedule context with schedule id : 5baa8732fea0f1f1a8cfe4e9
+INFO: 2018/09/25 14:06:26 ----------- test schedule lifecycle end ------------
+INFO: 2018/09/25 14:06:26 ----------- test schedule event lifecycle start ------------
+INFO: 2018/09/25 14:06:26 adding the schedule with id : 5baa8732fea0f1f1a8cfe4ea
+DEBUG: 2018/09/25 14:06:26 resetting the schedule with id : 5baa8732fea0f1f1a8cfe4ea
+INFO: 2018/09/25 14:06:26 added the schedule with id : 5baa8732fea0f1f1a8cfe4ea
+INFO: 2018/09/25 14:06:26 adding the schedule event with id 746573745363686564756c654576656e744964 to schedule : midnight-1
+INFO: 2018/09/25 14:06:26 check the schedule with id : 5baa8732fea0f1f1a8cfe4ea exists.
+INFO: 2018/09/25 14:06:26 added the schedule event with id : 746573745363686564756c654576656e744964 to schedule : midnight-1
+INFO: 2018/09/25 14:06:26 updating the schedule event with id : 746573745363686564756c654576656e744964
+DEBUG: 2018/09/25 14:06:27 1 item in schedule queue.
+DEBUG: 2018/09/25 14:06:27 check schedule with id : 5baa8732fea0f1f1a8cfe4ea
+DEBUG: 2018/09/25 14:06:27 schedule with id : 5baa8732fea0f1f1a8cfe4ea next schedule time is : 2000-01-01 00:00:00 +0000 UTC
+INFO: 2018/09/25 14:06:27 executing schedule, detail : {{"created":0,"modified":0,"origin":0,"id":"5baa8732fea0f1f1a8cfe4ea","name":"midnight-1","start":"20000101T000000","end":null,"frequency":"P1D","cron":"This is a description","runOnce":true}} , at : 2000-01-01 00:00:00 +0000 UTC
+DEBUG: 2018/09/25 14:06:27 1 schedule event need to be executed.
+INFO: 2018/09/25 14:06:27 the event with id : 746573745363686564756c654576656e744964 belongs to schedule : 5baa8732fea0f1f1a8cfe4ea will be executing!
+DEBUG: 2018/09/25 14:06:27 the event with id : 746573745363686564756c654576656e744964 will request url : mqtt://:0
+DEBUG: 2018/09/25 14:06:27 execution returns status code : 500
+DEBUG: 2018/09/25 14:06:27 execution returns response content : 
+INFO: 2018/09/25 14:06:27 completed schedule, detail : {"created":0,"modified":0,"origin":0,"id":"5baa8732fea0f1f1a8cfe4ea","name":"midnight-1","start":"20000101T000000","end":null,"frequency":"P1D","cron":"This is a description","runOnce":true}
+INFO: 2018/09/25 14:18:30 ----------- test add schedule start ------------
+INFO: 2018/09/25 14:18:30 adding the schedule with id : 5baa8a06fea0f1f1d820c96c
+DEBUG: 2018/09/25 14:18:30 resetting the schedule with id : 5baa8a06fea0f1f1d820c96c
+INFO: 2018/09/25 14:18:30 added the schedule with id : 5baa8a06fea0f1f1d820c96c
+INFO: 2018/09/25 14:18:30 ----------- test add schedule end ------------
+INFO: 2018/09/25 14:19:09 ----------- test remove schedule start ------------
+INFO: 2018/09/25 14:19:09 adding the schedule with id : 5baa8a2dfea0f1f1fce1dbaa
+DEBUG: 2018/09/25 14:19:09 resetting the schedule with id : 5baa8a2dfea0f1f1fce1dbaa
+INFO: 2018/09/25 14:19:09 added the schedule with id : 5baa8a2dfea0f1f1fce1dbaa
+INFO: 2018/09/25 14:19:09 removing the schedule with id : 5baa8a2dfea0f1f1fce1dbaa
+DEBUG: 2018/09/25 14:19:09 removing all the mappings of schedule event id to schedule id : 5baa8a2dfea0f1f1fce1dbaa
+INFO: 2018/09/25 14:19:09 removed the schedule with id : 5baa8a2dfea0f1f1fce1dbaa
+INFO: 2018/09/25 14:19:09 ----------- test remove schedule end ------------
+INFO: 2018/09/25 14:19:27 ----------- test query schedule start ------------
+INFO: 2018/09/25 14:19:27 adding the schedule with id : 5baa8a3ffea0f1f22019a2fe
+DEBUG: 2018/09/25 14:19:27 resetting the schedule with id : 5baa8a3ffea0f1f22019a2fe
+INFO: 2018/09/25 14:19:27 added the schedule with id : 5baa8a3ffea0f1f22019a2fe
+INFO: 2018/09/25 14:19:27 querying found the schedule with id : 5baa8a3ffea0f1f22019a2fe
+INFO: 2018/09/25 14:19:27 ----------- test query schedule end ------------
+INFO: 2018/09/25 14:19:44 ----------- test update schedule start ------------
+INFO: 2018/09/25 14:19:44 adding the schedule with id : 5baa8a50fea0f1f243f29910
+DEBUG: 2018/09/25 14:19:44 resetting the schedule with id : 5baa8a50fea0f1f243f29910
+INFO: 2018/09/25 14:19:44 added the schedule with id : 5baa8a50fea0f1f243f29910
+INFO: 2018/09/25 14:19:44 updating the schedule with id : 5baa8a50fea0f1f243f29910
+DEBUG: 2018/09/25 14:19:44 resetting the schedule with id 5baa8a50fea0f1f243f29910
+INFO: 2018/09/25 14:19:44 updated the schedule with id : 5baa8a50fea0f1f243f29910
+INFO: 2018/09/25 14:19:44 ----------- test update schedule end ------------
+INFO: 2018/09/25 14:20:09 ----------- test schedule lifecycle start ------------
+INFO: 2018/09/25 14:20:09 adding the schedule with id : 5baa8a69fea0f1f270fd7392
+DEBUG: 2018/09/25 14:20:09 resetting the schedule with id : 5baa8a69fea0f1f270fd7392
+INFO: 2018/09/25 14:20:09 added the schedule with id : 5baa8a69fea0f1f270fd7392
+INFO: 2018/09/25 14:20:09 querying found the schedule with id : 5baa8a69fea0f1f270fd7392
+INFO: 2018/09/25 14:20:09 updating the schedule with id : 5baa8a69fea0f1f270fd7392
+DEBUG: 2018/09/25 14:20:09 resetting the schedule with id 5baa8a69fea0f1f270fd7392
+INFO: 2018/09/25 14:20:09 updated the schedule with id : 5baa8a69fea0f1f270fd7392
+INFO: 2018/09/25 14:20:09 querying found the schedule with id : 5baa8a69fea0f1f270fd7392
+INFO: 2018/09/25 14:20:09 removing the schedule with id : 5baa8a69fea0f1f270fd7392
+DEBUG: 2018/09/25 14:20:09 removing all the mappings of schedule event id to schedule id : 5baa8a69fea0f1f270fd7392
+INFO: 2018/09/25 14:20:09 removed the schedule with id : 5baa8a69fea0f1f270fd7392
+WARN: 2018/09/25 14:20:09 can not find a schedule context with schedule id : 5baa8a69fea0f1f270fd7392
+INFO: 2018/09/25 14:20:09 ----------- test schedule lifecycle end ------------
+INFO: 2018/09/25 14:20:24 ----------- test schedule event lifecycle start ------------
+INFO: 2018/09/25 14:20:24 adding the schedule with id : 5baa8a78fea0f1f2947081f3
+DEBUG: 2018/09/25 14:20:24 resetting the schedule with id : 5baa8a78fea0f1f2947081f3
+INFO: 2018/09/25 14:20:24 added the schedule with id : 5baa8a78fea0f1f2947081f3
+INFO: 2018/09/25 14:20:24 adding the schedule event with id 746573745363686564756c654576656e744964 to schedule : midnight-1
+INFO: 2018/09/25 14:20:24 check the schedule with id : 5baa8a78fea0f1f2947081f3 exists.
+INFO: 2018/09/25 14:20:24 added the schedule event with id : 746573745363686564756c654576656e744964 to schedule : midnight-1
+INFO: 2018/09/25 14:20:24 updating the schedule event with id : 746573745363686564756c654576656e744964
+DEBUG: 2018/09/25 14:20:24 1 item in schedule queue.
+DEBUG: 2018/09/25 14:20:24 1 item in schedule queue.
+DEBUG: 2018/09/25 14:20:24 check schedule with id : 5baa8a78fea0f1f2947081f3
+DEBUG: 2018/09/25 14:20:24 schedule with id : 5baa8a78fea0f1f2947081f3 next schedule time is : 2000-01-01 00:00:00 +0000 UTC
+INFO: 2018/09/25 14:20:24 executing schedule, detail : {{"created":0,"modified":0,"origin":0,"id":"5baa8a78fea0f1f2947081f3","name":"midnight-1","start":"20000101T000000","end":null,"frequency":"P1D","cron":"This is a description","runOnce":true}} , at : 2000-01-01 00:00:00 +0000 UTC
+DEBUG: 2018/09/25 14:20:24 1 schedule event need to be executed.
+INFO: 2018/09/25 14:20:24 the event with id : 746573745363686564756c654576656e744964 belongs to schedule : 5baa8a78fea0f1f2947081f3 will be executing!
+DEBUG: 2018/09/25 14:20:24 the event with id : 746573745363686564756c654576656e744964 will request url : mqtt://:0
+DEBUG: 2018/09/25 14:20:24 execution returns status code : 500
+DEBUG: 2018/09/25 14:20:24 execution returns response content : 
+INFO: 2018/09/25 14:20:24 completed schedule, detail : {"created":0,"modified":0,"origin":0,"id":"5baa8a78fea0f1f2947081f3","name":"midnight-1","start":"20000101T000000","end":null,"frequency":"P1D","cron":"This is a description","runOnce":true}
+INFO: 2018/09/25 14:21:29 ----------- test schedule event lifecycle start ------------
+INFO: 2018/09/25 14:21:29 adding the schedule with id : 5baa8ab9fea0f1f2b9952425
+DEBUG: 2018/09/25 14:21:29 resetting the schedule with id : 5baa8ab9fea0f1f2b9952425
+INFO: 2018/09/25 14:21:29 added the schedule with id : 5baa8ab9fea0f1f2b9952425
+INFO: 2018/09/25 14:21:29 adding the schedule event with id 746573745363686564756c654576656e744964 to schedule : midnight-1
+INFO: 2018/09/25 14:21:29 check the schedule with id : 5baa8ab9fea0f1f2b9952425 exists.
+INFO: 2018/09/25 14:21:29 added the schedule event with id : 746573745363686564756c654576656e744964 to schedule : midnight-1
+INFO: 2018/09/25 14:21:29 updating the schedule event with id : 746573745363686564756c654576656e744964
+DEBUG: 2018/09/25 14:21:29 1 item in schedule queue.
+DEBUG: 2018/09/25 14:21:29 1 item in schedule queue.
+DEBUG: 2018/09/25 14:21:29 check schedule with id : 5baa8ab9fea0f1f2b9952425
+DEBUG: 2018/09/25 14:21:29 schedule with id : 5baa8ab9fea0f1f2b9952425 next schedule time is : 2000-01-01 00:00:00 +0000 UTC
+INFO: 2018/09/25 14:21:29 executing schedule, detail : {{"created":0,"modified":0,"origin":0,"id":"5baa8ab9fea0f1f2b9952425","name":"midnight-1","start":"20000101T000000","end":null,"frequency":"P1D","cron":"This is a description","runOnce":true}} , at : 2000-01-01 00:00:00 +0000 UTC
+DEBUG: 2018/09/25 14:21:29 1 schedule event need to be executed.
+INFO: 2018/09/25 14:21:29 the event with id : 746573745363686564756c654576656e744964 belongs to schedule : 5baa8ab9fea0f1f2b9952425 will be executing!
+DEBUG: 2018/09/25 14:21:29 the event with id : 746573745363686564756c654576656e744964 will request url : mqtt://:0
+DEBUG: 2018/09/25 14:21:29 execution returns status code : 500
+DEBUG: 2018/09/25 14:21:29 execution returns response content : 
+INFO: 2018/09/25 14:21:29 completed schedule, detail : {"created":0,"modified":0,"origin":0,"id":"5baa8ab9fea0f1f2b9952425","name":"midnight-1","start":"20000101T000000","end":null,"frequency":"P1D","cron":"This is a description","runOnce":true}
+INFO: 2018/09/25 14:22:50 ----------- test add schedule start ------------
+INFO: 2018/09/25 14:22:50 adding the schedule with id : 5baa8b0afea0f1f2df660688
+DEBUG: 2018/09/25 14:22:50 resetting the schedule with id : 5baa8b0afea0f1f2df660688
+INFO: 2018/09/25 14:22:50 added the schedule with id : 5baa8b0afea0f1f2df660688
+INFO: 2018/09/25 14:22:50 ----------- test add schedule end ------------
+INFO: 2018/09/25 14:23:40 ----------- test schedule lifecycle start ------------
+INFO: 2018/09/25 14:23:40 adding the schedule with id : 5baa8b3cfea0f1f2f9274f9c
+DEBUG: 2018/09/25 14:23:40 resetting the schedule with id : 5baa8b3cfea0f1f2f9274f9c
+INFO: 2018/09/25 14:23:40 added the schedule with id : 5baa8b3cfea0f1f2f9274f9c
+INFO: 2018/09/25 14:23:40 querying found the schedule with id : 5baa8b3cfea0f1f2f9274f9c
+INFO: 2018/09/25 14:23:40 updating the schedule with id : 5baa8b3cfea0f1f2f9274f9c
+DEBUG: 2018/09/25 14:23:40 resetting the schedule with id 5baa8b3cfea0f1f2f9274f9c
+INFO: 2018/09/25 14:23:40 updated the schedule with id : 5baa8b3cfea0f1f2f9274f9c
+INFO: 2018/09/25 14:23:40 querying found the schedule with id : 5baa8b3cfea0f1f2f9274f9c
+INFO: 2018/09/25 14:23:40 removing the schedule with id : 5baa8b3cfea0f1f2f9274f9c
+DEBUG: 2018/09/25 14:23:40 removing all the mappings of schedule event id to schedule id : 5baa8b3cfea0f1f2f9274f9c
+INFO: 2018/09/25 14:23:40 removed the schedule with id : 5baa8b3cfea0f1f2f9274f9c
+WARN: 2018/09/25 14:23:40 can not find a schedule context with schedule id : 5baa8b3cfea0f1f2f9274f9c
+INFO: 2018/09/25 14:23:40 ----------- test schedule lifecycle end ------------
+INFO: 2018/09/25 14:23:40 ----------- test schedule event lifecycle start ------------
+INFO: 2018/09/25 14:23:40 adding the schedule with id : 5baa8b3cfea0f1f2f9274f9d
+DEBUG: 2018/09/25 14:23:40 resetting the schedule with id : 5baa8b3cfea0f1f2f9274f9d
+INFO: 2018/09/25 14:23:40 added the schedule with id : 5baa8b3cfea0f1f2f9274f9d
+INFO: 2018/09/25 14:23:40 adding the schedule event with id 746573745363686564756c654576656e744964 to schedule : midnight-1
+INFO: 2018/09/25 14:23:40 check the schedule with id : 5baa8b3cfea0f1f2f9274f9d exists.
+INFO: 2018/09/25 14:23:40 added the schedule event with id : 746573745363686564756c654576656e744964 to schedule : midnight-1
+INFO: 2018/09/25 14:23:40 updating the schedule event with id : 746573745363686564756c654576656e744964
+DEBUG: 2018/09/25 14:23:40 1 item in schedule queue.
+DEBUG: 2018/09/25 14:23:40 1 item in schedule queue.
+DEBUG: 2018/09/25 14:23:40 check schedule with id : 5baa8b3cfea0f1f2f9274f9d
+DEBUG: 2018/09/25 14:23:40 schedule with id : 5baa8b3cfea0f1f2f9274f9d next schedule time is : 2000-01-01 00:00:00 +0000 UTC
+INFO: 2018/09/25 14:23:40 executing schedule, detail : {{"created":0,"modified":0,"origin":0,"id":"5baa8b3cfea0f1f2f9274f9d","name":"midnight-1","start":"20000101T000000","end":null,"frequency":"P1D","cron":"This is a description","runOnce":true}} , at : 2000-01-01 00:00:00 +0000 UTC
+DEBUG: 2018/09/25 14:23:40 1 schedule event need to be executed.
+INFO: 2018/09/25 14:23:40 the event with id : 746573745363686564756c654576656e744964 belongs to schedule : 5baa8b3cfea0f1f2f9274f9d will be executing!
+DEBUG: 2018/09/25 14:23:40 the event with id : 746573745363686564756c654576656e744964 will request url : mqtt://:0
+DEBUG: 2018/09/25 14:23:40 execution returns status code : 500
+DEBUG: 2018/09/25 14:23:40 execution returns response content : 
+INFO: 2018/09/25 14:23:40 completed schedule, detail : {"created":0,"modified":0,"origin":0,"id":"5baa8b3cfea0f1f2f9274f9d","name":"midnight-1","start":"20000101T000000","end":null,"frequency":"P1D","cron":"This is a description","runOnce":true}
+INFO: 2018/09/25 14:27:04 ----------- test add schedule start ------------
+INFO: 2018/09/25 14:27:04 adding the schedule with id : 5baa8c08fea0f1f316a6bbd4
+DEBUG: 2018/09/25 14:27:04 resetting the schedule with id : 5baa8c08fea0f1f316a6bbd4
+INFO: 2018/09/25 14:27:04 added the schedule with id : 5baa8c08fea0f1f316a6bbd4
+INFO: 2018/09/25 14:27:04 ----------- test add schedule end ------------
+INFO: 2018/09/25 14:27:04 ----------- test remove schedule start ------------
+INFO: 2018/09/25 14:27:04 adding the schedule with id : 5baa8c08fea0f1f316a6bbd5
+DEBUG: 2018/09/25 14:27:04 resetting the schedule with id : 5baa8c08fea0f1f316a6bbd5
+INFO: 2018/09/25 14:27:04 added the schedule with id : 5baa8c08fea0f1f316a6bbd5
+INFO: 2018/09/25 14:27:04 removing the schedule with id : 5baa8c08fea0f1f316a6bbd5
+DEBUG: 2018/09/25 14:27:04 removing all the mappings of schedule event id to schedule id : 5baa8c08fea0f1f316a6bbd5
+INFO: 2018/09/25 14:27:04 removed the schedule with id : 5baa8c08fea0f1f316a6bbd5
+INFO: 2018/09/25 14:27:04 ----------- test remove schedule end ------------
+INFO: 2018/09/25 14:27:04 ----------- test query schedule start ------------
+INFO: 2018/09/25 14:27:04 adding the schedule with id : 5baa8c08fea0f1f316a6bbd6
+DEBUG: 2018/09/25 14:27:04 resetting the schedule with id : 5baa8c08fea0f1f316a6bbd6
+INFO: 2018/09/25 14:27:04 added the schedule with id : 5baa8c08fea0f1f316a6bbd6
+INFO: 2018/09/25 14:27:04 querying found the schedule with id : 5baa8c08fea0f1f316a6bbd6
+INFO: 2018/09/25 14:27:04 ----------- test query schedule end ------------
+INFO: 2018/09/25 14:27:04 ----------- test update schedule start ------------
+INFO: 2018/09/25 14:27:04 adding the schedule with id : 5baa8c08fea0f1f316a6bbd7
+DEBUG: 2018/09/25 14:27:04 resetting the schedule with id : 5baa8c08fea0f1f316a6bbd7
+INFO: 2018/09/25 14:27:04 added the schedule with id : 5baa8c08fea0f1f316a6bbd7
+INFO: 2018/09/25 14:27:04 updating the schedule with id : 5baa8c08fea0f1f316a6bbd7
+DEBUG: 2018/09/25 14:27:04 resetting the schedule with id 5baa8c08fea0f1f316a6bbd7
+INFO: 2018/09/25 14:27:04 updated the schedule with id : 5baa8c08fea0f1f316a6bbd7
+INFO: 2018/09/25 14:27:04 ----------- test update schedule end ------------
+INFO: 2018/09/25 14:40:56 ----------- test schedule event lifecycle start ------------
+INFO: 2018/09/25 14:40:56 adding the schedule with id : 5baa8f48fea0f1f33f6efb2f
+DEBUG: 2018/09/25 14:40:56 resetting the schedule with id : 5baa8f48fea0f1f33f6efb2f
+INFO: 2018/09/25 14:41:18 added the schedule with id : 5baa8f48fea0f1f33f6efb2f
+INFO: 2018/09/25 14:41:34 adding the schedule event with id 746573745363686564756c654576656e744964 to schedule : midnight-1
+DEBUG: 2018/09/25 14:41:34 1 item in schedule queue.
+INFO: 2018/09/25 14:41:34 check the schedule with id : 5baa8f48fea0f1f33f6efb2f exists.
+DEBUG: 2018/09/25 14:41:34 check schedule with id : 5baa8f48fea0f1f33f6efb2f
+INFO: 2018/09/25 14:41:34 added the schedule event with id : 746573745363686564756c654576656e744964 to schedule : midnight-1
+DEBUG: 2018/09/25 14:41:34 schedule with id : 5baa8f48fea0f1f33f6efb2f next schedule time is : 2000-01-01 00:00:00 +0000 UTC
+ERROR: 2018/09/25 14:41:37 can not find schedule id with schedule event id : testScheduleEventId
+INFO: 2018/09/25 14:42:52 ----------- test schedule event lifecycle start ------------
+INFO: 2018/09/25 14:42:52 adding the schedule with id : 5baa8fbcfea0f1f369b21fe2
+DEBUG: 2018/09/25 14:42:52 resetting the schedule with id : 5baa8fbcfea0f1f369b21fe2
+INFO: 2018/09/25 14:42:52 added the schedule with id : 5baa8fbcfea0f1f369b21fe2
+INFO: 2018/09/25 14:42:52 adding the schedule event with id 746573745363686564756c654576656e744964 to schedule : midnight-1
+INFO: 2018/09/25 14:42:52 check the schedule with id : 5baa8fbcfea0f1f369b21fe2 exists.
+INFO: 2018/09/25 14:42:52 added the schedule event with id : 746573745363686564756c654576656e744964 to schedule : midnight-1
+INFO: 2018/09/25 15:04:01 ----------- test remove schedule event start ------------
+INFO: 2018/09/25 15:04:01 adding the schedule with id : 5baa94b1fea0f1f394fde377
+DEBUG: 2018/09/25 15:04:01 resetting the schedule with id : 5baa94b1fea0f1f394fde377
+INFO: 2018/09/25 15:04:01 added the schedule with id : 5baa94b1fea0f1f394fde377
+INFO: 2018/09/25 15:04:01 adding the schedule event with id 746573745363686564756c654576656e744964 to schedule : midnight-1
+INFO: 2018/09/25 15:04:01 check the schedule with id : 5baa94b1fea0f1f394fde377 exists.
+INFO: 2018/09/25 15:04:01 added the schedule event with id : 746573745363686564756c654576656e744964 to schedule : midnight-1
+INFO: 2018/09/25 15:04:01 removing the schedule event with id 746573745363686564756c654576656e744964
+INFO: 2018/09/25 15:04:01 there are no more events for the schedule : 5baa94b1fea0f1f394fde377, remove it.
+INFO: 2018/09/25 15:04:01 removed the schedule event with id 746573745363686564756c654576656e744964
+WARN: 2018/09/25 15:04:01 can not find a schedule context with schedule id : 5baa94b1fea0f1f394fde377
+INFO: 2018/09/25 15:04:01 ----------- test removeSchedulerEvent stop ------------
+INFO: 2018/09/25 15:04:43 ----------- test remove schedule event start ------------
+INFO: 2018/09/25 15:04:43 adding the schedule with id : 5baa94dbfea0f1f3ba75db25
+DEBUG: 2018/09/25 15:04:43 resetting the schedule with id : 5baa94dbfea0f1f3ba75db25
+INFO: 2018/09/25 15:04:43 added the schedule with id : 5baa94dbfea0f1f3ba75db25
+INFO: 2018/09/25 15:04:43 adding the schedule event with id 746573745363686564756c654576656e744964 to schedule : midnight-1
+INFO: 2018/09/25 15:04:43 check the schedule with id : 5baa94dbfea0f1f3ba75db25 exists.
+INFO: 2018/09/25 15:04:43 added the schedule event with id : 746573745363686564756c654576656e744964 to schedule : midnight-1
+INFO: 2018/09/25 15:04:43 removing the schedule event with id 746573745363686564756c654576656e744964
+INFO: 2018/09/25 15:04:43 there are no more events for the schedule : 5baa94dbfea0f1f3ba75db25, remove it.
+INFO: 2018/09/25 15:04:43 removed the schedule event with id 746573745363686564756c654576656e744964
+INFO: 2018/09/25 15:04:43 ----------- test removeSchedulerEvent stop ------------
+INFO: 2018/09/25 15:04:55 ----------- test add schedule event start ------------
+INFO: 2018/09/25 15:04:55 adding the schedule with id : 5baa94e7fea0f1f3de200162
+DEBUG: 2018/09/25 15:04:55 resetting the schedule with id : 5baa94e7fea0f1f3de200162
+INFO: 2018/09/25 15:04:55 added the schedule with id : 5baa94e7fea0f1f3de200162
+INFO: 2018/09/25 15:04:55 adding the schedule event with id 746573745363686564756c654576656e744964 to schedule : midnight-1
+INFO: 2018/09/25 15:04:55 check the schedule with id : 5baa94e7fea0f1f3de200162 exists.
+INFO: 2018/09/25 15:04:55 added the schedule event with id : 746573745363686564756c654576656e744964 to schedule : midnight-1
+INFO: 2018/09/25 15:04:55 ----------- test add schedule event stop ------------
+INFO: 2018/09/25 15:07:24 ----------- test add schedule begin ------------
+INFO: 2018/09/25 15:07:24 adding the schedule with id : 5baa957cfea0f1f42b42ad86
+DEBUG: 2018/09/25 15:07:24 resetting the schedule with id : 5baa957cfea0f1f42b42ad86
+INFO: 2018/09/25 15:07:24 added the schedule with id : 5baa957cfea0f1f42b42ad86
+INFO: 2018/09/25 15:07:24 ----------- test add schedule end ------------
+INFO: 2018/09/25 15:07:24 ----------- test remove schedule begin ------------
+INFO: 2018/09/25 15:07:24 adding the schedule with id : 5baa957cfea0f1f42b42ad87
+DEBUG: 2018/09/25 15:07:24 resetting the schedule with id : 5baa957cfea0f1f42b42ad87
+INFO: 2018/09/25 15:07:24 added the schedule with id : 5baa957cfea0f1f42b42ad87
+INFO: 2018/09/25 15:07:24 removing the schedule with id : 5baa957cfea0f1f42b42ad87
+DEBUG: 2018/09/25 15:07:24 removing all the mappings of schedule event id to schedule id : 5baa957cfea0f1f42b42ad87
+INFO: 2018/09/25 15:07:24 removed the schedule with id : 5baa957cfea0f1f42b42ad87
+INFO: 2018/09/25 15:07:24 ----------- test remove schedule end ------------
+INFO: 2018/09/25 15:07:24 ----------- test query schedule begin ------------
+INFO: 2018/09/25 15:07:24 adding the schedule with id : 5baa957cfea0f1f42b42ad88
+DEBUG: 2018/09/25 15:07:24 resetting the schedule with id : 5baa957cfea0f1f42b42ad88
+INFO: 2018/09/25 15:07:24 added the schedule with id : 5baa957cfea0f1f42b42ad88
+INFO: 2018/09/25 15:07:24 querying found the schedule with id : 5baa957cfea0f1f42b42ad88
+INFO: 2018/09/25 15:07:24 ----------- test query schedule end ------------
+INFO: 2018/09/25 15:07:24 ----------- test update schedule begin ------------
+INFO: 2018/09/25 15:07:24 adding the schedule with id : 5baa957cfea0f1f42b42ad89
+DEBUG: 2018/09/25 15:07:24 resetting the schedule with id : 5baa957cfea0f1f42b42ad89
+INFO: 2018/09/25 15:07:24 added the schedule with id : 5baa957cfea0f1f42b42ad89
+INFO: 2018/09/25 15:07:24 updating the schedule with id : 5baa957cfea0f1f42b42ad89
+DEBUG: 2018/09/25 15:07:24 resetting the schedule with id 5baa957cfea0f1f42b42ad89
+INFO: 2018/09/25 15:07:24 updated the schedule with id : 5baa957cfea0f1f42b42ad89
+INFO: 2018/09/25 15:07:24 ----------- test update schedule end ------------
+INFO: 2018/09/25 15:07:24 ----------- test add schedule event begin ------------
+INFO: 2018/09/25 15:07:24 adding the schedule with id : 5baa957cfea0f1f42b42ad8a
+DEBUG: 2018/09/25 15:07:24 resetting the schedule with id : 5baa957cfea0f1f42b42ad8a
+INFO: 2018/09/25 15:07:24 added the schedule with id : 5baa957cfea0f1f42b42ad8a
+INFO: 2018/09/25 15:07:24 adding the schedule event with id 746573745363686564756c654576656e744964 to schedule : midnight-1
+INFO: 2018/09/25 15:07:24 check the schedule with id : 5baa957cfea0f1f42b42ad8a exists.
+INFO: 2018/09/25 15:07:24 added the schedule event with id : 746573745363686564756c654576656e744964 to schedule : midnight-1
+INFO: 2018/09/25 15:07:24 ----------- test add schedule event end ------------
+INFO: 2018/09/25 15:07:24 ----------- test remove schedule event begin ------------
+INFO: 2018/09/25 15:07:24 adding the schedule with id : 5baa957cfea0f1f42b42ad8b
+DEBUG: 2018/09/25 15:07:24 resetting the schedule with id : 5baa957cfea0f1f42b42ad8b
+INFO: 2018/09/25 15:07:24 added the schedule with id : 5baa957cfea0f1f42b42ad8b
+INFO: 2018/09/25 15:07:24 adding the schedule event with id 746573745363686564756c654576656e744964 to schedule : midnight-1
+INFO: 2018/09/25 15:07:24 check the schedule with id : 5baa957cfea0f1f42b42ad8b exists.
+INFO: 2018/09/25 15:07:24 added the schedule event with id : 746573745363686564756c654576656e744964 to schedule : midnight-1
+INFO: 2018/09/25 15:07:24 removing the schedule event with id 746573745363686564756c654576656e744964
+INFO: 2018/09/25 15:07:24 there are no more events for the schedule : 5baa957cfea0f1f42b42ad8b, remove it.
+INFO: 2018/09/25 15:07:24 removed the schedule event with id 746573745363686564756c654576656e744964
+INFO: 2018/09/25 15:07:24 ----------- test removeSchedulerEvent end ------------
+INFO: 2018/09/25 15:22:14 ----------- test add schedule begin ------------
+INFO: 2018/09/25 15:22:14 adding the schedule with id : 5baa98f6fea0f1f48f8b714b
+DEBUG: 2018/09/25 15:22:14 resetting the schedule with id : 5baa98f6fea0f1f48f8b714b
+INFO: 2018/09/25 15:22:14 added the schedule with id : 5baa98f6fea0f1f48f8b714b
+INFO: 2018/09/25 15:22:14 ----------- test add schedule end ------------
+INFO: 2018/09/25 15:22:14 ----------- test remove schedule begin ------------
+INFO: 2018/09/25 15:22:14 adding the schedule with id : 5baa98f6fea0f1f48f8b714c
+DEBUG: 2018/09/25 15:22:14 resetting the schedule with id : 5baa98f6fea0f1f48f8b714c
+INFO: 2018/09/25 15:22:14 added the schedule with id : 5baa98f6fea0f1f48f8b714c
+INFO: 2018/09/25 15:22:14 removing the schedule with id : 5baa98f6fea0f1f48f8b714c
+DEBUG: 2018/09/25 15:22:14 removing all the mappings of schedule event id to schedule id : 5baa98f6fea0f1f48f8b714c
+INFO: 2018/09/25 15:22:14 removed the schedule with id : 5baa98f6fea0f1f48f8b714c
+INFO: 2018/09/25 15:22:14 ----------- test remove schedule end ------------
+INFO: 2018/09/25 15:22:14 ----------- test query schedule begin ------------
+INFO: 2018/09/25 15:22:14 adding the schedule with id : 5baa98f6fea0f1f48f8b714d
+DEBUG: 2018/09/25 15:22:14 resetting the schedule with id : 5baa98f6fea0f1f48f8b714d
+INFO: 2018/09/25 15:22:14 added the schedule with id : 5baa98f6fea0f1f48f8b714d
+INFO: 2018/09/25 15:22:14 querying found the schedule with id : 5baa98f6fea0f1f48f8b714d
+INFO: 2018/09/25 15:22:14 ----------- test query schedule end ------------
+INFO: 2018/09/25 15:22:14 ----------- test update schedule begin ------------
+INFO: 2018/09/25 15:22:14 adding the schedule with id : 5baa98f6fea0f1f48f8b714e
+DEBUG: 2018/09/25 15:22:14 resetting the schedule with id : 5baa98f6fea0f1f48f8b714e
+INFO: 2018/09/25 15:22:14 added the schedule with id : 5baa98f6fea0f1f48f8b714e
+INFO: 2018/09/25 15:22:14 updating the schedule with id : 5baa98f6fea0f1f48f8b714e
+DEBUG: 2018/09/25 15:22:14 resetting the schedule with id 5baa98f6fea0f1f48f8b714e
+INFO: 2018/09/25 15:22:14 updated the schedule with id : 5baa98f6fea0f1f48f8b714e
+INFO: 2018/09/25 15:22:14 ----------- test update schedule end ------------
+INFO: 2018/09/25 15:22:14 ----------- test add schedule event begin ------------
+INFO: 2018/09/25 15:22:14 adding the schedule with id : 5baa98f6fea0f1f48f8b714f
+DEBUG: 2018/09/25 15:22:14 resetting the schedule with id : 5baa98f6fea0f1f48f8b714f
+INFO: 2018/09/25 15:22:14 added the schedule with id : 5baa98f6fea0f1f48f8b714f
+INFO: 2018/09/25 15:22:14 adding the schedule event with id 746573745363686564756c654576656e744964 to schedule : midnight-1
+INFO: 2018/09/25 15:22:14 check the schedule with id : 5baa98f6fea0f1f48f8b714f exists.
+INFO: 2018/09/25 15:22:14 added the schedule event with id : 746573745363686564756c654576656e744964 to schedule : midnight-1
+INFO: 2018/09/25 15:22:14 ----------- test add schedule event end ------------
+INFO: 2018/09/25 15:22:14 ----------- test remove schedule event begin ------------
+INFO: 2018/09/25 15:22:14 adding the schedule with id : 5baa98f6fea0f1f48f8b7150
+DEBUG: 2018/09/25 15:22:14 resetting the schedule with id : 5baa98f6fea0f1f48f8b7150
+INFO: 2018/09/25 15:22:14 added the schedule with id : 5baa98f6fea0f1f48f8b7150
+INFO: 2018/09/25 15:22:14 adding the schedule event with id 746573745363686564756c654576656e744964 to schedule : midnight-1
+INFO: 2018/09/25 15:22:14 check the schedule with id : 5baa98f6fea0f1f48f8b7150 exists.
+INFO: 2018/09/25 15:22:14 added the schedule event with id : 746573745363686564756c654576656e744964 to schedule : midnight-1
+INFO: 2018/09/25 15:22:14 removing the schedule event with id 746573745363686564756c654576656e744964
+INFO: 2018/09/25 15:22:14 there are no more events for the schedule : 5baa98f6fea0f1f48f8b7150, remove it.
+INFO: 2018/09/25 15:22:14 removed the schedule event with id 746573745363686564756c654576656e744964
+INFO: 2018/09/25 15:22:14 ----------- test removeSchedulerEvent end ------------
+INFO: 2018/09/25 15:27:10 adding the schedule with id : 5baa9a1efea0f1f4af7376d4
+DEBUG: 2018/09/25 15:27:10 resetting the schedule with id : 5baa9a1efea0f1f4af7376d4
+INFO: 2018/09/25 15:27:10 added the schedule with id : 5baa9a1efea0f1f4af7376d4
+INFO: 2018/09/25 15:27:10 adding the schedule with id : 5baa9a1efea0f1f4af7376d5
+DEBUG: 2018/09/25 15:27:10 resetting the schedule with id : 5baa9a1efea0f1f4af7376d5
+INFO: 2018/09/25 15:27:10 added the schedule with id : 5baa9a1efea0f1f4af7376d5
+INFO: 2018/09/25 15:27:10 removing the schedule with id : 5baa9a1efea0f1f4af7376d5
+DEBUG: 2018/09/25 15:27:10 removing all the mappings of schedule event id to schedule id : 5baa9a1efea0f1f4af7376d5
+INFO: 2018/09/25 15:27:10 removed the schedule with id : 5baa9a1efea0f1f4af7376d5
+INFO: 2018/09/25 15:27:10 adding the schedule with id : 5baa9a1efea0f1f4af7376d6
+DEBUG: 2018/09/25 15:27:10 resetting the schedule with id : 5baa9a1efea0f1f4af7376d6
+INFO: 2018/09/25 15:27:10 added the schedule with id : 5baa9a1efea0f1f4af7376d6
+INFO: 2018/09/25 15:27:10 querying found the schedule with id : 5baa9a1efea0f1f4af7376d6
+INFO: 2018/09/25 15:27:10 adding the schedule with id : 5baa9a1efea0f1f4af7376d7
+DEBUG: 2018/09/25 15:27:10 resetting the schedule with id : 5baa9a1efea0f1f4af7376d7
+INFO: 2018/09/25 15:27:10 added the schedule with id : 5baa9a1efea0f1f4af7376d7
+INFO: 2018/09/25 15:27:10 updating the schedule with id : 5baa9a1efea0f1f4af7376d7
+DEBUG: 2018/09/25 15:27:10 resetting the schedule with id 5baa9a1efea0f1f4af7376d7
+INFO: 2018/09/25 15:27:10 updated the schedule with id : 5baa9a1efea0f1f4af7376d7
+INFO: 2018/09/25 15:27:10 adding the schedule with id : 5baa9a1efea0f1f4af7376d8
+DEBUG: 2018/09/25 15:27:10 resetting the schedule with id : 5baa9a1efea0f1f4af7376d8
+INFO: 2018/09/25 15:27:10 added the schedule with id : 5baa9a1efea0f1f4af7376d8
+INFO: 2018/09/25 15:27:10 adding the schedule event with id 746573745363686564756c654576656e744964 to schedule : midnight-1
+INFO: 2018/09/25 15:27:10 check the schedule with id : 5baa9a1efea0f1f4af7376d8 exists.
+INFO: 2018/09/25 15:27:10 added the schedule event with id : 746573745363686564756c654576656e744964 to schedule : midnight-1
+INFO: 2018/09/25 15:27:10 adding the schedule with id : 5baa9a1efea0f1f4af7376d9
+DEBUG: 2018/09/25 15:27:10 resetting the schedule with id : 5baa9a1efea0f1f4af7376d9
+INFO: 2018/09/25 15:27:10 added the schedule with id : 5baa9a1efea0f1f4af7376d9
+INFO: 2018/09/25 15:27:10 adding the schedule event with id 746573745363686564756c654576656e744964 to schedule : midnight-1
+INFO: 2018/09/25 15:27:10 check the schedule with id : 5baa9a1efea0f1f4af7376d9 exists.
+INFO: 2018/09/25 15:27:10 added the schedule event with id : 746573745363686564756c654576656e744964 to schedule : midnight-1
+INFO: 2018/09/25 15:27:10 removing the schedule event with id 746573745363686564756c654576656e744964
+INFO: 2018/09/25 15:27:10 there are no more events for the schedule : 5baa9a1efea0f1f4af7376d9, remove it.
+INFO: 2018/09/25 15:27:10 removed the schedule event with id 746573745363686564756c654576656e744964
+INFO: 2018/09/25 15:33:05 adding the schedule with id : 5baa9b81fea0f1f4d0e3fd02
+DEBUG: 2018/09/25 15:33:05 resetting the schedule with id : 5baa9b81fea0f1f4d0e3fd02
+INFO: 2018/09/25 15:33:05 added the schedule with id : 5baa9b81fea0f1f4d0e3fd02
+INFO: 2018/09/25 15:33:05 adding the schedule with id : 5baa9b81fea0f1f4d0e3fd03
+DEBUG: 2018/09/25 15:33:05 resetting the schedule with id : 5baa9b81fea0f1f4d0e3fd03
+INFO: 2018/09/25 15:33:05 added the schedule with id : 5baa9b81fea0f1f4d0e3fd03
+INFO: 2018/09/25 15:33:05 removing the schedule with id : 5baa9b81fea0f1f4d0e3fd03
+DEBUG: 2018/09/25 15:33:05 removing all the mappings of schedule event id to schedule id : 5baa9b81fea0f1f4d0e3fd03
+INFO: 2018/09/25 15:33:05 removed the schedule with id : 5baa9b81fea0f1f4d0e3fd03
+INFO: 2018/09/25 15:33:05 adding the schedule with id : 5baa9b81fea0f1f4d0e3fd04
+DEBUG: 2018/09/25 15:33:05 resetting the schedule with id : 5baa9b81fea0f1f4d0e3fd04
+INFO: 2018/09/25 15:33:05 added the schedule with id : 5baa9b81fea0f1f4d0e3fd04
+INFO: 2018/09/25 15:33:05 querying found the schedule with id : 5baa9b81fea0f1f4d0e3fd04
+INFO: 2018/09/25 15:33:05 adding the schedule with id : 5baa9b81fea0f1f4d0e3fd05
+DEBUG: 2018/09/25 15:33:05 resetting the schedule with id : 5baa9b81fea0f1f4d0e3fd05
+INFO: 2018/09/25 15:33:05 added the schedule with id : 5baa9b81fea0f1f4d0e3fd05
+INFO: 2018/09/25 15:33:05 updating the schedule with id : 5baa9b81fea0f1f4d0e3fd05
+DEBUG: 2018/09/25 15:33:05 resetting the schedule with id 5baa9b81fea0f1f4d0e3fd05
+INFO: 2018/09/25 15:33:05 updated the schedule with id : 5baa9b81fea0f1f4d0e3fd05
+INFO: 2018/09/25 15:33:05 adding the schedule with id : 5baa9b81fea0f1f4d0e3fd06
+DEBUG: 2018/09/25 15:33:05 resetting the schedule with id : 5baa9b81fea0f1f4d0e3fd06
+INFO: 2018/09/25 15:33:05 added the schedule with id : 5baa9b81fea0f1f4d0e3fd06
+DEBUG: 2018/09/25 15:33:05 adding the schedule event with id 746573745363686564756c654576656e744964 to schedule : midnight-1
+DEBUG: 2018/09/25 15:33:05 check the schedule with id : 5baa9b81fea0f1f4d0e3fd06 exists.
+DEBUG: 2018/09/25 15:33:05 added the schedule event with id : 746573745363686564756c654576656e744964 to schedule : midnight-1
+INFO: 2018/09/25 15:33:05 adding the schedule with id : 5baa9b81fea0f1f4d0e3fd07
+DEBUG: 2018/09/25 15:33:05 resetting the schedule with id : 5baa9b81fea0f1f4d0e3fd07
+INFO: 2018/09/25 15:33:05 added the schedule with id : 5baa9b81fea0f1f4d0e3fd07
+DEBUG: 2018/09/25 15:33:05 adding the schedule event with id 746573745363686564756c654576656e744964 to schedule : midnight-1
+DEBUG: 2018/09/25 15:33:05 check the schedule with id : 5baa9b81fea0f1f4d0e3fd07 exists.
+DEBUG: 2018/09/25 15:33:05 added the schedule event with id : 746573745363686564756c654576656e744964 to schedule : midnight-1
+DEBUG: 2018/09/25 15:33:05 removing the schedule event with id 746573745363686564756c654576656e744964
+INFO: 2018/09/25 15:33:05 there are no more events for the schedule : 5baa9b81fea0f1f4d0e3fd07, remove it.
+DEBUG: 2018/09/25 15:33:05 removed the schedule event with id 746573745363686564756c654576656e744964
+DEBUG: 2018/09/25 15:35:38 adding the schedule with id : 5baa9c1afea0f1f4ee51011d
+DEBUG: 2018/09/25 15:35:38 resetting the schedule with id : 5baa9c1afea0f1f4ee51011d
+DEBUG: 2018/09/25 15:35:38 added the schedule with id : 5baa9c1afea0f1f4ee51011d
+DEBUG: 2018/09/25 15:35:38 adding the schedule with id : 5baa9c1afea0f1f4ee51011e
+DEBUG: 2018/09/25 15:35:38 resetting the schedule with id : 5baa9c1afea0f1f4ee51011e
+DEBUG: 2018/09/25 15:35:38 added the schedule with id : 5baa9c1afea0f1f4ee51011e
+DEBUG: 2018/09/25 15:35:38 removing the schedule with id : 5baa9c1afea0f1f4ee51011e
+DEBUG: 2018/09/25 15:35:38 removing all the mappings of schedule event id to schedule id : 5baa9c1afea0f1f4ee51011e
+DEBUG: 2018/09/25 15:35:38 removed the schedule with id : 5baa9c1afea0f1f4ee51011e
+DEBUG: 2018/09/25 15:35:38 adding the schedule with id : 5baa9c1afea0f1f4ee51011f
+DEBUG: 2018/09/25 15:35:38 resetting the schedule with id : 5baa9c1afea0f1f4ee51011f
+DEBUG: 2018/09/25 15:35:38 added the schedule with id : 5baa9c1afea0f1f4ee51011f
+DEBUG: 2018/09/25 15:35:38 querying found the schedule with id : 5baa9c1afea0f1f4ee51011f
+DEBUG: 2018/09/25 15:35:38 adding the schedule with id : 5baa9c1afea0f1f4ee510120
+DEBUG: 2018/09/25 15:35:38 resetting the schedule with id : 5baa9c1afea0f1f4ee510120
+DEBUG: 2018/09/25 15:35:38 added the schedule with id : 5baa9c1afea0f1f4ee510120
+DEBUG: 2018/09/25 15:35:38 updating the schedule with id : 5baa9c1afea0f1f4ee510120
+DEBUG: 2018/09/25 15:35:38 resetting the schedule with id 5baa9c1afea0f1f4ee510120
+DEBUG: 2018/09/25 15:35:38 updated the schedule with id : 5baa9c1afea0f1f4ee510120
+DEBUG: 2018/09/25 15:35:38 adding the schedule with id : 5baa9c1afea0f1f4ee510121
+DEBUG: 2018/09/25 15:35:38 resetting the schedule with id : 5baa9c1afea0f1f4ee510121
+DEBUG: 2018/09/25 15:35:38 added the schedule with id : 5baa9c1afea0f1f4ee510121
+DEBUG: 2018/09/25 15:35:38 adding the schedule event with id 746573745363686564756c654576656e744964 to schedule : midnight-1
+DEBUG: 2018/09/25 15:35:38 check the schedule with id : 5baa9c1afea0f1f4ee510121 exists.
+DEBUG: 2018/09/25 15:35:38 added the schedule event with id : 746573745363686564756c654576656e744964 to schedule : midnight-1
+DEBUG: 2018/09/25 15:35:38 adding the schedule with id : 5baa9c1afea0f1f4ee510122
+DEBUG: 2018/09/25 15:35:38 resetting the schedule with id : 5baa9c1afea0f1f4ee510122
+DEBUG: 2018/09/25 15:35:38 added the schedule with id : 5baa9c1afea0f1f4ee510122
+DEBUG: 2018/09/25 15:35:38 adding the schedule event with id 746573745363686564756c654576656e744964 to schedule : midnight-1
+DEBUG: 2018/09/25 15:35:38 check the schedule with id : 5baa9c1afea0f1f4ee510122 exists.
+DEBUG: 2018/09/25 15:35:38 added the schedule event with id : 746573745363686564756c654576656e744964 to schedule : midnight-1
+DEBUG: 2018/09/25 15:35:38 removing the schedule event with id 746573745363686564756c654576656e744964
+DEBUG: 2018/09/25 15:35:38 there are no more events for the schedule : 5baa9c1afea0f1f4ee510122, remove it.
+DEBUG: 2018/09/25 15:35:38 removed the schedule event with id 746573745363686564756c654576656e744964
