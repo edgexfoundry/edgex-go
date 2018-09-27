@@ -9,17 +9,14 @@
 package client
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"net/http"
-	"strconv"
-
 	"github.com/edgexfoundry/edgex-go/internal/export"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+	"github.com/edgexfoundry/edgex-go/pkg/models"
 	"github.com/go-zoo/bone"
-
+	"io/ioutil"
+	"net/http"
 )
 
 const (
@@ -152,7 +149,7 @@ func addReg(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	notifyUpdatedRegistrations(export.NotifyUpdate{Name: reg.Name,
+	notifyUpdatedRegistrations(models.NotifyUpdate{Name: reg.Name,
 		Operation: "add"})
 
 	w.WriteHeader(http.StatusOK)
@@ -241,7 +238,7 @@ func updateReg(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	notifyUpdatedRegistrations(export.NotifyUpdate{Name: toReg.Name,
+	notifyUpdatedRegistrations(models.NotifyUpdate{Name: toReg.Name,
 		Operation: "update"})
 
 	w.Header().Set("Content-Type", applicationJson)
@@ -268,7 +265,7 @@ func delRegByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	notifyUpdatedRegistrations(export.NotifyUpdate{Name: reg.Name,
+	notifyUpdatedRegistrations(models.NotifyUpdate{Name: reg.Name,
 		Operation: "delete"})
 
 	w.Header().Set("Content-Type", applicationJson)
@@ -286,7 +283,7 @@ func delRegByName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	notifyUpdatedRegistrations(export.NotifyUpdate{Name: name,
+	notifyUpdatedRegistrations(models.NotifyUpdate{Name: name,
 		Operation: "delete"})
 
 	w.Header().Set("Content-Type", applicationJson)
@@ -294,26 +291,11 @@ func delRegByName(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("true"))
 }
 
-func notifyUpdatedRegistrations(update export.NotifyUpdate) {
+func notifyUpdatedRegistrations(update models.NotifyUpdate) {
 	go func() {
-		client := &http.Client{}
-		url := "http://" + configuration.DistroHost + ":" + strconv.Itoa(configuration.DistroPort) +
-			"/api/v1/notify/registrations"
-
-		data, err := json.Marshal(update)
+		err := dc.NotifyRegistrations(update)
 		if err != nil {
-			LoggingClient.Error(fmt.Sprintf("Error generating update json. Error: %s", err.Error()))
-			return
-		}
-
-		req, err := http.NewRequest(http.MethodPut, url, bytes.NewBuffer([]byte(data)))
-		if err != nil {
-			LoggingClient.Error(fmt.Sprintf("Error creating http request. Error: %s", err.Error()))
-			return
-		}
-		_, err = client.Do(req)
-		if err != nil {
-			LoggingClient.Error(fmt.Sprintf("Error notifying updated registrations to distro: %s. Error: %s", url, err.Error()))
+			LoggingClient.Error(fmt.Sprintf("error from distro: %s", err.Error()))
 		}
 	}()
 }

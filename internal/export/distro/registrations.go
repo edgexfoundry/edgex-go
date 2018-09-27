@@ -27,7 +27,7 @@ const (
 	awsThingUpdateTopic string = "$aws/things/%s/shadow/update"
 )
 
-var registrationChanges chan export.NotifyUpdate = make(chan export.NotifyUpdate, 2)
+var registrationChanges chan models.NotifyUpdate = make(chan models.NotifyUpdate, 2)
 
 // RegistrationInfo - registration info
 type registrationInfo struct {
@@ -44,7 +44,7 @@ type registrationInfo struct {
 	deleteFlag bool
 }
 
-func RefreshRegistrations(update export.NotifyUpdate) {
+func RefreshRegistrations(update models.NotifyUpdate) {
 	// TODO make it not blocking, return bool?
 	registrationChanges <- update
 }
@@ -223,7 +223,7 @@ func registrationLoop(reg *registrationInfo) {
 }
 
 func updateRunningRegistrations(running map[string]*registrationInfo,
-	update export.NotifyUpdate) error {
+	update models.NotifyUpdate) error {
 
 	switch update.Operation {
 	case export.NotifyUpdateDelete:
