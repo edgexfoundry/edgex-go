@@ -46,7 +46,7 @@ sudo make run_docker
 
 # Install and Deploy via Snap Package #
 EdgeX Foundry is also available as a snap package, for more details
-on the snap, including how to install it, please refer to [EdgeX snap](https://github.com/edgexfoundry/edgex-go/snap/README.md)
+on the snap, including how to install it, please refer to [EdgeX snap](https://github.com/edgexfoundry/edgex-go/blob/master/snap/README.md)
 
 # Docker Hub #
 EdgeX images are kept on organization's [DockerHub page](https://hub.docker.com/u/edgexfoundry/).
