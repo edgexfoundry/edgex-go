@@ -57,7 +57,7 @@ func main() {
 
 	// Time it took to start service
 	logging.LoggingClient.Info("Service started in: "+time.Since(start).String(), "")
-	logging.LoggingClient.Info("Listening on port: "+strconv.Itoa(logging.Configuration.Port), "")
+	logging.LoggingClient.Info("Listening on port: "+strconv.Itoa(logging.Configuration.Service.Port), "")
 	startHTTPServer(errs)
 
 	c := <-errs
@@ -80,7 +80,7 @@ func listenForInterrupt(errChan chan error) {
 
 func startHTTPServer(errChan chan error) {
 	go func() {
-		p := fmt.Sprintf(":%d", logging.Configuration.Port)
+		p := fmt.Sprintf(":%d", logging.Configuration.Service.Port)
 		errChan <- http.ListenAndServe(p, logging.HttpServer())
 	}()
 }

@@ -11,24 +11,27 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
-package models
+package memory
 
-type LogEntry struct {
-	Level         string   `bson:"logLevel" json:"logLevel"`
-	Labels        []string `bson:"labels" json:"labels"`
-	OriginService string   `bson:"originService" json:"originService"`
-	Message       string   `bson:"message" json:"message"`
-	Created       int64    `bson:"created" json:"created"`
-}
-
-const (
-	TRACE = "TRACE"
-	DEBUG = "DEBUG"
-	WARN  = "WARN"
-	INFO  = "INFO"
-	ERROR = "ERROR"
+import (
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+	"github.com/edgexfoundry/edgex-go/pkg/models"
 )
 
-func IsValidLogLevel(l string) bool {
-	return l == TRACE || l == DEBUG || l == WARN || l == INFO || l == ERROR
+func (m *MemDB) AddLog(le models.LogEntry) error {
+	m.logs = append(m.logs, le)
+
+	return nil
+}
+
+func (m *MemDB) DeleteLog(criteria db.LogMatcher) (int, error) {
+	return 0, nil
+}
+
+func (m *MemDB) FindLog(criteria db.LogMatcher, limit int) ([]models.LogEntry, error) {
+	return m.logs, nil
+}
+
+func (m *MemDB) ResetLogs() {
+	m.logs = []models.LogEntry{}
 }

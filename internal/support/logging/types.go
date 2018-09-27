@@ -7,31 +7,45 @@
 package logging
 
 import (
+	"fmt"
+	"log"
+	"os"
+
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
-	"github.com/edgexfoundry/edgex-go/internal/support/logging/models"
+	"github.com/edgexfoundry/edgex-go/pkg/models"
 )
 
 const (
-	PersistenceMongo = "mongodb"
-	PersistenceFile  = "file"
+	PersistenceDB   = "database"
+	PersistenceFile = "file"
 )
 
-type persistence interface {
-	add(logEntry models.LogEntry) error
-	closeSession()
-	remove(criteria matchCriteria) (int, error)
-	find(criteria matchCriteria) ([]models.LogEntry, error)
+type DBClient interface {
+	AddLog(le models.LogEntry) error
+	CloseSession()
+	Connect() error
+	DeleteLog(criteria db.LogMatcher) (int, error)
+	FindLog(criteria db.LogMatcher, limit int) ([]models.LogEntry, error)
 
 	// Needed for the tests. Reset the instance (closing files, sessions...)
 	// and clear the logs.
-	reset()
+	ResetLogs()
 }
 
 type privLogger struct {
+	stdOutLogger *log.Logger
+}
+
+func newPrivateLogger() privLogger {
+	p := privLogger{}
+	p.stdOutLogger = log.New(os.Stdout, "", log.Ldate|log.Ltime)
+	return p
 }
 
 func (l privLogger) log(level string, msg string, labels []string) {
+	l.stdOutLogger.SetPrefix(fmt.Sprintf("%s: ", level))
+	l.stdOutLogger.Println(msg)
 	if dbClient != nil {
 		logEntry := models.LogEntry{
 			Level:         level,
@@ -40,7 +54,7 @@ func (l privLogger) log(level string, msg string, labels []string) {
 			Message:       msg,
 			Created:       db.MakeTimestamp(),
 		}
-		dbClient.add(logEntry)
+		dbClient.AddLog(logEntry)
 	}
 }
 
