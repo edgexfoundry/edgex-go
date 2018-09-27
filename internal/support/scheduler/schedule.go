@@ -249,21 +249,17 @@ func updateScheduleEvent(scheduleEvent models.ScheduleEvent) error {
 		return errors.New("there is no mapping from schedule event id : " + scheduleEventId + " to schedule.")
 	}
 
-	// TODO: ensure thread safety when making this call
-	schedule, err := querySchedule(scheduleEventId)
-	if err != nil {
-		loggingClient.Error("query the schedule with name : " + scheduleEvent.Schedule + " occurs a error : " + err.Error())
-		return err
-	}
-
-	scheduleContext, exists := scheduleIdToContextMap[oldScheduleId]
-	if !exists {
-		loggingClient.Error("can not find the mapping from the old schedule id : " + oldScheduleId + " to schedule context")
-		return errors.New("can not find the mapping from the old schedule id : " + oldScheduleId + " to schedule context")
+	scheduleContext, exists := scheduleNameToContextMap[scheduleEvent.Schedule]
+	if !exists{
+		loggingClient.Error("query the schedule with name : " + scheduleEvent.Schedule + " occurs a error ")
+		return errors.New("there is no mapping from scheduleEvent schedule name: " + scheduleEvent.Schedule + " to schedule")
 	}
 
 	//if the schedule event switched schedule
+	schedule := scheduleContext.Schedule
+
 	newScheduleId := schedule.Id.Hex()
+
 	if newScheduleId != oldScheduleId {
 		loggingClient.Debug("the schedule event switched schedule from " + oldScheduleId + " to " + newScheduleId)
 
@@ -320,12 +316,6 @@ func removeScheduleEvent(scheduleEventId string) error {
 	}
 
 	delete(scheduleContext.ScheduleEventsMap, scheduleEventId)
-
-	//if there are no more events for the schedule, remove the schedule context
-	if len(scheduleContext.ScheduleEventsMap) == 0 {
-		loggingClient.Debug("there are no more events for the schedule : " + scheduleId + ", remove it.")
-		deleteScheduleOperation(scheduleId, scheduleContext)
-	}
 
 	loggingClient.Debug("removed the schedule event with id " + scheduleEventId)
 
