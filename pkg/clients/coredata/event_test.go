@@ -28,13 +28,13 @@ import (
 )
 
 const (
-	MarkPushedUriPath = "/api/v1/event/id/5aae1f4fe4b0d019b26a56b8"
-	EventUriPath      = "/api/v1/event"
-	TestEventDevice1  = "device1"
-	TestEventDevice2  = "device2"
+	TestId           = "5aae1f4fe4b0d019b26a56b8"
+	TestEventDevice1 = "device1"
+	TestEventDevice2 = "device2"
 )
 
 func TestMarkPushed(t *testing.T) {
+
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 
@@ -42,25 +42,26 @@ func TestMarkPushed(t *testing.T) {
 			t.Errorf("expected http method is PUT, active http method is : %s", r.Method)
 		}
 
-		if r.URL.EscapedPath() != MarkPushedUriPath {
-			t.Errorf("expected uri path is %s, actual uri path is %s", MarkPushedUriPath, r.URL.EscapedPath())
+		url := clients.ApiEventRoute + "/id/" + TestId
+		if r.URL.EscapedPath() != url {
+			t.Errorf("expected uri path is %s, actual uri path is %s", url, r.URL.EscapedPath())
 		}
 	}))
 
 	defer ts.Close()
 
-	url := ts.URL + EventUriPath
+	url := ts.URL + clients.ApiEventRoute
 
 	params := types.EndpointParams{
 		ServiceKey:  internal.CoreDataServiceKey,
-		Path:        EventUriPath,
+		Path:        clients.ApiEventRoute,
 		UseRegistry: false,
 		Url:         url,
 		Interval:    clients.ClientMonitorDefault}
 
 	ec := NewEventClient(params, mockEventEndpoint{})
 
-	err := ec.MarkPushed("5aae1f4fe4b0d019b26a56b8")
+	err := ec.MarkPushed(TestId)
 
 	if err != nil {
 		t.FailNow()
@@ -75,8 +76,8 @@ func TestGetEvents(t *testing.T) {
 			t.Errorf("expected http method is GET, active http method is : %s", r.Method)
 		}
 
-		if r.URL.EscapedPath() != EventUriPath {
-			t.Errorf("expected uri path is %s, actual uri path is %s", EventUriPath, r.URL.EscapedPath())
+		if r.URL.EscapedPath() != clients.ApiEventRoute {
+			t.Errorf("expected uri path is %s, actual uri path is %s", clients.ApiEventRoute, r.URL.EscapedPath())
 		}
 
 		w.Write([]byte("[" +
@@ -92,11 +93,11 @@ func TestGetEvents(t *testing.T) {
 
 	defer ts.Close()
 
-	url := ts.URL + EventUriPath
+	url := ts.URL + clients.ApiEventRoute
 
 	params := types.EndpointParams{
 		ServiceKey:  internal.CoreDataServiceKey,
-		Path:        EventUriPath,
+		Path:        clients.ApiEventRoute,
 		UseRegistry: false,
 		Url:         url,
 		Interval:    clients.ClientMonitorDefault}
@@ -124,10 +125,10 @@ func TestGetEvents(t *testing.T) {
 }
 
 func TestNewEventClientWithConsul(t *testing.T) {
-	deviceUrl := "http://localhost:48080" + EventUriPath
+	deviceUrl := "http://localhost:48080" + clients.ApiEventRoute
 	params := types.EndpointParams{
 		ServiceKey:  internal.CoreDataServiceKey,
-		Path:        EventUriPath,
+		Path:        clients.ApiEventRoute,
 		UseRegistry: true,
 		Url:         deviceUrl,
 		Interval:    clients.ClientMonitorDefault}

@@ -30,6 +30,7 @@ Addressable client for interacting with the addressable section of metadata
 */
 type AddressableClient interface {
 	Add(addr *models.Addressable) (string, error)
+	Addressable(id string) (models.Addressable, error)
 	AddressableForName(name string) (models.Addressable, error)
 	Update(addr models.Addressable) error
 	Delete(id string) error
@@ -114,6 +115,35 @@ func (d *AddressableRestClient) decodeAddressable(resp *http.Response) (models.A
 
 // TODO: make method signatures consistent wrt to error return value
 // ie. use it everywhere, or not at all!
+
+// Get an addressable by id
+func (d *AddressableRestClient) Addressable(id string) (models.Addressable, error) {
+	req, err := http.NewRequest(http.MethodGet, d.url+"/"+id, nil)
+	if err != nil {
+		return models.Addressable{}, err
+	}
+
+	resp, err := makeRequest(req)
+	if err != nil {
+		return models.Addressable{}, err
+	}
+	if resp == nil {
+		return models.Addressable{}, ErrResponseNil
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		// Get the response body
+		bodyBytes, err := getBody(resp)
+		if err != nil {
+			return models.Addressable{}, err
+		}
+
+		return models.Addressable{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
+	}
+
+	return d.decodeAddressable(resp)
+}
 
 // Get the addressable by name
 func (a *AddressableRestClient) AddressableForName(name string) (models.Addressable, error) {

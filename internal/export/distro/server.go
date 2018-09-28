@@ -15,12 +15,9 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/export"
+	"github.com/edgexfoundry/edgex-go/pkg/clients"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 	"github.com/go-zoo/bone"
-)
-
-const (
-	apiV1NotifyRegistrations = "/api/v1/notify/registrations"
 )
 
 func replyPing(w http.ResponseWriter, r *http.Request) {
@@ -67,7 +64,7 @@ func replyNotifyRegistrations(w http.ResponseWriter, r *http.Request) {
 func httpServer() http.Handler {
 	mux := bone.New()
 	mux.Get(internal.ApiPingRoute, http.HandlerFunc(replyPing))
-	mux.Put(apiV1NotifyRegistrations, http.HandlerFunc(replyNotifyRegistrations))
+	mux.Put(clients.ApiNotifyRegistrationRoute, http.HandlerFunc(replyNotifyRegistrations))
 
 	return mux
 }

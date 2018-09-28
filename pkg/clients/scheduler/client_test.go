@@ -16,6 +16,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/edgexfoundry/edgex-go/pkg/clients"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 )
 
@@ -57,8 +58,8 @@ func TestAddSchedule(t *testing.T) {
 		if r.Method != http.MethodPost {
 			t.Errorf(TestUnexpectedMsgFormatStr, r.Method, http.MethodPost)
 		}
-		if r.URL.EscapedPath() != ScheduleApiPath {
-			t.Errorf(TestUnexpectedMsgFormatStr, r.URL.EscapedPath(), ScheduleApiPath)
+		if r.URL.EscapedPath() != clients.ApiScheduleRoute {
+			t.Errorf(TestUnexpectedMsgFormatStr, r.URL.EscapedPath(), clients.ApiScheduleRoute)
 		}
 
 		result, _ := ioutil.ReadAll(r.Body)
@@ -131,13 +132,13 @@ func TestQuerySchedule(t *testing.T) {
 			t.Errorf(TestUnexpectedMsgFormatStr, r.Method, http.MethodGet)
 		}
 
-		urlWithIdPath := ScheduleApiPath + "/" + TestScheduleId
+		urlWithIdPath := clients.ApiScheduleRoute + "/" + TestScheduleId
 
 		if r.URL.EscapedPath() != urlWithIdPath {
 			t.Errorf(TestUnexpectedMsgFormatStr, r.URL.EscapedPath(), urlWithIdPath)
 		}
 
-		id := strings.TrimPrefix(r.URL.EscapedPath(), ScheduleApiPath+"/")
+		id := strings.TrimPrefix(r.URL.EscapedPath(), clients.ApiScheduleRoute+"/")
 
 		if id != TestScheduleId {
 			t.Errorf(TestUnexpectedMsgFormatStr, id, TestScheduleId)
@@ -216,13 +217,13 @@ func TestQueryScheduleWithName(t *testing.T) {
 			t.Errorf(TestUnexpectedMsgFormatStr, r.Method, http.MethodGet)
 		}
 
-		urlWithNamePart := ScheduleApiPath + "/name/" + TestScheduleName
+		urlWithNamePart := clients.ApiScheduleRoute + "/name/" + TestScheduleName
 
 		if r.URL.EscapedPath() != urlWithNamePart {
 			t.Errorf(TestUnexpectedMsgFormatStr, r.URL.EscapedPath(), urlWithNamePart)
 		}
 
-		name := strings.TrimPrefix(r.URL.EscapedPath(), ScheduleApiPath+"/name/")
+		name := strings.TrimPrefix(r.URL.EscapedPath(), clients.ApiScheduleRoute+"/name/")
 
 		if name != TestScheduleName {
 			t.Errorf(TestUnexpectedMsgFormatStr, name, TestScheduleName)
@@ -302,8 +303,8 @@ func TestUpdateSchedule(t *testing.T) {
 		if r.Method != http.MethodPut {
 			t.Errorf(TestUnexpectedMsgFormatStr, r.Method, http.MethodPut)
 		}
-		if r.URL.EscapedPath() != ScheduleApiPath {
-			t.Errorf(TestUnexpectedMsgFormatStr, r.URL.EscapedPath(), ScheduleApiPath)
+		if r.URL.EscapedPath() != clients.ApiScheduleRoute {
+			t.Errorf(TestUnexpectedMsgFormatStr, r.URL.EscapedPath(), clients.ApiScheduleRoute)
 		}
 
 		result, _ := ioutil.ReadAll(r.Body)
@@ -378,7 +379,7 @@ func TestRemoveSchedule(t *testing.T) {
 			t.Errorf(TestUnexpectedMsgFormatStr, r.Method, http.MethodDelete)
 		}
 
-		if !strings.HasPrefix(r.URL.EscapedPath(), ScheduleApiPath) {
+		if !strings.HasPrefix(r.URL.EscapedPath(), clients.ApiScheduleRoute) {
 			t.Errorf(TestUnexpectedMsg)
 		}
 
@@ -417,8 +418,8 @@ func TestAddScheduleEvent(t *testing.T) {
 		if r.Method != http.MethodPost {
 			t.Errorf(TestUnexpectedMsgFormatStr, r.Method, http.MethodPost)
 		}
-		if r.URL.EscapedPath() != ScheduleEventApiPath {
-			t.Errorf(TestUnexpectedMsgFormatStr, r.URL.EscapedPath(), ScheduleEventApiPath)
+		if r.URL.EscapedPath() != clients.ApiScheduleEventRoute {
+			t.Errorf(TestUnexpectedMsgFormatStr, r.URL.EscapedPath(), clients.ApiScheduleEventRoute)
 		}
 
 		result, _ := ioutil.ReadAll(r.Body)
@@ -493,13 +494,13 @@ func TestQueryScheduleEvent(t *testing.T) {
 			t.Errorf(TestUnexpectedMsgFormatStr, r.Method, http.MethodGet)
 		}
 
-		urlWithIdPath := ScheduleEventApiPath + "/" + TestScheduleEventId
+		urlWithIdPath := clients.ApiScheduleEventRoute + "/" + TestScheduleEventId
 
 		if r.URL.EscapedPath() != urlWithIdPath {
 			t.Errorf(TestUnexpectedMsgFormatStr, r.URL.EscapedPath(), urlWithIdPath)
 		}
 
-		id := strings.TrimPrefix(r.URL.EscapedPath(), ScheduleEventApiPath+"/")
+		id := strings.TrimPrefix(r.URL.EscapedPath(), clients.ApiScheduleEventRoute+"/")
 		if id != TestScheduleEventId {
 			t.Errorf(TestUnexpectedMsgFormatStr, id, TestScheduleEventId)
 		}
@@ -579,8 +580,8 @@ func TestUpdateScheduleEvent(t *testing.T) {
 		if r.Method != http.MethodPut {
 			t.Errorf(TestUnexpectedMsgFormatStr, r.Method, http.MethodPut)
 		}
-		if r.URL.EscapedPath() != ScheduleEventApiPath {
-			t.Errorf(TestUnexpectedMsgFormatStr, r.URL.EscapedPath(), ScheduleEventApiPath)
+		if r.URL.EscapedPath() != clients.ApiScheduleEventRoute {
+			t.Errorf(TestUnexpectedMsgFormatStr, r.URL.EscapedPath(), clients.ApiScheduleEventRoute)
 		}
 
 		result, _ := ioutil.ReadAll(r.Body)
@@ -657,7 +658,7 @@ func TestRemoveScheduleEvent(t *testing.T) {
 			t.Errorf(TestUnexpectedMsgFormatStr, r.Method, http.MethodDelete)
 		}
 
-		if !strings.HasPrefix(r.URL.EscapedPath(), ScheduleEventApiPath) {
+		if !strings.HasPrefix(r.URL.EscapedPath(), clients.ApiScheduleEventRoute) {
 			t.Errorf(TestUnexpectedMsg)
 		}
 

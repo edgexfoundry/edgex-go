@@ -17,14 +17,14 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/consul"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
+	"github.com/edgexfoundry/edgex-go/pkg/clients"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/coredata"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
 )
 
 const (
-	PingApiPath  = "/api/v1/ping"
-	EventUriPath = "/api/v1/event"
+	PingApiPath = "/api/v1/ping"
 )
 
 var LoggingClient logger.LoggingClient
@@ -120,11 +120,11 @@ func connectToConsul(conf *ConfigurationStruct) error {
 }
 
 func initializeClient(useConsul bool) {
-	coreDataEventUrl := fmt.Sprintf("http://%s:%d%s", Configuration.DataHost, Configuration.DataPort, EventUriPath)
+	coreDataEventUrl := fmt.Sprintf("http://%s:%d%s", Configuration.DataHost, Configuration.DataPort, clients.ApiEventRoute)
 
 	params := types.EndpointParams{
 		ServiceKey:  internal.CoreDataServiceKey,
-		Path:        EventUriPath,
+		Path:        clients.ApiEventRoute,
 		UseRegistry: useConsul,
 		Url:         coreDataEventUrl,
 		Interval:    internal.ClientMonitorDefault,
