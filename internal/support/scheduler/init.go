@@ -57,8 +57,13 @@ func Init(conf ConfigurationStruct, l logger.LoggingClient, useConsul bool) erro
 	// Check if we have default schedules to add
 	if len(configuration.DefaultScheduleName) > 0  {
 		// Add default scheduled events
-		AddDefaultSchedules(configuration)
+		err := AddDefaultSchedules(configuration)
+		if err != nil{
+			return loggingClient.Error("Error while loading default schedule(s) or scheduleEvent(s) %s",err.Error())
+		}
 	}
+
+	// TODO: Enable MetaData Client
 
 	// Start ticker ('legacy')
 	ticker = time.NewTicker(time.Duration(conf.ScheduleInterval) * time.Millisecond)
@@ -66,13 +71,14 @@ func Init(conf ConfigurationStruct, l logger.LoggingClient, useConsul bool) erro
 	return nil
 }
 
-func AddDefaultSchedules(conf ConfigurationStruct) {
+func AddDefaultSchedules(conf ConfigurationStruct)  error{
 
 	// Default number of attempts
 	initializeAttempts++
 
 	loggingClient.Info("bootstrapping default schedule attempt " + strconv.Itoa(initializeAttempts))
 
+	// Add Schedule
 	defaultSchedule := models.Schedule{
 		BaseObject: models.BaseObject{},
 		Id:         bson.NewObjectId(),
@@ -84,7 +90,6 @@ func AddDefaultSchedules(conf ConfigurationStruct) {
 		RunOnce:    false,
 	}
 
-	//var err = sc.AddSchedule(defaultSchedule)  // Java version uses the schedulerClient to do this.
 	err := addSchedule(defaultSchedule)
 	if err != nil {
 		loggingClient.Error(fmt.Sprintf("call to AddSchedule failed: %v", err.Error()))
@@ -92,11 +97,9 @@ func AddDefaultSchedules(conf ConfigurationStruct) {
 		loggingClient.Info("added default schedule " + conf.DefaultScheduleName)
 	}
 
-	//
-	// Add ScheduleEvent(s)
-	//
-	// TODO: need a utility function to ensure proper range length or return error
+	// TODO: Change to using V2 Config where we can have map[string]
 
+	// Add ScheduleEvent(s)
 	eNames := strings.Split(conf.DefaultScheduleEventName, ",")
 	eSchedules := strings.Split(conf.DefaultScheduleEventSchedule, ",")
 	eParameters := strings.Split(conf.DefaultScheduleEventParameters, ",")
@@ -134,9 +137,6 @@ func AddDefaultSchedules(conf ConfigurationStruct) {
 		} else {
 			loggingClient.Info("added default schedule " + eNames[i])
 		}
-
-		// TODO: need to ensure metadata client service is available and we can obtain the routes.
-		// Reference the MetaData service
-		// Call the metadata service as required to get the full path for dispatch
 	}
+	return nil
 }

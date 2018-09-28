@@ -268,9 +268,9 @@ func updateScheduleEvent(scheduleEvent models.ScheduleEvent) error {
 		delete(scheduleContext.ScheduleEventsMap, scheduleEventId)
 
 		//if there are no more events for the schedule, remove the schedule context
+		// TODO: Not sure we want to just remove the schedule from the schedule context
 		if len(scheduleContext.ScheduleEventsMap) == 0 {
 			loggingClient.Debug("there are no more events for the schedule : " + oldScheduleId + ", remove it.")
-
 			deleteScheduleOperation(oldScheduleId, scheduleContext)
 		}
 

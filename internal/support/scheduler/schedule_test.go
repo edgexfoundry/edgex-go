@@ -32,6 +32,8 @@ const (
 	TestScheduleCron         = "This is a description"
 	TestScheduleRunOnce      = true
 	TestScheduleUpdatingName = "midnight-2"
+
+	TestBadFrequency = "423"
 )
 
 // Test ScheduleEvent model const fields
@@ -61,6 +63,32 @@ func mockInit() {
 	StartTicker()
 }
 
+func mockInitDefaultSchedule(){
+
+	var loggingClient = logger.NewMockClient()
+
+	Init(
+		ConfigurationStruct{
+			EnableRemoteLogging:            false,
+			ScheduleInterval:               ScheduleInterval,
+			DefaultScheduleServiceProtocol: "http",
+			DefaultScheduleServicePort: 48080,
+			DefaultSchedulerServiceAddress:"localhost",
+			DefaultScheduleName: "midnight",
+			DefaultScheduleFrequency: "P1D",
+			DefaultScheduleStart: "20180101T000000",
+			DefaultScheduleEventName: "scrub-pushed-events,scrube-aged-events",
+			DefaultScheduleEventMethod:"DELETE,DELETE",
+			DefaultScheduleEventService: "core-data,core-data",
+			DefaultScheduleEventParameters: ",",
+			DefaultScheduleEventPath: "/api/v1/event/scrub,/api/v1/event/removeold/age/604800000",
+			DefaultScheduleEventSchedule: "midnight,midnight",
+			DefaultScheduleEventScheduler: "support-scheduler,support-scheduler",
+		}, loggingClient, false)
+
+
+	StartTicker()
+}
 
 // test the schedule and Scheduler
 func TestAddSchedule(t *testing.T){
@@ -334,7 +362,6 @@ func TestUpdateScheduleEvent(t *testing.T){
 	if len != 1 {
 		t.Errorf(TestUnexpectedMsgFormatStrForIntVal, len, 1)
 	}
-
 
 	//add schedule event to schedule
 	testScheduleEvent := models.ScheduleEvent{
