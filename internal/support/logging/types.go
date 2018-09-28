@@ -7,6 +7,7 @@
 package logging
 
 import (
+	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/support/logging/models"
 )
@@ -35,7 +36,7 @@ func (l privLogger) log(level string, msg string, labels []string) {
 		logEntry := models.LogEntry{
 			Level:         level,
 			Labels:        labels,
-			OriginService: "logging",
+			OriginService: internal.SupportLoggingServiceKey,
 			Message:       msg,
 			Created:       db.MakeTimestamp(),
 		}
