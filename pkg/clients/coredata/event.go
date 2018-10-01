@@ -16,12 +16,8 @@
 package coredata
 
 import (
-	"bytes"
 	"encoding/json"
-	"fmt"
-	"net/http"
 	"net/url"
-
 	"strconv"
 
 	"github.com/edgexfoundry/edgex-go/pkg/clients"
@@ -72,426 +68,86 @@ func (e *EventRestClient) init(params types.EndpointParams) {
 	}
 }
 
-// Helper method to decode an event slice
-func (e *EventRestClient) decodeEventSlice(resp *http.Response) ([]models.Event, error) {
-	eSlice := make([]models.Event, 0)
-	dec := json.NewDecoder(resp.Body)
-	err := dec.Decode(&eSlice)
+// Helper method to request and decode an event slice
+func (e *EventRestClient) requestEventSlice(url string) ([]models.Event, error) {
+	data, err := getRequest(url)
 	if err != nil {
-		fmt.Println(err)
+		return []models.Event{}, err
 	}
 
+	eSlice := make([]models.Event, 0)
+	err = json.Unmarshal(data, &eSlice)
 	return eSlice, err
 }
 
-// Helper method to decode an event and return the event
-func (e *EventRestClient) decodeEvent(resp *http.Response) (models.Event, error) {
-	dec := json.NewDecoder(resp.Body)
-	ev := models.Event{}
-	err := dec.Decode(&ev)
+// Helper method to request and decode an event and return the event
+func (e *EventRestClient) requestEvent(url string) (models.Event, error) {
+	data, err := getRequest(url)
 	if err != nil {
-		fmt.Println(err)
+		return models.Event{}, err
 	}
 
+	ev := models.Event{}
+	err = json.Unmarshal(data, &ev)
 	return ev, err
 }
 
 // Get a list of all events
 func (e *EventRestClient) Events() ([]models.Event, error) {
-	req, err := http.NewRequest(http.MethodGet, e.url, nil)
-	if err != nil {
-		fmt.Println(err.Error())
-		return []models.Event{}, err
-	}
-
-	resp, err := makeRequest(req)
-	if err != nil {
-		fmt.Println(err.Error())
-		return []models.Event{}, err
-	}
-	if resp == nil {
-		fmt.Println(ErrResponseNil)
-		return []models.Event{}, ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		bodyBytes, err := getBody(resp)
-		if err != nil {
-			fmt.Println(err.Error())
-			return []models.Event{}, err
-		}
-		return []models.Event{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-
-	return e.decodeEventSlice(resp)
+	return e.requestEventSlice(e.url)
 }
 
 // Get the event by id
 func (e *EventRestClient) Event(id string) (models.Event, error) {
-	req, err := http.NewRequest(http.MethodGet, e.url+"/"+id, nil)
-	if err != nil {
-		fmt.Println(err)
-		return models.Event{}, err
-	}
-
-	resp, err := makeRequest(req)
-	if err != nil {
-		fmt.Println(err.Error())
-		return models.Event{}, err
-	}
-	if resp == nil {
-		fmt.Println(ErrResponseNil)
-		return models.Event{}, ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		bodyBytes, err := getBody(resp)
-		if err != nil {
-			fmt.Println(err.Error())
-			return models.Event{}, err
-		}
-
-		return models.Event{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-
-	return e.decodeEvent(resp)
+	return e.requestEvent(e.url + "/" + id)
 }
 
 // Get event count
 func (e *EventRestClient) EventCount() (int, error) {
-	req, err := http.NewRequest(http.MethodGet, e.url+"/count", nil)
-	if err != nil {
-		fmt.Println(err)
-		return 0, err
-	}
-
-	resp, err := makeRequest(req)
-	if err != nil {
-		fmt.Println(err.Error())
-		return 0, err
-	}
-	if resp == nil {
-		fmt.Println(ErrResponseNil)
-		return 0, ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	bodyBytes, err := getBody(resp)
-	if err != nil {
-		fmt.Println(err.Error())
-		return 0, err
-	}
-	bodyString := string(bodyBytes)
-
-	if resp.StatusCode != http.StatusOK {
-		return 0, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-	count, err := strconv.Atoi(bodyString)
-	if err != nil {
-		return 0, err
-	}
-	return count, nil
+	return countRequest(e.url + "/count")
 }
 
 // Get event count for device
 func (e *EventRestClient) EventCountForDevice(deviceId string) (int, error) {
-	req, err := http.NewRequest(http.MethodGet, e.url+"/count/"+url.QueryEscape(deviceId), nil)
-	if err != nil {
-		fmt.Println(err)
-		return 0, err
-	}
-
-	resp, err := makeRequest(req)
-	if err != nil {
-		fmt.Println(err.Error())
-		return 0, err
-	}
-	if resp == nil {
-		fmt.Println(ErrResponseNil)
-		return 0, ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	bodyBytes, err := getBody(resp)
-	if err != nil {
-		fmt.Println(err.Error())
-		return 0, err
-	}
-	bodyString := string(bodyBytes)
-
-	if resp.StatusCode != http.StatusOK {
-		return 0, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-
-	count, err := strconv.Atoi(bodyString)
-	if err != nil {
-		return 0, err
-	}
-	return count, nil
+	return countRequest(e.url + "/count/" + url.QueryEscape(deviceId))
 }
 
 // Get events for device
 func (e *EventRestClient) EventsForDevice(deviceId string, limit int) ([]models.Event, error) {
-	req, err := http.NewRequest(http.MethodGet, e.url+"/device/"+url.QueryEscape(deviceId)+"/"+strconv.Itoa(limit), nil)
-	if err != nil {
-		fmt.Println(err)
-		return []models.Event{}, err
-	}
-
-	resp, err := makeRequest(req)
-	if err != nil {
-		fmt.Println(err.Error())
-		return []models.Event{}, err
-	}
-	if resp == nil {
-		fmt.Println(ErrResponseNil)
-		return []models.Event{}, ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		bodyBytes, err := getBody(resp)
-		if err != nil {
-			fmt.Println(err.Error())
-			return []models.Event{}, err
-		}
-
-		return []models.Event{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-	return e.decodeEventSlice(resp)
+	return e.requestEventSlice(e.url + "/device/" + url.QueryEscape(deviceId) + "/" + strconv.Itoa(limit))
 }
 
 // Get events for interval
 func (e *EventRestClient) EventsForInterval(start int, end int, limit int) ([]models.Event, error) {
-	req, err := http.NewRequest(http.MethodGet, e.url+"/"+strconv.Itoa(start)+"/"+strconv.Itoa(end)+"/"+strconv.Itoa(limit), nil)
-	if err != nil {
-		fmt.Println(err)
-		return []models.Event{}, err
-	}
-
-	resp, err := makeRequest(req)
-	if err != nil {
-		fmt.Println(err.Error())
-		return []models.Event{}, err
-	}
-	if resp == nil {
-		fmt.Println(ErrResponseNil)
-		return []models.Event{}, ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		bodyBytes, err := getBody(resp)
-		if err != nil {
-			fmt.Println(err.Error())
-			return []models.Event{}, err
-		}
-
-		return []models.Event{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-	return e.decodeEventSlice(resp)
+	return e.requestEventSlice(e.url + "/" + strconv.Itoa(start) + "/" + strconv.Itoa(end) + "/" + strconv.Itoa(limit))
 }
 
 // Get events for device and value descriptor
 func (e *EventRestClient) EventsForDeviceAndValueDescriptor(deviceId string, vd string, limit int) ([]models.Event, error) {
-	req, err := http.NewRequest(http.MethodGet, e.url+"/device/"+url.QueryEscape(deviceId)+"/valuedescriptor/"+url.QueryEscape(vd)+"/"+strconv.Itoa(limit), nil)
-	if err != nil {
-		fmt.Println(err)
-		return []models.Event{}, err
-	}
-
-	resp, err := makeRequest(req)
-	if err != nil {
-		fmt.Println(err.Error())
-		return []models.Event{}, err
-	}
-	if resp == nil {
-		fmt.Println(ErrResponseNil)
-		return []models.Event{}, ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		bodyBytes, err := getBody(resp)
-		if err != nil {
-			fmt.Println(err.Error())
-			return []models.Event{}, err
-		}
-
-		return []models.Event{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-	return e.decodeEventSlice(resp)
+	return e.requestEventSlice(e.url + "/device/" + url.QueryEscape(deviceId) + "/valuedescriptor/" + url.QueryEscape(vd) + "/" + strconv.Itoa(limit))
 }
 
 // Add event
 func (e *EventRestClient) Add(event *models.Event) (string, error) {
-	jsonStr, err := json.Marshal(event)
-	if err != nil {
-		fmt.Println(err)
-		return "", err
-	}
-
-	req, err := http.NewRequest(http.MethodPost, e.url, bytes.NewReader(jsonStr))
-	if err != nil {
-		fmt.Println(err)
-		return "", err
-	}
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := makeRequest(req)
-	if err != nil {
-		fmt.Println(err)
-		return "", err
-	}
-	if resp == nil {
-		fmt.Println(ErrResponseNil)
-		return "", ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	// Get the response body
-	bodyBytes, err := getBody(resp)
-	if err != nil {
-		fmt.Println(err.Error())
-		return "", err
-	}
-	bodyString := string(bodyBytes)
-
-	if resp.StatusCode != http.StatusOK {
-		return "", types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-
-	return bodyString, nil
+	return postRequest(e.url, event)
 }
 
 // Delete event by id
 func (e *EventRestClient) Delete(id string) error {
-	req, err := http.NewRequest(http.MethodDelete, e.url+"/id/"+id, nil)
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
-
-	resp, err := makeRequest(req)
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
-	if resp == nil {
-		fmt.Println(ErrResponseNil)
-		return ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		bodyBytes, err := getBody(resp)
-		if err != nil {
-			fmt.Println(err.Error())
-			return err
-		}
-
-		return types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-
-	return nil
+	return deleteRequest(e.url + "/id/" + id)
 }
 
 // Delete events by device name
 func (e *EventRestClient) DeleteForDevice(deviceId string) error {
-	req, err := http.NewRequest(http.MethodDelete, e.url+"/device/"+url.QueryEscape(deviceId), nil)
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
-
-	resp, err := makeRequest(req)
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
-	if resp == nil {
-		fmt.Println(ErrResponseNil)
-		return ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		bodyBytes, err := getBody(resp)
-		if err != nil {
-			fmt.Println(err.Error())
-			return err
-		}
-
-		return types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-
-	return nil
+	return deleteRequest(e.url + "/device/" + url.QueryEscape(deviceId))
 }
 
 // Delete events by age
 func (e *EventRestClient) DeleteOld(age int) error {
-	req, err := http.NewRequest(http.MethodDelete, e.url+"/removeold/age/"+strconv.Itoa(age), nil)
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
-
-	resp, err := makeRequest(req)
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
-	if resp == nil {
-		fmt.Println(ErrResponseNil)
-		return ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		bodyBytes, err := getBody(resp)
-		if err != nil {
-			fmt.Println(err.Error())
-			return err
-		}
-
-		return types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-
-	return nil
+	return deleteRequest(e.url + "/removeold/age/" + strconv.Itoa(age))
 }
 
 // Mark event as pushed
 func (e *EventRestClient) MarkPushed(id string) error {
-	req, err := http.NewRequest(http.MethodPut, e.url+"/id/"+id, nil)
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
-
-	resp, err := makeRequest(req)
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
-
-	if resp == nil {
-		fmt.Println(ErrResponseNil)
-		return ErrResponseNil
-	}
-
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		bodyBytes, err := getBody(resp)
-		if err != nil {
-			fmt.Println(err.Error())
-			return err
-		}
-
-		return types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-
-	return nil
+	return putRequest(e.url+"/id/"+id, nil)
 }

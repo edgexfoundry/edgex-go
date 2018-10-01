@@ -16,10 +16,7 @@
 package coredata
 
 import (
-	"bytes"
 	"encoding/json"
-	"fmt"
-	"net/http"
 	"net/url"
 	"strconv"
 
@@ -71,450 +68,91 @@ func (r *ReadingRestClient) init(params types.EndpointParams) {
 	}
 }
 
-// Help method to decode a reading slice
-func (r *ReadingRestClient) decodeReadingSlice(resp *http.Response) ([]models.Reading, error) {
-	rSlice := make([]models.Reading, 0)
-
-	dec := json.NewDecoder(resp.Body)
-	err := dec.Decode(&rSlice)
+// Help method to request and decode a reading slice
+func (r *ReadingRestClient) requestReadingSlice(url string) ([]models.Reading, error) {
+	data, err := getRequest(url)
 	if err != nil {
-		fmt.Println(err)
+		return []models.Reading{}, err
 	}
 
+	rSlice := make([]models.Reading, 0)
+	err = json.Unmarshal(data, &rSlice)
 	return rSlice, err
 }
 
-// Helper method to decode a reading and return the reading
-func (r *ReadingRestClient) decodeReading(resp *http.Response) (models.Reading, error) {
-	dec := json.NewDecoder(resp.Body)
-	reading := models.Reading{}
-
-	err := dec.Decode(&reading)
+// Helper method to request and decode a reading and return the reading
+func (r *ReadingRestClient) requestReading(url string) (models.Reading, error) {
+	data, err := getRequest(url)
 	if err != nil {
-		fmt.Println(err)
+		return models.Reading{}, err
 	}
 
+	reading := models.Reading{}
+	err = json.Unmarshal(data, &reading)
 	return reading, err
 }
 
 // Get a list of all readings
 func (r *ReadingRestClient) Readings() ([]models.Reading, error) {
-	req, err := http.NewRequest(http.MethodGet, r.url, nil)
-	if err != nil {
-		fmt.Println(err.Error())
-		return []models.Reading{}, err
-	}
-
-	resp, err := makeRequest(req)
-	if err != nil {
-		fmt.Println(err.Error())
-		return []models.Reading{}, err
-	}
-	if resp == nil {
-		fmt.Println(ErrResponseNil)
-		return []models.Reading{}, ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	// Response was not OK
-	if resp.StatusCode != http.StatusOK {
-		// Get the response body
-		bodyBytes, err := getBody(resp)
-		if err != nil {
-			fmt.Println(err.Error())
-			return []models.Reading{}, err
-		}
-		return []models.Reading{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-
-	return r.decodeReadingSlice(resp)
+	return r.requestReadingSlice(r.url)
 }
 
 // Get the reading by id
 func (r *ReadingRestClient) Reading(id string) (models.Reading, error) {
-	req, err := http.NewRequest(http.MethodGet, r.url+"/"+id, nil)
-	if err != nil {
-		fmt.Println(err)
-		return models.Reading{}, err
-	}
-
-	resp, err := makeRequest(req)
-	if err != nil {
-		fmt.Println(err.Error())
-		return models.Reading{}, err
-	}
-	if resp == nil {
-		fmt.Println(ErrResponseNil)
-		return models.Reading{}, ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		bodyBytes, err := getBody(resp)
-		if err != nil {
-			fmt.Println(err.Error())
-			return models.Reading{}, err
-		}
-
-		return models.Reading{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-
-	return r.decodeReading(resp)
+	return r.requestReading(r.url + "/" + id)
 }
 
 // Get reading count
 func (r *ReadingRestClient) ReadingCount() (int, error) {
-	req, err := http.NewRequest(http.MethodGet, r.url+"/count", nil)
-	if err != nil {
-		fmt.Println(err)
-		return 0, err
-	}
-
-	resp, err := makeRequest(req)
-	if err != nil {
-		fmt.Println(err.Error())
-		return 0, err
-	}
-	if resp == nil {
-		fmt.Println(ErrResponseNil)
-		return 0, ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	bodyBytes, err := getBody(resp)
-	if err != nil {
-		fmt.Println(err.Error())
-		return 0, err
-	}
-	bodyString := string(bodyBytes)
-
-	if resp.StatusCode != http.StatusOK {
-		return 0, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-	count, err := strconv.Atoi(bodyString)
-	if err != nil {
-		return 0, err
-	}
-	return count, nil
+	return countRequest(r.url + "/count")
 }
 
 // Get the readings for a device
 func (r *ReadingRestClient) ReadingsForDevice(deviceId string, limit int) ([]models.Reading, error) {
-	req, err := http.NewRequest(http.MethodGet, r.url+"/device/"+url.QueryEscape(deviceId)+"/"+strconv.Itoa(limit), nil)
-	if err != nil {
-		fmt.Println(err)
-		return []models.Reading{}, err
-	}
-
-	resp, err := makeRequest(req)
-	if err != nil {
-		fmt.Println(err.Error())
-		return []models.Reading{}, err
-	}
-	if resp == nil {
-		fmt.Println(ErrResponseNil)
-		return []models.Reading{}, ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		bodyBytes, err := getBody(resp)
-		if err != nil {
-			fmt.Println(err.Error())
-			return []models.Reading{}, err
-		}
-
-		return []models.Reading{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-	return r.decodeReadingSlice(resp)
+	return r.requestReadingSlice(r.url + "/device/" + url.QueryEscape(deviceId) + "/" + strconv.Itoa(limit))
 }
 
 // Get the readings for name and device
 func (r *ReadingRestClient) ReadingsForNameAndDevice(name string, deviceId string, limit int) ([]models.Reading, error) {
-	req, err := http.NewRequest(http.MethodGet, r.url+"/name/"+url.QueryEscape(name)+"/device/"+url.QueryEscape(deviceId)+"/"+strconv.Itoa(limit), nil)
-	if err != nil {
-		fmt.Println(err)
-		return []models.Reading{}, err
-	}
-
-	resp, err := makeRequest(req)
-	if err != nil {
-		fmt.Println(err.Error())
-		return []models.Reading{}, err
-	}
-	if resp == nil {
-		fmt.Println(ErrResponseNil)
-		return []models.Reading{}, ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		bodyBytes, err := getBody(resp)
-		if err != nil {
-			fmt.Println(err.Error())
-			return []models.Reading{}, err
-		}
-
-		return []models.Reading{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-	return r.decodeReadingSlice(resp)
+	return r.requestReadingSlice(r.url + "/name/" + url.QueryEscape(name) + "/device/" + url.QueryEscape(deviceId) + "/" + strconv.Itoa(limit))
 }
 
 // Get readings by name
 func (r *ReadingRestClient) ReadingsForName(name string, limit int) ([]models.Reading, error) {
-	req, err := http.NewRequest(http.MethodGet, r.url+"/name/"+url.QueryEscape(name)+"/"+strconv.Itoa(limit), nil)
-	if err != nil {
-		fmt.Println(err)
-		return []models.Reading{}, err
-	}
-
-	resp, err := makeRequest(req)
-	if err != nil {
-		fmt.Println(err.Error())
-		return []models.Reading{}, err
-	}
-	if resp == nil {
-		fmt.Println(ErrResponseNil)
-		return []models.Reading{}, ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		bodyBytes, err := getBody(resp)
-		if err != nil {
-			fmt.Println(err.Error())
-			return []models.Reading{}, err
-		}
-
-		return []models.Reading{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-	return r.decodeReadingSlice(resp)
+	return r.requestReadingSlice(r.url + "/name/" + url.QueryEscape(name) + "/" + strconv.Itoa(limit))
 }
 
 // Get readings for UOM Label
 func (r *ReadingRestClient) ReadingsForUOMLabel(uomLabel string, limit int) ([]models.Reading, error) {
-	req, err := http.NewRequest(http.MethodGet, r.url+"/uomlabel/"+url.QueryEscape(uomLabel)+"/"+strconv.Itoa(limit), nil)
-	if err != nil {
-		fmt.Println(err)
-		return []models.Reading{}, err
-	}
-
-	resp, err := makeRequest(req)
-	if err != nil {
-		fmt.Println(err.Error())
-		return []models.Reading{}, err
-	}
-	if resp == nil {
-		fmt.Println(ErrResponseNil)
-		return []models.Reading{}, ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		bodyBytes, err := getBody(resp)
-		if err != nil {
-			fmt.Println(err.Error())
-			return []models.Reading{}, err
-		}
-
-		return []models.Reading{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-	return r.decodeReadingSlice(resp)
+	return r.requestReadingSlice(r.url + "/uomlabel/" + url.QueryEscape(uomLabel) + "/" + strconv.Itoa(limit))
 }
 
 // Get readings for label
 func (r *ReadingRestClient) ReadingsForLabel(label string, limit int) ([]models.Reading, error) {
-	req, err := http.NewRequest(http.MethodGet, r.url+"/label/"+url.QueryEscape(label)+"/"+strconv.Itoa(limit), nil)
-	if err != nil {
-		fmt.Println(err)
-		return []models.Reading{}, err
-	}
-
-	resp, err := makeRequest(req)
-	if err != nil {
-		fmt.Println(err.Error())
-		return []models.Reading{}, err
-	}
-	if resp == nil {
-		fmt.Println(ErrResponseNil)
-		return []models.Reading{}, ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		bodyBytes, err := getBody(resp)
-		if err != nil {
-			fmt.Println(err.Error())
-			return []models.Reading{}, err
-		}
-
-		return []models.Reading{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-	return r.decodeReadingSlice(resp)
+	return r.requestReadingSlice(r.url + "/label/" + url.QueryEscape(label) + "/" + strconv.Itoa(limit))
 }
 
 // Get readings for type
 func (r *ReadingRestClient) ReadingsForType(readingType string, limit int) ([]models.Reading, error) {
-	req, err := http.NewRequest(http.MethodGet, r.url+"/type/"+url.QueryEscape(readingType)+"/"+strconv.Itoa(limit), nil)
-	if err != nil {
-		fmt.Println(err)
-		return []models.Reading{}, err
-	}
-
-	resp, err := makeRequest(req)
-	if err != nil {
-		fmt.Println(err.Error())
-		return []models.Reading{}, err
-	}
-	if resp == nil {
-		fmt.Println(ErrResponseNil)
-		return []models.Reading{}, ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		bodyBytes, err := getBody(resp)
-		if err != nil {
-			fmt.Println(err.Error())
-			return []models.Reading{}, err
-		}
-
-		return []models.Reading{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-	return r.decodeReadingSlice(resp)
+	return r.requestReadingSlice(r.url + "/type/" + url.QueryEscape(readingType) + "/" + strconv.Itoa(limit))
 }
 
 // Get readings for interval
 func (r *ReadingRestClient) ReadingsForInterval(start int, end int, limit int) ([]models.Reading, error) {
-	req, err := http.NewRequest(http.MethodGet, r.url+"/"+strconv.Itoa(start)+"/"+strconv.Itoa(end)+"/"+strconv.Itoa(limit), nil)
-	if err != nil {
-		fmt.Println(err)
-		return []models.Reading{}, err
-	}
-
-	resp, err := makeRequest(req)
-	if err != nil {
-		fmt.Println(err.Error())
-		return []models.Reading{}, err
-	}
-	if resp == nil {
-		fmt.Println(ErrResponseNil)
-		return []models.Reading{}, ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		bodyBytes, err := getBody(resp)
-		if err != nil {
-			fmt.Println(err.Error())
-			return []models.Reading{}, err
-		}
-
-		return []models.Reading{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-	return r.decodeReadingSlice(resp)
+	return r.requestReadingSlice(r.url + "/" + strconv.Itoa(start) + "/" + strconv.Itoa(end) + "/" + strconv.Itoa(limit))
 }
 
 // Get readings for device and value descriptor
 func (r *ReadingRestClient) ReadingsForDeviceAndValueDescriptor(deviceId string, vd string, limit int) ([]models.Reading, error) {
-	req, err := http.NewRequest(http.MethodGet, r.url+"/device/"+url.QueryEscape(deviceId)+"/valuedescriptor/"+url.QueryEscape(vd)+"/"+strconv.Itoa(limit), nil)
-	if err != nil {
-		fmt.Println(err)
-		return []models.Reading{}, err
-	}
-
-	resp, err := makeRequest(req)
-	if err != nil {
-		fmt.Println(err.Error())
-		return []models.Reading{}, err
-	}
-	if resp == nil {
-		fmt.Println(ErrResponseNil)
-		return []models.Reading{}, ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		bodyBytes, err := getBody(resp)
-		if err != nil {
-			fmt.Println(err.Error())
-			return []models.Reading{}, err
-		}
-
-		return []models.Reading{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-	return r.decodeReadingSlice(resp)
+	return r.requestReadingSlice(r.url + "/device/" + url.QueryEscape(deviceId) + "/valuedescriptor/" + url.QueryEscape(vd) + "/" + strconv.Itoa(limit))
 }
 
 // Add a reading
 func (r *ReadingRestClient) Add(reading *models.Reading) (string, error) {
-	jsonStr, err := json.Marshal(reading)
-	if err != nil {
-		fmt.Println(err)
-		return "", err
-	}
-
-	req, err := http.NewRequest(http.MethodPost, r.url, bytes.NewReader(jsonStr))
-	if err != nil {
-		fmt.Println(err)
-		return "", err
-	}
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := makeRequest(req)
-	if err != nil {
-		fmt.Println(err)
-		return "", err
-	}
-	if resp == nil {
-		fmt.Println(ErrResponseNil)
-		return "", ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	// Get the response body
-	bodyBytes, err := getBody(resp)
-	if err != nil {
-		fmt.Println(err.Error())
-		return "", err
-	}
-	bodyString := string(bodyBytes)
-
-	if resp.StatusCode != http.StatusOK {
-		return "", types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-
-	return bodyString, nil
+	return postRequest(r.url, reading)
 }
 
 // Delete a reading by id
 func (r *ReadingRestClient) Delete(id string) error {
-	req, err := http.NewRequest(http.MethodDelete, r.url+"/id/"+id, nil)
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
-
-	resp, err := makeRequest(req)
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
-	if resp == nil {
-		fmt.Println(ErrResponseNil)
-		return ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		bodyBytes, err := getBody(resp)
-		if err != nil {
-			fmt.Println(err.Error())
-			return err
-		}
-
-		return types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-
-	return nil
+	return deleteRequest(r.url + "/id/" + id)
 }
