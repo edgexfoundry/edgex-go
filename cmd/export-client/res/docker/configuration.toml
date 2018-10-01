@@ -1,0 +1,41 @@
+[Service]
+BootTimeout = 30000
+ClientMonitor = 15000
+CheckInterval = '10s'
+Host = 'edgex-export-client'
+Port = 48071
+Protocol = 'http'
+ReadMaxLimit = 100
+StartupMsg = 'This is the Export Client Microservice'
+Timeout = 5000
+
+[Registry]
+Host = 'edgex-core-consul'
+Port = 8500
+Type = 'consul'
+
+[Logging]
+EnableRemote = true
+File = '/edgex/logs/edgex-export-client.log'
+
+[Clients]
+  [Clients.Distro]
+  Protocol = 'http'
+  Host = 'edgex-export-distro'
+  Port = 48070
+
+  [Clients.Logging]
+  Protocol = 'http'
+  Host = 'edgex-support-logging'
+  Port = 48061
+
+[Databases]
+  [Databases.Primary]
+  Host = 'edgex-mongo'
+  Name = 'exportclient'
+  Password = ''
+  Port = 27017
+  Username = ''
+  Timeout = 5000
+  Type = 'mongodb'
+

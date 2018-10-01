@@ -11,15 +11,14 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
-package notifications
+package client
 
-type notificationConfig struct {
-	serviceHost string
-	servicePort int
-}
+import "github.com/edgexfoundry/edgex-go/internal/pkg/config"
 
-var clientConfig notificationConfig
-
-func SetConfiguration(host string, port int) {
-	clientConfig = notificationConfig{serviceHost: host, servicePort: port}
+type ConfigurationStruct struct {
+	Clients   map[string]config.ClientInfo
+	Databases map[string]config.DatabaseInfo
+	Logging   config.LoggingInfo
+	Registry  config.RegistryInfo
+	Service   config.ServiceInfo
 }

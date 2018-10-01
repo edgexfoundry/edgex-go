@@ -174,10 +174,8 @@ func ImportV2Configuration(root string, profile string) error {
 	return nil
 }
 
-func listDirectories() [5]string {
-	var names = [5]string{internal.CoreMetaDataServiceKey, internal.ExportClientServiceKey,
-		internal.ExportDistroServiceKey, internal.SupportLoggingServiceKey,
-		internal.SupportNotificationsServiceKey}
+func listDirectories() [3]string {
+	var names = [3]string{internal.ExportDistroServiceKey, internal.SupportLoggingServiceKey, internal.SupportNotificationsServiceKey}
 
 	for i, name := range names {
 		names[i] = strings.Replace(name, internal.ServiceKeyPrefix, "", 1)
@@ -187,8 +185,9 @@ func listDirectories() [5]string {
 }
 
 // As services are converted to utilize V2 types, add them to this list and remove from the one above.
-func listV2Directories() [2]string {
-	var names = [2]string{internal.CoreCommandServiceKey, internal.CoreDataServiceKey}
+func listV2Directories() [4]string {
+	var names = [4]string{internal.CoreMetaDataServiceKey, internal.CoreCommandServiceKey, internal.CoreDataServiceKey,
+		internal.ExportClientServiceKey}
 
 	for i, name := range names {
 		names[i] = strings.Replace(name, internal.ServiceKeyPrefix, "", 1)

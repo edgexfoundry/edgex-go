@@ -14,6 +14,7 @@
 package internal
 
 const (
+	ApiConfigRoute           = "/api/v1/config"
 	ApiPingRoute             = "/api/v1/ping"
 	BootTimeoutDefault       = 30000
 	ClientMonitorDefault     = 15000

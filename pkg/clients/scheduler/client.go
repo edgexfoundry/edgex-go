@@ -15,6 +15,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/edgexfoundry/edgex-go/pkg/clients"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 )
 
@@ -25,9 +26,7 @@ const (
 )
 
 const (
-	ScheduleApiPath      = "/api/v1/schedule"
-	ScheduleEventApiPath = "/api/v1/scheduleevent"
-	UrlPattern           = "http://%s:%d%s"
+	UrlPattern = "http://%s:%d%s"
 )
 
 // Struct to represent the scheduler client
@@ -61,7 +60,7 @@ func (schedulerClient *schedulerRestClient) QuerySchedule(id string) (models.Sch
 		Timeout: time.Second * 10,
 	}
 
-	remoteScheduleUrl := fmt.Sprintf(UrlPattern, clientConfig.serviceHost, clientConfig.servicePort, ScheduleApiPath)
+	remoteScheduleUrl := fmt.Sprintf(UrlPattern, clientConfig.serviceHost, clientConfig.servicePort, clients.ApiScheduleRoute)
 	remoteScheduleUrl = remoteScheduleUrl + "/" + id
 
 	jsonBytes, err := doGet(remoteScheduleUrl, client)
@@ -84,7 +83,7 @@ func (schedulerClient *schedulerRestClient) QueryScheduleWithName(scheduleName s
 		Timeout: time.Second * 10,
 	}
 
-	remoteScheduleUrl := fmt.Sprintf(UrlPattern, clientConfig.serviceHost, clientConfig.servicePort, ScheduleApiPath)
+	remoteScheduleUrl := fmt.Sprintf(UrlPattern, clientConfig.serviceHost, clientConfig.servicePort, clients.ApiScheduleRoute)
 	remoteScheduleUrl = remoteScheduleUrl + "/name/" + scheduleName
 
 	jsonBytes, err := doGet(remoteScheduleUrl, client)
@@ -112,7 +111,7 @@ func (schedulerClient *schedulerRestClient) AddSchedule(schedule models.Schedule
 		return err
 	}
 
-	remoteScheduleUrl := fmt.Sprintf(UrlPattern, clientConfig.serviceHost, clientConfig.servicePort, ScheduleApiPath)
+	remoteScheduleUrl := fmt.Sprintf(UrlPattern, clientConfig.serviceHost, clientConfig.servicePort, clients.ApiScheduleRoute)
 
 	return doPost(remoteScheduleUrl, bytes.NewBuffer(requestBody), client)
 }
@@ -128,7 +127,7 @@ func (schedulerClient *schedulerRestClient) UpdateSchedule(schedule models.Sched
 		return err
 	}
 
-	remoteScheduleUrl := fmt.Sprintf(UrlPattern, clientConfig.serviceHost, clientConfig.servicePort, ScheduleApiPath)
+	remoteScheduleUrl := fmt.Sprintf(UrlPattern, clientConfig.serviceHost, clientConfig.servicePort, clients.ApiScheduleRoute)
 
 	return doPut(remoteScheduleUrl, bytes.NewBuffer(requestBody), client)
 }
@@ -139,7 +138,7 @@ func (schedulerClient *schedulerRestClient) RemoveSchedule(id string) error {
 		Timeout: time.Second * 10,
 	}
 
-	remoteScheduleUrl := fmt.Sprintf(UrlPattern, clientConfig.serviceHost, clientConfig.servicePort, ScheduleApiPath)
+	remoteScheduleUrl := fmt.Sprintf(UrlPattern, clientConfig.serviceHost, clientConfig.servicePort, clients.ApiScheduleRoute)
 	remoteScheduleUrl = remoteScheduleUrl + "/" + id
 
 	return doDelete(remoteScheduleUrl, client)
@@ -151,7 +150,7 @@ func (schedulerClient *schedulerRestClient) QueryScheduleEvent(id string) (model
 		Timeout: time.Second * 10,
 	}
 
-	remoteScheduleEventUrl := fmt.Sprintf(UrlPattern, clientConfig.serviceHost, clientConfig.servicePort, ScheduleEventApiPath)
+	remoteScheduleEventUrl := fmt.Sprintf(UrlPattern, clientConfig.serviceHost, clientConfig.servicePort, clients.ApiScheduleEventRoute)
 	remoteScheduleEventUrl = remoteScheduleEventUrl + "/" + id
 
 	jsonBytes, err := doGet(remoteScheduleEventUrl, client)
@@ -179,7 +178,7 @@ func (schedulerClient *schedulerRestClient) AddScheduleEvent(scheduleEvent model
 		return err
 	}
 
-	remoteScheduleEventUrl := fmt.Sprintf(UrlPattern, clientConfig.serviceHost, clientConfig.servicePort, ScheduleEventApiPath)
+	remoteScheduleEventUrl := fmt.Sprintf(UrlPattern, clientConfig.serviceHost, clientConfig.servicePort, clients.ApiScheduleEventRoute)
 
 	return doPost(remoteScheduleEventUrl, bytes.NewBuffer(requestBody), client)
 }
@@ -195,7 +194,7 @@ func (schedulerClient *schedulerRestClient) UpdateScheduleEvent(scheduleEvent mo
 		return err
 	}
 
-	remoteScheduleEventUrl := fmt.Sprintf(UrlPattern, clientConfig.serviceHost, clientConfig.servicePort, ScheduleEventApiPath)
+	remoteScheduleEventUrl := fmt.Sprintf(UrlPattern, clientConfig.serviceHost, clientConfig.servicePort, clients.ApiScheduleEventRoute)
 
 	return doPut(remoteScheduleEventUrl, bytes.NewBuffer(requestBody), client)
 }
@@ -206,7 +205,7 @@ func (schedulerClient *schedulerRestClient) RemoveScheduleEvent(id string) error
 		Timeout: time.Second * 10,
 	}
 
-	remoteScheduleEventUrl := fmt.Sprintf(UrlPattern, clientConfig.serviceHost, clientConfig.servicePort, ScheduleEventApiPath)
+	remoteScheduleEventUrl := fmt.Sprintf(UrlPattern, clientConfig.serviceHost, clientConfig.servicePort, clients.ApiScheduleEventRoute)
 	remoteScheduleEventUrl = remoteScheduleEventUrl + "/" + id
 
 	return doDelete(remoteScheduleEventUrl, client)

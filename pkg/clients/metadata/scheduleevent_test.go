@@ -26,10 +26,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 )
 
-const (
-	scheduleEventUriPath = "/api/v1/scheduleevent"
-)
-
 // Test adding a schedule event using the client
 func TestAddScheduleEvent(t *testing.T) {
 	se := models.ScheduleEvent{
@@ -50,8 +46,8 @@ func TestAddScheduleEvent(t *testing.T) {
 			t.Errorf("expected http method is %s, active http method is : %s", http.MethodPost, r.Method)
 		}
 
-		if r.URL.EscapedPath() != scheduleEventUriPath {
-			t.Errorf("expected uri path is %s, actual uri path is %s", scheduleEventUriPath, r.URL.EscapedPath())
+		if r.URL.EscapedPath() != clients.ApiScheduleEventRoute {
+			t.Errorf("expected uri path is %s, actual uri path is %s", clients.ApiScheduleEventRoute, r.URL.EscapedPath())
 		}
 
 		w.Write([]byte(addingScheduleEventId))
@@ -60,11 +56,11 @@ func TestAddScheduleEvent(t *testing.T) {
 
 	defer ts.Close()
 
-	url := ts.URL + scheduleEventUriPath
+	url := ts.URL + clients.ApiScheduleEventRoute
 
 	params := types.EndpointParams{
 		ServiceKey:  internal.CoreMetaDataServiceKey,
-		Path:        scheduleEventUriPath,
+		Path:        clients.ApiScheduleEventRoute,
 		UseRegistry: false,
 		Url:         url,
 		Interval:    clients.ClientMonitorDefault}
@@ -81,10 +77,10 @@ func TestAddScheduleEvent(t *testing.T) {
 }
 
 func TestNewScheduleEventClientWithConsul(t *testing.T) {
-	scheduleEventUrl := "http://localhost:48081" + scheduleEventUriPath
+	scheduleEventUrl := "http://localhost:48081" + clients.ApiScheduleEventRoute
 	params := types.EndpointParams{
 		ServiceKey:  internal.CoreMetaDataServiceKey,
-		Path:        scheduleEventUriPath,
+		Path:        clients.ApiScheduleEventRoute,
 		UseRegistry: true,
 		Url:         scheduleEventUrl,
 		Interval:    clients.ClientMonitorDefault}

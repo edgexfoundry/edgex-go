@@ -7,16 +7,17 @@
 package client
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 
+	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/go-zoo/bone"
 )
 
 const (
 	apiV1Registration = "/api/v1/registration"
-	apiV1Ping         = "/api/v1/ping"
 )
 
 func replyPing(w http.ResponseWriter, r *http.Request) {
@@ -26,11 +27,26 @@ func replyPing(w http.ResponseWriter, r *http.Request) {
 	io.WriteString(w, str)
 }
 
+func replyConfig(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+
+	w.Header().Add("Content-Type", "application/json")
+
+	enc := json.NewEncoder(w)
+	err := enc.Encode(Configuration)
+	// Problems encoding
+	if err != nil {
+		LoggingClient.Error("Error encoding the data: " + err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
 // HTTPServer function
 func httpServer() http.Handler {
 	mux := bone.New()
 
-	mux.Get(apiV1Ping, http.HandlerFunc(replyPing))
+	mux.Get(internal.ApiPingRoute, http.HandlerFunc(replyPing))
+	mux.Get(internal.ApiConfigRoute, http.HandlerFunc(replyConfig))
 
 	// Registration
 	mux.Get(apiV1Registration+"/:id", http.HandlerFunc(getRegByID))
@@ -45,10 +61,9 @@ func httpServer() http.Handler {
 	return mux
 }
 
-func StartHTTPServer(config ConfigurationStruct, errChan chan error) {
+func StartHTTPServer(errChan chan error) {
 	go func() {
-		p := fmt.Sprintf(":%d", config.Port)
-		LoggingClient.Info(fmt.Sprintf("Starting Export Client: %s", p))
+		p := fmt.Sprintf(":%d", Configuration.Service.Port)
 		errChan <- http.ListenAndServe(p, httpServer())
 	}()
 }

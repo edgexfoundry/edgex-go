@@ -57,7 +57,7 @@ func restGetAllDeviceServices(w http.ResponseWriter, _ *http.Request) {
 	}
 
 	// Check the limit
-	if len(r) > Configuration.ReadMaxLimit {
+	if len(r) > Configuration.Service.ReadMaxLimit {
 		err := errors.New("Max limit exceeded")
 		LoggingClient.Error(err.Error(), "")
 		http.Error(w, err.Error(), http.StatusRequestEntityTooLarge)

@@ -30,3 +30,9 @@ cmd/export-distro/logs/
 cmd/support-notifications/logs/
 cmd/support-scheduler/logs/
 
+
+*.snap
+
+*.bz2
+
+*.pyc

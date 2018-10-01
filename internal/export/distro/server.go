@@ -13,14 +13,11 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/export"
-
+	"github.com/edgexfoundry/edgex-go/pkg/clients"
+	"github.com/edgexfoundry/edgex-go/pkg/models"
 	"github.com/go-zoo/bone"
-)
-
-const (
-	apiV1NotifyRegistrations = "/api/v1/notify/registrations"
-	apiV1Ping                = "/api/v1/ping"
 )
 
 func replyPing(w http.ResponseWriter, r *http.Request) {
@@ -39,7 +36,7 @@ func replyNotifyRegistrations(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	update := export.NotifyUpdate{}
+	update := models.NotifyUpdate{}
 	if err := json.Unmarshal(data, &update); err != nil {
 		LoggingClient.Error(fmt.Sprintf("Failed to parse %X", data))
 		w.WriteHeader(http.StatusBadRequest)
@@ -66,8 +63,8 @@ func replyNotifyRegistrations(w http.ResponseWriter, r *http.Request) {
 // HTTPServer function
 func httpServer() http.Handler {
 	mux := bone.New()
-	mux.Get(apiV1Ping, http.HandlerFunc(replyPing))
-	mux.Put(apiV1NotifyRegistrations, http.HandlerFunc(replyNotifyRegistrations))
+	mux.Get(internal.ApiPingRoute, http.HandlerFunc(replyPing))
+	mux.Put(clients.ApiNotifyRegistrationRoute, http.HandlerFunc(replyNotifyRegistrations))
 
 	return mux
 }

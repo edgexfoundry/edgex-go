@@ -21,9 +21,16 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/export"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/memory"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
+	"github.com/edgexfoundry/edgex-go/pkg/models"
 )
 
 const regJson = `{"origin":1471806386919,"name":"OSIClient","addressable":{"origin":1471806386919,"name":"OSIMQTTBroker","protocol":"TCP","address":"m10.cloudmqtt.com","port":15421,"publisher":"EdgeXExportPublisher","user":"hukfgtoh","password":"uP6hJLYW6Ji4","topic":"EdgeXDataTopic"},"format":"JSON","filter":{"deviceIdentifiers":["livingroomthermosat", "hallwaythermostat"],"valueDescriptorIdentifiers":["temperature", "humidity"]},"encryption":{"encryptionAlgorithm":"AES","encryptionKey":"123","initializingVector":"123"},"compression":"GZIP","enable":true, "destination": "REST_ENDPOINT"}`
+
+type distroMockClient struct{}
+
+func (d *distroMockClient) NotifyRegistrations(models.NotifyUpdate) error {
+	return nil
+}
 
 func prepareTest(t *testing.T) *httptest.Server {
 	if LoggingClient == nil {
@@ -31,6 +38,7 @@ func prepareTest(t *testing.T) *httptest.Server {
 	}
 
 	dbClient = &memory.MemDB{}
+	dc = &distroMockClient{}
 	return httptest.NewServer(httpServer())
 }
 
@@ -54,7 +62,7 @@ func TestPing(t *testing.T) {
 	ts := httptest.NewServer(httpServer())
 	defer ts.Close()
 
-	response, err := http.Get(ts.URL + apiV1Ping)
+	response, err := http.Get(ts.URL + internal.ApiPingRoute)
 	if err != nil {
 		t.Errorf("Error getting ping: %v", err)
 	}

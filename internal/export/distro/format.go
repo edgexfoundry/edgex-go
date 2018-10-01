@@ -112,9 +112,9 @@ type AzureMessage struct {
 	Properties     map[string]string `json:"properties"`
 }
 
-// NewAzureMessage creates a new Azure message and sets
+// newAzureMessage creates a new Azure message and sets
 // Body and default fields values.
-func NewAzureMessage() (*AzureMessage, error) {
+func newAzureMessage() (*AzureMessage, error) {
 	msg := &AzureMessage{
 		Ack:        none,
 		Properties: make(map[string]string),
@@ -143,7 +143,7 @@ type azureFormatter struct {
 
 // Format method does all foramtting job.
 func (af azureFormatter) Format(event *models.Event) []byte {
-	am, err := NewAzureMessage()
+	am, err := newAzureMessage()
 	if err != nil {
 		LoggingClient.Error(fmt.Sprintf("Error creating a new Azure message: %s", err))
 		return []byte{}
@@ -212,4 +212,66 @@ type noopFormatter struct {
 
 func (noopFmt noopFormatter) Format(event *models.Event) []byte {
 	return []byte{}
+}
+
+// BIoTMessage represents Brightics IoT(Samsung SDS IoT platform)  messages.
+type BIoTMessage struct {
+	Version    string `json:"version"`
+	MsgType    string `json:"msgType"`
+	FuncType   string `json:"funcType"`
+	SId        string `json:"sId"`
+	TpId       string `json:"tpId"`
+	TId        string `json:"tId"`
+	MsgCode    string `json:"msgCode"`
+	MsgId      string `json:"msgId"`
+	MsgDate    int64  `json:"msgDate"`
+	ResCode    string `json:"resCode"`
+	ResMsg     string `json:"resMsg"`
+	Severity   string `json:"severity"`
+	Dataformat string `json:"dataformat"`
+	EncType    string `json:"encType"`
+	AuthToken  string `json:"authToken"`
+	Data       []byte `json:"data"`
+}
+
+// newBIoTMessage creates a new Brightics IoT message and sets
+// Body and default fields values.
+func newBIoTMessage() (*BIoTMessage, error) {
+	msg := &BIoTMessage{
+		Severity: "1",
+		MsgType:  "Q",
+	}
+
+	id := uuid.NewV1()
+	msg.MsgId = id.String()
+
+	return msg, nil
+}
+
+// brighticsiotFormatter is used to convert Event to BIoT message and
+// BIoT message to bytes.
+type biotFormatter struct {
+}
+
+// Format method does all foramtting job.
+func (af biotFormatter) Format(event *models.Event) []byte {
+	bm, err := newBIoTMessage()
+	if err != nil {
+		LoggingClient.Error(fmt.Sprintf("error creating a new BIoT message: %s", err))
+		return []byte{}
+	}
+	bm.TpId = event.Device
+	bm.TId = string(event.Origin)
+	rawdata, err := json.Marshal(event)
+	if err != nil {
+		LoggingClient.Error(fmt.Sprintf("error parsing Event data to BIoTMessage : %s", err))
+		return []byte{}
+	}
+	bm.Data = rawdata
+	msg, err := json.Marshal(bm)
+	if err != nil {
+		LoggingClient.Error(fmt.Sprintf("error parsing BIoTMessage to data: %s", err))
+		return []byte{}
+	}
+	return msg
 }

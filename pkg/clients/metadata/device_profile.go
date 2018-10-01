@@ -16,8 +16,12 @@ package metadata
 import (
 	"bytes"
 	"encoding/json"
+	"io"
+	"io/ioutil"
+	"mime/multipart"
 	"net/http"
 	"net/url"
+	"path/filepath"
 
 	"github.com/edgexfoundry/edgex-go/pkg/clients"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
@@ -32,6 +36,8 @@ type DeviceProfileClient interface {
 	DeviceProfile(id string) (models.DeviceProfile, error)
 	DeviceProfiles() ([]models.DeviceProfile, error)
 	DeviceProfileForName(name string) (models.DeviceProfile, error)
+	Upload(yamlString string) (string, error)
+	UploadFile(yamlFilePath string) (string, error)
 }
 
 type DeviceProfileRestClient struct {
@@ -269,4 +275,77 @@ func (dpc *DeviceProfileRestClient) decodeDeviceProfile(resp *http.Response) (mo
 	}
 
 	return ds, err
+}
+
+func (dpc *DeviceProfileRestClient) Upload(yamlString string) (string, error) {
+	req, err := http.NewRequest(http.MethodPost, dpc.url+"/upload", bytes.NewReader([]byte(yamlString)))
+	if err != nil {
+		return "", err
+	}
+
+	resp, err := makeRequest(req)
+	if err != nil {
+		return "", err
+	}
+	if resp == nil {
+		return "", ErrResponseNil
+	}
+	defer resp.Body.Close()
+
+	bodyBytes, err := getBody(resp)
+	if err != nil {
+		return "", err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return "", types.NewErrServiceClient(resp.StatusCode, bodyBytes)
+	}
+
+	return string(bodyBytes), nil
+}
+
+func (dpc *DeviceProfileRestClient) UploadFile(yamlFilePath string) (string, error) {
+	yamlFile, err := ioutil.ReadFile(yamlFilePath)
+	if err != nil {
+		return "", err
+	}
+
+	// Create multipart/form-data request
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	formFileWriter, err := writer.CreateFormFile("file", filepath.Base(yamlFilePath))
+	if err != nil {
+		return "", err
+	}
+	_, err = io.Copy(formFileWriter, bytes.NewReader(yamlFile))
+	if err != nil {
+		return "", err
+	}
+	writer.Close()
+
+	req, err := http.NewRequest(http.MethodPost, dpc.url+"/uploadfile", body)
+	if err != nil {
+		return "", err
+	}
+	req.Header.Add("Content-Type", writer.FormDataContentType())
+
+	resp, err := makeRequest(req)
+	if err != nil {
+		return "", err
+	}
+	if resp == nil {
+		return "", ErrResponseNil
+	}
+	defer resp.Body.Close()
+
+	bodyBytes, err := getBody(resp)
+	if err != nil {
+		return "", err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return "", types.NewErrServiceClient(resp.StatusCode, bodyBytes)
+	}
+
+	return string(bodyBytes), nil
 }

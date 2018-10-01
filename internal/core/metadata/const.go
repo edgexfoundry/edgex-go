@@ -13,45 +13,7 @@
  *******************************************************************************/
 package metadata
 
-// Struct used to pase the JSON configuration file
-type ConfigurationStruct struct {
-	DBType                              string
-	MongoDatabaseName                   string
-	MongoDBUserName                     string
-	MongoDBPassword                     string
-	MongoDBHost                         string
-	MongoDBPort                         int
-	MongoDBConnectTimeout               int
-	ReadMaxLimit                        int
-	Protocol                            string
-	ServiceAddress                      string
-	ServicePort                         int
-	ServiceTimeout                      int
-	AppOpenMsg                          string
-	CheckInterval                       string
-	ConsulProfilesActive                string
-	ConsulHost                          string
-	ConsulCheckAddress                  string
-	ConsulPort                          int
-	EnableRemoteLogging                 bool
-	LoggingFile                         string
-	LoggingRemoteURL                    string
-	NotificationPostDeviceChanges       bool
-	NotificationsSlug                   string
-	NotificationContent                 string
-	NotificationSender                  string
-	NotificationDescription             string
-	NotificationLabel                   string
-	SupportNotificationsHost            string
-	SupportNotificationsPort            int
-	SupportNotificationsSubscriptionURL string
-	SupportNotificationsTransmissionURL string
-	StartupTimeout                      int
-}
-
 const (
-	MAX_LIMIT int = 1000
-
 	/* ---------------- URL PARAM NAMES -----------------------*/
 	ID                       = "id"
 	NAME                     = "name"
@@ -100,11 +62,6 @@ const (
 	DEVICEADDRESSABLES       = "deviceaddressables"
 	DEVICEADDRESSABLESBYNAME = "deviceaddressablesbyname"
 	TIMELAYOUT               = "20060102T150405"
-
-	/* TODO ENUM */
-	LOCKED   = "LOCKED"
-	UNLOCKED = "UNLOCKED"
-	ENABLED  = "ENABLED"
-	DISABLED = "DISABLED"
-	QUERYTS  = "-timestamp"
+	UNLOCKED                 = "UNLOCKED"
+	ENABLED                  = "ENABLED"
 )

@@ -15,7 +15,6 @@ package metadata
 
 import (
 	"fmt"
-	"strings"
 	"sync"
 	"time"
 
@@ -26,14 +25,20 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/memory"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
+	"github.com/edgexfoundry/edgex-go/pkg/clients"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/notifications"
+	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
+	"github.com/pkg/errors"
 )
 
 // Global variables
 var Configuration *ConfigurationStruct
 var dbClient interfaces.DBClient
 var LoggingClient logger.LoggingClient
+var nc notifications.NotificationsClient
+var chConfig chan interface{} //A channel for use by ConsulDecoder in detecting configuration mods.
 
 func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup, ch chan error) {
 	until := time.Now().Add(time.Millisecond * time.Duration(timeout))
@@ -52,10 +57,10 @@ func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup,
 				}
 			} else {
 				// Initialize notificationsClient based on configuration
-				notifications.SetConfiguration(Configuration.SupportNotificationsHost, Configuration.SupportNotificationsPort)
+				initializeClients(useConsul)
 				// Setup Logging
 				logTarget := setLoggingTarget()
-				LoggingClient = logger.NewClient(internal.CoreMetaDataServiceKey, Configuration.EnableRemoteLogging, logTarget)
+				LoggingClient = logger.NewClient(internal.CoreMetaDataServiceKey, Configuration.Logging.EnableRemote, logTarget)
 			}
 		}
 
@@ -76,10 +81,15 @@ func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup,
 	return
 }
 
-func Init() bool {
+func Init(useConsul bool) bool {
 	if Configuration == nil || dbClient == nil {
 		return false
 	}
+	if useConsul {
+		chConfig = make(chan interface{})
+		go listenForConfigChanges()
+	}
+
 	return true
 }
 
@@ -93,7 +103,7 @@ func Destruct() {
 func initializeConfiguration(useConsul bool, useProfile string) (*ConfigurationStruct, error) {
 	//We currently have to load configuration from filesystem first in order to obtain ConsulHost/Port
 	conf := &ConfigurationStruct{}
-	err := config.LoadFromFile(useProfile, conf)
+	err := config.LoadFromFileV2(useProfile, conf)
 	if err != nil {
 		return nil, err
 	}
@@ -108,38 +118,90 @@ func initializeConfiguration(useConsul bool, useProfile string) (*ConfigurationS
 }
 
 func connectToConsul(conf *ConfigurationStruct) error {
-	// Initialize service on Consul
-	err := consulclient.ConsulInit(consulclient.ConsulConfig{
-		ServiceName:    internal.CoreMetaDataServiceKey,
-		ServicePort:    conf.ServicePort,
-		ServiceAddress: conf.ServiceAddress,
-		CheckAddress:   conf.ConsulCheckAddress,
-		CheckInterval:  conf.CheckInterval,
-		ConsulAddress:  conf.ConsulHost,
-		ConsulPort:     conf.ConsulPort,
-	})
+	//Obtain ConsulConfig
+	cfg := consulclient.NewConsulConfig(conf.Registry, conf.Service, internal.CoreMetaDataServiceKey)
+	// Register the service in Consul
+	err := consulclient.ConsulInit(cfg)
+
 	if err != nil {
 		return fmt.Errorf("connection to Consul could not be made: %v", err.Error())
 	} else {
 		// Update configuration data from Consul
-		if err := consulclient.CheckKeyValuePairs(conf, internal.CoreMetaDataServiceKey, strings.Split(conf.ConsulProfilesActive, ";")); err != nil {
-			return fmt.Errorf("error getting key/values from Consul: %v", err.Error())
+		updateCh := make(chan interface{})
+		errCh := make(chan error)
+		dec := consulclient.NewConsulDecoder(conf.Registry)
+		dec.Target = &ConfigurationStruct{}
+		dec.Prefix = internal.ConfigV2Stem + internal.CoreMetaDataServiceKey
+		dec.ErrCh = errCh
+		dec.UpdateCh = updateCh
+
+		defer dec.Close()
+		defer close(updateCh)
+		defer close(errCh)
+		go dec.Run()
+
+		select {
+		case <-time.After(2 * time.Second):
+			err = errors.New("timeout loading config from registry")
+		case ex := <-errCh:
+			err = errors.New(ex.Error())
+		case raw := <-updateCh:
+			actual, ok := raw.(*ConfigurationStruct)
+			if !ok {
+				return errors.New("type check failed")
+			}
+			Configuration = actual
+		}
+
+		if err != nil {
+			return err
 		}
 	}
 	return nil
 }
 
-func connectToDatabase() error {
-	dbConfig := db.Configuration{
-		Host:         Configuration.MongoDBHost,
-		Port:         Configuration.MongoDBPort,
-		Timeout:      Configuration.MongoDBConnectTimeout,
-		DatabaseName: Configuration.MongoDatabaseName,
-		Username:     Configuration.MongoDBUserName,
-		Password:     Configuration.MongoDBPassword,
+func listenForConfigChanges() {
+	errCh := make(chan error)
+	dec := consulclient.NewConsulDecoder(Configuration.Registry)
+	dec.Target = &ConfigurationStruct{}
+	dec.Prefix = internal.ConfigV2Stem + internal.CoreMetaDataServiceKey
+	dec.ErrCh = errCh
+	dec.UpdateCh = chConfig
+
+	defer dec.Close()
+	defer close(errCh)
+
+	go dec.Run()
+	for {
+		select {
+		case ex := <-errCh:
+			LoggingClient.Error(ex.Error())
+		case raw, ok := <-chConfig:
+			if ok {
+				actual, ok := raw.(*ConfigurationStruct)
+				if !ok {
+					LoggingClient.Error("listenForConfigChanges() type check failed")
+				}
+				Configuration = actual //Mutex needed?
+			} else {
+				return
+			}
+		}
 	}
+}
+
+func connectToDatabase() error {
 	var err error
-	dbClient, err = newDBClient(Configuration.DBType, dbConfig)
+	dbConfig := db.Configuration{
+		Host:         Configuration.Databases["Primary"].Host,
+		Port:         Configuration.Databases["Primary"].Port,
+		Timeout:      Configuration.Databases["Primary"].Timeout,
+		DatabaseName: Configuration.Databases["Primary"].Name,
+		Username:     Configuration.Databases["Primary"].Username,
+		Password:     Configuration.Databases["Primary"].Password,
+	}
+
+	dbClient, err = newDBClient(Configuration.Databases["Primary"].Type, dbConfig)
 	if err != nil {
 		dbClient = nil
 		return fmt.Errorf("couldn't create database client: %v", err.Error())
@@ -166,10 +228,22 @@ func newDBClient(dbType string, config db.Configuration) (interfaces.DBClient, e
 	}
 }
 
-func setLoggingTarget() string {
-	logTarget := Configuration.LoggingRemoteURL
-	if !Configuration.EnableRemoteLogging {
-		return Configuration.LoggingFile
+func initializeClients(useConsul bool) {
+	// Create notification client
+	params := types.EndpointParams{
+		ServiceKey:  internal.SupportNotificationsServiceKey,
+		Path:        clients.ApiNotificationRoute,
+		UseRegistry: useConsul,
+		Url:         Configuration.Clients["Notifications"].Url() + clients.ApiNotificationRoute,
+		Interval:    Configuration.Service.ClientMonitor,
 	}
-	return logTarget
+
+	nc = notifications.NewNotificationsClient(params, startup.Endpoint{})
+}
+
+func setLoggingTarget() string {
+	if Configuration.Logging.EnableRemote {
+		return Configuration.Clients["Logging"].Url() + clients.ApiLoggingRoute
+	}
+	return Configuration.Logging.File
 }

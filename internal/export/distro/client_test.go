@@ -29,6 +29,7 @@ const (
 )
 
 func TestMain(m *testing.M) {
+	Configuration = &ConfigurationStruct{}
 	LoggingClient = logger.NewMockClient()
 	os.Exit(m.Run())
 }

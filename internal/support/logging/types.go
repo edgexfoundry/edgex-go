@@ -6,7 +6,11 @@
 
 package logging
 
-import "github.com/edgexfoundry/edgex-go/internal/support/logging/models"
+import (
+	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+	"github.com/edgexfoundry/edgex-go/internal/support/logging/models"
+)
 
 const (
 	PersistenceMongo = "mongodb"
@@ -22,4 +26,45 @@ type persistence interface {
 	// Needed for the tests. Reset the instance (closing files, sessions...)
 	// and clear the logs.
 	reset()
+}
+
+type privLogger struct {
+}
+
+func (l privLogger) log(level string, msg string, labels []string) {
+	if dbClient != nil {
+		logEntry := models.LogEntry{
+			Level:         level,
+			Labels:        labels,
+			OriginService: internal.SupportLoggingServiceKey,
+			Message:       msg,
+			Created:       db.MakeTimestamp(),
+		}
+		dbClient.add(logEntry)
+	}
+}
+
+func (l privLogger) Debug(msg string, labels ...string) error {
+	l.log(models.DEBUG, msg, labels)
+	return nil
+}
+
+func (l privLogger) Error(msg string, labels ...string) error {
+	l.log(models.ERROR, msg, labels)
+	return nil
+}
+
+func (l privLogger) Info(msg string, labels ...string) error {
+	l.log(models.INFO, msg, labels)
+	return nil
+}
+
+func (l privLogger) Trace(msg string, labels ...string) error {
+	l.log(models.TRACE, msg, labels)
+	return nil
+}
+
+func (l privLogger) Warn(msg string, labels ...string) error {
+	l.log(models.WARN, msg, labels)
+	return nil
 }

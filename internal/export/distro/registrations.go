@@ -15,11 +15,11 @@ package distro
 
 import (
 	"fmt"
-	"github.com/edgexfoundry/edgex-go/internal/export"
-	"github.com/edgexfoundry/edgex-go/internal/export/interfaces"
-	"github.com/edgexfoundry/edgex-go/pkg/models"
 	"net/http"
 	"time"
+
+	"github.com/edgexfoundry/edgex-go/internal/export"
+	"github.com/edgexfoundry/edgex-go/pkg/models"
 )
 
 const (
@@ -27,16 +27,16 @@ const (
 	awsThingUpdateTopic string = "$aws/things/%s/shadow/update"
 )
 
-var registrationChanges chan export.NotifyUpdate = make(chan export.NotifyUpdate, 2)
+var registrationChanges chan models.NotifyUpdate = make(chan models.NotifyUpdate, 2)
 
 // RegistrationInfo - registration info
 type registrationInfo struct {
 	registration export.Registration
-	format       interfaces.Formatter
-	compression  interfaces.Transformer
-	encrypt      interfaces.Transformer
-	sender       interfaces.Sender
-	filter       []interfaces.Filterer
+	format       formatter
+	compression  transformer
+	encrypt      transformer
+	sender       sender
+	filter       []filterer
 
 	chRegistration chan *export.Registration
 	chEvent        chan *models.Event
@@ -44,7 +44,7 @@ type registrationInfo struct {
 	deleteFlag bool
 }
 
-func RefreshRegistrations(update export.NotifyUpdate) {
+func RefreshRegistrations(update models.NotifyUpdate) {
 	// TODO make it not blocking, return bool?
 	registrationChanges <- update
 }
@@ -103,23 +103,23 @@ func (reg *registrationInfo) update(newReg export.Registration) bool {
 	reg.sender = nil
 	switch newReg.Destination {
 	case export.DestMQTT, export.DestAzureMQTT:
-		reg.sender = NewMqttSender(newReg.Addressable, configuration.MQTTSCert, configuration.MQTTSKey)
+		reg.sender = newMqttSender(newReg.Addressable, Configuration.MQTTSCert, Configuration.MQTTSKey)
 	case export.DestAWSMQTT:
 		newReg.Addressable.Protocol = "tls"
 		newReg.Addressable.Path = ""
 		newReg.Addressable.Topic = fmt.Sprintf(awsThingUpdateTopic, newReg.Addressable.Topic)
 		newReg.Addressable.Port = awsMQTTPort
-		reg.sender = NewMqttSender(newReg.Addressable, configuration.AWSCert, configuration.AWSKey)
+		reg.sender = newMqttSender(newReg.Addressable, Configuration.AWSCert, Configuration.AWSKey)
 	case export.DestZMQ:
 		LoggingClient.Info("Destination ZMQ is not supported")
 	case export.DestIotCoreMQTT:
-		reg.sender = NewIoTCoreSender(newReg.Addressable)
+		reg.sender = newIoTCoreSender(newReg.Addressable)
 	case export.DestRest:
-		reg.sender = NewHTTPSender(newReg.Addressable)
+		reg.sender = newHTTPSender(newReg.Addressable)
 	case export.DestXMPP:
-		reg.sender = NewXMPPSender(newReg.Addressable)
+		reg.sender = newXMPPSender(newReg.Addressable)
 	case export.DestInfluxDB:
-		reg.sender = NewInfluxDBSender(newReg.Addressable)
+		reg.sender = newInfluxDBSender(newReg.Addressable)
 
 	default:
 		LoggingClient.Warn(fmt.Sprintf("Destination not supported: %s", newReg.Destination))
@@ -137,7 +137,7 @@ func (reg *registrationInfo) update(newReg export.Registration) bool {
 	case export.EncNone:
 		reg.encrypt = nil
 	case export.EncAes:
-		reg.encrypt = export.NewAESEncryption(newReg.Encryption)
+		reg.encrypt = newAESEncryption(newReg.Encryption)
 	default:
 		LoggingClient.Warn(fmt.Sprintf("Encryption not supported: %s", newReg.Encryption.Algo))
 		return false
@@ -146,12 +146,12 @@ func (reg *registrationInfo) update(newReg export.Registration) bool {
 	reg.filter = nil
 
 	if len(newReg.Filter.DeviceIDs) > 0 {
-		reg.filter = append(reg.filter, NewDevIdFilter(newReg.Filter))
+		reg.filter = append(reg.filter, newDevIdFilter(newReg.Filter))
 		LoggingClient.Debug(fmt.Sprintf("Device ID filter added: %s", newReg.Filter.DeviceIDs))
 	}
 
 	if len(newReg.Filter.ValueDescriptorIDs) > 0 {
-		reg.filter = append(reg.filter, NewValueDescFilter(newReg.Filter))
+		reg.filter = append(reg.filter, newValueDescFilter(newReg.Filter))
 		LoggingClient.Debug(fmt.Sprintf("Value descriptor filter added: %s", newReg.Filter.ValueDescriptorIDs))
 	}
 
@@ -186,7 +186,7 @@ func (reg registrationInfo) processEvent(event *models.Event) {
 		encrypted = reg.encrypt.Transform(compressed)
 	}
 
-	if reg.sender.Send(encrypted, event) && configuration.MarkPushed {
+	if reg.sender.Send(encrypted, event) && Configuration.MarkPushed {
 		id := event.ID.Hex()
 		err := ec.MarkPushed(id)
 
@@ -223,7 +223,7 @@ func registrationLoop(reg *registrationInfo) {
 }
 
 func updateRunningRegistrations(running map[string]*registrationInfo,
-	update export.NotifyUpdate) error {
+	update models.NotifyUpdate) error {
 
 	switch update.Operation {
 	case export.NotifyUpdateDelete:
@@ -266,7 +266,7 @@ func updateRunningRegistrations(running map[string]*registrationInfo,
 // Loop - registration loop
 func Loop(errChan chan error, eventCh chan *models.Event) {
 	go func() {
-		p := fmt.Sprintf(":%d", configuration.Port)
+		p := fmt.Sprintf(":%d", Configuration.Port)
 		LoggingClient.Info(fmt.Sprintf("Starting Export Distro %s", p))
 		errChan <- http.ListenAndServe(p, httpServer())
 	}()
@@ -322,7 +322,6 @@ func Loop(errChan chan error, eventCh chan *models.Event) {
 			}
 
 		case event := <-eventCh:
-			LoggingClient.Info("EVENT")
 			for k, reg := range registrations {
 				if reg.deleteFlag {
 					delete(registrations, k)

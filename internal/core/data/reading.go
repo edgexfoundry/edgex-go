@@ -40,7 +40,7 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Check max limit
-		if len(r) > Configuration.ReadMaxLimit {
+		if len(r) > Configuration.Service.ReadMaxLimit {
 			http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
 			LoggingClient.Error(maxExceededString)
 			return
@@ -281,7 +281,7 @@ func readingByDeviceHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodGet:
-		if limit > Configuration.ReadMaxLimit {
+		if limit > Configuration.Service.ReadMaxLimit {
 			http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
 			LoggingClient.Error(maxExceededString)
 			return
@@ -340,7 +340,7 @@ func readingbyValueDescriptorHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Limit is too large
-	if limit > Configuration.ReadMaxLimit {
+	if limit > Configuration.Service.ReadMaxLimit {
 		http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
 		LoggingClient.Error(maxExceededString)
 		return
@@ -380,7 +380,7 @@ func readingByUomLabelHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Limit was exceeded
-	if limit > Configuration.ReadMaxLimit {
+	if limit > Configuration.Service.ReadMaxLimit {
 		http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
 		LoggingClient.Error(maxExceededString)
 		return
@@ -432,7 +432,7 @@ func readingByLabelHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Limit is too large
-	if limit > Configuration.ReadMaxLimit {
+	if limit > Configuration.Service.ReadMaxLimit {
 		LoggingClient.Error(maxExceededString)
 		http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
 		return
@@ -484,7 +484,7 @@ func readingByTypeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Limit exceeds max limit
-	if l > Configuration.ReadMaxLimit {
+	if l > Configuration.Service.ReadMaxLimit {
 		http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
 		LoggingClient.Error(maxExceededString)
 		return
@@ -539,7 +539,7 @@ func readingByCreationTimeHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodGet:
-		if l > Configuration.ReadMaxLimit {
+		if l > Configuration.Service.ReadMaxLimit {
 			LoggingClient.Error(maxExceededString)
 			http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
 			return
@@ -586,7 +586,7 @@ func readingByValueDescriptorAndDeviceHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	if limit > Configuration.ReadMaxLimit {
+	if limit > Configuration.Service.ReadMaxLimit {
 		LoggingClient.Error(maxExceededString)
 		http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
 		return
