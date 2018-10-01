@@ -84,6 +84,7 @@ apps:
 parts:
   curl:
     plugin: nil
+    override-pull: echo "no source pull"
     stage-packages:
       - curl
   go:
