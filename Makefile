@@ -51,11 +51,12 @@ cmd/support-logging/support-logging:
 cmd/support-notifications/support-notifications:
 	$(GO) build $(GOFLAGS) -o $@ ./cmd/support-notifications
 
+cmd/support-scheduler/support-scheduler:
+	$(GO) build $(GOFLAGS) -o $@ ./cmd/support-scheduler
+
 cmd/sys-mgmt-agent/sys-mgmt-agent:
 	$(GO) build $(GOFLAGS) -o $@ ./cmd/sys-mgmt-agent
 
-cmd/support-scheduler/support-scheduler:
-	$(GO) build $(GOFLAGS) -o $@ ./cmd/support-scheduler
 
 clean:
 	rm -f $(MICROSERVICES)

@@ -1,9 +1,9 @@
 //
 // Copyright (c) 2018 Tencent
 //
-// SPDX-License-Identifier: Apache-2.0
+// Copyright (c) 2017 Dell Inc
 //
-
+// SPDX-License-Identifier: Apache-2.0
 package scheduler
 
 import (
@@ -54,6 +54,9 @@ func Init(conf ConfigurationStruct, l logger.LoggingClient, useConsul bool) erro
 	loggingClient = l
 	configuration = conf
 
+	// Start ticker ('legacy')
+	ticker = time.NewTicker(time.Duration(conf.ScheduleInterval) * time.Millisecond)
+
 	// Check if we have default schedules to add
 	if len(configuration.DefaultScheduleName) > 0  {
 		// Add default scheduled events
@@ -62,11 +65,6 @@ func Init(conf ConfigurationStruct, l logger.LoggingClient, useConsul bool) erro
 			return loggingClient.Error("Error while loading default schedule(s) or scheduleEvent(s) %s",err.Error())
 		}
 	}
-
-	// TODO: Enable MetaData Client
-
-	// Start ticker ('legacy')
-	ticker = time.NewTicker(time.Duration(conf.ScheduleInterval) * time.Millisecond)
 
 	return nil
 }

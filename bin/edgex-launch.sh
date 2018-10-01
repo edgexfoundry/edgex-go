@@ -79,6 +79,8 @@ cd $DIR
 cd $CMD/sys-mgmt-agent
 # Add `edgex-` prefix on start, so we can find the process family
 exec -a edgex-sys-mgmt-agent ./sys-mgmt-agent &
+cd $DIR
+
 # Support scheduler
 ###
 cd $CMD/support-scheduler

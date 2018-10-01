@@ -1,8 +1,9 @@
 //
 // Copyright (c) 2018 Tencent
 //
-// SPDX-License-Identifier: Apache-2.0
+// Copyright (c) 2017 Dell Inc.
 //
+// SPDX-License-Identifier: Apache-2.0
 
 package scheduler
 

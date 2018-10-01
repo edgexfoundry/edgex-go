@@ -1,9 +1,9 @@
 //
 // Copyright (c) 2018 Tencent
 //
-// SPDX-License-Identifier: Apache-2.0
+// Copyright (c) 2017 Dell Inc.
 //
-
+// SPDX-License-Identifier: Apache-2.0
 package scheduler
 
 import (
@@ -13,12 +13,12 @@ import (
 	queueV1 "gopkg.in/eapache/queue.v1"
 	"io/ioutil"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 )
 
 const (
-	ScheduleEventInvokeRequestTimeOut = 5000
 	ScheduleInterval                  = 500
 )
 
@@ -47,10 +47,7 @@ func StopTicker() {
 func queryQueueLen() int {
 	mutex.Lock()
 	defer mutex.Unlock()
-
-	len := scheduleQueue.Length()
-
-	return len
+	return scheduleQueue.Length()
 }
 
 func clearQueue() {
@@ -64,7 +61,7 @@ func clearQueue() {
 
 //endregion
 
-//region util methods access shared variable, Warning : these methods should be called in sychronization block
+//region util methods access shared variable, Warning : these methods should be called in synchronization block
 func addScheduleOperation(scheduleId models.Schedule, context *ScheduleContext) {
 	scheduleIdToContextMap[scheduleId.Id.Hex()] = context
 	scheduleNameToContextMap[scheduleId.Name] = context
@@ -106,7 +103,7 @@ func addSchedule(schedule models.Schedule) error {
 	defer mutex.Unlock()
 
 	scheduleId := schedule.Id.Hex()
-	loggingClient.Debug("adding the schedule with id : " + scheduleId)
+	loggingClient.Debug("adding the schedule with id : " + scheduleId + " at time " + schedule.Start)
 
 	if _, exists := scheduleIdToContextMap[scheduleId]; exists {
 		loggingClient.Warn("the schedule context with id " + scheduleId + " already exist ")
@@ -250,7 +247,7 @@ func updateScheduleEvent(scheduleEvent models.ScheduleEvent) error {
 	}
 
 	scheduleContext, exists := scheduleNameToContextMap[scheduleEvent.Schedule]
-	if !exists{
+	if !exists {
 		loggingClient.Error("query the schedule with name : " + scheduleEvent.Schedule + " occurs a error ")
 		return errors.New("there is no mapping from scheduleEvent schedule name: " + scheduleEvent.Schedule + " to schedule")
 	}
@@ -338,7 +335,8 @@ func triggerSchedule() {
 		return
 	}
 
-	loggingClient.Debug(fmt.Sprintf("%d item in schedule queue.", scheduleQueue.Length()))
+	//TODO: Enable once logging thresholds work again
+	//loggingClient.Debug(fmt.Sprintf("%d item in schedule queue.", scheduleQueue.Length()))
 
 	var wg sync.WaitGroup
 
@@ -346,12 +344,14 @@ func triggerSchedule() {
 		if scheduleQueue.Peek().(*ScheduleContext) != nil {
 			scheduleContext := scheduleQueue.Remove().(*ScheduleContext)
 			scheduleId := scheduleContext.Schedule.Id.Hex()
-			loggingClient.Debug("check schedule with id : " + scheduleId)
+			// TODO: Enable once we have threshold logging working again
+			//loggingClient.Debug("check schedule with id : " + scheduleId)
 			if scheduleContext.MarkedDeleted {
 				loggingClient.Debug("the schedule with id : " + scheduleId + " be marked as deleted, removing it.")
 				continue //really delete from the queue
 			} else {
-				loggingClient.Debug("schedule with id : " + scheduleId + " next schedule time is : " + scheduleContext.NextTime.String())
+				// TODO: Enable once we have threshold logging working again
+				//loggingClient.Debug("schedule with id : " + scheduleId + " next schedule time is : " + scheduleContext.NextTime.String())
 				if scheduleContext.NextTime.Unix() <= nowEpoch {
 					loggingClient.Debug("executing schedule, detail : {" + scheduleContext.GetInfo() + "} , at : " + scheduleContext.NextTime.String())
 
@@ -369,7 +369,7 @@ func triggerSchedule() {
 	wg.Wait()
 }
 
-func execute(context *ScheduleContext, wg *sync.WaitGroup) {
+func execute(context *ScheduleContext, wg *sync.WaitGroup) error {
 	scheduleEventsMap := context.ScheduleEventsMap
 
 	defer wg.Done()
@@ -390,16 +390,29 @@ func execute(context *ScheduleContext, wg *sync.WaitGroup) {
 		executingUrl := getUrlStr(scheduleEvent.Addressable)
 		loggingClient.Debug("the event with id : " + eventId + " will request url : " + executingUrl)
 
-		req, err := http.NewRequest(http.MethodPost, executingUrl, nil)
+		//TODO: change the method type based on the event
+
+		httpMethod := scheduleEvent.Addressable.HTTPMethod
+		if !validMethod(httpMethod) {
+			loggingClient.Error("net/http: invalid method %q", httpMethod)
+			return nil
+		}
+
+		req, err := http.NewRequest(httpMethod, executingUrl, nil)
 		req.Header.Set(ContentTypeKey, ContentTypeJsonValue)
-		req.Header.Set(ContentLengthKey, string(len(scheduleEvent.Parameters)))
+
+		params := strings.TrimSpace(scheduleEvent.Parameters)
+
+		if len(params) > 0 {
+			req.Header.Set(ContentLengthKey, string(len(params)))
+		}
 
 		if err != nil {
 			loggingClient.Error("create new request occurs error : " + err.Error())
 		}
 
 		client := &http.Client{
-			Timeout: ScheduleEventInvokeRequestTimeOut,
+			Timeout: 5 * time.Second,
 		}
 		responseBytes, statusCode, err := sendRequestAndGetResponse(client, req)
 		responseStr := string(responseBytes)
@@ -417,6 +430,7 @@ func execute(context *ScheduleContext, wg *sync.WaitGroup) {
 		loggingClient.Debug("requeue schedule, detail : " + context.GetInfo())
 		scheduleQueue.Add(context)
 	}
+	return nil
 }
 
 func getUrlStr(addressable models.Addressable) string {
@@ -427,6 +441,7 @@ func sendRequestAndGetResponse(client *http.Client, req *http.Request) ([]byte, 
 	resp, err := client.Do(req)
 
 	if err != nil {
+		println(err.Error())
 		return []byte{}, 500, err
 	}
 
@@ -441,4 +456,31 @@ func sendRequestAndGetResponse(client *http.Client, req *http.Request) ([]byte, 
 	return bodyBytes, resp.StatusCode, nil
 }
 
+func validMethod(method string) bool {
+	/*
+	     Method         = "OPTIONS"                ; Section 9.2
+	                    | "GET"                    ; Section 9.3
+	                    | "HEAD"                   ; Section 9.4
+	                    | "POST"                   ; Section 9.5
+	                    | "PUT"                    ; Section 9.6
+	                    | "DELETE"                 ; Section 9.7
+	                    | "TRACE"                  ; Section 9.8
+	                    | "CONNECT"                ; Section 9.9
+	                    | extension-method
+	   extension-method = token
+	     token          = 1*<any CHAR except CTLs or separators>
+	*/
+	a:= [] string {"GET","HEAD", "POST","PUT","DELETE","TRACE","CONNECT"}
+	method = strings.ToUpper(method)
+	return contains(a,method)
+}
+
+func contains(a []string, x string) bool {
+	for _, n := range a {
+		if x == n {
+			return true
+		}
+	}
+	return false
+}
 //endregion
