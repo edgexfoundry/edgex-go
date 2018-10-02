@@ -4,7 +4,7 @@ Persistence = 'database'
 BootTimeout = 30000
 ClientMonitor = 15000
 CheckInterval = '10s'
-Host = 'localhost'
+Host = 'edgex-support-logging'
 Port = 48061
 Protocol = 'http'
 ReadMaxLimit = 100
@@ -12,19 +12,19 @@ StartupMsg = 'This is the Support Logging Microservice'
 Timeout = 5000
 
 [Registry]
-Host = 'localhost'
+Host = 'edgex-core-consul'
 Port = 8500
 Type = 'consul'
 
 [Logging]
-File = './logs/support-logging.log'
+File = '/edgex/logs/edgex-support-logging.log'
 
 [Databases]
   [Databases.Primary]
-  Host = 'localhost'
+  Host = 'edgex-mongo'
   Name = 'logging'
-  Password = ''
+  Password = 'password'
   Port = 27017
-  Username = ''
+  Username = 'logging'
   Timeout = 5000
   Type = 'mongodb'

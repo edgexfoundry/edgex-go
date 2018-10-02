@@ -9,6 +9,7 @@ package logging
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/edgexfoundry/edgex-go/internal"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -25,6 +26,20 @@ func replyPing(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	str := `{"value" : "pong"}`
 	io.WriteString(w, str)
+}
+
+func replyConfig(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+
+	w.Header().Add("Content-Type", "application/json")
+
+	enc := json.NewEncoder(w)
+	err := enc.Encode(Configuration)
+	// Problems encoding
+	if err != nil {
+		LoggingClient.Error("Error encoding the data: " + err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }
 
 func addLog(w http.ResponseWriter, r *http.Request) {
@@ -57,6 +72,13 @@ func addLog(w http.ResponseWriter, r *http.Request) {
 	dbClient.add(l)
 }
 
+func checkMaxLimit(limit int) int {
+	if limit > Configuration.Service.ReadMaxLimit || limit == 0 {
+		return Configuration.Service.ReadMaxLimit
+	}
+	return limit
+}
+
 func getCriteria(w http.ResponseWriter, r *http.Request) *matchCriteria {
 	var criteria matchCriteria
 	limit := bone.GetValue(r, "limit")
@@ -75,6 +97,8 @@ func getCriteria(w http.ResponseWriter, r *http.Request) *matchCriteria {
 			return nil
 		}
 	}
+	//In all cases, cap the # of entries returned at ReadMaxLimit
+	criteria.Limit = checkMaxLimit(criteria.Limit)
 
 	start := bone.GetValue(r, "start")
 	if len(start) > 0 {
@@ -155,14 +179,6 @@ func getLogs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if criteria.Limit > 0 && len(logs) > criteria.Limit {
-		w.WriteHeader(http.StatusRequestEntityTooLarge)
-		s := fmt.Sprintf("More logs than requested, %d with limit %d",
-			len(logs), criteria.Limit)
-		io.WriteString(w, s)
-		return
-	}
-
 	res, err := json.Marshal(logs)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -192,6 +208,8 @@ func delLogs(w http.ResponseWriter, r *http.Request) {
 // HTTPServer function
 func HttpServer() http.Handler {
 	mux := bone.New()
+	mux.Get(internal.ApiConfigRoute, http.HandlerFunc(replyConfig))
+
 	mv1 := mux.Prefix("/api/v1")
 
 	mv1.Get("/ping", http.HandlerFunc(replyPing))
