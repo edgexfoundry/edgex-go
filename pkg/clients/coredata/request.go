@@ -1,5 +1,6 @@
 /*******************************************************************************
  * Copyright 2017 Dell Inc.
+ * Copyright 2018 Joan Duran
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -11,6 +12,7 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
+
 package coredata
 
 import (
@@ -25,8 +27,8 @@ import (
 )
 
 var (
-	ErrResponseNil       = errors.New("Response was nil")
-	ErrNotFound    error = errors.New("Item not found")
+	// ErrResponseNil is the error in case of empty response
+	ErrResponseNil = errors.New("Response was nil")
 )
 
 // Helper method to get the body from the response after making the request
@@ -126,12 +128,13 @@ func putRequest(url string, data interface{}) error {
 	var req *http.Request
 
 	if data != nil {
-		jsonStr, err := json.Marshal(data)
+		var data []byte
+		data, err = json.Marshal(data)
 		if err != nil {
 			return err
 		}
 
-		req, err = http.NewRequest(http.MethodPut, url, bytes.NewReader(jsonStr))
+		req, err = http.NewRequest(http.MethodPut, url, bytes.NewReader(data))
 	} else {
 		req, err = http.NewRequest(http.MethodPut, url, nil)
 	}
