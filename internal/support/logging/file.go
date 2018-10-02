@@ -9,11 +9,14 @@ package logging
 import (
 	"bufio"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 
-	"github.com/edgexfoundry/edgex-go/internal/support/logging/models"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+	"github.com/edgexfoundry/edgex-go/pkg/models"
 )
 
 const (
@@ -25,23 +28,19 @@ type fileLog struct {
 	out      io.WriteCloser
 }
 
-func (fl *fileLog) closeSession() {
+func (fl *fileLog) CloseSession() {
 	if fl.out != nil {
 		fl.out.Close()
 	}
 }
 
-func (fl *fileLog) add(le models.LogEntry) error {
+func (fl *fileLog) AddLog(le models.LogEntry) error {
 	if fl.out == nil {
-		var err error
-		fl.out, err = os.OpenFile(fl.filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		err := fl.Connect()
 		if err != nil {
-			//fmt.Println("Error opening log file: ", fl.filename, err)
-			fl.out = nil
 			return err
 		}
 	}
-
 	res, err := json.Marshal(le)
 	if err != nil {
 		return err
@@ -52,7 +51,29 @@ func (fl *fileLog) add(le models.LogEntry) error {
 	return nil
 }
 
-func (fl *fileLog) remove(criteria matchCriteria) (int, error) {
+// Connect() for file persistence simply opens a handle to the designated file
+func (fl *fileLog) Connect() error {
+	var err error
+	if fl.out == nil {
+		//First check to see if the specified directory exists
+		//File won't be written without directory.
+		path := filepath.Dir(fl.filename)
+		if _, err := os.Stat(path); os.IsNotExist(err) {
+			os.MkdirAll(path, 0755)
+		}
+		fl.out, err = os.OpenFile(fl.filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		if err != nil {
+			fl.out = nil
+		}
+	}
+	return err
+}
+
+func (fl *fileLog) DeleteLog(criteria db.LogMatcher) (int, error) {
+	query, ok := criteria.(matchCriteria)
+	if !ok {
+		return 0, errors.New("unexpected type")
+	}
 	tmpFilename := fl.filename + rmFileSuffix
 	tmpFile, err := os.OpenFile(tmpFilename, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
@@ -77,7 +98,7 @@ func (fl *fileLog) remove(criteria matchCriteria) (int, error) {
 		line := scanner.Bytes()
 		err := json.Unmarshal(line, &le)
 		if err == nil {
-			if !criteria.match(le) {
+			if !query.match(le) {
 				tmpFile.Write(line)
 				tmpFile.Write([]byte("\n"))
 			} else {
@@ -99,7 +120,11 @@ func (fl *fileLog) remove(criteria matchCriteria) (int, error) {
 	return count, nil
 }
 
-func (fl *fileLog) find(criteria matchCriteria) ([]models.LogEntry, error) {
+func (fl *fileLog) FindLog(criteria db.LogMatcher, limit int) ([]models.LogEntry, error) {
+	query, ok := criteria.(matchCriteria)
+	if !ok {
+		return []models.LogEntry{}, errors.New("unexpected type")
+	}
 	var logs []models.LogEntry
 	f, err := os.Open(fl.filename)
 	if err != nil {
@@ -113,7 +138,7 @@ func (fl *fileLog) find(criteria matchCriteria) ([]models.LogEntry, error) {
 		line := scanner.Bytes()
 		err := json.Unmarshal(line, &le)
 		if err == nil {
-			if criteria.match(le) {
+			if query.match(le) {
 				logs = append(logs, le)
 			}
 		}
@@ -121,7 +146,7 @@ func (fl *fileLog) find(criteria matchCriteria) ([]models.LogEntry, error) {
 	return logs, err
 }
 
-func (fl *fileLog) reset() {
+func (fl *fileLog) ResetLogs() {
 	if fl.out != nil {
 		fl.out.Close()
 		fl.out = nil

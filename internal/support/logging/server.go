@@ -15,8 +15,9 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
-	"github.com/edgexfoundry/edgex-go/internal/support/logging/models"
+	"github.com/edgexfoundry/edgex-go/pkg/models"
 	"github.com/go-zoo/bone"
 )
 
@@ -25,6 +26,20 @@ func replyPing(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	str := `{"value" : "pong"}`
 	io.WriteString(w, str)
+}
+
+func replyConfig(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+
+	w.Header().Add("Content-Type", "application/json")
+
+	enc := json.NewEncoder(w)
+	err := enc.Encode(Configuration)
+	// Problems encoding
+	if err != nil {
+		LoggingClient.Error("Error encoding the data: " + err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }
 
 func addLog(w http.ResponseWriter, r *http.Request) {
@@ -54,7 +69,7 @@ func addLog(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusAccepted)
 
-	dbClient.add(l)
+	dbClient.AddLog(l)
 }
 
 func getCriteria(w http.ResponseWriter, r *http.Request) *matchCriteria {
@@ -149,16 +164,16 @@ func getLogs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logs, err := dbClient.find(*criteria)
+	logs, err := dbClient.FindLog(*criteria, criteria.Limit)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	if criteria.Limit > 0 && len(logs) > criteria.Limit {
+	if criteria.Limit > 0 && len(logs) > Configuration.Service.ReadMaxLimit {
 		w.WriteHeader(http.StatusRequestEntityTooLarge)
-		s := fmt.Sprintf("More logs than requested, %d with limit %d",
-			len(logs), criteria.Limit)
+		s := fmt.Sprintf("more logs %d than configured limit %d",
+			len(logs), Configuration.Service.ReadMaxLimit)
 		io.WriteString(w, s)
 		return
 	}
@@ -179,7 +194,7 @@ func delLogs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	removed, err := dbClient.remove(*criteria)
+	removed, err := dbClient.DeleteLog(*criteria)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -192,6 +207,8 @@ func delLogs(w http.ResponseWriter, r *http.Request) {
 // HTTPServer function
 func HttpServer() http.Handler {
 	mux := bone.New()
+	mux.Get(internal.ApiConfigRoute, http.HandlerFunc(replyConfig))
+
 	mv1 := mux.Prefix("/api/v1")
 
 	mv1.Get("/ping", http.HandlerFunc(replyPing))

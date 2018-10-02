@@ -28,7 +28,12 @@ const (
 	EventsCollection          = "event"
 	ReadingsCollection        = "reading"
 	ValueDescriptorCollection = "valueDescriptor"
-	ExportCollection         = "exportConfiguration"
+
+	//Export
+	ExportCollection          = "exportConfiguration"
+
+	//Log
+	LogsCollection            = "logEntry"
 
 	// Metadata
 	Device           = "device"
@@ -63,4 +68,8 @@ type Configuration struct {
 
 func MakeTimestamp() int64 {
 	return time.Now().UnixNano() / int64(time.Millisecond)
+}
+
+type LogMatcher interface {
+	CreateQuery() map[string]interface{}
 }

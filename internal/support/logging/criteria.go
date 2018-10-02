@@ -7,9 +7,11 @@
 package logging
 
 import (
+	"fmt"
 	"strings"
 
-	"github.com/edgexfoundry/edgex-go/internal/support/logging/models"
+	"github.com/edgexfoundry/edgex-go/pkg/models"
+	"gopkg.in/mgo.v2/bson"
 )
 
 type matchCriteria struct {
@@ -79,4 +81,48 @@ func (criteria matchCriteria) match(le models.LogEntry) bool {
 	}
 
 	return true
+}
+
+func createConditions(conditions []bson.M, field string, elements []string) []bson.M {
+	keyCond := []bson.M{}
+	for _, value := range elements {
+		keyCond = append(keyCond, bson.M{field: value})
+	}
+
+	return append(conditions, bson.M{"$or": keyCond})
+}
+
+func (criteria matchCriteria) CreateQuery() map[string]interface{} {
+	conditions := []bson.M{{}}
+
+	if len(criteria.Labels) > 0 {
+		conditions = createConditions(conditions, "labels", criteria.Labels)
+	}
+
+	if len(criteria.Keywords) > 0 {
+		keyCond := []bson.M{}
+		for _, key := range criteria.Keywords {
+			regex := fmt.Sprintf(".*%s.*", key)
+			keyCond = append(keyCond, bson.M{"message": bson.M{"$regex": regex}})
+		}
+		conditions = append(conditions, bson.M{"$or": keyCond})
+	}
+
+	if len(criteria.OriginServices) > 0 {
+		conditions = createConditions(conditions, "originService", criteria.OriginServices)
+	}
+
+	if len(criteria.LogLevels) > 0 {
+		conditions = createConditions(conditions, "logLevel", criteria.LogLevels)
+	}
+
+	if criteria.Start != 0 {
+		conditions = append(conditions, bson.M{"created": bson.M{"$gt": criteria.Start}})
+	}
+
+	if criteria.End != 0 {
+		conditions = append(conditions, bson.M{"created": bson.M{"$lt": criteria.End}})
+	}
+
+	return bson.M{"$and": conditions}
 }

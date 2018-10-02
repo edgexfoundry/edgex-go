@@ -19,7 +19,7 @@ func logAllLevels(pl privLogger, msg string) {
 }
 
 func TestPrivLogger(t *testing.T) {
-	pl := privLogger{}
+	pl := newPrivateLogger()
 
 	// Does not break with nil persistence
 	dbClient = nil

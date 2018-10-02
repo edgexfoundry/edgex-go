@@ -37,6 +37,9 @@ type MemDB struct {
 
 	// Export
 	regs []export.Registration
+
+	//Logging
+	logs []models.LogEntry
 }
 
 func (m *MemDB) CloseSession() {
@@ -54,4 +57,3 @@ func stringInSlice(a string, list []string) bool {
 	}
 	return false
 }
-

@@ -25,5 +25,5 @@ LABEL license='SPDX-License-Identifier: Apache-2.0' \
 
 COPY --from=builder /bin/bash /bin/bash
 COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/support-logging/support-logging /
-COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/support-logging/res/configuration-docker.toml /res/configuration-docker.toml
+COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/support-logging/res/docker/configuration.toml /res/docker/configuration.toml
 ENTRYPOINT ["/support-logging","--consul","--profile=docker","--confdir=/res"]

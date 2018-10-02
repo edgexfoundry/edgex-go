@@ -10,7 +10,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/edgexfoundry/edgex-go/internal/support/logging/models"
+	"github.com/edgexfoundry/edgex-go/pkg/models"
 )
 
 const (
@@ -21,7 +21,7 @@ const (
 	message2       string = "message2"
 )
 
-func testPersistenceFind(t *testing.T, persistence persistence) {
+func testPersistenceFind(t *testing.T, persistence DBClient) {
 	var keywords1 = []string{"1"}
 	var keywords2 = []string{"2"}
 	var keywords12 = []string{"2", "1"}
@@ -50,24 +50,24 @@ func testPersistenceFind(t *testing.T, persistence persistence) {
 		Message:       message1,
 		Labels:        labels1,
 	}
-	persistence.add(le)
+	persistence.AddLog(le)
 	le.Message = message2
-	persistence.add(le)
+	persistence.AddLog(le)
 	le.Message = message1
-	persistence.add(le)
+	persistence.AddLog(le)
 	le.Message = message2
 	le.OriginService = sampleService2
 	le.Message = message2
-	persistence.add(le)
+	persistence.AddLog(le)
 	le.Message = message1
-	persistence.add(le)
+	persistence.AddLog(le)
 	le.Message = message2
 	le.Labels = labels2
-	persistence.add(le)
+	persistence.AddLog(le)
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			logs, err := persistence.find(tt.criteria)
+			logs, err := persistence.FindLog(tt.criteria, tt.criteria.Limit)
 			if err != nil {
 				t.Errorf("Error thrown: %s", err.Error())
 			}
@@ -90,10 +90,12 @@ func TestFileFind(t *testing.T) {
 	defer os.Remove(testFilename)
 
 	fl := fileLog{filename: testFilename}
+	fl.Connect()
 	testPersistenceFind(t, &fl)
+	fl.CloseSession()
 }
 
-func testPersistenceRemove(t *testing.T, persistence persistence) {
+func testPersistenceRemove(t *testing.T, persistence DBClient) {
 	var keywords1 = []string{"1"}
 	var keywords2 = []string{"2"}
 	var keywords12 = []string{"2", "1"}
@@ -118,7 +120,7 @@ func testPersistenceRemove(t *testing.T, persistence persistence) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			persistence.reset()
+			persistence.ResetLogs()
 
 			le := models.LogEntry{
 				Level:         models.TRACE,
@@ -126,22 +128,22 @@ func testPersistenceRemove(t *testing.T, persistence persistence) {
 				Message:       message1,
 				Labels:        labels1,
 			}
-			persistence.add(le)
+			persistence.AddLog(le)
 			le.Message = message2
-			persistence.add(le)
+			persistence.AddLog(le)
 			le.Message = message1
-			persistence.add(le)
+			persistence.AddLog(le)
 			le.Message = message2
 			le.OriginService = sampleService2
 			le.Message = message2
-			persistence.add(le)
+			persistence.AddLog(le)
 			le.Message = message1
-			persistence.add(le)
+			persistence.AddLog(le)
 			le.Message = message2
 			le.Labels = labels2
-			persistence.add(le)
+			persistence.AddLog(le)
 
-			removed, err := persistence.remove(tt.criteria)
+			removed, err := persistence.DeleteLog(tt.criteria)
 			if err != nil {
 				t.Errorf("Error thrown: %s", err.Error())
 			}
@@ -150,8 +152,8 @@ func testPersistenceRemove(t *testing.T, persistence persistence) {
 					tt.result, removed)
 			}
 			// we add a new log
-			persistence.add(le)
-			logs, err := persistence.find(matchCriteria{})
+			persistence.AddLog(le)
+			logs, err := persistence.FindLog(matchCriteria{}, 0)
 			if len(logs) != 6-tt.result+1 {
 				t.Errorf("Should return %d log entries, returned %d",
 					6-tt.result+1, len(logs))
@@ -168,5 +170,7 @@ func TestFileRemove(t *testing.T) {
 	defer os.Remove(testFilename)
 
 	fl := fileLog{filename: testFilename}
+	fl.Connect()
 	testPersistenceRemove(t, &fl)
+	fl.CloseSession()
 }
