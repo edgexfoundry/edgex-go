@@ -84,6 +84,7 @@ apps:
 parts:
   curl:
     plugin: nil
+    override-pull: echo "no source pull"
     stage-packages:
       - curl
   go:
@@ -95,39 +96,28 @@ parts:
       # setting go to build after config-common ensures that it will get re-added to SNAPCRAFT_STAGE
       # if config-common is rebuilt
       - config-common
-    plugin: shell
-    source: .
-    shell: bash
-    shell-flags: ['-eux', '-o', 'pipefail']
-    build-packages: [wget]
-    shell-command: |
-      case $SNAPCRAFT_ARCH_TRIPLET in
-        aarch64*)
-          export PACKAGE="glide-v0.12.3-linux-arm64.tar.gz";;
-        arm*)
-          export PACKAGE="glide-v0.12.3-linux-armv7.tar.gz";;
-        i386*|i686*)
-          export PACKAGE="glide-v0.12.3-linux-386.tar.gz";;
-        x86_64*)
-          export PACKAGE="glide-v0.12.3-linux-amd64.tar.gz";;
-        *)
-          echo "Unsupported arch $SNAPCRAFT_ARCH_TRIPLET"
-          exit 1;;
-      esac
-
-      wget "https://github.com/Masterminds/glide/releases/download/v0.12.3/$PACKAGE"
-      tar xvf "$PACKAGE" --strip-components=1
-      install -DT glide $SNAPCRAFT_STAGE/bin/glide
+    plugin: dump
+    source: 
+      - on amd64: https://github.com/Masterminds/glide/releases/download/v0.12.3/glide-v0.12.3-linux-amd64.tar.gz
+      - else:
+        - on arm64: https://github.com/Masterminds/glide/releases/download/v0.12.3/glide-v0.12.3-linux-arm64.tar.gz
+        - else:
+          - on armhf: https://github.com/Masterminds/glide/releases/download/v0.12.3/glide-v0.12.3-linux-armv7.tar.gz
+          - else:
+            - on i386: https://github.com/Masterminds/glide/releases/download/v0.12.3/glide-v0.12.3-linux-386.tar.gz
+      - else fail
     prime:
-     - -*
+      - -*
+    organize:
+      glide: bin/glide
+    stage:
+      - bin/glide
   consul:
     after: [go]
-    plugin: shell
+    plugin: make
     source: https://github.com/hashicorp/consul.git
     source-tag: v1.1.0
-    shell: bash
-    shell-flags: ['-eux', '-o', 'pipefail']
-    shell-command: |
+    override-build: |
       . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
       gopartbootstrap github.com/hashicorp/consul
 
@@ -199,7 +189,7 @@ parts:
 
   config-common:
     plugin: dump
-    source: ./snap
+    source: ./snap/local
     stage:
       - bin/go-build-helper.sh
       - config/*
@@ -251,7 +241,7 @@ parts:
       install -d "$SNAPCRAFT_PART_INSTALL/mongo"
       cat ./launch-edgex-mongo.sh | \
         sed -e s/\$SLEEP_TIME_BEFORE_CONFIG/10/ \
-            -e s:mongod:mongod\ --dbpath\ \$SNAP_DATA/mongo/db\ --logpath\ /var/snap/edgexfoundry/common/mongodb.log: \
+            -e s:mongod:mongod\ --dbpath\ \$SNAP_DATA/mongo/db\ --logpath\ \$SNAP_COMMON/mongodb.log: \
             -e '/wait/ d' \
             -e s:/edgex/mongo/config/:\$SNAP/mongo/: > \
          "$SNAPCRAFT_PART_INSTALL/mongo/launch-edgex-mongo.sh"
@@ -265,13 +255,11 @@ parts:
       - -LICENSE-2.0.TXT
   edgex-go:
     source: .
-    plugin: shell
+    plugin: make
     after:
       - glide
       - go
-    shell: bash
-    shell-flags: ['-eux', '-o', 'pipefail']
-    shell-command: |
+    override-build: |
       . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
       gopartbootstrap github.com/edgexfoundry/edgex-go
       
@@ -285,6 +273,7 @@ parts:
       install -DT "./cmd/export-distro/export-distro" "$SNAPCRAFT_PART_INSTALL/bin/export-distro"
       install -DT "./cmd/export-client/export-client" "$SNAPCRAFT_PART_INSTALL/bin/export-client"
       install -DT "./cmd/support-logging/support-logging" "$SNAPCRAFT_PART_INSTALL/bin/support-logging"
+      install -DT "./cmd/support-notifications/support-notifications" "$SNAPCRAFT_PART_INSTALL/bin/support-notifications"
 
       # FIXME: settings can't be overridden from the cmd-line!
       # Override 'LogFile' and 'LoggingRemoteURL'
@@ -295,45 +284,51 @@ parts:
       install -d "$SNAPCRAFT_PART_INSTALL/config/export-distro/res/"
       install -d "$SNAPCRAFT_PART_INSTALL/config/config-seed/res/properties/device-virtual/"
       install -d "$SNAPCRAFT_PART_INSTALL/config/support-logging/res/"
+      install -d "$SNAPCRAFT_PART_INSTALL/config/support-notifications/res/"
 
       install -DT "./cmd/config-seed/res/properties/device-virtual/application.properties" \
         "$SNAPCRAFT_PART_INSTALL/config/config-seed/res/properties/device-virtual/application.properties"
 
       cat "./cmd/config-seed/res/configuration.toml" | \
-        sed -e s:./logs/config-seed.log:/var/snap/edgexfoundry/common/config-seed.log: \
+        sed -e s:./logs/config-seed.log:\$SNAP_COMMON/config-seed.log: \
             -e s:'http\://localhost\:48061/api/v1/logs':: > \
        "$SNAPCRAFT_PART_INSTALL/config/config-seed/res/configuration.toml"
 
-
       cat "./cmd/core-command/res/configuration.toml" | \
-        sed -e s:./logs/edgex-core-command.log:/var/snap/edgexfoundry/common/core-command.log: \
+        sed -e s:./logs/edgex-core-command.log:\$SNAP_COMMON/core-command.log: \
             -e s:'http\://localhost\:48061/api/v1/logs':: > \
        "$SNAPCRAFT_PART_INSTALL/config/core-command/res/configuration.toml"
 
       cat "./cmd/core-data/res/configuration.toml" | \
-        sed -e s:./logs/edgex-core-data.log:/var/snap/edgexfoundry/common/core-data.log: \
+        sed -e s:./logs/edgex-core-data.log:\$SNAP_COMMON/core-data.log: \
             -e s:'http\://localhost\:48061/api/v1/logs':: > \
        "$SNAPCRAFT_PART_INSTALL/config/core-data/res/configuration.toml"
 
       cat "./cmd/core-metadata/res/configuration.toml" | \
-        sed -e s:./logs/edgex-core-metadata.log:/var/snap/edgexfoundry/common/core-metadata.log: \
+        sed -e s:./logs/edgex-core-metadata.log:\$SNAP_COMMON/core-metadata.log: \
             -e s:'http\://localhost\:48061/api/v1/logs':: > \
        "$SNAPCRAFT_PART_INSTALL/config/core-metadata/res/configuration.toml"
 
       cat "./cmd/export-client/res/configuration.toml" | \
-        sed -e s:./logs/edgex-export-client.log:/var/snap/edgexfoundry/common/export-client.log: \
+        sed -e s:./logs/edgex-export-client.log:\$SNAP_COMMON/export-client.log: \
             -e s:'http\://localhost\:48061/api/v1/logs':: > \
        "$SNAPCRAFT_PART_INSTALL/config/export-client/res/configuration.toml"
 
       cat "./cmd/export-distro/res/configuration.toml" | \
-        sed -e s:./logs/edgex-export-distro.log:/var/snap/edgexfoundry/common/export-distro.log: \
+        sed -e s:./logs/edgex-export-distro.log:\$SNAP_COMMON/export-distro.log: \
             -e s:'http\://localhost\:48061/api/v1/logs':: > \
        "$SNAPCRAFT_PART_INSTALL/config/export-distro/res/configuration.toml"
 
       cat "./cmd/support-logging/res/configuration.toml" | \
-        sed -e s:./logs/support-logging.log:/var/snap/edgexfoundry/common/support-logging.log: \
+        sed -e s:./logs/support-logging.log:\$SNAP_COMMON/support-logging.log: \
             -e s:'http\://localhost\:48061/api/v1/logs':: > \
        "$SNAPCRAFT_PART_INSTALL/config/support-logging/res/configuration.toml"
+
+      cat "./cmd/support-notifications/res/configuration.toml" | \
+        sed -e s:./logs/edgex-support-notifications.log:/var/snap/edgexfoundry/common/edgex-support-notifications.log: \
+            -e s:'http\://localhost\:48061/api/v1/logs':: > \
+       "$SNAPCRAFT_PART_INSTALL/config/support-notifications/res/configuration.toml"
+
 
       # handle license files
       install -DT "./cmd/core-command/Attribution.txt" \
@@ -359,52 +354,10 @@ parts:
       - pkg-config
     stage-packages:
       - libzmq3-dev
-  support-notifications:
-    source: https://github.com/edgexfoundry/support-notifications.git
-    # the following commit == 0.5.0 version plus a few fixes
-    source-commit: "ddebc1b"
-    plugin: maven
-    override-build: |
-      snapcraftctl build
-      echo "Installing support-notifications files"
-
-      # The logic following logic is all handled by DockerFile for
-      # the EdgeX support-notifications docker image.
-      install -d "$SNAPCRAFT_PART_INSTALL/jar/support-notifications"
-      mv "$SNAPCRAFT_PART_INSTALL/jar/support-notifications-0.5.0-SNAPSHOT.jar" \
-         "$SNAPCRAFT_PART_INSTALL/jar/support-notifications/support-notifications.jar"
-
-      # FIXME:
-      # copy service license into /usr/share/java/doc, because the
-      # jdk plugin has a bug which prevents any files from /usr/share/doc
-      # to be staged or primed.
-      install -DT "./Attribution.txt" \
-         "$SNAPCRAFT_PART_INSTALL/usr/share/java/doc/support-notifications/Attribution.txt"
-      install -DT "./LICENSE-2.0.txt" \
-         "$SNAPCRAFT_PART_INSTALL/usr/share/java/doc/support-notifications/LICENSE-2.0.txt"
-    prime:
-      - -etc/fonts
-      - -etc/fonts/X11
-      - -usr/lib/jvm/*/ASSEMBLY_EXCEPTION
-      - -usr/lib/jvm/*/THIRD_PARTY_README
-      - -usr/lib/jvm/*/jre/ASSEMBLY_EXCEPTION
-      - -usr/lib/jvm/*/jre/THIRD_PARTY_README
-      - -usr/lib/jvm/*/man
-      - -usr/lib/jvm/*/jre/man
-      - -usr/lib/jvm/*/jre/lib/images
-      - -usr/lib/jvm/*/include
-      - -usr/lib/jvm/*/bin
-      - -usr/lib/jvm/*/lib
-      - -usr/lib/jvm/*/docs
-      - -usr/lib/jvm/*/src.zip
-      - -usr/share/X11
-      - -usr/share/man
-      - -usr/share/fonts
-      - -usr/share/alsa
   support-scheduler:
     source: https://github.com/edgexfoundry/support-scheduler.git
-    # the following commit == 0.5.0 version update +1 (core-domain fix)
-    source-commit: "00707ae"
+    # the following commit == 0.7.0 version update
+    source-commit: "194094a3cf2a0a3a2cc608cec7cd3c4904ac6b5b"
     plugin: maven
     override-build: |
       snapcraftctl build
@@ -413,7 +366,7 @@ parts:
       # The logic following logic is all handled by DockerFile for
       # the EdgeX support-scheduler docker image.
       install -d "$SNAPCRAFT_PART_INSTALL/jar/support-scheduler"
-      mv "$SNAPCRAFT_PART_INSTALL/jar/support-scheduler-0.5.0-SNAPSHOT.jar" \
+      mv "$SNAPCRAFT_PART_INSTALL/jar/support-scheduler-0.7.0-SNAPSHOT.jar" \
          "$SNAPCRAFT_PART_INSTALL/jar/support-scheduler/support-scheduler.jar"
 
       # FIXME:
@@ -445,8 +398,8 @@ parts:
       - -usr/share/
   support-rulesengine:
     source: https://github.com/edgexfoundry/support-rulesengine.git
-    # the following commit == 0.5.0 version update
-    source-commit: "2e282f5"
+    # the following commit == 0.7.0 version update
+    source-commit: "3aca4a7bf9774ad07b9b74c7b05c45deb74412f2"
     plugin: maven
     override-build: |
       snapcraftctl build
@@ -455,7 +408,7 @@ parts:
       # The logic following logic is all handled by DockerFile for
       # the EdgeX support-rulesengine docker image.
       install -d "$SNAPCRAFT_PART_INSTALL/jar/support-rulesengine"
-      mv "$SNAPCRAFT_PART_INSTALL/jar/support-rulesengine-0.5.0-SNAPSHOT.jar" \
+      mv "$SNAPCRAFT_PART_INSTALL/jar/support-rulesengine-0.7.0-SNAPSHOT.jar" \
          "$SNAPCRAFT_PART_INSTALL/jar/support-rulesengine/support-rulesengine.jar"
 
       # FIXME:

@@ -21,7 +21,7 @@ done
 #
 # TODO: this success check could be improved...
 if [ "$CONSUL_RUNNING" != "[]" ] ; then
-    cd "$SNAP"/config/config-seed
+    cd "$SNAP_DATA"/config/config-seed
 
-    "$SNAP"/bin/config-seed -c "$SNAP"/config &
+    "$SNAP"/bin/config-seed -c "$SNAP_DATA"/config &
 fi
