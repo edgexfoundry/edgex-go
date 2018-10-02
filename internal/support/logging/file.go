@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 
 	"github.com/edgexfoundry/edgex-go/internal/support/logging/models"
 )
@@ -34,6 +35,12 @@ func (fl *fileLog) closeSession() {
 func (fl *fileLog) add(le models.LogEntry) error {
 	if fl.out == nil {
 		var err error
+		//First check to see if the specified directory exists
+		//File won't be written without directory.
+		path := filepath.Dir(fl.filename)
+		if _, err = os.Stat(path); os.IsNotExist(err) {
+			os.MkdirAll(path, 0755)
+		}
 		fl.out, err = os.OpenFile(fl.filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 		if err != nil {
 			//fmt.Println("Error opening log file: ", fl.filename, err)

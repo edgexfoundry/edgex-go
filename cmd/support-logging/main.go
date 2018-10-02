@@ -43,7 +43,7 @@ func main() {
 	params := startup.BootParams{UseConsul: useConsul, UseProfile: useProfile, BootTimeout: bootTimeout}
 	startup.Bootstrap(params, logging.Retry, logBeforeInit)
 
-	ok := logging.Init()
+	ok := logging.Init(useConsul)
 	if !ok {
 		time.Sleep(time.Millisecond * time.Duration(15))
 		logBeforeInit(fmt.Errorf("%s: Service bootstrap failed!", internal.SupportLoggingServiceKey))
@@ -57,7 +57,7 @@ func main() {
 
 	// Time it took to start service
 	logging.LoggingClient.Info("Service started in: "+time.Since(start).String(), "")
-	logging.LoggingClient.Info("Listening on port: "+strconv.Itoa(logging.Configuration.Port), "")
+	logging.LoggingClient.Info("Listening on port: "+strconv.Itoa(logging.Configuration.Service.Port), "")
 	startHTTPServer(errs)
 
 	c := <-errs
@@ -80,7 +80,7 @@ func listenForInterrupt(errChan chan error) {
 
 func startHTTPServer(errChan chan error) {
 	go func() {
-		p := fmt.Sprintf(":%d", logging.Configuration.Port)
+		p := fmt.Sprintf(":%d", logging.Configuration.Service.Port)
 		errChan <- http.ListenAndServe(p, logging.HttpServer())
 	}()
 }

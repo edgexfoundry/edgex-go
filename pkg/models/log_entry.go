@@ -13,10 +13,44 @@
  *******************************************************************************/
 package models
 
+import "encoding/json"
+
 type LogEntry struct {
 	Level         string   `json:"logLevel"`
 	Labels        []string `json:"labels"`
 	OriginService string   `json:"originService"`
 	Message       string   `json:"message"`
 	Created       int64    `json:"created"`
+}
+
+func (l LogEntry) MarshalJSON() ([]byte, error) {
+	test := struct {
+		Level         *string  `json:"logLevel"`
+		Labels        []string `json:"labels"`
+		OriginService *string  `json:"originService"`
+		Message       *string  `json:"message"`
+		Created       int64    `json:"created"`
+	}{
+		Labels:  l.Labels,
+		Created: l.Created,
+	}
+
+	// Empty strings are null
+	if l.Level != "" {
+		test.Level = &l.Level
+	}
+
+	if l.OriginService != "" {
+		test.OriginService = &l.OriginService
+	}
+
+	if l.Message != "" {
+		test.Message = &l.Message
+	}
+
+	if len(l.Labels) > 0 {
+		test.Labels = l.Labels
+	}
+
+	return json.Marshal(test)
 }

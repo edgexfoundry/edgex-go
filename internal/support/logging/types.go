@@ -7,14 +7,18 @@
 package logging
 
 import (
+	"fmt"
+	"log"
+	"os"
+
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/support/logging/models"
 )
 
 const (
-	PersistenceMongo = "mongodb"
-	PersistenceFile  = "file"
+	PersistenceDB   = "database"
+	PersistenceFile = "file"
 )
 
 type persistence interface {
@@ -29,9 +33,18 @@ type persistence interface {
 }
 
 type privLogger struct {
+	stdOutLogger *log.Logger
+}
+
+func newPrivateLogger() privLogger {
+	p := privLogger{}
+	p.stdOutLogger = log.New(os.Stdout, "", log.Ldate|log.Ltime)
+	return p
 }
 
 func (l privLogger) log(level string, msg string, labels []string) {
+	l.stdOutLogger.SetPrefix(fmt.Sprintf("%s: ", level))
+	l.stdOutLogger.Println(msg)
 	if dbClient != nil {
 		logEntry := models.LogEntry{
 			Level:         level,
