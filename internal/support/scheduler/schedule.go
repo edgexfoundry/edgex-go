@@ -412,7 +412,7 @@ func execute(context *ScheduleContext, wg *sync.WaitGroup) error {
 		}
 
 		client := &http.Client{
-			Timeout: 5 * time.Second,
+			Timeout:       time.Duration(configuration.ServiceTimeout) * time.Millisecond,
 		}
 		responseBytes, statusCode, err := sendRequestAndGetResponse(client, req)
 		responseStr := string(responseBytes)
