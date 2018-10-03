@@ -1,5 +1,10 @@
 #!/bin/bash -e
 
+# install the edgex-services-env file into $SNAP_DATA
+if [ ! -f ${SNAP_DATA}/edgex-services-env ]; then
+    cp "${SNAP}/config/edgex-services-env" "${SNAP_DATA}/edgex-services-env"
+fi
+
 # install all the config files from $SNAP/config/SERVICE/res/configuration.toml 
 # into $SNAP_DATA/config
 mkdir -p ${SNAP_DATA}/config
@@ -7,6 +12,8 @@ for service in security-api-gateway core-command config-seed core-data core-meta
     if [ ! -f "${SNAP_DATA}/config/${service}/res/configuration.toml" ]; then
         mkdir -p "${SNAP_DATA}/config/${service}/res"
         cp ${SNAP}/config/${service}/res/configuration.toml "${SNAP_DATA}/config/${service}/res/configuration.toml"
+        # do replacement of the SNAP_DATA and SNAP_COMMON environment variables in the config files
+        sed -i -e "s@\$SNAP_COMMON@$SNAP_COMMON@g" -e "s@\$SNAP_DATA@$SNAP_DATA@g" "${SNAP_DATA}/config/${service}/res/configuration.toml"
     fi
 done
 
