@@ -629,7 +629,7 @@ func restGetYamlProfileById(w http.ResponseWriter, r *http.Request) {
 	w.Write(out)
 }
 
-// Notify the associated device services for the addressable
+// Notify the associated device services for changes in the device profile
 func notifyProfileAssociates(dp models.DeviceProfile, action string) error {
 	// Get the devices
 	var d []models.Device

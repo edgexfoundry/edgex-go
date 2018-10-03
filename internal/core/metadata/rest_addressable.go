@@ -360,13 +360,27 @@ func restGetAddressableByAddress(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(res)
 }
 
-// Notify the associated device services for the addressable
+// Notify the associated device services for changes in the device addressable
 func notifyAddressableAssociates(a models.Addressable, action string) error {
-	var ds []models.DeviceService
-	if err := dbClient.GetDeviceServicesByAddressableId(&ds, a.Id.Hex()); err != nil {
+	// Get the devices
+	var d []models.Device
+	if err := dbClient.GetDevicesByAddressableId(&d, a.Id.Hex()); err != nil {
 		LoggingClient.Error(err.Error(), "")
 		return err
 	}
+
+	// Get the services for each device
+	// Use map as a Set
+	dsMap := map[string]models.DeviceService{}
+	var ds []models.DeviceService
+	for _, device := range d {
+		// Only add if not there
+		if _, ok := dsMap[device.Service.Service.Id.Hex()]; !ok {
+			dsMap[device.Service.Service.Id.Hex()] = device.Service
+			ds = append(ds, device.Service)
+		}
+	}
+
 	if err := notifyAssociates(ds, a.Id.Hex(), action, models.ADDRESSABLE); err != nil {
 		LoggingClient.Error(err.Error(), "")
 		return err
