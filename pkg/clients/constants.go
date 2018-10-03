@@ -25,6 +25,8 @@ const (
 	ApiNotificationRoute       = "/api/v1/notification"
 	ApiNotifyRegistrationRoute = "/api/v1/notify/registrations"
 	ApiProvisionWatcherRoute   = "/api/v1/provisionwatcher"
+	ApiRegistrationRoute       = "/api/v1/registration"
+	ApiRegistrationByNameRoute = ApiRegistrationRoute + "/name"
 	ApiScheduleRoute           = "/api/v1/schedule"
 	ApiScheduleEventRoute      = "/api/v1/scheduleevent"
 	ApiSubscriptionRoute       = "/api/v1/subscription"

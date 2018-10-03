@@ -27,8 +27,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 )
 
-var bootTimeout = 30000 //Once we start the V2 configuration rework, this will be config driven
-
 func main() {
 	var useConsul bool
 	var useProfile string
@@ -41,10 +39,10 @@ func main() {
 	flag.Usage = usage.HelpCallback
 	flag.Parse()
 
-	params := startup.BootParams{UseConsul: useConsul, UseProfile: useProfile, BootTimeout: bootTimeout}
+	params := startup.BootParams{UseConsul: useConsul, UseProfile: useProfile, BootTimeout: internal.BootTimeoutDefault}
 	startup.Bootstrap(params, distro.Retry, logBeforeInit)
 
-	if ok := distro.Init(); !ok {
+	if ok := distro.Init(useConsul); !ok {
 		logBeforeInit(fmt.Errorf("%s: Service bootstrap failed", internal.ExportDistroServiceKey))
 		return
 	}
@@ -52,8 +50,8 @@ func main() {
 	distro.LoggingClient.Info("Service dependencies resolved...")
 	distro.LoggingClient.Info(fmt.Sprintf("Starting %s %s ", internal.ExportDistroServiceKey, edgex.Version))
 
-	http.TimeoutHandler(nil, time.Millisecond*time.Duration(distro.Configuration.Timeout), "Request timed out")
-	distro.LoggingClient.Info(distro.Configuration.AppOpenMsg, "")
+	http.TimeoutHandler(nil, time.Millisecond*time.Duration(distro.Configuration.Service.Timeout), "Request timed out")
+	distro.LoggingClient.Info(distro.Configuration.Service.StartupMsg, "")
 
 	errs := make(chan error, 2)
 	eventCh := make(chan *models.Event, 10)
@@ -66,8 +64,9 @@ func main() {
 
 	// Time it took to start service
 	distro.LoggingClient.Info("Service started in: "+time.Since(start).String(), "")
-	distro.LoggingClient.Info("Listening on port: " + strconv.Itoa(distro.Configuration.Port))
+	distro.LoggingClient.Info("Listening on port: " + strconv.Itoa(distro.Configuration.Service.Port))
 	c := <-errs
+	distro.Destruct()
 	distro.LoggingClient.Warn(fmt.Sprintf("terminating: %v", c))
 }
 
@@ -75,7 +74,6 @@ func logBeforeInit(err error) {
 	l := logger.NewClient(internal.ExportDistroServiceKey, false, "")
 	l.Error(err.Error())
 }
-
 
 func listenForInterrupt(errChan chan error) {
 	go func() {
