@@ -4,7 +4,7 @@ MarkPushed = false
 BootTimeout = 30000
 ClientMonitor = 15000
 CheckInterval = '10s'
-Host = 'localhost'
+Host = 'edgex-export-distro'
 Port = 48070
 Protocol = 'http'
 ReadMaxLimit = 100
@@ -12,28 +12,28 @@ StartupMsg = 'This is the Export Distro Microservice'
 Timeout = 5000
 
 [Registry]
-Host = 'localhost'
+Host = 'edgex-core-consul'
 Port = 8500
 Type = 'consul'
 
 [Logging]
 EnableRemote = false
-File = './logs/edgex-export-distro.log'
+File = '/edgex/logs/edgex-export-distro.log'
 
 [Clients]
   [Clients.Export]
   Protocol = 'http'
-  Host = 'localhost'
+  Host = 'edgex-export-client'
   Port = 48071
 
   [Clients.Logging]
   Protocol = 'http'
-  Host = 'localhost'
+  Host = 'edgex-support-logging'
   Port = 48061
 
   [Clients.CoreData]
   Protocol = 'http'
-  Host = 'localhost'
+  Host = 'edgex-core-data'
   Port = 48080
 
 [Certificates]

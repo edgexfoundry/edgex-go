@@ -42,7 +42,8 @@ func newIoTCoreSender(addr models.Addressable) sender {
 	opts.SetAutoReconnect(false)
 
 	if validateProtocol(protocol) {
-		cert, err := tls.LoadX509KeyPair(Configuration.MQTTSCert, Configuration.MQTTSKey)
+		c := Configuration.Certificates["MQTTS"]
+		cert, err := tls.LoadX509KeyPair(c.Cert, c.Key)
 		if err != nil {
 			LoggingClient.Error("Failed loading x509 data")
 			return nil

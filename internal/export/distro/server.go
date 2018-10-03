@@ -27,6 +27,20 @@ func replyPing(w http.ResponseWriter, r *http.Request) {
 	io.WriteString(w, str)
 }
 
+func replyConfig(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+
+	w.Header().Add("Content-Type", "application/json")
+
+	enc := json.NewEncoder(w)
+	err := enc.Encode(Configuration)
+	// Problems encoding
+	if err != nil {
+		LoggingClient.Error("Error encoding the data: " + err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
 func replyNotifyRegistrations(w http.ResponseWriter, r *http.Request) {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -64,6 +78,7 @@ func replyNotifyRegistrations(w http.ResponseWriter, r *http.Request) {
 func httpServer() http.Handler {
 	mux := bone.New()
 	mux.Get(internal.ApiPingRoute, http.HandlerFunc(replyPing))
+	mux.Get(internal.ApiConfigRoute, http.HandlerFunc(replyConfig))
 	mux.Put(clients.ApiNotifyRegistrationRoute, http.HandlerFunc(replyNotifyRegistrations))
 
 	return mux

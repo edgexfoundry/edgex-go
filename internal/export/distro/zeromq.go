@@ -14,10 +14,6 @@ import (
 	zmq "github.com/pebbe/zmq4"
 )
 
-const (
-	zeroMQPort = 5563
-)
-
 func ZeroMQReceiver(eventCh chan *models.Event) {
 	go initZmq(eventCh)
 }
@@ -27,8 +23,7 @@ func initZmq(eventCh chan *models.Event) {
 	defer q.Close()
 
 	LoggingClient.Info("Connecting to zmq...")
-	url := fmt.Sprintf("tcp://%s:%d", Configuration.DataHost, zeroMQPort)
-	q.Connect(url)
+	q.Connect(Configuration.MessageQueue.Uri())
 	LoggingClient.Info("Connected to zmq")
 	q.SetSubscribe("")
 

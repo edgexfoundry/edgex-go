@@ -11,22 +11,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strconv"
 
 	"github.com/edgexfoundry/edgex-go/internal/export"
+	"github.com/edgexfoundry/edgex-go/pkg/clients"
 )
 
-const (
-	clientPort int = 48071
-)
-
-func getRegistrationBaseURL(host string) string {
-	return "http://" + host + ":" + strconv.Itoa(clientPort) +
-		"/api/v1/registration"
-}
-
+//TODO: Since this is a service-to-service client, it should be in /pkg/clients/export
 func getRegistrations() ([]export.Registration, error) {
-	url := getRegistrationBaseURL(Configuration.ClientHost)
+	url := Configuration.Clients["Export"].Url() + clients.ApiRegistrationRoute
 	return getRegistrationsURL(url)
 }
 
@@ -57,7 +49,7 @@ func getRegistrationsURL(url string) ([]export.Registration, error) {
 }
 
 func getRegistrationByName(name string) *export.Registration {
-	url := getRegistrationBaseURL(Configuration.ClientHost) + "/name/" + name
+	url := fmt.Sprintf("%s%s/%s", Configuration.Clients["Export"].Url(), clients.ApiRegistrationByNameRoute, name)
 	return getRegistrationByNameURL(url)
 }
 
