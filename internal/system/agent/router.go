@@ -16,9 +16,9 @@
 package agent
 
 import (
-	"net/http"
-	"github.com/gorilla/mux"
 	"fmt"
+	"github.com/gorilla/mux"
+	"net/http"
 )
 
 func LoadRestRoutes() *mux.Router {
@@ -98,22 +98,22 @@ func configHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Example Response:
 	/*
-          [
-          {
-             "service":"edgex-core-data",
-             "config":[
-                "port":48080,
-                "loggingLevel":"debug"         …
-             ]
-          },
-          {
-             "service":"edgex-core-metdata",
-             "config":[
-                "port":48081,
-                "loggingLevel":"error"         …
-             ]
-          }
-          ]
+	   [
+	   {
+	      "service":"edgex-core-data",
+	      "config":[
+	         "port":48080,
+	         "loggingLevel":"debug"         …
+	      ]
+	   },
+	   {
+	      "service":"edgex-core-metdata",
+	      "config":[
+	         "port":48081,
+	         "loggingLevel":"error"         …
+	      ]
+	   }
+	   ]
 	*/
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Example Response..."))
@@ -140,22 +140,22 @@ func metricHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Response"))
 
 	/* Example Response:
-	    [
-            {
-               "service":"edgex-core-data",
-               "metrics":[
-                  "memory":"34MB",
-                  "CPU":"3%"
-               ]
-            },
-            {
-               "service":"edgex-core-metdata",
-               "metrics":[
-                  "memory":"31MB",
-                  "CPU":"2%"
-               ]
-            },
-            …
-        ]
+		    [
+	            {
+	               "service":"edgex-core-data",
+	               "metrics":[
+	                  "memory":"34MB",
+	                  "CPU":"3%"
+	               ]
+	            },
+	            {
+	               "service":"edgex-core-metdata",
+	               "metrics":[
+	                  "memory":"31MB",
+	                  "CPU":"2%"
+	               ]
+	            },
+	            …
+	        ]
 	*/
 }

@@ -34,5 +34,6 @@ const (
 	ExportDistroServiceKey          = "edgex-export-distro"
 	SupportLoggingServiceKey        = "edgex-support-logging"
 	SupportNotificationsServiceKey  = "edgex-support-notifications"
+	SupportSchedulerServiceKey      = "edgex-support-scheduler"
 	SystemManagementAgentServiceKey = "edgex-sys-mgmt-agent"
 )

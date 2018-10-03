@@ -16,6 +16,7 @@ cmd/export-distro/export-distro
 cmd/support-logging/support-logging
 cmd/support-notifications/support-notifications
 cmd/sys-mgmt-agent/sys-mgmt-agent
+cmd/support-scheduler/support-scheduler
 
 # log dirs
 logs/
@@ -27,6 +28,8 @@ cmd/support-logging/logs/
 cmd/export-client/logs/
 cmd/export-distro/logs/
 cmd/support-notifications/logs/
+cmd/support-scheduler/logs/
+
 
 *.snap
 

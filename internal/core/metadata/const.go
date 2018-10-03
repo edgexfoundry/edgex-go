@@ -61,6 +61,7 @@ const (
 	VALUEDESCRIPTORSFOR      = "valueDescriptorsFor"
 	DEVICEADDRESSABLES       = "deviceaddressables"
 	DEVICEADDRESSABLESBYNAME = "deviceaddressablesbyname"
+	TIMELAYOUT               = "20060102T150405"
 	UNLOCKED                 = "UNLOCKED"
 	ENABLED                  = "ENABLED"
 )

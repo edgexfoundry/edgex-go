@@ -364,7 +364,6 @@ func (v *ValueDescriptorRestClient) Update(vdr *models.ValueDescriptor) error {
 			return err
 		}
 
-
 		return types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 
