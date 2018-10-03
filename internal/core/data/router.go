@@ -304,6 +304,65 @@ func getEventByIdHandler(w http.ResponseWriter, r *http.Request) {
 	encode(e, w)
 }
 
+// Get event by device id
+// Returns the events for the given device sorted by creation date and limited by 'limit'
+// {deviceId} - the device that the events are for
+// {limit} - the limit of events
+// api/v1/event/device/{deviceId}/{limit}
+func getEventByDeviceHandler(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+
+	vars := mux.Vars(r)
+	limit := vars["limit"]
+	deviceId, err := url.QueryUnescape(vars["deviceId"])
+
+	// Problems unescaping URL
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		LoggingClient.Error("Error unescaping URL: " + err.Error())
+		return
+	}
+
+	// Convert limit to int
+	limitNum, err := strconv.Atoi(limit)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		LoggingClient.Error("Error converting to integer: " + err.Error())
+		return
+	}
+
+	// Check device
+	if checkDevice(deviceId) != nil {
+		LoggingClient.Error(fmt.Sprintf("error checking device %s %v", deviceId, err))
+		switch err := err.(type) {
+		case types.ErrNotFound:
+			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		default: //return an error on everything else.
+			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			return
+		}
+	}
+
+	switch r.Method {
+	case http.MethodGet:
+		err := testLimit(limitNum)
+		if err != nil {
+			http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
+			return
+		}
+
+		eventList, err := getEventsByDeviceIdLimit(limitNum, deviceId)
+
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		encode(eventList, w)
+	}
+}
+
 /*
 DELETE, PUT
 Handle events specified by an ID
@@ -356,5 +415,186 @@ func eventIdHandler(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("true"))
+	}
+}
+
+// Delete all of the events associated with a device
+// api/v1/event/device/{deviceId}
+// 404 - device ID not found in metadata
+// 503 - service unavailable
+func deleteByDeviceIdHandler(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+
+	vars := mux.Vars(r)
+	deviceId, err := url.QueryUnescape(vars["deviceId"])
+	// Problems unescaping URL
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		LoggingClient.Error("Error unescaping the URL: " + err.Error())
+		return
+	}
+
+	// Check device
+	if checkDevice(deviceId) != nil {
+		LoggingClient.Error(fmt.Sprintf("error checking device %s %v", deviceId, err))
+		switch err := err.(type) {
+		case types.ErrNotFound:
+			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		default: //return an error on everything else.
+			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			return
+		}
+	}
+
+	switch r.Method {
+	case http.MethodDelete:
+		count, err := deleteEvents(deviceId)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(strconv.Itoa(count)))
+	}
+}
+
+// Get events by creation time
+// {start} - start time, {end} - end time, {limit} - max number of results
+// Sort the events by creation date
+// 413 - number of results exceeds limit
+// 503 - service unavailable
+// api/v1/event/{start}/{end}/{limit}
+func eventByCreationTimeHandler(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+
+	vars := mux.Vars(r)
+	start, err := strconv.ParseInt(vars["start"], 10, 64)
+	// Problems converting start time
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		LoggingClient.Error("Problem converting start time: " + err.Error())
+		return
+	}
+
+	end, err := strconv.ParseInt(vars["end"], 10, 64)
+	// Problems converting end time
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		LoggingClient.Error("Problem converting end time: " + err.Error())
+		return
+	}
+
+	limit, err := strconv.Atoi(vars["limit"])
+	// Problems converting limit
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		LoggingClient.Error("Problem converting limit: " + strconv.Itoa(limit))
+		return
+	}
+
+	switch r.Method {
+	case http.MethodGet:
+		err := testLimit(limit)
+		if err != nil {
+			http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
+			return
+		}
+
+		eventList, err := getEventsByCreationTime(limit, start, end)
+
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		encode(eventList, w)
+	}
+}
+
+// Get the readings for a device and filter them based on the value descriptor
+// Only those readings whos name is the value descriptor should get through
+// /event/device/{deviceId}/valuedescriptor/{valueDescriptor}/{limit}
+// 413 - number exceeds limit
+func readingByDeviceFilteredValueDescriptor(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+
+	vars := mux.Vars(r)
+	limit := vars["limit"]
+
+	valueDescriptor, err := url.QueryUnescape(vars["valueDescriptor"])
+	// Problems unescaping URL
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		LoggingClient.Error("Problem unescaping value descriptor: " + err.Error())
+		return
+	}
+
+	deviceId, err := url.QueryUnescape(vars["deviceId"])
+	// Problems unescaping URL
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		LoggingClient.Error("Problem unescaping device ID: " + err.Error())
+		return
+	}
+
+	limitNum, err := strconv.Atoi(limit)
+	// Problem converting the limit
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		LoggingClient.Error("Problem converting limit to integer: " + err.Error())
+		return
+	}
+	switch r.Method {
+	case http.MethodGet:
+		// Check device
+		if checkDevice(deviceId) != nil {
+			LoggingClient.Error(fmt.Sprintf("error checking device %s %v", deviceId, err))
+			switch err := err.(type) {
+			case types.ErrNotFound:
+				http.Error(w, err.Error(), http.StatusNotFound)
+				return
+			default: //return an error on everything else.
+				http.Error(w, err.Error(), http.StatusServiceUnavailable)
+				return
+			}
+		}
+
+		err := testLimit(limitNum)
+		if err != nil {
+			http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
+			return
+		}
+
+		readings, err := getReadingsByDeviceId(limitNum, deviceId, valueDescriptor)
+
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		encode(readings, w)
+	}
+}
+
+// Scrub all the events that have been pushed
+// Also remove the readings associated with the events
+// api/v1/event/scrub
+func scrubHandler(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+
+	switch r.Method {
+	case http.MethodDelete:
+		count, err:= doScrub()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(strconv.Itoa(count)))
 	}
 }

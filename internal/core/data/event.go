@@ -15,15 +15,9 @@ package data
 
 import (
 	"fmt"
-	"net/http"
-	"net/url"
-	"strconv"
-
 	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
-	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
-	"github.com/gorilla/mux"
 )
 
 func countEvents() (int, error) {
@@ -35,7 +29,7 @@ func countEvents() (int, error) {
 }
 
 func countEventsByDevice(device string) (int, error) {
-	err := newCheckDevice(device)
+	err := checkDevice(device)
 	if err != nil {
 		return -1, err
 	}
@@ -47,8 +41,7 @@ func countEventsByDevice(device string) (int, error) {
 	return count, err
 }
 
-//TODO: Eliminate checkDevice below and make this checkDevice
-func newCheckDevice(device string) error {
+func checkDevice(device string) error {
 	if Configuration.MetaDataCheck {
 		_, err := mdc.CheckForDevice(device)
 		if err != nil {
@@ -56,27 +49,6 @@ func newCheckDevice(device string) error {
 		}
 	}
 	return nil
-}
-
-//TODO: Get rid of this method
-// Check metadata if the device exists
-func checkDevice(device string, w http.ResponseWriter) bool {
-	if Configuration.MetaDataCheck {
-		_, err := mdc.CheckForDevice(device)
-		if err != nil {
-			LoggingClient.Error(fmt.Sprintf("error checking device %s %v", device, err))
-			switch err := err.(type) {
-			case types.ErrNotFound:
-				http.Error(w, err.Error(), http.StatusNotFound)
-				return false
-			default: //return an error on everything else.
-				http.Error(w, err.Error(), http.StatusServiceUnavailable)
-				return false
-			}
-		}
-	}
-
-	return true
 }
 
 func deleteEventsByAge(age int64) (int, error) {
@@ -113,7 +85,7 @@ func getEvents(limit int) ([]models.Event, error) {
 
 func addNew(e models.Event) (string, error) {
 	retVal := "unsaved"
-	err := newCheckDevice(e.Device)
+	err := checkDevice(e.Device)
 	if err != nil {
 		return "", err
 	}
@@ -163,7 +135,7 @@ func updateEvent(from models.Event) error {
 	// Update the fields
 	if len(from.Device) > 0 {
 		// Check device
-		err = newCheckDevice(from.Device)
+		err = checkDevice(from.Device)
 		if err != nil {
 			return err
 		}
@@ -236,267 +208,6 @@ func updateEventPushDate(id string) error {
 	return nil
 }
 
-// Get event by device id
-// Returns the events for the given device sorted by creation date and limited by 'limit'
-// {deviceId} - the device that the events are for
-// {limit} - the limit of events
-// api/v1/event/device/{deviceId}/{limit}
-func getEventByDeviceHandler(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
-
-	vars := mux.Vars(r)
-	limit := vars["limit"]
-	deviceId, err := url.QueryUnescape(vars["deviceId"])
-
-	// Problems unescaping URL
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		LoggingClient.Error("Error unescaping URL: " + err.Error())
-		return
-	}
-
-	// Convert limit to int
-	limitNum, err := strconv.Atoi(limit)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		LoggingClient.Error("Error converting to integer: " + err.Error())
-		return
-	}
-
-	// Check device
-	if checkDevice(deviceId, w) == false {
-		return
-	}
-
-	switch r.Method {
-	case http.MethodGet:
-		if limitNum > Configuration.Service.ReadMaxLimit {
-			http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
-			LoggingClient.Error(maxExceededString)
-			return
-		}
-
-		eventList, err := dbClient.EventsForDeviceLimit(deviceId, limitNum)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			LoggingClient.Error(err.Error())
-			return
-		}
-
-		encode(eventList, w)
-	}
-}
-
-// Delete all of the events associated with a device
-// api/v1/event/device/{deviceId}
-// 404 - device ID not found in metadata
-// 503 - service unavailable
-func deleteByDeviceIdHandler(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
-
-	vars := mux.Vars(r)
-	deviceId, err := url.QueryUnescape(vars["deviceId"])
-	// Problems unescaping URL
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		LoggingClient.Error("Error unescaping the URL: " + err.Error())
-		return
-	}
-
-	// Check device
-	if checkDevice(deviceId, w) == false {
-		return
-	}
-
-	switch r.Method {
-	case http.MethodDelete:
-		// Get the events by the device name
-		events, err := dbClient.EventsForDevice(deviceId)
-		if err != nil {
-			LoggingClient.Error(err.Error())
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		LoggingClient.Info("Deleting the events for device: " + deviceId)
-
-		// Delete the events
-		count := len(events)
-		for _, event := range events {
-			if err = deleteEvent(event); err != nil {
-				LoggingClient.Error(err.Error())
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(strconv.Itoa(count)))
-	}
-}
-
-// Get events by creation time
-// {start} - start time, {end} - end time, {limit} - max number of results
-// Sort the events by creation date
-// 413 - number of results exceeds limit
-// 503 - service unavailable
-// api/v1/event/{start}/{end}/{limit}
-func eventByCreationTimeHandler(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
-
-	vars := mux.Vars(r)
-	start, err := strconv.ParseInt(vars["start"], 10, 64)
-	// Problems converting start time
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		LoggingClient.Error("Problem converting start time: " + err.Error())
-		return
-	}
-
-	end, err := strconv.ParseInt(vars["end"], 10, 64)
-	// Problems converting end time
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		LoggingClient.Error("Problem converting end time: " + err.Error())
-		return
-	}
-
-	limit, err := strconv.Atoi(vars["limit"])
-	// Problems converting limit
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		LoggingClient.Error("Problem converting limit: " + strconv.Itoa(limit))
-		return
-	}
-
-	switch r.Method {
-	case http.MethodGet:
-		if limit > Configuration.Service.ReadMaxLimit {
-			http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
-			LoggingClient.Error(maxExceededString)
-			return
-		}
-
-		e, err := dbClient.EventsByCreationTime(start, end, limit)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			LoggingClient.Error(err.Error())
-			return
-		}
-
-		encode(e, w)
-	}
-}
-
-// Get the readings for a device and filter them based on the value descriptor
-// Only those readings whos name is the value descriptor should get through
-// /event/device/{deviceId}/valuedescriptor/{valueDescriptor}/{limit}
-// 413 - number exceeds limit
-func readingByDeviceFilteredValueDescriptor(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
-
-	vars := mux.Vars(r)
-	limit := vars["limit"]
-
-	valueDescriptor, err := url.QueryUnescape(vars["valueDescriptor"])
-	// Problems unescaping URL
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		LoggingClient.Error("Problem unescaping value descriptor: " + err.Error())
-		return
-	}
-
-	deviceId, err := url.QueryUnescape(vars["deviceId"])
-	// Problems unescaping URL
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		LoggingClient.Error("Problem unescaping device ID: " + err.Error())
-		return
-	}
-
-	limitNum, err := strconv.Atoi(limit)
-	// Problem converting the limit
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		LoggingClient.Error("Problem converting limit to integer: " + err.Error())
-		return
-	}
-	switch r.Method {
-	case http.MethodGet:
-		if limitNum > Configuration.Service.ReadMaxLimit {
-			http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
-			LoggingClient.Error(maxExceededString)
-			return
-		}
-
-		// Check device
-		if checkDevice(deviceId, w) == false {
-			return
-		}
-
-		// Get all the events for the device
-		e, err := dbClient.EventsForDevice(deviceId)
-		if err != nil {
-			LoggingClient.Error(err.Error())
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		// Only pick the readings who match the value descriptor
-		readings := []models.Reading{}
-		count := 0 // Make sure we stay below the limit
-		for _, event := range e {
-			if count >= limitNum {
-				break
-			}
-			for _, reading := range event.Readings {
-				if count >= limitNum {
-					break
-				}
-				if reading.Name == valueDescriptor {
-					readings = append(readings, reading)
-					count += 1
-				}
-			}
-		}
-
-		encode(readings, w)
-	}
-}
-
-// Scrub all the events that have been pushed
-// Also remove the readings associated with the events
-// api/v1/event/scrub
-func scrubHandler(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
-
-	switch r.Method {
-	case http.MethodDelete:
-		LoggingClient.Info("Scrubbing events.  Deleting all events that have been pushed")
-
-		// Get the events
-		events, err := dbClient.EventsPushed()
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			LoggingClient.Error(err.Error())
-			return
-		}
-
-		// Delete all the events
-		count := len(events)
-		for _, event := range events {
-			if err = deleteEvent(event); err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				LoggingClient.Error(err.Error())
-				return
-			}
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(strconv.Itoa(count)))
-	}
-}
-
 // Put event on the message queue to be processed by the rules engine
 func putEventOnQueue(e models.Event) {
 	LoggingClient.Info("Putting event on message queue", "")
@@ -505,4 +216,105 @@ func putEventOnQueue(e models.Event) {
 	if err != nil {
 		LoggingClient.Error("Unable to send message for event: " + e.String())
 	}
+}
+
+func testLimit (limit int) error {
+	if limit > Configuration.Service.ReadMaxLimit {
+		LoggingClient.Error(maxExceededString)
+		return fmt.Errorf(maxExceededString)
+	}
+
+	return nil
+}
+
+func getEventsByDeviceIdLimit(limit int, deviceId string) ([]models.Event, error) {
+	eventList, err := dbClient.EventsForDeviceLimit(deviceId, limit)
+	if err != nil {
+		LoggingClient.Error(err.Error())
+		return nil, err
+	}
+
+	return eventList, nil
+}
+
+func getReadingsByDeviceId(limit int, deviceId string, valueDescriptor string) ([]models.Reading, error) {
+	eventList, err := dbClient.EventsForDevice(deviceId)
+	if err != nil {
+		LoggingClient.Error(err.Error())
+		return nil, err
+	}
+
+	// Only pick the readings who match the value descriptor
+	var readings []models.Reading
+	count := 0 // Make sure we stay below the limit
+	for _, event := range eventList {
+		if count >= limit {
+			break
+		}
+		for _, reading := range event.Readings {
+			if count >= limit {
+				break
+			}
+			if reading.Name == valueDescriptor {
+				readings = append(readings, reading)
+				count += 1
+			}
+		}
+	}
+
+	return readings, nil
+}
+
+func getEventsByCreationTime(limit int, start int64, end int64) ([]models.Event, error) {
+	eventList, err := dbClient.EventsByCreationTime(start, end, limit)
+	if err != nil {
+		LoggingClient.Error(err.Error())
+		return nil, err
+	}
+
+	return eventList, nil
+}
+
+func deleteEvents(deviceId string) (int, error) {
+	// Get the events by the device name
+	events, err := dbClient.EventsForDevice(deviceId)
+	if err != nil {
+		LoggingClient.Error(err.Error())
+		return 0, err
+	}
+
+	LoggingClient.Info("Deleting the events for device: " + deviceId)
+
+	// Delete the events
+	count := len(events)
+	for _, event := range events {
+		if err = deleteEvent(event); err != nil {
+			LoggingClient.Error(err.Error())
+			return 0, err
+		}
+	}
+
+	return count, nil
+}
+
+func doScrub()(int, error) {
+	LoggingClient.Info("Scrubbing events.  Deleting all events that have been pushed")
+
+	// Get the events
+	events, err := dbClient.EventsPushed()
+	if err != nil {
+		LoggingClient.Error(err.Error())
+		return 0, err
+	}
+
+	// Delete all the events
+	count := len(events)
+	for _, event := range events {
+		if err = deleteEvent(event); err != nil {
+			LoggingClient.Error(err.Error())
+			return 0, err
+		}
+	}
+
+	return count, nil
 }
