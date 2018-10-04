@@ -39,3 +39,5 @@ echo "Starting core-export-distro"
 docker-compose -f $COMPOSE_FILE up -d export-distro
 echo "Starting support-notifications"
 docker-compose -f $COMPOSE_FILE up -d notifications
+echo "Starting support-scheduler"
+docker-compose -f $COMPOSE_FILE up -d scheduler
