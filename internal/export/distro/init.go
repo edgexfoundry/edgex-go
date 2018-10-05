@@ -8,8 +8,6 @@ package distro
 
 import (
 	"fmt"
-	"strconv"
-	"strings"
 	"sync"
 	"time"
 
@@ -21,38 +19,13 @@ import (
 	"github.com/edgexfoundry/edgex-go/pkg/clients/coredata"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
+	"github.com/pkg/errors"
 )
 
-const (
-	PingApiPath = "/api/v1/ping"
-)
-
+var chConfig chan interface{} //A channel for use by ConsulDecoder in detecting configuration mods.
 var LoggingClient logger.LoggingClient
 var ec coredata.EventClient
 var Configuration *ConfigurationStruct
-
-type ConfigurationStruct struct {
-	Hostname             string
-	Port                 int
-	Timeout              int
-	DistroHost           string
-	ClientHost           string
-	DataHost             string
-	DataPort             int
-	ConsulHost           string
-	ConsulPort           int
-	ConsulProfilesActive string
-	CheckInterval        string
-	MQTTSCert            string
-	MQTTSKey             string
-	MarkPushed           bool
-	AWSCert              string
-	AWSKey               string
-	EnableRemoteLogging  bool
-	LoggingRemoteURL     string
-	LogFile              string
-	AppOpenMsg           string
-}
 
 func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup, ch chan error) {
 	until := time.Now().Add(time.Millisecond * time.Duration(timeout))
@@ -72,7 +45,7 @@ func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup,
 			} else {
 				// Setup Logging
 				logTarget := setLoggingTarget()
-				LoggingClient = logger.NewClient(internal.ExportDistroServiceKey, Configuration.EnableRemoteLogging, logTarget)
+				LoggingClient = logger.NewClient(internal.ExportDistroServiceKey, Configuration.Logging.EnableRemote, logTarget)
 				//Initialize service clients
 				initializeClient(useConsul)
 			}
@@ -89,45 +62,69 @@ func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup,
 	return
 }
 
-func Init() bool {
+func Init(useConsul bool) bool {
 	if Configuration == nil {
 		return false
+	}
+	if useConsul {
+		chConfig = make(chan interface{})
+		go listenForConfigChanges()
 	}
 	return true
 }
 
-func connectToConsul(conf *ConfigurationStruct) error {
-	// Initialize service on Consul
-	err := consulclient.ConsulInit(consulclient.ConsulConfig{
-		ServiceName:    internal.ExportDistroServiceKey,
-		ServicePort:    conf.ConsulPort,
-		ServiceAddress: conf.ConsulHost,
-		CheckAddress:   "http://" + conf.Hostname + ":" + strconv.Itoa(conf.Port) + PingApiPath,
-		CheckInterval:  conf.CheckInterval,
-		ConsulAddress:  conf.ConsulHost,
-		ConsulPort:     conf.ConsulPort,
-	})
+func Destruct() {
+	if chConfig != nil {
+		close(chConfig)
+		chConfig = nil
+	}
+}
+
+func connectToConsul(conf *ConfigurationStruct) (*ConfigurationStruct, error) {
+	//Obtain ConsulConfig
+	cfg := consulclient.NewConsulConfig(conf.Registry, conf.Service, internal.ExportDistroServiceKey)
+	// Register the service in Consul
+	err := consulclient.ConsulInit(cfg)
 
 	if err != nil {
-		return fmt.Errorf("connection to Consul could not be made: %v", err.Error())
-	} else {
-		// Update configuration data from Consul
-		if err := consulclient.CheckKeyValuePairs(conf, internal.ExportDistroServiceKey, strings.Split(conf.ConsulProfilesActive, ";")); err != nil {
-			return fmt.Errorf("error getting key/values from Consul: %v", err.Error())
-		}
+		return conf, fmt.Errorf("connection to Consul could not be made: %v", err.Error())
 	}
-	return nil
+	// Update configuration data from Consul
+	updateCh := make(chan interface{})
+	errCh := make(chan error)
+	dec := consulclient.NewConsulDecoder(conf.Registry)
+	dec.Target = &ConfigurationStruct{}
+	dec.Prefix = internal.ConfigV2Stem + internal.ExportDistroServiceKey
+	dec.ErrCh = errCh
+	dec.UpdateCh = updateCh
+
+	defer dec.Close()
+	defer close(updateCh)
+	defer close(errCh)
+	go dec.Run()
+
+	select {
+	case <-time.After(2 * time.Second):
+		err = errors.New("timeout loading config from registry")
+	case ex := <-errCh:
+		err = errors.New(ex.Error())
+	case raw := <-updateCh:
+		actual, ok := raw.(*ConfigurationStruct)
+		if !ok {
+			return conf, errors.New("type check failed")
+		}
+		conf = actual
+	}
+	return conf, err
 }
 
 func initializeClient(useConsul bool) {
-	coreDataEventUrl := fmt.Sprintf("http://%s:%d%s", Configuration.DataHost, Configuration.DataPort, clients.ApiEventRoute)
-
 	params := types.EndpointParams{
 		ServiceKey:  internal.CoreDataServiceKey,
 		Path:        clients.ApiEventRoute,
 		UseRegistry: useConsul,
-		Url:         coreDataEventUrl,
-		Interval:    internal.ClientMonitorDefault,
+		Url:         Configuration.Clients["CoreData"].Url() + clients.ApiEventRoute,
+		Interval:    Configuration.Service.ClientMonitor,
 	}
 
 	ec = coredata.NewEventClient(params, startup.Endpoint{})
@@ -136,22 +133,52 @@ func initializeClient(useConsul bool) {
 func initializeConfiguration(useConsul bool, useProfile string) (*ConfigurationStruct, error) {
 	//We currently have to load configuration from filesystem first in order to obtain ConsulHost/Port
 	conf := &ConfigurationStruct{}
-	if err := config.LoadFromFile(useProfile, conf); err != nil {
+	err := config.LoadFromFileV2(useProfile, conf)
+	if err != nil {
 		return nil, err
 	}
 
 	if useConsul {
-		if err := connectToConsul(conf); err != nil {
+		if conf, err = connectToConsul(conf); err != nil {
 			return nil, err
 		}
 	}
 	return conf, nil
 }
 
-func setLoggingTarget() string {
-	logTarget := Configuration.LoggingRemoteURL
-	if !Configuration.EnableRemoteLogging {
-		return Configuration.LogFile
+func listenForConfigChanges() {
+	errCh := make(chan error)
+	dec := consulclient.NewConsulDecoder(Configuration.Registry)
+	dec.Target = &ConfigurationStruct{}
+	dec.Prefix = internal.ConfigV2Stem + internal.ExportDistroServiceKey
+	dec.ErrCh = errCh
+	dec.UpdateCh = chConfig
+
+	defer dec.Close()
+	defer close(errCh)
+
+	go dec.Run()
+	for {
+		select {
+		case ex := <-errCh:
+			LoggingClient.Error(ex.Error())
+		case raw, ok := <-chConfig:
+			if ok {
+				actual, ok := raw.(*ConfigurationStruct)
+				if !ok {
+					LoggingClient.Error("listenForConfigChanges() type check failed")
+				}
+				Configuration = actual //Mutex needed?
+			} else {
+				return
+			}
+		}
 	}
-	return logTarget
+}
+
+func setLoggingTarget() string {
+	if Configuration.Logging.EnableRemote {
+		return Configuration.Clients["Logging"].Url() + clients.ApiLoggingRoute
+	}
+	return Configuration.Logging.File
 }
