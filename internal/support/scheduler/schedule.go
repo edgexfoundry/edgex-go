@@ -344,14 +344,10 @@ func triggerSchedule() {
 		if scheduleQueue.Peek().(*ScheduleContext) != nil {
 			scheduleContext := scheduleQueue.Remove().(*ScheduleContext)
 			scheduleId := scheduleContext.Schedule.Id.Hex()
-			// TODO: Enable once we have threshold logging working again
-			//LoggingClient.Debug("check schedule with id : " + scheduleId)
 			if scheduleContext.MarkedDeleted {
 				LoggingClient.Debug("the schedule with id : " + scheduleId + " be marked as deleted, removing it.")
 				continue //really delete from the queue
 			} else {
-				// TODO: Enable once we have threshold logging working again
-				//LoggingClient.Debug("schedule with id : " + scheduleId + " next schedule time is : " + scheduleContext.NextTime.String())
 				if scheduleContext.NextTime.Unix() <= nowEpoch {
 					LoggingClient.Debug("executing schedule, detail : {" + scheduleContext.GetInfo() + "} , at : " + scheduleContext.NextTime.String())
 

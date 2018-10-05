@@ -31,14 +31,14 @@ File = './logs/edgex-support-scheduler.log'
   Host = 'edgex-support-logging'
   Port = 48061
 
-[DefaultSchedules]
-    [DefaultSchedules.Midnight]
+[Schedules]
+    [Schedules.Midnight]
     Name = 'midnight'
     Start = '20180101T000000'
     Frequency = 'P1D'
 
-[DefaultScheduleEvents]
-    [DefaultScheduleEvents.Scrub-Pushed]
+[ScheduleEvents]
+    [ScheduleEvents.ScrubPushed]
     Name = 'scrub-pushed-events'
     Host = 'edgex-core-data'
     Port = 48080
@@ -49,7 +49,7 @@ File = './logs/edgex-support-scheduler.log'
     Schedule = 'midnight'
     Scheduler = 'support-scheduler'
 
-    [DefaultScheduleEvents.Scrub-Aged]
+    [ScheduleEvents.ScrubAged]
     Name = 'scrub-aged-events'
     Host = 'edgex-core-data'
     Port = 48080

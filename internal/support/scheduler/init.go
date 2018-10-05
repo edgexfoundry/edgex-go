@@ -234,7 +234,7 @@ func AddDefaultSchedulers() error {
 
 	LoggingClient.Info(fmt.Sprintf("loading default schedules and schedule events..."))
 
-	defaultSchedules := Configuration.DefaultSchedules
+	defaultSchedules := Configuration.Schedules
 
 	for i := range defaultSchedules {
 
@@ -255,7 +255,7 @@ func AddDefaultSchedulers() error {
 			LoggingClient.Info(fmt.Sprintf("added default schedule %s", defaultSchedule.Name))
 		}
 	}
-	defaultScheduleEvents := Configuration.DefaultScheduleEvents
+	defaultScheduleEvents := Configuration.ScheduleEvents
 
 	for e := range defaultScheduleEvents {
 
@@ -290,70 +290,3 @@ func AddDefaultSchedulers() error {
 	return nil
 }
 
-/*func AddDefaultSchedules(conf ConfigurationStruct)  error{
-
-
-	//loggingClient.Info("bootstrapping default schedule attempt " + strconv.Itoa(initializeAttempts))
-
-	// Add Schedule
-	defaultSchedule := models.Schedule{
-		BaseObject: models.BaseObject{},
-		Id:         bson.NewObjectId(),
-		Name:       conf.DefaultScheduleName,
-		Start:      conf.DefaultScheduleStart,
-		End:        "",
-		Frequency:  conf.DefaultScheduleFrequency,
-		Cron:       "",
-		RunOnce:    false,
-	}
-
-	err := addSchedule(defaultSchedule)
-	if err != nil {
-		LoggingClient.Error(fmt.Sprintf("call to AddSchedule failed: %v", err.Error()))
-	} else {
-		LoggingClient.Info("added default schedule " + conf.DefaultScheduleName)
-	}
-
-	// TODO: Change to using V2 Config where we can have map[string]
-
-	// Add ScheduleEvent(s)
-	eNames := strings.Split(conf.DefaultScheduleEventName, ",")
-	eSchedules := strings.Split(conf.DefaultScheduleEventSchedule, ",")
-	eParameters := strings.Split(conf.DefaultScheduleEventParameters, ",")
-	eServices := strings.Split(conf.DefaultScheduleEventService, ",")
-	ePaths := strings.Split(conf.DefaultScheduleEventPath, ",")
-	eMethods := strings.Split(conf.DefaultScheduleEventMethod, ",")
-
-	for i := range eNames {
-		defScheduleEvent := models.ScheduleEvent{}
-
-		defScheduleEvent.Name = eNames[i]
-		defScheduleEvent.Schedule = eSchedules[i]
-		defScheduleEvent.Parameters = eParameters[i]
-		defScheduleEvent.Service = eServices[i]
-
-		// TODO: the existing java scheduler utilizes a device client.
-		// TODO: this device client is used to create the "addressable" based on the service name.
-		addressable := models.Addressable{}
-		addressable.Name = "Schedule-" + eNames[i]
-		addressable.Path = ePaths[i]
-		addressable.Port = conf.DefaultScheduleServicePort
-		addressable.Protocol = conf.DefaultScheduleServiceProtocol
-		addressable.HTTPMethod = eMethods[i]
-		addressable.Address = conf.DefaultSchedulerServiceAddress
-
-		// TODO: need a better method to create unique addressable.Id values  (java version uses client utility to obtain the objectId)
-		addressable.Id = bson.NewObjectId() // will be unique every time system starts up not desirable
-
-		defScheduleEvent.Id = bson.NewObjectId()
-		defScheduleEvent.Addressable = addressable
-
-		err := addScheduleEvent(defScheduleEvent)
-		if err != nil {
-			LoggingClient.Error(fmt.Sprintf("call to AddSchuldedEvent failed: %v", err.Error()))
-		} else {
-			LoggingClient.Info("added default schedule " + eNames[i])
-		}
-	}
-	return nil
-}*/
