@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 	queueV1 "gopkg.in/eapache/queue.v1"
+
 	"gopkg.in/mgo.v2/bson"
 	"io/ioutil"
 	"net/http"
@@ -80,7 +81,6 @@ func addScheduleEventOperation(scheduleId string, scheduleEventId string, schedu
 	scheduleEventIdToScheduleIdMap[scheduleEventId] = scheduleId
 }
 
-
 func querySchedule(scheduleId string) (models.Schedule, error) {
 	mutex.Lock()
 	defer mutex.Unlock()
@@ -111,7 +111,6 @@ func queryScheduleByName(scheduleName string) (models.Schedule, error){
 
 	return scheduleContext.Schedule, nil
 }
-
 
 func addSchedule(schedule models.Schedule) error {
 	mutex.Lock()
@@ -184,7 +183,6 @@ func removeSchedule(scheduleId string) error {
 
 	return nil
 }
-
 
 func queryScheduleEvent(scheduleEventId string) (models.ScheduleEvent, error) {
 	mutex.Lock()
@@ -486,6 +484,7 @@ func contains(a []string, x string) bool {
 	}
 	return false
 }
+
 
 
 // Utility function for adding configured locally schedulers and scheduled events

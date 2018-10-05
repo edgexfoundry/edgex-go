@@ -73,6 +73,7 @@ func main() {
 func logBeforeInit(err error) {
 	scheduler.LoggingClient = logger.NewClient(internal.CoreCommandServiceKey, false, "")
 	scheduler.LoggingClient.Error(err.Error())
+
 }
 
 func listenForInterrupt(errChan chan error) {
