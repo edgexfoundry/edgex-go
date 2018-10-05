@@ -32,12 +32,8 @@ var mdc metadata.DeviceClient
 var cc metadata.CommandClient
 var chConfig chan interface{} //A channel for use by ConsulDecoder in detecting configuration mods.
 
-<<<<<<< HEAD
 
 var ticker = time.NewTicker(time.Duration(ScheduleInterval) * time.Millisecond)
-=======
-var ticker = time.NewTicker(ScheduleInterval * time.Millisecond)
->>>>>>> 388bdb10bcb7248b9d4099fd1e3c9b0c322db94f
 var schedulerClient scheduler.SchedulerClient
 
 func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup, ch chan error) {
@@ -64,21 +60,6 @@ func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup,
 				// Setup Logging
 				logTarget := setLoggingTarget()
 				LoggingClient = logger.NewClient(internal.SupportSchedulerServiceKey, Configuration.Logging.EnableRemote, logTarget)
-<<<<<<< HEAD
-=======
-
-				//Initialize service clients
-				initializeClients(useConsul)
-
-				// Start ticker ('legacy')
-				ticker = time.NewTicker(time.Duration(Configuration.ScheduleInterval) * time.Millisecond)
-
-				// Bootstrap default schedulers?
-				err := AddDefaultSchedulers()
-				if err != nil{
-					LoggingClient.Error(fmt.Sprintf("Failed to load default schedules and events %s",err.Error()))
-				}
->>>>>>> 388bdb10bcb7248b9d4099fd1e3c9b0c322db94f
 			}
 		}
 
@@ -221,26 +202,6 @@ func setLoggingTarget() string {
 	return Configuration.Logging.File
 }
 
-<<<<<<< HEAD
-=======
-/*func Init( useConsul bool) error {
-
-	// Start ticker ('legacy')
-	ticker = time.NewTicker(time.Duration(configuration.ScheduleInterval) * time.Millisecond)
-
-	// Check if we have default schedules to add
-	if len(configuration.DefaultScheduleName) > 0  {
-		// Add default scheduled events
-		err := AddDefaultSchedules(configuration)
-		if err != nil{
-			return LoggingClient.Error("Error while loading default schedule(s) or scheduleEvent(s) %s",err.Error())
-		}
-	}
-
-	return nil
-}*/
-
->>>>>>> 388bdb10bcb7248b9d4099fd1e3c9b0c322db94f
 func AddDefaultSchedulers() error {
 
 	LoggingClient.Info(fmt.Sprintf("loading default schedules and schedule events..."))
@@ -266,10 +227,7 @@ func AddDefaultSchedulers() error {
 			LoggingClient.Info(fmt.Sprintf("added default schedule %s", defaultSchedule.Name))
 		}
 	}
-<<<<<<< HEAD
 
-=======
->>>>>>> 388bdb10bcb7248b9d4099fd1e3c9b0c322db94f
 	defaultScheduleEvents := Configuration.ScheduleEvents
 
 	for e := range defaultScheduleEvents {
@@ -286,10 +244,7 @@ func AddDefaultSchedulers() error {
 		}
 
 		defaultScheduleEvent := models.ScheduleEvent{
-<<<<<<< HEAD
 			Id: 	 	 bson.NewObjectId(),
-=======
->>>>>>> 388bdb10bcb7248b9d4099fd1e3c9b0c322db94f
 			Name:        defaultScheduleEvents[e].Name,
 			Schedule:    defaultScheduleEvents[e].Schedule,
 			Parameters:  defaultScheduleEvents[e].Parameters,
@@ -308,4 +263,3 @@ func AddDefaultSchedulers() error {
 	LoggingClient.Info(fmt.Sprintf("completed loading default schedules and schedule events"))
 	return nil
 }
-
