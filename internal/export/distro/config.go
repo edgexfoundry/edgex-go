@@ -16,13 +16,14 @@ package distro
 import "github.com/edgexfoundry/edgex-go/internal/pkg/config"
 
 type ConfigurationStruct struct {
-	Certificates map[string]CertificateInfo
-	Clients      map[string]config.ClientInfo
-	Logging      config.LoggingInfo
-	MessageQueue config.MessageQueueInfo
-	Registry     config.RegistryInfo
-	Service      config.ServiceInfo
-	MarkPushed   bool
+	Certificates   map[string]CertificateInfo
+	Clients        map[string]config.ClientInfo
+	Logging        config.LoggingInfo
+	MessageQueue   config.MessageQueueInfo
+	AnalyticsQueue config.MessageQueueInfo
+	Registry       config.RegistryInfo
+	Service        config.ServiceInfo
+	MarkPushed     bool
 }
 
 type CertificateInfo struct {
