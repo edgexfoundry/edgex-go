@@ -49,7 +49,7 @@ func (sc *ScheduleContext) Reset(schedule models.Schedule) {
 	} else {
 		t, err := time.Parse(TIMELAYOUT, sc.Schedule.Start)
 		if err != nil {
-			loggingClient.Error("parse time error, the original time string is : " + sc.Schedule.Start)
+			LoggingClient.Error("parse time error, the original time string is : " + sc.Schedule.Start)
 		}
 
 		sc.StartTime = t
@@ -61,7 +61,7 @@ func (sc *ScheduleContext) Reset(schedule models.Schedule) {
 	} else {
 		t, err := time.Parse(TIMELAYOUT, sc.Schedule.End)
 		if err != nil {
-			loggingClient.Error("parse time error, the original time string is : " + sc.Schedule.End)
+			LoggingClient.Error("parse time error, the original time string is : " + sc.Schedule.End)
 		}
 
 		sc.EndTime = t

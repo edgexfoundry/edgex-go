@@ -56,7 +56,7 @@ func info(rw http.ResponseWriter, req *http.Request) {
 
 	scheduleEvent, err := schedulerClient.QueryScheduleWithName(vars["name"])
 	if err != nil {
-		loggingClient.Error("read info request error" + err.Error())
+		LoggingClient.Error("read info request error" + err.Error())
 		return
 	}
 
@@ -71,14 +71,14 @@ func info(rw http.ResponseWriter, req *http.Request) {
 func addCallbackAlert(rw http.ResponseWriter, r *http.Request) {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		loggingClient.Error("read request body error : " + err.Error())
+		LoggingClient.Error("read request body error : " + err.Error())
 		http.Error(rw, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	callbackAlert := models.CallbackAlert{}
 	if err := json.Unmarshal(data, &callbackAlert); err != nil {
-		loggingClient.Error("failed to parse callback alert : " + err.Error())
+		LoggingClient.Error("failed to parse callback alert : " + err.Error())
 		http.Error(rw, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -89,14 +89,14 @@ func addCallbackAlert(rw http.ResponseWriter, r *http.Request) {
 		schedule, err := schedulerClient.QuerySchedule(callbackAlert.Id)
 
 		if err != nil {
-			loggingClient.Error("query schedule error : " + err.Error())
+			LoggingClient.Error("query schedule error : " + err.Error())
 			http.Error(rw, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		err = addSchedule(schedule)
 		if err != nil {
-			loggingClient.Error("add schedule error : " + err.Error())
+			LoggingClient.Error("add schedule error : " + err.Error())
 			http.Error(rw, err.Error(), http.StatusInternalServerError)
 		} else {
 			rw.WriteHeader(http.StatusCreated)
@@ -107,13 +107,13 @@ func addCallbackAlert(rw http.ResponseWriter, r *http.Request) {
 	case models.SCHEDULEEVENT:
 		scheduleEvent, err := schedulerClient.QueryScheduleEvent(callbackAlert.Id)
 		if err != nil {
-			loggingClient.Error("query schedule event error : " + err.Error())
+			LoggingClient.Error("query schedule event error : " + err.Error())
 			http.Error(rw, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		if err := addScheduleEvent(scheduleEvent); err != nil {
-			loggingClient.Error("add schedule event error : " + err.Error())
+			LoggingClient.Error("add schedule event error : " + err.Error())
 			http.Error(rw, err.Error(), http.StatusInternalServerError)
 		} else {
 			rw.WriteHeader(http.StatusCreated)
@@ -122,7 +122,7 @@ func addCallbackAlert(rw http.ResponseWriter, r *http.Request) {
 		break
 
 	default:
-		loggingClient.Error(fmt.Sprintf("unsupported action type : %s", callbackAlert.ActionType))
+		LoggingClient.Error(fmt.Sprintf("unsupported action type : %s", callbackAlert.ActionType))
 		http.Error(rw, fmt.Sprintf("unsupported action type : %s", callbackAlert.ActionType), http.StatusBadRequest)
 		break
 	}
@@ -131,14 +131,14 @@ func addCallbackAlert(rw http.ResponseWriter, r *http.Request) {
 func updateCallbackAlert(rw http.ResponseWriter, r *http.Request) {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		loggingClient.Error("reading the http request body error : " + err.Error())
+		LoggingClient.Error("reading the http request body error : " + err.Error())
 		http.Error(rw, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	callbackAlert := models.CallbackAlert{}
 	if err := json.Unmarshal(data, &callbackAlert); err != nil {
-		loggingClient.Error("failed to parse callback alert : " + err.Error())
+		LoggingClient.Error("failed to parse callback alert : " + err.Error())
 		http.Error(rw, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -149,14 +149,14 @@ func updateCallbackAlert(rw http.ResponseWriter, r *http.Request) {
 		schedule, err := schedulerClient.QuerySchedule(callbackAlert.Id)
 
 		if err != nil {
-			loggingClient.Error("query schedule error : " + err.Error())
+			LoggingClient.Error("query schedule error : " + err.Error())
 			http.Error(rw, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		err = updateSchedule(schedule)
 		if err != nil {
-			loggingClient.Error("update schedule error : " + err.Error())
+			LoggingClient.Error("update schedule error : " + err.Error())
 			http.Error(rw, err.Error(), http.StatusInternalServerError)
 		} else {
 			rw.WriteHeader(http.StatusCreated)
@@ -167,13 +167,13 @@ func updateCallbackAlert(rw http.ResponseWriter, r *http.Request) {
 	case models.SCHEDULEEVENT:
 		scheduleEvent, err := schedulerClient.QueryScheduleEvent(callbackAlert.Id)
 		if err != nil {
-			loggingClient.Error("query schedule event error : " + err.Error())
+			LoggingClient.Error("query schedule event error : " + err.Error())
 			http.Error(rw, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		if err := updateScheduleEvent(scheduleEvent); err != nil {
-			loggingClient.Error("query schedule event error : " + err.Error())
+			LoggingClient.Error("query schedule event error : " + err.Error())
 			http.Error(rw, err.Error(), http.StatusInternalServerError)
 		} else {
 			rw.WriteHeader(http.StatusCreated)
@@ -182,7 +182,7 @@ func updateCallbackAlert(rw http.ResponseWriter, r *http.Request) {
 		break
 
 	default:
-		loggingClient.Error(fmt.Sprintf("unsupported action type : %s", callbackAlert.ActionType))
+		LoggingClient.Error(fmt.Sprintf("unsupported action type : %s", callbackAlert.ActionType))
 		http.Error(rw, fmt.Sprintf("unsupported action type : %s", callbackAlert.ActionType), http.StatusBadRequest)
 		break
 	}
@@ -192,14 +192,14 @@ func removeCallbackAlert(rw http.ResponseWriter, r *http.Request) {
 	//here we need the action type, so request the callback alert json
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		loggingClient.Error("reading the http request body error : " + err.Error())
+		LoggingClient.Error("reading the http request body error : " + err.Error())
 		http.Error(rw, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	callbackAlert := models.CallbackAlert{}
 	if err := json.Unmarshal(data, &callbackAlert); err != nil {
-		loggingClient.Error("failed to parse callback alert : " + err.Error())
+		LoggingClient.Error("failed to parse callback alert : " + err.Error())
 		http.Error(rw, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -207,7 +207,7 @@ func removeCallbackAlert(rw http.ResponseWriter, r *http.Request) {
 	switch callbackAlert.ActionType {
 	case models.SCHEDULE:
 		if err := removeSchedule(callbackAlert.Id); err != nil {
-			loggingClient.Error("remove schedule error : " + err.Error())
+			LoggingClient.Error("remove schedule error : " + err.Error())
 			http.Error(rw, err.Error(), http.StatusInternalServerError)
 		} else {
 			rw.WriteHeader(http.StatusOK)
@@ -216,7 +216,7 @@ func removeCallbackAlert(rw http.ResponseWriter, r *http.Request) {
 
 	case models.SCHEDULEEVENT:
 		if err := removeScheduleEvent(callbackAlert.Id); err != nil {
-			loggingClient.Error("remove schedule event error : " + err.Error())
+			LoggingClient.Error("remove schedule event error : " + err.Error())
 			http.Error(rw, err.Error(), http.StatusInternalServerError)
 		} else {
 			rw.WriteHeader(http.StatusOK)
@@ -224,7 +224,7 @@ func removeCallbackAlert(rw http.ResponseWriter, r *http.Request) {
 		break
 
 	default:
-		loggingClient.Error(fmt.Sprintf("unsupported action type : %s", callbackAlert.ActionType))
+		LoggingClient.Error(fmt.Sprintf("unsupported action type : %s", callbackAlert.ActionType))
 		http.Error(rw, fmt.Sprintf("unsupported action type : %s", callbackAlert.ActionType), http.StatusBadRequest)
 		break
 	}
