@@ -35,7 +35,6 @@ func main() {
 	flag.Usage = usage.HelpCallback
 	flag.Parse()
 
-	//begin changes EFC
 	params := startup.BootParams{UseConsul: useConsul, UseProfile: useProfile, BootTimeout: internal.BootTimeoutDefault}
 	startup.Bootstrap(params, scheduler.Retry, logBeforeInit)
 
@@ -47,6 +46,18 @@ func main() {
 
 	scheduler.LoggingClient.Info("Service dependencies resolved...")
 	scheduler.LoggingClient.Info(fmt.Sprintf("Starting %s %s ", internal.SupportSchedulerServiceKey, edgex.Version))
+
+	// Initialize the  Service Routes
+	scheduler.LoadRestRoutes()
+
+	// Bootstrap default schedulers?
+	err := scheduler.AddDefaultSchedulers()
+	if err != nil{
+		scheduler.LoggingClient.Error(fmt.Sprintf("Failed to load default schedules and events %s",err.Error()))
+	}
+
+	// Start the ticker
+	scheduler.StartTicker()
 
 	http.TimeoutHandler(nil, time.Millisecond*time.Duration(scheduler.Configuration.Service.Timeout), "Request timed out")
 	scheduler.LoggingClient.Info(scheduler.Configuration.Service.StartupMsg, "")

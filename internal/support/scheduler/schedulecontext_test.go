@@ -13,6 +13,41 @@ import (
 	"time"
 )
 
+
+// Test common const
+const (
+	TestUnexpectedMsg                     = "unexpected result"
+	TestUnexpectedMsgFormatStr            = "unexpected result, active: '%s' but expected: '%s'"
+	TestUnexpectedMsgFormatStrForIntVal   = "unexpected result, active: '%d' but expected: '%d'"
+	TestUnexpectedMsgFormatStrForFloatVal = "unexpected result, active: '%f' but expected: '%f'"
+	TestUnexpectedMsgFormatStrForBoolVal  = "unexpected result, active: '%t' but expected: '%t'"
+	ScheduleApiPath                       = "/api/v1/schedule"
+)
+
+// Test Schedule model const fields
+const (
+	TestScheduleName         = "midnight-1"
+	TestScheduleStart        = "20000101T000000"
+	TestScheduleEnd          = ""
+	TestScheduleFrequency    = "P1D"
+	TestScheduleCron         = "This is a description"
+	TestScheduleRunOnce      = true
+	TestScheduleUpdatingName = "midnight-2"
+
+	TestBadFrequency = "423"
+)
+
+// Test ScheduleEvent model const fields
+const (
+	TestScheduleEventId                  = "testScheduleEventId"
+	TestScheduleEventName                = "pushed events"
+	TestScheduleEventParameters          = ""
+	TestScheduleEventService             = "notifications"
+	TestScheduleEventSchedule            = TestScheduleName
+	TestScheduleEventAddressableName     = "MQTT"
+	TestScheduleEventAddressableProtocol = "MQTT"
+	TestScheduleEventUpdatingName        = "pushed events-1"
+)
 func TestRet(t *testing.T) {
 	testSchedule := models.Schedule{
 		Name:      TestScheduleName,
