@@ -35,4 +35,5 @@ const (
 	SupportLoggingServiceKey        = "edgex-support-logging"
 	SupportNotificationsServiceKey  = "edgex-support-notifications"
 	SystemManagementAgentServiceKey = "edgex-sys-mgmt-agent"
+	SupportSchedulerServiceKey      = "edgex-support-scheduler"
 )
