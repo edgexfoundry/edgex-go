@@ -3,16 +3,21 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/edgexfoundry/edgex-go/internal/core/command"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 	"net/http"
+	"os"
+	"os/signal"
 	"strconv"
+	"syscall"
 	"time"
 
 	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
+	"github.com/gorilla/context"
 )
 
 var loggingClient logger.LoggingClient
@@ -30,65 +35,52 @@ func main() {
 	flag.Usage = usage.HelpCallback
 	flag.Parse()
 
-	//Read Configuration.
-	configuration := &scheduler.ConfigurationStruct{}
-	err := config.LoadFromFile(useProfile, configuration)
-	if err != nil {
-		logBeforeTermination(err)
+	//begin changes EFC
+	params := startup.BootParams{UseConsul: useConsul, UseProfile: useProfile, BootTimeout: internal.BootTimeoutDefault}
+	startup.Bootstrap(params, scheduler.Retry, logBeforeInit)
+
+	ok := scheduler.Init(useConsul)
+	if !ok {
+		logBeforeInit(fmt.Errorf("%s: Service bootstrap failed!", internal.SupportSchedulerServiceKey))
 		return
 	}
 
-	//Determine if configuration should be overridden from Consul
-	var consulMsg string
-	if useConsul {
-		consulMsg = "Loading configuration from Consul..."
-		err := scheduler.ConnectToConsul(*configuration)
-		if err != nil {
-			logBeforeTermination(err)
-			return //end program since user explicitly told us to use Consul.
-		}
-	} else {
-		consulMsg = "Bypassing Consul configuration..."
-	}
+	scheduler.LoggingClient.Info("Service dependencies resolved...")
+	scheduler.LoggingClient.Info(fmt.Sprintf("Starting %s %s ", internal.SupportSchedulerServiceKey, edgex.Version))
 
-	// Setup Logging
-	logTarget := setLoggingTarget(*configuration)
-	loggingClient = logger.NewClient(internal.SupportSchedulerServiceKey, configuration.EnableRemoteLogging, logTarget)
+	http.TimeoutHandler(nil, time.Millisecond*time.Duration(scheduler.Configuration.Service.Timeout), "Request timed out")
+	scheduler.LoggingClient.Info(scheduler.Configuration.Service.StartupMsg, "")
 
-	loggingClient.Info(consulMsg)
-	loggingClient.Info(fmt.Sprintf("Starting %s %s ", internal.SupportSchedulerServiceKey, edgex.Version))
-
-	err = scheduler.Init(*configuration, loggingClient, useConsul)
-	if err != nil {
-		loggingClient.Error(fmt.Sprintf("call to init() failed: %v", err.Error()))
-		return
-	}
-
-	// Start the Scheduler Service
-	r := scheduler.LoadRestRoutes()
-	http.TimeoutHandler(nil, time.Millisecond*time.Duration(configuration.ServiceTimeout), "Request timed out")
-	loggingClient.Info(configuration.AppOpenMsg, "")
-
-	scheduler.StartTicker()
+	errs := make(chan error, 2)
+	listenForInterrupt(errs)
+	startHttpServer(errs, scheduler.Configuration.Service.Port)
 
 	// Time it took to start service
-	loggingClient.Info("service started in: "+time.Since(start).String(), "")
-	loggingClient.Info("listening on port: "+strconv.Itoa(configuration.ServicePort), "")
-	loggingClient.Error(http.ListenAndServe(":"+strconv.Itoa(configuration.ServicePort), r).Error())
-
-	// stop the ticker
-	scheduler.StopTicker()
+	scheduler.LoggingClient.Info("Service started in: "+time.Since(start).String(), "")
+	scheduler.LoggingClient.Info("Listening on port: "+strconv.Itoa(scheduler.Configuration.Service.Port), "")
+	c := <-errs
+	scheduler.Destruct()
+	scheduler.LoggingClient.Warn(fmt.Sprintf("terminating: %v", c))
 }
 
-func logBeforeTermination(err error) {
-	loggingClient = logger.NewClient(internal.SupportSchedulerServiceKey, false, "")
-	loggingClient.Error(err.Error())
+
+func logBeforeInit(err error) {
+	command.LoggingClient = logger.NewClient(internal.CoreCommandServiceKey, false, "")
+	command.LoggingClient.Error(err.Error())
 }
 
-func setLoggingTarget(conf scheduler.ConfigurationStruct) string {
-	logTarget := conf.LoggingRemoteURL
-	if !conf.EnableRemoteLogging {
-		return conf.LogFile
-	}
-	return logTarget
+func listenForInterrupt(errChan chan error) {
+	go func() {
+		c := make(chan os.Signal)
+		signal.Notify(c, syscall.SIGINT)
+		errChan <- fmt.Errorf("%s", <-c)
+	}()
 }
+
+func startHttpServer(errChan chan error, port int) {
+	go func() {
+		r := command.LoadRestRoutes()
+		errChan <- http.ListenAndServe(":"+strconv.Itoa(port), context.ClearHandler(r))
+	}()
+}
+

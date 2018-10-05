@@ -4,7 +4,7 @@ ScheduleInterval = 500
 BootTimeout = 30000
 ClientMonitor = 15000
 CheckInterval = '10s'
-Host = 'localhost'
+Host = 'edgex-support-scheduler'
 Port = 48085
 Protocol = 'http'
 ReadMaxLimit = 100
@@ -12,7 +12,7 @@ StartupMsg = 'This is the Support Scheduler Microservice'
 Timeout = 5000
 
 [Registry]
-Host = 'localhost'
+Host = 'edgex-core-consul'
 Port = 8500
 Type = 'consul'
 
@@ -23,24 +23,24 @@ File = './logs/edgex-support-scheduler.log'
 [Clients]
   [Clients.Metadata]
   Protocol = 'http'
-  Host = 'localhost'
+  Host = 'edgex-core-metadata'
   Port = 48081
 
   [Clients.Logging]
   Protocol = 'http'
-  Host = 'localhost'
+  Host = 'edgex-support-logging'
   Port = 48061
 
-[Schedules]
-    [Schedules.Midnight]
+[DefaultSchedules]
+    [DefaultSchedules.Midnight]
     Name = 'midnight'
     Start = '20180101T000000'
     Frequency = 'P1D'
 
-[ScheduleEvents]
-    [ScheduleEvents.ScrubPushed]
+[DefaultScheduleEvents]
+    [DefaultScheduleEvents.Scrub-Pushed]
     Name = 'scrub-pushed-events'
-    Host = 'localhost'
+    Host = 'edgex-core-data'
     Port = 48080
     Protocol = 'http'
     Method = 'DELETE'
@@ -49,9 +49,9 @@ File = './logs/edgex-support-scheduler.log'
     Schedule = 'midnight'
     Scheduler = 'support-scheduler'
 
-    [ScheduleEvents.ScrubAged]
+    [DefaultScheduleEvents.Scrub-Aged]
     Name = 'scrub-aged-events'
-    Host = 'localhost'
+    Host = 'edgex-core-data'
     Port = 48080
     Protocol = 'http'
     Method = 'DELETE'
@@ -59,6 +59,7 @@ File = './logs/edgex-support-scheduler.log'
     Path = 'api/v1/event/removeold/age/604800000'
     Schedule = 'midnight'
     Scheduler = 'support-scheduler'
+
 
 
 
