@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/edgexfoundry/edgex-go/internal/support/logging/models"
+	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 )
 
 const (
@@ -45,7 +46,7 @@ func testPersistenceFind(t *testing.T, persistence persistence) {
 	}
 
 	le := models.LogEntry{
-		Level:         models.TRACE,
+		Level:         logger.TraceLog,
 		OriginService: sampleService1,
 		Message:       message1,
 		Labels:        labels1,
@@ -121,7 +122,7 @@ func testPersistenceRemove(t *testing.T, persistence persistence) {
 			persistence.reset()
 
 			le := models.LogEntry{
-				Level:         models.TRACE,
+				Level:         logger.TraceLog,
 				OriginService: sampleService1,
 				Message:       message1,
 				Labels:        labels1,
