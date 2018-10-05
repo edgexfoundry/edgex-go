@@ -21,10 +21,9 @@ import (
 )
 
 const (
-	ScheduleInterval                  = 500
+	ScheduleInterval = 500
 )
 
-//the schedule specific shared variables
 var (
 	mutex                          sync.Mutex
 	scheduleQueue                  = queueV1.New()                     // global schedule queue
@@ -96,8 +95,7 @@ func querySchedule(scheduleId string) (models.Schedule, error) {
 	return scheduleContext.Schedule, nil
 }
 
-
-func queryScheduleByName(scheduleName string) (models.Schedule, error){
+func queryScheduleByName(scheduleName string) (models.Schedule, error) {
 	mutex.Lock()
 	defer mutex.Unlock()
 
@@ -413,7 +411,7 @@ func execute(context *ScheduleContext, wg *sync.WaitGroup) error {
 		}
 
 		client := &http.Client{
-			Timeout:       time.Duration(Configuration.Service.Timeout) * time.Millisecond,
+			Timeout: time.Duration(Configuration.Service.Timeout) * time.Millisecond,
 		}
 		responseBytes, statusCode, err := sendRequestAndGetResponse(client, req)
 		responseStr := string(responseBytes)
@@ -471,9 +469,9 @@ func validMethod(method string) bool {
 	   extension-method = token
 	     token          = 1*<any CHAR except CTLs or separators>
 	*/
-	a:= [] string {"GET","HEAD", "POST","PUT","DELETE","TRACE","CONNECT"}
+	a := []string{"GET", "HEAD", "POST", "PUT", "DELETE", "TRACE", "CONNECT"}
 	method = strings.ToUpper(method)
-	return contains(a,method)
+	return contains(a, method)
 }
 
 func contains(a []string, x string) bool {
@@ -484,8 +482,6 @@ func contains(a []string, x string) bool {
 	}
 	return false
 }
-
-
 
 // Utility function for adding configured locally schedulers and scheduled events
 func AddSchedulers() error {
@@ -530,7 +526,7 @@ func AddSchedulers() error {
 		}
 
 		scheduleEvent := models.ScheduleEvent{
-			Id: 	 	 bson.NewObjectId(),
+			Id:          bson.NewObjectId(),
 			Name:        scheduleEvents[e].Name,
 			Schedule:    scheduleEvents[e].Schedule,
 			Parameters:  scheduleEvents[e].Parameters,
@@ -549,4 +545,5 @@ func AddSchedulers() error {
 	LoggingClient.Info(fmt.Sprintf("completed loading default schedules and schedule events"))
 	return nil
 }
+
 //endregion

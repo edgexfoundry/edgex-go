@@ -20,6 +20,7 @@ Type = 'consul'
 EnableRemote = false
 File = '/edgex/logs/edgex-support-scheduler.log'
 
+
 [Clients]
   [Clients.Metadata]
   Protocol = 'http'

@@ -13,7 +13,6 @@ import (
 	"time"
 )
 
-
 // Test common const
 const (
 	TestUnexpectedMsg                     = "unexpected result"
