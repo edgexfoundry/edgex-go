@@ -22,17 +22,18 @@ type zeroMQEventPublisher struct {
 	mux       sync.Mutex
 }
 
-func newZeroMQEventPublisher() zeroMQEventPublisher {
+func newZeroMQEventPublisher() sender {
 	newPublisher, _ := zmq.NewSocket(zmq.PUB)
 	LoggingClient.Info("Connecting to analytics 0MQ at: " + Configuration.AnalyticsQueue.Uri())
 	newPublisher.Bind(Configuration.AnalyticsQueue.Uri())
 	LoggingClient.Info("Connected to analytics outbound 0MQ")
-	return zeroMQEventPublisher{
+	sender := &zeroMQEventPublisher{
 		publisher: newPublisher,
 	}
+	return sender
 }
 
-func (sender zeroMQEventPublisher) Send(data []byte, event *models.Event) bool {
+func (sender *zeroMQEventPublisher) Send(data []byte, event *models.Event) bool {
 	sender.mux.Lock()
 	defer sender.mux.Unlock()
 	LoggingClient.Debug("Sending data to 0MQ: " + string(data[:]))
