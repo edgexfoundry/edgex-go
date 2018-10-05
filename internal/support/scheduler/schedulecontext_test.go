@@ -13,6 +13,7 @@ import (
 	"time"
 )
 
+<<<<<<< HEAD
 
 // Test common const
 const (
@@ -48,6 +49,8 @@ const (
 	TestScheduleEventAddressableProtocol = "MQTT"
 	TestScheduleEventUpdatingName        = "pushed events-1"
 )
+=======
+>>>>>>> 388bdb10bcb7248b9d4099fd1e3c9b0c322db94f
 func TestRet(t *testing.T) {
 	testSchedule := models.Schedule{
 		Name:      TestScheduleName,

@@ -35,6 +35,10 @@ func main() {
 	flag.Usage = usage.HelpCallback
 	flag.Parse()
 
+<<<<<<< HEAD
+=======
+	//begin changes EFC
+>>>>>>> 388bdb10bcb7248b9d4099fd1e3c9b0c322db94f
 	params := startup.BootParams{UseConsul: useConsul, UseProfile: useProfile, BootTimeout: internal.BootTimeoutDefault}
 	startup.Bootstrap(params, scheduler.Retry, logBeforeInit)
 
@@ -47,6 +51,7 @@ func main() {
 	scheduler.LoggingClient.Info("Service dependencies resolved...")
 	scheduler.LoggingClient.Info(fmt.Sprintf("Starting %s %s ", internal.SupportSchedulerServiceKey, edgex.Version))
 
+<<<<<<< HEAD
 	// Initialize the  Service Routes
 	scheduler.LoadRestRoutes()
 
@@ -59,6 +64,8 @@ func main() {
 	// Start the ticker
 	scheduler.StartTicker()
 
+=======
+>>>>>>> 388bdb10bcb7248b9d4099fd1e3c9b0c322db94f
 	http.TimeoutHandler(nil, time.Millisecond*time.Duration(scheduler.Configuration.Service.Timeout), "Request timed out")
 	scheduler.LoggingClient.Info(scheduler.Configuration.Service.StartupMsg, "")
 
