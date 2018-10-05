@@ -47,9 +47,12 @@ File = '/edgex/logs/edgex-export-distro.log'
 
 [MessageQueue]
 Protocol = 'tcp'
-Host = '*'
+Host = 'edgex-core-data'
 Port = 5563
 Type = 'zero'
 
-
-
+[AnalyticsQueue]
+Protocol = 'tcp'
+Host = '*'
+Port = 5566
+Type = 'zero'

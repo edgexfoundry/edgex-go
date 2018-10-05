@@ -3,6 +3,7 @@
 // Cavium
 // Mainflux
 // IOTech
+// Copyright (c) 2018 Dell Technologies, Inc.
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -67,7 +68,7 @@ func (reg *registrationInfo) update(newReg export.Registration) bool {
 	case export.FormatXML:
 		reg.format = xmlFormatter{}
 	case export.FormatSerialized:
-		// TODO reg.format = distro.NewSerializedFormat()
+		reg.format = jsonFormatter{}
 	case export.FormatIoTCoreJSON:
 		reg.format = jsonFormatter{}
 	case export.FormatAzureJSON:
@@ -113,7 +114,7 @@ func (reg *registrationInfo) update(newReg export.Registration) bool {
 		c := Configuration.Certificates["AWS"]
 		reg.sender = newMqttSender(newReg.Addressable, c.Cert, c.Key)
 	case export.DestZMQ:
-		LoggingClient.Info("Destination ZMQ is not supported")
+		reg.sender = newZeroMQEventPublisher()
 	case export.DestIotCoreMQTT:
 		reg.sender = newIoTCoreSender(newReg.Addressable)
 	case export.DestRest:
