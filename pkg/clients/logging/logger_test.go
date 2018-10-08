@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-package models
+package logger
 
 import (
 	"testing"
@@ -15,11 +15,11 @@ func TestIsValidLogLevel(t *testing.T) {
 		level string
 		res   bool
 	}{
-		{TRACE, true},
-		{DEBUG, true},
-		{INFO, true},
-		{WARN, true},
-		{ERROR, true},
+		{TraceLog, true},
+		{DebugLog, true},
+		{InfoLog, true},
+		{WarnLog, true},
+		{ErrorLog, true},
 		{"EERROR", false},
 		{"ERRORR", false},
 		{"INF", false},

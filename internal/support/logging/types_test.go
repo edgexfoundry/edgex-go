@@ -8,6 +8,8 @@ package logging
 
 import (
 	"testing"
+
+	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 )
 
 func logAllLevels(pl privLogger, msg string) {
@@ -20,6 +22,7 @@ func logAllLevels(pl privLogger, msg string) {
 
 func TestPrivLogger(t *testing.T) {
 	pl := newPrivateLogger()
+	pl.SetLogLevel(logger.TraceLog)
 
 	// Does not break with nil persistence
 	dbClient = nil

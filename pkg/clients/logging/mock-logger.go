@@ -21,6 +21,10 @@ func NewMockClient() LoggingClient {
 	return MockLogger{}
 }
 
+func (lc MockLogger) SetLogLevel(loglevel string) {
+	return
+}
+
 func (lc MockLogger) Info(msg string, labels ...string) error {
 	return nil
 }
