@@ -1,0 +1,36 @@
+#
+# Copyright (c) 2017-2018
+# Mainflux
+# Cavium
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+FROM golang:1.9-alpine AS builder
+WORKDIR /go/src/github.com/edgexfoundry/edgex-go
+
+# The main mirrors are giving us timeout issues on builds periodically.
+# So we can try these.
+RUN echo http://nl.alpinelinux.org/alpine/v3.6/main > /etc/apk/repositories; \
+    echo http://nl.alpinelinux.org/alpine/v3.6/community >> /etc/apk/repositories
+
+
+RUN apk update && apk add zeromq-dev libsodium-dev pkgconfig build-base
+COPY . .
+RUN make cmd/export-distro/export-distro
+
+FROM alpine:3.7
+
+LABEL license='SPDX-License-Identifier: Apache-2.0' \
+      copyright='Copyright (c) 2017-2018: Mainflux, Cavium'
+
+# The main mirrors are giving us timeout issues on builds periodically.
+# So we can try these.
+RUN echo http://nl.alpinelinux.org/alpine/v3.7/main > /etc/apk/repositories; \
+    echo http://nl.alpinelinux.org/alpine/v3.7/community >> /etc/apk/repositories
+
+
+RUN apk --no-cache add zeromq
+COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/export-distro/export-distro /
+COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/export-distro/res/docker/configuration.toml /res/docker/configuration.toml
+ENTRYPOINT ["/export-distro","--consul","--profile=docker","--confdir=/res"]

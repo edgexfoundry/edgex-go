@@ -1,0 +1,13 @@
+The following open source projects are referenced by Core Data Go:
+
+mgo v2 (BSD-2) - https://github.com/go-mgo/mgo
+https://github.com/go-mgo/mgo/blob/v2-unstable/LICENSE
+
+mgo/bson v2 (unspecified) - https://github.com/go-mgo/mgo/tree/v2/bson
+https://github.com/go-mgo/mgo/blob/v2/bson/LICENSE
+
+gorilla/mux (BSD-3) - https://github.com/gorilla/mux
+https://github.com/gorilla/mux/blob/master/LICENSE
+
+pebbe/zmq4 (BSD-2) - https://github.com/pebbe/zmq4
+https://github.com/pebbe/zmq4/blob/master/LICENSE.txt

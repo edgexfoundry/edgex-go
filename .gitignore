@@ -1,0 +1,24 @@
+.idea/
+.vscode/
+vendor
+*.exe
+glide.lock
+*.DS_Store
+.project
+*.snap
+*.bz2
+*.pyc
+
+# binary files
+cmd/config-seed/config-seed
+cmd/core-command/core-command
+cmd/core-data/core-data
+cmd/core-metadata/core-metadata
+cmd/export-client/export-client
+cmd/export-distro/export-distro
+cmd/support-logging/support-logging
+cmd/support-notifications/support-notifications
+cmd/sys-mgmt-agent/sys-mgmt-agent
+
+# log dirs
+**/logs

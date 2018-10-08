@@ -1,0 +1,30 @@
+Persistence = 'database'
+
+[Service]
+BootTimeout = 30000
+ClientMonitor = 15000
+CheckInterval = '10s'
+Host = 'localhost'
+Port = 48061
+Protocol = 'http'
+ReadMaxLimit = 100
+StartupMsg = 'This is the Support Logging Microservice'
+Timeout = 5000
+
+[Registry]
+Host = 'localhost'
+Port = 8500
+Type = 'consul'
+
+[Logging]
+File = './logs/support-logging.log'
+
+[Databases]
+  [Databases.Primary]
+  Host = 'localhost'
+  Name = 'logging'
+  Password = ''
+  Port = 27017
+  Username = ''
+  Timeout = 5000
+  Type = 'mongodb'

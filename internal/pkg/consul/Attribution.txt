@@ -1,0 +1,5 @@
+The following open source projects are referenced by Consul Client Go:
+
+hashicorp/consul 0.9.3 (Modzilla Public License 2.0) - https://github.com/hashicorp/consul
+https://github.com/hashicorp/consul/blob/master/LICENSE
+
