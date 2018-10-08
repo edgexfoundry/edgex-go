@@ -11,7 +11,7 @@
 GO=CGO_ENABLED=0 go
 GOCGO=CGO_ENABLED=1 go
 
-DOCKERS=docker_config-seed docker_export_client docker_export_distro docker_core_data docker_core_metadata docker_core_command docker_support_logging docker_support_notifications docker_sys_mgmt_agent
+DOCKERS=docker_config_seed docker_export_client docker_export_distro docker_core_data docker_core_metadata docker_core_command docker_support_logging docker_support_notifications docker_sys_mgmt_agent
 .PHONY: $(DOCKERS)
 
 MICROSERVICES=cmd/config-seed/config-seed cmd/export-client/export-client cmd/export-distro/export-distro cmd/core-metadata/core-metadata cmd/core-data/core-data cmd/core-command/core-command cmd/support-logging/support-logging cmd/support-notifications/support-notifications cmd/sys-mgmt-agent/sys-mgmt-agent
@@ -72,7 +72,7 @@ run_docker:
 
 docker: $(DOCKERS)
 
-docker_config-seed:
+docker_config_seed:
 	docker build \
 		-f docker/Dockerfile.config-seed \
 		--label "git_sha=$(GIT_SHA)" \
