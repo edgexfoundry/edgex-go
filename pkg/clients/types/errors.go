@@ -18,7 +18,13 @@ import "fmt"
 type ErrNotFound struct{}
 
 func (e ErrNotFound) Error() string {
-	return "item not found"
+	return "Item not found"
+}
+
+type ErrResponseNil struct{}
+
+func (e ErrResponseNil) Error() string {
+	return "Response was nil"
 }
 
 type ErrServiceClient struct {

@@ -68,9 +68,9 @@ func (r *ReadingRestClient) init(params types.EndpointParams) {
 	}
 }
 
-// Help method to request and decode a reading slice
+// Helper method to request and decode a reading slice
 func (r *ReadingRestClient) requestReadingSlice(url string) ([]models.Reading, error) {
-	data, err := getRequest(url)
+	data, err := clients.GetRequest(url)
 	if err != nil {
 		return []models.Reading{}, err
 	}
@@ -80,9 +80,9 @@ func (r *ReadingRestClient) requestReadingSlice(url string) ([]models.Reading, e
 	return rSlice, err
 }
 
-// Helper method to request and decode a reading and return the reading
+// Helper method to request and decode a reading
 func (r *ReadingRestClient) requestReading(url string) (models.Reading, error) {
-	data, err := getRequest(url)
+	data, err := clients.GetRequest(url)
 	if err != nil {
 		return models.Reading{}, err
 	}
@@ -104,7 +104,7 @@ func (r *ReadingRestClient) Reading(id string) (models.Reading, error) {
 
 // Get reading count
 func (r *ReadingRestClient) ReadingCount() (int, error) {
-	return countRequest(r.url + "/count")
+	return clients.CountRequest(r.url + "/count")
 }
 
 // Get the readings for a device
@@ -149,10 +149,10 @@ func (r *ReadingRestClient) ReadingsForDeviceAndValueDescriptor(deviceId string,
 
 // Add a reading
 func (r *ReadingRestClient) Add(reading *models.Reading) (string, error) {
-	return postRequest(r.url, reading)
+	return clients.PostJsonRequest(r.url, reading)
 }
 
 // Delete a reading by id
 func (r *ReadingRestClient) Delete(id string) error {
-	return deleteRequest(r.url + "/id/" + id)
+	return clients.DeleteRequest(r.url + "/id/" + id)
 }

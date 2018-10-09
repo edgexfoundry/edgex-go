@@ -14,10 +14,7 @@
 package metadata
 
 import (
-	"bytes"
 	"encoding/json"
-	"fmt"
-	"net/http"
 	"strconv"
 
 	"github.com/edgexfoundry/edgex-go/pkg/clients"
@@ -66,134 +63,36 @@ func (d *DeviceServiceRestClient) init(params types.EndpointParams) {
 	}
 }
 
-// Helper method to decode and return a deviceservice
-func (s *DeviceServiceRestClient) decodeDeviceService(resp *http.Response) (models.DeviceService, error) {
-	dec := json.NewDecoder(resp.Body)
-	ds := models.DeviceService{}
-	err := dec.Decode(&ds)
+// Helper method to request and decode a device service
+func (s *DeviceServiceRestClient) requestDeviceService(url string) (models.DeviceService, error) {
+	data, err := clients.GetRequest(url)
 	if err != nil {
 		return models.DeviceService{}, err
 	}
 
+	ds := models.DeviceService{}
+	err = json.Unmarshal(data, &ds)
 	return ds, err
 }
 
 // Update the last connected time for the device service
 func (s *DeviceServiceRestClient) UpdateLastConnected(id string, time int64) error {
-	req, err := http.NewRequest(http.MethodPut, s.url+"/"+id+"/lastconnected/"+strconv.FormatInt(time, 10), nil)
-	if err != nil {
-		return err
-	}
-
-	resp, err := makeRequest(req)
-	if err != nil {
-		return err
-	}
-	if resp == nil {
-		return ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		// Get the response body
-		bodyBytes, err := getBody(resp)
-		if err != nil {
-			return err
-		}
-
-		return types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-
-	return nil
+	_, err := clients.PutRequest(s.url+"/"+id+"/lastconnected/"+strconv.FormatInt(time, 10), nil)
+	return err
 }
 
 // Update the last reported time for the device service
 func (s *DeviceServiceRestClient) UpdateLastReported(id string, time int64) error {
-	req, err := http.NewRequest(http.MethodPut, s.url+"/"+id+"/lastreported/"+strconv.FormatInt(time, 10), nil)
-	if err != nil {
-		return err
-	}
-
-	resp, err := makeRequest(req)
-	if err != nil {
-		return err
-	}
-	if resp == nil {
-		return ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		// Get the response body
-		bodyBytes, err := getBody(resp)
-		if err != nil {
-			return err
-		}
-
-		return types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-
-	return nil
+	_, err := clients.PutRequest(s.url+"/"+id+"/lastreported/"+strconv.FormatInt(time, 10), nil)
+	return err
 }
 
 // Add a new deviceservice
 func (s *DeviceServiceRestClient) Add(ds *models.DeviceService) (string, error) {
-	jsonStr, err := json.Marshal(ds)
-	if err != nil {
-		return "", err
-	}
-
-	client := &http.Client{}
-	resp, err := client.Post(s.url, "application/json", bytes.NewReader(jsonStr))
-	if err != nil {
-		return "", err
-	}
-	if resp == nil {
-		return "", ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	// Get the response body
-	bodyBytes, err := getBody(resp)
-	if err != nil {
-		return "", err
-	}
-	bodyString := string(bodyBytes)
-
-	if resp.StatusCode != http.StatusOK {
-		return "", types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-
-	return bodyString, nil
+	return clients.PostJsonRequest(s.url, ds)
 }
 
 // Request deviceservice for specified name
 func (s *DeviceServiceRestClient) DeviceServiceForName(name string) (models.DeviceService, error) {
-	req, err := http.NewRequest(http.MethodGet, s.url+"/name/"+name, nil)
-	if err != nil {
-		fmt.Printf("DeviceServiceForName NewRequest failed: %v\n", err)
-		return models.DeviceService{}, err
-	}
-
-	resp, err := makeRequest(req)
-	if resp == nil {
-		return models.DeviceService{}, ErrResponseNil
-	}
-	defer resp.Body.Close()
-	if err != nil {
-		fmt.Printf("DeviceServiceForName makeRequest failed: %v\n", err)
-		return models.DeviceService{}, err
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		// Get the response body
-		bodyBytes, err := getBody(resp)
-		if err != nil {
-			return models.DeviceService{}, err
-		}
-
-		return models.DeviceService{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-
-	return s.decodeDeviceService(resp)
+	return s.requestDeviceService(s.url + "/name/" + name)
 }

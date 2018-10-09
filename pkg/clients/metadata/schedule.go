@@ -15,9 +15,7 @@
 package metadata
 
 import (
-	"bytes"
 	"encoding/json"
-	"net/http"
 	"net/url"
 
 	"github.com/edgexfoundry/edgex-go/pkg/clients"
@@ -66,242 +64,61 @@ func (s *ScheduleRestClient) init(params types.EndpointParams) {
 	}
 }
 
-// Help method to decode a schedule slice
-func (s *ScheduleRestClient) decodeScheduleSlice(resp *http.Response) ([]models.Schedule, error) {
-	dec := json.NewDecoder(resp.Body)
-	sSlice := []models.Schedule{}
-
-	err := dec.Decode(&sSlice)
-	if err != nil {
-		return []models.Schedule{}, err
-	}
-
-	return sSlice, err
-}
-
-// Helper method to decode a schedule and return the schedule
-func (s *ScheduleRestClient) decodeSchedule(resp *http.Response) (models.Schedule, error) {
-	dec := json.NewDecoder(resp.Body)
-	sched := models.Schedule{}
-
-	err := dec.Decode(&sched)
+// Helper method to request and decode a schedule
+func (s *ScheduleRestClient) requestSchedule(url string) (models.Schedule, error) {
+	data, err := clients.GetRequest(url)
 	if err != nil {
 		return models.Schedule{}, err
 	}
 
+	sched := models.Schedule{}
+	err = json.Unmarshal(data, &sched)
 	return sched, err
 }
 
+// Helper method to request and decode a schedule slice
+func (s *ScheduleRestClient) requestScheduleSlice(url string) ([]models.Schedule, error) {
+	data, err := clients.GetRequest(url)
+	if err != nil {
+		return []models.Schedule{}, err
+	}
+
+	sSlice := make([]models.Schedule, 0)
+	err = json.Unmarshal(data, &sSlice)
+	return sSlice, err
+}
+
 // Add a schedule.
-func (s *ScheduleRestClient) Add(dev *models.Schedule) (string, error) {
-	jsonStr, err := json.Marshal(dev)
-	if err != nil {
-		return "", err
-	}
-
-	req, err := http.NewRequest(http.MethodPost, s.url, bytes.NewReader(jsonStr))
-	if err != nil {
-		return "", err
-	}
-
-	resp, err := makeRequest(req)
-	if err != nil {
-		return "", err
-	}
-	if resp == nil {
-		return "", ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	// Get the body
-	bodyBytes, err := getBody(resp)
-	if err != nil {
-		return "", err
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return "", types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-
-	return string(bodyBytes), nil
+func (s *ScheduleRestClient) Add(sched *models.Schedule) (string, error) {
+	return clients.PostJsonRequest(s.url, sched)
 }
 
 // Delete a schedule (specified by id).
 func (s *ScheduleRestClient) Delete(id string) error {
-	req, err := http.NewRequest(http.MethodDelete, s.url+"/id/"+id, nil)
-	if err != nil {
-		return err
-	}
-
-	resp, err := makeRequest(req)
-	if err != nil {
-		return err
-	}
-	if resp == nil {
-		return ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		// Get the response body
-		bodyBytes, err := getBody(resp)
-		if err != nil {
-			return err
-		}
-
-		return types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-
-	return nil
+	return clients.DeleteRequest(s.url + "/id/" + id)
 }
 
 // Delete a schedule (specified by name).
 func (s *ScheduleRestClient) DeleteByName(name string) error {
-	req, err := http.NewRequest(http.MethodDelete, s.url+"/name/"+url.QueryEscape(name), nil)
-	if err != nil {
-		return err
-	}
-
-	resp, err := makeRequest(req)
-	if err != nil {
-		return err
-	}
-	if resp == nil {
-		return ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		// Get the response body
-		bodyBytes, err := getBody(resp)
-		if err != nil {
-			return err
-		}
-
-		return types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-
-	return nil
+	return clients.DeleteRequest(s.url + "/name/" + url.QueryEscape(name))
 }
 
 // Schedule returns the Schedule specified by id.
 func (s *ScheduleRestClient) Schedule(id string) (models.Schedule, error) {
-	req, err := http.NewRequest(http.MethodGet, s.url+"/"+id, nil)
-	if err != nil {
-		return models.Schedule{}, err
-	}
-
-	// Make the request and get response
-	resp, err := makeRequest(req)
-	if err != nil {
-		return models.Schedule{}, err
-	}
-	if resp == nil {
-		return models.Schedule{}, ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		// Get the response body
-		bodyBytes, err := getBody(resp)
-		if err != nil {
-			return models.Schedule{}, err
-		}
-
-		return models.Schedule{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-
-	return s.decodeSchedule(resp)
+	return s.requestSchedule(s.url + "/" + id)
 }
 
 // ScheduleForName returns the Schedule specified by name.
 func (s *ScheduleRestClient) ScheduleForName(name string) (models.Schedule, error) {
-	req, err := http.NewRequest(http.MethodGet, s.url+"/name/"+url.QueryEscape(name), nil)
-	if err != nil {
-		return models.Schedule{}, err
-	}
-
-	// Make the request and get response
-	resp, err := makeRequest(req)
-	if err != nil {
-		return models.Schedule{}, err
-	}
-	if resp == nil {
-		return models.Schedule{}, ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		// Get the response body
-		bodyBytes, err := getBody(resp)
-		if err != nil {
-			return models.Schedule{}, err
-		}
-
-		return models.Schedule{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-	return s.decodeSchedule(resp)
+	return s.requestSchedule(s.url + "/name/" + url.QueryEscape(name))
 }
 
 // Schedules returns the list of all schedules.
 func (s *ScheduleRestClient) Schedules() ([]models.Schedule, error) {
-	req, err := http.NewRequest(http.MethodGet, s.url, nil)
-	if err != nil {
-		return []models.Schedule{}, err
-	}
-
-	// Make the request and get response
-	resp, err := makeRequest(req)
-	if err != nil {
-		return []models.Schedule{}, err
-	}
-	if resp == nil {
-		return []models.Schedule{}, ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		// Get the response body
-		bodyBytes, err := getBody(resp)
-		if err != nil {
-			return []models.Schedule{}, err
-		}
-
-		return []models.Schedule{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-	return s.decodeScheduleSlice(resp)
+	return s.requestScheduleSlice(s.url)
 }
 
 // Update a schedule.
-func (s *ScheduleRestClient) Update(dev models.Schedule) error {
-	jsonStr, err := json.Marshal(&dev)
-	if err != nil {
-		return err
-	}
-
-	req, err := http.NewRequest(http.MethodPut, s.url, bytes.NewReader(jsonStr))
-	if err != nil {
-		return err
-	}
-
-	resp, err := makeRequest(req)
-	if err != nil {
-		return err
-	}
-	if resp == nil {
-		return ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		// Get the response body
-		bodyBytes, err := getBody(resp)
-		if err != nil {
-			return err
-		}
-
-		return types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-
-	return nil
+func (s *ScheduleRestClient) Update(sched models.Schedule) error {
+	return clients.UpdateRequest(s.url, sched)
 }
