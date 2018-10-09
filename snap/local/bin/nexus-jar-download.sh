@@ -9,8 +9,10 @@ download_jar_file()
     export JAR_FILE=$SERVICE-$VERSION.jar
 
     # download the jar file and the md5 sum for it
-    curl https://nexus.edgexfoundry.org/content/repositories/$REPO/org/edgexfoundry/$SERVICE/$VERSION/$JAR_FILE -o $JAR_FILE
-    curl https://nexus.edgexfoundry.org/content/repositories/$REPO/org/edgexfoundry/$SERVICE/$VERSION/$JAR_FILE.md5 -o $JAR_FILE.md5
+    curl https://nexus.edgexfoundry.org/content/repositories/$REPO/org/edgexfoundry/$SERVICE/$VERSION/$JAR_FILE \
+        -s -S -f -o $JAR_FILE 
+    curl https://nexus.edgexfoundry.org/content/repositories/$REPO/org/edgexfoundry/$SERVICE/$VERSION/$JAR_FILE.md5 \
+        -s -S -f -o $JAR_FILE.md5
 
     # confirm that the sum matches - note we can't use `md5sum -c` here because 
     # the md5sum file is just the hash, not the filename and so md5sum doesn't accept it
