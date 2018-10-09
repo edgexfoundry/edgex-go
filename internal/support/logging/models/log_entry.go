@@ -21,15 +21,3 @@ type LogEntry struct {
 	Message       string   `bson:"message" json:"message"`
 	Created       int64    `bson:"created" json:"created"`
 }
-
-const (
-	TRACE = "TRACE"
-	DEBUG = "DEBUG"
-	WARN  = "WARN"
-	INFO  = "INFO"
-	ERROR = "ERROR"
-)
-
-func IsValidLogLevel(l string) bool {
-	return l == TRACE || l == DEBUG || l == WARN || l == INFO || l == ERROR
-}

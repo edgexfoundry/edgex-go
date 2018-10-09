@@ -9,15 +9,16 @@ package logging
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/edgexfoundry/edgex-go/internal"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"strconv"
 	"strings"
 
+	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/support/logging/models"
+	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 	"github.com/go-zoo/bone"
 )
 
@@ -58,7 +59,7 @@ func addLog(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !models.IsValidLogLevel(l.Level) {
+	if !logger.IsValidLogLevel(l.Level) {
 		s := fmt.Sprintf("Invalid level in LogEntry: %s", l.Level)
 		w.WriteHeader(http.StatusBadRequest)
 		io.WriteString(w, s)
@@ -156,7 +157,7 @@ func getCriteria(w http.ResponseWriter, r *http.Request) *matchCriteria {
 		criteria.LogLevels = append(criteria.LogLevels,
 			strings.Split(logLevels, ",")...)
 		for _, l := range criteria.LogLevels {
-			if !models.IsValidLogLevel(l) {
+			if !logger.IsValidLogLevel(l) {
 				s := fmt.Sprintf("Invalid log level '%s'", l)
 				w.WriteHeader(http.StatusBadRequest)
 				io.WriteString(w, s)

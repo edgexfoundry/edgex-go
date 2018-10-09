@@ -17,6 +17,7 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/support/logging/models"
+	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 )
 
 type dummyPersist struct {
@@ -118,8 +119,8 @@ func TestGetLogs(t *testing.T) {
 	var labels = []string{"label1", "label2"}
 	var services = []string{"service1", "service2"}
 	var keywords = []string{"keyword1", "keyword2"}
-	var logLevels = []string{models.TRACE, models.DEBUG, models.WARN,
-		models.INFO, models.ERROR}
+	var logLevels = []string{logger.TraceLog, logger.DebugLog, logger.WarnLog,
+		logger.InfoLog, logger.ErrorLog}
 	var tests = []struct {
 		name       string
 		url        string
@@ -257,8 +258,8 @@ func TestRemoveLogs(t *testing.T) {
 	var labels = []string{"label1", "label2"}
 	var services = []string{"service1", "service2"}
 	var keywords = []string{"keyword1", "keyword2"}
-	var logLevels = []string{models.TRACE, models.DEBUG, models.WARN,
-		models.INFO, models.ERROR}
+	var logLevels = []string{logger.TraceLog, logger.DebugLog, logger.WarnLog,
+		logger.InfoLog, logger.ErrorLog}
 	var tests = []struct {
 		name     string
 		url      string
