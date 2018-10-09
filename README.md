@@ -4,14 +4,22 @@
 
 EdgeX Foundry is a vendor-neutral open source project hosted by The Linux Foundation building a common open framework for IoT edge computing.  At the heart of the project is an interoperability framework hosted within a full hardware- and OS-agnostic reference software platform to enable an ecosystem of plug-and-play components that unifies the marketplace and accelerates the deployment of IoT solutions.  This repository contains the Go implementation of EdgeX Foundry microservices.  It also includes files for building the services, containerizing the services, and initializing (bootstrapping) the services.
 
-# Install and Deploy Native #
+# Install and Deploy Native
 
-### Prerequisites ###
-Serveral EdgeX Foundry services depend on ZeroMQ for communications by default.  The easiest way to get and install ZeroMQ is to use or follow the following setup script:  https://gist.github.com/katopz/8b766a5cb0ca96c816658e9407e83d00.
+## Prerequisites
+### pkg-config
+`go get github.com/rjeczalik/pkgconfig/cmd/pkg-config`
+
+### ZeroMQ
+Several EdgeX Foundry services depend on ZeroMQ for communications by default.
+
+The easiest way to get and install ZeroMQ on Linux is to use or follow the following setup script:  https://gist.github.com/katopz/8b766a5cb0ca96c816658e9407e83d00.
+
+For MacOS, use brew: `brew install zeromq`. Please note that the necessary `pc` file will need to be added to the `PKG_CONFIG_PATH` environment variable. For example `PKG_CONFIG_PATH=/usr/local/Cellar/zeromq/4.2.5/lib/pkgconfig/`
 
 **Note**: Setup of the ZeroMQ library is not supported on Windows plaforms.
 
-### Installation and Execution ###
+## Installation and Execution
 To fetch the code and build the microservice execute the following:
 
 ```
@@ -25,6 +33,8 @@ make build
 # run the services
 make run
 ```
+
+**Note** You will need to have the database running before you execute `make run`. If you don't want to install a database locally, you can bring one up via their respective Docker containers.
 
 # Install and Deploy via Docker Container #
 This project has facilities to create and run Docker containers.
