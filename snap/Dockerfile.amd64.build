@@ -1,0 +1,9 @@
+# for x86, we can just use the upstream snapcraft image
+FROM snapcore/snapcraft:stable
+
+# include all of the build context inside /build
+COPY . /build
+
+# run the entrypoint.sh script to actually perform the build when the container is run
+WORKDIR /build
+ENTRYPOINT [ "/build/snap/entrypoint.sh" ]
