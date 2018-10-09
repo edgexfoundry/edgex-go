@@ -409,7 +409,7 @@ func TestDeleteEventReadingDoesNotExist(t *testing.T) {
 func TestTestLimit(t *testing.T) {
 	testedLimit := math.MinInt32
 
-	expectedNil := testLimit(testedLimit)
+	expectedNil := checkMaxLimit(testedLimit)
 
 	if expectedNil != nil {
 		t.Errorf("Should not exceed limit")
@@ -419,7 +419,7 @@ func TestTestLimit(t *testing.T) {
 func TestTestLimitOverLimit(t *testing.T) {
 	testedLimit := math.MaxInt32
 
-	expectedErr := testLimit(testedLimit)
+	expectedErr := checkMaxLimit(testedLimit)
 
 	if expectedErr == nil {
 		t.Errorf("Exceeded limit and should throw error")
@@ -577,7 +577,7 @@ func TestDoScrub(t *testing.T) {
 
 	expectedCount:= 1
 
-	actualCount, expectedNil := doScrub()
+	actualCount, expectedNil := scrubPushedEvents()
 
 	if actualCount != expectedCount {
 		t.Errorf("Expected %d deletions, was %d", expectedCount, actualCount)

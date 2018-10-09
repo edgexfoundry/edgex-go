@@ -346,7 +346,7 @@ func getEventByDeviceHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodGet:
-		err := testLimit(limitNum)
+		err := checkMaxLimit(limitNum)
 		if err != nil {
 			http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
 			return
@@ -497,7 +497,7 @@ func eventByCreationTimeHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodGet:
-		err := testLimit(limit)
+		err := checkMaxLimit(limit)
 		if err != nil {
 			http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
 			return
@@ -562,7 +562,7 @@ func readingByDeviceFilteredValueDescriptor(w http.ResponseWriter, r *http.Reque
 			}
 		}
 
-		err := testLimit(limitNum)
+		err := checkMaxLimit(limitNum)
 		if err != nil {
 			http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
 			return
@@ -587,7 +587,7 @@ func scrubHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodDelete:
-		count, err:= doScrub()
+		count, err:= scrubPushedEvents()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

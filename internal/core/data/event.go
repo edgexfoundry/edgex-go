@@ -218,7 +218,7 @@ func putEventOnQueue(e models.Event) {
 	}
 }
 
-func testLimit (limit int) error {
+func checkMaxLimit(limit int) error {
 	if limit > Configuration.Service.ReadMaxLimit {
 		LoggingClient.Error(maxExceededString)
 		return fmt.Errorf(maxExceededString)
@@ -297,7 +297,7 @@ func deleteEvents(deviceId string) (int, error) {
 	return count, nil
 }
 
-func doScrub()(int, error) {
+func scrubPushedEvents()(int, error) {
 	LoggingClient.Info("Scrubbing events.  Deleting all events that have been pushed")
 
 	// Get the events
