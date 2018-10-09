@@ -17,7 +17,7 @@ EdgeX Foundry is a vendor-neutral open source project hosted by The Linux Founda
 
 Several EdgeX Foundry services depend on ZeroMQ for communications by default.
 
-The easiest way to get and install ZeroMQ on Linux is to use or follow the following setup script: https://gist.github.com/katopz/8b766a5cb0ca96c816658e9407e83d00.
+The easiest way to get and install ZeroMQ on Linux is to use or follow the following setup script:  https://gist.github.com/katopz/8b766a5cb0ca96c816658e9407e83d00.
 
 For MacOS, use brew: `brew install zeromq`. Please note that the necessary `pc` file will need to be added to the `PKG_CONFIG_PATH` environment variable. For example `PKG_CONFIG_PATH=/usr/local/Cellar/zeromq/4.2.5/lib/pkgconfig/`
 
@@ -82,7 +82,7 @@ make build
 make run
 ```
 
-**Note** You will need to have the database and Consul running before you execute `make run`. If you don't want to install them, start them via their respective Docker containers.
+**Note** You will need to have the database running before you execute `make run`. If you don't want to install a database locally, you can bring one up via their respective Docker containers.
 
 ## Install and Deploy via Docker Container
 
@@ -150,8 +150,10 @@ cd bin
 ```
 
 ## Community
+
 - Chat: https://chat.edgexfoundry.org/home
 - Mainling lists: https://lists.edgexfoundry.org/mailman/listinfo
 
 ## License
+
 [Apache-2.0](LICENSE)
