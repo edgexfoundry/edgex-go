@@ -191,10 +191,12 @@ parts:
     source: ./snap/local
     stage:
       - bin/go-build-helper.sh
+      - bin/nexus-jar-download.sh
       - config/*
       - bin/*
     prime:
       - -bin/go-build-helper.sh
+      - -bin/nexus-jar-download.sh
       - bin/*
       - config/*
   mongodb:
@@ -357,16 +359,13 @@ parts:
     source: https://github.com/edgexfoundry/support-scheduler.git
     # the following commit == 0.7.0 version update
     source-commit: "194094a3cf2a0a3a2cc608cec7cd3c4904ac6b5b"
-    plugin: maven
+    plugin: make
+    build-packages: [curl]
     override-build: |
-      snapcraftctl build
+      . $SNAPCRAFT_STAGE/bin/nexus-jar-download.sh
       echo "Installing support-scheduler files"
 
-      # The logic following logic is all handled by DockerFile for
-      # the EdgeX support-scheduler docker image.
-      install -d "$SNAPCRAFT_PART_INSTALL/jar/support-scheduler"
-      mv "$SNAPCRAFT_PART_INSTALL/jar/support-scheduler-0.7.0-SNAPSHOT.jar" \
-         "$SNAPCRAFT_PART_INSTALL/jar/support-scheduler/support-scheduler.jar"
+      download_jar_file support-scheduler 0.7.0 staging
 
       # FIXME:
       # copy service license into /usr/share/java/doc, because the
@@ -376,39 +375,18 @@ parts:
          "$SNAPCRAFT_PART_INSTALL/usr/share/java/doc/support-scheduler/Attribution.txt"
       install -DT "./LICENSE-2.0.txt" \
          "$SNAPCRAFT_PART_INSTALL/usr/share/java/doc/support-scheduler/LICENSE-2.0.txt"
-    prime:
-      - -etc/fonts
-      - -etc/fonts/X11
-      - -usr/lib/jvm/*/ASSEMBLY_EXCEPTION
-      - -usr/lib/jvm/*/THIRD_PARTY_README
-      - -usr/lib/jvm/*/jre/ASSEMBLY_EXCEPTION
-      - -usr/lib/jvm/*/jre/THIRD_PARTY_README
-      - -usr/lib/jvm/*/man
-      - -usr/lib/jvm/*/jre/man
-      - -usr/lib/jvm/*/jre/lib/images
-      - -usr/lib/jvm/*/include
-      - -usr/lib/jvm/*/bin
-      - -usr/lib/jvm/*/lib
-      - -usr/lib/jvm/*/docs
-      - -usr/lib/jvm/*/src.zip
-      - -usr/share/X11
-      - -usr/share/man
-      - -usr/share/fonts
-      - -usr/share/
+
   support-rulesengine:
     source: https://github.com/edgexfoundry/support-rulesengine.git
     # the following commit == 0.7.0 version update
     source-commit: "3aca4a7bf9774ad07b9b74c7b05c45deb74412f2"
-    plugin: maven
+    plugin: make
+    build-packages: [curl]
     override-build: |
-      snapcraftctl build
+      . $SNAPCRAFT_STAGE/bin/nexus-jar-download.sh
       echo "Installing support-rulesengine files"
 
-      # The logic following logic is all handled by DockerFile for
-      # the EdgeX support-rulesengine docker image.
-      install -d "$SNAPCRAFT_PART_INSTALL/jar/support-rulesengine"
-      mv "$SNAPCRAFT_PART_INSTALL/jar/support-rulesengine-0.7.0-SNAPSHOT.jar" \
-         "$SNAPCRAFT_PART_INSTALL/jar/support-rulesengine/support-rulesengine.jar"
+      download_jar_file support-rulesengine 0.7.0 staging
 
       # FIXME:
       # copy service license into /usr/share/java/doc, because the
@@ -418,32 +396,14 @@ parts:
          "$SNAPCRAFT_PART_INSTALL/usr/share/java/doc/support-rulesengine/Attribution.txt"
       install -DT "./LICENSE-2.0.txt" \
          "$SNAPCRAFT_PART_INSTALL/usr/share/java/doc/support-rulesengine/LICENSE-2.0.txt"
-    prime:
-      - -etc/fonts
-      - -etc/fonts/X11
-      - -usr/lib/jvm/*/ASSEMBLY_EXCEPTION
-      - -usr/lib/jvm/*/THIRD_PARTY_README
-      - -usr/lib/jvm/*/jre/ASSEMBLY_EXCEPTION
-      - -usr/lib/jvm/*/jre/THIRD_PARTY_README
-      - -usr/lib/jvm/*/man
-      - -usr/lib/jvm/*/jre/man
-      - -usr/lib/jvm/*/jre/lib/images
-      - -usr/lib/jvm/*/include
-      - -usr/lib/jvm/*/bin
-      - -usr/lib/jvm/*/lib
-      - -usr/lib/jvm/*/docs
-      - -usr/lib/jvm/*/src.zip
-      - -usr/share/X11
-      - -usr/share/man
-      - -usr/share/fonts
-      - -usr/share/alsa
   device-virtual:
     source: https://github.com/edgexfoundry/device-virtual.git
     # the following commit == 0.5.0 version update +1 (core-domain fix)
     source-commit: "2033429"
-    plugin: maven
+    plugin: make
+    build-packages: [curl]
     override-build: |
-      snapcraftctl build
+      . $SNAPCRAFT_STAGE/bin/nexus-jar-download.sh
       echo "Installing device-virtual files"
 
       # The logic following logic is all handled by DockerFile for
@@ -451,8 +411,9 @@ parts:
       install -d "$SNAPCRAFT_PART_INSTALL/jar/device-virtual"
       install -d "$SNAPCRAFT_PART_INSTALL/jar/device-virtual/bacnet_sample_profiles"
       install -d "$SNAPCRAFT_PART_INSTALL/jar/device-virtual/modbus_sample_profiles"
-      mv "$SNAPCRAFT_PART_INSTALL/jar/device-virtual-0.5.0-SNAPSHOT.jar" \
-         "$SNAPCRAFT_PART_INSTALL/jar/device-virtual/device-virtual.jar"
+
+      download_jar_file device-virtual 0.5.0 staging
+
       cp ./bacnet_sample_profiles/*.yaml \
          "$SNAPCRAFT_PART_INSTALL/jar/device-virtual/bacnet_sample_profiles/"
       cp ./modbus_sample_profiles/*.yaml \
