@@ -46,4 +46,4 @@ docker run --rm -e "IS_RELEASE_JOB=$IS_RELEASE_JOB" -e "RELEASE=$RELEASE" -e "SN
 
 # also delete the image we created so that it doesn't persist on the system as it contains credentials
 docker image rm --force edgex-snap-builder:latest
-docker image prune
+docker image prune --force
