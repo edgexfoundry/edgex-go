@@ -14,15 +14,9 @@
 package distro
 
 import (
-	"bytes"
-	"encoding/json"
-	"fmt"
 	"github.com/edgexfoundry/edgex-go/pkg/clients"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
-	"github.com/pkg/errors"
-	"io/ioutil"
-	"net/http"
 )
 
 type DistroClient interface {
@@ -58,37 +52,5 @@ func (d *distroRestClient) init(params types.EndpointParams) {
 }
 
 func (d *distroRestClient) NotifyRegistrations(update models.NotifyUpdate) error {
-	client := &http.Client{}
-	url := d.url + clients.ApiNotifyRegistrationRoute
-
-	data, err := json.Marshal(update)
-	if err != nil {
-		return errors.New(fmt.Sprintf("error marshaling to json: %s", err.Error()))
-	}
-
-	req, err := http.NewRequest(http.MethodPut, url, bytes.NewBuffer([]byte(data)))
-	if err != nil {
-		return err
-	}
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		json, _ := getBody(resp)
-		return types.NewErrServiceClient(resp.StatusCode, json)
-	}
-	return nil
-}
-
-func getBody(resp *http.Response) ([]byte, error) {
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return []byte{}, err
-	}
-
-	return body, nil
+	return clients.UpdateRequest(d.url+clients.ApiNotifyRegistrationRoute, update)
 }

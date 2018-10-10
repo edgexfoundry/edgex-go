@@ -65,9 +65,9 @@ func (d *ValueDescriptorRestClient) init(params types.EndpointParams) {
 	}
 }
 
-// Help method to request and decode a valuedescriptor slice
+// Helper method to request and decode a valuedescriptor slice
 func (v *ValueDescriptorRestClient) requestValueDescriptorSlice(url string) ([]models.ValueDescriptor, error) {
-	data, err := getRequest(url)
+	data, err := clients.GetRequest(url)
 	if err != nil {
 		return []models.ValueDescriptor{}, err
 	}
@@ -77,9 +77,9 @@ func (v *ValueDescriptorRestClient) requestValueDescriptorSlice(url string) ([]m
 	return dSlice, err
 }
 
-// Helper method to request and decode a device and return the device
+// Helper method to request and decode a device
 func (v *ValueDescriptorRestClient) requestValueDescriptor(url string) (models.ValueDescriptor, error) {
-	data, err := getRequest(url)
+	data, err := clients.GetRequest(url)
 	if err != nil {
 		return models.ValueDescriptor{}, err
 	}
@@ -126,20 +126,20 @@ func (v *ValueDescriptorRestClient) ValueDescriptorsByUomLabel(uomLabel string) 
 
 // Add a value descriptor
 func (v *ValueDescriptorRestClient) Add(vdr *models.ValueDescriptor) (string, error) {
-	return postRequest(v.url, vdr)
+	return clients.PostJsonRequest(v.url, vdr)
 }
 
 // Update a value descriptor
 func (v *ValueDescriptorRestClient) Update(vdr *models.ValueDescriptor) error {
-	return putRequest(v.url, vdr)
+	return clients.UpdateRequest(v.url, vdr)
 }
 
 // Delete a value descriptor (specified by id)
 func (v *ValueDescriptorRestClient) Delete(id string) error {
-	return deleteRequest(v.url + "/id/" + id)
+	return clients.DeleteRequest(v.url + "/id/" + id)
 }
 
 // Delete a value descriptor (specified by name)
 func (v *ValueDescriptorRestClient) DeleteByName(name string) error {
-	return deleteRequest(v.url + "/name/" + name)
+	return clients.DeleteRequest(v.url + "/name/" + name)
 }

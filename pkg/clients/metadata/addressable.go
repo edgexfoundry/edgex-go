@@ -14,10 +14,7 @@
 package metadata
 
 import (
-	"bytes"
 	"encoding/json"
-	"fmt"
-	"net/http"
 	"net/url"
 
 	"github.com/edgexfoundry/edgex-go/pkg/clients"
@@ -67,175 +64,40 @@ func (a *AddressableRestClient) init(params types.EndpointParams) {
 	}
 }
 
+// Helper method to request and decode an addressable
+func (a *AddressableRestClient) requestAddressable(url string) (models.Addressable, error) {
+	data, err := clients.GetRequest(url)
+	if err != nil {
+		return models.Addressable{}, err
+	}
+
+	add := models.Addressable{}
+	err = json.Unmarshal(data, &add)
+	return add, err
+}
+
 // Add an addressable - handle error codes
 // Returns the ID of the addressable and an error
 func (a *AddressableRestClient) Add(addr *models.Addressable) (string, error) {
-	// Marshal the addressable to JSON
-	jsonStr, err := json.Marshal(addr)
-	if err != nil {
-		return "", err
-	}
-
-	client := &http.Client{}
-	resp, err := client.Post(a.url, "application/json", bytes.NewReader(jsonStr))
-	if err != nil {
-		return "", err
-	}
-	if resp == nil {
-		return "", ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	// Get the response body
-	bodyBytes, err := getBody(resp)
-	if err != nil {
-		return "", err
-	}
-	bodyString := string(bodyBytes)
-
-	if resp.StatusCode != http.StatusOK {
-		return "", types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-
-	return bodyString, err
+	return clients.PostJsonRequest(a.url, addr)
 }
-
-// Helper method to decode an addressable and return the addressable
-func (d *AddressableRestClient) decodeAddressable(resp *http.Response) (models.Addressable, error) {
-	dec := json.NewDecoder(resp.Body)
-	addr := models.Addressable{}
-
-	err := dec.Decode(&addr)
-	if err != nil {
-		return models.Addressable{}, err
-	}
-
-	return addr, err
-}
-
-// TODO: make method signatures consistent wrt to error return value
-// ie. use it everywhere, or not at all!
 
 // Get an addressable by id
-func (d *AddressableRestClient) Addressable(id string) (models.Addressable, error) {
-	req, err := http.NewRequest(http.MethodGet, d.url+"/"+id, nil)
-	if err != nil {
-		return models.Addressable{}, err
-	}
-
-	resp, err := makeRequest(req)
-	if err != nil {
-		return models.Addressable{}, err
-	}
-	if resp == nil {
-		return models.Addressable{}, ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		// Get the response body
-		bodyBytes, err := getBody(resp)
-		if err != nil {
-			return models.Addressable{}, err
-		}
-
-		return models.Addressable{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-
-	return d.decodeAddressable(resp)
+func (a *AddressableRestClient) Addressable(id string) (models.Addressable, error) {
+	return a.requestAddressable(a.url + "/" + id)
 }
 
 // Get the addressable by name
 func (a *AddressableRestClient) AddressableForName(name string) (models.Addressable, error) {
-	req, err := http.NewRequest(http.MethodGet, a.url+"/name/"+url.QueryEscape(name), nil)
-	if err != nil {
-		return models.Addressable{}, err
-	}
-
-	resp, err := makeRequest(req)
-
-	// Check response
-	if resp == nil {
-		return models.Addressable{}, ErrResponseNil
-	}
-	defer resp.Body.Close()
-	if err != nil {
-		fmt.Printf("AddressableForName makeRequest failed: %v\n", err)
-		return models.Addressable{}, err
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		// Get the response body
-		bodyBytes, err := getBody(resp)
-		if err != nil {
-			return models.Addressable{}, err
-		}
-
-		return models.Addressable{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-
-	return a.decodeAddressable(resp)
+	return a.requestAddressable(a.url + "/name/" + url.QueryEscape(name))
 }
 
 // Update a addressable
 func (a *AddressableRestClient) Update(addr models.Addressable) error {
-	jsonStr, err := json.Marshal(&addr)
-	if err != nil {
-		return err
-	}
-
-	req, err := http.NewRequest(http.MethodPut, a.url, bytes.NewReader(jsonStr))
-	if err != nil {
-		return err
-	}
-
-	resp, err := makeRequest(req)
-	if err != nil {
-		return err
-	}
-	if resp == nil {
-		return ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		// Get the response body
-		bodyBytes, err := getBody(resp)
-		if err != nil {
-			return err
-		}
-
-		return types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-
-	return nil
+	return clients.UpdateRequest(a.url, addr)
 }
 
 // Delete a addressable (specified by id)
 func (a *AddressableRestClient) Delete(id string) error {
-	req, err := http.NewRequest(http.MethodDelete, a.url+"/id/"+id, nil)
-	if err != nil {
-		return err
-	}
-
-	resp, err := makeRequest(req)
-	if err != nil {
-		return err
-	}
-	if resp == nil {
-		return ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		// Get the response body
-		bodyBytes, err := getBody(resp)
-		if err != nil {
-			return err
-		}
-
-		return types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-
-	return nil
+	return clients.DeleteRequest(a.url + "/id/" + id)
 }
