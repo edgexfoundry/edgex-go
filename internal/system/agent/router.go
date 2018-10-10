@@ -106,7 +106,7 @@ func configHandler(w http.ResponseWriter, r *http.Request) {
 	var services []string
 	services = strings.Split(list, ",")
 
-	var send = RespMap{}
+	var send = ConfigRespMap{}
 	send, _ = getConfig(services)
 
 	w.Header().Add("Content-Type", "application/json")
@@ -127,7 +127,7 @@ func metricsHandler(w http.ResponseWriter, r *http.Request) {
 	var services []string
 	services = strings.Split(list, ",")
 
-	var send = RespMap{}
+	var send = MetricsRespMap{}
 	send, _ = getMetrics(services)
 
 	w.Header().Add("Content-Type", "application/json")

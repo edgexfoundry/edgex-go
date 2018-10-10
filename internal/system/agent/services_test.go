@@ -22,7 +22,7 @@ import (
 	"fmt"
 )
 
-func TestProcessResponse(t *testing.T) {
+func TestProcessConfigResponse(t *testing.T) {
 
 	LoggingClient = logger.NewMockClient()
 
@@ -68,9 +68,9 @@ func TestProcessResponse(t *testing.T) {
 		"DBType":                        "mongodb",
 	}
 
-	var send = RespMap{}
+	var send = ConfigRespMap{}
 
-	send = ProcessResponse(responseJSON)
+	send = ProcessConfigResponse(responseJSON)
 	LoggingClient.Info(fmt.Sprintf("Actual Response: {%v}", send))
 
 	expected, err := json.Marshal(expResponseJSON)
@@ -79,12 +79,13 @@ func TestProcessResponse(t *testing.T) {
 		return
 	}
 
-	var exp = RespMap{}
+	var exp = ConfigRespMap{}
 	err = json.Unmarshal([]byte(expected), &exp)
 	if err != nil {
 		LoggingClient.Error(fmt.Sprintf("ERROR: {%v}", err))
 	}
 
+	// TODO: Ran into an issue here with the call to reflect.DeepEqual()...
 	/*	if !reflect.DeepEqual(send, exp) {
 			t.Fatalf("Objects should be equals: %v %v", send.Config, exp)
 		}

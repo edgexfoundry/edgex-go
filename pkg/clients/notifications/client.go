@@ -105,7 +105,7 @@ func (nc *notificationsRestClient) FetchConfiguration() (string, error) {
 
 	var result string
 	client := &http.Client{}
-	req, err := http.NewRequest(http.MethodGet, nc.url, nil)
+	req, err := http.NewRequest(http.MethodGet, nc.url+clients.ApiMetricsRoute, nil)
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -128,7 +128,7 @@ func (nc *notificationsRestClient) FetchMetrics() (string, error) {
 
 	var result string
 	client := &http.Client{}
-	req, err := http.NewRequest(http.MethodGet, nc.url, nil)
+	req, err := http.NewRequest(http.MethodGet, nc.url+clients.ApiConfigRoute, nil)
 
 	resp, err := client.Do(req)
 	if err != nil {

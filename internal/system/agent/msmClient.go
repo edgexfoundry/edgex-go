@@ -1,7 +1,6 @@
 package agent
 
-import "net/http"
-
 type MSMClient interface {
-	ProcessResponse(resp *http.Response) RespMap
+	ProcessConfigResponse(response string) ConfigRespMap
+	ProcessMetricsResponse(response string) MetricsRespMap
 }

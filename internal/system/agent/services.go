@@ -28,10 +28,10 @@ const (
 	RESTART = "restart"
 )
 
-type Adaptee RespMap
+type Adaptee1 ConfigRespMap
+type Adaptee2 MetricsRespMap
 
 var responseJSON string
-var result = RespMap{}
 
 func InvokeOperation(action string, services []string, params []string) bool {
 
@@ -178,7 +178,9 @@ func InvokeOperation(action string, services []string, params []string) bool {
 	return true
 }
 
-func getConfig(services []string) (RespMap, error) {
+func getConfig(services []string) (ConfigRespMap, error) {
+
+	var resultConfig = ConfigRespMap{}
 
 	// Loop through requested actions, along with respectively-supplied parameters.
 	for _, service := range services {
@@ -187,12 +189,12 @@ func getConfig(services []string) (RespMap, error) {
 
 		case internal.SupportNotificationsServiceKey:
 
-			responseJSON, err := NcConfig.FetchConfiguration()
+			responseJSON, err := nc.FetchConfiguration()
 			if err != nil {
 				LoggingClient.Error(fmt.Sprintf("For the {%v} service, encountered error while fetching its configuration.", service))
 			} else {
-				result = ProcessResponse(responseJSON)
-				jsonBytes, _ := RespMap.MarshalJSON(result)
+				resultConfig = ProcessConfigResponse(responseJSON)
+				jsonBytes, _ := ConfigRespMap.MarshalJSON(resultConfig)
 				LoggingClient.Debug(fmt.Sprintf("For the {%v} service, fetched this configuration: {%v}: ", service, string(jsonBytes)))
 			}
 			break
@@ -226,22 +228,24 @@ func getConfig(services []string) (RespMap, error) {
 			break
 		}
 	}
-	return result, nil
+	return resultConfig, nil
 }
 
-func getMetrics(services []string) (RespMap, error) {
+func getMetrics(services []string) (MetricsRespMap, error) {
+
+	var resultMetrics = MetricsRespMap{}
 
 	// Loop through requested actions, along with respectively-supplied parameters.
 	for _, service := range services {
 		switch service {
 		case internal.SupportNotificationsServiceKey:
 
-			responseJSON, err := NcMetrics.FetchMetrics()
+			responseJSON, err := nc.FetchMetrics()
 			if err != nil {
 				LoggingClient.Error(fmt.Sprintf("For the {%v} service, encountered error while fetching its metrics.", service))
 			} else {
-				result = ProcessResponse(responseJSON)
-				jsonBytes, _ := RespMap.MarshalJSON(result)
+				resultMetrics = ProcessMetricsResponse(responseJSON)
+				jsonBytes, _ := MetricsRespMap.MarshalJSON(resultMetrics)
 				LoggingClient.Debug(fmt.Sprintf("For the {%v} service, fetched these metrics: {%v}: ", service, string(jsonBytes)))
 			}
 			break
@@ -275,5 +279,5 @@ func getMetrics(services []string) (RespMap, error) {
 			break
 		}
 	}
-	return result, nil
+	return resultMetrics, nil
 }

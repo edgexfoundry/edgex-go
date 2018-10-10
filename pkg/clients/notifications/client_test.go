@@ -153,7 +153,7 @@ func TestGetConfig(t *testing.T) {
 
 	defer ts.Close()
 
-	url := ts.URL + clients.ApiConfigRoute
+	url := ts.URL
 
 	params := types.EndpointParams{
 		ServiceKey:  internal.SupportNotificationsServiceKey,

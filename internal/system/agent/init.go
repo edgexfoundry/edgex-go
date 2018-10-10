@@ -20,11 +20,10 @@ import (
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/notifications"
-	"github.com/edgexfoundry/edgex-go/pkg/clients"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
-	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/executor"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
+	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
 )
 
 // Global variables
@@ -32,8 +31,7 @@ var Configuration *ConfigurationStruct
 var LoggingClient logger.LoggingClient
 var Manifest *ManifestStruct
 var Conf = &ConfigurationStruct{}
-var NcConfig notifications.NotificationsClient
-var NcMetrics notifications.NotificationsClient
+var nc notifications.NotificationsClient
 var Ec interfaces.ExecutorClient
 
 func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup, ch chan error) {
@@ -147,27 +145,14 @@ func setLoggingTarget() string {
 }
 
 func initializeClients(useConsul bool) {
-
-	// [1] Create a notification client (for the ApiConfigRoute endpoint).
+	// Create notification client
 	params := types.EndpointParams{
 		ServiceKey:  internal.SupportNotificationsServiceKey,
-		Path:        clients.ApiConfigRoute,
+		Path:        "/",
 		UseRegistry: useConsul,
-		Url:         Configuration.Clients["Notifications"].Url() + clients.ApiConfigRoute,
-		Interval:    Configuration.Service.ClientMonitor,
+		Url:         Configuration.Clients["Notifications"].Url(),
+		Interval: Configuration.Service.ClientMonitor,
 	}
 
-	NcConfig = notifications.NewNotificationsClient(params, startup.Endpoint{})
-
-	// [2] Create a notification client (for the ApiMetricsRoute endpoint).
-	params = types.EndpointParams{
-		ServiceKey:  internal.SupportNotificationsServiceKey,
-		Path:        clients.ApiMetricsRoute,
-		UseRegistry: useConsul,
-		Url:         Configuration.Clients["Notifications"].Url() + clients.ApiMetricsRoute,
-		Interval:    Configuration.Service.ClientMonitor,
-	}
-
-	NcMetrics = notifications.NewNotificationsClient(params, startup.Endpoint{})
-
+	nc = notifications.NewNotificationsClient(params, startup.Endpoint{})
 }

@@ -5,17 +5,32 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal"
 )
 
-// For handling the response (containing, for example, configuration or metrics data) returned by the edgex-support-notifications service.
-type RespMap struct {
+// For handling the response (containing configuration data) returned by the edgex-support-notifications service.
+type ConfigRespMap struct {
 	Config map[string]interface{}
 }
 
-func (m RespMap) MarshalJSON() ([]byte, error) {
+// For handling the response (containing metrics data) returned by the edgex-support-notifications service.
+type MetricsRespMap struct {
+	Metrics map[string]interface{}
+}
+
+func (b ConfigRespMap) MarshalJSON() ([]byte, error) {
 	return json.Marshal(struct {
 		Service string
-		Adaptee
+		Adaptee1
 	}{
 		Service:  internal.SupportNotificationsServiceKey,
-		Adaptee: Adaptee(m),
+		Adaptee1: Adaptee1(b),
+	})
+}
+
+func (m MetricsRespMap) MarshalJSON() ([]byte, error) {
+	return json.Marshal(struct {
+		Service string
+		Adaptee2
+	}{
+		Service:  internal.SupportNotificationsServiceKey,
+		Adaptee2: Adaptee2(m),
 	})
 }
