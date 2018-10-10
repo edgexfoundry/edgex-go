@@ -1,10 +1,10 @@
 //
 // Copyright (c) 2018 Tencent
 //
-// SPDX-License-Identifier: Apache-2.0
+// Copyright (c) 2018 Dell Inc
 //
-
-package logging
+// SPDX-License-Identifier: Apache-2.0
+package scheduler
 
 import (
 	"fmt"
@@ -14,22 +14,21 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/consul"
+	"github.com/edgexfoundry/edgex-go/pkg/clients"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 	"github.com/pkg/errors"
 )
 
-const (
-	PingApiPath = "/api/v1/ping"
-)
-
 var Configuration *ConfigurationStruct
-var dbClient persistence
 var LoggingClient logger.LoggingClient
+
 var chConfig chan interface{} //A channel for use by ConsulDecoder in detecting configuration mods.
+var ticker = time.NewTicker(time.Duration(ScheduleInterval) * time.Millisecond)
+
 
 func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup, ch chan error) {
-	LoggingClient = newPrivateLogger()
-	until := time.Now().Add(time.Millisecond * time.Duration(timeout))
+	now := time.Now()
+	until := now.Add(time.Millisecond * time.Duration(timeout))
 	for time.Now().Before(until) {
 		var err error
 		//When looping, only handle configuration if it hasn't already been set.
@@ -43,17 +42,19 @@ func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup,
 					wait.Done()
 					return
 				}
+			} else {
+				//Check against boot timeout default
+				if Configuration.Service.BootTimeout != timeout {
+					until = now.Add(time.Millisecond * time.Duration(Configuration.Service.BootTimeout))
+				}
+				// Setup Logging
+				logTarget := setLoggingTarget()
+				LoggingClient = logger.NewClient(internal.SupportSchedulerServiceKey, Configuration.Logging.EnableRemote, logTarget)
 			}
 		}
 
-		//Only attempt to connect to database if configuration has been populated
 		if Configuration != nil {
-			err = getPersistence()
-			if err != nil {
-				ch <- err
-			} else {
-				break
-			}
+			break
 		}
 		time.Sleep(time.Second * time.Duration(1))
 	}
@@ -64,9 +65,10 @@ func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup,
 }
 
 func Init(useConsul bool) bool {
-	if Configuration == nil || dbClient == nil {
+	if Configuration == nil {
 		return false
 	}
+
 	if useConsul {
 		chConfig = make(chan interface{})
 		go listenForConfigChanges()
@@ -75,13 +77,12 @@ func Init(useConsul bool) bool {
 }
 
 func Destruct() {
-	if dbClient != nil {
-		dbClient.closeSession()
-		dbClient = nil
-	}
 	if chConfig != nil {
 		close(chConfig)
-		chConfig = nil
+	}
+
+	if ticker != nil {
+		StopTicker()
 	}
 }
 
@@ -104,7 +105,8 @@ func initializeConfiguration(useConsul bool, useProfile string) (*ConfigurationS
 
 func connectToConsul(conf *ConfigurationStruct) (*ConfigurationStruct, error) {
 	//Obtain ConsulConfig
-	cfg := consulclient.NewConsulConfig(conf.Registry, conf.Service, internal.SupportLoggingServiceKey)
+	cfg := consulclient.NewConsulConfig(conf.Registry, conf.Service, internal.SupportSchedulerServiceKey)
+
 	// Register the service in Consul
 	err := consulclient.ConsulInit(cfg)
 
@@ -116,7 +118,7 @@ func connectToConsul(conf *ConfigurationStruct) (*ConfigurationStruct, error) {
 	errCh := make(chan error)
 	dec := consulclient.NewConsulDecoder(conf.Registry)
 	dec.Target = &ConfigurationStruct{}
-	dec.Prefix = internal.ConfigV2Stem + internal.SupportLoggingServiceKey
+	dec.Prefix = internal.ConfigV2Stem + internal.SupportSchedulerServiceKey
 	dec.ErrCh = errCh
 	dec.UpdateCh = updateCh
 
@@ -136,11 +138,8 @@ func connectToConsul(conf *ConfigurationStruct) (*ConfigurationStruct, error) {
 			return conf, errors.New("type check failed")
 		}
 		conf = actual
-		//Check that information was successfully read from Consul
-		if len(conf.Persistence) == 0 {
-			return nil, errors.New("error reading from Consul")
-		}
 	}
+
 	return conf, err
 }
 
@@ -148,7 +147,7 @@ func listenForConfigChanges() {
 	errCh := make(chan error)
 	dec := consulclient.NewConsulDecoder(Configuration.Registry)
 	dec.Target = &ConfigurationStruct{}
-	dec.Prefix = internal.ConfigV2Stem + internal.SupportLoggingServiceKey
+	dec.Prefix = internal.ConfigV2Stem + internal.SupportSchedulerServiceKey
 	dec.ErrCh = errCh
 	dec.UpdateCh = chConfig
 
@@ -174,20 +173,11 @@ func listenForConfigChanges() {
 	}
 }
 
-func getPersistence() error {
-	switch Configuration.Persistence {
-	case PersistenceFile:
-		dbClient = &fileLog{filename: Configuration.Logging.File}
-	case PersistenceDB:
-		// TODO: Integrate db layer with internal/pkg/db/ types so we can support other databases
-		ms, err := connectToMongo()
-		if err != nil {
-			return err
-		} else {
-			dbClient = &mongoLog{session: ms}
-		}
-	default:
-		return errors.New(fmt.Sprintf("unrecognized value Configuration.Persistence: %s", Configuration.Persistence))
+
+func setLoggingTarget() string {
+	if Configuration.Logging.EnableRemote {
+		return Configuration.Clients["Logging"].Url() + clients.ApiLoggingRoute
 	}
-	return nil
+	return Configuration.Logging.File
 }
+

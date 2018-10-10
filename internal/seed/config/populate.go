@@ -185,9 +185,9 @@ func listDirectories() [1]string {
 }
 
 // As services are converted to utilize V2 types, add them to this list and remove from the one above.
-func listV2Directories() [6]string {
-	var names = [6]string{internal.CoreMetaDataServiceKey, internal.CoreCommandServiceKey, internal.CoreDataServiceKey,
-		internal.ExportDistroServiceKey, internal.ExportClientServiceKey, internal.SupportLoggingServiceKey}
+func listV2Directories() [7]string {
+	var names = [7]string{internal.CoreMetaDataServiceKey, internal.CoreCommandServiceKey, internal.CoreDataServiceKey,
+		internal.ExportDistroServiceKey, internal.ExportClientServiceKey, internal.SupportLoggingServiceKey,internal.SupportSchedulerServiceKey}
 
 
 	for i, name := range names {
