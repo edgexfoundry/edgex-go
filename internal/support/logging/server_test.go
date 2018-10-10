@@ -259,7 +259,7 @@ func TestRemoveLogs(t *testing.T) {
 	var services = []string{"service1", "service2"}
 	var keywords = []string{"keyword1", "keyword2"}
 	var logLevels = []string{logger.TraceLog, logger.DebugLog, logger.WarnLog,
-		logger.InfoLog, logger.ErrorLog}
+		logger.InfoLog,	logger.ErrorLog}
 	var tests = []struct {
 		name     string
 		url      string
