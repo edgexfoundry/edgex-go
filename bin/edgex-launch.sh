@@ -81,6 +81,13 @@ cd $CMD/sys-mgmt-agent
 exec -a edgex-sys-mgmt-agent ./sys-mgmt-agent &
 cd $DIR
 
+# Support Scheduler
+###
+cd $CMD/support-scheduler
+# Add `edgex-` prefix on start, so we can find the process family
+exec -a edgex-support-scheduler ./support-scheduler &
+cd $DIR
+
 trap cleanup EXIT
 
 while : ; do sleep 1 ; done
