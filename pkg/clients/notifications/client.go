@@ -111,6 +111,9 @@ func (nc *notificationsRestClient) SendNotification(n Notification) error {
 	}
 
 	req, err := http.NewRequest(http.MethodPost, nc.url, bytes.NewBuffer(requestBody))
+	if err != nil {
+		return err
+	}
 	req.Header.Add(ContentType, ContentTypeJsonVal)
 
 	resp, err := client.Do(req)
