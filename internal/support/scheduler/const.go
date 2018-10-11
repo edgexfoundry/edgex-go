@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2018 Dell Inc.
+ * Copyright 2017 Dell Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -11,29 +11,21 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
-package metadata
+package scheduler
 
-import (
-	"errors"
-	"io/ioutil"
-	"net/http"
+const (
+	/* -------------- Constants for Command -------------------- */
+	ID                       string = "id"
+	NAME                     string = "name"
+	YAML                     string = "yaml"
+	COMMAND                  string = "command"
+	KEY                      string = "key"
+	VALUE                    string = "value"
+	TIMELAYOUT                      = "20060102T150405"
+	UNLOCKED string = "UNLOCKED"
+	ENABLED  string = "ENABLED"
+
+	ContentTypeKey       = "Content-Type"
+	ContentTypeJsonValue = "application/json; charset=utf-8"
+	ContentLengthKey     = "Content-Length"
 )
-
-var (
-	ErrResponseNil error = errors.New("Problem connecting to metadata - response was nil")
-	ErrNotFound    error = errors.New("Item not found")
-)
-
-// Helper method to make the request and return the response
-func makeRequest(req *http.Request) (*http.Response, error) {
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	return resp, err
-}
-
-// Helper method to get the body from the response after making the request
-func getBody(resp *http.Response) ([]byte, error) {
-	body, err := ioutil.ReadAll(resp.Body)
-
-	return body, err
-}

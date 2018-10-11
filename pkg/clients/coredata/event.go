@@ -70,7 +70,7 @@ func (e *EventRestClient) init(params types.EndpointParams) {
 
 // Helper method to request and decode an event slice
 func (e *EventRestClient) requestEventSlice(url string) ([]models.Event, error) {
-	data, err := getRequest(url)
+	data, err := clients.GetRequest(url)
 	if err != nil {
 		return []models.Event{}, err
 	}
@@ -80,9 +80,9 @@ func (e *EventRestClient) requestEventSlice(url string) ([]models.Event, error) 
 	return eSlice, err
 }
 
-// Helper method to request and decode an event and return the event
+// Helper method to request and decode an event
 func (e *EventRestClient) requestEvent(url string) (models.Event, error) {
-	data, err := getRequest(url)
+	data, err := clients.GetRequest(url)
 	if err != nil {
 		return models.Event{}, err
 	}
@@ -104,12 +104,12 @@ func (e *EventRestClient) Event(id string) (models.Event, error) {
 
 // Get event count
 func (e *EventRestClient) EventCount() (int, error) {
-	return countRequest(e.url + "/count")
+	return clients.CountRequest(e.url + "/count")
 }
 
 // Get event count for device
 func (e *EventRestClient) EventCountForDevice(deviceId string) (int, error) {
-	return countRequest(e.url + "/count/" + url.QueryEscape(deviceId))
+	return clients.CountRequest(e.url + "/count/" + url.QueryEscape(deviceId))
 }
 
 // Get events for device
@@ -129,25 +129,26 @@ func (e *EventRestClient) EventsForDeviceAndValueDescriptor(deviceId string, vd 
 
 // Add event
 func (e *EventRestClient) Add(event *models.Event) (string, error) {
-	return postRequest(e.url, event)
+	return clients.PostJsonRequest(e.url, event)
 }
 
 // Delete event by id
 func (e *EventRestClient) Delete(id string) error {
-	return deleteRequest(e.url + "/id/" + id)
+	return clients.DeleteRequest(e.url + "/id/" + id)
 }
 
 // Delete events by device name
 func (e *EventRestClient) DeleteForDevice(deviceId string) error {
-	return deleteRequest(e.url + "/device/" + url.QueryEscape(deviceId))
+	return clients.DeleteRequest(e.url + "/device/" + url.QueryEscape(deviceId))
 }
 
 // Delete events by age
 func (e *EventRestClient) DeleteOld(age int) error {
-	return deleteRequest(e.url + "/removeold/age/" + strconv.Itoa(age))
+	return clients.DeleteRequest(e.url + "/removeold/age/" + strconv.Itoa(age))
 }
 
 // Mark event as pushed
 func (e *EventRestClient) MarkPushed(id string) error {
-	return putRequest(e.url+"/id/"+id, nil)
+	_, err := clients.PutRequest(e.url+"/id/"+id, nil)
+	return err
 }

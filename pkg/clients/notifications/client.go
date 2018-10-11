@@ -14,10 +14,6 @@
 package notifications
 
 import (
-	"bytes"
-	"encoding/json"
-	"net/http"
-
 	"github.com/edgexfoundry/edgex-go/pkg/clients"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
 )
@@ -43,12 +39,6 @@ const (
 	NEW       StatusEnum = "NEW"
 	PROCESSED StatusEnum = "PROCESSED"
 	ESCALATED StatusEnum = "ESCALATED"
-)
-
-// Common http const
-const (
-	ContentType        = "Content-Type"
-	ContentTypeJsonVal = "application/json"
 )
 
 // Interface defining behavior for the notifications client
@@ -102,23 +92,6 @@ func (n *notificationsRestClient) init(params types.EndpointParams) {
 
 // Send a notification to the notifications service
 func (nc *notificationsRestClient) SendNotification(n Notification) error {
-	client := &http.Client{}
-
-	// Get the JSON request body
-	requestBody, err := json.Marshal(n)
-	if err != nil {
-		return err
-	}
-
-	req, err := http.NewRequest(http.MethodPost, nc.url, bytes.NewBuffer(requestBody))
-	req.Header.Add(ContentType, ContentTypeJsonVal)
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-
-	defer resp.Body.Close()
-
-	return nil
+	_, err := clients.PostJsonRequest(nc.url, n)
+	return err
 }

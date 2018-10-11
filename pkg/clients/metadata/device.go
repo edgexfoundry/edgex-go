@@ -14,10 +14,7 @@
 package metadata
 
 import (
-	"bytes"
 	"encoding/json"
-	"fmt"
-	"net/http"
 	"net/url"
 	"strconv"
 
@@ -86,719 +83,151 @@ func (d *DeviceRestClient) init(params types.EndpointParams) {
 	}
 }
 
-// Help method to decode a device slice
-func (d *DeviceRestClient) decodeDeviceSlice(resp *http.Response) ([]models.Device, error) {
-	dec := json.NewDecoder(resp.Body)
-	dSlice := []models.Device{}
-
-	err := dec.Decode(&dSlice)
-	if err != nil {
-		return []models.Device{}, err
-	}
-
-	return dSlice, err
-}
-
-// Helper method to decode a device and return the device
-func (d *DeviceRestClient) decodeDevice(resp *http.Response) (models.Device, error) {
-	dec := json.NewDecoder(resp.Body)
-	dev := models.Device{}
-
-	err := dec.Decode(&dev)
+// Helper method to request and decode a device
+func (d *DeviceRestClient) requestDevice(url string) (models.Device, error) {
+	data, err := clients.GetRequest(url)
 	if err != nil {
 		return models.Device{}, err
 	}
 
+	dev := models.Device{}
+	err = json.Unmarshal(data, &dev)
 	return dev, err
+}
+
+// Helper method to request and decode a device slice
+func (d *DeviceRestClient) requestDeviceSlice(url string) ([]models.Device, error) {
+	data, err := clients.GetRequest(url)
+	if err != nil {
+		return []models.Device{}, err
+	}
+
+	dSlice := make([]models.Device, 0)
+	err = json.Unmarshal(data, &dSlice)
+	return dSlice, err
 }
 
 //Use the models.Event.Device property for the supplied token parameter.
 //The above property is currently double-purposed and needs to be refactored.
 //This call replaces the previous two calls necessary to lookup a device by id followed by name.
 func (d *DeviceRestClient) CheckForDevice(token string) (models.Device, error) {
-	req, err := http.NewRequest(http.MethodGet, d.url+"/check/"+token, nil)
-	if err != nil {
-		fmt.Println(err)
-		return models.Device{}, err
-	}
-
-	// Make the request and get response
-	resp, err := makeRequest(req)
-	if err != nil {
-		fmt.Println(err.Error())
-		return models.Device{}, err
-	}
-	if resp == nil {
-		fmt.Println(ErrResponseNil)
-		return models.Device{}, ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	switch resp.StatusCode {
-	case http.StatusNotFound:
-		return models.Device{}, types.ErrNotFound{}
-	case http.StatusOK:
-		return d.decodeDevice(resp)
-	}
-
-	// Unexpected http status. Get the response body
-	bodyBytes, err := getBody(resp)
-	if err != nil {
-		fmt.Println(err.Error())
-		return models.Device{}, err
-	}
-
-	return models.Device{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
+	return d.requestDevice(d.url + "/check/" + token)
 }
 
 // Get the device by id
 func (d *DeviceRestClient) Device(id string) (models.Device, error) {
-	req, err := http.NewRequest(http.MethodGet, d.url+"/"+id, nil)
-	if err != nil {
-		return models.Device{}, err
-	}
-
-	// Make the request and get response
-	resp, err := makeRequest(req)
-	if err != nil {
-		return models.Device{}, err
-	}
-	if resp == nil {
-		return models.Device{}, ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		// Get the response body
-		bodyBytes, err := getBody(resp)
-		if err != nil {
-			return models.Device{}, err
-		}
-
-		return models.Device{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-
-	return d.decodeDevice(resp)
+	return d.requestDevice(d.url + "/" + id)
 }
 
 // Get a list of all devices
 func (d *DeviceRestClient) Devices() ([]models.Device, error) {
-	req, err := http.NewRequest(http.MethodGet, d.url, nil)
-	if err != nil {
-		return []models.Device{}, err
-	}
-
-	// Make the request and get response
-	resp, err := makeRequest(req)
-	if err != nil {
-		return []models.Device{}, err
-	}
-	if resp == nil {
-		return []models.Device{}, ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		// Get the response body
-		bodyBytes, err := getBody(resp)
-		if err != nil {
-			return []models.Device{}, err
-		}
-
-		return []models.Device{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-	return d.decodeDeviceSlice(resp)
+	return d.requestDeviceSlice(d.url)
 }
 
 // Get the device by name
 func (d *DeviceRestClient) DeviceForName(name string) (models.Device, error) {
-	req, err := http.NewRequest(http.MethodGet, d.url+"/name/"+url.QueryEscape(name), nil)
-	if err != nil {
-		return models.Device{}, err
-	}
-
-	// Make the request and get response
-	resp, err := makeRequest(req)
-	if err != nil {
-		return models.Device{}, err
-	}
-	if resp == nil {
-		return models.Device{}, ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		// Get the response body
-		bodyBytes, err := getBody(resp)
-		if err != nil {
-			return models.Device{}, err
-		}
-
-		return models.Device{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-	return d.decodeDevice(resp)
+	return d.requestDevice(d.url + "/name/" + url.QueryEscape(name))
 }
 
 // Get the device by label
 func (d *DeviceRestClient) DevicesByLabel(label string) ([]models.Device, error) {
-	req, err := http.NewRequest(http.MethodGet, d.url+"/label/"+url.QueryEscape(label), nil)
-	if err != nil {
-		return []models.Device{}, err
-	}
-
-	// Make the request and get response
-	resp, err := makeRequest(req)
-	if err != nil {
-		return []models.Device{}, err
-	}
-	if resp == nil {
-		return []models.Device{}, ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		// Get the response body
-		bodyBytes, err := getBody(resp)
-		if err != nil {
-			return []models.Device{}, err
-		}
-
-		return []models.Device{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-	return d.decodeDeviceSlice(resp)
+	return d.requestDeviceSlice(d.url + "/label/" + url.QueryEscape(label))
 }
 
 // Get the devices that are on a service
 func (d *DeviceRestClient) DevicesForService(serviceId string) ([]models.Device, error) {
-	req, err := http.NewRequest(http.MethodGet, d.url+"/service/"+serviceId, nil)
-	if err != nil {
-		return []models.Device{}, err
-	}
-
-	// Make the request and get response
-	resp, err := makeRequest(req)
-	if err != nil {
-		return []models.Device{}, err
-	}
-	if resp == nil {
-		return []models.Device{}, ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		// Get the response body
-		bodyBytes, err := getBody(resp)
-		if err != nil {
-			return []models.Device{}, err
-		}
-
-		return []models.Device{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-	return d.decodeDeviceSlice(resp)
+	return d.requestDeviceSlice(d.url + "/service/" + serviceId)
 }
 
 // Get the devices that are on a service(by name)
 func (d *DeviceRestClient) DevicesForServiceByName(serviceName string) ([]models.Device, error) {
-	req, err := http.NewRequest(http.MethodGet, d.url+"/servicename/"+url.QueryEscape(serviceName), nil)
-	if err != nil {
-		return []models.Device{}, err
-	}
-
-	// Make the request and get response
-	resp, err := makeRequest(req)
-	if err != nil {
-		return []models.Device{}, err
-	}
-	if resp == nil {
-		return []models.Device{}, ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		// Get the response body
-		bodyBytes, err := getBody(resp)
-		if err != nil {
-			return []models.Device{}, err
-		}
-
-		return []models.Device{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-	return d.decodeDeviceSlice(resp)
+	return d.requestDeviceSlice(d.url + "/servicename/" + url.QueryEscape(serviceName))
 }
 
 // Get the devices for a profile
 func (d *DeviceRestClient) DevicesForProfile(profileId string) ([]models.Device, error) {
-	req, err := http.NewRequest(http.MethodGet, d.url+"/profile/"+profileId, nil)
-	if err != nil {
-		return []models.Device{}, err
-	}
-
-	// Make the request and get response
-	resp, err := makeRequest(req)
-	if err != nil {
-		return []models.Device{}, err
-	}
-	if resp == nil {
-		return []models.Device{}, ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		// Get the response body
-		bodyBytes, err := getBody(resp)
-		if err != nil {
-			return []models.Device{}, err
-		}
-
-		return []models.Device{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-	return d.decodeDeviceSlice(resp)
+	return d.requestDeviceSlice(d.url + "/profile/" + profileId)
 }
 
 // Get the devices for a profile (by name)
 func (d *DeviceRestClient) DevicesForProfileByName(profileName string) ([]models.Device, error) {
-	req, err := http.NewRequest(http.MethodGet, d.url+"/profilename/"+url.QueryEscape(profileName), nil)
-	if err != nil {
-		return []models.Device{}, err
-	}
-
-	// Make the request and get response
-	resp, err := makeRequest(req)
-	if err != nil {
-		return []models.Device{}, err
-	}
-	if resp == nil {
-		return []models.Device{}, ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		// Get the response body
-		bodyBytes, err := getBody(resp)
-		if err != nil {
-			return []models.Device{}, err
-		}
-
-		return []models.Device{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-	return d.decodeDeviceSlice(resp)
+	return d.requestDeviceSlice(d.url + "/profilename/" + url.QueryEscape(profileName))
 }
 
 // Get the devices for an addressable
 func (d *DeviceRestClient) DevicesForAddressable(addressableId string) ([]models.Device, error) {
-	req, err := http.NewRequest(http.MethodGet, d.url+"/addressable/"+addressableId, nil)
-	if err != nil {
-		return []models.Device{}, err
-	}
-
-	// Make the request and get response
-	resp, err := makeRequest(req)
-	if err != nil {
-		return []models.Device{}, err
-	}
-	if resp == nil {
-		return []models.Device{}, ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		// Get the response body
-		bodyBytes, err := getBody(resp)
-		if err != nil {
-			return []models.Device{}, err
-		}
-
-		return []models.Device{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-
-	return d.decodeDeviceSlice(resp)
+	return d.requestDeviceSlice(d.url + "/addressable/" + addressableId)
 }
 
 // Get the devices for an addressable (by name)
 func (d *DeviceRestClient) DevicesForAddressableByName(addressableName string) ([]models.Device, error) {
-	req, err := http.NewRequest(http.MethodGet, d.url+"/addressablename/"+url.QueryEscape(addressableName), nil)
-	if err != nil {
-		return []models.Device{}, err
-	}
-
-	// Make the request and get response
-	resp, err := makeRequest(req)
-	if err != nil {
-		return []models.Device{}, err
-	}
-	if resp == nil {
-		return []models.Device{}, ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		// Get the response body
-		bodyBytes, err := getBody(resp)
-		if err != nil {
-			return []models.Device{}, err
-		}
-
-		return []models.Device{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-
-	return d.decodeDeviceSlice(resp)
+	return d.requestDeviceSlice(d.url + "/addressablename/" + url.QueryEscape(addressableName))
 }
 
 // Add a device - handle error codes
 func (d *DeviceRestClient) Add(dev *models.Device) (string, error) {
-	jsonStr, err := json.Marshal(dev)
-	if err != nil {
-		return "", err
-	}
-
-	req, err := http.NewRequest(http.MethodPost, d.url, bytes.NewReader(jsonStr))
-	if err != nil {
-		return "", err
-	}
-
-	resp, err := makeRequest(req)
-	if err != nil {
-		return "", err
-	}
-	if resp == nil {
-		return "", ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	// Get the body
-	bodyBytes, err := getBody(resp)
-	if err != nil {
-		return "", err
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return "", types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-
-	return string(bodyBytes), nil
+	return clients.PostJsonRequest(d.url, dev)
 }
 
 // Update a device - handle error codes
 func (d *DeviceRestClient) Update(dev models.Device) error {
-	jsonStr, err := json.Marshal(&dev)
-	if err != nil {
-		return err
-	}
-
-	req, err := http.NewRequest(http.MethodPut, d.url, bytes.NewReader(jsonStr))
-	if err != nil {
-		return err
-	}
-
-	resp, err := makeRequest(req)
-	if err != nil {
-		return err
-	}
-	if resp == nil {
-		return ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		// Get the response body
-		bodyBytes, err := getBody(resp)
-		if err != nil {
-			return err
-		}
-
-		return types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-
-	return nil
+	return clients.UpdateRequest(d.url, dev)
 }
 
 // Update the lastConnected value for a device (specified by id)
 func (d *DeviceRestClient) UpdateLastConnected(id string, time int64) error {
-	req, err := http.NewRequest(http.MethodPut, d.url+"/"+id+"/lastconnected/"+strconv.FormatInt(time, 10), nil)
-	if err != nil {
-		return err
-	}
-
-	resp, err := makeRequest(req)
-	if err != nil {
-		return err
-	}
-	if resp == nil {
-		return ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		// Get the response body
-		bodyBytes, err := getBody(resp)
-		if err != nil {
-			return err
-		}
-
-		return types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-
-	return nil
+	_, err := clients.PutRequest(d.url+"/"+id+"/lastconnected/"+strconv.FormatInt(time, 10), nil)
+	return err
 }
 
 // Update the lastConnected value for a device (specified by name)
 func (d *DeviceRestClient) UpdateLastConnectedByName(name string, time int64) error {
-	req, err := http.NewRequest(http.MethodPut, d.url+"/name/"+url.QueryEscape(name)+"/lastconnected/"+strconv.FormatInt(time, 10), nil)
-	if err != nil {
-		return err
-	}
-
-	resp, err := makeRequest(req)
-	if err != nil {
-		return err
-	}
-	if resp == nil {
-		return ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		// Get the response body
-		bodyBytes, err := getBody(resp)
-		if err != nil {
-			return err
-		}
-
-		return types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-
-	return nil
+	_, err := clients.PutRequest(d.url+"/name/"+url.QueryEscape(name)+"/lastconnected/"+strconv.FormatInt(time, 10), nil)
+	return err
 }
 
 // Update the lastReported value for a device (specified by id)
 func (d *DeviceRestClient) UpdateLastReported(id string, time int64) error {
-	req, err := http.NewRequest(http.MethodPut, d.url+"/"+id+"/lastreported/"+strconv.FormatInt(time, 10), nil)
-	if err != nil {
-		return err
-	}
-
-	resp, err := makeRequest(req)
-	if err != nil {
-		return err
-	}
-	if resp == nil {
-		return ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		// Get the response body
-		bodyBytes, err := getBody(resp)
-		if err != nil {
-			return err
-		}
-
-		return types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-
-	return nil
+	_, err := clients.PutRequest(d.url+"/"+id+"/lastreported/"+strconv.FormatInt(time, 10), nil)
+	return err
 }
 
 // Update the lastReported value for a device (specified by name)
 func (d *DeviceRestClient) UpdateLastReportedByName(name string, time int64) error {
-	req, err := http.NewRequest(http.MethodPut, d.url+"/name/"+url.QueryEscape(name)+"/lastreported/"+strconv.FormatInt(time, 10), nil)
-	if err != nil {
-		return err
-	}
-
-	resp, err := makeRequest(req)
-	if err != nil {
-		return err
-	}
-	if resp == nil {
-		return ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		// Get the response body
-		bodyBytes, err := getBody(resp)
-		if err != nil {
-			return err
-		}
-
-		return types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-
+	_, err := clients.PutRequest(d.url+"/name/"+url.QueryEscape(name)+"/lastreported/"+strconv.FormatInt(time, 10), nil)
 	return err
 }
 
 // Update the opState value for a device (specified by id)
 func (d *DeviceRestClient) UpdateOpState(id string, opState string) error {
-	req, err := http.NewRequest(http.MethodPut, d.url+"/"+id+"/opstate/"+opState, nil)
-	if err != nil {
-		return err
-	}
-
-	resp, err := makeRequest(req)
-	if err != nil {
-		return err
-	}
-	if resp == nil {
-		return ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		// Get the response body
-		bodyBytes, err := getBody(resp)
-		if err != nil {
-			return err
-		}
-
-		return types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-
+	_, err := clients.PutRequest(d.url+"/"+id+"/opstate/"+opState, nil)
 	return err
 }
 
 // Update the opState value for a device (specified by name)
 func (d *DeviceRestClient) UpdateOpStateByName(name string, opState string) error {
-	req, err := http.NewRequest(http.MethodPut, d.url+"/name/"+url.QueryEscape(name)+"/opstate/"+opState, nil)
-	if err != nil {
-		return err
-	}
-
-	resp, err := makeRequest(req)
-	if err != nil {
-		return err
-	}
-	if resp == nil {
-		return ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		// Get the response body
-		bodyBytes, err := getBody(resp)
-		if err != nil {
-			return err
-		}
-
-		return types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-
-	return nil
+	_, err := clients.PutRequest(d.url+"/name/"+url.QueryEscape(name)+"/opstate/"+opState, nil)
+	return err
 }
 
 // Update the adminState value for a device (specified by id)
 func (d *DeviceRestClient) UpdateAdminState(id string, adminState string) error {
-	req, err := http.NewRequest(http.MethodPut, d.url+"/"+id+"/adminstate/"+adminState, nil)
-	if err != nil {
-		return err
-	}
-
-	resp, err := makeRequest(req)
-	if err != nil {
-		return err
-	}
-	if resp == nil {
-		return ErrResponseNil
-	}
-
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		// Get the response body
-		bodyBytes, err := getBody(resp)
-		if err != nil {
-			return err
-		}
-
-		return types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-
-	return nil
+	_, err := clients.PutRequest(d.url+"/"+id+"/adminstate/"+adminState, nil)
+	return err
 }
 
 // Update the adminState value for a device (specified by name)
 func (d *DeviceRestClient) UpdateAdminStateByName(name string, adminState string) error {
-	req, err := http.NewRequest(http.MethodPut, d.url+"/name/"+url.QueryEscape(name)+"/adminstate/"+adminState, nil)
-	if err != nil {
-		return err
-	}
-
-	resp, err := makeRequest(req)
-	if err != nil {
-		return err
-	}
-	if resp == nil {
-		return ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		// Get the response body
-		bodyBytes, err := getBody(resp)
-		if err != nil {
-			return err
-		}
-
-		return types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-
+	_, err := clients.PutRequest(d.url+"/name/"+url.QueryEscape(name)+"/adminstate/"+adminState, nil)
 	return err
 }
 
 // Delete a device (specified by id)
 func (d *DeviceRestClient) Delete(id string) error {
-	req, err := http.NewRequest(http.MethodDelete, d.url+"/id/"+id, nil)
-	if err != nil {
-		return err
-	}
-
-	resp, err := makeRequest(req)
-	if err != nil {
-		return err
-	}
-	if resp == nil {
-		return ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		// Get the response body
-		bodyBytes, err := getBody(resp)
-		if err != nil {
-			return err
-		}
-
-		return types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-
-	return nil
+	return clients.DeleteRequest(d.url + "/id/" + id)
 }
 
 // Delete a device (specified by name)
 func (d *DeviceRestClient) DeleteByName(name string) error {
-	req, err := http.NewRequest(http.MethodDelete, d.url+"/name/"+url.QueryEscape(name), nil)
-	if err != nil {
-		return err
-	}
-
-	resp, err := makeRequest(req)
-	if err != nil {
-		return err
-	}
-	if resp == nil {
-		return ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		// Get the response body
-		bodyBytes, err := getBody(resp)
-		if err != nil {
-			return err
-		}
-
-		return types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-
-	return nil
+	return clients.DeleteRequest(d.url + "/name/" + url.QueryEscape(name))
 }
