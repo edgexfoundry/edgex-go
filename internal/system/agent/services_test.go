@@ -22,7 +22,7 @@ import (
 	"fmt"
 )
 
-func TestProcessConfigResponse(t *testing.T) {
+func TestProcessResponse(t *testing.T) {
 
 	LoggingClient = logger.NewMockClient()
 
@@ -68,9 +68,7 @@ func TestProcessConfigResponse(t *testing.T) {
 		"DBType":                        "mongodb",
 	}
 
-	var send = ConfigRespMap{}
-
-	send = ProcessConfigResponse(responseJSON)
+	send := ProcessResponse(responseJSON)
 	LoggingClient.Info(fmt.Sprintf("Actual Response: {%v}", send))
 
 	expected, err := json.Marshal(expResponseJSON)
