@@ -1,13 +1,11 @@
 .idea/
-.vscode/
 vendor
 *.exe
 glide.lock
 *.DS_Store
+docker/docker-compose.yml
 .project
-*.snap
-*.bz2
-*.pyc
+.vscode/
 
 # binary files
 cmd/config-seed/config-seed
@@ -22,3 +20,12 @@ cmd/sys-mgmt-agent/sys-mgmt-agent
 
 # log dirs
 **/logs
+
+# snap files
+*.snap
+*.bz2
+*.pyc
+parts/*
+prime/*
+stage/*
+snap/.snapcraft/*
