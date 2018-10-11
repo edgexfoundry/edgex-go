@@ -29,7 +29,6 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/export"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db/redis"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 )
 
@@ -675,8 +674,8 @@ func processRegistration(jsonMap map[string]interface{}) {
 	redisConn.Send("MULTI")
 	marshalled, _ := bson.Marshal(r)
 	redisConn.Send("SET", setId, marshalled)
-	redisConn.Send("ZADD", redis.EXPORT_COLLECTION, 0, setId)
-	redisConn.Send("HSET", redis.EXPORT_COLLECTION+":name", r.Name, setId)
+	redisConn.Send("ZADD", db.ExportCollection, 0, setId)
+	redisConn.Send("HSET", db.ExportCollection+":name", r.Name, setId)
 
 	_, err = redisConn.Do("EXEC")
 	if err != nil {
