@@ -44,13 +44,13 @@ const (
 )
 
 // Interface defining behavior for the notifications client
-type NotificationsClient interface {
+type ClientForNotifications interface {
 	SendNotification(n Notification) error
 	FetchConfiguration() (string, error)
 	FetchMetrics() (string, error)
 }
 
-// Type struct for REST-specific implementation of NotificationsClient interface
+// Type struct for REST-specific implementation of the ClientForNotifications interface
 type notificationsRestClient struct {
 	url      string
 	endpoint clients.Endpointer
@@ -71,7 +71,7 @@ type Notification struct {
 	Modified    int          `json:"modified,omitempty"` // The last modification timestamp
 }
 
-func NewNotificationsClient(params types.EndpointParams, m clients.Endpointer) NotificationsClient {
+func NewNotificationsClient(params types.EndpointParams, m clients.Endpointer) ClientForNotifications {
 	n := notificationsRestClient{endpoint: m}
 	n.init(params)
 	return &n

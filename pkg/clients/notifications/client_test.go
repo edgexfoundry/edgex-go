@@ -20,8 +20,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 )
 
-// var nc notifications.NotificationsClient
-
 // Test common const
 const (
 	TestUnexpectedMsg          = "unexpected result"

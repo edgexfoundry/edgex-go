@@ -31,7 +31,7 @@ var Configuration *ConfigurationStruct
 var LoggingClient logger.LoggingClient
 var Manifest *ManifestStruct
 var Conf = &ConfigurationStruct{}
-var nc notifications.NotificationsClient
+var nc notifications.ClientForNotifications
 var Ec interfaces.ExecutorClient
 
 func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup, ch chan error) {

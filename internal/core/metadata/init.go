@@ -37,7 +37,7 @@ import (
 var Configuration *ConfigurationStruct
 var dbClient interfaces.DBClient
 var LoggingClient logger.LoggingClient
-var nc notifications.NotificationsClient
+var nc notifications.ClientForNotifications
 var chConfig chan interface{} //A channel for use by ConsulDecoder in detecting configuration mods.
 
 func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup, ch chan error) {
