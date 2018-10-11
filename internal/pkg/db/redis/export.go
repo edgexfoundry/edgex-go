@@ -20,10 +20,6 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
-const (
-	EXPORT_COLLECTION = "exportConfiguration"
-)
-
 // ********************** REGISTRATION FUNCTIONS *****************************
 // Return all the registrations
 // UnexpectedError - failed to retrieve registrations from the database
@@ -31,7 +27,7 @@ func (c *Client) Registrations() (r []export.Registration, err error) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
-	objects, err := getObjectsByRange(conn, EXPORT_COLLECTION, 0, -1)
+	objects, err := getObjectsByRange(conn, db.ExportCollection, 0, -1)
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +86,7 @@ func (c *Client) RegistrationByName(name string) (r export.Registration, err err
 	conn := c.Pool.Get()
 	defer conn.Close()
 
-	err = getObjectByHash(conn, EXPORT_COLLECTION+":name", name, unmarshalObject, &r)
+	err = getObjectByHash(conn, db.ExportCollection+":name", name, unmarshalObject, &r)
 	return r, err
 }
 
@@ -111,7 +107,7 @@ func (c *Client) DeleteRegistrationByName(name string) error {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
-	id, err := redis.String(conn.Do("HGET", EXPORT_COLLECTION+":name", name))
+	id, err := redis.String(conn.Do("HGET", db.ExportCollection+":name", name))
 	if err == redis.ErrNil {
 		return db.ErrNotFound
 	} else if err != nil {
@@ -126,7 +122,7 @@ func (c *Client) ScrubAllRegistrations() (err error) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
-	return unlinkCollection(conn, EXPORT_COLLECTION)
+	return unlinkCollection(conn, db.ExportCollection)
 }
 
 func addRegistration(conn redis.Conn, r *export.Registration) (id bson.ObjectId, err error) {
@@ -149,8 +145,8 @@ func addRegistration(conn redis.Conn, r *export.Registration) (id bson.ObjectId,
 
 	conn.Send("MULTI")
 	conn.Send("SET", rid, m)
-	conn.Send("ZADD", EXPORT_COLLECTION, 0, rid)
-	conn.Send("HSET", EXPORT_COLLECTION+":name", r.Name, rid)
+	conn.Send("ZADD", db.ExportCollection, 0, rid)
+	conn.Send("HSET", db.ExportCollection+":name", r.Name, rid)
 	_, err = conn.Do("EXEC")
 	return id, err
 }
@@ -168,8 +164,8 @@ func deleteRegistration(conn redis.Conn, id string) error {
 
 	conn.Send("MULTI")
 	conn.Send("DEL", id)
-	conn.Send("ZREM", EXPORT_COLLECTION, id)
-	conn.Send("HDEL", EXPORT_COLLECTION+":name", r.Name)
+	conn.Send("ZREM", db.ExportCollection, id)
+	conn.Send("HDEL", db.ExportCollection+":name", r.Name)
 	_, err = conn.Do("EXEC")
 	return err
 }
