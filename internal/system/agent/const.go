@@ -13,15 +13,35 @@
  *******************************************************************************/
 package agent
 
+import "github.com/edgexfoundry/edgex-go/internal/pkg/config"
+
 type ConfigurationStruct struct {
-	ReadMaxLimit        int
-	ValidateCheck       bool
-	AppOpenMsg          string
-	FormatSpecifier     string
-	ServicePort         int
-	ServiceTimeout      int
-	ServiceAddress      string
-	LoggingFile         string
-	LoggingRemoteURL    string
-	EnableRemoteLogging bool
+	ReadMaxLimit          int
+	ValidateCheck         bool
+	AppOpenMsg            string
+	FormatSpecifier       string
+	ServicePort           int
+	ServiceTimeout        int
+	ServiceAddress        string
+	LoggingFile           string
+	LoggingRemoteURL      string
+	EnableRemoteLogging   bool
+	OsLevelOperations     bool
+	DockerLevelOperations bool
+	Clients               map[string]config.ClientInfo
+	Databases             map[string]config.DatabaseInfo
+	Logging               config.LoggingInfo
+	Notifications         config.NotificationInfo
+	Registry              config.RegistryInfo
+	Service               config.ServiceInfo
+}
+
+type ManifestStruct struct {
+	EdgexServicesNotificationsName         string
+	EdgexServicesNotificationsHost         string
+	EdgexServicesNotificationsPort         int
+	EdgexServicesNotificationsProtocol     string
+	EdgexServicesNotificationsCommandstop  string
+	EdgexServicesNotificationsCommandstart string
+	OperationsType                         string
 }

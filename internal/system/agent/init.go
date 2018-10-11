@@ -16,15 +16,23 @@ package agent
 import (
 	"sync"
 	"time"
-
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/pkg/clients/notifications"
+	"github.com/edgexfoundry/edgex-go/internal/system/agent/interfaces"
+	"github.com/edgexfoundry/edgex-go/internal/system/agent/executor"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
+	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
 )
 
 // Global variables
 var Configuration *ConfigurationStruct
 var LoggingClient logger.LoggingClient
+var Manifest *ManifestStruct
+var Conf = &ConfigurationStruct{}
+var nc notifications.ClientForNotifications
+var Ec interfaces.ExecutorClient
 
 func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup, ch chan error) {
 	until := time.Now().Add(time.Millisecond * time.Duration(timeout))
@@ -42,6 +50,8 @@ func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup,
 					return
 				}
 			} else {
+				// Initialize notificationsClient based on configuration
+				initializeClients(useConsul)
 				// Setup Logging
 				logTarget := setLoggingTarget()
 				LoggingClient = logger.NewClient(internal.SystemManagementAgentServiceKey, Configuration.EnableRemoteLogging, logTarget)
@@ -54,10 +64,48 @@ func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup,
 		}
 		time.Sleep(time.Second * time.Duration(1))
 	}
+
+	until = time.Now().Add(time.Millisecond * time.Duration(timeout))
+	for time.Now().Before(until) {
+		var err error
+		// The SMA-managed services are bootstrapped by the SMA.
+		// Read the SMA's TOML manifest file, which which specifies details for those services.
+		if Manifest == nil {
+			Manifest, err = initializePerManifest(useProfile)
+			if err != nil {
+				ch <- err
+				if !useConsul {
+					//Error occurred when attempting to read from local filesystem. Fail fast.
+					close(ch)
+					wait.Done()
+					return
+				}
+			}
+		}
+		// Exit the loop if the dependencies have been satisfied.
+		if Manifest != nil {
+			Ec, _ = newExecutorClient(Manifest.OperationsType)
+			break
+		}
+		time.Sleep(time.Second * time.Duration(1))
+	}
 	close(ch)
 	wait.Done()
 
 	return
+}
+
+func newExecutorClient(operationsType string) (interfaces.ExecutorClient, error) {
+
+	// TODO: The abstraction which should be accessed via a global var.
+	switch operationsType {
+	case "os":
+		return &executor.ExecuteOs{}, nil
+	case "docker":
+		return &executor.ExecuteDocker{}, nil
+	default:
+		return nil, nil
+	}
 }
 
 func Init() bool {
@@ -69,13 +117,23 @@ func Init() bool {
 
 func initializeConfiguration(useProfile string) (*ConfigurationStruct, error) {
 	//We currently have to load configuration from filesystem first in order to obtain ConsulHost/Port
-	conf := &ConfigurationStruct{}
-	err := config.LoadFromFile(useProfile, conf)
+	err := config.LoadFromFile(useProfile, Conf)
 	if err != nil {
 		return nil, err
 	}
 
-	return conf, nil
+	return Conf, nil
+}
+
+func initializePerManifest(useProfile string) (*ManifestStruct, error) {
+	// Populate in-memory store with data from the SMA's TOML manifest file.
+	man := &ManifestStruct{}
+	err := LoadFromFile(useProfile, man)
+	if err != nil {
+		return nil, err
+	}
+
+	return man, nil
 }
 
 func setLoggingTarget() string {
@@ -84,4 +142,17 @@ func setLoggingTarget() string {
 		return Configuration.LoggingFile
 	}
 	return logTarget
+}
+
+func initializeClients(useConsul bool) {
+	// Create notification client
+	params := types.EndpointParams{
+		ServiceKey:  internal.SupportNotificationsServiceKey,
+		Path:        "/",
+		UseRegistry: useConsul,
+		Url:         Configuration.Clients["Notifications"].Url(),
+		Interval: Configuration.Service.ClientMonitor,
+	}
+
+	nc = notifications.NewNotificationsClient(params, startup.Endpoint{})
 }
