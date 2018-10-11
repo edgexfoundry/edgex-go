@@ -14,10 +14,10 @@
 package notifications
 
 import (
+	"bytes"
 	"github.com/edgexfoundry/edgex-go/pkg/clients"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
 	"net/http"
-	"bytes"
 )
 
 type CategoryEnum string
@@ -44,7 +44,7 @@ const (
 )
 
 // Interface defining behavior for the notifications client
-type ClientForNotifications interface {
+type NotificationsClient interface {
 	SendNotification(n Notification) error
 	FetchConfiguration() (string, error)
 	FetchMetrics() (string, error)
@@ -71,7 +71,7 @@ type Notification struct {
 	Modified    int          `json:"modified,omitempty"` // The last modification timestamp
 }
 
-func NewNotificationsClient(params types.EndpointParams, m clients.Endpointer) ClientForNotifications {
+func NewNotificationsClient(params types.EndpointParams, m clients.Endpointer) NotificationsClient {
 	n := notificationsRestClient{endpoint: m}
 	n.init(params)
 	return &n

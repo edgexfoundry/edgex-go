@@ -23,7 +23,7 @@ import (
 
 func startNormalResend() error {
 	LoggingClient.Info("Normal severity resend scheduler is triggered.")
-	trxs, err := dbClient.TransmissionsByStatus(resendLimit, models.TransmissionStatus(models.Failed))
+	trxs, err := dbClient.TransmissionsByStatus(Configuration.ResendLimit, models.TransmissionStatus(models.Failed))
 	if err != nil {
 		LoggingClient.Error("Normal resend failed: unable to get FAILED transmissions")
 	}

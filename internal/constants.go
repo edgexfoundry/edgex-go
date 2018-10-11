@@ -14,14 +14,12 @@
 package internal
 
 const (
-	ApiConfigRoute           = "/api/v1/config"
-	ApiPingRoute             = "/api/v1/ping"
-	BootTimeoutDefault       = 30000
-	ClientMonitorDefault     = 15000
-	ConfigFileName           = "configuration.toml"
-	ConfigFileDefaultProfile = "configuration.toml"        // Will be obsolete w/Config V2
-	ConfigFileDockerProfile  = "configuration-docker.toml" // Will be obsolete w/Config V2
-	ConfigV2Stem             = "config/V2/"
+	ApiConfigRoute       = "/api/v1/config"
+	ApiPingRoute         = "/api/v1/ping"
+	BootTimeoutDefault   = 30000
+	ClientMonitorDefault = 15000
+	ConfigFileName       = "configuration.toml"
+	ConfigV2Stem         = "config/V2/"
 )
 
 const (
