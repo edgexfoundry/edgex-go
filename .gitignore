@@ -5,6 +5,7 @@ glide.lock
 *.DS_Store
 docker/docker-compose.yml
 .project
+.vscode/
 
 # binary files
 cmd/config-seed/config-seed
