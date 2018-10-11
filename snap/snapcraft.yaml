@@ -97,7 +97,7 @@ parts:
       # if config-common is rebuilt
       - config-common
     plugin: dump
-    source: 
+    source:
       - on amd64: https://github.com/Masterminds/glide/releases/download/v0.12.3/glide-v0.12.3-linux-amd64.tar.gz
       - else:
         - on arm64: https://github.com/Masterminds/glide/releases/download/v0.12.3/glide-v0.12.3-linux-arm64.tar.gz
@@ -158,9 +158,9 @@ parts:
 
       make bootstrap
       make dev
-      
+
       # install the vault binary
-      install -DT bin/vault "$SNAPCRAFT_PART_INSTALL/bin/vault" 
+      install -DT bin/vault "$SNAPCRAFT_PART_INSTALL/bin/vault"
 
       # handle vault LICENSE
       # TODO: do PATENT files need copying?
@@ -200,7 +200,7 @@ parts:
       - config/*
   mongodb:
     plugin: dump
-    source: 
+    source:
       - on amd64: https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-ubuntu1604-3.4.10.tgz
       - else:
         - on arm64: https://fastdl.mongodb.org/linux/mongodb-linux-arm64-ubuntu1604-3.4.10.tgz
@@ -262,7 +262,7 @@ parts:
     override-build: |
       . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
       gopartbootstrap github.com/edgexfoundry/edgex-go
-      
+
       make prepare
       make build
 
@@ -290,7 +290,7 @@ parts:
         "$SNAPCRAFT_PART_INSTALL/config/config-seed/res/properties/device-virtual/application.properties"
 
       cat "./cmd/config-seed/res/configuration.toml" | \
-        sed -e s:./logs/config-seed.log:\$SNAP_COMMON/config-seed.log: \
+        sed -e s:./logs/edgex-config-seed.log:\$SNAP_COMMON/config-seed.log: \
             -e s:'http\://localhost\:48061/api/v1/logs':: > \
        "$SNAPCRAFT_PART_INSTALL/config/config-seed/res/configuration.toml"
 
@@ -320,7 +320,7 @@ parts:
        "$SNAPCRAFT_PART_INSTALL/config/export-distro/res/configuration.toml"
 
       cat "./cmd/support-logging/res/configuration.toml" | \
-        sed -e s:./logs/support-logging.log:\$SNAP_COMMON/support-logging.log: \
+        sed -e s:./logs/edgex-support-logging.log:\$SNAP_COMMON/support-logging.log: \
             -e s:'http\://localhost\:48061/api/v1/logs':: > \
        "$SNAPCRAFT_PART_INSTALL/config/support-logging/res/configuration.toml"
 
@@ -525,7 +525,7 @@ parts:
 
 # KONG / LUA PARTS
   lua:
-    # this dependency is somewhat artificial, because 
+    # this dependency is somewhat artificial, because
     # when iterating on the openresty parts if you just rebuild openresty,
     # without also rebuilding lua, then kong will fail because it can't find
     # luarocks.cfg somewhere...
@@ -543,7 +543,7 @@ parts:
       - libncurses5-dev
     override-build: |
       # patch the Makefile to use $SNAPCRAFT_STAGE for the INSTALL_TOP variable
-      # which unfortunately is not settable using an environment variable and thus needs 
+      # which unfortunately is not settable using an environment variable and thus needs
       # this manual patch
       sed -i "s@INSTALL_TOP= /usr/local@INSTALL_TOP=$SNAPCRAFT_STAGE@" Makefile
       snapcraftctl build
@@ -569,7 +569,7 @@ parts:
       - --with-http_ssl_module
       - --with-http_stub_status_module
       - --with-http_v2_module
-    build-packages: 
+    build-packages:
       - build-essential
       - libpcre3-dev
       - perl
@@ -585,14 +585,14 @@ parts:
       mkdir -p $SNAPCRAFT_PART_INSTALL/usr/share/doc/openresty.org/openresty/
       cp COPYRIGHT "$SNAPCRAFT_PART_INSTALL/usr/share/doc/openresty.org/openresty/COPYRIGHT"
   kong:
-    after: 
+    after:
       - openresty
       - luarocks
-    source: https://github.com/kong/kong.git  
+    source: https://github.com/kong/kong.git
     plugin: nil
     source-tag: 0.13.1
     source-depth: 1
-    build-packages: 
+    build-packages:
       - unzip
       - libssl-dev
       - libpcre3-dev
@@ -608,7 +608,7 @@ parts:
       if [ -d $SNAPCRAFT_STAGE/lib/luarocks/rocks ]; then
         luarocks purge --tree=$SNAPCRAFT_STAGE
       fi
-      
+
       # handle the location of openssl + libcrypto by architecture
       # cause luarocks is silly and hardcodes /usr/lib/x86_64-linux-gnu as the lib search path
       case $SNAPCRAFT_ARCH_TRIPLET in
@@ -642,7 +642,7 @@ parts:
         exit 1
         ;;
       esac
-      
+
       mkdir -p $SNAPCRAFT_STAGE/bin
       cp bin/kong $SNAPCRAFT_STAGE/bin/kong
       # make all the things inside the cmd directory executable because they for some reason aren't executable by default...
