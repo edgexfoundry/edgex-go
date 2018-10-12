@@ -17,7 +17,7 @@ Port = 8500
 Type = 'consul'
 
 [Logging]
-File = './logs/support-logging.log'
+File = './logs/edgex-support-logging.log'
 
 [Databases]
   [Databases.Primary]
