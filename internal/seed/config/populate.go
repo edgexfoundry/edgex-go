@@ -28,6 +28,7 @@ import (
 	"github.com/pelletier/go-toml"
 )
 
+// Import properties files for support of legacy Java services.
 func ImportProperties(root string) error {
 	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -64,60 +65,10 @@ func ImportProperties(root string) error {
 	return nil
 }
 
-// Function to import the older, legacy configuration for services not yet converted to V2.
-// Eventually, this function will be retired. Newer methodology is below.
-func ImportConfiguration(root string) error {
+// Import configuration files using the specified path to the cmd directory where service configuration files reside.
+// Also, profile indicates the preferred deployment target (such as "docker")
+func ImportConfiguration(root string, profile string) error {
 	dirs := listDirectories()
-	absRoot, err := determineAbsRoot(root)
-	if err != nil {
-		return err
-	}
-	for _, d := range dirs {
-		LoggingClient.Debug(fmt.Sprintf("importing: %s/%s", absRoot, d))
-		if err != nil {
-			return err
-		}
-		res := fmt.Sprintf("%s/%s/res", absRoot, d)
-		err = filepath.Walk(res, func(path string, info os.FileInfo, err error) error {
-			if err != nil {
-				return err
-			}
-
-			// Only import TOML files. Ignore others.
-			if info.IsDir() || !isTomlExtension(info.Name()) {
-				return nil
-			}
-
-			LoggingClient.Debug("reading toml " + path)
-			props, err := readTomlFile(path)
-			if err != nil {
-				return err
-			}
-
-			appKey, err := buildAppKey(d, info.Name())
-			if err != nil {
-				return err
-			}
-			// Put config properties to Consul K/V store.
-			prefix := Configuration.GlobalPrefix + "/" + appKey + "/"
-			for k := range props {
-				p := &consulapi.KVPair{Key: prefix + k, Value: []byte(props[k])}
-				if _, err := (*consulapi.KV).Put(Registry.KV(), p, nil); err != nil {
-					return err
-				}
-			}
-			return nil
-		})
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// Eventually, once all services are converted to utilize ConfigV2 types, this function will replace the one above.
-func ImportV2Configuration(root string, profile string) error {
-	dirs := listV2Directories()
 	absRoot, err := determineAbsRoot(root)
 	if err != nil {
 		return err
@@ -138,10 +89,10 @@ func ImportV2Configuration(root string, profile string) error {
 		}
 
 		//Append configuration file name
-		path := res + "/" + internal.ConfigFileDefaultProfile
+		path := res + "/" + internal.ConfigFileName
 
 		if !isTomlExtension(path) {
-			return errors.New("unsupported file extension: " + internal.ConfigFileDefaultProfile)
+			return errors.New("unsupported file extension: " + path)
 		}
 
 		LoggingClient.Debug("reading toml " + path)
@@ -174,21 +125,11 @@ func ImportV2Configuration(root string, profile string) error {
 	return nil
 }
 
-func listDirectories() [1]string {
-	var names = [1]string{internal.SupportNotificationsServiceKey}
-
-	for i, name := range names {
-		names[i] = strings.Replace(name, internal.ServiceKeyPrefix, "", 1)
-	}
-
-	return names
-}
-
 // As services are converted to utilize V2 types, add them to this list and remove from the one above.
-func listV2Directories() [7]string {
-	var names = [7]string{internal.CoreMetaDataServiceKey, internal.CoreCommandServiceKey, internal.CoreDataServiceKey,
-		internal.ExportDistroServiceKey, internal.ExportClientServiceKey, internal.SupportLoggingServiceKey,internal.SupportSchedulerServiceKey}
-
+func listDirectories() [8]string {
+	var names = [8]string{internal.CoreMetaDataServiceKey, internal.CoreCommandServiceKey, internal.CoreDataServiceKey,
+		internal.ExportDistroServiceKey, internal.ExportClientServiceKey, internal.SupportLoggingServiceKey,
+		internal.SupportSchedulerServiceKey, internal.SupportNotificationsServiceKey}
 
 	for i, name := range names {
 		names[i] = strings.Replace(name, internal.ServiceKeyPrefix, "", 1)
@@ -213,24 +154,6 @@ func determineAbsRoot(root string) (string, error) {
 		return absRoot, nil
 	}
 	return root, nil
-}
-
-func buildAppKey(app string, fileName string) (string, error) {
-	var err error = nil
-	var key string = internal.ServiceKeyPrefix
-	switch fileName {
-	case internal.ConfigFileDefaultProfile:
-		key += app + ";go"
-		break
-	case internal.ConfigFileDockerProfile:
-		key += app + ";docker"
-		break
-	default:
-		err = errors.New("unrecognized name: " + fileName)
-		key = ""
-		break
-	}
-	return key, err
 }
 
 func isAcceptablePropertyExtensions(file string) bool {

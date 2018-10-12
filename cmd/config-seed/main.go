@@ -16,14 +16,13 @@ package main
 import (
 	"flag"
 	"fmt"
+	"sync"
+
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/internal/seed/config"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
-	"sync"
 )
-
-var bootTimeout int = 30000 //Once we start the V2 configuration rework, this will be config driven
 
 func main() {
 	var useProfile string
@@ -51,11 +50,7 @@ func main() {
 	if err != nil {
 		config.LoggingClient.Error(err.Error())
 	}
-	err = config.ImportConfiguration(dirCmd)
-	if err != nil {
-		config.LoggingClient.Error(err.Error())
-	}
-	err = config.ImportV2Configuration(dirCmd, useProfile)
+	err = config.ImportConfiguration(dirCmd, useProfile)
 	if err != nil {
 		config.LoggingClient.Error(err.Error())
 	}
@@ -65,7 +60,7 @@ func bootstrap(profile string) {
 	deps := make(chan error, 2)
 	wg := sync.WaitGroup{}
 	wg.Add(1)
-	go config.Retry(profile, bootTimeout, &wg, deps)
+	go config.Retry(profile, internal.BootTimeoutDefault, &wg, deps)
 	go func(ch chan error) {
 		for {
 			select {
