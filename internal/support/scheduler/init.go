@@ -25,7 +25,6 @@ var LoggingClient logger.LoggingClient
 var chConfig chan interface{} //A channel for use by ConsulDecoder in detecting configuration mods.
 var ticker = time.NewTicker(time.Duration(ScheduleInterval) * time.Millisecond)
 
-
 func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup, ch chan error) {
 	now := time.Now()
 	until := now.Add(time.Millisecond * time.Duration(timeout))
@@ -89,7 +88,7 @@ func Destruct() {
 func initializeConfiguration(useConsul bool, useProfile string) (*ConfigurationStruct, error) {
 	//We currently have to load configuration from filesystem first in order to obtain ConsulHost/Port
 	conf := &ConfigurationStruct{}
-	err := config.LoadFromFileV2(useProfile, conf)
+	err := config.LoadFromFile(useProfile, conf)
 	if err != nil {
 		return nil, err
 	}
@@ -173,11 +172,9 @@ func listenForConfigChanges() {
 	}
 }
 
-
 func setLoggingTarget() string {
 	if Configuration.Logging.EnableRemote {
 		return Configuration.Clients["Logging"].Url() + clients.ApiLoggingRoute
 	}
 	return Configuration.Logging.File
 }
-

@@ -16,48 +16,6 @@
 
 package notifications
 
-type ConfigurationStruct struct {
-	ApplicationName               string
-	ConsulProfilesActive          string
-	HeartBeatTime                 int
-	HeartBeatMsg                  string
-	AppOpenMsg                    string
-	FormatSpecifier               string
-	ServicePort                   int
-	ServiceTimeout                int
-	ServiceAddress                string
-	ServiceName                   string
-	ConsulHost                    string
-	ConsulCheckAddress            string
-	ConsulPort                    int
-	CheckInterval                 string
-	EnableRemoteLogging           bool
-	LoggingFile                   string
-	LoggingRemoteURL              string
-	MongoDBUserName               string
-	MongoDBPassword               string
-	MongoDatabaseName             string
-	MongoDBHost                   string
-	MongoDBPort                   int
-	MongoDBConnectTimeout         int
-	MongoDBMaxWaitTime            int
-	MongoDBKeepAlive              bool
-	ReadMaxLimit                  int
-	ResendLimit                   int
-	CleanupDefaultAge             int
-	SchedulerNormalDuration       string
-	SchedulerNormalResendDuration string
-	SchedulerCriticalResendDelay  int
-	SMTPPort                      string
-	SMTPHost                      string
-	SMTPSender                    string
-	SMTPPassword                  string
-	SMTPSubject                   string
-	DBType                        string
-}
-
-var configuration = ConfigurationStruct{} //  Needs to be initialized before used
-
 var (
 	/* ----------------------- CONSTANTS ----------------------------*/
 	SUPPORTNOTIFICATIONSSERVICENAME = "support-notifications"

@@ -27,7 +27,6 @@ import (
 
 const (
 	configDirectory = "./res"
-	configDefault   = "configuration.toml"
 
 	configDirEnv = "EDGEX_CONF_DIR"
 )
@@ -35,26 +34,6 @@ const (
 var confDir = flag.String("confdir", "", "Specify local configuration directory")
 
 func LoadFromFile(profile string, configuration interface{}) error {
-	path := determinePath()
-	fileName := path + "/" + determineConfigFile(profile)
-
-	contents, err := ioutil.ReadFile(fileName)
-	if err != nil {
-		return fmt.Errorf("could not load configuration file (%s): %v", fileName, err.Error())
-	}
-
-	// Decode the configuration from TOML
-	err = toml.Unmarshal(contents, configuration)
-	if err != nil {
-		return fmt.Errorf("unable to parse configuration file (%s): %v", fileName, err.Error())
-	}
-
-	return nil
-}
-
-// This function will eventually replace the above function. Note the difference in how the configuration file
-// is located based on the supplied profile.
-func LoadFromFileV2(profile string, configuration interface{}) error {
 	path := determinePath()
 	fileName := path + "/" + internal.ConfigFileName //default profile
 	if len(profile) > 0 {
@@ -72,13 +51,6 @@ func LoadFromFileV2(profile string, configuration interface{}) error {
 	}
 
 	return nil
-}
-
-func determineConfigFile(profile string) string {
-	if profile == "" {
-		return configDefault
-	}
-	return "configuration-" + profile + ".toml"
 }
 
 func determinePath() string {
@@ -100,13 +72,19 @@ func determinePath() string {
 }
 
 func VerifyTomlFiles(configuration interface{}) error {
-	files, err := filepath.Glob("res/configuration*.toml")
-	if err != nil {
+	files, _ := filepath.Glob("res/*/*.toml")
+	files2, _ := filepath.Glob("res/configuration.toml")
+
+	for _, x := range files2 {
+		files = append(files, x)
+	}
+
+	if len(files) == 0 {
 		return fmt.Errorf("There are no toml files")
 	}
 
 	for _, f := range files {
-		profile := f[len("res/configuration") : len(f)-len(".toml")]
+		profile := f[len("res") : len(f)-len("/configuration.toml")]
 		if profile != "" {
 			// remove the dash
 			profile = profile[1:]

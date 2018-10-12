@@ -14,16 +14,16 @@
 package agent
 
 import (
+	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
+	"github.com/edgexfoundry/edgex-go/internal/system/agent/executor"
+	"github.com/edgexfoundry/edgex-go/internal/system/agent/interfaces"
+	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
+	"github.com/edgexfoundry/edgex-go/pkg/clients/notifications"
+	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
 	"sync"
 	"time"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
-	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
-	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/pkg/clients/notifications"
-	"github.com/edgexfoundry/edgex-go/internal/system/agent/interfaces"
-	"github.com/edgexfoundry/edgex-go/internal/system/agent/executor"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
-	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
 )
 
 // Global variables
@@ -31,7 +31,7 @@ var Configuration *ConfigurationStruct
 var LoggingClient logger.LoggingClient
 var Manifest *ManifestStruct
 var Conf = &ConfigurationStruct{}
-var nc notifications.ClientForNotifications
+var nc notifications.NotificationsClient
 var Ec interfaces.ExecutorClient
 
 func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup, ch chan error) {
@@ -151,7 +151,7 @@ func initializeClients(useConsul bool) {
 		Path:        "/",
 		UseRegistry: useConsul,
 		Url:         Configuration.Clients["Notifications"].Url(),
-		Interval: Configuration.Service.ClientMonitor,
+		Interval:    internal.ClientMonitorDefault,
 	}
 
 	nc = notifications.NewNotificationsClient(params, startup.Endpoint{})

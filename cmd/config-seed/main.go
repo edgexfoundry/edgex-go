@@ -51,11 +51,7 @@ func main() {
 	if err != nil {
 		config.LoggingClient.Error(err.Error())
 	}
-	err = config.ImportConfiguration(dirCmd)
-	if err != nil {
-		config.LoggingClient.Error(err.Error())
-	}
-	err = config.ImportV2Configuration(dirCmd, useProfile)
+	err = config.ImportConfiguration(dirCmd, useProfile)
 	if err != nil {
 		config.LoggingClient.Error(err.Error())
 	}

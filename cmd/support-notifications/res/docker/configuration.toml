@@ -4,7 +4,7 @@ ResendLimit = 2
 BootTimeout = 30000
 ClientMonitor = 15000
 CheckInterval = '10s'
-Host = 'localhost'
+Host = 'edgex-support-notifications'
 Port = 48060
 Protocol = 'http'
 ReadMaxLimit = 1000
@@ -12,23 +12,23 @@ StartupMsg = 'This is the Support Notifications Microservice'
 Timeout = 5000
 
 [Registry]
-Host = 'localhost'
+Host = 'edgex-core-consul'
 Port = 8500
 Type = 'consul'
 
 [Logging]
 EnableRemote = false
-File = './logs/edgex-support-notifications.log'
+File = '/edgex/logs/edgex-support-notifications.log'
 
 [Clients]
   [Clients.Logging]
   Protocol = 'http'
-  Host = 'localhost'
+  Host = 'edgex-support-logging'
   Port = 48061
 
 [Databases]
   [Databases.Primary]
-  Host = 'localhost'
+  Host = 'edgex-mongo'
   Name = 'notifications'
   Password = ''
   Port = 27017
@@ -42,6 +42,4 @@ Password = 'mypassword'
 Port = 587
 Sender = 'jdoe@gmail.com'
 Subject = 'EdgeX Notification'
-
-
 
