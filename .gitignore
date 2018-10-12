@@ -5,6 +5,7 @@ glide.lock
 *.DS_Store
 docker/docker-compose.yml
 .project
+.vscode/
 
 # binary files
 cmd/config-seed/config-seed
@@ -19,16 +20,7 @@ cmd/sys-mgmt-agent/sys-mgmt-agent
 cmd/support-scheduler/support-scheduler
 
 # log dirs
-logs/
-cmd/config-seed/logs/
-cmd/core-command/logs/
-cmd/core-data/logs/
-cmd/core-metadata/logs/
-cmd/support-logging/logs/
-cmd/export-client/logs/
-cmd/export-distro/logs/
-cmd/support-notifications/logs/
-cmd/support-scheduler/support-scheduler
+**/logs
 
 # snap files
 *.snap
