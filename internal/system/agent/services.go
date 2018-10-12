@@ -17,6 +17,9 @@ package agent
 
 import (
 	"fmt"
+	"time"
+	"github.com/edgexfoundry/edgex-go/internal/system/agent/executor"
+	"github.com/edgexfoundry/edgex-go/internal"
 )
 
 const (
@@ -25,35 +28,256 @@ const (
 	RESTART = "restart"
 )
 
-func invokeAction(action string, services []string, params map[string]string) bool {
+type Adaptee1 ConfigRespMap
+type Adaptee2 MetricsRespMap
 
-	// Loop through requested action, along with respectively-supplied parameters.
+var responseJSON string
+
+func InvokeOperation(action string, services []string, params []string) bool {
+
+	// Loop through requested operation, along with respectively-supplied parameters.
 	for _, service := range services {
-		// TODO: Logging is placeholder for actual functionality to be implemented.
-		LoggingClient.Info(fmt.Sprintf("OPERATION >> About to {%v} the service {%v} with parameters {%v}.\n", action, service, params))
-	}
-	return true
-}
+		LoggingClient.Info(fmt.Sprintf("About to {%v} the service {%v} with parameters {%v}.", action, service, params))
 
-func getConfig(services []string) bool {
+		switch action {
 
-	// Loop through requested actions, along with respectively-supplied parameters.
-	for _, service := range services {
-		// TODO: Logging is placeholder for actual functionality to be implemented.
-		LoggingClient.Info(fmt.Sprintf("CONFIG >> Fetching the configuration for the service {%v}!\n", service))
-	}
-	return true
-}
+		case STOP:
+			switch service {
+			case internal.SupportNotificationsServiceKey:
+				Ec.StopService(internal.SupportNotificationsServiceKey, params[0])
+				break
 
-func getMetric(services []string, metrics []string) bool {
+			case internal.CoreDataServiceKey:
+				Ec.StopService(internal.CoreDataServiceKey, params[0])
+				break
 
-	// Loop through requested service(s), along with respectively-sought metric(s).
-	for _, service := range services {
-		for _, metric := range metrics {
-			// TODO: Logging is placeholder for actual functionality to be implemented.
-			// TODO: What constitutes metrics. How do services provide those metrics?
-			LoggingClient.Info(fmt.Sprintf("METRIC >> Fetching the metric {%v} for the service {%v}...\n", metric, service))
+			case internal.CoreCommandServiceKey:
+				Ec.StopService(internal.CoreCommandServiceKey, params[0])
+				break
+
+			case internal.CoreMetaDataServiceKey:
+				Ec.StopService(internal.CoreMetaDataServiceKey, params[0])
+				break
+
+			case internal.ExportClientServiceKey:
+				Ec.StopService(internal.ExportClientServiceKey, params[0])
+				break
+
+			case internal.ExportDistroServiceKey:
+				Ec.StopService(internal.ExportDistroServiceKey, params[0])
+				break
+
+			case internal.SupportLoggingServiceKey:
+				Ec.StopService(internal.SupportLoggingServiceKey, params[0])
+				break
+
+			case internal.ConfigSeedServiceKey:
+				Ec.StopService(internal.ConfigSeedServiceKey, params[0])
+				break
+
+			default:
+				LoggingClient.Info(fmt.Sprintf(">> Unknown service: %v", service))
+				break
+			}
+
+		case START:
+			switch service {
+			case internal.SupportNotificationsServiceKey:
+				executor.StartDockerContainerCompose(internal.SupportNotificationsServiceKey)
+				break
+
+			case internal.CoreDataServiceKey:
+				executor.StartDockerContainerCompose(internal.CoreDataServiceKey)
+				break
+
+			case internal.CoreMetaDataServiceKey:
+				executor.StartDockerContainerCompose(internal.CoreMetaDataServiceKey)
+				break
+
+			case internal.CoreCommandServiceKey:
+				executor.StartDockerContainerCompose(internal.CoreCommandServiceKey)
+				break
+
+			case internal.ExportClientServiceKey:
+				executor.StartDockerContainerCompose(internal.ExportClientServiceKey)
+				break
+
+			case internal.ExportDistroServiceKey:
+				executor.StartDockerContainerCompose(internal.ExportDistroServiceKey)
+				break
+
+			case internal.SupportLoggingServiceKey:
+				executor.StartDockerContainerCompose(internal.SupportLoggingServiceKey)
+				break
+
+			case internal.ConfigSeedServiceKey:
+				executor.StartDockerContainerCompose(internal.ConfigSeedServiceKey)
+				break
+
+			default:
+				LoggingClient.Info(fmt.Sprintf(">> Unknown service: %v", service))
+				break
+			}
+
+		case RESTART:
+			switch service {
+			case internal.SupportNotificationsServiceKey:
+				Ec.StopService(internal.SupportNotificationsServiceKey, params[0])
+				time.Sleep(time.Second * time.Duration(1))
+				executor.StartDockerContainerCompose(internal.SupportNotificationsServiceKey)
+				break
+
+			case internal.CoreDataServiceKey:
+				Ec.StopService(internal.CoreDataServiceKey, params[0])
+				time.Sleep(time.Second * time.Duration(1))
+				executor.StartDockerContainerCompose(internal.CoreDataServiceKey)
+				break
+
+			case internal.CoreCommandServiceKey:
+				Ec.StopService(internal.CoreCommandServiceKey, params[0])
+				time.Sleep(time.Second * time.Duration(1))
+				executor.StartDockerContainerCompose(internal.CoreCommandServiceKey)
+				break
+
+			case internal.CoreMetaDataServiceKey:
+				Ec.StopService(internal.CoreMetaDataServiceKey, params[0])
+				time.Sleep(time.Second * time.Duration(1))
+				executor.StartDockerContainerCompose(internal.CoreMetaDataServiceKey)
+				break
+
+			case internal.ExportClientServiceKey:
+				Ec.StopService(internal.ExportClientServiceKey, params[0])
+				time.Sleep(time.Second * time.Duration(1))
+				executor.StartDockerContainerCompose(internal.ExportClientServiceKey)
+				break
+
+			case internal.ExportDistroServiceKey:
+				Ec.StopService(internal.ExportDistroServiceKey, params[0])
+				time.Sleep(time.Second * time.Duration(1))
+				executor.StartDockerContainerCompose(internal.ExportDistroServiceKey)
+				break
+
+			case internal.SupportLoggingServiceKey:
+				Ec.StopService(internal.SupportLoggingServiceKey, params[0])
+				time.Sleep(time.Second * time.Duration(1))
+				executor.StartDockerContainerCompose(internal.SupportLoggingServiceKey)
+				break
+
+			case internal.ConfigSeedServiceKey:
+				Ec.StopService(internal.ConfigSeedServiceKey, params[0])
+				time.Sleep(time.Second * time.Duration(1))
+				executor.StartDockerContainerCompose(internal.ConfigSeedServiceKey)
+				break
+
+			default:
+				LoggingClient.Info(fmt.Sprintf(">> Unknown service: %v", service))
+				break
+			}
 		}
 	}
 	return true
+}
+
+func getConfig(services []string) (ConfigRespMap, error) {
+
+	var resultConfig = ConfigRespMap{}
+
+	// Loop through requested actions, along with respectively-supplied parameters.
+	for _, service := range services {
+
+		switch service {
+
+		case internal.SupportNotificationsServiceKey:
+
+			responseJSON, err := nc.FetchConfiguration()
+			if err != nil {
+				LoggingClient.Error(fmt.Sprintf("For the {%v} service, encountered error while fetching its configuration.", service))
+			} else {
+				resultConfig = ProcessConfigResponse(responseJSON)
+				jsonBytes, _ := ConfigRespMap.MarshalJSON(resultConfig)
+				LoggingClient.Debug(fmt.Sprintf("For the {%v} service, fetched this configuration: {%v}: ", service, string(jsonBytes)))
+			}
+			break
+
+		case internal.CoreCommandServiceKey:
+			LoggingClient.Info(fmt.Sprintf("The micro-service {%v} currently does not support an endpoint for providing its configuration data...", internal.CoreCommandServiceKey))
+			break
+
+		case internal.CoreDataServiceKey:
+			LoggingClient.Info(fmt.Sprintf("The micro-service {%v} currently does not support an endpoint for providing its configuration data...", internal.CoreDataServiceKey))
+			break
+
+		case internal.CoreMetaDataServiceKey:
+			LoggingClient.Info(fmt.Sprintf("The micro-service {%v} currently does not support an endpoint for providing its configuration data...", internal.CoreMetaDataServiceKey))
+			break
+
+		case internal.ExportClientServiceKey:
+			LoggingClient.Info(fmt.Sprintf("The micro-service {%v} currently does not support an endpoint for providing its configuration data...", internal.ExportClientServiceKey))
+			break
+
+		case internal.ExportDistroServiceKey:
+			LoggingClient.Info(fmt.Sprintf("The micro-service {%v} currently does not support an endpoint for providing its configuration data...", internal.ExportDistroServiceKey))
+			break
+
+		case internal.SupportLoggingServiceKey:
+			LoggingClient.Info(fmt.Sprintf("The micro-service {%v} currently does not support an endpoint for providing its configuration data...", internal.SupportLoggingServiceKey))
+			break
+
+		default:
+			LoggingClient.Warn(fmt.Sprintf(">> Unknown service: %v", service))
+			break
+		}
+	}
+	return resultConfig, nil
+}
+
+func getMetrics(services []string) (MetricsRespMap, error) {
+
+	var resultMetrics = MetricsRespMap{}
+
+	// Loop through requested actions, along with respectively-supplied parameters.
+	for _, service := range services {
+		switch service {
+		case internal.SupportNotificationsServiceKey:
+
+			responseJSON, err := nc.FetchMetrics()
+			if err != nil {
+				LoggingClient.Error(fmt.Sprintf("For the {%v} service, encountered error while fetching its metrics.", service))
+			} else {
+				resultMetrics = ProcessMetricsResponse(responseJSON)
+				jsonBytes, _ := MetricsRespMap.MarshalJSON(resultMetrics)
+				LoggingClient.Debug(fmt.Sprintf("For the {%v} service, fetched these metrics: {%v}: ", service, string(jsonBytes)))
+			}
+			break
+
+		case internal.CoreCommandServiceKey:
+			LoggingClient.Info(fmt.Sprintf("The micro-service {%v} currently does not support an endpoint for providing its metrics data...", internal.CoreCommandServiceKey))
+			break
+
+		case internal.CoreDataServiceKey:
+			LoggingClient.Info(fmt.Sprintf("The micro-service {%v} currently does not support an endpoint for providing its metrics data...", internal.CoreDataServiceKey))
+			break
+
+		case internal.CoreMetaDataServiceKey:
+			LoggingClient.Info(fmt.Sprintf("The micro-service {%v} currently does not support an endpoint for providing its metrics data...", internal.CoreMetaDataServiceKey))
+			break
+
+		case internal.ExportClientServiceKey:
+			LoggingClient.Info(fmt.Sprintf("The micro-service {%v} currently does not support an endpoint for providing its metrics data...", internal.ExportClientServiceKey))
+			break
+
+		case internal.ExportDistroServiceKey:
+			LoggingClient.Info(fmt.Sprintf("The micro-service {%v} currently does not support an endpoint for providing its metrics data...", internal.ExportDistroServiceKey))
+			break
+
+		case internal.SupportLoggingServiceKey:
+			LoggingClient.Info(fmt.Sprintf("The micro-service {%v} currently does not support an endpoint for providing its metrics data...", internal.SupportLoggingServiceKey))
+			break
+
+		default:
+			LoggingClient.Warn(fmt.Sprintf(">> Unknown service: %v", service))
+			break
+		}
+	}
+	return resultMetrics, nil
 }

@@ -16,15 +16,13 @@ package logger
 // Logging client for the Go implementation of edgexfoundry
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
 	"log"
-	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/edgexfoundry/edgex-go/pkg/clients"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 )
 
@@ -197,33 +195,12 @@ func (lc EdgeXLogger) sendLog(logEntry models.LogEntry) error {
 		return nil
 	}
 
-	reqBody, err := json.Marshal(logEntry)
-	if err != nil {
-		fmt.Println(err.Error())
-		return err
-	}
-
-	req, err := http.NewRequest(http.MethodPost, lc.logTarget, bytes.NewBuffer(reqBody))
-	if err != nil {
-		fmt.Println(err.Error())
-		return err
-	}
-	req.Header.Add("Content-Type", "application/json")
-	client := &http.Client{}
-
-	// Asynchronous call
-	go lc.makeRequest(client, req)
+	go func() {
+		_, err := clients.PostJsonRequest(lc.logTarget, logEntry)
+		if err != nil {
+			fmt.Println(err.Error())
+		}
+	}()
 
 	return nil
-}
-
-// Function to call in a goroutine
-func (lc EdgeXLogger) makeRequest(client *http.Client, request *http.Request) {
-	resp, err := client.Do(request)
-	if err == nil {
-		defer resp.Body.Close()
-		resp.Close = true
-	} else {
-		fmt.Println(err.Error())
-	}
 }

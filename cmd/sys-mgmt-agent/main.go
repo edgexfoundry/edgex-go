@@ -27,11 +27,9 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
-	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent"
+	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 )
-
-var bootTimeout int = 30000 //Once we start the V2 configuration rework, this will be config driven
 
 func main() {
 
@@ -57,7 +55,7 @@ func main() {
 	flag.Usage = usage.HelpCallback
 	flag.Parse()
 
-	params := startup.BootParams{UseConsul: useConsul, UseProfile: useProfile, BootTimeout: bootTimeout}
+	params := startup.BootParams{UseConsul: useConsul, UseProfile: useProfile, BootTimeout: internal.BootTimeoutDefault}
 	startup.Bootstrap(params, agent.Retry, logBeforeInit)
 
 	ok := agent.Init()

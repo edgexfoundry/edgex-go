@@ -21,9 +21,12 @@ import (
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 )
 
+// TODO: This looks like the function that is supposed to start the notifications cycle but it is not
+// currently called anywhere. Something was lost in the Java->Go conversion.
+// A subsequent issue/PR should be undertaken to address this.
 func startNormalDistributing() error {
 	LoggingClient.Info("Normal severity scheduler is triggered.")
-	nm, err := dbClient.NotificationsNewNormal(limitMax)
+	nm, err := dbClient.NotificationsNewNormal(Configuration.Service.ReadMaxLimit)
 	if err != nil {
 		LoggingClient.Error("Normal distribution of notifications failed: unable to get NEW notifications")
 	}

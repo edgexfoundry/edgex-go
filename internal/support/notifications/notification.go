@@ -217,7 +217,7 @@ func notificationBySenderHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 
-		if limitNum > Configuration.ReadMaxLimit {
+		if limitNum > Configuration.Service.ReadMaxLimit {
 			http.Error(w, "Exceeded max limit", http.StatusRequestEntityTooLarge)
 			LoggingClient.Error("Exceeded max limit")
 			return
@@ -269,7 +269,7 @@ func notificationByStartEndHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 
-		if limitNum > Configuration.ReadMaxLimit {
+		if limitNum > Configuration.Service.ReadMaxLimit {
 			http.Error(w, "Exceeded max limit", http.StatusRequestEntityTooLarge)
 			LoggingClient.Error("Exceeded max limit")
 			return
@@ -309,7 +309,7 @@ func notificationByStartHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 
-		if limitNum > Configuration.ReadMaxLimit {
+		if limitNum > Configuration.Service.ReadMaxLimit {
 			http.Error(w, "Exceeded max limit", http.StatusRequestEntityTooLarge)
 			LoggingClient.Error("Exceeded max limit")
 			return
@@ -355,7 +355,7 @@ func notificationByEndHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 
-		if limitNum > Configuration.ReadMaxLimit {
+		if limitNum > Configuration.Service.ReadMaxLimit {
 			http.Error(w, "Exceeded max limit", http.StatusRequestEntityTooLarge)
 			LoggingClient.Error("Exceeded max limit")
 			return
@@ -395,7 +395,7 @@ func notificationsByLabelsHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 
-		if limitNum > Configuration.ReadMaxLimit {
+		if limitNum > Configuration.Service.ReadMaxLimit {
 			http.Error(w, "Exceeded max limit", http.StatusRequestEntityTooLarge)
 			LoggingClient.Error("Exceeded max limit")
 			return
@@ -437,7 +437,7 @@ func notificationsNewHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 
-		if limitNum > Configuration.ReadMaxLimit {
+		if limitNum > Configuration.Service.ReadMaxLimit {
 			http.Error(w, "Exceeded max limit", http.StatusRequestEntityTooLarge)
 			LoggingClient.Error("Exceeded max limit")
 			return

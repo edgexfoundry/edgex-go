@@ -17,6 +17,7 @@ cmd/export-distro/export-distro
 cmd/support-logging/support-logging
 cmd/support-notifications/support-notifications
 cmd/sys-mgmt-agent/sys-mgmt-agent
+cmd/support-scheduler/support-scheduler
 
 # log dirs
 **/logs

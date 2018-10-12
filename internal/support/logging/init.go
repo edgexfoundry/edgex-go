@@ -88,7 +88,7 @@ func Destruct() {
 func initializeConfiguration(useConsul bool, useProfile string) (*ConfigurationStruct, error) {
 	//We currently have to load configuration from filesystem first in order to obtain ConsulHost/Port
 	conf := &ConfigurationStruct{}
-	err := config.LoadFromFileV2(useProfile, conf)
+	err := config.LoadFromFile(useProfile, conf)
 	if err != nil {
 		return nil, err
 	}
@@ -136,6 +136,10 @@ func connectToConsul(conf *ConfigurationStruct) (*ConfigurationStruct, error) {
 			return conf, errors.New("type check failed")
 		}
 		conf = actual
+		//Check that information was successfully read from Consul
+		if len(conf.Persistence) == 0 {
+			return nil, errors.New("error reading from Consul")
+		}
 	}
 	return conf, err
 }
@@ -171,9 +175,10 @@ func listenForConfigChanges() {
 }
 
 func getPersistence() error {
-	if Configuration.Persistence == PersistenceFile {
+	switch Configuration.Persistence {
+	case PersistenceFile:
 		dbClient = &fileLog{filename: Configuration.Logging.File}
-	} else if Configuration.Persistence == PersistenceDB {
+	case PersistenceDB:
 		// TODO: Integrate db layer with internal/pkg/db/ types so we can support other databases
 		ms, err := connectToMongo()
 		if err != nil {
@@ -181,6 +186,8 @@ func getPersistence() error {
 		} else {
 			dbClient = &mongoLog{session: ms}
 		}
+	default:
+		return errors.New(fmt.Sprintf("unrecognized value Configuration.Persistence: %s", Configuration.Persistence))
 	}
 	return nil
 }

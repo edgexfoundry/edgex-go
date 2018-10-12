@@ -36,8 +36,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 )
 
-var bootTimeout int = 30000 //Once we start the V2 configuration rework, this will be config driven
-
 func main() {
 	start := time.Now()
 	var useConsul bool
@@ -50,7 +48,7 @@ func main() {
 	flag.Usage = usage.HelpCallback
 	flag.Parse()
 
-	params := startup.BootParams{UseConsul: useConsul, UseProfile: useProfile, BootTimeout: bootTimeout}
+	params := startup.BootParams{UseConsul: useConsul, UseProfile: useProfile, BootTimeout: internal.BootTimeoutDefault}
 	startup.Bootstrap(params, notifications.Retry, logBeforeInit)
 
 	ok := notifications.Init()
@@ -62,16 +60,16 @@ func main() {
 	notifications.LoggingClient.Info("Service dependencies resolved...")
 	notifications.LoggingClient.Info(fmt.Sprintf("Starting %s %s ", internal.SupportNotificationsServiceKey, edgex.Version))
 
-	http.TimeoutHandler(nil, time.Millisecond*time.Duration(notifications.Configuration.ServiceTimeout), "Request timed out")
-	notifications.LoggingClient.Info(notifications.Configuration.AppOpenMsg, "")
+	http.TimeoutHandler(nil, time.Millisecond*time.Duration(notifications.Configuration.Service.Timeout), "Request timed out")
+	notifications.LoggingClient.Info(notifications.Configuration.Service.StartupMsg, "")
 
 	errs := make(chan error, 2)
 	listenForInterrupt(errs)
-	startHttpServer(errs, notifications.Configuration.ServicePort)
+	startHttpServer(errs, notifications.Configuration.Service.Port)
 
 	// Time it took to start service
 	notifications.LoggingClient.Info("Service started in: "+time.Since(start).String(), "")
-	notifications.LoggingClient.Info("Listening on port: " + strconv.Itoa(notifications.Configuration.ServicePort))
+	notifications.LoggingClient.Info("Listening on port: " + strconv.Itoa(notifications.Configuration.Service.Port))
 	c := <-errs
 	notifications.Destruct()
 	notifications.LoggingClient.Warn(fmt.Sprintf("terminating: %v", c))

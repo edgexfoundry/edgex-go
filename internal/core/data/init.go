@@ -161,7 +161,7 @@ func newDBClient(dbType string) (interfaces.DBClient, error) {
 func initializeConfiguration(useConsul bool, useProfile string) (*ConfigurationStruct, error) {
 	//We currently have to load configuration from filesystem first in order to obtain ConsulHost/Port
 	conf := &ConfigurationStruct{}
-	err := config.LoadFromFileV2(useProfile, conf)
+	err := config.LoadFromFile(useProfile, conf)
 	if err != nil {
 		return nil, err
 	}

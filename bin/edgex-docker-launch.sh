@@ -46,7 +46,7 @@ docker-compose -f $COMPOSE_FILE up -d config-seed
 echo "Sleeping before launching remaining services"
 sleep 15
 
-defaultServices="logging metadata data command export-client export-distro notifications"
+defaultServices="logging metadata data command export-client export-distro notifications scheduler"
 if [[ -z ${EDGEX_SERVICES} ]]; then
   deps=
   services=${defaultServices}
@@ -59,4 +59,3 @@ for s in ${services}; do
     echo Starting ${s}
     docker-compose -f $COMPOSE_FILE up -d ${deps} $s
 done
-

@@ -14,21 +14,8 @@
 package command
 
 import (
-	"errors"
-	"io/ioutil"
-	"net/http"
-	"strings"
-
 	"github.com/edgexfoundry/edgex-go/pkg/clients"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
-)
-
-var (
-	COMMAND    = "command"
-	JSONHEADER = "application/json"
-
-	ErrResponseNil       = errors.New("Response was nil")
-	ErrorCommandNotFound = errors.New("Command not found")
 )
 
 // CommandClient : client to interact with core command
@@ -68,65 +55,11 @@ func (c *CommandRestClient) init(params types.EndpointParams) {
 
 // Get : issue GET command
 func (cc *CommandRestClient) Get(id string, cID string) (string, error) {
-	req, err := http.NewRequest(http.MethodGet, cc.url+"/"+id+"/"+COMMAND+"/"+cID, nil)
-	if err != nil {
-		return "", err
-	}
-
-	resp, err := doReq(req)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-
-	json, err := getBody(resp)
-	if resp.StatusCode != http.StatusOK {
-		if err != nil {
-			return "", err
-		}
-		return "", types.NewErrServiceClient(resp.StatusCode, json)
-	}
-	return string(json), err
+	body, err := clients.GetRequest(cc.url + "/" + id + "/command/" + cID)
+	return string(body), err
 }
 
 // Put : Issue PUT command
 func (cc *CommandRestClient) Put(id string, cID string, body string) (string, error) {
-	req, err := http.NewRequest(http.MethodPut, cc.url+"/"+id+"/"+COMMAND+"/"+cID, strings.NewReader(body))
-	if err != nil {
-		return "", err
-	}
-
-	resp, err := doReq(req)
-	if err != nil {
-		return "", err
-	}
-	if resp == nil {
-		return "", ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	json, err := getBody(resp)
-	if err != nil {
-		return "", err
-	} else if resp.StatusCode != http.StatusOK {
-		return "", types.NewErrServiceClient(resp.StatusCode, json)
-	}
-
-	return string(json), err
-}
-
-func doReq(req *http.Request) (*http.Response, error) {
-	client := &http.Client{}
-	resp, err := client.Do(req)
-
-	return resp, err
-}
-
-func getBody(resp *http.Response) ([]byte, error) {
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return []byte{}, err
-	}
-
-	return body, nil
+	return clients.PutRequest(cc.url+"/"+id+"/command/"+cID, []byte(body))
 }

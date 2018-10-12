@@ -14,9 +14,7 @@
 package metadata
 
 import (
-	"bytes"
 	"encoding/json"
-	"net/http"
 
 	"github.com/edgexfoundry/edgex-go/pkg/clients"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
@@ -66,209 +64,56 @@ func (c *CommandRestClient) init(params types.EndpointParams) {
 	}
 }
 
-// Helper method to decode and return a command
-func (c *CommandRestClient) decodeCommand(resp *http.Response) (models.Command, error) {
-	dec := json.NewDecoder(resp.Body)
-	com := models.Command{}
-	err := dec.Decode(&com)
+// Helper method to request and decode a command
+func (c *CommandRestClient) requestCommand(url string) (models.Command, error) {
+	data, err := clients.GetRequest(url)
 	if err != nil {
 		return models.Command{}, err
 	}
 
+	com := models.Command{}
+	err = json.Unmarshal(data, &com)
 	return com, err
 }
 
-// Helper method to decode and return a command slice
-func (c *CommandRestClient) decodeCommandSlice(resp *http.Response) ([]models.Command, error) {
-	dec := json.NewDecoder(resp.Body)
-	comSlice := []models.Command{}
-	err := dec.Decode(&comSlice)
+// Helper method to request and decode a command slice
+func (c *CommandRestClient) requestCommandSlice(url string) ([]models.Command, error) {
+	data, err := clients.GetRequest(url)
 	if err != nil {
 		return []models.Command{}, err
 	}
 
+	comSlice := make([]models.Command, 0)
+	err = json.Unmarshal(data, &comSlice)
 	return comSlice, err
 }
 
 // Get a command by id
 func (c *CommandRestClient) Command(id string) (models.Command, error) {
-	req, err := http.NewRequest(http.MethodGet, c.url+"/"+id, nil)
-	if err != nil {
-		return models.Command{}, err
-	}
-
-	resp, err := makeRequest(req)
-	if err != nil {
-		return models.Command{}, err
-	}
-	if resp == nil {
-		return models.Command{}, ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		// Get the response body
-		bodyBytes, err := getBody(resp)
-		if err != nil {
-			return models.Command{}, err
-		}
-
-		return models.Command{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-
-	return c.decodeCommand(resp)
+	return c.requestCommand(c.url + "/" + id)
 }
 
 // Get a list of all the commands
 func (c *CommandRestClient) Commands() ([]models.Command, error) {
-	req, err := http.NewRequest(http.MethodGet, c.url, nil)
-	if err != nil {
-		return []models.Command{}, err
-	}
-
-	resp, err := makeRequest(req)
-	if err != nil {
-		return []models.Command{}, err
-	}
-	if resp == nil {
-		return []models.Command{}, ErrResponseNil
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		// Get the response body
-		bodyBytes, err := getBody(resp)
-		if err != nil {
-			return []models.Command{}, err
-		}
-
-		return []models.Command{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-
-	return c.decodeCommandSlice(resp)
+	return c.requestCommandSlice(c.url)
 }
 
 // Get a list of commands for a certain name
 func (c *CommandRestClient) CommandsForName(name string) ([]models.Command, error) {
-	req, err := http.NewRequest(http.MethodGet, c.url+"/name/"+name, nil)
-	if err != nil {
-		return []models.Command{}, err
-	}
-
-	resp, err := makeRequest(req)
-	if err != nil {
-		return []models.Command{}, err
-	}
-	if resp == nil {
-		return []models.Command{}, ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		// Get the response body
-		bodyBytes, err := getBody(resp)
-		if err != nil {
-			return []models.Command{}, err
-		}
-
-		return []models.Command{}, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-
-	return c.decodeCommandSlice(resp)
+	return c.requestCommandSlice(c.url + "/name/" + name)
 }
 
 // Add a new command
 func (c *CommandRestClient) Add(com *models.Command) (string, error) {
-	jsonStr, err := json.Marshal(com)
-	if err != nil {
-		return "", err
-	}
-
-	req, err := http.NewRequest(http.MethodPost, c.url, bytes.NewReader(jsonStr))
-	if err != nil {
-		return "", err
-	}
-
-	resp, err := makeRequest(req)
-	if err != nil {
-		return "", err
-	}
-	if resp == nil {
-		return "", ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	// Get the response body
-	bodyBytes, err := getBody(resp)
-	if err != nil {
-		return "", err
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return "", types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-
-	return string(bodyBytes), nil
+	return clients.PostJsonRequest(c.url, com)
 }
 
 // Update a command
 func (c *CommandRestClient) Update(com models.Command) error {
-	jsonStr, err := json.Marshal(&com)
-	if err != nil {
-		return err
-	}
-
-	req, err := http.NewRequest(http.MethodPut, c.url, bytes.NewReader(jsonStr))
-	if err != nil {
-		return err
-	}
-
-	resp, err := makeRequest(req)
-	if err != nil {
-		return err
-	}
-	if resp == nil {
-		return ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		// Get the response body
-		bodyBytes, err := getBody(resp)
-		if err != nil {
-			return err
-		}
-
-		return types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-
-	return nil
+	return clients.UpdateRequest(c.url, com)
 }
 
 // Delete a command
 func (c *CommandRestClient) Delete(id string) error {
-	req, err := http.NewRequest(http.MethodDelete, c.url+"/id/"+id, nil)
-	if err != nil {
-		return err
-	}
-
-	resp, err := makeRequest(req)
-	if err != nil {
-		return err
-	}
-	if resp == nil {
-		return ErrResponseNil
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		// Get the response body
-		bodyBytes, err := getBody(resp)
-		if err != nil {
-			return err
-		}
-
-		return types.NewErrServiceClient(resp.StatusCode, bodyBytes)
-	}
-
-	return nil
+	return clients.DeleteRequest(c.url + "/id/" + id)
 }
