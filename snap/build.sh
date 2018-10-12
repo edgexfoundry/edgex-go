@@ -44,6 +44,5 @@ rm $GIT_ROOT/edgex-snap-store-login
 # now run the build with the environment variables 
 docker run --rm -e "IS_RELEASE_JOB=$IS_RELEASE_JOB" -e "RELEASE=$RELEASE" -e "SNAP_CHANNEL=$SNAP_CHANNEL" edgex-snap-builder:latest
 
-# also delete the image we created so that it doesn't persist on the system as it contains credentials
-docker image rm --force edgex-snap-builder:latest
-docker image prune
+# note that we don't need to delete the docker images here, that's done for us by jenkins in the 
+# edgex-provide-docker-cleanup macro defined for all the snap jobs
