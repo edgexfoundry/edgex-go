@@ -11,4 +11,7 @@ func TestToml(t *testing.T) {
 	if err := config.VerifyTomlFiles(configuration); err != nil {
 		t.Fatalf("%v", err)
 	}
+	if configuration.Service.StartupMsg == "" {
+		t.Errorf("configuration.StartupMsg is zero length.")
+	}
 }

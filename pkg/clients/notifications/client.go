@@ -14,8 +14,10 @@
 package notifications
 
 import (
+	"bytes"
 	"github.com/edgexfoundry/edgex-go/pkg/clients"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
+	"net/http"
 )
 
 type CategoryEnum string
@@ -44,9 +46,11 @@ const (
 // Interface defining behavior for the notifications client
 type NotificationsClient interface {
 	SendNotification(n Notification) error
+	FetchConfiguration() (string, error)
+	FetchMetrics() (string, error)
 }
 
-// Type struct for REST-specific implementation of NotificationsClient interface
+// Type struct for REST-specific implementation of the ClientForNotifications interface
 type notificationsRestClient struct {
 	url      string
 	endpoint clients.Endpointer
@@ -94,4 +98,50 @@ func (n *notificationsRestClient) init(params types.EndpointParams) {
 func (nc *notificationsRestClient) SendNotification(n Notification) error {
 	_, err := clients.PostJsonRequest(nc.url, n)
 	return err
+}
+
+// Fetch configuration information from the notifications service.
+func (nc *notificationsRestClient) FetchConfiguration() (string, error) {
+
+	var result string
+	client := &http.Client{}
+	req, err := http.NewRequest(http.MethodGet, nc.url+clients.ApiConfigRoute, nil)
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+
+	buf := new(bytes.Buffer)
+	if buf != nil {
+		buf.ReadFrom(resp.Body)
+		result = buf.String()
+	}
+
+	defer resp.Body.Close()
+
+	return result, nil
+}
+
+// Fetch metrics information from the notifications service.
+func (nc *notificationsRestClient) FetchMetrics() (string, error) {
+
+	var result string
+	client := &http.Client{}
+	req, err := http.NewRequest(http.MethodGet, nc.url+clients.ApiMetricsRoute, nil)
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+
+	buf := new(bytes.Buffer)
+	if buf != nil {
+		buf.ReadFrom(resp.Body)
+		result = buf.String()
+	}
+
+	defer resp.Body.Close()
+
+	return result, nil
 }

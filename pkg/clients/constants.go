@@ -31,4 +31,7 @@ const (
 	ApiScheduleEventRoute      = "/api/v1/scheduleevent"
 	ApiSubscriptionRoute       = "/api/v1/subscription"
 	ApiTransmissionRoute       = "/api/v1/transmission"
+	ApiConfigRoute             = "/api/v1/config"
+	ApiMetricsRoute            = "/api/v1/metrics"
+	ApiPingRoute               = "/api/v1/ping"
 )

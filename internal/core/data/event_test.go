@@ -16,11 +16,15 @@ package data
 
 import (
 	"fmt"
+	"github.com/edgexfoundry/edgex-go/internal/core/data/interfaces"
+	"math"
 	"os"
 	"strconv"
 	"sync"
 	"testing"
 	"time"
+
+	dbMock "github.com/edgexfoundry/edgex-go/internal/core/data/interfaces/mocks"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/messaging"
@@ -98,6 +102,17 @@ func TestDeleteByAge(t *testing.T) {
 		t.Errorf("no events deleted")
 	}
 }
+
+func TestDeleteEventByAgeErrorThrownByEventsOlderThanAge(t *testing.T) {
+	reset()
+	dbClient = newMockDb()
+	_, err := deleteEventsByAge(-1)
+
+	if err == nil {
+		t.Errorf("Should throw error")
+	}
+}
+
 
 func TestGetEvents(t *testing.T) {
 	reset()
@@ -202,6 +217,62 @@ func TestAddEventNoPersistence(t *testing.T) {
 	}
 }
 
+func TestAddEventWithValidationValueDescriptorExistsAndIsInvalid(t *testing.T) {
+	reset()
+	dbClient = newMockDb()
+	Configuration.ValidateCheck= true
+
+	Configuration.PersistData = false
+	evt := models.Event{Device: testDeviceName, Origin: testOrigin, Readings: buildReadings()[0:1]}
+	//wire up handlers to listen for device events
+	bitEvents := make([]bool, 2)
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	go handleDomainEvents(bitEvents, &wg, t)
+
+	_, err := addNew(evt)
+	if err == nil {
+		t.Errorf("expected error")
+	}
+}
+
+func TestAddEventWithValidationValueDescriptorNotFound(t *testing.T) {
+	reset()
+	Configuration.ValidateCheck= true
+
+	Configuration.PersistData = false
+	evt := models.Event{Device: testDeviceName, Origin: testOrigin, Readings: buildReadings()}
+	//wire up handlers to listen for device events
+	bitEvents := make([]bool, 2)
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	go handleDomainEvents(bitEvents, &wg, t)
+
+	_, err := addNew(evt)
+	if err == nil {
+		t.Errorf("expected error")
+	}
+}
+
+func TestAddEventWithValidationValueDescriptorDBError(t *testing.T) {
+	reset()
+	dbClient = newMockDb()
+	Configuration.ValidateCheck= true
+
+	Configuration.PersistData = false
+	evt := models.Event{Device: testDeviceName, Origin: testOrigin, Readings: buildReadings()[1:]}
+	//wire up handlers to listen for device events
+	bitEvents := make([]bool, 2)
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	go handleDomainEvents(bitEvents, &wg, t)
+
+	_, err := addNew(evt)
+	if err == nil {
+		t.Errorf("expected error")
+	}
+}
+
 func TestUpdateEventNotFound(t *testing.T) {
 	reset()
 	evt := models.Event{ID: bson.NewObjectId(), Device: "Not Found", Origin: testOrigin}
@@ -299,6 +370,224 @@ func TestDeleteEventById(t *testing.T) {
 	}
 }
 
+func TestDeleteEvent(t *testing.T) {
+	reset()
+	err := deleteEvent(testEvent)
+
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+
+	_, err = getEventById(testEvent.ID.Hex())
+	if err != nil {
+		if x, ok := err.(*errors.ErrEventNotFound); !ok {
+			t.Errorf(x.Error())
+		}
+	}
+}
+
+func TestDeleteEventEventDoesNotExist(t *testing.T) {
+	reset()
+	testEvent.ID = "fake"
+	err := deleteEvent(testEvent)
+
+	if err == nil {
+		t.Errorf("Event does not exist and should throw error")
+	}
+}
+
+func TestDeleteEventReadingDoesNotExist(t *testing.T) {
+	reset()
+	testEvent.Readings[0].Id = "fake"
+	err := deleteEvent(testEvent)
+
+	if err == nil {
+		t.Errorf("Reading does not exist and should throw error")
+	}
+}
+
+func TestTestLimit(t *testing.T) {
+	testedLimit := math.MinInt32
+
+	expectedNil := checkMaxLimit(testedLimit)
+
+	if expectedNil != nil {
+		t.Errorf("Should not exceed limit")
+	}
+}
+
+func TestTestLimitOverLimit(t *testing.T) {
+	testedLimit := math.MaxInt32
+
+	expectedErr := checkMaxLimit(testedLimit)
+
+	if expectedErr == nil {
+		t.Errorf("Exceeded limit and should throw error")
+	}
+}
+
+func TestGetEventsByDeviceIdLimit(t *testing.T) {
+	reset()
+	dbClient = newMockDb()
+
+	expectedList, expectedNil := getEventsByDeviceIdLimit(0, "valid")
+
+	if expectedNil != nil {
+		t.Errorf("Should not throw error")
+	}
+
+	if expectedList == nil {
+		t.Errorf("Should return a list of events")
+	}
+}
+
+func TestGetEventsByDeviceIdLimitDBThrowsError(t *testing.T) {
+	reset()
+	dbClient = newMockDb()
+
+	expectedNil, expectedErr := getEventsByDeviceIdLimit(0, "error")
+
+	if expectedNil != nil {
+		t.Errorf("Should not return list")
+	}
+
+	if expectedErr == nil {
+		t.Errorf("Should throw error")
+	}
+}
+
+func TestGetReadingsByDeviceId(t *testing.T) {
+	reset()
+	dbClient = newMockDb()
+
+	expectedReadings, expectedNil := getReadingsByDeviceId(math.MaxInt32, "valid", "Pressure")
+
+	if expectedReadings == nil {
+		t.Errorf("Should return Readings")
+	}
+
+	if expectedNil != nil {
+		t.Errorf("Should not throw error")
+	}
+}
+
+func TestGetReadingsByDeviceIdLimited(t *testing.T) {
+	reset()
+	dbClient = newMockDb()
+
+	for limit:= 0; limit < 5; limit++ {
+		expectedReadings, expectedNil := getReadingsByDeviceId(limit, "valid", "Pressure")
+
+		if limit == 0 {
+			if expectedReadings != nil {
+				t.Errorf("Should return nil slice for zero limit")
+			}
+		} else if expectedReadings == nil {
+			t.Errorf("Should return Readings, limit: %d", limit)
+		}
+
+		if len(expectedReadings) > limit {
+			t.Errorf("Should only return %d Readings", limit)
+		}
+
+		if expectedNil != nil {
+			t.Errorf("Should not throw error")
+		}
+	}
+}
+
+func TestGetReadingsByDeviceIdDBThrowsError(t *testing.T) {
+	reset()
+	dbClient = newMockDb()
+
+	expectedNil, expectedErr := getReadingsByDeviceId(0, "error", "")
+
+	if expectedNil != nil {
+		t.Errorf("Should not return Readings on error")
+	}
+
+	if expectedErr == nil {
+		t.Errorf("Should throw error")
+	}
+}
+
+func TestGetEventsByCreationTime(t *testing.T) {
+	reset()
+	dbClient = newMockDb()
+
+	expectedReadings, expectedNil := getEventsByCreationTime(0, 0xF00D, 0)
+
+	if expectedReadings == nil {
+		t.Errorf("Should return Events")
+	}
+
+	if expectedNil != nil {
+		t.Errorf("Should not throw error")
+	}
+}
+
+func TestGetEventsByCreationTimeDBThrowsError(t *testing.T) {
+	reset()
+	dbClient = newMockDb()
+
+	expectedNil, expectedErr := getEventsByCreationTime(0, 0xBADF00D, 0)
+
+	if expectedNil != nil {
+		t.Errorf("Should not return list")
+	}
+
+	if expectedErr == nil {
+		t.Errorf("Should throw error")
+	}
+}
+
+func TestDeleteEvents(t *testing.T) {
+	reset()
+	dbClient = newMockDb()
+
+	_, expectedNil := deleteEvents("valid")
+
+	if expectedNil != nil {
+		t.Errorf("Should not throw error")
+	}
+}
+
+func TestDeleteEventsDBLookupThrowsError(t *testing.T) {
+	reset()
+	dbClient = newMockDb()
+
+	expectedZero, expectedErr := deleteEvents("error")
+
+	if expectedZero != 0 {
+		t.Errorf("Should return zero on error")
+	}
+
+	if expectedErr == nil {
+		t.Errorf("Should throw error")
+	}
+}
+
+func TestDoScrub(t *testing.T) {
+	reset()
+
+	pushedEvent := testEvent
+	pushedEvent.Pushed = -1
+	pushedEvent.ID = "pushed"
+	dbClient.AddEvent(&pushedEvent)
+
+	expectedCount:= 1
+
+	actualCount, expectedNil := scrubPushedEvents()
+
+	if actualCount != expectedCount {
+		t.Errorf("Expected %d deletions, was %d", expectedCount, actualCount)
+	}
+
+	if expectedNil != nil {
+		t.Errorf("Should not throw error")
+	}
+}
+
 // Supporting methods
 // Reset() re-initializes dependencies for each test
 func reset() {
@@ -345,6 +634,60 @@ func newMockDeviceClient() *mocks.DeviceClient {
 	})).Return(mockDeviceForNameResultFn, fmt.Errorf("no device found for name"))
 
 	return client
+}
+
+func newMockDb() interfaces.DBClient {
+	db := &dbMock.DBClient{}
+
+	db.On("EventsOlderThanAge", mock.MatchedBy(func(age int64) bool {
+		return age == -1
+	})).Return(nil, fmt.Errorf("expected testing error"))
+
+	db.On("ValueDescriptorByName", mock.MatchedBy(func(name string) bool {
+		return name == "Temperature"
+	})).Return(models.ValueDescriptor{Type: "8"}, nil)
+
+	db.On("ValueDescriptorByName", mock.MatchedBy(func(name string) bool {
+		return name == "Pressure"
+	})).Return(models.ValueDescriptor{}, fmt.Errorf("some error"))
+
+	db.On("EventsForDeviceLimit", mock.MatchedBy(func(deviceId string) bool {
+		return deviceId == "valid"
+	}), mock.Anything).Return([]models.Event{}, nil)
+
+	db.On("EventsForDeviceLimit", mock.MatchedBy(func(deviceId string) bool {
+		return deviceId == "error"
+	}), mock.Anything).Return(nil, fmt.Errorf("some error"))
+
+	db.On("EventsForDevice", mock.MatchedBy(func(deviceId string) bool {
+		return deviceId == "valid"
+	})).Return([]models.Event{{Readings: append(buildReadings(), buildReadings()...)}}, nil)
+
+	db.On("EventsForDevice", mock.MatchedBy(func(deviceId string) bool {
+		return deviceId == "error"
+	})).Return(nil, fmt.Errorf("some error"))
+
+	db.On("EventsByCreationTime", mock.MatchedBy(func(start int64) bool {
+		return start == 0xF00D
+	}), mock.Anything, mock.Anything).Return([]models.Event{}, nil)
+
+	db.On("EventsByCreationTime", mock.MatchedBy(func(start int64) bool {
+		return start == 0xBADF00D
+	}), mock.Anything, mock.Anything).Return(nil, fmt.Errorf("some error"))
+
+	db.On("EventsForDevice", mock.MatchedBy(func(deviceId string) bool {
+		return deviceId == testEvent.ID.Hex()
+	})).Return([]models.Event{testEvent}, nil)
+
+	db.On("EventsForDevice", mock.MatchedBy(func(deviceId string) bool {
+		return deviceId == "error"
+	})).Return(nil, fmt.Errorf("some error"))
+
+	db.On("DeleteEventById", mock.Anything).Return(nil)
+
+	db.On("DeleteReadingById", mock.Anything).Return(nil)
+
+	return db
 }
 
 func buildReadings() []models.Reading {

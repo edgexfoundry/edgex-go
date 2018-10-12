@@ -18,7 +18,6 @@ package notifications
 
 import (
 	"fmt"
-	"strings"
 	"sync"
 	"time"
 
@@ -28,20 +27,18 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo"
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/interfaces"
+	"github.com/edgexfoundry/edgex-go/pkg/clients"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
+	"github.com/edgexfoundry/edgex-go/pkg/clients/notifications"
+	"github.com/pkg/errors"
 )
 
 // Global variables
+var chConfig chan interface{} //A channel for use by ConsulDecoder in detecting configuration mods.
 var Configuration *ConfigurationStruct
 var dbClient interfaces.DBClient
 var LoggingClient logger.LoggingClient
-var limitMax int
-var resendLimit int
-var smtpPort string
-var smtpHost string
-var smtpSender string
-var smtpPassword string
-var smtpSubject string
+var nc notifications.NotificationsClient
 
 func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup, ch chan error) {
 	until := time.Now().Add(time.Millisecond * time.Duration(timeout))
@@ -61,7 +58,7 @@ func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup,
 			} else {
 				// Setup Logging
 				logTarget := setLoggingTarget()
-				LoggingClient = logger.NewClient(internal.SupportNotificationsServiceKey, Configuration.EnableRemoteLogging, logTarget)
+				LoggingClient = logger.NewClient(internal.SupportNotificationsServiceKey, Configuration.Logging.EnableRemote, logTarget)
 			}
 		}
 
@@ -94,20 +91,24 @@ func Destruct() {
 		dbClient.CloseSession()
 		dbClient = nil
 	}
+	if chConfig != nil {
+		close(chConfig)
+		chConfig = nil
+	}
 }
 
 func connectToDatabase() error {
 	// Create a database client
 	var err error
 	dbConfig := db.Configuration{
-		Host:         Configuration.MongoDBHost,
-		Port:         Configuration.MongoDBPort,
-		Timeout:      Configuration.MongoDBConnectTimeout,
-		DatabaseName: Configuration.MongoDatabaseName,
-		Username:     Configuration.MongoDBUserName,
-		Password:     Configuration.MongoDBPassword,
+		Host:         Configuration.Databases["Primary"].Host,
+		Port:         Configuration.Databases["Primary"].Port,
+		Timeout:      Configuration.Databases["Primary"].Timeout,
+		DatabaseName: Configuration.Databases["Primary"].Name,
+		Username:     Configuration.Databases["Primary"].Username,
+		Password:     Configuration.Databases["Primary"].Password,
 	}
-	dbClient, err = newDBClient(Configuration.DBType, dbConfig)
+	dbClient, err = newDBClient(Configuration.Databases["Primary"].Type, dbConfig)
 	if err != nil {
 		return fmt.Errorf("couldn't create database client: %v", err.Error())
 	}
@@ -139,7 +140,7 @@ func initializeConfiguration(useConsul bool, useProfile string) (*ConfigurationS
 	}
 
 	if useConsul {
-		err := connectToConsul(conf)
+		conf, err = connectToConsul(conf)
 		if err != nil {
 			return nil, err
 		}
@@ -147,33 +148,81 @@ func initializeConfiguration(useConsul bool, useProfile string) (*ConfigurationS
 	return conf, nil
 }
 
-func connectToConsul(conf *ConfigurationStruct) error {
-	// Initialize service on Consul
-	err := consulclient.ConsulInit(consulclient.ConsulConfig{
-		ServiceName:    internal.SupportNotificationsServiceKey,
-		ServicePort:    conf.ServicePort,
-		ServiceAddress: conf.ServiceAddress,
-		CheckAddress:   conf.ConsulCheckAddress,
-		CheckInterval:  conf.CheckInterval,
-		ConsulAddress:  conf.ConsulHost,
-		ConsulPort:     conf.ConsulPort,
-	})
+func connectToConsul(conf *ConfigurationStruct) (*ConfigurationStruct, error) {
+	//Obtain ConsulConfig
+	cfg := consulclient.NewConsulConfig(conf.Registry, conf.Service, internal.SupportNotificationsServiceKey)
+	// Register the service in Consul
+	err := consulclient.ConsulInit(cfg)
 
 	if err != nil {
-		return fmt.Errorf("connection to Consul could not be made: %v", err.Error())
-	} else {
-		// Update configuration data from Consul
-		if err := consulclient.CheckKeyValuePairs(conf, internal.SupportNotificationsServiceKey, strings.Split(conf.ConsulProfilesActive, ";")); err != nil {
-			return fmt.Errorf("error getting key/values from Consul: %v", err.Error())
+		return conf, fmt.Errorf("connection to Consul could not be made: %v", err.Error())
+	}
+	// Update configuration data from Consul
+	updateCh := make(chan interface{})
+	errCh := make(chan error)
+	dec := consulclient.NewConsulDecoder(conf.Registry)
+	dec.Target = &ConfigurationStruct{}
+	dec.Prefix = internal.ConfigV2Stem + internal.SupportNotificationsServiceKey
+	dec.ErrCh = errCh
+	dec.UpdateCh = updateCh
+
+	defer dec.Close()
+	defer close(updateCh)
+	defer close(errCh)
+	go dec.Run()
+
+	select {
+	case <-time.After(2 * time.Second):
+		err = errors.New("timeout loading config from registry")
+	case ex := <-errCh:
+		err = errors.New(ex.Error())
+	case raw := <-updateCh:
+		actual, ok := raw.(*ConfigurationStruct)
+		if !ok {
+			return conf, errors.New("type check failed")
+		}
+		conf = actual
+		//Check that information was successfully read from Consul
+		if conf.ResendLimit == 0 {
+			return nil, errors.New("error reading from Consul")
 		}
 	}
-	return nil
+
+	return conf, err
 }
 
-func setLoggingTarget() string {
-	logTarget := Configuration.LoggingRemoteURL
-	if !Configuration.EnableRemoteLogging {
-		return Configuration.LoggingFile
+func listenForConfigChanges() {
+	errCh := make(chan error)
+	dec := consulclient.NewConsulDecoder(Configuration.Registry)
+	dec.Target = &ConfigurationStruct{}
+	dec.Prefix = internal.ConfigV2Stem + internal.SupportNotificationsServiceKey
+	dec.ErrCh = errCh
+	dec.UpdateCh = chConfig
+
+	defer dec.Close()
+	defer close(errCh)
+
+	go dec.Run()
+	for {
+		select {
+		case ex := <-errCh:
+			LoggingClient.Error(ex.Error())
+		case raw, ok := <-chConfig:
+			if ok {
+				actual, ok := raw.(*ConfigurationStruct)
+				if !ok {
+					LoggingClient.Error("listenForConfigChanges() type check failed")
+				}
+				Configuration = actual //Mutex needed?
+			} else {
+				return
+			}
+		}
 	}
-	return logTarget
+}
+func setLoggingTarget() string {
+	if Configuration.Logging.EnableRemote {
+		return Configuration.Clients["Logging"].Url() + clients.ApiLoggingRoute
+	}
+	return Configuration.Logging.File
 }

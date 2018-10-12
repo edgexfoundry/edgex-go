@@ -16,6 +16,7 @@ package data
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -82,8 +83,16 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 
 		// Check device
 		if reading.Device != "" {
-			if checkDevice(reading.Device, w) == false {
-				return
+			if checkDevice(reading.Device) != nil {
+				LoggingClient.Error(fmt.Sprintf("error checking device %s %v", reading.Device, err))
+				switch err := err.(type) {
+				case types.ErrNotFound:
+					http.Error(w, err.Error(), http.StatusNotFound)
+					return
+				default: //return an error on everything else.
+					http.Error(w, err.Error(), http.StatusServiceUnavailable)
+					return
+				}
 			}
 		}
 
@@ -288,8 +297,16 @@ func readingByDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Check device
-		if checkDevice(deviceId, w) == false {
-			return
+		if checkDevice(deviceId) != nil {
+			LoggingClient.Error(fmt.Sprintf("error checking device %s %v", deviceId, err))
+			switch err := err.(type) {
+			case types.ErrNotFound:
+				http.Error(w, err.Error(), http.StatusNotFound)
+				return
+			default: //return an error on everything else.
+				http.Error(w, err.Error(), http.StatusServiceUnavailable)
+				return
+			}
 		}
 
 		readings, err := dbClient.ReadingsByDevice(deviceId, limit)
@@ -593,8 +610,16 @@ func readingByValueDescriptorAndDeviceHandler(w http.ResponseWriter, r *http.Req
 	}
 
 	// Check device
-	if checkDevice(device, w) == false {
-		return
+	if checkDevice(device) != nil {
+		LoggingClient.Error(fmt.Sprintf("error checking device %s %v", device, err))
+		switch err := err.(type) {
+		case types.ErrNotFound:
+			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		default: //return an error on everything else.
+			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			return
+		}
 	}
 
 	// Check for value descriptor
