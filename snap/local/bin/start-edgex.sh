@@ -57,10 +57,8 @@ if [ "$SUPPORT_NOTIFICATIONS" = "y" ] ; then
     sleep 65
     echo "Starting notifications"
 
-    "$JAVA" -jar -Djava.security.egd=file:/dev/urandom -Xmx100M \
-               -Dspring.cloud.consul.enabled=true \
-               -Dlogging.file=$SNAP_COMMON/logs/edgex-notifications.log \
-               $SNAP/jar/support-notifications/support-notifications.jar &
+    cd $SNAP_DATA/config/support-notifications
+    $SNAP/bin/support-notifications --consul &
 fi
 
 
