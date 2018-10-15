@@ -14,16 +14,17 @@
 package agent
 
 import (
-	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
-	"github.com/edgexfoundry/edgex-go/internal/system/agent/executor"
-	"github.com/edgexfoundry/edgex-go/internal/system/agent/interfaces"
-	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
-	"github.com/edgexfoundry/edgex-go/pkg/clients/notifications"
-	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
 	"sync"
 	"time"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
+	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
+	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/pkg/clients/notifications"
+	"github.com/edgexfoundry/edgex-go/internal/system/agent/interfaces"
+	"github.com/edgexfoundry/edgex-go/internal/system/agent/executor"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
+	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
+	"github.com/edgexfoundry/edgex-go/pkg/clients/command"
 )
 
 // Global variables
@@ -32,7 +33,8 @@ var LoggingClient logger.LoggingClient
 var Manifest *ManifestStruct
 var Conf = &ConfigurationStruct{}
 var nc notifications.NotificationsClient
-var Ec interfaces.ExecutorClient
+var ec interfaces.ExecutorClient
+var mcc command.MgmtClient
 
 func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup, ch chan error) {
 	until := time.Now().Add(time.Millisecond * time.Duration(timeout))
@@ -84,7 +86,7 @@ func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup,
 		}
 		// Exit the loop if the dependencies have been satisfied.
 		if Manifest != nil {
-			Ec, _ = newExecutorClient(Manifest.OperationsType)
+			ec, _ = newExecutorClient(Manifest.OperationsType)
 			break
 		}
 		time.Sleep(time.Second * time.Duration(1))
@@ -146,13 +148,22 @@ func setLoggingTarget() string {
 
 func initializeClients(useConsul bool) {
 	// Create notification client
-	params := types.EndpointParams{
+	paramsNotification := types.EndpointParams{
 		ServiceKey:  internal.SupportNotificationsServiceKey,
 		Path:        "/",
 		UseRegistry: useConsul,
 		Url:         Configuration.Clients["Notifications"].Url(),
 		Interval:    internal.ClientMonitorDefault,
 	}
+	nc = notifications.NewNotificationsClient(paramsNotification, startup.Endpoint{})
 
-	nc = notifications.NewNotificationsClient(params, startup.Endpoint{})
+	// Create command client
+	paramsCommand := types.EndpointParams{
+		ServiceKey:  internal.CoreCommandServiceKey,
+		Path:        "/",
+		UseRegistry: useConsul,
+		Url:         Configuration.Clients["Command"].Url(),
+		Interval:    internal.ClientMonitorDefault,
+	}
+	mcc = command.NewMgmtClient(paramsCommand, startup.Endpoint{})
 }

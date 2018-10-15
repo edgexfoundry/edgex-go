@@ -27,7 +27,15 @@ schemas:
         responses:
             "200":
                 description: The service's configuration as JSON document
-/device/{id}/command/{commandid}: 
+/metrics:
+    displayName: Metrics Resource
+    description: Example - http://localhost:48082/api/v1/metrics
+    get:
+        description: Fetch the current state of the service's metrics.
+        responses:
+            "200":
+                description: The service's metrics as JSON document
+/device/{id}/command/{commandid}:
     displayName: Issue command
     description: Example - http://localhost:48082/api/v1/device/57bd0f2d32d258ad3fcd2d4b/command/57bd0f1432d258ad3fcd2d49
     uriParameters: 

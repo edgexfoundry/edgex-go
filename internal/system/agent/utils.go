@@ -87,41 +87,11 @@ func determinePath() string {
 
 	return path
 }
-
-func ProcessConfigResponse(response string) ConfigRespMap {
-
-	var send = ConfigRespMap{}
-
+func ProcessResponse(response string) map[string]interface{} {
 	rsp := make(map[string]interface{})
-
 	err := json.Unmarshal([]byte(response), &rsp)
 	if err != nil {
 		LoggingClient.Error(fmt.Sprintf("ERROR: {%v}", err))
 	}
-
-	json.Unmarshal([]byte(response), &send)
-
-	send.Config = make(map[string]interface{})
-	json.Unmarshal([]byte(response), &send.Config)
-
-	return send
-}
-
-func ProcessMetricsResponse(response string) MetricsRespMap {
-
-	var send = MetricsRespMap{}
-
-	rsp := make(map[string]interface{})
-
-	err := json.Unmarshal([]byte(response), &rsp)
-	if err != nil {
-		LoggingClient.Error(fmt.Sprintf("ERROR: {%v}", err))
-	}
-
-	json.Unmarshal([]byte(response), &send)
-
-	send.Metrics = make(map[string]interface{})
-	json.Unmarshal([]byte(response), &send.Metrics)
-
-	return send
+	return rsp
 }

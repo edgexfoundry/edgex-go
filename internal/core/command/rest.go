@@ -16,17 +16,19 @@ package command
 import (
 	"encoding/json"
 	"net/http"
+	"runtime"
 
-	mux "github.com/gorilla/mux"
+	"github.com/gorilla/mux"
+	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/pkg/clients"
 )
 
 func LoadRestRoutes() http.Handler {
 	r := mux.NewRouter()
+	r.HandleFunc(clients.ApiPingRoute, ping)
+	r.HandleFunc(clients.ApiConfigRoute, configHandler)
+	r.HandleFunc(clients.ApiMetricsRoute, metricsHandler)
 	b := r.PathPrefix("/api/v1").Subrouter()
-	b.HandleFunc(PINGENDPOINT, ping)
-	//Config Resource
-	// /api/v1/config
-	b.HandleFunc(CONFIGENDPOINT, configHandler)
 
 	loadDeviceRoutes(b)
 	return r
@@ -58,6 +60,7 @@ func ping(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set(CONTENTTYPE, TEXTPLAIN)
 	w.Write([]byte(PINGRESPONSE))
 }
+
 func configHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
@@ -70,4 +73,41 @@ func configHandler(w http.ResponseWriter, r *http.Request) {
 		LoggingClient.Error("Error encoding the data: " + err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+}
+
+func metricsHandler(w http.ResponseWriter, r *http.Request) {
+
+	var t internal.Telemetry
+
+	if r.Body != nil {
+		defer r.Body.Close()
+	}
+
+	// The micro-service is to be considered the System Of Record (SOR) in terms of accurate information.
+	// Fetch metrics for the command service.
+	var rtm runtime.MemStats
+
+	// Read full memory stats
+	runtime.ReadMemStats(&rtm)
+
+	// Miscellaneous memory stats
+	t.Alloc = rtm.Alloc
+	t.TotalAlloc = rtm.TotalAlloc
+	t.Sys = rtm.Sys
+	t.Mallocs = rtm.Mallocs
+	t.Frees = rtm.Frees
+
+	// Live objects = Mallocs - Frees
+	t.LiveObjects = t.Mallocs - t.Frees
+
+	w.Header().Set("Content-Type", "application/json")
+	enc := json.NewEncoder(w)
+	err := enc.Encode(t)
+	// Problems encoding
+	if err != nil {
+		LoggingClient.Error("Error encoding the data: " + err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	return
 }

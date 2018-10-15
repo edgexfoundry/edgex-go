@@ -26,8 +26,6 @@ const (
 	DEVICE           = "device"
 	KEY              = "key"
 	VALUE            = "value"
-	CONFIGENDPOINT   = "/config"
-	PINGENDPOINT     = "/ping"
 	PINGRESPONSE     = "pong"
 	CONTENTTYPE      = "Content-Type"
 	TEXTPLAIN        = "text/plain"
