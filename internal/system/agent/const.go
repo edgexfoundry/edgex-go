@@ -29,6 +29,7 @@ type ConfigurationStruct struct {
 	OsLevelOperations     bool
 	DockerLevelOperations bool
 	Clients               map[string]config.ClientInfo
+	Service               config.ServiceInfo
 }
 
 type ManifestStruct struct {
