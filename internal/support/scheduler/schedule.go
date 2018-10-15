@@ -101,8 +101,9 @@ func queryScheduleByName(scheduleName string) (models.Schedule, error) {
 
 	scheduleContext, exists := scheduleNameToContextMap[scheduleName]
 	if !exists {
-		LoggingClient.Warn("can not find a schedule context with schedule name : " + scheduleName)
-		return models.Schedule{}, nil
+		LoggingClient.Warn(fmt.Sprintf("can not find a schedule context with schedule name :%s ", scheduleName))
+		err := errors.New(fmt.Sprintf("can not find a schedule context with schedule name :%s ", scheduleName))
+		return models.Schedule{}, err
 	}
 
 	LoggingClient.Debug("querying found the schedule with name : " + scheduleName)
