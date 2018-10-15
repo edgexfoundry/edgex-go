@@ -89,46 +89,59 @@ This section shows the sequence diagrams for EdgeX Foundry Logging Service.
 Configuration Properties
 ========================
 
-The default configuration file is in the /src/main/resources folder of source code.  When interacting with the Configuration Management microservice, the configuration is in the /config/support-logging name space in Consul Key/Value Store.
-
-
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
 |   **Configuration**                                     |   **Default Value**                 |  **Dependencies**                                                         |
 +=========================================================+=====================================+===========================================================================+
-| read.max.limit                                          | 100                             \*  | Read data limit per invocation                                            |
+| Service ReadMaxLimit                                    | 100                             \*  | Read data limit per invocation                                            |
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
-| heart.beat.time                                         | 300000                          \*  | Heart beat time in milliseconds                                           |
+| Service BootTimeout                                     | 300000                          \*  | Heart beat time in milliseconds                                           |
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
-| heart.beat.msg                                          | Logging Service heart beat      \*  | Heart beat message                                                        |
+| Service StartupMsg                                      | Logging Service heart beat      \*  | Heart beat message                                                        |
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
-| server.port                                             | 48061                          \**  | Micro service port number                                                 |  
+| Service Port                                            | 48061                          \**  | Micro service port number                                                 |
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
-| spring.cloud.consul.discovery.healthCheckPath           | /api/v1/ping                   \**  | Health checking path for Service Registry                                 | 
+| Service Host                                            | localhost                      \**  | Micro service host name                                                   |
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
-| logging.persistence                                     | file                            \*  | "file" to save logging in file;                                           |
-|                                                         |                                     | "mongodb" to save logging in MongoDB                                      |  
+| Service Protocol                                        | http                           \**  | Micro service host protocol                                               |
++---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
+| Service ClientMonitor                                   | 15000                          \**  |                                                                           |
++---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
+| Service CheckInterval                                   | 10s                            \**  |                                                                           |
++---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
+| Service Timeout                                         | 5000                           \**  |                                                                           |
++---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
+| Persistence                                             | database                        \*  | "file" to save logging in file;                                           |
+|                                                         |                                     | "database" to save logging in MongoDB                                     |
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
 | Following config only take effect when logging.persistence=file                                                                                                           | 
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
-| logging.persistence.file                                |                                     | File path to save logging entries                                         |
+| Logging File                                            | edgex/logs/edgex-support-logging.log| File path to save logging entries                                         |
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
-| logging.persistence.file.maxsize                        | 10MB                            \*  | Threshold to roll and archive the logging file. It can be specified in    |
-|                                                         |                                     | bytes, kilobytes, megabytes or gigabytes by suffixing a numeric value     |
-|                                                         |                                     | with KB, MB and respectively GB. For example, 5000000, 5000KB, 5MB and    |
-|                                                         |                                     | 2GB are all valid values, with the first three being equivalent.          |                               
+| Following config only take effect when logging.persistence=database                                                                                                       |
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
-| Following config only take effect when logging.persistence=mongodb                                                                                                        |
+| Databases Database Primary Username                     | [empty string]                 \**  | DB user name                                                              |
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
-| spring.data.mongodb.username                            | logging                        \**  | MongoDB user name                                                         |
+| Databases Database Password                             | [empty string]                  \*  | DB password                                                               |
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
-| spring.data.mongodb.password                            | password                        \*  | MongoDB password                                                          |
+| Databases Database Host                                 | localhost                      \**  | DB host name                                                              |
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
-| spring.data.mongodb.host                                | localhost                      \**  | MongoDB host name                                                         |
+| Databases Database Port                                 | 27017                          \**  | DB port number                                                            |
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
-| spring.data.mongodb.port                                | 27017                          \**  | MongoDB port number                                                       |
+| Databases Database Database                             | logging                         \*  | database or document store name                                           |
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
-| spring.data.mongodb.database                            | logging                         \*  | MongoDB database name                                                     | 
+| Databases Database Timeout                              | 5000                            \*  | DB connection timeout                                                     |
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
+| Databases Database Type                                 | mongodb                        \**  | DB type                                                                   |
++---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
+| Following config only take effect when connecting to the registry for configuraiton info                                                                                  |
++---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
+| Registry Host                                           | localhost                      \**  | Registry host name                                                        |
++---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
+| Registry Port                                           | 8500                           \**  | Registry port number                                                      |
++---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
+| Registry Type                                           | consul                         \**  | Registry implementation type                                              |
++---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
+
 
 | \*means the configuration value can be changed if necessary.
 | \**means the configuration value has to be replaced.

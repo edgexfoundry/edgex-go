@@ -87,68 +87,78 @@ Cleanup service removes old notification and transmission records.
 Configuration Properties
 ========================
 
-The default configuration file is in the  /src/main/resources folder of source code. When cooperating with the Configuration Management microservice, the configuration would be under /config/iot-support-notifications name space in Consul Key/Value Store.
-
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
 |   **Configuration**                                     |   **Default Value**                 |  **Dependencies**                                                         |
 +=========================================================+=====================================+===========================================================================+
-| application.general.readLimit                           | 100                             \*  | Read data limit per invocation                                            |
+| Service ReadMaxLimit                                    | 1000                            \*  | Read data limit per invocation                                            |
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
-| application.general.resendLimit                         | 3                               \*  | Resend count limit                                                        |
+| Service BootTimeout                                     | 300000                          \*  | Heart beat time in milliseconds                                           |
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
-| application.general.schedulerPoolSize                   | 3                               \*  | Thread pool size of scheduler                                             |
+| Service StartupMsg                                      | This is the Support Notifications Microservice \*  | Heart beat message                                         |
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
-| spring.data.mongodb.username                            | notifications                  \**  | MongoDB user name                                                         |  
+| Service Port                                            | 48060                          \**  | Micro service port number                                                 |
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
-| spring.data.mongodb.password                            | password                       \**  | MongoDB password                                                          | 
+| Service Host                                            | localhost                      \**  | Micro service host name                                                   |
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
-| spring.data.mongodb.host                                | localhost                       \*  | MongoDB host name                                                         |  
+| Service Protocol                                        | http                           \**  | Micro service host protocol                                               |
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
-| spring.data.mongodb.port                                | 27017                           \*  | MongoDB port number                                                       | 
+| Service ClientMonitor                                   | 15000                          \**  |                                                                           |
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
-| spring.data.mongodb.database                            | notifications                 \***  | MongoDB database name                                                     |
+| Service CheckInterval                                   | 10s                            \**  |                                                                           |
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
-| server.port                                             | 48060                           \*  | Micro service port number                                                 |  
+| Service Timeout                                         | 5000                           \**  |                                                                           |
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
-| spring.cloud.consul.discovery.healthCheckPath           | /api/v1/ping                  \***  | Health checking path for Service Registry                                 |
+| ResendLimit                                             | 2                               \*  | Number of attempts to resend a notification                               |
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
-| spring.mail.host                                        | <empty>                        \**  | Mail server (SMTP) host name                                              |
+| Following config only take effect when logging.persistence=file                                                                                                           |
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
-| spring.mail.port                                        | 25                              \*  | Mail server (SMTP) port number                                            |
+| Logging File                                            | /logs/edgex-support-notifications.log| File path to save logging entries                                        |
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
-| spring.mail.username                                    | <empty>                        \**  | Mail server (SMTP) user name                                              |
+| Logging EnableRemote                                    | false                               | Indicate whether to use the logging service (vs local log file)           |
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
-| spring.mail.password                                    | <empty>                        \**  | Mail server (SMTP) password                                               |
+| Following config only take effect when logging.persistence=database                                                                                                       |
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
-| spring.mail.properties.mail.smtp.ssl.enable             | true                            \*  | Whether enable SSL on mail server. If set to true, use SSL to connect     | 
-|						          |	         	                | and use the SSL port. Set to false for the "smtp" protocol and true for   |
-|                                                         |                                     | the "smtps" protocol.                                                     |
+| Databases Database Primary Username                     | [empty string]                 \**  | DB user name                                                              |
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
-| spring.mail.properties.mail.smtp.auth                   | true                            \*  | Whether authenticate the user on mail server. If set to true, attempt to  |
-|                                                         |                                     | authenticate the user using the AUTH command.                             |
+| Databases Database Password                             | [empty string]                  \*  | DB password                                                               |
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
-| spring.mail.properties.mail.smtp.socketFactory.port     | 465                             \*  | Specify the port to connect to when using the specified socket factory.   |
-|                                                         |                                     | If not set, the default port will be used.                                |
+| Databases Database Host                                 | localhost                      \**  | DB host name                                                              |
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
-| spring.mail.properties.mail.smtp.socketFactory.class    | javax.net.ssl.SSLSocketFactory \*** | Specify the name of a class that implements thjavax.net.SocketFactor      |
-|                                                         |                                     | This class will be used to create SMTP sockets.                           |		   
+| Databases Database Port                                 | 27017                          \**  | DB port number                                                            |
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
-| spring.mail.properties.mail.smtp.socketFactory.fallback | false                         \***  | If set to true, failure to create a socket using the specified socket     | 
-|                                                         |                                     | factory class will cause the socket to be created using the               |
-|                                                         |                                     | java.net.Socket class.                                                    | 
+| Databases Database Database                             | logging                         \*  | database or document store name                                           |
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
-| application.mail.subject                                | [No Reply] Auto-send from Fuse  \*  | The default subject of mail channel.                                      |
-|                                                         |                                     |                                                                           |
+| Databases Database Timeout                              | 5000                            \*  | DB connection timeout                                                     |
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
-| application.mail.sender                                 | <empty                         \**  | The default sender of mail channel (in mail address format)               |
+| Databases Database Type                                 | mongodb                        \**  | DB type                                                                   |
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
-| application.scheduler.normal.duration                   | 3600000                         \*  | Normal severity scheduler duration (in millionsecond)                     |
+| Following config only take effect when connecting to the registry for configuraiton info                                                                                  |
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
-| application.scheduler.normal.resend.duration            | 3600000                         \*  | Normal severity resend scheduler duration (in millionsecond)              |
+| Registry Host                                           | localhost                      \**  | Registry host name                                                        |
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
-| application.scheduler.critical.resend.duration          | 60000                           \*  | Critical severity resend scheduler duration (in millionsecond)            |
+| Registry Port                                           | 8500                           \**  | Registry port number                                                      |
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
-| application.cleanup.defaultAge                          | 2592000000                      \*  | The default cleanup age (in millionsecond)                                |
+| Registry Type                                           | consul                         \**  | Registry implementation type                                              |
++---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
+| Following config only take effect when connecting to the remote logging service                                                                                           |
++---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
+| Clients Clients.Logging Host                            | localhost                      \**  | Remote logging service host name                                          |
++---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
+| Clients Clients.Logging Port                            | 48061                          \**  | Remote logging service port number                                        |
++---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
+| Clients Clients.Logging Protocol                        | http                           \**  | Remote logging service host protocl                                       |
++---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
+| Following config apply to using the SMTP service                                                                                                                          |
++---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
+| Smtp Host                                               | smtp.gmail.com                 \**  | SMTP service host name                                                    |
++---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
+| Smtp Port                                               | 48061                          \**  | SMTP service port number                                                  |
++---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
+| Smtp Password                                           | mypassword                     \**  | SMTP service host access password                                         |
++---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
+| Smtp Sender                                             | jdoe@gmail.com                 \**  | SMTP service sendor/username                                              |
++---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
+| Smtp Subject                                            | EdgeX Notification             \**  | SMTP alert message subject                                                |
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
 
 | \*means the configuration value can be changed if necessary.
