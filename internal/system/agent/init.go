@@ -16,15 +16,15 @@ package agent
 import (
 	"sync"
 	"time"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
-	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
+
 	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/pkg/clients/notifications"
-	"github.com/edgexfoundry/edgex-go/internal/system/agent/interfaces"
-	"github.com/edgexfoundry/edgex-go/internal/system/agent/executor"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
+	"github.com/edgexfoundry/edgex-go/internal/system/agent/executor"
+	"github.com/edgexfoundry/edgex-go/internal/system/agent/interfaces"
+	"github.com/edgexfoundry/edgex-go/pkg/clients/general"
+	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
-	"github.com/edgexfoundry/edgex-go/pkg/clients/command"
 )
 
 // Global variables
@@ -32,9 +32,9 @@ var Configuration *ConfigurationStruct
 var LoggingClient logger.LoggingClient
 var Manifest *ManifestStruct
 var Conf = &ConfigurationStruct{}
-var nc notifications.NotificationsClient
+var nc general.GeneralClient
 var ec interfaces.ExecutorClient
-var mcc command.MgmtClient
+var mcc general.GeneralClient
 
 func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup, ch chan error) {
 	until := time.Now().Add(time.Millisecond * time.Duration(timeout))
@@ -155,7 +155,7 @@ func initializeClients(useConsul bool) {
 		Url:         Configuration.Clients["Notifications"].Url(),
 		Interval:    internal.ClientMonitorDefault,
 	}
-	nc = notifications.NewNotificationsClient(paramsNotification, startup.Endpoint{})
+	nc = general.NewGeneralClient(paramsNotification, startup.Endpoint{})
 
 	// Create command client
 	paramsCommand := types.EndpointParams{
@@ -165,5 +165,5 @@ func initializeClients(useConsul bool) {
 		Url:         Configuration.Clients["Command"].Url(),
 		Interval:    internal.ClientMonitorDefault,
 	}
-	mcc = command.NewMgmtClient(paramsCommand, startup.Endpoint{})
+	mcc = general.NewGeneralClient(paramsCommand, startup.Endpoint{})
 }
