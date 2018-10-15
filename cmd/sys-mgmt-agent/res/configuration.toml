@@ -21,10 +21,10 @@ LoggingFile = './logs/edgex-sys-mgmt-agent.log'
   Host = 'localhost'
   Port = 48082
 
-  [Clients.Metadata]
+  [Clients.Coredata]
   Protocol = 'http'
   Host = 'localhost'
-  Port = 48081
+  Port = 48080
 
   [Clients.Logging]
   Protocol = 'http'

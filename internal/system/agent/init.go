@@ -25,6 +25,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/command"
+	"github.com/edgexfoundry/edgex-go/pkg/clients/coredata"
 )
 
 // Global variables
@@ -32,9 +33,10 @@ var Configuration *ConfigurationStruct
 var LoggingClient logger.LoggingClient
 var Manifest *ManifestStruct
 var Conf = &ConfigurationStruct{}
-var nc notifications.NotificationsClient
 var ec interfaces.ExecutorClient
+var nc notifications.NotificationsClient
 var mcc command.MgmtClient
+var cdc coredata.MgmtClient
 
 func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup, ch chan error) {
 	until := time.Now().Add(time.Millisecond * time.Duration(timeout))
@@ -166,4 +168,14 @@ func initializeClients(useConsul bool) {
 		Interval:    internal.ClientMonitorDefault,
 	}
 	mcc = command.NewMgmtClient(paramsCommand, startup.Endpoint{})
+
+	// Create coredata client
+	paramsCoreData := types.EndpointParams{
+		ServiceKey:  internal.CoreDataServiceKey,
+		Path:        "/",
+		UseRegistry: useConsul,
+		Url:         Configuration.Clients["Coredata"].Url(),
+		Interval:    internal.ClientMonitorDefault,
+	}
+	cdc = coredata.NewMgmtClient(paramsCoreData, startup.Endpoint{})
 }
