@@ -7,7 +7,13 @@ cp ../api/raml/core-data.raml ./core/data/
 cp ../api/raml/core-metadata.raml ./core/metadata/
 cp ../api/raml/core-command.raml ./core/command/
 cp ../api/raml/support-logging.raml ./support/logging/
+cp ../api/raml/support-scheduler.raml ./support/scheduler/
+cp ../api/raml/support-notifications.raml ./support/notifications/
 cp ../api/raml/export-client.raml ./export/client/
+mkdir ./system-management
+mkdir ./system-management/agent
+cp ../api/raml/system-agent.raml ./system-management/agent/
+
 
 # Build image (copying in documentation sources)
 
@@ -25,4 +31,7 @@ rm ./core/data/*.raml
 rm ./core/metadata/*.raml
 rm ./core/command/*.raml
 rm ./support/logging/*.raml
+rm ./support/notifications/*.raml
+rm ./support/scheduler/*.raml
 rm ./export/client/*.raml
+rm ./system-management/agent/*.raml
