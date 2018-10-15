@@ -24,19 +24,19 @@ Ubuntu 16.04 LTS or later Desktop or Server, or a system running Ubuntu Core 16 
 The snap is published in the snap store at https://snapcraft.io/edgexfoundry.
 You can see the current revisions available for your machine's architecture by running the command:
 
-```
+```bash
 $ snap info edgexfoundry
 ```
 
 The snap can be installed using `snap install`. To install the snap from the edge channel:
 
-```
+```bash
 $ sudo snap install edgexfoundry --edge
 ```
 
 You can specify install specific releases using the `--channel` option. For example to install the california release of the snap:
 
-```
+```bash
 $ sudo snap install edgexfoundry --channel=california
 ```
 
@@ -48,7 +48,7 @@ Lastly, on a system supporting it, the snap may be installed using GNOME (or Ubu
 The `hardware-observe`, `process-control`, `mount-observe`, and `system-observe` snap interfaces needs to be
 connected after installation using the following commands:
 
-```
+```bash
 $ snap connect edgexfoundry:hardware-observe
 $ snap connect edgexfoundry:process-control
 $ snap connect edgexfoundry:system-observe
@@ -102,7 +102,7 @@ $ snapcraft
 
 This will produce a binary snap package called `edgexfoundry_<latest version>_<arch>.snap`, which can be installed locally with the `--dangerous` flag:
 
-```
+```bash
 sudo snap install --dangerous edgexfoundry*.snap
 ```
 
