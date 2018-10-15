@@ -55,6 +55,11 @@ $ snap connect edgexfoundry:system-observe
 $ snap connect edgexfoundry:mount-observe
 ```
 
+After connecting these restart the services in the snap with:
+
+```bash
+$ sudo snap restart edgexfoundry
+```
 
 **Note** - these interface will be connected automatically after https://forum.snapcraft.io/t/edgexfoundry-auto-connections-assertions-request/7920/1 has been processed.
 
