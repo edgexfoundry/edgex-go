@@ -61,11 +61,11 @@ After connecting these restart the services in the snap with:
 $ sudo snap restart edgexfoundry
 ```
 
-**Note** - these interface will be connected automatically after https://forum.snapcraft.io/t/edgexfoundry-auto-connections-assertions-request/7920/1 has been processed.
+**Note** - these interface will be connected automatically after https://forum.snapcraft.io/t/edgexfoundry-auto-connections-assertions-request/7920/1 has been processed. After this is done, then connecting these interfaces will only be necessary during development. See the section below on building the snap for more details.
 
 **Note** - the process-control interface will be dropped after all of the services are supported as proper daemons in the snap.
 
-## Starting/Stopping EdgeX
+## Using the EdgeX snap
 To start all the EdgeX microservices, run the following command as root:
 
 `$ edgexfoundry.start-edgex`
@@ -105,12 +105,6 @@ The easiest way to build the snap is on an Ubuntu 16.04 Classic installation whe
 $ snapcraft
 ```
 
-This will produce a binary snap package called `edgexfoundry_<latest version>_<arch>.snap`, which can be installed locally with the `--dangerous` flag:
-
-```bash
-sudo snap install --dangerous edgexfoundry*.snap
-```
-
 ### Building with LXD containers
 
 Alternatively, you can use snapcraft with it's own container/build VM using `cleanbuild`. This requires installing LXD as documented (here)[https://docs.snapcraft.io/t/clean-build-using-lxc].
@@ -131,4 +125,27 @@ If the build fails and you need to make changes and re-build, you can use snapcr
 
 ```bash
 $ docker run -it -v"$PWD":/build snapcore/snapcraft:stable bash -c "apt update && cd /build && snapcraft clean && snapcraft"
+```
+
+### Developing the snap
+
+After building the snap from one of the above methods, you will have a binary snap package called `edgexfoundry_<latest version>_<arch>.snap`, which can be installed locally with the `--devmode` flag:
+
+```bash
+sudo snap install --devmode edgexfoundry*.snap
+```
+
+After installing the snap, you will need to connect interfaces and restart the snap. To connect the interfaces manually, run:
+
+```bash
+$ sudo snap connect edgexfoundry:hardware-observe
+$ sudo snap connect edgexfoundry:process-control
+$ sudo snap connect edgexfoundry:system-observe
+$ sudo snap connect edgexfoundry:mount-observe
+```
+
+After connecting the interfaces, restart all of the snap's services with:
+
+```bash
+$ sudo snap restart edgexfoundry
 ```
