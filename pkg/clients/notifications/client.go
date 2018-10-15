@@ -50,7 +50,7 @@ type NotificationsClient interface {
 	FetchMetrics() (string, error)
 }
 
-// Type struct for REST-specific implementation of the ClientForNotifications interface
+// Type struct for REST-specific implementation of the NotificationsClient interface
 type notificationsRestClient struct {
 	url      string
 	endpoint clients.Endpointer

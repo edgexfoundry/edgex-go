@@ -14,7 +14,7 @@ WORKDIR /docbuild
 
 # Clone documentation sources in other repositories
 
-RUN git clone https://github.com/edgexfoundry/support-notifications 
+#RUN git clone https://github.com/edgexfoundry/support-notifications
 RUN git clone https://github.com/edgexfoundry/support-rulesengine
 RUN git clone https://github.com/edgexfoundry/device-virtual
 
@@ -38,6 +38,7 @@ COPY support/scheduler/* ./
 COPY support/logging/* ./
 COPY support/notifications/* ./
 COPY support/rulesengine/* ./
+COPY system-management/* ./
 COPY examples ./
 COPY general ./
 COPY getting-started ./

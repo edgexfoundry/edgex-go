@@ -1,0 +1,50 @@
+#%RAML 0.8
+---
+title: Scheduler Microservice
+baseUri: http://localhost:48085/api/{version}
+version: v1
+protocols: [ HTTP ]
+mediaType:  application/json
+
+documentation:
+  - title: Welcome
+    content: |
+      Welcome to the Scheduler Microservice API Documentation.
+schemas:
+    -
+        schedule: '{"type":"object","$schema":"http://json-schema.org/draft-03/schema#","description":"meta data around anything that needs to be scheduled (frequency with optional start and end times).","title":"schedule","properties":{"id":{"type":"string","required":false,"title":"id"},"created":{"type":"integer","required":false,"title":"created"},"modified":{"type":"integer","required":false,"title":"modified"},"origin":{"type":"integer","required":false,"title":"origin"},"name":{"type":"string","required":false,"title":"name"},"start":{"type":"integer","required":false,"title":"start"},"end":{"type":"integer","required":false,"title":"end"},"frequency":{"type":"integer","required":false,"title":"frequency"}}}'
+    -
+        scheduleevent: '{"type":"object","$schema":"http://json-schema.org/draft-03/schema#","title":"scheduleevent","properties":{"id":{"type":"string","required":false,"title":"id"},"created":{"type":"integer","required":false,"title":"created"},"modified":{"type":"integer","required":false,"title":"modified"},"origin":{"type":"integer","required":false,"title":"origin"},"name":{"type":"string","required":false,"title":"name"},"addressable":{"type":"object","properties":{"name":{"type":"string","required":false,"title":"name"}},"required":false,"title":"addressable"},"parameters":{"type":"string","required":false,"title":"parameters"},"schedule":{"type":"string","required":false,"title":"schedule"},"service":{"type":"string","required":true,"title":"service"}}}'
+/info/{name}:
+    displayName: Schedule Resource (by name)
+    description: Example - http://localhost:48085/api/v1/info/midnight (where midnight is the name of a schedule)
+    uriParameters:
+        name:
+            displayName: name
+            type: string
+            required: false
+            repeat: false
+    get:
+        description: Return Schedule matching given name (schedule names should be unique). May be null if no schedule matches on the name provided. Returns Internal Service Error (HTTP 500) for unknown or unanticipated issues. NotFoundException (HTTP 404) if no Schedule is found with the provided name.
+        responses:
+            "200":
+                description: schedule matching on name
+                body:
+                    application/json:
+                        schema: schedule
+                        example: '{"created":0,"modified":0,"origin":0,"id":"5bc3c18fa493823224c12eb1","name":"midnight","start":"20180101T000000","end":null,"frequency":"P1D","cron":null,"runOnce":false}'
+            "404":
+                description: if no schedule is found for the identifier provided.
+            "500":
+                description: for unknown or unanticipated issues
+/ping:
+    displayName: Ping Resource
+    description: example - http://localhost:48085/api/v1/ping
+    get:
+        description: Test service providing an indication that the service is available.
+        displayName: service up check
+        responses:
+            "200":
+                description: return value of "pong"
+            "503":
+                description: for unknown or unanticipated issues

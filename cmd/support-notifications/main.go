@@ -51,7 +51,7 @@ func main() {
 	params := startup.BootParams{UseConsul: useConsul, UseProfile: useProfile, BootTimeout: internal.BootTimeoutDefault}
 	startup.Bootstrap(params, notifications.Retry, logBeforeInit)
 
-	ok := notifications.Init()
+	ok := notifications.Init(useConsul)
 	if !ok {
 		logBeforeInit(fmt.Errorf("%s: Service bootstrap failed!", internal.SupportNotificationsServiceKey))
 		return

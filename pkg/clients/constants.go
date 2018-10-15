@@ -19,6 +19,7 @@ const (
 	ApiAddressableRoute        = "/api/v1/addressable"
 	ApiCommandRoute            = "/api/v1/command"
 	ApiDeviceRoute             = "/api/v1/device"
+	ApiDeviceProfileRoute      = "/api/v1/deviceprofile"
 	ApiDeviceServiceRoute      = "/api/v1/deviceservice"
 	ApiEventRoute              = "/api/v1/event"
 	ApiLoggingRoute            = "/api/v1/logs"

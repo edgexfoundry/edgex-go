@@ -15,3 +15,18 @@ LoggingFile = './logs/edgex-sys-mgmt-agent.log'
   Protocol = 'http'
   Host = 'localhost'
   Port = 48060
+
+  [Clients.Command]
+  Protocol = 'http'
+  Host = 'localhost'
+  Port = 48082
+
+  [Clients.Metadata]
+  Protocol = 'http'
+  Host = 'localhost'
+  Port = 48081
+
+  [Clients.Logging]
+  Protocol = 'http'
+  Host = 'localhost'
+  Port = 48061
