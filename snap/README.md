@@ -49,10 +49,10 @@ The `hardware-observe`, `process-control`, `mount-observe`, and `system-observe`
 connected after installation using the following commands:
 
 ```bash
-$ snap connect edgexfoundry:hardware-observe
-$ snap connect edgexfoundry:process-control
-$ snap connect edgexfoundry:system-observe
-$ snap connect edgexfoundry:mount-observe
+$ sudo snap connect edgexfoundry:hardware-observe
+$ sudo snap connect edgexfoundry:process-control
+$ sudo snap connect edgexfoundry:system-observe
+$ sudo snap connect edgexfoundry:mount-observe
 ```
 
 After connecting these restart the services in the snap with:
