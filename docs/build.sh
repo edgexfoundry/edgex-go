@@ -10,6 +10,8 @@ cp ../api/raml/support-logging.raml ./support/logging/
 cp ../api/raml/support-scheduler.raml ./support/scheduler/
 cp ../api/raml/support-notifications.raml ./support/notifications/
 cp ../api/raml/export-client.raml ./export/client/
+mkdir ./system-management
+mkdir ./system-management/agent
 cp ../api/raml/system-agent.raml ./system-management/agent/
 
 
