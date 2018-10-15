@@ -80,7 +80,7 @@ To stop all the EdgeX microservices, run the following command as root:
 It's possible to change which services are started by the `start-edgex` script by
 editing a file called `edgex-services-env` which can be found in the directory `/var/snap/edgexfoundry/current` (aka $SNAP_DATA).
 
-**Note** - after all services have been converted to daemons in the snap this file will become obselete.
+**Note** - after all services have been converted to daemons in the snap this file will become obselete and all service management will be done with `snap set`. This document will be updated to reflect this...
 
 ## Limitations
 
