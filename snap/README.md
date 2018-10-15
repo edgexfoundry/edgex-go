@@ -97,6 +97,8 @@ $ cd edgex-go
 
 The `snapcraft` tool is used to actually build the snap. There are a few different ways to use it, depending on what OS you are building on.
 
+**Note** - currently the snap doesn't support cross-compilation, and must be built natively on the target architecture. Specifically, to support cross-compilation the kong/lua parts must be modified to support cross-compilation. The openresty part uses non-standard flags for handling cross-compiling so all the flags would have to manually passed to build that part. Also luarocks doesn't seem to easily support cross-compilation, so that would need to be figured out as well.
+
 ### Building on Ubuntu 16.04
 
 The easiest way to build the snap is on an Ubuntu 16.04 Classic installation where you can use `snapcraft` directly:
