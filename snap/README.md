@@ -82,6 +82,15 @@ editing a file called `edgex-services-env` which can be found in the directory `
 
 **Note** - after all services have been converted to daemons in the snap this file will become obselete and all service management will be done with `snap set`. This document will be updated to reflect this...
 
+### Configuring individual services
+
+All default configuration files are shipped with the snap inside `$SNAP/config`, however because `$SNAP` isn't writable, all of the config files are copied during snap installation (specifically during the install hook, see `snap/hooks/install` in this repository) to `$SNAP_DATA/config`. The configuration files in `$SNAP_DATA` may then be modified.
+
+### Viewing logs
+
+Currently, all log files for the snap's can be found inside `$SNAP_COMMON`, which is usually `/var/snap/edgexfoundry/common`. Once all the services are supported as daemons, you can also use `sudo snap logs edgexfoundry` to view logs.
+
+
 ## Limitations
 
   * None of the services are actually defined as such in snapcraft.yaml, instead shell-scripts are used to start and stop the EdgeX microservices and dependent services such as consul and mongo. This is being tracked at https://github.com/edgexfoundry/edgex-go/issues/485
