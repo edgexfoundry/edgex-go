@@ -10,8 +10,8 @@ type MSMClient struct {
 	mock.Mock
 }
 
-// ProcessConfigResponse provides a mock function with given fields: response
-func (_m *MSMClient) ProcessConfigResponse(response string) agent.ConfigRespMap {
+// ProcessResponse provides a mock function with given fields: response
+func (_m *MSMClient) ProcessResponse(response string) agent.ConfigRespMap {
 	ret := _m.Called(response)
 
 	var r0 agent.ConfigRespMap
@@ -19,20 +19,6 @@ func (_m *MSMClient) ProcessConfigResponse(response string) agent.ConfigRespMap 
 		r0 = rf(response)
 	} else {
 		r0 = ret.Get(0).(agent.ConfigRespMap)
-	}
-
-	return r0
-}
-
-// ProcessMetricsResponse provides a mock function with given fields: response
-func (_m *MSMClient) ProcessMetricsResponse(response string) agent.MetricsRespMap {
-	ret := _m.Called(response)
-
-	var r0 agent.MetricsRespMap
-	if rf, ok := ret.Get(0).(func(string) agent.MetricsRespMap); ok {
-		r0 = rf(response)
-	} else {
-		r0 = ret.Get(0).(agent.MetricsRespMap)
 	}
 
 	return r0

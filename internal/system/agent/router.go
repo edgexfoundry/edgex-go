@@ -127,8 +127,7 @@ func metricsHandler(w http.ResponseWriter, r *http.Request) {
 	var services []string
 	services = strings.Split(list, ",")
 
-	var send = MetricsRespMap{}
-	send, _ = getMetrics(services)
+	send, _ := getMetrics(services)
 
 	w.Header().Add("Content-Type", "application/json")
 	encode(send, w)
