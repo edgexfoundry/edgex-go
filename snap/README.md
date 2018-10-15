@@ -90,6 +90,23 @@ All default configuration files are shipped with the snap inside `$SNAP/config`,
 
 Currently, all log files for the snap's can be found inside `$SNAP_COMMON`, which is usually `/var/snap/edgexfoundry/common`. Once all the services are supported as daemons, you can also use `sudo snap logs edgexfoundry` to view logs.
 
+### Enabling security services
+
+Currently, the security services are enabled by default. The security services consitute the following components:
+
+ * Vault
+ * Cassandra
+ * Kong
+ * vault-worker (from [security-secret-store](https://github.com/edgexfoundry/security-secret-store))
+ * kong-worker (from [security-api-gateway](https://github.com/edgexfoundry/security-api-gateway/))
+
+All of the services are controlled by the same variable `SECURITY` in the `edgex-services-env` file. You can either turn all of them on, or turn all of them off. 
+
+When security is enabled (which is what happens by default), Consul is secured using Vault for secret management, and Kong is used as an HTTPS proxy for all the services. The HTTPS keys for Kong are generated at runtime, and placed in `$SNAP_DATA/kong`. Kong needs a database to manage itself, and can use either Postgres or Cassandra. Because Postgres cannot run inside of a snap due to issues running as root (currently all snap services must run as root, see [this post](https://forum.snapcraft.io/t/multiple-users-and-groups-in-snaps/1461) for details), we use Cassandra. Cassandra is currently a service, so to fully disable the security services, you must also disable Cassandra using:
+
+```
+$ sudo snap stop --disable edgexfoundry.cassandra
+```
 
 ## Limitations
 
