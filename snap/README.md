@@ -34,10 +34,10 @@ The snap can be installed using `snap install`. To install the snap from the edg
 $ sudo snap install edgexfoundry --edge
 ```
 
-You can specify install specific releases using the `--channel` option. For example to install the california release of the snap:
+You can specify install specific releases using the `--channel` option. For example to install the Delhi release of the snap:
 
 ```bash
-$ sudo snap install edgexfoundry --channel=california
+$ sudo snap install edgexfoundry --channel=delhi
 ```
 
 Lastly, on a system supporting it, the snap may be installed using GNOME (or Ubuntu) Software Center by searching for `edgexfoundry`.
