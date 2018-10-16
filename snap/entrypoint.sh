@@ -4,6 +4,10 @@
 export LC_ALL=C.UTF-8
 export SNAPCRAFT_SETUP_CORE=1
 
+# this tells snapcraft to include a manifest file in the snap
+# detailing which packages were used to build the snap
+export SNAPCRAFT_BUILD_INFO=1
+
 # build the snap
 cd /build
 snapcraft clean
