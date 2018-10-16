@@ -1,4 +1,7 @@
-FROM ubuntu:16.04
+# the image we build from is passed in as a command line argument
+# this facilitates building on different architectures
+ARG image_name
+FROM ${image_name}
 
 # this is basically the same as the amd64 upstream:
 # https://github.com/snapcore/snapcraft/blob/master/Dockerfile

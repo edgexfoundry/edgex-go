@@ -24,19 +24,24 @@ if [ ! -z "$JENKINS_URL" ]; then
     fi
 fi
 
-# build the container image - switch on which architecture we're on
+# switch on what architecture we are currently on to determine the base docker image to use
 # note that for now the armhf and i386 builds fail, but if we ever support those targets
 # this will "just work"
 ARCH=$(arch)
 if [ $ARCH = "x86_64" ] ; then
-    docker build -t edgex-snap-builder:latest -f ${SCRIPT_DIR}/Dockerfile.amd64.build $GIT_ROOT
+    DOCKER_BASE_IMG="ubuntu:16.04"
 elif [ $ARCH = "armhf" ] ; then
-    docker build -t edgex-snap-builder:latest -f ${SCRIPT_DIR}/Dockerfile.armhf.build $GIT_ROOT
+    # the docker base image here is armv7 because snapd is only supported on armv7+
+    # this means that the raspberry pi 1 or raspberry pi zero are not supported, as those are both armv6 devices
+    DOCKER_BASE_IMG="arm32v7/ubuntu:16.04"
 elif [ $ARCH = "aarch64" ] ; then
-    docker build -t edgex-snap-builder:latest -f ${SCRIPT_DIR}/Dockerfile.arm64.build $GIT_ROOT
+    DOCKER_BASE_IMG="arm64v8/ubuntu:16.04"
 elif [ $ARCH = "i386" ] ; then
-    docker build -t edgex-snap-builder:latest -f ${SCRIPT_DIR}/Dockerfile.i386.build $GIT_ROOT
+    DOCKER_BASE_IMG="i386/ubuntu:16.04"
 fi
+
+# build the container image - providing the relevant architecture base image
+docker build -t edgex-snap-builder:latest --build-arg image_name="$DOCKER_BASE_IMG" -f ${SCRIPT_DIR}/Dockerfile.build $GIT_ROOT
 
 # delete the login file we copied to the git root so it doesn't persist around
 rm $GIT_ROOT/edgex-snap-store-login
