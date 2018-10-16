@@ -160,7 +160,7 @@ func TestAddEventWithPersistence(t *testing.T) {
 	wg.Add(1)
 	go handleDomainEvents(bitEvents, &wg, t)
 
-	newId, err := addNew(evt)
+	newId, err := addNewEvent(evt)
 	Configuration.PersistData = false
 	if err != nil {
 		t.Errorf(err.Error())
@@ -193,7 +193,7 @@ func TestAddEventNoPersistence(t *testing.T) {
 	wg.Add(1)
 	go handleDomainEvents(bitEvents, &wg, t)
 
-	newId, err := addNew(evt)
+	newId, err := addNewEvent(evt)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -230,7 +230,7 @@ func TestAddEventWithValidationValueDescriptorExistsAndIsInvalid(t *testing.T) {
 	wg.Add(1)
 	go handleDomainEvents(bitEvents, &wg, t)
 
-	_, err := addNew(evt)
+	_, err := addNewEvent(evt)
 	if err == nil {
 		t.Errorf("expected error")
 	}
@@ -248,7 +248,7 @@ func TestAddEventWithValidationValueDescriptorNotFound(t *testing.T) {
 	wg.Add(1)
 	go handleDomainEvents(bitEvents, &wg, t)
 
-	_, err := addNew(evt)
+	_, err := addNewEvent(evt)
 	if err == nil {
 		t.Errorf("expected error")
 	}
@@ -267,7 +267,7 @@ func TestAddEventWithValidationValueDescriptorDBError(t *testing.T) {
 	wg.Add(1)
 	go handleDomainEvents(bitEvents, &wg, t)
 
-	_, err := addNew(evt)
+	_, err := addNewEvent(evt)
 	if err == nil {
 		t.Errorf("expected error")
 	}
@@ -313,7 +313,7 @@ func TestUpdateEvent(t *testing.T) {
 	}
 }
 
-func TestDeleteAll(t *testing.T) {
+func TestDeleteAllEvents(t *testing.T) {
 	reset()
 	err := deleteAllEvents()
 	if err != nil {
@@ -456,61 +456,6 @@ func TestGetEventsByDeviceIdLimitDBThrowsError(t *testing.T) {
 	}
 }
 
-func TestGetReadingsByDeviceId(t *testing.T) {
-	reset()
-	dbClient = newMockDb()
-
-	expectedReadings, expectedNil := getReadingsByDeviceId(math.MaxInt32, "valid", "Pressure")
-
-	if expectedReadings == nil {
-		t.Errorf("Should return Readings")
-	}
-
-	if expectedNil != nil {
-		t.Errorf("Should not throw error")
-	}
-}
-
-func TestGetReadingsByDeviceIdLimited(t *testing.T) {
-	reset()
-	dbClient = newMockDb()
-
-	for limit:= 0; limit < 5; limit++ {
-		expectedReadings, expectedNil := getReadingsByDeviceId(limit, "valid", "Pressure")
-
-		if limit == 0 {
-			if expectedReadings != nil {
-				t.Errorf("Should return nil slice for zero limit")
-			}
-		} else if expectedReadings == nil {
-			t.Errorf("Should return Readings, limit: %d", limit)
-		}
-
-		if len(expectedReadings) > limit {
-			t.Errorf("Should only return %d Readings", limit)
-		}
-
-		if expectedNil != nil {
-			t.Errorf("Should not throw error")
-		}
-	}
-}
-
-func TestGetReadingsByDeviceIdDBThrowsError(t *testing.T) {
-	reset()
-	dbClient = newMockDb()
-
-	expectedNil, expectedErr := getReadingsByDeviceId(0, "error", "")
-
-	if expectedNil != nil {
-		t.Errorf("Should not return Readings on error")
-	}
-
-	if expectedErr == nil {
-		t.Errorf("Should throw error")
-	}
-}
-
 func TestGetEventsByCreationTime(t *testing.T) {
 	reset()
 	dbClient = newMockDb()
@@ -567,7 +512,7 @@ func TestDeleteEventsDBLookupThrowsError(t *testing.T) {
 	}
 }
 
-func TestDoScrub(t *testing.T) {
+func TestScrubPushedEvents(t *testing.T) {
 	reset()
 
 	pushedEvent := testEvent

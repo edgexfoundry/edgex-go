@@ -41,16 +41,6 @@ func countEventsByDevice(device string) (int, error) {
 	return count, err
 }
 
-func checkDevice(device string) error {
-	if Configuration.MetaDataCheck {
-		_, err := mdc.CheckForDevice(device)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 func deleteEventsByAge(age int64) (int, error) {
 	events, err := dbClient.EventsOlderThanAge(age)
 	if err != nil {
@@ -83,7 +73,7 @@ func getEvents(limit int) ([]models.Event, error) {
 	return events, err
 }
 
-func addNew(e models.Event) (string, error) {
+func addNewEvent(e models.Event) (string, error) {
 	retVal := "unsaved"
 	err := checkDevice(e.Device)
 	if err != nil {
@@ -218,15 +208,6 @@ func putEventOnQueue(e models.Event) {
 	}
 }
 
-func checkMaxLimit(limit int) error {
-	if limit > Configuration.Service.ReadMaxLimit {
-		LoggingClient.Error(maxExceededString)
-		return fmt.Errorf(maxExceededString)
-	}
-
-	return nil
-}
-
 func getEventsByDeviceIdLimit(limit int, deviceId string) ([]models.Event, error) {
 	eventList, err := dbClient.EventsForDeviceLimit(deviceId, limit)
 	if err != nil {
@@ -235,34 +216,6 @@ func getEventsByDeviceIdLimit(limit int, deviceId string) ([]models.Event, error
 	}
 
 	return eventList, nil
-}
-
-func getReadingsByDeviceId(limit int, deviceId string, valueDescriptor string) ([]models.Reading, error) {
-	eventList, err := dbClient.EventsForDevice(deviceId)
-	if err != nil {
-		LoggingClient.Error(err.Error())
-		return nil, err
-	}
-
-	// Only pick the readings who match the value descriptor
-	var readings []models.Reading
-	count := 0 // Make sure we stay below the limit
-	for _, event := range eventList {
-		if count >= limit {
-			break
-		}
-		for _, reading := range event.Readings {
-			if count >= limit {
-				break
-			}
-			if reading.Name == valueDescriptor {
-				readings = append(readings, reading)
-				count += 1
-			}
-		}
-	}
-
-	return readings, nil
 }
 
 func getEventsByCreationTime(limit int, start int64, end int64) ([]models.Event, error) {

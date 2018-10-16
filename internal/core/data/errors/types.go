@@ -13,7 +13,10 @@
  *******************************************************************************/
 package errors
 
-import "fmt"
+import (
+	"fmt"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+)
 
 type ErrEventNotFound struct {
 	id string
@@ -86,4 +89,39 @@ func (e ErrValueDescriptorInUse) Error() string {
 
 func NewErrValueDescriptorInUse(name string) error {
 	return &ErrValueDescriptorInUse{name: name}
+}
+
+type ErrLimitExceeded struct {
+	limit int
+}
+
+func (e ErrLimitExceeded) Error() string {
+	return fmt.Sprintf("limit %d exceeds configured max", e.limit)
+}
+
+func NewErrLimitExceeded(limit int) error {
+	return &ErrLimitExceeded{limit: limit}
+}
+
+type ErrJsonDecoding struct {
+	name string
+}
+
+func (e ErrJsonDecoding) Error() string {
+	return fmt.Sprintf("error decoding the reading: %s", e.name)
+}
+
+func NewErrJsonDecoding(name string) error {
+	return &ErrJsonDecoding{name: name}
+}
+
+type ErrDbNotFound struct {
+}
+
+func (e ErrDbNotFound) Error() string {
+	return db.ErrNotFound.Error()
+}
+
+func NewErrDbNotFound() error {
+	return &ErrDbNotFound{}
 }
