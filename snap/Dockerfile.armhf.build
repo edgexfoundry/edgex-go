@@ -2,7 +2,7 @@
 # as there isn't currently a snapcraft image published for architectures other than amd64
 # see request on the forum: https://forum.snapcraft.io/t/docker-images-for-non-amd64-architectures/7466
 
-# alos note that snaps are only supported on armv7+, so we don't support for example
+# also note that snaps are only supported on armv7+, so we don't support for example
 # the raspberry pi 1 or raspberry pi zero, as those are both armv6 devices
 FROM arm32v7/ubuntu:16.04
 
