@@ -5,11 +5,10 @@ version-script: |
 summary: Provides a full set of Edgex Foundry core microservices.
 description: |
  This snap provides a full set of EdgeX Foundry core micro services.
- It's based on the 'California ' release of EdgeX, in which all of
- the core, and export services have been re-written in Go.
- In addition to Mongodb and Consul, this snap also includes a shared
- OpenJDK JRE for use by the device-virtual service. The packaging for
- this snap can be found at:
+ The snap contains Consul, MongoDB, all of the EdgeX Go-based micro services from
+ this repository, and three Java-based services, support-rulesengine and support-
+ scheduler, and device-virtual, as well as Vault, Kong, Cassandra, and the two go-based 
+ security micro services. The packaging for this snap can be found at:
  https://github.com/edgexfoundry/edgex-go
 
 # TODO: upgrade to stable before releasing to beta/candidate/stable
