@@ -56,9 +56,3 @@ func pingHandler(w http.ResponseWriter, r *http.Request) {
 		LoggingClient.Error("Error writing pong: " + err.Error())
 	}
 }
-
-func configHandler(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
-
-	encode(Configuration, w)
-}

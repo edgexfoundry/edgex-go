@@ -889,3 +889,11 @@ schemas:
         responses:
             "200":
                 description: The service's configuration as JSON document
+/metrics:
+    displayName: Metrics Resource
+    description: Example - http://localhost:48080/api/v1/metrics
+    get:
+        description: Fetch the current state of the service's metrics.
+        responses:
+            "200":
+                description: The service's metrics as JSON document

@@ -10,3 +10,35 @@ CheckInterval = '10s'
 LoggingFile = '/edgex/logs/edgex-sys-mgmt-agent.log'
 LoggingRemoteURL = 'http://edgex-support-logging:48061/api/v1/logs'
 
+[Service]
+BootTimeout = 30000
+ClientMonitor = 15000
+CheckInterval = '10s'
+Host = 'edgex-sys-mgmt-agent'
+Port = 48090
+Protocol = 'http'
+ReadMaxLimit = 100
+StartupMsg = 'This is the System Management Agent Service'
+Timeout = 5000
+
+[Clients]
+  [Clients.Notifications]
+  Protocol = 'http'
+  Host = 'localhost'
+  Port = 48060
+
+  [Clients.Command]
+  Protocol = 'http'
+  Host = 'localhost'
+  Port = 48082
+
+  [Clients.Coredata]
+  Protocol = 'http'
+  Host = 'localhost'
+  Port = 48080
+
+  [Clients.Logging]
+  Protocol = 'http'
+  Host = 'localhost'
+  Port = 48061
+

@@ -209,8 +209,14 @@ func getConfig(services []string) (ConfigRespMap, error) {
 			break
 
 		case internal.CoreDataServiceKey:
-			c.Configuration[service] = "N/A"
-			LoggingClient.Info(fmt.Sprintf("The micro-service {%v} currently does not support an endpoint for providing its configuration data...", internal.CoreDataServiceKey))
+			responseJSON, err := cdc.FetchConfiguration()
+			if err != nil {
+				msg := fmt.Sprintf("%s get config error: %s", service, err.Error())
+				c.Configuration[service] = msg
+				LoggingClient.Error(msg)
+			} else {
+				c.Configuration[service] = ProcessResponse(responseJSON)
+			}
 			break
 
 		case internal.CoreMetaDataServiceKey:
@@ -276,8 +282,14 @@ func getMetrics(services []string) (MetricsRespMap, error) {
 			break
 
 		case internal.CoreDataServiceKey:
-			m.Metrics[service] = "N/A"
-			LoggingClient.Info(fmt.Sprintf("The micro-service {%v} currently does not support an endpoint for providing its metrics data...", internal.CoreDataServiceKey))
+			responseJSON, err := cdc.FetchMetrics()
+			if err != nil {
+				msg := fmt.Sprintf("%s get metrics error: %s", service, err.Error())
+				m.Metrics[service] = msg
+				LoggingClient.Error(msg)
+			} else {
+				m.Metrics[service] = ProcessResponse(responseJSON)
+			}
 			break
 
 		case internal.CoreMetaDataServiceKey:
