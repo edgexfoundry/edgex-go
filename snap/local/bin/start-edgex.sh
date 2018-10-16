@@ -91,15 +91,8 @@ fi
 if [ "$SUPPORT_SCHEDULER" = "y" ] ; then
     sleep 60
     echo "Starting scheduler"
-
-    # workaround consul.host=edgex-core-consul bug:
-    # https://github.com/edgexfoundry/support-scheduler/issues/23
-
-    "$JAVA" -jar -Djava.security.egd=file:/dev/urandom -Xmx100M \
-               -Dspring.cloud.consul.enabled=true \
-               -Dspring.cloud.consul.host=localhost \
-               -Dlogging.file=$SNAP_COMMON/logs/edgex-support-scheduler.log \
-               $SNAP/jar/support-scheduler/support-scheduler.jar &
+    cd $SNAP_DATA/config/support-scheduler
+    $SNAP/bin/support-scheduler --consul &
 fi
 
 if [ "$EXPORT_CLIENT" = "y" ] ; then
