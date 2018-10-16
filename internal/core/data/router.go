@@ -16,7 +16,6 @@ package data
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -28,6 +27,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 	"github.com/edgexfoundry/edgex-go/pkg/clients"
 	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 )
 
 func LoadRestRoutes() *mux.Router {
@@ -622,36 +622,6 @@ func configHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	encode(Configuration, w)
-}
-
-func metricsHandler(w http.ResponseWriter, r *http.Request) {
-
-	var t internal.Telemetry
-
-	if r.Body != nil {
-		defer r.Body.Close()
-	}
-
-	// The micro-service is to be considered the System Of Record (SOR) in terms of accurate information.
-	// Fetch metrics for the data service.
-	var rtm runtime.MemStats
-
-	// Read full memory stats
-	runtime.ReadMemStats(&rtm)
-
-	// Miscellaneous memory stats
-	t.Alloc = rtm.Alloc
-	t.TotalAlloc = rtm.TotalAlloc
-	t.Sys = rtm.Sys
-	t.Mallocs = rtm.Mallocs
-	t.Frees = rtm.Frees
-
-	// Live objects = Mallocs - Frees
-	t.LiveObjects = t.Mallocs - t.Frees
-
-	encode(t, w)
-
-	return
 }
 
 // Reading handler
@@ -1518,4 +1488,33 @@ func valueDescriptorByDeviceIdHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	encode(vdList, w)
+}
+
+func metricsHandler(w http.ResponseWriter, r *http.Request) {
+	var t internal.Telemetry
+
+	if r.Body != nil {
+		defer r.Body.Close()
+	}
+
+	// The micro-service is to be considered the System Of Record (SOR) in terms of accurate information.
+	// Fetch metrics for the data service.
+	var rtm runtime.MemStats
+
+	// Read full memory stats
+	runtime.ReadMemStats(&rtm)
+
+	// Miscellaneous memory stats
+	t.Alloc = rtm.Alloc
+	t.TotalAlloc = rtm.TotalAlloc
+	t.Sys = rtm.Sys
+	t.Mallocs = rtm.Mallocs
+	t.Frees = rtm.Frees
+
+	// Live objects = Mallocs - Frees
+	t.LiveObjects = t.Mallocs - t.Frees
+
+	encode(t, w)
+
+	return
 }
