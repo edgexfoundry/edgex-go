@@ -14,9 +14,9 @@
 package command
 
 import (
-	"encoding/json"
 	"net/http"
 	"runtime"
+	"encoding/json"
 
 	"github.com/gorilla/mux"
 	"github.com/edgexfoundry/edgex-go/internal"
@@ -25,9 +25,16 @@ import (
 
 func LoadRestRoutes() http.Handler {
 	r := mux.NewRouter()
-	r.HandleFunc(clients.ApiPingRoute, ping)
-	r.HandleFunc(clients.ApiConfigRoute, configHandler)
-	r.HandleFunc(clients.ApiMetricsRoute, metricsHandler)
+
+	// Ping Resource
+	r.HandleFunc(clients.ApiPingRoute, pingHandler).Methods(http.MethodGet)
+
+	// Configuration
+	r.HandleFunc(clients.ApiConfigRoute, configHandler).Methods(http.MethodGet)
+
+	// Metrics
+	r.HandleFunc(clients.ApiMetricsRoute, metricsHandler).Methods(http.MethodGet)
+
 	b := r.PathPrefix("/api/v1").Subrouter()
 
 	loadDeviceRoutes(b)
@@ -56,23 +63,18 @@ func loadDeviceRoutes(b *mux.Router) {
 }
 
 // Respond with PINGRESPONSE to see if the service is alive
-func ping(w http.ResponseWriter, _ *http.Request) {
+func pingHandler(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set(CONTENTTYPE, TEXTPLAIN)
 	w.Write([]byte(PINGRESPONSE))
 }
 
 func configHandler(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
 
-	w.Header().Add("Content-Type", "application/json")
-
-	enc := json.NewEncoder(w)
-	err := enc.Encode(Configuration)
-	// Problems encoding
-	if err != nil {
-		LoggingClient.Error("Error encoding the data: " + err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	if r.Body != nil {
+		defer r.Body.Close()
 	}
+
+	encode(Configuration, w)
 }
 
 func metricsHandler(w http.ResponseWriter, r *http.Request) {
@@ -100,14 +102,22 @@ func metricsHandler(w http.ResponseWriter, r *http.Request) {
 	// Live objects = Mallocs - Frees
 	t.LiveObjects = t.Mallocs - t.Frees
 
-	w.Header().Set("Content-Type", "application/json")
+	encode(t, w)
+
+	return
+}
+
+
+// Helper function for encoding things for returning from REST calls
+func encode(i interface{}, w http.ResponseWriter) {
+	w.Header().Add("Content-Type", "application/json")
+
 	enc := json.NewEncoder(w)
-	err := enc.Encode(t)
+	err := enc.Encode(i)
 	// Problems encoding
 	if err != nil {
 		LoggingClient.Error("Error encoding the data: " + err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
-
-	return
 }

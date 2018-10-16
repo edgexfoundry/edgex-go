@@ -17,12 +17,10 @@ package notifications
 
 import (
 	"net/http"
-
+	"runtime"
 	"github.com/gorilla/mux"
-	"fmt"
 	"github.com/edgexfoundry/edgex-go/pkg/clients"
 	"github.com/edgexfoundry/edgex-go/internal"
-	"runtime"
 )
 
 func LoadRestRoutes() *mux.Router {
@@ -86,14 +84,7 @@ func configHandler(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
 	}
 
-	// The micro-service is to be considered the System Of Record (SOR) in terms of accurate information.
-	// Fetch configuration from cache (the in-memory store which is populated when micro-service is bootstrapped!)
-	w.Header().Set("Content-Type", "application/json")
 	encode(Configuration, w)
-
-	LoggingClient.Debug(fmt.Sprintf("Fetched this configuration for the notifications service: {%v}: ", *Configuration))
-
-	return
 }
 
 func metricsHandler(w http.ResponseWriter, r *http.Request) {
@@ -121,10 +112,7 @@ func metricsHandler(w http.ResponseWriter, r *http.Request) {
 	// Live objects = Mallocs - Frees
 	t.LiveObjects = t.Mallocs - t.Frees
 
-	w.Header().Set("Content-Type", "application/json")
 	encode(t, w)
-
-	LoggingClient.Debug(fmt.Sprintf("Fetched these metrics for the notifications service: {%v}:", t))
 
 	return
 }
