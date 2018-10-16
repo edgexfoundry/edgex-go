@@ -158,7 +158,7 @@ func deleteEventById(id string) error {
 // Delete the event and readings
 func deleteEvent(e models.Event) error {
 	for _, reading := range e.Readings {
-		if err := dbClient.DeleteReadingById(reading.Id.Hex()); err != nil {
+		if err := deleteReadingById(reading.Id.Hex()); err != nil {
 			return err
 		}
 	}
