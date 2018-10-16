@@ -71,6 +71,7 @@ func replyInfo(w http.ResponseWriter, r *http.Request) {
 	schedule, err := queryScheduleByName(vars)
 	if err != nil {
 		LoggingClient.Error(fmt.Sprintf("read info request error %s", err.Error()))
+		http.Error(w,"Schedule/Event not found",http.StatusNotFound)
 		return
 	}
 
