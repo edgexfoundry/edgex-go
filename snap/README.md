@@ -66,11 +66,11 @@ $ sudo snap restart edgexfoundry
 **Note** - the process-control interface will be dropped after all of the services are supported as proper daemons in the snap.
 
 ## Using the EdgeX snap
-To start all the EdgeX microservices, run the following command as root:
+To start all the EdgeX microservices, run the following command using sudo:
 
 `$ edgexfoundry.start-edgex`
 
-To stop all the EdgeX microservices, run the following command as root:
+To stop all the EdgeX microservices, run the following command using sudo:
 
 `$ edgexfoundry.stop-edgex`
 
