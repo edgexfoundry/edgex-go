@@ -163,17 +163,4 @@ After building the snap from one of the above methods, you will have a binary sn
 sudo snap install --devmode edgexfoundry*.snap
 ```
 
-After installing the snap, you will need to connect interfaces and restart the snap. To connect the interfaces manually, run:
-
-```bash
-$ sudo snap connect edgexfoundry:hardware-observe
-$ sudo snap connect edgexfoundry:process-control
-$ sudo snap connect edgexfoundry:system-observe
-$ sudo snap connect edgexfoundry:mount-observe
-```
-
-After connecting the interfaces, restart all of the snap's services with:
-
-```bash
-$ sudo snap restart edgexfoundry
-```
+After installing the snap, you will need to connect interfaces and restart the snap as explained in the previous section on [Configuration](https://github.com/edgexfoundry/edgex-go/blob/master/snap/README.md#configuration).
