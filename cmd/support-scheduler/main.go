@@ -20,6 +20,7 @@ import (
 	"github.com/gorilla/context"
 )
 
+
 func main() {
 
 	start := time.Now()
@@ -45,11 +46,14 @@ func main() {
 	scheduler.LoggingClient.Info("Service dependencies resolved...")
 	scheduler.LoggingClient.Info(fmt.Sprintf("Starting %s %s ", internal.SupportSchedulerServiceKey, edgex.Version))
 
+
 	// Bootstrap schedulers
 	err := scheduler.AddSchedulers()
+
 	if err != nil{
 		scheduler.LoggingClient.Error(fmt.Sprintf("Failed to load default schedules and events %s",err.Error()))
 	}
+
 
 	http.TimeoutHandler(nil, time.Millisecond*time.Duration(scheduler.Configuration.Service.Timeout), "Request timed out")
 	scheduler.LoggingClient.Info(scheduler.Configuration.Service.StartupMsg, "")
@@ -73,6 +77,7 @@ func main() {
 func logBeforeInit(err error) {
 	scheduler.LoggingClient = logger.NewClient(internal.CoreCommandServiceKey, false, "")
 	scheduler.LoggingClient.Error(err.Error())
+
 }
 
 func listenForInterrupt(errChan chan error) {
