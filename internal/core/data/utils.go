@@ -46,19 +46,3 @@ func printBody(r io.ReadCloser) {
 
 	LoggingClient.Info(bodyString)
 }
-
-// Test if the service is working
-func pingHandler(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
-
-	_, err := w.Write([]byte("pong"))
-	if err != nil {
-		LoggingClient.Error("Error writing pong: " + err.Error())
-	}
-}
-
-func configHandler(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
-
-	encode(Configuration, w)
-}

@@ -12,12 +12,13 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"runtime"
 
-	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/go-zoo/bone"
 	"github.com/edgexfoundry/edgex-go/internal/export"
 	"github.com/edgexfoundry/edgex-go/pkg/clients"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
-	"github.com/go-zoo/bone"
+	"github.com/edgexfoundry/edgex-go/internal"
 )
 
 func replyPing(w http.ResponseWriter, r *http.Request) {
@@ -30,15 +31,7 @@ func replyPing(w http.ResponseWriter, r *http.Request) {
 func replyConfig(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
-	w.Header().Add("Content-Type", "application/json")
-
-	enc := json.NewEncoder(w)
-	err := enc.Encode(Configuration)
-	// Problems encoding
-	if err != nil {
-		LoggingClient.Error("Error encoding the data: " + err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
+	encode(Configuration, w)
 }
 
 func replyNotifyRegistrations(w http.ResponseWriter, r *http.Request) {
@@ -74,11 +67,63 @@ func replyNotifyRegistrations(w http.ResponseWriter, r *http.Request) {
 	RefreshRegistrations(update)
 }
 
+func replyMetrics(w http.ResponseWriter, r *http.Request) {
+
+	var t internal.Telemetry
+
+	if r.Body != nil {
+		defer r.Body.Close()
+	}
+
+	// The micro-service is to be considered the System Of Record (SOR) in terms of accurate information.
+	// Fetch metrics for the scheduler service.
+	var rtm runtime.MemStats
+
+	// Read full memory stats
+	runtime.ReadMemStats(&rtm)
+
+	// Miscellaneous memory stats
+	t.Alloc = rtm.Alloc
+	t.TotalAlloc = rtm.TotalAlloc
+	t.Sys = rtm.Sys
+	t.Mallocs = rtm.Mallocs
+	t.Frees = rtm.Frees
+
+	// Live objects = Mallocs - Frees
+	t.LiveObjects = t.Mallocs - t.Frees
+
+	encode(t, w)
+
+	return
+}
+
+// Helper function for encoding things for returning from REST calls
+func encode(i interface{}, w http.ResponseWriter) {
+	w.Header().Add("Content-Type", "application/json")
+
+	enc := json.NewEncoder(w)
+	err := enc.Encode(i)
+	// Problems encoding
+	if err != nil {
+		LoggingClient.Error("Error encoding the data: " + err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
 // HTTPServer function
 func httpServer() http.Handler {
 	mux := bone.New()
-	mux.Get(internal.ApiPingRoute, http.HandlerFunc(replyPing))
-	mux.Get(internal.ApiConfigRoute, http.HandlerFunc(replyConfig))
+
+	// Ping Resource
+	mux.Get(clients.ApiPingRoute, http.HandlerFunc(replyPing))
+
+	// Configuration
+	mux.Get(clients.ApiConfigRoute, http.HandlerFunc(replyConfig))
+
+	// Metrics
+	mux.Get(clients.ApiMetricsRoute, http.HandlerFunc(replyMetrics))
+
 	mux.Put(clients.ApiNotifyRegistrationRoute, http.HandlerFunc(replyNotifyRegistrations))
 
 	return mux

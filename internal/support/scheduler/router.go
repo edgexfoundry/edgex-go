@@ -10,28 +10,35 @@ package scheduler
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/pkg/models"
 	"github.com/go-zoo/bone"
-
+	"runtime"
 	"io"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/edgexfoundry/edgex-go/pkg/models"
+	"github.com/edgexfoundry/edgex-go/pkg/clients"
+	"github.com/edgexfoundry/edgex-go/internal"
 )
 
 func LoadRestRoutes() http.Handler {
 
 	mux := bone.New()
 
-	// config
-	mux.Get(internal.ApiConfigRoute, http.HandlerFunc(replyConfig))
+	// Ping Resource
+	mux.Get(clients.ApiPingRoute, http.HandlerFunc(replyPing))
+
+	// Configuration
+	mux.Get(clients.ApiConfigRoute, http.HandlerFunc(replyConfig))
+
+	// Metrics
+	mux.Get(clients.ApiMetricsRoute, http.HandlerFunc(replyMetrics))
 
 	// default api route
 	mv1 := mux.Prefix("/api/v1")
 
-	// ping and info
+	// info
 	mv1.Get("/info/:name", http.HandlerFunc(replyInfo))
-	mv1.Get("/ping", http.HandlerFunc(replyPing))
 
 	// callbacks
 	mv1.Post("/callbacks", http.HandlerFunc(addCallbackAlert))
@@ -49,17 +56,42 @@ func replyPing(w http.ResponseWriter, r *http.Request) {
 }
 
 func replyConfig(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
 
-	w.Header().Add(ContentTypeKey, ContentTypeJsonValue)
-
-	enc := json.NewEncoder(w)
-	err := enc.Encode(Configuration)
-	// Problems encoding
-	if err != nil {
-		LoggingClient.Error(fmt.Sprintf("Error encoding the data: %s", err.Error()))
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	if r.Body != nil {
+		defer r.Body.Close()
 	}
+
+	encode(Configuration, w)
+}
+
+func replyMetrics(w http.ResponseWriter, r *http.Request) {
+
+	var t internal.Telemetry
+
+	if r.Body != nil {
+		defer r.Body.Close()
+	}
+
+	// The micro-service is to be considered the System Of Record (SOR) in terms of accurate information.
+	// Fetch metrics for the scheduler service.
+	var rtm runtime.MemStats
+
+	// Read full memory stats
+	runtime.ReadMemStats(&rtm)
+
+	// Miscellaneous memory stats
+	t.Alloc = rtm.Alloc
+	t.TotalAlloc = rtm.TotalAlloc
+	t.Sys = rtm.Sys
+	t.Mallocs = rtm.Mallocs
+	t.Frees = rtm.Frees
+
+	// Live objects = Mallocs - Frees
+	t.LiveObjects = t.Mallocs - t.Frees
+
+	encode(t, w)
+
+	return
 }
 
 func replyInfo(w http.ResponseWriter, r *http.Request) {
@@ -249,3 +281,16 @@ func removeCallbackAlert(rw http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Helper function for encoding things for returning from REST calls
+func encode(i interface{}, w http.ResponseWriter) {
+	w.Header().Add("Content-Type", "application/json")
+
+	enc := json.NewEncoder(w)
+	err := enc.Encode(i)
+	// Problems encoding
+	if err != nil {
+		LoggingClient.Error("Error encoding the data: " + err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}

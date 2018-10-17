@@ -19,15 +19,28 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"runtime"
 
+	"github.com/gorilla/mux"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
-	"github.com/gorilla/mux"
+	"github.com/edgexfoundry/edgex-go/pkg/clients"
+	"github.com/edgexfoundry/edgex-go/internal"
 )
 
 func LoadRestRoutes() *mux.Router {
 	r := mux.NewRouter()
+
+	// Ping Resource
+	r.HandleFunc(clients.ApiPingRoute, pingHandler).Methods(http.MethodGet)
+
+	// Configuration
+	r.HandleFunc(clients.ApiConfigRoute, configHandler).Methods(http.MethodGet)
+
+	// Metrics
+	r.HandleFunc(clients.ApiMetricsRoute, metricsHandler).Methods(http.MethodGet)
+
 	b := r.PathPrefix("/api/v1").Subrouter()
 
 	// EVENTS
@@ -72,14 +85,6 @@ func LoadRestRoutes() *mux.Router {
 	vd.HandleFunc("/label/{label}", valueDescriptorByLabelHandler).Methods(http.MethodGet)
 	vd.HandleFunc("/devicename/{device}", valueDescriptorByDeviceHandler).Methods(http.MethodGet)
 	vd.HandleFunc("/deviceid/{id}", valueDescriptorByDeviceIdHandler).Methods(http.MethodGet)
-
-	// Ping Resource
-	// /api/v1/ping
-	b.HandleFunc("/ping", pingHandler)
-
-	//Config Resource
-	// /api/v1/config
-	b.HandleFunc("/config", configHandler)
 
 	return r
 }
@@ -587,7 +592,7 @@ func scrubHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodDelete:
-		count, err:= scrubPushedEvents()
+		count, err := scrubPushedEvents()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -597,4 +602,53 @@ func scrubHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(strconv.Itoa(count)))
 	}
+}
+
+// Test if the service is working
+func pingHandler(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+
+	_, err := w.Write([]byte("pong"))
+	if err != nil {
+		LoggingClient.Error("Error writing pong: " + err.Error())
+	}
+}
+
+func configHandler(w http.ResponseWriter, r *http.Request) {
+
+	if r.Body != nil {
+		defer r.Body.Close()
+	}
+
+	encode(Configuration, w)
+}
+
+func metricsHandler(w http.ResponseWriter, r *http.Request) {
+
+	var t internal.Telemetry
+
+	if r.Body != nil {
+		defer r.Body.Close()
+	}
+
+	// The micro-service is to be considered the System Of Record (SOR) in terms of accurate information.
+	// Fetch metrics for the data service.
+	var rtm runtime.MemStats
+
+	// Read full memory stats
+	runtime.ReadMemStats(&rtm)
+
+	// Miscellaneous memory stats
+	t.Alloc = rtm.Alloc
+	t.TotalAlloc = rtm.TotalAlloc
+	t.Sys = rtm.Sys
+	t.Mallocs = rtm.Mallocs
+	t.Frees = rtm.Frees
+
+	// Live objects = Mallocs - Frees
+	t.LiveObjects = t.Mallocs - t.Frees
+
+	encode(t, w)
+
+	return
 }
