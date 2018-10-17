@@ -24,19 +24,8 @@ if [ ! -z "$JENKINS_URL" ]; then
     fi
 fi
 
-# build the container image - switch on which architecture we're on
-# note that for now the armhf and i386 builds fail, but if we ever support those targets
-# this will "just work"
-ARCH=$(arch)
-if [ $ARCH = "x86_64" ] ; then
-    docker build -t edgex-snap-builder:latest -f ${SCRIPT_DIR}/Dockerfile.amd64.build $GIT_ROOT
-elif [ $ARCH = "armhf" ] ; then
-    docker build -t edgex-snap-builder:latest -f ${SCRIPT_DIR}/Dockerfile.armhf.build $GIT_ROOT
-elif [ $ARCH = "aarch64" ] ; then
-    docker build -t edgex-snap-builder:latest -f ${SCRIPT_DIR}/Dockerfile.arm64.build $GIT_ROOT
-elif [ $ARCH = "i386" ] ; then
-    docker build -t edgex-snap-builder:latest -f ${SCRIPT_DIR}/Dockerfile.i386.build $GIT_ROOT
-fi
+# build the container image - providing the relevant architecture base image
+docker build -t edgex-snap-builder:latest -f ${SCRIPT_DIR}/Dockerfile.build $GIT_ROOT
 
 # delete the login file we copied to the git root so it doesn't persist around
 rm $GIT_ROOT/edgex-snap-store-login
