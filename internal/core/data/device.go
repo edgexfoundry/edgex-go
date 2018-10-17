@@ -14,6 +14,7 @@
 package data
 
 import (
+	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 )
 
@@ -82,4 +83,24 @@ func updateDeviceServiceLastReportedConnected(device string) {
 
 	msc.UpdateLastConnected(s.Service.Id.Hex(), t)
 	msc.UpdateLastReported(s.Service.Id.Hex(), t)
+}
+
+
+func checkMaxLimit(limit int) error {
+	if limit > Configuration.Service.ReadMaxLimit {
+		LoggingClient.Error(maxExceededString)
+		return errors.NewErrLimitExceeded(limit)
+	}
+
+	return nil
+}
+
+func checkDevice(device string) error {
+	if Configuration.MetaDataCheck {
+		_, err := mdc.CheckForDevice(device)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
