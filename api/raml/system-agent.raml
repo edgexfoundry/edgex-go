@@ -29,7 +29,7 @@ schemas:
         body:
             application/json:
                 schema: operation
-                example: '{"action":"STOP","services":["edgex-support-notifications","edgex-core-data"],"params":["graceful","graceful"]}'
+                example: '{"action":"stop","services":["edgex-support-notifications","edgex-core-data"],"params":["graceful"]}'
         responses:
             "500":
                 description: for unknown or unanticipated issues.
