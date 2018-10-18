@@ -332,7 +332,7 @@ parts:
        "$SNAPCRAFT_PART_INSTALL/config/support-logging/res/configuration.toml"
 
       cat "./cmd/support-notifications/res/configuration.toml" | \
-        sed -e s:./logs/edgex-support-notifications.log:/var/snap/edgexfoundry/common/edgex-support-notifications.log: \
+        sed -e s:./logs/edgex-support-notifications.log:\$SNAP_COMMON/support-notifications.log: \
             -e s:'http\://localhost\:48061/api/v1/logs':: > \
        "$SNAPCRAFT_PART_INSTALL/config/support-notifications/res/configuration.toml"
 
