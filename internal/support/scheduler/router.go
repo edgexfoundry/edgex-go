@@ -11,14 +11,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/go-zoo/bone"
-	"runtime"
 	"io"
 	"io/ioutil"
 	"net/http"
+	"runtime"
 
-	"github.com/edgexfoundry/edgex-go/pkg/models"
-	"github.com/edgexfoundry/edgex-go/pkg/clients"
 	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/pkg/clients"
+	"github.com/edgexfoundry/edgex-go/pkg/models"
 )
 
 func LoadRestRoutes() http.Handler {
@@ -40,6 +40,9 @@ func LoadRestRoutes() http.Handler {
 	// info
 	mv1.Get("/info/:name", http.HandlerFunc(replyInfo))
 
+	// flush reload schedules
+	mv1.Get("/flush", http.HandlerFunc(replyFlushScheduler))
+
 	// callbacks
 	mv1.Post("/callbacks", http.HandlerFunc(addCallbackAlert))
 	mv1.Put("/callbacks", http.HandlerFunc(updateCallbackAlert))
@@ -48,7 +51,7 @@ func LoadRestRoutes() http.Handler {
 	return mux
 }
 
-func replyPing(w http.ResponseWriter, r *http.Request) {
+func replyPing(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set(ContentTypeKey, ContentTypeJsonValue)
 	w.WriteHeader(http.StatusOK)
 	str := `{"value" : "pong"}`
@@ -115,6 +118,22 @@ func replyInfo(w http.ResponseWriter, r *http.Request) {
 		LoggingClient.Error(fmt.Sprintf("Error encoding the data: %s", err.Error()))
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+}
+
+func replyFlushScheduler(w http.ResponseWriter, r *http.Request){
+	defer r.Body.Close()
+
+	w.Header().Add(ContentTypeKey,ContentTypeJsonValue)
+
+	err := AddSchedulers()
+	if err != nil{
+		LoggingClient.Error(fmt.Sprintf("Error reloading new schedules, scheduleEvents,  or addressables: %s", err.Error()))
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	w.WriteHeader(http.StatusOK)
+	str := `{"flush" : "success"}`
+	io.WriteString(w, str)
 }
 
 func addCallbackAlert(rw http.ResponseWriter, r *http.Request) {

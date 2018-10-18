@@ -8,6 +8,7 @@ package scheduler
 
 import (
 	"fmt"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 	"sync"
 	"time"
 
@@ -16,11 +17,16 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/consul"
 	"github.com/edgexfoundry/edgex-go/pkg/clients"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
+	"github.com/edgexfoundry/edgex-go/pkg/clients/metadata"
+	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
 	"github.com/pkg/errors"
 )
 
 var Configuration *ConfigurationStruct
 var LoggingClient logger.LoggingClient
+var msc metadata.ScheduleClient
+var msec metadata.ScheduleEventClient
+var mac metadata.AddressableClient
 
 var chConfig chan interface{} //A channel for use by ConsulDecoder in detecting configuration mods.
 var ticker = time.NewTicker(time.Duration(ScheduleInterval) * time.Millisecond)
@@ -49,6 +55,8 @@ func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup,
 				// Setup Logging
 				logTarget := setLoggingTarget()
 				LoggingClient = logger.NewClient(internal.SupportSchedulerServiceKey, Configuration.Logging.EnableRemote, logTarget)
+				//Initialize service clients
+				initializeClients(useConsul)
 			}
 		}
 
@@ -177,4 +185,28 @@ func setLoggingTarget() string {
 		return Configuration.Clients["Logging"].Url() + clients.ApiLoggingRoute
 	}
 	return Configuration.Logging.File
+}
+
+func initializeClients(useConsul bool) {
+	// Create metadata clients
+
+	params := types.EndpointParams{
+		ServiceKey:  internal.SupportSchedulerServiceKey,
+		Path:        clients.ApiScheduleRoute,
+		UseRegistry: useConsul,
+		Url:         Configuration.Clients["Metadata"].Url() + clients.ApiScheduleRoute,
+		Interval:    Configuration.Service.ClientMonitor,
+	}
+	// metadata Schedule client
+	msc = metadata.NewScheduleClient(params, startup.Endpoint{})
+
+	// metadata ScheduleEvent client
+	params.Path = clients.ApiScheduleEventRoute
+	params.Url = Configuration.Clients["Metadata"].Url() + clients.ApiScheduleEventRoute
+	msec = metadata.NewScheduleEventClient(params, startup.Endpoint{})
+
+	// metadata Addressable client
+	params.Path = clients.ApiAddressableRoute
+	params.Url = Configuration.Clients["Metadata"].Url() + clients.ApiAddressableRoute
+	mac = metadata.NewAddressableClient(params,startup.Endpoint{})
 }
