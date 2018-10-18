@@ -55,6 +55,14 @@ if [ "$SUPPORT_SCHEDULER" = "y" ] ; then
     fi
 fi
 
+if [ $SUPPORT_RULESENGINE = "y" ] ; then
+    pid=`pgrep -f support-rulesengine`
+
+    if [ ! -z $pid ] && [ $pid != "" ] ; then
+	kill_service $pid "support-rulesengine"
+    fi
+fi
+
 if [ "$CORE_COMMAND" = "y" ] ; then
     pid=$(pgrep -f core-command)
 
