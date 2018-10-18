@@ -1,50 +1,54 @@
-ConsulProfilesActive = 'go'
-ReadMaxLimit = 100
-MetaDataCheck = false
-ValidateCheck = false
-AddToEventQueue = true
-PersistData = true
-AppOpenMsg = 'This is the Core Data Micro Service'
-FormatSpecifier = '%(\\d=\\$)?([-#= 0(\\<]*)?(\\d=)?(\\.\\d=)?([tT])?([a-zA-Z%])'
-MsgPubType = 'zero'
-ServicePort = 48080
-ServiceTimeout = 5000
-ServiceAddress = 'localhost'
 DeviceUpdateLastConnected = false
+MetaDataCheck = false
+PersistData = true
 ServiceUpdateLastConnected = false
-DBType = 'mongodb'
-MongoDBUserName = 'core'
-MongoDBPassword = 'password'
-MongoDatabaseName = 'coredata'
-MongoDBHost = 'localhost'
-MongoDBPort = 27017
-MongoDBConnectTimeout = 60000
-ConsulHost = 'localhost'
-ConsulCheckAddress = 'http://localhost:48080/api/v1/ping'
-ConsulPort = 8500
+ValidateCheck = false
+
+[Service]
+BootTimeout = 30000
+ClientMonitor = 15000
 CheckInterval = '10s'
-EnableRemoteLogging = false
-LoggingFile = './logs/edgex-core-data.log'
-LoggingRemoteURL = 'http://localhost:48061/api/v1/logs'
-MetaAddressableURL = 'http://localhost:48081/api/v1/addressable'
-MetaAddressablePath = '/api/v1/addressable'
-MetaDeviceServiceURL = 'http://localhost:48081/api/v1/deviceservice'
-MetaDeviceServicePath = '/api/v1/deviceservice'
-MetaDeviceProfileURL = 'http://localhost:48081/api/v1/deviceprofile'
-MetaDeviceProfilePath = '/api/v1/deviceprofile'
-MetaDeviceURL = 'http://localhost:48081/api/v1/device'
-MetaDevicePath = '/api/v1/device'
-MetaDeviceReportURL = 'http://localhost:48081/api/v1/devicereport'
-MetaDeviceReportPath = '/api/v1/devicereport'
-MetaCommandURL = 'http://localhost:48081/api/v1/command'
-MetaCommandPath = '/api/v1/command'
-MetaEventURL = 'http://localhost:48081/api/v1/event'
-MetaEventPath = '/api/v1/event'
-MetaScheduleURL = 'http://localhost:48081/api/v1/schedule'
-MetaSchedulePath = '/api/v1/schedule'
-MetaProvisionWatcherURL = 'http://localhost:48081/api/v1/provisionwatcher'
-MetaProvisionWatcherPath = '/api/v1/provisionwatcher'
-MetaPingURL = 'http://localhost:48081/api/v1/ping'
-MetaPingPath = '/api/v1/ping'
-ActiveMQBroker = 'tcp://localhost:61616'
-ZeroMQAddressPort = 'tcp://*:5563'
+Host = 'localhost'
+Port = 48080
+Protocol = 'http'
+ReadMaxLimit = 100
+StartupMsg = 'This is the Core Data Microservice'
+Timeout = 5000
+
+[Registry]
+Host = 'localhost'
+Port = 8500
+Type = 'consul'
+
+[Logging]
+EnableRemote = false
+File = './logs/edgex-core-data.log'
+
+[Clients]
+  [Clients.Metadata]
+  Protocol = 'http'
+  Host = 'localhost'
+  Port = 48081
+
+  [Clients.Logging]
+  Protocol = 'http'
+  Host = 'localhost'
+  Port = 48061
+
+[Databases]
+  [Databases.Primary]
+  Host = 'localhost'
+  Name = 'coredata'
+  Password = ''
+  Port = 27017
+  Username = ''
+  Timeout = 5000
+  Type = 'mongodb'
+
+[MessageQueue]
+Protocol = 'tcp'
+Host = '*'
+Port = 5563
+Type = 'zero'
+
+

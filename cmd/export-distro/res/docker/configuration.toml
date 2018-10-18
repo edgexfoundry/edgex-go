@@ -1,0 +1,58 @@
+MarkPushed = false
+
+[Service]
+BootTimeout = 30000
+ClientMonitor = 15000
+CheckInterval = '10s'
+Host = 'edgex-export-distro'
+Port = 48070
+Protocol = 'http'
+ReadMaxLimit = 100
+StartupMsg = 'This is the Export Distro Microservice'
+Timeout = 5000
+
+[Registry]
+Host = 'edgex-core-consul'
+Port = 8500
+Type = 'consul'
+
+[Logging]
+EnableRemote = false
+File = '/edgex/logs/edgex-export-distro.log'
+
+[Clients]
+  [Clients.Export]
+  Protocol = 'http'
+  Host = 'edgex-export-client'
+  Port = 48071
+
+  [Clients.Logging]
+  Protocol = 'http'
+  Host = 'edgex-support-logging'
+  Port = 48061
+
+  [Clients.CoreData]
+  Protocol = 'http'
+  Host = 'edgex-core-data'
+  Port = 48080
+
+[Certificates]
+  [Certificates.MQTTS]
+  Cert = 'dummy.crt'
+  Key = 'dummy.key'
+
+  [Certificates.AWS]
+  Cert = 'dummy.crt'
+  Key = 'dummy.key'
+
+[MessageQueue]
+Protocol = 'tcp'
+Host = 'edgex-core-data'
+Port = 5563
+Type = 'zero'
+
+[AnalyticsQueue]
+Protocol = 'tcp'
+Host = '*'
+Port = 5566
+Type = 'zero'

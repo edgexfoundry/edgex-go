@@ -4,7 +4,7 @@ Get EdgeX Foundry - Users
 ============
 Introduction
 ============
-These instructions are for Users to obtain and run EdgeX Foundry.  (Developers should read:  Get EdgeX Foundry - Developers)
+These instructions are for Users to obtain and run EdgeX Foundry. (Developers should read: :doc:`../Ch-GettingStartedDevelopers`) 
 
 EdgeX Foundry is a collection of more than a dozen microservices that are deployed to provide minimal edge platform capability. EdgeX Foundry microservice source code can be downloaded and built into deployment artifacts, but if you are not a Developer, or if you do not have a specific need to run EdgeX Foundry "natively," you do not need to download source code. 
 
@@ -31,9 +31,11 @@ EdgeX Foundry is an operating system (OS)-agnostic and hardware (HW)-agnostic ed
 =======================
 Get & Run EdgeX Foundry
 =======================
+
 -------------------------------
 Install Docker & Docker Compose
 -------------------------------
+|
 .. image:: EdgeX_GettingStartedUsrInstallDocker.png
 
 To run Dockerized EdgeX Foundry, you need to install Docker.  See https://docs.docker.com/install/ to learn how to obtain and install Docker.  If you are new to using Docker, the same web site provides you additional information.  The following short video has is also very informative https://www.youtube.com/watch?time_continue=3&v=VhabrYF1nms
@@ -47,6 +49,7 @@ You do not need to be an expert with Docker to obtain and run EdgeX Foundry.  Th
 ---------------------------------------
 Download the EdgeX Foundry Compose File
 ---------------------------------------
+|
 .. image:: EdgeX_GettingStartedUsrDownloadDockerCompose.png
 
 After installing Docker and Docker Compose, you need the Docker Compose file that is a manifest of all the EdgeX Foundry microservices.  EdgeX Foundry has over 12 microservices, each deployed in their own Docker container, in a typical EdgeX Foundry deployment. 
@@ -57,7 +60,7 @@ Getting and running EdgeX Foundry microservices can also be accomplished more ea
 
 The collection of the EdgeX Foundry Docker compose files are found here:  https://github.com/edgexfoundry/developer-scripts/tree/master/compose-files
 
-Note that most of the Docker Compose files carry a specific version identifier (like california-0.6.0) in the file name.  These Compose files help obtain the specific version of EdgeX.  The docker-compose.yml file will pull the latest tagged EdgeX microservices from Docker Hub.  The docker-compose-nexus.yml will pull the latest microservice images from the developer's Nexus registry which contains the latest built artifacts.  These are typically work-in-progress microservice artifacts and should not be used by most end users.  It is recommended that If you use the lastest version of EdgeX Foundry.  As of this writing, the latest version can be found here: https://github.com/edgexfoundry/developer-scripts/blob/master/compose-files/docker-compose-california-0.6.0.yml
+Note that most of the Docker Compose files carry a specific version identifier (like california-0.6.0) in the file name.  These Compose files help obtain the specific version of EdgeX.  The docker-compose.yml file will pull the latest tagged EdgeX microservices from Docker Hub.  The docker-compose-nexus.yml will pull the latest microservice images from the developer's Nexus registry which contains the latest built artifacts.  These are typically work-in-progress microservice artifacts and should not be used by most end users.  It is recommended that you use the lastest version of EdgeX Foundry.  As of this writing, the latest version can be found here: https://github.com/edgexfoundry/developer-scripts/blob/master/compose-files/docker-compose-california-0.6.0.yml
 
 A Docker Compose file is a manifest file, which lists:
 
@@ -68,6 +71,7 @@ A Docker Compose file is a manifest file, which lists:
 -----------------
 Run EdgeX Foundry
 -----------------
+|
 .. image:: EdgeX_GettingStartedUsrRunEdgex.png
 
 Now that you have the EdgeX Foundry Docker Compose file, you are ready to run EdgeX Foundry. Follow these steps to get the container images and start EdgeX Foundry!
@@ -209,7 +213,7 @@ Each EdgeX Foundry microservice has been built to respond to a "ping" HTTP reque
 Below is a list of the EdgeX Foundry microservices, their ports, and "ping" URLs.
 
 +---------------------------------+------------------------------+----------------------------+-------------+-----------------------------------+
-| **EdgeX Foundry MicroService**  | **Docker Compose Container** | **Container Name**         | **Port**    |  **Ping URL**                     |
+| **EdgeX Foundry Microservice**  | **Docker Compose Container** | **Container Name**         | **Port**    |  **Ping URL**                     |
 +=================================+==============================+============================+=============+===================================+
 | Core Command                    |  command                     | edgex-core-command         | 48082       | http://[host]:48082/api/v1/ping   |    
 +---------------------------------+------------------------------+----------------------------+-------------+-----------------------------------+

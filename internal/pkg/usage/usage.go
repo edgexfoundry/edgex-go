@@ -27,9 +27,25 @@ Common Options:
     -h, --help                      Show this message
 `
 
+var configSeedUsageStr = `
+Usage: %s [options]
+Server Options:
+    -p, --profile <name>            Indicate configuration profile other than default
+    -r, --props <dir>               Provide alternate location for legacy application.properties files
+    -c, --cmd <dir>                 Provide absolute path to "cmd" directory containing EdgeX services
+Common Options:
+    -h, --help                      Show this message
+`
+
 // usage will print out the flag options for the server.
 func HelpCallback() {
 	msg := fmt.Sprintf(usageStr, os.Args[0])
+	fmt.Printf("%s\n", msg)
+	os.Exit(0)
+}
+
+func HelpCallbackConfigSeed() {
+	msg := fmt.Sprintf(configSeedUsageStr, os.Args[0])
 	fmt.Printf("%s\n", msg)
 	os.Exit(0)
 }

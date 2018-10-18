@@ -98,7 +98,7 @@ The Virtual Device Service adopts a normal MVC design pattern, separating logic 
 **Interface Layer**--interacting with other microservices.
 Controllers provide the RESTful API. The implementation is located in org.edgexfoundry.device.virtual.controller package.
 Scheduled Collection Tasks is a set of async tasks which is executed periodically, and they are created for each virtual resource (GET Command).
-See org.edgexfoundry.device.virtual.scheduling package for the detailed implementation. Also, org.edgexfoundry.device.virtual.scheduling.Scheduler reads Schedule and ScheduleEvent from Meta Data Micro Service and arranges the collection tasks.
+See org.edgexfoundry.device.virtual.scheduling package for the detailed implementation. Also, org.edgexfoundry.device.virtual.scheduling.Scheduler reads Schedule and ScheduleEvent from Meta Data Microservice and arranges the collection tasks.
 
 Tasks execution logic is located in org.edgexfoundry.device.virtual.service.impl.CollectionTaskExecutorImpl, and the tasks creation behavior is located in org.edgexfoundry.device.virtual.service.impl.VirtualResourceManagerImpl.createDefaultRecords().
 
@@ -119,7 +119,7 @@ Users can define any virtual device profile in YAML format, if the structure is 
 
 .. image:: EdgeX_VirtualDeviceProfile.png
 
-In addition to Profile Definition, ValueDescriptors are defined in the "deviceResources.properties" part of the profile definition.  The structure needs to conform with the ProfileProperty in "Device Profile" (in the graphic below the "Device and Device Profile Model"), and the ValueDescriptors will be created and send to the Core Data Micro Service during the Device creation callback process.
+In addition to Profile Definition, ValueDescriptors are defined in the "deviceResources.properties" part of the profile definition.  The structure needs to conform with the ProfileProperty in "Device Profile" (in the graphic below the "Device and Device Profile Model"), and the ValueDescriptors will be created and send to the Core Data Microservice during the Device creation callback process.
 
 By assigning the application property "application.auto-create-device" = true (the default value is true), the Virtual Device Service creates Device instances for each profile automatically during starting up, and the Device instances start sending events and readings to Core Data Microservice.
 

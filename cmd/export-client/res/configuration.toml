@@ -1,16 +1,41 @@
-Hostname = '127.0.0.1'
-Port = 48071
-DBType = 'mongodb'
-MongoURL = '0.0.0.0'
-MongoUsername = ''
-MongoPassword = ''
-MongoDatabaseName = 'coredata'
-MongoPort = 27017
-MongoConnectTimeout = 5000
-MongoSocketTimeout = 5000
-ConsulHost = 'localhost'
-ConsulPort = 8500
+[Service]
+BootTimeout = 30000
+ClientMonitor = 15000
 CheckInterval = '10s'
-ConsulProfilesActive = 'go'
-DistroHost = 'localhost'
-DistroPort = 48070
+Host = 'localhost'
+Port = 48071
+Protocol = 'http'
+ReadMaxLimit = 100
+StartupMsg = 'This is the Export Client Microservice'
+Timeout = 5000
+
+[Registry]
+Host = 'localhost'
+Port = 8500
+Type = 'consul'
+
+[Logging]
+EnableRemote = false
+File = './logs/edgex-export-client.log'
+
+[Clients]
+  [Clients.Distro]
+  Protocol = 'http'
+  Host = 'localhost'
+  Port = 48070
+
+  [Clients.Logging]
+  Protocol = 'http'
+  Host = 'localhost'
+  Port = 48061
+
+[Databases]
+  [Databases.Primary]
+  Host = 'localhost'
+  Name = 'exportclient'
+  Password = ''
+  Port = 27017
+  Username = ''
+  Timeout = 5000
+  Type = 'mongodb'
+

@@ -1,34 +1,81 @@
-# EdgeX Foundry Go Services
-[![Go Report Card](https://goreportcard.com/badge/github.com/edgexfoundry/edgex-go)](https://goreportcard.com/report/github.com/edgexfoundry/edgex-go) [![license](https://img.shields.io/badge/license-Apache%20v2.0-blue.svg)](LICENSE)
+# EdgeX Foundry Services
+[![Go Report Card](https://goreportcard.com/badge/github.com/edgexfoundry/edgex-go)](https://goreportcard.com/report/github.com/edgexfoundry/edgex-go)
+[![license](https://img.shields.io/badge/license-Apache%20v2.0-blue.svg)](LICENSE)
 
-Go implementation of EdgeX services.
+EdgeX Foundry is a vendor-neutral open source project hosted by The Linux Foundation building a common open framework for IoT edge computing.  At the heart of the project is an interoperability framework hosted within a full hardware- and OS-agnostic reference software platform to enable an ecosystem of plug-and-play components that unifies the marketplace and accelerates the deployment of IoT solutions.  This repository contains the Go implementation of EdgeX Foundry microservices.  It also includes files for building the services, containerizing the services, and initializing (bootstrapping) the services.
 
-All edgex go [repos](https://github.com/edgexfoundry/) have been merged into this repo.
+# Install and Deploy Native
 
-The script [merge-edgex-go.sh](https://gist.github.com/feclare/8dba191e8cf77864fe5eed38b380f13a) has been used to generate this repo.
+## Prerequisites
+### pkg-config
+`go get github.com/rjeczalik/pkgconfig/cmd/pkg-config`
 
-## Install and Deploy
+### ZeroMQ
+Several EdgeX Foundry services depend on ZeroMQ for communications by default.
 
-EdgeX Go code depends on ZMQ library. Make sure that you have dev version of the library
-installed on your host.
+The easiest way to get and install ZeroMQ on Linux is to use or follow the following setup script:  https://gist.github.com/katopz/8b766a5cb0ca96c816658e9407e83d00.
 
-For example, in the case of Debian Linux system you can:
+For MacOS, use brew: `brew install zeromq`. Please note that the necessary `pc` file will need to be added to the `PKG_CONFIG_PATH` environment variable. For example `PKG_CONFIG_PATH=/usr/local/Cellar/zeromq/4.2.5/lib/pkgconfig/`
+
+**Note**: Setup of the ZeroMQ library is not supported on Windows plaforms.
+
+## Installation and Execution
+To fetch the code and build the microservice execute the following:
+
 ```
-sudo apt-get install libzmq3-dev
-```
-
-To fetch the code and compile the microservices execute:
-
-```
+cd $GOPATH/src
 go get github.com/edgexfoundry/edgex-go
 cd $GOPATH/src/github.com/edgexfoundry/edgex-go
-glide install
+# pull the 3rd party / vendor packages
+make prepare
+# build the microservices
 make build
+# run the services
+make run
 ```
-## Snap Package
-Edgex Foundry is also available as a snap package, for more details
-on the snap, including how to install it, please refer to [EdgeX snap](https://github.com/edgexfoundry/edgex-go/snap/README.md)
 
+**Note** You will need to have the database running before you execute `make run`. If you don't want to install a database locally, you can bring one up via their respective Docker containers.
+
+# Install and Deploy via Docker Container #
+This project has facilities to create and run Docker containers.
+
+### Prerequisites ###
+See https://docs.docker.com/install/ to learn how to obtain and install Docker.
+
+### Installation and Execution ###
+
+```
+cd $GOPATH/src
+go get github.com/edgexfoundry/edgex-go
+cd $GOPATH/src/github.com/edgexfoundry/edgex-go
+# To create the Docker images
+sudo make docker
+# To run the containers
+sudo make run_docker
+```
+
+# Install and Deploy via Snap Package #
+EdgeX Foundry is also available as a snap package, for more details
+on the snap, including how to install it, please refer to [EdgeX snap](https://github.com/edgexfoundry/edgex-go/blob/master/snap/README.md)
+
+# Docker Hub #
+EdgeX images are kept on organization's [DockerHub page](https://hub.docker.com/u/edgexfoundry/).
+They can be run in orchestration via official [docker-compose.yml](https://github.com/edgexfoundry/developer-scripts/blob/master/compose-files/docker-compose.yml).
+
+The simplest way is to do this via prepared script in `bin` directory:
+```
+cd bin 
+./edgex-docker-launch.sh
+```
+
+### Compiled Binaries
+During development phase, it is important to run compiled binaries (not containers).
+
+There is a script in `bin` directory that can help you launch the whole EdgeX system:
+```
+cd bin
+./edgex-launch.sh
+```
 
 ## Community
 - Chat: https://chat.edgexfoundry.org/home

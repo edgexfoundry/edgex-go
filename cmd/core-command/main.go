@@ -24,14 +24,13 @@ import (
 	"time"
 
 	"github.com/edgexfoundry/edgex-go"
-	"github.com/edgexfoundry/edgex-go/core/command"
 	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
+	"github.com/edgexfoundry/edgex-go/internal/core/command"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
-	"github.com/edgexfoundry/edgex-go/support/logging-client"
+	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
+	"github.com/gorilla/context"
 )
-
-var loggingClient logger.LoggingClient
 
 func main() {
 	start := time.Now()
@@ -45,60 +44,36 @@ func main() {
 	flag.Usage = usage.HelpCallback
 	flag.Parse()
 
-	//Read Configuration
-	configuration := &command.ConfigurationStruct{}
-	err := config.LoadFromFile(useProfile, configuration)
-	if err != nil {
-		logBeforeTermination(err)
+	params := startup.BootParams{UseConsul: useConsul, UseProfile: useProfile, BootTimeout: internal.BootTimeoutDefault}
+	startup.Bootstrap(params, command.Retry, logBeforeInit)
+
+	ok := command.Init(useConsul)
+	if !ok {
+		logBeforeInit(fmt.Errorf("%s: Service bootstrap failed!", internal.CoreCommandServiceKey))
 		return
 	}
 
-	//Determine if configuration should be overridden from Consul
-	var consulMsg string
-	if useConsul {
-		consulMsg = "Loading configuration from Consul..."
-		err := command.ConnectToConsul(*configuration)
-		if err != nil {
-			logBeforeTermination(err)
-			return //end program since user explicitly told us to use Consul.
-		}
-	} else {
-		consulMsg = "Bypassing Consul configuration..."
-	}
+	command.LoggingClient.Info("Service dependencies resolved...")
+	command.LoggingClient.Info(fmt.Sprintf("Starting %s %s ", internal.CoreCommandServiceKey, edgex.Version))
 
-	// Setup Logging
-	logTarget := setLoggingTarget(*configuration)
-	var loggingClient = logger.NewClient(internal.CoreCommandServiceKey, configuration.EnableRemoteLogging, logTarget)
-
-	loggingClient.Info(consulMsg)
-	loggingClient.Info(fmt.Sprintf("Starting %s %s ", internal.CoreCommandServiceKey, edgex.Version))
-
-	command.Init(*configuration, loggingClient, useConsul)
-
-	http.TimeoutHandler(nil, time.Millisecond*time.Duration(configuration.ServiceTimeout), "Request timed out")
-	loggingClient.Info(configuration.AppOpenMsg, "")
+	http.TimeoutHandler(nil, time.Millisecond*time.Duration(command.Configuration.Service.Timeout), "Request timed out")
+	command.LoggingClient.Info(command.Configuration.Service.StartupMsg, "")
 
 	errs := make(chan error, 2)
 	listenForInterrupt(errs)
-	startHttpServer(errs, configuration.ServicePort)
+	startHttpServer(errs, command.Configuration.Service.Port)
+
 	// Time it took to start service
-	loggingClient.Info("Service started in: "+time.Since(start).String(), "")
-	loggingClient.Info("Listening on port: "+strconv.Itoa(configuration.ServicePort), "")
+	command.LoggingClient.Info("Service started in: "+time.Since(start).String(), "")
+	command.LoggingClient.Info("Listening on port: "+strconv.Itoa(command.Configuration.Service.Port), "")
 	c := <-errs
-	loggingClient.Warn(fmt.Sprintf("terminating: %v", c))
+	command.Destruct()
+	command.LoggingClient.Warn(fmt.Sprintf("terminating: %v", c))
 }
 
-func logBeforeTermination(err error) {
-	loggingClient = logger.NewClient(internal.CoreCommandServiceKey, false, "")
-	loggingClient.Error(err.Error())
-}
-
-func setLoggingTarget(conf command.ConfigurationStruct) string {
-	logTarget := conf.LoggingRemoteURL
-	if !conf.EnableRemoteLogging {
-		return conf.LogFile
-	}
-	return logTarget
+func logBeforeInit(err error) {
+	command.LoggingClient = logger.NewClient(internal.CoreCommandServiceKey, false, "")
+	command.LoggingClient.Error(err.Error())
 }
 
 func listenForInterrupt(errChan chan error) {
@@ -112,6 +87,6 @@ func listenForInterrupt(errChan chan error) {
 func startHttpServer(errChan chan error, port int) {
 	go func() {
 		r := command.LoadRestRoutes()
-		errChan <- http.ListenAndServe(":"+strconv.Itoa(port), r)
+		errChan <- http.ListenAndServe(":"+strconv.Itoa(port), context.ClearHandler(r))
 	}()
 }

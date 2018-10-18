@@ -1,32 +1,48 @@
-DBType = 'mongodb'
-MongoDatabaseName = 'metadata'
-MongoDBUserName = ''
-MongoDBPassword = ''
-MongoDBHost = 'localhost'
-MongoDBPort = 27017
-MongoDBConnectTimeout = 5000
-ReadMaxLimit = 100
-Protocol = 'http'
-ServiceAddress = 'localhost'
-ServicePort = 48081
-ServiceTimeout = 5000
-AppOpenMsg = 'This is the EdgeX Core Metadata MicroService'
-ConsulHost = 'localhost'
-ConsulProfilesActive = 'go'
-ConsulCheckAddress = 'http://localhost:48081/api/v1/ping'
+[Service]
+BootTimeout = 30000
+ClientMonitor = 15000
 CheckInterval = '10s'
-ConsulPort = 8500
-EnableRemoteLogging = false
-LoggingFile = './logs/edgex-core-metadata.log'
-LoggingRemoteURL = 'http://localhost:48061/api/v1/logs'
-NotificationPostDeviceChanges = true
-NotificationsSlug = 'device-change-'
-NotificationContent = 'Device update: '
-NotificationSender = 'core-metadata'
-NotificationDescription = 'Metadata device notice'
-NotificationLabel = 'metadata'
-SupportNotificationsHost = 'localhost'
-SupportNotificationsPort = 48060
-SupportNotificationsNotificationURL = 'http://localhost:48060/api/v1/notification'
-SupportNotificationsSubscriptionURL = 'http://localhost:48060/api/v1/subscription'
-SupportNotificationsTransmissionURL = 'http://localhost:48060/api/v1/transmission'
+Host = 'localhost'
+Port = 48081
+Protocol = 'http'
+ReadMaxLimit = 100
+StartupMsg = 'This is the EdgeX Core Metadata Microservice'
+Timeout = 5000
+
+[Registry]
+Host = 'localhost'
+Port = 8500
+Type = 'consul'
+
+[Logging]
+EnableRemote = false
+File = './logs/edgex-core-metadata.log'
+
+[Clients]
+  [Clients.Logging]
+  Protocol = 'http'
+  Host = 'localhost'
+  Port = 48061
+  [Clients.Notifications]
+  Protocol = 'http'
+  Host = 'localhost'
+  Port = 48060
+
+[Databases]
+  [Databases.Primary]
+  Host = 'localhost'
+  Name = 'metadata'
+  Password = ''
+  Port = 27017
+  Username = ''
+  Timeout = 5000
+  Type = 'mongodb'
+
+[Notifications]
+PostDeviceChanges = true
+Slug = 'device-change-'
+Content = 'Device update: '
+Sender = 'core-metadata'
+Description = 'Metadata device notice'
+Label = 'metadata'
+

@@ -65,6 +65,28 @@ cd $CMD/export-distro
 exec -a edgex-export-distro ./export-distro &
 cd $DIR
 
+###
+# Support Notifications
+###
+cd $CMD/support-notifications
+# Add `edgex-` prefix on start, so we can find the process family
+exec -a edgex-support-notifications ./support-notifications &
+cd $DIR
+
+###
+# System Management Agent
+###
+cd $CMD/sys-mgmt-agent
+# Add `edgex-` prefix on start, so we can find the process family
+exec -a edgex-sys-mgmt-agent ./sys-mgmt-agent &
+cd $DIR
+
+# Support Scheduler
+###
+cd $CMD/support-scheduler
+# Add `edgex-` prefix on start, so we can find the process family
+exec -a edgex-support-scheduler ./support-scheduler &
+cd $DIR
 
 trap cleanup EXIT
 

@@ -13,9 +13,25 @@
  *******************************************************************************/
 package internal
 
-const CoreCommandServiceKey = "edgex-core-command"
-const CoreDataServiceKey = "edgex-core-data"
-const CoreMetaDataServiceKey = "edgex-core-metadata"
-const ExportClientServiceKey = "edgex-export-client"
-const ExportDistroServiceKey = "edgex-export-distro"
-const SupportLoggingServiceKey = "edgex-support-logging"
+const (
+	ApiConfigRoute       = "/api/v1/config"
+	ApiPingRoute         = "/api/v1/ping"
+	BootTimeoutDefault   = 30000
+	ClientMonitorDefault = 15000
+	ConfigFileName       = "configuration.toml"
+	ConfigV2Stem         = "config/V2/"
+)
+
+const (
+	ServiceKeyPrefix                = "edgex-"
+	ConfigSeedServiceKey            = "edgex-config-seed"
+	CoreCommandServiceKey           = "edgex-core-command"
+	CoreDataServiceKey              = "edgex-core-data"
+	CoreMetaDataServiceKey          = "edgex-core-metadata"
+	ExportClientServiceKey          = "edgex-export-client"
+	ExportDistroServiceKey          = "edgex-export-distro"
+	SupportLoggingServiceKey        = "edgex-support-logging"
+	SupportNotificationsServiceKey  = "edgex-support-notifications"
+	SystemManagementAgentServiceKey = "edgex-sys-mgmt-agent"
+	SupportSchedulerServiceKey      = "edgex-support-scheduler"
+)

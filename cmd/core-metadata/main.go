@@ -24,14 +24,13 @@ import (
 	"time"
 
 	"github.com/edgexfoundry/edgex-go"
-	"github.com/edgexfoundry/edgex-go/core/metadata"
 	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
-	"github.com/edgexfoundry/edgex-go/support/logging-client"
+	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
+	"github.com/gorilla/context"
 )
-
-var loggingClient logger.LoggingClient
 
 func main() {
 	start := time.Now()
@@ -45,66 +44,36 @@ func main() {
 	flag.Usage = usage.HelpCallback
 	flag.Parse()
 
-	//Read Configuration
-	configuration := &metadata.ConfigurationStruct{}
-	err := config.LoadFromFile(useProfile, configuration)
-	if err != nil {
-		logBeforeTermination(err)
+	params := startup.BootParams{UseConsul: useConsul, UseProfile: useProfile, BootTimeout: internal.BootTimeoutDefault}
+	startup.Bootstrap(params, metadata.Retry, logBeforeInit)
+
+	ok := metadata.Init(useConsul)
+	if !ok {
+		logBeforeInit(fmt.Errorf("%s: Service bootstrap failed!", internal.CoreMetaDataServiceKey))
 		return
 	}
 
-	//Determine if configuration should be overridden from Consul
-	var consulMsg string
-	if useConsul {
-		consulMsg = "Loading configuration from Consul..."
-		err := metadata.ConnectToConsul(*configuration)
-		if err != nil {
-			logBeforeTermination(err)
-			return //end program since user explicitly told us to use Consul.
-		}
-	} else {
-		consulMsg = "Bypassing Consul configuration..."
-	}
+	metadata.LoggingClient.Info("Service dependencies resolved...")
+	metadata.LoggingClient.Info(fmt.Sprintf("Starting %s %s ", internal.CoreMetaDataServiceKey, edgex.Version))
 
-	// Setup Logging
-	logTarget := setLoggingTarget(*configuration)
-	loggingClient = logger.NewClient(internal.CoreMetaDataServiceKey, configuration.EnableRemoteLogging, logTarget)
-
-	loggingClient.Info(consulMsg)
-	loggingClient.Info(fmt.Sprintf("Starting %s %s ", internal.CoreMetaDataServiceKey, edgex.Version))
-
-	err = metadata.Init(*configuration, loggingClient)
-	if err != nil {
-		loggingClient.Error(fmt.Sprintf("call to init() failed: %v", err.Error()))
-		return
-	}
-
-	http.TimeoutHandler(nil, time.Millisecond*time.Duration(configuration.ServiceTimeout), "Request timed out")
-	loggingClient.Info(configuration.AppOpenMsg, "")
+	http.TimeoutHandler(nil, time.Millisecond*time.Duration(metadata.Configuration.Service.Timeout), "Request timed out")
+	metadata.LoggingClient.Info(metadata.Configuration.Service.StartupMsg, "")
 
 	errs := make(chan error, 2)
 	listenForInterrupt(errs)
-	startHttpServer(errs, configuration.ServicePort)
+	startHttpServer(errs, metadata.Configuration.Service.Port)
 
 	// Time it took to start service
-	loggingClient.Info("Service started in: "+time.Since(start).String(), "")
-	loggingClient.Info("Listening on port: " + strconv.Itoa(configuration.ServicePort))
+	metadata.LoggingClient.Info("Service started in: "+time.Since(start).String(), "")
+	metadata.LoggingClient.Info("Listening on port: " + strconv.Itoa(metadata.Configuration.Service.Port))
 	c := <-errs
 	metadata.Destruct()
-	loggingClient.Warn(fmt.Sprintf("terminating: %v", c))
+	metadata.LoggingClient.Warn(fmt.Sprintf("terminating: %v", c))
 }
 
-func logBeforeTermination(err error) {
-	loggingClient = logger.NewClient(internal.CoreMetaDataServiceKey, false, "")
-	loggingClient.Error(err.Error())
-}
-
-func setLoggingTarget(conf metadata.ConfigurationStruct) string {
-	logTarget := conf.LoggingRemoteURL
-	if !conf.EnableRemoteLogging {
-		return conf.LoggingFile
-	}
-	return logTarget
+func logBeforeInit(err error) {
+	l := logger.NewClient(internal.CoreMetaDataServiceKey, false, "")
+	l.Error(err.Error())
 }
 
 func listenForInterrupt(errChan chan error) {
@@ -118,6 +87,6 @@ func listenForInterrupt(errChan chan error) {
 func startHttpServer(errChan chan error, port int) {
 	go func() {
 		r := metadata.LoadRestRoutes()
-		errChan <- http.ListenAndServe(":"+strconv.Itoa(port), r)
+		errChan <- http.ListenAndServe(":"+strconv.Itoa(port), context.ClearHandler(r))
 	}()
 }
