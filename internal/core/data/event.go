@@ -42,19 +42,26 @@ func countEventsByDevice(device string) (int, error) {
 }
 
 func deleteEventsByAge(age int64) (int, error) {
-	events, err := dbClient.EventsOlderThanAge(age)
+	expireDate := (db.MakeTimestamp()) - age
+	count, err := dbClient.EventsCountOlderThanAge(expireDate)
 	if err != nil {
 		return -1, err
 	}
 
-	// Delete all the events
-	count := len(events)
-	for _, event := range events {
-		if err = deleteEvent(event); err != nil {
-			return -1, err
+	deleteOldCh <- expireDate
+
+	return count, nil
+}
+
+func DeleteOldEvents() {
+	for {
+		expireTime := <- deleteOldCh
+
+		err := dbClient.DeleteOldEvents(expireTime)
+		if err != nil {
+			LoggingClient.Error(err.Error())
 		}
 	}
-	return count, nil
 }
 
 func getEvents(limit int) ([]models.Event, error) {
@@ -253,21 +260,24 @@ func deleteEvents(deviceId string) (int, error) {
 func scrubPushedEvents()(int, error) {
 	LoggingClient.Info("Scrubbing events.  Deleting all events that have been pushed")
 
-	// Get the events
-	events, err := dbClient.EventsPushed()
+	current := db.MakeTimestamp()
+	count, err := dbClient.EventsPushedCount(current)
 	if err != nil {
-		LoggingClient.Error(err.Error())
-		return 0, err
+		return -1, err
 	}
 
-	// Delete all the events
-	count := len(events)
-	for _, event := range events {
-		if err = deleteEvent(event); err != nil {
-			LoggingClient.Error(err.Error())
-			return 0, err
-		}
-	}
+	scrubPushedCh <- current
 
 	return count, nil
+}
+
+func DeletePushedEvents() {
+	for {
+		time := <- scrubPushedCh
+
+		err := dbClient.DeletePushedEvents(time)
+		if err != nil {
+			LoggingClient.Error(err.Error())
+		}
+	}
 }
