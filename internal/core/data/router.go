@@ -18,16 +18,16 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"strconv"
 	"runtime"
+	"strconv"
 
-	"github.com/gorilla/mux"
+	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+	"github.com/edgexfoundry/edgex-go/pkg/clients"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
-	"github.com/edgexfoundry/edgex-go/pkg/clients"
-	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+	"github.com/gorilla/mux"
 )
 
 func LoadRestRoutes() *mux.Router {
@@ -42,12 +42,9 @@ func LoadRestRoutes() *mux.Router {
 	// Metrics
 	r.HandleFunc(clients.ApiMetricsRoute, metricsHandler).Methods(http.MethodGet)
 
-	b := r.PathPrefix("/api/v1").Subrouter()
-
-	// EVENTS
-	// /api/v1/event
-	b.HandleFunc("/event", eventHandler).Methods(http.MethodGet, http.MethodPut, http.MethodPost)
-	e := b.PathPrefix("/event").Subrouter()
+	// Events
+	r.HandleFunc(clients.ApiEventRoute, eventHandler).Methods(http.MethodGet, http.MethodPut, http.MethodPost)
+	e := r.PathPrefix(clients.ApiEventRoute).Subrouter()
 	e.HandleFunc("/scrub", scrubHandler).Methods(http.MethodDelete)
 	e.HandleFunc("/scruball", scrubAllHandler).Methods(http.MethodDelete)
 	e.HandleFunc("/count", eventCountHandler).Methods(http.MethodGet)
@@ -60,10 +57,9 @@ func LoadRestRoutes() *mux.Router {
 	e.HandleFunc("/{start:[0-9]+}/{end:[0-9]+}/{limit:[0-9]+}", eventByCreationTimeHandler).Methods(http.MethodGet)
 	e.HandleFunc("/device/{deviceId}/valuedescriptor/{valueDescriptor}/{limit:[0-9]+}", readingByDeviceFilteredValueDescriptor).Methods(http.MethodGet)
 
-	// READINGS
-	// /api/v1/reading
-	b.HandleFunc("/reading", readingHandler).Methods(http.MethodGet, http.MethodPut, http.MethodPost)
-	rd := b.PathPrefix("/reading").Subrouter()
+	// Readings
+	r.HandleFunc(clients.ApiReadingRoute, readingHandler).Methods(http.MethodGet, http.MethodPut, http.MethodPost)
+	rd := r.PathPrefix(clients.ApiReadingRoute).Subrouter()
 	rd.HandleFunc("/count", readingCountHandler).Methods(http.MethodGet)
 	rd.HandleFunc("/id/{id}", deleteReadingByIdHandler).Methods(http.MethodDelete)
 	rd.HandleFunc("/{id}", getReadingByIdHandler).Methods(http.MethodGet)
@@ -75,10 +71,9 @@ func LoadRestRoutes() *mux.Router {
 	rd.HandleFunc("/{start:[0-9]+}/{end:[0-9]+}/{limit:[0-9]+}", readingByCreationTimeHandler).Methods(http.MethodGet)
 	rd.HandleFunc("/name/{name}/device/{device}/{limit:[0-9]+}", readingByValueDescriptorAndDeviceHandler).Methods(http.MethodGet)
 
-	// VALUE DESCRIPTORS
-	// /api/v1/valuedescriptor
-	b.HandleFunc("/valuedescriptor", valueDescriptorHandler).Methods(http.MethodGet, http.MethodPut, http.MethodPost)
-	vd := b.PathPrefix("/valuedescriptor").Subrouter()
+	// Value descriptors
+	r.HandleFunc(clients.ApiValueDescriptorRoute, valueDescriptorHandler).Methods(http.MethodGet, http.MethodPut, http.MethodPost)
+	vd := r.PathPrefix(clients.ApiValueDescriptorRoute).Subrouter()
 	vd.HandleFunc("/id/{id}", deleteValueDescriptorByIdHandler).Methods(http.MethodDelete)
 	vd.HandleFunc("/name/{name}", valueDescriptorByNameHandler).Methods(http.MethodGet, http.MethodDelete)
 	vd.HandleFunc("/{id}", valueDescriptorByIdHandler).Methods(http.MethodGet)

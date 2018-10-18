@@ -20,7 +20,7 @@ func TestPing(t *testing.T) {
 	ts := httptest.NewServer(httpServer())
 	defer ts.Close()
 
-	response, err := http.Get(ts.URL + "/api/v1" + "/ping")
+	response, err := http.Get(ts.URL + clients.ApiPingRoute)
 	if err != nil {
 		t.Errorf("Error getting ping: %v", err)
 	}

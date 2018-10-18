@@ -18,10 +18,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-const (
-	PingApiPath = "/api/v1/ping"
-)
-
 var Configuration *ConfigurationStruct
 var dbClient persistence
 var LoggingClient logger.LoggingClient

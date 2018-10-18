@@ -13,13 +13,9 @@ import (
 	"net/http"
 	"runtime"
 
-	"github.com/go-zoo/bone"
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/pkg/clients"
-)
-
-const (
-	apiV1Registration = "/api/v1/registration"
+	"github.com/go-zoo/bone"
 )
 
 func replyPing(w http.ResponseWriter, r *http.Request) {
@@ -93,14 +89,14 @@ func httpServer() http.Handler {
 	mux.Get(clients.ApiMetricsRoute, http.HandlerFunc(replyMetrics))
 
 	// Registration
-	mux.Get(apiV1Registration+"/:id", http.HandlerFunc(getRegByID))
-	mux.Get(apiV1Registration+"/reference/:type", http.HandlerFunc(getRegList))
-	mux.Get(apiV1Registration, http.HandlerFunc(getAllReg))
-	mux.Get(apiV1Registration+"/name/:name", http.HandlerFunc(getRegByName))
-	mux.Post(apiV1Registration, http.HandlerFunc(addReg))
-	mux.Put(apiV1Registration, http.HandlerFunc(updateReg))
-	mux.Delete(apiV1Registration+"/id/:id", http.HandlerFunc(delRegByID))
-	mux.Delete(apiV1Registration+"/name/:name", http.HandlerFunc(delRegByName))
+	mux.Get(clients.ApiRegistrationRoute+"/:id", http.HandlerFunc(getRegByID))
+	mux.Get(clients.ApiRegistrationRoute+"/reference/:type", http.HandlerFunc(getRegList))
+	mux.Get(clients.ApiRegistrationRoute, http.HandlerFunc(getAllReg))
+	mux.Get(clients.ApiRegistrationRoute+"/name/:name", http.HandlerFunc(getRegByName))
+	mux.Post(clients.ApiRegistrationRoute, http.HandlerFunc(addReg))
+	mux.Put(clients.ApiRegistrationRoute, http.HandlerFunc(updateReg))
+	mux.Delete(clients.ApiRegistrationRoute+"/id/:id", http.HandlerFunc(delRegByID))
+	mux.Delete(clients.ApiRegistrationRoute+"/name/:name", http.HandlerFunc(delRegByName))
 
 	return mux
 }
