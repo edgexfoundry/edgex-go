@@ -30,3 +30,23 @@ LoggingFile = './logs/edgex-sys-mgmt-agent.log'
   Protocol = 'http'
   Host = 'localhost'
   Port = 48061
+
+  [Clients.CoreData]
+  Protocol = 'http'
+  Host = 'localhost'
+  Port = 48080
+
+  [Clients.Scheduler]
+  Protocol = 'http'
+  Host = 'localhost'
+  Port = 48085
+
+  [Clients.Export]
+  Protocol = 'http'
+  Host = 'localhost'
+  Port = 48071
+
+  [Clients.Distro]
+  Protocol = 'http'
+  Host = 'localhost'
+  Port = 48070

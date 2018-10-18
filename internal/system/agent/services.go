@@ -187,7 +187,7 @@ func getConfig(services []string) (ConfigRespMap, error) {
 
 		case internal.SupportNotificationsServiceKey:
 
-			responseJSON, err := nc.FetchConfiguration()
+			responseJSON, err := gcsn.FetchConfiguration()
 			if err != nil {
 				msg := fmt.Sprintf("%s get config error: %s", service, err.Error())
 				c.Configuration[service] = msg
@@ -198,7 +198,7 @@ func getConfig(services []string) (ConfigRespMap, error) {
 			break
 
 		case internal.CoreCommandServiceKey:
-			responseJSON, err := mcc.FetchConfiguration()
+			responseJSON, err := gccc.FetchConfiguration()
 			if err != nil {
 				msg := fmt.Sprintf("%s get config error: %s", service, err.Error())
 				c.Configuration[service] = msg
@@ -209,28 +209,69 @@ func getConfig(services []string) (ConfigRespMap, error) {
 			break
 
 		case internal.CoreDataServiceKey:
-			c.Configuration[service] = "N/A"
-			LoggingClient.Info(fmt.Sprintf("The micro-service {%v} currently does not support an endpoint for providing its configuration data...", internal.CoreDataServiceKey))
+			responseJSON, err := gccd.FetchConfiguration()
+			if err != nil {
+				msg := fmt.Sprintf("%s get config error: %s", service, err.Error())
+				c.Configuration[service] = msg
+				LoggingClient.Error(msg)
+			} else {
+				c.Configuration[service] = ProcessResponse(responseJSON)
+			}
 			break
 
 		case internal.CoreMetaDataServiceKey:
-			c.Configuration[service] = "N/A"
-			LoggingClient.Info(fmt.Sprintf("The micro-service {%v} currently does not support an endpoint for providing its configuration data...", internal.CoreMetaDataServiceKey))
+			responseJSON, err := gccm.FetchConfiguration()
+			if err != nil {
+				msg := fmt.Sprintf("%s get config error: %s", service, err.Error())
+				c.Configuration[service] = msg
+				LoggingClient.Error(msg)
+			} else {
+				c.Configuration[service] = ProcessResponse(responseJSON)
+			}
 			break
 
 		case internal.ExportClientServiceKey:
-			c.Configuration[service] = "N/A"
-			LoggingClient.Info(fmt.Sprintf("The micro-service {%v} currently does not support an endpoint for providing its configuration data...", internal.ExportClientServiceKey))
+			responseJSON, err := gcec.FetchConfiguration()
+			if err != nil {
+				msg := fmt.Sprintf("%s get config error: %s", service, err.Error())
+				c.Configuration[service] = msg
+				LoggingClient.Error(msg)
+			} else {
+				c.Configuration[service] = ProcessResponse(responseJSON)
+			}
 			break
 
 		case internal.ExportDistroServiceKey:
-			c.Configuration[service] = "N/A"
-			LoggingClient.Info(fmt.Sprintf("The micro-service {%v} currently does not support an endpoint for providing its configuration data...", internal.ExportDistroServiceKey))
+			responseJSON, err := gced.FetchConfiguration()
+			if err != nil {
+				msg := fmt.Sprintf("%s get config error: %s", service, err.Error())
+				c.Configuration[service] = msg
+				LoggingClient.Error(msg)
+			} else {
+				c.Configuration[service] = ProcessResponse(responseJSON)
+			}
 			break
 
 		case internal.SupportLoggingServiceKey:
-			c.Configuration[service] = "N/A"
-			LoggingClient.Info(fmt.Sprintf("The micro-service {%v} currently does not support an endpoint for providing its configuration data...", internal.SupportLoggingServiceKey))
+			responseJSON, err := gcsl.FetchConfiguration()
+			if err != nil {
+				msg := fmt.Sprintf("%s get config error: %s", service, err.Error())
+				c.Configuration[service] = msg
+				LoggingClient.Error(msg)
+			} else {
+				c.Configuration[service] = ProcessResponse(responseJSON)
+			}
+			break
+
+		case internal.SupportSchedulerServiceKey:
+			responseJSON, err := gcss.FetchConfiguration()
+			if err != nil {
+				msg := fmt.Sprintf("%s get config error: %s", service, err.Error())
+				c.Configuration[service] = msg
+				LoggingClient.Error(msg)
+			} else {
+				c.Configuration[service] = ProcessResponse(responseJSON)
+			}
 			break
 
 		default:
@@ -254,7 +295,7 @@ func getMetrics(services []string) (MetricsRespMap, error) {
 		switch service {
 
 		case internal.SupportNotificationsServiceKey:
-			responseJSON, err := nc.FetchMetrics()
+			responseJSON, err := gcsn.FetchMetrics()
 			if err != nil {
 				msg := fmt.Sprintf("%s get metrics error: %s", service, err.Error())
 				m.Metrics[service] = msg
@@ -265,7 +306,7 @@ func getMetrics(services []string) (MetricsRespMap, error) {
 			break
 
 		case internal.CoreCommandServiceKey:
-			responseJSON, err := mcc.FetchMetrics()
+			responseJSON, err := gccc.FetchMetrics()
 			if err != nil {
 				msg := fmt.Sprintf("%s get metrics error: %s", service, err.Error())
 				m.Metrics[service] = msg
@@ -276,28 +317,69 @@ func getMetrics(services []string) (MetricsRespMap, error) {
 			break
 
 		case internal.CoreDataServiceKey:
-			m.Metrics[service] = "N/A"
-			LoggingClient.Info(fmt.Sprintf("The micro-service {%v} currently does not support an endpoint for providing its metrics data...", internal.CoreDataServiceKey))
+			responseJSON, err := gccd.FetchMetrics()
+			if err != nil {
+				msg := fmt.Sprintf("%s get metrics error: %s", service, err.Error())
+				m.Metrics[service] = msg
+				LoggingClient.Error(msg)
+			} else {
+				m.Metrics[service] = ProcessResponse(responseJSON)
+			}
 			break
 
 		case internal.CoreMetaDataServiceKey:
-			m.Metrics[service] = "N/A"
-			LoggingClient.Info(fmt.Sprintf("The micro-service {%v} currently does not support an endpoint for providing its metrics data...", internal.CoreMetaDataServiceKey))
+			responseJSON, err := gccm.FetchMetrics()
+			if err != nil {
+				msg := fmt.Sprintf("%s get metrics error: %s", service, err.Error())
+				m.Metrics[service] = msg
+				LoggingClient.Error(msg)
+			} else {
+				m.Metrics[service] = ProcessResponse(responseJSON)
+			}
 			break
 
 		case internal.ExportClientServiceKey:
-			m.Metrics[service] = "N/A"
-			LoggingClient.Info(fmt.Sprintf("The micro-service {%v} currently does not support an endpoint for providing its metrics data...", internal.ExportClientServiceKey))
+			responseJSON, err := gcec.FetchMetrics()
+			if err != nil {
+				msg := fmt.Sprintf("%s get metrics error: %s", service, err.Error())
+				m.Metrics[service] = msg
+				LoggingClient.Error(msg)
+			} else {
+				m.Metrics[service] = ProcessResponse(responseJSON)
+			}
 			break
 
 		case internal.ExportDistroServiceKey:
-			m.Metrics[service] = "N/A"
-			LoggingClient.Info(fmt.Sprintf("The micro-service {%v} currently does not support an endpoint for providing its metrics data...", internal.ExportDistroServiceKey))
+			responseJSON, err := gced.FetchMetrics()
+			if err != nil {
+				msg := fmt.Sprintf("%s get metrics error: %s", service, err.Error())
+				m.Metrics[service] = msg
+				LoggingClient.Error(msg)
+			} else {
+				m.Metrics[service] = ProcessResponse(responseJSON)
+			}
 			break
 
 		case internal.SupportLoggingServiceKey:
-			m.Metrics[service] = "N/A"
-			LoggingClient.Info(fmt.Sprintf("The micro-service {%v} currently does not support an endpoint for providing its metrics data...", internal.SupportLoggingServiceKey))
+			responseJSON, err := gcsl.FetchMetrics()
+			if err != nil {
+				msg := fmt.Sprintf("%s get metrics error: %s", service, err.Error())
+				m.Metrics[service] = msg
+				LoggingClient.Error(msg)
+			} else {
+				m.Metrics[service] = ProcessResponse(responseJSON)
+			}
+			break
+
+		case internal.SupportSchedulerServiceKey:
+			responseJSON, err := gcss.FetchMetrics()
+			if err != nil {
+				msg := fmt.Sprintf("%s get metrics error: %s", service, err.Error())
+				m.Metrics[service] = msg
+				LoggingClient.Error(msg)
+			} else {
+				m.Metrics[service] = ProcessResponse(responseJSON)
+			}
 			break
 
 		default:
