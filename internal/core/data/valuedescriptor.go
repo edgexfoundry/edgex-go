@@ -55,6 +55,21 @@ func getValueDescriptorByName(name string) (vd models.ValueDescriptor, err error
 	return vd, nil
 }
 
+func getValueDescriptorById(id string) (vd models.ValueDescriptor, err error) {
+	vd, err = dbClient.ValueDescriptorById(id)
+
+	if err != nil {
+		LoggingClient.Error(err.Error())
+		if err == db.ErrNotFound {
+			return models.ValueDescriptor{}, errors.NewErrDbNotFound()
+		} else {
+			return models.ValueDescriptor{}, err
+		}
+	}
+
+	return vd, nil
+}
+
 func getValueDescriptorsByUomLabel(uomLabel string) (vdList []models.ValueDescriptor, err error) {
 	vdList, err = dbClient.ValueDescriptorsByUomLabel(uomLabel)
 
@@ -85,14 +100,19 @@ func getValueDescriptorsByLabel(label string) (vdList []models.ValueDescriptor, 
 	return vdList, nil
 }
 
-func getValueDescriptorsByType(typ string)(vd []models.ValueDescriptor, err error) {
-	vd, err = dbClient.ValueDescriptorsByType(typ)
+func getValueDescriptorsByType(typ string)(vdList []models.ValueDescriptor, err error) {
+	vdList, err = dbClient.ValueDescriptorsByType(typ)
+
 	if err != nil {
 		LoggingClient.Error(err.Error())
-		return nil, err
+		if err == db.ErrNotFound {
+			return []models.ValueDescriptor{}, errors.NewErrDbNotFound()
+		} else {
+			return []models.ValueDescriptor{}, err
+		}
 	}
 
-	return vd, nil
+	return vdList, nil
 }
 
 func getValueDescriptorsByDevice(device models.Device)(vdList []models.ValueDescriptor, err error) {
@@ -322,19 +342,4 @@ func deleteValueDescriptorById(id string) error {
 	}
 
 	return nil
-}
-
-func getValueDescriptorById(id string) (vd models.ValueDescriptor, err error) {
-	vd, err = dbClient.ValueDescriptorById(id)
-
-	if err != nil {
-		LoggingClient.Error(err.Error())
-		if err == db.ErrNotFound {
-			return models.ValueDescriptor{}, errors.NewErrDbNotFound()
-		} else {
-			return models.ValueDescriptor{}, err
-		}
-	}
-
-	return vd, nil
 }

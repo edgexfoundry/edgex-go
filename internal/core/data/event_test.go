@@ -15,59 +15,16 @@
 package data
 
 import (
-	"fmt"
-	"github.com/edgexfoundry/edgex-go/internal/core/data/interfaces"
-	"math"
-	"os"
+	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
+	"github.com/edgexfoundry/edgex-go/pkg/models"
+	"gopkg.in/mgo.v2/bson"
 	"strconv"
 	"sync"
 	"testing"
-	"time"
-
-	dbMock "github.com/edgexfoundry/edgex-go/internal/core/data/interfaces/mocks"
-
-	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
-	"github.com/edgexfoundry/edgex-go/internal/core/data/messaging"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db/memory"
-	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
-	"github.com/edgexfoundry/edgex-go/pkg/clients/metadata/mocks"
-	"github.com/edgexfoundry/edgex-go/pkg/models"
-	"github.com/gorilla/mux"
-	"github.com/stretchr/testify/mock"
-	"gopkg.in/mgo.v2/bson"
 )
-
-var testEvent models.Event
-var testRoutes *mux.Router
-
-const (
-	testDeviceName string = "Test Device"
-	testOrigin     int64  = 123456789
-)
-
-// Mock implementation of the event publisher for testing purposes
-type mockEventPublisher struct{}
-
-func newMockEventPublisher(config messaging.PubSubConfiguration) messaging.EventPublisher {
-	return &mockEventPublisher{}
-}
-
-func (zep *mockEventPublisher) SendEventMessage(e models.Event) error {
-	return nil
-}
-
-func TestMain(m *testing.M) {
-	testRoutes = LoadRestRoutes()
-	LoggingClient = logger.NewMockClient()
-	mdc = newMockDeviceClient()
-	ep = newMockEventPublisher(messaging.PubSubConfiguration{})
-	chEvents = make(chan interface{}, 10)
-	os.Exit(m.Run())
-}
 
 //Test methods
-func TestCount(t *testing.T) {
+func TestEventCount(t *testing.T) {
 	reset()
 	c, err := countEvents()
 	if err != nil {
@@ -406,26 +363,6 @@ func TestDeleteEventReadingDoesNotExist(t *testing.T) {
 	}
 }
 
-func TestTestLimit(t *testing.T) {
-	testedLimit := math.MinInt32
-
-	expectedNil := checkMaxLimit(testedLimit)
-
-	if expectedNil != nil {
-		t.Errorf("Should not exceed limit")
-	}
-}
-
-func TestTestLimitOverLimit(t *testing.T) {
-	testedLimit := math.MaxInt32
-
-	expectedErr := checkMaxLimit(testedLimit)
-
-	if expectedErr == nil {
-		t.Errorf("Exceeded limit and should throw error")
-	}
-}
-
 func TestGetEventsByDeviceIdLimit(t *testing.T) {
 	reset()
 	dbClient = newMockDb()
@@ -533,132 +470,6 @@ func TestScrubPushedEvents(t *testing.T) {
 	}
 }
 
-// Supporting methods
-// Reset() re-initializes dependencies for each test
-func reset() {
-	Configuration = &ConfigurationStruct{}
-	testEvent.Device = testDeviceName
-	testEvent.Origin = testOrigin
-	testEvent.Readings = buildReadings()
-	dbClient = &memory.MemDB{}
-	testEvent.ID, _ = dbClient.AddEvent(&testEvent)
-}
-
-func newMockDeviceClient() *mocks.DeviceClient {
-	client := &mocks.DeviceClient{}
-
-	mockAddressable := models.Addressable{
-		Address:  "localhost",
-		Name:     "Test Addressable",
-		Port:     3000,
-		Protocol: "http"}
-
-	mockDeviceResultFn := func(id string) models.Device {
-		if bson.IsObjectIdHex(id) {
-			return models.Device{Id: bson.ObjectIdHex(id), Name: testEvent.Device, Addressable: mockAddressable}
-		}
-		return models.Device{}
-	}
-	client.On("Device", mock.MatchedBy(func(id string) bool {
-		return bson.IsObjectIdHex(id)
-	})).Return(mockDeviceResultFn, nil)
-	client.On("Device", mock.MatchedBy(func(id string) bool {
-		return !bson.IsObjectIdHex(id)
-	})).Return(mockDeviceResultFn, fmt.Errorf("id is not bson ObjectIdHex"))
-
-	mockDeviceForNameResultFn := func(name string) models.Device {
-		device := models.Device{Id: bson.NewObjectId(), Name: name, Addressable: mockAddressable}
-
-		return device
-	}
-	client.On("DeviceForName", mock.MatchedBy(func(name string) bool {
-		return name == testEvent.Device
-	})).Return(mockDeviceForNameResultFn, nil)
-	client.On("DeviceForName", mock.MatchedBy(func(name string) bool {
-		return name != testEvent.Device
-	})).Return(mockDeviceForNameResultFn, fmt.Errorf("no device found for name"))
-
-	return client
-}
-
-func newMockDb() interfaces.DBClient {
-	db := &dbMock.DBClient{}
-
-	db.On("EventsOlderThanAge", mock.MatchedBy(func(age int64) bool {
-		return age == -1
-	})).Return(nil, fmt.Errorf("expected testing error"))
-
-	db.On("ValueDescriptorByName", mock.MatchedBy(func(name string) bool {
-		return name == "Temperature"
-	})).Return(models.ValueDescriptor{Type: "8"}, nil)
-
-	db.On("ValueDescriptorByName", mock.MatchedBy(func(name string) bool {
-		return name == "Pressure"
-	})).Return(models.ValueDescriptor{}, fmt.Errorf("some error"))
-
-	db.On("EventsForDeviceLimit", mock.MatchedBy(func(deviceId string) bool {
-		return deviceId == "valid"
-	}), mock.Anything).Return([]models.Event{}, nil)
-
-	db.On("EventsForDeviceLimit", mock.MatchedBy(func(deviceId string) bool {
-		return deviceId == "error"
-	}), mock.Anything).Return(nil, fmt.Errorf("some error"))
-
-	db.On("EventsForDevice", mock.MatchedBy(func(deviceId string) bool {
-		return deviceId == "valid"
-	})).Return([]models.Event{{Readings: append(buildReadings(), buildReadings()...)}}, nil)
-
-	db.On("EventsForDevice", mock.MatchedBy(func(deviceId string) bool {
-		return deviceId == "error"
-	})).Return(nil, fmt.Errorf("some error"))
-
-	db.On("EventsByCreationTime", mock.MatchedBy(func(start int64) bool {
-		return start == 0xF00D
-	}), mock.Anything, mock.Anything).Return([]models.Event{}, nil)
-
-	db.On("EventsByCreationTime", mock.MatchedBy(func(start int64) bool {
-		return start == 0xBADF00D
-	}), mock.Anything, mock.Anything).Return(nil, fmt.Errorf("some error"))
-
-	db.On("EventsForDevice", mock.MatchedBy(func(deviceId string) bool {
-		return deviceId == testEvent.ID.Hex()
-	})).Return([]models.Event{testEvent}, nil)
-
-	db.On("EventsForDevice", mock.MatchedBy(func(deviceId string) bool {
-		return deviceId == "error"
-	})).Return(nil, fmt.Errorf("some error"))
-
-	db.On("DeleteEventById", mock.Anything).Return(nil)
-
-	db.On("DeleteReadingById", mock.Anything).Return(nil)
-
-	return db
-}
-
-func buildReadings() []models.Reading {
-	ticks := db.MakeTimestamp()
-	r1 := models.Reading{Id: bson.NewObjectId(),
-		Name:     "Temperature",
-		Value:    "45",
-		Origin:   testOrigin,
-		Created:  ticks,
-		Modified: ticks,
-		Pushed:   ticks,
-		Device:   testDeviceName}
-
-	r2 := models.Reading{Id: bson.NewObjectId(),
-		Name:     "Pressure",
-		Value:    "1.01325",
-		Origin:   testOrigin,
-		Created:  ticks,
-		Modified: ticks,
-		Pushed:   ticks,
-		Device:   testDeviceName}
-	readings := []models.Reading{}
-	readings = append(readings, r1, r2)
-	return readings
-}
-
 func testEventWithoutReadings(event models.Event, t *testing.T) {
 	if event.ID.Hex() != testEvent.ID.Hex() {
 		t.Error("eventId mismatch. expected " + testEvent.ID.Hex() + " received " + event.ID.Hex())
@@ -671,34 +482,4 @@ func testEventWithoutReadings(event models.Event, t *testing.T) {
 	if event.Origin != testEvent.Origin {
 		t.Error("origin mismatch. expected " + strconv.FormatInt(testEvent.Origin, 10) + " received " + strconv.FormatInt(event.Origin, 10))
 	}
-}
-
-func handleDomainEvents(bitEvents []bool, wait *sync.WaitGroup, t *testing.T) {
-	until := time.Now().Add(250 * time.Millisecond) //Kill this loop after quarter second.
-	for time.Now().Before(until) {
-		select {
-		case evt := <-chEvents:
-			switch evt.(type) {
-			case DeviceLastReported:
-				e := evt.(DeviceLastReported)
-				if e.DeviceName != testDeviceName {
-					t.Errorf("DeviceLastReported name mistmatch %s", e.DeviceName)
-					return
-				}
-				bitEvents[0] = true
-				break
-			case DeviceServiceLastReported:
-				e := evt.(DeviceServiceLastReported)
-				if e.DeviceName != testDeviceName {
-					t.Errorf("DeviceLastReported name mistmatch %s", e.DeviceName)
-					return
-				}
-				bitEvents[1] = true
-				break
-			}
-		default:
-			//	Without a default case in here, the select block will hang.
-		}
-	}
-	wait.Done()
 }

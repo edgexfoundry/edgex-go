@@ -25,15 +25,14 @@ import (
 
 func getAllReadings() (readings []models.Reading, err error){
 	readings, err = dbClient.Readings()
+	if err != nil {
+		LoggingClient.Error(err.Error())
+		return nil, err
+	}
 
 	// Check max limit
 	err = checkMaxLimit(len(readings))
 	if err != nil {
-		return nil, err
-	}
-
-	if err != nil {
-		LoggingClient.Error(err.Error())
 		return nil, err
 	}
 
