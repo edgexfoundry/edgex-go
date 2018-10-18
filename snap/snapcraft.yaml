@@ -281,12 +281,20 @@ parts:
       install -d "$SNAPCRAFT_PART_INSTALL/config/core-metadata/res/"
       install -d "$SNAPCRAFT_PART_INSTALL/config/export-client/res/"
       install -d "$SNAPCRAFT_PART_INSTALL/config/export-distro/res/"
-      install -d "$SNAPCRAFT_PART_INSTALL/config/config-seed/res/properties/device-virtual/"
       install -d "$SNAPCRAFT_PART_INSTALL/config/support-logging/res/"
       install -d "$SNAPCRAFT_PART_INSTALL/config/support-notifications/res/"
-
+      install -d "$SNAPCRAFT_PART_INSTALL/config/config-seed/res/properties/device-virtual/"
+      install -d "$SNAPCRAFT_PART_INSTALL/config/config-seed/res/properties/edgex-support-rulesengine/"
+      
+      # handle application.properties for the remaining java services
       install -DT "./cmd/config-seed/res/properties/device-virtual/application.properties" \
         "$SNAPCRAFT_PART_INSTALL/config/config-seed/res/properties/device-virtual/application.properties"
+
+      cat "./cmd/config-seed/res/properties/edgex-support-rulesengine/application.properties" | \
+        sed -e s:edgex/rules:\$SNAP_DATA/support-rulesengine/rules: \
+            -e s:edgex/templates:\$SNAP_DATA/support-rulesengine/templates: > \
+       "$SNAPCRAFT_PART_INSTALL/config/config-seed/res/properties/edgex-support-rulesengine/application.properties"
+
 
       cat "./cmd/config-seed/res/configuration.toml" | \
         sed -e s:./logs/edgex-config-seed.log:\$SNAP_COMMON/config-seed.log: \
@@ -419,6 +427,8 @@ parts:
          "$SNAPCRAFT_PART_INSTALL/usr/share/java/doc/support-rulesengine/Attribution.txt"
       install -DT "./LICENSE-2.0.txt" \
          "$SNAPCRAFT_PART_INSTALL/usr/share/java/doc/support-rulesengine/LICENSE-2.0.txt"
+      install -DT "./src/main/resources/rule-template.drl" \
+         "$SNAPCRAFT_PART_INSTALL/jar/support-rulesengine/templates/rule-template.drl"
     prime:
       - -etc/fonts
       - -etc/fonts/X11
