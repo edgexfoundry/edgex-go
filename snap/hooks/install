@@ -17,11 +17,26 @@ for service in security-api-gateway core-command config-seed core-data core-meta
     fi
 done
 
-# also handle config-seed/device-virtual/application.properties
-if [ ! -f "${SNAP_DATA}/config/config-seed/res/properties/device-virtual/application.properties" ]; then
-    mkdir -p "${SNAP_DATA}/config/config-seed/res/properties/device-virtual"
-    cp "${SNAP}/config/config-seed/res/properties/device-virtual/application.properties" "${SNAP_DATA}/config/config-seed/res/properties/device-virtual/application.properties"
+# also handle java services' application.properties
+for jsvc in device-virtual edgex-support-rulesengine; do
+    if [ ! -f "${SNAP_DATA}/config/config-seed/res/properties/$jsvc/application.properties" ]; then
+        mkdir -p "${SNAP_DATA}/config/config-seed/res/properties/$jsvc"
+        cp "${SNAP}/config/config-seed/res/properties/$jsvc/application.properties" "${SNAP_DATA}/config/config-seed/res/properties/$jsvc/application.properties"
+        # also replace SNAP_DATA and SNAP_COMMON in the application files
+        sed -i -e "s@\$SNAP_COMMON@$SNAP_COMMON@g" -e "s@\$SNAP_DATA@$SNAP_DATA@g" "${SNAP_DATA}/config/config-seed/res/properties/$jsvc/application.properties"
+    fi
+done
+
+# create support-rulesengine directories for templates/rules
+if [ ! -f "${SNAP_DATA}/support-rulesengine/templates" ]; then
+    mkdir -p "${SNAP_DATA}/support-rulesengine/templates"
+    cp "${SNAP}/jar/support-rulesengine/templates/rule-template.drl" "${SNAP_DATA}/support-rulesengine/templates/rule-template.drl"
 fi
+
+if [ ! -f "${SNAP_DATA}/support-rulesengine/rules" ]; then
+    mkdir -p "${SNAP_DATA}/support-rulesengine/rules"
+fi
+
 
 # for the pki setup files from security services, we replace the password at install time with a psuedorandomly generated password from openssl
 # this isn't 100% secure, but it's unlikely that people will change the default password on initial install
