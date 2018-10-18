@@ -14,22 +14,25 @@ import (
 	"gopkg.in/mgo.v2/bson"
 	"io/ioutil"
 	"net/http"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
 )
 
 const (
-	ScheduleInterval                  = 500
+	ScheduleInterval = 500
 )
 
 //the schedule specific shared variables
 var (
-	mutex                          sync.Mutex
-	scheduleQueue                  = queueV1.New()                     // global schedule queue
-	scheduleIdToContextMap         = make(map[string]*ScheduleContext) // map : schedule id -> schedule context
-	scheduleNameToContextMap       = make(map[string]*ScheduleContext) // map : schedule name -> schedule context
-	scheduleEventIdToScheduleIdMap = make(map[string]string)           // map : schedule event id -> schedule id
+	mutex                                 sync.Mutex
+	scheduleQueue                         = queueV1.New()                     // global schedule queue
+	scheduleIdToContextMap                = make(map[string]*ScheduleContext) // map : schedule id -> schedule context
+	scheduleNameToContextMap              = make(map[string]*ScheduleContext) // map : schedule name -> schedule context
+	scheduleEventIdToScheduleIdMap        = make(map[string]string)           // map : schedule event id -> schedule id
+	scheduleEventNameToScheduleIdMap      = make(map[string]string)           // map : schedule event name -> schedule id
+	scheduleEventNameToScheduleEventIdMap = make(map[string]string)           // map : schedule event name -> schedule event id
 )
 
 func StartTicker() {
@@ -44,13 +47,7 @@ func StopTicker() {
 	ticker.Stop()
 }
 
-//region queue util for testing
-func queryQueueLen() int {
-	mutex.Lock()
-	defer mutex.Unlock()
-	return scheduleQueue.Length()
-}
-
+// utility function
 func clearQueue() {
 	mutex.Lock()
 	defer mutex.Unlock()
@@ -58,6 +55,15 @@ func clearQueue() {
 	for scheduleQueue.Length() > 0 {
 		scheduleQueue.Remove()
 	}
+}
+
+// utility function
+func clearMaps() {
+	scheduleIdToContextMap = make(map[string]*ScheduleContext)   // map : schedule id -> schedule context
+	scheduleNameToContextMap = make(map[string]*ScheduleContext) // map : schedule name -> schedule context
+	scheduleEventIdToScheduleIdMap = make(map[string]string)     // map : schedule event id -> schedule id
+	scheduleEventNameToScheduleIdMap = make(map[string]string)   // map : schedule event name -> schedule id
+	scheduleEventNameToScheduleEventIdMap = make(map[string]string)
 }
 
 //endregion
@@ -68,18 +74,20 @@ func addScheduleOperation(scheduleId models.Schedule, context *ScheduleContext) 
 	scheduleQueue.Add(context)
 }
 
-func deleteScheduleOperation(scheduleId string, scheduleContext *ScheduleContext) {
+func deleteScheduleOperation(schedule models.Schedule, scheduleContext *ScheduleContext) {
 	scheduleContext.MarkedDeleted = true
-	scheduleIdToContextMap[scheduleId] = scheduleContext
-	delete(scheduleIdToContextMap, scheduleId)
+	scheduleIdToContextMap[schedule.Id.Hex()] = scheduleContext
+	scheduleNameToContextMap[schedule.Name] = scheduleContext
+	delete(scheduleIdToContextMap, schedule.Id.Hex())
 }
 
-func addScheduleEventOperation(scheduleId string, scheduleEventId string, scheduleEvent models.ScheduleEvent) {
-	scheduleContext, _ := scheduleIdToContextMap[scheduleId]
-	scheduleContext.ScheduleEventsMap[scheduleEventId] = scheduleEvent
-	scheduleEventIdToScheduleIdMap[scheduleEventId] = scheduleId
+func addScheduleEventOperation(schedule models.Schedule, scheduleEvent models.ScheduleEvent) {
+	scheduleContext, _ := scheduleIdToContextMap[schedule.Id.Hex()]
+	scheduleContext.ScheduleEventsMap[scheduleEvent.Id.Hex()] = scheduleEvent
+	scheduleEventIdToScheduleIdMap[scheduleEvent.Id.Hex()] = schedule.Id.Hex()
+	scheduleEventNameToScheduleIdMap[scheduleEvent.Name] = schedule.Id.Hex()
+	scheduleEventNameToScheduleEventIdMap[scheduleEvent.Name] = scheduleEvent.Id.Hex()
 }
-
 
 func querySchedule(scheduleId string) (models.Schedule, error) {
 	mutex.Lock()
@@ -87,41 +95,41 @@ func querySchedule(scheduleId string) (models.Schedule, error) {
 
 	scheduleContext, exists := scheduleIdToContextMap[scheduleId]
 	if !exists {
-		LoggingClient.Warn("can not find a schedule context with schedule id : " + scheduleId)
-		return models.Schedule{}, nil
+		logMsg := fmt.Sprintf("scheduler could not find a schedule context with schedule id : %s", scheduleId)
+		LoggingClient.Info(logMsg)
+		return models.Schedule{}, errors.New(logMsg)
 	}
 
-	LoggingClient.Debug("querying found the schedule with id : " + scheduleId)
+	LoggingClient.Debug(fmt.Sprintf("querying found the schedule with id : %s", scheduleId))
 
 	return scheduleContext.Schedule, nil
 }
 
-
-func queryScheduleByName(scheduleName string) (models.Schedule, error){
+func queryScheduleByName(scheduleName string) (models.Schedule, error) {
 	mutex.Lock()
 	defer mutex.Unlock()
 
 	scheduleContext, exists := scheduleNameToContextMap[scheduleName]
 	if !exists {
-		LoggingClient.Warn(fmt.Sprintf("can not find a schedule context with schedule name : %s", scheduleName))
-		return models.Schedule{},errors.New(fmt.Sprintf("can not find a schedule context with schedule name : %s ",scheduleName))
+		logMsg := fmt.Sprintf("scheduler could not find schedule id with schedule with name : %s", scheduleName)
+		LoggingClient.Info(logMsg)
+		return models.Schedule{}, errors.New(logMsg)
 	}
 
-	LoggingClient.Debug("querying found the schedule with name : " + scheduleName)
+	LoggingClient.Debug(fmt.Sprintf("scheduler found the schedule with name : %s", scheduleName))
 
 	return scheduleContext.Schedule, nil
 }
-
 
 func addSchedule(schedule models.Schedule) error {
 	mutex.Lock()
 	defer mutex.Unlock()
 
 	scheduleId := schedule.Id.Hex()
-	LoggingClient.Debug("adding the schedule with id : " + scheduleId + " at time " + schedule.Start)
+	LoggingClient.Debug(fmt.Sprintf("adding the schedule with id : %s at time %s", scheduleId, schedule.Start))
 
 	if _, exists := scheduleIdToContextMap[scheduleId]; exists {
-		LoggingClient.Warn("the schedule context with id " + scheduleId + " already exist ")
+		LoggingClient.Debug(fmt.Sprintf("the schedule context with id : %s already exists", scheduleId))
 		return nil
 	}
 
@@ -130,12 +138,12 @@ func addSchedule(schedule models.Schedule) error {
 		MarkedDeleted:     false,
 	}
 
-	LoggingClient.Debug("resetting the schedule with id : " + scheduleId)
+	LoggingClient.Debug(fmt.Sprintf("resetting the schedule with id : %s", scheduleId))
 	context.Reset(schedule)
 
 	addScheduleOperation(schedule, &context)
 
-	LoggingClient.Debug("added the schedule with id : " + scheduleId)
+	LoggingClient.Debug(fmt.Sprintf("added the schedule with id : %s ", scheduleId))
 
 	return nil
 }
@@ -169,8 +177,8 @@ func removeSchedule(scheduleId string) error {
 
 	scheduleContext, exists := scheduleIdToContextMap[scheduleId]
 	if !exists {
-		LoggingClient.Error("can not find schedule context with schedule id : " + scheduleId)
-		return errors.New("can not find schedule context with schedule id : " + scheduleId)
+		logMsg := fmt.Sprintf("scheduler could not find schedule context with schedule id : %s", scheduleId)
+		return errors.New(logMsg)
 	}
 
 	LoggingClient.Debug("removing all the mappings of schedule event id to schedule id : " + scheduleId)
@@ -178,13 +186,12 @@ func removeSchedule(scheduleId string) error {
 		delete(scheduleEventIdToScheduleIdMap, eventId)
 	}
 
-	deleteScheduleOperation(scheduleId, scheduleContext)
+	deleteScheduleOperation(scheduleContext.Schedule, scheduleContext)
 
 	LoggingClient.Debug("removed the schedule with id : " + scheduleId)
 
 	return nil
 }
-
 
 func queryScheduleEvent(scheduleEventId string) (models.ScheduleEvent, error) {
 	mutex.Lock()
@@ -192,20 +199,55 @@ func queryScheduleEvent(scheduleEventId string) (models.ScheduleEvent, error) {
 
 	scheduleId, exists := scheduleEventIdToScheduleIdMap[scheduleEventId]
 	if !exists {
-		LoggingClient.Error("can not find schedule id with schedule event id : " + scheduleEventId)
-		return models.ScheduleEvent{}, errors.New("Can not find schedule id with schedule event id : " + scheduleEventId)
+		logMsg := fmt.Sprintf("scheduler could not find schedule id with schedule event id : %s" ,scheduleEventId)
+		return models.ScheduleEvent{}, errors.New(logMsg)
 	}
 
 	scheduleContext, exists := scheduleIdToContextMap[scheduleId]
 	if !exists {
-		LoggingClient.Warn("can not find a schedule context with schedule id : " + scheduleId)
+		LoggingClient.Warn("scheduler could not find a schedule context with schedule id : " + scheduleId)
 		return models.ScheduleEvent{}, nil
 	}
 
 	scheduleEvent, exists := scheduleContext.ScheduleEventsMap[scheduleEventId]
 	if !exists {
-		LoggingClient.Error("can not find schedule event with schedule event id : " + scheduleEventId)
-		return models.ScheduleEvent{}, errors.New("can not find schedule event with schedule event id : " + scheduleEventId)
+		logMsg := fmt.Sprintf("scheduler could not find schedule event with schedule event id : %s", scheduleEventId)
+		return models.ScheduleEvent{}, errors.New(logMsg)
+	}
+
+	return scheduleEvent, nil
+}
+
+func queryScheduleEventByName(scheduleEventName string) (models.ScheduleEvent, error) {
+	mutex.Lock()
+	defer mutex.Unlock()
+
+	scheduleId, exists := scheduleEventNameToScheduleIdMap[scheduleEventName]
+	if !exists {
+		logMsg := fmt.Sprintf("scheduler could not find schedule id with schedule event name : %s", scheduleEventName)
+		LoggingClient.Error(logMsg)
+		return models.ScheduleEvent{}, errors.New(logMsg)
+	}
+
+	scheduleEventId, exists := scheduleEventNameToScheduleEventIdMap[scheduleEventName]
+	if !exists {
+		logMsg := fmt.Sprintf("scheduler could not find schedule event id with schedule event name : %s", scheduleEventName)
+		LoggingClient.Error(logMsg)
+		return models.ScheduleEvent{}, errors.New(logMsg)
+	}
+
+	scheduleContext, exists := scheduleIdToContextMap[scheduleId]
+	if !exists {
+		logMsg := fmt.Sprintf("could not find a schedule context with schedule id : %s", scheduleId)
+		LoggingClient.Error(logMsg)
+		return models.ScheduleEvent{}, errors.New(logMsg)
+	}
+
+	scheduleEvent, exists := scheduleContext.ScheduleEventsMap[scheduleEventId]
+	if !exists {
+		logMsg := fmt.Sprintf("could not find schedule event with schedule event id :  %s", scheduleContext.Schedule.Id.Hex())
+		LoggingClient.Error(logMsg)
+		return models.ScheduleEvent{}, errors.New(logMsg)
 	}
 
 	return scheduleEvent, nil
@@ -218,14 +260,14 @@ func addScheduleEvent(scheduleEvent models.ScheduleEvent) error {
 	scheduleEventId := scheduleEvent.Id.Hex()
 	scheduleName := scheduleEvent.Schedule
 
-	LoggingClient.Debug("adding the schedule event with id " + scheduleEventId + " to schedule : " + scheduleName)
+	LoggingClient.Debug(fmt.Sprintf("adding the schedule event with id  : %s to schedule : %s ", scheduleEventId, scheduleName))
 
 	scheduleContext := scheduleNameToContextMap[scheduleName]
 
 	schedule := scheduleContext.Schedule
 
 	scheduleId := schedule.Id.Hex()
-	LoggingClient.Debug("check the schedule with id : " + scheduleId + " exists.")
+	LoggingClient.Debug(fmt.Sprintf("check the schedule with id : %s exists.", scheduleId))
 
 	if _, exists := scheduleIdToContextMap[scheduleId]; !exists {
 		context := ScheduleContext{
@@ -238,9 +280,9 @@ func addScheduleEvent(scheduleEvent models.ScheduleEvent) error {
 		addScheduleOperation(schedule, &context)
 	}
 
-	addScheduleEventOperation(scheduleId, scheduleEventId, scheduleEvent)
+	addScheduleEventOperation(schedule, scheduleEvent)
 
-	LoggingClient.Debug("added the schedule event with id : " + scheduleEventId + " to schedule : " + scheduleName)
+	LoggingClient.Debug(fmt.Sprintf("added the schedule event with id : %s to schedule : %s", scheduleEventId, scheduleName))
 
 	return nil
 }
@@ -255,14 +297,15 @@ func updateScheduleEvent(scheduleEvent models.ScheduleEvent) error {
 
 	oldScheduleId, exists := scheduleEventIdToScheduleIdMap[scheduleEventId]
 	if !exists {
-		LoggingClient.Error("there is no mapping from schedule event id : " + scheduleEventId + " to schedule.")
-		return errors.New("there is no mapping from schedule event id : " + scheduleEventId + " to schedule.")
+		logMsg := fmt.Sprintf("there is no mapping from schedule event id : %s to schedule.", scheduleEventId)
+		LoggingClient.Error(logMsg)
+		return errors.New(logMsg)
 	}
 
 	scheduleContext, exists := scheduleNameToContextMap[scheduleEvent.Schedule]
 	if !exists {
-		LoggingClient.Error("query the schedule with name : " + scheduleEvent.Schedule + " occurs a error ")
-		return errors.New("there is no mapping from scheduleEvent schedule name: " + scheduleEvent.Schedule + " to schedule")
+		logMsg := fmt.Sprintf("query the schedule with name : %s  and did not exist.", scheduleEvent.Schedule)
+		return errors.New(logMsg)
 	}
 
 	//if the schedule event switched schedule
@@ -281,7 +324,7 @@ func updateScheduleEvent(scheduleEvent models.ScheduleEvent) error {
 		// TODO: Not sure we want to just remove the schedule from the schedule context
 		if len(scheduleContext.ScheduleEventsMap) == 0 {
 			LoggingClient.Debug("there are no more events for the schedule : " + oldScheduleId + ", remove it.")
-			deleteScheduleOperation(oldScheduleId, scheduleContext)
+			deleteScheduleOperation(schedule, scheduleContext)
 		}
 
 		//add Schedule Event
@@ -297,7 +340,7 @@ func updateScheduleEvent(scheduleEvent models.ScheduleEvent) error {
 			addScheduleOperation(schedule, &context)
 		}
 
-		addScheduleEventOperation(newScheduleId, scheduleEventId, scheduleEvent)
+		addScheduleEventOperation(schedule, scheduleEvent)
 	} else { // if not, just update the schedule event in place
 		scheduleContext.ScheduleEventsMap[scheduleEventId] = scheduleEvent
 	}
@@ -315,14 +358,14 @@ func removeScheduleEvent(scheduleEventId string) error {
 
 	scheduleId, exists := scheduleEventIdToScheduleIdMap[scheduleEventId]
 	if !exists {
-		LoggingClient.Error("can not find schedule id with schedule event id : " + scheduleEventId)
-		return errors.New("can not find schedule id with schedule event id : " + scheduleEventId)
+		logMsg:= fmt.Sprintf("could not find schedule id with schedule event id : %s", scheduleEventId)
+		return errors.New(logMsg)
 	}
 
 	scheduleContext, exists := scheduleIdToContextMap[scheduleId]
 	if !exists {
-		LoggingClient.Error("can not find schedule context with schedule id : " + scheduleId)
-		return errors.New("can not find schedule context with schedule id : " + scheduleId)
+		logMsg := fmt.Sprintf("can not find schedule context with schedule id : %s", scheduleId)
+		return errors.New(logMsg)
 	}
 
 	delete(scheduleContext.ScheduleEventsMap, scheduleEventId)
@@ -415,7 +458,7 @@ func execute(context *ScheduleContext, wg *sync.WaitGroup) error {
 		}
 
 		client := &http.Client{
-			Timeout:       time.Duration(Configuration.Service.Timeout) * time.Millisecond,
+			Timeout: time.Duration(Configuration.Service.Timeout) * time.Millisecond,
 		}
 		responseBytes, statusCode, err := sendRequestAndGetResponse(client, req)
 		responseStr := string(responseBytes)
@@ -473,9 +516,9 @@ func validMethod(method string) bool {
 	   extension-method = token
 	     token          = 1*<any CHAR except CTLs or separators>
 	*/
-	a:= [] string {"GET","HEAD", "POST","PUT","DELETE","TRACE","CONNECT"}
+	a := []string{"GET", "HEAD", "POST", "PUT", "DELETE", "TRACE", "CONNECT"}
 	method = strings.ToUpper(method)
-	return contains(a,method)
+	return contains(a, method)
 }
 
 func contains(a []string, x string) bool {
@@ -487,19 +530,131 @@ func contains(a []string, x string) bool {
 	return false
 }
 
+// Query core-metadata scheduler client get schedules
+func getMetadataSchedules() ([]models.Schedule, error) {
+
+	var receivedSchedules []models.Schedule
+	receivedSchedules, errSchedule := msc.Schedules()
+	if errSchedule != nil {
+		return receivedSchedules, LoggingClient.Error(fmt.Sprintf("error connecting to metadata and retrieving schedules %s", errSchedule.Error()))
+	}
+
+	if receivedSchedules != nil {
+		LoggingClient.Debug("successfully queried core-metadata schedules...")
+		for _, v := range receivedSchedules {
+			LoggingClient.Debug(fmt.Sprintf("found schedule id: %s  name: %s start time: %s", v.Id.Hex(), v.Name, v.Start))
+		}
+	}
+	return receivedSchedules, nil
+}
+
+// Query core-metadata schedulerEvent client get scheduledEvents
+func getMetadataScheduleEvents() ([]models.ScheduleEvent, error) {
+
+	var receivedScheduleEvents []models.ScheduleEvent
+	receivedScheduleEvents, err := msec.ScheduleEvents()
+	if err != nil {
+		return receivedScheduleEvents, LoggingClient.Error(fmt.Sprintf("error connecting to metadata and retrieving schedule events: %s", err.Error()))
+	}
+
+	// debug information only
+	if receivedScheduleEvents != nil {
+		LoggingClient.Debug("successfully queried core-metadata schedule events...")
+		for _, v := range receivedScheduleEvents {
+			LoggingClient.Debug(fmt.Sprintf("found schedule event id: %s name: %s schedule: %s service name: %s ", v.Id.Hex(), v.Name, v.Schedule, v.Service))
+		}
+	}
+
+	return receivedScheduleEvents, nil
+}
+
+// Iterate over the received schedules add them to scheduler
+func addReceivedSchedules(schedules []models.Schedule) error {
+
+	for _, schedule := range schedules {
+		// todo: need to remove this naming convention based inference
+		matched, err := regexp.MatchString("device.*", schedule.Name)
+		if err != nil {
+			LoggingClient.Info(fmt.Sprintf("error parsing recevied core-metadata schedules %s", err.Error()))
+			return err
+		}
+		// we have a service related notification
+		if !matched {
+			err := addSchedule(schedule)
+			if err != nil {
+				LoggingClient.Info(fmt.Sprintf("error adding core-metadata schedule name: %s - %s", schedule.Name, err.Error()))
+				return err
+			}
+			LoggingClient.Info(fmt.Sprintf("added schedule name: %s to the schedule id: %s ", schedule.Name, schedule.Id.Hex()))
+		}
+	}
+	return nil
+}
+
+// Iterate over the received schedule event(s)
+func addReceivedScheduleEvents(scheduleEvents []models.ScheduleEvent) error {
+
+	for _, scheduleEvent := range scheduleEvents {
+		// todo: need to remove this naming convention based inference
+		matched, err := regexp.MatchString("device.*", scheduleEvent.Service)
+		if err != nil {
+			LoggingClient.Info(fmt.Sprintf("error parsing recevied core-metadata schedules %s", err.Error()))
+			return err
+		}
+		// schedule event service should not be device.*
+		if !matched {
+			err := addScheduleEvent(scheduleEvent)
+			if err != nil {
+				LoggingClient.Info(fmt.Sprintf("error adding core-metadata schedule event name: %s - %s", scheduleEvent.Name, err.Error()))
+				return err
+			}
+			LoggingClient.Info(fmt.Sprintf("added schedule event name: %s to the schedule name: %s  schedule event id: %s", scheduleEvent.Name, scheduleEvent.Schedule, scheduleEvent.Id.Hex()))
+		}
+	}
+
+	return nil
+}
 
 // Utility function for adding configured locally schedulers and scheduled events
 func AddSchedulers() error {
 
-	LoggingClient.Info(fmt.Sprintf("loading default schedules and schedule events..."))
+	// ensure maps are clean
+	clearMaps()
+
+	// ensure queue is empty
+	clearQueue()
+
+	LoggingClient.Info(fmt.Sprintf("Loading schedules, schedule events, and addressables ..."))
+
+	// load data from core-metadata
+	err := loadCoreMetadataInformation()
+	if err != nil {
+		return LoggingClient.Error("failed to load information from core-metadata", err.Error())
+	}
+
+	// load config schedules
+	errCS := loadConfigSchedules()
+	if errCS != nil {
+		return LoggingClient.Error("failed to load scheduler config data", errCS.Error())
+	}
+
+	// load config schedule events
+	errCSE := loadConfigScheduleEvents()
+	if errCSE != nil {
+		return LoggingClient.Error("failed to load scheduler events config data", errCSE.Error())
+	}
+
+	LoggingClient.Info(fmt.Sprintf("completed loading schedules, schedule events, and addressables"))
+
+	return nil
+}
+
+func loadConfigSchedules() error {
 
 	schedules := Configuration.Schedules
-
 	for i := range schedules {
-
 		schedule := models.Schedule{
 			BaseObject: models.BaseObject{},
-			Id:         bson.NewObjectId(),
 			Name:       schedules[i].Name,
 			Start:      schedules[i].Start,
 			End:        schedules[i].End,
@@ -507,22 +662,42 @@ func AddSchedulers() error {
 			Cron:       schedules[i].Cron,
 			RunOnce:    schedules[i].RunOnce,
 		}
-		err := addSchedule(schedule)
-		if err != nil {
-			return LoggingClient.Error("AddDefaultSchedulers() - failed to load schedule %s", err.Error())
+		_, errExistingSchedule := queryScheduleByName(schedule.Name)
+
+		if errExistingSchedule != nil {
+			// add the schedule core-metadata
+			newScheduleId, errAddedSchedule := addScheduleToCoreMetaData(schedule)
+			if errAddedSchedule != nil {
+				return LoggingClient.Error("error adding schedule %s to the scheduler", errAddedSchedule.Error())
+			}
+
+			// add the core-metadata scheduler.id
+			schedule.Id = bson.ObjectId(newScheduleId)
+
+			// add the schedule to the scheduler
+			err := addSchedule(schedule)
+			//loadedSchedules = append(loadedSchedules, schedule)
+
+			if err != nil {
+				return LoggingClient.Error("error loading schedule %s from the scheduler config", err.Error())
+			}
 		} else {
-			LoggingClient.Info(fmt.Sprintf("added default schedule %s", schedule.Name))
+			LoggingClient.Debug(fmt.Sprintf("did not add schedule %s as it already exists in the scheduler", schedule.Name))
 		}
 	}
+
+	return nil
+}
+
+// Load schedule events and associated addressable(s) if required
+func loadConfigScheduleEvents() error {
 
 	scheduleEvents := Configuration.ScheduleEvents
 
 	for e := range scheduleEvents {
 
 		addressable := models.Addressable{
-			// TODO: find a better way to initialize perhaps core-metadata
-			Id:         bson.NewObjectId(),
-			Name:       fmt.Sprintf("Schedule-%s", scheduleEvents[e].Name),
+			Name:       fmt.Sprintf("schedule-%s", scheduleEvents[e].Name),
 			Path:       scheduleEvents[e].Path,
 			Port:       scheduleEvents[e].Port,
 			Protocol:   scheduleEvents[e].Protocol,
@@ -531,7 +706,7 @@ func AddSchedulers() error {
 		}
 
 		scheduleEvent := models.ScheduleEvent{
-			Id: 	 	 bson.NewObjectId(),
+			//Id:          bson.NewObjectId(),
 			Name:        scheduleEvents[e].Name,
 			Schedule:    scheduleEvents[e].Schedule,
 			Parameters:  scheduleEvents[e].Parameters,
@@ -539,15 +714,94 @@ func AddSchedulers() error {
 			Addressable: addressable,
 		}
 
-		err := addScheduleEvent(scheduleEvent)
+		// fetch existing queue and determine of scheduleEvent exists
+		_, err := queryScheduleEventByName(scheduleEvent.Name)
+
 		if err != nil {
-			return LoggingClient.Error("AddDefaultSchedulers() - failed to load schedule event %s", err.Error())
+			// query core-metadata for addressable
+			_, err := mac.AddressableForName(addressable.Name)
+			if err != nil {
+				// we don't have that addressable yet now add it
+				addressableId, err := mac.Add(&addressable)
+				if err != nil {
+					return LoggingClient.Error("error adding new addressable into core-metadata", err.Error())
+				}
+				LoggingClient.Info(fmt.Sprintf("added addressable into core-metadata name: %s id: %s path: %s" , addressable.Name, addressableId, addressable.Path))
+
+				// add the core-metadata id value
+				addressable.Id = bson.ObjectId(addressableId)
+			}
+
+			// add the schedule event with addressable event to core-metadata
+			newScheduleEventId, err := addScheduleEventToCoreMetadata(scheduleEvent)
+			if err != nil {
+				return LoggingClient.Error("error adding schedule event %s into core-metadata", err.Error())
+			}
+			LoggingClient.Info(fmt.Sprintf("added schedule event into core-metadata name: %s id: %s ", scheduleEvent.Name, newScheduleEventId))
+
+			// add the core-metadata version of the scheduleEvent.Id
+			scheduleEvent.Id = bson.ObjectId(newScheduleEventId)
+
+			errAddSE := addScheduleEvent(scheduleEvent)
+			if errAddSE!= nil {
+				return LoggingClient.Error("error loading schedule event %s into scheduler", errAddSE.Error())
+			}
+			LoggingClient.Info(fmt.Sprintf("added schedule event name: %s id: %s into scheduler", scheduleEvent.Name, scheduleEvent.Id.Hex()))
+
 		} else {
-			LoggingClient.Info(fmt.Sprintf("added default schedule event %s", scheduleEvent.Name))
+			LoggingClient.Debug(fmt.Sprintf("did not load schedule event name: %s as it exists in the scheduler", scheduleEvent.Name))
 		}
 	}
 
-	LoggingClient.Info(fmt.Sprintf("completed loading default schedules and schedule events"))
 	return nil
 }
+
+func loadCoreMetadataInformation() error {
+
+	receivedSchedules, err := getMetadataSchedules()
+	if err != nil {
+		LoggingClient.Error("failed to receive schedules from core-metadata %s", err.Error())
+		return err
+	}
+
+	err = addReceivedSchedules(receivedSchedules)
+	if err != nil {
+		LoggingClient.Error("failed to add received schedules from core-metadata %s", err.Error())
+		return err
+	}
+
+	receivedScheduleEvents, err := getMetadataScheduleEvents()
+	if err != nil {
+		LoggingClient.Error("failed to receive schedule events from core-metadata %s", err.Error())
+		return err
+	}
+
+	err = addReceivedScheduleEvents(receivedScheduleEvents)
+	if err != nil {
+		LoggingClient.Error("failed to add received schedule events from core-metadata %s", err.Error())
+		return err
+	}
+
+	return nil
+}
+func addScheduleToCoreMetaData(schedule models.Schedule) (string, error) {
+
+	addedScheduleId, err := msc.Add(&schedule)
+	if err != nil {
+		return "", LoggingClient.Error(fmt.Sprintf("error trying to add schedule to core-metadata service: %s", err.Error()))
+	}
+	LoggingClient.Info(fmt.Sprintf("added schedule %s to the core-metadata with id %s", schedule.Name, addedScheduleId))
+	return addedScheduleId, nil
+}
+
+func addScheduleEventToCoreMetadata(scheduleEvent models.ScheduleEvent) (string, error) {
+
+	addedScheduleEventId, err := msec.Add(&scheduleEvent)
+	if err != nil {
+		return "", LoggingClient.Error(fmt.Sprintf("error trying to add schedule event to core-metadata service: %s", err.Error()))
+	}
+	LoggingClient.Info(fmt.Sprintf("added schedule event %s to the core-metadata with id %s", scheduleEvent.Name, addedScheduleEventId))
+	return addedScheduleEventId, nil
+}
+
 //endregion

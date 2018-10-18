@@ -39,6 +39,11 @@ func isIntervalValid(frequency string) bool {
 func msToTime(ms string) (time.Time, error) {
 	msInt, err := strconv.ParseInt(ms, 10, 64)
 	if err != nil {
+		// todo: support-scheduler will be removed later issue_650a
+		t, err := time.Parse(SCHEDULER_TIMELAYOUT, ms)
+		if err == nil{
+			return t, nil
+		}
 		return time.Time{}, err
 	}
 
