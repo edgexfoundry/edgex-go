@@ -156,6 +156,21 @@ func (mc *MongoClient) EventsPushed() ([]models.Event, error) {
 	return mc.getEvents(bson.M{"pushed": bson.M{"$gt": int64(0)}})
 }
 
+
+//Delete pushed events by created time
+func (mc *MongoClient) DeletePushedEvents(time int64) error {
+	err := mc.deleteEvents(bson.M{"pushed": bson.M{"$gt": int64(0)}, "created": bson.M{"$lte": time}})
+
+	return err
+}
+
+func (mc *MongoClient) EventsPushedCount(time int64) (int, error) {
+	s := mc.getSessionCopy()
+	defer s.Close()
+
+	return s.DB(mc.database.Name).C(db.EventsCollection).Find(bson.M{"pushed": bson.M{"$gt": int64(0)}, "created": bson.M{"$lte": time}}).Count()
+}
+
 // Delete all of the readings and all of the events
 func (mc *MongoClient) ScrubAllEvents() error {
 	s := mc.getSessionCopy()
@@ -172,6 +187,21 @@ func (mc *MongoClient) ScrubAllEvents() error {
 	}
 
 	return nil
+}
+
+// Get count of events number before expire time
+func (mc *MongoClient) EventsCountOlderThanAge(time int64) (int, error) {
+	s := mc.getSessionCopy()
+	defer s.Close()
+
+	return s.DB(mc.database.Name).C(db.EventsCollection).Find(bson.M{"created": bson.M{"$lte": time}}).Count()
+}
+
+// Delete all of the readings and all of the events before expire time
+func (mc *MongoClient) DeleteOldEvents(time int64) error {
+	err := mc.deleteEvents(bson.M{"created": bson.M{"$lt": time}})
+
+	return err
 }
 
 // Get events for the passed query
@@ -232,6 +262,20 @@ func (mc *MongoClient) getEvent(q bson.M) (models.Event, error) {
 	err := s.DB(mc.database.Name).C(db.EventsCollection).Find(q).One(&me)
 	err = errorMap(err)
 	return me.Event, err
+}
+
+//delete events
+func (mc *MongoClient) deleteEvents(q bson.M) error {
+	s := mc.getSessionCopy()
+	defer s.Close()
+
+	_, err := s.DB(mc.database.Name).C(db.ReadingsCollection).RemoveAll(q)
+	if err != nil {
+		return err
+	}
+
+	_, err = s.DB(mc.database.Name).C(db.EventsCollection).RemoveAll(q)
+	return err
 }
 
 // ************************ READINGS ************************************8

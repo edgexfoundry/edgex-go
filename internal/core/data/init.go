@@ -31,7 +31,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/metadata"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
-	"github.com/pkg/errors"
+	"errors"
 )
 
 // Global variables
@@ -43,6 +43,12 @@ var chConfig chan interface{} //A channel for use by ConsulDecoder in detecting 
 var ep messaging.EventPublisher
 var mdc metadata.DeviceClient
 var msc metadata.DeviceServiceClient
+var scrubPushedCh chan int64
+var deleteOldCh chan int64
+
+//Constant
+const scrubPushedChSize = 5
+const deleteOldChSize = 5
 
 func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup, ch chan error) {
 	until := time.Now().Add(time.Millisecond * time.Duration(timeout))
@@ -96,7 +102,21 @@ func Init(useConsul bool) bool {
 		chConfig = make(chan interface{})
 		go listenForConfigChanges()
 	}
+	
+	dataScrubInit()
+
 	return true
+}
+
+func dataScrubInit() {
+	//Create scrub pushed events long go routine and channel
+	scrubPushedCh = make(chan int64, scrubPushedChSize)
+	go DeletePushedEvents()
+
+
+	//Create delete old events long go routine and channel
+	deleteOldCh = make(chan int64, deleteOldChSize)
+	go DeleteOldEvents()
 }
 
 func Destruct() {
