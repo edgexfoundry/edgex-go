@@ -48,3 +48,14 @@ schemas:
                 description: return value of "pong"
             "503":
                 description: for unknown or unanticipated issues
+/flush:
+    displayName: Flush Scheduler Schedules
+    description: example - http://localhost:48085/api/v1/flush
+    get:
+        description: Flushes all of the current schedule(s), schedule event(s) from the Scheduler. Will reload from core-metadata and config.
+        displayName: Flush Scheduler Schedules
+        responses:
+            "200":
+                description: return value of value  of "success"
+            "500":
+                description: for unknown or unanticipated issues
