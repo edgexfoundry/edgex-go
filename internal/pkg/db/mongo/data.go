@@ -199,7 +199,7 @@ func (mc *MongoClient) EventsCountOlderThanAge(time int64) (int, error) {
 
 // Delete all of the readings and all of the events before expire time
 func (mc *MongoClient) DeleteOldEvents(time int64) error {
-	err := mc.deleteEvents(bson.M{"created": bson.M{"$lt": time}})
+	err := mc.deleteEvents(bson.M{"created": bson.M{"$lte": time}})
 
 	return err
 }
