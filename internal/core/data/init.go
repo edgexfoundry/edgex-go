@@ -31,7 +31,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/metadata"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
-	"errors"
+	"github.com/pkg/errors"
 )
 
 // Global variables
