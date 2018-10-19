@@ -14,7 +14,7 @@ Introduction
 
 EdgeX Foundry Export Client Registration microservice enables clients to register for data from EdgeX Foundry through REST, and specify compression, encryption, format (JSON, XML), and destination of data.
 
-https://github.com/edgexfoundry/edgex-go/blob/master/export/client/raml/export-client.raml
+https://github.com/edgexfoundry/edgex-go/blob/master/api/raml/export-client.raml
 
 
 .. _`Export client API HTML Documentation`: export-client.html
