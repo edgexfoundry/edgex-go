@@ -25,17 +25,43 @@ confinement: strict
 # may be defaulting to this dir...
 
 apps:
-  kong:
-    command: bin/kong-wrapper.sh
-    plugs:
-      - network-bind
+  # edgex microservices
   consul:
     command: bin/start-consul.sh
-    # TODO: add stop-command
+    daemon: simple
     plugs: [network, network-bind]
-  vault:
-    command: bin/vault
+  core-config-seed:
+    command: bin/start-config-seed.sh
+    plugs: [network, network-bind, daemon-notify]
+    daemon: notify
+    passthrough:
+      after:
+        - consul
+  mongod:
+    command: bin/mongod-wrapper.sh
+    stop-command: bin/mongod --shutdown --dbpath ${SNAP_DATA}/mongo/db
+    plugs: [hardware-observe, network, network-bind, system-observe]
+    daemon: simple
+    passthrough:
+      after:
+        - core-config-seed
+  mongo-worker:
+    command: bin/mongo-worker-wrapper.sh
+    plugs: [network]
+    daemon: oneshot
+    passthrough:
+      after:
+        - mongod
+  security-services:
+    command: bin/security-start.sh
+    stop-command: bin/security-stop.sh
+    daemon: forking
     plugs: [network, network-bind]
+    passthrough:
+      after:
+        - core-config-seed
+        # this service also runs kong, so we need it to run after cassandra
+        - cassandra
   cassandra:
     command: bin/cassandra-wrapper.sh
     daemon: forking
@@ -47,26 +73,92 @@ apps:
       # Needed for checking available space in the data directories
       # (java.io.File.getTotalSpace).
       - mount-observe
-  core-config-seed:
-    command: bin/start-config-seed.sh
+  support-logging:
+    command: bin/go-services-wrapper.sh support-logging
+    daemon: notify
+    plugs: [network, network-bind, daemon-notify]
+    passthrough:
+      after:
+        - core-config-seed
+        - mongo-worker
+  support-notifications:
+    command: bin/go-services-wrapper.sh support-notifications
+    daemon: notify
+    plugs: [network, network-bind, daemon-notify]
+    passthrough:
+      after:
+        - core-config-seed
+        - mongo-worker
+  core-data:
+    command: bin/go-services-wrapper.sh core-data
+    daemon: notify
+    plugs: [network, network-bind, daemon-notify]
+    passthrough:
+      after:
+        - core-config-seed
+        - mongo-worker
+  core-metadata:
+    command: bin/go-services-wrapper.sh core-metadata
+    daemon: notify
+    plugs: [network, network-bind, daemon-notify]
+    passthrough:
+      after:
+        - core-config-seed
+        - mongo-worker
+  core-command:
+    command: bin/go-services-wrapper.sh core-command
+    daemon: notify
+    plugs: [network, network-bind, daemon-notify]
+    passthrough:
+      after:
+        - core-config-seed
+        - mongo-worker
+  support-rulesengine:
+    command: bin/support-rulesengine-wrapper.sh
+    daemon: simple
     plugs: [network, network-bind]
-  start-edgex:
-    command: bin/start-edgex.sh
-    plugs: [network, network-bind, system-observe, process-control, hardware-observe]
-  stop-edgex:
-    command: bin/stop-edgex.sh
-    plugs: [system-observe, process-control]
-  security-start:
-    command: bin/security-start.sh
-    plugs:
-      - network
-      - network-bind
+    passthrough:
+      after:
+        - core-config-seed
+        - mongo-worker
+  support-scheduler:
+    command: bin/go-services-wrapper.sh support-scheduler
+    daemon: notify
+    plugs: [network, network-bind]
+    passthrough:
+      after:
+        - core-config-seed
+        - mongo-worker
+  export-client:
+    command: bin/go-services-wrapper.sh export-client
+    daemon: notify
+    plugs: [network, network-bind, daemon-notify]
+    passthrough:
+      after:
+        - core-config-seed
+        - mongo-worker
+  export-distro:
+    command: bin/go-services-wrapper.sh export-distro
+    daemon: notify
+    plugs: [network, network-bind, daemon-notify]
+    passthrough:
+      after:
+        - core-config-seed
+        - mongo-worker
+  device-virtual:
+    command: bin/device-virtual-wrapper.sh
+    daemon: simple
+    plugs: [network, network-bind]
+    passthrough:
+      after:
+        - core-config-seed
+        - mongo-worker
+
+
+  # helper commands the snap exposes
   mongo:
     command: bin/mongo
     plugs: [home, network]
-  mongod:
-    command: mongo/launch-edgex-mongo.sh
-    plugs: [hardware-observe, network, network-bind, system-observe]
   mongostat:
     command: bin/mongostat
     plugs: [network]
@@ -79,22 +171,40 @@ apps:
   curl:
     command: usr/bin/curl
     plugs: [network]
+  kong:
+    command: bin/kong-wrapper.sh
+    plugs:
+      - network-bind
 
 parts:
   curl:
     plugin: nil
-    override-pull: echo "no source pull"
+    # snapcraft defaults the source for a part that doesn't specify a source
+    # to ".", which then means when will scan the full directory and determine
+    # that something there has changed, i.e. the config-common parts with
+    # actual scripts, etc. this part gets marked out of date too and needs 
+    # rebuilding, which is false
+    # to resolve this we can just specify the source of something that doesn't
+    # matter and will minimize confusion by snapcraft
+    source: snap/local/build-helpers
     stage-packages:
       - curl
+  # this part really only exists so that the go parts can use this local 
+  # script, but we don't want all the go parts to depend on the config-common
+  # part, as they really don't depend on it
+  # separating this makes quicker iteration when you just need to change the 
+  # config scripts
+  go-build-helper:
+    plugin: dump
+    source: snap/local/build-helpers
+    prime: [-*]
   go:
-    after: [config-common]
+    after: [glide]
     source-tag: go1.10.2
     source-depth: 1
   glide:
     after:
-      # setting go to build after config-common ensures that it will get re-added to SNAPCRAFT_STAGE
-      # if config-common is rebuilt
-      - config-common
+      - go-build-helper
     plugin: dump
     source:
       - on amd64: https://github.com/Masterminds/glide/releases/download/v0.12.3/glide-v0.12.3-linux-amd64.tar.gz
@@ -188,15 +298,7 @@ parts:
 
   config-common:
     plugin: dump
-    source: ./snap/local
-    stage:
-      - bin/go-build-helper.sh
-      - config/*
-      - bin/*
-    prime:
-      - -bin/go-build-helper.sh
-      - bin/*
-      - config/*
+    source: snap/local/runtime-helpers
   mongodb:
     plugin: dump
     source:
@@ -256,7 +358,6 @@ parts:
     source: .
     plugin: make
     after:
-      - glide
       - go
     override-build: |
       . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
@@ -661,7 +762,7 @@ parts:
       - bin/*
       - config/*
   security-api-gateway:
-    after: [go, glide]
+    after: [go]
     source: https://github.com/edgexfoundry/security-api-gateway.git
     source-branch: california
     plugin: make
