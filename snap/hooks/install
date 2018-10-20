@@ -91,3 +91,9 @@ if [ ! -f ${SNAP_DATA}/config/security-api-gateway/kong.conf ]; then
     # finally set the make database to be cassandra
     sed -i "s@#database = postgres@database = cassandra@" ${SNAP_DATA}/config/security-api-gateway/kong.conf
 fi
+
+# finally, disable services in the snap that aren't meant to come up by default
+# by default, we want the export-*, support-*, and device-virtual services off
+for svc in export-distro export-client support-notifications support-scheduler support-rulesengine support-logging device-virtual; do
+    snapctl stop --disable edgexfoundry.$svc
+done
