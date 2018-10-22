@@ -55,24 +55,15 @@ apps:
   security-services:
     command: bin/security-start.sh
     stop-command: bin/security-stop.sh
-    daemon: forking
-    plugs: [network, network-bind]
+    daemon: notify
+    plugs: 
+      - network
+      - network-bind
+      - daemon-notify
+      - mount-observe
     passthrough:
       after:
         - core-config-seed
-        # this service also runs kong, so we need it to run after cassandra
-        - cassandra
-  cassandra:
-    command: bin/cassandra-wrapper.sh
-    daemon: forking
-    # mount-observe needs to be manually connected post-install:
-    # `sudo snap connect cassandra:mount-observe ubuntu-core:mount-observe`
-    plugs:
-      - network
-      - network-bind
-      # Needed for checking available space in the data directories
-      # (java.io.File.getTotalSpace).
-      - mount-observe
   support-logging:
     command: bin/go-services-wrapper.sh support-logging
     daemon: notify
