@@ -34,6 +34,11 @@ export MAX_VAULT_UNSEAL_TRIES=10
 # on some systems. See issue #509 for more details
 cd $SNAP_DATA
 
+systemd-notify --ready
+
+# start up cassandra
+$SNAP/bin/cassandra-wrapper.sh
+
 # touch all the kong log files to ensure they exist
 mkdir -p ${LOG_DIR}
 for log in ${KONG_PROXY_ACCESS_LOG} ${KONG_ADMIN_ACCESS_LOG} ${KONG_PROXY_ERROR_LOG} ${KONG_ADMIN_ERROR_LOG}; do
