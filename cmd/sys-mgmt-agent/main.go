@@ -82,7 +82,7 @@ func main() {
 }
 
 func logBeforeInit(err error) {
-	l := logger.NewClient(internal.SystemManagementAgentServiceKey, false, "")
+	l := logger.NewClient(internal.SystemManagementAgentServiceKey, false, "", logger.InfoLog)
 	l.Error(err.Error())
 }
 

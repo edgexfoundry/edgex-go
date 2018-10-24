@@ -25,6 +25,7 @@ type ConfigurationStruct struct {
 	ServiceAddress        string
 	LoggingFile           string
 	LoggingRemoteURL      string
+	LoggingLevel          string
 	EnableRemoteLogging   bool
 	OsLevelOperations     bool
 	DockerLevelOperations bool

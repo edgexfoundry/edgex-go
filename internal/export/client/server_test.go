@@ -34,7 +34,7 @@ func (d *distroMockClient) NotifyRegistrations(models.NotifyUpdate) error {
 
 func prepareTest(t *testing.T) *httptest.Server {
 	if LoggingClient == nil {
-		LoggingClient = logger.NewClient(internal.ExportClientServiceKey, false, "")
+		LoggingClient = logger.NewClient(internal.ExportClientServiceKey, false, "", logger.InfoLog)
 	}
 
 	dbClient = &memory.MemDB{}

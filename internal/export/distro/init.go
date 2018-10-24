@@ -45,7 +45,7 @@ func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup,
 			} else {
 				// Setup Logging
 				logTarget := setLoggingTarget()
-				LoggingClient = logger.NewClient(internal.ExportDistroServiceKey, Configuration.Logging.EnableRemote, logTarget)
+				LoggingClient = logger.NewClient(internal.ExportDistroServiceKey, Configuration.Logging.EnableRemote, logTarget, Configuration.Logging.Level)
 				//Initialize service clients
 				initializeClient(useConsul)
 			}
@@ -182,3 +182,4 @@ func setLoggingTarget() string {
 	}
 	return Configuration.Logging.File
 }
+
