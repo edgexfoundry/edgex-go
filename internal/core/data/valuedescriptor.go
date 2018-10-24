@@ -15,7 +15,6 @@ package data
 
 import (
 	"encoding/json"
-	"gopkg.in/mgo.v2/bson"
 	"io"
 	"regexp"
 
@@ -23,6 +22,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
+	"gopkg.in/mgo.v2/bson"
 )
 
 const (
@@ -100,7 +100,7 @@ func getValueDescriptorsByLabel(label string) (vdList []models.ValueDescriptor, 
 	return vdList, nil
 }
 
-func getValueDescriptorsByType(typ string)(vdList []models.ValueDescriptor, err error) {
+func getValueDescriptorsByType(typ string) (vdList []models.ValueDescriptor, err error) {
 	vdList, err = dbClient.ValueDescriptorsByType(typ)
 
 	if err != nil {
@@ -115,7 +115,7 @@ func getValueDescriptorsByType(typ string)(vdList []models.ValueDescriptor, err 
 	return vdList, nil
 }
 
-func getValueDescriptorsByDevice(device models.Device)(vdList []models.ValueDescriptor, err error) {
+func getValueDescriptorsByDevice(device models.Device) (vdList []models.ValueDescriptor, err error) {
 	// Get the names of the value descriptors
 	vdNames := []string{}
 	device.AllAssociatedValueDescriptors(&vdNames)
@@ -141,7 +141,7 @@ func getValueDescriptorsByDevice(device models.Device)(vdList []models.ValueDesc
 	return vdList, nil
 }
 
-func getValueDescriptorsByDeviceName(name string)(vdList []models.ValueDescriptor, err error) {
+func getValueDescriptorsByDeviceName(name string) (vdList []models.ValueDescriptor, err error) {
 	// Get the device
 	device, err := mdc.DeviceForName(name)
 	if err != nil {
@@ -158,7 +158,7 @@ func getValueDescriptorsByDeviceName(name string)(vdList []models.ValueDescripto
 	return getValueDescriptorsByDevice(device)
 }
 
-func getValueDescriptorsByDeviceId(id string)(vdList []models.ValueDescriptor, err error) {
+func getValueDescriptorsByDeviceId(id string) (vdList []models.ValueDescriptor, err error) {
 	// Get the device
 	device, err := mdc.Device(id)
 	if err != nil {
@@ -175,7 +175,7 @@ func getValueDescriptorsByDeviceId(id string)(vdList []models.ValueDescriptor, e
 	return getValueDescriptorsByDevice(device)
 }
 
-func getAllValueDescriptors()(vd []models.ValueDescriptor, err error) {
+func getAllValueDescriptors() (vd []models.ValueDescriptor, err error) {
 	vd, err = dbClient.ValueDescriptors()
 	if err != nil {
 		LoggingClient.Error(err.Error())
@@ -229,6 +229,9 @@ func updateValueDescriptor(from models.ValueDescriptor) error {
 	}
 
 	// Update the fields
+	if from.Description != "" {
+		to.Description = from.Description
+	}
 	if from.DefaultValue != "" {
 		to.DefaultValue = from.DefaultValue
 	}
