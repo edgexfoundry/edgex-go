@@ -47,7 +47,7 @@ func Retry(useProfile string, timeout int, wait *sync.WaitGroup, ch chan error) 
 			} else {
 				// Setup Logging
 				logTarget := setLoggingTarget()
-				LoggingClient = logger.NewClient(internal.ConfigSeedServiceKey, Configuration.EnableRemoteLogging, logTarget)
+				LoggingClient = logger.NewClient(internal.ConfigSeedServiceKey, Configuration.EnableRemoteLogging, logTarget, Configuration.LoggingLevel)
 			}
 		}
 		//Check to verify consul connectivity
