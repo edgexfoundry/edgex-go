@@ -10,6 +10,10 @@ EdgeX Foundry is a vendor-neutral open source project hosted by The Linux Founda
 ### pkg-config
 `go get github.com/rjeczalik/pkgconfig/cmd/pkg-config`
 
+### Go Dep
+ EdgeX-Go uses the native go dependency management tool. You can download the `dep` tool from [Go Dep](https://github.com/golang/dep). 
+ > For Windows users visit the releases tab and download the `*.exe`, rename it to `dep.exe` and place it in your `%GOPATH%\bin` dir
+
 ### ZeroMQ
 Several EdgeX Foundry services depend on ZeroMQ for communications by default.
 
