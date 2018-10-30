@@ -9,6 +9,7 @@ ServiceAddress = 'localhost'
 CheckInterval = '10s'
 EnableRemoteLogging = false
 LoggingFile = './logs/edgex-sys-mgmt-agent.log'
+LoggingLevel = 'INFO'
 
 [Clients]
   [Clients.Notifications]

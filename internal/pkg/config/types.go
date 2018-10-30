@@ -76,6 +76,7 @@ type RegistryInfo struct {
 type LoggingInfo struct {
 	EnableRemote bool
 	File         string
+	Level        string
 }
 
 // MessageQueueInfo provides parameters related to connecting to a message queue

@@ -8,6 +8,7 @@ package logging
 
 import (
 	"fmt"
+	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
 	"log"
 	"os"
 
@@ -72,10 +73,12 @@ func (l privLogger) log(logLevel string, msg string, labels []string) {
 }
 
 // SetLogLevel sets logger log level
-func (l privLogger) SetLogLevel(logLevel string) {
+func (l privLogger) SetLogLevel(logLevel string) error {
 	if logger.IsValidLogLevel(logLevel) == true {
 		*l.logLevel = logLevel
+		return nil
 	}
+	return types.ErrNotFound{}
 }
 
 func (l privLogger) Debug(msg string, labels ...string) error {
