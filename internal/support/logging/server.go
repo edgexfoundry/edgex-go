@@ -12,16 +12,16 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"runtime"
 	"strconv"
 	"strings"
-	"runtime"
 
-	"github.com/go-zoo/bone"
+	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/support/logging/models"
-	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 	"github.com/edgexfoundry/edgex-go/pkg/clients"
-	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
+	"github.com/go-zoo/bone"
 )
 
 func replyPing(w http.ResponseWriter, r *http.Request) {
@@ -258,8 +258,6 @@ func HttpServer() http.Handler {
 	mux.Get(clients.ApiMetricsRoute, http.HandlerFunc(replyMetrics))
 
 	mv1 := mux.Prefix("/api/v1")
-
-	mv1.Get("/ping", http.HandlerFunc(replyPing))
 
 	mv1.Post("/logs", http.HandlerFunc(addLog))
 	mv1.Get("/logs/:limit", http.HandlerFunc(getLogs))

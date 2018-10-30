@@ -8,11 +8,11 @@
 package scheduler
 
 import (
-	"github.com/edgexfoundry/edgex-go/pkg/models"
 	"testing"
 	"time"
-)
 
+	"github.com/edgexfoundry/edgex-go/pkg/models"
+)
 
 // Test common const
 const (
@@ -21,7 +21,6 @@ const (
 	TestUnexpectedMsgFormatStrForIntVal   = "unexpected result, active: '%d' but expected: '%d'"
 	TestUnexpectedMsgFormatStrForFloatVal = "unexpected result, active: '%f' but expected: '%f'"
 	TestUnexpectedMsgFormatStrForBoolVal  = "unexpected result, active: '%t' but expected: '%t'"
-	ScheduleApiPath                       = "/api/v1/schedule"
 )
 
 // Test Schedule model const fields
