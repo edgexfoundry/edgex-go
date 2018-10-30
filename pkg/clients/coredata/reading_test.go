@@ -28,7 +28,6 @@ import (
 )
 
 const (
-	ReadingUriPath     = "/api/v1/reading"
 	TestReadingDevice1 = "device1"
 	TestReadingDevice2 = "device2"
 )
@@ -41,8 +40,8 @@ func TestGetReadings(t *testing.T) {
 			t.Errorf("expected http method is GET, active http method is : %s", r.Method)
 		}
 
-		if r.URL.EscapedPath() != ReadingUriPath {
-			t.Errorf("expected uri path is %s, actual uri path is %s", ReadingUriPath, r.URL.EscapedPath())
+		if r.URL.EscapedPath() != clients.ApiReadingRoute {
+			t.Errorf("expected uri path is %s, actual uri path is %s", clients.ApiReadingRoute, r.URL.EscapedPath())
 		}
 
 		w.Write([]byte("[" +
@@ -58,11 +57,11 @@ func TestGetReadings(t *testing.T) {
 
 	defer ts.Close()
 
-	url := ts.URL + ReadingUriPath
+	url := ts.URL + clients.ApiReadingRoute
 
 	params := types.EndpointParams{
 		ServiceKey:  internal.CoreDataServiceKey,
-		Path:        ReadingUriPath,
+		Path:        clients.ApiReadingRoute,
 		UseRegistry: false,
 		Url:         url,
 		Interval:    clients.ClientMonitorDefault}
@@ -90,10 +89,10 @@ func TestGetReadings(t *testing.T) {
 }
 
 func TestNewReadingClientWithConsul(t *testing.T) {
-	deviceUrl := "http://localhost:48080" + ReadingUriPath
+	deviceUrl := "http://localhost:48080" + clients.ApiReadingRoute
 	params := types.EndpointParams{
 		ServiceKey:  internal.CoreDataServiceKey,
-		Path:        ReadingUriPath,
+		Path:        clients.ApiReadingRoute,
 		UseRegistry: true,
 		Url:         deviceUrl,
 		Interval:    clients.ClientMonitorDefault}

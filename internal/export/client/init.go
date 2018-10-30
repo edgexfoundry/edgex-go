@@ -8,7 +8,6 @@ package client
 
 import (
 	"fmt"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 	"sync"
 	"time"
 
@@ -19,15 +18,12 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/memory"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 	"github.com/edgexfoundry/edgex-go/pkg/clients"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/export/distro"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
 	"github.com/pkg/errors"
-)
-
-const (
-	PingApiPath = "/api/v1/ping"
 )
 
 // Global variables

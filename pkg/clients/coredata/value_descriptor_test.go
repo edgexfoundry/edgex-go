@@ -26,7 +26,6 @@ import (
 )
 
 const (
-	ValueDescriptorUriPath         = "/api/v1/valuedescriptor"
 	TestValueDesciptorDescription1 = "value descriptor1"
 	TestValueDesciptorDescription2 = "value descriptor2"
 )
@@ -39,8 +38,8 @@ func TestGetvaluedescriptors(t *testing.T) {
 			t.Errorf("expected http method is GET, active http method is : %s", r.Method)
 		}
 
-		if r.URL.EscapedPath() != ValueDescriptorUriPath {
-			t.Errorf("expected uri path is %s, actual uri path is %s", ValueDescriptorUriPath, r.URL.EscapedPath())
+		if r.URL.EscapedPath() != clients.ApiValueDescriptorRoute {
+			t.Errorf("expected uri path is %s, actual uri path is %s", clients.ApiValueDescriptorRoute, r.URL.EscapedPath())
 		}
 
 		w.Write([]byte("[" +
@@ -56,11 +55,11 @@ func TestGetvaluedescriptors(t *testing.T) {
 
 	defer ts.Close()
 
-	url := ts.URL + ValueDescriptorUriPath
+	url := ts.URL + clients.ApiValueDescriptorRoute
 
 	params := types.EndpointParams{
 		ServiceKey:  internal.CoreDataServiceKey,
-		Path:        ValueDescriptorUriPath,
+		Path:        clients.ApiValueDescriptorRoute,
 		UseRegistry: false,
 		Url:         url,
 		Interval:    clients.ClientMonitorDefault}
@@ -88,10 +87,10 @@ func TestGetvaluedescriptors(t *testing.T) {
 }
 
 func TestNewValueDescriptorClientWithConsul(t *testing.T) {
-	deviceUrl := "http://localhost:48080" + ValueDescriptorUriPath
+	deviceUrl := "http://localhost:48080" + clients.ApiValueDescriptorRoute
 	params := types.EndpointParams{
 		ServiceKey:  internal.CoreDataServiceKey,
-		Path:        ValueDescriptorUriPath,
+		Path:        clients.ApiValueDescriptorRoute,
 		UseRegistry: true,
 		Url:         deviceUrl,
 		Interval:    clients.ClientMonitorDefault}
