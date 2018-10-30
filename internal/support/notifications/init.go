@@ -58,7 +58,7 @@ func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup,
 			} else {
 				// Setup Logging
 				logTarget := setLoggingTarget()
-				LoggingClient = logger.NewClient(internal.SupportNotificationsServiceKey, Configuration.Logging.EnableRemote, logTarget)
+				LoggingClient = logger.NewClient(internal.SupportNotificationsServiceKey, Configuration.Logging.EnableRemote, logTarget, Configuration.Logging.Level)
 			}
 		}
 
@@ -230,3 +230,4 @@ func setLoggingTarget() string {
 	}
 	return Configuration.Logging.File
 }
+

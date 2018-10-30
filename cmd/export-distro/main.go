@@ -71,7 +71,7 @@ func main() {
 }
 
 func logBeforeInit(err error) {
-	l := logger.NewClient(internal.ExportDistroServiceKey, false, "")
+	l := logger.NewClient(internal.ExportDistroServiceKey, false, "", logger.InfoLog)
 	l.Error(err.Error())
 }
 

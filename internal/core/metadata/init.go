@@ -60,7 +60,7 @@ func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup,
 				initializeClients(useConsul)
 				// Setup Logging
 				logTarget := setLoggingTarget()
-				LoggingClient = logger.NewClient(internal.CoreMetaDataServiceKey, Configuration.Logging.EnableRemote, logTarget)
+				LoggingClient = logger.NewClient(internal.CoreMetaDataServiceKey, Configuration.Logging.EnableRemote, logTarget, Configuration.Logging.Level)
 			}
 		}
 

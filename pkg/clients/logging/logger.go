@@ -17,6 +17,7 @@ package logger
 
 import (
 	"fmt"
+	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
 	"log"
 	"os"
 	"path/filepath"
@@ -43,7 +44,7 @@ var LogLevels = []string{
 	ErrorLog}
 
 type LoggingClient interface {
-	SetLogLevel(logLevel string)
+	SetLogLevel(logLevel string) error
 	Debug(msg string, labels ...string) error
 	Error(msg string, labels ...string) error
 	Info(msg string, labels ...string) error
@@ -61,12 +62,17 @@ type EdgeXLogger struct {
 }
 
 // Create a new logging client for the owning service
-func NewClient(owningServiceName string, isRemote bool, logTarget string) LoggingClient {
+func NewClient(owningServiceName string, isRemote bool, logTarget string, logLevel string) LoggingClient {
+	if !IsValidLogLevel(logLevel) {
+		logLevel = InfoLog
+	}
+
 	// Set up logging client
 	lc := EdgeXLogger{
 		owningServiceName: owningServiceName,
 		remoteEnabled:     isRemote,
 		logTarget:         logTarget,
+		logLevel:          &logLevel,
 	}
 
 	//If local logging, verify directory exists
@@ -78,8 +84,7 @@ func NewClient(owningServiceName string, isRemote bool, logTarget string) Loggin
 	lc.stdOutLogger = log.New(os.Stdout, "", log.Ldate|log.Ltime)
 	lc.fileLogger = &log.Logger{}
 	lc.fileLogger.SetFlags(log.Ldate | log.Ltime)
-	logLevel := InfoLog
-	lc.logLevel = &logLevel
+
 
 	return lc
 }
@@ -147,10 +152,14 @@ func verifyLogDirectory(path string) {
 }
 
 // SetLogLevel sets minimum severity log level
-func (lc EdgeXLogger) SetLogLevel(logLevel string) {
+func (lc EdgeXLogger) SetLogLevel(logLevel string) error {
 	if IsValidLogLevel(logLevel) == true {
 		*lc.logLevel = logLevel
+
+		return nil
 	}
+
+	return types.ErrNotFound{}
 }
 
 // Log an INFO level message

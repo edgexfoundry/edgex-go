@@ -76,7 +76,7 @@ func main() {
 }
 
 func logBeforeInit(err error) {
-	l := logger.NewClient(internal.SupportNotificationsServiceKey, false, "")
+	l := logger.NewClient(internal.SupportNotificationsServiceKey, false, "", logger.InfoLog)
 	l.Error(err.Error())
 }
 

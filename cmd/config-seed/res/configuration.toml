@@ -12,3 +12,4 @@ TomlExtensions = ['.toml']
 EnableRemoteLogging = false
 LoggingFile = './logs/edgex-config-seed.log'
 LoggingRemoteURL = 'http://localhost:48061/api/v1/logs'
+LoggingLevel = 'INFO'

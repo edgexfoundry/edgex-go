@@ -78,6 +78,6 @@ func bootstrap(profile string) {
 }
 
 func logBeforeInit(err error) {
-	l := logger.NewClient(internal.ConfigSeedServiceKey, false, "")
+	l := logger.NewClient(internal.ConfigSeedServiceKey, false, "", logger.InfoLog)
 	l.Error(err.Error())
 }
