@@ -106,7 +106,7 @@ func addNewEvent(e models.Event) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		retVal = id.Hex() //Coupling to Mongo in the model
+		retVal = id
 	}
 
 	putEventOnQueue(e)                              // Push the aux struct to export service (It has the actual readings)
@@ -117,9 +117,9 @@ func addNewEvent(e models.Event) (string, error) {
 }
 
 func updateEvent(from models.Event) error {
-	to, err := dbClient.EventById(from.ID.Hex())
+	to, err := dbClient.EventById(from.ID)
 	if err != nil {
-		return errors.NewErrEventNotFound(from.ID.Hex())
+		return errors.NewErrEventNotFound(from.ID)
 	}
 
 	// Update the fields
@@ -158,11 +158,11 @@ func deleteEventById(id string) error {
 // Delete the event and readings
 func deleteEvent(e models.Event) error {
 	for _, reading := range e.Readings {
-		if err := deleteReadingById(reading.Id.Hex()); err != nil {
+		if err := deleteReadingById(reading.Id); err != nil {
 			return err
 		}
 	}
-	if err := dbClient.DeleteEventById(e.ID.Hex()); err != nil {
+	if err := dbClient.DeleteEventById(e.ID); err != nil {
 		return err
 	}
 
@@ -250,7 +250,7 @@ func deleteEvents(deviceId string) (int, error) {
 	return count, nil
 }
 
-func scrubPushedEvents()(int, error) {
+func scrubPushedEvents() (int, error) {
 	LoggingClient.Info("Scrubbing events.  Deleting all events that have been pushed")
 
 	// Get the events

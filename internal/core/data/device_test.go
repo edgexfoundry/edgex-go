@@ -2,6 +2,7 @@ package data
 
 import (
 	"fmt"
+	"github.com/google/uuid"
 	"math"
 	"os"
 	"sync"
@@ -171,7 +172,7 @@ func newMockDb() interfaces.DBClient {
 
 
 	DB.On("EventsForDevice", mock.MatchedBy(func(deviceId string) bool {
-		return deviceId == testEvent.ID.Hex()
+		return deviceId == testEvent.ID
 	})).Return([]models.Event{testEvent}, nil)
 
 	DB.On("EventsForDevice", mock.MatchedBy(func(deviceId string) bool {
@@ -263,9 +264,9 @@ func newMockDb() interfaces.DBClient {
 
 	DB.On("AddReading", mock.MatchedBy(func(reading models.Reading) bool {
 		return reading.Name == "valid"
-	})).Return(bson.ObjectId(""), nil)
+	})).Return("", nil)
 
-	DB.On("AddReading", mock.Anything).Return(bson.ObjectId(""), fmt.Errorf("some error"))
+	DB.On("AddReading", mock.Anything).Return("", fmt.Errorf("some error"))
 
 
 	DB.On("ReadingById", mock.MatchedBy(func(id string) bool {
@@ -335,7 +336,7 @@ func newMockDb() interfaces.DBClient {
 
 func buildReadings() []models.Reading {
 	ticks := db.MakeTimestamp()
-	r1 := models.Reading{Id: bson.NewObjectId(),
+	r1 := models.Reading{Id: uuid.New().String(),
 		Name:     "Temperature",
 		Value:    "45",
 		Origin:   testOrigin,
@@ -344,7 +345,8 @@ func buildReadings() []models.Reading {
 		Pushed:   ticks,
 		Device:   testDeviceName}
 
-	r2 := models.Reading{Id: bson.NewObjectId(),
+	// this reading has a bson ID because the API should accept both but only generate UUIDs
+	r2 := models.Reading{Id: bson.NewObjectId().Hex(),
 		Name:     "Pressure",
 		Value:    "1.01325",
 		Origin:   testOrigin,

@@ -239,7 +239,7 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		LoggingClient.Info("Updating event: " + from.ID.Hex())
+		LoggingClient.Info("Updating event: " + from.ID)
 		err = updateEvent(from)
 		if err != nil {
 			switch t := err.(type) {
@@ -684,7 +684,7 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 			}
 
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(id.Hex()))
+			w.Write([]byte(id))
 		} else {
 			// Didn't save the reading in the database
 			encode("unsaved", w)
@@ -1203,7 +1203,7 @@ func valueDescriptorHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(id.Hex()))
+		w.Write([]byte(id))
 	case http.MethodPut:
 		vd, err := decodeValueDescriptor(r.Body)
 		if err != nil {

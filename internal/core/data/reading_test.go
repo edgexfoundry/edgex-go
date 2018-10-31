@@ -157,7 +157,7 @@ func TestGetReadingsByDeviceIdLimited(t *testing.T) {
 	reset()
 	dbClient = newMockDb()
 
-	for limit:= 0; limit < 5; limit++ {
+	for limit := 0; limit < 5; limit++ {
 		expectedReadings, expectedNil := getReadingsByDeviceId(limit, "valid", "Pressure")
 
 		if limit == 0 {
@@ -296,7 +296,7 @@ func TestGetReadingsByCreationTime(t *testing.T) {
 	reset()
 	dbClient = newMockDb()
 
-	_, err := getReadingsByCreationTime(0xBEEF, 0 ,0)
+	_, err := getReadingsByCreationTime(0xBEEF, 0, 0)
 
 	if err != nil {
 		t.Errorf("Unexpected error getting readings by creation time")

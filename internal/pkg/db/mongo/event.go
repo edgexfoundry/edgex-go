@@ -34,15 +34,15 @@ func (me mongoEvent) GetBSON() (interface{}, error) {
 	}
 
 	return struct {
-		ID       bson.ObjectId `bson:"_id,omitempty"`
-		Pushed   int64         `bson:"pushed"`
-		Device   string        `bson:"device"` // Device identifier (name or id)
-		Created  int64         `bson:"created"`
-		Modified int64         `bson:"modified"`
-		Origin   int64         `bson:"origin"`
-		Schedule string        `bson:"schedule,omitempty"` // Schedule identifier
-		Event    string        `bson:"event"`              // Schedule event identifier
-		Readings []mgo.DBRef   `bson:"readings"`           // List of readings
+		ID       string      `bson:"_id,omitempty"`
+		Pushed   int64       `bson:"pushed"`
+		Device   string      `bson:"device"` // Device identifier (name or id)
+		Created  int64       `bson:"created"`
+		Modified int64       `bson:"modified"`
+		Origin   int64       `bson:"origin"`
+		Schedule string      `bson:"schedule,omitempty"` // Schedule identifier
+		Event    string      `bson:"event"`              // Schedule event identifier
+		Readings []mgo.DBRef `bson:"readings"`           // List of readings
 	}{
 		ID:       me.ID,
 		Pushed:   me.Pushed,
@@ -58,15 +58,15 @@ func (me mongoEvent) GetBSON() (interface{}, error) {
 // Custom unmarshaling out of mongo
 func (me *mongoEvent) SetBSON(raw bson.Raw) error {
 	decoded := new(struct {
-		ID       bson.ObjectId `bson:"_id,omitempty"`
-		Pushed   int64         `bson:"pushed"`
-		Device   string        `bson:"device"` // Device identifier (name or id)
-		Created  int64         `bson:"created"`
-		Modified int64         `bson:"modified"`
-		Origin   int64         `bson:"origin"`
-		Schedule string        `bson:"schedule,omitempty"` // Schedule identifier
-		Event    string        `bson:"event"`              // Schedule event identifier
-		Readings []mgo.DBRef   `bson:"readings"`           // List of readings
+		ID       string      `bson:"_id,omitempty"`
+		Pushed   int64       `bson:"pushed"`
+		Device   string      `bson:"device"` // Device identifier (name or id)
+		Created  int64       `bson:"created"`
+		Modified int64       `bson:"modified"`
+		Origin   int64       `bson:"origin"`
+		Schedule string      `bson:"schedule,omitempty"` // Schedule identifier
+		Event    string      `bson:"event"`              // Schedule event identifier
+		Readings []mgo.DBRef `bson:"readings"`           // List of readings
 	})
 
 	bsonErr := raw.Unmarshal(decoded)

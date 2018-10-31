@@ -16,14 +16,14 @@ package data
 import (
 	"encoding/json"
 	"fmt"
+	"io"
+
 	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
-	"gopkg.in/mgo.v2/bson"
-	"io"
 )
 
-func getAllReadings() (readings []models.Reading, err error){
+func getAllReadings() (readings []models.Reading, err error) {
 	readings, err = dbClient.Readings()
 	if err != nil {
 		LoggingClient.Error(err.Error())
@@ -82,13 +82,13 @@ func validateReading(reading models.Reading) error {
 	return nil
 }
 
-func addReading(reading models.Reading) (id bson.ObjectId, err error) {
+func addReading(reading models.Reading) (id string, err error) {
 	id, err = dbClient.AddReading(reading)
 
 	if err != nil {
 		LoggingClient.Error(err.Error())
 
-		return bson.ObjectId(""), err
+		return "", err
 	}
 
 	return id, nil
@@ -148,7 +148,7 @@ func deleteReadingById(id string) error {
 }
 
 func updateReading(reading models.Reading) error {
-	to, err := getReadingById(reading.Id.Hex())
+	to, err := getReadingById(reading.Id)
 	if err != nil {
 		return err
 	}

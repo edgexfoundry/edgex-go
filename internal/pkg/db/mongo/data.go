@@ -16,6 +16,7 @@ package mongo
 import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
+	"github.com/google/uuid"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -43,18 +44,18 @@ func (mc *MongoClient) EventsWithLimit(limit int) ([]models.Event, error) {
 // Add a new event
 // UnexpectedError - failed to add to database
 // NoValueDescriptor - no existing value descriptor for a reading in the event
-func (mc *MongoClient) AddEvent(e *models.Event) (bson.ObjectId, error) {
+func (mc *MongoClient) AddEvent(e *models.Event) (string, error) {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
 	e.Created = db.MakeTimestamp()
-	e.ID = bson.NewObjectId()
+	e.ID = uuid.New().String()
 
 	// Insert readings
 	var ui []interface{}
 	if len(e.Readings) != 0 {
 		for i := range e.Readings {
-			e.Readings[i].Id = bson.NewObjectId()
+			e.Readings[i].Id = uuid.New().String()
 			e.Readings[i].Created = e.Created
 			e.Readings[i].Device = e.Device
 			ui = append(ui, e.Readings[i])
@@ -95,10 +96,13 @@ func (mc *MongoClient) UpdateEvent(e models.Event) error {
 
 // Get an event by id
 func (mc *MongoClient) EventById(id string) (models.Event, error) {
-	if !bson.IsObjectIdHex(id) {
-		return models.Event{}, db.ErrInvalidObjectId
+	_, err := uuid.Parse(id)
+	if err != nil {
+		if !bson.IsObjectIdHex(id) {
+			return models.Event{}, db.ErrInvalidObjectId
+		}
 	}
-	return mc.getEvent(bson.M{"_id": bson.ObjectIdHex(id)})
+	return mc.getEvent(bson.M{"_id": id})
 }
 
 // Get the number of events in Mongo
@@ -242,12 +246,12 @@ func (mc *MongoClient) Readings() ([]models.Reading, error) {
 }
 
 // Post a new reading
-func (mc *MongoClient) AddReading(r models.Reading) (bson.ObjectId, error) {
+func (mc *MongoClient) AddReading(r models.Reading) (string, error) {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
 	// Get the reading ready
-	r.Id = bson.NewObjectId()
+	r.Id = uuid.New().String()
 	r.Created = db.MakeTimestamp()
 
 	err := s.DB(mc.database.Name).C(db.ReadingsCollection).Insert(&r)
@@ -271,12 +275,14 @@ func (mc *MongoClient) UpdateReading(r models.Reading) error {
 
 // Get a reading by ID
 func (mc *MongoClient) ReadingById(id string) (models.Reading, error) {
-	// Check if the id is a id hex
-	if !bson.IsObjectIdHex(id) {
-		return models.Reading{}, db.ErrInvalidObjectId
+	_, err := uuid.Parse(id)
+	if err != nil {
+		if !bson.IsObjectIdHex(id) {
+			return models.Reading{}, db.ErrInvalidObjectId
+		}
 	}
 
-	query := bson.M{"_id": bson.ObjectIdHex(id)}
+	query := bson.M{"_id": id}
 
 	return mc.getReading(query)
 }
