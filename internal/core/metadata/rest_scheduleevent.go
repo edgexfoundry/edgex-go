@@ -28,8 +28,12 @@ import (
 	"github.com/robfig/cron"
 )
 
+const (
+	frequencyPattern = `^P(\d+Y)?(\d+M)?(\d+D)?(T(\d+H)?(\d+M)?(\d+S)?)?$`
+)
+
 func isIntervalValid(frequency string) bool {
-	matched, _ := regexp.MatchString(`^P(\d+Y)?(\d+M)?(\d+D)?(T(\d+H)?(\d+M)?(\d+S)?)?$`, frequency)
+	matched, _ := regexp.MatchString(frequencyPattern, frequency)
 	if matched {
 		if frequency == "P" || frequency == "PT" {
 			matched = false
