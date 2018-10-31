@@ -17,7 +17,7 @@ import (
 	"time"
 
 	"github.com/edgexfoundry/edgex-go/pkg/models"
-	"github.com/satori/go.uuid"
+	"github.com/google/uuid"
 )
 
 type jsonFormatter struct {
@@ -121,10 +121,10 @@ func newAzureMessage() (*AzureMessage, error) {
 		Created:    time.Now(),
 	}
 
-	id := uuid.NewV4()
+	id := uuid.New()
 	msg.ID = id.String()
 
-	correlationID := uuid.NewV4()
+	correlationID := uuid.New()
 	msg.CorrelationID = correlationID.String()
 
 	return msg, nil
@@ -242,7 +242,7 @@ func newBIoTMessage() (*BIoTMessage, error) {
 		MsgType:  "Q",
 	}
 
-	id := uuid.NewV1()
+	id := uuid.New()
 	msg.MsgId = id.String()
 
 	return msg, nil

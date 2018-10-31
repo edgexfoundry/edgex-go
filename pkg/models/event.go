@@ -16,8 +16,6 @@ package models
 
 import (
 	"encoding/json"
-
-	"gopkg.in/mgo.v2/bson"
 )
 
 /*
@@ -27,30 +25,29 @@ import (
  * Event struct to hold event data
  */
 type Event struct {
-	ID       bson.ObjectId `bson:"_id,omitempty" json:"id"`
-	Pushed   int64         `bson:"pushed" json:"pushed"`
-	Device   string        `bson:"device" json:"device"` // Device identifier (name or id)
-	Created  int64         `bson:"created" json:"created"`
-	Modified int64         `bson:"modified" json:"modified"`
-	Origin   int64         `bson:"origin" json:"origin"`
-	Event    string        `bson:"event,omitempty" json:"event"` // Schedule event identifier
-	Readings []Reading     `bson:"readings" json:"readings"`     // List of readings
+	ID       string    `json:"id"`
+	Pushed   int64     `json:"pushed"`
+	Device   string    `json:"device"` // Device identifier (name or id)
+	Created  int64     `json:"created"`
+	Modified int64     `json:"modified"`
+	Origin   int64     `json:"origin"`
+	Event    string    `json:"event"`    // Schedule event identifier
+	Readings []Reading `json:"readings"` // List of readings
 }
 
 // Custom marshaling to make empty strings null
 func (e Event) MarshalJSON() ([]byte, error) {
 	test := struct {
-		ID       bson.ObjectId `json:"id"`
-		Pushed   int64         `json:"pushed,omitempty"`
-		Device   *string       `json:"device,omitempty"` // Device identifier (name or id)
-		Created  int64         `json:"created,omitempty"`
-		Modified int64         `json:"modified,omitempty"`
-		Origin   int64         `json:"origin,omitempty"`
-		Schedule *string       `json:"schedule,omitempty"` // Schedule identifier
-		Event    *string       `json:"event,omitempty"`    // Schedule event identifier
-		Readings []Reading     `json:"readings,omitempty"` // List of readings
+		ID       *string   `json:"id,omitempty"`
+		Pushed   int64     `json:"pushed,omitempty"`
+		Device   *string   `json:"device,omitempty"` // Device identifier (name or id)
+		Created  int64     `json:"created,omitempty"`
+		Modified int64     `json:"modified,omitempty"`
+		Origin   int64     `json:"origin,omitempty"`
+		Schedule *string   `json:"schedule,omitempty"` // Schedule identifier
+		Event    *string   `json:"event,omitempty"`    // Schedule event identifier
+		Readings []Reading `json:"readings,omitempty"` // List of readings
 	}{
-		ID:       e.ID,
 		Pushed:   e.Pushed,
 		Created:  e.Created,
 		Modified: e.Modified,
@@ -58,6 +55,9 @@ func (e Event) MarshalJSON() ([]byte, error) {
 	}
 
 	// Empty strings are null
+	if e.ID != "" {
+		test.ID = &e.ID
+	}
 	if e.Device != "" {
 		test.Device = &e.Device
 	}

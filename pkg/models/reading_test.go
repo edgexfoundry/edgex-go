@@ -59,8 +59,7 @@ func TestReading_String(t *testing.T) {
 		want string
 	}{
 		{"reading to string", TestReading,
-			"{\"id\":\"\"" +
-				",\"pushed\":" + strconv.FormatInt(TestReading.Pushed, 10) +
+			"{\"pushed\":" + strconv.FormatInt(TestReading.Pushed, 10) +
 				",\"created\":" + strconv.FormatInt(TestReading.Created, 10) +
 				",\"origin\":" + strconv.FormatInt(TestReading.Origin, 10) +
 				",\"modified\":" + strconv.FormatInt(TestReading.Modified, 10) +

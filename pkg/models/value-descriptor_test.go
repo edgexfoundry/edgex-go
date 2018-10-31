@@ -65,7 +65,7 @@ func TestValueDescriptor_String(t *testing.T) {
 		want string
 	}{
 		{"value descriptor to string", TestValueDescriptor,
-			"{\"id\":\"\",\"created\":" + strconv.FormatInt(TestValueDescriptor.Created, 10) +
+			"{\"created\":" + strconv.FormatInt(TestValueDescriptor.Created, 10) +
 				",\"description\":\"" + TestValueDescriptor.Description + "\"" +
 				",\"modified\":" + strconv.FormatInt(TestValueDescriptor.Modified, 10) +
 				",\"origin\":" + strconv.FormatInt(TestValueDescriptor.Origin, 10) +

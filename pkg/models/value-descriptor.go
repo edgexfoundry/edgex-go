@@ -16,47 +16,44 @@ package models
 
 import (
 	"encoding/json"
-
-	"gopkg.in/mgo.v2/bson"
 )
 
 /*
  * Value Descriptor Struct
  */
 type ValueDescriptor struct {
-	Id           bson.ObjectId `json:"id" bson:"_id,omitempty"`
-	Created      int64         `bson:"created" json:"created"`
-	Description  string        `bson:"description" json:"description"`
-	Modified     int64         `bson:"modified" json:"modified"`
-	Origin       int64         `bson:"origin" json:"origin"`
-	Name         string        `bson:"name" json:"name"`
-	Min          interface{}   `bson:"min,omitempty" json:"min"`
-	Max          interface{}   `bson:"max,omitempty" json:"max"`
-	DefaultValue interface{}   `bson:"defaultValue,omitempty" json:"defaultValue"`
-	Type         string        `bson:"type" json:"type"`
-	UomLabel     string        `bson:"uomLabel,omitempty" json:"uomLabel"`
-	Formatting   string        `bson:"formatting,omitempty" json:"formatting"`
-	Labels       []string      `bson:"labels,omitempty" json:"labels"`
+	Id           string      `json:"id"`
+	Created      int64       `json:"created"`
+	Description  string      `json:"description"`
+	Modified     int64       `json:"modified"`
+	Origin       int64       `json:"origin"`
+	Name         string      `json:"name"`
+	Min          interface{} `json:"min"`
+	Max          interface{} `json:"max"`
+	DefaultValue interface{} `json:"defaultValue"`
+	Type         string      `json:"type"`
+	UomLabel     string      `json:"uomLabel"`
+	Formatting   string      `json:"formatting"`
+	Labels       []string    `json:"labels"`
 }
 
 // Custom marshaling to make empty strings null
 func (v ValueDescriptor) MarshalJSON() ([]byte, error) {
 	test := struct {
-		Id           bson.ObjectId `json:"id" bson:"_id,omitempty"`
-		Created      int64         `json:"created,omitempty"`
-		Description  *string       `json:"description,omitempty"`
-		Modified     int64         `json:"modified,omitempty"`
-		Origin       int64         `json:"origin,omitempty"`
-		Name         *string       `json:"name,omitempty"`
-		Min          *interface{}  `json:"min,omitempty"`
-		Max          *interface{}  `json:"max,omitempty"`
-		DefaultValue *interface{}  `json:"defaultValue,omitempty"`
-		Type         *string       `json:"type,omitempty"`
-		UomLabel     *string       `json:"uomLabel,omitempty"`
-		Formatting   *string       `json:"formatting,omitempty"`
-		Labels       []string      `json:"labels,omitempty"`
+		Id           *string      `json:"id,omitempty"`
+		Created      int64        `json:"created,omitempty"`
+		Description  *string      `json:"description,omitempty"`
+		Modified     int64        `json:"modified,omitempty"`
+		Origin       int64        `json:"origin,omitempty"`
+		Name         *string      `json:"name,omitempty"`
+		Min          *interface{} `json:"min,omitempty"`
+		Max          *interface{} `json:"max,omitempty"`
+		DefaultValue *interface{} `json:"defaultValue,omitempty"`
+		Type         *string      `json:"type,omitempty"`
+		UomLabel     *string      `json:"uomLabel,omitempty"`
+		Formatting   *string      `json:"formatting,omitempty"`
+		Labels       []string     `json:"labels,omitempty"`
 	}{
-		Id:       v.Id,
 		Created:  v.Created,
 		Modified: v.Modified,
 		Origin:   v.Origin,
@@ -64,6 +61,9 @@ func (v ValueDescriptor) MarshalJSON() ([]byte, error) {
 	}
 
 	// Empty strings are null
+	if v.Id != "" {
+		test.Id = &v.Id
+	}
 	if v.Name != "" {
 		test.Name = &v.Name
 	}
