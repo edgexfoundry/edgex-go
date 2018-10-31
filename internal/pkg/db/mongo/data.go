@@ -43,18 +43,18 @@ func (mc *MongoClient) EventsWithLimit(limit int) ([]models.Event, error) {
 // Add a new event
 // UnexpectedError - failed to add to database
 // NoValueDescriptor - no existing value descriptor for a reading in the event
-func (mc *MongoClient) AddEvent(e *models.Event) (bson.ObjectId, error) {
+func (mc *MongoClient) AddEvent(e *models.Event) (string, error) {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
 	e.Created = db.MakeTimestamp()
-	e.ID = bson.NewObjectId()
+	e.ID = bson.NewObjectId().Hex()
 
 	// Insert readings
 	var ui []interface{}
 	if len(e.Readings) != 0 {
 		for i := range e.Readings {
-			e.Readings[i].Id = bson.NewObjectId()
+			e.Readings[i].Id = bson.NewObjectId().Hex()
 			e.Readings[i].Created = e.Created
 			e.Readings[i].Device = e.Device
 			ui = append(ui, e.Readings[i])
@@ -242,12 +242,12 @@ func (mc *MongoClient) Readings() ([]models.Reading, error) {
 }
 
 // Post a new reading
-func (mc *MongoClient) AddReading(r models.Reading) (bson.ObjectId, error) {
+func (mc *MongoClient) AddReading(r models.Reading) (string, error) {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
 	// Get the reading ready
-	r.Id = bson.NewObjectId()
+	r.Id = bson.NewObjectId().Hex()
 	r.Created = db.MakeTimestamp()
 
 	err := s.DB(mc.database.Name).C(db.ReadingsCollection).Insert(&r)

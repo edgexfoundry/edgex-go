@@ -35,7 +35,7 @@ type DBClient interface {
 	// Add a new event
 	// UnexpectedError - failed to add to database
 	// NoValueDescriptor - no existing value descriptor for a reading in the event
-	AddEvent(e *models.Event) (bson.ObjectId, error)
+	AddEvent(e *models.Event) (string, error)
 
 	// Update an event - do NOT update readings
 	// UnexpectedError - problem updating in database
@@ -101,7 +101,7 @@ type DBClient interface {
 
 	// Post a new reading
 	// Check if valuedescriptor exists in the database
-	AddReading(r models.Reading) (bson.ObjectId, error)
+	AddReading(r models.Reading) (string, error)
 
 	// Update a reading
 	// 404 - reading cannot be found

@@ -8,17 +8,17 @@ package test
 
 import (
 	"fmt"
+	"gopkg.in/mgo.v2/bson"
 	"strconv"
 	"testing"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/data/interfaces"
 	dbp "github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
-	"gopkg.in/mgo.v2/bson"
 )
 
-func populateDbReadings(db interfaces.DBClient, count int) (bson.ObjectId, error) {
-	var id bson.ObjectId
+func populateDbReadings(db interfaces.DBClient, count int) (string, error) {
+	var id string
 	for i := 0; i < count; i++ {
 		name := fmt.Sprintf("name%d", i)
 		r := models.Reading{}
@@ -53,8 +53,8 @@ func populateDbValues(db interfaces.DBClient, count int) (bson.ObjectId, error) 
 	return id, nil
 }
 
-func populateDbEvents(db interfaces.DBClient, count int, pushed int64) (bson.ObjectId, error) {
-	var id bson.ObjectId
+func populateDbEvents(db interfaces.DBClient, count int, pushed int64) (string, error) {
+	var id string
 	for i := 0; i < count; i++ {
 		name := fmt.Sprintf("name%d", i)
 		e := models.Event{}
@@ -115,11 +115,11 @@ func testDBReadings(t *testing.T, db interfaces.DBClient) {
 	if len(readings) != 110 {
 		t.Fatalf("There should be 110 readings instead of %d", len(readings))
 	}
-	r3, err := db.ReadingById(id.Hex())
+	r3, err := db.ReadingById(id)
 	if err != nil {
 		t.Fatalf("Error getting reading by id %v", err)
 	}
-	if r3.Id.Hex() != id.Hex() {
+	if r3.Id != id {
 		t.Fatalf("Id does not match %s - %s", r3.Id, id)
 	}
 	_, err = db.ReadingById("INVALID")
@@ -251,7 +251,7 @@ func testDBReadings(t *testing.T, db interfaces.DBClient) {
 	if err != nil {
 		t.Fatalf("Error updating reading %v", err)
 	}
-	r2, err := db.ReadingById(r.Id.Hex())
+	r2, err := db.ReadingById(r.Id)
 	if err != nil {
 		t.Fatalf("Error getting reading by id %v", err)
 	}
@@ -264,7 +264,7 @@ func testDBReadings(t *testing.T, db interfaces.DBClient) {
 		t.Fatalf("Reading should not be deleted")
 	}
 
-	err = db.DeleteReadingById(id.Hex())
+	err = db.DeleteReadingById(id)
 	if err != nil {
 		t.Fatalf("Reading should be deleted: %v", err)
 	}
@@ -344,11 +344,11 @@ func testDBEvents(t *testing.T, db interfaces.DBClient) {
 	if len(events) != 110 {
 		t.Fatalf("There should be 110 events instead of %d", len(events))
 	}
-	e3, err := db.EventById(id.Hex())
+	e3, err := db.EventById(id)
 	if err != nil {
 		t.Fatalf("Error getting event by id %v", err)
 	}
-	if e3.ID.Hex() != id.Hex() {
+	if e3.ID != id {
 		t.Fatalf("Id does not match %s - %s", e3.ID, id)
 	}
 	_, err = db.EventById("INVALID")
@@ -452,7 +452,7 @@ func testDBEvents(t *testing.T, db interfaces.DBClient) {
 	if err != nil {
 		t.Fatalf("Error updating event %v", err)
 	}
-	e2, err := db.EventById(e.ID.Hex())
+	e2, err := db.EventById(e.ID)
 	if err != nil {
 		t.Fatalf("Error getting event by id %v", err)
 	}
@@ -465,7 +465,7 @@ func testDBEvents(t *testing.T, db interfaces.DBClient) {
 		t.Fatalf("Event should not be deleted")
 	}
 
-	err = db.DeleteEventById(id.Hex())
+	err = db.DeleteEventById(id)
 	if err != nil {
 		t.Fatalf("Event should be deleted: %v", err)
 	}
@@ -704,7 +704,7 @@ func benchmarkReadings(b *testing.B, db interfaces.DBClient) {
 		if err != nil {
 			b.Fatalf("Error add reading: %v", err)
 		}
-		readings[i] = id.Hex()
+		readings[i] = id
 	}
 
 	b.Run("Readings", func(b *testing.B) {
@@ -791,7 +791,7 @@ func benchmarkEvents(b *testing.B, db interfaces.DBClient) {
 		if err != nil {
 			b.Fatalf("Error add event: %v", err)
 		}
-		events[i] = id.Hex()
+		events[i] = id
 	}
 
 	b.Run("Events", func(b *testing.B) {

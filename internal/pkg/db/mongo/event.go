@@ -34,7 +34,7 @@ func (me mongoEvent) GetBSON() (interface{}, error) {
 	}
 
 	return struct {
-		ID       bson.ObjectId `bson:"_id,omitempty"`
+		ID       string        `bson:"_id,omitempty"`
 		Pushed   int64         `bson:"pushed"`
 		Device   string        `bson:"device"` // Device identifier (name or id)
 		Created  int64         `bson:"created"`
@@ -58,7 +58,7 @@ func (me mongoEvent) GetBSON() (interface{}, error) {
 // Custom unmarshaling out of mongo
 func (me *mongoEvent) SetBSON(raw bson.Raw) error {
 	decoded := new(struct {
-		ID       bson.ObjectId `bson:"_id,omitempty"`
+		ID       string        `bson:"_id,omitempty"`
 		Pushed   int64         `bson:"pushed"`
 		Device   string        `bson:"device"` // Device identifier (name or id)
 		Created  int64         `bson:"created"`

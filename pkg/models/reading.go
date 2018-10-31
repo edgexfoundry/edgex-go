@@ -16,7 +16,6 @@ package models
 
 import (
 	"encoding/json"
-	"gopkg.in/mgo.v2/bson"
 )
 
 /*
@@ -27,7 +26,7 @@ import (
  * Struct for the Reading object in EdgeX
  */
 type Reading struct {
-	Id       bson.ObjectId `bson:"_id,omitempty"`
+	Id       string        `bson:"_id,omitempty"`
 	Pushed   int64         `bson:"pushed" json:"pushed"`   // When the data was pushed out of EdgeX (0 - not pushed yet)
 	Created  int64         `bson:"created" json:"created"` // When the reading was created
 	Origin   int64         `bson:"origin" json:"origin"`
@@ -40,7 +39,7 @@ type Reading struct {
 // Custom marshaling to make empty strings null
 func (r Reading) MarshalJSON() ([]byte, error) {
 	test := struct {
-		Id       bson.ObjectId `json:"id"`
+		Id       string        `json:"id"`
 		Pushed   int64         `json:"pushed"`  // When the data was pushed out of EdgeX (0 - not pushed yet)
 		Created  int64         `json:"created"` // When the reading was created
 		Origin   int64         `json:"origin"`

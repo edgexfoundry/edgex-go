@@ -16,14 +16,15 @@ package memory
 import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
+	"github.com/satori/go.uuid"
 	"gopkg.in/mgo.v2/bson"
 )
 
-func (m *MemDB) AddReading(r models.Reading) (bson.ObjectId, error) {
+func (m *MemDB) AddReading(r models.Reading) (string, error) {
 	currentTime := db.MakeTimestamp()
 	r.Created = currentTime
 	r.Modified = currentTime
-	r.Id = bson.NewObjectId()
+	r.Id = uuid.NewV4().String()
 
 	m.readings = append(m.readings, r)
 
@@ -51,11 +52,11 @@ func (m *MemDB) EventsWithLimit(limit int) ([]models.Event, error) {
 	return cpy, nil
 }
 
-func (m *MemDB) AddEvent(e *models.Event) (bson.ObjectId, error) {
+func (m *MemDB) AddEvent(e *models.Event) (string, error) {
 	currentTime := db.MakeTimestamp()
 
 	for i := range e.Readings {
-		e.Readings[i].Id = bson.NewObjectId()
+		e.Readings[i].Id = uuid.NewV4().String()
 		e.Readings[i].Created = currentTime
 		e.Readings[i].Modified = currentTime
 		e.Readings[i].Device = e.Device
@@ -64,7 +65,7 @@ func (m *MemDB) AddEvent(e *models.Event) (bson.ObjectId, error) {
 
 	e.Created = currentTime
 	e.Modified = currentTime
-	e.ID = bson.NewObjectId()
+	e.ID = uuid.NewV4().String()
 
 	m.events = append(m.events, *e)
 
@@ -83,7 +84,7 @@ func (m *MemDB) UpdateEvent(event models.Event) error {
 
 func (m *MemDB) EventById(id string) (models.Event, error) {
 	for _, e := range m.events {
-		if e.ID.Hex() == id {
+		if e.ID == id {
 			return e, nil
 		}
 	}
@@ -106,7 +107,7 @@ func (m *MemDB) EventCountByDeviceId(id string) (int, error) {
 
 func (m *MemDB) DeleteEventById(id string) error {
 	for i, e := range m.events {
-		if e.ID.Hex() == id {
+		if e.ID == id {
 			m.events = append(m.events[:i], m.events[i+1:]...)
 			return nil
 		}
@@ -214,7 +215,7 @@ func (m *MemDB) UpdateReading(reading models.Reading) error {
 
 func (m *MemDB) ReadingById(id string) (models.Reading, error) {
 	for _, r := range m.readings {
-		if r.Id.Hex() == id {
+		if r.Id == id {
 			return r, nil
 		}
 	}
@@ -227,7 +228,7 @@ func (m *MemDB) ReadingCount() (int, error) {
 
 func (m *MemDB) DeleteReadingById(id string) error {
 	for i, r := range m.readings {
-		if r.Id.Hex() == id {
+		if r.Id == id {
 			m.readings = append(m.readings[:i], m.readings[i+1:]...)
 			return nil
 		}

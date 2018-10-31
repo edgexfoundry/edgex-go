@@ -16,8 +16,6 @@ package models
 
 import (
 	"encoding/json"
-
-	"gopkg.in/mgo.v2/bson"
 )
 
 /*
@@ -27,7 +25,7 @@ import (
  * Event struct to hold event data
  */
 type Event struct {
-	ID       bson.ObjectId `bson:"_id,omitempty" json:"id"`
+	ID       string        `bson:"_id,omitempty" json:"id"`
 	Pushed   int64         `bson:"pushed" json:"pushed"`
 	Device   string        `bson:"device" json:"device"` // Device identifier (name or id)
 	Created  int64         `bson:"created" json:"created"`
@@ -40,7 +38,7 @@ type Event struct {
 // Custom marshaling to make empty strings null
 func (e Event) MarshalJSON() ([]byte, error) {
 	test := struct {
-		ID       bson.ObjectId `json:"id"`
+		ID       string        `json:"id"`
 		Pushed   int64         `json:"pushed"`
 		Device   *string       `json:"device"` // Device identifier (name or id)
 		Created  int64         `json:"created"`

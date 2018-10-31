@@ -13,14 +13,14 @@ type DBClient struct {
 }
 
 // AddEvent provides a mock function with given fields: e
-func (_m *DBClient) AddEvent(e *models.Event) (bson.ObjectId, error) {
+func (_m *DBClient) AddEvent(e *models.Event) (string, error) {
 	ret := _m.Called(e)
 
-	var r0 bson.ObjectId
-	if rf, ok := ret.Get(0).(func(*models.Event) bson.ObjectId); ok {
+	var r0 string
+	if rf, ok := ret.Get(0).(func(*models.Event) string); ok {
 		r0 = rf(e)
 	} else {
-		r0 = ret.Get(0).(bson.ObjectId)
+		r0 = ret.Get(0).(string)
 	}
 
 	var r1 error
@@ -34,14 +34,14 @@ func (_m *DBClient) AddEvent(e *models.Event) (bson.ObjectId, error) {
 }
 
 // AddReading provides a mock function with given fields: r
-func (_m *DBClient) AddReading(r models.Reading) (bson.ObjectId, error) {
+func (_m *DBClient) AddReading(r models.Reading) (string, error) {
 	ret := _m.Called(r)
 
-	var r0 bson.ObjectId
-	if rf, ok := ret.Get(0).(func(models.Reading) bson.ObjectId); ok {
+	var r0 string
+	if rf, ok := ret.Get(0).(func(models.Reading) string); ok {
 		r0 = rf(r)
 	} else {
-		r0 = ret.Get(0).(bson.ObjectId)
+		r0 = ret.Get(0).(string)
 	}
 
 	var r1 error
