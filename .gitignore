@@ -1,6 +1,7 @@
 .idea/
 vendor
 *.exe
+*.dll
 glide.lock
 *.DS_Store
 docker/docker-compose.yml
