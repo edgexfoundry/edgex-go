@@ -358,6 +358,7 @@ parts:
     # the following commit == 0.7.0 version update
     source-commit: "194094a3cf2a0a3a2cc608cec7cd3c4904ac6b5b"
     plugin: maven
+    maven-options: ["-Dmaven.test.skip=true"]
     override-build: |
       snapcraftctl build
       echo "Installing support-scheduler files"
@@ -400,6 +401,7 @@ parts:
     # the following commit == 0.7.0 version update
     source-commit: "3aca4a7bf9774ad07b9b74c7b05c45deb74412f2"
     plugin: maven
+    maven-options: ["-Dmaven.test.skip=true"]
     override-build: |
       snapcraftctl build
       echo "Installing support-rulesengine files"
@@ -442,6 +444,7 @@ parts:
     # the following commit == 0.5.0 version update +1 (core-domain fix)
     source-commit: "2033429"
     plugin: maven
+    maven-options: ["-Dmaven.test.skip=true"]
     override-build: |
       snapcraftctl build
       echo "Installing device-virtual files"
