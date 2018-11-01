@@ -42,7 +42,7 @@ func ImportProperties(root string) error {
 
 		dir, file := filepath.Split(path)
 		appKey := parseDirectoryName(dir)
-		LoggingClient.Info(fmt.Sprintf("dir: %s file: %s", appKey, file))
+		LoggingClient.Debug(fmt.Sprintf("dir: %s file: %s", appKey, file))
 		props, err := readPropertiesFile(path)
 		if err != nil {
 			return err
