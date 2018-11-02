@@ -16,7 +16,7 @@ package memory
 import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
-	"github.com/satori/go.uuid"
+	"github.com/google/uuid"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -24,7 +24,7 @@ func (m *MemDB) AddReading(r models.Reading) (string, error) {
 	currentTime := db.MakeTimestamp()
 	r.Created = currentTime
 	r.Modified = currentTime
-	r.Id = uuid.NewV4().String()
+	r.Id = uuid.New().String()
 
 	m.readings = append(m.readings, r)
 
@@ -56,7 +56,7 @@ func (m *MemDB) AddEvent(e *models.Event) (string, error) {
 	currentTime := db.MakeTimestamp()
 
 	for i := range e.Readings {
-		e.Readings[i].Id = uuid.NewV4().String()
+		e.Readings[i].Id = uuid.New().String()
 		e.Readings[i].Created = currentTime
 		e.Readings[i].Modified = currentTime
 		e.Readings[i].Device = e.Device
@@ -65,7 +65,7 @@ func (m *MemDB) AddEvent(e *models.Event) (string, error) {
 
 	e.Created = currentTime
 	e.Modified = currentTime
-	e.ID = uuid.NewV4().String()
+	e.ID = uuid.New().String()
 
 	m.events = append(m.events, *e)
 
