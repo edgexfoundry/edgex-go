@@ -9,15 +9,16 @@ package scheduler
 import (
 	"errors"
 	"fmt"
-	"github.com/edgexfoundry/edgex-go/pkg/models"
-	queueV1 "gopkg.in/eapache/queue.v1"
-	"gopkg.in/mgo.v2/bson"
 	"io/ioutil"
 	"net/http"
 	"regexp"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/edgexfoundry/edgex-go/pkg/models"
+	queueV1 "gopkg.in/eapache/queue.v1"
+	"gopkg.in/mgo.v2/bson"
 )
 
 const (
@@ -199,7 +200,7 @@ func queryScheduleEvent(scheduleEventId string) (models.ScheduleEvent, error) {
 
 	scheduleId, exists := scheduleEventIdToScheduleIdMap[scheduleEventId]
 	if !exists {
-		logMsg := fmt.Sprintf("scheduler could not find schedule id with schedule event id : %s" ,scheduleEventId)
+		logMsg := fmt.Sprintf("scheduler could not find schedule id with schedule event id : %s", scheduleEventId)
 		return models.ScheduleEvent{}, errors.New(logMsg)
 	}
 
@@ -358,7 +359,7 @@ func removeScheduleEvent(scheduleEventId string) error {
 
 	scheduleId, exists := scheduleEventIdToScheduleIdMap[scheduleEventId]
 	if !exists {
-		logMsg:= fmt.Sprintf("could not find schedule id with schedule event id : %s", scheduleEventId)
+		logMsg := fmt.Sprintf("could not find schedule id with schedule event id : %s", scheduleEventId)
 		return errors.New(logMsg)
 	}
 
@@ -676,7 +677,6 @@ func loadConfigSchedules() error {
 
 			// add the schedule to the scheduler
 			err := addSchedule(schedule)
-			//loadedSchedules = append(loadedSchedules, schedule)
 
 			if err != nil {
 				return LoggingClient.Error("error loading schedule %s from the scheduler config", err.Error())
@@ -726,7 +726,7 @@ func loadConfigScheduleEvents() error {
 				if err != nil {
 					return LoggingClient.Error("error adding new addressable into core-metadata", err.Error())
 				}
-				LoggingClient.Info(fmt.Sprintf("added addressable into core-metadata name: %s id: %s path: %s" , addressable.Name, addressableId, addressable.Path))
+				LoggingClient.Info(fmt.Sprintf("added addressable into core-metadata name: %s id: %s path: %s", addressable.Name, addressableId, addressable.Path))
 
 				// add the core-metadata id value
 				addressable.Id = bson.ObjectId(addressableId)
@@ -737,17 +737,14 @@ func loadConfigScheduleEvents() error {
 			if err != nil {
 				return LoggingClient.Error("error adding schedule event %s into core-metadata", err.Error())
 			}
-			LoggingClient.Info(fmt.Sprintf("added schedule event into core-metadata name: %s id: %s ", scheduleEvent.Name, newScheduleEventId))
 
 			// add the core-metadata version of the scheduleEvent.Id
 			scheduleEvent.Id = bson.ObjectId(newScheduleEventId)
 
 			errAddSE := addScheduleEvent(scheduleEvent)
-			if errAddSE!= nil {
+			if errAddSE != nil {
 				return LoggingClient.Error("error loading schedule event %s into scheduler", errAddSE.Error())
 			}
-			LoggingClient.Info(fmt.Sprintf("added schedule event name: %s id: %s into scheduler", scheduleEvent.Name, scheduleEvent.Id.Hex()))
-
 		} else {
 			LoggingClient.Debug(fmt.Sprintf("did not load schedule event name: %s as it exists in the scheduler", scheduleEvent.Name))
 		}

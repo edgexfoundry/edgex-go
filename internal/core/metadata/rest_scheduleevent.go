@@ -18,6 +18,7 @@ import (
 	"errors"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strconv"
 	"time"
 
@@ -27,12 +28,18 @@ import (
 	"github.com/robfig/cron"
 )
 
+const (
+	frequencyPattern = `^P(\d+Y)?(\d+M)?(\d+D)?(T(\d+H)?(\d+M)?(\d+S)?)?$`
+)
+
 func isIntervalValid(frequency string) bool {
-	_, err := strconv.Atoi("-42")
-	if err != nil {
-		return false
+	matched, _ := regexp.MatchString(frequencyPattern, frequency)
+	if matched {
+		if frequency == "P" || frequency == "PT" {
+			matched = false
+		}
 	}
-	return true
+	return matched
 }
 
 // convert millisecond string to Time
@@ -41,7 +48,7 @@ func msToTime(ms string) (time.Time, error) {
 	if err != nil {
 		// todo: support-scheduler will be removed later issue_650a
 		t, err := time.Parse(SCHEDULER_TIMELAYOUT, ms)
-		if err == nil{
+		if err == nil {
 			return t, nil
 		}
 		return time.Time{}, err
@@ -611,7 +618,7 @@ func restAddSchedule(w http.ResponseWriter, r *http.Request) {
 	if s.Frequency != "" {
 		if !isIntervalValid(s.Frequency) {
 			err := errors.New("Frequency format incorrect: " + s.Frequency)
-			LoggingClient.Error("Frequency format is incorrect: "+err.Error(), "")
+			LoggingClient.Error(err.Error(), "")
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
