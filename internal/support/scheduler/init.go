@@ -9,6 +9,7 @@ package scheduler
 import (
 	"fmt"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
+	"net/http"
 	"sync"
 	"time"
 
@@ -71,6 +72,39 @@ func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup,
 	return
 }
 
+// check meta data service
+func RetryService(timeout int, wait *sync.WaitGroup, ch chan string) {
+	now := time.Now()
+	until := now.Add(time.Millisecond * time.Duration(timeout))
+
+	var status = 0
+	for time.Now().Before(until) {
+		var err error
+		//When looping, only handle configuration if it hasn't already been set.
+		if status != 200 {
+			status, err = callMetaDataService()
+			if err != nil {
+				ch <- "Support Scheduler failed to connect to Core Metadata...retrying"
+			} else {
+				//Check against boot timeout default
+				if Configuration.Service.BootTimeout != timeout {
+					until = now.Add(time.Millisecond * time.Duration(Configuration.Service.BootTimeout))
+				}
+			}
+		}
+
+		if status == 200 {
+			ch <- "Support Scheduler established connection to Core Metadata"
+			break
+		}
+		time.Sleep(time.Second * time.Duration(1))
+	}
+	close(ch)
+	wait.Done()
+
+	return
+}
+
 func Init(useConsul bool) bool {
 	if Configuration == nil {
 		return false
@@ -108,6 +142,26 @@ func initializeConfiguration(useConsul bool, useProfile string) (*ConfigurationS
 		}
 	}
 	return conf, nil
+}
+
+// ensure we have core metadata available
+func callMetaDataService() (int, error) {
+
+	client := &http.Client{
+		Timeout: time.Duration(Configuration.Service.Timeout) * time.Millisecond,
+	}
+
+	executingUrl := fmt.Sprintf("%s://%s:%d%s", Configuration.Clients["Metadata"].Protocol, Configuration.Clients["Metadata"].Host, Configuration.Clients["Metadata"].Port, clients.ApiPingRoute)
+
+	req, _ := http.NewRequest(http.MethodGet, executingUrl, nil)
+	req.Header.Set(ContentTypeKey, ContentTypeJsonValue)
+
+	_, statusCode, err := sendRequestAndGetResponse(client, req)
+	if err != nil {
+		return statusCode, err
+	}
+	LoggingClient.Debug(fmt.Sprintf("Execution returns status code : %d", statusCode))
+	return statusCode, nil
 }
 
 func connectToConsul(conf *ConfigurationStruct) (*ConfigurationStruct, error) {
@@ -189,7 +243,6 @@ func setLoggingTarget() string {
 
 func initializeClients(useConsul bool) {
 	// Create metadata clients
-
 	params := types.EndpointParams{
 		ServiceKey:  internal.SupportSchedulerServiceKey,
 		Path:        clients.ApiScheduleRoute,
@@ -208,5 +261,5 @@ func initializeClients(useConsul bool) {
 	// metadata Addressable client
 	params.Path = clients.ApiAddressableRoute
 	params.Url = Configuration.Clients["Metadata"].Url() + clients.ApiAddressableRoute
-	mac = metadata.NewAddressableClient(params,startup.Endpoint{})
+	mac = metadata.NewAddressableClient(params, startup.Endpoint{})
 }

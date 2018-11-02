@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 
-	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 	"net/http"
 	"os"
 	"os/signal"
@@ -14,6 +13,7 @@ import (
 
 	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
@@ -36,19 +36,23 @@ func main() {
 	params := startup.BootParams{UseConsul: useConsul, UseProfile: useProfile, BootTimeout: internal.BootTimeoutDefault}
 	startup.Bootstrap(params, scheduler.Retry, logBeforeInit)
 
+	// ensure metadata is up
+	scheduler.CheckStatus(params, scheduler.RetryService, logServiceCheckStatus)
+
+	// Load configuration data
 	ok := scheduler.Init(useConsul)
 	if !ok {
 		logBeforeInit(fmt.Errorf("%s: Service bootstrap failed!", internal.SupportSchedulerServiceKey))
 		return
 	}
 
-	scheduler.LoggingClient.Info("Service dependencies resolved...")
+	scheduler.LoggingClient.Info(fmt.Sprintf("Service dependencies resolved...%s", internal.SupportSchedulerServiceKey))
 	scheduler.LoggingClient.Info(fmt.Sprintf("Starting %s %s ", internal.SupportSchedulerServiceKey, edgex.Version))
 
 	// Bootstrap schedulers
 	err := scheduler.AddSchedulers()
-	if err != nil{
-		scheduler.LoggingClient.Error(fmt.Sprintf("Failed to load schedules and events %s",err.Error()))
+	if err != nil {
+		scheduler.LoggingClient.Error(fmt.Sprintf("Failed to load schedules and events %s", err.Error()))
 	}
 
 	http.TimeoutHandler(nil, time.Millisecond*time.Duration(scheduler.Configuration.Service.Timeout), "Request timed out")
@@ -69,10 +73,13 @@ func main() {
 	scheduler.LoggingClient.Warn(fmt.Sprintf("terminating: %v", c))
 }
 
-
 func logBeforeInit(err error) {
 	scheduler.LoggingClient = logger.NewClient(internal.CoreCommandServiceKey, false, "", logger.InfoLog)
 	scheduler.LoggingClient.Error(err.Error())
+}
+
+func logServiceCheckStatus(msg string) {
+	scheduler.LoggingClient.Info(msg)
 }
 
 func listenForInterrupt(errChan chan error) {
