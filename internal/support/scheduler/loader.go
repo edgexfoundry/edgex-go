@@ -2,14 +2,49 @@ package scheduler
 
 import (
 	"fmt"
-	"github.com/edgexfoundry/edgex-go/pkg/clients"
-	"github.com/edgexfoundry/edgex-go/pkg/models"
-	"gopkg.in/mgo.v2/bson"
 	"net/http"
 	"regexp"
 	"sync"
 	"time"
+
+	"github.com/edgexfoundry/edgex-go/pkg/clients"
+	"github.com/edgexfoundry/edgex-go/pkg/models"
+	"gopkg.in/mgo.v2/bson"
 )
+
+// check meta data service
+func RetryService(timeout int, wait *sync.WaitGroup, ch chan string) {
+	now := time.Now()
+	until := now.Add(time.Millisecond * time.Duration(timeout))
+
+	var status = 0
+	for time.Now().Before(until) {
+		var err error
+		//When looping, only handle configuration if it hasn't already been set.
+		if status != 200 {
+			status, err = callMetaDataService()
+			if err != nil {
+				ch <- "Support Scheduler failed to connect to Core Metadata...retrying"
+			} else {
+				//Check against boot timeout default
+				if Configuration.Service.BootTimeout != timeout {
+					until = now.Add(time.Millisecond * time.Duration(Configuration.Service.BootTimeout))
+				}
+			}
+		}
+
+		// only continue if we have established a connection to core metadata
+		if status == 200 {
+			ch <- "Support Scheduler established connection to Core Metadata"
+			break
+		}
+		time.Sleep(time.Second * time.Duration(1))
+	}
+	close(ch)
+	wait.Done()
+
+	return
+}
 
 // Utility function for adding configured locally schedulers and scheduled events
 func AddSchedulers() error {
@@ -45,46 +80,14 @@ func AddSchedulers() error {
 	return nil
 }
 
-// check meta data service
-func RetryService(timeout int, wait *sync.WaitGroup, ch chan string) {
-	now := time.Now()
-	until := now.Add(time.Millisecond * time.Duration(timeout))
-
-	var status = 0
-	for time.Now().Before(until) {
-		var err error
-		//When looping, only handle configuration if it hasn't already been set.
-		if status != 200 {
-			status, err = callMetaDataService()
-			if err != nil {
-				ch <- "Support Scheduler failed to connect to Core Metadata...retrying"
-			} else {
-				//Check against boot timeout default
-				if Configuration.Service.BootTimeout != timeout {
-					until = now.Add(time.Millisecond * time.Duration(Configuration.Service.BootTimeout))
-				}
-			}
-		}
-
-		if status == 200 {
-			ch <- "Support Scheduler established connection to Core Metadata"
-			break
-		}
-		time.Sleep(time.Second * time.Duration(1))
-	}
-	close(ch)
-	wait.Done()
-
-	return
-}
-
 // ensure we have core metadata available
 func callMetaDataService() (int, error) {
 
 	client := &http.Client{
 		Timeout: time.Duration(Configuration.Service.Timeout) * time.Millisecond,
 	}
-	executingUrl := fmt.Sprintf("%s%s", Configuration.Clients["Metadata"].Url(),clients.ApiPingRoute)
+
+	executingUrl := fmt.Sprintf("%s://%s:%d%s", Configuration.Clients["Metadata"].Protocol, Configuration.Clients["Metadata"].Host, Configuration.Clients["Metadata"].Port, clients.ApiPingRoute)
 
 	req, _ := http.NewRequest(http.MethodGet, executingUrl, nil)
 	req.Header.Set(ContentTypeKey, ContentTypeJsonValue)
