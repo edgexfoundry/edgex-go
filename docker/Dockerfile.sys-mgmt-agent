@@ -25,4 +25,4 @@ LABEL license='SPDX-License-Identifier: Apache-2.0' \
 COPY --from=builder /bin/bash /bin/bash
 COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/sys-mgmt-agent/sys-mgmt-agent /
 COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/sys-mgmt-agent/res/docker/configuration.toml /res/docker/configuration.toml
-ENTRYPOINT ["/sys-mgmt-agent","--consul","--profile=docker","--confdir=/res"]
+ENTRYPOINT ["/sys-mgmt-agent","--profile=docker","--confdir=/res"]
