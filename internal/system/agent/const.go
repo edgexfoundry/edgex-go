@@ -31,14 +31,5 @@ type ConfigurationStruct struct {
 	DockerLevelOperations bool
 	Clients               map[string]config.ClientInfo
 	Service               config.ServiceInfo
-}
-
-type ManifestStruct struct {
-	EdgexServicesNotificationsName         string
-	EdgexServicesNotificationsHost         string
-	EdgexServicesNotificationsPort         int
-	EdgexServicesNotificationsProtocol     string
-	EdgexServicesNotificationsCommandstop  string
-	EdgexServicesNotificationsCommandstart string
-	OperationsType                         string
+	OperationsType        string
 }

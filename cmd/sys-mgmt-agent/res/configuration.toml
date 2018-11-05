@@ -1,3 +1,10 @@
+# This TOML file now incorporates a now-defunct manifest file, which had specified the services managed by the SMA.
+# The SMA needs the details provided in this TOML to stop/start/restart each service that the SMA manages.
+# What about specifying the edgexsecurity service to use?
+# Different versions of this manifest may exist depending on how/where EdgeX is deployed (Docker v. Snappy, Windows v. Linux, etc.).
+# In the first release of the SMA, the manifest will be static.
+# In the future, the manifest may be more dynamic or even provided by some 3rd party orchestrator.
+
 ApplicationName = 'edgex-sys-mgmt-agent'
 ConsulProfilesActive = 'go'
 ValidateCheck = false
@@ -9,7 +16,8 @@ ServiceAddress = 'localhost'
 CheckInterval = '10s'
 EnableRemoteLogging = false
 LoggingFile = './logs/edgex-sys-mgmt-agent.log'
-LoggingLevel = 'INFO'
+# OperationsType = 'os'
+OperationsType = 'docker'
 
 [Clients]
   [Clients.Notifications]
