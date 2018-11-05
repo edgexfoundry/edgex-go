@@ -15,13 +15,10 @@
 package consulclient
 
 import (
-	"errors"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	consulapi "github.com/hashicorp/consul/api"
 	"github.com/mitchellh/consulstructure"
-	"reflect"
 	"strconv"
-	"strings"
 )
 
 // Configuration struct for consul - used to initialize the service
@@ -45,14 +42,14 @@ var consul *consulapi.Client = nil // Call consulInit to initialize this variabl
 
 func NewConsulConfig(reg config.RegistryInfo, svc config.ServiceInfo, key string) ConsulConfig {
 	c := ConsulConfig{
-			ServiceName:    key,
-			ServicePort:    svc.Port,
-			ServiceAddress: svc.Host,
-			CheckAddress:   svc.HealthCheck(),
-			CheckInterval:  svc.CheckInterval,
-			ConsulAddress:  reg.Host,
-			ConsulPort:     reg.Port,
-		}
+		ServiceName:    key,
+		ServicePort:    svc.Port,
+		ServiceAddress: svc.Host,
+		CheckAddress:   svc.HealthCheck(),
+		CheckInterval:  svc.CheckInterval,
+		ConsulAddress:  reg.Host,
+		ConsulPort:     reg.Port,
+	}
 	return c
 }
 
@@ -60,7 +57,7 @@ func NewConsulDecoder(reg config.RegistryInfo) *consulstructure.Decoder {
 	cfg := &consulapi.Config{}
 	cfg.Address = reg.Host + ":" + strconv.Itoa(reg.Port)
 	d := &consulstructure.Decoder{
-		Consul:cfg,
+		Consul: cfg,
 	}
 	return d
 }
@@ -119,127 +116,4 @@ func GetServiceEndpoint(serviceKey string) (ServiceEndpoint, error) {
 		}
 	}
 	return endpoint, nil
-}
-
-// Look at the key/value pairs to update configuration
-func CheckKeyValuePairs(configurationStruct interface{}, applicationName string, profiles []string) error {
-	// Consul wasn't initialized
-	if consul == nil {
-		err := errors.New("Consul wasn't initialized, can't check key/value pairs")
-		return err
-	}
-
-	kv := consul.KV()
-
-	// Reflection to get the field names (These will be part of the key names)
-	configValue := reflect.ValueOf(configurationStruct)
-	// Loop through the fields
-	for i := 0; i < configValue.Elem().NumField(); i++ {
-		fieldName := configValue.Elem().Type().Field(i).Name
-		fieldValue := configValue.Elem().Field(i)
-		keyPath := "config/" + applicationName + ";" + strings.Join(profiles, ";") + "/" + fieldName
-		var byteValue []byte // Byte array that will be passed to Consul
-
-		// Switch off of the value type
-		switch fieldValue.Kind() {
-		case reflect.Bool:
-			byteValue = []byte(strconv.FormatBool(fieldValue.Bool()))
-
-			// Check if the key is already there
-			pair, _, err := kv.Get(keyPath, nil)
-			if err != nil {
-				return err
-			}
-			// Pair doesn't exist, create it
-			if pair == nil {
-				pair = &consulapi.KVPair{
-					Key:   keyPath,
-					Value: byteValue,
-				}
-				_, err = kv.Put(pair, nil)
-				if err != nil {
-					return err
-				}
-			} else { // Pair does exist, get the new value
-				pair, _, err = kv.Get(keyPath, nil)
-				if err != nil {
-					return err
-				}
-
-				newValue, err := strconv.ParseBool(string(pair.Value))
-				if err != nil {
-					return err
-				}
-
-				fieldValue.SetBool(newValue) // Set the new value
-			}
-			break
-		case reflect.String:
-			byteValue = []byte(fieldValue.String())
-
-			// Check if the key is already there
-			pair, _, err := kv.Get(keyPath, nil)
-			if err != nil {
-				return err
-			}
-			// Pair doesn't exist, create it
-			if pair == nil {
-				pair = &consulapi.KVPair{
-					Key:   keyPath,
-					Value: byteValue,
-				}
-				_, err = kv.Put(pair, nil)
-				if err != nil {
-					return err
-				}
-			} else { // Pair does exist, get the new value
-				pair, _, err = kv.Get(keyPath, nil)
-				if err != nil {
-					return err
-				}
-
-				newValue := string(pair.Value)
-
-				fieldValue.SetString(newValue) // Set the new value
-			}
-			break
-		case reflect.Int:
-			byteValue = []byte(strconv.FormatInt(fieldValue.Int(), 10))
-
-			// Check if the key is already there
-			pair, _, err := kv.Get(keyPath, nil)
-			if err != nil {
-				return err
-			}
-			// Pair doesn't exist, create it
-			if pair == nil {
-				pair = &consulapi.KVPair{
-					Key:   keyPath,
-					Value: byteValue,
-				}
-				_, err = kv.Put(pair, nil)
-				if err != nil {
-					return err
-				}
-			} else { // Pair does exist, get the new value
-				pair, _, err = kv.Get(keyPath, nil)
-				if err != nil {
-					return err
-				}
-
-				newValue, err := strconv.ParseInt(string(pair.Value), 10, 64)
-				if err != nil {
-					return err
-				}
-
-				fieldValue.SetInt(newValue) // Set the new value
-			}
-			break
-		default:
-			err := errors.New("Can't get the type of field: " + keyPath)
-			return err
-		}
-	}
-
-	return nil
 }
