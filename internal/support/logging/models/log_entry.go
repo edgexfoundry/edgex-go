@@ -15,9 +15,9 @@ package models
 
 type LogEntry struct {
 	//Id            string   `json:"id"`
-	Level         string   `bson:"logLevel" json:"logLevel"`
-	Labels        []string `bson:"labels" json:"labels"`
-	OriginService string   `bson:"originService" json:"originService"`
-	Message       string   `bson:"message" json:"message"`
-	Created       int64    `bson:"created" json:"created"`
+	Level         string        `bson:"logLevel" json:"logLevel"`
+	Args          []interface{} `bson:"args" json:"args"`
+	OriginService string        `bson:"originService" json:"originService"`
+	Message       string        `bson:"message" json:"message"`
+	Created       int64         `bson:"created" json:"created"`
 }

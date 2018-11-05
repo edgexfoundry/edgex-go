@@ -57,7 +57,7 @@ func main() {
 	data.LoggingClient.Info(fmt.Sprintf("Starting %s %s ", internal.CoreDataServiceKey, edgex.Version))
 
 	http.TimeoutHandler(nil, time.Millisecond*time.Duration(data.Configuration.Service.Timeout), "Request timed out")
-	data.LoggingClient.Info(data.Configuration.Service.StartupMsg, "")
+	data.LoggingClient.Info(data.Configuration.Service.StartupMsg)
 
 	errs := make(chan error, 2)
 	listenForInterrupt(errs)

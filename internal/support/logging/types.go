@@ -47,7 +47,7 @@ func newPrivateLogger() privLogger {
 	return p
 }
 
-func (l privLogger) log(logLevel string, msg string, labels []string) {
+func (l privLogger) log(logLevel string, msg string, args ...interface{}) {
 	// Check minimum log level
 	for _, name := range logger.LogLevels {
 		if name == *l.logLevel {
@@ -63,7 +63,7 @@ func (l privLogger) log(logLevel string, msg string, labels []string) {
 	if dbClient != nil {
 		logEntry := models.LogEntry{
 			Level:         logLevel,
-			Labels:        labels,
+			Args:          args,
 			OriginService: internal.SupportLoggingServiceKey,
 			Message:       msg,
 			Created:       db.MakeTimestamp(),
@@ -81,27 +81,27 @@ func (l privLogger) SetLogLevel(logLevel string) error {
 	return types.ErrNotFound{}
 }
 
-func (l privLogger) Debug(msg string, labels ...string) error {
-	l.log(logger.DebugLog, msg, labels)
+func (l privLogger) Debug(msg string, args ...interface{}) error {
+	l.log(logger.DebugLog, msg, args)
 	return nil
 }
 
-func (l privLogger) Error(msg string, labels ...string) error {
-	l.log(logger.ErrorLog, msg, labels)
+func (l privLogger) Error(msg string, args ...interface{}) error {
+	l.log(logger.ErrorLog, msg, args)
 	return nil
 }
 
-func (l privLogger) Info(msg string, labels ...string) error {
-	l.log(logger.InfoLog, msg, labels)
+func (l privLogger) Info(msg string, args ...interface{}) error {
+	l.log(logger.InfoLog, msg, args)
 	return nil
 }
 
-func (l privLogger) Trace(msg string, labels ...string) error {
-	l.log(logger.TraceLog, msg, labels)
+func (l privLogger) Trace(msg string, args ...interface{}) error {
+	l.log(logger.TraceLog, msg, args)
 	return nil
 }
 
-func (l privLogger) Warn(msg string, labels ...string) error {
-	l.log(logger.WarnLog, msg, labels)
+func (l privLogger) Warn(msg string, args ...interface{}) error {
+	l.log(logger.WarnLog, msg, args)
 	return nil
 }
