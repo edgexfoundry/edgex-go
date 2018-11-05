@@ -6,7 +6,7 @@
 
 2. Run `go get -v -x github.com/pebbe/zmq4`, **expect it to fail** due to a missing `zmq.h` file. This will create the directory structure needed in order to accomplish the steps below. This step can be skipped, but if skipped the directories in the following steps will have to be manually created.
 
-3. Download the release version of ZMQ from AppVeyor builds from zmq: https://ci.appveyor.com/project/zeromq/libzmq. Be sure it is a successful build and be sure a choose the the correct platform architecture and VERSION for your system.  Ensure the commit that is built matches the version you clone from source in step 3. Example: `Environment: platform=x64, configuration=Release, WITH_LIBSODIUM=ON, ENABLE_CURVE=ON, NO_PR=TRUE`. You can download the zip from the artifacts tab.
+3. Download the release version of ZMQ from AppVeyor builds from zmq: https://ci.appveyor.com/project/zeromq/libzmq. Be sure it is a successful build to choose the correct platform architecture and VERSION for your system.  Ensure the commit that is built matches the version you clone from source in step 3. Example: `Environment: platform=x64, configuration=Release, WITH_LIBSODIUM=ON, ENABLE_CURVE=ON, NO_PR=TRUE`. You can download the zip from the artifacts tab.
 
     3.a. Extract the contents of the downloaded zip file anywhere you prefer.
 
@@ -14,7 +14,7 @@
 
 3. In any directory you prefer, clone the source of ZMQ that matches the version/commit you downloaded from AppVeyor: `git clone https://github.com/zeromq/libzmq.git`.
 
-4. Copy over the `include` directory from the source downloaded in step 3 to  `%GOPATH%\src\github.com\pebbe\zmq4\usr\local\include`, ensuring that any necessary directories that don't exist are created.
+4. Copy over the `include` directory from the source downloaded in step 3 to  `%GOPATH%\src\github.com\pebbe\zmq4\usr\local\include`, ensuring that any necessary parent directories that don't exist are created.
 
 5. Set the following environment variables (run this in PowerShell):
 
@@ -22,6 +22,7 @@
 $Env:CGO_CFLAGS="-I%GOPATH%\src\github.com\pebbe\zmq4\usr\local\include"
 $Env:CGO_LDFLAGS="-L%GOPATH%\src\github.com\pebbe\zmq4\usr\local\lib"
 ```
+
 > Replace %GOPATH% with your actual path as PowerShell doesn't seem to be able resolve %GOPATH%. For example C:\users\\[windowsusername]\go
 
 After setting those, running `go get -v -x github.com/pebbe/zmq4` should succeed. If it fails, it most likely due to the `.h` files or `dll`s existing in a directory that doesnt match your `CGO_` environment variables. It may also fail due to the same error as before (see step 3.b) - try downloading the artifact from a different build on the [AppVeyor builds site](https://ci.appveyor.com/project/zeromq/libzmq).
