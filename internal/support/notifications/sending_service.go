@@ -18,7 +18,7 @@ package notifications
 import (
 	"bytes"
 	"net/http"
-	mail "net/smtp"
+	"net/smtp"
 	"strconv"
 	"strings"
 	"time"
@@ -31,9 +31,13 @@ func sendViaChannel(n models.Notification, c models.Channel, receiver string) {
 	LoggingClient.Debug("Sending notification: " + n.Slug + ", via channel: " + c.String())
 	var tr models.TransmissionRecord
 	if c.Type == models.ChannelType(models.Email) {
+		LoggingClient.Debug("..............send mail Content=" + n.Content) 
 		tr = smtpSend(n.Content, c.MailAddresses)
 	} else {
-		tr = restSend(n.Content, c.Url)
+		LoggingClient.Debug("...................send requst Url=" + c.Url + " Content=" + n.Content)  
+         // edit by  15599633@qq.com lesliechung88	
+        //tr = restSend(n.Content, c.Url)
+		tr = restSend(n.Content, c.Url,n.ContentType)
 	}
 	t, err := persistTransmission(tr, n, c, receiver)
 	if err == nil {
@@ -46,7 +50,9 @@ func resendViaChannel(t models.Transmission) {
 	if t.Channel.Type == models.ChannelType(models.Email) {
 		tr = smtpSend(t.Notification.Content, t.Channel.MailAddresses)
 	} else {
-		tr = restSend(t.Notification.Content, t.Channel.Url)
+		// edit by  15599633@qq.com lesliechung88	
+		//tr = restSend(t.Notification.Content, t.Channel.Url)
+		tr = restSend(t.Notification.Content, t.Channel.Url,t.Notification.ContentType)
 	}
 	t.ResendCount = t.ResendCount + 1
 	t.Status = tr.Status
@@ -77,17 +83,22 @@ func persistTransmission(tr models.TransmissionRecord, n models.Notification, c 
 }
 
 func smtpSend(message string, addressees []string) models.TransmissionRecord {
-	smtp := Configuration.Smtp
 	tr := getTransmissionRecord("SMTP server received", models.Sent)
-	buf := bytes.NewBufferString("Subject: " + smtp.Subject + "\r\n")
+	buf := bytes.NewBufferString("Subject: " + Configuration.SMTPSubject + "\r\n")
 	// required CRLF at ends of lines and CRLF between header and body for SMTP RFC 822 style email
 	buf.WriteString("\r\n")
 	buf.WriteString(message)
-	err := mail.SendMail(smtp.Host+":"+strconv.Itoa(smtp.Port),
-		mail.PlainAuth("", smtp.Sender, smtp.Password, smtp.Host),
-		smtp.Sender, addressees, []byte(buf.String()))
+	
+	// edit by  15599633@qq.com lesliechung88	
+//  err := smtp.SendMail(smtpHost+":"+smtpPort,
+//		smtp.PlainAuth("", smtpSender, smtpPassword, smtpHost),
+//		smtpSender, addressees, []byte(buf.String()))
+	err := smtp.SendMail(Configuration.SMTPHost+":"+Configuration.SMTPPort,
+		smtp.PlainAuth("", Configuration.SMTPSender, Configuration.SMTPPassword, Configuration.SMTPHost),
+		Configuration.SMTPSender, addressees, []byte(buf.String()))
+
 	if err != nil {
-		LoggingClient.Error("Problems sending message to: " + strings.Join(addressees, ",") + ", issue: " + err.Error())
+		LoggingClient.Error("Problems sending message to: " + strings.Join(addressees, ",") + ", smtpPort=" + Configuration.SMTPPort  + ", smtpHost=" + Configuration.SMTPHost + ", smtpSender=" + Configuration.SMTPSender + ", smtpPassword=" + Configuration.SMTPPassword  + ", issue: " + err.Error())
 		tr.Status = models.Failed
 		tr.Response = err.Error()
 		return tr
@@ -96,9 +107,12 @@ func smtpSend(message string, addressees []string) models.TransmissionRecord {
 
 }
 
-func restSend(message string, url string) models.TransmissionRecord {
+// edit by  15599633@qq.com lesliechung88
+//func restSend(message string, url string) models.TransmissionRecord {
+func restSend(message string, url string,contentType string) models.TransmissionRecord {
 	tr := getTransmissionRecord("", models.Sent)
-	rs, err := http.Post(url, "text/plain", bytes.NewBuffer([]byte(message)))
+//  rs, err := http.Post(url, "text/plain", bytes.NewBuffer([]byte(message)))
+    rs, err := http.Post(url, contentType, bytes.NewBuffer([]byte(message)))
 	if err != nil {
 		LoggingClient.Error("Problems sending message to: " + url)
 		LoggingClient.Error("Error indication was:  " + err.Error())
@@ -112,13 +126,13 @@ func restSend(message string, url string) models.TransmissionRecord {
 
 func handleFailedTransmission(t models.Transmission) {
 	n := t.Notification
-	if t.ResendCount >= Configuration.ResendLimit {
+	if t.ResendCount >= resendLimit {
 		LoggingClient.Error("Too many transmission resend attempts!  Giving up on transmission: " + t.ID.String() + ", for notification: " + n.Slug)
 	}
 	if t.Status == models.Failed && n.Status != models.Escalated {
 		LoggingClient.Debug("Handling failed transmission for: " + t.ID.String() + " for notification: " + t.Notification.Slug + ", resends so far: " + strconv.Itoa(t.ResendCount))
 		if n.Severity == models.Critical {
-			if t.ResendCount < Configuration.ResendLimit {
+			if t.ResendCount < resendLimit {
 				time.AfterFunc(time.Second*5, func() { criticalSeverityResend(t) })
 			} else {
 				escalate(t)

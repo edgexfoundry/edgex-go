@@ -14,17 +14,27 @@ RUN echo http://nl.alpinelinux.org/alpine/v3.6/main > /etc/apk/repositories; \
     echo http://nl.alpinelinux.org/alpine/v3.6/community >> /etc/apk/repositories
 
 
-RUN apk update && apk add make && apk add bash
+RUN apk update && apk add make && apk add bash 
 COPY . .
+#should be at outter glide,then vendor included lib,so direct make
 RUN make cmd/support-notifications/support-notifications
 
-FROM scratch
+
+# edit by  15599633@qq.com lesliechung88	
+#FROM scratch
+#  issue: x509: failed to load system roots and no roots provided
+FROM alpine
+RUN apk update &&  apk --no-cache add ca-certificates
 
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
       copyright='Copyright (c) 2018: Cavium'
 
+ENV APP_PORT=48060
+#expose notifications port
+EXPOSE $APP_PORT
+
 COPY --from=builder /bin/bash /bin/bash
 COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/support-notifications/support-notifications /
-COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/support-notifications/res/docker/configuration.toml /res/docker/configuration.toml
-ENTRYPOINT ["/support-notifications","--consul","--profile=docker","--confdir=/res"]
+COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/support-notifications/res/configuration-docker.toml /res/configuration-docker.toml
+ENTRYPOINT ["/support-notifications","--consul=true","--profile=docker","--confdir=/res"]
 
