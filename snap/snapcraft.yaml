@@ -32,7 +32,7 @@ apps:
     daemon: simple
     plugs: [network, network-bind]
   core-config-seed:
-    command: bin/start-config-seed.sh
+    command: bin/go-services-wrapper.sh config-seed -c ${SNAP_DATA}/config
     plugs: [network, network-bind, daemon-notify]
     daemon: notify
     passthrough:
@@ -66,7 +66,7 @@ apps:
       after:
         - core-config-seed
   support-logging:
-    command: bin/go-services-wrapper.sh support-logging
+    command: bin/go-services-wrapper.sh support-logging --consul
     daemon: notify
     plugs: [network, network-bind, daemon-notify]
     passthrough:
@@ -74,7 +74,7 @@ apps:
         - core-config-seed
         - mongo-worker
   support-notifications:
-    command: bin/go-services-wrapper.sh support-notifications
+    command: bin/go-services-wrapper.sh support-notifications --consul
     daemon: notify
     plugs: [network, network-bind, daemon-notify]
     passthrough:
@@ -82,7 +82,7 @@ apps:
         - core-config-seed
         - mongo-worker
   core-data:
-    command: bin/go-services-wrapper.sh core-data
+    command: bin/go-services-wrapper.sh core-data --consul
     daemon: notify
     plugs: [network, network-bind, daemon-notify]
     passthrough:
@@ -90,7 +90,7 @@ apps:
         - core-config-seed
         - mongo-worker
   core-metadata:
-    command: bin/go-services-wrapper.sh core-metadata
+    command: bin/go-services-wrapper.sh core-metadata --consul
     daemon: notify
     plugs: [network, network-bind, daemon-notify]
     passthrough:
@@ -98,7 +98,7 @@ apps:
         - core-config-seed
         - mongo-worker
   core-command:
-    command: bin/go-services-wrapper.sh core-command
+    command: bin/go-services-wrapper.sh core-command --consul
     daemon: notify
     plugs: [network, network-bind, daemon-notify]
     passthrough:
@@ -106,7 +106,7 @@ apps:
         - core-config-seed
         - mongo-worker
   support-scheduler:
-    command: bin/go-services-wrapper.sh support-scheduler
+    command: bin/go-services-wrapper.sh support-scheduler --consul
     daemon: notify
     plugs: [network, network-bind]
     passthrough:
@@ -114,7 +114,7 @@ apps:
         - core-config-seed
         - mongo-worker
   export-client:
-    command: bin/go-services-wrapper.sh export-client
+    command: bin/go-services-wrapper.sh export-client --consul
     daemon: notify
     plugs: [network, network-bind, daemon-notify]
     passthrough:
@@ -122,7 +122,7 @@ apps:
         - core-config-seed
         - mongo-worker
   export-distro:
-    command: bin/go-services-wrapper.sh export-distro
+    command: bin/go-services-wrapper.sh export-distro --consul
     daemon: notify
     plugs: [network, network-bind, daemon-notify]
     passthrough:
