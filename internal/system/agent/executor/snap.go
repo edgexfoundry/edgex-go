@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/system/agent"
 )
 
 // ExecuteSnap is a struct for managing services inside the snap
@@ -59,11 +58,6 @@ func (oe *ExecuteSnap) StopService(service string, params string) error {
 	// use snapctl to stop the service - note that this won't disable the service
 	// so after a reboot the service will come up again
 	cmd := exec.Command("snapctl", "stop", snapName+"."+rootSvcName)
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		// assume that the agent will have been initialize and this isn't a nil interface
-		// otherwise this will panic
-		agent.LoggingClient.Error(fmt.Sprintf("failed to stop snap service: %s", out))
-	}
+	_, err := cmd.CombinedOutput()
 	return err
 }
