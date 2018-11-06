@@ -71,6 +71,8 @@ func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup,
 	return
 }
 
+
+
 func Init(useConsul bool) bool {
 	if Configuration == nil {
 		return false
@@ -189,7 +191,6 @@ func setLoggingTarget() string {
 
 func initializeClients(useConsul bool) {
 	// Create metadata clients
-
 	params := types.EndpointParams{
 		ServiceKey:  internal.SupportSchedulerServiceKey,
 		Path:        clients.ApiScheduleRoute,
@@ -208,5 +209,5 @@ func initializeClients(useConsul bool) {
 	// metadata Addressable client
 	params.Path = clients.ApiAddressableRoute
 	params.Url = Configuration.Clients["Metadata"].Url() + clients.ApiAddressableRoute
-	mac = metadata.NewAddressableClient(params,startup.Endpoint{})
+	mac = metadata.NewAddressableClient(params, startup.Endpoint{})
 }
