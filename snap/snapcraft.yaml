@@ -446,8 +446,10 @@ parts:
             -e s:'http\://localhost\:48061/api/v1/logs':: > \
        "$SNAPCRAFT_PART_INSTALL/config/support-scheduler/res/configuration.toml"
       
+      # for sys-mgmt-agent we also need to specify the operations type as "snap"
       cat "./cmd/sys-mgmt-agent/res/configuration.toml" | \
         sed -e s:./logs/edgex-sys-mgmt-agent.log:\$SNAP_COMMON/sys-mgmt-agent.log: \
+            -e s:"OperationsType = 'docker'":"OperationsType = 'snap'": \
             -e s:'http\://localhost\:48061/api/v1/logs':: > \
        "$SNAPCRAFT_PART_INSTALL/config/sys-mgmt-agent/res/configuration.toml"
 
