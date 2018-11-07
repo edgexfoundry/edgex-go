@@ -17,13 +17,13 @@ type ExecuteSnap struct {
 // StopService of ExecuteSnap will stop a service in the snap using `snapctl`
 func (oe *ExecuteSnap) StopService(service string, params string) error {
 
-	// use $SNAP to get the name of the snap as snapctl needs to use it
+	// use $SNAP_NAME to get the name of the snap as snapctl needs to use it
 	// and this also lets the name of the snap change if needed
 	// and ensures that if you're not running inside a snap we don't try to use
 	// snapctl which will fail
-	snapName := os.Getenv("SNAP")
+	snapName := os.Getenv("SNAP_NAME")
 	if snapName == "" {
-		return errors.New("$SNAP not set, not running inside of a snap")
+		return errors.New("$SNAP_NAME not set, not running inside of a snap")
 	}
 
 	// make a map of the service names and use it as a set
