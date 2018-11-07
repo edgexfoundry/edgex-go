@@ -156,7 +156,7 @@ func initializeClients(useConsul bool) {
 	// Create export-distro client
 	params := types.EndpointParams{
 		ServiceKey:  internal.ExportDistroServiceKey,
-		Path:        "/",
+		Path:        "",
 		UseRegistry: useConsul,
 		Url:         Configuration.Clients["Distro"].Url(),
 		Interval:    Configuration.Service.ClientMonitor,
