@@ -2,12 +2,13 @@ package executor
 
 import (
 	"fmt"
-	"strings"
-	"os"
-	"os/exec"
-	"net/http"
 	"io/ioutil"
 	"log"
+	"net/http"
+	"os"
+	"os/exec"
+	"strings"
+
 	"github.com/edgexfoundry/edgex-go/internal"
 )
 
@@ -123,8 +124,8 @@ func RunDockerComposeCommand(service string, dockerComposeService string, compos
 	}
 	println(out)
 
-	if ! WasDockerContainerComposeStarted(service) {
-		log.Printf(fmt.Sprintf("The container for {%s} was NOT started!", service))
+	if !WasDockerContainerComposeStarted(service) {
+		log.Printf(fmt.Sprintf("The container for {%s} was NOT started!" + service))
 		// agent.LoggingClient.Warn("The container for {%s} was NOT started!" + service)
 	}
 }
@@ -137,10 +138,6 @@ func FetchDockerComposeYamlAndPath(composeUrl string) (string, error) {
 	if err != nil {
 		log.Printf(fmt.Sprintf("Call to http.Get() failed with %s\n", err.Error()))
 		// agent.LoggingClient.Error("Call to http.Get() failed with %s\n", err.Error())
-	}
-
-	if res.Body != nil {
-		defer res.Body.Close()
 	}
 	body, _ := ioutil.ReadAll(res.Body)
 
@@ -176,7 +173,7 @@ func FetchDockerComposeYamlAndPath(composeUrl string) (string, error) {
 		println(fileInfo)
 		err = ioutil.WriteFile(filename, []byte(body), 0666)
 		if err != nil {
-			log.Printf("%s We have already fetched the contents and written them to the deployed file-system!", err.Error())
+			log.Printf(err.Error(), "%s We have already fetched the contents and written them to the deployed file-system!", err.Error())
 			// agent.LoggingClient.Error("%s We have already fetched the contents and written them to the deployed file-system!", err.Error())
 		}
 	}
