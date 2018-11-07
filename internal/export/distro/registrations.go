@@ -121,6 +121,8 @@ func (reg *registrationInfo) update(newReg export.Registration) bool {
 		reg.sender = newHTTPSender(newReg.Addressable)
 	case export.DestXMPP:
 		reg.sender = newXMPPSender(newReg.Addressable)
+	case export.DestKAFKA:
+		reg.sender = newKAFKASender(newReg.Addressable)
 	case export.DestInfluxDB:
 		reg.sender = newInfluxDBSender(newReg.Addressable)
 

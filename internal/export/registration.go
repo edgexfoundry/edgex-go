@@ -26,6 +26,7 @@ const (
 	DestRest        = "REST_ENDPOINT"
 	DestXMPP        = "XMPP_TOPIC"
 	DestAWSMQTT     = "AWS_TOPIC"
+	DestKAFKA       = "KAFKA_TOPIC"
 	DestInfluxDB    = "INFLUXDB_ENDPOINT"
 )
 
@@ -112,6 +113,7 @@ func (reg Registration) Validate() (bool, error) {
 		reg.Destination != DestAzureMQTT &&
 		reg.Destination != DestAWSMQTT &&
 		reg.Destination != DestRest &&
+		reg.Destination != DestKAFKA &&
 		reg.Destination != DestInfluxDB {
 		return false, fmt.Errorf("Destination invalid: %s", reg.Destination)
 	}
