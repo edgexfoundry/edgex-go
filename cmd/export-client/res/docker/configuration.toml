@@ -1,6 +1,6 @@
 [Service]
 BootTimeout = 30000
-ClientMonitor = 15000
+ClientMonitor = 300 
 CheckInterval = '10s'
 Host = 'edgex-export-client'
 Port = 48071
