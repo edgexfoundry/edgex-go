@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"strings"
 	"os"
-	"log"
 	"os/exec"
 	"net/http"
 	"io/ioutil"
+	"log"
 	"github.com/edgexfoundry/edgex-go/internal"
 )
 
@@ -20,7 +20,7 @@ func WasDockerContainerComposeStarted(service string) bool {
 	cmdName := "docker"
 	cmdArgs := []string{"ps"}
 	if cmdOut, err = exec.Command(cmdName, cmdArgs...).Output(); err != nil {
-		fmt.Fprintln(os.Stderr, "There was an error running the docker-compose command: ", err)
+		fmt.Fprintln(os.Stderr, "There was an error running the docker-compose command: ", err.Error())
 		os.Exit(1)
 	}
 	composeOutput := string(cmdOut)
@@ -40,7 +40,7 @@ func WasDockerContainerComposeStarted(service string) bool {
 	return false
 }
 
-func StartDockerContainerCompose(service string) error {
+func StartDockerContainerCompose(service string, composeUrl string) error {
 
 	var dockerComposeService string
 
@@ -48,52 +48,51 @@ func StartDockerContainerCompose(service string) error {
 
 	case internal.SupportNotificationsServiceKey:
 		dockerComposeService = "notifications"
-		RunDockerComposeCommand(service, dockerComposeService)
+		RunDockerComposeCommand(service, dockerComposeService, composeUrl)
 		break
 
 	case internal.CoreDataServiceKey:
 		dockerComposeService = "data"
-		RunDockerComposeCommand(service, dockerComposeService)
+		RunDockerComposeCommand(service, dockerComposeService, composeUrl)
 		break
 
 	case internal.CoreMetaDataServiceKey:
 		dockerComposeService = "metadata"
-		RunDockerComposeCommand(service, dockerComposeService)
+		RunDockerComposeCommand(service, dockerComposeService, composeUrl)
 		break
 
 	case internal.CoreCommandServiceKey:
 		dockerComposeService = "command"
-		RunDockerComposeCommand(service, dockerComposeService)
+		RunDockerComposeCommand(service, dockerComposeService, composeUrl)
 		break
 
 	case internal.ExportClientServiceKey:
 		dockerComposeService = "export-client"
-		RunDockerComposeCommand(service, dockerComposeService)
+		RunDockerComposeCommand(service, dockerComposeService, composeUrl)
 		break
 
 	case internal.ExportDistroServiceKey:
 		dockerComposeService = "export-distro"
-		RunDockerComposeCommand(service, dockerComposeService)
+		RunDockerComposeCommand(service, dockerComposeService, composeUrl)
 		break
 
 	case internal.SupportLoggingServiceKey:
 		dockerComposeService = "logging"
-		RunDockerComposeCommand(service, dockerComposeService)
+		RunDockerComposeCommand(service, dockerComposeService, composeUrl)
 		break
 
 	case internal.ConfigSeedServiceKey:
 		dockerComposeService = "config-seed"
-		RunDockerComposeCommand(service, dockerComposeService)
+		RunDockerComposeCommand(service, dockerComposeService, composeUrl)
 		break
 
 	default:
-		// fmt.Sprintf(">> Unknown service: %v", service)
 		break
 	}
 	return nil
 }
 
-func RunDockerComposeCommand(service string, dockerComposeService string) {
+func RunDockerComposeCommand(service string, dockerComposeService string, composeUrl string) {
 
 	var (
 		err    error
@@ -102,15 +101,15 @@ func RunDockerComposeCommand(service string, dockerComposeService string) {
 	cmdName := "docker-compose"
 
 	// Retry the fetching of the docker-compose.yml from the Github edgexfoundry repository.
-	// fmt.Sprintf("Pulling latest compose file from Github edgexfoundry repository...")
 	err = Do(func(attempt int) (bool, error) {
 		var err error
-		cmdDir, err = FetchDockerComposeYamlAndPath()
+		cmdDir, err = FetchDockerComposeYamlAndPath(composeUrl)
 		// Try 5 times
 		return attempt < 5, err
 	})
 	if err != nil {
-		log.Fatalln("Unable to pull the latest compose file from Github edgexfoundry repository.:", err)
+		log.Printf("Unable to pull the latest compose file from Github edgexfoundry repository: %s", err.Error())
+		// agent.LoggingClient.Error("Unable to pull the latest compose file from Github edgexfoundry repository: %s", err.Error())
 	}
 
 	cmdArgs := []string{"up", "-d", dockerComposeService}
@@ -119,37 +118,27 @@ func RunDockerComposeCommand(service string, dockerComposeService string) {
 
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		log.Fatal(fmt.Sprintf("Call to docker-compose up -d failed with %s\n", err))
+		log.Printf(fmt.Sprintf("Call to docker-compose up -d failed with %s\n", err.Error()))
+		// agent.LoggingClient.Error("Call to docker-compose up -d failed with %s\n", err.Error())
 	}
-
-	// composeOutput := string(out)
-	// fmt.Sprintf("For the micro-service {%v}, we got this docker-compose output:\n {%v}", service, composeOutput)
 	println(out)
 
 	if ! WasDockerContainerComposeStarted(service) {
-		log.Fatal(fmt.Sprintf("The container for {%v} was NOT started!" + service))
+		log.Printf(fmt.Sprintf("The container for {%s} was NOT started!" + service))
+		// agent.LoggingClient.Warn("The container for {%s} was NOT started!" + service)
 	}
 }
 
-func FetchDockerComposeYamlAndPath() (string, error) {
-
-	// Specifying the location of the latest "docker-compose.yml" file (on Github).
-	composeUrl := "https://raw.githubusercontent.com/edgexfoundry/developer-scripts/master/compose-files/docker-compose-california-0.6.1.yml"
-	req, _ := http.NewRequest("GET", composeUrl, nil)
-	res, _ := http.DefaultClient.Do(req)
-
-	if res.Body != nil {
-		defer res.Body.Close()
-	}
-
-	body, _ := ioutil.ReadAll(res.Body)
+func FetchDockerComposeYamlAndPath(composeUrl string) (string, error) {
 
 	// [1] Fetch contents of the latest "docker-compose.yml" file from Github.
-	resp, err := http.Get("https://raw.githubusercontent.com/edgexfoundry/developer-scripts/master/compose-files/docker-compose-california-0.6.0.yml")
+	req, _ := http.NewRequest("GET", composeUrl, nil)
+	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		log.Fatal(fmt.Sprintf("Call to http.Get() failed with %s\n", err))
+		log.Printf(fmt.Sprintf("Call to http.Get() failed with %s\n", err.Error()))
+		// agent.LoggingClient.Error("Call to http.Get() failed with %s\n", err.Error())
 	}
-	defer resp.Body.Close()
+	body, _ := ioutil.ReadAll(res.Body)
 
 	// [2] Determine the directory (in the deployed file-system) that we will be writing the fetched contents to.
 	cmdName := "curl"
@@ -158,13 +147,13 @@ func FetchDockerComposeYamlAndPath() (string, error) {
 	cmd := exec.Command(cmdName)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		log.Fatal(fmt.Sprintf("Call to exec.Command(cmdName) failed with %s\n", err))
+		log.Printf(fmt.Sprintf("Call to exec.Command(cmdName) failed with %s\n", err.Error()))
+		// agent.LoggingClient.Error("Call to exec.Command(cmdName) failed with %s\n", err.Error())
 	}
 	composeOutput := string(out)
 
 	cmdArgs := composeOutput
 	path := strings.TrimSuffix(cmdArgs, "\n")
-	// fmt.Sprintf("Determined this to be the directory we will be writing to: {%v}", path)
 
 	composeFile := "/docker-compose.yml"
 	filename := path + composeFile
@@ -172,20 +161,20 @@ func FetchDockerComposeYamlAndPath() (string, error) {
 	// [3] Get info about the named file (i.e. under the designator "filename").
 	fileInfo, err := os.Stat(filename)
 	if err != nil {
-		log.Fatal(err.Error(), "Filename-related error!")
+		log.Printf(err.Error(), " File docker-compose.yml does not exist, yet!")
+		log.Printf(" Therefore, creating docker-compose.yml from scratch...")
+		// agent.LoggingClient.Error(" File docker-compose.yml does not exist, yet!", err.Error())
+		// agent.LoggingClient.Info(" Therefore, creating docker-compose.yml from scratch...")
 	}
 
 	// [4] Determine whether we have _already_ fetched the contents and written them to the deployed file-system.
 	if os.IsNotExist(err) {
 		println(fileInfo)
-		// fmt.Sprintf("File {%v} does NOT exist. Therefore, create it.", fileInfo)
 		err = ioutil.WriteFile(filename, []byte(body), 0666)
 		if err != nil {
-			log.Fatal(err)
+			log.Printf(err.Error(), "%s We have already fetched the contents and written them to the deployed file-system!", err.Error())
+			// agent.LoggingClient.Error("%s We have already fetched the contents and written them to the deployed file-system!", err.Error())
 		}
-	} else {
-		// fmt.Sprintf("File {%v} already exists! Therefore, NOT creating it.", filename)
 	}
-
 	return path, err
 }

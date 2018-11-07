@@ -32,4 +32,5 @@ type ConfigurationStruct struct {
 	Clients               map[string]config.ClientInfo
 	Service               config.ServiceInfo
 	OperationsType        string
+	ComposeUrl            string
 }
