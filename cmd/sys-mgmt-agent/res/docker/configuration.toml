@@ -16,7 +16,6 @@ ServiceAddress = 'edgex-sys-mgmt-agent'
 CheckInterval = '10s'
 LoggingFile = '/edgex/logs/edgex-sys-mgmt-agent.log'
 LoggingRemoteURL = 'http://edgex-support-logging:48061/api/v1/logs'
-# OperationsType = 'os'
 OperationsType = 'docker'
 
 [Clients]
