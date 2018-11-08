@@ -31,7 +31,7 @@ apps:
     daemon: simple
     plugs: [network, network-bind]
   core-config-seed:
-    command: bin/start-config-seed.sh
+    command: bin/go-services-wrapper.sh config-seed -c ${SNAP_DATA}/config
     plugs: [network, network-bind, daemon-notify]
     daemon: notify
     passthrough:
@@ -65,7 +65,7 @@ apps:
       after:
         - core-config-seed
   support-logging:
-    command: bin/go-services-wrapper.sh support-logging
+    command: bin/go-services-wrapper.sh support-logging --consul
     daemon: notify
     plugs: [network, network-bind, daemon-notify]
     passthrough:
@@ -73,7 +73,7 @@ apps:
         - core-config-seed
         - mongo-worker
   support-notifications:
-    command: bin/go-services-wrapper.sh support-notifications
+    command: bin/go-services-wrapper.sh support-notifications --consul
     daemon: notify
     plugs: [network, network-bind, daemon-notify]
     passthrough:
@@ -81,7 +81,7 @@ apps:
         - core-config-seed
         - mongo-worker
   core-data:
-    command: bin/go-services-wrapper.sh core-data
+    command: bin/go-services-wrapper.sh core-data --consul
     daemon: notify
     plugs: [network, network-bind, daemon-notify]
     passthrough:
@@ -89,7 +89,7 @@ apps:
         - core-config-seed
         - mongo-worker
   core-metadata:
-    command: bin/go-services-wrapper.sh core-metadata
+    command: bin/go-services-wrapper.sh core-metadata --consul
     daemon: notify
     plugs: [network, network-bind, daemon-notify]
     passthrough:
@@ -97,7 +97,7 @@ apps:
         - core-config-seed
         - mongo-worker
   core-command:
-    command: bin/go-services-wrapper.sh core-command
+    command: bin/go-services-wrapper.sh core-command --consul
     daemon: notify
     plugs: [network, network-bind, daemon-notify]
     passthrough:
@@ -113,7 +113,7 @@ apps:
         - core-config-seed
         - mongo-worker
   support-scheduler:
-    command: bin/go-services-wrapper.sh support-scheduler
+    command: bin/go-services-wrapper.sh support-scheduler --consul
     daemon: notify
     plugs: [network, network-bind]
     passthrough:
@@ -121,7 +121,7 @@ apps:
         - core-config-seed
         - mongo-worker
   export-client:
-    command: bin/go-services-wrapper.sh export-client
+    command: bin/go-services-wrapper.sh export-client --consul
     daemon: notify
     plugs: [network, network-bind, daemon-notify]
     passthrough:
@@ -129,7 +129,15 @@ apps:
         - core-config-seed
         - mongo-worker
   export-distro:
-    command: bin/go-services-wrapper.sh export-distro
+    command: bin/go-services-wrapper.sh export-distro --consul
+    daemon: notify
+    plugs: [network, network-bind, daemon-notify]
+    passthrough:
+      after:
+        - core-config-seed
+        - mongo-worker
+  sys-mgmt-agent:
+    command: bin/go-services-wrapper.sh sys-mgmt-agent
     daemon: notify
     plugs: [network, network-bind, daemon-notify]
     passthrough:
@@ -366,6 +374,8 @@ parts:
       install -DT "./cmd/support-logging/support-logging" "$SNAPCRAFT_PART_INSTALL/bin/support-logging"
       install -DT "./cmd/support-notifications/support-notifications" "$SNAPCRAFT_PART_INSTALL/bin/support-notifications"
       install -DT "./cmd/support-scheduler/support-scheduler" "$SNAPCRAFT_PART_INSTALL/bin/support-scheduler"
+      install -DT "./cmd/sys-mgmt-agent/sys-mgmt-agent" "$SNAPCRAFT_PART_INSTALL/bin/sys-mgmt-agent"
+
 
       # FIXME: settings can't be overridden from the cmd-line!
       # Override 'LogFile' and 'LoggingRemoteURL'
@@ -379,6 +389,7 @@ parts:
       install -d "$SNAPCRAFT_PART_INSTALL/config/support-scheduler/res/"
       install -d "$SNAPCRAFT_PART_INSTALL/config/config-seed/res/properties/device-virtual/"
       install -d "$SNAPCRAFT_PART_INSTALL/config/config-seed/res/properties/edgex-support-rulesengine/"
+      install -d "$SNAPCRAFT_PART_INSTALL/config/sys-mgmt-agent/res/"
       
       # handle application.properties for the remaining java services
       install -DT "./cmd/config-seed/res/properties/device-virtual/application.properties" \
@@ -434,6 +445,11 @@ parts:
         sed -e s:./logs/edgex-support-scheduler.log:\$SNAP_COMMON/support-scheduler.log: \
             -e s:'http\://localhost\:48061/api/v1/logs':: > \
        "$SNAPCRAFT_PART_INSTALL/config/support-scheduler/res/configuration.toml"
+      
+      cat "./cmd/sys-mgmt-agent/res/configuration.toml" | \
+        sed -e s:./logs/edgex-sys-mgmt-agent.log:\$SNAP_COMMON/sys-mgmt-agent.log: \
+            -e s:'http\://localhost\:48061/api/v1/logs':: > \
+       "$SNAPCRAFT_PART_INSTALL/config/sys-mgmt-agent/res/configuration.toml"
 
       # handle license files
       install -DT "./cmd/core-command/Attribution.txt" \
@@ -460,7 +476,9 @@ parts:
               "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/support-scheduler/LICENSE"
       install -DT "./LICENSE" \
               "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/config-seed/LICENSE"
-      
+      install -DT "./LICENSE" \
+              "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/sys-mgmt-agent/LICENSE"
+
     build-packages:
       - zip
       - pkg-config
