@@ -26,27 +26,32 @@ import (
  * Operation struct
  */
 type Operation struct {
-	BaseObject        `bson:",inline"`
 	Action   string   `bson:"action" json:"action,omitempty"`
-	Params   []string `bson:"params" json:"params,omitempty"`
 	Services []string `bson:"services,omitempty" json:"services,omitempty"`
 }
 
-// Custom marshaling to make empty strings null
-func (o Operation) MarshalJSON() ([]byte, error) {
+//Implements unmarshaling of JSON string to Operation type instance
+func (o *Operation) UnmarshalJSON(data []byte) error {
 	test := struct {
-		BaseObject
-		Action   *string        `json:"action,omitempty"`
-		Params   []string       `json:"params,omitempty"`
-		Services []string       `json:"services,omitempty"`
-	}{
-		BaseObject: o.BaseObject,
+		Action   *string  `json:"action"`
+		Services []string `json:"services"`
+	}{}
+
+	//Verify that incoming string will unmarshal successfully
+	if err := json.Unmarshal(data, &test); err != nil {
+		return err
 	}
 
-	if o.Action != "" {
-		test.Action = &o.Action
+	//If so, copy the fields
+	if test.Action != nil {
+		o.Action = *test.Action
 	}
-	return json.Marshal(test)
+
+	o.Services = []string{}
+	if len(test.Services) > 0 {
+		o.Services = test.Services
+	}
+	return nil
 }
 
 /*
