@@ -28,7 +28,8 @@ func findAndStopProcess(output string, err error, process string) error {
 
 	var pid int
 	if err != nil {
-		log.Fatalf("Error during findAndStopProcess() as follows: " + err.Error())
+		log.Printf("Error during findAndStopProcess() as follows: %s", err.Error())
+		// agent.LoggingClient.Error(" Error during findAndStopProcess() as follows: ", err.Error())
 		return nil
 	}
 
@@ -43,19 +44,19 @@ func findAndStopProcess(output string, err error, process string) error {
 				tokens := strings.Split(line, " ")
 				pid, err = strconv.Atoi(tokens[0])
 				if err != nil {
-					log.Fatalf("Error converting PID to integer: " + err.Error())
+					log.Printf("Error converting PID to integer: %s", err.Error())
+					// log.Fatalf("Error converting PID to integer: " + err.Error())
 				}
 				// fmt.Sprintf("Found the data with the PID {%v} of the the micro-service {%v} which we seek to stop!", tokens[0], process)
 			}
 		}
 
 		// Now stop the process using the PID found above.
-		// fmt.Sprintf("OS-level >> The micro-service {%v} with the PID of {%v} is now being stopped!", process, pid)
-
 		// Make a system call.
 		proc, err := os.FindProcess(pid)
 		if err != nil {
-			log.Println(err)
+			log.Printf("Error during os.FindProcess(pid) as follows: %s", err.Error())
+			// agent.LoggingClient.Error(" Error during os.FindProcess(pid) as follows: ", err.Error())
 		}
 		proc.Kill()
 	} else {
