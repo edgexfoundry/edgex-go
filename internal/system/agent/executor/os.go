@@ -1,17 +1,17 @@
 package executor
 
 import (
-	"strings"
-	"os"
 	"log"
+	"os"
 	"os/exec"
 	"strconv"
+	"strings"
 )
 
 type ExecuteOs struct {
 }
 
-func (oe *ExecuteOs) StopService(service string, params string) error {
+func (oe *ExecuteOs) StopService(service string) error {
 
 	cmd := exec.Command("ps", "-ax")
 	out, err := cmd.CombinedOutput()

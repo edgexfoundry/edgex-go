@@ -17,9 +17,9 @@ package agent
 
 import (
 	"fmt"
-	"time"
-	"github.com/edgexfoundry/edgex-go/internal/system/agent/executor"
 	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/internal/system/agent/executor"
+	"time"
 )
 
 const (
@@ -28,46 +28,46 @@ const (
 	RESTART = "restart"
 )
 
-func InvokeOperation(action string, services []string, params []string) bool {
+func InvokeOperation(action string, services []string) bool {
 
 	// Loop through requested operation, along with respectively-supplied parameters.
 	for _, service := range services {
-		LoggingClient.Info(fmt.Sprintf("About to {%v} the service {%v} with parameters {%v}.", action, service, params))
+		LoggingClient.Info(fmt.Sprintf("About to {%v} the service {%v} ", action, service))
 
 		switch action {
 
 		case STOP:
 			switch service {
 			case internal.SupportNotificationsServiceKey:
-				ec.StopService(internal.SupportNotificationsServiceKey, params[0])
+				ec.StopService(internal.SupportNotificationsServiceKey)
 				break
 
 			case internal.CoreDataServiceKey:
-				ec.StopService(internal.CoreDataServiceKey, params[0])
+				ec.StopService(internal.CoreDataServiceKey)
 				break
 
 			case internal.CoreCommandServiceKey:
-				ec.StopService(internal.CoreCommandServiceKey, params[0])
+				ec.StopService(internal.CoreCommandServiceKey)
 				break
 
 			case internal.CoreMetaDataServiceKey:
-				ec.StopService(internal.CoreMetaDataServiceKey, params[0])
+				ec.StopService(internal.CoreMetaDataServiceKey)
 				break
 
 			case internal.ExportClientServiceKey:
-				ec.StopService(internal.ExportClientServiceKey, params[0])
+				ec.StopService(internal.ExportClientServiceKey)
 				break
 
 			case internal.ExportDistroServiceKey:
-				ec.StopService(internal.ExportDistroServiceKey, params[0])
+				ec.StopService(internal.ExportDistroServiceKey)
 				break
 
 			case internal.SupportLoggingServiceKey:
-				ec.StopService(internal.SupportLoggingServiceKey, params[0])
+				ec.StopService(internal.SupportLoggingServiceKey)
 				break
 
 			case internal.ConfigSeedServiceKey:
-				ec.StopService(internal.ConfigSeedServiceKey, params[0])
+				ec.StopService(internal.ConfigSeedServiceKey)
 				break
 
 			default:
@@ -117,49 +117,49 @@ func InvokeOperation(action string, services []string, params []string) bool {
 		case RESTART:
 			switch service {
 			case internal.SupportNotificationsServiceKey:
-				ec.StopService(internal.SupportNotificationsServiceKey, params[0])
+				ec.StopService(internal.SupportNotificationsServiceKey)
 				time.Sleep(time.Second * time.Duration(1))
 				executor.StartDockerContainerCompose(internal.SupportNotificationsServiceKey, Configuration.ComposeUrl)
 				break
 
 			case internal.CoreDataServiceKey:
-				ec.StopService(internal.CoreDataServiceKey, params[0])
+				ec.StopService(internal.CoreDataServiceKey)
 				time.Sleep(time.Second * time.Duration(1))
 				executor.StartDockerContainerCompose(internal.CoreDataServiceKey, Configuration.ComposeUrl)
 				break
 
 			case internal.CoreCommandServiceKey:
-				ec.StopService(internal.CoreCommandServiceKey, params[0])
+				ec.StopService(internal.CoreCommandServiceKey)
 				time.Sleep(time.Second * time.Duration(1))
 				executor.StartDockerContainerCompose(internal.CoreCommandServiceKey, Configuration.ComposeUrl)
 				break
 
 			case internal.CoreMetaDataServiceKey:
-				ec.StopService(internal.CoreMetaDataServiceKey, params[0])
+				ec.StopService(internal.CoreMetaDataServiceKey)
 				time.Sleep(time.Second * time.Duration(1))
 				executor.StartDockerContainerCompose(internal.CoreMetaDataServiceKey, Configuration.ComposeUrl)
 				break
 
 			case internal.ExportClientServiceKey:
-				ec.StopService(internal.ExportClientServiceKey, params[0])
+				ec.StopService(internal.ExportClientServiceKey)
 				time.Sleep(time.Second * time.Duration(1))
 				executor.StartDockerContainerCompose(internal.ExportClientServiceKey, Configuration.ComposeUrl)
 				break
 
 			case internal.ExportDistroServiceKey:
-				ec.StopService(internal.ExportDistroServiceKey, params[0])
+				ec.StopService(internal.ExportDistroServiceKey)
 				time.Sleep(time.Second * time.Duration(1))
 				executor.StartDockerContainerCompose(internal.ExportDistroServiceKey, Configuration.ComposeUrl)
 				break
 
 			case internal.SupportLoggingServiceKey:
-				ec.StopService(internal.SupportLoggingServiceKey, params[0])
+				ec.StopService(internal.SupportLoggingServiceKey)
 				time.Sleep(time.Second * time.Duration(1))
 				executor.StartDockerContainerCompose(internal.SupportLoggingServiceKey, Configuration.ComposeUrl)
 				break
 
 			case internal.ConfigSeedServiceKey:
-				ec.StopService(internal.ConfigSeedServiceKey, params[0])
+				ec.StopService(internal.ConfigSeedServiceKey)
 				time.Sleep(time.Second * time.Duration(1))
 				executor.StartDockerContainerCompose(internal.ConfigSeedServiceKey, Configuration.ComposeUrl)
 				break
