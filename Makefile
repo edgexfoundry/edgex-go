@@ -65,7 +65,7 @@ test:
 	go vet ./...
 
 prepare:
-	dep ensure
+	glide install
 	
 run:
 	cd bin && ./edgex-launch.sh
