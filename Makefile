@@ -66,7 +66,7 @@ test:
 
 prepare:
 	glide install
-	
+
 run:
 	cd bin && ./edgex-launch.sh
 
