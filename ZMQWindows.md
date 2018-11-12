@@ -1,6 +1,6 @@
 ## Setting up ZMQ to build on Windows
 
-0. Ensure that you've followed the steps leading up to this on the [README.md](README.md). Clone this repository into the `%GOPATH%\src\github.com\edgexfoundry\` directory, using `git clone https://github.com/edgexfoundry/edgex-go.git %GOPATH%\src\github.com\edgexfoundry\edgex-go`. If `dep` is available (it should be since it's a prerequisite), navigate to `%GOPATH%\src\github.com\edgexfoundry\edgex-go` and run `dep ensure -v`. Otherwise, some of the below `go get` steps will need to be run before attempting to build (skippable commands will be denoted).
+0. Ensure that you've followed the steps leading up to this on the [README.md](README.md), this includes any dependenices. Clone this repository into the `%GOPATH%\src\github.com\edgexfoundry\` directory, using `git clone https://github.com/edgexfoundry/edgex-go.git %GOPATH%\src\github.com\edgexfoundry\edgex-go`.
 
 1. Download & install the TDM-GCC from this URL: http://tdm-gcc.tdragon.net/download
 
@@ -25,7 +25,7 @@ $Env:CGO_LDFLAGS="-L$Env:GOPATH\src\github.com\pebbe\zmq4\usr\local\lib"
 
 After setting those, running `go get -v -x github.com/pebbe/zmq4` should succeed. If it fails, it most likely due to the `.h` files or `dll`s existing in a directory that doesnt match your `CGO_` environment variables. It may also fail due to the same error as before (see step 3.b) - try downloading the artifact from a different build on the [AppVeyor builds site](https://ci.appveyor.com/project/zeromq/libzmq).
 
-5. Next, navigate to `$Env:GOPATH\src\github.com\edgexfoundry\edgex-go\cmd\core-data`. *If you didn't run `dep ensure -v` previously, run `go get -v` to acquire all dependencies*. Run `go build -v`. If it complains about not finding zmq.h from auth.go, double check the CGO_ environment variables by running `go env`.
+5. Next, navigate to `$Env:GOPATH\src\github.com\edgexfoundry\edgex-go\cmd\core-data`. *If you didn't acquire dependencies previously, run `go get -v` to acquire all dependencies*. Run `go build -v`. If it complains about not finding zmq.h from auth.go, double check the CGO_ environment variables by running `go env`.
 
 6. There should now be a `core-data.exe` file in your directory. The last step is to ensure that a copy of the DLL's `libsodium.dll` and `libzmq-v120-mt-4_x_x.dll` (yes, this one, not with the rename we did earlier) is in the same directory as your `.exe`.
 
