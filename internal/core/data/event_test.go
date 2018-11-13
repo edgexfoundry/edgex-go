@@ -156,6 +156,10 @@ func TestAddEventNoPersistence(t *testing.T) {
 	if err != nil {
 		t.Errorf(err.Error())
 	}
+	_, err = uuid.Parse(newId)
+	if err == nil {
+		t.Errorf("unexpected UUID %s received", newId)
+	}
 
 	wg.Wait()
 	for i, val := range bitEvents {
