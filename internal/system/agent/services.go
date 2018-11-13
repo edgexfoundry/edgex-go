@@ -78,35 +78,35 @@ func InvokeOperation(action string, services []string, params []string) bool {
 		case START:
 			switch service {
 			case internal.SupportNotificationsServiceKey:
-				executor.StartDockerContainerCompose(internal.SupportNotificationsServiceKey)
+				executor.StartDockerContainerCompose(internal.SupportNotificationsServiceKey, Configuration.ComposeUrl)
 				break
 
 			case internal.CoreDataServiceKey:
-				executor.StartDockerContainerCompose(internal.CoreDataServiceKey)
+				executor.StartDockerContainerCompose(internal.CoreDataServiceKey, Configuration.ComposeUrl)
 				break
 
 			case internal.CoreMetaDataServiceKey:
-				executor.StartDockerContainerCompose(internal.CoreMetaDataServiceKey)
+				executor.StartDockerContainerCompose(internal.CoreMetaDataServiceKey, Configuration.ComposeUrl)
 				break
 
 			case internal.CoreCommandServiceKey:
-				executor.StartDockerContainerCompose(internal.CoreCommandServiceKey)
+				executor.StartDockerContainerCompose(internal.CoreCommandServiceKey, Configuration.ComposeUrl)
 				break
 
 			case internal.ExportClientServiceKey:
-				executor.StartDockerContainerCompose(internal.ExportClientServiceKey)
+				executor.StartDockerContainerCompose(internal.ExportClientServiceKey, Configuration.ComposeUrl)
 				break
 
 			case internal.ExportDistroServiceKey:
-				executor.StartDockerContainerCompose(internal.ExportDistroServiceKey)
+				executor.StartDockerContainerCompose(internal.ExportDistroServiceKey, Configuration.ComposeUrl)
 				break
 
 			case internal.SupportLoggingServiceKey:
-				executor.StartDockerContainerCompose(internal.SupportLoggingServiceKey)
+				executor.StartDockerContainerCompose(internal.SupportLoggingServiceKey, Configuration.ComposeUrl)
 				break
 
 			case internal.ConfigSeedServiceKey:
-				executor.StartDockerContainerCompose(internal.ConfigSeedServiceKey)
+				executor.StartDockerContainerCompose(internal.ConfigSeedServiceKey, Configuration.ComposeUrl)
 				break
 
 			default:
@@ -119,49 +119,49 @@ func InvokeOperation(action string, services []string, params []string) bool {
 			case internal.SupportNotificationsServiceKey:
 				ec.StopService(internal.SupportNotificationsServiceKey, params[0])
 				time.Sleep(time.Second * time.Duration(1))
-				executor.StartDockerContainerCompose(internal.SupportNotificationsServiceKey)
+				executor.StartDockerContainerCompose(internal.SupportNotificationsServiceKey, Configuration.ComposeUrl)
 				break
 
 			case internal.CoreDataServiceKey:
 				ec.StopService(internal.CoreDataServiceKey, params[0])
 				time.Sleep(time.Second * time.Duration(1))
-				executor.StartDockerContainerCompose(internal.CoreDataServiceKey)
+				executor.StartDockerContainerCompose(internal.CoreDataServiceKey, Configuration.ComposeUrl)
 				break
 
 			case internal.CoreCommandServiceKey:
 				ec.StopService(internal.CoreCommandServiceKey, params[0])
 				time.Sleep(time.Second * time.Duration(1))
-				executor.StartDockerContainerCompose(internal.CoreCommandServiceKey)
+				executor.StartDockerContainerCompose(internal.CoreCommandServiceKey, Configuration.ComposeUrl)
 				break
 
 			case internal.CoreMetaDataServiceKey:
 				ec.StopService(internal.CoreMetaDataServiceKey, params[0])
 				time.Sleep(time.Second * time.Duration(1))
-				executor.StartDockerContainerCompose(internal.CoreMetaDataServiceKey)
+				executor.StartDockerContainerCompose(internal.CoreMetaDataServiceKey, Configuration.ComposeUrl)
 				break
 
 			case internal.ExportClientServiceKey:
 				ec.StopService(internal.ExportClientServiceKey, params[0])
 				time.Sleep(time.Second * time.Duration(1))
-				executor.StartDockerContainerCompose(internal.ExportClientServiceKey)
+				executor.StartDockerContainerCompose(internal.ExportClientServiceKey, Configuration.ComposeUrl)
 				break
 
 			case internal.ExportDistroServiceKey:
 				ec.StopService(internal.ExportDistroServiceKey, params[0])
 				time.Sleep(time.Second * time.Duration(1))
-				executor.StartDockerContainerCompose(internal.ExportDistroServiceKey)
+				executor.StartDockerContainerCompose(internal.ExportDistroServiceKey, Configuration.ComposeUrl)
 				break
 
 			case internal.SupportLoggingServiceKey:
 				ec.StopService(internal.SupportLoggingServiceKey, params[0])
 				time.Sleep(time.Second * time.Duration(1))
-				executor.StartDockerContainerCompose(internal.SupportLoggingServiceKey)
+				executor.StartDockerContainerCompose(internal.SupportLoggingServiceKey, Configuration.ComposeUrl)
 				break
 
 			case internal.ConfigSeedServiceKey:
 				ec.StopService(internal.ConfigSeedServiceKey, params[0])
 				time.Sleep(time.Second * time.Duration(1))
-				executor.StartDockerContainerCompose(internal.ConfigSeedServiceKey)
+				executor.StartDockerContainerCompose(internal.ConfigSeedServiceKey, Configuration.ComposeUrl)
 				break
 
 			default:
