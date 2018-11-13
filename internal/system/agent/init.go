@@ -89,6 +89,8 @@ func newExecutorClient(operationsType string) (interfaces.ExecutorClient, error)
 		return &executor.ExecuteOs{}, nil
 	case "docker":
 		return &executor.ExecuteDocker{}, nil
+	case "snap":
+		return &executor.ExecuteSnap{}, nil
 	default:
 		return nil, nil
 	}
