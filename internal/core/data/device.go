@@ -14,6 +14,7 @@
 package data
 
 import (
+	"context"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 )
@@ -26,7 +27,7 @@ func updateDeviceLastReportedConnected(device string) {
 		return
 	}
 
-	d, err := mdc.CheckForDevice(device)
+	d, err := mdc.CheckForDevice(device, context.Background())
 	if err != nil {
 		LoggingClient.Error("Error getting device " + device + ": " + err.Error())
 		return
@@ -40,12 +41,13 @@ func updateDeviceLastReportedConnected(device string) {
 
 	t := db.MakeTimestamp()
 	// Found device, now update lastReported
-	err = mdc.UpdateLastConnectedByName(d.Name, t)
+	//Use of context.Background because this function is invoked asynchronously from a channel
+	err = mdc.UpdateLastConnectedByName(d.Name, t, context.Background())
 	if err != nil {
 		LoggingClient.Error("Problems updating last connected value for device: " + d.Name)
 		return
 	}
-	err = mdc.UpdateLastReportedByName(d.Name, t)
+	err = mdc.UpdateLastReportedByName(d.Name, t, context.Background())
 	if err != nil {
 		LoggingClient.Error("Problems updating last reported value for device: " + d.Name)
 	}
@@ -62,7 +64,7 @@ func updateDeviceServiceLastReportedConnected(device string) {
 	t := db.MakeTimestamp()
 
 	// Get the device
-	d, err := mdc.CheckForDevice(device)
+	d, err := mdc.CheckForDevice(device, context.Background())
 	if err != nil {
 		LoggingClient.Error("Error getting device " + device + ": " + err.Error())
 		return
@@ -81,8 +83,9 @@ func updateDeviceServiceLastReportedConnected(device string) {
 		return
 	}
 
-	msc.UpdateLastConnected(s.Service.Id, t)
-	msc.UpdateLastReported(s.Service.Id, t)
+	//Use of context.Background because this function is invoked asynchronously from a channel
+	msc.UpdateLastConnected(s.Service.Id, t, context.Background())
+	msc.UpdateLastReported(s.Service.Id, t, context.Background())
 }
 
 func checkMaxLimit(limit int) error {
@@ -94,9 +97,9 @@ func checkMaxLimit(limit int) error {
 	return nil
 }
 
-func checkDevice(device string) error {
+func checkDevice(device string, ctx context.Context) error {
 	if Configuration.Writable.MetaDataCheck {
-		_, err := mdc.CheckForDevice(device)
+		_, err := mdc.CheckForDevice(device, ctx)
 		if err != nil {
 			return err
 		}

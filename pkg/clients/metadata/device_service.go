@@ -14,6 +14,7 @@
 package metadata
 
 import (
+	"context"
 	"encoding/json"
 	"strconv"
 
@@ -26,10 +27,10 @@ import (
 Service client for interacting with the device service section of metadata
 */
 type DeviceServiceClient interface {
-	Add(ds *models.DeviceService) (string, error)
-	DeviceServiceForName(name string) (models.DeviceService, error)
-	UpdateLastConnected(id string, time int64) error
-	UpdateLastReported(id string, time int64) error
+	Add(ds *models.DeviceService, ctx context.Context) (string, error)
+	DeviceServiceForName(name string, ctx context.Context) (models.DeviceService, error)
+	UpdateLastConnected(id string, time int64, ctx context.Context) error
+	UpdateLastReported(id string, time int64, ctx context.Context) error
 }
 
 type DeviceServiceRestClient struct {
@@ -64,8 +65,8 @@ func (d *DeviceServiceRestClient) init(params types.EndpointParams) {
 }
 
 // Helper method to request and decode a device service
-func (s *DeviceServiceRestClient) requestDeviceService(url string) (models.DeviceService, error) {
-	data, err := clients.GetRequest(url)
+func (s *DeviceServiceRestClient) requestDeviceService(url string, ctx context.Context) (models.DeviceService, error) {
+	data, err := clients.GetRequest(url, ctx)
 	if err != nil {
 		return models.DeviceService{}, err
 	}
@@ -76,23 +77,23 @@ func (s *DeviceServiceRestClient) requestDeviceService(url string) (models.Devic
 }
 
 // Update the last connected time for the device service
-func (s *DeviceServiceRestClient) UpdateLastConnected(id string, time int64) error {
-	_, err := clients.PutRequest(s.url+"/"+id+"/lastconnected/"+strconv.FormatInt(time, 10), nil)
+func (s *DeviceServiceRestClient) UpdateLastConnected(id string, time int64, ctx context.Context) error {
+	_, err := clients.PutRequest(s.url+"/"+id+"/lastconnected/"+strconv.FormatInt(time, 10), nil, ctx)
 	return err
 }
 
 // Update the last reported time for the device service
-func (s *DeviceServiceRestClient) UpdateLastReported(id string, time int64) error {
-	_, err := clients.PutRequest(s.url+"/"+id+"/lastreported/"+strconv.FormatInt(time, 10), nil)
+func (s *DeviceServiceRestClient) UpdateLastReported(id string, time int64, ctx context.Context) error {
+	_, err := clients.PutRequest(s.url+"/"+id+"/lastreported/"+strconv.FormatInt(time, 10), nil, ctx)
 	return err
 }
 
 // Add a new deviceservice
-func (s *DeviceServiceRestClient) Add(ds *models.DeviceService) (string, error) {
-	return clients.PostJsonRequest(s.url, ds)
+func (s *DeviceServiceRestClient) Add(ds *models.DeviceService, ctx context.Context) (string, error) {
+	return clients.PostJsonRequest(s.url, ds, ctx)
 }
 
 // Request deviceservice for specified name
-func (s *DeviceServiceRestClient) DeviceServiceForName(name string) (models.DeviceService, error) {
-	return s.requestDeviceService(s.url + "/name/" + name)
+func (s *DeviceServiceRestClient) DeviceServiceForName(name string, ctx context.Context) (models.DeviceService, error) {
+	return s.requestDeviceService(s.url+"/name/"+name, ctx)
 }

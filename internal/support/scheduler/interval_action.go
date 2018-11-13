@@ -30,7 +30,7 @@ func addNewIntervalAction(intervalAction contract.IntervalAction) (string, error
 
 	// Validate the Target
 	target := intervalAction.Target
-	if target == ""{
+	if target == "" {
 		return "", errors.NewErrIntervalActionTargetNameRequired(intervalAction.ID)
 	}
 
@@ -91,7 +91,7 @@ func updateIntervalAction(from contract.IntervalAction) error {
 
 	// Name
 	name := from.Name
-	if name == ""{
+	if name == "" {
 		return errors.NewErrIntervalActionTargetNameRequired("")
 	}
 	// Ensure name is unique

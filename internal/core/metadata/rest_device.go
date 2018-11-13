@@ -14,6 +14,7 @@
 package metadata
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -124,8 +125,9 @@ func restAddNewDevice(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ctx := r.Context()
 	// Notify the associates
-	notifyDeviceAssociates(d, http.MethodPost)
+	notifyDeviceAssociates(d, http.MethodPost, ctx)
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(d.Id))
@@ -169,8 +171,9 @@ func restUpdateDevice(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ctx := r.Context()
 	// Notify
-	notifyDeviceAssociates(oldDevice, http.MethodPut)
+	notifyDeviceAssociates(oldDevice, http.MethodPut, ctx)
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
@@ -513,8 +516,10 @@ func restCheckForDevice(w http.ResponseWriter, r *http.Request) {
 			LoggingClient.Error(err.Error())
 			if err == db.ErrNotFound {
 				http.Error(w, err.Error(), http.StatusNotFound)
+			} else if err == db.ErrInvalidObjectId {
+				http.Error(w, err.Error(), http.StatusBadRequest)
 			} else {
-				http.Error(w, err.Error(), http.StatusServiceUnavailable)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 			return
 		}
@@ -559,8 +564,9 @@ func restSetDeviceOpStateById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ctx := r.Context()
 	// Notify
-	notifyDeviceAssociates(d, http.MethodPut)
+	notifyDeviceAssociates(d, http.MethodPut, ctx)
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
@@ -605,8 +611,9 @@ func restSetDeviceOpStateByName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ctx := r.Context()
 	// Notify
-	notifyDeviceAssociates(d, http.MethodPut)
+	notifyDeviceAssociates(d, http.MethodPut, ctx)
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
@@ -644,7 +651,8 @@ func restSetDeviceAdminStateById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := notifyDeviceAssociates(d, http.MethodPut); err != nil {
+	ctx := r.Context()
+	if err := notifyDeviceAssociates(d, http.MethodPut, ctx); err != nil {
 		LoggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return
@@ -693,7 +701,8 @@ func restSetDeviceAdminStateByName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := notifyDeviceAssociates(d, http.MethodPut); err != nil {
+	ctx := r.Context()
+	if err := notifyDeviceAssociates(d, http.MethodPut, ctx); err != nil {
 		LoggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -720,7 +729,8 @@ func restDeleteDeviceById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := deleteDevice(d, w); err != nil {
+	ctx := r.Context()
+	if err := deleteDevice(d, w, ctx); err != nil {
 		LoggingClient.Error(err.Error())
 		return
 	}
@@ -745,7 +755,8 @@ func restDeleteDeviceByName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := deleteDevice(d, w); err != nil {
+	ctx := r.Context()
+	if err := deleteDevice(d, w, ctx); err != nil {
 		LoggingClient.Error(err.Error())
 		return
 	}
@@ -755,7 +766,7 @@ func restDeleteDeviceByName(w http.ResponseWriter, r *http.Request) {
 }
 
 // Delete the device
-func deleteDevice(d models.Device, w http.ResponseWriter) error {
+func deleteDevice(d models.Device, w http.ResponseWriter, ctx context.Context) error {
 	if err := deleteAssociatedReportsForDevice(d, w); err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return err
@@ -767,7 +778,7 @@ func deleteDevice(d models.Device, w http.ResponseWriter) error {
 	}
 
 	// Notify Associates
-	if err := notifyDeviceAssociates(d, http.MethodDelete); err != nil {
+	if err := notifyDeviceAssociates(d, http.MethodDelete, ctx); err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return err
 	}
@@ -820,8 +831,9 @@ func restSetDeviceLastConnectedById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ctx := r.Context()
 	// Update last connected
-	if err = setLastConnected(d, lc, false, w); err != nil {
+	if err = setLastConnected(d, lc, false, w, ctx); err != nil {
 		return
 	}
 
@@ -859,8 +871,9 @@ func restSetLastConnectedByIdNotify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ctx := r.Context()
 	// Update last connected
-	if err = setLastConnected(d, lc, notify, w); err != nil {
+	if err = setLastConnected(d, lc, notify, w, ctx); err != nil {
 		return
 	}
 
@@ -896,8 +909,9 @@ func restSetDeviceLastConnectedByName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ctx := r.Context()
 	// Update last connected
-	if err = setLastConnected(d, lc, false, w); err != nil {
+	if err = setLastConnected(d, lc, false, w, ctx); err != nil {
 		return
 	}
 
@@ -939,8 +953,9 @@ func restSetDeviceLastConnectedByNameNotify(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
+	ctx := r.Context()
 	// Update last connected
-	if err = setLastConnected(d, lc, notify, w); err != nil {
+	if err = setLastConnected(d, lc, notify, w, ctx); err != nil {
 		return
 	}
 
@@ -949,7 +964,7 @@ func restSetDeviceLastConnectedByNameNotify(w http.ResponseWriter, r *http.Reque
 }
 
 // Update the last connected value for the device
-func setLastConnected(d models.Device, time int64, notify bool, w http.ResponseWriter) error {
+func setLastConnected(d models.Device, time int64, notify bool, w http.ResponseWriter, ctx context.Context) error {
 	d.LastConnected = time
 	if err := dbClient.UpdateDevice(d); err != nil {
 		LoggingClient.Error(err.Error())
@@ -958,7 +973,7 @@ func setLastConnected(d models.Device, time int64, notify bool, w http.ResponseW
 	}
 
 	if notify {
-		notifyDeviceAssociates(d, http.MethodPut)
+		notifyDeviceAssociates(d, http.MethodPut, ctx)
 	}
 
 	return nil
@@ -987,8 +1002,9 @@ func restSetDeviceLastReportedById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ctx := r.Context()
 	// Update Last Reported
-	if err = setLastReported(d, lr, false, w); err != nil {
+	if err = setLastReported(d, lr, false, w, ctx); err != nil {
 		return
 	}
 
@@ -1025,8 +1041,9 @@ func restSetDeviceLastReportedByIdNotify(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	ctx := r.Context()
 	// Update last reported
-	if err = setLastReported(d, lr, notify, w); err != nil {
+	if err = setLastReported(d, lr, notify, w, ctx); err != nil {
 		return
 	}
 
@@ -1062,8 +1079,9 @@ func restSetDeviceLastReportedByName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ctx := r.Context()
 	// Update last reported
-	if err = setLastReported(d, lr, false, w); err != nil {
+	if err = setLastReported(d, lr, false, w, ctx); err != nil {
 		return
 	}
 
@@ -1105,8 +1123,9 @@ func restSetDeviceLastReportedByNameNotify(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	ctx := r.Context()
 	// Update last reported
-	if err = setLastReported(d, lr, notify, w); err != nil {
+	if err = setLastReported(d, lr, notify, w, ctx); err != nil {
 		return
 	}
 
@@ -1115,7 +1134,7 @@ func restSetDeviceLastReportedByNameNotify(w http.ResponseWriter, r *http.Reques
 }
 
 // Update the last reported field of the device
-func setLastReported(d models.Device, time int64, notify bool, w http.ResponseWriter) error {
+func setLastReported(d models.Device, time int64, notify bool, w http.ResponseWriter, ctx context.Context) error {
 	d.LastReported = time
 	if err := dbClient.UpdateDevice(d); err != nil {
 		LoggingClient.Error(err.Error())
@@ -1124,7 +1143,7 @@ func setLastReported(d models.Device, time int64, notify bool, w http.ResponseWr
 	}
 
 	if notify {
-		notifyDeviceAssociates(d, http.MethodPut)
+		notifyDeviceAssociates(d, http.MethodPut, ctx)
 	}
 
 	return nil
@@ -1153,9 +1172,9 @@ func restGetDeviceByName(w http.ResponseWriter, r *http.Request) {
 }
 
 // Notify the associated device service for the device
-func notifyDeviceAssociates(d models.Device, action string) error {
+func notifyDeviceAssociates(d models.Device, action string, ctx context.Context) error {
 	// Post the notification to the notifications service
-	postNotification(d.Name, action)
+	postNotification(d.Name, action, ctx)
 
 	// Callback for device service
 	ds, err := dbClient.GetDeviceServiceById(d.Service.Service.Id)
@@ -1171,7 +1190,7 @@ func notifyDeviceAssociates(d models.Device, action string) error {
 	return nil
 }
 
-func postNotification(name string, action string) {
+func postNotification(name string, action string, ctx context.Context) {
 	// Only post notification if the configuration is set
 	if Configuration.Notifications.PostDeviceChanges {
 		// Make the notification
@@ -1185,6 +1204,6 @@ func postNotification(name string, action string) {
 			Severity:    notifications.NORMAL,
 		}
 
-		nc.SendNotification(notification)
+		nc.SendNotification(notification, ctx)
 	}
 }

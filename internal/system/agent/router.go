@@ -21,9 +21,11 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/edgexfoundry/edgex-go/internal/system/agent/logger"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 	"github.com/gorilla/mux"
+
+	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
+	"github.com/edgexfoundry/edgex-go/internal/system/agent/logger"
 )
 
 func LoadRestRoutes() *mux.Router {
@@ -37,6 +39,10 @@ func LoadRestRoutes() *mux.Router {
 	// Ping Resource
 	// /api/v1/ping
 	b.HandleFunc("/ping", pingHandler).Methods(http.MethodGet)
+
+	r.Use(correlation.ManageHeader)
+	r.Use(correlation.OnResponseComplete)
+	r.Use(correlation.OnRequestBegin)
 
 	return r
 }
@@ -99,8 +105,9 @@ func configHandler(w http.ResponseWriter, r *http.Request) {
 	var services []string
 	services = strings.Split(list, ",")
 
+	ctx := r.Context()
 	var send = ConfigRespMap{}
-	send, _ = getConfig(services)
+	send, _ = getConfig(services, ctx)
 
 	w.Header().Add("Content-Type", "application/json")
 	encode(send, w)
@@ -116,7 +123,8 @@ func metricsHandler(w http.ResponseWriter, r *http.Request) {
 	var services []string
 	services = strings.Split(list, ",")
 
-	send, _ := getMetrics(services)
+	ctx := r.Context()
+	send, _ := getMetrics(services, ctx)
 
 	w.Header().Add("Content-Type", "application/json")
 	encode(send, w)

@@ -18,6 +18,8 @@ const (
 	ClientMonitorDefault = 15000
 	ConfigFileName       = "configuration.toml"
 	ConfigRegistryStem   = "edgex/core/1.0/"
+	CorrelationHeader    = "correlation-id"
+	LogDurationKey       = "duration"
 )
 
 const (

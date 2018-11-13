@@ -15,6 +15,7 @@ package metadata
 
 import (
 	"encoding/json"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"net/http"
 	"runtime"
 
@@ -46,6 +47,11 @@ func LoadRestRoutes() *mux.Router {
 	loadProvisionWatcherRoutes(b)
 	loadAddressableRoutes(b)
 	loadCommandRoutes(b)
+
+	r.Use(correlation.ManageHeader)
+	r.Use(correlation.OnResponseComplete)
+	r.Use(correlation.OnRequestBegin)
+
 	return r
 }
 func loadDeviceRoutes(b *mux.Router) {

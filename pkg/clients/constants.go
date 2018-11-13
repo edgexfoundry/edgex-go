@@ -13,7 +13,10 @@
  *******************************************************************************/
 package clients
 
-const ClientMonitorDefault = 15000
+const (
+	ClientMonitorDefault = 15000
+	CorrelationHeader    = "correlation-id"
+)
 
 const (
 	ApiBase                    = "/api/v1"

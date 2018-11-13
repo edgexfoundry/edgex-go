@@ -15,6 +15,7 @@ package metadata
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -421,7 +422,8 @@ func restDeleteServiceById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err = deleteDeviceService(ds, w); err != nil {
+	ctx := r.Context()
+	if err = deleteDeviceService(ds, w, ctx); err != nil {
 		LoggingClient.Error(err.Error())
 		return
 	}
@@ -450,8 +452,9 @@ func restDeleteServiceByName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ctx := r.Context()
 	// Delete the device service
-	if err = deleteDeviceService(ds, w); err != nil {
+	if err = deleteDeviceService(ds, w, ctx); err != nil {
 		LoggingClient.Error(err.Error())
 		return
 	}
@@ -463,7 +466,7 @@ func restDeleteServiceByName(w http.ResponseWriter, r *http.Request) {
 // Delete the device service
 // Delete the associated devices
 // Delete the associated provision watchers
-func deleteDeviceService(ds models.DeviceService, w http.ResponseWriter) error {
+func deleteDeviceService(ds models.DeviceService, w http.ResponseWriter, ctx context.Context) error {
 	// Delete the associated devices
 	devices, err := dbClient.GetDevicesByServiceId(ds.Service.Id)
 	if err != nil {
@@ -471,7 +474,7 @@ func deleteDeviceService(ds models.DeviceService, w http.ResponseWriter) error {
 		return err
 	}
 	for _, device := range devices {
-		if err = deleteDevice(device, w); err != nil {
+		if err = deleteDevice(device, w, ctx); err != nil {
 			return err
 		}
 	}

@@ -15,6 +15,7 @@
 package metadata
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -59,7 +60,7 @@ func TestUpdateDeviceProfile(t *testing.T) {
 		Interval:    clients.ClientMonitorDefault}
 	dpc := NewDeviceProfileClient(params, MockEndpoint{})
 
-	err := dpc.Update(p)
+	err := dpc.Update(p, context.Background())
 	if err != nil {
 		t.Error(err.Error())
 	}

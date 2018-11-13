@@ -1,6 +1,7 @@
 package data
 
 import (
+	"context"
 	"fmt"
 	"github.com/google/uuid"
 	"math"
@@ -96,32 +97,27 @@ func newMockDeviceClient() *mocks.DeviceClient {
 		Port:     3000,
 		Protocol: "http"}
 
-	mockDeviceResultFn := func(id string) models.Device {
+	mockDeviceResultFn := func(id string, ctx context.Context) models.Device {
 		if bson.IsObjectIdHex(id) {
-			return models.Device{Id: id, Name: testEvent.Device, Addressable: mockAddressable}
+			return models.Device{Id: id, Name: testDeviceName, Addressable: mockAddressable}
 		}
 		return models.Device{}
 	}
-	client.On("Device", mock.MatchedBy(func(id string) bool {
-		return id == "valid"
-	})).Return(mockDeviceResultFn, nil)
-	client.On("Device", mock.MatchedBy(func(id string) bool {
-		return id == "404"
-	})).Return(mockDeviceResultFn, types.NewErrServiceClient(http.StatusNotFound, []byte{}))
-	client.On("Device", mock.Anything).Return(mockDeviceResultFn, fmt.Errorf("some error"))
+	client.On("Device", "valid", context.Background()).Return(mockDeviceResultFn, nil)
+	client.On("Device", "404", context.Background()).Return(mockDeviceResultFn,
+		types.NewErrServiceClient(http.StatusNotFound, []byte{}))
+	client.On("Device", mock.Anything, context.Background()).Return(mockDeviceResultFn, fmt.Errorf("some error"))
 
-	mockDeviceForNameResultFn := func(name string) models.Device {
+	mockDeviceForNameResultFn := func(name string, ctx context.Context) models.Device {
 		device := models.Device{Id: uuid.New().String(), Name: name, Addressable: mockAddressable}
 
 		return device
 	}
-	client.On("DeviceForName", mock.MatchedBy(func(name string) bool {
-		return name == testEvent.Device
-	})).Return(mockDeviceForNameResultFn, nil)
-	client.On("DeviceForName", mock.MatchedBy(func(name string) bool {
-		return name == "404"
-	})).Return(mockDeviceForNameResultFn, types.NewErrServiceClient(http.StatusNotFound, []byte{}))
-	client.On("DeviceForName", mock.Anything).Return(mockDeviceForNameResultFn, fmt.Errorf("some error"))
+	client.On("DeviceForName", testDeviceName, context.Background()).Return(mockDeviceForNameResultFn, nil)
+	client.On("DeviceForName", "404", context.Background()).Return(mockDeviceForNameResultFn,
+		types.NewErrServiceClient(http.StatusNotFound, []byte{}))
+	client.On("DeviceForName", mock.Anything, context.Background()).Return(mockDeviceForNameResultFn,
+		fmt.Errorf("some error"))
 
 	return client
 }

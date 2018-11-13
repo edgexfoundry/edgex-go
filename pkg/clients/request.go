@@ -17,7 +17,9 @@ package clients
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"github.com/google/uuid"
 	"io"
 	"io/ioutil"
 	"mime/multipart"
@@ -49,13 +51,14 @@ func makeRequest(req *http.Request) (*http.Response, error) {
 }
 
 // Helper method to make the get request and return the body
-func GetRequest(url string) ([]byte, error) {
+func GetRequest(url string, ctx context.Context) ([]byte, error) {
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	resp, err := makeRequest(req)
+	c := NewCorrelatedRequest(req, ctx)
+	resp, err := makeRequest(c.Request)
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +72,9 @@ func GetRequest(url string) ([]byte, error) {
 		return nil, err
 	}
 
-	if (resp.StatusCode != http.StatusOK) && (resp.StatusCode != http.StatusAccepted) {
+	if resp.StatusCode == http.StatusNotFound {
+		return nil, types.ErrNotFound{}
+	} else if (resp.StatusCode != http.StatusOK) && (resp.StatusCode != http.StatusAccepted) {
 		return nil, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 
@@ -77,8 +82,8 @@ func GetRequest(url string) ([]byte, error) {
 }
 
 // Helper method to make the count request
-func CountRequest(url string) (int, error) {
-	data, err := GetRequest(url)
+func CountRequest(url string, ctx context.Context) (int, error) {
+	data, err := GetRequest(url, ctx)
 	if err != nil {
 		return 0, err
 	}
@@ -91,24 +96,25 @@ func CountRequest(url string) (int, error) {
 }
 
 // Helper method to make the post JSON request and return the body
-func PostJsonRequest(url string, data interface{}) (string, error) {
+func PostJsonRequest(url string, data interface{}, ctx context.Context) (string, error) {
 	jsonStr, err := json.Marshal(data)
 	if err != nil {
 		return "", err
 	}
 
-	return PostRequest(url, jsonStr, ContentJson)
+	return PostRequest(url, jsonStr, ContentJson, ctx)
 }
 
 // Helper method to make the post request and return the body
-func PostRequest(url string, data []byte, content string) (string, error) {
+func PostRequest(url string, data []byte, content string, ctx context.Context) (string, error) {
 	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
 	if err != nil {
 		return "", err
 	}
 	req.Header.Set(ContentType, content)
 
-	resp, err := makeRequest(req)
+	c := NewCorrelatedRequest(req, ctx)
+	resp, err := makeRequest(c.Request)
 	if err != nil {
 		return "", err
 	}
@@ -131,7 +137,7 @@ func PostRequest(url string, data []byte, content string) (string, error) {
 }
 
 // Helper method to make a post request in order to upload a file and return the request body
-func UploadFileRequest(url string, filePath string) (string, error) {
+func UploadFileRequest(url string, filePath string, ctx context.Context) (string, error) {
 	fileContents, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		return "", err
@@ -156,7 +162,8 @@ func UploadFileRequest(url string, filePath string) (string, error) {
 	}
 	req.Header.Add(ContentType, writer.FormDataContentType())
 
-	resp, err := makeRequest(req)
+	c := NewCorrelatedRequest(req, ctx)
+	resp, err := makeRequest(c.Request)
 	if err != nil {
 		return "", err
 	}
@@ -179,18 +186,18 @@ func UploadFileRequest(url string, filePath string) (string, error) {
 }
 
 // Helper method to make the update request
-func UpdateRequest(url string, data interface{}) error {
+func UpdateRequest(url string, data interface{}, ctx context.Context) error {
 	jsonStr, err := json.Marshal(data)
 	if err != nil {
 		return err
 	}
 
-	_, err = PutRequest(url, jsonStr)
+	_, err = PutRequest(url, jsonStr, ctx)
 	return err
 }
 
 // Helper method to make the put request
-func PutRequest(url string, body []byte) (string, error) {
+func PutRequest(url string, body []byte, ctx context.Context) (string, error) {
 	var err error
 	var req *http.Request
 
@@ -207,7 +214,8 @@ func PutRequest(url string, body []byte) (string, error) {
 		req.Header.Set(ContentType, ContentJson)
 	}
 
-	resp, err := makeRequest(req)
+	c := NewCorrelatedRequest(req, ctx)
+	resp, err := makeRequest(c.Request)
 	if err != nil {
 		return "", err
 	}
@@ -230,13 +238,14 @@ func PutRequest(url string, body []byte) (string, error) {
 }
 
 // Helper method to make the delete request
-func DeleteRequest(url string) error {
+func DeleteRequest(url string, ctx context.Context) error {
 	req, err := http.NewRequest(http.MethodDelete, url, nil)
 	if err != nil {
 		return err
 	}
 
-	resp, err := makeRequest(req)
+	c := NewCorrelatedRequest(req, ctx)
+	resp, err := makeRequest(c.Request)
 	if err != nil {
 		return err
 	}
@@ -255,4 +264,18 @@ func DeleteRequest(url string) error {
 	}
 
 	return nil
+}
+
+type CorrelatedRequest struct {
+	*http.Request
+}
+
+func NewCorrelatedRequest(req *http.Request, ctx context.Context) CorrelatedRequest {
+	c := CorrelatedRequest{Request: req}
+	correlation := fromContext(CorrelationHeader, ctx)
+	if len(correlation) == 0 {
+		correlation = uuid.New().String()
+	}
+	c.Header.Set(CorrelationHeader, correlation)
+	return c
 }

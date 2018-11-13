@@ -14,6 +14,7 @@
 package metadata
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -87,7 +88,7 @@ func TestAddAddressable(t *testing.T) {
 		Interval:    clients.ClientMonitorDefault}
 	ac := NewAddressableClient(params, MockEndpoint{})
 
-	receivedAddressableID, err := ac.Add(&addressable)
+	receivedAddressableID, err := ac.Add(&addressable, context.Background())
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -132,7 +133,7 @@ func TestGetAddressable(t *testing.T) {
 		Interval:    clients.ClientMonitorDefault}
 	ac := NewAddressableClient(params, MockEndpoint{})
 
-	receivedAddressable, err := ac.Addressable(addressable.Id)
+	receivedAddressable, err := ac.Addressable(addressable.Id, context.Background())
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -177,7 +178,7 @@ func TestGetAddressableForName(t *testing.T) {
 		Interval:    clients.ClientMonitorDefault}
 	ac := NewAddressableClient(params, MockEndpoint{})
 
-	receivedAddressable, err := ac.AddressableForName(addressable.Name)
+	receivedAddressable, err := ac.AddressableForName(addressable.Name, context.Background())
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -219,7 +220,7 @@ func TestUpdateAddressable(t *testing.T) {
 		Interval:    clients.ClientMonitorDefault}
 	ac := NewAddressableClient(params, MockEndpoint{})
 
-	err := ac.Update(addressable)
+	err := ac.Update(addressable, context.Background())
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -258,7 +259,7 @@ func TestDeleteAddressable(t *testing.T) {
 		Interval:    clients.ClientMonitorDefault}
 	ac := NewAddressableClient(params, MockEndpoint{})
 
-	err := ac.Delete(addressable.Id)
+	err := ac.Delete(addressable.Id, context.Background())
 	if err != nil {
 		t.Error(err.Error())
 	}

@@ -14,6 +14,7 @@
 package data
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
@@ -29,8 +30,8 @@ func countEvents() (int, error) {
 	return count, nil
 }
 
-func countEventsByDevice(device string) (int, error) {
-	err := checkDevice(device)
+func countEventsByDevice(device string, ctx context.Context) (int, error) {
+	err := checkDevice(device, ctx)
 	if err != nil {
 		return -1, err
 	}
@@ -74,8 +75,8 @@ func getEvents(limit int) ([]contract.Event, error) {
 	return events, err
 }
 
-func addNewEvent(e contract.Event) (string, error) {
-	err := checkDevice(e.Device)
+func addNewEvent(e contract.Event, ctx context.Context) (string, error) {
+	err := checkDevice(e.Device, ctx)
 	if err != nil {
 		return "", err
 	}
@@ -116,7 +117,7 @@ func addNewEvent(e contract.Event) (string, error) {
 	return e.ID, nil
 }
 
-func updateEvent(from contract.Event) error {
+func updateEvent(from contract.Event, ctx context.Context) error {
 	to, err := dbClient.EventById(from.ID)
 	if err != nil {
 		return errors.NewErrEventNotFound(from.ID)
@@ -125,7 +126,7 @@ func updateEvent(from contract.Event) error {
 	// Update the fields
 	if len(from.Device) > 0 {
 		// Check device
-		err = checkDevice(from.Device)
+		err = checkDevice(from.Device, ctx)
 		if err != nil {
 			return err
 		}
@@ -184,14 +185,14 @@ func getEventById(id string) (contract.Event, error) {
 	return e, nil
 }
 
-func updateEventPushDate(id string) error {
+func updateEventPushDate(id string, ctx context.Context) error {
 	e, err := getEventById(id)
 	if err != nil {
 		return err
 	}
 
 	e.Pushed = db.MakeTimestamp()
-	err = updateEvent(e)
+	err = updateEvent(e, ctx)
 	if err != nil {
 		return err
 	}

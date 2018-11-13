@@ -2,6 +2,7 @@ package data
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"net/http"
 	"testing"
@@ -327,7 +328,7 @@ func TestGetValueDescriptorsByDeviceName(t *testing.T) {
 	reset()
 	dbClient = nil
 
-	_, err := getValueDescriptorsByDeviceName(testDeviceName)
+	_, err := getValueDescriptorsByDeviceName(testDeviceName, context.Background())
 
 	if err != nil {
 		t.Errorf("Unexpected error getting value descriptor by device name")
@@ -338,7 +339,7 @@ func TestGetValueDescriptorsByDeviceNameNotFound(t *testing.T) {
 	reset()
 	dbClient = nil
 
-	_, err := getValueDescriptorsByDeviceName("404")
+	_, err := getValueDescriptorsByDeviceName("404", context.Background())
 
 	if err != nil {
 		switch err := err.(type) {
@@ -361,7 +362,7 @@ func TestGetValueDescriptorsByDeviceNameError(t *testing.T) {
 	reset()
 	dbClient = nil
 
-	_, err := getValueDescriptorsByDeviceName("error")
+	_, err := getValueDescriptorsByDeviceName("error", context.Background())
 
 	if err == nil {
 		t.Errorf("Expected error getting value descriptor by device name with some error")
@@ -372,7 +373,7 @@ func TestGetValueDescriptorsByDeviceId(t *testing.T) {
 	reset()
 	dbClient = nil
 
-	_, err := getValueDescriptorsByDeviceId("valid")
+	_, err := getValueDescriptorsByDeviceId("valid", context.Background())
 
 	if err != nil {
 		t.Errorf("Unexpected error getting value descriptor by device id")
@@ -383,7 +384,7 @@ func TestGetValueDescriptorsByDeviceIdNotFound(t *testing.T) {
 	reset()
 	dbClient = nil
 
-	_, err := getValueDescriptorsByDeviceId("404")
+	_, err := getValueDescriptorsByDeviceId("404", context.Background())
 
 	if err != nil {
 		switch err := err.(type) {
@@ -406,7 +407,7 @@ func TestGetValueDescriptorsByDeviceIdError(t *testing.T) {
 	reset()
 	dbClient = nil
 
-	_, err := getValueDescriptorsByDeviceId("error")
+	_, err := getValueDescriptorsByDeviceId("error", context.Background())
 
 	if err == nil {
 		t.Errorf("Expected error getting value descriptor by device id with some error")

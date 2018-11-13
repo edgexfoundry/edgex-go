@@ -8,6 +8,7 @@ package client
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -27,7 +28,7 @@ const regJson = `{"origin":1471806386919,"name":"OSIClient","addressable":{"orig
 
 type distroMockClient struct{}
 
-func (d *distroMockClient) NotifyRegistrations(models.NotifyUpdate) error {
+func (d *distroMockClient) NotifyRegistrations(models.NotifyUpdate, context.Context) error {
 	return nil
 }
 

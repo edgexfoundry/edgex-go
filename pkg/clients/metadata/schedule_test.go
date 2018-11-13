@@ -15,6 +15,7 @@
 package metadata
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -65,7 +66,7 @@ func TestAddSchedule(t *testing.T) {
 		Interval:    clients.ClientMonitorDefault}
 	sc := NewScheduleClient(params, MockEndpoint{})
 
-	receivedScheduleId, err := sc.Add(&d)
+	receivedScheduleId, err := sc.Add(&d, context.Background())
 	if err != nil {
 		t.Error(err.Error())
 	}

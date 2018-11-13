@@ -27,6 +27,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 
 	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent"
@@ -105,6 +106,7 @@ func listenForInterrupt(errChan chan error) {
 
 func startHttpServer(errChan chan error, port int) {
 	go func() {
+		correlation.LoggingClient = logs.LoggingClient
 		r := agent.LoadRestRoutes()
 		errChan <- http.ListenAndServe(":"+strconv.Itoa(port), r)
 	}()

@@ -16,13 +16,15 @@
 package general
 
 import (
+	"context"
+
 	"github.com/edgexfoundry/edgex-go/pkg/clients"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
 )
 
 type GeneralClient interface {
-	FetchConfiguration() (string, error)
-	FetchMetrics() (string, error)
+	FetchConfiguration(ctx context.Context) (string, error)
+	FetchMetrics(ctx context.Context) (string, error)
 }
 
 type generalRestClient struct {
@@ -54,13 +56,13 @@ func (gc *generalRestClient) init(params types.EndpointParams) {
 }
 
 // FetchConfiguration fetch configuration information from the service.
-func (gc *generalRestClient) FetchConfiguration() (string, error) {
-	body, err := clients.GetRequest(gc.url + clients.ApiConfigRoute)
+func (gc *generalRestClient) FetchConfiguration(ctx context.Context) (string, error) {
+	body, err := clients.GetRequest(gc.url+clients.ApiConfigRoute, ctx)
 	return string(body), err
 }
 
 // FetchMetrics fetch metrics information from the service.
-func (gc *generalRestClient) FetchMetrics() (string, error) {
-	body, err := clients.GetRequest(gc.url + clients.ApiMetricsRoute)
+func (gc *generalRestClient) FetchMetrics(ctx context.Context) (string, error) {
+	body, err := clients.GetRequest(gc.url+clients.ApiMetricsRoute, ctx)
 	return string(body), err
 }

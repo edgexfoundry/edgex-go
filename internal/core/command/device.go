@@ -15,6 +15,7 @@ package command
 
 import (
 	"bytes"
+	"context"
 	"net/http"
 	"strings"
 
@@ -31,8 +32,8 @@ func issueCommand(req *http.Request) (*http.Response, error) {
 	return resp, err
 }
 
-func commandByDeviceID(did string, cid string, b string, p bool) (string, int) {
-	d, err := mdc.Device(did)
+func commandByDeviceID(did string, cid string, b string, p bool, ctx context.Context) (string, int) {
+	d, err := mdc.Device(did, ctx)
 
 	if err != nil {
 		LoggingClient.Error(err.Error())
@@ -51,7 +52,7 @@ func commandByDeviceID(did string, cid string, b string, p bool) (string, int) {
 		return "", http.StatusLocked
 	}
 
-	c, err := cc.Command(cid)
+	c, err := cc.Command(cid, ctx)
 	if err != nil {
 		LoggingClient.Error(err.Error())
 
@@ -93,8 +94,8 @@ func commandByDeviceID(did string, cid string, b string, p bool) (string, int) {
 	}
 }
 
-func putDeviceAdminState(did string, as string) (int, error) {
-	err := mdc.UpdateAdminState(did, as)
+func putDeviceAdminState(did string, as string, ctx context.Context) (int, error) {
+	err := mdc.UpdateAdminState(did, as, ctx)
 	if err != nil {
 		LoggingClient.Error(err.Error())
 
@@ -108,8 +109,8 @@ func putDeviceAdminState(did string, as string) (int, error) {
 	return http.StatusOK, err
 }
 
-func putDeviceAdminStateByName(dn string, as string) (int, error) {
-	err := mdc.UpdateAdminStateByName(dn, as)
+func putDeviceAdminStateByName(dn string, as string, ctx context.Context) (int, error) {
+	err := mdc.UpdateAdminStateByName(dn, as, ctx)
 	if err != nil {
 		LoggingClient.Error(err.Error())
 
@@ -123,8 +124,8 @@ func putDeviceAdminStateByName(dn string, as string) (int, error) {
 	return http.StatusOK, err
 }
 
-func putDeviceOpState(did string, as string) (int, error) {
-	err := mdc.UpdateOpState(did, as)
+func putDeviceOpState(did string, as string, ctx context.Context) (int, error) {
+	err := mdc.UpdateOpState(did, as, ctx)
 	if err != nil {
 		LoggingClient.Error(err.Error())
 
@@ -138,8 +139,8 @@ func putDeviceOpState(did string, as string) (int, error) {
 	return http.StatusOK, err
 }
 
-func putDeviceOpStateByName(dn string, as string) (int, error) {
-	err := mdc.UpdateOpStateByName(dn, as)
+func putDeviceOpStateByName(dn string, as string, ctx context.Context) (int, error) {
+	err := mdc.UpdateOpStateByName(dn, as, ctx)
 	if err != nil {
 		LoggingClient.Error(err.Error())
 
@@ -153,8 +154,8 @@ func putDeviceOpStateByName(dn string, as string) (int, error) {
 	return http.StatusOK, err
 }
 
-func getCommands() (int, []models.CommandResponse, error) {
-	devices, err := mdc.Devices()
+func getCommands(ctx context.Context) (int, []models.CommandResponse, error) {
+	devices, err := mdc.Devices(ctx)
 	if err != nil {
 		chk, ok := err.(*types.ErrServiceClient)
 		if ok {
@@ -171,8 +172,8 @@ func getCommands() (int, []models.CommandResponse, error) {
 
 }
 
-func getCommandsByDeviceID(did string) (int, models.CommandResponse, error) {
-	d, err := mdc.Device(did)
+func getCommandsByDeviceID(did string, ctx context.Context) (int, models.CommandResponse, error) {
+	d, err := mdc.Device(did, ctx)
 	if err != nil {
 		chk, ok := err.(*types.ErrServiceClient)
 		if ok {
@@ -184,8 +185,8 @@ func getCommandsByDeviceID(did string) (int, models.CommandResponse, error) {
 	return http.StatusOK, models.CommandResponseFromDevice(d, Configuration.Service.Url()), err
 }
 
-func getCommandsByDeviceName(dn string) (int, models.CommandResponse, error) {
-	d, err := mdc.DeviceForName(dn)
+func getCommandsByDeviceName(dn string, ctx context.Context) (int, models.CommandResponse, error) {
+	d, err := mdc.DeviceForName(dn, ctx)
 	if err != nil {
 		chk, ok := err.(*types.ErrServiceClient)
 		if ok {

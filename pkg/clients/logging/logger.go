@@ -16,6 +16,7 @@ package logger
 // Logging client for the Go implementation of edgexfoundry
 
 import (
+	"context"
 	"fmt"
 	"io"
 	stdlog "log"
@@ -161,7 +162,9 @@ func (lc EdgeXLogger) log(logLevel string, msg string, args ...interface{}) {
 			// add an empty string to keep k/v pairs correct
 			args = append(args, "")
 		}
-		args = append(args, "msg", msg)
+		if len(msg) > 0 {
+			args = append(args, "msg", msg)
+		}
 	}
 
 	err := lc.levelLoggers[logLevel].Log(args...)
@@ -234,7 +237,7 @@ func (lc EdgeXLogger) buildLogEntry(logLevel string, msg string, args ...interfa
 // Send the log as an http request
 func (lc EdgeXLogger) sendLog(logEntry models.LogEntry) {
 	go func() {
-		_, err := clients.PostJsonRequest(lc.logTarget, logEntry)
+		_, err := clients.PostJsonRequest(lc.logTarget, logEntry, context.Background())
 		if err != nil {
 			fmt.Println(err.Error())
 		}

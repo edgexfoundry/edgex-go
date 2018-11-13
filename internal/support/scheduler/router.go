@@ -16,17 +16,19 @@ package scheduler
 
 import (
 	"encoding/json"
-	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/errors"
-	"github.com/edgexfoundry/edgex-go/pkg/clients"
-
-	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
-	"github.com/edgexfoundry/edgex-go/pkg/models"
-	"github.com/gorilla/mux"
 	"net/http"
 	"net/url"
 	"runtime"
 	"strconv"
+
+	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
+	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/errors"
+
+	"github.com/edgexfoundry/edgex-go/pkg/clients"
+	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
+	"github.com/edgexfoundry/edgex-go/pkg/models"
+	"github.com/gorilla/mux"
 )
 
 func LoadRestRoutes() *mux.Router {
@@ -60,6 +62,10 @@ func LoadRestRoutes() *mux.Router {
 
 	// Scrub "IntervalActions"
 	intervalAction.HandleFunc("/scrub/", scrubIntervalActionsHandler).Methods(http.MethodDelete)
+
+	r.Use(correlation.ManageHeader)
+	r.Use(correlation.OnResponseComplete)
+	r.Use(correlation.OnRequestBegin)
 
 	return r
 }

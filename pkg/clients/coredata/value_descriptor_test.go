@@ -14,6 +14,7 @@
 package coredata
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -66,7 +67,7 @@ func TestGetvaluedescriptors(t *testing.T) {
 
 	vdc := NewValueDescriptorClient(params, mockEndpoint{})
 
-	vdArr, err := vdc.ValueDescriptors()
+	vdArr, err := vdc.ValueDescriptors(context.Background())
 	if err != nil {
 		t.FailNow()
 	}

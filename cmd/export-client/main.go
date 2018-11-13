@@ -19,11 +19,13 @@ import (
 	"time"
 
 	"github.com/edgexfoundry/edgex-go"
+	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
+
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/export/client"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
-	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 )
 
 func main() {
@@ -76,6 +78,7 @@ func logBeforeInit(err error) {
 
 func listenForInterrupt(errChan chan error) {
 	go func() {
+		correlation.LoggingClient = client.LoggingClient
 		c := make(chan os.Signal)
 		signal.Notify(c, syscall.SIGINT)
 		errChan <- fmt.Errorf("%s", <-c)

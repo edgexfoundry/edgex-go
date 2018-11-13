@@ -15,6 +15,7 @@
 package metadata
 
 import (
+	"context"
 	"encoding/json"
 	"net/url"
 
@@ -25,16 +26,16 @@ import (
 
 // ScheduleEventClient is an interface used to operate on Core Metadata schedule event objects.
 type ScheduleEventClient interface {
-	Add(dev *models.ScheduleEvent) (string, error)
-	Delete(id string) error
-	DeleteByName(name string) error
-	ScheduleEvent(id string) (models.ScheduleEvent, error)
-	ScheduleEventForName(name string) (models.ScheduleEvent, error)
-	ScheduleEvents() ([]models.ScheduleEvent, error)
-	ScheduleEventsForAddressable(name string) ([]models.ScheduleEvent, error)
-	ScheduleEventsForAddressableByName(name string) ([]models.ScheduleEvent, error)
-	ScheduleEventsForServiceByName(name string) ([]models.ScheduleEvent, error)
-	Update(dev models.ScheduleEvent) error
+	Add(dev *models.ScheduleEvent, ctx context.Context) (string, error)
+	Delete(id string, ctx context.Context) error
+	DeleteByName(name string, ctx context.Context) error
+	ScheduleEvent(id string, ctx context.Context) (models.ScheduleEvent, error)
+	ScheduleEventForName(name string, ctx context.Context) (models.ScheduleEvent, error)
+	ScheduleEvents(ctx context.Context) ([]models.ScheduleEvent, error)
+	ScheduleEventsForAddressable(name string, ctx context.Context) ([]models.ScheduleEvent, error)
+	ScheduleEventsForAddressableByName(name string, ctx context.Context) ([]models.ScheduleEvent, error)
+	ScheduleEventsForServiceByName(name string, ctx context.Context) ([]models.ScheduleEvent, error)
+	Update(dev models.ScheduleEvent, ctx context.Context) error
 }
 
 // ScheduleEventRestClient is struct used as a receiver for ScheduleEventClient interface methods.
@@ -68,8 +69,8 @@ func (s *ScheduleEventRestClient) init(params types.EndpointParams) {
 }
 
 // Helper method to request and decode a schedule event
-func (s *ScheduleEventRestClient) requestScheduleEvent(url string) (models.ScheduleEvent, error) {
-	data, err := clients.GetRequest(url)
+func (s *ScheduleEventRestClient) requestScheduleEvent(url string, ctx context.Context) (models.ScheduleEvent, error) {
+	data, err := clients.GetRequest(url, ctx)
 	if err != nil {
 		return models.ScheduleEvent{}, err
 	}
@@ -80,8 +81,8 @@ func (s *ScheduleEventRestClient) requestScheduleEvent(url string) (models.Sched
 }
 
 // Helper method to request and decode a schedule event slice
-func (s *ScheduleEventRestClient) requestScheduleEventSlice(url string) ([]models.ScheduleEvent, error) {
-	data, err := clients.GetRequest(url)
+func (s *ScheduleEventRestClient) requestScheduleEventSlice(url string, ctx context.Context) ([]models.ScheduleEvent, error) {
+	data, err := clients.GetRequest(url, ctx)
 	if err != nil {
 		return []models.ScheduleEvent{}, err
 	}
@@ -92,51 +93,51 @@ func (s *ScheduleEventRestClient) requestScheduleEventSlice(url string) ([]model
 }
 
 // Add a schedule event.
-func (s *ScheduleEventRestClient) Add(se *models.ScheduleEvent) (string, error) {
-	return clients.PostJsonRequest(s.url, se)
+func (s *ScheduleEventRestClient) Add(se *models.ScheduleEvent, ctx context.Context) (string, error) {
+	return clients.PostJsonRequest(s.url, se, ctx)
 }
 
 // Delete a schedule event (specified by id).
-func (s *ScheduleEventRestClient) Delete(id string) error {
-	return clients.DeleteRequest(s.url + "/id/" + id)
+func (s *ScheduleEventRestClient) Delete(id string, ctx context.Context) error {
+	return clients.DeleteRequest(s.url+"/id/"+id, ctx)
 }
 
 // Delete a schedule event (specified by name).
-func (s *ScheduleEventRestClient) DeleteByName(name string) error {
-	return clients.DeleteRequest(s.url + "/name/" + url.QueryEscape(name))
+func (s *ScheduleEventRestClient) DeleteByName(name string, ctx context.Context) error {
+	return clients.DeleteRequest(s.url+"/name/"+url.QueryEscape(name), ctx)
 }
 
 // ScheduleEvent returns the ScheduleEvent specified by id.
-func (s *ScheduleEventRestClient) ScheduleEvent(id string) (models.ScheduleEvent, error) {
-	return s.requestScheduleEvent(s.url + "/" + id)
+func (s *ScheduleEventRestClient) ScheduleEvent(id string, ctx context.Context) (models.ScheduleEvent, error) {
+	return s.requestScheduleEvent(s.url+"/"+id, ctx)
 }
 
 // ScheduleEventForName returns the ScheduleEvent specified by name.
-func (s *ScheduleEventRestClient) ScheduleEventForName(name string) (models.ScheduleEvent, error) {
-	return s.requestScheduleEvent(s.url + "/name/" + url.QueryEscape(name))
+func (s *ScheduleEventRestClient) ScheduleEventForName(name string, ctx context.Context) (models.ScheduleEvent, error) {
+	return s.requestScheduleEvent(s.url+"/name/"+url.QueryEscape(name), ctx)
 }
 
 // Get a list of all schedules events.
-func (s *ScheduleEventRestClient) ScheduleEvents() ([]models.ScheduleEvent, error) {
-	return s.requestScheduleEventSlice(s.url)
+func (s *ScheduleEventRestClient) ScheduleEvents(ctx context.Context) ([]models.ScheduleEvent, error) {
+	return s.requestScheduleEventSlice(s.url, ctx)
 }
 
 // ScheduleEventForAddressable returns the ScheduleEvent specified by addressable.
-func (s *ScheduleEventRestClient) ScheduleEventsForAddressable(addressable string) ([]models.ScheduleEvent, error) {
-	return s.requestScheduleEventSlice(s.url + "/addressable/" + url.QueryEscape(addressable))
+func (s *ScheduleEventRestClient) ScheduleEventsForAddressable(addressable string, ctx context.Context) ([]models.ScheduleEvent, error) {
+	return s.requestScheduleEventSlice(s.url+"/addressable/"+url.QueryEscape(addressable), ctx)
 }
 
 // ScheduleEventForAddressableByName returns the ScheduleEvent specified by addressable name.
-func (s *ScheduleEventRestClient) ScheduleEventsForAddressableByName(name string) ([]models.ScheduleEvent, error) {
-	return s.requestScheduleEventSlice(s.url + "/addressablename/" + url.QueryEscape(name))
+func (s *ScheduleEventRestClient) ScheduleEventsForAddressableByName(name string, ctx context.Context) ([]models.ScheduleEvent, error) {
+	return s.requestScheduleEventSlice(s.url+"/addressablename/"+url.QueryEscape(name), ctx)
 }
 
 // Get the schedule event for service by name.
-func (s *ScheduleEventRestClient) ScheduleEventsForServiceByName(name string) ([]models.ScheduleEvent, error) {
-	return s.requestScheduleEventSlice(s.url + "/servicename/" + url.QueryEscape(name))
+func (s *ScheduleEventRestClient) ScheduleEventsForServiceByName(name string, ctx context.Context) ([]models.ScheduleEvent, error) {
+	return s.requestScheduleEventSlice(s.url+"/servicename/"+url.QueryEscape(name), ctx)
 }
 
 // Update a schedule event - handle error codes
-func (s *ScheduleEventRestClient) Update(se models.ScheduleEvent) error {
-	return clients.UpdateRequest(s.url, se)
+func (s *ScheduleEventRestClient) Update(se models.ScheduleEvent, ctx context.Context) error {
+	return clients.UpdateRequest(s.url, se, ctx)
 }

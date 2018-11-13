@@ -19,9 +19,11 @@ import (
 	"net/http"
 	"runtime"
 
-	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/pkg/clients"
 	"github.com/gorilla/mux"
+
+	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
+	"github.com/edgexfoundry/edgex-go/pkg/clients"
 )
 
 func LoadRestRoutes() *mux.Router {
@@ -76,6 +78,10 @@ func LoadRestRoutes() *mux.Router {
 	// Cleanup
 	b.HandleFunc("/cleanup", cleanupHandler).Methods(http.MethodDelete)
 	b.HandleFunc("/cleanup/age/{age:[0-9]+}", cleanupAgeHandler).Methods(http.MethodDelete)
+
+	r.Use(correlation.ManageHeader)
+	r.Use(correlation.OnResponseComplete)
+	r.Use(correlation.OnRequestBegin)
 
 	return r
 }

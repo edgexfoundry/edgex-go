@@ -14,6 +14,7 @@
 package metadata
 
 import (
+	"context"
 	"encoding/json"
 	"net/url"
 
@@ -26,11 +27,11 @@ import (
 Addressable client for interacting with the addressable section of metadata
 */
 type AddressableClient interface {
-	Add(addr *models.Addressable) (string, error)
-	Addressable(id string) (models.Addressable, error)
-	AddressableForName(name string) (models.Addressable, error)
-	Update(addr models.Addressable) error
-	Delete(id string) error
+	Add(addr *models.Addressable, ctx context.Context) (string, error)
+	Addressable(id string, ctx context.Context) (models.Addressable, error)
+	AddressableForName(name string, ctx context.Context) (models.Addressable, error)
+	Update(addr models.Addressable, ctx context.Context) error
+	Delete(id string, ctx context.Context) error
 }
 
 type AddressableRestClient struct {
@@ -65,8 +66,8 @@ func (a *AddressableRestClient) init(params types.EndpointParams) {
 }
 
 // Helper method to request and decode an addressable
-func (a *AddressableRestClient) requestAddressable(url string) (models.Addressable, error) {
-	data, err := clients.GetRequest(url)
+func (a *AddressableRestClient) requestAddressable(url string, ctx context.Context) (models.Addressable, error) {
+	data, err := clients.GetRequest(url, ctx)
 	if err != nil {
 		return models.Addressable{}, err
 	}
@@ -78,26 +79,26 @@ func (a *AddressableRestClient) requestAddressable(url string) (models.Addressab
 
 // Add an addressable - handle error codes
 // Returns the ID of the addressable and an error
-func (a *AddressableRestClient) Add(addr *models.Addressable) (string, error) {
-	return clients.PostJsonRequest(a.url, addr)
+func (a *AddressableRestClient) Add(addr *models.Addressable, ctx context.Context) (string, error) {
+	return clients.PostJsonRequest(a.url, addr, ctx)
 }
 
 // Get an addressable by id
-func (a *AddressableRestClient) Addressable(id string) (models.Addressable, error) {
-	return a.requestAddressable(a.url + "/" + id)
+func (a *AddressableRestClient) Addressable(id string, ctx context.Context) (models.Addressable, error) {
+	return a.requestAddressable(a.url+"/"+id, ctx)
 }
 
 // Get the addressable by name
-func (a *AddressableRestClient) AddressableForName(name string) (models.Addressable, error) {
-	return a.requestAddressable(a.url + "/name/" + url.QueryEscape(name))
+func (a *AddressableRestClient) AddressableForName(name string, ctx context.Context) (models.Addressable, error) {
+	return a.requestAddressable(a.url+"/name/"+url.QueryEscape(name), ctx)
 }
 
 // Update a addressable
-func (a *AddressableRestClient) Update(addr models.Addressable) error {
-	return clients.UpdateRequest(a.url, addr)
+func (a *AddressableRestClient) Update(addr models.Addressable, ctx context.Context) error {
+	return clients.UpdateRequest(a.url, addr, ctx)
 }
 
 // Delete a addressable (specified by id)
-func (a *AddressableRestClient) Delete(id string) error {
-	return clients.DeleteRequest(a.url + "/id/" + id)
+func (a *AddressableRestClient) Delete(id string, ctx context.Context) error {
+	return clients.DeleteRequest(a.url+"/id/"+id, ctx)
 }
