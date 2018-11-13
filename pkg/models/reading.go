@@ -16,6 +16,7 @@ package models
 
 import (
 	"encoding/json"
+
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -41,13 +42,13 @@ type Reading struct {
 func (r Reading) MarshalJSON() ([]byte, error) {
 	test := struct {
 		Id       bson.ObjectId `json:"id"`
-		Pushed   int64         `json:"pushed"`  // When the data was pushed out of EdgeX (0 - not pushed yet)
-		Created  int64         `json:"created"` // When the reading was created
-		Origin   int64         `json:"origin"`
-		Modified int64         `json:"modified"`
-		Device   *string       `json:"device"`
-		Name     *string       `json:"name"`
-		Value    *string       `json:"value"` // Device sensor data value
+		Pushed   int64         `json:"pushed,omitempty"`  // When the data was pushed out of EdgeX (0 - not pushed yet)
+		Created  int64         `json:"created,omitempty"` // When the reading was created
+		Origin   int64         `json:"origin,omitempty"`
+		Modified int64         `json:"modified,omitempty"`
+		Device   *string       `json:"device,omitempty"`
+		Name     *string       `json:"name,omitempty"`
+		Value    *string       `json:"value,omitempty"` // Device sensor data value
 	}{
 		Id:       r.Id,
 		Pushed:   r.Pushed,
