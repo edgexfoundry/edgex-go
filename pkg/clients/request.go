@@ -17,7 +17,9 @@ package clients
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"github.com/google/uuid"
 	"io"
 	"io/ioutil"
 	"mime/multipart"
@@ -49,6 +51,40 @@ func makeRequest(req *http.Request) (*http.Response, error) {
 }
 
 // Helper method to make the get request and return the body
+func GetRequestWithContext(url string, ctx context.Context) ([]byte, error) {
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	correlation := fromContext(CorrelationHeader, ctx)
+	if len(correlation) == 0 {
+		correlation = uuid.New().String()
+	}
+	req.Header.Set(CorrelationHeader, correlation)
+	resp, err := makeRequest(req)
+	if err != nil {
+		return nil, err
+	}
+	if resp == nil {
+		return nil, types.ErrResponseNil{}
+	}
+	defer resp.Body.Close()
+
+	bodyBytes, err := getBody(resp)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode == http.StatusNotFound {
+		return nil, types.ErrNotFound{}
+	} else if (resp.StatusCode != http.StatusOK) && (resp.StatusCode != http.StatusAccepted) {
+		return nil, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
+	}
+
+	return bodyBytes, nil
+}
+
 func GetRequest(url string) ([]byte, error) {
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {

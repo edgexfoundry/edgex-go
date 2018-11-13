@@ -14,6 +14,7 @@
 package data
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
@@ -30,7 +31,7 @@ func countEvents() (int, error) {
 }
 
 func countEventsByDevice(device string) (int, error) {
-	err := checkDevice(device)
+	err := checkDevice(device, context.TODO())
 	if err != nil {
 		return -1, err
 	}
@@ -74,8 +75,8 @@ func getEvents(limit int) ([]contract.Event, error) {
 	return events, err
 }
 
-func addNewEvent(e contract.Event) (string, error) {
-	err := checkDevice(e.Device)
+func addNewEvent(e contract.Event, ctx context.Context) (string, error) {
+	err := checkDevice(e.Device, ctx)
 	if err != nil {
 		return "", err
 	}
@@ -125,7 +126,7 @@ func updateEvent(from contract.Event) error {
 	// Update the fields
 	if len(from.Device) > 0 {
 		// Check device
-		err = checkDevice(from.Device)
+		err = checkDevice(from.Device, context.TODO())
 		if err != nil {
 			return err
 		}

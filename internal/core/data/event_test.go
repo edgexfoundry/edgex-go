@@ -16,6 +16,7 @@ package data
 
 import (
 	"fmt"
+	"context"
 	"strconv"
 	"sync"
 	"testing"
@@ -214,7 +215,7 @@ func TestAddEventWithPersistence(t *testing.T) {
 	wg.Add(1)
 	go handleDomainEvents(bitEvents, &wg, t)
 
-	_, err := addNewEvent(evt)
+	_, err := addNewEvent(evt, context.TODO())
 	Configuration.Writable.PersistData = false
 	if err != nil {
 		t.Errorf(err.Error())
@@ -242,7 +243,7 @@ func TestAddEventNoPersistence(t *testing.T) {
 	wg.Add(1)
 	go handleDomainEvents(bitEvents, &wg, t)
 
-	newId, err := addNewEvent(evt)
+	newId, err := addNewEvent(evt, context.TODO())
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -280,7 +281,7 @@ func TestAddEventWithValidationValueDescriptorExistsAndIsInvalid(t *testing.T) {
 	wg.Add(1)
 	go handleDomainEvents(bitEvents, &wg, t)
 
-	_, err := addNewEvent(evt)
+	_, err := addNewEvent(evt, context.TODO())
 	if err == nil {
 		t.Errorf("expected error")
 	}
@@ -305,7 +306,7 @@ func TestAddEventWithValidationValueDescriptorNotFound(t *testing.T) {
 	wg.Add(1)
 	go handleDomainEvents(bitEvents, &wg, t)
 
-	_, err := addNewEvent(evt)
+	_, err := addNewEvent(evt, context.TODO())
 	switch err.(type) {
 	case *errors.ErrValueDescriptorNotFound:
 	// expected
@@ -333,7 +334,7 @@ func TestAddEventWithValidationValueDescriptorDBError(t *testing.T) {
 	wg.Add(1)
 	go handleDomainEvents(bitEvents, &wg, t)
 
-	_, err := addNewEvent(evt)
+	_, err := addNewEvent(evt, context.TODO())
 	if err == nil {
 		t.Errorf("expected error")
 	}

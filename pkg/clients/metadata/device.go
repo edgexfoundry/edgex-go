@@ -14,6 +14,7 @@
 package metadata
 
 import (
+	"context"
 	"encoding/json"
 	"net/url"
 	"strconv"
@@ -30,7 +31,7 @@ type DeviceClient interface {
 	Add(dev *models.Device) (string, error)
 	Delete(id string) error
 	DeleteByName(name string) error
-	CheckForDevice(token string) (models.Device, error)
+	CheckForDevice(token string, ctx context.Context) (models.Device, error)
 	Device(id string) (models.Device, error)
 	DeviceForName(name string) (models.Device, error)
 	Devices() ([]models.Device, error)
@@ -84,8 +85,8 @@ func (d *DeviceRestClient) init(params types.EndpointParams) {
 }
 
 // Helper method to request and decode a device
-func (d *DeviceRestClient) requestDevice(url string) (models.Device, error) {
-	data, err := clients.GetRequest(url)
+func (d *DeviceRestClient) requestDevice(url string, ctx context.Context) (models.Device, error) {
+	data, err := clients.GetRequestWithContext(url, ctx)
 	if err != nil {
 		return models.Device{}, err
 	}
@@ -110,13 +111,13 @@ func (d *DeviceRestClient) requestDeviceSlice(url string) ([]models.Device, erro
 //Use the models.Event.Device property for the supplied token parameter.
 //The above property is currently double-purposed and needs to be refactored.
 //This call replaces the previous two calls necessary to lookup a device by id followed by name.
-func (d *DeviceRestClient) CheckForDevice(token string) (models.Device, error) {
-	return d.requestDevice(d.url + "/check/" + token)
+func (d *DeviceRestClient) CheckForDevice(token string, ctx context.Context) (models.Device, error) {
+	return d.requestDevice(d.url+"/check/"+token, ctx)
 }
 
 // Get the device by id
 func (d *DeviceRestClient) Device(id string) (models.Device, error) {
-	return d.requestDevice(d.url + "/" + id)
+	return d.requestDevice(d.url+"/"+id, context.TODO())
 }
 
 // Get a list of all devices
@@ -126,7 +127,7 @@ func (d *DeviceRestClient) Devices() ([]models.Device, error) {
 
 // Get the device by name
 func (d *DeviceRestClient) DeviceForName(name string) (models.Device, error) {
-	return d.requestDevice(d.url + "/name/" + url.QueryEscape(name))
+	return d.requestDevice(d.url+"/name/"+url.QueryEscape(name), context.TODO())
 }
 
 // Get the device by label

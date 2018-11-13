@@ -93,7 +93,7 @@ func NewClient(owningServiceName string, isRemote bool, logTarget string, logLev
 		lc.rootLogger = log.NewLogfmtLogger(os.Stdout)
 	}
 
-	lc.rootLogger = log.WithPrefix(lc.rootLogger, "ts", log.DefaultTimestampUTC,
+	lc.rootLogger = log.WithPrefix(lc.rootLogger, "ts", log.DefaultTimestampUTC, "app", owningServiceName,
 		"app", owningServiceName, "source", log.Caller(5))
 
 	// Set up the loggers
@@ -161,7 +161,9 @@ func (lc EdgeXLogger) log(logLevel string, msg string, args ...interface{}) {
 			// add an empty string to keep k/v pairs correct
 			args = append(args, "")
 		}
-		args = append(args, "msg", msg)
+		if len(msg) > 0 {
+			args = append(args, "msg", msg)
+		}
 	}
 
 	err := lc.levelLoggers[logLevel].Log(args...)

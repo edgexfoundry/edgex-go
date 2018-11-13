@@ -1,6 +1,6 @@
 [Writable]
 DeviceUpdateLastConnected = false
-MetaDataCheck = false
+MetaDataCheck = true
 PersistData = true
 ServiceUpdateLastConnected = false
 ValidateCheck = false

@@ -14,6 +14,7 @@
 package data
 
 import (
+	"context"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 )
@@ -26,7 +27,7 @@ func updateDeviceLastReportedConnected(device string) {
 		return
 	}
 
-	d, err := mdc.CheckForDevice(device)
+	d, err := mdc.CheckForDevice(device, context.TODO())
 	if err != nil {
 		LoggingClient.Error("Error getting device " + device + ": " + err.Error())
 		return
@@ -62,7 +63,7 @@ func updateDeviceServiceLastReportedConnected(device string) {
 	t := db.MakeTimestamp()
 
 	// Get the device
-	d, err := mdc.CheckForDevice(device)
+	d, err := mdc.CheckForDevice(device, context.TODO())
 	if err != nil {
 		LoggingClient.Error("Error getting device " + device + ": " + err.Error())
 		return
@@ -94,9 +95,9 @@ func checkMaxLimit(limit int) error {
 	return nil
 }
 
-func checkDevice(device string) error {
+func checkDevice(device string, ctx context.Context) error {
 	if Configuration.Writable.MetaDataCheck {
-		_, err := mdc.CheckForDevice(device)
+		_, err := mdc.CheckForDevice(device, ctx)
 		if err != nil {
 			return err
 		}

@@ -14,19 +14,20 @@
 package data
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
-	"net/http"
-	"net/url"
-	"runtime"
-	"strconv"
-
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/pkg/clients"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 	"github.com/gorilla/mux"
+	"net/http"
+	"net/url"
+	"runtime"
+	"strconv"
 )
 
 func LoadRestRoutes() *mux.Router {
@@ -80,6 +81,10 @@ func LoadRestRoutes() *mux.Router {
 	vd.HandleFunc("/label/{label}", valueDescriptorByLabelHandler).Methods(http.MethodGet)
 	vd.HandleFunc("/devicename/{device}", valueDescriptorByDeviceHandler).Methods(http.MethodGet)
 	vd.HandleFunc("/deviceid/{id}", valueDescriptorByDeviceIdHandler).Methods(http.MethodGet)
+
+	r.Use(correlation.ManageHeader)
+	r.Use(correlation.OnResponseComplete)
+	r.Use(correlation.OnRequestBegin)
 
 	return r
 }
@@ -180,6 +185,8 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
 	}
 
+	ctx := r.Context()
+
 	switch r.Method {
 	// Get all events
 	case http.MethodGet:
@@ -207,7 +214,7 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 
 		LoggingClient.Info("Posting Event: " + e.String())
 
-		newId, err := addNewEvent(e)
+		newId, err := addNewEvent(e, ctx)
 		if err != nil {
 			switch t := err.(type) {
 			case *errors.ErrValueDescriptorNotFound:
@@ -332,7 +339,7 @@ func getEventByDeviceHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check device
-	if err := checkDevice(deviceId); err != nil {
+	if err := checkDevice(deviceId, context.TODO()); err != nil {
 		LoggingClient.Error(fmt.Sprintf("error checking device %s %v", deviceId, err))
 		switch err := err.(type) {
 		case *types.ErrServiceClient:
@@ -435,7 +442,7 @@ func deleteByDeviceIdHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check device
-	if err := checkDevice(deviceId); err != nil {
+	if err := checkDevice(deviceId, context.TODO()); err != nil {
 		LoggingClient.Error(fmt.Sprintf("error checking device %s %v", deviceId, err))
 		switch err := err.(type) {
 		case *types.ErrServiceClient:
@@ -550,7 +557,7 @@ func readingByDeviceFilteredValueDescriptor(w http.ResponseWriter, r *http.Reque
 	switch r.Method {
 	case http.MethodGet:
 		// Check device
-		if err := checkDevice(deviceId); err != nil {
+		if err := checkDevice(deviceId, context.TODO()); err != nil {
 			LoggingClient.Error(fmt.Sprintf("error checking device %s %v", deviceId, err))
 			switch err := err.(type) {
 			case *types.ErrServiceClient:
@@ -653,7 +660,7 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 
 		// Check device
 		if reading.Device != "" {
-			if err := checkDevice(reading.Device); err != nil {
+			if err := checkDevice(reading.Device, context.TODO()); err != nil {
 				LoggingClient.Error(fmt.Sprintf("error checking device %s %v", reading.Device, err))
 				switch err := err.(type) {
 				case *types.ErrServiceClient:
@@ -1105,7 +1112,7 @@ func readingByValueDescriptorAndDeviceHandler(w http.ResponseWriter, r *http.Req
 	}
 
 	// Check device
-	if err := checkDevice(device); err != nil {
+	if err := checkDevice(device, context.TODO()); err != nil {
 		LoggingClient.Error(fmt.Sprintf("error checking device %s %v", device, err))
 		switch err := err.(type) {
 		case *types.ErrServiceClient:
