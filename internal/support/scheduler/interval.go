@@ -24,7 +24,7 @@ func getIntervals(limit int) ([]contract.Interval, error) {
 	var err error
 	var intervals []contract.Interval
 
-	if limit <=0 {
+	if limit <= 0 {
 		intervals, err = dbClient.Intervals()
 	} else {
 		intervals, err = dbClient.IntervalsWithLimit(limit)
@@ -69,9 +69,9 @@ func addNewInterval(interval contract.Interval) (string, error) {
 	}
 
 	// Validate that interval is not in queue
-	ret,err = scClient.QueryIntervalByName(name)
-	if err == nil && ret.Name == name  {
-		return "",errors.NewErrIntervalNameInUse(name)
+	ret, err = scClient.QueryIntervalByName(name)
+	if err == nil && ret.Name == name {
+		return "", errors.NewErrIntervalNameInUse(name)
 	}
 
 	// Add the new interval to the database
@@ -83,7 +83,7 @@ func addNewInterval(interval contract.Interval) (string, error) {
 	// Push the new interval into scheduler queue
 	interval.ID = ID
 	err = scClient.AddIntervalToQueue(interval)
-	if err!= nil{
+	if err != nil {
 		//failed to add to scheduler queue
 		LoggingClient.Error(err.Error())
 	}

@@ -23,6 +23,8 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
+
 	"github.com/edgexfoundry/edgex-go/pkg/clients"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
@@ -81,6 +83,10 @@ func LoadRestRoutes() *mux.Router {
 	vd.HandleFunc("/devicename/{device}", valueDescriptorByDeviceHandler).Methods(http.MethodGet)
 	vd.HandleFunc("/deviceid/{id}", valueDescriptorByDeviceIdHandler).Methods(http.MethodGet)
 
+	r.Use(correlation.ManageHeader)
+	r.Use(correlation.OnResponseComplete)
+	r.Use(correlation.OnRequestBegin)
+
 	return r
 }
 
@@ -116,6 +122,8 @@ func eventCountByDeviceIdHandler(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
 	id, err := url.QueryUnescape(vars["deviceId"])
+	ctx := r.Context()
+
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		LoggingClient.Error("Problem unescaping URL: " + err.Error())
@@ -123,7 +131,7 @@ func eventCountByDeviceIdHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check device
-	count, err := countEventsByDevice(id)
+	count, err := countEventsByDevice(id, ctx)
 	if err != nil {
 		LoggingClient.Error(fmt.Sprintf("error checking device %s %v", id, err))
 		switch err := err.(type) {
@@ -180,6 +188,8 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
 	}
 
+	ctx := r.Context()
+
 	switch r.Method {
 	// Get all events
 	case http.MethodGet:
@@ -207,7 +217,7 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 
 		LoggingClient.Info("Posting Event: " + e.String())
 
-		newId, err := addNewEvent(e)
+		newId, err := addNewEvent(e, ctx)
 		if err != nil {
 			switch t := err.(type) {
 			case *errors.ErrValueDescriptorNotFound:
@@ -239,7 +249,7 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		LoggingClient.Info("Updating event: " + from.ID)
-		err = updateEvent(from)
+		err = updateEvent(from, ctx)
 		if err != nil {
 			switch t := err.(type) {
 			case *errors.ErrEventNotFound:
@@ -314,6 +324,7 @@ func getEventByDeviceHandler(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
 	limit := vars["limit"]
+	ctx := r.Context()
 	deviceId, err := url.QueryUnescape(vars["deviceId"])
 
 	// Problems unescaping URL
@@ -332,7 +343,7 @@ func getEventByDeviceHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check device
-	if err := checkDevice(deviceId); err != nil {
+	if err := checkDevice(deviceId, ctx); err != nil {
 		LoggingClient.Error(fmt.Sprintf("error checking device %s %v", deviceId, err))
 		switch err := err.(type) {
 		case *types.ErrServiceClient:
@@ -374,13 +385,14 @@ func eventIdHandler(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
 	id := vars["id"]
+	ctx := r.Context()
 
 	switch r.Method {
 	// Set the 'pushed' timestamp for the event to the current time - event is going to another (not EdgeX) service
 	case http.MethodPut:
 		LoggingClient.Info("Updating event: " + id)
 
-		err := updateEventPushDate(id)
+		err := updateEventPushDate(id, ctx)
 		if err != nil {
 			switch x := err.(type) {
 			case *errors.ErrEventNotFound:
@@ -427,6 +439,8 @@ func deleteByDeviceIdHandler(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
 	deviceId, err := url.QueryUnescape(vars["deviceId"])
+	ctx := r.Context()
+
 	// Problems unescaping URL
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -435,7 +449,7 @@ func deleteByDeviceIdHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check device
-	if err := checkDevice(deviceId); err != nil {
+	if err := checkDevice(deviceId, ctx); err != nil {
 		LoggingClient.Error(fmt.Sprintf("error checking device %s %v", deviceId, err))
 		switch err := err.(type) {
 		case *types.ErrServiceClient:
@@ -523,6 +537,7 @@ func readingByDeviceFilteredValueDescriptor(w http.ResponseWriter, r *http.Reque
 
 	vars := mux.Vars(r)
 	limit := vars["limit"]
+	ctx := r.Context()
 
 	valueDescriptor, err := url.QueryUnescape(vars["valueDescriptor"])
 	// Problems unescaping URL
@@ -550,7 +565,7 @@ func readingByDeviceFilteredValueDescriptor(w http.ResponseWriter, r *http.Reque
 	switch r.Method {
 	case http.MethodGet:
 		// Check device
-		if err := checkDevice(deviceId); err != nil {
+		if err := checkDevice(deviceId, ctx); err != nil {
 			LoggingClient.Error(fmt.Sprintf("error checking device %s %v", deviceId, err))
 			switch err := err.(type) {
 			case *types.ErrServiceClient:
@@ -605,7 +620,7 @@ func pingHandler(w http.ResponseWriter, _ *http.Request) {
 	w.Write([]byte("pong"))
 }
 
-func configHandler(w http.ResponseWriter, _ *http.Request) {
+func configHandler(w http.ResponseWriter, r *http.Request) {
 	encode(Configuration, w)
 }
 
@@ -613,6 +628,8 @@ func configHandler(w http.ResponseWriter, _ *http.Request) {
 // GET, PUT, and POST readings
 func readingHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
+
+	ctx := r.Context()
 
 	switch r.Method {
 	case http.MethodGet:
@@ -653,7 +670,7 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 
 		// Check device
 		if reading.Device != "" {
-			if err := checkDevice(reading.Device); err != nil {
+			if err := checkDevice(reading.Device, ctx); err != nil {
 				LoggingClient.Error(fmt.Sprintf("error checking device %s %v", reading.Device, err))
 				switch err := err.(type) {
 				case *types.ErrServiceClient:
@@ -1075,6 +1092,7 @@ func readingByValueDescriptorAndDeviceHandler(w http.ResponseWriter, r *http.Req
 	defer r.Body.Close()
 
 	vars := mux.Vars(r)
+	ctx := r.Context()
 
 	// Get the variables from the URL
 	name, err := url.QueryUnescape(vars["name"])
@@ -1105,7 +1123,7 @@ func readingByValueDescriptorAndDeviceHandler(w http.ResponseWriter, r *http.Req
 	}
 
 	// Check device
-	if err := checkDevice(device); err != nil {
+	if err := checkDevice(device, ctx); err != nil {
 		LoggingClient.Error(fmt.Sprintf("error checking device %s %v", device, err))
 		switch err := err.(type) {
 		case *types.ErrServiceClient:
@@ -1431,8 +1449,9 @@ func valueDescriptorByDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ctx := r.Context()
 	// Get the value descriptors
-	vdList, err := getValueDescriptorsByDeviceName(device)
+	vdList, err := getValueDescriptorsByDeviceName(device, ctx)
 	if err != nil {
 		switch err := err.(type) {
 		case *errors.ErrDbNotFound:
@@ -1464,8 +1483,9 @@ func valueDescriptorByDeviceIdHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ctx := r.Context()
 	// Get the value descriptors
-	vdList, err := getValueDescriptorsByDeviceId(deviceId)
+	vdList, err := getValueDescriptorsByDeviceId(deviceId, ctx)
 	if err != nil {
 		switch err := err.(type) {
 		case *types.ErrServiceClient:

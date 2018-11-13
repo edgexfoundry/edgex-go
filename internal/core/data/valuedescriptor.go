@@ -14,6 +14,7 @@
 package data
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -154,9 +155,9 @@ func getValueDescriptorsByDevice(device contract.Device) (vdList []contract.Valu
 	return vdList, nil
 }
 
-func getValueDescriptorsByDeviceName(name string) (vdList []contract.ValueDescriptor, err error) {
+func getValueDescriptorsByDeviceName(name string, ctx context.Context) (vdList []contract.ValueDescriptor, err error) {
 	// Get the device
-	device, err := mdc.DeviceForName(name)
+	device, err := mdc.DeviceForName(name, ctx)
 	if err != nil {
 		LoggingClient.Error("Problem getting device from metadata: " + err.Error())
 		return []contract.ValueDescriptor{}, err
@@ -165,9 +166,9 @@ func getValueDescriptorsByDeviceName(name string) (vdList []contract.ValueDescri
 	return getValueDescriptorsByDevice(device)
 }
 
-func getValueDescriptorsByDeviceId(id string) (vdList []contract.ValueDescriptor, err error) {
+func getValueDescriptorsByDeviceId(id string, ctx context.Context) (vdList []contract.ValueDescriptor, err error) {
 	// Get the device
-	device, err := mdc.Device(id)
+	device, err := mdc.Device(id, ctx)
 	if err != nil {
 		LoggingClient.Error("Problem getting device from metadata: " + err.Error())
 		return []contract.ValueDescriptor{}, err

@@ -18,14 +18,13 @@ import (
 	"time"
 )
 
-
 //the interval specific shared variables
 var (
 	mutex                                   sync.Mutex
 	intervalQueue                           = queueV1.New()                     // global interval queue
 	intervalIdToContextMap                  = make(map[string]*IntervalContext) // map : interval id -> interval context
 	intervalNameToContextMap                = make(map[string]*IntervalContext) // map : interval name -> interval context
-	intervalNameToIdMap	                    = make(map[string]string)           // map : interval name -> interval id
+	intervalNameToIdMap                     = make(map[string]string)           // map : interval name -> interval id
 	intervalActionIdToIntervalMap           = make(map[string]string)           // map : interval action id -> interval id
 	intervalActionNameToIntervalMap         = make(map[string]string)           // map : interval action name -> interval id
 	intervalActionNameToIntervalActionIdMap = make(map[string]string)           // map : interval action name -> interval action id
@@ -56,7 +55,7 @@ func clearQueue() {
 func clearMaps() {
 	intervalIdToContextMap = make(map[string]*IntervalContext)        // map : interval id -> interval context
 	intervalNameToContextMap = make(map[string]*IntervalContext)      // map : interval name -> interval context
-	intervalNameToIdMap           = make(map[string]string)           // map : interval name -> interval id
+	intervalNameToIdMap = make(map[string]string)                     // map : interval name -> interval id
 	intervalActionIdToIntervalMap = make(map[string]string)           // map : interval action id -> interval id
 	intervalActionNameToIntervalMap = make(map[string]string)         // map : interval action name -> interval id
 	intervalActionNameToIntervalActionIdMap = make(map[string]string) // map : interval action name -> interval actionId
@@ -86,8 +85,8 @@ func addIntervalActionOperation(interval contract.Interval, intervalAction contr
 	intervalActionNameToIntervalActionIdMap[intervalAction.Name] = intervalAction.ID
 }
 
-func (qc *QueueClient) Connect()(string, error){
-	return "alive..",nil
+func (qc *QueueClient) Connect() (string, error) {
+	return "alive..", nil
 }
 func (qc *QueueClient) QueryIntervalByID(intervalId string) (contract.Interval, error) {
 	mutex.Lock()
@@ -161,17 +160,17 @@ func (qc *QueueClient) UpdateIntervalInQueue(interval contract.Interval) error {
 
 	// remove the old map entry and create new one
 	_, exists = intervalNameToIdMap[context.Interval.Name]
-	if exists{
-		delete(intervalNameToIdMap,context.Interval.Name)
+	if exists {
+		delete(intervalNameToIdMap, context.Interval.Name)
 	}
 
 	// add new map entry
 	intervalNameToIdMap[interval.Name] = interval.ID
 
-	LoggingClient.Debug(fmt.Sprintf("resting the interval context with id: %s in the scheduler queue",intervalId))
+	LoggingClient.Debug(fmt.Sprintf("resting the interval context with id: %s in the scheduler queue", intervalId))
 	context.Reset(interval)
 
-	LoggingClient.Info(fmt.Sprintf("updated the interval with id: %s in the scheduler queue",intervalId))
+	LoggingClient.Info(fmt.Sprintf("updated the interval with id: %s in the scheduler queue", intervalId))
 
 	return nil
 }
@@ -195,7 +194,7 @@ func (qc *QueueClient) RemoveIntervalInQueue(intervalId string) error {
 
 	deleteIntervalOperation(intervalContext.Interval, intervalContext)
 
-	LoggingClient.Info(fmt.Sprintf("removed the interval with id: %s from the scheduler queue",intervalId))
+	LoggingClient.Info(fmt.Sprintf("removed the interval with id: %s from the scheduler queue", intervalId))
 
 	return nil
 }
@@ -278,7 +277,7 @@ func (qc *QueueClient) AddIntervalActionToQueue(intervalAction contract.Interval
 
 	// Ensure we have an existing Interval
 	intervalId, exists := intervalNameToIdMap[intervalName]
-	if !exists{
+	if !exists {
 		logMsg := fmt.Sprintf("scheduler could not find a interval with interval name : %s", intervalName)
 		LoggingClient.Warn(logMsg)
 		return errors.New(logMsg)
@@ -286,7 +285,7 @@ func (qc *QueueClient) AddIntervalActionToQueue(intervalAction contract.Interval
 
 	// Get the Schedule Context
 	intervalContext, exists := intervalIdToContextMap[intervalId]
-	if !exists{
+	if !exists {
 		logMsg := fmt.Sprintf("scheduler could not find a interval with interval name : %s", intervalName)
 		LoggingClient.Warn(logMsg)
 		return errors.New(logMsg)
@@ -316,7 +315,7 @@ func (qc *QueueClient) UpdateIntervalActionQueue(intervalAction contract.Interva
 		return errors.New(logMsg)
 	}
 
-// Refactor START
+	// Refactor START
 
 	intervalContext, exists := intervalNameToContextMap[intervalAction.Interval]
 	if !exists {
@@ -330,10 +329,10 @@ func (qc *QueueClient) UpdateIntervalActionQueue(intervalAction contract.Interva
 	newIntervalId := interval.ID
 
 	if newIntervalId != oldIntervalId {
-		LoggingClient.Debug(fmt.Sprintf("the interval action switched interval from ID: %s to new ID: %s" ,oldIntervalId, newIntervalId))
+		LoggingClient.Debug(fmt.Sprintf("the interval action switched interval from ID: %s to new ID: %s", oldIntervalId, newIntervalId))
 
 		//remove the old interval action entry
-		LoggingClient.Debug(fmt.Sprintf("remove the intervalAction with ID: %s from interval with ID: %s ",intervalActionId ,oldIntervalId))
+		LoggingClient.Debug(fmt.Sprintf("remove the intervalAction with ID: %s from interval with ID: %s ", intervalActionId, oldIntervalId))
 		delete(intervalContext.IntervalActionsMap, intervalActionId)
 
 		//if there are no more events for the interval, remove the interval context
@@ -344,7 +343,7 @@ func (qc *QueueClient) UpdateIntervalActionQueue(intervalAction contract.Interva
 		}
 
 		//add Interval Event
-		LoggingClient.Info(fmt.Sprintf("add the intervalAction with id: %s to interval with id: %s",intervalActionId, newIntervalId))
+		LoggingClient.Info(fmt.Sprintf("add the intervalAction with id: %s to interval with id: %s", intervalActionId, newIntervalId))
 
 		if _, exists := intervalIdToContextMap[newIntervalId]; !exists {
 			context := IntervalContext{
@@ -360,12 +359,12 @@ func (qc *QueueClient) UpdateIntervalActionQueue(intervalAction contract.Interva
 		intervalContext.IntervalActionsMap[intervalActionId] = intervalAction
 	}
 
-	LoggingClient.Info(fmt.Sprintf("updated the intervalAction with id: %s to interval id:  %s", intervalAction.ID,interval.ID))
+	LoggingClient.Info(fmt.Sprintf("updated the intervalAction with id: %s to interval id:  %s", intervalAction.ID, interval.ID))
 
 	return nil
 }
 
-func(qc *QueueClient)  RemoveIntervalActionQueue(intervalActionId string) error {
+func (qc *QueueClient) RemoveIntervalActionQueue(intervalActionId string) error {
 	mutex.Lock()
 	defer mutex.Unlock()
 
@@ -385,11 +384,11 @@ func(qc *QueueClient)  RemoveIntervalActionQueue(intervalActionId string) error 
 
 	action, exists := intervalContext.IntervalActionsMap[intervalActionId]
 	if exists {
-		delete(intervalActionNameToIntervalMap,action.Name)
+		delete(intervalActionNameToIntervalMap, action.Name)
 	}
 
 	delete(intervalContext.IntervalActionsMap, intervalActionId)
-	
+
 	LoggingClient.Info(fmt.Sprintf("removed the intervalAction with id: %s", intervalActionId))
 
 	return nil

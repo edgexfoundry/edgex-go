@@ -40,7 +40,9 @@ func issueDeviceCommand(w http.ResponseWriter, r *http.Request, p bool) {
 		LoggingClient.Error(err.Error())
 		return
 	}
-	body, status := commandByDeviceID(did, cid, string(b), p)
+
+	ctx := r.Context()
+	body, status := commandByDeviceID(did, cid, string(b), p, ctx)
 	if status != http.StatusOK {
 		w.WriteHeader(status)
 	} else {
@@ -55,7 +57,8 @@ func restPutDeviceAdminState(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	did := vars[ID]
 	as := vars[ADMINSTATE]
-	status, err := putDeviceAdminState(did, as)
+	ctx := r.Context()
+	status, err := putDeviceAdminState(did, as, ctx)
 	if err != nil {
 		LoggingClient.Error(err.Error())
 	}
@@ -66,7 +69,8 @@ func restPutDeviceAdminStateByDeviceName(w http.ResponseWriter, r *http.Request)
 	vars := mux.Vars(r)
 	dn := vars[NAME]
 	as := vars[ADMINSTATE]
-	status, err := putDeviceAdminStateByName(dn, as)
+	ctx := r.Context()
+	status, err := putDeviceAdminStateByName(dn, as, ctx)
 	if err != nil {
 		LoggingClient.Error(err.Error())
 	}
@@ -77,7 +81,8 @@ func restPutDeviceOpState(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	did := vars[ID]
 	os := vars[OPSTATE]
-	status, err := putDeviceOpState(did, os)
+	ctx := r.Context()
+	status, err := putDeviceOpState(did, os, ctx)
 	if err != nil {
 		LoggingClient.Error(err.Error())
 	}
@@ -88,7 +93,8 @@ func restPutDeviceOpStateByDeviceName(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	dn := vars[NAME]
 	os := vars[OPSTATE]
-	status, err := putDeviceOpStateByName(dn, os)
+	ctx := r.Context()
+	status, err := putDeviceOpStateByName(dn, os, ctx)
 	if err != nil {
 		LoggingClient.Error(err.Error())
 	}
@@ -98,7 +104,8 @@ func restPutDeviceOpStateByDeviceName(w http.ResponseWriter, r *http.Request) {
 func restGetCommandsByDeviceID(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	did := vars[ID]
-	status, device, err := getCommandsByDeviceID(did)
+	ctx := r.Context()
+	status, device, err := getCommandsByDeviceID(did, ctx)
 	if err != nil {
 		LoggingClient.Error(err.Error())
 		http.Error(w, "Device not found", http.StatusNotFound)
@@ -114,7 +121,8 @@ func restGetCommandsByDeviceID(w http.ResponseWriter, r *http.Request) {
 func restGetCommandsByDeviceName(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	dn := vars[NAME]
-	status, devices, err := getCommandsByDeviceName(dn)
+	ctx := r.Context()
+	status, devices, err := getCommandsByDeviceName(dn, ctx)
 	if err != nil {
 		LoggingClient.Error(err.Error())
 		http.Error(w, "Device not found", http.StatusNotFound)
@@ -127,8 +135,9 @@ func restGetCommandsByDeviceName(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(&devices)
 }
 
-func restGetAllCommands(w http.ResponseWriter, _ *http.Request) {
-	status, devices, err := getCommands()
+func restGetAllCommands(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	status, devices, err := getCommands(ctx)
 	if err != nil {
 		LoggingClient.Error(err.Error())
 		w.WriteHeader(status)

@@ -15,6 +15,7 @@
 package metadata
 
 import (
+	"context"
 	"encoding/json"
 	"net/url"
 
@@ -25,13 +26,13 @@ import (
 
 // ScheduleClient is an interface used to operate on Core Metadata schedule objects.
 type ScheduleClient interface {
-	Add(dev *models.Schedule) (string, error)
-	Delete(id string) error
-	DeleteByName(name string) error
-	Schedule(id string) (models.Schedule, error)
-	ScheduleForName(name string) (models.Schedule, error)
-	Schedules() ([]models.Schedule, error)
-	Update(dev models.Schedule) error
+	Add(dev *models.Schedule, ctx context.Context) (string, error)
+	Delete(id string, ctx context.Context) error
+	DeleteByName(name string, ctx context.Context) error
+	Schedule(id string, ctx context.Context) (models.Schedule, error)
+	ScheduleForName(name string, ctx context.Context) (models.Schedule, error)
+	Schedules(ctx context.Context) ([]models.Schedule, error)
+	Update(dev models.Schedule, ctx context.Context) error
 }
 
 // ScheduleRestClient is struct used as a receiver for ScheduleClient interface methods.
@@ -65,8 +66,8 @@ func (s *ScheduleRestClient) init(params types.EndpointParams) {
 }
 
 // Helper method to request and decode a schedule
-func (s *ScheduleRestClient) requestSchedule(url string) (models.Schedule, error) {
-	data, err := clients.GetRequest(url)
+func (s *ScheduleRestClient) requestSchedule(url string, ctx context.Context) (models.Schedule, error) {
+	data, err := clients.GetRequest(url, ctx)
 	if err != nil {
 		return models.Schedule{}, err
 	}
@@ -77,8 +78,8 @@ func (s *ScheduleRestClient) requestSchedule(url string) (models.Schedule, error
 }
 
 // Helper method to request and decode a schedule slice
-func (s *ScheduleRestClient) requestScheduleSlice(url string) ([]models.Schedule, error) {
-	data, err := clients.GetRequest(url)
+func (s *ScheduleRestClient) requestScheduleSlice(url string, ctx context.Context) ([]models.Schedule, error) {
+	data, err := clients.GetRequest(url, ctx)
 	if err != nil {
 		return []models.Schedule{}, err
 	}
@@ -89,36 +90,36 @@ func (s *ScheduleRestClient) requestScheduleSlice(url string) ([]models.Schedule
 }
 
 // Add a schedule.
-func (s *ScheduleRestClient) Add(sched *models.Schedule) (string, error) {
-	return clients.PostJsonRequest(s.url, sched)
+func (s *ScheduleRestClient) Add(sched *models.Schedule, ctx context.Context) (string, error) {
+	return clients.PostJsonRequest(s.url, sched, ctx)
 }
 
 // Delete a schedule (specified by id).
-func (s *ScheduleRestClient) Delete(id string) error {
-	return clients.DeleteRequest(s.url + "/id/" + id)
+func (s *ScheduleRestClient) Delete(id string, ctx context.Context) error {
+	return clients.DeleteRequest(s.url+"/id/"+id, ctx)
 }
 
 // Delete a schedule (specified by name).
-func (s *ScheduleRestClient) DeleteByName(name string) error {
-	return clients.DeleteRequest(s.url + "/name/" + url.QueryEscape(name))
+func (s *ScheduleRestClient) DeleteByName(name string, ctx context.Context) error {
+	return clients.DeleteRequest(s.url+"/name/"+url.QueryEscape(name), ctx)
 }
 
 // Schedule returns the Schedule specified by id.
-func (s *ScheduleRestClient) Schedule(id string) (models.Schedule, error) {
-	return s.requestSchedule(s.url + "/" + id)
+func (s *ScheduleRestClient) Schedule(id string, ctx context.Context) (models.Schedule, error) {
+	return s.requestSchedule(s.url+"/"+id, ctx)
 }
 
 // ScheduleForName returns the Schedule specified by name.
-func (s *ScheduleRestClient) ScheduleForName(name string) (models.Schedule, error) {
-	return s.requestSchedule(s.url + "/name/" + url.QueryEscape(name))
+func (s *ScheduleRestClient) ScheduleForName(name string, ctx context.Context) (models.Schedule, error) {
+	return s.requestSchedule(s.url+"/name/"+url.QueryEscape(name), ctx)
 }
 
 // Schedules returns the list of all schedules.
-func (s *ScheduleRestClient) Schedules() ([]models.Schedule, error) {
-	return s.requestScheduleSlice(s.url)
+func (s *ScheduleRestClient) Schedules(ctx context.Context) ([]models.Schedule, error) {
+	return s.requestScheduleSlice(s.url, ctx)
 }
 
 // Update a schedule.
-func (s *ScheduleRestClient) Update(sched models.Schedule) error {
-	return clients.UpdateRequest(s.url, sched)
+func (s *ScheduleRestClient) Update(sched models.Schedule, ctx context.Context) error {
+	return clients.UpdateRequest(s.url, sched, ctx)
 }

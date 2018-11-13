@@ -14,6 +14,7 @@
 package metadata
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -69,7 +70,7 @@ func TestAddDevice(t *testing.T) {
 		Interval:    clients.ClientMonitorDefault}
 	dc := NewDeviceClient(params, MockEndpoint{})
 
-	receivedDeviceId, err := dc.Add(&d)
+	receivedDeviceId, err := dc.Add(&d, context.Background())
 	if err != nil {
 		t.Error(err.Error())
 	}

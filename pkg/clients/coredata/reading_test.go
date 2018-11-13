@@ -16,6 +16,7 @@
 package coredata
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -68,7 +69,7 @@ func TestGetReadings(t *testing.T) {
 
 	rc := NewReadingClient(params, mockReadingEndpoint{})
 
-	rArr, err := rc.Readings()
+	rArr, err := rc.Readings(context.Background())
 	if err != nil {
 		t.FailNow()
 	}

@@ -16,6 +16,7 @@
 package agent
 
 import (
+	"context"
 	"fmt"
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/executor"
@@ -58,7 +59,7 @@ func InvokeOperation(action string, services []string) bool {
 	return true
 }
 
-func getConfig(services []string) (ConfigRespMap, error) {
+func getConfig(services []string, ctx context.Context) (ConfigRespMap, error) {
 
 	c := ConfigRespMap{}
 	c.Configuration = map[string]interface{}{}
@@ -72,7 +73,7 @@ func getConfig(services []string) (ConfigRespMap, error) {
 			logs.LoggingClient.Warn("unknown service found getting configuration", "service name", service)
 		}
 
-		responseJSON, err := clients[service].FetchConfiguration()
+		responseJSON, err := clients[service].FetchConfiguration(ctx)
 		if err != nil {
 			c.Configuration[service] = fmt.Sprintf("%s get config error: %s", service, err.Error())
 			logs.LoggingClient.Error("error retrieving configuration", "service name", service, "error message", err.Error())
@@ -83,7 +84,7 @@ func getConfig(services []string) (ConfigRespMap, error) {
 	return c, nil
 }
 
-func getMetrics(services []string) (MetricsRespMap, error) {
+func getMetrics(services []string, ctx context.Context) (MetricsRespMap, error) {
 
 	m := MetricsRespMap{}
 	m.Metrics = map[string]interface{}{}
@@ -97,7 +98,7 @@ func getMetrics(services []string) (MetricsRespMap, error) {
 			logs.LoggingClient.Warn("unknown service found getting metrics", "service name", service)
 		}
 
-		responseJSON, err := clients[service].FetchMetrics()
+		responseJSON, err := clients[service].FetchMetrics(ctx)
 		if err != nil {
 			m.Metrics[service] = fmt.Sprintf("%s get metrics error: %s", service, err.Error())
 			logs.LoggingClient.Error("error retrieving metrics", "service name", service, "error message", err.Error())
@@ -112,17 +113,17 @@ func isKnownServiceKey(serviceKey string) bool {
 	// create a map because this is the easiest/cleanest way to determine whether something exists in a set
 	var services = map[string]struct{}{
 		internal.SupportNotificationsServiceKey: {},
-		internal.CoreCommandServiceKey: {},
-		internal.CoreDataServiceKey: {},
-		internal.CoreMetaDataServiceKey: {},
-		internal.ExportClientServiceKey: {},
-		internal.ExportDistroServiceKey: {},
-		internal.SupportLoggingServiceKey: {},
-		internal.SupportSchedulerServiceKey: {},
-		internal.ConfigSeedServiceKey: {},
+		internal.CoreCommandServiceKey:          {},
+		internal.CoreDataServiceKey:             {},
+		internal.CoreMetaDataServiceKey:         {},
+		internal.ExportClientServiceKey:         {},
+		internal.ExportDistroServiceKey:         {},
+		internal.SupportLoggingServiceKey:       {},
+		internal.SupportSchedulerServiceKey:     {},
+		internal.ConfigSeedServiceKey:           {},
 	}
 
-	 _, exists := services[serviceKey]
+	_, exists := services[serviceKey]
 
-	 return exists
+	return exists
 }

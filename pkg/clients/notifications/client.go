@@ -14,6 +14,8 @@
 package notifications
 
 import (
+	"context"
+
 	"github.com/edgexfoundry/edgex-go/pkg/clients"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
 )
@@ -43,7 +45,7 @@ const (
 
 // Interface defining behavior for the notifications client
 type NotificationsClient interface {
-	SendNotification(n Notification) error
+	SendNotification(n Notification, ctx context.Context) error
 }
 
 // Type struct for REST-specific implementation of the NotificationsClient interface
@@ -91,7 +93,7 @@ func (n *notificationsRestClient) init(params types.EndpointParams) {
 }
 
 // Send a notification to the notifications service
-func (nc *notificationsRestClient) SendNotification(n Notification) error {
-	_, err := clients.PostJsonRequest(nc.url, n)
+func (nc *notificationsRestClient) SendNotification(n Notification, ctx context.Context) error {
+	_, err := clients.PostJsonRequest(nc.url, n, ctx)
 	return err
 }

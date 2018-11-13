@@ -9,6 +9,7 @@
 package client
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -155,8 +156,9 @@ func addReg(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ctx := r.Context()
 	notifyUpdatedRegistrations(models.NotifyUpdate{Name: reg.Name,
-		Operation: "add"})
+		Operation: "add"}, ctx)
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(id))
@@ -244,8 +246,9 @@ func updateReg(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ctx := r.Context()
 	notifyUpdatedRegistrations(models.NotifyUpdate{Name: toReg.Name,
-		Operation: "update"})
+		Operation: "update"}, ctx)
 
 	w.Header().Set("Content-Type", applicationJson)
 	w.WriteHeader(http.StatusOK)
@@ -253,6 +256,7 @@ func updateReg(w http.ResponseWriter, r *http.Request) {
 }
 
 func delRegByID(w http.ResponseWriter, r *http.Request) {
+
 	// URL parameters
 	vars := mux.Vars(r)
 	id := vars["id"]
@@ -273,8 +277,9 @@ func delRegByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ctx := r.Context()
 	notifyUpdatedRegistrations(models.NotifyUpdate{Name: reg.Name,
-		Operation: "delete"})
+		Operation: "delete"}, ctx)
 
 	w.Header().Set("Content-Type", applicationJson)
 	w.WriteHeader(http.StatusOK)
@@ -293,17 +298,18 @@ func delRegByName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ctx := r.Context()
 	notifyUpdatedRegistrations(models.NotifyUpdate{Name: name,
-		Operation: "delete"})
+		Operation: "delete"}, ctx)
 
 	w.Header().Set("Content-Type", applicationJson)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
 }
 
-func notifyUpdatedRegistrations(update models.NotifyUpdate) {
+func notifyUpdatedRegistrations(update models.NotifyUpdate, ctx context.Context) {
 	go func() {
-		err := dc.NotifyRegistrations(update)
+		err := dc.NotifyRegistrations(update, ctx)
 		if err != nil {
 			LoggingClient.Error(fmt.Sprintf("error from distro: %s", err.Error()))
 		}

@@ -16,6 +16,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"net/http"
 	"os"
 	"os/signal"
@@ -88,6 +89,7 @@ func listenForInterrupt(errChan chan error) {
 
 func startHttpServer(errChan chan error, port int) {
 	go func() {
+		correlation.LoggingClient = data.LoggingClient //Not thrilled about this, can't think of anything better ATM
 		r := data.LoadRestRoutes()
 		errChan <- http.ListenAndServe(":"+strconv.Itoa(port), context.ClearHandler(r))
 	}()

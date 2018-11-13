@@ -19,11 +19,13 @@ import (
 	"time"
 
 	"github.com/edgexfoundry/edgex-go"
+	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
+
 	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/internal/support/logging"
-	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 )
 
 func main() {
@@ -80,6 +82,7 @@ func listenForInterrupt(errChan chan error) {
 
 func startHTTPServer(errChan chan error) {
 	go func() {
+		correlation.LoggingClient = logging.LoggingClient
 		p := fmt.Sprintf(":%d", logging.Configuration.Service.Port)
 		errChan <- http.ListenAndServe(p, logging.HttpServer())
 	}()

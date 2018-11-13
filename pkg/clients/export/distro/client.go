@@ -14,13 +14,15 @@
 package distro
 
 import (
+	"context"
+
 	"github.com/edgexfoundry/edgex-go/pkg/clients"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 )
 
 type DistroClient interface {
-	NotifyRegistrations(models.NotifyUpdate) error
+	NotifyRegistrations(models.NotifyUpdate, context.Context) error
 }
 
 type distroRestClient struct {
@@ -51,6 +53,6 @@ func (d *distroRestClient) init(params types.EndpointParams) {
 	}
 }
 
-func (d *distroRestClient) NotifyRegistrations(update models.NotifyUpdate) error {
-	return clients.UpdateRequest(d.url+clients.ApiNotifyRegistrationRoute, update)
+func (d *distroRestClient) NotifyRegistrations(update models.NotifyUpdate, ctx context.Context) error {
+	return clients.UpdateRequest(d.url+clients.ApiNotifyRegistrationRoute, update, ctx)
 }

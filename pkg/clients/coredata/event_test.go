@@ -16,6 +16,7 @@
 package coredata
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -61,7 +62,7 @@ func TestMarkPushed(t *testing.T) {
 
 	ec := NewEventClient(params, mockEventEndpoint{})
 
-	err := ec.MarkPushed(TestId)
+	err := ec.MarkPushed(TestId, context.Background())
 
 	if err != nil {
 		t.FailNow()
@@ -104,7 +105,7 @@ func TestGetEvents(t *testing.T) {
 
 	ec := NewEventClient(params, mockEventEndpoint{})
 
-	eArr, err := ec.Events()
+	eArr, err := ec.Events(context.Background())
 	if err != nil {
 		t.FailNow()
 	}

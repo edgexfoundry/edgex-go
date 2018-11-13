@@ -14,6 +14,7 @@
 package metadata
 
 import (
+	"context"
 	"encoding/json"
 
 	"github.com/edgexfoundry/edgex-go/pkg/clients"
@@ -25,12 +26,12 @@ import (
 Command client for interacting with the command section of metadata
 */
 type CommandClient interface {
-	Add(com *models.Command) (string, error)
-	Command(id string) (models.Command, error)
-	Commands() ([]models.Command, error)
-	CommandsForName(name string) ([]models.Command, error)
-	Delete(id string) error
-	Update(com models.Command) error
+	Add(com *models.Command, ctx context.Context) (string, error)
+	Command(id string, ctx context.Context) (models.Command, error)
+	Commands(ctx context.Context) ([]models.Command, error)
+	CommandsForName(name string, ctx context.Context) ([]models.Command, error)
+	Delete(id string, ctx context.Context) error
+	Update(com models.Command, ctx context.Context) error
 }
 
 type CommandRestClient struct {
@@ -65,8 +66,8 @@ func (c *CommandRestClient) init(params types.EndpointParams) {
 }
 
 // Helper method to request and decode a command
-func (c *CommandRestClient) requestCommand(url string) (models.Command, error) {
-	data, err := clients.GetRequest(url)
+func (c *CommandRestClient) requestCommand(url string, ctx context.Context) (models.Command, error) {
+	data, err := clients.GetRequest(url, ctx)
 	if err != nil {
 		return models.Command{}, err
 	}
@@ -77,8 +78,8 @@ func (c *CommandRestClient) requestCommand(url string) (models.Command, error) {
 }
 
 // Helper method to request and decode a command slice
-func (c *CommandRestClient) requestCommandSlice(url string) ([]models.Command, error) {
-	data, err := clients.GetRequest(url)
+func (c *CommandRestClient) requestCommandSlice(url string, ctx context.Context) ([]models.Command, error) {
+	data, err := clients.GetRequest(url, ctx)
 	if err != nil {
 		return []models.Command{}, err
 	}
@@ -89,31 +90,31 @@ func (c *CommandRestClient) requestCommandSlice(url string) ([]models.Command, e
 }
 
 // Get a command by id
-func (c *CommandRestClient) Command(id string) (models.Command, error) {
-	return c.requestCommand(c.url + "/" + id)
+func (c *CommandRestClient) Command(id string, ctx context.Context) (models.Command, error) {
+	return c.requestCommand(c.url+"/"+id, ctx)
 }
 
 // Get a list of all the commands
-func (c *CommandRestClient) Commands() ([]models.Command, error) {
-	return c.requestCommandSlice(c.url)
+func (c *CommandRestClient) Commands(ctx context.Context) ([]models.Command, error) {
+	return c.requestCommandSlice(c.url, ctx)
 }
 
 // Get a list of commands for a certain name
-func (c *CommandRestClient) CommandsForName(name string) ([]models.Command, error) {
-	return c.requestCommandSlice(c.url + "/name/" + name)
+func (c *CommandRestClient) CommandsForName(name string, ctx context.Context) ([]models.Command, error) {
+	return c.requestCommandSlice(c.url+"/name/"+name, ctx)
 }
 
 // Add a new command
-func (c *CommandRestClient) Add(com *models.Command) (string, error) {
-	return clients.PostJsonRequest(c.url, com)
+func (c *CommandRestClient) Add(com *models.Command, ctx context.Context) (string, error) {
+	return clients.PostJsonRequest(c.url, com, ctx)
 }
 
 // Update a command
-func (c *CommandRestClient) Update(com models.Command) error {
-	return clients.UpdateRequest(c.url, com)
+func (c *CommandRestClient) Update(com models.Command, ctx context.Context) error {
+	return clients.UpdateRequest(c.url, com, ctx)
 }
 
 // Delete a command
-func (c *CommandRestClient) Delete(id string) error {
-	return clients.DeleteRequest(c.url + "/id/" + id)
+func (c *CommandRestClient) Delete(id string, ctx context.Context) error {
+	return clients.DeleteRequest(c.url+"/id/"+id, ctx)
 }

@@ -14,7 +14,6 @@
 package agent
 
 import (
-	"github.com/edgexfoundry/edgex-go/internal/system/agent/logger"
 	"sync"
 	"time"
 
@@ -23,6 +22,8 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/executor"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/interfaces"
+	"github.com/edgexfoundry/edgex-go/internal/system/agent/logger"
+
 	"github.com/edgexfoundry/edgex-go/pkg/clients/general"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
 )

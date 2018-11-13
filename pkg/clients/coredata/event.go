@@ -16,6 +16,7 @@
 package coredata
 
 import (
+	"context"
 	"encoding/json"
 	"net/url"
 	"strconv"
@@ -26,18 +27,18 @@ import (
 )
 
 type EventClient interface {
-	Events() ([]models.Event, error)
-	Event(id string) (models.Event, error)
-	EventCount() (int, error)
-	EventCountForDevice(deviceId string) (int, error)
-	EventsForDevice(id string, limit int) ([]models.Event, error)
-	EventsForInterval(start int, end int, limit int) ([]models.Event, error)
-	EventsForDeviceAndValueDescriptor(deviceId string, vd string, limit int) ([]models.Event, error)
-	Add(event *models.Event) (string, error)
-	DeleteForDevice(id string) error
-	DeleteOld(age int) error
-	Delete(id string) error
-	MarkPushed(id string) error
+	Events(ctx context.Context) ([]models.Event, error)
+	Event(id string, ctx context.Context) (models.Event, error)
+	EventCount(ctx context.Context) (int, error)
+	EventCountForDevice(deviceId string, ctx context.Context) (int, error)
+	EventsForDevice(id string, limit int, ctx context.Context) ([]models.Event, error)
+	EventsForInterval(start int, end int, limit int, ctx context.Context) ([]models.Event, error)
+	EventsForDeviceAndValueDescriptor(deviceId string, vd string, limit int, ctx context.Context) ([]models.Event, error)
+	Add(event *models.Event, ctx context.Context) (string, error)
+	DeleteForDevice(id string, ctx context.Context) error
+	DeleteOld(age int, ctx context.Context) error
+	Delete(id string, ctx context.Context) error
+	MarkPushed(id string, ctx context.Context) error
 }
 
 type EventRestClient struct {
@@ -69,8 +70,8 @@ func (e *EventRestClient) init(params types.EndpointParams) {
 }
 
 // Helper method to request and decode an event slice
-func (e *EventRestClient) requestEventSlice(url string) ([]models.Event, error) {
-	data, err := clients.GetRequest(url)
+func (e *EventRestClient) requestEventSlice(url string, ctx context.Context) ([]models.Event, error) {
+	data, err := clients.GetRequest(url, ctx)
 	if err != nil {
 		return []models.Event{}, err
 	}
@@ -81,8 +82,8 @@ func (e *EventRestClient) requestEventSlice(url string) ([]models.Event, error) 
 }
 
 // Helper method to request and decode an event
-func (e *EventRestClient) requestEvent(url string) (models.Event, error) {
-	data, err := clients.GetRequest(url)
+func (e *EventRestClient) requestEvent(url string, ctx context.Context) (models.Event, error) {
+	data, err := clients.GetRequest(url, ctx)
 	if err != nil {
 		return models.Event{}, err
 	}
@@ -93,62 +94,62 @@ func (e *EventRestClient) requestEvent(url string) (models.Event, error) {
 }
 
 // Get a list of all events
-func (e *EventRestClient) Events() ([]models.Event, error) {
-	return e.requestEventSlice(e.url)
+func (e *EventRestClient) Events(ctx context.Context) ([]models.Event, error) {
+	return e.requestEventSlice(e.url, ctx)
 }
 
 // Get the event by id
-func (e *EventRestClient) Event(id string) (models.Event, error) {
-	return e.requestEvent(e.url + "/" + id)
+func (e *EventRestClient) Event(id string, ctx context.Context) (models.Event, error) {
+	return e.requestEvent(e.url+"/"+id, ctx)
 }
 
 // Get event count
-func (e *EventRestClient) EventCount() (int, error) {
-	return clients.CountRequest(e.url + "/count")
+func (e *EventRestClient) EventCount(ctx context.Context) (int, error) {
+	return clients.CountRequest(e.url+"/count", ctx)
 }
 
 // Get event count for device
-func (e *EventRestClient) EventCountForDevice(deviceId string) (int, error) {
-	return clients.CountRequest(e.url + "/count/" + url.QueryEscape(deviceId))
+func (e *EventRestClient) EventCountForDevice(deviceId string, ctx context.Context) (int, error) {
+	return clients.CountRequest(e.url+"/count/"+url.QueryEscape(deviceId), ctx)
 }
 
 // Get events for device
-func (e *EventRestClient) EventsForDevice(deviceId string, limit int) ([]models.Event, error) {
-	return e.requestEventSlice(e.url + "/device/" + url.QueryEscape(deviceId) + "/" + strconv.Itoa(limit))
+func (e *EventRestClient) EventsForDevice(deviceId string, limit int, ctx context.Context) ([]models.Event, error) {
+	return e.requestEventSlice(e.url+"/device/"+url.QueryEscape(deviceId)+"/"+strconv.Itoa(limit), ctx)
 }
 
 // Get events for interval
-func (e *EventRestClient) EventsForInterval(start int, end int, limit int) ([]models.Event, error) {
-	return e.requestEventSlice(e.url + "/" + strconv.Itoa(start) + "/" + strconv.Itoa(end) + "/" + strconv.Itoa(limit))
+func (e *EventRestClient) EventsForInterval(start int, end int, limit int, ctx context.Context) ([]models.Event, error) {
+	return e.requestEventSlice(e.url+"/"+strconv.Itoa(start)+"/"+strconv.Itoa(end)+"/"+strconv.Itoa(limit), ctx)
 }
 
 // Get events for device and value descriptor
-func (e *EventRestClient) EventsForDeviceAndValueDescriptor(deviceId string, vd string, limit int) ([]models.Event, error) {
-	return e.requestEventSlice(e.url + "/device/" + url.QueryEscape(deviceId) + "/valuedescriptor/" + url.QueryEscape(vd) + "/" + strconv.Itoa(limit))
+func (e *EventRestClient) EventsForDeviceAndValueDescriptor(deviceId string, vd string, limit int, ctx context.Context) ([]models.Event, error) {
+	return e.requestEventSlice(e.url+"/device/"+url.QueryEscape(deviceId)+"/valuedescriptor/"+url.QueryEscape(vd)+"/"+strconv.Itoa(limit), ctx)
 }
 
 // Add event
-func (e *EventRestClient) Add(event *models.Event) (string, error) {
-	return clients.PostJsonRequest(e.url, event)
+func (e *EventRestClient) Add(event *models.Event, ctx context.Context) (string, error) {
+	return clients.PostJsonRequest(e.url, event, ctx)
 }
 
 // Delete event by id
-func (e *EventRestClient) Delete(id string) error {
-	return clients.DeleteRequest(e.url + "/id/" + id)
+func (e *EventRestClient) Delete(id string, ctx context.Context) error {
+	return clients.DeleteRequest(e.url+"/id/"+id, ctx)
 }
 
 // Delete events by device name
-func (e *EventRestClient) DeleteForDevice(deviceId string) error {
-	return clients.DeleteRequest(e.url + "/device/" + url.QueryEscape(deviceId))
+func (e *EventRestClient) DeleteForDevice(deviceId string, ctx context.Context) error {
+	return clients.DeleteRequest(e.url+"/device/"+url.QueryEscape(deviceId), ctx)
 }
 
 // Delete events by age
-func (e *EventRestClient) DeleteOld(age int) error {
-	return clients.DeleteRequest(e.url + "/removeold/age/" + strconv.Itoa(age))
+func (e *EventRestClient) DeleteOld(age int, ctx context.Context) error {
+	return clients.DeleteRequest(e.url+"/removeold/age/"+strconv.Itoa(age), ctx)
 }
 
 // Mark event as pushed
-func (e *EventRestClient) MarkPushed(id string) error {
-	_, err := clients.PutRequest(e.url+"/id/"+id, nil)
+func (e *EventRestClient) MarkPushed(id string, ctx context.Context) error {
+	_, err := clients.PutRequest(e.url+"/id/"+id, nil, ctx)
 	return err
 }

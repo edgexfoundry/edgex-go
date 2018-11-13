@@ -7,6 +7,7 @@
 package notifications
 
 import (
+	"context"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
@@ -115,7 +116,7 @@ func TestReceiveNotification(t *testing.T) {
 		Labels:      []string{TestNotificationLabel1, TestNotificationLabel2},
 	}
 
-	nc.SendNotification(notification)
+	nc.SendNotification(notification, context.Background())
 }
 
 type mockNotificationEndpoint struct {

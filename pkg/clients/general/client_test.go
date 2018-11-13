@@ -16,6 +16,7 @@
 package general
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -62,7 +63,7 @@ func TestGetConfig(t *testing.T) {
 
 	mc := NewGeneralClient(params, mockGeneralEndpoint{})
 
-	responseJSON, err := mc.FetchConfiguration()
+	responseJSON, err := mc.FetchConfiguration(context.Background())
 	if err != nil {
 		t.Errorf("Fetched this for its configuration: {%v}", responseJSON)
 	}
@@ -95,7 +96,7 @@ func TestGetMetrics(t *testing.T) {
 
 	mc := NewGeneralClient(params, mockGeneralEndpoint{})
 
-	responseJSON, err := mc.FetchMetrics()
+	responseJSON, err := mc.FetchMetrics(context.Background())
 	if err != nil {
 		t.Errorf("Fetched this for its configuration: {%v}", responseJSON)
 	}

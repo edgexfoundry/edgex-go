@@ -15,6 +15,7 @@
 package data
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"sync"
@@ -55,7 +56,7 @@ func TestCountByDevice(t *testing.T) {
 
 	dbClient = myMock
 
-	count, err := countEventsByDevice(testEvent.Device)
+	count, err := countEventsByDevice(testEvent.Device, context.Background())
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -214,7 +215,7 @@ func TestAddEventWithPersistence(t *testing.T) {
 	wg.Add(1)
 	go handleDomainEvents(bitEvents, &wg, t)
 
-	_, err := addNewEvent(evt)
+	_, err := addNewEvent(evt, context.Background())
 	Configuration.Writable.PersistData = false
 	if err != nil {
 		t.Errorf(err.Error())
@@ -242,7 +243,7 @@ func TestAddEventNoPersistence(t *testing.T) {
 	wg.Add(1)
 	go handleDomainEvents(bitEvents, &wg, t)
 
-	newId, err := addNewEvent(evt)
+	newId, err := addNewEvent(evt, context.Background())
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -280,7 +281,7 @@ func TestAddEventWithValidationValueDescriptorExistsAndIsInvalid(t *testing.T) {
 	wg.Add(1)
 	go handleDomainEvents(bitEvents, &wg, t)
 
-	_, err := addNewEvent(evt)
+	_, err := addNewEvent(evt, context.Background())
 	if err == nil {
 		t.Errorf("expected error")
 	}
@@ -305,7 +306,7 @@ func TestAddEventWithValidationValueDescriptorNotFound(t *testing.T) {
 	wg.Add(1)
 	go handleDomainEvents(bitEvents, &wg, t)
 
-	_, err := addNewEvent(evt)
+	_, err := addNewEvent(evt, context.Background())
 	switch err.(type) {
 	case *errors.ErrValueDescriptorNotFound:
 	// expected
@@ -333,7 +334,7 @@ func TestAddEventWithValidationValueDescriptorDBError(t *testing.T) {
 	wg.Add(1)
 	go handleDomainEvents(bitEvents, &wg, t)
 
-	_, err := addNewEvent(evt)
+	_, err := addNewEvent(evt, context.Background())
 	if err == nil {
 		t.Errorf("expected error")
 	}
@@ -348,7 +349,7 @@ func TestUpdateEventNotFound(t *testing.T) {
 	dbClient = myMock
 
 	evt := models.Event{ID: bson.NewObjectId().Hex(), Device: "Not Found", Origin: testOrigin}
-	err := updateEvent(evt)
+	err := updateEvent(evt, context.Background())
 	if err != nil {
 		if x, ok := err.(*errors.ErrEventNotFound); !ok {
 			t.Errorf("unexpected error type: %s", x.Error())
@@ -379,7 +380,7 @@ func TestUpdateEvent(t *testing.T) {
 	dbClient = myMock
 
 	evt := models.Event{ID: testEvent.ID, Device: expectedDevice, Origin: testOrigin}
-	err := updateEvent(evt)
+	err := updateEvent(evt, context.Background())
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -445,7 +446,7 @@ func TestUpdateEventPushDate(t *testing.T) {
 	})).Return(nil)
 	dbClient = myMock
 
-	err := updateEventPushDate(testEvent.ID)
+	err := updateEventPushDate(testEvent.ID, context.Background())
 	if err != nil {
 		t.Errorf(err.Error())
 	}

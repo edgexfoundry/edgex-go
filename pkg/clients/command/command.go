@@ -14,14 +14,15 @@
 package command
 
 import (
+	"context"
 	"github.com/edgexfoundry/edgex-go/pkg/clients"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
 )
 
 // CommandClient : client to interact with core command
 type CommandClient interface {
-	Get(id string, cID string) (string, error)
-	Put(id string, cID string, body string) (string, error)
+	Get(id string, cID string, ctx context.Context) (string, error)
+	Put(id string, cID string, body string, ctx context.Context) (string, error)
 }
 
 type CommandRestClient struct {
@@ -54,12 +55,12 @@ func (c *CommandRestClient) init(params types.EndpointParams) {
 }
 
 // Get : issue GET command
-func (cc *CommandRestClient) Get(id string, cID string) (string, error) {
-	body, err := clients.GetRequest(cc.url + "/" + id + "/command/" + cID)
+func (cc *CommandRestClient) Get(id string, cID string, ctx context.Context) (string, error) {
+	body, err := clients.GetRequest(cc.url+"/"+id+"/command/"+cID, ctx)
 	return string(body), err
 }
 
 // Put : Issue PUT command
-func (cc *CommandRestClient) Put(id string, cID string, body string) (string, error) {
-	return clients.PutRequest(cc.url+"/"+id+"/command/"+cID, []byte(body))
+func (cc *CommandRestClient) Put(id string, cID string, body string, ctx context.Context) (string, error) {
+	return clients.PutRequest(cc.url+"/"+id+"/command/"+cID, []byte(body), ctx)
 }
