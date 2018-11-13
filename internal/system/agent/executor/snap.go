@@ -29,7 +29,7 @@ type ExecuteSnap struct {
 }
 
 // StopService of ExecuteSnap will stop a service in the snap using `snapctl`
-func (oe *ExecuteSnap) StopService(service string, params string) error {
+func (oe *ExecuteSnap) StopService(service string) error {
 
 	// use $SNAP_NAME to get the name of the snap as snapctl needs to use it
 	// and this also lets the name of the snap change if needed
