@@ -1,27 +1,27 @@
 #!/bin/bash -e
 
+# the kong wrapper script from $SNAP
 export KONG_SNAP="${SNAP}/bin/kong-wrapper.sh"
 
-export LOG_DIR=${SNAP_COMMON}/logs
+# general config dirs for security-api-gateway and security-secret-store 
 export CONFIG_DIR=${SNAP_DATA}/config
 export SEC_SEC_STORE_CONFIG_DIR=${CONFIG_DIR}/security-secret-store
 export SEC_API_GATEWAY_CONFIG_DIR=${CONFIG_DIR}/security-api-gateway
 
 # security-secret-store environment variables
-export _VAULT_SCRIPT_DIR=${SNAP}/bin
 export _VAULT_DIR=${SNAP_DATA}/vault
-export _VAULT_SVC=localhost
-export _KONG_SVC=localhost
 export _PKI_SETUP_VAULT_FILE=${SEC_SEC_STORE_CONFIG_DIR}/pkisetup-vault.json
 export _PKI_SETUP_KONG_FILE=${SEC_SEC_STORE_CONFIG_DIR}/pkisetup-kong.json
-export WATCHDOG_DELAY=3m
 
-# security-api-gateway environment variables
+# kong environment variables
+export LOG_DIR=${SNAP_COMMON}/logs
 export KONG_PROXY_ACCESS_LOG=${LOG_DIR}/kong-proxy-access.log
 export KONG_ADMIN_ACCESS_LOG=${LOG_DIR}/kong-admin-access.log
 export KONG_PROXY_ERROR_LOG=${LOG_DIR}/kong-admin-error.log
 export KONG_ADMIN_ERROR_LOG=${LOG_DIR}/kong-admin-error.log
 export KONG_ADMIN_LISTEN="0.0.0.0:8001, 0.0.0.0:8444 ssl"
+
+# vault environment variables
 export VAULT_ADDR=https://localhost:8200
 export VAULT_CONFIG_DIR=${_VAULT_DIR}/config
 export VAULT_UI=true
@@ -72,8 +72,8 @@ CERT_DIR=$(jq -r '.working_dir' "${_PKI_SETUP_VAULT_FILE}")
 CERT_SUBDIR=$(jq -r '.pki_setup_dir' "${_PKI_SETUP_VAULT_FILE}")
 ROOT_NAME=$(jq -r '.x509_root_ca_parameters | .ca_name' "${_PKI_SETUP_VAULT_FILE}")
 if [ ! -f "${CERT_DIR}/${CERT_SUBDIR}/${ROOT_NAME}/${ROOT_NAME}.pem" ]; then
-     ${_VAULT_SCRIPT_DIR}/pkisetup --config ${_PKI_SETUP_VAULT_FILE}
-     ${_VAULT_SCRIPT_DIR}/pkisetup --config ${_PKI_SETUP_KONG_FILE}
+     ${SNAP}/bin/pkisetup --config ${_PKI_SETUP_VAULT_FILE}
+     ${SNAP}/bin/pkisetup --config ${_PKI_SETUP_KONG_FILE}
 fi
 popd > /dev/null
 
