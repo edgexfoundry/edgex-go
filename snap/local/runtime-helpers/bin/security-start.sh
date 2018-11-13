@@ -61,14 +61,20 @@ done
 # now start kong normally
 $KONG_SNAP start --conf ${SEC_API_GATEWAY_CONFIG_DIR}/kong.conf
 
-# setup key generation for vault before starting vault up
-# note that the vault setup scripts will put the generated keys inside
-# ./pki/... so we go into the $SNAP_DATA/vault which is where all the other 
-# scripts go. Ideally we would override some environment variables and not have
-# to change directories for this
+# generate tls keys before running vault
 pushd ${_VAULT_DIR} > /dev/null
-${_VAULT_SCRIPT_DIR}/pkisetup --config ${_PKI_SETUP_VAULT_FILE}
-${_VAULT_SCRIPT_DIR}/pkisetup --config ${_PKI_SETUP_KONG_FILE}
+# check to see if the root certificate generated with pkisetup already exists, if so then don't generate new certs
+# note that this assumes::
+# * that the pkisetup-vault.json file exists and is valid json
+# * that if the root ca file still exists then the other certificates still exists
+# * that the root ca file name is located at $working_dir/$pki_setup_dir/$ca_name/$ca_name.pem (this is true for the current release)
+CERT_DIR=$(jq -r '.working_dir' "${_PKI_SETUP_VAULT_FILE}")
+CERT_SUBDIR=$(jq -r '.pki_setup_dir' "${_PKI_SETUP_VAULT_FILE}")
+ROOT_NAME=$(jq -r '.x509_root_ca_parameters | .ca_name' "${_PKI_SETUP_VAULT_FILE}")
+if [ ! -f "${CERT_DIR}/${CERT_SUBDIR}/${ROOT_NAME}/${ROOT_NAME}.pem" ]; then
+     ${_VAULT_SCRIPT_DIR}/pkisetup --config ${_PKI_SETUP_VAULT_FILE}
+     ${_VAULT_SCRIPT_DIR}/pkisetup --config ${_PKI_SETUP_KONG_FILE}
+fi
 popd > /dev/null
 
 # wait for consul to come up before starting vault
