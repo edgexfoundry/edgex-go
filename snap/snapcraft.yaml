@@ -362,6 +362,7 @@ parts:
       . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
       gopartbootstrap github.com/edgexfoundry/edgex-go
 
+      glide cc
       make prepare
       make build
 
@@ -790,6 +791,7 @@ parts:
       . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
       gopartbootstrap github.com/edgexfoundry/security-api-gateway
 
+      glide cc
       glide install
       make build
 
