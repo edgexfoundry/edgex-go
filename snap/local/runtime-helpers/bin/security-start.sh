@@ -100,3 +100,6 @@ pushd ${SEC_API_GATEWAY_CONFIG_DIR} > /dev/null
 echo "running edgexproxy from security-api-gateway"
 $SNAP/bin/edgexproxy --configfile=${SEC_API_GATEWAY_CONFIG_DIR}/res/configuration.toml --init=true
 popd > /dev/null
+
+wait
+
