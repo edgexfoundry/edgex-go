@@ -114,6 +114,10 @@ func connectToConsul(conf *ConfigurationStruct) (*ConfigurationStruct, error) {
 			return conf, errors.New("type check failed")
 		}
 		conf = actual
+		//Check that information was successfully read from Consul
+		if conf.Service.Port == 0 {
+			return nil, errors.New("error reading from Consul")
+		}
 	}
 	return conf, err
 }
@@ -182,4 +186,3 @@ func setLoggingTarget() string {
 	}
 	return Configuration.Logging.File
 }
-
