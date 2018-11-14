@@ -187,7 +187,7 @@ func connectToConsul(conf *ConfigurationStruct) (*ConfigurationStruct, error) {
 		}
 		conf = actual
 		//Check that information was successfully read from Consul
-		if conf.ResendLimit == 0 {
+		if conf.Service.Port == 0 {
 			return nil, errors.New("error reading from Consul")
 		}
 	}
@@ -230,4 +230,3 @@ func setLoggingTarget() string {
 	}
 	return Configuration.Logging.File
 }
-
