@@ -11,14 +11,12 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"regexp"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 	queueV1 "gopkg.in/eapache/queue.v1"
-	"gopkg.in/mgo.v2/bson"
 )
 
 const (
@@ -58,7 +56,6 @@ func clearQueue() {
 	}
 }
 
-// utility function
 func clearMaps() {
 	scheduleIdToContextMap = make(map[string]*ScheduleContext)   // map : schedule id -> schedule context
 	scheduleNameToContextMap = make(map[string]*ScheduleContext) // map : schedule name -> schedule context
@@ -66,8 +63,6 @@ func clearMaps() {
 	scheduleEventNameToScheduleIdMap = make(map[string]string)   // map : schedule event name -> schedule id
 	scheduleEventNameToScheduleEventIdMap = make(map[string]string)
 }
-
-//endregion
 
 func addScheduleOperation(scheduleId models.Schedule, context *ScheduleContext) {
 	scheduleIdToContextMap[scheduleId.Id.Hex()] = context
@@ -488,7 +483,7 @@ func sendRequestAndGetResponse(client *http.Client, req *http.Request) ([]byte, 
 	resp, err := client.Do(req)
 
 	if err != nil {
-		println(err.Error())
+		//println(err.Error())
 		return []byte{}, 500, err
 	}
 
@@ -530,275 +525,3 @@ func contains(a []string, x string) bool {
 	}
 	return false
 }
-
-// Query core-metadata scheduler client get schedules
-func getMetadataSchedules() ([]models.Schedule, error) {
-
-	var receivedSchedules []models.Schedule
-	receivedSchedules, errSchedule := msc.Schedules()
-	if errSchedule != nil {
-		return receivedSchedules, LoggingClient.Error(fmt.Sprintf("error connecting to metadata and retrieving schedules %s", errSchedule.Error()))
-	}
-
-	if receivedSchedules != nil {
-		LoggingClient.Debug("successfully queried core-metadata schedules...")
-		for _, v := range receivedSchedules {
-			LoggingClient.Debug(fmt.Sprintf("found schedule id: %s  name: %s start time: %s", v.Id.Hex(), v.Name, v.Start))
-		}
-	}
-	return receivedSchedules, nil
-}
-
-// Query core-metadata schedulerEvent client get scheduledEvents
-func getMetadataScheduleEvents() ([]models.ScheduleEvent, error) {
-
-	var receivedScheduleEvents []models.ScheduleEvent
-	receivedScheduleEvents, err := msec.ScheduleEvents()
-	if err != nil {
-		return receivedScheduleEvents, LoggingClient.Error(fmt.Sprintf("error connecting to metadata and retrieving schedule events: %s", err.Error()))
-	}
-
-	// debug information only
-	if receivedScheduleEvents != nil {
-		LoggingClient.Debug("successfully queried core-metadata schedule events...")
-		for _, v := range receivedScheduleEvents {
-			LoggingClient.Debug(fmt.Sprintf("found schedule event id: %s name: %s schedule: %s service name: %s ", v.Id.Hex(), v.Name, v.Schedule, v.Service))
-		}
-	}
-
-	return receivedScheduleEvents, nil
-}
-
-// Iterate over the received schedules add them to scheduler
-func addReceivedSchedules(schedules []models.Schedule) error {
-
-	for _, schedule := range schedules {
-		// todo: need to remove this naming convention based inference
-		matched, err := regexp.MatchString("device.*", schedule.Name)
-		if err != nil {
-			LoggingClient.Info(fmt.Sprintf("error parsing recevied core-metadata schedules %s", err.Error()))
-			return err
-		}
-		// we have a service related notification
-		if !matched {
-			err := addSchedule(schedule)
-			if err != nil {
-				LoggingClient.Info(fmt.Sprintf("error adding core-metadata schedule name: %s - %s", schedule.Name, err.Error()))
-				return err
-			}
-			LoggingClient.Info(fmt.Sprintf("added schedule name: %s to the schedule id: %s ", schedule.Name, schedule.Id.Hex()))
-		}
-	}
-	return nil
-}
-
-// Iterate over the received schedule event(s)
-func addReceivedScheduleEvents(scheduleEvents []models.ScheduleEvent) error {
-
-	for _, scheduleEvent := range scheduleEvents {
-		// todo: need to remove this naming convention based inference
-		matched, err := regexp.MatchString("device.*", scheduleEvent.Service)
-		if err != nil {
-			LoggingClient.Info(fmt.Sprintf("error parsing recevied core-metadata schedules %s", err.Error()))
-			return err
-		}
-		// schedule event service should not be device.*
-		if !matched {
-			err := addScheduleEvent(scheduleEvent)
-			if err != nil {
-				LoggingClient.Info(fmt.Sprintf("error adding core-metadata schedule event name: %s - %s", scheduleEvent.Name, err.Error()))
-				return err
-			}
-			LoggingClient.Info(fmt.Sprintf("added schedule event name: %s to the schedule name: %s  schedule event id: %s", scheduleEvent.Name, scheduleEvent.Schedule, scheduleEvent.Id.Hex()))
-		}
-	}
-
-	return nil
-}
-
-// Utility function for adding configured locally schedulers and scheduled events
-func AddSchedulers() error {
-
-	// ensure maps are clean
-	clearMaps()
-
-	// ensure queue is empty
-	clearQueue()
-
-	LoggingClient.Info(fmt.Sprintf("Loading schedules, schedule events, and addressables ..."))
-
-	// load data from core-metadata
-	err := loadCoreMetadataInformation()
-	if err != nil {
-		return LoggingClient.Error("failed to load information from core-metadata", err.Error())
-	}
-
-	// load config schedules
-	errCS := loadConfigSchedules()
-	if errCS != nil {
-		return LoggingClient.Error("failed to load scheduler config data", errCS.Error())
-	}
-
-	// load config schedule events
-	errCSE := loadConfigScheduleEvents()
-	if errCSE != nil {
-		return LoggingClient.Error("failed to load scheduler events config data", errCSE.Error())
-	}
-
-	LoggingClient.Info(fmt.Sprintf("completed loading schedules, schedule events, and addressables"))
-
-	return nil
-}
-
-func loadConfigSchedules() error {
-
-	schedules := Configuration.Schedules
-	for i := range schedules {
-		schedule := models.Schedule{
-			BaseObject: models.BaseObject{},
-			Name:       schedules[i].Name,
-			Start:      schedules[i].Start,
-			End:        schedules[i].End,
-			Frequency:  schedules[i].Frequency,
-			Cron:       schedules[i].Cron,
-			RunOnce:    schedules[i].RunOnce,
-		}
-		_, errExistingSchedule := queryScheduleByName(schedule.Name)
-
-		if errExistingSchedule != nil {
-			// add the schedule core-metadata
-			newScheduleId, errAddedSchedule := addScheduleToCoreMetaData(schedule)
-			if errAddedSchedule != nil {
-				return LoggingClient.Error("error adding schedule %s to the scheduler", errAddedSchedule.Error())
-			}
-
-			// add the core-metadata scheduler.id
-			schedule.Id = bson.ObjectId(newScheduleId)
-
-			// add the schedule to the scheduler
-			err := addSchedule(schedule)
-
-			if err != nil {
-				return LoggingClient.Error("error loading schedule %s from the scheduler config", err.Error())
-			}
-		} else {
-			LoggingClient.Debug(fmt.Sprintf("did not add schedule %s as it already exists in the scheduler", schedule.Name))
-		}
-	}
-
-	return nil
-}
-
-// Load schedule events and associated addressable(s) if required
-func loadConfigScheduleEvents() error {
-
-	scheduleEvents := Configuration.ScheduleEvents
-
-	for e := range scheduleEvents {
-
-		addressable := models.Addressable{
-			Name:       fmt.Sprintf("schedule-%s", scheduleEvents[e].Name),
-			Path:       scheduleEvents[e].Path,
-			Port:       scheduleEvents[e].Port,
-			Protocol:   scheduleEvents[e].Protocol,
-			HTTPMethod: scheduleEvents[e].Method,
-			Address:    scheduleEvents[e].Host,
-		}
-
-		scheduleEvent := models.ScheduleEvent{
-			//Id:          bson.NewObjectId(),
-			Name:        scheduleEvents[e].Name,
-			Schedule:    scheduleEvents[e].Schedule,
-			Parameters:  scheduleEvents[e].Parameters,
-			Service:     scheduleEvents[e].Service,
-			Addressable: addressable,
-		}
-
-		// fetch existing queue and determine of scheduleEvent exists
-		_, err := queryScheduleEventByName(scheduleEvent.Name)
-
-		if err != nil {
-			// query core-metadata for addressable
-			_, err := mac.AddressableForName(addressable.Name)
-			if err != nil {
-				// we don't have that addressable yet now add it
-				addressableId, err := mac.Add(&addressable)
-				if err != nil {
-					return LoggingClient.Error("error adding new addressable into core-metadata", err.Error())
-				}
-				LoggingClient.Info(fmt.Sprintf("added addressable into core-metadata name: %s id: %s path: %s", addressable.Name, addressableId, addressable.Path))
-
-				// add the core-metadata id value
-				addressable.Id = bson.ObjectId(addressableId)
-			}
-
-			// add the schedule event with addressable event to core-metadata
-			newScheduleEventId, err := addScheduleEventToCoreMetadata(scheduleEvent)
-			if err != nil {
-				return LoggingClient.Error("error adding schedule event %s into core-metadata", err.Error())
-			}
-
-			// add the core-metadata version of the scheduleEvent.Id
-			scheduleEvent.Id = bson.ObjectId(newScheduleEventId)
-
-			errAddSE := addScheduleEvent(scheduleEvent)
-			if errAddSE != nil {
-				return LoggingClient.Error("error loading schedule event %s into scheduler", errAddSE.Error())
-			}
-		} else {
-			LoggingClient.Debug(fmt.Sprintf("did not load schedule event name: %s as it exists in the scheduler", scheduleEvent.Name))
-		}
-	}
-
-	return nil
-}
-
-func loadCoreMetadataInformation() error {
-
-	receivedSchedules, err := getMetadataSchedules()
-	if err != nil {
-		LoggingClient.Error("failed to receive schedules from core-metadata %s", err.Error())
-		return err
-	}
-
-	err = addReceivedSchedules(receivedSchedules)
-	if err != nil {
-		LoggingClient.Error("failed to add received schedules from core-metadata %s", err.Error())
-		return err
-	}
-
-	receivedScheduleEvents, err := getMetadataScheduleEvents()
-	if err != nil {
-		LoggingClient.Error("failed to receive schedule events from core-metadata %s", err.Error())
-		return err
-	}
-
-	err = addReceivedScheduleEvents(receivedScheduleEvents)
-	if err != nil {
-		LoggingClient.Error("failed to add received schedule events from core-metadata %s", err.Error())
-		return err
-	}
-
-	return nil
-}
-func addScheduleToCoreMetaData(schedule models.Schedule) (string, error) {
-
-	addedScheduleId, err := msc.Add(&schedule)
-	if err != nil {
-		return "", LoggingClient.Error(fmt.Sprintf("error trying to add schedule to core-metadata service: %s", err.Error()))
-	}
-	LoggingClient.Info(fmt.Sprintf("added schedule %s to the core-metadata with id %s", schedule.Name, addedScheduleId))
-	return addedScheduleId, nil
-}
-
-func addScheduleEventToCoreMetadata(scheduleEvent models.ScheduleEvent) (string, error) {
-
-	addedScheduleEventId, err := msec.Add(&scheduleEvent)
-	if err != nil {
-		return "", LoggingClient.Error(fmt.Sprintf("error trying to add schedule event to core-metadata service: %s", err.Error()))
-	}
-	LoggingClient.Info(fmt.Sprintf("added schedule event %s to the core-metadata with id %s", scheduleEvent.Name, addedScheduleEventId))
-	return addedScheduleEventId, nil
-}
-
-//endregion

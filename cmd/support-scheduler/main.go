@@ -42,7 +42,23 @@ func main() {
 		return
 	}
 
-	scheduler.LoggingClient.Info("Service dependencies resolved...")
+	// ensure metadata is up
+	deps := make(chan string, 2)
+	go func(ch chan string) {
+		for {
+			select {
+			case m, ok := <-ch:
+				if ok {
+					scheduler.LoggingClient.Info(m)
+				} else {
+					return
+				}
+			}
+		}
+	}(deps)
+	scheduler.CheckStatus(params, scheduler.RetryService, deps)
+
+	scheduler.LoggingClient.Info(fmt.Sprintf("Service dependencies resolved...%s %s ", internal.SupportSchedulerServiceKey, edgex.Version))
 	scheduler.LoggingClient.Info(fmt.Sprintf("Starting %s %s ", internal.SupportSchedulerServiceKey, edgex.Version))
 
 	// Bootstrap schedulers
@@ -68,7 +84,6 @@ func main() {
 	scheduler.Destruct()
 	scheduler.LoggingClient.Warn(fmt.Sprintf("terminating: %v", c))
 }
-
 
 func logBeforeInit(err error) {
 	scheduler.LoggingClient = logger.NewClient(internal.CoreCommandServiceKey, false, "", logger.InfoLog)

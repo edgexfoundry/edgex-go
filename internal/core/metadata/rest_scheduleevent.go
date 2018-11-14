@@ -150,7 +150,7 @@ func restAddScheduleEvent(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Duplicate name for schedule event", http.StatusConflict)
 			LoggingClient.Error("Duplicate name for schedule event: "+err.Error(), "")
 		} else {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			LoggingClient.Error("Problem adding schedule event: "+err.Error(), "")
 		}
 		return
@@ -158,7 +158,7 @@ func restAddScheduleEvent(w http.ResponseWriter, r *http.Request) {
 
 	// Notify Associates
 	if err := notifyScheduleEventAssociates(se, http.MethodPost); err != nil {
-		LoggingClient.Error("Problem notifying associated device services for schedule event: "+err.Error(), "")
+		LoggingClient.Warn("Problem notifying associated device services for schedule event: "+err.Error(), "")
 	}
 
 	w.WriteHeader(http.StatusOK)
