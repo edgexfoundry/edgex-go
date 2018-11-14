@@ -2,15 +2,21 @@ package executor
 
 import (
 	"context"
+	"strings"
+	"time"
+
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
-	"strings"
 )
 
+// ExecuteDocker implements ServiceStopper and ServiceStarter to
+// start and stop services that are running as docker containers
 type ExecuteDocker struct {
+	ComposeURL string
 }
 
-func (de *ExecuteDocker) StopService(service string) error {
+// Stop stops a service using the docker cli directly
+func (de *ExecuteDocker) Stop(service string, params []string) error {
 
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.WithVersion("1.37"))
@@ -38,6 +44,22 @@ func (de *ExecuteDocker) StopService(service string) error {
 	listRunningDockerContainers()
 
 	return nil
+}
+
+// Start starts a service using docker compose
+func (de *ExecuteDocker) Start(service string, params []string) error {
+	return StartDockerContainerCompose(service, de.ComposeURL)
+}
+
+// Restart restarts the service using the docker cli and docker compose
+func (de *ExecuteDocker) Restart(service string, params []string) error {
+	err := de.Stop(service, params)
+	if err != nil {
+		return err
+	}
+	// the time to sleep should probably be a paramater passed into here
+	time.Sleep(time.Second * time.Duration(1))
+	return de.Start(service, params)
 }
 
 func listRunningDockerContainers() error {

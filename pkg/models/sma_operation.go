@@ -26,11 +26,12 @@ import (
  * Operation struct
  */
 type Operation struct {
-	Action   string   `bson:"action" json:"action,omitempty"`
-	Services []string `bson:"services,omitempty" json:"services,omitempty"`
+	Action     string   `bson:"action" json:"action,omitempty"`
+	Services   []string `bson:"services,omitempty" json:"services,omitempty"`
+	Parameters []string `bson:"params,omitempty" json:"params,omitempty"`
 }
 
-//Implements unmarshaling of JSON string to Operation type instance
+// UnmarshalJSON attempts to unmarshal the JSON bytes into an Operation
 func (o *Operation) UnmarshalJSON(data []byte) error {
 	test := struct {
 		Action   *string  `json:"action"`

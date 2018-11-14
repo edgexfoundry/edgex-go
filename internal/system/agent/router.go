@@ -62,33 +62,31 @@ func operationHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	switch o.Action {
-
-	// Make asynchronous goroutine call(s) to the appropriate internal function (respectively, to stop, start, or restart the service(s).
-	case STOP:
-		InvokeOperation(STOP, o.Services)
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("Done. Stopped the requested services."))
-		break
-
-	case START:
-		InvokeOperation(START, o.Services)
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("Done. Started the requested services."))
-		break
-
-	case RESTART:
-		// First, stop the requested services.
-		InvokeOperation(STOP, o.Services)
-		// Second, start the requested services (thereby effectively restarting those services).
-		InvokeOperation(START, o.Services)
-		w.WriteHeader(http.StatusCreated)
-		w.Write([]byte("Done. Restarted the requested services."))
-		break
-
-	default:
-		LoggingClient.Info(fmt.Sprintf(">> Unknown action %v\n", o.Action))
+	// invoke the operation and check the result
+	err = InvokeOperation(o.Action, o.Services, o.Parameters)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		LoggingClient.Error("Error invoking operation: " + err.Error())
+		return
 	}
+
+	w.WriteHeader(http.StatusOK)
+	var msg string
+
+	switch o.Action {
+	case STOP:
+		msg = "Done. Stopped the requested services."
+	case START:
+		msg = "Done. Started the requested services."
+	case RESTART:
+		msg = "Done. Restarted the requested services."
+	case ENABLE:
+		msg = "Done. Enabled the requested services."
+	case DISABLE:
+		msg = "Done. Disabled the requested services."
+	}
+	// note that an unsupported action is handled with an error returned from InvokeOperation
+	w.Write([]byte(msg))
 }
 
 func configHandler(w http.ResponseWriter, r *http.Request) {

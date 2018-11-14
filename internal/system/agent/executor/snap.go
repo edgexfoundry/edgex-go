@@ -1,17 +1,3 @@
-/*******************************************************************************
- * Copyright 2018 Canonical Ltd.
- *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
- * in compliance with the License. You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software distributed under the License
- * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
- * or implied. See the License for the specific language governing permissions and limitations under
- * the License.
- *******************************************************************************/
-
 package executor
 
 import (
@@ -24,22 +10,69 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal"
 )
 
-// ExecuteSnap is a struct for managing services inside the snap
+// ExecuteSnap implemnts ServiceStopper, ServiceStarter, ServiceRestarter, ServiceEnabler, and ServiceDisabler
+// for managing services inside the snap using snapctl stop, snapctl start, etc.
 type ExecuteSnap struct {
 }
 
-// StopService of ExecuteSnap will stop a service in the snap using `snapctl`
-func (oe *ExecuteSnap) StopService(service string) error {
-
-	// use $SNAP_NAME to get the name of the snap as snapctl needs to use it
-	// and this also lets the name of the snap change if needed
-	// and ensures that if you're not running inside a snap we don't try to use
-	// snapctl which will fail
-	snapName := os.Getenv("SNAP_NAME")
-	if snapName == "" {
-		return errors.New("$SNAP_NAME not set, not running inside of a snap")
+// Stop will stop a service in a snap using snapctl
+func (es *ExecuteSnap) Stop(service string, params []string) error {
+	svcName, err := getSnapServiceName(service)
+	if err != nil {
+		return err
 	}
+	_, err = runSnapctlOp([]string{"stop"}, svcName)
+	return err
+}
 
+// Start will stop a service in a snap using snapctl
+func (es *ExecuteSnap) Start(service string, params []string) error {
+	svcName, err := getSnapServiceName(service)
+	if err != nil {
+		return err
+	}
+	_, err = runSnapctlOp([]string{"start"}, svcName)
+	return err
+}
+
+// Restart will stop and then start again the service in a snap using snapctl
+func (es *ExecuteSnap) Restart(service string, params []string) error {
+	svcName, err := getSnapServiceName(service)
+	if err != nil {
+		return err
+	}
+	_, err = runSnapctlOp([]string{"restart"}, svcName)
+	return err
+}
+
+// Enable will enable and start the service in a snap using snapctl
+// so it will startup automatically on boot
+// note that snapctl always starts the service when enabling it,
+// there's not currently a way to leave a service stopped now,
+// but enable it to run on the next and all subsequent boots
+func (es *ExecuteSnap) Enable(service string, params []string) error {
+	svcName, err := getSnapServiceName(service)
+	if err != nil {
+		return err
+	}
+	_, err = runSnapctlOp([]string{"start", "--enable"}, svcName)
+	return err
+}
+
+// Disable will disable and stop the service using snapctl so it doesn't startup on boot
+// note that snapctl always stops the service when disables it,
+// there's not currently a way to leave a service running now,
+// but disable it from running on the next and all subsequent boots
+func (es *ExecuteSnap) Disable(service string, params []string) error {
+	svcName, err := getSnapServiceName(service)
+	if err != nil {
+		return err
+	}
+	_, err = runSnapctlOp([]string{"stop", "--disable"}, svcName)
+	return err
+}
+
+func getSnapServiceName(svc string) (string, error) {
 	// make a map of the service names and use it as a set
 	// to check for membership
 	serviceNameSet := make(map[string]bool)
@@ -52,26 +85,40 @@ func (oe *ExecuteSnap) StopService(service string) error {
 		internal.ExportDistroServiceKey,
 		internal.SupportLoggingServiceKey,
 		internal.SupportNotificationsServiceKey,
-		// note that the sys-mgmt-agent is here and snapctl lets us stop
-		// ourselves, but this should probably be handled somewhere else in sys-mgmt-agent
-		// more gracefully
-		internal.SystemManagementAgentServiceKey,
 		internal.SupportSchedulerServiceKey,
 	} {
 		serviceNameSet[supportedService] = true
 	}
 
-	if _, found := serviceNameSet[service]; !found {
-		return fmt.Errorf("unknown snap service %s", service)
+	// ensure that the service is known and exists
+	if _, found := serviceNameSet[svc]; !found {
+		return "", fmt.Errorf("unknown snap service %s", svc)
 	}
 
 	// trim the prefix, as the service names in the snap are like "core-command"
 	// but the name of the services here are "edgex-core-command"
-	rootSvcName := strings.TrimPrefix(service, internal.ServiceKeyPrefix)
+	rootSvcName := strings.TrimPrefix(svc, internal.ServiceKeyPrefix)
+
+	// config-seed is actually called core-config-seed in the snap
+	if rootSvcName == "config-seed" {
+		rootSvcName = "core-config-seed"
+	}
+
+	return rootSvcName, nil
+}
+
+func runSnapctlOp(ops []string, svc string) ([]byte, error) {
+	// use $SNAP_NAME to get the name of the snap as snapctl needs to use it
+	// and this also lets the name of the snap change if needed
+	// and ensures that if you're not running inside a snap we don't try to use
+	// snapctl which will fail
+	snapName := os.Getenv("SNAP_NAME")
+	if snapName == "" {
+		return nil, errors.New("$SNAP_NAME not set, not running inside of a snap")
+	}
 
 	// use snapctl to stop the service - note that this won't disable the service
 	// so after a reboot the service will come up again
-	cmd := exec.Command("snapctl", "stop", snapName+"."+rootSvcName)
-	_, err := cmd.CombinedOutput()
-	return err
+	cmd := exec.Command("snapctl", append(ops, snapName+"."+svc)...)
+	return cmd.CombinedOutput()
 }

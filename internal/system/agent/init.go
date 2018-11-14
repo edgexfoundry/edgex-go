@@ -14,6 +14,7 @@
 package agent
 
 import (
+	"fmt"
 	"sync"
 	"time"
 
@@ -21,7 +22,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/executor"
-	"github.com/edgexfoundry/edgex-go/internal/system/agent/interfaces"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/general"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
@@ -31,7 +31,10 @@ import (
 var Configuration *ConfigurationStruct
 var LoggingClient logger.LoggingClient
 var Conf = &ConfigurationStruct{}
-var ec interfaces.ExecutorClient
+
+// executorClient is the empty interface so that we may type cast it
+// to whatever operation we need it to do at runtime
+var executorClient interface{}
 var gccc general.GeneralClient
 var gccd general.GeneralClient
 var gccm general.GeneralClient
@@ -70,7 +73,21 @@ func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup,
 
 		// Exit the loop if the dependencies have been satisfied.
 		if Configuration != nil {
-			ec, _ = newExecutorClient(Configuration.OperationsType)
+			executorClient, err = makeExecutorImplementation(Configuration)
+			if err != nil {
+				ch <- err
+				close(ch)
+				wait.Done()
+				return
+			}
+			// need to also pass in the docker compose url from theconfiguration struct
+			// if we're using docker
+			// TODO fix this abstraction so we don't have to type cast the interface into a type
+			if Configuration.OperationsType == "docker" {
+				if dockerExecutor, ok := executorClient.(*executor.ExecuteDocker); ok {
+					dockerExecutor.ComposeURL = Configuration.ComposeUrl
+				}
+			}
 			break
 		}
 		time.Sleep(time.Second * time.Duration(1))
@@ -81,18 +98,21 @@ func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup,
 	return
 }
 
-func newExecutorClient(operationsType string) (interfaces.ExecutorClient, error) {
-
-	// TODO: The abstraction which should be accessed via a global var.
-	switch operationsType {
+// makeExecutorImplementation returns an executor implementation that can be used
+// to start/stop/restart services depending on what the implementation
+// supports
+func makeExecutorImplementation(config *ConfigurationStruct) (interface{}, error) {
+	switch config.OperationsType {
 	case "os":
 		return &executor.ExecuteOs{}, nil
 	case "docker":
-		return &executor.ExecuteDocker{}, nil
+		return &executor.ExecuteDocker{
+			ComposeURL: config.ComposeUrl,
+		}, nil
 	case "snap":
 		return &executor.ExecuteSnap{}, nil
 	default:
-		return nil, nil
+		return nil, fmt.Errorf("operation type %s not supported", config.OperationsType)
 	}
 }
 

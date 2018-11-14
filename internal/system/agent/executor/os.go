@@ -1,68 +1,61 @@
 package executor
 
 import (
-	"log"
+	"fmt"
 	"os"
 	"os/exec"
 	"strconv"
 	"strings"
 )
 
+// ExecuteOs implements ServiceStopper to be able to stop native services
+// by killing the processes
 type ExecuteOs struct {
 }
 
-func (oe *ExecuteOs) StopService(service string) error {
+// Stop will stop the service by searching for the PID and killing it directly
+func (oe *ExecuteOs) Stop(service string, params []string) error {
 
 	cmd := exec.Command("ps", "-ax")
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		// fmt.Sprintf("Call to StopService() failed with %s\n", err)
 		return err
 	}
-	findAndStopProcess(string(out), err, service)
 
-	return nil
-}
-
-func findAndStopProcess(output string, err error, process string) error {
-
-	var pid int
+	// find the process's pid from the process listing returned by ps
+	pid, err := parseProcessListing(string(out), service)
 	if err != nil {
-		log.Printf("Error during findAndStopProcess() as follows: %s" + err.Error())
-		// agent.LoggingClient.Error(" Error during findAndStopProcess() as follows: ", err.Error())
-		return nil
+		return err
 	}
 
+	// Now stop the process using the PID found above.
+	// Make a system call.
+	proc, err := os.FindProcess(pid)
+	if err != nil {
+		return err
+	}
+	return proc.Kill()
+}
+
+// parseProcessListing searches for a process name in the output
+// and returns the pid if the processes exists in the output
+func parseProcessListing(output string, processName string) (int, error) {
 	// We are only interested in that segment of the output (from listing the running processes) which has this pattern:
 	// <PID> ttys###    H:MM.SS <process-name>
 	// For example the following:
 	// 19922 ttys010    0:01.50 edgex-core-metadata
-	if strings.Contains(output, process) {
+	if strings.Contains(output, processName) {
 		// Find the PID of the process which we seek to stop.
 		for _, line := range strings.Split(strings.TrimSuffix(output, "\n"), "\n") {
-			if strings.Contains(line, process) {
+			if strings.Contains(line, processName) {
 				tokens := strings.Split(line, " ")
-				pid, err = strconv.Atoi(tokens[0])
+				pid, err := strconv.Atoi(tokens[0])
 				if err != nil {
-					log.Printf("Error converting PID to integer: %s" + err.Error())
-					// log.Fatalf("Error converting PID to integer: " + err.Error())
+					return 0, err
 				}
-				// fmt.Sprintf("Found the data with the PID {%v} of the the micro-service {%v} which we seek to stop!", tokens[0], process)
+				return pid, nil
 			}
 		}
-
-		// Now stop the process using the PID found above.
-		// Make a system call.
-		proc, err := os.FindProcess(pid)
-		if err != nil {
-			log.Printf("Error during os.FindProcess(pid) as follows: %s" + err.Error())
-			// agent.LoggingClient.Error(" Error during os.FindProcess(pid) as follows: ", err.Error())
-		}
-		proc.Kill()
-	} else {
-		// TODO Return suitable response...
-		// fmt.Sprintf("OS-level >> The micro-service {%v} was NOT found in a running state...", process)
 	}
-
-	return nil
+	return 0, fmt.Errorf("failed to find the process \"%s\"", processName)
 }
