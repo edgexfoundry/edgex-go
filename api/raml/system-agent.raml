@@ -18,7 +18,7 @@ schemas:
     -
         metric: '{"type":"object","$schema":"http://json-schema.org/draft-03/schema#","description":"Service metrics","title":"metric","properties":{"Service":{"type":"string","required":false,"title":"Service"},"Metrics":{"type":"string","required":false,"title":"Metrics"}}}'
     -
-        operation: '{"type":"object","$schema":"http://json-schema.org/draft-03/schema#","description":"Service operation","title":"operation","properties":{"action":{"type":"string","required":false,"title":"Action"}, "services": {"type": "array","items": { "type": "string" },"uniqueItems": true},  "params": {"type": "array","items": { "type": "string" },"uniqueItems": true}}}'
+        operation: '{"type":"object","$schema":"http://json-schema.org/draft-03/schema#","description":"Service operation","title":"operation","properties":{"action":{"type":"string","required":false,"title":"Action"}, "services": {"type": "array","items": { "type": "string" },"uniqueItems": true}}}'
 
 /operation:
     displayName: Service Operation
@@ -29,7 +29,7 @@ schemas:
         body:
             application/json:
                 schema: operation
-                example: '{"action":"stop","services":["edgex-support-notifications","edgex-core-data"],"params":["graceful"]}'
+                example: '{"action":"stop","services":["edgex-support-notifications","edgex-core-data"]}'
         responses:
             "500":
                 description: for unknown or unanticipated issues.
