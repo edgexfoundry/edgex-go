@@ -111,6 +111,10 @@ func makeExecutorImplementation(config *ConfigurationStruct) (interface{}, error
 		}, nil
 	case "snap":
 		return &executor.ExecuteSnap{}, nil
+	case "custom":
+		return &executor.CustomProgram{
+			Program: config.CustomExecutorProgram,
+		}, nil
 	default:
 		return nil, fmt.Errorf("operation type %s not supported", config.OperationsType)
 	}

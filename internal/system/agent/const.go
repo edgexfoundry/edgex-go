@@ -33,4 +33,5 @@ type ConfigurationStruct struct {
 	Service               config.ServiceInfo
 	OperationsType        string
 	ComposeUrl            string
+	CustomExecutorProgram string
 }
