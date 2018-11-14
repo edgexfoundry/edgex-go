@@ -10,7 +10,7 @@ In summary, the current features are as below:
 -	Secret creation, store and retrieve (password, cert, access key etc.)
 -	API gateway for other existing EdgeX microservice REST APIs
 -	User account creation with optional either OAuth2 or JWT authentication
--	User account with arbitrary Access Control List groups ( ACL)
+-	User account with arbitrary Access Control List groups (ACL)
 
 .. toctree::
    :maxdepth: 1
@@ -18,4 +18,8 @@ In summary, the current features are as below:
    Ch-SecretStore 
    Ch-APIGateway
    Ch-StartingSecurity
-   Ch-AccessEdgeXRESTResources  
+   Ch-AccessEdgeXRESTResources
+
+
+
+
