@@ -1,7 +1,9 @@
 #!/bin/bash -e
 
-# setup env variables - none of these paths are setup for hooks like they are for
-# apps in snapcraft, so we have to do this ourselves
+# LD_LIBRARY_PATH isn't properly initialized for hooks as snapcraft does for apps, so this 
+# has to be constructed manually
+# Note - the env var SNAP_LIBRARY_PATH is set by snapd for hooks, so it can be referenced here
+# This is mainly necessary so we can use jq from the snap which needs libs from inside the snap
 export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
 # for LD_LIBRARY_PATH, we need to handle the different architecture paths
 case $(arch) in
@@ -86,12 +88,8 @@ if [ ! -f "${SNAP_DATA}/config/security-secret-store/pkisetup-vault.json" ]; the
 fi
 
 
-# ensure vault setup directories exist
-for dir in vault vault/pki; do
-    if [ ! -d "${SNAP_DATA}/$dir" ]; then
-        mkdir -p "${SNAP_DATA}/$dir"
-    fi
-done
+# ensure vault pki directory exists
+mkdir -p "${SNAP_DATA}/vault/pki"
 
 # the vault config needs to be generated with sed, replacing $SNAP_DATA in the file 
 # with the actual absolute directory
