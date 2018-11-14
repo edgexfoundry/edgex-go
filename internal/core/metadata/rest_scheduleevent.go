@@ -630,11 +630,6 @@ func restAddSchedule(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Notify Associates
-	if err := notifyScheduleAssociates(s, http.MethodPost); err != nil {
-		LoggingClient.Error("Problem notifying associated device services for schedule: "+err.Error(), "")
-	}
-
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(s.Id.Hex()))
 }
@@ -872,11 +867,6 @@ func deleteSchedule(s models.Schedule, w http.ResponseWriter) error {
 	if err := dbClient.DeleteScheduleById(s.Id.Hex()); err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return err
-	}
-
-	// Notify Associates
-	if err := notifyScheduleAssociates(s, http.MethodDelete); err != nil {
-		LoggingClient.Error("Problem notifying associated device services for schedule: "+err.Error(), "")
 	}
 
 	return nil
