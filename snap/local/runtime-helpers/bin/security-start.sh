@@ -101,5 +101,11 @@ echo "running edgexproxy from security-api-gateway"
 $SNAP/bin/edgexproxy --configfile=${SEC_API_GATEWAY_CONFIG_DIR}/res/configuration.toml --init=true
 popd > /dev/null
 
+# wait for the forked processes to exit
+# this is necessary because currently the security-service is implemented as a "notify" daemon which 
+# means that systemd will kill the child processes of this process when this process exits
+# the ideal thing to do here would be have this be a "forking" daemon, but that has problems
+# timing out waiting for the fork to happen, as we need to wait for cassandra to finish coming up
+# before the default systemd service start timeout of 30 seconds
 wait
 
