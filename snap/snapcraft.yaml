@@ -827,4 +827,13 @@ parts:
       sed -i \
         -e "s@tokenpath = \"res\\\\\\\\admin-token.json\"@tokenpath = \"\$SNAP_DATA/config/security-api-gateway/res/kong-token.json\"@" \
         -e "s:snis = \"edgex.com\":snis = \"localhost\":" \
+        -e "s:host = \"edgex-core-data\":host = \"localhost\":" \
+        -e "s:host = \"edgex-core-metadata\":host = \"localhost\":" \
+        -e "s:host = \"edgex-core-command\":host = \"localhost\":" \
+        -e "s:host = \"edgex-support-notifications\":host = \"localhost\":" \
+        -e "s:host = \"edgex-support-logging\":host = \"localhost\":" \
+        -e "s:host = \"edgex-export-distro\":host = \"localhost\":" \
+        -e "s:host = \"edgex-export-client\":host = \"localhost\":" \
+        -e "s:host = \"edgex-support-rulesengine\":host = \"localhost\":" \
+        -e "s:host = \"edgex-device-virtual\":host = \"localhost\":" \
         $SNAPCRAFT_PART_INSTALL/config/security-api-gateway/res/configuration.toml
