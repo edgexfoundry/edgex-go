@@ -8,6 +8,11 @@ export SNAPCRAFT_SETUP_CORE=1
 # detailing which packages were used to build the snap
 export SNAPCRAFT_BUILD_INFO=1
 
+# if snapcraft ever encounters any bugs, we should force it to 
+# auto-report silently rather than attempt to ask for permission
+# to send a report
+export SNAPCRAFT_ENABLE_SILENT_REPORT=1
+
 # build the snap
 cd /build
 snapcraft clean
@@ -21,4 +26,6 @@ if [ "$IS_RELEASE_JOB" = "YES" ]; then
     REVISION=$(snapcraft push edgexfoundry*.snap | awk '/Revision/ {print $2}')
     # now release it on the provided revision and snap channel
     snapcraft release edgexfoundry $REVISION $SNAP_CHANNEL 
+    # also update the meta-data automatically
+    snapcraft push-metadata edgexfoundry*.snap --force
 fi
