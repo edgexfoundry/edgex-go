@@ -20,8 +20,8 @@
 
 if [[ -z $EDGEX_COMPOSE_FILE ]]; then
   COMPOSE_FILE=../docker/docker-compose.yml
-  COMPOSE_URL=https://raw.githubusercontent.com/edgexfoundry/developer-scripts/master/compose-files/docker-compose-california-0.6.0.yml
-
+  COMPOSE_URL=https://raw.githubusercontent.com/edgexfoundry/developer-scripts/master/compose-files/docker-compose-delhi-0.7.0.yml
+  
   echo "Pulling latest compose file..."
   curl -o $COMPOSE_FILE $COMPOSE_URL
 else
