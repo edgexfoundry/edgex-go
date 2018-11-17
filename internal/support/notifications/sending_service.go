@@ -33,7 +33,7 @@ func sendViaChannel(n models.Notification, c models.Channel, receiver string) {
 	if c.Type == models.ChannelType(models.Email) {
 		tr = smtpSend(n.Content, c.MailAddresses)
 	} else {
-		tr = restSend(n.Content, c.Url)
+		tr = restSend(n.Content, c.Url,n.ContentType)
 	}
 	t, err := persistTransmission(tr, n, c, receiver)
 	if err == nil {
@@ -46,7 +46,7 @@ func resendViaChannel(t models.Transmission) {
 	if t.Channel.Type == models.ChannelType(models.Email) {
 		tr = smtpSend(t.Notification.Content, t.Channel.MailAddresses)
 	} else {
-		tr = restSend(t.Notification.Content, t.Channel.Url)
+		tr = restSend(t.Notification.Content, t.Channel.Url,t.Notification.ContentType)
 	}
 	t.ResendCount = t.ResendCount + 1
 	t.Status = tr.Status
@@ -83,9 +83,9 @@ func smtpSend(message string, addressees []string) models.TransmissionRecord {
 	// required CRLF at ends of lines and CRLF between header and body for SMTP RFC 822 style email
 	buf.WriteString("\r\n")
 	buf.WriteString(message)
-	err := mail.SendMail(smtp.Host+":"+strconv.Itoa(smtp.Port),
-		mail.PlainAuth("", smtp.Sender, smtp.Password, smtp.Host),
-		smtp.Sender, addressees, []byte(buf.String()))
+	err := mail.SendMail(Configuration.SMTPHost+":"+Configuration.SMTPPort,
+		mail.PlainAuth("", Configuration.SMTPSender, Configuration.SMTPPassword, Configuration.SMTPHost),
+		Configuration.SMTPSender, addressees, []byte(buf.String()))
 	if err != nil {
 		LoggingClient.Error("Problems sending message to: " + strings.Join(addressees, ",") + ", issue: " + err.Error())
 		tr.Status = models.Failed
@@ -96,9 +96,9 @@ func smtpSend(message string, addressees []string) models.TransmissionRecord {
 
 }
 
-func restSend(message string, url string) models.TransmissionRecord {
+func restSend(message string, url string,contentType string) models.TransmissionRecord {
 	tr := getTransmissionRecord("", models.Sent)
-	rs, err := http.Post(url, "text/plain", bytes.NewBuffer([]byte(message)))
+    rs, err := http.Post(url, contentType, bytes.NewBuffer([]byte(message)))
 	if err != nil {
 		LoggingClient.Error("Problems sending message to: " + url)
 		LoggingClient.Error("Error indication was:  " + err.Error())

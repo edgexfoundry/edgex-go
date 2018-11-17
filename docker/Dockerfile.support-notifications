@@ -18,7 +18,8 @@ RUN apk update && apk add make && apk add bash
 COPY . .
 RUN make cmd/support-notifications/support-notifications
 
-FROM scratch
+FROM alpine
+RUN apk update &&  apk --no-cache add ca-certificates
 
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
       copyright='Copyright (c) 2018: Cavium'

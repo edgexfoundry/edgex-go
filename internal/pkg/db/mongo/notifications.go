@@ -133,15 +133,15 @@ func (mc *MongoClient) SubscriptionBySlug(slug string) (models.Subscription, err
 }
 
 func (mc *MongoClient) SubscriptionByCategories(categories []string) ([]models.Subscription, error) {
-	return mc.getSubscriptions(bson.M{"subscribedcategories": bson.M{"$in": categories}})
+	return mc.getSubscriptions(bson.M{"subscribedCategories": bson.M{"$in": categories}})
 }
 
 func (mc *MongoClient) SubscriptionByLabels(labels []string) ([]models.Subscription, error) {
-	return mc.getSubscriptions(bson.M{"subscribedlabels": bson.M{"$in": labels}})
+	return mc.getSubscriptions(bson.M{"subscribedLabels": bson.M{"$in": labels}})
 }
 
 func (mc *MongoClient) SubscriptionByCategoriesLabels(categories []string, labels []string) ([]models.Subscription, error) {
-	return mc.getSubscriptions(bson.M{"subscribedcategories": bson.M{"$in": categories}, "subscribedlabels": bson.M{"$in": labels}})
+	return mc.getSubscriptions(bson.M{"subscribedCategories": bson.M{"$in": categories}, "subscribedLabels": bson.M{"$in": labels}})
 }
 
 func (mc *MongoClient) SubscriptionByReceiver(receiver string) ([]models.Subscription, error) {
