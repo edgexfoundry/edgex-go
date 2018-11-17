@@ -140,6 +140,7 @@ func (mc *MongoClient) SubscriptionByLabels(labels []string) ([]models.Subscript
 	return mc.getSubscriptions(bson.M{"subscribedLabels": bson.M{"$in": labels}})
 }
 
+
 func (mc *MongoClient) SubscriptionByCategoriesLabels(categories []string, labels []string) ([]models.Subscription, error) {
 	return mc.getSubscriptions(bson.M{"subscribedCategories": bson.M{"$in": categories}, "subscribedLabels": bson.M{"$in": labels}})
 }

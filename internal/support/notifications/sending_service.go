@@ -96,6 +96,7 @@ func smtpSend(message string, addressees []string) models.TransmissionRecord {
 
 }
 
+
 func restSend(message string, url string,contentType string) models.TransmissionRecord {
 	tr := getTransmissionRecord("", models.Sent)
     rs, err := http.Post(url, contentType, bytes.NewBuffer([]byte(message)))
