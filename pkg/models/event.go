@@ -41,14 +41,14 @@ type Event struct {
 func (e Event) MarshalJSON() ([]byte, error) {
 	test := struct {
 		ID       bson.ObjectId `json:"id"`
-		Pushed   int64         `json:"pushed"`
-		Device   *string       `json:"device"` // Device identifier (name or id)
-		Created  int64         `json:"created"`
-		Modified int64         `json:"modified"`
-		Origin   int64         `json:"origin"`
-		Schedule *string       `json:"schedule"` // Schedule identifier
-		Event    *string       `json:"event"`    // Schedule event identifier
-		Readings []Reading     `json:"readings"` // List of readings
+		Pushed   int64         `json:"pushed,omitempty"`
+		Device   *string       `json:"device,omitempty"` // Device identifier (name or id)
+		Created  int64         `json:"created,omitempty"`
+		Modified int64         `json:"modified,omitempty"`
+		Origin   int64         `json:"origin,omitempty"`
+		Schedule *string       `json:"schedule,omitempty"` // Schedule identifier
+		Event    *string       `json:"event,omitempty"`    // Schedule event identifier
+		Readings []Reading     `json:"readings,omitempty"` // List of readings
 	}{
 		ID:       e.ID,
 		Pushed:   e.Pushed,

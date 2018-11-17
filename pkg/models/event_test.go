@@ -59,12 +59,9 @@ func TestEvent_String(t *testing.T) {
 		{"event to string", TestEvent,
 			"{\"id\":\"\"" +
 				",\"pushed\":" + strconv.FormatInt(TestEvent.Pushed, 10) +
-				",\"device\":null" +
 				",\"created\":" + strconv.FormatInt(TestEvent.Created, 10) +
 				",\"modified\":" + strconv.FormatInt(TestEvent.Modified, 10) +
 				",\"origin\":" + strconv.FormatInt(TestEvent.Origin, 10) +
-				",\"schedule\":null" +
-				",\"event\":null" +
 				",\"readings\":[" + TestReading.String() + "]" +
 				"}"},
 	}
