@@ -56,7 +56,7 @@ This Data Dictionary has the same content as the Data Dictionary for Export Serv
 The Pipe and Filter
 ===================
 
-Inside the Export Distribution service, a Spring Integration set of components, filter and transform the data of the Event based on each client's registered preference. This diagram shows a list of the components and operations included in the distribution service pipe.
+Inside the Export Distribution service, a set of components, filter and transform the data of the Event based on each client's registered preference. This diagram shows a list of the components and operations included in the distribution service pipe.
 
 .. image:: EdgeX_ExportServicesDistributionPipeFilter.png
 

@@ -42,7 +42,7 @@ func ImportProperties(root string) error {
 
 		dir, file := filepath.Split(path)
 		appKey := parseDirectoryName(dir)
-		LoggingClient.Info(fmt.Sprintf("dir: %s file: %s", appKey, file))
+		LoggingClient.Debug(fmt.Sprintf("dir: %s file: %s", appKey, file))
 		props, err := readPropertiesFile(path)
 		if err != nil {
 			return err
@@ -97,28 +97,32 @@ func ImportConfiguration(root string, profile string) error {
 
 		LoggingClient.Debug("reading toml " + path)
 		// load the ToML file
-		config, _ := toml.LoadFile(path)
-
-		// Fetch the map[string]interface{}
-		m := config.ToMap()
-
-		// traverse the map and put into KV[]
-		kvs, err := traverse("", m)
+		config, err := toml.LoadFile(path)
 		if err != nil {
-			LoggingClient.Error(fmt.Sprintf("There was an error: %v", err))
-		}
-		for _, kv := range kvs {
-			LoggingClient.Debug(fmt.Sprintf("v2 consul wrote key %s with value %s", kv.Key, kv.Value))
-		}
+			LoggingClient.Warn(err.Error())
+		} else {
 
-		// Put config properties to Consul K/V store.
-		prefix := internal.ConfigV2Stem + internal.ServiceKeyPrefix + d + "/"
+			// Fetch the map[string]interface{}
+			m := config.ToMap()
 
-		// Put config properties to Consul K/V store.
-		for _, v := range kvs {
-			p := &consulapi.KVPair{Key: prefix + v.Key, Value: []byte(v.Value)}
-			if _, err := (*consulapi.KV).Put(Registry.KV(), p, nil); err != nil {
-				return err
+			// traverse the map and put into KV[]
+			kvs, err := traverse("", m)
+			if err != nil {
+				LoggingClient.Error(fmt.Sprintf("There was an error: %v", err))
+			}
+			for _, kv := range kvs {
+				LoggingClient.Debug(fmt.Sprintf("v2 consul wrote key %s with value %s", kv.Key, kv.Value))
+			}
+
+			// Put config properties to Consul K/V store.
+			prefix := internal.ConfigV2Stem + internal.ServiceKeyPrefix + d + "/"
+
+			// Put config properties to Consul K/V store.
+			for _, v := range kvs {
+				p := &consulapi.KVPair{Key: prefix + v.Key, Value: []byte(v.Value)}
+				if _, err := (*consulapi.KV).Put(Registry.KV(), p, nil); err != nil {
+					return err
+				}
 			}
 		}
 	}

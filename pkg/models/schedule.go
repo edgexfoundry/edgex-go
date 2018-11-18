@@ -26,7 +26,7 @@ type Schedule struct {
 	Name       string        `bson:"name" json:"name"`           // non-database identifier for a shcedule (*must be quitue)
 	Start      string        `bson:"start" json:"start"`         // Start time in ISO 8601 format YYYYMMDD'T'HHmmss 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyymmdd'T'HHmmss")
 	End        string        `bson:"end" json:"end"`             // Start time in ISO 8601 format YYYYMMDD'T'HHmmss 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyymmdd'T'HHmmss")
-	Frequency  string        `bson:"frequency" json:"frequency"` // how frequently should the event occur
+	Frequency  string        `bson:"frequency" json:"frequency"` // how frequently should the event occur according ISO 8601
 	Cron       string        `bson:"cron" json:"cron"`           // cron styled regular expression indicating how often the action under schedule should occur.  Use either runOnce, frequency or cron and not all.
 	RunOnce    bool          `bson:"runOnce" json:"runOnce"`     // boolean indicating that this schedules runs one time - at the time indicated by the start
 }

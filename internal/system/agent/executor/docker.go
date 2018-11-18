@@ -10,7 +10,7 @@ import (
 type ExecuteDocker struct {
 }
 
-func (de *ExecuteDocker) StopService(service string, params string) error {
+func (de *ExecuteDocker) StopService(service string) error {
 
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.WithVersion("1.37"))

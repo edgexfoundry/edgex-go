@@ -30,7 +30,6 @@ import (
 // Global variables
 var Configuration *ConfigurationStruct
 var LoggingClient logger.LoggingClient
-var Manifest *ManifestStruct
 var Conf = &ConfigurationStruct{}
 var ec interfaces.ExecutorClient
 var gccc general.GeneralClient
@@ -46,7 +45,10 @@ func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup,
 	until := time.Now().Add(time.Millisecond * time.Duration(timeout))
 	for time.Now().Before(until) {
 		var err error
-		//When looping, only handle configuration if it hasn't already been set.
+		// When looping, only handle configuration if it hasn't already been set.
+		// Note, too, that the SMA-managed services are bootstrapped by the SMA.
+		// Read in those setting, too, which specifies details for those services
+		// (Those setting were _previously_ to be found in a now-defunct TOML manifest file).
 		if Configuration == nil {
 			Configuration, err = initializeConfiguration(useProfile)
 			if err != nil {
@@ -62,37 +64,13 @@ func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup,
 				initializeClients(useConsul)
 				// Setup Logging
 				logTarget := setLoggingTarget()
-				LoggingClient = logger.NewClient(internal.SystemManagementAgentServiceKey, Configuration.EnableRemoteLogging, logTarget)
+				LoggingClient = logger.NewClient(internal.SystemManagementAgentServiceKey, Configuration.EnableRemoteLogging, logTarget, Configuration.LoggingLevel)
 			}
 		}
 
 		// Exit the loop if the dependencies have been satisfied.
 		if Configuration != nil {
-			break
-		}
-		time.Sleep(time.Second * time.Duration(1))
-	}
-
-	until = time.Now().Add(time.Millisecond * time.Duration(timeout))
-	for time.Now().Before(until) {
-		var err error
-		// The SMA-managed services are bootstrapped by the SMA.
-		// Read the SMA's TOML manifest file, which which specifies details for those services.
-		if Manifest == nil {
-			Manifest, err = initializePerManifest(useProfile)
-			if err != nil {
-				ch <- err
-				if !useConsul {
-					//Error occurred when attempting to read from local filesystem. Fail fast.
-					close(ch)
-					wait.Done()
-					return
-				}
-			}
-		}
-		// Exit the loop if the dependencies have been satisfied.
-		if Manifest != nil {
-			ec, _ = newExecutorClient(Manifest.OperationsType)
+			ec, _ = newExecutorClient(Configuration.OperationsType)
 			break
 		}
 		time.Sleep(time.Second * time.Duration(1))
@@ -131,17 +109,6 @@ func initializeConfiguration(useProfile string) (*ConfigurationStruct, error) {
 	}
 
 	return Conf, nil
-}
-
-func initializePerManifest(useProfile string) (*ManifestStruct, error) {
-	// Populate in-memory store with data from the SMA's TOML manifest file.
-	man := &ManifestStruct{}
-	err := LoadFromFile(useProfile, man)
-	if err != nil {
-		return nil, err
-	}
-
-	return man, nil
 }
 
 func setLoggingTarget() string {

@@ -25,19 +25,12 @@ type ConfigurationStruct struct {
 	ServiceAddress        string
 	LoggingFile           string
 	LoggingRemoteURL      string
+	LoggingLevel          string
 	EnableRemoteLogging   bool
 	OsLevelOperations     bool
 	DockerLevelOperations bool
 	Clients               map[string]config.ClientInfo
 	Service               config.ServiceInfo
-}
-
-type ManifestStruct struct {
-	EdgexServicesNotificationsName         string
-	EdgexServicesNotificationsHost         string
-	EdgexServicesNotificationsPort         int
-	EdgexServicesNotificationsProtocol     string
-	EdgexServicesNotificationsCommandstop  string
-	EdgexServicesNotificationsCommandstart string
-	OperationsType                         string
+	OperationsType        string
+	ComposeUrl            string
 }

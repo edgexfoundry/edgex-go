@@ -18,6 +18,8 @@ import (
 	"reflect"
 	"strconv"
 	"testing"
+
+	"github.com/edgexfoundry/edgex-go/pkg/clients"
 )
 
 const testAddrName = "TEST_ADDR.NAME"
@@ -25,13 +27,12 @@ const testProtocol = "HTTP"
 const testMethod = "Get"
 const testAddress = "localhost"
 const testPort = 48089
-const testAddressablePath = "/api/v1/device"
 const testPublisher = "TEST_PUB"
 const testUser = "edgexer"
 const testPassword = "password"
 const testTopic = "device_topic"
 
-var TestAddressable = Addressable{BaseObject: TestBaseObject, Name: testAddrName, Protocol: testProtocol, HTTPMethod: testMethod, Address: testAddress, Port: testPort, Path: testAddressablePath, Publisher: testPublisher, User: testUser, Password: testPassword, Topic: testTopic}
+var TestAddressable = Addressable{BaseObject: TestBaseObject, Name: testAddrName, Protocol: testProtocol, HTTPMethod: testMethod, Address: testAddress, Port: testPort, Path: clients.ApiDeviceRoute, Publisher: testPublisher, User: testUser, Password: testPassword, Topic: testTopic}
 var EmptyAddressable = Addressable{}
 
 func TestAddressable_MarshalJSON(t *testing.T) {

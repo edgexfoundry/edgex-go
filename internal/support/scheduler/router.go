@@ -111,10 +111,7 @@ func replyInfo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	enc := json.NewEncoder(w)
-	errEnc := enc.Encode(schedule)
-
-	// Problems encoding
-	if errEnc != nil {
+	if err := enc.Encode(schedule); err != nil {
 		LoggingClient.Error(fmt.Sprintf("Error encoding the data: %s", err.Error()))
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}

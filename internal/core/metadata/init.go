@@ -60,7 +60,7 @@ func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup,
 				initializeClients(useConsul)
 				// Setup Logging
 				logTarget := setLoggingTarget()
-				LoggingClient = logger.NewClient(internal.CoreMetaDataServiceKey, Configuration.Logging.EnableRemote, logTarget)
+				LoggingClient = logger.NewClient(internal.CoreMetaDataServiceKey, Configuration.Logging.EnableRemote, logTarget, Configuration.Logging.Level)
 			}
 		}
 
@@ -151,6 +151,10 @@ func connectToConsul(conf *ConfigurationStruct) (*ConfigurationStruct, error) {
 			return conf, errors.New("type check failed")
 		}
 		conf = actual
+		//Check that information was successfully read from Consul
+		if conf.Service.Port == 0 {
+			return nil, errors.New("error reading from Consul")
+		}
 	}
 
 	return conf, err

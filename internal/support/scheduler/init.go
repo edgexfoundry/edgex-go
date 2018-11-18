@@ -54,7 +54,7 @@ func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup,
 				}
 				// Setup Logging
 				logTarget := setLoggingTarget()
-				LoggingClient = logger.NewClient(internal.SupportSchedulerServiceKey, Configuration.Logging.EnableRemote, logTarget)
+				LoggingClient = logger.NewClient(internal.SupportSchedulerServiceKey, Configuration.Logging.EnableRemote, logTarget, Configuration.Logging.Level)
 				//Initialize service clients
 				initializeClients(useConsul)
 			}
@@ -145,6 +145,10 @@ func connectToConsul(conf *ConfigurationStruct) (*ConfigurationStruct, error) {
 			return conf, errors.New("type check failed")
 		}
 		conf = actual
+		//Check that information was successfully read from Consul
+		if conf.Service.Port == 0 {
+			return nil, errors.New("error reading from Consul")
+		}
 	}
 
 	return conf, err
@@ -189,7 +193,6 @@ func setLoggingTarget() string {
 
 func initializeClients(useConsul bool) {
 	// Create metadata clients
-
 	params := types.EndpointParams{
 		ServiceKey:  internal.SupportSchedulerServiceKey,
 		Path:        clients.ApiScheduleRoute,
@@ -208,5 +211,5 @@ func initializeClients(useConsul bool) {
 	// metadata Addressable client
 	params.Path = clients.ApiAddressableRoute
 	params.Url = Configuration.Clients["Metadata"].Url() + clients.ApiAddressableRoute
-	mac = metadata.NewAddressableClient(params,startup.Endpoint{})
+	mac = metadata.NewAddressableClient(params, startup.Endpoint{})
 }

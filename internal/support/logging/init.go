@@ -18,10 +18,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-const (
-	PingApiPath = "/api/v1/ping"
-)
-
 var Configuration *ConfigurationStruct
 var dbClient persistence
 var LoggingClient logger.LoggingClient
@@ -137,7 +133,7 @@ func connectToConsul(conf *ConfigurationStruct) (*ConfigurationStruct, error) {
 		}
 		conf = actual
 		//Check that information was successfully read from Consul
-		if len(conf.Persistence) == 0 {
+		if conf.Service.Port == 0 {
 			return nil, errors.New("error reading from Consul")
 		}
 	}

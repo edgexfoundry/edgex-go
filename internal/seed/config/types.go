@@ -28,4 +28,5 @@ type ConfigurationStruct struct {
 	EnableRemoteLogging          bool
 	LoggingFile                  string
 	LoggingRemoteURL             string
+	LoggingLevel                 string
 }

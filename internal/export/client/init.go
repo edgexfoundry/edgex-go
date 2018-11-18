@@ -8,7 +8,6 @@ package client
 
 import (
 	"fmt"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 	"sync"
 	"time"
 
@@ -19,15 +18,12 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/memory"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 	"github.com/edgexfoundry/edgex-go/pkg/clients"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/export/distro"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
 	"github.com/pkg/errors"
-)
-
-const (
-	PingApiPath = "/api/v1/ping"
 )
 
 // Global variables
@@ -55,7 +51,7 @@ func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup,
 			} else {
 				// Setup Logging
 				logTarget := setLoggingTarget()
-				LoggingClient = logger.NewClient(internal.ExportClientServiceKey, Configuration.Logging.EnableRemote, logTarget)
+				LoggingClient = logger.NewClient(internal.ExportClientServiceKey, Configuration.Logging.EnableRemote, logTarget, Configuration.Logging.Level)
 				//Initialize service clients
 				initializeClients(useConsul)
 			}
@@ -203,6 +199,10 @@ func connectToConsul(conf *ConfigurationStruct) (*ConfigurationStruct, error) {
 			return conf, errors.New("type check failed")
 		}
 		conf = actual
+		//Check that information was successfully read from Consul
+		if conf.Service.Port == 0 {
+			return nil, errors.New("error reading from Consul")
+		}
 	}
 	return conf, err
 }

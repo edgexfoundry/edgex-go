@@ -48,12 +48,17 @@ func main() {
 	var useConsul bool
 	var useProfile string
 
-	flag.BoolVar(&useConsul, "consul", false, "Indicates the service should use consul.")
-	flag.BoolVar(&useConsul, "c", false, "Indicates the service should use consul.")
 	flag.StringVar(&useProfile, "profile", "", "Specify a profile other than default.")
 	flag.StringVar(&useProfile, "p", "", "Specify a profile other than default.")
 	flag.Usage = usage.HelpCallback
 	flag.Parse()
+	// [1] Removed two lines of code above (having to do with accepting the "--consul" aka "--c" flag) because the SMA is
+	// designed to operate independently, in a stand-alone fashion. In particular, the SMA should not rely on Consul,
+	// and leaving the --consul flag (in the relevant Docker file) was an oversight, as was originally the case (but
+	// corrected since then by updating that Docker file).
+	// [2] Added one line of code below (having to do with setting the "useConsul" variable to false) since we no longer
+	// handle the --consul flag.
+	useConsul = false
 
 	params := startup.BootParams{UseConsul: useConsul, UseProfile: useProfile, BootTimeout: internal.BootTimeoutDefault}
 	startup.Bootstrap(params, agent.Retry, logBeforeInit)
@@ -82,7 +87,7 @@ func main() {
 }
 
 func logBeforeInit(err error) {
-	l := logger.NewClient(internal.SystemManagementAgentServiceKey, false, "")
+	l := logger.NewClient(internal.SystemManagementAgentServiceKey, false, "", logger.InfoLog)
 	l.Error(err.Error())
 }
 

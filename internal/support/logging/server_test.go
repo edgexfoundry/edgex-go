@@ -17,6 +17,7 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/support/logging/models"
+	"github.com/edgexfoundry/edgex-go/pkg/clients"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 )
 
@@ -67,7 +68,7 @@ func TestPing(t *testing.T) {
 	ts := httptest.NewServer(HttpServer())
 	defer ts.Close()
 
-	response, err := http.Get(ts.URL + "/api/v1" + "/ping")
+	response, err := http.Get(ts.URL + clients.ApiPingRoute)
 	if err != nil {
 		t.Errorf("Error getting ping: %v", err)
 	}
@@ -99,7 +100,7 @@ func TestAddLog(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			response, err := http.Post(ts.URL+"/api/v1"+"/logs", "application/json", strings.NewReader(tt.data))
+			response, err := http.Post(ts.URL+clients.ApiLoggingRoute, "application/json", strings.NewReader(tt.data))
 			if err != nil {
 				t.Errorf("Error sending log %v", err)
 			}
@@ -228,7 +229,7 @@ func TestGetLogs(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			response, err := http.Get(ts.URL + "/api/v1/logs/" + tt.url)
+			response, err := http.Get(ts.URL + clients.ApiLoggingRoute + "/" + tt.url)
 			if err != nil {
 				t.Errorf("Error gettings logs %v", err)
 			}
@@ -259,7 +260,7 @@ func TestRemoveLogs(t *testing.T) {
 	var services = []string{"service1", "service2"}
 	var keywords = []string{"keyword1", "keyword2"}
 	var logLevels = []string{logger.TraceLog, logger.DebugLog, logger.WarnLog,
-		logger.InfoLog,	logger.ErrorLog}
+		logger.InfoLog, logger.ErrorLog}
 	var tests = []struct {
 		name     string
 		url      string
@@ -332,7 +333,7 @@ func TestRemoveLogs(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodDelete, ts.URL+"/api/v1"+"/logs/"+tt.url, nil)
+			req, err := http.NewRequest(http.MethodDelete, ts.URL+clients.ApiLoggingRoute+"/"+tt.url, nil)
 			if err != nil {
 				t.Errorf("Error creating request logs %v", err)
 			}

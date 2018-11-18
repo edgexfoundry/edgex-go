@@ -73,7 +73,6 @@ func TestValueDescriptor_String(t *testing.T) {
 				",\"min\":" + strconv.Itoa(TestValueDescriptor.Min.(int)) +
 				",\"max\":" + strconv.Itoa(TestValueDescriptor.Max.(int)) +
 				",\"defaultValue\":" + strconv.Itoa(TestValueDescriptor.DefaultValue.(int)) +
-				",\"type\":null" +
 				",\"uomLabel\":\"" + TestValueDescriptor.UomLabel + "\"" +
 				",\"formatting\":\"" + TestValueDescriptor.Formatting + "\"" +
 				",\"labels\":" + fmt.Sprint(string(labelSlice)) + "}"},

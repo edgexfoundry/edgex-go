@@ -1,3 +1,0 @@
-The following open source projects are referenced by Support Scheduler Client Go:
-
-*** None at this time ***

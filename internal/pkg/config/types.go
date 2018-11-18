@@ -15,7 +15,8 @@ package config
 
 import (
 	"fmt"
-	"github.com/edgexfoundry/edgex-go/internal"
+
+	"github.com/edgexfoundry/edgex-go/pkg/clients"
 )
 
 // Cannot use type string inside structs to be parsed into map[string]interface{} correctly
@@ -53,7 +54,7 @@ type ServiceInfo struct {
 // HealthCheck is a URL specifying a healthcheck REST endpoint used by the Registry to determine if the
 // service is available.
 func (s ServiceInfo) HealthCheck() string {
-	hc := fmt.Sprintf("%s://%s:%v%s", s.Protocol, s.Host, s.Port, internal.ApiPingRoute)
+	hc := fmt.Sprintf("%s://%s:%v%s", s.Protocol, s.Host, s.Port, clients.ApiPingRoute)
 	return hc
 }
 
@@ -75,6 +76,7 @@ type RegistryInfo struct {
 type LoggingInfo struct {
 	EnableRemote bool
 	File         string
+	Level        string
 }
 
 // MessageQueueInfo provides parameters related to connecting to a message queue
@@ -147,7 +149,7 @@ type ScheduleEventInfo struct {
 
 // ScheduleEventInfo helper function
 func (e ScheduleEventInfo) Url() string {
-	url := fmt.Sprintf("%s://%s:%v",e.Protocol,e.Host,e.Port)
+	url := fmt.Sprintf("%s://%s:%v", e.Protocol, e.Host, e.Port)
 	return url
 }
 
@@ -160,7 +162,6 @@ type ClientInfo struct {
 	// Protocol indicates the protocol to use when accessing a given service
 	Protocol string
 }
-
 
 func (c ClientInfo) Url() string {
 	url := fmt.Sprintf("%s://%s:%v", c.Protocol, c.Host, c.Port)

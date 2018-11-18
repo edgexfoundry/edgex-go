@@ -18,6 +18,7 @@ import (
 	"errors"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strconv"
 	"time"
 
@@ -27,12 +28,18 @@ import (
 	"github.com/robfig/cron"
 )
 
+const (
+	frequencyPattern = `^P(\d+Y)?(\d+M)?(\d+D)?(T(\d+H)?(\d+M)?(\d+S)?)?$`
+)
+
 func isIntervalValid(frequency string) bool {
-	_, err := strconv.Atoi("-42")
-	if err != nil {
-		return false
+	matched, _ := regexp.MatchString(frequencyPattern, frequency)
+	if matched {
+		if frequency == "P" || frequency == "PT" {
+			matched = false
+		}
 	}
-	return true
+	return matched
 }
 
 // convert millisecond string to Time
@@ -41,7 +48,7 @@ func msToTime(ms string) (time.Time, error) {
 	if err != nil {
 		// todo: support-scheduler will be removed later issue_650a
 		t, err := time.Parse(SCHEDULER_TIMELAYOUT, ms)
-		if err == nil{
+		if err == nil {
 			return t, nil
 		}
 		return time.Time{}, err
@@ -143,7 +150,7 @@ func restAddScheduleEvent(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Duplicate name for schedule event", http.StatusConflict)
 			LoggingClient.Error("Duplicate name for schedule event: "+err.Error(), "")
 		} else {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			LoggingClient.Error("Problem adding schedule event: "+err.Error(), "")
 		}
 		return
@@ -151,7 +158,7 @@ func restAddScheduleEvent(w http.ResponseWriter, r *http.Request) {
 
 	// Notify Associates
 	if err := notifyScheduleEventAssociates(se, http.MethodPost); err != nil {
-		LoggingClient.Error("Problem notifying associated device services for schedule event: "+err.Error(), "")
+		LoggingClient.Warn("Problem notifying associated device services for schedule event: "+err.Error(), "")
 	}
 
 	w.WriteHeader(http.StatusOK)
@@ -611,7 +618,7 @@ func restAddSchedule(w http.ResponseWriter, r *http.Request) {
 	if s.Frequency != "" {
 		if !isIntervalValid(s.Frequency) {
 			err := errors.New("Frequency format incorrect: " + s.Frequency)
-			LoggingClient.Error("Frequency format is incorrect: "+err.Error(), "")
+			LoggingClient.Error(err.Error(), "")
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
@@ -621,11 +628,6 @@ func restAddSchedule(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		LoggingClient.Error("Problem adding schedule: "+err.Error(), "")
 		return
-	}
-
-	// Notify Associates
-	if err := notifyScheduleAssociates(s, http.MethodPost); err != nil {
-		LoggingClient.Error("Problem notifying associated device services for schedule: "+err.Error(), "")
 	}
 
 	w.WriteHeader(http.StatusOK)
@@ -865,11 +867,6 @@ func deleteSchedule(s models.Schedule, w http.ResponseWriter) error {
 	if err := dbClient.DeleteScheduleById(s.Id.Hex()); err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return err
-	}
-
-	// Notify Associates
-	if err := notifyScheduleAssociates(s, http.MethodDelete); err != nil {
-		LoggingClient.Error("Problem notifying associated device services for schedule: "+err.Error(), "")
 	}
 
 	return nil
