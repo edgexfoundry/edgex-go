@@ -37,10 +37,8 @@ fi
 #    [ -x "$hook" ] && /bin/sh -x "$hook"
 #done
 
-# TODO: remove trailing '&' if/when services are actually
-# enabled in snap/snapcraft.yaml
 exec "$SNAP"/bin/consul agent \
      -data-dir="$CONSUL_DATA_DIR" \
      -config-dir="$CONSUL_CONFIG_DIR" \
-     $CONSUL_ARGS | tee "$LOG_DIR"/core-consul.log &
+     $CONSUL_ARGS | tee "$LOG_DIR"/core-consul.log
      
