@@ -1,27 +1,27 @@
 #!/bin/bash -e
 
+# the kong wrapper script from $SNAP
 export KONG_SNAP="${SNAP}/bin/kong-wrapper.sh"
 
-export LOG_DIR=${SNAP_COMMON}/logs
+# general config dirs for security-api-gateway and security-secret-store 
 export CONFIG_DIR=${SNAP_DATA}/config
 export SEC_SEC_STORE_CONFIG_DIR=${CONFIG_DIR}/security-secret-store
 export SEC_API_GATEWAY_CONFIG_DIR=${CONFIG_DIR}/security-api-gateway
 
 # security-secret-store environment variables
-export _VAULT_SCRIPT_DIR=${SNAP}/bin
 export _VAULT_DIR=${SNAP_DATA}/vault
-export _VAULT_SVC=localhost
-export _KONG_SVC=localhost
-export _PKI_SETUP_VAULT_ENV=${SEC_SEC_STORE_CONFIG_DIR}/pki-setup-config-vault.env
-export _PKI_SETUP_KONG_ENV=${SEC_SEC_STORE_CONFIG_DIR}/pki-setup-config-kong.env
-export WATCHDOG_DELAY=3m
+export _PKI_SETUP_VAULT_FILE=${SEC_SEC_STORE_CONFIG_DIR}/pkisetup-vault.json
+export _PKI_SETUP_KONG_FILE=${SEC_SEC_STORE_CONFIG_DIR}/pkisetup-kong.json
 
-# security-api-gateway environment variables
+# kong environment variables
+export LOG_DIR=${SNAP_COMMON}/logs
 export KONG_PROXY_ACCESS_LOG=${LOG_DIR}/kong-proxy-access.log
 export KONG_ADMIN_ACCESS_LOG=${LOG_DIR}/kong-admin-access.log
 export KONG_PROXY_ERROR_LOG=${LOG_DIR}/kong-admin-error.log
 export KONG_ADMIN_ERROR_LOG=${LOG_DIR}/kong-admin-error.log
 export KONG_ADMIN_LISTEN="0.0.0.0:8001, 0.0.0.0:8444 ssl"
+
+# vault environment variables
 export VAULT_ADDR=https://localhost:8200
 export VAULT_CONFIG_DIR=${_VAULT_DIR}/config
 export VAULT_UI=true
@@ -61,69 +61,51 @@ done
 # now start kong normally
 $KONG_SNAP start --conf ${SEC_API_GATEWAY_CONFIG_DIR}/kong.conf
 
-# setup key generation for vault before starting vault up
-# note that the vault setup scripts will put the generated keys inside
-# ./pki/... so we go into the $SNAP_DATA/vault which is where all the other 
-# scripts go. Ideally we would override some environment variables and not have
-# to change directories for this
-pushd ${_VAULT_DIR}
-$SNAP/bin/vault-setup.sh
-popd
+# generate tls keys before running vault
+pushd ${_VAULT_DIR} > /dev/null
+# check to see if the root certificate generated with pkisetup already exists, if so then don't generate new certs
+# note that this assumes::
+# * that the pkisetup-vault.json file exists and is valid json
+# * that if the root ca file still exists then the other certificates still exists
+# * that the root ca file name is located at $working_dir/$pki_setup_dir/$ca_name/$ca_name.pem (this is true for the current release)
+CERT_DIR=$(jq -r '.working_dir' "${_PKI_SETUP_VAULT_FILE}")
+CERT_SUBDIR=$(jq -r '.pki_setup_dir' "${_PKI_SETUP_VAULT_FILE}")
+ROOT_NAME=$(jq -r '.x509_root_ca_parameters | .ca_name' "${_PKI_SETUP_VAULT_FILE}")
+if [ ! -f "${CERT_DIR}/${CERT_SUBDIR}/${ROOT_NAME}/${ROOT_NAME}.pem" ]; then
+     ${SNAP}/bin/pkisetup --config ${_PKI_SETUP_VAULT_FILE}
+     ${SNAP}/bin/pkisetup --config ${_PKI_SETUP_KONG_FILE}
+fi
+popd > /dev/null
 
 # wait for consul to come up before starting vault
 $SNAP/bin/wait-for-consul.sh "security-services"
 
 # execute the vault binary in the background, logging 
-# all output to $SNAP_COMMONG
+# all output to $SNAP_COMMON
 $SNAP/bin/vault server \
      --config="${SEC_SEC_STORE_CONFIG_DIR}/vault-config.json" \
      | tee ${LOG_DIR}/vault.log &
 
-# now that vault is up and running we need to initialize it
-# same situation as for vault when setting up - we need to be in the vault folder
-# for this to work
-pushd ${_VAULT_DIR}
-while true; do
-    # Init/Unseal processes
-    set +e
-    ${_VAULT_SCRIPT_DIR}/vault-init-unseal.sh
-    init_res=$?
-    set -e
-    
-    # If Vault init/unseal was OK break out of the loop
-    # to start the vault-worker running in the background indefinitely
-    if [ "$init_res" -eq 0 ];  then
-        break
-    fi
-
-    # increment number of tries
-    num_tries=$((num_tries+1))
-    if (( num_tries > MAX_VAULT_UNSEAL_TRIES )); then
-        echo "max tries attempting to unseal vault"
-        exit 1
-    fi
-
-    # we sleep for 1 second each time in this first loop to check that it quickly comes up
-    # the background loop sleeps for 3 minutes each iteration
-    sleep 1
-done
-
-# now that we are done unsealing the vault, we can start the 
-# vault-worker in the background
-# NOTE: for Delhi we want to change this to not just always run and 
-# have a better restarting mechanism in case vault goes down
-# see discussion on https://github.com/edgexfoundry/security-secret-store/pull/15#issuecomment-412043938
-# also note that the process vault-init-unseal will probably immediately get run again here, but that's
-# fine, as there's no harm in unsealing vault when it's already unsealed
-$SNAP/bin/vault-worker.sh &
-popd
-
-# go into the snap folder
-cd ${_VAULT_DIR}/file
-
-# copy the resp-init.json file into the res folder
-mkdir -p res
-cp resp-init.json res/
+# run the vault-worker
+pushd ${SEC_SEC_STORE_CONFIG_DIR} > /dev/null
+echo "running vault-worker from security-secret-store"
+$SNAP/bin/vault-worker --init=true --configfile=${SEC_SEC_STORE_CONFIG_DIR}/res/configuration.toml
+# copy the kong access token to the config directory for the security-api-gateway so it has 
+# perms to read the certs from vault and upload them into kong
+cp ${SEC_SEC_STORE_CONFIG_DIR}/res/kong-token.json ${SEC_API_GATEWAY_CONFIG_DIR}/res/kong-token.json
+popd > /dev/null
 
 # now finally start the security proxy
-$SNAP/bin/edgexproxy --configfile=${SEC_API_GATEWAY_CONFIG_DIR}/res/configuration.toml init=true
+pushd ${SEC_API_GATEWAY_CONFIG_DIR} > /dev/null
+echo "running edgexproxy from security-api-gateway"
+$SNAP/bin/edgexproxy --configfile=${SEC_API_GATEWAY_CONFIG_DIR}/res/configuration.toml --init=true
+popd > /dev/null
+
+# wait for the forked processes to exit
+# this is necessary because currently the security-service is implemented as a "notify" daemon which 
+# means that systemd will kill the child processes of this process when this process exits
+# the ideal thing to do here would be have this be a "forking" daemon, but that has problems
+# timing out waiting for the fork to happen, as we need to wait for cassandra to finish coming up
+# before the default systemd service start timeout of 30 seconds
+wait
+
