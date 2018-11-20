@@ -274,6 +274,7 @@ parts:
       install -DT "./cmd/export-client/export-client" "$SNAPCRAFT_PART_INSTALL/bin/export-client"
       install -DT "./cmd/support-logging/support-logging" "$SNAPCRAFT_PART_INSTALL/bin/support-logging"
       install -DT "./cmd/support-notifications/support-notifications" "$SNAPCRAFT_PART_INSTALL/bin/support-notifications"
+      install -DT "./cmd/support-scheduler/support-scheduler" "$SNAPCRAFT_PART_INSTALL/bin/support-scheduler"
 
       # FIXME: settings can't be overridden from the cmd-line!
       # Override 'LogFile' and 'LoggingRemoteURL'
@@ -285,7 +286,10 @@ parts:
       install -d "$SNAPCRAFT_PART_INSTALL/config/config-seed/res/properties/device-virtual/"
       install -d "$SNAPCRAFT_PART_INSTALL/config/support-logging/res/"
       install -d "$SNAPCRAFT_PART_INSTALL/config/support-notifications/res/"
-
+      install -d "$SNAPCRAFT_PART_INSTALL/config/support-scheduler/res/"
+      install -d "$SNAPCRAFT_PART_INSTALL/config/config-seed/res/properties/device-virtual/"
+      
+      # handle application.properties for the remaining java services
       install -DT "./cmd/config-seed/res/properties/device-virtual/application.properties" \
         "$SNAPCRAFT_PART_INSTALL/config/config-seed/res/properties/device-virtual/application.properties"
 
@@ -329,6 +333,10 @@ parts:
             -e s:'http\://localhost\:48061/api/v1/logs':: > \
        "$SNAPCRAFT_PART_INSTALL/config/support-notifications/res/configuration.toml"
 
+      cat "./cmd/support-scheduler/res/configuration.toml" | \
+        sed -e s:./logs/edgex-support-scheduler.log:\$SNAP_COMMON/support-scheduler.log: \
+            -e s:'http\://localhost\:48061/api/v1/logs':: > \
+       "$SNAPCRAFT_PART_INSTALL/config/support-scheduler/res/configuration.toml"
 
       # handle license files
       install -DT "./cmd/core-command/Attribution.txt" \
@@ -349,55 +357,18 @@ parts:
               "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/export-client/LICENSE"
       install -DT "./LICENSE" \
               "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/support-logging/LICENSE"
+      install -DT "./LICENSE" \
+              "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/support-notifications/LICENSE"
+      install -DT "./LICENSE" \
+              "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/support-scheduler/LICENSE"
+      install -DT "./LICENSE" \
+              "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/config-seed/LICENSE"
+      
     build-packages:
       - zip
       - pkg-config
     stage-packages:
       - libzmq3-dev
-  support-scheduler:
-    source: https://github.com/edgexfoundry/support-scheduler.git
-    # the following commit == 0.7.0 version update
-    source-commit: "194094a3cf2a0a3a2cc608cec7cd3c4904ac6b5b"
-    plugin: maven
-    maven-options: ["-Dmaven.test.skip=true"]
-    override-build: |
-      snapcraftctl build
-      echo "Installing support-scheduler files"
-
-      # The logic following logic is all handled by DockerFile for
-      # the EdgeX support-scheduler docker image.
-      install -d "$SNAPCRAFT_PART_INSTALL/jar/support-scheduler"
-      JAR_FILE=$(find "$SNAPCRAFT_PART_INSTALL/jar" -name "support-scheduler-*-SNAPSHOT.jar")
-      mv "$JAR_FILE" \
-         "$SNAPCRAFT_PART_INSTALL/jar/support-scheduler/support-scheduler.jar"
-
-      # FIXME:
-      # copy service license into /usr/share/java/doc, because the
-      # jdk plugin has a bug which prevents any files from /usr/share/doc
-      # to be staged or primed.
-      install -DT "./Attribution.txt" \
-         "$SNAPCRAFT_PART_INSTALL/usr/share/java/doc/support-scheduler/Attribution.txt"
-      install -DT "./LICENSE-2.0.txt" \
-         "$SNAPCRAFT_PART_INSTALL/usr/share/java/doc/support-scheduler/LICENSE-2.0.txt"
-    prime:
-      - -etc/fonts
-      - -etc/fonts/X11
-      - -usr/lib/jvm/*/ASSEMBLY_EXCEPTION
-      - -usr/lib/jvm/*/THIRD_PARTY_README
-      - -usr/lib/jvm/*/jre/ASSEMBLY_EXCEPTION
-      - -usr/lib/jvm/*/jre/THIRD_PARTY_README
-      - -usr/lib/jvm/*/man
-      - -usr/lib/jvm/*/jre/man
-      - -usr/lib/jvm/*/jre/lib/images
-      - -usr/lib/jvm/*/include
-      - -usr/lib/jvm/*/bin
-      - -usr/lib/jvm/*/lib
-      - -usr/lib/jvm/*/docs
-      - -usr/lib/jvm/*/src.zip
-      - -usr/share/X11
-      - -usr/share/man
-      - -usr/share/fonts
-      - -usr/share/
   support-rulesengine:
     source: https://github.com/edgexfoundry/support-rulesengine.git
     # the following commit == 0.7.0 version update
