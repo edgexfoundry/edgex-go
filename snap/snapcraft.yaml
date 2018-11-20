@@ -362,6 +362,7 @@ parts:
       . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
       gopartbootstrap github.com/edgexfoundry/edgex-go
 
+      glide cc
       make prepare
       make build
 
@@ -498,7 +499,8 @@ parts:
       # The logic following logic is all handled by DockerFile for
       # the EdgeX support-rulesengine docker image.
       install -d "$SNAPCRAFT_PART_INSTALL/jar/support-rulesengine"
-      mv "$SNAPCRAFT_PART_INSTALL/jar/support-rulesengine-0.7.0-SNAPSHOT.jar" \
+      JAR_FILE=$(find "$SNAPCRAFT_PART_INSTALL/jar" -name "support-rulesengine-*-SNAPSHOT.jar")
+      mv "$JAR_FILE" \
          "$SNAPCRAFT_PART_INSTALL/jar/support-rulesengine/support-rulesengine.jar"
 
       # FIXME:
@@ -544,7 +546,8 @@ parts:
       install -d "$SNAPCRAFT_PART_INSTALL/jar/device-virtual"
       install -d "$SNAPCRAFT_PART_INSTALL/jar/device-virtual/bacnet_sample_profiles"
       install -d "$SNAPCRAFT_PART_INSTALL/jar/device-virtual/modbus_sample_profiles"
-      mv "$SNAPCRAFT_PART_INSTALL/jar/device-virtual-0.5.0-SNAPSHOT.jar" \
+      JAR_FILE=$(find "$SNAPCRAFT_PART_INSTALL/jar" -name "device-virtual-*-SNAPSHOT.jar")
+      mv "$JAR_FILE" \
          "$SNAPCRAFT_PART_INSTALL/jar/device-virtual/device-virtual.jar"
       cp ./bacnet_sample_profiles/*.yaml \
          "$SNAPCRAFT_PART_INSTALL/jar/device-virtual/bacnet_sample_profiles/"
@@ -759,23 +762,45 @@ parts:
 
   security-secret-store:
     source: https://github.com/edgexfoundry/security-secret-store.git
-    source-branch: california
-    plugin: dump
-    organize:
-      pki-setup.sh: bin/pki-setup.sh
-      pki-setup-config-kong.env: config/security-secret-store/pki-setup-config-kong.env
-      pki-setup-config-vault.env: config/security-secret-store/pki-setup-config-vault.env
-      vault-init-unseal.sh: bin/vault-init-unseal.sh
-      vault-kong.sh: bin/vault-kong.sh
-      vault-setup.sh: bin/vault-setup.sh
-      vault-worker.sh: bin/vault-worker.sh
+    source-branch: delhi
+    source-depth: 1
+    plugin: make
+    override-build: |
+      . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
+      gopartbootstrap github.com/edgexfoundry/security-secret-store
+
+      glide cc
+      make prepare
+      make build
+
+      install -DT pkisetup/pkisetup "$SNAPCRAFT_PART_INSTALL/bin/pkisetup"
+      install -DT core/edgex-vault-worker "$SNAPCRAFT_PART_INSTALL/bin/vault-worker"
+
+      # modify the configuration file for the vault-worker
+      install -d "$SNAPCRAFT_PART_INSTALL/config/security-secret-store/res/"
+      cat "core/res/configuration.toml" | \
+        sed -e "s@tokenpath = \"res\\\\\\\\resp-init.json\"@tokenpath = \"res/resp-init.json\"@" \
+            -e "s@\"/vault/config/pki/@\"\$SNAP_DATA/vault/pki/@g" \
+            -e "s@EdgeXFoundryCA/edgex-vault.pem@EdgeXFoundryCA/localhost.pem@" \
+            -e "s@EdgeXFoundryCA/edgex-vault.priv.key@EdgeXFoundryCA/localhost.priv.key@" \
+            -e "s@tokenfolderpath = \"/vault/config/assets\"@tokenfolderpath = \"\$SNAP_DATA/config/security-secret-store/res\"@" \
+        > "$SNAPCRAFT_PART_INSTALL/config/security-secret-store/res/configuration.toml"
+
+      # install the hcl files too for vault accesses
+      install -DT "core/res/vault-policy-admin.hcl" "$SNAPCRAFT_PART_INSTALL/config/security-secret-store/res/vault-policy-admin.hcl"
+      install -DT "core/res/vault-policy-kong.hcl" "$SNAPCRAFT_PART_INSTALL/config/security-secret-store/res/vault-policy-kong.hcl"
+
+      # also install the pki config files
+      install -DT pkisetup/pkisetup-kong.json "$SNAPCRAFT_PART_INSTALL/config/security-secret-store/pkisetup-kong.json"
+      install -DT pkisetup/pkisetup-vault.json "$SNAPCRAFT_PART_INSTALL/config/security-secret-store/pkisetup-vault.json"
     prime:
       - bin/*
       - config/*
   security-api-gateway:
     after: [go]
     source: https://github.com/edgexfoundry/security-api-gateway.git
-    source-branch: california
+    source-branch: delhi
+    source-depth: 1
     plugin: make
     stage-packages:
       - openssl
@@ -788,12 +813,27 @@ parts:
       . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
       gopartbootstrap github.com/edgexfoundry/security-api-gateway
 
+      glide cc
       glide install
       make build
 
       install -DT core/edgexproxy "$SNAPCRAFT_PART_INSTALL/bin/edgexproxy"
 
       # also modify the configuration file to use "/" instead of "\" in the file
+      # and set the snis by default to be localhost so that https works when using the certificate authority 
+      # file generated and a url like "https://localhost:8443/{svc}" etc. for kong
       mkdir -p $SNAPCRAFT_PART_INSTALL/config/security-api-gateway/res
       cp core/res/configuration.toml $SNAPCRAFT_PART_INSTALL/config/security-api-gateway/res/configuration.toml
-      sed -i "s@tokenpath = \"res\\\\\\\\resp-init.json\"@tokenpath = \"res/resp-init.json\"@" $SNAPCRAFT_PART_INSTALL/config/security-api-gateway/res/configuration.toml
+      sed -i \
+        -e "s@tokenpath = \"res\\\\\\\\admin-token.json\"@tokenpath = \"\$SNAP_DATA/config/security-api-gateway/res/kong-token.json\"@" \
+        -e "s:snis = \"edgex.com\":snis = \"localhost\":" \
+        -e "s:host = \"edgex-core-data\":host = \"localhost\":" \
+        -e "s:host = \"edgex-core-metadata\":host = \"localhost\":" \
+        -e "s:host = \"edgex-core-command\":host = \"localhost\":" \
+        -e "s:host = \"edgex-support-notifications\":host = \"localhost\":" \
+        -e "s:host = \"edgex-support-logging\":host = \"localhost\":" \
+        -e "s:host = \"edgex-export-distro\":host = \"localhost\":" \
+        -e "s:host = \"edgex-export-client\":host = \"localhost\":" \
+        -e "s:host = \"edgex-support-rulesengine\":host = \"localhost\":" \
+        -e "s:host = \"edgex-device-virtual\":host = \"localhost\":" \
+        $SNAPCRAFT_PART_INSTALL/config/security-api-gateway/res/configuration.toml
