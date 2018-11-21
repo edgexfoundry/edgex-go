@@ -91,7 +91,7 @@ sudo make run_docker
 ```
 
 # Community
-- Chat: https://chat.edgexfoundry.org/home
+- Chat: [https://edgexfoundry.slack.com](https://join.slack.com/t/edgexfoundry/shared_invite/enQtNDgyODM5ODUyODY0LWVhY2VmOTcyOWY2NjZhOWJjOGI1YzQ2NzYzZmIxYzAzN2IzYzY0NTVmMWZhZjNkMjVmODNiZGZmYTkzZDE3MTA)
 - Mailing lists: https://lists.edgexfoundry.org/mailman/listinfo
 
 # License
