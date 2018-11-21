@@ -152,7 +152,7 @@ Configuration Properties
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
 | Smtp Host                                               | smtp.gmail.com                 \**  | SMTP service host name                                                    |
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
-| Smtp Port                                               | 48061                          \**  | SMTP service port number                                                  |
+| Smtp Port                                               | 25                             \**  | SMTP service port number                                                  |
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
 | Smtp Password                                           | mypassword                     \**  | SMTP service host access password                                         |
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
@@ -163,13 +163,12 @@ Configuration Properties
 
 | \*means the configuration value can be changed if necessary.
 | \**means the configuration value has to be replaced.
-| \***means the configuration value should NOT be changed.
 
 =====================
 Configure Mail Server
 =====================
 
-All the properties with prefix "spring.mail" are for mail server configuration. Configure the mail server appropriately to send Alerts and Notifications. The correct values depend on which mail server is used. 
+All the properties with prefix "smtp" are for mail server configuration. Configure the mail server appropriately to send Alerts and Notifications. The correct values depend on which mail server is used. 
 
 -----
 Gmail
@@ -184,16 +183,11 @@ Then, use the following settings for the mail server properties:
 
 ::
 
-  spring.mail.port=25
-  spring.mail.host=smtp.gmail.com
-  spring.mail.username=${Gmail account}
-  spring.mail.password=${Gmail password or App password}
-  spring.mail.properties.mail.smtp.ssl.enable=true
-  spring.mail.properties.mail.smtp.auth=true
-  spring.mail.properties.mail.smtp.socketFactory.port=465
-  spring.mail.properties.mail.smtp.socketFactory.class=javax.net.ssl.SSLSocketFactory
-  spring.mail.properties.mail.smtp.socketFactory.fallback=false
-
+  Smtp Port=25
+  Smtp Host=smtp.gmail.com
+  Smtp Sender=${Gmail account}
+  Smtp Password=${Gmail password or App password}
+  
 ----------
 Yahoo Mail
 ----------
@@ -207,16 +201,10 @@ Then, use the following settings for the mail server properties:
 
 ::
 
-  spring.mail.port=25
-  spring.mail.host=smtp.mail.yahoo.com
-  spring.mail.username=${Yahoo account}
-  spring.mail.password=${Yahoo password or App password}
-  spring.mail.properties.mail.smtp.ssl.enable=true
-  spring.mail.properties.mail.smtp.auth=true
-  spring.mail.properties.mail.smtp.socketFactory.port=465
-  spring.mail.properties.mail.smtp.socketFactory.class=javax.net.ssl.SSLSocketFactory
-  spring.mail.properties.mail.smtp.socketFactory.fallback=false
-
+  Smtp Port=25
+  Smtp Host=smtp.mail.yahoo.com
+  Smtp Sender=${Yahoo account}
+  Smtp Password=${Yahoo password or App password}
 
 
 

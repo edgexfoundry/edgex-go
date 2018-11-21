@@ -7,7 +7,7 @@ Introduction
 ============
 
 These instructions are for Java Developers to obtain and run Java-based EdgeX Foundry microservices.  (Users should read: :doc:`../Ch-GettingStartedUsers`) 
-It should be noted that EdgeX Foundry is migrating from Java to Go and C (and other compiled languages) in order to improve the performance and footprint of the platform.  While the Java services still function today, the Go versions of the microservices are considered to be the reference implementation.  Java versions of the services will be archived in the future unless organizations and individuals in the community decide to maintain and keep these services consistent with the reference implementations.
+It should be noted that EdgeX Foundry has largely migrated from Java to Go and C (and other compiled languages) in order to improve the performance and footprint of the platform.  While many of the Java services still function today, the Go versions of the microservices are considered to be the reference implementation.  Java versions of the services will be archived in the future unless organizations and individuals in the community decide to maintain and keep these services consistent with the reference implementations.
 
 ==================================
 What You Need For Java Development
@@ -33,9 +33,9 @@ To download or "pull" any of the library or microservice projects, use your git 
 
 git clone https://github.com/edgexfoundry/<library or microservice repos name>
 
-For example, to pull the support-logging microservice repository, execute the following command:
+For example, to pull the device-virtual microservice repository, execute the following command:
 
-git clone https://github.com/edgexfoundry/support-logging.git
+git clone https://github.com/edgexfoundry/device-virtual.git
 
 .. image:: EdgeX_GettingStartedDevClone.png
 
