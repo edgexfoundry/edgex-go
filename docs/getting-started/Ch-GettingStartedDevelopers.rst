@@ -1,5 +1,5 @@
 ##############################
-Get EdgeX Foundry - Developers
+Getting Started - Developers
 ##############################
 
 ============
