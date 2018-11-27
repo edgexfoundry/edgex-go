@@ -1,6 +1,7 @@
 #########################
-Get EdgeX Foundry - Users
+Getting Started - Users
 #########################
+
 ============
 Introduction
 ============
