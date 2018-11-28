@@ -803,6 +803,7 @@ func addEvent(conn redis.Conn, e *models.Event) (err error) {
 	for i, r := range e.Readings {
 		r.Created = e.Created
 		r.Id = bson.NewObjectId()
+		r.Device = e.Device
 		err := addReading(conn, false, &r)
 		if err != nil {
 			return err
