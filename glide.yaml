@@ -30,8 +30,8 @@ import:
   version: e543ad3fcd51155e4b39f7487bdfcb5e3772f1ce
 - package: github.com/magiconair/properties
   version: =1.8.0
-- package: github.com/satori/go.uuid
-  version: =1.2.0
+- package: github.com/google/uuid
+  version: =1.1.0
 - package: github.com/stretchr/testify
   version: =1.2.1
 - package: github.com/docker/distribution

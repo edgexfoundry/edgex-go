@@ -15,12 +15,14 @@
 package data
 
 import (
-	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
-	"github.com/edgexfoundry/edgex-go/pkg/models"
-	"gopkg.in/mgo.v2/bson"
 	"strconv"
 	"sync"
 	"testing"
+
+	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
+	"github.com/edgexfoundry/edgex-go/pkg/models"
+	"github.com/google/uuid"
+	"gopkg.in/mgo.v2/bson"
 )
 
 //Test methods
@@ -70,7 +72,6 @@ func TestDeleteEventByAgeErrorThrownByEventsOlderThanAge(t *testing.T) {
 	}
 }
 
-
 func TestGetEvents(t *testing.T) {
 	reset()
 	events, err := getEvents(0)
@@ -95,7 +96,7 @@ func TestGetEventsWithLimit(t *testing.T) {
 	reset()
 	//Put an extra dummy event in the DB
 	evt := models.Event{Device: testDeviceName, Origin: testOrigin}
-	dbClient.AddEvent(&evt)
+	dbClient.AddEvent(evt)
 
 	events, err := getEvents(1)
 	if err != nil {
@@ -122,8 +123,10 @@ func TestAddEventWithPersistence(t *testing.T) {
 	if err != nil {
 		t.Errorf(err.Error())
 	}
-	if !bson.IsObjectIdHex(newId) {
-		t.Errorf("invalid bson id: %s", newId)
+
+	_, err = uuid.Parse(newId)
+	if err != nil {
+		t.Errorf("invalid UUID id: %s", newId)
 	}
 
 	wg.Wait()
@@ -177,7 +180,7 @@ func TestAddEventNoPersistence(t *testing.T) {
 func TestAddEventWithValidationValueDescriptorExistsAndIsInvalid(t *testing.T) {
 	reset()
 	dbClient = newMockDb()
-	Configuration.ValidateCheck= true
+	Configuration.ValidateCheck = true
 
 	Configuration.PersistData = false
 	evt := models.Event{Device: testDeviceName, Origin: testOrigin, Readings: buildReadings()[0:1]}
@@ -195,7 +198,7 @@ func TestAddEventWithValidationValueDescriptorExistsAndIsInvalid(t *testing.T) {
 
 func TestAddEventWithValidationValueDescriptorNotFound(t *testing.T) {
 	reset()
-	Configuration.ValidateCheck= true
+	Configuration.ValidateCheck = true
 
 	Configuration.PersistData = false
 	evt := models.Event{Device: testDeviceName, Origin: testOrigin, Readings: buildReadings()}
@@ -214,7 +217,7 @@ func TestAddEventWithValidationValueDescriptorNotFound(t *testing.T) {
 func TestAddEventWithValidationValueDescriptorDBError(t *testing.T) {
 	reset()
 	dbClient = newMockDb()
-	Configuration.ValidateCheck= true
+	Configuration.ValidateCheck = true
 
 	Configuration.PersistData = false
 	evt := models.Event{Device: testDeviceName, Origin: testOrigin, Readings: buildReadings()[1:]}
@@ -232,7 +235,7 @@ func TestAddEventWithValidationValueDescriptorDBError(t *testing.T) {
 
 func TestUpdateEventNotFound(t *testing.T) {
 	reset()
-	evt := models.Event{ID: bson.NewObjectId(), Device: "Not Found", Origin: testOrigin}
+	evt := models.Event{ID: bson.NewObjectId().Hex(), Device: "Not Found", Origin: testOrigin}
 	err := updateEvent(evt)
 	if err != nil {
 		if x, ok := err.(*errors.ErrEventNotFound); !ok {
@@ -246,7 +249,7 @@ func TestUpdateEventNotFound(t *testing.T) {
 func TestUpdateEventDeviceNotFound(t *testing.T) {
 	Configuration.MetaDataCheck = true
 	reset()
-	evt := models.Event{ID: bson.NewObjectId(), Device: "Not Found", Origin: testOrigin}
+	evt := models.Event{ID: bson.NewObjectId().Hex(), Device: "Not Found", Origin: testOrigin}
 	err := updateEvent(evt)
 	if err == nil {
 		t.Errorf("error expected")
@@ -261,7 +264,7 @@ func TestUpdateEvent(t *testing.T) {
 	if err != nil {
 		t.Errorf(err.Error())
 	}
-	chk, err := dbClient.EventById(testEvent.ID.Hex())
+	chk, err := dbClient.EventById(testEvent.ID)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -280,7 +283,7 @@ func TestDeleteAllEvents(t *testing.T) {
 
 func TestGetEventById(t *testing.T) {
 	reset()
-	_, err := getEventById(testEvent.ID.Hex())
+	_, err := getEventById(testEvent.ID)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -299,11 +302,11 @@ func TestGetEventByIdNotFound(t *testing.T) {
 func TestUpdateEventPushDate(t *testing.T) {
 	reset()
 	old := testEvent.Pushed
-	err := updateEventPushDate(testEvent.ID.Hex())
+	err := updateEventPushDate(testEvent.ID)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
-	e, err := getEventById(testEvent.ID.Hex())
+	e, err := getEventById(testEvent.ID)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -314,12 +317,12 @@ func TestUpdateEventPushDate(t *testing.T) {
 
 func TestDeleteEventById(t *testing.T) {
 	reset()
-	err := deleteEventById(testEvent.ID.Hex())
+	err := deleteEventById(testEvent.ID)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
 
-	_, err = getEventById(testEvent.ID.Hex())
+	_, err = getEventById(testEvent.ID)
 	if err != nil {
 		if x, ok := err.(*errors.ErrEventNotFound); !ok {
 			t.Errorf(x.Error())
@@ -335,7 +338,7 @@ func TestDeleteEvent(t *testing.T) {
 		t.Errorf(err.Error())
 	}
 
-	_, err = getEventById(testEvent.ID.Hex())
+	_, err = getEventById(testEvent.ID)
 	if err != nil {
 		if x, ok := err.(*errors.ErrEventNotFound); !ok {
 			t.Errorf(x.Error())
@@ -455,9 +458,9 @@ func TestScrubPushedEvents(t *testing.T) {
 	pushedEvent := testEvent
 	pushedEvent.Pushed = -1
 	pushedEvent.ID = "pushed"
-	dbClient.AddEvent(&pushedEvent)
+	dbClient.AddEvent(pushedEvent)
 
-	expectedCount:= 1
+	expectedCount := 1
 
 	actualCount, expectedNil := scrubPushedEvents()
 
@@ -471,8 +474,8 @@ func TestScrubPushedEvents(t *testing.T) {
 }
 
 func testEventWithoutReadings(event models.Event, t *testing.T) {
-	if event.ID.Hex() != testEvent.ID.Hex() {
-		t.Error("eventId mismatch. expected " + testEvent.ID.Hex() + " received " + event.ID.Hex())
+	if event.ID != testEvent.ID {
+		t.Error("eventId mismatch. expected " + testEvent.ID + " received " + event.ID)
 	}
 
 	if event.Device != testEvent.Device {

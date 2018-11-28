@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+	"github.com/google/uuid"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -90,14 +91,21 @@ func errorMap(err error) error {
 
 // Delete from the collection based on ID
 func (mc *MongoClient) deleteById(col string, id string) error {
-	// Check if id is a hexstring
-	if !bson.IsObjectIdHex(id) {
-		return db.ErrInvalidObjectId
-	}
-
 	s := mc.getSessionCopy()
 	defer s.Close()
 
-	err := s.DB(mc.database.Name).C(col).RemoveId(bson.ObjectIdHex(id))
+	var err error
+	if !bson.IsObjectIdHex(id) {
+		// EventID is not a BSON ID. Is it a UUID?
+		_, err := uuid.Parse(id)
+		if err != nil { // It is some unsupported type of string
+			return db.ErrInvalidObjectId
+		}
+		query := bson.M{"uuid": id}
+		err = s.DB(mc.database.Name).C(col).Remove(query)
+	} else {
+		err = s.DB(mc.database.Name).C(col).RemoveId(bson.ObjectIdHex(id))
+	}
+
 	return errorMap(err)
 }

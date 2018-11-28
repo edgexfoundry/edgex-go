@@ -87,7 +87,7 @@ func (sender *influxdbSender) Send(data []byte, event *models.Event) bool {
 		tags := map[string]string{
 			"device":        reading.Device,
 			"resource_name": reading.Name,
-			"event_id":      event.ID.Hex(),
+			"event_id":      event.ID,
 		}
 
 		pt, err := client.NewPoint(

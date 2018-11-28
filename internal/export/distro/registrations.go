@@ -190,7 +190,7 @@ func (reg registrationInfo) processEvent(event *models.Event) {
 	}
 
 	if reg.sender.Send(encrypted, event) && Configuration.MarkPushed {
-		id := event.ID.Hex()
+		id := event.ID
 		err := ec.MarkPushed(id)
 
 		if err != nil {

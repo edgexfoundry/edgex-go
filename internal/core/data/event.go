@@ -17,7 +17,7 @@ import (
 	"fmt"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
-	"github.com/edgexfoundry/edgex-go/pkg/models"
+	contract "github.com/edgexfoundry/edgex-go/pkg/models"
 )
 
 func countEvents() (int, error) {
@@ -57,9 +57,9 @@ func deleteEventsByAge(age int64) (int, error) {
 	return count, nil
 }
 
-func getEvents(limit int) ([]models.Event, error) {
+func getEvents(limit int) ([]contract.Event, error) {
 	var err error
-	var events []models.Event
+	var events []contract.Event
 
 	if limit <= 0 {
 		events, err = dbClient.Events()
@@ -73,7 +73,7 @@ func getEvents(limit int) ([]models.Event, error) {
 	return events, err
 }
 
-func addNewEvent(e models.Event) (string, error) {
+func addNewEvent(e contract.Event) (string, error) {
 	retVal := "unsaved"
 	err := checkDevice(e.Device)
 	if err != nil {
@@ -102,11 +102,11 @@ func addNewEvent(e models.Event) (string, error) {
 
 	// Add the event and readings to the database
 	if Configuration.PersistData {
-		id, err := dbClient.AddEvent(&e)
+		id, err := dbClient.AddEvent(e)
 		if err != nil {
 			return "", err
 		}
-		retVal = id.Hex() //Coupling to Mongo in the model
+		retVal = id
 	}
 
 	putEventOnQueue(e)                              // Push the aux struct to export service (It has the actual readings)
@@ -116,10 +116,10 @@ func addNewEvent(e models.Event) (string, error) {
 	return retVal, nil
 }
 
-func updateEvent(from models.Event) error {
-	to, err := dbClient.EventById(from.ID.Hex())
+func updateEvent(from contract.Event) error {
+	to, err := dbClient.EventById(from.ID)
 	if err != nil {
-		return errors.NewErrEventNotFound(from.ID.Hex())
+		return errors.NewErrEventNotFound(from.ID)
 	}
 
 	// Update the fields
@@ -156,13 +156,13 @@ func deleteEventById(id string) error {
 }
 
 // Delete the event and readings
-func deleteEvent(e models.Event) error {
+func deleteEvent(e contract.Event) error {
 	for _, reading := range e.Readings {
-		if err := deleteReadingById(reading.Id.Hex()); err != nil {
+		if err := deleteReadingById(reading.Id); err != nil {
 			return err
 		}
 	}
-	if err := dbClient.DeleteEventById(e.ID.Hex()); err != nil {
+	if err := dbClient.DeleteEventById(e.ID); err != nil {
 		return err
 	}
 
@@ -173,13 +173,13 @@ func deleteAllEvents() error {
 	return dbClient.ScrubAllEvents()
 }
 
-func getEventById(id string) (models.Event, error) {
+func getEventById(id string) (contract.Event, error) {
 	e, err := dbClient.EventById(id)
 	if err != nil {
 		if err == db.ErrNotFound {
 			err = errors.NewErrEventNotFound(id)
 		}
-		return models.Event{}, err
+		return contract.Event{}, err
 	}
 	return e, nil
 }
@@ -199,7 +199,7 @@ func updateEventPushDate(id string) error {
 }
 
 // Put event on the message queue to be processed by the rules engine
-func putEventOnQueue(e models.Event) {
+func putEventOnQueue(e contract.Event) {
 	LoggingClient.Info("Putting event on message queue", "")
 	//	Have multiple implementations (start with ZeroMQ)
 	err := ep.SendEventMessage(e)
@@ -208,7 +208,7 @@ func putEventOnQueue(e models.Event) {
 	}
 }
 
-func getEventsByDeviceIdLimit(limit int, deviceId string) ([]models.Event, error) {
+func getEventsByDeviceIdLimit(limit int, deviceId string) ([]contract.Event, error) {
 	eventList, err := dbClient.EventsForDeviceLimit(deviceId, limit)
 	if err != nil {
 		LoggingClient.Error(err.Error())
@@ -218,7 +218,7 @@ func getEventsByDeviceIdLimit(limit int, deviceId string) ([]models.Event, error
 	return eventList, nil
 }
 
-func getEventsByCreationTime(limit int, start int64, end int64) ([]models.Event, error) {
+func getEventsByCreationTime(limit int, start int64, end int64) ([]contract.Event, error) {
 	eventList, err := dbClient.EventsByCreationTime(start, end, limit)
 	if err != nil {
 		LoggingClient.Error(err.Error())
@@ -250,7 +250,7 @@ func deleteEvents(deviceId string) (int, error) {
 	return count, nil
 }
 
-func scrubPushedEvents()(int, error) {
+func scrubPushedEvents() (int, error) {
 	LoggingClient.Info("Scrubbing events.  Deleting all events that have been pushed")
 
 	// Get the events

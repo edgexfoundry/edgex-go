@@ -25,7 +25,7 @@ func TestValidateFormatStringEmpty(t *testing.T) {
 func TestValidateFormatStringInvalid(t *testing.T) {
 	match, err := validateFormatString(models.ValueDescriptor{Formatting: "error"})
 
-	if match  {
+	if match {
 		t.Errorf("Should not match format specifier")
 	}
 
@@ -396,7 +396,7 @@ func TestDeleteValueDescriptor(t *testing.T) {
 	reset()
 	dbClient = newMockDb()
 
-	err := deleteValueDescriptor(models.ValueDescriptor{Name: "valid", Id: "valid"})
+	err := deleteValueDescriptor(models.ValueDescriptor{Name: "valid", Id: testBsonString})
 
 	if err != nil {
 		t.Errorf("Unexpected error deleting value descriptor")

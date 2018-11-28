@@ -29,6 +29,8 @@ var testRoutes *mux.Router
 const (
 	testDeviceName string = "Test Device"
 	testOrigin     int64  = 123456789
+	testBsonString string = "57e59a71e4b0ca8e6d6d4cc2"
+	testUUIDString string = "ca93c8fa-9919-4ec5-85d3-f81b2b6a7bc1"
 )
 
 // Mock implementation of the event publisher for testing purposes
@@ -58,7 +60,6 @@ func TestCheckMaxLimitOverLimit(t *testing.T) {
 	}
 }
 
-
 func newMockEventPublisher(config messaging.PubSubConfiguration) messaging.EventPublisher {
 	return &mockEventPublisher{}
 }
@@ -84,7 +85,7 @@ func reset() {
 	testEvent.Origin = testOrigin
 	testEvent.Readings = buildReadings()
 	dbClient = &memory.MemDB{}
-	testEvent.ID, _ = dbClient.AddEvent(&testEvent)
+	testEvent.ID, _ = dbClient.AddEvent(testEvent)
 }
 
 func newMockDeviceClient() *mocks.DeviceClient {
@@ -133,7 +134,6 @@ func newMockDb() interfaces.DBClient {
 		return age == -1
 	})).Return(nil, fmt.Errorf("expected testing error"))
 
-
 	DB.On("ValueDescriptorByName", mock.MatchedBy(func(name string) bool {
 		return name == "Temperature"
 	})).Return(models.ValueDescriptor{Type: "8"}, nil)
@@ -141,7 +141,6 @@ func newMockDb() interfaces.DBClient {
 	DB.On("ValueDescriptorByName", mock.MatchedBy(func(name string) bool {
 		return name == "Pressure"
 	})).Return(models.ValueDescriptor{}, fmt.Errorf("some error"))
-
 
 	DB.On("EventsForDeviceLimit", mock.MatchedBy(func(deviceId string) bool {
 		return deviceId == "valid"
@@ -151,7 +150,6 @@ func newMockDb() interfaces.DBClient {
 		return deviceId == "error"
 	}), mock.Anything).Return(nil, fmt.Errorf("some error"))
 
-
 	DB.On("EventsForDevice", mock.MatchedBy(func(deviceId string) bool {
 		return deviceId == "valid"
 	})).Return([]models.Event{{Readings: append(buildReadings(), buildReadings()...)}}, nil)
@@ -159,7 +157,6 @@ func newMockDb() interfaces.DBClient {
 	DB.On("EventsForDevice", mock.MatchedBy(func(deviceId string) bool {
 		return deviceId == "error"
 	})).Return(nil, fmt.Errorf("some error"))
-
 
 	DB.On("EventsByCreationTime", mock.MatchedBy(func(start int64) bool {
 		return start == 0xF00D
@@ -169,18 +166,15 @@ func newMockDb() interfaces.DBClient {
 		return start == 0xBADF00D
 	}), mock.Anything, mock.Anything).Return(nil, fmt.Errorf("some error"))
 
-
 	DB.On("EventsForDevice", mock.MatchedBy(func(deviceId string) bool {
-		return deviceId == testEvent.ID.Hex()
+		return deviceId == testEvent.ID
 	})).Return([]models.Event{testEvent}, nil)
 
 	DB.On("EventsForDevice", mock.MatchedBy(func(deviceId string) bool {
 		return deviceId == "error"
 	})).Return(nil, fmt.Errorf("some error"))
 
-
 	DB.On("DeleteEventById", mock.Anything).Return(nil)
-
 
 	DB.On("ValueDescriptorByName", mock.MatchedBy(func(name string) bool {
 		return name == "valid"
@@ -192,7 +186,6 @@ func newMockDb() interfaces.DBClient {
 
 	DB.On("ValueDescriptorByName", mock.Anything).Return(models.ValueDescriptor{}, fmt.Errorf("some error"))
 
-
 	DB.On("ValueDescriptorById", mock.MatchedBy(func(id string) bool {
 		return id == "valid"
 	})).Return(models.ValueDescriptor{}, nil)
@@ -202,7 +195,6 @@ func newMockDb() interfaces.DBClient {
 	})).Return(models.ValueDescriptor{}, db.ErrNotFound)
 
 	DB.On("ValueDescriptorById", mock.Anything).Return(models.ValueDescriptor{}, fmt.Errorf("some error"))
-
 
 	DB.On("ValueDescriptorsByUomLabel", mock.MatchedBy(func(name string) bool {
 		return name == "valid"
@@ -214,7 +206,6 @@ func newMockDb() interfaces.DBClient {
 
 	DB.On("ValueDescriptorsByUomLabel", mock.Anything).Return([]models.ValueDescriptor{}, fmt.Errorf("some error"))
 
-
 	DB.On("ValueDescriptorsByLabel", mock.MatchedBy(func(name string) bool {
 		return name == "valid"
 	})).Return([]models.ValueDescriptor{}, nil)
@@ -224,7 +215,6 @@ func newMockDb() interfaces.DBClient {
 	})).Return([]models.ValueDescriptor{}, db.ErrNotFound)
 
 	DB.On("ValueDescriptorsByLabel", mock.Anything).Return([]models.ValueDescriptor{}, fmt.Errorf("some error"))
-
 
 	DB.On("ValueDescriptorsByType", mock.MatchedBy(func(name string) bool {
 		return name == "valid"
@@ -236,37 +226,31 @@ func newMockDb() interfaces.DBClient {
 
 	DB.On("ValueDescriptorsByType", mock.Anything).Return([]models.ValueDescriptor{}, fmt.Errorf("some error"))
 
-
 	DB.On("ValueDescriptors").Return([]models.ValueDescriptor{}, fmt.Errorf("some error"))
-
 
 	DB.On("AddValueDescriptor", mock.MatchedBy(func(vd models.ValueDescriptor) bool {
 		return vd.Name == "valid"
-	})).Return(bson.ObjectId(""), nil)
+	})).Return("", nil)
 
 	DB.On("AddValueDescriptor", mock.MatchedBy(func(vd models.ValueDescriptor) bool {
 		return vd.Name == "409"
-	})).Return(bson.ObjectId(""), db.ErrNotUnique)
+	})).Return("", db.ErrNotUnique)
 
-	DB.On("AddValueDescriptor", mock.Anything).Return(bson.ObjectId(""), fmt.Errorf("some error"))
-
+	DB.On("AddValueDescriptor", mock.Anything).Return("", fmt.Errorf("some error"))
 
 	DB.On("DeleteValueDescriptorById", mock.MatchedBy(func(id string) bool {
-		return id == bson.ObjectId("valid").Hex()
+		return id == testBsonString
 	})).Return(nil)
 
 	DB.On("DeleteValueDescriptorById", mock.Anything).Return(fmt.Errorf("some error"))
 
-
 	DB.On("Readings").Return([]models.Reading{}, fmt.Errorf("some error"))
-
 
 	DB.On("AddReading", mock.MatchedBy(func(reading models.Reading) bool {
 		return reading.Name == "valid"
-	})).Return(bson.ObjectId(""), nil)
+	})).Return("", nil)
 
-	DB.On("AddReading", mock.Anything).Return(bson.ObjectId(""), fmt.Errorf("some error"))
-
+	DB.On("AddReading", mock.Anything).Return("", fmt.Errorf("some error"))
 
 	DB.On("ReadingById", mock.MatchedBy(func(id string) bool {
 		return id == "valid"
@@ -278,24 +262,20 @@ func newMockDb() interfaces.DBClient {
 
 	DB.On("ReadingById", mock.Anything).Return(models.Reading{}, fmt.Errorf("some error"))
 
-
 	// these are reversed from usual because of a call in events.go
 	DB.On("DeleteReadingById", mock.MatchedBy(func(id string) bool {
 		return id == "invalid"
-	})).Return( fmt.Errorf("some error"))
+	})).Return(fmt.Errorf("some error"))
 
 	DB.On("DeleteReadingById", mock.Anything).Return(nil)
 
-
 	DB.On("ReadingCount").Return(0, fmt.Errorf("some error"))
-
 
 	DB.On("ReadingsByDevice", mock.MatchedBy(func(name string) bool {
 		return name == "valid"
 	}), mock.Anything).Return([]models.Reading{}, nil)
 
 	DB.On("ReadingsByDevice", mock.Anything, mock.Anything).Return([]models.Reading{}, fmt.Errorf("some error"))
-
 
 	// also used by TestDeleteValueDescriptor
 	DB.On("ReadingsByValueDescriptor", mock.MatchedBy(func(name string) bool {
@@ -308,13 +288,11 @@ func newMockDb() interfaces.DBClient {
 
 	DB.On("ReadingsByValueDescriptor", mock.Anything, mock.Anything).Return([]models.Reading{}, fmt.Errorf("some error"))
 
-
 	DB.On("ReadingsByValueDescriptorNames", mock.MatchedBy(func(names []string) bool {
 		return names[0] == "valid"
 	}), mock.Anything).Return([]models.Reading{}, nil)
 
 	DB.On("ReadingsByValueDescriptorNames", mock.Anything, mock.Anything).Return([]models.Reading{}, fmt.Errorf("some error"))
-
 
 	DB.On("ReadingsByCreationTime", mock.MatchedBy(func(start int64) bool {
 		return start == 0x0BEEF
@@ -322,20 +300,18 @@ func newMockDb() interfaces.DBClient {
 
 	DB.On("ReadingsByCreationTime", mock.Anything, mock.Anything, mock.Anything).Return([]models.Reading{}, fmt.Errorf("some error"))
 
-
 	DB.On("ReadingsByDeviceAndValueDescriptor", mock.MatchedBy(func(device string) bool {
 		return device == "valid"
 	}), mock.Anything, mock.Anything).Return([]models.Reading{}, nil)
 
 	DB.On("ReadingsByDeviceAndValueDescriptor", mock.Anything, mock.Anything, mock.Anything).Return([]models.Reading{}, fmt.Errorf("some error"))
 
-
 	return DB
 }
 
 func buildReadings() []models.Reading {
 	ticks := db.MakeTimestamp()
-	r1 := models.Reading{Id: bson.NewObjectId(),
+	r1 := models.Reading{Id: bson.NewObjectId().Hex(),
 		Name:     "Temperature",
 		Value:    "45",
 		Origin:   testOrigin,
@@ -344,7 +320,7 @@ func buildReadings() []models.Reading {
 		Pushed:   ticks,
 		Device:   testDeviceName}
 
-	r2 := models.Reading{Id: bson.NewObjectId(),
+	r2 := models.Reading{Id: bson.NewObjectId().Hex(),
 		Name:     "Pressure",
 		Value:    "1.01325",
 		Origin:   testOrigin,
