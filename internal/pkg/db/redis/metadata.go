@@ -54,7 +54,7 @@ func (c *Client) GetAllScheduleEvents(se *[]models.ScheduleEvent) error {
 
 	*se = make([]models.ScheduleEvent, len(objects))
 	for i, object := range objects {
-		err = unmarshalObject(object, &(*se)[i])
+		err = unmarshalScheduleEvent(object, &(*se)[i])
 		if err != nil {
 			return err
 		}
@@ -107,7 +107,7 @@ func (c *Client) getScheduleEventsByValue(se *[]models.ScheduleEvent, v string) 
 
 	*se = make([]models.ScheduleEvent, len(objects))
 	for i, object := range objects {
-		err = unmarshalObject(object, &(*se)[i])
+		err = unmarshalScheduleEvent(object, &(*se)[i])
 		if err != nil {
 			return err
 		}
