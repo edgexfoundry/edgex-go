@@ -74,7 +74,6 @@ func getEvents(limit int) ([]contract.Event, error) {
 }
 
 func addNewEvent(e contract.Event) (string, error) {
-	retVal := "unsaved"
 	err := checkDevice(e.Device)
 	if err != nil {
 		return "", err
@@ -106,14 +105,14 @@ func addNewEvent(e contract.Event) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		retVal = id
+		e.ID = id
 	}
 
 	putEventOnQueue(e)                              // Push the aux struct to export service (It has the actual readings)
 	chEvents <- DeviceLastReported{e.Device}        // update last reported connected (device)
 	chEvents <- DeviceServiceLastReported{e.Device} // update last reported connected (device service)
 
-	return retVal, nil
+	return e.ID, nil
 }
 
 func updateEvent(from contract.Event) error {
