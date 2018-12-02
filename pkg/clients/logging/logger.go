@@ -19,6 +19,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	stdlog "log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -65,7 +66,6 @@ type EdgeXLogger struct {
 }
 
 type fileWriter struct {
-	messages chan []byte
 	fileName string
 }
 
@@ -86,23 +86,22 @@ func NewClient(owningServiceName string, isRemote bool, logTarget string, logLev
 	// Set up the loggers
 	lc.levelLoggers = map[string]log.Logger{}
 
-	var writer io.Writer
 	var err error
-
-	// the default writer
-	writer = log.NewSyncWriter(os.Stderr)
 
 	//If local logging, verify directory exists
 	if !lc.remoteEnabled {
 		verifyLogDirectory(lc.logTarget)
+
 		w, err := newFileWriter(lc.logTarget)
 		// only use the FileWriter if there are no errors
-		if err == nil {
-			writer = w
+		if err != nil {
+			stdlog.Fatal(err.Error())
 		}
+		lc.rootLogger = log.NewLogfmtLogger(io.MultiWriter(os.Stdout, log.NewSyncWriter(w)))
+	} else {
+		lc.rootLogger = log.NewLogfmtLogger(os.Stdout)
 	}
 
-	lc.rootLogger = log.NewLogfmtLogger(writer)
 	lc.rootLogger = log.WithPrefix(lc.rootLogger, "ts", log.DefaultTimestampUTC,
 		"source", log.Caller(5))
 	if err != nil {
@@ -112,8 +111,14 @@ func NewClient(owningServiceName string, isRemote bool, logTarget string, logLev
 }
 
 func (f *fileWriter) Write(p []byte) (n int, err error) {
-	f.messages <- p
-	return len(p), nil
+	file, err := os.OpenFile(f.fileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY|os.O_SYNC, 0644)
+	if err != nil {
+		return 0, err
+	}
+	defer file.Close()
+
+	_, err = file.WriteString(string(p))
+	return len(p), err
 }
 
 // IsValidLogLevel checks if is a valid log level
@@ -130,29 +135,7 @@ func newFileWriter(logTarget string) (io.Writer, error) {
 	if logTarget == "" {
 		return nil, errors.New("logTarget cannot be blank")
 	}
-	fileWriter := fileWriter{messages: make(chan []byte), fileName: logTarget}
-
-	go func(q chan []byte, target string) {
-		errLogger := log.NewLogfmtLogger(io.MultiWriter(os.Stderr))
-		for {
-			select {
-			case msg := <-q:
-				file, err := os.OpenFile(target, os.O_APPEND|os.O_CREATE|os.O_WRONLY|os.O_SYNC, 0644)
-				if err != nil {
-					errLogger.Log("msg", err)
-					return
-				}
-				defer file.Close()
-				w := io.MultiWriter(os.Stderr, file)
-				_, err = w.Write(msg)
-				if err != nil {
-					errLogger.Log("msg", err)
-					return
-				}
-			}
-		}
-
-	}(fileWriter.messages, fileWriter.fileName)
+	fileWriter := fileWriter{fileName: logTarget}
 
 	return &fileWriter, nil
 }

@@ -34,7 +34,7 @@ func (d *distroMockClient) NotifyRegistrations(models.NotifyUpdate) error {
 }
 
 func prepareTest(t *testing.T) *httptest.Server {
-	LoggingClient = logger.NewClient(internal.ExportClientServiceKey, false, "", logger.InfoLog)
+	LoggingClient = logger.NewClient(internal.ExportClientServiceKey, false, "./logs/edgex-export-client-test.log", logger.InfoLog)
 
 	dbClient = &memory.MemDB{}
 	dc = &distroMockClient{}
