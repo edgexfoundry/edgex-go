@@ -45,7 +45,7 @@ File = '/edgex/logs/edgex-support-scheduler.log'
     Protocol = 'http'
     Method = 'DELETE'
     Service = 'core-data'
-    Path = 'api/v1/event/scrub'
+    Path = '/api/v1/event/scrub'
     Schedule = 'midnight'
     Scheduler = 'support-scheduler'
 
@@ -56,12 +56,6 @@ File = '/edgex/logs/edgex-support-scheduler.log'
     Protocol = 'http'
     Method = 'DELETE'
     Service = 'core-data'
-    Path = 'api/v1/event/removeold/age/604800000'
+    Path = '/api/v1/event/removeold/age/604800000'
     Schedule = 'midnight'
     Scheduler = 'support-scheduler'
-
-
-
-
-
-
