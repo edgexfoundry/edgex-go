@@ -30,9 +30,9 @@ apps:
     daemon: simple
     plugs: [network, network-bind]
   core-config-seed:
-    command: bin/go-services-wrapper.sh config-seed -c ${SNAP_DATA}/config
-    plugs: [network, network-bind, daemon-notify]
-    daemon: notify
+    command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh config-seed -c ${SNAP_DATA}/config
+    plugs: [network, network-bind]
+    daemon: forking
     passthrough:
       after:
         - consul
@@ -52,53 +52,52 @@ apps:
       after:
         - mongod
   security-services:
-    command: bin/security-start.sh
+    command: bin/fork-wrapper.sh $SNAP/bin/security-start.sh
     stop-command: bin/security-stop.sh
-    daemon: notify
+    daemon: forking
     plugs: 
       - network
       - network-bind
-      - daemon-notify
       - mount-observe
     passthrough:
       after:
         - core-config-seed
   support-logging:
-    command: bin/go-services-wrapper.sh support-logging --consul
-    daemon: notify
-    plugs: [network, network-bind, daemon-notify]
+    command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh support-logging --consul
+    daemon: forking
+    plugs: [network, network-bind]
     passthrough:
       after:
         - core-config-seed
         - mongo-worker
   support-notifications:
-    command: bin/go-services-wrapper.sh support-notifications --consul
-    daemon: notify
-    plugs: [network, network-bind, daemon-notify]
+    command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh support-notifications --consul
+    daemon: forking
+    plugs: [network, network-bind]
     passthrough:
       after:
         - core-config-seed
         - mongo-worker
   core-data:
-    command: bin/go-services-wrapper.sh core-data --consul
-    daemon: notify
-    plugs: [network, network-bind, daemon-notify]
+    command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh core-data --consul
+    daemon: forking
+    plugs: [network, network-bind]
     passthrough:
       after:
         - core-config-seed
         - mongo-worker
   core-metadata:
-    command: bin/go-services-wrapper.sh core-metadata --consul
-    daemon: notify
-    plugs: [network, network-bind, daemon-notify]
+    command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh core-metadata --consul
+    daemon: forking
+    plugs: [network, network-bind]
     passthrough:
       after:
         - core-config-seed
         - mongo-worker
   core-command:
-    command: bin/go-services-wrapper.sh core-command --consul
-    daemon: notify
-    plugs: [network, network-bind, daemon-notify]
+    command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh core-command --consul
+    daemon: forking
+    plugs: [network, network-bind, ]
     passthrough:
       after:
         - core-config-seed
@@ -112,33 +111,33 @@ apps:
         - core-config-seed
         - mongo-worker
   support-scheduler:
-    command: bin/go-services-wrapper.sh support-scheduler --consul
-    daemon: notify
+    command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh support-scheduler --consul
+    daemon: forking
     plugs: [network, network-bind]
     passthrough:
       after:
         - core-config-seed
         - mongo-worker
   export-client:
-    command: bin/go-services-wrapper.sh export-client --consul
-    daemon: notify
-    plugs: [network, network-bind, daemon-notify]
+    command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh export-client --consul
+    daemon: forking
+    plugs: [network, network-bind]
     passthrough:
       after:
         - core-config-seed
         - mongo-worker
   export-distro:
-    command: bin/go-services-wrapper.sh export-distro --consul
-    daemon: notify
-    plugs: [network, network-bind, daemon-notify]
+    command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh export-distro --consul
+    daemon: forking
+    plugs: [network, network-bind]
     passthrough:
       after:
         - core-config-seed
         - mongo-worker
   sys-mgmt-agent:
-    command: bin/go-services-wrapper.sh sys-mgmt-agent
-    daemon: notify
-    plugs: [network, network-bind, daemon-notify]
+    command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh sys-mgmt-agent
+    daemon: forking
+    plugs: [network, network-bind]
     passthrough:
       after:
         - core-config-seed
