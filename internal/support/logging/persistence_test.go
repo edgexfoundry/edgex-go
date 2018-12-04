@@ -30,6 +30,10 @@ func testPersistenceFind(t *testing.T, persistence persistence) {
 	var labels1 = []string{"label1"}
 	var labels2 = []string{"label2"}
 	var labels12 = []string{"label2", "label1"}
+	var args1 = make([]interface{}, len(labels1))
+	args1[0] = labels1[0]
+	var args2 = make([]interface{}, len(labels2))
+	args2[0] = labels2[0]
 
 	var tests = []struct {
 		name     string
@@ -49,7 +53,7 @@ func testPersistenceFind(t *testing.T, persistence persistence) {
 		Level:         logger.TraceLog,
 		OriginService: sampleService1,
 		Message:       message1,
-		Labels:        labels1,
+		Args:        args1,
 	}
 	persistence.add(le)
 	le.Message = message2
@@ -63,7 +67,7 @@ func testPersistenceFind(t *testing.T, persistence persistence) {
 	le.Message = message1
 	persistence.add(le)
 	le.Message = message2
-	le.Labels = labels2
+	le.Args = args2
 	persistence.add(le)
 
 	for _, tt := range tests {
@@ -103,6 +107,11 @@ func testPersistenceRemove(t *testing.T, persistence persistence) {
 	var labels2 = []string{"label2"}
 	var labels12 = []string{"label2", "label1"}
 
+	var args1 = make([]interface{}, len(labels1))
+	args1[0] = labels1[0]
+	var args2 = make([]interface{}, len(labels2))
+	args2[0] = labels2[0]
+
 	var tests = []struct {
 		name     string
 		criteria matchCriteria
@@ -125,7 +134,7 @@ func testPersistenceRemove(t *testing.T, persistence persistence) {
 				Level:         logger.TraceLog,
 				OriginService: sampleService1,
 				Message:       message1,
-				Labels:        labels1,
+				Args:          args1,
 			}
 			persistence.add(le)
 			le.Message = message2
@@ -139,7 +148,7 @@ func testPersistenceRemove(t *testing.T, persistence persistence) {
 			le.Message = message1
 			persistence.add(le)
 			le.Message = message2
-			le.Labels = labels2
+			le.Args = args2
 			persistence.add(le)
 
 			removed, err := persistence.remove(tt.criteria)

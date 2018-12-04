@@ -4,6 +4,8 @@ import:
   version: a368813c5e648fee92e5f6c30e3944ff9d5e8895
 - package: github.com/eclipse/paho.mqtt.golang
   version: =1.1.1
+- package: github.com/go-kit/kit
+  version: =0.8.0
 - package: github.com/go-zoo/bone
   version: 9eaad4b99a9a66b85c0cc32cb9691621ccfa4278
 - package: github.com/gorilla/mux

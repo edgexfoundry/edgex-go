@@ -25,22 +25,22 @@ func (lc MockLogger) SetLogLevel(loglevel string) error {
 	return nil
 }
 
-func (lc MockLogger) Info(msg string, labels ...string) error {
+func (lc MockLogger) Info(msg string, args ...interface{}) error {
 	return nil
 }
 
-func (lc MockLogger) Debug(msg string, labels ...string) error {
+func (lc MockLogger) Debug(msg string, args ...interface{}) error {
 	return nil
 }
 
-func (lc MockLogger) Error(msg string, labels ...string) error {
+func (lc MockLogger) Error(msg string, args ...interface{}) error {
 	return nil
 }
 
-func (lc MockLogger) Trace(msg string, labels ...string) error {
+func (lc MockLogger) Trace(msg string, args ...interface{}) error {
 	return nil
 }
 
-func (lc MockLogger) Warn(msg string, labels ...string) error {
+func (lc MockLogger) Warn(msg string, args ...interface{}) error {
 	return nil
 }
