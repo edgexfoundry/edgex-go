@@ -34,8 +34,6 @@ export MAX_VAULT_UNSEAL_TRIES=10
 # on some systems. See issue #509 for more details
 cd $SNAP_DATA
 
-systemd-notify --ready
-
 # start up cassandra
 $SNAP/bin/cassandra-wrapper.sh
 
