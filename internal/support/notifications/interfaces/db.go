@@ -122,19 +122,3 @@ var ErrUnsupportedDatabase error = errors.New("Unsuppored database type")
 var ErrInvalidObjectId error = errors.New("Invalid object ID")
 var ErrNotUnique error = errors.New("Resource already exists")
 var ErrSlugEmpty error = errors.New("Slug is nil or empty")
-
-// Return the dbClient interface
-//func NewDBClient(config DBConfiguration) (DBClient, error) {
-//	switch config.DbType {
-//	case MONGO:
-//		// Create the mongo client
-//		mc, err := newMongoClient(config)
-//		if err != nil {
-//			fmt.Println("Error creating the mongo client: " + err.Error())
-//			return nil, err
-//		}
-//		return mc, nil
-//	default:
-//		return nil, ErrUnsupportedDatabase
-//	}
-//}

@@ -48,7 +48,6 @@ func subscriptionHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		encodeWithUTF8(subscriptions, w)
-		break
 
 		// Modify (an existing) subscription
 	case http.MethodPut:
@@ -80,7 +79,6 @@ func subscriptionHandler(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("true"))
-		break
 
 	case http.MethodPost:
 		var s models.Subscription
@@ -104,7 +102,6 @@ func subscriptionHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusCreated)
 		w.Write([]byte(s.Slug))
 
-		break
 	}
 }
 
