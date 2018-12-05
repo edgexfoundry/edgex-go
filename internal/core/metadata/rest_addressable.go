@@ -62,9 +62,9 @@ func restAddAddressable(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch err.(type) {
 		case types.ErrDuplicateAddressableName:
-			http.Error(w, "Duplicate name for addressable", http.StatusConflict)
+			http.Error(w, err.Error(), http.StatusConflict)
 		case types.ErrEmptyAddressableName:
-			http.Error(w, "Name is required for addressable", http.StatusBadRequest)
+			http.Error(w, err.Error(), http.StatusBadRequest)
 		default:
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
