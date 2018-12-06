@@ -15,6 +15,7 @@ package data
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"regexp"
 
@@ -30,13 +31,25 @@ const (
 )
 
 // Check if the value descriptor matches the format string regular expression
-func validateFormatString(v contract.ValueDescriptor) (bool, error) {
+func validateFormatString(v contract.ValueDescriptor) error {
 	// No formatting specified
 	if v.Formatting == "" {
-		return true, nil
-	} else {
-		return regexp.MatchString(formatSpecifier, v.Formatting)
+		return nil
 	}
+
+	match, err := regexp.MatchString(formatSpecifier, v.Formatting)
+
+	if err != nil {
+		LoggingClient.Error("Error checking for format string for value descriptor " + v.Name)
+		return err
+	}
+	if !match {
+		err = fmt.Errorf("format is not a valid printf format")
+		LoggingClient.Error(fmt.Sprintf("Error posting value descriptor. %s", err.Error()))
+		return errors.NewErrValueDescriptorInvalid(v.Name, err)
+	}
+
+	return nil
 }
 
 func getValueDescriptorByName(name string) (vd contract.ValueDescriptor, err error) {
@@ -194,14 +207,9 @@ func decodeValueDescriptor(reader io.ReadCloser) (vd contract.ValueDescriptor, e
 	}
 
 	// Check the formatting
-	match, err := validateFormatString(v)
+	err = validateFormatString(v)
 	if err != nil {
-		LoggingClient.Error("Error checking for format string for value descriptor " + v.Name)
 		return contract.ValueDescriptor{}, err
-	}
-	if !match {
-		LoggingClient.Error("Error posting value descriptor. Format is not a valid printf format.")
-		return contract.ValueDescriptor{}, errors.NewErrValueDescriptorInvalid(v.Name, err)
 	}
 
 	return v, nil

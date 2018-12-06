@@ -1182,7 +1182,7 @@ func valueDescriptorHandler(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, err.Error(), http.StatusBadRequest)
 				return
 			case *errors.ErrValueDescriptorInvalid:
-				http.Error(w, err.Error(), http.StatusBadRequest)
+				http.Error(w, err.Error(), http.StatusConflict)
 				return
 			default:
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -1212,7 +1212,7 @@ func valueDescriptorHandler(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, err.Error(), http.StatusBadRequest)
 				return
 			case *errors.ErrValueDescriptorInvalid:
-				http.Error(w, err.Error(), http.StatusBadRequest)
+				http.Error(w, err.Error(), http.StatusConflict)
 				return
 			default:
 				http.Error(w, err.Error(), http.StatusInternalServerError)
