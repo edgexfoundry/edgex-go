@@ -14,8 +14,8 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/support/logging/models"
 
-	mgo "gopkg.in/mgo.v2"
-	bson "gopkg.in/mgo.v2/bson"
+	mgo "github.com/globalsign/mgo"
+	bson "github.com/globalsign/mgo/bson"
 )
 
 type mongoLog struct {

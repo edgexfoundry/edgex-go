@@ -25,7 +25,7 @@ import (
 	notifications "github.com/edgexfoundry/edgex-go/pkg/clients/notifications"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 	"github.com/gorilla/mux"
-	"gopkg.in/mgo.v2/bson"
+	"github.com/globalsign/mgo/bson"
 )
 
 func restGetAllDevices(w http.ResponseWriter, _ *http.Request) {
