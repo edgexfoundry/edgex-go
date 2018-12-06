@@ -41,3 +41,4 @@ import:
 - package: github.com/docker/go-units
   version: 47565b4f722fb6ceae66b95f853feed578a4a51c
 - package: github.com/globalsign/mgo
+  version: eeefdecb41b842af6dc652aaea4026e8403e62df
