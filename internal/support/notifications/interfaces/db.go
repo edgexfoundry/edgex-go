@@ -18,7 +18,7 @@ package interfaces
 import (
 	"errors"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
-	"gopkg.in/mgo.v2/bson"
+	"github.com/globalsign/mgo/bson"
 )
 
 type DatabaseType int8 // Database type enum

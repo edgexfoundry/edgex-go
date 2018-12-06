@@ -20,7 +20,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/mock"
-	"gopkg.in/mgo.v2/bson"
+	"github.com/globalsign/mgo/bson"
 )
 
 var testEvent models.Event

@@ -20,8 +20,8 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/google/uuid"
-	"gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
+	"github.com/globalsign/mgo"
+	"github.com/globalsign/mgo/bson"
 )
 
 var currentMongoClient *MongoClient // Singleton used so that mongoEvent can use it to de-reference readings

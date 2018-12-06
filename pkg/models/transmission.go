@@ -18,7 +18,7 @@ package models
 import (
 	"encoding/json"
 
-	"gopkg.in/mgo.v2/bson"
+	"github.com/globalsign/mgo/bson"
 )
 
 type Transmission struct {
