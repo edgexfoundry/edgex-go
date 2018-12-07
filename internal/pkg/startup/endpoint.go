@@ -32,6 +32,6 @@ func (e Endpoint) Monitor(params types.EndpointParams, ch chan string) {
 		}
 		url := fmt.Sprintf("http://%s:%v%s", data.Address, data.Port, params.Path)
 		ch <- url
-		time.Sleep(time.Second * time.Duration(params.Interval))
+		time.Sleep(time.Millisecond * time.Duration(params.Interval))
 	}
 }
