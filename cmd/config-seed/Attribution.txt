@@ -1,4 +1,4 @@
-The following open source projects are referenced by Core Scheduler Go:
+The following open source projects are referenced by Core Config Seed Go:
 
 pkg/errors (BSD-2) https://github.com/pkg/errors
 https://github.com/pkg/errors/blob/master/LICENSE
