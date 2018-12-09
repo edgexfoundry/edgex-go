@@ -447,14 +447,15 @@ func (mc *MongoClient) AddValueDescriptor(v contract.ValueDescriptor) (string, e
 	}
 
 	// See if the name is unique and add the value descriptors
-	info, err := s.DB(mc.database.Name).C(db.ValueDescriptorCollection).Upsert(bson.M{"name": mapped.Name}, mapped)
-	if err != nil {
-		return v.Id, err
+	found, err := s.DB(mc.database.Name).C(db.ValueDescriptorCollection).Find(bson.M{"name": mapped.Name}).Count()
+	// Duplicate name
+	if found > 0 {
+		return v.Id, db.ErrNotUnique
 	}
 
-	// Duplicate name
-	if info.UpsertedId == nil {
-		return v.Id, db.ErrNotUnique
+	err = s.DB(mc.database.Name).C(db.ValueDescriptorCollection).Insert(mapped)
+	if err != nil {
+		return v.Id, err
 	}
 
 	to := mapped.ToContract()
