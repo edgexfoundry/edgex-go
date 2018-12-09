@@ -1,3 +1,0 @@
-The following open source projects are referenced by Support Logging Models Go:
-
-*** None at this time ***
