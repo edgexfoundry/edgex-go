@@ -21,6 +21,9 @@ https://github.com/robfig/cron/blob/master/LICENSE
 satori/go.uuid (MIT) https://github.com/satori/go.uuid
 https://github.com/satori/go.uuid/blob/master/LICENSE
 
+pelletier/go-toml (MIT) https://github.com/pelletier/go-toml
+https://github.com/pelletier/go-toml/blob/master/LICENSE
+
 influxdata/influxdb/client/v2 (MIT) https://github.com/influxdata/influxdb
 https://github.com/influxdata/influxdb/blob/master/LICENSE
 
