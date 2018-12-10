@@ -37,10 +37,13 @@ func commandByDeviceID(did string, cid string, b string, p bool) (string, int) {
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
 
-		chk, ok := err.(*types.ErrServiceClient)
-		if ok {
-			return "", chk.StatusCode
-		} else {
+		switch err.(type) {
+		case *types.ErrServiceClient:
+			errSC := err.(*types.ErrServiceClient)
+			return "", errSC.StatusCode
+		case types.ErrNotFound:
+			return "", http.StatusNotFound
+		default:
 			return "", http.StatusInternalServerError
 		}
 	}
