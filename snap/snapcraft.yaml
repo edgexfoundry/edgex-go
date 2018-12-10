@@ -797,7 +797,7 @@ parts:
 
   security-secret-store:
     source: https://github.com/edgexfoundry/security-secret-store.git
-    source-branch: delhi
+    source-branch: "delhi"
     source-depth: 1
     plugin: make
     override-build: |
@@ -834,7 +834,7 @@ parts:
   security-api-gateway:
     after: [go]
     source: https://github.com/edgexfoundry/security-api-gateway.git
-    source-branch: delhi
+    source-branch: "delhi"
     source-depth: 1
     plugin: make
     stage-packages:
@@ -875,7 +875,7 @@ parts:
   device-modbus:
     source: https://github.com/edgexfoundry/device-modbus-go.git
     source-depth: 1
-    #source-branch: dehli
+    source-branch: "delhi"
     plugin: make
     after:
       - go
@@ -903,7 +903,7 @@ parts:
   device-mqtt:
     source: https://github.com/edgexfoundry/device-mqtt-go.git
     source-depth: 1
-    #source-branch: dehli
+    source-branch: "delhi"
     plugin: make
     after:
       - go
@@ -935,7 +935,7 @@ parts:
   device-random:
     source: https://github.com/edgexfoundry/device-random.git
     source-depth: 1
-    #source-branch: dehli
+    source-branch: "delhi"
     plugin: make
     after:
       - go
