@@ -45,7 +45,7 @@ func commandByDeviceID(did string, cid string, b string, p bool) (string, int) {
 		}
 	}
 
-	if p && (d.AdminState == models.Locked) {
+	if d.AdminState == models.Locked {
 		LoggingClient.Error(d.Name + " is in admin locked state")
 
 		return "", http.StatusLocked

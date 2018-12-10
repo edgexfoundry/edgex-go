@@ -89,7 +89,7 @@ func NewClient(owningServiceName string, isRemote bool, logTarget string, logLev
 	var err error
 
 	//If local logging, verify directory exists
-	if !lc.remoteEnabled {
+	if !lc.remoteEnabled && lc.logTarget != "" {
 		verifyLogDirectory(lc.logTarget)
 
 		w, err := newFileWriter(lc.logTarget)
