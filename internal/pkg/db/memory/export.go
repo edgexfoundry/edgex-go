@@ -20,7 +20,7 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/export"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
-	"gopkg.in/mgo.v2/bson"
+	"github.com/globalsign/mgo/bson"
 )
 
 func (mc *MemDB) Registrations() ([]export.Registration, error) {

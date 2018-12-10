@@ -5,8 +5,8 @@ import (
 	contract "github.com/edgexfoundry/edgex-go/pkg/models"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
-	"gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
+	"github.com/globalsign/mgo"
+	"github.com/globalsign/mgo/bson"
 )
 
 type Event struct {

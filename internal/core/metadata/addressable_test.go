@@ -26,7 +26,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 	"github.com/stretchr/testify/mock"
-	"gopkg.in/mgo.v2/bson"
+	"github.com/globalsign/mgo/bson"
 )
 
 func TestGetAllAddressables(t *testing.T) {

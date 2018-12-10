@@ -2,7 +2,7 @@
 
 package mocks
 
-import bson "gopkg.in/mgo.v2/bson"
+import bson "github.com/globalsign/mgo/bson"
 
 import mock "github.com/stretchr/testify/mock"
 import models "github.com/edgexfoundry/edgex-go/pkg/models"

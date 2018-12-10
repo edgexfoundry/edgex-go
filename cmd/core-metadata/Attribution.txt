@@ -6,11 +6,8 @@ https://github.com/pkg/errors/blob/master/LICENSE
 gorilla/mux (BSD-3) https://github.com/gorilla/mux
 https://github.com/gorilla/mux/blob/master/LICENSE
 
-gopkg.in/mgo.v2 (unspecified) https://gopkg.in/mgo.v2
-https://github.com/go-mgo/mgo/blob/v2-unstable/LICENSE
-
-gopkg.in/mgo.v2/bson (unspecified) https://gopkg.in/mgo.v2/bson
-https://github.com/go-mgo/mgo/blob/v2/bson/LICENSE
+globalsign/mgo (unspecified) - https://github.com/globalsign/mgo
+https://github.com/globalsign/mgo/blob/master/LICENSE
 
 pebbe/zmq4 (BSD-2) https://github.com/pebbe/zmq4
 https://github.com/pebbe/zmq4/blob/master/LICENSE.txt

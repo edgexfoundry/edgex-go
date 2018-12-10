@@ -17,8 +17,8 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/export"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 
-	"gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
+	"github.com/globalsign/mgo"
+	"github.com/globalsign/mgo/bson"
 )
 
 // ****************************** REGISTRATIONS ********************************

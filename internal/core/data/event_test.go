@@ -22,7 +22,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 	"github.com/google/uuid"
-	"gopkg.in/mgo.v2/bson"
+	"github.com/globalsign/mgo/bson"
 )
 
 //Test methods
