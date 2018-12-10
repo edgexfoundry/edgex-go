@@ -797,7 +797,7 @@ parts:
 
   security-secret-store:
     source: https://github.com/edgexfoundry/security-secret-store.git
-    source-branch: delhi
+    source-branch: "delhi"
     source-depth: 1
     plugin: make
     override-build: |
@@ -834,7 +834,7 @@ parts:
   security-api-gateway:
     after: [go]
     source: https://github.com/edgexfoundry/security-api-gateway.git
-    source-branch: delhi
+    source-branch: "delhi"
     source-depth: 1
     plugin: make
     stage-packages:
@@ -875,7 +875,7 @@ parts:
   device-modbus:
     source: https://github.com/edgexfoundry/device-modbus-go.git
     source-depth: 1
-    #source-branch: dehli
+    source-branch: "delhi"
     plugin: make
     after:
       - go
@@ -896,16 +896,14 @@ parts:
       cat "./cmd/res/configuration.toml" | \
         sed -e s:\"./device-Modbus.log\":\'\$SNAP_COMMON/device-Modbus.log\': > \
         "$SNAPCRAFT_PART_INSTALL/config/device-modbus/res/configuration.toml"
-
-      # FIXME: no Attribution.txt for 3rd party licenses; probably needs to be
-      # an aggregation of SDK's and this device service...
-
+      install -DT "./cmd/Attribution.txt" \
+         "$SNAPCRAFT_PART_INSTALL/usr/share/doc/device-modbus/Attribution.txt"
       install -DT "./LICENSE-2.0.txt" \
-         "$SNAPCRAFT_PART_INSTALL/usr/share/doc/device-mongo/LICENSE-2.0.txt"
+         "$SNAPCRAFT_PART_INSTALL/usr/share/doc/device-modbus/LICENSE-2.0.txt"
   device-mqtt:
     source: https://github.com/edgexfoundry/device-mqtt-go.git
     source-depth: 1
-    #source-branch: dehli
+    source-branch: "delhi"
     plugin: make
     after:
       - go
@@ -930,15 +928,14 @@ parts:
       install -T "./cmd/res/configuration-driver.toml" \
         "$SNAPCRAFT_PART_INSTALL/config/device-mqtt/res/configuration-driver.toml"
 
-      # FIXME: no Attribution.txt for 3rd party licenses; probably needs to be
-      # an aggregation of SDK's and this device service...
-
+      install -DT "./cmd/Attribution.txt" \
+         "$SNAPCRAFT_PART_INSTALL/usr/share/doc/device-mqtt/Attribution.txt"
       install -DT "./LICENSE-2.0.txt" \
          "$SNAPCRAFT_PART_INSTALL/usr/share/doc/device-mqtt/LICENSE-2.0.txt"
   device-random:
     source: https://github.com/edgexfoundry/device-random.git
     source-depth: 1
-    #source-branch: dehli
+    source-branch: "delhi"
     plugin: make
     after:
       - go
@@ -964,8 +961,7 @@ parts:
       install -T "./cmd/res/device.random.yaml" \
         "$SNAPCRAFT_PART_INSTALL/config/device-random/res/device.random.yaml"
 
-      # FIXME: no Attribution.txt for 3rd party licenses; probably needs to be
-      # an aggregation of SDK's and this device service...
-
+      install -DT "./cmd/Attribution.txt" \
+         "$SNAPCRAFT_PART_INSTALL/usr/share/doc/device-random/Attribution.txt"
       install -DT "./LICENSE-2.0.txt" \
          "$SNAPCRAFT_PART_INSTALL/usr/share/doc/device-random/LICENSE-2.0.txt"
