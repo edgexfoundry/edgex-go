@@ -2,6 +2,8 @@ package data
 
 import (
 	"bytes"
+	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
+	"net/http"
 	"testing"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
@@ -260,8 +262,11 @@ func TestGetValueDescriptorsByDeviceNameNotFound(t *testing.T) {
 	_, err := getValueDescriptorsByDeviceName("404")
 
 	if err != nil {
-		switch err.(type) {
-		case *errors.ErrDbNotFound:
+		switch err := err.(type) {
+		case *types.ErrServiceClient:
+			if err.StatusCode != http.StatusNotFound {
+				t.Errorf("Expected a 404 error")
+			}
 			return
 		default:
 			t.Errorf("Unexpected error getting value descriptor by device name missing in DB")
@@ -302,8 +307,11 @@ func TestGetValueDescriptorsByDeviceIdNotFound(t *testing.T) {
 	_, err := getValueDescriptorsByDeviceId("404")
 
 	if err != nil {
-		switch err.(type) {
-		case *errors.ErrDbNotFound:
+		switch err := err.(type) {
+		case *types.ErrServiceClient:
+			if err.StatusCode != http.StatusNotFound {
+				t.Errorf("Expected a 404 error")
+			}
 			return
 		default:
 			t.Errorf("Unexpected error getting value descriptor by device id missing in DB")

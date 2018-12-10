@@ -3,6 +3,7 @@ package data
 import (
 	"fmt"
 	"math"
+	"net/http"
 	"os"
 	"sync"
 	"testing"
@@ -108,7 +109,7 @@ func newMockDeviceClient() *mocks.DeviceClient {
 	})).Return(mockDeviceResultFn, nil)
 	client.On("Device", mock.MatchedBy(func(id string) bool {
 		return id == "404"
-	})).Return(mockDeviceResultFn, types.ErrNotFound{})
+	})).Return(mockDeviceResultFn, types.NewErrServiceClient(http.StatusNotFound, []byte{}))
 	client.On("Device", mock.Anything).Return(mockDeviceResultFn, fmt.Errorf("some error"))
 
 	mockDeviceForNameResultFn := func(name string) models.Device {
@@ -121,7 +122,7 @@ func newMockDeviceClient() *mocks.DeviceClient {
 	})).Return(mockDeviceForNameResultFn, nil)
 	client.On("DeviceForName", mock.MatchedBy(func(name string) bool {
 		return name == "404"
-	})).Return(mockDeviceForNameResultFn, types.ErrNotFound{})
+	})).Return(mockDeviceForNameResultFn, types.NewErrServiceClient(http.StatusNotFound, []byte{}))
 	client.On("DeviceForName", mock.Anything).Return(mockDeviceForNameResultFn, fmt.Errorf("some error"))
 
 	return client

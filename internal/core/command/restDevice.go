@@ -56,7 +56,6 @@ func restPutDeviceAdminState(w http.ResponseWriter, r *http.Request) {
 	status, err := putDeviceAdminState(did, as)
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
-		w.WriteHeader(http.StatusInternalServerError)
 	}
 	w.WriteHeader(status)
 
@@ -69,7 +68,6 @@ func restPutDeviceAdminStateByDeviceName(w http.ResponseWriter, r *http.Request)
 	status, err := putDeviceAdminStateByName(dn, as)
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
-		w.WriteHeader(http.StatusInternalServerError)
 	}
 	w.WriteHeader(status)
 }
@@ -81,7 +79,6 @@ func restPutDeviceOpState(w http.ResponseWriter, r *http.Request) {
 	status, err := putDeviceOpState(did, os)
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
-		w.WriteHeader(http.StatusInternalServerError)
 	}
 	w.WriteHeader(status)
 }
@@ -93,7 +90,6 @@ func restPutDeviceOpStateByDeviceName(w http.ResponseWriter, r *http.Request) {
 	status, err := putDeviceOpStateByName(dn, os)
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
-		w.WriteHeader(http.StatusInternalServerError)
 	}
 	w.WriteHeader(status)
 }
@@ -132,7 +128,7 @@ func restGetAllCommands(w http.ResponseWriter, _ *http.Request) {
 	status, devices, err := getCommands()
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
-		w.WriteHeader(http.StatusInternalServerError)
+		w.WriteHeader(status)
 	} else if status != http.StatusOK {
 		w.WriteHeader(status)
 	}
