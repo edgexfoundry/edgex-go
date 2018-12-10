@@ -5,3 +5,9 @@ https://github.com/go-mgo/mgo/blob/v2-unstable/LICENSE
 
 mgo/bson v2 (unspecified) - https://github.com/go-mgo/mgo/tree/v2/bson
 https://github.com/go-mgo/mgo/blob/v2/bson/LICENSE
+
+go-kit/kit (MIT) github.com/go-kit/kit
+https://github.com/go-kit/kit/blob/master/LICENSE
+
+go-logfmt/logfmt (MIT) https://github.com/go-logfmt/logfmt
+https://github.com/go-logfmt/logfmt/blob/master/LICENSE
