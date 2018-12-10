@@ -15,6 +15,12 @@ https://github.com/go-mgo/mgo/blob/v2/bson/LICENSE
 pebbe/zmq4 (BSD-2) https://github.com/pebbe/zmq4
 https://github.com/pebbe/zmq4/blob/master/LICENSE.txt
 
+go-kit/kit (MIT) github.com/go-kit/kit
+https://github.com/go-kit/kit/blob/master/LICENSE
+
+go-logfmt/logfmt (MIT) https://github.com/go-logfmt/logfmt
+https://github.com/go-logfmt/logfmt/blob/master/LICENSE
+
 robfig/cron (MIT) https://github.com/robfig/cron
 https://github.com/robfig/cron/blob/master/LICENSE
 
