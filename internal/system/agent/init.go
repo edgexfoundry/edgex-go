@@ -14,6 +14,7 @@
 package agent
 
 import (
+	"github.com/edgexfoundry/edgex-go/internal/system/agent/logger"
 	"sync"
 	"time"
 
@@ -23,14 +24,12 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/executor"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/interfaces"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/general"
-	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
 )
 
 // Global variables
-var Configuration *ConfigurationStruct
-var LoggingClient logger.LoggingClient
-var Conf = &ConfigurationStruct{}
+var Configuration *interfaces.ConfigurationStruct
+var Conf = &interfaces.ConfigurationStruct{}
 var ec interfaces.ExecutorClient
 var clients map[string]general.GeneralClient
 
@@ -57,7 +56,7 @@ func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup,
 				initializeClients(useConsul)
 				// Setup Logging
 				logTarget := setLoggingTarget()
-				LoggingClient = logger.NewClient(internal.SystemManagementAgentServiceKey, Configuration.EnableRemoteLogging, logTarget, Configuration.LoggingLevel)
+				logs.BuildLoggingClient(Configuration, logTarget)
 			}
 		}
 
@@ -94,7 +93,7 @@ func Init() bool {
 	return true
 }
 
-func initializeConfiguration(useProfile string) (*ConfigurationStruct, error) {
+func initializeConfiguration(useProfile string) (*interfaces.ConfigurationStruct, error) {
 	//We currently have to load configuration from filesystem first in order to obtain ConsulHost/Port
 	err := config.LoadFromFile(useProfile, Conf)
 	if err != nil {

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2017 Dell Inc.
+ * Copyright 2018 Dell Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -11,26 +11,18 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
-package agent
 
-import "github.com/edgexfoundry/edgex-go/internal/pkg/config"
+package logs
 
-type ConfigurationStruct struct {
-	ReadMaxLimit          int
-	ValidateCheck         bool
-	AppOpenMsg            string
-	FormatSpecifier       string
-	ServicePort           int
-	ServiceTimeout        int
-	ServiceAddress        string
-	LoggingFile           string
-	LoggingRemoteURL      string
-	LoggingLevel          string
-	EnableRemoteLogging   bool
-	OsLevelOperations     bool
-	DockerLevelOperations bool
-	Clients               map[string]config.ClientInfo
-	Service               config.ServiceInfo
-	OperationsType        string
-	ComposeUrl            string
+import (
+	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
+
+	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/internal/system/agent/interfaces"
+)
+
+var LoggingClient logger.LoggingClient
+
+func BuildLoggingClient(config *interfaces.ConfigurationStruct, logTarget string) {
+	LoggingClient = logger.NewClient(internal.SystemManagementAgentServiceKey, config.EnableRemoteLogging, logTarget, config.LoggingLevel)
 }

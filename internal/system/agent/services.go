@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/executor"
+	"github.com/edgexfoundry/edgex-go/internal/system/agent/logger"
 	"time"
 )
 
@@ -32,10 +33,10 @@ func InvokeOperation(action string, services []string) bool {
 
 	// Loop through requested operation, along with respectively-supplied parameters.
 	for _, service := range services {
-		LoggingClient.Info(fmt.Sprintf("About to {%v} the service {%v} ", action, service))
+		logs.LoggingClient.Info("invoking operation on service", "action type", action, "service name", service)
 
 		if !isKnownServiceKey(service) {
-			LoggingClient.Warn(fmt.Sprintf("unknown service: %v", service))
+			logs.LoggingClient.Warn("unknown service found during invocation", "service name", service)
 		}
 
 		switch action {
@@ -68,14 +69,13 @@ func getConfig(services []string) (ConfigRespMap, error) {
 		c.Configuration[service] = ""
 
 		if !isKnownServiceKey(service) {
-			LoggingClient.Warn(fmt.Sprintf("unknown service: %v", service))
+			logs.LoggingClient.Warn("unknown service found getting configuration", "service name", service)
 		}
 
 		responseJSON, err := clients[service].FetchConfiguration()
 		if err != nil {
-			msg := fmt.Sprintf("%s get config error: %s", service, err.Error())
-			c.Configuration[service] = msg
-			LoggingClient.Error(msg)
+			c.Configuration[service] = fmt.Sprintf("%s get config error: %s", service, err.Error())
+			logs.LoggingClient.Error("error retrieving configuration", "service name", service, "error message", err.Error())
 		} else {
 			c.Configuration[service] = ProcessResponse(responseJSON)
 		}
@@ -94,14 +94,13 @@ func getMetrics(services []string) (MetricsRespMap, error) {
 		m.Metrics[service] = ""
 
 		if !isKnownServiceKey(service) {
-			LoggingClient.Warn(fmt.Sprintf("unknown service: %v", service))
+			logs.LoggingClient.Warn("unknown service found getting metrics", "service name", service)
 		}
 
 		responseJSON, err := clients[service].FetchMetrics()
 		if err != nil {
-			msg := fmt.Sprintf("%s get metrics error: %s", service, err.Error())
-			m.Metrics[service] = msg
-			LoggingClient.Error(msg)
+			m.Metrics[service] = fmt.Sprintf("%s get metrics error: %s", service, err.Error())
+			logs.LoggingClient.Error("error retrieving metrics", "service name", service, "error message", err.Error())
 		} else {
 			m.Metrics[service] = ProcessResponse(responseJSON)
 		}

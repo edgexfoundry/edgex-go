@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
+	"github.com/edgexfoundry/edgex-go/internal/system/agent/logger"
 	"strings"
 )
 
@@ -27,11 +28,11 @@ func (de *ExecuteDocker) StopService(service string) error {
 
 	for _, container := range containers {
 		if strings.Contains(container.Names[0], service) {
-			// fmt.Sprintf("Stopping container {%v} with ID {%v}...", container.Names[0], container.ID[:10])
+			logs.LoggingClient.Debug("stopping container", "container name", container.Names[0], "container id", container.ID[:10])
 			if err := cli.ContainerStop(ctx, container.ID, nil); err != nil {
 				return err
 			}
-			// fmt.Sprintf("Successfully stopped the container for the micro-service {%v}.", service)
+			logs.LoggingClient.Debug("successfully stopped container", "service name", service)
 		}
 	}
 	// AFTER Docker stop
