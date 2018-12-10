@@ -2,9 +2,7 @@
 
 # check the mongo database path
 MONGO_DATA_DIR="$SNAP_DATA"/mongo/db
-if [ -e "$MONGO_DATA_DIR" ] ; then
-    rm -rf "${MONGO_DATA_DIR:?}"/*
-else
+if [ ! -e "$MONGO_DATA_DIR" ] ; then
     mkdir -p "$MONGO_DATA_DIR"
 fi
 
