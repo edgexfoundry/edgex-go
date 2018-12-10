@@ -20,30 +20,28 @@ import (
 	"net/url"
 	"strconv"
 
-	types "github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
-
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 	"github.com/gorilla/mux"
+	"github.com/globalsign/mgo/bson"
 )
 
 func restGetAllAddressables(w http.ResponseWriter, _ *http.Request) {
-	results, err := getAllAddressables()
+	results := make([]models.Addressable, 0)
+	err := dbClient.GetAddressables(&results)
 	if err != nil {
-		switch err.(type) {
-		case types.ErrLimitExceeded:
-			http.Error(w, err.Error(), http.StatusRequestEntityTooLarge)
-		default:
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		return
-	}
-	w.Header().Set("Content-Type", "application/json")
-	err = json.NewEncoder(w).Encode(&results)
-	if err != nil {
+		LoggingClient.Error(err.Error(), "")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	if len(results) > Configuration.Service.ReadMaxLimit {
+		err = errors.New("Max limit exceeded")
+		LoggingClient.Error(err.Error(), "")
+		http.Error(w, err.Error(), http.StatusRequestEntityTooLarge)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(&results)
 }
 
 // Add a new addressable
@@ -53,29 +51,31 @@ func restAddAddressable(w http.ResponseWriter, r *http.Request) {
 	var a models.Addressable
 	err := json.NewDecoder(r.Body).Decode(&a)
 	if err != nil {
-		LoggingClient.Error(err.Error())
+		LoggingClient.Error(err.Error(), "")
 		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	} else {
+		if len(a.Name) == 0 {
+			err = errors.New("name is required for addressable")
+			LoggingClient.Error(err.Error(), "")
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+	}
+	var id bson.ObjectId
+	id, err = dbClient.AddAddressable(&a)
+	if err != nil {
+		if err == db.ErrNotUnique {
+			http.Error(w, "Duplicate name for addressable", http.StatusConflict)
+		} else {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		LoggingClient.Error(err.Error(), "")
 		return
 	}
 
-	id, err := addAddressable(a)
-	if err != nil {
-		switch err.(type) {
-		case types.ErrDuplicateAddressableName:
-			http.Error(w, err.Error(), http.StatusConflict)
-		case types.ErrEmptyAddressableName:
-			http.Error(w, err.Error(), http.StatusBadRequest)
-		default:
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		return
-	}
 	w.WriteHeader(http.StatusOK)
-	_, err = w.Write([]byte(id))
-	if err != nil {
-		LoggingClient.Error(err.Error())
-		return
-	}
+	w.Write([]byte(id.Hex()))
 }
 
 // Update addressable by ID or name (ID used first)
@@ -84,30 +84,57 @@ func restUpdateAddressable(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	var ra models.Addressable
 	if err := json.NewDecoder(r.Body).Decode(&ra); err != nil {
-		LoggingClient.Error(err.Error())
+		LoggingClient.Error(err.Error(), "")
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	if err := updateAddressable(ra); err != nil {
-		switch err.(type) {
-		case types.ErrAddressableNotFound:
-			http.Error(w, err.Error(), http.StatusNotFound)
-		case types.ErrAddressableInUse:
-			http.Error(w, err.Error(), http.StatusConflict)
-		default:
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+	// Check if the addressable exists
+	var res models.Addressable
+	err := dbClient.GetAddressableById(&res, ra.Id.Hex())
+	if err != nil {
+		if ra.Id == "" {
+			err = dbClient.GetAddressableByName(&res, ra.Name)
 		}
-		LoggingClient.Error(err.Error())
+		if err != nil {
+			if err == db.ErrNotFound {
+				http.Error(w, err.Error(), http.StatusNotFound)
+			} else {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
+			LoggingClient.Error(err.Error(), "")
+			return
+		}
+	}
+
+	// If the name is changed, check if the addressable is still in use
+	if ra.Name != "" && ra.Name != res.Name {
+		isStillInUse, err := isAddressableStillInUse(res)
+		if err != nil {
+			LoggingClient.Error(err.Error(), "")
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		if isStillInUse {
+			err = errors.New("Data integrity issue: Addressable is still in use")
+			LoggingClient.Error(err.Error(), "")
+			http.Error(w, err.Error(), http.StatusConflict)
+			return
+		}
+	}
+
+	if err := dbClient.UpdateAddressable(&ra, &res); err != nil {
+		LoggingClient.Error(err.Error(), "")
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
+	// Notify Associates
+	notifyAddressableAssociates(res, http.MethodPut)
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	if _, err := w.Write([]byte("true")); err != nil {
-		LoggingClient.Error(err.Error())
-		return
-	}
+	w.Write([]byte("true"))
 }
 
 func restGetAddressableById(w http.ResponseWriter, r *http.Request) {
