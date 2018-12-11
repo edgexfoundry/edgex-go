@@ -1,4 +1,4 @@
-The following open source projects are referenced by Core Metadata Go:
+The following open source projects are referenced by Support Notifications Go:
 
 pkg/errors (BSD-2) https://github.com/pkg/errors
 https://github.com/pkg/errors/blob/master/LICENSE
