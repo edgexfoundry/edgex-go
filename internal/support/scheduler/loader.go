@@ -84,7 +84,7 @@ func callMetaDataService() (int, error) {
 	client := &http.Client{
 		Timeout: time.Duration(Configuration.Service.Timeout) * time.Millisecond,
 	}
-	executingUrl := fmt.Sprintf("%s%s", Configuration.Clients["Metadata"].Url(),clients.ApiPingRoute)
+	executingUrl := fmt.Sprintf("%s%s", Configuration.Clients["Metadata"].Url(), clients.ApiPingRoute)
 
 	req, _ := http.NewRequest(http.MethodGet, executingUrl, nil)
 	req.Header.Set(ContentTypeKey, ContentTypeJsonValue)
@@ -283,7 +283,7 @@ func loadConfigScheduleEvents() error {
 				LoggingClient.Info(fmt.Sprintf("Added addressable into core-metadata name: %s id: %s path: %s", addressable.Name, addressableId, addressable.Path))
 
 				// add the core-metadata id value
-				addressable.Id = bson.ObjectId(addressableId)
+				addressable.Id = addressableId
 			}
 
 			// add the schedule event with addressable event to core-metadata

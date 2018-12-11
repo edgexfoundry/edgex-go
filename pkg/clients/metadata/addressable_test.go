@@ -24,7 +24,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/pkg/clients"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
-	"github.com/globalsign/mgo/bson"
+	"github.com/google/uuid"
 )
 
 func TestNewAddressableClientWithConsul(t *testing.T) {
@@ -54,11 +54,11 @@ func TestNewAddressableClientWithConsul(t *testing.T) {
 // Test adding an addressable using the client
 func TestAddAddressable(t *testing.T) {
 	addressable := models.Addressable{
-		Id:   bson.ObjectIdHex("5baca80d64562a6fcd22070c"),
+		Id:   uuid.New().String(),
 		Name: "TestName",
 	}
 
-	addingAddressableID := addressable.Id.Hex()
+	addingAddressableID := addressable.Id
 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -100,7 +100,7 @@ func TestAddAddressable(t *testing.T) {
 // Test get an addressable using the client
 func TestGetAddressable(t *testing.T) {
 	addressable := models.Addressable{
-		Id:   bson.ObjectIdHex("5baca80d64562a6fcd22070c"),
+		Id:   uuid.New().String(),
 		Name: "TestName",
 	}
 
@@ -111,7 +111,7 @@ func TestGetAddressable(t *testing.T) {
 			t.Errorf("expected http method is %s, active http method is : %s", http.MethodGet, r.Method)
 		}
 
-		path := clients.ApiAddressableRoute + "/" + addressable.Id.Hex()
+		path := clients.ApiAddressableRoute + "/" + addressable.Id
 		if r.URL.EscapedPath() != path {
 			t.Errorf("expected uri path is %s, actual uri path is %s", path, r.URL.EscapedPath())
 		}
@@ -132,7 +132,7 @@ func TestGetAddressable(t *testing.T) {
 		Interval:    clients.ClientMonitorDefault}
 	ac := NewAddressableClient(params, MockEndpoint{})
 
-	receivedAddressable, err := ac.Addressable(addressable.Id.Hex())
+	receivedAddressable, err := ac.Addressable(addressable.Id)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -145,7 +145,7 @@ func TestGetAddressable(t *testing.T) {
 // Test get an addressable using the client
 func TestGetAddressableForName(t *testing.T) {
 	addressable := models.Addressable{
-		Id:   bson.ObjectIdHex("5baca80d64562a6fcd22070c"),
+		Id:   uuid.New().String(),
 		Name: "TestName",
 	}
 
@@ -190,7 +190,7 @@ func TestGetAddressableForName(t *testing.T) {
 // Test updating an addressable using the client
 func TestUpdateAddressable(t *testing.T) {
 	addressable := models.Addressable{
-		Id:   bson.ObjectIdHex("5baca80d64562a6fcd22070c"),
+		Id:   uuid.New().String(),
 		Name: "TestName",
 	}
 
@@ -228,7 +228,7 @@ func TestUpdateAddressable(t *testing.T) {
 // Test deleting an addressable using the client
 func TestDeleteAddressable(t *testing.T) {
 	addressable := models.Addressable{
-		Id:   bson.ObjectIdHex("5baca80d64562a6fcd22070c"),
+		Id:   uuid.New().String(),
 		Name: "TestName",
 	}
 
@@ -239,7 +239,7 @@ func TestDeleteAddressable(t *testing.T) {
 			t.Errorf("expected http method is %s, active http method is : %s", http.MethodDelete, r.Method)
 		}
 
-		path := clients.ApiAddressableRoute + "/id/" + addressable.Id.Hex()
+		path := clients.ApiAddressableRoute + "/id/" + addressable.Id
 		if r.URL.EscapedPath() != path {
 			t.Errorf("expected uri path is %s, actual uri path is %s", path, r.URL.EscapedPath())
 		}
@@ -258,7 +258,7 @@ func TestDeleteAddressable(t *testing.T) {
 		Interval:    clients.ClientMonitorDefault}
 	ac := NewAddressableClient(params, MockEndpoint{})
 
-	err := ac.Delete(addressable.Id.Hex())
+	err := ac.Delete(addressable.Id)
 	if err != nil {
 		t.Error(err.Error())
 	}

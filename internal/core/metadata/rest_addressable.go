@@ -31,7 +31,7 @@ func restGetAllAddressables(w http.ResponseWriter, _ *http.Request) {
 	results, err := getAllAddressables()
 	if err != nil {
 		switch err.(type) {
-		case types.ErrLimitExceeded:
+		case *types.ErrLimitExceeded:
 			http.Error(w, err.Error(), http.StatusRequestEntityTooLarge)
 		default:
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -61,9 +61,9 @@ func restAddAddressable(w http.ResponseWriter, r *http.Request) {
 	id, err := addAddressable(a)
 	if err != nil {
 		switch err.(type) {
-		case types.ErrDuplicateAddressableName:
+		case *types.ErrDuplicateAddressableName:
 			http.Error(w, err.Error(), http.StatusConflict)
-		case types.ErrEmptyAddressableName:
+		case *types.ErrEmptyAddressableName:
 			http.Error(w, err.Error(), http.StatusBadRequest)
 		default:
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -91,9 +91,9 @@ func restUpdateAddressable(w http.ResponseWriter, r *http.Request) {
 
 	if err := updateAddressable(ra); err != nil {
 		switch err.(type) {
-		case types.ErrAddressableNotFound:
+		case *types.ErrAddressableNotFound:
 			http.Error(w, err.Error(), http.StatusNotFound)
-		case types.ErrAddressableInUse:
+		case *types.ErrAddressableInUse:
 			http.Error(w, err.Error(), http.StatusConflict)
 		default:
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -113,8 +113,8 @@ func restUpdateAddressable(w http.ResponseWriter, r *http.Request) {
 func restGetAddressableById(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	var id string = vars["id"]
-	var result models.Addressable
-	if err := dbClient.GetAddressableById(&result, id); err != nil {
+	result, err := dbClient.GetAddressableById(id)
+	if err != nil {
 		if err == db.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
 		} else {
@@ -131,8 +131,7 @@ func restDeleteAddressableById(w http.ResponseWriter, r *http.Request) {
 	var id string = vars[ID]
 
 	// Check if the addressable exists
-	var a models.Addressable
-	err := dbClient.GetAddressableById(&a, id)
+	a, err := dbClient.GetAddressableById(id)
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
 		http.Error(w, err.Error(), http.StatusNotFound)
@@ -153,7 +152,7 @@ func restDeleteAddressableById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = dbClient.DeleteAddressableById(a.Id.Hex())
+	err = dbClient.DeleteAddressableById(a.Id)
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -174,8 +173,7 @@ func restDeleteAddressableByName(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check if the addressable exists
-	var a models.Addressable
-	err = dbClient.GetAddressableByName(&a, n)
+	a, err := dbClient.GetAddressableByName(n)
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
 		http.Error(w, err.Error(), http.StatusNotFound)
@@ -196,7 +194,7 @@ func restDeleteAddressableByName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := dbClient.DeleteAddressableById(a.Id.Hex()); err != nil {
+	if err := dbClient.DeleteAddressableById(a.Id); err != nil {
 		LoggingClient.Error(err.Error(), "")
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return
@@ -211,7 +209,7 @@ func restDeleteAddressableByName(w http.ResponseWriter, r *http.Request) {
 func isAddressableStillInUse(a models.Addressable) (bool, error) {
 	// Check devices
 	var d []models.Device
-	err := dbClient.GetDevicesByAddressableId(&d, a.Id.Hex())
+	err := dbClient.GetDevicesByAddressableId(&d, a.Id)
 	if err != nil {
 		return false, err
 	}
@@ -221,7 +219,7 @@ func isAddressableStillInUse(a models.Addressable) (bool, error) {
 
 	// Check device services
 	var ds []models.DeviceService
-	err = dbClient.GetDeviceServicesByAddressableId(&ds, a.Id.Hex())
+	err = dbClient.GetDeviceServicesByAddressableId(&ds, a.Id)
 	if err != nil {
 		return false, err
 	}
@@ -239,8 +237,8 @@ func restGetAddressableByName(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return
 	}
-	var result models.Addressable
-	if err := dbClient.GetAddressableByName(&result, dn); err != nil {
+	result, err := dbClient.GetAddressableByName(dn)
+	if err != nil {
 		LoggingClient.Error(err.Error(), "")
 		if err == db.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
@@ -262,9 +260,8 @@ func restGetAddressableByTopic(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	res := make([]models.Addressable, 0)
 
-	err = dbClient.GetAddressablesByTopic(&res, t)
+	res, err := dbClient.GetAddressablesByTopic(t)
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -284,8 +281,8 @@ func restGetAddressableByPort(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res := make([]models.Addressable, 0)
-	if err := dbClient.GetAddressablesByPort(&res, p); err != nil {
+	res, err := dbClient.GetAddressablesByPort(p)
+	if err != nil {
 		LoggingClient.Error(err.Error(), "")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -302,8 +299,8 @@ func restGetAddressableByPublisher(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	res := make([]models.Addressable, 0)
-	err = dbClient.GetAddressablesByPublisher(&res, p)
+
+	res, err := dbClient.GetAddressablesByPublisher(p)
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -321,8 +318,8 @@ func restGetAddressableByAddress(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	res := make([]models.Addressable, 0)
-	err = dbClient.GetAddressablesByAddress(&res, a)
+
+	res, err := dbClient.GetAddressablesByAddress(a)
 	if err != nil {
 		LoggingClient.Error(err.Error(), "")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -337,7 +334,7 @@ func restGetAddressableByAddress(w http.ResponseWriter, r *http.Request) {
 func notifyAddressableAssociates(a models.Addressable, action string) error {
 	// Get the devices
 	var d []models.Device
-	if err := dbClient.GetDevicesByAddressableId(&d, a.Id.Hex()); err != nil {
+	if err := dbClient.GetDevicesByAddressableId(&d, a.Id); err != nil {
 		LoggingClient.Error(err.Error(), "")
 		return err
 	}
@@ -354,7 +351,7 @@ func notifyAddressableAssociates(a models.Addressable, action string) error {
 		}
 	}
 
-	if err := notifyAssociates(ds, a.Id.Hex(), action, models.ADDRESSABLE); err != nil {
+	if err := notifyAssociates(ds, a.Id, action, models.ADDRESSABLE); err != nil {
 		LoggingClient.Error(err.Error(), "")
 		return err
 	}
