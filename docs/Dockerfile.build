@@ -43,6 +43,8 @@ COPY examples ./
 COPY general ./
 COPY getting-started ./
 COPY walk-through ./
+COPY quick-start ./
+
 
 COPY entrypoint.sh /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
