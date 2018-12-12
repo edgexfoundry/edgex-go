@@ -1,4 +1,6 @@
 # EdgeX Foundry Core Snap
+[![snap store badge](https://raw.githubusercontent.com/snapcore/snap-store-badges/master/EN/%5BEN%5D-snap-store-black-uneditable.png)](https://snapcraft.io/edgexfoundry)
+
 This folder contains snap packaging for the EdgeX Foundry reference implementation.
 
 The snap contains Consul, MongoDB, all of the EdgeX Go-based micro services from
