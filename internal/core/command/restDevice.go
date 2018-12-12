@@ -44,7 +44,9 @@ func issueDeviceCommand(w http.ResponseWriter, r *http.Request, p bool) {
 	if status != http.StatusOK {
 		w.WriteHeader(status)
 	} else {
-		w.Header().Set("Content-Type", "application/json")
+		if len(body) > 0 {
+			w.Header().Set("Content-Type", "application/json")
+		}
 		w.Write([]byte(body))
 	}
 }
@@ -58,7 +60,6 @@ func restPutDeviceAdminState(w http.ResponseWriter, r *http.Request) {
 		LoggingClient.Error(err.Error(), "")
 	}
 	w.WriteHeader(status)
-
 }
 
 func restPutDeviceAdminStateByDeviceName(w http.ResponseWriter, r *http.Request) {
@@ -104,6 +105,7 @@ func restGetCommandsByDeviceID(w http.ResponseWriter, r *http.Request) {
 		return
 	} else if status != http.StatusOK {
 		w.WriteHeader(status)
+		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(&device)
@@ -119,6 +121,7 @@ func restGetCommandsByDeviceName(w http.ResponseWriter, r *http.Request) {
 		return
 	} else if status != http.StatusOK {
 		w.WriteHeader(status)
+		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(&devices)
@@ -131,6 +134,7 @@ func restGetAllCommands(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(status)
 	} else if status != http.StatusOK {
 		w.WriteHeader(status)
+		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(devices)
