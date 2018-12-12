@@ -2,14 +2,15 @@ name: edgexfoundry
 version: 'replace-me'
 version-script: |
     echo $(cat VERSION)-$(date +%Y%m%d)+$(git rev-parse --short HEAD)
-summary: Provides a full set of Edgex Foundry core microservices.
+summary: Open-source framework for IoT edge computing
 description: |
- This snap provides a full set of EdgeX Foundry core micro services.
- The snap contains Consul, MongoDB, all of the EdgeX Go-based micro services from
- this repository, and three Java-based services, support-rulesengine and support-
- scheduler, and device-virtual, as well as Vault, Kong, Cassandra, and the two go-based 
- security micro services. The packaging for this snap can be found at:
- https://github.com/edgexfoundry/edgex-go
+  EdgeX Foundry is a vendor-neutral open source project hosted by The Linux 
+  Foundation building a common open framework for IoT edge computing. This 
+  snap contains all of the EdgeX core, security, and support reference 
+  services, as well as Consul, Kong, MongoDB, Vault, a JRE for the two 
+  remaining Java services, and a set of basic device services. The packaging 
+  for this snap can be found at: https://github.com/edgexfoundry/edgex-go
+icon: snap/local/assets/edgex-snap-icon.png
 
 # TODO: upgrade to stable before releasing to beta/candidate/stable
 grade: devel
