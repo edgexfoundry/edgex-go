@@ -22,10 +22,6 @@ import:
   version: =1.2.0
 - package: github.com/robfig/cron
   version: =1.1.0
-- package: gopkg.in/mgo.v2
-  version: 3f83fa5005286a7fe593b055f0d7771a7dce4655
-  subpackages:
-  - bson
 - package: gopkg.in/yaml.v2
   version: eb3733d160e74a9c7e442f435eb3bea458e1d19f
 - package: github.com/mattn/go-xmpp
@@ -44,3 +40,5 @@ import:
   version: 97c2040d34dfae1d1b1275fa3a78dbdd2f41cf7e
 - package: github.com/docker/go-units
   version: 47565b4f722fb6ceae66b95f853feed578a4a51c
+- package: github.com/globalsign/mgo
+  version: 113d3961e7311526535a1ef7042196563d442761
