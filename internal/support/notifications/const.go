@@ -18,12 +18,12 @@ package notifications
 
 var (
 	/* ----------------------- CONSTANTS ----------------------------*/
-	ESCALATIONSUBSCRIPTIONSLUG      = "ESCALATION"
-	ESCALATIONPREFIX                = "escalated-"
-	ESCALATEDCONTENTNOTICE          = "This notification is escalated by the transmission"
+	ESCALATIONSUBSCRIPTIONSLUG = "ESCALATION"
+	ESCALATIONPREFIX           = "escalated-"
+	ESCALATEDCONTENTNOTICE     = "This notification is escalated by the transmission"
 
 	/* ---------------- URL PARAM NAMES -----------------------*/
-	START        = "start"
-	END          = "end"
-	LIMIT        = "limit"
+	START = "start"
+	END   = "end"
+	LIMIT = "limit"
 )

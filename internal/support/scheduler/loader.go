@@ -1,19 +1,24 @@
+/*******************************************************************************
+ * Copyright 2018 Dell Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
+ *******************************************************************************/
 package scheduler
 
 import (
-	"fmt"
-	"net/http"
-	"regexp"
-	"sync"
-	"time"
-
-	"github.com/edgexfoundry/edgex-go/pkg/clients"
-	"github.com/edgexfoundry/edgex-go/pkg/models"
-	"github.com/globalsign/mgo/bson"
+	contract "github.com/edgexfoundry/edgex-go/pkg/models"
 )
 
-// Utility function for adding configured locally schedulers and scheduled events
-func AddSchedulers() error {
+// Utility function for adding configured locally intervals and scheduled events
+func LoadScheduler() error {
 
 	// ensure maps are clean
 	clearMaps()
@@ -21,329 +26,253 @@ func AddSchedulers() error {
 	// ensure queue is empty
 	clearQueue()
 
-	LoggingClient.Info("Loading schedules, schedule events, and addressables ...")
+	LoggingClient.Info("loading intervals, interval actions ...")
 
-	// load data from core-metadata
-	err := loadCoreMetadataInformation()
+	// load data from support-scheduler database
+	err := loadSupportSchedulerDBInformation()
 	if err != nil {
-		LoggingClient.Error("failed to load information from core-metadata", "message", err.Error())
+		LoggingClient.Error("failed to load information from support-scheduler:" + err.Error())
 		return err
 	}
 
-	// load config schedules
-	errCS := loadConfigSchedules()
-	if errCS != nil {
-		LoggingClient.Error("failed to load scheduler config data", "message", errCS.Error())
-		return errCS
+	// load config intervals
+	errLCI := loadConfigIntervals()
+	if errLCI != nil {
+		LoggingClient.Error("failed to load scheduler config data:" + errLCI.Error())
+		return errLCI
 	}
 
-	// load config schedule events
-	errCSE := loadConfigScheduleEvents()
-	if errCSE != nil {
-		LoggingClient.Error("failed to load scheduler events config data", "message", errCSE.Error())
-		return errCSE
+	// load config interval actions
+	errLCA := loadConfigIntervalActions()
+	if errLCA != nil {
+		LoggingClient.Error("failed to load interval actions config data:" + errLCA.Error())
+		return errLCA
 	}
 
-	LoggingClient.Info("Finished loading schedules, schedule events, and addressables")
+	LoggingClient.Info("finished loading intervals, interval actions")
 
 	return nil
 }
 
-// check meta data service
-func RetryService(timeout int, wait *sync.WaitGroup, ch chan string) {
-	now := time.Now()
-	until := now.Add(time.Millisecond * time.Duration(timeout))
+// Query support-scheduler scheduler client get intervals
+func getSchedulerDBIntervals() ([]contract.Interval, error) {
+	var err error
+	var intervals []contract.Interval
 
-	var status = 0
-	for time.Now().Before(until) {
-		var err error
-		//When looping, only handle configuration if it hasn't already been set.
-		if status != 200 {
-			status, err = callMetaDataService()
-			if err != nil {
-				ch <- "Support Scheduler failed to connect to Core Metadata...retrying"
-			} else {
-				//Check against boot timeout default
-				if Configuration.Service.BootTimeout != timeout {
-					until = now.Add(time.Millisecond * time.Duration(Configuration.Service.BootTimeout))
-				}
-			}
-		}
+	intervals, err = dbClient.Intervals()
 
-		if status == 200 {
-			ch <- "Support Scheduler established connection to Core Metadata"
-			break
-		}
-		time.Sleep(time.Second * time.Duration(1))
-	}
-	close(ch)
-	wait.Done()
-
-	return
-}
-
-// ensure we have core metadata available
-func callMetaDataService() (int, error) {
-
-	client := &http.Client{
-		Timeout: time.Duration(Configuration.Service.Timeout) * time.Millisecond,
-	}
-	executingUrl := fmt.Sprintf("%s%s", Configuration.Clients["Metadata"].Url(), clients.ApiPingRoute)
-
-	req, _ := http.NewRequest(http.MethodGet, executingUrl, nil)
-	req.Header.Set(ContentTypeKey, ContentTypeJsonValue)
-
-	_, statusCode, err := sendRequestAndGetResponse(client, req)
 	if err != nil {
-		return statusCode, err
-	}
-	LoggingClient.Debug("execution complete", "code", statusCode)
-	return statusCode, nil
-}
-
-// Query core-metadata scheduler client get schedules
-func getMetadataSchedules() ([]models.Schedule, error) {
-
-	var receivedSchedules []models.Schedule
-	receivedSchedules, errSchedule := msc.Schedules()
-	if errSchedule != nil {
-		LoggingClient.Error("error connecting to metadata and retrieving schedules", "message", errSchedule.Error())
-		return receivedSchedules, errSchedule
+		LoggingClient.Error("failed connecting to metadata and retrieving intervals:" + err.Error())
+		return intervals, err
 	}
 
-	if receivedSchedules != nil {
-		LoggingClient.Debug("Successfully queried core-metadata schedules...")
-		for _, v := range receivedSchedules {
-			LoggingClient.Debug("found schedule", "id", v.Id.Hex(), "schedule", v.Name, "start", v.Start)
+	if intervals != nil {
+		LoggingClient.Debug("successfully queried support-scheduler intervals...")
+		for _, v := range intervals {
+			LoggingClient.Debug("found interval", "name", v.Name, "id", v.ID, "start", v.Start)
 		}
 	}
-	return receivedSchedules, nil
+	return intervals, nil
 }
 
-// Query core-metadata schedulerEvent client get scheduledEvents
-func getMetadataScheduleEvents() ([]models.ScheduleEvent, error) {
+// Query support-scheduler schedulerEvent client get scheduledEvents
+func getSchedulerDBIntervalActions() ([]contract.IntervalAction, error) {
+	var err error
+	var intervalActions []contract.IntervalAction
 
-	var receivedScheduleEvents []models.ScheduleEvent
-	receivedScheduleEvents, err := msec.ScheduleEvents()
+	intervalActions, err = dbClient.IntervalActions()
 	if err != nil {
-		LoggingClient.Error("error connecting to metadata and retrieving schedule events", "message", err.Error())
-		return receivedScheduleEvents, err
+		LoggingClient.Error("error connecting to metadata and retrieving interval actions:" + err.Error())
+		return intervalActions, err
 	}
 
 	// debug information only
-	if receivedScheduleEvents != nil {
-		LoggingClient.Debug("Successfully queried core-metadata schedule events...")
-		for _, v := range receivedScheduleEvents {
-			LoggingClient.Debug("found schedule", "id", v.Id.Hex(), "event", v.Name, "schedule", v.Schedule, "service", v.Service)
+	if intervalActions != nil {
+		LoggingClient.Debug("successfully queried support-scheduler interval actions...")
+		for _, v := range intervalActions {
+			LoggingClient.Debug("found interval action", "name", v.Name, "id", v.ID, "interval", v.Interval, "target", v.Target)
 		}
 	}
-
-	return receivedScheduleEvents, nil
+	return intervalActions, nil
 }
 
-// Iterate over the received schedules add them to scheduler
-func addReceivedSchedules(schedules []models.Schedule) error {
-
-	for _, schedule := range schedules {
-		// todo: need to remove this naming convention based inference
-		matched, err := regexp.MatchString("device.*", schedule.Name)
+// Iterate over the received intervals add them to scheduler memory queue
+func addReceivedIntervals(intervals []contract.Interval) error {
+	for _, interval := range intervals {
+		err := scClient.AddIntervalToQueue(interval)
 		if err != nil {
-			LoggingClient.Error("error parsing received core-metadata schedules", "message", err.Error())
+			LoggingClient.Info("problem adding support-scheduler interval name: %s - %s", interval.Name, err.Error())
 			return err
 		}
-		// we have a service related notification
-		if !matched {
-			err := addSchedule(schedule)
-			if err != nil {
-				LoggingClient.Error("error adding core-metadata schedule", "schedule", schedule.Name, "message", err.Error())
-				return err
-			}
-			LoggingClient.Info("associated schedule name and id", "schedule", schedule.Name, "id", schedule.Id.Hex())
-		}
+		LoggingClient.Info("added interval", "name", interval.Name, "id", interval.ID)
 	}
 	return nil
 }
 
-// Iterate over the received schedule event(s)
-func addReceivedScheduleEvents(scheduleEvents []models.ScheduleEvent) error {
-
-	for _, scheduleEvent := range scheduleEvents {
-		// todo: need to remove this naming convention based inference
-		matched, err := regexp.MatchString("device.*", scheduleEvent.Service)
+// Iterate over the received interval action(s)
+func addReceivedIntervalActions(intervalActions []contract.IntervalAction) error {
+	for _, intervalAction := range intervalActions {
+		err := scClient.AddIntervalActionToQueue(intervalAction)
 		if err != nil {
-			LoggingClient.Error("error parsing received core-metadata schedules", "message", err.Error())
+			LoggingClient.Info("problem adding support-scheduler interval action", "name:", intervalAction.Name, "message", err.Error())
 			return err
 		}
-		// schedule event service should not be device.*
-		if !matched {
-			err := addScheduleEvent(scheduleEvent)
-			if err != nil {
-				LoggingClient.Error("error adding core-metadata schedule event", "event", scheduleEvent.Name, "message", err.Error())
-				return err
-			}
-			LoggingClient.Info("added event to schedule", "event", scheduleEvent.Name, "schedule", scheduleEvent.Schedule, "id", scheduleEvent.Id.Hex())
-		}
+		LoggingClient.Info("added interval action", "name", intervalAction.Name, "id", intervalAction.ID)
 	}
-
 	return nil
 }
 
-// Add schedule to core-metadata
-func addScheduleToCoreMetaData(schedule models.Schedule) (string, error) {
+// Add interval to support-scheduler
+func addIntervalToSchedulerDB(interval contract.Interval) (string, error) {
 
-	addedScheduleId, err := msc.Add(&schedule)
+	var err error
+	var id string
+
+	id, err = dbClient.AddInterval(interval)
 	if err != nil {
-		LoggingClient.Error("error trying to add schedule to core-metadata service", "message", err.Error())
+		LoggingClient.Error("problem trying to add interval to support-scheduler service:" + err.Error())
 		return "", err
 	}
-	LoggingClient.Info("Added schedule to the core-metadata", "schedule", schedule.Name, "id", addedScheduleId)
-	return addedScheduleId, nil
+	interval.ID = id
+
+	LoggingClient.Info("added interval to the support-scheduler database", "name", interval.Name, "id", ID)
+
+	return id, nil
 }
 
-// Add schedule event to core-metadata
-func addScheduleEventToCoreMetadata(scheduleEvent models.ScheduleEvent) (string, error) {
+// Add interval event to support-scheduler
+func addIntervalActionToSchedulerDB(intervalAction contract.IntervalAction) (string, error) {
+	var err error
+	var id string
 
-	addedScheduleEventId, err := msec.Add(&scheduleEvent)
+	id, err = dbClient.AddIntervalAction(intervalAction)
 	if err != nil {
-		LoggingClient.Error("error trying to add schedule event to core-metadata service", "message", err.Error())
+		LoggingClient.Error("problem trying to add interval action to support-scheduler service:" + err.Error())
 		return "", err
 	}
-	LoggingClient.Info("Added schedule event to the core-metadata", "event", scheduleEvent.Name, "id", addedScheduleEventId)
-	return addedScheduleEventId, nil
+	LoggingClient.Info("added interval action to the support-scheduler", "name", intervalAction.Name, "id", id)
+
+	return id, nil
 }
 
-// Load schedules
-func loadConfigSchedules() error {
+// Load intervals
+func loadConfigIntervals() error {
 
-	schedules := Configuration.Schedules
-	for i := range schedules {
-		schedule := models.Schedule{
-			BaseObject: models.BaseObject{},
-			Name:       schedules[i].Name,
-			Start:      schedules[i].Start,
-			End:        schedules[i].End,
-			Frequency:  schedules[i].Frequency,
-			Cron:       schedules[i].Cron,
-			RunOnce:    schedules[i].RunOnce,
+	intervals := Configuration.Intervals
+	for i := range intervals {
+		interval := contract.Interval{
+			ID:        "",
+			Created:   0,
+			Modified:  0,
+			Origin:    0,
+			Name:      intervals[i].Name,
+			Start:     intervals[i].Start,
+			End:       intervals[i].End,
+			Frequency: intervals[i].Frequency,
+			Cron:      intervals[i].Cron,
+			RunOnce:   intervals[i].RunOnce,
 		}
-		_, errExistingSchedule := queryScheduleByName(schedule.Name)
+
+		// query scheduler service for interval in memory queue
+		_, errExistingSchedule := scClient.QueryIntervalByName(interval.Name)
 
 		if errExistingSchedule != nil {
-			// add the schedule core-metadata
-			newScheduleId, errAddedSchedule := addScheduleToCoreMetaData(schedule)
-			if errAddedSchedule != nil {
-				LoggingClient.Error("error adding to the scheduler", "message", errAddedSchedule.Error())
-				return errAddedSchedule
+			// add the interval support-scheduler
+			newIntervalID, errAddedInterval := addIntervalToSchedulerDB(interval)
+			if errAddedInterval != nil {
+				LoggingClient.Error("problem adding interval to the scheduler database:" + errAddedInterval.Error())
+				return errAddedInterval
 			}
 
-			// add the core-metadata scheduler.id
-			schedule.Id = bson.ObjectId(newScheduleId)
+			// add the support-scheduler scheduler.id
+			interval.ID = newIntervalID
 
-			// add the schedule to the scheduler
-			err := addSchedule(schedule)
+			// add the interval to the scheduler
+			err := scClient.AddIntervalToQueue(interval)
 
 			if err != nil {
-				LoggingClient.Error("error loading schedule %s from the scheduler config", "message", err.Error())
+				LoggingClient.Error("problem loading interval from the scheduler config: " + err.Error())
 				return err
 			}
 		} else {
-			LoggingClient.Debug("did not add schedule %s as it already exists in the scheduler", "schedule", schedule.Name)
+			LoggingClient.Debug("did not add interval as it already exists in the scheduler database", "name", interval.Name)
 		}
 	}
 
 	return nil
 }
 
-// Load schedule events and associated addressable(s) if required
-func loadConfigScheduleEvents() error {
+// Load interval actions if required
+func loadConfigIntervalActions() error {
 
-	scheduleEvents := Configuration.ScheduleEvents
+	intervalActions := Configuration.IntervalActions
 
-	for e := range scheduleEvents {
-
-		addressable := models.Addressable{
-			Name:       fmt.Sprintf("schedule-%s", scheduleEvents[e].Name),
-			Path:       scheduleEvents[e].Path,
-			Port:       scheduleEvents[e].Port,
-			Protocol:   scheduleEvents[e].Protocol,
-			HTTPMethod: scheduleEvents[e].Method,
-			Address:    scheduleEvents[e].Host,
+	for ia := range intervalActions {
+		intervalAction := contract.IntervalAction{
+			Name:       intervalActions[ia].Name,
+			Interval:   intervalActions[ia].Interval,
+			Parameters: intervalActions[ia].Parameters,
+			Target:     intervalActions[ia].Target,
+			Path:       intervalActions[ia].Path,
+			Port:       intervalActions[ia].Port,
+			Protocol:   intervalActions[ia].Protocol,
+			HTTPMethod: intervalActions[ia].Method,
+			Address:    intervalActions[ia].Host,
 		}
 
-		scheduleEvent := models.ScheduleEvent{
-			Name:        scheduleEvents[e].Name,
-			Schedule:    scheduleEvents[e].Schedule,
-			Parameters:  scheduleEvents[e].Parameters,
-			Service:     scheduleEvents[e].Service,
-			Addressable: addressable,
-		}
-
-		// fetch existing queue and determine of scheduleEvent exists
-		_, err := queryScheduleEventByName(scheduleEvent.Name)
+		// query scheduler in memory queue and determine of intervalAction exists
+		_, err := scClient.QueryIntervalActionByName(intervalAction.Name)
 
 		if err != nil {
-			// query core-metadata for addressable
-			_, err := mac.AddressableForName(addressable.Name)
-			if err != nil {
-				// we don't have that addressable yet now add it
-				addressableId, err := mac.Add(&addressable)
-				if err != nil {
-					LoggingClient.Error("error adding new addressable into core-metadata", "message", err.Error())
-					return err
-				}
-				LoggingClient.Info("Added addressable into core-metadata", "addressable", addressable.Name, "id", addressableId, "path", addressable.Path)
 
-				// add the core-metadata id value
-				addressable.Id = addressableId
-			}
-
-			// add the schedule event with addressable event to core-metadata
-			newScheduleEventId, err := addScheduleEventToCoreMetadata(scheduleEvent)
+			// add the interval action to support-scheduler database
+			newIntervalActionID, err := addIntervalActionToSchedulerDB(intervalAction)
 			if err != nil {
-				LoggingClient.Error("error adding schedule event %s into core-metadata", "message", err.Error())
+				LoggingClient.Error("problem adding interval action into support-scheduler database:" + err.Error())
 				return err
 			}
 
-			// add the core-metadata version of the scheduleEvent.Id
-			scheduleEvent.Id = bson.ObjectId(newScheduleEventId)
+			// add the support-scheduler version of the intervalAction.ID
+			intervalAction.ID = newIntervalActionID
+			//TODO: Do we care about the Created,Modified, or Origin fields?
 
-			errAddSE := addScheduleEvent(scheduleEvent)
-			if errAddSE != nil {
-				LoggingClient.Error("error loading schedule event %s into scheduler", "message", errAddSE.Error())
-				return errAddSE
+			errAddIntervalAction := scClient.AddIntervalActionToQueue(intervalAction)
+			if errAddIntervalAction != nil {
+				LoggingClient.Error("problem loading interval action into support-scheduler:" + errAddIntervalAction.Error())
+				return errAddIntervalAction
+
 			}
 		} else {
-			LoggingClient.Debug("Did not load schedule event as it exists in the scheduler", "event", scheduleEvent.Name)
+			LoggingClient.Debug("did not load interval action as it exists in the scheduler database:" + intervalAction.Name)
 		}
 	}
-
 	return nil
 }
 
-// Query core-metadata information
-func loadCoreMetadataInformation() error {
+// Query support-scheduler database information
+func loadSupportSchedulerDBInformation() error {
 
-	receivedSchedules, err := getMetadataSchedules()
+	receivedIntervals, err := getSchedulerDBIntervals()
 	if err != nil {
-		LoggingClient.Error("Failed to receive schedules from core-metadata", "message", err.Error())
+		LoggingClient.Error("failed to receive intervals from support-scheduler database:" + err.Error())
 		return err
 	}
 
-	err = addReceivedSchedules(receivedSchedules)
+	err = addReceivedIntervals(receivedIntervals)
 	if err != nil {
-		LoggingClient.Error("Failed to add received schedules from core-metadata", "message", err.Error())
+		LoggingClient.Error("failed to add received intervals from support-scheduler database:" + err.Error())
 		return err
 	}
 
-	receivedScheduleEvents, err := getMetadataScheduleEvents()
+	intervalActions, err := getSchedulerDBIntervalActions()
 	if err != nil {
-		LoggingClient.Error("Failed to receive schedule events from core-metadata", "message", err.Error())
+		LoggingClient.Error("failed to receive interval actions from support-scheduler database:" + err.Error())
 		return err
 	}
 
-	err = addReceivedScheduleEvents(receivedScheduleEvents)
+	err = addReceivedIntervalActions(intervalActions)
 	if err != nil {
-		LoggingClient.Error("Failed to add received schedule events from core-metadata", "message", err.Error())
+		LoggingClient.Error("failed to add received interval actions from support-scheduler database:" + err.Error())
 		return err
 	}
 

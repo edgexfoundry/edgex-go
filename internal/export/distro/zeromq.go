@@ -37,14 +37,13 @@ func (sender *zeroMQEventPublisher) Send(data []byte, event *models.Event) bool 
 	sender.mux.Lock()
 	defer sender.mux.Unlock()
 	LoggingClient.Debug("Sending data to 0MQ: " + string(data[:]))
-	_, err := sender.publisher.SendBytes(data,0)
+	_, err := sender.publisher.SendBytes(data, 0)
 	if err != nil {
 		LoggingClient.Error("Issue trying to publish to 0MQ...")
 		return false
 	}
 	return true
 }
-
 
 func ZeroMQReceiver(eventCh chan *models.Event) {
 	go initZmq(eventCh)

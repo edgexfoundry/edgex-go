@@ -1,4 +1,4 @@
-ScheduleInterval = 500
+ScheduleIntervalTime = 500
 
 [Service]
 BootTimeout = 30000
@@ -22,44 +22,47 @@ File = './logs/edgex-support-scheduler.log'
 Level = 'INFO'
 
 [Clients]
-  [Clients.Metadata]
-  Protocol = 'http'
-  Host = 'localhost'
-  Port = 48081
-
   [Clients.Logging]
   Protocol = 'http'
   Host = 'localhost'
   Port = 48061
 
-[Schedules]
-    [Schedules.Midnight]
+[Databases]
+  [Databases.Primary]
+  Host = 'localhost'
+  Name = 'scheduler'
+  Password = ''
+  Port = 27017
+  Username = ''
+  Timeout = 5000
+  Type = 'mongodb'
+
+[Intervals]
+    [Intervals.Midnight]
     Name = 'midnight'
     Start = '20180101T000000'
     Frequency = 'P1D'
 
-[ScheduleEvents]
-    [ScheduleEvents.ScrubPushed]
+[IntervalActions]
+    [IntervalActions.ScrubPushed]
     Name = 'scrub-pushed-events'
     Host = 'localhost'
     Port = 48080
     Protocol = 'http'
     Method = 'DELETE'
-    Service = 'core-data'
+    Target = 'core-data'
     Path = '/api/v1/event/scrub'
-    Schedule = 'midnight'
-    Scheduler = 'support-scheduler'
+    Interval = 'midnight'
 
-    [ScheduleEvents.ScrubAged]
+    [IntervalActions.ScrubAged]
     Name = 'scrub-aged-events'
     Host = 'localhost'
     Port = 48080
     Protocol = 'http'
     Method = 'DELETE'
-    Service = 'core-data'
+    Target = 'core-data'
     Path = '/api/v1/event/removeold/age/604800000'
-    Schedule = 'midnight'
-    Scheduler = 'support-scheduler'
+    Interval = 'midnight'
 
 
 

@@ -28,8 +28,8 @@ import (
 // Test updating a device profile using the device profile client
 func TestUpdateDeviceProfile(t *testing.T) {
 	p := models.DeviceProfile{
-		Id:             "1234",
-		Name:           "Test name for device profile",
+		Id:   "1234",
+		Name: "Test name for device profile",
 	}
 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -64,4 +64,3 @@ func TestUpdateDeviceProfile(t *testing.T) {
 		t.Error(err.Error())
 	}
 }
-

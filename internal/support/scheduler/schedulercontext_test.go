@@ -25,160 +25,160 @@ const (
 
 // Test Schedule model const fields
 const (
-	TestScheduleName         = "midnight-1"
-	TestScheduleStart        = "20000101T000000"
-	TestScheduleEnd          = ""
-	TestScheduleFrequency    = "P1D"
-	TestScheduleCron         = "This is a description"
-	TestScheduleRunOnce      = true
-	TestScheduleUpdatingName = "midnight-2"
+	TestIntervalName         = "midnight-1"
+	TestIntervalStart        = "20000101T000000"
+	TestIntervalEnd          = ""
+	TestIntervalFrequency    = "P1D"
+	TestIntervalCron         = "This is a description"
+	TestIntervalRunOnce      = true
+	TestIntervalUpdatingName = "midnight-2"
 
 	TestBadFrequency = "423"
 )
 
 // Test ScheduleEvent model const fields
 const (
-	TestScheduleEventId                  = "testScheduleEventId"
-	TestScheduleEventName                = "pushed events"
-	TestScheduleEventParameters          = ""
-	TestScheduleEventService             = "notifications"
-	TestScheduleEventSchedule            = TestScheduleName
-	TestScheduleEventAddressableName     = "MQTT"
-	TestScheduleEventAddressableProtocol = "MQTT"
-	TestScheduleEventUpdatingName        = "pushed events-1"
+	TestIntervalActionEventId                  = "testScheduleEventId"
+	TestIntervalActionName                = "pushed events"
+	TestIntervalActionParameters          = ""
+	TestIntervalActionService             = "notifications"
+	TestIntervalActionSchedule            = TestIntervalName
+	TestIntervalActionAddressableName     = "MQTT"
+	TestIntervalActionAddressableProtocol = "MQTT"
+	TestIntervalActionUpdatingName        = "pushed events-1"
 )
 
 func TestRet(t *testing.T) {
-	testSchedule := models.Schedule{
-		Name:      TestScheduleName,
-		Start:     TestScheduleStart,
-		End:       TestScheduleEnd,
-		Frequency: TestScheduleFrequency,
-		Cron:      TestScheduleCron,
-		RunOnce:   TestScheduleRunOnce,
+	testInterval := models.Interval{
+		Name:      TestIntervalName,
+		Start:     TestIntervalStart,
+		End:       TestIntervalEnd,
+		Frequency: TestIntervalFrequency,
+		Cron:      TestIntervalCron,
+		RunOnce:   TestIntervalRunOnce,
 	}
 
 	//init reset
-	testScheduleContext := ScheduleContext{}
-	testScheduleContext.Reset(testSchedule)
+	testIntervalContext := IntervalContext{}
+	testIntervalContext.Reset(testInterval)
 
-	if testSchedule.Name != testScheduleContext.Schedule.Name {
-		t.Errorf(TestUnexpectedMsgFormatStr, testScheduleContext.Schedule.Name, testSchedule.Name)
+	if testInterval.Name != testIntervalContext.Interval.Name {
+		t.Errorf(TestUnexpectedMsgFormatStr, testIntervalContext.Interval.Name, testInterval.Name)
 	}
 
-	if testScheduleContext.MaxIterations != 1 {
-		t.Errorf(TestUnexpectedMsgFormatStrForIntVal, testScheduleContext.MaxIterations, 1)
+	if testIntervalContext.MaxIterations != 1 {
+		t.Errorf(TestUnexpectedMsgFormatStrForIntVal, testIntervalContext.MaxIterations, 1)
 	}
 
 	//run times, current and max iteration
-	testSchedule.RunOnce = false
-	testScheduleContext.Reset(testSchedule)
+	testInterval.RunOnce = false
+	testIntervalContext.Reset(testInterval)
 
-	if testScheduleContext.MaxIterations != 0 {
-		t.Errorf(TestUnexpectedMsgFormatStrForIntVal, testScheduleContext.MaxIterations, 0)
+	if testIntervalContext.MaxIterations != 0 {
+		t.Errorf(TestUnexpectedMsgFormatStrForIntVal, testIntervalContext.MaxIterations, 0)
 	}
 
-	if testScheduleContext.CurrentIterations != 0 {
-		t.Errorf(TestUnexpectedMsgFormatStrForIntVal, testScheduleContext.CurrentIterations, 0)
+	if testIntervalContext.CurrentIterations != 0 {
+		t.Errorf(TestUnexpectedMsgFormatStrForIntVal, testIntervalContext.CurrentIterations, 0)
 	}
 
 	//start time
-	if testScheduleContext.StartTime == (time.Time{}) {
+	if testIntervalContext.StartTime == (time.Time{}) {
 		t.Errorf(TestUnexpectedMsg)
 	}
 
-	testSchedule.Start = "20180101T010101"
-	testScheduleContext.Reset(testSchedule)
+	testInterval.Start = "20180101T010101"
+	testIntervalContext.Reset(testInterval)
 
-	if testScheduleContext.StartTime.Year() != 2018 {
-		t.Errorf(TestUnexpectedMsgFormatStrForIntVal, testScheduleContext.StartTime.Year(), 2018)
+	if testIntervalContext.StartTime.Year() != 2018 {
+		t.Errorf(TestUnexpectedMsgFormatStrForIntVal, testIntervalContext.StartTime.Year(), 2018)
 	}
 
 	//end time
-	if testScheduleContext.EndTime == (time.Time{}) {
+	if testIntervalContext.EndTime == (time.Time{}) {
 		t.Error(TestUnexpectedMsg)
 	}
 
-	testSchedule.End = "20170101T010101"
-	testScheduleContext.Reset(testSchedule)
+	testInterval.End = "20170101T010101"
+	testIntervalContext.Reset(testInterval)
 
-	if testScheduleContext.EndTime.Year() != 2017 {
-		t.Errorf(TestUnexpectedMsgFormatStrForIntVal, testScheduleContext.EndTime.Year(), 2017)
+	if testIntervalContext.EndTime.Year() != 2017 {
+		t.Errorf(TestUnexpectedMsgFormatStrForIntVal, testIntervalContext.EndTime.Year(), 2017)
 	}
 
 	//frequency
-	if testScheduleContext.Frequency.Hours() != 24 {
-		t.Errorf(TestUnexpectedMsgFormatStrForFloatVal, testScheduleContext.Frequency.Hours(), 24.0)
+	if testIntervalContext.Frequency.Hours() != 24 {
+		t.Errorf(TestUnexpectedMsgFormatStrForFloatVal, testIntervalContext.Frequency.Hours(), 24.0)
 	}
 
-	testSchedule.Frequency = "PT60S"
-	testScheduleContext.Reset(testSchedule)
-	if testScheduleContext.Frequency.Seconds() != 60 {
-		t.Errorf(TestUnexpectedMsgFormatStrForFloatVal, testScheduleContext.Frequency.Seconds(), 60.0)
+	testInterval.Frequency = "PT60S"
+	testIntervalContext.Reset(testInterval)
+	if testIntervalContext.Frequency.Seconds() != 60 {
+		t.Errorf(TestUnexpectedMsgFormatStrForFloatVal, testIntervalContext.Frequency.Seconds(), 60.0)
 	}
 
 	//re-init time
-	testSchedule.Start = ""
-	testSchedule.End = ""
-	testSchedule.RunOnce = true
+	testInterval.Start = ""
+	testInterval.End = ""
+	testInterval.RunOnce = true
 
-	testScheduleContext.Reset(testSchedule)
+	testIntervalContext.Reset(testInterval)
 
 	//next time
-	if testScheduleContext.StartTime != testScheduleContext.NextTime {
+	if testIntervalContext.StartTime != testIntervalContext.NextTime {
 		t.Error(TestUnexpectedMsg)
 	}
 
-	if testScheduleContext.NextTime.Unix() > time.Now().Unix() {
+	if testIntervalContext.NextTime.Unix() > time.Now().Unix() {
 		t.Error(TestUnexpectedMsg)
 	}
 
-	testSchedule.RunOnce = false
-	testScheduleContext.Reset(testSchedule)
+	testInterval.RunOnce = false
+	testIntervalContext.Reset(testInterval)
 
-	if testScheduleContext.StartTime.Unix() > testScheduleContext.NextTime.Unix() {
+	if testIntervalContext.StartTime.Unix() > testIntervalContext.NextTime.Unix() {
 		t.Error(TestUnexpectedMsg)
 	}
 
-	testSchedule.Start = "20180101T010101"
-	testSchedule.Frequency = "P1D"
-	testScheduleContext.Reset(testSchedule)
+	testInterval.Start = "20180101T010101"
+	testInterval.Frequency = "P1D"
+	testIntervalContext.Reset(testInterval)
 
-	if testScheduleContext.StartTime.Unix() > testScheduleContext.NextTime.Unix() {
+	if testIntervalContext.StartTime.Unix() > testIntervalContext.NextTime.Unix() {
 		t.Error(TestUnexpectedMsg)
 	}
 
-	if testScheduleContext.NextTime.Unix() < time.Now().Unix() {
+	if testIntervalContext.NextTime.Unix() < time.Now().Unix() {
 		t.Errorf(TestUnexpectedMsg)
 	}
 
 }
 
 func TestIsComplete(t *testing.T) {
-	testSchedule := models.Schedule{
-		Name:      TestScheduleName,
-		Start:     TestScheduleStart,
-		End:       TestScheduleEnd,
-		Frequency: TestScheduleFrequency,
-		Cron:      TestScheduleCron,
-		RunOnce:   TestScheduleRunOnce,
+	testInterval := models.Interval{
+		Name:      TestIntervalName,
+		Start:     TestIntervalStart,
+		End:       TestIntervalEnd,
+		Frequency: TestIntervalFrequency,
+		Cron:      TestIntervalCron,
+		RunOnce:   TestIntervalRunOnce,
 	}
 
 	//init reset
-	testScheduleContext := ScheduleContext{}
-	testScheduleContext.Reset(testSchedule)
+	testIntervalContext := IntervalContext{}
+	testIntervalContext.Reset(testInterval)
 
-	if !testScheduleContext.IsComplete() {
-		t.Errorf(TestUnexpectedMsgFormatStrForBoolVal, testScheduleContext.IsComplete(), true)
+	if !testIntervalContext.IsComplete() {
+		t.Errorf(TestUnexpectedMsgFormatStrForBoolVal, testIntervalContext.IsComplete(), true)
 	}
 
-	testSchedule.Start = "20180101T010101"
-	testSchedule.Frequency = "P1D"
-	testSchedule.RunOnce = false
-	testScheduleContext.Reset(testSchedule)
+	testInterval.Start = "20180101T010101"
+	testInterval.Frequency = "P1D"
+	testInterval.RunOnce = false
+	testIntervalContext.Reset(testInterval)
 
-	if testScheduleContext.IsComplete() {
-		t.Errorf(TestUnexpectedMsgFormatStrForBoolVal, testScheduleContext.IsComplete(), false)
+	if testIntervalContext.IsComplete() {
+		t.Errorf(TestUnexpectedMsgFormatStrForBoolVal, testIntervalContext.IsComplete(), false)
 	}
 }
 

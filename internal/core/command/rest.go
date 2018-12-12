@@ -14,13 +14,13 @@
 package command
 
 import (
+	"encoding/json"
 	"net/http"
 	"runtime"
-	"encoding/json"
 
-	"github.com/gorilla/mux"
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/pkg/clients"
+	"github.com/gorilla/mux"
 )
 
 func LoadRestRoutes() http.Handler {
@@ -106,7 +106,6 @@ func metricsHandler(w http.ResponseWriter, r *http.Request) {
 
 	return
 }
-
 
 // Helper function for encoding things for returning from REST calls
 func encode(i interface{}, w http.ResponseWriter) {

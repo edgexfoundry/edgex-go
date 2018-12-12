@@ -14,17 +14,26 @@
 package scheduler
 
 const (
-	/* -------------- Constants for Command -------------------- */
-	ID                       string = "id"
-	NAME                     string = "name"
-	YAML                     string = "yaml"
-	COMMAND                  string = "command"
-	KEY                      string = "key"
-	VALUE                    string = "value"
-	TIMELAYOUT                      = "20060102T150405"
-	UNLOCKED string = "UNLOCKED"
-	ENABLED  string = "ENABLED"
 
+	/* -------------- Constants for Scheduler -------------------- */
+	ID                   = "id"
+	NAME                 = "name"
+	TARGETNAME           = "targetname"
+	INTERVALACTION       = "intervalaction"
+	INTERVAL             = "interval"
+	LABEL                = "label"
+	YAML                 = "yaml"
+	COMMAND              = "command"
+	KEY                  = "key"
+	VALUE                = "value"
+	UNLOCKED             = "UNLOCKED"
+	ENABLED              = "ENABLED"
+	SCHEDULER_TIMELAYOUT = "20060102T150405" /** Scheduler **/
+	TIMELAYOUT           = "20060102T150405" /** Scheduler **/
+
+
+
+	/* ---------------- URL PARAM NAMES -----------------------*/
 	ContentTypeKey       = "Content-Type"
 	ContentTypeJsonValue = "application/json; charset=utf-8"
 	ContentLengthKey     = "Content-Length"
