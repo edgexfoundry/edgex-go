@@ -1265,6 +1265,9 @@ func deleteValueDescriptorByIdHandler(w http.ResponseWriter, r *http.Request) {
 		case *errors.ErrValueDescriptorInUse:
 			http.Error(w, "Data integrity issue. Value Descriptor still in use by readings", http.StatusConflict)
 			return
+		case *errors.ErrInvalidId:
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
 		default:
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

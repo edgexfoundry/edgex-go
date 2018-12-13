@@ -73,6 +73,8 @@ func getValueDescriptorById(id string) (vd contract.ValueDescriptor, err error) 
 		LoggingClient.Error(err.Error())
 		if err == db.ErrNotFound {
 			return contract.ValueDescriptor{}, errors.NewErrDbNotFound()
+		} else if err == db.ErrInvalidObjectId {
+			return contract.ValueDescriptor{}, errors.NewErrInvalidId(id)
 		} else {
 			return contract.ValueDescriptor{}, err
 		}
