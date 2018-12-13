@@ -15,14 +15,16 @@ package mongo
 
 import (
 	"errors"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo/models"
+	"github.com/google/uuid"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
-	"github.com/edgexfoundry/edgex-go/pkg/models"
+	contract "github.com/edgexfoundry/edgex-go/pkg/models"
 	"github.com/globalsign/mgo/bson"
 )
 
 /* -----------------------Schedule Event ------------------------*/
-func (m *MongoClient) UpdateScheduleEvent(se models.ScheduleEvent) error {
+func (m *MongoClient) UpdateScheduleEvent(se contract.ScheduleEvent) error {
 	s := m.session.Copy()
 	defer s.Close()
 	col := s.DB(m.database.Name).C(db.ScheduleEvent)
@@ -35,7 +37,7 @@ func (m *MongoClient) UpdateScheduleEvent(se models.ScheduleEvent) error {
 	return col.UpdateId(se.Id, mse)
 }
 
-func (m *MongoClient) AddScheduleEvent(se *models.ScheduleEvent) error {
+func (m *MongoClient) AddScheduleEvent(se *contract.ScheduleEvent) error {
 	s := m.session.Copy()
 	defer s.Close()
 	col := s.DB(m.database.Name).C(db.ScheduleEvent)
@@ -56,15 +58,15 @@ func (m *MongoClient) AddScheduleEvent(se *models.ScheduleEvent) error {
 	return col.Insert(mse)
 }
 
-func (m *MongoClient) GetAllScheduleEvents(se *[]models.ScheduleEvent) error {
+func (m *MongoClient) GetAllScheduleEvents(se *[]contract.ScheduleEvent) error {
 	return m.GetScheduleEvents(se, bson.M{})
 }
 
-func (m *MongoClient) GetScheduleEventByName(se *models.ScheduleEvent, n string) error {
+func (m *MongoClient) GetScheduleEventByName(se *contract.ScheduleEvent, n string) error {
 	return m.GetScheduleEvent(se, bson.M{"name": n})
 }
 
-func (m *MongoClient) GetScheduleEventById(se *models.ScheduleEvent, id string) error {
+func (m *MongoClient) GetScheduleEventById(se *contract.ScheduleEvent, id string) error {
 	if bson.IsObjectIdHex(id) {
 		return m.GetScheduleEvent(se, bson.M{"_id": bson.ObjectIdHex(id)})
 	} else {
@@ -73,11 +75,11 @@ func (m *MongoClient) GetScheduleEventById(se *models.ScheduleEvent, id string) 
 	}
 }
 
-func (m *MongoClient) GetScheduleEventsByScheduleName(se *[]models.ScheduleEvent, n string) error {
+func (m *MongoClient) GetScheduleEventsByScheduleName(se *[]contract.ScheduleEvent, n string) error {
 	return m.GetScheduleEvents(se, bson.M{"schedule": n})
 }
 
-func (m *MongoClient) GetScheduleEventsByAddressableId(se *[]models.ScheduleEvent, id string) error {
+func (m *MongoClient) GetScheduleEventsByAddressableId(se *[]contract.ScheduleEvent, id string) error {
 	if bson.IsObjectIdHex(id) {
 		return m.GetScheduleEvents(se, bson.M{"addressable" + ".$id": bson.ObjectIdHex(id)})
 	} else {
@@ -86,11 +88,11 @@ func (m *MongoClient) GetScheduleEventsByAddressableId(se *[]models.ScheduleEven
 	}
 }
 
-func (m *MongoClient) GetScheduleEventsByServiceName(se *[]models.ScheduleEvent, n string) error {
+func (m *MongoClient) GetScheduleEventsByServiceName(se *[]contract.ScheduleEvent, n string) error {
 	return m.GetScheduleEvents(se, bson.M{"service": n})
 }
 
-func (m *MongoClient) GetScheduleEvent(se *models.ScheduleEvent, q bson.M) error {
+func (m *MongoClient) GetScheduleEvent(se *contract.ScheduleEvent, q bson.M) error {
 	s := m.session.Copy()
 	defer s.Close()
 	col := s.DB(m.database.Name).C(db.ScheduleEvent)
@@ -106,7 +108,7 @@ func (m *MongoClient) GetScheduleEvent(se *models.ScheduleEvent, q bson.M) error
 	return nil
 }
 
-func (m *MongoClient) GetScheduleEvents(se *[]models.ScheduleEvent, q bson.M) error {
+func (m *MongoClient) GetScheduleEvents(se *[]contract.ScheduleEvent, q bson.M) error {
 	s := m.session.Copy()
 	defer s.Close()
 	col := s.DB(m.database.Name).C(db.ScheduleEvent)
@@ -119,7 +121,7 @@ func (m *MongoClient) GetScheduleEvents(se *[]models.ScheduleEvent, q bson.M) er
 		return err
 	}
 
-	*se = []models.ScheduleEvent{}
+	*se = []contract.ScheduleEvent{}
 	for _, mse := range mses {
 		*se = append(*se, mse.ScheduleEvent)
 	}
@@ -132,15 +134,15 @@ func (m *MongoClient) DeleteScheduleEventById(id string) error {
 }
 
 //  --------------------------Schedule ---------------------------*/
-func (m *MongoClient) GetAllSchedules(s *[]models.Schedule) error {
+func (m *MongoClient) GetAllSchedules(s *[]contract.Schedule) error {
 	return m.GetSchedules(s, bson.M{})
 }
 
-func (m *MongoClient) GetScheduleByName(s *models.Schedule, n string) error {
+func (m *MongoClient) GetScheduleByName(s *contract.Schedule, n string) error {
 	return m.GetSchedule(s, bson.M{"name": n})
 }
 
-func (m *MongoClient) GetScheduleById(s *models.Schedule, id string) error {
+func (m *MongoClient) GetScheduleById(s *contract.Schedule, id string) error {
 	if bson.IsObjectIdHex(id) {
 		return m.GetSchedule(s, bson.M{"_id": bson.ObjectIdHex(id)})
 	} else {
@@ -149,7 +151,7 @@ func (m *MongoClient) GetScheduleById(s *models.Schedule, id string) error {
 	}
 }
 
-func (m *MongoClient) AddSchedule(sch *models.Schedule) error {
+func (m *MongoClient) AddSchedule(sch *contract.Schedule) error {
 	s := m.session.Copy()
 	defer s.Close()
 	col := s.DB(m.database.Name).C(db.Schedule)
@@ -167,7 +169,7 @@ func (m *MongoClient) AddSchedule(sch *models.Schedule) error {
 	return col.Insert(sch)
 }
 
-func (m *MongoClient) UpdateSchedule(sch models.Schedule) error {
+func (m *MongoClient) UpdateSchedule(sch contract.Schedule) error {
 	s := m.session.Copy()
 	defer s.Close()
 	col := s.DB(m.database.Name).C(db.Schedule)
@@ -185,7 +187,7 @@ func (m *MongoClient) DeleteScheduleById(id string) error {
 	return m.deleteById(db.Schedule, id)
 }
 
-func (m *MongoClient) GetSchedule(sch *models.Schedule, q bson.M) error {
+func (m *MongoClient) GetSchedule(sch *contract.Schedule, q bson.M) error {
 	s := m.session.Copy()
 	defer s.Close()
 	col := s.DB(m.database.Name).C(db.Schedule)
@@ -193,7 +195,7 @@ func (m *MongoClient) GetSchedule(sch *models.Schedule, q bson.M) error {
 	return errorMap(err)
 }
 
-func (m *MongoClient) GetSchedules(sch *[]models.Schedule, q bson.M) error {
+func (m *MongoClient) GetSchedules(sch *[]contract.Schedule, q bson.M) error {
 	s := m.session.Copy()
 	defer s.Close()
 	col := s.DB(m.database.Name).C(db.Schedule)
@@ -201,19 +203,19 @@ func (m *MongoClient) GetSchedules(sch *[]models.Schedule, q bson.M) error {
 }
 
 /* ----------------------Device Report --------------------------*/
-func (m *MongoClient) GetAllDeviceReports(d *[]models.DeviceReport) error {
+func (m *MongoClient) GetAllDeviceReports(d *[]contract.DeviceReport) error {
 	return m.GetDeviceReports(d, bson.M{})
 }
 
-func (m *MongoClient) GetDeviceReportByName(d *models.DeviceReport, n string) error {
+func (m *MongoClient) GetDeviceReportByName(d *contract.DeviceReport, n string) error {
 	return m.GetDeviceReport(d, bson.M{"name": n})
 }
 
-func (m *MongoClient) GetDeviceReportByDeviceName(d *[]models.DeviceReport, n string) error {
+func (m *MongoClient) GetDeviceReportByDeviceName(d *[]contract.DeviceReport, n string) error {
 	return m.GetDeviceReports(d, bson.M{"device": n})
 }
 
-func (m *MongoClient) GetDeviceReportById(d *models.DeviceReport, id string) error {
+func (m *MongoClient) GetDeviceReportById(d *contract.DeviceReport, id string) error {
 	if bson.IsObjectIdHex(id) {
 		return m.GetDeviceReport(d, bson.M{"_id": bson.ObjectIdHex(id)})
 	} else {
@@ -222,18 +224,18 @@ func (m *MongoClient) GetDeviceReportById(d *models.DeviceReport, id string) err
 	}
 }
 
-func (m *MongoClient) GetDeviceReportsByScheduleEventName(d *[]models.DeviceReport, n string) error {
+func (m *MongoClient) GetDeviceReportsByScheduleEventName(d *[]contract.DeviceReport, n string) error {
 	return m.GetDeviceReports(d, bson.M{"event": n})
 }
 
-func (m *MongoClient) GetDeviceReports(d *[]models.DeviceReport, q bson.M) error {
+func (m *MongoClient) GetDeviceReports(d *[]contract.DeviceReport, q bson.M) error {
 	s := m.session.Copy()
 	defer s.Close()
 	col := s.DB(m.database.Name).C(db.DeviceReport)
 	return col.Find(q).Sort("queryts").All(d)
 }
 
-func (m *MongoClient) GetDeviceReport(d *models.DeviceReport, q bson.M) error {
+func (m *MongoClient) GetDeviceReport(d *contract.DeviceReport, q bson.M) error {
 	s := m.session.Copy()
 	defer s.Close()
 	col := s.DB(m.database.Name).C(db.DeviceReport)
@@ -241,7 +243,7 @@ func (m *MongoClient) GetDeviceReport(d *models.DeviceReport, q bson.M) error {
 	return errorMap(err)
 }
 
-func (m *MongoClient) AddDeviceReport(d *models.DeviceReport) error {
+func (m *MongoClient) AddDeviceReport(d *contract.DeviceReport) error {
 	s := m.session.Copy()
 	defer s.Close()
 	col := s.DB(m.database.Name).C(db.DeviceReport)
@@ -257,7 +259,7 @@ func (m *MongoClient) AddDeviceReport(d *models.DeviceReport) error {
 	return col.Insert(d)
 }
 
-func (m *MongoClient) UpdateDeviceReport(dr *models.DeviceReport) error {
+func (m *MongoClient) UpdateDeviceReport(dr *contract.DeviceReport) error {
 	s := m.session.Copy()
 	defer s.Close()
 	col := s.DB(m.database.Name).C(db.DeviceReport)
@@ -270,7 +272,7 @@ func (m *MongoClient) DeleteDeviceReportById(id string) error {
 }
 
 /* ----------------------------- Device ---------------------------------- */
-func (m *MongoClient) AddDevice(d *models.Device) error {
+func (m *MongoClient) AddDevice(d *contract.Device) error {
 	s := m.session.Copy()
 	defer s.Close()
 	col := s.DB(m.database.Name).C(db.Device)
@@ -294,7 +296,7 @@ func (m *MongoClient) AddDevice(d *models.Device) error {
 	return col.Insert(md)
 }
 
-func (m *MongoClient) UpdateDevice(rd models.Device) error {
+func (m *MongoClient) UpdateDevice(rd contract.Device) error {
 	s := m.session.Copy()
 	defer s.Close()
 	c := s.DB(m.database.Name).C(db.Device)
@@ -309,11 +311,11 @@ func (m *MongoClient) DeleteDeviceById(id string) error {
 	return m.deleteById(db.Device, id)
 }
 
-func (m *MongoClient) GetAllDevices(d *[]models.Device) error {
+func (m *MongoClient) GetAllDevices(d *[]contract.Device) error {
 	return m.GetDevices(d, nil)
 }
 
-func (m *MongoClient) GetDevicesByProfileId(d *[]models.Device, pid string) error {
+func (m *MongoClient) GetDevicesByProfileId(d *[]contract.Device, pid string) error {
 	if bson.IsObjectIdHex(pid) {
 		return m.GetDevices(d, bson.M{"profile.$id": bson.ObjectIdHex(pid)})
 	} else {
@@ -322,7 +324,7 @@ func (m *MongoClient) GetDevicesByProfileId(d *[]models.Device, pid string) erro
 	}
 }
 
-func (m *MongoClient) GetDeviceById(d *models.Device, id string) error {
+func (m *MongoClient) GetDeviceById(d *contract.Device, id string) error {
 	if bson.IsObjectIdHex(id) {
 		return m.GetDevice(d, bson.M{"_id": bson.ObjectIdHex(id)})
 	} else {
@@ -331,11 +333,11 @@ func (m *MongoClient) GetDeviceById(d *models.Device, id string) error {
 	}
 }
 
-func (m *MongoClient) GetDeviceByName(d *models.Device, n string) error {
+func (m *MongoClient) GetDeviceByName(d *contract.Device, n string) error {
 	return m.GetDevice(d, bson.M{"name": n})
 }
 
-func (m *MongoClient) GetDevicesByServiceId(d *[]models.Device, sid string) error {
+func (m *MongoClient) GetDevicesByServiceId(d *[]contract.Device, sid string) error {
 	if bson.IsObjectIdHex(sid) {
 		return m.GetDevices(d, bson.M{"service.$id": bson.ObjectIdHex(sid)})
 	} else {
@@ -344,7 +346,7 @@ func (m *MongoClient) GetDevicesByServiceId(d *[]models.Device, sid string) erro
 	}
 }
 
-func (m *MongoClient) GetDevicesByAddressableId(d *[]models.Device, aid string) error {
+func (m *MongoClient) GetDevicesByAddressableId(d *[]contract.Device, aid string) error {
 	if bson.IsObjectIdHex(aid) {
 		return m.GetDevices(d, bson.M{"addressable.$id": bson.ObjectIdHex(aid)})
 	} else {
@@ -353,13 +355,13 @@ func (m *MongoClient) GetDevicesByAddressableId(d *[]models.Device, aid string) 
 	}
 }
 
-func (m *MongoClient) GetDevicesWithLabel(d *[]models.Device, l string) error {
+func (m *MongoClient) GetDevicesWithLabel(d *[]contract.Device, l string) error {
 	var ls []string
 	ls = append(ls, l)
 	return m.GetDevices(d, bson.M{"labels": bson.M{"$in": ls}})
 }
 
-func (m *MongoClient) GetDevices(d *[]models.Device, q bson.M) error {
+func (m *MongoClient) GetDevices(d *[]contract.Device, q bson.M) error {
 	s := m.session.Copy()
 	defer s.Close()
 	col := s.DB(m.database.Name).C(db.Device)
@@ -370,7 +372,7 @@ func (m *MongoClient) GetDevices(d *[]models.Device, q bson.M) error {
 		return err
 	}
 
-	*d = []models.Device{}
+	*d = []contract.Device{}
 	for _, md := range mds {
 		*d = append(*d, md.Device)
 	}
@@ -378,7 +380,7 @@ func (m *MongoClient) GetDevices(d *[]models.Device, q bson.M) error {
 	return nil
 }
 
-func (m *MongoClient) GetDevice(d *models.Device, q bson.M) error {
+func (m *MongoClient) GetDevice(d *contract.Device, q bson.M) error {
 	s := m.session.Copy()
 	defer s.Close()
 	col := s.DB(m.database.Name).C(db.Device)
@@ -393,7 +395,7 @@ func (m *MongoClient) GetDevice(d *models.Device, q bson.M) error {
 }
 
 /* -----------------------------Device Profile -----------------------------*/
-func (m *MongoClient) GetDeviceProfileById(d *models.DeviceProfile, id string) error {
+func (m *MongoClient) GetDeviceProfileById(d *contract.DeviceProfile, id string) error {
 	if bson.IsObjectIdHex(id) {
 		return m.GetDeviceProfile(d, bson.M{"_id": bson.ObjectIdHex(id)})
 	} else {
@@ -402,31 +404,31 @@ func (m *MongoClient) GetDeviceProfileById(d *models.DeviceProfile, id string) e
 	}
 }
 
-func (m *MongoClient) GetAllDeviceProfiles(dp *[]models.DeviceProfile) error {
+func (m *MongoClient) GetAllDeviceProfiles(dp *[]contract.DeviceProfile) error {
 	return m.GetDeviceProfiles(dp, nil)
 }
 
-func (m *MongoClient) GetDeviceProfilesByModel(dp *[]models.DeviceProfile, model string) error {
+func (m *MongoClient) GetDeviceProfilesByModel(dp *[]contract.DeviceProfile, model string) error {
 	return m.GetDeviceProfiles(dp, bson.M{"model": model})
 }
 
-func (m *MongoClient) GetDeviceProfilesWithLabel(dp *[]models.DeviceProfile, l string) error {
+func (m *MongoClient) GetDeviceProfilesWithLabel(dp *[]contract.DeviceProfile, l string) error {
 	var ls []string
 	ls = append(ls, l)
 	return m.GetDeviceProfiles(dp, bson.M{"labels": bson.M{"$in": ls}})
 }
-func (m *MongoClient) GetDeviceProfilesByManufacturerModel(dp *[]models.DeviceProfile, man string, mod string) error {
+func (m *MongoClient) GetDeviceProfilesByManufacturerModel(dp *[]contract.DeviceProfile, man string, mod string) error {
 	return m.GetDeviceProfiles(dp, bson.M{"manufacturer": man, "model": mod})
 }
-func (m *MongoClient) GetDeviceProfilesByManufacturer(dp *[]models.DeviceProfile, man string) error {
+func (m *MongoClient) GetDeviceProfilesByManufacturer(dp *[]contract.DeviceProfile, man string) error {
 	return m.GetDeviceProfiles(dp, bson.M{"manufacturer": man})
 }
-func (m *MongoClient) GetDeviceProfileByName(dp *models.DeviceProfile, n string) error {
+func (m *MongoClient) GetDeviceProfileByName(dp *contract.DeviceProfile, n string) error {
 	return m.GetDeviceProfile(dp, bson.M{"name": n})
 }
 
 // Get device profiles with the passed query
-func (m *MongoClient) GetDeviceProfiles(d *[]models.DeviceProfile, q bson.M) error {
+func (m *MongoClient) GetDeviceProfiles(d *[]contract.DeviceProfile, q bson.M) error {
 	s := m.session.Copy()
 	defer s.Close()
 	col := s.DB(m.database.Name).C(db.DeviceProfile)
@@ -438,7 +440,7 @@ func (m *MongoClient) GetDeviceProfiles(d *[]models.DeviceProfile, q bson.M) err
 		return err
 	}
 
-	*d = []models.DeviceProfile{}
+	*d = []contract.DeviceProfile{}
 	for _, mdp := range mdps {
 		*d = append(*d, mdp.DeviceProfile)
 	}
@@ -447,7 +449,7 @@ func (m *MongoClient) GetDeviceProfiles(d *[]models.DeviceProfile, q bson.M) err
 }
 
 // Get device profile with the passed query
-func (m *MongoClient) GetDeviceProfile(d *models.DeviceProfile, q bson.M) error {
+func (m *MongoClient) GetDeviceProfile(d *contract.DeviceProfile, q bson.M) error {
 	s := m.session.Copy()
 	defer s.Close()
 	col := s.DB(m.database.Name).C(db.DeviceProfile)
@@ -462,7 +464,7 @@ func (m *MongoClient) GetDeviceProfile(d *models.DeviceProfile, q bson.M) error 
 	return nil
 }
 
-func (m *MongoClient) AddDeviceProfile(dp *models.DeviceProfile) error {
+func (m *MongoClient) AddDeviceProfile(dp *contract.DeviceProfile) error {
 	s := m.session.Copy()
 	defer s.Close()
 	col := s.DB(m.database.Name).C(db.DeviceProfile)
@@ -487,7 +489,7 @@ func (m *MongoClient) AddDeviceProfile(dp *models.DeviceProfile) error {
 	return col.Insert(mdp)
 }
 
-func (m *MongoClient) UpdateDeviceProfile(dp *models.DeviceProfile) error {
+func (m *MongoClient) UpdateDeviceProfile(dp *contract.DeviceProfile) error {
 	s := m.session.Copy()
 	defer s.Close()
 	c := s.DB(m.database.Name).C(db.DeviceProfile)
@@ -499,8 +501,19 @@ func (m *MongoClient) UpdateDeviceProfile(dp *models.DeviceProfile) error {
 }
 
 // Get the device profiles that are currently using the command
-func (m *MongoClient) GetDeviceProfilesUsingCommand(dp *[]models.DeviceProfile, c models.Command) error {
-	query := bson.M{"commands": bson.M{"$elemMatch": bson.M{"$id": c.Id}}}
+func (m *MongoClient) GetDeviceProfilesUsingCommand(dp *[]contract.DeviceProfile, c contract.Command) error {
+	var item bson.M
+	if !bson.IsObjectIdHex(c.Id) {
+		// EventID is not a BSON ID. Is it a UUID?
+		_, err := uuid.Parse(c.Id)
+		if err != nil { // It is some unsupported type of string
+			return db.ErrInvalidObjectId
+		}
+		item = bson.M{"uuid": c.Id}
+	} else {
+		item = bson.M{"$id": bson.ObjectIdHex(c.Id)}
+	}
+	query := bson.M{"commands": bson.M{"$elemMatch": item}}
 	return m.GetDeviceProfiles(dp, query)
 }
 
@@ -509,7 +522,7 @@ func (m *MongoClient) DeleteDeviceProfileById(id string) error {
 }
 
 //  -----------------------------------Addressable --------------------------*/
-func (m *MongoClient) UpdateAddressable(ra *models.Addressable, r *models.Addressable) error {
+func (m *MongoClient) UpdateAddressable(ra *contract.Addressable, r *contract.Addressable) error {
 	s := m.session.Copy()
 
 	defer s.Close()
@@ -550,11 +563,11 @@ func (m *MongoClient) UpdateAddressable(ra *models.Addressable, r *models.Addres
 	return nil
 }
 
-func (m *MongoClient) GetAddressables(d *[]models.Addressable) error {
+func (m *MongoClient) GetAddressables(d *[]contract.Addressable) error {
 	return m.GetAddressablesQuery(d, bson.M{})
 }
 
-func (m *MongoClient) GetAddressablesQuery(d *[]models.Addressable, q bson.M) error {
+func (m *MongoClient) GetAddressablesQuery(d *[]contract.Addressable, q bson.M) error {
 	s := m.session.Copy()
 	defer s.Close()
 	col := s.DB(m.database.Name).C(db.Addressable)
@@ -566,7 +579,7 @@ func (m *MongoClient) GetAddressablesQuery(d *[]models.Addressable, q bson.M) er
 	return nil
 }
 
-func (m *MongoClient) GetAddressableById(a *models.Addressable, id string) error {
+func (m *MongoClient) GetAddressableById(a *contract.Addressable, id string) error {
 	if bson.IsObjectIdHex(id) {
 		return m.GetAddressable(a, bson.M{"_id": bson.ObjectIdHex(id)})
 	} else {
@@ -575,7 +588,7 @@ func (m *MongoClient) GetAddressableById(a *models.Addressable, id string) error
 	}
 }
 
-func (m *MongoClient) AddAddressable(a *models.Addressable) (bson.ObjectId, error) {
+func (m *MongoClient) AddAddressable(a *contract.Addressable) (bson.ObjectId, error) {
 	s := m.session.Copy()
 	defer s.Close()
 	col := s.DB(m.database.Name).C(db.Addressable)
@@ -595,27 +608,27 @@ func (m *MongoClient) AddAddressable(a *models.Addressable) (bson.ObjectId, erro
 	return a.Id, err
 }
 
-func (m *MongoClient) GetAddressableByName(a *models.Addressable, n string) error {
+func (m *MongoClient) GetAddressableByName(a *contract.Addressable, n string) error {
 	return m.GetAddressable(a, bson.M{"name": n})
 }
 
-func (m *MongoClient) GetAddressablesByTopic(a *[]models.Addressable, t string) error {
+func (m *MongoClient) GetAddressablesByTopic(a *[]contract.Addressable, t string) error {
 	return m.GetAddressablesQuery(a, bson.M{"topic": t})
 }
 
-func (m *MongoClient) GetAddressablesByPort(a *[]models.Addressable, p int) error {
+func (m *MongoClient) GetAddressablesByPort(a *[]contract.Addressable, p int) error {
 	return m.GetAddressablesQuery(a, bson.M{"port": p})
 }
 
-func (m *MongoClient) GetAddressablesByPublisher(a *[]models.Addressable, p string) error {
+func (m *MongoClient) GetAddressablesByPublisher(a *[]contract.Addressable, p string) error {
 	return m.GetAddressablesQuery(a, bson.M{"publisher": p})
 }
 
-func (m *MongoClient) GetAddressablesByAddress(a *[]models.Addressable, add string) error {
+func (m *MongoClient) GetAddressablesByAddress(a *[]contract.Addressable, add string) error {
 	return m.GetAddressablesQuery(a, bson.M{"address": add})
 }
 
-func (m *MongoClient) GetAddressable(d *models.Addressable, q bson.M) error {
+func (m *MongoClient) GetAddressable(d *contract.Addressable, q bson.M) error {
 	s := m.session.Copy()
 	defer s.Close()
 	col := s.DB(m.database.Name).C(db.Addressable)
@@ -628,11 +641,11 @@ func (m *MongoClient) DeleteAddressableById(id string) error {
 }
 
 /* ----------------------------- Device Service ----------------------------------*/
-func (m *MongoClient) GetDeviceServiceByName(d *models.DeviceService, n string) error {
+func (m *MongoClient) GetDeviceServiceByName(d *contract.DeviceService, n string) error {
 	return m.GetDeviceService(d, bson.M{"name": n})
 }
 
-func (m *MongoClient) GetDeviceServiceById(d *models.DeviceService, id string) error {
+func (m *MongoClient) GetDeviceServiceById(d *contract.DeviceService, id string) error {
 	if bson.IsObjectIdHex(id) {
 		return m.GetDeviceService(d, bson.M{"_id": bson.ObjectIdHex(id)})
 	} else {
@@ -641,11 +654,11 @@ func (m *MongoClient) GetDeviceServiceById(d *models.DeviceService, id string) e
 	}
 }
 
-func (m *MongoClient) GetAllDeviceServices(d *[]models.DeviceService) error {
+func (m *MongoClient) GetAllDeviceServices(d *[]contract.DeviceService) error {
 	return m.GetDeviceServices(d, bson.M{})
 }
 
-func (m *MongoClient) GetDeviceServicesByAddressableId(d *[]models.DeviceService, id string) error {
+func (m *MongoClient) GetDeviceServicesByAddressableId(d *[]contract.DeviceService, id string) error {
 	if bson.IsObjectIdHex(id) {
 		return m.GetDeviceServices(d, bson.M{"addressable.$id": bson.ObjectIdHex(id)})
 	} else {
@@ -654,13 +667,13 @@ func (m *MongoClient) GetDeviceServicesByAddressableId(d *[]models.DeviceService
 	}
 }
 
-func (m *MongoClient) GetDeviceServicesWithLabel(d *[]models.DeviceService, l string) error {
+func (m *MongoClient) GetDeviceServicesWithLabel(d *[]contract.DeviceService, l string) error {
 	var ls []string
 	ls = append(ls, l)
 	return m.GetDeviceServices(d, bson.M{"labels": bson.M{"$in": ls}})
 }
 
-func (m *MongoClient) GetDeviceServices(d *[]models.DeviceService, q bson.M) error {
+func (m *MongoClient) GetDeviceServices(d *[]contract.DeviceService, q bson.M) error {
 	s := m.session.Copy()
 	defer s.Close()
 	col := s.DB(m.database.Name).C(db.DeviceService)
@@ -669,14 +682,14 @@ func (m *MongoClient) GetDeviceServices(d *[]models.DeviceService, q bson.M) err
 	if err != nil {
 		return err
 	}
-	*d = []models.DeviceService{}
+	*d = []contract.DeviceService{}
 	for _, mds := range mdss {
 		*d = append(*d, mds.DeviceService)
 	}
 	return nil
 }
 
-func (m *MongoClient) GetDeviceService(d *models.DeviceService, q bson.M) error {
+func (m *MongoClient) GetDeviceService(d *contract.DeviceService, q bson.M) error {
 	s := m.session.Copy()
 	defer s.Close()
 	col := s.DB(m.database.Name).C(db.DeviceService)
@@ -689,7 +702,7 @@ func (m *MongoClient) GetDeviceService(d *models.DeviceService, q bson.M) error 
 	return nil
 }
 
-func (m *MongoClient) AddDeviceService(d *models.DeviceService) error {
+func (m *MongoClient) AddDeviceService(d *contract.DeviceService) error {
 	s := m.session.Copy()
 	defer s.Close()
 
@@ -705,7 +718,7 @@ func (m *MongoClient) AddDeviceService(d *models.DeviceService) error {
 	return col.Insert(mds)
 }
 
-func (m *MongoClient) UpdateDeviceService(deviceService models.DeviceService) error {
+func (m *MongoClient) UpdateDeviceService(deviceService contract.DeviceService) error {
 	s := m.session.Copy()
 	defer s.Close()
 	c := s.DB(m.database.Name).C(db.DeviceService)
@@ -723,19 +736,19 @@ func (m *MongoClient) DeleteDeviceServiceById(id string) error {
 }
 
 //  ----------------------Provision Watcher -----------------------------*/
-func (m *MongoClient) GetAllProvisionWatchers(pw *[]models.ProvisionWatcher) error {
+func (m *MongoClient) GetAllProvisionWatchers(pw *[]contract.ProvisionWatcher) error {
 	return m.GetProvisionWatchers(pw, bson.M{})
 }
 
-func (m *MongoClient) GetProvisionWatcherByName(pw *models.ProvisionWatcher, n string) error {
+func (m *MongoClient) GetProvisionWatcherByName(pw *contract.ProvisionWatcher, n string) error {
 	return m.GetProvisionWatcher(pw, bson.M{"name": n})
 }
 
-func (m *MongoClient) GetProvisionWatchersByIdentifier(pw *[]models.ProvisionWatcher, k string, v string) error {
+func (m *MongoClient) GetProvisionWatchersByIdentifier(pw *[]contract.ProvisionWatcher, k string, v string) error {
 	return m.GetProvisionWatchers(pw, bson.M{"identifiers." + k: v})
 }
 
-func (m *MongoClient) GetProvisionWatchersByServiceId(pw *[]models.ProvisionWatcher, id string) error {
+func (m *MongoClient) GetProvisionWatchersByServiceId(pw *[]contract.ProvisionWatcher, id string) error {
 	if bson.IsObjectIdHex(id) {
 		return m.GetProvisionWatchers(pw, bson.M{"service.$id": bson.ObjectIdHex(id)})
 	} else {
@@ -743,7 +756,7 @@ func (m *MongoClient) GetProvisionWatchersByServiceId(pw *[]models.ProvisionWatc
 	}
 }
 
-func (m *MongoClient) GetProvisionWatchersByProfileId(pw *[]models.ProvisionWatcher, id string) error {
+func (m *MongoClient) GetProvisionWatchersByProfileId(pw *[]contract.ProvisionWatcher, id string) error {
 	if bson.IsObjectIdHex(id) {
 		return m.GetProvisionWatchers(pw, bson.M{"profile.$id": bson.ObjectIdHex(id)})
 	} else {
@@ -752,7 +765,7 @@ func (m *MongoClient) GetProvisionWatchersByProfileId(pw *[]models.ProvisionWatc
 	}
 }
 
-func (m *MongoClient) GetProvisionWatcherById(pw *models.ProvisionWatcher, id string) error {
+func (m *MongoClient) GetProvisionWatcherById(pw *contract.ProvisionWatcher, id string) error {
 	if bson.IsObjectIdHex(id) {
 		return m.GetProvisionWatcher(pw, bson.M{"_id": bson.ObjectIdHex(id)})
 	} else {
@@ -761,7 +774,7 @@ func (m *MongoClient) GetProvisionWatcherById(pw *models.ProvisionWatcher, id st
 	}
 }
 
-func (m *MongoClient) GetProvisionWatcher(pw *models.ProvisionWatcher, q bson.M) error {
+func (m *MongoClient) GetProvisionWatcher(pw *contract.ProvisionWatcher, q bson.M) error {
 	s := m.session.Copy()
 	defer s.Close()
 	col := s.DB(m.database.Name).C(db.ProvisionWatcher)
@@ -777,7 +790,7 @@ func (m *MongoClient) GetProvisionWatcher(pw *models.ProvisionWatcher, q bson.M)
 	return nil
 }
 
-func (m *MongoClient) GetProvisionWatchers(pw *[]models.ProvisionWatcher, q bson.M) error {
+func (m *MongoClient) GetProvisionWatchers(pw *[]contract.ProvisionWatcher, q bson.M) error {
 	s := m.session.Copy()
 	defer s.Close()
 	col := s.DB(m.database.Name).C(db.ProvisionWatcher)
@@ -790,7 +803,7 @@ func (m *MongoClient) GetProvisionWatchers(pw *[]models.ProvisionWatcher, q bson
 		return err
 	}
 
-	*pw = []models.ProvisionWatcher{}
+	*pw = []contract.ProvisionWatcher{}
 	for _, mpw := range mpws {
 		*pw = append(*pw, mpw.ProvisionWatcher)
 	}
@@ -798,7 +811,7 @@ func (m *MongoClient) GetProvisionWatchers(pw *[]models.ProvisionWatcher, q bson
 	return nil
 }
 
-func (m *MongoClient) AddProvisionWatcher(pw *models.ProvisionWatcher) error {
+func (m *MongoClient) AddProvisionWatcher(pw *contract.ProvisionWatcher) error {
 	s := m.session.Copy()
 	defer s.Close()
 	col := s.DB(m.database.Name).C(db.ProvisionWatcher)
@@ -810,7 +823,7 @@ func (m *MongoClient) AddProvisionWatcher(pw *models.ProvisionWatcher) error {
 	}
 
 	// get Device Service
-	var dev models.DeviceService
+	var dev contract.DeviceService
 	if pw.Service.Id.Hex() != "" {
 		m.GetDeviceServiceById(&dev, pw.Service.Id.Hex())
 	} else if pw.Service.Name != "" {
@@ -821,7 +834,7 @@ func (m *MongoClient) AddProvisionWatcher(pw *models.ProvisionWatcher) error {
 	pw.Service = dev
 
 	// get Device Profile
-	var dp models.DeviceProfile
+	var dp contract.DeviceProfile
 	if pw.Profile.Id.Hex() != "" {
 		m.GetDeviceProfileById(&dp, pw.Profile.Id.Hex())
 	} else if pw.Profile.Name != "" {
@@ -843,7 +856,7 @@ func (m *MongoClient) AddProvisionWatcher(pw *models.ProvisionWatcher) error {
 	return col.Insert(mpw)
 }
 
-func (m *MongoClient) UpdateProvisionWatcher(pw models.ProvisionWatcher) error {
+func (m *MongoClient) UpdateProvisionWatcher(pw contract.ProvisionWatcher) error {
 	s := m.session.Copy()
 	defer s.Close()
 	c := s.DB(m.database.Name).C(db.ProvisionWatcher)
@@ -861,59 +874,101 @@ func (m *MongoClient) DeleteProvisionWatcherById(id string) error {
 }
 
 //  ------------------------Command -------------------------------------*/
-func (m *MongoClient) GetAllCommands(d *[]models.Command) error {
+func (m *MongoClient) GetAllCommands(d *[]contract.Command) error {
 	return m.GetCommands(d, bson.M{})
 }
 
-func (m *MongoClient) GetCommands(d *[]models.Command, q bson.M) error {
+func (m *MongoClient) GetCommands(d *[]contract.Command, q bson.M) error {
 	s := m.session.Copy()
 	defer s.Close()
 	col := s.DB(m.database.Name).C(db.Command)
 	return col.Find(q).Sort("queryts").All(d)
 }
 
-func (m *MongoClient) GetCommandById(d *models.Command, id string) error {
+func (m *MongoClient) GetCommandById(c *contract.Command, id string) error {
 	if bson.IsObjectIdHex(id) {
 		s := m.session.Copy()
 		defer s.Close()
+
 		col := s.DB(m.database.Name).C(db.Command)
-		err := col.Find(bson.M{"_id": bson.ObjectIdHex(id)}).One(d)
-		return errorMap(err)
+
+		var query bson.M
+		if !bson.IsObjectIdHex(id) {
+			// EventID is not a BSON ID. Is it a UUID?
+			_, err := uuid.Parse(id)
+			if err != nil { // It is some unsupported type of string
+				return db.ErrInvalidObjectId
+			}
+			query = bson.M{"uuid": id}
+		} else {
+			query = bson.M{"_id": bson.ObjectIdHex(id)}
+		}
+
+		command := &models.Command{}
+		err := col.Find(query).One(command)
+		*c = command.ToContract()
+
+		return err
 	} else {
 		return errors.New("mgoGetCommandById Invalid Object ID " + id)
 	}
 }
 
-func (m *MongoClient) GetCommandByName(c *[]models.Command, n string) error {
+func (m *MongoClient) GetCommandByName(c *[]contract.Command, n string) error {
 	s := m.session.Copy()
 	defer s.Close()
+
 	col := s.DB(m.database.Name).C(db.Command)
-	return col.Find(bson.M{"name": n}).All(c)
+	commands := &[]models.Command{}
+	err := col.Find(bson.M{"name": n}).All(commands)
+
+	*c, err = mapCommands(*commands, err)
+	return err
 }
 
-func (m *MongoClient) AddCommand(c *models.Command) error {
+func mapCommands(commands []models.Command, err error) ([]contract.Command, error) {
+	if err != nil {
+		return []contract.Command{}, errorMap(err)
+	}
+
+	var mapped []contract.Command
+	for _, cmd := range commands {
+		mapped = append(mapped, cmd.ToContract())
+	}
+	return mapped, nil
+}
+
+func (m *MongoClient) AddCommand(c *contract.Command) error {
 	s := m.session.Copy()
 	defer s.Close()
+
 	col := s.DB(m.database.Name).C(db.Command)
 
 	ts := db.MakeTimestamp()
 	c.Created = ts
-	c.Id = bson.NewObjectId()
+	c.Id = uuid.New().String()
 	return col.Insert(c)
 }
 
 // Update command uses the ID of the command for identification
-func (m *MongoClient) UpdateCommand(c *models.Command, r *models.Command) error {
+func (m *MongoClient) UpdateCommand(c *contract.Command, r *contract.Command) error {
 	s := m.session.Copy()
 	defer s.Close()
+
 	col := s.DB(m.database.Name).C(db.Command)
 	if c == nil {
 		return nil
 	}
 
-	// Check if the command has a valid ID
-	if len(c.Id.Hex()) == 0 || !bson.IsObjectIdHex(c.Id.Hex()) {
-		return errors.New("ID required for updating a command")
+	var id interface{}
+	var err error
+	if bson.IsObjectIdHex(c.Id) {
+		id = bson.ObjectIdHex(c.Id)
+	} else {
+		id, err = uuid.Parse(c.Id)
+		if err != nil { // It is some unsupported type of string
+			return errors.New("Id required for updating a command")
+		}
 	}
 
 	// Update the fields
@@ -922,17 +977,17 @@ func (m *MongoClient) UpdateCommand(c *models.Command, r *models.Command) error 
 	}
 	// TODO check for Get and Put Equality
 
-	if (c.Get.String() != models.Get{}.String()) {
+	if (c.Get.String() != contract.Get{}.String()) {
 		r.Get = c.Get
 	}
-	if (c.Put.String() != models.Put{}.String()) {
+	if (c.Put.String() != contract.Put{}.String()) {
 		r.Put = c.Put
 	}
 	if c.Origin != 0 {
 		r.Origin = c.Origin
 	}
 
-	return col.UpdateId(r.Id, r)
+	return col.UpdateId(id, r)
 }
 
 // Delete the command by ID

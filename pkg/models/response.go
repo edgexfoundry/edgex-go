@@ -27,9 +27,9 @@ import (
  * Response Struct
  */
 type Response struct {
-	Code           string   `bson:"code" json:"code" yaml:"code"`
-	Description    string   `bson:"description" json:"description" yaml:"description"`
-	ExpectedValues []string `bson:"expectedValues" json:"expectedValues" yaml:"expectedValues"`
+	Code           string   `json:"code" yaml:"code"`
+	Description    string   `json:"description" yaml:"description"`
+	ExpectedValues []string `json:"expectedValues" yaml:"expectedValues"`
 }
 
 // Custom marshalling to make empty strings null

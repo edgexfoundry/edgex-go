@@ -230,7 +230,7 @@ func checkDuplicateCommands(dp models.DeviceProfile, w http.ResponseWriter) erro
 // Delete all of the commands that are a part of the device profile
 func deleteCommands(dp models.DeviceProfile, w http.ResponseWriter) error {
 	for _, command := range dp.Commands {
-		err := dbClient.DeleteCommandById(command.Id.Hex())
+		err := dbClient.DeleteCommandById(command.Id)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			return err
