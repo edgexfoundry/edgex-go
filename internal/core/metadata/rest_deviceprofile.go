@@ -73,6 +73,8 @@ func restAddDeviceProfile(w http.ResponseWriter, r *http.Request) {
 	if err := dbClient.AddDeviceProfile(&dp); err != nil {
 		if err == db.ErrNotUnique {
 			http.Error(w, "Duplicate name for device profile", http.StatusConflict)
+		} else if err == db.ErrNameEmpty {
+			http.Error(w, err.Error(), http.StatusBadRequest)
 		} else {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
@@ -432,6 +434,8 @@ func addDeviceProfileYaml(data []byte, w http.ResponseWriter) {
 	if err := dbClient.AddDeviceProfile(&dp); err != nil {
 		if err == db.ErrNotUnique {
 			http.Error(w, "Duplicate profile name", http.StatusConflict)
+		} else if err == db.ErrNameEmpty {
+			http.Error(w, err.Error(), http.StatusBadRequest)
 		} else {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		}
