@@ -4,10 +4,9 @@
 This folder contains snap packaging for the EdgeX Foundry reference implementation.
 
 The snap contains Consul, MongoDB, all of the EdgeX Go-based micro services from
-this repository, and three Java-based services, support-rulesengine and support-
-scheduler, and device-virtual, as well as Vault, Kong, Cassandra, and the two go-based 
-security micro services. The snap also contains a single OpenJDK JRE used to run 
-the Java-based services.
+this repository, and two Java-based services support-scheduler, and device-virtual,
+as well as Vault, Kong, Cassandra, and the two go-based security micro services.
+The snap also contains a single OpenJDK JRE used to run the Java-based services.
 
 The project maintains a rolling release of the snap on the `edge` channel that is rebuilt and published at least once daily through the jenkins jobs setup for the EdgeX project. You can see the jobs run [here](https://jenkins.edgexfoundry.org/view/Snap/) specifically looking at the `edgex-go-snap-{branch}-stage-snap`.
 
