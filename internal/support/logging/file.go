@@ -14,7 +14,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/edgexfoundry/edgex-go/internal/support/logging/models"
+	"github.com/edgexfoundry/edgex-go/pkg/models"
 )
 
 const (
@@ -122,6 +122,10 @@ func (fl *fileLog) find(criteria matchCriteria) ([]models.LogEntry, error) {
 		if err == nil {
 			if criteria.match(le) {
 				logs = append(logs, le)
+
+				if criteria.Limit != 0 && len(logs) >= criteria.Limit {
+					break
+				}
 			}
 		}
 	}

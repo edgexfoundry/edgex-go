@@ -8,14 +8,14 @@ package logging
 
 import (
 	"fmt"
-	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
 	"log"
 	"os"
 
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
-	"github.com/edgexfoundry/edgex-go/internal/support/logging/models"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
+	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
+	"github.com/edgexfoundry/edgex-go/pkg/models"
 )
 
 const (

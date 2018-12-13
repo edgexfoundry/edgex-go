@@ -24,11 +24,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/go-kit/kit/log"
-
 	"github.com/edgexfoundry/edgex-go/pkg/clients"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
+	"github.com/go-kit/kit/log"
 )
 
 // These constants identify the log levels in order of increasing severity.
@@ -105,7 +104,7 @@ func NewClient(owningServiceName string, isRemote bool, logTarget string, logLev
 	lc.rootLogger = log.WithPrefix(lc.rootLogger, "ts", log.DefaultTimestampUTC,
 		"source", log.Caller(5))
 	if err != nil {
-		lc.Error(err.Error(), "initializationStatus", "error")
+		lc.Error(err.Error())
 	}
 	return lc
 }

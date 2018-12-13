@@ -51,7 +51,7 @@ func getAddressableByIdOrName(a *models.Addressable, w http.ResponseWriter) erro
 func restGetAllDeviceServices(w http.ResponseWriter, _ *http.Request) {
 	r := make([]models.DeviceService, 0)
 	if err := dbClient.GetAllDeviceServices(&r); err != nil {
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -59,7 +59,7 @@ func restGetAllDeviceServices(w http.ResponseWriter, _ *http.Request) {
 	// Check the limit
 	if len(r) > Configuration.Service.ReadMaxLimit {
 		err := errors.New("Max limit exceeded")
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusRequestEntityTooLarge)
 		return
 	}
@@ -73,7 +73,7 @@ func restAddDeviceService(w http.ResponseWriter, r *http.Request) {
 	var ds models.DeviceService
 	err := json.NewDecoder(r.Body).Decode(&ds)
 	if err != nil {
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -83,7 +83,7 @@ func restAddDeviceService(w http.ResponseWriter, r *http.Request) {
 	if ds.Service.Addressable.Id.Hex() == "" && ds.Service.Addressable.Name == "" {
 		err = errors.New("Must provide an Addressable for Device Service")
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 		return
 	}
 
@@ -93,7 +93,7 @@ func restAddDeviceService(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if err != db.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
-			LoggingClient.Error(err.Error(), "")
+			LoggingClient.Error(err.Error())
 		}
 	} else {
 		// There wasn't an error - found the addressable
@@ -105,7 +105,7 @@ func restAddDeviceService(w http.ResponseWriter, r *http.Request) {
 		err := dbClient.GetAddressableById(&ds.Service.Addressable, ds.Service.Addressable.Id.Hex())
 		if err != nil {
 			http.Error(w, "Addressable not found by ID or Name", http.StatusNotFound)
-			LoggingClient.Error("Addressable not found by ID or Name: "+err.Error(), "")
+			LoggingClient.Error("Addressable not found by ID or Name: " + err.Error())
 			return
 		}
 	}
@@ -117,7 +117,7 @@ func restAddDeviceService(w http.ResponseWriter, r *http.Request) {
 		} else {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 		return
 	}
 
@@ -139,14 +139,14 @@ func restGetAddressablesForAssociatedDevicesById(w http.ResponseWriter, r *http.
 		} else {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		}
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 		return
 	}
 
 	addressables := []models.Addressable{}
 
 	if err := getAddressablesForAssociatedDevices(&addressables, ds, w); err != nil {
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 		return
 	}
 
@@ -160,7 +160,7 @@ func restGetAddressablesForAssociatedDevicesByName(w http.ResponseWriter, r *htt
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return
 	}
@@ -173,13 +173,13 @@ func restGetAddressablesForAssociatedDevicesByName(w http.ResponseWriter, r *htt
 		} else {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		}
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 		return
 	}
 
 	addressables := []models.Addressable{}
 	if err = getAddressablesForAssociatedDevices(&addressables, ds, w); err != nil {
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 		return
 	}
 
@@ -217,7 +217,7 @@ func restUpdateDeviceService(w http.ResponseWriter, r *http.Request) {
 	var from models.DeviceService
 	err := json.NewDecoder(r.Body).Decode(&from)
 	if err != nil {
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -229,18 +229,18 @@ func restUpdateDeviceService(w http.ResponseWriter, r *http.Request) {
 		// Try by Name
 		if err = dbClient.GetDeviceServiceByName(&to, from.Service.Name); err != nil {
 			http.Error(w, "Device service not found", http.StatusNotFound)
-			LoggingClient.Error(err.Error(), "")
+			LoggingClient.Error(err.Error())
 			return
 		}
 	}
 
 	if err = updateDeviceServiceFields(from, &to, w); err != nil {
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 		return
 	}
 
 	if err := dbClient.UpdateDeviceService(to); err != nil {
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -324,7 +324,7 @@ func restGetServiceByAddressableName(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	an, err := url.QueryUnescape(vars[ADDRESSABLENAME])
 	if err != nil {
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -338,13 +338,13 @@ func restGetServiceByAddressableName(w http.ResponseWriter, r *http.Request) {
 		} else {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 		return
 	}
 
 	if err = dbClient.GetDeviceServicesByAddressableId(&res, a.Id.Hex()); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 		return
 	}
 
@@ -365,12 +365,12 @@ func restGetServiceByAddressableId(w http.ResponseWriter, r *http.Request) {
 		} else {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 		return
 	}
 
 	if err := dbClient.GetDeviceServicesByAddressableId(&res, sid); err != nil {
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -383,14 +383,14 @@ func restGetServiceWithLabel(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	l, err := url.QueryUnescape(vars[LABEL])
 	if err != nil {
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	res := make([]models.DeviceService, 0)
 
 	if err := dbClient.GetDeviceServicesWithLabel(&res, l); err != nil {
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -403,7 +403,7 @@ func restGetServiceByName(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	dn, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -416,7 +416,7 @@ func restGetServiceByName(w http.ResponseWriter, r *http.Request) {
 		} else {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 		return
 	}
 
@@ -436,12 +436,12 @@ func restDeleteServiceById(w http.ResponseWriter, r *http.Request) {
 		} else {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 		return
 	}
 
 	if err := deleteDeviceService(ds, w); err != nil {
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -452,7 +452,7 @@ func restDeleteServiceByName(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -465,13 +465,13 @@ func restDeleteServiceByName(w http.ResponseWriter, r *http.Request) {
 		} else {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 		return
 	}
 
 	// Delete the device service
 	if err = deleteDeviceService(ds, w); err != nil {
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -522,7 +522,7 @@ func restUpdateServiceLastConnectedById(w http.ResponseWriter, r *http.Request) 
 	var vlc string = vars[LASTCONNECTED]
 	lc, err := strconv.ParseInt(vlc, 10, 64)
 	if err != nil {
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -535,12 +535,12 @@ func restUpdateServiceLastConnectedById(w http.ResponseWriter, r *http.Request) 
 		} else {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 		return
 	}
 
 	if err = updateServiceLastConnected(ds, lc, w); err != nil {
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -552,14 +552,14 @@ func restUpdateServiceLastConnectedByName(w http.ResponseWriter, r *http.Request
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	var vlc string = vars[LASTCONNECTED]
 	lc, err := strconv.ParseInt(vlc, 10, 64)
 	if err != nil {
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -572,13 +572,13 @@ func restUpdateServiceLastConnectedByName(w http.ResponseWriter, r *http.Request
 		} else {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 		return
 	}
 
 	// Update last connected
 	if err = updateServiceLastConnected(ds, lc, w); err != nil {
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -609,7 +609,7 @@ func restGetServiceById(w http.ResponseWriter, r *http.Request) {
 		} else {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 		return
 	}
 
@@ -626,7 +626,7 @@ func restUpdateServiceOpStateById(w http.ResponseWriter, r *http.Request) {
 	newOs, f := models.GetOperatingState(os)
 	if !f {
 		err := errors.New("Invalid State: " + os + " Must be 'ENABLED' or 'DISABLED'")
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -639,12 +639,12 @@ func restUpdateServiceOpStateById(w http.ResponseWriter, r *http.Request) {
 		} else {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 		return
 	}
 
 	if err := updateServiceOpState(ds, newOs, w); err != nil {
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -656,7 +656,7 @@ func restUpdateServiceOpStateByName(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -666,7 +666,7 @@ func restUpdateServiceOpStateByName(w http.ResponseWriter, r *http.Request) {
 	newOs, f := models.GetOperatingState(os)
 	if !f {
 		err = errors.New("Invalid State: " + os + " Must be 'ENABLED' or 'DISABLED'")
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -679,12 +679,12 @@ func restUpdateServiceOpStateByName(w http.ResponseWriter, r *http.Request) {
 		} else {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 		return
 	}
 
 	if err := updateServiceOpState(ds, newOs, w); err != nil {
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -713,7 +713,7 @@ func restUpdateServiceAdminStateById(w http.ResponseWriter, r *http.Request) {
 	if !f {
 		err := errors.New("Invalid state: " + as + " Must be 'LOCKED' or 'UNLOCKED'")
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 		return
 	}
 
@@ -725,13 +725,13 @@ func restUpdateServiceAdminStateById(w http.ResponseWriter, r *http.Request) {
 		} else {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 		return
 	}
 
 	// Update the admin state
 	if err := updateServiceAdminState(ds, newAs, w); err != nil {
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -743,7 +743,7 @@ func restUpdateServiceAdminStateByName(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -754,7 +754,7 @@ func restUpdateServiceAdminStateByName(w http.ResponseWriter, r *http.Request) {
 	if !f {
 		err := errors.New("Invalid state: " + as + " Must be 'LOCKED' or 'UNLOCKED'")
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 		return
 	}
 
@@ -766,13 +766,13 @@ func restUpdateServiceAdminStateByName(w http.ResponseWriter, r *http.Request) {
 		} else {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 		return
 	}
 
 	// Update the admins state
 	if err = updateServiceAdminState(ds, newAs, w); err != nil {
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -797,7 +797,7 @@ func restUpdateServiceLastReportedById(w http.ResponseWriter, r *http.Request) {
 	var vlr string = vars[LASTREPORTED]
 	lr, err := strconv.ParseInt(vlr, 10, 64)
 	if err != nil {
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -810,12 +810,12 @@ func restUpdateServiceLastReportedById(w http.ResponseWriter, r *http.Request) {
 		} else {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 		return
 	}
 
 	if err = updateServiceLastReported(ds, lr, w); err != nil {
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -827,14 +827,14 @@ func restUpdateServiceLastReportedByName(w http.ResponseWriter, r *http.Request)
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	var vlr string = vars[LASTREPORTED]
 	lr, err := strconv.ParseInt(vlr, 10, 64)
 	if err != nil {
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -847,12 +847,12 @@ func restUpdateServiceLastReportedByName(w http.ResponseWriter, r *http.Request)
 		} else {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 		return
 	}
 
 	if err = updateServiceLastReported(ds, lr, w); err != nil {
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -913,7 +913,7 @@ func makeRequest(client *http.Client, req *http.Request) {
 		defer resp.Body.Close()
 		resp.Close = true
 	} else {
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 	}
 }
 

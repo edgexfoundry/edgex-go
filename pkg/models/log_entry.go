@@ -16,22 +16,21 @@ package models
 import "encoding/json"
 
 type LogEntry struct {
-	Level         string        `json:"logLevel"`
-	Args          []interface{} `json:"args"`
-	OriginService string        `json:"originService"`
-	Message       string        `json:"message"`
-	Created       int64         `json:"created"`
+	Level         string        `bson:"logLevel" json:"logLevel"`
+	Args          []interface{} `bson:"args" json:"args"`
+	OriginService string        `bson:"originService" json:"originService"`
+	Message       string        `bson:"message" json:"message"`
+	Created       int64         `bson:"created" json:"created"`
 }
 
 func (l LogEntry) MarshalJSON() ([]byte, error) {
 	test := struct {
-		Level         *string       `json:"logLevel"`
-		Args          []interface{} `json:"args"`
-		OriginService *string       `json:"originService"`
-		Message       *string       `json:"message"`
-		Created       int64         `json:"created"`
+		Level         *string       `json:"logLevel,omitempty"`
+		Args          []interface{} `json:"args,omitempty"`
+		OriginService *string       `json:"originService,omitempty"`
+		Message       *string       `json:"message,omitempty"`
+		Created       int64         `json:"created,omitempty"`
 	}{
-		Args:    l.Args,
 		Created: l.Created,
 	}
 

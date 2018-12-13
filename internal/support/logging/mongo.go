@@ -8,11 +8,11 @@ package logging
 
 import (
 	"fmt"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"strconv"
 	"time"
 
-	"github.com/edgexfoundry/edgex-go/internal/support/logging/models"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+	"github.com/edgexfoundry/edgex-go/pkg/models"
 
 	mgo "github.com/globalsign/mgo"
 	bson "github.com/globalsign/mgo/bson"
@@ -74,10 +74,6 @@ func createConditions(conditions []bson.M, field string, elements []string) []bs
 
 func createQuery(criteria matchCriteria) bson.M {
 	conditions := []bson.M{{}}
-
-	if len(criteria.Labels) > 0 {
-		conditions = createConditions(conditions, "labels", criteria.Labels)
-	}
 
 	if len(criteria.Keywords) > 0 {
 		keyCond := []bson.M{}

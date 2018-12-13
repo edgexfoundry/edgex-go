@@ -11,7 +11,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/edgexfoundry/edgex-go/pkg/models"
 	"net/http"
 	"os"
 	"os/signal"
@@ -25,6 +24,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
+	"github.com/edgexfoundry/edgex-go/pkg/models"
 )
 
 func main() {
@@ -51,7 +51,7 @@ func main() {
 	distro.LoggingClient.Info(fmt.Sprintf("Starting %s %s ", internal.ExportDistroServiceKey, edgex.Version))
 
 	http.TimeoutHandler(nil, time.Millisecond*time.Duration(distro.Configuration.Service.Timeout), "Request timed out")
-	distro.LoggingClient.Info(distro.Configuration.Service.StartupMsg, "")
+	distro.LoggingClient.Info(distro.Configuration.Service.StartupMsg)
 
 	errs := make(chan error, 2)
 	eventCh := make(chan *models.Event, 10)
@@ -63,7 +63,7 @@ func main() {
 	distro.Loop(errs, eventCh)
 
 	// Time it took to start service
-	distro.LoggingClient.Info("Service started in: "+time.Since(start).String(), "")
+	distro.LoggingClient.Info("Service started in: " + time.Since(start).String())
 	distro.LoggingClient.Info("Listening on port: " + strconv.Itoa(distro.Configuration.Service.Port))
 	c := <-errs
 	distro.Destruct()

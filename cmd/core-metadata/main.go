@@ -57,14 +57,14 @@ func main() {
 	metadata.LoggingClient.Info(fmt.Sprintf("Starting %s %s ", internal.CoreMetaDataServiceKey, edgex.Version))
 
 	http.TimeoutHandler(nil, time.Millisecond*time.Duration(metadata.Configuration.Service.Timeout), "Request timed out")
-	metadata.LoggingClient.Info(metadata.Configuration.Service.StartupMsg, "")
+	metadata.LoggingClient.Info(metadata.Configuration.Service.StartupMsg)
 
 	errs := make(chan error, 2)
 	listenForInterrupt(errs)
 	startHttpServer(errs, metadata.Configuration.Service.Port)
 
 	// Time it took to start service
-	metadata.LoggingClient.Info("Service started in: "+time.Since(start).String(), "")
+	metadata.LoggingClient.Info("Service started in: " + time.Since(start).String())
 	metadata.LoggingClient.Info("Listening on port: " + strconv.Itoa(metadata.Configuration.Service.Port))
 	c := <-errs
 	metadata.Destruct()
