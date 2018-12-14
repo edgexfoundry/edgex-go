@@ -467,6 +467,9 @@ func (m *MongoClient) GetDeviceProfile(d *contract.DeviceProfile, q bson.M) erro
 func (m *MongoClient) AddDeviceProfile(dp *contract.DeviceProfile) error {
 	s := m.session.Copy()
 	defer s.Close()
+	if len(dp.Name) == 0 {
+		return db.ErrNameEmpty
+	}
 	col := s.DB(m.database.Name).C(db.DeviceProfile)
 	count, err := col.Find(bson.M{"name": dp.Name}).Count()
 	if err != nil {
