@@ -125,7 +125,7 @@ func populateCommand(db interfaces.DBClient, count int) (bson.ObjectId, error) {
 		if err != nil {
 			return id, err
 		}
-		id = c.Id
+		id = bson.ObjectIdHex(c.Id)
 	}
 	return id, nil
 }
@@ -567,7 +567,7 @@ func testDBCommand(t *testing.T, db interfaces.DBClient) {
 		t.Fatalf("Error getting commands %v", err)
 	}
 	for _, c := range commands {
-		if err = db.DeleteCommandById(c.Id.Hex()); err != nil {
+		if err = db.DeleteCommandById(c.Id); err != nil {
 			t.Fatalf("Error removing command %v", err)
 		}
 	}
@@ -589,7 +589,7 @@ func testDBCommand(t *testing.T, db interfaces.DBClient) {
 	if err != nil {
 		t.Fatalf("Error getting command by id %v", err)
 	}
-	if c.Id.Hex() != id.Hex() {
+	if c.Id != id.Hex() {
 		t.Fatalf("Id does not match %s - %s", c.Id, id)
 	}
 	err = db.GetCommandById(&c, "INVALID")
@@ -614,7 +614,7 @@ func testDBCommand(t *testing.T, db interfaces.DBClient) {
 	}
 
 	cc := models.Command{}
-	cc.Id = id
+	cc.Id = id.Hex()
 	cc.Get = &models.Get{}
 	cc.Put = &models.Put{}
 	cc.Name = "name"
@@ -1176,7 +1176,7 @@ func testDBDeviceProfile(t *testing.T, db interfaces.DBClient) {
 		t.Fatalf("There should be 1 deviceProfiles instead of %d", len(deviceProfiles))
 	}
 
-	c.Id = bson.NewObjectId()
+	c.Id = bson.NewObjectId().Hex()
 	err = db.GetDeviceProfilesUsingCommand(&deviceProfiles, c)
 	if err != nil {
 		t.Fatalf("Error getting deviceProfiles %v", err)
