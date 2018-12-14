@@ -21,27 +21,30 @@ func AddSchedulers() error {
 	// ensure queue is empty
 	clearQueue()
 
-	LoggingClient.Info(fmt.Sprintf("Loading schedules, schedule events, and addressables ..."))
+	LoggingClient.Info("Loading schedules, schedule events, and addressables ...")
 
 	// load data from core-metadata
 	err := loadCoreMetadataInformation()
 	if err != nil {
-		return LoggingClient.Error(fmt.Sprintf("Failed to load information from core-metadata: %s", err.Error()))
+		LoggingClient.Error("failed to load information from core-metadata", "message", err.Error())
+		return err
 	}
 
 	// load config schedules
 	errCS := loadConfigSchedules()
 	if errCS != nil {
-		return LoggingClient.Error(fmt.Sprintf("Failed to load scheduler config data: %s", errCS.Error()))
+		LoggingClient.Error("failed to load scheduler config data", "message", errCS.Error())
+		return errCS
 	}
 
 	// load config schedule events
 	errCSE := loadConfigScheduleEvents()
 	if errCSE != nil {
-		return LoggingClient.Error(fmt.Sprintf("Failed to load scheduler events config data: %s", errCSE.Error()))
+		LoggingClient.Error("failed to load scheduler events config data", "message", errCSE.Error())
+		return errCSE
 	}
 
-	LoggingClient.Info(fmt.Sprintf("Finished loading schedules, schedule events, and addressables"))
+	LoggingClient.Info("Finished loading schedules, schedule events, and addressables")
 
 	return nil
 }
@@ -94,7 +97,7 @@ func callMetaDataService() (int, error) {
 	if err != nil {
 		return statusCode, err
 	}
-	LoggingClient.Debug(fmt.Sprintf("Execution returns status code : %d", statusCode))
+	LoggingClient.Debug("execution complete", "code", statusCode)
 	return statusCode, nil
 }
 
@@ -104,13 +107,14 @@ func getMetadataSchedules() ([]models.Schedule, error) {
 	var receivedSchedules []models.Schedule
 	receivedSchedules, errSchedule := msc.Schedules()
 	if errSchedule != nil {
-		return receivedSchedules, LoggingClient.Error(fmt.Sprintf("Error connecting to metadata and retrieving schedules: %s", errSchedule.Error()))
+		LoggingClient.Error("error connecting to metadata and retrieving schedules", "message", errSchedule.Error())
+		return receivedSchedules, errSchedule
 	}
 
 	if receivedSchedules != nil {
 		LoggingClient.Debug("Successfully queried core-metadata schedules...")
 		for _, v := range receivedSchedules {
-			LoggingClient.Debug(fmt.Sprintf("Found schedule id: %s  name: %s start time: %s", v.Id.Hex(), v.Name, v.Start))
+			LoggingClient.Debug("found schedule", "id", v.Id.Hex(), "schedule", v.Name, "start", v.Start)
 		}
 	}
 	return receivedSchedules, nil
@@ -122,14 +126,15 @@ func getMetadataScheduleEvents() ([]models.ScheduleEvent, error) {
 	var receivedScheduleEvents []models.ScheduleEvent
 	receivedScheduleEvents, err := msec.ScheduleEvents()
 	if err != nil {
-		return receivedScheduleEvents, LoggingClient.Error(fmt.Sprintf("Error connecting to metadata and retrieving schedule events: %s", err.Error()))
+		LoggingClient.Error("error connecting to metadata and retrieving schedule events", "message", err.Error())
+		return receivedScheduleEvents, err
 	}
 
 	// debug information only
 	if receivedScheduleEvents != nil {
 		LoggingClient.Debug("Successfully queried core-metadata schedule events...")
 		for _, v := range receivedScheduleEvents {
-			LoggingClient.Debug(fmt.Sprintf("Found schedule event id: %s name: %s schedule: %s service name: %s ", v.Id.Hex(), v.Name, v.Schedule, v.Service))
+			LoggingClient.Debug("found schedule", "id", v.Id.Hex(), "event", v.Name, "schedule", v.Schedule, "service", v.Service)
 		}
 	}
 
@@ -143,17 +148,17 @@ func addReceivedSchedules(schedules []models.Schedule) error {
 		// todo: need to remove this naming convention based inference
 		matched, err := regexp.MatchString("device.*", schedule.Name)
 		if err != nil {
-			LoggingClient.Info(fmt.Sprintf("Error parsing recevied core-metadata schedules: %s", err.Error()))
+			LoggingClient.Error("error parsing received core-metadata schedules", "message", err.Error())
 			return err
 		}
 		// we have a service related notification
 		if !matched {
 			err := addSchedule(schedule)
 			if err != nil {
-				LoggingClient.Info(fmt.Sprintf("Error adding core-metadata schedule name: %s - %s", schedule.Name, err.Error()))
+				LoggingClient.Error("error adding core-metadata schedule", "schedule", schedule.Name, "message", err.Error())
 				return err
 			}
-			LoggingClient.Info(fmt.Sprintf("Added schedule name: %s to the schedule id: %s ", schedule.Name, schedule.Id.Hex()))
+			LoggingClient.Info("associated schedule name and id", "schedule", schedule.Name, "id", schedule.Id.Hex())
 		}
 	}
 	return nil
@@ -166,17 +171,17 @@ func addReceivedScheduleEvents(scheduleEvents []models.ScheduleEvent) error {
 		// todo: need to remove this naming convention based inference
 		matched, err := regexp.MatchString("device.*", scheduleEvent.Service)
 		if err != nil {
-			LoggingClient.Info(fmt.Sprintf("Error parsing recevied core-metadata schedules: %s", err.Error()))
+			LoggingClient.Error("error parsing received core-metadata schedules", "message", err.Error())
 			return err
 		}
 		// schedule event service should not be device.*
 		if !matched {
 			err := addScheduleEvent(scheduleEvent)
 			if err != nil {
-				LoggingClient.Info(fmt.Sprintf("Error adding core-metadata schedule event name: %s - %s", scheduleEvent.Name, err.Error()))
+				LoggingClient.Error("error adding core-metadata schedule event", "event", scheduleEvent.Name, "message", err.Error())
 				return err
 			}
-			LoggingClient.Info(fmt.Sprintf("Added schedule event name: %s to the schedule name: %s  schedule event id: %s", scheduleEvent.Name, scheduleEvent.Schedule, scheduleEvent.Id.Hex()))
+			LoggingClient.Info("added event to schedule", "event", scheduleEvent.Name, "schedule", scheduleEvent.Schedule, "id", scheduleEvent.Id.Hex())
 		}
 	}
 
@@ -188,9 +193,10 @@ func addScheduleToCoreMetaData(schedule models.Schedule) (string, error) {
 
 	addedScheduleId, err := msc.Add(&schedule)
 	if err != nil {
-		return "", LoggingClient.Error(fmt.Sprintf("Error trying to add schedule to core-metadata service: %s", err.Error()))
+		LoggingClient.Error("error trying to add schedule to core-metadata service", "message", err.Error())
+		return "", err
 	}
-	LoggingClient.Info(fmt.Sprintf("Added schedule %s to the core-metadata with id %s", schedule.Name, addedScheduleId))
+	LoggingClient.Info("Added schedule to the core-metadata", "schedule", schedule.Name, "id", addedScheduleId)
 	return addedScheduleId, nil
 }
 
@@ -199,9 +205,10 @@ func addScheduleEventToCoreMetadata(scheduleEvent models.ScheduleEvent) (string,
 
 	addedScheduleEventId, err := msec.Add(&scheduleEvent)
 	if err != nil {
-		return "", LoggingClient.Error(fmt.Sprintf("Error trying to add schedule event to core-metadata service: %s", err.Error()))
+		LoggingClient.Error("error trying to add schedule event to core-metadata service", "message", err.Error())
+		return "", err
 	}
-	LoggingClient.Info(fmt.Sprintf("Added schedule event %s to the core-metadata with id %s", scheduleEvent.Name, addedScheduleEventId))
+	LoggingClient.Info("Added schedule event to the core-metadata", "event", scheduleEvent.Name, "id", addedScheduleEventId)
 	return addedScheduleEventId, nil
 }
 
@@ -225,7 +232,8 @@ func loadConfigSchedules() error {
 			// add the schedule core-metadata
 			newScheduleId, errAddedSchedule := addScheduleToCoreMetaData(schedule)
 			if errAddedSchedule != nil {
-				return LoggingClient.Error(fmt.Sprintf("Error adding schedule to the scheduler: %s", errAddedSchedule.Error()))
+				LoggingClient.Error("error adding to the scheduler", "message", errAddedSchedule.Error())
+				return errAddedSchedule
 			}
 
 			// add the core-metadata scheduler.id
@@ -235,10 +243,11 @@ func loadConfigSchedules() error {
 			err := addSchedule(schedule)
 
 			if err != nil {
-				return LoggingClient.Error(fmt.Sprintf("Error loading schedule from the scheduler config: %s", err.Error()))
+				LoggingClient.Error("error loading schedule %s from the scheduler config", "message", err.Error())
+				return err
 			}
 		} else {
-			LoggingClient.Debug(fmt.Sprintf("Did not add schedule %s as it already exists in the scheduler", schedule.Name))
+			LoggingClient.Debug("did not add schedule %s as it already exists in the scheduler", "schedule", schedule.Name)
 		}
 	}
 
@@ -279,9 +288,10 @@ func loadConfigScheduleEvents() error {
 				// we don't have that addressable yet now add it
 				addressableId, err := mac.Add(&addressable)
 				if err != nil {
-					return LoggingClient.Error(fmt.Sprintf("Error adding new addressable into core-metadata: %s", err.Error()))
+					LoggingClient.Error("error adding new addressable into core-metadata", "message", err.Error())
+					return err
 				}
-				LoggingClient.Info(fmt.Sprintf("Added addressable into core-metadata name: %s id: %s path: %s", addressable.Name, addressableId, addressable.Path))
+				LoggingClient.Info("Added addressable into core-metadata", "addressable", addressable.Name, "id", addressableId, "path", addressable.Path)
 
 				// add the core-metadata id value
 				addressable.Id = addressableId
@@ -290,7 +300,8 @@ func loadConfigScheduleEvents() error {
 			// add the schedule event with addressable event to core-metadata
 			newScheduleEventId, err := addScheduleEventToCoreMetadata(scheduleEvent)
 			if err != nil {
-				return LoggingClient.Error(fmt.Sprintf("Error adding schedule event into core-metadata: %s", err.Error()))
+				LoggingClient.Error("error adding schedule event %s into core-metadata", "message", err.Error())
+				return err
 			}
 
 			// add the core-metadata version of the scheduleEvent.Id
@@ -298,10 +309,11 @@ func loadConfigScheduleEvents() error {
 
 			errAddSE := addScheduleEvent(scheduleEvent)
 			if errAddSE != nil {
-				return LoggingClient.Error(fmt.Sprintf("Error loading schedule event into scheduler: %s", errAddSE.Error()))
+				LoggingClient.Error("error loading schedule event %s into scheduler", "message", errAddSE.Error())
+				return errAddSE
 			}
 		} else {
-			LoggingClient.Debug(fmt.Sprintf("Did not load schedule event name: %s as it exists in the scheduler", scheduleEvent.Name))
+			LoggingClient.Debug("Did not load schedule event as it exists in the scheduler", "event", scheduleEvent.Name)
 		}
 	}
 
@@ -313,25 +325,25 @@ func loadCoreMetadataInformation() error {
 
 	receivedSchedules, err := getMetadataSchedules()
 	if err != nil {
-		LoggingClient.Error(fmt.Sprintf("Failed to receive schedules from core-metadata: %s", err.Error()))
+		LoggingClient.Error("Failed to receive schedules from core-metadata", "message", err.Error())
 		return err
 	}
 
 	err = addReceivedSchedules(receivedSchedules)
 	if err != nil {
-		LoggingClient.Error(fmt.Sprintf("Failed to add received schedules from core-metadata: %s", err.Error()))
+		LoggingClient.Error("Failed to add received schedules from core-metadata", "message", err.Error())
 		return err
 	}
 
 	receivedScheduleEvents, err := getMetadataScheduleEvents()
 	if err != nil {
-		LoggingClient.Error(fmt.Sprintf("Failed to receive schedule events from core-metadata: %s", err.Error()))
+		LoggingClient.Error("Failed to receive schedule events from core-metadata", "message", err.Error())
 		return err
 	}
 
 	err = addReceivedScheduleEvents(receivedScheduleEvents)
 	if err != nil {
-		LoggingClient.Error(fmt.Sprintf("Failed to add received schedule events from core-metadata: %s", err.Error()))
+		LoggingClient.Error("Failed to add received schedule events from core-metadata", "message", err.Error())
 		return err
 	}
 

@@ -16,7 +16,6 @@ package logger
 // Logging client for the Go implementation of edgexfoundry
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	stdlog "log"
@@ -48,11 +47,11 @@ var LogLevels = []string{
 
 type LoggingClient interface {
 	SetLogLevel(logLevel string) error
-	Debug(msg string, args ...interface{}) error
-	Error(msg string, args ...interface{}) error
-	Info(msg string, args ...interface{}) error
-	Trace(msg string, args ...interface{}) error
-	Warn(msg string, args ...interface{}) error
+	Debug(msg string, args ...interface{})
+	Error(msg string, args ...interface{})
+	Info(msg string, args ...interface{})
+	Trace(msg string, args ...interface{})
+	Warn(msg string, args ...interface{})
 }
 
 type EdgeXLogger struct {
@@ -85,22 +84,24 @@ func NewClient(owningServiceName string, isRemote bool, logTarget string, logLev
 	// Set up the loggers
 	lc.levelLoggers = map[string]log.Logger{}
 
-	// If local logging, verify directory exists
-	if !lc.remoteEnabled && lc.logTarget != "" {
+	if !lc.remoteEnabled && logTarget != "" { // file based logging
 		verifyLogDirectory(lc.logTarget)
 
 		w, err := newFileWriter(lc.logTarget)
-		// only use the FileWriter if there are no errors
 		if err != nil {
 			stdlog.Fatal(err.Error())
 		}
 		lc.rootLogger = log.NewLogfmtLogger(io.MultiWriter(os.Stdout, log.NewSyncWriter(w)))
-	} else {
+	} else { // HTTP logging OR invalid log target
 		lc.rootLogger = log.NewLogfmtLogger(os.Stdout)
 	}
 
 	lc.rootLogger = log.WithPrefix(lc.rootLogger, "ts", log.DefaultTimestampUTC,
 		"source", log.Caller(5))
+
+	if logTarget == "" {
+		lc.Error("logTarget cannot be blank, using stdout only")
+	}
 
 	return lc
 }
@@ -127,22 +128,19 @@ func IsValidLogLevel(l string) bool {
 }
 
 func newFileWriter(logTarget string) (io.Writer, error) {
-	if logTarget == "" {
-		return nil, errors.New("logTarget cannot be blank")
-	}
 	fileWriter := fileWriter{fileName: logTarget}
 
 	return &fileWriter, nil
 }
 
-func (lc EdgeXLogger) log(logLevel string, msg string, args ...interface{}) error {
+func (lc EdgeXLogger) log(logLevel string, msg string, args ...interface{}) {
 	// Check minimum log level
 	for _, name := range LogLevels {
 		if name == *lc.logLevel {
 			break
 		}
 		if name == logLevel {
-			return nil
+			return
 		}
 	}
 
@@ -159,9 +157,6 @@ func (lc EdgeXLogger) log(logLevel string, msg string, args ...interface{}) erro
 			// add an empty string to keep k/v pairs correct
 			args = append(args, "")
 		}
-		// Practical usage thus far has been to call this type like so Logger.Info("message")
-		// I'm attempting to preserve that behavior below without requiring the client types
-		// to provide the "msg" key.
 		args = append(args, "msg", msg)
 	}
 
@@ -171,10 +166,11 @@ func (lc EdgeXLogger) log(logLevel string, msg string, args ...interface{}) erro
 
 	err := lc.levelLoggers[logLevel].Log(args...)
 	if err != nil {
-		return err
+		stdlog.Fatal(err.Error())
+		return
 	}
 
-	return nil
+
 }
 
 func verifyLogDirectory(path string) {
@@ -201,28 +197,28 @@ func (lc EdgeXLogger) SetLogLevel(logLevel string) error {
 }
 
 // Log an INFO level message
-func (lc EdgeXLogger) Info(msg string, args ...interface{}) error {
-	return lc.log(InfoLog, msg, args...)
+func (lc EdgeXLogger) Info(msg string, args ...interface{}) {
+	lc.log(InfoLog, msg, args...)
 }
 
 // Log a TRACE level message
-func (lc EdgeXLogger) Trace(msg string, args ...interface{}) error {
-	return lc.log(TraceLog, msg, args...)
+func (lc EdgeXLogger) Trace(msg string, args ...interface{}) {
+	lc.log(TraceLog, msg, args...)
 }
 
 // Log a DEBUG level message
-func (lc EdgeXLogger) Debug(msg string, args ...interface{}) error {
-	return lc.log(DebugLog, msg, args...)
+func (lc EdgeXLogger) Debug(msg string, args ...interface{}) {
+	lc.log(DebugLog, msg, args...)
 }
 
 // Log a WARN level message
-func (lc EdgeXLogger) Warn(msg string, args ...interface{}) error {
-	return lc.log(WarnLog, msg, args...)
+func (lc EdgeXLogger) Warn(msg string, args ...interface{}) {
+	lc.log(WarnLog, msg, args...)
 }
 
 // Log an ERROR level message
-func (lc EdgeXLogger) Error(msg string, args ...interface{}) error {
-	return lc.log(ErrorLog, msg, args...)
+func (lc EdgeXLogger) Error(msg string, args ...interface{}) {
+	lc.log(ErrorLog, msg, args...)
 }
 
 // Build the log entry object
@@ -238,10 +234,6 @@ func (lc EdgeXLogger) buildLogEntry(logLevel string, msg string, args ...interfa
 
 // Send the log as an http request
 func (lc EdgeXLogger) sendLog(logEntry models.LogEntry) {
-	if lc.logTarget == "" {
-		return
-	}
-
 	go func() {
 		_, err := clients.PostJsonRequest(lc.logTarget, logEntry)
 		if err != nil {
