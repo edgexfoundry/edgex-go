@@ -85,9 +85,7 @@ func NewClient(owningServiceName string, isRemote bool, logTarget string, logLev
 	// Set up the loggers
 	lc.levelLoggers = map[string]log.Logger{}
 
-	var err error
-
-	//If local logging, verify directory exists
+	// If local logging, verify directory exists
 	if !lc.remoteEnabled && lc.logTarget != "" {
 		verifyLogDirectory(lc.logTarget)
 
@@ -103,9 +101,7 @@ func NewClient(owningServiceName string, isRemote bool, logTarget string, logLev
 
 	lc.rootLogger = log.WithPrefix(lc.rootLogger, "ts", log.DefaultTimestampUTC,
 		"source", log.Caller(5))
-	if err != nil {
-		lc.Error(err.Error())
-	}
+
 	return lc
 }
 
@@ -150,6 +146,12 @@ func (lc EdgeXLogger) log(logLevel string, msg string, args ...interface{}) erro
 		}
 	}
 
+	if lc.remoteEnabled {
+		// Send to logging service
+		logEntry := lc.buildLogEntry(logLevel, msg, args...)
+		lc.sendLog(logEntry)
+	}
+
 	if args == nil {
 		args = []interface{}{"msg", msg}
 	} else {
@@ -172,11 +174,6 @@ func (lc EdgeXLogger) log(logLevel string, msg string, args ...interface{}) erro
 		return err
 	}
 
-	if lc.remoteEnabled {
-		// Send to logging service
-		logEntry := lc.buildLogEntry(logLevel, msg, args...)
-		lc.sendLog(logEntry)
-	}
 	return nil
 }
 
