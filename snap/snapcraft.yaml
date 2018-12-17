@@ -12,6 +12,11 @@ description: |
   for this snap can be found at: https://github.com/edgexfoundry/edgex-go
 icon: snap/local/assets/edgex-snap-icon.png
 
+# TODO: add armhf here when that's supported
+architectures: 
+  - arm64
+  - amd64
+
 # TODO: upgrade to stable before releasing to beta/candidate/stable
 grade: devel
 confinement: strict
