@@ -4,13 +4,13 @@ version-script: |
     echo $SNAPCRAFT_PROJECT_VERSION-$(date +%Y%m%d)+$(git rev-parse --short HEAD)
 summary: Provides a full set of Edgex Foundry core microservices.
 description: |
- This snap provides a full set of EdgeX Foundry core micro services.
- It's based on the 'California ' release of EdgeX, in which all of
- the core, and export services have been re-written in Go.
- In addition to Mongodb and Consul, this snap also includes a shared
- OpenJDK JRE for use by the device-virtual service. The packaging for
- this snap can be found at:
- https://github.com/edgexfoundry/edgex-go
+  EdgeX Foundry is a vendor-neutral open source project hosted by The Linux 
+  Foundation building a common open framework for IoT edge computing. This 
+  snap contains all of the EdgeX core, security, and support reference 
+  services, as well as Consul, Kong, MongoDB, Vault, a JRE for the two 
+  remaining Java services, and a set of basic device services. The packaging 
+  for this snap can be found at: https://github.com/edgexfoundry/edgex-go
+icon: snap/local/assets/edgex-snap-icon.png
 
 grade: stable
 confinement: strict
