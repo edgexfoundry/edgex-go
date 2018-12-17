@@ -17,7 +17,7 @@ package agent
 
 import (
 	"encoding/json"
-	"fmt"
+	"github.com/edgexfoundry/edgex-go/internal/system/agent/logger"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -47,18 +47,18 @@ func operationHandler(w http.ResponseWriter, r *http.Request) {
 	b, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		LoggingClient.Error(fmt.Sprintf("unable to read request body (%s)", err.Error()))
+		logs.LoggingClient.Error("unable to read request body", "error message", err.Error())
 		return
 	}
 	o := models.Operation{}
 	err = o.UnmarshalJSON(b)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		LoggingClient.Error("Error decoding operation: " + err.Error())
+		logs.LoggingClient.Error("error decoding operation", "error message", err.Error())
 		return
 	} else if o.Action == "" {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		LoggingClient.Error("action is required")
+		logs.LoggingClient.Error("action is required")
 		return
 	}
 
@@ -87,7 +87,7 @@ func operationHandler(w http.ResponseWriter, r *http.Request) {
 		break
 
 	default:
-		LoggingClient.Info(fmt.Sprintf(">> Unknown action %v\n", o.Action))
+		logs.LoggingClient.Warn("unknown action", "action name", o.Action)
 	}
 }
 
@@ -98,7 +98,7 @@ func configHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	vars := mux.Vars(r)
-	LoggingClient.Debug(fmt.Sprintf("It is for these micro-service that their configuration data has been requested: %v", vars))
+	logs.LoggingClient.Debug("service configuration data requested", "service names",  vars)
 
 	list := vars["services"]
 	var services []string
@@ -119,7 +119,7 @@ func metricsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	vars := mux.Vars(r)
-	LoggingClient.Debug(fmt.Sprintf("It is for these micro-service that their metrics data has been requested: %v", vars))
+	logs.LoggingClient.Debug("service configuration data requested", "service names",  vars)
 
 	list := vars["services"]
 	var services []string
@@ -140,7 +140,7 @@ func encode(i interface{}, w http.ResponseWriter) {
 	err := enc.Encode(i)
 
 	if err != nil {
-		LoggingClient.Error("Error encoding the data: " + err.Error())
+		logs.LoggingClient.Error("error during encoding", "error message", err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}

@@ -108,10 +108,10 @@ func CommandResponseFromDevice(d Device, cmdURL string) CommandResponse {
 
 	for _, c := range cmdResp.Commands {
 		if c.Get != nil {
-			c.Get.URL = createUrl(basePath, c.Id.Hex())
+			c.Get.URL = createUrl(basePath, c.Id)
 		}
 		if c.Put != nil {
-			c.Put.URL = createUrl(basePath, c.Id.Hex())
+			c.Put.URL = createUrl(basePath, c.Id)
 		}
 	}
 

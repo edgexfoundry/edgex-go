@@ -15,25 +15,25 @@ package memory
 
 import (
 	"github.com/edgexfoundry/edgex-go/internal/export"
-	"github.com/edgexfoundry/edgex-go/pkg/models"
+	contract "github.com/edgexfoundry/edgex-go/pkg/models"
 )
 
 type MemDB struct {
 	// Data
-	readings     []models.Reading
-	events       []models.Event
-	vDescriptors []models.ValueDescriptor
+	readings     []contract.Reading
+	events       []contract.Event
+	vDescriptors []contract.ValueDescriptor
 
 	// Metadata
-	addressables      []models.Addressable
-	commands          []models.Command
-	deviceServices    []models.DeviceService
-	schedules         []models.Schedule
-	scheduleEvents    []models.ScheduleEvent
-	provisionWatchers []models.ProvisionWatcher
-	deviceReports     []models.DeviceReport
-	deviceProfiles    []models.DeviceProfile
-	devices           []models.Device
+	addressables      []contract.Addressable
+	commands          []contract.Command
+	deviceServices    []contract.DeviceService
+	schedules         []contract.Schedule
+	scheduleEvents    []contract.ScheduleEvent
+	provisionWatchers []contract.ProvisionWatcher
+	deviceReports     []contract.DeviceReport
+	deviceProfiles    []contract.DeviceProfile
+	devices           []contract.Device
 
 	// Export
 	regs []export.Registration
@@ -54,4 +54,3 @@ func stringInSlice(a string, list []string) bool {
 	}
 	return false
 }
-

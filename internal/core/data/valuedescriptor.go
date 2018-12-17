@@ -21,7 +21,6 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
-	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
 	contract "github.com/edgexfoundry/edgex-go/pkg/models"
 )
 
@@ -157,14 +156,8 @@ func getValueDescriptorsByDeviceName(name string) (vdList []contract.ValueDescri
 	// Get the device
 	device, err := mdc.DeviceForName(name)
 	if err != nil {
-		switch err := err.(type) {
-		case types.ErrNotFound:
-			LoggingClient.Error("Device not found: " + err.Error())
-			return []contract.ValueDescriptor{}, errors.NewErrDbNotFound()
-		default:
-			LoggingClient.Error("Problem getting device from metadata: " + err.Error())
-			return []contract.ValueDescriptor{}, err
-		}
+		LoggingClient.Error("Problem getting device from metadata: " + err.Error())
+		return []contract.ValueDescriptor{}, err
 	}
 
 	return getValueDescriptorsByDevice(device)
@@ -174,14 +167,8 @@ func getValueDescriptorsByDeviceId(id string) (vdList []contract.ValueDescriptor
 	// Get the device
 	device, err := mdc.Device(id)
 	if err != nil {
-		switch err := err.(type) {
-		case types.ErrNotFound:
-			LoggingClient.Error("Device not found: " + err.Error())
-			return []contract.ValueDescriptor{}, errors.NewErrDbNotFound()
-		default:
-			LoggingClient.Error("Problem getting device from metadata: " + err.Error())
-			return []contract.ValueDescriptor{}, err
-		}
+		LoggingClient.Error("Problem getting device from metadata: " + err.Error())
+		return []contract.ValueDescriptor{}, err
 	}
 
 	return getValueDescriptorsByDevice(device)

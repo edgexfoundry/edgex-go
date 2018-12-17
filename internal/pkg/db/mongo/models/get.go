@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2017 Dell Inc.
+ * Copyright 2018 Dell Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -11,26 +11,29 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
-package agent
 
-import "github.com/edgexfoundry/edgex-go/internal/pkg/config"
+package models
 
-type ConfigurationStruct struct {
-	ReadMaxLimit          int
-	ValidateCheck         bool
-	AppOpenMsg            string
-	FormatSpecifier       string
-	ServicePort           int
-	ServiceTimeout        int
-	ServiceAddress        string
-	LoggingFile           string
-	LoggingRemoteURL      string
-	LoggingLevel          string
-	EnableRemoteLogging   bool
-	OsLevelOperations     bool
-	DockerLevelOperations bool
-	Clients               map[string]config.ClientInfo
-	Service               config.ServiceInfo
-	OperationsType        string
-	ComposeUrl            string
+import (
+	contract "github.com/edgexfoundry/edgex-go/pkg/models"
+	"github.com/pkg/errors"
+)
+
+type Get struct {
+	Action `bson:",inline"`
+}
+
+func (g *Get) ToContract() contract.Get {
+	return contract.Get{
+		Action: g.Action.ToContract(),
+	}
+}
+
+func (g *Get) FromContract(from contract.Get) error {
+	action := &Action{}
+	err := action.FromContract(from.Action)
+	if err != nil {
+		return errors.New(err.Error() + " path: " + from.Path)
+	}
+	return nil
 }

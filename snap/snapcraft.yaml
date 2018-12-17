@@ -64,7 +64,7 @@ apps:
       - network-bind
   mongo:
     command: bin/mongo
-    plugs: [network]
+    plugs: [home, network]
   mongod:
     command: mongo/launch-edgex-mongo.sh
     plugs: [hardware-observe, network, network-bind, system-observe]
@@ -329,7 +329,7 @@ parts:
        "$SNAPCRAFT_PART_INSTALL/config/support-logging/res/configuration.toml"
 
       cat "./cmd/support-notifications/res/configuration.toml" | \
-        sed -e s:./logs/edgex-support-notifications.log:/var/snap/edgexfoundry/common/edgex-support-notifications.log: \
+        sed -e s:./logs/edgex-support-notifications.log:\$SNAP_COMMON/support-notifications.log: \
             -e s:'http\://localhost\:48061/api/v1/logs':: > \
        "$SNAPCRAFT_PART_INSTALL/config/support-notifications/res/configuration.toml"
 
@@ -338,17 +338,31 @@ parts:
             -e s:'http\://localhost\:48061/api/v1/logs':: > \
        "$SNAPCRAFT_PART_INSTALL/config/support-scheduler/res/configuration.toml"
 
-      # handle license files
+      # handle license/attribution files
       install -DT "./cmd/core-command/Attribution.txt" \
               "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/core-command/Attribution.txt"
-      install -DT "./LICENSE" \
-              "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/core-command/LICENSE"
       install -DT "./cmd/core-data/Attribution.txt" \
              "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/core-data/Attribution.txt"
-      install -DT "./LICENSE" \
-              "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/core-data/LICENSE"
       install -DT "./cmd/core-metadata/Attribution.txt" \
               "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/core-metadata/Attribution.txt"
+      install -DT "./cmd/config-seed/Attribution.txt" \
+              "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/config-seed/Attribution.txt"
+      install -DT "./cmd/export-client/Attribution.txt" \
+              "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/export-client/Attribution.txt"
+      install -DT "./cmd/export-distro/Attribution.txt" \
+              "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/export-distro/Attribution.txt"      
+      install -DT "./cmd/support-logging/Attribution.txt" \
+              "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/support-logging/Attribution.txt"
+      install -DT "./cmd/support-notifications/Attribution.txt" \
+              "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/support-notifications/Attribution.txt"
+      install -DT "./cmd/support-scheduler/Attribution.txt" \
+              "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/support-scheduler/Attribution.txt"
+      install -DT "./cmd/sys-mgmt-agent/Attribution.txt" \
+              "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/sys-mgmt-agent/Attribution.txt"
+      install -DT "./LICENSE" \
+              "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/core-command/LICENSE"
+      install -DT "./LICENSE" \
+              "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/core-data/LICENSE"
       install -DT "./LICENSE" \
               "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/core-metdata/LICENSE"
       install -DT "./LICENSE" \
@@ -369,50 +383,6 @@ parts:
       - pkg-config
     stage-packages:
       - libzmq3-dev
-  support-rulesengine:
-    source: https://github.com/edgexfoundry/support-rulesengine.git
-    # the following commit == 0.7.0 version update
-    source-commit: "3aca4a7bf9774ad07b9b74c7b05c45deb74412f2"
-    plugin: maven
-    maven-options: ["-Dmaven.test.skip=true"]
-    override-build: |
-      snapcraftctl build
-      echo "Installing support-rulesengine files"
-
-      # The logic following logic is all handled by DockerFile for
-      # the EdgeX support-rulesengine docker image.
-      install -d "$SNAPCRAFT_PART_INSTALL/jar/support-rulesengine"
-      JAR_FILE=$(find "$SNAPCRAFT_PART_INSTALL/jar" -name "support-rulesengine-*-SNAPSHOT.jar")
-      mv "$JAR_FILE" \
-         "$SNAPCRAFT_PART_INSTALL/jar/support-rulesengine/support-rulesengine.jar"
-
-      # FIXME:
-      # copy service license into /usr/share/java/doc, because the
-      # jdk plugin has a bug which prevents any files from /usr/share/doc
-      # to be staged or primed.
-      install -DT "./Attribution.txt" \
-         "$SNAPCRAFT_PART_INSTALL/usr/share/java/doc/support-rulesengine/Attribution.txt"
-      install -DT "./LICENSE-2.0.txt" \
-         "$SNAPCRAFT_PART_INSTALL/usr/share/java/doc/support-rulesengine/LICENSE-2.0.txt"
-    prime:
-      - -etc/fonts
-      - -etc/fonts/X11
-      - -usr/lib/jvm/*/ASSEMBLY_EXCEPTION
-      - -usr/lib/jvm/*/THIRD_PARTY_README
-      - -usr/lib/jvm/*/jre/ASSEMBLY_EXCEPTION
-      - -usr/lib/jvm/*/jre/THIRD_PARTY_README
-      - -usr/lib/jvm/*/man
-      - -usr/lib/jvm/*/jre/man
-      - -usr/lib/jvm/*/jre/lib/images
-      - -usr/lib/jvm/*/include
-      - -usr/lib/jvm/*/bin
-      - -usr/lib/jvm/*/lib
-      - -usr/lib/jvm/*/docs
-      - -usr/lib/jvm/*/src.zip
-      - -usr/share/X11
-      - -usr/share/man
-      - -usr/share/fonts
-      - -usr/share/alsa
   device-virtual:
     source: https://github.com/edgexfoundry/device-virtual.git
     # the following commit == 0.5.0 version update +1 (core-domain fix)

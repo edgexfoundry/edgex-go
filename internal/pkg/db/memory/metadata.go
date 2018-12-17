@@ -1018,7 +1018,7 @@ func (m *MemDB) DeleteProvisionWatcherById(id string) error {
 // Command
 func (m *MemDB) GetCommandById(c *models.Command, id string) error {
 	for _, cc := range m.commands {
-		if cc.Id.Hex() == id {
+		if cc.Id == id {
 			*c = cc
 			return nil
 		}
@@ -1041,7 +1041,7 @@ func (m *MemDB) AddCommand(c *models.Command) error {
 	currentTime := db.MakeTimestamp()
 	c.Created = currentTime
 	c.Modified = currentTime
-	c.Id = bson.NewObjectId()
+	c.Id = bson.NewObjectId().Hex()
 
 	m.commands = append(m.commands, *c)
 	return nil
@@ -1083,7 +1083,7 @@ func (m *MemDB) UpdateCommand(updated *models.Command, orig *models.Command) err
 
 func (m *MemDB) DeleteCommandById(id string) error {
 	for i, c := range m.commands {
-		if c.Id.Hex() == id {
+		if c.Id == id {
 			m.commands = append(m.commands[:i], m.commands[i+1:]...)
 			return nil
 		}

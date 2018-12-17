@@ -17,7 +17,7 @@ package models
 import "encoding/json"
 
 type Get struct {
-	Action `bson:",inline" yaml:",inline"`
+	Action `yaml:",inline"`
 }
 
 // Custom marshaling to make empty strings and arrays null

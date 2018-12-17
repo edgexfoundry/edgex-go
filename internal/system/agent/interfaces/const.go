@@ -11,26 +11,26 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
+package interfaces
 
-package models
+import "github.com/edgexfoundry/edgex-go/internal/pkg/config"
 
-import (
-	"encoding/json"
-)
-
-type Action struct {
-	Path      string     `json:"path"`          // path used by service for action on a device or sensor
-	Responses []Response `json:"responses"`     // responses from get or put requests to service
-	URL       string     `json:"url,omitempty"` // url for requests from command service
-}
-
-/*
- * String() function for formatting
- */
-func (a Action) String() string {
-	out, err := json.Marshal(a)
-	if err != nil {
-		return err.Error()
-	}
-	return string(out)
+type ConfigurationStruct struct {
+	ReadMaxLimit          int
+	ValidateCheck         bool
+	AppOpenMsg            string
+	FormatSpecifier       string
+	ServicePort           int
+	ServiceTimeout        int
+	ServiceAddress        string
+	LoggingFile           string
+	LoggingRemoteURL      string
+	LoggingLevel          string
+	EnableRemoteLogging   bool
+	OsLevelOperations     bool
+	DockerLevelOperations bool
+	Clients               map[string]config.ClientInfo
+	Service               config.ServiceInfo
+	OperationsType        string
+	ComposeUrl            string
 }

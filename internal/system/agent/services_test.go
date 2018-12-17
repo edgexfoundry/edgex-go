@@ -16,15 +16,17 @@
 package agent
 
 import (
-	"testing"
-	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 	"encoding/json"
 	"fmt"
+	"testing"
+
+	"github.com/edgexfoundry/edgex-go/internal/system/agent/logger"
+	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 )
 
 func TestProcessResponse(t *testing.T) {
 
-	LoggingClient = logger.NewMockClient()
+	logs.LoggingClient = logger.NewMockClient()
 
 	var responseJSON = "{\"ApplicationName\":\"support-notifications\",\"ConsulProfilesActive\":\"go\",\"HeartBeatTime\":300000,\"HeartBeatMsg\":\"Support Notifications heart beat\",\"AppOpenMsg\":\"This is the Support Notifications Microservice\", \"FormatSpecifier\":\"%(\\\\d=\\\\$)?([-#= 0(\\\\\u003c]*)?(\\\\d=)?(\\\\.\\\\d=)?([tT])?([a-zA-Z%])\", \"ServicePort\":48060, \"ServiceTimeout\":5000, \"ServiceAddress\":\"localhost\", \"ServiceName\":\"support-notifications\", \"ConsulHost\":\"localhost\", \"ConsulCheckAddress\":\"http://localhost:48060/api/v1/ping\", \"ConsulPort\":8500, \"CheckInterval\":\"10s\", \"EnableRemoteLogging\":false, \"LoggingFile\":\"./logs/edgex-support-notifications.log\", \"LoggingRemoteURL\":\"http://localhost:48061/api/v1/logs\", \"MongoDBUserName\":\"\", \"MongoDBPassword\":\"\", \"MongoDatabaseName\":\"notifications\", \"MongoDBHost\":\"localhost\", \"MongoDBPort\":27017, \"MongoDBConnectTimeout\":60000, \"MongoDBMaxWaitTime\":120000, \"MongoDBKeepAlive\":true, \"ReadMaxLimit\":1000, \"ResendLimit\":2, \"CleanupDefaultAge\":86400001, \"SchedulerNormalDuration\":\"59 * * * * *\", \"SchedulerNormalResendDuration\":\"59 * * * * *\", \"SchedulerCriticalResendDelay\":10, \"SMTPPort\":\"587\", \"SMTPHost\":\"smtp.gmail.com\", \"SMTPSender\":\"jdoe@gmail.com\", \"SMTPPassword\":\"mypassword\", \"SMTPSubject\":\"EdgeX Notification\", \"DBType\":\"mongodb\"}"
 
@@ -69,7 +71,7 @@ func TestProcessResponse(t *testing.T) {
 	}
 
 	send := ProcessResponse(responseJSON)
-	LoggingClient.Info(fmt.Sprintf("Actual Response: {%v}", send))
+	logs.LoggingClient.Info(fmt.Sprintf("Actual Response: {%v}", send))
 
 	expected, err := json.Marshal(expResponseJSON)
 	if err != nil {
@@ -80,7 +82,7 @@ func TestProcessResponse(t *testing.T) {
 	var exp = ConfigRespMap{}
 	err = json.Unmarshal([]byte(expected), &exp)
 	if err != nil {
-		LoggingClient.Error(fmt.Sprintf("ERROR: {%v}", err))
+		logs.LoggingClient.Error(fmt.Sprintf("ERROR: {%v}", err))
 	}
 
 	// TODO: Ran into an issue here with the call to reflect.DeepEqual()...
@@ -98,7 +100,7 @@ func TestProcessResponse(t *testing.T) {
 	action := "start"
 	services := []string{"edgex-config-seed", "edgex-support-logging", "edgex-core-metadata", "edgex-support-notifications", "edgex-core-data", "edgex-core-command", "edgex-export-client", "edgex-export-distro"}
 	params := []string{"graceful"}
-	LoggingClient = logger.NewMockClient()
+	logs.LoggingClient = logger.NewMockClient()
 
 	res := InvokeOperation(action, services, params)
 	if res != true {
@@ -112,7 +114,7 @@ func TestInvokeOperationRestart(t *testing.T) {
 	action := "restart"
 	services := []string{"edgex-config-seed", "edgex-support-logging", "edgex-core-metadata", "edgex-support-notifications", "edgex-core-data", "edgex-core-command", "edgex-export-client", "edgex-export-distro"}
 	params := []string{"graceful"}
-	LoggingClient = logger.NewMockClient()
+	logs.LoggingClient = logger.NewMockClient()
 
 	res := InvokeOperation(action, services, params)
 	if res != true {
@@ -126,7 +128,7 @@ func TestInvokeOperationStop(t *testing.T) {
 	action := "stop"
 	services := []string{"edgex-config-seed", "edgex-support-logging", "edgex-core-metadata", "edgex-support-notifications", "edgex-core-data", "edgex-core-command", "edgex-export-client", "edgex-export-distro"}
 	params := []string{"graceful"}
-	LoggingClient = logger.NewMockClient()
+	logs.LoggingClient = logger.NewMockClient()
 
 	res := InvokeOperation(action, services, params)
 	if res != true {
@@ -140,7 +142,7 @@ func TestInvokeOperationStartUnknownService(t *testing.T) {
 	action := "start"
 	services := []string{"foo-bar"}
 	params := []string{"graceful"}
-	LoggingClient = logger.NewMockClient()
+	logs.LoggingClient = logger.NewMockClient()
 
 	res := InvokeOperation(action, services, params)
 	if res != true {
@@ -154,7 +156,7 @@ func TestInvokeOperationRestartUnknownService(t *testing.T) {
 	action := "restart"
 	services := []string{"foo-bar"}
 	params := []string{"graceful"}
-	LoggingClient = logger.NewMockClient()
+	logs.LoggingClient = logger.NewMockClient()
 
 	res := InvokeOperation(action, services, params)
 	if res != true {
@@ -168,7 +170,7 @@ func TestInvokeOperationStopUnknownService(t *testing.T) {
 	action := "stop"
 	services := []string{"foo-bar"}
 	params := []string{"graceful"}
-	LoggingClient = logger.NewMockClient()
+	logs.LoggingClient = logger.NewMockClient()
 
 	res := InvokeOperation(action, services, params)
 	if res != true {
@@ -179,19 +181,19 @@ func TestInvokeOperationStopUnknownService(t *testing.T) {
 
 func TestGetConfig(t *testing.T) {
 
-	LoggingClient = logger.NewMockClient()
+	logs.LoggingClient = logger.NewMockClient()
 	services := []string{"edgex-config-seed", "edgex-support-logging", "edgex-core-metadata", "edgex-support-notifications", "edgex-core-data", "edgex-core-command", "edgex-export-client", "edgex-export-distro"}
 	result, err := getConfig(services)
 	if err != nil {
 		t.Errorf("TestGetConfig() failed.")
 		return
 	}
-	LoggingClient.Debug(fmt.Sprintf("Fetched this configuration for the {%v} service: {%v}: ", "first one", result))
+	logs.LoggingClient.Debug(fmt.Sprintf("Fetched this configuration for the {%v} service: {%v}: ", "first one", result))
 }
 
 func TestGetMetric(t *testing.T) {
 
-	LoggingClient = logger.NewMockClient()
+	logs.LoggingClient = logger.NewMockClient()
 	services := []string{"edgex-config-seed", "edgex-support-logging", "edgex-core-metadata", "edgex-support-notifications", "edgex-core-data", "edgex-core-command", "edgex-export-client", "edgex-export-distro"}
 
 	result, err := getMetrics(services)
@@ -199,7 +201,7 @@ func TestGetMetric(t *testing.T) {
 		t.Errorf("TestGetMetric() failed.")
 		return
 	}
-	LoggingClient.Debug(fmt.Sprintf("Fetched these metrics for the {%v} service: {%v}: ", "first one", result))
+	logs.LoggingClient.Debug(fmt.Sprintf("Fetched these metrics for the {%v} service: {%v}: ", "first one", result))
 }
 
 func TestStopDockerContainer(t *testing.T) {

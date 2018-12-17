@@ -24,11 +24,13 @@ import (
 	"time"
 
 	"github.com/edgexfoundry/edgex-go"
+	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
+
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent"
-	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
+	"github.com/edgexfoundry/edgex-go/internal/system/agent/logger"
 )
 
 func main() {
@@ -69,21 +71,21 @@ func main() {
 		return
 	}
 
-	agent.LoggingClient.Info("Service dependencies resolved...")
-	agent.LoggingClient.Info(fmt.Sprintf("Starting %s %s ", internal.SystemManagementAgentServiceKey, edgex.Version))
+	logs.LoggingClient.Info("Service dependencies resolved...")
+	logs.LoggingClient.Info(fmt.Sprintf("Starting %s %s ", internal.SystemManagementAgentServiceKey, edgex.Version))
 
 	http.TimeoutHandler(nil, time.Millisecond*time.Duration(agent.Configuration.ServiceTimeout), "Request timed out")
-	agent.LoggingClient.Info(agent.Configuration.AppOpenMsg, "")
+	logs.LoggingClient.Info(agent.Configuration.AppOpenMsg, "")
 
 	errs := make(chan error, 2)
 	listenForInterrupt(errs)
 	startHttpServer(errs, agent.Configuration.ServicePort)
 
 	// Time it took to start service
-	agent.LoggingClient.Info("Service started in: "+time.Since(start).String(), "")
-	agent.LoggingClient.Info("Listening on port: " + strconv.Itoa(agent.Configuration.ServicePort))
+	logs.LoggingClient.Info("Service started in: "+time.Since(start).String(), "")
+	logs.LoggingClient.Info("Listening on port: " + strconv.Itoa(agent.Configuration.ServicePort))
 	c := <-errs
-	agent.LoggingClient.Warn(fmt.Sprintf("terminating: %v", c))
+	logs.LoggingClient.Warn(fmt.Sprintf("terminating: %v", c))
 }
 
 func logBeforeInit(err error) {
