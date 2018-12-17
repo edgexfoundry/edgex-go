@@ -16,15 +16,18 @@ if [ ! -z "$JENKINS_URL" ]; then
         echo "I seem to be running on Jenkins, but there's not a snap store login file..." 
     fi
 
-    # check if this is a release job or not, if it is set the corresponding env var
+    # figure out what kind of job this is using $JOB_NAME and simplify that 
+    # into $JOB_TYPE
+    JOB_TYPE="build"
     if [[ "$JOB_NAME" =~ edgex-go-snap-.*-stage-snap.* ]]; then
-        IS_RELEASE_JOB="YES"
-    else
-        IS_RELEASE_JOB="NO"
+        JOB_TYPE="stage"
+    elif [[ "$JOB_NAME" =~ edgex-go-snap-.*-release-snap.* ]]; then
+        JOB_TYPE="release"
     fi
 fi
 
-# build the container image - providing the relevant architecture base image
+# build the container image - providing the relevant architecture we're on
+# to determine which snap arch to download in the docker container
 case $(arch) in 
     x86_64)
         arch="amd64";;
@@ -39,7 +42,7 @@ docker build -t edgex-snap-builder:latest -f ${SCRIPT_DIR}/Dockerfile.build --bu
 rm $GIT_ROOT/edgex-snap-store-login
 
 # now run the build with the environment variables 
-docker run --rm -e "IS_RELEASE_JOB=$IS_RELEASE_JOB" -e "RELEASE=$RELEASE" -e "SNAP_CHANNEL=$SNAP_CHANNEL" edgex-snap-builder:latest
+docker run --rm -e "JOB_TYPE=$JOB_TYPE" -e "SNAP_REVISION=$SNAP_REVISION" -e "SNAP_CHANNEL=$SNAP_CHANNEL" edgex-snap-builder:latest
 
 # note that we don't need to delete the docker images here, that's done for us by jenkins in the 
 # edgex-provide-docker-cleanup macro defined for all the snap jobs
