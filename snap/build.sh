@@ -25,7 +25,15 @@ if [ ! -z "$JENKINS_URL" ]; then
 fi
 
 # build the container image - providing the relevant architecture base image
-docker build -t edgex-snap-builder:latest -f ${SCRIPT_DIR}/Dockerfile.build $GIT_ROOT
+case $(arch) in 
+    x86_64)
+        arch="amd64";;
+    aarch64)
+        arch="arm64";;
+    arm*)
+        arch="armhf";;
+esac
+docker build -t edgex-snap-builder:latest -f ${SCRIPT_DIR}/Dockerfile.build --build-arg ARCH="$arch" $GIT_ROOT
 
 # delete the login file we copied to the git root so it doesn't persist around
 rm $GIT_ROOT/edgex-snap-store-login

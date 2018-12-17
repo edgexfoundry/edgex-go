@@ -1,15 +1,41 @@
 FROM ubuntu:16.04
 
-# this is basically the same as the amd64 upstream:
-# https://github.com/snapcore/snapcraft/blob/master/Dockerfile
+# allow specifying the architecture from the build arg command line
+ARG ARCH
+
+# this is essentially the same as the upstream dockerfile
+# here: https://github.com/snapcore/snapcraft/blob/master/docker/stable.Dockerfile
+# except we also specify the architecture to download so that this works
+# on other architectures
+# basically, we send a command to the snap store for the info on the core +
+# snapcraft snaps, extract the download link from the result and 
+# download and extract the snaps into the docker container
+# we do this because we can't easily run snapd (and thus snaps) inside a docker
+# container without disabling important security protections enabled for 
+# docker containers
 RUN apt-get update && \
   apt-get dist-upgrade --yes && \
   apt-get install --yes \
-  git \
-  snapcraft \
-  && \
+  curl sudo jq squashfs-tools && \
+  curl -s -L $(curl -s -H 'X-Ubuntu-Series: 16' -H "X-Ubuntu-Architecture: $ARCH" 'https://api.snapcraft.io/api/v1/snaps/details/core' | jq '.download_url' -r) --output core.snap && \
+  mkdir -p /snap/core && unsquashfs -n -d /snap/core/current core.snap && rm core.snap && \
+  curl -s -L $(curl -s -H 'X-Ubuntu-Series: 16' -H "X-Ubuntu-Architecture: $ARCH" 'https://api.snapcraft.io/api/v1/snaps/details/snapcraft' | jq '.download_url' -r) --output snapcraft.snap && \
+  mkdir -p /snap/snapcraft && unsquashfs -n -d /snap/snapcraft/current snapcraft.snap && rm snapcraft.snap && \
+  apt remove --yes --purge curl jq squashfs-tools && \
   apt-get autoclean --yes && \
   apt-get clean --yes
+
+# the upstream dockerfile just uses this file locally from the repo, but 
+# rather than copy that file here, we can just download it here
+# while unlikely it is possible that the file location could move in the git repo
+# on master branch, so for stability in our builds, we just hard-code the git 
+# commit that most recently updated this file as the revision to download from
+# if this ever breaks, just change this file to copy what the upstream master dockerfile does
+ADD https://raw.githubusercontent.com/snapcore/snapcraft/25043ab3667d24688b3d93dcac9f9a74f35dae9e/docker/bin/snapcraft-wrapper /snap/bin/snapcraft
+RUN sed -i -e "s@\"amd64\"@$ARCH@" /snap/bin/snapcraft && chmod +x /snap/bin/snapcraft
+
+# snapcraft will be in /snap/bin, so we need to put that on the $PATH
+ENV PATH=/snap/bin:$PATH
 
 # include all of the build context inside /build
 COPY . /build
