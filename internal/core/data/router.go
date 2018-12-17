@@ -712,7 +712,7 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			switch err.(type) {
 			case *errors.ErrDbNotFound:
-				http.Error(w, "Value descriptor not found for reading", http.StatusConflict)
+				http.Error(w, "Value descriptor not found for reading", http.StatusNotFound)
 				return
 			case *errors.ErrValueDescriptorInvalid:
 				http.Error(w, err.Error(), http.StatusConflict)
