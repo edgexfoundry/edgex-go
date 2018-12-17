@@ -125,7 +125,7 @@ Currently, the security services are enabled by default. The security services c
 
 All services are currently bundled in the singular service, `security-services` (see issue [#485](https://github.com/edgexfoundry/edgex-go/issues/485) for more details on why). 
 
-When security is enabled, Consul is secured using Vault for secret management, and Kong is used as an HTTPS proxy for all the services. The HTTPS keys for Kong are generated at runtime, and placed in `$SNAP_DATA/kong/keys` and the keys for Vault are placed in `$SNAP_DATA/vault/pki`. Kong needs a database to manage itself, and can use either Postgres or Cassandra. Because Postgres cannot run inside of a snap due to issues running as root (currently all snap services must run as root, see [this post](https://forum.snapcraft.io/t/multiple-users-and-groups-in-snaps/1461) for details), we use Cassandra. 
+When security is enabled, Consul is secured using Vault for secret management, and Kong is used as an HTTPS proxy for all the services. The HTTPS keys for Kong and Vault are placed in `$SNAP_DATA/vault/pki`. Kong needs a database to manage itself, and can use either Postgres or Cassandra. Because Postgres cannot run inside of a snap due to issues running as root (currently all snap services must run as root, see [this post](https://forum.snapcraft.io/t/multiple-users-and-groups-in-snaps/1461) for details), we use Cassandra. 
 
 To turn off security, use `snap set`:
 
