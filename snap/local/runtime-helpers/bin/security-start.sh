@@ -25,12 +25,17 @@ export KONG_ADMIN_LISTEN="0.0.0.0:8001, 0.0.0.0:8444 ssl"
 export VAULT_ADDR=https://localhost:8200
 export VAULT_CONFIG_DIR=${_VAULT_DIR}/config
 export VAULT_UI=true
+export num_tries=0
+export MAX_KONG_UP_TRIES=10
 export MAX_VAULT_UNSEAL_TRIES=10
 
 # before running anything else go into a snap writable directory
 # this prevents issues later on with popd, as we may not have permission to go back to the directory we came from
 # on some systems. See issue #509 for more details
 cd $SNAP_DATA
+
+# start up cassandra
+$SNAP/bin/cassandra-wrapper.sh
 
 # touch all the kong log files to ensure they exist
 mkdir -p ${LOG_DIR}
@@ -39,7 +44,17 @@ for log in ${KONG_PROXY_ACCESS_LOG} ${KONG_ADMIN_ACCESS_LOG} ${KONG_PROXY_ERROR_
 done
 
 # run kong migrations up to bootstrap the cassandra database
-$KONG_SNAP migrations up --yes --conf ${SEC_API_GATEWAY_CONFIG_DIR}/kong.conf
+# note that sometimes cassandra can in a "starting up" start, etc.
+# and in this case we should just loop and keep trying
+until $KONG_SNAP migrations up --yes --conf ${SEC_API_GATEWAY_CONFIG_DIR}/kong.conf; do
+    sleep 10
+    # increment number of tries
+    num_tries=$((num_tries+1))
+    if (( num_tries > MAX_KONG_UP_TRIES )); then
+        echo "max tries attempting to bring up kong"
+        exit 1
+    fi
+done
 
 # now start kong normally
 $KONG_SNAP start --conf ${SEC_API_GATEWAY_CONFIG_DIR}/kong.conf
@@ -52,6 +67,9 @@ $KONG_SNAP start --conf ${SEC_API_GATEWAY_CONFIG_DIR}/kong.conf
 pushd ${_VAULT_DIR}
 $SNAP/bin/vault-setup.sh
 popd
+
+# wait for consul to come up before starting vault
+$SNAP/bin/wait-for-consul.sh "security-services"
 
 # execute the vault binary in the background, logging 
 # all output to $SNAP_COMMONG
