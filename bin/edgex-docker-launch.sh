@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env sh
 
 # Copyright (c) 2018
 # Cavium
@@ -18,9 +18,10 @@
 # EDGEX_CORE_DB=redis EDGEX_COMPOSE_FILE=docker/local-docker-compose.yml \
 # bin/edgex-docker-launch.sh
 
-if [[ -z $EDGEX_COMPOSE_FILE ]]; then
-  COMPOSE_FILE=../docker/docker-compose.yml
-  COMPOSE_URL=https://raw.githubusercontent.com/edgexfoundry/developer-scripts/master/compose-files/docker-compose-delhi-0.7.0.yml
+if [ -z $EDGEX_COMPOSE_FILE ]; then
+  COMPOSE_FILENAME=docker-compose-delhi-0.7.1.yml
+  COMPOSE_FILE=/tmp/${COMPOSE_FILENAME}
+  COMPOSE_URL=https://raw.githubusercontent.com/edgexfoundry/developer-scripts/master/compose-files/${COMPOSE_FILENAME}
   
   echo "Pulling latest compose file..."
   curl -o $COMPOSE_FILE $COMPOSE_URL
@@ -33,7 +34,7 @@ EDGEX_CORE_DB=${EDGEX_CORE_DB:-"mongo"}
 echo "Starting Mongo"
 docker-compose -f $COMPOSE_FILE up -d mongo
 
-if [[ ${EDGEX_CORE_DB} != mongo ]]; then
+if [ ${EDGEX_CORE_DB} != mongo ]; then
   echo "Starting $EDGEX_CORE_DB for Core Data Services"
   docker-compose -f $COMPOSE_FILE up -d $EDGEX_CORE_DB
 fi
@@ -47,7 +48,7 @@ echo "Sleeping before launching remaining services"
 sleep 15
 
 defaultServices="logging metadata data command export-client export-distro notifications scheduler"
-if [[ -z ${EDGEX_SERVICES} ]]; then
+if [ -z ${EDGEX_SERVICES} ]; then
   deps=
   services=${defaultServices}
 else
