@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-package memory
+package client
 
 import (
 	"testing"
@@ -14,13 +14,5 @@ import (
 
 func TestMemoryDB(t *testing.T) {
 	memory := &MemDB{}
-	test.TestDataDB(t, memory)
-	test.TestMetadataDB(t, memory)
 	test.TestExportDB(t, memory)
-}
-
-func BenchmarkMemoryDB(b *testing.B) {
-	memory := &MemDB{}
-
-	test.BenchmarkDB(b, memory)
 }

@@ -24,7 +24,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/consul"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db/memory"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 	"github.com/edgexfoundry/edgex-go/pkg/clients"
@@ -144,8 +143,6 @@ func newDBClient(dbType string, config db.Configuration) (interfaces.DBClient, e
 	switch dbType {
 	case db.MongoDB:
 		return mongo.NewClient(config), nil
-	case db.MemoryDB:
-		return &memory.MemDB{}, nil
 	default:
 		return nil, db.ErrUnsupportedDatabase
 	}

@@ -19,7 +19,6 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/export"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db/memory"
 	"github.com/edgexfoundry/edgex-go/pkg/clients"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
@@ -36,7 +35,7 @@ func (d *distroMockClient) NotifyRegistrations(models.NotifyUpdate) error {
 func prepareTest(t *testing.T) *httptest.Server {
 	LoggingClient = logger.NewClient(internal.ExportClientServiceKey, false, "./logs/edgex-export-client-test.log", logger.InfoLog)
 
-	dbClient = &memory.MemDB{}
+	dbClient = &MemDB{}
 	dc = &distroMockClient{}
 	return httptest.NewServer(httpServer())
 }
