@@ -24,8 +24,8 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	notifications "github.com/edgexfoundry/edgex-go/pkg/clients/notifications"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
-	"github.com/gorilla/mux"
 	"github.com/globalsign/mgo/bson"
+	"github.com/gorilla/mux"
 )
 
 func restGetAllDevices(w http.ResponseWriter, _ *http.Request) {
@@ -67,16 +67,17 @@ func restAddNewDevice(w http.ResponseWriter, r *http.Request) {
 	// Addressable check
 	// Try by name
 	//TODO: Is what we really need here a checkForAddressable() function?
-	_, err = dbClient.GetAddressableByName(d.Addressable.Name)
+	addressable, err := dbClient.GetAddressableByName(d.Addressable.Name)
 	if err != nil {
 		// Try by ID
-		_, err = dbClient.GetAddressableById(d.Addressable.Id)
+		addressable, err = dbClient.GetAddressableById(d.Addressable.Id)
 		if err != nil {
 			LoggingClient.Error(err.Error())
 			http.Error(w, err.Error()+": A device must be associated to an Addressable", http.StatusBadRequest)
 			return
 		}
 	}
+	d.Addressable = addressable
 
 	// Service Check
 	// Try by name

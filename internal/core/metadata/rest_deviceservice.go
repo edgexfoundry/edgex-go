@@ -86,28 +86,23 @@ func restAddDeviceService(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var foundAddressable = false
+	var addressable models.Addressable
 	// First try by name
-	_, err = dbClient.GetAddressableByName(ds.Service.Addressable.Name)
+	addressable, err = dbClient.GetAddressableByName(ds.Service.Addressable.Name)
+	if err != nil && err == db.ErrNotFound {
+		addressable, err = dbClient.GetAddressableById(ds.Service.Addressable.Id)
+	}
 	if err != nil {
-		if err != db.ErrNotFound {
+		if err == db.ErrNotFound {
+			http.Error(w, "Addressable not found by ID or Name", http.StatusNotFound)
+			LoggingClient.Error("Addressable not found by ID or Name: "+err.Error(), "")
+		} else {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			LoggingClient.Error(err.Error())
 		}
-	} else {
-		// There wasn't an error - found the addressable
-		foundAddressable = true
+		return
 	}
-
-	// Then try by ID
-	if !foundAddressable {
-		_, err := dbClient.GetAddressableById(ds.Service.Addressable.Id)
-		if err != nil {
-			http.Error(w, "Addressable not found by ID or Name", http.StatusNotFound)
-			LoggingClient.Error("Addressable not found by ID or Name: " + err.Error())
-			return
-		}
-	}
+	ds.Service.Addressable = addressable
 
 	// Add the device service
 	if err := dbClient.AddDeviceService(&ds); err != nil {
