@@ -125,3 +125,15 @@ func (e ErrDbNotFound) Error() string {
 func NewErrDbNotFound() error {
 	return &ErrDbNotFound{}
 }
+
+type ErrInvalidId struct {
+	id string
+}
+
+func (e ErrInvalidId) Error() string {
+	return fmt.Sprintf("invalid ID: %s", e.id)
+}
+
+func NewErrInvalidId(id string) error {
+	return &ErrInvalidId{id: id}
+}

@@ -704,6 +704,8 @@ schemas:
         responses: 
             "200": 
                 description: boolean indicating success of the remove operation
+            "400":
+                description: id is invalid or unparseable
             "404": 
                 description: if the value descriptor cannot be located by the identifier.
             "409": 
