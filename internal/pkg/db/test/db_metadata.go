@@ -613,18 +613,17 @@ func testDBCommand(t *testing.T, db interfaces.DBClient) {
 		t.Fatalf("There should be 1 commands instead of %d", len(commands))
 	}
 
-	cc := models.Command{}
-	cc.Id = id.Hex()
-	cc.Get = &models.Get{}
-	cc.Put = &models.Put{}
-	cc.Name = "name"
-	err = db.UpdateCommand(&cc, &c)
+	c.Id = id.Hex()
+	c.Get = &models.Get{}
+	c.Put = &models.Put{}
+	c.Name = "name"
+	err = db.UpdateCommand(&c)
 	if err != nil {
 		t.Fatalf("Error updating Command %v", err)
 	}
 
 	c.Id = "INVALID"
-	err = db.UpdateCommand(&cc, &c)
+	err = db.UpdateCommand(&c)
 	if err == nil {
 		t.Fatalf("Should return error")
 	}

@@ -20,21 +20,37 @@ import (
 )
 
 type Put struct {
-	Action         `bson:",inline"`
-	ParameterNames []string `bson:"parameterNames"`
+	Path           string     `bson:"path"`      // path used by service for action on a device or sensor
+	Responses      []Response `bson:"responses"` // responses from get or put requests to service
+	URL            string     // url for requests from command service
+	ParameterNames []string   `bson:"parameterNames"`
 }
 
 func (p *Put) ToContract() contract.Put {
-	return contract.Put{
-		Action: p.Action.ToContract(),
+	to := contract.Put{}
+	to.Path = p.Path
+	to.Responses = []contract.Response{}
+	for _, r := range p.Responses {
+		to.Responses = append(to.Responses, r.ToContract())
 	}
+	to.URL = p.URL
+	to.ParameterNames = p.ParameterNames
+	return to
 }
 
 func (p *Put) FromContract(from contract.Put) error {
-	action := &Action{}
-	err := action.FromContract(from.Action)
-	if err != nil {
-		return errors.New(err.Error() + " path: " + from.Path)
+	p.Path = from.Path
+	p.Responses = []Response{}
+	for _, val := range from.Responses {
+		r := &Response{}
+		err := r.FromContract(val)
+		if err != nil {
+			return errors.New(err.Error() + " code: " + val.Code)
+		}
+		p.Responses = append(p.Responses, *r)
+
 	}
+	p.URL = from.URL
+	p.ParameterNames = from.ParameterNames
 	return nil
 }

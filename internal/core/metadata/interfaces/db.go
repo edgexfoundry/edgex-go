@@ -112,7 +112,7 @@ type DBClient interface {
 	GetCommandByName(c *[]contract.Command, id string) error
 	AddCommand(c *contract.Command) error
 	GetAllCommands(d *[]contract.Command) error
-	UpdateCommand(c *contract.Command, r *contract.Command) error
+	UpdateCommand(c *contract.Command) error
 	DeleteCommandById(id string) error
 
 	// Scrub all metadata (only used in test)

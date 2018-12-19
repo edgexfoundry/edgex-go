@@ -15,6 +15,8 @@ package mongo
 
 import (
 	"errors"
+	"fmt"
+	"github.com/globalsign/mgo"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo/models"
@@ -925,43 +927,40 @@ func (m *MongoClient) DeleteProvisionWatcherById(id string) error {
 
 //  ------------------------Command -------------------------------------*/
 func (m *MongoClient) GetAllCommands(d *[]contract.Command) error {
-	return m.GetCommands(d, bson.M{})
-}
-
-func (m *MongoClient) GetCommands(d *[]contract.Command, q bson.M) error {
 	s := m.session.Copy()
 	defer s.Close()
+
 	col := s.DB(m.database.Name).C(db.Command)
-	return col.Find(q).Sort("queryts").All(d)
+	commands := &[]models.Command{}
+	err := col.Find(bson.M{}).Sort("queryts").All(commands)
+
+	*d, err = mapCommands(*commands, err)
+	return err
 }
 
 func (m *MongoClient) GetCommandById(c *contract.Command, id string) error {
-	if bson.IsObjectIdHex(id) {
-		s := m.session.Copy()
-		defer s.Close()
+	s := m.session.Copy()
+	defer s.Close()
 
-		col := s.DB(m.database.Name).C(db.Command)
+	col := s.DB(m.database.Name).C(db.Command)
 
-		var query bson.M
-		if !bson.IsObjectIdHex(id) {
-			// EventID is not a BSON ID. Is it a UUID?
-			_, err := uuid.Parse(id)
-			if err != nil { // It is some unsupported type of string
-				return db.ErrInvalidObjectId
-			}
-			query = bson.M{"uuid": id}
-		} else {
-			query = bson.M{"_id": bson.ObjectIdHex(id)}
+	var query bson.M
+	if !bson.IsObjectIdHex(id) {
+		// EventID is not a BSON ID. Is it a UUID?
+		_, err := uuid.Parse(id)
+		if err != nil { // It is some unsupported type of string
+			return db.ErrNotFound
 		}
-
-		command := &models.Command{}
-		err := col.Find(query).One(command)
-		*c = command.ToContract()
-
-		return err
+		query = bson.M{"uuid": id}
 	} else {
-		return errors.New("mgoGetCommandById Invalid Object ID " + id)
+		query = bson.M{"_id": bson.ObjectIdHex(id)}
 	}
+
+	command := &models.Command{}
+	err := col.Find(query).One(command)
+	*c = command.ToContract()
+
+	return err
 }
 
 func (m *MongoClient) GetCommandByName(c *[]contract.Command, n string) error {
@@ -978,12 +977,16 @@ func (m *MongoClient) GetCommandByName(c *[]contract.Command, n string) error {
 
 func mapCommands(commands []models.Command, err error) ([]contract.Command, error) {
 	if err != nil {
-		return []contract.Command{}, errorMap(err)
+		return nil, errorMap(err)
 	}
 
 	var mapped []contract.Command
 	for _, cmd := range commands {
 		mapped = append(mapped, cmd.ToContract())
+	}
+
+	if mapped == nil {
+		return nil, db.ErrNotFound
 	}
 	return mapped, nil
 }
@@ -992,52 +995,41 @@ func (m *MongoClient) AddCommand(c *contract.Command) error {
 	s := m.session.Copy()
 	defer s.Close()
 
-	col := s.DB(m.database.Name).C(db.Command)
+	command := &models.Command{}
+	if err := command.FromContract(*c); err != nil {
+		return errors.New("FromContract failed")
+	}
+	command.Created = db.MakeTimestamp()
+	command.Id = bson.NewObjectId()
+	command.Uuid = uuid.New().String()
+	*c = command.ToContract()
 
-	ts := db.MakeTimestamp()
-	c.Created = ts
-	c.Id = uuid.New().String()
-	return col.Insert(c)
+	col := s.DB(m.database.Name).C(db.Command)
+	return col.Insert(command)
 }
 
 // Update command uses the ID of the command for identification
-func (m *MongoClient) UpdateCommand(c *contract.Command, r *contract.Command) error {
+func (m *MongoClient) UpdateCommand(c *contract.Command) error {
 	s := m.session.Copy()
 	defer s.Close()
 
-	col := s.DB(m.database.Name).C(db.Command)
 	if c == nil {
 		return nil
 	}
 
-	var id interface{}
+	model := &models.Command{}
+	if err := model.FromContract(*c); err != nil {
+		return errors.New("FromContract failed")
+	}
+
 	var err error
-	if bson.IsObjectIdHex(c.Id) {
-		id = bson.ObjectIdHex(c.Id)
+	if model.Id.Valid() {
+		err = s.DB(m.database.Name).C(db.Command).UpdateId(model.Id, model)
 	} else {
-		id, err = uuid.Parse(c.Id)
-		if err != nil { // It is some unsupported type of string
-			return errors.New("Id required for updating a command")
-		}
+		query := bson.M{"uuid": model.Uuid}
+		err = s.DB(m.database.Name).C(db.Command).Update(query, model)
 	}
-
-	// Update the fields
-	if c.Name != "" {
-		r.Name = c.Name
-	}
-	// TODO check for Get and Put Equality
-
-	if (c.Get.String() != contract.Get{}.String()) {
-		r.Get = c.Get
-	}
-	if (c.Put.String() != contract.Put{}.String()) {
-		r.Put = c.Put
-	}
-	if c.Origin != 0 {
-		r.Origin = c.Origin
-	}
-
-	return col.UpdateId(id, r)
+	return errorMap(err)
 }
 
 // Delete the command by ID
@@ -1047,12 +1039,24 @@ func (m *MongoClient) DeleteCommandById(id string) error {
 	defer s.Close()
 	col := s.DB(m.database.Name).C(db.Command)
 
+	var findParameters bson.M
+	var deleteParameters bson.D
 	if !bson.IsObjectIdHex(id) {
-		return errors.New("Invalid ID")
+		// EventID is not a BSON ID. Is it a UUID?
+		_, err := uuid.Parse(id)
+		if err != nil { // It is some unsupported type of string
+			return db.ErrInvalidObjectId
+		}
+		findParameters = bson.M{"uuid": id}
+		deleteParameters = bson.D{{Name: "uuid", Value: id}}
+	} else {
+		var objectId = bson.ObjectIdHex(id)
+		findParameters = bson.M{"_id": objectId}
+		deleteParameters = bson.D{{Name: "_id", Value: objectId}}
 	}
 
 	// Check if the command is still in use
-	query := bson.M{"commands": bson.M{"$elemMatch": bson.M{"_id": bson.ObjectIdHex(id)}}}
+	query := bson.M{"commands": bson.M{"$elemMatch": findParameters}}
 	count, err := s.DB(m.database.Name).C(db.DeviceProfile).Find(query).Count()
 	if err != nil {
 		return err
@@ -1061,7 +1065,23 @@ func (m *MongoClient) DeleteCommandById(id string) error {
 		return db.ErrCommandStillInUse
 	}
 
-	return col.RemoveId(bson.ObjectIdHex(id))
+	return col.Remove(deleteParameters)
+}
+
+func (m MongoClient) GetAndMapCommands(c []mgo.DBRef) ([]contract.Command, error) {
+	s := m.session.Copy()
+	defer s.Close()
+
+	var commands []contract.Command
+	for _, cRef := range c {
+		var command contract.Command
+		err := m.GetCommandById(&command, fmt.Sprintf("%s", cRef.Id))
+		if err != nil {
+			return []contract.Command{}, errorMap(err)
+		}
+		commands = append(commands, command)
+	}
+	return commands, nil
 }
 
 // Scrub all metadata

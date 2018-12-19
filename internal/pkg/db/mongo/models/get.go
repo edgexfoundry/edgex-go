@@ -20,20 +20,34 @@ import (
 )
 
 type Get struct {
-	Action `bson:",inline"`
+	Path      string     `bson:"path"`      // path used by service for action on a device or sensor
+	Responses []Response `bson:"responses"` // responses from get or put requests to service
+	URL       string     // url for requests from command service
 }
 
 func (g *Get) ToContract() contract.Get {
-	return contract.Get{
-		Action: g.Action.ToContract(),
+	to := contract.Get{}
+	to.Path = g.Path
+	to.URL = g.URL
+	to.Responses = []contract.Response{}
+	for _, r := range g.Responses {
+		to.Responses = append(to.Responses, r.ToContract())
 	}
+	return to
 }
 
 func (g *Get) FromContract(from contract.Get) error {
-	action := &Action{}
-	err := action.FromContract(from.Action)
-	if err != nil {
-		return errors.New(err.Error() + " path: " + from.Path)
+	g.Path = from.Path
+	g.URL = from.URL
+	g.Responses = []Response{}
+	for _, val := range from.Responses {
+		r := &Response{}
+		err := r.FromContract(val)
+		if err != nil {
+			return errors.New(err.Error() + " code: " + val.Code)
+		}
+		g.Responses = append(g.Responses, *r)
+
 	}
 	return nil
 }

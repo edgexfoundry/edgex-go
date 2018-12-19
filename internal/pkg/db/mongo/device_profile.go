@@ -15,7 +15,7 @@ package mongo
 
 import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
-	"github.com/edgexfoundry/edgex-go/pkg/models"
+	contract "github.com/edgexfoundry/edgex-go/pkg/models"
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
 )
@@ -23,7 +23,7 @@ import (
 // Internal version of the device profile struct
 // Use this to handle DBRef
 type mongoDeviceProfile struct {
-	models.DeviceProfile
+	contract.DeviceProfile
 }
 
 // Custom marshaling into mongo
@@ -35,16 +35,16 @@ func (mdp mongoDeviceProfile) GetBSON() (interface{}, error) {
 	}
 
 	return struct {
-		models.DescribedObject `bson:",inline"`
-		Id                     bson.ObjectId            `bson:"_id,omitempty"`
-		Name                   string                   `bson:"name"`         // Non-database identifier (must be unique)
-		Manufacturer           string                   `bson:"manufacturer"` // Manufacturer of the device
-		Model                  string                   `bson:"model"`        // Model of the device
-		Labels                 []string                 `bson:"labels"`       // Labels used to search for groups of profiles
-		Objects                interface{}              `bson:"objects"`      // JSON data that the device service uses to communicate with devices with this profile
-		DeviceResources        []models.DeviceObject    `bson:"deviceResources"`
-		Resources              []models.ProfileResource `bson:"resources"`
-		Commands               []mgo.DBRef              `bson:"commands"` // List of commands to Get/Put information for devices associated with this profile
+		contract.DescribedObject `bson:",inline"`
+		Id                       bson.ObjectId              `bson:"_id,omitempty"`
+		Name                     string                     `bson:"name"`         // Non-database identifier (must be unique)
+		Manufacturer             string                     `bson:"manufacturer"` // Manufacturer of the device
+		Model                    string                     `bson:"model"`        // Model of the device
+		Labels                   []string                   `bson:"labels"`       // Labels used to search for groups of profiles
+		Objects                  interface{}                `bson:"objects"`      // JSON data that the device service uses to communicate with devices with this profile
+		DeviceResources          []contract.DeviceObject    `bson:"deviceResources"`
+		Resources                []contract.ProfileResource `bson:"resources"`
+		Commands                 []mgo.DBRef                `bson:"commands"` // List of commands to Get/Put information for devices associated with this profile
 	}{
 		DescribedObject: mdp.DescribedObject,
 		Id:              mdp.Id,
@@ -62,16 +62,16 @@ func (mdp mongoDeviceProfile) GetBSON() (interface{}, error) {
 // Custom unmarshaling out of mongo
 func (mdp *mongoDeviceProfile) SetBSON(raw bson.Raw) error {
 	decoded := new(struct {
-		models.DescribedObject `bson:",inline"`
-		Id                     bson.ObjectId            `bson:"_id,omitempty"`
-		Name                   string                   `bson:"name"`         // Non-database identifier (must be unique)
-		Manufacturer           string                   `bson:"manufacturer"` // Manufacturer of the device
-		Model                  string                   `bson:"model"`        // Model of the device
-		Labels                 []string                 `bson:"labels"`       // Labels used to search for groups of profiles
-		Objects                interface{}              `bson:"objects"`      // JSON data that the device service uses to communicate with devices with this profile
-		DeviceResources        []models.DeviceObject    `bson:"deviceResources"`
-		Resources              []models.ProfileResource `bson:"resources"`
-		Commands               []mgo.DBRef              `bson:"commands"` // List of commands to Get/Put information for devices associated with this profile
+		contract.DescribedObject `bson:",inline"`
+		Id                       bson.ObjectId              `bson:"_id,omitempty"`
+		Name                     string                     `bson:"name"`         // Non-database identifier (must be unique)
+		Manufacturer             string                     `bson:"manufacturer"` // Manufacturer of the device
+		Model                    string                     `bson:"model"`        // Model of the device
+		Labels                   []string                   `bson:"labels"`       // Labels used to search for groups of profiles
+		Objects                  interface{}                `bson:"objects"`      // JSON data that the device service uses to communicate with devices with this profile
+		DeviceResources          []contract.DeviceObject    `bson:"deviceResources"`
+		Resources                []contract.ProfileResource `bson:"resources"`
+		Commands                 []mgo.DBRef                `bson:"commands"` // List of commands to Get/Put information for devices associated with this profile
 	})
 
 	//	bsonErr := bson.Unmarshal(raw.Data, decoded)
@@ -96,24 +96,7 @@ func (mdp *mongoDeviceProfile) SetBSON(raw bson.Raw) error {
 	if err != nil {
 		return err
 	}
-	s := m.session.Copy()
-	defer s.Close()
+	mdp.Commands, err = m.GetAndMapCommands(decoded.Commands)
 
-	comCol := s.DB(m.database.Name).C(db.Command)
-
-	var commands []models.Command
-
-	// Get all of the commands from the references
-	for _, cRef := range decoded.Commands {
-		var c models.Command
-		err := comCol.FindId(cRef.Id).One(&c)
-		if err != nil {
-			return err
-		}
-		commands = append(commands, c)
-	}
-
-	mdp.Commands = commands
-
-	return nil
+	return err
 }

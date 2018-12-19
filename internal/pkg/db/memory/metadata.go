@@ -1029,26 +1029,13 @@ func (m *MemDB) GetAllCommands(d *[]contract.Command) error {
 	return nil
 }
 
-func (m *MemDB) UpdateCommand(updated *contract.Command, orig *contract.Command) error {
+func (m *MemDB) UpdateCommand(updated *contract.Command) error {
 	if updated == nil {
 		return nil
 	}
-	if updated.Name != "" {
-		orig.Name = updated.Name
-	}
-	if updated.Get != nil && (updated.Get.String() != contract.Get{}.String()) {
-		orig.Get = updated.Get
-	}
-	if updated.Put != nil && (updated.Put.String() != contract.Put{}.String()) {
-		orig.Put = updated.Put
-	}
-	if updated.Origin != 0 {
-		orig.Origin = updated.Origin
-	}
-
 	for i, c := range m.commands {
-		if c.Id == orig.Id {
-			m.commands[i] = *orig
+		if c.Id == updated.Id {
+			m.commands[i] = *updated
 			return nil
 		}
 	}
