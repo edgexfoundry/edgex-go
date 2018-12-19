@@ -26,48 +26,130 @@ confinement: strict
 # may be defaulting to this dir...
 
 apps:
-  kong:
-    command: bin/kong-wrapper.sh
-    plugs:
-      - network-bind
+  # edgex microservices
   consul:
     command: bin/start-consul.sh
-    # TODO: add stop-command
+    daemon: simple
     plugs: [network, network-bind]
-  vault:
-    command: bin/vault
-    plugs: [network, network-bind]
-  cassandra:
-    command: bin/cassandra-wrapper.sh
-    daemon: forking
-    # mount-observe needs to be manually connected post-install:
-    # `sudo snap connect cassandra:mount-observe ubuntu-core:mount-observe`
-    plugs:
-      - network
-      - network-bind
-      # Needed for checking available space in the data directories
-      # (java.io.File.getTotalSpace).
-      - mount-observe
   core-config-seed:
-    command: bin/start-config-seed.sh
+    command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh config-seed -c ${SNAP_DATA}/config
     plugs: [network, network-bind]
-  start-edgex:
-    command: bin/start-edgex.sh
-    plugs: [network, network-bind, system-observe, process-control, hardware-observe]
-  stop-edgex:
-    command: bin/stop-edgex.sh
-    plugs: [system-observe, process-control]
-  security-start:
-    command: bin/security-start.sh
-    plugs:
+    daemon: forking
+    passthrough:
+      after:
+        - consul
+  mongod:
+    command: bin/mongod-wrapper.sh
+    stop-command: bin/mongod --shutdown --dbpath ${SNAP_DATA}/mongo/db
+    plugs: [hardware-observe, network, network-bind, system-observe]
+    daemon: simple
+    passthrough:
+      after:
+        - core-config-seed
+  mongo-worker:
+    command: bin/mongo-worker-wrapper.sh
+    plugs: [network]
+    daemon: oneshot
+    passthrough:
+      after:
+        - mongod
+  security-services:
+    command: bin/fork-wrapper.sh $SNAP/bin/security-start.sh
+    stop-command: bin/security-stop.sh
+    daemon: forking
+    plugs: 
       - network
       - network-bind
+      - mount-observe
+    passthrough:
+      after:
+        - core-config-seed
+  support-logging:
+    command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh support-logging --consul
+    daemon: forking
+    plugs: [network, network-bind]
+    passthrough:
+      after:
+        - core-config-seed
+        - mongo-worker
+  support-notifications:
+    command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh support-notifications --consul
+    daemon: forking
+    plugs: [network, network-bind]
+    passthrough:
+      after:
+        - core-config-seed
+        - mongo-worker
+  core-data:
+    command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh core-data --consul
+    daemon: forking
+    plugs: [network, network-bind]
+    passthrough:
+      after:
+        - core-config-seed
+        - mongo-worker
+  core-metadata:
+    command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh core-metadata --consul
+    daemon: forking
+    plugs: [network, network-bind]
+    passthrough:
+      after:
+        - core-config-seed
+        - mongo-worker
+  core-command:
+    command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh core-command --consul
+    daemon: forking
+    plugs: [network, network-bind, ]
+    passthrough:
+      after:
+        - core-config-seed
+        - mongo-worker
+  support-scheduler:
+    command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh support-scheduler --consul
+    daemon: forking
+    plugs: [network, network-bind]
+    passthrough:
+      after:
+        - core-config-seed
+        - mongo-worker
+  export-client:
+    command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh export-client --consul
+    daemon: forking
+    plugs: [network, network-bind]
+    passthrough:
+      after:
+        - core-config-seed
+        - mongo-worker
+  export-distro:
+    command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh export-distro --consul
+    daemon: forking
+    plugs: [network, network-bind]
+    passthrough:
+      after:
+        - core-config-seed
+        - mongo-worker
+  sys-mgmt-agent:
+    command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh sys-mgmt-agent
+    daemon: forking
+    plugs: [network, network-bind, daemon-notify]
+    passthrough:
+      after:
+        - core-config-seed
+        - mongo-worker
+  device-virtual:
+    command: bin/device-virtual-wrapper.sh
+    daemon: simple
+    plugs: [network, network-bind]
+    passthrough:
+      after:
+        - core-config-seed
+        - mongo-worker
+
+
+  # helper commands the snap exposes
   mongo:
     command: bin/mongo
     plugs: [home, network]
-  mongod:
-    command: mongo/launch-edgex-mongo.sh
-    plugs: [hardware-observe, network, network-bind, system-observe]
   mongostat:
     command: bin/mongostat
     plugs: [network]
@@ -80,22 +162,40 @@ apps:
   curl:
     command: usr/bin/curl
     plugs: [network]
+  kong:
+    command: bin/kong-wrapper.sh
+    plugs:
+      - network-bind
 
 parts:
   curl:
     plugin: nil
-    override-pull: echo "no source pull"
+    # snapcraft defaults the source for a part that doesn't specify a source
+    # to ".", which then means when will scan the full directory and determine
+    # that something there has changed, i.e. the config-common parts with
+    # actual scripts, etc. this part gets marked out of date too and needs 
+    # rebuilding, which is false
+    # to resolve this we can just specify the source of something that doesn't
+    # matter and will minimize confusion by snapcraft
+    source: snap/local/build-helpers
     stage-packages:
       - curl
+  # this part really only exists so that the go parts can use this local 
+  # script, but we don't want all the go parts to depend on the config-common
+  # part, as they really don't depend on it
+  # separating this makes quicker iteration when you just need to change the 
+  # config scripts
+  go-build-helper:
+    plugin: dump
+    source: snap/local/build-helpers
+    prime: [-*]
   go:
-    after: [config-common]
+    after: [glide]
     source-tag: go1.10.2
     source-depth: 1
   glide:
     after:
-      # setting go to build after config-common ensures that it will get re-added to SNAPCRAFT_STAGE
-      # if config-common is rebuilt
-      - config-common
+      - go-build-helper
     plugin: dump
     source:
       - on amd64: https://github.com/Masterminds/glide/releases/download/v0.12.3/glide-v0.12.3-linux-amd64.tar.gz
@@ -189,15 +289,7 @@ parts:
 
   config-common:
     plugin: dump
-    source: ./snap/local
-    stage:
-      - bin/go-build-helper.sh
-      - config/*
-      - bin/*
-    prime:
-      - -bin/go-build-helper.sh
-      - bin/*
-      - config/*
+    source: snap/local/runtime-helpers
   mongodb:
     plugin: dump
     source:
@@ -257,7 +349,6 @@ parts:
     source: .
     plugin: make
     after:
-      - glide
       - go
     override-build: |
       . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
@@ -275,6 +366,8 @@ parts:
       install -DT "./cmd/support-logging/support-logging" "$SNAPCRAFT_PART_INSTALL/bin/support-logging"
       install -DT "./cmd/support-notifications/support-notifications" "$SNAPCRAFT_PART_INSTALL/bin/support-notifications"
       install -DT "./cmd/support-scheduler/support-scheduler" "$SNAPCRAFT_PART_INSTALL/bin/support-scheduler"
+      install -DT "./cmd/sys-mgmt-agent/sys-mgmt-agent" "$SNAPCRAFT_PART_INSTALL/bin/sys-mgmt-agent"
+
 
       # FIXME: settings can't be overridden from the cmd-line!
       # Override 'LogFile' and 'LoggingRemoteURL'
@@ -288,6 +381,7 @@ parts:
       install -d "$SNAPCRAFT_PART_INSTALL/config/support-notifications/res/"
       install -d "$SNAPCRAFT_PART_INSTALL/config/support-scheduler/res/"
       install -d "$SNAPCRAFT_PART_INSTALL/config/config-seed/res/properties/device-virtual/"
+      install -d "$SNAPCRAFT_PART_INSTALL/config/sys-mgmt-agent/res/"
       
       # handle application.properties for the remaining java services
       install -DT "./cmd/config-seed/res/properties/device-virtual/application.properties" \
@@ -337,6 +431,13 @@ parts:
         sed -e s:./logs/edgex-support-scheduler.log:\$SNAP_COMMON/support-scheduler.log: \
             -e s:'http\://localhost\:48061/api/v1/logs':: > \
        "$SNAPCRAFT_PART_INSTALL/config/support-scheduler/res/configuration.toml"
+      
+      # for sys-mgmt-agent we also need to specify the operations type as "snap"
+      cat "./cmd/sys-mgmt-agent/res/configuration.toml" | \
+        sed -e s:./logs/edgex-sys-mgmt-agent.log:\$SNAP_COMMON/sys-mgmt-agent.log: \
+            -e s:"OperationsType = 'docker'":"OperationsType = 'snap'": \
+            -e s:'http\://localhost\:48061/api/v1/logs':: > \
+       "$SNAPCRAFT_PART_INSTALL/config/sys-mgmt-agent/res/configuration.toml"
 
       # handle license/attribution files
       install -DT "./cmd/core-command/Attribution.txt" \
@@ -377,7 +478,9 @@ parts:
               "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/support-scheduler/LICENSE"
       install -DT "./LICENSE" \
               "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/config-seed/LICENSE"
-      
+      install -DT "./LICENSE" \
+              "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/sys-mgmt-agent/LICENSE"
+
     build-packages:
       - zip
       - pkg-config
@@ -628,7 +731,7 @@ parts:
       - bin/*
       - config/*
   security-api-gateway:
-    after: [go, glide]
+    after: [go]
     source: https://github.com/edgexfoundry/security-api-gateway.git
     source-branch: california
     plugin: make

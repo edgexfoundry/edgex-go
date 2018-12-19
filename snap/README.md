@@ -4,9 +4,9 @@
 This folder contains snap packaging for the EdgeX Foundry reference implementation.
 
 The snap contains Consul, MongoDB, all of the EdgeX Go-based micro services from
-this repository, and two Java-based services support-scheduler, and device-virtual,
-as well as Vault, Kong, Cassandra, and the two go-based security micro services.
-The snap also contains a single OpenJDK JRE used to run the Java-based services.
+this repository, device-virtual, as well as Vault, Kong, Cassandra, and the 
+two go-based security micro services. The snap also contains a single OpenJDK 
+JRE used to run device-virtual.
 
 The project maintains a rolling release of the snap on the `edge` channel that is rebuilt and published at least once daily through the jenkins jobs setup for the EdgeX project. You can see the jobs run [here](https://jenkins.edgexfoundry.org/view/Snap/) specifically looking at the `edgex-go-snap-{branch}-stage-snap`.
 
@@ -45,53 +45,75 @@ Lastly, on a system supporting it, the snap may be installed using GNOME (or Ubu
 
 **Note** - the snap has only been tested on Ubuntu 16.04 LTS Desktop/Server and Ubuntu Core 16.
 
-### Configuration
-The `hardware-observe`, `process-control`, `mount-observe`, and `system-observe` snap interfaces needs to be
-connected after installation using the following commands:
+**WARNING** - don't install the EdgeX snap on a system which is already running mongoDB or Consul.
+
+## Using the EdgeX snap
+
+Upon installation, the following EdgeX services are automatically and immediately started:
+
+* consul
+* mongod
+* mongo-worker
+* core-data
+* core-command
+* core-metadata
+* core-config-seed
+* security-services (see [note below](https://github.com/edgexfoundry/edgex-go/tree/master/snap#security-services))
+
+The following services are disabled by default:
+
+* support-notifications
+* support-logging
+* support-scheduler
+* export-client
+* export-distro
+* device-virtual
+
+Any disabled services can be enabled and started up using `snap set`:
 
 ```bash
-$ sudo snap connect edgexfoundry:hardware-observe
-$ sudo snap connect edgexfoundry:process-control
-$ sudo snap connect edgexfoundry:system-observe
-$ sudo snap connect edgexfoundry:mount-observe
+$ sudo snap set edgexfoundry support-notifications=on
 ```
 
-After connecting these restart the services in the snap with:
+To turn a service off (thereby disabling and immediately stopping it) set the service to off:
+
+```bash
+$ sudo snap set edgexfoundry support-notifications=off
+```
+
+All services which are installed on the system as systemd units, which if enabled will automatically start running when the system boots or reboots.
+
+### Configuring individual services
+
+All default configuration files are shipped with the snap inside `$SNAP/config`, however because `$SNAP` isn't writable, all of the config files are copied during snap installation (specifically during the install hook, see `snap/hooks/install` in this repository) to `$SNAP_DATA/config`. The configuration files in `$SNAP_DATA` may then be modified. You may wish to restart the snap to take configuration into account with:
 
 ```bash
 $ sudo snap restart edgexfoundry
 ```
 
-**Note** - these interface will be connected automatically after https://forum.snapcraft.io/t/edgexfoundry-auto-connections-assertions-request/7920/1 has been processed. After this is done, then connecting these interfaces will only be necessary during development. See the section below on building the snap for more details.
-
-**Note** - the process-control interface will be dropped after all of the services are supported as proper daemons in the snap.
-
-## Using the EdgeX snap
-To start all the EdgeX microservices, run the following command using sudo:
-
-`$ edgexfoundry.start-edgex`
-
-To stop all the EdgeX microservices, run the following command using sudo:
-
-`$ edgexfoundry.stop-edgex`
-
-**WARNING** - don't start the EdgeX snap on a system which is already running mongoDB or Consul.
-
-### Enabling/Disabling service startup
-It's possible to change which services are started by the `start-edgex` script by
-editing a file called `edgex-services-env` which can be found in the directory `/var/snap/edgexfoundry/current` (aka $SNAP_DATA).
-
-**Note** - after all services have been converted to daemons in the snap this file will become obselete and all service management will be done with `snap set`. This document will be updated to reflect this...
-
-### Configuring individual services
-
-All default configuration files are shipped with the snap inside `$SNAP/config`, however because `$SNAP` isn't writable, all of the config files are copied during snap installation (specifically during the install hook, see `snap/hooks/install` in this repository) to `$SNAP_DATA/config`. The configuration files in `$SNAP_DATA` may then be modified.
-
 ### Viewing logs
 
 Currently, all log files for the snap's can be found inside `$SNAP_COMMON`, which is usually `/var/snap/edgexfoundry/common`. Once all the services are supported as daemons, you can also use `sudo snap logs edgexfoundry` to view logs.
 
-### Enabling security services
+Additionally, logs can be viewed using the system journal or `snap logs`. To view the logs for all services in the edgexfoundry snap use:
+
+```bash
+$ sudo snap logs edgexfoundry
+```
+
+Individual service logs may be viewed by specifying the service name:
+
+```bash
+$ sudo snap logs edgexfoundry.consul
+```
+
+Or by using the systemd unit name and journalctl:
+
+```bash
+$ journalctl -u snap.edgexfoundry.consul.service
+```
+
+### Security services
 
 Currently, the security services are enabled by default. The security services consitute the following components:
 
@@ -101,17 +123,19 @@ Currently, the security services are enabled by default. The security services c
  * vault-worker (from [security-secret-store](https://github.com/edgexfoundry/security-secret-store))
  * kong-worker (from [security-api-gateway](https://github.com/edgexfoundry/security-api-gateway/))
 
-All of the services are controlled by the same variable `SECURITY` in the `edgex-services-env` file. You can either turn all of them on, or turn all of them off. 
+All services are currently bundled in the singular service, `security-services` (see issue [#485](https://github.com/edgexfoundry/edgex-go/issues/485) for more details on why). 
 
-When security is enabled (which is what happens by default), Consul is secured using Vault for secret management, and Kong is used as an HTTPS proxy for all the services. The HTTPS keys for Kong are generated at runtime, and placed in `$SNAP_DATA/kong/keys` and the keys for Vault are placed in `$SNAP_DATA/vault/pki`. Kong needs a database to manage itself, and can use either Postgres or Cassandra. Because Postgres cannot run inside of a snap due to issues running as root (currently all snap services must run as root, see [this post](https://forum.snapcraft.io/t/multiple-users-and-groups-in-snaps/1461) for details), we use Cassandra. Cassandra is currently a service, so to fully disable the security services, you must also disable Cassandra using:
+When security is enabled, Consul is secured using Vault for secret management, and Kong is used as an HTTPS proxy for all the services. The HTTPS keys for Kong and Vault are placed in `$SNAP_DATA/vault/pki`. Kong needs a database to manage itself, and can use either Postgres or Cassandra. Because Postgres cannot run inside of a snap due to issues running as root (currently all snap services must run as root, see [this post](https://forum.snapcraft.io/t/multiple-users-and-groups-in-snaps/1461) for details), we use Cassandra. 
 
-```
-$ sudo snap stop --disable edgexfoundry.cassandra
+To turn off security, use `snap set`:
+
+```bash
+$ sudo snap set edgexfoundry security-services=off
 ```
 
 ## Limitations
 
-  * None of the services are actually defined as such in snapcraft.yaml, instead shell-scripts are used to start and stop the EdgeX microservices and dependent services such as consul and mongo. This is being tracked at https://github.com/edgexfoundry/edgex-go/issues/485
+[See the GitHub issues with label snap for current issues.](https://github.com/edgexfoundry/edgex-go/issues?q=is%3Aopen+is%3Aissue+label%3Asnap)
 
 ## Building
 
@@ -161,7 +185,24 @@ $ docker run -it -v"$PWD":/build snapcore/snapcraft:stable bash -c "apt update &
 After building the snap from one of the above methods, you will have a binary snap package called `edgexfoundry_<latest version>_<arch>.snap`, which can be installed locally with the `--devmode` flag:
 
 ```bash
-sudo snap install --devmode edgexfoundry*.snap
+$ sudo snap install --devmode edgexfoundry*.snap
 ```
 
-After installing the snap, you will need to connect interfaces and restart the snap as explained in the previous section on [Configuration](https://github.com/edgexfoundry/edgex-go/blob/master/snap/README.md#configuration).
+**Note** You can try installing a locally built snap with the `--dangerous` flag (instead of the `--devmode` flag), but there is a race condition with this method. Specifically Cassandra, MongoDB, and other services require accesses not provided by default to the snap, and these are provided by connecting the interfaces detailed below. The race condition occurs because if the services fail to start because the accesses were denied (because the interfaces weren't connected soon enough), the installation may be entirely aborted by snapd.  If you do install with `--dangerous`, it is recommended to perform the connections detailed below in the same shell command to minimize the time between the installation (and hence service startup) and granting of accesses from interface connection. Note this race condition doesn't happen when installing the snap from the store because the interface connection automatically happens before starting the services.
+
+#### Interfaces
+
+After installing the snap, you will need to connect interfaces and restart the snap. The snap needs the `hardware-observe`, `mount-observe`, and `system-observe` interfaces connected. These are automatically connected using snap store assertions when installing from the store, but when developing the snap and installing a revision locally, use the following commands to connect the interfaces:
+
+```bash
+$ sudo snap connect edgexfoundry:hardware-observe
+$ sudo snap connect edgexfoundry:system-observe
+$ sudo snap connect edgexfoundry:mount-observe
+```
+
+After connecting these restart the services in the snap with:
+
+```bash
+$ sudo snap restart edgexfoundry
+```
+

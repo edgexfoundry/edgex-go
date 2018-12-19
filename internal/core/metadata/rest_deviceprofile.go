@@ -73,6 +73,8 @@ func restAddDeviceProfile(w http.ResponseWriter, r *http.Request) {
 	if err := dbClient.AddDeviceProfile(&dp); err != nil {
 		if err == db.ErrNotUnique {
 			http.Error(w, "Duplicate name for device profile", http.StatusConflict)
+		} else if err == db.ErrNameEmpty {
+			http.Error(w, err.Error(), http.StatusBadRequest)
 		} else {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
@@ -230,7 +232,7 @@ func checkDuplicateCommands(dp models.DeviceProfile, w http.ResponseWriter) erro
 // Delete all of the commands that are a part of the device profile
 func deleteCommands(dp models.DeviceProfile, w http.ResponseWriter) error {
 	for _, command := range dp.Commands {
-		err := dbClient.DeleteCommandById(command.Id.Hex())
+		err := dbClient.DeleteCommandById(command.Id)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			return err
@@ -432,6 +434,8 @@ func addDeviceProfileYaml(data []byte, w http.ResponseWriter) {
 	if err := dbClient.AddDeviceProfile(&dp); err != nil {
 		if err == db.ErrNotUnique {
 			http.Error(w, "Duplicate profile name", http.StatusConflict)
+		} else if err == db.ErrNameEmpty {
+			http.Error(w, err.Error(), http.StatusBadRequest)
 		} else {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		}

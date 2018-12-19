@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2017 Dell Inc.
+ * Copyright 2018 Dell Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -15,22 +15,32 @@
 package models
 
 import (
-	"encoding/json"
+	contract "github.com/edgexfoundry/edgex-go/pkg/models"
 )
 
-type Action struct {
-	Path      string     `json:"path"`          // path used by service for action on a device or sensor
-	Responses []Response `json:"responses"`     // responses from get or put requests to service
-	URL       string     `json:"url,omitempty"` // url for requests from command service
+/*
+ * Response for a Get or Put request to a service
+ *
+ *
+ * Response Struct
+ */
+type Response struct {
+	Code           string   `bson:"code"`
+	Description    string   `bson:"description"`
+	ExpectedValues []string `bson:"expectedValues"`
 }
 
-/*
- * String() function for formatting
- */
-func (a Action) String() string {
-	out, err := json.Marshal(a)
-	if err != nil {
-		return err.Error()
+func (r Response) ToContract() contract.Response {
+	return contract.Response{
+		Code:           r.Code,
+		Description:    r.Description,
+		ExpectedValues: r.ExpectedValues,
 	}
-	return string(out)
+}
+
+func (r *Response) FromContract(from contract.Response) error {
+	r.Code = from.Code
+	r.Description = from.Description
+	r.ExpectedValues = from.ExpectedValues
+	return nil
 }

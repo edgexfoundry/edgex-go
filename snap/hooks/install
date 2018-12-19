@@ -1,14 +1,9 @@
 #!/bin/bash -e
 
-# install the edgex-services-env file into $SNAP_DATA
-if [ ! -f ${SNAP_DATA}/edgex-services-env ]; then
-    cp "${SNAP}/config/edgex-services-env" "${SNAP_DATA}/edgex-services-env"
-fi
-
 # install all the config files from $SNAP/config/SERVICE/res/configuration.toml 
 # into $SNAP_DATA/config
 mkdir -p ${SNAP_DATA}/config
-for service in security-api-gateway core-command config-seed core-data core-metadata export-client export-distro support-logging support-notifications support-scheduler; do
+for service in security-api-gateway core-command config-seed core-data core-metadata export-client export-distro support-logging support-notifications support-scheduler sys-mgmt-agent; do
     if [ ! -f "${SNAP_DATA}/config/${service}/res/configuration.toml" ]; then
         mkdir -p "${SNAP_DATA}/config/${service}/res"
         cp ${SNAP}/config/${service}/res/configuration.toml "${SNAP_DATA}/config/${service}/res/configuration.toml"
@@ -76,3 +71,9 @@ if [ ! -f ${SNAP_DATA}/config/security-api-gateway/kong.conf ]; then
     # finally set the make database to be cassandra
     sed -i "s@#database = postgres@database = cassandra@" ${SNAP_DATA}/config/security-api-gateway/kong.conf
 fi
+
+# finally, disable services in the snap that aren't meant to come up by default
+# by default, we want the export-*, support-*, and device-virtual services off
+for svc in export-distro export-client support-notifications support-scheduler support-logging device-virtual; do
+    snapctl stop --disable edgexfoundry.$svc
+done

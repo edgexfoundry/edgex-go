@@ -139,6 +139,9 @@ func getReadingsByDeviceId(limit int, deviceId string, valueDescriptor string) (
 func deleteReadingById(id string) error {
 	err := dbClient.DeleteReadingById(id)
 	if err != nil {
+		if err == db.ErrNotFound {
+			return errors.NewErrDbNotFound()
+		}
 		LoggingClient.Error(err.Error())
 		return err
 	}

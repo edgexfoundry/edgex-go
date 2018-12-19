@@ -66,10 +66,11 @@ func restAddNewDevice(w http.ResponseWriter, r *http.Request) {
 
 	// Addressable check
 	// Try by name
-	err = dbClient.GetAddressableByName(&d.Addressable, d.Addressable.Name)
+	//TODO: Is what we really need here a checkForAddressable() function?
+	_, err = dbClient.GetAddressableByName(d.Addressable.Name)
 	if err != nil {
 		// Try by ID
-		err = dbClient.GetAddressableById(&d.Addressable, d.Addressable.Id.Hex())
+		_, err = dbClient.GetAddressableById(d.Addressable.Id)
 		if err != nil {
 			LoggingClient.Error(err.Error())
 			http.Error(w, err.Error()+": A device must be associated to an Addressable", http.StatusBadRequest)
@@ -182,10 +183,10 @@ func updateDeviceFields(from models.Device, to *models.Device) error {
 		// Check if the new addressable exists
 		var a models.Addressable
 		// Try ID first
-		err := dbClient.GetAddressableById(&a, from.Addressable.Id.Hex())
+		a, err := dbClient.GetAddressableById(from.Addressable.Id)
 		if err != nil {
 			// Then try name
-			err = dbClient.GetAddressableByName(&a, from.Addressable.Name)
+			a, err = dbClient.GetAddressableByName(from.Addressable.Name)
 			if err != nil {
 				return errors.New("Addressable not found for updated device")
 			}
@@ -401,8 +402,7 @@ func restGetDeviceByAddressableName(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check if the addressable exists
-	var a models.Addressable
-	err = dbClient.GetAddressableByName(&a, an)
+	a, err := dbClient.GetAddressableByName(an)
 	if err != nil {
 		if err == db.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
@@ -416,7 +416,7 @@ func restGetDeviceByAddressableName(w http.ResponseWriter, r *http.Request) {
 	res := make([]models.Device, 0)
 
 	// Use the addressable ID now that you have the addressable object
-	err = dbClient.GetDevicesByAddressableId(&res, a.Id.Hex())
+	err = dbClient.GetDevicesByAddressableId(&res, a.Id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		LoggingClient.Error(err.Error())
@@ -468,8 +468,7 @@ func restGetDeviceByAddressableId(w http.ResponseWriter, r *http.Request) {
 	var aid string = vars[ADDRESSABLEID]
 
 	// Check if the addressable exists
-	var a models.Addressable
-	err := dbClient.GetAddressableById(&a, aid)
+	_, err := dbClient.GetAddressableById(aid)
 	if err != nil {
 		if err == db.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)

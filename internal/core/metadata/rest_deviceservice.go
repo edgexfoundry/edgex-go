@@ -24,7 +24,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 	"github.com/gorilla/mux"
-	"github.com/globalsign/mgo/bson"
 )
 
 // Get the addressable by its ID or Name
@@ -33,9 +32,9 @@ func getAddressableByIdOrName(a *models.Addressable, w http.ResponseWriter) erro
 	name := a.Name
 
 	// Try by ID
-	if err := dbClient.GetAddressableById(a, id.Hex()); err != nil {
+	if _, err := dbClient.GetAddressableById(id); err != nil {
 		// Try by name
-		if err = dbClient.GetAddressableByName(a, name); err != nil {
+		if _, err = dbClient.GetAddressableByName(name); err != nil {
 			if err == db.ErrNotFound {
 				http.Error(w, "Addressable not found", http.StatusServiceUnavailable)
 			} else {
@@ -80,7 +79,7 @@ func restAddDeviceService(w http.ResponseWriter, r *http.Request) {
 
 	// Addressable Check
 	// No ID or Name given for addressable
-	if ds.Service.Addressable.Id.Hex() == "" && ds.Service.Addressable.Name == "" {
+	if ds.Service.Addressable.Id == "" && ds.Service.Addressable.Name == "" {
 		err = errors.New("Must provide an Addressable for Device Service")
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		LoggingClient.Error(err.Error())
@@ -89,7 +88,7 @@ func restAddDeviceService(w http.ResponseWriter, r *http.Request) {
 
 	var foundAddressable = false
 	// First try by name
-	err = dbClient.GetAddressableByName(&ds.Service.Addressable, ds.Service.Addressable.Name)
+	_, err = dbClient.GetAddressableByName(ds.Service.Addressable.Name)
 	if err != nil {
 		if err != db.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -102,7 +101,7 @@ func restAddDeviceService(w http.ResponseWriter, r *http.Request) {
 
 	// Then try by ID
 	if !foundAddressable {
-		err := dbClient.GetAddressableById(&ds.Service.Addressable, ds.Service.Addressable.Id.Hex())
+		_, err := dbClient.GetAddressableById(ds.Service.Addressable.Id)
 		if err != nil {
 			http.Error(w, "Addressable not found by ID or Name", http.StatusNotFound)
 			LoggingClient.Error("Addressable not found by ID or Name: " + err.Error())
@@ -200,7 +199,7 @@ func getAddressablesForAssociatedDevices(addressables *[]models.Addressable, ds 
 	// Get the addressables for all the devices
 	// Use a map to maintain a set (no duplicates)
 	// Convert to a slice afterwards
-	aMap := map[bson.ObjectId]models.Addressable{}
+	aMap := map[string]models.Addressable{}
 	for _, d := range devices {
 		// Only append addressable if its not in the map
 		if _, ok := aMap[d.Addressable.Id]; !ok {
@@ -331,8 +330,8 @@ func restGetServiceByAddressableName(w http.ResponseWriter, r *http.Request) {
 	res := make([]models.DeviceService, 0)
 
 	// Check if the addressable exists
-	var a models.Addressable
-	if err = dbClient.GetAddressableByName(&a, an); err != nil {
+	a, err := dbClient.GetAddressableByName(an)
+	if err != nil {
 		if err == db.ErrNotFound {
 			http.Error(w, "Addressable not found", http.StatusNotFound)
 		} else {
@@ -342,7 +341,7 @@ func restGetServiceByAddressableName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err = dbClient.GetDeviceServicesByAddressableId(&res, a.Id.Hex()); err != nil {
+	if err = dbClient.GetDeviceServicesByAddressableId(&res, a.Id); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		LoggingClient.Error(err.Error())
 		return
@@ -358,8 +357,8 @@ func restGetServiceByAddressableId(w http.ResponseWriter, r *http.Request) {
 	res := make([]models.DeviceService, 0)
 
 	// Check if the Addressable exists
-	var a models.Addressable
-	if err := dbClient.GetAddressableById(&a, sid); err != nil {
+	_, err := dbClient.GetAddressableById(sid)
+	if err != nil {
 		if err == db.ErrNotFound {
 			http.Error(w, "Addressable not found", http.StatusNotFound)
 		} else {

@@ -284,7 +284,7 @@ func loadConfigScheduleEvents() error {
 				LoggingClient.Info(fmt.Sprintf("Added addressable into core-metadata name: %s id: %s path: %s", addressable.Name, addressableId, addressable.Path))
 
 				// add the core-metadata id value
-				addressable.Id = bson.ObjectId(addressableId)
+				addressable.Id = addressableId
 			}
 
 			// add the schedule event with addressable event to core-metadata

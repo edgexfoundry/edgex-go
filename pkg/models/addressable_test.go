@@ -70,7 +70,7 @@ func TestAddressable_String(t *testing.T) {
 		{"full addressable", TestAddressable, "{\"created\":" + strconv.FormatInt(TestAddressable.Created, 10) +
 			",\"modified\":" + strconv.FormatInt(TestAddressable.Modified, 10) +
 			",\"origin\":" + strconv.FormatInt(TestAddressable.Origin, 10) +
-			",\"id\":null,\"name\":\"" + TestAddressable.Name +
+			",\"name\":\"" + TestAddressable.Name +
 			"\",\"protocol\":\"" + TestAddressable.Protocol +
 			"\",\"method\":\"" + TestAddressable.HTTPMethod +
 			"\",\"address\":\"" + TestAddressable.Address +
@@ -82,7 +82,7 @@ func TestAddressable_String(t *testing.T) {
 			"\",\"topic\":\"" + TestAddressable.Topic +
 			"\",\"baseURL\":\"" + TestAddressable.Protocol + "://" + TestAddressable.Address + ":" + strconv.Itoa(TestAddressable.Port) +
 			"\",\"url\":\"" + TestAddressable.Protocol + "://" + TestAddressable.Address + ":" + strconv.Itoa(TestAddressable.Port) + TestAddressable.Path + "\"}"},
-		{"empty", EmptyAddressable, "{\"created\":0,\"modified\":0,\"origin\":0,\"id\":null,\"name\":null,\"protocol\":null,\"method\":null,\"address\":null,\"port\":0,\"path\":null,\"publisher\":null,\"user\":null,\"password\":null,\"topic\":null,\"baseURL\":null,\"url\":null}"},
+		{"empty", EmptyAddressable, "{\"created\":0,\"modified\":0,\"origin\":0}"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

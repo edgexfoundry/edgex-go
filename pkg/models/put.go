@@ -22,8 +22,8 @@ import "encoding/json"
  * Put Struct
  */
 type Put struct {
-	Action         `bson:",inline" yaml:",inline"`
-	ParameterNames []string `bson:"parameterNames" json:"parameterNames" yaml:"parameterNames"`
+	Action         `yaml:",inline"`
+	ParameterNames []string `json:"parameterNames" yaml:"parameterNames"`
 }
 
 // Custom marshaling to make empty strings null

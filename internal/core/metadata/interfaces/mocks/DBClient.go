@@ -2,8 +2,6 @@
 
 package mocks
 
-import bson "github.com/globalsign/mgo/bson"
-
 import mock "github.com/stretchr/testify/mock"
 import models "github.com/edgexfoundry/edgex-go/pkg/models"
 
@@ -13,18 +11,18 @@ type DBClient struct {
 }
 
 // AddAddressable provides a mock function with given fields: a
-func (_m *DBClient) AddAddressable(a *models.Addressable) (bson.ObjectId, error) {
+func (_m *DBClient) AddAddressable(a models.Addressable) (string, error) {
 	ret := _m.Called(a)
 
-	var r0 bson.ObjectId
-	if rf, ok := ret.Get(0).(func(*models.Addressable) bson.ObjectId); ok {
+	var r0 string
+	if rf, ok := ret.Get(0).(func(models.Addressable) string); ok {
 		r0 = rf(a)
 	} else {
-		r0 = ret.Get(0).(bson.ObjectId)
+		r0 = ret.Get(0).(string)
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(*models.Addressable) error); ok {
+	if rf, ok := ret.Get(1).(func(models.Addressable) error); ok {
 		r1 = rf(a)
 	} else {
 		r1 = ret.Error(1)
@@ -290,102 +288,161 @@ func (_m *DBClient) DeleteScheduleEventById(id string) error {
 	return r0
 }
 
-// GetAddressableById provides a mock function with given fields: a, id
-func (_m *DBClient) GetAddressableById(a *models.Addressable, id string) error {
-	ret := _m.Called(a, id)
+// GetAddressableById provides a mock function with given fields: id
+func (_m *DBClient) GetAddressableById(id string) (models.Addressable, error) {
+	ret := _m.Called(id)
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func(*models.Addressable, string) error); ok {
-		r0 = rf(a, id)
+	var r0 models.Addressable
+	if rf, ok := ret.Get(0).(func(string) models.Addressable); ok {
+		r0 = rf(id)
 	} else {
-		r0 = ret.Error(0)
+		r0 = ret.Get(0).(models.Addressable)
 	}
 
-	return r0
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
-// GetAddressableByName provides a mock function with given fields: a, n
-func (_m *DBClient) GetAddressableByName(a *models.Addressable, n string) error {
-	ret := _m.Called(a, n)
+// GetAddressableByName provides a mock function with given fields: n
+func (_m *DBClient) GetAddressableByName(n string) (models.Addressable, error) {
+	ret := _m.Called(n)
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func(*models.Addressable, string) error); ok {
-		r0 = rf(a, n)
+	var r0 models.Addressable
+	if rf, ok := ret.Get(0).(func(string) models.Addressable); ok {
+		r0 = rf(n)
 	} else {
-		r0 = ret.Error(0)
+		r0 = ret.Get(0).(models.Addressable)
 	}
 
-	return r0
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(n)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
-// GetAddressables provides a mock function with given fields: d
-func (_m *DBClient) GetAddressables(d *[]models.Addressable) error {
-	ret := _m.Called(d)
+// GetAddressables provides a mock function with given fields:
+func (_m *DBClient) GetAddressables() ([]models.Addressable, error) {
+	ret := _m.Called()
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func(*[]models.Addressable) error); ok {
-		r0 = rf(d)
+	var r0 []models.Addressable
+	if rf, ok := ret.Get(0).(func() []models.Addressable); ok {
+		r0 = rf()
 	} else {
-		r0 = ret.Error(0)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.Addressable)
+		}
 	}
 
-	return r0
+	var r1 error
+	if rf, ok := ret.Get(1).(func() error); ok {
+		r1 = rf()
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
-// GetAddressablesByAddress provides a mock function with given fields: a, add
-func (_m *DBClient) GetAddressablesByAddress(a *[]models.Addressable, add string) error {
-	ret := _m.Called(a, add)
+// GetAddressablesByAddress provides a mock function with given fields: add
+func (_m *DBClient) GetAddressablesByAddress(add string) ([]models.Addressable, error) {
+	ret := _m.Called(add)
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func(*[]models.Addressable, string) error); ok {
-		r0 = rf(a, add)
+	var r0 []models.Addressable
+	if rf, ok := ret.Get(0).(func(string) []models.Addressable); ok {
+		r0 = rf(add)
 	} else {
-		r0 = ret.Error(0)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.Addressable)
+		}
 	}
 
-	return r0
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(add)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
-// GetAddressablesByPort provides a mock function with given fields: a, p
-func (_m *DBClient) GetAddressablesByPort(a *[]models.Addressable, p int) error {
-	ret := _m.Called(a, p)
+// GetAddressablesByPort provides a mock function with given fields: p
+func (_m *DBClient) GetAddressablesByPort(p int) ([]models.Addressable, error) {
+	ret := _m.Called(p)
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func(*[]models.Addressable, int) error); ok {
-		r0 = rf(a, p)
+	var r0 []models.Addressable
+	if rf, ok := ret.Get(0).(func(int) []models.Addressable); ok {
+		r0 = rf(p)
 	} else {
-		r0 = ret.Error(0)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.Addressable)
+		}
 	}
 
-	return r0
+	var r1 error
+	if rf, ok := ret.Get(1).(func(int) error); ok {
+		r1 = rf(p)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
-// GetAddressablesByPublisher provides a mock function with given fields: a, p
-func (_m *DBClient) GetAddressablesByPublisher(a *[]models.Addressable, p string) error {
-	ret := _m.Called(a, p)
+// GetAddressablesByPublisher provides a mock function with given fields: p
+func (_m *DBClient) GetAddressablesByPublisher(p string) ([]models.Addressable, error) {
+	ret := _m.Called(p)
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func(*[]models.Addressable, string) error); ok {
-		r0 = rf(a, p)
+	var r0 []models.Addressable
+	if rf, ok := ret.Get(0).(func(string) []models.Addressable); ok {
+		r0 = rf(p)
 	} else {
-		r0 = ret.Error(0)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.Addressable)
+		}
 	}
 
-	return r0
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(p)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
-// GetAddressablesByTopic provides a mock function with given fields: a, t
-func (_m *DBClient) GetAddressablesByTopic(a *[]models.Addressable, t string) error {
-	ret := _m.Called(a, t)
+// GetAddressablesByTopic provides a mock function with given fields: t
+func (_m *DBClient) GetAddressablesByTopic(t string) ([]models.Addressable, error) {
+	ret := _m.Called(t)
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func(*[]models.Addressable, string) error); ok {
-		r0 = rf(a, t)
+	var r0 []models.Addressable
+	if rf, ok := ret.Get(0).(func(string) []models.Addressable); ok {
+		r0 = rf(t)
 	} else {
-		r0 = ret.Error(0)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.Addressable)
+		}
 	}
 
-	return r0
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(t)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // GetAllCommands provides a mock function with given fields: d
@@ -1004,13 +1061,13 @@ func (_m *DBClient) ScrubMetadata() error {
 	return r0
 }
 
-// UpdateAddressable provides a mock function with given fields: ra, r
-func (_m *DBClient) UpdateAddressable(ra *models.Addressable, r *models.Addressable) error {
-	ret := _m.Called(ra, r)
+// UpdateAddressable provides a mock function with given fields: a
+func (_m *DBClient) UpdateAddressable(a models.Addressable) error {
+	ret := _m.Called(a)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(*models.Addressable, *models.Addressable) error); ok {
-		r0 = rf(ra, r)
+	if rf, ok := ret.Get(0).(func(models.Addressable) error); ok {
+		r0 = rf(a)
 	} else {
 		r0 = ret.Error(0)
 	}
