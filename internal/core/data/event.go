@@ -15,6 +15,7 @@ package data
 
 import (
 	"fmt"
+
 	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	contract "github.com/edgexfoundry/edgex-go/pkg/models"
@@ -199,7 +200,7 @@ func updateEventPushDate(id string) error {
 
 // Put event on the message queue to be processed by the rules engine
 func putEventOnQueue(e contract.Event) {
-	LoggingClient.Info("Putting event on message queue", "")
+	LoggingClient.Info("Putting event on message queue")
 	//	Have multiple implementations (start with ZeroMQ)
 	err := ep.SendEventMessage(e)
 	if err != nil {

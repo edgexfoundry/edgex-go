@@ -10,8 +10,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/edgexfoundry/edgex-go/internal/support/logging/models"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
+	"github.com/edgexfoundry/edgex-go/pkg/models"
 )
 
 const (
@@ -27,33 +27,21 @@ func testPersistenceFind(t *testing.T, persistence persistence) {
 	var keywords2 = []string{"2"}
 	var keywords12 = []string{"2", "1"}
 
-	var labels1 = []string{"label1"}
-	var labels2 = []string{"label2"}
-	var labels12 = []string{"label2", "label1"}
-	var args1 = make([]interface{}, len(labels1))
-	args1[0] = labels1[0]
-	var args2 = make([]interface{}, len(labels2))
-	args2[0] = labels2[0]
-
 	var tests = []struct {
 		name     string
 		criteria matchCriteria
 		result   int
 	}{
-		{"empty", matchCriteria{}, 6},
+		{"empty", matchCriteria{}, 5},
 		{"keywords1", matchCriteria{Keywords: keywords1}, 3},
-		{"keywords2", matchCriteria{Keywords: keywords2}, 3},
-		{"keywords12", matchCriteria{Keywords: keywords12}, 6},
-		{"labels1", matchCriteria{Labels: labels1}, 5},
-		{"labels2", matchCriteria{Labels: labels2}, 1},
-		{"labels12", matchCriteria{Labels: labels12}, 6},
+		{"keywords2", matchCriteria{Keywords: keywords2}, 2},
+		{"keywords12", matchCriteria{Keywords: keywords12}, 5},
 	}
 
 	le := models.LogEntry{
 		Level:         logger.TraceLog,
 		OriginService: sampleService1,
 		Message:       message1,
-		Args:        args1,
 	}
 	persistence.add(le)
 	le.Message = message2
@@ -62,12 +50,8 @@ func testPersistenceFind(t *testing.T, persistence persistence) {
 	persistence.add(le)
 	le.Message = message2
 	le.OriginService = sampleService2
-	le.Message = message2
 	persistence.add(le)
 	le.Message = message1
-	persistence.add(le)
-	le.Message = message2
-	le.Args = args2
 	persistence.add(le)
 
 	for _, tt := range tests {
@@ -103,27 +87,15 @@ func testPersistenceRemove(t *testing.T, persistence persistence) {
 	var keywords2 = []string{"2"}
 	var keywords12 = []string{"2", "1"}
 
-	var labels1 = []string{"label1"}
-	var labels2 = []string{"label2"}
-	var labels12 = []string{"label2", "label1"}
-
-	var args1 = make([]interface{}, len(labels1))
-	args1[0] = labels1[0]
-	var args2 = make([]interface{}, len(labels2))
-	args2[0] = labels2[0]
-
 	var tests = []struct {
 		name     string
 		criteria matchCriteria
 		result   int
 	}{
-		{"empty", matchCriteria{}, 6},
+		{"empty", matchCriteria{}, 5},
 		{"keywords1", matchCriteria{Keywords: keywords1}, 3},
-		{"keywords2", matchCriteria{Keywords: keywords2}, 3},
-		{"keywords12", matchCriteria{Keywords: keywords12}, 6},
-		{"labels1", matchCriteria{Labels: labels1}, 5},
-		{"labels2", matchCriteria{Labels: labels2}, 1},
-		{"labels12", matchCriteria{Labels: labels12}, 6},
+		{"keywords2", matchCriteria{Keywords: keywords2}, 2},
+		{"keywords12", matchCriteria{Keywords: keywords12}, 5},
 	}
 
 	for _, tt := range tests {
@@ -134,7 +106,6 @@ func testPersistenceRemove(t *testing.T, persistence persistence) {
 				Level:         logger.TraceLog,
 				OriginService: sampleService1,
 				Message:       message1,
-				Args:          args1,
 			}
 			persistence.add(le)
 			le.Message = message2
@@ -143,12 +114,8 @@ func testPersistenceRemove(t *testing.T, persistence persistence) {
 			persistence.add(le)
 			le.Message = message2
 			le.OriginService = sampleService2
-			le.Message = message2
 			persistence.add(le)
 			le.Message = message1
-			persistence.add(le)
-			le.Message = message2
-			le.Args = args2
 			persistence.add(le)
 
 			removed, err := persistence.remove(tt.criteria)
@@ -162,7 +129,7 @@ func testPersistenceRemove(t *testing.T, persistence persistence) {
 			// we add a new log
 			persistence.add(le)
 			logs, err := persistence.find(matchCriteria{})
-			if len(logs) != 6-tt.result+1 {
+			if len(logs) != 5-tt.result+1 {
 				t.Errorf("Should return %d log entries, returned %d",
 					6-tt.result+1, len(logs))
 			}

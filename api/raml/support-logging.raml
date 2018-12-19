@@ -27,11 +27,6 @@ schemas:
           "logLevel": {
             "enum": ["TRACE","DEBUG","INFO","WARN","ERROR"]
           },
-          "labels": {
-            "type": "array",
-            "items": { "type": "string" },
-            "uniqueItems": true
-          },
           "created": {
             "description": "The creation timestamp",
             "type": "integer",
@@ -50,11 +45,7 @@ schemas:
           {
             "logLevel": "WARN",
             "originService": "service1",
-            "message": "Hello, Logging Service!",
-            "labels": [
-              "label1",
-              "label2"
-            ]
+            "message": "Hello, Logging Service!"
           }
     responses:
       202:
@@ -69,9 +60,9 @@ schemas:
         example: 10
     get:
       responses:
-        413: 
+        413:
           description: if the number of events exceeds the current max limit
-        500: 
+        500:
           description: for unknown or unanticipated issues.
         200:
           description: list a collection of LogEntry - limited in size by the limit parameter
@@ -84,20 +75,12 @@ schemas:
                     "logLevel": "WARN",
                     "originService": "service1",
                     "message": "Hello, Logging Service!",
-                    "labels": [
-                      "label1",
-                      "label2"
-                    ],
                     "created": 1469175494527
                   },
                   {
                     "logLevel": "INFO",
                     "originService": "service2",
                     "message": "Hello, Logging Service!",
-                    "labels": [
-                      "label3",
-                      "label4"
-                    ],
                     "created": 1469175494528
                   }
                 ]
@@ -117,9 +100,9 @@ schemas:
         example: 10
     get:
       responses:
-        413: 
+        413:
           description: if the number of events exceeds the current max limit
-        500: 
+        500:
           description: for unknown or unanticipated issues.
         200:
           description: list a collection of LogEntry created between the specified start and end dates - limited in size by the limit parameter
@@ -132,72 +115,12 @@ schemas:
                     "logLevel": "WARN",
                     "originService": "service1",
                     "message": "Hello, Logging Service!",
-                    "labels": [
-                      "label1",
-                      "label2"
-                    ],
                     "created": 1469175494527
                   },
                   {
                     "logLevel": "INFO",
                     "originService": "service2",
                     "message": "Hello, Logging Service!",
-                    "labels": [
-                      "label3",
-                      "label4"
-                    ],
-                    "created": 1469175494528
-                  }
-                ]
-  /labels/{labels}/{start}/{end}/{limit}:
-    uriParameters:
-      labels:
-        type: string
-        description: accepting multiple labels separated by comma
-        example: test,Dell,IoT
-      start:
-        type: number
-        description: start date in long form
-        example: 1469175494521
-      end:
-        type: number
-        description: end date in long form
-        example: 1469175499899
-      limit:
-        type: number
-        description: the maximum number of records to fetch
-        example: 10
-    get:
-      responses:
-        413: 
-          description: if the number of events exceeds the current max limit
-        500: 
-          description: for unknown or unanticipated issues.
-        200:
-          description: list a collection of LogEntry matching any of the specified labels and being created between the specified start and end dates - limited in size by the limit parameter
-          body:
-            application/json:
-              schema: array
-              example: |
-                [
-                  {
-                    "logLevel": "WARN",
-                    "originService": "service1",
-                    "message": "Hello, Logging Service!",
-                    "labels": [
-                      "label1",
-                      "label2"
-                    ],
-                    "created": 1469175494527
-                  },
-                  {
-                    "logLevel": "INFO",
-                    "originService": "service2",
-                    "message": "Hello, Logging Service!",
-                    "labels": [
-                      "label3",
-                      "label4"
-                    ],
                     "created": 1469175494528
                   }
                 ]
@@ -221,9 +144,9 @@ schemas:
         example: 10
     get:
       responses:
-        413: 
+        413:
           description: if the number of events exceeds the current max limit
-        500: 
+        500:
           description: for unknown or unanticipated issues.
         200:
           description: list a collection of LogEntry matching any of the specified originServices and being created between the specified start and end dates - limited in size by the limit parameter
@@ -236,20 +159,12 @@ schemas:
                     "logLevel": "WARN",
                     "originService": "service1",
                     "message": "Hello, Logging Service!",
-                    "labels": [
-                      "label1",
-                      "label2"
-                    ],
                     "created": 1469175494527
                   },
                   {
                     "logLevel": "INFO",
                     "originService": "service2",
                     "message": "Hello, Logging Service!",
-                    "labels": [
-                      "label3",
-                      "label4"
-                    ],
                     "created": 1469175494528
                   }
                 ]
@@ -273,9 +188,9 @@ schemas:
         example: 10
     get:
       responses:
-        413: 
+        413:
           description: if the number of events exceeds the current max limit
-        500: 
+        500:
           description: for unknown or unanticipated issues.
         200:
           description: list a collection of LogEntry whose message containing any of the specified keywords and being created between the specified start and end dates - limited in size by the limit parameter
@@ -288,20 +203,12 @@ schemas:
                     "logLevel": "WARN",
                     "originService": "service1",
                     "message": "Hello, Logging Service!",
-                    "labels": [
-                      "label1",
-                      "label2"
-                    ],
                     "created": 1469175494527
                   },
                   {
                     "logLevel": "INFO",
                     "originService": "service2",
                     "message": "Hello, Logging Service!",
-                    "labels": [
-                      "label3",
-                      "label4"
-                    ],
                     "created": 1469175494528
                   }
                 ]
@@ -325,9 +232,9 @@ schemas:
         example: 10
     get:
       responses:
-        413: 
+        413:
           description: if the number of events exceeds the current max limit
-        500: 
+        500:
           description: for unknown or unanticipated issues.
         200:
           description: list a collection of LogEntry matching any of the specified logLevels and being created between the specified start and end dates - limited in size by the limit parameter
@@ -340,20 +247,12 @@ schemas:
                     "logLevel": "WARN",
                     "originService": "service1",
                     "message": "Hello, Logging Service!",
-                    "labels": [
-                      "label1",
-                      "label2"
-                    ],
                     "created": 1469175494527
                   },
                   {
                     "logLevel": "INFO",
                     "originService": "service2",
                     "message": "Hello, Logging Service!",
-                    "labels": [
-                      "label3",
-                      "label4"
-                    ],
                     "created": 1469175494528
                   }
                 ]
@@ -381,9 +280,9 @@ schemas:
         example: 10
     get:
       responses:
-        413: 
+        413:
           description: if the number of events exceeds the current max limit
-        500: 
+        500:
           description: for unknown or unanticipated issues.
         200:
           description: list a collection of LogEntry matching any of the specified logLevels, originServices, and also being created between the specified start and end dates - limited in size by the limit parameter
@@ -396,144 +295,12 @@ schemas:
                     "logLevel": "WARN",
                     "originService": "service1",
                     "message": "Hello, Logging Service!",
-                    "labels": [
-                      "label1",
-                      "label2"
-                    ],
                     "created": 1469175494527
                   },
                   {
                     "logLevel": "INFO",
                     "originService": "service2",
                     "message": "Hello, Logging Service!",
-                    "labels": [
-                      "label3",
-                      "label4"
-                    ],
-                    "created": 1469175494528
-                  }
-                ]
-  /logLevels/{logLevels}/originServices/{originServices}/labels/{labels}/{start}/{end}/{limit}:
-    uriParameters:
-      logLevels:
-        type: string
-        description: accepting multiple logLevels separated by comma
-        example: ERROR,WARN,INFO,DEBUG,TRACE
-      originServices:
-        type: string
-        description: accepting multiple originServices separated by comma
-        example: service1,service2,service3
-      labels:
-        type: string
-        description: accepting multiple labels separated by comma
-        example: test,Dell,IoT
-      start:
-        type: number
-        description: start date in long form
-        example: 1469175494521
-      end:
-        type: number
-        description: end date in long form
-        example: 1469175499899
-      limit:
-        type: number
-        description: the maximum number of records to fetch
-        example: 10
-    get:
-      responses:
-        413: 
-          description: if the number of events exceeds the current max limit
-        500: 
-          description: for unknown or unanticipated issues.
-        200:
-          description: list a collection of LogEntry matching any of the specified logLevels, originServices, labels, and also being created between the specified start and end dates - limited in size by the limit parameter
-          body:
-            application/json:
-              schema: array
-              example: |
-                [
-                  {
-                    "logLevel": "WARN",
-                    "originService": "service1",
-                    "message": "Hello, Logging Service!",
-                    "labels": [
-                      "label1",
-                      "label2"
-                    ],
-                    "created": 1469175494527
-                  },
-                  {
-                    "logLevel": "INFO",
-                    "originService": "service2",
-                    "message": "Hello, Logging Service!",
-                    "labels": [
-                      "label3",
-                      "label4"
-                    ],
-                    "created": 1469175494528
-                  }
-                ]
-  /logLevels/{logLevels}/originServices/{originServices}/labels/{labels}/keywords/{keywords}/{start}/{end}/{limit}:
-    uriParameters:
-      logLevels:
-        type: string
-        description: accepting multiple logLevels separated by comma
-        example: ERROR,WARN,INFO,DEBUG,TRACE
-      originServices:
-        type: string
-        description: accepting multiple originServices separated by comma
-        example: service1,service2,service3
-      labels:
-        type: string
-        description: accepting multiple labels separated by comma
-        example: test,Dell,IoT
-      keywords:
-        type: string
-        description: accepting multiple keywords separated by comma
-        example: keyword1,keyword2,keyword3
-      start:
-        type: number
-        description: start date in long form
-        example: 1469175494521
-      end:
-        type: number
-        description: end date in long form
-        example: 1469175499899
-      limit:
-        type: number
-        description: the maximum number of records to fetch
-        example: 10
-    get:
-      responses:
-        413: 
-          description: if the number of events exceeds the current max limit
-        500: 
-          description: for unknown or unanticipated issues.
-        200:
-          description: list a collection of LogEntry whose message containing any of the specified keywords, matching any of the specified logLevels, originServices, labels, and also being created between the specified start and end dates - limited in size by the limit parameter
-          body:
-            application/json:
-              schema: array
-              example: |
-                [
-                  {
-                    "logLevel": "WARN",
-                    "originService": "service1",
-                    "message": "Hello, Logging Service!",
-                    "labels": [
-                      "label1",
-                      "label2"
-                    ],
-                    "created": 1469175494527
-                  },
-                  {
-                    "logLevel": "INFO",
-                    "originService": "service2",
-                    "message": "Hello, Logging Service!",
-                    "labels": [
-                      "label3",
-                      "label4"
-                    ],
                     "created": 1469175494528
                   }
                 ]
@@ -551,27 +318,7 @@ schemas:
       responses:
         200:
           description: count of the number of LogEntry being deleted
-        503: 
-          description: for unknown or unanticipated issues.
-  /labels/{labels}/{start}/{end}:
-    uriParameters:
-      labels:
-        type: string
-        description: accepting multiple labels separated by comma
-        example: test,Dell,IoT
-      start:
-        type: number
-        description: start date in long form
-        example: 1469175494521
-      end:
-        type: number
-        description: end date in long form
-        example: 1469175499899
-    delete:
-      responses:
-        200:
-          description: count of the number of LogEntry being deleted
-        500:
+        503:
           description: for unknown or unanticipated issues.
   /originServices/{originServices}/{start}/{end}:
     uriParameters:
@@ -643,66 +390,6 @@ schemas:
         type: string
         description: accepting multiple originServices separated by comma
         example: service1,service2,service3
-      start:
-        type: number
-        description: start date in long form
-        example: 1469175494521
-      end:
-        type: number
-        description: end date in long form
-        example: 1469175499899
-    delete:
-      responses:
-        200:
-          description: count of the number of LogEntry being deleted
-        500:
-          description: for unknown or unanticipated issues.
-  /logLevels/{logLevels}/originServices/{originServices}/labels/{labels}/{start}/{end}:
-    uriParameters:
-      logLevels:
-        type: string
-        description: accepting multiple logLevels separated by comma
-        example: ERROR,WARN,INFO,DEBUG,TRACE
-      originServices:
-        type: string
-        description: accepting multiple originServices separated by comma
-        example: service1,service2,service3
-      labels:
-        type: string
-        description: accepting multiple labels separated by comma
-        example: test,Dell,IoT
-      start:
-        type: number
-        description: start date in long form
-        example: 1469175494521
-      end:
-        type: number
-        description: end date in long form
-        example: 1469175499899
-    delete:
-      responses:
-        200:
-          description: count of the number of LogEntry being deleted
-        500:
-          description: for unknown or unanticipated issues
-  /logLevels/{logLevels}/originServices/{originServices}/labels/{labels}/keywords/{keywords}/{start}/{end}:
-    uriParameters:
-      logLevels:
-        type: string
-        description: accepting multiple logLevels separated by comma
-        example: ERROR,WARN,INFO,DEBUG,TRACE
-      originServices:
-        type: string
-        description: accepting multiple originServices separated by comma
-        example: service1,service2,service3
-      labels:
-        type: string
-        description: accepting multiple labels separated by comma
-        example: test,Dell,IoT
-      keywords:
-        type: string
-        description: accepting multiple keywords separated by comma
-        example: keyword1,keyword2,keyword3
       start:
         type: number
         description: start date in long form

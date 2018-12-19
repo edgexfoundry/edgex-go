@@ -3,8 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-
-	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 	"net/http"
 	"os"
 	"os/signal"
@@ -14,6 +12,7 @@ import (
 
 	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
@@ -63,12 +62,12 @@ func main() {
 
 	// Bootstrap schedulers
 	err := scheduler.AddSchedulers()
-	if err != nil{
-		scheduler.LoggingClient.Error(fmt.Sprintf("Failed to load schedules and events %s",err.Error()))
+	if err != nil {
+		scheduler.LoggingClient.Error(fmt.Sprintf("Failed to load schedules and events %s", err.Error()))
 	}
 
 	http.TimeoutHandler(nil, time.Millisecond*time.Duration(scheduler.Configuration.Service.Timeout), "Request timed out")
-	scheduler.LoggingClient.Info(scheduler.Configuration.Service.StartupMsg, "")
+	scheduler.LoggingClient.Info(scheduler.Configuration.Service.StartupMsg)
 
 	errs := make(chan error, 2)
 	listenForInterrupt(errs)
@@ -78,8 +77,8 @@ func main() {
 	scheduler.StartTicker()
 
 	// Time it took to start service
-	scheduler.LoggingClient.Info("Service started in: "+time.Since(start).String(), "")
-	scheduler.LoggingClient.Info("Listening on port: "+strconv.Itoa(scheduler.Configuration.Service.Port), "")
+	scheduler.LoggingClient.Info("Service started in: " + time.Since(start).String())
+	scheduler.LoggingClient.Info("Listening on port: " + strconv.Itoa(scheduler.Configuration.Service.Port))
 	c := <-errs
 	scheduler.Destruct()
 	scheduler.LoggingClient.Warn(fmt.Sprintf("terminating: %v", c))

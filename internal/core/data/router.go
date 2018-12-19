@@ -94,7 +94,7 @@ func eventCountHandler(w http.ResponseWriter, r *http.Request) {
 	count, err := countEvents()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 		return
 	}
 
@@ -102,7 +102,7 @@ func eventCountHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	_, err = w.Write([]byte(strconv.Itoa(count)))
 	if err != nil {
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 	}
 }
 
@@ -772,7 +772,7 @@ func readingCountHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, err = w.Write([]byte(strconv.Itoa(count)))
 		if err != nil {
-			LoggingClient.Error(err.Error(), "")
+			LoggingClient.Error(err.Error())
 		}
 	}
 }

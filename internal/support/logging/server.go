@@ -18,9 +18,9 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
-	"github.com/edgexfoundry/edgex-go/internal/support/logging/models"
 	"github.com/edgexfoundry/edgex-go/pkg/clients"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
+	"github.com/edgexfoundry/edgex-go/pkg/models"
 	"github.com/go-zoo/bone"
 )
 
@@ -127,11 +127,6 @@ func getCriteria(w http.ResponseWriter, r *http.Request) *matchCriteria {
 			io.WriteString(w, s)
 			return nil
 		}
-	}
-
-	labels := bone.GetValue(r, "labels")
-	if len(labels) > 0 {
-		criteria.Labels = append(criteria.Labels, strings.Split(labels, ",")...)
 	}
 
 	services := bone.GetValue(r, "services")
@@ -262,21 +257,15 @@ func HttpServer() http.Handler {
 	mv1.Post("/logs", http.HandlerFunc(addLog))
 	mv1.Get("/logs/:limit", http.HandlerFunc(getLogs))
 	mv1.Get("/logs/:start/:end/:limit", http.HandlerFunc(getLogs))
-	mv1.Get("/logs/labels/:labels/:start/:end/:limit", http.HandlerFunc(getLogs))
 	mv1.Get("/logs/originServices/:services/:start/:end/:limit", http.HandlerFunc(getLogs))
 	mv1.Get("/logs/keywords/:keywords/:start/:end/:limit", http.HandlerFunc(getLogs))
 	mv1.Get("/logs/logLevels/:levels/:start/:end/:limit", http.HandlerFunc(getLogs))
 	mv1.Get("/logs/logLevels/:levels/originServices/:services/:start/:end/:limit", http.HandlerFunc(getLogs))
-	mv1.Get("/logs/logLevels/:levels/originServices/:services/labels/:labels/:start/:end/:limit", http.HandlerFunc(getLogs))
-	mv1.Get("/logs/logLevels/:levels/originServices/:services/labels/:labels/keywords/:keywords/:start/:end/:limit", http.HandlerFunc(getLogs))
 
 	mv1.Delete("/logs/:start/:end", http.HandlerFunc(delLogs))
 	mv1.Delete("/logs/keywords/:keywords/:start/:end", http.HandlerFunc(delLogs))
-	mv1.Delete("/logs/labels/:labels/:start/:end", http.HandlerFunc(delLogs))
 	mv1.Delete("/logs/originServices/:services/:start/:end", http.HandlerFunc(delLogs))
 	mv1.Delete("/logs/logLevels/:levels/:start/:end", http.HandlerFunc(delLogs))
 	mv1.Delete("/logs/logLevels/:levels/originServices/:services/:start/:end", http.HandlerFunc(delLogs))
-	mv1.Delete("/logs/logLevels/:levels/originServices/:services/labels/:labels/:start/:end", http.HandlerFunc(delLogs))
-	mv1.Delete("/logs/logLevels/:levels/originServices/:services/labels/:labels/keywords/:keywords/:start/:end", http.HandlerFunc(delLogs))
 	return mux
 }

@@ -7,15 +7,14 @@
 package logging
 
 import (
-	"fmt"
-	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
-	"log"
 	"os"
 
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
-	"github.com/edgexfoundry/edgex-go/internal/support/logging/models"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
+	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
+	"github.com/edgexfoundry/edgex-go/pkg/models"
+	"github.com/go-kit/kit/log"
 )
 
 const (
@@ -35,16 +34,24 @@ type persistence interface {
 }
 
 type privLogger struct {
-	stdOutLogger *log.Logger
 	logLevel     *string
+	rootLogger   log.Logger
+	levelLoggers map[string]log.Logger
 }
 
 func newPrivateLogger() privLogger {
-	p := privLogger{}
-	p.stdOutLogger = log.New(os.Stdout, "", log.Ldate|log.Ltime)
+	pl := privLogger{}
 	logLevel := logger.InfoLog
-	p.logLevel = &logLevel
-	return p
+	pl.logLevel = &logLevel
+
+	// Set up the loggers
+	pl.levelLoggers = map[string]log.Logger{}
+
+	pl.rootLogger = log.NewLogfmtLogger(os.Stdout)
+	pl.rootLogger = log.WithPrefix(pl.rootLogger, "ts", log.DefaultTimestampUTC,
+		"source", log.Caller(5))
+
+	return pl
 }
 
 func (l privLogger) log(logLevel string, msg string, args ...interface{}) {
@@ -58,8 +65,6 @@ func (l privLogger) log(logLevel string, msg string, args ...interface{}) {
 		}
 	}
 
-	l.stdOutLogger.SetPrefix(fmt.Sprintf("%s: ", logLevel))
-	l.stdOutLogger.Println(msg)
 	if dbClient != nil {
 		logEntry := models.LogEntry{
 			Level:         logLevel,
@@ -70,6 +75,25 @@ func (l privLogger) log(logLevel string, msg string, args ...interface{}) {
 		}
 		dbClient.add(logEntry)
 	}
+
+	if args == nil {
+		args = []interface{}{"msg", msg}
+	} else {
+		if len(args)%2 == 1 {
+			// add an empty string to keep k/v pairs correct
+			args = append(args, "")
+		}
+		// Practical usage thus far has been to call this type like so Logger.Info("message")
+		// I'm attempting to preserve that behavior below without requiring the client types
+		// to provide the "msg" key.
+		args = append(args, "msg", msg)
+	}
+
+	if l.levelLoggers[logLevel] == nil {
+		l.levelLoggers[logLevel] = log.WithPrefix(l.rootLogger, "level", logLevel)
+	}
+	l.levelLoggers[logLevel].Log(args...)
+
 }
 
 // SetLogLevel sets logger log level
@@ -82,26 +106,26 @@ func (l privLogger) SetLogLevel(logLevel string) error {
 }
 
 func (l privLogger) Debug(msg string, args ...interface{}) error {
-	l.log(logger.DebugLog, msg, args)
+	l.log(logger.DebugLog, msg, args...)
 	return nil
 }
 
 func (l privLogger) Error(msg string, args ...interface{}) error {
-	l.log(logger.ErrorLog, msg, args)
+	l.log(logger.ErrorLog, msg, args...)
 	return nil
 }
 
 func (l privLogger) Info(msg string, args ...interface{}) error {
-	l.log(logger.InfoLog, msg, args)
+	l.log(logger.InfoLog, msg, args...)
 	return nil
 }
 
 func (l privLogger) Trace(msg string, args ...interface{}) error {
-	l.log(logger.TraceLog, msg, args)
+	l.log(logger.TraceLog, msg, args...)
 	return nil
 }
 
 func (l privLogger) Warn(msg string, args ...interface{}) error {
-	l.log(logger.WarnLog, msg, args)
+	l.log(logger.WarnLog, msg, args...)
 	return nil
 }
