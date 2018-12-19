@@ -61,14 +61,14 @@ func main() {
 	notifications.LoggingClient.Info(fmt.Sprintf("Starting %s %s ", internal.SupportNotificationsServiceKey, edgex.Version))
 
 	http.TimeoutHandler(nil, time.Millisecond*time.Duration(notifications.Configuration.Service.Timeout), "Request timed out")
-	notifications.LoggingClient.Info(notifications.Configuration.Service.StartupMsg, "")
+	notifications.LoggingClient.Info(notifications.Configuration.Service.StartupMsg)
 
 	errs := make(chan error, 2)
 	listenForInterrupt(errs)
 	startHttpServer(errs, notifications.Configuration.Service.Port)
 
 	// Time it took to start service
-	notifications.LoggingClient.Info("Service started in: "+time.Since(start).String(), "")
+	notifications.LoggingClient.Info("Service started in: " + time.Since(start).String())
 	notifications.LoggingClient.Info("Listening on port: " + strconv.Itoa(notifications.Configuration.Service.Port))
 	c := <-errs
 	notifications.Destruct()

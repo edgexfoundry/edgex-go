@@ -35,7 +35,7 @@ func commandByDeviceID(did string, cid string, b string, p bool) (string, int) {
 	d, err := mdc.Device(did)
 
 	if err != nil {
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 
 		chk, ok := err.(*types.ErrServiceClient)
 		if ok {
@@ -53,7 +53,7 @@ func commandByDeviceID(did string, cid string, b string, p bool) (string, int) {
 
 	c, err := cc.Command(cid)
 	if err != nil {
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 
 		chk, ok := err.(*types.ErrServiceClient)
 		if ok {
@@ -96,7 +96,7 @@ func commandByDeviceID(did string, cid string, b string, p bool) (string, int) {
 func putDeviceAdminState(did string, as string) (int, error) {
 	err := mdc.UpdateAdminState(did, as)
 	if err != nil {
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 
 		chk, ok := err.(*types.ErrServiceClient)
 		if ok {
@@ -111,7 +111,7 @@ func putDeviceAdminState(did string, as string) (int, error) {
 func putDeviceAdminStateByName(dn string, as string) (int, error) {
 	err := mdc.UpdateAdminStateByName(dn, as)
 	if err != nil {
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 
 		chk, ok := err.(*types.ErrServiceClient)
 		if ok {
@@ -126,7 +126,7 @@ func putDeviceAdminStateByName(dn string, as string) (int, error) {
 func putDeviceOpState(did string, as string) (int, error) {
 	err := mdc.UpdateOpState(did, as)
 	if err != nil {
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 
 		chk, ok := err.(*types.ErrServiceClient)
 		if ok {
@@ -141,7 +141,7 @@ func putDeviceOpState(did string, as string) (int, error) {
 func putDeviceOpStateByName(dn string, as string) (int, error) {
 	err := mdc.UpdateOpStateByName(dn, as)
 	if err != nil {
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 
 		chk, ok := err.(*types.ErrServiceClient)
 		if ok {

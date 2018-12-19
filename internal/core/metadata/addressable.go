@@ -16,13 +16,12 @@ package metadata
 import (
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
-	"github.com/edgexfoundry/edgex-go/pkg/models"
+	contract "github.com/edgexfoundry/edgex-go/pkg/models"
 	"net/http"
 )
 
-func getAllAddressables() ([]models.Addressable, error) {
-	results := make([]models.Addressable, 0)
-	err := dbClient.GetAddressables(&results)
+func getAllAddressables() ([]contract.Addressable, error) {
+	results, err := dbClient.GetAddressables()
 	if err != nil {
 		LoggingClient.Error(err.Error())
 		return nil, err
@@ -36,13 +35,13 @@ func getAllAddressables() ([]models.Addressable, error) {
 	return results, nil
 }
 
-func addAddressable(addressable models.Addressable) (string, error) {
+func addAddressable(addressable contract.Addressable) (string, error) {
 	if len(addressable.Name) == 0 {
 		err := errors.NewErrEmptyAddressableName()
 		LoggingClient.Error(err.Error())
 		return "", err
 	}
-	id, err := dbClient.AddAddressable(&addressable)
+	id, err := dbClient.AddAddressable(addressable)
 	if err != nil {
 		if err == db.ErrNotUnique {
 			err = errors.NewErrDuplicateAddressableName(addressable.Name)
@@ -51,48 +50,59 @@ func addAddressable(addressable models.Addressable) (string, error) {
 		return "", err
 	}
 
-	return id.Hex(), nil // Coupling to mongo?
+	return id, nil // Coupling to mongo?
 }
 
-func updateAddressable(addressable models.Addressable) error {
+func updateAddressable(addressable contract.Addressable) error {
+	var dest contract.Addressable
+	var err error
 	// Check if the addressable exists
-	var res models.Addressable
-	err := dbClient.GetAddressableById(&res, addressable.Id.Hex())
+	if addressable.Id == "" {
+		dest, err = dbClient.GetAddressableByName(addressable.Name)
+	} else {
+		dest, err = dbClient.GetAddressableById(addressable.Id)
+	}
+
 	if err != nil {
-		if addressable.Id == "" {
-			err = dbClient.GetAddressableByName(&res, addressable.Name)
+		if err == db.ErrNotFound {
+			err = errors.NewErrAddressableNotFound(addressable.Id, addressable.Name)
 		}
-		if err != nil {
-			if err == db.ErrNotFound {
-				err = errors.NewErrAddressableNotFound(addressable.Id.Hex(), addressable.Name)
-			}
-			LoggingClient.Error(err.Error())
-			return err
-		}
+		LoggingClient.Error(err.Error())
+		return err
 	}
 
 	// If the name is changed, check if the addressable is still in use
-	if addressable.Name != "" && addressable.Name != res.Name {
-		isStillInUse, err := isAddressableStillInUse(res)
+	if addressable.Name != "" && addressable.Name != dest.Name {
+		isStillInUse, err := isAddressableStillInUse(dest)
 		if err != nil {
 			LoggingClient.Error(err.Error())
 			return err
 		}
 		if isStillInUse {
-			err = errors.NewErrAddressableInUse(res.Name)
+			err = errors.NewErrAddressableInUse(dest.Name)
 			LoggingClient.Error(err.Error())
 			return err
 		}
 	}
 
-	if err := dbClient.UpdateAddressable(&addressable, &res); err != nil {
+	dest.Name = addressable.Name
+	dest.Protocol = addressable.Protocol
+	dest.Address = addressable.Address
+	dest.Port = addressable.Port
+	dest.Path = addressable.Path
+	dest.Publisher = addressable.Publisher
+	dest.User = addressable.User
+	dest.Password = addressable.Password
+	dest.Topic = addressable.Topic
+
+	if err := dbClient.UpdateAddressable(dest); err != nil {
 		LoggingClient.Error(err.Error())
 		return err
 	}
 
 	// Notify Associates
 	// TODO: Should this call be here, or in rest_addressable.go?
-	if err := notifyAddressableAssociates(res, http.MethodPut); err != nil {
+	if err := notifyAddressableAssociates(dest, http.MethodPut); err != nil {
 		LoggingClient.Error(err.Error())
 		return err
 	}

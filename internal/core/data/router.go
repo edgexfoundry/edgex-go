@@ -94,7 +94,7 @@ func eventCountHandler(w http.ResponseWriter, r *http.Request) {
 	count, err := countEvents()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 		return
 	}
 
@@ -102,7 +102,7 @@ func eventCountHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	_, err = w.Write([]byte(strconv.Itoa(count)))
 	if err != nil {
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 	}
 }
 
@@ -712,7 +712,7 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			switch err.(type) {
 			case *errors.ErrDbNotFound:
-				http.Error(w, "Value descriptor not found for reading", http.StatusConflict)
+				http.Error(w, "Value descriptor not found for reading", http.StatusNotFound)
 				return
 			case *errors.ErrValueDescriptorInvalid:
 				http.Error(w, err.Error(), http.StatusConflict)
@@ -772,7 +772,7 @@ func readingCountHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, err = w.Write([]byte(strconv.Itoa(count)))
 		if err != nil {
-			LoggingClient.Error(err.Error(), "")
+			LoggingClient.Error(err.Error())
 		}
 	}
 }
