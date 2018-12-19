@@ -15,7 +15,6 @@ package interfaces
 
 import (
 	contract "github.com/edgexfoundry/edgex-go/pkg/models"
-	"github.com/globalsign/mgo/bson"
 )
 
 type DBClient interface {
@@ -76,15 +75,15 @@ type DBClient interface {
 	GetDeviceProfilesUsingCommand(dp *[]contract.DeviceProfile, c contract.Command) error
 
 	// Addressable
-	UpdateAddressable(ra *contract.Addressable, r *contract.Addressable) error
-	AddAddressable(a *contract.Addressable) (bson.ObjectId, error)
-	GetAddressableById(a *contract.Addressable, id string) error
-	GetAddressableByName(a *contract.Addressable, n string) error
-	GetAddressablesByTopic(a *[]contract.Addressable, t string) error
-	GetAddressablesByPort(a *[]contract.Addressable, p int) error
-	GetAddressablesByPublisher(a *[]contract.Addressable, p string) error
-	GetAddressablesByAddress(a *[]contract.Addressable, add string) error
-	GetAddressables(d *[]contract.Addressable) error
+	UpdateAddressable(a contract.Addressable) error
+	AddAddressable(a contract.Addressable) (string, error)
+	GetAddressableById(id string) (contract.Addressable, error)
+	GetAddressableByName(n string) (contract.Addressable, error)
+	GetAddressablesByTopic(t string) ([]contract.Addressable, error)
+	GetAddressablesByPort(p int) ([]contract.Addressable, error)
+	GetAddressablesByPublisher(p string) ([]contract.Addressable, error)
+	GetAddressablesByAddress(add string) ([]contract.Addressable, error)
+	GetAddressables() ([]contract.Addressable, error)
 	DeleteAddressableById(id string) error
 
 	// Device service

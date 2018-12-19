@@ -107,43 +107,16 @@ func restAddScheduleEvent(w http.ResponseWriter, r *http.Request) {
 	// Check for the addressable
 	// Try by ID
 	var a models.Addressable
-	if err := dbClient.GetAddressableById(&a, se.Addressable.Id.Hex()); err != nil {
+	a, err := dbClient.GetAddressableById(se.Addressable.Id)
+	if err != nil {
 		// Try by Name
-		if err = dbClient.GetAddressableByName(&a, se.Addressable.Name); err != nil {
+		if a, err = dbClient.GetAddressableByName(se.Addressable.Name); err != nil {
 			http.Error(w, "Address not found for schedule event", http.StatusNotFound)
 			LoggingClient.Error("Addressable for schedule event not found: "+err.Error(), "")
 			return
 		}
 	}
 	se.Addressable = a
-
-	/*if len(se.Addressable.Name) != 0 {
-		if err := getAddressableByName(&se.Addressable, se.Addressable.Name); err != nil {
-			if err == db.ErrNotFound {
-				http.Error(w, "Unknown Addressable", http.StatusNotFound)
-				LOGGER.Println(err.Error())
-				return
-			}
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-			LOGGER.Println(err.Error())
-			return
-		}
-	} else if len(se.Addressable.Id.Hex()) != 0 {
-		if err := getAddressableById(&se.Addressable, se.Addressable.Id.Hex()); err != nil {
-			if err == db.ErrNotFound {
-				http.Error(w, "Unknown Addressable", http.StatusNotFound)
-				LOGGER.Println(err.Error())
-				return
-			}
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-			LOGGER.Println(err.Error())
-			return
-		}
-	} else {
-		http.Error(w, "Unknown Addressable", http.StatusNotFound)
-		LOGGER.Println("Unknown Addressable")
-		return
-	}*/
 
 	if err := dbClient.AddScheduleEvent(&se); err != nil {
 		if err == db.ErrNotUnique {
@@ -233,9 +206,10 @@ func updateScheduleEventFields(from models.ScheduleEvent, to *models.ScheduleEve
 	if (from.Addressable.String() != models.Addressable{}.String()) {
 		// Check if the new addressable exists
 		// Try by ID
-		if err := dbClient.GetAddressableById(&from.Addressable, from.Addressable.Id.Hex()); err != nil {
+		addr, err := dbClient.GetAddressableById(from.Addressable.Id)
+		if err != nil {
 			// Try by name
-			if err = dbClient.GetAddressableByName(&from.Addressable, from.Addressable.Name); err != nil {
+			if addr, err = dbClient.GetAddressableByName(from.Addressable.Name); err != nil {
 				if err == db.ErrNotFound {
 					http.Error(w, "Addressable not found for schedule event", http.StatusNotFound)
 				} else {
@@ -245,7 +219,7 @@ func updateScheduleEventFields(from models.ScheduleEvent, to *models.ScheduleEve
 			}
 		}
 
-		to.Addressable = from.Addressable
+		to.Addressable = addr
 	}
 	if from.Service != "" {
 		if from.Service != to.Service {
@@ -458,8 +432,8 @@ func restGetScheduleEventByAddressableId(w http.ResponseWriter, r *http.Request)
 	var res []models.ScheduleEvent = make([]models.ScheduleEvent, 0)
 
 	// Check if the addressable exists
-	var a models.Addressable
-	if err := dbClient.GetAddressableById(&a, aid); err != nil {
+	_, err := dbClient.GetAddressableById(aid)
+	if err != nil {
 		if err == db.ErrNotFound {
 			http.Error(w, "Addressable not found for schedule event", http.StatusNotFound)
 			LoggingClient.Error("Addressable not found for schedule event: "+err.Error(), "")
@@ -494,8 +468,8 @@ func restGetScheduleEventByAddressableName(w http.ResponseWriter, r *http.Reques
 	var res []models.ScheduleEvent = make([]models.ScheduleEvent, 0)
 
 	// Check if the addressable exists
-	var a models.Addressable
-	if err = dbClient.GetAddressableByName(&a, an); err != nil {
+	a, err := dbClient.GetAddressableByName(an)
+	if err != nil {
 		if err == db.ErrNotFound {
 			LoggingClient.Error("Addressable not found for schedule event: "+err.Error(), "")
 			http.Error(w, "Addressable not found for schedule event", http.StatusNotFound)
@@ -507,7 +481,7 @@ func restGetScheduleEventByAddressableName(w http.ResponseWriter, r *http.Reques
 	}
 
 	// Get the schedule events
-	if err = dbClient.GetScheduleEventsByAddressableId(&res, a.Id.Hex()); err != nil {
+	if err = dbClient.GetScheduleEventsByAddressableId(&res, a.Id); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		LoggingClient.Error("Problem getting schedule events: "+err.Error(), "")
 		return

@@ -19,19 +19,19 @@ import (
 	"fmt"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
-	"github.com/edgexfoundry/edgex-go/pkg/models"
+	contract "github.com/edgexfoundry/edgex-go/pkg/models"
 	"github.com/globalsign/mgo/bson"
 )
 
 // Schedule event
-func (m *MemDB) GetAllScheduleEvents(se *[]models.ScheduleEvent) error {
-	cpy := make([]models.ScheduleEvent, len(m.scheduleEvents))
+func (m *MemDB) GetAllScheduleEvents(se *[]contract.ScheduleEvent) error {
+	cpy := make([]contract.ScheduleEvent, len(m.scheduleEvents))
 	copy(cpy, m.scheduleEvents)
 	*se = cpy
 	return nil
 }
 
-func (m *MemDB) AddScheduleEvent(se *models.ScheduleEvent) error {
+func (m *MemDB) AddScheduleEvent(se *contract.ScheduleEvent) error {
 	currentTime := db.MakeTimestamp()
 	se.Created = currentTime
 	se.Modified = currentTime
@@ -64,14 +64,15 @@ func (m *MemDB) AddScheduleEvent(se *models.ScheduleEvent) error {
 	return nil
 }
 
-func (m *MemDB) GetScheduleEventByName(se *models.ScheduleEvent, n string) error {
+func (m *MemDB) GetScheduleEventByName(se *contract.ScheduleEvent, n string) error {
 	for _, s := range m.scheduleEvents {
 		if s.Name == n {
-			err := m.GetAddressableById(&s.Addressable, s.Addressable.Id.Hex())
+			a, err := m.GetAddressableById(s.Addressable.Id)
 			if err != nil {
 				return fmt.Errorf("Could not find addressable %s for ds %s",
-					se.Addressable.Id.Hex(), se.Id.Hex())
+					se.Addressable.Id, se.Id.Hex())
 			}
+			s.Addressable = a
 			*se = s
 			return nil
 		}
@@ -79,7 +80,7 @@ func (m *MemDB) GetScheduleEventByName(se *models.ScheduleEvent, n string) error
 	return db.ErrNotFound
 }
 
-func (m *MemDB) UpdateScheduleEvent(se models.ScheduleEvent) error {
+func (m *MemDB) UpdateScheduleEvent(se contract.ScheduleEvent) error {
 	for i, s := range m.scheduleEvents {
 		if s.Id == se.Id {
 			m.scheduleEvents[i] = se
@@ -89,14 +90,15 @@ func (m *MemDB) UpdateScheduleEvent(se models.ScheduleEvent) error {
 	return db.ErrNotFound
 }
 
-func (m *MemDB) GetScheduleEventById(se *models.ScheduleEvent, id string) error {
+func (m *MemDB) GetScheduleEventById(se *contract.ScheduleEvent, id string) error {
 	for _, s := range m.scheduleEvents {
 		if s.Id.Hex() == id {
-			err := m.GetAddressableById(&s.Addressable, s.Addressable.Id.Hex())
+			a, err := m.GetAddressableById(s.Addressable.Id)
 			if err != nil {
 				return fmt.Errorf("Could not find addressable %s for ds %s",
-					se.Addressable.Id.Hex(), se.Id.Hex())
+					se.Addressable.Id, se.Id.Hex())
 			}
+			s.Addressable = a
 			*se = s
 			return nil
 		}
@@ -104,15 +106,16 @@ func (m *MemDB) GetScheduleEventById(se *models.ScheduleEvent, id string) error 
 	return db.ErrNotFound
 }
 
-func (m *MemDB) GetScheduleEventsByScheduleName(ses *[]models.ScheduleEvent, n string) error {
-	l := []models.ScheduleEvent{}
+func (m *MemDB) GetScheduleEventsByScheduleName(ses *[]contract.ScheduleEvent, n string) error {
+	l := []contract.ScheduleEvent{}
 	for _, se := range m.scheduleEvents {
 		if se.Schedule == n {
-			err := m.GetAddressableById(&se.Addressable, se.Addressable.Id.Hex())
+			a, err := m.GetAddressableById(se.Addressable.Id)
 			if err != nil {
 				return fmt.Errorf("Could not find addressable %s for se %s",
-					se.Addressable.Id.Hex(), se.Id.Hex())
+					se.Addressable.Id, se.Id.Hex())
 			}
+			se.Addressable = a
 			l = append(l, se)
 		}
 	}
@@ -120,15 +123,16 @@ func (m *MemDB) GetScheduleEventsByScheduleName(ses *[]models.ScheduleEvent, n s
 	return nil
 }
 
-func (m *MemDB) GetScheduleEventsByAddressableId(ses *[]models.ScheduleEvent, id string) error {
-	l := []models.ScheduleEvent{}
+func (m *MemDB) GetScheduleEventsByAddressableId(ses *[]contract.ScheduleEvent, id string) error {
+	l := []contract.ScheduleEvent{}
 	for _, se := range m.scheduleEvents {
-		if se.Addressable.Id.Hex() == id {
-			err := m.GetAddressableById(&se.Addressable, se.Addressable.Id.Hex())
+		if se.Addressable.Id == id {
+			a, err := m.GetAddressableById(se.Addressable.Id)
 			if err != nil {
 				return fmt.Errorf("Could not find addressable %s for se %s",
-					se.Addressable.Id.Hex(), se.Id.Hex())
+					se.Addressable.Id, se.Id.Hex())
 			}
+			se.Addressable = a
 			l = append(l, se)
 		}
 	}
@@ -136,15 +140,16 @@ func (m *MemDB) GetScheduleEventsByAddressableId(ses *[]models.ScheduleEvent, id
 	return nil
 }
 
-func (m *MemDB) GetScheduleEventsByServiceName(ses *[]models.ScheduleEvent, n string) error {
-	l := []models.ScheduleEvent{}
+func (m *MemDB) GetScheduleEventsByServiceName(ses *[]contract.ScheduleEvent, n string) error {
+	l := []contract.ScheduleEvent{}
 	for _, se := range m.scheduleEvents {
 		if se.Service == n {
-			err := m.GetAddressableById(&se.Addressable, se.Addressable.Id.Hex())
+			a, err := m.GetAddressableById(se.Addressable.Id)
 			if err != nil {
 				return fmt.Errorf("Could not find addressable %s for se %s",
-					se.Addressable.Id.Hex(), se.Id.Hex())
+					se.Addressable.Id, se.Id.Hex())
 			}
+			se.Addressable = a
 			l = append(l, se)
 		}
 	}
@@ -163,14 +168,14 @@ func (m *MemDB) DeleteScheduleEventById(id string) error {
 }
 
 // Schedule
-func (m *MemDB) GetAllSchedules(s *[]models.Schedule) error {
-	cpy := make([]models.Schedule, len(m.schedules))
+func (m *MemDB) GetAllSchedules(s *[]contract.Schedule) error {
+	cpy := make([]contract.Schedule, len(m.schedules))
 	copy(cpy, m.schedules)
 	*s = cpy
 	return nil
 }
 
-func (m *MemDB) AddSchedule(s *models.Schedule) error {
+func (m *MemDB) AddSchedule(s *contract.Schedule) error {
 	currentTime := db.MakeTimestamp()
 	s.Created = currentTime
 	s.Modified = currentTime
@@ -186,7 +191,7 @@ func (m *MemDB) AddSchedule(s *models.Schedule) error {
 	return nil
 }
 
-func (m *MemDB) GetScheduleByName(s *models.Schedule, n string) error {
+func (m *MemDB) GetScheduleByName(s *contract.Schedule, n string) error {
 	for _, ss := range m.schedules {
 		if ss.Name == n {
 			*s = ss
@@ -196,7 +201,7 @@ func (m *MemDB) GetScheduleByName(s *models.Schedule, n string) error {
 	return db.ErrNotFound
 }
 
-func (m *MemDB) UpdateSchedule(s models.Schedule) error {
+func (m *MemDB) UpdateSchedule(s contract.Schedule) error {
 	s.Modified = db.MakeTimestamp()
 	for i, ss := range m.schedules {
 		if ss.Id == s.Id {
@@ -208,7 +213,7 @@ func (m *MemDB) UpdateSchedule(s models.Schedule) error {
 	return db.ErrNotFound
 }
 
-func (m *MemDB) GetScheduleById(s *models.Schedule, id string) error {
+func (m *MemDB) GetScheduleById(s *contract.Schedule, id string) error {
 	for _, ss := range m.schedules {
 		if ss.Id.Hex() == id {
 			*s = ss
@@ -229,15 +234,15 @@ func (m *MemDB) DeleteScheduleById(id string) error {
 }
 
 // Device Report
-func (m *MemDB) GetAllDeviceReports(drs *[]models.DeviceReport) error {
-	cpy := make([]models.DeviceReport, len(m.deviceReports))
+func (m *MemDB) GetAllDeviceReports(drs *[]contract.DeviceReport) error {
+	cpy := make([]contract.DeviceReport, len(m.deviceReports))
 	copy(cpy, m.deviceReports)
 	*drs = cpy
 	return nil
 }
 
-func (m *MemDB) GetDeviceReportByDeviceName(drs *[]models.DeviceReport, n string) error {
-	l := []models.DeviceReport{}
+func (m *MemDB) GetDeviceReportByDeviceName(drs *[]contract.DeviceReport, n string) error {
+	l := []contract.DeviceReport{}
 	for _, dr := range m.deviceReports {
 		if dr.Name == n {
 			l = append(l, dr)
@@ -247,7 +252,7 @@ func (m *MemDB) GetDeviceReportByDeviceName(drs *[]models.DeviceReport, n string
 	return nil
 }
 
-func (m *MemDB) GetDeviceReportByName(dr *models.DeviceReport, n string) error {
+func (m *MemDB) GetDeviceReportByName(dr *contract.DeviceReport, n string) error {
 	for _, d := range m.deviceReports {
 		if d.Name == n {
 			*dr = d
@@ -257,7 +262,7 @@ func (m *MemDB) GetDeviceReportByName(dr *models.DeviceReport, n string) error {
 	return db.ErrNotFound
 }
 
-func (m *MemDB) GetDeviceReportById(dr *models.DeviceReport, id string) error {
+func (m *MemDB) GetDeviceReportById(dr *contract.DeviceReport, id string) error {
 	for _, d := range m.deviceReports {
 		if d.Id.Hex() == id {
 			*dr = d
@@ -267,13 +272,13 @@ func (m *MemDB) GetDeviceReportById(dr *models.DeviceReport, id string) error {
 	return db.ErrNotFound
 }
 
-func (m *MemDB) AddDeviceReport(dr *models.DeviceReport) error {
+func (m *MemDB) AddDeviceReport(dr *contract.DeviceReport) error {
 	currentTime := db.MakeTimestamp()
 	dr.Created = currentTime
 	dr.Modified = currentTime
 	dr.Id = bson.NewObjectId()
 
-	dummy := models.DeviceReport{}
+	dummy := contract.DeviceReport{}
 	if m.GetDeviceReportByName(&dummy, dr.Name) == nil {
 		return db.ErrNotUnique
 	}
@@ -283,7 +288,7 @@ func (m *MemDB) AddDeviceReport(dr *models.DeviceReport) error {
 
 }
 
-func (m *MemDB) UpdateDeviceReport(dr *models.DeviceReport) error {
+func (m *MemDB) UpdateDeviceReport(dr *contract.DeviceReport) error {
 	for i, d := range m.deviceReports {
 		if d.Id == dr.Id {
 			m.deviceReports[i] = *dr
@@ -293,8 +298,8 @@ func (m *MemDB) UpdateDeviceReport(dr *models.DeviceReport) error {
 	return db.ErrNotFound
 }
 
-func (m *MemDB) GetDeviceReportsByScheduleEventName(drs *[]models.DeviceReport, n string) error {
-	l := []models.DeviceReport{}
+func (m *MemDB) GetDeviceReportsByScheduleEventName(drs *[]contract.DeviceReport, n string) error {
+	l := []contract.DeviceReport{}
 	for _, dr := range m.deviceReports {
 		if dr.Event == n {
 			l = append(l, dr)
@@ -315,12 +320,14 @@ func (m *MemDB) DeleteDeviceReportById(id string) error {
 }
 
 // Device
-func (m *MemDB) updateDeviceValues(d *models.Device) error {
-	err := m.GetAddressableById(&d.Addressable, d.Addressable.Id.Hex())
+func (m *MemDB) updateDeviceValues(d *contract.Device) error {
+	a, err := m.GetAddressableById(d.Addressable.Id)
 	if err != nil {
 		return fmt.Errorf("Could not find addressable %s for ds %s",
-			d.Addressable.Id.Hex(), d.Id.Hex())
+			d.Addressable.Id, d.Id.Hex())
 	}
+	d.Addressable = a
+
 	err = m.GetDeviceServiceById(&d.Service, d.Service.Id.Hex())
 	if err != nil {
 		return fmt.Errorf("Could not find DeviceService %s for ds %s",
@@ -334,9 +341,9 @@ func (m *MemDB) updateDeviceValues(d *models.Device) error {
 	return nil
 }
 
-type deviceCmp func(models.Device) bool
+type deviceCmp func(contract.Device) bool
 
-func (m *MemDB) getDeviceBy(d *models.Device, f deviceCmp) error {
+func (m *MemDB) getDeviceBy(d *contract.Device, f deviceCmp) error {
 	for _, dd := range m.devices {
 		if f(dd) {
 			if err := m.updateDeviceValues(&dd); err != nil {
@@ -349,8 +356,8 @@ func (m *MemDB) getDeviceBy(d *models.Device, f deviceCmp) error {
 	return db.ErrNotFound
 }
 
-func (m *MemDB) getDevicesBy(d *[]models.Device, f deviceCmp) error {
-	l := []models.Device{}
+func (m *MemDB) getDevicesBy(d *[]contract.Device, f deviceCmp) error {
+	l := []contract.Device{}
 	for _, dd := range m.devices {
 		if f(dd) {
 			if err := m.updateDeviceValues(&dd); err != nil {
@@ -363,7 +370,7 @@ func (m *MemDB) getDevicesBy(d *[]models.Device, f deviceCmp) error {
 	return nil
 }
 
-func (m *MemDB) UpdateDevice(d models.Device) error {
+func (m *MemDB) UpdateDevice(d contract.Device) error {
 	for i, dd := range m.devices {
 		if dd.Id == d.Id {
 			m.devices[i] = d
@@ -373,56 +380,56 @@ func (m *MemDB) UpdateDevice(d models.Device) error {
 	return db.ErrNotFound
 }
 
-func (m *MemDB) GetDeviceById(d *models.Device, id string) error {
+func (m *MemDB) GetDeviceById(d *contract.Device, id string) error {
 	return m.getDeviceBy(d,
-		func(dd models.Device) bool {
+		func(dd contract.Device) bool {
 			return dd.Id.Hex() == id
 		})
 }
 
-func (m *MemDB) GetDeviceByName(d *models.Device, n string) error {
+func (m *MemDB) GetDeviceByName(d *contract.Device, n string) error {
 	return m.getDeviceBy(d,
-		func(dd models.Device) bool {
+		func(dd contract.Device) bool {
 			return dd.Name == n
 		})
 }
 
-func (m *MemDB) GetAllDevices(d *[]models.Device) error {
-	cpy := make([]models.Device, len(m.devices))
+func (m *MemDB) GetAllDevices(d *[]contract.Device) error {
+	cpy := make([]contract.Device, len(m.devices))
 	copy(cpy, m.devices)
 	*d = cpy
 	return nil
 }
 
-func (m *MemDB) GetDevicesByProfileId(d *[]models.Device, id string) error {
+func (m *MemDB) GetDevicesByProfileId(d *[]contract.Device, id string) error {
 	return m.getDevicesBy(d,
-		func(dd models.Device) bool {
+		func(dd contract.Device) bool {
 			return dd.Profile.Id.Hex() == id
 		})
 }
 
-func (m *MemDB) GetDevicesByServiceId(d *[]models.Device, id string) error {
+func (m *MemDB) GetDevicesByServiceId(d *[]contract.Device, id string) error {
 	return m.getDevicesBy(d,
-		func(dd models.Device) bool {
+		func(dd contract.Device) bool {
 			return dd.Service.Id.Hex() == id
 		})
 }
 
-func (m *MemDB) GetDevicesByAddressableId(d *[]models.Device, id string) error {
+func (m *MemDB) GetDevicesByAddressableId(d *[]contract.Device, id string) error {
 	return m.getDevicesBy(d,
-		func(dd models.Device) bool {
-			return dd.Addressable.Id.Hex() == id
+		func(dd contract.Device) bool {
+			return dd.Addressable.Id == id
 		})
 }
 
-func (m *MemDB) GetDevicesWithLabel(d *[]models.Device, l string) error {
+func (m *MemDB) GetDevicesWithLabel(d *[]contract.Device, l string) error {
 	return m.getDevicesBy(d,
-		func(dd models.Device) bool {
+		func(dd contract.Device) bool {
 			return stringInSlice(l, dd.Labels)
 		})
 }
 
-func (m *MemDB) AddDevice(d *models.Device) error {
+func (m *MemDB) AddDevice(d *contract.Device) error {
 	currentTime := db.MakeTimestamp()
 	d.Created = currentTime
 	d.Modified = currentTime
@@ -465,7 +472,7 @@ func (m *MemDB) DeleteDeviceById(id string) error {
 	return db.ErrNotFound
 }
 
-func (m *MemDB) UpdateDeviceProfile(dp *models.DeviceProfile) error {
+func (m *MemDB) UpdateDeviceProfile(dp *contract.DeviceProfile) error {
 	for i, d := range m.deviceProfiles {
 		if d.Id == dp.Id {
 			m.deviceProfiles[i] = *dp
@@ -475,7 +482,7 @@ func (m *MemDB) UpdateDeviceProfile(dp *models.DeviceProfile) error {
 	return db.ErrNotFound
 }
 
-func (m *MemDB) AddDeviceProfile(d *models.DeviceProfile) error {
+func (m *MemDB) AddDeviceProfile(d *contract.DeviceProfile) error {
 	currentTime := db.MakeTimestamp()
 	d.Created = currentTime
 	d.Modified = currentTime
@@ -491,14 +498,14 @@ func (m *MemDB) AddDeviceProfile(d *models.DeviceProfile) error {
 	return nil
 }
 
-func (m *MemDB) GetAllDeviceProfiles(d *[]models.DeviceProfile) error {
-	cpy := make([]models.DeviceProfile, len(m.deviceProfiles))
+func (m *MemDB) GetAllDeviceProfiles(d *[]contract.DeviceProfile) error {
+	cpy := make([]contract.DeviceProfile, len(m.deviceProfiles))
 	copy(cpy, m.deviceProfiles)
 	*d = cpy
 	return nil
 }
 
-func (m *MemDB) GetDeviceProfileById(d *models.DeviceProfile, id string) error {
+func (m *MemDB) GetDeviceProfileById(d *contract.DeviceProfile, id string) error {
 	for _, dp := range m.deviceProfiles {
 		if dp.Id.Hex() == id {
 			*d = dp
@@ -518,8 +525,8 @@ func (m *MemDB) DeleteDeviceProfileById(id string) error {
 	return db.ErrNotFound
 }
 
-func (m *MemDB) GetDeviceProfilesByModel(dps *[]models.DeviceProfile, model string) error {
-	l := []models.DeviceProfile{}
+func (m *MemDB) GetDeviceProfilesByModel(dps *[]contract.DeviceProfile, model string) error {
+	l := []contract.DeviceProfile{}
 	for _, dp := range m.deviceProfiles {
 		if dp.Model == model {
 			l = append(l, dp)
@@ -529,8 +536,8 @@ func (m *MemDB) GetDeviceProfilesByModel(dps *[]models.DeviceProfile, model stri
 	return nil
 }
 
-func (m *MemDB) GetDeviceProfilesWithLabel(dps *[]models.DeviceProfile, label string) error {
-	l := []models.DeviceProfile{}
+func (m *MemDB) GetDeviceProfilesWithLabel(dps *[]contract.DeviceProfile, label string) error {
+	l := []contract.DeviceProfile{}
 	for _, dp := range m.deviceProfiles {
 		if stringInSlice(label, dp.Labels) {
 			l = append(l, dp)
@@ -540,8 +547,8 @@ func (m *MemDB) GetDeviceProfilesWithLabel(dps *[]models.DeviceProfile, label st
 	return nil
 }
 
-func (m *MemDB) GetDeviceProfilesByManufacturerModel(dps *[]models.DeviceProfile, man string, mod string) error {
-	l := []models.DeviceProfile{}
+func (m *MemDB) GetDeviceProfilesByManufacturerModel(dps *[]contract.DeviceProfile, man string, mod string) error {
+	l := []contract.DeviceProfile{}
 	for _, dp := range m.deviceProfiles {
 		if dp.Manufacturer == man && dp.Model == mod {
 			l = append(l, dp)
@@ -551,8 +558,8 @@ func (m *MemDB) GetDeviceProfilesByManufacturerModel(dps *[]models.DeviceProfile
 	return nil
 }
 
-func (m *MemDB) GetDeviceProfilesByManufacturer(dps *[]models.DeviceProfile, man string) error {
-	l := []models.DeviceProfile{}
+func (m *MemDB) GetDeviceProfilesByManufacturer(dps *[]contract.DeviceProfile, man string) error {
+	l := []contract.DeviceProfile{}
 	for _, dp := range m.deviceProfiles {
 		if dp.Manufacturer == man {
 			l = append(l, dp)
@@ -562,7 +569,7 @@ func (m *MemDB) GetDeviceProfilesByManufacturer(dps *[]models.DeviceProfile, man
 	return nil
 }
 
-func (m *MemDB) GetDeviceProfileByName(d *models.DeviceProfile, n string) error {
+func (m *MemDB) GetDeviceProfileByName(d *contract.DeviceProfile, n string) error {
 	for _, dp := range m.deviceProfiles {
 		if dp.Name == n {
 			*d = dp
@@ -573,41 +580,11 @@ func (m *MemDB) GetDeviceProfileByName(d *models.DeviceProfile, n string) error 
 }
 
 // Addressable
-func (m *MemDB) UpdateAddressable(updated *models.Addressable, orig *models.Addressable) error {
-	if updated == nil {
-		return nil
-	}
-	if updated.Name != "" {
-		orig.Name = updated.Name
-	}
-	if updated.Protocol != "" {
-		orig.Protocol = updated.Protocol
-	}
-	if updated.Address != "" {
-		orig.Address = updated.Address
-	}
-	if updated.Port != int(0) {
-		orig.Port = updated.Port
-	}
-	if updated.Path != "" {
-		orig.Path = updated.Path
-	}
-	if updated.Publisher != "" {
-		orig.Publisher = updated.Publisher
-	}
-	if updated.User != "" {
-		orig.User = updated.User
-	}
-	if updated.Password != "" {
-		orig.Password = updated.Password
-	}
-	if updated.Topic != "" {
-		orig.Topic = updated.Topic
-	}
+func (m *MemDB) UpdateAddressable(orig contract.Addressable) error {
 
 	for i, aa := range m.addressables {
 		if aa.Id == orig.Id {
-			m.addressables[i] = *orig
+			m.addressables[i] = orig
 			return nil
 		}
 	}
@@ -615,11 +592,10 @@ func (m *MemDB) UpdateAddressable(updated *models.Addressable, orig *models.Addr
 	return db.ErrNotFound
 }
 
-func (m *MemDB) AddAddressable(a *models.Addressable) (bson.ObjectId, error) {
+func (m *MemDB) AddAddressable(a contract.Addressable) (string, error) {
 	currentTime := db.MakeTimestamp()
 	a.Created = currentTime
 	a.Modified = currentTime
-	a.Id = bson.NewObjectId()
 
 	for _, aa := range m.addressables {
 		if aa.Name == a.Name {
@@ -627,97 +603,96 @@ func (m *MemDB) AddAddressable(a *models.Addressable) (bson.ObjectId, error) {
 		}
 	}
 
-	m.addressables = append(m.addressables, *a)
+	m.addressables = append(m.addressables, a)
 	return a.Id, nil
 }
 
-type addressableCmp func(models.Addressable) bool
+type addressableCmp func(contract.Addressable) bool
 
-func (m *MemDB) getAddressableBy(a *models.Addressable, f addressableCmp) error {
+func (m *MemDB) getAddressableBy(f addressableCmp) (contract.Addressable, error) {
 	for _, aa := range m.addressables {
 		if f(aa) {
-			*a = aa
-			return nil
+			return aa, nil
 		}
 	}
-	return db.ErrNotFound
+	return contract.Addressable{}, db.ErrNotFound
 }
 
-func (m *MemDB) getAddressablesBy(a *[]models.Addressable, f addressableCmp) {
-	l := []models.Addressable{}
+func (m *MemDB) getAddressablesBy(f addressableCmp) []contract.Addressable {
+	l := []contract.Addressable{}
 	for _, aa := range m.addressables {
 		if f(aa) {
 			l = append(l, aa)
 		}
 	}
-	*a = l
+	return l
 }
 
-func (m *MemDB) GetAddressableById(a *models.Addressable, id string) error {
-	return m.getAddressableBy(a,
-		func(aa models.Addressable) bool {
-			return aa.Id.Hex() == id
+func (m *MemDB) GetAddressableById(id string) (contract.Addressable, error) {
+	return m.getAddressableBy(
+		func(aa contract.Addressable) bool {
+			return aa.Id == id
 		})
 }
 
-func (m *MemDB) GetAddressableByName(a *models.Addressable, n string) error {
-	return m.getAddressableBy(a,
-		func(aa models.Addressable) bool {
+func (m *MemDB) GetAddressableByName(n string) (contract.Addressable, error) {
+	return m.getAddressableBy(
+		func(aa contract.Addressable) bool {
 			return aa.Name == n
 		})
 }
 
-func (m *MemDB) GetAddressablesByTopic(a *[]models.Addressable, t string) error {
-	m.getAddressablesBy(a,
-		func(aa models.Addressable) bool {
+func (m *MemDB) GetAddressablesByTopic(t string) ([]contract.Addressable, error) {
+	return m.getAddressablesBy(
+		func(aa contract.Addressable) bool {
 			return aa.Topic == t
-		})
-	return nil
+		}), nil
 }
 
-func (m *MemDB) GetAddressablesByPort(a *[]models.Addressable, p int) error {
-	m.getAddressablesBy(a,
-		func(aa models.Addressable) bool {
+func (m *MemDB) GetAddressablesByPort(p int) ([]contract.Addressable, error) {
+	return m.getAddressablesBy(
+		func(aa contract.Addressable) bool {
 			return aa.Port == p
-		})
-	return nil
+		}), nil
 }
 
-func (m *MemDB) GetAddressablesByPublisher(a *[]models.Addressable, p string) error {
-	m.getAddressablesBy(a,
-		func(aa models.Addressable) bool {
+func (m *MemDB) GetAddressablesByPublisher(p string) ([]contract.Addressable, error) {
+	return m.getAddressablesBy(
+		func(aa contract.Addressable) bool {
 			return aa.Publisher == p
-		})
-	return nil
+		}), nil
 }
 
-func (m *MemDB) GetAddressablesByAddress(a *[]models.Addressable, add string) error {
-	m.getAddressablesBy(a,
-		func(aa models.Addressable) bool {
+func (m *MemDB) GetAddressablesByAddress(add string) ([]contract.Addressable, error) {
+	return m.getAddressablesBy(
+		func(aa contract.Addressable) bool {
 			return aa.Address == add
-		})
-	return nil
+		}), nil
 }
 
-func (m *MemDB) GetAddressables(d *[]models.Addressable) error {
-	cpy := make([]models.Addressable, len(m.addressables))
-	copy(cpy, m.addressables)
-	*d = cpy
-	return nil
+func (m *MemDB) GetAddressables() ([]contract.Addressable, error) {
+	return m.addressables, nil
 }
 
 func (m *MemDB) DeleteAddressableById(id string) error {
+	var found bool
+	list := []contract.Addressable{}
 	for i, aa := range m.addressables {
-		if aa.Id.Hex() == id {
-			m.addressables = append(m.addressables[:i], m.addressables[i+1:]...)
-			return nil
+		if aa.Id != id {
+			list = append(list, m.addressables[i])
+		} else {
+			found = true
 		}
 	}
-	return db.ErrNotFound
+	if !found {
+		return db.ErrNotFound
+	}
+	m.addressables = list
+	return nil
 }
 
 // Device service
-func (m *MemDB) UpdateDeviceService(ds models.DeviceService) error {
+func (m *MemDB) UpdateDeviceService(ds contract.DeviceService) error {
 	for i, d := range m.deviceServices {
 		if d.Id == ds.Id {
 			m.deviceServices[i] = ds
@@ -727,14 +702,14 @@ func (m *MemDB) UpdateDeviceService(ds models.DeviceService) error {
 	return db.ErrNotFound
 }
 
-func (m *MemDB) GetDeviceServicesByAddressableId(d *[]models.DeviceService, id string) error {
-	l := []models.DeviceService{}
+func (m *MemDB) GetDeviceServicesByAddressableId(d *[]contract.DeviceService, id string) error {
+	l := []contract.DeviceService{}
 	for _, ds := range m.deviceServices {
-		if ds.Addressable.Id.Hex() == id {
-			err := m.GetAddressableById(&ds.Addressable, ds.Addressable.Id.Hex())
+		if ds.Addressable.Id == id {
+			_, err := m.GetAddressableById(ds.Addressable.Id)
 			if err != nil {
 				return fmt.Errorf("Could not find addressable %s for ds %s",
-					ds.Addressable.Id.Hex(), ds.Id.Hex())
+					ds.Addressable.Id, ds.Id.Hex())
 			}
 			l = append(l, ds)
 		}
@@ -743,14 +718,14 @@ func (m *MemDB) GetDeviceServicesByAddressableId(d *[]models.DeviceService, id s
 	return nil
 }
 
-func (m *MemDB) GetDeviceServicesWithLabel(d *[]models.DeviceService, label string) error {
-	l := []models.DeviceService{}
+func (m *MemDB) GetDeviceServicesWithLabel(d *[]contract.DeviceService, label string) error {
+	l := []contract.DeviceService{}
 	for _, ds := range m.deviceServices {
 		if stringInSlice(label, ds.Labels) {
-			err := m.GetAddressableById(&ds.Addressable, ds.Addressable.Id.Hex())
+			_, err := m.GetAddressableById(ds.Addressable.Id)
 			if err != nil {
 				return fmt.Errorf("Could not find addressable %s for ds %s",
-					ds.Addressable.Id.Hex(), ds.Id.Hex())
+					ds.Addressable.Id, ds.Id.Hex())
 			}
 			l = append(l, ds)
 		}
@@ -759,13 +734,13 @@ func (m *MemDB) GetDeviceServicesWithLabel(d *[]models.DeviceService, label stri
 	return nil
 }
 
-func (m *MemDB) GetDeviceServiceById(d *models.DeviceService, id string) error {
+func (m *MemDB) GetDeviceServiceById(d *contract.DeviceService, id string) error {
 	for _, ds := range m.deviceServices {
 		if ds.Id.Hex() == id {
-			err := m.GetAddressableById(&ds.Addressable, ds.Addressable.Id.Hex())
+			_, err := m.GetAddressableById(ds.Addressable.Id)
 			if err != nil {
 				return fmt.Errorf("Could not find addressable %s for ds %s",
-					ds.Addressable.Id.Hex(), ds.Id.Hex())
+					ds.Addressable.Id, ds.Id.Hex())
 			}
 			*d = ds
 			return nil
@@ -774,13 +749,13 @@ func (m *MemDB) GetDeviceServiceById(d *models.DeviceService, id string) error {
 	return db.ErrNotFound
 }
 
-func (m *MemDB) GetDeviceServiceByName(d *models.DeviceService, n string) error {
+func (m *MemDB) GetDeviceServiceByName(d *contract.DeviceService, n string) error {
 	for _, ds := range m.deviceServices {
 		if ds.Name == n {
-			err := m.GetAddressableById(&ds.Addressable, ds.Addressable.Id.Hex())
+			_, err := m.GetAddressableById(ds.Addressable.Id)
 			if err != nil {
 				return fmt.Errorf("Could not find addressable %s for ds %s",
-					ds.Addressable.Id.Hex(), ds.Id.Hex())
+					ds.Addressable.Id, ds.Id.Hex())
 			}
 			*d = ds
 			return nil
@@ -789,21 +764,21 @@ func (m *MemDB) GetDeviceServiceByName(d *models.DeviceService, n string) error 
 	return db.ErrNotFound
 }
 
-func (m *MemDB) GetAllDeviceServices(d *[]models.DeviceService) error {
+func (m *MemDB) GetAllDeviceServices(d *[]contract.DeviceService) error {
 	for _, ds := range m.deviceServices {
-		err := m.GetAddressableById(&ds.Addressable, ds.Addressable.Id.Hex())
+		_, err := m.GetAddressableById(ds.Addressable.Id)
 		if err != nil {
 			return fmt.Errorf("Could not find addressable %s for ds %s",
-				ds.Addressable.Id.Hex(), ds.Id.Hex())
+				ds.Addressable.Id, ds.Id.Hex())
 		}
 	}
-	cpy := make([]models.DeviceService, len(m.deviceServices))
+	cpy := make([]contract.DeviceService, len(m.deviceServices))
 	copy(cpy, m.deviceServices)
 	*d = cpy
 	return nil
 }
 
-func (m *MemDB) AddDeviceService(ds *models.DeviceService) error {
+func (m *MemDB) AddDeviceService(ds *contract.DeviceService) error {
 	currentTime := db.MakeTimestamp()
 	ds.Created = currentTime
 	ds.Modified = currentTime
@@ -847,9 +822,9 @@ func (m *MemDB) DeleteDeviceServiceById(id string) error {
 }
 
 // Provision watcher
-type provisionWatcherComp func(models.ProvisionWatcher) bool
+type provisionWatcherComp func(contract.ProvisionWatcher) bool
 
-func (m *MemDB) getProvisionWatcherBy(pw *models.ProvisionWatcher, f provisionWatcherComp) error {
+func (m *MemDB) getProvisionWatcherBy(pw *contract.ProvisionWatcher, f provisionWatcherComp) error {
 	for _, p := range m.provisionWatchers {
 		if f(p) {
 			err := m.GetDeviceServiceById(&p.Service, p.Service.Id.Hex())
@@ -869,8 +844,8 @@ func (m *MemDB) getProvisionWatcherBy(pw *models.ProvisionWatcher, f provisionWa
 	return db.ErrNotFound
 }
 
-func (m *MemDB) getProvisionWatchersBy(pws *[]models.ProvisionWatcher, f provisionWatcherComp) error {
-	l := []models.ProvisionWatcher{}
+func (m *MemDB) getProvisionWatchersBy(pws *[]contract.ProvisionWatcher, f provisionWatcherComp) error {
+	l := []contract.ProvisionWatcher{}
 	for _, pw := range m.provisionWatchers {
 		if f(pw) {
 			err := m.GetDeviceServiceById(&pw.Service, pw.Service.Id.Hex())
@@ -890,50 +865,50 @@ func (m *MemDB) getProvisionWatchersBy(pws *[]models.ProvisionWatcher, f provisi
 	return nil
 }
 
-func (m *MemDB) GetProvisionWatcherById(pw *models.ProvisionWatcher, id string) error {
+func (m *MemDB) GetProvisionWatcherById(pw *contract.ProvisionWatcher, id string) error {
 	return m.getProvisionWatcherBy(pw,
-		func(p models.ProvisionWatcher) bool {
+		func(p contract.ProvisionWatcher) bool {
 			return p.Id.Hex() == id
 		})
 }
 
-func (m *MemDB) GetAllProvisionWatchers(pw *[]models.ProvisionWatcher) error {
+func (m *MemDB) GetAllProvisionWatchers(pw *[]contract.ProvisionWatcher) error {
 	*pw = m.provisionWatchers
 	return nil
 }
 
-func (m *MemDB) GetProvisionWatcherByName(pw *models.ProvisionWatcher, n string) error {
+func (m *MemDB) GetProvisionWatcherByName(pw *contract.ProvisionWatcher, n string) error {
 	return m.getProvisionWatcherBy(pw,
-		func(p models.ProvisionWatcher) bool {
+		func(p contract.ProvisionWatcher) bool {
 			return p.Name == n
 		})
 }
 
-func (m *MemDB) GetProvisionWatchersByProfileId(pw *[]models.ProvisionWatcher, id string) error {
+func (m *MemDB) GetProvisionWatchersByProfileId(pw *[]contract.ProvisionWatcher, id string) error {
 	return m.getProvisionWatchersBy(pw,
-		func(p models.ProvisionWatcher) bool {
+		func(p contract.ProvisionWatcher) bool {
 			return p.Profile.Id.Hex() == id
 		})
 }
 
-func (m *MemDB) GetProvisionWatchersByServiceId(pw *[]models.ProvisionWatcher, id string) error {
+func (m *MemDB) GetProvisionWatchersByServiceId(pw *[]contract.ProvisionWatcher, id string) error {
 	return m.getProvisionWatchersBy(pw,
-		func(p models.ProvisionWatcher) bool {
+		func(p contract.ProvisionWatcher) bool {
 			return p.Service.Id.Hex() == id
 		})
 }
 
-func (m *MemDB) GetProvisionWatchersByIdentifier(pw *[]models.ProvisionWatcher, k string, v string) error {
+func (m *MemDB) GetProvisionWatchersByIdentifier(pw *[]contract.ProvisionWatcher, k string, v string) error {
 	return m.getProvisionWatchersBy(pw,
-		func(p models.ProvisionWatcher) bool {
+		func(p contract.ProvisionWatcher) bool {
 			return p.Identifiers[k] == v
 		})
 }
 
-func (m *MemDB) updateProvisionWatcherValues(pw *models.ProvisionWatcher) error {
+func (m *MemDB) updateProvisionWatcherValues(pw *contract.ProvisionWatcher) error {
 	// get Device Service
 	validDeviceService := false
-	var dev models.DeviceService
+	var dev contract.DeviceService
 	var err error
 	if pw.Service.Id.Hex() != "" {
 		if err = m.GetDeviceServiceById(&dev, pw.Service.Id.Hex()); err == nil {
@@ -953,7 +928,7 @@ func (m *MemDB) updateProvisionWatcherValues(pw *models.ProvisionWatcher) error 
 
 	// get Device Profile
 	validDeviceProfile := false
-	var dp models.DeviceProfile
+	var dp contract.DeviceProfile
 	if pw.Profile.Id.Hex() != "" {
 		if err = m.GetDeviceProfileById(&dp, pw.Profile.Id.Hex()); err == nil {
 			validDeviceProfile = true
@@ -972,13 +947,13 @@ func (m *MemDB) updateProvisionWatcherValues(pw *models.ProvisionWatcher) error 
 	return nil
 }
 
-func (m *MemDB) AddProvisionWatcher(pw *models.ProvisionWatcher) error {
+func (m *MemDB) AddProvisionWatcher(pw *contract.ProvisionWatcher) error {
 	currentTime := db.MakeTimestamp()
 	pw.Created = currentTime
 	pw.Modified = currentTime
 	pw.Id = bson.NewObjectId()
 
-	p := models.ProvisionWatcher{}
+	p := contract.ProvisionWatcher{}
 	if err := m.GetProvisionWatcherByName(&p, pw.Name); err == nil {
 		return db.ErrNotUnique
 	}
@@ -990,7 +965,7 @@ func (m *MemDB) AddProvisionWatcher(pw *models.ProvisionWatcher) error {
 	return nil
 }
 
-func (m *MemDB) UpdateProvisionWatcher(pw models.ProvisionWatcher) error {
+func (m *MemDB) UpdateProvisionWatcher(pw contract.ProvisionWatcher) error {
 	pw.Modified = db.MakeTimestamp()
 
 	if err := m.updateProvisionWatcherValues(&pw); err != nil {
@@ -1016,7 +991,7 @@ func (m *MemDB) DeleteProvisionWatcherById(id string) error {
 }
 
 // Command
-func (m *MemDB) GetCommandById(c *models.Command, id string) error {
+func (m *MemDB) GetCommandById(c *contract.Command, id string) error {
 	for _, cc := range m.commands {
 		if cc.Id == id {
 			*c = cc
@@ -1026,8 +1001,8 @@ func (m *MemDB) GetCommandById(c *models.Command, id string) error {
 	return db.ErrNotFound
 }
 
-func (m *MemDB) GetCommandByName(d *[]models.Command, name string) error {
-	cmds := []models.Command{}
+func (m *MemDB) GetCommandByName(d *[]contract.Command, name string) error {
+	cmds := []contract.Command{}
 	for _, cc := range m.commands {
 		if cc.Name == name {
 			cmds = append(cmds, cc)
@@ -1037,7 +1012,7 @@ func (m *MemDB) GetCommandByName(d *[]models.Command, name string) error {
 	return nil
 }
 
-func (m *MemDB) AddCommand(c *models.Command) error {
+func (m *MemDB) AddCommand(c *contract.Command) error {
 	currentTime := db.MakeTimestamp()
 	c.Created = currentTime
 	c.Modified = currentTime
@@ -1047,24 +1022,24 @@ func (m *MemDB) AddCommand(c *models.Command) error {
 	return nil
 }
 
-func (m *MemDB) GetAllCommands(d *[]models.Command) error {
-	cpy := make([]models.Command, len(m.commands))
+func (m *MemDB) GetAllCommands(d *[]contract.Command) error {
+	cpy := make([]contract.Command, len(m.commands))
 	copy(cpy, m.commands)
 	*d = cpy
 	return nil
 }
 
-func (m *MemDB) UpdateCommand(updated *models.Command, orig *models.Command) error {
+func (m *MemDB) UpdateCommand(updated *contract.Command, orig *contract.Command) error {
 	if updated == nil {
 		return nil
 	}
 	if updated.Name != "" {
 		orig.Name = updated.Name
 	}
-	if updated.Get != nil && (updated.Get.String() != models.Get{}.String()) {
+	if updated.Get != nil && (updated.Get.String() != contract.Get{}.String()) {
 		orig.Get = updated.Get
 	}
-	if updated.Put != nil && (updated.Put.String() != models.Put{}.String()) {
+	if updated.Put != nil && (updated.Put.String() != contract.Put{}.String()) {
 		orig.Put = updated.Put
 	}
 	if updated.Origin != 0 {
@@ -1091,8 +1066,8 @@ func (m *MemDB) DeleteCommandById(id string) error {
 	return db.ErrNotFound
 }
 
-func (m *MemDB) GetDeviceProfilesUsingCommand(dps *[]models.DeviceProfile, c models.Command) error {
-	l := []models.DeviceProfile{}
+func (m *MemDB) GetDeviceProfilesUsingCommand(dps *[]contract.DeviceProfile, c contract.Command) error {
+	l := []contract.DeviceProfile{}
 	for _, dp := range m.deviceProfiles {
 		for _, cc := range dp.Commands {
 			if cc.Id == c.Id {

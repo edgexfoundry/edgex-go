@@ -16,17 +16,17 @@ package metadata
 
 import (
 	"errors"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"os"
 	"testing"
 
 	metadataErrors "github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces"
 	dbMock "github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces/mocks"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
-	"github.com/globalsign/mgo/bson"
 )
 
 func TestGetAllAddressables(t *testing.T) {
@@ -74,7 +74,7 @@ func TestAddAddressable(t *testing.T) {
 	reset()
 	dbClient = newMockDb()
 
-	objectId := bson.NewObjectId()
+	objectId := uuid.New().String()
 	newAddr := models.Addressable{
 		Id:   objectId,
 		Name: "new addressable",
@@ -85,7 +85,7 @@ func TestAddAddressable(t *testing.T) {
 	if err != nil {
 		t.Errorf(err.Error())
 	}
-	if id != objectId.Hex() {
+	if id != objectId {
 		t.Errorf("Id returned by addAddressable() doesn't match expectation")
 	}
 }
@@ -94,7 +94,7 @@ func TestAddAddressableEmptyName(t *testing.T) {
 	reset()
 	dbClient = newMockDb()
 
-	objectId := bson.NewObjectId()
+	objectId := uuid.New().String()
 	newAddr := models.Addressable{
 		Id: objectId,
 	}
@@ -115,7 +115,7 @@ func TestAddDuplicateAddressableName(t *testing.T) {
 	reset()
 	dbClient = newMockDb(db.ErrNotUnique)
 
-	objectId := bson.NewObjectId()
+	objectId := uuid.New().String()
 	newAddr := models.Addressable{
 		Id:   objectId,
 		Name: "new addressable",
@@ -146,7 +146,7 @@ func reset() {
 
 func buildAddressables() []models.Addressable {
 	a1 := models.Addressable{
-		Id:         bson.NewObjectId(),
+		Id:         uuid.New().String(),
 		Name:       "camera address",
 		Protocol:   "HTTP",
 		HTTPMethod: "get",
@@ -159,7 +159,7 @@ func buildAddressables() []models.Addressable {
 		Topic:      "none",
 	}
 	a2 := models.Addressable{
-		Id:         bson.NewObjectId(),
+		Id:         uuid.New().String(),
 		Name:       "microphone address",
 		Protocol:   "HTTP",
 		HTTPMethod: "get",
@@ -172,7 +172,7 @@ func buildAddressables() []models.Addressable {
 		Topic:      "none",
 	}
 	a3 := models.Addressable{
-		Id:         bson.NewObjectId(),
+		Id:         uuid.New().String(),
 		Name:       "pressure sensor address",
 		Protocol:   "HTTP",
 		HTTPMethod: "get",
@@ -198,21 +198,22 @@ func newMockDb(errors ...error) interfaces.DBClient {
 		err = errors[0]
 	}
 
-	getAddressablesMockFn := func(results *[]models.Addressable) error {
+	getAddressablesMockFn := func() []models.Addressable {
+		results := make([]models.Addressable, 0)
 		for _, element := range buildAddressables() {
-			*results = append(*results, element)
+			results = append(results, element)
 		}
-		return err
+		return results
 	}
 
-	addAddressableMockFn := func(addr *models.Addressable) bson.ObjectId {
+	addAddressableMockFn := func(addr models.Addressable) string {
 		id := addr.Id
 		return id
 	}
 
-	DB.On("GetAddressables", mock.Anything).Return(getAddressablesMockFn)
+	DB.On("GetAddressables").Return(getAddressablesMockFn, err)
 
-	DB.On("AddAddressable", mock.AnythingOfType("*models.Addressable")).Return(addAddressableMockFn, err)
+	DB.On("AddAddressable", mock.AnythingOfType("models.Addressable")).Return(addAddressableMockFn, err)
 
 	return DB
 }
