@@ -805,8 +805,8 @@ func deleteDevice(d models.Device, w http.ResponseWriter) error {
 
 // Delete the associated device reports for the device
 func deleteAssociatedReportsForDevice(d models.Device, w http.ResponseWriter) error {
-	var reports []models.DeviceReport
-	if err := dbClient.GetDeviceReportByDeviceName(&reports, d.Name); err != nil {
+	reports, err := dbClient.GetDeviceReportByDeviceName(d.Name)
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		LoggingClient.Error(err.Error())
 		return err
@@ -814,7 +814,7 @@ func deleteAssociatedReportsForDevice(d models.Device, w http.ResponseWriter) er
 
 	// Delete the associated reports
 	for _, report := range reports {
-		if err := dbClient.DeleteDeviceReportById(report.Id.Hex()); err != nil {
+		if err := dbClient.DeleteDeviceReportById(report.Id); err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			LoggingClient.Error(err.Error())
 			return err

@@ -17,10 +17,10 @@ package memory
 import (
 	"errors"
 	"fmt"
-
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	contract "github.com/edgexfoundry/edgex-go/pkg/models"
 	"github.com/globalsign/mgo/bson"
+	"github.com/google/uuid"
 )
 
 // Schedule event
@@ -234,84 +234,77 @@ func (m *MemDB) DeleteScheduleById(id string) error {
 }
 
 // Device Report
-func (m *MemDB) GetAllDeviceReports(drs *[]contract.DeviceReport) error {
-	cpy := make([]contract.DeviceReport, len(m.deviceReports))
-	copy(cpy, m.deviceReports)
-	*drs = cpy
-	return nil
+func (m MemDB) GetAllDeviceReports() ([]contract.DeviceReport, error) {
+	return m.deviceReports, nil
 }
 
-func (m *MemDB) GetDeviceReportByDeviceName(drs *[]contract.DeviceReport, n string) error {
+func (m MemDB) GetDeviceReportByDeviceName(n string) ([]contract.DeviceReport, error) {
 	l := []contract.DeviceReport{}
 	for _, dr := range m.deviceReports {
 		if dr.Name == n {
 			l = append(l, dr)
 		}
 	}
-	*drs = l
-	return nil
+	return l, nil
 }
 
-func (m *MemDB) GetDeviceReportByName(dr *contract.DeviceReport, n string) error {
+func (m MemDB) GetDeviceReportByName(n string) (contract.DeviceReport, error) {
 	for _, d := range m.deviceReports {
 		if d.Name == n {
-			*dr = d
-			return nil
+			return d, nil
 		}
 	}
-	return db.ErrNotFound
+	return contract.DeviceReport{}, db.ErrNotFound
 }
 
-func (m *MemDB) GetDeviceReportById(dr *contract.DeviceReport, id string) error {
+func (m MemDB) GetDeviceReportById(id string) (contract.DeviceReport, error) {
 	for _, d := range m.deviceReports {
-		if d.Id.Hex() == id {
-			*dr = d
-			return nil
+		if d.Id == id {
+			return d, nil
 		}
 	}
-	return db.ErrNotFound
+	return contract.DeviceReport{}, db.ErrNotFound
 }
 
-func (m *MemDB) AddDeviceReport(dr *contract.DeviceReport) error {
+func (m *MemDB) AddDeviceReport(dr contract.DeviceReport) (string, error) {
+	_, err := m.GetDeviceReportByName(dr.Name)
+	if err == nil {
+		return "", db.ErrNotUnique
+	}
+
 	currentTime := db.MakeTimestamp()
 	dr.Created = currentTime
 	dr.Modified = currentTime
-	dr.Id = bson.NewObjectId()
+	dr.Id = uuid.New().String()
 
-	dummy := contract.DeviceReport{}
-	if m.GetDeviceReportByName(&dummy, dr.Name) == nil {
-		return db.ErrNotUnique
-	}
-
-	m.deviceReports = append(m.deviceReports, *dr)
-	return nil
+	m.deviceReports = append(m.deviceReports, dr)
+	return dr.Id, nil
 
 }
 
-func (m *MemDB) UpdateDeviceReport(dr *contract.DeviceReport) error {
+func (m *MemDB) UpdateDeviceReport(dr contract.DeviceReport) error {
 	for i, d := range m.deviceReports {
 		if d.Id == dr.Id {
-			m.deviceReports[i] = *dr
+			m.deviceReports[i] = dr
 			return nil
 		}
 	}
 	return db.ErrNotFound
 }
 
-func (m *MemDB) GetDeviceReportsByScheduleEventName(drs *[]contract.DeviceReport, n string) error {
+func (m MemDB) GetDeviceReportsByScheduleEventName(n string) ([]contract.DeviceReport, error) {
 	l := []contract.DeviceReport{}
 	for _, dr := range m.deviceReports {
 		if dr.Event == n {
 			l = append(l, dr)
 		}
 	}
-	*drs = l
-	return nil
+	return l, nil
 }
 
 func (m *MemDB) DeleteDeviceReportById(id string) error {
 	for i, c := range m.deviceReports {
-		if c.Id.Hex() == id {
+		if c.Id == id {
 			m.deviceReports = append(m.deviceReports[:i], m.deviceReports[i+1:]...)
 			return nil
 		}
