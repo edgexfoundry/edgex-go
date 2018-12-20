@@ -387,6 +387,12 @@ func restAddProfileByYaml(w http.ResponseWriter, r *http.Request) {
 		LoggingClient.Error(err.Error())
 		return
 	}
+	if len(data) == 0 {
+		err := errors.New("YAML file is empty")
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		LoggingClient.Error(err.Error())
+		return
+	}
 
 	addDeviceProfileYaml(data, w)
 }
