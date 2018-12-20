@@ -29,26 +29,67 @@ ALL_SERVICES="$ALL_SERVICES export-client"
 ALL_SERVICES="$ALL_SERVICES device-virtual"
 
 # security services
-ALL_SERVICES="$ALL_SERVICES security-services"
+ALL_SERVICES="$ALL_SERVICES security-secret-store"
+ALL_SERVICES="$ALL_SERVICES security-api-gateway"
 
+
+# handle_svc will either turn a service off or on
+# first arg is the service, second is the state to put it in
+handle_svc () {
+    case "$2" in 
+    "off")
+        snapctl stop --disable edgexfoundry.$1;;
+    "on")
+        snapctl start --enable edgexfoundry.$1;;
+    "")
+        # no setting for it, ignore and continue
+        ;;
+    *)
+        echo "invalid setting $2 for service $1"
+        exit 1;;
+    esac
+}
 
 for key in $ALL_SERVICES; do
     # get the config key for the service
     status=$(snapctl get $key)
     case $key in 
-        mongo-worker)
-            # it doesn't make any sense to disable the mongo-worker since it's a oneshot
-            # daemon that runs after mongod, so just ignore this request
+        mongo-worker|edgexproxy|vault-worker)
+            # it doesn't make any sense to disable the *-worker daemons since 
+            # they are just oneshot daemons that run after another daemon, so
+            # just ignore this request
+            ;;
+        security-api-gateway)
+            # the security-api-gateway consists of the following services:
+            # - kong
+            # - cassandra (because kong requires it)
+            # - edgexproxy
+            # - vault (because edgexproxy will access/store secrets in vault)
+            # - vault-worker
+            handle_svc "cassandra" $status
+            handle_svc "kong-daemon" $status
+            handle_svc "edgexproxy" $status
+            ;;
+        security-secret-store)
+            # the security-api-gateway consists of the following services:
+            # - vault
+            # - vault-worker
+            # and since the security-api-gateway needs to be able to use 
+            # security-secret-store, we also need to turn off those services
+            # if this one is disabled
+            if [ "$status" = "off" ]; then
+                handle_svc "cassandra" "off"
+                handle_svc "kong-daemon" "off"
+                handle_svc "edgexproxy" "off"
+            fi
+            handle_svc "vault" $status
+            handle_svc "vault-worker" $status
             ;;
         *)
             # default case for all other services just enable/disable the service using
             # snapd/systemd
             # if the service is meant to be off, then disable it
-            if [ "$status" = "off" ]; then
-                snapctl stop --disable edgexfoundry.$key
-            elif [ "$status" = "on" ]; then 
-                snapctl start --enable edgexfoundry.$key
-            fi
+            handle_svc $key $status
             ;;
     esac
 done
