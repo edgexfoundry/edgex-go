@@ -15,7 +15,8 @@ package mongo
 
 import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
-	"github.com/edgexfoundry/edgex-go/pkg/models"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo/models"
+	contract "github.com/edgexfoundry/edgex-go/pkg/models"
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
 )
@@ -23,24 +24,24 @@ import (
 // Internal version of the device struct
 // Use this to handle DBRef
 type mongoDevice struct {
-	models.Device `bson:",inline"`
+	contract.Device `bson:",inline"`
 }
 
 // Struct to hold the result of GetBSON
 // This struct is used by MongoDeviceManager so that it can call GetBSON explicitly on MongoDevice
 type mongoDeviceBSON struct {
-	models.DescribedObject `bson:",inline"`
-	Id                     bson.ObjectId         `bson:"_id,omitempty"`
-	Name                   string                `bson:"name"`           // Unique name for identifying a device
-	AdminState             models.AdminState     `bson:"adminState"`     // Admin state (locked/unlocked)
-	OperatingState         models.OperatingState `bson:"operatingState"` // Operating state (enabled/disabled)
-	Addressable            mgo.DBRef             `bson:"addressable"`    // Addressable for the device - stores information about it's address
-	LastConnected          int64                 `bson:"lastConnected"`  // Time (milliseconds) that the device last provided any feedback or responded to any request
-	LastReported           int64                 `bson:"lastReported"`   // Time (milliseconds) that the device reported data to the core microservice
-	Labels                 []string              `bson:"labels"`         // Other labels applied to the device to help with searching
-	Location               interface{}           `bson:"location"`       // Device service specific location (interface{} is an empty interface so it can be anything)
-	Service                mgo.DBRef             `bson:"service"`        // Associated Device Service - One per device
-	Profile                mgo.DBRef             `bson:"profile"`        // Associated Device Profile - Describes the device
+	contract.DescribedObject `bson:",inline"`
+	Id                       bson.ObjectId           `bson:"_id,omitempty"`
+	Name                     string                  `bson:"name"`           // Unique name for identifying a device
+	AdminState               contract.AdminState     `bson:"adminState"`     // Admin state (locked/unlocked)
+	OperatingState           contract.OperatingState `bson:"operatingState"` // Operating state (enabled/disabled)
+	Addressable              mgo.DBRef               `bson:"addressable"`    // Addressable for the device - stores information about it's address
+	LastConnected            int64                   `bson:"lastConnected"`  // Time (milliseconds) that the device last provided any feedback or responded to any request
+	LastReported             int64                   `bson:"lastReported"`   // Time (milliseconds) that the device reported data to the core microservice
+	Labels                   []string                `bson:"labels"`         // Other labels applied to the device to help with searching
+	Location                 interface{}             `bson:"location"`       // Device service specific location (interface{} is an empty interface so it can be anything)
+	Service                  mgo.DBRef               `bson:"service"`        // Associated Device Service - One per device
+	Profile                  mgo.DBRef               `bson:"profile"`        // Associated Device Profile - Describes the device
 }
 
 // Custom marshaling into mongo
@@ -64,18 +65,18 @@ func (md mongoDevice) GetBSON() (interface{}, error) {
 // Custom unmarshaling out of mongo
 func (md *mongoDevice) SetBSON(raw bson.Raw) error {
 	decoded := new(struct {
-		models.DescribedObject `bson:",inline"`
-		Id                     bson.ObjectId         `bson:"_id,omitempty"`
-		Name                   string                `bson:"name"`           // Unique name for identifying a device
-		AdminState             models.AdminState     `bson:"adminState"`     // Admin state (locked/unlocked)
-		OperatingState         models.OperatingState `bson:"operatingState"` // Operating state (enabled/disabled)
-		Addressable            mgo.DBRef             `bson:"addressable"`    // Addressable for the device - stores information about it's address
-		LastConnected          int64                 `bson:"lastConnected"`  // Time (milliseconds) that the device last provided any feedback or responded to any request
-		LastReported           int64                 `bson:"lastReported"`   // Time (milliseconds) that the device reported data to the core microservice
-		Labels                 []string              `bson:"labels"`         // Other labels applied to the device to help with searching
-		Location               interface{}           `bson:"location"`       // Device service specific location (interface{} is an empty interface so it can be anything)
-		Service                mgo.DBRef             `bson:"service"`        // Associated Device Service - One per device
-		Profile                mgo.DBRef             `bson:"profile"`        // Associated Device Profile - Describes the device
+		contract.DescribedObject `bson:",inline"`
+		Id                       bson.ObjectId           `bson:"_id,omitempty"`
+		Name                     string                  `bson:"name"`           // Unique name for identifying a device
+		AdminState               contract.AdminState     `bson:"adminState"`     // Admin state (locked/unlocked)
+		OperatingState           contract.OperatingState `bson:"operatingState"` // Operating state (enabled/disabled)
+		Addressable              mgo.DBRef               `bson:"addressable"`    // Addressable for the device - stores information about it's address
+		LastConnected            int64                   `bson:"lastConnected"`  // Time (milliseconds) that the device last provided any feedback or responded to any request
+		LastReported             int64                   `bson:"lastReported"`   // Time (milliseconds) that the device reported data to the core microservice
+		Labels                   []string                `bson:"labels"`         // Other labels applied to the device to help with searching
+		Location                 interface{}             `bson:"location"`       // Device service specific location (interface{} is an empty interface so it can be anything)
+		Service                  mgo.DBRef               `bson:"service"`        // Associated Device Service - One per device
+		Profile                  mgo.DBRef               `bson:"profile"`        // Associated Device Profile - Describes the device
 	})
 	bsonErr := raw.Unmarshal(decoded)
 	if bsonErr != nil {
@@ -111,9 +112,13 @@ func (md *mongoDevice) SetBSON(raw bson.Raw) error {
 	var mds mongoDeviceService
 
 	err = addCol.Find(bson.M{"_id": decoded.Addressable.Id}).One(&a)
+	if err == mgo.ErrNotFound {
+		err = addCol.Find(bson.M{"uuid": decoded.Addressable.Id}).One(&a)
+	}
 	if err != nil {
 		return err
 	}
+
 	err = dsCol.Find(bson.M{"_id": decoded.Service.Id}).One(&mds)
 	if err != nil {
 		return err
@@ -123,7 +128,7 @@ func (md *mongoDevice) SetBSON(raw bson.Raw) error {
 		return err
 	}
 
-	md.Addressable = a
+	md.Addressable = a.ToContract()
 	md.Profile = mdp.DeviceProfile
 	md.Service = mds.DeviceService
 
