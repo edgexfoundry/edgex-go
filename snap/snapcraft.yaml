@@ -162,6 +162,9 @@ apps:
   curl:
     command: usr/bin/curl
     plugs: [network]
+  jq:
+    command: usr/bin/jq
+    plugs: [home, removable-media]
   kong:
     command: bin/kong-wrapper.sh
     plugs:
