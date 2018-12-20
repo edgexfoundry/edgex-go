@@ -149,7 +149,7 @@ apps:
   # helper commands the snap exposes
   mongo:
     command: bin/mongo
-    plugs: [home, network]
+    plugs: [home, removable-media, network]
   mongostat:
     command: bin/mongostat
     plugs: [network]
