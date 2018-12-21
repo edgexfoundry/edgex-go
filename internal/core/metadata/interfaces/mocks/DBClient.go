@@ -1075,13 +1075,13 @@ func (_m *DBClient) UpdateAddressable(a models.Addressable) error {
 	return r0
 }
 
-// UpdateCommand provides a mock function with given fields: c, r
-func (_m *DBClient) UpdateCommand(c *models.Command, r *models.Command) error {
-	ret := _m.Called(c, r)
+// UpdateCommand provides a mock function with given fields: c
+func (_m *DBClient) UpdateCommand(c *models.Command) error {
+	ret := _m.Called(c)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(*models.Command, *models.Command) error); ok {
-		r0 = rf(c, r)
+	if rf, ok := ret.Get(0).(func(*models.Command) error); ok {
+		r0 = rf(c)
 	} else {
 		r0 = ret.Error(0)
 	}

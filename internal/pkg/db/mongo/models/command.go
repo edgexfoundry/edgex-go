@@ -17,19 +17,19 @@ package models
 import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	contract "github.com/edgexfoundry/edgex-go/pkg/models"
-	"github.com/google/uuid"
 	"github.com/globalsign/mgo/bson"
+	"github.com/google/uuid"
 )
 
 type Command struct {
 	Id       bson.ObjectId `bson:"_id,omitempty"`
-	Uuid     string `bson:"uuid,omitempty"`
-	Name     string `bson:"name"`
-	Get      *Get   `bson:"get"`
-	Put      *Put   `bson:"put"`
-	Created  int64  `bson:"created"`
-	Modified int64  `bson:"modified"`
-	Origin   int64  `bson:"origin"`
+	Uuid     string        `bson:"uuid,omitempty"`
+	Name     string        `bson:"name"`
+	Get      *Get          `bson:"get"`
+	Put      *Put          `bson:"put"`
+	Created  int64         `bson:"created"`
+	Modified int64         `bson:"modified"`
+	Origin   int64         `bson:"origin"`
 }
 
 func (c *Command) ToContract() contract.Command {
@@ -88,10 +88,12 @@ func (c *Command) FromContract(from contract.Command) error {
 	}
 
 	c.Name = from.Name
+	c.Get = &Get{}
 	err := c.Get.FromContract(*from.Get)
 	if err != nil {
 		return err
 	}
+	c.Put = &Put{}
 	err = c.Put.FromContract(*from.Put)
 	if err != nil {
 		return err

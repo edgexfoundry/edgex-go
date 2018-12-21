@@ -68,7 +68,6 @@ func restAddCommand(w http.ResponseWriter, r *http.Request) {
 func restUpdateCommand(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	var c contract.Command
-	var res contract.Command
 	if err := json.NewDecoder(r.Body).Decode(&c); err != nil {
 		LoggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -76,7 +75,7 @@ func restUpdateCommand(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check if command exists (By ID)
-	err := dbClient.GetCommandById(&res, c.Id)
+	err := dbClient.GetCommandById(&c, c.Id)
 	if err != nil {
 		LoggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusNotFound)
@@ -106,7 +105,7 @@ func restUpdateCommand(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if err := dbClient.UpdateCommand(&c, &res); err != nil {
+	if err := dbClient.UpdateCommand(&c); err != nil {
 		LoggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -146,8 +145,13 @@ func restGetCommandByName(w http.ResponseWriter, r *http.Request) {
 	results := []contract.Command{}
 	err = dbClient.GetCommandByName(&results, n)
 	if err != nil {
+		if err == db.ErrNotFound {
+			http.Error(w, err.Error(), http.StatusNotFound)
+		} else {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+
 		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
