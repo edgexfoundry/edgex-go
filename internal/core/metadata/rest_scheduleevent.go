@@ -258,8 +258,8 @@ func updateScheduleEventFields(from models.ScheduleEvent, to *models.ScheduleEve
 	if from.Name != "" {
 		if from.Name != to.Name {
 			// Verify data integrity
-			var reports []models.DeviceReport
-			if err := dbClient.GetDeviceReportsByScheduleEventName(&reports, to.Name); err != nil {
+			reports, err := dbClient.GetDeviceReportsByScheduleEventName(to.Name)
+			if err != nil {
 				http.Error(w, err.Error(), http.StatusServiceUnavailable)
 				return err
 			}
@@ -381,8 +381,8 @@ func restDeleteScheduleEventByName(w http.ResponseWriter, r *http.Request) {
 // 409 error if the schedule event is still in use by device reports
 func deleteScheduleEvent(se models.ScheduleEvent, w http.ResponseWriter) error {
 	// Check if the schedule event is still in use by device reports
-	var dr []models.DeviceReport
-	if err := dbClient.GetDeviceReportsByScheduleEventName(&dr, se.Name); err != nil {
+	dr, err := dbClient.GetDeviceReportsByScheduleEventName(se.Name)
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return err
 	}

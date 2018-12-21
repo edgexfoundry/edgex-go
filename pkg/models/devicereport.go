@@ -16,42 +16,41 @@ package models
 
 import (
 	"encoding/json"
-	"github.com/globalsign/mgo/bson"
 )
 
 type DeviceReport struct {
-	BaseObject `bson:",inline"`
-	Id         bson.ObjectId `bson:"_id,omitempty" json:"id"`
-	Name       string        `bson:"name" json:"name"`         // non-database identifier for a device report - must be unique
-	Device     string        `bson:"device" json:"device"`     // associated device name - should be a valid and unique device name
-	Event      string        `bson:"event" json:"event"`       // associated schedule event name - should be a valid and unique schedule event name
-	Expected   []string      `bson:"expected" json:"expected"` // array of value descriptor names describing the types of data captured in the report
+	BaseObject
+	Id       string   `json:"id"`
+	Name     string   `json:"name"`     // non-database identifier for a device report - must be unique
+	Device   string   `json:"device"`   // associated device name - should be a valid and unique device name
+	Event    string   `json:"event"`    // associated schedule event name - should be a valid and unique schedule event name
+	Expected []string `json:"expected"` // array of value descriptor names describing the types of data captured in the report
 }
 
 // Custom marshaling to make empty strings null
-func (dp DeviceReport) MarshalJSON() ([]byte, error) {
+func (dr DeviceReport) MarshalJSON() ([]byte, error) {
 	test := struct {
 		BaseObject
-		Id       bson.ObjectId `json:"id"`
-		Name     *string       `json:"name"`     // non-database identifier for a device report - must be unique
-		Device   *string       `json:"device"`   // associated device name - should be a valid and unique device name
-		Event    *string       `json:"event"`    // associated schedule event name - should be a valid and unique schedule event name
-		Expected []string      `json:"expected"` // array of value descriptor names describing the types of data captured in the report
+		Id       string   `json:"id"`
+		Name     *string  `json:"name"`     // non-database identifier for a device report - must be unique
+		Device   *string  `json:"device"`   // associated device name - should be a valid and unique device name
+		Event    *string  `json:"event"`    // associated schedule event name - should be a valid and unique schedule event name
+		Expected []string `json:"expected"` // array of value descriptor names describing the types of data captured in the report
 	}{
-		BaseObject: dp.BaseObject,
-		Id:         dp.Id,
-		Expected:   dp.Expected,
+		BaseObject: dr.BaseObject,
+		Id:         dr.Id,
+		Expected:   dr.Expected,
 	}
 
 	// Empty strings are null
-	if dp.Name != "" {
-		test.Name = &dp.Name
+	if dr.Name != "" {
+		test.Name = &dr.Name
 	}
-	if dp.Device != "" {
-		test.Device = &dp.Device
+	if dr.Device != "" {
+		test.Device = &dr.Device
 	}
-	if dp.Event != "" {
-		test.Event = &dp.Event
+	if dr.Event != "" {
+		test.Event = &dr.Event
 	}
 
 	return json.Marshal(test)

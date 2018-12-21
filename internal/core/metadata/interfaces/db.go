@@ -42,13 +42,13 @@ type DBClient interface {
 	DeleteScheduleById(id string) error
 
 	// Device Report
-	GetAllDeviceReports(dr *[]contract.DeviceReport) error
-	GetDeviceReportByDeviceName(dr *[]contract.DeviceReport, n string) error
-	GetDeviceReportByName(dr *contract.DeviceReport, n string) error
-	GetDeviceReportById(dr *contract.DeviceReport, id string) error
-	AddDeviceReport(dr *contract.DeviceReport) error
-	UpdateDeviceReport(dr *contract.DeviceReport) error
-	GetDeviceReportsByScheduleEventName(dr *[]contract.DeviceReport, n string) error
+	GetAllDeviceReports() ([]contract.DeviceReport, error)
+	GetDeviceReportByDeviceName(n string) ([]contract.DeviceReport, error)
+	GetDeviceReportByName(n string) (contract.DeviceReport, error)
+	GetDeviceReportById(id string) (contract.DeviceReport, error)
+	AddDeviceReport(dr contract.DeviceReport) (string, error)
+	UpdateDeviceReport(dr contract.DeviceReport) error
+	GetDeviceReportsByScheduleEventName(n string) ([]contract.DeviceReport, error)
 	DeleteDeviceReportById(id string) error
 
 	// Device
