@@ -13,7 +13,7 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
-package memory
+package client
 
 import (
 	"time"
@@ -22,6 +22,24 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/globalsign/mgo/bson"
 )
+
+/* NB: This portion of the MemDB provider has been moved to
+ * this package because of server_test.go's reliance on them.
+ * This is meant to be a short-term solution until either this
+ * package can be removed or the tests can be refactored to remove
+ * this dependency.
+ */
+
+type MemDB struct {
+	regs []export.Registration
+}
+
+func (m *MemDB) CloseSession() {
+}
+
+func (m *MemDB) Connect() error {
+	return nil
+}
 
 func (mc *MemDB) Registrations() ([]export.Registration, error) {
 	return mc.regs, nil

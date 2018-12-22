@@ -22,7 +22,6 @@ import (
 const (
 	// Databases
 	MongoDB  = "mongodb"
-	MemoryDB = "memorydb"
 
 	// Data
 	EventsCollection          = "event"
