@@ -23,6 +23,10 @@ import (
 var TestValueDescriptorName = "Temperature"
 var TestValue = "45"
 var TestReading = Reading{Pushed: 123, Created: 123, Origin: 123, Modified: 123, Device: TestDeviceName, Name: TestValueDescriptorName, Value: TestValue}
+var TestValueFloat = "45.2"
+var TestUnit = "Cel"
+var TestReadingFloat = Reading{Pushed: 123, Created: 123, Origin: 123, Modified: 123, Device: TestDeviceName, Name: TestValueDescriptorName, Value: TestValueFloat, Unit: TestUnit, Type: Float64}
+
 
 func TestReading_MarshalJSON(t *testing.T) {
 	var emptyReading = Reading{}
@@ -76,3 +80,31 @@ func TestReading_String(t *testing.T) {
 		})
 	}
 }
+
+func TestReading_String2(t *testing.T) {
+        tests := []struct {
+                name string
+                r    Reading
+                want string
+        }{
+                {"reading to string", TestReadingFloat,
+                        "{\"pushed\":" + strconv.FormatInt(TestReading.Pushed, 10) +
+                                ",\"created\":" + strconv.FormatInt(TestReading.Created, 10) +
+                                ",\"origin\":" + strconv.FormatInt(TestReading.Origin, 10) +
+                                ",\"modified\":" + strconv.FormatInt(TestReading.Modified, 10) +
+                                ",\"device\":\"" + TestDeviceName + "\"" +
+                                ",\"name\":\"" + TestValueDescriptorName + "\"" +
+                                ",\"value\":\"" + TestValueFloat + "\"" +
+                                ",\"unit\":\"" + TestUnit + "\"" +
+                                ",\"type\":" + strconv.FormatInt(int64(Float64), 10) +
+                                "}"},
+        }
+        for _, tt := range tests {
+                t.Run(tt.name, func(t *testing.T) {
+                        if got := tt.r.String(); got != tt.want {
+                                t.Errorf("Reading.String() = %v, want %v", got, tt.want)
+                        }
+                })
+        }
+}
+

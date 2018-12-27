@@ -9,12 +9,17 @@
 package distro
 
 import (
+	"encoding/base64"
+	"encoding/binary"
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/cisco/senml"
 
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 	"github.com/google/uuid"
@@ -274,4 +279,64 @@ func (af biotFormatter) Format(event *models.Event) []byte {
 		return []byte{}
 	}
 	return msg
+}
+
+// senMLJSONFormatter is used to convert Event to SenML message and
+// SenML message to bytes.
+type senMLJSONFormatter struct {
+}
+
+// SenML JSON formatter
+func (senMLjsonTr senMLJSONFormatter) Format(event *models.Event) []byte {
+
+	readings := []senml.SenMLRecord{}
+
+	for _,v := range event.Readings {
+
+		reading := senml.SenMLRecord{}
+
+		reading.BaseName = v.Device + ".edgex-gateway"
+		reading.Name = v.Name
+		reading.Unit = v.Unit
+		reading.Time = float64(v.Origin/1000)
+
+
+		switch  {
+		case v.Type == models.String:
+			reading.StringValue = v.Value
+		case v.Type == models.Bool:
+			b,_ := strconv.ParseBool(v.Value)
+			reading.BoolValue = &b
+		case v.Type == models.Float64:
+			b, err := base64.StdEncoding.DecodeString(v.Value)
+			if err != nil {
+				LoggingClient.Error(fmt.Sprintf("Error parsing SenML Float value. Error: %s", err.Error()))
+			} else {
+				value := Float64frombytes(b)
+				reading.Value = &value
+			}
+			// SenML Data not supported yet
+		}
+
+		readings = append(readings, reading)
+	}
+
+	msg := senml.SenML{}
+
+	msg.Records = readings
+
+	dataOut, err := senml.Encode(msg, senml.JSON, senml.OutputOptions{})
+
+	if err != nil {
+		LoggingClient.Error(fmt.Sprintf("Encode of SenML failed. Error: %s", err.Error()))
+		return []byte{}
+	}
+
+	return dataOut
+}
+
+func Float64frombytes(bytes []byte) float64 {
+	bits := binary.BigEndian.Uint64(bytes)
+	float := math.Float64frombits(bits)
+	return float
 }
