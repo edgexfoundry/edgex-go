@@ -16,6 +16,7 @@ package clients
 const ClientMonitorDefault = 15000
 
 const (
+	ApiBase                    = "/api/v1"
 	ApiAddressableRoute        = "/api/v1/addressable"
 	ApiCallbackRoute           = "/api/v1/callback"
 	ApiCommandRoute            = "/api/v1/command"

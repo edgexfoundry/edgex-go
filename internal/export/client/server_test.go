@@ -296,7 +296,7 @@ func TestRegistrationGetList(t *testing.T) {
 		typeStr string
 		status  int
 	}{
-		{"", http.StatusBadRequest},
+		{"", http.StatusNotFound},
 		{"invalid", http.StatusBadRequest},
 		{typeAlgorithms, http.StatusOK},
 		{typeCompressions, http.StatusOK},

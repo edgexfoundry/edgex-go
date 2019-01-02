@@ -35,7 +35,7 @@ func LoadRestRoutes() http.Handler {
 	// Metrics
 	r.HandleFunc(clients.ApiMetricsRoute, metricsHandler).Methods(http.MethodGet)
 
-	b := r.PathPrefix("/api/v1").Subrouter()
+	b := r.PathPrefix(clients.ApiBase).Subrouter()
 
 	loadDeviceRoutes(b)
 	return r
@@ -68,22 +68,12 @@ func pingHandler(w http.ResponseWriter, _ *http.Request) {
 	w.Write([]byte(PINGRESPONSE))
 }
 
-func configHandler(w http.ResponseWriter, r *http.Request) {
-
-	if r.Body != nil {
-		defer r.Body.Close()
-	}
-
+func configHandler(w http.ResponseWriter, _ *http.Request) {
 	encode(Configuration, w)
 }
 
-func metricsHandler(w http.ResponseWriter, r *http.Request) {
-
+func metricsHandler(w http.ResponseWriter, _ *http.Request) {
 	var t internal.Telemetry
-
-	if r.Body != nil {
-		defer r.Body.Close()
-	}
 
 	// The micro-service is to be considered the System Of Record (SOR) in terms of accurate information.
 	// Fetch metrics for the command service.
