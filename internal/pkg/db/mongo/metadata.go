@@ -532,8 +532,10 @@ func (m *MongoClient) AddDeviceProfile(dp *contract.DeviceProfile) error {
 		return db.ErrNotUnique
 	}
 	for i := 0; i < len(dp.Commands); i++ {
-		if err := m.AddCommand(&dp.Commands[i]); err != nil {
+		if newId, err := m.AddCommand(dp.Commands[i]); err != nil {
 			return err
+		} else {
+			dp.Commands[i].Id = newId
 		}
 	}
 	ts := db.MakeTimestamp()
@@ -965,7 +967,7 @@ func (m *MongoClient) DeleteProvisionWatcherById(id string) error {
 }
 
 //  ------------------------Command -------------------------------------*/
-func (m *MongoClient) GetAllCommands(d *[]contract.Command) error {
+func (m MongoClient) GetAllCommands() ([]contract.Command, error) {
 	s := m.session.Copy()
 	defer s.Close()
 
@@ -973,11 +975,10 @@ func (m *MongoClient) GetAllCommands(d *[]contract.Command) error {
 	commands := &[]models.Command{}
 	err := col.Find(bson.M{}).Sort("queryts").All(commands)
 
-	*d, err = mapCommands(*commands, err)
-	return err
+	return mapCommands(*commands, err)
 }
 
-func (m *MongoClient) GetCommandById(c *contract.Command, id string) error {
+func (m MongoClient) GetCommandById(id string) (contract.Command, error) {
 	s := m.session.Copy()
 	defer s.Close()
 
@@ -988,7 +989,7 @@ func (m *MongoClient) GetCommandById(c *contract.Command, id string) error {
 		// EventID is not a BSON ID. Is it a UUID?
 		_, err := uuid.Parse(id)
 		if err != nil { // It is some unsupported type of string
-			return db.ErrNotFound
+			return contract.Command{}, db.ErrNotFound
 		}
 		query = bson.M{"uuid": id}
 	} else {
@@ -997,12 +998,11 @@ func (m *MongoClient) GetCommandById(c *contract.Command, id string) error {
 
 	command := &models.Command{}
 	err := col.Find(query).One(command)
-	*c = command.ToContract()
 
-	return err
+	return command.ToContract(), err
 }
 
-func (m *MongoClient) GetCommandByName(c *[]contract.Command, n string) error {
+func (m MongoClient) GetCommandByName(n string) ([]contract.Command, error) {
 	s := m.session.Copy()
 	defer s.Close()
 
@@ -1010,8 +1010,7 @@ func (m *MongoClient) GetCommandByName(c *[]contract.Command, n string) error {
 	commands := &[]models.Command{}
 	err := col.Find(bson.M{"name": n}).All(commands)
 
-	*c, err = mapCommands(*commands, err)
-	return err
+	return mapCommands(*commands, err)
 }
 
 func mapCommands(commands []models.Command, err error) ([]contract.Command, error) {
@@ -1030,25 +1029,21 @@ func mapCommands(commands []models.Command, err error) ([]contract.Command, erro
 	return mapped, nil
 }
 
-func (m *MongoClient) AddCommand(c *contract.Command) error {
+func (m MongoClient) AddCommand(c contract.Command) (string, error) {
 	s := m.session.Copy()
 	defer s.Close()
 
 	command := &models.Command{}
-	if err := command.FromContract(*c); err != nil {
-		return errors.New("FromContract failed")
+	if err := command.FromContract(c); err != nil {
+		return "", errors.New("FromContract failed")
 	}
-	command.Created = db.MakeTimestamp()
-	command.Id = bson.NewObjectId()
-	command.Uuid = uuid.New().String()
-	*c = command.ToContract()
 
-	col := s.DB(m.database.Name).C(db.Command)
-	return col.Insert(command)
+	err := s.DB(m.database.Name).C(db.Command).Insert(command)
+	return command.Uuid, err
 }
 
 // Update command uses the ID of the command for identification
-func (m *MongoClient) UpdateCommand(c *contract.Command) error {
+func (m MongoClient) UpdateCommand(c *contract.Command) error {
 	s := m.session.Copy()
 	defer s.Close()
 
@@ -1072,7 +1067,7 @@ func (m *MongoClient) UpdateCommand(c *contract.Command) error {
 
 // Delete the command by ID
 // Check if the command is still in use by device profiles
-func (m *MongoClient) DeleteCommandById(id string) error {
+func (m MongoClient) DeleteCommandById(id string) error {
 	s := m.session.Copy()
 	defer s.Close()
 	col := s.DB(m.database.Name).C(db.Command)
@@ -1113,7 +1108,7 @@ func (m MongoClient) GetAndMapCommands(c []mgo.DBRef) ([]contract.Command, error
 	var commands []contract.Command
 	for _, cRef := range c {
 		var command contract.Command
-		err := m.GetCommandById(&command, fmt.Sprintf("%s", cRef.Id))
+		command, err := m.GetCommandById(fmt.Sprintf("%s", cRef.Id))
 		if err != nil {
 			return []contract.Command{}, errorMap(err)
 		}

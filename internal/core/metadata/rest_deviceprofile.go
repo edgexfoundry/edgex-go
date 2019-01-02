@@ -245,9 +245,11 @@ func deleteCommands(dp models.DeviceProfile, w http.ResponseWriter) error {
 // Add all of the commands that are a part of the device profile
 func addCommands(dp *models.DeviceProfile, w http.ResponseWriter) error {
 	for i := range dp.Commands {
-		if err := dbClient.AddCommand(&(dp.Commands[i])); err != nil {
+		if newId, err := dbClient.AddCommand(dp.Commands[i]); err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			return err
+		} else {
+			dp.Commands[i].Id = newId
 		}
 	}
 

@@ -25,8 +25,7 @@ import (
 )
 
 func restGetAllCommands(w http.ResponseWriter, _ *http.Request) {
-	results := make([]contract.Command, 0)
-	err := dbClient.GetAllCommands(&results)
+	results, err := dbClient.GetAllCommands()
 	if err != nil {
 		LoggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -46,20 +45,23 @@ func restGetAllCommands(w http.ResponseWriter, _ *http.Request) {
 func restAddCommand(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	var c contract.Command
-	if err := json.NewDecoder(r.Body).Decode(&c); err != nil {
+
+	var err error
+	if err = json.NewDecoder(r.Body).Decode(&c); err != nil {
 		LoggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	if err := dbClient.AddCommand(&c); err != nil {
+	var newId string
+	if newId, err = dbClient.AddCommand(c); err != nil {
 		LoggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(c.Id))
+	w.Write([]byte(newId))
 }
 
 // Update a command
@@ -75,7 +77,7 @@ func restUpdateCommand(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check if command exists (By ID)
-	err := dbClient.GetCommandById(&c, c.Id)
+	c, err := dbClient.GetCommandById(c.Id)
 	if err != nil {
 		LoggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusNotFound)
@@ -118,8 +120,7 @@ func restUpdateCommand(w http.ResponseWriter, r *http.Request) {
 func restGetCommandById(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	var did string = vars[ID]
-	var res contract.Command
-	err := dbClient.GetCommandById(&res, did)
+	res, err := dbClient.GetCommandById(did)
 	if err != nil {
 		if err == db.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
@@ -142,8 +143,7 @@ func restGetCommandByName(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	results := []contract.Command{}
-	err = dbClient.GetCommandByName(&results, n)
+	results, err := dbClient.GetCommandByName(n)
 	if err != nil {
 		if err == db.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
@@ -165,8 +165,7 @@ func restDeleteCommandById(w http.ResponseWriter, r *http.Request) {
 	var id string = vars[ID]
 
 	// Check if the command exists
-	var c contract.Command
-	err := dbClient.GetCommandById(&c, id)
+	c, err := dbClient.GetCommandById(id)
 	if err != nil {
 		LoggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusNotFound)
