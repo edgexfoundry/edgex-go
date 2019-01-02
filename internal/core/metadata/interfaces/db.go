@@ -108,10 +108,10 @@ type DBClient interface {
 	DeleteProvisionWatcherById(id string) error
 
 	// Command
-	GetCommandById(c *contract.Command, id string) error
-	GetCommandByName(c *[]contract.Command, id string) error
-	AddCommand(c *contract.Command) error
-	GetAllCommands(d *[]contract.Command) error
+	GetCommandById(id string) (contract.Command, error)
+	GetCommandByName(id string) ([]contract.Command, error)
+	AddCommand(c contract.Command) (string, error)
+	GetAllCommands() ([]contract.Command, error)
 	UpdateCommand(c *contract.Command) error
 	DeleteCommandById(id string) error
 

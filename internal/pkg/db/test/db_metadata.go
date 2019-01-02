@@ -99,10 +99,11 @@ func getDeviceProfile(db interfaces.DBClient, i int) (models.DeviceProfile, erro
 	// dp.DeviceResources = append(dp.DeviceResources, name)
 	// dp.Resources = append(dp.Resources, name)
 	c := getCommand(db, i)
-	err := db.AddCommand(&c)
+	newId, err := db.AddCommand(c)
 	if err != nil {
 		return dp, err
 	}
+	c.Id = newId
 	dp.Commands = append(dp.Commands, c)
 	return dp, nil
 }
@@ -120,15 +121,15 @@ func populateAddressable(db interfaces.DBClient, count int) (string, error) {
 	return id, nil
 }
 
-func populateCommand(db interfaces.DBClient, count int) (bson.ObjectId, error) {
-	var id bson.ObjectId
+func populateCommand(db interfaces.DBClient, count int) (string, error) {
+	var id string
 	for i := 0; i < count; i++ {
 		c := getCommand(db, i)
-		err := db.AddCommand(&c)
+		newId, err := db.AddCommand(c)
 		if err != nil {
 			return id, err
 		}
-		id = bson.ObjectIdHex(c.Id)
+		id = newId
 	}
 	return id, nil
 }
@@ -559,8 +560,7 @@ func testDBAddressables(t *testing.T, db interfaces.DBClient) {
 }
 
 func testDBCommand(t *testing.T, db interfaces.DBClient) {
-	var commands []models.Command
-	err := db.GetAllCommands(&commands)
+	commands, err := db.GetAllCommands()
 	if err != nil {
 		t.Fatalf("Error getting commands %v", err)
 	}
@@ -575,27 +575,26 @@ func testDBCommand(t *testing.T, db interfaces.DBClient) {
 		t.Fatalf("Error populating db: %v\n", err)
 	}
 
-	err = db.GetAllCommands(&commands)
+	commands, err = db.GetAllCommands()
 	if err != nil {
 		t.Fatalf("Error getting commands %v", err)
 	}
 	if len(commands) != 100 {
 		t.Fatalf("There should be 100 commands instead of %d", len(commands))
 	}
-	c := models.Command{}
-	err = db.GetCommandById(&c, id.Hex())
+	c, err := db.GetCommandById(id)
 	if err != nil {
 		t.Fatalf("Error getting command by id %v", err)
 	}
-	if c.Id != id.Hex() {
+	if c.Id != id {
 		t.Fatalf("Id does not match %s - %s", c.Id, id)
 	}
-	err = db.GetCommandById(&c, "INVALID")
+	c, err = db.GetCommandById("INVALID")
 	if err == nil {
 		t.Fatalf("Command should not be found")
 	}
 
-	err = db.GetCommandByName(&commands, "name1")
+	commands, err = db.GetCommandByName("name1")
 	if err != nil {
 		t.Fatalf("Error getting commands by name %v", err)
 	}
@@ -603,7 +602,7 @@ func testDBCommand(t *testing.T, db interfaces.DBClient) {
 		t.Fatalf("There should be 1 commands instead of %d", len(commands))
 	}
 
-	err = db.GetCommandByName(&commands, "INVALID")
+	commands, err = db.GetCommandByName("INVALID")
 	if err != nil {
 		t.Fatalf("Error getting commands by name %v", err)
 	}
@@ -611,7 +610,7 @@ func testDBCommand(t *testing.T, db interfaces.DBClient) {
 		t.Fatalf("There should be 1 commands instead of %d", len(commands))
 	}
 
-	c.Id = id.Hex()
+	c.Id = id
 	c.Get = &models.Get{}
 	c.Put = &models.Put{}
 	c.Name = "name"
@@ -631,7 +630,7 @@ func testDBCommand(t *testing.T, db interfaces.DBClient) {
 		t.Fatalf("Command should not be deleted")
 	}
 
-	err = db.DeleteCommandById(id.Hex())
+	err = db.DeleteCommandById(id)
 	if err != nil {
 		t.Fatalf("Command should be deleted: %v", err)
 	}
