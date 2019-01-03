@@ -206,20 +206,14 @@ func connectToDatabase() error {
 		return fmt.Errorf("couldn't create database client: %v", err.Error())
 	}
 
-	// Connect to the database
-	err = dbClient.Connect()
-	if err != nil {
-		dbClient = nil
-		return fmt.Errorf("couldn't connect to database: %v", err.Error())
-	}
-	return nil
+	return err
 }
 
 // Return the dbClient interface
 func newDBClient(dbType string, config db.Configuration) (interfaces.DBClient, error) {
 	switch dbType {
 	case db.MongoDB:
-		return mongo.NewClient(config), nil
+		return mongo.NewClient(config)
 	default:
 		return nil, db.ErrUnsupportedDatabase
 	}

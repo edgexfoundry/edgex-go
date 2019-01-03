@@ -20,8 +20,6 @@ import (
 type DBClient interface {
 	CloseSession()
 
-	Connect() error
-
 	// ********************** EVENT FUNCTIONS *******************************
 	// Return all the events
 	// UnexpectedError - failed to retrieve events from the database

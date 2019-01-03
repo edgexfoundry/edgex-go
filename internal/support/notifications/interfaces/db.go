@@ -29,8 +29,6 @@ const (
 type DBClient interface {
 	CloseSession()
 
-	Connect() error
-
 	Notifications() ([]models.Notification, error)
 
 	NotificationById(id string) (models.Notification, error)
