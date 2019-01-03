@@ -105,27 +105,22 @@ func (l privLogger) SetLogLevel(logLevel string) error {
 	return types.ErrNotFound{}
 }
 
-func (l privLogger) Debug(msg string, args ...interface{}) error {
+func (l privLogger) Debug(msg string, args ...interface{}) {
 	l.log(logger.DebugLog, msg, args...)
-	return nil
 }
 
-func (l privLogger) Error(msg string, args ...interface{}) error {
+func (l privLogger) Error(msg string, args ...interface{}) {
 	l.log(logger.ErrorLog, msg, args...)
-	return nil
 }
 
-func (l privLogger) Info(msg string, args ...interface{}) error {
+func (l privLogger) Info(msg string, args ...interface{}) {
 	l.log(logger.InfoLog, msg, args...)
-	return nil
 }
 
-func (l privLogger) Trace(msg string, args ...interface{}) error {
+func (l privLogger) Trace(msg string, args ...interface{}) {
 	l.log(logger.TraceLog, msg, args...)
-	return nil
 }
 
-func (l privLogger) Warn(msg string, args ...interface{}) error {
+func (l privLogger) Warn(msg string, args ...interface{}) {
 	l.log(logger.WarnLog, msg, args...)
-	return nil
 }
