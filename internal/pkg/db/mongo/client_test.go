@@ -29,15 +29,24 @@ func TestMongoDB(t *testing.T) {
 		DatabaseName: "coredata",
 		Timeout:      1000,
 	}
-	mongo := NewClient(config)
+	mongo, err := NewClient(config)
+	if err != nil {
+		t.Fatalf("Could not connect: %v", err)
+	}
 	test.TestDataDB(t, mongo)
 
 	config.DatabaseName = "metadata"
-	mongo = NewClient(config)
+	mongo, err = NewClient(config)
+	if err != nil {
+		t.Fatalf("Could not connect: %v", err)
+	}
 	test.TestMetadataDB(t, mongo)
 
 	config.DatabaseName = "export"
-	mongo = NewClient(config)
+	mongo, err = NewClient(config)
+	if err != nil {
+		t.Fatalf("Could not connect: %v", err)
+	}
 	test.TestExportDB(t, mongo)
 }
 
@@ -51,9 +60,8 @@ func BenchmarkMongoDB(b *testing.B) {
 		DatabaseName: "coredata",
 		Timeout:      1000,
 	}
-	mongo := NewClient(config)
+	mongo, err := NewClient(config)
 
-	err := mongo.Connect()
 	if err != nil {
 		b.Fatalf("Could not connect with mongodb: %v", err)
 	}

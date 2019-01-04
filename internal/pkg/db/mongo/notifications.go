@@ -33,66 +33,66 @@ var cleanupDefaultAge int
 
 // ******************************* NOTIFICATIONS **********************************
 
-func (mc *MongoClient) Notifications() ([]models.Notification, error) {
+func (mc MongoClient) Notifications() ([]models.Notification, error) {
 	return mc.getNotifications(bson.M{})
 }
 
-func (mc *MongoClient) NotificationById(id string) (models.Notification, error) {
+func (mc MongoClient) NotificationById(id string) (models.Notification, error) {
 	if !bson.IsObjectIdHex(id) {
 		return models.Notification{}, db.ErrInvalidObjectId
 	}
 	return mc.getNotificaiton(bson.M{"_id": bson.ObjectIdHex(id)})
 }
 
-func (mc *MongoClient) NotificationBySlug(slug string) (models.Notification, error) {
+func (mc MongoClient) NotificationBySlug(slug string) (models.Notification, error) {
 	return mc.getNotificaiton(bson.M{"slug": slug})
 }
 
-func (mc *MongoClient) NotificationBySender(sender string, limit int) ([]models.Notification, error) {
+func (mc MongoClient) NotificationBySender(sender string, limit int) ([]models.Notification, error) {
 	return mc.getNotificationsLimit(bson.M{"sender": sender}, limit)
 }
 
-func (mc *MongoClient) NotificationsByLabels(labels []string, limit int) ([]models.Notification, error) {
+func (mc MongoClient) NotificationsByLabels(labels []string, limit int) ([]models.Notification, error) {
 	return mc.getNotificationsLimit(bson.M{"labels": bson.M{"$in": labels}}, limit)
 }
 
-func (mc *MongoClient) NotificationsByStartEnd(start int64, end int64, limit int) ([]models.Notification, error) {
+func (mc MongoClient) NotificationsByStartEnd(start int64, end int64, limit int) ([]models.Notification, error) {
 	query := bson.M{"created": bson.M{"$gt": start, "$lt": end}}
 	return mc.getNotificationsLimit(query, limit)
 }
 
-func (mc *MongoClient) NotificationsByStart(start int64, limit int) ([]models.Notification, error) {
+func (mc MongoClient) NotificationsByStart(start int64, limit int) ([]models.Notification, error) {
 	query := bson.M{"created": bson.M{"$gt": start}}
 	return mc.getNotificationsLimit(query, limit)
 }
 
-func (mc *MongoClient) NotificationsByEnd(end int64, limit int) ([]models.Notification, error) {
+func (mc MongoClient) NotificationsByEnd(end int64, limit int) ([]models.Notification, error) {
 	query := bson.M{"created": bson.M{"$lt": end}}
 	return mc.getNotificationsLimit(query, limit)
 }
 
-func (mc *MongoClient) NotificationsNew(limit int) ([]models.Notification, error) {
+func (mc MongoClient) NotificationsNew(limit int) ([]models.Notification, error) {
 	return mc.getNotificationsLimit(bson.M{"status": "NEW"}, limit)
 }
 
-func (mc *MongoClient) NotificationsNewNormal(limit int) ([]models.Notification, error) {
+func (mc MongoClient) NotificationsNewNormal(limit int) ([]models.Notification, error) {
 	return mc.getNotificationsLimit(bson.M{"status": "NEW", "severity": "NORMAL"}, limit)
 }
 
-func (mc *MongoClient) AddNotification(n *models.Notification) (bson.ObjectId, error) {
+func (mc MongoClient) AddNotification(n *models.Notification) (bson.ObjectId, error) {
 	return mc.addNotification(n)
 }
 
-func (mc *MongoClient) UpdateNotification(n models.Notification) error {
+func (mc MongoClient) UpdateNotification(n models.Notification) error {
 	return mc.updateNotification(n)
 }
 
-func (mc *MongoClient) MarkNotificationProcessed(n models.Notification) error {
+func (mc MongoClient) MarkNotificationProcessed(n models.Notification) error {
 	n.Status = models.NotificationsStatus(models.Processed)
 	return mc.updateNotification(n)
 }
 
-func (mc *MongoClient) DeleteNotificationById(id string) error {
+func (mc MongoClient) DeleteNotificationById(id string) error {
 	mn, err := mc.NotificationById(id)
 	if err == db.ErrNotFound {
 		return db.ErrNotFound
@@ -100,7 +100,7 @@ func (mc *MongoClient) DeleteNotificationById(id string) error {
 	return mc.deleteNotificationAndAssociatedTransmissions(mn)
 }
 
-func (mc *MongoClient) DeleteNotificationBySlug(slug string) error {
+func (mc MongoClient) DeleteNotificationBySlug(slug string) error {
 	mn, err := mc.NotificationBySlug(slug)
 	if err == db.ErrNotFound {
 		return db.ErrNotFound
@@ -108,7 +108,7 @@ func (mc *MongoClient) DeleteNotificationBySlug(slug string) error {
 	return mc.deleteNotificationAndAssociatedTransmissions(mn)
 }
 
-func (mc *MongoClient) DeleteNotificationsOld(age int) error {
+func (mc MongoClient) DeleteNotificationsOld(age int) error {
 	currentTime := db.MakeTimestamp()
 	end := int(currentTime) - age
 	query := bson.M{"modified": bson.M{
@@ -128,42 +128,42 @@ func (mc *MongoClient) DeleteNotificationsOld(age int) error {
 
 // ******************************* SUBSCRIPTIONS **********************************
 
-func (mc *MongoClient) SubscriptionBySlug(slug string) (models.Subscription, error) {
+func (mc MongoClient) SubscriptionBySlug(slug string) (models.Subscription, error) {
 	return mc.getSubscription(bson.M{"slug": slug})
 }
 
-func (mc *MongoClient) SubscriptionByCategories(categories []string) ([]models.Subscription, error) {
+func (mc MongoClient) SubscriptionByCategories(categories []string) ([]models.Subscription, error) {
 	return mc.getSubscriptions(bson.M{"subscribedcategories": bson.M{"$in": categories}})
 }
 
-func (mc *MongoClient) SubscriptionByLabels(labels []string) ([]models.Subscription, error) {
+func (mc MongoClient) SubscriptionByLabels(labels []string) ([]models.Subscription, error) {
 	return mc.getSubscriptions(bson.M{"subscribedlabels": bson.M{"$in": labels}})
 }
 
-func (mc *MongoClient) SubscriptionByCategoriesLabels(categories []string, labels []string) ([]models.Subscription, error) {
+func (mc MongoClient) SubscriptionByCategoriesLabels(categories []string, labels []string) ([]models.Subscription, error) {
 	return mc.getSubscriptions(bson.M{"subscribedcategories": bson.M{"$in": categories}, "subscribedlabels": bson.M{"$in": labels}})
 }
 
-func (mc *MongoClient) SubscriptionByReceiver(receiver string) ([]models.Subscription, error) {
+func (mc MongoClient) SubscriptionByReceiver(receiver string) ([]models.Subscription, error) {
 	return mc.getSubscriptions(bson.M{"receiver": receiver})
 }
 
-func (mc *MongoClient) SubscriptionById(id string) (models.Subscription, error) {
+func (mc MongoClient) SubscriptionById(id string) (models.Subscription, error) {
 	if !bson.IsObjectIdHex(id) {
 		return models.Subscription{}, db.ErrInvalidObjectId
 	}
 	return mc.getSubscription(bson.M{"_id": bson.ObjectIdHex(id)})
 }
 
-func (mc *MongoClient) AddSubscription(s *models.Subscription) (bson.ObjectId, error) {
+func (mc MongoClient) AddSubscription(s *models.Subscription) (bson.ObjectId, error) {
 	return mc.addSubscription(s)
 }
 
-func (mc *MongoClient) UpdateSubscription(s models.Subscription) error {
+func (mc MongoClient) UpdateSubscription(s models.Subscription) error {
 	return mc.updateSubscription(s)
 }
 
-func (mc *MongoClient) DeleteSubscriptionBySlug(slug string) error {
+func (mc MongoClient) DeleteSubscriptionBySlug(slug string) error {
 	ms, err := mc.SubscriptionBySlug(slug)
 	if err == db.ErrNotFound {
 		return db.ErrNotFound
@@ -173,54 +173,54 @@ func (mc *MongoClient) DeleteSubscriptionBySlug(slug string) error {
 
 // Return all the subscriptions
 // UnexpectedError - failed to retrieve subscriptions from the database
-func (mc *MongoClient) Subscriptions() ([]models.Subscription, error) {
+func (mc MongoClient) Subscriptions() ([]models.Subscription, error) {
 	return mc.getSubscriptions(bson.M{})
 }
 
 // ******************************* TRANSMISSIONS  **********************************
 // limits for transmissions here refer to resend counts
-func (mc *MongoClient) AddTransmission(t *models.Transmission) (bson.ObjectId, error) {
+func (mc MongoClient) AddTransmission(t *models.Transmission) (bson.ObjectId, error) {
 	return mc.addTransmission(t)
 }
 
-func (mc *MongoClient) UpdateTransmission(t models.Transmission) error {
+func (mc MongoClient) UpdateTransmission(t models.Transmission) error {
 	return mc.updateTransmission(t)
 }
 
-func (mc *MongoClient) DeleteTransmission(age int64, status models.TransmissionStatus) error {
+func (mc MongoClient) DeleteTransmission(age int64, status models.TransmissionStatus) error {
 	currentTime := db.MakeTimestamp()
 	end := currentTime - age
 	query := bson.M{"modified": bson.M{"$lt": end}, "status": status}
 	return mc.deleteAll(query, TRANSMISSION_COLLECTION)
 }
 
-func (mc *MongoClient) TransmissionsByNotificationSlug(slug string, resendLimit int) ([]models.Transmission, error) {
+func (mc MongoClient) TransmissionsByNotificationSlug(slug string, resendLimit int) ([]models.Transmission, error) {
 	return mc.getTransmissionsLimit(bson.M{"resendcount": bson.M{"$lt": resendLimit}, "notification.slug": slug})
 }
 
-func (mc *MongoClient) TransmissionsByStartEnd(start int64, end int64, resendLimit int) ([]models.Transmission, error) {
+func (mc MongoClient) TransmissionsByStartEnd(start int64, end int64, resendLimit int) ([]models.Transmission, error) {
 	return mc.getTransmissionsLimit(bson.M{"resendcount": bson.M{"$lt": resendLimit}, "created": bson.M{"$gt": start, "$lt": end}})
 }
 
-func (mc *MongoClient) TransmissionsByStart(start int64, resendLimit int) ([]models.Transmission, error) {
+func (mc MongoClient) TransmissionsByStart(start int64, resendLimit int) ([]models.Transmission, error) {
 	return mc.getTransmissionsLimit(bson.M{"resendcount": bson.M{"$lt": resendLimit}, "created": bson.M{"$gt": start}})
 }
 
-func (mc *MongoClient) TransmissionsByEnd(end int64, resendLimit int) ([]models.Transmission, error) {
+func (mc MongoClient) TransmissionsByEnd(end int64, resendLimit int) ([]models.Transmission, error) {
 	return mc.getTransmissionsLimit(bson.M{"resendcount": bson.M{"$lt": resendLimit}, "created": bson.M{"$lt": end}})
 }
 
-func (mc *MongoClient) TransmissionsByStatus(resendLimit int, status models.TransmissionStatus) ([]models.Transmission, error) {
+func (mc MongoClient) TransmissionsByStatus(resendLimit int, status models.TransmissionStatus) ([]models.Transmission, error) {
 	return mc.getTransmissionsLimit(bson.M{"resendcount": bson.M{"$lt": resendLimit}, "status": status})
 }
 
 // ******************************* GENERAL CLEANUP **********************************
 
-func (mc *MongoClient) Cleanup() error {
+func (mc MongoClient) Cleanup() error {
 	return mc.CleanupOld(cleanupDefaultAge)
 }
 
-func (mc *MongoClient) CleanupOld(age int) error {
+func (mc MongoClient) CleanupOld(age int) error {
 	currentTime := db.MakeTimestamp()
 	end := int(currentTime) - age
 	query := bson.M{"modified": bson.M{"$lt": end}}
@@ -239,7 +239,7 @@ func (mc *MongoClient) CleanupOld(age int) error {
 
 // ******************************* NOTIFICATIONS **********************************
 
-func (mc *MongoClient) deleteNotificationAndAssociatedTransmissions(n models.Notification) error {
+func (mc MongoClient) deleteNotificationAndAssociatedTransmissions(n models.Notification) error {
 
 	err := mc.deleteAll(bson.M{"notification.slug": n.Slug}, TRANSMISSION_COLLECTION)
 
@@ -250,7 +250,7 @@ func (mc *MongoClient) deleteNotificationAndAssociatedTransmissions(n models.Not
 
 }
 
-func (mc *MongoClient) addNotification(n *models.Notification) (bson.ObjectId, error) {
+func (mc MongoClient) addNotification(n *models.Notification) (bson.ObjectId, error) {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
@@ -273,7 +273,7 @@ func (mc *MongoClient) addNotification(n *models.Notification) (bson.ObjectId, e
 	return n.ID, err
 }
 
-func (mc *MongoClient) checkNotificationSlugIntegrity(slug string) error {
+func (mc MongoClient) checkNotificationSlugIntegrity(slug string) error {
 	if slug == "" {
 		return db.ErrSlugEmpty
 	}
@@ -284,7 +284,7 @@ func (mc *MongoClient) checkNotificationSlugIntegrity(slug string) error {
 	return nil
 }
 
-func (mc *MongoClient) updateNotification(n models.Notification) error {
+func (mc MongoClient) updateNotification(n models.Notification) error {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
@@ -301,7 +301,7 @@ func (mc *MongoClient) updateNotification(n models.Notification) error {
 	return err
 }
 
-func (mc *MongoClient) getNotificaiton(q bson.M) (models.Notification, error) {
+func (mc MongoClient) getNotificaiton(q bson.M) (models.Notification, error) {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
@@ -316,11 +316,11 @@ func (mc *MongoClient) getNotificaiton(q bson.M) (models.Notification, error) {
 	return mn.Notification, err
 }
 
-func (mc *MongoClient) getNotifications(q bson.M) ([]models.Notification, error) {
+func (mc MongoClient) getNotifications(q bson.M) ([]models.Notification, error) {
 	return mc.getNotificationsLimit(q, currentReadMaxLimit)
 }
 
-func (mc *MongoClient) getNotificationsLimit(q bson.M, limit int) ([]models.Notification, error) {
+func (mc MongoClient) getNotificationsLimit(q bson.M, limit int) ([]models.Notification, error) {
 
 	s := mc.getSessionCopy()
 	defer s.Close()
@@ -346,7 +346,7 @@ func (mc *MongoClient) getNotificationsLimit(q bson.M, limit int) ([]models.Noti
 
 // ******************************* SUBSCRIPTIONS **********************************
 
-func (mc *MongoClient) addSubscription(sub *models.Subscription) (bson.ObjectId, error) {
+func (mc MongoClient) addSubscription(sub *models.Subscription) (bson.ObjectId, error) {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
@@ -369,7 +369,7 @@ func (mc *MongoClient) addSubscription(sub *models.Subscription) (bson.ObjectId,
 	return sub.ID, err
 }
 
-func (mc *MongoClient) checkSubscriptionSlugIntegrity(slug string) error {
+func (mc MongoClient) checkSubscriptionSlugIntegrity(slug string) error {
 	if slug == "" {
 		return db.ErrSlugEmpty
 	}
@@ -380,7 +380,7 @@ func (mc *MongoClient) checkSubscriptionSlugIntegrity(slug string) error {
 	return nil
 }
 
-func (mc *MongoClient) updateSubscription(sub models.Subscription) error {
+func (mc MongoClient) updateSubscription(sub models.Subscription) error {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
@@ -397,7 +397,7 @@ func (mc *MongoClient) updateSubscription(sub models.Subscription) error {
 	return err
 }
 
-func (mc *MongoClient) getSubscription(q bson.M) (models.Subscription, error) {
+func (mc MongoClient) getSubscription(q bson.M) (models.Subscription, error) {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
@@ -412,7 +412,7 @@ func (mc *MongoClient) getSubscription(q bson.M) (models.Subscription, error) {
 	return ms.Subscription, err
 }
 
-func (mc *MongoClient) getSubscriptions(q bson.M) ([]models.Subscription, error) {
+func (mc MongoClient) getSubscriptions(q bson.M) ([]models.Subscription, error) {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
@@ -432,7 +432,7 @@ func (mc *MongoClient) getSubscriptions(q bson.M) ([]models.Subscription, error)
 	return subscriptions, nil
 }
 
-func (mc *MongoClient) getSubscriptionsLimit(q bson.M, limit int) ([]models.Subscription, error) {
+func (mc MongoClient) getSubscriptionsLimit(q bson.M, limit int) ([]models.Subscription, error) {
 
 	s := mc.getSessionCopy()
 	defer s.Close()
@@ -458,7 +458,7 @@ func (mc *MongoClient) getSubscriptionsLimit(q bson.M, limit int) ([]models.Subs
 
 // ******************************* TRANSMISSIONS **********************************
 
-func (mc *MongoClient) addTransmission(tran *models.Transmission) (bson.ObjectId, error) {
+func (mc MongoClient) addTransmission(tran *models.Transmission) (bson.ObjectId, error) {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
@@ -476,7 +476,7 @@ func (mc *MongoClient) addTransmission(tran *models.Transmission) (bson.ObjectId
 	return tran.ID, err
 }
 
-func (mc *MongoClient) updateTransmission(tran models.Transmission) error {
+func (mc MongoClient) updateTransmission(tran models.Transmission) error {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
@@ -493,7 +493,7 @@ func (mc *MongoClient) updateTransmission(tran models.Transmission) error {
 	return err
 }
 
-func (mc *MongoClient) getTransmission(q bson.M) (models.Transmission, error) {
+func (mc MongoClient) getTransmission(q bson.M) (models.Transmission, error) {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
@@ -507,7 +507,7 @@ func (mc *MongoClient) getTransmission(q bson.M) (models.Transmission, error) {
 	return mt.Transmission, err
 }
 
-func (mc *MongoClient) getTransmissionsLimit(q bson.M) ([]models.Transmission, error) {
+func (mc MongoClient) getTransmissionsLimit(q bson.M) ([]models.Transmission, error) {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
@@ -529,7 +529,7 @@ func (mc *MongoClient) getTransmissionsLimit(q bson.M) ([]models.Transmission, e
 
 /////////////////////////////////////// General delete functions ////////////////////////////////////////////
 
-func (mc *MongoClient) deleteByID(id string, col string) error {
+func (mc MongoClient) deleteByID(id string, col string) error {
 
 	if !bson.IsObjectIdHex(id) {
 		return db.ErrInvalidObjectId
@@ -539,7 +539,7 @@ func (mc *MongoClient) deleteByID(id string, col string) error {
 
 }
 
-func (mc *MongoClient) deleteByObjectID(id bson.ObjectId, col string) error {
+func (mc MongoClient) deleteByObjectID(id bson.ObjectId, col string) error {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
@@ -550,7 +550,7 @@ func (mc *MongoClient) deleteByObjectID(id bson.ObjectId, col string) error {
 	return err
 }
 
-func (mc *MongoClient) deleteAll(q bson.M, col string) error {
+func (mc MongoClient) deleteAll(q bson.M, col string) error {
 	s := mc.getSessionCopy()
 	defer s.Close()
 

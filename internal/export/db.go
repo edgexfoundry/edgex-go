@@ -20,8 +20,6 @@ import (
 type DBClient interface {
 	CloseSession()
 
-	Connect() error
-
 	// ********************** REGISTRATION FUNCTIONS *****************************
 	// Return all the registrations
 	// UnexpectedError - failed to retrieve registrations from the database
