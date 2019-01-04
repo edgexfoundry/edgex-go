@@ -17,8 +17,8 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo/models"
 	contract "github.com/edgexfoundry/edgex-go/pkg/models"
-	"github.com/google/uuid"
 	"github.com/globalsign/mgo/bson"
+	"github.com/google/uuid"
 )
 
 /*
@@ -31,7 +31,7 @@ Has functions for interacting with the core data mongo database
 // Return all the events
 // UnexpectedError - failed to retrieve events from the database
 // Sort the events in descending order by ID
-func (mc *MongoClient) Events() ([]contract.Event, error) {
+func (mc MongoClient) Events() ([]contract.Event, error) {
 	return mapEvents(mc.getEvents(bson.M{}))
 
 }
@@ -39,14 +39,14 @@ func (mc *MongoClient) Events() ([]contract.Event, error) {
 // Return events up to the max number specified
 // UnexpectedError - failed to retrieve events from the database
 // Sort the events in descending order by ID
-func (mc *MongoClient) EventsWithLimit(limit int) ([]contract.Event, error) {
+func (mc MongoClient) EventsWithLimit(limit int) ([]contract.Event, error) {
 	return mapEvents(mc.getEventsLimit(bson.M{}, limit))
 }
 
 // Add a new event
 // UnexpectedError - failed to add to database
 // NoValueDescriptor - no existing value descriptor for a reading in the event
-func (mc *MongoClient) AddEvent(e contract.Event) (string, error) {
+func (mc MongoClient) AddEvent(e contract.Event) (string, error) {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
@@ -77,7 +77,7 @@ func (mc *MongoClient) AddEvent(e contract.Event) (string, error) {
 // Update an event - do NOT update readings
 // UnexpectedError - problem updating in database
 // NotFound - no event with the ID was found
-func (mc *MongoClient) UpdateEvent(e contract.Event) error {
+func (mc MongoClient) UpdateEvent(e contract.Event) error {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
@@ -97,7 +97,7 @@ func (mc *MongoClient) UpdateEvent(e contract.Event) error {
 }
 
 // Get an event by id
-func (mc *MongoClient) EventById(id string) (contract.Event, error) {
+func (mc MongoClient) EventById(id string) (contract.Event, error) {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
@@ -125,7 +125,7 @@ func (mc *MongoClient) EventById(id string) (contract.Event, error) {
 }
 
 // Get the number of events in Mongo
-func (mc *MongoClient) EventCount() (int, error) {
+func (mc MongoClient) EventCount() (int, error) {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
@@ -133,7 +133,7 @@ func (mc *MongoClient) EventCount() (int, error) {
 }
 
 // Get the number of events in Mongo for the device
-func (mc *MongoClient) EventCountByDeviceId(id string) (int, error) {
+func (mc MongoClient) EventCountByDeviceId(id string) (int, error) {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
@@ -144,23 +144,23 @@ func (mc *MongoClient) EventCountByDeviceId(id string) (int, error) {
 // Delete an event by ID and all of its readings
 // 404 - Event not found
 // 503 - Unexpected problems
-func (mc *MongoClient) DeleteEventById(id string) error {
+func (mc MongoClient) DeleteEventById(id string) error {
 	return mc.deleteById(db.EventsCollection, id)
 }
 
 // Get a list of events based on the device id and limit
-func (mc *MongoClient) EventsForDeviceLimit(id string, limit int) ([]contract.Event, error) {
+func (mc MongoClient) EventsForDeviceLimit(id string, limit int) ([]contract.Event, error) {
 	return mapEvents(mc.getEventsLimit(bson.M{"device": id}, limit))
 }
 
 // Get a list of events based on the device id
-func (mc *MongoClient) EventsForDevice(id string) ([]contract.Event, error) {
+func (mc MongoClient) EventsForDevice(id string) ([]contract.Event, error) {
 	return mapEvents(mc.getEvents(bson.M{"device": id}))
 }
 
 // Return a list of events whos creation time is between startTime and endTime
 // Limit the number of results by limit
-func (mc *MongoClient) EventsByCreationTime(startTime, endTime int64, limit int) ([]contract.Event, error) {
+func (mc MongoClient) EventsByCreationTime(startTime, endTime int64, limit int) ([]contract.Event, error) {
 	query := bson.M{"created": bson.M{
 		"$gte": startTime,
 		"$lte": endTime,
@@ -169,18 +169,18 @@ func (mc *MongoClient) EventsByCreationTime(startTime, endTime int64, limit int)
 }
 
 // Get Events that are older than the given age (defined by age = now - created)
-func (mc *MongoClient) EventsOlderThanAge(age int64) ([]contract.Event, error) {
+func (mc MongoClient) EventsOlderThanAge(age int64) ([]contract.Event, error) {
 	expireDate := (db.MakeTimestamp()) - age
 	return mapEvents(mc.getEvents(bson.M{"created": bson.M{"$lt": expireDate}}))
 }
 
 // Get all of the events that have been pushed
-func (mc *MongoClient) EventsPushed() ([]contract.Event, error) {
+func (mc MongoClient) EventsPushed() ([]contract.Event, error) {
 	return mapEvents(mc.getEvents(bson.M{"pushed": bson.M{"$gt": int64(0)}}))
 }
 
 // Delete all of the readings and all of the events
-func (mc *MongoClient) ScrubAllEvents() error {
+func (mc MongoClient) ScrubAllEvents() error {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
@@ -198,7 +198,7 @@ func (mc *MongoClient) ScrubAllEvents() error {
 }
 
 // Get events for the passed query
-func (mc *MongoClient) getEvents(q bson.M) ([]models.Event, error) {
+func (mc MongoClient) getEvents(q bson.M) ([]models.Event, error) {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
@@ -212,7 +212,7 @@ func (mc *MongoClient) getEvents(q bson.M) ([]models.Event, error) {
 }
 
 // Get events with a limit
-func (mc *MongoClient) getEventsLimit(q bson.M, limit int) ([]models.Event, error) {
+func (mc MongoClient) getEventsLimit(q bson.M, limit int) ([]models.Event, error) {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
@@ -232,7 +232,7 @@ func (mc *MongoClient) getEventsLimit(q bson.M, limit int) ([]models.Event, erro
 // ************************ READINGS ************************************8
 
 // Return a list of readings sorted by reading id
-func (mc *MongoClient) Readings() ([]contract.Reading, error) {
+func (mc MongoClient) Readings() ([]contract.Reading, error) {
 	readings, err := mc.getReadings(nil)
 	if err != nil {
 		return []contract.Reading{}, err
@@ -246,7 +246,7 @@ func (mc *MongoClient) Readings() ([]contract.Reading, error) {
 }
 
 // Post a new reading
-func (mc *MongoClient) AddReading(r contract.Reading) (string, error) {
+func (mc MongoClient) AddReading(r contract.Reading) (string, error) {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
@@ -263,7 +263,7 @@ func (mc *MongoClient) AddReading(r contract.Reading) (string, error) {
 // 404 - reading cannot be found
 // 409 - Value descriptor doesn't exist
 // 503 - unknown issues
-func (mc *MongoClient) UpdateReading(r contract.Reading) error {
+func (mc MongoClient) UpdateReading(r contract.Reading) error {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
@@ -284,7 +284,7 @@ func (mc *MongoClient) UpdateReading(r contract.Reading) error {
 }
 
 // Get a reading by ID
-func (mc *MongoClient) ReadingById(id string) (contract.Reading, error) {
+func (mc MongoClient) ReadingById(id string) (contract.Reading, error) {
 	var query bson.M
 	if !bson.IsObjectIdHex(id) {
 		// ReadingID is not a BSON ID. Is it a UUID?
@@ -307,7 +307,7 @@ func (mc *MongoClient) ReadingById(id string) (contract.Reading, error) {
 }
 
 // Get the count of readings in Mongo
-func (mc *MongoClient) ReadingCount() (int, error) {
+func (mc MongoClient) ReadingCount() (int, error) {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
@@ -316,33 +316,33 @@ func (mc *MongoClient) ReadingCount() (int, error) {
 
 // Delete a reading by ID
 // 404 - can't find the reading with the given id
-func (mc *MongoClient) DeleteReadingById(id string) error {
+func (mc MongoClient) DeleteReadingById(id string) error {
 	return mc.deleteById(db.ReadingsCollection, id)
 }
 
 // Return a list of readings for the given device (id or name)
 // Sort the list of readings on creation date
-func (mc *MongoClient) ReadingsByDevice(id string, limit int) ([]contract.Reading, error) {
+func (mc MongoClient) ReadingsByDevice(id string, limit int) ([]contract.Reading, error) {
 	query := bson.M{"device": id}
 	return mapReadings(mc.getReadingsLimit(query, limit))
 }
 
 // Return a list of readings for the given value descriptor
 // Limit by the given limit
-func (mc *MongoClient) ReadingsByValueDescriptor(name string, limit int) ([]contract.Reading, error) {
+func (mc MongoClient) ReadingsByValueDescriptor(name string, limit int) ([]contract.Reading, error) {
 	query := bson.M{"name": name}
 	return mapReadings(mc.getReadingsLimit(query, limit))
 }
 
 // Return a list of readings whose name is in the list of value descriptor names
-func (mc *MongoClient) ReadingsByValueDescriptorNames(names []string, limit int) ([]contract.Reading, error) {
+func (mc MongoClient) ReadingsByValueDescriptorNames(names []string, limit int) ([]contract.Reading, error) {
 	query := bson.M{"name": bson.M{"$in": names}}
 	return mapReadings(mc.getReadingsLimit(query, limit))
 }
 
 // Return a list of readings whos creation time is in-between start and end
 // Limit by the limit parameter
-func (mc *MongoClient) ReadingsByCreationTime(start, end int64, limit int) ([]contract.Reading, error) {
+func (mc MongoClient) ReadingsByCreationTime(start, end int64, limit int) ([]contract.Reading, error) {
 	query := bson.M{"created": bson.M{
 		"$gte": start,
 		"$lte": end,
@@ -352,12 +352,12 @@ func (mc *MongoClient) ReadingsByCreationTime(start, end int64, limit int) ([]co
 
 // Return a list of readings for a device filtered by the value descriptor and limited by the limit
 // The readings are linked to the device through an event
-func (mc *MongoClient) ReadingsByDeviceAndValueDescriptor(deviceId, valueDescriptor string, limit int) ([]contract.Reading, error) {
+func (mc MongoClient) ReadingsByDeviceAndValueDescriptor(deviceId, valueDescriptor string, limit int) ([]contract.Reading, error) {
 	query := bson.M{"device": deviceId, "name": valueDescriptor}
 	return mapReadings(mc.getReadingsLimit(query, limit))
 }
 
-func (mc *MongoClient) getReadingsLimit(q bson.M, limit int) ([]models.Reading, error) {
+func (mc MongoClient) getReadingsLimit(q bson.M, limit int) ([]models.Reading, error) {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
@@ -373,7 +373,7 @@ func (mc *MongoClient) getReadingsLimit(q bson.M, limit int) ([]models.Reading, 
 }
 
 // Get readings from the database
-func (mc *MongoClient) getReadings(q bson.M) ([]models.Reading, error) {
+func (mc MongoClient) getReadings(q bson.M) ([]models.Reading, error) {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
@@ -383,7 +383,7 @@ func (mc *MongoClient) getReadings(q bson.M) ([]models.Reading, error) {
 }
 
 // Get a reading from the database with the passed query
-func (mc *MongoClient) getReading(q bson.M) (models.Reading, error) {
+func (mc MongoClient) getReading(q bson.M) (models.Reading, error) {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
@@ -393,7 +393,7 @@ func (mc *MongoClient) getReading(q bson.M) (models.Reading, error) {
 	return res, err
 }
 
-func (mc *MongoClient) getReadingsForEvent(event models.Event) ([]models.Reading, error) {
+func (mc MongoClient) getReadingsForEvent(event models.Event) ([]models.Reading, error) {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
@@ -410,7 +410,7 @@ func (mc *MongoClient) getReadingsForEvent(event models.Event) ([]models.Reading
 	return readings, nil
 }
 
-func (mc *MongoClient) getReadingsForEventList(events []models.Event) ([]models.Event, error) {
+func (mc MongoClient) getReadingsForEventList(events []models.Event) ([]models.Event, error) {
 	var result []models.Event
 	for _, event := range events {
 		readings, err := mc.getReadingsForEvent(event)
@@ -436,7 +436,7 @@ func (mc *MongoClient) getReadingsForEventList(events []models.Event) ([]models.
 // 409 - Formatting is bad or it is not unique
 // 503 - Unexpected
 // TODO: Check for valid printf formatting
-func (mc *MongoClient) AddValueDescriptor(v contract.ValueDescriptor) (string, error) {
+func (mc MongoClient) AddValueDescriptor(v contract.ValueDescriptor) (string, error) {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
@@ -464,7 +464,7 @@ func (mc *MongoClient) AddValueDescriptor(v contract.ValueDescriptor) (string, e
 
 // Return a list of all the value descriptors
 // 513 Service Unavailable - database problems
-func (mc *MongoClient) ValueDescriptors() ([]contract.ValueDescriptor, error) {
+func (mc MongoClient) ValueDescriptors() ([]contract.ValueDescriptor, error) {
 	return mapValueDescriptors(mc.getValueDescriptors(nil))
 }
 
@@ -472,7 +472,7 @@ func (mc *MongoClient) ValueDescriptors() ([]contract.ValueDescriptor, error) {
 // First use the ID for identification, then the name
 // TODO: Check for the valid printf formatting
 // 404 not found if the value descriptor cannot be found by the identifiers
-func (mc *MongoClient) UpdateValueDescriptor(cvd contract.ValueDescriptor) error {
+func (mc MongoClient) UpdateValueDescriptor(cvd contract.ValueDescriptor) error {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
@@ -508,13 +508,13 @@ func (mc *MongoClient) UpdateValueDescriptor(cvd contract.ValueDescriptor) error
 // Delete the value descriptor based on the id
 // Not found error if there isn't a value descriptor for the ID
 // ValueDescriptorStillInUse if the value descriptor is still referenced by readings
-func (mc *MongoClient) DeleteValueDescriptorById(id string) error {
+func (mc MongoClient) DeleteValueDescriptorById(id string) error {
 	return mc.deleteById(db.ValueDescriptorCollection, id)
 }
 
 // Return a value descriptor based on the name
 // Can return null if no value descriptor is found
-func (mc *MongoClient) ValueDescriptorByName(name string) (contract.ValueDescriptor, error) {
+func (mc MongoClient) ValueDescriptorByName(name string) (contract.ValueDescriptor, error) {
 	query := bson.M{"name": name}
 	mvd, err := mc.getValueDescriptor(query)
 	if err != nil {
@@ -524,7 +524,7 @@ func (mc *MongoClient) ValueDescriptorByName(name string) (contract.ValueDescrip
 }
 
 // Return all of the value descriptors based on the names
-func (mc *MongoClient) ValueDescriptorsByName(names []string) ([]contract.ValueDescriptor, error) {
+func (mc MongoClient) ValueDescriptorsByName(names []string) ([]contract.ValueDescriptor, error) {
 	vList := []contract.ValueDescriptor{}
 
 	for _, name := range names {
@@ -542,7 +542,7 @@ func (mc *MongoClient) ValueDescriptorsByName(names []string) ([]contract.ValueD
 
 // Return a value descriptor based on the id
 // Return NotFoundError if there is no value descriptor for the id
-func (mc *MongoClient) ValueDescriptorById(id string) (contract.ValueDescriptor, error) {
+func (mc MongoClient) ValueDescriptorById(id string) (contract.ValueDescriptor, error) {
 	var query bson.M
 	if !bson.IsObjectIdHex(id) {
 		// EventID is not a BSON ID. Is it a UUID?
@@ -563,25 +563,25 @@ func (mc *MongoClient) ValueDescriptorById(id string) (contract.ValueDescriptor,
 }
 
 // Return all the value descriptors that match the UOM label
-func (mc *MongoClient) ValueDescriptorsByUomLabel(uomLabel string) ([]contract.ValueDescriptor, error) {
+func (mc MongoClient) ValueDescriptorsByUomLabel(uomLabel string) ([]contract.ValueDescriptor, error) {
 	query := bson.M{"uomLabel": uomLabel}
 	return mapValueDescriptors(mc.getValueDescriptors(query))
 }
 
 // Return value descriptors based on if it has the label
-func (mc *MongoClient) ValueDescriptorsByLabel(label string) ([]contract.ValueDescriptor, error) {
+func (mc MongoClient) ValueDescriptorsByLabel(label string) ([]contract.ValueDescriptor, error) {
 	query := bson.M{"labels": label}
 	return mapValueDescriptors(mc.getValueDescriptors(query))
 }
 
 // Return value descriptors based on the type
-func (mc *MongoClient) ValueDescriptorsByType(t string) ([]contract.ValueDescriptor, error) {
+func (mc MongoClient) ValueDescriptorsByType(t string) ([]contract.ValueDescriptor, error) {
 	query := bson.M{"type": t}
 	return mapValueDescriptors(mc.getValueDescriptors(query))
 }
 
 // Delete all of the value descriptors
-func (mc *MongoClient) ScrubAllValueDescriptors() error {
+func (mc MongoClient) ScrubAllValueDescriptors() error {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
@@ -594,7 +594,7 @@ func (mc *MongoClient) ScrubAllValueDescriptors() error {
 }
 
 // Get value descriptors based on the query
-func (mc *MongoClient) getValueDescriptors(q bson.M) ([]models.ValueDescriptor, error) {
+func (mc MongoClient) getValueDescriptors(q bson.M) ([]models.ValueDescriptor, error) {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
@@ -605,7 +605,7 @@ func (mc *MongoClient) getValueDescriptors(q bson.M) ([]models.ValueDescriptor, 
 }
 
 // Get value descriptors with a limit based on the query
-func (mc *MongoClient) getValueDescriptorsLimit(q bson.M, limit int) ([]models.ValueDescriptor, error) {
+func (mc MongoClient) getValueDescriptorsLimit(q bson.M, limit int) ([]models.ValueDescriptor, error) {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
@@ -616,7 +616,7 @@ func (mc *MongoClient) getValueDescriptorsLimit(q bson.M, limit int) ([]models.V
 }
 
 // Get a value descriptor based on the query
-func (mc *MongoClient) getValueDescriptor(q bson.M) (models.ValueDescriptor, error) {
+func (mc MongoClient) getValueDescriptor(q bson.M) (models.ValueDescriptor, error) {
 	s := mc.getSessionCopy()
 	defer s.Close()
 

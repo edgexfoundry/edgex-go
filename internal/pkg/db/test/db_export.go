@@ -13,11 +13,6 @@ import (
 )
 
 func TestExportDB(t *testing.T, db export.DBClient) {
-	err := db.Connect()
-	if err != nil {
-		t.Fatalf("Could not connect: %v", err)
-	}
-
 	// Remove previous registrations
 	db.ScrubAllRegistrations()
 

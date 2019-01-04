@@ -20,8 +20,6 @@ import (
 type DBClient interface {
 	CloseSession()
 
-	Connect() error
-
 	// Schedule event
 	GetAllScheduleEvents(se *[]contract.ScheduleEvent) error
 	AddScheduleEvent(se *contract.ScheduleEvent) error

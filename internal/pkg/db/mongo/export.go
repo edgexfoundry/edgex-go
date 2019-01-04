@@ -25,13 +25,13 @@ import (
 
 // Return all the registrations
 // UnexpectedError - failed to retrieve registrations from the database
-func (mc *MongoClient) Registrations() ([]export.Registration, error) {
+func (mc MongoClient) Registrations() ([]export.Registration, error) {
 	return mc.getRegistrations(bson.M{})
 }
 
 // Add a new registration
 // UnexpectedError - failed to add to database
-func (mc *MongoClient) AddRegistration(reg *export.Registration) (bson.ObjectId, error) {
+func (mc MongoClient) AddRegistration(reg *export.Registration) (bson.ObjectId, error) {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
@@ -50,7 +50,7 @@ func (mc *MongoClient) AddRegistration(reg *export.Registration) (bson.ObjectId,
 // Update a registration
 // UnexpectedError - problem updating in database
 // NotFound - no registration with the ID was found
-func (mc *MongoClient) UpdateRegistration(reg export.Registration) error {
+func (mc MongoClient) UpdateRegistration(reg export.Registration) error {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
@@ -67,7 +67,7 @@ func (mc *MongoClient) UpdateRegistration(reg export.Registration) error {
 // Get a registration by ID
 // UnexpectedError - problem getting in database
 // NotFound - no registration with the ID was found
-func (mc *MongoClient) RegistrationById(id string) (export.Registration, error) {
+func (mc MongoClient) RegistrationById(id string) (export.Registration, error) {
 	if !bson.IsObjectIdHex(id) {
 		return export.Registration{}, db.ErrInvalidObjectId
 	}
@@ -77,14 +77,14 @@ func (mc *MongoClient) RegistrationById(id string) (export.Registration, error) 
 // Get a registration by name
 // UnexpectedError - problem getting in database
 // NotFound - no registration with the name was found
-func (mc *MongoClient) RegistrationByName(name string) (export.Registration, error) {
+func (mc MongoClient) RegistrationByName(name string) (export.Registration, error) {
 	return mc.getRegistration(bson.M{"name": name})
 }
 
 // Delete a registration by ID
 // UnexpectedError - problem getting in database
 // NotFound - no registration with the ID was found
-func (mc *MongoClient) DeleteRegistrationById(id string) error {
+func (mc MongoClient) DeleteRegistrationById(id string) error {
 	if !bson.IsObjectIdHex(id) {
 		return db.ErrInvalidObjectId
 	}
@@ -94,12 +94,12 @@ func (mc *MongoClient) DeleteRegistrationById(id string) error {
 // Delete a registration by name
 // UnexpectedError - problem getting in database
 // NotFound - no registration with the ID was found
-func (mc *MongoClient) DeleteRegistrationByName(name string) error {
+func (mc MongoClient) DeleteRegistrationByName(name string) error {
 	return mc.deleteRegistration(bson.M{"name": name})
 }
 
 // Delete all registrations
-func (mc *MongoClient) ScrubAllRegistrations() error {
+func (mc MongoClient) ScrubAllRegistrations() error {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
@@ -108,7 +108,7 @@ func (mc *MongoClient) ScrubAllRegistrations() error {
 }
 
 // Get registrations for the passed query
-func (mc *MongoClient) getRegistrations(q bson.M) ([]export.Registration, error) {
+func (mc MongoClient) getRegistrations(q bson.M) ([]export.Registration, error) {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
@@ -122,7 +122,7 @@ func (mc *MongoClient) getRegistrations(q bson.M) ([]export.Registration, error)
 }
 
 // Get a single registration for the passed query
-func (mc *MongoClient) getRegistration(q bson.M) (export.Registration, error) {
+func (mc MongoClient) getRegistration(q bson.M) (export.Registration, error) {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
@@ -136,7 +136,7 @@ func (mc *MongoClient) getRegistration(q bson.M) (export.Registration, error) {
 }
 
 // Delete from the collection based on ID
-func (mc *MongoClient) deleteRegistration(q bson.M) error {
+func (mc MongoClient) deleteRegistration(q bson.M) error {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
