@@ -8,7 +8,6 @@ package test
 
 import (
 	"fmt"
-	"github.com/google/uuid"
 	"testing"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces"
@@ -40,7 +39,6 @@ func getAddressable(i int, prefix string) models.Addressable {
 	name := fmt.Sprintf("%sname%d", prefix, i)
 	a := models.Addressable{}
 
-	a.Id = uuid.New().String()
 	a.Name = name
 	a.Protocol = name
 	a.HTTPMethod = name
@@ -70,6 +68,7 @@ func getDeviceService(db interfaces.DBClient, i int) (models.DeviceService, erro
 	if err != nil {
 		return ds, fmt.Errorf("Error creating addressable: %v", err)
 	}
+
 	return ds, nil
 }
 

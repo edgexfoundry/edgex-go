@@ -16,12 +16,12 @@ package models
 import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	contract "github.com/edgexfoundry/edgex-go/pkg/models"
-	"github.com/google/uuid"
 	"github.com/globalsign/mgo/bson"
+	"github.com/google/uuid"
 )
 
 type Reading struct {
-	Id       bson.ObjectId `bson:"_id"`
+	Id       bson.ObjectId `bson:"_id,omitempty"`
 	Uuid     string        `bson:"uuid"`
 	Pushed   int64         `bson:"pushed"`  // When the data was pushed out of EdgeX (0 - not pushed yet)
 	Created  int64         `bson:"created"` // When the reading was created

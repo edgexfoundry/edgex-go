@@ -284,9 +284,7 @@ func testDBEvents(t *testing.T, db interfaces.DBClient) {
 	if err != nil {
 		t.Fatalf("Error getting events %v", err)
 	}
-	if events == nil {
-		t.Fatalf("Should return an empty array")
-	}
+
 	if len(events) != 0 {
 		t.Fatalf("There should be 0 events instead of %d", len(events))
 	}
@@ -497,9 +495,6 @@ func testDBValueDescriptors(t *testing.T, db interfaces.DBClient) {
 	values, err := db.ValueDescriptors()
 	if err != nil {
 		t.Fatalf("Error getting events %v", err)
-	}
-	if values == nil {
-		t.Fatalf("Should return an empty array")
 	}
 	if len(values) != 0 {
 		t.Fatalf("There should be 0 values instead of %d", len(values))
