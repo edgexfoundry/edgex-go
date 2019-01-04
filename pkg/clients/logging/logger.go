@@ -97,7 +97,7 @@ func NewClient(owningServiceName string, isRemote bool, logTarget string, logLev
 	}
 
 	lc.rootLogger = log.WithPrefix(lc.rootLogger, "ts", log.DefaultTimestampUTC,
-		"source", log.Caller(5))
+		"app", owningServiceName, "source", log.Caller(5))
 
 	if logTarget == "" {
 		lc.Error("logTarget cannot be blank, using stdout only")
@@ -169,7 +169,6 @@ func (lc EdgeXLogger) log(logLevel string, msg string, args ...interface{}) {
 		stdlog.Fatal(err.Error())
 		return
 	}
-
 
 }
 
