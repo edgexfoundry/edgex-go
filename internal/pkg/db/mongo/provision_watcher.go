@@ -94,7 +94,7 @@ func (mpw *mongoProvisionWatcher) SetBSON(raw bson.Raw) error {
 	}
 
 	mpw.Profile = mdp.DeviceProfile
-	mpw.Service = mds.DeviceService
+	mpw.Service = mds.DeviceService.ToContract()
 
 	return nil
 }

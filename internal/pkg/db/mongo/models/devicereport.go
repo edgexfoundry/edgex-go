@@ -18,7 +18,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	contract "github.com/edgexfoundry/edgex-go/pkg/models"
 	"github.com/globalsign/mgo/bson"
-	"github.com/google/uuid"
 )
 
 type DeviceReport struct {
@@ -54,25 +53,10 @@ func (dr *DeviceReport) ToContract() contract.DeviceReport {
 }
 
 func (dr *DeviceReport) FromContract(from contract.DeviceReport) error {
-	// In this first case, ID is empty so this must be an add.
-	// Generate new BSON/UUIDs
-	if from.Id == "" {
-		dr.Id = bson.NewObjectId()
-		dr.Uuid = uuid.New().String()
-	} else {
-		// In this case, we're dealing with an existing devicereport
-		if !bson.IsObjectIdHex(from.Id) {
-			// Command Id is not a BSON ID. Is it a UUID?
-			_, err := uuid.Parse(from.Id)
-			if err != nil { // It is some unsupported type of string
-				return db.ErrInvalidObjectId
-			}
-			// Leave model's ID blank for now. We will be querying based on the UUID.
-			dr.Uuid = from.Id
-		} else {
-			// ID of pre-existing event is a BSON ID. We will query using the BSON ID.
-			dr.Id = bson.ObjectIdHex(from.Id)
-		}
+	var err error
+	dr.Id, dr.Uuid, err = FromContractId(from.Id)
+	if err != nil {
+		return err
 	}
 
 	dr.Name = from.Name

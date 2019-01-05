@@ -371,13 +371,14 @@ func deleteDeviceReport(dr models.DeviceReport, w http.ResponseWriter) error {
 func notifyDeviceReportAssociates(dr models.DeviceReport, action string) error {
 	// Get the device of the report
 	var d models.Device
-	if err := dbClient.GetDeviceByName(&d, dr.Device); err != nil {
+	var err error
+	if err = dbClient.GetDeviceByName(&d, dr.Device); err != nil {
 		return err
 	}
 
 	// Get the device service for the device
 	var ds models.DeviceService
-	if err := dbClient.GetDeviceServiceById(&ds, d.Service.Service.Id.Hex()); err != nil {
+	if ds, err = dbClient.GetDeviceServiceById(d.Service.Service.Id); err != nil {
 		return err
 	}
 
@@ -385,7 +386,7 @@ func notifyDeviceReportAssociates(dr models.DeviceReport, action string) error {
 	services = append(services, ds)
 
 	// Notify the associating device services
-	if err := notifyAssociates(services, dr.Id, action, models.REPORT); err != nil {
+	if err = notifyAssociates(services, dr.Id, action, models.REPORT); err != nil {
 		return err
 	}
 

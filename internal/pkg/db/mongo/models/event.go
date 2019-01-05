@@ -18,7 +18,6 @@ import (
 	contract "github.com/edgexfoundry/edgex-go/pkg/models"
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
-	"github.com/google/uuid"
 	"github.com/pkg/errors"
 )
 
@@ -58,25 +57,10 @@ func (e Event) ToContract() contract.Event {
 }
 
 func (e *Event) FromContract(from contract.Event) error {
-	// In this first case, ID is empty so this must be an add.
-	// Generate new BSON/UUIDs
-	if from.ID == "" {
-		e.Id = bson.NewObjectId()
-		e.Uuid = uuid.New().String()
-	} else {
-		// In this case, we're dealing with an existing event
-		if !bson.IsObjectIdHex(from.ID) {
-			// EventID is not a BSON ID. Is it a UUID?
-			_, err := uuid.Parse(from.ID)
-			if err != nil { // It is some unsupported type of string
-				return db.ErrInvalidObjectId
-			}
-			// Leave model's ID blank for now. We will be querying based on the UUID.
-			e.Uuid = from.ID
-		} else {
-			// ID of pre-existing event is a BSON ID. We will query using the BSON ID.
-			e.Id = bson.ObjectIdHex(from.ID)
-		}
+	var err error
+	e.Id, e.Uuid, err = FromContractId(from.ID)
+	if err != nil {
+		return err
 	}
 
 	e.Pushed = from.Pushed
