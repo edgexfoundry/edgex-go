@@ -16,10 +16,10 @@ package models
 import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	contract "github.com/edgexfoundry/edgex-go/pkg/models"
-	"github.com/google/uuid"
-	"github.com/pkg/errors"
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
+	"github.com/google/uuid"
+	"github.com/pkg/errors"
 )
 
 type Event struct {
@@ -107,7 +107,9 @@ func (e Event) GetBSON() (interface{}, error) {
 	// Turn the readings into DBRef objects
 	var readings []mgo.DBRef
 	for _, reading := range e.Readings {
-		readings = append(readings, mgo.DBRef{Collection: db.ReadingsCollection, Id: reading.Id})
+		if reading.Id.Valid() {
+			readings = append(readings, mgo.DBRef{Collection: db.ReadingsCollection, Id: reading.Id})
+		}
 	}
 
 	return struct {
@@ -120,7 +122,7 @@ func (e Event) GetBSON() (interface{}, error) {
 		Origin   int64         `bson:"origin"`
 		Schedule string        `bson:"schedule,omitempty"` // Schedule identifier
 		Event    string        `bson:"event"`              // Schedule event identifier
-		Readings []mgo.DBRef   `bson:"readings"`           // List of readings
+		Readings []mgo.DBRef   `bson:"readings,omitempty"` // List of readings
 	}{
 		ID:       e.Id,
 		Uuid:     e.Uuid,

@@ -1023,9 +1023,6 @@ func mapCommands(commands []models.Command, err error) ([]contract.Command, erro
 		mapped = append(mapped, cmd.ToContract())
 	}
 
-	if mapped == nil {
-		return nil, db.ErrNotFound
-	}
 	return mapped, nil
 }
 
