@@ -77,7 +77,7 @@ docker: $(DOCKERS)
 
 docker_config_seed:
 	docker build \
-		-f docker/Dockerfile.config-seed \
+		-f cmd/config-seed/Dockerfile \
 		--label "git_sha=$(GIT_SHA)" \
 		-t edgexfoundry/docker-core-config-seed-go:$(GIT_SHA) \
 		-t edgexfoundry/docker-core-config-seed-go:$(VERSION)-dev \
