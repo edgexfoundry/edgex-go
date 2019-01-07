@@ -7,7 +7,7 @@ Introduction
 ============
 
 These instructions are for Go Lang Developers to obtain and run Go-based EdgeX Foundry microservices. (Users should read: :doc:`../Ch-GettingStartedUsers`) 
-It should be noted that EdgeX Foundry is migrating from Java to Go and C (and other compiled languages) in order to improve the performance and footprint of the platform.  While the Java services still function today, the Go versions of the microservices are considered to be the reference implementation.  Java versions of the services will be archived in the future unless organizations and individuals in the community decide to maintain and keep these services consistent with the reference implementations.
+While many of the Java services still function today, the Go versions of the microservices are considered to be the reference implementation.  Java versions of the services will be archived in the future unless organizations and individuals in the community decide to maintain and keep these services consistent with the reference implementations.
 
 ================================
 What You Need For Go Development

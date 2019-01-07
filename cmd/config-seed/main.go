@@ -28,6 +28,7 @@ func main() {
 	var useProfile string
 	var dirCmd string
 	var dirProperties string
+	var overwriteConfig bool
 
 	flag.StringVar(&useProfile, "profile", "", "Specify a profile other than default.")
 	flag.StringVar(&useProfile, "p", "", "Specify a profile other than default.")
@@ -35,6 +36,8 @@ func main() {
 	flag.StringVar(&dirProperties, "r", "./res/properties", "Specify alternate properties location as absolute path")
 	flag.StringVar(&dirCmd, "cmd", "../cmd", "Specify alternate cmd location as absolute path")
 	flag.StringVar(&dirCmd, "c", "../cmd", "Specify alternate cmd location as absolute path")
+	flag.BoolVar(&overwriteConfig, "overwrite", false, "Overwrite configuration in Consul")
+	flag.BoolVar(&overwriteConfig, "o", false, "Overwrite configuration in Consul")
 
 	flag.Usage = usage.HelpCallbackConfigSeed
 	flag.Parse()
@@ -50,7 +53,7 @@ func main() {
 	if err != nil {
 		config.LoggingClient.Error(err.Error())
 	}
-	err = config.ImportConfiguration(dirCmd, useProfile)
+	err = config.ImportConfiguration(dirCmd, useProfile, overwriteConfig)
 	if err != nil {
 		config.LoggingClient.Error(err.Error())
 	}

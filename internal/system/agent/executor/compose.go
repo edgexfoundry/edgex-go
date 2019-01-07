@@ -2,14 +2,25 @@ package executor
 
 import (
 	"fmt"
-	"strings"
-	"os"
-	"log"
-	"os/exec"
-	"net/http"
 	"io/ioutil"
+	"net/http"
+	"os"
+	"os/exec"
+	"strings"
+
 	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/internal/system/agent/logger"
 )
+var services = map[string]string{
+internal.SupportNotificationsServiceKey: "notifications",
+internal.CoreDataServiceKey: "data",
+internal.CoreMetaDataServiceKey: "metadata",
+internal.CoreCommandServiceKey: "command",
+internal.ExportClientServiceKey: "export-client",
+internal.ExportDistroServiceKey: "export-distro",
+internal.SupportLoggingServiceKey: "logging",
+internal.ConfigSeedServiceKey: "config-seed",
+}
 
 func WasDockerContainerComposeStarted(service string) bool {
 
@@ -20,19 +31,19 @@ func WasDockerContainerComposeStarted(service string) bool {
 	cmdName := "docker"
 	cmdArgs := []string{"ps"}
 	if cmdOut, err = exec.Command(cmdName, cmdArgs...).Output(); err != nil {
-		fmt.Fprintln(os.Stderr, "There was an error running the docker-compose command: ", err)
+		logs.LoggingClient.Error("error running the docker-compose command", "error message", err.Error())
 		os.Exit(1)
 	}
 	composeOutput := string(cmdOut)
-	// Find whether the container which we sought to start has started.
+	// Find whether the container to start has started.
 	for _, line := range strings.Split(strings.TrimSuffix(composeOutput, "\n"), "\n") {
 		if strings.Contains(line, service) {
 
 			if strings.Contains(line, "Up") {
-				// fmt.Sprintf("The container for {%v} has started! Some (container) details as follows:\n{%v}", service, line)
+				logs.LoggingClient.Debug("container started", "service name", service, "details", line)
 				return true
 			} else {
-				// fmt.Sprintf("The container for {%v} has NOT started!" + service)
+				logs.LoggingClient.Warn("container not started", "service name", service)
 				return false
 			}
 		}
@@ -40,60 +51,22 @@ func WasDockerContainerComposeStarted(service string) bool {
 	return false
 }
 
-func StartDockerContainerCompose(service string) error {
+func StartDockerContainerCompose(service string, composeUrl string) error {
+	_, knownService := services[service]
 
-	var dockerComposeService string
+	if knownService {
+		RunDockerComposeCommand(service, services[service], composeUrl)
 
-	switch service {
+		return nil
+	} else {
+		newError := fmt.Errorf("unknown service: %v", service)
+		logs.LoggingClient.Error(newError.Error())
 
-	case internal.SupportNotificationsServiceKey:
-		dockerComposeService = "notifications"
-		RunDockerComposeCommand(service, dockerComposeService)
-		break
-
-	case internal.CoreDataServiceKey:
-		dockerComposeService = "data"
-		RunDockerComposeCommand(service, dockerComposeService)
-		break
-
-	case internal.CoreMetaDataServiceKey:
-		dockerComposeService = "metadata"
-		RunDockerComposeCommand(service, dockerComposeService)
-		break
-
-	case internal.CoreCommandServiceKey:
-		dockerComposeService = "command"
-		RunDockerComposeCommand(service, dockerComposeService)
-		break
-
-	case internal.ExportClientServiceKey:
-		dockerComposeService = "export-client"
-		RunDockerComposeCommand(service, dockerComposeService)
-		break
-
-	case internal.ExportDistroServiceKey:
-		dockerComposeService = "export-distro"
-		RunDockerComposeCommand(service, dockerComposeService)
-		break
-
-	case internal.SupportLoggingServiceKey:
-		dockerComposeService = "logging"
-		RunDockerComposeCommand(service, dockerComposeService)
-		break
-
-	case internal.ConfigSeedServiceKey:
-		dockerComposeService = "config-seed"
-		RunDockerComposeCommand(service, dockerComposeService)
-		break
-
-	default:
-		// fmt.Sprintf(">> Unknown service: %v", service)
-		break
+		return newError
 	}
-	return nil
 }
 
-func RunDockerComposeCommand(service string, dockerComposeService string) {
+func RunDockerComposeCommand(service string, dockerComposeService string, composeUrl string) {
 
 	var (
 		err    error
@@ -101,16 +74,15 @@ func RunDockerComposeCommand(service string, dockerComposeService string) {
 	)
 	cmdName := "docker-compose"
 
-	// Retry the fetching of the docker-compose.yml from the Github edgexfoundry repository.
-	// fmt.Sprintf("Pulling latest compose file from Github edgexfoundry repository...")
+	// Retry fetch of the docker-compose.yml from the GitHub repository.
 	err = Do(func(attempt int) (bool, error) {
 		var err error
-		cmdDir, err = FetchDockerComposeYamlAndPath()
+		cmdDir, err = FetchDockerComposeYamlAndPath(composeUrl)
 		// Try 5 times
 		return attempt < 5, err
 	})
 	if err != nil {
-		log.Fatalln("Unable to pull the latest compose file from Github edgexfoundry repository.:", err)
+		logs.LoggingClient.Error("unable to pull the latest compose file from repository" ,"error message", err.Error())
 	}
 
 	cmdArgs := []string{"up", "-d", dockerComposeService}
@@ -119,73 +91,59 @@ func RunDockerComposeCommand(service string, dockerComposeService string) {
 
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		log.Fatal(fmt.Sprintf("Call to docker-compose up -d failed with %s\n", err))
+		logs.LoggingClient.Warn("docker-compose up -d failed", "error message", err.Error())
 	}
-
-	// composeOutput := string(out)
-	// fmt.Sprintf("For the micro-service {%v}, we got this docker-compose output:\n {%v}", service, composeOutput)
 	println(out)
 
 	if ! WasDockerContainerComposeStarted(service) {
-		log.Fatal(fmt.Sprintf("The container for {%v} was NOT started!" + service))
+		logs.LoggingClient.Warn("container not started", "service name",  service)
 	}
 }
 
-func FetchDockerComposeYamlAndPath() (string, error) {
+func FetchDockerComposeYamlAndPath(composeUrl string) (string, error) {
 
-	// Specifying the location of the latest "docker-compose.yml" file (on Github).
-	composeUrl := "https://raw.githubusercontent.com/edgexfoundry/developer-scripts/master/compose-files/docker-compose-california-0.6.1.yml"
+	// [1] Fetch contents of the latest "docker-compose.yml" file from GitHub.
 	req, _ := http.NewRequest("GET", composeUrl, nil)
-	res, _ := http.DefaultClient.Do(req)
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		logs.LoggingClient.Error("GET failed", "error message", err.Error())
+	}
 
 	if res.Body != nil {
 		defer res.Body.Close()
 	}
-
 	body, _ := ioutil.ReadAll(res.Body)
 
-	// [1] Fetch contents of the latest "docker-compose.yml" file from Github.
-	resp, err := http.Get("https://raw.githubusercontent.com/edgexfoundry/developer-scripts/master/compose-files/docker-compose-california-0.6.0.yml")
-	if err != nil {
-		log.Fatal(fmt.Sprintf("Call to http.Get() failed with %s\n", err))
-	}
-	defer resp.Body.Close()
-
-	// [2] Determine the directory (in the deployed file-system) that we will be writing the fetched contents to.
+	// [2] Determine the directory (in the deployed filesystem) that we will be writing the fetched contents to.
 	cmdName := "curl"
 	cmdName = "pwd"
 
 	cmd := exec.Command(cmdName)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		log.Fatal(fmt.Sprintf("Call to exec.Command(cmdName) failed with %s\n", err))
+		logs.LoggingClient.Error("exec.Command(cmdName) failed", "error message", err.Error())
 	}
 	composeOutput := string(out)
 
 	cmdArgs := composeOutput
 	path := strings.TrimSuffix(cmdArgs, "\n")
-	// fmt.Sprintf("Determined this to be the directory we will be writing to: {%v}", path)
 
 	composeFile := "/docker-compose.yml"
 	filename := path + composeFile
 
-	// [3] Get info about the named file (i.e. under the designator "filename").
+	// [3] Get info about the file "filename".
 	fileInfo, err := os.Stat(filename)
 	if err != nil {
-		log.Fatal(err.Error(), "Filename-related error!")
+		logs.LoggingClient.Warn("docker-compose.yml does not exist; creating", "error message", err.Error())
 	}
 
-	// [4] Determine whether we have _already_ fetched the contents and written them to the deployed file-system.
+	// [4] Determine whether we have already fetched the contents and written them to the deployed filesystem.
 	if os.IsNotExist(err) {
 		println(fileInfo)
-		// fmt.Sprintf("File {%v} does NOT exist. Therefore, create it.", fileInfo)
 		err = ioutil.WriteFile(filename, []byte(body), 0666)
 		if err != nil {
-			log.Fatal(err)
+			logs.LoggingClient.Error("already fetched the contents and written them to the deployed file-system", "error message", err.Error())
 		}
-	} else {
-		// fmt.Sprintf("File {%v} already exists! Therefore, NOT creating it.", filename)
 	}
-
 	return path, err
 }

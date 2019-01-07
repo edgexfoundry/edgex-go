@@ -17,14 +17,16 @@ package logger
 
 import (
 	"fmt"
-	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
-	"log"
+	"io"
+	stdlog "log"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/edgexfoundry/edgex-go/pkg/clients"
+	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
+	"github.com/go-kit/kit/log"
 )
 
 // These constants identify the log levels in order of increasing severity.
@@ -45,11 +47,11 @@ var LogLevels = []string{
 
 type LoggingClient interface {
 	SetLogLevel(logLevel string) error
-	Debug(msg string, labels ...string) error
-	Error(msg string, labels ...string) error
-	Info(msg string, labels ...string) error
-	Trace(msg string, labels ...string) error
-	Warn(msg string, labels ...string) error
+	Debug(msg string, args ...interface{})
+	Error(msg string, args ...interface{})
+	Info(msg string, args ...interface{})
+	Trace(msg string, args ...interface{})
+	Warn(msg string, args ...interface{})
 }
 
 type EdgeXLogger struct {
@@ -57,8 +59,12 @@ type EdgeXLogger struct {
 	remoteEnabled     bool
 	logTarget         string
 	logLevel          *string
-	stdOutLogger      *log.Logger
-	fileLogger        *log.Logger
+	rootLogger        log.Logger
+	levelLoggers      map[string]log.Logger
+}
+
+type fileWriter struct {
+	fileName string
 }
 
 // Create a new logging client for the owning service
@@ -75,18 +81,40 @@ func NewClient(owningServiceName string, isRemote bool, logTarget string, logLev
 		logLevel:          &logLevel,
 	}
 
-	//If local logging, verify directory exists
-	if !lc.remoteEnabled {
+	// Set up the loggers
+	lc.levelLoggers = map[string]log.Logger{}
+
+	if !lc.remoteEnabled && logTarget != "" { // file based logging
 		verifyLogDirectory(lc.logTarget)
+
+		w, err := newFileWriter(lc.logTarget)
+		if err != nil {
+			stdlog.Fatal(err.Error())
+		}
+		lc.rootLogger = log.NewLogfmtLogger(io.MultiWriter(os.Stdout, log.NewSyncWriter(w)))
+	} else { // HTTP logging OR invalid log target
+		lc.rootLogger = log.NewLogfmtLogger(os.Stdout)
 	}
 
-	// Set up the loggers
-	lc.stdOutLogger = log.New(os.Stdout, "", log.Ldate|log.Ltime)
-	lc.fileLogger = &log.Logger{}
-	lc.fileLogger.SetFlags(log.Ldate | log.Ltime)
+	lc.rootLogger = log.WithPrefix(lc.rootLogger, "ts", log.DefaultTimestampUTC,
+		"app", owningServiceName, "source", log.Caller(5))
 
+	if logTarget == "" {
+		lc.Error("logTarget cannot be blank, using stdout only")
+	}
 
 	return lc
+}
+
+func (f *fileWriter) Write(p []byte) (n int, err error) {
+	file, err := os.OpenFile(f.fileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY|os.O_SYNC, 0644)
+	if err != nil {
+		return 0, err
+	}
+	defer file.Close()
+
+	_, err = file.WriteString(string(p))
+	return len(p), err
 }
 
 // IsValidLogLevel checks if is a valid log level
@@ -99,44 +127,49 @@ func IsValidLogLevel(l string) bool {
 	return false
 }
 
-// Send the log out as a REST request
-func (lc EdgeXLogger) log(logLevel string, msg string, labels []string) error {
+func newFileWriter(logTarget string) (io.Writer, error) {
+	fileWriter := fileWriter{fileName: logTarget}
+
+	return &fileWriter, nil
+}
+
+func (lc EdgeXLogger) log(logLevel string, msg string, args ...interface{}) {
 	// Check minimum log level
 	for _, name := range LogLevels {
 		if name == *lc.logLevel {
 			break
 		}
 		if name == logLevel {
-			return nil
+			return
 		}
 	}
 
-	lc.stdOutLogger.SetPrefix(fmt.Sprintf("%s: ", logLevel))
-	lc.stdOutLogger.Println(msg)
-
-	if !lc.remoteEnabled {
-		// Save to logging file if path was set
-		return lc.saveToLogFile(logLevel, msg)
+	if lc.remoteEnabled {
+		// Send to logging service
+		logEntry := lc.buildLogEntry(logLevel, msg, args...)
+		lc.sendLog(logEntry)
 	}
 
-	// Send to logging service
-	logEntry := lc.buildLogEntry(logLevel, msg, labels)
-	return lc.sendLog(logEntry)
-}
-
-func (lc EdgeXLogger) saveToLogFile(prefix string, message string) error {
-	if lc.logTarget == "" {
-		return nil
+	if args == nil {
+		args = []interface{}{"msg", msg}
+	} else {
+		if len(args)%2 == 1 {
+			// add an empty string to keep k/v pairs correct
+			args = append(args, "")
+		}
+		args = append(args, "msg", msg)
 	}
-	file, err := os.OpenFile(lc.logTarget, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	defer file.Close()
+
+	if lc.levelLoggers[logLevel] == nil {
+		lc.levelLoggers[logLevel] = log.WithPrefix(lc.rootLogger, "level", logLevel)
+	}
+
+	err := lc.levelLoggers[logLevel].Log(args...)
 	if err != nil {
-		fmt.Println("Error opening log file: " + err.Error())
+		stdlog.Fatal(err.Error())
+		return
 	}
-	lc.fileLogger.SetOutput(file)
-	lc.fileLogger.SetPrefix(prefix + ": ")
-	lc.fileLogger.Println(message)
-	return nil
+
 }
 
 func verifyLogDirectory(path string) {
@@ -163,53 +196,47 @@ func (lc EdgeXLogger) SetLogLevel(logLevel string) error {
 }
 
 // Log an INFO level message
-func (lc EdgeXLogger) Info(msg string, labels ...string) error {
-	return lc.log(InfoLog, msg, labels)
+func (lc EdgeXLogger) Info(msg string, args ...interface{}) {
+	lc.log(InfoLog, msg, args...)
 }
 
 // Log a TRACE level message
-func (lc EdgeXLogger) Trace(msg string, labels ...string) error {
-	return lc.log(TraceLog, msg, labels)
+func (lc EdgeXLogger) Trace(msg string, args ...interface{}) {
+	lc.log(TraceLog, msg, args...)
 }
 
 // Log a DEBUG level message
-func (lc EdgeXLogger) Debug(msg string, labels ...string) error {
-	return lc.log(DebugLog, msg, labels)
+func (lc EdgeXLogger) Debug(msg string, args ...interface{}) {
+	lc.log(DebugLog, msg, args...)
 }
 
 // Log a WARN level message
-func (lc EdgeXLogger) Warn(msg string, labels ...string) error {
-	return lc.log(WarnLog, msg, labels)
+func (lc EdgeXLogger) Warn(msg string, args ...interface{}) {
+	lc.log(WarnLog, msg, args...)
 }
 
 // Log an ERROR level message
-func (lc EdgeXLogger) Error(msg string, labels ...string) error {
-	return lc.log(ErrorLog, msg, labels)
+func (lc EdgeXLogger) Error(msg string, args ...interface{}) {
+	lc.log(ErrorLog, msg, args...)
 }
 
 // Build the log entry object
-func (lc EdgeXLogger) buildLogEntry(logLevel string, msg string, labels []string) models.LogEntry {
+func (lc EdgeXLogger) buildLogEntry(logLevel string, msg string, args ...interface{}) models.LogEntry {
 	res := models.LogEntry{}
 	res.Level = logLevel
 	res.Message = msg
-	res.Labels = labels
+	res.Args = args
 	res.OriginService = lc.owningServiceName
 
 	return res
 }
 
 // Send the log as an http request
-func (lc EdgeXLogger) sendLog(logEntry models.LogEntry) error {
-	if lc.logTarget == "" {
-		return nil
-	}
-
+func (lc EdgeXLogger) sendLog(logEntry models.LogEntry) {
 	go func() {
 		_, err := clients.PostJsonRequest(lc.logTarget, logEntry)
 		if err != nil {
 			fmt.Println(err.Error())
 		}
 	}()
-
-	return nil
 }

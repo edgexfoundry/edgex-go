@@ -1,0 +1,54 @@
+#!/bin/bash
+
+# this is a little hackish, but reads better to use string concatenation 
+# to build the list of services than have a long string 
+ALL_SERVICES=""
+
+# base services
+ALL_SERVICES="$ALL_SERVICES consul"
+ALL_SERVICES="$ALL_SERVICES mongod"
+ALL_SERVICES="$ALL_SERVICES mongo-worker"
+
+# core services
+ALL_SERVICES="$ALL_SERVICES core-data"
+ALL_SERVICES="$ALL_SERVICES core-metadata"
+ALL_SERVICES="$ALL_SERVICES core-config-seed"
+ALL_SERVICES="$ALL_SERVICES core-command"
+
+# support services
+ALL_SERVICES="$ALL_SERVICES support-notifications"
+ALL_SERVICES="$ALL_SERVICES support-logging"
+ALL_SERVICES="$ALL_SERVICES support-scheduler"
+# TODO: add support-rulesengine here when available
+
+# export services
+ALL_SERVICES="$ALL_SERVICES export-distro"
+ALL_SERVICES="$ALL_SERVICES export-client"
+
+# device services
+ALL_SERVICES="$ALL_SERVICES device-virtual"
+
+# security services
+ALL_SERVICES="$ALL_SERVICES security-services"
+
+
+for key in $ALL_SERVICES; do
+    # get the config key for the service
+    status=$(snapctl get $key)
+    case $key in 
+        mongo-worker)
+            # it doesn't make any sense to disable the mongo-worker since it's a oneshot
+            # daemon that runs after mongod, so just ignore this request
+            ;;
+        *)
+            # default case for all other services just enable/disable the service using
+            # snapd/systemd
+            # if the service is meant to be off, then disable it
+            if [ "$status" = "off" ]; then
+                snapctl stop --disable edgexfoundry.$key
+            elif [ "$status" = "on" ]; then 
+                snapctl start --enable edgexfoundry.$key
+            fi
+            ;;
+    esac
+done

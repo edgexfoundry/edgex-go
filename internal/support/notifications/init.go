@@ -29,7 +29,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/interfaces"
 	"github.com/edgexfoundry/edgex-go/pkg/clients"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
-	"github.com/edgexfoundry/edgex-go/pkg/clients/notifications"
 	"github.com/pkg/errors"
 )
 
@@ -38,7 +37,6 @@ var chConfig chan interface{} //A channel for use by ConsulDecoder in detecting 
 var Configuration *ConfigurationStruct
 var dbClient interfaces.DBClient
 var LoggingClient logger.LoggingClient
-var nc notifications.NotificationsClient
 
 func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup, ch chan error) {
 	until := time.Now().Add(time.Millisecond * time.Duration(timeout))
@@ -117,19 +115,14 @@ func connectToDatabase() error {
 		return fmt.Errorf("couldn't create database client: %v", err.Error())
 	}
 
-	// Connect to the database
-	err = dbClient.Connect()
-	if err != nil {
-		return fmt.Errorf("couldn't connect to database: %v", err.Error())
-	}
-	return nil
+	return err
 }
 
 // Return the dbClient interface
 func newDBClient(dbType string, config db.Configuration) (interfaces.DBClient, error) {
 	switch dbType {
 	case db.MongoDB:
-		return mongo.NewClient(config), nil
+		return mongo.NewClient(config)
 	default:
 		return nil, db.ErrUnsupportedDatabase
 	}
@@ -187,7 +180,7 @@ func connectToConsul(conf *ConfigurationStruct) (*ConfigurationStruct, error) {
 		}
 		conf = actual
 		//Check that information was successfully read from Consul
-		if conf.ResendLimit == 0 {
+		if conf.Service.Port == 0 {
 			return nil, errors.New("error reading from Consul")
 		}
 	}
@@ -230,4 +223,3 @@ func setLoggingTarget() string {
 	}
 	return Configuration.Logging.File
 }
-

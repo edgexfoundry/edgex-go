@@ -2,14 +2,15 @@ name: edgexfoundry
 version: 'replace-me'
 version-script: |
     echo $(cat VERSION)-$(date +%Y%m%d)+$(git rev-parse --short HEAD)
-summary: Provides a full set of Edgex Foundry core microservices.
+summary: Open-source framework for IoT edge computing
 description: |
- This snap provides a full set of EdgeX Foundry core micro services.
- The snap contains Consul, MongoDB, all of the EdgeX Go-based micro services from
- this repository, and three Java-based services, support-rulesengine and support-
- scheduler, and device-virtual, as well as Vault, Kong, Cassandra, and the two go-based 
- security micro services. The packaging for this snap can be found at:
- https://github.com/edgexfoundry/edgex-go
+  EdgeX Foundry is a vendor-neutral open source project hosted by The Linux 
+  Foundation building a common open framework for IoT edge computing. This 
+  snap contains all of the EdgeX core, security, and support reference 
+  services, as well as Consul, Kong, MongoDB, Vault, a JRE for the two 
+  remaining Java services, and a set of basic device services. The packaging 
+  for this snap can be found at: https://github.com/edgexfoundry/edgex-go
+icon: snap/local/assets/edgex-snap-icon.png
 
 # TODO: upgrade to stable before releasing to beta/candidate/stable
 grade: devel
@@ -25,48 +26,130 @@ confinement: strict
 # may be defaulting to this dir...
 
 apps:
-  kong:
-    command: bin/kong-wrapper.sh
-    plugs:
-      - network-bind
+  # edgex microservices
   consul:
     command: bin/start-consul.sh
-    # TODO: add stop-command
+    daemon: simple
     plugs: [network, network-bind]
-  vault:
-    command: bin/vault
-    plugs: [network, network-bind]
-  cassandra:
-    command: bin/cassandra-wrapper.sh
-    daemon: forking
-    # mount-observe needs to be manually connected post-install:
-    # `sudo snap connect cassandra:mount-observe ubuntu-core:mount-observe`
-    plugs:
-      - network
-      - network-bind
-      # Needed for checking available space in the data directories
-      # (java.io.File.getTotalSpace).
-      - mount-observe
   core-config-seed:
-    command: bin/start-config-seed.sh
+    command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh config-seed -c ${SNAP_DATA}/config
     plugs: [network, network-bind]
-  start-edgex:
-    command: bin/start-edgex.sh
-    plugs: [network, network-bind, system-observe, process-control, hardware-observe]
-  stop-edgex:
-    command: bin/stop-edgex.sh
-    plugs: [system-observe, process-control]
-  security-start:
-    command: bin/security-start.sh
-    plugs:
+    daemon: forking
+    passthrough:
+      after:
+        - consul
+  mongod:
+    command: bin/mongod-wrapper.sh
+    stop-command: bin/mongod --shutdown --dbpath ${SNAP_DATA}/mongo/db
+    plugs: [hardware-observe, network, network-bind, system-observe]
+    daemon: simple
+    passthrough:
+      after:
+        - core-config-seed
+  mongo-worker:
+    command: bin/mongo-worker-wrapper.sh
+    plugs: [network]
+    daemon: oneshot
+    passthrough:
+      after:
+        - mongod
+  security-services:
+    command: bin/fork-wrapper.sh $SNAP/bin/security-start.sh
+    stop-command: bin/security-stop.sh
+    daemon: forking
+    plugs: 
       - network
       - network-bind
+      - mount-observe
+    passthrough:
+      after:
+        - core-config-seed
+  support-logging:
+    command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh support-logging --consul
+    daemon: forking
+    plugs: [network, network-bind]
+    passthrough:
+      after:
+        - core-config-seed
+        - mongo-worker
+  support-notifications:
+    command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh support-notifications --consul
+    daemon: forking
+    plugs: [network, network-bind]
+    passthrough:
+      after:
+        - core-config-seed
+        - mongo-worker
+  core-data:
+    command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh core-data --consul
+    daemon: forking
+    plugs: [network, network-bind]
+    passthrough:
+      after:
+        - core-config-seed
+        - mongo-worker
+  core-metadata:
+    command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh core-metadata --consul
+    daemon: forking
+    plugs: [network, network-bind]
+    passthrough:
+      after:
+        - core-config-seed
+        - mongo-worker
+  core-command:
+    command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh core-command --consul
+    daemon: forking
+    plugs: [network, network-bind, ]
+    passthrough:
+      after:
+        - core-config-seed
+        - mongo-worker
+  support-scheduler:
+    command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh support-scheduler --consul
+    daemon: forking
+    plugs: [network, network-bind]
+    passthrough:
+      after:
+        - core-config-seed
+        - mongo-worker
+  export-client:
+    command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh export-client --consul
+    daemon: forking
+    plugs: [network, network-bind]
+    passthrough:
+      after:
+        - core-config-seed
+        - mongo-worker
+  export-distro:
+    command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh export-distro --consul
+    daemon: forking
+    plugs: [network, network-bind]
+    passthrough:
+      after:
+        - core-config-seed
+        - mongo-worker
+  sys-mgmt-agent:
+    command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh sys-mgmt-agent
+    daemon: forking
+    plugs: [network, network-bind, daemon-notify]
+    passthrough:
+      after:
+        - core-config-seed
+        - mongo-worker
+  device-virtual:
+    command: bin/device-virtual-wrapper.sh
+    daemon: simple
+    plugs: [network, network-bind]
+    passthrough:
+      after:
+        - core-config-seed
+        - mongo-worker
+
+
+  # helper commands the snap exposes
   mongo:
     command: bin/mongo
-    plugs: [network]
-  mongod:
-    command: mongo/launch-edgex-mongo.sh
-    plugs: [hardware-observe, network, network-bind, system-observe]
+    plugs: [home, network]
   mongostat:
     command: bin/mongostat
     plugs: [network]
@@ -79,22 +162,40 @@ apps:
   curl:
     command: usr/bin/curl
     plugs: [network]
+  kong:
+    command: bin/kong-wrapper.sh
+    plugs:
+      - network-bind
 
 parts:
   curl:
     plugin: nil
-    override-pull: echo "no source pull"
+    # snapcraft defaults the source for a part that doesn't specify a source
+    # to ".", which then means when will scan the full directory and determine
+    # that something there has changed, i.e. the config-common parts with
+    # actual scripts, etc. this part gets marked out of date too and needs 
+    # rebuilding, which is false
+    # to resolve this we can just specify the source of something that doesn't
+    # matter and will minimize confusion by snapcraft
+    source: snap/local/build-helpers
     stage-packages:
       - curl
+  # this part really only exists so that the go parts can use this local 
+  # script, but we don't want all the go parts to depend on the config-common
+  # part, as they really don't depend on it
+  # separating this makes quicker iteration when you just need to change the 
+  # config scripts
+  go-build-helper:
+    plugin: dump
+    source: snap/local/build-helpers
+    prime: [-*]
   go:
-    after: [config-common]
+    after: [glide]
     source-tag: go1.10.2
     source-depth: 1
   glide:
     after:
-      # setting go to build after config-common ensures that it will get re-added to SNAPCRAFT_STAGE
-      # if config-common is rebuilt
-      - config-common
+      - go-build-helper
     plugin: dump
     source:
       - on amd64: https://github.com/Masterminds/glide/releases/download/v0.12.3/glide-v0.12.3-linux-amd64.tar.gz
@@ -188,15 +289,7 @@ parts:
 
   config-common:
     plugin: dump
-    source: ./snap/local
-    stage:
-      - bin/go-build-helper.sh
-      - config/*
-      - bin/*
-    prime:
-      - -bin/go-build-helper.sh
-      - bin/*
-      - config/*
+    source: snap/local/runtime-helpers
   mongodb:
     plugin: dump
     source:
@@ -256,7 +349,6 @@ parts:
     source: .
     plugin: make
     after:
-      - glide
       - go
     override-build: |
       . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
@@ -273,6 +365,9 @@ parts:
       install -DT "./cmd/export-client/export-client" "$SNAPCRAFT_PART_INSTALL/bin/export-client"
       install -DT "./cmd/support-logging/support-logging" "$SNAPCRAFT_PART_INSTALL/bin/support-logging"
       install -DT "./cmd/support-notifications/support-notifications" "$SNAPCRAFT_PART_INSTALL/bin/support-notifications"
+      install -DT "./cmd/support-scheduler/support-scheduler" "$SNAPCRAFT_PART_INSTALL/bin/support-scheduler"
+      install -DT "./cmd/sys-mgmt-agent/sys-mgmt-agent" "$SNAPCRAFT_PART_INSTALL/bin/sys-mgmt-agent"
+
 
       # FIXME: settings can't be overridden from the cmd-line!
       # Override 'LogFile' and 'LoggingRemoteURL'
@@ -284,7 +379,11 @@ parts:
       install -d "$SNAPCRAFT_PART_INSTALL/config/config-seed/res/properties/device-virtual/"
       install -d "$SNAPCRAFT_PART_INSTALL/config/support-logging/res/"
       install -d "$SNAPCRAFT_PART_INSTALL/config/support-notifications/res/"
-
+      install -d "$SNAPCRAFT_PART_INSTALL/config/support-scheduler/res/"
+      install -d "$SNAPCRAFT_PART_INSTALL/config/config-seed/res/properties/device-virtual/"
+      install -d "$SNAPCRAFT_PART_INSTALL/config/sys-mgmt-agent/res/"
+      
+      # handle application.properties for the remaining java services
       install -DT "./cmd/config-seed/res/properties/device-virtual/application.properties" \
         "$SNAPCRAFT_PART_INSTALL/config/config-seed/res/properties/device-virtual/application.properties"
 
@@ -324,22 +423,47 @@ parts:
        "$SNAPCRAFT_PART_INSTALL/config/support-logging/res/configuration.toml"
 
       cat "./cmd/support-notifications/res/configuration.toml" | \
-        sed -e s:./logs/edgex-support-notifications.log:/var/snap/edgexfoundry/common/edgex-support-notifications.log: \
+        sed -e s:./logs/edgex-support-notifications.log:\$SNAP_COMMON/support-notifications.log: \
             -e s:'http\://localhost\:48061/api/v1/logs':: > \
        "$SNAPCRAFT_PART_INSTALL/config/support-notifications/res/configuration.toml"
 
+      cat "./cmd/support-scheduler/res/configuration.toml" | \
+        sed -e s:./logs/edgex-support-scheduler.log:\$SNAP_COMMON/support-scheduler.log: \
+            -e s:'http\://localhost\:48061/api/v1/logs':: > \
+       "$SNAPCRAFT_PART_INSTALL/config/support-scheduler/res/configuration.toml"
+      
+      # for sys-mgmt-agent we also need to specify the operations type as "snap"
+      cat "./cmd/sys-mgmt-agent/res/configuration.toml" | \
+        sed -e s:./logs/edgex-sys-mgmt-agent.log:\$SNAP_COMMON/sys-mgmt-agent.log: \
+            -e s:"OperationsType = 'docker'":"OperationsType = 'snap'": \
+            -e s:'http\://localhost\:48061/api/v1/logs':: > \
+       "$SNAPCRAFT_PART_INSTALL/config/sys-mgmt-agent/res/configuration.toml"
 
-      # handle license files
+      # handle license/attribution files
       install -DT "./cmd/core-command/Attribution.txt" \
               "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/core-command/Attribution.txt"
-      install -DT "./LICENSE" \
-              "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/core-command/LICENSE"
       install -DT "./cmd/core-data/Attribution.txt" \
              "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/core-data/Attribution.txt"
-      install -DT "./LICENSE" \
-              "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/core-data/LICENSE"
       install -DT "./cmd/core-metadata/Attribution.txt" \
               "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/core-metadata/Attribution.txt"
+      install -DT "./cmd/config-seed/Attribution.txt" \
+              "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/config-seed/Attribution.txt"
+      install -DT "./cmd/export-client/Attribution.txt" \
+              "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/export-client/Attribution.txt"
+      install -DT "./cmd/export-distro/Attribution.txt" \
+              "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/export-distro/Attribution.txt"      
+      install -DT "./cmd/support-logging/Attribution.txt" \
+              "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/support-logging/Attribution.txt"
+      install -DT "./cmd/support-notifications/Attribution.txt" \
+              "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/support-notifications/Attribution.txt"
+      install -DT "./cmd/support-scheduler/Attribution.txt" \
+              "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/support-scheduler/Attribution.txt"
+      install -DT "./cmd/sys-mgmt-agent/Attribution.txt" \
+              "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/sys-mgmt-agent/Attribution.txt"
+      install -DT "./LICENSE" \
+              "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/core-command/LICENSE"
+      install -DT "./LICENSE" \
+              "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/core-data/LICENSE"
       install -DT "./LICENSE" \
               "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/core-metdata/LICENSE"
       install -DT "./LICENSE" \
@@ -348,97 +472,20 @@ parts:
               "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/export-client/LICENSE"
       install -DT "./LICENSE" \
               "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/support-logging/LICENSE"
+      install -DT "./LICENSE" \
+              "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/support-notifications/LICENSE"
+      install -DT "./LICENSE" \
+              "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/support-scheduler/LICENSE"
+      install -DT "./LICENSE" \
+              "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/config-seed/LICENSE"
+      install -DT "./LICENSE" \
+              "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/sys-mgmt-agent/LICENSE"
+
     build-packages:
       - zip
       - pkg-config
     stage-packages:
       - libzmq3-dev
-  support-scheduler:
-    source: https://github.com/edgexfoundry/support-scheduler.git
-    # the following commit == 0.7.0 version update
-    source-commit: "194094a3cf2a0a3a2cc608cec7cd3c4904ac6b5b"
-    plugin: maven
-    maven-options: ["-Dmaven.test.skip=true"]
-    override-build: |
-      snapcraftctl build
-      echo "Installing support-scheduler files"
-
-      # The logic following logic is all handled by DockerFile for
-      # the EdgeX support-scheduler docker image.
-      install -d "$SNAPCRAFT_PART_INSTALL/jar/support-scheduler"
-      mv "$SNAPCRAFT_PART_INSTALL/jar/support-scheduler-0.7.0-SNAPSHOT.jar" \
-         "$SNAPCRAFT_PART_INSTALL/jar/support-scheduler/support-scheduler.jar"
-
-      # FIXME:
-      # copy service license into /usr/share/java/doc, because the
-      # jdk plugin has a bug which prevents any files from /usr/share/doc
-      # to be staged or primed.
-      install -DT "./Attribution.txt" \
-         "$SNAPCRAFT_PART_INSTALL/usr/share/java/doc/support-scheduler/Attribution.txt"
-      install -DT "./LICENSE-2.0.txt" \
-         "$SNAPCRAFT_PART_INSTALL/usr/share/java/doc/support-scheduler/LICENSE-2.0.txt"
-    prime:
-      - -etc/fonts
-      - -etc/fonts/X11
-      - -usr/lib/jvm/*/ASSEMBLY_EXCEPTION
-      - -usr/lib/jvm/*/THIRD_PARTY_README
-      - -usr/lib/jvm/*/jre/ASSEMBLY_EXCEPTION
-      - -usr/lib/jvm/*/jre/THIRD_PARTY_README
-      - -usr/lib/jvm/*/man
-      - -usr/lib/jvm/*/jre/man
-      - -usr/lib/jvm/*/jre/lib/images
-      - -usr/lib/jvm/*/include
-      - -usr/lib/jvm/*/bin
-      - -usr/lib/jvm/*/lib
-      - -usr/lib/jvm/*/docs
-      - -usr/lib/jvm/*/src.zip
-      - -usr/share/X11
-      - -usr/share/man
-      - -usr/share/fonts
-      - -usr/share/
-  support-rulesengine:
-    source: https://github.com/edgexfoundry/support-rulesengine.git
-    # the following commit == 0.7.0 version update
-    source-commit: "3aca4a7bf9774ad07b9b74c7b05c45deb74412f2"
-    plugin: maven
-    maven-options: ["-Dmaven.test.skip=true"]
-    override-build: |
-      snapcraftctl build
-      echo "Installing support-rulesengine files"
-
-      # The logic following logic is all handled by DockerFile for
-      # the EdgeX support-rulesengine docker image.
-      install -d "$SNAPCRAFT_PART_INSTALL/jar/support-rulesengine"
-      mv "$SNAPCRAFT_PART_INSTALL/jar/support-rulesengine-0.7.0-SNAPSHOT.jar" \
-         "$SNAPCRAFT_PART_INSTALL/jar/support-rulesengine/support-rulesengine.jar"
-
-      # FIXME:
-      # copy service license into /usr/share/java/doc, because the
-      # jdk plugin has a bug which prevents any files from /usr/share/doc
-      # to be staged or primed.
-      install -DT "./Attribution.txt" \
-         "$SNAPCRAFT_PART_INSTALL/usr/share/java/doc/support-rulesengine/Attribution.txt"
-      install -DT "./LICENSE-2.0.txt" \
-         "$SNAPCRAFT_PART_INSTALL/usr/share/java/doc/support-rulesengine/LICENSE-2.0.txt"
-    prime:
-      - -etc/fonts
-      - -etc/fonts/X11
-      - -usr/lib/jvm/*/ASSEMBLY_EXCEPTION
-      - -usr/lib/jvm/*/THIRD_PARTY_README
-      - -usr/lib/jvm/*/jre/ASSEMBLY_EXCEPTION
-      - -usr/lib/jvm/*/jre/THIRD_PARTY_README
-      - -usr/lib/jvm/*/man
-      - -usr/lib/jvm/*/jre/man
-      - -usr/lib/jvm/*/jre/lib/images
-      - -usr/lib/jvm/*/include
-      - -usr/lib/jvm/*/bin
-      - -usr/lib/jvm/*/lib
-      - -usr/lib/jvm/*/docs
-      - -usr/lib/jvm/*/src.zip
-      - -usr/share/X11
-      - -usr/share/man
-      - -usr/share/fonts
-      - -usr/share/alsa
   device-virtual:
     source: https://github.com/edgexfoundry/device-virtual.git
     # the following commit == 0.5.0 version update +1 (core-domain fix)
@@ -454,7 +501,8 @@ parts:
       install -d "$SNAPCRAFT_PART_INSTALL/jar/device-virtual"
       install -d "$SNAPCRAFT_PART_INSTALL/jar/device-virtual/bacnet_sample_profiles"
       install -d "$SNAPCRAFT_PART_INSTALL/jar/device-virtual/modbus_sample_profiles"
-      mv "$SNAPCRAFT_PART_INSTALL/jar/device-virtual-0.5.0-SNAPSHOT.jar" \
+      JAR_FILE=$(find "$SNAPCRAFT_PART_INSTALL/jar" -name "device-virtual-*-SNAPSHOT.jar")
+      mv "$JAR_FILE" \
          "$SNAPCRAFT_PART_INSTALL/jar/device-virtual/device-virtual.jar"
       cp ./bacnet_sample_profiles/*.yaml \
          "$SNAPCRAFT_PART_INSTALL/jar/device-virtual/bacnet_sample_profiles/"
@@ -683,7 +731,7 @@ parts:
       - bin/*
       - config/*
   security-api-gateway:
-    after: [go, glide]
+    after: [go]
     source: https://github.com/edgexfoundry/security-api-gateway.git
     source-branch: california
     plugin: make

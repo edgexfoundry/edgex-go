@@ -16,7 +16,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/consul"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db/memory"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 	"github.com/edgexfoundry/edgex-go/pkg/clients"
@@ -52,6 +51,7 @@ func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup,
 				// Setup Logging
 				logTarget := setLoggingTarget()
 				LoggingClient = logger.NewClient(internal.ExportClientServiceKey, Configuration.Logging.EnableRemote, logTarget, Configuration.Logging.Level)
+
 				//Initialize service clients
 				initializeClients(useConsul)
 			}
@@ -114,22 +114,14 @@ func connectToDatabase() error {
 		return fmt.Errorf("couldn't create database client: %v", err.Error())
 	}
 
-	// Connect to the database
-	err = dbClient.Connect()
-	if err != nil {
-		dbClient = nil
-		return fmt.Errorf("couldn't connect to database: %v", err.Error())
-	}
-	return nil
+	return err
 }
 
 // Return the dbClient interface
 func newDBClient(dbType string, config db.Configuration) (export.DBClient, error) {
 	switch dbType {
 	case db.MongoDB:
-		return mongo.NewClient(config), nil
-	case db.MemoryDB:
-		return &memory.MemDB{}, nil
+		return mongo.NewClient(config)
 	default:
 		return nil, db.ErrUnsupportedDatabase
 	}
@@ -156,7 +148,6 @@ func initializeClients(useConsul bool) {
 	// Create export-distro client
 	params := types.EndpointParams{
 		ServiceKey:  internal.ExportDistroServiceKey,
-		Path:        "/",
 		UseRegistry: useConsul,
 		Url:         Configuration.Clients["Distro"].Url(),
 		Interval:    Configuration.Service.ClientMonitor,
@@ -199,6 +190,10 @@ func connectToConsul(conf *ConfigurationStruct) (*ConfigurationStruct, error) {
 			return conf, errors.New("type check failed")
 		}
 		conf = actual
+		//Check that information was successfully read from Consul
+		if conf.Service.Port == 0 {
+			return nil, errors.New("error reading from Consul")
+		}
 	}
 	return conf, err
 }

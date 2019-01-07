@@ -16,8 +16,8 @@ package mongo
 import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
-	"gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
+	"github.com/globalsign/mgo"
+	"github.com/globalsign/mgo/bson"
 )
 
 // Internal version of the schedule event struct
@@ -84,7 +84,11 @@ func (mse *mongoScheduleEvent) SetBSON(raw bson.Raw) error {
 
 	var a models.Addressable
 
-	if err := addCol.FindId(decoded.Addressable.Id).One(&a); err != nil {
+	err = addCol.Find(bson.M{"_id": decoded.Addressable.Id}).One(&a)
+	if err == mgo.ErrNotFound {
+		err = addCol.Find(bson.M{"uuid": decoded.Addressable.Id}).One(&a)
+	}
+	if err != nil {
 		return err
 	}
 

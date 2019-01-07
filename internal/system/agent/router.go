@@ -16,12 +16,14 @@
 package agent
 
 import (
-	"net/http"
-	"github.com/gorilla/mux"
-	"fmt"
 	"encoding/json"
+	"github.com/edgexfoundry/edgex-go/internal/system/agent/logger"
+	"io/ioutil"
+	"net/http"
 	"strings"
+
 	"github.com/edgexfoundry/edgex-go/pkg/models"
+	"github.com/gorilla/mux"
 )
 
 func LoadRestRoutes() *mux.Router {
@@ -40,56 +42,52 @@ func LoadRestRoutes() *mux.Router {
 }
 
 func operationHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Body != nil {
-		defer r.Body.Close()
-	}
+	defer r.Body.Close()
 
-	// TODO: Work with parsing mux.Vars(r) and assigning to vars.
-	var services []string
-	vars := mux.Vars(r)
-	action := vars["action"]
-
-	var params []string
-	var o models.Operation
-	dec := json.NewDecoder(r.Body)
-	err := dec.Decode(&o)
-
+	b, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		LoggingClient.Error("Error decoding operation: " + err.Error())
+		logs.LoggingClient.Error("unable to read request body", "error message", err.Error())
+		return
+	}
+	o := models.Operation{}
+	err = o.UnmarshalJSON(b)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		logs.LoggingClient.Error("error decoding operation", "error message", err.Error())
+		return
+	} else if o.Action == "" {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		logs.LoggingClient.Error("action is required")
 		return
 	}
 
-	action = o.Action
-	services = o.Services
-	params = o.Params
-
-	switch action {
+	switch o.Action {
 
 	// Make asynchronous goroutine call(s) to the appropriate internal function (respectively, to stop, start, or restart the service(s).
 	case STOP:
-		InvokeOperation(STOP, services, params)
+		InvokeOperation(STOP, o.Services)
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("Done. Stopped the requested services."))
 		break
 
 	case START:
-		InvokeOperation(START, services, params)
+		InvokeOperation(START, o.Services)
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("Done. Started the requested services."))
 		break
 
 	case RESTART:
 		// First, stop the requested services.
-		InvokeOperation(STOP, services, params)
+		InvokeOperation(STOP, o.Services)
 		// Second, start the requested services (thereby effectively restarting those services).
-		InvokeOperation(START, services, params)
+		InvokeOperation(START, o.Services)
 		w.WriteHeader(http.StatusCreated)
 		w.Write([]byte("Done. Restarted the requested services."))
 		break
 
 	default:
-		LoggingClient.Info(fmt.Sprintf(">> Unknown action %v\n", action))
+		logs.LoggingClient.Warn("unknown action", "action name", o.Action)
 	}
 }
 
@@ -100,7 +98,7 @@ func configHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	vars := mux.Vars(r)
-	LoggingClient.Debug(fmt.Sprintf("It is for these micro-service that their configuration data has been requested: %v", vars))
+	logs.LoggingClient.Debug("service configuration data requested", "service names",  vars)
 
 	list := vars["services"]
 	var services []string
@@ -121,7 +119,7 @@ func metricsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	vars := mux.Vars(r)
-	LoggingClient.Debug(fmt.Sprintf("It is for these micro-service that their metrics data has been requested: %v", vars))
+	logs.LoggingClient.Debug("service configuration data requested", "service names",  vars)
 
 	list := vars["services"]
 	var services []string
@@ -142,7 +140,7 @@ func encode(i interface{}, w http.ResponseWriter) {
 	err := enc.Encode(i)
 
 	if err != nil {
-		LoggingClient.Error("Error encoding the data: " + err.Error())
+		logs.LoggingClient.Error("error during encoding", "error message", err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}

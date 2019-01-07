@@ -114,8 +114,6 @@ The Export Services Layer at this time, includes the following microservices:
 
 * Client Registration
 * Distribution
-* Google IoT Core
-
 
 =====================
 Device Services Layer
@@ -131,18 +129,11 @@ Device services may service one or a number of devices (sensor, actuator, and so
 
 The DS layer's microservices communicate with the devices, sensors, actuators, and other IoT objects through protocols native to each IoT object. The DS Layer converts the data produced and communicated by the IoT object into a common EdgeX Foundry data structure, and sends that converted data into the Core Services layer, and to other microservices in other layers of EdgeX Foundry. 
 
-EdgeX Foundry provides a device service software developer kit (SDK) for generating the shell of a device service.  It makes the creation of new device services easier and provides connector code to the Core Services Layer.
+EdgeX Foundry provides device service software developer kits (SDK) for generating the shell of a device service.  There are SDKs in Go and C to support the creation of device services in the most convenient language for your use case.  SDKs make the creation of new device services easier and provides connector code to the Core Services Layer (as well as other services).
 
-The EdgeX Foundry DS layer at this time, includes the following microservice:
+Please note, EdgeX is in a period of transition with regard to the device service SDKs and device services.  Early versions of EdgeX provide a Java-based SDK and there are a number of legacy Java device services.  The Java SDK and device services are being retired in a future release of EdgeX in favor of the Go and C SDK (and Go/C based device services created from them).  
 
-* Virtual Device Service
-* BACnet Device Service
-* Modbus Device Service
-* SNMP Device Service
-* Blue Tooth Low Energy (BLE) Device Service
-* Serial Device Service
-
-Examples of Device Services
+Examples of what work a Device Service does
 
 * A BACnet DS converts the BACNet device-supplied temperature and humidity readings into a common EdgeX Foundry object data structure. 
 * A DS receives and translates commands from other EdgeX Foundry services or enterprise systems, and communicates those requests to the devices for actuation in a programming language that the device understands. 
@@ -162,7 +153,11 @@ Security elements both inside and outside of EdgeX Foundry protect the data and 
 
 .. image:: EdgeX_SystemManagementLayer.png
 
-System Management facilities provide the installation, upgrade, start, stop, and monitoring of EdgeX Foundry microservices and BIOS firmware, operating system, and other gateway-related software, and can also support these functions from off-box, enterprise-based systems.
+System Management facilities provide the central point of contact for external management systems to 
+* start/stop/restart EdgeX services
+* get metrics on the EdgeX services (such as memory usage) so that the EdgeX services can be monitored 
+
+In future releases, the EdgeX system management capability will expand to include being able to set service configuration, provide a status/health check of all of the services, and providing other performance and operational information to management platforms.  
 
 
 

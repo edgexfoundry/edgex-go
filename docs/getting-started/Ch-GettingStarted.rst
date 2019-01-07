@@ -8,8 +8,8 @@ To get started you need to obtain EdgeX Foundry either as a User or as a Develop
    :maxdepth: 1
 
    Ch-GettingStartedUsers
-   Ch-GettingStartedUsersNexus
    Ch-GettingStartedDevelopers
-   Ch-GettingStartedHybrid
    Ch-GettingStartedSDK
+   Ch-GettingStartedHybrid
+   Ch-GettingStartedUsersNexus
   

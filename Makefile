@@ -139,14 +139,6 @@ docker_support_notifications:
 		-t edgexfoundry/docker-support-notifications-go:$(VERSION)-dev \
 		.
 
-docker_sys_mgmt_agent:
-	docker build \
-		-f docker/Dockerfile.sys-mgmt-agent \
-		--label "git_sha=$(GIT_SHA)" \
-		-t edgexfoundry/docker-sys-mgmt-agent-go:$(GIT_SHA) \
-		-t edgexfoundry/docker-sys-mgmt-agent-go:$(VERSION)-dev \
-		.
-
 docker_support_scheduler:
 	docker build \
 		-f docker/Dockerfile.support-scheduler \

@@ -18,6 +18,11 @@ import (
 	"encoding/json"
 )
 
+/*
+TODO: Since this type is embedded throughout many contract models, we must leave the bson tags in place until
+the full decoupling from Mongo is complete. This shouldn't have any impact since there isn't a direct import
+to mgo/bson
+*/
 type BaseObject struct {
 	Created  int64 `bson:"created" json:"created"`
 	Modified int64 `bson:"modified" json:"modified"`

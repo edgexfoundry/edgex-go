@@ -436,7 +436,7 @@ func execute(context *ScheduleContext, wg *sync.WaitGroup) error {
 
 		httpMethod := scheduleEvent.Addressable.HTTPMethod
 		if !validMethod(httpMethod) {
-			LoggingClient.Error("net/http: invalid method %q", httpMethod)
+			LoggingClient.Error(fmt.Sprintf("net/http: invalid method %q", httpMethod))
 			return nil
 		}
 

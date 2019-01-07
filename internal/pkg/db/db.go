@@ -22,7 +22,6 @@ import (
 const (
 	// Databases
 	MongoDB  = "mongodb"
-	MemoryDB = "memorydb"
 
 	// Data
 	EventsCollection          = "event"
@@ -54,6 +53,7 @@ var (
 	ErrNotUnique           = errors.New("Resource already exists")
 	ErrCommandStillInUse   = errors.New("Command is still in use by device profiles")
 	ErrSlugEmpty           = errors.New("Slug is nil or empty")
+	ErrNameEmpty           = errors.New("Name is required")
 )
 
 type Configuration struct {

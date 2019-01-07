@@ -37,14 +37,16 @@ func issueDeviceCommand(w http.ResponseWriter, r *http.Request, p bool) {
 	cid := vars[COMMANDID]
 	b, err := ioutil.ReadAll(r.Body)
 	if b == nil && err != nil {
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 		return
 	}
 	body, status := commandByDeviceID(did, cid, string(b), p)
 	if status != http.StatusOK {
 		w.WriteHeader(status)
 	} else {
-		w.Header().Set("Content-Type", "application/json")
+		if len(body) > 0 {
+			w.Header().Set("Content-Type", "application/json")
+		}
 		w.Write([]byte(body))
 	}
 }
@@ -55,11 +57,9 @@ func restPutDeviceAdminState(w http.ResponseWriter, r *http.Request) {
 	as := vars[ADMINSTATE]
 	status, err := putDeviceAdminState(did, as)
 	if err != nil {
-		LoggingClient.Error(err.Error(), "")
-		w.WriteHeader(http.StatusInternalServerError)
+		LoggingClient.Error(err.Error())
 	}
 	w.WriteHeader(status)
-
 }
 
 func restPutDeviceAdminStateByDeviceName(w http.ResponseWriter, r *http.Request) {
@@ -68,8 +68,7 @@ func restPutDeviceAdminStateByDeviceName(w http.ResponseWriter, r *http.Request)
 	as := vars[ADMINSTATE]
 	status, err := putDeviceAdminStateByName(dn, as)
 	if err != nil {
-		LoggingClient.Error(err.Error(), "")
-		w.WriteHeader(http.StatusInternalServerError)
+		LoggingClient.Error(err.Error())
 	}
 	w.WriteHeader(status)
 }
@@ -80,8 +79,7 @@ func restPutDeviceOpState(w http.ResponseWriter, r *http.Request) {
 	os := vars[OPSTATE]
 	status, err := putDeviceOpState(did, os)
 	if err != nil {
-		LoggingClient.Error(err.Error(), "")
-		w.WriteHeader(http.StatusInternalServerError)
+		LoggingClient.Error(err.Error())
 	}
 	w.WriteHeader(status)
 }
@@ -92,8 +90,7 @@ func restPutDeviceOpStateByDeviceName(w http.ResponseWriter, r *http.Request) {
 	os := vars[OPSTATE]
 	status, err := putDeviceOpStateByName(dn, os)
 	if err != nil {
-		LoggingClient.Error(err.Error(), "")
-		w.WriteHeader(http.StatusInternalServerError)
+		LoggingClient.Error(err.Error())
 	}
 	w.WriteHeader(status)
 }
@@ -103,11 +100,12 @@ func restGetCommandsByDeviceID(w http.ResponseWriter, r *http.Request) {
 	did := vars[ID]
 	status, device, err := getCommandsByDeviceID(did)
 	if err != nil {
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 		http.Error(w, "Device not found", http.StatusNotFound)
 		return
 	} else if status != http.StatusOK {
 		w.WriteHeader(status)
+		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(&device)
@@ -118,11 +116,12 @@ func restGetCommandsByDeviceName(w http.ResponseWriter, r *http.Request) {
 	dn := vars[NAME]
 	status, devices, err := getCommandsByDeviceName(dn)
 	if err != nil {
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 		http.Error(w, "Device not found", http.StatusNotFound)
 		return
 	} else if status != http.StatusOK {
 		w.WriteHeader(status)
+		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(&devices)
@@ -131,10 +130,11 @@ func restGetCommandsByDeviceName(w http.ResponseWriter, r *http.Request) {
 func restGetAllCommands(w http.ResponseWriter, _ *http.Request) {
 	status, devices, err := getCommands()
 	if err != nil {
-		LoggingClient.Error(err.Error(), "")
-		w.WriteHeader(http.StatusInternalServerError)
+		LoggingClient.Error(err.Error())
+		w.WriteHeader(status)
 	} else if status != http.StatusOK {
 		w.WriteHeader(status)
+		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(devices)

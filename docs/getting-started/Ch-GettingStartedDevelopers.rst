@@ -1,5 +1,5 @@
 ##############################
-Get EdgeX Foundry - Developers
+Getting Started - Developers
 ##############################
 
 ============
@@ -8,7 +8,7 @@ Introduction
 
 These instructions are for Developers to obtain and run EdgeX Foundry.  (Users should read: :doc:`../Ch-GettingStartedUsers`) 
 
-EdgeX Foundry is a collection of more than a dozen microservices that can be deployed to provide a minimal edge platform capability.  EdgeX Foundry consists of a collection of microservices and an SDK tool.  The microservices and SDK currently released by the project's founders were originally written in Java.  Today, the services and SDK are being migrated to Go and C.  These documentation pages provide a developer with the information and instructions to get and run EdgeX Foundry in either the Java or Go development environments.
+EdgeX Foundry is a collection of more than a dozen microservices that can be deployed to provide a minimal edge platform capability.  EdgeX Foundry consists of a collection of microservices and SDK tools.  The microservices and SDKs are mostly written in Go or C with some legacy servcies written in Java (EdgeX was originally written in Java).  These documentation pages provide a developer with the information and instructions to get and run EdgeX Foundry in either the Go or Java (for legacy services) development environments.
 
 =============
 What You Need
@@ -18,7 +18,7 @@ What You Need
 
 EdgeX Foundry is an operating system (OS)-agnostic and hardware (HW)-agnostic edge software platform. Minimum platform requirements are being established. At this time use the following recommended characteristics:
 
-* Memory:  minimum of 4 GB (with the new Go Lang services, much less memory is required, and may be as litle as 1GB of memory)
+* Memory:  minimum of 1 GB 
 * Hard drive space:  minimum of 3 GB of space to run the EdgeX Foundry containers, but you may want more depending on how long sensor and device data is retained
 * OS: EdgeX Foundry has been run successfully on many systems including, but not limited to the following systems
         * Windows (ver 7 - 10)
@@ -38,7 +38,7 @@ Developers will need to install the following software in order to get, run and 
 .. toctree::
    :maxdepth: 1
 
-   Ch-GettingStartedJavaDevelopers
    Ch-GettingStartedGoDevelopers
+   Ch-GettingStartedJavaDevelopers
 
   

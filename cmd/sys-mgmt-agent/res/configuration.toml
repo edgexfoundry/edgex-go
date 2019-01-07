@@ -18,6 +18,7 @@ EnableRemoteLogging = false
 LoggingFile = './logs/edgex-sys-mgmt-agent.log'
 # OperationsType = 'os'
 OperationsType = 'docker'
+ComposeUrl = 'https://raw.githubusercontent.com/edgexfoundry/developer-scripts/master/compose-files/docker-compose-delhi-0.7.0.yml'
 
 [Clients]
   [Clients.Notifications]

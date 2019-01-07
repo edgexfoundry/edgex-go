@@ -55,7 +55,7 @@ sudo docker start [DOCKER_CONTAINER_NAME]
 *Note* - creating and running the container above requires Docker network setup, may require dependent containers to be setup on that network, and appropriate port access configuration (among other start up parameters).  For this reason, EdgeX recommends use of Docker Compose for pulling, building, and running containers.  See The Getting Started Guides for more detail.
  
 ## Community
-- Chat: https://chat.edgexfoundry.org/home
+- Chat: [https://edgexfoundry.slack.com](https://join.slack.com/t/edgexfoundry/shared_invite/enQtNDgyODM5ODUyODY0LWVhY2VmOTcyOWY2NjZhOWJjOGI1YzQ2NzYzZmIxYzAzN2IzYzY0NTVmMWZhZjNkMjVmODNiZGZmYTkzZDE3MTA)
 - Mainling lists: https://lists.edgexfoundry.org/mailman/listinfo
 
 ## License

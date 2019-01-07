@@ -1,10 +1,132 @@
 The following open source projects are referenced by System Management Agent Go:
 
-mgo v2 (BSD-2) - https://github.com/go-mgo/mgo
-https://github.com/go-mgo/mgo/blob/v2-unstable/LICENSE
+pkg/errors (BSD-2) https://github.com/pkg/errors
+https://github.com/pkg/errors/blob/master/LICENSE
 
-mgo/bson v2 (unspecified) - https://github.com/go-mgo/mgo/tree/v2/bson
-https://github.com/go-mgo/mgo/blob/v2/bson/LICENSE
-
-gorilla/mux (BSD-3) - https://github.com/gorilla/mux
+gorilla/mux (BSD-3) https://github.com/gorilla/mux
 https://github.com/gorilla/mux/blob/master/LICENSE
+
+globalsign/mgo (unspecified) - https://github.com/globalsign/mgo
+https://github.com/globalsign/mgo/blob/master/LICENSE
+
+pebbe/zmq4 (BSD-2) https://github.com/pebbe/zmq4
+https://github.com/pebbe/zmq4/blob/master/LICENSE.txt
+
+go-kit/kit (MIT) github.com/go-kit/kit
+https://github.com/go-kit/kit/blob/master/LICENSE
+
+go-logfmt/logfmt (MIT) https://github.com/go-logfmt/logfmt
+https://github.com/go-logfmt/logfmt/blob/master/LICENSE
+
+robfig/cron (MIT) https://github.com/robfig/cron
+https://github.com/robfig/cron/blob/master/LICENSE
+
+google/uuid (BSD-3) https://github.com/google/uuid
+https://github.com/google/uuid/blob/master/LICENSE
+
+pelletier/go-toml (MIT) https://github.com/pelletier/go-toml
+https://github.com/pelletier/go-toml/blob/master/LICENSE
+
+influxdata/influxdb/client/v2 (MIT) https://github.com/influxdata/influxdb
+https://github.com/influxdata/influxdb/blob/master/LICENSE
+
+influxdata/platform (MIT) https://github.com/influxdata/platform
+https://github.com/influxdata/platform/blob/master/LICENSE
+
+eclipse/paho.mqtt.golang (Eclipse Public License 1.0) https://github.com/eclipse/paho.mqtt.golang
+https://github.com/eclipse/paho.mqtt.golang/blob/master/LICENSE
+
+go-zoo/bone (MIT) https://github.com/go-zoo/bone
+https://github.com/go-zoo/bone/blob/master/LICENSE
+
+mattn/go-xmpp (BSD-3) https://github.com/mattn/go-xmpp
+https://github.com/mattn/go-xmpp/blob/master/LICENSE
+
+BurntSushi/toml (MIT) https://github.com/BurntSushi/toml
+https://github.com/BurntSushi/toml/blob/master/COPYING
+
+mitchellh/consulstructure (MIT) https://github.com/mitchellh/consulstructure
+https://github.com/mitchellh/consulstructure/blob/master/LICENSE
+
+mitchellh/mapstructure (MIT) https://github.com/mitchellh/mapstructure
+https://github.com/mitchellh/mapstructure/blob/master/LICENSE
+
+mitchellh/copystructure (MIT) https://github.com/mitchellh/copystructure
+https://github.com/mitchellh/copystructure/blob/master/LICENSE
+
+mitchellh/reflectwalk (MIT) https://github.com/mitchellh/reflectwalk
+https://github.com/mitchellh/reflectwalk/blob/master/LICENSE
+
+cenkalti/backoff (MIT) https://github.com/cenkalti/backoff
+https://github.com/cenkalti/backoff/blob/master/LICENSE
+
+hashicorp/consul 1.1.0 (Mozilla Public License 2.0) - https://github.com/hashicorp/consul
+https://github.com/hashicorp/consul/blob/master/LICENSE
+
+hashicorp/go-cleanhttp (Mozilla Public License 2.0) - https://github.com/hashicorp/go-cleanhttp
+https://github.com/hashicorp/go-cleanhttp/blob/master/LICENSE
+
+hashicorp/go-rootcerts (Mozilla Public License 2.0) https://github.com/hashicorp/go-rootcerts
+https://github.com/hashicorp/go-rootcerts/blob/master/LICENSE
+
+mitchellh/go-homedir (MIT) https://github.com/mitchellh/go-homedir
+https://github.com/mitchellh/go-homedir/blob/master/LICENSE
+
+mitchellh/mapstructure (MIT) https://github.com/mitchellh/mapstructure
+https://github.com/mitchellh/mapstructure/blob/master/LICENSE
+
+hashicorp/serf (Mozilla Public License 2.0) https://github.com/hashicorp/serf
+https://github.com/hashicorp/serf/blob/master/LICENSE
+
+armon/go-metrics (MIT) https://github.com/armon/go-metrics
+https://github.com/armon/go-metrics/blob/master/LICENSE
+
+hashicorp/go-immutable-radix (Mozilla Public License 2.0) https://github.com/hashicorp/go-immutable-radix
+https://github.com/hashicorp/go-immutable-radix/blob/master/LICENSE
+
+hashicorp/golang-lru (Mozilla Public License 2.0) https://github.com/hashicorp/golang-lru
+https://github.com/hashicorp/golang-lru/blob/master/LICENSE
+
+gomodule/redigo (Apache 2.0) https://github.com/gomodule/redigo
+https://github.com/gomodule/redigo/blob/master/LICENSE
+
+imdario/mergo (BSD-3) github.com/imdario/mergo
+https://github.com/imdario/mergo/blob/master/LICENSE
+
+magiconair/properties (BSD-2) https://github.com/magiconair/properties
+https://github.com/magiconair/properties/blob/master/LICENSE
+
+gopkg.in/eapache/queue.v1 (MIT) gopkg.in/eapache/queue.v1
+https://github.com/eapache/queue/blob/v1.1.0/LICENSE
+
+All of the following are due to sys-mgmt-agent's docker import...
+
+docker/docker/api/types (Apache 2.0) https://github.com/moby/moby/tree/master/api/types 
+https://github.com/moby/moby/blob/master/LICENSE
+
+docker/go-connections (Apache 2.0) https://github.com/docker/go-connections
+https://github.com/docker/go-connections/blob/master/LICENSE
+
+gogo/protobuf/proto (unspecified) https://github.com/gogo/protobuf/proto
+https://github.com/gogo/protobuf/blob/master/LICENSE
+
+opencontainers/image-spec/specs-go/v1 (Apache 2.0) https://github.com/opencontainers/image-spec
+https://github.com/opencontainers/image-spec/blob/master/LICENSE
+
+opencontainers/go-digest (Apache 2.0) https://github.com/opencontainers/go-digest
+https://github.com/opencontainers/go-digest/blob/master/LICENSE
+
+Azure/go-ansiterm (MIT) https://github.com/Azure/go-ansiterm
+https://github.com/Azure/go-ansiterm/blob/master/LICENSE
+
+sirupsen/logrus (MIT) https://github.com/sirupsen/logrus
+https://github.com/sirupsen/logrus/blob/master/LICENSE
+
+Nvveen/Gotty (unspecified) https://github.com/Nvveen/Gotty
+https://github.com/Nvveen/Gotty/blob/master/LICENSE 
+
+docker/go-units (Apache 2.0) https://github.com/docker/go-units
+https://github.com/docker/go-units/blob/master/LICENSE
+
+docker/distribution (Apache 2.0) https://github.com/docker/distribution/
+https://github.com/docker/distribution/blob/master/LICENSE

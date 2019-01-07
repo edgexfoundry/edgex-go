@@ -23,7 +23,6 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/pkg/clients"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
@@ -95,7 +94,7 @@ func eventCountHandler(w http.ResponseWriter, r *http.Request) {
 	count, err := countEvents()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 		return
 	}
 
@@ -103,7 +102,7 @@ func eventCountHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	_, err = w.Write([]byte(strconv.Itoa(count)))
 	if err != nil {
-		LoggingClient.Error(err.Error(), "")
+		LoggingClient.Error(err.Error())
 	}
 }
 
@@ -128,8 +127,8 @@ func eventCountByDeviceIdHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		LoggingClient.Error(fmt.Sprintf("error checking device %s %v", id, err))
 		switch err := err.(type) {
-		case types.ErrNotFound:
-			http.Error(w, err.Error(), http.StatusNotFound)
+		case *types.ErrServiceClient:
+			http.Error(w, err.Error(), err.StatusCode)
 			return
 		default: //return an error on everything else.
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -239,7 +238,7 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		LoggingClient.Info("Updating event: " + from.ID.Hex())
+		LoggingClient.Info("Updating event: " + from.ID)
 		err = updateEvent(from)
 		if err != nil {
 			switch t := err.(type) {
@@ -333,11 +332,11 @@ func getEventByDeviceHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check device
-	if checkDevice(deviceId) != nil {
+	if err := checkDevice(deviceId); err != nil{
 		LoggingClient.Error(fmt.Sprintf("error checking device %s %v", deviceId, err))
 		switch err := err.(type) {
-		case types.ErrNotFound:
-			http.Error(w, err.Error(), http.StatusNotFound)
+		case *types.ErrServiceClient:
+			http.Error(w, err.Error(), err.StatusCode)
 			return
 		default: //return an error on everything else.
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -436,11 +435,11 @@ func deleteByDeviceIdHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check device
-	if checkDevice(deviceId) != nil {
+	if err := checkDevice(deviceId); err != nil {
 		LoggingClient.Error(fmt.Sprintf("error checking device %s %v", deviceId, err))
 		switch err := err.(type) {
-		case types.ErrNotFound:
-			http.Error(w, err.Error(), http.StatusNotFound)
+		case *types.ErrServiceClient:
+			http.Error(w, err.Error(), err.StatusCode)
 			return
 		default: //return an error on everything else.
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -551,11 +550,11 @@ func readingByDeviceFilteredValueDescriptor(w http.ResponseWriter, r *http.Reque
 	switch r.Method {
 	case http.MethodGet:
 		// Check device
-		if checkDevice(deviceId) != nil {
+		if err := checkDevice(deviceId); err != nil {
 			LoggingClient.Error(fmt.Sprintf("error checking device %s %v", deviceId, err))
 			switch err := err.(type) {
-			case types.ErrNotFound:
-				http.Error(w, err.Error(), http.StatusNotFound)
+			case *types.ErrServiceClient:
+				http.Error(w, err.Error(), err.StatusCode)
 				return
 			default: //return an error on everything else.
 				http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -663,11 +662,11 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 
 		// Check device
 		if reading.Device != "" {
-			if checkDevice(reading.Device) != nil {
+			if err := checkDevice(reading.Device); err != nil {
 				LoggingClient.Error(fmt.Sprintf("error checking device %s %v", reading.Device, err))
 				switch err := err.(type) {
-				case types.ErrNotFound:
-					http.Error(w, err.Error(), http.StatusNotFound)
+				case *types.ErrServiceClient:
+					http.Error(w, err.Error(), err.StatusCode)
 					return
 				default: //return an error on everything else.
 					http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -684,7 +683,7 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 			}
 
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(id.Hex()))
+			w.Write([]byte(id))
 		} else {
 			// Didn't save the reading in the database
 			encode("unsaved", w)
@@ -713,7 +712,7 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			switch err.(type) {
 			case *errors.ErrDbNotFound:
-				http.Error(w, "Value descriptor not found for reading", http.StatusConflict)
+				http.Error(w, "Value descriptor not found for reading", http.StatusNotFound)
 				return
 			case *errors.ErrValueDescriptorInvalid:
 				http.Error(w, err.Error(), http.StatusConflict)
@@ -773,7 +772,7 @@ func readingCountHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, err = w.Write([]byte(strconv.Itoa(count)))
 		if err != nil {
-			LoggingClient.Error(err.Error(), "")
+			LoggingClient.Error(err.Error())
 		}
 	}
 }
@@ -840,8 +839,8 @@ func readingByDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		readings, err := getReadingsByDevice(deviceId, limit)
 		if err != nil {
 			switch err := err.(type) {
-			case types.ErrNotFound:
-				http.Error(w, err.Error(), http.StatusNotFound)
+			case *types.ErrServiceClient:
+				http.Error(w, err.Error(), err.StatusCode)
 				return
 			default:
 				http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -1115,11 +1114,11 @@ func readingByValueDescriptorAndDeviceHandler(w http.ResponseWriter, r *http.Req
 	}
 
 	// Check device
-	if checkDevice(device) != nil {
+	if err := checkDevice(device); err != nil {
 		LoggingClient.Error(fmt.Sprintf("error checking device %s %v", device, err))
 		switch err := err.(type) {
-		case types.ErrNotFound:
-			http.Error(w, err.Error(), http.StatusNotFound)
+		case *types.ErrServiceClient:
+			http.Error(w, err.Error(), err.StatusCode)
 			return
 		default: //return an error on everything else.
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -1182,7 +1181,7 @@ func valueDescriptorHandler(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, err.Error(), http.StatusBadRequest)
 				return
 			case *errors.ErrValueDescriptorInvalid:
-				http.Error(w, err.Error(), http.StatusBadRequest)
+				http.Error(w, err.Error(), http.StatusConflict)
 				return
 			default:
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -1203,7 +1202,7 @@ func valueDescriptorHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(id.Hex()))
+		w.Write([]byte(id))
 	case http.MethodPut:
 		vd, err := decodeValueDescriptor(r.Body)
 		if err != nil {
@@ -1212,7 +1211,7 @@ func valueDescriptorHandler(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, err.Error(), http.StatusBadRequest)
 				return
 			case *errors.ErrValueDescriptorInvalid:
-				http.Error(w, err.Error(), http.StatusBadRequest)
+				http.Error(w, err.Error(), http.StatusConflict)
 				return
 			default:
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -1266,6 +1265,9 @@ func deleteValueDescriptorByIdHandler(w http.ResponseWriter, r *http.Request) {
 		case *errors.ErrValueDescriptorInUse:
 			http.Error(w, "Data integrity issue. Value Descriptor still in use by readings", http.StatusConflict)
 			return
+		case *errors.ErrInvalidId:
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
 		default:
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -1296,15 +1298,15 @@ func valueDescriptorByNameHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		v, err := dbClient.ValueDescriptorByName(name)
 		if err != nil {
-			if err == db.ErrNotFound {
-				http.Error(w, "Value Descriptor not found", http.StatusNotFound)
-			} else {
+			switch err := err.(type) {
+			case *types.ErrServiceClient:
+				http.Error(w, err.Error(), err.StatusCode)
+			default:
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 			LoggingClient.Error(err.Error())
 			return
 		}
-
 		encode(v, w)
 	case http.MethodDelete:
 		if err = deleteValueDescriptorByName(name); err != nil {
@@ -1441,10 +1443,12 @@ func valueDescriptorByDeviceHandler(w http.ResponseWriter, r *http.Request) {
 	// Get the value descriptors
 	vdList, err := getValueDescriptorsByDeviceName(device)
 	if err != nil {
-		switch err.(type) {
+		switch err := err.(type) {
 		case *errors.ErrDbNotFound:
 			http.Error(w, err.Error(), http.StatusNotFound)
 			return
+		case *types.ErrServiceClient:
+			http.Error(w, err.Error(), err.StatusCode)
 		default:
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -1472,7 +1476,9 @@ func valueDescriptorByDeviceIdHandler(w http.ResponseWriter, r *http.Request) {
 	// Get the value descriptors
 	vdList, err := getValueDescriptorsByDeviceId(deviceId)
 	if err != nil {
-		switch err.(type) {
+		switch err := err.(type) {
+		case *types.ErrServiceClient:
+			http.Error(w, err.Error(), err.StatusCode)
 		case *errors.ErrDbNotFound:
 			http.Error(w, err.Error(), http.StatusNotFound)
 			return

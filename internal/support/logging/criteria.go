@@ -9,13 +9,12 @@ package logging
 import (
 	"strings"
 
-	"github.com/edgexfoundry/edgex-go/internal/support/logging/models"
+	"github.com/edgexfoundry/edgex-go/pkg/models"
 )
 
 type matchCriteria struct {
 	OriginServices []string
 	LogLevels      []string
-	Labels         []string
 	Keywords       []string
 	Start          int64
 	End            int64
@@ -56,19 +55,6 @@ func (criteria matchCriteria) match(le models.LogEntry) bool {
 		found := false
 		for _, keyword := range criteria.Keywords {
 			if strings.Contains(le.Message, keyword) {
-				found = true
-				break
-			}
-		}
-		if !found {
-			return false
-		}
-	}
-
-	if len(criteria.Labels) > 0 {
-		found := false
-		for _, label := range criteria.Labels {
-			if matchStringInSlice(label, le.Labels) {
 				found = true
 				break
 			}

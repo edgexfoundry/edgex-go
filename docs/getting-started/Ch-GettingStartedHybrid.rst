@@ -13,30 +13,29 @@ Get and Run the EdgeX Docker Containers
 1. Per :doc:`../Ch-GettingStartedUsers`, get Docker, Docker Compose setup and then pull the EdgeX docker containers.
 2. Since you are working with the virtual device, you probably don't need or want to run all the micro services.  You just need the few that the Virtual Device will be communicating with or that will be required to run a minimal EdgeX environment.  So you will need to run Consul, Mongo, Core Data, Core Metadata, Core Command, Support Logging, and Support Notifications.  After pulling the EdgeX containers, start these containers with the following commands in order
 
-
 +------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-|   **Docker Command**               |   **Description**                                                                   |  **Suggested Waiti Time After Completing**     |
+|   **Docker Command**               |   **Description**                                                                   |  **Notes**     |
 +====================================+=====================================================================================+================================================+
-| docker-compose up -d volume        |  Start the EdgeX Foundry file volume--must be done before the other services are    | A couple of seconds.  In the time it takes to  |
-|                                    |  started                                                                            | type the next command it shoud be ready.       |
+| docker-compose up -d volume        |  Start the EdgeX Foundry file volume--must be done before the other services are    |                                                |
+|                                    |  started                                                                            |                                                |   
 +------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-| docker-compose up -d consul        |  Start the configuration and registry microservice which all services must          | A couple of seconds                            |
-|                                    |  register with and get their configuration from                                     |                                                |
+| docker-compose up -d consul        |  Start the configuration and registry microservice which all services must          |                                                |
+|                                    |  register with and get their configuration from                                     |                                                | 
 +------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-| docker-compose up -d config-seed   |  Populate the configuration/registry microservice                                   | A couple of seconds                            |
+| docker-compose up -d config-seed   |  Populate the configuration/registry microservice                                   |                                                |
 +------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-| docker-compose up -d mongo         |  Start the NoSQL MongoDB container                                                  | 10 seconds                                     |
+| docker-compose up -d mongo         |  Start the NoSQL MongoDB container                                                  | An embedded initialization script configures   | 
+|                                    |                                                                                     | the database for EdgeX documents               | 
 +------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-| docker-compose up -d logging       |  Start the logging microservice - used by all micro services that make log entries  | A couple of seconds                            |
+| docker-compose up -d logging       |  Start the logging microservice - used by all micro services that make log entries  |                                                | 
 +------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-| docker-compose up -d notifications |  Start the notifications and alerts microservice--used by many of the microservices | 30 seconds                                     |
-|                                    |  Note: this service is still implemented in Java and takes more time to start       |                                                |
+| docker-compose up -d notifications |  Start the notifications and alerts microservice--used by many of the microservices |                                                |
 +------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-| docker-compose up -d metadata      |  Start the Core Metadata microservice                                               | A couple of seconds                            |
+| docker-compose up -d metadata      |  Start the Core Metadata microservice                                               |                                                | 
 +------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-| docker-compose up -d data          |  Start the Core Data microservice                                                   | A couple of seconds                            |
+| docker-compose up -d data          |  Start the Core Data microservice                                                   |                                                | 
 +------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-| docker-compose up -d command       |  Start the Core Command microservice                                                | A couple of seconds                            |
+| docker-compose up -d command       |  Start the Core Command microservice                                                |                                                | 
 +------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
 
 Run a **"docker-compose ps"** command to confirm that all the containers have been downloaded and started.  (Note: initialization or seed containers, like config-seed, will have exited as there job is just to initialize the associated service and then exit.)

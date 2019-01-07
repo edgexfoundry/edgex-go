@@ -16,7 +16,6 @@ package models
 
 import (
 	"encoding/json"
-	"gopkg.in/mgo.v2/bson"
 )
 
 /*
@@ -26,21 +25,21 @@ import (
  * Command struct
  */
 type Command struct {
-	BaseObject `bson:",inline" yaml:",inline"`
-	Id         bson.ObjectId `bson:"_id,omitempty" json:"id"`
-	Name       string        `bson:"name" json:"name" yaml:"name"` // Command name (unique on the profile)
-	Get        *Get          `bson:"get" json:"get" yaml:"get"`    // Get Command
-	Put        *Put          `bson:"put" json:"put" yaml:"put"`    // Put Command
+	BaseObject `yaml:",inline"`
+	Id         string `json:"id"`
+	Name       string `json:"name" yaml:"name"` // Command name (unique on the profile)
+	Get        *Get   `json:"get" yaml:"get"`   // Get Command
+	Put        *Put   `json:"put" yaml:"put"`   // Put Command
 }
 
 // Custom marshaling for making empty strings null
 func (c Command) MarshalJSON() ([]byte, error) {
 	test := struct {
 		BaseObject
-		Id   *bson.ObjectId `json:"id"`
-		Name *string        `json:"name"` // Command name (unique on the profile)
-		Get  *Get           `json:"get"`  // Get Command
-		Put  *Put           `json:"put"`  // Put Command
+		Id   *string `json:"id"`
+		Name *string `json:"name"` // Command name (unique on the profile)
+		Get  *Get    `json:"get"`  // Get Command
+		Put  *Put    `json:"put"`  // Put Command
 	}{
 		BaseObject: c.BaseObject,
 		Get:        c.Get,

@@ -14,13 +14,11 @@
 package export
 
 import (
-	"gopkg.in/mgo.v2/bson"
+	"github.com/globalsign/mgo/bson"
 )
 
 type DBClient interface {
 	CloseSession()
-
-	Connect() error
 
 	// ********************** REGISTRATION FUNCTIONS *****************************
 	// Return all the registrations

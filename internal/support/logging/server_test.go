@@ -16,9 +16,9 @@ import (
 	"testing"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
-	"github.com/edgexfoundry/edgex-go/internal/support/logging/models"
 	"github.com/edgexfoundry/edgex-go/pkg/clients"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
+	"github.com/edgexfoundry/edgex-go/pkg/models"
 )
 
 type dummyPersist struct {
@@ -87,9 +87,9 @@ func TestAddLog(t *testing.T) {
 	}{
 		{"emptyPost", "", http.StatusBadRequest},
 		{"invalidJSON", "aa", http.StatusBadRequest},
-		{"ok", `{"logLevel":"INFO","labels":null,"originService":"tests","message":"test1"}`,
+		{"ok", `{"logLevel":"INFO","originService":"tests","message":"test1"}`,
 			http.StatusAccepted},
-		{"invalidLevel", `{"logLevel":"NONE","labels":null,"originService":"tests","message":"test1"}`,
+		{"invalidLevel", `{"logLevel":"NONE","originService":"tests","message":"test1"}`,
 			http.StatusBadRequest},
 	}
 	// create test server with handler
@@ -117,7 +117,6 @@ func TestGetLogs(t *testing.T) {
 	Configuration = &ConfigurationStruct{Service: config.ServiceInfo{}}
 	Configuration.Service.ReadMaxLimit = maxLimit
 
-	var labels = []string{"label1", "label2"}
 	var services = []string{"service1", "service2"}
 	var keywords = []string{"keyword1", "keyword2"}
 	var logLevels = []string{logger.TraceLog, logger.DebugLog, logger.WarnLog,
@@ -174,13 +173,8 @@ func TestGetLogs(t *testing.T) {
 			http.StatusBadRequest,
 			matchCriteria{},
 			3},
-		{"labels/start/end/limit",
-			"labels/label1,label2/1/2/3",
-			http.StatusOK,
-			matchCriteria{Labels: labels, Start: 1, End: 2, Limit: 3},
-			3},
-		{"labelsempty/start/end/limit",
-			"labels//1/2/3",
+		{"start/end/limit",
+			"1/2/3",
 			http.StatusOK,
 			matchCriteria{Start: 1, End: 2, Limit: 3},
 			3},
@@ -208,16 +202,6 @@ func TestGetLogs(t *testing.T) {
 			"logLevels/TRACE,DEBUG,WARN,INFO,ERROR/originServices/service1,service2/1/2/3",
 			http.StatusOK,
 			matchCriteria{LogLevels: logLevels, OriginServices: services, Start: 1, End: 2, Limit: 3},
-			3},
-		{"levels/services/labels/start/end/limit",
-			"logLevels/TRACE,DEBUG,WARN,INFO,ERROR/originServices/service1,service2/labels/label1,label2/1/2/3",
-			http.StatusOK,
-			matchCriteria{LogLevels: logLevels, OriginServices: services, Labels: labels, Start: 1, End: 2, Limit: 3},
-			3},
-		{"levels/services/labels/keywords/start/end/limit",
-			"logLevels/TRACE,DEBUG,WARN,INFO,ERROR/originServices/service1,service2/labels/label1,label2/keywords/keyword1,keyword2/1/2/3",
-			http.StatusOK,
-			matchCriteria{LogLevels: logLevels, OriginServices: services, Labels: labels, Keywords: keywords, Start: 1, End: 2, Limit: 3},
 			3},
 	}
 	// create test server with handler
@@ -256,7 +240,6 @@ func TestRemoveLogs(t *testing.T) {
 	Configuration = &ConfigurationStruct{Service: config.ServiceInfo{}}
 	Configuration.Service.ReadMaxLimit = maxLimit
 
-	var labels = []string{"label1", "label2"}
 	var services = []string{"service1", "service2"}
 	var keywords = []string{"keyword1", "keyword2"}
 	var logLevels = []string{logger.TraceLog, logger.DebugLog, logger.WarnLog,
@@ -287,12 +270,8 @@ func TestRemoveLogs(t *testing.T) {
 			"1/two",
 			http.StatusBadRequest,
 			matchCriteria{}},
-		{"labels/start/end",
-			"labels/label1,label2/1/2",
-			http.StatusOK,
-			matchCriteria{Labels: labels, Start: 1, End: 2}},
-		{"labelsempty/start/end",
-			"labels//1/2",
+		{"start/end",
+			"1/2",
 			http.StatusOK,
 			matchCriteria{Start: 1, End: 2}},
 		{"services/start/end",
@@ -315,14 +294,6 @@ func TestRemoveLogs(t *testing.T) {
 			"logLevels/TRACE,DEBUG,WARN,INFO,ERROR/originServices/service1,service2/1/2",
 			http.StatusOK,
 			matchCriteria{LogLevels: logLevels, OriginServices: services, Start: 1, End: 2}},
-		{"levels/services/labels/start/end",
-			"logLevels/TRACE,DEBUG,WARN,INFO,ERROR/originServices/service1,service2/labels/label1,label2/1/2",
-			http.StatusOK,
-			matchCriteria{LogLevels: logLevels, OriginServices: services, Labels: labels, Start: 1, End: 2}},
-		{"levels/services/labels/keywords/start/end",
-			"logLevels/TRACE,DEBUG,WARN,INFO,ERROR/originServices/service1,service2/labels/label1,label2/keywords/keyword1,keyword2/1/2",
-			http.StatusOK,
-			matchCriteria{LogLevels: logLevels, OriginServices: services, Labels: labels, Keywords: keywords, Start: 1, End: 2}},
 	}
 	// create test server with handler
 	ts := httptest.NewServer(HttpServer())

@@ -15,14 +15,13 @@ package data
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"regexp"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
-	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
-	"github.com/edgexfoundry/edgex-go/pkg/models"
-	"gopkg.in/mgo.v2/bson"
+	contract "github.com/edgexfoundry/edgex-go/pkg/models"
 )
 
 const (
@@ -31,97 +30,111 @@ const (
 )
 
 // Check if the value descriptor matches the format string regular expression
-func validateFormatString(v models.ValueDescriptor) (bool, error) {
+func validateFormatString(v contract.ValueDescriptor) error {
 	// No formatting specified
 	if v.Formatting == "" {
-		return true, nil
-	} else {
-		return regexp.MatchString(formatSpecifier, v.Formatting)
+		return nil
 	}
+
+	match, err := regexp.MatchString(formatSpecifier, v.Formatting)
+
+	if err != nil {
+		LoggingClient.Error("Error checking for format string for value descriptor " + v.Name)
+		return err
+	}
+	if !match {
+		err = fmt.Errorf("format is not a valid printf format")
+		LoggingClient.Error(fmt.Sprintf("Error posting value descriptor. %s", err.Error()))
+		return errors.NewErrValueDescriptorInvalid(v.Name, err)
+	}
+
+	return nil
 }
 
-func getValueDescriptorByName(name string) (vd models.ValueDescriptor, err error) {
+func getValueDescriptorByName(name string) (vd contract.ValueDescriptor, err error) {
 	vd, err = dbClient.ValueDescriptorByName(name)
 
 	if err != nil {
 		LoggingClient.Error(err.Error())
 		if err == db.ErrNotFound {
-			return models.ValueDescriptor{}, errors.NewErrDbNotFound()
+			return contract.ValueDescriptor{}, errors.NewErrDbNotFound()
 		} else {
-			return models.ValueDescriptor{}, err
+			return contract.ValueDescriptor{}, err
 		}
 	}
 
 	return vd, nil
 }
 
-func getValueDescriptorById(id string) (vd models.ValueDescriptor, err error) {
+func getValueDescriptorById(id string) (vd contract.ValueDescriptor, err error) {
 	vd, err = dbClient.ValueDescriptorById(id)
 
 	if err != nil {
 		LoggingClient.Error(err.Error())
 		if err == db.ErrNotFound {
-			return models.ValueDescriptor{}, errors.NewErrDbNotFound()
+			return contract.ValueDescriptor{}, errors.NewErrDbNotFound()
+		} else if err == db.ErrInvalidObjectId {
+			return contract.ValueDescriptor{}, errors.NewErrInvalidId(id)
 		} else {
-			return models.ValueDescriptor{}, err
+			return contract.ValueDescriptor{}, err
 		}
 	}
 
 	return vd, nil
 }
 
-func getValueDescriptorsByUomLabel(uomLabel string) (vdList []models.ValueDescriptor, err error) {
+func getValueDescriptorsByUomLabel(uomLabel string) (vdList []contract.ValueDescriptor, err error) {
 	vdList, err = dbClient.ValueDescriptorsByUomLabel(uomLabel)
 
 	if err != nil {
 		LoggingClient.Error(err.Error())
 		if err == db.ErrNotFound {
-			return []models.ValueDescriptor{}, errors.NewErrDbNotFound()
+			return []contract.ValueDescriptor{}, errors.NewErrDbNotFound()
 		} else {
-			return []models.ValueDescriptor{}, err
+			return []contract.ValueDescriptor{}, err
 		}
 	}
 
 	return vdList, nil
 }
 
-func getValueDescriptorsByLabel(label string) (vdList []models.ValueDescriptor, err error) {
+func getValueDescriptorsByLabel(label string) (vdList []contract.ValueDescriptor, err error) {
 	vdList, err = dbClient.ValueDescriptorsByLabel(label)
 
 	if err != nil {
 		LoggingClient.Error(err.Error())
 		if err == db.ErrNotFound {
-			return []models.ValueDescriptor{}, errors.NewErrDbNotFound()
+			return []contract.ValueDescriptor{}, errors.NewErrDbNotFound()
 		} else {
-			return []models.ValueDescriptor{}, err
+			return []contract.ValueDescriptor{}, err
 		}
 	}
 
 	return vdList, nil
 }
 
-func getValueDescriptorsByType(typ string) (vdList []models.ValueDescriptor, err error) {
+func getValueDescriptorsByType(typ string) (vdList []contract.ValueDescriptor, err error) {
 	vdList, err = dbClient.ValueDescriptorsByType(typ)
 
 	if err != nil {
 		LoggingClient.Error(err.Error())
 		if err == db.ErrNotFound {
-			return []models.ValueDescriptor{}, errors.NewErrDbNotFound()
+			return []contract.ValueDescriptor{}, errors.NewErrDbNotFound()
 		} else {
-			return []models.ValueDescriptor{}, err
+			return []contract.ValueDescriptor{}, err
 		}
 	}
 
 	return vdList, nil
 }
 
-func getValueDescriptorsByDevice(device models.Device) (vdList []models.ValueDescriptor, err error) {
+func getValueDescriptorsByDevice(device contract.Device) (vdList []contract.ValueDescriptor, err error) {
 	// Get the names of the value descriptors
 	vdNames := []string{}
 	device.AllAssociatedValueDescriptors(&vdNames)
 
 	// Get the value descriptors
-	vdList = []models.ValueDescriptor{}
+	vdList = []contract.ValueDescriptor{}
 	for _, name := range vdNames {
 		vd, err := getValueDescriptorByName(name)
 
@@ -131,7 +144,7 @@ func getValueDescriptorsByDevice(device models.Device) (vdList []models.ValueDes
 			case *errors.ErrDbNotFound:
 				continue
 			default:
-				return []models.ValueDescriptor{}, err
+				return []contract.ValueDescriptor{}, err
 			}
 		}
 
@@ -141,41 +154,29 @@ func getValueDescriptorsByDevice(device models.Device) (vdList []models.ValueDes
 	return vdList, nil
 }
 
-func getValueDescriptorsByDeviceName(name string) (vdList []models.ValueDescriptor, err error) {
+func getValueDescriptorsByDeviceName(name string) (vdList []contract.ValueDescriptor, err error) {
 	// Get the device
 	device, err := mdc.DeviceForName(name)
 	if err != nil {
-		switch err := err.(type) {
-		case types.ErrNotFound:
-			LoggingClient.Error("Device not found: " + err.Error())
-			return []models.ValueDescriptor{}, errors.NewErrDbNotFound()
-		default:
-			LoggingClient.Error("Problem getting device from metadata: " + err.Error())
-			return []models.ValueDescriptor{}, err
-		}
+		LoggingClient.Error("Problem getting device from metadata: " + err.Error())
+		return []contract.ValueDescriptor{}, err
 	}
 
 	return getValueDescriptorsByDevice(device)
 }
 
-func getValueDescriptorsByDeviceId(id string) (vdList []models.ValueDescriptor, err error) {
+func getValueDescriptorsByDeviceId(id string) (vdList []contract.ValueDescriptor, err error) {
 	// Get the device
 	device, err := mdc.Device(id)
 	if err != nil {
-		switch err := err.(type) {
-		case types.ErrNotFound:
-			LoggingClient.Error("Device not found: " + err.Error())
-			return []models.ValueDescriptor{}, errors.NewErrDbNotFound()
-		default:
-			LoggingClient.Error("Problem getting device from metadata: " + err.Error())
-			return []models.ValueDescriptor{}, err
-		}
+		LoggingClient.Error("Problem getting device from metadata: " + err.Error())
+		return []contract.ValueDescriptor{}, err
 	}
 
 	return getValueDescriptorsByDevice(device)
 }
 
-func getAllValueDescriptors() (vd []models.ValueDescriptor, err error) {
+func getAllValueDescriptors() (vd []contract.ValueDescriptor, err error) {
 	vd, err = dbClient.ValueDescriptors()
 	if err != nil {
 		LoggingClient.Error(err.Error())
@@ -185,45 +186,40 @@ func getAllValueDescriptors() (vd []models.ValueDescriptor, err error) {
 	return vd, nil
 }
 
-func decodeValueDescriptor(reader io.ReadCloser) (vd models.ValueDescriptor, err error) {
-	v := models.ValueDescriptor{}
+func decodeValueDescriptor(reader io.ReadCloser) (vd contract.ValueDescriptor, err error) {
+	v := contract.ValueDescriptor{}
 	err = json.NewDecoder(reader).Decode(&v)
 	// Problems decoding
 	if err != nil {
 		LoggingClient.Error("Error decoding the value descriptor: " + err.Error())
-		return models.ValueDescriptor{}, errors.NewErrJsonDecoding(v.Name)
+		return contract.ValueDescriptor{}, errors.NewErrJsonDecoding(v.Name)
 	}
 
 	// Check the formatting
-	match, err := validateFormatString(v)
+	err = validateFormatString(v)
 	if err != nil {
-		LoggingClient.Error("Error checking for format string for value descriptor " + v.Name)
-		return models.ValueDescriptor{}, err
-	}
-	if !match {
-		LoggingClient.Error("Error posting value descriptor. Format is not a valid printf format.")
-		return models.ValueDescriptor{}, errors.NewErrValueDescriptorInvalid(v.Name, err)
+		return contract.ValueDescriptor{}, err
 	}
 
 	return v, nil
 }
 
-func addValueDescriptor(vd models.ValueDescriptor) (id bson.ObjectId, err error) {
+func addValueDescriptor(vd contract.ValueDescriptor) (id string, err error) {
 	id, err = dbClient.AddValueDescriptor(vd)
 	if err != nil {
 		LoggingClient.Error(err.Error())
 		if err == db.ErrNotUnique {
-			return bson.ObjectId(""), errors.NewErrValueDescriptorInUse(vd.Name)
+			return "", errors.NewErrValueDescriptorInUse(vd.Name)
 		} else {
-			return bson.ObjectId(""), err
+			return "", err
 		}
 	}
 
 	return id, nil
 }
 
-func updateValueDescriptor(from models.ValueDescriptor) error {
-	to, err := getValueDescriptorById(from.Id.Hex())
+func updateValueDescriptor(from contract.ValueDescriptor) error {
+	to, err := getValueDescriptorById(from.Id)
 	if err != nil {
 		return err
 	}
@@ -298,7 +294,7 @@ func updateValueDescriptor(from models.ValueDescriptor) error {
 	return nil
 }
 
-func deleteValueDescriptor(vd models.ValueDescriptor) error {
+func deleteValueDescriptor(vd contract.ValueDescriptor) error {
 	// Check if the value descriptor is still in use by readings
 	readings, err := dbClient.ReadingsByValueDescriptor(vd.Name, 10)
 	if err != nil {
@@ -311,7 +307,7 @@ func deleteValueDescriptor(vd models.ValueDescriptor) error {
 	}
 
 	// Delete the value descriptor
-	if err = dbClient.DeleteValueDescriptorById(vd.Id.Hex()); err != nil {
+	if err = dbClient.DeleteValueDescriptorById(vd.Id); err != nil {
 		LoggingClient.Error(err.Error())
 		return err
 	}

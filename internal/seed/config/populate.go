@@ -67,7 +67,7 @@ func ImportProperties(root string) error {
 
 // Import configuration files using the specified path to the cmd directory where service configuration files reside.
 // Also, profile indicates the preferred deployment target (such as "docker")
-func ImportConfiguration(root string, profile string) error {
+func ImportConfiguration(root string, profile string, overwrite bool) error {
 	dirs := listDirectories()
 	absRoot, err := determineAbsRoot(root)
 	if err != nil {
@@ -120,8 +120,10 @@ func ImportConfiguration(root string, profile string) error {
 			// Put config properties to Consul K/V store.
 			for _, v := range kvs {
 				p := &consulapi.KVPair{Key: prefix + v.Key, Value: []byte(v.Value)}
-				if _, err := (*consulapi.KV).Put(Registry.KV(), p, nil); err != nil {
-					return err
+				if kvPair, _, _ := (*consulapi.KV).Get(Registry.KV(), p.Key, nil); overwrite || kvPair == nil {
+					if _, err := (*consulapi.KV).Put(Registry.KV(), p, nil); err != nil {
+						return err
+					}
 				}
 			}
 		}

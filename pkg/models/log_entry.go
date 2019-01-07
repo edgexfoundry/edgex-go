@@ -16,22 +16,21 @@ package models
 import "encoding/json"
 
 type LogEntry struct {
-	Level         string   `json:"logLevel"`
-	Labels        []string `json:"labels"`
-	OriginService string   `json:"originService"`
-	Message       string   `json:"message"`
-	Created       int64    `json:"created"`
+	Level         string        `bson:"logLevel" json:"logLevel"`
+	Args          []interface{} `bson:"args" json:"args"`
+	OriginService string        `bson:"originService" json:"originService"`
+	Message       string        `bson:"message" json:"message"`
+	Created       int64         `bson:"created" json:"created"`
 }
 
 func (l LogEntry) MarshalJSON() ([]byte, error) {
 	test := struct {
-		Level         *string  `json:"logLevel"`
-		Labels        []string `json:"labels"`
-		OriginService *string  `json:"originService"`
-		Message       *string  `json:"message"`
-		Created       int64    `json:"created"`
+		Level         *string       `json:"logLevel,omitempty"`
+		Args          []interface{} `json:"args,omitempty"`
+		OriginService *string       `json:"originService,omitempty"`
+		Message       *string       `json:"message,omitempty"`
+		Created       int64         `json:"created,omitempty"`
 	}{
-		Labels:  l.Labels,
 		Created: l.Created,
 	}
 
@@ -48,8 +47,8 @@ func (l LogEntry) MarshalJSON() ([]byte, error) {
 		test.Message = &l.Message
 	}
 
-	if len(l.Labels) > 0 {
-		test.Labels = l.Labels
+	if len(l.Args) > 0 {
+		test.Args = l.Args
 	}
 
 	return json.Marshal(test)

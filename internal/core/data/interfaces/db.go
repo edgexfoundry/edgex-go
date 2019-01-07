@@ -14,36 +14,33 @@
 package interfaces
 
 import (
-	"github.com/edgexfoundry/edgex-go/pkg/models"
-	"gopkg.in/mgo.v2/bson"
+	contract "github.com/edgexfoundry/edgex-go/pkg/models"
 )
 
 type DBClient interface {
 	CloseSession()
 
-	Connect() error
-
 	// ********************** EVENT FUNCTIONS *******************************
 	// Return all the events
 	// UnexpectedError - failed to retrieve events from the database
-	Events() ([]models.Event, error)
+	Events() ([]contract.Event, error)
 
 	// Return events up to the number specified
 	// UnexpectedError - failed to retrieve events from the database
-	EventsWithLimit(limit int) ([]models.Event, error)
+	EventsWithLimit(limit int) ([]contract.Event, error)
 
 	// Add a new event
 	// UnexpectedError - failed to add to database
 	// NoValueDescriptor - no existing value descriptor for a reading in the event
-	AddEvent(e *models.Event) (bson.ObjectId, error)
+	AddEvent(e contract.Event) (string, error)
 
 	// Update an event - do NOT update readings
 	// UnexpectedError - problem updating in database
 	// NotFound - no event with the ID was found
-	UpdateEvent(e models.Event) error
+	UpdateEvent(e contract.Event) error
 
 	// Get an event by id
-	EventById(id string) (models.Event, error)
+	EventById(id string) (contract.Event, error)
 
 	// Get the number of events in Core Data
 	EventCount() (int, error)
@@ -63,54 +60,54 @@ type DBClient interface {
 	DeleteEventById(id string) error
 
 	// Get a list of events based on the device id and limit
-	EventsForDeviceLimit(id string, limit int) ([]models.Event, error)
+	EventsForDeviceLimit(id string, limit int) ([]contract.Event, error)
 
 	// Get a list of events based on the device id
-	EventsForDevice(id string) ([]models.Event, error)
+	EventsForDevice(id string) ([]contract.Event, error)
 
 	// Delete all of the events by the device id (and the readings)
 	//DeleteEventsByDeviceId(id string) error
 
 	// Return a list of events whos creation time is between startTime and endTime
 	// Limit the number of results by limit
-	EventsByCreationTime(startTime, endTime int64, limit int) ([]models.Event, error)
+	EventsByCreationTime(startTime, endTime int64, limit int) ([]contract.Event, error)
 
 	// Return a list of readings for a device filtered by the value descriptor and limited by the limit
 	// The readings are linked to the device through an event
-	ReadingsByDeviceAndValueDescriptor(deviceId, valueDescriptor string, limit int) ([]models.Reading, error)
+	ReadingsByDeviceAndValueDescriptor(deviceId, valueDescriptor string, limit int) ([]contract.Reading, error)
 
 	// Remove all the events that are older than the given age
 	// Return the number of events removed
 	//RemoveEventByAge(age int64) (int, error)
 
 	// Get events that are older than a age
-	EventsOlderThanAge(age int64) ([]models.Event, error)
+	EventsOlderThanAge(age int64) ([]contract.Event, error)
 
 	// Remove all the events that have been pushed
 	//func (dbc *DBClient) ScrubEvents()(int, error)
 
 	// Get events that have been pushed (pushed field is not 0)
-	EventsPushed() ([]models.Event, error)
+	EventsPushed() ([]contract.Event, error)
 
 	// Delete all readings and events
 	ScrubAllEvents() error
 
 	// ********************* READING FUNCTIONS *************************
 	// Return a list of readings sorted by reading id
-	Readings() ([]models.Reading, error)
+	Readings() ([]contract.Reading, error)
 
 	// Post a new reading
 	// Check if valuedescriptor exists in the database
-	AddReading(r models.Reading) (bson.ObjectId, error)
+	AddReading(r contract.Reading) (string, error)
 
 	// Update a reading
 	// 404 - reading cannot be found
 	// 409 - Value descriptor doesn't exist
 	// 503 - unknown issues
-	UpdateReading(r models.Reading) error
+	UpdateReading(r contract.Reading) error
 
 	// Get a reading by ID
-	ReadingById(id string) (models.Reading, error)
+	ReadingById(id string) (contract.Reading, error)
 
 	// Get the number of readings in core data
 	ReadingCount() (int, error)
@@ -122,68 +119,68 @@ type DBClient interface {
 	// Return a list of readings for the given device (id or name)
 	// 404 - meta data checking enabled and can't find the device
 	// Sort the list of readings on creation date
-	ReadingsByDevice(id string, limit int) ([]models.Reading, error)
+	ReadingsByDevice(id string, limit int) ([]contract.Reading, error)
 
 	// Return a list of readings for the given value descriptor
 	// 413 - the number exceeds the current max limit
-	ReadingsByValueDescriptor(name string, limit int) ([]models.Reading, error)
+	ReadingsByValueDescriptor(name string, limit int) ([]contract.Reading, error)
 
 	// Return a list of readings whose name is in the list of value descriptor names
-	ReadingsByValueDescriptorNames(names []string, limit int) ([]models.Reading, error)
+	ReadingsByValueDescriptorNames(names []string, limit int) ([]contract.Reading, error)
 
 	// Return a list of readings specified by the UOM label
-	//ReadingsByUomLabel(uomLabel string, limit int)([]models.Reading, error)
+	//ReadingsByUomLabel(uomLabel string, limit int)([]contract.Reading, error)
 
 	// Return a list of readings based on the label (value descriptor)
 	// 413 - limit exceeded
-	//ReadingsByLabel(label string, limit int) ([]models.Reading, error)
+	//ReadingsByLabel(label string, limit int) ([]contract.Reading, error)
 
 	// Return a list of readings who's value descriptor has the type
-	//ReadingsByType(typeString string, limit int) ([]models.Reading, error)
+	//ReadingsByType(typeString string, limit int) ([]contract.Reading, error)
 
 	// Return a list of readings whos created time is between the start and end times
-	ReadingsByCreationTime(start, end int64, limit int) ([]models.Reading, error)
+	ReadingsByCreationTime(start, end int64, limit int) ([]contract.Reading, error)
 
 	// ************************** VALUE DESCRIPTOR FUNCTIONS ***************************
 	// Add a value descriptor
 	// 409 - Formatting is bad or it is not unique
 	// 503 - Unexpected
 	// TODO: Check for valid printf formatting
-	AddValueDescriptor(v models.ValueDescriptor) (bson.ObjectId, error)
+	AddValueDescriptor(v contract.ValueDescriptor) (string, error)
 
 	// Return a list of all the value descriptors
 	// 513 Service Unavailable - database problems
-	ValueDescriptors() ([]models.ValueDescriptor, error)
+	ValueDescriptors() ([]contract.ValueDescriptor, error)
 
 	// Update a value descriptor
 	// First use the ID for identification, then the name
 	// TODO: Check for the valid printf formatting
 	// 404 not found if the value descriptor cannot be found by the identifiers
-	UpdateValueDescriptor(v models.ValueDescriptor) error
+	UpdateValueDescriptor(v contract.ValueDescriptor) error
 
 	// Delete a value descriptor based on the ID
 	DeleteValueDescriptorById(id string) error
 
 	// Return a value descriptor based on the name
-	ValueDescriptorByName(name string) (models.ValueDescriptor, error)
+	ValueDescriptorByName(name string) (contract.ValueDescriptor, error)
 
 	// Return value descriptors based on the names
-	ValueDescriptorsByName(names []string) ([]models.ValueDescriptor, error)
+	ValueDescriptorsByName(names []string) ([]contract.ValueDescriptor, error)
 
 	// Delete a valuedescriptor based on the name
 	//DeleteValueDescriptorByName(name string) error
 
 	// Return a value descriptor based on the id
-	ValueDescriptorById(id string) (models.ValueDescriptor, error)
+	ValueDescriptorById(id string) (contract.ValueDescriptor, error)
 
 	// Return value descriptors based on the unit of measure label
-	ValueDescriptorsByUomLabel(uomLabel string) ([]models.ValueDescriptor, error)
+	ValueDescriptorsByUomLabel(uomLabel string) ([]contract.ValueDescriptor, error)
 
 	// Return value descriptors based on the label
-	ValueDescriptorsByLabel(label string) ([]models.ValueDescriptor, error)
+	ValueDescriptorsByLabel(label string) ([]contract.ValueDescriptor, error)
 
 	// Return a list of value descriptors based on their type
-	ValueDescriptorsByType(t string) ([]models.ValueDescriptor, error)
+	ValueDescriptorsByType(t string) ([]contract.ValueDescriptor, error)
 
 	// Delete all value descriptors
 	ScrubAllValueDescriptors() error

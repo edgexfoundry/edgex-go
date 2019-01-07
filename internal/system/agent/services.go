@@ -17,9 +17,10 @@ package agent
 
 import (
 	"fmt"
-	"time"
-	"github.com/edgexfoundry/edgex-go/internal/system/agent/executor"
 	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/internal/system/agent/executor"
+	"github.com/edgexfoundry/edgex-go/internal/system/agent/logger"
+	"time"
 )
 
 const (
@@ -28,146 +29,30 @@ const (
 	RESTART = "restart"
 )
 
-func InvokeOperation(action string, services []string, params []string) bool {
+func InvokeOperation(action string, services []string) bool {
 
 	// Loop through requested operation, along with respectively-supplied parameters.
 	for _, service := range services {
-		LoggingClient.Info(fmt.Sprintf("About to {%v} the service {%v} with parameters {%v}.", action, service, params))
+		logs.LoggingClient.Info("invoking operation on service", "action type", action, "service name", service)
+
+		if !isKnownServiceKey(service) {
+			logs.LoggingClient.Warn("unknown service found during invocation", "service name", service)
+		}
 
 		switch action {
+		case START:
+			executor.StartDockerContainerCompose(service, Configuration.ComposeUrl)
+			break
 
 		case STOP:
-			switch service {
-			case internal.SupportNotificationsServiceKey:
-				ec.StopService(internal.SupportNotificationsServiceKey, params[0])
-				break
-
-			case internal.CoreDataServiceKey:
-				ec.StopService(internal.CoreDataServiceKey, params[0])
-				break
-
-			case internal.CoreCommandServiceKey:
-				ec.StopService(internal.CoreCommandServiceKey, params[0])
-				break
-
-			case internal.CoreMetaDataServiceKey:
-				ec.StopService(internal.CoreMetaDataServiceKey, params[0])
-				break
-
-			case internal.ExportClientServiceKey:
-				ec.StopService(internal.ExportClientServiceKey, params[0])
-				break
-
-			case internal.ExportDistroServiceKey:
-				ec.StopService(internal.ExportDistroServiceKey, params[0])
-				break
-
-			case internal.SupportLoggingServiceKey:
-				ec.StopService(internal.SupportLoggingServiceKey, params[0])
-				break
-
-			case internal.ConfigSeedServiceKey:
-				ec.StopService(internal.ConfigSeedServiceKey, params[0])
-				break
-
-			default:
-				LoggingClient.Info(fmt.Sprintf(">> Unknown service: %v", service))
-				break
-			}
-
-		case START:
-			switch service {
-			case internal.SupportNotificationsServiceKey:
-				executor.StartDockerContainerCompose(internal.SupportNotificationsServiceKey)
-				break
-
-			case internal.CoreDataServiceKey:
-				executor.StartDockerContainerCompose(internal.CoreDataServiceKey)
-				break
-
-			case internal.CoreMetaDataServiceKey:
-				executor.StartDockerContainerCompose(internal.CoreMetaDataServiceKey)
-				break
-
-			case internal.CoreCommandServiceKey:
-				executor.StartDockerContainerCompose(internal.CoreCommandServiceKey)
-				break
-
-			case internal.ExportClientServiceKey:
-				executor.StartDockerContainerCompose(internal.ExportClientServiceKey)
-				break
-
-			case internal.ExportDistroServiceKey:
-				executor.StartDockerContainerCompose(internal.ExportDistroServiceKey)
-				break
-
-			case internal.SupportLoggingServiceKey:
-				executor.StartDockerContainerCompose(internal.SupportLoggingServiceKey)
-				break
-
-			case internal.ConfigSeedServiceKey:
-				executor.StartDockerContainerCompose(internal.ConfigSeedServiceKey)
-				break
-
-			default:
-				LoggingClient.Info(fmt.Sprintf(">> Unknown service: %v", service))
-				break
-			}
+			ec.StopService(service)
+			break
 
 		case RESTART:
-			switch service {
-			case internal.SupportNotificationsServiceKey:
-				ec.StopService(internal.SupportNotificationsServiceKey, params[0])
-				time.Sleep(time.Second * time.Duration(1))
-				executor.StartDockerContainerCompose(internal.SupportNotificationsServiceKey)
-				break
-
-			case internal.CoreDataServiceKey:
-				ec.StopService(internal.CoreDataServiceKey, params[0])
-				time.Sleep(time.Second * time.Duration(1))
-				executor.StartDockerContainerCompose(internal.CoreDataServiceKey)
-				break
-
-			case internal.CoreCommandServiceKey:
-				ec.StopService(internal.CoreCommandServiceKey, params[0])
-				time.Sleep(time.Second * time.Duration(1))
-				executor.StartDockerContainerCompose(internal.CoreCommandServiceKey)
-				break
-
-			case internal.CoreMetaDataServiceKey:
-				ec.StopService(internal.CoreMetaDataServiceKey, params[0])
-				time.Sleep(time.Second * time.Duration(1))
-				executor.StartDockerContainerCompose(internal.CoreMetaDataServiceKey)
-				break
-
-			case internal.ExportClientServiceKey:
-				ec.StopService(internal.ExportClientServiceKey, params[0])
-				time.Sleep(time.Second * time.Duration(1))
-				executor.StartDockerContainerCompose(internal.ExportClientServiceKey)
-				break
-
-			case internal.ExportDistroServiceKey:
-				ec.StopService(internal.ExportDistroServiceKey, params[0])
-				time.Sleep(time.Second * time.Duration(1))
-				executor.StartDockerContainerCompose(internal.ExportDistroServiceKey)
-				break
-
-			case internal.SupportLoggingServiceKey:
-				ec.StopService(internal.SupportLoggingServiceKey, params[0])
-				time.Sleep(time.Second * time.Duration(1))
-				executor.StartDockerContainerCompose(internal.SupportLoggingServiceKey)
-				break
-
-			case internal.ConfigSeedServiceKey:
-				ec.StopService(internal.ConfigSeedServiceKey, params[0])
-				time.Sleep(time.Second * time.Duration(1))
-				executor.StartDockerContainerCompose(internal.ConfigSeedServiceKey)
-				break
-
-			default:
-				LoggingClient.Info(fmt.Sprintf(">> Unknown service: %v", service))
-				break
-			}
+			ec.StopService(service)
+			time.Sleep(time.Second * time.Duration(1))
+			executor.StartDockerContainerCompose(service, Configuration.ComposeUrl)
+			break
 		}
 	}
 	return true
@@ -183,100 +68,16 @@ func getConfig(services []string) (ConfigRespMap, error) {
 
 		c.Configuration[service] = ""
 
-		switch service {
+		if !isKnownServiceKey(service) {
+			logs.LoggingClient.Warn("unknown service found getting configuration", "service name", service)
+		}
 
-		case internal.SupportNotificationsServiceKey:
-
-			responseJSON, err := gcsn.FetchConfiguration()
-			if err != nil {
-				msg := fmt.Sprintf("%s get config error: %s", service, err.Error())
-				c.Configuration[service] = msg
-				LoggingClient.Error(msg)
-			} else {
-				c.Configuration[service] = ProcessResponse(responseJSON)
-			}
-			break
-
-		case internal.CoreCommandServiceKey:
-			responseJSON, err := gccc.FetchConfiguration()
-			if err != nil {
-				msg := fmt.Sprintf("%s get config error: %s", service, err.Error())
-				c.Configuration[service] = msg
-				LoggingClient.Error(msg)
-			} else {
-				c.Configuration[service] = ProcessResponse(responseJSON)
-			}
-			break
-
-		case internal.CoreDataServiceKey:
-			responseJSON, err := gccd.FetchConfiguration()
-			if err != nil {
-				msg := fmt.Sprintf("%s get config error: %s", service, err.Error())
-				c.Configuration[service] = msg
-				LoggingClient.Error(msg)
-			} else {
-				c.Configuration[service] = ProcessResponse(responseJSON)
-			}
-			break
-
-		case internal.CoreMetaDataServiceKey:
-			responseJSON, err := gccm.FetchConfiguration()
-			if err != nil {
-				msg := fmt.Sprintf("%s get config error: %s", service, err.Error())
-				c.Configuration[service] = msg
-				LoggingClient.Error(msg)
-			} else {
-				c.Configuration[service] = ProcessResponse(responseJSON)
-			}
-			break
-
-		case internal.ExportClientServiceKey:
-			responseJSON, err := gcec.FetchConfiguration()
-			if err != nil {
-				msg := fmt.Sprintf("%s get config error: %s", service, err.Error())
-				c.Configuration[service] = msg
-				LoggingClient.Error(msg)
-			} else {
-				c.Configuration[service] = ProcessResponse(responseJSON)
-			}
-			break
-
-		case internal.ExportDistroServiceKey:
-			responseJSON, err := gced.FetchConfiguration()
-			if err != nil {
-				msg := fmt.Sprintf("%s get config error: %s", service, err.Error())
-				c.Configuration[service] = msg
-				LoggingClient.Error(msg)
-			} else {
-				c.Configuration[service] = ProcessResponse(responseJSON)
-			}
-			break
-
-		case internal.SupportLoggingServiceKey:
-			responseJSON, err := gcsl.FetchConfiguration()
-			if err != nil {
-				msg := fmt.Sprintf("%s get config error: %s", service, err.Error())
-				c.Configuration[service] = msg
-				LoggingClient.Error(msg)
-			} else {
-				c.Configuration[service] = ProcessResponse(responseJSON)
-			}
-			break
-
-		case internal.SupportSchedulerServiceKey:
-			responseJSON, err := gcss.FetchConfiguration()
-			if err != nil {
-				msg := fmt.Sprintf("%s get config error: %s", service, err.Error())
-				c.Configuration[service] = msg
-				LoggingClient.Error(msg)
-			} else {
-				c.Configuration[service] = ProcessResponse(responseJSON)
-			}
-			break
-
-		default:
-			LoggingClient.Warn(fmt.Sprintf(">> Unknown service: %v", service))
-			break
+		responseJSON, err := clients[service].FetchConfiguration()
+		if err != nil {
+			c.Configuration[service] = fmt.Sprintf("%s get config error: %s", service, err.Error())
+			logs.LoggingClient.Error("error retrieving configuration", "service name", service, "error message", err.Error())
+		} else {
+			c.Configuration[service] = ProcessResponse(responseJSON)
 		}
 	}
 	return c, nil
@@ -292,100 +93,36 @@ func getMetrics(services []string) (MetricsRespMap, error) {
 
 		m.Metrics[service] = ""
 
-		switch service {
+		if !isKnownServiceKey(service) {
+			logs.LoggingClient.Warn("unknown service found getting metrics", "service name", service)
+		}
 
-		case internal.SupportNotificationsServiceKey:
-			responseJSON, err := gcsn.FetchMetrics()
-			if err != nil {
-				msg := fmt.Sprintf("%s get metrics error: %s", service, err.Error())
-				m.Metrics[service] = msg
-				LoggingClient.Error(msg)
-			} else {
-				m.Metrics[service] = ProcessResponse(responseJSON)
-			}
-			break
-
-		case internal.CoreCommandServiceKey:
-			responseJSON, err := gccc.FetchMetrics()
-			if err != nil {
-				msg := fmt.Sprintf("%s get metrics error: %s", service, err.Error())
-				m.Metrics[service] = msg
-				LoggingClient.Error(msg)
-			} else {
-				m.Metrics[service] = ProcessResponse(responseJSON)
-			}
-			break
-
-		case internal.CoreDataServiceKey:
-			responseJSON, err := gccd.FetchMetrics()
-			if err != nil {
-				msg := fmt.Sprintf("%s get metrics error: %s", service, err.Error())
-				m.Metrics[service] = msg
-				LoggingClient.Error(msg)
-			} else {
-				m.Metrics[service] = ProcessResponse(responseJSON)
-			}
-			break
-
-		case internal.CoreMetaDataServiceKey:
-			responseJSON, err := gccm.FetchMetrics()
-			if err != nil {
-				msg := fmt.Sprintf("%s get metrics error: %s", service, err.Error())
-				m.Metrics[service] = msg
-				LoggingClient.Error(msg)
-			} else {
-				m.Metrics[service] = ProcessResponse(responseJSON)
-			}
-			break
-
-		case internal.ExportClientServiceKey:
-			responseJSON, err := gcec.FetchMetrics()
-			if err != nil {
-				msg := fmt.Sprintf("%s get metrics error: %s", service, err.Error())
-				m.Metrics[service] = msg
-				LoggingClient.Error(msg)
-			} else {
-				m.Metrics[service] = ProcessResponse(responseJSON)
-			}
-			break
-
-		case internal.ExportDistroServiceKey:
-			responseJSON, err := gced.FetchMetrics()
-			if err != nil {
-				msg := fmt.Sprintf("%s get metrics error: %s", service, err.Error())
-				m.Metrics[service] = msg
-				LoggingClient.Error(msg)
-			} else {
-				m.Metrics[service] = ProcessResponse(responseJSON)
-			}
-			break
-
-		case internal.SupportLoggingServiceKey:
-			responseJSON, err := gcsl.FetchMetrics()
-			if err != nil {
-				msg := fmt.Sprintf("%s get metrics error: %s", service, err.Error())
-				m.Metrics[service] = msg
-				LoggingClient.Error(msg)
-			} else {
-				m.Metrics[service] = ProcessResponse(responseJSON)
-			}
-			break
-
-		case internal.SupportSchedulerServiceKey:
-			responseJSON, err := gcss.FetchMetrics()
-			if err != nil {
-				msg := fmt.Sprintf("%s get metrics error: %s", service, err.Error())
-				m.Metrics[service] = msg
-				LoggingClient.Error(msg)
-			} else {
-				m.Metrics[service] = ProcessResponse(responseJSON)
-			}
-			break
-
-		default:
-			LoggingClient.Warn(fmt.Sprintf(">> Unknown service: %v", service))
-			break
+		responseJSON, err := clients[service].FetchMetrics()
+		if err != nil {
+			m.Metrics[service] = fmt.Sprintf("%s get metrics error: %s", service, err.Error())
+			logs.LoggingClient.Error("error retrieving metrics", "service name", service, "error message", err.Error())
+		} else {
+			m.Metrics[service] = ProcessResponse(responseJSON)
 		}
 	}
 	return m, nil
+}
+
+func isKnownServiceKey(serviceKey string) bool {
+	// create a map because this is the easiest/cleanest way to determine whether something exists in a set
+	var services = map[string]struct{}{
+		internal.SupportNotificationsServiceKey: {},
+		internal.CoreCommandServiceKey: {},
+		internal.CoreDataServiceKey: {},
+		internal.CoreMetaDataServiceKey: {},
+		internal.ExportClientServiceKey: {},
+		internal.ExportDistroServiceKey: {},
+		internal.SupportLoggingServiceKey: {},
+		internal.SupportSchedulerServiceKey: {},
+		internal.ConfigSeedServiceKey: {},
+	}
+
+	 _, exists := services[serviceKey]
+
+	 return exists
 }

@@ -65,7 +65,7 @@ func TestValueDescriptor_String(t *testing.T) {
 		want string
 	}{
 		{"value descriptor to string", TestValueDescriptor,
-			"{\"id\":\"\",\"created\":" + strconv.FormatInt(TestValueDescriptor.Created, 10) +
+			"{\"created\":" + strconv.FormatInt(TestValueDescriptor.Created, 10) +
 				",\"description\":\"" + TestValueDescriptor.Description + "\"" +
 				",\"modified\":" + strconv.FormatInt(TestValueDescriptor.Modified, 10) +
 				",\"origin\":" + strconv.FormatInt(TestValueDescriptor.Origin, 10) +
@@ -73,7 +73,6 @@ func TestValueDescriptor_String(t *testing.T) {
 				",\"min\":" + strconv.Itoa(TestValueDescriptor.Min.(int)) +
 				",\"max\":" + strconv.Itoa(TestValueDescriptor.Max.(int)) +
 				",\"defaultValue\":" + strconv.Itoa(TestValueDescriptor.DefaultValue.(int)) +
-				",\"type\":null" +
 				",\"uomLabel\":\"" + TestValueDescriptor.UomLabel + "\"" +
 				",\"formatting\":\"" + TestValueDescriptor.Formatting + "\"" +
 				",\"labels\":" + fmt.Sprint(string(labelSlice)) + "}"},

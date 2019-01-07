@@ -16,8 +16,8 @@ package mongo
 import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
-	"gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
+	"github.com/globalsign/mgo"
+	"github.com/globalsign/mgo/bson"
 )
 
 // Internal version of the device service struct
@@ -93,8 +93,11 @@ func (mds *mongoDeviceService) SetBSON(raw bson.Raw) error {
 	var a models.Addressable
 
 	err = addCol.Find(bson.M{"_id": decoded.Addressable.Id}).One(&a)
-	if err != nil {
-		return err
+	if err == mgo.ErrNotFound {
+		err = addCol.Find(bson.M{"uuid": decoded.Addressable.Id}).One(&a)
+		if err != nil {
+			return err
+		}
 	}
 
 	mds.Service.Addressable = a

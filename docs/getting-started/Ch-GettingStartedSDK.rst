@@ -1,388 +1,213 @@
-#################################
-SDK that generates Device Service
-#################################
+##################################
+Writing a Device Service in Go
+##################################
+
+The EdgeX Device Service SDK helps developers quickly create new device connectors for EdgeX because it provides the common scaffolding that each Device Service needs to have.  The scaffolding provides a pattern for provisioning devices.  It provides common template code to receive and react to command (a.k.a. actuation) requests.  Finally, the scaffolding provides the common code to help get the data coming from the sensor into EdgeX Core Data (often referred to as data ingestion).  With the SDK, developers are left to focus on the code that is specific to the communications with the device via the protocol of the device.
+
+In this guide, you create a simple device service that generates a random number in place of getting data from an actual sensor.  In this way, you get to explore some of the scaffolding and work necessary to complete a device service without actually having a device to talk to.
+
+====================
+Install dependencies
+====================
+
+Creating a device service requires some small amounts of programming in Go.  Go Lang (version 1.10 or better) must be installed on your system to complete this lab.  Follow the instructions below to install Go if it is not already installed on your platform.
+    https://golang.org/doc/install
+
+
+Glide is a tool for managing 3rd party packages for Go.   EdgeX uses glide to retrieve and manage the 3rd party libraries used in the system.  Follow the instructions below to get Glide for your environment.
+    https://github.com/Masterminds/glide
+
+
+You will also need a Git tool in order to pull the Device Service Go SDK code from the EdgeX Foundry Git repository.  Follow the instructions below to install Git for your platform.
+    https://git-scm.com/book/en/v2/Getting-Started-Installing-Git
+
+
+You will also need a “make” program.  On Ubuntu Linux environments, this can be accomplished with the following command::
+
+    sudo apt install build-essential
+
+Finally, you will need a simple text editor (or Go Lang IDE).
+
+===============================
+Get the EdgeX Device SDK for Go
+===============================
+
+In this step, you create a folder on your file system where you will download the :doc:`./Ch-DeviceSDK`, then you pull the SDK to your system, and finally create the new EdgeX Device Service from the SDK templating code.
+
+#. Create a collection of nested folders, ~/go/src/github.com/edgexfoundry on your file system.  This folder will eventually hold your new Device Service.  In linux, this can be done with a single mkdir (with -p switch) command::
+
+    mkdir -p ~/go/src/github.com/edgexfoundry
+
+#. In a terminal window, change directories to the folder you created::
+
+    cd ~/go/src/github.com/edgexfoundry
+
+#. Type the following command to pull down the EdgeX Device Service SDK in Go (there is also a Device Service SDK in C)::
+
+    git clone https://github.com/edgexfoundry/device-sdk-go.git
+
+   .. image:: EdgeX_GettingStartedSDKClone3.png
+    
+#. Rename the cloned **device-sdk-go** to **device-simple**. In this step, you are renaming the folder to the name you want to give your new Device Service.  Standard practice in EdgeX is to prefix the name of a Device Service with **device-** ::
+
+    mv device-sdk-go/ device-simple
+
+   .. image:: EdgeX_GettingStartedSDKClone4.png
+    
+
+=====================================
+Starting a new Device Service project
+=====================================
+
+The device-sdk-go comes with example code to create a new device service.  In this step, you move a copy of the example code to use in your new service.
+
+#. Locate the cmd and driver folders in the /example directory of the device-simple folder.  Move both the cmd and driver folders to the root of the device-simple folder (you can use command line or file system explorer tool to move this folder).
+
+   .. image:: EdgeX_GettingStartedSDKProject1.png
+
+#. Search for all files with references to “device-sdk-go” in the device-simple folder (and its subfolders).  If you are using Linux or Unix, you can use the following command to find all files with “device-sdk-go” in the device-simple folder::
+
+    grep -irl “device-sdk-go”
+
+   You should find the following files have “device-sdk-go” references
+
+   .. image:: EdgeX_GettingStartedSDKProject3.png
+
+#. Edit each of the files above and change “device-sdk-go” to “device-simple”.  You can ignore any of the “.git” files.  If you are on a linux system, you can use this one command to replace all the occurances::
+
+    find .  -type f | xargs sed -i  's/device-sdk-go/device-simple/g'
+
+#. Edit the main.go file in the cmd/device-simple folder.  Modify the import statements to remove “/example” from the paths in the import statements.  Save the file when done editing.
+
+   .. image:: EdgeX_GettingStartedSDKProject4.png
+
+#. Edit the Makefile in the root of the /device-simple folder.  In the Makefile, change all of the example/cmd/device-simple to be just cmd/device-simple (there are 3 such references in this directory.
+
+   .. image:: EdgeX_GettingStartedSDKProject5.png
+
+#. Remove the now empty /device-simple/example directory::
+
+    rmdir example/
+
+=========================
+Build your Device Service
+=========================
+
+In order to ensure that the code you have moved and updated still works, build the current Device Service.
+
+#. In a terminal window, change directories to the device-simple folder (the folder contains the Makefile).
+#. Get the associated 3rd party libraries used in the service by issuing the command::
+
+    make prepare
+
+   It will take a few minutes for Go Glide to download all the 3rd party dependencies.
+
+#. Now build the service by issuing the command::
+
+    make build
+
+   .. image:: EdgeX_GettingStartedSDKBuild1.png
+
+#. If there are no errors, your service is ready for you to add customizations to generate data values as if there was a sensor attached.  If there are errors, retrace your steps to correct the error and try to build again.  Ask you instructor for help in finding the issue if you are unable to locate it given the error messages you receive from the build process.
+
+   .. image:: EdgeX_GettingStartedSDKBuild2.png
+
+=============================
+Customize your Device Service
+=============================
+
+The Device Service you are creating isn’t going to talk to a real device.  Instead, it is going to simply generate a random number in place of where the service would make a call to get sensor data from the actual device.  By so doing, you see where the EdgeX Device Service would make a call to a local device (via its protocol and device drivers under the covers) in order to provide EdgeX with its sensor readings.
+
+#. Locate the simpledriver.go file in the /driver folder and open it with your favorite editor.
+
+   .. image:: EdgeX_GettingStartedSDKCode1.png
+
+#. In the import( ) area at the top of the file, add “math/rand” under “time”.
+
+   .. image:: EdgeX_GettingStartedSDKCode2.png
+
+#. Next, locate the HandleReadCommands() function in this file.  Notice the following line of code in this file::
+
+    cv, _ := ds_models.NewBoolValue(&reqs[0].RO, now, s.switchButton)
+
+   .. image:: EdgeX_GettingStartedSDKCode3.png
+
+#. Replace that line of code with the following line of code::
+
+    cv, _ := ds_models.NewInt32Value(&reqs[0].RO, now, int32(rand.Intn(100)))
+
+   .. image:: EdgeX_GettingStartedSDKCode4.png
+
+#. What this line of code does is generate an integer (between 0 and 100) and uses that as the value the Device Service sends to EdgeX – mimicking the collection of data from a real device.  It is here that the Device Service would normally capture some sensor reading from a device and send the data to EdgeX.  The line of code you just added is where you’d need to do some customization work to talk to the sensor, get the sensor's latest sensor values and send them into EdgeX.
+
+#. Save the simpledriver.go file
+
+============================
+Creating your Device Profile
+============================
+
+A Device Profile is a YAML file that describes a class of device to EdgeX.  General characteristics about the type of device, the data these devices provide, and how to command the device is all provided in a Device Profile.  Device Services use the Device Profile to understand what data is being collected from the Device (in some cases providing information used by the Device Service to know how to communicate with the device and get the desired sensor readings).  A Device Profile is needed to describe the data that will be collected from the simple random number generating Device Service.
+
+#. Explore the files in the cmd/device-simple/res folder.  Take note of the example Device Profile YAML file that is already there (Simple-Driver.yml).  You can explore the contents of this file to see how devices are represented by YAML.  In particular, note how fields or properties of a sensor are represented by “deviceResources”.  Command to be issued to the device are represented by “commands”.
+
+#. Download this :download:`random-generator-device.yaml <random-generator-device.yaml>` into the cmd/device-simple/res folder.  
+
+You can open random-generator-device.yaml in a text editor.  In this Device Profile, you are suggesting that the device you are describing to EdgeX has a single property (or deviceResource) which EdgeX should know about - in this case, the property is the “randomnumber”.  Note how the deviceResource is typed.
+
+    In more real world IoT situations, this deviceResource list could be extensive and could be filled with all different types of data.
+
+    Note also how the Device Profile describes REST commands that can be used by others to call on (or “get”) the random number from the Device Service.   
+
+===============================
+Configuring your Device Service
+===============================
+
+You will now update the configuration for your new Device Service – changing the port it operates on (so as not to conflict with other Device Services), altering the scheduled times of when the data is collected from the Device Service (every 10 seconds), and setting up the initial provisioning of the random number generating device when the service starts.
+
+* Downlod this :download:`configuration.toml <configuration.toml>` to the cmd/device-simple/res folder (this will overwrite an existing file – that’s ok).  
+
+===========================
+Rebuild your Device Service
+===========================
+
+Just as you did before, you are ready to build the device-simple service – creating the executable program that is your Device Service.
+
+#. As you did previously, in a terminal window, change directories to the base device-simple folder (containing the Makefile).
+
+#. Build the Device Service by issuing the command::
+
+    make build
+
+   .. image:: EdgeX_GettingStartedSDKRebuild1.png
+
+#. If there are no errors, your service has now been created and is available in the cmd/device-simple folder (look for the device-simple file).
 
 =======================
-Introduction to the SDK
+Run your Device Service
 =======================
 
-The EdgeX Foundry Device Service Software Development Kit (SDK) takes the Developer through the step-by-step process to create an EdgeX Foundry Device Service microservice.  Then setup the SDK and execute the code to generate the Device Service scaffolding to get you started using EdgeX.
+Allow your newly created Device Service, which was formed out of the Device Service Go SDK, to create sensor mimicking data which it then sends to EdgeX.
 
-The EdgeX Foundry Software Development Kit (SDK) is written in Java. Other languages will be available in the future from the open source community. If you are creating your own SDK, use this one as an example.
+#. Per the :doc:`./Ch-GettingStartedUsers` guide, use Docker Compose to start all of EdgeX.  From the folder containing the docker-compose file, start EdgeX with a call to::
 
-The Device Service SDK supports:
+    docker-compose up -d
 
-* Synchronous read and write operations
-* Asynchronous Device data
-* Initialization and deconstruction of Driver Interface
-* Initialization and destruction of Device Connection
-* Framework for automated Provisioning Mechanism
-* Support for multiple classes of Devices with Profiles
-* Support for sets of actions triggered by a command
-* Cached responses to queries
+#. In a terminal window, change directories to the device-simple’s cmd/device-simple folder.  You should find the executable device-simple there.
 
-**Setup**
+   .. image:: EdgeX_GettingStartedSDKRun1.png
 
-This SDK can be run directly via Eclipse or can also be exported as a Runnable JAR and run from the command line.
+#. Execute the Device Service with the command ./device-simple (as shown below)
 
-**NOTE:  Images in this documentation still contain references to Fuse (the Dell project that was contributed to EdgeX Foundry).  The images are still accurate and helpful if you can ignore any place you see "fuse-" in the image.   In the future, these references will be removed.**
+   .. image:: EdgeX_GettingStartedSDKRun2.png
 
-**Run configuration requires two parameters**
+   This will start the service and it will immediate start to display log entries in the terminal.
 
-1. Output directory name where files are generated.
-2. Device Service configuration file. By default the file is expected to be in the project root directory. Examples are included in the tools project root directory.
+#. Using a browser, use the following URL to see the Event/Reading data that the service is generating and sending into EdgeX.
 
-**To generate a New Device Service**
+   http://localhost:48080/api/v1/event/device/RandNum-Device-01/100
 
-1. Create a new service configuration file using the included file 'Demo' as a template.
-	a. Set the Service name field of the new service. Convention is device-<protocol name>
-	b. Set the profile attributes that will be generated in the domain.<Protocol name>Attribute.java file. These fields are passed to the driver layer and must also be included in each deviceResource attribute field of every device profile for a service. These are protocol specific metadata objects characteristics of a protocol (such as uuid for BLE, oid and community for SNMP, and so forth). The first column is the Attribute name, the second is the java type.
+   .. image:: EdgeX_GettingStartedSDKRun3.png
 
-**Component Diagram of a Service Generated from the SDK**
+   This request asks for the last 100 Events/Readings from Core Data associated to the RandNum-Device-01.
 
-.. image:: EdgeX_GettingStartedSDKComponents.png
-
-Step 1. Clone the Projects
-
-  Clone from the Bitbucket repository the following projects:
-
-* `device-sdk`_.
-* `device-sdk-tools`_.
-
-.. _`device-sdk`: https://github.com/edgexfoundry/device-sdk
-..
-
-.. _`device-sdk-tools`: https://github.com/edgexfoundry/device-sdk-tools
-..
-
-Step 2. Import the Projects
-
-Import the two projects in to your IDE of choice; the images in this guide were generated with Eclipse Mars.2 Release (4.5.2) 
-See Figure 1. "Import the device-sdk and device-sdk-tools projects"
-
-* device-sdk
-* device-sdk-tools
-
-.. image:: EdgeX_GettingStartedSDKImport1.png
-
-Figure 1 (above).  Import the device-sdk and device-sdk-tools projects
-
-.. image:: EdgeX_GettingStartedSDKImport2.png
-
-Figure 2 (above).  Import the device-sdk and device-sdk-tools projects, continued
-
-.. image:: EdgeX_GettingStartedSDKImport3.png
-
-Figure 3 (above).  The device-sdk and device-sdk-tools projects have been imported
-
-.. image:: EdgeX_GettingStartedSDKSetup.png
-
-Figure 4 (above).  Set up the Run Configuration
-
-Step 3. Set up the Run Configuration
-
-Set up the Run Configuration for the Device Service Generation. (device-sdk-tools → Run As → Run Configurations...) See Figure 4. "Set up the Run Configuration."
-
-Add a new Java application targeting the device-sdk-tools project. See Figure 5. "Create Run Configuration"
-
-.. image:: EdgeX_GettingStartedSDKRun.png
-
-Figure 5 (above).  Create Run Configuration
-
-.. image:: EdgeX_GettingStartedSDKRun2.png
-
-Figure 6 (above).  Configure Run Parameters
-
-Step 4. Set the Arguments
-
-Set the arguments. See Figure 6. "Configure Run Parameters"
-
-C:\<Path> Demo 
-
-Enter the Generation Target Parent Path and the Demo Service Configuration File. 
-
-Step 5. Run the Newly Created Configuration to Generate your New Device Service
-
-Run the newly created Configuration to generate your new Device Service.
-
-.. image:: EdgeX_GettingStartedSDKRun3.png
-
-Figure 7 (above).  Results of Running Generate Device Service
-
-Step 6. A New Service Has Been Created
-
-Check the console output, see Figure 7. "Results of Running Generate Device Service"
-
-Now a new service has been created from the Device Service SDK template code. The Demo Service Configuration File generates a service called device-sdk-generated.
-
-Step 7. Import the Service
-
-Import your newly generated Device Service.
-
-See Figure 8. "Import the Demo Service"
-
-The root directory is the path from Step 4 plus the new service name. 
-
-.. image:: EdgeX_GettingStartedSDKImportDemo.png
-
-Figure 8 (above).  Import the Demo Service
-
-.. image:: EdgeX_GettingStartedSDKImportDemo2.png
-
-Figure 9 (above).  Run a Maven Install on the New Service
-
-Step 8. Run a Maven Install on the New Service
-
-Run a Maven Install on the new service to install the project dependencies. See Figure 9. "Run a Maven Install on the New Service"
-
-This will get packages needed as dependencies. See Figure 10. "The Results of Running as a Maven Install"
-
-.. image:: EdgeX_GettingStartedSDKRunMavenInstall.png
-
-Figure 10 (above).  Results of Running as a Maven Install
-
-Step 9. Run the New Service as a Java Application
-
-Bug Note:  Before running the service, the current implementation of the SDK contains a small but in the application.properties file.  Open application.properties and add the following default logging configuration to the file to avoid an issue when running the application:
-
-logging.remote.url=http://localhost:48061/api/v1/logs
-
-Run the new service as a Java Application. See Figure 11. "Run the Demo as a Java Application"
-
-.. image:: EdgeX_GettingStartedSDKRunDemoJavaApp.png
-
-Figure 11 (above).  Run the Demo Service as a Java Application
-
-Step 10. Run Configuration Application
-
-The Application--run the Device Service Demo.  See Figure 12. "Run Configuration Application."
-
-.. image:: EdgeX_GettingStartedSDKRunConfigApp.png
-
-Figure 12 (above).  Run Configuration Application
-
-The result: when the Device Service has nothing to which to connect, it fails.  If EdgeX Foundry is running locally it will connect and initialize with Metadata.
-
-Note: when running the service at this time, you will see the a default scheduling event fail if you watch the log output from the new device service.  It will look something like the following:
-
-::
-
-   2018-02-03 16:28:19.456 DEBUG 18672 --- [ool-16-thread-1] o.edgexfoundry.pkg.scheduling.Scheduler  : executing schedule 5a763773641a47658e75ebed 'Interval-15s' at 2018-02-03T16:28:19-06:00[America/Chicago]
-   2018-02-03 16:28:19.456 DEBUG 18672 --- [ool-16-thread-1] o.e.p.scheduling.ScheduleEventExecutor   : schedule event list contains 1 events
-   2018-02-03 16:28:19.456 DEBUG 18672 --- [ool-16-thread-1] o.e.p.scheduling.ScheduleEventExecutor   : executing event 5a763773641a47658e75ebef 'device-sdk-generated-Discovery'
-   2018-02-03 16:28:20.286 ERROR 18672 --- [ool-16-thread-1] o.e.p.s.ScheduleEventHttpExecutor        : exception executing event 5a763773641a47658e75ebef 'device-sdk-generated-Discovery' url 'HTTP://device-sdk-generated:49997/api/v1/discovery' body '' exception device-sdk-generated
-  java.net.UnknownHostException: device-sdk-generated
-    at java.net.AbstractPlainSocketImpl.connect(AbstractPlainSocketImpl.java:184)
-    at java.net.PlainSocketImpl.connect(PlainSocketImpl.java:172)
-    at java.net.SocksSocketImpl.connect(SocksSocketImpl.java:392)
-    at java.net.Socket.connect(Socket.java:589)
-    at sun.net.NetworkClient.doConnect(NetworkClient.java:175)
-    at sun.net.www.http.HttpClient.openServer(HttpClient.java:432)
-    at sun.net.www.http.HttpClient.openServer(HttpClient.java:527)
-    at sun.net.www.http.HttpClient.<init>(HttpClient.java:211)
-    at sun.net.www.http.HttpClient.New(HttpClient.java:308)
-    at sun.net.www.http.HttpClient.New(HttpClient.java:326)
-    at sun.net.www.protocol.http.HttpURLConnection.getNewHttpClient(HttpURLConnection.java:1168)
-    at sun.net.www.protocol.http.HttpURLConnection.plainConnect0(HttpURLConnection.java:1104)
-    at sun.net.www.protocol.http.HttpURLConnection.plainConnect(HttpURLConnection.java:998)
-    at sun.net.www.protocol.http.HttpURLConnection.connect(HttpURLConnection.java:932)
-    at sun.net.www.protocol.http.HttpURLConnection.getOutputStream0(HttpURLConnection.java:1282)
-    at sun.net.www.protocol.http.HttpURLConnection.getOutputStream(HttpURLConnection.java:1257)
-    at org.edgexfoundry.pkg.scheduling.ScheduleEventHttpExecutor.execute(ScheduleEventHttpExecutor.java:67)
-    at org.edgexfoundry.pkg.scheduling.ScheduleEventExecutor.execute(ScheduleEventExecutor.java:57)
-    at org.edgexfoundry.pkg.scheduling.ScheduleEventExecutor.execute(ScheduleEventExecutor.java:48)
-    at org.edgexfoundry.pkg.scheduling.Scheduler.schedule(Scheduler.java:131)
-    at sun.reflect.GeneratedMethodAccessor33.invoke(Unknown Source)
-    at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
-    at java.lang.reflect.Method.invoke(Method.java:497)
-    at org.springframework.scheduling.support.ScheduledMethodRunnable.run(ScheduledMethodRunnable.java:65)
-    at org.springframework.scheduling.support.DelegatingErrorHandlingRunnable.run(DelegatingErrorHandlingRunnable.java:54)
-    at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)
-    at java.util.concurrent.FutureTask.runAndReset(FutureTask.java:308)
-    at java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.access$301(ScheduledThreadPoolExecutor.java:180)
-    at java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:294)
-    at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142)
-    at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617)
-    at java.lang.Thread.run(Thread.java:745)
-  2018-02-03 16:28:20.293 DEBUG 18672 --- [ool-16-thread-1] o.edgexfoundry.pkg.scheduling.Scheduler  : queueing schedule 5a763773641a47658e75ebed 'Interval-15s'
-
-To avoid this issue, you can comment out the default schedule properties in the schedule.properties file:
-
-| # Add comma separated schedule and scheduleEvent initializations, may be partially specified, used by SimpleSchedule and SimpleScheduleEvent for initialization
-| # TODO 9: [Required] Set up default schedules. Each property set must be equal width. Run the schedule in the service by leaving the scheduleEvent.scheduler property blank,
-| # or run on the scheduler service by defining the scheduleEvent.scheduler=scheduler,...
-| #default.schedule.name=Interval-15s
-| #default.schedule.frequency=PT15S
-
-| #default.scheduleEvent.name=device-sdk-generated-Discovery
-| #default.scheduleEvent.path=/api/v1/discovery
-| #default.scheduleEvent.service=device-sdk-generated
-| #default.scheduleEvent.schedule=Interval-15s
-
-Step 11. Generate the Users' Service
-
-New Service is a copy of Demo Service.  See Figure 13. "New Device Service Configuration."
-
-.. image:: EdgeX_GettingStartedSDKGenerateUsersService.png
-
-Figure 13 (above).  New Device Service Configuration
-
-Enter the following information (see Figure 14 to see these examples):
-
-+---------------+-----------------------------+--------------------------------------------------------------------------------------------+
-| Line 7        |  The package text           |   Example:  Package=org.edgexfoundry.newservice                                            |
-+---------------+-----------------------------+--------------------------------------------------------------------------------------------+
-| Line 10       |  Service name               |   Example:  Service name=device-new-service                                                |
-+---------------+-----------------------------+--------------------------------------------------------------------------------------------+
-| Line 13       |  Protocol name              |   Example:  Protocol name=NewService                                                       |
-|               |                             |   For example, BLE, modbus, Virtual.                                                       |
-+---------------+-----------------------------+--------------------------------------------------------------------------------------------+
-| Line 17       |  Service port               |   Example:  Service port=49000                                                             |
-|               |                             |   Project conventions place device services in the 49000-49999 port range at this time.    |
-+---------------+-----------------------------+--------------------------------------------------------------------------------------------+
-| Line 20       |  Service labels             |   Example:  Service labels=newService                                                      |
-|               |                             |   Used as metadata for upstream services.                                                  |                  
-+---------------+-----------------------------+--------------------------------------------------------------------------------------------+
-| Line 24       |  SDK Scheduler Block        |   * "true"  = includes scheduling code and runs locally (adds support for the Scheduling   |
-|               |                             |     APIs and implementation).                                                              |
-|               |                             |   * "false" = does not include scheduling capabilities in the service.                     |
-+---------------+-----------------------------+--------------------------------------------------------------------------------------------+
-| Lines 30, 31  |  Profile attributes         |   Completely dependent on what the underlying Protocol Driver needs and is Service         |
-| and so forth  |                             |   dependent. Enter as many attributes as needed. Java type is comma separated.             |
-+---------------+-----------------------------+--------------------------------------------------------------------------------------------+
-
-.. image:: EdgeX_GettingStartedSDKServiceConfigured.png
-
-Figure 14 (above).  Results of New Device Service Configured
-
-.. image:: EdgeX_GettingStartedSDKServiceGeneration.png
-
-Figure 15 (above).  Run New Device Service Generation
-
-.. image:: EdgeX_GettingStartedSDKServiceGenResults.png
-
-Figure 16 (above).  Results of Running New Device Service Generation
-
-Step 12. Run New Device Service Generation 
-
-| See Figure 15. "Run New Device Service Generation" for the settings.  
-| See Figure 16. "Results of Running New Device Service Generation" for the results.
-
-Step 13. Import New Device Service
-
-| See Figure 17. "Import New Device Service" for the settings.  
-| See Figure 18. "Results of Importing New Device Service" for the results. 
-
-.. image:: EdgeX_GettingStartedSDKImportNewDeviceService.png
-
-Figure 17 (above).  Import New Device Service
-
-.. image:: EdgeX_GettingStartedSDKImportDeviceServiceResults.png
-
-Figure 18 (above).  Results of Importing New Device Service
-
-.. image:: EdgeX_GettingStartedSDKNewServiceTasks.png
-
-Figure 19 (above).   New Service Tasks
-
-.. image:: EdgeX_GettingStartedSDKNewServiceTaskList.png
-
-Figure 20 (above).  New Service Task List With Highlights of Tasks 1 - 8, and 11
-
-Step 14. Show Developer Tasks
-
-Show Developer Tasks (Window → Show View → Other... → General → Tasks)
-See Figure 19. "New Service Tasks"
-See Figure 20. "New Service Task List With Highlights of Tasks 1 - 8, and 11" to see most of the list of tasks. Tasks 9 & 10 are in the src main resources properties files.
-
-Step 15. TO DOs #1 to #4
-
-Perform and complete the required TO DO #1 and perform and complete the optional TO DOs that meet your needs.
-
-| In <Protocol name>.<Protocol name>Driver.java:
-| TO DO #1 (REQUIRED)–Creating or implementing or integrating the Device Driver Interface for the Service. Depending on which Device Service you are creating, you may be importing libraries, or creating your own device interface.
-
-| Replace the sample code with your Driver or Protocol stack. See Figure 21. "New Service Task #1."
-| TO DO #2 (Optional)–Redefining or modifying the Driver Interface from TO DO #1. Expanding the scope of metadata passed for a driver operation call.
-
-| Modify the interface between process and processCommand to expose additional information from the Device Object if required.
-| TO DO #3 (Optional)–Initialize the interface or driver stack (includes things such as port initialization or dongle capture). The service has no knowledge of associated devices at this stage in execution.
-| TO DO #4 (Optional)–Implement your service or protocol-specific device discovery mechanism if needed or if it exists.
-
-Step 16. TO DOs #5 to #8
-
-| Perform and complete the required TO DO #5 and perform and complete the optional TO DOs that meet your needs.
-| TO DO #5 (REQUIRED)–If you did TO DO #4 and implemented a discovery mechanism, then you have completed TO DO #5. If you did not need to do TO DO #4, then you need to remove this block of sample discovery code (lines 64 to 71), which is here for reference.
-| TO DO #6 (Optional)–Implement Device disconnection mechanism.  For clean up, closing ports, clearing caches, and so forth. 
-| TO DO #7 (Optional)–Tying the driver asynchronous callback mechansism to this function in TO DO #7. Asynchronous received data from the device which is where it would institute callback mechanism.
-
-| In domain.SimpleWatcher.java
-| TO DO #8 (Optional)–If you implement a protocol specific device discovery mechanism you may want to modify the reference device matching model here in this file. Redefine or extend the device discovery attributes for your service.
-
-.. image:: EdgeX_GettingStartedSDKNewServiceTask1.png
-
-Figure 21 (above).  New Service Task #1
-
-.. image:: EdgeX_GettingStartedSDKNewServiceTask9.png
-
-Figure 22 (above).  New Service Task #9  Schedule.properties
-
-Step 17. TO DOs #9 to #11
-
-Perform and complete the required TO DO #9, and perform and complete the optional TO DOs that meet your needs.
-Go to the file src/main/resources/schedule.properties  (See Figure 22. New Service Task #9 Schedule.properties)
-
-TO DO #9 (REQUIRED)–Initializing the default schedules for a service. Change the schedule.properties configuration file to configure the default schedules seeded by the service on startup.
-
-In EdgeX Foundry there are 2 Scheduling classes:
-
-    schedule– which is name and frequency such as a clock
-    schedule events – contains the REST call that occurs when the associated schedule fires.  Multiple schedule events can refer to the same one schedule. 
-
-See Figure 23. Schedule.properties
-
-TO DO #10 (Optional)–For configuring default Device Discovery metadata. The info for #10 is used in TO DOs #4 and #5.
-Go to the file src/main/resources/watcher.properties just below schedule.properties in TO DO #9.
-
-In Application.java:
-TO DO #11 (Optional)–For Consul support. If you want to use Consul in EdgeX Foundry's Registration and Configuration microservice, then uncomment the two lines of code as shown in Figure 24. Task #11 Enabling Consul 
-
-.. image:: EdgeX_GettingStartedSDKScheduleProperties.png
-
-Figure 23 (above).  Schedule.properties
-
-.. image:: EdgeX_GettingStartedSDKEnablingConsul.png
-
-Figure 24 (above).  Task #11–Enabling Consul
-
-**Configuration Notes**
-
-**Service Name and Host Name**
-
-In EdgeX device services the service name (which is represented by service.name key in the application.properties file or Consul configuration) is the identity of the Device Service object.  The name is used by EdgeX to attribute all the information about the service (in particular schedules, device ownership, etc.) to this name. However, the service.host parameter is used to describe how to interact with the service. Depending on your operating mode, the following guidelines for configuring the service host apply.
-
-**Deployment Mode (running everything containerized in Docker):**
-
-The Service host (which is represented by the service.host key in the application.properties file or Consul configuration) is the DNS or IP address networking entry of the entity that the service is bound to (container, machine, etc) and reachable from the other microservices. This allows a full location URL for the service to be determined.  In Docker environments, the host name is the name of the Docker container running the microservice (such as edgex-device-virtual).
-
-Use service.host=${service.name} and the docker-compose file for all services (default).
-
-Important Note:  be sure to use Docker Compose and docker-compose file (found in the compose-files folder in the developer-scripts repos) to bring up the containers for all services.  Docker Compose establishes the networking and container naming for you, which can otherwise be difficult to do and prone to errors if bringing up containers manually.
-
-**Developer Mode (running everything natively):**
-
-When running a service natively, the service names will not resolve to a DNS entry as they will in a Docker environment.
-
-Use service.host=localhost for all services (default).
-
-**Hybrid Mode (running some services natively with the rest deployed with Docker):**
-
-Use service.host=<Host Machine IP Address> for the native services (manual configuration) and the docker-compose file to bring up the containerized services (default). Ensure that Addressable objects for the native services are not accidentally created by bringing them up with the docker-compose file, otherwise conflicts may arise. This issue is being addressed in future versions.
-
-
-
-
-
-
-
-
+   **Note**: If you are running the other EdgeX services somewhere other than localhost, use that hostname in the above URL.

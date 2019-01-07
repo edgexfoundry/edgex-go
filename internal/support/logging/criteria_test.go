@@ -9,8 +9,8 @@ package logging
 import (
 	"testing"
 
-	"github.com/edgexfoundry/edgex-go/internal/support/logging/models"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
+	"github.com/edgexfoundry/edgex-go/pkg/models"
 )
 
 func TestCriteriaMatch(t *testing.T) {
@@ -18,10 +18,6 @@ func TestCriteriaMatch(t *testing.T) {
 	var levels = []string{logger.TraceLog, logger.DebugLog}
 	var keywords = []string{"2"}
 	var keywordsEmptyString = []string{""}
-	var labels1 = []string{"label1"}
-	var labels2 = []string{"label2"}
-	var labels12 = []string{"label2", "label1"}
-	var labels3 = []string{"1", "2", "label2"}
 
 	var tests = []struct {
 		name     string
@@ -53,12 +49,6 @@ func TestCriteriaMatch(t *testing.T) {
 		{"matchKeywords", models.LogEntry{Message: "222222"}, matchCriteria{Keywords: keywords}, true},
 		{"KeywordsEmptyString", models.LogEntry{Message: "222222"}, matchCriteria{Keywords: keywordsEmptyString}, true},
 		{"KeywordsEmptyString2", models.LogEntry{Message: ""}, matchCriteria{Keywords: keywordsEmptyString}, true},
-		// labels
-		{"noLabels", models.LogEntry{Labels: labels1}, matchCriteria{}, true},
-		{"matchLabels", models.LogEntry{Labels: labels1}, matchCriteria{Labels: labels1}, true},
-		{"matchLabels2", models.LogEntry{Labels: labels1}, matchCriteria{Labels: labels12}, true},
-		{"wrongLabels", models.LogEntry{Labels: labels1}, matchCriteria{Labels: labels2}, false},
-		{"wrongLabels", models.LogEntry{Labels: labels1}, matchCriteria{Labels: labels3}, false},
 	}
 	le := models.LogEntry{}
 

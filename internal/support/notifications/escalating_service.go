@@ -24,17 +24,18 @@ func escalate(t models.Transmission) {
 
 	var err error
 	s, err := dbClient.SubscriptionBySlug(ESCALATIONSUBSCRIPTIONSLUG)
-	if err == nil {
-		n, err := createEscalatedNotification(t)
-		if err == nil {
-			send(n, s)
-		} else {
-			LoggingClient.Error("Unable to create new escalating notice to send escalation notice for " + t.ID.String())
-		}
-	} else {
+	if err != nil {
 		LoggingClient.Error("Unable to find Escalation subcriber to send escalation notice for " + t.ID.String())
+		return
 	}
 
+	n, err := createEscalatedNotification(t)
+	if err != nil {
+		LoggingClient.Error("Unable to create new escalating notice to send escalation notice for " + t.ID.String())
+		return
+	}
+
+	send(n, s)
 }
 
 func createEscalatedNotification(t models.Transmission) (models.Notification, error) {

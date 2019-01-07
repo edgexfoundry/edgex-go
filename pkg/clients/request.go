@@ -69,9 +69,7 @@ func GetRequest(url string) ([]byte, error) {
 		return nil, err
 	}
 
-	if resp.StatusCode == http.StatusNotFound {
-		return nil, types.ErrNotFound{}
-	} else if (resp.StatusCode != http.StatusOK) && (resp.StatusCode != http.StatusAccepted) {
+	if (resp.StatusCode != http.StatusOK) && (resp.StatusCode != http.StatusAccepted) {
 		return nil, types.NewErrServiceClient(resp.StatusCode, bodyBytes)
 	}
 

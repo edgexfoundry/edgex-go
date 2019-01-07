@@ -1,22 +1,23 @@
 package executor
 
 import (
-	"strings"
 	"os"
-	"log"
 	"os/exec"
 	"strconv"
+	"strings"
+
+	"github.com/edgexfoundry/edgex-go/internal/system/agent/logger"
 )
 
 type ExecuteOs struct {
 }
 
-func (oe *ExecuteOs) StopService(service string, params string) error {
+func (oe *ExecuteOs) StopService(service string) error {
 
 	cmd := exec.Command("ps", "-ax")
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		// fmt.Sprintf("Call to StopService() failed with %s\n", err)
+		logs.LoggingClient.Error("StopService() failed", "error message", err.Error())
 		return err
 	}
 	findAndStopProcess(string(out), err, service)
@@ -28,7 +29,7 @@ func findAndStopProcess(output string, err error, process string) error {
 
 	var pid int
 	if err != nil {
-		log.Fatalf("Error during findAndStopProcess() as follows: " + err.Error())
+		logs.LoggingClient.Error("findAndStopProcess() failed", "error message", err.Error())
 		return nil
 	}
 
@@ -43,24 +44,22 @@ func findAndStopProcess(output string, err error, process string) error {
 				tokens := strings.Split(line, " ")
 				pid, err = strconv.Atoi(tokens[0])
 				if err != nil {
-					log.Fatalf("Error converting PID to integer: " + err.Error())
+					logs.LoggingClient.Error("error converting PID to integer", "error message", err.Error(), "unparsable token", tokens[0])
 				}
-				// fmt.Sprintf("Found the data with the PID {%v} of the the micro-service {%v} which we seek to stop!", tokens[0], process)
+				logs.LoggingClient.Debug("found service to be stopped", "PID", tokens[0], "service name", process)
 			}
 		}
 
 		// Now stop the process using the PID found above.
-		// fmt.Sprintf("OS-level >> The micro-service {%v} with the PID of {%v} is now being stopped!", process, pid)
-
 		// Make a system call.
 		proc, err := os.FindProcess(pid)
 		if err != nil {
-			log.Println(err)
+			logs.LoggingClient.Error("os.FindProcess(pid) failed", "error message", err.Error())
 		}
 		proc.Kill()
 	} else {
 		// TODO Return suitable response...
-		// fmt.Sprintf("OS-level >> The micro-service {%v} was NOT found in a running state...", process)
+		logs.LoggingClient.Debug("service not running", "level", "OS", "service name", process)
 	}
 
 	return nil
