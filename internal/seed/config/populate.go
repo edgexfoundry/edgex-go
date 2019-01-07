@@ -115,7 +115,7 @@ func ImportConfiguration(root string, profile string, overwrite bool) error {
 			}
 
 			// Put config properties to Consul K/V store.
-			prefix := internal.ConfigV2Stem + internal.ServiceKeyPrefix + d + "/"
+			prefix := internal.ConfigRegistryStem + internal.ServiceKeyPrefix + d + "/"
 
 			// Put config properties to Consul K/V store.
 			for _, v := range kvs {
