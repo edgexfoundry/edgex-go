@@ -18,7 +18,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	contract "github.com/edgexfoundry/edgex-go/pkg/models"
 	"github.com/globalsign/mgo/bson"
-	"github.com/google/uuid"
 )
 
 type Command struct {
@@ -66,30 +65,15 @@ func (c *Command) ToContract() contract.Command {
 }
 
 func (c *Command) FromContract(from contract.Command) error {
-	// In this first case, ID is empty so this must be an add.
-	// Generate new BSON/UUIDs
-	if from.Id == "" {
-		c.Id = bson.NewObjectId()
-		c.Uuid = uuid.New().String()
-	} else {
-		// In this case, we're dealing with an existing command
-		if !bson.IsObjectIdHex(from.Id) {
-			// Command Id is not a BSON ID. Is it a UUID?
-			_, err := uuid.Parse(from.Id)
-			if err != nil { // It is some unsupported type of string
-				return db.ErrInvalidObjectId
-			}
-			// Leave model's ID blank for now. We will be querying based on the UUID.
-			c.Uuid = from.Id
-		} else {
-			// ID of pre-existing event is a BSON ID. We will query using the BSON ID.
-			c.Id = bson.ObjectIdHex(from.Id)
-		}
+	var err error
+	c.Id, c.Uuid, err = FromContractId(from.Id)
+	if err != nil {
+		return err
 	}
 
 	c.Name = from.Name
 	c.Get = &Get{}
-	err := c.Get.FromContract(*from.Get)
+	err = c.Get.FromContract(*from.Get)
 	if err != nil {
 		return err
 	}

@@ -15,7 +15,8 @@ package mongo
 
 import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
-	"github.com/edgexfoundry/edgex-go/pkg/models"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo/models"
+	contract "github.com/edgexfoundry/edgex-go/pkg/models"
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
 )
@@ -30,14 +31,14 @@ type mongoDeviceService struct {
 func (mds mongoDeviceService) GetBSON() (interface{}, error) {
 	return struct {
 		models.DescribedObject `bson:",inline"`
-		Id                     bson.ObjectId         `bson:"_id,omitempty"`
-		Name                   string                `bson:"name"`           // time in milliseconds that the device last provided any feedback or responded to any request
-		LastConnected          int64                 `bson:"lastConnected"`  // time in milliseconds that the device last reported data to the core
-		LastReported           int64                 `bson:"lastReported"`   // operational state - either enabled or disabled
-		OperatingState         models.OperatingState `bson:"operatingState"` // operational state - ether enabled or disableddc
-		Labels                 []string              `bson:"labels"`         // tags or other labels applied to the device service for search or other identification needs
-		Addressable            mgo.DBRef             `bson:"addressable"`    // address (MQTT topic, HTTP address, serial bus, etc.) for reaching the service
-		AdminState             models.AdminState     `bson:"adminState"`     // Device Service Admin State
+		Id                     bson.ObjectId           `bson:"_id,omitempty"`
+		Name                   string                  `bson:"name"`           // time in milliseconds that the device last provided any feedback or responded to any request
+		LastConnected          int64                   `bson:"lastConnected"`  // time in milliseconds that the device last reported data to the core
+		LastReported           int64                   `bson:"lastReported"`   // operational state - either enabled or disabled
+		OperatingState         contract.OperatingState `bson:"operatingState"` // operational state - ether enabled or disabled
+		Labels                 []string                `bson:"labels"`         // tags or other labels applied to the device service for search or other identification needs
+		Addressable            mgo.DBRef               `bson:"addressable"`    // address (MQTT topic, HTTP address, serial bus, etc.) for reaching the service
+		AdminState             contract.AdminState     `bson:"adminState"`     // Device Service Admin State
 	}{
 		DescribedObject: mds.Service.DescribedObject,
 		Id:              mds.Service.Id,
@@ -51,18 +52,18 @@ func (mds mongoDeviceService) GetBSON() (interface{}, error) {
 	}, nil
 }
 
-// Custom unmarshaling out of mongo
+// Custom marshalling out of mongo
 func (mds *mongoDeviceService) SetBSON(raw bson.Raw) error {
 	decoded := new(struct {
-		models.DescribedObject `bson:",inline"`
-		Id                     bson.ObjectId         `bson:"_id,omitempty"`
-		Name                   string                `bson:"name"`           // time in milliseconds that the device last provided any feedback or responded to any request
-		LastConnected          int64                 `bson:"lastConnected"`  // time in milliseconds that the device last reported data to the core
-		LastReported           int64                 `bson:"lastReported"`   // operational state - either enabled or disabled
-		OperatingState         models.OperatingState `bson:"operatingState"` // operational state - ether enabled or disableddc
-		Labels                 []string              `bson:"labels"`         // tags or other labels applied to the device service for search or other identification needs
-		Addressable            mgo.DBRef             `bson:"addressable"`    // address (MQTT topic, HTTP address, serial bus, etc.) for reaching the service
-		AdminState             models.AdminState     `bson:"adminState"`     // Device Service Admin State
+		contract.DescribedObject `bson:",inline"`
+		Id                       bson.ObjectId           `bson:"_id,omitempty"`
+		Name                     string                  `bson:"name"`           // time in milliseconds that the device last provided any feedback or responded to any request
+		LastConnected            int64                   `bson:"lastConnected"`  // time in milliseconds that the device last reported data to the core
+		LastReported             int64                   `bson:"lastReported"`   // operational state - either enabled or disabled
+		OperatingState           contract.OperatingState `bson:"operatingState"` // operational state - ether enabled or disabled
+		Labels                   []string                `bson:"labels"`         // tags or other labels applied to the device service for search or other identification needs
+		Addressable              mgo.DBRef               `bson:"addressable"`    // address (MQTT topic, HTTP address, serial bus, etc.) for reaching the service
+		AdminState               contract.AdminState     `bson:"adminState"`     // Device Service Admin State
 	})
 
 	bsonErr := raw.Unmarshal(decoded)
@@ -71,7 +72,7 @@ func (mds *mongoDeviceService) SetBSON(raw bson.Raw) error {
 	}
 
 	// Copy over the non-DBRef fields
-	mds.Service.DescribedObject = decoded.DescribedObject
+	mds.Service.DescribedObject.FromContract(decoded.DescribedObject)
 	mds.Service.Id = decoded.Id
 	mds.Service.Name = decoded.Name
 	mds.AdminState = decoded.AdminState
@@ -90,7 +91,7 @@ func (mds *mongoDeviceService) SetBSON(raw bson.Raw) error {
 
 	addCol := s.DB(m.database.Name).C(db.Addressable)
 
-	var a models.Addressable
+	var a contract.Addressable
 
 	err = addCol.Find(bson.M{"_id": decoded.Addressable.Id}).One(&a)
 	if err == mgo.ErrNotFound {
@@ -100,7 +101,9 @@ func (mds *mongoDeviceService) SetBSON(raw bson.Raw) error {
 		}
 	}
 
-	mds.Service.Addressable = a
+	if err = mds.Service.Addressable.FromContract(a); err != nil {
+		return err
+	}
 
 	return nil
 }

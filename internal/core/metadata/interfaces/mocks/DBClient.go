@@ -102,17 +102,24 @@ func (_m *DBClient) AddDeviceReport(dr models.DeviceReport) (string, error) {
 }
 
 // AddDeviceService provides a mock function with given fields: ds
-func (_m *DBClient) AddDeviceService(ds *models.DeviceService) error {
+func (_m *DBClient) AddDeviceService(ds models.DeviceService) (string, error) {
 	ret := _m.Called(ds)
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func(*models.DeviceService) error); ok {
+	var r0 string
+	if rf, ok := ret.Get(0).(func(models.DeviceService) string); ok {
 		r0 = rf(ds)
 	} else {
-		r0 = ret.Error(0)
+		r0 = ret.Get(0).(string)
 	}
 
-	return r0
+	var r1 error
+	if rf, ok := ret.Get(1).(func(models.DeviceService) error); ok {
+		r1 = rf(ds)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // AddProvisionWatcher provides a mock function with given fields: pw
@@ -160,20 +167,6 @@ func (_m *DBClient) AddScheduleEvent(se *models.ScheduleEvent) error {
 // CloseSession provides a mock function with given fields:
 func (_m *DBClient) CloseSession() {
 	_m.Called()
-}
-
-// Connect provides a mock function with given fields:
-func (_m *DBClient) Connect() error {
-	ret := _m.Called()
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func() error); ok {
-		r0 = rf()
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
 }
 
 // DeleteAddressableById provides a mock function with given fields: id
@@ -519,18 +512,27 @@ func (_m *DBClient) GetAllDeviceReports() ([]models.DeviceReport, error) {
 	return r0, r1
 }
 
-// GetAllDeviceServices provides a mock function with given fields: d
-func (_m *DBClient) GetAllDeviceServices(d *[]models.DeviceService) error {
-	ret := _m.Called(d)
+// GetAllDeviceServices provides a mock function with given fields:
+func (_m *DBClient) GetAllDeviceServices() ([]models.DeviceService, error) {
+	ret := _m.Called()
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func(*[]models.DeviceService) error); ok {
-		r0 = rf(d)
+	var r0 []models.DeviceService
+	if rf, ok := ret.Get(0).(func() []models.DeviceService); ok {
+		r0 = rf()
 	} else {
-		r0 = ret.Error(0)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.DeviceService)
+		}
 	}
 
-	return r0
+	var r1 error
+	if rf, ok := ret.Get(1).(func() error); ok {
+		r1 = rf()
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // GetAllDevices provides a mock function with given fields: d
@@ -847,60 +849,92 @@ func (_m *DBClient) GetDeviceReportsByScheduleEventName(n string) ([]models.Devi
 	return r0, r1
 }
 
-// GetDeviceServiceById provides a mock function with given fields: d, id
-func (_m *DBClient) GetDeviceServiceById(d *models.DeviceService, id string) error {
-	ret := _m.Called(d, id)
+// GetDeviceServiceById provides a mock function with given fields: id
+func (_m *DBClient) GetDeviceServiceById(id string) (models.DeviceService, error) {
+	ret := _m.Called(id)
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func(*models.DeviceService, string) error); ok {
-		r0 = rf(d, id)
+	var r0 models.DeviceService
+	if rf, ok := ret.Get(0).(func(string) models.DeviceService); ok {
+		r0 = rf(id)
 	} else {
-		r0 = ret.Error(0)
+		r0 = ret.Get(0).(models.DeviceService)
 	}
 
-	return r0
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
-// GetDeviceServiceByName provides a mock function with given fields: d, n
-func (_m *DBClient) GetDeviceServiceByName(d *models.DeviceService, n string) error {
-	ret := _m.Called(d, n)
+// GetDeviceServiceByName provides a mock function with given fields: n
+func (_m *DBClient) GetDeviceServiceByName(n string) (models.DeviceService, error) {
+	ret := _m.Called(n)
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func(*models.DeviceService, string) error); ok {
-		r0 = rf(d, n)
+	var r0 models.DeviceService
+	if rf, ok := ret.Get(0).(func(string) models.DeviceService); ok {
+		r0 = rf(n)
 	} else {
-		r0 = ret.Error(0)
+		r0 = ret.Get(0).(models.DeviceService)
 	}
 
-	return r0
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(n)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
-// GetDeviceServicesByAddressableId provides a mock function with given fields: d, id
-func (_m *DBClient) GetDeviceServicesByAddressableId(d *[]models.DeviceService, id string) error {
-	ret := _m.Called(d, id)
+// GetDeviceServicesByAddressableId provides a mock function with given fields: id
+func (_m *DBClient) GetDeviceServicesByAddressableId(id string) ([]models.DeviceService, error) {
+	ret := _m.Called(id)
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func(*[]models.DeviceService, string) error); ok {
-		r0 = rf(d, id)
+	var r0 []models.DeviceService
+	if rf, ok := ret.Get(0).(func(string) []models.DeviceService); ok {
+		r0 = rf(id)
 	} else {
-		r0 = ret.Error(0)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.DeviceService)
+		}
 	}
 
-	return r0
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
-// GetDeviceServicesWithLabel provides a mock function with given fields: d, l
-func (_m *DBClient) GetDeviceServicesWithLabel(d *[]models.DeviceService, l string) error {
-	ret := _m.Called(d, l)
+// GetDeviceServicesWithLabel provides a mock function with given fields: l
+func (_m *DBClient) GetDeviceServicesWithLabel(l string) ([]models.DeviceService, error) {
+	ret := _m.Called(l)
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func(*[]models.DeviceService, string) error); ok {
-		r0 = rf(d, l)
+	var r0 []models.DeviceService
+	if rf, ok := ret.Get(0).(func(string) []models.DeviceService); ok {
+		r0 = rf(l)
 	} else {
-		r0 = ret.Error(0)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.DeviceService)
+		}
 	}
 
-	return r0
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(l)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // GetDevicesByAddressableId provides a mock function with given fields: d, aid

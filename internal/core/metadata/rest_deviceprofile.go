@@ -656,8 +656,8 @@ func notifyProfileAssociates(dp models.DeviceProfile, action string) error {
 	var ds []models.DeviceService
 	for _, device := range d {
 		// Only add if not there
-		if _, ok := dsMap[device.Service.Service.Id.Hex()]; !ok {
-			dsMap[device.Service.Service.Id.Hex()] = device.Service
+		if _, ok := dsMap[device.Service.Service.Id]; !ok {
+			dsMap[device.Service.Service.Id] = device.Service
 			ds = append(ds, device.Service)
 		}
 	}

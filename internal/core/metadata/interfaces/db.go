@@ -86,12 +86,12 @@ type DBClient interface {
 
 	// Device service
 	UpdateDeviceService(ds contract.DeviceService) error
-	GetDeviceServicesByAddressableId(d *[]contract.DeviceService, id string) error
-	GetDeviceServicesWithLabel(d *[]contract.DeviceService, l string) error
-	GetDeviceServiceById(d *contract.DeviceService, id string) error
-	GetDeviceServiceByName(d *contract.DeviceService, n string) error
-	GetAllDeviceServices(d *[]contract.DeviceService) error
-	AddDeviceService(ds *contract.DeviceService) error
+	GetDeviceServicesByAddressableId(id string) ([]contract.DeviceService, error)
+	GetDeviceServicesWithLabel(l string) ([]contract.DeviceService, error)
+	GetDeviceServiceById(id string) (contract.DeviceService, error)
+	GetDeviceServiceByName(n string) (contract.DeviceService, error)
+	GetAllDeviceServices() ([]contract.DeviceService, error)
+	AddDeviceService(ds contract.DeviceService) (string, error)
 	DeleteDeviceServiceById(id string) error
 
 	// Provision watcher

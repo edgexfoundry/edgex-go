@@ -130,7 +130,7 @@ func (md *mongoDevice) SetBSON(raw bson.Raw) error {
 
 	md.Addressable = a.ToContract()
 	md.Profile = mdp.DeviceProfile
-	md.Service = mds.DeviceService
+	md.Service = mds.DeviceService.ToContract()
 
 	return nil
 }
