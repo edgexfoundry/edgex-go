@@ -46,15 +46,14 @@ func restAddCommand(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	var c contract.Command
 
-	var err error
-	if err = json.NewDecoder(r.Body).Decode(&c); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&c); err != nil {
 		LoggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	var newId string
-	if newId, err = dbClient.AddCommand(c); err != nil {
+	newId, err := dbClient.AddCommand(c)
+	if err != nil {
 		LoggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -86,8 +85,7 @@ func restUpdateCommand(w http.ResponseWriter, r *http.Request) {
 
 	// Name is changed, make sure the new name doesn't conflict with device profile
 	if c.Name != "" {
-		var dps []contract.DeviceProfile
-		dps, err = dbClient.GetDeviceProfilesUsingCommand(c)
+		dps, err := dbClient.GetDeviceProfilesUsingCommand(c)
 		if err != nil {
 			LoggingClient.Error(err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -202,7 +200,6 @@ func restDeleteCommandById(w http.ResponseWriter, r *http.Request) {
 
 // Helper function to determine if the command is still in use by device profiles
 func isCommandStillInUse(c contract.Command) (bool, error) {
-	var dp []contract.DeviceProfile
 	dp, err := dbClient.GetDeviceProfilesUsingCommand(c)
 	if err != nil {
 		return false, err

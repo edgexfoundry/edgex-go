@@ -77,12 +77,12 @@ func TestGetIntervalActions(t *testing.T) {
 	}
 }
 
-func TestGetIntervalActionsByIntervalName(t *testing.T){
+func TestGetIntervalActionsByIntervalName(t *testing.T) {
 	reset()
 	myMock := &dbMock.DBClient{}
 
 	myMock.On("IntervalActionsByIntervalName",
-		mock.MatchedBy(func(name string) bool { return name == testIntervalAction.Interval})).Return([]models.IntervalAction{testIntervalAction}, nil)
+		mock.MatchedBy(func(name string) bool { return name == testIntervalAction.Interval })).Return([]models.IntervalAction{testIntervalAction}, nil)
 	dbClient = myMock
 
 	intervalActions, err := getIntervalActionsByInterval(testIntervalActionInterval)
@@ -97,12 +97,12 @@ func TestGetIntervalActionsByIntervalName(t *testing.T){
 	}
 }
 
-func TestGetIntervalActionByName(t *testing.T){
+func TestGetIntervalActionByName(t *testing.T) {
 	reset()
 	myMock := &dbMock.DBClient{}
 
 	myMock.On("IntervalActionByName",
-		mock.MatchedBy(func(name string) bool { return name == testIntervalAction.Name})).Return(testIntervalAction, nil)
+		mock.MatchedBy(func(name string) bool { return name == testIntervalAction.Name })).Return(testIntervalAction, nil)
 	dbClient = myMock
 
 	intervalAction, err := getIntervalActionByName(testIntervalActionName)
@@ -112,17 +112,17 @@ func TestGetIntervalActionByName(t *testing.T){
 	if len(intervalAction.Name) == 0 {
 		t.Errorf("no interval action found")
 	}
-	if intervalAction.Name != testIntervalActionName{
+	if intervalAction.Name != testIntervalActionName {
 		t.Errorf("incorrect interval action name found")
 	}
 }
 
-func TestGetIntervalActionById(t *testing.T){
+func TestGetIntervalActionById(t *testing.T) {
 	reset()
 	myMock := &dbMock.DBClient{}
 
 	myMock.On("IntervalActionById",
-		mock.MatchedBy(func(id string) bool { return id == testIntervalAction.ID})).Return(testIntervalAction, nil)
+		mock.MatchedBy(func(id string) bool { return id == testIntervalAction.ID })).Return(testIntervalAction, nil)
 	dbClient = myMock
 
 	intervalAction, err := getIntervalActionById(testUUIDString)
@@ -132,22 +132,22 @@ func TestGetIntervalActionById(t *testing.T){
 	if len(intervalAction.ID) == 0 {
 		t.Errorf("no interval action found")
 	}
-	if intervalAction.ID != testUUIDString{
+	if intervalAction.ID != testUUIDString {
 		t.Errorf("incorrect UUID found")
 	}
 }
 
-func TestAddIntervalAction(t *testing.T){
+func TestAddIntervalAction(t *testing.T) {
 	reset()
 	myMock := &dbMock.DBClient{}
 	mySchedulerMock := &dbMock.SchedulerQueueClient{}
 
 	// Validation call
 	myMock.On("IntervalActionByName",
-		mock.Anything).Return(models.IntervalAction{},nil)
+		mock.Anything).Return(models.IntervalAction{}, nil)
 
 	myMock.On("IntervalByName",
-		mock.Anything).Return(models.Interval{},nil)
+		mock.Anything).Return(models.Interval{}, nil)
 
 	// Add Interval call
 	myMock.On("AddIntervalAction",
@@ -158,58 +158,56 @@ func TestAddIntervalAction(t *testing.T){
 		mock.Anything).Return(nil)
 
 	mySchedulerMock.On("QueryIntervalActionByName",
-		mock.Anything).Return(models.IntervalAction{},nil)
+		mock.Anything).Return(models.IntervalAction{}, nil)
 
 	nIntervalAction := models.IntervalAction{Name: testIntervalActionNewName, Target: testIntervalActionTarget, Origin: testOrigin, Interval: testIntervalActionInterval}
 	dbClient = myMock
 	scClient = mySchedulerMock
 
-
 	id, err := addNewIntervalAction(nIntervalAction)
-	if err != nil{
+	if err != nil {
 		t.Errorf(err.Error())
 	}
 
-	if id != testUUIDString{
+	if id != testUUIDString {
 		t.Errorf("expected return interval ID to match inserted ID")
 	}
 
 	myMock.AssertExpectations(t)
 }
 
-func TestUpdateIntervalAction(t *testing.T){
+func TestUpdateIntervalAction(t *testing.T) {
 	reset()
 	myMock := &dbMock.DBClient{}
 	mySchedulerMock := &dbMock.SchedulerQueueClient{}
 
 	// Validation call
 	myMock.On("IntervalActionById",
-		mock.Anything).Return(models.IntervalAction{Name: testIntervalActionName},nil)
+		mock.Anything).Return(models.IntervalAction{Name: testIntervalActionName}, nil)
 
 	myMock.On("IntervalByName",
-		mock.Anything).Return(models.Interval{},nil)
+		mock.Anything).Return(models.Interval{}, nil)
 
 	// Update IntervalAction call
 	myMock.On("UpdateIntervalAction",
-		mock.Anything).Return( nil)
-
+		mock.Anything).Return(nil)
 
 	mySchedulerMock.On("QueryIntervalActionByName",
-		mock.Anything).Return(models.IntervalAction{},errors.New("mock db not found"))
+		mock.Anything).Return(models.IntervalAction{}, errors.New("mock db not found"))
 
 	nIntervalAction := models.IntervalAction{Name: testIntervalActionName, Target: testIntervalActionTarget, Origin: testOrigin, Interval: testIntervalActionInterval}
 	dbClient = myMock
 	scClient = mySchedulerMock
 
 	err := updateIntervalAction(nIntervalAction)
-	if err != nil{
+	if err != nil {
 		t.Errorf(err.Error())
 	}
 
 	myMock.AssertExpectations(t)
 }
 
-func TestDeleteIntervalActionById (t *testing.T){
+func TestDeleteIntervalActionById(t *testing.T) {
 	reset()
 
 	myMock := &dbMock.DBClient{}
@@ -217,7 +215,7 @@ func TestDeleteIntervalActionById (t *testing.T){
 
 	// Validation call
 	myMock.On("IntervalActionById",
-		mock.MatchedBy(func(id string) bool { return id == testIntervalAction.ID})).Return(testIntervalAction, nil)
+		mock.MatchedBy(func(id string) bool { return id == testIntervalAction.ID })).Return(testIntervalAction, nil)
 
 	// remove the IntervalAction from DB
 	myMock.On("DeleteIntervalActionById",
@@ -225,7 +223,7 @@ func TestDeleteIntervalActionById (t *testing.T){
 
 	// Queue Validation
 	mySchedulerMock.On("QueryIntervalActionByID",
-		mock.Anything).Return(models.IntervalAction{},nil)
+		mock.Anything).Return(models.IntervalAction{}, nil)
 
 	// remove the IntervalAction from memory
 	mySchedulerMock.On("RemoveIntervalActionQueue",

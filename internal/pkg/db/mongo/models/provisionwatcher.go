@@ -15,12 +15,16 @@
 package models
 
 import (
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	contract "github.com/edgexfoundry/edgex-go/pkg/models"
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
 )
 
 type ProvisionWatcher struct {
+	Created        int64                   `bson:"created"`
+	Modified       int64                   `bson:"modified"`
+	Origin         int64                   `bson:"origin"`
 	Id             bson.ObjectId           `bson:"_id,omitempty"`
 	Uuid           string                  `bson:"uuid,omitempty"`
 	Name           string                  `bson:"name"`           // unique name and identifier of the addressable
@@ -28,9 +32,6 @@ type ProvisionWatcher struct {
 	Profile        mgo.DBRef               `bson:"profile"`        // device profile that should be applied to the devices available at the identifier addresses
 	Service        mgo.DBRef               `bson:"service"`        // device service that owns the watcher
 	OperatingState contract.OperatingState `bson:"operatingState"` // operational state - either enabled or disabled
-	Created        int64                   `bson:"created"`
-	Origin         int64                   `bson:"origin"`
-	Modified       int64                   `bson:"modified"`
 }
 
 func (pw *ProvisionWatcher) ToContract(dpt deviceProfileTransform, dst deviceServiceTransform, ct commandTransform, at addressableTransform) (c contract.ProvisionWatcher, err error) {
@@ -40,6 +41,9 @@ func (pw *ProvisionWatcher) ToContract(dpt deviceProfileTransform, dst deviceSer
 	}
 
 	c.Id = id
+	c.Created = pw.Created
+	c.Modified = pw.Modified
+	c.Origin = pw.Origin
 	c.Name = pw.Name
 	c.Identifiers = pw.Identifiers
 
@@ -62,46 +66,49 @@ func (pw *ProvisionWatcher) ToContract(dpt deviceProfileTransform, dst deviceSer
 	}
 
 	c.OperatingState = pw.OperatingState
-	c.Created = pw.Created
-	c.Origin = pw.Origin
-	c.Modified = pw.Modified
 
 	return
 }
 
-func (pw *ProvisionWatcher) FromContract(c contract.ProvisionWatcher, dpt deviceProfileTransform, dst deviceServiceTransform, ct commandTransform, at addressableTransform) (contractId string, err error) {
-	pw.Id, pw.Uuid, err = fromContractId(c.Id)
+func (pw *ProvisionWatcher) FromContract(from contract.ProvisionWatcher, dpt deviceProfileTransform, dst deviceServiceTransform, ct commandTransform, at addressableTransform) (id string, err error) {
+	pw.Id, pw.Uuid, err = fromContractId(from.Id)
 	if err != nil {
 		return
 	}
 
-	pw.Name = c.Name
-	pw.Identifiers = c.Identifiers
+	pw.Created = from.Created
+	pw.Modified = from.Modified
+	pw.Origin = from.Origin
+	pw.Name = from.Name
+	pw.Identifiers = from.Identifiers
 
 	var profile DeviceProfile
-	_, err = profile.FromContract(c.Profile, ct)
-	if err != nil {
+	if _, err = profile.FromContract(from.Profile, ct); err != nil {
 		return
 	}
-	pw.Profile, err = dpt.DeviceProfileToDBRef(profile)
-	if err !=  nil {
+	if pw.Profile, err = dpt.DeviceProfileToDBRef(profile); err != nil {
 		return
 	}
 
 	var service DeviceService
-	err = service.FromContract(c.Service, at)
-	if err != nil {
+	if _, err = service.FromContract(from.Service, at); err != nil {
 		return
 	}
-	pw.Service, err = dst.DeviceServiceToDBRef(service)
-	if err != nil {
+	if pw.Service, err = dst.DeviceServiceToDBRef(service); err != nil {
 		return
 	}
 
-	pw.OperatingState = c.OperatingState
-	pw.Created = c.Created
-	pw.Origin = c.Origin
-	pw.Modified = c.Modified
+	pw.OperatingState = from.OperatingState
 
-	return toContractId(pw.Id, pw.Uuid), nil
+	id = toContractId(pw.Id, pw.Uuid)
+	return
+}
+
+func (pw *ProvisionWatcher) TimestampForUpdate() {
+	pw.Modified = db.MakeTimestamp()
+}
+
+func (pw *ProvisionWatcher) TimestampForAdd() {
+	pw.TimestampForUpdate()
+	pw.Created = pw.Modified
 }

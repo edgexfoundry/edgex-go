@@ -7,17 +7,17 @@ import (
 )
 
 type IntervalAction struct {
-	Id         bson.ObjectId `bson:"_id"`
-	Uuid       string        `bson:"uuid"`
 	Created    int64         `bson:"created"`
 	Modified   int64         `bson:"modified"`
 	Origin     int64         `bson:"origin"`
-	Name       string        `bson:"bson"`
+	Id         bson.ObjectId `bson:"_id,omitempty"`
+	Uuid       string        `bson:"uuid,omitempty"`
+	Name       string        `bson:"name"`
 	Interval   string        `bson:"interval"`
 	Parameters string        `bson:"parameters"`
 	Target     string        `bson:"target"`
 	Protocol   string        `bson:"protocol"`
-	HTTPMethod string        `bson:"httpmethod"`
+	HTTPMethod string        `bson:"httpMethod"`
 	Address    string        `bson:"address"`
 	Port       int           `bson:"port"`
 	Path       string        `bson:"path"`
@@ -27,42 +27,38 @@ type IntervalAction struct {
 	Topic      string        `bson:"topic"`
 }
 
-func (ia IntervalAction) ToContract() contract.IntervalAction {
+func (ia *IntervalAction) ToContract() (c contract.IntervalAction) {
 	// Always hand back the UUID as the contract event ID unless it's blank (an old event, for example blackbox test scripts
 	id := ia.Uuid
 	if id == "" {
 		id = ia.Id.Hex()
 	}
 
-	to := contract.IntervalAction{
+	c.ID = id
+	c.Created = ia.Created
+	c.Modified = ia.Modified
+	c.Origin = ia.Origin
+	c.Name = ia.Name
+	c.Interval = ia.Interval
+	c.Parameters = ia.Parameters
+	c.Target = ia.Target
+	c.Protocol = ia.Protocol
+	c.HTTPMethod = ia.HTTPMethod
+	c.Address = ia.Address
+	c.Port = ia.Port
+	c.Path = ia.Path
+	c.Publisher = ia.Publisher
+	c.User = ia.User
+	c.Password = ia.Password
+	c.Topic = ia.Topic
 
-		ID:         id,
-		Created:    ia.Created,
-		Modified:   ia.Modified,
-		Origin:     ia.Origin,
-		Name:       ia.Name,
-		Interval:   ia.Interval,
-		Parameters: ia.Parameters,
-		Target:     ia.Target,
-		Protocol:   ia.Protocol,
-		HTTPMethod: ia.HTTPMethod,
-		Address:    ia.Address,
-		Port:       ia.Port,
-		Path:       ia.Path,
-		Publisher:  ia.Publisher,
-		User:       ia.User,
-		Password:   ia.Password,
-		Topic:      ia.Topic,
-	}
-	return to
+	return
 }
 
-func (ia *IntervalAction) FromContract(from contract.IntervalAction) error {
-
-	var err error
+func (ia *IntervalAction) FromContract(from contract.IntervalAction) (id string, err error) {
 	ia.Id, ia.Uuid, err = fromContractId(from.ID)
 	if err != nil {
-		return err
+		return
 	}
 
 	ia.Created = from.Created
@@ -82,96 +78,15 @@ func (ia *IntervalAction) FromContract(from contract.IntervalAction) error {
 	ia.Password = from.Password
 	ia.Topic = from.Topic
 
-	if ia.Created == 0 {
-		ia.Created = db.MakeTimestamp()
-	}
-
-	return nil
+	id = toContractId(ia.Id, ia.Uuid)
+	return
 }
 
-func (ia IntervalAction) GetBSON() (interface{}, error) {
-	return struct {
-		ID         bson.ObjectId `bson:"_id,omitempty"`
-		Uuid       string        `bson:"uuid,omitempty"`
-		Created    int64         `bson:"created"`
-		Modified   int64         `bson:"modified"`
-		Origin     int64         `bson:"origin"`
-		Name       string        `bson:"name"`
-		Interval   string        `bson:"interval"`
-		Parameters string        `bson:"parameters"`
-		Target     string        `bson:"target"`
-		Protocol   string        `bson:"protocol"`
-		HTTPMethod string        `bson:"httpMethod"`
-		Address    string        `bson:"address"`
-		Port       int           `bson:"port"`
-		Path       string        `bson:"path"`
-		Publisher  string        `bson:"publisher"`
-		User       string        `bson:"user"`
-		Password   string        `bson:"password"`
-		Topic      string        `bson:"topic"`
-	}{
-		ID:         ia.Id,
-		Uuid:       ia.Uuid,
-		Created:    ia.Created,
-		Modified:   ia.Modified,
-		Origin:     ia.Origin,
-		Name:       ia.Name,
-		Interval:   ia.Interval,
-		Parameters: ia.Parameters,
-		Target:     ia.Target,
-		Protocol:   ia.Protocol,
-		HTTPMethod: ia.HTTPMethod,
-		Address:    ia.Address,
-		Port:       ia.Port,
-		Path:       ia.Path,
-		Publisher:  ia.Publisher,
-		User:       ia.User,
-		Password:   ia.Password,
-		Topic:      ia.Topic,
-	}, nil
+func (ia *IntervalAction) TimestampForUpdate() {
+	ia.Modified = db.MakeTimestamp()
 }
 
-func (ia *IntervalAction) SetBSON(raw bson.Raw) error {
-	decoded := new(struct {
-		ID         bson.ObjectId `bson:"_id,omitempty"`
-		Uuid       string        `bson:"uuid,omitempty"`
-		Created    int64         `bson:"created"`
-		Modified   int64         `bson:"modified"`
-		Origin     int64         `bson:"origin"`
-		Name       string        `bson:"name"`
-		Interval   string        `bson:"interval"`
-		Parameters string        `bson:"parameters"`
-		Target     string        `bson:"target"`
-		Protocol   string        `bson:"protocol"`
-		HTTPMethod string        `bson:"httpMethod"`
-		Address    string        `bson:"address"`
-		Port       int           `bson:"port"`
-		Path       string        `bson:"path"`
-		Publisher  string        `bson:"publisher"`
-		User       string        `bson:"user"`
-		Password   string        `bson:"password"`
-		Topic      string        `bson:"topic"`
-	})
-
-	bsonErr := raw.Unmarshal(decoded)
-	if bsonErr != nil {
-		return bsonErr
-	}
-
-	// Copy over the non-DBRef fields
-	ia.Id = decoded.ID
-	ia.Uuid = decoded.Uuid
-	ia.Created = decoded.Created
-	ia.Modified = decoded.Modified
-	ia.Origin = decoded.Origin
-	ia.Name = decoded.Name
-	ia.Interval = decoded.Interval
-	ia.Parameters = decoded.Parameters
-	ia.Target = decoded.Target
-	ia.Protocol = decoded.Protocol
-	ia.HTTPMethod = decoded.HTTPMethod
-	ia.Address = decoded.Address
-	ia.Port = decoded.Port
-
-	return nil
+func (ia *IntervalAction) TimestampForAdd() {
+	ia.TimestampForUpdate()
+	ia.Created = ia.Modified
 }

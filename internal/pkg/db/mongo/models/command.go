@@ -26,48 +26,85 @@ type commandTransform interface {
 	CommandToDBRef(c Command) (dbRef mgo.DBRef, err error)
 }
 
+type Response struct {
+	Code           string   `bson:"code"`
+	Description    string   `bson:"description"`
+	ExpectedValues []string `bson:"expectedValues"`
+}
+
+type Get struct {
+	Path      string     `bson:"path"`      // path used by service for action on a device or sensor
+	Responses []Response `bson:"responses"` // responses from get or put requests to service
+	URL       string     // url for requests from command service
+}
+
+type Put struct {
+	Path           string     `bson:"path"`      // path used by service for action on a device or sensor
+	Responses      []Response `bson:"responses"` // responses from get or put requests to service
+	URL            string     // url for requests from command service
+	ParameterNames []string   `bson:"parameterNames"`
+}
+
 type Command struct {
+	Created  int64         `bson:"created"`
+	Modified int64         `bson:"modified"`
+	Origin   int64         `bson:"origin"`
 	Id       bson.ObjectId `bson:"_id,omitempty"`
 	Uuid     string        `bson:"uuid,omitempty"`
 	Name     string        `bson:"name"`
 	Get      *Get          `bson:"get"`
 	Put      *Put          `bson:"put"`
-	Created  int64         `bson:"created"`
-	Modified int64         `bson:"modified"`
-	Origin   int64         `bson:"origin"`
 }
 
-func (c *Command) ToContract() contract.Command {
+func (c *Command) ToContract() (cmd contract.Command) {
 	// Always hand back the UUID as the contract command ID unless it's blank (an old command, for example blackbox test scripts)
 	id := c.Uuid
 	if id == "" {
 		id = c.Id.Hex()
 	}
 
-	var get *contract.Get
 	if c.Get == nil {
-		get = nil
+		cmd.Get = nil
 	} else {
-		get = &[]contract.Get{c.Get.ToContract()}[0]
+		cmd.Get = &contract.Get{}
+
+		cmd.Get.Path = c.Get.Path
+		cmd.Get.URL = c.Get.URL
+		cmd.Get.Responses = []contract.Response{}
+		for _, r := range c.Get.Responses {
+			cmd.Get.Responses = append(cmd.Get.Responses, contract.Response{
+				Code:           r.Code,
+				Description:    r.Description,
+				ExpectedValues: r.ExpectedValues,
+			})
+		}
 	}
 
-	var put *contract.Put
 	if c.Put == nil {
-		put = nil
+		cmd.Put = nil
 	} else {
-		put = &[]contract.Put{c.Put.ToContract()}[0]
+		cmd.Put = &contract.Put{}
+
+		cmd.Put.Path = c.Put.Path
+		cmd.Put.Responses = []contract.Response{}
+		for _, r := range c.Put.Responses {
+			cmd.Put.Responses = append(cmd.Put.Responses, contract.Response{
+				Code:           r.Code,
+				Description:    r.Description,
+				ExpectedValues: r.ExpectedValues,
+			})
+		}
+		cmd.Put.URL = c.Put.URL
+		cmd.Put.ParameterNames = c.Put.ParameterNames
 	}
 
-	to := contract.Command{
-		Id:   id,
-		Name: c.Name,
-		Get:  get,
-		Put:  put,
-	}
-	to.Created = c.Created
-	to.Modified = c.Modified
-	to.Origin = c.Origin
-	return to
+	cmd.Id = id
+	cmd.Created = c.Created
+	cmd.Modified = c.Modified
+	cmd.Origin = c.Origin
+	cmd.Name = c.Name
+
+	return
 }
 
 func (c *Command) FromContract(from contract.Command) (contractId string, err error) {
@@ -76,30 +113,48 @@ func (c *Command) FromContract(from contract.Command) (contractId string, err er
 		return
 	}
 
+	c.Created = from.Created
+	c.Modified = from.Modified
+	c.Origin = from.Origin
 	c.Name = from.Name
 	c.Get = &Get{}
 	if from.Get != nil {
-		err = c.Get.FromContract(*from.Get)
-		if err != nil {
-			return
+		c.Get.Path = from.Get.Path
+		c.Get.URL = from.Get.URL
+		c.Get.Responses = []Response{}
+		for _, val := range from.Get.Responses {
+			c.Get.Responses = append(c.Get.Responses, Response{
+				Code:           val.Code,
+				Description:    val.Description,
+				ExpectedValues: val.ExpectedValues,
+			})
 		}
 	}
 
 	c.Put = &Put{}
 	if from.Put != nil {
-		err = c.Put.FromContract(*from.Put)
-		if err != nil {
-			return
+		c.Put.Path = from.Put.Path
+		c.Put.Responses = []Response{}
+		for _, val := range from.Put.Responses {
+			c.Get.Responses = append(c.Put.Responses, Response{
+				Code:           val.Code,
+				Description:    val.Description,
+				ExpectedValues: val.ExpectedValues,
+			})
 		}
+		c.Put.URL = from.Put.URL
+		c.Put.ParameterNames = from.Put.ParameterNames
 	}
 
-	c.Created = from.Created
-	c.Modified = from.Modified
-	c.Origin = from.Origin
+	contractId = toContractId(c.Id, c.Uuid)
+	return
+}
 
-	if c.Created == 0 {
-		c.Created = db.MakeTimestamp()
-	}
+func (c *Command) TimestampForUpdate() {
+	c.Modified = db.MakeTimestamp()
+}
 
-	return toContractId(c.Id, c.Uuid), nil
+func (c *Command) TimestampForAdd() {
+	c.TimestampForUpdate()
+	c.Created = c.Modified
 }

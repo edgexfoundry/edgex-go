@@ -15,6 +15,7 @@
 package models
 
 import (
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	contract "github.com/edgexfoundry/edgex-go/pkg/models"
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
@@ -25,8 +26,66 @@ type deviceProfileTransform interface {
 	DeviceProfileToDBRef(model DeviceProfile) (dbRef mgo.DBRef, err error)
 }
 
+type PropertyValue struct {
+	Type         string `bson:"type"`         // ValueDescriptor Type of property after transformations
+	ReadWrite    string `bson:"readWrite"`    // Read/Write Permissions set for this property
+	Minimum      string `bson:"minimum"`      // Minimum value that can be get/set from this property
+	Maximum      string `bson:"maximum"`      // Maximum value that can be get/set from this property
+	DefaultValue string `bson:"defaultValue"` // Default value set to this property if no argument is passed
+	Size         string `bson:"size"`         // Size of this property in its type  (i.e. bytes for numeric types, characters for string types)
+	Word         string `bson:"word"`         // Word size of property used for endianness
+	LSB          string `bson:"lsb"`          // Endianness setting for a property
+	Mask         string `bson:"mask"`         // Mask to be applied prior to get/set of property
+	Shift        string `bson:"shift"`        // Shift to be applied after masking, prior to get/set of property
+	Scale        string `bson:"scale"`        // Multiplicative factor to be applied after shifting, prior to get/set of property
+	Offset       string `bson:"offset"`       // Additive factor to be applied after multiplying, prior to get/set of property
+	Base         string `bson:"base"`         // Base for property to be applied to, leave 0 for no power operation (i.e. base ^ property: 2 ^ 10)
+	Assertion    string `bson:"assertion"`    // Required value of the property, set for checking error state.  Failing an assertion condition will mark the device with an error state
+	Signed       bool   `bson:"signed"`       // Treat the property as a signed or unsigned value
+	Precision    string `bson:"precision"`
+}
+
+type Units struct {
+	Type         string `bson:"type"`
+	ReadWrite    string `bson:"readWrite"`
+	DefaultValue string `bson:"defaultValue"`
+}
+
+type ProfileProperty struct {
+	Value PropertyValue `bson:"value"`
+	Units Units         `bson:"units"`
+}
+
+type DeviceObject struct {
+	Description string                 `bson:"description"`
+	Name        string                 `bson:"name"`
+	Tag         string                 `bson:"tag"`
+	Properties  ProfileProperty        `bson:"properties"`
+	Attributes  map[string]interface{} `bson:"attributes"`
+}
+
+type ResourceOperation struct {
+	Index     string            `bson:"index"`
+	Operation string            `bson:"operation"`
+	Object    string            `bson:"object"`
+	Property  string            `bson:"property"`
+	Parameter string            `bson:"parameter"`
+	Resource  string            `bson:"resource"`
+	Secondary []string          `bson:"secondary"`
+	Mappings  map[string]string `bson:"mappings"`
+}
+
+type ProfileResource struct {
+	Name string              `bson:"name"`
+	Get  []ResourceOperation `bson:"get"`
+	Set  []ResourceOperation `bson:"set"`
+}
+
 type DeviceProfile struct {
-	DescribedObject `bson:",inline"`
+	Created         int64             `bson:"created"`
+	Modified        int64             `bson:"modified"`
+	Origin          int64             `bson:"origin"`
+	Description     string            `bson:"description"`
 	Id              bson.ObjectId     `bson:"_id,omitempty"`
 	Uuid            string            `bson:"uuid,omitempty"`
 	Name            string            `bson:"name"`
@@ -51,14 +110,74 @@ func (dp *DeviceProfile) ToContract(transform commandTransform) (c contract.Devi
 	c.Model = dp.Model
 	c.Labels = dp.Labels
 	c.Objects = dp.Objects
-	c.DescribedObject = dp.DescribedObject.ToContract()
+	c.Created = dp.Created
+	c.Modified = dp.Modified
+	c.Origin = dp.Origin
+	c.Description = dp.Description
 
 	for _, dr := range dp.DeviceResources {
-		c.DeviceResources = append(c.DeviceResources, dr.ToContract())
+		var cdo contract.DeviceObject
+
+		cdo.Description = dr.Description
+		cdo.Name = dr.Name
+		cdo.Tag = dr.Tag
+
+		cdo.Properties.Value.Type = dr.Properties.Value.Type
+		cdo.Properties.Value.ReadWrite = dr.Properties.Value.ReadWrite
+		cdo.Properties.Value.Minimum = dr.Properties.Value.Minimum
+		cdo.Properties.Value.Maximum = dr.Properties.Value.Maximum
+		cdo.Properties.Value.DefaultValue = dr.Properties.Value.DefaultValue
+		cdo.Properties.Value.Size = dr.Properties.Value.Size
+		cdo.Properties.Value.Word = dr.Properties.Value.Word
+		cdo.Properties.Value.LSB = dr.Properties.Value.LSB
+		cdo.Properties.Value.Mask = dr.Properties.Value.Mask
+		cdo.Properties.Value.Shift = dr.Properties.Value.Shift
+		cdo.Properties.Value.Scale = dr.Properties.Value.Scale
+		cdo.Properties.Value.Offset = dr.Properties.Value.Offset
+		cdo.Properties.Value.Base = dr.Properties.Value.Base
+		cdo.Properties.Value.Assertion = dr.Properties.Value.Assertion
+		cdo.Properties.Value.Signed = dr.Properties.Value.Signed
+		cdo.Properties.Value.Precision = dr.Properties.Value.Precision
+
+		cdo.Properties.Units.Type = dr.Properties.Units.Type
+		cdo.Properties.Units.ReadWrite = dr.Properties.Units.ReadWrite
+		cdo.Properties.Units.DefaultValue = dr.Properties.Units.DefaultValue
+
+		cdo.Attributes = dr.Attributes
+
+		c.DeviceResources = append(c.DeviceResources, cdo)
 	}
 
 	for _, r := range dp.Resources {
-		c.Resources = append(c.Resources, r.ToContract())
+		var cpr contract.ProfileResource
+		cpr.Name = r.Name
+		for _, ro := range r.Get {
+			cpr.Get = append(cpr.Get, contract.ResourceOperation{
+				Index:     ro.Index,
+				Operation: ro.Operation,
+				Object:    ro.Object,
+				Property:  ro.Property,
+				Parameter: ro.Parameter,
+				Resource:  ro.Resource,
+				Secondary: ro.Secondary,
+				Mappings:  ro.Mappings,
+			})
+		}
+
+		for _, ro := range r.Set {
+			cpr.Set = append(cpr.Set, contract.ResourceOperation{
+				Index:     ro.Index,
+				Operation: ro.Operation,
+				Object:    ro.Object,
+				Property:  ro.Property,
+				Parameter: ro.Parameter,
+				Resource:  ro.Resource,
+				Secondary: ro.Secondary,
+				Mappings:  ro.Mappings,
+			})
+		}
+
+		c.Resources = append(c.Resources, cpr)
 	}
 
 	for _, dbRef := range dp.Commands {
@@ -72,33 +191,89 @@ func (dp *DeviceProfile) ToContract(transform commandTransform) (c contract.Devi
 	return
 }
 
-func (dp *DeviceProfile) FromContract(c contract.DeviceProfile, transform commandTransform) (contractId string, err error) {
-	dp.Id, dp.Uuid, err = fromContractId(c.Id)
+func (dp *DeviceProfile) FromContract(from contract.DeviceProfile, transform commandTransform) (contractId string, err error) {
+	dp.Id, dp.Uuid, err = fromContractId(from.Id)
 	if err != nil {
 		return
 	}
 
-	dp.Name = c.Name
-	dp.Manufacturer = c.Manufacturer
-	dp.Model = c.Model
-	dp.Labels = c.Labels
-	dp.Objects = c.Objects
+	dp.Name = from.Name
+	dp.Manufacturer = from.Manufacturer
+	dp.Model = from.Model
+	dp.Labels = from.Labels
+	dp.Objects = from.Objects
 
-	dp.DescribedObject.FromContract(c.DescribedObject)
+	dp.Created = from.Created
+	dp.Modified = from.Modified
+	dp.Origin = from.Origin
+	dp.Description = from.Description
 
-	for _, dr := range c.DeviceResources {
-		var resource DeviceObject
-		resource.FromContract(dr)
-		dp.DeviceResources = append(dp.DeviceResources, resource)
+	for _, dr := range from.DeviceResources {
+		var do DeviceObject
+
+		do.Description = dr.Description
+		do.Name = dr.Name
+		do.Tag = dr.Tag
+
+		do.Properties.Value.Type = dr.Properties.Value.Type
+		do.Properties.Value.ReadWrite = dr.Properties.Value.ReadWrite
+		do.Properties.Value.Minimum = dr.Properties.Value.Minimum
+		do.Properties.Value.Maximum = dr.Properties.Value.Maximum
+		do.Properties.Value.DefaultValue = dr.Properties.Value.DefaultValue
+		do.Properties.Value.Size = dr.Properties.Value.Size
+		do.Properties.Value.Word = dr.Properties.Value.Word
+		do.Properties.Value.LSB = dr.Properties.Value.LSB
+		do.Properties.Value.Mask = dr.Properties.Value.Mask
+		do.Properties.Value.Shift = dr.Properties.Value.Shift
+		do.Properties.Value.Scale = dr.Properties.Value.Scale
+		do.Properties.Value.Offset = dr.Properties.Value.Offset
+		do.Properties.Value.Base = dr.Properties.Value.Base
+		do.Properties.Value.Assertion = dr.Properties.Value.Assertion
+		do.Properties.Value.Signed = dr.Properties.Value.Signed
+		do.Properties.Value.Precision = dr.Properties.Value.Precision
+
+		do.Properties.Units.Type = dr.Properties.Units.Type
+		do.Properties.Units.ReadWrite = dr.Properties.Units.ReadWrite
+		do.Properties.Units.DefaultValue = dr.Properties.Units.DefaultValue
+
+		do.Attributes = dr.Attributes
+
+		dp.DeviceResources = append(dp.DeviceResources, do)
 	}
 
-	for _, r := range c.Resources {
-		var resource ProfileResource
-		resource.FromContract(r)
-		dp.Resources = append(dp.Resources, resource)
+	for _, r := range from.Resources {
+		var pr ProfileResource
+		pr.Name = r.Name
+		for _, ro := range r.Get {
+			pr.Get = append(pr.Get, ResourceOperation{
+				Index:     ro.Index,
+				Operation: ro.Operation,
+				Object:    ro.Object,
+				Property:  ro.Property,
+				Parameter: ro.Parameter,
+				Resource:  ro.Resource,
+				Secondary: ro.Secondary,
+				Mappings:  ro.Mappings,
+			})
+		}
+
+		for _, ro := range r.Set {
+			pr.Set = append(pr.Set, ResourceOperation{
+				Index:     ro.Index,
+				Operation: ro.Operation,
+				Object:    ro.Object,
+				Property:  ro.Property,
+				Parameter: ro.Parameter,
+				Resource:  ro.Resource,
+				Secondary: ro.Secondary,
+				Mappings:  ro.Mappings,
+			})
+		}
+
+		dp.Resources = append(dp.Resources, pr)
 	}
 
-	for _, command := range c.Commands {
+	for _, command := range from.Commands {
 		var commandModel Command
 		if _, err = commandModel.FromContract(command); err != nil {
 			return
@@ -113,69 +288,15 @@ func (dp *DeviceProfile) FromContract(c contract.DeviceProfile, transform comman
 		dp.Commands = append(dp.Commands, dbRef)
 	}
 
-	return toContractId(dp.Id, dp.Uuid), nil
+	contractId = toContractId(dp.Id, dp.Uuid)
+	return
 }
 
-// Custom marshaling into mongo
-func (dp *DeviceProfile) GetBSON() (interface{}, error) {
-	return struct {
-		DescribedObject `bson:",inline"`
-		Id              bson.ObjectId     `bson:"_id,omitempty"`
-		Uuid            string            `bson:"uuid"`
-		Name            string            `bson:"name"`         // Non-database identifier (must be unique)
-		Manufacturer    string            `bson:"manufacturer"` // Manufacturer of the device
-		Model           string            `bson:"model"`        // Model of the device
-		Labels          []string          `bson:"labels"`       // Labels used to search for groups of profiles
-		Objects         interface{}       `bson:"objects"`      // JSON data that the device service uses to communicate with devices with this profile
-		DeviceResources []DeviceObject    `bson:"deviceResources"`
-		Resources       []ProfileResource `bson:"resources"`
-		Commands        []mgo.DBRef       `bson:"commands"` // List of commands to Get/Put information for devices associated with this profile
-	}{
-		DescribedObject: dp.DescribedObject,
-		Id:              dp.Id,
-		Uuid:            dp.Uuid,
-		Name:            dp.Name,
-		Manufacturer:    dp.Manufacturer,
-		Model:           dp.Model,
-		Labels:          dp.Labels,
-		Objects:         dp.Objects,
-		DeviceResources: dp.DeviceResources,
-		Resources:       dp.Resources,
-		Commands:        dp.Commands,
-	}, nil
+func (dp *DeviceProfile) TimestampForUpdate() {
+	dp.Modified = db.MakeTimestamp()
 }
 
-// Custom unmarshaling out of mongo
-func (dp *DeviceProfile) SetBSON(raw bson.Raw) error {
-	decoded := new(struct {
-		DescribedObject `bson:",inline"`
-		Id              bson.ObjectId     `bson:"_id,omitempty"`
-		Uuid            string            `bson:"uuid"`
-		Name            string            `bson:"name"`         // Non-database identifier (must be unique)
-		Manufacturer    string            `bson:"manufacturer"` // Manufacturer of the device
-		Model           string            `bson:"model"`        // Model of the device
-		Labels          []string          `bson:"labels"`       // Labels used to search for groups of profiles
-		Objects         interface{}       `bson:"objects"`      // JSON data that the device service uses to communicate with devices with this profile
-		DeviceResources []DeviceObject    `bson:"deviceResources"`
-		Resources       []ProfileResource `bson:"resources"`
-		Commands        []mgo.DBRef       `bson:"commands"` // List of commands to Get/Put information for devices associated with this profile
-	})
-
-	bsonErr := raw.Unmarshal(&decoded)
-	if bsonErr != nil {
-		return bsonErr
-	}
-
-	dp.DescribedObject = decoded.DescribedObject
-	dp.Id = decoded.Id
-	dp.Name = decoded.Name
-	dp.Manufacturer = decoded.Manufacturer
-	dp.Model = decoded.Model
-	dp.Labels = decoded.Labels
-	dp.Objects = decoded.Objects
-	dp.DeviceResources = decoded.DeviceResources
-	dp.Resources = decoded.Resources
-	dp.Commands = decoded.Commands
-
-	return nil
+func (dp *DeviceProfile) TimestampForAdd() {
+	dp.TimestampForUpdate()
+	dp.Created = dp.Modified
 }

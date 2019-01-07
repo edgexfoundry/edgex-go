@@ -15,21 +15,25 @@
 package models
 
 import (
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	contract "github.com/edgexfoundry/edgex-go/pkg/models"
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
 )
 
 type Service struct {
-	DescribedObject `bson:",inline"`
-	Id              bson.ObjectId           `bson:"_id,omitempty"`
-	Uuid            string                  `bson:"uuid,omitempty"`
-	Name            string                  `bson:"name"`           // time in milliseconds that the device last provided any feedback or responded to any request
-	LastConnected   int64                   `bson:"lastConnected"`  // time in milliseconds that the device last reported data to the core
-	LastReported    int64                   `bson:"lastReported"`   // operational state - either enabled or disabled
-	OperatingState  contract.OperatingState `bson:"operatingState"` // operational state - ether enabled or disableddc
-	Labels          []string                `bson:"labels"`         // tags or other labels applied to the device service for search or other identification needs
-	Addressable     mgo.DBRef               `bson:"addressable"`    // address (MQTT topic, HTTP address, serial bus, etc.) for reaching the service
+	Created        int64                   `bson:"created"`
+	Modified       int64                   `bson:"modified"`
+	Origin         int64                   `bson:"origin"`
+	Description    string                  `bson:"description"`
+	Id             bson.ObjectId           `bson:"_id,omitempty"`
+	Uuid           string                  `bson:"uuid,omitempty"`
+	Name           string                  `bson:"name"`           // time in milliseconds that the device last provided any feedback or responded to any request
+	LastConnected  int64                   `bson:"lastConnected"`  // time in milliseconds that the device last reported data to the core
+	LastReported   int64                   `bson:"lastReported"`   // operational state - either enabled or disabled
+	OperatingState contract.OperatingState `bson:"operatingState"` // operational state - ether enabled or disableddc
+	Labels         []string                `bson:"labels"`         // tags or other labels applied to the device service for search or other identification needs
+	Addressable    mgo.DBRef               `bson:"addressable"`    // address (MQTT topic, HTTP address, serial bus, etc.) for reaching the service
 }
 
 func (s *Service) ToContract(transform addressableTransform) (c contract.Service, err error) {
@@ -39,7 +43,10 @@ func (s *Service) ToContract(transform addressableTransform) (c contract.Service
 		id = s.Id.Hex()
 	}
 
-	c.DescribedObject = s.DescribedObject.ToContract()
+	c.Created = s.Created
+	c.Modified = s.Modified
+	c.Origin = s.Origin
+	c.Description = s.Description
 	c.Id = id
 	c.Name = s.Name
 	c.LastConnected = s.LastConnected
@@ -55,13 +62,16 @@ func (s *Service) ToContract(transform addressableTransform) (c contract.Service
 	return
 }
 
-func (s *Service) FromContract(from contract.Service, transform addressableTransform) (err error) {
+func (s *Service) FromContract(from contract.Service, transform addressableTransform) (id string, err error) {
 	s.Id, s.Uuid, err = fromContractId(from.Id)
 	if err != nil {
 		return
 	}
 
-	s.DescribedObject.FromContract(from.DescribedObject)
+	s.Created = from.Created
+	s.Modified = from.Modified
+	s.Origin = from.Origin
+	s.Description = from.Description
 	s.Name = from.Name
 	s.LastConnected = from.LastConnected
 	s.LastReported = from.LastReported
@@ -69,10 +79,22 @@ func (s *Service) FromContract(from contract.Service, transform addressableTrans
 	s.Labels = from.Labels
 
 	var aModel Addressable
-	err = aModel.FromContract(from.Addressable)
-	if err != nil {
+	if _, err = aModel.FromContract(from.Addressable); err != nil {
 		return
 	}
-	s.Addressable, err = transform.AddressableToDBRef(aModel)
+	if s.Addressable, err = transform.AddressableToDBRef(aModel); err != nil {
+		return
+	}
+
+	id = toContractId(s.Id, s.Uuid)
 	return
+}
+
+func (s *Service) TimestampForUpdate() {
+	s.Modified = db.MakeTimestamp()
+}
+
+func (s *Service) TimestampForAdd() {
+	s.TimestampForUpdate()
+	s.Created = s.Modified
 }

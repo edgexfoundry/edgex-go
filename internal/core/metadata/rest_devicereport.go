@@ -112,7 +112,6 @@ func restUpdateDeviceReport(w http.ResponseWriter, r *http.Request) {
 
 	// Check if the device report exists
 	// First try ID
-	var to models.DeviceReport
 	to, err := dbClient.GetDeviceReportById(from.Id)
 	if err != nil {
 		// Try by name
@@ -367,24 +366,20 @@ func deleteDeviceReport(dr models.DeviceReport, w http.ResponseWriter) error {
 
 // Notify the associated device services to the device report
 func notifyDeviceReportAssociates(dr models.DeviceReport, action string) error {
-	var d models.Device
-	var err error
 	// Get the device of the report
-	if d, err = dbClient.GetDeviceByName(dr.Device); err != nil {
+	d, err := dbClient.GetDeviceByName(dr.Device)
+	if err != nil {
 		return err
 	}
 
 	// Get the device service for the device
-	var ds models.DeviceService
-	if ds, err = dbClient.GetDeviceServiceById(d.Service.Service.Id); err != nil {
+	ds, err := dbClient.GetDeviceServiceById(d.Service.Service.Id)
+	if err != nil {
 		return err
 	}
 
-	var services []models.DeviceService
-	services = append(services, ds)
-
 	// Notify the associating device services
-	if err = notifyAssociates(services, dr.Id, action, models.REPORT); err != nil {
+	if err = notifyAssociates([]models.DeviceService{ds}, dr.Id, action, models.REPORT); err != nil {
 		return err
 	}
 

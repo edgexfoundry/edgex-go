@@ -26,6 +26,9 @@ type addressableTransform interface {
 }
 
 type Addressable struct {
+	Created    int64         `bson:"created"`
+	Modified   int64         `bson:"modified"`
+	Origin     int64         `bson:"origin"`
 	Id         bson.ObjectId `bson:"_id,omitempty"`
 	Uuid       string        `bson:"uuid,omitempty"`
 	Name       string        `bson:"name"`
@@ -38,44 +41,41 @@ type Addressable struct {
 	User       string        `bson:"user"`      // User id for authentication
 	Password   string        `bson:"password"`  // Password of the user for authentication for the addressable
 	Topic      string        `bson:"topic"`     // Topic for message bus addressables
-	Created    int64         `bson:"created"`
-	Modified   int64         `bson:"modified"`
-	Origin     int64         `bson:"origin"`
 }
 
-func (a *Addressable) ToContract() contract.Addressable {
+func (a *Addressable) ToContract() (c contract.Addressable) {
 	// Always hand back the UUID as the contract event ID unless it's blank (an old event, for example blackbox test scripts
 	id := a.Uuid
 	if id == "" {
 		id = a.Id.Hex()
 	}
-	to := contract.Addressable{
-		Id:         id,
-		Name:       a.Name,
-		Protocol:   a.Protocol,
-		HTTPMethod: a.HTTPMethod,
-		Address:    a.Address,
-		Port:       a.Port,
-		Path:       a.Path,
-		Publisher:  a.Publisher,
-		User:       a.User,
-		Password:   a.Password,
-		Topic:      a.Topic,
-	}
-	to.Created = a.Created
-	to.Modified = a.Modified
-	to.Origin = a.Origin
 
-	return to
+	c.Created = a.Created
+	c.Modified = a.Modified
+	c.Origin = a.Origin
+	c.Id = id
+	c.Name = a.Name
+	c.Protocol = a.Protocol
+	c.HTTPMethod = a.HTTPMethod
+	c.Address = a.Address
+	c.Port = a.Port
+	c.Path = a.Path
+	c.Publisher = a.Publisher
+	c.User = a.User
+	c.Password = a.Password
+	c.Topic = a.Topic
+
+	return
 }
 
-func (a *Addressable) FromContract(from contract.Addressable) error {
-	var err error
-	a.Id, a.Uuid, err = fromContractId(from.Id)
-	if err != nil {
-		return err
+func (a *Addressable) FromContract(from contract.Addressable) (id string, err error) {
+	if a.Id, a.Uuid, err = fromContractId(from.Id); err != nil {
+		return
 	}
 
+	a.Created = from.Created
+	a.Modified = from.Modified
+	a.Origin = from.Origin
 	a.Name = from.Name
 	a.Protocol = from.Protocol
 	a.HTTPMethod = from.HTTPMethod
@@ -86,15 +86,16 @@ func (a *Addressable) FromContract(from contract.Addressable) error {
 	a.User = from.User
 	a.Password = from.Password
 	a.Topic = from.Topic
-	a.Origin = from.Origin
 
-	if a.Created == 0 {
-		ts := db.MakeTimestamp()
-		a.Created = ts
-		a.Modified = ts
-	} else {
-		a.Modified = from.Modified
-	}
+	id = toContractId(a.Id, a.Uuid)
+	return
+}
 
-	return nil
+func (a *Addressable) TimestampForUpdate() {
+	a.Modified = db.MakeTimestamp()
+}
+
+func (a *Addressable) TimestampForAdd() {
+	a.TimestampForUpdate()
+	a.Created = a.Modified
 }

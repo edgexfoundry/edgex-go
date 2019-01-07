@@ -63,11 +63,10 @@ func (v *ValueDescriptor) ToContract() contract.ValueDescriptor {
 	return to
 }
 
-func (v *ValueDescriptor) FromContract(from contract.ValueDescriptor) error {
-	var err error
+func (v *ValueDescriptor) FromContract(from contract.ValueDescriptor) (id string, err error) {
 	v.Id, v.Uuid, err = fromContractId(from.Id)
 	if err != nil {
-		return err
+		return
 	}
 
 	v.Created = from.Created
@@ -90,5 +89,7 @@ func (v *ValueDescriptor) FromContract(from contract.ValueDescriptor) error {
 	if v.Created == 0 {
 		v.Created = db.MakeTimestamp()
 	}
-	return nil
+
+	id = toContractId(v.Id, v.Uuid)
+	return
 }

@@ -27,9 +27,8 @@ import (
 )
 
 func restGetAllDeviceServices(w http.ResponseWriter, _ *http.Request) {
-	var r []models.DeviceService
-	var err error
-	if r, err = dbClient.GetAllDeviceServices(); err != nil {
+	r, err := dbClient.GetAllDeviceServices()
+	if err != nil {
 		LoggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -66,9 +65,8 @@ func restAddDeviceService(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var addressable models.Addressable
 	// First try by name
-	addressable, err = dbClient.GetAddressableByName(ds.Service.Addressable.Name)
+	addressable, err := dbClient.GetAddressableByName(ds.Service.Addressable.Name)
 	if err != nil && err == db.ErrNotFound && ds.Service.Addressable.Id != "" {
 		addressable, err = dbClient.GetAddressableById(ds.Service.Addressable.Id)
 	}
@@ -104,11 +102,10 @@ func restGetAddressablesForAssociatedDevicesById(w http.ResponseWriter, r *http.
 	defer r.Body.Close()
 	vars := mux.Vars(r)
 	var id string = vars[ID]
-	var ds models.DeviceService
-	var err error
 
 	// Check if the device service exists
-	if ds, err = dbClient.GetDeviceServiceById(id); err != nil {
+	ds, err := dbClient.GetDeviceServiceById(id)
+	if err != nil {
 		if err == db.ErrNotFound {
 			http.Error(w, "Device service not found", http.StatusNotFound)
 		} else {
@@ -141,8 +138,8 @@ func restGetAddressablesForAssociatedDevicesByName(w http.ResponseWriter, r *htt
 	}
 
 	// Check if the device service exists
-	var ds models.DeviceService
-	if ds, err = dbClient.GetDeviceServiceByName(n); err != nil {
+	ds, err := dbClient.GetDeviceServiceByName(n)
+	if err != nil {
 		if err == db.ErrNotFound {
 			http.Error(w, "Device service not found", http.StatusNotFound)
 		} else {
@@ -166,10 +163,8 @@ func restGetAddressablesForAssociatedDevicesByName(w http.ResponseWriter, r *htt
 // addressables will have the result
 func getAddressablesForAssociatedDevices(addressables *[]models.Addressable, ds models.DeviceService, w http.ResponseWriter) error {
 	// Get the associated devices
-	var devices []models.Device
-	var err error
-
-	if devices, err = dbClient.GetDevicesByServiceId(ds.Service.Id); err != nil {
+	devices, err := dbClient.GetDevicesByServiceId(ds.Service.Id)
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return err
 	}
@@ -271,7 +266,6 @@ func updateDeviceServiceFields(from models.DeviceService, to *models.DeviceServi
 		to.Service.Name = from.Service.Name
 
 		// Check if the new name is unique
-		var checkDS models.DeviceService
 		checkDS, err := dbClient.GetDeviceServiceByName(from.Service.Name)
 		if err != nil {
 			// A problem occurred accessing database
@@ -416,9 +410,8 @@ func restDeleteServiceById(w http.ResponseWriter, r *http.Request) {
 	var id string = vars[ID]
 
 	// Check if the device service exists and get it
-	var ds models.DeviceService
-	var err error
-	if ds, err = dbClient.GetDeviceServiceById(id); err != nil {
+	ds, err := dbClient.GetDeviceServiceById(id)
+	if err != nil {
 		if err == db.ErrNotFound {
 			http.Error(w, "Device service not found", http.StatusNotFound)
 		} else {
@@ -446,8 +439,8 @@ func restDeleteServiceByName(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check if the device service exists
-	var ds models.DeviceService
-	if ds, err = dbClient.GetDeviceServiceByName(n); err != nil {
+	ds, err := dbClient.GetDeviceServiceByName(n)
+	if err != nil {
 		if err == db.ErrNotFound {
 			http.Error(w, "Device service not found", http.StatusNotFound)
 		} else {
@@ -472,10 +465,8 @@ func restDeleteServiceByName(w http.ResponseWriter, r *http.Request) {
 // Delete the associated provision watchers
 func deleteDeviceService(ds models.DeviceService, w http.ResponseWriter) error {
 	// Delete the associated devices
-	var devices []models.Device
-	var err error
-
-	if devices, err = dbClient.GetDevicesByServiceId(ds.Service.Id); err != nil {
+	devices, err := dbClient.GetDevicesByServiceId(ds.Service.Id)
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return err
 	}
@@ -518,8 +509,8 @@ func restUpdateServiceLastConnectedById(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// Check if the device service exists
-	var ds models.DeviceService
-	if ds, err = dbClient.GetDeviceServiceById(id); err != nil {
+	ds, err := dbClient.GetDeviceServiceById(id)
+	if err != nil {
 		if err == db.ErrNotFound {
 			http.Error(w, "Device service not found", http.StatusNotFound)
 		} else {
@@ -555,8 +546,8 @@ func restUpdateServiceLastConnectedByName(w http.ResponseWriter, r *http.Request
 	}
 
 	// Check if the device service exists
-	var ds models.DeviceService
-	if ds, err = dbClient.GetDeviceServiceByName(n); err != nil {
+	ds, err := dbClient.GetDeviceServiceByName(n)
+	if err != nil {
 		if err == db.ErrNotFound {
 			http.Error(w, "Device service not found", http.StatusNotFound)
 		} else {
@@ -591,10 +582,9 @@ func updateServiceLastConnected(ds models.DeviceService, lc int64, w http.Respon
 func restGetServiceById(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	var did string = vars[ID]
-	var res models.DeviceService
-	var err error
 
-	if res, err = dbClient.GetDeviceServiceById(did); err != nil {
+	res, err := dbClient.GetDeviceServiceById(did)
+	if err != nil {
 		if err == db.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
 		} else {
@@ -612,20 +602,19 @@ func restUpdateServiceOpStateById(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	var id string = vars[ID]
 	var os string = vars[OPSTATE]
-	var err error
 
 	// Check the OpState
 	newOs, f := models.GetOperatingState(os)
 	if !f {
-		err = errors.New("Invalid State: " + os + " Must be 'ENABLED' or 'DISABLED'")
+		err := errors.New("Invalid State: " + os + " Must be 'ENABLED' or 'DISABLED'")
 		LoggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	// Check if the device service exists
-	var ds models.DeviceService
-	if ds, err = dbClient.GetDeviceServiceById(id); err != nil {
+	ds, err := dbClient.GetDeviceServiceById(id)
+	if err != nil {
 		if err == db.ErrNotFound {
 			http.Error(w, "Device service not found", http.StatusNotFound)
 		} else {
@@ -664,8 +653,8 @@ func restUpdateServiceOpStateByName(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check if the device service exists
-	var ds models.DeviceService
-	if ds, err = dbClient.GetDeviceServiceByName(n); err != nil {
+	ds, err := dbClient.GetDeviceServiceByName(n)
+	if err != nil {
 		if err == db.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
 		} else {
@@ -699,20 +688,19 @@ func restUpdateServiceAdminStateById(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	var id string = vars[ID]
 	var as string = vars[ADMINSTATE]
-	var err error
 
 	// Check the admin state
 	newAs, f := models.GetAdminState(as)
 	if !f {
-		err = errors.New("Invalid state: " + as + " Must be 'LOCKED' or 'UNLOCKED'")
+		err := errors.New("Invalid state: " + as + " Must be 'LOCKED' or 'UNLOCKED'")
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		LoggingClient.Error(err.Error())
 		return
 	}
 
 	// Check if the device service exists
-	var ds models.DeviceService
-	if ds, err = dbClient.GetDeviceServiceById(id); err != nil {
+	ds, err := dbClient.GetDeviceServiceById(id)
+	if err != nil {
 		if err == db.ErrNotFound {
 			http.Error(w, "Device service not found", http.StatusNotFound)
 		} else {
@@ -752,8 +740,8 @@ func restUpdateServiceAdminStateByName(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check if the device service exists
-	var ds models.DeviceService
-	if ds, err = dbClient.GetDeviceServiceByName(n); err != nil {
+	ds, err := dbClient.GetDeviceServiceByName(n)
+	if err != nil {
 		if err == db.ErrNotFound {
 			http.Error(w, "Device service not found", http.StatusNotFound)
 		} else {
@@ -796,8 +784,8 @@ func restUpdateServiceLastReportedById(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check if the devicde service exists
-	var ds models.DeviceService
-	if ds, err = dbClient.GetDeviceServiceById(id); err != nil {
+	ds, err := dbClient.GetDeviceServiceById(id)
+	if err != nil {
 		if err == db.ErrNotFound {
 			http.Error(w, "Device service not found", http.StatusNotFound)
 		} else {
@@ -833,8 +821,8 @@ func restUpdateServiceLastReportedByName(w http.ResponseWriter, r *http.Request)
 	}
 
 	// Check if the device service exists
-	var ds models.DeviceService
-	if ds, err = dbClient.GetDeviceServiceByName(n); err != nil {
+	ds, err := dbClient.GetDeviceServiceByName(n)
+	if err != nil {
 		if err == db.ErrNotFound {
 			http.Error(w, "Device service not found", http.StatusNotFound)
 		} else {

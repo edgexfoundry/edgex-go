@@ -318,9 +318,13 @@ func restAddProvisionWatcher(w http.ResponseWriter, r *http.Request) {
 
 	// Check if the device profile exists
 	// Try by ID
-	if _, err = dbClient.GetDeviceProfileById(pw.Profile.Id); err != nil {
+	var profile models.DeviceProfile
+	if pw.Profile.Id != "" {
+		profile, err = dbClient.GetDeviceProfileById(pw.Profile.Id)
+	}
+	if pw.Profile.Id == "" || err != nil {
 		// Try by name
-		if _, err = dbClient.GetDeviceProfileByName(pw.Profile.Name); err != nil {
+		if profile, err = dbClient.GetDeviceProfileByName(pw.Profile.Name); err != nil {
 			if err == db.ErrNotFound {
 				LoggingClient.Error("Device profile not found for provision watcher: " + err.Error())
 				http.Error(w, "Device profile not found for provision watcher", http.StatusConflict)
@@ -331,6 +335,7 @@ func restAddProvisionWatcher(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+	pw.Profile = profile
 
 	// Check if the device service exists
 	// Try by ID
@@ -352,8 +357,9 @@ func restAddProvisionWatcher(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	pw.Service = service
-	var id string
-	if id, err = dbClient.AddProvisionWatcher(pw); err != nil {
+
+	id, err := dbClient.AddProvisionWatcher(pw)
+	if err != nil {
 		if err == db.ErrNotUnique {
 			LoggingClient.Error("Duplicate name for the provision watcher: " + err.Error())
 			http.Error(w, "Duplicate name for the provision watcher", http.StatusConflict)
@@ -386,10 +392,9 @@ func restUpdateProvisionWatcher(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check if the provision watcher exists
-	var to models.ProvisionWatcher
-	var err error
 	// Try by ID
-	if to, err = dbClient.GetProvisionWatcherById(from.Id); err != nil {
+	to, err := dbClient.GetProvisionWatcherById(from.Id)
+	if err != nil {
 		// Try by name
 		if to, err = dbClient.GetProvisionWatcherByName(from.Name); err != nil {
 			if err == db.ErrNotFound {
@@ -456,19 +461,14 @@ func updateProvisionWatcherFields(from models.ProvisionWatcher, to *models.Provi
 
 // Notify the associated device services for the provision watcher
 func notifyProvisionWatcherAssociates(pw models.ProvisionWatcher, action string) error {
-	var ds models.DeviceService
-	var err error
-
 	// Get the device service for the provision watcher
-	if ds, err = dbClient.GetDeviceServiceById(pw.Service.Service.Id); err != nil {
+	ds, err := dbClient.GetDeviceServiceById(pw.Service.Service.Id)
+	if err != nil {
 		return err
 	}
 
-	var services []models.DeviceService
-	services = append(services, ds)
-
 	// Notify the service
-	if err = notifyAssociates(services, pw.Id, action, models.PROVISIONWATCHER); err != nil {
+	if err = notifyAssociates([]models.DeviceService{ds}, pw.Id, action, models.PROVISIONWATCHER); err != nil {
 		return err
 	}
 

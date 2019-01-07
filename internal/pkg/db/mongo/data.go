@@ -19,7 +19,6 @@ import (
 	contract "github.com/edgexfoundry/edgex-go/pkg/models"
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
-	"github.com/google/uuid"
 )
 
 /*
@@ -56,51 +55,49 @@ func (mc MongoClient) AddEvent(e contract.Event) (string, error) {
 		var ui []interface{}
 		for i, reading := range e.Readings {
 			var r models.Reading
-			if err := r.FromContract(reading); err != nil {
+			id, err := r.FromContract(reading)
+			if err != nil {
 				return "", err
 			}
+
+			r.TimestampForAdd()
+
 			ui = append(ui, r)
 
-			e.Readings[i].Id = r.Id.Hex()
+			e.Readings[i].Id = id
 		}
-		err := s.DB(mc.database.Name).C(db.ReadingsCollection).Insert(ui...)
-		if err != nil {
-			return "", err
+		if err := s.DB(mc.database.Name).C(db.ReadingsCollection).Insert(ui...); err != nil {
+			return "", errorMap(err)
 		}
 	}
 
-	evt := &models.Event{}
-	err := evt.FromContract(e, mc)
+	var mapped models.Event
+	id, err := mapped.FromContract(e, mc)
 	if err != nil {
-		return e.ID, err
+		return "", err
 	}
 
-	// Add the event
-	err = s.DB(mc.database.Name).C(db.EventsCollection).Insert(evt)
-	mapped, err := evt.ToContract(mc)
-	return mapped.ID, err
+	mapped.TimestampForAdd()
+
+	if err = s.DB(mc.database.Name).C(db.EventsCollection).Insert(mapped); err != nil {
+		return "", errorMap(err)
+	}
+	return id, nil
 }
 
 // Update an event - do NOT update readings
 // UnexpectedError - problem updating in database
 // NotFound - no event with the ID was found
 func (mc MongoClient) UpdateEvent(e contract.Event) error {
-	s := mc.getSessionCopy()
-	defer s.Close()
-
-	mapped := &models.Event{}
-	mapped.FromContract(e, mc)
-	mapped.Modified = db.MakeTimestamp()
-
-	var err error
-	if mapped.Id.Valid() {
-		err = s.DB(mc.database.Name).C(db.EventsCollection).UpdateId(mapped.Id, mapped)
-	} else {
-		query := bson.M{"uuid": mapped.Uuid}
-		err = s.DB(mc.database.Name).C(db.EventsCollection).Update(query, mapped)
+	var mapped models.Event
+	id, err := mapped.FromContract(e, mc)
+	if err != nil {
+		return err
 	}
 
-	return errorMap(err)
+	mapped.TimestampForUpdate()
+
+	return mc.updateId(db.EventsCollection, id, mapped)
 }
 
 // Get an event by id
@@ -108,25 +105,15 @@ func (mc MongoClient) EventById(id string) (contract.Event, error) {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
-	var query bson.M
-	if !bson.IsObjectIdHex(id) {
-		// EventID is not a BSON ID. Is it a UUID?
-		_, err := uuid.Parse(id)
-		if err != nil { // It is some unsupported type of string
-			return contract.Event{}, db.ErrInvalidObjectId
-		}
-		query = bson.M{"uuid": id}
-	} else {
-		query = bson.M{"_id": bson.ObjectIdHex(id)}
-	}
-
-	evt := models.Event{}
-	err := s.DB(mc.database.Name).C(db.EventsCollection).Find(query).One(&evt)
+	query, err := idToBsonM(id)
 	if err != nil {
-		err = errorMap(err)
 		return contract.Event{}, err
 	}
 
+	var evt models.Event
+	if err := s.DB(mc.database.Name).C(db.EventsCollection).Find(query).One(&evt); err != nil {
+		return contract.Event{}, errorMap(err)
+	}
 	return evt.ToContract(mc)
 }
 
@@ -135,7 +122,11 @@ func (mc MongoClient) EventCount() (int, error) {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
-	return s.DB(mc.database.Name).C(db.EventsCollection).Find(nil).Count()
+	count, err := s.DB(mc.database.Name).C(db.EventsCollection).Find(nil).Count()
+	if err != nil {
+		return 0, errorMap(err)
+	}
+	return count, nil
 }
 
 // Get the number of events in Mongo for the device
@@ -144,7 +135,11 @@ func (mc MongoClient) EventCountByDeviceId(id string) (int, error) {
 	defer s.Close()
 
 	query := bson.M{"device": id}
-	return s.DB(mc.database.Name).C(db.EventsCollection).Find(query).Count()
+	count, err := s.DB(mc.database.Name).C(db.EventsCollection).Find(query).Count()
+	if err != nil {
+		return 0, errorMap(err)
+	}
+	return count, nil
 }
 
 // Delete an event by ID and all of its readings
@@ -164,7 +159,7 @@ func (mc MongoClient) EventsForDevice(id string) ([]contract.Event, error) {
 	return mc.mapEvents(mc.getEvents(bson.M{"device": id}))
 }
 
-// Return a list of events whos creation time is between startTime and endTime
+// Return a list of events whose creation time is between startTime and endTime
 // Limit the number of results by limit
 func (mc MongoClient) EventsByCreationTime(startTime, endTime int64, limit int) ([]contract.Event, error) {
 	query := bson.M{"created": bson.M{
@@ -192,12 +187,12 @@ func (mc MongoClient) ScrubAllEvents() error {
 
 	_, err := s.DB(mc.database.Name).C(db.ReadingsCollection).RemoveAll(nil)
 	if err != nil {
-		return err
+		return errorMap(err)
 	}
 
 	_, err = s.DB(mc.database.Name).C(db.EventsCollection).RemoveAll(nil)
 	if err != nil {
-		return err
+		return errorMap(err)
 	}
 
 	return nil
@@ -210,7 +205,7 @@ func (mc MongoClient) getEvents(q bson.M) (me []models.Event, err error) {
 
 	err = s.DB(mc.database.Name).C(db.EventsCollection).Find(q).All(&me)
 	if err != nil {
-		return []models.Event{}, err
+		return []models.Event{}, errorMap(err)
 	}
 	return
 }
@@ -227,7 +222,7 @@ func (mc MongoClient) getEventsLimit(q bson.M, limit int) (me []models.Event, er
 
 	err = s.DB(mc.database.Name).C(db.EventsCollection).Find(q).Limit(limit).All(&me)
 	if err != nil {
-		return []models.Event{}, err
+		return []models.Event{}, errorMap(err)
 	}
 	return
 }
@@ -236,7 +231,7 @@ func (mc MongoClient) getEventsLimit(q bson.M, limit int) (me []models.Event, er
 
 func (mc MongoClient) DBRefToReading(dbRef mgo.DBRef) (a models.Reading, err error) {
 	if err = mc.database.C(db.ReadingsCollection).Find(bson.M{"_id": dbRef.Id}).One(&a); err != nil {
-		return models.Reading{}, err
+		return models.Reading{}, errorMap(err)
 	}
 	return
 }
@@ -253,10 +248,10 @@ func (mc MongoClient) ReadingToDBRef(r models.Reading) (dbRef mgo.DBRef, err err
 		reading, err = mc.readingById(r.Uuid)
 	}
 	if err != nil {
-		return
+		return dbRef, err
 	}
 
-	dbRef = mgo.DBRef{Collection: db.Addressable, Id: reading.Id}
+	dbRef = mgo.DBRef{Collection: db.ReadingsCollection, Id: reading.Id}
 	return
 }
 
@@ -267,7 +262,7 @@ func (mc MongoClient) Readings() ([]contract.Reading, error) {
 		return []contract.Reading{}, err
 	}
 
-	mapped := []contract.Reading{}
+	mapped := make([]contract.Reading, 0)
 	for _, r := range readings {
 		mapped = append(mapped, r.ToContract())
 	}
@@ -279,13 +274,19 @@ func (mc MongoClient) AddReading(r contract.Reading) (string, error) {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
-	mr := models.Reading{}
-	mr.FromContract(r)
+	var mapped models.Reading
+	id, err := mapped.FromContract(r)
+	if err != nil {
+		return "", err
+	}
 
-	err := s.DB(mc.database.Name).C(db.ReadingsCollection).Insert(&mr)
+	mapped.TimestampForAdd()
 
-	r = mr.ToContract()
-	return r.Id, err
+	err = s.DB(mc.database.Name).C(db.ReadingsCollection).Insert(&mapped)
+	if err != nil {
+		return "", errorMap(err)
+	}
+	return id, err
 }
 
 // Update a reading
@@ -293,23 +294,15 @@ func (mc MongoClient) AddReading(r contract.Reading) (string, error) {
 // 409 - Value descriptor doesn't exist
 // 503 - unknown issues
 func (mc MongoClient) UpdateReading(r contract.Reading) error {
-	s := mc.getSessionCopy()
-	defer s.Close()
-
-	mr := models.Reading{}
-	mr.FromContract(r)
-	mr.Modified = db.MakeTimestamp()
-
-	// Update the reading
-	var err error
-	if mr.Id.Valid() {
-		err = s.DB(mc.database.Name).C(db.ReadingsCollection).UpdateId(mr.Id, mr)
-	} else {
-		query := bson.M{"uuid": mr.Uuid}
-		err = s.DB(mc.database.Name).C(db.ReadingsCollection).Update(query, mr)
+	var mapped models.Reading
+	id, err := mapped.FromContract(r)
+	if err != nil {
+		return err
 	}
 
-	return errorMap(err)
+	mapped.TimestampForUpdate()
+
+	return mc.updateId(db.ReadingsCollection, id, mapped)
 }
 
 // Get a reading by ID
@@ -322,24 +315,19 @@ func (mc MongoClient) ReadingById(id string) (contract.Reading, error) {
 }
 
 func (mc MongoClient) readingById(id string) (models.Reading, error) {
-	var query bson.M
-	if !bson.IsObjectIdHex(id) {
-		// ReadingID is not a BSON ID. Is it a UUID?
-		_, err := uuid.Parse(id)
-		if err != nil { // It is some unsupported type of string
-			return models.Reading{}, db.ErrInvalidObjectId
-		}
-		query = bson.M{"uuid": id}
-	} else {
-		query = bson.M{"_id": bson.ObjectIdHex(id)}
-	}
-
 	s := mc.getSessionCopy()
 	defer s.Close()
 
+	query, err := idToBsonM(id)
+	if err != nil {
+		return models.Reading{}, err
+	}
+
 	var res models.Reading
-	err := s.DB(mc.database.Name).C(db.ReadingsCollection).Find(query).One(&res)
-	return res, errorMap(err)
+	if err = s.DB(mc.database.Name).C(db.ReadingsCollection).Find(query).One(&res); err != nil {
+		return models.Reading{}, errorMap(err)
+	}
+	return res, nil
 }
 
 // Get the count of readings in Mongo
@@ -347,7 +335,11 @@ func (mc MongoClient) ReadingCount() (int, error) {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
-	return s.DB(mc.database.Name).C(db.ReadingsCollection).Find(bson.M{}).Count()
+	count, err := s.DB(mc.database.Name).C(db.ReadingsCollection).Find(bson.M{}).Count()
+	if err != nil {
+		return 0, errorMap(err)
+	}
+	return count, nil
 }
 
 // Delete a reading by ID
@@ -359,53 +351,46 @@ func (mc MongoClient) DeleteReadingById(id string) error {
 // Return a list of readings for the given device (id or name)
 // Sort the list of readings on creation date
 func (mc MongoClient) ReadingsByDevice(id string, limit int) ([]contract.Reading, error) {
-	query := bson.M{"device": id}
-	return mapReadings(mc.getReadingsLimit(query, limit))
+	return mapReadings(mc.getReadingsLimit(bson.M{"device": id}, limit))
 }
 
 // Return a list of readings for the given value descriptor
 // Limit by the given limit
 func (mc MongoClient) ReadingsByValueDescriptor(name string, limit int) ([]contract.Reading, error) {
-	query := bson.M{"name": name}
-	return mapReadings(mc.getReadingsLimit(query, limit))
+	return mapReadings(mc.getReadingsLimit(bson.M{"name": name}, limit))
 }
 
 // Return a list of readings whose name is in the list of value descriptor names
 func (mc MongoClient) ReadingsByValueDescriptorNames(names []string, limit int) ([]contract.Reading, error) {
-	query := bson.M{"name": bson.M{"$in": names}}
-	return mapReadings(mc.getReadingsLimit(query, limit))
+	return mapReadings(mc.getReadingsLimit(bson.M{"name": bson.M{"$in": names}}, limit))
 }
 
-// Return a list of readings whos creation time is in-between start and end
+// Return a list of readings whose creation time is in-between start and end
 // Limit by the limit parameter
 func (mc MongoClient) ReadingsByCreationTime(start, end int64, limit int) ([]contract.Reading, error) {
-	query := bson.M{"created": bson.M{
-		"$gte": start,
-		"$lte": end,
-	}}
-	return mapReadings(mc.getReadingsLimit(query, limit))
+	return mapReadings(mc.getReadingsLimit(bson.M{"created": bson.M{"$gte": start, "$lte": end}}, limit))
 }
 
 // Return a list of readings for a device filtered by the value descriptor and limited by the limit
 // The readings are linked to the device through an event
 func (mc MongoClient) ReadingsByDeviceAndValueDescriptor(deviceId, valueDescriptor string, limit int) ([]contract.Reading, error) {
-	query := bson.M{"device": deviceId, "name": valueDescriptor}
-	return mapReadings(mc.getReadingsLimit(query, limit))
+	return mapReadings(mc.getReadingsLimit(bson.M{"device": deviceId, "name": valueDescriptor}, limit))
 }
 
 func (mc MongoClient) getReadingsLimit(q bson.M, limit int) ([]models.Reading, error) {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
-	readings := []models.Reading{}
-
 	// Check if limit is 0
 	if limit == 0 {
-		return readings, nil
+		return []models.Reading{}, nil
 	}
 
-	err := s.DB(mc.database.Name).C(db.ReadingsCollection).Find(q).Limit(limit).All(&readings)
-	return readings, err
+	var readings []models.Reading
+	if err := s.DB(mc.database.Name).C(db.ReadingsCollection).Find(q).Limit(limit).All(&readings); err != nil {
+		return []models.Reading{}, errorMap(err)
+	}
+	return readings, nil
 }
 
 // Get readings from the database
@@ -413,9 +398,11 @@ func (mc MongoClient) getReadings(q bson.M) ([]models.Reading, error) {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
-	readings := []models.Reading{}
-	err := s.DB(mc.database.Name).C(db.ReadingsCollection).Find(q).All(&readings)
-	return readings, err
+	var readings []models.Reading
+	if err := s.DB(mc.database.Name).C(db.ReadingsCollection).Find(q).All(&readings); err != nil {
+		return []models.Reading{}, errorMap(err)
+	}
+	return readings, nil
 }
 
 // Get a reading from the database with the passed query
@@ -424,9 +411,10 @@ func (mc MongoClient) getReading(q bson.M) (models.Reading, error) {
 	defer s.Close()
 
 	var res models.Reading
-	err := s.DB(mc.database.Name).C(db.ReadingsCollection).Find(q).One(&res)
-	err = errorMap(err)
-	return res, err
+	if err := s.DB(mc.database.Name).C(db.ReadingsCollection).Find(q).One(&res); err != nil {
+		return models.Reading{}, errorMap(err)
+	}
+	return res, nil
 }
 
 // ************************* VALUE DESCRIPTORS *****************************
@@ -439,26 +427,29 @@ func (mc MongoClient) AddValueDescriptor(v contract.ValueDescriptor) (string, er
 	s := mc.getSessionCopy()
 	defer s.Close()
 
-	mapped := &models.ValueDescriptor{}
-	err := mapped.FromContract(v)
+	var mapped models.ValueDescriptor
+	id, err := mapped.FromContract(v)
 	if err != nil {
-		return v.Id, err
+		return "", err
 	}
 
 	// See if the name is unique and add the value descriptors
 	found, err := s.DB(mc.database.Name).C(db.ValueDescriptorCollection).Find(bson.M{"name": mapped.Name}).Count()
+	if err != nil {
+		return "", errorMap(err)
+	}
 	// Duplicate name
 	if found > 0 {
-		return v.Id, db.ErrNotUnique
+		return "", db.ErrNotUnique
 	}
 
-	err = s.DB(mc.database.Name).C(db.ValueDescriptorCollection).Insert(mapped)
-	if err != nil {
-		return v.Id, err
-	}
+	mapped.Modified = db.MakeTimestamp()
+	mapped.Created = mapped.Modified
 
-	to := mapped.ToContract()
-	return to.Id, err
+	if err = s.DB(mc.database.Name).C(db.ValueDescriptorCollection).Insert(mapped); err != nil {
+		return "", errorMap(err)
+	}
+	return id, nil
 }
 
 // Return a list of all the value descriptors
@@ -472,9 +463,6 @@ func (mc MongoClient) ValueDescriptors() ([]contract.ValueDescriptor, error) {
 // TODO: Check for the valid printf formatting
 // 404 not found if the value descriptor cannot be found by the identifiers
 func (mc MongoClient) UpdateValueDescriptor(cvd contract.ValueDescriptor) error {
-	s := mc.getSessionCopy()
-	defer s.Close()
-
 	// See if the name is unique if it changed
 	chk, err := mc.getValueDescriptor(bson.M{"name": cvd.Name})
 	if err != db.ErrNotFound {
@@ -488,20 +476,15 @@ func (mc MongoClient) UpdateValueDescriptor(cvd contract.ValueDescriptor) error 
 		}
 	}
 
-	mvd := models.ValueDescriptor{}
-	err = mvd.FromContract(cvd)
+	var mapped models.ValueDescriptor
+	id, err := mapped.FromContract(cvd)
 	if err != nil {
 		return err
 	}
-	mvd.Modified = db.MakeTimestamp()
 
-	if mvd.Id.Valid() {
-		err = s.DB(mc.database.Name).C(db.ValueDescriptorCollection).UpdateId(mvd.Id, mvd)
-	} else {
-		query := bson.M{"uuid": mvd.Uuid}
-		err = s.DB(mc.database.Name).C(db.ValueDescriptorCollection).Update(query, mvd)
-	}
-	return errorMap(err)
+	mapped.Modified = db.MakeTimestamp()
+
+	return mc.updateId(db.ValueDescriptorCollection, id, mapped)
 }
 
 // Delete the value descriptor based on the id
@@ -514,18 +497,16 @@ func (mc MongoClient) DeleteValueDescriptorById(id string) error {
 // Return a value descriptor based on the name
 // Can return null if no value descriptor is found
 func (mc MongoClient) ValueDescriptorByName(name string) (contract.ValueDescriptor, error) {
-	query := bson.M{"name": name}
-	mvd, err := mc.getValueDescriptor(query)
+	mvd, err := mc.getValueDescriptor(bson.M{"name": name})
 	if err != nil {
-		return contract.ValueDescriptor{}, errorMap(err)
+		return contract.ValueDescriptor{}, err
 	}
 	return mvd.ToContract(), nil
 }
 
 // Return all of the value descriptors based on the names
 func (mc MongoClient) ValueDescriptorsByName(names []string) ([]contract.ValueDescriptor, error) {
-	vList := []contract.ValueDescriptor{}
-
+	vList := make([]contract.ValueDescriptor, 0)
 	for _, name := range names {
 		v, err := mc.ValueDescriptorByName(name)
 		if err != nil && err != db.ErrNotFound {
@@ -542,16 +523,9 @@ func (mc MongoClient) ValueDescriptorsByName(names []string) ([]contract.ValueDe
 // Return a value descriptor based on the id
 // Return NotFoundError if there is no value descriptor for the id
 func (mc MongoClient) ValueDescriptorById(id string) (contract.ValueDescriptor, error) {
-	var query bson.M
-	if !bson.IsObjectIdHex(id) {
-		// EventID is not a BSON ID. Is it a UUID?
-		_, err := uuid.Parse(id)
-		if err != nil { // It is some unsupported type of string
-			return contract.ValueDescriptor{}, db.ErrInvalidObjectId
-		}
-		query = bson.M{"uuid": id}
-	} else {
-		query = bson.M{"_id": bson.ObjectIdHex(id)}
+	query, err := idToBsonM(id)
+	if err != nil {
+		return contract.ValueDescriptor{}, err
 	}
 
 	mvd, err := mc.getValueDescriptor(query)
@@ -563,20 +537,17 @@ func (mc MongoClient) ValueDescriptorById(id string) (contract.ValueDescriptor, 
 
 // Return all the value descriptors that match the UOM label
 func (mc MongoClient) ValueDescriptorsByUomLabel(uomLabel string) ([]contract.ValueDescriptor, error) {
-	query := bson.M{"uomLabel": uomLabel}
-	return mapValueDescriptors(mc.getValueDescriptors(query))
+	return mapValueDescriptors(mc.getValueDescriptors(bson.M{"uomLabel": uomLabel}))
 }
 
 // Return value descriptors based on if it has the label
 func (mc MongoClient) ValueDescriptorsByLabel(label string) ([]contract.ValueDescriptor, error) {
-	query := bson.M{"labels": label}
-	return mapValueDescriptors(mc.getValueDescriptors(query))
+	return mapValueDescriptors(mc.getValueDescriptors(bson.M{"labels": label}))
 }
 
 // Return value descriptors based on the type
 func (mc MongoClient) ValueDescriptorsByType(t string) ([]contract.ValueDescriptor, error) {
-	query := bson.M{"type": t}
-	return mapValueDescriptors(mc.getValueDescriptors(query))
+	return mapValueDescriptors(mc.getValueDescriptors(bson.M{"type": t}))
 }
 
 // Delete all of the value descriptors
@@ -584,11 +555,9 @@ func (mc MongoClient) ScrubAllValueDescriptors() error {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
-	_, err := s.DB(mc.database.Name).C(db.ValueDescriptorCollection).RemoveAll(nil)
-	if err != nil {
-		return err
+	if _, err := s.DB(mc.database.Name).C(db.ValueDescriptorCollection).RemoveAll(nil); err != nil {
+		return errorMap(err)
 	}
-
 	return nil
 }
 
@@ -598,9 +567,10 @@ func (mc MongoClient) getValueDescriptors(q bson.M) ([]models.ValueDescriptor, e
 	defer s.Close()
 
 	var v []models.ValueDescriptor
-	err := s.DB(mc.database.Name).C(db.ValueDescriptorCollection).Find(q).All(&v)
-
-	return v, err
+	if err := s.DB(mc.database.Name).C(db.ValueDescriptorCollection).Find(q).All(&v); err != nil {
+		return []models.ValueDescriptor{}, errorMap(err)
+	}
+	return v, nil
 }
 
 // Get value descriptors with a limit based on the query
@@ -609,9 +579,10 @@ func (mc MongoClient) getValueDescriptorsLimit(q bson.M, limit int) ([]models.Va
 	defer s.Close()
 
 	var v []models.ValueDescriptor
-	err := s.DB(mc.database.Name).C(db.ValueDescriptorCollection).Find(q).Limit(limit).All(&v)
-
-	return v, err
+	if err := s.DB(mc.database.Name).C(db.ValueDescriptorCollection).Find(q).Limit(limit).All(&v); err != nil {
+		return []models.ValueDescriptor{}, errorMap(err)
+	}
+	return v, nil
 }
 
 // Get a value descriptor based on the query
@@ -620,13 +591,10 @@ func (mc MongoClient) getValueDescriptor(q bson.M) (models.ValueDescriptor, erro
 	defer s.Close()
 
 	var m models.ValueDescriptor
-	err := s.DB(mc.database.Name).C(db.ValueDescriptorCollection).Find(q).One(&m)
-	if err != nil {
-		err = errorMap(err)
-		return models.ValueDescriptor{}, err
+	if err := s.DB(mc.database.Name).C(db.ValueDescriptorCollection).Find(q).One(&m); err != nil {
+		return models.ValueDescriptor{}, errorMap(err)
 	}
-
-	return m, err
+	return m, nil
 }
 
 func (mc MongoClient) mapEvents(events []models.Event, errIn error) (ce []contract.Event, err error) {
@@ -636,8 +604,7 @@ func (mc MongoClient) mapEvents(events []models.Event, errIn error) (ce []contra
 
 	ce = []contract.Event{}
 	for _, event := range events {
-		var contractEvent contract.Event
-		contractEvent, err = event.ToContract(mc)
+		contractEvent, err := event.ToContract(mc)
 		if err != nil {
 			return []contract.Event{}, err
 		}
@@ -652,7 +619,7 @@ func mapReadings(readings []models.Reading, err error) ([]contract.Reading, erro
 		return []contract.Reading{}, err
 	}
 
-	mapped := []contract.Reading{}
+	mapped := make([]contract.Reading, 0)
 	for _, r := range readings {
 		mapped = append(mapped, r.ToContract())
 	}
@@ -664,7 +631,7 @@ func mapValueDescriptors(descriptors []models.ValueDescriptor, err error) ([]con
 		return []contract.ValueDescriptor{}, err
 	}
 
-	var mapped []contract.ValueDescriptor
+	mapped := make([]contract.ValueDescriptor, 0)
 	for _, v := range descriptors {
 		mapped = append(mapped, v.ToContract())
 	}
