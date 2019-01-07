@@ -107,7 +107,7 @@ func restUpdateCommand(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if err := dbClient.UpdateCommand(&c); err != nil {
+	if err := dbClient.UpdateCommand(c); err != nil {
 		LoggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

@@ -51,14 +51,14 @@ type DBClient interface {
 
 	// Device
 	UpdateDevice(d contract.Device) error
-	GetDeviceById(d *contract.Device, id string) error
-	GetDeviceByName(d *contract.Device, n string) error
-	GetAllDevices(d *[]contract.Device) error
-	GetDevicesByProfileId(d *[]contract.Device, pid string) error
-	GetDevicesByServiceId(d *[]contract.Device, sid string) error
-	GetDevicesByAddressableId(d *[]contract.Device, aid string) error
-	GetDevicesWithLabel(d *[]contract.Device, l string) error
-	AddDevice(d *contract.Device) error
+	GetDeviceById(id string) (contract.Device, error)
+	GetDeviceByName(n string) (contract.Device, error)
+	GetAllDevices() ([]contract.Device, error)
+	GetDevicesByProfileId(pid string) ([]contract.Device, error)
+	GetDevicesByServiceId(sid string) ([]contract.Device, error)
+	GetDevicesByAddressableId(aid string) ([]contract.Device, error)
+	GetDevicesWithLabel(l string) ([]contract.Device, error)
+	AddDevice(d contract.Device) (string, error)
 	DeleteDeviceById(id string) error
 
 	// Device Profile
@@ -112,7 +112,7 @@ type DBClient interface {
 	GetCommandByName(id string) ([]contract.Command, error)
 	AddCommand(c contract.Command) (string, error)
 	GetAllCommands() ([]contract.Command, error)
-	UpdateCommand(c *contract.Command) error
+	UpdateCommand(c contract.Command) error
 	DeleteCommandById(id string) error
 
 	// Scrub all metadata (only used in test)

@@ -63,7 +63,7 @@ func commandByDeviceID(did string, cid string, b string, p bool) (string, int) {
 		}
 	}
 	if p {
-		url := d.Service.Addressable.GetBaseURL() + strings.Replace(c.Put.Action.Path, DEVICEIDURLPARAM, d.Id.Hex(), -1)
+		url := d.Service.Addressable.GetBaseURL() + strings.Replace(c.Put.Action.Path, DEVICEIDURLPARAM, d.Id, -1)
 		LoggingClient.Info("Issuing PUT command to: " + url)
 		req, err := http.NewRequest(http.MethodPut, url, strings.NewReader(b))
 		if err != nil {
@@ -77,7 +77,7 @@ func commandByDeviceID(did string, cid string, b string, p bool) (string, int) {
 		buf.ReadFrom(resp.Body)
 		return buf.String(), resp.StatusCode
 	} else {
-		url := d.Service.Addressable.GetBaseURL() + strings.Replace(c.Get.Action.Path, DEVICEIDURLPARAM, d.Id.Hex(), -1)
+		url := d.Service.Addressable.GetBaseURL() + strings.Replace(c.Get.Action.Path, DEVICEIDURLPARAM, d.Id, -1)
 		LoggingClient.Info("Issuing GET command to: " + url)
 		req, err := http.NewRequest(http.MethodGet, url, nil)
 		if err != nil {

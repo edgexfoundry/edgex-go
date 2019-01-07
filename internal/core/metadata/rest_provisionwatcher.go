@@ -172,8 +172,7 @@ func restGetProvisionWatchersByProfileId(w http.ResponseWriter, r *http.Request)
 	}
 
 	res := make([]models.ProvisionWatcher, 0)
-	err := dbClient.GetProvisionWatchersByProfileId(&res, pid)
-	if err != nil {
+	if err := dbClient.GetProvisionWatchersByProfileId(&res, pid); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		LoggingClient.Error("Problem getting provision watcher: " + err.Error())
 		return

@@ -20,7 +20,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo/models"
 	contract "github.com/edgexfoundry/edgex-go/pkg/models"
 	"github.com/globalsign/mgo/bson"
-	"github.com/google/uuid"
 )
 
 const (
@@ -32,34 +31,6 @@ const (
 var currentReadMaxLimit int // configuration read max limit
 var currentResendLimit int  // configuration transmission resent count limit
 var cleanupDefaultAge int
-
-/* ----------------------- Internal Common Utility Functions ------------------------*/
-
-func idToQueryParameters(id string) (name string, value interface{}, err error) {
-	if !bson.IsObjectIdHex(id) {
-		_, err := uuid.Parse(id)
-		if err != nil { // It is some unsupported type of string
-			return "", "", db.ErrInvalidObjectId
-		}
-		name = "uuid"
-		value = id
-	} else {
-		name = "_id"
-		value = bson.ObjectIdHex(id)
-	}
-	return
-}
-
-func idToBsonM(id string) (q bson.M, err error) {
-	var name string
-	var value interface{}
-	name, value, err = idToQueryParameters(id)
-	if err != nil {
-		return
-	}
-	q = bson.M{name: value}
-	return
-}
 
 /* ----------------------- Notifications ------------------------*/
 

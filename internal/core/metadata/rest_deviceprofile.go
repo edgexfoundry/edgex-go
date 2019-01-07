@@ -29,6 +29,7 @@ import (
 func restGetAllDeviceProfiles(w http.ResponseWriter, _ *http.Request) {
 	var res []models.DeviceProfile
 	var err error
+
 	if res, err = dbClient.GetAllDeviceProfiles(); err != nil {
 		LoggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -36,7 +37,7 @@ func restGetAllDeviceProfiles(w http.ResponseWriter, _ *http.Request) {
 	}
 
 	if len(res) > Configuration.Service.ReadMaxLimit {
-		err := errors.New("Max limit exceeded with request for profiles")
+		err = errors.New("Max limit exceeded with request for profiles")
 		http.Error(w, err.Error(), http.StatusRequestEntityTooLarge)
 		LoggingClient.Error(err.Error())
 		return
@@ -195,8 +196,9 @@ func updateDeviceProfileFields(from models.DeviceProfile, to *models.DeviceProfi
 
 // Check for duplicate names in device profiles
 func checkDuplicateProfileNames(dp models.DeviceProfile, w http.ResponseWriter) error {
-	profiles := []models.DeviceProfile{}
+	var profiles []models.DeviceProfile
 	var err error
+
 	if profiles, err = dbClient.GetAllDeviceProfiles(); err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return err
@@ -204,7 +206,7 @@ func checkDuplicateProfileNames(dp models.DeviceProfile, w http.ResponseWriter) 
 
 	for _, p := range profiles {
 		if p.Name == dp.Name && p.Id != dp.Id {
-			err := errors.New("Duplicate profile name")
+			err = errors.New("Duplicate profile name")
 			http.Error(w, err.Error(), http.StatusConflict)
 			return err
 		}
@@ -265,6 +267,7 @@ func restGetProfileByProfileId(w http.ResponseWriter, r *http.Request) {
 	var did string = vars["id"]
 	var res models.DeviceProfile
 	var err error
+
 	if res, err = dbClient.GetDeviceProfileById(did); err != nil {
 		if err == db.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
@@ -285,6 +288,7 @@ func restDeleteProfileByProfileId(w http.ResponseWriter, r *http.Request) {
 	// Check if the device profile exists
 	var dp models.DeviceProfile
 	var err error
+
 	if dp, err = dbClient.GetDeviceProfileById(did); err != nil {
 		if err == db.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
@@ -296,7 +300,7 @@ func restDeleteProfileByProfileId(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Delete the device profile
-	if err := deleteDeviceProfile(dp, w); err != nil {
+	if err = deleteDeviceProfile(dp, w); err != nil {
 		LoggingClient.Error(err.Error())
 		return
 	}
@@ -343,12 +347,14 @@ func restDeleteProfileByName(w http.ResponseWriter, r *http.Request) {
 func deleteDeviceProfile(dp models.DeviceProfile, w http.ResponseWriter) error {
 	// Check if the device profile is still in use by devices
 	var d []models.Device
-	if err := dbClient.GetDevicesByProfileId(&d, dp.Id); err != nil {
+	var err error
+
+	if d, err = dbClient.GetDevicesByProfileId(dp.Id); err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return err
 	}
 	if len(d) > 0 {
-		err := errors.New("Can't delete device profile, the profile is still in use by a device")
+		err = errors.New("Can't delete device profile, the profile is still in use by a device")
 		http.Error(w, err.Error(), http.StatusConflict)
 		return err
 	}
@@ -360,7 +366,7 @@ func deleteDeviceProfile(dp models.DeviceProfile, w http.ResponseWriter) error {
 		return err
 	}
 	if len(pw) > 0 {
-		err := errors.New("Cant delete device profile, the profile is still in use by a provision watcher")
+		err = errors.New("Cant delete device profile, the profile is still in use by a provision watcher")
 		http.Error(w, err.Error(), http.StatusConflict)
 		return err
 	}
@@ -471,7 +477,7 @@ func restGetProfileByModel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res := make([]models.DeviceProfile, 0)
+	var res []models.DeviceProfile
 	if res, err = dbClient.GetDeviceProfilesByModel(an); err != nil {
 		LoggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -491,7 +497,7 @@ func restGetProfileWithLabel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res := make([]models.DeviceProfile, 0)
+	var res []models.DeviceProfile
 	if res, err = dbClient.GetDeviceProfilesWithLabel(label); err != nil {
 		LoggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -504,6 +510,7 @@ func restGetProfileWithLabel(w http.ResponseWriter, r *http.Request) {
 
 func restGetProfileByManufacturerModel(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
+	var err error
 	man, err := url.QueryUnescape(vars[MANUFACTURER])
 	if err != nil {
 		LoggingClient.Error(err.Error())
@@ -518,7 +525,7 @@ func restGetProfileByManufacturerModel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res := make([]models.DeviceProfile, 0)
+	var res []models.DeviceProfile
 	if res, err = dbClient.GetDeviceProfilesByManufacturerModel(man, mod); err != nil {
 		LoggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -531,6 +538,7 @@ func restGetProfileByManufacturerModel(w http.ResponseWriter, r *http.Request) {
 
 func restGetProfileByManufacturer(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
+	var err error
 	man, err := url.QueryUnescape(vars[MANUFACTURER])
 	if err != nil {
 		LoggingClient.Error(err.Error())
@@ -538,7 +546,7 @@ func restGetProfileByManufacturer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res := make([]models.DeviceProfile, 0)
+	var res []models.DeviceProfile
 	if res, err = dbClient.GetDeviceProfilesByManufacturer(man); err != nil {
 		LoggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -652,7 +660,9 @@ func restGetYamlProfileById(w http.ResponseWriter, r *http.Request) {
 func notifyProfileAssociates(dp models.DeviceProfile, action string) error {
 	// Get the devices
 	var d []models.Device
-	if err := dbClient.GetDevicesByProfileId(&d, dp.Id); err != nil {
+	var err error
+
+	if d, err = dbClient.GetDevicesByProfileId(dp.Id); err != nil {
 		LoggingClient.Error(err.Error())
 		return err
 	}

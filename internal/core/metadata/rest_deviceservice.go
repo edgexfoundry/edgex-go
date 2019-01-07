@@ -167,7 +167,9 @@ func restGetAddressablesForAssociatedDevicesByName(w http.ResponseWriter, r *htt
 func getAddressablesForAssociatedDevices(addressables *[]models.Addressable, ds models.DeviceService, w http.ResponseWriter) error {
 	// Get the associated devices
 	var devices []models.Device
-	if err := dbClient.GetDevicesByServiceId(&devices, ds.Service.Id); err != nil {
+	var err error
+
+	if devices, err = dbClient.GetDevicesByServiceId(ds.Service.Id); err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return err
 	}
@@ -471,30 +473,32 @@ func restDeleteServiceByName(w http.ResponseWriter, r *http.Request) {
 func deleteDeviceService(ds models.DeviceService, w http.ResponseWriter) error {
 	// Delete the associated devices
 	var devices []models.Device
-	if err := dbClient.GetDevicesByServiceId(&devices, ds.Service.Id); err != nil {
+	var err error
+
+	if devices, err = dbClient.GetDevicesByServiceId(ds.Service.Id); err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return err
 	}
 	for _, device := range devices {
-		if err := deleteDevice(device, w); err != nil {
+		if err = deleteDevice(device, w); err != nil {
 			return err
 		}
 	}
 
 	// Delete the associated provision watchers
 	var watchers []models.ProvisionWatcher
-	if err := dbClient.GetProvisionWatchersByServiceId(&watchers, ds.Service.Id); err != nil {
+	if err = dbClient.GetProvisionWatchersByServiceId(&watchers, ds.Service.Id); err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return err
 	}
 	for _, watcher := range watchers {
-		if err := deleteProvisionWatcher(watcher, w); err != nil {
+		if err = deleteProvisionWatcher(watcher, w); err != nil {
 			return err
 		}
 	}
 
 	// Delete the device service
-	if err := dbClient.DeleteDeviceServiceById(ds.Id); err != nil {
+	if err = dbClient.DeleteDeviceServiceById(ds.Id); err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return err
 	}

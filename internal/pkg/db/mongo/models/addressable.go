@@ -21,8 +21,8 @@ import (
 )
 
 type addressableTransform interface {
-	DBRefToAddressable(dbRef mgo.DBRef) (a Addressable, err error)
-	AddressableToDBRef(a Addressable) (dbRef mgo.DBRef, err error)
+	DBRefToAddressable(dbRef mgo.DBRef) (model Addressable, err error)
+	AddressableToDBRef(model Addressable) (dbRef mgo.DBRef, err error)
 }
 
 type Addressable struct {

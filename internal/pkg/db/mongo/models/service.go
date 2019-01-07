@@ -47,15 +47,18 @@ func (s *Service) ToContract(transform addressableTransform) (c contract.Service
 	c.OperatingState = s.OperatingState
 	c.Labels = s.Labels
 
-	a, err := transform.DBRefToAddressable(s.Addressable)
-	c.Addressable = a.ToContract()
+	aModel, err := transform.DBRefToAddressable(s.Addressable)
+	if err != nil {
+		return contract.Service{}, err
+	}
+	c.Addressable = aModel.ToContract()
 	return
 }
 
 func (s *Service) FromContract(from contract.Service, transform addressableTransform) (err error) {
 	s.Id, s.Uuid, err = fromContractId(from.Id)
 	if err != nil {
-		return err
+		return
 	}
 
 	s.DescribedObject.FromContract(from.DescribedObject)
@@ -65,11 +68,11 @@ func (s *Service) FromContract(from contract.Service, transform addressableTrans
 	s.OperatingState = from.OperatingState
 	s.Labels = from.Labels
 
-	var addrModel Addressable
-	err = addrModel.FromContract(from.Addressable)
+	var aModel Addressable
+	err = aModel.FromContract(from.Addressable)
 	if err != nil {
 		return
 	}
-	s.Addressable, err = transform.AddressableToDBRef(addrModel)
+	s.Addressable, err = transform.AddressableToDBRef(aModel)
 	return
 }

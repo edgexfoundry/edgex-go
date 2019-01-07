@@ -18,7 +18,6 @@ import (
 	"fmt"
 
 	"github.com/edgexfoundry/edgex-go/pkg/clients"
-	"github.com/globalsign/mgo/bson"
 )
 
 /*
@@ -28,7 +27,7 @@ import (
  * CommandResponse struct
  */
 type CommandResponse struct {
-	Id             bson.ObjectId  `json:"id"`
+	Id             string         `json:"id"`
 	Name           string         `json:"name"`           // Unique name for identifying a device
 	AdminState     AdminState     `json:"adminState"`     // Admin state (locked/unlocked)
 	OperatingState OperatingState `json:"operatingState"` // Operating state (enabled/disabled)
@@ -42,7 +41,7 @@ type CommandResponse struct {
 // Custom marshaling to make empty strings null
 func (cr CommandResponse) MarshalJSON() ([]byte, error) {
 	res := struct {
-		Id             *bson.ObjectId `json:"id"`
+		Id             *string        `json:"id"`
 		Name           *string        `json:"name"`
 		AdminState     AdminState     `json:"adminState"`
 		OperatingState OperatingState `json:"operatingState"`
@@ -104,7 +103,7 @@ func CommandResponseFromDevice(d Device, cmdURL string) CommandResponse {
 		Commands:       d.Profile.Commands,
 	}
 
-	basePath := fmt.Sprintf("%s%s/%s/command/", cmdURL, clients.ApiDeviceRoute, d.Id.Hex())
+	basePath := fmt.Sprintf("%s%s/%s/command/", cmdURL, clients.ApiDeviceRoute, d.Id)
 
 	for _, c := range cmdResp.Commands {
 		if c.Get != nil {
