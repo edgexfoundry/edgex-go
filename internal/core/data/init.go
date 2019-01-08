@@ -173,7 +173,7 @@ func connectToConsul(conf *ConfigurationStruct) (*ConfigurationStruct, error) {
 	errCh := make(chan error)
 	dec := consulclient.NewConsulDecoder(conf.Registry)
 	dec.Target = &ConfigurationStruct{}
-	dec.Prefix = internal.ConfigV2Stem + internal.CoreDataServiceKey
+	dec.Prefix = internal.ConfigRegistryStem + internal.CoreDataServiceKey
 	dec.ErrCh = errCh
 	dec.UpdateCh = updateCh
 
@@ -206,7 +206,7 @@ func listenForConfigChanges() {
 	errCh := make(chan error)
 	dec := consulclient.NewConsulDecoder(Configuration.Registry)
 	dec.Target = &ConfigurationStruct{}
-	dec.Prefix = internal.ConfigV2Stem + internal.CoreDataServiceKey
+	dec.Prefix = internal.ConfigRegistryStem + internal.CoreDataServiceKey
 	dec.ErrCh = errCh
 	dec.UpdateCh = chConfig
 

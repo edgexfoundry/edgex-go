@@ -19,7 +19,7 @@ const (
 	BootTimeoutDefault   = 30000
 	ClientMonitorDefault = 15000
 	ConfigFileName       = "configuration.toml"
-	ConfigV2Stem         = "config/V2/"
+	ConfigRegistryStem   = "edgex/core/1.0/"
 )
 
 const (
