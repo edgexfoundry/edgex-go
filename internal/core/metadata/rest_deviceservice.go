@@ -26,27 +26,6 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// Get the addressable by its ID or Name
-func getAddressableByIdOrName(a *models.Addressable, w http.ResponseWriter) error {
-	id := a.Id
-	name := a.Name
-
-	// Try by ID
-	if _, err := dbClient.GetAddressableById(id); err != nil {
-		// Try by name
-		if _, err = dbClient.GetAddressableByName(name); err != nil {
-			if err == db.ErrNotFound {
-				http.Error(w, "Addressable not found", http.StatusServiceUnavailable)
-			} else {
-				http.Error(w, err.Error(), http.StatusServiceUnavailable)
-			}
-			return err
-		}
-	}
-
-	return nil
-}
-
 func restGetAllDeviceServices(w http.ResponseWriter, _ *http.Request) {
 	var r []models.DeviceService
 	var err error
@@ -221,7 +200,10 @@ func restUpdateDeviceService(w http.ResponseWriter, r *http.Request) {
 	// Check if the device service exists and get it
 	var to models.DeviceService
 	// Try by ID
-	if to, err = dbClient.GetDeviceServiceById(from.Service.Id); err != nil {
+	if from.Service.Id != "" {
+		to, err = dbClient.GetDeviceServiceById(from.Service.Id)
+	}
+	if from.Service.Id == "" || err != nil {
 		// Try by Name
 		if to, err = dbClient.GetDeviceServiceByName(from.Service.Name); err != nil {
 			http.Error(w, "Device service not found", http.StatusNotFound)
@@ -249,12 +231,20 @@ func restUpdateDeviceService(w http.ResponseWriter, r *http.Request) {
 func updateDeviceServiceFields(from models.DeviceService, to *models.DeviceService, w http.ResponseWriter) error {
 	// Use .String() to compare empty structs (not ideal, but there is no .equals method)
 	if (from.Service.Addressable.String() != models.Addressable{}.String()) {
-		// Check if addressable exists
-		to.Service.Addressable = from.Service.Addressable
-		if err := getAddressableByIdOrName(&to.Service.Addressable, w); err != nil {
-			return err
+		var addr models.Addressable
+		var err error
+		if from.Addressable.Id != "" {
+			addr, err = dbClient.GetAddressableById(from.Addressable.Id)
 		}
+		if from.Addressable.Id == "" || err != nil {
+			addr, err = dbClient.GetAddressableByName(from.Addressable.Name)
+			if err != nil {
+				return err
+			}
+		}
+		to.Service.Addressable = addr
 	}
+
 	if from.AdminState != models.AdminState("") {
 		if !models.IsAdminStateType(string(from.AdminState)) {
 			err := errors.New("Invalid Admin State: " + string(from.AdminState) + " Must be 'locked' or 'unlocked'")

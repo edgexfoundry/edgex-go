@@ -60,6 +60,8 @@ type DBClient interface {
 	GetDevicesWithLabel(d *[]contract.Device, l string) error
 	AddDevice(d *contract.Device) error
 	DeleteDeviceById(id string) error
+
+	// Device Profile
 	UpdateDeviceProfile(dp *contract.DeviceProfile) error
 	AddDeviceProfile(d *contract.DeviceProfile) error
 	GetAllDeviceProfiles(d *[]contract.DeviceProfile) error

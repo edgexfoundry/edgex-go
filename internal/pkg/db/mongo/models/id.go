@@ -20,7 +20,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func FromContractId(id string) (bson.ObjectId, string, error) {
+func fromContractId(id string) (bson.ObjectId, string, error) {
 	// In this first case, ID is empty so this must be an add.
 	// Generate new BSON/UUIDs
 	if id == "" {

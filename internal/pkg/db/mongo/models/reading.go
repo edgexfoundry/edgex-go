@@ -31,7 +31,7 @@ type Reading struct {
 	Value    string        `bson:"value"` // Device sensor data value
 }
 
-func (r Reading) ToContract() contract.Reading {
+func (r *Reading) ToContract() contract.Reading {
 	// Always hand back the UUID as the contract event ID unless it's blank (an old event, for example blackbox test scripts)
 	id := r.Uuid
 	if id == "" {
@@ -52,7 +52,7 @@ func (r Reading) ToContract() contract.Reading {
 
 func (r *Reading) FromContract(from contract.Reading) error {
 	var err error
-	r.Id, r.Uuid, err = FromContractId(from.Id)
+	r.Id, r.Uuid, err = fromContractId(from.Id)
 	if err != nil {
 		return err
 	}

@@ -340,7 +340,10 @@ func restAddProvisionWatcher(w http.ResponseWriter, r *http.Request) {
 	// Check if the device service exists
 	// Try by ID
 	var service models.DeviceService
-	if service, err = dbClient.GetDeviceServiceById(pw.Service.Service.Id); err != nil {
+	if pw.Service.Service.Id != "" {
+		service, err = dbClient.GetDeviceServiceById(pw.Service.Service.Id)
+	}
+	if pw.Service.Service.Id == "" || err != nil {
 		// Try by name
 		if service, err = dbClient.GetDeviceServiceByName(pw.Service.Service.Name); err != nil {
 			if err == db.ErrNotFound {

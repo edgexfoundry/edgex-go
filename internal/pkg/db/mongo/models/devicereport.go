@@ -54,7 +54,7 @@ func (dr *DeviceReport) ToContract() contract.DeviceReport {
 
 func (dr *DeviceReport) FromContract(from contract.DeviceReport) error {
 	var err error
-	dr.Id, dr.Uuid, err = FromContractId(from.Id)
+	dr.Id, dr.Uuid, err = fromContractId(from.Id)
 	if err != nil {
 		return err
 	}
