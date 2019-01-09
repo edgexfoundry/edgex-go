@@ -27,8 +27,9 @@ import (
 )
 
 func restGetAllDeviceProfiles(w http.ResponseWriter, _ *http.Request) {
-	res := []models.DeviceProfile{}
-	if err := dbClient.GetAllDeviceProfiles(&res); err != nil {
+	var res []models.DeviceProfile
+	var err error
+	if res, err = dbClient.GetAllDeviceProfiles(); err != nil {
 		LoggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -70,7 +71,9 @@ func restAddDeviceProfile(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if err := dbClient.AddDeviceProfile(&dp); err != nil {
+	var id string
+	var err error
+	if id, err = dbClient.AddDeviceProfile(dp); err != nil {
 		if err == db.ErrNotUnique {
 			http.Error(w, "Duplicate name for device profile", http.StatusConflict)
 		} else if err == db.ErrNameEmpty {
@@ -83,7 +86,7 @@ func restAddDeviceProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(dp.Id.Hex()))
+	w.Write([]byte(id))
 }
 
 func restUpdateDeviceProfile(w http.ResponseWriter, r *http.Request) {
@@ -99,10 +102,10 @@ func restUpdateDeviceProfile(w http.ResponseWriter, r *http.Request) {
 	// Check if the Device Profile exists
 	var to models.DeviceProfile
 	// First try with ID
-	err := dbClient.GetDeviceProfileById(&to, from.Id.Hex())
+	to, err := dbClient.GetDeviceProfileById(from.Id)
 	if err != nil {
 		// Try with name
-		err = dbClient.GetDeviceProfileByName(&to, from.Name)
+		to, err = dbClient.GetDeviceProfileByName(from.Name)
 		if err != nil {
 			LoggingClient.Error(err.Error())
 			http.Error(w, err.Error(), http.StatusNotFound)
@@ -115,7 +118,7 @@ func restUpdateDeviceProfile(w http.ResponseWriter, r *http.Request) {
 		LoggingClient.Error(err.Error())
 		return
 	}
-	if err := dbClient.UpdateDeviceProfile(&to); err != nil {
+	if err := dbClient.UpdateDeviceProfile(to); err != nil {
 		LoggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -193,7 +196,8 @@ func updateDeviceProfileFields(from models.DeviceProfile, to *models.DeviceProfi
 // Check for duplicate names in device profiles
 func checkDuplicateProfileNames(dp models.DeviceProfile, w http.ResponseWriter) error {
 	profiles := []models.DeviceProfile{}
-	if err := dbClient.GetAllDeviceProfiles(&profiles); err != nil {
+	var err error
+	if profiles, err = dbClient.GetAllDeviceProfiles(); err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return err
 	}
@@ -260,7 +264,8 @@ func restGetProfileByProfileId(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	var did string = vars["id"]
 	var res models.DeviceProfile
-	if err := dbClient.GetDeviceProfileById(&res, did); err != nil {
+	var err error
+	if res, err = dbClient.GetDeviceProfileById(did); err != nil {
 		if err == db.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
 		} else {
@@ -279,7 +284,8 @@ func restDeleteProfileByProfileId(w http.ResponseWriter, r *http.Request) {
 
 	// Check if the device profile exists
 	var dp models.DeviceProfile
-	if err := dbClient.GetDeviceProfileById(&dp, did); err != nil {
+	var err error
+	if dp, err = dbClient.GetDeviceProfileById(did); err != nil {
 		if err == db.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
 		} else {
@@ -311,7 +317,7 @@ func restDeleteProfileByName(w http.ResponseWriter, r *http.Request) {
 
 	// Check if the device profile exists
 	var dp models.DeviceProfile
-	if err = dbClient.GetDeviceProfileByName(&dp, n); err != nil {
+	if dp, err = dbClient.GetDeviceProfileByName(n); err != nil {
 		if err == db.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
 		} else {
@@ -337,7 +343,7 @@ func restDeleteProfileByName(w http.ResponseWriter, r *http.Request) {
 func deleteDeviceProfile(dp models.DeviceProfile, w http.ResponseWriter) error {
 	// Check if the device profile is still in use by devices
 	var d []models.Device
-	if err := dbClient.GetDevicesByProfileId(&d, dp.Id.Hex()); err != nil {
+	if err := dbClient.GetDevicesByProfileId(&d, dp.Id); err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return err
 	}
@@ -349,7 +355,7 @@ func deleteDeviceProfile(dp models.DeviceProfile, w http.ResponseWriter) error {
 
 	// Check if the device profile is still in use by provision watchers
 	var pw []models.ProvisionWatcher
-	if err := dbClient.GetProvisionWatchersByProfileId(&pw, dp.Id.Hex()); err != nil {
+	if err := dbClient.GetProvisionWatchersByProfileId(&pw, dp.Id); err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return err
 	}
@@ -360,7 +366,7 @@ func deleteDeviceProfile(dp models.DeviceProfile, w http.ResponseWriter) error {
 	}
 
 	// Delete the profile
-	if err := dbClient.DeleteDeviceProfileById(dp.Id.Hex()); err != nil {
+	if err := dbClient.DeleteDeviceProfileById(dp.Id); err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return err
 	}
@@ -439,7 +445,8 @@ func addDeviceProfileYaml(data []byte, w http.ResponseWriter) {
 		}
 	}
 
-	if err := dbClient.AddDeviceProfile(&dp); err != nil {
+	var id string
+	if id, err = dbClient.AddDeviceProfile(dp); err != nil {
 		if err == db.ErrNotUnique {
 			http.Error(w, "Duplicate profile name", http.StatusConflict)
 		} else if err == db.ErrNameEmpty {
@@ -452,7 +459,7 @@ func addDeviceProfileYaml(data []byte, w http.ResponseWriter) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(dp.Id.Hex()))
+	w.Write([]byte(id))
 }
 
 func restGetProfileByModel(w http.ResponseWriter, r *http.Request) {
@@ -465,7 +472,7 @@ func restGetProfileByModel(w http.ResponseWriter, r *http.Request) {
 	}
 
 	res := make([]models.DeviceProfile, 0)
-	if err := dbClient.GetDeviceProfilesByModel(&res, an); err != nil {
+	if res, err = dbClient.GetDeviceProfilesByModel(an); err != nil {
 		LoggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -485,7 +492,7 @@ func restGetProfileWithLabel(w http.ResponseWriter, r *http.Request) {
 	}
 
 	res := make([]models.DeviceProfile, 0)
-	if err := dbClient.GetDeviceProfilesWithLabel(&res, label); err != nil {
+	if res, err = dbClient.GetDeviceProfilesWithLabel(label); err != nil {
 		LoggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -512,7 +519,7 @@ func restGetProfileByManufacturerModel(w http.ResponseWriter, r *http.Request) {
 	}
 
 	res := make([]models.DeviceProfile, 0)
-	if err := dbClient.GetDeviceProfilesByManufacturerModel(&res, man, mod); err != nil {
+	if res, err = dbClient.GetDeviceProfilesByManufacturerModel(man, mod); err != nil {
 		LoggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -532,7 +539,7 @@ func restGetProfileByManufacturer(w http.ResponseWriter, r *http.Request) {
 	}
 
 	res := make([]models.DeviceProfile, 0)
-	if err := dbClient.GetDeviceProfilesByManufacturer(&res, man); err != nil {
+	if res, err = dbClient.GetDeviceProfilesByManufacturer(man); err != nil {
 		LoggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -553,7 +560,7 @@ func restGetProfileByName(w http.ResponseWriter, r *http.Request) {
 
 	// Get the device
 	var res models.DeviceProfile
-	if err := dbClient.GetDeviceProfileByName(&res, dn); err != nil {
+	if res, err = dbClient.GetDeviceProfileByName(dn); err != nil {
 		if err == db.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
 		} else {
@@ -578,7 +585,7 @@ func restGetYamlProfileByName(w http.ResponseWriter, r *http.Request) {
 
 	// Check for the device profile
 	var dp models.DeviceProfile
-	err = dbClient.GetDeviceProfileByName(&dp, name)
+	dp, err = dbClient.GetDeviceProfileByName(name)
 	if err != nil {
 		// Not found, return nil
 		if err == db.ErrNotFound {
@@ -616,7 +623,7 @@ func restGetYamlProfileById(w http.ResponseWriter, r *http.Request) {
 
 	// Check if the device profile exists
 	var dp models.DeviceProfile
-	err := dbClient.GetDeviceProfileById(&dp, id)
+	dp, err := dbClient.GetDeviceProfileById(id)
 	if err != nil {
 		if err == db.ErrNotFound {
 			w.WriteHeader(http.StatusNotFound)
@@ -645,7 +652,7 @@ func restGetYamlProfileById(w http.ResponseWriter, r *http.Request) {
 func notifyProfileAssociates(dp models.DeviceProfile, action string) error {
 	// Get the devices
 	var d []models.Device
-	if err := dbClient.GetDevicesByProfileId(&d, dp.Id.Hex()); err != nil {
+	if err := dbClient.GetDevicesByProfileId(&d, dp.Id); err != nil {
 		LoggingClient.Error(err.Error())
 		return err
 	}
@@ -662,7 +669,7 @@ func notifyProfileAssociates(dp models.DeviceProfile, action string) error {
 		}
 	}
 
-	if err := notifyAssociates(ds, dp.Id.Hex(), action, models.PROFILE); err != nil {
+	if err := notifyAssociates(ds, dp.Id, action, models.PROFILE); err != nil {
 		LoggingClient.Error(err.Error())
 		return err
 	}

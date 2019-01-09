@@ -17,9 +17,9 @@ package models
 import "encoding/json"
 
 type Units struct {
-	Type         string `bson:"type" json:"type"`
-	ReadWrite    string `bson:"readWrite" json:"readWrite" yaml:"readWrite"`
-	DefaultValue string `bson:"defaultValue" json:"defaultValue" yaml:"defaultValue"`
+	Type         string `json:"type"`
+	ReadWrite    string `json:"readWrite" yaml:"readWrite"`
+	DefaultValue string `json:"defaultValue" yaml:"defaultValue"`
 }
 
 // Custom marshaling to make empty strings null

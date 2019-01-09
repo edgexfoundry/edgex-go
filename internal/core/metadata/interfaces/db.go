@@ -62,17 +62,17 @@ type DBClient interface {
 	DeleteDeviceById(id string) error
 
 	// Device Profile
-	UpdateDeviceProfile(dp *contract.DeviceProfile) error
-	AddDeviceProfile(d *contract.DeviceProfile) error
-	GetAllDeviceProfiles(d *[]contract.DeviceProfile) error
-	GetDeviceProfileById(d *contract.DeviceProfile, id string) error
+	UpdateDeviceProfile(dp contract.DeviceProfile) error
+	AddDeviceProfile(d contract.DeviceProfile) (string, error)
+	GetAllDeviceProfiles() ([]contract.DeviceProfile, error)
+	GetDeviceProfileById(id string) (contract.DeviceProfile, error)
 	DeleteDeviceProfileById(id string) error
-	GetDeviceProfilesByModel(dp *[]contract.DeviceProfile, m string) error
-	GetDeviceProfilesWithLabel(dp *[]contract.DeviceProfile, l string) error
-	GetDeviceProfilesByManufacturerModel(dp *[]contract.DeviceProfile, man string, mod string) error
-	GetDeviceProfilesByManufacturer(dp *[]contract.DeviceProfile, man string) error
-	GetDeviceProfileByName(dp *contract.DeviceProfile, n string) error
-	GetDeviceProfilesUsingCommand(dp *[]contract.DeviceProfile, c contract.Command) error
+	GetDeviceProfilesByModel(m string) ([]contract.DeviceProfile, error)
+	GetDeviceProfilesWithLabel(l string) ([]contract.DeviceProfile, error)
+	GetDeviceProfilesByManufacturerModel(man string, mod string) ([]contract.DeviceProfile, error)
+	GetDeviceProfilesByManufacturer(man string) ([]contract.DeviceProfile, error)
+	GetDeviceProfileByName(n string) (contract.DeviceProfile, error)
+	GetDeviceProfilesUsingCommand(c contract.Command) ([]contract.DeviceProfile, error)
 
 	// Addressable
 	UpdateAddressable(a contract.Addressable) error

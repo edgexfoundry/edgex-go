@@ -17,9 +17,9 @@ package models
 import "encoding/json"
 
 type ProfileResource struct {
-	Name string              `bson:"name" json:"name"`
-	Get  []ResourceOperation `bson:"get" json:"get"`
-	Set  []ResourceOperation `bson:"set" json:"set"`
+	Name string              `json:"name"`
+	Get  []ResourceOperation `json:"get"`
+	Set  []ResourceOperation `json:"set"`
 }
 
 // Custom marshaling to make empty strings null

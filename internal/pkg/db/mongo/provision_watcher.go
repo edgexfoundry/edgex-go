@@ -83,10 +83,10 @@ func (mpw *mongoProvisionWatcher) SetBSON(raw bson.Raw) error {
 	profCol := s.DB(m.database.Name).C(db.DeviceProfile)
 	servCol := s.DB(m.database.Name).C(db.DeviceService)
 
-	var mdp mongoDeviceProfile
 	var ds models.DeviceService
+	var dp models.DeviceProfile
 
-	if err := profCol.FindId(decoded.Profile.Id).One(&mdp); err != nil {
+	if err := profCol.FindId(decoded.Profile.Id).One(&dp); err != nil {
 		return err
 	}
 
@@ -94,7 +94,15 @@ func (mpw *mongoProvisionWatcher) SetBSON(raw bson.Raw) error {
 		return err
 	}
 
-	mpw.Profile = mdp.DeviceProfile
 	mpw.Service, err = ds.ToContract(m)
-	return err
+	if err != nil {
+		return err
+	}
+
+	mpw.Profile, err = dp.ToContract(m)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

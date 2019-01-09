@@ -17,14 +17,14 @@ package models
 import "encoding/json"
 
 type ResourceOperation struct {
-	Index     string            `bson:"index" json:"index"`
-	Operation string            `bson:"operation" json:"operation"`
-	Object    string            `bson:"object" json:"object"`
-	Property  string            `bson:"property" json:"property"`
-	Parameter string            `bson:"parameter" json:"parameter"`
-	Resource  string            `bson:"resource" json:"resource"`
-	Secondary []string          `bson:"secondary" json:"secondary"`
-	Mappings  map[string]string `bson:"mappings" json:"mappings"`
+	Index     string            `json:"index"`
+	Operation string            `json:"operation"`
+	Object    string            `json:"object"`
+	Property  string            `json:"property"`
+	Parameter string            `json:"parameter"`
+	Resource  string            `json:"resource"`
+	Secondary []string          `json:"secondary"`
+	Mappings  map[string]string `json:"mappings"`
 }
 
 // Custom marshaling to make empty strings null

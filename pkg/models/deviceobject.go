@@ -19,16 +19,11 @@ import (
 )
 
 type DeviceObject struct {
-	//	DescribedObject				`bson:",inline" yaml:",inline"`
-	//	Id		bson.ObjectId		`bson:"_id,omitempty" json:"id"`
-	Description string `bson:"description" json:"description"`
-	Name        string `bson:"name" json:"name"`
-	Tag         string `bson:"tag" json:"tag"`
-	//	Properties 	ProfileProperty 	`bson:"profileProperty" json:"profileProperty"`
-	Properties ProfileProperty        `bson:"properties" json:"properties" yaml:"properties"`
-	Attributes map[string]interface{} `bson:"attributes" json:"attributes" yaml:"attributes"`
-	//	Other 		string	`bson:"other" json:"other"`
-	//	Other 		map[string]string	`bson:"other" json:"other"`
+	Description string                 `json:"description"`
+	Name        string                 `json:"name"`
+	Tag         string                 `json:"tag"`
+	Properties  ProfileProperty        `json:"properties" yaml:"properties"`
+	Attributes  map[string]interface{} `json:"attributes" yaml:"attributes"`
 }
 
 // Custom marshaling to make empty strings null

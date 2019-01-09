@@ -165,8 +165,7 @@ func restGetProvisionWatchersByProfileId(w http.ResponseWriter, r *http.Request)
 	var pid string = vars[ID]
 
 	// Check if the device profile exists
-	var dp models.DeviceProfile
-	if err := dbClient.GetDeviceProfileById(&dp, pid); err != nil {
+	if _, err := dbClient.GetDeviceProfileById(pid); err != nil {
 		LoggingClient.Error("Device profile not found: " + err.Error())
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
@@ -195,7 +194,7 @@ func restGetProvisionWatchersByProfileName(w http.ResponseWriter, r *http.Reques
 
 	// Check if the device profile exists
 	var dp models.DeviceProfile
-	if err = dbClient.GetDeviceProfileByName(&dp, pn); err != nil {
+	if dp, err = dbClient.GetDeviceProfileByName(pn); err != nil {
 		if err == db.ErrNotFound {
 			http.Error(w, "Device profile not found", http.StatusNotFound)
 			LoggingClient.Error("Device profile not found: " + err.Error())
@@ -207,7 +206,7 @@ func restGetProvisionWatchersByProfileName(w http.ResponseWriter, r *http.Reques
 	}
 
 	res := make([]models.ProvisionWatcher, 0)
-	err = dbClient.GetProvisionWatchersByProfileId(&res, dp.Id.Hex())
+	err = dbClient.GetProvisionWatchersByProfileId(&res, dp.Id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		LoggingClient.Error("Problem getting provision watcher: " + err.Error())
@@ -323,9 +322,9 @@ func restAddProvisionWatcher(w http.ResponseWriter, r *http.Request) {
 
 	// Check if the device profile exists
 	// Try by ID
-	if err = dbClient.GetDeviceProfileById(&pw.Profile, pw.Profile.Id.Hex()); err != nil {
+	if _, err = dbClient.GetDeviceProfileById(pw.Profile.Id); err != nil {
 		// Try by name
-		if err = dbClient.GetDeviceProfileByName(&pw.Profile, pw.Profile.Name); err != nil {
+		if _, err = dbClient.GetDeviceProfileByName(pw.Profile.Name); err != nil {
 			if err == db.ErrNotFound {
 				LoggingClient.Error("Device profile not found for provision watcher: " + err.Error())
 				http.Error(w, "Device profile not found for provision watcher", http.StatusConflict)
