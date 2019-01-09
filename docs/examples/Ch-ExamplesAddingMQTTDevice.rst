@@ -11,7 +11,7 @@ In this example, we use the simulator instead of a real device. This provides a 
 Environment
 -----------
 
-You can use any operating system that can install docker and docker-compose. In this example, we use Photon OS to delpoy EdgeX using docker. The system requirements can be found at https://docs.edgexfoundry.org/Ch-GettingStartedUsers.html#what-you-need.
+You can use any operating system that can install docker and docker-compose. In this example, we use Photon OS to deploy EdgeX using docker. The system requirements can be found at https://docs.edgexfoundry.org/Ch-GettingStartedUsers.html#what-you-need.
 
 .. image:: PhotonOS.png
     :scale: 50%
@@ -52,7 +52,7 @@ To set up the service:
 
 1. Download the source code::
 
-    git clone git@github.com:edgexfoundry-holding/device-mqtt-go.git
+    git clone git@github.com:edgexfoundry/device-mqtt-go.git
 
 2. Modify the broker connection
 
@@ -82,6 +82,10 @@ The DeviceProfile defines the device's values and operation method, which can be
         :scale: 50%
         :alt: Device profile
 
+You can download and use the provided :download:`modbus.test.device.profile.yml
+<modbus.test.device.profile.yml>`.
+
+
 Set Up Device Service Configuration
 ===================================
 
@@ -92,6 +96,9 @@ MQTT is subscribe/publish pattern, so we must define the MQTT connection informa
     .. image:: configuration_MQTT.png
         :scale: 50%
         :alt: configuration.toml File
+
+You can download and use the provided :download:`configuration.toml
+<configuration.toml>`.
 
 MQTT Driver Configuration
 =========================
@@ -110,9 +117,34 @@ Add Device Service to docker-compose File
 
 Because we deploy EdgeX using docker-compose, we must add the device-mqtt to the docker-compose file ( https://github.com/edgexfoundry/developer-scripts/blob/master/compose-files/docker-compose-delhi-0.7.0.yml ). If you have prepared configuration files, you can mount them using volumes and change the entrypoint for device-mqtt internal use.
 
-    .. image:: config_changes_MQTT.png
-        :scale: 50%
-        :alt: configuration.toml Updates
+::
+
+    device-mqtt
+      image: docker.edgexfoundry.org/device-mqtt-go-x86_64:test ports:
+        - "49982:49982"
+      container_name: edgex-device-mqtt
+      hostname: edgex-device-mqtt
+      networks:
+        edgex-network:
+          aliases:
+          - edgex-device-mqtt
+      priviledged: true
+      volumes:
+        - db-data:/data/db
+        - log-data:/edgex/logs
+        - consul-config:/consul/data
+        - /device-service-demo/mqtt:/custom-config
+      depends_on:
+        - data
+        - command
+      entrypoint:
+        - /device-mqtt
+        - --registry
+        - --confdir=/custom-config
+
+    networks:
+      edgex-network:
+        driver: "bridge"
 
 Start EdgeX Foundry on Docker
 -----------------------------

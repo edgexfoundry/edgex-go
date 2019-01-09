@@ -2,7 +2,7 @@
 Random Integer Device Service Example
 #####################################
 
-The Random Integer Device Service is a sample Device Service that can run directly with other Edge Xpert services. It has a default, pre-defined device profile (see the *device.random.yaml* file), device and schedule events (see the *configuration.toml* file). After the Edge Xpert Core Service and Random Integer Device Service start, the following Core Service APIs can be viewed in the browser:
+The Random Integer Device Service is a sample Device Service that can run directly with other EdgeX services. It has a default, pre-defined device profile (see the *device.random.yaml* file), device and schedule events (see the *configuration.toml* file). After the EdgeX Core Service and Random Integer Device Service start, the following Core Service APIs can be viewed in the browser:
 
 .. csv-table:: Core Service API
     :header: "Core Service API", "URL", "Description"
@@ -40,7 +40,7 @@ If you replace the host and run the GET command for GenerateRandomValue_Int8, yo
 PUT Command
 -----------
 
-PUT commands can adjust the minimum and maximum values for future random reading values, but they must be valid values for the data type. For example, the minimum value for GenerateRansomValue_Int16 cannot be less than -32768.
+PUT commands can adjust the minimum and maximum values for future random reading values, but they must be valid values for the data type. For example, the minimum value for GenerateRandomValue_Int16 cannot be less than -32768.
 
 In the following example, the PUT command limits the future reading value of GenerateRandomValue_Int8 to a range of -2 to 2:
 
@@ -49,7 +49,7 @@ In the following example, the PUT command limits the future reading value of Gen
     :alt: Example PUT Command
 
 .. NOTE::
-    The paameter of the PUT command body is defined in the ``parameterNames`` field of the Command model.
+    The parameter of the PUT command body is defined in the ``parameterNames`` field of the Command model.
 
 To validate the result, send the following GET command:
 

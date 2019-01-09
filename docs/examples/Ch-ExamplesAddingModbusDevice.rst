@@ -73,6 +73,9 @@ Set Up Device Profile
 
 The DeviceProfile defines the device's values and operation method, which can be Read or Write. 
 
+You can download and use the provided :download:`mqtt.test.device.profile.yml
+<mqtt.test.device.profile.yml>`.
+
 In the Modbus protocol, we must define attributes: 
 
 * ``primaryTable``: HOLDING_REGISTERS, INPUT_REGISTERS, COILS, DISCRETES_INPUT
@@ -129,9 +132,70 @@ In the RTU protocol, address is defined in five comma-separated parts:
 * stop bits
 * parity (N - None is 0, O - Odd is 1, E - Even is 2, default is E).
 
-    .. image:: configuration.png
-        :scale: 50%
-        :alt: configuration.toml File
+::
+
+    [Logging]
+    EnableRemote = false
+    File = "./device-Modbus.log"
+    Level = "DEBUG"
+
+    [Device]
+      DataTransform = true
+      InitCmd = ""
+      InitCmdArgs = ""
+      MaxCmdOps = 128
+      MaxCmdValueLen = 256
+      RemoveCmd = ""
+      RemoveCmdArgs = ""
+      ProfileDir = "/custom-config"
+
+    # Pre-define Devices
+    [[DeviceList]]
+      Name = "Modbus TCP test device"
+      Profile = "Network Power Meter"
+      Description = "This device is a product for monitoring and controlling digital inputs and outputs over a LAN."
+      labels = [ "Air conditioner","modbus TCP" ]
+      [DeviceList.Addressable]
+        name = "Gateway address 1"
+        Protocol = "TCP"
+        Address = "10.211.55.6"
+        Port = 502
+        Path = "1"
+    
+    [[DeviceList]]
+      Name = "Modbus TCP test device 2"
+      Profile = "Network Power Meter"
+      Description = "This device is a product for monitoring and controlling digital inputs and outputs over a LAN."
+      labels = [ "Air conditioner","modbus TCP" ]
+      [DeviceList.Addressable]
+        name = "Gateway address 1"
+        Protocol = "TCP"
+        Address = "10.211.55.6"
+        Port = 502
+        Path = "2"
+
+   # Pre-define Schedule Configuration
+    [[Schedules]]
+    Name = "20sec-schedule"
+    Frequency = "PT20S"
+
+    [[ScheduleEvents]]
+    Name = "Read Switch status"
+    Schedule = "20sec-schedule"
+      [ScheduleEvents.Addressable]
+      HTTPMethod = "GET"
+    Path = "/api/v1/device/name/Modbus TCP test device 1/Configuration"
+
+    [[ScheduleEvents]]
+    Name = "Put Configuration"
+    Parameters = "[{\"DemandWindowSize\": \"110\"},{\"LineFrequency\": \"50\"}]"
+    Schedule = "20sec-schedule"
+      [ScheduleEvents.Addressable]
+      HTTPMethod = "Put"
+      Path = "/api/v1/device/name/Modbus TCP test device 1/Configuration"
+
+You can download and use the provided :download:`configuration.toml
+<configuration.toml>`.
 
 Add Device Service to docker-compose File
 -----------------------------------------
@@ -223,6 +287,8 @@ Find Executable Commands
 Use the following query to find executable commands::
 
     photon-ip:48082/api/v1/device
+
+|
 
     .. image:: commands.png
         :scale: 50%
