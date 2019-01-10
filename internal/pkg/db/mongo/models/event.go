@@ -22,45 +22,48 @@ import (
 )
 
 type Event struct {
-	Id       bson.ObjectId
-	Uuid     string
-	Pushed   int64
-	Device   string
-	Created  int64
-	Modified int64
-	Origin   int64
-	Event    string
-	Readings []Reading
-	dbRefs   []mgo.DBRef
+	Id       bson.ObjectId `bson:"_id,omitempty"`
+	Uuid     string        `bson:"uuid,omitempty"`
+	Pushed   int64         `bson:"pushed"`
+	Device   string        `bson:"device"` // Device identifier (name or id)
+	Created  int64         `bson:"created"`
+	Modified int64         `bson:"modified"`
+	Origin   int64         `bson:"origin"`
+	Event    string        `bson:"event"`              // Schedule event identifier
+	Readings []mgo.DBRef   `bson:"readings,omitempty"` // List of readings
+
 }
 
-func (e *Event) ToContract() contract.Event {
-	// Always hand back the UUID as the contract event ID unless it's blank (an old event, for example blackbox test scripts
+func (e *Event) ToContract(transform readingTransform) (c contract.Event, err error) {
 	id := e.Uuid
 	if id == "" {
 		id = e.Id.Hex()
 	}
-	to := contract.Event{
-		ID:       id,
-		Pushed:   e.Pushed,
-		Device:   e.Device,
-		Created:  e.Created,
-		Modified: e.Modified,
-		Origin:   e.Origin,
-		Event:    e.Event,
-		Readings: []contract.Reading{},
+
+	c.ID = id
+	c.Pushed = e.Pushed
+	c.Device = e.Device
+	c.Created = e.Created
+	c.Modified = e.Modified
+	c.Origin = e.Origin
+	c.Event = e.Event
+
+	c.Readings = []contract.Reading{}
+	for _, dbRef := range e.Readings {
+		var r Reading
+		r, err = transform.DBRefToReading(dbRef)
+		if err != nil {
+			return contract.Event{}, err
+		}
+		c.Readings = append(c.Readings, r.ToContract())
 	}
-	for _, r := range e.Readings {
-		to.Readings = append(to.Readings, r.ToContract())
-	}
-	return to
+	return
 }
 
-func (e *Event) FromContract(from contract.Event) error {
-	var err error
+func (e *Event) FromContract(from contract.Event, transform readingTransform) (err error) {
 	e.Id, e.Uuid, err = fromContractId(from.ID)
 	if err != nil {
-		return err
+		return
 	}
 
 	e.Pushed = from.Pushed
@@ -69,106 +72,26 @@ func (e *Event) FromContract(from contract.Event) error {
 	e.Modified = from.Modified
 	e.Origin = from.Origin
 	e.Event = from.Event
-	e.Readings = []Reading{}
-	for _, val := range from.Readings {
-		r := &Reading{}
-		err := r.FromContract(val)
+
+	e.Readings = []mgo.DBRef{}
+	for _, reading := range from.Readings {
+		var readingModel Reading
+		err = readingModel.FromContract(reading)
 		if err != nil {
-			return errors.New(err.Error() + " id: " + val.Id)
+			return errors.New(err.Error() + " id: " + reading.Id)
 		}
-		e.Readings = append(e.Readings, *r)
+
+		var dbRef mgo.DBRef
+		dbRef, err = transform.ReadingToDBRef(readingModel)
+		if err != nil {
+			return err
+		}
+		e.Readings = append(e.Readings, dbRef)
 	}
 
 	if e.Created == 0 {
 		e.Created = db.MakeTimestamp()
 	}
 
-	return nil
-}
-
-// Custom marshaling into mongo
-func (e *Event) GetBSON() (interface{}, error) {
-	// Turn the readings into DBRef objects
-	var readings []mgo.DBRef
-	for _, reading := range e.Readings {
-		if reading.Id.Valid() {
-			readings = append(readings, mgo.DBRef{Collection: db.ReadingsCollection, Id: reading.Id})
-		}
-	}
-
-	return struct {
-		ID       bson.ObjectId `bson:"_id,omitempty"`
-		Uuid     string        `bson:"uuid,omitempty"`
-		Pushed   int64         `bson:"pushed"`
-		Device   string        `bson:"device"` // Device identifier (name or id)
-		Created  int64         `bson:"created"`
-		Modified int64         `bson:"modified"`
-		Origin   int64         `bson:"origin"`
-		Schedule string        `bson:"schedule,omitempty"` // Schedule identifier
-		Event    string        `bson:"event"`              // Schedule event identifier
-		Readings []mgo.DBRef   `bson:"readings,omitempty"` // List of readings
-	}{
-		ID:       e.Id,
-		Uuid:     e.Uuid,
-		Pushed:   e.Pushed,
-		Device:   e.Device,
-		Created:  e.Created,
-		Modified: e.Modified,
-		Origin:   e.Origin,
-		Event:    e.Event,
-		Readings: readings,
-	}, nil
-}
-
-// Custom unmarshaling out of Mongo
-func (e *Event) SetBSON(raw bson.Raw) error {
-	decoded := new(struct {
-		ID       bson.ObjectId `bson:"_id,omitempty"`
-		Uuid     string        `bson:"uuid,omitempty"`
-		Pushed   int64         `bson:"pushed"`
-		Device   string        `bson:"device"` // Device identifier (name or id)
-		Created  int64         `bson:"created"`
-		Modified int64         `bson:"modified"`
-		Origin   int64         `bson:"origin"`
-		Schedule string        `bson:"schedule,omitempty"` // Schedule identifier
-		Event    string        `bson:"event"`              // Schedule event identifier
-		DBRefs   []mgo.DBRef   `bson:"readings"`           // List of readings
-	})
-
-	bsonErr := raw.Unmarshal(decoded)
-	if bsonErr != nil {
-		return bsonErr
-	}
-
-	// Copy over the non-DBRef fields
-	e.Id = decoded.ID
-	e.Uuid = decoded.Uuid
-	e.Pushed = decoded.Pushed
-	e.Device = decoded.Device
-	e.Created = decoded.Created
-	e.Modified = decoded.Modified
-	e.Origin = decoded.Origin
-	e.Event = decoded.Event
-	e.Readings = []Reading{}
-	e.dbRefs = decoded.DBRefs
-	return nil
-}
-
-// The purpose of this function is to expose the DBRefs used in our pseudo-FK relationship
-// whereby an event is linked to its readings. As I write this, readings are associated to an
-// event as a series of DBRefs, each item an Object ID of a reading like so:
-// "readings" : [ DBRef("reading", ObjectId("5beb825bdeafc2bc618d4d8b")) ]
-// The previous MongoEvent model type included a loop that iterated through the DBRefs and
-// called to the database to obtain the reading details. This is poor separation of concerns
-// as a model type should not call the database. Further, this was deemed necessary because of
-// poor design in the underlying gopkg.in/mgo2 driver.
-//
-// In order to fully separate the database access and state concerns, I have to provide a getter
-// for the internal list of DBRefs. I do not want to pollute the property-based signature of the
-// mongo/model/event type.
-func (e *Event) GetDBRefs() []mgo.DBRef {
-	if e.dbRefs == nil {
-		return []mgo.DBRef{}
-	}
-	return e.dbRefs
+	return
 }
