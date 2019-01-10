@@ -18,9 +18,9 @@ package client
 import (
 	"time"
 
-	"github.com/edgexfoundry/edgex-go/internal/export"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
-	"github.com/globalsign/mgo/bson"
+	contract "github.com/edgexfoundry/edgex-go/pkg/models"
+	"github.com/google/uuid"
 )
 
 /* NB: This portion of the MemDB provider has been moved to
@@ -31,7 +31,7 @@ import (
  */
 
 type MemDB struct {
-	regs []export.Registration
+	regs []contract.Registration
 }
 
 func (m *MemDB) CloseSession() {
@@ -41,22 +41,22 @@ func (m *MemDB) Connect() error {
 	return nil
 }
 
-func (mc *MemDB) Registrations() ([]export.Registration, error) {
+func (mc *MemDB) Registrations() ([]contract.Registration, error) {
 	return mc.regs, nil
 }
 
-func (mc *MemDB) AddRegistration(reg *export.Registration) (bson.ObjectId, error) {
+func (mc *MemDB) AddRegistration(reg contract.Registration) (string, error) {
 	ticks := time.Now().Unix()
 	reg.Created = ticks
 	reg.Modified = ticks
-	reg.ID = bson.NewObjectId()
+	reg.ID = uuid.New().String()
 
-	mc.regs = append(mc.regs, *reg)
+	mc.regs = append(mc.regs, reg)
 
 	return reg.ID, nil
 }
 
-func (mc *MemDB) UpdateRegistration(reg export.Registration) error {
+func (mc *MemDB) UpdateRegistration(reg contract.Registration) error {
 	for i, r := range mc.regs {
 		if r.ID == reg.ID {
 			mc.regs[i] = reg
@@ -66,29 +66,29 @@ func (mc *MemDB) UpdateRegistration(reg export.Registration) error {
 	return db.ErrNotFound
 }
 
-func (mc *MemDB) RegistrationById(id string) (export.Registration, error) {
+func (mc *MemDB) RegistrationById(id string) (contract.Registration, error) {
 	for _, reg := range mc.regs {
-		if reg.ID.Hex() == id {
+		if reg.ID == id {
 			return reg, nil
 		}
 	}
 
-	return export.Registration{}, db.ErrNotFound
+	return contract.Registration{}, db.ErrNotFound
 }
 
-func (mc *MemDB) RegistrationByName(name string) (export.Registration, error) {
+func (mc *MemDB) RegistrationByName(name string) (contract.Registration, error) {
 	for _, reg := range mc.regs {
 		if reg.Name == name {
 			return reg, nil
 		}
 	}
 
-	return export.Registration{}, db.ErrNotFound
+	return contract.Registration{}, db.ErrNotFound
 }
 
 func (mc *MemDB) DeleteRegistrationById(id string) error {
 	for i, reg := range mc.regs {
-		if reg.ID.Hex() == id {
+		if reg.ID == id {
 			mc.regs = append(mc.regs[:i], mc.regs[i+1:]...)
 			return nil
 		}
@@ -107,6 +107,6 @@ func (mc *MemDB) DeleteRegistrationByName(name string) error {
 }
 
 func (mc *MemDB) ScrubAllRegistrations() error {
-	mc.regs = make([]export.Registration, 0)
+	mc.regs = make([]contract.Registration, 0)
 	return nil
 }

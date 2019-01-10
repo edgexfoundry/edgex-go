@@ -7,6 +7,7 @@
 package export
 
 import (
+	"github.com/edgexfoundry/edgex-go/pkg/models"
 	"testing"
 )
 
@@ -21,19 +22,19 @@ func TestRegistrationValid(t *testing.T) {
 		valid       bool
 	}{
 		{"empty", "", "", "", "", "", false},
-		{"valid", "reg", CompZip, FormatJSON, DestMQTT, EncAes, true},
-		{"defaultCompression", "reg", "", FormatJSON, DestMQTT, EncAes, true},
-		{"defaultEncryption", "reg", CompZip, FormatJSON, DestMQTT, "", true},
-		{"withoutName", "", CompZip, FormatJSON, DestMQTT, EncAes, false},
-		{"wrongCompresion", "reg", "INVALID", FormatJSON, DestMQTT, EncAes, false},
-		{"wrongFormat", "reg", CompZip, "INVALID", DestMQTT, EncAes, false},
-		{"wrongDestination", "reg", CompZip, FormatJSON, "INVALID", EncAes, false},
-		{"wrongEncryption", "reg", CompZip, FormatJSON, DestMQTT, "INVALID", false},
+		{"valid", "reg", models.CompZip, models.FormatJSON, models.DestMQTT, models.EncAes, true},
+		{"defaultCompression", "reg", "", models.FormatJSON, models.DestMQTT, models.EncAes, true},
+		{"defaultEncryption", "reg", models.CompZip, models.FormatJSON, models.DestMQTT, "", true},
+		{"withoutName", "", models.CompZip, models.FormatJSON, models.DestMQTT, models.EncAes, false},
+		{"wrongCompresion", "reg", "INVALID", models.FormatJSON, models.DestMQTT, models.EncAes, false},
+		{"wrongFormat", "reg", models.CompZip, "INVALID", models.DestMQTT, models.EncAes, false},
+		{"wrongDestination", "reg", models.CompZip, models.FormatJSON, "INVALID", models.EncAes, false},
+		{"wrongEncryption", "reg", models.CompZip, models.FormatJSON, models.DestMQTT, "INVALID", false},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := Registration{}
+			r := models.Registration{}
 
 			r.Name = tt.regName
 

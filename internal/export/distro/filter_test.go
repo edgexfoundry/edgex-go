@@ -9,7 +9,6 @@ package distro
 import (
 	"testing"
 
-	"github.com/edgexfoundry/edgex-go/internal/export"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 )
 
@@ -23,7 +22,7 @@ const (
 
 func TestFilterDevice(t *testing.T) {
 	// Filter only accepting events from device 1
-	f := export.Filter{}
+	f := models.Filter{}
 	f.DeviceIDs = append(f.DeviceIDs, "DEV1")
 
 	// Event from device 1
@@ -54,10 +53,10 @@ func TestFilterDevice(t *testing.T) {
 }
 
 func TestFilterValue(t *testing.T) {
-	f1 := export.Filter{}
+	f1 := models.Filter{}
 	f1.ValueDescriptorIDs = append(f1.ValueDescriptorIDs, descriptor1)
 
-	f12 := export.Filter{}
+	f12 := models.Filter{}
 	f12.ValueDescriptorIDs = append(f12.ValueDescriptorIDs, descriptor1)
 	f12.ValueDescriptorIDs = append(f12.ValueDescriptorIDs, descriptor2)
 

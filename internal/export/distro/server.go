@@ -15,7 +15,6 @@ import (
 	"runtime"
 
 	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/export"
 	"github.com/edgexfoundry/edgex-go/pkg/clients"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 	"github.com/gorilla/mux"
@@ -52,9 +51,9 @@ func replyNotifyRegistrations(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	if update.Operation != export.NotifyUpdateAdd &&
-		update.Operation != export.NotifyUpdateUpdate &&
-		update.Operation != export.NotifyUpdateDelete {
+	if update.Operation != models.NotifyUpdateAdd &&
+		update.Operation != models.NotifyUpdateUpdate &&
+		update.Operation != models.NotifyUpdateDelete {
 		LoggingClient.Error(fmt.Sprintf("Invalid value for operation %s", update.Operation))
 		w.WriteHeader(http.StatusBadRequest)
 		return

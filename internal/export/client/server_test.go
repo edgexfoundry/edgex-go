@@ -18,7 +18,6 @@ import (
 	"testing"
 
 	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/export"
 	"github.com/edgexfoundry/edgex-go/pkg/clients"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
@@ -321,7 +320,7 @@ func TestRegistrationGetList(t *testing.T) {
 	}
 }
 
-func getRegistrations(t *testing.T, serverUrl string) []export.Registration {
+func getRegistrations(t *testing.T, serverUrl string) []models.Registration {
 	response, err := http.Get(serverUrl + clients.ApiRegistrationRoute)
 	if err != nil {
 		t.Errorf("Error getting registrations: %v", err)
@@ -333,7 +332,7 @@ func getRegistrations(t *testing.T, serverUrl string) []export.Registration {
 
 	var data []byte
 	data, _ = ioutil.ReadAll(response.Body)
-	var regs []export.Registration
+	var regs []models.Registration
 	if err := json.Unmarshal(data, &regs); err != nil {
 		t.Errorf("Registrations could not be parsed: %v", err)
 	}
