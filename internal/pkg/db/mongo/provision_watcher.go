@@ -15,7 +15,8 @@ package mongo
 
 import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
-	"github.com/edgexfoundry/edgex-go/pkg/models"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo/models"
+	contract "github.com/edgexfoundry/edgex-go/pkg/models"
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
 )
@@ -23,19 +24,19 @@ import (
 // Internal version of the provision watcher struct
 // Use this to handle DBRef
 type mongoProvisionWatcher struct {
-	models.ProvisionWatcher
+	contract.ProvisionWatcher
 }
 
 // Custom marshaling into mongo
 func (mpw mongoProvisionWatcher) GetBSON() (interface{}, error) {
 	return struct {
-		models.BaseObject `bson:",inline"`
-		Id                bson.ObjectId         `bson:"_id,omitempty"`
-		Name              string                `bson:"name"`           // unique name and identifier of the addressable
-		Identifiers       map[string]string     `bson:"identifiers"`    // set of key value pairs that identify type of of address (MAC, HTTP,...) and address to watch for (00-05-1B-A1-99-99, 10.0.0.1,...)
-		Profile           mgo.DBRef             `bson:"profile"`        // device profile that should be applied to the devices available at the identifier addresses
-		Service           mgo.DBRef             `bson:"service"`        // device service that owns the watcher
-		OperatingState    models.OperatingState `bson:"operatingState"` // operational state - either enabled or disabled
+		contract.BaseObject `bson:",inline"`
+		Id                  bson.ObjectId           `bson:"_id,omitempty"`
+		Name                string                  `bson:"name"`           // unique name and identifier of the addressable
+		Identifiers         map[string]string       `bson:"identifiers"`    // set of key value pairs that identify type of of address (MAC, HTTP,...) and address to watch for (00-05-1B-A1-99-99, 10.0.0.1,...)
+		Profile             mgo.DBRef               `bson:"profile"`        // device profile that should be applied to the devices available at the identifier addresses
+		Service             mgo.DBRef               `bson:"service"`        // device service that owns the watcher
+		OperatingState      contract.OperatingState `bson:"operatingState"` // operational state - either enabled or disabled
 	}{
 		BaseObject:     mpw.BaseObject,
 		Id:             mpw.Id,
@@ -50,13 +51,13 @@ func (mpw mongoProvisionWatcher) GetBSON() (interface{}, error) {
 // Custom unmarshaling out of mongo
 func (mpw *mongoProvisionWatcher) SetBSON(raw bson.Raw) error {
 	decoded := new(struct {
-		models.BaseObject `bson:",inline"`
-		Id                bson.ObjectId         `bson:"_id,omitempty"`
-		Name              string                `bson:"name"`           // unique name and identifier of the addressable
-		Identifiers       map[string]string     `bson:"identifiers"`    // set of key value pairs that identify type of of address (MAC, HTTP,...) and address to watch for (00-05-1B-A1-99-99, 10.0.0.1,...)
-		Profile           mgo.DBRef             `bson:"profile"`        // device profile that should be applied to the devices available at the identifier addresses
-		Service           mgo.DBRef             `bson:"service"`        // device service that owns the watcher
-		OperatingState    models.OperatingState `bson:"operatingState"` // operational state - either enabled or disabled
+		contract.BaseObject `bson:",inline"`
+		Id                  bson.ObjectId           `bson:"_id,omitempty"`
+		Name                string                  `bson:"name"`           // unique name and identifier of the addressable
+		Identifiers         map[string]string       `bson:"identifiers"`    // set of key value pairs that identify type of of address (MAC, HTTP,...) and address to watch for (00-05-1B-A1-99-99, 10.0.0.1,...)
+		Profile             mgo.DBRef               `bson:"profile"`        // device profile that should be applied to the devices available at the identifier addresses
+		Service             mgo.DBRef               `bson:"service"`        // device service that owns the watcher
+		OperatingState      contract.OperatingState `bson:"operatingState"` // operational state - either enabled or disabled
 	})
 
 	bsonErr := raw.Unmarshal(decoded)
@@ -83,18 +84,17 @@ func (mpw *mongoProvisionWatcher) SetBSON(raw bson.Raw) error {
 	servCol := s.DB(m.database.Name).C(db.DeviceService)
 
 	var mdp mongoDeviceProfile
-	var mds mongoDeviceService
+	var ds models.DeviceService
 
 	if err := profCol.FindId(decoded.Profile.Id).One(&mdp); err != nil {
 		return err
 	}
 
-	if err := servCol.FindId(decoded.Service.Id).One(&mds); err != nil {
+	if err := servCol.FindId(decoded.Service.Id).One(&ds); err != nil {
 		return err
 	}
 
 	mpw.Profile = mdp.DeviceProfile
-	mpw.Service = mds.DeviceService.ToContract()
-
-	return nil
+	mpw.Service, err = ds.ToContract(m)
+	return err
 }

@@ -29,32 +29,31 @@ type Service struct {
 	LastReported    int64                   `bson:"lastReported"`   // operational state - either enabled or disabled
 	OperatingState  contract.OperatingState `bson:"operatingState"` // operational state - ether enabled or disableddc
 	Labels          []string                `bson:"labels"`         // tags or other labels applied to the device service for search or other identification needs
-	Addressable     Addressable
-	dbRefs          []mgo.DBRef `bson:"addressable"` // address (MQTT topic, HTTP address, serial bus, etc.) for reaching the service
+	Addressable     mgo.DBRef               `bson:"addressable"`    // address (MQTT topic, HTTP address, serial bus, etc.) for reaching the service
 }
 
-func (s *Service) ToContract() contract.Service {
+func (s *Service) ToContract(transform addressableTransform) (c contract.Service, err error) {
 	// Always hand back the UUID as the contract command ID unless it's blank (an old command, for example blackbox test scripts)
 	id := s.Uuid
 	if id == "" {
 		id = s.Id.Hex()
 	}
 
-	return contract.Service{
-		DescribedObject: s.DescribedObject.ToContract(),
-		Id:              id,
-		Name:            s.Name,
-		LastConnected:   s.LastConnected,
-		LastReported:    s.LastReported,
-		OperatingState:  s.OperatingState,
-		Labels:          s.Labels,
-		Addressable:     s.Addressable.ToContract(),
-	}
+	c.DescribedObject = s.DescribedObject.ToContract()
+	c.Id = id
+	c.Name = s.Name
+	c.LastConnected = s.LastConnected
+	c.LastReported = s.LastReported
+	c.OperatingState = s.OperatingState
+	c.Labels = s.Labels
+
+	a, err := transform.DBRefToAddressable(s.Addressable)
+	c.Addressable = a.ToContract()
+	return
 }
 
-func (s *Service) FromContract(from contract.Service) error {
-	var err error
-	s.Id, s.Uuid, err = FromContractId(from.Id)
+func (s *Service) FromContract(from contract.Service, transform addressableTransform) (err error) {
+	s.Id, s.Uuid, err = fromContractId(from.Id)
 	if err != nil {
 		return err
 	}
@@ -65,8 +64,12 @@ func (s *Service) FromContract(from contract.Service) error {
 	s.LastReported = from.LastReported
 	s.OperatingState = from.OperatingState
 	s.Labels = from.Labels
-	if err = s.Addressable.FromContract(from.Addressable); err != nil {
-		return err
+
+	var addrModel Addressable
+	err = addrModel.FromContract(from.Addressable)
+	if err != nil {
+		return
 	}
-	return nil
+	s.Addressable, err = transform.AddressableToDBRef(addrModel)
+	return
 }

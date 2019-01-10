@@ -16,8 +16,14 @@ package models
 import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	contract "github.com/edgexfoundry/edgex-go/pkg/models"
+	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
 )
+
+type addressableTransform interface {
+	DBRefToAddressable(dbRef mgo.DBRef) (a Addressable, err error)
+	AddressableToDBRef(a Addressable) (dbRef mgo.DBRef, err error)
+}
 
 type Addressable struct {
 	Id         bson.ObjectId `bson:"_id,omitempty"`
@@ -37,7 +43,7 @@ type Addressable struct {
 	Origin     int64         `bson:"origin"`
 }
 
-func (a Addressable) ToContract() contract.Addressable {
+func (a *Addressable) ToContract() contract.Addressable {
 	// Always hand back the UUID as the contract event ID unless it's blank (an old event, for example blackbox test scripts
 	id := a.Uuid
 	if id == "" {
@@ -65,7 +71,7 @@ func (a Addressable) ToContract() contract.Addressable {
 
 func (a *Addressable) FromContract(from contract.Addressable) error {
 	var err error
-	a.Id, a.Uuid, err = FromContractId(from.Id)
+	a.Id, a.Uuid, err = fromContractId(from.Id)
 	if err != nil {
 		return err
 	}

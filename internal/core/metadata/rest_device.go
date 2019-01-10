@@ -81,16 +81,17 @@ func restAddNewDevice(w http.ResponseWriter, r *http.Request) {
 
 	// Service Check
 	// Try by name
-	d.Service, err = dbClient.GetDeviceServiceByName(d.Service.Service.Name)
+	service, err := dbClient.GetDeviceServiceByName(d.Service.Service.Name)
 	if err != nil {
 		// Try by ID
-		d.Service, err = dbClient.GetDeviceServiceById(d.Service.Service.Id)
+		service, err = dbClient.GetDeviceServiceById(d.Service.Service.Id)
 		if err != nil {
 			LoggingClient.Error(err.Error())
 			http.Error(w, err.Error()+": A device must be associated with a device service", http.StatusBadRequest)
 			return
 		}
 	}
+	d.Service = service
 
 	// Profile Check
 	// Try by name

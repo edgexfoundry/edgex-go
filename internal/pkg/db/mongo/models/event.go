@@ -34,7 +34,7 @@ type Event struct {
 	dbRefs   []mgo.DBRef
 }
 
-func (e Event) ToContract() contract.Event {
+func (e *Event) ToContract() contract.Event {
 	// Always hand back the UUID as the contract event ID unless it's blank (an old event, for example blackbox test scripts
 	id := e.Uuid
 	if id == "" {
@@ -58,7 +58,7 @@ func (e Event) ToContract() contract.Event {
 
 func (e *Event) FromContract(from contract.Event) error {
 	var err error
-	e.Id, e.Uuid, err = FromContractId(from.ID)
+	e.Id, e.Uuid, err = fromContractId(from.ID)
 	if err != nil {
 		return err
 	}
@@ -87,7 +87,7 @@ func (e *Event) FromContract(from contract.Event) error {
 }
 
 // Custom marshaling into mongo
-func (e Event) GetBSON() (interface{}, error) {
+func (e *Event) GetBSON() (interface{}, error) {
 	// Turn the readings into DBRef objects
 	var readings []mgo.DBRef
 	for _, reading := range e.Readings {
@@ -166,7 +166,7 @@ func (e *Event) SetBSON(raw bson.Raw) error {
 // In order to fully separate the database access and state concerns, I have to provide a getter
 // for the internal list of DBRefs. I do not want to pollute the property-based signature of the
 // mongo/model/event type.
-func (e Event) GetDBRefs() []mgo.DBRef {
+func (e *Event) GetDBRefs() []mgo.DBRef {
 	if e.dbRefs == nil {
 		return []mgo.DBRef{}
 	}

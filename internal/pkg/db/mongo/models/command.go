@@ -66,7 +66,7 @@ func (c *Command) ToContract() contract.Command {
 
 func (c *Command) FromContract(from contract.Command) error {
 	var err error
-	c.Id, c.Uuid, err = FromContractId(from.Id)
+	c.Id, c.Uuid, err = fromContractId(from.Id)
 	if err != nil {
 		return err
 	}

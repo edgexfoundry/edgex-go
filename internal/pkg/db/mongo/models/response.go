@@ -30,7 +30,7 @@ type Response struct {
 	ExpectedValues []string `bson:"expectedValues"`
 }
 
-func (r Response) ToContract() contract.Response {
+func (r *Response) ToContract() contract.Response {
 	return contract.Response{
 		Code:           r.Code,
 		Description:    r.Description,

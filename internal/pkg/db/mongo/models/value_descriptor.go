@@ -36,7 +36,7 @@ type ValueDescriptor struct {
 	Labels       []string      `bson:"labels,omitempty"`
 }
 
-func (v ValueDescriptor) ToContract() contract.ValueDescriptor {
+func (v *ValueDescriptor) ToContract() contract.ValueDescriptor {
 	// Always hand back the UUID as the contract event ID unless it's blank (an old event, for example blackbox test scripts)
 	id := v.Uuid
 	if id == "" {
@@ -65,7 +65,7 @@ func (v ValueDescriptor) ToContract() contract.ValueDescriptor {
 
 func (v *ValueDescriptor) FromContract(from contract.ValueDescriptor) error {
 	var err error
-	v.Id, v.Uuid, err = FromContractId(from.Id)
+	v.Id, v.Uuid, err = fromContractId(from.Id)
 	if err != nil {
 		return err
 	}
