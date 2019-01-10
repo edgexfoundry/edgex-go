@@ -49,7 +49,7 @@ func decodeReading(reader io.Reader) (reading contract.Reading, err error) {
 		return contract.Reading{}, errors.NewErrJsonDecoding(reading.Name)
 	}
 
-	if Configuration.ValidateCheck {
+	if Configuration.Writable.ValidateCheck {
 		err = validateReading(reading)
 
 		if err != nil {
@@ -167,7 +167,7 @@ func updateReading(reading contract.Reading) error {
 	}
 
 	if reading.Value != "" || reading.Name != "" {
-		if Configuration.ValidateCheck {
+		if Configuration.Writable.ValidateCheck {
 			fmt.Println(to)
 
 			err = validateReading(to)
@@ -221,7 +221,7 @@ func getReadingsByValueDescriptor(name string, limit int) (readings []contract.R
 	}
 
 	// Check for value descriptor
-	if Configuration.ValidateCheck {
+	if Configuration.Writable.ValidateCheck {
 		_, err = getValueDescriptorByName(name)
 		if err != nil {
 			return []contract.Reading{}, err

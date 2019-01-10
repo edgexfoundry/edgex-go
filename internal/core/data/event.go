@@ -80,7 +80,7 @@ func addNewEvent(e contract.Event) (string, error) {
 		return "", err
 	}
 
-	if Configuration.ValidateCheck {
+	if Configuration.Writable.ValidateCheck {
 		LoggingClient.Debug("Validation enabled, parsing events")
 		for reading := range e.Readings {
 			// Check value descriptor
@@ -101,7 +101,7 @@ func addNewEvent(e contract.Event) (string, error) {
 	}
 
 	// Add the event and readings to the database
-	if Configuration.PersistData {
+	if Configuration.Writable.PersistData {
 		id, err := dbClient.AddEvent(e)
 		if err != nil {
 			return "", err

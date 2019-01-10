@@ -206,7 +206,7 @@ func TestAddEventWithPersistence(t *testing.T) {
 	reset()
 	myMock := newAddEventMockDB(true)
 	dbClient = myMock
-	Configuration.PersistData = true
+	Configuration.Writable.PersistData = true
 	evt := models.Event{Device: testDeviceName, Origin: testOrigin, Readings: buildReadings()}
 	//wire up handlers to listen for device events
 	bitEvents := make([]bool, 2)
@@ -215,7 +215,7 @@ func TestAddEventWithPersistence(t *testing.T) {
 	go handleDomainEvents(bitEvents, &wg, t)
 
 	_, err := addNewEvent(evt)
-	Configuration.PersistData = false
+	Configuration.Writable.PersistData = false
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -234,7 +234,7 @@ func TestAddEventNoPersistence(t *testing.T) {
 	reset()
 	myMock := newAddEventMockDB(false)
 	dbClient = myMock
-	Configuration.PersistData = false
+	Configuration.Writable.PersistData = false
 	evt := models.Event{Device: testDeviceName, Origin: testOrigin, Readings: buildReadings()}
 	//wire up handlers to listen for device events
 	bitEvents := make([]bool, 2)
@@ -270,8 +270,8 @@ func TestAddEventWithValidationValueDescriptorExistsAndIsInvalid(t *testing.T) {
 
 	dbClient = myMock
 
-	Configuration.ValidateCheck = true
-	Configuration.PersistData = false
+	Configuration.Writable.ValidateCheck = true
+	Configuration.Writable.PersistData = false
 
 	evt := models.Event{Device: testDeviceName, Origin: testOrigin, Readings: buildReadings()[0:1]}
 	//wire up handlers to listen for device events
@@ -295,9 +295,9 @@ func TestAddEventWithValidationValueDescriptorNotFound(t *testing.T) {
 	})).Return(models.ValueDescriptor{}, db.ErrNotFound)
 
 	dbClient = myMock
-	Configuration.ValidateCheck = true
+	Configuration.Writable.ValidateCheck = true
 
-	Configuration.PersistData = false
+	Configuration.Writable.PersistData = false
 	evt := models.Event{Device: testDeviceName, Origin: testOrigin, Readings: buildReadings()}
 	//wire up handlers to listen for device events
 	bitEvents := make([]bool, 2)
@@ -323,9 +323,9 @@ func TestAddEventWithValidationValueDescriptorDBError(t *testing.T) {
 	})).Return(models.ValueDescriptor{}, fmt.Errorf("some error"))
 
 	dbClient = myMock
-	Configuration.ValidateCheck = true
+	Configuration.Writable.ValidateCheck = true
 
-	Configuration.PersistData = false
+	Configuration.Writable.PersistData = false
 	evt := models.Event{Device: testDeviceName, Origin: testOrigin, Readings: buildReadings()[1:]}
 	//wire up handlers to listen for device events
 	bitEvents := make([]bool, 2)

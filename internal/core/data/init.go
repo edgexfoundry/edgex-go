@@ -205,8 +205,8 @@ func connectToConsul(conf *ConfigurationStruct) (*ConfigurationStruct, error) {
 func listenForConfigChanges() {
 	errCh := make(chan error)
 	dec := consulclient.NewConsulDecoder(Configuration.Registry)
-	dec.Target = &ConfigurationStruct{}
-	dec.Prefix = internal.ConfigRegistryStem + internal.CoreDataServiceKey
+	dec.Target = &WritableInfo{}
+	dec.Prefix = internal.ConfigRegistryStem + internal.CoreDataServiceKey + internal.WritableKey
 	dec.ErrCh = errCh
 	dec.UpdateCh = chConfig
 
@@ -220,11 +220,11 @@ func listenForConfigChanges() {
 			LoggingClient.Error(ex.Error())
 		case raw, ok := <-chConfig:
 			if ok {
-				actual, ok := raw.(*ConfigurationStruct)
+				actual, ok := raw.(*WritableInfo)
 				if !ok {
 					LoggingClient.Error("listenForConfigChanges() type check failed")
 				}
-				Configuration = actual //Mutex needed?
+				Configuration.Writable = *actual
 			} else {
 				return
 			}
