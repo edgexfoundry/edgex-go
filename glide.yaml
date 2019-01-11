@@ -12,6 +12,8 @@ import:
   version: =1.1.0
   subpackages:
   - api
+- package: github.com/influxdata/influxdb
+  version: =1.5.5
 - package: github.com/mitchellh/consulstructure
   version: b407c521973b7b902db2f09e65dbf5cb10f2dc5f
 - package: github.com/pebbe/zmq4
