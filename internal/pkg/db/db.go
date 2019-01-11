@@ -44,11 +44,13 @@ const (
 	ScheduleEvent    = "scheduleEvent"
 	Schedule         = "schedule"
 	ProvisionWatcher = "provisionWatcher"
+	Interval         = "interval"
+	IntervalAction   = "intervalAction"
 )
 
 var (
 	ErrNotFound            = errors.New("Item not found")
-	ErrUnsupportedDatabase = errors.New("Unsuppored database type")
+	ErrUnsupportedDatabase = errors.New("Unsupported database type")
 	ErrInvalidObjectId     = errors.New("Invalid object ID")
 	ErrNotUnique           = errors.New("Resource already exists")
 	ErrCommandStillInUse   = errors.New("Command is still in use by device profiles")

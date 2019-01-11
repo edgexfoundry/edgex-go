@@ -41,27 +41,11 @@ func main() {
 		return
 	}
 
-	// ensure metadata is up
-	deps := make(chan string, 2)
-	go func(ch chan string) {
-		for {
-			select {
-			case m, ok := <-ch:
-				if ok {
-					scheduler.LoggingClient.Info(m)
-				} else {
-					return
-				}
-			}
-		}
-	}(deps)
-	scheduler.CheckStatus(params, scheduler.RetryService, deps)
-
 	scheduler.LoggingClient.Info(fmt.Sprintf("Service dependencies resolved...%s %s ", internal.SupportSchedulerServiceKey, edgex.Version))
 	scheduler.LoggingClient.Info(fmt.Sprintf("Starting %s %s ", internal.SupportSchedulerServiceKey, edgex.Version))
 
 	// Bootstrap schedulers
-	err := scheduler.AddSchedulers()
+	err := scheduler.LoadScheduler()
 	if err != nil {
 		scheduler.LoggingClient.Error(fmt.Sprintf("Failed to load schedules and events %s", err.Error()))
 	}

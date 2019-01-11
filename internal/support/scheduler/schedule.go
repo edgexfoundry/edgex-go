@@ -9,35 +9,31 @@ package scheduler
 import (
 	"errors"
 	"fmt"
+	contract "github.com/edgexfoundry/edgex-go/pkg/models"
+	queueV1 "gopkg.in/eapache/queue.v1"
 	"io/ioutil"
 	"net/http"
 	"strings"
 	"sync"
 	"time"
-
-	"github.com/edgexfoundry/edgex-go/pkg/models"
-	queueV1 "gopkg.in/eapache/queue.v1"
 )
 
-const (
-	ScheduleInterval = 500
-)
 
-//the schedule specific shared variables
+//the interval specific shared variables
 var (
-	mutex                                 sync.Mutex
-	scheduleQueue                         = queueV1.New()                     // global schedule queue
-	scheduleIdToContextMap                = make(map[string]*ScheduleContext) // map : schedule id -> schedule context
-	scheduleNameToContextMap              = make(map[string]*ScheduleContext) // map : schedule name -> schedule context
-	scheduleEventIdToScheduleIdMap        = make(map[string]string)           // map : schedule event id -> schedule id
-	scheduleEventNameToScheduleIdMap      = make(map[string]string)           // map : schedule event name -> schedule id
-	scheduleEventNameToScheduleEventIdMap = make(map[string]string)           // map : schedule event name -> schedule event id
+	mutex                                   sync.Mutex
+	intervalQueue                           = queueV1.New()                     // global interval queue
+	intervalIdToContextMap                  = make(map[string]*IntervalContext) // map : interval id -> interval context
+	intervalNameToContextMap                = make(map[string]*IntervalContext) // map : interval name -> interval context
+	intervalActionIdToIntervalMap           = make(map[string]string)           // map : interval action id -> interval id
+	intervalActionNameToIntervalMap         = make(map[string]string)           // map : interval action name -> interval id
+	intervalActionNameToIntervalActionIdMap = make(map[string]string)           // map : interval action name -> interval action id
 )
 
 func StartTicker() {
 	go func() {
 		for range ticker.C {
-			triggerSchedule()
+			triggerInterval()
 		}
 	}()
 }
@@ -51,358 +47,358 @@ func clearQueue() {
 	mutex.Lock()
 	defer mutex.Unlock()
 
-	for scheduleQueue.Length() > 0 {
-		scheduleQueue.Remove()
+	for intervalQueue.Length() > 0 {
+		intervalQueue.Remove()
 	}
 }
 
 func clearMaps() {
-	scheduleIdToContextMap = make(map[string]*ScheduleContext)   // map : schedule id -> schedule context
-	scheduleNameToContextMap = make(map[string]*ScheduleContext) // map : schedule name -> schedule context
-	scheduleEventIdToScheduleIdMap = make(map[string]string)     // map : schedule event id -> schedule id
-	scheduleEventNameToScheduleIdMap = make(map[string]string)   // map : schedule event name -> schedule id
-	scheduleEventNameToScheduleEventIdMap = make(map[string]string)
+	intervalIdToContextMap = make(map[string]*IntervalContext)        // map : interval id -> interval context
+	intervalNameToContextMap = make(map[string]*IntervalContext)      // map : interval name -> interval context
+	intervalActionIdToIntervalMap = make(map[string]string)           // map : interval action id -> interval id
+	intervalActionNameToIntervalMap = make(map[string]string)         // map : interval action name -> interval id
+	intervalActionNameToIntervalActionIdMap = make(map[string]string) // map : interval action name -> interval actionId
 }
 
-func addScheduleOperation(scheduleId models.Schedule, context *ScheduleContext) {
-	scheduleIdToContextMap[scheduleId.Id.Hex()] = context
-	scheduleNameToContextMap[scheduleId.Name] = context
-	scheduleQueue.Add(context)
+func addIntervalOperation(intervalId contract.Interval, context *IntervalContext) {
+	intervalIdToContextMap[intervalId.ID] = context
+	intervalNameToContextMap[intervalId.Name] = context
+	intervalQueue.Add(context)
 }
 
-func deleteScheduleOperation(schedule models.Schedule, scheduleContext *ScheduleContext) {
-	scheduleContext.MarkedDeleted = true
-	scheduleIdToContextMap[schedule.Id.Hex()] = scheduleContext
-	scheduleNameToContextMap[schedule.Name] = scheduleContext
-	delete(scheduleIdToContextMap, schedule.Id.Hex())
+func deleteIntervalOperation(interval contract.Interval, intervalContext *IntervalContext) {
+	intervalContext.MarkedDeleted = true
+	intervalIdToContextMap[interval.ID] = intervalContext
+	intervalNameToContextMap[interval.Name] = intervalContext
+	delete(intervalIdToContextMap, interval.ID)
 }
 
-func addScheduleEventOperation(schedule models.Schedule, scheduleEvent models.ScheduleEvent) {
-	scheduleContext, _ := scheduleIdToContextMap[schedule.Id.Hex()]
-	scheduleContext.ScheduleEventsMap[scheduleEvent.Id.Hex()] = scheduleEvent
-	scheduleEventIdToScheduleIdMap[scheduleEvent.Id.Hex()] = schedule.Id.Hex()
-	scheduleEventNameToScheduleIdMap[scheduleEvent.Name] = schedule.Id.Hex()
-	scheduleEventNameToScheduleEventIdMap[scheduleEvent.Name] = scheduleEvent.Id.Hex()
+func addIntervalActionOperation(interval contract.Interval, intervalAction contract.IntervalAction) {
+	intervalContext, _ := intervalIdToContextMap[interval.ID]
+	intervalContext.IntervalActionsMap[intervalAction.ID] = intervalAction
+	intervalActionIdToIntervalMap[intervalAction.ID] = interval.ID
+	intervalActionNameToIntervalMap[intervalAction.Name] = interval.ID
+	intervalActionNameToIntervalActionIdMap[intervalAction.Name] = intervalAction.ID
 }
 
-func querySchedule(scheduleId string) (models.Schedule, error) {
+func (qc *QueueClient) Connect()(string, error){
+	return "alive..",nil
+}
+func (qc *QueueClient) QueryIntervalByID(intervalId string) (contract.Interval, error) {
 	mutex.Lock()
 	defer mutex.Unlock()
 
-	scheduleContext, exists := scheduleIdToContextMap[scheduleId]
+	intervalContext, exists := intervalIdToContextMap[intervalId]
 	if !exists {
-		logMsg := fmt.Sprintf("scheduler could not find a schedule context with schedule id : %s", scheduleId)
+		logMsg := fmt.Sprintf("scheduler could not find a interval context with interval id : %s", intervalId)
 		LoggingClient.Info(logMsg)
-		return models.Schedule{}, errors.New(logMsg)
+		return contract.Interval{}, errors.New(logMsg)
 	}
 
-	LoggingClient.Debug(fmt.Sprintf("querying found the schedule with id : %s", scheduleId))
+	LoggingClient.Debug(fmt.Sprintf("querying found the interval with id : %s", intervalId))
 
-	return scheduleContext.Schedule, nil
+	return intervalContext.Interval, nil
 }
 
-func queryScheduleByName(scheduleName string) (models.Schedule, error) {
+func (qc *QueueClient) QueryIntervalByName(intervalName string) (contract.Interval, error) {
 	mutex.Lock()
 	defer mutex.Unlock()
 
-	scheduleContext, exists := scheduleNameToContextMap[scheduleName]
+	intervalContext, exists := intervalNameToContextMap[intervalName]
 	if !exists {
-		logMsg := fmt.Sprintf("scheduler could not find schedule id with schedule with name : %s", scheduleName)
+		logMsg := fmt.Sprintf("scheduler could not find interval with interval with name : %s", intervalName)
 		LoggingClient.Info(logMsg)
-		return models.Schedule{}, errors.New(logMsg)
+		return contract.Interval{}, errors.New(logMsg)
 	}
 
-	LoggingClient.Debug(fmt.Sprintf("scheduler found the schedule with name : %s", scheduleName))
+	LoggingClient.Debug(fmt.Sprintf("scheduler found the interval with name : %s", intervalName))
 
-	return scheduleContext.Schedule, nil
+	return intervalContext.Interval, nil
 }
 
-func addSchedule(schedule models.Schedule) error {
+func (qc *QueueClient) AddIntervalToQueue(interval contract.Interval) error {
 	mutex.Lock()
 	defer mutex.Unlock()
 
-	scheduleId := schedule.Id.Hex()
-	LoggingClient.Debug(fmt.Sprintf("adding the schedule with id : %s at time %s", scheduleId, schedule.Start))
+	intervalId := interval.ID
+	LoggingClient.Debug(fmt.Sprintf("adding the interval with id : %s at time %s", intervalId, interval.Start))
 
-	if _, exists := scheduleIdToContextMap[scheduleId]; exists {
-		LoggingClient.Debug(fmt.Sprintf("the schedule context with id : %s already exists", scheduleId))
+	if _, exists := intervalIdToContextMap[intervalId]; exists {
+		LoggingClient.Debug(fmt.Sprintf("the interval context with id : %s already exists", intervalId))
 		return nil
 	}
 
-	context := ScheduleContext{
-		ScheduleEventsMap: make(map[string]models.ScheduleEvent),
-		MarkedDeleted:     false,
+	context := IntervalContext{
+		IntervalActionsMap: make(map[string]contract.IntervalAction),
+		MarkedDeleted:      false,
 	}
 
-	LoggingClient.Debug(fmt.Sprintf("resetting the schedule with id : %s", scheduleId))
-	context.Reset(schedule)
+	LoggingClient.Debug(fmt.Sprintf("resetting the interval with id : %s", intervalId))
+	context.Reset(interval)
 
-	addScheduleOperation(schedule, &context)
+	addIntervalOperation(interval, &context)
 
-	LoggingClient.Debug(fmt.Sprintf("added the schedule with id : %s ", scheduleId))
+	LoggingClient.Info(fmt.Sprintf("added the interval with id : %s into the scheduler queue", intervalId))
 
 	return nil
 }
 
-func updateSchedule(schedule models.Schedule) error {
+func (qc *QueueClient) UpdateIntervalInQueue(interval contract.Interval) error {
 	mutex.Lock()
 	defer mutex.Unlock()
 
-	LoggingClient.Debug("updating the schedule with id : " + schedule.Id.Hex())
-
-	scheduleId := schedule.Id.Hex()
-	context, exists := scheduleIdToContextMap[scheduleId]
+	intervalId := interval.ID
+	context, exists := intervalIdToContextMap[intervalId]
 	if !exists {
-		LoggingClient.Error("the schedule context with id " + scheduleId + " does not exist ")
-		return errors.New("the schedule context with id " + scheduleId + " does not exist ")
+		LoggingClient.Error("the interval context with id " + intervalId + " does not exist ")
+		return errors.New("the interval context with id " + intervalId + " does not exist ")
 	}
 
-	LoggingClient.Debug("resetting the schedule with id " + scheduleId)
-	context.Reset(schedule)
+	LoggingClient.Debug(fmt.Sprintf("resting the interval context with id: %s in the scheduler queue",intervalId))
+	context.Reset(interval)
 
-	LoggingClient.Debug("updated the schedule with id : " + scheduleId)
+	LoggingClient.Info(fmt.Sprintf("updated the interval with id: %s in the scheduler queue",intervalId))
 
 	return nil
 }
 
-func removeSchedule(scheduleId string) error {
+func (qc *QueueClient) RemoveIntervalInQueue(intervalId string) error {
 	mutex.Lock()
 	defer mutex.Unlock()
 
-	LoggingClient.Debug("removing the schedule with id : " + scheduleId)
+	LoggingClient.Debug(fmt.Sprintf("removing the interval with id: %s ", intervalId))
 
-	scheduleContext, exists := scheduleIdToContextMap[scheduleId]
+	intervalContext, exists := intervalIdToContextMap[intervalId]
 	if !exists {
-		logMsg := fmt.Sprintf("scheduler could not find schedule context with schedule id : %s", scheduleId)
+		logMsg := fmt.Sprintf("scheduler could not find interval context with interval id : %s", intervalId)
 		return errors.New(logMsg)
 	}
 
-	LoggingClient.Debug("removing all the mappings of schedule event id to schedule id : " + scheduleId)
-	for eventId := range scheduleContext.ScheduleEventsMap {
-		delete(scheduleEventIdToScheduleIdMap, eventId)
+	LoggingClient.Debug(fmt.Sprintf("removing all the mappings of interval action id to interval id: %s ", intervalId))
+	for eventId := range intervalContext.IntervalActionsMap {
+		delete(intervalActionIdToIntervalMap, eventId)
 	}
 
-	deleteScheduleOperation(scheduleContext.Schedule, scheduleContext)
+	deleteIntervalOperation(intervalContext.Interval, intervalContext)
 
-	LoggingClient.Debug("removed the schedule with id : " + scheduleId)
+	LoggingClient.Info(fmt.Sprintf("removed the interval with id: %s from the scheduler queue",intervalId))
 
 	return nil
 }
 
-func queryScheduleEvent(scheduleEventId string) (models.ScheduleEvent, error) {
+func (qc *QueueClient) QueryIntervalActionByID(intervalActionId string) (contract.IntervalAction, error) {
 	mutex.Lock()
 	defer mutex.Unlock()
 
-	scheduleId, exists := scheduleEventIdToScheduleIdMap[scheduleEventId]
+	intervalId, exists := intervalActionIdToIntervalMap[intervalActionId]
 	if !exists {
-		logMsg := fmt.Sprintf("scheduler could not find schedule id with schedule event id : %s", scheduleEventId)
-		return models.ScheduleEvent{}, errors.New(logMsg)
+		logMsg := fmt.Sprintf("scheduler could not find interval id with interval action id : %s", intervalActionId)
+		return contract.IntervalAction{}, errors.New(logMsg)
 	}
 
-	scheduleContext, exists := scheduleIdToContextMap[scheduleId]
+	intervalContext, exists := intervalIdToContextMap[intervalId]
 	if !exists {
-		LoggingClient.Warn("scheduler could not find a schedule context with schedule id : " + scheduleId)
-		return models.ScheduleEvent{}, nil
+		LoggingClient.Warn("scheduler could not find a interval context with interval id : " + intervalId)
+		return contract.IntervalAction{}, nil
 	}
 
-	scheduleEvent, exists := scheduleContext.ScheduleEventsMap[scheduleEventId]
+	intervalAction, exists := intervalContext.IntervalActionsMap[intervalActionId]
 	if !exists {
-		logMsg := fmt.Sprintf("scheduler could not find schedule event with schedule event id : %s", scheduleEventId)
-		return models.ScheduleEvent{}, errors.New(logMsg)
+		logMsg := fmt.Sprintf("scheduler could not find interval action with interval action id : %s", intervalActionId)
+		return contract.IntervalAction{}, errors.New(logMsg)
 	}
 
-	return scheduleEvent, nil
+	return intervalAction, nil
 }
 
-func queryScheduleEventByName(scheduleEventName string) (models.ScheduleEvent, error) {
+func (qc *QueueClient) QueryIntervalActionByName(intervalActionName string) (contract.IntervalAction, error) {
 	mutex.Lock()
 	defer mutex.Unlock()
 
-	scheduleId, exists := scheduleEventNameToScheduleIdMap[scheduleEventName]
+	intervalId, exists := intervalActionNameToIntervalMap[intervalActionName]
 	if !exists {
-		logMsg := fmt.Sprintf("scheduler could not find schedule id with schedule event name : %s", scheduleEventName)
-		LoggingClient.Error(logMsg)
-		return models.ScheduleEvent{}, errors.New(logMsg)
+		logMsg := fmt.Sprintf("scheduler could not find interval id with intervalAction name : %s", intervalActionName)
+		LoggingClient.Warn(logMsg)
+		return contract.IntervalAction{}, errors.New(logMsg)
 	}
 
-	scheduleEventId, exists := scheduleEventNameToScheduleEventIdMap[scheduleEventName]
+	intervalActionId, exists := intervalActionNameToIntervalActionIdMap[intervalActionName]
 	if !exists {
-		logMsg := fmt.Sprintf("scheduler could not find schedule event id with schedule event name : %s", scheduleEventName)
-		LoggingClient.Error(logMsg)
-		return models.ScheduleEvent{}, errors.New(logMsg)
+		logMsg := fmt.Sprintf("scheduler could not find intervalAction id with intervalAction name : %s", intervalActionName)
+		LoggingClient.Warn(logMsg)
+		return contract.IntervalAction{}, errors.New(logMsg)
 	}
 
-	scheduleContext, exists := scheduleIdToContextMap[scheduleId]
+	intervalContext, exists := intervalIdToContextMap[intervalId]
 	if !exists {
-		logMsg := fmt.Sprintf("could not find a schedule context with schedule id : %s", scheduleId)
-		LoggingClient.Error(logMsg)
-		return models.ScheduleEvent{}, errors.New(logMsg)
+		logMsg := fmt.Sprintf("scheduler could not find a interval context with interval id : %s", intervalId)
+		LoggingClient.Warn(logMsg)
+		return contract.IntervalAction{}, errors.New(logMsg)
 	}
 
-	scheduleEvent, exists := scheduleContext.ScheduleEventsMap[scheduleEventId]
+	intervalAction, exists := intervalContext.IntervalActionsMap[intervalActionId]
 	if !exists {
-		logMsg := fmt.Sprintf("could not find schedule event with schedule event id :  %s", scheduleContext.Schedule.Id.Hex())
-		LoggingClient.Error(logMsg)
-		return models.ScheduleEvent{}, errors.New(logMsg)
+		logMsg := fmt.Sprintf("scheduler could not find intervalAction with intervalAction id :  %s", intervalContext.Interval.ID)
+		LoggingClient.Warn(logMsg)
+		return contract.IntervalAction{}, errors.New(logMsg)
 	}
 
-	return scheduleEvent, nil
+	return intervalAction, nil
 }
 
-func addScheduleEvent(scheduleEvent models.ScheduleEvent) error {
+func (qc *QueueClient) AddIntervalActionToQueue(intervalAction contract.IntervalAction) error {
 	mutex.Lock()
 	defer mutex.Unlock()
 
-	scheduleEventId := scheduleEvent.Id.Hex()
-	scheduleName := scheduleEvent.Schedule
+	intervalActionId := intervalAction.ID
+	intervalName := intervalAction.Interval
 
-	LoggingClient.Debug(fmt.Sprintf("adding the schedule event with id  : %s to schedule : %s ", scheduleEventId, scheduleName))
+	LoggingClient.Debug(fmt.Sprintf("adding the intervalAction with id  : %s to interval : %s into the queue", intervalActionId, intervalName))
 
-	scheduleContext := scheduleNameToContextMap[scheduleName]
+	intervalContext := intervalNameToContextMap[intervalName]
 
-	schedule := scheduleContext.Schedule
+	interval := intervalContext.Interval
 
-	scheduleId := schedule.Id.Hex()
-	LoggingClient.Debug(fmt.Sprintf("check the schedule with id : %s exists.", scheduleId))
+	intervalId := interval.ID
+	LoggingClient.Debug(fmt.Sprintf("check the interval with id : %s exists.", intervalId))
 
-	if _, exists := scheduleIdToContextMap[scheduleId]; !exists {
-		context := ScheduleContext{
-			ScheduleEventsMap: make(map[string]models.ScheduleEvent),
-			MarkedDeleted:     false,
+	if _, exists := intervalIdToContextMap[intervalId]; !exists {
+		context := IntervalContext{
+			IntervalActionsMap: make(map[string]contract.IntervalAction),
+			MarkedDeleted:      false,
 		}
 
-		context.Reset(schedule)
+		context.Reset(interval)
 
-		addScheduleOperation(schedule, &context)
+		addIntervalOperation(interval, &context)
 	}
 
-	addScheduleEventOperation(schedule, scheduleEvent)
+	addIntervalActionOperation(interval, intervalAction)
 
-	LoggingClient.Debug(fmt.Sprintf("added the schedule event with id : %s to schedule : %s", scheduleEventId, scheduleName))
+	LoggingClient.Info(fmt.Sprintf("added the intervalAction with id: %s to interal: %s into the queue", intervalActionId, intervalName))
 
 	return nil
 }
 
-func updateScheduleEvent(scheduleEvent models.ScheduleEvent) error {
+func (qc *QueueClient) UpdateIntervalActionQueue(intervalAction contract.IntervalAction) error {
 	mutex.Lock()
 	defer mutex.Unlock()
 
-	scheduleEventId := scheduleEvent.Id.Hex()
+	intervalActionId := intervalAction.ID
 
-	LoggingClient.Debug("updating the schedule event with id : " + scheduleEventId)
+	LoggingClient.Debug(fmt.Sprintf("updating the intervalAction with id: %s ", intervalActionId))
 
-	oldScheduleId, exists := scheduleEventIdToScheduleIdMap[scheduleEventId]
+	oldIntervalId, exists := intervalActionIdToIntervalMap[intervalActionId]
 	if !exists {
-		logMsg := fmt.Sprintf("there is no mapping from schedule event id : %s to schedule.", scheduleEventId)
+		logMsg := fmt.Sprintf("there is no mapping from interval action id : %s to interval.", intervalActionId)
 		LoggingClient.Error(logMsg)
 		return errors.New(logMsg)
 	}
 
-	scheduleContext, exists := scheduleNameToContextMap[scheduleEvent.Schedule]
+	intervalContext, exists := intervalNameToContextMap[intervalAction.Interval]
 	if !exists {
-		logMsg := fmt.Sprintf("query the schedule with name : %s  and did not exist.", scheduleEvent.Schedule)
+		logMsg := fmt.Sprintf("query the interval with name : %s  and did not exist.", intervalAction.Interval)
 		return errors.New(logMsg)
 	}
 
-	//if the schedule event switched schedule
-	schedule := scheduleContext.Schedule
+	//if the interval action switched interval
+	interval := intervalContext.Interval
 
-	newScheduleId := schedule.Id.Hex()
+	newIntervalId := interval.ID
 
-	if newScheduleId != oldScheduleId {
-		LoggingClient.Debug("the schedule event switched schedule from " + oldScheduleId + " to " + newScheduleId)
+	if newIntervalId != oldIntervalId {
+		LoggingClient.Debug(fmt.Sprintf("the interval action switched interval from ID: %s to new ID: %s" ,oldIntervalId, newIntervalId))
 
-		//remove Schedule Event
-		LoggingClient.Debug("remove the schedule event with id : " + scheduleEventId + " from schedule with id : " + oldScheduleId)
-		delete(scheduleContext.ScheduleEventsMap, scheduleEventId)
+		//remove Interval Event
+		LoggingClient.Debug(fmt.Sprintf("remove the intervalAction with ID: %s from interval with ID: %s ",intervalActionId ,oldIntervalId))
+		delete(intervalContext.IntervalActionsMap, intervalActionId)
 
-		//if there are no more events for the schedule, remove the schedule context
-		// TODO: Not sure we want to just remove the schedule from the schedule context
-		if len(scheduleContext.ScheduleEventsMap) == 0 {
-			LoggingClient.Debug("there are no more events for the schedule : " + oldScheduleId + ", remove it.")
-			deleteScheduleOperation(schedule, scheduleContext)
+		//if there are no more events for the interval, remove the interval context
+		// TODO: Not sure we want to just remove the interval from the interval context
+		if len(intervalContext.IntervalActionsMap) == 0 {
+			LoggingClient.Debug("there are no more events for the interval : " + oldIntervalId + ", remove it.")
+			deleteIntervalOperation(interval, intervalContext)
 		}
 
-		//add Schedule Event
-		LoggingClient.Debug("add the schedule event with id : " + scheduleEventId + " to schedule with id : " + newScheduleId)
+		//add Interval Event
+		LoggingClient.Info(fmt.Sprintf("add the intervalAction with id: %s to interval with id: %s",intervalActionId, newIntervalId))
 
-		if _, exists := scheduleIdToContextMap[newScheduleId]; !exists {
-			context := ScheduleContext{
-				ScheduleEventsMap: make(map[string]models.ScheduleEvent),
-				MarkedDeleted:     false,
+		if _, exists := intervalIdToContextMap[newIntervalId]; !exists {
+			context := IntervalContext{
+				IntervalActionsMap: make(map[string]contract.IntervalAction),
+				MarkedDeleted:      false,
 			}
-			context.Reset(schedule)
+			context.Reset(interval)
 
-			addScheduleOperation(schedule, &context)
+			addIntervalOperation(interval, &context)
 		}
-
-		addScheduleEventOperation(schedule, scheduleEvent)
-	} else { // if not, just update the schedule event in place
-		scheduleContext.ScheduleEventsMap[scheduleEventId] = scheduleEvent
+		addIntervalActionOperation(interval, intervalAction)
+	} else { // if not, just update the interval action in place
+		intervalContext.IntervalActionsMap[intervalActionId] = intervalAction
 	}
 
-	LoggingClient.Debug("updated the schedule event with id " + scheduleEvent.Id.Hex() + " to schedule id : " + schedule.Id.Hex())
+	LoggingClient.Info(fmt.Sprintf("updated the intervalAction with id: %s to interval id:  %s", intervalAction.ID,interval.ID))
 
 	return nil
 }
 
-func removeScheduleEvent(scheduleEventId string) error {
+func(qc *QueueClient)  RemoveIntervalActionQueue(intervalActionId string) error {
 	mutex.Lock()
 	defer mutex.Unlock()
 
-	LoggingClient.Debug("removing the schedule event with id " + scheduleEventId)
+	LoggingClient.Debug(fmt.Sprintf("removing the intervalAction with id: %s", intervalActionId))
 
-	scheduleId, exists := scheduleEventIdToScheduleIdMap[scheduleEventId]
+	intervalId, exists := intervalActionIdToIntervalMap[intervalActionId]
 	if !exists {
-		logMsg := fmt.Sprintf("could not find schedule id with schedule event id : %s", scheduleEventId)
+		logMsg := fmt.Sprintf("could not find interval id with interval action id : %s", intervalActionId)
 		return errors.New(logMsg)
 	}
 
-	scheduleContext, exists := scheduleIdToContextMap[scheduleId]
+	intervalContext, exists := intervalIdToContextMap[intervalId]
 	if !exists {
-		logMsg := fmt.Sprintf("can not find schedule context with schedule id : %s", scheduleId)
+		logMsg := fmt.Sprintf("can not find interval context with interval id : %s", intervalId)
 		return errors.New(logMsg)
 	}
 
-	delete(scheduleContext.ScheduleEventsMap, scheduleEventId)
+	delete(intervalContext.IntervalActionsMap, intervalActionId)
 
-	LoggingClient.Debug("removed the schedule event with id " + scheduleEventId)
+	LoggingClient.Info(fmt.Sprintf("removed the intervalAction with id: %s", intervalActionId))
 
 	return nil
 }
 
-func triggerSchedule() {
+func triggerInterval() {
 	nowEpoch := time.Now().Unix()
 
 	defer func() {
 		if err := recover(); err != nil {
-			LoggingClient.Error("trigger schedule error : " + err.(string))
+			LoggingClient.Error("trigger interval error : " + err.(string))
 		}
 	}()
 
-	if scheduleQueue.Length() == 0 {
+	if intervalQueue.Length() == 0 {
 		return
 	}
 
 	var wg sync.WaitGroup
 
-	for i := 0; i < scheduleQueue.Length(); i++ {
-		if scheduleQueue.Peek().(*ScheduleContext) != nil {
-			scheduleContext := scheduleQueue.Remove().(*ScheduleContext)
-			scheduleId := scheduleContext.Schedule.Id.Hex()
-			if scheduleContext.MarkedDeleted {
-				LoggingClient.Debug("the schedule with id : " + scheduleId + " be marked as deleted, removing it.")
+	for i := 0; i < intervalQueue.Length(); i++ {
+		if intervalQueue.Peek().(*IntervalContext) != nil {
+			intervalContext := intervalQueue.Remove().(*IntervalContext)
+			intervalId := intervalContext.Interval.ID
+			if intervalContext.MarkedDeleted {
+				LoggingClient.Debug("the interval with id : " + intervalId + " be marked as deleted, removing it.")
 				continue //really delete from the queue
 			} else {
-				if scheduleContext.NextTime.Unix() <= nowEpoch {
-					LoggingClient.Debug("executing schedule, detail : {" + scheduleContext.GetInfo() + "} , at : " + scheduleContext.NextTime.String())
+				if intervalContext.NextTime.Unix() <= nowEpoch {
+					LoggingClient.Debug("executing interval, detail : {" + intervalContext.GetInfo() + "} , at : " + intervalContext.NextTime.String())
 
 					wg.Add(1)
 
 					//execute it in a individual go routine
-					go execute(scheduleContext, &wg)
+					go execute(intervalContext, &wg)
 				} else {
-					scheduleQueue.Add(scheduleContext)
+					intervalQueue.Add(intervalContext)
 				}
 			}
 		}
@@ -411,30 +407,30 @@ func triggerSchedule() {
 	wg.Wait()
 }
 
-func execute(context *ScheduleContext, wg *sync.WaitGroup) error {
-	scheduleEventsMap := context.ScheduleEventsMap
+func execute(context *IntervalContext, wg *sync.WaitGroup) error {
+	intervalActionMap := context.IntervalActionsMap
 
 	defer wg.Done()
 
 	defer func() {
 		if err := recover(); err != nil {
-			LoggingClient.Error("schedule execution error : " + err.(string))
+			LoggingClient.Error("interval execution error : " + err.(string))
 		}
 	}()
 
-	LoggingClient.Debug(fmt.Sprintf("%d schedule event need to be executed.", len(scheduleEventsMap)))
+	LoggingClient.Debug(fmt.Sprintf("%d interval action need to be executed.", len(intervalActionMap)))
 
-	//execute schedule event one by one
-	for eventId := range scheduleEventsMap {
-		LoggingClient.Debug("the event with id : " + eventId + " belongs to schedule : " + context.Schedule.Id.Hex() + " will be executing!")
-		scheduleEvent, _ := scheduleEventsMap[eventId]
+	//execute interval action one by one
+	for eventId := range intervalActionMap {
+		LoggingClient.Debug("the event with id : " + eventId + " belongs to interval : " + context.Interval.ID + " will be executing!")
+		intervalAction, _ := intervalActionMap[eventId]
 
-		executingUrl := getUrlStr(scheduleEvent.Addressable)
+		executingUrl := getUrlStr(intervalAction)
 		LoggingClient.Debug("the event with id : " + eventId + " will request url : " + executingUrl)
 
 		//TODO: change the method type based on the event
 
-		httpMethod := scheduleEvent.Addressable.HTTPMethod
+		httpMethod := intervalAction.HTTPMethod
 		if !validMethod(httpMethod) {
 			LoggingClient.Error(fmt.Sprintf("net/http: invalid method %q", httpMethod))
 			return nil
@@ -443,7 +439,7 @@ func execute(context *ScheduleContext, wg *sync.WaitGroup) error {
 		req, err := http.NewRequest(httpMethod, executingUrl, nil)
 		req.Header.Set(ContentTypeKey, ContentTypeJsonValue)
 
-		params := strings.TrimSpace(scheduleEvent.Parameters)
+		params := strings.TrimSpace(intervalAction.Parameters)
 
 		if len(params) > 0 {
 			req.Header.Set(ContentLengthKey, string(len(params)))
@@ -467,16 +463,16 @@ func execute(context *ScheduleContext, wg *sync.WaitGroup) error {
 	context.UpdateIterations()
 
 	if context.IsComplete() {
-		LoggingClient.Debug("completed schedule, detail : " + context.GetInfo())
+		LoggingClient.Debug("completed interval, detail : " + context.GetInfo())
 	} else {
-		LoggingClient.Debug("requeue schedule, detail : " + context.GetInfo())
-		scheduleQueue.Add(context)
+		LoggingClient.Debug("requeue interval, detail : " + context.GetInfo())
+		intervalQueue.Add(context)
 	}
 	return nil
 }
 
-func getUrlStr(addressable models.Addressable) string {
-	return addressable.GetBaseURL() + addressable.Path
+func getUrlStr(intervalAction contract.IntervalAction) string {
+	return intervalAction.GetBaseURL() + intervalAction.Path
 }
 
 func sendRequestAndGetResponse(client *http.Client, req *http.Request) ([]byte, int, error) {

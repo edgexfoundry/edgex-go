@@ -38,4 +38,6 @@ const (
 	ApiSubscriptionRoute       = "/api/v1/subscription"
 	ApiTransmissionRoute       = "/api/v1/transmission"
 	ApiValueDescriptorRoute    = "/api/v1/valuedescriptor"
+	ApiIntervalRoute           = "/api/v1/interval"
+	ApiIntervalActionRoute     = "/api/v1/intervalaction"
 )

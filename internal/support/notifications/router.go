@@ -16,11 +16,11 @@
 package notifications
 
 import (
+	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/pkg/clients"
+	"github.com/gorilla/mux"
 	"net/http"
 	"runtime"
-	"github.com/gorilla/mux"
-	"github.com/edgexfoundry/edgex-go/pkg/clients"
-	"github.com/edgexfoundry/edgex-go/internal"
 )
 
 func LoadRestRoutes() *mux.Router {

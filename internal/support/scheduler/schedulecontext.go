@@ -15,9 +15,9 @@ import (
 	"time"
 )
 
-type ScheduleContext struct {
-	Schedule          models.Schedule
-	ScheduleEventsMap map[string]models.ScheduleEvent
+type IntervalContext struct {
+	Interval          models.Interval
+	IntervalActionsMap map[string]models.IntervalAction
 	StartTime         time.Time
 	EndTime           time.Time
 	NextTime          time.Time
@@ -27,16 +27,16 @@ type ScheduleContext struct {
 	MarkedDeleted     bool
 }
 
-func (sc *ScheduleContext) Reset(schedule models.Schedule) {
-	if sc.Schedule != (models.Schedule{}) && sc.Schedule.Name != schedule.Name {
-		//if schedule name has changed, we should clear the old events map(here just renew one)
-		sc.ScheduleEventsMap = make(map[string]models.ScheduleEvent)
+func (sc *IntervalContext) Reset(interval models.Interval) {
+	if sc.Interval != (models.Interval{}) && sc.Interval.Name != interval.Name {
+		//if interval name has changed, we should clear the old actions map(here just renew one)
+		sc.IntervalActionsMap = make(map[string]models.IntervalAction)
 	}
 
-	sc.Schedule = schedule
+	sc.Interval = interval
 
 	//run times, current and max iteration
-	if sc.Schedule.RunOnce {
+	if sc.Interval.RunOnce {
 		sc.MaxIterations = 1
 	} else {
 		sc.MaxIterations = 0
@@ -44,24 +44,24 @@ func (sc *ScheduleContext) Reset(schedule models.Schedule) {
 	sc.CurrentIterations = 0
 
 	//start and end time
-	if sc.Schedule.Start == "" {
+	if sc.Interval.Start == "" {
 		sc.StartTime = time.Now()
 	} else {
-		t, err := time.Parse(TIMELAYOUT, sc.Schedule.Start)
+		t, err := time.Parse(TIMELAYOUT, sc.Interval.Start)
 		if err != nil {
-			LoggingClient.Error("parse time error, the original time string is : " + sc.Schedule.Start)
+			LoggingClient.Error("parse time error, the original time string is : " + sc.Interval.Start)
 		}
 
 		sc.StartTime = t
 	}
 
-	if sc.Schedule.End == "" {
+	if sc.Interval.End == "" {
 		//use max time
 		sc.EndTime = time.Unix(1<<63-62135596801, 999999999)
 	} else {
-		t, err := time.Parse(TIMELAYOUT, sc.Schedule.End)
+		t, err := time.Parse(TIMELAYOUT, sc.Interval.End)
 		if err != nil {
-			LoggingClient.Error("parse time error, the original time string is : " + sc.Schedule.End)
+			LoggingClient.Error("parse time error, the original time string is : " + sc.Interval.End)
 		}
 
 		sc.EndTime = t
@@ -69,44 +69,43 @@ func (sc *ScheduleContext) Reset(schedule models.Schedule) {
 
 	//frequency and next time
 	nowBenchmark := time.Now().Unix()
-	sc.Frequency = parseFrequency(sc.Schedule.Frequency)
+	sc.Frequency = parseFrequency(sc.Interval.Frequency)
 
 	sc.NextTime = sc.StartTime
-	if sc.StartTime.Unix() <= nowBenchmark && !sc.Schedule.RunOnce {
+	if sc.StartTime.Unix() <= nowBenchmark && !sc.Interval.RunOnce {
 		for sc.NextTime.Unix() <= nowBenchmark {
 			sc.NextTime = sc.NextTime.Add(sc.Frequency)
 		}
 	}
 }
 
-func (sc *ScheduleContext) IsComplete() bool {
+func (sc *IntervalContext) IsComplete() bool {
 	return sc.isComplete(time.Now())
 }
 
-func (sc *ScheduleContext) UpdateIterations() {
+func (sc *IntervalContext) UpdateIterations() {
 	if !sc.IsComplete() {
 		sc.CurrentIterations += 1
 	}
 }
 
-func (sc *ScheduleContext) UpdateNextTime() {
+func (sc *IntervalContext) UpdateNextTime() {
 	if !sc.IsComplete() {
 		sc.NextTime = sc.NextTime.Add(sc.Frequency)
 	}
 }
 
-func (sc *ScheduleContext) GetInfo() string {
-	return sc.Schedule.String()
+func (sc *IntervalContext) GetInfo() string {
+	return sc.Interval.String()
 }
 
-func (sc *ScheduleContext) isComplete(time time.Time) bool {
-	complete := (sc.StartTime.Unix() < time.Unix() && sc.Schedule.RunOnce) ||
+func (sc *IntervalContext) isComplete(time time.Time) bool {
+	complete := (sc.StartTime.Unix() < time.Unix() && sc.Interval.RunOnce) ||
 		(sc.NextTime.Unix() > sc.EndTime.Unix()) ||
 		((sc.MaxIterations != 0) && (sc.CurrentIterations >= sc.MaxIterations))
 	return complete
 }
 
-//region util methods
 func parseFrequency(durationStr string) time.Duration {
 	durationRegex := regexp.MustCompile(`P(?P<years>\d+Y)?(?P<months>\d+M)?(?P<days>\d+D)?T?(?P<hours>\d+H)?(?P<minutes>\d+M)?(?P<seconds>\d+S)?`)
 	matches := durationRegex.FindStringSubmatch(durationStr)
@@ -134,5 +133,3 @@ func parseInt64(value string) int64 {
 	}
 	return int64(parsed)
 }
-
-//endregion

@@ -53,7 +53,7 @@ func NewErrEmptyAddressableName() error {
 }
 
 type ErrAddressableNotFound struct {
-	id string
+	id   string
 	name string
 }
 

@@ -14,11 +14,11 @@ import (
 	"net/http"
 	"runtime"
 
-	"github.com/go-zoo/bone"
+	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/export"
 	"github.com/edgexfoundry/edgex-go/pkg/clients"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
-	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/go-zoo/bone"
 )
 
 func replyPing(w http.ResponseWriter, r *http.Request) {

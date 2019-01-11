@@ -12,12 +12,13 @@ documentation:
       Welcome to the Scheduler Microservice API Documentation.
 schemas:
     -
-        schedule: '{"type":"object","$schema":"http://json-schema.org/draft-03/schema#","description":"meta data around anything that needs to be scheduled (frequency with optional start and end times).","title":"schedule","properties":{"id":{"type":"string","required":false,"title":"id"},"created":{"type":"integer","required":false,"title":"created"},"modified":{"type":"integer","required":false,"title":"modified"},"origin":{"type":"integer","required":false,"title":"origin"},"name":{"type":"string","required":false,"title":"name"},"start":{"type":"integer","required":false,"title":"start"},"end":{"type":"integer","required":false,"title":"end"},"frequency":{"type":"integer","required":false,"title":"frequency"}}}'
+        interval: '{"type":"object","$schema":"http://json-schema.org/draft-03/schema#","description":"meta data around anything that needs to be scheduled (frequency with optional start and end times).","title":"interval","properties":{"id":{"type":"string","required":false,"title":"id"},"created":{"type":"integer","required":false,"title":"created"},"modified":{"type":"integer","required":false,"title":"modified"},"origin":{"type":"integer","required":false,"title":"origin"},"name":{"type":"string","required":false,"title":"name"},"start":{"type":"integer","required":false,"title":"start"},"end":{"type":"integer","required":false,"title":"end"},"frequency":{"type":"integer","required":false,"title":"frequency"}}}'
     -
-        scheduleevent: '{"type":"object","$schema":"http://json-schema.org/draft-03/schema#","title":"scheduleevent","properties":{"id":{"type":"string","required":false,"title":"id"},"created":{"type":"integer","required":false,"title":"created"},"modified":{"type":"integer","required":false,"title":"modified"},"origin":{"type":"integer","required":false,"title":"origin"},"name":{"type":"string","required":false,"title":"name"},"addressable":{"type":"object","properties":{"name":{"type":"string","required":false,"title":"name"}},"required":false,"title":"addressable"},"parameters":{"type":"string","required":false,"title":"parameters"},"schedule":{"type":"string","required":false,"title":"schedule"},"service":{"type":"string","required":true,"title":"service"}}}'
+        intervalAction: '{"type":"object","$schema":"http://json-schema.org/draft-03/schema#","title":"intervalAction","properties":{"id":{"type":"string","required":false,"title":"id"},"created":{"type":"integer","required":false,"title":"created"},"modified":{"type":"integer","required":false,"title":"modified"},"origin":{"type":"integer","required":false,"title":"origin"},"name":{"type":"string","required":false,"title":"name"},"parameters":{"type":"string","required":false,"title":"parameters"},"interval":{"type":"string","required":false,"title":"interval"},"target":{"type":"string","required":true,"title":"target"},"protocol":{"type":"string","required":false,"title":"protocol"},"httpmethod":{"type":"string","required":false,"title":"httpmethod"},"address":{"type":"string","required":false,"title":"address"},"port":{"type":"integer","required":false,"title":"port"},"path":{"type":"string","required":false,"title":"path"},"publisher":{"type":"string","required":false,"title":"publisher"},"user":{"type":"string","required":false,"title":"user"},"password":{"type":"string","required":false,"title":"password"},"topic":{"type":"string","required":false,"title":"topic"}}}'
+
 /info/{name}:
-    displayName: Schedule Resource (by name)
-    description: Example - http://localhost:48085/api/v1/info/midnight (where midnight is the name of a schedule)
+    displayName: Interval Resource (by name)
+    description: Example - http://localhost:48085/api/v1/info/midnight (where midnight is the name of an Interval)
     uriParameters:
         name:
             displayName: name
@@ -25,37 +26,295 @@ schemas:
             required: false
             repeat: false
     get:
-        description: Return Schedule matching given name (schedule names should be unique). May be null if no schedule matches on the name provided. Returns Internal Service Error (HTTP 500) for unknown or unanticipated issues. NotFoundException (HTTP 404) if no Schedule is found with the provided name.
+        description: Return Interval matching given name (interval names should be unique). May be null if no interval matches on the name provided. Returns Internal Service Error (HTTP 500) for unknown or unanticipated issues. NotFoundException (HTTP 404) if no Interval is found with the provided name.
         responses:
             "200":
-                description: schedule matching on name
+                description: interval matching on name
                 body:
                     application/json:
-                        schema: schedule
+                        schema: interval
                         example: '{"created":0,"modified":0,"origin":0,"id":"5bc3c18fa493823224c12eb1","name":"midnight","start":"20180101T000000","end":null,"frequency":"P1D","cron":null,"runOnce":false}'
             "404":
-                description: if no schedule is found for the identifier provided.
+                description: if no interval is found for the identifier provided.
             "500":
                 description: for unknown or unanticipated issues
 /ping:
     displayName: Ping Resource
-    description: example - http://localhost:48085/api/v1/ping
+    description: Example - http://localhost:48081/api/v1/ping
     get:
-        description: Test service providing an indication that the service is available.
-        displayName: service up check
+        description: ping
         responses:
             "200":
-                description: return value of "pong"
+                description: Successful Response
+/intervalaction/{id}:
+    displayName: IntervalAction Resource (by id)
+    description: Example - http://localhost:48081/api/v1/intervalaction/57bb5837555e5218873e5a23
+    uriParameters:
+        id:
+            displayName: id
+            type: string
+            required: false
+            repeat: false
+    delete:
+        description: Remove the IntervalAction designated by database generated id. Internal Service Error (HTTP 500) for unknown or unanticipated issues. NotFoundException (HTTP 404) if no IntervalAction is found with the provided id. DataValidationException (HTTP 409) if an attempt to delete a interval action still being referenced by device reports.
+        responses:
+            "200":
+                description: boolean indicating success of the remove operation
             "503":
                 description: for unknown or unanticipated issues
-/flush:
-    displayName: Flush Scheduler Schedules
-    description: example - http://localhost:48085/api/v1/flush
+            "404":
+                description: if no IntervalAction is found with the provided id
+            "409":
+                description: if an attempt to delete a interval action still being referenced by device reports
     get:
-        description: Flushes all of the current schedule(s), schedule event(s) from the Scheduler. Will reload from core-metadata and config.
-        displayName: Flush Scheduler Schedules
+        description: Fetch a specific IntervalAction by database generated id. May return null if no interval action with the id is found. Returns Internal Service Error (HTTP 500) for unknown or unanticipated issues. NotFoundException (HTTP 404) if no IntervalAction is found with the provided id.
         responses:
             "200":
-                description: return value of value  of "success"
+                description: interval action matching on the id
+                body:
+                    application/json:
+                        schema: intervalaction
+                        example: '{"id":"57bb5837555e5218873e5a23","created":1471895607378,"modified":1471895971882,"origin":1471806386919,"name":"scrub pushed records","addressable":{"name":"scrub pushed records"},"parameters":null,"interval":"daily","service":"edgex-support-scheduler"}'
+            "404":
+                description: if no IntervalAction is found with the provided id
+            "500":
+                description: for unknown or unanticipated issues
+/intervalaction/name/{name}:
+    displayName: IntervalAction Resource (by name)
+    description: Example - http://localhost:48081/api/v1/intervalaction/name/scrub pushed records (where 'scrub pushed records' is a interval action name)
+    uriParameters:
+        name:
+            displayName: name
+            type: string
+            required: false
+            repeat: false
+    delete:
+        description: Remove the IntervalAction designated by name. Internal Service Error (HTTP 500) for unknown or unanticipated issues. NotFoundException (HTTP 404) if no IntervalAction is found with the provided name. DataValidationException (HTTP 409) if an attempt to delete a interval action still being referenced by device reports.
+        responses:
+            "200":
+                description: boolean indicating success of the remove operation
+            "400":
+                description: for malformed or unparsable requests
+            "409":
+                description: if an attempt to delete a interval action still being referenced by device reports
+            "404":
+                description: if no IntervalAction is found with the provided name
+            "500":
+                description: for unknown or unanticipated issues
+    get:
+        description: Return ScheduleEvents matching given name (interval names should be unique). May be null if no interval events matches on the name provided. Returns Internal Service Error (HTTP 500) for unknown or unanticipated issues. NotFoundException (HTTP 404) if no IntervalAction is found with the provided name.
+        responses:
+            "200":
+                description: interval action matching on name
+                body:
+                    application/json:
+                        schema: intervalaction
+                        example: '{"id":"57bb5837555e5218873e5a23","created":1471895607378,"modified":1471895971882,"origin":1471806386919,"name":"scrub pushed records","addressable":{"name":"scrub pushed records"},"parameters":null,"interval":"daily","service":"edgex-support-scheduler"}'
+            "400":
+                description: for malformed or unparsable requests
+            "404":
+                description: if no IntervalAction is found with the provided name
+            "500":
+                description: for unknown or unanticipated issues
+/intervalaction/target/{name}:
+    displayName: IntervalAction Resource (by target name)
+    description: Example - http://localhost:48081/api/v1/intervalaction/target/core-data (returns all intervalaction(s) associated with the target core-data)
+    uriParameters:
+        name:
+            displayName: name
+            type: string
+            required: false
+            repeat: false
+    delete:
+        description: Remove the IntervalAction(s) designated by name. Internal Service Error (HTTP 500) for unknown or unanticipated issues. NotFoundException (HTTP 404) if no IntervalAction is found with the provided name. DataValidationException (HTTP 409) if an attempt to delete a interval action still being referenced by device reports.
+        responses:
+            "200":
+                description: boolean indicating success of the remove operation
+            "400":
+                description: for malformed or unparsable requests
+            "409":
+                description: if an attempt to delete a interval action still being referenced by device reports
+            "404":
+                description: if no IntervalAction is found with the provided name
+            "500":
+                description: for unknown or unanticipated issues
+    get:
+        description: Return ScheduleEvents matching given name (interval names should be unique). May be null if no interval events matches on the name provided. Returns Internal Service Error (HTTP 500) for unknown or unanticipated issues. NotFoundException (HTTP 404) if no IntervalAction is found with the provided name.
+        responses:
+            "200":
+                description: interval action matching on name
+                body:
+                    application/json:
+                        schema: intervalaction
+                        example: '{"id":"57bb5837555e5218873e5a23","created":1471895607378,"modified":1471895971882,"origin":1471806386919,"name":"scrub pushed records","addressable":{"name":"scrub pushed records"},"parameters":null,"interval":"daily","service":"edgex-support-scheduler"}'
+            "400":
+                description: for malformed or unparsable requests
+            "404":
+                description: if no IntervalAction is found with the provided name
+            "500":
+                description: for unknown or unanticipated issues
+/intervalaction:
+    displayName: IntervalAction Resource
+    description: Example - http://localhost:48081/api/v1/intervalaction
+    post:
+        description: Add a new IntervalAction - name must be unique. Returns Internal Service Error (HTTP 500) for unknown or unanticipated issues. NotFoundException (HTTP 404) if the action's associated interval is not found (referenced by name). DataValidationException (HTTP 409) if the interval was not provided.
+        body:
+            application/json:
+                schema: intervalaction
+                example: '{"origin":1471806386919,"name":"scrub pushed records","addressable":{"name":"scrub pushed records"},"parameters":null,"interval":"daily","service":"edgex-support-scheduler"}'
+        responses:
+            "200":
+                description: database generated identifier for the new interval
+            "400":
+                description: for malformed or unparsable requests
+            "404":
+                description: if the action's associated interval is not found (referenced by name)
+            "409":
+                description: if the interval was not provided or if the name is determined to not be unique with regard to others
+            "500":
+                description: for unknown or unanticipated issues or if interval action name is a duplicate
+    put:
+        description: Update the IntervalAction identified by the id or name in the object provided. Id is used first, name is used second for identification purposes. Returns Internal Service Error (HTTP 500) for unknown or unanticipated issues. DataValidationException (HTTP 409) if an attempt to change the name is made when the interval action is still being referenced by device reports. NotFoundException (HTTP 404) if no interval is found for the identifier provided.
+        body:
+            application/json:
+                schema: intervalaction
+                example: '{"id":"57bb5837555e5218873e5a23","addressable":{"name":"weekly scrubber service"}}'
+        responses:
+            "200":
+                description: boolean indicating success of the update
+            "400":
+                description: for malformed or unparsable requests
+            "409":
+                description: if an attempt to change the name is made when the interval action is still being referenced by device reports
+            "404":
+                description: if no interval is found for the identifier provided.
+            "500":
+                description: for unknown or unanticipated issues
+    get:
+        description: Return all interval events sorted by id. Returns Internal Service Error (HTTP 500) for unknown or unanticipated issues. Returns LimitExceededException (HTTP 413) if the number returned exceeds the max limit.
+        responses:
+            "200":
+                description: list of interval events
+                body:
+                    application/json:
+                        schema: intervalaction
+                        example: '[{"id":"57bb5837555e5218873e5a23","created":1471895607378,"modified":1471895607378,"origin":1471806386919,"name":"scrub pushed records","addressable:{"name":"scrub pushed records"},"parameters":null,"interval":"daily","service":"edgex-support-scheduler"}]'
+            "413":
+                description: if the number of intervals exceeds the current max limit.
+            "500":
+                description: for unknown or unanticipated issues
+/interval/{id}:
+    displayName: Interval Resource
+    description: Example - http://localhost:48081/api/v1/interval/57bb49e6555e5218873e5a1b
+    uriParameters:
+        id:
+            displayName: id
+            type: string
+            required: false
+            repeat: false
+    delete:
+        description: Remove the Interval designated by database generated id. Internal Service Error (HTTP 500) for unknown or unanticipated issues. NotFoundException (HTTP 404) if no Interval is found with the provided id.
+        responses:
+            "200":
+                description: boolean indicating success of the remove operation
+            "404":
+                description: if no interval is found for the identifier provided.
+            "503":
+                description: for unknown or unanticipated issues
+    get:
+        description: Fetch a specific Interval by database generated id. May return null if no interval with the id is found. Returns Internal Service Error (HTTP 500) for unknown or unanticipated issues. NotFoundException (HTTP 404) if no Interval is found with the provided id.
+        responses:
+            "200":
+                description: interval matching on the id
+                body:
+                    application/json:
+                        schema: interval
+                        example: '{"id":"57bb49e6555e5218873e5a1b","created":1471891942854,"modified":1471893402687,"origin":1471806386919,"name":"hourly","start":1503360000,"end":1503390000,"frequency":60000,"cron":null,"runOnce":"false"}'
+            "404":
+                description: if no interval is found for the identifier provided.
+            "500":
+                description: for unknown or unanticipated issues
+/interval/name/{name}:
+    displayName: Interval Resource (by name)
+    description: Example - http://localhost:48081/api/v1/interval/name/hourly (where hourly is the name of a interval)
+    uriParameters:
+        name:
+            displayName: name
+            type: string
+            required: false
+            repeat: false
+    delete:
+        description: Remove the Interval designated by name. Internal Service Error (HTTP 500) for unknown or unanticipated issues. NotFoundException (HTTP 404) if no Interval is found with the provided name.
+
+        responses:
+            "200":
+                description: boolean indicating success of the remove operation
+            "400":
+                description: for malformed or unparsable requests
+            "404":
+                description: if no interval is found for the name provided.
+            "500":
+                description: for unknown or unanticipated issues
+    get:
+        description: Return Interval matching given name (interval names should be unique). May be null if no interval matches on the name provided. Returns Internal Service Error (HTTP 500) for unknown or unanticipated issues. NotFoundException (HTTP 404) if no Interval is found with the provided name.
+        responses:
+            "200":
+                description: interval matching on name
+                body:
+                    application/json:
+                        schema: interval
+                        example: '{"id":"57bb49e6555e5218873e5a1b","created":1471891942854,"modified":1471893402687,"origin":1471806386919,"name":"hourly","start":1503360000,"end":1503390000,"frequency":60000,"cron":null,"runOnce":"false"}'
+            "400":
+                description: for malformed or unparsable requests
+            "404":
+                description: if no interval is found for the identifier provided.
+            "500":
+                description: for unknown or unanticipated issues
+/interval:
+    displayName: Interval Resource
+    description: Example - http://localhost:48081/api/v1/interval
+    post:
+        description: Add a new Interval - name must be unique. Returns Internal Service Error (HTTP 500) for unknown or unanticipated issues. DataValidationException (HTTP 409) if the cron expression string is not properly formatted.
+        body:
+            application/json:
+                schema: interval
+                example: '{"origin":1471806386919,"name":"hourly","start":"20160101T000000","end":"","frequency":"PT1H"} or {"origin":1471806386919,"name":"at midnight","start":"20160101T000000","frequency":"PT1D"} or {"origin":1471806386919,"name":"daily noon","start":"20160101T120000","frequency":"PT1D"}'
+        responses:
+            "200":
+                description: database generated identifier for the new interval
+            "400":
+                description: for malformed or unparsable requests
+            "409":
+                description: if the start, end, or frequency strings are not properly formatted or if the name is determined to not be unique with regard to others
+            "500":
+                description: for unknown or unanticipated issues
+    put:
+        description: Update an Interval identified by the id or name in the object provided. Id is used first, name is used second for identification purposes. Returns Internal Service Error (HTTP 500) for unknown or unanticipated issues. DataValidationException (HTTP // 409) if any the time or frequency strings are not properly formatted. NotFoundException (HTTP 404) if no interval is found for the id.
+        body:
+            application/json:
+                schema: interval
+                example: '{"id":"57bb49e6555e5218873e5a1b","end":"20170101T000000"}'
+        responses:
+            "200":
+                description: boolean indicating success of the update
+            "400":
+                description: for malformed or unparsable requests
+            "409":
+                description: if the start, end, or frequency strings are not properly formatted
+            "500":
+                description: for unknown or unanticipated issues
+    get:
+        description: Return all intervals sorted by id. Returns Internal Service Error (HTTP 500) for unknown or unanticipated issues. Returns LimitExceededException (HTTP 413) if the number returned exceeds the max limit.
+        responses:
+            "200":
+                description: list of intervals
+                body:
+                    application/json:
+                        schema: interval
+                        example: '[{"id":"57fc078d4c1a663f6fda1ae0","created":1476134797194,"modified":1476134797194,"origin":1471806386919,"name":"fifteen minute","start":"20160101T000000","end":"","frequency":"PT15M"},{"id":"57fc077e4c1a663f6fda1adf","created":1476134782460,"modified":1476134782460,"origin":1471806386919,"name":"hourly","start":"20160101T000000","end":"","frequency":"PT1H"},{"id":"57fc075a4c1a663f6fda1ade","created":1476134746390,"modified":1476134746390,"origin":1471806386919,"name":"midnight","start":"20160101T000000","end":"","frequency":"PT1D"}]'
+            "400":
+                description: for malformed or unparsable requests
+            "413":
+                description: if the number of intervals exceeds the current max limit.
             "500":
                 description: for unknown or unanticipated issues

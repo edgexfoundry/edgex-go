@@ -18,9 +18,9 @@ import (
 	"net/http"
 	"runtime"
 
-	"github.com/gorilla/mux"
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/pkg/clients"
+	"github.com/gorilla/mux"
 )
 
 func LoadRestRoutes() *mux.Router {
