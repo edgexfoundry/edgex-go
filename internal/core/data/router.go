@@ -666,7 +666,7 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		if Configuration.PersistData {
+		if Configuration.Writable.PersistData {
 			id, err := addReading(reading)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -1118,7 +1118,7 @@ func readingByValueDescriptorAndDeviceHandler(w http.ResponseWriter, r *http.Req
 	}
 
 	// Check for value descriptor
-	if Configuration.ValidateCheck {
+	if Configuration.Writable.ValidateCheck {
 		_, err = getValueDescriptorByName(name)
 		if err != nil {
 			switch err.(type) {

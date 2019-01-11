@@ -32,4 +32,5 @@ const (
 	SupportNotificationsServiceKey  = "edgex-support-notifications"
 	SystemManagementAgentServiceKey = "edgex-sys-mgmt-agent"
 	SupportSchedulerServiceKey      = "edgex-support-scheduler"
+	WritableKey                     = "/Writable"
 )

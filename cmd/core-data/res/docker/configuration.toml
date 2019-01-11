@@ -1,3 +1,4 @@
+[Writable]
 DeviceUpdateLastConnected = false
 MetaDataCheck = false
 PersistData = true
