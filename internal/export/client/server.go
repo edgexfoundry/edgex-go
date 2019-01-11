@@ -9,25 +9,21 @@ package client
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"runtime"
 
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/pkg/clients"
-	"github.com/go-zoo/bone"
+	"github.com/gorilla/mux"
 )
 
-func replyPing(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
-	str := `pong`
-	io.WriteString(w, str)
+// Test if the service is working
+func pingHandler(w http.ResponseWriter, _ *http.Request) {
+	w.Header().Set("Content-Type", "text/plain")
+	w.Write([]byte("pong"))
 }
 
-func replyConfig(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
-
+func configHandler(w http.ResponseWriter, _ *http.Request) {
 	encode(Configuration, w)
 }
 
@@ -45,13 +41,8 @@ func encode(i interface{}, w http.ResponseWriter) {
 	}
 }
 
-func replyMetrics(w http.ResponseWriter, r *http.Request) {
-
+func metricsHandler(w http.ResponseWriter, _ *http.Request) {
 	var t internal.Telemetry
-
-	if r.Body != nil {
-		defer r.Body.Close()
-	}
 
 	// The micro-service is to be considered the System Of Record (SOR) in terms of accurate information.
 	// Fetch metrics for the scheduler service.
@@ -77,28 +68,29 @@ func replyMetrics(w http.ResponseWriter, r *http.Request) {
 
 // HTTPServer function
 func httpServer() http.Handler {
-	mux := bone.New()
+	r := mux.NewRouter()
 
 	// Ping Resource
-	mux.Get(clients.ApiPingRoute, http.HandlerFunc(replyPing))
+	r.HandleFunc(clients.ApiPingRoute, pingHandler).Methods(http.MethodGet)
 
 	// Configuration
-	mux.Get(clients.ApiConfigRoute, http.HandlerFunc(replyConfig))
+	r.HandleFunc(clients.ApiConfigRoute, configHandler).Methods(http.MethodGet)
 
 	// Metrics
-	mux.Get(clients.ApiMetricsRoute, http.HandlerFunc(replyMetrics))
+	r.HandleFunc(clients.ApiMetricsRoute, metricsHandler).Methods(http.MethodGet)
 
 	// Registration
-	mux.Get(clients.ApiRegistrationRoute+"/:id", http.HandlerFunc(getRegByID))
-	mux.Get(clients.ApiRegistrationRoute+"/reference/:type", http.HandlerFunc(getRegList))
-	mux.Get(clients.ApiRegistrationRoute, http.HandlerFunc(getAllReg))
-	mux.Get(clients.ApiRegistrationRoute+"/name/:name", http.HandlerFunc(getRegByName))
-	mux.Post(clients.ApiRegistrationRoute, http.HandlerFunc(addReg))
-	mux.Put(clients.ApiRegistrationRoute, http.HandlerFunc(updateReg))
-	mux.Delete(clients.ApiRegistrationRoute+"/id/:id", http.HandlerFunc(delRegByID))
-	mux.Delete(clients.ApiRegistrationRoute+"/name/:name", http.HandlerFunc(delRegByName))
+	r.HandleFunc(clients.ApiRegistrationRoute, getAllReg).Methods(http.MethodGet)
+	r.HandleFunc(clients.ApiRegistrationRoute, addReg).Methods(http.MethodPost)
+	r.HandleFunc(clients.ApiRegistrationRoute, updateReg).Methods(http.MethodPut)
+	reg := r.PathPrefix(clients.ApiRegistrationRoute).Subrouter()
+	reg.HandleFunc("/{id}", getRegByID).Methods(http.MethodGet)
+	reg.HandleFunc("/reference/{type}", getRegList).Methods(http.MethodGet)
+	reg.HandleFunc("/name/{name}", getRegByName).Methods(http.MethodGet)
+	reg.HandleFunc("/id/{id}", delRegByID).Methods(http.MethodDelete)
+	reg.HandleFunc("/name/{name}", delRegByName).Methods(http.MethodDelete)
 
-	return mux
+	return r
 }
 
 func StartHTTPServer(errChan chan error) {

@@ -18,19 +18,16 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/export"
 	"github.com/edgexfoundry/edgex-go/pkg/clients"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
-	"github.com/go-zoo/bone"
+	"github.com/gorilla/mux"
 )
 
-func replyPing(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
-	str := `pong`
-	io.WriteString(w, str)
+// Test if the service is working
+func pingHandler(w http.ResponseWriter, _ *http.Request) {
+	w.Header().Set("Content-Type", "text/plain")
+	w.Write([]byte("pong"))
 }
 
-func replyConfig(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
-
+func configHandler(w http.ResponseWriter, _ *http.Request) {
 	encode(Configuration, w)
 }
 
@@ -67,13 +64,8 @@ func replyNotifyRegistrations(w http.ResponseWriter, r *http.Request) {
 	RefreshRegistrations(update)
 }
 
-func replyMetrics(w http.ResponseWriter, r *http.Request) {
-
+func metricsHandler(w http.ResponseWriter, _ *http.Request) {
 	var t internal.Telemetry
-
-	if r.Body != nil {
-		defer r.Body.Close()
-	}
 
 	// The micro-service is to be considered the System Of Record (SOR) in terms of accurate information.
 	// Fetch metrics for the scheduler service.
@@ -113,18 +105,18 @@ func encode(i interface{}, w http.ResponseWriter) {
 
 // HTTPServer function
 func httpServer() http.Handler {
-	mux := bone.New()
+	r := mux.NewRouter()
 
 	// Ping Resource
-	mux.Get(clients.ApiPingRoute, http.HandlerFunc(replyPing))
+	r.HandleFunc(clients.ApiPingRoute, pingHandler).Methods(http.MethodGet)
 
 	// Configuration
-	mux.Get(clients.ApiConfigRoute, http.HandlerFunc(replyConfig))
+	r.HandleFunc(clients.ApiConfigRoute, configHandler).Methods(http.MethodGet)
 
 	// Metrics
-	mux.Get(clients.ApiMetricsRoute, http.HandlerFunc(replyMetrics))
+	r.HandleFunc(clients.ApiMetricsRoute, metricsHandler).Methods(http.MethodGet)
 
-	mux.Put(clients.ApiNotifyRegistrationRoute, http.HandlerFunc(replyNotifyRegistrations))
+	r.HandleFunc(clients.ApiNotifyRegistrationRoute, replyNotifyRegistrations).Methods(http.MethodPut)
 
-	return mux
+	return r
 }

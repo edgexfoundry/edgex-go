@@ -21,19 +21,16 @@ import (
 	"github.com/edgexfoundry/edgex-go/pkg/clients"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
-	"github.com/go-zoo/bone"
+	"github.com/gorilla/mux"
 )
 
-func replyPing(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
-	str := `{"value" : "pong"}`
-	io.WriteString(w, str)
+// Test if the service is working
+func pingHandler(w http.ResponseWriter, _ *http.Request) {
+	w.Header().Set("Content-Type", "text/plain")
+	w.Write([]byte("pong"))
 }
 
-func replyConfig(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
-
+func configHandler(w http.ResponseWriter, _ *http.Request) {
 	encode(Configuration, w)
 }
 
@@ -76,7 +73,9 @@ func checkMaxLimit(limit int) int {
 
 func getCriteria(w http.ResponseWriter, r *http.Request) *matchCriteria {
 	var criteria matchCriteria
-	limit := bone.GetValue(r, "limit")
+	vars := mux.Vars(r)
+
+	limit := vars["limit"]
 	if len(limit) > 0 {
 		var err error
 		criteria.Limit, err = strconv.Atoi(limit)
@@ -95,7 +94,7 @@ func getCriteria(w http.ResponseWriter, r *http.Request) *matchCriteria {
 	//In all cases, cap the # of entries returned at ReadMaxLimit
 	criteria.Limit = checkMaxLimit(criteria.Limit)
 
-	start := bone.GetValue(r, "start")
+	start := vars["start"]
 	if len(start) > 0 {
 		var err error
 		criteria.Start, err = strconv.ParseInt(start, 10, 64)
@@ -112,7 +111,7 @@ func getCriteria(w http.ResponseWriter, r *http.Request) *matchCriteria {
 		}
 	}
 
-	end := bone.GetValue(r, "end")
+	end := vars["end"]
 	if len(end) > 0 {
 		var err error
 		criteria.End, err = strconv.ParseInt(end, 10, 64)
@@ -129,19 +128,19 @@ func getCriteria(w http.ResponseWriter, r *http.Request) *matchCriteria {
 		}
 	}
 
-	services := bone.GetValue(r, "services")
+	services := vars["services"]
 	if len(services) > 0 {
 		criteria.OriginServices = append(criteria.OriginServices,
 			strings.Split(services, ",")...)
 	}
 
-	keywords := bone.GetValue(r, "keywords")
+	keywords := vars["keywords"]
 	if len(keywords) > 0 {
 		criteria.Keywords = append(criteria.Keywords,
 			strings.Split(keywords, ",")...)
 	}
 
-	logLevels := bone.GetValue(r, "levels")
+	logLevels := vars["levels"]
 	if len(logLevels) > 0 {
 		criteria.LogLevels = append(criteria.LogLevels,
 			strings.Split(logLevels, ",")...)
@@ -195,13 +194,8 @@ func delLogs(w http.ResponseWriter, r *http.Request) {
 	io.WriteString(w, strconv.Itoa(removed))
 }
 
-func replyMetrics(w http.ResponseWriter, r *http.Request) {
-
+func metricsHandler(w http.ResponseWriter, _ *http.Request) {
 	var t internal.Telemetry
-
-	if r.Body != nil {
-		defer r.Body.Close()
-	}
 
 	// The micro-service is to be considered the System Of Record (SOR) in terms of accurate information.
 	// Fetch metrics for the scheduler service.
@@ -241,31 +235,34 @@ func encode(i interface{}, w http.ResponseWriter) {
 
 // HTTPServer function
 func HttpServer() http.Handler {
-	mux := bone.New()
+	r := mux.NewRouter()
 
 	// Ping Resource
-	mux.Get(clients.ApiPingRoute, http.HandlerFunc(replyPing))
+	r.HandleFunc(clients.ApiPingRoute, pingHandler).Methods(http.MethodGet)
 
 	// Configuration
-	mux.Get(clients.ApiConfigRoute, http.HandlerFunc(replyConfig))
+	r.HandleFunc(clients.ApiConfigRoute, configHandler).Methods(http.MethodGet)
 
 	// Metrics
-	mux.Get(clients.ApiMetricsRoute, http.HandlerFunc(replyMetrics))
+	r.HandleFunc(clients.ApiMetricsRoute, metricsHandler).Methods(http.MethodGet)
 
-	mv1 := mux.Prefix("/api/v1")
+	// Logs
+	r.HandleFunc(clients.ApiLoggingRoute, addLog).Methods(http.MethodPost)
 
-	mv1.Post("/logs", http.HandlerFunc(addLog))
-	mv1.Get("/logs/:limit", http.HandlerFunc(getLogs))
-	mv1.Get("/logs/:start/:end/:limit", http.HandlerFunc(getLogs))
-	mv1.Get("/logs/originServices/:services/:start/:end/:limit", http.HandlerFunc(getLogs))
-	mv1.Get("/logs/keywords/:keywords/:start/:end/:limit", http.HandlerFunc(getLogs))
-	mv1.Get("/logs/logLevels/:levels/:start/:end/:limit", http.HandlerFunc(getLogs))
-	mv1.Get("/logs/logLevels/:levels/originServices/:services/:start/:end/:limit", http.HandlerFunc(getLogs))
+	r.HandleFunc(clients.ApiLoggingRoute, getLogs).Methods(http.MethodGet)
+	l := r.PathPrefix(clients.ApiLoggingRoute).Subrouter()
+	l.HandleFunc("/{limit}", getLogs).Methods(http.MethodGet)
+	l.HandleFunc("/{start}/{end}/{limit}", getLogs).Methods(http.MethodGet)
+	l.HandleFunc("/originServices/{services}/{start}/{end}/{limit}", getLogs).Methods(http.MethodGet)
+	l.HandleFunc("/keywords/{keywords}/{start}/{end}/{limit}", getLogs).Methods(http.MethodGet)
+	l.HandleFunc("/logLevels/{levels}/{start}/{end}/{limit}", getLogs).Methods(http.MethodGet)
+	l.HandleFunc("/logLevels/{levels}/originServices/{services}/{start}/{end}/{limit}", getLogs).Methods(http.MethodGet)
 
-	mv1.Delete("/logs/:start/:end", http.HandlerFunc(delLogs))
-	mv1.Delete("/logs/keywords/:keywords/:start/:end", http.HandlerFunc(delLogs))
-	mv1.Delete("/logs/originServices/:services/:start/:end", http.HandlerFunc(delLogs))
-	mv1.Delete("/logs/logLevels/:levels/:start/:end", http.HandlerFunc(delLogs))
-	mv1.Delete("/logs/logLevels/:levels/originServices/:services/:start/:end", http.HandlerFunc(delLogs))
-	return mux
+	l.HandleFunc("/{start}/{end}", delLogs).Methods(http.MethodDelete)
+	l.HandleFunc("/keywords/{keywords}/{start}/{end}", delLogs).Methods(http.MethodDelete)
+	l.HandleFunc("/originServices/{services}/{start}/{end}", delLogs).Methods(http.MethodDelete)
+	l.HandleFunc("/logLevels/{levels}/{start}/{end}", delLogs).Methods(http.MethodDelete)
+	l.HandleFunc("/logLevels/{levels}/originServices/{services}/{start}/{end}", delLogs).Methods(http.MethodDelete)
+
+	return r
 }

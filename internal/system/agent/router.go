@@ -17,11 +17,11 @@ package agent
 
 import (
 	"encoding/json"
-	"github.com/edgexfoundry/edgex-go/internal/system/agent/logger"
 	"io/ioutil"
 	"net/http"
 	"strings"
 
+	"github.com/edgexfoundry/edgex-go/internal/system/agent/logger"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 	"github.com/gorilla/mux"
 )
@@ -92,13 +92,8 @@ func operationHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func configHandler(w http.ResponseWriter, r *http.Request) {
-
-	if r.Body != nil {
-		defer r.Body.Close()
-	}
-
 	vars := mux.Vars(r)
-	logs.LoggingClient.Debug("service configuration data requested", "service names",  vars)
+	logs.LoggingClient.Debug("service configuration data requested", "service names", vars)
 
 	list := vars["services"]
 	var services []string
@@ -114,12 +109,8 @@ func configHandler(w http.ResponseWriter, r *http.Request) {
 
 func metricsHandler(w http.ResponseWriter, r *http.Request) {
 
-	if r.Body != nil {
-		defer r.Body.Close()
-	}
-
 	vars := mux.Vars(r)
-	logs.LoggingClient.Debug("service configuration data requested", "service names",  vars)
+	logs.LoggingClient.Debug("service configuration data requested", "service names", vars)
 
 	list := vars["services"]
 	var services []string

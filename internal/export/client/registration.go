@@ -11,12 +11,13 @@ package client
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+
 	"github.com/edgexfoundry/edgex-go/internal/export"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
-	"github.com/go-zoo/bone"
-	"io/ioutil"
-	"net/http"
+	"github.com/gorilla/mux"
 )
 
 const (
@@ -33,7 +34,9 @@ const (
 )
 
 func getRegByID(w http.ResponseWriter, r *http.Request) {
-	id := bone.GetValue(r, "id")
+	// URL parameters
+	vars := mux.Vars(r)
+	id := vars["id"]
 
 	reg, err := dbClient.RegistrationById(id)
 	if err != nil {
@@ -47,7 +50,9 @@ func getRegByID(w http.ResponseWriter, r *http.Request) {
 }
 
 func getRegList(w http.ResponseWriter, r *http.Request) {
-	t := bone.GetValue(r, "type")
+	// URL parameters
+	vars := mux.Vars(r)
+	t := vars["type"]
 
 	var list []string
 
@@ -97,7 +102,9 @@ func getAllReg(w http.ResponseWriter, r *http.Request) {
 }
 
 func getRegByName(w http.ResponseWriter, r *http.Request) {
-	name := bone.GetValue(r, "name")
+	// URL parameters
+	vars := mux.Vars(r)
+	name := vars["name"]
 
 	reg, err := dbClient.RegistrationByName(name)
 	if err != nil {
@@ -247,7 +254,9 @@ func updateReg(w http.ResponseWriter, r *http.Request) {
 }
 
 func delRegByID(w http.ResponseWriter, r *http.Request) {
-	id := bone.GetValue(r, "id")
+	// URL parameters
+	vars := mux.Vars(r)
+	id := vars["id"]
 
 	// Read the registration, the registration name is needed to
 	// notify distro of the deletion
@@ -274,7 +283,9 @@ func delRegByID(w http.ResponseWriter, r *http.Request) {
 }
 
 func delRegByName(w http.ResponseWriter, r *http.Request) {
-	name := bone.GetValue(r, "name")
+	// URL parameters
+	vars := mux.Vars(r)
+	name := vars["name"]
 
 	err := dbClient.DeleteRegistrationByName(name)
 	if err != nil {

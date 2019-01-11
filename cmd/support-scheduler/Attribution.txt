@@ -36,9 +36,6 @@ https://github.com/influxdata/platform/blob/master/LICENSE
 eclipse/paho.mqtt.golang (Eclipse Public License 1.0) https://github.com/eclipse/paho.mqtt.golang
 https://github.com/eclipse/paho.mqtt.golang/blob/master/LICENSE
 
-go-zoo/bone (MIT) https://github.com/go-zoo/bone
-https://github.com/go-zoo/bone/blob/master/LICENSE
-
 mattn/go-xmpp (BSD-3) https://github.com/mattn/go-xmpp
 https://github.com/mattn/go-xmpp/blob/master/LICENSE
 
@@ -101,7 +98,7 @@ https://github.com/eapache/queue/blob/v1.1.0/LICENSE
 
 All of the following are due to sys-mgmt-agent's docker import...
 
-docker/docker/api/types (Apache 2.0) https://github.com/moby/moby/tree/master/api/types 
+docker/docker/api/types (Apache 2.0) https://github.com/moby/moby/tree/master/api/types
 https://github.com/moby/moby/blob/master/LICENSE
 
 docker/go-connections (Apache 2.0) https://github.com/docker/go-connections
@@ -123,7 +120,7 @@ sirupsen/logrus (MIT) https://github.com/sirupsen/logrus
 https://github.com/sirupsen/logrus/blob/master/LICENSE
 
 Nvveen/Gotty (unspecified) https://github.com/Nvveen/Gotty
-https://github.com/Nvveen/Gotty/blob/master/LICENSE 
+https://github.com/Nvveen/Gotty/blob/master/LICENSE
 
 docker/go-units (Apache 2.0) https://github.com/docker/go-units
 https://github.com/docker/go-units/blob/master/LICENSE

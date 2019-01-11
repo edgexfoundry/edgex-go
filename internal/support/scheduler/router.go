@@ -64,31 +64,21 @@ func LoadRestRoutes() *mux.Router {
 	return r
 }
 
-// Test is the micro service working
+// Test if the service is working
 func pingHandler(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
 	w.Write([]byte("pong"))
 }
 
-// Returns the current config for the micro service
-func configHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Body != nil {
-		defer r.Body.Close()
-	}
+func configHandler(w http.ResponseWriter, _ *http.Request) {
 	encode(Configuration, w)
 }
 
-
-func metricsHandler(w http.ResponseWriter, r *http.Request) {
-
+func metricsHandler(w http.ResponseWriter, _ *http.Request) {
 	var t internal.Telemetry
 
-	if r.Body != nil {
-		defer r.Body.Close()
-	}
-
 	// The micro-service is to be considered the System Of Record (SOR) in terms of accurate information.
-	// Fetch metrics for the metadata service.
+	// Fetch metrics for the scheduler service.
 	var rtm runtime.MemStats
 
 	// Read full memory stats

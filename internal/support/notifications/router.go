@@ -16,15 +16,17 @@
 package notifications
 
 import (
+	"net/http"
+	"runtime"
+
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/pkg/clients"
 	"github.com/gorilla/mux"
-	"net/http"
-	"runtime"
 )
 
 func LoadRestRoutes() *mux.Router {
 	r := mux.NewRouter()
+
 	// Ping Resource
 	r.HandleFunc(clients.ApiPingRoute, pingHandler).Methods(http.MethodGet)
 
@@ -34,7 +36,7 @@ func LoadRestRoutes() *mux.Router {
 	// Metrics
 	r.HandleFunc(clients.ApiMetricsRoute, metricsHandler).Methods(http.MethodGet)
 
-	b := r.PathPrefix("/api/v1").Subrouter()
+	b := r.PathPrefix(clients.ApiBase).Subrouter()
 
 	// Notifications
 	b.HandleFunc("/notification", notificationHandler).Methods(http.MethodPost)
@@ -78,22 +80,12 @@ func LoadRestRoutes() *mux.Router {
 	return r
 }
 
-func configHandler(w http.ResponseWriter, r *http.Request) {
-
-	if r.Body != nil {
-		defer r.Body.Close()
-	}
-
+func configHandler(w http.ResponseWriter, _ *http.Request) {
 	encode(Configuration, w)
 }
 
-func metricsHandler(w http.ResponseWriter, r *http.Request) {
-
+func metricsHandler(w http.ResponseWriter, _ *http.Request) {
 	var t internal.Telemetry
-
-	if r.Body != nil {
-		defer r.Body.Close()
-	}
 
 	// The micro-service is to be considered the System Of Record (SOR) in terms of accurate information.
 	// Fetch metrics for the notifications service.

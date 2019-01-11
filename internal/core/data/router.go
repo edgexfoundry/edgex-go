@@ -332,7 +332,7 @@ func getEventByDeviceHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check device
-	if err := checkDevice(deviceId); err != nil{
+	if err := checkDevice(deviceId); err != nil {
 		LoggingClient.Error(fmt.Sprintf("error checking device %s %v", deviceId, err))
 		switch err := err.(type) {
 		case *types.ErrServiceClient:
@@ -600,21 +600,12 @@ func scrubHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // Test if the service is working
-func pingHandler(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
-
-	_, err := w.Write([]byte("pong"))
-	if err != nil {
-		LoggingClient.Error("Error writing pong: " + err.Error())
-	}
+func pingHandler(w http.ResponseWriter, _ *http.Request) {
+	w.Header().Set("Content-Type", "text/plain")
+	w.Write([]byte("pong"))
 }
 
-func configHandler(w http.ResponseWriter, r *http.Request) {
-
-	if r.Body != nil {
-		defer r.Body.Close()
-	}
-
+func configHandler(w http.ResponseWriter, _ *http.Request) {
 	encode(Configuration, w)
 }
 
@@ -1491,12 +1482,8 @@ func valueDescriptorByDeviceIdHandler(w http.ResponseWriter, r *http.Request) {
 	encode(vdList, w)
 }
 
-func metricsHandler(w http.ResponseWriter, r *http.Request) {
+func metricsHandler(w http.ResponseWriter, _ *http.Request) {
 	var t internal.Telemetry
-
-	if r.Body != nil {
-		defer r.Body.Close()
-	}
 
 	// The micro-service is to be considered the System Of Record (SOR) in terms of accurate information.
 	// Fetch metrics for the data service.
