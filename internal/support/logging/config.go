@@ -16,9 +16,13 @@ package logging
 import "github.com/edgexfoundry/edgex-go/internal/pkg/config"
 
 type ConfigurationStruct struct {
-	Persistence string
+	Writable    WritableInfo
 	Databases   map[string]config.DatabaseInfo
 	Logging     config.LoggingInfo
 	Registry    config.RegistryInfo
 	Service     config.ServiceInfo
+}
+
+type WritableInfo struct {
+	Persistence string
 }
