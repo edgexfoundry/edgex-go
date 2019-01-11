@@ -1,3 +1,4 @@
+[Writable]
 ResendLimit = 2
 
 [Service]

@@ -17,13 +17,17 @@ package notifications
 import "github.com/edgexfoundry/edgex-go/internal/pkg/config"
 
 type ConfigurationStruct struct {
-	ResendLimit int
+	Writable    WritableInfo
 	Clients     map[string]config.ClientInfo
 	Databases   map[string]config.DatabaseInfo
 	Logging     config.LoggingInfo
 	Registry    config.RegistryInfo
 	Service     config.ServiceInfo
 	Smtp        SmtpInfo
+}
+
+type WritableInfo struct {
+	ResendLimit int
 }
 
 type SmtpInfo struct {

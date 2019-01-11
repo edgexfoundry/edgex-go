@@ -112,13 +112,13 @@ func restSend(message string, url string) models.TransmissionRecord {
 
 func handleFailedTransmission(t models.Transmission) {
 	n := t.Notification
-	if t.ResendCount >= Configuration.ResendLimit {
+	if t.ResendCount >= Configuration.Writable.ResendLimit {
 		LoggingClient.Error("Too many transmission resend attempts!  Giving up on transmission: " + t.ID.String() + ", for notification: " + n.Slug)
 	}
 	if t.Status == models.Failed && n.Status != models.Escalated {
 		LoggingClient.Debug("Handling failed transmission for: " + t.ID.String() + " for notification: " + t.Notification.Slug + ", resends so far: " + strconv.Itoa(t.ResendCount))
 		if n.Severity == models.Critical {
-			if t.ResendCount < Configuration.ResendLimit {
+			if t.ResendCount < Configuration.Writable.ResendLimit {
 				time.AfterFunc(time.Second*5, func() { criticalSeverityResend(t) })
 			} else {
 				escalate(t)
