@@ -16,8 +16,14 @@ package models
 import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	contract "github.com/edgexfoundry/edgex-go/pkg/models"
+	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
 )
+
+type readingTransform interface {
+	DBRefToReading(dbRef mgo.DBRef) (a Reading, err error)
+	ReadingToDBRef(a Reading) (dbRef mgo.DBRef, err error)
+}
 
 type Reading struct {
 	Id       bson.ObjectId `bson:"_id,omitempty"`
@@ -31,30 +37,29 @@ type Reading struct {
 	Value    string        `bson:"value"` // Device sensor data value
 }
 
-func (r *Reading) ToContract() contract.Reading {
+func (r *Reading) ToContract() (c contract.Reading) {
 	// Always hand back the UUID as the contract event ID unless it's blank (an old event, for example blackbox test scripts)
 	id := r.Uuid
 	if id == "" {
 		id = r.Id.Hex()
 	}
-	to := contract.Reading{
-		Id:       id,
-		Pushed:   r.Pushed,
-		Created:  r.Created,
-		Origin:   r.Origin,
-		Modified: r.Modified,
-		Device:   r.Device,
-		Name:     r.Name,
-		Value:    r.Value,
-	}
-	return to
+
+	c.Id = id
+	c.Pushed = r.Pushed
+	c.Created = r.Created
+	c.Origin = r.Origin
+	c.Modified = r.Modified
+	c.Device = r.Device
+	c.Name = r.Name
+	c.Value = r.Value
+
+	return c
 }
 
-func (r *Reading) FromContract(from contract.Reading) error {
-	var err error
+func (r *Reading) FromContract(from contract.Reading) (err error) {
 	r.Id, r.Uuid, err = fromContractId(from.Id)
 	if err != nil {
-		return err
+		return
 	}
 
 	r.Pushed = from.Pushed
@@ -69,5 +74,5 @@ func (r *Reading) FromContract(from contract.Reading) error {
 		r.Created = db.MakeTimestamp()
 	}
 
-	return nil
+	return
 }

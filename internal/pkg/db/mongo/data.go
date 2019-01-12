@@ -17,6 +17,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo/models"
 	contract "github.com/edgexfoundry/edgex-go/pkg/models"
+	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
 	"github.com/google/uuid"
 )
@@ -32,7 +33,7 @@ Has functions for interacting with the core data mongo database
 // UnexpectedError - failed to retrieve events from the database
 // Sort the events in descending order by ID
 func (mc MongoClient) Events() ([]contract.Event, error) {
-	return mapEvents(mc.getEvents(bson.M{}))
+	return mc.mapEvents(mc.getEvents(bson.M{}))
 
 }
 
@@ -40,7 +41,7 @@ func (mc MongoClient) Events() ([]contract.Event, error) {
 // UnexpectedError - failed to retrieve events from the database
 // Sort the events in descending order by ID
 func (mc MongoClient) EventsWithLimit(limit int) ([]contract.Event, error) {
-	return mapEvents(mc.getEventsLimit(bson.M{}, limit))
+	return mc.mapEvents(mc.getEventsLimit(bson.M{}, limit))
 }
 
 // Add a new event
@@ -50,27 +51,33 @@ func (mc MongoClient) AddEvent(e contract.Event) (string, error) {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
+	//Add the readings
+	if len(e.Readings) > 0 {
+		var ui []interface{}
+		for i, reading := range e.Readings {
+			var r models.Reading
+			if err := r.FromContract(reading); err != nil {
+				return "", err
+			}
+			ui = append(ui, r)
+
+			e.Readings[i].Id = r.Id.Hex()
+		}
+		err := s.DB(mc.database.Name).C(db.ReadingsCollection).Insert(ui...)
+		if err != nil {
+			return "", err
+		}
+	}
+
 	evt := &models.Event{}
-	err := evt.FromContract(e)
+	err := evt.FromContract(e, mc)
 	if err != nil {
 		return e.ID, err
 	}
 
-	//Add the readings
-	if len(evt.Readings) > 0 {
-		var ui []interface{}
-		for i := range evt.Readings {
-			ui = append(ui, evt.Readings[i])
-		}
-		err = s.DB(mc.database.Name).C(db.ReadingsCollection).Insert(ui...)
-		if err != nil {
-			return evt.Uuid, err
-		}
-	}
-
 	// Add the event
 	err = s.DB(mc.database.Name).C(db.EventsCollection).Insert(evt)
-	mapped := evt.ToContract()
+	mapped, err := evt.ToContract(mc)
 	return mapped.ID, err
 }
 
@@ -82,7 +89,7 @@ func (mc MongoClient) UpdateEvent(e contract.Event) error {
 	defer s.Close()
 
 	mapped := &models.Event{}
-	mapped.FromContract(e)
+	mapped.FromContract(e, mc)
 	mapped.Modified = db.MakeTimestamp()
 
 	var err error
@@ -120,8 +127,7 @@ func (mc MongoClient) EventById(id string) (contract.Event, error) {
 		return contract.Event{}, err
 	}
 
-	evt.Readings, err = mc.getReadingsForEvent(evt)
-	return evt.ToContract(), err
+	return evt.ToContract(mc)
 }
 
 // Get the number of events in Mongo
@@ -150,12 +156,12 @@ func (mc MongoClient) DeleteEventById(id string) error {
 
 // Get a list of events based on the device id and limit
 func (mc MongoClient) EventsForDeviceLimit(id string, limit int) ([]contract.Event, error) {
-	return mapEvents(mc.getEventsLimit(bson.M{"device": id}, limit))
+	return mc.mapEvents(mc.getEventsLimit(bson.M{"device": id}, limit))
 }
 
 // Get a list of events based on the device id
 func (mc MongoClient) EventsForDevice(id string) ([]contract.Event, error) {
-	return mapEvents(mc.getEvents(bson.M{"device": id}))
+	return mc.mapEvents(mc.getEvents(bson.M{"device": id}))
 }
 
 // Return a list of events whos creation time is between startTime and endTime
@@ -165,18 +171,18 @@ func (mc MongoClient) EventsByCreationTime(startTime, endTime int64, limit int) 
 		"$gte": startTime,
 		"$lte": endTime,
 	}}
-	return mapEvents(mc.getEventsLimit(query, limit))
+	return mc.mapEvents(mc.getEventsLimit(query, limit))
 }
 
 // Get Events that are older than the given age (defined by age = now - created)
 func (mc MongoClient) EventsOlderThanAge(age int64) ([]contract.Event, error) {
 	expireDate := (db.MakeTimestamp()) - age
-	return mapEvents(mc.getEvents(bson.M{"created": bson.M{"$lt": expireDate}}))
+	return mc.mapEvents(mc.getEvents(bson.M{"created": bson.M{"$lt": expireDate}}))
 }
 
 // Get all of the events that have been pushed
 func (mc MongoClient) EventsPushed() ([]contract.Event, error) {
-	return mapEvents(mc.getEvents(bson.M{"pushed": bson.M{"$gt": int64(0)}}))
+	return mc.mapEvents(mc.getEvents(bson.M{"pushed": bson.M{"$gt": int64(0)}}))
 }
 
 // Delete all of the readings and all of the events
@@ -198,38 +204,61 @@ func (mc MongoClient) ScrubAllEvents() error {
 }
 
 // Get events for the passed query
-func (mc MongoClient) getEvents(q bson.M) ([]models.Event, error) {
+func (mc MongoClient) getEvents(q bson.M) (me []models.Event, err error) {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
-	var me []models.Event
-	err := s.DB(mc.database.Name).C(db.EventsCollection).Find(q).All(&me)
+	err = s.DB(mc.database.Name).C(db.EventsCollection).Find(q).All(&me)
 	if err != nil {
 		return []models.Event{}, err
 	}
-
-	return mc.getReadingsForEventList(me)
+	return
 }
 
 // Get events with a limit
-func (mc MongoClient) getEventsLimit(q bson.M, limit int) ([]models.Event, error) {
+func (mc MongoClient) getEventsLimit(q bson.M, limit int) (me []models.Event, err error) {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
-	var me []models.Event
 	// Check if limit is 0
 	if limit == 0 {
 		return []models.Event{}, nil
 	}
 
-	err := s.DB(mc.database.Name).C(db.EventsCollection).Find(q).Limit(limit).All(&me)
+	err = s.DB(mc.database.Name).C(db.EventsCollection).Find(q).Limit(limit).All(&me)
 	if err != nil {
 		return []models.Event{}, err
 	}
-	return mc.getReadingsForEventList(me)
+	return
 }
 
 // ************************ READINGS ************************************8
+
+func (mc MongoClient) DBRefToReading(dbRef mgo.DBRef) (a models.Reading, err error) {
+	if err = mc.database.C(db.ReadingsCollection).Find(bson.M{"_id": dbRef.Id}).One(&a); err != nil {
+		return models.Reading{}, err
+	}
+	return
+}
+
+func (mc MongoClient) ReadingToDBRef(r models.Reading) (dbRef mgo.DBRef, err error) {
+	s := mc.session.Copy()
+	defer s.Close()
+
+	// validate identity provided in contract actually exists and populate missing Id, Uuid field
+	var reading models.Reading
+	if r.Id.Valid() {
+		reading, err = mc.readingById(r.Id.Hex())
+	} else {
+		reading, err = mc.readingById(r.Uuid)
+	}
+	if err != nil {
+		return
+	}
+
+	dbRef = mgo.DBRef{Collection: db.Addressable, Id: reading.Id}
+	return
+}
 
 // Return a list of readings sorted by reading id
 func (mc MongoClient) Readings() ([]contract.Reading, error) {
@@ -285,12 +314,20 @@ func (mc MongoClient) UpdateReading(r contract.Reading) error {
 
 // Get a reading by ID
 func (mc MongoClient) ReadingById(id string) (contract.Reading, error) {
+	res, err := mc.readingById(id)
+	if err != nil {
+		return contract.Reading{}, err
+	}
+	return res.ToContract(), nil
+}
+
+func (mc MongoClient) readingById(id string) (models.Reading, error) {
 	var query bson.M
 	if !bson.IsObjectIdHex(id) {
 		// ReadingID is not a BSON ID. Is it a UUID?
 		_, err := uuid.Parse(id)
 		if err != nil { // It is some unsupported type of string
-			return contract.Reading{}, db.ErrInvalidObjectId
+			return models.Reading{}, db.ErrInvalidObjectId
 		}
 		query = bson.M{"uuid": id}
 	} else {
@@ -302,8 +339,7 @@ func (mc MongoClient) ReadingById(id string) (contract.Reading, error) {
 
 	var res models.Reading
 	err := s.DB(mc.database.Name).C(db.ReadingsCollection).Find(query).One(&res)
-	err = errorMap(err)
-	return res.ToContract(), err
+	return res, errorMap(err)
 }
 
 // Get the count of readings in Mongo
@@ -391,43 +427,6 @@ func (mc MongoClient) getReading(q bson.M) (models.Reading, error) {
 	err := s.DB(mc.database.Name).C(db.ReadingsCollection).Find(q).One(&res)
 	err = errorMap(err)
 	return res, err
-}
-
-func (mc MongoClient) getReadingsForEvent(event models.Event) ([]models.Reading, error) {
-	s := mc.getSessionCopy()
-	defer s.Close()
-
-	readings := []models.Reading{}
-	// Get all of the reading objects
-	for _, rRef := range event.GetDBRefs() {
-		var reading models.Reading
-		err := mc.database.C(db.ReadingsCollection).FindId(rRef.Id).One(&reading)
-		if err != nil {
-			return []models.Reading{}, errorMap(err)
-		}
-		readings = append(readings, reading)
-	}
-	return readings, nil
-}
-
-func (mc MongoClient) getReadingsForEventList(events []models.Event) ([]models.Event, error) {
-	var result []models.Event
-	for _, event := range events {
-		readings, err := mc.getReadingsForEvent(event)
-		if err != nil {
-			//When getting a list of events, I am specifically ignoring missing readings
-			//Failing the whole query if there is bad data in the database engenders a level
-			//of transactionality I do not think we want. In addition, if one out of a hundred
-			//events has bad/missing readings, how do I as an operator find that out if the
-			//endpoint just returns a 500?
-			if err != db.ErrNotFound {
-				return []models.Event{}, err
-			}
-		}
-		event.Readings = readings
-		result = append(result, event)
-	}
-	return result, nil
 }
 
 // ************************* VALUE DESCRIPTORS *****************************
@@ -630,16 +629,22 @@ func (mc MongoClient) getValueDescriptor(q bson.M) (models.ValueDescriptor, erro
 	return m, err
 }
 
-func mapEvents(events []models.Event, err error) ([]contract.Event, error) {
-	if err != nil {
-		return []contract.Event{}, err
+func (mc MongoClient) mapEvents(events []models.Event, errIn error) (ce []contract.Event, err error) {
+	if errIn != nil {
+		return []contract.Event{}, errIn
 	}
 
-	var mapped []contract.Event
-	for _, evt := range events {
-		mapped = append(mapped, evt.ToContract())
+	ce = []contract.Event{}
+	for _, event := range events {
+		var contractEvent contract.Event
+		contractEvent, err = event.ToContract(mc)
+		if err != nil {
+			return []contract.Event{}, err
+		}
+		ce = append(ce, contractEvent)
 	}
-	return mapped, nil
+
+	return
 }
 
 func mapReadings(readings []models.Reading, err error) ([]contract.Reading, error) {
