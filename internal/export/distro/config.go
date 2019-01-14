@@ -16,6 +16,7 @@ package distro
 import "github.com/edgexfoundry/edgex-go/internal/pkg/config"
 
 type ConfigurationStruct struct {
+	Writable       WritableInfo
 	Certificates   map[string]CertificateInfo
 	Clients        map[string]config.ClientInfo
 	Logging        config.LoggingInfo
@@ -23,6 +24,9 @@ type ConfigurationStruct struct {
 	AnalyticsQueue config.MessageQueueInfo
 	Registry       config.RegistryInfo
 	Service        config.ServiceInfo
+}
+
+type WritableInfo struct {
 	MarkPushed     bool
 }
 
