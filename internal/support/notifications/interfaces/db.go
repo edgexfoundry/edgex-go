@@ -17,8 +17,7 @@ package interfaces
 
 import (
 	"errors"
-	"github.com/edgexfoundry/edgex-go/pkg/models"
-	"github.com/globalsign/mgo/bson"
+	contract "github.com/edgexfoundry/edgex-go/pkg/models"
 )
 
 type DatabaseType int8 // Database type enum
@@ -29,76 +28,48 @@ const (
 type DBClient interface {
 	CloseSession()
 
-	Notifications() ([]models.Notification, error)
-
-	NotificationById(id string) (models.Notification, error)
-
-	NotificationBySlug(slug string) (models.Notification, error)
-
-	NotificationBySender(sender string, limit int) ([]models.Notification, error)
-
-	NotificationsByLabels(labels []string, limit int) ([]models.Notification, error)
-
-	NotificationsByStartEnd(start int64, end int64, limit int) ([]models.Notification, error)
-
-	NotificationsByStart(start int64, limit int) ([]models.Notification, error)
-
-	NotificationsByEnd(end int64, limit int) ([]models.Notification, error)
-
-	NotificationsNew(limit int) ([]models.Notification, error)
-
-	NotificationsNewNormal(limit int) ([]models.Notification, error)
-
-	AddNotification(n *models.Notification) (bson.ObjectId, error)
-
-	UpdateNotification(n models.Notification) error
-
-	MarkNotificationProcessed(n models.Notification) error
-
+	// Notifications
+	GetNotifications() ([]contract.Notification, error)
+	GetNotificationById(id string) (contract.Notification, error)
+	GetNotificationBySlug(slug string) (contract.Notification, error)
+	GetNotificationBySender(sender string, limit int) ([]contract.Notification, error)
+	GetNotificationsByLabels(labels []string, limit int) ([]contract.Notification, error)
+	GetNotificationsByStartEnd(start int64, end int64, limit int) ([]contract.Notification, error)
+	GetNotificationsByStart(start int64, limit int) ([]contract.Notification, error)
+	GetNotificationsByEnd(end int64, limit int) ([]contract.Notification, error)
+	GetNewNotifications(limit int) ([]contract.Notification, error)
+	GetNewNormalNotifications(limit int) ([]contract.Notification, error)
+	AddNotification(n contract.Notification) (string, error)
+	UpdateNotification(n contract.Notification) error
+	MarkNotificationProcessed(n contract.Notification) error
 	DeleteNotificationById(id string) error
-
 	DeleteNotificationBySlug(id string) error
-
 	DeleteNotificationsOld(age int) error
 
-	Subscriptions() ([]models.Subscription, error)
-
-	SubscriptionById(id string) (models.Subscription, error)
-
-	SubscriptionBySlug(slug string) (models.Subscription, error)
-
-	SubscriptionByReceiver(receiver string) ([]models.Subscription, error)
-
-	SubscriptionByCategories(categories []string) ([]models.Subscription, error)
-
-	SubscriptionByLabels(labels []string) ([]models.Subscription, error)
-
-	SubscriptionByCategoriesLabels(categories []string, labels []string) ([]models.Subscription, error)
-
-	AddSubscription(s *models.Subscription) (bson.ObjectId, error)
-
-	UpdateSubscription(s models.Subscription) error
-
+	// Subscriptions
+	GetSubscriptions() ([]contract.Subscription, error)
+	GetSubscriptionById(id string) (contract.Subscription, error)
+	GetSubscriptionBySlug(slug string) (contract.Subscription, error)
+	GetSubscriptionByReceiver(receiver string) ([]contract.Subscription, error)
+	GetSubscriptionByCategories(categories []string) ([]contract.Subscription, error)
+	GetSubscriptionByLabels(labels []string) ([]contract.Subscription, error)
+	GetSubscriptionByCategoriesLabels(categories []string, labels []string) ([]contract.Subscription, error)
+	AddSubscription(s contract.Subscription) (string, error)
+	UpdateSubscription(s contract.Subscription) error
 	DeleteSubscriptionBySlug(id string) error
 
-	AddTransmission(t *models.Transmission) (bson.ObjectId, error)
+	// Transmissions
+	GetTransmissionsByNotificationSlug(slug string, resendLimit int) ([]contract.Transmission, error)
+	GetTransmissionsByStartEnd(start int64, end int64, resendLimit int) ([]contract.Transmission, error)
+	GetTransmissionsByStart(start int64, resendLimit int) ([]contract.Transmission, error)
+	GetTransmissionsByEnd(end int64, resendLimit int) ([]contract.Transmission, error)
+	GetTransmissionsByStatus(resendLimit int, status contract.TransmissionStatus) ([]contract.Transmission, error)
+	AddTransmission(t contract.Transmission) (string, error)
+	UpdateTransmission(t contract.Transmission) error
+	DeleteTransmission(age int64, status contract.TransmissionStatus) error
 
-	UpdateTransmission(t models.Transmission) error
-
-	DeleteTransmission(age int64, status models.TransmissionStatus) error
-
-	TransmissionsByNotificationSlug(slug string, resendLimit int) ([]models.Transmission, error)
-
-	TransmissionsByStartEnd(start int64, end int64, resendLimit int) ([]models.Transmission, error)
-
-	TransmissionsByStart(start int64, resendLimit int) ([]models.Transmission, error)
-
-	TransmissionsByEnd(end int64, resendLimit int) ([]models.Transmission, error)
-
-	TransmissionsByStatus(resendLimit int, status models.TransmissionStatus) ([]models.Transmission, error)
-
+	// General Cleanup
 	Cleanup() error
-
 	CleanupOld(age int) error
 }
 

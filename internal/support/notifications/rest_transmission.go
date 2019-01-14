@@ -44,7 +44,7 @@ func transmissionHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		LoggingClient.Info("Posting Transmission: " + t.String())
-		id, err := dbClient.AddTransmission(&t)
+		id, err := dbClient.AddTransmission(t)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			LoggingClient.Error(err.Error())
@@ -52,7 +52,7 @@ func transmissionHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(id.Hex()))
+		w.Write([]byte(id))
 
 		break
 	}
@@ -75,7 +75,7 @@ func transmissionBySlugHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 
-		t, err := dbClient.TransmissionsByNotificationSlug(vars["slug"], resendLimit)
+		t, err := dbClient.GetTransmissionsByNotificationSlug(vars["slug"], resendLimit)
 		if err != nil {
 			if err == db.ErrNotFound {
 				http.Error(w, "Transmission not found", http.StatusNotFound)
@@ -120,7 +120,7 @@ func transmissionByStartEndHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 
-		t, err := dbClient.TransmissionsByStartEnd(start, end, resendLimit)
+		t, err := dbClient.GetTransmissionsByStartEnd(start, end, resendLimit)
 		if err != nil {
 			if err == db.ErrNotFound {
 				http.Error(w, "Transmission not found", http.StatusNotFound)
@@ -156,7 +156,7 @@ func transmissionByStartHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 
-		t, err := dbClient.TransmissionsByStart(start, resendLimit)
+		t, err := dbClient.GetTransmissionsByStart(start, resendLimit)
 		if err != nil {
 			if err == db.ErrNotFound {
 				http.Error(w, "Transmission not found", http.StatusNotFound)
@@ -195,7 +195,7 @@ func transmissionByEndHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 
-		t, err := dbClient.TransmissionsByEnd(end, resendLimit)
+		t, err := dbClient.GetTransmissionsByEnd(end, resendLimit)
 		if err != nil {
 			if err == db.ErrNotFound {
 				http.Error(w, "Transmission not found", http.StatusNotFound)
@@ -235,7 +235,7 @@ func transmissionByStatusHandler(w http.ResponseWriter, r *http.Request, status 
 	switch r.Method {
 	case http.MethodGet:
 
-		t, err := dbClient.TransmissionsByStatus(resendLimit, status)
+		t, err := dbClient.GetTransmissionsByStatus(resendLimit, status)
 		if err != nil {
 			if err == db.ErrNotFound {
 				http.Error(w, "Transmission not found", http.StatusNotFound)

@@ -44,7 +44,7 @@ func notificationHandler(w http.ResponseWriter, r *http.Request) {
 
 		LoggingClient.Info("Posting Notification: " + n.String())
 		n.Status = models.NotificationsStatus(models.New)
-		_, err = dbClient.AddNotification(&n)
+		n.ID, err = dbClient.AddNotification(n)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusConflict)
 			LoggingClient.Error(err.Error())
@@ -77,7 +77,7 @@ func notificationBySlugHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 
-		n, err := dbClient.NotificationBySlug(slug)
+		n, err := dbClient.GetNotificationBySlug(slug)
 		if err != nil {
 			if err == db.ErrNotFound {
 				http.Error(w, "Notification not found", http.StatusNotFound)
@@ -92,7 +92,7 @@ func notificationBySlugHandler(w http.ResponseWriter, r *http.Request) {
 
 		encode(n, w)
 	case http.MethodDelete:
-		_, err := dbClient.NotificationBySlug(slug)
+		_, err := dbClient.GetNotificationBySlug(slug)
 		if err != nil {
 			if err == db.ErrNotFound {
 				http.Error(w, "Notification not found", http.StatusNotFound)
@@ -127,7 +127,7 @@ func notificationByIDHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 
-		n, err := dbClient.NotificationById(id)
+		n, err := dbClient.GetNotificationById(id)
 		if err != nil {
 			if err == db.ErrNotFound {
 				http.Error(w, "Notification not found", http.StatusNotFound)
@@ -142,7 +142,7 @@ func notificationByIDHandler(w http.ResponseWriter, r *http.Request) {
 
 		encode(n, w)
 	case http.MethodDelete:
-		_, err := dbClient.NotificationById(id)
+		_, err := dbClient.GetNotificationById(id)
 		if err != nil {
 			if err == db.ErrNotFound {
 				http.Error(w, "Notification not found", http.StatusNotFound)
@@ -221,7 +221,7 @@ func notificationBySenderHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		n, err := dbClient.NotificationBySender(vars["sender"], limitNum)
+		n, err := dbClient.GetNotificationBySender(vars["sender"], limitNum)
 		if err != nil {
 			if err == db.ErrNotFound {
 				http.Error(w, "Notification not found", http.StatusNotFound)
@@ -273,7 +273,7 @@ func notificationByStartEndHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		n, err := dbClient.NotificationsByStartEnd(start, end, limitNum)
+		n, err := dbClient.GetNotificationsByStartEnd(start, end, limitNum)
 		if err != nil {
 			if err == db.ErrNotFound {
 				http.Error(w, "Notification not found", http.StatusNotFound)
@@ -313,7 +313,7 @@ func notificationByStartHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		n, err := dbClient.NotificationsByStart(start, limitNum)
+		n, err := dbClient.GetNotificationsByStart(start, limitNum)
 		if err != nil {
 			if err == db.ErrNotFound {
 				http.Error(w, "Notification not found", http.StatusNotFound)
@@ -359,7 +359,7 @@ func notificationByEndHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		n, err := dbClient.NotificationsByEnd(end, limitNum)
+		n, err := dbClient.GetNotificationsByEnd(end, limitNum)
 		if err != nil {
 			if err == db.ErrNotFound {
 				http.Error(w, "Notification not found", http.StatusNotFound)
@@ -401,7 +401,7 @@ func notificationsByLabelsHandler(w http.ResponseWriter, r *http.Request) {
 
 		labels := splitVars(vars["labels"])
 
-		n, err := dbClient.NotificationsByLabels(labels, limitNum)
+		n, err := dbClient.GetNotificationsByLabels(labels, limitNum)
 		if err != nil {
 			if err == db.ErrNotFound {
 				http.Error(w, "Notification not found", http.StatusNotFound)
@@ -441,7 +441,7 @@ func notificationsNewHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		n, err := dbClient.NotificationsNew(limitNum)
+		n, err := dbClient.GetNewNotifications(limitNum)
 		if err != nil {
 			if err == db.ErrNotFound {
 				http.Error(w, "Notification not found", http.StatusNotFound)

@@ -23,7 +23,7 @@ func distribute(n models.Notification) error {
 	LoggingClient.Debug("DistributionCoordinator start distributing notification: " + n.Slug)
 	var categories []string
 	categories = append(categories, string(n.Category))
-	subs, err := dbClient.SubscriptionByCategoriesLabels(categories, n.Labels)
+	subs, err := dbClient.GetSubscriptionByCategoriesLabels(categories, n.Labels)
 	if err != nil {
 		LoggingClient.Error("Unable to get subcriptions to distribute notification:" + n.Slug)
 		return err
@@ -35,7 +35,7 @@ func distribute(n models.Notification) error {
 }
 
 func resend(t models.Transmission) {
-	LoggingClient.Debug("Resending transmission: " + t.ID.String() + " for: " + t.Notification.Slug)
+	LoggingClient.Debug("Resending transmission: " + t.ID + " for: " + t.Notification.Slug)
 	resendViaChannel(t)
 }
 
@@ -47,6 +47,6 @@ func send(n models.Notification, s models.Subscription) {
 
 func criticalSeverityResend(t models.Transmission) {
 	LoggingClient.Info("Critical severity resend scheduler is triggered.")
-	LoggingClient.Debug("Resending transmission is: " + t.ID.String() + " for: " + t.Notification.Slug)
+	LoggingClient.Debug("Resending transmission is: " + t.ID + " for: " + t.Notification.Slug)
 	resend(t)
 }
