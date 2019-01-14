@@ -16,9 +16,14 @@ package client
 import "github.com/edgexfoundry/edgex-go/internal/pkg/config"
 
 type ConfigurationStruct struct {
-	Clients   map[string]config.ClientInfo
-	Databases map[string]config.DatabaseInfo
-	Logging   config.LoggingInfo
-	Registry  config.RegistryInfo
-	Service   config.ServiceInfo
+	Writable      WritableInfo
+	Clients       map[string]config.ClientInfo
+	Databases     map[string]config.DatabaseInfo
+	Logging       config.LoggingInfo
+	Registry      config.RegistryInfo
+	Service       config.ServiceInfo
+}
+
+type WritableInfo struct {
+	LogLevel string
 }

@@ -1,3 +1,6 @@
+[Writable]
+LogLevel = 'INFO'
+
 [Service]
 BootTimeout = 30000
 ClientMonitor = 15000

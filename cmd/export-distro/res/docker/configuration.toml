@@ -1,5 +1,6 @@
 [Writable]
 MarkPushed = false
+LogLevel = 'INFO'
 
 [Service]
 BootTimeout = 30000

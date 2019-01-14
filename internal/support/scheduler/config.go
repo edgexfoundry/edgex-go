@@ -29,4 +29,5 @@ type ConfigurationStruct struct {
 
 type WritableInfo struct {
 	ScheduleIntervalTime    int
+	LogLevel                string
 }
