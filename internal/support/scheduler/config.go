@@ -17,8 +17,7 @@ import "github.com/edgexfoundry/edgex-go/internal/pkg/config"
 
 // Configuration V2 for the Support Scheduler Service
 type ConfigurationStruct struct {
-
-	ScheduleIntervalTime    int
+	Writable        WritableInfo
 	Clients         map[string]config.ClientInfo
 	Databases       map[string]config.DatabaseInfo
 	Logging         config.LoggingInfo
@@ -26,4 +25,8 @@ type ConfigurationStruct struct {
 	Service         config.ServiceInfo
 	Intervals       map[string]config.IntervalInfo
 	IntervalActions map[string]config.IntervalActionInfo
+}
+
+type WritableInfo struct {
+	ScheduleIntervalTime    int
 }
