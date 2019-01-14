@@ -77,7 +77,7 @@ func updateIntervalAction(from contract.IntervalAction) error {
 			return errors.NewErrIntervalNotFound(from.ID)
 		}
 	}
-	// Validate interval name
+	// Validate interval
 	interval := from.Interval
 	if interval != "" {
 		_, err := dbClient.IntervalByName(interval)
@@ -87,6 +87,20 @@ func updateIntervalAction(from contract.IntervalAction) error {
 	}
 	if interval != to.Interval {
 		to.Interval = interval
+	}
+
+	// Name
+	name := from.Name
+	if name == ""{
+		return errors.NewErrIntervalActionTargetNameRequired("")
+	}
+	// Ensure name is unique
+	if name != to.Name {
+		ret, err := dbClient.IntervalActionByName(name)
+		if err == nil && ret.Name == name {
+			return errors.NewErrIntervalActionNameInUse(name)
+		}
+		to.Name = name
 	}
 
 	// Validate target

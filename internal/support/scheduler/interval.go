@@ -129,12 +129,10 @@ func updateInterval(from contract.Interval) error {
 	}
 	// Check if new name is unique
 	if from.Name != "" && from.Name != to.Name {
-		checkInterval, err := dbClient.IntervalByName(to.Name)
+		checkInterval, err := dbClient.IntervalByName(from.Name)
 		if err != nil {
-			if checkInterval.ID != from.ID {
+			if checkInterval.ID != "" {
 				return errors.NewErrIntervalNameInUse(from.Name)
-			} else {
-				return err
 			}
 		}
 
@@ -251,7 +249,7 @@ func deleteInterval(interval contract.Interval) error {
 func isIntervalStillInUse(s contract.Interval) (bool, error) {
 	var intervalActions []contract.IntervalAction
 
-	_, err := dbClient.IntervalActionsByIntervalName(s.Name)
+	intervalActions, err := dbClient.IntervalActionsByIntervalName(s.Name)
 	if err != nil {
 		return false, err
 	}
