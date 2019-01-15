@@ -41,7 +41,7 @@ func subscriptionHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Get all subscriptions
 	case http.MethodGet:
-		subscriptions, err := dbClient.Subscriptions()
+		subscriptions, err := dbClient.GetSubscriptions()
 		if err != nil {
 			LoggingClient.Error(err.Error())
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -56,7 +56,7 @@ func subscriptionHandler(w http.ResponseWriter, r *http.Request) {
 		err := dec.Decode(&s)
 
 		// Check if the subscription exists
-		s2, err := dbClient.SubscriptionBySlug(s.Slug)
+		s2, err := dbClient.GetSubscriptionBySlug(s.Slug)
 		if err != nil {
 			if err == db.ErrNotFound {
 				http.Error(w, "Subscription not found", http.StatusNotFound)
@@ -92,7 +92,7 @@ func subscriptionHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		LoggingClient.Info("Posting Subscription: " + s.String())
-		_, err = dbClient.AddSubscription(&s)
+		_, err = dbClient.AddSubscription(s)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusConflict)
 			LoggingClient.Error(err.Error())
@@ -115,7 +115,7 @@ func subscriptionByIDHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 
-		s, err := dbClient.SubscriptionById(vars["id"])
+		s, err := dbClient.GetSubscriptionById(vars["id"])
 		if err != nil {
 			if err == db.ErrNotFound {
 				http.Error(w, "Subscription not found", http.StatusNotFound)
@@ -141,7 +141,7 @@ func subscriptionsBySlugHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 
-		s, err := dbClient.SubscriptionBySlug(slug)
+		s, err := dbClient.GetSubscriptionBySlug(slug)
 		if err != nil {
 			if err == db.ErrNotFound {
 				http.Error(w, "Subscription not found", http.StatusNotFound)
@@ -155,7 +155,7 @@ func subscriptionsBySlugHandler(w http.ResponseWriter, r *http.Request) {
 
 		encodeWithUTF8(s, w)
 	case http.MethodDelete:
-		_, err := dbClient.SubscriptionBySlug(slug)
+		_, err := dbClient.GetSubscriptionBySlug(slug)
 		if err != nil {
 			if err == db.ErrNotFound {
 				http.Error(w, "Subscription not found", http.StatusNotFound)
@@ -191,7 +191,7 @@ func subscriptionsByCategoriesHandler(w http.ResponseWriter, r *http.Request) {
 
 		categories := splitVars(vars["categories"])
 
-		s, err := dbClient.SubscriptionByCategories(categories)
+		s, err := dbClient.GetSubscriptionByCategories(categories)
 		if err != nil {
 			if err == db.ErrNotFound {
 				http.Error(w, "Subscription not found", http.StatusNotFound)
@@ -218,7 +218,7 @@ func subscriptionsByLabelsHandler(w http.ResponseWriter, r *http.Request) {
 
 		labels := splitVars(vars["labels"])
 
-		s, err := dbClient.SubscriptionByLabels(labels)
+		s, err := dbClient.GetSubscriptionByLabels(labels)
 		if err != nil {
 			if err == db.ErrNotFound {
 				http.Error(w, "Subscription not found", http.StatusNotFound)
@@ -246,7 +246,7 @@ func subscriptionsByCategoriesLabelsHandler(w http.ResponseWriter, r *http.Reque
 		labels := splitVars(vars["labels"])
 		categories := splitVars(vars["categories"])
 
-		s, err := dbClient.SubscriptionByCategoriesLabels(categories, labels)
+		s, err := dbClient.GetSubscriptionByCategoriesLabels(categories, labels)
 		if err != nil {
 			if err == db.ErrNotFound {
 				http.Error(w, "Subscription not found", http.StatusNotFound)
@@ -275,7 +275,7 @@ func subscriptionsByReceiverHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 
-		s, err := dbClient.SubscriptionByReceiver(vars["receiver"])
+		s, err := dbClient.GetSubscriptionByReceiver(vars["receiver"])
 		if err != nil {
 			if err == db.ErrNotFound {
 				http.Error(w, "Subscription not found", http.StatusNotFound)

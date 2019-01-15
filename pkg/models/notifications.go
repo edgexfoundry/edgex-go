@@ -17,28 +17,26 @@ package models
 
 import (
 	"encoding/json"
-
-	"github.com/globalsign/mgo/bson"
 )
 
 type Notification struct {
-	BaseObject  `bson:",inline"`
-	ID          bson.ObjectId         `json:"id" bson:"_id,omitempty"`
-	Slug        string                `bson:"slug" json:"slug,omitempty"`
-	Sender      string                `bson:"sender" json:"sender,omitempty"`
-	Category    NotificationsCategory `bson:"category" json:"category,omitempty"`
-	Severity    NotificationsSeverity `bson:"severity" json:"severity,omitempty"`
-	Content     string                `bson:"content" json:"content,omitempty"`
-	Description string                `bson:"description" json:"description,omitempty"`
-	Status      NotificationsStatus   `bson:"status" json:"status,omitempty"`
-	Labels      []string              `bson:"labels,omitempty" json:"labels,omitempty"`
-	ContentType string                `bson:"contenttype" json:"contenttype,omitempty"`
+	BaseObject
+	ID          string                `json:"id,omitempty"`
+	Slug        string                `json:"slug,omitempty"`
+	Sender      string                `json:"sender,omitempty"`
+	Category    NotificationsCategory `json:"category,omitempty"`
+	Severity    NotificationsSeverity `json:"severity,omitempty"`
+	Content     string                `json:"content,omitempty"`
+	Description string                `json:"description,omitempty"`
+	Status      NotificationsStatus   `json:"status,omitempty"`
+	Labels      []string              `json:"labels,omitempty"`
+	ContentType string                `json:"contenttype,omitempty"`
 }
 
 func (n Notification) MarshalJSON() ([]byte, error) {
 	test := struct {
 		BaseObject
-		ID          *bson.ObjectId        `json:"id"`
+		ID          *string               `json:"id"`
 		Slug        *string               `json:"slug,omitempty,omitempty"`
 		Sender      *string               `json:"sender,omitempty"`
 		Category    NotificationsCategory `json:"category,omitempty"`

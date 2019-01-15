@@ -20,9 +20,9 @@ import (
 )
 
 type TransmissionRecord struct {
-	Status   TransmissionStatus `bson:"status" json:"status"`
-	Response string             `bson:"response" json:"response"`
-	Sent     int64              `bson:"sent" json:"sent"`
+	Status   TransmissionStatus `json:"status"`
+	Response string             `json:"response"`
+	Sent     int64              `json:"sent"`
 }
 
 // Custom marshaling to make empty strings null

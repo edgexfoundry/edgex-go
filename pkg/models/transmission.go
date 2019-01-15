@@ -17,26 +17,24 @@ package models
 
 import (
 	"encoding/json"
-
-	"github.com/globalsign/mgo/bson"
 )
 
 type Transmission struct {
-	BaseObject   `bson:",inline"`
-	ID           bson.ObjectId        `json:"id" bson:"_id,omitempty"`
-	Notification Notification         `json:"notification" bson:"notification,omitempty"`
-	Receiver     string               `bson:"receiver" json:"receiver,omitempty"`
-	Channel      Channel              `bson:"channel,omitempty" json:"channel,omitempty"`
-	Status       TransmissionStatus   `bson:"status" json:"status,omitempty"`
-	ResendCount  int                  `bson:"resendcount" json:"resendcount"`
-	Records      []TransmissionRecord `bson:"records,omitempty" json:"records,omitempty"`
+	BaseObject
+	ID           string               `json:"id"`
+	Notification Notification         `json:"notification"`
+	Receiver     string               `json:"receiver,omitempty"`
+	Channel      Channel              `json:"channel,omitempty"`
+	Status       TransmissionStatus   `json:"status,omitempty"`
+	ResendCount  int                  `json:"resendcount"`
+	Records      []TransmissionRecord `json:"records,omitempty"`
 }
 
 // Custom marshaling to make empty strings null
 func (t Transmission) MarshalJSON() ([]byte, error) {
 	test := struct {
 		BaseObject
-		ID           *bson.ObjectId       `json:"id"`
+		ID           *string              `json:"id"`
 		Notification Notification         `json:"notification,omitempty"`
 		Receiver     *string              `json:"receiver,omitempty"`
 		Channel      Channel              `json:"channel,omitempty"`
@@ -52,6 +50,9 @@ func (t Transmission) MarshalJSON() ([]byte, error) {
 		Records:      t.Records,
 	}
 	// Empty strings are null
+	if t.ID != "" {
+		test.ID = &t.ID
+	}
 	if t.Receiver != "" {
 		test.Receiver = &t.Receiver
 	}

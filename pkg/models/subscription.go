@@ -17,8 +17,6 @@ package models
 
 import (
 	"encoding/json"
-
-	"github.com/globalsign/mgo/bson"
 )
 
 /*
@@ -28,21 +26,21 @@ import (
  * Subscription struct
  */
 type Subscription struct {
-	BaseObject           `bson:",inline"`
-	ID                   bson.ObjectId           `bson:"_id,omitempty" json:"id"`
-	Slug                 string                  `bson:"slug" json:"slug,omitempty"`
-	Receiver             string                  `bson:"receiver" json:"receiver,omitempty"`
-	Description          string                  `bson:"description" json:"description,omitempty"`
-	SubscribedCategories []NotificationsCategory `bson:"subscribedCategories,omitempty" json:"subscribedCategories,omitempty"`
-	SubscribedLabels     []string                `bson:"subscribedLabels,omitempty" json:"subscribedLabels,omitempty"`
-	Channels             []Channel               `bson:"channels,omitempty" json:"channels,omitempty"`
+	BaseObject
+	ID                   string                  `json:"id"`
+	Slug                 string                  `json:"slug,omitempty"`
+	Receiver             string                  `json:"receiver,omitempty"`
+	Description          string                  `json:"description,omitempty"`
+	SubscribedCategories []NotificationsCategory `json:"subscribedCategories,omitempty"`
+	SubscribedLabels     []string                `json:"subscribedLabels,omitempty"`
+	Channels             []Channel               `json:"channels,omitempty"`
 }
 
 // Custom marshaling to make empty strings null
 func (s Subscription) MarshalJSON() ([]byte, error) {
 	test := struct {
 		BaseObject
-		ID                   *bson.ObjectId          `json:"id"`
+		ID                   *string                 `json:"id"`
 		Slug                 *string                 `json:"slug,omitempty"`
 		Receiver             *string                 `json:"receiver,omitempty"`
 		Description          *string                 `json:"description,omitempty"`

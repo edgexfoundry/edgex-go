@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2018 Dell Technologies Inc.
+ * Copyright 2019 Dell Technologies Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -14,21 +14,23 @@
  *******************************************************************************/
 package models
 
-import (
-	"encoding/json"
-)
+import contract "github.com/edgexfoundry/edgex-go/pkg/models"
 
-//TODO - this is ugly and I want to someday have two different structs of EMailChannel and RESTChannel
 type Channel struct {
-	Type          ChannelType `json:"type,omitempty"`
-	MailAddresses []string    `json:"mailAddresses,omitempty"`
-	Url           string      `json:"url,omitempty"`
+	Type          contract.ChannelType `bson:"type,omitempty"`
+	MailAddresses []string             `bson:"mailAddresses,omitempty"`
+	Url           string               `bson:"url,omitempty"`
 }
 
-func (c Channel) String() string {
-	out, err := json.Marshal(c)
-	if err != nil {
-		return err.Error()
-	}
-	return string(out)
+func (channel *Channel) ToContract() (c contract.Channel) {
+	c.Type = channel.Type
+	c.MailAddresses = channel.MailAddresses
+	c.Url = channel.Url
+	return
+}
+
+func (channel *Channel) FromContract(from contract.Channel) {
+	channel.Type = from.Type
+	channel.MailAddresses = from.MailAddresses
+	channel.Url = from.Url
 }
