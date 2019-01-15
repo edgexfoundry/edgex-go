@@ -16,6 +16,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
 	"sync"
 
 	"github.com/edgexfoundry/edgex-go/internal"
@@ -46,7 +47,7 @@ func main() {
 	ok := config.Init()
 	if !ok {
 		logBeforeInit(fmt.Errorf("%s: Service bootstrap failed!", internal.ConfigSeedServiceKey))
-		return
+		os.Exit(1)
 	}
 	config.LoggingClient.Info("Service dependencies resolved...")
 	err := config.ImportProperties(dirProperties)
@@ -57,6 +58,8 @@ func main() {
 	if err != nil {
 		config.LoggingClient.Error(err.Error())
 	}
+
+	os.Exit(0)
 }
 
 func bootstrap(profile string) {
