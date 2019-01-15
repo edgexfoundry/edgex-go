@@ -56,7 +56,7 @@ func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup,
 			} else {
 				// Setup Logging
 				logTarget := setLoggingTarget()
-				LoggingClient = logger.NewClient(internal.SupportNotificationsServiceKey, Configuration.Logging.EnableRemote, logTarget, Configuration.Logging.Level)
+				LoggingClient = logger.NewClient(internal.SupportNotificationsServiceKey, Configuration.Logging.EnableRemote, logTarget, Configuration.Writable.LogLevel)
 			}
 		}
 
@@ -211,6 +211,7 @@ func listenForConfigChanges() {
 					LoggingClient.Error("listenForConfigChanges() type check failed")
 				}
 				Configuration.Writable = *actual
+				LoggingClient.SetLogLevel(Configuration.Writable.LogLevel)
 			} else {
 				return
 			}

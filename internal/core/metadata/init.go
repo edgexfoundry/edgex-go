@@ -59,7 +59,7 @@ func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup,
 				initializeClients(useConsul)
 				// Setup Logging
 				logTarget := setLoggingTarget()
-				LoggingClient = logger.NewClient(internal.CoreMetaDataServiceKey, Configuration.Logging.EnableRemote, logTarget, Configuration.Logging.Level)
+				LoggingClient = logger.NewClient(internal.CoreMetaDataServiceKey, Configuration.Logging.EnableRemote, logTarget, Configuration.Writable.LogLevel)
 			}
 		}
 
@@ -162,8 +162,8 @@ func connectToConsul(conf *ConfigurationStruct) (*ConfigurationStruct, error) {
 func listenForConfigChanges() {
 	errCh := make(chan error)
 	dec := consulclient.NewConsulDecoder(Configuration.Registry)
-	dec.Target = &ConfigurationStruct{}
-	dec.Prefix = internal.ConfigRegistryStem + internal.CoreMetaDataServiceKey
+	dec.Target = &WritableInfo{}
+	dec.Prefix = internal.ConfigRegistryStem + internal.CoreMetaDataServiceKey + internal.WritableKey
 	dec.ErrCh = errCh
 	dec.UpdateCh = chConfig
 
@@ -177,11 +177,12 @@ func listenForConfigChanges() {
 			LoggingClient.Error(ex.Error())
 		case raw, ok := <-chConfig:
 			if ok {
-				actual, ok := raw.(*ConfigurationStruct)
+				actual, ok := raw.(*WritableInfo)
 				if !ok {
 					LoggingClient.Error("listenForConfigChanges() type check failed")
 				}
-				Configuration = actual //Mutex needed?
+				Configuration.Writable = *actual
+				LoggingClient.SetLogLevel(Configuration.Writable.LogLevel)
 			} else {
 				return
 			}

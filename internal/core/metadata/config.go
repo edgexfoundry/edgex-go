@@ -19,10 +19,15 @@ import (
 
 // Struct used to parse the JSON configuration file
 type ConfigurationStruct struct {
+	Writable      WritableInfo
 	Clients       map[string]config.ClientInfo
 	Databases     map[string]config.DatabaseInfo
 	Logging       config.LoggingInfo
 	Notifications config.NotificationInfo
 	Registry      config.RegistryInfo
 	Service       config.ServiceInfo
+}
+
+type WritableInfo struct {
+	LogLevel   string
 }

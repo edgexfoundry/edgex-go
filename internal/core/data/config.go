@@ -31,4 +31,5 @@ type WritableInfo struct {
 	PersistData                bool
 	ServiceUpdateLastConnected bool
 	ValidateCheck              bool
+	LogLevel                   string
 }

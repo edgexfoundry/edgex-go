@@ -4,6 +4,7 @@ MetaDataCheck = false
 PersistData = true
 ServiceUpdateLastConnected = false
 ValidateCheck = false
+LogLevel = 'INFO'
 
 [Service]
 BootTimeout = 30000
@@ -24,7 +25,6 @@ Type = 'consul'
 [Logging]
 EnableRemote = false
 File = './logs/edgex-core-data.log'
-Level = 'INFO'
 
 [Clients]
   [Clients.Metadata]

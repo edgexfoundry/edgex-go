@@ -1,5 +1,6 @@
 [Writable]
 ScheduleIntervalTime = 500
+LogLevel = 'INFO'
 
 [Service]
 BootTimeout = 30000
@@ -20,7 +21,6 @@ Type = 'consul'
 [Logging]
 EnableRemote = false
 File = './logs/edgex-support-scheduler.log'
-Level = 'INFO'
 
 [Clients]
   [Clients.Logging]

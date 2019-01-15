@@ -28,6 +28,7 @@ type ConfigurationStruct struct {
 
 type WritableInfo struct {
 	ResendLimit int
+	LogLevel    string
 }
 
 type SmtpInfo struct {

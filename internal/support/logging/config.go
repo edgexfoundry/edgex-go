@@ -25,4 +25,5 @@ type ConfigurationStruct struct {
 
 type WritableInfo struct {
 	Persistence string
+	LogLevel    string
 }

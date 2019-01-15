@@ -1,5 +1,6 @@
 [Writable]
 ResendLimit = 2
+LogLevel = 'INFO'
 
 [Service]
 BootTimeout = 30000
