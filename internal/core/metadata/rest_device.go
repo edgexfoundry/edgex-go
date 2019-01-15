@@ -95,10 +95,10 @@ func restAddNewDevice(w http.ResponseWriter, r *http.Request) {
 
 	// Profile Check
 	// Try by name
-	err = dbClient.GetDeviceProfileByName(&d.Profile, d.Profile.Name)
+	d.Profile, err = dbClient.GetDeviceProfileByName(d.Profile.Name)
 	if err != nil {
 		// Try by ID
-		err = dbClient.GetDeviceProfileById(&d.Profile, d.Profile.Id.Hex())
+		d.Profile, err = dbClient.GetDeviceProfileById(d.Profile.Id)
 		if err != nil {
 			LoggingClient.Error(err.Error())
 			http.Error(w, err.Error()+": A device must be associated with a device profile", http.StatusBadRequest)
@@ -215,10 +215,10 @@ func updateDeviceFields(from models.Device, to *models.Device) error {
 		// Check if the new profile exists
 		var dp models.DeviceProfile
 		// Try ID first
-		err := dbClient.GetDeviceProfileById(&dp, from.Profile.Id.Hex())
+		_, err := dbClient.GetDeviceProfileById(from.Profile.Id)
 		if err != nil {
 			// Then try Name
-			err = dbClient.GetDeviceProfileByName(&dp, from.Profile.Name)
+			_, err = dbClient.GetDeviceProfileByName(from.Profile.Name)
 			if err != nil {
 				return errors.New("Device profile not found for updated device")
 			}
@@ -304,8 +304,7 @@ func restGetDeviceByProfileId(w http.ResponseWriter, r *http.Request) {
 	var pid string = vars[PROFILEID]
 
 	// Check if the device profile exists
-	var dp models.DeviceProfile
-	err := dbClient.GetDeviceProfileById(&dp, pid)
+	_, err := dbClient.GetDeviceProfileById(pid)
 	if err != nil {
 		if err == db.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
@@ -439,7 +438,7 @@ func restGetDeviceByProfileName(w http.ResponseWriter, r *http.Request) {
 
 	// Check if the device profile exists
 	var dp models.DeviceProfile
-	err = dbClient.GetDeviceProfileByName(&dp, pn)
+	dp, err = dbClient.GetDeviceProfileByName(pn)
 	if err != nil {
 		if err == db.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
@@ -453,7 +452,7 @@ func restGetDeviceByProfileName(w http.ResponseWriter, r *http.Request) {
 	res := make([]models.Device, 0)
 
 	// Use profile ID now that you have the profile object
-	err = dbClient.GetDevicesByProfileId(&res, dp.Id.Hex())
+	err = dbClient.GetDevicesByProfileId(&res, dp.Id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		LoggingClient.Error(err.Error())

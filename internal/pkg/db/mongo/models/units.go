@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2017 Dell Inc.
+ * Copyright 2019 Dell Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -14,20 +14,24 @@
 
 package models
 
-import "encoding/json"
+import contract "github.com/edgexfoundry/edgex-go/pkg/models"
 
-type ProfileProperty struct {
-	Value PropertyValue `json:"value"`
-	Units Units         `json:"units"`
+type Units struct {
+	Type         string `bson:"type"`
+	ReadWrite    string `bson:"readWrite"`
+	DefaultValue string `bson:"defaultValue"`
 }
 
-/*
- * To String function for DeviceService
- */
-func (pp ProfileProperty) String() string {
-	out, err := json.Marshal(pp)
-	if err != nil {
-		return err.Error()
-	}
-	return string(out)
+func (u *Units) ToContract() (c contract.Units) {
+	c.Type = u.Type
+	c.ReadWrite = u.ReadWrite
+	c.DefaultValue = u.DefaultValue
+
+	return
+}
+
+func (u *Units) FromContract(c contract.Units) {
+	u.Type = c.Type
+	u.ReadWrite = c.ReadWrite
+	u.DefaultValue = c.DefaultValue
 }

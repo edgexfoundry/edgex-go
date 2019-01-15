@@ -40,3 +40,11 @@ func fromContractId(id string) (bson.ObjectId, string, error) {
 	// ID of pre-existing event is a BSON ID. We will query using the BSON ID.
 	return bson.ObjectIdHex(id), "", nil
 }
+
+func toContractId(id bson.ObjectId, uuid string) string {
+	if uuid != "" {
+		return uuid
+	}
+
+	return id.Hex()
+}
