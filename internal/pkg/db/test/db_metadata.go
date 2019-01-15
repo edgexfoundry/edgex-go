@@ -294,11 +294,10 @@ func populateProvisionWatcher(db interfaces.DBClient, count int) (string, error)
 		if err != nil {
 			return id, fmt.Errorf("Error creating DeviceProfile: %v", err)
 		}
-		err = db.AddProvisionWatcher(&d)
+		id, err = db.AddProvisionWatcher(d)
 		if err != nil {
 			return id, err
 		}
-		id = d.Id.Hex()
 	}
 	return id, nil
 }
@@ -1354,12 +1353,12 @@ func testDBProvisionWatcher(t *testing.T, db interfaces.DBClient) {
 
 	pw := models.ProvisionWatcher{}
 	pw.Name = "name1"
-	err = db.AddProvisionWatcher(&pw)
+	_, err = db.AddProvisionWatcher(pw)
 	if err == nil {
 		t.Fatalf("Should be an error adding an existing name")
 	}
 
-	err = db.GetAllProvisionWatchers(&provisionWatchers)
+	provisionWatchers, err = db.GetAllProvisionWatchers()
 	if err != nil {
 		t.Fatalf("Error getting provisionWatchers %v", err)
 	}
@@ -1367,31 +1366,31 @@ func testDBProvisionWatcher(t *testing.T, db interfaces.DBClient) {
 		t.Fatalf("There should be 100 provisionWatchers instead of %d", len(provisionWatchers))
 	}
 
-	err = db.GetProvisionWatcherById(&pw, id)
+	pw, err = db.GetProvisionWatcherById(id)
 	if err != nil {
 		t.Fatalf("Error getting provisionWatcher by id %v", err)
 	}
-	if pw.Id.Hex() != id {
+	if pw.Id != id {
 		t.Fatalf("Id does not match %s - %s", pw.Id, id)
 	}
-	err = db.GetProvisionWatcherById(&pw, "INVALID")
+	pw, err = db.GetProvisionWatcherById("INVALID")
 	if err == nil {
 		t.Fatalf("ProvisionWatcher should not be found")
 	}
 
-	err = db.GetProvisionWatcherByName(&pw, "name1")
+	pw, err = db.GetProvisionWatcherByName("name1")
 	if err != nil {
 		t.Fatalf("Error getting provisionWatcher by id %v", err)
 	}
 	if pw.Name != "name1" {
 		t.Fatalf("Id does not match %s - %s", pw.Id, id)
 	}
-	err = db.GetProvisionWatcherByName(&pw, "INVALID")
+	pw, err = db.GetProvisionWatcherByName("INVALID")
 	if err == nil {
 		t.Fatalf("ProvisionWatcher should not be found")
 	}
 
-	err = db.GetProvisionWatchersByServiceId(&provisionWatchers, pw.Service.Id)
+	provisionWatchers, err = db.GetProvisionWatchersByServiceId(pw.Service.Id)
 	if err != nil {
 		t.Fatalf("Error getting provisionWatchers %v", err)
 	}
@@ -1399,7 +1398,7 @@ func testDBProvisionWatcher(t *testing.T, db interfaces.DBClient) {
 		t.Fatalf("There should be 1 provisionWatchers instead of %d", len(provisionWatchers))
 	}
 
-	err = db.GetProvisionWatchersByServiceId(&provisionWatchers, bson.NewObjectId().Hex())
+	provisionWatchers, err = db.GetProvisionWatchersByServiceId(bson.NewObjectId().Hex())
 	if err != nil {
 		t.Fatalf("Error getting provisionWatchers %v", err)
 	}
@@ -1407,7 +1406,7 @@ func testDBProvisionWatcher(t *testing.T, db interfaces.DBClient) {
 		t.Fatalf("There should be 0 provisionWatchers instead of %d", len(provisionWatchers))
 	}
 
-	err = db.GetProvisionWatchersByProfileId(&provisionWatchers, pw.Profile.Id)
+	provisionWatchers, err = db.GetProvisionWatchersByProfileId(pw.Profile.Id)
 	if err != nil {
 		t.Fatalf("Error getting provisionWatchers %v", err)
 	}
@@ -1415,7 +1414,7 @@ func testDBProvisionWatcher(t *testing.T, db interfaces.DBClient) {
 		t.Fatalf("There should be 1 provisionWatchers instead of %d", len(provisionWatchers))
 	}
 
-	err = db.GetProvisionWatchersByProfileId(&provisionWatchers, bson.NewObjectId().Hex())
+	provisionWatchers, err = db.GetProvisionWatchersByProfileId(bson.NewObjectId().Hex())
 	if err != nil {
 		t.Fatalf("Error getting provisionWatchers %v", err)
 	}
@@ -1423,7 +1422,7 @@ func testDBProvisionWatcher(t *testing.T, db interfaces.DBClient) {
 		t.Fatalf("There should be 0 provisionWatchers instead of %d", len(provisionWatchers))
 	}
 
-	err = db.GetProvisionWatchersByIdentifier(&provisionWatchers, "name", "name1")
+	provisionWatchers, err = db.GetProvisionWatchersByIdentifier("name", "name1")
 	if err != nil {
 		t.Fatalf("Error getting provisionWatchers %v", err)
 	}
@@ -1431,7 +1430,7 @@ func testDBProvisionWatcher(t *testing.T, db interfaces.DBClient) {
 		t.Fatalf("There should be 1 provisionWatchers instead of %d", len(provisionWatchers))
 	}
 
-	err = db.GetProvisionWatchersByIdentifier(&provisionWatchers, "name", "invalid")
+	provisionWatchers, err = db.GetProvisionWatchersByIdentifier("name", "invalid")
 	if err != nil {
 		t.Fatalf("Error getting provisionWatchers %v", err)
 	}
@@ -1451,13 +1450,13 @@ func testDBProvisionWatcher(t *testing.T, db interfaces.DBClient) {
 		t.Fatalf("Should return error")
 	}
 
-	err = db.DeleteProvisionWatcherById(pw.Id.Hex())
+	err = db.DeleteProvisionWatcherById(pw.Id)
 	if err == nil {
 		t.Fatalf("ProvisionWatcher should not be deleted")
 	}
 
-	pw.Id = bson.ObjectIdHex(id)
-	err = db.DeleteProvisionWatcherById(pw.Id.Hex())
+	pw.Id = id
+	err = db.DeleteProvisionWatcherById(pw.Id)
 	if err != nil {
 		t.Fatalf("ProvisionWatcher should be deleted: %v", err)
 	}

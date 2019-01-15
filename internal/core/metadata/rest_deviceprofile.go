@@ -360,8 +360,8 @@ func deleteDeviceProfile(dp models.DeviceProfile, w http.ResponseWriter) error {
 	}
 
 	// Check if the device profile is still in use by provision watchers
-	var pw []models.ProvisionWatcher
-	if err := dbClient.GetProvisionWatchersByProfileId(&pw, dp.Id); err != nil {
+	pw, err := dbClient.GetProvisionWatchersByProfileId(dp.Id)
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return err
 	}
