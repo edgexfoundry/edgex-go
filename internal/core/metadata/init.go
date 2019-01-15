@@ -182,6 +182,7 @@ func listenForConfigChanges() {
 					LoggingClient.Error("listenForConfigChanges() type check failed")
 				}
 				Configuration.Writable = *actual
+				LoggingClient.SetLogLevel(Configuration.Writable.LogLevel)
 			} else {
 				return
 			}
