@@ -16,24 +16,23 @@ package models
 
 import (
 	"encoding/json"
-	"github.com/globalsign/mgo/bson"
 )
 
 type ProvisionWatcher struct {
-	BaseObject     `bson:",inline"`
-	Id             bson.ObjectId     `bson:"_id,omitempty" json:"id"`
-	Name           string            `bson:"name" json:"name"`                     // unique name and identifier of the addressable
-	Identifiers    map[string]string `bson:"identifiers" json:"identifiers"`       // set of key value pairs that identify type of of address (MAC, HTTP,...) and address to watch for (00-05-1B-A1-99-99, 10.0.0.1,...)
-	Profile        DeviceProfile     `bson:"profile" json:"profile"`               // device profile that should be applied to the devices available at the identifier addresses
-	Service        DeviceService     `bson:"service" json:"service"`               // device service that owns the watcher
-	OperatingState OperatingState    `bson:"operatingState" json:"operatingState"` // operational state - either enabled or disabled
+	BaseObject
+	Id             string            `json:"id"`
+	Name           string            `json:"name"`           // unique name and identifier of the addressable
+	Identifiers    map[string]string `json:"identifiers"`    // set of key value pairs that identify type of of address (MAC, HTTP,...) and address to watch for (00-05-1B-A1-99-99, 10.0.0.1,...)
+	Profile        DeviceProfile     `json:"profile"`        // device profile that should be applied to the devices available at the identifier addresses
+	Service        DeviceService     `json:"service"`        // device service that owns the watcher
+	OperatingState OperatingState    `json:"operatingState"` // operational state - either enabled or disabled
 }
 
 // Custom marshaling to make empty strings null
 func (pw ProvisionWatcher) MarshalJSON() ([]byte, error) {
 	test := struct {
 		BaseObject
-		Id             bson.ObjectId     `json:"id"`
+		Id             string            `json:"id"`
 		Name           *string           `json:"name"`           // unique name and identifier of the addressable
 		Identifiers    map[string]string `json:"identifiers"`    // set of key value pairs that identify type of of address (MAC, HTTP,...) and address to watch for (00-05-1B-A1-99-99, 10.0.0.1,...)
 		Profile        DeviceProfile     `json:"profile"`        // device profile that should be applied to the devices available at the identifier addresses

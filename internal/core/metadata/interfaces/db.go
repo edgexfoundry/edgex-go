@@ -97,13 +97,13 @@ type DBClient interface {
 	DeleteDeviceServiceById(id string) error
 
 	// Provision watcher
-	GetProvisionWatcherById(pw *contract.ProvisionWatcher, id string) error
-	GetAllProvisionWatchers(pw *[]contract.ProvisionWatcher) error
-	GetProvisionWatcherByName(pw *contract.ProvisionWatcher, n string) error
-	GetProvisionWatchersByProfileId(pw *[]contract.ProvisionWatcher, id string) error
-	GetProvisionWatchersByServiceId(pw *[]contract.ProvisionWatcher, id string) error
-	GetProvisionWatchersByIdentifier(pw *[]contract.ProvisionWatcher, k string, v string) error
-	AddProvisionWatcher(pw *contract.ProvisionWatcher) error
+	GetProvisionWatcherById(id string) (contract.ProvisionWatcher, error)
+	GetAllProvisionWatchers() ([]contract.ProvisionWatcher, error)
+	GetProvisionWatcherByName(n string) (contract.ProvisionWatcher, error)
+	GetProvisionWatchersByProfileId(id string) ([]contract.ProvisionWatcher, error)
+	GetProvisionWatchersByServiceId(id string) ([]contract.ProvisionWatcher, error)
+	GetProvisionWatchersByIdentifier(k string, v string) ([]contract.ProvisionWatcher, error)
+	AddProvisionWatcher(pw contract.ProvisionWatcher) (string, error)
 	UpdateProvisionWatcher(pw contract.ProvisionWatcher) error
 	DeleteProvisionWatcherById(id string) error
 

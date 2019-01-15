@@ -25,8 +25,8 @@ import (
 )
 
 func restGetProvisionWatchers(w http.ResponseWriter, _ *http.Request) {
-	res := make([]models.ProvisionWatcher, 0)
-	if err := dbClient.GetAllProvisionWatchers(&res); err != nil {
+	res, err := dbClient.GetAllProvisionWatchers()
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		LoggingClient.Error(err.Error())
 		return
@@ -49,15 +49,16 @@ func restDeleteProvisionWatcherById(w http.ResponseWriter, r *http.Request) {
 	var id string = vars[ID]
 
 	// Check if the provision watcher exists
-	var pw models.ProvisionWatcher
-	if err := dbClient.GetProvisionWatcherById(&pw, id); err != nil {
+	pw, err := dbClient.GetProvisionWatcherById(id)
+	if err != nil {
 		errMessage := "Provision Watcher not found by ID: " + err.Error()
 		LoggingClient.Error(errMessage)
 		http.Error(w, errMessage, http.StatusNotFound)
 		return
 	}
 
-	if err := deleteProvisionWatcher(pw, w); err != nil {
+	err = deleteProvisionWatcher(pw, w)
+	if err != nil {
 		errMessage := "Error deleting provision watcher"
 		LoggingClient.Error(errMessage)
 		http.Error(w, errMessage, http.StatusInternalServerError)
@@ -77,8 +78,8 @@ func restDeleteProvisionWatcherByName(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check if the provision watcher exists
-	var pw models.ProvisionWatcher
-	if err = dbClient.GetProvisionWatcherByName(&pw, n); err != nil {
+	pw, err := dbClient.GetProvisionWatcherByName(n)
+	if err != nil {
 		if err == db.ErrNotFound {
 			errMessage := "Provision watcher not found: " + err.Error()
 			http.Error(w, errMessage, http.StatusNotFound)
@@ -101,7 +102,7 @@ func restDeleteProvisionWatcherByName(w http.ResponseWriter, r *http.Request) {
 
 // Delete the provision watcher
 func deleteProvisionWatcher(pw models.ProvisionWatcher, w http.ResponseWriter) error {
-	if err := dbClient.DeleteProvisionWatcherById(pw.Id.Hex()); err != nil {
+	if err := dbClient.DeleteProvisionWatcherById(pw.Id); err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return err
 	}
@@ -116,9 +117,9 @@ func deleteProvisionWatcher(pw models.ProvisionWatcher, w http.ResponseWriter) e
 func restGetProvisionWatcherById(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	var id string = vars[ID]
-	var res models.ProvisionWatcher
 
-	if err := dbClient.GetProvisionWatcherById(&res, id); err != nil {
+	res, err := dbClient.GetProvisionWatcherById(id)
+	if err != nil {
 		if err == db.ErrNotFound {
 			errMessage := "Problem getting provision watcher by ID: " + err.Error()
 			LoggingClient.Error(errMessage)
@@ -142,9 +143,8 @@ func restGetProvisionWatcherByName(w http.ResponseWriter, r *http.Request) {
 		LoggingClient.Error(err.Error())
 		return
 	}
-	var res models.ProvisionWatcher
 
-	err = dbClient.GetProvisionWatcherByName(&res, n)
+	res, err := dbClient.GetProvisionWatcherByName(n)
 	if err != nil {
 		if err == db.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
@@ -171,8 +171,8 @@ func restGetProvisionWatchersByProfileId(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	res := make([]models.ProvisionWatcher, 0)
-	if err := dbClient.GetProvisionWatchersByProfileId(&res, pid); err != nil {
+	res, err := dbClient.GetProvisionWatchersByProfileId(pid)
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		LoggingClient.Error("Problem getting provision watcher: " + err.Error())
 		return
@@ -192,8 +192,8 @@ func restGetProvisionWatchersByProfileName(w http.ResponseWriter, r *http.Reques
 	}
 
 	// Check if the device profile exists
-	var dp models.DeviceProfile
-	if dp, err = dbClient.GetDeviceProfileByName(pn); err != nil {
+	dp, err := dbClient.GetDeviceProfileByName(pn)
+	if err != nil {
 		if err == db.ErrNotFound {
 			http.Error(w, "Device profile not found", http.StatusNotFound)
 			LoggingClient.Error("Device profile not found: " + err.Error())
@@ -204,8 +204,7 @@ func restGetProvisionWatchersByProfileName(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	res := make([]models.ProvisionWatcher, 0)
-	err = dbClient.GetProvisionWatchersByProfileId(&res, dp.Id)
+	res, err := dbClient.GetProvisionWatchersByProfileId(dp.Id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		LoggingClient.Error("Problem getting provision watcher: " + err.Error())
@@ -227,8 +226,7 @@ func restGetProvisionWatchersByServiceId(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	res := make([]models.ProvisionWatcher, 0)
-	err := dbClient.GetProvisionWatchersByServiceId(&res, sid)
+	res, err := dbClient.GetProvisionWatchersByServiceId(sid)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		LoggingClient.Error("Problem getting provision watcher: " + err.Error())
@@ -249,8 +247,8 @@ func restGetProvisionWatchersByServiceName(w http.ResponseWriter, r *http.Reques
 	}
 
 	// Check if the device service exists
-	var ds models.DeviceService
-	if ds, err = dbClient.GetDeviceServiceByName(sn); err != nil {
+	ds, err := dbClient.GetDeviceServiceByName(sn)
+	if err != nil {
 		if err == db.ErrNotFound {
 			http.Error(w, "Device service not found", http.StatusNotFound)
 			LoggingClient.Error("Device service not found: " + err.Error())
@@ -262,8 +260,7 @@ func restGetProvisionWatchersByServiceName(w http.ResponseWriter, r *http.Reques
 	}
 
 	// Get the provision watchers
-	res := make([]models.ProvisionWatcher, 0)
-	err = dbClient.GetProvisionWatchersByServiceId(&res, ds.Service.Id)
+	res, err := dbClient.GetProvisionWatchersByServiceId(ds.Service.Id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		LoggingClient.Error("Problem getting provision watcher: " + err.Error())
@@ -289,8 +286,8 @@ func restGetProvisionWatchersByIdentifier(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	res := make([]models.ProvisionWatcher, 0)
-	if err := dbClient.GetProvisionWatchersByIdentifier(&res, k, v); err != nil {
+	res, err := dbClient.GetProvisionWatchersByIdentifier(k, v)
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		LoggingClient.Error("Problem getting provision watchers: " + err.Error())
 		return
@@ -355,8 +352,8 @@ func restAddProvisionWatcher(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	pw.Service = service
-
-	if err = dbClient.AddProvisionWatcher(&pw); err != nil {
+	var id string
+	if id, err = dbClient.AddProvisionWatcher(pw); err != nil {
 		if err == db.ErrNotUnique {
 			LoggingClient.Error("Duplicate name for the provision watcher: " + err.Error())
 			http.Error(w, "Duplicate name for the provision watcher", http.StatusConflict)
@@ -373,7 +370,7 @@ func restAddProvisionWatcher(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(pw.Id.Hex()))
+	w.Write([]byte(id))
 }
 
 // Update the provision watcher object
@@ -390,10 +387,11 @@ func restUpdateProvisionWatcher(w http.ResponseWriter, r *http.Request) {
 
 	// Check if the provision watcher exists
 	var to models.ProvisionWatcher
+	var err error
 	// Try by ID
-	if err := dbClient.GetProvisionWatcherById(&to, from.Id.Hex()); err != nil {
+	if to, err = dbClient.GetProvisionWatcherById(from.Id); err != nil {
 		// Try by name
-		if err = dbClient.GetProvisionWatcherByName(&to, from.Name); err != nil {
+		if to, err = dbClient.GetProvisionWatcherByName(from.Name); err != nil {
 			if err == db.ErrNotFound {
 				http.Error(w, "Provision watcher not found", http.StatusNotFound)
 				LoggingClient.Error("Provision watcher not found: " + err.Error())
@@ -435,8 +433,7 @@ func updateProvisionWatcherFields(from models.ProvisionWatcher, to *models.Provi
 	}
 	if from.Name != "" {
 		// Check that the name is unique
-		var checkPW models.ProvisionWatcher
-		err := dbClient.GetProvisionWatcherByName(&checkPW, from.Name)
+		checkPW, err := dbClient.GetProvisionWatcherByName(from.Name)
 		if err != nil {
 			if err != db.ErrNotFound {
 				http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -471,7 +468,7 @@ func notifyProvisionWatcherAssociates(pw models.ProvisionWatcher, action string)
 	services = append(services, ds)
 
 	// Notify the service
-	if err = notifyAssociates(services, pw.Id.Hex(), action, models.PROVISIONWATCHER); err != nil {
+	if err = notifyAssociates(services, pw.Id, action, models.PROVISIONWATCHER); err != nil {
 		return err
 	}
 

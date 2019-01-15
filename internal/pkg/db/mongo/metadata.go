@@ -28,16 +28,12 @@ import (
 /* -----------------------Schedule Event ------------------------*/
 
 func (m MongoClient) UpdateScheduleEvent(se contract.ScheduleEvent) error {
-	s := m.session.Copy()
-	defer s.Close()
-	col := s.DB(m.database.Name).C(db.ScheduleEvent)
-
 	se.Modified = db.MakeTimestamp()
 
 	// Handle DBRefs
 	mse := mongoScheduleEvent{ScheduleEvent: se}
 
-	return col.UpdateId(se.Id, mse)
+	return m.updateId(db.ScheduleEvent, se.Id, mse)
 }
 
 func (m MongoClient) AddScheduleEvent(se *contract.ScheduleEvent) error {
@@ -174,13 +170,9 @@ func (m MongoClient) AddSchedule(sch *contract.Schedule) error {
 }
 
 func (m MongoClient) UpdateSchedule(sch contract.Schedule) error {
-	s := m.session.Copy()
-	defer s.Close()
-	col := s.DB(m.database.Name).C(db.Schedule)
-
 	sch.Modified = db.MakeTimestamp()
 
-	if err := col.UpdateId(sch.Id, sch); err != nil {
+	if err := m.updateId(db.Schedule, sch.Id, sch); err != nil {
 		return err
 	}
 
@@ -573,6 +565,7 @@ func (m MongoClient) getDeviceProfile(q bson.M) (d models.DeviceProfile, err err
 	if err != nil {
 		return models.DeviceProfile{}, errorMap(err)
 	}
+
 	return
 }
 
@@ -615,10 +608,6 @@ func (m MongoClient) AddDeviceProfile(dp contract.DeviceProfile) (string, error)
 }
 
 func (m MongoClient) UpdateDeviceProfile(dp contract.DeviceProfile) error {
-	s := m.session.Copy()
-	defer s.Close()
-	c := s.DB(m.database.Name).C(db.DeviceProfile)
-
 	dp.Modified = db.MakeTimestamp()
 
 	mdp := models.DeviceProfile{}
@@ -626,7 +615,7 @@ func (m MongoClient) UpdateDeviceProfile(dp contract.DeviceProfile) error {
 		return err
 	}
 
-	return c.UpdateId(mdp.Id, mdp)
+	return m.updateId(db.DeviceProfile, mdp.Id, mdp)
 }
 
 // Get the device profiles that are currently using the command
@@ -830,13 +819,11 @@ func mapAddressables(addrs []models.Addressable, err error) ([]contract.Addressa
 }
 
 /* ----------------------------- Device Service ----------------------------------*/
-
-// DBRefToDeviceService converts DBRef to internal Mongo struct
-func (m MongoClient) DBRefToDeviceService(dbRef mgo.DBRef) (a models.DeviceService, err error) {
+func (m MongoClient) DBRefToDeviceService(dbRef mgo.DBRef) (ds models.DeviceService, err error) {
 	s := m.session.Copy()
 	defer s.Close()
 
-	if err = s.DB(m.database.Name).C(db.DeviceService).Find(bson.M{"_id": dbRef.Id}).One(&a); err != nil {
+	if err = s.DB(m.database.Name).C(db.DeviceService).Find(bson.M{"_id": dbRef.Id}).One(&ds); err != nil {
 		return models.DeviceService{}, err
 	}
 	return
@@ -858,7 +845,7 @@ func (m MongoClient) DeviceServiceToDBRef(model models.DeviceService) (dbRef mgo
 }
 
 func (m MongoClient) GetDeviceServiceByName(n string) (contract.DeviceService, error) {
-	ds, err := m.getDeviceServiceModel(bson.M{"name": n})
+	ds, err := m.deviceService(bson.M{"name": n})
 	if err != nil {
 		return contract.DeviceService{}, err
 	}
@@ -878,7 +865,7 @@ func (m MongoClient) getDeviceServiceById(id string) (models.DeviceService, erro
 	if err != nil {
 		return models.DeviceService{}, err
 	}
-	return m.getDeviceServiceModel(query)
+	return m.deviceService(query)
 }
 
 func (m MongoClient) GetAllDeviceServices() ([]contract.DeviceService, error) {
@@ -913,36 +900,55 @@ func (m MongoClient) GetDeviceServicesWithLabel(l string) ([]contract.DeviceServ
 	return m.getDeviceServices(bson.M{"labels": bson.M{"$in": ls}})
 }
 
-func (m MongoClient) getDeviceServices(q bson.M) ([]contract.DeviceService, error) {
-	s := m.session.Copy()
-	defer s.Close()
-	col := s.DB(m.database.Name).C(db.DeviceService)
-	dss := []models.DeviceService{}
-	err := col.Find(q).Sort("queryts").All(&dss)
+func (m MongoClient) getDeviceServices(q bson.M) (dss []contract.DeviceService, err error) {
+	dss = []contract.DeviceService{}
+	mds, err := m.deviceServices(q)
 	if err != nil {
-		return nil, err
+		return
 	}
-
-	contractDeviceServices := []contract.DeviceService{}
-	for _, deviceService := range dss {
-		contractDeviceService, err := deviceService.ToContract(m)
+	for _, ds := range mds {
+		cds, err := ds.ToContract(m)
 		if err != nil {
 			return []contract.DeviceService{}, err
 		}
-		contractDeviceServices = append(contractDeviceServices, contractDeviceService)
+		dss = append(dss, cds)
 	}
-	return contractDeviceServices, nil
+
+	return dss, nil
 }
 
-func (m MongoClient) getDeviceServiceModel(q bson.M) (ds models.DeviceService, err error) {
+func (m MongoClient) deviceServices(q bson.M) (dss []models.DeviceService, err error) {
+	s := m.session.Copy()
+	defer s.Close()
+	col := s.DB(m.database.Name).C(db.DeviceService)
+	err = col.Find(q).Sort("queryts").All(&dss)
+	if err != nil {
+		return []models.DeviceService{}, err
+	}
+
+	return
+}
+
+func (m MongoClient) getDeviceService(q bson.M) (ds contract.DeviceService, err error) {
+	mds, err := m.deviceService(q)
+	if err != nil {
+		return contract.DeviceService{}, err
+	}
+	ds, err = mds.ToContract(m)
+	return
+}
+
+func (m MongoClient) deviceService(q bson.M) (models.DeviceService, error) {
 	s := m.session.Copy()
 	defer s.Close()
 
-	err = s.DB(m.database.Name).C(db.DeviceService).Find(q).One(&ds)
+	var ds models.DeviceService
+	err := s.DB(m.database.Name).C(db.DeviceService).Find(q).One(&ds)
 	if err != nil {
 		return models.DeviceService{}, errorMap(err)
 	}
-	return
+
+	return ds, nil
 }
 
 func (m MongoClient) AddDeviceService(ds contract.DeviceService) (string, error) {
@@ -985,91 +991,144 @@ func (m MongoClient) DeleteDeviceServiceById(id string) error {
 }
 
 //  ----------------------Provision Watcher -----------------------------*/
-
-func (m MongoClient) GetAllProvisionWatchers(pw *[]contract.ProvisionWatcher) error {
-	return m.GetProvisionWatchers(pw, bson.M{})
+func (m MongoClient) GetAllProvisionWatchers() (pw []contract.ProvisionWatcher, err error) {
+	return m.getProvisionWatchers(bson.M{})
 }
 
-func (m MongoClient) GetProvisionWatcherByName(pw *contract.ProvisionWatcher, n string) error {
-	return m.GetProvisionWatcher(pw, bson.M{"name": n})
+func (m MongoClient) GetProvisionWatcherByName(n string) (pw contract.ProvisionWatcher, err error) {
+	return m.GetProvisionWatcher(bson.M{"name": n})
 }
 
-func (m MongoClient) GetProvisionWatchersByIdentifier(pw *[]contract.ProvisionWatcher, k string, v string) error {
-	return m.GetProvisionWatchers(pw, bson.M{"identifiers." + k: v})
+func (m MongoClient) GetProvisionWatchersByIdentifier(k string, v string) (pw []contract.ProvisionWatcher, err error) {
+	return m.getProvisionWatchers(bson.M{"identifiers." + k: v})
 }
 
-func (m MongoClient) GetProvisionWatchersByServiceId(pw *[]contract.ProvisionWatcher, id string) error {
-	if bson.IsObjectIdHex(id) {
-		return m.GetProvisionWatchers(pw, bson.M{"service.$id": bson.ObjectIdHex(id)})
+func (m MongoClient) GetProvisionWatchersByServiceId(id string) (pw []contract.ProvisionWatcher, err error) {
+	var query bson.M
+	if !bson.IsObjectIdHex(id) {
+		// ID is not a BSON ID. Is it a UUID?
+		_, err := uuid.Parse(id)
+		if err != nil { // It is some unsupported type of string
+			return []contract.ProvisionWatcher{}, errors.New("mgoGetProvisionWatchersByServiceId Invalid Object ID " + id)
+		}
+		query = bson.M{"service.uuid": id}
 	} else {
-		return errors.New("mgoGetProvisionWatchersByServiceId Invalid Object ID " + id)
+		query = bson.M{"service.$id": bson.ObjectIdHex(id)}
 	}
+
+	pw, err = m.getProvisionWatchers(query)
+	if err != nil {
+		return []contract.ProvisionWatcher{}, err
+	}
+
+	return pw, nil
 }
 
-func (m MongoClient) GetProvisionWatchersByProfileId(pw *[]contract.ProvisionWatcher, id string) error {
-	if bson.IsObjectIdHex(id) {
-		return m.GetProvisionWatchers(pw, bson.M{"profile.$id": bson.ObjectIdHex(id)})
+func (m MongoClient) GetProvisionWatchersByProfileId(id string) (pw []contract.ProvisionWatcher, err error) {
+	var query bson.M
+	if !bson.IsObjectIdHex(id) {
+		// ID is not a BSON ID. Is it a UUID?
+		_, err := uuid.Parse(id)
+		if err != nil { // It is some unsupported type of string
+			return []contract.ProvisionWatcher{}, errors.New("mgoGetProvisionWatchersByProfileId Invalid Object ID " + id)
+		}
+		query = bson.M{"profile.uuid": id}
 	} else {
-		err := errors.New("mgoGetProvisionWatcherByProfileId Invalid Object ID " + id)
-		return err
+		query = bson.M{"profile.$id": bson.ObjectIdHex(id)}
 	}
+
+	pw, err = m.getProvisionWatchers(query)
+	if err != nil {
+		return []contract.ProvisionWatcher{}, err
+	}
+
+	return pw, nil
 }
 
-func (m MongoClient) GetProvisionWatcherById(pw *contract.ProvisionWatcher, id string) error {
-	if bson.IsObjectIdHex(id) {
-		return m.GetProvisionWatcher(pw, bson.M{"_id": bson.ObjectIdHex(id)})
+func (m MongoClient) GetProvisionWatcherById(id string) (pw contract.ProvisionWatcher, err error) {
+	var query bson.M
+	if !bson.IsObjectIdHex(id) {
+		// ID is not a BSON ID. Is it a UUID?
+		_, err := uuid.Parse(id)
+		if err != nil { // It is some unsupported type of string
+			return contract.ProvisionWatcher{}, errors.New("mgoGetProvisionWatcherById Invalid Object ID " + id)
+		}
+		query = bson.M{"uuid": id}
 	} else {
-		err := errors.New("mgoGetProvisionWatcherById Invalid Object ID " + id)
-		return err
+		query = bson.M{"_id": bson.ObjectIdHex(id)}
 	}
+
+	pw, err = m.GetProvisionWatcher(query)
+	if err != nil {
+		return contract.ProvisionWatcher{}, err
+	}
+
+	return
 }
 
-func (m MongoClient) GetProvisionWatcher(pw *contract.ProvisionWatcher, q bson.M) error {
+func (m MongoClient) GetProvisionWatcher(q bson.M) (pw contract.ProvisionWatcher, err error) {
+	mpw, err := m.getProvisionWatcher(q)
+	if err != nil {
+		return
+	}
+
+	pw, err = mpw.ToContract(m, m, m, m)
+
+	return
+}
+
+func (m MongoClient) getProvisionWatcher(q bson.M) (mpw models.ProvisionWatcher, err error) {
 	s := m.session.Copy()
 	defer s.Close()
 	col := s.DB(m.database.Name).C(db.ProvisionWatcher)
 
-	// Handle DBRefs
-	var mpw mongoProvisionWatcher
-
-	err := col.Find(q).One(&mpw)
+	err = col.Find(q).One(&mpw)
 	if err != nil {
-		return errorMap(err)
+		return models.ProvisionWatcher{}, errorMap(err)
 	}
-	*pw = mpw.ProvisionWatcher
-	return nil
+
+	return mpw, nil
 }
 
-func (m MongoClient) GetProvisionWatchers(pw *[]contract.ProvisionWatcher, q bson.M) error {
-	s := m.session.Copy()
-	defer s.Close()
-	col := s.DB(m.database.Name).C(db.ProvisionWatcher)
+func (m MongoClient) getProvisionWatchers(q bson.M) (pws []contract.ProvisionWatcher, err error) {
+	mpws, err := m.provisionWatchers(q)
 
-	// Handle DBRefs
-	var mpws []mongoProvisionWatcher
-
-	err := col.Find(q).Sort("queryts").All(&mpws)
-	if err != nil {
-		return err
-	}
-
-	*pw = []contract.ProvisionWatcher{}
+	var cpws []contract.ProvisionWatcher
 	for _, mpw := range mpws {
-		*pw = append(*pw, mpw.ProvisionWatcher)
+		cpw, err := mpw.ToContract(m, m, m, m)
+		if err != nil {
+			return []contract.ProvisionWatcher{}, err
+		}
+		cpws = append(cpws, cpw)
 	}
 
-	return nil
+	return cpws, nil
 }
 
-func (m MongoClient) AddProvisionWatcher(pw *contract.ProvisionWatcher) error {
+func (m MongoClient) provisionWatchers(q bson.M) (pws []models.ProvisionWatcher, err error) {
+	s := m.session.Copy()
+	defer s.Close()
+	col := s.DB(m.database.Name).C(db.ProvisionWatcher)
+
+	var mpws []models.ProvisionWatcher
+
+	err = col.Find(q).Sort("queryts").All(&mpws)
+	if err != nil {
+		return []models.ProvisionWatcher{}, err
+	}
+
+	return mpws, nil
+}
+
+func (m MongoClient) AddProvisionWatcher(pw contract.ProvisionWatcher) (string, error) {
 	s := m.session.Copy()
 	defer s.Close()
 	col := s.DB(m.database.Name).C(db.ProvisionWatcher)
 	count, err := col.Find(bson.M{"name": pw.Name}).Count()
 	if err != nil {
-		return err
+		return "", err
 	} else if count > 0 {
-		return db.ErrNotUnique
+		return "", db.ErrNotUnique
 	}
 
 	// get Device Service
@@ -1079,10 +1138,10 @@ func (m MongoClient) AddProvisionWatcher(pw *contract.ProvisionWatcher) error {
 	} else if pw.Service.Name != "" {
 		dev, err = m.GetDeviceServiceByName(pw.Service.Name)
 	} else {
-		return errors.New("Device Service ID or Name is required")
+		return "", errors.New("Device Service ID or Name is required")
 	}
 	if err != nil {
-		return err
+		return "", err
 	}
 	pw.Service = dev
 
@@ -1093,37 +1152,43 @@ func (m MongoClient) AddProvisionWatcher(pw *contract.ProvisionWatcher) error {
 	} else if pw.Profile.Name != "" {
 		dp, err = m.GetDeviceProfileByName(pw.Profile.Name)
 	} else {
-		return errors.New("Device Profile ID or Name is required")
+		return "", errors.New("Device Profile ID or Name is required")
 	}
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	pw.Profile = dp
 
-	// Set data
+	var mpw models.ProvisionWatcher
+	id, err := mpw.FromContract(pw, m, m, m, m)
+	if err != nil {
+		return "", errors.New("ProvisionWatcher FromContract() failed")
+	}
+
+	// Set timestamps
 	ts := db.MakeTimestamp()
-	pw.Created = ts
-	pw.Modified = ts
-	pw.Id = bson.NewObjectId()
+	mpw.Created = ts
+	mpw.Modified = ts
 
-	// Handle DBRefs
-	mpw := mongoProvisionWatcher{ProvisionWatcher: *pw}
+	err = col.Insert(mpw)
 
-	return col.Insert(mpw)
+	return id, err
 }
 
 func (m MongoClient) UpdateProvisionWatcher(pw contract.ProvisionWatcher) error {
 	s := m.session.Copy()
 	defer s.Close()
-	c := s.DB(m.database.Name).C(db.ProvisionWatcher)
 
 	pw.Modified = db.MakeTimestamp()
 
-	// Handle DBRefs
-	mpw := mongoProvisionWatcher{ProvisionWatcher: pw}
+	var mpw models.ProvisionWatcher
+	id, err := mpw.FromContract(pw, m, m, m, m)
+	if err != nil {
+		return err
+	}
 
-	return c.UpdateId(mpw.Id, mpw)
+	return m.updateId(db.ProvisionWatcher, id, mpw)
 }
 
 func (m MongoClient) DeleteProvisionWatcherById(id string) error {
@@ -1309,7 +1374,6 @@ func (m MongoClient) ScrubMetadata() error {
 	if err != nil {
 		return err
 	}
-
 	_, err = s.DB(m.database.Name).C(db.DeviceService).RemoveAll(nil)
 	if err != nil {
 		return err

@@ -486,8 +486,8 @@ func deleteDeviceService(ds models.DeviceService, w http.ResponseWriter) error {
 	}
 
 	// Delete the associated provision watchers
-	var watchers []models.ProvisionWatcher
-	if err = dbClient.GetProvisionWatchersByServiceId(&watchers, ds.Service.Id); err != nil {
+	watchers, err := dbClient.GetProvisionWatchersByServiceId(ds.Service.Id)
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return err
 	}

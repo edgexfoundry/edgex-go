@@ -14,6 +14,7 @@
 package mongo
 
 import (
+	"errors"
 	"strconv"
 	"time"
 
@@ -98,4 +99,29 @@ func (mc MongoClient) deleteById(col string, id string) error {
 	}
 
 	return errorMap(err)
+}
+
+func (mc MongoClient) updateId(col string, id interface{}, update interface{}) error {
+	s := mc.getSessionCopy()
+	defer s.Close()
+
+	c := s.DB(mc.database.Name).C(col)
+
+	switch v := id.(type) {
+	case string:
+		if !bson.IsObjectIdHex(v) {
+			// EventID is not a BSON ID. Is it a UUID?
+			_, err := uuid.Parse(v)
+			if err != nil { // It is some unsupported type of string
+				return db.ErrInvalidObjectId
+			}
+			return c.Update(bson.M{"uuid": v}, update)
+		} else {
+			return c.Update(bson.M{"_id": bson.ObjectIdHex(v)}, update)
+		}
+	case bson.ObjectId:
+		return c.Update(bson.M{"_id": v}, update)
+	default:
+		return errors.New("MongoClient: id has invalid type in updateId")
+	}
 }
