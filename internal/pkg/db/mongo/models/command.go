@@ -78,14 +78,19 @@ func (c *Command) FromContract(from contract.Command) (contractId string, err er
 
 	c.Name = from.Name
 	c.Get = &Get{}
-	err = c.Get.FromContract(*from.Get)
-	if err != nil {
-		return
+	if from.Get != nil {
+		err = c.Get.FromContract(*from.Get)
+		if err != nil {
+			return
+		}
 	}
+
 	c.Put = &Put{}
-	err = c.Put.FromContract(*from.Put)
-	if err != nil {
-		return
+	if from.Put != nil {
+		err = c.Put.FromContract(*from.Put)
+		if err != nil {
+			return
+		}
 	}
 
 	c.Created = from.Created
