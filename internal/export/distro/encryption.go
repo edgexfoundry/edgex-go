@@ -13,7 +13,7 @@ import (
 	"crypto/sha1"
 	"encoding/base64"
 
-	"github.com/edgexfoundry/edgex-go/internal/export"
+	"github.com/edgexfoundry/edgex-go/pkg/models"
 )
 
 type aesEncryption struct {
@@ -24,7 +24,7 @@ type aesEncryption struct {
 // IV and KEY must be 16 bytes
 const blockSize = 16
 
-func newAESEncryption(encData export.EncryptionDetails) transformer {
+func newAESEncryption(encData models.EncryptionDetails) transformer {
 	aesData := aesEncryption{
 		key: encData.Key,
 		iv:  encData.InitVector,

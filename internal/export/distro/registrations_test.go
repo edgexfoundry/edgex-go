@@ -9,16 +9,15 @@ package distro
 import (
 	"testing"
 
-	"github.com/edgexfoundry/edgex-go/internal/export"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 )
 
-func validRegistration() export.Registration {
-	r := export.Registration{}
-	r.Format = export.FormatJSON
-	r.Compression = export.CompNone
-	r.Destination = export.DestMQTT
-	r.Encryption.Algo = export.EncNone
+func validRegistration() models.Registration {
+	r := models.Registration{}
+	r.Format = models.FormatJSON
+	r.Compression = models.CompNone
+	r.Destination = models.DestMQTT
+	r.Encryption.Algo = models.EncNone
 	r.Filter.DeviceIDs = append(r.Filter.DeviceIDs, "dummy1")
 	r.Filter.ValueDescriptorIDs = append(r.Filter.DeviceIDs, "dummy1")
 	return r
@@ -30,7 +29,7 @@ func TestRegistrationInfoUpdate(t *testing.T) {
 		t.Fatal("RegistrationInfo should not be nil")
 	}
 
-	r := export.Registration{}
+	r := models.Registration{}
 	if ri.update(r) {
 		t.Fatal("An empty registration is not valid")
 	}
@@ -102,7 +101,7 @@ func TestRegistrationInfoEvent(t *testing.T) {
 	ri.compression = dummy
 
 	// Filter only accepting events from dummyDev
-	f := export.Filter{}
+	f := models.Filter{}
 	f.DeviceIDs = append(f.DeviceIDs, dummyDev)
 	filter := newDevIdFilter(f)
 
@@ -177,15 +176,15 @@ func TestUpdateRunningRegistrations(t *testing.T) {
 		t.Error("Err should not be nil")
 	}
 	if updateRunningRegistrations(running, models.NotifyUpdate{
-		Operation: export.NotifyUpdateDelete}) == nil {
+		Operation: models.NotifyUpdateDelete}) == nil {
 		t.Error("Err should not be nil")
 	}
 	if updateRunningRegistrations(running, models.NotifyUpdate{
-		Operation: export.NotifyUpdateUpdate}) == nil {
+		Operation: models.NotifyUpdateUpdate}) == nil {
 		t.Error("Err should not be nil")
 	}
 	if updateRunningRegistrations(running, models.NotifyUpdate{
-		Operation: export.NotifyUpdateAdd}) == nil {
+		Operation: models.NotifyUpdateAdd}) == nil {
 		t.Error("Err should not be nil")
 	}
 

@@ -14,7 +14,7 @@ import (
 
 	"testing"
 
-	"github.com/edgexfoundry/edgex-go/internal/export"
+	"github.com/edgexfoundry/edgex-go/pkg/models"
 )
 
 const (
@@ -23,7 +23,7 @@ const (
 	key         = "aquqweoruqwpeoruqwpoeruqwpoierupqoweiurpoqwiuerpqowieurqpowieurpoqiweuroipwqure"
 )
 
-func aesDecrypt(crypt []byte, aesData export.EncryptionDetails) []byte {
+func aesDecrypt(crypt []byte, aesData models.EncryptionDetails) []byte {
 	hash := sha1.New()
 
 	hash.Write([]byte((aesData.Key)))
@@ -56,7 +56,7 @@ func pkcs5Trimming(encrypt []byte) []byte {
 
 func TestAES(t *testing.T) {
 
-	aesData := export.EncryptionDetails{
+	aesData := models.EncryptionDetails{
 		Algo:       "AES",
 		Key:        key,
 		InitVector: iv,
