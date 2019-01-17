@@ -18,7 +18,7 @@ import (
 	"encoding/json"
 )
 
-type DeviceObject struct {
+type DeviceResource struct {
 	Description string                 `json:"description"`
 	Name        string                 `json:"name"`
 	Tag         string                 `json:"tag"`
@@ -27,7 +27,7 @@ type DeviceObject struct {
 }
 
 // Custom marshaling to make empty strings null
-func (do DeviceObject) MarshalJSON() ([]byte, error) {
+func (do DeviceResource) MarshalJSON() ([]byte, error) {
 	test := struct {
 		Description *string                `json:"description"`
 		Name        *string                `json:"name"`
@@ -58,9 +58,9 @@ func (do DeviceObject) MarshalJSON() ([]byte, error) {
 }
 
 /*
- * To String function for DeviceObject
+ * To String function for DeviceResource
  */
-func (do DeviceObject) String() string {
+func (do DeviceResource) String() string {
 	out, err := json.Marshal(do)
 	if err != nil {
 		return err.Error()

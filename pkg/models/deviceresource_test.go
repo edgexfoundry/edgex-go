@@ -19,55 +19,55 @@ import (
 	"testing"
 )
 
-var TestDeviceObjectDescription = "test device object description"
-var TestDeviceObjectName = "test device object name"
-var TestDeviceObjectTag = "test device object tag"
-var TestDeviceObject = DeviceObject{Description: TestDeviceObjectDescription, Name: TestDeviceObjectName, Tag: TestDeviceObjectTag, Properties: TestProfileProperty}
+var TestDeviceResourceDescription = "test device object description"
+var TestDeviceResourceName = "test device object name"
+var TestDeviceResourceTag = "test device object tag"
+var TestDeviceResource = DeviceResource{Description: TestDeviceResourceDescription, Name: TestDeviceResourceName, Tag: TestDeviceResourceTag, Properties: TestProfileProperty}
 
-func TestDeviceObject_MarshalJSON(t *testing.T) {
-	var emptyDeviceObject = DeviceObject{}
-	var resultTestBytes = []byte(TestDeviceObject.String())
-	var resultEmptyTestBytes = []byte(emptyDeviceObject.String())
+func TestDeviceResource_MarshalJSON(t *testing.T) {
+	var emptyDeviceResource = DeviceResource{}
+	var resultTestBytes = []byte(TestDeviceResource.String())
+	var resultEmptyTestBytes = []byte(emptyDeviceResource.String())
 	tests := []struct {
 		name    string
-		do      DeviceObject
+		do      DeviceResource
 		want    []byte
 		wantErr bool
 	}{
-		{"successful marshal", TestDeviceObject, resultTestBytes, false},
-		{"successful empty marshal", emptyDeviceObject, resultEmptyTestBytes, false},
+		{"successful marshal", TestDeviceResource, resultTestBytes, false},
+		{"successful empty marshal", emptyDeviceResource, resultEmptyTestBytes, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := tt.do.MarshalJSON()
 			if (err != nil) != tt.wantErr {
-				t.Errorf("DeviceObject.MarshalJSON() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("DeviceResource.MarshalJSON() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("DeviceObject.MarshalJSON() = %v, want %v", got, tt.want)
+				t.Errorf("DeviceResource.MarshalJSON() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
-func TestDeviceObject_String(t *testing.T) {
+func TestDeviceResource_String(t *testing.T) {
 	tests := []struct {
 		name string
-		do   DeviceObject
+		do   DeviceResource
 		want string
 	}{
-		{"device object to string", TestDeviceObject,
-			"{\"description\":\"" + TestDeviceObjectDescription + "\"" +
-				",\"name\":\"" + TestDeviceObjectName + "\"" +
-				",\"tag\":\"" + TestDeviceObjectTag + "\"" +
+		{"device object to string", TestDeviceResource,
+			"{\"description\":\"" + TestDeviceResourceDescription + "\"" +
+				",\"name\":\"" + TestDeviceResourceName + "\"" +
+				",\"tag\":\"" + TestDeviceResourceTag + "\"" +
 				",\"properties\":" + TestProfileProperty.String() +
 				",\"attributes\":null}"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := tt.do.String(); got != tt.want {
-				t.Errorf("DeviceObject.String() = %v, want %v", got, tt.want)
+				t.Errorf("DeviceResource.String() = %v, want %v", got, tt.want)
 			}
 		})
 	}

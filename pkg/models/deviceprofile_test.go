@@ -27,8 +27,7 @@ var TestManufacturer = "Test Manufacturer"
 var TestModel = "Test Model"
 var TestProfileLabels = []string{"labe1", "label2"}
 var TestProfileDescription = "Test Description"
-var TestObjects = "{key1:value1, key2:value2}"
-var TestProfile = DeviceProfile{DescribedObject: TestDescribedObject, Name: TestProfileName, Manufacturer: TestManufacturer, Model: TestModel, Labels: TestProfileLabels, Objects: TestObjects, DeviceResources: []DeviceObject{TestDeviceObject}, Resources: []ProfileResource{TestProfileResource}, Commands: []Command{TestCommand}}
+var TestProfile = DeviceProfile{DescribedObject: TestDescribedObject, Name: TestProfileName, Manufacturer: TestManufacturer, Model: TestModel, Labels: TestProfileLabels, DeviceResources: []DeviceResource{TestDeviceResource}, Resources: []ProfileResource{TestProfileResource}, Commands: []Command{TestCommand}}
 
 func TestDeviceProfile_MarshalJSON(t *testing.T) {
 	var emptyDeviceProfile = DeviceProfile{}
@@ -74,8 +73,7 @@ func TestDeviceProfile_String(t *testing.T) {
 				",\"manufacturer\":\"" + TestManufacturer + "\"" +
 				",\"model\":\"" + TestModel + "\"" +
 				",\"labels\":" + fmt.Sprint(string(labelSlice)) +
-				",\"objects\":\"" + TestObjects + "\"" +
-				",\"deviceResources\":[" + TestDeviceObject.String() + "]" +
+				",\"deviceResources\":[" + TestDeviceResource.String() + "]" +
 				",\"resources\":[" + TestProfileResource.String() + "]" +
 				",\"commands\":[" + TestCommand.String() + "]" +
 				"}"},
