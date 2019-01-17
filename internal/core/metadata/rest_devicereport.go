@@ -57,8 +57,7 @@ func restAddDeviceReport(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check if the device exists
-	var d models.Device
-	if err := dbClient.GetDeviceByName(&d, dr.Device); err != nil {
+	if _, err := dbClient.GetDeviceByName(dr.Device); err != nil {
 		if err == db.ErrNotFound {
 			http.Error(w, "Device referenced by Device Report doesn't exist", http.StatusNotFound)
 		} else {
@@ -179,8 +178,7 @@ func updateDeviceReportFields(from models.DeviceReport, to *models.DeviceReport,
 
 // Validate that the device exists
 func validateDevice(d string, w http.ResponseWriter) error {
-	var device models.Device
-	if err := dbClient.GetDeviceByName(&device, d); err != nil {
+	if _, err := dbClient.GetDeviceByName(d); err != nil {
 		if err == db.ErrNotFound {
 			http.Error(w, "Device was not found", http.StatusNotFound)
 		} else {
@@ -369,10 +367,10 @@ func deleteDeviceReport(dr models.DeviceReport, w http.ResponseWriter) error {
 
 // Notify the associated device services to the device report
 func notifyDeviceReportAssociates(dr models.DeviceReport, action string) error {
-	// Get the device of the report
 	var d models.Device
 	var err error
-	if err = dbClient.GetDeviceByName(&d, dr.Device); err != nil {
+	// Get the device of the report
+	if d, err = dbClient.GetDeviceByName(dr.Device); err != nil {
 		return err
 	}
 

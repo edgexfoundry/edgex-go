@@ -40,7 +40,7 @@ func TestAddDevice(t *testing.T) {
 		Service:        models.DeviceService{},
 	}
 
-	addingDeviceId := d.Id.Hex()
+	addingDeviceId := d.Id
 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)

@@ -21,6 +21,11 @@ import (
 	"github.com/globalsign/mgo/bson"
 )
 
+type deviceServiceTransform interface {
+	DBRefToDeviceService(dbRef mgo.DBRef) (model DeviceService, err error)
+	DeviceServiceToDBRef(model DeviceService) (dbRef mgo.DBRef, err error)
+}
+
 type DeviceService struct {
 	Service    `bson:",inline"`
 	AdminState contract.AdminState `bson:"adminState"` // Device Service Admin State

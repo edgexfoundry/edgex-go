@@ -26,6 +26,7 @@ import (
 )
 
 /* -----------------------Schedule Event ------------------------*/
+
 func (m MongoClient) UpdateScheduleEvent(se contract.ScheduleEvent) error {
 	s := m.session.Copy()
 	defer s.Close()
@@ -136,6 +137,7 @@ func (m MongoClient) DeleteScheduleEventById(id string) error {
 }
 
 //  --------------------------Schedule ---------------------------*/
+
 func (m MongoClient) GetAllSchedules(s *[]contract.Schedule) error {
 	return m.GetSchedules(s, bson.M{})
 }
@@ -205,6 +207,7 @@ func (m MongoClient) GetSchedules(sch *[]contract.Schedule, q bson.M) error {
 }
 
 /* ----------------------Device Report --------------------------*/
+
 func (m MongoClient) GetAllDeviceReports() ([]contract.DeviceReport, error) {
 	return m.getDeviceReports(bson.M{})
 }
@@ -218,16 +221,9 @@ func (m MongoClient) GetDeviceReportByDeviceName(n string) ([]contract.DeviceRep
 }
 
 func (m MongoClient) GetDeviceReportById(id string) (contract.DeviceReport, error) {
-	var query bson.M
-	if bson.IsObjectIdHex(id) {
-		query = bson.M{"_id": bson.ObjectIdHex(id)}
-	} else {
-		_, err := uuid.Parse(id)
-		if err == nil {
-			query = bson.M{"uuid": id}
-		} else {
-			return contract.DeviceReport{}, errors.New("mgoGetDeviceReportById Invalid Object ID " + id)
-		}
+	query, err := idToBsonM(id)
+	if err != nil {
+		return contract.DeviceReport{}, err
 	}
 	return m.getDeviceReport(query)
 }
@@ -294,18 +290,16 @@ func (m MongoClient) UpdateDeviceReport(dr contract.DeviceReport) error {
 	s := m.session.Copy()
 	defer s.Close()
 
-	model := &models.DeviceReport{}
-	if err := model.FromContract(dr); err != nil {
+	var mapped models.DeviceReport
+	if err := mapped.FromContract(dr); err != nil {
 		return errors.New("FromContract failed")
 	}
 
-	var err error
-	if model.Id.Valid() {
-		err = s.DB(m.database.Name).C(db.DeviceReport).UpdateId(dr.Id, dr)
-	} else {
-		err = s.DB(m.database.Name).C(db.DeviceReport).Update(bson.M{"uuid": model.Uuid}, model)
+	query, err := idToBsonM(dr.Id)
+	if err != nil {
+		return err
 	}
-	return errorMap(err)
+	return errorMap(s.DB(m.database.Name).C(db.Addressable).Update(query, mapped))
 }
 
 func (m MongoClient) DeleteDeviceReportById(id string) error {
@@ -313,156 +307,205 @@ func (m MongoClient) DeleteDeviceReportById(id string) error {
 }
 
 /* ----------------------------- Device ---------------------------------- */
-func (m MongoClient) AddDevice(d *contract.Device) error {
+func (m MongoClient) AddDevice(d contract.Device) (string, error) {
 	s := m.session.Copy()
 	defer s.Close()
+
 	col := s.DB(m.database.Name).C(db.Device)
 
 	// Check if the name exist (Device names must be unique)
 	count, err := col.Find(bson.M{"name": d.Name}).Count()
 	if err != nil {
-		return err
+		return "", err
 	}
 	if count > 0 {
-		return db.ErrNotUnique
+		return "", db.ErrNotUnique
 	}
+
+	var device models.Device
+	if err := device.FromContract(d, m, m, m, m); err != nil {
+		return "", errors.New("FromContract failed")
+	}
+
 	ts := db.MakeTimestamp()
-	d.Created = ts
-	d.Modified = ts
-	d.Id = bson.NewObjectId()
+	device.Created = ts
+	device.Modified = ts
 
-	addr, err := m.getAddressableByName(d.Addressable.Name)
-	if err != nil {
-		return err
-	}
-	d.Addressable.Id = addr.Id.Hex()
-
-	// Wrap the device in MongoDevice (For DBRefs)
-	md := mongoDevice{Device: *d}
-
-	return col.Insert(md)
+	return device.Uuid, col.Insert(device)
 }
 
-func (m MongoClient) UpdateDevice(rd contract.Device) error {
+func (m MongoClient) UpdateDevice(d contract.Device) error {
 	s := m.session.Copy()
 	defer s.Close()
-	c := s.DB(m.database.Name).C(db.Device)
 
-	// Copy over the DBRefs
-	md := mongoDevice{Device: rd}
+	var err error
+	var mapped models.Device
+	if err = mapped.FromContract(d, m, m, m, m); err != nil {
+		return errors.New("FromContract failed")
+	}
 
-	return c.UpdateId(rd.Id, md)
+	var query bson.M
+	if query, err = idToBsonM(d.Id); err != nil {
+		return err
+	}
+	return errorMap(s.DB(m.database.Name).C(db.Device).Update(query, mapped))
 }
 
 func (m MongoClient) DeleteDeviceById(id string) error {
 	return m.deleteById(db.Device, id)
 }
 
-func (m MongoClient) GetAllDevices(d *[]contract.Device) error {
-	return m.GetDevices(d, nil)
+func (m MongoClient) GetAllDevices() ([]contract.Device, error) {
+	return m.getDevices(nil)
 }
 
-func (m MongoClient) GetDevicesByProfileId(d *[]contract.Device, pid string) error {
-	if bson.IsObjectIdHex(pid) {
-		return m.GetDevices(d, bson.M{"profile.$id": bson.ObjectIdHex(pid)})
-	} else {
-		err := errors.New("mgoGetDevicesByProfileId Invalid Object ID " + pid)
-		return err
-	}
-}
-
-func (m MongoClient) GetDeviceById(d *contract.Device, id string) error {
+func (m MongoClient) GetDevicesByProfileId(id string) ([]contract.Device, error) {
+	//Incoming profile ID could be either BSON or JSON.
+	//If UUID, load the Mongo model to obtain the BSON Id because the contract won't have that.
 	if bson.IsObjectIdHex(id) {
-		return m.GetDevice(d, bson.M{"_id": bson.ObjectIdHex(id)})
-	} else {
-		err := errors.New("mgoGetDeviceById Invalid Object ID " + id)
-		return err
+		return m.getDevices(bson.M{"profile.$id": bson.ObjectIdHex(id)})
 	}
-}
 
-func (m MongoClient) GetDeviceByName(d *contract.Device, n string) error {
-	return m.GetDevice(d, bson.M{"name": n})
-}
-
-func (m MongoClient) GetDevicesByServiceId(d *[]contract.Device, sid string) error {
-	if bson.IsObjectIdHex(sid) {
-		return m.GetDevices(d, bson.M{"service.$id": bson.ObjectIdHex(sid)})
-	} else {
-		err := errors.New("mgoGetDevicesByServiceId Invalid Object ID " + sid)
-		return err
-	}
-}
-
-func (m MongoClient) GetDevicesByAddressableId(d *[]contract.Device, aid string) error {
-	//Incoming addressable ID could be either BSON or JSON.
-	//Figure out which one it is. If UUID, load the Mongo addressable model to obtain the BSON Id
-	//because the contract won't have that.
-	var query bson.M
-	if bson.IsObjectIdHex(aid) {
-		query = bson.M{"addressable.$id": bson.ObjectIdHex(aid)}
-	} else {
-		_, err := uuid.Parse(aid)
-		if err == nil {
-			addr, err := m.getAddressable(bson.M{"uuid": aid})
-			if err != nil {
-				return err
-			}
-			query = bson.M{"addressable.$id": addr.Id}
-		} else {
-			return errors.New("mgoGetDevicesByAddressableId Invalid Object ID " + aid)
+	if _, err := uuid.Parse(id); err == nil {
+		model, err := m.getDeviceProfileById(id)
+		if err != nil {
+			return []contract.Device{}, err
 		}
+		return m.getDevices(bson.M{"profile.$id": model.Id})
 	}
-	return m.GetDevices(d, bson.M{"addressable.$id": query})
+
+	return []contract.Device{}, errors.New("mgoGetDevicesByProfileId Invalid ID " + id)
 }
 
-func (m MongoClient) GetDevicesWithLabel(d *[]contract.Device, l string) error {
-	var ls []string
-	ls = append(ls, l)
-	return m.GetDevices(d, bson.M{"labels": bson.M{"$in": ls}})
+func (m MongoClient) GetDeviceById(id string) (contract.Device, error) {
+	query, err := idToBsonM(id)
+	if err != nil {
+		return contract.Device{}, err
+	}
+	return m.getDevice(query)
 }
 
-func (m MongoClient) GetDevices(d *[]contract.Device, q bson.M) error {
+func (m MongoClient) GetDeviceByName(n string) (contract.Device, error) {
+	return m.getDevice(bson.M{"name": n})
+}
+
+func (m MongoClient) GetDevicesByServiceId(id string) ([]contract.Device, error) {
+	//Incoming device service ID could be either BSON or JSON.
+	//If UUID, load the Mongo model to obtain the BSON Id because the contract won't have that.
+	if bson.IsObjectIdHex(id) {
+		return m.getDevices(bson.M{"profile.$id": bson.ObjectIdHex(id)})
+	}
+
+	if _, err := uuid.Parse(id); err == nil {
+		model, err := m.getDeviceServiceById(id)
+		if err != nil {
+			return []contract.Device{}, err
+		}
+		return m.getDevices(bson.M{"profile.$id": model.Id})
+	}
+
+	return []contract.Device{}, errors.New("mgoGetDevicesByServiceId Invalid ID " + id)
+}
+
+func (m MongoClient) GetDevicesByAddressableId(id string) ([]contract.Device, error) {
+	//Incoming addressable ID could be either BSON or JSON.
+	//If UUID, load the Mongo model to obtain the BSON Id because the contract won't have that.
+	if bson.IsObjectIdHex(id) {
+		return m.getDevices(bson.M{"addressable.$id": bson.ObjectIdHex(id)})
+	}
+
+	if _, err := uuid.Parse(id); err == nil {
+		model, err := m.getAddressable(bson.M{"uuid": id})
+		if err != nil {
+			return []contract.Device{}, err
+		}
+		return m.getDevices(bson.M{"addressable.$id": model.Id})
+	}
+
+	return []contract.Device{}, errors.New("mgoGetDevicesByAddressableId Invalid ID " + id)
+}
+
+func (m MongoClient) GetDevicesWithLabel(l string) ([]contract.Device, error) {
+	return m.getDevices(bson.M{"labels": bson.M{"$in": []string{l}}})
+}
+
+func (m MongoClient) getDevices(q bson.M) ([]contract.Device, error) {
 	s := m.session.Copy()
 	defer s.Close()
 	col := s.DB(m.database.Name).C(db.Device)
-	mds := []mongoDevice{}
+	mds := []models.Device{}
 
 	err := col.Find(q).Sort("queryts").All(&mds)
 	if err != nil {
-		return err
+		return []contract.Device{}, err
 	}
 
-	*d = []contract.Device{}
+	res := []contract.Device{}
 	for _, md := range mds {
-		*d = append(*d, md.Device)
+		d, err := md.ToContract(m, m, m, m)
+		if err != nil {
+			return []contract.Device{}, err
+		}
+		res = append(res, d)
 	}
 
-	return nil
+	return res, nil
 }
 
-func (m MongoClient) GetDevice(d *contract.Device, q bson.M) error {
+func (m MongoClient) getDevice(q bson.M) (contract.Device, error) {
 	s := m.session.Copy()
 	defer s.Close()
 	col := s.DB(m.database.Name).C(db.Device)
-	md := mongoDevice{}
+	var d models.Device
 
-	err := col.Find(q).One(&md)
-	if err != nil {
-		return errorMap(err)
+	if err := col.Find(q).One(&d); err != nil {
+		return contract.Device{}, errorMap(err)
 	}
-	*d = md.Device
-	return nil
+	return d.ToContract(m, m, m, m)
 }
 
 /* -----------------------------Device Profile -----------------------------*/
+
+// DBRefToDeviceProfile converts DBRef to internal Mongo struct
+func (m MongoClient) DBRefToDeviceProfile(dbRef mgo.DBRef) (a models.DeviceProfile, err error) {
+	s := m.session.Copy()
+	defer s.Close()
+
+	if err = s.DB(m.database.Name).C(db.DeviceProfile).Find(bson.M{"_id": dbRef.Id}).One(&a); err != nil {
+		return models.DeviceProfile{}, err
+	}
+	return
+}
+
+// DeviceProfileToDBRef converts internal Mongo struct to DBRef
+func (m MongoClient) DeviceProfileToDBRef(model models.DeviceProfile) (dbRef mgo.DBRef, err error) {
+	s := m.session.Copy()
+	defer s.Close()
+
+	// validate model with identity provided in contract actually exists
+	model, err = m.getDeviceProfileById(model.Id.Hex())
+	if err != nil {
+		return
+	}
+
+	dbRef = mgo.DBRef{Collection: db.DeviceProfile, Id: model.Id}
+	return
+}
+
 func (m MongoClient) GetDeviceProfileById(id string) (contract.DeviceProfile, error) {
-	if bson.IsObjectIdHex(id) {
-		return m.getDeviceProfile(bson.M{"_id": bson.ObjectIdHex(id)})
+	model, err := m.getDeviceProfileById(id)
+	if err != nil {
+		return contract.DeviceProfile{}, err
 	}
-	if _, err := uuid.Parse(id); err != nil {
-		return contract.DeviceProfile{}, db.ErrInvalidObjectId
+	return model.ToContract(m)
+}
+
+func (m MongoClient) getDeviceProfileById(id string) (dp models.DeviceProfile, err error) {
+	var query bson.M
+	if query, err = idToBsonM(id); err != nil {
+		return models.DeviceProfile{}, err
 	}
-	return m.getDeviceProfile(bson.M{"uuid": id})
+	return m.getDeviceProfile(query)
 }
 
 func (m MongoClient) GetAllDeviceProfiles() ([]contract.DeviceProfile, error) {
@@ -489,7 +532,11 @@ func (m MongoClient) GetDeviceProfilesByManufacturer(man string) ([]contract.Dev
 }
 
 func (m MongoClient) GetDeviceProfileByName(n string) (contract.DeviceProfile, error) {
-	return m.getDeviceProfile(bson.M{"name": n})
+	model, err := m.getDeviceProfile(bson.M{"name": n})
+	if err != nil {
+		return contract.DeviceProfile{}, err
+	}
+	return model.ToContract(m)
 }
 
 // Get device profiles with the passed query
@@ -517,19 +564,15 @@ func (m MongoClient) getDeviceProfiles(q bson.M) (cdps []contract.DeviceProfile,
 	return
 }
 
-// Get device profile with the passed query
-func (m MongoClient) getDeviceProfile(q bson.M) (d contract.DeviceProfile, err error) {
+func (m MongoClient) getDeviceProfile(q bson.M) (d models.DeviceProfile, err error) {
 	s := m.session.Copy()
 	defer s.Close()
 	col := s.DB(m.database.Name).C(db.DeviceProfile)
 
-	// Handle the DBRefs
-	var dp models.DeviceProfile
-	err = col.Find(q).One(&dp)
+	err = col.Find(q).One(&d)
 	if err != nil {
-		return contract.DeviceProfile{}, errorMap(err)
+		return models.DeviceProfile{}, errorMap(err)
 	}
-	d, err = dp.ToContract(m)
 	return
 }
 
@@ -650,21 +693,19 @@ func (m MongoClient) UpdateAddressable(a contract.Addressable) error {
 	s := m.session.Copy()
 	defer s.Close()
 
-	mapped := &models.Addressable{}
-	mapped.FromContract(a)
-	mapped.Modified = db.MakeTimestamp()
-
-	c := s.DB(m.database.Name).C(db.Addressable)
-
 	var err error
-	if mapped.Id.Valid() {
-		err = c.UpdateId(mapped.Id, mapped)
-	} else {
-		query := bson.M{"uuid": mapped.Uuid}
-		err = c.Update(query, mapped)
+	mapped := &models.Addressable{}
+	if err = mapped.FromContract(a); err != nil {
+		return err
 	}
 
-	return err
+	mapped.Modified = db.MakeTimestamp()
+
+	var query bson.M
+	if query, err = idToBsonM(a.Id); err != nil {
+		return err
+	}
+	return s.DB(m.database.Name).C(db.Addressable).Update(query, mapped)
 }
 
 func (m MongoClient) GetAddressables() ([]contract.Addressable, error) {
@@ -695,23 +736,11 @@ func (m MongoClient) GetAddressableById(id string) (contract.Addressable, error)
 }
 
 func (m MongoClient) getAddressableById(id string) (models.Addressable, error) {
-	var query bson.M
-	if !bson.IsObjectIdHex(id) {
-		// AddressableID is not a BSON ID. Is it a UUID?
-		_, err := uuid.Parse(id)
-		if err != nil { // It is some unsupported type of string
-			return models.Addressable{}, db.ErrInvalidObjectId
-		}
-		query = bson.M{"uuid": id}
-	} else {
-		query = bson.M{"_id": bson.ObjectIdHex(id)}
-	}
-
-	addr, err := m.getAddressable(query)
+	query, err := idToBsonM(id)
 	if err != nil {
 		return models.Addressable{}, err
 	}
-	return addr, nil
+	return m.getAddressable(query)
 }
 
 func (m MongoClient) AddAddressable(a contract.Addressable) (string, error) {
@@ -801,23 +830,55 @@ func mapAddressables(addrs []models.Addressable, err error) ([]contract.Addressa
 }
 
 /* ----------------------------- Device Service ----------------------------------*/
+
+// DBRefToDeviceService converts DBRef to internal Mongo struct
+func (m MongoClient) DBRefToDeviceService(dbRef mgo.DBRef) (a models.DeviceService, err error) {
+	s := m.session.Copy()
+	defer s.Close()
+
+	if err = s.DB(m.database.Name).C(db.DeviceService).Find(bson.M{"_id": dbRef.Id}).One(&a); err != nil {
+		return models.DeviceService{}, err
+	}
+	return
+}
+
+// DeviceServiceToDBRef converts internal Mongo struct to DBRef
+func (m MongoClient) DeviceServiceToDBRef(model models.DeviceService) (dbRef mgo.DBRef, err error) {
+	s := m.session.Copy()
+	defer s.Close()
+
+	// validate model with identity provided in contract actually exists
+	model, err = m.getDeviceServiceById(model.Id.Hex())
+	if err != nil {
+		return
+	}
+
+	dbRef = mgo.DBRef{Collection: db.DeviceService, Id: model.Id}
+	return
+}
+
 func (m MongoClient) GetDeviceServiceByName(n string) (contract.DeviceService, error) {
-	return m.getDeviceService(bson.M{"name": n})
+	ds, err := m.getDeviceServiceModel(bson.M{"name": n})
+	if err != nil {
+		return contract.DeviceService{}, err
+	}
+	return ds.ToContract(m)
 }
 
 func (m MongoClient) GetDeviceServiceById(id string) (contract.DeviceService, error) {
-	var query bson.M
-	if !bson.IsObjectIdHex(id) {
-		// EventID is not a BSON ID. Is it a UUID?
-		_, err := uuid.Parse(id)
-		if err != nil { // It is some unsupported type of string
-			return contract.DeviceService{}, errors.New("mgoGetDeviceServiceByName Invalid Object ID " + id)
-		}
-		query = bson.M{"uuid": id}
-	} else {
-		query = bson.M{"_id": bson.ObjectIdHex(id)}
+	ds, err := m.getDeviceServiceById(id)
+	if err != nil {
+		return contract.DeviceService{}, err
 	}
-	return m.getDeviceService(query)
+	return ds.ToContract(m)
+}
+
+func (m MongoClient) getDeviceServiceById(id string) (models.DeviceService, error) {
+	query, err := idToBsonM(id)
+	if err != nil {
+		return models.DeviceService{}, err
+	}
+	return m.getDeviceServiceModel(query)
 }
 
 func (m MongoClient) GetAllDeviceServices() ([]contract.DeviceService, error) {
@@ -873,16 +934,15 @@ func (m MongoClient) getDeviceServices(q bson.M) ([]contract.DeviceService, erro
 	return contractDeviceServices, nil
 }
 
-func (m MongoClient) getDeviceService(q bson.M) (contract.DeviceService, error) {
+func (m MongoClient) getDeviceServiceModel(q bson.M) (ds models.DeviceService, err error) {
 	s := m.session.Copy()
 	defer s.Close()
-	col := s.DB(m.database.Name).C(db.DeviceService)
-	ds := models.DeviceService{}
-	err := col.Find(q).One(&ds)
+
+	err = s.DB(m.database.Name).C(db.DeviceService).Find(q).One(&ds)
 	if err != nil {
-		return contract.DeviceService{}, errorMap(err)
+		return models.DeviceService{}, errorMap(err)
 	}
-	return ds.ToContract(m)
+	return
 }
 
 func (m MongoClient) AddDeviceService(ds contract.DeviceService) (string, error) {
@@ -906,17 +966,18 @@ func (m MongoClient) UpdateDeviceService(ds contract.DeviceService) error {
 	s := m.session.Copy()
 	defer s.Close()
 
-	var deviceService models.DeviceService
-	if err := deviceService.FromContract(ds, m); err != nil {
+	var err error
+	var mapped models.DeviceService
+	if err = mapped.FromContract(ds, m); err != nil {
 		return errors.New("FromContract failed")
 	}
-	deviceService.Modified = db.MakeTimestamp()
+	mapped.Modified = db.MakeTimestamp()
 
-	col := s.DB(m.database.Name).C(db.DeviceService)
-	if deviceService.Id.Valid() {
-		return col.UpdateId(deviceService.Id, deviceService)
+	var query bson.M
+	if query, err = idToBsonM(ds.Id); err != nil {
+		return err
 	}
-	return col.Update(bson.M{"uuid": deviceService.Uuid}, deviceService)
+	return s.DB(m.database.Name).C(db.DeviceService).Update(query, mapped)
 }
 
 func (m MongoClient) DeleteDeviceServiceById(id string) error {
@@ -924,6 +985,7 @@ func (m MongoClient) DeleteDeviceServiceById(id string) error {
 }
 
 //  ----------------------Provision Watcher -----------------------------*/
+
 func (m MongoClient) GetAllProvisionWatchers(pw *[]contract.ProvisionWatcher) error {
 	return m.GetProvisionWatchers(pw, bson.M{})
 }
@@ -1123,23 +1185,16 @@ func (m MongoClient) getCommandById(id string) (models.Command, error) {
 	s := m.session.Copy()
 	defer s.Close()
 
-	col := s.DB(m.database.Name).C(db.Command)
-
-	var query bson.M
-	if !bson.IsObjectIdHex(id) {
-		// EventID is not a BSON ID. Is it a UUID?
-		_, err := uuid.Parse(id)
-		if err != nil { // It is some unsupported type of string
-			return models.Command{}, db.ErrNotFound
-		}
-		query = bson.M{"uuid": id}
-	} else {
-		query = bson.M{"_id": bson.ObjectIdHex(id)}
+	query, err := idToBsonM(id)
+	if err != nil {
+		return models.Command{}, err
 	}
 
-	command := models.Command{}
-	err := col.Find(query).One(&command)
-	return command, err
+	var command models.Command
+	if err = s.DB(m.database.Name).C(db.Command).Find(query).One(&command); err != nil {
+		return models.Command{}, err
+	}
+	return command, nil
 }
 
 func (m MongoClient) GetCommandByName(n string) ([]contract.Command, error) {
@@ -1183,26 +1238,21 @@ func (m MongoClient) AddCommand(c contract.Command) (string, error) {
 }
 
 // Update command uses the ID of the command for identification
-func (m MongoClient) UpdateCommand(c *contract.Command) error {
+func (m MongoClient) UpdateCommand(c contract.Command) error {
 	s := m.session.Copy()
 	defer s.Close()
 
-	if c == nil {
-		return nil
-	}
-
-	model := &models.Command{}
-	if _, err := model.FromContract(*c); err != nil {
+	var err error
+	var mapped models.Command
+	if _, err = mapped.FromContract(c); err != nil {
 		return errors.New("FromContract failed")
 	}
 
-	var err error
-	if model.Id.Valid() {
-		err = s.DB(m.database.Name).C(db.Command).UpdateId(model.Id, model)
-	} else {
-		err = s.DB(m.database.Name).C(db.Command).Update(bson.M{"uuid": model.Uuid}, model)
+	var query bson.M
+	if query, err = idToBsonM(c.Id); err != nil {
+		return err
 	}
-	return errorMap(err)
+	return errorMap(s.DB(m.database.Name).C(db.Command).Update(query, mapped))
 }
 
 // Delete the command by ID
@@ -1212,23 +1262,11 @@ func (m MongoClient) DeleteCommandById(id string) error {
 	defer s.Close()
 	col := s.DB(m.database.Name).C(db.Command)
 
-	var findParameters bson.M
-	var deleteParameters bson.D
-	if !bson.IsObjectIdHex(id) {
-		// EventID is not a BSON ID. Is it a UUID?
-		_, err := uuid.Parse(id)
-		if err != nil { // It is some unsupported type of string
-			return db.ErrInvalidObjectId
-		}
-		findParameters = bson.M{"uuid": id}
-		deleteParameters = bson.D{{Name: "uuid", Value: id}}
-	} else {
-		var objectId = bson.ObjectIdHex(id)
-		findParameters = bson.M{"_id": objectId}
-		deleteParameters = bson.D{{Name: "_id", Value: objectId}}
-	}
-
 	// Check if the command is still in use
+	findParameters, err := idToBsonM(id)
+	if err != nil {
+		return err
+	}
 	query := bson.M{"commands": bson.M{"$elemMatch": findParameters}}
 	count, err := s.DB(m.database.Name).C(db.DeviceProfile).Find(query).Count()
 	if err != nil {
@@ -1238,7 +1276,12 @@ func (m MongoClient) DeleteCommandById(id string) error {
 		return db.ErrCommandStillInUse
 	}
 
-	return col.Remove(deleteParameters)
+	// remove the command
+	n, v, err := idToQueryParameters(id)
+	if err != nil {
+		return err
+	}
+	return col.Remove(bson.D{{Name: n, Value: v}})
 }
 
 func (m MongoClient) GetAndMapCommands(c []mgo.DBRef) ([]contract.Command, error) {

@@ -2,6 +2,7 @@ package data
 
 import (
 	"fmt"
+	"github.com/google/uuid"
 	"math"
 	"net/http"
 	"os"
@@ -97,7 +98,7 @@ func newMockDeviceClient() *mocks.DeviceClient {
 
 	mockDeviceResultFn := func(id string) models.Device {
 		if bson.IsObjectIdHex(id) {
-			return models.Device{Id: bson.ObjectIdHex(id), Name: testEvent.Device, Addressable: mockAddressable}
+			return models.Device{Id: id, Name: testEvent.Device, Addressable: mockAddressable}
 		}
 		return models.Device{}
 	}
@@ -110,7 +111,7 @@ func newMockDeviceClient() *mocks.DeviceClient {
 	client.On("Device", mock.Anything).Return(mockDeviceResultFn, fmt.Errorf("some error"))
 
 	mockDeviceForNameResultFn := func(name string) models.Device {
-		device := models.Device{Id: bson.NewObjectId(), Name: name, Addressable: mockAddressable}
+		device := models.Device{Id: uuid.New().String(), Name: name, Addressable: mockAddressable}
 
 		return device
 	}

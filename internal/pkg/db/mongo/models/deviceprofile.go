@@ -20,6 +20,11 @@ import (
 	"github.com/globalsign/mgo/bson"
 )
 
+type deviceProfileTransform interface {
+	DBRefToDeviceProfile(dbRef mgo.DBRef) (model DeviceProfile, err error)
+	DeviceProfileToDBRef(model DeviceProfile) (dbRef mgo.DBRef, err error)
+}
+
 type DeviceProfile struct {
 	DescribedObject `bson:",inline"`
 	Id              bson.ObjectId     `bson:"_id,omitempty"`
@@ -128,7 +133,7 @@ func (dp *DeviceProfile) GetBSON() (interface{}, error) {
 	}{
 		DescribedObject: dp.DescribedObject,
 		Id:              dp.Id,
-		Uuid:			 dp.Uuid,
+		Uuid:            dp.Uuid,
 		Name:            dp.Name,
 		Manufacturer:    dp.Manufacturer,
 		Model:           dp.Model,

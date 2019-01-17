@@ -208,7 +208,7 @@ func restDeleteAddressableByName(w http.ResponseWriter, r *http.Request) {
 func isAddressableStillInUse(a models.Addressable) (bool, error) {
 	// Check devices
 	var d []models.Device
-	err := dbClient.GetDevicesByAddressableId(&d, a.Id)
+	d, err := dbClient.GetDevicesByAddressableId(a.Id)
 	if err != nil {
 		return false, err
 	}
@@ -333,7 +333,8 @@ func restGetAddressableByAddress(w http.ResponseWriter, r *http.Request) {
 func notifyAddressableAssociates(a models.Addressable, action string) error {
 	// Get the devices
 	var d []models.Device
-	if err := dbClient.GetDevicesByAddressableId(&d, a.Id); err != nil {
+	d, err := dbClient.GetDevicesByAddressableId(a.Id)
+	if err != nil {
 		LoggingClient.Error(err.Error())
 		return err
 	}
@@ -348,8 +349,8 @@ func notifyAddressableAssociates(a models.Addressable, action string) error {
 			dsMap[device.Service.Service.Id] = device.Service
 			ds = append(ds, device.Service)
 		}
-	}
 
+	}
 	if err := notifyAssociates(ds, a.Id, action, models.ADDRESSABLE); err != nil {
 		LoggingClient.Error(err.Error())
 		return err
