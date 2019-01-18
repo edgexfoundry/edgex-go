@@ -3,6 +3,7 @@ package correlation
 import (
 	"context"
 	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/internal/system/agent/logger"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 	"github.com/google/uuid"
 	"net/http"
@@ -25,6 +26,11 @@ func ManageHeader(next http.Handler) http.Handler {
 
 func OnResponseComplete(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// handle the SMA's snowflake logging setup
+		if LoggingClient == nil {
+			LoggingClient = logs.LoggingClient
+		}
+
 		begin := time.Now()
 		next.ServeHTTP(w, r)
 		correlationId := FromContext(r.Context())
@@ -34,6 +40,11 @@ func OnResponseComplete(next http.Handler) http.Handler {
 
 func OnRequestBegin(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// handle the SMA's snowflake logging setup
+		if LoggingClient == nil {
+			LoggingClient = logs.LoggingClient
+		}
+
 		correlationId := FromContext(r.Context())
 		LoggingClient.Info("Begin request", internal.CorrelationHeader, correlationId, "path", r.URL.Path)
 		next.ServeHTTP(w, r)

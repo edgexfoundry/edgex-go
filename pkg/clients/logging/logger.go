@@ -93,7 +93,7 @@ func NewClient(owningServiceName string, isRemote bool, logTarget string, logLev
 		lc.rootLogger = log.NewLogfmtLogger(os.Stdout)
 	}
 
-	lc.rootLogger = log.WithPrefix(lc.rootLogger, "ts", log.DefaultTimestampUTC, "app", owningServiceName,
+	lc.rootLogger = log.WithPrefix(lc.rootLogger, "ts", log.DefaultTimestampUTC,
 		"app", owningServiceName, "source", log.Caller(5))
 
 	// Set up the loggers
