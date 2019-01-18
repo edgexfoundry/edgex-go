@@ -16,7 +16,6 @@ package scheduler
 import (
 	"fmt"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/interfaces"
 	"sync"
 	"time"
@@ -75,7 +74,7 @@ func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup,
 			err = connectToSchedulerQueue()
 			if err != nil {
 				ch <- err
-			}else{
+			} else {
 				break
 			}
 		}
@@ -210,7 +209,6 @@ func listenForConfigChanges() {
 	}
 }
 
-
 func connectToDatabase() error {
 	var err error
 	dbConfig := db.Configuration{
@@ -222,7 +220,7 @@ func connectToDatabase() error {
 		Password:     Configuration.Databases["Primary"].Password,
 	}
 
-	dbClient, err = newDBClient(Configuration.Databases["Primary"].Type, dbConfig)
+	dbClient, err = newDBClient(dbConfig)
 	if err != nil {
 		dbClient = nil
 		return fmt.Errorf("couldn't create database client: %v", err.Error())
@@ -230,7 +228,7 @@ func connectToDatabase() error {
 	return nil
 }
 
-func connectToSchedulerQueue()  error {
+func connectToSchedulerQueue() error {
 	var err error
 	scClient, err = newScheduleQueueClient()
 	if err != nil {
@@ -239,18 +237,8 @@ func connectToSchedulerQueue()  error {
 	}
 	return nil
 }
-func newScheduleQueueClient()(interfaces.SchedulerQueueClient,error){
-	return NewSchedulerQueueClient(),nil
-} 
-
-// Return the dbClient interface
-func newDBClient(dbType string, config db.Configuration) (interfaces.DBClient, error) {
-	switch dbType {
-	case db.MongoDB:
-		return mongo.NewClient(config)
-	default:
-		return nil, db.ErrUnsupportedDatabase
-	}
+func newScheduleQueueClient() (interfaces.SchedulerQueueClient, error) {
+	return NewSchedulerQueueClient(), nil
 }
 
 func setLoggingTarget() string {

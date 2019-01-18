@@ -11,6 +11,9 @@
 GO=CGO_ENABLED=0 go
 GOCGO=CGO_ENABLED=1 go
 
+DBPROVIDER ?= github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo
+SETDB = go run ./cmd/set-db --provider $(DBPROVIDER)
+
 DOCKERS=docker_config_seed docker_export_client docker_export_distro docker_core_data docker_core_metadata docker_core_command docker_support_logging docker_support_notifications docker_sys_mgmt_agent docker_support_scheduler
 .PHONY: $(DOCKERS)
 
@@ -65,6 +68,11 @@ test:
 	go vet ./...
 
 prepare:
+	$(SETDB) --service core-data
+	$(SETDB) --service core-metadata
+	$(SETDB) --service export-client
+	$(SETDB) --service support-notifications
+	$(SETDB) --service support-scheduler
 	glide install
 
 run:

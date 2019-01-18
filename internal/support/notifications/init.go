@@ -25,7 +25,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/consul"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo"
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/interfaces"
 	"github.com/edgexfoundry/edgex-go/pkg/clients"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
@@ -110,22 +109,12 @@ func connectToDatabase() error {
 		Username:     Configuration.Databases["Primary"].Username,
 		Password:     Configuration.Databases["Primary"].Password,
 	}
-	dbClient, err = newDBClient(Configuration.Databases["Primary"].Type, dbConfig)
+	dbClient, err = newDBClient(dbConfig)
 	if err != nil {
 		return fmt.Errorf("couldn't create database client: %v", err.Error())
 	}
 
 	return err
-}
-
-// Return the dbClient interface
-func newDBClient(dbType string, config db.Configuration) (interfaces.DBClient, error) {
-	switch dbType {
-	case db.MongoDB:
-		return mongo.NewClient(config)
-	default:
-		return nil, db.ErrUnsupportedDatabase
-	}
 }
 
 func initializeConfiguration(useConsul bool, useProfile string) (*ConfigurationStruct, error) {
