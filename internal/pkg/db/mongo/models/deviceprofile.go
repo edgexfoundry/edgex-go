@@ -161,13 +161,11 @@ func (dp *DeviceProfile) SetBSON(raw bson.Raw) error {
 		Commands        []mgo.DBRef       `bson:"commands"` // List of commands to Get/Put information for devices associated with this profile
 	})
 
-	//	bsonErr := bson.Unmarshal(raw.Data, decoded)
 	bsonErr := raw.Unmarshal(&decoded)
 	if bsonErr != nil {
 		return bsonErr
 	}
 
-	// Copy over the non-DBRef fields
 	dp.DescribedObject = decoded.DescribedObject
 	dp.Id = decoded.Id
 	dp.Name = decoded.Name

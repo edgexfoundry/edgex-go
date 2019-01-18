@@ -137,17 +137,24 @@ func (_m *DBClient) AddDeviceService(ds models.DeviceService) (string, error) {
 }
 
 // AddProvisionWatcher provides a mock function with given fields: pw
-func (_m *DBClient) AddProvisionWatcher(pw *models.ProvisionWatcher) error {
+func (_m *DBClient) AddProvisionWatcher(pw models.ProvisionWatcher) (string, error) {
 	ret := _m.Called(pw)
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func(*models.ProvisionWatcher) error); ok {
+	var r0 string
+	if rf, ok := ret.Get(0).(func(models.ProvisionWatcher) string); ok {
 		r0 = rf(pw)
 	} else {
-		r0 = ret.Error(0)
+		r0 = ret.Get(0).(string)
 	}
 
-	return r0
+	var r1 error
+	if rf, ok := ret.Get(1).(func(models.ProvisionWatcher) error); ok {
+		r1 = rf(pw)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // AddSchedule provides a mock function with given fields: s
@@ -581,18 +588,27 @@ func (_m *DBClient) GetAllDevices() ([]models.Device, error) {
 	return r0, r1
 }
 
-// GetAllProvisionWatchers provides a mock function with given fields: pw
-func (_m *DBClient) GetAllProvisionWatchers(pw *[]models.ProvisionWatcher) error {
-	ret := _m.Called(pw)
+// GetAllProvisionWatchers provides a mock function with given fields:
+func (_m *DBClient) GetAllProvisionWatchers() ([]models.ProvisionWatcher, error) {
+	ret := _m.Called()
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func(*[]models.ProvisionWatcher) error); ok {
-		r0 = rf(pw)
+	var r0 []models.ProvisionWatcher
+	if rf, ok := ret.Get(0).(func() []models.ProvisionWatcher); ok {
+		r0 = rf()
 	} else {
-		r0 = ret.Error(0)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.ProvisionWatcher)
+		}
 	}
 
-	return r0
+	var r1 error
+	if rf, ok := ret.Get(1).(func() error); ok {
+		r1 = rf()
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // GetAllScheduleEvents provides a mock function with given fields: se
@@ -1134,74 +1150,115 @@ func (_m *DBClient) GetDevicesWithLabel(l string) ([]models.Device, error) {
 	return r0, r1
 }
 
-// GetProvisionWatcherById provides a mock function with given fields: pw, id
-func (_m *DBClient) GetProvisionWatcherById(pw *models.ProvisionWatcher, id string) error {
-	ret := _m.Called(pw, id)
+// GetProvisionWatcherById provides a mock function with given fields: id
+func (_m *DBClient) GetProvisionWatcherById(id string) (models.ProvisionWatcher, error) {
+	ret := _m.Called(id)
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func(*models.ProvisionWatcher, string) error); ok {
-		r0 = rf(pw, id)
+	var r0 models.ProvisionWatcher
+	if rf, ok := ret.Get(0).(func(string) models.ProvisionWatcher); ok {
+		r0 = rf(id)
 	} else {
-		r0 = ret.Error(0)
+		r0 = ret.Get(0).(models.ProvisionWatcher)
 	}
 
-	return r0
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
-// GetProvisionWatcherByName provides a mock function with given fields: pw, n
-func (_m *DBClient) GetProvisionWatcherByName(pw *models.ProvisionWatcher, n string) error {
-	ret := _m.Called(pw, n)
+// GetProvisionWatcherByName provides a mock function with given fields: n
+func (_m *DBClient) GetProvisionWatcherByName(n string) (models.ProvisionWatcher, error) {
+	ret := _m.Called(n)
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func(*models.ProvisionWatcher, string) error); ok {
-		r0 = rf(pw, n)
+	var r0 models.ProvisionWatcher
+	if rf, ok := ret.Get(0).(func(string) models.ProvisionWatcher); ok {
+		r0 = rf(n)
 	} else {
-		r0 = ret.Error(0)
+		r0 = ret.Get(0).(models.ProvisionWatcher)
 	}
 
-	return r0
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(n)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
-// GetProvisionWatchersByIdentifier provides a mock function with given fields: pw, k, v
-func (_m *DBClient) GetProvisionWatchersByIdentifier(pw *[]models.ProvisionWatcher, k string, v string) error {
-	ret := _m.Called(pw, k, v)
+// GetProvisionWatchersByIdentifier provides a mock function with given fields: k, v
+func (_m *DBClient) GetProvisionWatchersByIdentifier(k string, v string) ([]models.ProvisionWatcher, error) {
+	ret := _m.Called(k, v)
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func(*[]models.ProvisionWatcher, string, string) error); ok {
-		r0 = rf(pw, k, v)
+	var r0 []models.ProvisionWatcher
+	if rf, ok := ret.Get(0).(func(string, string) []models.ProvisionWatcher); ok {
+		r0 = rf(k, v)
 	} else {
-		r0 = ret.Error(0)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.ProvisionWatcher)
+		}
 	}
 
-	return r0
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string, string) error); ok {
+		r1 = rf(k, v)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
-// GetProvisionWatchersByProfileId provides a mock function with given fields: pw, id
-func (_m *DBClient) GetProvisionWatchersByProfileId(pw *[]models.ProvisionWatcher, id string) error {
-	ret := _m.Called(pw, id)
+// GetProvisionWatchersByProfileId provides a mock function with given fields: id
+func (_m *DBClient) GetProvisionWatchersByProfileId(id string) ([]models.ProvisionWatcher, error) {
+	ret := _m.Called(id)
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func(*[]models.ProvisionWatcher, string) error); ok {
-		r0 = rf(pw, id)
+	var r0 []models.ProvisionWatcher
+	if rf, ok := ret.Get(0).(func(string) []models.ProvisionWatcher); ok {
+		r0 = rf(id)
 	} else {
-		r0 = ret.Error(0)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.ProvisionWatcher)
+		}
 	}
 
-	return r0
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
-// GetProvisionWatchersByServiceId provides a mock function with given fields: pw, id
-func (_m *DBClient) GetProvisionWatchersByServiceId(pw *[]models.ProvisionWatcher, id string) error {
-	ret := _m.Called(pw, id)
+// GetProvisionWatchersByServiceId provides a mock function with given fields: id
+func (_m *DBClient) GetProvisionWatchersByServiceId(id string) ([]models.ProvisionWatcher, error) {
+	ret := _m.Called(id)
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func(*[]models.ProvisionWatcher, string) error); ok {
-		r0 = rf(pw, id)
+	var r0 []models.ProvisionWatcher
+	if rf, ok := ret.Get(0).(func(string) []models.ProvisionWatcher); ok {
+		r0 = rf(id)
 	} else {
-		r0 = ret.Error(0)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.ProvisionWatcher)
+		}
 	}
 
-	return r0
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // GetScheduleById provides a mock function with given fields: s, id
