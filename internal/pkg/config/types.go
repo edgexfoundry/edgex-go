@@ -97,7 +97,6 @@ func (m MessageQueueInfo) Uri() string {
 
 // DatabaseInfo defines the parameters necessary for connecting to the desired persistence layer.
 type DatabaseInfo struct {
-	Type     string
 	Timeout  int
 	Host     string
 	Port     int
@@ -105,7 +104,6 @@ type DatabaseInfo struct {
 	Password string
 	Name     string
 }
-
 
 type IntervalInfo struct {
 	// Name of the schedule must be unique?
@@ -137,7 +135,6 @@ type ScheduleInfo struct {
 	// Boolean indicating that this schedules runs one time - at the time indicated by the start
 	RunOnce bool
 }
-
 
 type IntervalActionInfo struct {
 	// Host is the hostname or IP address of a service.

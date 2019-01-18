@@ -45,7 +45,6 @@ File = './logs/edgex-core-data.log'
   Port = 27017
   Username = ''
   Timeout = 5000
-  Type = 'mongodb'
 
 [MessageQueue]
 Protocol = 'tcp'

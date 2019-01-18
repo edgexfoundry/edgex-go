@@ -39,7 +39,6 @@ File = './logs/edgex-core-metadata.log'
   Port = 27017
   Username = ''
   Timeout = 5000
-  Type = 'mongodb'
 
 [Notifications]
 PostDeviceChanges = true

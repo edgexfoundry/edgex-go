@@ -29,4 +29,3 @@ File = '/edgex/logs/edgex-support-logging.log'
   Port = 27017
   Username = 'logging'
   Timeout = 5000
-  Type = 'mongodb'
