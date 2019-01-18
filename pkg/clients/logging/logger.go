@@ -81,9 +81,6 @@ func NewClient(owningServiceName string, isRemote bool, logTarget string, logLev
 		logLevel:          &logLevel,
 	}
 
-	// Set up the loggers
-	lc.levelLoggers = map[string]log.Logger{}
-
 	if !lc.remoteEnabled && logTarget != "" { // file based logging
 		verifyLogDirectory(lc.logTarget)
 
@@ -98,6 +95,13 @@ func NewClient(owningServiceName string, isRemote bool, logTarget string, logLev
 
 	lc.rootLogger = log.WithPrefix(lc.rootLogger, "ts", log.DefaultTimestampUTC,
 		"app", owningServiceName, "source", log.Caller(5))
+
+	// Set up the loggers
+	lc.levelLoggers = map[string]log.Logger{}
+
+	for _, logLevel := range LogLevels {
+		lc.levelLoggers[logLevel] = log.WithPrefix(lc.rootLogger, "level", logLevel)
+	}
 
 	if logTarget == "" {
 		lc.Error("logTarget cannot be blank, using stdout only")
@@ -158,10 +162,6 @@ func (lc EdgeXLogger) log(logLevel string, msg string, args ...interface{}) {
 			args = append(args, "")
 		}
 		args = append(args, "msg", msg)
-	}
-
-	if lc.levelLoggers[logLevel] == nil {
-		lc.levelLoggers[logLevel] = log.WithPrefix(lc.rootLogger, "level", logLevel)
 	}
 
 	err := lc.levelLoggers[logLevel].Log(args...)
