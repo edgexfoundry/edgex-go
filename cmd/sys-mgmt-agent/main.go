@@ -68,7 +68,7 @@ func main() {
 	ok := agent.Init()
 	if !ok {
 		logBeforeInit(fmt.Errorf("%s: Service bootstrap failed!", internal.SystemManagementAgentServiceKey))
-		return
+		os.Exit(1)
 	}
 
 	logs.LoggingClient.Info("Service dependencies resolved...")
@@ -86,6 +86,8 @@ func main() {
 	logs.LoggingClient.Info("Listening on port: " + strconv.Itoa(agent.Configuration.ServicePort))
 	c := <-errs
 	logs.LoggingClient.Warn(fmt.Sprintf("terminating: %v", c))
+
+	os.Exit(0)
 }
 
 func logBeforeInit(err error) {

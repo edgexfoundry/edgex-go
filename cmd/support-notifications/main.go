@@ -54,7 +54,7 @@ func main() {
 	ok := notifications.Init(useConsul)
 	if !ok {
 		logBeforeInit(fmt.Errorf("%s: Service bootstrap failed!", internal.SupportNotificationsServiceKey))
-		return
+		os.Exit(1)
 	}
 
 	notifications.LoggingClient.Info("Service dependencies resolved...")
@@ -73,6 +73,8 @@ func main() {
 	c := <-errs
 	notifications.Destruct()
 	notifications.LoggingClient.Warn(fmt.Sprintf("terminating: %v", c))
+
+	os.Exit(0)
 }
 
 func logBeforeInit(err error) {

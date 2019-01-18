@@ -46,7 +46,7 @@ func main() {
 	ok := client.Init(useConsul)
 	if !ok {
 		logBeforeInit(fmt.Errorf("%s: Service bootstrap failed", internal.ExportClientServiceKey))
-		return
+		os.Exit(1)
 	}
 
 	client.LoggingClient.Info("Service dependencies resolved...")
@@ -65,6 +65,8 @@ func main() {
 	c := <-errs
 	client.Destruct()
 	client.LoggingClient.Warn(fmt.Sprintf("terminating: %v", c))
+
+	os.Exit(0)
 }
 
 func logBeforeInit(err error) {

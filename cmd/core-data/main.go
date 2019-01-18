@@ -50,7 +50,7 @@ func main() {
 	ok := data.Init(useConsul)
 	if !ok {
 		logBeforeInit(fmt.Errorf("%s: Service bootstrap failed!", internal.CoreDataServiceKey))
-		return
+		os.Exit(1)
 	}
 
 	data.LoggingClient.Info("Service dependencies resolved...")
@@ -69,6 +69,8 @@ func main() {
 	c := <-errs
 	data.Destruct()
 	data.LoggingClient.Warn(fmt.Sprintf("terminating: %v", c))
+
+	os.Exit(0)
 }
 
 func logBeforeInit(err error) {

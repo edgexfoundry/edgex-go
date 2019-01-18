@@ -45,7 +45,7 @@ func main() {
 	if !ok {
 		time.Sleep(time.Millisecond * time.Duration(15))
 		logBeforeInit(fmt.Errorf("%s: Service bootstrap failed!", internal.SupportLoggingServiceKey))
-		return
+		os.Exit(1)
 	}
 	logging.LoggingClient.Info("Service dependencies resolved...")
 	logging.LoggingClient.Info(fmt.Sprintf("Starting %s %s", internal.SupportLoggingServiceKey, edgex.Version))
@@ -61,6 +61,8 @@ func main() {
 	c := <-errs
 	logging.Destruct()
 	logging.LoggingClient.Warn(fmt.Sprintf("terminated %v", c))
+
+	os.Exit(0)
 }
 
 func logBeforeInit(err error) {
