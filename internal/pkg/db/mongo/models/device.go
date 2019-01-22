@@ -15,6 +15,7 @@
 package models
 
 import (
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	contract "github.com/edgexfoundry/edgex-go/pkg/models"
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
@@ -27,19 +28,22 @@ import (
  * Device struct
  */
 type Device struct {
-	DescribedObject `bson:",inline"`
-	Id              bson.ObjectId           `bson:"_id,omitempty"`
-	Uuid            string                  `bson:"uuid,omitempty"`
-	Name            string                  `bson:"name"`           // Unique name for identifying a device
-	AdminState      contract.AdminState     `bson:"adminState"`     // Admin state (locked/unlocked)
-	OperatingState  contract.OperatingState `bson:"operatingState"` // Operating state (enabled/disabled)
-	Addressable     mgo.DBRef               `bson:"addressable"`    // Addressable for the device - stores information about it's address
-	LastConnected   int64                   `bson:"lastConnected"`  // Time (milliseconds) that the device last provided any feedback or responded to any request
-	LastReported    int64                   `bson:"lastReported"`   // Time (milliseconds) that the device reported data to the core microservice
-	Labels          []string                `bson:"labels"`         // Other labels applied to the device to help with searching
-	Location        interface{}             `bson:"location"`       // Device service specific location (interface{} is an empty interface so it can be anything)
-	Service         mgo.DBRef               `bson:"service"`        // Associated Device Service - One per device
-	Profile         mgo.DBRef               `bson:"profile"`        // Associated Device Profile - Describes the device
+	Created        int64                   `bson:"created"`
+	Modified       int64                   `bson:"modified"`
+	Origin         int64                   `bson:"origin"`
+	Description    string                  `bson:"description"`
+	Id             bson.ObjectId           `bson:"_id,omitempty"`
+	Uuid           string                  `bson:"uuid,omitempty"`
+	Name           string                  `bson:"name"`           // Unique name for identifying a device
+	AdminState     contract.AdminState     `bson:"adminState"`     // Admin state (locked/unlocked)
+	OperatingState contract.OperatingState `bson:"operatingState"` // Operating state (enabled/disabled)
+	Addressable    mgo.DBRef               `bson:"addressable"`    // Addressable for the device - stores information about it's address
+	LastConnected  int64                   `bson:"lastConnected"`  // Time (milliseconds) that the device last provided any feedback or responded to any request
+	LastReported   int64                   `bson:"lastReported"`   // Time (milliseconds) that the device reported data to the core microservice
+	Labels         []string                `bson:"labels"`         // Other labels applied to the device to help with searching
+	Location       interface{}             `bson:"location"`       // Device service specific location (interface{} is an empty interface so it can be anything)
+	Service        mgo.DBRef               `bson:"service"`        // Associated Device Service - One per device
+	Profile        mgo.DBRef               `bson:"profile"`        // Associated Device Profile - Describes the device
 }
 
 func (d *Device) ToContract(dsTransform deviceServiceTransform, dpTransform deviceProfileTransform, cTransform commandTransform, aTransform addressableTransform) (c contract.Device, err error) {
@@ -51,7 +55,10 @@ func (d *Device) ToContract(dsTransform deviceServiceTransform, dpTransform devi
 
 	var result contract.Device
 
-	result.DescribedObject = d.DescribedObject.ToContract()
+	c.Created = d.Created
+	c.Modified = d.Modified
+	c.Origin = d.Origin
+	c.Description = d.Description
 	result.Id = id
 	result.Name = d.Name
 	result.AdminState = d.AdminState
@@ -90,19 +97,21 @@ func (d *Device) ToContract(dsTransform deviceServiceTransform, dpTransform devi
 	return
 }
 
-func (d *Device) FromContract(from contract.Device, dsTransform deviceServiceTransform, dpTransform deviceProfileTransform, cTransform commandTransform, aTransform addressableTransform) (err error) {
-	d.Id, d.Uuid, err = fromContractId(from.Id)
-	if err != nil {
+func (d *Device) FromContract(from contract.Device, dsTransform deviceServiceTransform, dpTransform deviceProfileTransform, cTransform commandTransform, aTransform addressableTransform) (id string, err error) {
+	if d.Id, d.Uuid, err = fromContractId(from.Id); err != nil {
 		return
 	}
 
-	d.DescribedObject.FromContract(from.DescribedObject)
+	d.Created = from.Created
+	d.Modified = from.Modified
+	d.Origin = from.Origin
+	d.Description = from.Description
 	d.Name = from.Name
 	d.AdminState = from.AdminState
 	d.OperatingState = from.OperatingState
 
 	var aModel Addressable
-	if err = aModel.FromContract(from.Addressable); err != nil {
+	if _, err = aModel.FromContract(from.Addressable); err != nil {
 		return
 	}
 	if d.Addressable, err = aTransform.AddressableToDBRef(aModel); err != nil {
@@ -115,7 +124,7 @@ func (d *Device) FromContract(from contract.Device, dsTransform deviceServiceTra
 	d.Location = from.Location
 
 	var dsModel DeviceService
-	if err = dsModel.FromContract(from.Service, aTransform); err != nil {
+	if _, err = dsModel.FromContract(from.Service, aTransform); err != nil {
 		return
 	}
 	if d.Service, err = dsTransform.DeviceServiceToDBRef(dsModel); err != nil {
@@ -126,6 +135,18 @@ func (d *Device) FromContract(from contract.Device, dsTransform deviceServiceTra
 	if _, err = dpModel.FromContract(from.Profile, cTransform); err != nil {
 		return
 	}
-	d.Profile, err = dpTransform.DeviceProfileToDBRef(dpModel)
+	if d.Profile, err = dpTransform.DeviceProfileToDBRef(dpModel); err != nil {
+		return
+	}
+	id = toContractId(d.Id, d.Uuid)
 	return
+}
+
+func (d *Device) TimestampForUpdate() {
+	d.Modified = db.MakeTimestamp()
+}
+
+func (d *Device) TimestampForAdd() {
+	d.TimestampForUpdate()
+	d.Created = d.Modified
 }

@@ -21,7 +21,16 @@ import (
 	"github.com/globalsign/mgo/bson"
 )
 
+type TransmissionRecord struct {
+	Status   contract.TransmissionStatus `bson:"status"`
+	Response string                      `bson:"response"`
+	Sent     int64                       `bson:"sent"`
+}
+
 type Transmission struct {
+	Created      int64                       `bson:"created"`
+	Modified     int64                       `bson:"modified"`
+	Origin       int64                       `bson:"origin"`
 	Id           bson.ObjectId               `bson:"_id,omitempty"`
 	Uuid         string                      `bson:"uuid,omitempty"`
 	Notification Notification                `bson:"notification,omitempty"`
@@ -30,9 +39,6 @@ type Transmission struct {
 	Status       contract.TransmissionStatus `bson:"status"`
 	ResendCount  int                         `bson:"resendcount"`
 	Records      []TransmissionRecord        `bson:"records,omitempty"`
-	Created      int64                       `bson:"created"`
-	Modified     int64                       `bson:"modified"`
-	Origin       int64                       `bson:"origin"`
 }
 
 func (t *Transmission) ToContract() (c contract.Transmission) {
@@ -42,6 +48,9 @@ func (t *Transmission) ToContract() (c contract.Transmission) {
 	}
 
 	c.ID = id
+	c.Created = t.Created
+	c.Modified = t.Modified
+	c.Origin = t.Origin
 	c.Notification = t.Notification.ToContract()
 	c.Receiver = t.Receiver
 	c.Channel = t.Channel.ToContract()
@@ -49,21 +58,26 @@ func (t *Transmission) ToContract() (c contract.Transmission) {
 	c.ResendCount = t.ResendCount
 
 	for _, record := range t.Records {
-		c.Records = append(c.Records, record.ToContract())
+		c.Records = append(c.Records, contract.TransmissionRecord{
+			Status:   record.Status,
+			Response: record.Response,
+			Sent:     record.Sent,
+		})
 	}
 
-	c.Created = t.Created
-	c.Modified = t.Modified
-	c.Origin = t.Origin
 	return
 }
 
-func (t *Transmission) FromContract(from contract.Transmission) (err error) {
+func (t *Transmission) FromContract(from contract.Transmission) (id string, err error) {
 	t.Id, t.Uuid, err = fromContractId(from.ID)
 	if err != nil {
 		return
 	}
-	if err = t.Notification.FromContract(from.Notification); err != nil {
+
+	t.Created = from.Created
+	t.Modified = from.Modified
+	t.Origin = from.Origin
+	if _, err = t.Notification.FromContract(from.Notification); err != nil {
 		return
 	}
 	t.Receiver = from.Receiver
@@ -72,16 +86,22 @@ func (t *Transmission) FromContract(from contract.Transmission) (err error) {
 	t.ResendCount = from.ResendCount
 
 	for _, record := range from.Records {
-		var tr TransmissionRecord
-		tr.FromContract(record)
-		t.Records = append(t.Records, tr)
+		t.Records = append(t.Records, TransmissionRecord{
+			Status:   record.Status,
+			Response: record.Response,
+			Sent:     record.Sent,
+		})
 	}
 
-	t.Created = from.Created
-	if t.Created == 0 {
-		t.Created = db.MakeTimestamp()
-	}
-	t.Modified = from.Modified
-	t.Origin = from.Origin
+	id = toContractId(t.Id, t.Uuid)
 	return
+}
+
+func (t *Transmission) TimestampForUpdate() {
+	t.Modified = db.MakeTimestamp()
+}
+
+func (t *Transmission) TimestampForAdd() {
+	t.TimestampForUpdate()
+	t.Created = t.Modified
 }

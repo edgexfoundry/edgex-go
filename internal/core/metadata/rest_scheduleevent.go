@@ -106,7 +106,6 @@ func restAddScheduleEvent(w http.ResponseWriter, r *http.Request) {
 
 	// Check for the addressable
 	// Try by ID
-	var a models.Addressable
 	a, err := dbClient.GetAddressableById(se.Addressable.Id)
 	if err != nil {
 		// Try by Name
@@ -148,7 +147,6 @@ func restUpdateScheduleEvent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check if the schedule event exists
-	var to models.ScheduleEvent
 	to, err := getScheduleEventByIdOrName(from, w)
 	if err != nil {
 		LoggingClient.Error("Problem getting schedule event: " + err.Error())
@@ -859,26 +857,24 @@ func isScheduleStillInUse(s models.Schedule) (bool, error) {
 
 // Notify the associated device services for the schedule
 func notifyScheduleAssociates(s models.Schedule, action string) error {
-	var err error
-
 	// Get the associated schedule events
 	var events []models.ScheduleEvent
-	if err = dbClient.GetScheduleEventsByScheduleName(&events, s.Name); err != nil {
+	if err := dbClient.GetScheduleEventsByScheduleName(&events, s.Name); err != nil {
 		return err
 	}
 
 	// Get the device services for the schedule events
-	var services []models.DeviceService
+	services := []models.DeviceService{}
 	for _, se := range events {
-		var ds models.DeviceService
-		if ds, err = dbClient.GetDeviceServiceByName(se.Service); err != nil {
+		ds, err := dbClient.GetDeviceServiceByName(se.Service)
+		if err != nil {
 			return err
 		}
 		services = append(services, ds)
 	}
 
 	// Notify the associated device services
-	if err = notifyAssociates(services, s.Id.Hex(), action, models.SCHEDULE); err != nil {
+	if err := notifyAssociates(services, s.Id.Hex(), action, models.SCHEDULE); err != nil {
 		return err
 	}
 
@@ -887,19 +883,14 @@ func notifyScheduleAssociates(s models.Schedule, action string) error {
 
 // Notify the associated device service for the schedule event
 func notifyScheduleEventAssociates(se models.ScheduleEvent, action string) error {
-	var err error
-
 	// Get the associated device service
-	var ds models.DeviceService
-	if ds, err = dbClient.GetDeviceServiceByName(se.Service); err != nil {
+	ds, err := dbClient.GetDeviceServiceByName(se.Service)
+	if err != nil {
 		return err
 	}
 
-	var services []models.DeviceService
-	services = append(services, ds)
-
 	// Notify the associated device service
-	if err = notifyAssociates(services, se.Id.Hex(), action, models.SCHEDULEEVENT); err != nil {
+	if err := notifyAssociates([]models.DeviceService{ds}, se.Id.Hex(), action, models.SCHEDULEEVENT); err != nil {
 		return err
 	}
 
