@@ -18,6 +18,7 @@ import (
 	"os"
 )
 
+// TODO: rename consul to registry during consul cleanup once all services have changed to use Registry abstraction
 var usageStr = `
 Usage: %s [options]
 Server Options:

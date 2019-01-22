@@ -16,21 +16,20 @@ package config
 import (
 	"io/ioutil"
 	"net/http"
-	"strconv"
 	"sync"
 	"time"
 
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
-	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
-	consulapi "github.com/hashicorp/consul/api"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/registry"
+	"fmt"
 )
 
 // Global variables
 var Configuration *ConfigurationStruct
 var LoggingClient logger.LoggingClient
-var Registry *consulapi.Client
+var Registry registry.RegistryClient
 
 // The purpose of Retry is different here than in other services. In this case, we use a retry in order
 // to initialize the ConsulClient that will be used to write configuration information. Other services
@@ -52,7 +51,7 @@ func Retry(useProfile string, timeout int, wait *sync.WaitGroup, ch chan error) 
 		}
 		//Check to verify consul connectivity
 		if Registry == nil {
-			Registry, err = initConsulClient()
+			Registry, err = initRegistryClient("")
 			if err != nil {
 				ch <- err
 			} else {
@@ -83,30 +82,18 @@ func initializeConfiguration(useProfile string) (*ConfigurationStruct, error) {
 	return conf, nil
 }
 
-func initConsulClient() (*consulapi.Client, error) {
-	url := Configuration.ConsulProtocol + "://" + Configuration.ConsulHost + ":" + strconv.Itoa(Configuration.ConsulPort)
-
-	resp, err := http.Get(url + consulStatusPath)
+func initRegistryClient(serviceKey string) (registry.RegistryClient, error) {
+	registryClient, err := registry.NewRegistryClient(Configuration.Registry, nil, serviceKey)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to create New Registry: ", err)
 	}
 
-	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
-		// Connect to the Consul Agent
-		cfg := consulapi.DefaultConfig()
-		cfg.Address = url
+	 if !registryClient.IsRegistryRunning() {
+		 return nil, fmt.Errorf("registry is not available")
 
-		r, err := consulapi.NewClient(cfg)
-		if err != nil {
-			return nil, err
-		}
-		return r, nil
-	}
-	body, err := getBody(resp)
-	if err != nil {
-		return nil, err
-	}
-	return nil, types.NewErrServiceClient(resp.StatusCode, body)
+	 }
+
+	 return registryClient, nil
 }
 
 // Helper method to get the body from the response after making the request
