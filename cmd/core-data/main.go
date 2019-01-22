@@ -1,5 +1,6 @@
 /*******************************************************************************
  * Copyright 2017 Dell Inc.
+ * Copyright (c) 2019 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -35,20 +36,21 @@ import (
 
 func main() {
 	start := time.Now()
-	var useConsul bool
+	var useRegistry bool
 	var useProfile string
 
-	flag.BoolVar(&useConsul, "consul", false, "Indicates the service should use consul.")
-	flag.BoolVar(&useConsul, "c", false, "Indicates the service should use consul.")
+	flag.BoolVar(&useRegistry, "registry", false, "Indicates the service should use registry service.")
+	flag.BoolVar(&useRegistry, "r", false, "Indicates the service should use registry service.")
 	flag.StringVar(&useProfile, "profile", "", "Specify a profile other than default.")
 	flag.StringVar(&useProfile, "p", "", "Specify a profile other than default.")
 	flag.Usage = usage.HelpCallback
 	flag.Parse()
 
-	params := startup.BootParams{UseConsul: useConsul, UseProfile: useProfile, BootTimeout: internal.BootTimeoutDefault}
+	// TODO: Rename UseConsul to UseRegistry as part of consul cleanup once all services are using Registry abstraction
+	params := startup.BootParams{UseConsul: useRegistry, UseProfile: useProfile, BootTimeout: internal.BootTimeoutDefault}
 	startup.Bootstrap(params, data.Retry, logBeforeInit)
 
-	ok := data.Init(useConsul)
+	ok := data.Init(useRegistry)
 	if !ok {
 		logBeforeInit(fmt.Errorf("%s: Service bootstrap failed!", internal.CoreDataServiceKey))
 		os.Exit(1)

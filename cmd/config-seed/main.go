@@ -37,8 +37,8 @@ func main() {
 	flag.StringVar(&dirProperties, "r", "./res/properties", "Specify alternate properties location as absolute path")
 	flag.StringVar(&dirCmd, "cmd", "../cmd", "Specify alternate cmd location as absolute path")
 	flag.StringVar(&dirCmd, "c", "../cmd", "Specify alternate cmd location as absolute path")
-	flag.BoolVar(&overwriteConfig, "overwrite", false, "Overwrite configuration in Consul")
-	flag.BoolVar(&overwriteConfig, "o", false, "Overwrite configuration in Consul")
+	flag.BoolVar(&overwriteConfig, "overwrite", false, "Overwrite configuration in Registry")
+	flag.BoolVar(&overwriteConfig, "o", false, "Overwrite configuration in Registry")
 
 	flag.Usage = usage.HelpCallbackConfigSeed
 	flag.Parse()
@@ -50,11 +50,8 @@ func main() {
 		os.Exit(1)
 	}
 	config.LoggingClient.Info("Service dependencies resolved...")
-	err := config.ImportProperties(dirProperties)
-	if err != nil {
-		config.LoggingClient.Error(err.Error())
-	}
-	err = config.ImportConfiguration(dirCmd, useProfile, overwriteConfig)
+
+	err := config.ImportConfiguration(dirCmd, useProfile, overwriteConfig)
 	if err != nil {
 		config.LoggingClient.Error(err.Error())
 	}

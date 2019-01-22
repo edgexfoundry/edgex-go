@@ -1,5 +1,6 @@
 /*******************************************************************************
  * Copyright 2017 Dell Inc.
+ * Copyright (c) 2019 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -15,6 +16,7 @@ package data
 
 import (
 	"fmt"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/registry"
 	"sync"
 	"time"
 
@@ -22,7 +24,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/core/data/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/messaging"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/consul"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
@@ -30,7 +31,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/metadata"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
-	"github.com/pkg/errors"
 )
 
 // Global variables
@@ -38,21 +38,23 @@ var Configuration *ConfigurationStruct
 var dbClient interfaces.DBClient
 var LoggingClient logger.LoggingClient
 var chEvents chan interface{} //A channel for "domain events" sourced from event operations
-var chConfig chan interface{} //A channel for use by ConsulDecoder in detecting configuration mods.
+var errChannel chan error //A channel for "config wait error" sourced from Registry
+var updateChannel chan interface{} //A channel for "config updates" sourced from Registry
+
 var ep messaging.EventPublisher
 var mdc metadata.DeviceClient
 var msc metadata.DeviceServiceClient
 
-func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup, ch chan error) {
+func Retry(useRegistry bool, useProfile string, timeout int, wait *sync.WaitGroup, ch chan error) {
 	until := time.Now().Add(time.Millisecond * time.Duration(timeout))
 	for time.Now().Before(until) {
 		var err error
 		//When looping, only handle configuration if it hasn't already been set.
 		if Configuration == nil {
-			Configuration, err = initializeConfiguration(useConsul, useProfile)
+			Configuration, err = initializeConfiguration(useRegistry, useProfile)
 			if err != nil {
 				ch <- err
-				if !useConsul {
+				if !useRegistry {
 					//Error occurred when attempting to read from local filesystem. Fail fast.
 					close(ch)
 					wait.Done()
@@ -64,7 +66,7 @@ func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup,
 				LoggingClient = logger.NewClient(internal.CoreDataServiceKey, Configuration.Logging.EnableRemote, logTarget, Configuration.Writable.LogLevel)
 
 				//Initialize service clients
-				initializeClients(useConsul)
+				initializeClients(useRegistry)
 			}
 		}
 
@@ -85,15 +87,16 @@ func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup,
 	return
 }
 
-func Init(useConsul bool) bool {
+func Init(useRegistry bool) bool {
 	if Configuration == nil || dbClient == nil {
 		return false
 	}
 	chEvents = make(chan interface{}, 100)
 	initEventHandlers()
 
-	if useConsul {
-		chConfig = make(chan interface{})
+	if useRegistry && registry.Client != nil{
+		errChannel = make(chan error)
+		updateChannel = make(chan interface{})
 		go listenForConfigChanges()
 	}
 	return true
@@ -107,8 +110,13 @@ func Destruct() {
 	if chEvents != nil {
 		close(chEvents)
 	}
-	if chConfig != nil {
-		close(chConfig)
+
+	if errChannel != nil {
+		close(errChannel)
+	}
+
+	if updateChannel != nil {
+		close(updateChannel)
 	}
 }
 
@@ -142,103 +150,91 @@ func newDBClient(dbType string, config db.Configuration) (interfaces.DBClient, e
 	}
 }
 
-func initializeConfiguration(useConsul bool, useProfile string) (*ConfigurationStruct, error) {
-	//We currently have to load configuration from filesystem first in order to obtain ConsulHost/Port
-	conf := &ConfigurationStruct{}
-	err := config.LoadFromFile(useProfile, conf)
+func initializeConfiguration(useRegistry bool, useProfile string) (*ConfigurationStruct, error) {
+	//We currently have to load configuration from filesystem first in order to obtain Registry Host/Port
+	configuration := &ConfigurationStruct{}
+	err := config.LoadFromFile(useProfile, configuration)
 	if err != nil {
 		return nil, err
 	}
 
-	if useConsul {
-		conf, err = connectToConsul(conf)
+	if useRegistry {
+		err = connectToRegistry(configuration)
 		if err != nil {
 			return nil, err
 		}
+
+		rawConfig, err := registry.Client.GetConfiguration(configuration)
+		if err != nil {
+			return configuration, fmt.Errorf("could not get configuration from Registry: %v", err.Error())
+		}
+
+		actual, ok := rawConfig.(*ConfigurationStruct)
+		if !ok {
+			return configuration, fmt.Errorf("configuration from Registry failed type check")
+		}
+
+		configuration = actual
 	}
-	return conf, nil
+
+	return configuration, nil
 }
 
-func connectToConsul(conf *ConfigurationStruct) (*ConfigurationStruct, error) {
-	//Obtain ConsulConfig
-	cfg := consulclient.NewConsulConfig(conf.Registry, conf.Service, internal.CoreDataServiceKey)
-	// Register the service in Consul
-	err := consulclient.ConsulInit(cfg)
+func connectToRegistry(conf *ConfigurationStruct) (error) {
+	var err error
 
+	registryClient, err := registry.NewRegistryClient(conf.Registry, &conf.Service, internal.CoreDataServiceKey)
 	if err != nil {
-		return conf, fmt.Errorf("connection to Consul could not be made: %v", err.Error())
-	}
-	// Update configuration data from Consul
-	updateCh := make(chan interface{})
-	errCh := make(chan error)
-	dec := consulclient.NewConsulDecoder(conf.Registry)
-	dec.Target = &ConfigurationStruct{}
-	dec.Prefix = internal.ConfigRegistryStem + internal.CoreDataServiceKey
-	dec.ErrCh = errCh
-	dec.UpdateCh = updateCh
-
-	defer dec.Close()
-	defer close(updateCh)
-	defer close(errCh)
-	go dec.Run()
-
-	select {
-	case <-time.After(2 * time.Second):
-		err = errors.New("timeout loading config from registry")
-	case ex := <-errCh:
-		err = errors.New(ex.Error())
-	case raw := <-updateCh:
-		actual, ok := raw.(*ConfigurationStruct)
-		if !ok {
-			return conf, errors.New("type check failed")
-		}
-		conf = actual
-		//Check that information was successfully read from Consul
-		if conf.Service.Port == 0 {
-			return nil, errors.New("error reading from Consul")
-		}
+		return fmt.Errorf("connection to Registry could not be made: %v", err.Error())
 	}
 
-	return conf, err
+	// Register the service with Registry
+	err = registryClient.Register()
+	if err != nil {
+		return fmt.Errorf("could not register service with Registry: %v", err.Error())
+	}
+
+	return nil
 }
 
 func listenForConfigChanges() {
-	errCh := make(chan error)
-	dec := consulclient.NewConsulDecoder(Configuration.Registry)
-	dec.Target = &WritableInfo{}
-	dec.Prefix = internal.ConfigRegistryStem + internal.CoreDataServiceKey + internal.WritableKey
-	dec.ErrCh = errCh
-	dec.UpdateCh = chConfig
+	if registry.Client == nil {
+		LoggingClient.Error("listenForConfigChanges() registry client not set")
+		return
+	}
 
-	defer dec.Close()
-	defer close(errCh)
+	registry.Client.WatchForChanges(updateChannel, errChannel, &WritableInfo{}, internal.WritableKey)
 
-	go dec.Run()
 	for {
 		select {
-		case ex := <-errCh:
+		case ex := <-errChannel:
 			LoggingClient.Error(ex.Error())
-		case raw, ok := <-chConfig:
-			if ok {
-				actual, ok := raw.(*WritableInfo)
-				if !ok {
-					LoggingClient.Error("listenForConfigChanges() type check failed")
-				}
-				Configuration.Writable = *actual
-				LoggingClient.SetLogLevel(Configuration.Writable.LogLevel)
-			} else {
+
+		case raw, ok := <-updateChannel:
+			if !ok {
 				return
 			}
+
+			actual, ok := raw.(*WritableInfo)
+			if !ok {
+				LoggingClient.Error("listenForConfigChanges() type check failed")
+				return
+			}
+
+			Configuration.Writable = *actual
+
+			LoggingClient.Info("Writeable configuration has been updated. Setting log level to " + Configuration.Writable.LogLevel)
+			LoggingClient.SetLogLevel(Configuration.Writable.LogLevel)
 		}
 	}
 }
 
-func initializeClients(useConsul bool) {
+func initializeClients(useRegistry bool) {
 	// Create metadata clients
 	params := types.EndpointParams{
 		ServiceKey:  internal.CoreMetaDataServiceKey,
 		Path:        clients.ApiDeviceRoute,
-		UseRegistry: useConsul,
+		UseRegistry: useRegistry,
 		Url:         Configuration.Clients["Metadata"].Url() + clients.ApiDeviceRoute,
 		Interval:    Configuration.Service.ClientMonitor,
 	}

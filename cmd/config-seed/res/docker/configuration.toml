@@ -1,8 +1,5 @@
 ConfigPath = './config'
 GlobalPrefix = 'config'
-ConsulProtocol = 'http'
-ConsulHost = 'edgex-core-consul'
-ConsulPort = 8500
 IsReset = true
 FailLimit = 30
 FailWaitTime = 3
@@ -12,3 +9,8 @@ TomlExtensions = ['.toml']
 EnableRemoteLogging = false
 LoggingFile = '/edgex/logs/edgex-config-seed.log'
 LoggingRemoteURL = 'http://edgex-support-logging:48061/api/v1/logs'
+
+[Registry]
+Host = 'edgex-core-consul'
+Port = 8500
+Type = 'consul'

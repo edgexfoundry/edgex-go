@@ -13,12 +13,12 @@
  *******************************************************************************/
 package config
 
+import "github.com/edgexfoundry/edgex-go/internal/pkg/config"
+
 type ConfigurationStruct struct {
 	ConfigPath                   string
 	GlobalPrefix                 string
 	ConsulProtocol               string
-	ConsulHost                   string
-	ConsulPort                   int
 	IsReset                      bool
 	FailLimit                    int
 	FailWaitTime                 int
@@ -29,4 +29,5 @@ type ConfigurationStruct struct {
 	LoggingFile                  string
 	LoggingRemoteURL             string
 	LoggingLevel                 string
+	Registry                     config.RegistryInfo
 }

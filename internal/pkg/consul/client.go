@@ -19,6 +19,7 @@ import (
 	consulapi "github.com/hashicorp/consul/api"
 	"github.com/mitchellh/consulstructure"
 	"strconv"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/registry/types"
 )
 
 // Configuration struct for consul - used to initialize the service
@@ -30,12 +31,6 @@ type ConsulConfig struct {
 	ServicePort    int
 	CheckAddress   string
 	CheckInterval  string
-}
-
-type ServiceEndpoint struct {
-	Key     string
-	Address string
-	Port    int
 }
 
 var consul *consulapi.Client = nil // Call consulInit to initialize this variable
@@ -101,13 +96,13 @@ func ConsulInit(config ConsulConfig) error {
 	return nil
 }
 
-func GetServiceEndpoint(serviceKey string) (ServiceEndpoint, error) {
+func GetServiceEndpoint(serviceKey string) (types.ServiceEndpoint, error) {
 	services, err := consul.Agent().Services()
 	if err != nil {
-		return ServiceEndpoint{}, err
+		return types.ServiceEndpoint{}, err
 	}
 
-	endpoint := ServiceEndpoint{}
+	endpoint := types.ServiceEndpoint{}
 	for key, service := range services {
 		if key == serviceKey {
 			endpoint.Port = service.Port

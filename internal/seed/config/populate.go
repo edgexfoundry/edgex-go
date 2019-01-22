@@ -23,47 +23,10 @@ import (
 	"strings"
 
 	"github.com/edgexfoundry/edgex-go/internal"
-	consulapi "github.com/hashicorp/consul/api"
 	"github.com/magiconair/properties"
 	"github.com/pelletier/go-toml"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/registry"
 )
-
-// Import properties files for support of legacy Java services.
-func ImportProperties(root string) error {
-	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-
-		// Skip directories & unacceptable property extension
-		if info.IsDir() || !isAcceptablePropertyExtensions(info.Name()) {
-			return nil
-		}
-
-		dir, file := filepath.Split(path)
-		appKey := parseDirectoryName(dir)
-		LoggingClient.Debug(fmt.Sprintf("dir: %s file: %s", appKey, file))
-		props, err := readPropertiesFile(path)
-		if err != nil {
-			return err
-		}
-
-		// Put config properties to Consul K/V store.
-		prefix := Configuration.GlobalPrefix + "/" + appKey + "/"
-		for k := range props {
-			p := &consulapi.KVPair{Key: prefix + k, Value: []byte(props[k])}
-			if _, err := (*consulapi.KV).Put(Registry.KV(), p, nil); err != nil {
-				return err
-			}
-		}
-		return nil
-	})
-
-	if err != nil {
-		return err
-	}
-	return nil
-}
 
 // Import configuration files using the specified path to the cmd directory where service configuration files reside.
 // Also, profile indicates the preferred deployment target (such as "docker")
@@ -96,38 +59,22 @@ func ImportConfiguration(root string, profile string, overwrite bool) error {
 		}
 
 		LoggingClient.Debug("reading toml " + path)
+
 		// load the ToML file
-		config, err := toml.LoadFile(path)
+		configuration, err := toml.LoadFile(path)
 		if err != nil {
 			LoggingClient.Warn(err.Error())
-		} else {
-
-			// Fetch the map[string]interface{}
-			m := config.ToMap()
-
-			// traverse the map and put into KV[]
-			kvs, err := traverse("", m)
-			if err != nil {
-				LoggingClient.Error(fmt.Sprintf("There was an error: %v", err))
-			}
-			for _, kv := range kvs {
-				LoggingClient.Debug(fmt.Sprintf("v2 consul wrote key %s with value %s", kv.Key, kv.Value))
-			}
-
-			// Put config properties to Consul K/V store.
-			prefix := internal.ConfigRegistryStem + internal.ServiceKeyPrefix + d + "/"
-
-			// Put config properties to Consul K/V store.
-			for _, v := range kvs {
-				p := &consulapi.KVPair{Key: prefix + v.Key, Value: []byte(v.Value)}
-				if kvPair, _, _ := (*consulapi.KV).Get(Registry.KV(), p.Key, nil); overwrite || kvPair == nil {
-					if _, err := (*consulapi.KV).Put(Registry.KV(), p, nil); err != nil {
-						return err
-					}
-				}
-			}
+			return nil
 		}
+
+		Registry, err = registry.NewRegistryClient(Configuration.Registry, nil, internal.ServiceKeyPrefix+d)
+		if err != nil {
+			return err
+		}
+
+		Registry.PutConfiguration(configuration, overwrite)
 	}
+
 	return nil
 }
 
@@ -226,7 +173,7 @@ type pair struct {
 	Value string
 }
 
-// Traverse or walk hierarchical configuration in preparation for loading into Consul
+// Traverse or walk hierarchical configuration in preparation for loading into Registry
 func traverse(path string, j interface{}) ([]*pair, error) {
 	kvs := make([]*pair, 0)
 

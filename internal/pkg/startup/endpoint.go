@@ -18,19 +18,28 @@ import (
 	"os"
 	"time"
 
-	"github.com/edgexfoundry/edgex-go/internal/pkg/consul"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/registry"
+	registryTypes "github.com/edgexfoundry/edgex-go/internal/pkg/registry/types"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/consul"
 )
 
 type Endpoint struct{}
 
 func (e Endpoint) Monitor(params types.EndpointParams, ch chan string) {
+	var endpoint registryTypes.ServiceEndpoint
+	var err error
 	for {
-		data, err := consulclient.GetServiceEndpoint(params.ServiceKey)
+		if registry.Client != nil {
+			endpoint, err = registry.Client.GetServiceEndpoint(params.ServiceKey)
+		} else {
+			// TODO: remove the else when doing consul cleanup one all service have been changed to ues Registry abstraction.
+			endpoint, err = consulclient.GetServiceEndpoint(params.ServiceKey)
+		}
 		if err != nil {
 			fmt.Fprintln(os.Stdout, err.Error())
 		}
-		url := fmt.Sprintf("http://%s:%v%s", data.Address, data.Port, params.Path)
+		url := fmt.Sprintf("http://%s:%v%s", endpoint.Address, endpoint.Port, params.Path)
 		ch <- url
 		time.Sleep(time.Millisecond * time.Duration(params.Interval))
 	}
