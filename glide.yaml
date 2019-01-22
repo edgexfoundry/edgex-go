@@ -46,3 +46,21 @@ import:
   - bson
 - package: gopkg.in/yaml.v2
   version: eb3733d160e74a9c7e442f435eb3bea458e1d19f
+- package: github.com/mattn/go-xmpp
+  version: e543ad3fcd51155e4b39f7487bdfcb5e3772f1ce
+- package: github.com/magiconair/properties
+  version: =1.8.0
+- package: github.com/satori/go.uuid
+  version: =1.2.0
+- package: github.com/stretchr/testify
+  version: =1.2.1
+- package: github.com/docker/distribution
+  version: 16128bbac47f75050e82f7e91b04df33775e0c23
+- package: github.com/docker/docker
+  version: b1116479b23434de7d70710b6454af7cb2484a58
+- package: github.com/docker/go-connections
+  version: 97c2040d34dfae1d1b1275fa3a78dbdd2f41cf7e
+- package: github.com/docker/go-units
+  version: 47565b4f722fb6ceae66b95f853feed578a4a51c
+- package: github.com/influxdata/influxdb
+  version: =1.5.5
