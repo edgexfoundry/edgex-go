@@ -1,5 +1,6 @@
 /*******************************************************************************
  * Copyright 2018 Dell Inc.
+ * Copyright (c) 2019 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -14,26 +15,25 @@
 package config
 
 import (
+	"fmt"
 	"io/ioutil"
 	"net/http"
-	"strconv"
 	"sync"
 	"time"
-
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logging"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
-	consulapi "github.com/hashicorp/consul/api"
+	"github.com/edgexfoundry/go-mod-registry"
+	"github.com/edgexfoundry/go-mod-registry/pkg/factory"
 )
 
 // Global variables
 var Configuration *ConfigurationStruct
 var LoggingClient logger.LoggingClient
-var Registry *consulapi.Client
+var Registry registry.Client
 
 // The purpose of Retry is different here than in other services. In this case, we use a retry in order
-// to initialize the ConsulClient that will be used to write configuration information. Other services
+// to initialize the RegistryClient that will be used to write configuration information. Other services
 // use Retry to read their information. Config-seed writes information.
 func Retry(useProfile string, timeout int, wait *sync.WaitGroup, ch chan error) {
 	until := time.Now().Add(time.Millisecond * time.Duration(timeout))
@@ -50,15 +50,21 @@ func Retry(useProfile string, timeout int, wait *sync.WaitGroup, ch chan error) 
 				LoggingClient = logger.NewClient(internal.ConfigSeedServiceKey, Configuration.EnableRemoteLogging, logTarget, Configuration.LoggingLevel)
 			}
 		}
-		//Check to verify consul connectivity
+		//Check to verify Registry connectivity
 		if Registry == nil {
-			Registry, err = initConsulClient()
+			Registry, err = initRegistryClient("")
+
 			if err != nil {
 				ch <- err
+			}
+		} else {
+			if !Registry.IsAlive() {
+				ch <- fmt.Errorf("Registry (%s) is not running", Configuration.Registry.Type)
 			} else {
 				break
 			}
 		}
+
 		time.Sleep(time.Second * time.Duration(1))
 	}
 	close(ch)
@@ -83,30 +89,24 @@ func initializeConfiguration(useProfile string) (*ConfigurationStruct, error) {
 	return conf, nil
 }
 
-func initConsulClient() (*consulapi.Client, error) {
-	url := Configuration.ConsulProtocol + "://" + Configuration.ConsulHost + ":" + strconv.Itoa(Configuration.ConsulPort)
-
-	resp, err := http.Get(url + consulStatusPath)
+func initRegistryClient(serviceKey string) (registry.Client, error) {
+	registryConfig := registry.Config{
+		Host:       Configuration.Registry.Host,
+		Port:       Configuration.Registry.Port,
+		Type:       Configuration.Registry.Type,
+		ServiceKey: serviceKey,
+	}
+	registryClient, err := factory.NewRegistryClient(registryConfig)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to create New Registry: %v", err)
 	}
 
-	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
-		// Connect to the Consul Agent
-		cfg := consulapi.DefaultConfig()
-		cfg.Address = url
+	if !registryClient.IsAlive() {
+		return nil, fmt.Errorf("registry is not available")
 
-		r, err := consulapi.NewClient(cfg)
-		if err != nil {
-			return nil, err
-		}
-		return r, nil
 	}
-	body, err := getBody(resp)
-	if err != nil {
-		return nil, err
-	}
-	return nil, types.NewErrServiceClient(resp.StatusCode, body)
+
+	return registryClient, nil
 }
 
 // Helper method to get the body from the response after making the request

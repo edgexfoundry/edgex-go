@@ -24,29 +24,28 @@ import (
 	"time"
 
 	"github.com/edgexfoundry/edgex-go"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logging"
-
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logging"
 )
 
 func main() {
 
 	start := time.Now()
-	var useConsul bool
+	var useRegistry bool
 	var useProfile string
 
 	flag.StringVar(&useProfile, "profile", "", "Specify a profile other than default.")
 	flag.StringVar(&useProfile, "p", "", "Specify a profile other than default.")
 	flag.Usage = usage.HelpCallback
-	flag.Parse()
-	useConsul = false
 
-	params := startup.BootParams{UseConsul: useConsul, UseProfile: useProfile, BootTimeout: internal.BootTimeoutDefault}
+	useRegistry = false
+
+	params := startup.BootParams{UseRegistry: useRegistry, UseProfile: useProfile, BootTimeout: internal.BootTimeoutDefault}
 	startup.Bootstrap(params, agent.Retry, logBeforeInit)
 
 	ok := agent.Init()

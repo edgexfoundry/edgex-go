@@ -17,12 +17,13 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/system/agent/logger"
 	"os"
 	"os/exec"
 	"strings"
 	"time"
+
+	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/internal/system/agent/logger"
 )
 
 // Global variables

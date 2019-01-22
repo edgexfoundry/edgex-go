@@ -1,8 +1,5 @@
 ConfigPath = './config'
 GlobalPrefix = 'config'
-ConsulProtocol = 'http'
-ConsulHost = 'localhost'
-ConsulPort = 8500
 IsReset = true
 FailLimit = 30
 FailWaitTime = 3
@@ -13,3 +10,8 @@ EnableRemoteLogging = false
 LoggingFile = './logs/edgex-config-seed.log'
 LoggingRemoteURL = 'http://localhost:48061/api/v1/logs'
 LoggingLevel = 'INFO'
+
+[Registry]
+Host = 'localhost'
+Port = 8500
+Type = 'consul'

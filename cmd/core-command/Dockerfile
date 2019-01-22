@@ -40,4 +40,4 @@ WORKDIR /
 COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/core-command/Attribution.txt /
 COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/core-command/core-command /
 COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/core-command/res/docker/configuration.toml /res/docker/configuration.toml
-ENTRYPOINT ["/core-command","--consul","--profile=docker","--confdir=/res"]
+ENTRYPOINT ["/core-command","--registry","--profile=docker","--confdir=/res"]

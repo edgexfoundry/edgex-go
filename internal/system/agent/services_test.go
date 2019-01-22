@@ -28,11 +28,11 @@ func TestProcessResponse(t *testing.T) {
 
 	logs.LoggingClient = logger.NewMockClient()
 
-	var responseJSON = "{\"ApplicationName\":\"support-notifications\",\"ConsulProfilesActive\":\"go\",\"HeartBeatTime\":300000,\"HeartBeatMsg\":\"Support Notifications heart beat\",\"AppOpenMsg\":\"This is the Support Notifications Microservice\", \"FormatSpecifier\":\"%(\\\\d=\\\\$)?([-#= 0(\\\\\u003c]*)?(\\\\d=)?(\\\\.\\\\d=)?([tT])?([a-zA-Z%])\", \"ServicePort\":48060, \"ServiceTimeout\":5000, \"ServiceAddress\":\"localhost\", \"ServiceName\":\"support-notifications\", \"ConsulHost\":\"localhost\", \"ConsulCheckAddress\":\"http://localhost:48060/api/v1/ping\", \"ConsulPort\":8500, \"CheckInterval\":\"10s\", \"EnableRemoteLogging\":false, \"LoggingFile\":\"./logs/edgex-support-notifications.log\", \"LoggingRemoteURL\":\"http://localhost:48061/api/v1/logs\", \"MongoDBUserName\":\"\", \"MongoDBPassword\":\"\", \"MongoDatabaseName\":\"notifications\", \"MongoDBHost\":\"localhost\", \"MongoDBPort\":27017, \"MongoDBConnectTimeout\":60000, \"MongoDBMaxWaitTime\":120000, \"MongoDBKeepAlive\":true, \"ReadMaxLimit\":1000, \"ResendLimit\":2, \"CleanupDefaultAge\":86400001, \"SchedulerNormalDuration\":\"59 * * * * *\", \"SchedulerNormalResendDuration\":\"59 * * * * *\", \"SchedulerCriticalResendDelay\":10, \"SMTPPort\":\"587\", \"SMTPHost\":\"smtp.gmail.com\", \"SMTPSender\":\"jdoe@gmail.com\", \"SMTPPassword\":\"mypassword\", \"SMTPSubject\":\"EdgeX Notification\", \"DBType\":\"mongodb\"}"
+	var responseJSON = "{\"ApplicationName\":\"support-notifications\",\"RegistryProfilesActive\":\"go\",\"HeartBeatTime\":300000,\"HeartBeatMsg\":\"Support Notifications heart beat\",\"AppOpenMsg\":\"This is the Support Notifications Microservice\", \"FormatSpecifier\":\"%(\\\\d=\\\\$)?([-#= 0(\\\\\u003c]*)?(\\\\d=)?(\\\\.\\\\d=)?([tT])?([a-zA-Z%])\", \"ServicePort\":48060, \"ServiceTimeout\":5000, \"ServiceAddress\":\"localhost\", \"ServiceName\":\"support-notifications\", \"RegistryHost\":\"localhost\", \"RegistryCheckAddress\":\"http://localhost:48060/api/v1/ping\", \"RegistryPort\":8500, \"CheckInterval\":\"10s\", \"EnableRemoteLogging\":false, \"LoggingFile\":\"./logs/edgex-support-notifications.log\", \"LoggingRemoteURL\":\"http://localhost:48061/api/v1/logs\", \"MongoDBUserName\":\"\", \"MongoDBPassword\":\"\", \"MongoDatabaseName\":\"notifications\", \"MongoDBHost\":\"localhost\", \"MongoDBPort\":27017, \"MongoDBConnectTimeout\":60000, \"MongoDBMaxWaitTime\":120000, \"MongoDBKeepAlive\":true, \"ReadMaxLimit\":1000, \"ResendLimit\":2, \"CleanupDefaultAge\":86400001, \"SchedulerNormalDuration\":\"59 * * * * *\", \"SchedulerNormalResendDuration\":\"59 * * * * *\", \"SchedulerCriticalResendDelay\":10, \"SMTPPort\":\"587\", \"SMTPHost\":\"smtp.gmail.com\", \"SMTPSender\":\"jdoe@gmail.com\", \"SMTPPassword\":\"mypassword\", \"SMTPSubject\":\"EdgeX Notification\", \"DBType\":\"mongodb\"}"
 
 	expResponseJSON := map[string]interface{}{
 		"ApplicationName":               "support-notifications",
-		"ConsulProfilesActive":          "go",
+		"RegistryProfilesActive":          "go",
 		"HeartBeatTime":                 "300000",
 		"HeartBeatMsg":                  "Support Notifications heart beat",
 		"AppOpenMsg":                    "This is the Support Notifications Microservice",
@@ -41,9 +41,9 @@ func TestProcessResponse(t *testing.T) {
 		"ServiceTimeout":                "5000",
 		"ServiceAddress":                "localhost",
 		"ServiceName":                   "support-notifications",
-		"ConsulHost":                    "localhost",
-		"ConsulCheckAddress":            "http://localhost:48060/api/v1/ping",
-		"ConsulPort":                    "8500",
+		"RegistryHost":                    "localhost",
+		"RegistryCheckAddress":            "http://localhost:48060/api/v1/ping",
+		"RegistryPort":                    "8500",
 		"CheckInterval":                 "10s",
 		"EnableRemoteLogging":           "false",
 		"LoggingFile":                   "./logs/edgex-support-notifications.log",

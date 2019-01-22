@@ -1,5 +1,6 @@
 /*******************************************************************************
  * Copyright 2018 Dell Inc.
+ * Copyright (c) 2019 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -13,12 +14,11 @@
  *******************************************************************************/
 package config
 
+import "github.com/edgexfoundry/edgex-go/internal/pkg/config"
+
 type ConfigurationStruct struct {
 	ConfigPath                   string
 	GlobalPrefix                 string
-	ConsulProtocol               string
-	ConsulHost                   string
-	ConsulPort                   int
 	IsReset                      bool
 	FailLimit                    int
 	FailWaitTime                 int
@@ -29,4 +29,5 @@ type ConfigurationStruct struct {
 	LoggingFile                  string
 	LoggingRemoteURL             string
 	LoggingLevel                 string
+	Registry                     config.RegistryInfo
 }

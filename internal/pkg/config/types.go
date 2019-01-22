@@ -19,12 +19,6 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 )
 
-// Cannot use type string inside structs to be parsed into map[string]interface{} correctly
-// For now using const literals for values
-const (
-	Consul = "consul"
-)
-
 // ServiceInfo contains configuration settings necessary for the basic operation of any EdgeX service.
 type ServiceInfo struct {
 	// BootTimeout indicates, in milliseconds, how long the service will retry connecting to upstream dependencies
