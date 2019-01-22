@@ -44,3 +44,5 @@ import:
   version: 97c2040d34dfae1d1b1275fa3a78dbdd2f41cf7e
 - package: github.com/docker/go-units
   version: 47565b4f722fb6ceae66b95f853feed578a4a51c
+- package: github.com/influxdata/influxdb
+  version: =1.5.5
