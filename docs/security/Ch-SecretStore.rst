@@ -6,11 +6,11 @@ There are all kinds of secrets used within EdgeX Foundry micro services, such as
 
 Currently the EdgeX Foundry secret store is implemented with `Vault <https://www.vaultproject.io/>`_, a HashiCorp open source software product.
 
-Vault is a tool for securely accessing secrets. A secret is anything that you want to tightly control access to, such as API keys, passwords, database credentials, service credentials, or certificates. Vault provides a unified interface to any secret, while providing tight access control and multiple authentication mechanisms (token, LDAP, etc.). Vault adds on key rolling, revocation rules, time-to-live accesss tokens, secure storage, Shamir Secret Sharing based unlocking mechanism, high availability and detailed auditing.
+Vault is a tool for securely accessing secrets. A secret is anything that you want to tightly control access to, such as API keys, passwords, database credentials, service credentials, or certificates. Vault provides a unified interface to any secret, while providing tight access control and multiple authentication mechanisms (token, LDAP, etc.). Vault adds on key rolling, revocation rules, time-to-live access tokens, secure storage, Shamir Secret Sharing based unlocking mechanism, high availability and detailed auditing.
 
-Vault can use seceral backend systems (filesystem, databases, Consul, Etcd, S3, Azure, etc.) to securely store every sensitive asset. The current EdgeX Foundry implementation of Vault is using `Consul <https://www.consul.io/>`_, another HashiCorp open source software product. Consul is a distributed service mesh to connect, secure, and configure services across any runtime platform and public or private cloud. Consul uses a consensus protocol to provide Consistency as defined by `CAP <https://en.wikipedia.org/wiki/CAP_theorem>`_. The consensus protocol is based on `"Raft: In search of an Understandable Consensus Algorithm" <https://ramcloud.stanford.edu/wiki/download/attachments/11370504/raft.pdf>`_. For a visual explanation of Raft, see The `Secret Lives of Data <http://thesecretlivesofdata.com/raft>`_.
+Vault can use several backend systems (filesystem, databases, Consul, Etcd, S3, Azure, etc.) to securely store every sensitive asset. The current EdgeX Foundry implementation of Vault is using `Consul <https://www.consul.io/>`_, another HashiCorp open source software product. Consul is a distributed service mesh to connect, secure, and configure services across any runtime platform and public or private cloud. Consul uses a consensus protocol to provide Consistency as defined by `CAP <https://en.wikipedia.org/wiki/CAP_theorem>`_. The consensus protocol is based on `"Raft: In search of an Understandable Consensus Algorithm" <https://ramcloud.stanford.edu/wiki/download/attachments/11370504/raft.pdf>`_. For a visual explanation of Raft, see The `Secret Lives of Data <http://thesecretlivesofdata.com/raft>`_.
 
-The seamless integration of Vault and Consul provides a strong yet simple infracstucture to setup a reliable high availability architecture (Vault failover nodes, Consul Clustering) for the EdgeX Foundry Security services in production. 
+The seamless integration of Vault and Consul provides a strong yet simple infrastructure to setup a reliable high availability architecture (Vault failover nodes, Consul Clustering) for the EdgeX Foundry Security services in production. 
 
 The key features of Vault are:
 
@@ -41,7 +41,7 @@ The command to start EdgeX Foundry platform including the Secret Store and API g
 
     sh> docker-compose up -d
 
-For a pristine run, it is strongly recommended to thoroughly clean up any Docker artefacts remaining from the current run.
+For a pristine run, it is strongly recommended to thoroughly clean up any Docker artifacts remaining from the current run.
 
 .. code-block:: shell
 
@@ -106,7 +106,7 @@ Start the first service: volume (platform volume initializations)
 
     sh> docker-compose up -d volume
 
-Sample ouput:
+Sample output:
 
 .. code-block:: shell
     :linenos:
@@ -129,7 +129,7 @@ Start the second service: consul (Consul is Vault store backend)
 
     sh> docker-compose up -d consul
 
-Sample ouput:
+Sample output:
 
 .. code-block:: shell
     :linenos:
@@ -144,7 +144,7 @@ Display and inspect consul service logs: important lines are highlighted
 
     sh> docker-compose logs consul
 
-Sample ouput:
+Sample output:
 
 .. code-block:: none
     :linenos:
@@ -191,7 +191,7 @@ Start the third service: config-seed (platform configuration initializations)
 
     sh> docker-compose up -d config-seed
 
-Sample ouput:
+Sample output:
 
 .. code-block:: shell
     :linenos:
@@ -207,7 +207,7 @@ Display and inspect the created container states: important lines are highlighte
 
     sh> docker-compose ps
 
-Sample ouput:
+Sample output:
 
 .. code-block:: none
     :linenos:
@@ -233,7 +233,7 @@ Start the fourth service: vault (Vault tool)
 
     sh> docker-compose up -d vault
 
-Sample ouput:
+Sample output:
 
 .. code-block:: shell
     :linenos:
@@ -249,7 +249,7 @@ Display and inspect "vault" service logs: important lines are highlighted
 
     sh> docker-compose logs vault
 
-Sample ouput:
+Sample output:
 
 .. code-block:: none
     :linenos:
@@ -278,14 +278,14 @@ Sample ouput:
 
           Line 10: Vault backend storage is **Consul**.
 
-Start the fith service: vault-worker (Vault init/unseal process and setups)
+Start the fifth service: vault-worker (Vault init/unseal process and setups)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: shell
 
     sh> docker-compose up -d vault-worker
 
-Sample ouput:
+Sample output:
 
 .. code-block:: shell
     :linenos:
@@ -302,7 +302,7 @@ Display and inspect "vault-worker" service logs: important lines are highlighted
 
     sh> docker-compose logs vault-worker
 
-Sample ouput:
+Sample output:
 
 .. code-block:: none
     :linenos:
@@ -339,7 +339,7 @@ Display and inspect "vault" service logs: important lines are highlighted
 
     sh> docker-compose logs vault
 
-Sample ouput:
+Sample output:
 
 .. code-block:: none
     :linenos:
@@ -425,7 +425,7 @@ Display and inspect the created container states: important lines are highlighte
 
     sh> docker-compose ps
 
-Sample ouput:
+Sample output:
 
 .. code-block:: none
     :linenos:
@@ -572,7 +572,7 @@ Shell Access to Consul Container and Using Consul CLI
 Configuring the Secret Store
 ============================
 
-Vault server configuration is essentially concentrated in one JSON file named ``local.json``. This file was prepared during the Vault Docker image build process. In the eventuality of a change, the Vault server container should be accessed to then modify the JSON file. The absolute path being ``/vaul/config/local.json``. To reload the new configuration simply send Vault PID a HUP signal to trigger a configuration reload. 
+Vault server configuration is essentially concentrated in one JSON file named ``local.json``. This file was prepared during the Vault Docker image build process. In the eventuality of a change, the Vault server container should be accessed to then modify the JSON file. The absolute path being ``/vault/config/local.json``. To reload the new configuration simply send Vault PID a HUP signal to trigger a configuration reload. 
 
 Sample Vault server configuration file:
 
@@ -617,7 +617,7 @@ To modify this configuration file, execute a shell session in the running Vault 
     drwxr-xr-x    2 vault    vault         4096 Jun  7  2018 file
     drwxr-xr-x    2 vault    vault         4096 Jun  7  2018 logs
 
-Pay attention to the ``VAULT_CAPATH`` environment variable passed to the session. This is necessary in order to run succesfull Vault CLI command. Every Vault CLI command is a wrapper of the Vault HTTP API. The Vault server is configured with TLS using X.509 PKI materials generated and signed by a local self-signed CA (EdgeXFoundryCA). Therefore, in order for each Vault CLI command (or to that extent cURL commands) to verify the Vault server TLS certificate, the self-signing CA root certificate would have to be known by the CLI command interpreter. This ``VAULT_CAPATH`` variable is checked by every Vault CLI commands, alternatively each Vault CLI command can specify an option with the same certificate path if the variable is not set. 
+Pay attention to the ``VAULT_CAPATH`` environment variable passed to the session. This is necessary in order to run succesful Vault CLI command. Every Vault CLI command is a wrapper of the Vault HTTP API. The Vault server is configured with TLS using X.509 PKI materials generated and signed by a local self-signed CA (EdgeXFoundryCA). Therefore, in order for each Vault CLI command (or to that extent cURL commands) to verify the Vault server TLS certificate, the self-signing CA root certificate would have to be known by the CLI command interpreter. This ``VAULT_CAPATH`` variable is checked by every Vault CLI commands, alternatively each Vault CLI command can specify an option with the same certificate path if the variable is not set. 
 
 The self-signed Root CA certificate path can be found in the Vault configuration file (see above local.json), with parameter ``tls_client_ca_file ="/vault/config/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem"``.
 
@@ -840,7 +840,7 @@ Perform a ``list`` request to display the currently mounted secret backends:
     secret/       kv           kv_2362c227           key/value secret storage
     sys/          system       system_410e4276       system endpoints used for control, policy and debugging
 
-.. note:: Line 5: EdgeX Foundry platform is using the Key/Value secret stroage named ``secret``
+.. note:: Line 5: EdgeX Foundry platform is using the Key/Value secret storage named ``secret``
 
 Let's drill down into the ``secret`` k/v storage and walk through a predefined hierarchical tree structure (path).
 
