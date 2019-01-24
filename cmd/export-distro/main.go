@@ -44,7 +44,7 @@ func main() {
 
 	if ok := distro.Init(useConsul); !ok {
 		logBeforeInit(fmt.Errorf("%s: Service bootstrap failed", internal.ExportDistroServiceKey))
-		return
+		os.Exit(1)
 	}
 
 	distro.LoggingClient.Info("Service dependencies resolved...")
@@ -68,6 +68,8 @@ func main() {
 	c := <-errs
 	distro.Destruct()
 	distro.LoggingClient.Warn(fmt.Sprintf("terminating: %v", c))
+
+	os.Exit(0)
 }
 
 func logBeforeInit(err error) {

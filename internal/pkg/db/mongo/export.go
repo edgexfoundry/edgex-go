@@ -17,9 +17,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo/models"
 	contract "github.com/edgexfoundry/edgex-go/pkg/models"
-	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
-	"github.com/google/uuid"
 )
 
 // ****************************** REGISTRATIONS ********************************
@@ -27,10 +25,7 @@ import (
 // Return all the registrations
 // UnexpectedError - failed to retrieve registrations from the database
 func (mc MongoClient) Registrations() ([]contract.Registration, error) {
-	var mrs []models.Registration
-	mrs, err := mc.getRegistrations(bson.M{})
-
-	return mapRegistrations(mrs, err)
+	return mapRegistrations(mc.getRegistrations(bson.M{}))
 }
 
 // Add a new registration
@@ -39,46 +34,33 @@ func (mc MongoClient) AddRegistration(r contract.Registration) (string, error) {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
-	registration := &models.Registration{}
-	id, err := registration.FromContract(r)
-
+	var mapped models.Registration
+	id, err := mapped.FromContract(r)
 	if err != nil {
 		return "", err
 	}
 
-	col := s.DB(mc.database.Name).C(db.ExportCollection)
+	mapped.TimestampForAdd()
 
-	registration.Created = db.MakeTimestamp()
-
-	// Add the registration
-	err = col.Insert(registration)
-	if err != nil {
-		return "", err
+	if err = s.DB(mc.database.Name).C(db.ExportCollection).Insert(mapped); err != nil {
+		return "", errorMap(err)
 	}
-
-	return id, err
+	return id, nil
 }
 
 // Update a registration
 // UnexpectedError - problem updating in database
 // NotFound - no registration with the ID was found
 func (mc MongoClient) UpdateRegistration(reg contract.Registration) error {
-	s := mc.getSessionCopy()
-	defer s.Close()
-
-	mapped := &models.Registration{}
-	if _, err := mapped.FromContract(reg); err != nil {
+	var mapped models.Registration
+	id, err := mapped.FromContract(reg)
+	if err != nil {
 		return err
 	}
 
-	mapped.Modified = db.MakeTimestamp()
+	mapped.TimestampForUpdate()
 
-	c := s.DB(mc.database.Name).C(db.ExportCollection)
-
-	if mapped.ID.Valid() {
-		return c.UpdateId(mapped.ID, mapped)
-	}
-	return c.Update(bson.M{"uuid": mapped.Uuid}, mapped)
+	return mc.updateId(db.ExportCollection, id, mapped)
 }
 
 // Get a registration by ID
@@ -93,16 +75,9 @@ func (mc MongoClient) RegistrationById(id string) (contract.Registration, error)
 }
 
 func (mc MongoClient) registrationById(id string) (models.Registration, error) {
-	var query bson.M
-	if !bson.IsObjectIdHex(id){
-		// Id is not a BSON ID, is it a UUID?
-		_, err := uuid.Parse(id)
-		if err != nil {
-			return models.Registration{}, db.ErrInvalidObjectId
-		}
-		query = bson.M{"uuid": id}
-	} else {
-		query = bson.M{"_id": bson.ObjectIdHex(id)}
+	query, err := idToBsonM(id)
+	if err != nil {
+		return models.Registration{}, err
 	}
 
 	reg, err := mc.getRegistration(query)
@@ -127,7 +102,7 @@ func (mc MongoClient) RegistrationByName(name string) (contract.Registration, er
 func (mc MongoClient) registrationByName(name string) (models.Registration, error) {
 	reg, err := mc.getRegistration(bson.M{"name": name})
 	if err != nil {
-		return models.Registration{}, err
+		return models.Registration{}, errorMap(err)
 	}
 	return reg, nil
 }
@@ -152,7 +127,7 @@ func (mc MongoClient) ScrubAllRegistrations() error {
 	defer s.Close()
 
 	_, err := s.DB(mc.database.Name).C(db.ExportCollection).RemoveAll(nil)
-	return err
+	return errorMap(err)
 }
 
 // Get registrations for the passed query
@@ -163,7 +138,7 @@ func (mc MongoClient) getRegistrations(q bson.M) ([]models.Registration, error) 
 	var regs []models.Registration
 	err := s.DB(mc.database.Name).C(db.ExportCollection).Find(q).All(&regs)
 	if err != nil {
-		return []models.Registration{}, err
+		return []models.Registration{}, errorMap(err)
 	}
 
 	return regs, nil
@@ -176,11 +151,10 @@ func (mc MongoClient) getRegistration(q bson.M) (models.Registration, error) {
 
 	var reg models.Registration
 	err := s.DB(mc.database.Name).C(db.ExportCollection).Find(q).One(&reg)
-	if err == mgo.ErrNotFound {
-		return models.Registration{}, db.ErrNotFound
+	if err != nil {
+		return models.Registration{}, errorMap(err)
 	}
-
-	return reg, err
+	return reg, nil
 }
 
 // Delete from the collection based on ID
@@ -188,11 +162,7 @@ func (mc MongoClient) deleteRegistration(q bson.M) error {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
-	err := s.DB(mc.database.Name).C(db.ExportCollection).Remove(q)
-	if err == mgo.ErrNotFound {
-		return db.ErrNotFound
-	}
-	return err
+	return errorMap(s.DB(mc.database.Name).C(db.ExportCollection).Remove(q))
 }
 
 func mapRegistrations(registrations []models.Registration, err error) ([]contract.Registration, error) {
@@ -200,7 +170,7 @@ func mapRegistrations(registrations []models.Registration, err error) ([]contrac
 		return []contract.Registration{}, err
 	}
 
-	var mapped []contract.Registration
+	mapped := make([]contract.Registration, 0)
 	for _, r := range registrations {
 		mapped = append(mapped, r.ToContract())
 	}

@@ -205,7 +205,9 @@ func registrationLoop(reg *registrationInfo) {
 	for {
 		select {
 		case event := <-reg.chEvent:
-			reg.processEvent(event)
+			if reg.registration.Enable {
+				reg.processEvent(event)
+			}
 
 		case newReg := <-reg.chRegistration:
 			if newReg == nil {

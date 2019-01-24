@@ -22,16 +22,15 @@ import (
 )
 
 type Event struct {
-	Id       bson.ObjectId `bson:"_id,omitempty"`
-	Uuid     string        `bson:"uuid,omitempty"`
-	Pushed   int64         `bson:"pushed"`
-	Device   string        `bson:"device"` // Device identifier (name or id)
 	Created  int64         `bson:"created"`
 	Modified int64         `bson:"modified"`
 	Origin   int64         `bson:"origin"`
+	Id       bson.ObjectId `bson:"_id,omitempty"`
+	Uuid     string        `bson:"uuid,omitempty"`
+	Pushed   int64         `bson:"pushed"`
+	Device   string        `bson:"device"`             // Device identifier (name or id)
 	Event    string        `bson:"event"`              // Schedule event identifier
 	Readings []mgo.DBRef   `bson:"readings,omitempty"` // List of readings
-
 }
 
 func (e *Event) ToContract(transform readingTransform) (c contract.Event, err error) {
@@ -41,18 +40,17 @@ func (e *Event) ToContract(transform readingTransform) (c contract.Event, err er
 	}
 
 	c.ID = id
-	c.Pushed = e.Pushed
-	c.Device = e.Device
 	c.Created = e.Created
 	c.Modified = e.Modified
 	c.Origin = e.Origin
+	c.Pushed = e.Pushed
+	c.Device = e.Device
 	c.Event = e.Event
 
 	c.Readings = []contract.Reading{}
 	for _, dbRef := range e.Readings {
 		var r Reading
-		r, err = transform.DBRefToReading(dbRef)
-		if err != nil {
+		if r, err = transform.DBRefToReading(dbRef); err != nil {
 			return contract.Event{}, err
 		}
 		c.Readings = append(c.Readings, r.ToContract())
@@ -60,38 +58,42 @@ func (e *Event) ToContract(transform readingTransform) (c contract.Event, err er
 	return
 }
 
-func (e *Event) FromContract(from contract.Event, transform readingTransform) (err error) {
+func (e *Event) FromContract(from contract.Event, transform readingTransform) (id string, err error) {
 	e.Id, e.Uuid, err = fromContractId(from.ID)
 	if err != nil {
 		return
 	}
 
-	e.Pushed = from.Pushed
-	e.Device = from.Device
 	e.Created = from.Created
 	e.Modified = from.Modified
 	e.Origin = from.Origin
+	e.Pushed = from.Pushed
+	e.Device = from.Device
 	e.Event = from.Event
 
 	e.Readings = []mgo.DBRef{}
 	for _, reading := range from.Readings {
 		var readingModel Reading
-		err = readingModel.FromContract(reading)
-		if err != nil {
-			return errors.New(err.Error() + " id: " + reading.Id)
+		if rid, err := readingModel.FromContract(reading); err != nil {
+			return "", errors.New(err.Error() + " id: " + rid)
 		}
 
 		var dbRef mgo.DBRef
-		dbRef, err = transform.ReadingToDBRef(readingModel)
-		if err != nil {
-			return err
+		if dbRef, err = transform.ReadingToDBRef(readingModel); err != nil {
+			return
 		}
 		e.Readings = append(e.Readings, dbRef)
 	}
 
-	if e.Created == 0 {
-		e.Created = db.MakeTimestamp()
-	}
-
+	id = toContractId(e.Id, e.Uuid)
 	return
+}
+
+func (e *Event) TimestampForUpdate() {
+	e.Modified = db.MakeTimestamp()
+}
+
+func (e *Event) TimestampForAdd() {
+	e.TimestampForUpdate()
+	e.Created = e.Modified
 }

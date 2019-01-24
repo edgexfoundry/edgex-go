@@ -38,7 +38,7 @@ func main() {
 	ok := scheduler.Init(useConsul)
 	if !ok {
 		logBeforeInit(fmt.Errorf("%s: Service bootstrap failed!", internal.SupportSchedulerServiceKey))
-		return
+		os.Exit(1)
 	}
 
 	scheduler.LoggingClient.Info(fmt.Sprintf("Service dependencies resolved...%s %s ", internal.SupportSchedulerServiceKey, edgex.Version))
@@ -66,6 +66,8 @@ func main() {
 	c := <-errs
 	scheduler.Destruct()
 	scheduler.LoggingClient.Warn(fmt.Sprintf("terminating: %v", c))
+
+	os.Exit(0)
 }
 
 func logBeforeInit(err error) {

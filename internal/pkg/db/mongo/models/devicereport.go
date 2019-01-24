@@ -21,55 +21,58 @@ import (
 )
 
 type DeviceReport struct {
+	Created  int64         `bson:"created"`
+	Modified int64         `bson:"modified"`
+	Origin   int64         `bson:"origin"`
 	Id       bson.ObjectId `bson:"_id,omitempty"`
 	Uuid     string        `bson:"uuid,omitempty"`
 	Name     string        `bson:"name"`     // non-database identifier for a device report - must be unique
 	Device   string        `bson:"device"`   // associated device name - should be a valid and unique device name
 	Event    string        `bson:"event"`    // associated schedule event name - should be a valid and unique schedule event name
 	Expected []string      `bson:"expected"` // array of value descriptor names describing the types of data captured in the report
-	Created  int64         `bson:"created"`
-	Modified int64         `bson:"modified"`
-	Origin   int64         `bson:"origin"`
 }
 
-func (dr *DeviceReport) ToContract() contract.DeviceReport {
+func (dr *DeviceReport) ToContract() (c contract.DeviceReport) {
 	// Always hand back the UUID as the contract devicereport ID unless it's blank (an old devicereport, for example blackbox test scripts)
 	id := dr.Uuid
 	if id == "" {
 		id = dr.Id.Hex()
 	}
 
-	to := contract.DeviceReport{
-		Id:       id,
-		Name:     dr.Name,
-		Device:   dr.Device,
-		Event:    dr.Event,
-		Expected: dr.Expected,
-	}
-	to.Created = dr.Created
-	to.Modified = dr.Modified
-	to.Origin = dr.Origin
-	return to
+	c.Created = dr.Created
+	c.Modified = dr.Modified
+	c.Origin = dr.Origin
+	c.Id = id
+	c.Name = dr.Name
+	c.Device = dr.Device
+	c.Event = dr.Event
+	c.Expected = dr.Expected
+
+	return
 }
 
-func (dr *DeviceReport) FromContract(from contract.DeviceReport) error {
-	var err error
-	dr.Id, dr.Uuid, err = fromContractId(from.Id)
-	if err != nil {
-		return err
+func (dr *DeviceReport) FromContract(from contract.DeviceReport) (id string, err error) {
+	if dr.Id, dr.Uuid, err = fromContractId(from.Id); err != nil {
+		return
 	}
 
+	dr.Created = from.Created
+	dr.Modified = from.Modified
+	dr.Origin = from.Origin
 	dr.Name = from.Name
 	dr.Device = from.Device
 	dr.Event = from.Event
 	dr.Expected = from.Expected
-	dr.Created = from.Created
-	dr.Modified = from.Modified
-	dr.Origin = from.Origin
 
-	if dr.Created == 0 {
-		dr.Created = db.MakeTimestamp()
-	}
+	id = toContractId(dr.Id, dr.Uuid)
+	return
+}
 
-	return nil
+func (dr *DeviceReport) TimestampForUpdate() {
+	dr.Modified = db.MakeTimestamp()
+}
+
+func (dr *DeviceReport) TimestampForAdd() {
+	dr.TimestampForUpdate()
+	dr.Created = dr.Modified
 }

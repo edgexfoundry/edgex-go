@@ -18,7 +18,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo/models"
 	contract "github.com/edgexfoundry/edgex-go/pkg/models"
 	"github.com/globalsign/mgo/bson"
-	"github.com/google/uuid"
 )
 
 // ******************************* INTERVALS **********************************
@@ -47,10 +46,8 @@ func (mc MongoClient) IntervalByName(name string) (contract.Interval, error) {
 	query := bson.M{"name": name}
 
 	mi := models.Interval{}
-	err := s.DB(mc.database.Name).C(db.Interval).Find(query).One(&mi)
-	if err != nil {
-		err = errorMap(err)
-		return contract.Interval{}, err
+	if err := s.DB(mc.database.Name).C(db.Interval).Find(query).One(&mi); err != nil {
+		return contract.Interval{}, errorMap(err)
 	}
 	return mi.ToContract(), nil
 }
@@ -61,26 +58,16 @@ func (mc MongoClient) IntervalById(id string) (contract.Interval, error) {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
-	var query bson.M
-	if !bson.IsObjectIdHex(id) {
-		// Id is not a BSON ID. Is it a UUID?
-		_, err := uuid.Parse(id)
-		if err != nil { // It is some unsupported type of string
-			return contract.Interval{}, db.ErrInvalidObjectId
-		}
-		query = bson.M{"uuid": id}
-	} else {
-		query = bson.M{"_id": bson.ObjectIdHex(id)}
-	}
-
-	interval := models.Interval{}
-	err := s.DB(mc.database.Name).C(db.Interval).Find(query).One(&interval)
+	query, err := idToBsonM(id)
 	if err != nil {
-		err = errorMap(err)
 		return contract.Interval{}, err
 	}
 
-	return interval.ToContract(), err
+	var interval models.Interval
+	if err := s.DB(mc.database.Name).C(db.Interval).Find(query).One(&interval); err != nil {
+		return contract.Interval{}, errorMap(err)
+	}
+	return interval.ToContract(), nil
 }
 
 // Add an Interval
@@ -89,57 +76,40 @@ func (mc MongoClient) AddInterval(interval contract.Interval) (string, error) {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
-	mapped := &models.Interval{}
-	err := mapped.FromContract(interval)
+	var mapped models.Interval
+	id, err := mapped.FromContract(interval)
 	if err != nil {
-		return interval.ID, err
+		return "", err
 	}
 
 	// See if the name is unique and add the value descriptors
 	found, err := s.DB(mc.database.Name).C(db.Interval).Find(bson.M{"name": mapped.Name}).Count()
 	// Duplicate name
 	if found > 0 {
-		return interval.ID, db.ErrNotUnique
+		return "", db.ErrNotUnique
 	}
 
-	err = s.DB(mc.database.Name).C(db.Interval).Insert(mapped)
-	if err != nil {
-		return interval.ID, err
+	mapped.TimestampForAdd()
+
+	if err = s.DB(mc.database.Name).C(db.Interval).Insert(mapped); err != nil {
+		return "", errorMap(err)
 	}
 
-	to := mapped.ToContract()
-	return to.ID, err
+	return id, nil
 }
-
 
 // Update an Interval
 // UnexpectedError - failed to update interval in the database
 func (mc MongoClient) UpdateInterval(interval contract.Interval) error {
-	s := mc.getSessionCopy()
-	defer s.Close()
-
-	mapped := &models.Interval{}
-	err := mapped.FromContract(interval)
-
+	var mapped models.Interval
+	id, err := mapped.FromContract(interval)
 	if err != nil {
 		return err
 	}
-	mapped.Modified = db.MakeTimestamp()
 
-	if mapped.Id.Valid() {
-		err := s.DB(mc.database.Name).C(db.Interval).UpdateId(mapped.Id, mapped)
-		if err != nil {
-			return errorMap(err)
-		}
-	} else {
-		query := bson.M{"uuid": mapped.Uuid}
-		err := s.DB(mc.database.Name).C(db.Interval).Update(query, mapped)
-		if err != nil {
-			return errorMap(err)
-		}
-	}
+	mapped.TimestampForUpdate()
 
-	return nil
+	return mc.updateId(db.Interval, id, mapped)
 }
 
 // Remove an Interval by ID
@@ -148,29 +118,26 @@ func (mc MongoClient) DeleteIntervalById(id string) error {
 	return mc.deleteById(db.Interval, id)
 }
 
-
 // ******************************* INTERVAL ACTIONS **********************************
 
 // Return all the Interval Action(s)
 // UnexpectedError - failed to retrieve interval actions from the database
 // Sort the interval actions in descending order by ID
 func (mc MongoClient) IntervalActions() ([]contract.IntervalAction, error) {
-
 	return mapIntervalActions(mc.getIntervalActions(bson.M{}))
 }
 
 // Return Interval Action(s) up to the max number specified
 // UnexpectedError - failed to retrieve interval actions from the database
 // Sort the interval actions in descending order by ID
-func (mc MongoClient) IntervalActionsWithLimit(limit int) ([]contract.IntervalAction, error){
-	return mapIntervalActions(mc.getIntervalActionsLimit(bson.M{},limit))
+func (mc MongoClient) IntervalActionsWithLimit(limit int) ([]contract.IntervalAction, error) {
+	return mapIntervalActions(mc.getIntervalActionsLimit(bson.M{}, limit))
 }
 
 // Return Interval Action(s) by interval name
 // UnexpectedError - failed to retrieve interval actions from the database
 // Sort the interval actions in descending order by ID
 func (mc MongoClient) IntervalActionsByIntervalName(name string) ([]contract.IntervalAction, error) {
-
 	return mapIntervalActions(mc.getIntervalActions(bson.M{"interval": name}))
 }
 
@@ -188,43 +155,30 @@ func (mc MongoClient) IntervalActionById(id string) (contract.IntervalAction, er
 	s := mc.getSessionCopy()
 	defer s.Close()
 
-	var query bson.M
-	if !bson.IsObjectIdHex(id) {
-		// id is not a BSON ID. Is it a UUID?
-		_, err := uuid.Parse(id)
-		if err != nil { // It is some unsupported type of string
-			return contract.IntervalAction{}, db.ErrInvalidObjectId
-		}
-		query = bson.M{"uuid": id}
-	} else {
-		query = bson.M{"_id": bson.ObjectIdHex(id)}
-	}
-
-	action := models.IntervalAction{}
-	err := s.DB(mc.database.Name).C(db.IntervalAction).Find(query).One(&action)
+	query, err := idToBsonM(id)
 	if err != nil {
-		err = errorMap(err)
 		return contract.IntervalAction{}, err
 	}
 
-	return action.ToContract(), err
+	var action models.IntervalAction
+	if err := s.DB(mc.database.Name).C(db.IntervalAction).Find(query).One(&action); err != nil {
+		return contract.IntervalAction{}, errorMap(err)
+	}
+	return action.ToContract(), nil
 }
 
 // Return an Interval Action by name
 // UnexpectedError - failed to retrieve interval actions from the database
 // Sort the interval actions in descending order by ID
 func (mc MongoClient) IntervalActionByName(name string) (contract.IntervalAction, error) {
-
 	s := mc.getSessionCopy()
 	defer s.Close()
 
 	query := bson.M{"name": name}
 
 	mia := models.IntervalAction{}
-	err := s.DB(mc.database.Name).C(db.IntervalAction).Find(query).One(&mia)
-	if err != nil {
-		err = errorMap(err)
-		return contract.IntervalAction{}, err
+	if err := s.DB(mc.database.Name).C(db.IntervalAction).Find(query).One(&mia); err != nil {
+		return contract.IntervalAction{}, errorMap(err)
 	}
 	return mia.ToContract(), nil
 }
@@ -235,57 +189,40 @@ func (mc MongoClient) AddIntervalAction(action contract.IntervalAction) (string,
 	s := mc.getSessionCopy()
 	defer s.Close()
 
-	mapped := &models.IntervalAction{}
-	err := mapped.FromContract(action)
+	var mapped models.IntervalAction
+	id, err := mapped.FromContract(action)
 	if err != nil {
-		return action.ID, err
+		return "", err
 	}
 
 	// See if the name is unique and add the value descriptors
 	found, err := s.DB(mc.database.Name).C(db.IntervalAction).Find(bson.M{"name": mapped.Name}).Count()
 	// Duplicate name
 	if found > 0 {
-		return action.ID, db.ErrNotUnique
+		return "", db.ErrNotUnique
 	}
 
-	err = s.DB(mc.database.Name).C(db.IntervalAction).Insert(mapped)
-	if err != nil {
-		return action.ID, err
-	}
+	mapped.TimestampForAdd()
 
-	to := mapped.ToContract()
-	return to.ID, err
+	if err = s.DB(mc.database.Name).C(db.IntervalAction).Insert(mapped); err != nil {
+		return "", errorMap(err)
+	}
+	return id, nil
 }
 
 // Update an Interval Action
 // UnexpectedError - failed to update interval action in the database
 func (mc MongoClient) UpdateIntervalAction(action contract.IntervalAction) error {
-	s := mc.getSessionCopy()
-	defer s.Close()
-
-	mapped := &models.IntervalAction{}
-	err := mapped.FromContract(action)
+	var mapped models.IntervalAction
+	id, err := mapped.FromContract(action)
 	if err != nil {
 		return err
 	}
-	mapped.Modified = db.MakeTimestamp()
 
-	if mapped.Id.Valid() {
-		err := s.DB(mc.database.Name).C(db.IntervalAction).UpdateId(mapped.Id, mapped)
-		if err != nil {
-			return errorMap(err)
-		}
-	} else {
-		query := bson.M{"uuid": mapped.Uuid}
-		err := s.DB(mc.database.Name).C(db.IntervalAction).Update(query, mapped)
-		if err != nil {
-			return errorMap(err)
-		}
-	}
+	mapped.TimestampForUpdate()
 
-	return nil
+	return mc.updateId(db.IntervalAction, id, mapped)
 }
-
 
 // Remove an Interval Action by ID
 // UnexpectedError - failed to remove interval action from the database
@@ -297,32 +234,29 @@ func (mc MongoClient) DeleteIntervalActionById(id string) error {
 
 // Get Interval Action(s)
 func (mc MongoClient) getIntervalActions(q bson.M) ([]models.IntervalAction, error) {
-
 	s := mc.getSessionCopy()
 	defer s.Close()
 
 	var mia []models.IntervalAction
-	err := s.DB(mc.database.Name).C(db.IntervalAction).Find(q).All(&mia)
-	if err != nil {
-		return []models.IntervalAction{}, err
+	if err := s.DB(mc.database.Name).C(db.IntervalAction).Find(q).All(&mia); err != nil {
+		return []models.IntervalAction{}, errorMap(err)
 	}
 	return mia, nil
 }
 
 // Get Interval Action(s) with a limit
-func (mc MongoClient) getIntervalActionsLimit(q bson.M, limit int)([]models.IntervalAction, error){
+func (mc MongoClient) getIntervalActionsLimit(q bson.M, limit int) ([]models.IntervalAction, error) {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
-	var mia []models.IntervalAction
 	// Check if limit is 0
 	if limit == 0 {
 		return []models.IntervalAction{}, nil
 	}
 
-	err := s.DB(mc.database.Name).C(db.IntervalAction).Find(q).Limit(limit).All(&mia)
-	if err != nil {
-		return []models.IntervalAction{}, err
+	var mia []models.IntervalAction
+	if err := s.DB(mc.database.Name).C(db.IntervalAction).Find(q).Limit(limit).All(&mia); err != nil {
+		return []models.IntervalAction{}, errorMap(err)
 	}
 	return mia, nil
 }
@@ -333,9 +267,8 @@ func (mc MongoClient) getIntervals(q bson.M) ([]models.Interval, error) {
 	defer s.Close()
 
 	var mi []models.Interval
-	err := s.DB(mc.database.Name).C(db.Interval).Find(q).All(&mi)
-	if err != nil {
-		return []models.Interval{}, err
+	if err := s.DB(mc.database.Name).C(db.Interval).Find(q).All(&mi); err != nil {
+		return []models.Interval{}, errorMap(err)
 	}
 	return mi, nil
 }
@@ -345,15 +278,14 @@ func (mc MongoClient) getIntervalsLimit(q bson.M, limit int) ([]models.Interval,
 	s := mc.getSessionCopy()
 	defer s.Close()
 
-	var mi []models.Interval
 	// Check if limit is 0
 	if limit == 0 {
 		return []models.Interval{}, nil
 	}
 
-	err := s.DB(mc.database.Name).C(db.Interval).Find(q).Limit(limit).All(&mi)
-	if err != nil {
-		return []models.Interval{}, err
+	var mi []models.Interval
+	if err := s.DB(mc.database.Name).C(db.Interval).Find(q).Limit(limit).All(&mi); err != nil {
+		return []models.Interval{}, errorMap(err)
 	}
 	return mi, nil
 }
@@ -363,7 +295,7 @@ func mapIntervalActions(actions []models.IntervalAction, err error) ([]contract.
 	if err != nil {
 		return []contract.IntervalAction{}, err
 	}
-	var mapped []contract.IntervalAction
+	mapped := make([]contract.IntervalAction, 0)
 	for _, action := range actions {
 		mapped = append(mapped, action.ToContract())
 	}
@@ -375,7 +307,7 @@ func mapIntervals(intervals []models.Interval, err error) ([]contract.Interval, 
 	if err != nil {
 		return []contract.Interval{}, err
 	}
-	var mapped []contract.Interval
+	mapped := make([]contract.Interval, 0)
 	for _, interval := range intervals {
 		mapped = append(mapped, interval.ToContract())
 	}
@@ -387,17 +319,17 @@ func mapIntervals(intervals []models.Interval, err error) ([]contract.Interval, 
 // Removes all of the Interval Action(s)
 // Returns number of Interval Action(s) removed
 // UnexpectedError - failed to remove all of the Interval and IntervalActions from the database
-func (m MongoClient) ScrubAllIntervalActions() (int, error) {
-	s := m.session.Copy()
+func (mc MongoClient) ScrubAllIntervalActions() (int, error) {
+	s := mc.session.Copy()
 	defer s.Close()
 
-	count, err := s.DB(m.database.Name).C(db.IntervalAction).Count()
+	count, err := s.DB(mc.database.Name).C(db.IntervalAction).Count()
 	if err != nil {
-		return 0, err
+		return 0, errorMap(err)
 	}
-	_, err = s.DB(m.database.Name).C(db.IntervalAction).RemoveAll(nil)
+	_, err = s.DB(mc.database.Name).C(db.IntervalAction).RemoveAll(nil)
 	if err != nil {
-		return 0,err
+		return 0, errorMap(err)
 	}
 
 	return count, nil
@@ -407,28 +339,27 @@ func (m MongoClient) ScrubAllIntervalActions() (int, error) {
 // Removes any IntervalAction(s) previously not removed as well
 // Returns number Interval(s) removed
 // UnexpectedError - failed to remove all of the Interval and IntervalActions from the database
-func (m MongoClient) ScrubAllIntervals()(int, error){
-	s := m.session.Copy()
+func (mc MongoClient) ScrubAllIntervals() (int, error) {
+	s := mc.session.Copy()
 	defer s.Close()
 
 	// Ensure we have removed interval actions first
-	count, err := s.DB(m.database.Name).C(db.IntervalAction).Count()
-	if count >0 {
-		_, err = s.DB(m.database.Name).C(db.IntervalAction).RemoveAll(nil)
+	count, err := s.DB(mc.database.Name).C(db.IntervalAction).Count()
+	if count > 0 {
+		_, err = s.DB(mc.database.Name).C(db.IntervalAction).RemoveAll(nil)
 		if err != nil {
-			return 0,err
+			return 0, errorMap(err)
 		}
 	}
 	// count the number interval(s) were removing "overwrite interval actions count"
-	count, err = s.DB(m.database.Name).C(db.Interval).Count()
+	count, err = s.DB(mc.database.Name).C(db.Interval).Count()
 	if err != nil {
-		return 0, err
+		return 0, errorMap(err)
 	}
-	_, err = s.DB(m.database.Name).C(db.Interval).RemoveAll(nil)
+	_, err = s.DB(mc.database.Name).C(db.Interval).RemoveAll(nil)
 	if err != nil {
-		return 0, err
+		return 0, errorMap(err)
 	}
 
 	return count, nil
 }
-

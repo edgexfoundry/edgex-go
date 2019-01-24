@@ -29,7 +29,6 @@ const (
 )
 
 var currentReadMaxLimit int // configuration read max limit
-var currentResendLimit int  // configuration transmission resent count limit
 var cleanupDefaultAge int
 
 /* ----------------------- Notifications ------------------------*/
@@ -39,9 +38,8 @@ func (mc MongoClient) GetNotifications() ([]contract.Notification, error) {
 }
 
 func (mc MongoClient) GetNotificationById(id string) (contract.Notification, error) {
-	var query bson.M
-	var err error
-	if query, err = idToBsonM(id); err != nil {
+	query, err := idToBsonM(id)
+	if err != nil {
 		return contract.Notification{}, err
 	}
 	return mc.getNotification(query)
@@ -60,18 +58,15 @@ func (mc MongoClient) GetNotificationsByLabels(labels []string, limit int) ([]co
 }
 
 func (mc MongoClient) GetNotificationsByStartEnd(start int64, end int64, limit int) ([]contract.Notification, error) {
-	query := bson.M{"created": bson.M{"$gt": start, "$lt": end}}
-	return mc.getNotificationsLimit(query, limit)
+	return mc.getNotificationsLimit(bson.M{"created": bson.M{"$gt": start, "$lt": end}}, limit)
 }
 
 func (mc MongoClient) GetNotificationsByStart(start int64, limit int) ([]contract.Notification, error) {
-	query := bson.M{"created": bson.M{"$gt": start}}
-	return mc.getNotificationsLimit(query, limit)
+	return mc.getNotificationsLimit(bson.M{"created": bson.M{"$gt": start}}, limit)
 }
 
 func (mc MongoClient) GetNotificationsByEnd(end int64, limit int) ([]contract.Notification, error) {
-	query := bson.M{"created": bson.M{"$lt": end}}
-	return mc.getNotificationsLimit(query, limit)
+	return mc.getNotificationsLimit(bson.M{"created": bson.M{"$lt": end}}, limit)
 }
 
 func (mc MongoClient) GetNewNotifications(limit int) ([]contract.Notification, error) {
@@ -86,23 +81,23 @@ func (mc MongoClient) AddNotification(n contract.Notification) (string, error) {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
-	var err error
-	var model models.Notification
-	if err = model.FromContract(n); err != nil {
-		return "", err
-	}
-
-	err = mc.checkNotificationSlugIntegrity(model.Slug)
+	var mapped models.Notification
+	id, err := mapped.FromContract(n)
 	if err != nil {
 		return "", err
 	}
 
-	err = s.DB(mc.database.Name).C(NOTIFICATION_COLLECTION).Insert(model)
-	if err != nil {
+	if err = mc.checkNotificationSlugIntegrity(mapped.Slug); err != nil {
 		return "", err
 	}
 
-	return model.Uuid, err
+	mapped.TimestampForAdd()
+
+	if err = s.DB(mc.database.Name).C(NOTIFICATION_COLLECTION).Insert(mapped); err != nil {
+		return "", errorMap(err)
+	}
+
+	return id, err
 }
 
 func (mc MongoClient) UpdateNotification(n contract.Notification) error {
@@ -140,12 +135,11 @@ func (mc MongoClient) DeleteNotificationsOld(age int) error {
 		return err
 	}
 	for _, mn := range mns {
-		err = mc.deleteNotificationAndAssociatedTransmissions(mn)
-		if err != nil {
+		if err := mc.deleteNotificationAndAssociatedTransmissions(mn); err != nil {
 			return err
 		}
 	}
-	return err
+	return nil
 }
 
 func (mc MongoClient) deleteNotificationAndAssociatedTransmissions(n contract.Notification) error {
@@ -160,29 +154,23 @@ func (mc MongoClient) checkNotificationSlugIntegrity(slug string) error {
 	if slug == "" {
 		return db.ErrSlugEmpty
 	}
-	_, err := mc.getNotification(bson.M{"slug": slug})
-	if err == nil {
+
+	if _, err := mc.getNotification(bson.M{"slug": slug}); err == nil {
 		return db.ErrNotUnique
 	}
 	return nil
 }
 
 func (mc MongoClient) updateNotification(n contract.Notification) error {
-	s := mc.getSessionCopy()
-	defer s.Close()
-
-	var model models.Notification
-	if err := model.FromContract(n); err != nil {
+	var mapped models.Notification
+	id, err := mapped.FromContract(n)
+	if err != nil {
 		return err
 	}
 
-	model.Modified = db.MakeTimestamp()
+	mapped.TimestampForUpdate()
 
-	col := s.DB(mc.database.Name).C(NOTIFICATION_COLLECTION)
-	if model.Id.Valid() {
-		return col.UpdateId(model.Id, model)
-	}
-	return col.Update(bson.M{"uuid": model.Uuid}, model)
+	return mc.updateId(NOTIFICATION_COLLECTION, id, mapped)
 }
 
 func (mc MongoClient) getNotification(q bson.M) (contract.Notification, error) {
@@ -190,8 +178,7 @@ func (mc MongoClient) getNotification(q bson.M) (contract.Notification, error) {
 	defer s.Close()
 
 	var model models.Notification
-	err := errorMap(s.DB(mc.database.Name).C(NOTIFICATION_COLLECTION).Find(q).One(&model))
-	if err == db.ErrNotFound {
+	if err := errorMap(s.DB(mc.database.Name).C(NOTIFICATION_COLLECTION).Find(q).One(&model)); err == db.ErrNotFound {
 		return contract.Notification{}, err
 	}
 
@@ -213,10 +200,10 @@ func (mc MongoClient) getNotificationsLimit(q bson.M, limit int) ([]contract.Not
 
 	var notifications []models.Notification
 	if err := s.DB(mc.database.Name).C(NOTIFICATION_COLLECTION).Find(q).Limit(limit).All(&notifications); err != nil {
-		return []contract.Notification{}, err
+		return []contract.Notification{}, errorMap(err)
 	}
 
-	var contracts []contract.Notification
+	contracts := []contract.Notification{}
 	for _, model := range notifications {
 		contracts = append(contracts, model.ToContract())
 	}
@@ -246,9 +233,8 @@ func (mc MongoClient) GetSubscriptionByReceiver(receiver string) ([]contract.Sub
 }
 
 func (mc MongoClient) GetSubscriptionById(id string) (contract.Subscription, error) {
-	var query bson.M
-	var err error
-	if query, err = idToBsonM(id); err != nil {
+	query, err := idToBsonM(id)
+	if err != nil {
 		return contract.Subscription{}, err
 	}
 	return mc.getSubscription(query)
@@ -258,39 +244,35 @@ func (mc MongoClient) AddSubscription(sub contract.Subscription) (string, error)
 	s := mc.getSessionCopy()
 	defer s.Close()
 
-	var err error
-	var model models.Subscription
-	if err = model.FromContract(sub); err != nil {
+	var mapped models.Subscription
+	id, err := mapped.FromContract(sub)
+	if err != nil {
 		return "", err
 	}
 
-	if err = mc.checkSubscriptionSlugIntegrity(model.Slug); err != nil {
+	if err = mc.checkSubscriptionSlugIntegrity(mapped.Slug); err != nil {
 		return "", err
 	}
 
-	if err = s.DB(mc.database.Name).C(SUBSCRIPTION_COLLECTION).Insert(model); err != nil {
-		return "", err
+	mapped.TimestampForAdd()
+
+	if err = s.DB(mc.database.Name).C(SUBSCRIPTION_COLLECTION).Insert(mapped); err != nil {
+		return "", errorMap(err)
 	}
 
-	return model.Uuid, err
+	return id, nil
 }
 
 func (mc MongoClient) UpdateSubscription(sub contract.Subscription) error {
-	s := mc.getSessionCopy()
-	defer s.Close()
-
-	var model models.Subscription
-	if err := model.FromContract(sub); err != nil {
+	var mapped models.Subscription
+	id, err := mapped.FromContract(sub)
+	if err != nil {
 		return err
 	}
 
-	model.Modified = db.MakeTimestamp()
+	mapped.TimestampForUpdate()
 
-	col := s.DB(mc.database.Name).C(SUBSCRIPTION_COLLECTION)
-	if model.Id.Valid() {
-		return col.UpdateId(model.Id, model)
-	}
-	return col.Update(bson.M{"uuid": model.Uuid}, model)
+	return mc.updateId(SUBSCRIPTION_COLLECTION, id, mapped)
 }
 
 func (mc MongoClient) DeleteSubscriptionBySlug(slug string) error {
@@ -335,10 +317,11 @@ func (mc MongoClient) getSubscriptions(q bson.M) (c []contract.Subscription, err
 	defer s.Close()
 
 	var subs []models.Subscription
-	if err = s.DB(mc.database.Name).C(SUBSCRIPTION_COLLECTION).Find(q).All(&subs); err != nil {
+	if err = errorMap(s.DB(mc.database.Name).C(SUBSCRIPTION_COLLECTION).Find(q).All(&subs)); err != nil {
 		return
 	}
 
+	c = []contract.Subscription{}
 	for _, sub := range subs {
 		c = append(c, sub.ToContract())
 	}
@@ -353,41 +336,37 @@ func (mc MongoClient) AddTransmission(t contract.Transmission) (string, error) {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
-	var model models.Transmission
-	if err := model.FromContract(t); err != nil {
+	var mapped models.Transmission
+	id, err := mapped.FromContract(t)
+	if err != nil {
 		return "", err
 	}
 
-	if err := s.DB(mc.database.Name).C(TRANSMISSION_COLLECTION).Insert(model); err != nil {
-		return "", err
+	mapped.TimestampForAdd()
+
+	if err = s.DB(mc.database.Name).C(TRANSMISSION_COLLECTION).Insert(mapped); err != nil {
+		return "", errorMap(err)
 	}
 
-	return model.Uuid, nil
+	return id, nil
 }
 
 func (mc MongoClient) UpdateTransmission(t contract.Transmission) error {
-	s := mc.getSessionCopy()
-	defer s.Close()
-
-	var model models.Transmission
-	if err := model.FromContract(t); err != nil {
+	var mapped models.Transmission
+	id, err := mapped.FromContract(t)
+	if err != nil {
 		return err
 	}
 
-	model.Modified = db.MakeTimestamp()
+	mapped.TimestampForUpdate()
 
-	col := s.DB(mc.database.Name).C(TRANSMISSION_COLLECTION)
-	if model.Id.Valid() {
-		return col.UpdateId(model.Id, model)
-	}
-	return col.Update(bson.M{"uuid": model.Uuid}, model)
+	return mc.updateId(TRANSMISSION_COLLECTION, id, mapped)
 }
 
 func (mc MongoClient) DeleteTransmission(age int64, status contract.TransmissionStatus) error {
 	currentTime := db.MakeTimestamp()
 	end := currentTime - age
-	query := bson.M{"modified": bson.M{"$lt": end}, "status": status}
-	return mc.deleteAll(query, TRANSMISSION_COLLECTION)
+	return mc.deleteAll(bson.M{"modified": bson.M{"$lt": end}, "status": status}, TRANSMISSION_COLLECTION)
 }
 
 func (mc MongoClient) GetTransmissionsByNotificationSlug(slug string, resendLimit int) ([]contract.Transmission, error) {
@@ -415,7 +394,7 @@ func (mc MongoClient) getTransmission(q bson.M) (c contract.Transmission, err er
 	defer s.Close()
 
 	var t models.Transmission
-	if err = s.DB(mc.database.Name).C(TRANSMISSION_COLLECTION).Find(q).One(&t); err != nil {
+	if err = errorMap(s.DB(mc.database.Name).C(TRANSMISSION_COLLECTION).Find(q).One(&t)); err != nil {
 		return
 	}
 	c = t.ToContract()
@@ -427,7 +406,7 @@ func (mc MongoClient) getTransmissionsLimit(q bson.M) (c []contract.Transmission
 	defer s.Close()
 
 	var transmissions []models.Transmission
-	if err = s.DB(mc.database.Name).C(TRANSMISSION_COLLECTION).Find(q).All(&transmissions); err != nil {
+	if err = errorMap(s.DB(mc.database.Name).C(TRANSMISSION_COLLECTION).Find(q).All(&transmissions)); err != nil {
 		return
 	}
 
@@ -444,11 +423,11 @@ func (mc MongoClient) deleteByObjectID(id string, col string) (err error) {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
-	var q bson.M
-	if q, err = idToBsonM(id); err != nil {
+	query, err := idToBsonM(id)
+	if err != nil {
 		return
 	}
-	return s.DB(mc.database.Name).C(col).Remove(q)
+	return errorMap(s.DB(mc.database.Name).C(col).Remove(query))
 }
 
 func (mc MongoClient) deleteAll(q bson.M, col string) error {
@@ -456,7 +435,7 @@ func (mc MongoClient) deleteAll(q bson.M, col string) error {
 	defer s.Close()
 
 	_, err := s.DB(mc.database.Name).C(col).RemoveAll(q)
-	return err
+	return errorMap(err)
 }
 
 /* ----------------------- General Cleanup ------------------------*/
@@ -479,5 +458,5 @@ func (mc MongoClient) CleanupOld(age int) error {
 			return err
 		}
 	}
-	return err
+	return nil
 }

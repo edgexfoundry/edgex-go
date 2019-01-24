@@ -19,8 +19,6 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/globalsign/mgo"
-	"github.com/globalsign/mgo/bson"
-	"github.com/google/uuid"
 )
 
 var currentMongoClient MongoClient // Singleton used so that mongoEvent can use it to de-reference readings
@@ -55,10 +53,10 @@ func NewClient(config db.Configuration) (MongoClient, error) {
 	return m, nil
 }
 
-func (m MongoClient) CloseSession() {
-	if m.session != nil {
-		m.session.Close()
-		m.session = nil
+func (mc MongoClient) CloseSession() {
+	if mc.session != nil {
+		mc.session.Close()
+		mc.session = nil
 	}
 }
 
@@ -84,18 +82,20 @@ func (mc MongoClient) deleteById(col string, id string) error {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
-	var err error
-	if !bson.IsObjectIdHex(id) {
-		// EventID is not a BSON ID. Is it a UUID?
-		_, err := uuid.Parse(id)
-		if err != nil { // It is some unsupported type of string
-			return db.ErrInvalidObjectId
-		}
-		query := bson.M{"uuid": id}
-		err = s.DB(mc.database.Name).C(col).Remove(query)
-	} else {
-		err = s.DB(mc.database.Name).C(col).RemoveId(bson.ObjectIdHex(id))
+	query, err := idToBsonM(id)
+	if err != nil {
+		return err
 	}
+	return errorMap(s.DB(mc.database.Name).C(col).Remove(query))
+}
 
-	return errorMap(err)
+func (mc MongoClient) updateId(col string, id string, update interface{}) error {
+	s := mc.getSessionCopy()
+	defer s.Close()
+
+	query, err := idToBsonM(id)
+	if err != nil {
+		return err
+	}
+	return errorMap(s.DB(mc.database.Name).C(col).Update(query, update))
 }

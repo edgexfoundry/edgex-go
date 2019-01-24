@@ -26,12 +26,12 @@ type readingTransform interface {
 }
 
 type Reading struct {
+	Created  int64         `bson:"created"`
+	Modified int64         `bson:"modified"`
+	Origin   int64         `bson:"origin"`
 	Id       bson.ObjectId `bson:"_id,omitempty"`
 	Uuid     string        `bson:"uuid"`
-	Pushed   int64         `bson:"pushed"`  // When the data was pushed out of EdgeX (0 - not pushed yet)
-	Created  int64         `bson:"created"` // When the reading was created
-	Origin   int64         `bson:"origin"`
-	Modified int64         `bson:"modified"`
+	Pushed   int64         `bson:"pushed"` // When the data was pushed out of EdgeX (0 - not pushed yet)
 	Device   string        `bson:"device"`
 	Name     string        `bson:"name"`
 	Value    string        `bson:"value"` // Device sensor data value
@@ -45,10 +45,10 @@ func (r *Reading) ToContract() (c contract.Reading) {
 	}
 
 	c.Id = id
-	c.Pushed = r.Pushed
 	c.Created = r.Created
-	c.Origin = r.Origin
 	c.Modified = r.Modified
+	c.Origin = r.Origin
+	c.Pushed = r.Pushed
 	c.Device = r.Device
 	c.Name = r.Name
 	c.Value = r.Value
@@ -56,23 +56,29 @@ func (r *Reading) ToContract() (c contract.Reading) {
 	return c
 }
 
-func (r *Reading) FromContract(from contract.Reading) (err error) {
+func (r *Reading) FromContract(from contract.Reading) (id string, err error) {
 	r.Id, r.Uuid, err = fromContractId(from.Id)
 	if err != nil {
 		return
 	}
 
-	r.Pushed = from.Pushed
 	r.Created = from.Created
-	r.Origin = from.Origin
 	r.Modified = from.Modified
+	r.Origin = from.Origin
+	r.Pushed = from.Pushed
 	r.Device = from.Device
 	r.Name = from.Name
 	r.Value = from.Value
 
-	if r.Created == 0 {
-		r.Created = db.MakeTimestamp()
-	}
-
+	id = toContractId(r.Id, r.Uuid)
 	return
+}
+
+func (r *Reading) TimestampForUpdate() {
+	r.Modified = db.MakeTimestamp()
+}
+
+func (r *Reading) TimestampForAdd() {
+	r.TimestampForUpdate()
+	r.Created = r.Modified
 }

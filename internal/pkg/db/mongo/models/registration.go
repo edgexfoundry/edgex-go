@@ -15,16 +15,28 @@
 package models
 
 import (
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	contract "github.com/edgexfoundry/edgex-go/pkg/models"
 	"github.com/globalsign/mgo/bson"
 )
 
+type Filter struct {
+	DeviceIDs          []string `bson:"deviceIdentifiers,omitempty"`
+	ValueDescriptorIDs []string `bson:"valueDescriptorIdentifiers,omitempty"`
+}
+
+type EncryptionDetails struct {
+	Algo       string `bson:"encryptionAlgorithm,omitempty"`
+	Key        string `bson:"encryptionKey,omitempty"`
+	InitVector string `bson:"initializingVector,omitempty"`
+}
+
 type Registration struct {
+	Created     int64         `bson:"created"`
+	Modified    int64         `bson:"modified"`
+	Origin      int64         `bson:"origin"`
 	ID          bson.ObjectId `bson:"_id,omitempty"`
 	Uuid        string        `bson:"uuid,omitempty"`
-	Created     int64
-	Modified    int64
-	Origin      int64
 	Name        string
 	Addressable Addressable
 	Format      string
@@ -48,8 +60,14 @@ func (r *Registration) ToContract() (c contract.Registration) {
 	c.Name = r.Name
 	c.Addressable = r.Addressable.ToContract()
 	c.Format = r.Format
-	c.Filter = r.Filter.ToContract()
-	c.Encryption = r.Encryption.ToContract()
+
+	c.Filter.DeviceIDs = r.Filter.DeviceIDs
+	c.Filter.ValueDescriptorIDs = r.Filter.ValueDescriptorIDs
+
+	c.Encryption.Algo = r.Encryption.Algo
+	c.Encryption.Key = r.Encryption.Key
+	c.Encryption.InitVector = r.Encryption.InitVector
+
 	c.Compression = r.Compression
 	c.Enable = r.Enable
 	c.Destination = r.Destination
@@ -57,34 +75,45 @@ func (r *Registration) ToContract() (c contract.Registration) {
 	return
 }
 
-func (r *Registration) FromContract(c contract.Registration) (contractId string, err error){
-	r.ID, r.Uuid, err = fromContractId(c.ID)
+func (r *Registration) FromContract(from contract.Registration) (id string, err error) {
+	r.ID, r.Uuid, err = fromContractId(from.ID)
 	if err != nil {
 		return
 	}
 
-	r.Created = c.Created
-	r.Modified = c.Modified
-	r.Origin = c.Origin
-	r.Name = c.Name
+	r.Created = from.Created
+	r.Modified = from.Modified
+	r.Origin = from.Origin
+	r.Name = from.Name
 
 	r.Addressable = Addressable{}
-	err = r.Addressable.FromContract(c.Addressable)
+	_, err = r.Addressable.FromContract(from.Addressable)
 	if err != nil {
 		return
 	}
 
-	r.Format = c.Format
+	r.Format = from.Format
 
-	r.Filter = Filter{}
-	r.Filter.FromContract(c.Filter)
+	r.Filter.DeviceIDs = from.Filter.DeviceIDs
+	r.Filter.ValueDescriptorIDs = from.Filter.ValueDescriptorIDs
 
-	r.Encryption = EncryptionDetails{}
-	r.Encryption.FromContract(c.Encryption)
+	r.Encryption.Algo = from.Encryption.Algo
+	r.Encryption.Key = from.Encryption.Key
+	r.Encryption.InitVector = from.Encryption.InitVector
 
-	r.Compression = c.Compression
-	r.Enable = c.Enable
-	r.Destination = c.Destination
+	r.Compression = from.Compression
+	r.Enable = from.Enable
+	r.Destination = from.Destination
 
-	return toContractId(r.ID, r.Uuid), nil
+	id = toContractId(r.ID, r.Uuid)
+	return
+}
+
+func (r *Registration) TimestampForUpdate() {
+	r.Modified = db.MakeTimestamp()
+}
+
+func (r *Registration) TimestampForAdd() {
+	r.TimestampForUpdate()
+	r.Created = r.Modified
 }

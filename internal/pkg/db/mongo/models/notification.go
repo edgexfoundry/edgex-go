@@ -22,6 +22,9 @@ import (
 )
 
 type Notification struct {
+	Created     int64                          `bson:"created"`
+	Modified    int64                          `bson:"modified"`
+	Origin      int64                          `bson:"origin"`
 	Id          bson.ObjectId                  `bson:"_id,omitempty"`
 	Uuid        string                         `bson:"uuid,omitempty"`
 	Slug        string                         `bson:"slug"`
@@ -33,9 +36,6 @@ type Notification struct {
 	Status      contract.NotificationsStatus   `bson:"status"`
 	Labels      []string                       `bson:"labels,omitempty"`
 	ContentType string                         `bson:"contenttype"`
-	Created     int64                          `bson:"created"`
-	Modified    int64                          `bson:"modified"`
-	Origin      int64                          `bson:"origin"`
 }
 
 func (n *Notification) ToContract() (c contract.Notification) {
@@ -45,6 +45,9 @@ func (n *Notification) ToContract() (c contract.Notification) {
 	}
 
 	c.ID = id
+	c.Created = n.Created
+	c.Modified = n.Modified
+	c.Origin = n.Origin
 	c.Slug = n.Slug
 	c.Sender = n.Sender
 	c.Category = n.Category
@@ -54,18 +57,19 @@ func (n *Notification) ToContract() (c contract.Notification) {
 	c.Status = n.Status
 	c.Labels = n.Labels
 	c.ContentType = n.ContentType
-	c.Created = n.Created
-	c.Modified = n.Modified
-	c.Origin = n.Origin
 
 	return
 }
 
-func (n *Notification) FromContract(from contract.Notification) (err error) {
+func (n *Notification) FromContract(from contract.Notification) (id string, err error) {
 	n.Id, n.Uuid, err = fromContractId(from.ID)
 	if err != nil {
 		return
 	}
+
+	n.Created = from.Created
+	n.Modified = from.Modified
+	n.Origin = from.Origin
 	n.Slug = from.Slug
 	n.Sender = from.Sender
 	n.Category = from.Category
@@ -75,12 +79,16 @@ func (n *Notification) FromContract(from contract.Notification) (err error) {
 	n.Status = from.Status
 	n.Labels = from.Labels
 	n.ContentType = from.ContentType
-	n.Created = from.Created
-	if n.Created == 0 {
-		n.Created = db.MakeTimestamp()
-	}
-	n.Modified = from.Modified
-	n.Origin = from.Origin
 
+	id = toContractId(n.Id, n.Uuid)
 	return
+}
+
+func (n *Notification) TimestampForUpdate() {
+	n.Modified = db.MakeTimestamp()
+}
+
+func (n *Notification) TimestampForAdd() {
+	n.TimestampForUpdate()
+	n.Created = n.Modified
 }
