@@ -258,7 +258,7 @@ parts:
     prime: [-*]
   go:
     after: [glide]
-    source-tag: go1.10.2
+    source-tag: go1.11.2
     source-depth: 1
   glide:
     after:
