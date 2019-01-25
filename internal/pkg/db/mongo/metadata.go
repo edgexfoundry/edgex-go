@@ -557,12 +557,12 @@ func (mc MongoClient) UpdateDeviceProfile(dp contract.DeviceProfile) error {
 
 // Get the device profiles that are currently using the command
 func (mc MongoClient) GetDeviceProfilesUsingCommand(c contract.Command) ([]contract.DeviceProfile, error) {
-	query, err := idToBsonM(c.Id)
+	command, err := mc.getCommandById(c.Id)
 	if err != nil {
 		return []contract.DeviceProfile{}, err
 	}
 
-	dps, err := mc.getDeviceProfiles(bson.M{"commands": bson.M{"$elemMatch": query}})
+	dps, err := mc.getDeviceProfiles(bson.M{"commands.$id": command.Id})
 	if err != nil {
 		return []contract.DeviceProfile{}, err
 	}
