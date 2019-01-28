@@ -2,459 +2,339 @@
 Modbus - Adding a Device to EdgeX
 #################################
 
-EdgeX - Barcelona Release
+EdgeX - Delhi Release
 
-Ubuntu Desktop 16.04 with Docker/Docker-Compose
+PowerScout 3037 Power Submeter
 
-Adding a new Modbus RTU Device 
+https://shop.dentinstruments.com/products/powerscout-3037-ps3037
+https://www.dentinstruments.com/hs-fs/hub/472997/file-2378482732-pdf/Pdf_Files/PS3037_Manual.pdf
 
-.. image:: EdgeX_ExamplesDatanabSensor.JPG
+.. image:: powerscout.png
+    :scale: 50%
+    :alt: PowerScout 3037 Power Submeter
 
-Datanab Modbus Enabled Room Temperature & Humidity Sensor w/ LCD
+In this example, we simulate the PowerScout meter instead of using a real device. This provides a straight-forward way to test the device-modbus features.
 
+.. image:: simulator.png
+    :scale: 50%
+    :alt: Modbus Simulator
+
+Environment
+===========
+
+You can use any operating system that can install docker and docker-compose. In this example, we use Photon OS to delpoy EdgeX using docker. The system requirements can be found at https://docs.edgexfoundry.org/Ch-GettingStartedUsers.html#what-you-need.
+
+.. image:: PhotonOS.png
+    :scale: 50%
+    :alt: Photon Operating System
+
+.. image:: PhotonOSversion.png
+    :scale: 50%
+    :alt: Version Information
+
+
+Modbus Device (Simulator)
 =========================
-Project Components Needed
-=========================
 
-**Hardware needed**
+http://modbuspal.sourceforge.net/
 
-X86 computer with native RS485 communication device or RS485 adapter
+To simulate sensors, such as temperature and humidity, do the following:
 
-Datanab Modbus Enabled Room Temp/Humidity Sensor w/ LCD
+1. Add two mock devices:
 
--- http://www.datanab.com/sensors/modbus_rth_lcd.php
+.. image:: addmockdevices.png
+    :scale: 50%
+    :alt: Add Mock Devices
 
-**Software needed**
+2. Add registers according to the device manual:
 
-Ubuntu Desktop 16.04 - new installation
+    .. image:: addregisters.png
+        :scale: 50%
+        :alt: Add Registers
 
-The following software was installed via the “apt-get install” command (ubuntu default)
+3. Add the ModbusPal support value auto-generator, which can bind to registers:
 
-* git
-* curl
-* vim (or your favorite editor)
-* java (I used openjdk-8-jdk - 1.8.0_131)
-* maven
-* docker
-* docker-compose
+    .. image:: addvaluegen.png
+        :scale: 50%
+        :alt: Add Device Value Generators
 
-The following software was installed from 3rd parties
+    .. image:: bindvalue.png
+        :scale: 50%
+        :alt: Bind Value Generator
 
-Postman (Linux 64bit)
 
--- https://www.getpostman.com/
+Set Up Before Starting Services
+===============================
 
-EdgeX - barcelona-docker-compose.yaml
+The following sections describe how to complete the set up before starting the services. If you prefer to start the services and then add the device, see `Set Up After Starting Services`_
 
--- https://github.com/edgexfoundry/developer-scripts/blob/master/docker-compose.yml
+Set Up Device Profile
+---------------------
 
-**Modbus - Device documentation**
+The DeviceProfile defines the device's values and operation method, which can be Read or Write. 
 
--- http://www.datanab.com/zc/docs/sensors/MBus_RTH_LCD.pdf
+You can download and use the provided :download:`mqtt.test.device.profile.yml
+<mqtt.test.device.profile.yml>`.
 
-Modbus - Device communication settings
+In the Modbus protocol, we must define attributes: 
 
-Modbus device Baud rate = 19200
+* ``primaryTable``: HOLDING_REGISTERS, INPUT_REGISTERS, COILS, DISCRETES_INPUT
+* ``startingAddress`` specifies the address in Modbus device
 
-Modbus device Parity = N (none)
+    .. image:: attributes.png
+        :scale: 50%
+        :alt: DeviceProfile Attributes
 
-Modbus device Data bits = 8
+The Property value type decides how many registers will be read. Like Holding registers, a register has 16 bits. If the device manual specifies that a value has two registers, define it as FLOAT32 or INT32 or UINT32 in the deviceProfile.
 
-Modbus device Stop bits = 1
-Modbus device address: 254 (device specific)
-Modbus device register: 100, 101, 102 (device specific)
-Modbus device register data type: Integer/Floating point (device specific)
+Once we execute a command, device-modbus knows its value type and register type, startingAddress, and register length. So it can read or write value using the modbus protocol.
 
-**Gateway RS485 Port Configuration**
+    .. image:: properties.png
+        :scale: 50%
+        :alt: Properties
 
-For the Dell Edge Gateway 5000:
+|
+|
 
-* Port = “COM 3 (/dev/ttyS5)”
-* Port pin 1 = DATA +
-* Port pin 2 = DATA -
-* Port pin 3 = GND
+    .. image:: holdingregisters.png
+        :scale: 70%
+        :alt: Holding Registers
 
-**Ensuring success**
+|
+|
 
-Verify the following, prior to following the instruction on the following pages
+    .. image:: profileyaml.png
+        :scale: 70%
+        :alt: Profile YAML
 
-Is the COM port set to RS485?
 
-Does the Modbus device power on?
+Set Up Device Service Configuration
+-----------------------------------
 
-With a separate utility, can you read(from)/write(to) the modbus device?
+Use this configuration file to define devices and schedule jobs. The device-modbus generates a relative instance on startup.
 
-**Creating the Modbus yaml file**
+device-modbus offers two types of protocol, Modbus TCP and Modbus RTU. An addressable can be defined as shown below:
 
-.. _`Modbus device yaml`: https://github.com/edgexfoundry/device-modbus/blob/master/src/main/resources/GS1-10P5.profile.yaml
-..
+   .. csv-table:: Modbus Protocols
+       :header: "protocol", "Name", "Protocol", "Address", "Port", "Path"
+       :widths: 20, 20, 10, 20, 10, 10
 
-An example Modbus device yaml file can be found here: `Modbus device yaml`_. 
+       "Modbus TCP", "Gateway address 1", "TCP", "10.211.55.6", "502", "1"
+       "Modbus RTU", "Gateway address 2", "RTU", "/tmp/slave,19200,8,1,0", "502", "2"
 
-.. _`this example Modbus device yaml`: https://github.com/chadbyoung/edgexfoundry-modbus-profiles/blob/master/datanab-modbus-temp-humidity/MBUS_RTH_LCD.yaml
-..
+Path defines the Modbus device's unit ID (or slave ID).
 
-The Modbus device yaml file used in this example can be found here: `this example Modbus device yaml`_. 
+In the RTU protocol, address is defined in five comma-separated parts:
 
-When you are creating your yaml file you will need to know what command options are available to use, they can be found here:
-
-https://github.com/edgexfoundry/core-domain/blob/master/src/main/java/org/edgexfoundry/domain/meta/PropertyValue.java
-
-With your favorite file editor, open the file
-
-Modify the following fields
-
-* name <-- A/a ~Z/z and 0 ~ 9 && this will be needed in the future
-* manufacturer <-- A/a ~Z/z and 0 ~ 9
-* model <-- A/a ~Z/z and 0 ~ 9
-* description <-- A/a ~Z/z and 0 ~ 9
-* labels <-- A/a ~Z/z and 0 ~ 9
-
-
-deviceResources
-
-* name: <-- A/a ~Z/z and 0 ~ 9
-* description: <-- A/a ~Z/z and 0 ~ 9
-* attributes: only edit the text inside the parenthesis
-* value: only edit the text inside the parenthesis
-* units: only edit the text inside the parenthesis
-
-resources
-
-* name: <-- A/a ~Z/z and 0 ~ 9
-* get : only edit the text inside the parenthesis
-* set: only edit the text inside the parenthesis
-
-commands
-
-* name: <-- A/a ~Z/z and 0 ~ 9
-* path: "/api/v1/device/{deviceId}/OnlyEditThisWord" <-- A/a ~Z/z and 0 ~ 9
-* Code ”200”
-
-  * expectedvalues: [make same as OnlyEditThisWord]
-* Code ”500”
-
-  * Do not edit this section 
-
-**Bringing up EdgeX via Docker**
-
-Starting with following system configuration:
-
-* A fresh installation of Ubuntu Desktop 16.04 with all the available system updates.
-* A working directory > /home/tester/Development/edgex
-
-**Verify your Docker installation**
-
-Verify that Docker is installed and working as expected.
-
->$ sudo docker run hello-world
-
-Verify that the image is on the system
-
->$ sudo docker ps -a
-
-**Download docker-compose file**
-
-* Download the barcelona-docker-compose.yaml file from the EdgeX Wiki
-* Go to “https://wiki.edgexfoundry.org/display/FA/Barcelona”
-* Scroll to the bottom a look for the “barcelona-docker-compose.yml” file. Once downloaded, rename the file to “docker-compose.yml”
-* Once the file is download, move the file into your desired working directory.
-* Create a copy of the file and rename the copy “docker-compose.yml”
-
-**Verify the version of dockerized EdgeX that you will be running**
-
-* With your favorite file editor, open the docker-compose.yml file
-* Within the first couple of lines you will see the word “Version”, next to that you will see a number - it should  be “2”.
-* Version 2 refers to the Barcelona release
-
-**Enable Modbus in the Docker Compose file**
-
-With your favorite file editor, open the docker-compose file
-
-Find the section “device-modbus” section, which will be commented out with “#” symbols.
-
-Uncomment the entire section
-
-Save your changes and exit out of the editor
-Starting EdgeX Docker components
-
-Start Edgex by using the following commands
-
-+------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-|   **Docker Command**               |   **Description**                                                                   |  **Suggested Waiti Time After Completing**     |
-+====================================+=====================================================================================+================================================+
-| **docker-compose pull**            |  Pull down, but don't start, all the EdgeX Foundry microservices                    | Docker Compose will indicate when all the      |
-|                                    |                                                                                     | containers have been pulled successfully       |     
-+------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-| docker-compose up -d volume        |  Start the EdgeX Foundry file volume--must be done before the other services are    | A couple of seconds                            |
-|                                    |  started                                                                            |                                                |   
-+------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-| docker-compose up -d config-seed   |  Start and populate the configuration/registry microservice which all services must | 60 seconds                                     |
-|                                    |  register with and get their configuration from                                     |                                                | 
-+------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-| docker-compose up -d mongo         |  Start the NoSQL MongoDB container                                                  | 10 seconds                                     | 
-+------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-| docker-compose up -d logging       |  Start the logging microservice - used by all micro services that make log entries  | 1 minute                                       | 
-+------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-| docker-compose up -d notifications |  Start the notifications and alerts microservice--used by many of the microservices | 30 seconds                                     | 
-+------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-| docker-compose up -d metadata      |  Start the Core Metadata microservice                                               | 1 minute                                       | 
-+------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-| docker-compose up -d data          |  Start the Core Data microservice                                                   | 1 minute                                       | 
-+------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-| docker-compose up -d command       |  Start the Core Command microservice                                                | 1 minute                                       | 
-+------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-| docker-compose up -d scheduler     |  Start the scheduling microservice -used by many of the microservices               | 1 minute                                       |
-+------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-| docker-compose up -d export-client |  Start the Export Client registration microservice                                  | 1 minute                                       |
-+------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-| docker-compose up -d export-distro |  Start the Export Distribution microservice                                         | 1 minute                                       |
-+------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-| docker-compose up -d rulesengine   |  Start the Rules Engine microservice                                                | 1 minute                                       |
-+------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-| docker-compose up -d device-virtual|  Start the virtual device service                                                   | 1 minute                                       |
-+------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-| docker-compose up -d device-modbus |  Start the Modbus device service                                                    | 1 minute                                       |
-+------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-
-
-Check the containers status
-
-Run a "docker ps -a" command to confirm that all the containers have been downloaded and started
-
-Show containers
-
-To get a list of all the EdgeX containers, you can use “docker-compose config --services”
-
-Stop Containers
-
-To stop (but not remove) all containers, issue “docker-compose stop”.
-
-To stop an individual container, you can use “docker-compose stop [compose-container-name]”.
-
-Start Containers
-
-To start all the containers (after a stop) issue "docker-compose start" to re-start
-
-To start an individual container, you can use "docker-compose start [compose-container-name]" (after that container has been stopped).
-
-Delete Containers *** DANGER ***
-
-To stop all the containers running and DELETE them, you can use “docker-compose down”
-
-**EdgeX Foundry Container Logs**
-
-To view the log of any container, use the command:
-
-"docker-compose logs -f compose-contatainer-name"
-
-(ex. docker-compose logs -f edgex-device-snmp)
-
-At this point the Dockerized version of EdgeX is running.
-
-**Adding the Device to EdgeX**
-
-**Importing APIs**
-
-In this section you will be using the program Postman to interact with EdgeX. You will also need to have the file “core-metadata.raml” available to load into the Postman application.  The file “core-metadata.raml” can be found here: “edgex/core-metadata…./src/test/resources/raml/core-metadata.raml”
-
-**Viewing available APIs**
-
-* Open Postman
-* Click on the Import button
-* Add the file to the import dialog box - the application will take a about 30 seconds to digest the file you added.
-* If a list of API commands do not show up on the left hand side of the application then click on the “Collections” tab to the right of the “History” tab.
-
-**Create an addressable**
-
-* In the “Collections” tab, select the option “POST /addressable action
-* Open the body tab
-* Modify its contents
-
-  * name: mbus-rth-lcd-address
-  * protocol: OTHER (needs to be in ALL CAPS)
-  * address: /dev/ttyS5,19200,8,1,0
-
-    * (actual path to device, baud rate, data bits, stop bits, parity)
-    * (parity - none = 0, odd = 1, even = 2)
-
-  * port: leave unchanged (since using OTHER, it is ignored)
-  * path: 254 (this is where you enter the Modbus Slave ID)
-  * publisher, user, password, topic - do not need to be modified
-
-* Press the “Send” button when you are finished
-* Note the addressable id
-
-**Upload the profile**
-
-* In the “Collections” tab select the option “POST /deviceprofile/uploadfile
-* Open the body tab
-
-  * Under “Key”, look for the drop down menu for “text”. Be sure to write “file” in the open box.
-  * Under “Value” click  “Choose Files”, locate your profile file.
-
-* Press Upload
-* Press the “Send” button when you are finished
-* Note the profile id
-
-**Post the device**
-
-* In the “Collections” tab select the option “POST /device
-* Click on the “Body” tab
-* Modify its contents
-
-  * There are three components that are required to be modified. They are:
-
-    * “Service”
-    * “Profile”
-    * “Addressable”
-    * The others can be modified, however they are not required for operation
-
-  * name: mbus-rth-lcd-device
-  * description: modbus-thermostat
-  * addressable:
-
-    * name: mbus-rth-lcd-address (same as used in addressable)
-    * labels: “temperature”, “modbus”,”industrial” (same as used in modbus device profile)
-
-  * service:
-
-    * name: edgex-device-modbus
-
-  * profile:
-
-    * name: mbus-rth-lcd (same as used in modbus device profile)
-
-* Press the “Send” button when you are finished
-* Note the addressable id
-
-**What if a Mistake is Made**
-
-* Get device id
-* Delete device id
-* Get device profile id
-* Delete device profile id
-* Get addressable id
-* Delete addressable id
-
-**Verify Device Added**
-
-Check the edgex-device-modbus logs to see if the device was added without issue
-
-“sudo docker logs -f --tail 100 edgex-device-modbus”
-
-**Creating a Scheduled Event**
-
-This is used to regularly get & push data to another service or for regularly viewing data.
-Gathering information for the addressable
-
-Got to http://localhost:48082/api/v1/device
-
-Look for the id or the device that you want to schedule an event for
+* serial port
+* baud rate 
+* data bits
+* stop bits
+* parity (N - None is 0, O - Odd is 1, E - Even is 2, default is E).
 
 ::
 
-  [
+    [Logging]
+    EnableRemote = false
+    File = "./device-Modbus.log"
+    Level = "DEBUG"
 
-     {
+    [Device]
+      DataTransform = true
+      InitCmd = ""
+      InitCmdArgs = ""
+      MaxCmdOps = 128
+      MaxCmdValueLen = 256
+      RemoveCmd = ""
+      RemoveCmdArgs = ""
+      ProfileDir = "/custom-config"
 
-         "name": "mbus-rth-lcd-device",
+    # Pre-define Devices
+    [[DeviceList]]
+      Name = "Modbus TCP test device"
+      Profile = "Network Power Meter"
+      Description = "This device is a product for monitoring and controlling digital inputs and outputs over a LAN."
+      labels = [ "Air conditioner","modbus TCP" ]
+      [DeviceList.Addressable]
+        name = "Gateway address 1"
+        Protocol = "TCP"
+        Address = "10.211.55.6"
+        Port = 502
+        Path = "1"
+    
+    [[DeviceList]]
+      Name = "Modbus TCP test device 2"
+      Profile = "Network Power Meter"
+      Description = "This device is a product for monitoring and controlling digital inputs and outputs over a LAN."
+      labels = [ "Air conditioner","modbus TCP" ]
+      [DeviceList.Addressable]
+        name = "Gateway address 1"
+        Protocol = "TCP"
+        Address = "10.211.55.6"
+        Port = 502
+        Path = "2"
 
-         "id": "5a1dd585e4b0c3936013123d",  <--- This
+   # Pre-define Schedule Configuration
+    [[Schedules]]
+    Name = "20sec-schedule"
+    Frequency = "PT20S"
 
-         "description": "living room HVAC thermostat",
+    [[ScheduleEvents]]
+    Name = "Read Switch status"
+    Schedule = "20sec-schedule"
+      [ScheduleEvents.Addressable]
+      HTTPMethod = "GET"
+    Path = "/api/v1/device/name/Modbus TCP test device 1/Configuration"
 
-         "labels": [
+    [[ScheduleEvents]]
+    Name = "Put Configuration"
+    Parameters = "[{\"DemandWindowSize\": \"110\"},{\"LineFrequency\": \"50\"}]"
+    Schedule = "20sec-schedule"
+      [ScheduleEvents.Addressable]
+      HTTPMethod = "Put"
+      Path = "/api/v1/device/name/Modbus TCP test device 1/Configuration"
 
-             "temperature",
+You can download and use the provided :download:`EdgeX_ExampleModbus_configuration.toml
+<EdgeX_ExampleModbus_configuration.toml>`.
 
-             "modbus",
+Add Device Service to docker-compose File
+-----------------------------------------
 
-             "industrial"
+Because we deploy EdgeX using docker-compose, we must add the device-modbus to the docker-compose file ( https://github.com/edgexfoundry/developer-scripts/blob/master/compose-files/docker-compose-delhi-0.7.0.yml ). If you have prepared configuration files, you can mount them using volumes and change the entrypoint for device-modbus internal use.
 
-         ],
+    .. image:: config_changes.png
+        :scale: 50%
+        :alt: configuration.toml Updates
 
-         "adminState": "unlocked",
+Start EdgeX Foundry on Docker
+=============================
 
-In this example the id is “5a1dd585e4b0c3936013123d”
+Finally, we can deploy EdgeX in the Photon OS.
 
-Next you want to get the “name” of the command you want to schedule an event for
+1. Prepare configuration files by moving the files to the Photon OS
 
-::
+2. Deploy EdgeX using the following commands::
 
-  "commands": [
-              {
-                 "id": "5a1dcdfce4b0c39360131239",
-                 "name": "TemperatureDegF", <--- This
-                 "get": {
-                     "url": "http://localhost:48082/api/v1/device/5a1dd585e4b0c3936013123d/command/5a1dcdfce4b0c39360131239",
-                     "responses": [
-                         {
-                             "code": "200",
-                             "description": "Get the temperature in degrees F",
-                             "expectedValues": [
-                                 "TemperatureDegF"
-                             ]
+    docker-compose pull
+    docker-compose up -d
 
+ .. image:: startEdgeX.png
+      :scale: 50%
+      :alt: Start EdgeX
+
+3. Check the consul dashboard
+
+    .. image:: consul.png
+        :scale: 50%
+        :alt: Consul Dashboard
 
 
-In this example the name is "TemperatureDegF".
+Set Up After Starting Services
+==============================
 
-**Create addressable**
+If the services are already running and you want to add a device, you can use the Core Metadata API as outlined in this section. If you set up the device profile and Service as described in `Set Up Before Starting Services`_, you can skip this section.
 
-In this section you will need to supply a path the the item you want to schedule.
+To add a device after starting the services, complete the following steps:
 
-The path outline is:
+1. Upload the device profile above to metadata with a POST to http://localhost:48081/api/v1/deviceprofile/uploadfile and add the file as key “file” to the body in form-data format, and the created ID will be returned.  The following figure is an example if you use Postman to send the request
 
-/api/v1/device/{device id}/{command name}
+    .. image:: upload_profile.png
+        :scale: 50%
+        :alt: Uploading the Profile
 
-In this case, the address would be
+2. Add the addressable containing reachability information for the device with a POST to http://localhost:48081/api/v1/addressable: 
 
-::
+    a. If IP connected, the body will look something like: { “name”: “Motor”, “method”: “GET”, “protocol”: “HTTP”, “address”: “10.0.1.29”, “port”: 502 } 
+    b. If serially connected, the body will look something like: { “name”: “Motor”, “method”: “GET”, “protocol”: “OTHER”, “address”: “/dev/ttyS5,9600,8,1,1”, “port”: 0 } (address field contains port, baud rate, number of data bits, stop bits, and parity bits in CSV form)
+
+3. Ensure the Modbus device service is running, adjust the service name below to match if necessary or if using other device services.
+
+4. Add the device with a POST to http://localhost:48081/api/v1/device, the body will look something like::
+
+    {
+      "description": "MicroMax Variable Speed Motor",
+      "name": "Variable Speed motor",
+      "adminState": "unlocked",
+      "operatingState": "enabled",
+      "addressable": {
+        "name": "Motor"
  
-  /api/v1/device/5a1dd585e4b0c3936013123d/TemperatureDegF
-
-  /POST addressable
-
-      “name”: “schedule-mbus-rth-lcd”
-
-      “protocol”: “HTTP”
-
-      “address”: “edgex-device-modbus”
-
-      “port”: “49991”
-
-      “path”: “/api/v1/device/5a1dd585e4b0c3936013123d/TemperatureDegF”
+      },
+      "labels": [
  
-      “method”: “GET”  *** This will need to be added ***
+      ],
+      "location": null,
+      "service": {
+        "name": "edgex-device-modbus"
+ 
+      },
+      "profile": {
+        "name": "GS1-VariableSpeedMotor"
+ 
+      }
+    }
 
-**Create a schedule**
+   The addressable name must match/refer to the addressable added in Step 2, the service name must match/refer to the target device service, and the profile name must match the device profile name from Step 1.
 
-::
+Execute Commands
+================
 
-  /POST schedule
+Now we're ready to run some commands.
 
-      “name”: “interval-mbus-rth-lcd”
+Find Executable Commands
+------------------------
 
-      “start”: null (remove parenthesis and replace)
+Use the following query to find executable commands::
 
-      “end”: null (remove parenthesis and replace)
+    photon-ip:48082/api/v1/device
 
-      “frequency”: “PT5S”
+|
 
-**Create an event that will use the schedule**
+    .. image:: commands.png
+        :scale: 50%
+        :alt: Executable Commands
 
-::
+Execute GET command
+-------------------
 
-  /POST scheduleevent
+Replace *<host>* with the server IP when running the edgex-core-command.
 
-      “name”: “device-mbus-rth-lcd”
+    .. image:: getcommand.png
+        :scale: 50%
+        :alt: GET Command
 
-      “addressable”:{“name”:”schedule-mbus-rth-lcd”}
+Execute PUT command
+-------------------
 
-      “schedule”: “interval-mbus-rth-lcd”
+Execute PUT command according to ``url`` and ``parameterNames``.
 
-      “service”: “edgex-device-modbus” *** This will need to be added ***
+    .. image:: putcommand.png
+        :scale: 50%
+        :alt: PUT Command
+
+|
+|
+
+    .. image:: putModbusPal.png
+        :scale: 50%
+        :alt: PUT ModbusPal
+
+Schedule Job
+============
+
+After service startup, query core-data's reading API. The results show that the service auto-executes the command every 20 seconds.
+
+    .. image:: scheduleconfig.png
+        :scale: 50%
+        :alt: Schedule Configuration
+
+|
+|
+
+    .. image:: getreading.png
+        :scale: 50%
+        :alt: GET Readings
+
 
 
 
