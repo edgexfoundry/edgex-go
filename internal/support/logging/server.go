@@ -83,7 +83,7 @@ func getCriteria(w http.ResponseWriter, r *http.Request) *matchCriteria {
 		if err != nil {
 			s = fmt.Sprintf("Could not parse limit %s", limit)
 		} else if criteria.Limit < 0 {
-			s = fmt.Sprintf("Limit is not positive %d", criteria.Limit)
+			s = fmt.Sprintf("Limit cannot be negative %d", criteria.Limit)
 		}
 		if len(s) > 0 {
 			w.WriteHeader(http.StatusBadRequest)
@@ -102,7 +102,7 @@ func getCriteria(w http.ResponseWriter, r *http.Request) *matchCriteria {
 		if err != nil {
 			s = fmt.Sprintf("Could not parse start %s", start)
 		} else if criteria.Start < 0 {
-			s = fmt.Sprintf("Start is not positive %d", criteria.Start)
+			s = fmt.Sprintf("Start cannot be negative %d", criteria.Start)
 		}
 		if len(s) > 0 {
 			w.WriteHeader(http.StatusBadRequest)
@@ -119,7 +119,7 @@ func getCriteria(w http.ResponseWriter, r *http.Request) *matchCriteria {
 		if err != nil {
 			s = fmt.Sprintf("Could not parse end %s", end)
 		} else if criteria.End < 0 {
-			s = fmt.Sprintf("End is not positive %d", criteria.End)
+			s = fmt.Sprintf("End cannot be negative %d", criteria.End)
 		}
 		if len(s) > 0 {
 			w.WriteHeader(http.StatusBadRequest)
@@ -138,9 +138,9 @@ func getCriteria(w http.ResponseWriter, r *http.Request) *matchCriteria {
 		if err != nil {
 			s = fmt.Sprintf("Could not parse age %s", age)
 		} else if criteria.End < 0 {
-			s = fmt.Sprintf("Age is not positive %d", criteria.End)
+			s = fmt.Sprintf("Age cannot be negative %d", criteria.End)
 		} else if criteria.End > now {
-			s = fmt.Sprintf("Age is too much big %d", criteria.End)
+			s = fmt.Sprintf("Age value too large %d", criteria.End)
 		}
 		if len(s) > 0 {
 			w.WriteHeader(http.StatusBadRequest)
