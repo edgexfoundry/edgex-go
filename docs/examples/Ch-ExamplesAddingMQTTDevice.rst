@@ -22,8 +22,6 @@ You can use any operating system that can install docker and docker-compose. In 
     :alt: Version Information
 
 
-Set up the Device mqtt-go Device Service, as described in https://docs.edgexfoundry.org/Ch-ExamplesMQTTDeviceService.html
-
 MQTT Broker
 -----------
 
@@ -97,8 +95,8 @@ MQTT is subscribe/publish pattern, so we must define the MQTT connection informa
         :scale: 50%
         :alt: configuration.toml File
 
-You can download and use the provided :download:`configuration.toml
-<configuration.toml>`.
+You can download and use the provided :download:`EdgeX_ExampleMQTT_configuration.toml
+<EdgeX_ExampleMQTT_configuration.toml>`.
 
 MQTT Driver Configuration
 =========================

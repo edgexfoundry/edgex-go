@@ -194,8 +194,8 @@ In the RTU protocol, address is defined in five comma-separated parts:
       HTTPMethod = "Put"
       Path = "/api/v1/device/name/Modbus TCP test device 1/Configuration"
 
-You can download and use the provided :download:`configuration.toml
-<configuration.toml>`.
+You can download and use the provided :download:`EdgeX_ExampleModbus_configuration.toml
+<EdgeX_ExampleModbus_configuration.toml>`.
 
 Add Device Service to docker-compose File
 -----------------------------------------
