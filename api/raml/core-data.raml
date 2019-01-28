@@ -153,7 +153,7 @@ schemas:
             required: false
             repeat: false
     get: 
-        description: "Return list of events with their associated readings for a given device, sort by event creation date. May be an empty list if none are associated to the device.  Note: does not yet handle device managers. LimitExceededException (HTTP 413) if the number of events exceeds the current max limit. ServiceException (HTTP 500) for unknown or unanticipated issues.  NotFoundException (HTTP 404) if the meta data checks are on and no device is found for supplied id."
+        description: "Return list of events with their associated readings for a given device, sorted by event modified date.  Newest events are at the top of list.  May be an empty list if none are associated to the device.  Note: does not yet handle device managers. LimitExceededException (HTTP 413) if the number of events exceeds the current max limit. ServiceException (HTTP 500) for unknown or unanticipated issues.  NotFoundException (HTTP 404) if the meta data checks are on and no device is found for supplied id."
         displayName: get events associated to a device
         responses: 
             "200": 
@@ -215,7 +215,7 @@ schemas:
             required: false
             repeat: false
     get: 
-        description: Return all events between a given begin and end date/time (in the form of longs). LimitExceededException (HTTP 413) if the number of events exceeds the current max limit. ServiceException (HTTP 500) for unknown or unanticipated issues.
+        description: Return all events between a given begin and end date/time (in the form of longs) sorted by event modified date.  Newest events are at the top of list. LimitExceededException (HTTP 413) if the number of events exceeds the current max limit. ServiceException (HTTP 500) for unknown or unanticipated issues.
         displayName: get events created in a time range
         responses: 
             "200": 
@@ -253,7 +253,7 @@ schemas:
             required: false
             repeat: false
     get: 
-        description: Return all readings associated to the device via the event, and filtered by those readings associated to the provided value descriptor.  LimitExceededException (HTTP 413) if the number of events (associated to the device) exceeds the current max limit. ServiceException (HTTP 500) for unknown or unanticipated issues.
+        description: Return all readings associated to the device via the event, and filtered by those readings associated to the provided value descriptor.  Sorted by event modified date, newest events are at the top of list.  LimitExceededException (HTTP 413) if the number of events (associated to the device) exceeds the current max limit. ServiceException (HTTP 500) for unknown or unanticipated issues.
         displayName: get readings by device and value descriptor
         responses: 
             "200": 
@@ -419,7 +419,7 @@ schemas:
             required: false
             repeat: false
     get: 
-        description: "Return list of all readings for a given device, sort by reading creation date. Note: does not yet handle device managers. LimitExceededException (HTTP 413) if the number of readings exceeds the current max limit. ServiceException (HTTP 500) for unknown or unanticipated issues. NotFoundException (HTTP 404) if meta checks are in place and if the device id or name does not match any existing devices."
+        description: "Return list of all readings for a given device, sorted by the readings modified date.  Newest readings are at the top of list.  Note: does not yet handle device managers. LimitExceededException (HTTP 413) if the number of readings exceeds the current max limit. ServiceException (HTTP 500) for unknown or unanticipated issues. NotFoundException (HTTP 404) if meta checks are in place and if the device id or name does not match any existing devices."
         displayName: get readings by device
         responses: 
             "200": 
@@ -459,7 +459,7 @@ schemas:
             required: true
             repeat: false
     get: 
-        description: Return a list of readings that are associated to a ValueDescripter by name and Device by name (or id). LimitExceededException (HTTP 413) if the number of readings exceeds the current max limit. ServiceException (HTTP 500) for unknown or unanticipated issues.
+        description: Return a list of readings that are associated to a ValueDescripter by name and Device by name (or id), sorted by the readings modified date.  Newest readings are at the top of list.  LimitExceededException (HTTP 413) if the number of readings exceeds the current max limit. ServiceException (HTTP 500) for unknown or unanticipated issues.
         displayName: get readings by value descriptor and device
         responses: 
             "200": 
@@ -491,7 +491,7 @@ schemas:
             required: false
             repeat: false
     get: 
-        description: Return a list of readings that are associated to a ValueDescripter by name. LimitExceededException (HTTP 413) if the number of readings exceeds the current max limit. ServiceException (HTTP 500) for unknown or unanticipated issues.
+        description: Return a list of readings that are associated to a ValueDescripter by name, sorted by the readings modified date.  Newest readings are at the top of list.  LimitExceededException (HTTP 413) if the number of readings exceeds the current max limit. ServiceException (HTTP 500) for unknown or unanticipated issues.
         displayName: get readings by value descriptor
         responses: 
             "200": 
@@ -523,7 +523,7 @@ schemas:
             required: false
             repeat: false
     get: 
-        description: Return a list of readings with an associated value descriptor of the UoM label specified. LimitExceededException (HTTP 413) if the number of readings exceeds the current max limit. ServiceException (HTTP 500) for unknown or unanticipated issues.
+        description: Return a list of readings with an associated value descriptor of the UoM label specified, sorted by the readings modified date.  Newest readings are at the top of list. LimitExceededException (HTTP 413) if the number of readings exceeds the current max limit. ServiceException (HTTP 500) for unknown or unanticipated issues.
         displayName: get readings by unit of measure
         responses: 
             "200": 
@@ -555,7 +555,7 @@ schemas:
             required: false
             repeat: false
     get: 
-        description: Return a list of readings with an associated value descriptor of the label specified. LimitExceededException (HTTP 413) if the number of readings exceeds the current max limit. ServiceException (HTTP 500) for unknown or unanticipated issues.
+        description: Return a list of readings with an associated value descriptor of the label specified, sorted by the readings modified date.  Newest readings are at the top of list. LimitExceededException (HTTP 413) if the number of readings exceeds the current max limit. ServiceException (HTTP 500) for unknown or unanticipated issues.
         displayName: get readings by label
         responses: 
             "200": 
@@ -587,7 +587,7 @@ schemas:
             required: false
             repeat: false
     get: 
-        description: Return a list of readings with an associated value descriptor of the type (IoTType) specified. LimitExceededException (HTTP 413) if the number of readings exceeds the current max limit. ServiceException (HTTP 500) for unknown or unanticipated issues.
+        description: Return a list of readings with an associated value descriptor of the type (IoTType) specified, sorted by the readings modified date.  Newest readings are at the top of list. LimitExceededException (HTTP 413) if the number of readings exceeds the current max limit. ServiceException (HTTP 500) for unknown or unanticipated issues.
         displayName: get readings by type
         responses: 
             "200": 
@@ -625,7 +625,7 @@ schemas:
             required: false
             repeat: false
     get: 
-        description: Return a list of readings between two timestamps - limited by the number specified in the limit parameter. LimitExceededException (HTTP 413) if the number of readings exceeds the current max limit. ServiceException (HTTP 500) for unknown or unanticipated issues.
+        description: Return a list of readings between two timestamps - limited by the number specified in the limit parameter, sorted by the readings modified date.  Newest readings are at the top of list. LimitExceededException (HTTP 413) if the number of readings exceeds the current max limit. ServiceException (HTTP 500) for unknown or unanticipated issues.
         responses: 
             "200": 
                 description: list of matching readings in this range (limited by the limit parameter)

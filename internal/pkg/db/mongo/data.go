@@ -211,6 +211,7 @@ func (mc MongoClient) getEvents(q bson.M) (me []models.Event, err error) {
 }
 
 // Get events with a limit
+// Sort the list before applying the limit so we can return the most recent events
 func (mc MongoClient) getEventsLimit(q bson.M, limit int) (me []models.Event, err error) {
 	s := mc.getSessionCopy()
 	defer s.Close()
@@ -220,7 +221,7 @@ func (mc MongoClient) getEventsLimit(q bson.M, limit int) (me []models.Event, er
 		return []models.Event{}, nil
 	}
 
-	err = s.DB(mc.database.Name).C(db.EventsCollection).Find(q).Limit(limit).All(&me)
+	err = s.DB(mc.database.Name).C(db.EventsCollection).Find(q).Sort("-modified").Limit(limit).All(&me)
 	if err != nil {
 		return []models.Event{}, errorMap(err)
 	}
@@ -377,6 +378,8 @@ func (mc MongoClient) ReadingsByDeviceAndValueDescriptor(deviceId, valueDescript
 	return mapReadings(mc.getReadingsLimit(bson.M{"device": deviceId, "name": valueDescriptor}, limit))
 }
 
+// Return a list of readings that match.
+// Sort the list before applying the limit so we can return the most recent readings
 func (mc MongoClient) getReadingsLimit(q bson.M, limit int) ([]models.Reading, error) {
 	s := mc.getSessionCopy()
 	defer s.Close()
@@ -387,7 +390,7 @@ func (mc MongoClient) getReadingsLimit(q bson.M, limit int) ([]models.Reading, e
 	}
 
 	var readings []models.Reading
-	if err := s.DB(mc.database.Name).C(db.ReadingsCollection).Find(q).Limit(limit).All(&readings); err != nil {
+	if err := s.DB(mc.database.Name).C(db.ReadingsCollection).Find(q).Sort("-modified").Limit(limit).All(&readings); err != nil {
 		return []models.Reading{}, errorMap(err)
 	}
 	return readings, nil
