@@ -128,6 +128,28 @@ func getCriteria(w http.ResponseWriter, r *http.Request) *matchCriteria {
 		}
 	}
 
+	age := vars["age"]
+	if len(age) > 0 {
+		criteria.Start = 0
+		now := db.MakeTimestamp()
+		var err error
+		criteria.End, err = strconv.ParseInt(age, 10, 64)
+		var s string
+		if err != nil {
+			s = fmt.Sprintf("Could not parse age %s", age)
+		} else if criteria.End < 0 {
+			s = fmt.Sprintf("Age is not positive %d", criteria.End)
+		} else if criteria.End > now {
+			s = fmt.Sprintf("Age is too much big %d", criteria.End)
+		}
+		if len(s) > 0 {
+			w.WriteHeader(http.StatusBadRequest)
+			io.WriteString(w, s)
+			return nil
+		}
+		criteria.End = now - criteria.End
+	}
+
 	services := vars["services"]
 	if len(services) > 0 {
 		criteria.OriginServices = append(criteria.OriginServices,
@@ -263,6 +285,7 @@ func HttpServer() http.Handler {
 	l.HandleFunc("/originServices/{services}/{start}/{end}", delLogs).Methods(http.MethodDelete)
 	l.HandleFunc("/logLevels/{levels}/{start}/{end}", delLogs).Methods(http.MethodDelete)
 	l.HandleFunc("/logLevels/{levels}/originServices/{services}/{start}/{end}", delLogs).Methods(http.MethodDelete)
+	l.HandleFunc("/removeold/age/{age}", delLogs).Methods(http.MethodDelete)
 
 	return r
 }
