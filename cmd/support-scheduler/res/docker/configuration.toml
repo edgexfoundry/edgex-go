@@ -28,6 +28,16 @@ File = '/edgex/logs/edgex-support-scheduler.log'
   Host = 'edgex-support-logging'
   Port = 48061
 
+[Databases]
+  [Databases.Primary]
+  Host = 'edgex-mongo'
+  Name = 'scheduler'
+  Password = 'password'
+  Port = 27017
+  Username = 'scheduler'
+  Timeout = 5000
+  Type = 'mongodb'
+
 [Intervals]
     [Intervals.Midnight]
     Name = 'midnight'
