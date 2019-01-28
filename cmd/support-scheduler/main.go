@@ -71,7 +71,7 @@ func main() {
 }
 
 func logBeforeInit(err error) {
-	scheduler.LoggingClient = logger.NewClient(internal.CoreCommandServiceKey, false, "", logger.InfoLog)
+	scheduler.LoggingClient = logger.NewClient(internal.SupportSchedulerServiceKey, false, "", logger.InfoLog)
 	scheduler.LoggingClient.Error(err.Error())
 }
 

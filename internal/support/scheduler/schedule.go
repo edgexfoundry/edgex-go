@@ -75,6 +75,7 @@ func deleteIntervalOperation(interval contract.Interval, intervalContext *Interv
 	intervalIdToContextMap[interval.ID] = intervalContext
 	intervalNameToContextMap[interval.Name] = intervalContext
 	delete(intervalIdToContextMap, interval.ID)
+	delete(intervalNameToContextMap, interval.Name)
 }
 
 func addIntervalActionOperation(interval contract.Interval, intervalAction contract.IntervalAction) {
@@ -382,8 +383,13 @@ func(qc *QueueClient)  RemoveIntervalActionQueue(intervalActionId string) error 
 		return errors.New(logMsg)
 	}
 
-	delete(intervalContext.IntervalActionsMap, intervalActionId)
+	action, exists := intervalContext.IntervalActionsMap[intervalActionId]
+	if exists {
+		delete(intervalActionNameToIntervalMap,action.Name)
+	}
 
+	delete(intervalContext.IntervalActionsMap, intervalActionId)
+	
 	LoggingClient.Info(fmt.Sprintf("removed the intervalAction with id: %s", intervalActionId))
 
 	return nil
