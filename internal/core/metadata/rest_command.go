@@ -95,7 +95,7 @@ func restUpdateCommand(w http.ResponseWriter, r *http.Request) {
 		// Loop through matched device profiles to ensure the name isn't duplicate
 		for _, profile := range dps {
 			for _, command := range profile.Commands {
-				if command.Name == c.Name && command.Id != c.Id {
+				if command.Name == c.Name {
 					err = errors.New("Error updating command: duplicate command name in device profile")
 					LoggingClient.Error(err.Error())
 					http.Error(w, err.Error(), http.StatusConflict)
