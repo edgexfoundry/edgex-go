@@ -37,14 +37,26 @@ Several EdgeX Foundry services depend on ZeroMQ for communications by default.
 
 The easiest way to get and install ZeroMQ on Linux is to use this [setup script](https://gist.github.com/katopz/8b766a5cb0ca96c816658e9407e83d00).
 
-For MacOS, use brew: 
+For macOS, use brew: 
 ```
 brew install zeromq
 ``` 
 
-Please note that the necessary `pc` file will need to be added to the `PKG_CONFIG_PATH` environment variable. For example `PKG_CONFIG_PATH=/usr/local/Cellar/zeromq/4.2.5/lib/pkgconfig/`
+For directions installing ZeroMQ on Windows, please see [the Windows documentation.](ZMQWindows.md)
 
-**Note**: Setup of the ZeroMQ library is not supported on Windows plaforms.
+#### pkg-config
+
+The necessary file will need to be added to the `PKG_CONFIG_PATH` environment variable.
+ 
+On Linux, add this line to your local profile:
+```bash
+export PKG_CONFIG_PATH=/usr/local/Cellar/zeromq/4.2.5/lib/pkgconfig/
+```
+
+For macOS, install the package with brew:
+```bash
+brew install pkg-config
+```
 
 ### Installation and Execution
 To fetch the code and build the microservice execute the following:
@@ -84,6 +96,10 @@ See https://docs.docker.com/install/ to learn how to obtain and install Docker.
 cd $GOPATH/src
 go get github.com/edgexfoundry/edgex-go
 cd $GOPATH/src/github.com/edgexfoundry/edgex-go
+# To remove any old build artifacts
+make clean
+# To check and satisfy build dependencies
+make prepare
 # To create the Docker images
 sudo make docker
 # To run the containers
