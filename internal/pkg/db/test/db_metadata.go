@@ -88,7 +88,6 @@ func getDeviceProfile(db interfaces.DBClient, i int) (models.DeviceProfile, erro
 	dp.Manufacturer = name
 	dp.Model = name
 	dp.Labels = append(dp.Labels, name)
-	dp.Objects = dp.Labels
 	// TODO
 	// dp.DeviceResources = append(dp.DeviceResources, name)
 	// dp.Resources = append(dp.Resources, name)

@@ -146,9 +146,6 @@ func updateDeviceProfileFields(from models.DeviceProfile, to *models.DeviceProfi
 	if from.Model != "" {
 		to.Model = from.Model
 	}
-	if from.Objects != nil {
-		to.Objects = from.Objects
-	}
 	if from.Origin != 0 {
 		to.Origin = from.Origin
 	}
