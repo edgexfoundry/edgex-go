@@ -31,8 +31,7 @@ type DeviceProfile struct {
 	Manufacturer    string            `json:"manufacturer" yaml:"manufacturer"` // Manufacturer of the device
 	Model           string            `json:"model" yaml:"model"`               // Model of the device
 	Labels          []string          `json:"labels" yaml:"labels,flow"`        // Labels used to search for groups of profiles
-	Objects         interface{}       `json:"objects" yaml:"objects"`           // JSON data that the device service uses to communicate with devices with this profile
-	DeviceResources []DeviceObject    `json:"deviceResources" yaml:"deviceResources"`
+	DeviceResources []DeviceResource  `json:"deviceResources" yaml:"deviceResources"`
 	Resources       []ProfileResource `json:"resources" yaml:"resources"`
 	Commands        []Command         `json:"commands" yaml:"commands"` // List of commands to Get/Put information for devices associated with this profile
 }
@@ -46,15 +45,13 @@ func (dp DeviceProfile) MarshalJSON() ([]byte, error) {
 		Manufacturer    *string           `json:"manufacturer"` // Manufacturer of the device
 		Model           *string           `json:"model"`        // Model of the device
 		Labels          []string          `json:"labels"`       // Labels used to search for groups of profiles
-		Objects         interface{}       `json:"objects"`      // JSON data that the device service uses to communicate with devices with this profile
-		DeviceResources []DeviceObject    `json:"deviceResources"`
+		DeviceResources []DeviceResource  `json:"deviceResources"`
 		Resources       []ProfileResource `json:"resources"`
 		Commands        []Command         `json:"commands"` // List of commands to Get/Put information for devices associated with this profile
 	}{
 		Id:              dp.Id,
 		Labels:          dp.Labels,
 		DescribedObject: dp.DescribedObject,
-		Objects:         dp.Objects,
 	}
 
 	// Empty strings are null

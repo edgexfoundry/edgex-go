@@ -8,7 +8,7 @@ Metadata
 Introduction
 ============
 
-The Metadata microservice has the knowledge about the devices and sensors and how to communicate with them that is used by the other services, such as Core Data, Command, and so forth.  
+The Metadata microservice has the knowledge about the devices and sensors and how to communicate with them that is used by the other services, such as Core Data, Command, and so forth.
 
 Specifically, Metadata has the following abilities:
 
@@ -21,7 +21,7 @@ The Metadata does not do the following activities:
 * Does not do, and is not responsible for actual data collection from devices and sensors, which is performed by Device Services and Core Data
 * Does not do, and is not responsible for issuing commands to the devices and sensors, which is performed by Command and Device Service
 
-General characteristics about Devices, the data they provide, and how to command them is shown in Device Profiles in EdgeX Foundry.  A Device Profile can be thought of as a template of a type or classification of Device. For example, a device profile for BACnet thermostats provides general characteristics for the types of data a BACnet thermostat sends, such as current temperature, and which types of commands or actions can be sent to the BACnet thermostat, such as cooling set point, or heating set point. Therefore, Device Profiles are the first item that the Metadata service must be able to store or manage in local persistence, and provide to the other services of EdgeX Foundry.  
+General characteristics about Devices, the data they provide, and how to command them is shown in Device Profiles in EdgeX Foundry.  A Device Profile can be thought of as a template of a type or classification of Device. For example, a device profile for BACnet thermostats provides general characteristics for the types of data a BACnet thermostat sends, such as current temperature, and which types of commands or actions can be sent to the BACnet thermostat, such as cooling set point, or heating set point. Therefore, Device Profiles are the first item that the Metadata service must be able to store or manage in local persistence, and provide to the other services of EdgeX Foundry.
 
 Data about actual devices and sensors is another type of information that the Metadata microservice stores and manages. Each specific device and sensor that is managed by EdgeX Foundry must be registered with Metadata and have a unique ID associated to it. Information, such as the device's or sensor's address is stored with that identifier. Each device and sensor is also associated to a device profile. This association enables Metadata to apply generic knowledge provided by the device profile to each device and sensor. For example, a specific device such as the BACNet thermostat located in the CTO Solutions lab in Dell's building, is associated to the BACnet thermostat device profile described above and this connection would imply that this specific BACnet thermostat provides current temperature data and responds to commands to set the cooling and heating points.
 
@@ -68,21 +68,21 @@ Data Dictionary
 |                     | might include attributes such as HTTP Protocol, URL host of edgex-modbus-device-service,   |                        |
 |                     | port of 49090.                                                                             |                        |
 +---------------------+--------------------------------------------------------------------------------------------+------------------------+
-| AdminState          | An object's current administrative state of "Locked" or"Unlocked."                         |                        |      
+| AdminState          | An object's current administrative state of "Locked" or"Unlocked."                         |                        |
 +---------------------+--------------------------------------------------------------------------------------------+------------------------+
-| CallbackAlert       | The object used by the system to alert regarding a change to a system object.              |                        |                
+| CallbackAlert       | The object used by the system to alert regarding a change to a system object.              |                        |
 +---------------------+--------------------------------------------------------------------------------------------+------------------------+
-| Command             | The REST description of an interface.                                                      |                        |                
+| Command             | The REST description of an interface.                                                      |                        |
 +---------------------+--------------------------------------------------------------------------------------------+------------------------+
 | Device              | The object that contains information about the state, position, reachability, and methods  | Top Level object       |
-|                     | of interfacing with a Device                                                               |                        |                
+|                     | of interfacing with a Device                                                               |                        |
 +---------------------+--------------------------------------------------------------------------------------------+------------------------+
-| DeviceManager       | An object that groups other Devices and groups of Devices.                                 |                        |       
+| DeviceManager       | An object that groups other Devices and groups of Devices.                                 |                        |
 +---------------------+--------------------------------------------------------------------------------------------+------------------------+
-| DeviceObject        | The atomic description of a particular protocol level interface for a class of Devices.    |                        |        
+| DeviceResource      | The atomic description of a particular protocol level interface for a class of Devices.    |                        |        
 +---------------------+--------------------------------------------------------------------------------------------+------------------------+
 | DeviceProfile       | The description of both the protocol level interface, device service interface, and        | Top Level object       |
-|                     | mapping and interpretation logic that describe communication to a class of devices.        |                        |        
+|                     | mapping and interpretation logic that describe communication to a class of devices.        |                        |
 +---------------------+--------------------------------------------------------------------------------------------+------------------------+
 | DeviceReport        |                                                                                            |                        |
 +---------------------+--------------------------------------------------------------------------------------------+------------------------+
@@ -119,8 +119,8 @@ Sequence diagrams for some of the more critical or complex events regarding Meta
 
 The three following High Level Interaction Diagrams show:
 
-1. EdgeX Foundry Metadata Add a New Device Profile (Step 1 to provisioning a new device) 
-2. EdgeX Foundry Metadata Add a New Device Profile (Step 2 to provisioning a new device) 
+1. EdgeX Foundry Metadata Add a New Device Profile (Step 1 to provisioning a new device)
+2. EdgeX Foundry Metadata Add a New Device Profile (Step 2 to provisioning a new device)
 3. EdgeX Foundry Metadata Device Service Startup
 
 Metadata Add a New Device Profile (Step 1 to provisioning a new device)
@@ -130,13 +130,3 @@ Metadata Add a New Device Profile (Step 1 to provisioning a new device)
 .. image:: EdgeX_MetadataAddDeviceProfileStep2.png
 
 .. image:: EdgeX_MetadataDeviceStartup.png
-
-
-
-
-
-
-
-
-
-

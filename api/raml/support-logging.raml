@@ -404,6 +404,18 @@ schemas:
           description: count of the number of LogEntry being deleted
         500:
           description: for unknown or unanticipated issues.
+  /removeold/age/{age}:
+    uriParameters:
+      age:
+        type: number
+        description: minimum age in milliseconds (from created timestamp) a LogEntry should be in order to be removed
+        example: 604800000
+    delete:
+      responses:
+        200:
+          description: count of the number of LogEntry being deleted
+        500:
+          description: for unknown or unanticipated issues.
 /ping:
     displayName: Ping Resource
     description: example - http://localhost:48061/api/v1/ping

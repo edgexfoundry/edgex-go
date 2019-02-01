@@ -56,7 +56,7 @@ type ProfileProperty struct {
 	Units Units         `bson:"units"`
 }
 
-type DeviceObject struct {
+type DeviceResource struct {
 	Description string                 `bson:"description"`
 	Name        string                 `bson:"name"`
 	Tag         string                 `bson:"tag"`
@@ -92,8 +92,7 @@ type DeviceProfile struct {
 	Manufacturer    string            `bson:"manufacturer"`
 	Model           string            `bson:"model"`
 	Labels          []string          `bson:"labels"`
-	Objects         interface{}       `bson:"objects"`
-	DeviceResources []DeviceObject    `bson:"deviceResources"`
+	DeviceResources []DeviceResource  `bson:"deviceResources"`
 	Resources       []ProfileResource `bson:"resources"`
 	Commands        []mgo.DBRef       `bson:"commands"`
 }
@@ -109,14 +108,13 @@ func (dp *DeviceProfile) ToContract(transform commandTransform) (c contract.Devi
 	c.Manufacturer = dp.Manufacturer
 	c.Model = dp.Model
 	c.Labels = dp.Labels
-	c.Objects = dp.Objects
 	c.Created = dp.Created
 	c.Modified = dp.Modified
 	c.Origin = dp.Origin
 	c.Description = dp.Description
 
 	for _, dr := range dp.DeviceResources {
-		var cdo contract.DeviceObject
+		var cdo contract.DeviceResource
 
 		cdo.Description = dr.Description
 		cdo.Name = dr.Name
@@ -201,7 +199,6 @@ func (dp *DeviceProfile) FromContract(from contract.DeviceProfile, transform com
 	dp.Manufacturer = from.Manufacturer
 	dp.Model = from.Model
 	dp.Labels = from.Labels
-	dp.Objects = from.Objects
 
 	dp.Created = from.Created
 	dp.Modified = from.Modified
@@ -209,7 +206,7 @@ func (dp *DeviceProfile) FromContract(from contract.DeviceProfile, transform com
 	dp.Description = from.Description
 
 	for _, dr := range from.DeviceResources {
-		var do DeviceObject
+		var do DeviceResource
 
 		do.Description = dr.Description
 		do.Name = dr.Name
