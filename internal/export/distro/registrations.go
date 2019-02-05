@@ -191,7 +191,7 @@ func (reg registrationInfo) processEvent(event *models.Event) {
 
 	if reg.sender.Send(encrypted, event) && Configuration.Writable.MarkPushed {
 		id := event.ID
-		err := ec.MarkPushed(id, context.TODO()) //This is TODO because we will eventually take the correlationId from the event
+		err := ec.MarkPushed(id, context.Background())
 
 		if err != nil {
 			LoggingClient.Error(fmt.Sprintf("Failed to mark event as pushed : event ID = %s: %s", id, err))

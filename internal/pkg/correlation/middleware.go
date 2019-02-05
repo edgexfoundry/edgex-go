@@ -34,7 +34,7 @@ func OnResponseComplete(next http.Handler) http.Handler {
 		begin := time.Now()
 		next.ServeHTTP(w, r)
 		correlationId := FromContext(r.Context())
-		LoggingClient.Info("", internal.CorrelationHeader, correlationId, internal.LogDurationKey, time.Since(begin).String())
+		LoggingClient.Info("Response complete", internal.CorrelationHeader, correlationId, internal.LogDurationKey, time.Since(begin).String())
 	})
 }
 
