@@ -19,6 +19,7 @@ import (
 	"runtime"
 
 	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/pkg/clients"
 	"github.com/gorilla/mux"
 )
@@ -38,6 +39,11 @@ func LoadRestRoutes() http.Handler {
 	b := r.PathPrefix(clients.ApiBase).Subrouter()
 
 	loadDeviceRoutes(b)
+
+	r.Use(correlation.ManageHeader)
+	r.Use(correlation.OnResponseComplete)
+	r.Use(correlation.OnRequestBegin)
+
 	return r
 }
 

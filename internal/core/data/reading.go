@@ -199,8 +199,8 @@ func countReadings() (count int, err error) {
 	return count, nil
 }
 
-func getReadingsByDevice(deviceId string, limit int) (readings []contract.Reading, err error) {
-	if checkDevice(deviceId, context.Background()) != nil {
+func getReadingsByDevice(deviceId string, limit int, ctx context.Context) (readings []contract.Reading, err error) {
+	if checkDevice(deviceId, ctx) != nil {
 		LoggingClient.Error(fmt.Sprintf("error checking device %s %v", deviceId, err))
 
 		return []contract.Reading{}, err

@@ -13,6 +13,7 @@ import (
 	"runtime"
 
 	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/pkg/clients"
 	"github.com/gorilla/mux"
 )
@@ -89,6 +90,10 @@ func httpServer() http.Handler {
 	reg.HandleFunc("/name/{name}", getRegByName).Methods(http.MethodGet)
 	reg.HandleFunc("/id/{id}", delRegByID).Methods(http.MethodDelete)
 	reg.HandleFunc("/name/{name}", delRegByName).Methods(http.MethodDelete)
+
+	r.Use(correlation.ManageHeader)
+	r.Use(correlation.OnResponseComplete)
+	r.Use(correlation.OnRequestBegin)
 
 	return r
 }

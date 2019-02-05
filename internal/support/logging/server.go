@@ -17,6 +17,7 @@ import (
 	"strings"
 
 	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/pkg/clients"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
@@ -286,6 +287,10 @@ func HttpServer() http.Handler {
 	l.HandleFunc("/logLevels/{levels}/{start}/{end}", delLogs).Methods(http.MethodDelete)
 	l.HandleFunc("/logLevels/{levels}/originServices/{services}/{start}/{end}", delLogs).Methods(http.MethodDelete)
 	l.HandleFunc("/removeold/age/{age}", delLogs).Methods(http.MethodDelete)
+
+	r.Use(correlation.ManageHeader)
+	r.Use(correlation.OnResponseComplete)
+	r.Use(correlation.OnRequestBegin)
 
 	return r
 }

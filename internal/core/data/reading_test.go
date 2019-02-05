@@ -1,6 +1,7 @@
 package data
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"testing"
@@ -301,7 +302,7 @@ func TestGetReadingsByDevice(t *testing.T) {
 
 	dbClient = myMock
 
-	expectedReadings, err := getReadingsByDevice("valid", 0)
+	expectedReadings, err := getReadingsByDevice("valid", 0, context.Background())
 
 	if err != nil {
 		t.Errorf("Unexpected error in getReadingsByDevice")
@@ -320,7 +321,7 @@ func TestGetReadingsByDeviceError(t *testing.T) {
 
 	dbClient = myMock
 
-	_, err := getReadingsByDevice("error", 0)
+	_, err := getReadingsByDevice("error", 0, context.Background())
 
 	if err == nil {
 		t.Errorf("Expected error in getReadingsByDevice")
