@@ -15,6 +15,7 @@ import (
 	"runtime"
 
 	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/pkg/clients"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 	"github.com/gorilla/mux"
@@ -116,6 +117,10 @@ func httpServer() http.Handler {
 	r.HandleFunc(clients.ApiMetricsRoute, metricsHandler).Methods(http.MethodGet)
 
 	r.HandleFunc(clients.ApiNotifyRegistrationRoute, replyNotifyRegistrations).Methods(http.MethodPut)
+
+	r.Use(correlation.ManageHeader)
+	r.Use(correlation.OnResponseComplete)
+	r.Use(correlation.OnRequestBegin)
 
 	return r
 }

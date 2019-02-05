@@ -49,7 +49,7 @@ func newPrivateLogger() privLogger {
 
 	pl.rootLogger = log.NewLogfmtLogger(os.Stdout)
 	pl.rootLogger = log.WithPrefix(pl.rootLogger, "ts", log.DefaultTimestampUTC,
-		"source", log.Caller(5))
+		"app", internal.SupportLoggingServiceKey, "source", log.Caller(5))
 
 	return pl
 }

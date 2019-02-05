@@ -836,6 +836,8 @@ func readingByDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ctx := r.Context()
+
 	switch r.Method {
 	case http.MethodGet:
 		err := checkMaxLimit(limit)
@@ -844,7 +846,7 @@ func readingByDeviceHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		readings, err := getReadingsByDevice(deviceId, limit)
+		readings, err := getReadingsByDevice(deviceId, limit, ctx)
 		if err != nil {
 			switch err := err.(type) {
 			case *types.ErrServiceClient:
