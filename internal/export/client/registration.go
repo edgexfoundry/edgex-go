@@ -156,9 +156,8 @@ func addReg(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ctx := r.Context()
 	notifyUpdatedRegistrations(models.NotifyUpdate{Name: reg.Name,
-		Operation: "add"}, ctx)
+		Operation: "add"})
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(id))
@@ -246,9 +245,8 @@ func updateReg(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ctx := r.Context()
 	notifyUpdatedRegistrations(models.NotifyUpdate{Name: toReg.Name,
-		Operation: "update"}, ctx)
+		Operation: "update"})
 
 	w.Header().Set("Content-Type", applicationJson)
 	w.WriteHeader(http.StatusOK)
@@ -277,9 +275,8 @@ func delRegByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ctx := r.Context()
 	notifyUpdatedRegistrations(models.NotifyUpdate{Name: reg.Name,
-		Operation: "delete"}, ctx)
+		Operation: "delete"})
 
 	w.Header().Set("Content-Type", applicationJson)
 	w.WriteHeader(http.StatusOK)
@@ -298,18 +295,17 @@ func delRegByName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ctx := r.Context()
 	notifyUpdatedRegistrations(models.NotifyUpdate{Name: name,
-		Operation: "delete"}, ctx)
+		Operation: "delete"})
 
 	w.Header().Set("Content-Type", applicationJson)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
 }
 
-func notifyUpdatedRegistrations(update models.NotifyUpdate, ctx context.Context) {
+func notifyUpdatedRegistrations(update models.NotifyUpdate) {
 	go func() {
-		err := dc.NotifyRegistrations(update, ctx)
+		err := dc.NotifyRegistrations(update, context.Background())
 		if err != nil {
 			LoggingClient.Error(fmt.Sprintf("error from distro: %s", err.Error()))
 		}
