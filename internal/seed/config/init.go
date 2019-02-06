@@ -85,7 +85,7 @@ func initializeConfiguration(useProfile string) (*ConfigurationStruct, error) {
 func initRegistryClient(serviceKey string) (registry.RegistryClient, error) {
 	registryClient, err := registry.NewRegistryClient(Configuration.Registry, nil, serviceKey)
 	if err != nil {
-		return nil, fmt.Errorf("unable to create New Registry: ", err)
+		return nil, fmt.Errorf("unable to create New Registry: %v", err)
 	}
 
 	 if !registryClient.IsRegistryRunning() {
