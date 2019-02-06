@@ -32,5 +32,5 @@ func TestNewRegistryClientConsul(t *testing.T) {
 		t.Fatal()
 	}
 
-	assert.True(t, client.IsRegistryRunning(), "Consul client should be running")
+	assert.False(t, client.IsRegistryRunning(), "Consul service not expected be running")
 }
