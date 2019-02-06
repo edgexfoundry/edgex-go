@@ -95,35 +95,3 @@ https://github.com/magiconair/properties/blob/master/LICENSE
 
 gopkg.in/eapache/queue.v1 (MIT) gopkg.in/eapache/queue.v1
 https://github.com/eapache/queue/blob/v1.1.0/LICENSE
-
-All of the following are due to sys-mgmt-agent's docker import...
-
-docker/docker/api/types (Apache 2.0) https://github.com/moby/moby/tree/master/api/types
-https://github.com/moby/moby/blob/master/LICENSE
-
-docker/go-connections (Apache 2.0) https://github.com/docker/go-connections
-https://github.com/docker/go-connections/blob/master/LICENSE
-
-gogo/protobuf/proto (unspecified) https://github.com/gogo/protobuf/proto
-https://github.com/gogo/protobuf/blob/master/LICENSE
-
-opencontainers/image-spec/specs-go/v1 (Apache 2.0) https://github.com/opencontainers/image-spec
-https://github.com/opencontainers/image-spec/blob/master/LICENSE
-
-opencontainers/go-digest (Apache 2.0) https://github.com/opencontainers/go-digest
-https://github.com/opencontainers/go-digest/blob/master/LICENSE
-
-Azure/go-ansiterm (MIT) https://github.com/Azure/go-ansiterm
-https://github.com/Azure/go-ansiterm/blob/master/LICENSE
-
-sirupsen/logrus (MIT) https://github.com/sirupsen/logrus
-https://github.com/sirupsen/logrus/blob/master/LICENSE
-
-Nvveen/Gotty (unspecified) https://github.com/Nvveen/Gotty
-https://github.com/Nvveen/Gotty/blob/master/LICENSE
-
-docker/go-units (Apache 2.0) https://github.com/docker/go-units
-https://github.com/docker/go-units/blob/master/LICENSE
-
-docker/distribution (Apache 2.0) https://github.com/docker/distribution/
-https://github.com/docker/distribution/blob/master/LICENSE

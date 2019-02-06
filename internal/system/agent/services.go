@@ -19,9 +19,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/system/agent/executor"
+	"github.com/edgexfoundry/edgex-go/internal/system/agent/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/logger"
-	"time"
 )
 
 const (
@@ -41,19 +40,42 @@ func InvokeOperation(action string, services []string) bool {
 		}
 
 		switch action {
+
 		case START:
-			executor.StartDockerContainerCompose(service, Configuration.ComposeUrl)
-			break
+			if starter, ok := executorClient.(interfaces.ServiceStarter); ok {
+				err := starter.Start(service)
+				if err != nil {
+					msg := fmt.Sprintf("error starting service \"%s\": %v", service, err)
+					logs.LoggingClient.Error(msg)
+				}
+			} else {
+				msg := fmt.Sprintf("starting not supported with specified executor")
+				logs.LoggingClient.Warn(msg)
+			}
 
 		case STOP:
-			ec.StopService(service)
-			break
+			if stopper, ok := executorClient.(interfaces.ServiceStopper); ok {
+				err := stopper.Stop(service)
+				if err != nil {
+					msg := fmt.Sprintf("error stopping service \"%s\": %v", service, err)
+					logs.LoggingClient.Error(msg)
+				}
+			} else {
+				msg := fmt.Sprintf("stopping not supported with specified executor")
+				logs.LoggingClient.Warn(msg)
+			}
 
 		case RESTART:
-			ec.StopService(service)
-			time.Sleep(time.Second * time.Duration(1))
-			executor.StartDockerContainerCompose(service, Configuration.ComposeUrl)
-			break
+			if restarter, ok := executorClient.(interfaces.ServiceRestarter); ok {
+				err := restarter.Restart(service)
+				if err != nil {
+					msg := fmt.Sprintf("error restarting service \"%s\": %v", service, err)
+					logs.LoggingClient.Error(msg)
+				}
+			} else {
+				msg := fmt.Sprintf("restarting not supported with specified executor")
+				logs.LoggingClient.Warn(msg)
+			}
 		}
 	}
 	return true

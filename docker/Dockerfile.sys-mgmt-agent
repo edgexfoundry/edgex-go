@@ -1,0 +1,48 @@
+#
+# Copyright (c) 2018
+# Dell
+# Cavium
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+FROM golang:1.11.2-alpine3.7 AS builder
+
+# Build the SMA bits by fetching the source from Github.
+WORKDIR /go/src/github.com/edgexfoundry/edgex-go
+
+# The main mirrors are giving us timeout issues on builds periodically.
+# So we can try these.
+RUN echo http://nl.alpinelinux.org/alpine/v3.7/main > /etc/apk/repositories; \
+    echo http://nl.alpinelinux.org/alpine/v3.7/community >> /etc/apk/repositories
+
+RUN apk update && apk add make glide git
+COPY . .
+
+RUN make prepare
+RUN make cmd/sys-mgmt-agent/sys-mgmt-agent
+
+# Build the golang "executor" bits (an SMA-related reference implementation) by fetching the source from Github.
+WORKDIR /go/src/github.com/docker-compose
+RUN git clone https://github.com/akramtexas/docker-compose
+RUN go build -o main docker-compose/main.go
+
+FROM docker:latest
+
+# Copy over the "SMA" executable bits.
+COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/sys-mgmt-agent/sys-mgmt-agent /
+COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/sys-mgmt-agent/res/docker/configuration.toml /res/docker/configuration.toml
+COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/sys-mgmt-agent/res/docker/configuration.toml /res/configuration.toml
+
+# Copy over the golang "executor" executable bits.
+COPY --from=builder /go/src/github.com/docker-compose/main /
+
+RUN apk --no-cache add py-pip
+RUN pip install docker-compose
+RUN apk --no-cache add curl
+RUN curl -o docker-compose.yml https://raw.githubusercontent.com/edgexfoundry/developer-scripts/master/compose-files/docker-compose-delhi-0.7.1.yml
+
+# Following (commented-out) line is for DEBUG only.
+# ENTRYPOINT tail -f /dev/null
+
+ENTRYPOINT ["/sys-mgmt-agent","--profile=docker","--confdir=/res"]
