@@ -24,7 +24,7 @@ export LD_LIBRARY_PATH=$SNAP_LIBRARY_PATH:$LD_LIBRARY_PATH
 # install all the config files from $SNAP/config/SERVICE/res/configuration.toml 
 # into $SNAP_DATA/config
 mkdir -p ${SNAP_DATA}/config
-for service in security-api-gateway security-secret-store core-command config-seed core-data core-metadata export-client export-distro support-logging support-notifications support-scheduler sys-mgmt-agent; do
+for service in security-api-gateway security-secret-store core-command config-seed core-data core-metadata export-client export-distro support-logging support-notifications support-scheduler sys-mgmt-agent device-modbus device-mqtt device-random; do
     if [ ! -f "${SNAP_DATA}/config/${service}/res/configuration.toml" ]; then
         mkdir -p "${SNAP_DATA}/config/${service}/res"
         cp ${SNAP}/config/${service}/res/configuration.toml "${SNAP_DATA}/config/${service}/res/configuration.toml"
@@ -33,11 +33,21 @@ for service in security-api-gateway security-secret-store core-command config-se
     fi
 done
 
-# also handle config-seed/device-virtual/application.properties
-if [ ! -f "${SNAP_DATA}/config/config-seed/res/properties/device-virtual/application.properties" ]; then
-    mkdir -p "${SNAP_DATA}/config/config-seed/res/properties/device-virtual"
-    cp "${SNAP}/config/config-seed/res/properties/device-virtual/application.properties" "${SNAP_DATA}/config/config-seed/res/properties/device-virtual/application.properties"
-fi
+# handle device-mqtt driver configuration
+cp ${SNAP}/config/device-mqtt/res/configuration-driver.toml "${SNAP_DATA}/config/device-mqtt/res/configuration-driver.toml"
+
+# handle device-random device profile
+cp ${SNAP}/config/device-random/res/device.random.yaml "${SNAP_DATA}/config/device-random/res/device.random.yaml"
+
+# also handle java services' application.properties
+for jsvc in device-virtual; do
+    if [ ! -f "${SNAP_DATA}/config/config-seed/res/properties/$jsvc/application.properties" ]; then
+        mkdir -p "${SNAP_DATA}/config/config-seed/res/properties/$jsvc"
+        cp "${SNAP}/config/config-seed/res/properties/$jsvc/application.properties" "${SNAP_DATA}/config/config-seed/res/properties/$jsvc/application.properties"
+        # also replace SNAP_DATA and SNAP_COMMON in the application files
+        sed -i -e "s@\$SNAP_COMMON@$SNAP_COMMON@g" -e "s@\$SNAP_DATA@$SNAP_DATA@g" "${SNAP_DATA}/config/config-seed/res/properties/$jsvc/application.properties"
+    fi
+done
 
 # for security-secret-store, copy the hcl config files used with vault
 for hclType in admin kong; do 
@@ -114,6 +124,6 @@ fi
 
 # finally, disable services in the snap that aren't meant to come up by default
 # by default, we want the export-*, support-*, and device-virtual services off
-for svc in export-distro export-client support-notifications support-scheduler support-logging device-virtual; do
+for svc in export-distro export-client support-notifications support-scheduler support-logging device-virtual device-modbus device-mqtt device-random; do
     snapctl stop --disable edgexfoundry.$svc
 done
