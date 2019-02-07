@@ -46,6 +46,71 @@ apps:
     passthrough:
       after:
         - core-config-seed
+  cassandra:
+    command: bin/cassandra-wrapper.sh
+    daemon: forking
+    plugs:
+      - network
+      - network-bind
+      - mount-observe
+  kong-daemon:
+    command: bin/kong-daemon.sh
+    environment:
+      KONG_CONF: $SNAP_DATA/config/security-api-gateway/kong.conf
+      KONG_PROXY_ACCESS_LOG: $SNAP_COMMON/logs/kong-proxy-access.log
+      KONG_ADMIN_ACCESS_LOG: $SNAP_COMMON/logs/kong-admin-access.log
+      KONG_PROXY_ERROR_LOG: $SNAP_COMMON/logs/kong-proxy-error.log
+      KONG_ADMIN_ERROR_LOG: $SNAP_COMMON/logs/kong-admin-error.log
+      KONG_ADMIN_LISTEN: "0.0.0.0:8001, 0.0.0.0:8444 ssl"
+    stop-command: bin/kong-stop.sh
+    daemon: forking
+    plugs: 
+      - network
+      - network-bind
+    passthrough:
+      after:
+        - cassandra
+        - pkisetup
+  pkisetup:
+    command: bin/pkisetup-wrapper.sh
+    environment:
+      PKI_SETUP_VAULT_FILE: $SNAP_DATA/config/security-secret-store/pkisetup-vault.json
+      PKI_SETUP_KONG_FILE: $SNAP_DATA/config/security-secret-store/pkisetup-kong.json
+    daemon: oneshot
+  vault:
+    command: bin/vault server --config="$VAULT_CONFIG"
+    environment:
+      VAULT_CONFIG: "$SNAP_DATA/config/security-secret-store/vault-config.json"
+      VAULT_ADDR: "https://localhost:8200"
+      VAULT_UI: "true"
+    daemon: simple
+    plugs:
+      - network
+      - network-bind
+    passthrough:
+      after:
+        - consul
+        - pkisetup
+        - core-config-seed
+  vault-worker:
+    command: bin/vault-worker-wrapper.sh
+    daemon: oneshot
+    plugs:
+      - network
+      - network-bind
+    passthrough:
+      after: 
+        - vault
+  edgexproxy:
+    command: bin/edgexproxy-wrapper.sh
+    daemon: oneshot
+    plugs:
+      - network
+      - network-bind
+    passthrough:
+      after:
+        - vault-worker
+        - kong-daemon
   mongo-worker:
     command: bin/mongo-worker-wrapper.sh
     plugs: [network]
@@ -53,17 +118,6 @@ apps:
     passthrough:
       after:
         - mongod
-  security-services:
-    command: bin/fork-wrapper.sh $SNAP/bin/security-start.sh
-    stop-command: bin/security-stop.sh
-    daemon: forking
-    plugs: 
-      - network
-      - network-bind
-      - mount-observe
-    passthrough:
-      after:
-        - core-config-seed
   support-logging:
     command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh support-logging --consul
     daemon: forking
@@ -72,6 +126,7 @@ apps:
       after:
         - core-config-seed
         - mongo-worker
+        - edgexproxy
   support-notifications:
     command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh support-notifications --consul
     daemon: forking
@@ -80,6 +135,7 @@ apps:
       after:
         - core-config-seed
         - mongo-worker
+        - edgexproxy
   core-data:
     command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh core-data --consul
     daemon: forking
@@ -88,6 +144,7 @@ apps:
       after:
         - core-config-seed
         - mongo-worker
+        - edgexproxy
   core-metadata:
     command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh core-metadata --consul
     daemon: forking
@@ -96,6 +153,7 @@ apps:
       after:
         - core-config-seed
         - mongo-worker
+        - edgexproxy
   core-command:
     command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh core-command --consul
     daemon: forking
@@ -104,6 +162,7 @@ apps:
       after:
         - core-config-seed
         - mongo-worker
+        - edgexproxy
   support-scheduler:
     command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh support-scheduler --consul
     daemon: forking
@@ -112,6 +171,7 @@ apps:
       after:
         - core-config-seed
         - mongo-worker
+        - edgexproxy
   export-client:
     command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh export-client --consul
     daemon: forking
@@ -120,6 +180,7 @@ apps:
       after:
         - core-config-seed
         - mongo-worker
+        - edgexproxy
   export-distro:
     command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh export-distro --consul
     daemon: forking
@@ -128,6 +189,7 @@ apps:
       after:
         - core-config-seed
         - mongo-worker
+        - edgexproxy
   sys-mgmt-agent:
     command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh sys-mgmt-agent
     daemon: forking
@@ -136,6 +198,7 @@ apps:
       after:
         - core-config-seed
         - mongo-worker
+        - edgexproxy
   device-virtual:
     command: bin/device-virtual-wrapper.sh
     daemon: simple
@@ -144,12 +207,13 @@ apps:
       after:
         - core-config-seed
         - mongo-worker
+        - edgexproxy
 
 
   # helper commands the snap exposes
   mongo:
     command: bin/mongo
-    plugs: [home, network]
+    plugs: [home, removable-media, network]
   mongostat:
     command: bin/mongostat
     plugs: [network]
@@ -162,6 +226,9 @@ apps:
   curl:
     command: usr/bin/curl
     plugs: [network]
+  jq:
+    command: usr/bin/jq
+    plugs: [home, removable-media]
   kong:
     command: bin/kong-wrapper.sh
     plugs:
@@ -354,6 +421,7 @@ parts:
       . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
       gopartbootstrap github.com/edgexfoundry/edgex-go
 
+      glide cc
       make prepare
       make build
 
@@ -717,23 +785,45 @@ parts:
 
   security-secret-store:
     source: https://github.com/edgexfoundry/security-secret-store.git
-    source-branch: california
-    plugin: dump
-    organize:
-      pki-setup.sh: bin/pki-setup.sh
-      pki-setup-config-kong.env: config/security-secret-store/pki-setup-config-kong.env
-      pki-setup-config-vault.env: config/security-secret-store/pki-setup-config-vault.env
-      vault-init-unseal.sh: bin/vault-init-unseal.sh
-      vault-kong.sh: bin/vault-kong.sh
-      vault-setup.sh: bin/vault-setup.sh
-      vault-worker.sh: bin/vault-worker.sh
+    source-branch: master
+    source-depth: 1
+    plugin: make
+    override-build: |
+      . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
+      gopartbootstrap github.com/edgexfoundry/security-secret-store
+
+      glide cc
+      make prepare
+      make build
+
+      install -DT pkisetup/pkisetup "$SNAPCRAFT_PART_INSTALL/bin/pkisetup"
+      install -DT core/edgex-vault-worker "$SNAPCRAFT_PART_INSTALL/bin/vault-worker"
+
+      # modify the configuration file for the vault-worker
+      install -d "$SNAPCRAFT_PART_INSTALL/config/security-secret-store/res/"
+      cat "core/res/configuration.toml" | \
+        sed -e "s@tokenpath = \"res\\\\\\\\resp-init.json\"@tokenpath = \"res/resp-init.json\"@" \
+            -e "s@\"/vault/config/pki/@\"\$SNAP_DATA/vault/pki/@g" \
+            -e "s@EdgeXFoundryCA/edgex-vault.pem@EdgeXFoundryCA/localhost.pem@" \
+            -e "s@EdgeXFoundryCA/edgex-vault.priv.key@EdgeXFoundryCA/localhost.priv.key@" \
+            -e "s@tokenfolderpath = \"/vault/config/assets\"@tokenfolderpath = \"\$SNAP_DATA/config/security-secret-store/res\"@" \
+        > "$SNAPCRAFT_PART_INSTALL/config/security-secret-store/res/configuration.toml"
+
+      # install the hcl files too for vault accesses
+      install -DT "core/res/vault-policy-admin.hcl" "$SNAPCRAFT_PART_INSTALL/config/security-secret-store/res/vault-policy-admin.hcl"
+      install -DT "core/res/vault-policy-kong.hcl" "$SNAPCRAFT_PART_INSTALL/config/security-secret-store/res/vault-policy-kong.hcl"
+
+      # also install the pki config files
+      install -DT pkisetup/pkisetup-kong.json "$SNAPCRAFT_PART_INSTALL/config/security-secret-store/pkisetup-kong.json"
+      install -DT pkisetup/pkisetup-vault.json "$SNAPCRAFT_PART_INSTALL/config/security-secret-store/pkisetup-vault.json"
     prime:
       - bin/*
       - config/*
   security-api-gateway:
     after: [go]
     source: https://github.com/edgexfoundry/security-api-gateway.git
-    source-branch: california
+    source-branch: master
+    source-depth: 1
     plugin: make
     stage-packages:
       - openssl
@@ -746,12 +836,27 @@ parts:
       . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
       gopartbootstrap github.com/edgexfoundry/security-api-gateway
 
-      glide install
+      glide cc
+      make prepare
       make build
 
       install -DT core/edgexproxy "$SNAPCRAFT_PART_INSTALL/bin/edgexproxy"
 
       # also modify the configuration file to use "/" instead of "\" in the file
+      # and set the snis by default to be localhost so that https works when using the certificate authority 
+      # file generated and a url like "https://localhost:8443/{svc}" etc. for kong
       mkdir -p $SNAPCRAFT_PART_INSTALL/config/security-api-gateway/res
       cp core/res/configuration.toml $SNAPCRAFT_PART_INSTALL/config/security-api-gateway/res/configuration.toml
-      sed -i "s@tokenpath = \"res\\\\\\\\resp-init.json\"@tokenpath = \"res/resp-init.json\"@" $SNAPCRAFT_PART_INSTALL/config/security-api-gateway/res/configuration.toml
+      sed -i \
+        -e "s@tokenpath = \"res\\\\\\\\admin-token.json\"@tokenpath = \"\$SNAP_DATA/config/security-api-gateway/res/kong-token.json\"@" \
+        -e "s:snis = \"edgex.com\":snis = \"localhost\":" \
+        -e "s:host = \"edgex-core-data\":host = \"localhost\":" \
+        -e "s:host = \"edgex-core-metadata\":host = \"localhost\":" \
+        -e "s:host = \"edgex-core-command\":host = \"localhost\":" \
+        -e "s:host = \"edgex-support-notifications\":host = \"localhost\":" \
+        -e "s:host = \"edgex-support-logging\":host = \"localhost\":" \
+        -e "s:host = \"edgex-export-distro\":host = \"localhost\":" \
+        -e "s:host = \"edgex-export-client\":host = \"localhost\":" \
+        -e "s:host = \"edgex-support-rulesengine\":host = \"localhost\":" \
+        -e "s:host = \"edgex-device-virtual\":host = \"localhost\":" \
+        $SNAPCRAFT_PART_INSTALL/config/security-api-gateway/res/configuration.toml

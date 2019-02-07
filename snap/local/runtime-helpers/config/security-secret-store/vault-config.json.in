@@ -12,9 +12,9 @@ listener "tcp" {
   tls_disable = "0" 
   cluster_address = "localhost:8201"
   tls_min_version = "tls12"
-  tls_client_ca_file ="$SNAP_DATA/vault/pki/EdgeXFoundryTrustCA/EdgeXFoundryTrustCA.pem"
-  tls_cert_file ="$SNAP_DATA/vault/pki/EdgeXFoundryTrustCA/localhost.pem"
-  tls_key_file = "$SNAP_DATA/vault/pki/EdgeXFoundryTrustCA/localhost.priv.key"
+  tls_client_ca_file ="$SNAP_DATA/vault/pki/EdgeXFoundryCA/EdgeXFoundryTrustCA.pem"
+  tls_cert_file ="$SNAP_DATA/vault/pki/EdgeXFoundryCA/localhost.pem"
+  tls_key_file = "$SNAP_DATA/vault/pki/EdgeXFoundryCA/localhost.priv.key"
 }
 
 backend "consul" {

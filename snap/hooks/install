@@ -1,9 +1,30 @@
 #!/bin/bash -e
 
+# LD_LIBRARY_PATH isn't properly initialized for hooks as snapcraft does for apps, so this 
+# has to be constructed manually
+# Note - the env var SNAP_LIBRARY_PATH is set by snapd for hooks, so it can be referenced here
+# This is mainly necessary so we can use jq from the snap which needs libs from inside the snap
+export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
+# for LD_LIBRARY_PATH, we need to handle the different architecture paths
+case $(arch) in
+    x86_64)
+        MULTI_ARCH_PATH="x86_64-linux-gnu";;
+    arm*)
+        MULTI_ARCH_PATH="arm-linux-gnueabihf";;
+    aarch64)
+        MULTI_ARCH_PATH="aarch64-linux-gnu";;
+    *)
+        echo "architecture $ARCH not supported"
+        exit 1
+        ;;
+esac
+export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$MULTI_ARCH_PATH:$SNAP/usr/lib/$MULTI_ARCH_PATH"
+export LD_LIBRARY_PATH=$SNAP_LIBRARY_PATH:$LD_LIBRARY_PATH
+
 # install all the config files from $SNAP/config/SERVICE/res/configuration.toml 
 # into $SNAP_DATA/config
 mkdir -p ${SNAP_DATA}/config
-for service in security-api-gateway core-command config-seed core-data core-metadata export-client export-distro support-logging support-notifications support-scheduler sys-mgmt-agent; do
+for service in security-api-gateway security-secret-store core-command config-seed core-data core-metadata export-client export-distro support-logging support-notifications support-scheduler sys-mgmt-agent; do
     if [ ! -f "${SNAP_DATA}/config/${service}/res/configuration.toml" ]; then
         mkdir -p "${SNAP_DATA}/config/${service}/res"
         cp ${SNAP}/config/${service}/res/configuration.toml "${SNAP_DATA}/config/${service}/res/configuration.toml"
@@ -18,31 +39,50 @@ if [ ! -f "${SNAP_DATA}/config/config-seed/res/properties/device-virtual/applica
     cp "${SNAP}/config/config-seed/res/properties/device-virtual/application.properties" "${SNAP_DATA}/config/config-seed/res/properties/device-virtual/application.properties"
 fi
 
-# for the pki setup files from security services, we replace the password at install time with a psuedorandomly generated password from openssl
-# this isn't 100% secure, but it's unlikely that people will change the default password on initial install
-# and so generating a unique one at install time ensures that all snap installs don't suffer from a 
-# default password vulnerability for the certificates
-# additionally this file is installed into $SNAP_DATA with only owner read attributes, so the password can only be read by root
-for tlsEnvFile in pki-setup-config-kong.env pki-setup-config-vault.env; do
-    if [ ! -f "${SNAP_DATA}/config/security-secret-store/${tlsEnvFile}" ]; then
-        mkdir -p ${SNAP_DATA}/config/security-secret-store
-        newpw=$(openssl rand -base64 32)
-        cp ${SNAP}/config/security-secret-store/${tlsEnvFile} "${SNAP_DATA}/config/security-secret-store/${tlsEnvFile}"
-        sed -i "s@PKCS12_PASSWORD=\"s3cr3tp4th\"@PKCS12_PASSWORD=\"$newpw\"@g" "${SNAP_DATA}/config/security-secret-store/${tlsEnvFile}"
-
-        # these 2 sed command make look contradictory, but the kong env file will have HOST=edgex-kong, and the vault
-        # env file will have HOST=edgex-vault, so only one of these will actually do anything
-        sed -i "s@HOST=edgex-kong@HOST=localhost@" "${SNAP_DATA}/config/security-secret-store/${tlsEnvFile}"
-        sed -i "s@HOST=edgex-vault@HOST=localhost@" "${SNAP_DATA}/config/security-secret-store/${tlsEnvFile}"
-        chmod 600 "${SNAP_DATA}/config/security-secret-store/${tlsEnvFile}"
+# for security-secret-store, copy the hcl config files used with vault
+for hclType in admin kong; do 
+    if [ ! -f "${SNAP_DATA}/config/security-secret-store/res/vault-policy-${hclType}.hcl" ]; then
+        mkdir -p "${SNAP_DATA}/config/security-secret-store/res"
+        cp "${SNAP}/config/security-secret-store/res/vault-policy-${hclType}.hcl" "${SNAP_DATA}/config/security-secret-store/res/vault-policy-${hclType}.hcl"
     fi
 done
 
-# ensure vault setup directories exist
-for dir in vault vault/pki vault/file; do
-    if [ ! -d "${SNAP_DATA}/$dir" ]; then
-        mkdir -p "${SNAP_DATA}/$dir"
-    fi
+# for the kong pki setup file, we need to set the hostname as localhost
+# and then set the directory to store the cert files as $SNAP_DATA/kong/ssl
+if [ ! -f "${SNAP_DATA}/config/security-secret-store/pkisetup-kong.json" ]; then
+    mkdir -p ${SNAP_DATA}/config/security-secret-store
+    CONFIG_FILE_PATH="config/security-secret-store/pkisetup-kong.json"
+    # replace the hostname with localhost using jq
+    jq --arg WORKDIR "$SNAP_DATA/vault" \
+        '.x509_tls_server_parameters.tls_host = "localhost" | .pki_setup_dir = "pki" | .working_dir  = $WORKDIR' \
+        "${SNAP}/${CONFIG_FILE_PATH}" > "${SNAP_DATA}/${CONFIG_FILE_PATH}.tmp"
+    mv "${SNAP_DATA}/${CONFIG_FILE_PATH}.tmp" "${SNAP_DATA}/${CONFIG_FILE_PATH}"
+    chmod 600 "${SNAP_DATA}/config/security-secret-store/pkisetup-kong.json"
+fi
+
+# for vault, we also need to set the hostname as localhost
+# and then set the directory to store the cert files as $SNAP_DATA/vault/pki
+if [ ! -f "${SNAP_DATA}/config/security-secret-store/pkisetup-vault.json" ]; then
+    mkdir -p ${SNAP_DATA}/config/security-secret-store
+    CONFIG_FILE_PATH="config/security-secret-store/pkisetup-vault.json"
+    # modify the parameters using jq
+    jq --arg WORKDIR "$SNAP_DATA/vault" \
+        '.x509_tls_server_parameters.tls_host = "localhost" | .pki_setup_dir = "pki" | .working_dir  = $WORKDIR' \
+        "${SNAP}/${CONFIG_FILE_PATH}" > "${SNAP_DATA}/${CONFIG_FILE_PATH}.tmp"
+    mv "${SNAP_DATA}/${CONFIG_FILE_PATH}.tmp" "${SNAP_DATA}/${CONFIG_FILE_PATH}"
+    chmod 600 "${SNAP_DATA}/config/security-secret-store/pkisetup-vault.json"
+fi
+
+
+# ensure vault pki directory exists
+mkdir -p "${SNAP_DATA}/vault/pki"
+
+# touch all the kong log files to ensure they exist
+mkdir -p "$SNAP_COMMON/logs"
+for type in proxy admin; do
+    for op in access error; do
+        touch $SNAP_COMMON/logs/kong-$type-$op.log
+    done
 done
 
 # the vault config needs to be generated with sed, replacing $SNAP_DATA in the file 

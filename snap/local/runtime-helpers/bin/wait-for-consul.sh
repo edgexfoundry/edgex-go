@@ -10,7 +10,7 @@
 MAX_TRIES=10
 
 while [ "$MAX_TRIES" -gt 0 ] ; do
-    CONSUL_RUNNING=$(curl http://localhost:8500/v1/catalog/service/consul)
+    CONSUL_RUNNING=$(curl -s http://localhost:8500/v1/catalog/service/consul)
 
     if [ $? -ne 0 ] ||
        [ -z "$CONSUL_RUNNING" ] ||
