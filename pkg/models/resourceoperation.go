@@ -20,7 +20,6 @@ type ResourceOperation struct {
 	Index     string            `json:"index"`
 	Operation string            `json:"operation"`
 	Object    string            `json:"object"`
-	Property  string            `json:"property"`
 	Parameter string            `json:"parameter"`
 	Resource  string            `json:"resource"`
 	Secondary []string          `json:"secondary"`
@@ -33,7 +32,6 @@ func (ro ResourceOperation) MarshalJSON() ([]byte, error) {
 		Index     *string           `json:"index"`
 		Operation *string           `json:"operation"`
 		Object    *string           `json:"object"`
-		Property  *string           `json:"property"`
 		Parameter *string           `json:"parameter"`
 		Resource  *string           `json:"resource"`
 		Secondary []string          `json:"secondary"`
@@ -52,9 +50,6 @@ func (ro ResourceOperation) MarshalJSON() ([]byte, error) {
 	}
 	if ro.Object != "" {
 		test.Object = &ro.Object
-	}
-	if ro.Property != "" {
-		test.Property = &ro.Property
 	}
 	if ro.Parameter != "" {
 		test.Parameter = &ro.Parameter
