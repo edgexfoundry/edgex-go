@@ -258,7 +258,7 @@ parts:
     prime: [-*]
   go:
     after: [glide]
-    source-tag: go1.10.2
+    source-tag: go1.11.2
     source-depth: 1
   glide:
     after:
@@ -318,7 +318,7 @@ parts:
     after: [go]
     plugin: make
     source: https://github.com/hashicorp/vault.git
-    source-tag: v0.10.2
+    source-tag: v1.0.2
     override-build: |
       . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
       gopartbootstrap github.com/hashicorp/vault
