@@ -11,7 +11,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/edgexfoundry/edgex-go/pkg/models"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation/models"
+	contract "github.com/edgexfoundry/edgex-go/pkg/models"
 
 	"github.com/influxdata/influxdb/client/v2"
 )
@@ -26,7 +27,7 @@ type influxdbSender struct {
 	database string
 }
 
-func newInfluxDBSender(addr models.Addressable) sender {
+func newInfluxDBSender(addr contract.Addressable) sender {
 	connStr := "http://" + addr.Address + ":" + strconv.Itoa(addr.Port)
 
 	influxdbHTTPInfo := client.HTTPConfig{

@@ -9,15 +9,16 @@ package distro
 import (
 	"testing"
 
-	"github.com/edgexfoundry/edgex-go/pkg/models"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation/models"
+	contract "github.com/edgexfoundry/edgex-go/pkg/models"
 )
 
-func validRegistration() models.Registration {
-	r := models.Registration{}
-	r.Format = models.FormatJSON
-	r.Compression = models.CompNone
-	r.Destination = models.DestMQTT
-	r.Encryption.Algo = models.EncNone
+func validRegistration() contract.Registration {
+	r := contract.Registration{}
+	r.Format = contract.FormatJSON
+	r.Compression = contract.CompNone
+	r.Destination = contract.DestMQTT
+	r.Encryption.Algo = contract.EncNone
 	r.Filter.DeviceIDs = append(r.Filter.DeviceIDs, "dummy1")
 	r.Filter.ValueDescriptorIDs = append(r.Filter.DeviceIDs, "dummy1")
 	return r
@@ -29,7 +30,7 @@ func TestRegistrationInfoUpdate(t *testing.T) {
 		t.Fatal("RegistrationInfo should not be nil")
 	}
 
-	r := models.Registration{}
+	r := contract.Registration{}
 	if ri.update(r) {
 		t.Fatal("An empty registration is not valid")
 	}
@@ -75,7 +76,7 @@ func (sender *dummyStruct) Send(data []byte, event *models.Event) bool {
 	return true
 }
 
-func (sender *dummyStruct) Format(ev *models.Event) []byte {
+func (sender *dummyStruct) Format(ev *contract.Event) []byte {
 	return []byte("")
 }
 
@@ -101,16 +102,20 @@ func TestRegistrationInfoEvent(t *testing.T) {
 	ri.compression = dummy
 
 	// Filter only accepting events from dummyDev
-	f := models.Filter{}
+	f := contract.Filter{}
 	f.DeviceIDs = append(f.DeviceIDs, dummyDev)
 	filter := newDevIdFilter(f)
 
 	ri.filter = append(ri.filter, filter)
 
-	ri.processEvent(&models.Event{
-		Device: dummyDev})
-	ri.processEvent(&models.Event{
-		Device: filterOutDev})
+	e1 := &models.Event{}
+	e1.Device = dummyDev
+	ri.processEvent(e1)
+
+	e2 := &models.Event{}
+	e2.Device = filterOutDev
+	ri.processEvent(e2)
+
 	if dummy.count != 1 {
 		t.Fatal("It should send an event")
 	}
@@ -172,19 +177,19 @@ func TestRegistrationInfoLoop(t *testing.T) {
 func TestUpdateRunningRegistrations(t *testing.T) {
 	running := make(map[string]*registrationInfo)
 
-	if updateRunningRegistrations(running, models.NotifyUpdate{}) == nil {
+	if updateRunningRegistrations(running, contract.NotifyUpdate{}) == nil {
 		t.Error("Err should not be nil")
 	}
-	if updateRunningRegistrations(running, models.NotifyUpdate{
-		Operation: models.NotifyUpdateDelete}) == nil {
+	if updateRunningRegistrations(running, contract.NotifyUpdate{
+		Operation: contract.NotifyUpdateDelete}) == nil {
 		t.Error("Err should not be nil")
 	}
-	if updateRunningRegistrations(running, models.NotifyUpdate{
-		Operation: models.NotifyUpdateUpdate}) == nil {
+	if updateRunningRegistrations(running, contract.NotifyUpdate{
+		Operation: contract.NotifyUpdateUpdate}) == nil {
 		t.Error("Err should not be nil")
 	}
-	if updateRunningRegistrations(running, models.NotifyUpdate{
-		Operation: models.NotifyUpdateAdd}) == nil {
+	if updateRunningRegistrations(running, contract.NotifyUpdate{
+		Operation: contract.NotifyUpdateAdd}) == nil {
 		t.Error("Err should not be nil")
 	}
 

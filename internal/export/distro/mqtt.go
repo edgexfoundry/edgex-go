@@ -16,7 +16,8 @@ import (
 	"strings"
 
 	MQTT "github.com/eclipse/paho.mqtt.golang"
-	"github.com/edgexfoundry/edgex-go/pkg/models"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation/models"
+	contract "github.com/edgexfoundry/edgex-go/pkg/models"
 )
 
 type mqttSender struct {
@@ -25,7 +26,7 @@ type mqttSender struct {
 }
 
 // newMqttSender - create new mqtt sender
-func newMqttSender(addr models.Addressable, cert string, key string) sender {
+func newMqttSender(addr contract.Addressable, cert string, key string) sender {
 	protocol := strings.ToLower(addr.Protocol)
 
 	opts := MQTT.NewClientOptions()

@@ -18,6 +18,8 @@ import (
 	"fmt"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation/models"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	contract "github.com/edgexfoundry/edgex-go/pkg/models"
 )
@@ -110,7 +112,7 @@ func addNewEvent(e contract.Event, ctx context.Context) (string, error) {
 		e.ID = id
 	}
 
-	putEventOnQueue(e)                              // Push the aux struct to export service (It has the actual readings)
+	putEventOnQueue(e, ctx)                         // Push the aux struct to export service (It has the actual readings)
 	chEvents <- DeviceLastReported{e.Device}        // update last reported connected (device)
 	chEvents <- DeviceServiceLastReported{e.Device} // update last reported connected (device service)
 
@@ -200,10 +202,13 @@ func updateEventPushDate(id string, ctx context.Context) error {
 }
 
 // Put event on the message queue to be processed by the rules engine
-func putEventOnQueue(e contract.Event) {
+func putEventOnQueue(e contract.Event, ctx context.Context) {
 	LoggingClient.Info("Putting event on message queue")
 	//	Have multiple implementations (start with ZeroMQ)
-	err := ep.SendEventMessage(e)
+	evt := models.Event{}
+	evt.Event = e
+	evt.CorrelationId = correlation.FromContext(ctx)
+	err := ep.SendEventMessage(evt)
 	if err != nil {
 		LoggingClient.Error("Unable to send message for event: " + e.String())
 	}

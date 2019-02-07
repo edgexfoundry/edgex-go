@@ -13,7 +13,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/edgexfoundry/edgex-go/pkg/models"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation/models"
+	contract "github.com/edgexfoundry/edgex-go/pkg/models"
 
 	"github.com/mattn/go-xmpp"
 )
@@ -28,7 +29,7 @@ type xmppSender struct {
 	stamp   time.Time
 }
 
-func newXMPPSender(addr models.Addressable) sender {
+func newXMPPSender(addr contract.Addressable) sender {
 	protocol := strings.ToLower(addr.Protocol)
 
 	if protocol == "tls" {
