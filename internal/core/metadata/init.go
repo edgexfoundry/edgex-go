@@ -17,11 +17,18 @@ package metadata
 import (
 	"errors"
 	"fmt"
-	"sync"
-	"time"
-	"os/signal"
 	"os"
+	"os/signal"
+	"sync"
 	"syscall"
+	"time"
+
+	"github.com/edgexfoundry/go-mod-core-contracts/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logging"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/notifications"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
+	"github.com/edgexfoundry/go-mod-registry"
+	"github.com/edgexfoundry/go-mod-registry/pkg/factory"
 
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces"
@@ -29,12 +36,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logging"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/notifications"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
-	"github.com/edgexfoundry/go-mod-registry"
-	"github.com/edgexfoundry/go-mod-registry/pkg/factory"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
 )
 
 // Global variables
@@ -96,6 +98,8 @@ func Init(useRegistry bool) bool {
 		registryUpdates = make(chan interface{})
 		go listenForConfigChanges()
 	}
+
+	go telemetry.StartCpuUsageAverage()
 
 	return true
 }

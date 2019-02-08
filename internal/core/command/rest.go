@@ -16,12 +16,12 @@ package command
 import (
 	"encoding/json"
 	"net/http"
-	"runtime"
 
-	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/gorilla/mux"
+
+	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
 )
 
 func LoadRestRoutes() http.Handler {
@@ -79,26 +79,9 @@ func configHandler(w http.ResponseWriter, _ *http.Request) {
 }
 
 func metricsHandler(w http.ResponseWriter, _ *http.Request) {
-	var t internal.Telemetry
+	s := telemetry.NewSystemUsage()
 
-	// The micro-service is to be considered the System Of Record (SOR) in terms of accurate information.
-	// Fetch metrics for the command service.
-	var rtm runtime.MemStats
-
-	// Read full memory stats
-	runtime.ReadMemStats(&rtm)
-
-	// Miscellaneous memory stats
-	t.Alloc = rtm.Alloc
-	t.TotalAlloc = rtm.TotalAlloc
-	t.Sys = rtm.Sys
-	t.Mallocs = rtm.Mallocs
-	t.Frees = rtm.Frees
-
-	// Live objects = Mallocs - Frees
-	t.LiveObjects = t.Mallocs - t.Frees
-
-	encode(t, w)
+	encode(s, w)
 
 	return
 }

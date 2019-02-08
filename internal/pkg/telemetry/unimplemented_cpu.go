@@ -1,5 +1,7 @@
+// +build !linux
+
 /*******************************************************************************
- * Copyright 2018 Dell Inc.
+ * Copyright 2019 Dell Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -12,17 +14,26 @@
  * the License.
  *******************************************************************************/
 
-package logs
+package telemetry
 
 import (
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logging"
-
-	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/system/agent/interfaces"
 )
 
 var LoggingClient logger.LoggingClient
 
-func BuildLoggingClient(config *interfaces.ConfigurationStruct, logTarget string) {
-	LoggingClient = logger.NewClient(internal.SystemManagementAgentServiceKey, config.EnableRemoteLogging, logTarget, config.LoggingLevel)
+func PollCpu() (cpuSnapshot CpuUsage) {
+	if LoggingClient != nil {
+		LoggingClient.Debug("could not poll CPU usage", "reason", "OS not compatible with metrics service")
+	}
+
+	return cpuSnapshot
+}
+
+func AvgCpuUsage(init, final CpuUsage) (avg float64) {
+	if LoggingClient != nil {
+		LoggingClient.Debug("could not average CPU usage", "reason", "OS not compatible with metrics service")
+	}
+
+	return -1
 }

@@ -16,18 +16,20 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/export"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/export/distro"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logging"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
 	"github.com/edgexfoundry/go-mod-registry"
 	"github.com/edgexfoundry/go-mod-registry/pkg/factory"
+
+	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/internal/export"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
 )
 
 // Global variables
@@ -90,6 +92,9 @@ func Init(useRegistry bool) bool {
 		registryUpdates = make(chan interface{})
 		go listenForConfigChanges()
 	}
+
+	go telemetry.StartCpuUsageAverage()
+
 	return true
 }
 
