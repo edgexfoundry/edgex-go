@@ -208,7 +208,33 @@ apps:
         - core-config-seed
         - mongo-worker
         - edgexproxy
-
+  device-modbus:
+    command: bin/go-services-wrapper.sh device-modbus
+    daemon: simple
+    plugs: [network, network-bind]
+    passthrough:
+      after:
+        - core-config-seed
+        - mongo-worker
+        - edgexproxy
+  device-mqtt:
+    command: bin/go-services-wrapper.sh device-mqtt
+    daemon: simple
+    plugs: [network, network-bind]
+    passthrough:
+      after:
+        - core-config-seed
+        - mongo-worker
+        - edgexproxy
+  device-random:
+    command: bin/go-services-wrapper.sh device-random
+    daemon: simple
+    plugs: [network, network-bind]
+    passthrough:
+      after:
+        - core-config-seed
+        - mongo-worker
+        - edgexproxy
 
   # helper commands the snap exposes
   mongo:
@@ -860,3 +886,100 @@ parts:
         -e "s:host = \"edgex-support-rulesengine\":host = \"localhost\":" \
         -e "s:host = \"edgex-device-virtual\":host = \"localhost\":" \
         $SNAPCRAFT_PART_INSTALL/config/security-api-gateway/res/configuration.toml
+  device-modbus:
+    source: https://github.com/edgexfoundry/device-modbus-go.git
+    source-depth: 1
+    source-branch: master
+    plugin: make
+    after:
+      - go
+    override-build: |
+      . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
+      gopartbootstrap github.com/edgexfoundry/device-modbus-go
+
+      glide cc
+      make prepare
+      make build
+
+      install -DT "./cmd/device-modbus" "$SNAPCRAFT_PART_INSTALL/bin/device-modbus"
+
+      # FIXME: settings can't be overridden from the cmd-line!
+      # Override 'LogFile' and 'LoggingRemoteURL'
+      install -d "$SNAPCRAFT_PART_INSTALL/config/device-modbus/res/"
+
+      cat "./cmd/res/configuration.toml" | \
+        sed -e s:\"./device-Modbus.log\":\'\$SNAP_COMMON/device-Modbus.log\': > \
+        "$SNAPCRAFT_PART_INSTALL/config/device-modbus/res/configuration.toml"
+
+      # FIXME: no Attribution.txt for 3rd party licenses; probably needs to be
+      # an aggregation of SDK's and this device service...
+
+      install -DT "./LICENSE" \
+         "$SNAPCRAFT_PART_INSTALL/usr/share/doc/device-mongo/LICENSE"
+  device-mqtt:
+    source: https://github.com/edgexfoundry/device-mqtt-go.git
+    source-depth: 1
+    source-branch: master
+    plugin: make
+    after:
+      - go
+    override-build: |
+      . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
+      gopartbootstrap github.com/edgexfoundry/device-mqtt-go
+
+      glide cc
+      make prepare
+      make build
+
+      install -DT "./cmd/device-mqtt" "$SNAPCRAFT_PART_INSTALL/bin/device-mqtt"
+
+      # FIXME: settings can't be overridden from the cmd-line!
+      # Override 'LogFile' and 'LoggingRemoteURL'
+      install -d "$SNAPCRAFT_PART_INSTALL/config/device-mqtt/res/"
+
+      cat "./cmd/res/configuration.toml" | \
+        sed -e s:\"./device-mqtt.log\":\'\$SNAP_COMMON/device-mqtt.log\': > \
+        "$SNAPCRAFT_PART_INSTALL/config/device-mqtt/res/configuration.toml"
+
+      install -T "./cmd/res/configuration-driver.toml" \
+        "$SNAPCRAFT_PART_INSTALL/config/device-mqtt/res/configuration-driver.toml"
+
+      # FIXME: no Attribution.txt for 3rd party licenses; probably needs to be
+      # an aggregation of SDK's and this device service...
+
+      install -DT "./LICENSE" \
+         "$SNAPCRAFT_PART_INSTALL/usr/share/doc/device-mqtt/LICENSE"
+  device-random:
+    source: https://github.com/edgexfoundry/device-random.git
+    source-depth: 1
+    source-branch: master
+    plugin: make
+    after:
+      - go
+    override-build: |
+      . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
+      gopartbootstrap github.com/edgexfoundry/device-random
+
+      glide cc
+      make prepare
+      make build
+
+      install -DT "./cmd/device-random" "$SNAPCRAFT_PART_INSTALL/bin/device-random"
+
+      # FIXME: settings can't be overridden from the cmd-line!
+      # Override 'LogFile'
+      install -d "$SNAPCRAFT_PART_INSTALL/config/device-random/res/"
+
+      # install configuratin & default device profile
+      cat "./cmd/res/configuration.toml" | \
+        sed -e s:\"./device-random.log\":\'\$SNAP_COMMON/device-random.log\': > \
+        "$SNAPCRAFT_PART_INSTALL/config/device-random/res/configuration.toml"
+
+      install -T "./cmd/res/device.random.yaml" \
+        "$SNAPCRAFT_PART_INSTALL/config/device-random/res/device.random.yaml"
+
+      # FIXME: no Attribution.txt for 3rd party licenses; probably needs to be
+      # an aggregation of SDK's and this device service...
+
+      install -DT "./LICENSE" \
+         "$SNAPCRAFT_PART_INSTALL/usr/share/doc/device-random/LICENSE"
