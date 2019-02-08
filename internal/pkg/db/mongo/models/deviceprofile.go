@@ -65,7 +65,6 @@ type ResourceOperation struct {
 	Index     string            `bson:"index"`
 	Operation string            `bson:"operation"`
 	Object    string            `bson:"object"`
-	Property  string            `bson:"property"`
 	Parameter string            `bson:"parameter"`
 	Resource  string            `bson:"resource"`
 	Secondary []string          `bson:"secondary"`
@@ -148,7 +147,6 @@ func (dp *DeviceProfile) ToContract(transform commandTransform) (c contract.Devi
 				Index:     ro.Index,
 				Operation: ro.Operation,
 				Object:    ro.Object,
-				Property:  ro.Property,
 				Parameter: ro.Parameter,
 				Resource:  ro.Resource,
 				Secondary: ro.Secondary,
@@ -161,7 +159,6 @@ func (dp *DeviceProfile) ToContract(transform commandTransform) (c contract.Devi
 				Index:     ro.Index,
 				Operation: ro.Operation,
 				Object:    ro.Object,
-				Property:  ro.Property,
 				Parameter: ro.Parameter,
 				Resource:  ro.Resource,
 				Secondary: ro.Secondary,
@@ -237,7 +234,6 @@ func (dp *DeviceProfile) FromContract(from contract.DeviceProfile, transform com
 				Index:     ro.Index,
 				Operation: ro.Operation,
 				Object:    ro.Object,
-				Property:  ro.Property,
 				Parameter: ro.Parameter,
 				Resource:  ro.Resource,
 				Secondary: ro.Secondary,
@@ -250,7 +246,6 @@ func (dp *DeviceProfile) FromContract(from contract.DeviceProfile, transform com
 				Index:     ro.Index,
 				Operation: ro.Operation,
 				Object:    ro.Object,
-				Property:  ro.Property,
 				Parameter: ro.Parameter,
 				Resource:  ro.Resource,
 				Secondary: ro.Secondary,

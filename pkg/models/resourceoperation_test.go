@@ -24,12 +24,11 @@ import (
 var TestResourceIndex = "test index"
 var TestOperation = "test operation"
 var TestResourceObject = "test resource object"
-var TestProperty = "test property"
 var TestParameter = "test parameter"
 var TestResource = "test resource"
 var TestSecondary = []string{"test secondary"}
 var TestMappings = make(map[string]string)
-var TestResourceOperation = ResourceOperation{Index: TestResourceIndex, Operation: TestOperation, Object: TestResourceObject, Property: TestProperty, Parameter: TestParameter, Resource: TestResource, Secondary: TestSecondary, Mappings: TestMappings}
+var TestResourceOperation = ResourceOperation{Index: TestResourceIndex, Operation: TestOperation, Object: TestResourceObject, Parameter: TestParameter, Resource: TestResource, Secondary: TestSecondary, Mappings: TestMappings}
 
 func TestResourceOperation_MarshalJSON(t *testing.T) {
 	var testResourceOperationBytes = []byte(TestResourceOperation.String())
@@ -66,7 +65,6 @@ func TestResourceOperation_String(t *testing.T) {
 			"{\"index\":\"" + TestResourceIndex + "\"" +
 				",\"operation\":\"" + TestOperation + "\"" +
 				",\"object\":\"" + TestResourceObject + "\"" +
-				",\"property\":\"" + TestProperty + "\"" +
 				",\"parameter\":\"" + TestParameter + "\"" +
 				",\"resource\":\"" + TestResource + "\"" +
 				",\"secondary\":" + fmt.Sprint(string(secondarySlice)) +
