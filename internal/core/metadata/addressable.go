@@ -14,10 +14,11 @@
 package metadata
 
 import (
+	"net/http"
+
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
-	"net/http"
 )
 
 func getAllAddressables() ([]contract.Addressable, error) {
@@ -85,15 +86,33 @@ func updateAddressable(addressable contract.Addressable) error {
 		}
 	}
 
-	dest.Name = addressable.Name
-	dest.Protocol = addressable.Protocol
-	dest.Address = addressable.Address
-	dest.Port = addressable.Port
-	dest.Path = addressable.Path
-	dest.Publisher = addressable.Publisher
-	dest.User = addressable.User
-	dest.Password = addressable.Password
-	dest.Topic = addressable.Topic
+	if addressable.Name != "" {
+		dest.Name = addressable.Name
+	}
+	if addressable.Protocol != "" {
+		dest.Protocol = addressable.Protocol
+	}
+	if addressable.Address != "" {
+		dest.Address = addressable.Address
+	}
+	if addressable.Port != 0 {
+		dest.Port = addressable.Port
+	}
+	if addressable.Path != "" {
+		dest.Path = addressable.Path
+	}
+	if addressable.Publisher != "" {
+		dest.Publisher = addressable.Publisher
+	}
+	if addressable.User != "" {
+		dest.User = addressable.User
+	}
+	if addressable.Password != "" {
+		dest.Password = addressable.Password
+	}
+	if addressable.Topic != "" {
+		dest.Topic = addressable.Topic
+	}
 
 	if err := dbClient.UpdateAddressable(dest); err != nil {
 		LoggingClient.Error(err.Error())
