@@ -76,7 +76,7 @@ func restUpdateCommand(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check if command exists (By ID)
-	c, err := dbClient.GetCommandById(c.Id)
+	former, err := dbClient.GetCommandById(c.Id)
 	if err != nil {
 		LoggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusNotFound)
@@ -103,6 +103,17 @@ func restUpdateCommand(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 		}
+	}
+
+	// Update the fields
+	if c.Name != "" {
+		former.Name = c.Name
+	}
+	if (c.Get.String() != contract.Get{}.String()) {
+		former.Get = c.Get
+	}
+	if (c.Put.String() != contract.Put{}.String()) {
+		former.Put = c.Put
 	}
 
 	if err := dbClient.UpdateCommand(c); err != nil {
