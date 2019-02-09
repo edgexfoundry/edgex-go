@@ -33,7 +33,7 @@ GET Command
 
 If you replace the host and run the GET command for GenerateRandomValue_Int8, you receive an event with a random reading value between -128 and 127, as illustrated below:
 
-.. image:: GETcommand.png
+.. image:: RandomDeviceService-getcommand.png
     :scale: 70%
     :alt: Example GET Command
 
@@ -44,7 +44,7 @@ PUT commands can adjust the minimum and maximum values for future random reading
 
 In the following example, the PUT command limits the future reading value of GenerateRandomValue_Int8 to a range of -2 to 2:
 
-.. image:: PUTcommand.png
+.. image:: RandomDeviceService-putcommand.png
     :scale: 70%
     :alt: Example PUT Command
 
