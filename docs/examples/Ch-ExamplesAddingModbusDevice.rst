@@ -299,7 +299,7 @@ Execute GET command
 
 Replace *<host>* with the server IP when running the edgex-core-command.
 
-    .. image:: getcommand.png
+    .. image:: AddingModbusDevice-getcommand.png
         :scale: 50%
         :alt: GET Command
 
@@ -308,7 +308,7 @@ Execute PUT command
 
 Execute PUT command according to ``url`` and ``parameterNames``.
 
-    .. image:: putcommand.png
+    .. image:: AddingModbusDevice-putcommand.png
         :scale: 50%
         :alt: PUT Command
 
