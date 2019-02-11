@@ -84,7 +84,7 @@ Up to now you've been building the example device service provided by the C SDK.
         /* Set the resulting reading type as Uint64 */
         readings[i].type = Uint64;
 
-        if (strcmp (current->value, "randdom") ==0 )
+        if (strcmp (current->value, "random") ==0 )
         {
           /* Set the reading as a random value between 0 and 100 */
           readings[i].value.ui64_result = rand() % 100;
