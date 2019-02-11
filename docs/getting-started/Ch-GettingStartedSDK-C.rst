@@ -45,9 +45,8 @@ For this guide we're going to use the example template provided by the C SDK as 
     cp -r ./src/c/examples ../example-device-c
     cd ../example-device-c
 
-#. Next, rename example.Makefile to just Makefile, and delete the CMakeLists.txt as we don't need it anymore::
+#. You can delete the CMakeLists.txt as we don't need it anymore::
 
-    mv example.Makefile Makefile
     rm CMakeLists.txt
 
 
