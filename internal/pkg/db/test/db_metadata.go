@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces"
+	dataBase "github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
 	"github.com/globalsign/mgo/bson"
 	"github.com/google/uuid"
@@ -684,7 +685,7 @@ func testDBDeviceService(t *testing.T, db interfaces.DBClient) {
 		t.Fatalf("There should be 1 deviceServices instead of %d", len(deviceServices))
 	}
 	deviceServices, err = db.GetDeviceServicesByAddressableId(uuid.New().String())
-	if err != nil {
+	if err != dataBase.ErrNotFound {
 		t.Fatalf("Error getting deviceServices by addressable id")
 	}
 
@@ -1254,7 +1255,7 @@ func testDBDevice(t *testing.T, db interfaces.DBClient) {
 	}
 
 	devices, err = db.GetDevicesByProfileId(uuid.New().String())
-	if err != nil {
+	if err != dataBase.ErrNotFound {
 		t.Fatalf("Error getting devices %v", err)
 	}
 	if len(devices) != 0 {
@@ -1270,7 +1271,7 @@ func testDBDevice(t *testing.T, db interfaces.DBClient) {
 	}
 
 	devices, err = db.GetDevicesByServiceId(uuid.New().String())
-	if err != nil {
+	if err != dataBase.ErrNotFound {
 		t.Fatalf("Error getting devices %v", err)
 	}
 	if len(devices) != 0 {
@@ -1286,7 +1287,7 @@ func testDBDevice(t *testing.T, db interfaces.DBClient) {
 	}
 
 	devices, err = db.GetDevicesByAddressableId(uuid.New().String())
-	if err != nil {
+	if err != dataBase.ErrNotFound {
 		t.Fatalf("Error getting devices %v", err)
 	}
 	if len(devices) != 0 {
@@ -1393,7 +1394,7 @@ func testDBProvisionWatcher(t *testing.T, db interfaces.DBClient) {
 	}
 
 	provisionWatchers, err = db.GetProvisionWatchersByServiceId(uuid.New().String())
-	if err != nil {
+	if err != dataBase.ErrNotFound {
 		t.Fatalf("Error getting provisionWatchers %v", err)
 	}
 	if len(provisionWatchers) != 0 {
@@ -1409,7 +1410,7 @@ func testDBProvisionWatcher(t *testing.T, db interfaces.DBClient) {
 	}
 
 	provisionWatchers, err = db.GetProvisionWatchersByProfileId(uuid.New().String())
-	if err != nil {
+	if err != dataBase.ErrNotFound {
 		t.Fatalf("Error getting provisionWatchers %v", err)
 	}
 	if len(provisionWatchers) != 0 {

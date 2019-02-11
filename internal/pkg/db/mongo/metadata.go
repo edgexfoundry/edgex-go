@@ -17,11 +17,11 @@ package mongo
 import (
 	"errors"
 	"fmt"
-	"github.com/globalsign/mgo"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo/models"
 	contract "github.com/edgexfoundry/edgex-go/pkg/models"
+	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
 )
 
@@ -323,13 +323,11 @@ func (mc MongoClient) GetAllDevices() ([]contract.Device, error) {
 }
 
 func (mc MongoClient) GetDevicesByProfileId(id string) ([]contract.Device, error) {
-	name, value, err := idToQueryParameters(id)
+	dp, err := mc.getDeviceProfileById(id)
 	if err != nil {
 		return []contract.Device{}, err
 	}
-
-	name = "profile." + name
-	return mc.getDevices(bson.M{name: value})
+	return mc.getDevices(bson.M{"profile.$id": dp.Id})
 }
 
 func (mc MongoClient) GetDeviceById(id string) (contract.Device, error) {
@@ -345,23 +343,19 @@ func (mc MongoClient) GetDeviceByName(n string) (contract.Device, error) {
 }
 
 func (mc MongoClient) GetDevicesByServiceId(id string) ([]contract.Device, error) {
-	name, value, err := idToQueryParameters(id)
+	ds, err := mc.getDeviceServiceById(id)
 	if err != nil {
 		return []contract.Device{}, err
 	}
-
-	name = "service." + name
-	return mc.getDevices(bson.M{name: value})
+	return mc.getDevices(bson.M{"service.$id": ds.Id})
 }
 
 func (mc MongoClient) GetDevicesByAddressableId(id string) ([]contract.Device, error) {
-	name, value, err := idToQueryParameters(id)
+	addr, err := mc.getAddressableById(id)
 	if err != nil {
 		return []contract.Device{}, err
 	}
-
-	name = "addressable." + name
-	return mc.getDevices(bson.M{name: value})
+	return mc.getDevices(bson.M{"addressable.$id": addr.Id})
 }
 
 func (mc MongoClient) GetDevicesWithLabel(l string) ([]contract.Device, error) {
@@ -789,13 +783,11 @@ func (mc MongoClient) GetAllDeviceServices() ([]contract.DeviceService, error) {
 }
 
 func (mc MongoClient) GetDeviceServicesByAddressableId(id string) ([]contract.DeviceService, error) {
-	name, value, err := idToQueryParameters(id)
+	addr, err := mc.getAddressableById(id)
 	if err != nil {
 		return []contract.DeviceService{}, err
 	}
-
-	name = "addressable." + name
-	return mc.getDeviceServices(bson.M{name: value})
+	return mc.getDeviceServices(bson.M{"addressable.$id": addr.Id})
 }
 
 func (mc MongoClient) GetDeviceServicesWithLabel(l string) ([]contract.DeviceService, error) {
@@ -899,33 +891,19 @@ func (mc MongoClient) GetProvisionWatchersByIdentifier(k string, v string) (pw [
 }
 
 func (mc MongoClient) GetProvisionWatchersByServiceId(id string) (pw []contract.ProvisionWatcher, err error) {
-	name, value, err := idToQueryParameters(id)
+	ds, err := mc.getDeviceServiceById(id)
 	if err != nil {
 		return []contract.ProvisionWatcher{}, err
 	}
-
-	name = "service." + name
-	pw, err = mc.getProvisionWatchers(bson.M{name: value})
-	if err != nil {
-		return []contract.ProvisionWatcher{}, err
-	}
-
-	return pw, nil
+	return mc.getProvisionWatchers(bson.M{"service.$id": ds.Id})
 }
 
 func (mc MongoClient) GetProvisionWatchersByProfileId(id string) (pw []contract.ProvisionWatcher, err error) {
-	name, value, err := idToQueryParameters(id)
+	dp, err := mc.getDeviceProfileById(id)
 	if err != nil {
 		return []contract.ProvisionWatcher{}, err
 	}
-
-	name = "profile." + name
-	pw, err = mc.getProvisionWatchers(bson.M{name: value})
-	if err != nil {
-		return []contract.ProvisionWatcher{}, err
-	}
-
-	return pw, nil
+	return mc.getProvisionWatchers(bson.M{"profile.$id": dp.Id})
 }
 
 func (mc MongoClient) GetProvisionWatcherById(id string) (pw contract.ProvisionWatcher, err error) {
