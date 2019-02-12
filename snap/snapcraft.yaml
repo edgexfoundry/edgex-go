@@ -204,15 +204,6 @@ apps:
         - core-config-seed
         - mongo-worker
         - edgexproxy
-  device-virtual:
-    command: bin/device-virtual-wrapper.sh
-    daemon: simple
-    plugs: [network, network-bind]
-    passthrough:
-      after:
-        - core-config-seed
-        - mongo-worker
-        - edgexproxy
   device-modbus:
     command: bin/go-services-wrapper.sh device-modbus
     daemon: simple
@@ -475,17 +466,12 @@ parts:
       install -d "$SNAPCRAFT_PART_INSTALL/config/core-metadata/res/"
       install -d "$SNAPCRAFT_PART_INSTALL/config/export-client/res/"
       install -d "$SNAPCRAFT_PART_INSTALL/config/export-distro/res/"
-      install -d "$SNAPCRAFT_PART_INSTALL/config/config-seed/res/properties/device-virtual/"
+      install -d "$SNAPCRAFT_PART_INSTALL/config/config-seed/res/"
       install -d "$SNAPCRAFT_PART_INSTALL/config/support-logging/res/"
       install -d "$SNAPCRAFT_PART_INSTALL/config/support-notifications/res/"
       install -d "$SNAPCRAFT_PART_INSTALL/config/support-scheduler/res/"
-      install -d "$SNAPCRAFT_PART_INSTALL/config/config-seed/res/properties/device-virtual/"
       install -d "$SNAPCRAFT_PART_INSTALL/config/sys-mgmt-agent/res/"
       
-      # handle application.properties for the remaining java services
-      install -DT "./cmd/config-seed/res/properties/device-virtual/application.properties" \
-        "$SNAPCRAFT_PART_INSTALL/config/config-seed/res/properties/device-virtual/application.properties"
-
       cat "./cmd/config-seed/res/configuration.toml" | \
         sed -e s:./logs/edgex-config-seed.log:\$SNAP_COMMON/config-seed.log: \
             -e s:'http\://localhost\:48061/api/v1/logs':: > \
@@ -585,56 +571,6 @@ parts:
       - pkg-config
     stage-packages:
       - libzmq3-dev
-  device-virtual:
-    source: https://github.com/edgexfoundry/device-virtual.git
-    # the following commit == 0.5.0 version update +1 (core-domain fix)
-    source-commit: "2033429"
-    plugin: maven
-    maven-options: ["-Dmaven.test.skip=true"]
-    override-build: |
-      snapcraftctl build
-      echo "Installing device-virtual files"
-
-      # The logic following logic is all handled by DockerFile for
-      # the EdgeX device-virtual docker image.
-      install -d "$SNAPCRAFT_PART_INSTALL/jar/device-virtual"
-      install -d "$SNAPCRAFT_PART_INSTALL/jar/device-virtual/bacnet_sample_profiles"
-      install -d "$SNAPCRAFT_PART_INSTALL/jar/device-virtual/modbus_sample_profiles"
-      JAR_FILE=$(find "$SNAPCRAFT_PART_INSTALL/jar" -name "device-virtual-*-SNAPSHOT.jar")
-      mv "$JAR_FILE" \
-         "$SNAPCRAFT_PART_INSTALL/jar/device-virtual/device-virtual.jar"
-      cp ./bacnet_sample_profiles/*.yaml \
-         "$SNAPCRAFT_PART_INSTALL/jar/device-virtual/bacnet_sample_profiles/"
-      cp ./modbus_sample_profiles/*.yaml \
-         "$SNAPCRAFT_PART_INSTALL/jar/device-virtual/modbus_sample_profiles/"
-
-      # FIXME:
-      # copy service license into /usr/share/java/doc, because the
-      # jdk plugin has a bug which prevents any files from /usr/share/doc
-      # to be staged or primed.
-      install -DT "./Attribution.txt" \
-         "$SNAPCRAFT_PART_INSTALL/usr/share/java/doc/device-virtual/Attribution.txt"
-      install -DT "./LICENSE-2.0.txt" \
-         "$SNAPCRAFT_PART_INSTALL/usr/share/java/doc/device-virtual/LICENSE-2.0.txt"
-    prime:
-      - -etc/fonts
-      - -etc/fonts/X11
-      - -usr/lib/jvm/*/ASSEMBLY_EXCEPTION
-      - -usr/lib/jvm/*/THIRD_PARTY_README
-      - -usr/lib/jvm/*/jre/ASSEMBLY_EXCEPTION
-      - -usr/lib/jvm/*/jre/THIRD_PARTY_README
-      - -usr/lib/jvm/*/man
-      - -usr/lib/jvm/*/jre/man
-      - -usr/lib/jvm/*/jre/lib/images
-      - -usr/lib/jvm/*/include
-      - -usr/lib/jvm/*/bin
-      - -usr/lib/jvm/*/lib
-      - -usr/lib/jvm/*/docs
-      - -usr/lib/jvm/*/src.zip
-      - -usr/share/X11
-      - -usr/share/man
-      - -usr/share/fonts
-      - -usr/share/alsa
   cassandra:
     plugin: dump
     source: http://apache.claz.org/cassandra/3.11.4/apache-cassandra-3.11.4-bin.tar.gz
@@ -889,7 +825,6 @@ parts:
         -e "s:host = \"edgex-export-distro\":host = \"localhost\":" \
         -e "s:host = \"edgex-export-client\":host = \"localhost\":" \
         -e "s:host = \"edgex-support-rulesengine\":host = \"localhost\":" \
-        -e "s:host = \"edgex-device-virtual\":host = \"localhost\":" \
         $SNAPCRAFT_PART_INSTALL/config/security-api-gateway/res/configuration.toml
   device-modbus:
     source: https://github.com/edgexfoundry/device-modbus-go.git

@@ -39,16 +39,6 @@ cp ${SNAP}/config/device-mqtt/res/configuration-driver.toml "${SNAP_DATA}/config
 # handle device-random device profile
 cp ${SNAP}/config/device-random/res/device.random.yaml "${SNAP_DATA}/config/device-random/res/device.random.yaml"
 
-# also handle java services' application.properties
-for jsvc in device-virtual; do
-    if [ ! -f "${SNAP_DATA}/config/config-seed/res/properties/$jsvc/application.properties" ]; then
-        mkdir -p "${SNAP_DATA}/config/config-seed/res/properties/$jsvc"
-        cp "${SNAP}/config/config-seed/res/properties/$jsvc/application.properties" "${SNAP_DATA}/config/config-seed/res/properties/$jsvc/application.properties"
-        # also replace SNAP_DATA and SNAP_COMMON in the application files
-        sed -i -e "s@\$SNAP_COMMON@$SNAP_COMMON@g" -e "s@\$SNAP_DATA@$SNAP_DATA@g" "${SNAP_DATA}/config/config-seed/res/properties/$jsvc/application.properties"
-    fi
-done
-
 # for security-secret-store, copy the hcl config files used with vault
 for hclType in admin kong; do 
     if [ ! -f "${SNAP_DATA}/config/security-secret-store/res/vault-policy-${hclType}.hcl" ]; then
@@ -123,7 +113,7 @@ if [ ! -f ${SNAP_DATA}/config/security-api-gateway/kong.conf ]; then
 fi
 
 # finally, disable services in the snap that aren't meant to come up by default
-# by default, we want the export-*, support-*, and device-virtual services off
-for svc in export-distro export-client support-notifications support-scheduler support-logging device-virtual device-modbus device-mqtt device-random; do
+# by default, we want the export-*, support-*, and device-* services off.
+for svc in export-distro export-client support-notifications support-scheduler support-logging device-modbus device-mqtt device-random; do
     snapctl stop --disable edgexfoundry.$svc
 done
