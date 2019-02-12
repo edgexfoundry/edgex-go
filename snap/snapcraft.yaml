@@ -637,7 +637,7 @@ parts:
       - -usr/share/alsa
   cassandra:
     plugin: dump
-    source: http://apache.claz.org/cassandra/3.11.3/apache-cassandra-3.11.3-bin.tar.gz
+    source: http://apache.claz.org/cassandra/3.11.4/apache-cassandra-3.11.4-bin.tar.gz
     source-type: tar
     build-packages:
       - ant-optional
