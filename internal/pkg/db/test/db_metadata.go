@@ -1147,10 +1147,7 @@ func testDBDeviceProfile(t *testing.T, db interfaces.DBClient) {
 		t.Fatalf("There should be 0 deviceProfiles instead of %d", len(deviceProfiles))
 	}
 
-	c := models.Command{}
-	c.Id = dp.Commands[0].Id
-
-	deviceProfiles, err = db.GetDeviceProfilesUsingCommand(c)
+	deviceProfiles, err = db.GetDeviceProfilesByCommandId(dp.Commands[0].Id)
 	if err != nil {
 		t.Fatalf("Error getting deviceProfiles %v", err)
 	}
@@ -1158,9 +1155,8 @@ func testDBDeviceProfile(t *testing.T, db interfaces.DBClient) {
 		t.Fatalf("There should be 1 deviceProfiles instead of %d", len(deviceProfiles))
 	}
 
-	c.Id = uuid.New().String()
-	deviceProfiles, err = db.GetDeviceProfilesUsingCommand(c)
-	if err != nil {
+	deviceProfiles, err = db.GetDeviceProfilesByCommandId(uuid.New().String())
+	if err != dataBase.ErrNotFound {
 		t.Fatalf("Error getting deviceProfiles %v", err)
 	}
 	if len(deviceProfiles) != 0 {

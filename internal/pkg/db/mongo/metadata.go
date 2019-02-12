@@ -74,10 +74,17 @@ func (mc MongoClient) GetScheduleEventsByScheduleName(se *[]contract.ScheduleEve
 }
 
 func (mc MongoClient) GetScheduleEventsByAddressableId(se *[]contract.ScheduleEvent, id string) error {
-	if bson.IsObjectIdHex(id) {
-		return mc.getScheduleEvents(se, bson.M{"addressable" + ".$id": bson.ObjectIdHex(id)})
+	_, err := mc.getAddressableById(id)
+	if err != nil {
+		return err
 	}
-	return errors.New("mgoGetScheduleEventsByAddressableId Invalid Object ID" + id)
+	return err //mc.getDeviceServices(bson.M{"addressable.$id": addr.Id})
+
+	/*
+		if bson.IsObjectIdHex(id) {
+			return mc.getScheduleEvents(se, bson.M{"addressable" + ".$id": bson.ObjectIdHex(id)})
+		}
+		return errors.New("mgoGetScheduleEventsByAddressableId Invalid Object ID" + id)*/
 }
 
 func (mc MongoClient) GetScheduleEventsByServiceName(se *[]contract.ScheduleEvent, n string) error {
@@ -550,8 +557,8 @@ func (mc MongoClient) UpdateDeviceProfile(dp contract.DeviceProfile) error {
 }
 
 // Get the device profiles that are currently using the command
-func (mc MongoClient) GetDeviceProfilesUsingCommand(c contract.Command) ([]contract.DeviceProfile, error) {
-	command, err := mc.getCommandById(c.Id)
+func (mc MongoClient) GetDeviceProfilesByCommandId(id string) ([]contract.DeviceProfile, error) {
+	command, err := mc.getCommandById(id)
 	if err != nil {
 		return []contract.DeviceProfile{}, err
 	}

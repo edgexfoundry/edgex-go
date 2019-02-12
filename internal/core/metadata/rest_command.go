@@ -85,7 +85,7 @@ func restUpdateCommand(w http.ResponseWriter, r *http.Request) {
 
 	// Name is changed, make sure the new name doesn't conflict with device profile
 	if c.Name != "" {
-		dps, err := dbClient.GetDeviceProfilesUsingCommand(c)
+		dps, err := dbClient.GetDeviceProfilesByCommandId(c.Id)
 		if err != nil {
 			LoggingClient.Error(err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -163,7 +163,7 @@ func restDeleteCommandById(w http.ResponseWriter, r *http.Request) {
 	var id string = vars[ID]
 
 	// Check if the command exists
-	c, err := dbClient.GetCommandById(id)
+	_, err := dbClient.GetCommandById(id)
 	if err != nil {
 		LoggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusNotFound)
@@ -171,7 +171,7 @@ func restDeleteCommandById(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check if the command is still in use by a device profile
-	isStillInUse, err := isCommandStillInUse(c)
+	isStillInUse, err := isCommandStillInUse(id)
 	if err != nil {
 		LoggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -199,8 +199,8 @@ func restDeleteCommandById(w http.ResponseWriter, r *http.Request) {
 }
 
 // Helper function to determine if the command is still in use by device profiles
-func isCommandStillInUse(c contract.Command) (bool, error) {
-	dp, err := dbClient.GetDeviceProfilesUsingCommand(c)
+func isCommandStillInUse(id string) (bool, error) {
+	dp, err := dbClient.GetDeviceProfilesByCommandId(id)
 	if err != nil {
 		return false, err
 	}
