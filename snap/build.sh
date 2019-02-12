@@ -21,7 +21,7 @@ if [ ! -z "$JENKINS_URL" ]; then
     JOB_TYPE="build"
     if [[ "$JOB_NAME" =~ edgex-go-snap-.*-stage-snap.* ]]; then
         JOB_TYPE="stage"
-    elif [[ "$JOB_NAME" =~ edgex-go-snap-.*-release-snap.* ]]; then
+    elif [[ "$JOB_NAME" =~ edgex-go-snap-release-snap ]]; then
         JOB_TYPE="release"
     fi
 fi
