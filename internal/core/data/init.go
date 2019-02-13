@@ -16,7 +16,6 @@ package data
 
 import (
 	"fmt"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/registry"
 	"sync"
 	"time"
 
@@ -28,17 +27,20 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 	"github.com/edgexfoundry/edgex-go/pkg/clients"
-	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
+	logger "github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/metadata"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
+	registry "github.com/edgexfoundry/go-mod-registry"
+	"github.com/edgexfoundry/go-mod-registry/pkg/factory"
 )
 
 // Global variables
 var Configuration *ConfigurationStruct
 var dbClient interfaces.DBClient
 var LoggingClient logger.LoggingClient
-var chEvents chan interface{} //A channel for "domain events" sourced from event operations
-var errChannel chan error //A channel for "config wait error" sourced from Registry
+var Registry registry.Client
+var chEvents chan interface{}      //A channel for "domain events" sourced from event operations
+var errChannel chan error          //A channel for "config wait error" sourced from Registry
 var updateChannel chan interface{} //A channel for "config updates" sourced from Registry
 
 var ep messaging.EventPublisher
@@ -94,7 +96,7 @@ func Init(useRegistry bool) bool {
 	chEvents = make(chan interface{}, 100)
 	initEventHandlers()
 
-	if useRegistry && registry.Client != nil{
+	if useRegistry && Registry != nil {
 		errChannel = make(chan error)
 		updateChannel = make(chan interface{})
 		go listenForConfigChanges()
@@ -164,7 +166,7 @@ func initializeConfiguration(useRegistry bool, useProfile string) (*Configuratio
 			return nil, err
 		}
 
-		rawConfig, err := registry.Client.GetConfiguration(configuration)
+		rawConfig, err := Registry.GetConfiguration(configuration)
 		if err != nil {
 			return configuration, fmt.Errorf("could not get configuration from Registry: %v", err.Error())
 		}
@@ -180,16 +182,26 @@ func initializeConfiguration(useRegistry bool, useProfile string) (*Configuratio
 	return configuration, nil
 }
 
-func connectToRegistry(conf *ConfigurationStruct) (error) {
+func connectToRegistry(conf *ConfigurationStruct) error {
 	var err error
+	registryConfig := registry.Config{
+		Host: conf.Registry.Host,
+		Port: conf.Registry.Port,
+		Type: conf.Registry.Type,
+	}
 
-	registryClient, err := registry.NewRegistryClient(conf.Registry, &conf.Service, internal.CoreDataServiceKey)
+	Registry, err := factory.NewRegistryClient(registryConfig, internal.CoreDataServiceKey)
 	if err != nil {
 		return fmt.Errorf("connection to Registry could not be made: %v", err.Error())
 	}
 
+	// Check if registry service is running
+	if !Registry.IsRegistryRunning() {
+		return fmt.Errorf("registry is not available")
+	}
+
 	// Register the service with Registry
-	err = registryClient.Register()
+	err = Registry.Register()
 	if err != nil {
 		return fmt.Errorf("could not register service with Registry: %v", err.Error())
 	}
@@ -198,12 +210,12 @@ func connectToRegistry(conf *ConfigurationStruct) (error) {
 }
 
 func listenForConfigChanges() {
-	if registry.Client == nil {
+	if Registry == nil {
 		LoggingClient.Error("listenForConfigChanges() registry client not set")
 		return
 	}
 
-	registry.Client.WatchForChanges(updateChannel, errChannel, &WritableInfo{}, internal.WritableKey)
+	Registry.WatchForChanges(updateChannel, errChannel, &WritableInfo{}, internal.WritableKey)
 
 	for {
 		select {
