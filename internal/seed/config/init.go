@@ -18,11 +18,10 @@ import (
 	"net/http"
 	"sync"
 	"time"
-
+	"fmt"
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
-	"fmt"
 	"github.com/edgexfoundry/go-mod-registry"
 	"github.com/edgexfoundry/go-mod-registry/pkg/factory"
 )
@@ -53,12 +52,18 @@ func Retry(useProfile string, timeout int, wait *sync.WaitGroup, ch chan error) 
 		//Check to verify consul connectivity
 		if Registry == nil {
 			Registry, err = initRegistryClient("")
+
 			if err != nil {
 				ch <- err
+			}
+		} else {
+			if !Registry.IsRegistryRunning() {
+				ch <- fmt.Errorf("Registry (%s) is not running", Configuration.Registry.Type)
 			} else {
 				break
 			}
 		}
+
 		time.Sleep(time.Second * time.Duration(1))
 	}
 	close(ch)
@@ -85,21 +90,21 @@ func initializeConfiguration(useProfile string) (*ConfigurationStruct, error) {
 
 func initRegistryClient(serviceKey string) (registry.Client, error) {
 	registryConfig := registry.Config{
-		Host:          Configuration.Registry.Host,
-		Port:          Configuration.Registry.Port,
-		Type:          Configuration.Registry.Type,
+		Host: Configuration.Registry.Host,
+		Port: Configuration.Registry.Port,
+		Type: Configuration.Registry.Type,
 	}
 	registryClient, err := factory.NewRegistryClient(registryConfig, serviceKey)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create New Registry: %v", err)
 	}
 
-	 if !registryClient.IsRegistryRunning() {
-		 return nil, fmt.Errorf("registry is not available")
+	if !registryClient.IsRegistryRunning() {
+		return nil, fmt.Errorf("registry is not available")
 
-	 }
+	}
 
-	 return registryClient, nil
+	return registryClient, nil
 }
 
 // Helper method to get the body from the response after making the request
