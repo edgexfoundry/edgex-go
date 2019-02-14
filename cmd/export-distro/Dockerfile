@@ -15,7 +15,7 @@ RUN echo http://nl.alpinelinux.org/alpine/v3.7/main > /etc/apk/repositories; \
     echo http://nl.alpinelinux.org/alpine/v3.7/community >> /etc/apk/repositories
 
 
-RUN apk update && apk add zeromq-dev libsodium-dev pkgconfig build-base
+RUN apk update && apk add zeromq-dev libsodium-dev pkgconfig build-base git
 COPY . .
 RUN make cmd/export-distro/export-distro
 

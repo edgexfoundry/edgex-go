@@ -29,7 +29,7 @@ WORKDIR $GOPATH/src/github.com/edgexfoundry/edgex-go
 COPY . .
 
 # build
-RUN apk update && apk add make glide git
+RUN apk update && apk add make git
 RUN make prepare
 RUN make cmd/config-seed/config-seed
 
