@@ -26,7 +26,6 @@ ALL_SERVICES="$ALL_SERVICES export-distro"
 ALL_SERVICES="$ALL_SERVICES export-client"
 
 # device services
-ALL_SERVICES="$ALL_SERVICES device-virtual"
 ALL_SERVICES="$ALL_SERVICES device-modbus"
 ALL_SERVICES="$ALL_SERVICES device-mqtt"
 ALL_SERVICES="$ALL_SERVICES device-random"
