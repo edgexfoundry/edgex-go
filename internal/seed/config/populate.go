@@ -23,10 +23,10 @@ import (
 	"strings"
 
 	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/magiconair/properties"
-	"github.com/pelletier/go-toml"
 	"github.com/edgexfoundry/go-mod-registry"
 	"github.com/edgexfoundry/go-mod-registry/pkg/factory"
+	"github.com/magiconair/properties"
+	"github.com/pelletier/go-toml"
 )
 
 // Import configuration files using the specified path to the cmd directory where service configuration files reside.

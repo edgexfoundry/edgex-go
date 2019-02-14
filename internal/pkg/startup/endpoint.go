@@ -15,31 +15,42 @@ package startup
 
 import (
 	"fmt"
+	"github.com/edgexfoundry/go-mod-registry"
 	"os"
 	"time"
 
-	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/registry"
-	registryTypes "github.com/edgexfoundry/edgex-go/internal/pkg/registry/types"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/consul"
+	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
 )
 
-type Endpoint struct{}
+type Endpoint struct {
+	RegistryClient *registry.Client
+}
 
 func (e Endpoint) Monitor(params types.EndpointParams, ch chan string) {
-	var endpoint registryTypes.ServiceEndpoint
+	var endpoint registry.ServiceEndpoint
 	var err error
 	for {
-		if registry.Client != nil {
-			endpoint, err = registry.Client.GetServiceEndpoint(params.ServiceKey)
+
+		// TODO: Once consul cleanup complete add error logging if RegistryClient nil or can't be cast.
+		if e.RegistryClient != nil {
+			(*e.RegistryClient).GetServiceEndpoint(params.ServiceKey)
 		} else {
-			// TODO: remove the else when doing consul cleanup one all service have been changed to ues Registry abstraction.
-			endpoint, err = consulclient.GetServiceEndpoint(params.ServiceKey)
+			// TODO: remove the else when doing consul cleanup one all service have been changed to ues Registry abstraction and rename above to "Monitor"
+			var ep consulclient.ServiceEndpoint
+
+			ep, err = consulclient.GetServiceEndpoint(params.ServiceKey)
+			if err == nil {
+				endpoint.Host = ep.Address
+				endpoint.Port = ep.Port
+				endpoint.ServiceId = ep.Key
+			}
 		}
+
 		if err != nil {
 			fmt.Fprintln(os.Stdout, err.Error())
 		}
-		url := fmt.Sprintf("http://%s:%v%s", endpoint.Address, endpoint.Port, params.Path)
+		url := fmt.Sprintf("http://%s:%v%s", endpoint.Host, endpoint.Port, params.Path)
 		ch <- url
 		time.Sleep(time.Millisecond * time.Duration(params.Interval))
 	}

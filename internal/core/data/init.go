@@ -185,12 +185,18 @@ func initializeConfiguration(useRegistry bool, useProfile string) (*Configuratio
 func connectToRegistry(conf *ConfigurationStruct) error {
 	var err error
 	registryConfig := registry.Config{
-		Host: conf.Registry.Host,
-		Port: conf.Registry.Port,
-		Type: conf.Registry.Type,
+		Host:            conf.Registry.Host,
+		Port:            conf.Registry.Port,
+		Type:            conf.Registry.Type,
+		ServiceHost:     conf.Service.Host,
+		ServicePort:     conf.Service.Port,
+		ServiceProtocol: conf.Service.Protocol,
+		CheckInterval:   conf.Service.CheckInterval,
+		CheckRoute:      clients.ApiPingRoute,
+		Stem:            internal.ConfigRegistryStem,
 	}
 
-	Registry, err := factory.NewRegistryClient(registryConfig, internal.CoreDataServiceKey)
+	Registry, err = factory.NewRegistryClient(registryConfig, internal.CoreDataServiceKey)
 	if err != nil {
 		return fmt.Errorf("connection to Registry could not be made: %v", err.Error())
 	}
@@ -251,10 +257,10 @@ func initializeClients(useRegistry bool) {
 		Interval:    Configuration.Service.ClientMonitor,
 	}
 
-	mdc = metadata.NewDeviceClient(params, startup.Endpoint{})
+	mdc = metadata.NewDeviceClient(params, startup.Endpoint{RegistryClient: &Registry})
 
 	params.Path = clients.ApiDeviceServiceRoute
-	msc = metadata.NewDeviceServiceClient(params, startup.Endpoint{})
+	msc = metadata.NewDeviceServiceClient(params, startup.Endpoint{RegistryClient: &Registry})
 
 	// Create the event publisher
 	ep = messaging.NewEventPublisher(messaging.PubSubConfiguration{
