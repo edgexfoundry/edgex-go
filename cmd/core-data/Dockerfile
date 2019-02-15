@@ -45,4 +45,4 @@ RUN apk --no-cache add zeromq
 COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/core-data/core-data /
 COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/core-data/res/docker/configuration.toml /res/docker/configuration.toml
 
-ENTRYPOINT ["/core-data","--consul","--profile=docker","--confdir=/res"]
+ENTRYPOINT ["/core-data","--registry","--profile=docker","--confdir=/res"]
