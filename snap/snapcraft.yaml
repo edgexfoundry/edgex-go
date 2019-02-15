@@ -278,10 +278,28 @@ parts:
     plugin: dump
     source: snap/local/build-helpers
     prime: [-*]
+  # for now, the go part contains all of the remote part's stanzas, thus making 
+  # it not remote, because we need to specify GO111MODULE=off when we build go
+  # otherwise go will try to import all of the files from the top-level go.mod
+  # from edgex-go which at this point will fail
+  # eventually we would like these changes to be upstreamed but until then
+  # they live here. see also https://github.com/edgexfoundry/edgex-go/issues/1109
   go:
-    after: [glide]
+    plugin: nil
+    source: https://go.googlesource.com/go
+    source-type: git
     source-tag: go1.11.2
     source-depth: 1
+    after: [glide]
+    build-packages: [golang-go, g++]
+    override-build: |
+      cd src && env GOROOT_BOOTSTRAP=$(go env GOROOT | tr -d '\n') GO111MODULE=off ./make.bash
+      cd ..
+      cp -R bin $SNAPCRAFT_PART_INSTALL
+    stage:
+      - 'bin'
+    prime:
+      - '-*'
   glide:
     after:
       - go-build-helper
