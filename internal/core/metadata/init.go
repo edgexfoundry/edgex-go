@@ -28,7 +28,7 @@ import (
 	logger "github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/notifications"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
-	registry "github.com/edgexfoundry/go-mod-registry"
+	"github.com/edgexfoundry/go-mod-registry"
 	"github.com/edgexfoundry/go-mod-registry/pkg/factory"
 )
 
@@ -36,21 +36,21 @@ import (
 var Configuration *ConfigurationStruct
 var dbClient interfaces.DBClient
 var LoggingClient logger.LoggingClient
-var Registry registry.Client
+var registryClient registry.Client
 var nc notifications.NotificationsClient
 var errChannel chan error          //A channel for "config wait error" sourced from Registry
 var updateChannel chan interface{} //A channel for "config updates" sourced from Registry.
 
-func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup, ch chan error) {
+func Retry(useRegistry bool, useProfile string, timeout int, wait *sync.WaitGroup, ch chan error) {
 	until := time.Now().Add(time.Millisecond * time.Duration(timeout))
 	for time.Now().Before(until) {
 		var err error
 		//When looping, only handle configuration if it hasn't already been set.
 		if Configuration == nil {
-			Configuration, err = initializeConfiguration(useConsul, useProfile)
+			Configuration, err = initializeConfiguration(useRegistry, useProfile)
 			if err != nil {
 				ch <- err
-				if !useConsul {
+				if !useRegistry {
 					//Error occurred when attempting to read from local filesystem. Fail fast.
 					close(ch)
 					wait.Done()
@@ -58,7 +58,7 @@ func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup,
 				}
 			} else {
 				// Initialize notificationsClient based on configuration
-				initializeClients(useConsul)
+				initializeClients(useRegistry)
 				// Setup Logging
 				logTarget := setLoggingTarget()
 				LoggingClient = logger.NewClient(internal.CoreMetaDataServiceKey, Configuration.Logging.EnableRemote, logTarget, Configuration.Writable.LogLevel)
@@ -82,11 +82,11 @@ func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup,
 	return
 }
 
-func Init(useConsul bool) bool {
+func Init(useRegistry bool) bool {
 	if Configuration == nil || dbClient == nil {
 		return false
 	}
-	if useConsul {
+	if useRegistry {
 		errChannel = make(chan error)
 		updateChannel = make(chan interface{})
 		go listenForConfigChanges()
@@ -102,21 +102,21 @@ func Destruct() {
 	}
 }
 
-func initializeConfiguration(useConsul bool, useProfile string) (*ConfigurationStruct, error) {
-	//We currently have to load configuration from filesystem first in order to obtain ConsulHost/Port
+func initializeConfiguration(useRegistry bool, useProfile string) (*ConfigurationStruct, error) {
+	//We currently have to load configuration from filesystem first in order to obtain RegistryHost/Port
 	conf := &ConfigurationStruct{}
 	err := config.LoadFromFile(useProfile, conf)
 	if err != nil {
 		return nil, err
 	}
 
-	if useConsul {
+	if useRegistry {
 		err = connectToRegistry(conf)
 		if err != nil {
 			return nil, err
 		}
 
-		rawConfig, err := Registry.GetConfiguration(conf)
+		rawConfig, err := registryClient.GetConfiguration(conf)
 		if err != nil {
 			return conf, fmt.Errorf("could not get configuration from Registry: %v", err.Error())
 		}
@@ -145,18 +145,18 @@ func connectToRegistry(conf *ConfigurationStruct) error {
 		Stem:            internal.ConfigRegistryStem,
 	}
 
-	Registry, err = factory.NewRegistryClient(registryConfig, internal.CoreMetaDataServiceKey)
+	registryClient, err = factory.NewRegistryClient(registryConfig, internal.CoreMetaDataServiceKey)
 	if err != nil {
 		return fmt.Errorf("connection to Registry could not be made: %v", err.Error())
 	}
 
 	// Check if registry service is running
-	if !Registry.IsRegistryRunning() {
+	if !registryClient.IsRegistryRunning() {
 		return fmt.Errorf("registry is not available")
 	}
 
 	// Register the service with Registry
-	err = Registry.Register()
+	err = registryClient.Register()
 	if err != nil {
 		return fmt.Errorf("could not register service with Registry: %v", err.Error())
 	}
@@ -165,12 +165,12 @@ func connectToRegistry(conf *ConfigurationStruct) error {
 }
 
 func listenForConfigChanges() {
-	if Registry == nil {
+	if registryClient == nil {
 		LoggingClient.Error("listenForConfigChanges() registry client not set")
 		return
 	}
 
-	Registry.WatchForChanges(updateChannel, errChannel, &WritableInfo{}, internal.WritableKey)
+	registryClient.WatchForChanges(updateChannel, errChannel, &WritableInfo{}, internal.WritableKey)
 
 	for {
 		select {
@@ -222,17 +222,17 @@ func newDBClient(dbType string, config db.Configuration) (interfaces.DBClient, e
 	}
 }
 
-func initializeClients(useConsul bool) {
+func initializeClients(useRegistry bool) {
 	// Create notification client
 	params := types.EndpointParams{
 		ServiceKey:  internal.SupportNotificationsServiceKey,
 		Path:        clients.ApiNotificationRoute,
-		UseRegistry: useConsul,
+		UseRegistry: useRegistry,
 		Url:         Configuration.Clients["Notifications"].Url() + clients.ApiNotificationRoute,
 		Interval:    Configuration.Service.ClientMonitor,
 	}
 
-	nc = notifications.NewNotificationsClient(params, startup.Endpoint{RegistryClient: &Registry})
+	nc = notifications.NewNotificationsClient(params, startup.Endpoint{RegistryClient: &registryClient})
 }
 
 func setLoggingTarget() string {
