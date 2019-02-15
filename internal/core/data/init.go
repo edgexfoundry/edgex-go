@@ -16,7 +16,10 @@ package data
 
 import (
 	"fmt"
+	"os"
+	"os/signal"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/edgexfoundry/edgex-go/internal"
@@ -223,8 +226,15 @@ func listenForConfigChanges() {
 
 	registryClient.WatchForChanges(updateChannel, errChannel, &WritableInfo{}, internal.WritableKey)
 
+	signalChan := make(chan os.Signal)
+	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
+
 	for {
 		select {
+		case <- signalChan:
+			// Quietly and gracefully stop when SIGINT/SIGTERM received
+			return
+
 		case ex := <-errChannel:
 			LoggingClient.Error(ex.Error())
 
