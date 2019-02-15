@@ -38,7 +38,7 @@ import (
 var Configuration *ConfigurationStruct
 var dbClient interfaces.DBClient
 var LoggingClient logger.LoggingClient
-var Registry registry.Client
+var registryClient registry.Client
 var chEvents chan interface{}      //A channel for "domain events" sourced from event operations
 var errChannel chan error          //A channel for "config wait error" sourced from Registry
 var updateChannel chan interface{} //A channel for "config updates" sourced from Registry
@@ -96,7 +96,7 @@ func Init(useRegistry bool) bool {
 	chEvents = make(chan interface{}, 100)
 	initEventHandlers()
 
-	if useRegistry && Registry != nil {
+	if useRegistry && registryClient != nil {
 		errChannel = make(chan error)
 		updateChannel = make(chan interface{})
 		go listenForConfigChanges()
@@ -166,7 +166,7 @@ func initializeConfiguration(useRegistry bool, useProfile string) (*Configuratio
 			return nil, err
 		}
 
-		rawConfig, err := Registry.GetConfiguration(configuration)
+		rawConfig, err := registryClient.GetConfiguration(configuration)
 		if err != nil {
 			return configuration, fmt.Errorf("could not get configuration from Registry: %v", err.Error())
 		}
@@ -196,18 +196,18 @@ func connectToRegistry(conf *ConfigurationStruct) error {
 		Stem:            internal.ConfigRegistryStem,
 	}
 
-	Registry, err = factory.NewRegistryClient(registryConfig, internal.CoreDataServiceKey)
+	registryClient, err = factory.NewRegistryClient(registryConfig, internal.CoreDataServiceKey)
 	if err != nil {
 		return fmt.Errorf("connection to Registry could not be made: %v", err.Error())
 	}
 
 	// Check if registry service is running
-	if !Registry.IsRegistryRunning() {
+	if !registryClient.IsRegistryRunning() {
 		return fmt.Errorf("registry is not available")
 	}
 
 	// Register the service with Registry
-	err = Registry.Register()
+	err = registryClient.Register()
 	if err != nil {
 		return fmt.Errorf("could not register service with Registry: %v", err.Error())
 	}
@@ -216,12 +216,12 @@ func connectToRegistry(conf *ConfigurationStruct) error {
 }
 
 func listenForConfigChanges() {
-	if Registry == nil {
+	if registryClient == nil {
 		LoggingClient.Error("listenForConfigChanges() registry client not set")
 		return
 	}
 
-	Registry.WatchForChanges(updateChannel, errChannel, &WritableInfo{}, internal.WritableKey)
+	registryClient.WatchForChanges(updateChannel, errChannel, &WritableInfo{}, internal.WritableKey)
 
 	for {
 		select {
@@ -257,10 +257,10 @@ func initializeClients(useRegistry bool) {
 		Interval:    Configuration.Service.ClientMonitor,
 	}
 
-	mdc = metadata.NewDeviceClient(params, startup.Endpoint{RegistryClient: &Registry})
+	mdc = metadata.NewDeviceClient(params, startup.Endpoint{RegistryClient: &registryClient})
 
 	params.Path = clients.ApiDeviceServiceRoute
-	msc = metadata.NewDeviceServiceClient(params, startup.Endpoint{RegistryClient: &Registry})
+	msc = metadata.NewDeviceServiceClient(params, startup.Endpoint{RegistryClient: &registryClient})
 
 	// Create the event publisher
 	ep = messaging.NewEventPublisher(messaging.PubSubConfiguration{
