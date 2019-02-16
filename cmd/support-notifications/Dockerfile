@@ -14,7 +14,7 @@ RUN echo http://nl.alpinelinux.org/alpine/v3.7/main > /etc/apk/repositories; \
     echo http://nl.alpinelinux.org/alpine/v3.7/community >> /etc/apk/repositories
 
 
-RUN apk update && apk add make && apk add bash
+RUN apk update && apk add make && apk add bash git
 COPY . .
 RUN make cmd/support-notifications/support-notifications
 

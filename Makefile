@@ -8,8 +8,8 @@
 .PHONY: build clean test docker run
 
 
-GO=CGO_ENABLED=0 go
-GOCGO=CGO_ENABLED=1 go
+GO=CGO_ENABLED=0 GO111MODULE=on go
+GOCGO=CGO_ENABLED=1 GO111MODULE=on go
 
 DOCKERS=docker_config_seed docker_export_client docker_export_distro docker_core_data docker_core_metadata docker_core_command docker_support_logging docker_support_notifications docker_sys_mgmt_agent docker_support_scheduler
 .PHONY: $(DOCKERS)
@@ -25,7 +25,6 @@ GOFLAGS=-ldflags "-X github.com/edgexfoundry/edgex-go.Version=$(VERSION)"
 GIT_SHA=$(shell git rev-parse HEAD)
 
 build: $(MICROSERVICES)
-	go build ./...
 
 cmd/config-seed/config-seed:
 	$(GO) build $(GOFLAGS) -o $@ ./cmd/config-seed
@@ -61,11 +60,10 @@ clean:
 	rm -f $(MICROSERVICES)
 
 test:
-	go test -cover ./...
-	go vet ./...
+	GO111MODULE=on go test -cover ./...
+	GO111MODULE=on go vet ./...
 
 prepare:
-	glide install
 
 run:
 	cd bin && ./edgex-launch.sh
