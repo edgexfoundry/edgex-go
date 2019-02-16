@@ -8,6 +8,8 @@
 
 # Docker image for Golang Core Data micro service 
 FROM golang:1.11.2-alpine3.7 AS builder
+
+ENV GO111MODULE=on
 WORKDIR /go/src/github.com/edgexfoundry/edgex-go
 
 # The main mirrors are giving us timeout issues on builds periodically.
@@ -17,7 +19,14 @@ RUN echo http://nl.alpinelinux.org/alpine/v3.7/main > /etc/apk/repositories; \
 
 
 RUN apk update && apk add zeromq-dev libsodium-dev pkgconfig build-base git
+
+COPY go.mod .
+COPY go.sum .
+
+RUN go mod download
+
 COPY . .
+
 RUN make cmd/core-data/core-data
 
 #Next image - Copy built Go binary into new workspace
