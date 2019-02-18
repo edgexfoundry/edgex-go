@@ -19,17 +19,24 @@
 FROM golang:1.11.2-alpine3.7 AS build-env
 
 # environment variables
+ENV GO111MODULE=on
 ENV GOPATH=/go
 ENV PATH=$GOPATH/bin:$PATH
 
 # set the working directory
 WORKDIR $GOPATH/src/github.com/edgexfoundry/edgex-go
 
+RUN apk update && apk add make git
+
 # copy go source files
+COPY go.mod .
+COPY go.sum .
+
+RUN go mod download
+
 COPY . .
 
 # build
-RUN apk update && apk add make git
 RUN make prepare
 RUN make cmd/config-seed/config-seed
 
