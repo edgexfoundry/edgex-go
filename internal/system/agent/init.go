@@ -20,7 +20,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
-	"github.com/edgexfoundry/edgex-go/internal/system/agent/executor"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/logger"
 
@@ -31,8 +30,11 @@ import (
 // Global variables
 var Configuration *interfaces.ConfigurationStruct
 var Conf = &interfaces.ConfigurationStruct{}
-var ec interfaces.ExecutorClient
 var clients map[string]general.GeneralClient
+
+// executorClient is the empty interface so that we may type cast it
+// to whatever operation we need it to do at runtime
+var executorClient interface{}
 
 func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup, ch chan error) {
 	until := time.Now().Add(time.Millisecond * time.Duration(timeout))
@@ -63,7 +65,7 @@ func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup,
 
 		// Exit the loop if the dependencies have been satisfied.
 		if Configuration != nil {
-			ec, _ = newExecutorClient(Configuration.OperationsType)
+			executorClient, err = newExecutorClient()
 			break
 		}
 		time.Sleep(time.Second * time.Duration(1))
@@ -74,17 +76,9 @@ func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup,
 	return
 }
 
-func newExecutorClient(operationsType string) (interfaces.ExecutorClient, error) {
+func newExecutorClient() (interface{}, error) {
 
-	// TODO: The abstraction which should be accessed via a global var.
-	switch operationsType {
-	case "os":
-		return &executor.ExecuteOs{}, nil
-	case "snap":
-		return &executor.ExecuteSnap{}, nil
-	default:
-		return nil, nil
-	}
+	return &ExecuteApp{}, nil
 }
 
 func Init() bool {
@@ -112,17 +106,18 @@ func setLoggingTarget() string {
 	return logTarget
 }
 
+var services = map[string]string{
+	internal.SupportNotificationsServiceKey: "Notifications",
+	internal.CoreCommandServiceKey:          "Command",
+	internal.CoreDataServiceKey:             "CoreData",
+	internal.CoreMetaDataServiceKey:         "Metadata",
+	internal.ExportClientServiceKey:         "Export",
+	internal.ExportDistroServiceKey:         "Distro",
+	internal.SupportLoggingServiceKey:       "Logging",
+	internal.SupportSchedulerServiceKey:     "Scheduler",
+}
+
 func initializeClients(useConsul bool) {
-	services := map[string]string{
-		internal.SupportNotificationsServiceKey: "Notifications",
-		internal.CoreCommandServiceKey: "Command",
-		internal.CoreDataServiceKey: "CoreData",
-		internal.CoreMetaDataServiceKey: "Metadata",
-		internal.ExportClientServiceKey: "Export",
-		internal.ExportDistroServiceKey: "Distro",
-		internal.SupportLoggingServiceKey: "Logging",
-		internal.SupportSchedulerServiceKey: "Scheduler",
-	}
 
 	clients = make(map[string]general.GeneralClient)
 

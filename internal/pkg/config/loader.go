@@ -23,6 +23,8 @@ import (
 	"path/filepath"
 
 	"github.com/BurntSushi/toml"
+	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
+	"github.com/pkg/errors"
 )
 
 const (
@@ -32,6 +34,7 @@ const (
 )
 
 var confDir = flag.String("confdir", "", "Specify local configuration directory")
+var LoggingClient logger.LoggingClient
 
 func LoadFromFile(profile string, configuration interface{}) error {
 	path := determinePath()
@@ -41,13 +44,17 @@ func LoadFromFile(profile string, configuration interface{}) error {
 	}
 	contents, err := ioutil.ReadFile(fileName)
 	if err != nil {
-		return fmt.Errorf("could not load configuration file (%s): %v", fileName, err.Error())
+		msg := fmt.Sprintf("could not load configuration file (%s): %s", fileName, err.Error())
+		LoggingClient.Error(msg)
+		return errors.New(msg)
 	}
 
 	// Decode the configuration from TOML
 	err = toml.Unmarshal(contents, configuration)
 	if err != nil {
-		return fmt.Errorf("unable to parse configuration file (%s): %v", fileName, err.Error())
+		msg := fmt.Sprintf("unable to parse configuration file (%s): %s", fileName, err.Error())
+		LoggingClient.Error(msg)
+		return errors.New(msg)
 	}
 
 	return nil

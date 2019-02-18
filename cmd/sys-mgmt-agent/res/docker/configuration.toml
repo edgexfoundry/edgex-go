@@ -12,10 +12,11 @@ AppOpenMsg = 'This is the System Management Agent Service'
 FormatSpecifier = '%(\\d+\\$)?([-#+ 0(\\<]*)?(\\d+)?(\\.\\d+)?([tT])?([a-zA-Z%])'
 ServicePort = 48090
 ServiceTimeout = 5000
-ServiceAddress = 'localhost'
 CheckInterval = '10s'
-EnableRemoteLogging = false
-LoggingFile = './logs/edgex-sys-mgmt-agent.log'
+
+[Logging]
+EnableRemote = false
+File = '/edgex/logs/edgex-sys-mgmt-agent.log'
 
 ExecutorPath = '/path/to/the/file'
 # The following (ExecutorPath) is DEBUG_ONLY:
@@ -24,40 +25,40 @@ ExecutorPath = '/path/to/the/file'
 [Clients]
   [Clients.Notifications]
   Protocol = 'http'
-  Host = 'localhost'
+  Host = 'edgex-support-notifications'
   Port = 48060
 
   [Clients.Command]
   Protocol = 'http'
-  Host = 'localhost'
+  Host = 'edgex-core-command'
   Port = 48082
 
   [Clients.Metadata]
   Protocol = 'http'
-  Host = 'localhost'
+  Host = 'edgex-core-metadata'
   Port = 48081
 
   [Clients.Logging]
   Protocol = 'http'
-  Host = 'localhost'
+  Host = 'edgex-support-logging'
   Port = 48061
 
   [Clients.CoreData]
   Protocol = 'http'
-  Host = 'localhost'
+  Host = 'edgex-core-data'
   Port = 48080
 
   [Clients.Scheduler]
   Protocol = 'http'
-  Host = 'localhost'
+  Host = 'edgex-support-scheduler'
   Port = 48085
 
   [Clients.Export]
   Protocol = 'http'
-  Host = 'localhost'
+  Host = 'edgex-export-client'
   Port = 48071
 
   [Clients.Distro]
   Protocol = 'http'
-  Host = 'localhost'
+  Host = 'edgex-export-distro'
   Port = 48070

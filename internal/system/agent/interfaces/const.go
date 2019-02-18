@@ -31,6 +31,5 @@ type ConfigurationStruct struct {
 	DockerLevelOperations bool
 	Clients               map[string]config.ClientInfo
 	Service               config.ServiceInfo
-	OperationsType        string
-	ComposeUrl            string
+	ExecutorPath          string
 }

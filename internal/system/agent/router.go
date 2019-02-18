@@ -70,7 +70,7 @@ func operationHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch o.Action {
 
-	// Make asynchronous goroutine call(s) to the appropriate internal function (respectively, to stop, start, or restart the service(s).
+	// Call the appropriate internal function (respectively, to stop, start, or restart the service(s)).
 	case STOP:
 		InvokeOperation(STOP, o.Services)
 		w.WriteHeader(http.StatusOK)
@@ -84,11 +84,8 @@ func operationHandler(w http.ResponseWriter, r *http.Request) {
 		break
 
 	case RESTART:
-		// First, stop the requested services.
-		InvokeOperation(STOP, o.Services)
-		// Second, start the requested services (thereby effectively restarting those services).
-		InvokeOperation(START, o.Services)
-		w.WriteHeader(http.StatusCreated)
+		InvokeOperation(RESTART, o.Services)
+		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("Done. Restarted the requested services."))
 		break
 
