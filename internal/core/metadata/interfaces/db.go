@@ -72,7 +72,7 @@ type DBClient interface {
 	GetDeviceProfilesByManufacturerModel(man string, mod string) ([]contract.DeviceProfile, error)
 	GetDeviceProfilesByManufacturer(man string) ([]contract.DeviceProfile, error)
 	GetDeviceProfileByName(n string) (contract.DeviceProfile, error)
-	GetDeviceProfilesUsingCommand(c contract.Command) ([]contract.DeviceProfile, error)
+	GetDeviceProfilesByCommandId(id string) ([]contract.DeviceProfile, error)
 
 	// Addressable
 	UpdateAddressable(a contract.Addressable) error

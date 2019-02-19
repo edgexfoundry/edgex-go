@@ -836,13 +836,13 @@ func (_m *DBClient) GetDeviceProfilesByModel(m string) ([]models.DeviceProfile, 
 	return r0, r1
 }
 
-// GetDeviceProfilesUsingCommand provides a mock function with given fields: c
-func (_m *DBClient) GetDeviceProfilesUsingCommand(c models.Command) ([]models.DeviceProfile, error) {
-	ret := _m.Called(c)
+// GetDeviceProfilesByCommandId provides a mock function with given fields: c
+func (_m *DBClient) GetDeviceProfilesByCommandId(id string) ([]models.DeviceProfile, error) {
+	ret := _m.Called(id)
 
 	var r0 []models.DeviceProfile
-	if rf, ok := ret.Get(0).(func(models.Command) []models.DeviceProfile); ok {
-		r0 = rf(c)
+	if rf, ok := ret.Get(0).(func(string) []models.DeviceProfile); ok {
+		r0 = rf(id)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]models.DeviceProfile)
@@ -850,8 +850,8 @@ func (_m *DBClient) GetDeviceProfilesUsingCommand(c models.Command) ([]models.De
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(models.Command) error); ok {
-		r1 = rf(c)
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(id)
 	} else {
 		r1 = ret.Error(1)
 	}

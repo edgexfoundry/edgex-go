@@ -48,6 +48,13 @@ func TestMongoDB(t *testing.T) {
 		t.Fatalf("Could not connect: %v", err)
 	}
 	test.TestExportDB(t, mongo)
+
+	config.DatabaseName = "scheduler"
+	mongo, err = NewClient(config)
+	if err != nil {
+		t.Fatalf("Could not connect: %v", err)
+	}
+	test.TestSchedulerDB(t, mongo)
 }
 
 func BenchmarkMongoDB(b *testing.B) {
