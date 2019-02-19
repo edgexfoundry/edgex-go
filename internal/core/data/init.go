@@ -93,7 +93,7 @@ func Retry(useRegistry bool, useProfile string, timeout int, wait *sync.WaitGrou
 }
 
 func Init(useRegistry bool) bool {
-	if Configuration == nil || dbClient == nil {
+	if Configuration == nil || dbClient == nil || LoggingClient == nil {
 		return false
 	}
 	chEvents = make(chan interface{}, 100)
