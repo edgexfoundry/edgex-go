@@ -83,6 +83,7 @@ docker_config_seed:
 
 docker_core_metadata:
 	docker build \
+	    --cache-from edgexfoundry/docker-core-config-seed-go:$(VERSION)-dev \
 		-f cmd/core-metadata/Dockerfile \
 		--label "git_sha=$(GIT_SHA)" \
 		-t edgexfoundry/docker-core-metadata-go:$(GIT_SHA) \
@@ -91,6 +92,7 @@ docker_core_metadata:
 
 docker_core_data:
 	docker build \
+	    --cache-from edgexfoundry/docker-core-metadata-go:$(VERSION)-dev \
 		-f cmd/core-data/Dockerfile \
 		--label "git_sha=$(GIT_SHA)" \
 		-t edgexfoundry/docker-core-data-go:$(GIT_SHA) \
@@ -99,6 +101,7 @@ docker_core_data:
 
 docker_core_command:
 	docker build \
+	    --cache-from edgexfoundry/docker-core-data-go:$(VERSION)-dev \
 		-f cmd/core-command/Dockerfile \
 		--label "git_sha=$(GIT_SHA)" \
 		-t edgexfoundry/docker-core-command-go:$(GIT_SHA) \
@@ -107,6 +110,7 @@ docker_core_command:
 
 docker_export_client:
 	docker build \
+	    --cache-from edgexfoundry/docker-core-command-go:$(VERSION)-dev \
 		-f cmd/export-client/Dockerfile \
 		--label "git_sha=$(GIT_SHA)" \
 		-t edgexfoundry/docker-export-client-go:$(GIT_SHA) \
@@ -115,6 +119,7 @@ docker_export_client:
 
 docker_export_distro:
 	docker build \
+	    --cache-from edgexfoundry/docker-export-client-go:$(VERSION)-dev \
 		-f cmd/export-distro/Dockerfile \
 		--label "git_sha=$(GIT_SHA)" \
 		-t edgexfoundry/docker-export-distro-go:$(GIT_SHA) \
@@ -123,6 +128,7 @@ docker_export_distro:
 
 docker_support_logging:
 	docker build \
+	    --cache-from edgexfoundry/docker-export-distro-go:$(VERSION)-dev \
 		-f cmd/support-logging/Dockerfile \
 		--label "git_sha=$(GIT_SHA)" \
 		-t edgexfoundry/docker-support-logging-go:$(GIT_SHA) \
@@ -131,6 +137,7 @@ docker_support_logging:
 
 docker_support_notifications:
 	docker build \
+	    --cache-from edgexfoundry/docker-support-logging-go:$(VERSION)-dev \
 		-f cmd/support-notifications/Dockerfile \
 		--label "git_sha=$(GIT_SHA)" \
 		-t edgexfoundry/docker-support-notifications-go:$(GIT_SHA) \
@@ -139,6 +146,7 @@ docker_support_notifications:
 
 docker_support_scheduler:
 	docker build \
+	    --cache-from edgexfoundry/docker-support-notifications-go:$(VERSION)-dev \
 		-f cmd/support-scheduler/Dockerfile \
 		--label "git_sha=$(GIT_SHA)" \
 		-t edgexfoundry/docker-support-scheduler-go:$(GIT_SHA) \
