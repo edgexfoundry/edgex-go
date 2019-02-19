@@ -39,8 +39,8 @@ func main() {
 	var useRegistry bool
 	var useProfile string
 
-	flag.BoolVar(&useRegistry, "registry", true, "Indicates the service should use consul.")
-	flag.BoolVar(&useRegistry, "r", true, "Indicates the service should use consul.")
+	flag.BoolVar(&useRegistry, "registry", false, "Indicates the service should use consul.")
+	flag.BoolVar(&useRegistry, "r", false, "Indicates the service should use consul.")
 	flag.StringVar(&useProfile, "profile", "", "Specify a profile other than default.")
 	flag.StringVar(&useProfile, "p", "", "Specify a profile other than default.")
 	flag.Usage = usage.HelpCallback
