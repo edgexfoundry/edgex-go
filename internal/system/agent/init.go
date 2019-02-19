@@ -32,8 +32,8 @@ var Configuration *interfaces.ConfigurationStruct
 var Conf = &interfaces.ConfigurationStruct{}
 var clients map[string]general.GeneralClient
 
-// executorClient is the empty interface so that we may type cast it
-// to whatever operation we need it to do at runtime
+// Note that executorClient is the empty interface so that we may type-cast it
+// to whatever operation we need it to do at runtime.
 var executorClient interface{}
 
 func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup, ch chan error) {
@@ -65,7 +65,6 @@ func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup,
 
 		// Exit the loop if the dependencies have been satisfied.
 		if Configuration != nil {
-			executorClient, err = newExecutorClient()
 			break
 		}
 		time.Sleep(time.Second * time.Duration(1))
@@ -74,11 +73,6 @@ func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup,
 	wait.Done()
 
 	return
-}
-
-func newExecutorClient() (interface{}, error) {
-
-	return &ExecuteApp{}, nil
 }
 
 func Init() bool {
