@@ -74,17 +74,10 @@ func (mc MongoClient) GetScheduleEventsByScheduleName(se *[]contract.ScheduleEve
 }
 
 func (mc MongoClient) GetScheduleEventsByAddressableId(se *[]contract.ScheduleEvent, id string) error {
-	_, err := mc.getAddressableById(id)
-	if err != nil {
-		return err
+	if bson.IsObjectIdHex(id) {
+		return mc.getScheduleEvents(se, bson.M{"addressable" + ".$id": bson.ObjectIdHex(id)})
 	}
-	return err //mc.getDeviceServices(bson.M{"addressable.$id": addr.Id})
-
-	/*
-		if bson.IsObjectIdHex(id) {
-			return mc.getScheduleEvents(se, bson.M{"addressable" + ".$id": bson.ObjectIdHex(id)})
-		}
-		return errors.New("mgoGetScheduleEventsByAddressableId Invalid Object ID" + id)*/
+	return errors.New("mgoGetScheduleEventsByAddressableId Invalid Object ID" + id)
 }
 
 func (mc MongoClient) GetScheduleEventsByServiceName(se *[]contract.ScheduleEvent, n string) error {

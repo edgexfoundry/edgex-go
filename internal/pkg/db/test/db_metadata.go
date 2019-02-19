@@ -13,7 +13,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces"
 	dataBase "github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
-	"github.com/globalsign/mgo/bson"
 	"github.com/google/uuid"
 )
 
@@ -24,9 +23,7 @@ func TestMetadataDB(t *testing.T, db interfaces.DBClient) {
 	testDBAddressables(t, db)
 	testDBCommand(t, db)
 	testDBDeviceService(t, db)
-	testDBSchedule(t, db)
 	testDBDeviceReport(t, db)
-	testDBScheduleEvent(t, db)
 	testDBDeviceProfile(t, db)
 	testDBDevice(t, db)
 	testDBProvisionWatcher(t, db)
@@ -145,27 +142,6 @@ func populateDeviceService(db interfaces.DBClient, count int) (string, error) {
 	return id, nil
 }
 
-func populateSchedule(db interfaces.DBClient, count int) (bson.ObjectId, error) {
-	var id bson.ObjectId
-	for i := 0; i < count; i++ {
-		var err error
-		name := fmt.Sprintf("name%d", i)
-		s := models.Schedule{}
-		s.Name = name
-		s.Start = name
-		s.End = name
-		s.Frequency = name
-		s.Cron = name
-		s.RunOnce = false
-		err = db.AddSchedule(&s)
-		if err != nil {
-			return id, err
-		}
-		id = s.Id
-	}
-	return id, nil
-}
-
 func populateDeviceReport(db interfaces.DBClient, count int) (string, error) {
 	var id string
 	for i := 0; i < count; i++ {
@@ -180,30 +156,6 @@ func populateDeviceReport(db interfaces.DBClient, count int) (string, error) {
 		if err != nil {
 			return id, err
 		}
-	}
-	return id, nil
-}
-
-func populateScheduleEvent(db interfaces.DBClient, count int) (bson.ObjectId, error) {
-	var id bson.ObjectId
-	for i := 0; i < count; i++ {
-		var err error
-		name := fmt.Sprintf("name%d", i)
-		se := models.ScheduleEvent{}
-		se.Name = name
-		se.Schedule = name
-		se.Parameters = name
-		se.Service = name
-		se.Addressable = getAddressable(i, "se_")
-		se.Addressable.Id, err = db.AddAddressable(se.Addressable)
-		if err != nil {
-			return id, fmt.Errorf("Error creating addressable: %v", err)
-		}
-		err = db.AddScheduleEvent(&se)
-		if err != nil {
-			return id, err
-		}
-		id = se.Id
 	}
 	return id, nil
 }
@@ -323,32 +275,6 @@ func clearDevices(t *testing.T, db interfaces.DBClient) {
 	for _, d := range ds {
 		if err = db.DeleteDeviceById(d.Id); err != nil {
 			t.Fatalf("Error removing device %v: %v", d, err)
-		}
-	}
-}
-
-func clearSchedules(t *testing.T, db interfaces.DBClient) {
-	var ss []models.Schedule
-	err := db.GetAllSchedules(&ss)
-	if err != nil {
-		t.Fatalf("Error getting schedule %v", err)
-	}
-	for _, s := range ss {
-		if err = db.DeleteScheduleById(s.Id.Hex()); err != nil {
-			t.Fatalf("Error removing schedule %v: %v", s, err)
-		}
-	}
-}
-
-func clearScheduleEvents(t *testing.T, db interfaces.DBClient) {
-	var ss []models.ScheduleEvent
-	err := db.GetAllScheduleEvents(&ss)
-	if err != nil {
-		t.Fatalf("Error getting schedule %v", err)
-	}
-	for _, s := range ss {
-		if err = db.DeleteScheduleEventById(s.Id.Hex()); err != nil {
-			t.Fatalf("Error removing schedule %v: %v", s, err)
 		}
 	}
 }
@@ -731,80 +657,6 @@ func testDBDeviceService(t *testing.T, db interfaces.DBClient) {
 	clearDeviceServices(t, db)
 }
 
-func testDBSchedule(t *testing.T, db interfaces.DBClient) {
-	var schedules []models.Schedule
-
-	clearSchedules(t, db)
-	id, err := populateSchedule(db, 100)
-	if err != nil {
-		t.Fatalf("Error populating db: %v\n", err)
-	}
-
-	e := models.Schedule{}
-	e.Name = "name1"
-	err = db.AddSchedule(&e)
-	if err == nil {
-		t.Fatalf("Should be an error adding an existing name")
-	}
-
-	err = db.GetAllSchedules(&schedules)
-	if err != nil {
-		t.Fatalf("Error getting schedules %v", err)
-	}
-	if len(schedules) != 100 {
-		t.Fatalf("There should be 100 schedules instead of %d", len(schedules))
-	}
-
-	err = db.GetScheduleById(&e, id.Hex())
-	if err != nil {
-		t.Fatalf("Error getting schedule by id %v", err)
-	}
-	if e.Id.Hex() != id.Hex() {
-		t.Fatalf("Id does not match %s - %s", e.Id, id)
-	}
-	err = db.GetScheduleById(&e, "INVALID")
-	if err == nil {
-		t.Fatalf("Schedule should not be found")
-	}
-
-	err = db.GetScheduleByName(&e, "name1")
-	if err != nil {
-		t.Fatalf("Error getting schedule by id %v", err)
-	}
-	if e.Name != "name1" {
-		t.Fatalf("Id does not match %s - %s", e.Id, id)
-	}
-	err = db.GetScheduleByName(&e, "INVALID")
-	if err == nil {
-		t.Fatalf("Schedule should not be found")
-	}
-
-	e2 := models.Schedule{}
-	e2.Id = id
-	e2.Name = "name"
-	err = db.UpdateSchedule(e2)
-	if err != nil {
-		t.Fatalf("Error updating Schedule %v", err)
-	}
-
-	e2.Id = "INVALID"
-	err = db.UpdateSchedule(e2)
-	if err == nil {
-		t.Fatalf("Should return error")
-	}
-
-	err = db.DeleteScheduleById(e2.Id.Hex())
-	if err == nil {
-		t.Fatalf("Schedule should not be deleted")
-	}
-
-	e2.Id = id
-	err = db.DeleteScheduleById(e2.Id.Hex())
-	if err != nil {
-		t.Fatalf("Schedule should be deleted: %v", err)
-	}
-}
-
 func testDBDeviceReport(t *testing.T, db interfaces.DBClient) {
 	var deviceReports []models.DeviceReport
 
@@ -909,128 +761,6 @@ func testDBDeviceReport(t *testing.T, db interfaces.DBClient) {
 	err = db.DeleteDeviceReportById(e2.Id)
 	if err != nil {
 		t.Fatalf("DeviceReport should be deleted: %v", err)
-	}
-}
-
-func testDBScheduleEvent(t *testing.T, db interfaces.DBClient) {
-	var scheduleEvents []models.ScheduleEvent
-
-	clearScheduleEvents(t, db)
-	clearAddressables(t, db)
-	id, err := populateScheduleEvent(db, 100)
-	if err != nil {
-		t.Fatalf("Error populating db: %v\n", err)
-	}
-
-	e := models.ScheduleEvent{}
-	e.Name = "name1"
-	err = db.AddScheduleEvent(&e)
-	if err == nil {
-		t.Fatalf("Should be an error adding an existing name")
-	}
-
-	err = db.GetAllScheduleEvents(&scheduleEvents)
-	if err != nil {
-		t.Fatalf("Error getting ScheduleEvents %v", err)
-	}
-	if len(scheduleEvents) != 100 {
-		t.Fatalf("There should be 100 ScheduleEvents instead of %d", len(scheduleEvents))
-	}
-
-	err = db.GetScheduleEventById(&e, id.Hex())
-	if err != nil {
-		t.Fatalf("Error getting ScheduleEvent by id %v", err)
-	}
-	if e.Id.Hex() != id.Hex() {
-		t.Fatalf("Id does not match %s - %s", e.Id, id)
-	}
-	err = db.GetScheduleEventById(&e, "INVALID")
-	if err == nil {
-		t.Fatalf("ScheduleEvent should not be found")
-	}
-
-	err = db.GetScheduleEventByName(&e, "name1")
-	if err != nil {
-		t.Fatalf("Error getting ScheduleEvent by id %v", err)
-	}
-	if e.Name != "name1" {
-		t.Fatalf("Id does not match %s - %s", e.Id, id)
-	}
-	err = db.GetScheduleEventByName(&e, "INVALID")
-	if err == nil {
-		t.Fatalf("ScheduleEvent should not be found")
-	}
-
-	err = db.GetScheduleEventsByScheduleName(&scheduleEvents, "name1")
-	if err != nil {
-		t.Fatalf("Error getting ScheduleEvents %v", err)
-	}
-	if len(scheduleEvents) != 1 {
-		t.Fatalf("There should be 1 ScheduleEvents instead of %d", len(scheduleEvents))
-	}
-
-	err = db.GetScheduleEventsByScheduleName(&scheduleEvents, "name")
-	if err != nil {
-		t.Fatalf("Error getting ScheduleEvents %v", err)
-	}
-	if len(scheduleEvents) != 0 {
-		t.Fatalf("There should be 0 ScheduleEvents instead of %d", len(scheduleEvents))
-	}
-
-	err = db.GetScheduleEventsByAddressableId(&scheduleEvents, e.Addressable.Id)
-	if err != nil {
-		t.Fatalf("Error getting ScheduleEvents %v", err)
-	}
-	if len(scheduleEvents) != 1 {
-		t.Fatalf("There should be 1 ScheduleEvents instead of %d", len(scheduleEvents))
-	}
-
-	err = db.GetScheduleEventsByAddressableId(&scheduleEvents, bson.NewObjectId().Hex())
-	if err != nil {
-		t.Fatalf("Error getting ScheduleEvents %v", err)
-	}
-	if len(scheduleEvents) != 0 {
-		t.Fatalf("There should be 0 ScheduleEvents instead of %d", len(scheduleEvents))
-	}
-
-	err = db.GetScheduleEventsByServiceName(&scheduleEvents, "name1")
-	if err != nil {
-		t.Fatalf("Error getting ScheduleEvents %v", err)
-	}
-	if len(scheduleEvents) != 1 {
-		t.Fatalf("There should be 1 ScheduleEvents instead of %d", len(scheduleEvents))
-	}
-
-	err = db.GetScheduleEventsByServiceName(&scheduleEvents, "name")
-	if err != nil {
-		t.Fatalf("Error getting ScheduleEvents %v", err)
-	}
-	if len(scheduleEvents) != 0 {
-		t.Fatalf("There should be 0 ScheduleEvents instead of %d", len(scheduleEvents))
-	}
-
-	e.Id = id
-	e.Name = "name"
-	err = db.UpdateScheduleEvent(e)
-	if err != nil {
-		t.Fatalf("Error updating ScheduleEvent %v", err)
-	}
-
-	e.Id = "INVALID"
-	err = db.UpdateScheduleEvent(e)
-	if err == nil {
-		t.Fatalf("Should return error")
-	}
-
-	err = db.DeleteScheduleEventById(e.Id.Hex())
-	if err == nil {
-		t.Fatalf("ScheduleEvent should not be deleted")
-	}
-
-	e.Id = id
-	err = db.DeleteScheduleEventById(e.Id.Hex())
-	if err != nil {
-		t.Fatalf("ScheduleEvent should be deleted: %v", err)
 	}
 }
 
