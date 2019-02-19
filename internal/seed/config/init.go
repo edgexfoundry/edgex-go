@@ -22,14 +22,15 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/registry"
 	"fmt"
+	"github.com/edgexfoundry/go-mod-registry"
+	"github.com/edgexfoundry/go-mod-registry/pkg/factory"
 )
 
 // Global variables
 var Configuration *ConfigurationStruct
 var LoggingClient logger.LoggingClient
-var Registry registry.RegistryClient
+var Registry registry.Client
 
 // The purpose of Retry is different here than in other services. In this case, we use a retry in order
 // to initialize the ConsulClient that will be used to write configuration information. Other services
@@ -82,8 +83,13 @@ func initializeConfiguration(useProfile string) (*ConfigurationStruct, error) {
 	return conf, nil
 }
 
-func initRegistryClient(serviceKey string) (registry.RegistryClient, error) {
-	registryClient, err := registry.NewRegistryClient(Configuration.Registry, nil, serviceKey)
+func initRegistryClient(serviceKey string) (registry.Client, error) {
+	registryConfig := registry.Config{
+		Host:          Configuration.Registry.Host,
+		Port:          Configuration.Registry.Port,
+		Type:          Configuration.Registry.Type,
+	}
+	registryClient, err := factory.NewRegistryClient(registryConfig, serviceKey)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create New Registry: %v", err)
 	}

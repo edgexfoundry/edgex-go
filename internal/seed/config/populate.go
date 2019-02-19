@@ -25,7 +25,8 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/magiconair/properties"
 	"github.com/pelletier/go-toml"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/registry"
+	"github.com/edgexfoundry/go-mod-registry"
+	"github.com/edgexfoundry/go-mod-registry/pkg/factory"
 )
 
 // Import configuration files using the specified path to the cmd directory where service configuration files reside.
@@ -67,7 +68,13 @@ func ImportConfiguration(root string, profile string, overwrite bool) error {
 			return nil
 		}
 
-		Registry, err = registry.NewRegistryClient(Configuration.Registry, nil, internal.ServiceKeyPrefix+d)
+		registryConfig := registry.Config{
+			Host: Configuration.Registry.Host,
+			Port: Configuration.Registry.Port,
+			Type: Configuration.Registry.Type,
+			Stem: internal.ConfigRegistryStem,
+		}
+		Registry, err = factory.NewRegistryClient(registryConfig, internal.ServiceKeyPrefix+d)
 		if err != nil {
 			return err
 		}
