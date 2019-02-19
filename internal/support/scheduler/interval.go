@@ -16,7 +16,7 @@ package scheduler
 import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/errors"
-	contract "github.com/edgexfoundry/edgex-go/pkg/models"
+	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/robfig/cron"
 )
 

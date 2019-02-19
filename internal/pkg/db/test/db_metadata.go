@@ -12,7 +12,7 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces"
 	dataBase "github.com/edgexfoundry/edgex-go/internal/pkg/db"
-	"github.com/edgexfoundry/edgex-go/pkg/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/google/uuid"
 )
 

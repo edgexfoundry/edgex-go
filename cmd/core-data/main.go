@@ -16,7 +16,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"net/http"
 	"os"
 	"os/signal"
@@ -27,9 +26,10 @@ import (
 	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/core/data"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
-	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logging"
 	"github.com/gorilla/context"
 )
 

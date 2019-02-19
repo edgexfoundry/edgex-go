@@ -11,7 +11,7 @@ import (
 	"testing"
 
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/interfaces"
-	contract "github.com/edgexfoundry/edgex-go/pkg/models"
+	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
 func TestSchedulerDB(t *testing.T, db interfaces.DBClient) {

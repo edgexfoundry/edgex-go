@@ -19,8 +19,8 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation/models"
-	"github.com/edgexfoundry/edgex-go/pkg/clients"
-	contract "github.com/edgexfoundry/edgex-go/pkg/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients"
+	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
 type httpSender struct {

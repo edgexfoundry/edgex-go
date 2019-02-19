@@ -22,7 +22,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/internal/seed/config"
-	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logging"
 )
 
 func main() {

@@ -9,7 +9,7 @@ package test
 import (
 	"testing"
 
-	"github.com/edgexfoundry/edgex-go/pkg/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/edgexfoundry/edgex-go/internal/export"
 )
 

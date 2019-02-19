@@ -17,7 +17,7 @@ import (
 
 	MQTT "github.com/eclipse/paho.mqtt.golang"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation/models"
-	contract "github.com/edgexfoundry/edgex-go/pkg/models"
+	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
 type mqttSender struct {
