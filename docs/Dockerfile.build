@@ -7,7 +7,7 @@ RUN apt-get update
 RUN apt-get install -y git python-pip latexmk texlive-latex-recommended \
   texlive-latex-extra texlive-fonts-recommended nodejs npm make linkchecker
 RUN ln -s /usr/bin/nodejs /usr/bin/node
-RUN pip install sphinx
+RUN pip install sphinx==1.7.9 sphinxcontrib-googleanalytics==0.1
 RUN npm i -g raml2html@3.0.1
 RUN mkdir docbuild
 WORKDIR /docbuild
@@ -43,6 +43,9 @@ COPY examples ./
 COPY general ./
 COPY getting-started ./
 COPY walk-through ./
+COPY quick-start ./
+COPY security/* ./
+
 
 COPY entrypoint.sh /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
