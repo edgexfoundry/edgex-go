@@ -15,7 +15,7 @@ To build a device service using the EdgeX C SDK you'll need the following:
 
 You can install these on Ubuntu by running::
 
-    sudo apt install libcurl4 libmicrohttpd12 libyaml-0-2
+    sudo apt install libcurl4-openssl-dev libmicrohttpd-dev libyaml-dev
 
 ===============================
 Get the EdgeX Device SDK for C
