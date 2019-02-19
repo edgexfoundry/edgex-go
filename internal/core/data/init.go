@@ -93,7 +93,7 @@ func Retry(useRegistry bool, useProfile string, timeout int, wait *sync.WaitGrou
 }
 
 func Init(useRegistry bool) bool {
-	if Configuration == nil || dbClient == nil || LoggingClient == nil {
+	if Configuration == nil || dbClient == nil {
 		return false
 	}
 	chEvents = make(chan interface{}, 100)
@@ -171,12 +171,12 @@ func initializeConfiguration(useRegistry bool, useProfile string) (*Configuratio
 
 		rawConfig, err := registryClient.GetConfiguration(configuration)
 		if err != nil {
-			return configuration, fmt.Errorf("could not get configuration from Registry: %v", err.Error())
+			return nil, fmt.Errorf("could not get configuration from Registry: %v", err.Error())
 		}
 
 		actual, ok := rawConfig.(*ConfigurationStruct)
 		if !ok {
-			return configuration, fmt.Errorf("configuration from Registry failed type check")
+			return nil, fmt.Errorf("configuration from Registry failed type check")
 		}
 
 		configuration = actual

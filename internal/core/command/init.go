@@ -120,12 +120,12 @@ func initializeConfiguration(useRegistry bool, useProfile string) (*Configuratio
 
 		rawConfig, err := registryClient.GetConfiguration(configuration)
 		if err != nil {
-			return configuration, fmt.Errorf("could not get configuration from Registry: %v", err.Error())
+			return nil, fmt.Errorf("could not get configuration from Registry: %v", err.Error())
 		}
 
 		actual, ok := rawConfig.(*ConfigurationStruct)
 		if !ok {
-			return configuration, fmt.Errorf("configuration from Registry failed type check")
+			return nil, fmt.Errorf("configuration from Registry failed type check")
 		}
 
 		configuration = actual

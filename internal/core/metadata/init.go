@@ -107,31 +107,31 @@ func Destruct() {
 
 func initializeConfiguration(useRegistry bool, useProfile string) (*ConfigurationStruct, error) {
 	//We currently have to load configuration from filesystem first in order to obtain RegistryHost/Port
-	conf := &ConfigurationStruct{}
-	err := config.LoadFromFile(useProfile, conf)
+	configuration := &ConfigurationStruct{}
+	err := config.LoadFromFile(useProfile, configuration)
 	if err != nil {
 		return nil, err
 	}
 
 	if useRegistry {
-		err = connectToRegistry(conf)
+		err = connectToRegistry(configuration)
 		if err != nil {
 			return nil, err
 		}
 
-		rawConfig, err := registryClient.GetConfiguration(conf)
+		rawConfig, err := registryClient.GetConfiguration(configuration)
 		if err != nil {
-			return conf, fmt.Errorf("could not get configuration from Registry: %v", err.Error())
+			return nil, fmt.Errorf("could not get configuration from Registry: %v", err.Error())
 		}
 
 		actual, ok := rawConfig.(*ConfigurationStruct)
 		if !ok {
-			return conf, fmt.Errorf("configuration from Registry failed type check")
+			return nil, fmt.Errorf("configuration from Registry failed type check")
 		}
 
-		conf = actual
+		configuration = actual
 	}
-	return conf, nil
+	return configuration, nil
 }
 
 func connectToRegistry(conf *ConfigurationStruct) error {
