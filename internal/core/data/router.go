@@ -139,7 +139,7 @@ func eventCountByDeviceIdHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), err.StatusCode)
 			return
 		default: //return an error on everything else.
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 	}
@@ -456,7 +456,7 @@ func deleteByDeviceIdHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), err.StatusCode)
 			return
 		default: //return an error on everything else.
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 	}
@@ -572,7 +572,7 @@ func readingByDeviceFilteredValueDescriptor(w http.ResponseWriter, r *http.Reque
 				http.Error(w, err.Error(), err.StatusCode)
 				return
 			default: //return an error on everything else.
-				http.Error(w, err.Error(), http.StatusServiceUnavailable)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
 		}
@@ -677,7 +677,7 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 					http.Error(w, err.Error(), err.StatusCode)
 					return
 				default: //return an error on everything else.
-					http.Error(w, err.Error(), http.StatusServiceUnavailable)
+					http.Error(w, err.Error(), http.StatusInternalServerError)
 					return
 				}
 			}
@@ -755,7 +755,7 @@ func getReadingByIdHandler(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, err.Error(), http.StatusNotFound)
 				return
 			default: //return an error on everything else.
-				http.Error(w, err.Error(), http.StatusServiceUnavailable)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
 		}
@@ -802,7 +802,7 @@ func deleteReadingByIdHandler(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, err.Error(), http.StatusNotFound)
 				return
 			default: //return an error on everything else.
-				http.Error(w, err.Error(), http.StatusServiceUnavailable)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
 		}
@@ -853,7 +853,7 @@ func readingByDeviceHandler(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, err.Error(), err.StatusCode)
 				return
 			default:
-				http.Error(w, err.Error(), http.StatusServiceUnavailable)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
 		}
@@ -1132,7 +1132,7 @@ func readingByValueDescriptorAndDeviceHandler(w http.ResponseWriter, r *http.Req
 			http.Error(w, err.Error(), err.StatusCode)
 			return
 		default: //return an error on everything else.
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 	}
