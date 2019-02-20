@@ -57,7 +57,7 @@ func Retry(useProfile string, timeout int, wait *sync.WaitGroup, ch chan error) 
 				ch <- err
 			}
 		} else {
-			if !Registry.IsRegistryRunning() {
+			if !Registry.IsAlive() {
 				ch <- fmt.Errorf("Registry (%s) is not running", Configuration.Registry.Type)
 			} else {
 				break
@@ -99,7 +99,7 @@ func initRegistryClient(serviceKey string) (registry.Client, error) {
 		return nil, fmt.Errorf("unable to create New Registry: %v", err)
 	}
 
-	if !registryClient.IsRegistryRunning() {
+	if !registryClient.IsAlive() {
 		return nil, fmt.Errorf("registry is not available")
 
 	}

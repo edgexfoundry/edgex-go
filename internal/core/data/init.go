@@ -205,7 +205,7 @@ func connectToRegistry(conf *ConfigurationStruct) error {
 	}
 
 	// Check if registry service is running
-	if !registryClient.IsRegistryRunning() {
+	if !registryClient.IsAlive() {
 		return fmt.Errorf("registry is not available")
 	}
 
