@@ -79,7 +79,7 @@ func ImportConfiguration(root string, profile string, overwrite bool) error {
 			return err
 		}
 
-		Registry.PutConfiguration(configuration, overwrite)
+		Registry.PutConfigurationToml(configuration, overwrite)
 	}
 
 	return nil
