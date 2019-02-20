@@ -34,5 +34,5 @@ LABEL license='SPDX-License-Identifier: Apache-2.0' \
 COPY --from=builder /bin/bash /bin/bash
 COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/support-notifications/support-notifications /
 COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/support-notifications/res/docker/configuration.toml /res/docker/configuration.toml
-ENTRYPOINT ["/support-notifications","--consul","--profile=docker","--confdir=/res"]
+ENTRYPOINT ["/support-notifications","--registry","--profile=docker","--confdir=/res"]
 
