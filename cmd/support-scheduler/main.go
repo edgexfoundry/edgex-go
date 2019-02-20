@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/edgexfoundry/edgex-go"
-	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
+	logger "github.com/edgexfoundry/edgex-go/pkg/clients/logging"
 	"github.com/gorilla/context"
 
 	"github.com/edgexfoundry/edgex-go/internal"
@@ -24,20 +24,20 @@ import (
 func main() {
 
 	start := time.Now()
-	var useConsul bool
+	var useRegistry bool
 	var useProfile string
 
-	flag.BoolVar(&useConsul, "consul", false, "Indicates the service should use consul.")
-	flag.BoolVar(&useConsul, "c", false, "Indicates the service should use consul.")
+	flag.BoolVar(&useRegistry, "registry", false, "Indicates the service should use Registry.")
+	flag.BoolVar(&useRegistry, "r", false, "Indicates the service should use Registry.")
 	flag.StringVar(&useProfile, "profile", "", "Specify a profile other than default.")
 	flag.StringVar(&useProfile, "p", "", "Specify a profile other than default.")
 	flag.Usage = usage.HelpCallback
 	flag.Parse()
 
-	params := startup.BootParams{UseConsul: useConsul, UseProfile: useProfile, BootTimeout: internal.BootTimeoutDefault}
+	params := startup.BootParams{UseConsul: useRegistry, UseProfile: useProfile, BootTimeout: internal.BootTimeoutDefault}
 	startup.Bootstrap(params, scheduler.Retry, logBeforeInit)
 
-	ok := scheduler.Init(useConsul)
+	ok := scheduler.Init(useRegistry)
 	if !ok {
 		logBeforeInit(fmt.Errorf("%s: Service bootstrap failed!", internal.SupportSchedulerServiceKey))
 		os.Exit(1)
