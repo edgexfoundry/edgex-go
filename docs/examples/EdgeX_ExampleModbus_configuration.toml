@@ -1,0 +1,109 @@
+[Service]
+Host = "localhost"
+Port = 49991
+ConnectRetries = 3
+Labels = []
+OpenMsg = "device modbus started"
+ReadMaxLimit = 256
+Timeout = 5000
+EnableAsyncReadings = true
+AsyncBufferSize = 16
+
+[Registry]
+Host = "localhost"
+Port = 8500
+CheckInterval = "10s"
+FailLimit = 3
+FailWaitTime = 10
+
+[Clients]
+  [Clients.Data]
+  Name = "edgex-core-data"
+  Protocol = "http"
+  Host = "localhost"
+  Port = 48080
+  Timeout = 50000
+
+  [Clients.Metadata]
+  Name = "edgex-core-metadata"
+  Protocol = "http"
+  Host = "localhost"
+  Port = 48081
+  Timeout = 50000
+
+  [Clients.Logging]
+  Name = "edgex-support-logging"
+  Protocol = "http"
+  Host = "localhost"
+  Port = 48061
+
+[Device]
+  DataTransform = true
+  InitCmd = ""
+  InitCmdArgs = ""
+  MaxCmdOps = 128
+  MaxCmdValueLen = 256
+  RemoveCmd = ""
+  RemoveCmdArgs = ""
+  ProfilesDir = "./res/example"
+
+[Logging]
+EnableRemote = false
+File = "./device-Modbus.log"
+Level = "DEBUG"
+
+# Pre-define Devices
+[[DeviceList]]
+  Name = "Modbus TCP test device"
+  Profile = "Test.Device.Modbus.Profile"
+  Description = "This device is a product for monitoring and controlling digital inputs and outputs over a LAN."
+  labels = [ "Air conditioner","modbus TCP" ]
+  [DeviceList.Addressable]
+    name = "Gateway address 1"
+    Protocol = "TCP"
+    Address = "0.0.0.0"
+    Port = 1502
+    Path = "1"
+
+[[DeviceList]]
+  Name = "Modbus RTU test device"
+  Profile = "Test.Device.Modbus.Profile"
+  Description = "This device is a product for monitoring and controlling digital inputs and outputs over a LAN."
+  labels = [ "Air conditioner","modbus RTU" ]
+  [DeviceList.Addressable]
+    name = "Gateway address 2"
+    Protocol = "RTU"
+    Address = "/tmp/slave,19200,8,1,0"
+    Path = "1"
+
+# Pre-define Schedule Configuration
+[[Schedules]]
+Name = "10sec-schedule"
+Frequency = "PT10S"
+
+[[ScheduleEvents]]
+Name = "Set HVAC Values"
+Parameters = "[{\"OperationMode\": \"Auto\"},{\"FanSpeed\": \"Med\"},{\"Temperature\": \"11.22\"}]"
+Schedule = "10sec-schedule"
+  [ScheduleEvents.Addressable]
+  HTTPMethod = "Put"
+  Path = "/api/v1/device/name/Modbus TCP test device/HVACValues"
+
+[[ScheduleEvents]]
+Name = "Set the Switch"
+Parameters = "[{\"SwitchA\": \"ON\"},{\"SwitchB\": \"ON\"}]"
+Schedule = "10sec-schedule"
+  [ScheduleEvents.Addressable]
+  HTTPMethod = "Put"
+  Path = "/api/v1/device/name/Modbus TCP test device/Switch"
+
+[[Schedules]]
+Name = "5sec-schedule"
+Frequency = "PT5S"
+
+[[ScheduleEvents]]
+Name = "Read Values"
+Schedule = "5sec-schedule"
+  [ScheduleEvents.Addressable]
+  HTTPMethod = "GET"
+Path = "/api/v1/device/name/Modbus TCP test device/Values"
