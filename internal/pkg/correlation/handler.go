@@ -2,7 +2,7 @@ package correlation
 
 import (
 	"context"
-	"github.com/edgexfoundry/edgex-go/pkg/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 )
 
 func FromContext(ctx context.Context) string {

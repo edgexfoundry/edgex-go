@@ -12,8 +12,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/edgexfoundry/edgex-go/pkg/clients"
-	contract "github.com/edgexfoundry/edgex-go/pkg/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients"
+	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
 //TODO: Since this is a service-to-service client, it should be in /pkg/clients/export

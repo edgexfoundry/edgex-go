@@ -16,7 +16,7 @@ package scheduler
 import (
 	errorsSched "github.com/edgexfoundry/edgex-go/internal/support/scheduler/errors"
 	dbMock "github.com/edgexfoundry/edgex-go/internal/support/scheduler/interfaces/mocks"
-	"github.com/edgexfoundry/edgex-go/pkg/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/mock"
 	"testing"

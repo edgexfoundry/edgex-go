@@ -9,7 +9,7 @@ package scheduler
 import (
 	"errors"
 	"fmt"
-	contract "github.com/edgexfoundry/edgex-go/pkg/models"
+	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 	queueV1 "gopkg.in/eapache/queue.v1"
 	"io/ioutil"
 	"net/http"

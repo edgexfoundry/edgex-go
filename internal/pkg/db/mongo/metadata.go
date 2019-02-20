@@ -20,9 +20,10 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo/models"
-	contract "github.com/edgexfoundry/edgex-go/pkg/models"
+	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
+	"github.com/google/uuid"
 )
 
 /* -----------------------Schedule Event ------------------------*/
@@ -30,7 +31,7 @@ import (
 func (mc MongoClient) UpdateScheduleEvent(se contract.ScheduleEvent) error {
 	se.Modified = db.MakeTimestamp()
 
-	return mc.updateId(db.ScheduleEvent, se.Id.Hex(), mongoScheduleEvent{ScheduleEvent: se})
+	return mc.updateId(db.ScheduleEvent, se.Id, mongoScheduleEvent{ScheduleEvent: se})
 }
 
 func (mc MongoClient) AddScheduleEvent(se *contract.ScheduleEvent) error {
@@ -47,7 +48,7 @@ func (mc MongoClient) AddScheduleEvent(se *contract.ScheduleEvent) error {
 	ts := db.MakeTimestamp()
 	se.Created = ts
 	se.Modified = ts
-	se.Id = bson.NewObjectId()
+	se.Id = uuid.New().String()
 
 	mse := mongoScheduleEvent{ScheduleEvent: *se}
 
@@ -151,14 +152,14 @@ func (mc MongoClient) AddSchedule(sch *contract.Schedule) error {
 	ts := db.MakeTimestamp()
 	sch.Created = ts
 	sch.Modified = ts
-	sch.Id = bson.NewObjectId()
+	sch.Id = uuid.New().String()
 	return errorMap(col.Insert(sch))
 }
 
 func (mc MongoClient) UpdateSchedule(sch contract.Schedule) error {
 	sch.Modified = db.MakeTimestamp()
 
-	return mc.updateId(db.Schedule, sch.Id.Hex(), sch)
+	return mc.updateId(db.Schedule, sch.Id, sch)
 }
 
 func (mc MongoClient) DeleteScheduleById(id string) error {

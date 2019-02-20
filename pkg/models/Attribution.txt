@@ -1,4 +1,0 @@
-The following open source projects are referenced by Core Domain Go:
-
-globalsign/mgo (unspecified) - https://github.com/globalsign/mgo
-https://github.com/globalsign/mgo/blob/master/LICENSE

@@ -19,7 +19,7 @@ import (
 	"time"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/consul"
-	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
 )
 
 type Endpoint struct{}
