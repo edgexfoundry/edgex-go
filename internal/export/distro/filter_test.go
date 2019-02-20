@@ -9,7 +9,7 @@ package distro
 import (
 	"testing"
 
-	contract "github.com/edgexfoundry/edgex-go/pkg/models"
+	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
 const (

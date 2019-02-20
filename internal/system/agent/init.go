@@ -23,8 +23,8 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/logger"
 
-	"github.com/edgexfoundry/edgex-go/pkg/clients/general"
-	"github.com/edgexfoundry/edgex-go/pkg/clients/types"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/general"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
 )
 
 // Global variables

@@ -12,7 +12,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/edgexfoundry/edgex-go/pkg/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 )
 
 func TestPing(t *testing.T) {

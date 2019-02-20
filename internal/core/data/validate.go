@@ -13,7 +13,7 @@ import (
 	"strconv"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
-	models "github.com/edgexfoundry/edgex-go/pkg/models"
+	models "github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
 func isValidValueDescriptor(vd models.ValueDescriptor, reading models.Reading) error {

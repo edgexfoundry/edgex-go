@@ -4,9 +4,10 @@ require (
 	github.com/BurntSushi/toml v0.3.1
 	github.com/cenkalti/backoff v2.1.1+incompatible // indirect
 	github.com/eclipse/paho.mqtt.golang v1.1.1
+	github.com/edgexfoundry/go-mod-core-contracts v0.0.0-20190206111100-148998445693
 	github.com/globalsign/mgo v0.0.0-20181015135952-eeefdecb41b8
 	github.com/go-kit/kit v0.8.0
-	github.com/go-logfmt/logfmt v0.4.0 // indirect
+	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/google/uuid v1.1.0
 	github.com/gorilla/context v1.1.1
 	github.com/gorilla/mux v1.7.0

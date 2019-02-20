@@ -17,7 +17,7 @@ import (
 	"testing"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation/models"
-	contract "github.com/edgexfoundry/edgex-go/pkg/models"
+	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
 func TestHttpSender(t *testing.T) {

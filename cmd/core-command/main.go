@@ -24,7 +24,7 @@ import (
 	"time"
 
 	"github.com/edgexfoundry/edgex-go"
-	"github.com/edgexfoundry/edgex-go/pkg/clients/logging"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logging"
 	"github.com/gorilla/context"
 
 	"github.com/edgexfoundry/edgex-go/internal"

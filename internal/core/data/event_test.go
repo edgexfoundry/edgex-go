@@ -24,7 +24,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
 	dbMock "github.com/edgexfoundry/edgex-go/internal/core/data/interfaces/mocks"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
-	"github.com/edgexfoundry/edgex-go/pkg/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/models"
 
 	"github.com/globalsign/mgo/bson"
 	"github.com/stretchr/testify/mock"

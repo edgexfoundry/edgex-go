@@ -16,7 +16,7 @@ package config
 import (
 	"fmt"
 
-	"github.com/edgexfoundry/edgex-go/pkg/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 )
 
 // Cannot use type string inside structs to be parsed into map[string]interface{} correctly
