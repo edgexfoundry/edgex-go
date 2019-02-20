@@ -80,8 +80,8 @@ The DeviceProfile defines the device's values and operation method, which can be
         :scale: 50%
         :alt: Device profile
 
-You can download and use the provided :download:`modbus.test.device.profile.yml
-<modbus.test.device.profile.yml>`.
+You can download and use the provided :download:`mqtt.test.device.profile.yml
+<mqtt.test.device.profile.yml>`.
 
 
 Set Up Device Service Configuration

@@ -73,8 +73,8 @@ Set Up Device Profile
 
 The DeviceProfile defines the device's values and operation method, which can be Read or Write. 
 
-You can download and use the provided :download:`mqtt.test.device.profile.yml
-<mqtt.test.device.profile.yml>`.
+You can download and use the provided :download:`modbus.test.device.profile.yml
+<modbus.test.device.profile.yml>`.
 
 In the Modbus protocol, we must define attributes: 
 
