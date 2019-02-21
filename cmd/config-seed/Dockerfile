@@ -16,7 +16,7 @@
 ###############################################################################
 
 # Docker image for building EdgeX Foundry Config Seed
-FROM golang:1.11.2-alpine3.7 AS build-env
+FROM golang:1.11-alpine AS build-env
 
 # environment variables
 ENV GO111MODULE=on
@@ -30,7 +30,7 @@ RUN apk update && apk add make git
 
 # copy go source files
 COPY go.mod .
-COPY go.sum .
+#COPY go.sum .
 
 RUN go mod download
 
@@ -41,7 +41,7 @@ RUN make prepare
 RUN make cmd/config-seed/config-seed
 
 # Consul Docker image for EdgeX Foundry
-FROM golang:1.11.2-alpine3.7
+FROM golang:1.11-alpine
 
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
       copyright='Copyright (c) 2017: Samsung'
