@@ -165,6 +165,7 @@ func connectToRegistry(conf *ConfigurationStruct) error {
 		Host:            conf.Registry.Host,
 		Port:            conf.Registry.Port,
 		Type:            conf.Registry.Type,
+		ServiceKey:      internal.SupportSchedulerServiceKey,
 		ServiceHost:     conf.Service.Host,
 		ServicePort:     conf.Service.Port,
 		ServiceProtocol: conf.Service.Protocol,
@@ -173,7 +174,7 @@ func connectToRegistry(conf *ConfigurationStruct) error {
 		Stem:            internal.ConfigRegistryStem,
 	}
 
-	registryClient, err = factory.NewRegistryClient(registryConfig, internal.SupportSchedulerServiceKey)
+	registryClient, err = factory.NewRegistryClient(registryConfig)
 	if err != nil {
 		return fmt.Errorf("connection to Registry could not be made: %v", err.Error())
 	}

@@ -90,11 +90,12 @@ func initializeConfiguration(useProfile string) (*ConfigurationStruct, error) {
 
 func initRegistryClient(serviceKey string) (registry.Client, error) {
 	registryConfig := registry.Config{
-		Host: Configuration.Registry.Host,
-		Port: Configuration.Registry.Port,
-		Type: Configuration.Registry.Type,
+		Host:       Configuration.Registry.Host,
+		Port:       Configuration.Registry.Port,
+		Type:       Configuration.Registry.Type,
+		ServiceKey: serviceKey,
 	}
-	registryClient, err := factory.NewRegistryClient(registryConfig, serviceKey)
+	registryClient, err := factory.NewRegistryClient(registryConfig)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create New Registry: %v", err)
 	}

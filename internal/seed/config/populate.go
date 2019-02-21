@@ -39,13 +39,13 @@ func ImportConfiguration(root string, profile string, overwrite bool) error {
 	}
 
 	// For every application directory...
-	for _, d := range dirs {
-		LoggingClient.Debug(fmt.Sprintf("importing: %s/%s", absRoot, d))
+	for _, serviceName := range dirs {
+		LoggingClient.Debug(fmt.Sprintf("importing: %s/%s", absRoot, serviceName))
 		if err != nil {
 			return err
 		}
 		// Find the resource (res) directory...
-		res := fmt.Sprintf("%s/%s/res", absRoot, d)
+		res := fmt.Sprintf("%s/%s/res", absRoot, serviceName)
 
 		// Append profile to the path if specified...
 		if len(profile) > 0 {
@@ -73,8 +73,9 @@ func ImportConfiguration(root string, profile string, overwrite bool) error {
 			Port: Configuration.Registry.Port,
 			Type: Configuration.Registry.Type,
 			Stem: internal.ConfigRegistryStem,
+			ServiceKey: internal.ServiceKeyPrefix + serviceName,
 		}
-		Registry, err = factory.NewRegistryClient(registryConfig, internal.ServiceKeyPrefix+d)
+		Registry, err = factory.NewRegistryClient(registryConfig)
 		if err != nil {
 			return err
 		}
