@@ -36,6 +36,7 @@ ENV APP_PORT=48082
 EXPOSE $APP_PORT
 
 WORKDIR /
+COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/core-metadata/Attribution.txt /
 COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/core-metadata/core-metadata /
 COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/core-metadata/res/docker/configuration.toml /res/docker/configuration.toml
 ENTRYPOINT ["/core-metadata","--consul","--profile=docker","--confdir=/res"]

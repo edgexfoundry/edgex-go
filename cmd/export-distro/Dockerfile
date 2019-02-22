@@ -37,6 +37,7 @@ LABEL license='SPDX-License-Identifier: Apache-2.0' \
 RUN sed -e 's/dl-cdn[.]alpinelinux.org/nl.alpinelinux.org/g' -i~ /etc/apk/repositories
 
 RUN apk --no-cache add zeromq
+COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/export-distro/Attribution.txt /
 COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/export-distro/export-distro /
 COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/export-distro/res/docker/configuration.toml /res/docker/configuration.toml
 ENTRYPOINT ["/export-distro","--consul","--profile=docker","--confdir=/res"]

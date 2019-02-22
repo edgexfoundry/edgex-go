@@ -31,6 +31,7 @@ FROM scratch
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
       copyright='Copyright (c) 2017-2019: Mainflux, Cavium, Dell'
 
+COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/export-client/Attribution.txt /
 COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/export-client/export-client /
 COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/export-client/res/docker/configuration.toml /res/docker/configuration.toml
 ENTRYPOINT ["/export-client","--consul","--profile=docker","--confdir=/res"]
