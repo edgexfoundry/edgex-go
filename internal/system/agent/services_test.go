@@ -79,7 +79,7 @@ func TestProcessResponse(t *testing.T) {
 		return
 	}
 
-	var exp = ConfigRespMap{}
+	var exp = make(map[string]interface{})
 	err = json.Unmarshal([]byte(expected), &exp)
 	if err != nil {
 		logs.LoggingClient.Error(fmt.Sprintf("ERROR: {%v}", err))
