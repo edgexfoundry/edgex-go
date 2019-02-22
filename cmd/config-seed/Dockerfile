@@ -55,6 +55,7 @@ ENV APP_DIR=/edgex/cmd/config-seed
 WORKDIR $APP_DIR
 
 # copy files
+COPY --from=build-env $GOPATH/src/github.com/edgexfoundry/edgex-go/cmd/config-seed/Attribution.txt  .
 COPY --from=build-env $GOPATH/src/github.com/edgexfoundry/edgex-go/cmd/config-seed/config-seed  .
 COPY --from=build-env $GOPATH/src/github.com/edgexfoundry/edgex-go/cmd/config-seed/res ./res
 COPY --from=build-env $GOPATH/src/github.com/edgexfoundry/edgex-go/cmd/core-command/res /edgex/cmd/core-command/res
