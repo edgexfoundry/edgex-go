@@ -19,8 +19,6 @@ EnableRemote = false
 File = '/edgex/logs/edgex-sys-mgmt-agent.log'
 
 ExecutorPath = '/path/to/the/file'
-# The following (ExecutorPath) is DEBUG_ONLY:
-# ExecutorPath = '/Users/akramahmad/go/src/github.com/edgexfoundry/docker-compose-executor/main'
 
 [Clients]
   [Clients.Notifications]

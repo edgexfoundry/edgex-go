@@ -18,7 +18,7 @@ func runExec(service string, operation string) error {
 
 	_, err := cmd.CombinedOutput()
 	if err != nil {
-		logs.LoggingClient.Error(fmt.Sprintf("the error occurred in the invocation of executor: %v ", err.Error()))
+		logs.LoggingClient.Error(fmt.Sprintf("an error occurred in the invocation of the executor on the service named %s and where the requested operation was %s: %v ", service, operation, err.Error()))
 	} else {
 		logs.LoggingClient.Info("invocation of executor succeeded")
 	}
