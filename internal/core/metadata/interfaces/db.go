@@ -56,7 +56,6 @@ type DBClient interface {
 	GetAllDevices() ([]contract.Device, error)
 	GetDevicesByProfileId(pid string) ([]contract.Device, error)
 	GetDevicesByServiceId(sid string) ([]contract.Device, error)
-	GetDevicesByAddressableId(aid string) ([]contract.Device, error)
 	GetDevicesWithLabel(l string) ([]contract.Device, error)
 	AddDevice(d contract.Device) (string, error)
 	DeleteDeviceById(id string) error

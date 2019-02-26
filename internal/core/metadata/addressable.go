@@ -14,8 +14,6 @@
 package metadata
 
 import (
-	"net/http"
-
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
@@ -115,13 +113,6 @@ func updateAddressable(addressable contract.Addressable) error {
 	}
 
 	if err := dbClient.UpdateAddressable(dest); err != nil {
-		LoggingClient.Error(err.Error())
-		return err
-	}
-
-	// Notify Associates
-	// TODO: Should this call be here, or in rest_addressable.go?
-	if err := notifyAddressableAssociates(dest, http.MethodPut); err != nil {
 		LoggingClient.Error(err.Error())
 		return err
 	}

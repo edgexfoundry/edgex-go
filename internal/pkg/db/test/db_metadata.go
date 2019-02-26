@@ -34,6 +34,27 @@ func TestMetadataDB(t *testing.T, db interfaces.DBClient) {
 	db.CloseSession()
 }
 
+func getProtocols() map[string]map[string]string {
+	p1 := make(map[string]string)
+	p1["host"] = "localhost"
+	p1["port"] = "1234"
+	p1["unitID"] = "1"
+
+	p2 := make(map[string]string)
+	p2["serialPort"] = "/dev/USB0"
+	p2["baudRate"] = "19200"
+	p2["dataBits"] = "8"
+	p2["stopBits"] = "1"
+	p2["parity"] = "0"
+	p2["unitID"] = "2"
+
+	wrap := make(map[string]map[string]string)
+	wrap["modbus-ip"] = p1
+	wrap["modbus-rtu"] = p2
+
+	return wrap
+}
+
 func getAddressable(i int, prefix string) models.Addressable {
 	name := fmt.Sprintf("%sname%d", prefix, i)
 	a := models.Addressable{}
@@ -173,12 +194,7 @@ func populateDevice(db interfaces.DBClient, count int) (string, error) {
 		d.LastReported = 4
 		d.Labels = append(d.Labels, name)
 
-		d.Addressable = getAddressable(i, "device")
-		d.Addressable.Id, err = db.AddAddressable(d.Addressable)
-		if err != nil {
-			return id, fmt.Errorf("Error creating addressable: %v", err)
-		}
-
+		d.Protocols = getProtocols()
 		d.Service, err = getDeviceService(db, i)
 		if err != nil {
 			return id, nil
@@ -997,22 +1013,6 @@ func testDBDevice(t *testing.T, db interfaces.DBClient) {
 	}
 
 	devices, err = db.GetDevicesByServiceId(uuid.New().String())
-	if err != dataBase.ErrNotFound {
-		t.Fatalf("Error getting devices %v", err)
-	}
-	if len(devices) != 0 {
-		t.Fatalf("There should be 0 devices instead of %d", len(devices))
-	}
-
-	devices, err = db.GetDevicesByAddressableId(d.Addressable.Id)
-	if err != nil {
-		t.Fatalf("Error getting devices %v", err)
-	}
-	if len(devices) != 1 {
-		t.Fatalf("There should be 1 devices instead of %d", len(devices))
-	}
-
-	devices, err = db.GetDevicesByAddressableId(uuid.New().String())
 	if err != dataBase.ErrNotFound {
 		t.Fatalf("Error getting devices %v", err)
 	}

@@ -206,15 +206,6 @@ func restDeleteAddressableByName(w http.ResponseWriter, r *http.Request) {
 
 // Helper function to determine if an addressable is still referenced by a device or device service
 func isAddressableStillInUse(a models.Addressable) (bool, error) {
-	// Check devices
-	d, err := dbClient.GetDevicesByAddressableId(a.Id)
-	if err != nil {
-		return false, err
-	}
-	if len(d) > 0 {
-		return true, nil
-	}
-
 	// Check device services
 	ds, err := dbClient.GetDeviceServicesByAddressableId(a.Id)
 	if err != nil {
@@ -326,33 +317,4 @@ func restGetAddressableByAddress(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(res)
-}
-
-// Notify the associated device services for changes in the device addressable
-func notifyAddressableAssociates(a models.Addressable, action string) error {
-	// Get the devices
-	d, err := dbClient.GetDevicesByAddressableId(a.Id)
-	if err != nil {
-		LoggingClient.Error(err.Error())
-		return err
-	}
-
-	// Get the services for each device
-	// Use map as a Set
-	dsMap := map[string]models.DeviceService{}
-	ds := []models.DeviceService{}
-	for _, device := range d {
-		// Only add if not there
-		if _, ok := dsMap[device.Service.Service.Id]; !ok {
-			dsMap[device.Service.Service.Id] = device.Service
-			ds = append(ds, device.Service)
-		}
-	}
-
-	if err := notifyAssociates(ds, a.Id, action, models.ADDRESSABLE); err != nil {
-		LoggingClient.Error(err.Error())
-		return err
-	}
-
-	return nil
 }
