@@ -15,6 +15,7 @@ package errors
 
 import (
 	"fmt"
+
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 )
 
@@ -89,6 +90,18 @@ func (e ErrValueDescriptorInUse) Error() string {
 
 func NewErrValueDescriptorInUse(name string) error {
 	return &ErrValueDescriptorInUse{name: name}
+}
+
+type ErrDuplicateValueDescriptorName struct {
+	name string
+}
+
+func (e ErrDuplicateValueDescriptorName) Error() string {
+	return fmt.Sprintf("duplicate name for value descriptor: %s", e.name)
+}
+
+func NewErrDuplicateValueDescriptorName(name string) error {
+	return &ErrDuplicateValueDescriptorName{name: name}
 }
 
 type ErrLimitExceeded struct {

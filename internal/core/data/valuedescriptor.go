@@ -210,7 +210,7 @@ func addValueDescriptor(vd contract.ValueDescriptor) (id string, err error) {
 	if err != nil {
 		LoggingClient.Error(err.Error())
 		if err == db.ErrNotUnique {
-			return "", errors.NewErrValueDescriptorInUse(vd.Name)
+			return "", errors.NewErrDuplicateValueDescriptorName(vd.Name)
 		} else {
 			return "", err
 		}
@@ -285,7 +285,7 @@ func updateValueDescriptor(from contract.ValueDescriptor) error {
 	if err != nil {
 		if err == db.ErrNotUnique {
 			LoggingClient.Error("Value descriptor name is not unique")
-			return errors.NewErrValueDescriptorInUse(to.Name)
+			return errors.NewErrDuplicateValueDescriptorName(to.Name)
 		} else {
 			LoggingClient.Error(err.Error())
 			return err

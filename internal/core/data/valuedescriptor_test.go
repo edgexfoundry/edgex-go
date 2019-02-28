@@ -463,7 +463,7 @@ func TestAddValueDescriptor(t *testing.T) {
 	}
 }
 
-func TestAddValueDescriptorInUse(t *testing.T) {
+func TestAddDuplicateValueDescriptor(t *testing.T) {
 	reset()
 	myMock := &mocks.DBClient{}
 
@@ -475,10 +475,10 @@ func TestAddValueDescriptorInUse(t *testing.T) {
 
 	if err != nil {
 		switch err.(type) {
-		case *errors.ErrValueDescriptorInUse:
+		case *errors.ErrDuplicateValueDescriptorName:
 			return
 		default:
-			t.Errorf("Unexpected error getting value descriptor by UOM label missing in DB")
+			t.Errorf("Unexpected error adding value descriptor that already exists")
 		}
 	}
 
