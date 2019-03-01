@@ -38,4 +38,4 @@ EXPOSE $APP_PORT
 COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/support-scheduler/Attribution.txt /
 COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/support-scheduler/support-scheduler /
 COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/support-scheduler/res/docker/configuration.toml /res/docker/configuration.toml
-ENTRYPOINT ["/support-scheduler","--consul","--profile=docker","--confdir=/res"]
+ENTRYPOINT ["/support-scheduler","--registry","--profile=docker","--confdir=/res"]

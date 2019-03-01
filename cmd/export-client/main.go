@@ -19,33 +19,32 @@ import (
 	"time"
 
 	"github.com/edgexfoundry/edgex-go"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logging"
-
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/export/client"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logging"
 )
 
 func main() {
 	start := time.Now()
 	var (
-		useConsul  bool
-		useProfile string
+		useRegistry bool
+		useProfile  string
 	)
 
-	flag.BoolVar(&useConsul, "consul", false, "Indicates the service should use consul.")
-	flag.BoolVar(&useConsul, "c", false, "Indicates the service should use consul.")
+	flag.BoolVar(&useRegistry, "registry", false, "Indicates the service should use Registry.")
+	flag.BoolVar(&useRegistry, "r", false, "Indicates the service should use Registry.")
 	flag.StringVar(&useProfile, "profile", "", "Specify a profile other than default.")
 	flag.StringVar(&useProfile, "p", "", "Specify a profile other than default.")
 	flag.Usage = usage.HelpCallback
 	flag.Parse()
 
-	params := startup.BootParams{UseConsul: useConsul, UseProfile: useProfile, BootTimeout: internal.BootTimeoutDefault}
+	params := startup.BootParams{UseRegistry: useRegistry, UseProfile: useProfile, BootTimeout: internal.BootTimeoutDefault}
 	startup.Bootstrap(params, client.Retry, logBeforeInit)
 
-	ok := client.Init(useConsul)
+	ok := client.Init(useRegistry)
 	if !ok {
 		logBeforeInit(fmt.Errorf("%s: Service bootstrap failed", internal.ExportClientServiceKey))
 		os.Exit(1)

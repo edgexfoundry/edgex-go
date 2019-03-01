@@ -21,8 +21,9 @@ import (
 var usageStr = `
 Usage: %s [options]
 Server Options:
-    -c, --consul                    Indicates service should use Consul
+    -r, --registry                  Indicates service should use Registry
     -p, --profile <name>            Indicate configuration profile other than default
+    -confdir                        Specify local configuration directory
 Common Options:
     -h, --help                      Show this message
 `

@@ -40,4 +40,4 @@ RUN apk --no-cache add zeromq
 COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/export-distro/Attribution.txt /
 COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/export-distro/export-distro /
 COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/export-distro/res/docker/configuration.toml /res/docker/configuration.toml
-ENTRYPOINT ["/export-distro","--consul","--profile=docker","--confdir=/res"]
+ENTRYPOINT ["/export-distro","--registry","--profile=docker","--confdir=/res"]
