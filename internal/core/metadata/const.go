@@ -59,8 +59,6 @@ const (
 	KEY                      = "key"
 	VALUE                    = "value"
 	VALUEDESCRIPTORSFOR      = "valueDescriptorsFor"
-	DEVICEADDRESSABLES       = "deviceaddressables"
-	DEVICEADDRESSABLESBYNAME = "deviceaddressablesbyname"
 	UNLOCKED                 = "UNLOCKED"
 	ENABLED                  = "ENABLED"
 	SCHEDULER_TIMELAYOUT     = "20060102T150405"

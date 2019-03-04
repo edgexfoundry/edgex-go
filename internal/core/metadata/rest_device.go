@@ -63,20 +63,13 @@ func restAddNewDevice(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Addressable check
-	// Try by name
-	//TODO: Is what we really need here a checkForAddressable() function?
-	addressable, err := dbClient.GetAddressableByName(d.Addressable.Name)
-	if err != nil {
-		// Try by ID
-		addressable, err = dbClient.GetAddressableById(d.Addressable.Id)
-		if err != nil {
-			LoggingClient.Error(err.Error())
-			http.Error(w, err.Error()+": A device must be associated to an Addressable", http.StatusBadRequest)
-			return
-		}
+	// Protocol check
+	if len(d.Protocols) == 0 {
+		err := errors.New("no supporting protocol specified for device")
+		LoggingClient.Error(err.Error())
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
-	d.Addressable = addressable
 
 	// Service Check
 	// Try by name
@@ -181,20 +174,7 @@ func restUpdateDevice(w http.ResponseWriter, r *http.Request) {
 
 // Update the device fields
 func updateDeviceFields(from models.Device, to *models.Device) error {
-	if (from.Addressable != models.Addressable{}) {
-		// Check if the new addressable exists
-		// Try ID first
-		a, err := dbClient.GetAddressableById(from.Addressable.Id)
-		if err != nil {
-			// Then try name
-			a, err = dbClient.GetAddressableByName(from.Addressable.Name)
-			if err != nil {
-				return errors.New("Addressable not found for updated device")
-			}
-		}
 
-		to.Addressable = a
-	}
 	if (from.Service.String() != models.DeviceService{}.String()) {
 		// Check if the new service exists
 		// Try ID first
@@ -222,6 +202,12 @@ func updateDeviceFields(from models.Device, to *models.Device) error {
 		}
 
 		to.Profile = dp
+	}
+	if len(from.Protocols) > 0 {
+		to.Protocols = from.Protocols
+	}
+	if len(from.AutoEvents) > 0 {
+		to.AutoEvents = from.AutoEvents
 	}
 	if from.AdminState != "" {
 		to.AdminState = from.AdminState
@@ -382,39 +368,6 @@ func restGetDeviceByServiceName(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(res)
 }
 
-func restGetDeviceByAddressableName(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	an, err := url.QueryUnescape(vars[ADDRESSABLENAME])
-	if err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		return
-	}
-
-	// Check if the addressable exists
-	a, err := dbClient.GetAddressableByName(an)
-	if err != nil {
-		if err == db.ErrNotFound {
-			http.Error(w, err.Error(), http.StatusNotFound)
-		} else {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		}
-		LoggingClient.Error(err.Error())
-		return
-	}
-
-	// Use the addressable ID now that you have the addressable object
-	res, err := dbClient.GetDevicesByAddressableId(a.Id)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		LoggingClient.Error(err.Error())
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(res)
-}
-
 func restGetDeviceByProfileName(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	pn, err := url.QueryUnescape(vars[PROFILENAME])
@@ -438,33 +391,6 @@ func restGetDeviceByProfileName(w http.ResponseWriter, r *http.Request) {
 
 	// Use profile ID now that you have the profile object
 	res, err := dbClient.GetDevicesByProfileId(dp.Id)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		LoggingClient.Error(err.Error())
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(res)
-}
-
-func restGetDeviceByAddressableId(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	var aid string = vars[ADDRESSABLEID]
-
-	// Check if the addressable exists
-	_, err := dbClient.GetAddressableById(aid)
-	if err != nil {
-		if err == db.ErrNotFound {
-			http.Error(w, err.Error(), http.StatusNotFound)
-		} else {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		}
-		LoggingClient.Error(err.Error())
-		return
-	}
-
-	res, err := dbClient.GetDevicesByAddressableId(aid)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		LoggingClient.Error(err.Error())
