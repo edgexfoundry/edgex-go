@@ -10,12 +10,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"runtime"
 
-	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/gorilla/mux"
+
+	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
 )
 
 // Test if the service is working
@@ -43,26 +43,9 @@ func encode(i interface{}, w http.ResponseWriter) {
 }
 
 func metricsHandler(w http.ResponseWriter, _ *http.Request) {
-	var t internal.Telemetry
+	s := telemetry.NewSystemUsage()
 
-	// The micro-service is to be considered the System Of Record (SOR) in terms of accurate information.
-	// Fetch metrics for the scheduler service.
-	var rtm runtime.MemStats
-
-	// Read full memory stats
-	runtime.ReadMemStats(&rtm)
-
-	// Miscellaneous memory stats
-	t.Alloc = rtm.Alloc
-	t.TotalAlloc = rtm.TotalAlloc
-	t.Sys = rtm.Sys
-	t.Mallocs = rtm.Mallocs
-	t.Frees = rtm.Frees
-
-	// Live objects = Mallocs - Frees
-	t.LiveObjects = t.Mallocs - t.Frees
-
-	encode(t, w)
+	encode(s, w)
 
 	return
 }

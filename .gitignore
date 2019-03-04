@@ -6,6 +6,7 @@ glide.lock
 docker/docker-compose.yml
 .project
 .vscode/
+go.sum
 
 # binary files
 cmd/config-seed/config-seed

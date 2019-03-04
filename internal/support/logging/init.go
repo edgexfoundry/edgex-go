@@ -8,6 +8,7 @@
 package logging
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"os/signal"
@@ -15,13 +16,14 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logging"
 	"github.com/edgexfoundry/go-mod-registry"
 	"github.com/edgexfoundry/go-mod-registry/pkg/factory"
-	"github.com/pkg/errors"
+
+	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
 )
 
 var Configuration *ConfigurationStruct
@@ -76,6 +78,9 @@ func Init(useRegistry bool) bool {
 		registryUpdates = make(chan interface{})
 		go listenForConfigChanges()
 	}
+
+	go telemetry.StartCpuUsageAverage()
+
 	return true
 }
 

@@ -1,6 +1,7 @@
 module github.com/edgexfoundry/edgex-go
 
 require (
+	bitbucket.org/bertimus9/systemstat v0.0.0-20180207000608-0eeff89b0690 // indirect
 	github.com/BurntSushi/toml v0.3.1
 	github.com/eclipse/paho.mqtt.golang v1.1.1
 	github.com/edgexfoundry/go-mod-core-contracts v0.0.0-20190220165850-ed0acaf07725

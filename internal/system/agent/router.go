@@ -112,7 +112,6 @@ func configHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func metricsHandler(w http.ResponseWriter, r *http.Request) {
-
 	vars := mux.Vars(r)
 	logs.LoggingClient.Debug("service configuration data requested", "service names", vars)
 
