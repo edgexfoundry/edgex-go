@@ -63,13 +63,16 @@ Copy this URL into your REST client tool of choice and make a PUT to that URL on
 
    BODY:  {"depth":"9"}
 
-Again, because no Device Service (or Device) actually exists, Core Command will respond with an HTTP 503 Service Unavailable error (Service issue: Connection refused message in the body).  However, invoking the following request of the Support Logging micro service will prove that the Core Command micro service did receive the request and attempted to call on the non-existent Device Service to issue the actuating command.
+Again, because no Device Service (or Device) actually exists, Core Command will respond with an HTTP 502 Bad Gateway error.  However, checking the logging output will prove that the Core Command micro service did receive the request and attempted to call on the non-existent Device Service to issue the actuating command.
 
 ::
 
-   GET to http://localhost:48061/api/v1/logs/logLevels/INFO/originServices/edgex-core-command/0/9000000000000/100
+   docker logs edgex-core-command
 
-.. image:: EdgeX_WalkthroughLoggingRequest.png
+::
+
+   INFO: 2019/02/15 19:32:13 Issuing GET command to: http://172.17.0.1:49977/api/v1/devices/5c6711419f8fc200010f4ada/scandepth
+   ERROR: 2019/02/15 19:32:13 Get http://172.17.0.1:49977/api/v1/devices/5c6711419f8fc200010f4ada/scandepth: dial tcp 172.17.0.1:49977: getsockopt: connection refused
 
 Next you can start `Sending events and reading data 〉 <Ch-WalkthroughReading.html>`_
 
