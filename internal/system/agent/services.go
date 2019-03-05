@@ -18,6 +18,11 @@ package agent
 import (
 	"context"
 	"fmt"
+
+	"github.com/edgexfoundry/go-mod-registry/pkg/factory"
+	"github.com/edgexfoundry/go-mod-registry"
+	clientsMod "github.com/edgexfoundry/go-mod-core-contracts/clients"
+
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/logger"
@@ -81,15 +86,12 @@ func InvokeOperation(action string, services []string) bool {
 	return true
 }
 
-func getConfig(services []string, ctx context.Context) (ConfigRespMap, error) {
+func getConfig(services []string, ctx context.Context) (map[string]interface{}, error) {
 
-	c := ConfigRespMap{}
-	c.Configuration = map[string]interface{}{}
+	configuration := make(map[string]interface{})
 
 	// Loop through requested actions, along with respectively-supplied parameters.
 	for _, service := range services {
-
-		c.Configuration[service] = ""
 
 		if !isKnownServiceKey(service) {
 			logs.LoggingClient.Warn("unknown service found getting configuration", "service name", service)
@@ -97,24 +99,21 @@ func getConfig(services []string, ctx context.Context) (ConfigRespMap, error) {
 
 		responseJSON, err := clients[service].FetchConfiguration(ctx)
 		if err != nil {
-			c.Configuration[service] = fmt.Sprintf("%s get config error: %s", service, err.Error())
-			logs.LoggingClient.Error("error retrieving configuration", "service name", service, "error message", err.Error())
+			configuration[service] = fmt.Sprintf("%s get config error: %s", service, err.Error())
+			logs.LoggingClient.Error("error retrieving configuration", "service name", service, "errMsg", err.Error())
 		} else {
-			c.Configuration[service] = ProcessResponse(responseJSON)
+			configuration[service] = ProcessResponse(responseJSON)
 		}
 	}
-	return c, nil
+	return configuration, nil
 }
 
-func getMetrics(services []string, ctx context.Context) (MetricsRespMap, error) {
+func getMetrics(services []string, ctx context.Context) (map[string]interface{}, error) {
 
-	m := MetricsRespMap{}
-	m.Metrics = map[string]interface{}{}
+	metrics := make(map[string]interface{})
 
 	// Loop through requested actions, along with respectively-supplied parameters.
 	for _, service := range services {
-
-		m.Metrics[service] = ""
 
 		if !isKnownServiceKey(service) {
 			logs.LoggingClient.Warn("unknown service found getting metrics", "service name", service)
@@ -122,13 +121,53 @@ func getMetrics(services []string, ctx context.Context) (MetricsRespMap, error) 
 
 		responseJSON, err := clients[service].FetchMetrics(ctx)
 		if err != nil {
-			m.Metrics[service] = fmt.Sprintf("%s get metrics error: %s", service, err.Error())
-			logs.LoggingClient.Error("error retrieving metrics", "service name", service, "error message", err.Error())
+			metrics[service] = fmt.Sprintf("%s get metrics error: %s", service, err.Error())
+			logs.LoggingClient.Error("error retrieving metrics", "service name", service, "errMsg", err.Error())
 		} else {
-			m.Metrics[service] = ProcessResponse(responseJSON)
+			metrics[service] = ProcessResponse(responseJSON)
 		}
 	}
-	return m, nil
+	return metrics, nil
+}
+
+func getHealth(services []string) (map[string]interface{}, error) {
+
+	health := make(map[string]interface{})
+
+	config := registry.Config{
+		Host:            Configuration.Registry.Host,
+		Port:            Configuration.Registry.Port,
+		Type:            Configuration.Registry.Type,
+		ServiceKey:      internal.SystemManagementAgentServiceKey,
+		ServiceHost:     Configuration.Service.Host,
+		ServicePort:     Configuration.Service.Port,
+		ServiceProtocol: Configuration.Service.Protocol,
+		CheckInterval:   Configuration.Service.CheckInterval,
+		CheckRoute:      clientsMod.ApiPingRoute,
+		Stem:            internal.ConfigRegistryStem,
+	}
+	client, err := factory.NewRegistryClient(config)
+	if err != nil {
+		logs.LoggingClient.Error("could not create registry client", "errMsg", err.Error())
+		return health, err
+	}
+
+	for _, service := range services {
+
+		if !isKnownServiceKey(service) {
+			logs.LoggingClient.Warn("unknown service found getting health", "service name", service)
+		}
+
+		serviceError := client.IsServiceAvailable(service)
+		// the registry service returns nil for a healthy service
+		if serviceError != nil {
+			health[service] = serviceError.Error()
+		} else {
+			health[service] = true
+		}
+	}
+
+	return health, nil
 }
 
 func isKnownServiceKey(serviceKey string) bool {

@@ -59,3 +59,8 @@ ExecutorPath = '/path/to/the/file'
   Protocol = 'http'
   Host = 'localhost'
   Port = 48070
+
+[Registry]
+Host = 'localhost'
+Port = 8500
+Type = 'consul'

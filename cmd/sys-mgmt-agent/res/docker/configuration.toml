@@ -60,3 +60,8 @@ ExecutorPath = '/path/to/the/file'
   Protocol = 'http'
   Host = 'edgex-export-distro'
   Port = 48070
+
+[Registry]
+Host = 'edgex-core-consul'
+Port = 8500
+Type = 'consul'
