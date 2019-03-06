@@ -11,7 +11,7 @@ deviceResources:
         name: "randomnumber"
         description: "generated random number"
         attributes:
-            { type: "randdom" }
+            { type: "random" }
         properties:
             value:
                 { type: "INT32", readWrite: "R", defaultValue: "0.00", minimum: "0.00", maximum: "100.00"  }

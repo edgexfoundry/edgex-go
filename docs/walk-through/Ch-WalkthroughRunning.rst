@@ -16,7 +16,7 @@ A Docker Compose file is a manifest file, which lists:
 * The order in which the containers should be started
 * The parameters under which the containers should be run
 
-It is recommended that you use the lastest version of EdgeX Foundry. As of this writing, the latest version can be found here: https://github.com/edgexfoundry/developer-scripts/blob/master/compose-files/docker-compose-california0.6.1.yml
+It is recommended that you use the lastest version of EdgeX Foundry. As of this writing, the latest version can be found here: https://github.com/edgexfoundry/developer-scripts/raw/master/compose-files/docker-compose-delhi-0.7.1.yml
 
 Save this file as ``docker-compose.yml`` in your working directory so that the following commands will find it.
 
