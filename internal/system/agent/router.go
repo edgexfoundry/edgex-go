@@ -36,6 +36,10 @@ func LoadRestRoutes() *mux.Router {
 	b.HandleFunc("/config/{services}", configHandler).Methods(http.MethodGet)
 	b.HandleFunc("/metrics/{services}", metricsHandler).Methods(http.MethodGet)
 
+	// Health Resource
+	// /api/v1/health
+	b.HandleFunc("/health/{services}", healthHandler).Methods(http.MethodGet)
+
 	// Ping Resource
 	// /api/v1/ping
 	b.HandleFunc("/ping", pingHandler).Methods(http.MethodGet)
@@ -53,14 +57,14 @@ func operationHandler(w http.ResponseWriter, r *http.Request) {
 	b, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		logs.LoggingClient.Error("unable to read request body", "error message", err.Error())
+		logs.LoggingClient.Error("unable to read request body", "errMsg", err.Error())
 		return
 	}
 	o := models.Operation{}
 	err = o.UnmarshalJSON(b)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		logs.LoggingClient.Error("error decoding operation", "error message", err.Error())
+		logs.LoggingClient.Error("error decoding operation", "errMsg", err.Error())
 		return
 	} else if o.Action == "" {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -103,8 +107,12 @@ func configHandler(w http.ResponseWriter, r *http.Request) {
 	services = strings.Split(list, ",")
 
 	ctx := r.Context()
-	var send = ConfigRespMap{}
-	send, _ = getConfig(services, ctx)
+	send, err := getConfig(services, ctx)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		logs.LoggingClient.Error("could not retrieve configuration", "errMsg", err.Error())
+		return
+	}
 
 	w.Header().Add("Content-Type", "application/json")
 	encode(send, w)
@@ -112,7 +120,6 @@ func configHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func metricsHandler(w http.ResponseWriter, r *http.Request) {
-
 	vars := mux.Vars(r)
 	logs.LoggingClient.Debug("service configuration data requested", "service names", vars)
 
@@ -121,7 +128,32 @@ func metricsHandler(w http.ResponseWriter, r *http.Request) {
 	services = strings.Split(list, ",")
 
 	ctx := r.Context()
-	send, _ := getMetrics(services, ctx)
+	send, err := getMetrics(services, ctx)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		logs.LoggingClient.Error("could not retrieve metrics", "errMsg", err.Error())
+		return
+	}
+
+	w.Header().Add("Content-Type", "application/json")
+	encode(send, w)
+	return
+}
+
+func healthHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	logs.LoggingClient.Debug("health status data requested", "service names", vars)
+
+	list := vars["services"]
+	var services []string
+	services = strings.Split(list, ",")
+
+	send, err := getHealth(services)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		logs.LoggingClient.Error("could not retrieve health", "errMsg", err.Error())
+		return
+	}
 
 	w.Header().Add("Content-Type", "application/json")
 	encode(send, w)
@@ -136,7 +168,7 @@ func encode(i interface{}, w http.ResponseWriter) {
 	err := enc.Encode(i)
 
 	if err != nil {
-		logs.LoggingClient.Error("error during encoding", "error message", err.Error())
+		logs.LoggingClient.Error("error during encoding", "errMsg", err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}

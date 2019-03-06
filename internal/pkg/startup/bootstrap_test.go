@@ -64,7 +64,7 @@ func testFail(t *testing.T) {
 //Different test cases are toggled according to the timeout value
 //SUCCESS = short duration 100ms
 //FAIL = long duration 1000ms
-func mockRetry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup, ch chan error) {
+func mockRetry(UseRegistry bool, useProfile string, timeout int, wait *sync.WaitGroup, ch chan error) {
 	until := time.Now().Add(time.Millisecond * time.Duration(timeout))
 	for time.Now().Before(until) {
 		if timeout == timeoutFail {

@@ -95,3 +95,6 @@ https://github.com/magiconair/properties/blob/master/LICENSE
 
 gopkg.in/eapache/queue.v1 (MIT) gopkg.in/eapache/queue.v1
 https://github.com/eapache/queue/blob/v1.1.0/LICENSE
+
+bertimus9/systemstat (MIT) https://bitbucket.org/bertimus9/systemstat
+https://bitbucket.org/bertimus9/systemstat/src/master/LICENSE

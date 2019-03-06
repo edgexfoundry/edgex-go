@@ -15,13 +15,13 @@ package metadata
 
 import (
 	"encoding/json"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"net/http"
-	"runtime"
 
-	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/gorilla/mux"
+
+	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
 )
 
 func LoadRestRoutes() *mux.Router {
@@ -66,9 +66,7 @@ func loadDeviceRoutes(b *mux.Router) {
 	d.HandleFunc("/"+PROFILE+"/{"+PROFILEID+"}", restGetDeviceByProfileId).Methods(http.MethodGet)
 	d.HandleFunc("/"+SERVICE+"/{"+SERVICEID+"}", restGetDeviceByServiceId).Methods(http.MethodGet)
 	d.HandleFunc("/"+SERVICENAME+"/{"+SERVICENAME+"}", restGetDeviceByServiceName).Methods(http.MethodGet)
-	d.HandleFunc("/"+ADDRESSABLENAME+"/{"+ADDRESSABLENAME+"}", restGetDeviceByAddressableName).Methods(http.MethodGet)
 	d.HandleFunc("/"+PROFILENAME+"/{"+PROFILENAME+"}", restGetDeviceByProfileName).Methods(http.MethodGet)
-	d.HandleFunc("/"+ADDRESSABLE+"/{"+ADDRESSABLEID+"}", restGetDeviceByAddressableId).Methods(http.MethodGet)
 
 	// /api/v1/" + DEVICE" + ID + "
 	d.HandleFunc("/{"+ID+"}", restGetDeviceById).Methods(http.MethodGet)
@@ -153,8 +151,6 @@ func loadDeviceServiceRoutes(b *mux.Router) {
 	ds.HandleFunc("/"+ADDRESSABLENAME+"/{"+ADDRESSABLENAME+"}", restGetServiceByAddressableName).Methods(http.MethodGet)
 	ds.HandleFunc("/"+ADDRESSABLE+"/{"+ADDRESSABLEID+"}", restGetServiceByAddressableId).Methods(http.MethodGet)
 	ds.HandleFunc("/"+LABEL+"/{"+LABEL+"}", restGetServiceWithLabel).Methods(http.MethodGet)
-	ds.HandleFunc("/"+DEVICEADDRESSABLES+"/{"+ID+"}", restGetAddressablesForAssociatedDevicesById).Methods(http.MethodGet)
-	ds.HandleFunc("/"+DEVICEADDRESSABLESBYNAME+"/{"+NAME+"}", restGetAddressablesForAssociatedDevicesByName).Methods(http.MethodGet)
 
 	// /api/v1/deviceservice/" + NAME + "
 	dsn := ds.PathPrefix("/" + NAME).Subrouter()
@@ -274,26 +270,9 @@ func configHandler(w http.ResponseWriter, _ *http.Request) {
 }
 
 func metricsHandler(w http.ResponseWriter, _ *http.Request) {
-	var t internal.Telemetry
+	s := telemetry.NewSystemUsage()
 
-	// The micro-service is to be considered the System Of Record (SOR) in terms of accurate information.
-	// Fetch metrics for the metadata service.
-	var rtm runtime.MemStats
-
-	// Read full memory stats
-	runtime.ReadMemStats(&rtm)
-
-	// Miscellaneous memory stats
-	t.Alloc = rtm.Alloc
-	t.TotalAlloc = rtm.TotalAlloc
-	t.Sys = rtm.Sys
-	t.Mallocs = rtm.Mallocs
-	t.Frees = rtm.Frees
-
-	// Live objects = Mallocs - Frees
-	t.LiveObjects = t.Mallocs - t.Frees
-
-	encode(t, w)
+	encode(s, w)
 
 	return
 }

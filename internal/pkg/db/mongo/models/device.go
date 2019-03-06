@@ -15,6 +15,7 @@
 package models
 
 import (
+	"encoding/json"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/globalsign/mgo"
@@ -34,6 +35,8 @@ type Device struct {
 	Description    string                  `bson:"description"`
 	Id             bson.ObjectId           `bson:"_id,omitempty"`
 	Uuid           string                  `bson:"uuid,omitempty"`
+	Protocols      string                  `bson:"protocols,omitempty"` //Contains a JSON representation of the supported protocols for the device
+	AutoEvents     string                  `bson:"autoEvents,omitempty"` //Contains a JSON representation of the device's auto-generated events
 	Name           string                  `bson:"name"`           // Unique name for identifying a device
 	AdminState     contract.AdminState     `bson:"adminState"`     // Admin state (locked/unlocked)
 	OperatingState contract.OperatingState `bson:"operatingState"` // Operating state (enabled/disabled)
@@ -64,12 +67,19 @@ func (d *Device) ToContract(dsTransform deviceServiceTransform, dpTransform devi
 	result.AdminState = d.AdminState
 	result.OperatingState = d.OperatingState
 
-	aModel, err := aTransform.DBRefToAddressable(d.Addressable)
+	p := make(map[string]map[string]string)
+	err = json.Unmarshal([]byte(d.Protocols), &p)
 	if err != nil {
 		return
 	}
-	result.Addressable = aModel.ToContract()
+	result.Protocols = p
 
+	ae := make([]contract.AutoEvent, 0)
+	err = json.Unmarshal([]byte(d.AutoEvents), &ae)
+	if err != nil {
+		return
+	}
+	result.AutoEvents = ae
 	result.LastConnected = d.LastConnected
 	result.LastReported = d.LastReported
 	result.Labels = d.Labels
@@ -110,14 +120,17 @@ func (d *Device) FromContract(from contract.Device, dsTransform deviceServiceTra
 	d.AdminState = from.AdminState
 	d.OperatingState = from.OperatingState
 
-	var aModel Addressable
-	if _, err = aModel.FromContract(from.Addressable); err != nil {
+	p, err := json.Marshal(from.Protocols)
+	if err != nil {
 		return
 	}
-	if d.Addressable, err = aTransform.AddressableToDBRef(aModel); err != nil {
-		return
-	}
+	d.Protocols = string(p)
 
+	ae, err := json.Marshal(from.AutoEvents)
+	if err != nil {
+		return
+	}
+	d.AutoEvents = string(ae)
 	d.LastConnected = from.LastConnected
 	d.LastReported = from.LastReported
 	d.Labels = from.Labels

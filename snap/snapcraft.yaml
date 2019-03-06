@@ -124,7 +124,7 @@ apps:
       after:
         - mongod
   support-logging:
-    command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh support-logging --consul
+    command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh support-logging --registry
     daemon: forking
     plugs: [network, network-bind]
     passthrough:
@@ -133,7 +133,7 @@ apps:
         - mongo-worker
         - edgexproxy
   support-notifications:
-    command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh support-notifications --consul
+    command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh support-notifications --registry
     daemon: forking
     plugs: [network, network-bind]
     passthrough:
@@ -142,7 +142,7 @@ apps:
         - mongo-worker
         - edgexproxy
   core-data:
-    command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh core-data --consul
+    command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh core-data --registry
     daemon: forking
     plugs: [network, network-bind]
     passthrough:
@@ -151,7 +151,7 @@ apps:
         - mongo-worker
         - edgexproxy
   core-metadata:
-    command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh core-metadata --consul
+    command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh core-metadata --registry
     daemon: forking
     plugs: [network, network-bind]
     passthrough:
@@ -160,7 +160,7 @@ apps:
         - mongo-worker
         - edgexproxy
   core-command:
-    command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh core-command --consul
+    command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh core-command --registry
     daemon: forking
     plugs: [network, network-bind, ]
     passthrough:
@@ -169,7 +169,7 @@ apps:
         - mongo-worker
         - edgexproxy
   support-scheduler:
-    command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh support-scheduler --consul
+    command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh support-scheduler --registry
     daemon: forking
     plugs: [network, network-bind]
     passthrough:
@@ -178,7 +178,7 @@ apps:
         - mongo-worker
         - edgexproxy
   export-client:
-    command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh export-client --consul
+    command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh export-client --registry
     daemon: forking
     plugs: [network, network-bind]
     passthrough:
@@ -187,7 +187,7 @@ apps:
         - mongo-worker
         - edgexproxy
   export-distro:
-    command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh export-distro --consul
+    command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh export-distro --registry
     daemon: forking
     plugs: [network, network-bind]
     passthrough:
@@ -278,10 +278,28 @@ parts:
     plugin: dump
     source: snap/local/build-helpers
     prime: [-*]
+  # for now, the go part contains all of the remote part's stanzas, thus making 
+  # it not remote, because we need to specify GO111MODULE=off when we build go
+  # otherwise go will try to import all of the files from the top-level go.mod
+  # from edgex-go which at this point will fail
+  # eventually we would like these changes to be upstreamed but until then
+  # they live here. see also https://github.com/edgexfoundry/edgex-go/issues/1109
   go:
-    after: [glide]
+    plugin: nil
+    source: https://go.googlesource.com/go
+    source-type: git
     source-tag: go1.11.2
     source-depth: 1
+    after: [glide]
+    build-packages: [golang-go, g++]
+    override-build: |
+      cd src && env GOROOT_BOOTSTRAP=$(go env GOROOT | tr -d '\n') GO111MODULE=off ./make.bash
+      cd ..
+      cp -R bin $SNAPCRAFT_PART_INSTALL
+    stage:
+      - 'bin'
+    prime:
+      - '-*'
   glide:
     after:
       - go-build-helper

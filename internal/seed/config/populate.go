@@ -1,5 +1,6 @@
 /*******************************************************************************
  * Copyright 2018 Dell Inc.
+ * Copyright (c) 2019 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -23,7 +24,8 @@ import (
 	"strings"
 
 	"github.com/edgexfoundry/edgex-go/internal"
-	consulapi "github.com/hashicorp/consul/api"
+	"github.com/edgexfoundry/go-mod-registry"
+	"github.com/edgexfoundry/go-mod-registry/pkg/factory"
 	"github.com/magiconair/properties"
 	"github.com/pelletier/go-toml"
 )
@@ -48,11 +50,17 @@ func ImportProperties(root string) error {
 			return err
 		}
 
-		// Put config properties to Consul K/V store.
-		prefix := Configuration.GlobalPrefix + "/" + appKey + "/"
-		for k := range props {
-			p := &consulapi.KVPair{Key: prefix + k, Value: []byte(props[k])}
-			if _, err := (*consulapi.KV).Put(Registry.KV(), p, nil); err != nil {
+		registryConfig := registry.Config{
+			Host:       Configuration.Registry.Host,
+			Port:       Configuration.Registry.Port,
+			Type:       Configuration.Registry.Type,
+			Stem:       Configuration.GlobalPrefix + "/",
+			ServiceKey: appKey,
+		}
+
+		Registry, err = factory.NewRegistryClient(registryConfig)
+		for key := range props {
+			if err := Registry.PutConfigurationValue(key, []byte(props[key])); err != nil {
 				return err
 			}
 		}
@@ -75,13 +83,13 @@ func ImportConfiguration(root string, profile string, overwrite bool) error {
 	}
 
 	// For every application directory...
-	for _, d := range dirs {
-		LoggingClient.Debug(fmt.Sprintf("importing: %s/%s", absRoot, d))
+	for _, serviceName := range dirs {
+		LoggingClient.Debug(fmt.Sprintf("importing: %s/%s", absRoot, serviceName))
 		if err != nil {
 			return err
 		}
 		// Find the resource (res) directory...
-		res := fmt.Sprintf("%s/%s/res", absRoot, d)
+		res := fmt.Sprintf("%s/%s/res", absRoot, serviceName)
 
 		// Append profile to the path if specified...
 		if len(profile) > 0 {
@@ -96,38 +104,29 @@ func ImportConfiguration(root string, profile string, overwrite bool) error {
 		}
 
 		LoggingClient.Debug("reading toml " + path)
+
 		// load the ToML file
-		config, err := toml.LoadFile(path)
+		configuration, err := toml.LoadFile(path)
 		if err != nil {
 			LoggingClient.Warn(err.Error())
-		} else {
-
-			// Fetch the map[string]interface{}
-			m := config.ToMap()
-
-			// traverse the map and put into KV[]
-			kvs, err := traverse("", m)
-			if err != nil {
-				LoggingClient.Error(fmt.Sprintf("There was an error: %v", err))
-			}
-			for _, kv := range kvs {
-				LoggingClient.Debug(fmt.Sprintf("v2 consul wrote key %s with value %s", kv.Key, kv.Value))
-			}
-
-			// Put config properties to Consul K/V store.
-			prefix := internal.ConfigRegistryStem + internal.ServiceKeyPrefix + d + "/"
-
-			// Put config properties to Consul K/V store.
-			for _, v := range kvs {
-				p := &consulapi.KVPair{Key: prefix + v.Key, Value: []byte(v.Value)}
-				if kvPair, _, _ := (*consulapi.KV).Get(Registry.KV(), p.Key, nil); overwrite || kvPair == nil {
-					if _, err := (*consulapi.KV).Put(Registry.KV(), p, nil); err != nil {
-						return err
-					}
-				}
-			}
+			return nil
 		}
+
+		registryConfig := registry.Config{
+			Host: Configuration.Registry.Host,
+			Port: Configuration.Registry.Port,
+			Type: Configuration.Registry.Type,
+			Stem: internal.ConfigRegistryStem,
+			ServiceKey: internal.ServiceKeyPrefix + serviceName,
+		}
+		Registry, err = factory.NewRegistryClient(registryConfig)
+		if err != nil {
+			return err
+		}
+
+		Registry.PutConfigurationToml(configuration, overwrite)
 	}
+
 	return nil
 }
 
@@ -226,7 +225,7 @@ type pair struct {
 	Value string
 }
 
-// Traverse or walk hierarchical configuration in preparation for loading into Consul
+// Traverse or walk hierarchical configuration in preparation for loading into Registry
 func traverse(path string, j interface{}) ([]*pair, error) {
 	kvs := make([]*pair, 0)
 

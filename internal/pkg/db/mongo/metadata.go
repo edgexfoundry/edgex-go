@@ -351,14 +351,6 @@ func (mc MongoClient) GetDevicesByServiceId(id string) ([]contract.Device, error
 	return mc.getDevices(bson.M{"service.$id": ds.Id})
 }
 
-func (mc MongoClient) GetDevicesByAddressableId(id string) ([]contract.Device, error) {
-	addr, err := mc.getAddressableById(id)
-	if err != nil {
-		return []contract.Device{}, err
-	}
-	return mc.getDevices(bson.M{"addressable.$id": addr.Id})
-}
-
 func (mc MongoClient) GetDevicesWithLabel(l string) ([]contract.Device, error) {
 	return mc.getDevices(bson.M{"labels": bson.M{"$in": []string{l}}})
 }

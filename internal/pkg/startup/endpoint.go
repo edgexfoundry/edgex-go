@@ -1,5 +1,6 @@
 /*******************************************************************************
  * Copyright 2018 Dell Inc.
+ * Copyright (c) 2019 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -18,19 +19,32 @@ import (
 	"os"
 	"time"
 
-	"github.com/edgexfoundry/edgex-go/internal/pkg/consul"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
+	"github.com/edgexfoundry/go-mod-registry"
 )
 
-type Endpoint struct{}
+type Endpoint struct {
+	RegistryClient *registry.Client
+}
 
 func (e Endpoint) Monitor(params types.EndpointParams, ch chan string) {
+	var endpoint registry.ServiceEndpoint
+	var err error
 	for {
-		data, err := consulclient.GetServiceEndpoint(params.ServiceKey)
+
+		if e.RegistryClient != nil {
+			endpoint, err = (*e.RegistryClient).GetServiceEndpoint(params.ServiceKey)
+			if err != nil {
+				err = fmt.Errorf("unable to get Service endpoint for %s: %s", params.ServiceKey, err.Error())
+			}
+		} else {
+			err = fmt.Errorf("unable to get Service endpoint for %s: Registry client is nil", params.ServiceKey)
+		}
+
 		if err != nil {
 			fmt.Fprintln(os.Stdout, err.Error())
 		}
-		url := fmt.Sprintf("http://%s:%v%s", data.Address, data.Port, params.Path)
+		url := fmt.Sprintf("http://%s:%v%s", endpoint.Host, endpoint.Port, params.Path)
 		ch <- url
 		time.Sleep(time.Millisecond * time.Duration(params.Interval))
 	}

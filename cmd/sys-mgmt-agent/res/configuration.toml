@@ -6,7 +6,7 @@
 # In the future, the manifest may be more dynamic or even provided by some 3rd party orchestrator.
 
 ApplicationName = 'edgex-sys-mgmt-agent'
-ConsulProfilesActive = 'go'
+RegistryProfilesActive = 'go'
 ValidateCheck = false
 AppOpenMsg = 'This is the System Management Agent Service'
 FormatSpecifier = '%(\\d+\\$)?([-#+ 0(\\<]*)?(\\d+)?(\\.\\d+)?([tT])?([a-zA-Z%])'
@@ -18,8 +18,6 @@ EnableRemoteLogging = false
 LoggingFile = './logs/edgex-sys-mgmt-agent.log'
 
 ExecutorPath = '/path/to/the/file'
-# The following (ExecutorPath) is DEBUG_ONLY:
-# ExecutorPath = '/Users/akramahmad/go/src/github.com/edgexfoundry/docker-compose-executor/main'
 
 [Clients]
   [Clients.Notifications]
@@ -61,3 +59,8 @@ ExecutorPath = '/path/to/the/file'
   Protocol = 'http'
   Host = 'localhost'
   Port = 48070
+
+[Registry]
+Host = 'localhost'
+Port = 8500
+Type = 'consul'

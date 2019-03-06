@@ -22,7 +22,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/logger"
-
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/general"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
 )
@@ -32,11 +31,11 @@ var Configuration *interfaces.ConfigurationStruct
 var Conf = &interfaces.ConfigurationStruct{}
 var clients map[string]general.GeneralClient
 
-// executorClient is the empty interface so that we may type cast it
-// to whatever operation we need it to do at runtime
+// Note that executorClient is the empty interface so that we may type-cast it
+// to whatever operation we need it to do at runtime.
 var executorClient interface{}
 
-func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup, ch chan error) {
+func Retry(useRegistry bool, useProfile string, timeout int, wait *sync.WaitGroup, ch chan error) {
 	until := time.Now().Add(time.Millisecond * time.Duration(timeout))
 	for time.Now().Before(until) {
 		var err error
@@ -48,7 +47,7 @@ func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup,
 			Configuration, err = initializeConfiguration(useProfile)
 			if err != nil {
 				ch <- err
-				if !useConsul {
+				if !useRegistry {
 					//Error occurred when attempting to read from local filesystem. Fail fast.
 					close(ch)
 					wait.Done()
@@ -56,7 +55,7 @@ func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup,
 				}
 			} else {
 				// Initialize notificationsClient based on configuration
-				initializeClients(useConsul)
+				initializeClients(useRegistry)
 				// Setup Logging
 				logTarget := setLoggingTarget()
 				logs.BuildLoggingClient(Configuration, logTarget)
@@ -65,7 +64,6 @@ func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup,
 
 		// Exit the loop if the dependencies have been satisfied.
 		if Configuration != nil {
-			executorClient, err = newExecutorClient()
 			break
 		}
 		time.Sleep(time.Second * time.Duration(1))
@@ -76,11 +74,6 @@ func Retry(useConsul bool, useProfile string, timeout int, wait *sync.WaitGroup,
 	return
 }
 
-func newExecutorClient() (interface{}, error) {
-
-	return &ExecuteApp{}, nil
-}
-
 func Init() bool {
 	if Configuration == nil {
 		return false
@@ -89,7 +82,7 @@ func Init() bool {
 }
 
 func initializeConfiguration(useProfile string) (*interfaces.ConfigurationStruct, error) {
-	//We currently have to load configuration from filesystem first in order to obtain ConsulHost/Port
+	//We currently have to load configuration from filesystem first in order to obtain RegistryHost/Port
 	err := config.LoadFromFile(useProfile, Conf)
 	if err != nil {
 		return nil, err
@@ -117,7 +110,7 @@ var services = map[string]string{
 	internal.SupportSchedulerServiceKey:     "Scheduler",
 }
 
-func initializeClients(useConsul bool) {
+func initializeClients(useRegistry bool) {
 
 	clients = make(map[string]general.GeneralClient)
 
@@ -125,7 +118,7 @@ func initializeClients(useConsul bool) {
 		params := types.EndpointParams{
 			ServiceKey:  serviceKey,
 			Path:        "/",
-			UseRegistry: useConsul,
+			UseRegistry: useRegistry,
 			Url:         Configuration.Clients[serviceName].Url(),
 			Interval:    internal.ClientMonitorDefault,
 		}
