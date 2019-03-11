@@ -28,7 +28,7 @@ type DeviceReport struct {
 	Uuid     string        `bson:"uuid,omitempty"`
 	Name     string        `bson:"name"`     // non-database identifier for a device report - must be unique
 	Device   string        `bson:"device"`   // associated device name - should be a valid and unique device name
-	Event    string        `bson:"event"`    // associated schedule event name - should be a valid and unique schedule event name
+	Action   string        `bson:"action"`   // associated interval action name - should be a valid and unique interval action name
 	Expected []string      `bson:"expected"` // array of value descriptor names describing the types of data captured in the report
 }
 
@@ -45,7 +45,7 @@ func (dr *DeviceReport) ToContract() (c contract.DeviceReport) {
 	c.Id = id
 	c.Name = dr.Name
 	c.Device = dr.Device
-	c.Event = dr.Event
+	c.Action = dr.Action
 	c.Expected = dr.Expected
 
 	return
@@ -61,7 +61,7 @@ func (dr *DeviceReport) FromContract(from contract.DeviceReport) (id string, err
 	dr.Origin = from.Origin
 	dr.Name = from.Name
 	dr.Device = from.Device
-	dr.Event = from.Event
+	dr.Action = from.Action
 	dr.Expected = from.Expected
 
 	id = toContractId(dr.Id, dr.Uuid)

@@ -102,7 +102,7 @@ schemas:
             "500":
                 description: for unknown or unanticipated issues
     get:
-        description: Return ScheduleEvents matching given name (interval names should be unique). May be null if no interval events matches on the name provided. Returns Internal Service Error (HTTP 500) for unknown or unanticipated issues. NotFoundException (HTTP 404) if no IntervalAction is found with the provided name.
+        description: Return IntervalActions matching given name (interval names should be unique). May be null if no interval events matches on the name provided. Returns Internal Service Error (HTTP 500) for unknown or unanticipated issues. NotFoundException (HTTP 404) if no IntervalAction is found with the provided name.
         responses:
             "200":
                 description: interval action matching on name
@@ -139,7 +139,7 @@ schemas:
             "500":
                 description: for unknown or unanticipated issues
     get:
-        description: Return ScheduleEvents matching given name (interval names should be unique). May be null if no interval events matches on the name provided. Returns Internal Service Error (HTTP 500) for unknown or unanticipated issues. NotFoundException (HTTP 404) if no IntervalAction is found with the provided name.
+        description: Return IntervalActions matching given name (interval names should be unique). May be null if no interval events matches on the name provided. Returns Internal Service Error (HTTP 500) for unknown or unanticipated issues. NotFoundException (HTTP 404) if no IntervalAction is found with the provided name.
         responses:
             "200":
                 description: interval action matching on name

@@ -36,9 +36,9 @@ const (
 	TestBadFrequency = "423"
 )
 
-// Test ScheduleEvent model const fields
+// Test IntervalAction model const fields
 const (
-	TestIntervalActionEventId                  = "testScheduleEventId"
+	TestIntervalActionEventId             = "testIntervalActionEventId"
 	TestIntervalActionName                = "pushed events"
 	TestIntervalActionParameters          = ""
 	TestIntervalActionService             = "notifications"

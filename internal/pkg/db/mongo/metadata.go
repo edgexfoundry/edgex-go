@@ -23,160 +23,7 @@ import (
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
-	"github.com/google/uuid"
 )
-
-/* -----------------------Schedule Event ------------------------*/
-
-func (mc MongoClient) UpdateScheduleEvent(se contract.ScheduleEvent) error {
-	se.Modified = db.MakeTimestamp()
-
-	return mc.updateId(db.ScheduleEvent, se.Id, mongoScheduleEvent{ScheduleEvent: se})
-}
-
-func (mc MongoClient) AddScheduleEvent(se *contract.ScheduleEvent) error {
-	s := mc.session.Copy()
-	defer s.Close()
-	col := s.DB(mc.database.Name).C(db.ScheduleEvent)
-	count, err := col.Find(bson.M{"name": se.Name}).Count()
-	if err != nil {
-		return errorMap(err)
-	}
-	if count > 0 {
-		return db.ErrNotUnique
-	}
-	ts := db.MakeTimestamp()
-	se.Created = ts
-	se.Modified = ts
-	se.Id = uuid.New().String()
-
-	mse := mongoScheduleEvent{ScheduleEvent: *se}
-
-	return errorMap(col.Insert(mse))
-}
-
-func (mc MongoClient) GetAllScheduleEvents(se *[]contract.ScheduleEvent) error {
-	return mc.getScheduleEvents(se, bson.M{})
-}
-
-func (mc MongoClient) GetScheduleEventByName(se *contract.ScheduleEvent, n string) error {
-	return mc.getScheduleEvent(se, bson.M{"name": n})
-}
-
-func (mc MongoClient) GetScheduleEventById(se *contract.ScheduleEvent, id string) error {
-	if bson.IsObjectIdHex(id) {
-		return mc.getScheduleEvent(se, bson.M{"_id": bson.ObjectIdHex(id)})
-	}
-	return errors.New("mgoGetScheduleEventById Invalid Object ID " + id)
-}
-
-func (mc MongoClient) GetScheduleEventsByScheduleName(se *[]contract.ScheduleEvent, n string) error {
-	return mc.getScheduleEvents(se, bson.M{"schedule": n})
-}
-
-func (mc MongoClient) GetScheduleEventsByAddressableId(se *[]contract.ScheduleEvent, id string) error {
-	if bson.IsObjectIdHex(id) {
-		return mc.getScheduleEvents(se, bson.M{"addressable" + ".$id": bson.ObjectIdHex(id)})
-	}
-	return errors.New("mgoGetScheduleEventsByAddressableId Invalid Object ID" + id)
-}
-
-func (mc MongoClient) GetScheduleEventsByServiceName(se *[]contract.ScheduleEvent, n string) error {
-	return mc.getScheduleEvents(se, bson.M{"service": n})
-}
-
-func (mc MongoClient) getScheduleEvent(se *contract.ScheduleEvent, q bson.M) error {
-	s := mc.session.Copy()
-	defer s.Close()
-	col := s.DB(mc.database.Name).C(db.ScheduleEvent)
-
-	var mse mongoScheduleEvent
-	if err := col.Find(q).One(&mse); err != nil {
-		return errorMap(err)
-	}
-	*se = mse.ScheduleEvent
-	return nil
-}
-
-func (mc MongoClient) getScheduleEvents(se *[]contract.ScheduleEvent, q bson.M) error {
-	s := mc.session.Copy()
-	defer s.Close()
-	col := s.DB(mc.database.Name).C(db.ScheduleEvent)
-
-	var mses []mongoScheduleEvent
-	if err := col.Find(q).Sort("queryts").All(&mses); err != nil {
-		return errorMap(err)
-	}
-
-	*se = []contract.ScheduleEvent{}
-	for _, mse := range mses {
-		*se = append(*se, mse.ScheduleEvent)
-	}
-
-	return nil
-}
-
-func (mc MongoClient) DeleteScheduleEventById(id string) error {
-	return mc.deleteById(db.ScheduleEvent, id)
-}
-
-//  --------------------------Schedule ---------------------------*/
-
-func (mc MongoClient) GetAllSchedules(s *[]contract.Schedule) error {
-	return mc.GetSchedules(s, bson.M{})
-}
-
-func (mc MongoClient) GetScheduleByName(s *contract.Schedule, n string) error {
-	return mc.GetSchedule(s, bson.M{"name": n})
-}
-
-func (mc MongoClient) GetScheduleById(s *contract.Schedule, id string) error {
-	if bson.IsObjectIdHex(id) {
-		return mc.GetSchedule(s, bson.M{"_id": bson.ObjectIdHex(id)})
-	}
-	return errors.New("mgoGetScheduleById Invalid Object ID " + id)
-}
-
-func (mc MongoClient) AddSchedule(sch *contract.Schedule) error {
-	s := mc.session.Copy()
-	defer s.Close()
-	col := s.DB(mc.database.Name).C(db.Schedule)
-	count, err := col.Find(bson.M{"name": sch.Name}).Count()
-	if err != nil {
-		return errorMap(err)
-	}
-	if count > 0 {
-		return db.ErrNotUnique
-	}
-
-	ts := db.MakeTimestamp()
-	sch.Created = ts
-	sch.Modified = ts
-	sch.Id = uuid.New().String()
-	return errorMap(col.Insert(sch))
-}
-
-func (mc MongoClient) UpdateSchedule(sch contract.Schedule) error {
-	sch.Modified = db.MakeTimestamp()
-
-	return mc.updateId(db.Schedule, sch.Id, sch)
-}
-
-func (mc MongoClient) DeleteScheduleById(id string) error {
-	return mc.deleteById(db.Schedule, id)
-}
-
-func (mc MongoClient) GetSchedule(sch *contract.Schedule, q bson.M) error {
-	s := mc.session.Copy()
-	defer s.Close()
-	return errorMap(s.DB(mc.database.Name).C(db.Schedule).Find(q).One(sch))
-}
-
-func (mc MongoClient) GetSchedules(sch *[]contract.Schedule, q bson.M) error {
-	s := mc.session.Copy()
-	defer s.Close()
-	return errorMap(s.DB(mc.database.Name).C(db.Schedule).Find(q).Sort("queryts").All(sch))
-}
 
 /* ----------------------Device Report --------------------------*/
 
@@ -200,8 +47,8 @@ func (mc MongoClient) GetDeviceReportById(id string) (contract.DeviceReport, err
 	return mc.getDeviceReport(query)
 }
 
-func (mc MongoClient) GetDeviceReportsByScheduleEventName(n string) ([]contract.DeviceReport, error) {
-	return mc.getDeviceReports(bson.M{"event": n})
+func (mc MongoClient) GetDeviceReportsByAction(n string) ([]contract.DeviceReport, error) {
+	return mc.getDeviceReports(bson.M{"action": n})
 }
 
 func (mc MongoClient) getDeviceReports(q bson.M) ([]contract.DeviceReport, error) {
@@ -1209,10 +1056,6 @@ func (mc MongoClient) ScrubMetadata() error {
 		return errorMap(err)
 	}
 	_, err = s.DB(mc.database.Name).C(db.DeviceReport).RemoveAll(nil)
-	if err != nil {
-		return errorMap(err)
-	}
-	_, err = s.DB(mc.database.Name).C(db.ScheduleEvent).RemoveAll(nil)
 	if err != nil {
 		return errorMap(err)
 	}

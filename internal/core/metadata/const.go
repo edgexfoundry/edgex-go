@@ -46,8 +46,6 @@ const (
 	DEVICEREPORT             = "devicereport"
 	DEVICENAME               = "devicename"
 	DEVICESERVICE            = "deviceservice"
-	SCHEDULEEVENT            = "scheduleevent"
-	SCHEDULE                 = "schedule"
 	TOPIC                    = "topic"
 	PORT                     = "port"
 	PUBLISHER                = "publisher"
@@ -61,5 +59,4 @@ const (
 	VALUEDESCRIPTORSFOR      = "valueDescriptorsFor"
 	UNLOCKED                 = "UNLOCKED"
 	ENABLED                  = "ENABLED"
-	SCHEDULER_TIMELAYOUT     = "20060102T150405"
 )

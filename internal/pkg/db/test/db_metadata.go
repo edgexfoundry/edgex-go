@@ -171,7 +171,7 @@ func populateDeviceReport(db interfaces.DBClient, count int) (string, error) {
 		dr := models.DeviceReport{}
 		dr.Name = name
 		dr.Device = name
-		dr.Event = name
+		dr.Action = name
 		dr.Expected = append(dr.Expected, name)
 		id, err = db.AddDeviceReport(dr)
 		if err != nil {
@@ -738,7 +738,7 @@ func testDBDeviceReport(t *testing.T, db interfaces.DBClient) {
 		t.Fatalf("There should be 0 deviceReports instead of %d", len(deviceReports))
 	}
 
-	deviceReports, err = db.GetDeviceReportsByScheduleEventName("name1")
+	deviceReports, err = db.GetDeviceReportsByAction("name1")
 	if err != nil {
 		t.Fatalf("Error getting deviceReports %v", err)
 	}
@@ -746,7 +746,7 @@ func testDBDeviceReport(t *testing.T, db interfaces.DBClient) {
 		t.Fatalf("There should be 1 deviceReports instead of %d", len(deviceReports))
 	}
 
-	deviceReports, err = db.GetDeviceReportsByScheduleEventName("name")
+	deviceReports, err = db.GetDeviceReportsByAction("name")
 	if err != nil {
 		t.Fatalf("Error getting deviceReports %v", err)
 	}

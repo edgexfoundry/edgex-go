@@ -42,8 +42,6 @@ func LoadRestRoutes() *mux.Router {
 	loadDeviceProfileRoutes(b)
 	loadDeviceReportRoutes(b)
 	loadDeviceServiceRoutes(b)
-	loadScheduleEventRoutes(b)
-	loadScheduleRoutes(b)
 	loadProvisionWatcherRoutes(b)
 	loadAddressableRoutes(b)
 	loadCommandRoutes(b)
@@ -169,51 +167,7 @@ func loadDeviceServiceRoutes(b *mux.Router) {
 	ds.HandleFunc("/{"+ID+"}/"+URLLASTREPORTED+"/{"+LASTREPORTED+"}", restUpdateServiceLastReportedById).Methods(http.MethodPut)
 	ds.HandleFunc("/{"+ID+"}/"+URLLASTCONNECTED+"/{"+LASTCONNECTED+"}", restUpdateServiceLastConnectedById).Methods(http.MethodPut)
 }
-func loadScheduleEventRoutes(b *mux.Router) {
-	// /api/v1/scheduleevent
-	b.HandleFunc("/"+SCHEDULEEVENT, restGetAllScheduleEvents).Methods(http.MethodGet)
-	b.HandleFunc("/"+SCHEDULEEVENT, restAddScheduleEvent).Methods(http.MethodPost)
-	b.HandleFunc("/"+SCHEDULEEVENT, restUpdateScheduleEvent).Methods(http.MethodPut)
-	se := b.PathPrefix("/" + SCHEDULEEVENT).Subrouter()
-	se.HandleFunc("/{"+ID+"}", restGetScheduleEventById).Methods(http.MethodGet)
 
-	// /api/v1/scheduleevent/" + NAME + "
-	sen := se.PathPrefix("/" + NAME + "").Subrouter()
-	sen.HandleFunc("/{"+NAME+"}", restDeleteScheduleEventByName).Methods(http.MethodDelete)
-	sen.HandleFunc("/{"+NAME+"}", restGetScheduleEventByName).Methods(http.MethodGet)
-
-	// /api/v1/"  + SCHEDULEEVENT + ID + "
-	seid := se.PathPrefix("/" + ID).Subrouter()
-	seid.HandleFunc("/{"+ID+"}", restDeleteScheduleEventById).Methods(http.MethodDelete)
-
-	// /api/v1/scheduleevent/addressable
-	seaid := se.PathPrefix("/" + ADDRESSABLE).Subrouter()
-	seaid.HandleFunc("/{"+ADDRESSABLEID+"}", restGetScheduleEventByAddressableId).Methods(http.MethodGet)
-
-	sean := se.PathPrefix("/" + ADDRESSABLENAME).Subrouter()
-	sean.HandleFunc("/{"+ADDRESSABLENAME+"}", restGetScheduleEventByAddressableName).Methods(http.MethodGet)
-
-	// /api/v1/scheduleevent/servicename
-	sesn := se.PathPrefix("/" + SERVICENAME).Subrouter()
-	sesn.HandleFunc("/{"+SERVICENAME+"}", restGetScheduleEventsByServiceName).Methods(http.MethodGet)
-}
-func loadScheduleRoutes(b *mux.Router) {
-	// /api/v1/schedule
-	b.HandleFunc("/"+SCHEDULE, restGetAllSchedules).Methods(http.MethodGet)
-	b.HandleFunc("/"+SCHEDULE, restAddSchedule).Methods(http.MethodPost)
-	b.HandleFunc("/"+SCHEDULE, restUpdateSchedule).Methods(http.MethodPut)
-	sch := b.PathPrefix("/" + SCHEDULE).Subrouter()
-	sch.HandleFunc("/{"+ID+"}", restGetScheduleById).Methods(http.MethodGet)
-
-	// /api/v1/schedule/" + NAME + "
-	schn := sch.PathPrefix("/" + NAME + "").Subrouter()
-	schn.HandleFunc("/{"+NAME+"}", restGetScheduleByName).Methods(http.MethodGet)
-	schn.HandleFunc("/{"+NAME+"}", restDeleteScheduleByName).Methods(http.MethodDelete)
-
-	// /api/v1/"  + SCHEDULE + ID + "
-	schid := sch.PathPrefix("/" + ID).Subrouter()
-	schid.HandleFunc("/{"+ID+"}", restDeleteScheduleById).Methods(http.MethodDelete)
-}
 func loadProvisionWatcherRoutes(b *mux.Router) {
 	b.HandleFunc("/"+PROVISIONWATCHER, restAddProvisionWatcher).Methods(http.MethodPost)
 	b.HandleFunc("/"+PROVISIONWATCHER, restUpdateProvisionWatcher).Methods(http.MethodPut)

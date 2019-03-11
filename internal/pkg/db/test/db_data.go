@@ -58,7 +58,6 @@ func populateDbEvents(db interfaces.DBClient, count int, pushed int64) (string, 
 		name := fmt.Sprintf("name%d", i)
 		e := contract.Event{}
 		e.Device = name
-		e.Event = name
 		e.Pushed = pushed
 		var err error
 		id, err = db.AddEvent(e)
