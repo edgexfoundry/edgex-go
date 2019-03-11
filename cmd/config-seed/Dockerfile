@@ -66,5 +66,6 @@ COPY --from=build-env $GOPATH/src/github.com/edgexfoundry/edgex-go/cmd/export-di
 COPY --from=build-env $GOPATH/src/github.com/edgexfoundry/edgex-go/cmd/support-logging/res /edgex/cmd/support-logging/res
 COPY --from=build-env $GOPATH/src/github.com/edgexfoundry/edgex-go/cmd/support-notifications/res /edgex/cmd/support-notifications/res
 COPY --from=build-env $GOPATH/src/github.com/edgexfoundry/edgex-go/cmd/support-scheduler/res /edgex/cmd/support-scheduler/res
+COPY --from=build-env $GOPATH/src/github.com/edgexfoundry/edgex-go/cmd/sys-mgmt-agent/res /edgex/cmd/sys-mgmt-agent/res
 
 ENTRYPOINT /edgex/cmd/config-seed/config-seed --profile=docker --cmd=/edgex/cmd

@@ -19,8 +19,6 @@ package agent
 import (
 	"encoding/json"
 	"net/http"
-
-	"github.com/edgexfoundry/edgex-go/internal/system/agent/logger"
 )
 
 // Test if the service is working
@@ -33,7 +31,7 @@ func ProcessResponse(response string) map[string]interface{} {
 	rsp := make(map[string]interface{})
 	err := json.Unmarshal([]byte(response), &rsp)
 	if err != nil {
-		logs.LoggingClient.Error("error unmarshalling response from JSON", "error message", err.Error())
+		LoggingClient.Error("error unmarshalling response from JSON: %v", err.Error())
 	}
 	return rsp
 }

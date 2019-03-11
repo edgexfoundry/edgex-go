@@ -23,7 +23,7 @@ import (
 	"time"
 
 	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/system/agent/logger"
+	"github.com/edgexfoundry/edgex-go/internal/system/agent"
 )
 
 // Global variables
@@ -71,10 +71,10 @@ func main() {
 	flag.Usage = HelpCallback
 	flag.Parse()
 
-	logs.LoggingClient.Info(AppOpenMsg)
+	agent.LoggingClient.Info(AppOpenMsg)
 
 	// Time it took to start service
-	logs.LoggingClient.Info("Application started in: " + time.Since(start).String())
+	agent.LoggingClient.Info("Application started in: " + time.Since(start).String())
 
 	var service = ""
 	var operation = ""
@@ -86,9 +86,9 @@ func main() {
 		err := ExecuteDockerCommands(service, operation)
 
 		if err != nil {
-			logs.LoggingClient.Error("error performing ", operation, " on service ", service, " with error: ", err.Error())
+			agent.LoggingClient.Error(fmt.Sprintf("error performing  %s on service %s: %v", operation, service, err.Error()))
 		} else {
-			logs.LoggingClient.Info("success performing ", operation, " on service: ", service)
+			agent.LoggingClient.Info(fmt.Sprintf("success performing %s on service %s", operation, service))
 		}
 	}
 }
@@ -102,7 +102,7 @@ func findDockerContainerStatus(service string, status string) bool {
 	cmdName := "docker"
 	cmdArgs := []string{"ps"}
 	if cmdOut, err = exec.Command(cmdName, cmdArgs...).CombinedOutput(); err != nil {
-		logs.LoggingClient.Error("error running the docker command", "error message", err.Error())
+		agent.LoggingClient.Error(err.Error())
 		os.Exit(1)
 	}
 
@@ -114,18 +114,18 @@ func findDockerContainerStatus(service string, status string) bool {
 
 			if status == "Up" {
 				if strings.Contains(line, "Up") {
-					logs.LoggingClient.Info("container started", "service name", service, "details", line)
+					agent.LoggingClient.Info(fmt.Sprintf("container for service %s started: %s", service, line))
 					return true
 				} else {
-					logs.LoggingClient.Warn("container NOT started", "service name", service)
+					agent.LoggingClient.Warn(fmt.Sprintf("container for service %s NOT started", service))
 					return false
 				}
 			} else if status == "Exited" {
 				if strings.Contains(line, "Exited") {
-					logs.LoggingClient.Info("container stopped", "service name", service, "details", line)
+					agent.LoggingClient.Info(fmt.Sprintf("container for service %s stopped: %s", service, line))
 					return true
 				} else {
-					logs.LoggingClient.Warn("container NOT stopped", "service name", service)
+					agent.LoggingClient.Warn(fmt.Sprintf("container for service %s NOT stopped", service))
 					return false
 				}
 			}
@@ -139,11 +139,11 @@ func ExecuteDockerCommands(service string, operation string) error {
 
 	if knownService {
 		err := runDockerCommands(service, services[service], operation)
-		logs.LoggingClient.Error(fmt.Sprintf("service %s ran into error while running Docker command: %v", service, err))
+		agent.LoggingClient.Error(fmt.Sprintf("service %s ran into error while running Docker command: %v", service, err))
 		return err
 	} else {
 		err := errors.New("is an unknown service for which request was made to run Docker command")
-		logs.LoggingClient.Error(fmt.Sprintf("the service %s: %v", service, err))
+		agent.LoggingClient.Error(fmt.Sprintf("the service %s: %v", service, err))
 		return err
 	}
 }
@@ -167,31 +167,31 @@ func runDockerCommands(service string, dockerService string, operation string) e
 
 		out, err := cmd.CombinedOutput()
 		if err != nil {
-			logs.LoggingClient.Error("docker command failed: ", err.Error())
-			logs.LoggingClient.Info("associated output", string(out))
+			agent.LoggingClient.Error(err.Error())
+			agent.LoggingClient.Info("docker command failed: %s", string(out))
 		}
 
 		switch operation {
 		case START:
 		case RESTART:
 			if !findDockerContainerStatus(service, "Up") {
-				logs.LoggingClient.Warn("docker start operation failed for service: ", service)
+				agent.LoggingClient.Warn("docker start operation failed for service %s", service)
 			}
 			break
 
 		case STOP:
 			if !findDockerContainerStatus(service, "Exited") {
-				logs.LoggingClient.Warn("docker stop operation failed for service: ", service)
+				agent.LoggingClient.Warn("docker stop operation failed for service %s", service)
 			}
 			break
 
 		default:
-			logs.LoggingClient.Warn("unknown operation was requested: ", operation)
+			agent.LoggingClient.Warn("unknown operation %s was requested", operation)
 			break
 		}
 	} else {
 		err := errors.New("an unknown operation")
-		logs.LoggingClient.Error(fmt.Sprintf("system management was requested to perform %v %s on the %s service", err, operation, service))
+		agent.LoggingClient.Error(fmt.Sprintf("system management was requested to perform %v %s on the %s service", err.Error(), operation, service))
 		return err
 	}
 

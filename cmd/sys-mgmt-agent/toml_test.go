@@ -11,15 +11,15 @@ import (
 	"testing"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
-	"github.com/edgexfoundry/edgex-go/internal/system/agent/interfaces"
+	"github.com/edgexfoundry/edgex-go/internal/system/agent"
 )
 
 func TestToml(t *testing.T) {
-	configuration := &interfaces.ConfigurationStruct{}
+	configuration := &agent.ConfigurationStruct{}
 	if err := config.VerifyTomlFiles(configuration); err != nil {
 		t.Fatalf("%v", err)
 	}
-	if configuration.AppOpenMsg == "" {
+	if configuration.Service.StartupMsg == "" {
 		t.Errorf("configuration.StartupMsg is zero length.")
 	}
 }

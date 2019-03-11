@@ -113,10 +113,10 @@ func ImportConfiguration(root string, profile string, overwrite bool) error {
 		}
 
 		registryConfig := registry.Config{
-			Host: Configuration.Registry.Host,
-			Port: Configuration.Registry.Port,
-			Type: Configuration.Registry.Type,
-			Stem: internal.ConfigRegistryStem,
+			Host:       Configuration.Registry.Host,
+			Port:       Configuration.Registry.Port,
+			Type:       Configuration.Registry.Type,
+			Stem:       internal.ConfigRegistryStem,
 			ServiceKey: internal.ServiceKeyPrefix + serviceName,
 		}
 		Registry, err = factory.NewRegistryClient(registryConfig)
@@ -131,10 +131,10 @@ func ImportConfiguration(root string, profile string, overwrite bool) error {
 }
 
 // As services are converted to utilize V2 types, add them to this list and remove from the one above.
-func listDirectories() [8]string {
-	var names = [8]string{internal.CoreMetaDataServiceKey, internal.CoreCommandServiceKey, internal.CoreDataServiceKey,
+func listDirectories() [9]string {
+	var names = [9]string{internal.CoreMetaDataServiceKey, internal.CoreCommandServiceKey, internal.CoreDataServiceKey,
 		internal.ExportDistroServiceKey, internal.ExportClientServiceKey, internal.SupportLoggingServiceKey,
-		internal.SupportSchedulerServiceKey, internal.SupportNotificationsServiceKey}
+		internal.SupportSchedulerServiceKey, internal.SupportNotificationsServiceKey, internal.SystemManagementAgentServiceKey}
 
 	for i, name := range names {
 		names[i] = strings.Replace(name, internal.ServiceKeyPrefix, "", 1)

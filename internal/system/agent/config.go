@@ -11,26 +11,21 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
-package interfaces
+package agent
 
 import "github.com/edgexfoundry/edgex-go/internal/pkg/config"
 
 type ConfigurationStruct struct {
-	ReadMaxLimit          int
-	ValidateCheck         bool
-	AppOpenMsg            string
-	FormatSpecifier       string
-	ServicePort           int
-	ServiceTimeout        int
-	ServiceAddress        string
-	LoggingFile           string
-	LoggingRemoteURL      string
-	LoggingLevel          string
-	EnableRemoteLogging   bool
-	OsLevelOperations     bool
-	DockerLevelOperations bool
+	Writable              WritableInfo
 	Clients               map[string]config.ClientInfo
 	Service               config.ServiceInfo
-	Registry              config.RegistryInfo
 	ExecutorPath          string
+	Registry              config.RegistryInfo
+	Logging               config.LoggingInfo
+	FormatSpecifier       string
+}
+
+type WritableInfo struct {
+	ResendLimit int
+	LogLevel    string
 }

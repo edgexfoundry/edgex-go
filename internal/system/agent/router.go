@@ -25,7 +25,6 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
-	"github.com/edgexfoundry/edgex-go/internal/system/agent/logger"
 )
 
 func LoadRestRoutes() *mux.Router {
@@ -57,18 +56,18 @@ func operationHandler(w http.ResponseWriter, r *http.Request) {
 	b, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		logs.LoggingClient.Error("unable to read request body", "errMsg", err.Error())
+		LoggingClient.Error(err.Error())
 		return
 	}
 	o := models.Operation{}
 	err = o.UnmarshalJSON(b)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		logs.LoggingClient.Error("error decoding operation", "errMsg", err.Error())
+		LoggingClient.Error("error during decoding: %v", err.Error())
 		return
 	} else if o.Action == "" {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		logs.LoggingClient.Error("action is required")
+		LoggingClient.Error(err.Error())
 		return
 	}
 
@@ -94,13 +93,13 @@ func operationHandler(w http.ResponseWriter, r *http.Request) {
 		break
 
 	default:
-		logs.LoggingClient.Warn("unknown action", "action name", o.Action)
+		LoggingClient.Warn(o.Action)
 	}
 }
 
 func configHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	logs.LoggingClient.Debug("service configuration data requested", "service names", vars)
+	LoggingClient.Debug("service names: ", vars)
 
 	list := vars["services"]
 	var services []string
@@ -110,7 +109,7 @@ func configHandler(w http.ResponseWriter, r *http.Request) {
 	send, err := getConfig(services, ctx)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		logs.LoggingClient.Error("could not retrieve configuration", "errMsg", err.Error())
+		LoggingClient.Error(err.Error())
 		return
 	}
 
@@ -121,7 +120,7 @@ func configHandler(w http.ResponseWriter, r *http.Request) {
 
 func metricsHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	logs.LoggingClient.Debug("service configuration data requested", "service names", vars)
+	LoggingClient.Debug("service names: ", vars)
 
 	list := vars["services"]
 	var services []string
@@ -131,7 +130,7 @@ func metricsHandler(w http.ResponseWriter, r *http.Request) {
 	send, err := getMetrics(services, ctx)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		logs.LoggingClient.Error("could not retrieve metrics", "errMsg", err.Error())
+		LoggingClient.Error(err.Error())
 		return
 	}
 
@@ -142,7 +141,7 @@ func metricsHandler(w http.ResponseWriter, r *http.Request) {
 
 func healthHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	logs.LoggingClient.Debug("health status data requested", "service names", vars)
+	LoggingClient.Debug("health status data requested for services: ", vars)
 
 	list := vars["services"]
 	var services []string
@@ -151,7 +150,7 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 	send, err := getHealth(services)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		logs.LoggingClient.Error("could not retrieve health", "errMsg", err.Error())
+		LoggingClient.Error("could not retrieve health status: %v: ", err.Error())
 		return
 	}
 
@@ -168,7 +167,7 @@ func encode(i interface{}, w http.ResponseWriter) {
 	err := enc.Encode(i)
 
 	if err != nil {
-		logs.LoggingClient.Error("error during encoding", "errMsg", err.Error())
+		LoggingClient.Error("error during encoding: %v", err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}

@@ -5,19 +5,31 @@
 # In the first release of the SMA, the manifest will be static.
 # In the future, the manifest may be more dynamic or even provided by some 3rd party orchestrator.
 
-ApplicationName = 'edgex-sys-mgmt-agent'
-RegistryProfilesActive = 'go'
-ValidateCheck = false
-AppOpenMsg = 'This is the System Management Agent Service'
-FormatSpecifier = '%(\\d+\\$)?([-#+ 0(\\<]*)?(\\d+)?(\\.\\d+)?([tT])?([a-zA-Z%])'
-ServicePort = 48090
-ServiceTimeout = 5000
-ServiceAddress = 'localhost'
-CheckInterval = '10s'
-EnableRemoteLogging = false
-LoggingFile = './logs/edgex-sys-mgmt-agent.log'
+[Writable]
+ResendLimit = 2
+LogLevel = 'INFO'
 
+[Service]
+BootTimeout = 30000
+ClientMonitor = 15000
+CheckInterval = '10s'
+Host = 'localhost'
+Port = 48090
+Protocol = 'http'
+ReadMaxLimit = 100
+StartupMsg = 'This is the System Management Agent Service'
+Timeout = 5000
+FormatSpecifier = '%(\\d+\\$)?([-#+ 0(\\<]*)?(\\d+)?(\\.\\d+)?([tT])?([a-zA-Z%])'
 ExecutorPath = '/path/to/the/file'
+
+[Registry]
+Host = 'localhost'
+Port = 8500
+Type = 'consul'
+
+[Logging]
+EnableRemote = false
+File = './logs/edgex-sys-mgmt-agent.log'
 
 [Clients]
   [Clients.Notifications]
@@ -59,8 +71,3 @@ ExecutorPath = '/path/to/the/file'
   Protocol = 'http'
   Host = 'localhost'
   Port = 48070
-
-[Registry]
-Host = 'localhost'
-Port = 8500
-Type = 'consul'
