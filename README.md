@@ -26,8 +26,8 @@ on the snap, including how to install it, please refer to [EdgeX snap](https://g
 ## Native binaries
 
 ### Prerequisites
-#### Glide
-`curl https://glide.sh/get | sh`
+#### Go
+The current targeted version of the Go language runtime is v1.11.5
 
 #### pkg-config
 `go get github.com/rjeczalik/pkgconfig/cmd/pkg-config`
@@ -59,15 +59,21 @@ brew install pkg-config
 ```
 
 ### Installation and Execution
-To fetch the code and build the microservice execute the following:
-
+To fetch the code and build the microservices execute the following in a directory of your choosing:
 ```
+go get github.com/edgexfoundry/edgex-go
+# download dependencies and build services
+make build
+# run the services
+make run
+```
+If you are still utilizing the GOPATH as your primary working directory, you can do the following:
+```
+set GO111MODULE=on
 cd $GOPATH/src
 go get github.com/edgexfoundry/edgex-go
 cd $GOPATH/src/github.com/edgexfoundry/edgex-go
-# pull the 3rd party / vendor packages
-make prepare
-# build the microservices
+# download dependencies and build services
 make build
 # run the services
 make run
@@ -83,6 +89,7 @@ There is a script in `bin` directory that can help you launch the whole EdgeX sy
 cd bin
 ./edgex-launch.sh
 ```
+More simply, this script is invoked via the `make run` command referenced above.
 
 ## Build your own Docker Containers
 This project has facilities to create and run your own Docker containers.
@@ -91,15 +98,11 @@ This project has facilities to create and run your own Docker containers.
 See https://docs.docker.com/install/ to learn how to obtain and install Docker.
 
 #### Installation and Execution
+Follow the "Installation and Execution" steps above for obtaining and building the code, then proceed as follows:
 
 ```
-cd $GOPATH/src
-go get github.com/edgexfoundry/edgex-go
-cd $GOPATH/src/github.com/edgexfoundry/edgex-go
 # To remove any old build artifacts
 make clean
-# To check and satisfy build dependencies
-make prepare
 # To create the Docker images
 sudo make docker
 # To run the containers
