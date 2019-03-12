@@ -1,7 +1,7 @@
 name: edgexfoundry
-version: 'replace-me'
+version: "replace-me"
 version-script: |
-    echo $(cat VERSION)-$(date +%Y%m%d)+$(git rev-parse --short HEAD)
+  echo $(cat VERSION)-$(date +%Y%m%d)+$(git rev-parse --short HEAD)
 summary: Open-source framework for IoT edge computing
 description: |
   EdgeX Foundry is a vendor-neutral open source project hosted by The Linux 
@@ -13,7 +13,7 @@ description: |
 icon: snap/local/assets/edgex-snap-icon.png
 
 # TODO: add armhf here when that's supported
-architectures: 
+architectures:
   - build-on: arm64
   - build-on: amd64
 
@@ -69,7 +69,7 @@ apps:
       KONG_ADMIN_LISTEN: "0.0.0.0:8001, 0.0.0.0:8444 ssl"
     stop-command: bin/kong-stop.sh
     daemon: forking
-    plugs: 
+    plugs:
       - network
       - network-bind
     passthrough:
@@ -104,7 +104,7 @@ apps:
       - network
       - network-bind
     passthrough:
-      after: 
+      after:
         - vault
   edgexproxy:
     command: bin/edgexproxy-wrapper.sh
@@ -162,7 +162,7 @@ apps:
   core-command:
     command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh core-command --registry
     daemon: forking
-    plugs: [network, network-bind, ]
+    plugs: [network, network-bind]
     passthrough:
       after:
         - core-config-seed
@@ -259,26 +259,27 @@ apps:
 parts:
   curl:
     plugin: nil
-    # snapcraft defaults the source for a part that doesn't specify a source
-    # to ".", which then means when will scan the full directory and determine
-    # that something there has changed, i.e. the config-common parts with
-    # actual scripts, etc. this part gets marked out of date too and needs 
-    # rebuilding, which is false
-    # to resolve this we can just specify the source of something that doesn't
-    # matter and will minimize confusion by snapcraft
+    # the default source for a part that doesn't specify one is ".", which
+    # then means snapcraft will scan the full git directory here and determine
+    # that if anything changed, i.e. the config-common parts with
+    # actual scripts, etc. this part also gets marked out of date too and needs
+    # rebuilding, even though this part really only depends on a stage-package
+    # to resolve this we can just specify the source of something that changes
+    # infrequently and will minimize unnecessary part re-building by snapcraft
     source: snap/local/build-helpers
     stage-packages:
       - curl
-  # this part really only exists so that the go parts can use this local 
-  # script, but we don't want all the go parts to depend on the config-common
-  # part, as they really don't depend on it
-  # separating this makes quicker iteration when you just need to change the 
-  # config scripts
   go-build-helper:
     plugin: dump
+    # see comment for curl part about specifying a source part here
     source: snap/local/build-helpers
     prime: [-*]
-  # for now, the go part contains all of the remote part's stanzas, thus making 
+
+  config-common:
+    plugin: dump
+    source: snap/local/runtime-helpers
+
+  # for now, the go part contains all of the remote part's stanzas, thus making
   # it not remote, because we need to specify GO111MODULE=off when we build go
   # otherwise go will try to import all of the files from the top-level go.mod
   # from edgex-go which at this point will fail
@@ -290,35 +291,17 @@ parts:
     source-type: git
     source-tag: go1.11.2
     source-depth: 1
-    after: [glide]
     build-packages: [golang-go, g++]
     override-build: |
       cd src && env GOROOT_BOOTSTRAP=$(go env GOROOT | tr -d '\n') GO111MODULE=off ./make.bash
       cd ..
       cp -R bin $SNAPCRAFT_PART_INSTALL
     stage:
-      - 'bin'
+      - "bin"
     prime:
-      - '-*'
-  glide:
-    after:
-      - go-build-helper
-    plugin: dump
-    source:
-      - on amd64: https://github.com/Masterminds/glide/releases/download/v0.12.3/glide-v0.12.3-linux-amd64.tar.gz
-      - else:
-        - on arm64: https://github.com/Masterminds/glide/releases/download/v0.12.3/glide-v0.12.3-linux-arm64.tar.gz
-        - else:
-          - on armhf: https://github.com/Masterminds/glide/releases/download/v0.12.3/glide-v0.12.3-linux-armv7.tar.gz
-          - else:
-            - on i386: https://github.com/Masterminds/glide/releases/download/v0.12.3/glide-v0.12.3-linux-386.tar.gz
-      - else fail
-    prime:
-      - -*
-    organize:
-      glide: bin/glide
-    stage:
-      - bin/glide
+      - "-*"
+    after: [go-build-helper]
+
   consul:
     after: [go]
     plugin: make
@@ -354,55 +337,13 @@ parts:
     build-packages:
       - make
       - zip
-  vault:
-    after: [go]
-    plugin: make
-    source: https://github.com/hashicorp/vault.git
-    source-tag: v1.0.2
-    override-build: |
-      . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
-      gopartbootstrap github.com/hashicorp/vault
 
-      make bootstrap
-      make dev
-
-      # install the vault binary
-      install -DT bin/vault "$SNAPCRAFT_PART_INSTALL/bin/vault"
-
-      # handle vault LICENSE
-      # TODO: do PATENT files need copying?
-      install -DT "$GOIMPORTPATH/LICENSE" \
-                 "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/hashicorp/vault/LICENSE"
-
-      # handle vendor LICENSE files
-      cd $GOIMPORTPATH/vendor
-      for i in `find . -type f -name "LICENSE"`; do
-        install -DT "$i" \
-                 "$SNAPCRAFT_PART_INSTALL/usr/share/doc/$i"; done
-
-      # TODO: some LICENSE files fall under .gopath too
-      cd $GOPATH/src
-      for i in `find . -type f -name "LICENSE"`; do
-        install -DT "$i" \
-                 "$SNAPCRAFT_PART_INSTALL/usr/share/doc/$i"; done
-
-      # delete duplicated license files between vault + consul
-      # as snapcraft will fail we attempt to install duplicated files into the snap
-      rm -rf $SNAPCRAFT_PART_INSTALL/usr/share/doc/cloud.google.com/go/LICENSE
-      rm -rf $SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/golang/protobuf/LICENSE
-      rm -rf $SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/sean-/seed/LICENSE
-      rm -rf $SNAPCRAFT_PART_INSTALL/usr/share/doc/golang.org/x/oauth2/LICENSE
-      rm -rf $SNAPCRAFT_PART_INSTALL/usr/share/doc/google.golang.org/grpc/LICENSE
-
-  config-common:
-    plugin: dump
-    source: snap/local/runtime-helpers
   mongodb:
     plugin: dump
     source:
       - on amd64: https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-ubuntu1604-3.4.10.tgz
       - else:
-        - on arm64: https://fastdl.mongodb.org/linux/mongodb-linux-arm64-ubuntu1604-3.4.10.tgz
+          - on arm64: https://fastdl.mongodb.org/linux/mongodb-linux-arm64-ubuntu1604-3.4.10.tgz
       - else fail
     organize:
       GNU-AGPL-3.0: usr/share/doc/mongodb/GNU-AGPL-3.0
@@ -410,7 +351,7 @@ parts:
       README: usr/share/doc/mongodb/README
       THIRD-PARTY-NOTICES: usr/share/doc/mongodb/THIRD-PARTY-NOTICES
     stage-packages:
-    - libssl1.0.0
+      - libssl1.0.0
     stage:
       - -bin/bsondump
       - -bin/mongoexport
@@ -422,6 +363,7 @@ parts:
       - -bin/mongorestore
       - -bin/mongos
       - -bin/mongotop
+
   mongo-config:
     source: https://github.com/edgexfoundry/docker-edgex-mongo.git
     source-depth: 1
@@ -452,6 +394,7 @@ parts:
     prime:
       - -launch-edgex-mongo.sh
       - -LICENSE-2.0.TXT
+
   edgex-go:
     source: .
     plugin: make
@@ -461,7 +404,6 @@ parts:
       . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
       gopartbootstrap github.com/edgexfoundry/edgex-go
 
-      glide cc
       make prepare
       make build
 
@@ -489,7 +431,7 @@ parts:
       install -d "$SNAPCRAFT_PART_INSTALL/config/support-notifications/res/"
       install -d "$SNAPCRAFT_PART_INSTALL/config/support-scheduler/res/"
       install -d "$SNAPCRAFT_PART_INSTALL/config/sys-mgmt-agent/res/"
-      
+
       cat "./cmd/config-seed/res/configuration.toml" | \
         sed -e s:./logs/edgex-config-seed.log:\$SNAP_COMMON/config-seed.log: \
             -e s:'http\://localhost\:48061/api/v1/logs':: > \
@@ -534,7 +476,7 @@ parts:
         sed -e s:./logs/edgex-support-scheduler.log:\$SNAP_COMMON/support-scheduler.log: \
             -e s:'http\://localhost\:48061/api/v1/logs':: > \
        "$SNAPCRAFT_PART_INSTALL/config/support-scheduler/res/configuration.toml"
-      
+
       # for sys-mgmt-agent we also need to specify the operations type as "snap"
       cat "./cmd/sys-mgmt-agent/res/configuration.toml" | \
         sed -e s:./logs/edgex-sys-mgmt-agent.log:\$SNAP_COMMON/sys-mgmt-agent.log: \
@@ -589,6 +531,7 @@ parts:
       - pkg-config
     stage-packages:
       - libzmq3-dev
+
   cassandra:
     plugin: dump
     source: http://apache.claz.org/cassandra/3.11.4/apache-cassandra-3.11.4-bin.tar.gz
@@ -626,7 +569,7 @@ parts:
       - bin/grep
       - usr/bin/free
 
-# KONG / LUA PARTS
+  # KONG / LUA PARTS
   lua:
     # this dependency is somewhat artificial, because
     # when iterating on the openresty parts if you just rebuild openresty,
@@ -650,6 +593,7 @@ parts:
       # this manual patch
       sed -i "s@INSTALL_TOP= /usr/local@INSTALL_TOP=$SNAPCRAFT_STAGE@" Makefile
       snapcraftctl build
+
   luarocks:
     after: [lua]
     plugin: autotools
@@ -660,6 +604,7 @@ parts:
       ./configure --prefix=$SNAPCRAFT_STAGE --with-lua=$SNAPCRAFT_STAGE --lua-version=5.1
       make build
       make install
+
   openresty:
     plugin: autotools
     source: https://openresty.org/download/openresty-1.11.2.5.tar.gz
@@ -687,6 +632,7 @@ parts:
 
       mkdir -p $SNAPCRAFT_PART_INSTALL/usr/share/doc/openresty.org/openresty/
       cp COPYRIGHT "$SNAPCRAFT_PART_INSTALL/usr/share/doc/openresty.org/openresty/COPYRIGHT"
+
   kong:
     after:
       - openresty
@@ -766,7 +712,46 @@ parts:
       # install everything from stage into the part install for kong
       cp -r $SNAPCRAFT_STAGE/* $SNAPCRAFT_PART_INSTALL/
 
-# SECURITY SERVICES PARTS
+  # SECURITY SERVICES PARTS
+  vault:
+    after: [go]
+    plugin: make
+    source: https://github.com/hashicorp/vault.git
+    source-tag: v1.0.2
+    override-build: |
+      . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
+      gopartbootstrap github.com/hashicorp/vault
+
+      make bootstrap
+      make dev
+
+      # install the vault binary
+      install -DT bin/vault "$SNAPCRAFT_PART_INSTALL/bin/vault"
+
+      # handle vault LICENSE
+      # TODO: do PATENT files need copying?
+      install -DT "$GOIMPORTPATH/LICENSE" \
+                 "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/hashicorp/vault/LICENSE"
+
+      # handle vendor LICENSE files
+      cd $GOIMPORTPATH/vendor
+      for i in `find . -type f -name "LICENSE"`; do
+        install -DT "$i" \
+                 "$SNAPCRAFT_PART_INSTALL/usr/share/doc/$i"; done
+
+      # TODO: some LICENSE files fall under .gopath too
+      cd $GOPATH/src
+      for i in `find . -type f -name "LICENSE"`; do
+        install -DT "$i" \
+                 "$SNAPCRAFT_PART_INSTALL/usr/share/doc/$i"; done
+
+      # delete duplicated license files between vault + consul
+      # as snapcraft will fail we attempt to install duplicated files into the snap
+      rm -rf $SNAPCRAFT_PART_INSTALL/usr/share/doc/cloud.google.com/go/LICENSE
+      rm -rf $SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/golang/protobuf/LICENSE
+      rm -rf $SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/sean-/seed/LICENSE
+      rm -rf $SNAPCRAFT_PART_INSTALL/usr/share/doc/golang.org/x/oauth2/LICENSE
+      rm -rf $SNAPCRAFT_PART_INSTALL/usr/share/doc/google.golang.org/grpc/LICENSE
 
   security-secret-store:
     source: https://github.com/edgexfoundry/security-secret-store.git
@@ -777,7 +762,6 @@ parts:
       . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
       gopartbootstrap github.com/edgexfoundry/security-secret-store
 
-      glide cc
       make prepare
       make build
 
@@ -804,6 +788,7 @@ parts:
     prime:
       - bin/*
       - config/*
+
   security-api-gateway:
     after: [go]
     source: https://github.com/edgexfoundry/security-api-gateway.git
@@ -821,7 +806,6 @@ parts:
       . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
       gopartbootstrap github.com/edgexfoundry/security-api-gateway
 
-      glide cc
       make prepare
       make build
 
@@ -844,6 +828,8 @@ parts:
         -e "s:host = \"edgex-export-client\":host = \"localhost\":" \
         -e "s:host = \"edgex-support-rulesengine\":host = \"localhost\":" \
         $SNAPCRAFT_PART_INSTALL/config/security-api-gateway/res/configuration.toml
+
+  # DEVICE SERVICES parts
   device-modbus:
     source: https://github.com/edgexfoundry/device-modbus-go.git
     source-depth: 1
@@ -855,7 +841,6 @@ parts:
       . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
       gopartbootstrap github.com/edgexfoundry/device-modbus-go
 
-      glide cc
       make prepare
       make build
 
@@ -884,7 +869,6 @@ parts:
       . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
       gopartbootstrap github.com/edgexfoundry/device-mqtt-go
 
-      glide cc
       make prepare
       make build
 
@@ -917,7 +901,6 @@ parts:
       . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
       gopartbootstrap github.com/edgexfoundry/device-random
 
-      glide cc
       make prepare
       make build
 
@@ -939,4 +922,3 @@ parts:
          "$SNAPCRAFT_PART_INSTALL/usr/share/doc/device-random/Attribution.txt"
       install -DT "./LICENSE" \
          "$SNAPCRAFT_PART_INSTALL/usr/share/doc/device-random/LICENSE"
-
