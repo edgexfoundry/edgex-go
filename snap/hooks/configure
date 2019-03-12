@@ -19,7 +19,7 @@ ALL_SERVICES="$ALL_SERVICES core-command"
 ALL_SERVICES="$ALL_SERVICES support-notifications"
 ALL_SERVICES="$ALL_SERVICES support-logging"
 ALL_SERVICES="$ALL_SERVICES support-scheduler"
-# TODO: add support-rulesengine here when available
+ALL_SERVICES="$ALL_SERVICES support-rulesengine"
 
 # export services
 ALL_SERVICES="$ALL_SERVICES export-distro"
