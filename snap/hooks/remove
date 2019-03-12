@@ -1,4 +1,0 @@
-#!/bin/bash
-
-# stop edgex services
-$SNAP/bin/stop-edgex.sh
