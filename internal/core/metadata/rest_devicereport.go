@@ -67,18 +67,6 @@ func restAddDeviceReport(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Check if the Schedule Event exists
-	var se models.ScheduleEvent
-	if err := dbClient.GetScheduleEventByName(&se, dr.Event); err != nil {
-		if err == db.ErrNotFound {
-			http.Error(w, "Schedule Event referenced by Device Report doesn't exist", http.StatusNotFound)
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		LoggingClient.Error(err.Error())
-		return
-	}
-
 	// Add the device report
 	var err error
 	dr.Id, err = dbClient.AddDeviceReport(dr)
@@ -155,11 +143,8 @@ func updateDeviceReportFields(from models.DeviceReport, to *models.DeviceReport,
 			return err
 		}
 	}
-	if from.Event != "" {
-		to.Event = from.Event
-		if err := validateEvent(to.Event, w); err != nil {
-			return err
-		}
+	if from.Action != "" {
+		to.Action = from.Action
 	}
 	if from.Expected != nil {
 		to.Expected = from.Expected
@@ -180,21 +165,6 @@ func validateDevice(d string, w http.ResponseWriter) error {
 	if _, err := dbClient.GetDeviceByName(d); err != nil {
 		if err == db.ErrNotFound {
 			http.Error(w, "Device was not found", http.StatusNotFound)
-		} else {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		}
-		return err
-	}
-
-	return nil
-}
-
-// Validate that the schedule event exists
-func validateEvent(e string, w http.ResponseWriter) error {
-	var event models.ScheduleEvent
-	if err := dbClient.GetScheduleEventByName(&event, e); err != nil {
-		if err == db.ErrNotFound {
-			http.Error(w, "Event was not found", http.StatusNotFound)
 		} else {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		}

@@ -116,23 +116,6 @@ type IntervalInfo struct {
 	RunOnce bool
 }
 
-//TODO: Please remove when no longer needed based on device service rework
-type ScheduleInfo struct {
-	// Name of the schedule must be unique?
-	Name string
-	// Start time in ISO 8601 format YYYYMMDD'T'HHmmss
-	Start string
-	// End time in ISO 8601 format YYYYMMDD'T'HHmmss
-	End string
-	// Periodicity of the schedule
-	Frequency string
-	// Cron style regular expression indicating how often the action under schedule should occur.  Use either runOnce, frequency or cron and not all.
-	Cron string
-	// Boolean indicating that this schedules runs one time - at the time indicated by the start
-	RunOnce bool
-}
-
-
 type IntervalActionInfo struct {
 	// Host is the hostname or IP address of a service.
 	Host string
@@ -154,39 +137,9 @@ type IntervalActionInfo struct {
 	Interval string
 }
 
-//TODO: Please REMOVE when no longer needed based on device service rework
-type ScheduleEventInfo struct {
-	// Host is the hostname or IP address of a service.
-	Host string
-	// Port defines the port on which to access a given service
-	Port int
-	// Protocol indicates the protocol to use when accessing a given service
-	Protocol string
-	// Event name
-	Name string
-	// Event http method *const prob*
-	Method string
-	// Event Service name
-	Service string
-	// Event parameters
-	Parameters string
-	// Event API path
-	Path string
-	// Associated Schedule for the Event
-	Schedule string
-	// Source of the Scheduler *not sure we need this*
-	Scheduler string
-}
 
 // ScheduleEventInfo helper function
 func (e IntervalActionInfo) Url() string {
-	url := fmt.Sprintf("%s://%s:%v", e.Protocol, e.Host, e.Port)
-	return url
-}
-
-//TODO: Please REMOVE when no longer needed based on device service rework
-// ScheduleEventInfo helper function
-func (e ScheduleEventInfo) Url() string {
 	url := fmt.Sprintf("%s://%s:%v", e.Protocol, e.Host, e.Port)
 	return url
 }

@@ -20,25 +20,6 @@ import (
 type DBClient interface {
 	CloseSession()
 
-	// Schedule event
-	GetAllScheduleEvents(se *[]contract.ScheduleEvent) error
-	AddScheduleEvent(se *contract.ScheduleEvent) error
-	GetScheduleEventByName(se *contract.ScheduleEvent, n string) error
-	UpdateScheduleEvent(se contract.ScheduleEvent) error
-	GetScheduleEventById(se *contract.ScheduleEvent, id string) error
-	GetScheduleEventsByScheduleName(se *[]contract.ScheduleEvent, n string) error
-	GetScheduleEventsByAddressableId(se *[]contract.ScheduleEvent, id string) error
-	GetScheduleEventsByServiceName(se *[]contract.ScheduleEvent, n string) error
-	DeleteScheduleEventById(id string) error
-
-	// Schedule
-	GetAllSchedules(s *[]contract.Schedule) error
-	AddSchedule(s *contract.Schedule) error
-	GetScheduleByName(s *contract.Schedule, n string) error
-	UpdateSchedule(s contract.Schedule) error
-	GetScheduleById(s *contract.Schedule, id string) error
-	DeleteScheduleById(id string) error
-
 	// Device Report
 	GetAllDeviceReports() ([]contract.DeviceReport, error)
 	GetDeviceReportByDeviceName(n string) ([]contract.DeviceReport, error)
@@ -46,7 +27,7 @@ type DBClient interface {
 	GetDeviceReportById(id string) (contract.DeviceReport, error)
 	AddDeviceReport(dr contract.DeviceReport) (string, error)
 	UpdateDeviceReport(dr contract.DeviceReport) error
-	GetDeviceReportsByScheduleEventName(n string) ([]contract.DeviceReport, error)
+	GetDeviceReportsByAction(n string) ([]contract.DeviceReport, error)
 	DeleteDeviceReportById(id string) error
 
 	// Device

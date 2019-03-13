@@ -29,7 +29,6 @@ type Event struct {
 	Uuid     string        `bson:"uuid,omitempty"`
 	Pushed   int64         `bson:"pushed"`
 	Device   string        `bson:"device"`             // Device identifier (name or id)
-	Event    string        `bson:"event"`              // Schedule event identifier
 	Readings []mgo.DBRef   `bson:"readings,omitempty"` // List of readings
 }
 
@@ -45,7 +44,6 @@ func (e *Event) ToContract(transform readingTransform) (c contract.Event, err er
 	c.Origin = e.Origin
 	c.Pushed = e.Pushed
 	c.Device = e.Device
-	c.Event = e.Event
 
 	c.Readings = []contract.Reading{}
 	for _, dbRef := range e.Readings {
@@ -69,7 +67,6 @@ func (e *Event) FromContract(from contract.Event, transform readingTransform) (i
 	e.Origin = from.Origin
 	e.Pushed = from.Pushed
 	e.Device = from.Device
-	e.Event = from.Event
 
 	e.Readings = []mgo.DBRef{}
 	for _, reading := range from.Readings {

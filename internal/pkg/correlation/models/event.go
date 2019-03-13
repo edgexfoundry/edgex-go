@@ -36,7 +36,6 @@ func (e Event) ToContract() *contract.Event {
 		Created:  e.Created,
 		Modified: e.Modified,
 		Origin:   e.Origin,
-		Event:    e.Event.Event,
 	}
 
 	for _, r := range e.Readings {
@@ -54,8 +53,6 @@ func (e Event) MarshalJSON() ([]byte, error) {
 		Created       int64              `json:"created,omitempty"`
 		Modified      int64              `json:"modified,omitempty"`
 		Origin        int64              `json:"origin,omitempty"`
-		Schedule      *string            `json:"schedule,omitempty"` // Schedule identifier
-		Event         *string            `json:"event,omitempty"`    // Schedule event identifier
 		Readings      []contract.Reading `json:"readings,omitempty"` // List of readings
 	}{
 		Pushed:   e.Pushed,
@@ -74,9 +71,6 @@ func (e Event) MarshalJSON() ([]byte, error) {
 	}
 	if e.Device != "" {
 		test.Device = &e.Device
-	}
-	if e.Event.Event != "" { //good lord, this is terrible. An Event property on an Event type...
-		test.Event = &e.Event.Event
 	}
 
 	// Empty arrays are null
