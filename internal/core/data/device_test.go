@@ -3,7 +3,6 @@ package data
 import (
 	"context"
 	"fmt"
-	"github.com/google/uuid"
 	"math"
 	"net/http"
 	"os"
@@ -11,18 +10,19 @@ import (
 	"testing"
 	"time"
 
-	"github.com/edgexfoundry/edgex-go/internal/core/data/messaging"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation/models"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+	"github.com/globalsign/mgo/bson"
+	"github.com/google/uuid"
+	"github.com/gorilla/mux"
+	"github.com/stretchr/testify/mock"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/metadata/mocks"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
+	"github.com/edgexfoundry/go-mod-messaging/messaging"
+	msgTypes "github.com/edgexfoundry/go-mod-messaging/pkg/types"
 
-	"github.com/globalsign/mgo/bson"
-	"github.com/gorilla/mux"
-	"github.com/stretchr/testify/mock"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 )
 
 var testEvent contract.Event
@@ -34,9 +34,6 @@ const (
 	testBsonString string = "57e59a71e4b0ca8e6d6d4cc2"
 	testUUIDString string = "ca93c8fa-9919-4ec5-85d3-f81b2b6a7bc1"
 )
-
-// Mock implementation of the event publisher for testing purposes
-type mockEventPublisher struct{}
 
 func TestCheckMaxLimit(t *testing.T) {
 	reset()
@@ -62,19 +59,19 @@ func TestCheckMaxLimitOverLimit(t *testing.T) {
 	}
 }
 
-func newMockEventPublisher(config messaging.PubSubConfiguration) messaging.EventPublisher {
-	return &mockEventPublisher{}
-}
-
-func (zep *mockEventPublisher) SendEventMessage(e models.Event) error {
-	return nil
-}
-
 func TestMain(m *testing.M) {
 	testRoutes = LoadRestRoutes()
 	LoggingClient = logger.NewMockClient()
 	mdc = newMockDeviceClient()
-	ep = newMockEventPublisher(messaging.PubSubConfiguration{})
+	// no need to mock this since it's all in process
+	msgClient, _ = messaging.NewMessageClient(msgTypes.MessageBusConfig{
+		PublishHost: msgTypes.HostInfo{
+			Host:     "*",
+			Protocol: "tcp",
+			Port:     5563,
+		},
+		Type: "zero",
+	})
 	chEvents = make(chan interface{}, 10)
 	os.Exit(m.Run())
 }
@@ -165,7 +162,7 @@ func buildReadings() []contract.Reading {
 }
 
 func handleDomainEvents(bitEvents []bool, wait *sync.WaitGroup, t *testing.T) {
-	until := time.Now().Add(250 * time.Millisecond) //Kill this loop after quarter second.
+	until := time.Now().Add(500 * time.Millisecond) //Kill this loop after half second.
 	for time.Now().Before(until) {
 		select {
 		case evt := <-chEvents:

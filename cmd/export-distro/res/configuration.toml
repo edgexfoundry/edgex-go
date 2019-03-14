@@ -52,6 +52,7 @@ Protocol = 'tcp'
 Host = 'localhost'
 Port = 5563
 Type = 'zero'
+Topic = 'events'
 
 [AnalyticsQueue]
 Protocol = 'tcp'

@@ -82,6 +82,8 @@ type MessageQueueInfo struct {
 	Protocol string
 	// Indicates the message queue platform being used.
 	Type string
+	// Indicates the topic the data is published/subscribed
+	Topic string
 }
 
 func (m MessageQueueInfo) Uri() string {
@@ -99,7 +101,6 @@ type DatabaseInfo struct {
 	Password string
 	Name     string
 }
-
 
 type IntervalInfo struct {
 	// Name of the schedule must be unique?
@@ -136,7 +137,6 @@ type IntervalActionInfo struct {
 	// Associated Schedule for the Event
 	Interval string
 }
-
 
 // ScheduleEventInfo helper function
 func (e IntervalActionInfo) Url() string {

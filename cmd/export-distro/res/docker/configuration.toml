@@ -52,6 +52,7 @@ Protocol = 'tcp'
 Host = 'edgex-core-data'
 Port = 5563
 Type = 'zero'
+Topic = 'events'
 
 [AnalyticsQueue]
 Protocol = 'tcp'
