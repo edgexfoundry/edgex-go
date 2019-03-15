@@ -67,7 +67,7 @@ func (d *Device) ToContract(dsTransform deviceServiceTransform, dpTransform devi
 	result.AdminState = d.AdminState
 	result.OperatingState = d.OperatingState
 
-	p := make(map[string]map[string]string)
+	p := make(map[string]contract.ProtocolProperties)
 	err = json.Unmarshal([]byte(d.Protocols), &p)
 	if err != nil {
 		return

@@ -119,7 +119,7 @@ func newMockDeviceClient() *mocks.DeviceClient {
 	return client
 }
 
-func getProtocols() map[string]map[string]string {
+func getProtocols() map[string]contract.ProtocolProperties {
 	p1 := make(map[string]string)
 	p1["host"] = "localhost"
 	p1["port"] = "1234"
@@ -133,7 +133,7 @@ func getProtocols() map[string]map[string]string {
 	p2["parity"] = "0"
 	p2["unitID"] = "2"
 
-	wrap := make(map[string]map[string]string)
+	wrap := make(map[string]contract.ProtocolProperties)
 	wrap["modbus-ip"] = p1
 	wrap["modbus-rtu"] = p2
 
