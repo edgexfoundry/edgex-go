@@ -49,8 +49,7 @@ RUN pip install docker-compose
 RUN apk --no-cache add curl
 RUN curl -o docker-compose.yml https://raw.githubusercontent.com/edgexfoundry/developer-scripts/master/compose-files/docker-compose-delhi-0.7.1.yml
 
-# Note tht the SMA does NOT use the "--consul" flag.
-ENTRYPOINT ["/sys-mgmt-agent","--profile=docker","--confdir=/res"]
+ENTRYPOINT ["/sys-mgmt-agent", "--registry","--profile=docker","--confdir=/res"]
 
 # Following (commented-out) line is a life-saving DEBUG statement.
 # ENTRYPOINT tail -f /dev/null

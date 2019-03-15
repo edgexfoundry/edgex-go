@@ -14,26 +14,47 @@
 package agent
 
 import (
+	"errors"
+	"fmt"
+	"os"
+	"os/signal"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
-	"github.com/edgexfoundry/edgex-go/internal/system/agent/interfaces"
-	"github.com/edgexfoundry/edgex-go/internal/system/agent/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/general"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logging"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
+	"github.com/edgexfoundry/go-mod-registry"
+	"github.com/edgexfoundry/go-mod-registry/pkg/factory"
 )
 
 // Global variables
-var Configuration *interfaces.ConfigurationStruct
-var Conf = &interfaces.ConfigurationStruct{}
-var clients map[string]general.GeneralClient
+var Configuration *ConfigurationStruct
+var generalClients map[string]general.GeneralClient
+var LoggingClient logger.LoggingClient
+var registryClient registry.Client
+var chErrors chan error        //A channel for "config wait error" sourced from Registry
+var chUpdates chan interface{} //A channel for "config updates" sourced from Registry
 
 // Note that executorClient is the empty interface so that we may type-cast it
 // to whatever operation we need it to do at runtime.
 var executorClient interface{}
+
+var services = map[string]string{
+	internal.SupportNotificationsServiceKey: "Notifications",
+	internal.CoreCommandServiceKey:          "Command",
+	internal.CoreDataServiceKey:             "CoreData",
+	internal.CoreMetaDataServiceKey:         "Metadata",
+	internal.ExportClientServiceKey:         "Export",
+	internal.ExportDistroServiceKey:         "Distro",
+	internal.SupportLoggingServiceKey:       "Logging",
+	internal.SupportSchedulerServiceKey:     "Scheduler",
+}
 
 func Retry(useRegistry bool, useProfile string, timeout int, wait *sync.WaitGroup, ch chan error) {
 	until := time.Now().Add(time.Millisecond * time.Duration(timeout))
@@ -44,7 +65,7 @@ func Retry(useRegistry bool, useProfile string, timeout int, wait *sync.WaitGrou
 		// Read in those setting, too, which specifies details for those services
 		// (Those setting were _previously_ to be found in a now-defunct TOML manifest file).
 		if Configuration == nil {
-			Configuration, err = initializeConfiguration(useProfile)
+			Configuration, err = initializeConfiguration(useRegistry, useProfile)
 			if err != nil {
 				ch <- err
 				if !useRegistry {
@@ -54,11 +75,12 @@ func Retry(useRegistry bool, useProfile string, timeout int, wait *sync.WaitGrou
 					return
 				}
 			} else {
-				// Initialize notificationsClient based on configuration
-				initializeClients(useRegistry)
 				// Setup Logging
 				logTarget := setLoggingTarget()
-				logs.BuildLoggingClient(Configuration, logTarget)
+				LoggingClient = logger.NewClient(internal.SystemManagementAgentServiceKey, Configuration.Logging.EnableRemote, logTarget, Configuration.Writable.LogLevel)
+
+				//Initialize service clients
+				initializeClients(useRegistry)
 			}
 		}
 
@@ -74,45 +96,143 @@ func Retry(useRegistry bool, useProfile string, timeout int, wait *sync.WaitGrou
 	return
 }
 
-func Init() bool {
+func Init(useRegistry bool) bool {
 	if Configuration == nil {
 		return false
 	}
+
+	if useRegistry && registryClient != nil {
+		chErrors = make(chan error)
+		chUpdates = make(chan interface{})
+		go listenForConfigChanges()
+	}
+
 	return true
 }
 
-func initializeConfiguration(useProfile string) (*interfaces.ConfigurationStruct, error) {
-	//We currently have to load configuration from filesystem first in order to obtain RegistryHost/Port
-	err := config.LoadFromFile(useProfile, Conf)
+func Destruct() {
+
+	if chErrors != nil {
+		close(chErrors)
+	}
+
+	if chUpdates != nil {
+		close(chUpdates)
+	}
+}
+
+func initializeConfiguration(useRegistry bool, useProfile string) (*ConfigurationStruct, error) {
+	//We currently have to load configuration from filesystem first in order to obtain Registry Host/Port
+	configuration := &ConfigurationStruct{}
+	err := config.LoadFromFile(useProfile, configuration)
 	if err != nil {
 		return nil, err
 	}
 
-	return Conf, nil
-}
+	if useRegistry {
+		err = connectToRegistry(configuration)
+		if err != nil {
+			return nil, err
+		}
 
-func setLoggingTarget() string {
-	logTarget := Configuration.LoggingRemoteURL
-	if !Configuration.EnableRemoteLogging {
-		return Configuration.LoggingFile
+		rawConfig, err := registryClient.GetConfiguration(configuration)
+		if err != nil {
+			return nil, fmt.Errorf("could not get configuration from Registry: %v", err.Error())
+		}
+
+		actual, ok := rawConfig.(*ConfigurationStruct)
+		if !ok {
+			return nil, fmt.Errorf("configuration from Registry failed type check")
+		}
+
+		configuration = actual
+
+		// Check that information was successfully read from Registry
+		if configuration.Service.Port == 0 {
+			return nil, errors.New("error reading configuration from Registry")
+		}
 	}
-	return logTarget
+
+	return configuration, nil
 }
 
-var services = map[string]string{
-	internal.SupportNotificationsServiceKey: "Notifications",
-	internal.CoreCommandServiceKey:          "Command",
-	internal.CoreDataServiceKey:             "CoreData",
-	internal.CoreMetaDataServiceKey:         "Metadata",
-	internal.ExportClientServiceKey:         "Export",
-	internal.ExportDistroServiceKey:         "Distro",
-	internal.SupportLoggingServiceKey:       "Logging",
-	internal.SupportSchedulerServiceKey:     "Scheduler",
+func connectToRegistry(conf *ConfigurationStruct) error {
+	var err error
+	registryConfig := registry.Config{
+		Host:            conf.Registry.Host,
+		Port:            conf.Registry.Port,
+		Type:            conf.Registry.Type,
+		ServiceKey:      internal.SystemManagementAgentServiceKey,
+		ServiceHost:     conf.Service.Host,
+		ServicePort:     conf.Service.Port,
+		ServiceProtocol: conf.Service.Protocol,
+		CheckInterval:   conf.Service.CheckInterval,
+		CheckRoute:      clients.ApiPingRoute,
+		Stem:            internal.ConfigRegistryStem,
+	}
+
+	registryClient, err = factory.NewRegistryClient(registryConfig, )
+	if err != nil {
+		return fmt.Errorf("connection to Registry could not be made: %v", err.Error())
+	}
+
+	// Check if registry service is running
+	if !registryClient.IsAlive() {
+		return fmt.Errorf("registry is not available")
+	}
+
+	// Register the service with Registry
+	err = registryClient.Register()
+	if err != nil {
+		return fmt.Errorf("could not register service with Registry: %v", err.Error())
+	}
+
+	return nil
+}
+
+func listenForConfigChanges() {
+	if registryClient == nil {
+		LoggingClient.Error("listenForConfigChanges() registry client not set")
+		return
+	}
+
+	registryClient.WatchForChanges(chUpdates, chErrors, &WritableInfo{}, internal.WritableKey)
+
+	// TODO: Refactor names in separate PR: See comments on PR #1133
+	chSignals := make(chan os.Signal)
+	signal.Notify(chSignals, syscall.SIGINT, syscall.SIGTERM)
+
+	for {
+		select {
+		case <-chSignals:
+			// Quietly and gracefully stop when SIGINT/SIGTERM received
+			return
+
+		case ex := <-chErrors:
+			LoggingClient.Error(ex.Error())
+
+		case raw, ok := <-chUpdates:
+			if !ok {
+				return
+			}
+
+			actual, ok := raw.(*WritableInfo)
+			if !ok {
+				LoggingClient.Error("listenForConfigChanges() type check failed")
+				return
+			}
+
+			Configuration.Writable = *actual
+
+			LoggingClient.Info("Writeable configuration has been updated from the Registry")
+			LoggingClient.SetLogLevel(Configuration.Writable.LogLevel)
+		}
+	}
 }
 
 func initializeClients(useRegistry bool) {
 
-	clients = make(map[string]general.GeneralClient)
+	generalClients = make(map[string]general.GeneralClient)
 
 	for serviceKey, serviceName := range services {
 		params := types.EndpointParams{
@@ -122,6 +242,13 @@ func initializeClients(useRegistry bool) {
 			Url:         Configuration.Clients[serviceName].Url(),
 			Interval:    internal.ClientMonitorDefault,
 		}
-		clients[serviceKey] = general.NewGeneralClient(params, startup.Endpoint{})
+		generalClients[serviceKey] = general.NewGeneralClient(params, startup.Endpoint{RegistryClient: &registryClient})
 	}
+}
+
+func setLoggingTarget() string {
+	if Configuration.Logging.EnableRemote {
+		return Configuration.Clients["Logging"].Url() + clients.ApiLoggingRoute
+	}
+	return Configuration.Logging.File
 }
