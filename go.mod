@@ -1,7 +1,7 @@
 module github.com/edgexfoundry/edgex-go
 
 require (
-	bitbucket.org/bertimus9/systemstat v0.0.0-20180207000608-0eeff89b0690 // indirect
+	bitbucket.org/bertimus9/systemstat v0.0.0-20180207000608-0eeff89b0690
 	github.com/BurntSushi/toml v0.3.1
 	github.com/eclipse/paho.mqtt.golang v1.1.1
 	github.com/edgexfoundry/go-mod-core-contracts v0.0.0-20190315142420-7a2734aa6c01
@@ -13,8 +13,7 @@ require (
 	github.com/gorilla/context v1.1.1
 	github.com/gorilla/mux v1.7.0
 	github.com/hashicorp/consul v1.4.2
-	github.com/influxdata/influxdb v1.7.4
-	github.com/influxdata/platform v0.0.0-20190117200541-d500d3cf5589 // indirect
+	github.com/influxdata/influxdb1-client v0.0.0-20190124185755-16c852ea613f
 	github.com/magiconair/properties v1.8.0
 	github.com/mattn/go-xmpp v0.0.0-20190124093244-6093f50721ed
 	github.com/mitchellh/consulstructure v0.0.0-20160324233621-b407c521973b

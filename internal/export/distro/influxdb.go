@@ -14,7 +14,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation/models"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 
-	"github.com/influxdata/influxdb/client/v2"
+	"github.com/influxdata/influxdb1-client/v2"
 )
 
 const (
