@@ -203,6 +203,15 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 		break
 		// Post a new event
 	case http.MethodPost:
+		contentType := r.Header.Get(clients.ContentType)
+		if contentType == clients.ContentTypeCBOR {
+			errMsg := "CBOR payload is not yet supported"
+			http.Error(w, errMsg, http.StatusNotImplemented)
+			LoggingClient.Error(errMsg)
+
+			return
+		}
+
 		var e models.Event
 		dec := json.NewDecoder(r.Body)
 		err := dec.Decode(&e)
@@ -236,6 +245,15 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 		break
 		// Do not update the readings
 	case http.MethodPut:
+		contentType := r.Header.Get(clients.ContentType)
+		if contentType == clients.ContentTypeCBOR {
+			errMsg := "CBOR payload is not yet supported"
+			http.Error(w, errMsg, http.StatusNotImplemented)
+			LoggingClient.Error(errMsg)
+
+			return
+		}
+
 		var from models.Event
 		dec := json.NewDecoder(r.Body)
 		err := dec.Decode(&from)
@@ -389,6 +407,15 @@ func eventIdHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	// Set the 'pushed' timestamp for the event to the current time - event is going to another (not EdgeX) service
 	case http.MethodPut:
+		contentType := r.Header.Get(clients.ContentType)
+		if contentType == clients.ContentTypeCBOR {
+			errMsg := "CBOR payload is not yet supported"
+			http.Error(w, errMsg, http.StatusNotImplemented)
+			LoggingClient.Error(errMsg, "eventId", id)
+
+			return
+		}
+
 		LoggingClient.Info("Updating event: " + id)
 
 		err := updateEventPushDate(id, ctx)
