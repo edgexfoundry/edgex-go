@@ -533,9 +533,14 @@ parts:
       - libzmq3-dev
 
   cassandra:
-    plugin: dump
-    source: http://apache.claz.org/cassandra/3.11.4/apache-cassandra-3.11.4-bin.tar.gz
-    source-type: tar
+    plugin: ant
+    ant-properties:
+      dist.dir: $SNAPCRAFT_PART_INSTALL
+    ant-build-targets:
+      - artifacts
+    source: https://github.com/apache/cassandra
+    source-tag: cassandra-3.11.4
+    source-type: git
     build-packages:
       - ant-optional
       - build-essential
