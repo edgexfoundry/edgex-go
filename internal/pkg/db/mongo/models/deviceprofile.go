@@ -27,19 +27,20 @@ type deviceProfileTransform interface {
 }
 
 type PropertyValue struct {
-	Type         string `bson:"type"`         // ValueDescriptor Type of property after transformations
-	ReadWrite    string `bson:"readWrite"`    // Read/Write Permissions set for this property
-	Minimum      string `bson:"minimum"`      // Minimum value that can be get/set from this property
-	Maximum      string `bson:"maximum"`      // Maximum value that can be get/set from this property
-	DefaultValue string `bson:"defaultValue"` // Default value set to this property if no argument is passed
-	Size         string `bson:"size"`         // Size of this property in its type  (i.e. bytes for numeric types, characters for string types)
-	Mask         string `bson:"mask"`         // Mask to be applied prior to get/set of property
-	Shift        string `bson:"shift"`        // Shift to be applied after masking, prior to get/set of property
-	Scale        string `bson:"scale"`        // Multiplicative factor to be applied after shifting, prior to get/set of property
-	Offset       string `bson:"offset"`       // Additive factor to be applied after multiplying, prior to get/set of property
-	Base         string `bson:"base"`         // Base for property to be applied to, leave 0 for no power operation (i.e. base ^ property: 2 ^ 10)
-	Assertion    string `bson:"assertion"`    // Required value of the property, set for checking error state.  Failing an assertion condition will mark the device with an error state
-	Precision    string `bson:"precision"`
+	Type          string `bson:"type"`          // ValueDescriptor Type of property after transformations
+	ReadWrite     string `bson:"readWrite"`     // Read/Write Permissions set for this property
+	Minimum       string `bson:"minimum"`       // Minimum value that can be get/set from this property
+	Maximum       string `bson:"maximum"`       // Maximum value that can be get/set from this property
+	DefaultValue  string `bson:"defaultValue"`  // Default value set to this property if no argument is passed
+	Size          string `bson:"size"`          // Size of this property in its type  (i.e. bytes for numeric types, characters for string types)
+	Mask          string `bson:"mask"`          // Mask to be applied prior to get/set of property
+	Shift         string `bson:"shift"`         // Shift to be applied after masking, prior to get/set of property
+	Scale         string `bson:"scale"`         // Multiplicative factor to be applied after shifting, prior to get/set of property
+	Offset        string `bson:"offset"`        // Additive factor to be applied after multiplying, prior to get/set of property
+	Base          string `bson:"base"`          // Base for property to be applied to, leave 0 for no power operation (i.e. base ^ property: 2 ^ 10)
+	Assertion     string `bson:"assertion"`     // Required value of the property, set for checking error state.  Failing an assertion condition will mark the device with an error state
+	Precision     string `bson:"precision"`
+	FloatEncoding string `bson:"floatEncoding"` // FloatEncoding indicates the representation of floating value of reading.  It should be 'Base64' or 'eNotation'
 }
 
 type Units struct {
@@ -129,6 +130,7 @@ func (dp *DeviceProfile) ToContract(transform commandTransform) (c contract.Devi
 		cdo.Properties.Value.Base = dr.Properties.Value.Base
 		cdo.Properties.Value.Assertion = dr.Properties.Value.Assertion
 		cdo.Properties.Value.Precision = dr.Properties.Value.Precision
+		cdo.Properties.Value.FloatEncoding = dr.Properties.Value.FloatEncoding
 
 		cdo.Properties.Units.Type = dr.Properties.Units.Type
 		cdo.Properties.Units.ReadWrite = dr.Properties.Units.ReadWrite
@@ -216,6 +218,7 @@ func (dp *DeviceProfile) FromContract(from contract.DeviceProfile, transform com
 		do.Properties.Value.Base = dr.Properties.Value.Base
 		do.Properties.Value.Assertion = dr.Properties.Value.Assertion
 		do.Properties.Value.Precision = dr.Properties.Value.Precision
+		do.Properties.Value.FloatEncoding = dr.Properties.Value.FloatEncoding
 
 		do.Properties.Units.Type = dr.Properties.Units.Type
 		do.Properties.Units.ReadWrite = dr.Properties.Units.ReadWrite
