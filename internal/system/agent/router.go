@@ -17,10 +17,12 @@ package agent
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strings"
 
+	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/gorilla/mux"
 
@@ -63,7 +65,7 @@ func operationHandler(w http.ResponseWriter, r *http.Request) {
 	err = o.UnmarshalJSON(b)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		LoggingClient.Error("error during decoding: %v", err.Error())
+		LoggingClient.Error("error during decoding")
 		return
 	} else if o.Action == "" {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -72,24 +74,38 @@ func operationHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	switch o.Action {
-
-	// Call the appropriate internal function (respectively, to stop, start, or restart the service(s)).
 	case STOP:
-		InvokeOperation(STOP, o.Services)
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("Done. Stopped the requested services."))
+		err := InvokeOperation(STOP, o.Services)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(fmt.Sprintf("Error: %s", err.Error())))
+		} else {
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte("Done. Stopped the requested services."))
+		}
+
 		break
 
 	case START:
-		InvokeOperation(START, o.Services)
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("Done. Started the requested services."))
+		err := InvokeOperation(START, o.Services)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(fmt.Sprintf("Error: %s", err.Error())))
+		} else {
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte("Done. Started the requested services."))
+		}
 		break
 
 	case RESTART:
-		InvokeOperation(RESTART, o.Services)
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("Done. Restarted the requested services."))
+		err:= InvokeOperation(RESTART, o.Services)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(fmt.Sprintf("Error: %s", err.Error())))
+		} else {
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte("Done. Restarted the requested services."))
+		}
 		break
 
 	default:
@@ -99,7 +115,7 @@ func operationHandler(w http.ResponseWriter, r *http.Request) {
 
 func configHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	LoggingClient.Debug("service names: ", vars)
+	LoggingClient.Debug("retrieved service names")
 
 	list := vars["services"]
 	var services []string
@@ -113,14 +129,14 @@ func configHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Add("Content-Type", "application/json")
+	w.Header().Add(clients.ContentType, clients.ContentTypeJSON)
 	encode(send, w)
 	return
 }
 
 func metricsHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	LoggingClient.Debug("service names: ", vars)
+	LoggingClient.Debug("retrieved service names")
 
 	list := vars["services"]
 	var services []string
@@ -134,14 +150,14 @@ func metricsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Add("Content-Type", "application/json")
+	w.Header().Add(clients.ContentType, clients.ContentTypeJSON)
 	encode(send, w)
 	return
 }
 
 func healthHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	LoggingClient.Debug("health status data requested for services: ", vars)
+	LoggingClient.Debug("health status data requested")
 
 	list := vars["services"]
 	var services []string
@@ -149,25 +165,25 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 
 	send, err := getHealth(services)
 	if err != nil {
+		LoggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		LoggingClient.Error("could not retrieve health status: %v: ", err.Error())
 		return
 	}
 
-	w.Header().Add("Content-Type", "application/json")
+	w.Header().Add(clients.ContentType, clients.ContentTypeJSON)
 	encode(send, w)
 	return
 }
 
 // Helper function for encoding things for returning from REST calls
 func encode(i interface{}, w http.ResponseWriter) {
-	w.Header().Add("Content-Type", "application/json")
+	w.Header().Add(clients.ContentType, clients.ContentTypeJSON)
 
 	enc := json.NewEncoder(w)
 	err := enc.Encode(i)
 
 	if err != nil {
-		LoggingClient.Error("error during encoding: %v", err.Error())
+		LoggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}

@@ -33,14 +33,14 @@ const (
 	RESTART = "restart"
 )
 
-func InvokeOperation(action string, services []string) bool {
+func InvokeOperation(action string, services []string) error {
 
 	// Loop through requested operation, along with respectively-supplied parameters.
 	for _, service := range services {
-		LoggingClient.Info("invoking operation %s on service %s", action, service)
+		LoggingClient.Info("invoking operation")
 
 		if !isKnownServiceKey(service) {
-			LoggingClient.Warn("unknown service %s during invocation", service)
+			LoggingClient.Warn(fmt.Sprintf("unknown service %s during invocation", service))
 		}
 
 		switch action {
@@ -49,34 +49,43 @@ func InvokeOperation(action string, services []string) bool {
 			if starter, ok := executorClient.(interfaces.ServiceStarter); ok {
 				err := starter.Start(service)
 				if err != nil {
-					LoggingClient.Error(fmt.Sprintf("error starting service %s: %v", service, err.Error()))
+					LoggingClient.Error("error starting service")
+					return err
 				}
 			} else {
-				LoggingClient.Warn(fmt.Sprintf("starting not supported with specified executor"))
+				err := fmt.Errorf("operation not supported with specified executor")
+				LoggingClient.Error(err.Error())
+				return err
 			}
 
 		case STOP:
 			if stopper, ok := executorClient.(interfaces.ServiceStopper); ok {
 				err := stopper.Stop(service)
 				if err != nil {
-					LoggingClient.Error(fmt.Sprintf("error stopping service %s: %v", service, err.Error()))
+					LoggingClient.Error("error stopping service")
+					return err
 				}
 			} else {
-				LoggingClient.Warn(fmt.Sprintf("stopping not supported with specified executor"))
+				err := fmt.Errorf("operation not supported with specified executor")
+				LoggingClient.Error(err.Error())
+				return err
 			}
 
 		case RESTART:
 			if restarter, ok := executorClient.(interfaces.ServiceRestarter); ok {
 				err := restarter.Restart(service)
 				if err != nil {
-					LoggingClient.Error(fmt.Sprintf("error restarting service %s: %v", service, err.Error()))
+					LoggingClient.Error("error restarting service")
+					return err
 				}
 			} else {
-				LoggingClient.Warn(fmt.Sprintf("restarting not supported with specified executor"))
+				err := fmt.Errorf("operation not supported with specified executor")
+				LoggingClient.Error(err.Error())
+				return err
 			}
 		}
 	}
-	return true
+	return nil
 }
 
 func getConfig(services []string, ctx context.Context) (ConfigRespMap, error) {
@@ -251,7 +260,7 @@ func getHealth(services []string) (map[string]interface{}, error) {
 	for _, service := range services {
 
 		if !isKnownServiceKey(service) {
-			LoggingClient.Warn("unknown service %s found while getting health", service)
+			LoggingClient.Warn(fmt.Sprintf("unknown service %s found while getting health", service))
 		}
 
 		err := registryClient.IsServiceAvailable(service)
