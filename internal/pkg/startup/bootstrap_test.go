@@ -25,6 +25,7 @@ var checkInit bool
 var checkLog string
 var timeoutPass = 100
 var timeoutFail = 1000
+var wg sync.WaitGroup
 
 func TestBootstrap(t *testing.T) {
 	testPass(t)
@@ -56,6 +57,7 @@ func testFail(t *testing.T) {
 	if checkInit {
 		t.Error("checkInit should be false.")
 	}
+	wg.Wait()
 	if checkLog == "" {
 		t.Error("checkLog should not be blank.")
 	}
@@ -83,7 +85,7 @@ func mockRetry(UseRegistry bool, useProfile string, timeout int, wait *sync.Wait
 }
 
 func mockLog(err error) {
-	//fmt.Println(fmt.Sprintf("mockLog called: %v", err))
+	wg.Add(1)
 	checkLog = fmt.Sprintf("%v", err)
-	//fmt.Println("checkLog:" + checkLog)
+	wg.Done()
 }
