@@ -20,20 +20,22 @@ import (
 )
 
 type ValueDescriptor struct {
-	Id           bson.ObjectId `bson:"_id,omitempty"`
-	Uuid         string        `bson:"uuid"`
-	Created      int64         `bson:"created"`
-	Description  string        `bson:"description,omitempty"`
-	Modified     int64         `bson:"modified"`
-	Origin       int64         `bson:"origin"`
-	Name         string        `bson:"name"`
-	Min          interface{}   `bson:"min,omitempty"`
-	Max          interface{}   `bson:"max,omitempty"`
-	DefaultValue interface{}   `bson:"defaultValue,omitempty"`
-	Type         string        `bson:"type,omitempty"`
-	UomLabel     string        `bson:"uomLabel,omitempty"`
-	Formatting   string        `bson:"formatting,omitempty"`
-	Labels       []string      `bson:"labels,omitempty"`
+	Id            bson.ObjectId `bson:"_id,omitempty"`
+	Uuid          string        `bson:"uuid"`
+	Created       int64         `bson:"created"`
+	Description   string        `bson:"description,omitempty"`
+	Modified      int64         `bson:"modified"`
+	Origin        int64         `bson:"origin"`
+	Name          string        `bson:"name"`
+	Min           interface{}   `bson:"min,omitempty"`
+	Max           interface{}   `bson:"max,omitempty"`
+	DefaultValue  interface{}   `bson:"defaultValue,omitempty"`
+	Type          string        `bson:"type,omitempty"`
+	UomLabel      string        `bson:"uomLabel,omitempty"`
+	Formatting    string        `bson:"formatting,omitempty"`
+	Labels        []string      `bson:"labels,omitempty"`
+	MediaType     string        `bson:"mediaType,omitempty"`
+	FloatEncoding string        `bson:"floatEncoding,omitempty"`
 }
 
 func (v *ValueDescriptor) ToContract() contract.ValueDescriptor {
@@ -43,19 +45,21 @@ func (v *ValueDescriptor) ToContract() contract.ValueDescriptor {
 		id = v.Id.Hex()
 	}
 	to := contract.ValueDescriptor{
-		Id:           id,
-		Created:      v.Created,
-		Description:  v.Description,
-		Modified:     v.Modified,
-		Origin:       v.Origin,
-		Name:         v.Name,
-		Min:          v.Min,
-		Max:          v.Max,
-		DefaultValue: v.DefaultValue,
-		Type:         v.Type,
-		UomLabel:     v.UomLabel,
-		Formatting:   v.Formatting,
-		Labels:       []string{},
+		Id:            id,
+		Created:       v.Created,
+		Description:   v.Description,
+		Modified:      v.Modified,
+		Origin:        v.Origin,
+		Name:          v.Name,
+		Min:           v.Min,
+		Max:           v.Max,
+		DefaultValue:  v.DefaultValue,
+		Type:          v.Type,
+		UomLabel:      v.UomLabel,
+		Formatting:    v.Formatting,
+		Labels:        []string{},
+		MediaType:     v.MediaType,
+		FloatEncoding: v.FloatEncoding,
 	}
 	for _, l := range v.Labels {
 		to.Labels = append(to.Labels, l)
@@ -81,6 +85,8 @@ func (v *ValueDescriptor) FromContract(from contract.ValueDescriptor) (id string
 	v.UomLabel = from.UomLabel
 	v.Formatting = from.Formatting
 	v.Labels = []string{}
+	v.MediaType = from.MediaType
+	v.FloatEncoding = from.FloatEncoding
 
 	for _, l := range from.Labels {
 		v.Labels = append(v.Labels, l)
