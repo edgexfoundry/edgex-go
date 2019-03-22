@@ -43,6 +43,7 @@ type CpuUsage struct {
 var once sync.Once
 var lastSample CpuUsage
 var usageAvg float64
+var wg sync.WaitGroup
 
 func NewSystemUsage() (s SystemUsage) {
 	// The micro-service is to be considered the System Of Record (SOR) in terms of accurate information.
@@ -70,9 +71,11 @@ func NewSystemUsage() (s SystemUsage) {
 func StartCpuUsageAverage() {
 	once.Do(func() {
 		for {
+			wg.Add(1)
 			nextUsage := PollCpu()
 			usageAvg = AvgCpuUsage(lastSample, nextUsage)
 			lastSample = nextUsage
+			wg.Done()
 
 			time.Sleep(time.Second * 30)
 		}
