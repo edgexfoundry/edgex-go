@@ -37,8 +37,9 @@ func TestStartCpuUsageAverage(t *testing.T) {
 	// either it will correctly calculate usage and it will change,
 	// or it will run the unimplemented version and change to -1
 	go StartCpuUsageAverage()
-	time.Sleep(time.Second)
 
+	time.Sleep(time.Second)
+	wg.Wait()
 	if usageAvg == initialAvg {
 		t.Fatalf("Expected CPU usageAvg to change, no change. initial: %f, final: %f", initialAvg, usageAvg)
 	}
