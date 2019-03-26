@@ -41,6 +41,7 @@ type PropertyValue struct {
 	Assertion     string `bson:"assertion"`     // Required value of the property, set for checking error state.  Failing an assertion condition will mark the device with an error state
 	Precision     string `bson:"precision"`
 	FloatEncoding string `bson:"floatEncoding"` // FloatEncoding indicates the representation of floating value of reading.  It should be 'Base64' or 'eNotation'
+	MediaType     string `bson:"mediaType"`
 }
 
 type Units struct {
@@ -131,6 +132,7 @@ func (dp *DeviceProfile) ToContract(transform commandTransform) (c contract.Devi
 		cdo.Properties.Value.Assertion = dr.Properties.Value.Assertion
 		cdo.Properties.Value.Precision = dr.Properties.Value.Precision
 		cdo.Properties.Value.FloatEncoding = dr.Properties.Value.FloatEncoding
+		cdo.Properties.Value.MediaType = dr.Properties.Value.MediaType
 
 		cdo.Properties.Units.Type = dr.Properties.Units.Type
 		cdo.Properties.Units.ReadWrite = dr.Properties.Units.ReadWrite
@@ -219,6 +221,7 @@ func (dp *DeviceProfile) FromContract(from contract.DeviceProfile, transform com
 		do.Properties.Value.Assertion = dr.Properties.Value.Assertion
 		do.Properties.Value.Precision = dr.Properties.Value.Precision
 		do.Properties.Value.FloatEncoding = dr.Properties.Value.FloatEncoding
+		do.Properties.Value.MediaType = dr.Properties.Value.MediaType
 
 		do.Properties.Units.Type = dr.Properties.Units.Type
 		do.Properties.Units.ReadWrite = dr.Properties.Units.ReadWrite
