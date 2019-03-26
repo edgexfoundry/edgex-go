@@ -27,7 +27,6 @@ Ch-ExamplesAddingOPCUADevice.rst
 Ch-ExamplesAddingSNMPDevice.rst
 Ch-ExamplesAPIDemo.rst
 Ch-ExamplesDeviceServiceProfiles.rst
-Ch-ExamplesMQTTDeviceService.rst
 Ch-ExamplesProvisionDevice.rst
 Ch-Examples.rst
 Ch-ExportServices.rst
