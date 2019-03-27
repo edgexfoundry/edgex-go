@@ -177,6 +177,16 @@ apps:
         - core-config-seed
         - mongo-worker
         - edgexproxy
+  support-rulesengine:
+    command: bin/support-rulesengine-wrapper.sh
+    daemon: simple
+    plugs: [network, network-bind]
+    passthrough:
+      after:
+        - export-client
+        - core-config-seed
+        - mongo-worker
+        - edgexproxy
   export-client:
     command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh export-client --registry
     daemon: forking
@@ -432,6 +442,14 @@ parts:
       install -d "$SNAPCRAFT_PART_INSTALL/config/support-scheduler/res/"
       install -d "$SNAPCRAFT_PART_INSTALL/config/sys-mgmt-agent/res/"
 
+      install -d "$SNAPCRAFT_PART_INSTALL/config/config-seed/res/properties/edgex-support-rulesengine/"
+
+      # handle application.properties for the remaining java services
+      cat "./cmd/config-seed/res/properties/edgex-support-rulesengine/application.properties" | \
+        sed -e s:edgex/rules:\$SNAP_DATA/support-rulesengine/rules: \
+            -e s:edgex/templates:\$SNAP_DATA/support-rulesengine/templates: > \
+       "$SNAPCRAFT_PART_INSTALL/config/config-seed/res/properties/edgex-support-rulesengine/application.properties"
+
       cat "./cmd/config-seed/res/configuration.toml" | \
         sed -e s:./logs/edgex-config-seed.log:\$SNAP_COMMON/config-seed.log: \
             -e s:'http\://localhost\:48061/api/v1/logs':: > \
@@ -531,6 +549,51 @@ parts:
       - pkg-config
     stage-packages:
       - libzmq3-dev
+
+  support-rulesengine:
+    source: https://github.com/edgexfoundry/support-rulesengine.git
+    source-branch: "master"
+    plugin: maven
+    maven-options: ["-Dmaven.test.skip=true"]
+    override-build: |
+      snapcraftctl build
+      echo "Installing support-rulesengine files"
+
+      # The logic following logic is all handled by DockerFile for
+      # the EdgeX support-rulesengine docker image.
+      install -d "$SNAPCRAFT_PART_INSTALL/jar/support-rulesengine"
+      mv "$SNAPCRAFT_PART_INSTALL"/jar/support-rulesengine-*-SNAPSHOT.jar \
+         "$SNAPCRAFT_PART_INSTALL"/jar/support-rulesengine/support-rulesengine.jar
+
+      # FIXME:
+      # copy service license into /usr/share/java/doc, because the
+      # jdk plugin has a bug which prevents any files from /usr/share/doc
+      # to be staged or primed.
+      install -DT "./Attribution.txt" \
+         "$SNAPCRAFT_PART_INSTALL/usr/share/java/doc/support-rulesengine/Attribution.txt"
+      install -DT "./LICENSE-2.0.txt" \
+         "$SNAPCRAFT_PART_INSTALL/usr/share/java/doc/support-rulesengine/LICENSE-2.0.txt"
+      install -DT "./src/main/resources/rule-template.drl" \
+         "$SNAPCRAFT_PART_INSTALL/jar/support-rulesengine/templates/rule-template.drl"
+    prime:
+      - -etc/fonts
+      - -etc/fonts/X11
+      - -usr/lib/jvm/*/ASSEMBLY_EXCEPTION
+      - -usr/lib/jvm/*/THIRD_PARTY_README
+      - -usr/lib/jvm/*/jre/ASSEMBLY_EXCEPTION
+      - -usr/lib/jvm/*/jre/THIRD_PARTY_README
+      - -usr/lib/jvm/*/man
+      - -usr/lib/jvm/*/jre/man
+      - -usr/lib/jvm/*/jre/lib/images
+      - -usr/lib/jvm/*/include
+      - -usr/lib/jvm/*/bin
+      - -usr/lib/jvm/*/lib
+      - -usr/lib/jvm/*/docs
+      - -usr/lib/jvm/*/src.zip
+      - -usr/share/X11
+      - -usr/share/man
+      - -usr/share/fonts
+      - -usr/share/alsa
 
   cassandra:
     plugin: ant
