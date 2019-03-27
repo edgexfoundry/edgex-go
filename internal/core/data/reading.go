@@ -110,34 +110,6 @@ func getReadingById(id string) (reading contract.Reading, err error) {
 	return reading, nil
 }
 
-func getReadingsByDeviceId(limit int, deviceId string, valueDescriptor string) ([]contract.Reading, error) {
-	eventList, err := dbClient.EventsForDevice(deviceId)
-	if err != nil {
-		LoggingClient.Error(err.Error())
-		return nil, err
-	}
-
-	// Only pick the readings who match the value descriptor
-	var readings []contract.Reading
-	count := 0 // Make sure we stay below the limit
-	for _, event := range eventList {
-		if count >= limit {
-			break
-		}
-		for _, reading := range event.Readings {
-			if count >= limit {
-				break
-			}
-			if reading.Name == valueDescriptor {
-				readings = append(readings, reading)
-				count += 1
-			}
-		}
-	}
-
-	return readings, nil
-}
-
 func deleteReadingById(id string) error {
 	err := dbClient.DeleteReadingById(id)
 	if err != nil {

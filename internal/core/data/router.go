@@ -55,7 +55,6 @@ func LoadRestRoutes() *mux.Router {
 	e.HandleFunc("/device/{deviceId}", deleteByDeviceIdHandler).Methods(http.MethodDelete)
 	e.HandleFunc("/removeold/age/{age:[0-9]+}", eventByAgeHandler).Methods(http.MethodDelete)
 	e.HandleFunc("/{start:[0-9]+}/{end:[0-9]+}/{limit:[0-9]+}", eventByCreationTimeHandler).Methods(http.MethodGet)
-	e.HandleFunc("/device/{deviceId}/valuedescriptor/{valueDescriptor}/{limit:[0-9]+}", readingByDeviceFilteredValueDescriptor).Methods(http.MethodGet)
 
 	// Readings
 	r.HandleFunc(clients.ApiReadingRoute, readingHandler).Methods(http.MethodGet, http.MethodPut, http.MethodPost)
@@ -551,72 +550,6 @@ func eventByCreationTimeHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		encode(eventList, w)
-	}
-}
-
-// Get the readings for a device and filter them based on the value descriptor
-// Only those readings whos name is the value descriptor should get through
-// /event/device/{deviceId}/valuedescriptor/{valueDescriptor}/{limit}
-// 413 - number exceeds limit
-func readingByDeviceFilteredValueDescriptor(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
-
-	vars := mux.Vars(r)
-	limit := vars["limit"]
-	ctx := r.Context()
-
-	valueDescriptor, err := url.QueryUnescape(vars["valueDescriptor"])
-	// Problems unescaping URL
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		LoggingClient.Error("Problem unescaping value descriptor: " + err.Error())
-		return
-	}
-
-	deviceId, err := url.QueryUnescape(vars["deviceId"])
-	// Problems unescaping URL
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		LoggingClient.Error("Problem unescaping device ID: " + err.Error())
-		return
-	}
-
-	limitNum, err := strconv.Atoi(limit)
-	// Problem converting the limit
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		LoggingClient.Error("Problem converting limit to integer: " + err.Error())
-		return
-	}
-	switch r.Method {
-	case http.MethodGet:
-		// Check device
-		if err := checkDevice(deviceId, ctx); err != nil {
-			LoggingClient.Error(fmt.Sprintf("error checking device %s %v", deviceId, err))
-			switch err := err.(type) {
-			case *types.ErrServiceClient:
-				http.Error(w, err.Error(), err.StatusCode)
-				return
-			default: //return an error on everything else.
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-		}
-
-		err := checkMaxLimit(limitNum)
-		if err != nil {
-			http.Error(w, maxExceededString, http.StatusRequestEntityTooLarge)
-			return
-		}
-
-		readings, err := getReadingsByDeviceId(limitNum, deviceId, valueDescriptor)
-
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		encode(readings, w)
 	}
 }
 
