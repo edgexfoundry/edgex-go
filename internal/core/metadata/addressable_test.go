@@ -23,7 +23,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces"
 	dbMock "github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces/mocks"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logging"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
