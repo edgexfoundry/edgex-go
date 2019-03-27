@@ -7,7 +7,6 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
-	"syscall"
 	"time"
 
 	"github.com/edgexfoundry/edgex-go"
@@ -79,7 +78,7 @@ func logBeforeInit(err error) {
 func listenForInterrupt(errChan chan error) {
 	go func() {
 		c := make(chan os.Signal)
-		signal.Notify(c, syscall.SIGINT)
+		signal.Notify(c, os.Interrupt)
 		errChan <- fmt.Errorf("%s", <-c)
 	}()
 }

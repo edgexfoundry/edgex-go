@@ -200,7 +200,7 @@ func listenForConfigChanges() {
 
 	// TODO: Refactor names in separate PR: See comments on PR #1133
 	chSignals := make(chan os.Signal)
-	signal.Notify(chSignals, syscall.SIGINT, syscall.SIGTERM)
+	signal.Notify(chSignals, os.Interrupt, syscall.SIGTERM)
 
 	for {
 		select {
