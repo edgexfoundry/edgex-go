@@ -20,11 +20,13 @@ import (
 	"net/http"
 	"sync"
 	"time"
+
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	"github.com/edgexfoundry/go-mod-registry/pkg/types"
+	"github.com/edgexfoundry/go-mod-registry/registry"
+
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-	"github.com/edgexfoundry/go-mod-registry"
-	"github.com/edgexfoundry/go-mod-registry/pkg/factory"
 )
 
 // Global variables
@@ -90,13 +92,13 @@ func initializeConfiguration(useProfile string) (*ConfigurationStruct, error) {
 }
 
 func initRegistryClient(serviceKey string) (registry.Client, error) {
-	registryConfig := registry.Config{
+	registryConfig := types.Config{
 		Host:       Configuration.Registry.Host,
 		Port:       Configuration.Registry.Port,
 		Type:       Configuration.Registry.Type,
 		ServiceKey: serviceKey,
 	}
-	registryClient, err := factory.NewRegistryClient(registryConfig)
+	registryClient, err := registry.NewRegistryClient(registryConfig)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create New Registry: %v", err)
 	}

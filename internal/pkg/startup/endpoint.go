@@ -20,7 +20,8 @@ import (
 	"time"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
-	"github.com/edgexfoundry/go-mod-registry"
+	registryTypes "github.com/edgexfoundry/go-mod-registry/pkg/types"
+	"github.com/edgexfoundry/go-mod-registry/registry"
 )
 
 type Endpoint struct {
@@ -28,7 +29,7 @@ type Endpoint struct {
 }
 
 func (e Endpoint) Monitor(params types.EndpointParams, ch chan string) {
-	var endpoint registry.ServiceEndpoint
+	var endpoint registryTypes.ServiceEndpoint
 	var err error
 	for {
 
