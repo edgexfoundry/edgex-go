@@ -11,7 +11,7 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logging"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/go-kit/kit/log"
@@ -56,7 +56,12 @@ func newPrivateLogger() privLogger {
 
 func (l privLogger) log(logLevel string, msg string, args ...interface{}) {
 	// Check minimum log level
-	for _, name := range logger.LogLevels {
+	for _, name := range []string{
+		logger.TraceLog,
+		logger.DebugLog,
+		logger.InfoLog,
+		logger.WarnLog,
+		logger.ErrorLog} {
 		if name == *l.logLevel {
 			break
 		}

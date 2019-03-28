@@ -10,7 +10,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logging"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
