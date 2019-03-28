@@ -45,7 +45,7 @@ COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/sys-mgmt-agent/
 COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/sys-mgmt-executor/sys-mgmt-executor /
 
 RUN apk --no-cache add py-pip
-RUN pip install docker-compose
+RUN pip install docker-compose==1.23.2
 RUN apk --no-cache add curl
 RUN curl -o docker-compose.yml https://raw.githubusercontent.com/edgexfoundry/developer-scripts/master/compose-files/docker-compose-delhi-0.7.1.yml
 
