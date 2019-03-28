@@ -1,5 +1,6 @@
 /*******************************************************************************
  * Copyright 2017 Dell Inc.
+ * Copyright (c) 2019 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -15,13 +16,17 @@ package data
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+
+	"github.com/edgexfoundry/go-mod-core-contracts/clients"
+	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
+	msgTypes "github.com/edgexfoundry/go-mod-messaging/pkg/types"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation/models"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
-	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
 func countEvents() (int, error) {
@@ -208,9 +213,20 @@ func putEventOnQueue(e contract.Event, ctx context.Context) {
 	evt := models.Event{}
 	evt.Event = e
 	evt.CorrelationId = correlation.FromContext(ctx)
-	err := ep.SendEventMessage(evt)
+	payload, err := json.Marshal(evt)
 	if err != nil {
-		LoggingClient.Error("Unable to send message for event: " + e.String())
+		LoggingClient.Error(fmt.Sprintf("Unable to marshal event to json: %s", err.Error()))
+		return
+	}
+
+	ctx = context.WithValue(ctx, clients.ContentType, clients.ContentTypeJSON)
+	msgEnvelope := msgTypes.NewMessageEnvelope(payload, ctx)
+
+	err = msgClient.Publish(msgEnvelope, Configuration.MessageQueue.Topic)
+	if err != nil {
+		LoggingClient.Error(fmt.Sprintf("Unable to send message for event: %s", evt.String()))
+	} else {
+		LoggingClient.Info(fmt.Sprintf("Event Published on message queue. Topic: %s, Correlation-id: %s ", Configuration.MessageQueue.Topic, msgEnvelope.CorrelationID))
 	}
 }
 

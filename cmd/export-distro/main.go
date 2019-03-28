@@ -2,6 +2,7 @@
 // Copyright (c) 2017
 // Cavium
 // Mainflux
+// Copyright (c) 2019 Intel Corporation
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -18,14 +19,14 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+
 	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/export/distro"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation/models"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
 
 func main() {
@@ -55,13 +56,10 @@ func main() {
 	distro.LoggingClient.Info(distro.Configuration.Service.StartupMsg)
 
 	errs := make(chan error, 2)
-	eventCh := make(chan *models.Event, 10)
 
 	listenForInterrupt(errs)
 
-	// There can be another receivers that can be initialized here
-	distro.ZeroMQReceiver(eventCh)
-	distro.Loop(errs, eventCh)
+	distro.Loop()
 
 	// Time it took to start service
 	distro.LoggingClient.Info("Service started in: " + time.Since(start).String())
@@ -70,6 +68,7 @@ func main() {
 	distro.Destruct()
 	distro.LoggingClient.Warn(fmt.Sprintf("terminating: %v", c))
 
+	close(errs)
 	os.Exit(0)
 }
 
