@@ -230,44 +230,6 @@ schemas:
                 description: if the number of events exceeds the current max limit.
             "500": 
                 description: for unknown or unanticipated issues.
-/event/device/{deviceId}/valuedescriptor/{valuedescriptor}/{limit}: 
-    displayName: Reading Resource (filtered for device and value descriptor)
-    description: example - http://localhost:48080/api/v1/event/device/livingroomthermostat/valuedescriptor/temperature/10
-    uriParameters: 
-        limit: 
-            displayName: limit
-            description: maximum number of events to fetch, must be < max limit
-            type: integer
-            required: false
-            repeat: false
-        deviceId: 
-            displayName: deviceId
-            description: the id (database generated id) or name of the device associated to events
-            type: string
-            required: false
-            repeat: false
-        valuedescriptor: 
-            displayName: valuedescriptor
-            description: value descriptor used to filter readings
-            type: string
-            required: false
-            repeat: false
-    get: 
-        description: Return all readings associated to the device via the event, and filtered by those readings associated to the provided value descriptor.  Sorted by event modified date, newest events are at the top of list.  LimitExceededException (HTTP 413) if the number of events (associated to the device) exceeds the current max limit. ServiceException (HTTP 500) for unknown or unanticipated issues.
-        displayName: get readings by device and value descriptor
-        responses: 
-            "200": 
-                description: list of readings by device and value descriptor
-                body: 
-                    application/json: 
-                        schema: reading
-                        example: '[{"id":"5888dea1bd36573f4681d6f9","created":1485364897029,"modified":1485364897029,"origin":1471806386919,"pushed":0,"device":"livingroomthermostat","readings":[{"id":"5888dea0bd36573f4681d6f8","created":1485364896983,"modified":1485364896983,"origin":1471806386919,"pushed":0,"name":"temperature","value":"38","device":"livingroomthermostat"}]}]'
-            "400":
-                description: request is invalid or unparseable
-            "413": 
-                description: if the number of events exceeds the current max limit.
-            "500": 
-                description: for unknown or unanticipated issues. 
 /event/removeold/age/{age}: 
     displayName: Event Resource (by age)
     description: example - http://localhost:48080/api/v1/event/removeold/age/604800000
