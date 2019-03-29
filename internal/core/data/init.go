@@ -27,12 +27,13 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/metadata"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
-	"github.com/edgexfoundry/go-mod-registry"
+	"github.com/edgexfoundry/go-mod-messaging/messaging"
+	msgTypes "github.com/edgexfoundry/go-mod-messaging/pkg/types"
+	registry "github.com/edgexfoundry/go-mod-registry"
 	"github.com/edgexfoundry/go-mod-registry/pkg/factory"
 
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/interfaces"
-	"github.com/edgexfoundry/edgex-go/internal/core/data/messaging"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo"
@@ -45,12 +46,13 @@ var Configuration *ConfigurationStruct
 var dbClient interfaces.DBClient
 var LoggingClient logger.LoggingClient
 var registryClient registry.Client
+
 // TODO: Refactor names in separate PR: See comments on PR #1133
 var chEvents chan interface{}  //A channel for "domain events" sourced from event operations
 var chErrors chan error        //A channel for "config wait error" sourced from Registry
 var chUpdates chan interface{} //A channel for "config updates" sourced from Registry
 
-var ep messaging.EventPublisher
+var msgClient messaging.MessageClient
 var mdc metadata.DeviceClient
 var msc metadata.DeviceServiceClient
 
@@ -212,7 +214,7 @@ func connectToRegistry(conf *ConfigurationStruct) error {
 		Stem:            internal.ConfigRegistryStem,
 	}
 
-	registryClient, err = factory.NewRegistryClient(registryConfig, )
+	registryClient, err = factory.NewRegistryClient(registryConfig)
 	if err != nil {
 		return fmt.Errorf("connection to Registry could not be made: %v", err.Error())
 	}
@@ -241,7 +243,7 @@ func listenForConfigChanges() {
 
 	// TODO: Refactor names in separate PR: See comments on PR #1133
 	chSignals := make(chan os.Signal)
-	signal.Notify(chSignals, syscall.SIGINT, syscall.SIGTERM)
+	signal.Notify(chSignals, os.Interrupt, syscall.SIGTERM)
 
 	for {
 		select {
@@ -286,10 +288,20 @@ func initializeClients(useRegistry bool) {
 	params.Path = clients.ApiDeviceServiceRoute
 	msc = metadata.NewDeviceServiceClient(params, startup.Endpoint{RegistryClient: &registryClient})
 
-	// Create the event publisher
-	ep = messaging.NewEventPublisher(messaging.PubSubConfiguration{
-		AddressPort: Configuration.MessageQueue.Uri(),
+	// Create the messaging client
+	var err error
+	msgClient, err = messaging.NewMessageClient(msgTypes.MessageBusConfig{
+		PublishHost: msgTypes.HostInfo{
+			Host:     Configuration.MessageQueue.Host,
+			Port:     Configuration.MessageQueue.Port,
+			Protocol: Configuration.MessageQueue.Protocol,
+		},
+		Type: Configuration.MessageQueue.Type,
 	})
+
+	if err != nil {
+		LoggingClient.Error(fmt.Sprintf("failed to create messaging client: %s", err.Error()))
+	}
 }
 
 func setLoggingTarget() string {

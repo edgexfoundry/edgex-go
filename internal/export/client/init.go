@@ -231,7 +231,7 @@ func listenForConfigChanges() {
 	registryClient.WatchForChanges(registryUpdates, registryErrors, &WritableInfo{}, internal.WritableKey)
 
 	signals := make(chan os.Signal)
-	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
+	signal.Notify(signals, os.Interrupt, syscall.SIGTERM)
 
 	for {
 		select {

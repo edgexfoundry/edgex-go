@@ -4,6 +4,7 @@
 // Mainflux
 // IOTech
 // Copyright (c) 2018 Dell Technologies, Inc.
+// Copyright (c) 2019 Intel Corporation
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -20,8 +21,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
+
+	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation/models"
 )
 
 const (
@@ -271,11 +274,11 @@ func updateRunningRegistrations(running map[string]*registrationInfo,
 }
 
 // Loop - registration loop
-func Loop(errChan chan error, eventCh chan *models.Event) {
+func Loop() {
 	go func() {
 		p := fmt.Sprintf(":%d", Configuration.Service.Port)
 		LoggingClient.Info(fmt.Sprintf("Starting Export Distro %s", p))
-		errChan <- http.ListenAndServe(p, httpServer())
+		messageErrors <- http.ListenAndServe(p, httpServer())
 	}()
 
 	registrations := make(map[string]*registrationInfo)
@@ -285,7 +288,7 @@ func Loop(errChan chan error, eventCh chan *models.Event) {
 	for allRegs == nil {
 		LoggingClient.Info("Waiting for client microservice")
 		select {
-		case e := <-errChan:
+		case e := <-messageErrors:
 			LoggingClient.Error(fmt.Sprintf("exit msg: %s", e.Error()))
 			if err != nil {
 				LoggingClient.Error(fmt.Sprintf("with error: %s", err.Error()))
@@ -308,7 +311,7 @@ func Loop(errChan chan error, eventCh chan *models.Event) {
 	LoggingClient.Info("Starting registration loop")
 	for {
 		select {
-		case e := <-errChan:
+		case e := <-messageErrors:
 			// kill all registration goroutines
 			for k, reg := range registrations {
 				if !reg.deleteFlag {
@@ -328,7 +331,18 @@ func Loop(errChan chan error, eventCh chan *models.Event) {
 				LoggingClient.Warn(fmt.Sprintf("Error updating registration %s", update.Name))
 			}
 
-		case event := <-eventCh:
+		case msgEnvelope := <-messageEnvelopes:
+			LoggingClient.Info(fmt.Sprintf("Event received on message queue. Topic: %s, Correlation-id: %s ", Configuration.MessageQueue.Topic, msgEnvelope.CorrelationID))
+			if msgEnvelope.ContentType != clients.ContentTypeJSON {
+				LoggingClient.Error(fmt.Sprintf("Incorrect content type for event message. Received: %s, Expected: %s", msgEnvelope.ContentType, clients.ContentTypeJSON))
+				continue
+			}
+			str := string(msgEnvelope.Payload)
+			event := parseEvent(str)
+			if event == nil {
+				continue
+			}
+
 			for k, reg := range registrations {
 				if reg.deleteFlag {
 					delete(registrations, k)
