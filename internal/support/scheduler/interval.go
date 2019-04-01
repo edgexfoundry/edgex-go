@@ -209,11 +209,7 @@ func deleteIntervalById(id string) error {
 	if err != nil {
 		return errors.NewErrIntervalNotFound(id)
 	}
-	// remove in memory
-	err = scClient.RemoveIntervalInQueue(inMemory.ID)
-	if err != nil {
-		return errors.NewErrDbNotFound()
-	}
+
 	// check if interval exists
 	interval, err := getIntervalById(id)
 	if err != nil {
@@ -223,6 +219,13 @@ func deleteIntervalById(id string) error {
 	if err = deleteInterval(interval); err != nil {
 		return err
 	}
+
+	// remove in memory
+	err = scClient.RemoveIntervalInQueue(inMemory.ID)
+	if err != nil {
+		return errors.NewErrDbNotFound()
+	}
+
 	return nil
 }
 
