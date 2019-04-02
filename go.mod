@@ -6,7 +6,7 @@ require (
 	github.com/eclipse/paho.mqtt.golang v1.1.1
 	github.com/edgexfoundry/go-mod-core-contracts v0.0.0-20190326164454-587b69238c54
 	github.com/edgexfoundry/go-mod-messaging v0.0.0-20190327144236-4222ae1edb0b
-	github.com/edgexfoundry/go-mod-registry v0.0.0-20190221211212-171439dc16f8
+	github.com/edgexfoundry/go-mod-registry v0.0.0-20190401195203-552208258719
 	github.com/globalsign/mgo v0.0.0-20181015135952-eeefdecb41b8
 	github.com/go-kit/kit v0.8.0
 	github.com/go-stack/stack v1.8.0 // indirect
@@ -18,7 +18,7 @@ require (
 	github.com/influxdata/platform v0.0.0-20190117200541-d500d3cf5589 // indirect
 	github.com/magiconair/properties v1.8.0
 	github.com/mattn/go-xmpp v0.0.0-20190124093244-6093f50721ed
-	github.com/mitchellh/consulstructure v0.0.0-20160324233621-b407c521973b
+	github.com/mitchellh/consulstructure v0.0.0-20190329231841-56fdc4d2da54
 	github.com/pebbe/zmq4 v1.0.0
 	github.com/pelletier/go-toml v1.2.0
 	github.com/pkg/errors v0.8.1

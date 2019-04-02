@@ -24,8 +24,8 @@ import (
 	"strings"
 
 	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/go-mod-registry"
-	"github.com/edgexfoundry/go-mod-registry/pkg/factory"
+	"github.com/edgexfoundry/go-mod-registry/pkg/types"
+	"github.com/edgexfoundry/go-mod-registry/registry"
 	"github.com/magiconair/properties"
 	"github.com/pelletier/go-toml"
 )
@@ -50,7 +50,7 @@ func ImportProperties(root string) error {
 			return err
 		}
 
-		registryConfig := registry.Config{
+		registryConfig := types.Config{
 			Host:       Configuration.Registry.Host,
 			Port:       Configuration.Registry.Port,
 			Type:       Configuration.Registry.Type,
@@ -58,7 +58,7 @@ func ImportProperties(root string) error {
 			ServiceKey: appKey,
 		}
 
-		Registry, err = factory.NewRegistryClient(registryConfig)
+		Registry, err = registry.NewRegistryClient(registryConfig)
 		for key := range props {
 			if err := Registry.PutConfigurationValue(key, []byte(props[key])); err != nil {
 				return err
@@ -112,14 +112,14 @@ func ImportConfiguration(root string, profile string, overwrite bool) error {
 			return nil
 		}
 
-		registryConfig := registry.Config{
+		registryConfig := types.Config{
 			Host:       Configuration.Registry.Host,
 			Port:       Configuration.Registry.Port,
 			Type:       Configuration.Registry.Type,
 			Stem:       internal.ConfigRegistryStem,
 			ServiceKey: internal.ServiceKeyPrefix + serviceName,
 		}
-		Registry, err = factory.NewRegistryClient(registryConfig)
+		Registry, err = registry.NewRegistryClient(registryConfig)
 		if err != nil {
 			return err
 		}
