@@ -11,4 +11,3 @@ EdgeX Foundry Examples and Tutorials
    Ch-ExamplesAddingSNMPDevice
    Ch-ExamplesAddingMQTTDevice
    Ch-ExamplesRandomDeviceService
-   Ch-ExamplesDeviceServiceProfiles
