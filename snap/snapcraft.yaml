@@ -206,7 +206,7 @@ apps:
         - mongo-worker
         - edgexproxy
   sys-mgmt-agent:
-    command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh sys-mgmt-agent
+    command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh sys-mgmt-agent --registry
     daemon: forking
     plugs: [network, network-bind, daemon-notify]
     passthrough:
