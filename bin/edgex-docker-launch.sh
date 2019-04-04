@@ -31,11 +31,8 @@ fi
 
 EDGEX_CORE_DB=${EDGEX_CORE_DB:-"mongo"}
 
-echo "Starting Mongo"
-docker-compose -f $COMPOSE_FILE up -d mongo
-
 if [ ${EDGEX_CORE_DB} != mongo ]; then
-  echo "Starting $EDGEX_CORE_DB for Core Data Services"
+  echo "Starting $EDGEX_CORE_DB for Core Data Services and Support Services"
   docker-compose -f $COMPOSE_FILE up -d $EDGEX_CORE_DB
 fi
 
