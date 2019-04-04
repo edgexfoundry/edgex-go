@@ -950,9 +950,6 @@ parts:
         sed -e s:\"./device-mqtt.log\":\'\$SNAP_COMMON/device-mqtt.log\': > \
         "$SNAPCRAFT_PART_INSTALL/config/device-mqtt/res/configuration.toml"
 
-      install -T "./cmd/res/configuration-driver.toml" \
-        "$SNAPCRAFT_PART_INSTALL/config/device-mqtt/res/configuration-driver.toml"
-
       install -DT "./cmd/Attribution.txt" \
          "$SNAPCRAFT_PART_INSTALL/usr/share/doc/device-mqtt/Attribution.txt"
       install -DT "./LICENSE" \
