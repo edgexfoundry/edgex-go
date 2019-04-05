@@ -336,7 +336,12 @@ func restDeleteProfileByName(w http.ResponseWriter, r *http.Request) {
 func deleteDeviceProfile(dp models.DeviceProfile, w http.ResponseWriter) error {
 	// Check if the device profile is still in use by devices
 	d, err := dbClient.GetDevicesByProfileId(dp.Id)
-	if err != nil {
+
+	// XXX ErrNotFound should always be returned but this is not consistent in the implementations
+	if err == db.ErrNotFound {
+		err = nil
+		d = []models.Device{}
+	} else if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return err
 	}
