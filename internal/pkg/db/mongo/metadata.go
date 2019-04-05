@@ -247,6 +247,16 @@ func (mc MongoClient) DBRefToDeviceProfile(dbRef mgo.DBRef) (a models.DeviceProf
 	return
 }
 
+func (mc MongoClient) NameToDeviceProfile(name string) (a models.DeviceProfile, err error) {
+	s := mc.session.Copy()
+	defer s.Close()
+
+	if err = s.DB(mc.database.Name).C(db.DeviceProfile).Find(bson.M{"name": name}).One(&a); err != nil {
+		return models.DeviceProfile{}, errorMap(err)
+	}
+	return
+}
+
 func (mc MongoClient) DeviceProfileToDBRef(model models.DeviceProfile) (dbRef mgo.DBRef, err error) {
 	// validate model with identity provided in contract actually exists
 	if model.Id.Valid() {

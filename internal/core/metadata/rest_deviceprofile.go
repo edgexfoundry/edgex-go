@@ -149,12 +149,10 @@ func updateDeviceProfileFields(from models.DeviceProfile, to *models.DeviceProfi
 	if from.Origin != 0 {
 		to.Origin = from.Origin
 	}
-	if from.Name != "" {
-		to.Name = from.Name
-		// Names must be unique for each device profile
-		if err := checkDuplicateProfileNames(*to, w); err != nil {
-			return err
-		}
+	if from.Name != "" && to.Name != from.Name{
+		//DeviceName must be unique and cannot be updated
+		err := errors.New("DeviceProfile's Name cannot be updated.")
+		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
 	if from.DeviceResources != nil {
 		to.DeviceResources = from.DeviceResources

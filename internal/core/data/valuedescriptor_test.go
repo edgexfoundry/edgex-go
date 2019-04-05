@@ -12,7 +12,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
-
 	"github.com/stretchr/testify/mock"
 )
 
@@ -50,6 +49,7 @@ func TestGetValueDescriptorByName(t *testing.T) {
 
 	valueDescriptor, err := getValueDescriptorByName("valid")
 
+	fmt.Println("uu", valueDescriptor)
 	if err != nil {
 		t.Errorf("Unexpected error getting value descriptor by name")
 	}
@@ -327,11 +327,18 @@ func TestGetValueDescriptorsByTypeError(t *testing.T) {
 func TestGetValueDescriptorsByDeviceName(t *testing.T) {
 	reset()
 	dbClient = nil
+	myMock := &mocks.DBClient{}
+	myMock.On("ValueDescriptorByName", mock.Anything).Return(models.ValueDescriptor{}, nil)
 
-	_, err := getValueDescriptorsByDeviceName(testDeviceName, context.Background())
+	dbClient = myMock
+
+	vds, err := getValueDescriptorsByDeviceName(testDeviceName, context.Background())
 
 	if err != nil {
 		t.Errorf("Unexpected error getting value descriptor by device name")
+	}
+	if len(vds) != 1 {
+		t.Errorf("Expected 1 Value Descriptor, returned %v", len(vds))
 	}
 }
 
@@ -372,11 +379,17 @@ func TestGetValueDescriptorsByDeviceNameError(t *testing.T) {
 func TestGetValueDescriptorsByDeviceId(t *testing.T) {
 	reset()
 	dbClient = nil
+	myMock := &mocks.DBClient{}
+	myMock.On("ValueDescriptorByName", mock.Anything).Return(models.ValueDescriptor{Name: testValueDescriptorName}, nil)
 
-	_, err := getValueDescriptorsByDeviceId("valid", context.Background())
+	dbClient = myMock
+	vds, err := getValueDescriptorsByDeviceId("valid", context.Background())
 
 	if err != nil {
 		t.Errorf("Unexpected error getting value descriptor by device id")
+	}
+	if len(vds) != 1 {
+		t.Errorf("Expected 1 Value Descriptor, returned %v", len(vds))
 	}
 }
 

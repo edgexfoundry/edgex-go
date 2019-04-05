@@ -87,15 +87,11 @@ func restAddNewDevice(w http.ResponseWriter, r *http.Request) {
 
 	// Profile Check
 	// Try by name
-	d.Profile, err = dbClient.GetDeviceProfileByName(d.Profile.Name)
+	_, err = dbClient.GetDeviceProfileByName(d.ProfileName)
 	if err != nil {
-		// Try by ID
-		d.Profile, err = dbClient.GetDeviceProfileById(d.Profile.Id)
-		if err != nil {
-			LoggingClient.Error(err.Error())
-			http.Error(w, err.Error()+": A device must be associated with a device profile", http.StatusBadRequest)
-			return
-		}
+		LoggingClient.Error(err.Error())
+		http.Error(w, err.Error()+": A device must be associated with a device profile", http.StatusBadRequest)
+		return
 	}
 
 	// Check operating/admin state
@@ -189,20 +185,14 @@ func updateDeviceFields(from models.Device, to *models.Device) error {
 
 		to.Service = ds
 	}
-	if (from.Profile.String() != models.DeviceProfile{}.String()) {
-		// Check if the new profile exists
-		// Try ID first
-		dp, err := dbClient.GetDeviceProfileById(from.Profile.Id)
-		if err != nil {
-			// Then try Name
-			dp, err = dbClient.GetDeviceProfileByName(from.Profile.Name)
-			if err != nil {
-				return errors.New("Device profile not found for updated device")
-			}
-		}
-
-		to.Profile = dp
+	// Check if profile with specified name exists
+	_, err := dbClient.GetDeviceProfileByName(from.ProfileName)
+	if err != nil {
+		return errors.New("Device profile not found for updated device")
 	}
+
+	to.ProfileName = from.ProfileName
+
 	if len(from.Protocols) > 0 {
 		to.Protocols = from.Protocols
 	}
@@ -1086,7 +1076,7 @@ func restGetDeviceByName(w http.ResponseWriter, r *http.Request) {
 	res, err := dbClient.GetDeviceByName(dn)
 	if err != nil {
 		if err == db.ErrNotFound {
-			http.Error(w, err.Error(), http.StatusNotFound)
+			http.Error(w, fmt.Sprintf("Device with name %v not found", dn), http.StatusNotFound)
 		} else {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}

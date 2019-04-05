@@ -204,11 +204,12 @@ func populateDevice(db interfaces.DBClient, count int) (string, error) {
 			return id, fmt.Errorf("Error creating DeviceService: %v", err)
 		}
 
-		d.Profile, err = getDeviceProfile(db, i)
+		dp, err := getDeviceProfile(db, i)
 		if err != nil {
 			return id, fmt.Errorf("Error getting DeviceProfile: %v", err)
 		}
-		d.Profile.Id, err = db.AddDeviceProfile(d.Profile)
+		d.ProfileName = dp.Name
+		_, err = db.AddDeviceProfile(dp)
 		if err != nil {
 			return id, fmt.Errorf("Error creating DeviceProfile: %v", err)
 		}
@@ -987,8 +988,12 @@ func testDBDevice(t *testing.T, db interfaces.DBClient) {
 	if err == nil {
 		t.Fatalf("Device should not be found")
 	}
+	dp, err := db.GetDeviceProfileByName(d.ProfileName)
+	if err != nil {
+		t.Fatalf("Error getting Device Profile %v", err)
+	}
 
-	devices, err = db.GetDevicesByProfileId(d.Profile.Id)
+	devices, err = db.GetDevicesByProfileId(dp.Id)
 	if err != nil {
 		t.Fatalf("Error getting devices %v", err)
 	}

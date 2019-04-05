@@ -129,10 +129,11 @@ func getValueDescriptorsByType(typ string) (vdList []contract.ValueDescriptor, e
 	return vdList, nil
 }
 
-func getValueDescriptorsByDevice(device contract.Device) (vdList []contract.ValueDescriptor, err error) {
+
+func getValueDescriptorsByDeviceProfile(profile contract.DeviceProfile) (vdList []contract.ValueDescriptor, err error) {
 	// Get the names of the value descriptors
 	vdNames := []string{}
-	device.AllAssociatedValueDescriptors(&vdNames)
+	profile.AllAssociatedValueDescriptors(&vdNames)
 
 	// Get the value descriptors
 	vdList = []contract.ValueDescriptor{}
@@ -162,8 +163,12 @@ func getValueDescriptorsByDeviceName(name string, ctx context.Context) (vdList [
 		LoggingClient.Error("Problem getting device from metadata: " + err.Error())
 		return []contract.ValueDescriptor{}, err
 	}
-
-	return getValueDescriptorsByDevice(device)
+	dp, err := mdpc.DeviceProfileForName(device.ProfileName, ctx)
+	if err != nil {
+		LoggingClient.Error("Problem getting device profile from metadata: " + err.Error())
+		return []contract.ValueDescriptor{}, err
+	}
+	return getValueDescriptorsByDeviceProfile(dp)
 }
 
 func getValueDescriptorsByDeviceId(id string, ctx context.Context) (vdList []contract.ValueDescriptor, err error) {
@@ -173,8 +178,12 @@ func getValueDescriptorsByDeviceId(id string, ctx context.Context) (vdList []con
 		LoggingClient.Error("Problem getting device from metadata: " + err.Error())
 		return []contract.ValueDescriptor{}, err
 	}
-
-	return getValueDescriptorsByDevice(device)
+	dp, err := mdpc.DeviceProfileForName(device.ProfileName, ctx)
+	if err != nil {
+		LoggingClient.Error("Problem getting device profile from metadata: " + err.Error())
+		return []contract.ValueDescriptor{}, err
+	}
+	return getValueDescriptorsByDeviceProfile(dp)
 }
 
 func getAllValueDescriptors() (vd []contract.ValueDescriptor, err error) {

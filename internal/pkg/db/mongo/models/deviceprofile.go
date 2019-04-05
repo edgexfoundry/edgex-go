@@ -23,6 +23,7 @@ import (
 
 type deviceProfileTransform interface {
 	DBRefToDeviceProfile(dbRef mgo.DBRef) (model DeviceProfile, err error)
+	NameToDeviceProfile(name string) (model DeviceProfile, err error)
 	DeviceProfileToDBRef(model DeviceProfile) (dbRef mgo.DBRef, err error)
 }
 

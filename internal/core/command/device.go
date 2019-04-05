@@ -155,6 +155,7 @@ func putDeviceOpStateByName(dn string, as string, ctx context.Context) (int, err
 }
 
 func getCommands(ctx context.Context) (int, []models.CommandResponse, error) {
+	var cr []models.CommandResponse
 	devices, err := mdc.Devices(ctx)
 	if err != nil {
 		chk, ok := err.(*types.ErrServiceClient)
@@ -164,9 +165,32 @@ func getCommands(ctx context.Context) (int, []models.CommandResponse, error) {
 			return http.StatusInternalServerError, nil, err
 		}
 	}
-	var cr []models.CommandResponse
+
+	if len(devices) == 0 {
+		return http.StatusOK, cr, err
+	}
+
+	dps, err := mdpc.DeviceProfiles(ctx)
+	if err != nil {
+		chk, ok := err.(*types.ErrServiceClient)
+		if ok {
+			return chk.StatusCode, nil, chk
+		} else {
+			return http.StatusInternalServerError, nil, err
+		}
+	}
+	dpMap := make(map[string]models.DeviceProfile, len(dps))
+	for _, dp := range dps {
+		dpMap[dp.Name] = dp
+	}
+
 	for _, d := range devices {
-		cr = append(cr, models.CommandResponseFromDevice(d, Configuration.Service.Url()))
+		dp, ok := dpMap[d.ProfileName]
+		if ok {
+			cr = append(cr, models.CommandResponseFromDevice(d, dp, Configuration.Service.Url()))
+		} else {
+			LoggingClient.Error("Device Profile with name %v not found in dpMap", d.ProfileName)
+		}
 	}
 	return http.StatusOK, cr, err
 
@@ -175,25 +199,33 @@ func getCommands(ctx context.Context) (int, []models.CommandResponse, error) {
 func getCommandsByDeviceID(did string, ctx context.Context) (int, models.CommandResponse, error) {
 	d, err := mdc.Device(did, ctx)
 	if err != nil {
-		chk, ok := err.(*types.ErrServiceClient)
-		if ok {
-			return chk.StatusCode, models.CommandResponse{}, chk
-		} else {
-			return http.StatusInternalServerError, models.CommandResponse{}, err
-		}
+		return returnCommandRespError(err)
 	}
-	return http.StatusOK, models.CommandResponseFromDevice(d, Configuration.Service.Url()), err
+	dp, err := mdpc.DeviceProfileForName(d.ProfileName, ctx)
+	if err != nil {
+		return returnCommandRespError(err)
+	}
+	return http.StatusOK, models.CommandResponseFromDevice(d, dp, Configuration.Service.Url()), err
 }
 
 func getCommandsByDeviceName(dn string, ctx context.Context) (int, models.CommandResponse, error) {
 	d, err := mdc.DeviceForName(dn, ctx)
 	if err != nil {
-		chk, ok := err.(*types.ErrServiceClient)
-		if ok {
-			return chk.StatusCode, models.CommandResponse{}, err
-		} else {
-			return http.StatusInternalServerError, models.CommandResponse{}, err
-		}
+		return returnCommandRespError(err)
 	}
-	return http.StatusOK, models.CommandResponseFromDevice(d, Configuration.Service.Url()), err
+	dp, err := mdpc.DeviceProfileForName(d.ProfileName, ctx)
+	if err != nil {
+		return returnCommandRespError(err)
+	}
+	return http.StatusOK, models.CommandResponseFromDevice(d, dp, Configuration.Service.Url()), err
+}
+
+func returnCommandRespError(err error) (int, models.CommandResponse, error) {
+	LoggingClient.Error(err.Error())
+	chk, ok := err.(*types.ErrServiceClient)
+	if ok {
+		return chk.StatusCode, models.CommandResponse{}, chk
+	} else {
+		return http.StatusInternalServerError, models.CommandResponse{}, err
+	}
 }

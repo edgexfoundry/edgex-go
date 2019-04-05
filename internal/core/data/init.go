@@ -56,6 +56,7 @@ var chUpdates chan interface{} //A channel for "config updates" sourced from Reg
 var msgClient messaging.MessageClient
 var mdc metadata.DeviceClient
 var msc metadata.DeviceServiceClient
+var mdpc metadata.DeviceProfileClient
 
 func Retry(useRegistry bool, useProfile string, timeout int, wait *sync.WaitGroup, ch chan error) {
 	until := time.Now().Add(time.Millisecond * time.Duration(timeout))
@@ -306,6 +307,9 @@ func initializeClients(useRegistry bool) {
 		},
 		Type: Configuration.MessageQueue.Type,
 	})
+	params.Path = clients.ApiDeviceProfileRoute
+	params.Url = Configuration.Clients["Metadata"].Url() + clients.ApiDeviceProfileRoute
+	mdpc = metadata.NewDeviceProfileClient(params, startup.Endpoint{RegistryClient: &registryClient})
 
 	if err != nil {
 		LoggingClient.Error(fmt.Sprintf("failed to create messaging client: %s", err.Error()))

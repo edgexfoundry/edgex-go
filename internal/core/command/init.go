@@ -39,6 +39,7 @@ import (
 var Configuration *ConfigurationStruct
 var LoggingClient logger.LoggingClient
 var mdc metadata.DeviceClient
+var mdpc metadata.DeviceProfileClient
 var cc metadata.CommandClient
 var registryClient registry.Client
 var registryErrors chan error        //A channel for "config wait errors" sourced from Registry
@@ -228,6 +229,9 @@ func initializeClients(useRegistry bool) {
 	params.Path = clients.ApiCommandRoute
 	params.Url = Configuration.Clients["Metadata"].Url() + clients.ApiCommandRoute
 	cc = metadata.NewCommandClient(params, startup.Endpoint{RegistryClient: &registryClient})
+	params.Path = clients.ApiDeviceProfileRoute
+	params.Url = Configuration.Clients["Metadata"].Url() + clients.ApiDeviceProfileRoute
+	mdpc = metadata.NewDeviceProfileClient(params, startup.Endpoint{RegistryClient: &registryClient})
 }
 
 func setLoggingTarget() string {

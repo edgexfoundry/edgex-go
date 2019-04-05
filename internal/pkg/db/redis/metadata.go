@@ -351,7 +351,7 @@ func addDevice(conn redis.Conn, d contract.Device) (string, error) {
 	conn.Send("ZADD", db.Device, 0, id)
 	conn.Send("HSET", db.Device+":name", d.Name, id)
 	conn.Send("SADD", db.Device+":service:"+d.Service.Id, id)
-	conn.Send("SADD", db.Device+":profile:"+d.Profile.Id, id)
+	conn.Send("SADD", db.Device+":profileName:"+d.ProfileName, id)
 	for _, label := range d.Labels {
 		conn.Send("SADD", db.Device+":label:"+label, id)
 	}
@@ -375,7 +375,7 @@ func deleteDevice(conn redis.Conn, id string) error {
 	_ = conn.Send("ZREM", db.Device, id)
 	_ = conn.Send("HDEL", db.Device+":name", d.Name)
 	_ = conn.Send("SREM", db.Device+":service:"+d.Service.Id, id)
-	_ = conn.Send("SREM", db.Device+":profile:"+d.Profile.Id, id)
+	_ = conn.Send("SREM", db.Device+":profileName:"+d.ProfileName, id)
 	for _, label := range d.Labels {
 		conn.Send("SREM", db.Device+":label:"+label, id)
 	}
