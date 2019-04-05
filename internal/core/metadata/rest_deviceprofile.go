@@ -55,9 +55,9 @@ func restAddDeviceProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check if there are duplicate names in the device profile command list
-	for _, c1 := range dp.Commands {
+	for _, c1 := range dp.CoreCommands {
 		count := 0
-		for _, c2 := range dp.Commands {
+		for _, c2 := range dp.CoreCommands {
 			if c1.Name == c2.Name {
 				count += 1
 			}
@@ -159,10 +159,10 @@ func updateDeviceProfileFields(from models.DeviceProfile, to *models.DeviceProfi
 	if from.DeviceResources != nil {
 		to.DeviceResources = from.DeviceResources
 	}
-	if from.Resources != nil {
-		to.Resources = from.Resources
+	if from.DeviceCommands != nil {
+		to.DeviceCommands = from.DeviceCommands
 	}
-	if from.Commands != nil {
+	if from.CoreCommands != nil {
 		// Check for duplicates by command name
 		if err := checkDuplicateCommands(from, w); err != nil {
 			return err
@@ -177,7 +177,7 @@ func updateDeviceProfileFields(from models.DeviceProfile, to *models.DeviceProfi
 			return err
 		}
 
-		to.Commands = from.Commands
+		to.CoreCommands = from.CoreCommands
 
 		// Add the new commands
 		if err := addCommands(to, w); err != nil {
@@ -210,9 +210,9 @@ func checkDuplicateProfileNames(dp models.DeviceProfile, w http.ResponseWriter) 
 // Check for duplicate command names in the device profile
 func checkDuplicateCommands(dp models.DeviceProfile, w http.ResponseWriter) error {
 	// Check if there are duplicate names in the device profile command list
-	for _, c1 := range dp.Commands {
+	for _, c1 := range dp.CoreCommands {
 		count := 0
-		for _, c2 := range dp.Commands {
+		for _, c2 := range dp.CoreCommands {
 			if c1.Name == c2.Name {
 				count += 1
 			}
@@ -229,7 +229,7 @@ func checkDuplicateCommands(dp models.DeviceProfile, w http.ResponseWriter) erro
 
 // Delete all of the commands that are a part of the device profile
 func deleteCommands(dp models.DeviceProfile, w http.ResponseWriter) error {
-	for _, command := range dp.Commands {
+	for _, command := range dp.CoreCommands {
 		err := dbClient.DeleteCommandById(command.Id)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -242,12 +242,12 @@ func deleteCommands(dp models.DeviceProfile, w http.ResponseWriter) error {
 
 // Add all of the commands that are a part of the device profile
 func addCommands(dp *models.DeviceProfile, w http.ResponseWriter) error {
-	for i := range dp.Commands {
-		if newId, err := dbClient.AddCommand(dp.Commands[i]); err != nil {
+	for i := range dp.CoreCommands {
+		if newId, err := dbClient.AddCommand(dp.CoreCommands[i]); err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			return err
 		} else {
-			dp.Commands[i].Id = newId
+			dp.CoreCommands[i].Id = newId
 		}
 	}
 
@@ -428,9 +428,9 @@ func addDeviceProfileYaml(data []byte, w http.ResponseWriter) {
 	}
 
 	// Check if there are duplicate names in the device profile command list
-	for _, c1 := range dp.Commands {
+	for _, c1 := range dp.CoreCommands {
 		count := 0
-		for _, c2 := range dp.Commands {
+		for _, c2 := range dp.CoreCommands {
 			if c1.Name == c2.Name {
 				count += 1
 			}
