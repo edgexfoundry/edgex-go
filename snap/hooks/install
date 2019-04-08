@@ -1,5 +1,11 @@
 #!/bin/bash -e
 
+# get the values of $SNAP_DATA and $SNAP using the current symlink instead of
+# the default behavior which has the revision hard-coded, which breaks after
+# a refresh
+SNAP_DATA_CURRENT=${SNAP_DATA/%$SNAP_REVISION/current}
+SNAP_CURRENT=${SNAP/%$SNAP_REVISION/current}
+
 # install all the config files from $SNAP/config/SERVICE/res/configuration.toml 
 # into $SNAP_DATA/config
 mkdir -p ${SNAP_DATA}/config
@@ -9,8 +15,8 @@ for service in security-api-gateway security-secret-store core-command config-se
         cp ${SNAP}/config/${service}/res/configuration.toml "${SNAP_DATA}/config/${service}/res/configuration.toml"
         # do replacement of the $SNAP, $SNAP_DATA, $SNAP_COMMON environment variables in the config files
         sed -i -e "s@\$SNAP_COMMON@$SNAP_COMMON@g" \
-            -e "s@\$SNAP_DATA@$SNAP_DATA@g" \
-            -e "s@\$SNAP@$SNAP@g" \
+            -e "s@\$SNAP_DATA@$SNAP_DATA_CURRENT@g" \
+            -e "s@\$SNAP@$SNAP_CURRENT@g" \
             "${SNAP_DATA}/config/${service}/res/configuration.toml"
     fi
 done
@@ -24,7 +30,7 @@ for jsvc in edgex-support-rulesengine; do
         mkdir -p "${SNAP_DATA}/config/config-seed/res/properties/$jsvc"
         cp "${SNAP}/config/config-seed/res/properties/$jsvc/application.properties" "${SNAP_DATA}/config/config-seed/res/properties/$jsvc/application.properties"
         # also replace SNAP_DATA and SNAP_COMMON in the application files
-        sed -i -e "s@\$SNAP_COMMON@$SNAP_COMMON@g" -e "s@\$SNAP_DATA@$SNAP_DATA@g" "${SNAP_DATA}/config/config-seed/res/properties/$jsvc/application.properties"
+        sed -i -e "s@\$SNAP_COMMON@$SNAP_COMMON@g" -e "s@\$SNAP_DATA@$SNAP_DATA_CURRENT@g" "${SNAP_DATA}/config/config-seed/res/properties/$jsvc/application.properties"
     fi
 done
 
@@ -53,7 +59,7 @@ if [ ! -f "${SNAP_DATA}/config/security-secret-store/pkisetup-kong.json" ]; then
     mkdir -p ${SNAP_DATA}/config/security-secret-store
     CONFIG_FILE_PATH="config/security-secret-store/pkisetup-kong.json"
     # replace the hostname with localhost using jq
-    jq --arg WORKDIR "$SNAP_DATA/vault" \
+    jq --arg WORKDIR "$SNAP_DATA_CURRENT/vault" \
         '.x509_tls_server_parameters.tls_host = "localhost" | .pki_setup_dir = "pki" | .working_dir  = $WORKDIR' \
         "${SNAP}/${CONFIG_FILE_PATH}" > "${SNAP_DATA}/${CONFIG_FILE_PATH}.tmp"
     mv "${SNAP_DATA}/${CONFIG_FILE_PATH}.tmp" "${SNAP_DATA}/${CONFIG_FILE_PATH}"
@@ -66,7 +72,7 @@ if [ ! -f "${SNAP_DATA}/config/security-secret-store/pkisetup-vault.json" ]; the
     mkdir -p ${SNAP_DATA}/config/security-secret-store
     CONFIG_FILE_PATH="config/security-secret-store/pkisetup-vault.json"
     # modify the parameters using jq
-    jq --arg WORKDIR "$SNAP_DATA/vault" \
+    jq --arg WORKDIR "$SNAP_DATA_CURRENT/vault" \
         '.x509_tls_server_parameters.tls_host = "localhost" | .pki_setup_dir = "pki" | .working_dir  = $WORKDIR' \
         "${SNAP}/${CONFIG_FILE_PATH}" > "${SNAP_DATA}/${CONFIG_FILE_PATH}.tmp"
     mv "${SNAP_DATA}/${CONFIG_FILE_PATH}.tmp" "${SNAP_DATA}/${CONFIG_FILE_PATH}"
@@ -96,8 +102,8 @@ if [ ! -f "$SNAP_DATA/config/redis/redis.conf" ]; then
     mkdir -p "$SNAP_DATA/redis"
     cp "$SNAP/config/redis/redis.conf" "$SNAP_DATA/redis/redis.conf"
     sed -i -e "s@\$SNAP_COMMON@$SNAP_COMMON@g" \
-        -e "s@\$SNAP_DATA@$SNAP_DATA@g" \
-        -e "s@\$SNAP@$SNAP@g" \
+        -e "s@\$SNAP_DATA@$SNAP_DATA_CURRENT@g" \
+        -e "s@\$SNAP@$SNAP_CURRENT@g" \
         "$SNAP_DATA/redis/redis.conf"
 fi
 
@@ -106,7 +112,7 @@ fi
 # note that if anyone ever somehow has a "@" in their $SNAP_DATA this will likely break :-/
 if [ ! -f "${SNAP_DATA}/config/security-secret-store/vault-config.hcl" ]; then
     mkdir -p ${SNAP_DATA}/config/security-secret-store
-    sed "s@\$SNAP_DATA@$SNAP_DATA@g" ${SNAP}/config/security-secret-store/vault-config.hcl.in > ${SNAP_DATA}/config/security-secret-store/vault-config.hcl
+    sed "s@\$SNAP_DATA@$SNAP_DATA_CURRENT@g" ${SNAP}/config/security-secret-store/vault-config.hcl.in > ${SNAP_DATA}/config/security-secret-store/vault-config.hcl
     chmod 644 ${SNAP_DATA}/config/security-secret-store/vault-config.hcl
 fi
 
@@ -119,7 +125,7 @@ if [ ! -f ${SNAP_DATA}/config/security-api-gateway/kong.conf ]; then
     cp "${SNAP}/config/security-api-gateway/kong.conf" "${SNAP_DATA}/config/security-api-gateway/kong.conf"
     # replace the default prefix setting with an absolute path using $SNAP_DATA
     # note that if anyone ever has a "@" in their $SNAP_DATA this will likely fail
-    sed -i "s@#prefix = /usr/local/kong/@prefix = ${SNAP_DATA}/kong@" ${SNAP_DATA}/config/security-api-gateway/kong.conf
+    sed -i "s@#prefix = /usr/local/kong/@prefix = ${SNAP_DATA_CURRENT}/kong@" ${SNAP_DATA}/config/security-api-gateway/kong.conf
 
     # also replace the default nginx user/group to be root
     sed -i "s@#nginx_user = nobody nobody@nginx_user = root root@" ${SNAP_DATA}/config/security-api-gateway/kong.conf
