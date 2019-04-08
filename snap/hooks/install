@@ -33,9 +33,6 @@ for service in security-api-gateway security-secret-store core-command config-se
     fi
 done
 
-# handle device-mqtt driver configuration
-cp ${SNAP}/config/device-mqtt/res/configuration-driver.toml "${SNAP_DATA}/config/device-mqtt/res/configuration-driver.toml"
-
 # handle device-random device profile
 cp ${SNAP}/config/device-random/res/device.random.yaml "${SNAP_DATA}/config/device-random/res/device.random.yaml"
 
