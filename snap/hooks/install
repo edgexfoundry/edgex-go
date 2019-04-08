@@ -104,10 +104,10 @@ fi
 # the vault config needs to be generated with sed, replacing $SNAP_DATA in the file 
 # with the actual absolute directory
 # note that if anyone ever somehow has a "@" in their $SNAP_DATA this will likely break :-/
-if [ ! -f "${SNAP_DATA}/config/security-secret-store/vault-config.json" ]; then
+if [ ! -f "${SNAP_DATA}/config/security-secret-store/vault-config.hcl" ]; then
     mkdir -p ${SNAP_DATA}/config/security-secret-store
-    sed "s@\$SNAP_DATA@$SNAP_DATA@g" ${SNAP}/config/security-secret-store/vault-config.json.in > ${SNAP_DATA}/config/security-secret-store/vault-config.json
-    chmod 644 ${SNAP_DATA}/config/security-secret-store/vault-config.json
+    sed "s@\$SNAP_DATA@$SNAP_DATA@g" ${SNAP}/config/security-secret-store/vault-config.hcl.in > ${SNAP_DATA}/config/security-secret-store/vault-config.hcl
+    chmod 644 ${SNAP_DATA}/config/security-secret-store/vault-config.hcl
 fi
 
 # the kong config file needs to be generated with 3 changes from the default one included in the snap

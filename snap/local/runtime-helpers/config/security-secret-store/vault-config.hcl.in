@@ -3,7 +3,7 @@
 # this file maintains a number of changes, i.e. all
 # hostnames are localhost instead of the docker hostnames, 
 # the tls cert and key files reference localhost as the common name,
-# and the location of the files uses reference to $SNAP_DATA
+# and the location of the files uses reference to SNAP_DATA
 # (but note that these paths have to be absolute, so we process the env
 #  vars during the install hook)
 
