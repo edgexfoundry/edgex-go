@@ -85,7 +85,7 @@ apps:
   vault:
     command: bin/vault server --config="$VAULT_CONFIG"
     environment:
-      VAULT_CONFIG: "$SNAP_DATA/config/security-secret-store/vault-config.json"
+      VAULT_CONFIG: "$SNAP_DATA/config/security-secret-store/vault-config.hcl"
       VAULT_ADDR: "https://localhost:8200"
       VAULT_UI: "true"
     daemon: simple
