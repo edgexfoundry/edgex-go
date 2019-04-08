@@ -13,8 +13,6 @@ func runExec(service string, operation string) error {
 	// Preparing the call to the executor app.
 	cmd := exec.Command(Configuration.ExecutorPath, service, operation)
 
-	cmd.Dir = Configuration.ExecutorPath
-
 	_, err := cmd.CombinedOutput()
 	if err != nil {
 		LoggingClient.Error(fmt.Sprintf("an error occurred in calling executor on service %s where requested operation was %s: %v ", service, operation, err.Error()))

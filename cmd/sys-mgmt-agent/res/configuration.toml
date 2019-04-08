@@ -5,6 +5,8 @@
 # In the first release of the SMA, the manifest will be static.
 # In the future, the manifest may be more dynamic or even provided by some 3rd party orchestrator.
 
+ExecutorPath = '/path/to/the/file'
+
 [Writable]
 ResendLimit = 2
 LogLevel = 'INFO'
@@ -20,7 +22,6 @@ ReadMaxLimit = 100
 StartupMsg = 'This is the System Management Agent Service'
 Timeout = 5000
 FormatSpecifier = '%(\\d+\\$)?([-#+ 0(\\<]*)?(\\d+)?(\\.\\d+)?([tT])?([a-zA-Z%])'
-ExecutorPath = '/path/to/the/file'
 
 [Registry]
 Host = 'localhost'
