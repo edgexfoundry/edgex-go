@@ -30,7 +30,7 @@ type redisDeviceProfile struct {
 	Model           string
 	Labels          []string
 	DeviceResources []contract.DeviceResource
-	Resources       []contract.ProfileResource
+	DeviceCommands  []contract.ProfileResource
 }
 
 func marshalDeviceProfile(dp contract.DeviceProfile) (out []byte, err error) {
@@ -42,7 +42,7 @@ func marshalDeviceProfile(dp contract.DeviceProfile) (out []byte, err error) {
 		Model:           dp.Model,
 		Labels:          dp.Labels,
 		DeviceResources: dp.DeviceResources,
-		Resources:       dp.Resources,
+		DeviceCommands:  dp.DeviceCommands,
 	}
 
 	return marshalObject(s)
@@ -65,7 +65,7 @@ func unmarshalDeviceProfile(o []byte, dp interface{}) (err error) {
 		x.Model = s.Model
 		x.Labels = s.Labels
 		x.DeviceResources = s.DeviceResources
-		x.Resources = s.Resources
+		x.DeviceCommands = s.DeviceCommands
 		conn, err := getConnection()
 		if err != nil {
 			return err
@@ -79,9 +79,9 @@ func unmarshalDeviceProfile(o []byte, dp interface{}) (err error) {
 			}
 		}
 
-		x.Commands = make([]contract.Command, len(objects))
+		x.CoreCommands = make([]contract.Command, len(objects))
 		for i, in := range objects {
-			err = unmarshalObject(in, &x.Commands[i])
+			err = unmarshalObject(in, &x.CoreCommands[i])
 			if err != nil {
 				return err
 			}
