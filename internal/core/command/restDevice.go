@@ -15,6 +15,7 @@ package command
 
 import (
 	"encoding/json"
+	"github.com/edgexfoundry/edgex-go/internal/core/command/errors"
 	"io/ioutil"
 	"net/http"
 
@@ -22,19 +23,72 @@ import (
 )
 
 func restGetDeviceCommandByCommandID(w http.ResponseWriter, r *http.Request) {
-	issueDeviceCommand(w, r, false)
+	issueDeviceCommandById(w, r, false)
 }
 
 func restPutDeviceCommandByCommandID(w http.ResponseWriter, r *http.Request) {
-	issueDeviceCommand(w, r, true)
+	issueDeviceCommandById(w, r, true)
 }
 
-func issueDeviceCommand(w http.ResponseWriter, r *http.Request, p bool) {
-	defer r.Body.Close()
+func restGetDeviceCommandByNames(w http.ResponseWriter, r *http.Request) {
+	issueDeviceCommandByName(w, r, false)
+}
+
+func restPutDeviceCommandByNames(w http.ResponseWriter, r *http.Request) {
+	issueDeviceCommandByName(w, r, true)
+}
+
+func issueDeviceCommandById(w http.ResponseWriter, r *http.Request, p bool) {
 
 	vars := mux.Vars(r)
 	did := vars[ID]
 	cid := vars[COMMANDID]
+	issueDeviceCommand(w, r, did, cid, p)
+}
+
+func issueDeviceCommandByName(w http.ResponseWriter, r *http.Request, p bool) {
+
+	//	Attempt to get command/device IDs to use
+	did, cid, err := convertDeviceCommandToIDs(w, r)
+	if err != nil {
+		LoggingClient.Error(err.Error())
+		return
+	}
+
+	issueDeviceCommand(w, r, did, cid, p)
+}
+
+func convertDeviceCommandToIDs(w http.ResponseWriter, r *http.Request) (did string, cid string, err error) {
+
+	//	Setup
+	vars := mux.Vars(r)
+	dn := vars[NAME]
+	cn := vars[COMMAND]
+	ctx := r.Context()
+
+	//	Get Device
+	d, err := mdc.DeviceForName(dn, ctx)
+	if err != nil {
+		http.Error(w, "Device not found", http.StatusNotFound)
+		return "", "", errors.NewErrInvalidName(dn)
+	}
+
+	//	Match command name with commands associated with Device Profile.
+	for _, one := range d.Profile.Commands {
+		if cn == one.Name {
+			return d.Id, one.Id, nil
+		}
+	}
+
+	//	Command name specified not found in commands of device's profile.
+	http.Error(w, "Command not found", http.StatusNotFound)
+	return "", "", errors.NewErrInvalidName(cn)
+}
+
+func issueDeviceCommand(w http.ResponseWriter, r *http.Request, did string, cid string, p bool) {
+
+	defer r.Body.Close()
+
 	b, err := ioutil.ReadAll(r.Body)
 	if b == nil && err != nil {
 		LoggingClient.Error(err.Error())

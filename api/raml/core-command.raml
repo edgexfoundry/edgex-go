@@ -169,7 +169,50 @@ schemas:
                 description: if no device exists by the name provided.
             "500": 
                 description: for unanticipated or unknown issues encountered.
-/device/name/{name}/opstate/{opState}: 
+/device/name/{name}/command/{command}:
+    displayName: Issue command
+    description: Example - http://localhost:48082/api/v1/device/name/RPIMotionDetector/command/Set_Green_Led
+    uriParameters:
+        name:
+            displayName: name
+            type: string
+            required: false
+            repeat: false
+        command:
+            displayName: commandname
+            type: string
+            required: false
+            repeat: false
+    get:
+        description: Issue the get command referenced by the command name to the device/sensor (also referenced by name) it is associated to via the device service. ServiceException (HTTP 500) for unanticipated or unknown issues encountered. Throws NotFoundException (HTTP 404) if no device exists by the name provided. Throws LockedException (HTTP 423) if the device is locked (admin state).
+        responses:
+            "200":
+                description: String as returned by the device/sensor via the device service.
+            "400":
+                description: if the request is malformed or unparsable
+            "404":
+                description: if no device exists by the name provided
+            "423":
+                description: if the device is locked (admin state).
+            "500":
+                description: for unanticipated or unknown issues encountered.
+    put:
+        description: Issue the get command referenced by the command name to the device/sensor (also referenced by name) it is associated to via the device service. ServiceException (HTTP 500) for unanticipated or unknown issues encountered. Throws NotFoundException (HTTP 404) if no device exists by the name provided. Throws LockedException (HTTP 423) if the device is locked (admin state).
+        body:
+            application/json:
+                example: '{"temp":72}'
+        responses:
+            "200":
+                description: String as returned by the device/sensor via the device service.
+            "400":
+                description: if the request is malformed or unparsable
+            "404":
+                description: if no device exists by the name provided
+            "423":
+                description: if the device is locked (admin state)
+            "500":
+                description: for unanticipated or unknown issues encountered.
+/device/name/{name}/opstate/{opState}:
     displayName: Op state by name
     description: Example - http://localhost:48082/api/v1/device/name/livingroomthermostat/opstate/disabled
     uriParameters: 

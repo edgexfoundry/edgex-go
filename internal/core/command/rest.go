@@ -65,6 +65,8 @@ func loadDeviceRoutes(b *mux.Router) {
 
 	dn.HandleFunc("/{"+NAME+"}", restGetCommandsByDeviceName).Methods(http.MethodGet)
 	dn.HandleFunc("/{"+NAME+"}/"+URLADMINSTATE+"/{"+ADMINSTATE+"}", restPutDeviceAdminStateByDeviceName).Methods(http.MethodPut)
+	dn.HandleFunc("/{"+NAME+"}/"+COMMAND+"/{"+COMMAND+"}", restGetDeviceCommandByNames).Methods(http.MethodGet)
+	dn.HandleFunc("/{"+NAME+"}/"+COMMAND+"/{"+COMMAND+"}", restPutDeviceCommandByNames).Methods(http.MethodPut)
 	dn.HandleFunc("/{"+NAME+"}/"+OPSTATE+"/{"+OPSTATE+"}", restPutDeviceOpStateByDeviceName).Methods(http.MethodPut)
 }
 
