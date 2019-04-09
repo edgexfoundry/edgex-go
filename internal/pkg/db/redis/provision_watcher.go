@@ -20,7 +20,7 @@ import (
 )
 
 type redisProvisionWatcher struct {
-	contract.BaseObject
+	contract.Timestamps
 	Id             string
 	Name           string
 	Identifiers    map[string]string
@@ -31,7 +31,7 @@ type redisProvisionWatcher struct {
 
 func marshalProvisionWatcher(pw contract.ProvisionWatcher) (out []byte, err error) {
 	s := redisProvisionWatcher{
-		BaseObject:     pw.BaseObject,
+		Timestamps:     pw.Timestamps,
 		Id:             pw.Id,
 		Name:           pw.Name,
 		Identifiers:    pw.Identifiers,
@@ -53,7 +53,7 @@ func unmarshalProvisionWatcher(o []byte, pw interface{}) (err error) {
 
 	switch x := pw.(type) {
 	case *contract.ProvisionWatcher:
-		x.BaseObject = s.BaseObject
+		x.Timestamps = s.Timestamps
 		x.Id = s.Id
 		x.Name = s.Name
 		x.Identifiers = s.Identifiers

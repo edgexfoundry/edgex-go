@@ -118,7 +118,7 @@ func getDeviceProfile(db interfaces.DBClient, i int) (models.DeviceProfile, erro
 	if err != nil {
 		return dp, err
 	}
-	dp.Commands = append(dp.Commands, c)
+	dp.CoreCommands = append(dp.CoreCommands, c)
 	return dp, nil
 }
 
@@ -893,7 +893,7 @@ func testDBDeviceProfile(t *testing.T, db interfaces.DBClient) {
 		t.Fatalf("There should be 0 deviceProfiles instead of %d", len(deviceProfiles))
 	}
 
-	deviceProfiles, err = db.GetDeviceProfilesByCommandId(dp.Commands[0].Id)
+	deviceProfiles, err = db.GetDeviceProfilesByCommandId(dp.CoreCommands[0].Id)
 	if err != nil {
 		t.Fatalf("Error getting deviceProfiles %v", err)
 	}

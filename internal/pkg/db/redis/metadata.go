@@ -532,9 +532,9 @@ func addDeviceProfile(conn redis.Conn, dp contract.DeviceProfile) (string, error
 	for _, label := range dp.Labels {
 		conn.Send("SADD", db.DeviceProfile+":label:"+label, id)
 	}
-	if len(dp.Commands) > 0 {
+	if len(dp.CoreCommands) > 0 {
 		cids := redis.Args{}.Add(db.DeviceProfile + ":commands:" + id)
-		for _, c := range dp.Commands {
+		for _, c := range dp.CoreCommands {
 			cid, err := addCommand(conn, false, c)
 			if err != nil {
 				return "", err
@@ -569,7 +569,7 @@ func deleteDeviceProfile(conn redis.Conn, id string) error {
 		conn.Send("SREM", db.DeviceProfile+":label:"+label, id)
 	}
 	// TODO: should commands be also removed?
-	for _, c := range dp.Commands {
+	for _, c := range dp.CoreCommands {
 		conn.Send("SREM", db.DeviceProfile+":command:"+c.Id, id)
 	}
 	conn.Send("DEL", db.DeviceProfile+":commands:"+id)
