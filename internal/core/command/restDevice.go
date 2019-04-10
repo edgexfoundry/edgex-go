@@ -74,7 +74,7 @@ func convertDeviceCommandToIDs(w http.ResponseWriter, r *http.Request) (did stri
 	}
 
 	//	Match command name with commands associated with Device Profile.
-	for _, one := range d.Profile.Commands {
+	for _, one := range d.Profile.CoreCommands {
 		if cn == one.Name {
 			return d.Id, one.Id, nil
 		}
