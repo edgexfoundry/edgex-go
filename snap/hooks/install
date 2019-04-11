@@ -1,25 +1,8 @@
 #!/bin/bash -e
 
-# LD_LIBRARY_PATH isn't properly initialized for hooks as snapcraft does for apps, so this 
-# has to be constructed manually
-# Note - the env var SNAP_LIBRARY_PATH is set by snapd for hooks, so it can be referenced here
-# This is mainly necessary so we can use jq from the snap which needs libs from inside the snap
-export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
-# for LD_LIBRARY_PATH, we need to handle the different architecture paths
-case $(arch) in
-    x86_64)
-        MULTI_ARCH_PATH="x86_64-linux-gnu";;
-    arm*)
-        MULTI_ARCH_PATH="arm-linux-gnueabihf";;
-    aarch64)
-        MULTI_ARCH_PATH="aarch64-linux-gnu";;
-    *)
-        echo "architecture $ARCH not supported"
-        exit 1
-        ;;
-esac
-export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$MULTI_ARCH_PATH:$SNAP/usr/lib/$MULTI_ARCH_PATH"
-export LD_LIBRARY_PATH=$SNAP_LIBRARY_PATH:$LD_LIBRARY_PATH
+# load appropriate env vars so we can use jq here
+# shellcheck source=/dev/null
+source "$SNAP/bin/hooks-env-setup.sh"
 
 # currently $SNAP_DATA will evaluate to the absolute path including the 
 # explicit revision number, which will change after a refresh

@@ -1,5 +1,9 @@
 #!/bin/bash -e
 
+# load appropriate env vars so we can use jq here
+# shellcheck source=/dev/null
+source "$SNAP/bin/hooks-env-setup.sh"
+
 # the new revisions use vault-config.hcl as the vault config instead of 
 # vault-config.json as previously was used
 # so all we do is check if that file exists and the new hcl file doesn't exist
