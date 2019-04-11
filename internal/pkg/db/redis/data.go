@@ -14,11 +14,13 @@
 package redis
 
 import (
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/gomodule/redigo/redis"
 	"github.com/google/uuid"
 	"github.com/imdario/mergo"
+
+	correlation "github.com/edgexfoundry/edgex-go/internal/pkg/correlation/models"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 )
 
 // ******************************* EVENTS **********************************
@@ -70,7 +72,7 @@ func (c *Client) EventsWithLimit(limit int) (events []contract.Event, err error)
 // Add a new event
 // UnexpectedError - failed to add to database
 // NoValueDescriptor - no existing value descriptor for a reading in the event
-func (c *Client) AddEvent(e contract.Event) (id string, err error) {
+func (c *Client) AddEvent(e correlation.Event) (id string, err error) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
@@ -86,11 +88,13 @@ func (c *Client) AddEvent(e contract.Event) (id string, err error) {
 // Update an event - do NOT update readings
 // UnexpectedError - problem updating in database
 // NotFound - no event with the ID was found
-func (c *Client) UpdateEvent(e contract.Event) (err error) {
+func (c *Client) UpdateEvent(e correlation.Event) (err error) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
-	id := e.ID
+	event := e.Event
+
+	id := event.ID
 
 	o, err := eventByID(conn, id)
 	if err != nil {
@@ -101,7 +105,7 @@ func (c *Client) UpdateEvent(e contract.Event) (err error) {
 	}
 
 	e.Modified = db.MakeTimestamp()
-	err = mergo.Merge(&e, o)
+	err = mergo.Merge(&event, o)
 	if err != nil {
 		return err
 	}
@@ -129,6 +133,30 @@ func (c *Client) EventById(id string) (event contract.Event, err error) {
 	}
 
 	return event, nil
+}
+
+// EventsByChecksum Get an event by checksum
+func (c *Client) EventsByChecksum(checksum string) (events []contract.Event, err error) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	objects, err := getObjectsByRange(conn, db.EventsCollection+":checksum:"+checksum, 0, -1)
+	if err != nil {
+		if err != redis.ErrNil {
+			return events, err
+		}
+	}
+	events = make([]contract.Event, len(objects))
+	err = unmarshalEvents(objects, events)
+	if err != nil {
+		return events, err
+	}
+
+	if len(events) == 0 {
+		return events, db.ErrNotFound
+	}
+
+	return events, nil
 }
 
 // Get the number of events in Core Data
@@ -206,7 +234,7 @@ func (c *Client) EventsForDevice(id string) (events []contract.Event, err error)
 }
 
 // Delete all of the events by the device id (and the readings)
-//DeleteEventsByDeviceId(id string) error
+// DeleteEventsByDeviceId(id string) error
 
 // Return a list of events whos creation time is between startTime and endTime
 // Limit the number of results by limit
@@ -262,7 +290,7 @@ func (c *Client) ReadingsByDeviceAndValueDescriptor(deviceId, valueDescriptor st
 
 // Remove all the events that are older than the given age
 // Return the number of events removed
-//RemoveEventByAge(age int64) (int, error)
+// RemoveEventByAge(age int64) (int, error)
 
 // Get events that are older than a age
 func (c *Client) EventsOlderThanAge(age int64) ([]contract.Event, error) {
@@ -272,7 +300,7 @@ func (c *Client) EventsOlderThanAge(age int64) ([]contract.Event, error) {
 }
 
 // Remove all the events that have been pushed
-//func (dbc *DBClient) ScrubEvents()(int, error)
+// func (dbc *DBClient) ScrubEvents()(int, error)
 
 // Get events that have been pushed (pushed field is not 0)
 func (c *Client) EventsPushed() (events []contract.Event, err error) {
@@ -665,7 +693,7 @@ func (c *Client) ValueDescriptorsByName(names []string) (values []contract.Value
 }
 
 // Delete a valuedescriptor based on the name
-//DeleteValueDescriptorByName(name string) error
+// DeleteValueDescriptorByName(name string) error
 
 // Return a value descriptor based on the id
 func (c *Client) ValueDescriptorById(id string) (value contract.ValueDescriptor, err error) {
@@ -766,7 +794,7 @@ func (c *Client) ScrubAllValueDescriptors() error {
 }
 
 // ************************** HELPER FUNCTIONS ***************************
-func addEvent(conn redis.Conn, e contract.Event) (id string, err error) {
+func addEvent(conn redis.Conn, e correlation.Event) (id string, err error) {
 	if e.Created == 0 {
 		e.Created = db.MakeTimestamp()
 	}
@@ -792,6 +820,9 @@ func addEvent(conn redis.Conn, e contract.Event) (id string, err error) {
 	_ = conn.Send("ZADD", db.EventsCollection+":created", e.Created, e.ID)
 	_ = conn.Send("ZADD", db.EventsCollection+":pushed", e.Pushed, e.ID)
 	_ = conn.Send("ZADD", db.EventsCollection+":device:"+e.Device, e.Created, e.ID)
+	if e.Checksum != "" {
+		_ = conn.Send("ZADD", db.EventsCollection+":checksum:"+e.Checksum, 0, e.ID)
+	}
 
 	rids := make([]interface{}, len(e.Readings)*2+1)
 	rids[0] = db.EventsCollection + ":readings:" + e.ID
@@ -856,6 +887,22 @@ func eventByID(conn redis.Conn, id string) (event contract.Event, err error) {
 	}
 
 	return event, err
+}
+
+func eventByChecksum(conn redis.Conn, checksum string) (events []contract.Event, err error) {
+	objects, err := getObjectsByRange(conn, db.EventsCollection, 0, -1)
+	if err != nil {
+		if err != redis.ErrNil {
+			return events, err
+		}
+	}
+	events = make([]contract.Event, len(objects))
+	err = unmarshalEvents(objects, events)
+	if err != nil {
+		return events, err
+	}
+
+	return events, nil
 }
 
 // Add a reading to the database

@@ -13,6 +13,7 @@ import (
 	"testing"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/data/interfaces"
+	correlation "github.com/edgexfoundry/edgex-go/internal/pkg/correlation/models"
 	dbp "github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 )
@@ -57,7 +58,7 @@ func populateDbEvents(db interfaces.DBClient, count int, pushed int64) (string, 
 	var id string
 	for i := 0; i < count; i++ {
 		name := fmt.Sprintf("name%d", i)
-		e := contract.Event{}
+		e := correlation.Event{}
 		e.Device = name
 		e.Pushed = pushed
 		var err error
@@ -453,7 +454,7 @@ func testDBEvents(t *testing.T, db interfaces.DBClient) {
 		t.Fatalf("There should be 10 events, not %d", len(events))
 	}
 
-	e := contract.Event{}
+	e := correlation.Event{}
 	e.ID = id
 	e.Device = "name"
 	err = db.UpdateEvent(e)
@@ -753,9 +754,9 @@ func benchmarkEvents(b *testing.B, db interfaces.DBClient) {
 	b.Run("AddEvent", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			device := fmt.Sprintf("device" + strconv.Itoa(i/100))
-			e := contract.Event{
-				Device: device,
-			}
+			e := correlation.Event{}
+			e.Device = device
+
 			for j := 0; j < 5; j++ {
 				r := contract.Reading{
 					Device: device,
@@ -777,9 +778,9 @@ func benchmarkEvents(b *testing.B, db interfaces.DBClient) {
 	events := make([]string, n)
 	for i := 0; i < n; i++ {
 		device := fmt.Sprintf("device" + strconv.Itoa(i/100))
-		e := contract.Event{
-			Device: device,
-		}
+		e := correlation.Event{}
+		e.Device = device
+
 		for j := 0; j < 5; j++ {
 			r := contract.Reading{
 				Device: device,

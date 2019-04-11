@@ -14,11 +14,13 @@
 package mongo
 
 import (
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo/models"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
+
+	correlation "github.com/edgexfoundry/edgex-go/internal/pkg/correlation/models"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo/models"
 )
 
 /*
@@ -46,11 +48,11 @@ func (mc MongoClient) EventsWithLimit(limit int) ([]contract.Event, error) {
 // Add a new event
 // UnexpectedError - failed to add to database
 // NoValueDescriptor - no existing value descriptor for a reading in the event
-func (mc MongoClient) AddEvent(e contract.Event) (string, error) {
+func (mc MongoClient) AddEvent(e correlation.Event) (string, error) {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
-	//Add the readings
+	// Add the readings
 	if len(e.Readings) > 0 {
 		var ui []interface{}
 		for i, reading := range e.Readings {
@@ -92,7 +94,7 @@ func (mc MongoClient) AddEvent(e contract.Event) (string, error) {
 // Update an event - do NOT update readings
 // UnexpectedError - problem updating in database
 // NotFound - no event with the ID was found
-func (mc MongoClient) UpdateEvent(e contract.Event) error {
+func (mc MongoClient) UpdateEvent(e correlation.Event) error {
 	var mapped models.Event
 	id, err := mapped.FromContract(e, mc)
 	if err != nil {
@@ -119,6 +121,21 @@ func (mc MongoClient) EventById(id string) (contract.Event, error) {
 		return contract.Event{}, errorMap(err)
 	}
 	return evt.ToContract(mc)
+}
+
+// EventsByChecksum get events with matching checksum
+func (mc MongoClient) EventsByChecksum(checksum string) ([]contract.Event, error) {
+	events, err := mc.mapEvents(mc.getEvents(bson.M{"checksum": checksum}))
+
+	if err != nil {
+		return events, err
+	}
+
+	if len(events) == 0 {
+		return events, db.ErrNotFound
+	}
+
+	return events, nil
 }
 
 // Get the number of events in Mongo

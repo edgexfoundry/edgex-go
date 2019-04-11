@@ -16,10 +16,8 @@ package data
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 	msgTypes "github.com/edgexfoundry/go-mod-messaging/pkg/types"
 
@@ -27,6 +25,11 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation/models"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+)
+
+const (
+	ChecksumAlgoMD5    = "md5"
+	ChecksumAlgoxxHash = "xxHash"
 )
 
 func countEvents() (int, error) {
@@ -82,7 +85,7 @@ func getEvents(limit int) ([]contract.Event, error) {
 	return events, err
 }
 
-func addNewEvent(e contract.Event, ctx context.Context) (string, error) {
+func addNewEvent(e models.Event, ctx context.Context) (string, error) {
 	err := checkDevice(e.Device, ctx)
 	if err != nil {
 		return "", err
@@ -124,7 +127,35 @@ func addNewEvent(e contract.Event, ctx context.Context) (string, error) {
 	return e.ID, nil
 }
 
-func updateEvent(from contract.Event, ctx context.Context) error {
+func validateEvent(e contract.Event, ctx context.Context) error {
+	err := checkDevice(e.Device, ctx)
+	if err != nil {
+		return err
+	}
+
+	if Configuration.Writable.ValidateCheck {
+		LoggingClient.Debug("Validation enabled, parsing events")
+		for reading := range e.Readings {
+			// Check value descriptor
+			name := e.Readings[reading].Name
+			vd, err := dbClient.ValueDescriptorByName(name)
+			if err != nil {
+				if err == db.ErrNotFound {
+					return errors.NewErrValueDescriptorNotFound(name)
+				} else {
+					return err
+				}
+			}
+			err = isValidValueDescriptor(vd, e.Readings[reading])
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func updateEvent(from models.Event, ctx context.Context) error {
 	to, err := dbClient.EventById(from.ID)
 	if err != nil {
 		return errors.NewErrEventNotFound(from.ID)
@@ -147,7 +178,9 @@ func updateEvent(from contract.Event, ctx context.Context) error {
 	if from.Origin != 0 {
 		to.Origin = from.Origin
 	}
-	return dbClient.UpdateEvent(to)
+
+	mapped := models.Event{Event: to}
+	return dbClient.UpdateEvent(mapped)
 }
 
 func deleteEventById(id string) error {
@@ -192,14 +225,36 @@ func getEventById(id string) (contract.Event, error) {
 	return e, nil
 }
 
+// updateEventPushDateByChecksum updates the pushed dated for all events with a matching checksum which have not already been marked pushed
+func updateEventPushDateByChecksum(checksum string, ctx context.Context) error {
+	evts, err := dbClient.EventsByChecksum(checksum)
+	if err != nil {
+		return err
+	}
+
+	for _, e := range evts {
+		e.Pushed = db.MakeTimestamp()
+		// Updating the event has the desired side-effect of removing the checksum.
+		// We only want the checksum for "marked pushed" functionality and once the event
+		// has been marked pushed there is no reason to keep the checksum around.
+		// The expectation is that above query will only return one result, but this is not guaranteed
+		err = updateEvent(models.Event{Event: e}, ctx)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func updateEventPushDate(id string, ctx context.Context) error {
+	// TODO: This is going to break. Probably need DBClient to return Correlation event model
 	e, err := getEventById(id)
 	if err != nil {
 		return err
 	}
 
 	e.Pushed = db.MakeTimestamp()
-	err = updateEvent(e, ctx)
+	err = updateEvent(models.Event{Event: e}, ctx)
 	if err != nil {
 		return err
 	}
@@ -207,22 +262,13 @@ func updateEventPushDate(id string, ctx context.Context) error {
 }
 
 // Put event on the message queue to be processed by the rules engine
-func putEventOnQueue(e contract.Event, ctx context.Context) {
+func putEventOnQueue(evt models.Event, ctx context.Context) {
 	LoggingClient.Info("Putting event on message queue")
-	//	Have multiple implementations (start with ZeroMQ)
-	evt := models.Event{}
-	evt.Event = e
+	// 	Have multiple implementations (start with ZeroMQ)
 	evt.CorrelationId = correlation.FromContext(ctx)
-	payload, err := json.Marshal(evt)
-	if err != nil {
-		LoggingClient.Error(fmt.Sprintf("Unable to marshal event to json: %s", err.Error()))
-		return
-	}
 
-	ctx = context.WithValue(ctx, clients.ContentType, clients.ContentTypeJSON)
-	msgEnvelope := msgTypes.NewMessageEnvelope(payload, ctx)
-
-	err = msgClient.Publish(msgEnvelope, Configuration.MessageQueue.Topic)
+	msgEnvelope := msgTypes.NewMessageEnvelope(evt.Bytes, ctx)
+	err := msgClient.Publish(msgEnvelope, Configuration.MessageQueue.Topic)
 	if err != nil {
 		LoggingClient.Error(fmt.Sprintf("Unable to send message for event: %s", evt.String()))
 	} else {

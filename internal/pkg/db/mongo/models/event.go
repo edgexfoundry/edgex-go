@@ -14,11 +14,14 @@
 package models
 
 import (
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
 	"github.com/pkg/errors"
+
+	correlation "github.com/edgexfoundry/edgex-go/internal/pkg/correlation/models"
+
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 )
 
 type Event struct {
@@ -30,6 +33,7 @@ type Event struct {
 	Pushed   int64         `bson:"pushed"`
 	Device   string        `bson:"device"`             // Device identifier (name or id)
 	Readings []mgo.DBRef   `bson:"readings,omitempty"` // List of readings
+	Checksum string        `bson:"checksum,omitempty"` // checksum used to identify events
 }
 
 func (e *Event) ToContract(transform readingTransform) (c contract.Event, err error) {
@@ -56,7 +60,7 @@ func (e *Event) ToContract(transform readingTransform) (c contract.Event, err er
 	return
 }
 
-func (e *Event) FromContract(from contract.Event, transform readingTransform) (id string, err error) {
+func (e *Event) FromContract(from correlation.Event, transform readingTransform) (id string, err error) {
 	e.Id, e.Uuid, err = fromContractId(from.ID)
 	if err != nil {
 		return
@@ -67,6 +71,7 @@ func (e *Event) FromContract(from contract.Event, transform readingTransform) (i
 	e.Origin = from.Origin
 	e.Pushed = from.Pushed
 	e.Device = from.Device
+	e.Checksum = from.Checksum
 
 	e.Readings = []mgo.DBRef{}
 	for _, reading := range from.Readings {

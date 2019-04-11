@@ -16,13 +16,16 @@ package redis
 import (
 	"encoding/json"
 
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+	correlation "github.com/edgexfoundry/edgex-go/internal/pkg/correlation/models"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/gomodule/redigo/redis"
+
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 )
 
 type redisEvent struct {
 	ID       string
+	Checksum string
 	Pushed   int64
 	Device   string
 	Created  int64
@@ -30,9 +33,10 @@ type redisEvent struct {
 	Origin   int64
 }
 
-func marshalEvent(event contract.Event) (out []byte, err error) {
+func marshalEvent(event correlation.Event) (out []byte, err error) {
 	s := redisEvent{
 		ID:       event.ID,
+		Checksum: event.Checksum,
 		Pushed:   event.Pushed,
 		Device:   event.Device,
 		Created:  event.Created,
