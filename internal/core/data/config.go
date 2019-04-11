@@ -32,4 +32,5 @@ type WritableInfo struct {
 	ServiceUpdateLastConnected bool
 	ValidateCheck              bool
 	LogLevel                   string
+	ChecksumAlgo               string
 }

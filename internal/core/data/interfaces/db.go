@@ -14,6 +14,8 @@
 package interfaces
 
 import (
+	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation/models"
+
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
@@ -32,15 +34,18 @@ type DBClient interface {
 	// Add a new event
 	// UnexpectedError - failed to add to database
 	// NoValueDescriptor - no existing value descriptor for a reading in the event
-	AddEvent(e contract.Event) (string, error)
+	AddEvent(e models.Event) (string, error)
 
 	// Update an event - do NOT update readings
 	// UnexpectedError - problem updating in database
 	// NotFound - no event with the ID was found
-	UpdateEvent(e contract.Event) error
+	UpdateEvent(e models.Event) error
 
 	// Get an event by id
 	EventById(id string) (contract.Event, error)
+
+	// Get all events with a matching checksum
+	EventsByChecksum(checksum string) ([]contract.Event, error)
 
 	// Get the number of events in Core Data
 	EventCount() (int, error)
@@ -52,7 +57,7 @@ type DBClient interface {
 	// Set the pushed variable to the current time
 	// 404 - Event not found
 	// 503 - Unexpected problems
-	//UpdateEventById(id string) error
+	// UpdateEventById(id string) error
 
 	// Delete an event by ID and all of its readings
 	// 404 - Event not found
@@ -66,7 +71,7 @@ type DBClient interface {
 	EventsForDevice(id string) ([]contract.Event, error)
 
 	// Delete all of the events by the device id (and the readings)
-	//DeleteEventsByDeviceId(id string) error
+	// DeleteEventsByDeviceId(id string) error
 
 	// Return a list of events whos creation time is between startTime and endTime
 	// Limit the number of results by limit
@@ -78,13 +83,13 @@ type DBClient interface {
 
 	// Remove all the events that are older than the given age
 	// Return the number of events removed
-	//RemoveEventByAge(age int64) (int, error)
+	// RemoveEventByAge(age int64) (int, error)
 
 	// Get events that are older than a age
 	EventsOlderThanAge(age int64) ([]contract.Event, error)
 
 	// Remove all the events that have been pushed
-	//func (dbc *DBClient) ScrubEvents()(int, error)
+	// func (dbc *DBClient) ScrubEvents()(int, error)
 
 	// Get events that have been pushed (pushed field is not 0)
 	EventsPushed() ([]contract.Event, error)
@@ -129,14 +134,14 @@ type DBClient interface {
 	ReadingsByValueDescriptorNames(names []string, limit int) ([]contract.Reading, error)
 
 	// Return a list of readings specified by the UOM label
-	//ReadingsByUomLabel(uomLabel string, limit int)([]contract.Reading, error)
+	// ReadingsByUomLabel(uomLabel string, limit int)([]contract.Reading, error)
 
 	// Return a list of readings based on the label (value descriptor)
 	// 413 - limit exceeded
-	//ReadingsByLabel(label string, limit int) ([]contract.Reading, error)
+	// ReadingsByLabel(label string, limit int) ([]contract.Reading, error)
 
 	// Return a list of readings who's value descriptor has the type
-	//ReadingsByType(typeString string, limit int) ([]contract.Reading, error)
+	// ReadingsByType(typeString string, limit int) ([]contract.Reading, error)
 
 	// Return a list of readings whos created time is between the start and end times
 	ReadingsByCreationTime(start, end int64, limit int) ([]contract.Reading, error)
@@ -168,7 +173,7 @@ type DBClient interface {
 	ValueDescriptorsByName(names []string) ([]contract.ValueDescriptor, error)
 
 	// Delete a valuedescriptor based on the name
-	//DeleteValueDescriptorByName(name string) error
+	// DeleteValueDescriptorByName(name string) error
 
 	// Return a value descriptor based on the id
 	ValueDescriptorById(id string) (contract.ValueDescriptor, error)

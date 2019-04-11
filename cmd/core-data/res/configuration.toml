@@ -5,6 +5,7 @@ PersistData = true
 ServiceUpdateLastConnected = false
 ValidateCheck = false
 LogLevel = 'INFO'
+ChecksumAlgo = 'xxHash'
 
 [Service]
 BootTimeout = 30000
@@ -42,10 +43,10 @@ File = './logs/edgex-core-data.log'
   Host = 'localhost'
   Name = 'coredata'
   Password = ''
-  Port = 27017
+  Port = 6379
   Username = ''
   Timeout = 5000
-  Type = 'mongodb'
+  Type = 'redisdb'
 
 [MessageQueue]
 Protocol = 'tcp'
@@ -53,5 +54,3 @@ Host = '*'
 Port = 5563
 Type = 'zero'
 Topic = 'events'
-
-
