@@ -18,7 +18,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	mux "github.com/gorilla/mux"
+	"github.com/gorilla/mux"
 )
 
 func restGetDeviceCommandByCommandID(w http.ResponseWriter, r *http.Request) {
@@ -29,7 +29,7 @@ func restPutDeviceCommandByCommandID(w http.ResponseWriter, r *http.Request) {
 	issueDeviceCommand(w, r, true)
 }
 
-func issueDeviceCommand(w http.ResponseWriter, r *http.Request, p bool) {
+func issueDeviceCommand(w http.ResponseWriter, r *http.Request, isPutCommand bool) {
 	defer r.Body.Close()
 
 	vars := mux.Vars(r)
@@ -42,7 +42,7 @@ func issueDeviceCommand(w http.ResponseWriter, r *http.Request, p bool) {
 	}
 
 	ctx := r.Context()
-	body, status := commandByDeviceID(did, cid, string(b), p, ctx)
+	body, status := commandByDeviceID(did, cid, string(b), isPutCommand, ctx)
 	if status != http.StatusOK {
 		w.WriteHeader(status)
 	} else {
