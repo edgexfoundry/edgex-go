@@ -20,9 +20,8 @@ import (
 	"net/http"
 )
 
-func commandByDeviceID(deviceID string, commandID string, b string, isPutCommand bool, ctx context.Context) (string, int) {
+func commandByDeviceID(deviceID string, commandID string, body string, isPutCommand bool, ctx context.Context) (string, int) {
 	device, err := mdc.Device(deviceID, ctx)
-
 	if err != nil {
 		LoggingClient.Error(err.Error())
 
@@ -53,9 +52,8 @@ func commandByDeviceID(deviceID string, commandID string, b string, isPutCommand
 	}
 
 	var ex Executor
-
 	if isPutCommand {
-		ex, err = NewPutCommand(device, command, ctx, &http.Client{})
+		ex, err = NewPutCommand(device, command, body, ctx, &http.Client{})
 	} else {
 		ex, err = NewGetCommand(device, command, ctx, &http.Client{})
 	}
@@ -64,12 +62,12 @@ func commandByDeviceID(deviceID string, commandID string, b string, isPutCommand
 		return "", http.StatusInternalServerError
 	}
 
-	body, responseCode, err := ex.Execute()
-
+	responseBody, responseCode, err := ex.Execute()
 	if err != nil {
 		return "", http.StatusInternalServerError
 	}
-	return body, responseCode
+
+	return responseBody, responseCode
 }
 
 func putDeviceAdminState(did string, as string, ctx context.Context) (int, error) {
