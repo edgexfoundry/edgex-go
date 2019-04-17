@@ -50,13 +50,13 @@ One of the most common use cases for working with data that come from
 CoreData is to filter data down to what is relevant for a given application
 and to format it. To help facilitate this, four primary functions ported
 over from the existing services today are included in the SDK. The first is
-the `FilterByDeviceID` function which will remove events that do not match the
+the `DeviceNameFilter` function which will remove events that do not match the
 specified IDs and will cease execution of the pipeline if no event matches.
-The second is the `FilterByValueDescriptor` which exhibits the same behavior
-as `FilterByDeviceID` except filtering on Value Descriptor instead of
+The second is the `ValueDescriptorFilter` which exhibits the same behavior
+as `DeviceNameFilter` except filtering on Value Descriptor instead of
 DeviceID. The third and fourth provided functions in the SDK transform the data
-received to either XML or JSON by calling `TransformToXML()` or
-`TransformToJSON()`.
+received to either XML or JSON by calling `XMLTransform` or
+`JSONTransform`.
 
 Typically, after filtering and transforming the data as needed, exporting is
 the last step in a pipeline to ship the data where it needs to go. There are
