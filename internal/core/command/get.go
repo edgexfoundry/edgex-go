@@ -26,7 +26,6 @@ import (
 func NewGetCommand(device models.Device, command models.Command, context context.Context, httpCaller internal.HttpCaller) (Executor, error) {
 	url := device.Service.Addressable.GetBaseURL() + strings.Replace(command.Get.Action.Path, DEVICEIDURLPARAM, device.Id, -1)
 	request, err := http.NewRequest(http.MethodGet, url, nil)
-
 	if err != nil {
 		return serviceCommand{}, err
 	}

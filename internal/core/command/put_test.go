@@ -16,15 +16,14 @@ package command
 import (
 	"context"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
+	"io/ioutil"
 	"testing"
 )
 
 func TestNewPutCommandWithCorrelationId(t *testing.T) {
 	expectedCorrelationIDHeaderValue := "Testing"
 	testContext := context.WithValue(context.Background(), clients.CorrelationHeader, expectedCorrelationIDHeaderValue)
-
-	putCommand, _ := NewPutCommand(testDevice, testCommand, testContext, nil)
-
+	putCommand, _ := NewPutCommand(testDevice, testCommand, "Test body", testContext, nil)
 	actualCorrelationIDHeaderValue := putCommand.(serviceCommand).Request.Header.Get(clients.CorrelationHeader)
 	if actualCorrelationIDHeaderValue == "" {
 		t.Errorf("The populated PutCommand's request should contain a correlation ID header value")
@@ -35,8 +34,7 @@ func TestNewPutCommandWithCorrelationId(t *testing.T) {
 	}
 }
 func TestNewPutCommandNoCorrelationIDInContext(t *testing.T) {
-	putCommand, _ := NewPutCommand(testDevice, testCommand, context.Background(), nil)
-
+	putCommand, _ := NewPutCommand(testDevice, testCommand, "Test Body", context.Background(), nil)
 	actualCorrelationIDHeaderValue := putCommand.(serviceCommand).Request.Header.Get(clients.CorrelationHeader)
 	if actualCorrelationIDHeaderValue != "" {
 		t.Errorf("No correlation ID should be specified")
@@ -47,9 +45,28 @@ func TestNewPutCommandInvalidBaseUrl(t *testing.T) {
 	device := testDevice
 	device.Service.Addressable.Address = "!@#$"
 
-	_, err := NewPutCommand(device, testCommand, context.Background(), nil)
-
+	_, err := NewPutCommand(device, testCommand, "Test body", context.Background(), nil)
 	if err != nil {
 		t.Errorf("The invalid URL error was not properly propegated to the caller")
+	}
+}
+
+func TestNewPutCommandBody(t *testing.T) {
+	expectedRequestBody := "Test Request Body"
+	expectedRequestBodySize := len(expectedRequestBody)
+	putCommand, err := NewPutCommand(testDevice, testCommand, expectedRequestBody, context.Background(), nil)
+
+	if err != nil {
+		t.Errorf("Unexpectedly failed while creating a PutCommand")
+	}
+
+	actualBodyBytes, _ := ioutil.ReadAll(putCommand.(serviceCommand).Body)
+	if expectedRequestBodySize != len(actualBodyBytes) {
+		t.Errorf("Failed to verify the request body size")
+	}
+
+	actualRequestBody := string(actualBodyBytes)
+	if expectedRequestBody != actualRequestBody {
+		t.Error("Failed to verify the request body contents")
 	}
 }
