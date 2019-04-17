@@ -125,8 +125,6 @@ func (reg *registrationInfo) update(newReg contract.Registration) bool {
 		reg.sender = newHTTPSender(newReg.Addressable)
 	case contract.DestXMPP:
 		reg.sender = newXMPPSender(newReg.Addressable)
-	case contract.DestInfluxDB:
-		reg.sender = newInfluxDBSender(newReg.Addressable)
 
 	default:
 		LoggingClient.Warn(fmt.Sprintf("Destination not supported: %s", newReg.Destination))

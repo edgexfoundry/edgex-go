@@ -31,7 +31,7 @@ func OnResponseComplete(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 		correlationId := FromContext(r.Context())
 		if LoggingClient != nil {
-			LoggingClient.Info("Response complete", clients.CorrelationHeader, correlationId, internal.LogDurationKey, time.Since(begin).String())
+			LoggingClient.Trace("Response complete", clients.CorrelationHeader, correlationId, internal.LogDurationKey, time.Since(begin).String())
 		}
 	})
 }
@@ -40,7 +40,7 @@ func OnRequestBegin(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		correlationId := FromContext(r.Context())
 		if LoggingClient != nil {
-			LoggingClient.Info("Begin request", clients.CorrelationHeader, correlationId, "path", r.URL.Path)
+			LoggingClient.Trace("Begin request", clients.CorrelationHeader, correlationId, "path", r.URL.Path)
 		}
 		next.ServeHTTP(w, r)
 	})
