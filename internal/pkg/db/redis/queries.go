@@ -15,6 +15,7 @@ package redis
 
 import (
 	"encoding/json"
+	"strconv"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/redis/models"
@@ -193,16 +194,16 @@ func getObjectsByScore(conn redis.Conn, key string, start, end int64, limit int)
 
 // Transactions are managed outside of this function.
 func addObject(data []byte, adder models.Adder, id string, conn redis.Conn) {
-	conn.Send("SET", id, data)
+	_ = conn.Send("SET", id, data)
 
 	for _, cmd := range adder.Add() {
 		switch cmd.Command {
 		case "ZADD":
-			conn.Send(cmd.Command, cmd.Hash, cmd.Rank, cmd.Key)
+			_ = conn.Send(cmd.Command, cmd.Hash, cmd.Rank, cmd.Key)
 		case "SADD":
-			conn.Send(cmd.Command, cmd.Hash, cmd.Key)
+			_ = conn.Send(cmd.Command, cmd.Hash, cmd.Key)
 		case "HSET":
-			conn.Send(cmd.Command, cmd.Hash, cmd.Key, cmd.Value)
+			_ = conn.Send(cmd.Command, cmd.Hash, cmd.Key, cmd.Value)
 		}
 	}
 }
@@ -212,14 +213,65 @@ func addObject(data []byte, adder models.Adder, id string, conn redis.Conn) {
 //
 // Transactions are managed outside of this function.
 func deleteObject(remover models.Remover, id string, conn redis.Conn) {
-	conn.Send("DEL", id)
+	_ = conn.Send("DEL", id)
 
 	for _, cmd := range remover.Remove() {
 		switch cmd.Command {
 		case "ZREM":
 		case "SREM":
 		case "HDEL":
-			conn.Send(cmd.Command, cmd.Hash, cmd.Key)
+			_ = conn.Send(cmd.Command, cmd.Hash, cmd.Key)
 		}
 	}
+}
+
+func getUnionObjectsByValues(conn redis.Conn, vals ...string) (objects [][]byte, err error) {
+	args := redis.Args{}
+	for _, v := range vals {
+		args = args.Add(v)
+	}
+	ids, err := redis.Values(conn.Do("SUNION", args...))
+	if err != nil {
+		return nil, err
+	}
+
+	if len(ids) == 0 {
+		return nil, nil
+	}
+
+	objects, err = redis.ByteSlices(conn.Do("MGET", ids...))
+	if err != nil {
+		return nil, err
+	}
+
+	return objects, nil
+}
+
+func getObjectsByValuesSorted(conn redis.Conn, limit int, vals ...string) (objects [][]byte, err error) {
+	args := redis.Args{}
+	args = append(args, "desset")
+	args = append(args, strconv.Itoa(len(vals)))
+	for _, val := range vals {
+		args = append(args, val)
+	}
+
+	_, err = conn.Do("ZINTERSTORE", args...)
+	if err != nil {
+		return nil, err
+	}
+
+	ids, err := redis.Values(conn.Do("ZRANGE", "desset", 0, -1))
+	if err != nil {
+		return nil, err
+	}
+
+	if limit < 0 {
+		limit = len(ids)
+	}
+	objects, err = redis.ByteSlices(conn.Do("MGET", ids[0:limit]...))
+	if err != nil {
+		return nil, err
+	}
+
+	return objects, nil
 }

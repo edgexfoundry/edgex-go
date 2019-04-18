@@ -124,7 +124,7 @@ func (c *Client) AddInterval(from contract.Interval) (id string, err error) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
-	conn.Send("MULTI")
+	_ = conn.Send("MULTI")
 	addObject(data, interval, interval.ID, conn)
 	_, err = conn.Do("EXEC")
 
@@ -157,7 +157,7 @@ func (c *Client) UpdateInterval(from contract.Interval) (err error) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
-	conn.Send("MULTI")
+	_ = conn.Send("MULTI")
 	deleteObject(interval, interval.ID, conn)
 	addObject(data, interval, interval.ID, conn)
 	_, err = conn.Do("EXEC")
@@ -179,7 +179,7 @@ func (c *Client) DeleteIntervalById(id string) (err error) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
-	conn.Send("MULTI")
+	_ = conn.Send("MULTI")
 	deleteObject(interval, id, conn)
 
 	_, err = conn.Do("EXEC")
@@ -347,7 +347,7 @@ func (c *Client) AddIntervalAction(from contract.IntervalAction) (id string, err
 	conn := c.Pool.Get()
 	defer conn.Close()
 
-	conn.Send("MULTI")
+	_ = conn.Send("MULTI")
 	addObject(data, action, action.ID, conn)
 	_, err = conn.Do("EXEC")
 
@@ -380,7 +380,7 @@ func (c *Client) UpdateIntervalAction(from contract.IntervalAction) (err error) 
 	conn := c.Pool.Get()
 	defer conn.Close()
 
-	conn.Send("MULTI")
+	_ = conn.Send("MULTI")
 	deleteObject(action, action.ID, conn)
 	addObject(data, action, action.ID, conn)
 	_, err = conn.Do("EXEC")
@@ -402,7 +402,7 @@ func (c *Client) DeleteIntervalActionById(id string) (err error) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
-	conn.Send("MULTI")
+	_ = conn.Send("MULTI")
 	deleteObject(action, id, conn)
 
 	_, err = conn.Do("EXEC")

@@ -67,6 +67,13 @@ func TestRedisDB(t *testing.T) {
 	test.TestExportDB(t, rc)
 	rc.CloseSession()
 
+	rc, err = NewClient(config)
+	if err != nil {
+		t.Fatalf("Could not connect with Redis: %v", err)
+	}
+	test.TestNotificationsDB(t, rc)
+	rc.CloseSession()
+
 }
 
 func BenchmarkRedisDB(b *testing.B) {
