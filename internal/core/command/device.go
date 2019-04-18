@@ -142,7 +142,7 @@ func getCommands(ctx context.Context) (int, []models.CommandResponse, error) {
 	}
 	var cr []models.CommandResponse
 	for _, d := range devices {
-		cr = append(cr, models.CommandResponseFromDevice(d, Configuration.Service.Url()))
+		cr = append(cr, models.CommandResponseFromDevice(d, d.Profile.CoreCommands, Configuration.Service.Url()))
 	}
 	return http.StatusOK, cr, err
 
@@ -158,7 +158,7 @@ func getCommandsByDeviceID(did string, ctx context.Context) (int, models.Command
 			return http.StatusInternalServerError, models.CommandResponse{}, err
 		}
 	}
-	return http.StatusOK, models.CommandResponseFromDevice(d, Configuration.Service.Url()), err
+	return http.StatusOK, models.CommandResponseFromDevice(d, d.Profile.CoreCommands, Configuration.Service.Url()), err
 }
 
 func getCommandsByDeviceName(dn string, ctx context.Context) (int, models.CommandResponse, error) {
@@ -171,5 +171,5 @@ func getCommandsByDeviceName(dn string, ctx context.Context) (int, models.Comman
 			return http.StatusInternalServerError, models.CommandResponse{}, err
 		}
 	}
-	return http.StatusOK, models.CommandResponseFromDevice(d, Configuration.Service.Url()), err
+	return http.StatusOK, models.CommandResponseFromDevice(d, d.Profile.CoreCommands, Configuration.Service.Url()), err
 }
