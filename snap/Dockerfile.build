@@ -1,4 +1,4 @@
-FROM ubuntu:16.04
+FROM ubuntu:18.04
 
 # allow specifying the architecture from the build arg command line
 ARG ARCH
