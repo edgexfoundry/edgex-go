@@ -32,24 +32,23 @@ var testDevice = contract.Device{
 	Id:         TestDeviceId,
 	AdminState: contract.Unlocked,
 	Service: contract.DeviceService{
-		Service: contract.Service{
-			Addressable: contract.Addressable{
-				Protocol: TestProtocol,
-				Address:  TestAddress,
-				Port:     TestPort,
-			},
+		Addressable: contract.Addressable {
+			Protocol: TestProtocol,
+			Address:  TestAddress,
+			Port:     TestPort,
 		},
 	},
 }
 
 // Command which can be used as a basis for test setup. By default this is constructed for happy path testing.
+
 var testCommand = contract.Command{
-	Get: &contract.Get{
+	Get: contract.Get{
 		Action: contract.Action{
 			Path: "/some/uri",
 		},
 	},
-	Put: &contract.Put{
+	Put: contract.Put{
 		Action: contract.Action{
 			Path: "/another/uri",
 		},

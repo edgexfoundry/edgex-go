@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/models"
 
 	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/edgex-go/internal"
@@ -72,7 +73,7 @@ func main() {
 }
 
 func logBeforeInit(err error) {
-	l := logger.NewClient(internal.ExportDistroServiceKey, false, "", logger.InfoLog)
+	l := logger.NewClient(internal.ExportDistroServiceKey, false, "", models.InfoLog)
 	l.Error(err.Error())
 }
 

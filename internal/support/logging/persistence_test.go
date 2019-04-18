@@ -10,7 +10,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
@@ -39,7 +38,7 @@ func testPersistenceFind(t *testing.T, persistence persistence) {
 	}
 
 	le := models.LogEntry{
-		Level:         logger.TraceLog,
+		Level:         models.TraceLog,
 		OriginService: sampleService1,
 		Message:       message1,
 	}
@@ -103,7 +102,7 @@ func testPersistenceRemove(t *testing.T, persistence persistence) {
 			persistence.reset()
 
 			le := models.LogEntry{
-				Level:         logger.TraceLog,
+				Level:         models.TraceLog,
 				OriginService: sampleService1,
 				Message:       message1,
 			}

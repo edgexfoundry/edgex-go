@@ -9,13 +9,12 @@ package logging
 import (
 	"testing"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
 func TestCriteriaMatch(t *testing.T) {
 	var services = []string{"service1", "service2"}
-	var levels = []string{logger.TraceLog, logger.DebugLog}
+	var levels = []string{models.TraceLog, models.DebugLog}
 	var keywords = []string{"2"}
 	var keywordsEmptyString = []string{""}
 
@@ -31,8 +30,8 @@ func TestCriteriaMatch(t *testing.T) {
 		{"wrongService", models.LogEntry{OriginService: "service11"}, matchCriteria{OriginServices: services}, false},
 		{"matchService", models.LogEntry{OriginService: "service1"}, matchCriteria{OriginServices: services}, true},
 		// Levels
-		{"wrongLevel", models.LogEntry{Level: logger.WarnLog}, matchCriteria{LogLevels: levels}, false},
-		{"matchLevel", models.LogEntry{Level: logger.DebugLog}, matchCriteria{LogLevels: levels}, true},
+		{"wrongLevel", models.LogEntry{Level: models.WarnLog}, matchCriteria{LogLevels: levels}, false},
+		{"matchLevel", models.LogEntry{Level: models.DebugLog}, matchCriteria{LogLevels: levels}, true},
 		// Start
 		{"0Start", models.LogEntry{Created: 5}, matchCriteria{Start: 0}, true},
 		{"wrongStart", models.LogEntry{Created: 5}, matchCriteria{Start: 6}, false},

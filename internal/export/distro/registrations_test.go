@@ -11,10 +11,12 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation/models"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
+	"github.com/google/uuid"
 )
 
 func validRegistration() contract.Registration {
 	r := contract.Registration{}
+	r.Addressable = contract.Addressable{Id: uuid.New().String(), Name:"Test Addressable"}
 	r.Format = contract.FormatJSON
 	r.Compression = contract.CompNone
 	r.Destination = contract.DestMQTT

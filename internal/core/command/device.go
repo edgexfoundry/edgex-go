@@ -76,7 +76,7 @@ func commandByNames(dn string, cn string, body string, isPutCommand bool, ctx co
 		}
 	}
 
-	if c == (contract.Command{}){
+	if c.String() == (contract.Command{}).String(){
 		errMsg := fmt.Sprintf("Command with name '%v' not found.", cn)
 		LoggingClient.Error(errMsg)
 		return errMsg, http.StatusNotFound

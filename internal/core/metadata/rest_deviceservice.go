@@ -59,7 +59,7 @@ func restAddDeviceService(w http.ResponseWriter, r *http.Request) {
 
 	// Addressable Check
 	// No ID or Name given for addressable
-	if ds.Service.Addressable.Id == "" && ds.Service.Addressable.Name == "" {
+	if ds.Addressable.Id == "" && ds.Addressable.Name == "" {
 		err = errors.New("Must provide an Addressable for Device Service")
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		LoggingClient.Error(err.Error())
@@ -67,9 +67,9 @@ func restAddDeviceService(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// First try by name
-	addressable, err := dbClient.GetAddressableByName(ds.Service.Addressable.Name)
-	if err != nil && err == db.ErrNotFound && ds.Service.Addressable.Id != "" {
-		addressable, err = dbClient.GetAddressableById(ds.Service.Addressable.Id)
+	addressable, err := dbClient.GetAddressableByName(ds.Addressable.Name)
+	if err != nil && err == db.ErrNotFound && ds.Addressable.Id != "" {
+		addressable, err = dbClient.GetAddressableById(ds.Addressable.Id)
 	}
 	if err != nil {
 		if err == db.ErrNotFound {
@@ -81,10 +81,10 @@ func restAddDeviceService(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	ds.Service.Addressable = addressable
+	ds.Addressable = addressable
 
 	// Add the device service
-	if ds.Service.Id, err = dbClient.AddDeviceService(ds); err != nil {
+	if ds.Id, err = dbClient.AddDeviceService(ds); err != nil {
 		if err == db.ErrNotUnique {
 			http.Error(w, "Duplicate name for the device service", http.StatusConflict)
 		} else {
@@ -95,7 +95,7 @@ func restAddDeviceService(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(ds.Service.Id))
+	w.Write([]byte(ds.Id))
 }
 
 func restUpdateDeviceService(w http.ResponseWriter, r *http.Request) {
@@ -111,12 +111,12 @@ func restUpdateDeviceService(w http.ResponseWriter, r *http.Request) {
 	// Check if the device service exists and get it
 	var to models.DeviceService
 	// Try by ID
-	if from.Service.Id != "" {
-		to, err = dbClient.GetDeviceServiceById(from.Service.Id)
+	if from.Id != "" {
+		to, err = dbClient.GetDeviceServiceById(from.Id)
 	}
-	if from.Service.Id == "" || err != nil {
+	if from.Id == "" || err != nil {
 		// Try by Name
-		if to, err = dbClient.GetDeviceServiceByName(from.Service.Name); err != nil {
+		if to, err = dbClient.GetDeviceServiceByName(from.Name); err != nil {
 			http.Error(w, "Device service not found", http.StatusNotFound)
 			LoggingClient.Error(err.Error())
 			return
@@ -141,7 +141,7 @@ func restUpdateDeviceService(w http.ResponseWriter, r *http.Request) {
 // Update the relevant device service fields
 func updateDeviceServiceFields(from models.DeviceService, to *models.DeviceService, w http.ResponseWriter) error {
 	// Use .String() to compare empty structs (not ideal, but there is no .equals method)
-	if (from.Service.Addressable.String() != models.Addressable{}.String()) {
+	if (from.Addressable.String() != models.Addressable{}.String()) {
 		var addr models.Addressable
 		var err error
 		if from.Addressable.Id != "" {
@@ -153,34 +153,27 @@ func updateDeviceServiceFields(from models.DeviceService, to *models.DeviceServi
 				return err
 			}
 		}
-		to.Service.Addressable = addr
+		to.Addressable = addr
 	}
 
-	if from.AdminState != models.AdminState("") {
-		if !models.IsAdminStateType(string(from.AdminState)) {
-			err := errors.New("Invalid Admin State: " + string(from.AdminState) + " Must be 'locked' or 'unlocked'")
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-			return err
-		}
-		to.AdminState = from.AdminState
+	to.AdminState = from.AdminState
+	if from.Description != "" {
+		to.Description = from.Description
 	}
-	if from.Service.Description != "" {
-		to.Service.Description = from.Service.Description
+	if from.Labels != nil {
+		to.Labels = from.Labels
 	}
-	if from.Service.Labels != nil {
-		to.Service.Labels = from.Service.Labels
+	if from.LastConnected != 0 {
+		to.LastConnected = from.LastConnected
 	}
-	if from.Service.LastConnected != 0 {
-		to.Service.LastConnected = from.Service.LastConnected
+	if from.LastReported != 0 {
+		to.LastReported = from.LastReported
 	}
-	if from.Service.LastReported != 0 {
-		to.Service.LastReported = from.Service.LastReported
-	}
-	if from.Service.Name != "" {
-		to.Service.Name = from.Service.Name
+	if from.Name != "" {
+		to.Name = from.Name
 
 		// Check if the new name is unique
-		checkDS, err := dbClient.GetDeviceServiceByName(from.Service.Name)
+		checkDS, err := dbClient.GetDeviceServiceByName(from.Name)
 		if err != nil {
 			// A problem occurred accessing database
 			if err != db.ErrNotFound {
@@ -192,25 +185,17 @@ func updateDeviceServiceFields(from models.DeviceService, to *models.DeviceServi
 		// Found a device service, make sure its the one we're trying to update
 		if err != db.ErrNotFound {
 			// Different IDs -> Name is not unique
-			if checkDS.Service.Id != to.Service.Id {
+			if checkDS.Id != to.Id {
 				err = errors.New("Duplicate name for Device Service")
 				http.Error(w, err.Error(), http.StatusConflict)
 				return err
 			}
 		}
 	}
-	if from.Service.OperatingState != models.OperatingState("") {
-		// Check operating state
-		if !models.IsOperatingStateType(string(from.Service.OperatingState)) {
-			err := errors.New("Invalid operating state: " + string(from.Service.OperatingState) + " Must be 'enabled' or 'disabled'")
-			http.Error(w, err.Error(), http.StatusConflict)
-			return err
-		}
 
-		to.Service.OperatingState = from.Service.OperatingState
-	}
-	if from.Service.Origin != 0 {
-		to.Service.Origin = from.Service.Origin
+	to.OperatingState = from.OperatingState
+	if from.Origin != 0 {
+		to.Origin = from.Origin
 	}
 
 	return nil
@@ -381,7 +366,7 @@ func restDeleteServiceByName(w http.ResponseWriter, r *http.Request) {
 // Delete the associated provision watchers
 func deleteDeviceService(ds models.DeviceService, w http.ResponseWriter, ctx context.Context) error {
 	// Delete the associated devices
-	devices, err := dbClient.GetDevicesByServiceId(ds.Service.Id)
+	devices, err := dbClient.GetDevicesByServiceId(ds.Id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return err
@@ -393,7 +378,7 @@ func deleteDeviceService(ds models.DeviceService, w http.ResponseWriter, ctx con
 	}
 
 	// Delete the associated provision watchers
-	watchers, err := dbClient.GetProvisionWatchersByServiceId(ds.Service.Id)
+	watchers, err := dbClient.GetProvisionWatchersByServiceId(ds.Id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return err
@@ -783,7 +768,7 @@ func notifyAssociates(deviceServices []models.DeviceService, id string, action s
 // Make the callback for the device service
 func callback(service models.DeviceService, id string, action string, actionType models.ActionType) error {
 	client := &http.Client{}
-	url := service.Service.Addressable.GetCallbackURL()
+	url := service.Addressable.GetCallbackURL()
 	if len(url) > 0 {
 		body, err := getBody(id, actionType)
 		if err != nil {

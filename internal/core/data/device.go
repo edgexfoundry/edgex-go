@@ -84,8 +84,8 @@ func updateDeviceServiceLastReportedConnected(device string) {
 	}
 
 	//Use of context.Background because this function is invoked asynchronously from a channel
-	msc.UpdateLastConnected(s.Service.Id, t, context.Background())
-	msc.UpdateLastReported(s.Service.Id, t, context.Background())
+	msc.UpdateLastConnected(s.Id, t, context.Background())
+	msc.UpdateLastReported(s.Id, t, context.Background())
 }
 
 func checkMaxLimit(limit int) error {
