@@ -16,7 +16,7 @@ package redis
 import "github.com/gomodule/redigo/redis"
 
 func unlinkCollection(conn redis.Conn, col string) error {
-	conn.Send("MULTI")
+	_ = conn.Send("MULTI")
 	s := scripts["unlinkZsetMembers"]
 	_ = s.Send(conn, col)
 	s = scripts["unlinkCollection"]

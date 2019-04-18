@@ -150,10 +150,10 @@ func addRegistration(conn redis.Conn, r contract.Registration) (id string, err e
 		return r.ID, err
 	}
 
-	conn.Send("MULTI")
-	conn.Send("SET", r.ID, m)
-	conn.Send("ZADD", db.ExportCollection, 0, r.ID)
-	conn.Send("HSET", db.ExportCollection+":name", r.Name, r.ID)
+	_ = conn.Send("MULTI")
+	_ = conn.Send("SET", r.ID, m)
+	_ = conn.Send("ZADD", db.ExportCollection, 0, r.ID)
+	_ = conn.Send("HSET", db.ExportCollection+":name", r.Name, r.ID)
 	_, err = conn.Do("EXEC")
 	return r.ID, err
 }
@@ -169,10 +169,10 @@ func deleteRegistration(conn redis.Conn, id string) error {
 	r := contract.Registration{}
 	_ = unmarshalObject(object, &r)
 
-	conn.Send("MULTI")
-	conn.Send("DEL", id)
-	conn.Send("ZREM", db.ExportCollection, id)
-	conn.Send("HDEL", db.ExportCollection+":name", r.Name)
+	_ = conn.Send("MULTI")
+	_ = conn.Send("DEL", id)
+	_ = conn.Send("ZREM", db.ExportCollection, id)
+	_ = conn.Send("HDEL", db.ExportCollection+":name", r.Name)
 	_, err = conn.Do("EXEC")
 	return err
 }
