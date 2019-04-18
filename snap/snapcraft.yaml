@@ -1,4 +1,5 @@
 name: edgexfoundry
+base: core18
 version: "replace-me"
 version-script: |
   echo $(cat VERSION)-$(date +%Y%m%d)+$(git rev-parse --short HEAD)
@@ -608,6 +609,7 @@ parts:
       - build-essential
       - python
       - sed
+      - openjdk-8-jdk
     stage-packages:
       # Copy some packages into the stage directory to steal their
       # pre-built binaries.
@@ -624,6 +626,15 @@ parts:
       lib: usr/share/cassandra/lib
       # Rename mawk to awk instead of shipping a symlink.
       usr/bin/mawk: usr/bin/awk
+    override-build: |
+      if [ "$(id -u)" = "0" ]; then
+        SUDO=""
+      else
+        SUDO="sudo"
+      fi
+      # use openjdk-8 to build cassandra instead of openjdk-11
+      $SUDO update-alternatives --set java $(update-alternatives --list java | grep 8-openjdk)
+      snapcraftctl build
     prime:
       # Files from the stage directory to include in the snap.
       - bin/nodetool
@@ -689,7 +700,8 @@ parts:
       - libpcre3-dev
       - perl
       - curl
-      - libssl-dev
+      - libssl1.0-dev
+      - zlib1g-dev
     stage-packages:
       - perl
     override-build: |
@@ -710,7 +722,7 @@ parts:
     source-depth: 1
     build-packages:
       - unzip
-      - libssl-dev
+      - libssl1.0-dev
       - libpcre3-dev
     stage-packages:
       - luarocks
