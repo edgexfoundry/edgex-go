@@ -55,17 +55,15 @@ func loadDeviceRoutes(b *mux.Router) {
 
 	// /api/<version>/device
 	d.HandleFunc("/{"+ID+"}", restGetCommandsByDeviceID).Methods(http.MethodGet)
+	d.HandleFunc("/{"+ID+"}", restPutDeviceStateByDeviceId).Methods(http.MethodPut)
 	d.HandleFunc("/{"+ID+"}/"+COMMAND+"/{"+COMMANDID+"}", restGetDeviceCommandByCommandID).Methods(http.MethodGet)
 	d.HandleFunc("/{"+ID+"}/"+COMMAND+"/{"+COMMANDID+"}", restPutDeviceCommandByCommandID).Methods(http.MethodPut)
-	d.HandleFunc("/{"+ID+"}/"+URLADMINSTATE+"/{"+ADMINSTATE+"}", restPutDeviceAdminState).Methods(http.MethodPut)
-	d.HandleFunc("/{"+ID+"}/"+OPSTATE+"/{"+OPSTATE+"}", restPutDeviceOpState).Methods(http.MethodPut)
 
 	// /api/<version>/device/name
 	dn := d.PathPrefix("/" + NAME).Subrouter()
 
 	dn.HandleFunc("/{"+NAME+"}", restGetCommandsByDeviceName).Methods(http.MethodGet)
-	dn.HandleFunc("/{"+NAME+"}/"+URLADMINSTATE+"/{"+ADMINSTATE+"}", restPutDeviceAdminStateByDeviceName).Methods(http.MethodPut)
-	dn.HandleFunc("/{"+NAME+"}/"+OPSTATE+"/{"+OPSTATE+"}", restPutDeviceOpStateByDeviceName).Methods(http.MethodPut)
+	dn.HandleFunc("/{"+NAME+"}", restPutDeviceStateByDeviceName).Methods(http.MethodPut)
 }
 
 // Respond with PINGRESPONSE to see if the service is alive
