@@ -147,7 +147,7 @@ In the RTU protocol, address is defined in five comma-separated parts:
       MaxCmdValueLen = 256
       RemoveCmd = ""
       RemoveCmdArgs = ""
-      ProfileDir = "/custom-config"
+      ProfilesDir = "/custom-config"
 
     # Pre-define Devices
     [[DeviceList]]

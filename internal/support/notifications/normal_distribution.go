@@ -20,12 +20,9 @@ import (
 )
 
 func distributeAndMark(n models.Notification) error {
-	err := distribute(n)
-	if err != nil {
-		LoggingClient.Error("Trouble on distribution of notification: " + n.Slug)
-		return err
-	}
-	err = dbClient.MarkNotificationProcessed(n)
+	go distribute(n)
+
+	err := dbClient.MarkNotificationProcessed(n)
 	if err != nil {
 		LoggingClient.Error("Trouble updating notification to Processed for: " + n.Slug)
 		return err

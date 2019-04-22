@@ -49,6 +49,11 @@ var testCommand = models.Command{
 			Path: "/some/uri",
 		},
 	},
+	Put: &models.Put{
+		Action: models.Action{
+			Path: "/another/uri",
+		},
+	},
 }
 
 func TestNewGetCommandWithCorrelationId(t *testing.T) {

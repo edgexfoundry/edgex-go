@@ -176,12 +176,12 @@ func addDeviceReport(conn redis.Conn, dr contract.DeviceReport) (string, error) 
 		return "", err
 	}
 
-	conn.Send("MULTI")
-	conn.Send("SET", id, m)
-	conn.Send("ZADD", db.DeviceReport, 0, id)
-	conn.Send("SADD", db.DeviceReport+":device:"+dr.Device, id)
-	conn.Send("SADD", db.DeviceReport+":action:"+dr.Action, id)
-	conn.Send("HSET", db.DeviceReport+":name", dr.Name, id)
+	_ = conn.Send("MULTI")
+	_ = conn.Send("SET", id, m)
+	_ = conn.Send("ZADD", db.DeviceReport, 0, id)
+	_ = conn.Send("SADD", db.DeviceReport+":device:"+dr.Device, id)
+	_ = conn.Send("SADD", db.DeviceReport+":action:"+dr.Action, id)
+	_ = conn.Send("HSET", db.DeviceReport+":name", dr.Name, id)
 	_, err = conn.Do("EXEC")
 	return id, err
 }
@@ -346,14 +346,14 @@ func addDevice(conn redis.Conn, d contract.Device) (string, error) {
 		return "", err
 	}
 
-	conn.Send("MULTI")
-	conn.Send("SET", id, m)
-	conn.Send("ZADD", db.Device, 0, id)
-	conn.Send("HSET", db.Device+":name", d.Name, id)
-	conn.Send("SADD", db.Device+":service:"+d.Service.Id, id)
-	conn.Send("SADD", db.Device+":profile:"+d.Profile.Id, id)
+	_ = conn.Send("MULTI")
+	_ = conn.Send("SET", id, m)
+	_ = conn.Send("ZADD", db.Device, 0, id)
+	_ = conn.Send("HSET", db.Device+":name", d.Name, id)
+	_ = conn.Send("SADD", db.Device+":service:"+d.Service.Id, id)
+	_ = conn.Send("SADD", db.Device+":profile:"+d.Profile.Id, id)
 	for _, label := range d.Labels {
-		conn.Send("SADD", db.Device+":label:"+label, id)
+		_ = conn.Send("SADD", db.Device+":label:"+label, id)
 	}
 	_, err = conn.Do("EXEC")
 	return id, err
@@ -377,7 +377,7 @@ func deleteDevice(conn redis.Conn, id string) error {
 	_ = conn.Send("SREM", db.Device+":service:"+d.Service.Id, id)
 	_ = conn.Send("SREM", db.Device+":profile:"+d.Profile.Id, id)
 	for _, label := range d.Labels {
-		conn.Send("SREM", db.Device+":label:"+label, id)
+		_ = conn.Send("SREM", db.Device+":label:"+label, id)
 	}
 	_, err = conn.Do("EXEC")
 	return err
@@ -523,14 +523,14 @@ func addDeviceProfile(conn redis.Conn, dp contract.DeviceProfile) (string, error
 		return "", err
 	}
 
-	conn.Send("MULTI")
-	conn.Send("SET", id, m)
-	conn.Send("ZADD", db.DeviceProfile, 0, id)
-	conn.Send("HSET", db.DeviceProfile+":name", dp.Name, id)
-	conn.Send("SADD", db.DeviceProfile+":manufacturer:"+dp.Manufacturer, id)
-	conn.Send("SADD", db.DeviceProfile+":model:"+dp.Model, id)
+	_ = conn.Send("MULTI")
+	_ = conn.Send("SET", id, m)
+	_ = conn.Send("ZADD", db.DeviceProfile, 0, id)
+	_ = conn.Send("HSET", db.DeviceProfile+":name", dp.Name, id)
+	_ = conn.Send("SADD", db.DeviceProfile+":manufacturer:"+dp.Manufacturer, id)
+	_ = conn.Send("SADD", db.DeviceProfile+":model:"+dp.Model, id)
 	for _, label := range dp.Labels {
-		conn.Send("SADD", db.DeviceProfile+":label:"+label, id)
+		_ = conn.Send("SADD", db.DeviceProfile+":label:"+label, id)
 	}
 	if len(dp.CoreCommands) > 0 {
 		cids := redis.Args{}.Add(db.DeviceProfile + ":commands:" + id)
@@ -539,10 +539,10 @@ func addDeviceProfile(conn redis.Conn, dp contract.DeviceProfile) (string, error
 			if err != nil {
 				return "", err
 			}
-			conn.Send("SADD", db.DeviceProfile+":command:"+cid, id)
+			_ = conn.Send("SADD", db.DeviceProfile+":command:"+cid, id)
 			cids = cids.Add(cid)
 		}
-		conn.Send("SADD", cids...)
+		_ = conn.Send("SADD", cids...)
 	}
 	_, err = conn.Do("EXEC")
 	return id, err
@@ -566,13 +566,13 @@ func deleteDeviceProfile(conn redis.Conn, id string) error {
 	_ = conn.Send("SREM", db.DeviceProfile+":manufacturer:"+dp.Manufacturer, id)
 	_ = conn.Send("SREM", db.DeviceProfile+":model:"+dp.Model, id)
 	for _, label := range dp.Labels {
-		conn.Send("SREM", db.DeviceProfile+":label:"+label, id)
+		_ = conn.Send("SREM", db.DeviceProfile+":label:"+label, id)
 	}
 	// TODO: should commands be also removed?
 	for _, c := range dp.CoreCommands {
-		conn.Send("SREM", db.DeviceProfile+":command:"+c.Id, id)
+		_ = conn.Send("SREM", db.DeviceProfile+":command:"+c.Id, id)
 	}
-	conn.Send("DEL", db.DeviceProfile+":commands:"+id)
+	_ = conn.Send("DEL", db.DeviceProfile+":commands:"+id)
 	_, err = conn.Do("EXEC")
 	return err
 }
@@ -705,14 +705,14 @@ func addAddressable(conn redis.Conn, a contract.Addressable) (string, error) {
 		return a.Id, err
 	}
 
-	conn.Send("MULTI")
-	conn.Send("SET", id, m)
-	conn.Send("ZADD", db.Addressable, 0, id)
-	conn.Send("SADD", db.Addressable+":topic:"+a.Topic, id)
-	conn.Send("SADD", db.Addressable+":port:"+strconv.Itoa(a.Port), id)
-	conn.Send("SADD", db.Addressable+":publisher:"+a.Publisher, id)
-	conn.Send("SADD", db.Addressable+":address:"+a.Address, id)
-	conn.Send("HSET", db.Addressable+":name", a.Name, id)
+	_ = conn.Send("MULTI")
+	_ = conn.Send("SET", id, m)
+	_ = conn.Send("ZADD", db.Addressable, 0, id)
+	_ = conn.Send("SADD", db.Addressable+":topic:"+a.Topic, id)
+	_ = conn.Send("SADD", db.Addressable+":port:"+strconv.Itoa(a.Port), id)
+	_ = conn.Send("SADD", db.Addressable+":publisher:"+a.Publisher, id)
+	_ = conn.Send("SADD", db.Addressable+":address:"+a.Address, id)
+	_ = conn.Send("HSET", db.Addressable+":name", a.Name, id)
 	_, err = conn.Do("EXEC")
 	if err != nil {
 		return a.Id, err
@@ -866,10 +866,10 @@ func (c *Client) DeleteDeviceServiceById(id string) error {
 
 func addDeviceService(conn redis.Conn, ds contract.DeviceService) (string, error) {
 	aid := ds.Addressable.Id
-	conn.Send("MULTI")
-	conn.Send("HEXISTS", db.DeviceService+":name", ds.Name)
-	conn.Send("EXISTS", aid)
-	conn.Send("HGET", db.Addressable+":name", ds.Addressable.Name)
+	_ = conn.Send("MULTI")
+	_ = conn.Send("HEXISTS", db.DeviceService+":name", ds.Name)
+	_ = conn.Send("EXISTS", aid)
+	_ = conn.Send("HGET", db.Addressable+":name", ds.Addressable.Name)
 	rep, err := redis.Values(conn.Do("EXEC"))
 	if err != nil {
 		return ds.Id, err
@@ -914,13 +914,13 @@ func addDeviceService(conn redis.Conn, ds contract.DeviceService) (string, error
 		return "", err
 	}
 
-	conn.Send("MULTI")
-	conn.Send("SET", id, m)
-	conn.Send("ZADD", db.DeviceService, 0, id)
-	conn.Send("HSET", db.DeviceService+":name", ds.Name, id)
-	conn.Send("SADD", db.DeviceService+":addressable:"+aid, id)
+	_ = conn.Send("MULTI")
+	_ = conn.Send("SET", id, m)
+	_ = conn.Send("ZADD", db.DeviceService, 0, id)
+	_ = conn.Send("HSET", db.DeviceService+":name", ds.Name, id)
+	_ = conn.Send("SADD", db.DeviceService+":addressable:"+aid, id)
 	for _, label := range ds.Labels {
-		conn.Send("SADD", db.DeviceService+":label:"+label, id)
+		_ = conn.Send("SADD", db.DeviceService+":label:"+label, id)
 	}
 	_, err = conn.Do("EXEC")
 	if err != nil {
@@ -947,7 +947,7 @@ func deleteDeviceService(conn redis.Conn, id string) error {
 	_ = conn.Send("HDEL", db.DeviceService+":name", ds.Name)
 	_ = conn.Send("SREM", db.DeviceService+":addressable:"+ds.Addressable.Id, id)
 	for _, label := range ds.Labels {
-		conn.Send("SREM", db.DeviceService+":label:"+label, id)
+		_ = conn.Send("SREM", db.DeviceService+":label:"+label, id)
 	}
 	_, err = conn.Do("EXEC")
 	return err
@@ -1070,12 +1070,12 @@ func (c *Client) DeleteProvisionWatcherById(id string) error {
 func addProvisionWatcher(conn redis.Conn, pw contract.ProvisionWatcher) (string, error) {
 	pid := pw.Profile.Id
 	sid := pw.Service.Id
-	conn.Send("MULTI")
-	conn.Send("HEXISTS", db.ProvisionWatcher+":name", pw.Name)
-	conn.Send("EXISTS", pid)
-	conn.Send("HGET", db.DeviceProfile+":name", pw.Profile.Name)
-	conn.Send("EXISTS", sid)
-	conn.Send("HGET", db.DeviceService+":name", pw.Service.Name)
+	_ = conn.Send("MULTI")
+	_ = conn.Send("HEXISTS", db.ProvisionWatcher+":name", pw.Name)
+	_ = conn.Send("EXISTS", pid)
+	_ = conn.Send("HGET", db.DeviceProfile+":name", pw.Profile.Name)
+	_ = conn.Send("EXISTS", sid)
+	_ = conn.Send("HGET", db.DeviceService+":name", pw.Service.Name)
 	rep, err := redis.Values(conn.Do("EXEC"))
 	if err != nil {
 		return "", err
@@ -1134,14 +1134,14 @@ func addProvisionWatcher(conn redis.Conn, pw contract.ProvisionWatcher) (string,
 		return "", err
 	}
 
-	conn.Send("MULTI")
-	conn.Send("SET", id, m)
-	conn.Send("ZADD", db.ProvisionWatcher, 0, id)
-	conn.Send("HSET", db.ProvisionWatcher+":name", pw.Name, id)
-	conn.Send("SADD", db.ProvisionWatcher+":service:"+pw.Service.Id, id)
-	conn.Send("SADD", db.ProvisionWatcher+":profile:"+pw.Profile.Id, id)
+	_ = conn.Send("MULTI")
+	_ = conn.Send("SET", id, m)
+	_ = conn.Send("ZADD", db.ProvisionWatcher, 0, id)
+	_ = conn.Send("HSET", db.ProvisionWatcher+":name", pw.Name, id)
+	_ = conn.Send("SADD", db.ProvisionWatcher+":service:"+pw.Service.Id, id)
+	_ = conn.Send("SADD", db.ProvisionWatcher+":profile:"+pw.Profile.Id, id)
 	for k, v := range pw.Identifiers {
-		conn.Send("SADD", db.ProvisionWatcher+":identifier:"+k+":"+v, id)
+		_ = conn.Send("SADD", db.ProvisionWatcher+":identifier:"+k+":"+v, id)
 	}
 	_, err = conn.Do("EXEC")
 	if err != nil {
@@ -1169,7 +1169,7 @@ func deleteProvisionWatcher(conn redis.Conn, id string) error {
 	_ = conn.Send("SREM", db.ProvisionWatcher+":service:"+pw.Service.Id, id)
 	_ = conn.Send("SREM", db.ProvisionWatcher+":profile:"+pw.Profile.Id, id)
 	for k, v := range pw.Identifiers {
-		conn.Send("SREM", db.ProvisionWatcher+":identifier:"+k+":"+v, id)
+		_ = conn.Send("SREM", db.ProvisionWatcher+":identifier:"+k+":"+v, id)
 	}
 	_, err = conn.Do("EXEC")
 	return err
@@ -1275,11 +1275,11 @@ func addCommand(conn redis.Conn, tx bool, cmd contract.Command) (string, error) 
 	}
 
 	if tx {
-		conn.Send("MULTI")
+		_ = conn.Send("MULTI")
 	}
-	conn.Send("SET", id, m)
-	conn.Send("ZADD", db.Command, 0, id)
-	conn.Send("SADD", db.Command+":name:"+cmd.Name, id)
+	_ = conn.Send("SET", id, m)
+	_ = conn.Send("ZADD", db.Command, 0, id)
+	_ = conn.Send("SADD", db.Command+":name:"+cmd.Name, id)
 	if tx {
 		_, err = conn.Do("EXEC")
 		if err != nil {

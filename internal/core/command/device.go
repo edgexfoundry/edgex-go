@@ -20,9 +20,8 @@ import (
 	"net/http"
 )
 
-func commandByDeviceID(deviceID string, commandID string, b string, isPutCommand bool, ctx context.Context) (string, int) {
+func commandByDeviceID(deviceID string, commandID string, body string, isPutCommand bool, ctx context.Context) (string, int) {
 	device, err := mdc.Device(deviceID, ctx)
-
 	if err != nil {
 		LoggingClient.Error(err.Error())
 
@@ -53,9 +52,8 @@ func commandByDeviceID(deviceID string, commandID string, b string, isPutCommand
 	}
 
 	var ex Executor
-
 	if isPutCommand {
-		ex, err = NewPutCommand(device, command, ctx, &http.Client{})
+		ex, err = NewPutCommand(device, command, body, ctx, &http.Client{})
 	} else {
 		ex, err = NewGetCommand(device, command, ctx, &http.Client{})
 	}
@@ -64,12 +62,12 @@ func commandByDeviceID(deviceID string, commandID string, b string, isPutCommand
 		return "", http.StatusInternalServerError
 	}
 
-	body, responseCode, err := ex.Execute()
-
+	responseBody, responseCode, err := ex.Execute()
 	if err != nil {
 		return "", http.StatusInternalServerError
 	}
-	return body, responseCode
+
+	return responseBody, responseCode
 }
 
 func putDeviceAdminState(did string, as string, ctx context.Context) (int, error) {
@@ -144,7 +142,7 @@ func getCommands(ctx context.Context) (int, []models.CommandResponse, error) {
 	}
 	var cr []models.CommandResponse
 	for _, d := range devices {
-		cr = append(cr, models.CommandResponseFromDevice(d, Configuration.Service.Url()))
+		cr = append(cr, models.CommandResponseFromDevice(d, d.Profile.CoreCommands, Configuration.Service.Url()))
 	}
 	return http.StatusOK, cr, err
 
@@ -160,7 +158,7 @@ func getCommandsByDeviceID(did string, ctx context.Context) (int, models.Command
 			return http.StatusInternalServerError, models.CommandResponse{}, err
 		}
 	}
-	return http.StatusOK, models.CommandResponseFromDevice(d, Configuration.Service.Url()), err
+	return http.StatusOK, models.CommandResponseFromDevice(d, d.Profile.CoreCommands, Configuration.Service.Url()), err
 }
 
 func getCommandsByDeviceName(dn string, ctx context.Context) (int, models.CommandResponse, error) {
@@ -173,5 +171,5 @@ func getCommandsByDeviceName(dn string, ctx context.Context) (int, models.Comman
 			return http.StatusInternalServerError, models.CommandResponse{}, err
 		}
 	}
-	return http.StatusOK, models.CommandResponseFromDevice(d, Configuration.Service.Url()), err
+	return http.StatusOK, models.CommandResponseFromDevice(d, d.Profile.CoreCommands, Configuration.Service.Url()), err
 }
