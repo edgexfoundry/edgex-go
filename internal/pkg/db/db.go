@@ -21,7 +21,8 @@ import (
 
 const (
 	// Databases
-	MongoDB  = "mongodb"
+	MongoDB = "mongodb"
+	RedisDB = "redisdb"
 
 	// Data
 	EventsCollection          = "event"
@@ -44,6 +45,11 @@ const (
 	ProvisionWatcher = "provisionWatcher"
 	Interval         = "interval"
 	IntervalAction   = "intervalAction"
+
+	// Notification
+	Notification = "notification"
+	Subscription = "subscription"
+	Transmission = "transmission"
 )
 
 var (

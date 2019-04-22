@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2018 Dell Technologies Inc.
+ * Copyright 2018 Redis Labs Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -10,22 +10,20 @@
  * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
- *
  *******************************************************************************/
-
-package notifications
+package redis
 
 import (
-	"github.com/edgexfoundry/go-mod-core-contracts/models"
+	"encoding/json"
 )
 
-func distributeAndMark(n models.Notification) error {
-	go distribute(n)
+type marshalFunc func(in interface{}) (out []byte, err error)
+type unmarshalFunc func(in []byte, out interface{}) (err error)
 
-	err := dbClient.MarkNotificationProcessed(n)
-	if err != nil {
-		LoggingClient.Error("Trouble updating notification to Processed for: " + n.Slug)
-		return err
-	}
-	return nil
+func marshalObject(in interface{}) (out []byte, err error) {
+	return json.Marshal(in)
+}
+
+func unmarshalObject(in []byte, out interface{}) (err error) {
+	return json.Unmarshal(in, out)
 }

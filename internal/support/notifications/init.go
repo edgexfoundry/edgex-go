@@ -26,17 +26,17 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-	"github.com/edgexfoundry/go-mod-registry/registry"
-	registryTypes "github.com/edgexfoundry/go-mod-registry/pkg/types"
-
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db/redis"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/interfaces"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	registryTypes "github.com/edgexfoundry/go-mod-registry/pkg/types"
+	"github.com/edgexfoundry/go-mod-registry/registry"
 )
 
 // Global variables
@@ -118,15 +118,7 @@ func Destruct() {
 func connectToDatabase() error {
 	// Create a database client
 	var err error
-	dbConfig := db.Configuration{
-		Host:         Configuration.Databases["Primary"].Host,
-		Port:         Configuration.Databases["Primary"].Port,
-		Timeout:      Configuration.Databases["Primary"].Timeout,
-		DatabaseName: Configuration.Databases["Primary"].Name,
-		Username:     Configuration.Databases["Primary"].Username,
-		Password:     Configuration.Databases["Primary"].Password,
-	}
-	dbClient, err = newDBClient(Configuration.Databases["Primary"].Type, dbConfig)
+	dbClient, err = newDBClient(Configuration.Databases["Primary"].Type)
 	if err != nil {
 		return fmt.Errorf("couldn't create database client: %v", err.Error())
 	}
@@ -135,10 +127,24 @@ func connectToDatabase() error {
 }
 
 // Return the dbClient interface
-func newDBClient(dbType string, config db.Configuration) (interfaces.DBClient, error) {
+func newDBClient(dbType string) (interfaces.DBClient, error) {
 	switch dbType {
 	case db.MongoDB:
-		return mongo.NewClient(config)
+		dbConfig := db.Configuration{
+			Host:         Configuration.Databases["Primary"].Host,
+			Port:         Configuration.Databases["Primary"].Port,
+			Timeout:      Configuration.Databases["Primary"].Timeout,
+			DatabaseName: Configuration.Databases["Primary"].Name,
+			Username:     Configuration.Databases["Primary"].Username,
+			Password:     Configuration.Databases["Primary"].Password,
+		}
+		return mongo.NewClient(dbConfig)
+	case db.RedisDB:
+		dbConfig := db.Configuration{
+			Host: Configuration.Databases["Primary"].Host,
+			Port: Configuration.Databases["Primary"].Port,
+		}
+		return redis.NewClient(dbConfig)
 	default:
 		return nil, db.ErrUnsupportedDatabase
 	}

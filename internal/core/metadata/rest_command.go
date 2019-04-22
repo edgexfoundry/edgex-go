@@ -86,7 +86,10 @@ func restUpdateCommand(w http.ResponseWriter, r *http.Request) {
 	// Name is changed, make sure the new name doesn't conflict with device profile
 	if c.Name != "" {
 		dps, err := dbClient.GetDeviceProfilesByCommandId(c.Id)
-		if err != nil {
+		if err == db.ErrNotFound {
+			err = nil
+			dps = []contract.DeviceProfile{}
+		} else if err != nil {
 			LoggingClient.Error(err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -94,7 +97,7 @@ func restUpdateCommand(w http.ResponseWriter, r *http.Request) {
 
 		// Loop through matched device profiles to ensure the name isn't duplicate
 		for _, profile := range dps {
-			for _, command := range profile.Commands {
+			for _, command := range profile.CoreCommands {
 				if command.Name == c.Name {
 					err = errors.New("Error updating command: duplicate command name in device profile")
 					LoggingClient.Error(err.Error())
@@ -212,9 +215,13 @@ func restDeleteCommandById(w http.ResponseWriter, r *http.Request) {
 // Helper function to determine if the command is still in use by device profiles
 func isCommandStillInUse(id string) (bool, error) {
 	dp, err := dbClient.GetDeviceProfilesByCommandId(id)
-	if err != nil {
+
+	if err == db.ErrNotFound { // XXX Inconsistent return values. Should be ErrNotFound
+		err = nil
+	} else if err != nil {
 		return false, err
 	}
+
 	if len(dp) == 0 {
 		return false, err
 	}

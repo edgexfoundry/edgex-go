@@ -100,6 +100,7 @@ func Init(useRegistry bool) bool {
 	if Configuration == nil {
 		return false
 	}
+	executorClient = &ExecuteApp{}
 
 	if useRegistry && registryClient != nil {
 		chErrors = make(chan error)

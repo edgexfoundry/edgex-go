@@ -14,27 +14,14 @@
 package command
 
 import (
-	"bytes"
 	"context"
-	"net/http"
-	"strings"
-
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
+	"net/http"
 )
 
-func issueCommand(req *http.Request) (*http.Response, error) {
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		LoggingClient.Error(err.Error())
-	}
-	return resp, err
-}
-
-func commandByDeviceID(did string, cid string, b string, p bool, ctx context.Context) (string, int) {
-	d, err := mdc.Device(did, ctx)
-
+func commandByDeviceID(deviceID string, commandID string, body string, isPutCommand bool, ctx context.Context) (string, int) {
+	device, err := mdc.Device(deviceID, ctx)
 	if err != nil {
 		LoggingClient.Error(err.Error())
 
@@ -46,13 +33,13 @@ func commandByDeviceID(did string, cid string, b string, p bool, ctx context.Con
 		}
 	}
 
-	if d.AdminState == models.Locked {
-		LoggingClient.Error(d.Name + " is in admin locked state")
+	if device.AdminState == models.Locked {
+		LoggingClient.Error(device.Name + " is in admin locked state")
 
 		return "", http.StatusLocked
 	}
 
-	c, err := cc.Command(cid, ctx)
+	command, err := cc.Command(commandID, ctx)
 	if err != nil {
 		LoggingClient.Error(err.Error())
 
@@ -63,35 +50,24 @@ func commandByDeviceID(did string, cid string, b string, p bool, ctx context.Con
 			return "", http.StatusInternalServerError
 		}
 	}
-	if p {
-		url := d.Service.Addressable.GetBaseURL() + strings.Replace(c.Put.Action.Path, DEVICEIDURLPARAM, d.Id, -1)
-		LoggingClient.Info("Issuing PUT command to: " + url)
-		req, err := http.NewRequest(http.MethodPut, url, strings.NewReader(b))
-		if err != nil {
-			return "", http.StatusInternalServerError
-		}
-		resp, err := issueCommand(req)
-		if err != nil {
-			return "", http.StatusBadGateway
-		}
-		buf := new(bytes.Buffer)
-		buf.ReadFrom(resp.Body)
-		return buf.String(), resp.StatusCode
+
+	var ex Executor
+	if isPutCommand {
+		ex, err = NewPutCommand(device, command, body, ctx, &http.Client{})
 	} else {
-		url := d.Service.Addressable.GetBaseURL() + strings.Replace(c.Get.Action.Path, DEVICEIDURLPARAM, d.Id, -1)
-		LoggingClient.Info("Issuing GET command to: " + url)
-		req, err := http.NewRequest(http.MethodGet, url, nil)
-		if err != nil {
-			return "", http.StatusInternalServerError
-		}
-		resp, err := issueCommand(req)
-		if err != nil {
-			return "", http.StatusBadGateway
-		}
-		buf := new(bytes.Buffer)
-		buf.ReadFrom(resp.Body)
-		return buf.String(), resp.StatusCode
+		ex, err = NewGetCommand(device, command, ctx, &http.Client{})
 	}
+
+	if err != nil {
+		return "", http.StatusInternalServerError
+	}
+
+	responseBody, responseCode, err := ex.Execute()
+	if err != nil {
+		return "", http.StatusInternalServerError
+	}
+
+	return responseBody, responseCode
 }
 
 func putDeviceAdminState(did string, as string, ctx context.Context) (int, error) {
@@ -166,7 +142,7 @@ func getCommands(ctx context.Context) (int, []models.CommandResponse, error) {
 	}
 	var cr []models.CommandResponse
 	for _, d := range devices {
-		cr = append(cr, models.CommandResponseFromDevice(d, Configuration.Service.Url()))
+		cr = append(cr, models.CommandResponseFromDevice(d, d.Profile.CoreCommands, Configuration.Service.Url()))
 	}
 	return http.StatusOK, cr, err
 
@@ -182,7 +158,7 @@ func getCommandsByDeviceID(did string, ctx context.Context) (int, models.Command
 			return http.StatusInternalServerError, models.CommandResponse{}, err
 		}
 	}
-	return http.StatusOK, models.CommandResponseFromDevice(d, Configuration.Service.Url()), err
+	return http.StatusOK, models.CommandResponseFromDevice(d, d.Profile.CoreCommands, Configuration.Service.Url()), err
 }
 
 func getCommandsByDeviceName(dn string, ctx context.Context) (int, models.CommandResponse, error) {
@@ -195,5 +171,5 @@ func getCommandsByDeviceName(dn string, ctx context.Context) (int, models.Comman
 			return http.StatusInternalServerError, models.CommandResponse{}, err
 		}
 	}
-	return http.StatusOK, models.CommandResponseFromDevice(d, Configuration.Service.Url()), err
+	return http.StatusOK, models.CommandResponseFromDevice(d, d.Profile.CoreCommands, Configuration.Service.Url()), err
 }

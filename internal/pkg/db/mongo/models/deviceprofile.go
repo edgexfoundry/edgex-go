@@ -91,8 +91,8 @@ type DeviceProfile struct {
 	Model           string            `bson:"model"`
 	Labels          []string          `bson:"labels"`
 	DeviceResources []DeviceResource  `bson:"deviceResources"`
-	Resources       []ProfileResource `bson:"resources"`
-	Commands        []mgo.DBRef       `bson:"commands"`
+	DeviceCommands  []ProfileResource `bson:"resources"`
+	CoreCommands    []mgo.DBRef       `bson:"commands"`
 }
 
 func (dp *DeviceProfile) ToContract(transform commandTransform) (c contract.DeviceProfile, err error) {
@@ -143,7 +143,7 @@ func (dp *DeviceProfile) ToContract(transform commandTransform) (c contract.Devi
 		c.DeviceResources = append(c.DeviceResources, cdo)
 	}
 
-	for _, r := range dp.Resources {
+	for _, r := range dp.DeviceCommands {
 		var cpr contract.ProfileResource
 		cpr.Name = r.Name
 		for _, ro := range r.Get {
@@ -170,15 +170,15 @@ func (dp *DeviceProfile) ToContract(transform commandTransform) (c contract.Devi
 			})
 		}
 
-		c.Resources = append(c.Resources, cpr)
+		c.DeviceCommands = append(c.DeviceCommands, cpr)
 	}
 
-	for _, dbRef := range dp.Commands {
+	for _, dbRef := range dp.CoreCommands {
 		command, err := transform.DBRefToCommand(dbRef)
 		if err != nil {
 			return contract.DeviceProfile{}, err
 		}
-		c.Commands = append(c.Commands, command.ToContract())
+		c.CoreCommands = append(c.CoreCommands, command.ToContract())
 	}
 
 	return
@@ -232,7 +232,7 @@ func (dp *DeviceProfile) FromContract(from contract.DeviceProfile, transform com
 		dp.DeviceResources = append(dp.DeviceResources, do)
 	}
 
-	for _, r := range from.Resources {
+	for _, r := range from.DeviceCommands {
 		var pr ProfileResource
 		pr.Name = r.Name
 		for _, ro := range r.Get {
@@ -259,10 +259,10 @@ func (dp *DeviceProfile) FromContract(from contract.DeviceProfile, transform com
 			})
 		}
 
-		dp.Resources = append(dp.Resources, pr)
+		dp.DeviceCommands = append(dp.DeviceCommands, pr)
 	}
 
-	for _, command := range from.Commands {
+	for _, command := range from.CoreCommands {
 		var commandModel Command
 		if _, err = commandModel.FromContract(command); err != nil {
 			return
@@ -274,7 +274,7 @@ func (dp *DeviceProfile) FromContract(from contract.DeviceProfile, transform com
 		if err != nil {
 			return
 		}
-		dp.Commands = append(dp.Commands, dbRef)
+		dp.CoreCommands = append(dp.CoreCommands, dbRef)
 	}
 
 	contractId = toContractId(dp.Id, dp.Uuid)

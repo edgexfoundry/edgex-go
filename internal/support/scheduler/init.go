@@ -17,6 +17,7 @@ package scheduler
 import (
 	"errors"
 	"fmt"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db/redis"
 	"os"
 	"os/signal"
 	"sync"
@@ -237,22 +238,40 @@ func listenForConfigChanges() {
 }
 
 func connectToDatabase() error {
+	// Create a database client
 	var err error
-	dbConfig := db.Configuration{
-		Host:         Configuration.Databases["Primary"].Host,
-		Port:         Configuration.Databases["Primary"].Port,
-		Timeout:      Configuration.Databases["Primary"].Timeout,
-		DatabaseName: Configuration.Databases["Primary"].Name,
-		Username:     Configuration.Databases["Primary"].Username,
-		Password:     Configuration.Databases["Primary"].Password,
-	}
 
-	dbClient, err = newDBClient(Configuration.Databases["Primary"].Type, dbConfig)
+	dbClient, err = newDBClient(Configuration.Databases["Primary"].Type)
 	if err != nil {
 		dbClient = nil
 		return fmt.Errorf("couldn't create database client: %v", err.Error())
 	}
+
 	return nil
+}
+
+// Return the dbClient interface
+func newDBClient(dbType string) (interfaces.DBClient, error) {
+	switch dbType {
+	case db.MongoDB:
+		dbConfig := db.Configuration{
+			Host:         Configuration.Databases["Primary"].Host,
+			Port:         Configuration.Databases["Primary"].Port,
+			Timeout:      Configuration.Databases["Primary"].Timeout,
+			DatabaseName: Configuration.Databases["Primary"].Name,
+			Username:     Configuration.Databases["Primary"].Username,
+			Password:     Configuration.Databases["Primary"].Password,
+		}
+		return mongo.NewClient(dbConfig)
+	case db.RedisDB:
+		dbConfig := db.Configuration{
+			Host: Configuration.Databases["Primary"].Host,
+			Port: Configuration.Databases["Primary"].Port,
+		}
+		return redis.NewClient(dbConfig) //TODO: Verify this also connects to Redis
+	default:
+		return nil, db.ErrUnsupportedDatabase
+	}
 }
 
 func connectToSchedulerQueue() error {
@@ -266,16 +285,6 @@ func connectToSchedulerQueue() error {
 }
 func newScheduleQueueClient() (interfaces.SchedulerQueueClient, error) {
 	return NewSchedulerQueueClient(), nil
-}
-
-// Return the dbClient interface
-func newDBClient(dbType string, config db.Configuration) (interfaces.DBClient, error) {
-	switch dbType {
-	case db.MongoDB:
-		return mongo.NewClient(config)
-	default:
-		return nil, db.ErrUnsupportedDatabase
-	}
 }
 
 func setLoggingTarget() string {

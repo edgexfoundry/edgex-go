@@ -402,7 +402,7 @@ func (mc MongoClient) getReadings(q bson.M) ([]models.Reading, error) {
 	defer s.Close()
 
 	var readings []models.Reading
-	if err := s.DB(mc.database.Name).C(db.ReadingsCollection).Find(q).All(&readings); err != nil {
+	if err := s.DB(mc.database.Name).C(db.ReadingsCollection).Find(q).Sort("-modified").All(&readings); err != nil {
 		return []models.Reading{}, errorMap(err)
 	}
 	return readings, nil

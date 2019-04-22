@@ -68,11 +68,12 @@ func getTransmissionRecord(msg string, st models.TransmissionStatus) models.Tran
 func persistTransmission(tr models.TransmissionRecord, n models.Notification, c models.Channel, rec string) (models.Transmission, error) {
 	trx := models.Transmission{Notification: n, Receiver: rec, Channel: c, ResendCount: 0, Status: tr.Status}
 	trx.Records = []models.TransmissionRecord{tr}
-	_, err := dbClient.AddTransmission(trx)
+	id, err := dbClient.AddTransmission(trx)
 	if err != nil {
 		LoggingClient.Error("Transmission cannot be persisted: " + trx.String())
 		return trx, err
 	}
+	trx.ID = id
 	return trx, nil
 }
 

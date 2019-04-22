@@ -354,11 +354,11 @@ func (mc MongoClient) AddDeviceProfile(dp contract.DeviceProfile) (string, error
 	if count > 0 {
 		return "", db.ErrNotUnique
 	}
-	for i := 0; i < len(dp.Commands); i++ {
-		if newId, err := mc.AddCommand(dp.Commands[i]); err != nil {
+	for i := 0; i < len(dp.CoreCommands); i++ {
+		if newId, err := mc.AddCommand(dp.CoreCommands[i]); err != nil {
 			return "", err
 		} else {
-			dp.Commands[i].Id = newId
+			dp.CoreCommands[i].Id = newId
 		}
 	}
 
