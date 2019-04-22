@@ -66,8 +66,6 @@ test:
 	GO111MODULE=on go test -cover ./...
 	GO111MODULE=on go vet ./...
 
-prepare:
-
 run:
 	cd bin && ./edgex-launch.sh
 
