@@ -160,3 +160,46 @@ schemas:
                         example: '[{"name":"livingroomthermostat","id":"57bd0f2d32d258ad3fcd2d4b","description":"living room HVAC thermostat","labels":["home","hvac","thermostat"],"adminState":"unlocked","opState":"enabled","lastConnected":0,"lastReported":0,"locationObject":"{lat:45.45,long:47.80}","commands":[{"id":"57bd0f1432d258ad3fcd2d49","name":"cooling point","get":{"url":"http://localhost:48082/api/v1/device/57bd0f2d32d258ad3fcd2d4b/api/v1/command/57bd0f1432d258ad3fcd2d49"},"put":{"url":"http://localhost:48082/api/v1/device/57bd0f2d32d258ad3fcd2d4b/api/v1/command/57bd0f1432d258ad3fcd2d49","parameters":[{"name":"coolingpoint","value":"72"}],"responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]}}]}]'
             "500": 
                 description: for unanticipated or unknown issues encountered.
+/device/name/{name}/command/{commandname}:
+    displayName: Issue command
+    description: Example - http://localhost:48082/api/v1/device/name/RPIMotionDetector/command/Set_Green_Led
+    uriParameters:
+        name:
+            displayName: name
+            type: string
+            required: true
+            repeat: false
+        commandname:
+            displayName: commandname
+            type: string
+            required: true
+            repeat: false
+    get:
+        description: Issue the get command referenced by the command name to the device/sensor (also referenced by name). It is associated to via the device service. ServiceException (HTTP 500) for unanticipated or unknown issues encountered. Throws NotFoundException (HTTP 404) if device with given name does not exist or device doesn't have command with the given commandname. Throws LockedException (HTTP 423) if device adminState is locked.
+        responses:
+            "200":
+                description: String as returned by the device/sensor via the device service.
+            "400":
+                description: if the request is malformed or unparsable
+            "404":
+                description: if device with given name does not exist or device doesn't have command with the given commandname.
+            "423":
+                description: if the device is locked (admin state).
+            "500":
+                description: for unanticipated or unknown issues encountered.
+    put:
+        description: Issue the put command referenced by the command name to the device/sensor (also referenced by name) it is associated to via the device service. ServiceException (HTTP 500) for unanticipated or unknown issues encountered. Throws NotFoundException (HTTP 404) if device with given name does not exist or device doesn't have command with the given commandname. Throws LockedException (HTTP 423) if device adminState is locked.
+        body:
+            application/json:
+                example: '{"temp":72}'
+        responses:
+            "200":
+                description: String as returned by the device/sensor via the device service.
+            "400":
+                description: if the request is malformed or unparsable
+            "404":
+                description: if device with given name does not exist or device doesn't have a command with the given commandname.
+            "423":
+                description: if the device is locked (admin state)
+            "500":
+                description: for unanticipated or unknown issues encountered

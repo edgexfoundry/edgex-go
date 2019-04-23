@@ -64,6 +64,8 @@ func loadDeviceRoutes(b *mux.Router) {
 
 	dn.HandleFunc("/{"+NAME+"}", restGetCommandsByDeviceName).Methods(http.MethodGet)
 	dn.HandleFunc("/{"+NAME+"}", restPutDeviceStateByDeviceName).Methods(http.MethodPut)
+	dn.HandleFunc("/{"+NAME+"}/"+COMMAND+"/{"+COMMANDNAME+"}", restGetDeviceCommandByNames).Methods(http.MethodGet)
+	dn.HandleFunc("/{"+NAME+"}/"+COMMAND+"/{"+COMMANDNAME+"}", restPutDeviceCommandByNames).Methods(http.MethodPut)
 }
 
 // Respond with PINGRESPONSE to see if the service is alive
