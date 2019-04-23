@@ -53,6 +53,13 @@ func notificationHandler(w http.ResponseWriter, r *http.Request) {
 
 		if n.Severity == models.NotificationsSeverity(models.Critical) {
 			LoggingClient.Info("Critical severity scheduler is triggered for: " + n.Slug)
+			n, err = dbClient.GetNotificationById(n.ID)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				LoggingClient.Error(err.Error())
+				return
+			}
+
 			err := distributeAndMark(n)
 			if err != nil {
 				return
