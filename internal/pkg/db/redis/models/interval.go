@@ -40,7 +40,7 @@ func (i Interval) Add() (cmds []DbCommand) {
 	for _, key := range intervalKeys {
 		switch key {
 		case IntervalKey:
-			cmds = append(cmds, DbCommand{Command: "ZADD", Hash: key, Key: i.ID, Rank: i.Modified})
+			cmds = append(cmds, DbCommand{Command: "ZADD", Hash: key, Key: i.ID, Rank: i.Timestamps.Modified})
 		case IntervalNameKey:
 			cmds = append(cmds, DbCommand{Command: "HSET", Hash: key, Key: i.Name, Value: i.ID})
 		}

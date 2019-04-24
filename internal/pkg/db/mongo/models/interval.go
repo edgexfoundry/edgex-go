@@ -41,9 +41,9 @@ func (in *Interval) ToContract() (c contract.Interval) {
 		id = in.Id.Hex()
 	}
 
-	c.Created = in.Created
-	c.Modified = in.Modified
-	c.Origin = in.Origin
+	c.Timestamps.Created = in.Created
+	c.Timestamps.Modified = in.Modified
+	c.Timestamps.Origin = in.Origin
 	c.ID = id
 	c.Name = in.Name
 	c.Start = in.Start
@@ -60,9 +60,9 @@ func (in *Interval) FromContract(from contract.Interval) (id string, err error) 
 		return
 	}
 
-	in.Created = from.Created
-	in.Modified = from.Modified
-	in.Origin = from.Origin
+	in.Created = from.Timestamps.Created
+	in.Modified = from.Timestamps.Modified
+	in.Origin = from.Timestamps.Origin
 	in.Name = from.Name
 	in.Start = from.Start
 	in.End = from.End

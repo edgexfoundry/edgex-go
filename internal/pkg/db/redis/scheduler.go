@@ -110,10 +110,10 @@ func (c *Client) AddInterval(from contract.Interval) (id string, err error) {
 		interval.ID = uuid.New().String()
 	}
 
-	if interval.Created == 0 {
+	if interval.Timestamps.Created == 0 {
 		ts := db.MakeTimestamp()
-		interval.Created = ts
-		interval.Modified = ts
+		interval.Timestamps.Created = ts
+		interval.Timestamps.Modified = ts
 	}
 
 	data, err := json.Marshal(interval)
@@ -142,7 +142,7 @@ func (c *Client) UpdateInterval(from contract.Interval) (err error) {
 		return db.ErrNotUnique
 	}
 
-	from.Modified = db.MakeTimestamp()
+	from.Timestamps.Modified = db.MakeTimestamp()
 	err = mergo.Merge(&from, check)
 	if err != nil {
 		return err
