@@ -78,52 +78,6 @@ schemas:
                 description: if the device is locked (admin state)
             "500": 
                 description: for unanticipated or unknown issues encountered.
-/device/{id}/adminstate/{adminState}: 
-    displayName: Admin state by device id
-    description: Example - http://localhost:48082/api/v1/device/57bd0f2d32d258ad3fcd2d4b/adminstate/unlocked
-    uriParameters: 
-        id: 
-            displayName: id
-            type: string
-            required: false
-            repeat: false
-        adminState: 
-            displayName: adminState
-            type: string
-            required: false
-            repeat: false
-    put: 
-        description: Set the admin state of the device (as referenced by the database generated id of the device) to the state provided (either locked or unlocked). ServiceException (HTTP 500) for unanticipated or unknown issues encountered. Throws NotFoundException (HTTP 404) if no device exists by the id provided.
-        responses: 
-            "200": 
-                description: status code indicating success
-            "404": 
-                description: if no device exists by the id provided.
-            "500": 
-                description: for unanticipated or unknown issues encountered.
-/device/{id}/opstate/{opState}: 
-    displayName: Op state by device id
-    description: Example - http://localhost:48082/api/v1/device/57bd0f2d32d258ad3fcd2d4b/opstate/enabled
-    uriParameters: 
-        id: 
-            displayName: id
-            type: string
-            required: false
-            repeat: false
-        opState: 
-            displayName: opState
-            type: string
-            required: false
-            repeat: false
-    put: 
-        description: Set the op state of the device (as referenced by the database generated id of the device) to the state provided (either enabled or disabled). ServiceException (HTTP 500) for unanticipated or unknown issues encountered. Throws NotFoundException (HTTP 404) if no device exists by the id provided.
-        responses: 
-            "200": 
-                description: status code indicating success
-            "404": 
-                description: if no device exists by the id provided.
-            "500": 
-                description: for unanticipated or unknown issues encountered.
 /device/{id}: 
     displayName: Device & their commands by id
     description: Example - http://localhost:48082/api/v1/device/57bd0f2d32d258ad3fcd2d4b
@@ -146,51 +100,17 @@ schemas:
                 description: if no device exists by the id provided.
             "500": 
                 description: for unanticipated or unknown issues encountered.
-/device/name/{name}/adminstate/{adminState}: 
-    displayName: Admin state by name
-    description: Example - http://localhost:48082/api/v1/device/name/livingroomthermostat/adminstate/unlocked
-    uriParameters: 
-        name: 
-            displayName: name
-            type: string
-            required: false
-            repeat: false
-        adminState: 
-            displayName: adminState
-            type: string
-            required: false
-            repeat: false
-    put: 
-        description: Set the admin state of the device (by name of the device) to the state provided (either locked or unlocked). ServiceException (HTTP 500) for unanticipated or unknown issues encountered. Throws NotFoundException (HTTP 404) if no device exists by the name provided.
-        responses: 
-            "200": 
+    put:
+        description: Set the admin or op state of the device (as referenced by the database generated id of the device) to the state provided (either enabled or disabled). ServiceException (HTTP 500) for unanticipated or unknown issues encountered. Throws NotFoundException (HTTP 404) if no device exists by the id provided.
+        body:
+            application/json:
+                example: '{"adminState":"enabled"}'
+        responses:
+            "200":
                 description: status code indicating success
-            "404": 
-                description: if no device exists by the name provided.
-            "500": 
-                description: for unanticipated or unknown issues encountered.
-/device/name/{name}/opstate/{opState}: 
-    displayName: Op state by name
-    description: Example - http://localhost:48082/api/v1/device/name/livingroomthermostat/opstate/disabled
-    uriParameters: 
-        opState: 
-            displayName: opState
-            type: string
-            required: false
-            repeat: false
-        name: 
-            displayName: name
-            type: string
-            required: false
-            repeat: false
-    put: 
-        description: Set the op state of the device (by name of the device) to the state provided (either enabled or disabled). ServiceException (HTTP 500) for unanticipated or unknown issues encountered. Throws NotFoundException (HTTP 404) if no device exists by the name provided.
-        responses: 
-            "200": 
-                description: status code indicating success
-            "404": 
-                description: if no device exists by the name provided.
-            "500": 
+            "404":
+                description: if no device exists by the id provided.
+            "500":
                 description: for unanticipated or unknown issues encountered.
 /device/name/{name}: 
     displayName: Device & their commands by name 
@@ -213,6 +133,18 @@ schemas:
             "404": 
                 description: if no device exists by the name provided.
             "500": 
+                description: for unanticipated or unknown issues encountered.
+    put:
+        description: Set the admin or op state of the device (by name of the device) to the state provided (either enabled or disabled). ServiceException (HTTP 500) for unanticipated or unknown issues encountered. Throws NotFoundException (HTTP 404) if no device exists by the name provided.
+        body:
+            application/json:
+                example: '{"adminState":"enabled"}'
+        responses:
+            "200":
+                description: status code indicating success
+            "404":
+                description: if no device exists by the name provided.
+            "500":
                 description: for unanticipated or unknown issues encountered.
 /device: 
     displayName: Devices & their commands
