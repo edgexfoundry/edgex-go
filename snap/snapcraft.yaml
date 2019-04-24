@@ -414,7 +414,6 @@ parts:
       . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
       gopartbootstrap github.com/edgexfoundry/edgex-go
 
-      make prepare
       make build
 
       install -DT "./cmd/core-command/core-command" "$SNAPCRAFT_PART_INSTALL/bin/core-command"
