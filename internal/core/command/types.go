@@ -16,7 +16,7 @@ package command
 import (
 	"bytes"
 	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/go-mod-core-contracts/models"
+	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 	"net/http"
 )
 
@@ -32,14 +32,14 @@ func (ErrDeviceLocked) Error() string {
 
 // serviceCommand type which encapsulates command information to be sent to the command service.
 type serviceCommand struct {
-	models.Device
+	contract.Device
 	internal.HttpCaller
 	*http.Request
 }
 
 // Execute sends the command to the command service
 func (sc serviceCommand) Execute() (string, int, error) {
-	if sc.AdminState == models.Locked {
+	if sc.AdminState == contract.Locked {
 		LoggingClient.Error(sc.Name + " is in admin locked state")
 
 		return "", DefaultErrorCode, ErrDeviceLocked{}

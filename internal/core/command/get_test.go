@@ -16,7 +16,7 @@ package command
 import (
 	"context"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
-	"github.com/edgexfoundry/go-mod-core-contracts/models"
+	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 	"testing"
 )
 
@@ -28,12 +28,12 @@ const (
 )
 
 // Device which can be used as a basis for test setup. By default this is constructed for happy path testing.
-var testDevice = models.Device{
+var testDevice = contract.Device{
 	Id:         TestDeviceId,
-	AdminState: models.Unlocked,
-	Service: models.DeviceService{
-		Service: models.Service{
-			Addressable: models.Addressable{
+	AdminState: contract.Unlocked,
+	Service: contract.DeviceService{
+		Service: contract.Service{
+			Addressable: contract.Addressable{
 				Protocol: TestProtocol,
 				Address:  TestAddress,
 				Port:     TestPort,
@@ -43,14 +43,14 @@ var testDevice = models.Device{
 }
 
 // Command which can be used as a basis for test setup. By default this is constructed for happy path testing.
-var testCommand = models.Command{
-	Get: &models.Get{
-		Action: models.Action{
+var testCommand = contract.Command{
+	Get: &contract.Get{
+		Action: contract.Action{
 			Path: "/some/uri",
 		},
 	},
-	Put: &models.Put{
-		Action: models.Action{
+	Put: &contract.Put{
+		Action: contract.Action{
 			Path: "/another/uri",
 		},
 	},
