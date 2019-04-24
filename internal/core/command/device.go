@@ -16,7 +16,7 @@ package command
 import (
 	"context"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
-	"github.com/edgexfoundry/go-mod-core-contracts/models"
+	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 	"net/http"
 )
 
@@ -33,7 +33,7 @@ func commandByDeviceID(deviceID string, commandID string, body string, isPutComm
 		}
 	}
 
-	if device.AdminState == models.Locked {
+	if device.AdminState == contract.Locked {
 		LoggingClient.Error(device.Name + " is in admin locked state")
 
 		return "", http.StatusLocked
@@ -130,7 +130,7 @@ func putDeviceOpStateByName(dn string, as string, ctx context.Context) (int, err
 	return http.StatusOK, err
 }
 
-func getCommands(ctx context.Context) (int, []models.CommandResponse, error) {
+func getCommands(ctx context.Context) (int, []contract.CommandResponse, error) {
 	devices, err := mdc.Devices(ctx)
 	if err != nil {
 		chk, ok := err.(*types.ErrServiceClient)
@@ -140,36 +140,36 @@ func getCommands(ctx context.Context) (int, []models.CommandResponse, error) {
 			return http.StatusInternalServerError, nil, err
 		}
 	}
-	var cr []models.CommandResponse
+	var cr []contract.CommandResponse
 	for _, d := range devices {
-		cr = append(cr, models.CommandResponseFromDevice(d, d.Profile.CoreCommands, Configuration.Service.Url()))
+		cr = append(cr, contract.CommandResponseFromDevice(d, d.Profile.CoreCommands, Configuration.Service.Url()))
 	}
 	return http.StatusOK, cr, err
 
 }
 
-func getCommandsByDeviceID(did string, ctx context.Context) (int, models.CommandResponse, error) {
+func getCommandsByDeviceID(did string, ctx context.Context) (int, contract.CommandResponse, error) {
 	d, err := mdc.Device(did, ctx)
 	if err != nil {
 		chk, ok := err.(*types.ErrServiceClient)
 		if ok {
-			return chk.StatusCode, models.CommandResponse{}, chk
+			return chk.StatusCode, contract.CommandResponse{}, chk
 		} else {
-			return http.StatusInternalServerError, models.CommandResponse{}, err
+			return http.StatusInternalServerError, contract.CommandResponse{}, err
 		}
 	}
-	return http.StatusOK, models.CommandResponseFromDevice(d, d.Profile.CoreCommands, Configuration.Service.Url()), err
+	return http.StatusOK, contract.CommandResponseFromDevice(d, d.Profile.CoreCommands, Configuration.Service.Url()), err
 }
 
-func getCommandsByDeviceName(dn string, ctx context.Context) (int, models.CommandResponse, error) {
+func getCommandsByDeviceName(dn string, ctx context.Context) (int, contract.CommandResponse, error) {
 	d, err := mdc.DeviceForName(dn, ctx)
 	if err != nil {
 		chk, ok := err.(*types.ErrServiceClient)
 		if ok {
-			return chk.StatusCode, models.CommandResponse{}, err
+			return chk.StatusCode, contract.CommandResponse{}, err
 		} else {
-			return http.StatusInternalServerError, models.CommandResponse{}, err
+			return http.StatusInternalServerError, contract.CommandResponse{}, err
 		}
 	}
-	return http.StatusOK, models.CommandResponseFromDevice(d, d.Profile.CoreCommands, Configuration.Service.Url()), err
+	return http.StatusOK, contract.CommandResponseFromDevice(d, d.Profile.CoreCommands, Configuration.Service.Url()), err
 }

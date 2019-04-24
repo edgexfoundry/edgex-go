@@ -17,7 +17,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-	"github.com/edgexfoundry/go-mod-core-contracts/models"
+	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -66,8 +66,8 @@ func TestExecute(t *testing.T) {
 
 	request, _ := http.NewRequest(http.MethodGet, ts.URL, nil)
 	sc := serviceCommand{
-		Device: models.Device{
-			AdminState: models.Unlocked,
+		Device: contract.Device{
+			AdminState: contract.Unlocked,
 		},
 		HttpCaller: &http.Client{},
 		Request:    request,
@@ -91,8 +91,8 @@ func TestExecuteHttpRequestError(t *testing.T) {
 	LoggingClient = logger.MockLogger{}
 	request, _ := http.NewRequest(http.MethodGet, "http://example.com", nil)
 	sc := serviceCommand{
-		Device: models.Device{
-			AdminState: models.Unlocked,
+		Device: contract.Device{
+			AdminState: contract.Unlocked,
 		},
 		HttpCaller: &FailingMockHttpCaller{},
 		Request:    request,
@@ -108,8 +108,8 @@ func TestExecuteHttpReadResponseError(t *testing.T) {
 	LoggingClient = logger.MockLogger{}
 	request, _ := http.NewRequest(http.MethodGet, "http://example.com", nil)
 	sc := serviceCommand{
-		Device: models.Device{
-			AdminState: models.Unlocked,
+		Device: contract.Device{
+			AdminState: contract.Unlocked,
 		},
 		HttpCaller: &ReadFailMockHttpCaller{},
 		Request:    request,
@@ -129,8 +129,8 @@ func TestExecuteWithLockedDevice(t *testing.T) {
 	LoggingClient = logger.MockLogger{}
 	request, _ := http.NewRequest(http.MethodGet, "http://example.com", nil)
 	sc := serviceCommand{
-		Device: models.Device{
-			AdminState: models.Locked,
+		Device: contract.Device{
+			AdminState: contract.Locked,
 		},
 		HttpCaller: &http.Client{},
 		Request:    request,

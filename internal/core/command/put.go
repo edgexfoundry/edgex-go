@@ -17,13 +17,13 @@ import (
 	"context"
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
-	"github.com/edgexfoundry/go-mod-core-contracts/models"
+	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 	"net/http"
 	"strings"
 )
 
 // NewPutCommand creates and Executor which can be used to execute the PUT related command.
-func NewPutCommand(device models.Device, command models.Command, body string, context context.Context, httpCaller internal.HttpCaller) (Executor, error) {
+func NewPutCommand(device contract.Device, command contract.Command, body string, context context.Context, httpCaller internal.HttpCaller) (Executor, error) {
 	url := device.Service.Addressable.GetBaseURL() + strings.Replace(command.Put.Action.Path, DEVICEIDURLPARAM, device.Id, -1)
 	request, err := http.NewRequest(http.MethodPut, url, strings.NewReader(body))
 	if err != nil {
