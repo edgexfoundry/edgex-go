@@ -123,7 +123,7 @@ func decodeState(r *http.Request) (mode string, state string, err error) {
 	}
 
 	// In this case, the request we were given in completely invalid
-	return "","", fmt.Errorf("unknown request type")
+	return "", "", fmt.Errorf("unknown request type")
 }
 
 func restPutDeviceStateByDeviceId(w http.ResponseWriter, r *http.Request) {
@@ -133,7 +133,7 @@ func restPutDeviceStateByDeviceId(w http.ResponseWriter, r *http.Request) {
 	updateMode, state, err := decodeState(r)
 	if err != nil {
 		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -150,7 +150,7 @@ func restPutDeviceStateByDeviceId(w http.ResponseWriter, r *http.Request) {
 	}
 	if err != nil {
 		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), status)
 		return
 	}
 
@@ -165,7 +165,7 @@ func restPutDeviceStateByDeviceName(w http.ResponseWriter, r *http.Request) {
 	updateMode, state, err := decodeState(r)
 	if err != nil {
 		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	var status int
@@ -180,13 +180,12 @@ func restPutDeviceStateByDeviceName(w http.ResponseWriter, r *http.Request) {
 	}
 	if err != nil {
 		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), status)
 		return
 	}
 
 	w.WriteHeader(status)
 }
-
 
 func restGetCommandsByDeviceID(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
