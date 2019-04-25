@@ -48,7 +48,41 @@ func issueDeviceCommand(w http.ResponseWriter, r *http.Request, isPutCommand boo
 	ctx := r.Context()
 	body, status := commandByDeviceID(did, cid, string(b), isPutCommand, ctx)
 	if status != http.StatusOK {
-		w.WriteHeader(status)
+		http.Error(w, body, status)
+	} else {
+		if len(body) > 0 {
+			w.Header().Set("Content-Type", "application/json")
+		}
+		w.Write([]byte(body))
+	}
+}
+
+func restGetDeviceCommandByNames(w http.ResponseWriter, r *http.Request) {
+	issueDeviceCommandByNames(w, r, false)
+}
+
+func restPutDeviceCommandByNames(w http.ResponseWriter, r *http.Request) {
+	issueDeviceCommandByNames(w, r, true)
+}
+
+func issueDeviceCommandByNames(w http.ResponseWriter, r *http.Request, isPutCommand bool) {
+	defer r.Body.Close()
+
+	vars := mux.Vars(r)
+	dn := vars[NAME]
+	cn := vars[COMMANDNAME]
+
+	ctx := r.Context()
+
+	b, err := ioutil.ReadAll(r.Body)
+	if b == nil && err != nil {
+		LoggingClient.Error(err.Error())
+		return
+	}
+	body, status := commandByNames(dn, cn, string(b), isPutCommand, ctx)
+
+	if status != http.StatusOK {
+		http.Error(w, body, status)
 	} else {
 		if len(body) > 0 {
 			w.Header().Set("Content-Type", "application/json")

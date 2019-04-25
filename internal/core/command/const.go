@@ -23,6 +23,7 @@ const (
 	YAML             = "yaml"
 	COMMAND          = "command"
 	COMMANDID        = "commandid"
+	COMMANDNAME      = "commandname"
 	DEVICE           = "device"
 	KEY              = "key"
 	VALUE            = "value"
