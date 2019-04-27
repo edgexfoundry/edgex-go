@@ -20,6 +20,7 @@ cmd/support-notifications/support-notifications
 cmd/sys-mgmt-agent/sys-mgmt-agent
 cmd/support-scheduler/support-scheduler
 cmd/sys-mgmt-executor/sys-mgmt-executor
+cmd/sys-mgmt-executor/console
 docs/_build/
 
 # log dirs

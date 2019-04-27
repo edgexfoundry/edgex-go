@@ -18,14 +18,17 @@ SERVICES=(config-seed export-client core-metadata core-command support-logging \
   support-notifications sys-mgmt-executor sys-mgmt-agent support-scheduler \
   core-data export-distro)
 
+BIN_DIR=../cmd
+EDGEX_CONF_DIR=./res
+
 # Kill all edgex-* stuff
 function cleanup {
 	pkill edgex
 }
 
 function run {
-  cd ../cmd/$1
-  exec -a edgex-$1 ./$1 &
+  cd $BIN_DIR/$1
+  EDGEX_CONF_DIR=$EDGEX_CONF_DIR exec -a edgex-$1 ./$1 &
   cd $DIR
 }
 

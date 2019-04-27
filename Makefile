@@ -6,7 +6,6 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-GOFLAGS := -ldflags "-X github.com/edgexfoundry/edgex-go.Version=$(VERSION)"
 GIT_SHA=$(shell git rev-parse HEAD)
 VERSION=$(shell cat ./VERSION)
 
@@ -34,7 +33,7 @@ DOCKERS = $(addprefix docker_,$(SERVICES))
 .PHONY: $(SERVICES) $(DOCKERS) build clean test docker run
 
 define compile_service
-	$(1) go build -ldflags "-s -w" -o cmd/$(2)/$(2) cmd/$(2)/main.go
+	$(1) go build -ldflags "-s -w -X github.com/edgexfoundry/edgex-go.Version=$(VERSION)" -o cmd/$(2)/$(2) cmd/$(2)/main.go
 endef
 
 define clean_services
