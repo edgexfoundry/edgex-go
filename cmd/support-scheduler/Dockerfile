@@ -24,7 +24,7 @@ COPY go.mod .
 RUN go mod download
 
 COPY . .
-RUN make cmd/support-scheduler/support-scheduler
+RUN make support-scheduler
 
 FROM scratch
 

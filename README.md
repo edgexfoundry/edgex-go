@@ -63,7 +63,7 @@ To fetch the code and build the microservices execute the following in a directo
 ```
 go get github.com/edgexfoundry/edgex-go
 # download dependencies and build services
-make build
+make
 # run the services
 make run
 ```
@@ -74,7 +74,7 @@ cd $GOPATH/src
 go get github.com/edgexfoundry/edgex-go
 cd $GOPATH/src/github.com/edgexfoundry/edgex-go
 # download dependencies and build services
-make build
+make
 # run the services
 make run
 ```
@@ -86,8 +86,8 @@ During development phase, it is important to run compiled binaries (not containe
 
 There is a script in `bin` directory that can help you launch the whole EdgeX system:
 ```
-cd bin
-./edgex-launch.sh
+cd scripts
+./run.sh
 ```
 More simply, this script is invoked via the `make run` command referenced above.
 

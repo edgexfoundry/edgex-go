@@ -24,7 +24,7 @@ COPY go.mod .
 RUN go mod download
 
 COPY . .
-RUN make cmd/core-metadata/core-metadata
+RUN make core-metadata
 
 FROM scratch
 

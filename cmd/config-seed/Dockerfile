@@ -37,7 +37,7 @@ RUN go mod download
 COPY . .
 
 # build
-RUN make cmd/config-seed/config-seed
+RUN make config-seed
 
 # Consul Docker image for EdgeX Foundry
 FROM golang:1.11-alpine

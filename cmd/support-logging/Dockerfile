@@ -23,7 +23,7 @@ COPY go.mod .
 RUN go mod download
 
 COPY . .
-RUN make cmd/support-logging/support-logging
+RUN make support-logging
 
 FROM scratch
 

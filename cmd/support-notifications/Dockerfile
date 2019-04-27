@@ -23,7 +23,7 @@ COPY go.mod .
 RUN go mod download
 
 COPY . .
-RUN make cmd/support-notifications/support-notifications
+RUN make support-notifications
 
 FROM scratch
 

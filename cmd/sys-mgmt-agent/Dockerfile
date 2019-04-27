@@ -24,10 +24,10 @@ RUN go mod download
 COPY . .
 
 # Build the SMA executable.
-RUN make cmd/sys-mgmt-agent/sys-mgmt-agent
+RUN make sys-mgmt-agent
 
 # Build the golang "executor" executable.
-RUN make cmd/sys-mgmt-executor/sys-mgmt-executor
+RUN make sys-mgmt-executor
 
 # Get the Docker-in-Docker image layered-in now.
 FROM docker:latest

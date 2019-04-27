@@ -24,7 +24,7 @@ COPY go.mod .
 RUN go mod download
 
 COPY . .
-RUN make cmd/export-client/export-client
+RUN make export-client
 
 FROM scratch
 

@@ -24,7 +24,7 @@ COPY go.mod .
 RUN go mod download
 
 COPY . .
-RUN make cmd/export-distro/export-distro
+RUN make export-distro
 
 FROM alpine
 

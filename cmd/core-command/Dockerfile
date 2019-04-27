@@ -25,7 +25,7 @@ RUN go mod download
 
 COPY . .
 
-RUN make cmd/core-command/core-command
+RUN make core-command
 
 FROM scratch
 

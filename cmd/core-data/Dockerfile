@@ -26,7 +26,7 @@ RUN go mod download
 
 COPY . .
 
-RUN make cmd/core-data/core-data
+RUN make core-data
 
 #Next image - Copy built Go binary into new workspace
 FROM alpine
