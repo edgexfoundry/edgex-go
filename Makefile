@@ -23,7 +23,7 @@ BUILD_DIR := build
 ###
 FLAGS = GOOS=${GOOS} GOARCH=${GOARCH} GOARM=${GOARM} GO111MODULE=on
 GO_FLAGS =  $(FLAGS) CGO_ENABLED=0 
-CGO_FLAGS =  $(FLAGS) CC=${CC} CGO_LDFLAGS=${CGO_LDFLAGS} CGO_CFLAGS=${CGO_CFLAGS} GCGO_ENABLED=1
+CGO_FLAGS =  $(FLAGS) CC=${CC} CGO_LDFLAGS=${CGO_LDFLAGS} CGO_CFLAGS=${CGO_CFLAGS} CGO_ENABLED=1
 
 SERVICES_GO := config-seed export-client core-metadata core-command support-logging support-notifications sys-mgmt-executor sys-mgmt-agent support-scheduler
 SERVICES_CGO := core-data export-distro
