@@ -411,6 +411,7 @@ parts:
     plugin: make
     after: [go]
     override-build: |
+      cd $SNAPCRAFT_PART_SRC
       make build
 
       install -DT "./cmd/core-command/core-command" "$SNAPCRAFT_PART_INSTALL/bin/core-command"
@@ -834,7 +835,7 @@ parts:
     source-depth: 1
     plugin: make
     override-build: |
-      make prepare
+      cd $SNAPCRAFT_PART_SRC
       make build
 
       install -DT pkisetup/pkisetup "$SNAPCRAFT_PART_INSTALL/bin/pkisetup"
@@ -875,7 +876,7 @@ parts:
       - dnsutils
       - libdb5.3
     override-build: |
-      make prepare
+      cd $SNAPCRAFT_PART_SRC
       make build
 
       install -DT core/edgexproxy "$SNAPCRAFT_PART_INSTALL/bin/edgexproxy"
@@ -906,7 +907,7 @@ parts:
     plugin: make
     after: [go]
     override-build: |
-      make prepare
+      cd $SNAPCRAFT_PART_SRC
       make build
 
       install -DT "./cmd/device-modbus" "$SNAPCRAFT_PART_INSTALL/bin/device-modbus"
@@ -930,7 +931,7 @@ parts:
     plugin: make
     after: [go]
     override-build: |
-      make prepare
+      cd $SNAPCRAFT_PART_SRC
       make build
 
       install -DT "./cmd/device-mqtt" "$SNAPCRAFT_PART_INSTALL/bin/device-mqtt"
@@ -955,7 +956,7 @@ parts:
     plugin: make
     after: [go]
     override-build: |
-      make prepare
+      cd $SNAPCRAFT_PART_SRC
       make build
 
       install -DT "./cmd/device-random" "$SNAPCRAFT_PART_INSTALL/bin/device-random"
