@@ -409,8 +409,7 @@ parts:
   edgex-go:
     source: .
     plugin: make
-    after:
-      - go
+    after: [go]
     override-build: |
       . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
       gopartbootstrap github.com/edgexfoundry/edgex-go
@@ -914,8 +913,7 @@ parts:
     source-depth: 1
     source-branch: master
     plugin: make
-    after:
-      - go
+    after: [go]
     override-build: |
       . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
       gopartbootstrap github.com/edgexfoundry/device-modbus-go
@@ -942,8 +940,7 @@ parts:
     source-depth: 1
     source-branch: master
     plugin: make
-    after:
-      - go
+    after: [go]
     override-build: |
       . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
       gopartbootstrap github.com/edgexfoundry/device-mqtt-go
@@ -971,8 +968,7 @@ parts:
     source-depth: 1
     source-branch: master
     plugin: make
-    after:
-      - go
+    after: [go]
     override-build: |
       . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
       gopartbootstrap github.com/edgexfoundry/device-random
