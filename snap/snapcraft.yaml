@@ -411,9 +411,6 @@ parts:
     plugin: make
     after: [go]
     override-build: |
-      . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
-      gopartbootstrap github.com/edgexfoundry/edgex-go
-
       make build
 
       install -DT "./cmd/core-command/core-command" "$SNAPCRAFT_PART_INSTALL/bin/core-command"
@@ -837,9 +834,6 @@ parts:
     source-depth: 1
     plugin: make
     override-build: |
-      . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
-      gopartbootstrap github.com/edgexfoundry/security-secret-store
-
       make prepare
       make build
 
@@ -881,9 +875,6 @@ parts:
       - dnsutils
       - libdb5.3
     override-build: |
-      . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
-      gopartbootstrap github.com/edgexfoundry/security-api-gateway
-
       make prepare
       make build
 
@@ -915,9 +906,6 @@ parts:
     plugin: make
     after: [go]
     override-build: |
-      . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
-      gopartbootstrap github.com/edgexfoundry/device-modbus-go
-
       make prepare
       make build
 
@@ -942,9 +930,6 @@ parts:
     plugin: make
     after: [go]
     override-build: |
-      . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
-      gopartbootstrap github.com/edgexfoundry/device-mqtt-go
-
       make prepare
       make build
 
@@ -970,9 +955,6 @@ parts:
     plugin: make
     after: [go]
     override-build: |
-      . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
-      gopartbootstrap github.com/edgexfoundry/device-random
-
       make prepare
       make build
 
