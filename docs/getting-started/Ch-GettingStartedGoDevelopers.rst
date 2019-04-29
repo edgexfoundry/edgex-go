@@ -157,7 +157,7 @@ Building from the Command Line
 ==============================
 
 
-**Install Go **
+**Install Go**
 
 To get the exact same version of GoLang as used by the EdgeX Foundry, install it from the upstream source rather than through the apt repositories:
 
@@ -190,7 +190,7 @@ Now that you have the EdgeX go services built and all the dependencies installed
 
 This will start all of the EdgeX go services and leave them running until you terminate the process (with Ctrl-C). While it's running you can make EdgeX API calls to `localhost`.
 
-** Verify that it's working**
+**Verify that it's working**
 
 You can check that the microservices are working properly by calling their `ping` API endpoint:
 
