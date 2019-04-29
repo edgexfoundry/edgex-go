@@ -73,10 +73,10 @@ func restAddNewDevice(w http.ResponseWriter, r *http.Request) {
 
 	// Service Check
 	// Try by name
-	service, err := dbClient.GetDeviceServiceByName(d.Service.Service.Name)
+	service, err := dbClient.GetDeviceServiceByName(d.Service.Name)
 	if err != nil {
 		// Try by ID
-		service, err = dbClient.GetDeviceServiceById(d.Service.Service.Id)
+		service, err = dbClient.GetDeviceServiceById(d.Service.Id)
 		if err != nil {
 			LoggingClient.Error(err.Error())
 			http.Error(w, err.Error()+": A device must be associated with a device service", http.StatusBadRequest)
@@ -178,10 +178,10 @@ func updateDeviceFields(from models.Device, to *models.Device) error {
 	if (from.Service.String() != models.DeviceService{}.String()) {
 		// Check if the new service exists
 		// Try ID first
-		ds, err := dbClient.GetDeviceServiceById(from.Service.Service.Id)
+		ds, err := dbClient.GetDeviceServiceById(from.Service.Id)
 		if err != nil {
 			// Then try name
-			ds, err = dbClient.GetDeviceServiceByName(from.Service.Service.Name)
+			ds, err = dbClient.GetDeviceServiceByName(from.Service.Name)
 			if err != nil {
 				return errors.New("Device service not found for updated device")
 			}
@@ -357,7 +357,7 @@ func restGetDeviceByServiceName(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Find devices by service ID now that you have the Service object (and therefor the ID)
-	res, err := dbClient.GetDevicesByServiceId(ds.Service.Id)
+	res, err := dbClient.GetDevicesByServiceId(ds.Id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		LoggingClient.Error(err.Error())
@@ -1103,7 +1103,7 @@ func notifyDeviceAssociates(d models.Device, action string, ctx context.Context)
 	postNotification(d.Name, action, ctx)
 
 	// Callback for device service
-	ds, err := dbClient.GetDeviceServiceById(d.Service.Service.Id)
+	ds, err := dbClient.GetDeviceServiceById(d.Service.Id)
 	if err != nil {
 		LoggingClient.Error(err.Error())
 		return err

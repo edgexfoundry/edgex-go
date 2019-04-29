@@ -1,5 +1,6 @@
 //
 // Copyright (c) 2017 Cavium
+// Copyright (c) 2019 Dell Technologies, Inc.
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -7,25 +8,26 @@
 package distro
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"strings"
 	"testing"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/models"
 )
+
+var testAddressable = models.Addressable{Name:"OTROMAS-1", HTTPMethod:"POST", Protocol:"TCP", Address:"127.0.0.1", Port:1883,
+	Publisher:"FuseExportPublisher_OTROMAS-1", User:"dummy", Password:"dummy", Topic:"FuseDataTopic"}
+var testRegistration = models.Registration{ID:"5a15918fa4a9b92af1c94bab", Origin:1471806386919, Name:"OTROMAS-1",
+	Addressable:testAddressable, Format:models.FormatJSON, Enable:true, Destination:models.DestMQTT}
 
 const (
 	emptyRegistrationList    = "[]"
-	registrationStr          = `{"_id":"5a15918fa4a9b92af1c94bab","created":0,"modified":0,"origin":1471806386919,"name":"OTROMAS-1","addressable":{"Name":"OTROMAS-1","Method":"POST","Protocol":"TCP","Address":"127.0.0.1","Port":1883,"Path":"","Publisher":"FuseExportPublisher_OTROMAS-1","User":"dummy","Password":"dummy","Topic":"FuseDataTopic"},"format":"JSON","filter":{},"encryption":{},"compression":"NONE","enable":true,"destination":"MQTT_TOPIC"}`
-	registrationInvalidStr   = `{"_id":"5a15918fa4a9b92af1c94bab","created":0,"modified":0,"origin":1471806386919,"name":"OTROMAS-1","addressable":{"Name":"OTROMAS-1","Method":"POST","Protocol":"TCP","Address":"127.0.0.1","Port":1883,"Path":"","Publisher":"FuseExportPublisher_OTROMAS-1","User":"dummy","Password":"dummy","Topic":"FuseDataTopic"},"format":"JSON","filter":{},"encryption":{},"compression":"ZERO","enable":true,"destination":"MQTT_TOPIC"}`
-	oneRegistrationList      = "[" + registrationStr + "]"
 	invalidReply1            = "[[]]"
 	invalidReply2            = ""
-	invalidRegistrationList1 = "[" + registrationInvalidStr + "]"
-	invalidRegistrationList2 = "[" + registrationInvalidStr + "," + registrationStr + "]"
 )
 
 func TestMain(m *testing.M) {
@@ -56,8 +58,13 @@ func TestClientRegistrationsEmpty(t *testing.T) {
 }
 
 func TestClientRegistrations(t *testing.T) {
+	data, err := json.Marshal(testRegistration)
+	if err != nil {
+		t.Errorf("marshaling error %v", err)
+	}
+
 	handler := func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, oneRegistrationList)
+		fmt.Fprint(w, "[" + string(data) + "]")
 	}
 
 	// create test server with handler
@@ -90,27 +97,33 @@ func TestClientRegistrationsInvalid(t *testing.T) {
 	defer ts.Close()
 
 	for range invalidList {
-		regs, err := getRegistrationsURL(ts.URL)
-		if regs != nil {
-			t.Fatal("Registration list should be nil", regs)
-		}
-		if err == nil {
-			t.Fatal("error should exist")
-		}
-		if !strings.Contains(strings.ToLower(err.Error()), "json") &&
-			!strings.Contains(strings.ToLower(err.Error()), "eof") {
-			t.Fatalf("unexpected error: %s", err.Error())
+		regs, _ := getRegistrationsURL(ts.URL)
+		if len(regs) > 0 {
+			t.Fatal("Registration list should be empty", regs)
 		}
 	}
 }
 
 func TestClientRegistrationsInvalidRegistration(t *testing.T) {
+	valid := testRegistration
+	validData, err := json.Marshal(valid)
+	if err != nil {
+		t.Errorf("marshaling error %v", err)
+	}
+
+	invalid := testRegistration
+	invalid.Compression = "ZERO"
+	invalidData, err := json.Marshal(invalid)
+	if err != nil {
+		t.Errorf("marshaling error %v", err)
+	}
+
 	invalidList := []struct {
 		str       string
 		validRegs int
 	}{
-		{invalidRegistrationList1, 0},
-		{invalidRegistrationList2, 1},
+		{"[" + string(invalidData) + "]", 0},
+		{"[" + string(validData) + "," + string(invalidData) + "]", 1},
 	}
 
 	handler := func(w http.ResponseWriter, r *http.Request) {
@@ -137,8 +150,21 @@ func TestClientRegistrationsInvalidRegistration(t *testing.T) {
 }
 
 func TestClientRegistrationsInvalidRegistration2(t *testing.T) {
+	valid := testRegistration
+	validData, err := json.Marshal(valid)
+	if err != nil {
+		t.Errorf("marshaling error %v", err)
+	}
+
+	invalid := testRegistration
+	invalid.Compression = "ZERO"
+	invalidData, err := json.Marshal(invalid)
+	if err != nil {
+		t.Errorf("marshaling error %v", err)
+	}
+
 	handler := func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, invalidRegistrationList2)
+		fmt.Fprint(w, "[" + string(validData) + "," + string(invalidData) + "]")
 	}
 
 	// create test server with handler
@@ -158,8 +184,13 @@ func TestClientRegistrationsInvalidRegistration2(t *testing.T) {
 }
 
 func TestClientRegistrationByName(t *testing.T) {
+	data, err := json.Marshal(testRegistration)
+	if err != nil {
+		t.Errorf("marshaling error %v", err)
+	}
+
 	handler := func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, registrationStr)
+		fmt.Fprint(w, string(data))
 	}
 
 	// create test server with handler
@@ -173,7 +204,14 @@ func TestClientRegistrationByName(t *testing.T) {
 }
 
 func TestClientRegistrationByNameError(t *testing.T) {
-	invalidList := []string{invalidReply1, invalidReply2, registrationInvalidStr}
+	invalid := testRegistration
+	invalid.Compression = "ZERO"
+	data, err := json.Marshal(invalid)
+	if err != nil {
+		t.Errorf("marshaling error %v", err)
+	}
+
+	invalidList := []string{invalidReply1, invalidReply2, string(data)}
 
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		var ir string

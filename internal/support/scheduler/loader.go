@@ -162,11 +162,7 @@ func loadConfigIntervals() error {
 	for i := range intervals {
 		interval := contract.Interval{
 			ID:        "",
-			Timestamps: contract.Timestamps{
-				Created:   0,
-				Modified:  0,
-				Origin:    0,
-			},
+			Timestamps: contract.Timestamps{},
 			Name:      intervals[i].Name,
 			Start:     intervals[i].Start,
 			End:       intervals[i].End,

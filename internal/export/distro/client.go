@@ -31,12 +31,14 @@ func getRegistrationsURL(url string) ([]contract.Registration, error) {
 	defer response.Body.Close()
 
 	// ensure we have an empty slice instead of a nil slice for better handling of JSON
+	// validation and decoding are now done together. If it decodes successfully, it's valid.
 	registrations := make([]contract.Registration, 0)
 	if err := json.NewDecoder(response.Body).Decode(&registrations); err != nil {
-		LoggingClient.Error(fmt.Sprintf("Could not parse json. Error: %s", err.Error()))
-		return nil, err
+		LoggingClient.Error(fmt.Sprintf("error decoding registrations: %s", err.Error()))
 	}
 
+	// This is now redundant because we've already validated all of these. However, I have to include this for
+	// now because of the API's current behavior.
 	results := make([]contract.Registration, 0)
 	for _, reg := range registrations {
 		if valid, err := reg.Validate(); valid {

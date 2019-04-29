@@ -8,6 +8,7 @@ package export
 
 import (
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
+	"github.com/google/uuid"
 	"testing"
 )
 
@@ -32,10 +33,11 @@ func TestRegistrationValid(t *testing.T) {
 		{"wrongEncryption", "reg", models.CompZip, models.FormatJSON, models.DestMQTT, "INVALID", false},
 	}
 
+	testAddressable := models.Addressable{Id: uuid.New().String(), Name:"Test Addressable"}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r := models.Registration{}
-
+			r.Addressable = testAddressable
 			r.Name = tt.regName
 
 			if tt.compression != "" {

@@ -580,30 +580,3 @@ type closingBuffer struct {
 func (cb *closingBuffer) Close() (err error) {
 	return nil
 }
-
-func TestDecodeValueDescriptorBadFormatting(t *testing.T) {
-	reset()
-	dbClient = nil
-
-	cb := &closingBuffer{bytes.NewBufferString(`{
-		"name": "co2",
-		"min": "12",
-		"max": "15",
-		"type": "F",
-		"uomLabel": "degreecel",
-		"defaultValue": "0",
-		"formatting": "%",
-		"labels": [
-			"NHCO2",
-		"hvac"
-	]
-	}`)}
-	_, err := decodeValueDescriptor(cb)
-
-	switch err.(type) {
-	case *errors.ErrValueDescriptorInvalid:
-		return
-	default:
-		t.Errorf("Expected an error of type *ErrValueDescriptorInvalid")
-	}
-}

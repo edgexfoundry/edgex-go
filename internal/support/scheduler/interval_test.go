@@ -24,6 +24,7 @@ import (
 
 var testInterval models.Interval
 var testIntervalAction models.IntervalAction
+var testTimestamps models.Timestamps
 
 var testRoutes *mux.Router
 
@@ -45,8 +46,9 @@ const (
 // Reset() re-initializes dependencies for each test
 func reset() {
 	Configuration = &ConfigurationStruct{}
+	testTimestamps = models.Timestamps{Origin:testOrigin}
 	testInterval.ID = testUUIDString
-	testInterval.Timestamps.Origin = testOrigin
+	testInterval.Timestamps = testTimestamps
 	testInterval.Name = testIntervalName
 
 	testIntervalAction.ID = testUUIDString
@@ -167,7 +169,8 @@ func TestAddInterval(t *testing.T) {
 	mySchedulerMock.On("QueryIntervalByName",
 		mock.Anything).Return(models.Interval{}, nil)
 
-	nInterval := models.Interval{Name: testInterNewName, Timestamps: models.Timestamps{Origin: testOrigin}}
+	nInterval := models.Interval{Name: testInterNewName, Timestamps: testTimestamps}
+
 	dbClient = myMock
 	scClient = mySchedulerMock
 
@@ -204,7 +207,8 @@ func TestAddIntervalFailOnExistingName(t *testing.T) {
 	mySchedulerMock.On("QueryIntervalByName",
 		mock.Anything).Return(models.Interval{}, nil)
 
-	nInterval := models.Interval{Name: testInterval.Name, Timestamps: models.Timestamps{Origin: testOrigin}}
+	nInterval := models.Interval{Name: testInterval.Name, Timestamps: testTimestamps}
+
 	dbClient = myMock
 	scClient = mySchedulerMock
 
@@ -239,7 +243,8 @@ func TestAddIntervalFailOnInvalidTimeFormat(t *testing.T) {
 	mySchedulerMock.On("QueryIntervalByName",
 		mock.Anything).Return(models.Interval{}, nil)
 
-	nInterval := models.Interval{Name: testInterval.Name, Start: "34343", Timestamps: models.Timestamps{Origin: testOrigin}}
+	nInterval := models.Interval{Name: testInterval.Name, Start: "34343", Timestamps: testTimestamps}
+
 	dbClient = myMock
 	scClient = mySchedulerMock
 
@@ -272,7 +277,9 @@ func TestUpdateInterval(t *testing.T) {
 	mySchedulerMock.On("UpdateIntervalInQueue",
 		mock.Anything).Return(nil)
 
-	nInterval := models.Interval{Name: testIntervalName, Timestamps: models.Timestamps{Origin: testOrigin}}
+
+	nInterval := models.Interval{Name: testIntervalName, Timestamps: testTimestamps}
+
 	dbClient = myMock
 	scClient = mySchedulerMock
 

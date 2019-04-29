@@ -343,7 +343,7 @@ func notifyDeviceReportAssociates(dr models.DeviceReport, action string) error {
 	}
 
 	// Get the device service for the device
-	ds, err := dbClient.GetDeviceServiceById(d.Service.Service.Id)
+	ds, err := dbClient.GetDeviceServiceById(d.Service.Id)
 	if err != nil {
 		return err
 	}
