@@ -46,7 +46,7 @@ const (
 // Reset() re-initializes dependencies for each test
 func reset() {
 	Configuration = &ConfigurationStruct{}
-	testTimestamps = models.Timestamps{Origin:testOrigin}
+	testTimestamps = models.Timestamps{Origin: testOrigin}
 	testInterval.ID = testUUIDString
 	testInterval.Timestamps = testTimestamps
 	testInterval.Name = testIntervalName
@@ -276,7 +276,6 @@ func TestUpdateInterval(t *testing.T) {
 
 	mySchedulerMock.On("UpdateIntervalInQueue",
 		mock.Anything).Return(nil)
-
 
 	nInterval := models.Interval{Name: testIntervalName, Timestamps: testTimestamps}
 

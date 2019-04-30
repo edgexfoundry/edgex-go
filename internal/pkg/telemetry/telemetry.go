@@ -21,7 +21,7 @@ import (
 )
 
 type SystemUsage struct {
-	Memory memoryUsage
+	Memory     memoryUsage
 	CpuBusyAvg float64
 }
 
@@ -64,7 +64,7 @@ func NewSystemUsage() (s SystemUsage) {
 	s.Memory.LiveObjects = s.Memory.Mallocs - s.Memory.Frees
 
 	s.CpuBusyAvg = usageAvg
-	
+
 	return s
 }
 

@@ -32,7 +32,7 @@ var testDevice = contract.Device{
 	Id:         TestDeviceId,
 	AdminState: contract.Unlocked,
 	Service: contract.DeviceService{
-		Addressable: contract.Addressable {
+		Addressable: contract.Addressable{
 			Protocol: TestProtocol,
 			Address:  TestAddress,
 			Port:     TestPort,

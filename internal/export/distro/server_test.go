@@ -33,12 +33,12 @@ func TestPing(t *testing.T) {
 }
 
 func TestReplyNotifyRegistrations(t *testing.T) {
-	nuNoName := models.NotifyUpdate { Operation:"add" }
-	nuNoOp := models.NotifyUpdate { Name:"aaa" }
-	nuInvalidOp := models.NotifyUpdate{ Name:"aaa", Operation:"aadd"}
-	nuValidAdd := models.NotifyUpdate{ Name:"aaa", Operation:"add"}
-	nuValidDelete := models.NotifyUpdate{ Name:"aaa", Operation:"delete"}
-	nuValidUpdate := models.NotifyUpdate{ Name:"aaa", Operation:"update"}
+	nuNoName := models.NotifyUpdate{Operation: "add"}
+	nuNoOp := models.NotifyUpdate{Name: "aaa"}
+	nuInvalidOp := models.NotifyUpdate{Name: "aaa", Operation: "aadd"}
+	nuValidAdd := models.NotifyUpdate{Name: "aaa", Operation: "add"}
+	nuValidDelete := models.NotifyUpdate{Name: "aaa", Operation: "delete"}
+	nuValidUpdate := models.NotifyUpdate{Name: "aaa", Operation: "update"}
 
 	var tests = []struct {
 		name   string

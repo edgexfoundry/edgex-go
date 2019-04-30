@@ -52,7 +52,7 @@ func commandByDeviceID(deviceID string, commandID string, body string, isPutComm
 		}
 	}
 
-	return commandByDevice(device, command, body, isPutCommand,ctx)
+	return commandByDevice(device, command, body, isPutCommand, ctx)
 }
 
 func commandByNames(dn string, cn string, body string, isPutCommand bool, ctx context.Context) (string, int) {
@@ -76,13 +76,13 @@ func commandByNames(dn string, cn string, body string, isPutCommand bool, ctx co
 		}
 	}
 
-	if c.String() == (contract.Command{}).String(){
+	if c.String() == (contract.Command{}).String() {
 		errMsg := fmt.Sprintf("Command with name '%v' not found.", cn)
 		LoggingClient.Error(errMsg)
 		return errMsg, http.StatusNotFound
 	}
 
-	return commandByDevice(d, c, body, isPutCommand,ctx)
+	return commandByDevice(d, c, body, isPutCommand, ctx)
 }
 
 func commandByDevice(device contract.Device, command contract.Command, body string, isPutCommand bool, ctx context.Context) (string, int) {

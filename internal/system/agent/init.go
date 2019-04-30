@@ -29,8 +29,8 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/general"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
-	"github.com/edgexfoundry/go-mod-registry/registry"
 	registryTypes "github.com/edgexfoundry/go-mod-registry/pkg/types"
+	"github.com/edgexfoundry/go-mod-registry/registry"
 )
 
 // Global variables
@@ -172,7 +172,7 @@ func connectToRegistry(conf *ConfigurationStruct) error {
 		Stem:            internal.ConfigRegistryStem,
 	}
 
-	registryClient, err = registry.NewRegistryClient(registryConfig, )
+	registryClient, err = registry.NewRegistryClient(registryConfig)
 	if err != nil {
 		return fmt.Errorf("connection to Registry could not be made: %v", err.Error())
 	}

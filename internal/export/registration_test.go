@@ -33,7 +33,7 @@ func TestRegistrationValid(t *testing.T) {
 		{"wrongEncryption", "reg", models.CompZip, models.FormatJSON, models.DestMQTT, "INVALID", false},
 	}
 
-	testAddressable := models.Addressable{Id: uuid.New().String(), Name:"Test Addressable"}
+	testAddressable := models.Addressable{Id: uuid.New().String(), Name: "Test Addressable"}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r := models.Registration{}

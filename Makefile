@@ -65,6 +65,8 @@ clean:
 test:
 	GO111MODULE=on go test -cover ./...
 	GO111MODULE=on go vet ./...
+	gofmt -l .
+	[ "`gofmt -l .`" = "" ]
 
 run:
 	cd bin && ./edgex-launch.sh

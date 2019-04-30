@@ -16,15 +16,15 @@ import (
 )
 
 type IntervalContext struct {
-	Interval          models.Interval
+	Interval           models.Interval
 	IntervalActionsMap map[string]models.IntervalAction
-	StartTime         time.Time
-	EndTime           time.Time
-	NextTime          time.Time
-	Frequency         time.Duration
-	CurrentIterations int64
-	MaxIterations     int64
-	MarkedDeleted     bool
+	StartTime          time.Time
+	EndTime            time.Time
+	NextTime           time.Time
+	Frequency          time.Duration
+	CurrentIterations  int64
+	MaxIterations      int64
+	MarkedDeleted      bool
 }
 
 func (sc *IntervalContext) Reset(interval models.Interval) {
