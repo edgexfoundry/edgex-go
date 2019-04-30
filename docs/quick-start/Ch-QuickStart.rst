@@ -32,7 +32,7 @@ Finally, verify that the EdgeX containers have all been started::
 
     docker-compose ps 
 
-**Note:** *Initialization or seed containers, like config-seed, will have exited as there job is just to initialize the associated service and then exit.*
+**Note:** *Initialization or seed containers, like config-seed, will have exited as their job is just to initialize the associated service and then exit.*
 
 .. image:: EdgeX_GettingStartedUsrActiveContainers.png
 
