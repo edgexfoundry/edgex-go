@@ -29,6 +29,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/gorilla/context"
 )
 
@@ -74,7 +75,7 @@ func main() {
 }
 
 func logBeforeInit(err error) {
-	command.LoggingClient = logger.NewClient(internal.CoreCommandServiceKey, false, "", logger.InfoLog)
+	command.LoggingClient = logger.NewClient(internal.CoreCommandServiceKey, false, "", models.InfoLog)
 	command.LoggingClient.Error(err.Error())
 }
 

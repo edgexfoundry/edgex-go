@@ -38,7 +38,8 @@ func TestJson(t *testing.T) {
 	if err := json.Unmarshal(out, &eventOut); err != nil {
 		t.Fatalf("Error unmarshalling event: %v", err)
 	}
-	if !reflect.DeepEqual(eventIn, eventOut) {
+
+	if eventIn.String() != eventOut.String() {
 		t.Fatalf("Objects should be equals: %v %v", eventIn, eventOut)
 	}
 }

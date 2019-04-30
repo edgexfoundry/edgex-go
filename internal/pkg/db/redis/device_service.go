@@ -33,12 +33,12 @@ type redisDeviceService struct {
 
 func marshalDeviceService(ds contract.DeviceService) (out []byte, err error) {
 	s := redisDeviceService{
-		DescribedObject: ds.Service.DescribedObject,
-		Id:              ds.Service.Id,
-		Name:            ds.Service.Name,
-		LastConnected:   ds.Service.LastConnected,
-		LastReported:    ds.Service.LastReported,
-		OperatingState:  ds.Service.OperatingState,
+		DescribedObject: ds.DescribedObject,
+		Id:              ds.Id,
+		Name:            ds.Name,
+		LastConnected:   ds.LastConnected,
+		LastReported:    ds.LastReported,
+		OperatingState:  ds.OperatingState,
 		Addressable:     ds.Addressable.Id,
 		Labels:          ds.Labels,
 		AdminState:      ds.AdminState,

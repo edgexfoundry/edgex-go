@@ -52,8 +52,8 @@ type Command struct {
 	Id       bson.ObjectId `bson:"_id,omitempty"`
 	Uuid     string        `bson:"uuid,omitempty"`
 	Name     string        `bson:"name"`
-	Get      *Get          `bson:"get"`
-	Put      *Put          `bson:"put"`
+	Get      Get          `bson:"get"`
+	Put      Put          `bson:"put"`
 }
 
 func (c *Command) ToContract() (cmd contract.Command) {
@@ -63,40 +63,30 @@ func (c *Command) ToContract() (cmd contract.Command) {
 		id = c.Id.Hex()
 	}
 
-	if c.Get == nil {
-		cmd.Get = nil
-	} else {
-		cmd.Get = &contract.Get{}
-
-		cmd.Get.Path = c.Get.Path
-		cmd.Get.URL = c.Get.URL
-		cmd.Get.Responses = []contract.Response{}
-		for _, r := range c.Get.Responses {
-			cmd.Get.Responses = append(cmd.Get.Responses, contract.Response{
-				Code:           r.Code,
-				Description:    r.Description,
-				ExpectedValues: r.ExpectedValues,
-			})
-		}
+	cmd.Get = contract.Get{}
+	cmd.Get.Path = c.Get.Path
+	cmd.Get.URL = c.Get.URL
+	cmd.Get.Responses = []contract.Response{}
+	for _, r := range c.Get.Responses {
+		cmd.Get.Responses = append(cmd.Get.Responses, contract.Response{
+			Code:           r.Code,
+			Description:    r.Description,
+			ExpectedValues: r.ExpectedValues,
+		})
 	}
 
-	if c.Put == nil {
-		cmd.Put = nil
-	} else {
-		cmd.Put = &contract.Put{}
-
-		cmd.Put.Path = c.Put.Path
-		cmd.Put.Responses = []contract.Response{}
-		for _, r := range c.Put.Responses {
-			cmd.Put.Responses = append(cmd.Put.Responses, contract.Response{
-				Code:           r.Code,
-				Description:    r.Description,
-				ExpectedValues: r.ExpectedValues,
-			})
-		}
-		cmd.Put.URL = c.Put.URL
-		cmd.Put.ParameterNames = c.Put.ParameterNames
+	cmd.Put = contract.Put{}
+	cmd.Put.Path = c.Put.Path
+	cmd.Put.Responses = []contract.Response{}
+	for _, r := range c.Put.Responses {
+		cmd.Put.Responses = append(cmd.Put.Responses, contract.Response{
+			Code:           r.Code,
+			Description:    r.Description,
+			ExpectedValues: r.ExpectedValues,
+		})
 	}
+	cmd.Put.URL = c.Put.URL
+	cmd.Put.ParameterNames = c.Put.ParameterNames
 
 	cmd.Id = id
 	cmd.Created = c.Created
@@ -117,34 +107,31 @@ func (c *Command) FromContract(from contract.Command) (contractId string, err er
 	c.Modified = from.Modified
 	c.Origin = from.Origin
 	c.Name = from.Name
-	c.Get = &Get{}
-	if from.Get != nil {
-		c.Get.Path = from.Get.Path
-		c.Get.URL = from.Get.URL
-		c.Get.Responses = []Response{}
-		for _, val := range from.Get.Responses {
-			c.Get.Responses = append(c.Get.Responses, Response{
-				Code:           val.Code,
-				Description:    val.Description,
-				ExpectedValues: val.ExpectedValues,
-			})
-		}
+
+	c.Get = Get{}
+	c.Get.Path = from.Get.Path
+	c.Get.URL = from.Get.URL
+	c.Get.Responses = []Response{}
+	for _, val := range from.Get.Responses {
+		c.Get.Responses = append(c.Get.Responses, Response{
+			Code:           val.Code,
+			Description:    val.Description,
+			ExpectedValues: val.ExpectedValues,
+		})
 	}
 
-	c.Put = &Put{}
-	if from.Put != nil {
-		c.Put.Path = from.Put.Path
-		c.Put.Responses = []Response{}
-		for _, val := range from.Put.Responses {
-			c.Get.Responses = append(c.Put.Responses, Response{
-				Code:           val.Code,
-				Description:    val.Description,
-				ExpectedValues: val.ExpectedValues,
-			})
-		}
-		c.Put.URL = from.Put.URL
-		c.Put.ParameterNames = from.Put.ParameterNames
+	c.Put = Put{}
+	c.Put.Path = from.Put.Path
+	c.Put.Responses = []Response{}
+	for _, val := range from.Put.Responses {
+		c.Get.Responses = append(c.Put.Responses, Response{
+			Code:           val.Code,
+			Description:    val.Description,
+			ExpectedValues: val.ExpectedValues,
+		})
 	}
+	c.Put.URL = from.Put.URL
+	c.Put.ParameterNames = from.Put.ParameterNames
 
 	contractId = toContractId(c.Id, c.Uuid)
 	return

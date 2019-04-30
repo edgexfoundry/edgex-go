@@ -17,7 +17,6 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
@@ -119,8 +118,8 @@ func TestGetLogs(t *testing.T) {
 
 	var services = []string{"service1", "service2"}
 	var keywords = []string{"keyword1", "keyword2"}
-	var logLevels = []string{logger.TraceLog, logger.DebugLog, logger.WarnLog,
-		logger.InfoLog, logger.ErrorLog}
+	var logLevels = []string{models.TraceLog, models.DebugLog, models.WarnLog,
+		models.InfoLog, models.ErrorLog}
 	var tests = []struct {
 		name       string
 		url        string
@@ -242,8 +241,8 @@ func TestRemoveLogs(t *testing.T) {
 
 	var services = []string{"service1", "service2"}
 	var keywords = []string{"keyword1", "keyword2"}
-	var logLevels = []string{logger.TraceLog, logger.DebugLog, logger.WarnLog,
-		logger.InfoLog, logger.ErrorLog}
+	var logLevels = []string{models.TraceLog, models.DebugLog, models.WarnLog,
+		models.InfoLog, models.ErrorLog}
 	var tests = []struct {
 		name     string
 		url      string

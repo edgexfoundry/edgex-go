@@ -37,7 +37,6 @@ RUN go mod download
 COPY . .
 
 # build
-RUN make prepare
 RUN make cmd/config-seed/config-seed
 
 # Consul Docker image for EdgeX Foundry

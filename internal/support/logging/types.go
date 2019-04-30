@@ -41,7 +41,7 @@ type privLogger struct {
 
 func newPrivateLogger() privLogger {
 	pl := privLogger{}
-	logLevel := logger.InfoLog
+	logLevel := models.InfoLog
 	pl.logLevel = &logLevel
 
 	// Set up the loggers
@@ -57,11 +57,11 @@ func newPrivateLogger() privLogger {
 func (l privLogger) log(logLevel string, msg string, args ...interface{}) {
 	// Check minimum log level
 	for _, name := range []string{
-		logger.TraceLog,
-		logger.DebugLog,
-		logger.InfoLog,
-		logger.WarnLog,
-		logger.ErrorLog} {
+		models.TraceLog,
+		models.DebugLog,
+		models.InfoLog,
+		models.WarnLog,
+		models.ErrorLog} {
 		if name == *l.logLevel {
 			break
 		}
@@ -111,21 +111,21 @@ func (l privLogger) SetLogLevel(logLevel string) error {
 }
 
 func (l privLogger) Debug(msg string, args ...interface{}) {
-	l.log(logger.DebugLog, msg, args...)
+	l.log(models.DebugLog, msg, args...)
 }
 
 func (l privLogger) Error(msg string, args ...interface{}) {
-	l.log(logger.ErrorLog, msg, args...)
+	l.log(models.ErrorLog, msg, args...)
 }
 
 func (l privLogger) Info(msg string, args ...interface{}) {
-	l.log(logger.InfoLog, msg, args...)
+	l.log(models.InfoLog, msg, args...)
 }
 
 func (l privLogger) Trace(msg string, args ...interface{}) {
-	l.log(logger.TraceLog, msg, args...)
+	l.log(models.TraceLog, msg, args...)
 }
 
 func (l privLogger) Warn(msg string, args ...interface{}) {
-	l.log(logger.WarnLog, msg, args...)
+	l.log(models.WarnLog, msg, args...)
 }

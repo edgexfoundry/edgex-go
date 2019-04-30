@@ -124,8 +124,8 @@ func updateInterval(from contract.Interval) error {
 		}
 		to.Start = from.Start
 	}
-	if from.Origin != 0 {
-		to.Origin = from.Origin
+	if from.Timestamps.Origin != 0 {
+		to.Timestamps.Origin = from.Timestamps.Origin
 	}
 	// Check if new name is unique
 	if from.Name != "" && from.Name != to.Name {

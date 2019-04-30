@@ -39,6 +39,5 @@ Developers will need to install the following software in order to get, run and 
    :maxdepth: 1
 
    Ch-GettingStartedGoDevelopers
-   Ch-GettingStartedJavaDevelopers
 
   

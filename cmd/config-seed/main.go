@@ -23,6 +23,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/internal/seed/config"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
 func main() {
@@ -86,6 +87,6 @@ func bootstrap(profile string) {
 }
 
 func logBeforeInit(err error) {
-	l := logger.NewClient(internal.ConfigSeedServiceKey, false, "", logger.InfoLog)
+	l := logger.NewClient(internal.ConfigSeedServiceKey, false, "", models.InfoLog)
 	l.Error(err.Error())
 }

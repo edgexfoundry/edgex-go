@@ -9,7 +9,7 @@ package logging
 import (
 	"testing"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
 func logAllLevels(pl privLogger, msg string) {
@@ -22,7 +22,7 @@ func logAllLevels(pl privLogger, msg string) {
 
 func TestPrivLogger(t *testing.T) {
 	pl := newPrivateLogger()
-	pl.SetLogLevel(logger.TraceLog)
+	pl.SetLogLevel(models.TraceLog)
 
 	// Does not break with nil persistence
 	dbClient = nil

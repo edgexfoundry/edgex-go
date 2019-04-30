@@ -7,9 +7,11 @@
 package distro
 
 import (
+	"bytes"
+	"encoding/json"
+	"github.com/edgexfoundry/go-mod-core-contracts/models"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
@@ -31,19 +33,25 @@ func TestPing(t *testing.T) {
 }
 
 func TestReplyNotifyRegistrations(t *testing.T) {
+	nuNoName := models.NotifyUpdate { Operation:"add" }
+	nuNoOp := models.NotifyUpdate { Name:"aaa" }
+	nuInvalidOp := models.NotifyUpdate{ Name:"aaa", Operation:"aadd"}
+	nuValidAdd := models.NotifyUpdate{ Name:"aaa", Operation:"add"}
+	nuValidDelete := models.NotifyUpdate{ Name:"aaa", Operation:"delete"}
+	nuValidUpdate := models.NotifyUpdate{ Name:"aaa", Operation:"update"}
+
 	var tests = []struct {
 		name   string
-		data   string
+		nu     models.NotifyUpdate
 		status int
 	}{
-		{"empty", "", http.StatusBadRequest},
-		{"empty", "{}", http.StatusBadRequest},
-		{"noName", `{"operation": "add"}`, http.StatusBadRequest},
-		{"noOperation", `{"name": "aaa"}`, http.StatusBadRequest},
-		{"invalidOperation", `{"operation": "aadd", "name": "aaa"}`, http.StatusBadRequest},
-		{"validOperation", `{"operation": "add", "name": "aaa"}`, http.StatusOK},
-		{"validOperation", `{"operation": "delete", "name": "aaa"}`, http.StatusOK},
-		{"validOperation", `{"operation": "update", "name": "aaa"}`, http.StatusOK},
+		{"empty", models.NotifyUpdate{}, http.StatusBadRequest},
+		{"noName", nuNoName, http.StatusBadRequest},
+		{"noOperation", nuNoOp, http.StatusBadRequest},
+		{"invalidOperation", nuInvalidOp, http.StatusBadRequest},
+		{"validAdd", nuValidAdd, http.StatusOK},
+		{"validDelete", nuValidDelete, http.StatusOK},
+		{"validUpdate", nuValidUpdate, http.StatusOK},
 	}
 	// create test server with handler
 	ts := httptest.NewServer(httpServer())
@@ -54,7 +62,11 @@ func TestReplyNotifyRegistrations(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			client := &http.Client{}
-			req, err := http.NewRequest(http.MethodPut, url, strings.NewReader(tt.data))
+			data, err := json.Marshal(tt.nu)
+			if err != nil {
+				t.Errorf("marshaling error %v", err)
+			}
+			req, err := http.NewRequest(http.MethodPut, url, bytes.NewBuffer(data))
 			if err != nil {
 				t.Errorf("Error creating http request: %v", err)
 			}

@@ -97,8 +97,8 @@ func getCommand(db interfaces.DBClient, i int) models.Command {
 	name := fmt.Sprintf("name%d", i)
 	c := models.Command{}
 	c.Name = name
-	c.Put = &models.Put{}
-	c.Get = &models.Get{}
+	c.Put = models.Put{}
+	c.Get = models.Get{}
 	return c
 }
 
@@ -544,8 +544,8 @@ func testDBCommand(t *testing.T, db interfaces.DBClient) {
 	}
 
 	c.Id = id
-	c.Get = &models.Get{}
-	c.Put = &models.Put{}
+	c.Get = models.Get{}
+	c.Put = models.Put{}
 	c.Name = "name"
 	err = db.UpdateCommand(c)
 	if err != nil {

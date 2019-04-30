@@ -1,5 +1,6 @@
 //
 // Copyright (c) 2018 Cavium
+// Copyright (c) 2019 Dell Technologies, Inc.
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -24,7 +25,17 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
-const regJson = `{"origin":1471806386919,"name":"OSIClient","addressable":{"origin":1471806386919,"name":"OSIMQTTBroker","protocol":"TCP","address":"m10.cloudmqtt.com","port":15421,"publisher":"EdgeXExportPublisher","user":"hukfgtoh","password":"uP6hJLYW6Ji4","topic":"EdgeXDataTopic"},"format":"JSON","filter":{"deviceIdentifiers":["livingroomthermosat", "hallwaythermostat"],"valueDescriptorIdentifiers":["temperature", "humidity"]},"encryption":{"encryptionAlgorithm":"AES","encryptionKey":"123","initializingVector":"123"},"compression":"GZIP","enable":true, "destination": "REST_ENDPOINT"}`
+//const regJson = `{"origin":1471806386919,"name":"OSIClient","addressable":{"origin":1471806386919,"name":"OSIMQTTBroker","protocol":"TCP","address":"m10.cloudmqtt.com","port":15421,"publisher":"EdgeXExportPublisher","user":"hukfgtoh","password":"uP6hJLYW6Ji4","topic":"EdgeXDataTopic"},"format":"JSON","filter":{"deviceIdentifiers":["livingroomthermosat", "hallwaythermostat"],"valueDescriptorIdentifiers":["temperature", "humidity"]},"encryption":{"encryptionAlgorithm":"AES","encryptionKey":"123","initializingVector":"123"},"compression":"GZIP","enable":true, "destination": "REST_ENDPOINT"}`
+
+var testTimestamps = models.Timestamps{Origin:1471806386919}
+var testAddressable = models.Addressable{Timestamps: testTimestamps, Name:"OSIMQTTBroker", Protocol:"TCP",
+	Address:"m10.cloudmqtt.com", Port:15421, Publisher:"EdgeXExportPublisher", User:"hukfgtoh", Password:"uP6hJLYW6Ji4",
+	Topic:"EdgeXDataTopic"}
+var testFilter = models.Filter{DeviceIDs:[]string{"livingroomthermosat", "hallwaythermostat"}, ValueDescriptorIDs:[]string{"temperature", "humidity"}}
+var testEncryption = models.EncryptionDetails{Algo:"AES", Key:"123", InitVector:"123"}
+var testRegistration = models.Registration{Origin:testTimestamps.Origin, Name:"OSIClient", Addressable:testAddressable,
+	Format:models.FormatJSON, Filter:testFilter, Encryption:testEncryption, Compression:models.CompGzip, Enable:true,
+	Destination:models.DestRest}
 
 type distroMockClient struct{}
 
@@ -33,7 +44,7 @@ func (d *distroMockClient) NotifyRegistrations(models.NotifyUpdate, context.Cont
 }
 
 func prepareTest(t *testing.T) *httptest.Server {
-	LoggingClient = logger.NewClient(internal.ExportClientServiceKey, false, "./logs/edgex-export-client-test.log", logger.InfoLog)
+	LoggingClient = logger.NewClient(internal.ExportClientServiceKey, false, "./logs/edgex-export-client-test.log", models.InfoLog)
 
 	dbClient = &MemDB{}
 	dc = &distroMockClient{}
@@ -41,8 +52,11 @@ func prepareTest(t *testing.T) *httptest.Server {
 }
 
 func createRegistration(t *testing.T, serverUrl string) string {
-	response, err := http.Post(serverUrl+clients.ApiRegistrationRoute, "application/json",
-		strings.NewReader(regJson))
+	request, err := json.Marshal(testRegistration)
+	if err != nil {
+		t.Errorf("marshaling error %v", err)
+	}
+	response, err := http.Post(serverUrl+clients.ApiRegistrationRoute, clients.ContentTypeJSON, bytes.NewBuffer(request))
 	if err != nil {
 		t.Errorf("Error sending log %v", err)
 	}
@@ -72,6 +86,10 @@ func TestPing(t *testing.T) {
 }
 
 func TestRegistrationAdd(t *testing.T) {
+	regJson, err := json.Marshal(testRegistration)
+	if err != nil {
+		t.Errorf("marshaling error %v", err)
+	}
 	var tests = []struct {
 		name   string
 		data   string
@@ -81,7 +99,7 @@ func TestRegistrationAdd(t *testing.T) {
 		{"emptyPost", "{}", http.StatusBadRequest},
 		{"invalidJSON", "aa", http.StatusBadRequest},
 		{"ok", `{"origin":1471806386919,"name":"NAME","addressable":{"origin":1471806386919,"name":"AnotherName","method":"POST","protocol":"TCP","address":"127.0.0.1","port":1883,"publisher":"SomePublisher","user":"dummy","password":"dummy","topic":"SomeTopic"},"format":"JSON","enable":true, "destination":"MQTT_TOPIC","compression":"NONE"}`, http.StatusOK},
-		{"ok", regJson, http.StatusOK},
+		{"ok", string(regJson), http.StatusOK},
 	}
 
 	ts := prepareTest(t)
@@ -109,8 +127,11 @@ func TestRegistrationAddTwice(t *testing.T) {
 
 	createRegistration(t, ts.URL)
 
-	response, err := http.Post(ts.URL+clients.ApiRegistrationRoute, "application/json",
-		strings.NewReader(regJson))
+	request, err := json.Marshal(testRegistration)
+	if err != nil {
+		t.Errorf("marshaling error %v", err)
+	}
+	response, err := http.Post(ts.URL+clients.ApiRegistrationRoute, clients.ContentTypeJSON, bytes.NewBuffer(request))
 	if err != nil {
 		t.Errorf("Error sending log %v", err)
 	}
@@ -122,7 +143,7 @@ func TestRegistrationAddTwice(t *testing.T) {
 
 func requestMethod(t *testing.T, method string, url string, b io.Reader) *http.Response {
 	req, err := http.NewRequest(method, url, b)
-	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add(clients.ContentType, clients.ContentTypeJSON)
 
 	if err != nil {
 		t.Fatalf("Error creating request: %v", err)
@@ -138,6 +159,40 @@ func requestMethod(t *testing.T, method string, url string, b io.Reader) *http.R
 }
 
 func TestRegistrationUpdate(t *testing.T) {
+	jsonOK, err := json.Marshal(testRegistration)
+	if err != nil {
+		t.Errorf("marshaling error %v", err)
+	}
+
+	testNoName := testRegistration
+	testNoName.Name = "noname"
+	jsonNoName, err := json.Marshal(testNoName)
+	if err != nil {
+		t.Errorf("marshaling error %v", err)
+	}
+
+	testNoId := testRegistration
+	testNoId.ID = "507f1f77bcf86cd799439011"
+	jsonNoId, err := json.Marshal(testNoId)
+	if err != nil {
+		t.Errorf("marshaling error %v", err)
+	}
+
+	testUpdateId := testRegistration
+	testUpdateId.ID = "%s"
+	jsonUpdateId, err := json.Marshal(testUpdateId)
+	if err != nil {
+		t.Errorf("marshaling error %v", err)
+	}
+
+	testUpdateName := testRegistration
+	testUpdateName.ID = "%s"
+	testUpdateName.Name = "OtherName"
+	jsonUpdateName, err := json.Marshal(testUpdateName)
+	if err != nil {
+		t.Errorf("marshaling error %v", err)
+	}
+
 	var tests = []struct {
 		name   string
 		data   string
@@ -145,14 +200,15 @@ func TestRegistrationUpdate(t *testing.T) {
 	}{
 		{"emptyPost", "", http.StatusBadRequest},
 		{"emptyPost", "{}", http.StatusBadRequest},
-		{"notFound", `{"Name":"noname"}`, http.StatusNotFound},
-		{"notFound", `{"id":"507f1f77bcf86cd799439011"}`, http.StatusNotFound},
-		{"updById", `{"id":"%s"}`, http.StatusOK},
-		{"updById", `{"id":"%s", "Name": "OtherName"}`, http.StatusOK},
+		{"notFound", string(jsonNoName), http.StatusNotFound},
+		{"notFound", string(jsonNoId), http.StatusNotFound},
+		{"updById", string(jsonUpdateId), http.StatusOK},
+		{"updById", string(jsonUpdateName), http.StatusOK},
 		{"updById", `{"id":"%s", "compression":"INVALID"}`, http.StatusBadRequest},
-		{"updByName", regJson, http.StatusOK},
+		{"updByName", string(jsonOK), http.StatusOK},
 		{"updByName", `{"Name":"OSIClient", "compression":"INVALID"}`, http.StatusBadRequest},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Initialize for each test, to have the same registration before updating
