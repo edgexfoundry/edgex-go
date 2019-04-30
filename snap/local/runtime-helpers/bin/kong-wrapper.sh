@@ -23,8 +23,13 @@ case $SNAP_ARCH in
         ;;
 esac
 
+# get the perl version
+PERL_VERSION=$(perl -version | grep -Po '\(v\K([^\)]*)')
+
 # perl lib paths are needed for some rocks that kong loads through luarocks dependencies
-export PERL5LIB="$SNAP/usr/local/lib/$archLibName/perl/5.22.1:$SNAP/usr/local/share/perl/5.22.1:$SNAP/usr/lib/$archLibName/perl5/5.22:$SNAP/usr/share/perl5:$SNAP/usr/lib/$archLibName/perl/5.22:$SNAP/usr/share/perl/5.22:$SNAP/usr/local/lib/site_perl:$SNAP/usr/lib/$archLibName/perl-base"
+PERL5LIB="$PERL5LIB:$SNAP/usr/lib/$archLibName/perl/$PERL_VERSION"
+PERL5LIB="$PERL5LIB:$SNAP/usr/share/perl/$PERL_VERSION"
+export PERL5LIB
 
 # lua paths so that luarocks can work
 export LUA_VERSION=5.1
@@ -35,4 +40,4 @@ export LUA_CPATH="$SNAP/lualib/?.so;$SNAP/lib/lua/$LUA_VERSION/?.so;$SNAP/lib/$a
 export LC_ALL=C.UTF-8
 export LANG=C.UTF-8
 
-exec "$SNAP/bin/kong" "$@"
+"$SNAP/bin/kong" "$@"
