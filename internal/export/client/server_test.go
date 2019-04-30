@@ -27,15 +27,15 @@ import (
 
 //const regJson = `{"origin":1471806386919,"name":"OSIClient","addressable":{"origin":1471806386919,"name":"OSIMQTTBroker","protocol":"TCP","address":"m10.cloudmqtt.com","port":15421,"publisher":"EdgeXExportPublisher","user":"hukfgtoh","password":"uP6hJLYW6Ji4","topic":"EdgeXDataTopic"},"format":"JSON","filter":{"deviceIdentifiers":["livingroomthermosat", "hallwaythermostat"],"valueDescriptorIdentifiers":["temperature", "humidity"]},"encryption":{"encryptionAlgorithm":"AES","encryptionKey":"123","initializingVector":"123"},"compression":"GZIP","enable":true, "destination": "REST_ENDPOINT"}`
 
-var testTimestamps = models.Timestamps{Origin:1471806386919}
-var testAddressable = models.Addressable{Timestamps: testTimestamps, Name:"OSIMQTTBroker", Protocol:"TCP",
-	Address:"m10.cloudmqtt.com", Port:15421, Publisher:"EdgeXExportPublisher", User:"hukfgtoh", Password:"uP6hJLYW6Ji4",
-	Topic:"EdgeXDataTopic"}
-var testFilter = models.Filter{DeviceIDs:[]string{"livingroomthermosat", "hallwaythermostat"}, ValueDescriptorIDs:[]string{"temperature", "humidity"}}
-var testEncryption = models.EncryptionDetails{Algo:"AES", Key:"123", InitVector:"123"}
-var testRegistration = models.Registration{Origin:testTimestamps.Origin, Name:"OSIClient", Addressable:testAddressable,
-	Format:models.FormatJSON, Filter:testFilter, Encryption:testEncryption, Compression:models.CompGzip, Enable:true,
-	Destination:models.DestRest}
+var testTimestamps = models.Timestamps{Origin: 1471806386919}
+var testAddressable = models.Addressable{Timestamps: testTimestamps, Name: "OSIMQTTBroker", Protocol: "TCP",
+	Address: "m10.cloudmqtt.com", Port: 15421, Publisher: "EdgeXExportPublisher", User: "hukfgtoh", Password: "uP6hJLYW6Ji4",
+	Topic: "EdgeXDataTopic"}
+var testFilter = models.Filter{DeviceIDs: []string{"livingroomthermosat", "hallwaythermostat"}, ValueDescriptorIDs: []string{"temperature", "humidity"}}
+var testEncryption = models.EncryptionDetails{Algo: "AES", Key: "123", InitVector: "123"}
+var testRegistration = models.Registration{Origin: testTimestamps.Origin, Name: "OSIClient", Addressable: testAddressable,
+	Format: models.FormatJSON, Filter: testFilter, Encryption: testEncryption, Compression: models.CompGzip, Enable: true,
+	Destination: models.DestRest}
 
 type distroMockClient struct{}
 

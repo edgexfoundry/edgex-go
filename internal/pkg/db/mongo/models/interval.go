@@ -41,7 +41,7 @@ func (in *Interval) ToContract() (c contract.Interval) {
 		id = in.Id.Hex()
 	}
 
-	c.Timestamps = contract.Timestamps{ Created:in.Created, Modified:in.Modified, Origin:in.Origin}
+	c.Timestamps = contract.Timestamps{Created: in.Created, Modified: in.Modified, Origin: in.Origin}
 	c.ID = id
 	c.Name = in.Name
 	c.Start = in.Start

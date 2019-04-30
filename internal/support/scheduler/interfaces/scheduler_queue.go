@@ -13,7 +13,9 @@
  *******************************************************************************/
 package interfaces
 
-import(contract "github.com/edgexfoundry/go-mod-core-contracts/models")
+import (
+	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
+)
 
 type SchedulerQueueClient interface {
 
@@ -52,5 +54,5 @@ type SchedulerQueueClient interface {
 	RemoveIntervalActionQueue(intervalActionId string) error
 
 	// Check if we can connect to Scheduler Queue
-	Connect()(string,error)
+	Connect() (string, error)
 }

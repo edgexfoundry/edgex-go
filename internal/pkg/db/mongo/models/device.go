@@ -35,18 +35,18 @@ type Device struct {
 	Description    string                  `bson:"description"`
 	Id             bson.ObjectId           `bson:"_id,omitempty"`
 	Uuid           string                  `bson:"uuid,omitempty"`
-	Protocols      string                  `bson:"protocols,omitempty"` //Contains a JSON representation of the supported protocols for the device
+	Protocols      string                  `bson:"protocols,omitempty"`  //Contains a JSON representation of the supported protocols for the device
 	AutoEvents     string                  `bson:"autoEvents,omitempty"` //Contains a JSON representation of the device's auto-generated events
-	Name           string                  `bson:"name"`           // Unique name for identifying a device
-	AdminState     contract.AdminState     `bson:"adminState"`     // Admin state (locked/unlocked)
-	OperatingState contract.OperatingState `bson:"operatingState"` // Operating state (enabled/disabled)
-	Addressable    mgo.DBRef               `bson:"addressable"`    // Addressable for the device - stores information about it's address
-	LastConnected  int64                   `bson:"lastConnected"`  // Time (milliseconds) that the device last provided any feedback or responded to any request
-	LastReported   int64                   `bson:"lastReported"`   // Time (milliseconds) that the device reported data to the core microservice
-	Labels         []string                `bson:"labels"`         // Other labels applied to the device to help with searching
-	Location       interface{}             `bson:"location"`       // Device service specific location (interface{} is an empty interface so it can be anything)
-	Service        mgo.DBRef               `bson:"service"`        // Associated Device Service - One per device
-	Profile        mgo.DBRef               `bson:"profile"`        // Associated Device Profile - Describes the device
+	Name           string                  `bson:"name"`                 // Unique name for identifying a device
+	AdminState     contract.AdminState     `bson:"adminState"`           // Admin state (locked/unlocked)
+	OperatingState contract.OperatingState `bson:"operatingState"`       // Operating state (enabled/disabled)
+	Addressable    mgo.DBRef               `bson:"addressable"`          // Addressable for the device - stores information about it's address
+	LastConnected  int64                   `bson:"lastConnected"`        // Time (milliseconds) that the device last provided any feedback or responded to any request
+	LastReported   int64                   `bson:"lastReported"`         // Time (milliseconds) that the device reported data to the core microservice
+	Labels         []string                `bson:"labels"`               // Other labels applied to the device to help with searching
+	Location       interface{}             `bson:"location"`             // Device service specific location (interface{} is an empty interface so it can be anything)
+	Service        mgo.DBRef               `bson:"service"`              // Associated Device Service - One per device
+	Profile        mgo.DBRef               `bson:"profile"`              // Associated Device Profile - Describes the device
 }
 
 func (d *Device) ToContract(dsTransform deviceServiceTransform, dpTransform deviceProfileTransform, cTransform commandTransform, aTransform addressableTransform) (c contract.Device, err error) {
