@@ -94,6 +94,9 @@ if [ ! -f "${SNAP_DATA}/config/security-secret-store/pkisetup-vault.json" ]; the
     chmod 600 "${SNAP_DATA}/config/security-secret-store/pkisetup-vault.json"
 fi
 
+# ensure consul dirs exist
+mkdir -p "$SNAP_DATA/consul/data"
+mkdir -p "$SNAP_DATA/consul/config"
 
 # ensure vault pki directory exists
 mkdir -p "${SNAP_DATA}/vault/pki"
