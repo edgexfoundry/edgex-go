@@ -294,6 +294,10 @@ apps:
     plugs: [network, network-bind]
 
   # helper commands the snap exposes
+  push-config:
+    adapter: full
+    command: bin/push-config.sh
+    plugs: [network, network-bind]
   mongo:
     adapter: full
     command: bin/mongo
