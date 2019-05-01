@@ -334,7 +334,7 @@ parts:
     override-build: |
       . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
       gopartbootstrap github.com/hashicorp/consul
-
+      export GO111MODULES=off
       go get -u github.com/kardianos/govendor
       govendor install
       CONSUL_DEV=1 make
@@ -810,7 +810,7 @@ parts:
     override-build: |
       . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
       gopartbootstrap github.com/hashicorp/vault
-
+      export GO111MODULES=off
       make bootstrap
       make dev
 
