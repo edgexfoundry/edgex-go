@@ -224,6 +224,8 @@ apps:
         - core-config-seed
         - mongo-worker
         - edgexproxy
+        - core-data
+        - core-metadata
   device-mqtt:
     command: bin/go-services-wrapper.sh device-mqtt
     daemon: simple
@@ -233,6 +235,8 @@ apps:
         - core-config-seed
         - mongo-worker
         - edgexproxy
+        - core-data
+        - core-metadata
   device-random:
     command: bin/go-services-wrapper.sh device-random
     daemon: simple
@@ -242,6 +246,8 @@ apps:
         - core-config-seed
         - mongo-worker
         - edgexproxy
+        - core-data
+        - core-metadata
 
   # helper commands the snap exposes
   mongo:

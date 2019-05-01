@@ -56,6 +56,17 @@ for key in $ALL_SERVICES; do
     # get the config key for the service
     status=$(snapctl get $key)
     case $key in 
+        device*)
+            # the device services are all using the device-sdk-go which waits
+            # for core-data and core-metadata to come online, so if we are 
+            # enabling a device service, we should also enable those services
+            if [ "$status" = "on" ]; then
+                handle_svc "core-data" "on"
+                handle_svc "core-metadata" "on"
+            fi
+            # handle the service too
+            handle_svc "$key" $status
+            ;;
         mongo-worker|edgexproxy|vault-worker)
             # it doesn't make any sense to disable the *-worker daemons since 
             # they are just oneshot daemons that run after another daemon, so
