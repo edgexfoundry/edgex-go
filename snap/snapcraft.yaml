@@ -38,9 +38,13 @@ apps:
     daemon: simple
     plugs: [network, network-bind]
   core-config-seed:
-    command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh config-seed -c ${SNAP_DATA}/config
+    command: >
+      bin/config-seed
+      --cmd "$SNAP_DATA/config"
+      -confdir "$SNAP_DATA/config/config-seed/res"
+      --props "$SNAP_DATA/config/config-seed/res/properties"
     plugs: [network, network-bind]
-    daemon: forking
+    daemon: oneshot
     passthrough:
       after:
         - consul
@@ -124,27 +128,9 @@ apps:
     passthrough:
       after:
         - mongod
-  support-logging:
-    command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh support-logging --registry
-    daemon: forking
-    plugs: [network, network-bind]
-    passthrough:
-      after:
-        - core-config-seed
-        - mongo-worker
-        - edgexproxy
-  support-notifications:
-    command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh support-notifications --registry
-    daemon: forking
-    plugs: [network, network-bind]
-    passthrough:
-      after:
-        - core-config-seed
-        - mongo-worker
-        - edgexproxy
   core-data:
-    command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh core-data --registry
-    daemon: forking
+    command: bin/core-data -confdir "$SNAP_DATA/config/core-data/res" --registry
+    daemon: simple
     plugs: [network, network-bind]
     passthrough:
       after:
@@ -152,8 +138,8 @@ apps:
         - mongo-worker
         - edgexproxy
   core-metadata:
-    command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh core-metadata --registry
-    daemon: forking
+    command: bin/core-metadata -confdir "$SNAP_DATA/config/core-metadata/res" --registry
+    daemon: simple
     plugs: [network, network-bind]
     passthrough:
       after:
@@ -161,8 +147,26 @@ apps:
         - mongo-worker
         - edgexproxy
   core-command:
-    command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh core-command --registry
-    daemon: forking
+    command: bin/core-command -confdir "$SNAP_DATA/config/core-command/res" --registry
+    daemon: simple
+    plugs: [network, network-bind]
+    passthrough:
+      after:
+        - core-config-seed
+        - mongo-worker
+        - edgexproxy
+  support-logging:
+    command: bin/support-logging -confdir "$SNAP_DATA/config/support-logging/res" --registry
+    daemon: simple
+    plugs: [network, network-bind]
+    passthrough:
+      after:
+        - core-config-seed
+        - mongo-worker
+        - edgexproxy
+  support-notifications:
+    command: bin/support-notifications -confdir "$SNAP_DATA/config/support-notifications/res" --registry
+    daemon: simple
     plugs: [network, network-bind]
     passthrough:
       after:
@@ -170,8 +174,8 @@ apps:
         - mongo-worker
         - edgexproxy
   support-scheduler:
-    command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh support-scheduler --registry
-    daemon: forking
+    command: bin/support-scheduler -confdir "$SNAP_DATA/config/support-scheduler/res" --registry
+    daemon: simple
     plugs: [network, network-bind]
     passthrough:
       after:
@@ -189,8 +193,8 @@ apps:
         - mongo-worker
         - edgexproxy
   export-client:
-    command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh export-client --registry
-    daemon: forking
+    command: bin/export-client -confdir "$SNAP_DATA/config/export-client/res" --registry
+    daemon: simple
     plugs: [network, network-bind]
     passthrough:
       after:
@@ -198,8 +202,8 @@ apps:
         - mongo-worker
         - edgexproxy
   export-distro:
-    command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh export-distro --registry
-    daemon: forking
+    command: bin/export-distro -confdir "$SNAP_DATA/config/export-distro/res" --registry
+    daemon: simple
     plugs: [network, network-bind]
     passthrough:
       after:
@@ -207,8 +211,8 @@ apps:
         - mongo-worker
         - edgexproxy
   sys-mgmt-agent:
-    command: bin/fork-wrapper.sh $SNAP/bin/go-services-wrapper.sh sys-mgmt-agent --registry
-    daemon: forking
+    command: bin/sys-mgmt-agent -confdir "$SNAP_DATA/config/sys-mgmt-agent/res" --registry
+    daemon: simple
     plugs: [network, network-bind, daemon-notify]
     passthrough:
       after:
@@ -216,7 +220,7 @@ apps:
         - mongo-worker
         - edgexproxy
   device-modbus:
-    command: bin/go-services-wrapper.sh device-modbus
+    command: bin/device-modbus -confdir $SNAP_DATA/config/device-modbus -profile res --registry
     daemon: simple
     plugs: [network, network-bind]
     passthrough:
@@ -227,7 +231,7 @@ apps:
         - core-data
         - core-metadata
   device-mqtt:
-    command: bin/go-services-wrapper.sh device-mqtt
+    command: bin/device-mqtt -confdir $SNAP_DATA/config/device-mqtt -profile res --registry
     daemon: simple
     plugs: [network, network-bind]
     passthrough:
@@ -238,7 +242,7 @@ apps:
         - core-data
         - core-metadata
   device-random:
-    command: bin/go-services-wrapper.sh device-random
+    command: bin/device-random -confdir $SNAP_DATA/config/device-random -profile res --registry
     daemon: simple
     plugs: [network, network-bind]
     passthrough:
@@ -924,6 +928,7 @@ parts:
 
       cat "./cmd/res/configuration.toml" | \
         sed -e s:\"./device-Modbus.log\":\'\$SNAP_COMMON/device-Modbus.log\': > \
+            -e s:'ProfilesDir = \"./res\"':'ProfilesDir = \"\$SNAP_DATA/config/device-modbus/res\"': > \
         "$SNAPCRAFT_PART_INSTALL/config/device-modbus/res/configuration.toml"
       install -DT "./cmd/Attribution.txt" \
          "$SNAPCRAFT_PART_INSTALL/usr/share/doc/device-modbus/Attribution.txt"
@@ -947,7 +952,8 @@ parts:
       install -d "$SNAPCRAFT_PART_INSTALL/config/device-mqtt/res/"
 
       cat "./cmd/res/configuration.toml" | \
-        sed -e s:\"./device-mqtt.log\":\'\$SNAP_COMMON/device-mqtt.log\': > \
+        sed -e s:\"./device-mqtt.log\":\'\$SNAP_COMMON/device-mqtt.log\': \
+          -e s:'ProfilesDir = \"./res\"':'ProfilesDir = \"\$SNAP_DATA/config/device-mqtt/res\"': > \
         "$SNAPCRAFT_PART_INSTALL/config/device-mqtt/res/configuration.toml"
 
       install -DT "./cmd/Attribution.txt" \
@@ -971,9 +977,10 @@ parts:
       # Override 'LogFile'
       install -d "$SNAPCRAFT_PART_INSTALL/config/device-random/res/"
 
-      # install configuratin & default device profile
+      # install configuration & default device profile
       cat "./cmd/res/configuration.toml" | \
-        sed -e s:\"./device-random.log\":\'\$SNAP_COMMON/device-random.log\': > \
+        sed -e s:\"./device-random.log\":\'\$SNAP_COMMON/device-random.log\': \
+          -e s:'ProfilesDir = \"./res\"':'ProfilesDir = \"\$SNAP_DATA/config/device-random/res\"': > \
         "$SNAPCRAFT_PART_INSTALL/config/device-random/res/configuration.toml"
 
       install -T "./cmd/res/device.random.yaml" \
