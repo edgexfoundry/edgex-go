@@ -16,13 +16,13 @@ package data
 import "github.com/edgexfoundry/edgex-go/internal/pkg/config"
 
 type ConfigurationStruct struct {
-	Writable                   WritableInfo
-	MessageQueue               config.MessageQueueInfo
-	Clients                    map[string]config.ClientInfo
-	Databases                  map[string]config.DatabaseInfo
-	Logging                    config.LoggingInfo
-	Registry                   config.RegistryInfo
-	Service                    config.ServiceInfo
+	Writable     WritableInfo
+	MessageQueue config.MessageQueueInfo
+	Clients      map[string]config.ClientInfo
+	Databases    map[string]config.DatabaseInfo
+	Logging      config.LoggingInfo
+	Registry     config.RegistryInfo
+	Service      config.ServiceInfo
 }
 
 type WritableInfo struct {

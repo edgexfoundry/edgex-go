@@ -19,15 +19,15 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
-var testAddressable = models.Addressable{Name:"OTROMAS-1", HTTPMethod:"POST", Protocol:"TCP", Address:"127.0.0.1", Port:1883,
-	Publisher:"FuseExportPublisher_OTROMAS-1", User:"dummy", Password:"dummy", Topic:"FuseDataTopic"}
-var testRegistration = models.Registration{ID:"5a15918fa4a9b92af1c94bab", Origin:1471806386919, Name:"OTROMAS-1",
-	Addressable:testAddressable, Format:models.FormatJSON, Enable:true, Destination:models.DestMQTT}
+var testAddressable = models.Addressable{Name: "OTROMAS-1", HTTPMethod: "POST", Protocol: "TCP", Address: "127.0.0.1", Port: 1883,
+	Publisher: "FuseExportPublisher_OTROMAS-1", User: "dummy", Password: "dummy", Topic: "FuseDataTopic"}
+var testRegistration = models.Registration{ID: "5a15918fa4a9b92af1c94bab", Origin: 1471806386919, Name: "OTROMAS-1",
+	Addressable: testAddressable, Format: models.FormatJSON, Enable: true, Destination: models.DestMQTT}
 
 const (
-	emptyRegistrationList    = "[]"
-	invalidReply1            = "[[]]"
-	invalidReply2            = ""
+	emptyRegistrationList = "[]"
+	invalidReply1         = "[[]]"
+	invalidReply2         = ""
 )
 
 func TestMain(m *testing.M) {
@@ -64,7 +64,7 @@ func TestClientRegistrations(t *testing.T) {
 	}
 
 	handler := func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, "[" + string(data) + "]")
+		fmt.Fprint(w, "["+string(data)+"]")
 	}
 
 	// create test server with handler
@@ -164,7 +164,7 @@ func TestClientRegistrationsInvalidRegistration2(t *testing.T) {
 	}
 
 	handler := func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, "[" + string(validData) + "," + string(invalidData) + "]")
+		fmt.Fprint(w, "["+string(validData)+","+string(invalidData)+"]")
 	}
 
 	// create test server with handler

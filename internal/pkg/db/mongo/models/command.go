@@ -52,8 +52,8 @@ type Command struct {
 	Id       bson.ObjectId `bson:"_id,omitempty"`
 	Uuid     string        `bson:"uuid,omitempty"`
 	Name     string        `bson:"name"`
-	Get      Get          `bson:"get"`
-	Put      Put          `bson:"put"`
+	Get      Get           `bson:"get"`
+	Put      Put           `bson:"put"`
 }
 
 func (c *Command) ToContract() (cmd contract.Command) {

@@ -9,8 +9,8 @@ package test
 import (
 	"testing"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/edgexfoundry/edgex-go/internal/export"
+	"github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
 func TestExportDB(t *testing.T, db export.DBClient) {

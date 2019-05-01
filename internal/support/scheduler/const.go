@@ -31,8 +31,6 @@ const (
 	SCHEDULER_TIMELAYOUT = "20060102T150405" /** Scheduler **/
 	TIMELAYOUT           = "20060102T150405" /** Scheduler **/
 
-
-
 	/* ---------------- URL PARAM NAMES -----------------------*/
 	ContentTypeKey       = "Content-Type"
 	ContentTypeJsonValue = "application/json; charset=utf-8"

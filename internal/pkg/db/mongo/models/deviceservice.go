@@ -39,7 +39,7 @@ type DeviceService struct {
 	OperatingState contract.OperatingState `bson:"operatingState"` // operational state - ether enabled or disableddc
 	Labels         []string                `bson:"labels"`         // tags or other labels applied to the device service for search or other identification needs
 	Addressable    mgo.DBRef               `bson:"addressable"`    // address (MQTT topic, HTTP address, serial bus, etc.) for reaching the service
-	AdminState     contract.AdminState     `bson:"adminState"` // Device Service Admin State
+	AdminState     contract.AdminState     `bson:"adminState"`     // Device Service Admin State
 }
 
 func (ds *DeviceService) ToContract(transform addressableTransform) (c contract.DeviceService, err error) {

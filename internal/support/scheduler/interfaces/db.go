@@ -32,7 +32,7 @@ type DBClient interface {
 	IntervalByName(name string) (contract.Interval, error)
 
 	// Return interval by contract id
-	IntervalById(id string) (contract.Interval,error)
+	IntervalById(id string) (contract.Interval, error)
 
 	// Add a new Interval
 	AddInterval(interval contract.Interval) (string, error)
@@ -78,5 +78,5 @@ type DBClient interface {
 	ScrubAllIntervalActions() (int, error)
 
 	// Scrub all scheduler intervals from the database (only used in test)
-	ScrubAllIntervals()(int, error)
+	ScrubAllIntervals() (int, error)
 }

@@ -25,8 +25,8 @@ import (
 func PollCpu() (cpuSnapshot CpuUsage) {
 	linuxSample := systemstat.GetCPUSample()
 	return CpuUsage{
-		Busy: linuxSample.Nice + linuxSample.User,
-		Idle: linuxSample.Idle,
+		Busy:  linuxSample.Nice + linuxSample.User,
+		Idle:  linuxSample.Idle,
 		Total: linuxSample.Total,
 	}
 }
@@ -34,12 +34,12 @@ func PollCpu() (cpuSnapshot CpuUsage) {
 func AvgCpuUsage(init, final CpuUsage) (avg float64) {
 	// SimpleAverage only uses idle and total, so only copy those
 	linuxInit := systemstat.CPUSample{
-		Idle: init.Idle,
+		Idle:  init.Idle,
 		Total: init.Total,
 	}
 
 	linuxFinal := systemstat.CPUSample{
-		Idle: final.Idle,
+		Idle:  final.Idle,
 		Total: final.Total,
 	}
 

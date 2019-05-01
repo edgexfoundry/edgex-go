@@ -98,7 +98,7 @@ func operationHandler(w http.ResponseWriter, r *http.Request) {
 		break
 
 	case RESTART:
-		err:= InvokeOperation(RESTART, o.Services)
+		err := InvokeOperation(RESTART, o.Services)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(fmt.Sprintf("Error: %s", err.Error())))
