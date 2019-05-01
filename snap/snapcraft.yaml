@@ -38,7 +38,7 @@ apps:
   # edgex microservices
   consul:
     command: bin/start-consul.sh
-    daemon: simple
+    daemon: forking
     plugs: [network, network-bind]
   core-config-seed:
     after: [consul]
