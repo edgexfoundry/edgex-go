@@ -930,7 +930,7 @@ parts:
       install -d "$SNAPCRAFT_PART_INSTALL/config/device-modbus/res/"
 
       cat "./cmd/res/configuration.toml" | \
-        sed -e s:\"./device-Modbus.log\":\'\$SNAP_COMMON/device-Modbus.log\': > \
+        sed -e s:\"./device-modbus.log\":\'\$SNAP_COMMON/device-modbus.log\': \
             -e s:'ProfilesDir = \"./res\"':'ProfilesDir = \"\$SNAP_DATA/config/device-modbus/res\"': > \
         "$SNAPCRAFT_PART_INSTALL/config/device-modbus/res/configuration.toml"
       install -DT "./cmd/Attribution.txt" \
