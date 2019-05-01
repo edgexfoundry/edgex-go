@@ -41,24 +41,22 @@ apps:
     daemon: simple
     plugs: [network, network-bind]
   core-config-seed:
+    after: [consul]
     command: >
       bin/config-seed
       --cmd "$SNAP_DATA/config"
       -confdir "$SNAP_DATA/config/config-seed/res"
       --props "$SNAP_DATA/config/config-seed/res/properties"
-    plugs: [network, network-bind]
     daemon: oneshot
     passthrough:
       start-timeout: 15m
-    after:
-      - consul
+    plugs: [network, network-bind]
   mongod:
+    after: [core-config-seed]
     command: bin/mongod-wrapper.sh
-    stop-command: bin/mongod --shutdown --dbpath ${SNAP_DATA}/mongo/db
-    plugs: [hardware-observe, network, network-bind, system-observe]
     daemon: simple
-    after:
-      - core-config-seed
+    plugs: [hardware-observe, network, network-bind, system-observe]
+    stop-command: bin/mongod --shutdown --dbpath ${SNAP_DATA}/mongo/db
   cassandra:
     command: bin/cassandra-wrapper.sh
     daemon: forking
@@ -69,7 +67,11 @@ apps:
       - network-bind
       - mount-observe
   kong-daemon:
+    after:
+      - cassandra
+      - pkisetup
     command: bin/kong-daemon.sh
+    daemon: forking
     environment:
       KONG_CONF: $SNAP_DATA/config/security-api-gateway/kong.conf
       KONG_PROXY_ACCESS_LOG: $SNAP_COMMON/logs/kong-proxy-access.log
@@ -77,178 +79,172 @@ apps:
       KONG_PROXY_ERROR_LOG: $SNAP_COMMON/logs/kong-proxy-error.log
       KONG_ADMIN_ERROR_LOG: $SNAP_COMMON/logs/kong-admin-error.log
       KONG_ADMIN_LISTEN: "0.0.0.0:8001, 0.0.0.0:8444 ssl"
-    stop-command: bin/kong-stop.sh
-    daemon: forking
+    passthrough:
+      start-timeout: 15m
     plugs:
       - network
       - network-bind
-    passthrough:
-      start-timeout: 15m
-    after:
-      - cassandra
-      - pkisetup
+    stop-command: bin/kong-stop.sh
   pkisetup:
     command: bin/pkisetup-wrapper.sh
+    daemon: oneshot
     environment:
       PKI_SETUP_VAULT_FILE: $SNAP_DATA/config/security-secret-store/pkisetup-vault.json
       PKI_SETUP_KONG_FILE: $SNAP_DATA/config/security-secret-store/pkisetup-kong.json
-    daemon: oneshot
     passthrough:
       start-timeout: 15m
   vault:
-    command: bin/vault server --config="$VAULT_CONFIG"
-    environment:
-      VAULT_CONFIG: "$SNAP_DATA/config/security-secret-store/vault-config.json"
-      VAULT_ADDR: "https://localhost:8200"
-      VAULT_UI: "true"
-    daemon: simple
-    plugs:
-      - network
-      - network-bind
     after:
       - consul
       - pkisetup
       - core-config-seed
+    command: bin/vault server --config="$VAULT_CONFIG"
+    daemon: simple
+    environment:
+      VAULT_CONFIG: "$SNAP_DATA/config/security-secret-store/vault-config.json"
+      VAULT_ADDR: "https://localhost:8200"
+      VAULT_UI: "true"
+    plugs:
+      - network
+      - network-bind
   vault-worker:
+    after: [vault]
     command: bin/vault-worker-wrapper.sh
     daemon: oneshot
-    plugs:
-      - network
-      - network-bind
-    after:
-      - vault
     passthrough:
       start-timeout: 15m
-  edgexproxy:
-    command: bin/edgexproxy-wrapper.sh
-    daemon: oneshot
     plugs:
       - network
       - network-bind
+  edgexproxy:
     after:
       - vault-worker
       - kong-daemon
-    passthrough:
-      start-timeout: 15m
-  mongo-worker:
-    command: bin/mongo-worker-wrapper.sh
-    plugs: [network]
+    command: bin/edgexproxy-wrapper.sh
     daemon: oneshot
-    after:
-      - mongod
     passthrough:
       start-timeout: 15m
+    plugs:
+      - network
+      - network-bind
+  mongo-worker:
+    after: [mongod]
+    command: bin/mongo-worker-wrapper.sh
+    daemon: oneshot
+    passthrough:
+      start-timeout: 15m
+    plugs: [network]
   core-data:
+    after:
+      - core-config-seed
+      - mongo-worker
+      - edgexproxy
     command: bin/core-data -confdir "$SNAP_DATA/config/core-data/res" --registry
     daemon: simple
     plugs: [network, network-bind]
+  core-metadata:
     after:
       - core-config-seed
       - mongo-worker
       - edgexproxy
-  core-metadata:
     command: bin/core-metadata -confdir "$SNAP_DATA/config/core-metadata/res" --registry
     daemon: simple
     plugs: [network, network-bind]
+  core-command:
     after:
       - core-config-seed
       - mongo-worker
       - edgexproxy
-  core-command:
     command: bin/core-command -confdir "$SNAP_DATA/config/core-command/res" --registry
     daemon: simple
     plugs: [network, network-bind]
+  support-logging:
     after:
       - core-config-seed
       - mongo-worker
       - edgexproxy
-  support-logging:
     command: bin/support-logging -confdir "$SNAP_DATA/config/support-logging/res" --registry
     daemon: simple
     plugs: [network, network-bind]
+  support-notifications:
     after:
       - core-config-seed
       - mongo-worker
       - edgexproxy
-  support-notifications:
     command: bin/support-notifications -confdir "$SNAP_DATA/config/support-notifications/res" --registry
     daemon: simple
     plugs: [network, network-bind]
+  support-scheduler:
     after:
       - core-config-seed
       - mongo-worker
       - edgexproxy
-  support-scheduler:
     command: bin/support-scheduler -confdir "$SNAP_DATA/config/support-scheduler/res" --registry
     daemon: simple
     plugs: [network, network-bind]
-    after:
-      - core-config-seed
-      - mongo-worker
-      - edgexproxy
   support-rulesengine:
-    command: bin/support-rulesengine-wrapper.sh
-    daemon: simple
-    plugs: [network, network-bind]
     after:
       - export-client
       - core-config-seed
       - mongo-worker
       - edgexproxy
+    command: bin/support-rulesengine-wrapper.sh
+    daemon: simple
+    plugs: [network, network-bind]
   export-client:
+    after:
+      - core-config-seed
+      - mongo-worker
+      - edgexproxy
     command: bin/export-client -confdir "$SNAP_DATA/config/export-client/res" --registry
     daemon: simple
     plugs: [network, network-bind]
+  export-distro:
     after:
       - core-config-seed
       - mongo-worker
       - edgexproxy
-  export-distro:
     command: bin/export-distro -confdir "$SNAP_DATA/config/export-distro/res" --registry
     daemon: simple
     plugs: [network, network-bind]
+  sys-mgmt-agent:
     after:
       - core-config-seed
       - mongo-worker
       - edgexproxy
-  sys-mgmt-agent:
     command: bin/sys-mgmt-agent -confdir "$SNAP_DATA/config/sys-mgmt-agent/res" --registry
     daemon: simple
     plugs: [network, network-bind, daemon-notify]
+  device-modbus:
     after:
       - core-config-seed
       - mongo-worker
       - edgexproxy
-  device-modbus:
+      - core-data
+      - core-metadata
     command: bin/device-modbus -confdir $SNAP_DATA/config/device-modbus -profile res --registry
     daemon: simple
     plugs: [network, network-bind]
+  device-mqtt:
     after:
       - core-config-seed
       - mongo-worker
       - edgexproxy
       - core-data
       - core-metadata
-  device-mqtt:
     command: bin/device-mqtt -confdir $SNAP_DATA/config/device-mqtt -profile res --registry
     daemon: simple
     plugs: [network, network-bind]
+  device-random:
     after:
       - core-config-seed
       - mongo-worker
       - edgexproxy
       - core-data
       - core-metadata
-  device-random:
     command: bin/device-random -confdir $SNAP_DATA/config/device-random -profile res --registry
     daemon: simple
     plugs: [network, network-bind]
-    after:
-      - core-config-seed
-      - mongo-worker
-      - edgexproxy
-      - core-data
-      - core-metadata
 
   # helper commands the snap exposes
   mongo:
