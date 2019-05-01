@@ -56,11 +56,11 @@ type ProfileProperty struct {
 }
 
 type DeviceResource struct {
-	Description string                 `bson:"description"`
-	Name        string                 `bson:"name"`
-	Tag         string                 `bson:"tag"`
-	Properties  ProfileProperty        `bson:"properties"`
-	Attributes  map[string]interface{} `bson:"attributes"`
+	Description string            `bson:"description"`
+	Name        string            `bson:"name"`
+	Tag         string            `bson:"tag"`
+	Properties  ProfileProperty   `bson:"properties"`
+	Attributes  map[string]string `bson:"attributes"`
 }
 
 type ResourceOperation struct {
