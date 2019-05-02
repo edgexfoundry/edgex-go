@@ -98,6 +98,9 @@ fi
 mkdir -p "$SNAP_DATA/consul/data"
 mkdir -p "$SNAP_DATA/consul/config"
 
+# ensure mongodb data dirs exist
+mkdir -p "$SNAP_DATA/mongo/db"
+
 # ensure vault pki directory exists
 mkdir -p "${SNAP_DATA}/vault/pki"
 
