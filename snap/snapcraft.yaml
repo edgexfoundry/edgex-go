@@ -44,10 +44,10 @@ apps:
     plugs: [network, network-bind]
   mongod:
     after: [core-config-seed]
-    command: bin/mongod-wrapper.sh
+    command: bin/mongod --dbpath "$SNAP_DATA/mongo/db" --logpath "$SNAP_COMMON/mongodb.log" --smallfiles
     daemon: simple
     plugs: [hardware-observe, network, network-bind, system-observe]
-    stop-command: bin/mongod --shutdown --dbpath ${SNAP_DATA}/mongo/db
+    stop-command: bin/mongod --shutdown --dbpath "$SNAP_DATA/mongo/db"
   cassandra:
     command: bin/cassandra-wrapper.sh
     daemon: forking
