@@ -24,15 +24,6 @@ assumes: [snapd2.38]
 # TODO: upgrade to stable before releasing to beta/candidate/stable
 grade: devel
 confinement: strict
-#
-# TODO: still a few bugs to work out for confinement;
-# seems that there are apparmor denials being generated
-# for open calls to the directory: /var/lib/snapd/void/.
-# Prior to the changes to the start-edgex script, each
-# service's log files were being written here, so not
-# sure why denials are still being generated.  This
-# be caused by the fact that the current working dir
-# may be defaulting to this dir...
 
 apps:
   # edgex microservices
