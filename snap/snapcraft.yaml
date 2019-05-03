@@ -244,7 +244,7 @@ apps:
       - edgexproxy
     command: bin/sys-mgmt-agent -confdir $SNAP_DATA/config/sys-mgmt-agent/res --registry
     daemon: simple
-    plugs: [network, network-bind, daemon-notify]
+    plugs: [network, network-bind]
   device-modbus:
     adapter: none
     after:
