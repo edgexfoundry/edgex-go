@@ -44,7 +44,6 @@ endef
 
 define make_docker
 	docker build \
-		--no-cache \
 		--label "git_sha=$(GIT_SHA)" \
 		--build-arg SVC_NAME=$(subst docker_,,$(1)) \
 		-t edgex/$(subst docker_,,$(1)):$(GIT_SHA) \

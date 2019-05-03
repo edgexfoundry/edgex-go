@@ -8,8 +8,8 @@
 
 # Collects EdgeX Go binaries (must be previously built)
 # and packages them into a dir alongside with necessary config files.
-# This facililtets transfer of binaries to otehr machine
-# (for example copy of cross-compiled binaris to ARM gateway)
+# This facilitates transfer of binaries to otehr machine
+# (for example copy of cross-compiled binaries to ARM gateway)
 
 DIR=$PWD
 CMD_DIR=../cmd
