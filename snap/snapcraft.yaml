@@ -654,6 +654,14 @@ parts:
       lib: usr/share/cassandra/lib
       # Rename mawk to awk instead of shipping a symlink.
       usr/bin/mawk: usr/bin/awk
+    override-prime: |
+      snapcraftctl prime
+      # since we only use cassandra for kong, we severly limit the amount of 
+      # RAM that cassandra uses since it's a big of a RAM hog, by default
+      # attempting to use half of your RAM for itself...
+      echo "-Xms64M" >> $SNAPCRAFT_PART_INSTALL/etc/cassandra/jvm.options
+      echo "-Xmx512M" >> $SNAPCRAFT_PART_INSTALL/etc/cassandra/jvm.options
+      echo "-Xmn64M" >> $SNAPCRAFT_PART_INSTALL/etc/cassandra/jvm.options
     prime:
       # Files from the stage directory to include in the snap.
       - bin/nodetool
