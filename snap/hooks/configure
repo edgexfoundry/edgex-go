@@ -8,6 +8,7 @@ ALL_SERVICES=""
 ALL_SERVICES="$ALL_SERVICES consul"
 ALL_SERVICES="$ALL_SERVICES mongod"
 ALL_SERVICES="$ALL_SERVICES mongo-worker"
+ALL_SERVICES="$ALL_SERVICES redis"
 
 # core services
 ALL_SERVICES="$ALL_SERVICES core-data"
@@ -34,8 +35,8 @@ ALL_SERVICES="$ALL_SERVICES device-random"
 ALL_SERVICES="$ALL_SERVICES security-secret-store"
 ALL_SERVICES="$ALL_SERVICES security-api-gateway"
 
-
-# handle_svc will either turn a service off or on
+# handle_svc will either turn a service off or on and set the associated
+# config item
 # first arg is the service, second is the state to put it in
 handle_svc () {
     case "$2" in 
@@ -118,3 +119,101 @@ for key in $ALL_SERVICES; do
             ;;
     esac
 done
+
+# handle usage of database provider
+dbProvider=$(snapctl get dbtype)
+PREV_DB_PROVIDER_FILE="$SNAP_DATA/prevdbtype"
+if [ -f "$PREV_DB_PROVIDER_FILE" ]; then
+    echo "" > "$PREV_DB_PROVIDER_FILE"
+fi
+case "$dbProvider" in 
+    "")
+        # not set, don't do anything 
+        ;;
+    "redis")
+        # dbtype is set to redis, see what the previous value of dbtype was
+        prevDBtype=$(cat "$PREV_DB_PROVIDER_FILE")
+        if [ "$prevDBtype" != "redis" ]; then
+            # change from previous database provider to redis
+            # first change the configuration.toml files for the following
+            # services:
+            # * core-data
+            # * core-metadata
+            # * export-client
+            # * support-notifications
+            # * support-scheduler
+            for svc in core-data core-metadata export-client support-notifications support-scheduler; do
+                configFile=$SNAP_DATA/config/$svc/res/configuration.toml
+                toml2json --preserve-key-order "$configFile" | \
+                    jq -r '.Databases.Primary.Type = "redisdb" | .Databases.Primary.Port = 6379' | \
+                    json2toml --preserve-key-order > "$configFile.tmp"
+                mv "$configFile.tmp" "$configFile"
+            done
+
+            # we also need to ensure that the support-logging is set to 
+            # use file based logging persistence
+            configFile=$SNAP_DATA/config/support-logging/res/configuration.toml
+            toml2json --preserve-key-order "$configFile" | \
+                jq -r '.Writable.Persistence = "file"' | \
+                json2toml --preserve-key-order > "$configFile.tmp"
+            mv "$configFile.tmp" "$configFile"
+
+            # turn mongod and mongo-worker off
+            handle_svc "mongod" "off"
+            handle_svc "mongo-worker" "off"
+
+            # turn redis on
+            handle_svc "redis" "on"
+
+            # since the configuration files have been modified, those 
+            # changes need to be progpogated into relevant services, so 
+            # restart the services with updated configuration if they were 
+            # already running
+            # note support-logging is here too due to the file Persistence
+            "$SNAP/bin/push-config.sh" core-data core-metadata export-client support-notifications support-scheduler support-logging
+        fi
+        # save the database provider as redis for next invocation
+        echo "redis" > "$PREV_DB_PROVIDER_FILE"
+        ;;
+    "mongodb")
+        # dbtype is set to mongodb, see what the previous value of dbtype was
+        prevDBtype=$(cat "$PREV_DB_PROVIDER_FILE")
+        if [ "$prevDBtype" != "mongodb" ]; then
+            # change from previous database provider to mongodb
+            # first change the configuration.toml files for the following
+            # services:
+            # * core-data
+            # * core-metadata
+            # * export-client
+            # * support-notifications
+            # * support-scheduler
+            for svc in core-data core-metadata export-client support-notifications support-scheduler; do
+                configFile=$SNAP_DATA/config/$svc/res/configuration.toml
+                toml2json --preserve-key-order "$configFile" | \
+                    jq -r '.Databases.Primary.Type = "mongodb" | .Databases.Primary.Port = 27017' | \
+                    json2toml --preserve-key-order > "$configFile.tmp"
+                mv "$configFile.tmp" "$configFile"
+            done
+            
+            # turn redis off
+            handle_svc "redis" "off"
+            
+            # turn mongod and mongo-worker on
+            handle_svc "mongod" "on"
+            handle_svc "mongo-worker" "on"
+
+            # since the configuration files have been modified, those 
+            # changes need to be progpogated into relevant services, so 
+            # restart the services with updated configuration if they were 
+            # already running
+            "$SNAP/bin/push-config.sh" core-data core-metadata export-client support-notifications support-scheduler
+        fi
+
+        # save the database provider as mongodb for next invocation
+        echo "mongodb" > "$PREV_DB_PROVIDER_FILE"
+        ;;
+    *)
+        echo "invalid setting for dbtype: $dbProvider"
+        exit 1
+        ;;
+esac

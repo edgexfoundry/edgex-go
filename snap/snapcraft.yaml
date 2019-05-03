@@ -66,6 +66,12 @@ apps:
     passthrough:
       start-timeout: 15m
     plugs: [network, network-bind]
+  redis:
+    adapter: full
+    after: [core-config-seed]
+    command: bin/redis-server $SNAP_DATA/redis/redis.conf
+    daemon: simple
+    plugs: [network, network-bind]
   mongod:
     adapter: full
     after: [core-config-seed]
@@ -294,6 +300,10 @@ apps:
     plugs: [network, network-bind]
 
   # helper commands the snap exposes
+  redis-cli:
+    adapter: full
+    command: bin/redis-cli
+    plugs: [home, removable-media, network]
   push-config:
     adapter: full
     command: bin/push-config.sh
@@ -454,7 +464,27 @@ parts:
       - -bin/mongorestore
       - -bin/mongos
       - -bin/mongotop
-
+  remarshal:
+    plugin: python
+    source: https://github.com/dbohdan/remarshal.git
+    source-tag: v0.10.0
+    source-depth: 1
+    organize:
+      LICENSE: usr/share/doc/remarshal/LICENSE
+  redis:
+    source: https://github.com/antirez/redis.git
+    source-tag: "5.0.4"
+    source-depth: 1
+    plugin: make
+    make-install-var: PREFIX
+    override-build: |
+      snapcraftctl build
+      # process the config file to specify the working directory for redis
+      # as $SNAP_DATA/redis
+      cd $SNAPCRAFT_PART_SRC
+      mkdir -p $SNAPCRAFT_PART_INSTALL/config/redis
+      sed -e s@'dir ./'@'dir \$SNAP_DATA/redis'@ \
+        redis.conf > $SNAPCRAFT_PART_INSTALL/config/redis/redis.conf
   mongo-config:
     source: https://github.com/edgexfoundry/docker-edgex-mongo.git
     source-depth: 1
@@ -557,9 +587,13 @@ parts:
         sed -e s:./logs/edgex-export-distro.log:\$SNAP_COMMON/export-distro.log: \
             -e s:'http\://localhost\:48061/api/v1/logs':: > \
        "$SNAPCRAFT_PART_INSTALL/config/export-distro/res/configuration.toml"
-
+      
+      # for support-logging we also want the default persistence to be on a 
+      # file so that we can use redis (which isn't supported with support-logging)
+      # in the snap by default
       cat "./cmd/support-logging/res/configuration.toml" | \
         sed -e s:./logs/edgex-support-logging.log:\$SNAP_COMMON/support-logging.log: \
+            -e s:"Persistence = 'database'":"Persistence = 'file'":\
             -e s:'http\://localhost\:48061/api/v1/logs':: > \
        "$SNAPCRAFT_PART_INSTALL/config/support-logging/res/configuration.toml"
 
