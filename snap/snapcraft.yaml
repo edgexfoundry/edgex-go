@@ -163,6 +163,10 @@ apps:
     command: bin/core-data -confdir $SNAP_DATA/config/core-data/res --registry
     daemon: simple
     plugs: [network, network-bind]
+    # for now, specify a shorter stop-timeout until services learn how
+    # to handle SIGTERM properly with as per 
+    # https://github.com/edgexfoundry/edgex-go/issues/1306
+    stop-timeout: 10s
   core-metadata:
     adapter: none
     after:
@@ -172,6 +176,7 @@ apps:
     command: bin/core-metadata -confdir $SNAP_DATA/config/core-metadata/res --registry
     daemon: simple
     plugs: [network, network-bind]
+    stop-timeout: 10s
   core-command:
     adapter: none
     after:
@@ -181,6 +186,7 @@ apps:
     command: bin/core-command -confdir $SNAP_DATA/config/core-command/res --registry
     daemon: simple
     plugs: [network, network-bind]
+    stop-timeout: 10s
   support-logging:
     adapter: none
     after:
@@ -190,6 +196,7 @@ apps:
     command: bin/support-logging -confdir $SNAP_DATA/config/support-logging/res --registry
     daemon: simple
     plugs: [network, network-bind]
+    stop-timeout: 10s
   support-notifications:
     adapter: none
     after:
@@ -199,6 +206,7 @@ apps:
     command: bin/support-notifications -confdir $SNAP_DATA/config/support-notifications/res --registry
     daemon: simple
     plugs: [network, network-bind]
+    stop-timeout: 10s
   support-scheduler:
     adapter: none
     after:
@@ -208,6 +216,7 @@ apps:
     command: bin/support-scheduler -confdir $SNAP_DATA/config/support-scheduler/res --registry
     daemon: simple
     plugs: [network, network-bind]
+    stop-timeout: 10s
   support-rulesengine:
     adapter: full
     after:
@@ -227,6 +236,7 @@ apps:
     command: bin/export-client -confdir $SNAP_DATA/config/export-client/res --registry
     daemon: simple
     plugs: [network, network-bind]
+    stop-timeout: 10s
   export-distro:
     adapter: full
     after:
@@ -236,6 +246,7 @@ apps:
     command: bin/export-distro -confdir $SNAP_DATA/config/export-distro/res --registry
     daemon: simple
     plugs: [network, network-bind]
+    stop-timeout: 10s
   sys-mgmt-agent:
     adapter: none
     after:
