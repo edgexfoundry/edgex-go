@@ -118,8 +118,21 @@ if [ ! -f ${SNAP_DATA}/config/security-api-gateway/kong.conf ]; then
     sed -i "s@#database = postgres@database = cassandra@" ${SNAP_DATA}/config/security-api-gateway/kong.conf
 fi
 
-# finally, disable services in the snap that aren't meant to come up by default
+# finally, disable and turn off non-default services
 # by default, we want the export-*, support-*, and device-* services off.
 for svc in export-distro export-client support-notifications support-scheduler support-logging support-rulesengine device-modbus device-mqtt device-random; do
-    snapctl stop --disable edgexfoundry.$svc
+    # set the service as off, so that the setting is persistent after a refresh
+    # due to snapd bug: https://bugs.launchpad.net/snapd/+bug/1818306
+    snapctl set $svc=off
+    # also disable the service so it doesn't initially run - note that just 
+    # setting the service as off above isn't quite what we want as the install
+    # tasks go:
+    # - install hook runs
+    # - all non-disabled services are started
+    # - configure hook runs (thus disabled services turned off)
+    # as such, we don't want the services we turn off initially to be started
+    # before the configure hook runs as it will be resource intensive for no
+    # reason just to start a bunch of services and then immediately try to 
+    # stop them afterwards
+    snapctl stop --disable "$SNAP_NAME.$svc"
 done
