@@ -40,9 +40,13 @@ ALL_SERVICES="$ALL_SERVICES security-api-gateway"
 handle_svc () {
     case "$2" in 
     "off")
-        snapctl stop --disable edgexfoundry.$1;;
+        snapctl stop --disable "$SNAP_NAME.$1"
+        snapctl set "$1"=off
+        ;;
     "on")
-        snapctl start --enable edgexfoundry.$1;;
+        snapctl start --enable "$SNAP_NAME.$1"
+        snapctl set "$1"=on
+        ;;
     "")
         # no setting for it, ignore and continue
         ;;
