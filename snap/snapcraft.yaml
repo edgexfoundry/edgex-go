@@ -636,20 +636,8 @@ parts:
       - -usr/share/alsa
 
   cassandra:
-    plugin: ant
-    ant-properties:
-      dist.dir: $SNAPCRAFT_PART_INSTALL
-    ant-build-targets:
-      - artifacts
-    source: https://github.com/apache/cassandra
-    source-tag: cassandra-3.11.4
-    source-type: git
-    build-packages:
-      - ant-optional
-      - build-essential
-      - python
-      - sed
-      - openjdk-8-jdk
+    plugin: dump
+    source: http://archive.apache.org/dist/cassandra/3.11.4/apache-cassandra-3.11.4-bin.tar.gz
     stage-packages:
       # Copy some packages into the stage directory to steal their
       # pre-built binaries.
@@ -666,15 +654,6 @@ parts:
       lib: usr/share/cassandra/lib
       # Rename mawk to awk instead of shipping a symlink.
       usr/bin/mawk: usr/bin/awk
-    override-build: |
-      if [ "$(id -u)" = "0" ]; then
-        SUDO=""
-      else
-        SUDO="sudo"
-      fi
-      # use openjdk-8 to build cassandra instead of openjdk-11
-      $SUDO update-alternatives --set java $(update-alternatives --list java | grep 8-openjdk)
-      snapcraftctl build
     prime:
       # Files from the stage directory to include in the snap.
       - bin/nodetool
