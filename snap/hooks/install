@@ -91,6 +91,16 @@ for type in proxy admin; do
     done
 done
 
+# install redis configuration files
+if [ ! -f "$SNAP_DATA/config/redis/redis.conf" ]; then
+    mkdir -p "$SNAP_DATA/redis"
+    cp "$SNAP/config/redis/redis.conf" "$SNAP_DATA/redis/redis.conf"
+    sed -i -e "s@\$SNAP_COMMON@$SNAP_COMMON@g" \
+        -e "s@\$SNAP_DATA@$SNAP_DATA@g" \
+        -e "s@\$SNAP@$SNAP@g" \
+        "$SNAP_DATA/redis/redis.conf"
+fi
+
 # the vault config needs to be generated with sed, replacing $SNAP_DATA in the file 
 # with the actual absolute directory
 # note that if anyone ever somehow has a "@" in their $SNAP_DATA this will likely break :-/
@@ -119,8 +129,9 @@ if [ ! -f ${SNAP_DATA}/config/security-api-gateway/kong.conf ]; then
 fi
 
 # finally, disable and turn off non-default services
-# by default, we want the export-*, support-*, and device-* services off.
-for svc in export-distro export-client support-notifications support-scheduler support-logging support-rulesengine device-modbus device-mqtt device-random; do
+# by default, we want the export-*, support-*, device-*, and redis services 
+# off.
+for svc in export-distro export-client support-notifications support-scheduler support-logging support-rulesengine device-modbus device-mqtt device-random redis; do
     # set the service as off, so that the setting is persistent after a refresh
     # due to snapd bug: https://bugs.launchpad.net/snapd/+bug/1818306
     snapctl set $svc=off
