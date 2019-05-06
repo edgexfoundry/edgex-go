@@ -428,6 +428,7 @@ parts:
     stage:
       - -README.md
       - -Dockerfile*
+      - -VERSION
     override-build: |
       snapcraftctl build
       echo "Installing mongo-config files"
