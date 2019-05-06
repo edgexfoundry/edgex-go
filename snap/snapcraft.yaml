@@ -341,20 +341,38 @@ parts:
   # they live here. see also https://github.com/edgexfoundry/edgex-go/issues/1109
   go:
     plugin: nil
-    source: https://go.googlesource.com/go
-    source-type: git
-    source-tag: go1.11.2
-    source-depth: 1
-    build-packages: [golang-go, g++]
+    source: snap/local/build-helpers
     override-build: |
-      cd src && env GOROOT_BOOTSTRAP=$(go env GOROOT | tr -d '\n') GO111MODULE=off ./make.bash
-      cd ..
-      cp -R bin $SNAPCRAFT_PART_INSTALL
-    stage:
-      - "bin"
+      # use dpkg architecture to figure out our target arch
+      # note - we specifically don't use arch
+      case "$(dpkg --print-architecture)" in
+        amd64)
+          FILE_NAME=go1.11.9.linux-amd64.tar.gz
+          FILE_HASH=e88aa3e39104e3ba6a95a4e05629348b4a1ec82791fb3c941a493ca349730608
+          ;;
+        arm64)
+          FILE_NAME=go1.11.9.linux-arm64.tar.gz
+          FILE_HASH=892ab6c2510c4caa5905b3b1b6a1d4c6f04e384841fec50881ca2be7e8accf05
+          ;;
+        armhf)
+          FILE_NAME=go1.11.9.linux-armv6l.tar.gz
+          FILE_HASH=f0d7b039cae61efdc346669f3459460e3dc03b6c6de528ca107fc53970cba0d1
+          ;;
+        i386)
+          FILE_NAME=go1.11.9.linux-386.tar.gz
+          FILE_HASH=0fa4001fcf1ef0644e261bf6dde02fc9f10ae4df6d74fda61fc4d3c3cbef1d79
+          ;;
+      esac
+      # download the archive, failing on ssl cert problems
+      curl https://dl.google.com/go/$FILE_NAME -O
+      echo "$FILE_HASH $FILE_NAME" > sha256
+      sha256sum -c sha256 | grep OK
+      tar -C $SNAPCRAFT_STAGE -xf go*.tar.gz --strip-components=1
     prime:
       - "-*"
-    after: [go-build-helper]
+    # build after kong to prevent staging go binaries into the snap as they
+    # are large - see the TODO on the kong part
+    after: [go-build-helper, kong]
 
   consul:
     after: [go]
@@ -755,6 +773,15 @@ parts:
     stage-packages:
       - luarocks
     override-build: |
+      # TODO: currently this build process does everything inside 
+      # $SNAPCRAFT_STAGE and ends up copying everything inside 
+      # $SNAPCRAFT_STAGE into $SNAPCRAFT_PART_INSTALL for this part, meaning 
+      # that other parts that run *before* this part and put files into 
+      # $SNAPCRAFT_STAGE will always be put into the snap - we should fix this
+      # part so it copies only what is needed from $SNAPCRAFT_STAGE into 
+      # $SNAPCRAFT_PART_BUILD, builds, then copies into 
+      # $SNAPCRAFT_PART_INSTALL without errantly copying everything from stage
+
       # first copy the default config file provided and install it into $SNAPCRAFT_PART_INSTALL
       # it will be generated/configured during the install hook
       mkdir -p $SNAPCRAFT_PART_INSTALL/config/security-api-gateway
