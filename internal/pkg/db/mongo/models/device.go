@@ -40,7 +40,6 @@ type Device struct {
 	Name           string                  `bson:"name"`                 // Unique name for identifying a device
 	AdminState     contract.AdminState     `bson:"adminState"`           // Admin state (locked/unlocked)
 	OperatingState contract.OperatingState `bson:"operatingState"`       // Operating state (enabled/disabled)
-	Addressable    mgo.DBRef               `bson:"addressable"`          // Addressable for the device - stores information about it's address
 	LastConnected  int64                   `bson:"lastConnected"`        // Time (milliseconds) that the device last provided any feedback or responded to any request
 	LastReported   int64                   `bson:"lastReported"`         // Time (milliseconds) that the device reported data to the core microservice
 	Labels         []string                `bson:"labels"`               // Other labels applied to the device to help with searching
