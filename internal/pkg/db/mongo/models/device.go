@@ -47,6 +47,7 @@ type Device struct {
 	Location       interface{}             `bson:"location"`             // Device service specific location (interface{} is an empty interface so it can be anything)
 	Service        mgo.DBRef               `bson:"service"`              // Associated Device Service - One per device
 	Profile        mgo.DBRef               `bson:"profile"`              // Associated Device Profile - Describes the device
+	ProfileName    string                  `bson:"profileName"`          // Associated Device Profile Name
 }
 
 func (d *Device) ToContract(dsTransform deviceServiceTransform, dpTransform deviceProfileTransform, cTransform commandTransform, aTransform addressableTransform) (c contract.Device, err error) {
@@ -148,6 +149,7 @@ func (d *Device) FromContract(from contract.Device, dsTransform deviceServiceTra
 	if _, err = dpModel.FromContract(from.Profile, cTransform); err != nil {
 		return
 	}
+	d.ProfileName = dpModel.Name
 	if d.Profile, err = dpTransform.DeviceProfileToDBRef(dpModel); err != nil {
 		return
 	}

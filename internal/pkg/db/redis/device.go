@@ -33,6 +33,7 @@ type redisDevice struct {
 	Location       interface{}
 	Service        string
 	Profile        string
+	ProfileName    string
 }
 
 func marshalDevice(d contract.Device) (out []byte, err error) {
@@ -50,6 +51,7 @@ func marshalDevice(d contract.Device) (out []byte, err error) {
 		Location:        d.Location,
 		Service:         d.Service.Id,
 		Profile:         d.Profile.Id,
+		ProfileName:     d.Profile.Name,
 	}
 
 	return marshalObject(s)
