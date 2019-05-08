@@ -1,0 +1,127 @@
+#!/bin/bash -e
+
+# LD_LIBRARY_PATH isn't properly initialized for hooks as snapcraft does for apps, so this 
+# has to be constructed manually
+# Note - the env var SNAP_LIBRARY_PATH is set by snapd for hooks, so it can be referenced here
+# This is mainly necessary so we can use jq from the snap which needs libs from inside the snap
+export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
+# for LD_LIBRARY_PATH, we need to handle the different architecture paths
+case $(arch) in
+    x86_64)
+        MULTI_ARCH_PATH="x86_64-linux-gnu";;
+    arm*)
+        MULTI_ARCH_PATH="arm-linux-gnueabihf";;
+    aarch64)
+        MULTI_ARCH_PATH="aarch64-linux-gnu";;
+    *)
+        echo "architecture $ARCH not supported"
+        exit 1
+        ;;
+esac
+export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$MULTI_ARCH_PATH:$SNAP/usr/lib/$MULTI_ARCH_PATH"
+export LD_LIBRARY_PATH=$SNAP_LIBRARY_PATH:$LD_LIBRARY_PATH
+
+# if the lastrevision has a value, it means that the previous revision
+# was new enough to use the current symlink, and as such doesn't need
+# processing
+if [ -n "$(snapctl get lastrev)" ]; then
+    exit 0
+fi
+
+# if however the previous revision wasn't set, we know that the previous 
+# revision would have used absolute paths for things like $SNAP_DATA to
+# and are now incorrect, and so we should update relevant values to use the 
+# current symlink intead
+# see https://github.com/edgexfoundry/edgex-go/issues/799#issuecomment-480318857
+# for full details
+
+# the full set of previous config items that would have been set as verbatim 
+# $SNAP_DATA with revision
+# * $SNAP_DATA/config/config-seed/res/properties/edgex-support-rulesengine/application.properties:
+#     $SNAP_DATA/support-rulesengine/rules
+#     $SNAP_DATA/support-rulesengine/templates
+# * $SNAP_DATA/config/security-secret-store/res/configuration.toml:
+#     $SNAP_DATA/vault/pki
+#     tokenfolderpath = "$SNAP_DATA/config/security-secret-store/res"
+# * $SNAP_DATA/config/security-api-gateway/res/configuration.toml:
+#     tokenpath = "$SNAP_DATA/config/security-api-gateway/res/kong-token.json"
+# * $SNAP_DATA/config/security-secret-store/vault-config.hcl
+#     tls_client_ca_file ="$SNAP_DATA/vault/pki/EdgeXFoundryCA/EdgeXFoundryTrustCA.pem"
+#     tls_cert_file ="$SNAP_DATA/vault/pki/EdgeXFoundryCA/localhost.pem"
+#     tls_key_file = "$SNAP_DATA/vault/pki/EdgeXFoundryCA/localhost.priv.key"
+# * $SNAP_DATA/config/security-api-gateway/kong.conf
+#     prefix = $SNAP_DATA/kong
+# * $SNAP_DATA/config/security-secret-store/pkisetup-kong.json
+#     working_dir: $SNAP_DATA/vault
+# * $SNAP_DATA/config/security-secret-store/pkisetup-vault.json
+#     working_dir: $SNAP_DATA/vault
+
+# snap setup dirs
+SNAP_DATA_CURRENT=${SNAP_DATA/%$SNAP_REVISION/current}
+SNAP_DATA_DIR=$(dirname "$SNAP_DATA")
+
+RULES_ENGINE_PROP_FILE="$SNAP_DATA/config/config-seed/res/properties/edgex-support-rulesengine/application.properties"
+if [ -f "$RULES_ENGINE_PROP_FILE" ]; then
+    sed -i \
+        -e "s@$SNAP_DATA_DIR/[0-9]*/support-rulesengine/rules@$SNAP_DATA_CURRENT/support-rulesengine/rules@" \
+        -e "s@$SNAP_DATA_DIR/[0-9]*/support-rulesengine/templates@$SNAP_DATA_CURRENT/support-rulesengine/templates@" \
+        "$RULES_ENGINE_PROP_FILE"
+fi
+
+SECRET_STORE_CONFIG="$SNAP_DATA/config/security-secret-store/res/configuration.toml"
+if [ -f "$SECRET_STORE_CONFIG" ]; then
+    sed -i \
+        -e "s@$SNAP_DATA_DIR/[0-9]*/vault/pki@$SNAP_DATA_CURRENT/vault/pki@" \
+        -e "s@$SNAP_DATA_DIR/[0-9]*/config/security-secret-store/res@$SNAP_DATA_CURRENT/config/security-secret-store/res@" \
+        "$SECRET_STORE_CONFIG"
+fi
+
+API_GATEWAY_CONFIG="$SNAP_DATA/config/security-api-gateway/res/configuration.toml"
+if [ -f "$API_GATEWAY_CONFIG" ]; then
+    sed -i \
+        -e "s@$SNAP_DATA_DIR/[0-9]*/config/security-api-gateway/res/kong-token.json@$SNAP_DATA_CURRENT/config/security-api-gateway/res/kong-token.json@" \
+        "$API_GATEWAY_CONFIG"
+fi
+
+VAULT_CONFIG_FILE="$SNAP_DATA/config/security-secret-store/vault-config.json"
+if [ -f "$VAULT_CONFIG_FILE" ]; then
+    sed -i \
+        -e "s@$SNAP_DATA_DIR/[0-9]*/vault/pki/EdgeXFoundryCA/EdgeXFoundryTrustCA.pem@$SNAP_DATA_CURRENT/vault/pki/EdgeXFoundryCA/EdgeXFoundryTrustCA.pem@" \
+        -e "s@$SNAP_DATA_DIR/[0-9]*/vault/pki/EdgeXFoundryCA/localhost.pem@$SNAP_DATA_CURRENT/vault/pki/EdgeXFoundryCA/localhost.pem@" \
+        -e "s@$SNAP_DATA_DIR/[0-9]*/vault/pki/EdgeXFoundryCA/localhost.priv.key@$SNAP_DATA_CURRENT/vault/pki/EdgeXFoundryCA/localhost.priv.key@" \
+        "$VAULT_CONFIG_FILE"
+fi
+
+KONG_CONF="$SNAP_DATA/config/security-api-gateway/kong.conf"
+if [ -f "$KONG_CONF" ]; then
+    sed -i \
+        -e "s@$SNAP_DATA_DIR/[0-9]*/kong@$SNAP_DATA_CURRENT/kong@" \
+        "$KONG_CONF"
+fi
+
+PKISETUP_CONFIG_DIR=$SNAP_DATA/config/security-secret-store
+PKI_VAULT_FILE="$PKISETUP_CONFIG_DIR/pkisetup-vault.json"
+if [ -f "$PKI_VAULT_FILE" ]; then
+    # with jq we can directly check if the setting for working_dir matches the
+    # regex for the previous revision $SNAP_DATA
+    # only then do we update it
+    if [ "$(jq -r --arg REGEX "$SNAP_DATA_DIR/[0-9]+/vault" '.working_dir | test($REGEX)' < "$PKI_VAULT_FILE" )"  = "true" ]; then
+        # modify the parameters using jq
+        jq --arg WORKDIR "$SNAP_DATA_CURRENT/vault" '.working_dir  = $WORKDIR' \
+            < "$PKI_VAULT_FILE" > "$PKI_VAULT_FILE.tmp"
+        mv "$PKI_VAULT_FILE.tmp" "$PKI_VAULT_FILE"
+    fi
+fi
+
+PKI_KONG_FILE="$PKISETUP_CONFIG_DIR/pkisetup-kong.json"
+if [ -f "$PKI_KONG_FILE" ]; then
+    # with jq we can directly check if the setting for working_dir matches the
+    # regex for the previous revision $SNAP_DATA
+    # only then do we update it
+    if [ "$(jq -r --arg REGEX "$SNAP_DATA_DIR/[0-9]+/vault" '.working_dir | test($REGEX)' < "$PKI_KONG_FILE" )"  = "true" ]; then
+        # update the working_dir
+        jq --arg WORKDIR "$SNAP_DATA_CURRENT/vault" '.working_dir  = $WORKDIR' \
+            < "$PKI_KONG_FILE" > "$PKI_KONG_FILE.tmp"
+        mv "$PKI_KONG_FILE.tmp" "$PKI_KONG_FILE"
+    fi
+fi
