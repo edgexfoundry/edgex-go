@@ -281,6 +281,21 @@ func (mc MongoClient) AddReading(r contract.Reading) (string, error) {
 		return "", err
 	}
 
+	if mapped.Device == "" {
+		events, err := mc.mapEvents(mc.getEvents(bson.M{}))
+		if err != nil {
+			return r.Id, err
+		}
+
+		for _, event := range events {
+			for _, reading := range event.Readings {
+				if mapped.Id.String() == reading.Id {
+					mapped.Device = reading.Device
+				}
+			}
+		}
+	}
+
 	mapped.TimestampForAdd()
 
 	err = s.DB(mc.database.Name).C(db.ReadingsCollection).Insert(&mapped)
@@ -299,6 +314,21 @@ func (mc MongoClient) UpdateReading(r contract.Reading) error {
 	id, err := mapped.FromContract(r)
 	if err != nil {
 		return err
+	}
+
+	if mapped.Device == "" {
+		events, err := mc.mapEvents(mc.getEvents(bson.M{}))
+		if err != nil {
+			return err
+		}
+
+		for _, event := range events {
+			for _, reading := range event.Readings {
+				if mapped.Id.String() == reading.Id {
+					mapped.Device = reading.Device
+				}
+			}
+		}
 	}
 
 	mapped.TimestampForUpdate()

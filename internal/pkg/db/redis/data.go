@@ -867,6 +867,30 @@ func addReading(conn redis.Conn, tx bool, r contract.Reading) (id string, err er
 		return r.Id, err
 	}
 
+	if r.Device == "" {
+		defer conn.Close()
+
+		objects, err := getObjectsByRange(conn, db.EventsCollection, 0, -1)
+		if err != nil {
+			if err != redis.ErrNil {
+				return r.Id, err
+			}
+		}
+		events := make([]contract.Event, len(objects))
+		err = unmarshalEvents(objects, events)
+		if err != nil {
+			return r.Id, err
+		}
+
+		for _, event := range events {
+			for _, reading := range event.Readings {
+				if r.Id == reading.Id {
+					r.Device = reading.Device
+				}
+			}
+		}
+	}
+
 	if tx {
 		_ = conn.Send("MULTI")
 	}
