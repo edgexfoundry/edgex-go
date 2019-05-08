@@ -197,6 +197,9 @@ apps:
     plugs:
       - network-bind
 
+passthrough:
+  epoch: 0
+
 parts:
   curl:
     plugin: nil
