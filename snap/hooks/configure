@@ -69,19 +69,27 @@ for key in $ALL_SERVICES; do
             ;;
         mongo-worker|edgexproxy|vault-worker)
             # it doesn't make any sense to disable the *-worker daemons since 
-            # they are just oneshot daemons that run after another daemon, so
+            # they are just oneshot daemons that run after other daemons, so
             # just ignore this request
             ;;
         security-api-gateway)
-            # the security-api-gateway consists of the following services:
+            # the security-api-gateway consists of the following base services
             # - kong
             # - cassandra (because kong requires it)
             # - edgexproxy
-            # - vault (because edgexproxy will access/store secrets in vault)
-            # - vault-worker
             handle_svc "cassandra" $status
             handle_svc "kong-daemon" $status
             handle_svc "edgexproxy" $status
+            # additionally, the secrity-api-gateway needs to use the following
+            # services:
+            # - vault (because edgexproxy will access/store secrets in vault)
+            # - vault-worker
+            # so if we are turning the security-api-gateway on, then turn 
+            # those services on too
+            if [ "$status" = "on" ]; then
+                handle_svc "vault" "on"
+                handle_svc "vault-worker" "on"
+            fi
             ;;
         security-secret-store)
             # the security-api-gateway consists of the following services:
