@@ -62,6 +62,10 @@ func (mc MongoClient) AddEvent(e contract.Event) (string, error) {
 
 			r.TimestampForAdd()
 
+			if reading.Device == "" {
+				r.Device = e.Device
+			}
+
 			ui = append(ui, r)
 
 			e.Readings[i].Id = id

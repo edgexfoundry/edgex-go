@@ -780,6 +780,12 @@ func addEvent(conn redis.Conn, e contract.Event) (id string, err error) {
 		return "", err
 	}
 
+	for i, reading := range e.Readings {
+		if reading.Device == "" {
+			e.Readings[i].Device = e.Device
+		}
+	}
+
 	_ = conn.Send("MULTI")
 	_ = conn.Send("SET", e.ID, m)
 	_ = conn.Send("ZADD", db.EventsCollection, 0, e.ID)
