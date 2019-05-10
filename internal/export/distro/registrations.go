@@ -292,6 +292,9 @@ func Loop() {
 				LoggingClient.Error(fmt.Sprintf("with error: %s", err.Error()))
 			}
 			return
+		case <-processStop:
+			LoggingClient.Info(fmt.Sprintf("received term signal"))
+			return
 		case <-time.After(time.Second):
 		}
 		allRegs, err = getRegistrations()
@@ -311,14 +314,14 @@ func Loop() {
 		select {
 		case e := <-messageErrors:
 			// kill all registration goroutines
-			for k, reg := range registrations {
-				if !reg.deleteFlag {
-					// Do not write in channel that will not be read
-					reg.chRegistration <- nil
-				}
-				delete(registrations, k)
-			}
+			stop(registrations)
 			LoggingClient.Error(fmt.Sprintf("exit msg: %s", e.Error()))
+			return
+
+		case <-processStop:
+			// kill all registration goroutines
+			stop(registrations)
+			LoggingClient.Info(fmt.Sprintf("received term signal"))
 			return
 
 		case update := <-registrationChanges:
@@ -350,5 +353,15 @@ func Loop() {
 				}
 			}
 		}
+	}
+}
+
+func stop(registrations map[string]*registrationInfo) {
+	for k, reg := range registrations {
+		if !reg.deleteFlag {
+			// Do not write in channel that will not be read
+			reg.chRegistration <- nil
+		}
+		delete(registrations, k)
 	}
 }
