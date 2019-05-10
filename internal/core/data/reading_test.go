@@ -26,7 +26,7 @@ func newReadingsMockDB() interfaces.DBClient {
 
 func TestGetAllReadings(t *testing.T) {
 	reset()
-	Configuration.Service.ReadMaxLimit = 5
+	Configuration.Service.MaxResultCount = 5
 
 	dbClient = newReadingsMockDB()
 
@@ -39,7 +39,7 @@ func TestGetAllReadings(t *testing.T) {
 
 func TestGetAllReadingsOverLimit(t *testing.T) {
 	reset()
-	Configuration.Service.ReadMaxLimit = 1
+	Configuration.Service.MaxResultCount = 1
 
 	dbClient = newReadingsMockDB()
 
@@ -61,7 +61,7 @@ func TestGetAllReadingsOverLimit(t *testing.T) {
 
 func TestGetAllReadingsError(t *testing.T) {
 	reset()
-	Configuration.Service.ReadMaxLimit = 5
+	Configuration.Service.MaxResultCount = 5
 	myMock := &dbMock.DBClient{}
 
 	myMock.On("Readings").Return([]models.Reading{}, fmt.Errorf("some error"))

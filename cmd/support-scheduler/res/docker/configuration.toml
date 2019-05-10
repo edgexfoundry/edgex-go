@@ -9,7 +9,7 @@ CheckInterval = '10s'
 Host = 'edgex-support-scheduler'
 Port = 48085
 Protocol = 'http'
-ReadMaxLimit = 100
+MaxResultCount = 50000
 StartupMsg = 'This is the Support Scheduler Microservice'
 Timeout = 5000
 

@@ -9,7 +9,7 @@ CheckInterval = '10s'
 Host = 'localhost'
 Port = 48060
 Protocol = 'http'
-ReadMaxLimit = 1000
+MaxResultCount = 500000
 StartupMsg = 'This is the Support Notifications Microservice'
 Timeout = 5000
 

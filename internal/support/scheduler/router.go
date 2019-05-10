@@ -104,7 +104,7 @@ func intervalHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	// Get all Intervals
 	case http.MethodGet:
-		intervals, err := getIntervals(Configuration.Service.ReadMaxLimit)
+		intervals, err := getIntervals(Configuration.Service.MaxResultCount)
 		if err != nil {
 			LoggingClient.Error(err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -318,7 +318,7 @@ func intervalActionHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodGet:
-		intervalActions, err := getIntervalActions(Configuration.Service.ReadMaxLimit)
+		intervalActions, err := getIntervalActions(Configuration.Service.MaxResultCount)
 		if err != nil {
 			LoggingClient.Error(err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)

@@ -89,7 +89,7 @@ func updateDeviceServiceLastReportedConnected(device string) {
 }
 
 func checkMaxLimit(limit int) error {
-	if limit > Configuration.Service.ReadMaxLimit {
+	if limit > Configuration.Service.MaxResultCount {
 		LoggingClient.Error(maxExceededString)
 		return errors.NewErrLimitExceeded(limit)
 	}

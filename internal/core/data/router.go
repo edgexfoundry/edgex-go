@@ -194,7 +194,7 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	// Get all events
 	case http.MethodGet:
-		events, err := getEvents(Configuration.Service.ReadMaxLimit)
+		events, err := getEvents(Configuration.Service.MaxResultCount)
 		if err != nil {
 			LoggingClient.Error(err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)

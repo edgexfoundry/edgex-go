@@ -66,8 +66,8 @@ func addLog(w http.ResponseWriter, r *http.Request) {
 }
 
 func checkMaxLimit(limit int) int {
-	if limit > Configuration.Service.ReadMaxLimit || limit == 0 {
-		return Configuration.Service.ReadMaxLimit
+	if limit > Configuration.Service.MaxResultCount || limit == 0 {
+		return Configuration.Service.MaxResultCount
 	}
 	return limit
 }
@@ -92,7 +92,7 @@ func getCriteria(w http.ResponseWriter, r *http.Request) *matchCriteria {
 			return nil
 		}
 	}
-	//In all cases, cap the # of entries returned at ReadMaxLimit
+	//In all cases, cap the # of entries returned at MaxResultCount
 	criteria.Limit = checkMaxLimit(criteria.Limit)
 
 	start := vars["start"]

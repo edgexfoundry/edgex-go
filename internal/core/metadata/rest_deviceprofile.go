@@ -34,7 +34,7 @@ func restGetAllDeviceProfiles(w http.ResponseWriter, _ *http.Request) {
 		return
 	}
 
-	if len(res) > Configuration.Service.ReadMaxLimit {
+	if len(res) > Configuration.Service.MaxResultCount {
 		err = errors.New("Max limit exceeded with request for profiles")
 		http.Error(w, err.Error(), http.StatusRequestEntityTooLarge)
 		LoggingClient.Error(err.Error())

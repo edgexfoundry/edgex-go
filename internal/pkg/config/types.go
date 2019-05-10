@@ -37,9 +37,9 @@ type ServiceInfo struct {
 	// StartupMsg specifies a string to log once service
 	// initialization and startup is completed.
 	StartupMsg string
-	// ReadMaxLimit specifies the maximum size list supported
+	// MaxResultCount specifies the maximum size list supported
 	// in response to REST calls to other services.
-	ReadMaxLimit int
+	MaxResultCount int
 	// Timeout specifies a timeout (in milliseconds) for
 	// processing REST calls from other services.
 	Timeout int
