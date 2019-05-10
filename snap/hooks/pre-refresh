@@ -1,0 +1,7 @@
+#!/bin/bash -e
+
+# save this revision for when we run again in the post-refresh
+snapctl set lastrev="$SNAP_REVISION"
+
+# save this release channel for future potential upgrade paths
+snapctl set release="delhi"
