@@ -114,7 +114,7 @@ func TestAddLog(t *testing.T) {
 func TestGetLogs(t *testing.T) {
 	maxLimit := 100
 	Configuration = &ConfigurationStruct{Service: config.ServiceInfo{}}
-	Configuration.Service.ReadMaxLimit = maxLimit
+	Configuration.Service.MaxResultCount = maxLimit
 
 	var services = []string{"service1", "service2"}
 	var keywords = []string{"keyword1", "keyword2"}
@@ -237,7 +237,7 @@ func TestGetLogs(t *testing.T) {
 func TestRemoveLogs(t *testing.T) {
 	maxLimit := 100
 	Configuration = &ConfigurationStruct{Service: config.ServiceInfo{}}
-	Configuration.Service.ReadMaxLimit = maxLimit
+	Configuration.Service.MaxResultCount = maxLimit
 
 	var services = []string{"service1", "service2"}
 	var keywords = []string{"keyword1", "keyword2"}

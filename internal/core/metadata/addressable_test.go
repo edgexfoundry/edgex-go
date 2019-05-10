@@ -54,19 +54,19 @@ func TestGetAddressablesFails(t *testing.T) {
 	}
 }
 
-func TestGetAddressablesAboveReadMaxLimit(t *testing.T) {
+func TestGetAddressablesAboveMaxResultCount(t *testing.T) {
 	reset()
 	dbClient = newMockDb()
 
-	Configuration.Service.ReadMaxLimit = 1
+	Configuration.Service.MaxResultCount = 1
 
 	expectedNil, expectedErr := getAllAddressables()
 
 	if expectedNil != nil {
-		t.Errorf("getAllAddressables() should return nil when ReadMaxLimit is exceeded")
+		t.Errorf("getAllAddressables() should return nil when MaxResultCount is exceeded")
 	}
 	if expectedErr == nil {
-		t.Errorf("ReadMaxLimit exceeded should return an error")
+		t.Errorf("MaxResultCount exceeded should return an error")
 	}
 }
 
@@ -141,7 +141,7 @@ func TestMain(m *testing.M) {
 // reset() re-initializes dependencies for each test
 func reset() {
 	Configuration = &ConfigurationStruct{}
-	Configuration.Service.ReadMaxLimit = 100
+	Configuration.Service.MaxResultCount = 50000
 }
 
 func buildAddressables() []models.Addressable {

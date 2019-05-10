@@ -8,7 +8,7 @@ CheckInterval = '10s'
 Host = 'localhost'
 Port = 48082
 Protocol = 'http'
-ReadMaxLimit = 100
+MaxResultCount = 50000
 StartupMsg = 'This is the Core Command Microservice'
 Timeout = 5000
 

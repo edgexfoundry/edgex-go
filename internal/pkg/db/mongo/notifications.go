@@ -28,7 +28,7 @@ const (
 	TRANSMISSION_COLLECTION = "transmission"
 )
 
-var currentReadMaxLimit int // configuration read max limit
+var currentMaxResultCount int // configuration read max limit
 var cleanupDefaultAge int
 
 /* ----------------------- Notifications ------------------------*/
@@ -186,7 +186,7 @@ func (mc MongoClient) getNotification(q bson.M) (contract.Notification, error) {
 }
 
 func (mc MongoClient) getNotifications(q bson.M) ([]contract.Notification, error) {
-	return mc.getNotificationsLimit(q, currentReadMaxLimit)
+	return mc.getNotificationsLimit(q, currentMaxResultCount)
 }
 
 func (mc MongoClient) getNotificationsLimit(q bson.M, limit int) ([]contract.Notification, error) {

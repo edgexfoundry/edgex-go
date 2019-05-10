@@ -121,7 +121,7 @@ Corresponding response, in JSON format:
                     "Host": "localhost",
                     "Port": 48080,
                     "Protocol": "http",
-                    "ReadMaxLimit": 100,
+                    "MaxResultCount": 50000,
                     "StartupMsg": "This is the Core Data Microservice",
                     "Timeout": 5000
                 },

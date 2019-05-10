@@ -25,8 +25,8 @@ func getAllAddressables() ([]contract.Addressable, error) {
 		LoggingClient.Error(err.Error())
 		return nil, err
 	}
-	if len(results) > Configuration.Service.ReadMaxLimit {
-		err = errors.NewErrLimitExceeded(Configuration.Service.ReadMaxLimit)
+	if len(results) > Configuration.Service.MaxResultCount {
+		err = errors.NewErrLimitExceeded(Configuration.Service.MaxResultCount)
 		LoggingClient.Error(err.Error())
 
 		return nil, err

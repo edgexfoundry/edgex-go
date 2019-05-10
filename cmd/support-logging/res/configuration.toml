@@ -9,7 +9,7 @@ CheckInterval = '10s'
 Host = 'localhost'
 Port = 48061
 Protocol = 'http'
-ReadMaxLimit = 100
+MaxResultCount = 50000
 StartupMsg = 'This is the Support Logging Microservice'
 Timeout = 5000
 
