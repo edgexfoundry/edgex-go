@@ -104,7 +104,6 @@ func decodeState(r *http.Request) (mode string, state string, err error) {
 	err = decoder.Decode(&admin)
 	if err != nil {
 		LoggingClient.Error(err.Error())
-		return
 	}
 
 	if admin.AdminState != "" {
