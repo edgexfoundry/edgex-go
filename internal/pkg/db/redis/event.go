@@ -17,10 +17,10 @@ import (
 	"encoding/json"
 
 	correlation "github.com/edgexfoundry/edgex-go/internal/pkg/correlation/models"
-	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
-	"github.com/gomodule/redigo/redis"
-
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
+
+	"github.com/gomodule/redigo/redis"
 )
 
 type redisEvent struct {

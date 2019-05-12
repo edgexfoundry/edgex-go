@@ -43,10 +43,10 @@ File = './logs/edgex-core-data.log'
   Host = 'localhost'
   Name = 'coredata'
   Password = ''
-  Port = 6379
+  Port = 27017
   Username = ''
   Timeout = 5000
-  Type = 'redisdb'
+  Type = 'mongodb'
 
 [MessageQueue]
 Protocol = 'tcp'

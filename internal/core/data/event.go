@@ -127,34 +127,6 @@ func addNewEvent(e models.Event, ctx context.Context) (string, error) {
 	return e.ID, nil
 }
 
-func validateEvent(e contract.Event, ctx context.Context) error {
-	err := checkDevice(e.Device, ctx)
-	if err != nil {
-		return err
-	}
-
-	if Configuration.Writable.ValidateCheck {
-		LoggingClient.Debug("Validation enabled, parsing events")
-		for reading := range e.Readings {
-			// Check value descriptor
-			name := e.Readings[reading].Name
-			vd, err := dbClient.ValueDescriptorByName(name)
-			if err != nil {
-				if err == db.ErrNotFound {
-					return errors.NewErrValueDescriptorNotFound(name)
-				} else {
-					return err
-				}
-			}
-			err = isValidValueDescriptor(vd, e.Readings[reading])
-			if err != nil {
-				return err
-			}
-		}
-	}
-	return nil
-}
-
 func updateEvent(from models.Event, ctx context.Context) error {
 	to, err := dbClient.EventById(from.ID)
 	if err != nil {
@@ -247,7 +219,6 @@ func updateEventPushDateByChecksum(checksum string, ctx context.Context) error {
 }
 
 func updateEventPushDate(id string, ctx context.Context) error {
-	// TODO: This is going to break. Probably need DBClient to return Correlation event model
 	e, err := getEventById(id)
 	if err != nil {
 		return err
@@ -264,7 +235,7 @@ func updateEventPushDate(id string, ctx context.Context) error {
 // Put event on the message queue to be processed by the rules engine
 func putEventOnQueue(evt models.Event, ctx context.Context) {
 	LoggingClient.Info("Putting event on message queue")
-	// 	Have multiple implementations (start with ZeroMQ)
+
 	evt.CorrelationId = correlation.FromContext(ctx)
 
 	msgEnvelope := msgTypes.NewMessageEnvelope(evt.Bytes, ctx)

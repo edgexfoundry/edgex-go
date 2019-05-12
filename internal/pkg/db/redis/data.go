@@ -14,13 +14,13 @@
 package redis
 
 import (
+	correlation "github.com/edgexfoundry/edgex-go/internal/pkg/correlation/models"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
+
 	"github.com/gomodule/redigo/redis"
 	"github.com/google/uuid"
 	"github.com/imdario/mergo"
-
-	correlation "github.com/edgexfoundry/edgex-go/internal/pkg/correlation/models"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 )
 
 // ******************************* EVENTS **********************************
