@@ -14,14 +14,13 @@
 package models
 
 import (
+	correlation "github.com/edgexfoundry/edgex-go/internal/pkg/correlation/models"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
+
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
 	"github.com/pkg/errors"
-
-	correlation "github.com/edgexfoundry/edgex-go/internal/pkg/correlation/models"
-
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 )
 
 type Event struct {
