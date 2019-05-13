@@ -139,20 +139,36 @@ $ sudo snap set edgexfoundry security-services=off
 
 ## Building
 
-The source for the snap is inside this repo (the `edgex-go` repo), so the first step for all build methods involves cloning this repository:
+The snap is built with [snapcraft](https://snapcraft.io), and the snapcraft.yaml recipe is located within `edgex-go`, so the first step for all build methods involves cloning this repository:
 
 ```bash
 $ git clone https://github.com/edgexfoundry/edgex-go
 $ cd edgex-go
 ```
 
-The `snapcraft` tool is used to actually build the snap. There are a few different ways to use it, depending on what OS you are building on.
+### Installing snapcraft
+
+There are a few different ways to install snapcraft and use it, depending on what OS you are building on. However after building, the snap can only be run on a Linux machine (either a VM or natively). To install snapcraft on a Linux distro, first [install support for snaps](https://docs.snapcraft.io/installing-snapd), then install snapcraft as a snap with:
+
+```bash
+$ sudo snap install snapcraft
+```
+
+(note you will be promted to acknowledge you are installing a classic snap - use the `--classic` flag to acknowledge this)
 
 **Note** - currently the snap doesn't support cross-compilation, and must be built natively on the target architecture. Specifically, to support cross-compilation the kong/lua parts must be modified to support cross-compilation. The openresty part uses non-standard flags for handling cross-compiling so all the flags would have to manually passed to build that part. Also luarocks doesn't seem to easily support cross-compilation, so that would need to be figured out as well.
 
-### Building on Ubuntu 16.04
+#### Running snapcraft on MacOS
 
-The easiest way to build the snap is on an Ubuntu 16.04 Classic installation where you can use `snapcraft` directly:
+To install snapcraft on MacOS, see [this link](https://docs.snapcraft.io/install-snapcraft-on-macos). After doing so, follow in the below build instructions for "Building with multipass"
+
+#### Running snapcraft on Windows
+
+To install snapcraft on Windows, you will need to run a Linux VM and follow the above instructions to install snapcraft as a snap. Note that if you are using WSL, only WSL2 with full Linux kernel support will work - you cannot use WSL with snapcraft and snaps. If you like, you can install multipass to launch a Linux VM if your Windows machine has Windows 10 Pro or Enterprise with Hyper-V support. See this [forum post](https://discourse.ubuntu.com/t/installing-multipass-for-windows/9547) for more details.
+
+### Building with multipass
+
+The easiest way to build the snap is using the multipass VM tool that snapcraft knows to use directly. After [installing multipass](https://multipass.run), just run 
 
 ```bash
 $ snapcraft
@@ -160,25 +176,43 @@ $ snapcraft
 
 ### Building with LXD containers
 
-Alternatively, you can use snapcraft with it's own container/build VM using `cleanbuild`. This requires installing LXD as documented (here)[https://docs.snapcraft.io/t/clean-build-using-lxc].
+Alternatively, you can instruct snapcraft to use LXD containers instead of multipass VM's. This requires installing LXD as documented (here)[https://docs.snapcraft.io/build-on-lxd].
 
 ```bash
-$ snapcraft cleanbuild
+$ export SNAPCRAFT_BUILD_ENVIRONMENT=lxd
+$ snapcraft
 ```
 
-### Building using docker
+### Building inside external container/VM using native snapcraft
 
-Lastly, you can use docker with the `snapcraft` docker image to build the snap. You will build the snap inside a container, using the repository on your host filesystem as a volume mapped into the container. This lets us access the build artifacts and makes it easier to iterate on builds by sharing the intermediate contents of the build between runs of `snapcraft`.
+Finally, snapcraft can be run inside a VM, container or other similar build environment to build the snap without having snapcraft manage the environment (such as in a docker container where snaps are not available, or inside a VM launched from a build-farm without using nested VM's). 
+
+This requires creating an Ubuntu 18.04 environment and running snapcraft (from the snap) inside the environment with `--destructive-mode`. 
+
+#### Docker
+
+Snapcraft is smart enough to detect when it is running inside a docker container specifically, to the point where no additional arguments are need to snapcraft when it is run inside the container. For example, the upstream snapcraft docker image can be used (only on x86_64 architectures unfortunately) like so:
 
 ```bash
 $ docker run -it -v"$PWD":/build snapcore/snapcraft:stable bash -c "apt update && cd /build && snapcraft"
 ```
 
-If the build fails and you need to make changes and re-build, you can use snapcraft commands such as `snapcraft clean`, etc. inside the container like so:
+Note that if you are building your own docker image, you can't run snapd inside the container, and so to install snapcraft, the docker image must download the snapcraft snap and extract it as if it was installed normally inside `/snap` (same goes for the `core` and `core18` snaps). This is done by the Linux Foundation Jenkins server for the project's CI and you can see an example of that [here](https://github.com/edgexfoundry/ci-management/blob/master/shell/edgexfoundry-snapcraft.sh). The upstream docker image also does this, but only for x86_64 architectures.
+
+#### Multipass / generic VM
+
+To use multipass to create an Ubuntu 18.04 environment suitable for building the snap (i.e. when running natively on windows):
 
 ```bash
-$ docker run -it -v"$PWD":/build snapcore/snapcraft:stable bash -c "apt update && cd /build && snapcraft clean && snapcraft"
+$ multipass launch bionic -n edgex-snap-build
+$ multipass shell edgex-snap-build
+multipass@ubuntu:~$ git clone https://github.com/edgexfoundry/edgex-go
+multipass@ubuntu:~$ cd edgex-go
+multipass~ubuntu:~$ sudo snap install snapcraft --classic
+multipass~ubuntu:~$ snapcraft --destructive-mode
 ```
+
+The process should be similar for other VM's such as kvm, VirtualBox, etc. where you create the VM, clone the git repository, then install snapcraft as a snap and run with `--destructive-mode`. 
 
 ### Developing the snap
 
@@ -189,6 +223,17 @@ $ sudo snap install --devmode edgexfoundry*.snap
 ```
 
 **Note** You can try installing a locally built snap with the `--dangerous` flag (instead of the `--devmode` flag), but there is a race condition with this method. Specifically Cassandra, MongoDB, and other services require accesses not provided by default to the snap, and these are provided by connecting the interfaces detailed below. The race condition occurs because if the services fail to start because the accesses were denied (because the interfaces weren't connected soon enough), the installation may be entirely aborted by snapd.  If you do install with `--dangerous`, it is recommended to perform the connections detailed below in the same shell command to minimize the time between the installation (and hence service startup) and granting of accesses from interface connection. Note this race condition doesn't happen when installing the snap from the store because the interface connection automatically happens before starting the services.
+
+In addition, if you are using snapcraft with multipass VM's, you can speedup development by not creating a *.snap file and instead running in "try" mode . This is done by running `snapcraft try` which results in a `prime` folder placed in the root project directory that can then be "installed" using `snap try`. For example:
+
+```bash
+$ snapcraft try # produces prime dir instead of *.snap file
+...
+You can now run `snap try /home/ubuntu/go/src/github.com/edgexfoundry/edgex-go/prime`.
+$ sudo snap try --devmode prime # snap try works the same as snap install, but expects a directory
+edgexfoundry 1.0.0-20190513+0620a8d1 mounted from /home/ubuntu/go/src/github.com/edgexfoundry/edgex-go/prime
+$
+```
 
 #### Interfaces
 
