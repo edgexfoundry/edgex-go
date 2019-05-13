@@ -27,8 +27,8 @@ type ConfigurationStruct struct {
 }
 
 type WritableInfo struct {
-	MarkPushed     bool
-	LogLevel       string
+	MarkPushed bool
+	LogLevel   string
 }
 
 type CertificateInfo struct {

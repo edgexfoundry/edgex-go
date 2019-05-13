@@ -4,7 +4,7 @@ require (
 	bitbucket.org/bertimus9/systemstat v0.0.0-20180207000608-0eeff89b0690
 	github.com/BurntSushi/toml v0.3.1
 	github.com/eclipse/paho.mqtt.golang v1.1.1
-	github.com/edgexfoundry/go-mod-core-contracts v0.0.0-20190429073535-f8b9cd669563
+	github.com/edgexfoundry/go-mod-core-contracts v0.0.0-20190509203106-0e8d8505b6d1
 	github.com/edgexfoundry/go-mod-messaging v0.0.0-20190327144236-4222ae1edb0b
 	github.com/edgexfoundry/go-mod-registry v0.0.0-20190401195203-552208258719
 	github.com/globalsign/mgo v0.0.0-20181015135952-eeefdecb41b8

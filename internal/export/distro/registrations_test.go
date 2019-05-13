@@ -16,7 +16,7 @@ import (
 
 func validRegistration() contract.Registration {
 	r := contract.Registration{}
-	r.Addressable = contract.Addressable{Id: uuid.New().String(), Name:"Test Addressable"}
+	r.Addressable = contract.Addressable{Id: uuid.New().String(), Name: "Test Addressable"}
 	r.Format = contract.FormatJSON
 	r.Compression = contract.CompNone
 	r.Destination = contract.DestMQTT

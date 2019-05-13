@@ -40,6 +40,7 @@ var registryUpdates chan interface{} //A channel for "config updates" sourced fr
 var messageClient messaging.MessageClient
 var messageErrors chan error
 var messageEnvelopes chan *msgTypes.MessageEnvelope
+var processStop chan bool
 
 func Retry(useRegistry bool, useProfile string, timeout int, wait *sync.WaitGroup, ch chan error) {
 	until := time.Now().Add(time.Millisecond * time.Duration(timeout))
@@ -89,6 +90,8 @@ func Init(useRegistry bool) bool {
 
 	var err error
 	messageErrors, messageEnvelopes, err = initMessaging(messageClient)
+	processStop = make(chan bool)
+
 	if err != nil {
 		LoggingClient.Error(err.Error())
 		return false
@@ -106,6 +109,11 @@ func Destruct() {
 
 	if registryUpdates != nil {
 		close(registryUpdates)
+	}
+
+	if processStop != nil {
+		processStop <- true
+		close(processStop)
 	}
 
 	if messageErrors != nil {

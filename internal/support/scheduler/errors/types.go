@@ -19,12 +19,12 @@ import (
 )
 
 // Interval
-type ErrIntervalNotFound struct{
+type ErrIntervalNotFound struct {
 	id string
 }
 
-func (e ErrIntervalNotFound) Error() string{
-	return fmt.Sprintf("no interval found for id: %s",e.id)
+func (e ErrIntervalNotFound) Error() string {
+	return fmt.Sprintf("no interval found for id: %s", e.id)
 }
 
 func NewErrIntervalNotFound(id string) error {
@@ -36,21 +36,22 @@ type ErrIntervalNameInUse struct {
 }
 
 func (e ErrIntervalNameInUse) Error() string {
-	return fmt.Sprintf("interval name: %s in use",e.name)
+	return fmt.Sprintf("interval name: %s in use", e.name)
 }
 
-func NewErrIntervalNameInUse(name string) error{
+func NewErrIntervalNameInUse(name string) error {
 	return &ErrIntervalNameInUse{name: name}
 }
 
 type ErrIntervalStillUsedByIntervalActions struct {
 	name string
 }
+
 func (e ErrIntervalStillUsedByIntervalActions) Error() string {
-	return fmt.Sprintf("interval still in use by intervalAction(s) name:  %s",e.name)
+	return fmt.Sprintf("interval still in use by intervalAction(s) name:  %s", e.name)
 }
 
-func NewErrIntervalStillInUse(name string) error{
+func NewErrIntervalStillInUse(name string) error {
 	return &ErrIntervalStillUsedByIntervalActions{name: name}
 }
 
@@ -59,8 +60,8 @@ type ErrIntervalActionNotFound struct {
 	id string
 }
 
-func (e ErrIntervalActionNotFound) Error() string{
-	return fmt.Sprintf("no intervalAction found with id: %s",e.id)
+func (e ErrIntervalActionNotFound) Error() string {
+	return fmt.Sprintf("no intervalAction found with id: %s", e.id)
 }
 
 func NewErrIntervalActionNotFound(id string) error {
@@ -71,34 +72,32 @@ type ErrIntervalActionTargetNameRequired struct {
 	id string
 }
 
-func (e ErrIntervalActionTargetNameRequired) Error() string{
-	return fmt.Sprintf("intervalAction [ %s ] requires a target none provided. ",e.id)
+func (e ErrIntervalActionTargetNameRequired) Error() string {
+	return fmt.Sprintf("intervalAction [ %s ] requires a target none provided. ", e.id)
 }
 
 func NewErrIntervalActionTargetNameRequired(id string) error {
 	return &ErrIntervalActionTargetNameRequired{id: id}
 }
 
-
 type ErrIntervalActionNameInUse struct {
 	name string
 }
 
-func (e ErrIntervalActionNameInUse) Error() string{
-	return fmt.Sprintf("intervalAction name: %s in use",e.name)
+func (e ErrIntervalActionNameInUse) Error() string {
+	return fmt.Sprintf("intervalAction name: %s in use", e.name)
 }
 
 func NewErrIntervalActionNameInUse(name string) error {
 	return &ErrIntervalActionNameInUse{name: name}
 }
 
-
 type ErrInvalidTimeFormat struct {
-	 value string
+	value string
 }
 
 func (e ErrInvalidTimeFormat) Error() string {
-	return fmt.Sprintf("invalid time format for value: %s",e.value)
+	return fmt.Sprintf("invalid time format for value: %s", e.value)
 }
 
 func NewErrInvalidTimeFormat(value string) error {
@@ -106,14 +105,14 @@ func NewErrInvalidTimeFormat(value string) error {
 }
 
 type ErrInvalidFrequencyFormat struct {
-	 frequency string
+	frequency string
 }
 
 func (e ErrInvalidFrequencyFormat) Error() string {
 	return fmt.Sprintf("invalid frequency format for value: %s", e.frequency)
 }
 
-func NewErrInvalidFrequencyFormat(frequency string) error{
+func NewErrInvalidFrequencyFormat(frequency string) error {
 	return &ErrInvalidFrequencyFormat{frequency: frequency}
 }
 

@@ -59,7 +59,7 @@ func main() {
 
 	listenForInterrupt(errs)
 
-	distro.Loop()
+	go distro.Loop()
 
 	// Time it took to start service
 	distro.LoggingClient.Info("Service started in: " + time.Since(start).String())
