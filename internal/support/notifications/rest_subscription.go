@@ -71,7 +71,7 @@ func subscriptionHandler(w http.ResponseWriter, r *http.Request) {
 
 		LoggingClient.Info("Updating subscription by slug: " + slug)
 
-		if err = dbClient.UpdateSubscription(s2); err != nil {
+		if err = dbClient.UpdateSubscription(s); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			LoggingClient.Error(err.Error())
 			return
