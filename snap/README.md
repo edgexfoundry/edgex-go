@@ -43,7 +43,7 @@ $ sudo snap install edgexfoundry --channel=delhi
 
 Lastly, on a system supporting it, the snap may be installed using GNOME (or Ubuntu) Software Center by searching for `edgexfoundry`.
 
-**Note** - the snap has only been tested on Ubuntu 16.04 LTS Desktop/Server and Ubuntu Core 16.
+**Note** - the snap has only been tested on Ubuntu Desktop/Server versions 18.04 and 16.04, as well as Ubuntu Core versions 16 and 18.
 
 **WARNING** - don't install the EdgeX snap on a system which is already running mongoDB or Consul.
 
@@ -85,7 +85,7 @@ All services which are installed on the system as systemd units, which if enable
 
 ### Configuring individual services
 
-All default configuration files are shipped with the snap inside `$SNAP/config`, however because `$SNAP` isn't writable, all of the config files are copied during snap installation (specifically during the install hook, see `snap/hooks/install` in this repository) to `$SNAP_DATA/config`. The configuration files in `$SNAP_DATA` may then be modified. You may wish to restart the snap to take configuration into account with:
+All default configuration files are shipped with the snap inside `$SNAP/config`, however because `$SNAP` isn't writable, all of the config files are copied during snap installation (specifically during the install hook, see `snap/hooks/install` in this repository) to `$SNAP_DATA/config`. The configuration files in `$SNAP_DATA` may then be modified. You may wish to restart the snap's services to take configuration into account with:
 
 ```bash
 $ sudo snap restart edgexfoundry
@@ -107,10 +107,10 @@ Individual service logs may be viewed by specifying the service name:
 $ sudo snap logs edgexfoundry.consul
 ```
 
-Or by using the systemd unit name and journalctl:
+Or by using the systemd unit name and `journalctl`:
 
 ```bash
-$ journalctl -u snap.edgexfoundry.consul.service
+$ journalctl -u snap.edgexfoundry.consul
 ```
 
 ### Security services
