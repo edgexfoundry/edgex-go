@@ -863,10 +863,10 @@ traits:
           }
     responses:
       202:
-        description: If Alerts and Notifications Service is available, it always returns 202 Accepted to clients with the slug to indicate the Notification has been received.
+        description: If Alerts and Notifications Service is available, it always returns 202 Accepted to clients with the new ID to indicate the Notification has been received.
         body:
           text/plain:
-            example: notice-test-001
+            example: fd388f69-9393-49a7-9962-d70938438b47
   /slug/{slug}:
     uriParameters:
       slug:
