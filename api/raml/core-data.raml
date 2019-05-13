@@ -82,6 +82,23 @@ schemas:
                 description: if the event cannot be found by id.                       
             "500": 
                 description: for unknown or unanticipated issues.
+/event/checksum/{checksum}:
+    displayName: Event Resource (by checksum)
+    description: "http://localhost:48080/api/v1/event/checksum/499a1a799c47c567"
+    uriParameters:
+        checksum:
+            displayName: checksum
+            description: "checksum value of the event provided by core-data via the message bus"
+    put:
+        description: "Update an existing event's pushed time"
+        displayName: Mark an event as pushed
+        responses:
+            "200":
+                description: success no body returned
+            "404":
+                description: if the event cannot be found by checksum.
+            "500":
+                description: for unknown or unanticipated issues.
 /event/count: 
     displayName: Event Resource Count 
     description: example - http://localhost:48080/api/v1/event/device/count

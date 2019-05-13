@@ -23,6 +23,7 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
 	dbMock "github.com/edgexfoundry/edgex-go/internal/core/data/interfaces/mocks"
+	correlation "github.com/edgexfoundry/edgex-go/internal/pkg/correlation/models"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 
@@ -30,7 +31,7 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-//Test methods
+// Test methods
 func TestEventCount(t *testing.T) {
 	reset()
 	myMock := &dbMock.DBClient{}
@@ -209,13 +210,13 @@ func TestAddEventWithPersistence(t *testing.T) {
 	dbClient = myMock
 	Configuration.Writable.PersistData = true
 	evt := models.Event{Device: testDeviceName, Origin: testOrigin, Readings: buildReadings()}
-	//wire up handlers to listen for device events
+	// wire up handlers to listen for device events
 	bitEvents := make([]bool, 2)
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 	go handleDomainEvents(bitEvents, &wg, t)
 
-	_, err := addNewEvent(evt, context.Background())
+	_, err := addNewEvent(correlation.Event{Event: evt}, context.Background())
 	Configuration.Writable.PersistData = false
 	if err != nil {
 		t.Errorf(err.Error())
@@ -237,13 +238,13 @@ func TestAddEventNoPersistence(t *testing.T) {
 	dbClient = myMock
 	Configuration.Writable.PersistData = false
 	evt := models.Event{Device: testDeviceName, Origin: testOrigin, Readings: buildReadings()}
-	//wire up handlers to listen for device events
+	// wire up handlers to listen for device events
 	bitEvents := make([]bool, 2)
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 	go handleDomainEvents(bitEvents, &wg, t)
 
-	newId, err := addNewEvent(evt, context.Background())
+	newId, err := addNewEvent(correlation.Event{Event: evt}, context.Background())
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -261,85 +262,6 @@ func TestAddEventNoPersistence(t *testing.T) {
 	myMock.AssertExpectations(t)
 }
 
-func TestAddEventWithValidationValueDescriptorExistsAndIsInvalid(t *testing.T) {
-	reset()
-	myMock := &dbMock.DBClient{}
-
-	myMock.On("ValueDescriptorByName", mock.MatchedBy(func(name string) bool {
-		return name == "Temperature"
-	})).Return(models.ValueDescriptor{Type: "8"}, nil) // Invalid type
-
-	dbClient = myMock
-
-	Configuration.Writable.ValidateCheck = true
-	Configuration.Writable.PersistData = false
-
-	evt := models.Event{Device: testDeviceName, Origin: testOrigin, Readings: buildReadings()[0:1]}
-	//wire up handlers to listen for device events
-	bitEvents := make([]bool, 2)
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-	go handleDomainEvents(bitEvents, &wg, t)
-
-	_, err := addNewEvent(evt, context.Background())
-	if err == nil {
-		t.Errorf("expected error")
-	}
-}
-
-func TestAddEventWithValidationValueDescriptorNotFound(t *testing.T) {
-	reset()
-	myMock := &dbMock.DBClient{}
-
-	myMock.On("ValueDescriptorByName", mock.MatchedBy(func(name string) bool {
-		return name == "Temperature"
-	})).Return(models.ValueDescriptor{}, db.ErrNotFound)
-
-	dbClient = myMock
-	Configuration.Writable.ValidateCheck = true
-
-	Configuration.Writable.PersistData = false
-	evt := models.Event{Device: testDeviceName, Origin: testOrigin, Readings: buildReadings()}
-	//wire up handlers to listen for device events
-	bitEvents := make([]bool, 2)
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-	go handleDomainEvents(bitEvents, &wg, t)
-
-	_, err := addNewEvent(evt, context.Background())
-	switch err.(type) {
-	case *errors.ErrValueDescriptorNotFound:
-	// expected
-	default:
-		t.Errorf("Expected errors.ErrValueDescriptorNotFound")
-	}
-}
-
-func TestAddEventWithValidationValueDescriptorDBError(t *testing.T) {
-	reset()
-	myMock := &dbMock.DBClient{}
-
-	myMock.On("ValueDescriptorByName", mock.MatchedBy(func(name string) bool {
-		return name == "Pressure"
-	})).Return(models.ValueDescriptor{}, fmt.Errorf("some error"))
-
-	dbClient = myMock
-	Configuration.Writable.ValidateCheck = true
-
-	Configuration.Writable.PersistData = false
-	evt := models.Event{Device: testDeviceName, Origin: testOrigin, Readings: buildReadings()[1:]}
-	//wire up handlers to listen for device events
-	bitEvents := make([]bool, 2)
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-	go handleDomainEvents(bitEvents, &wg, t)
-
-	_, err := addNewEvent(evt, context.Background())
-	if err == nil {
-		t.Errorf("expected error")
-	}
-}
-
 func TestUpdateEventNotFound(t *testing.T) {
 	reset()
 	myMock := &dbMock.DBClient{}
@@ -349,7 +271,7 @@ func TestUpdateEventNotFound(t *testing.T) {
 	dbClient = myMock
 
 	evt := models.Event{ID: bson.NewObjectId().Hex(), Device: "Not Found", Origin: testOrigin}
-	err := updateEvent(evt, context.Background())
+	err := updateEvent(correlation.Event{Event: evt}, context.Background())
 	if err != nil {
 		if x, ok := err.(*errors.ErrEventNotFound); !ok {
 			t.Errorf("unexpected error type: %s", x.Error())
@@ -366,7 +288,7 @@ func newUpdateEventMockDB(expectedDevice string) *dbMock.DBClient {
 		return id == testEvent.ID
 	})).Return(testEvent, nil).Maybe()
 
-	myMock.On("UpdateEvent", mock.MatchedBy(func(event models.Event) bool {
+	myMock.On("UpdateEvent", mock.MatchedBy(func(event correlation.Event) bool {
 		return event.ID == testEvent.ID && event.Device == expectedDevice
 	})).Return(nil)
 
@@ -380,7 +302,7 @@ func TestUpdateEvent(t *testing.T) {
 	dbClient = myMock
 
 	evt := models.Event{ID: testEvent.ID, Device: expectedDevice, Origin: testOrigin}
-	err := updateEvent(evt, context.Background())
+	err := updateEvent(correlation.Event{Event: evt}, context.Background())
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -441,7 +363,7 @@ func TestUpdateEventPushDate(t *testing.T) {
 	myMock.On("EventById", mock.MatchedBy(func(id string) bool {
 		return id == testEvent.ID
 	})).Return(testEvent, nil)
-	myMock.On("UpdateEvent", mock.MatchedBy(func(event models.Event) bool {
+	myMock.On("UpdateEvent", mock.MatchedBy(func(event correlation.Event) bool {
 		return event.ID == testEvent.ID
 	})).Return(nil)
 	dbClient = myMock

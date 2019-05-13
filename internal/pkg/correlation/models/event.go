@@ -21,7 +21,9 @@ import (
 )
 
 type Event struct {
-	CorrelationId string `json:"correlation-id"`
+	Bytes         []byte // This will NOT be marshaled via the JSON below. It is only populated and read as an instance member.
+	CorrelationId string
+	Checksum      string
 	contract.Event
 }
 
@@ -47,6 +49,7 @@ func (e Event) ToContract() *contract.Event {
 func (e Event) MarshalJSON() ([]byte, error) {
 	test := struct {
 		CorrelationId *string            `json:"correlation-id,omitempty"`
+		Checksum      *string            `json:"checksum,omitempty"`
 		ID            *string            `json:"id,omitempty"`
 		Pushed        int64              `json:"pushed,omitempty"`
 		Device        *string            `json:"device,omitempty"` // Device identifier (name or id)
@@ -64,6 +67,10 @@ func (e Event) MarshalJSON() ([]byte, error) {
 	// Empty strings are null
 	if e.CorrelationId != "" {
 		test.CorrelationId = &e.CorrelationId
+	}
+
+	if e.Checksum != "" {
+		test.Checksum = &e.Checksum
 	}
 
 	if e.ID != "" {

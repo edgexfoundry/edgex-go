@@ -22,11 +22,12 @@ import (
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
-	"github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/gorilla/mux"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation/models"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
 )
 
@@ -51,6 +52,7 @@ func LoadRestRoutes() *mux.Router {
 	e.HandleFunc("/count/{deviceId}", eventCountByDeviceIdHandler).Methods(http.MethodGet)
 	e.HandleFunc("/{id}", getEventByIdHandler).Methods(http.MethodGet)
 	e.HandleFunc("/id/{id}", eventIdHandler).Methods(http.MethodDelete, http.MethodPut)
+	e.HandleFunc("/checksum/{checksum}", putEventChecksumHandler).Methods(http.MethodPut)
 	e.HandleFunc("/device/{deviceId}/{limit:[0-9]+}", getEventByDeviceHandler).Methods(http.MethodGet)
 	e.HandleFunc("/device/{deviceId}", deleteByDeviceIdHandler).Methods(http.MethodDelete)
 	e.HandleFunc("/removeold/age/{age:[0-9]+}", eventByAgeHandler).Methods(http.MethodDelete)
@@ -136,7 +138,7 @@ func eventCountByDeviceIdHandler(w http.ResponseWriter, r *http.Request) {
 		case *types.ErrServiceClient:
 			http.Error(w, err.Error(), err.StatusCode)
 			return
-		default: //return an error on everything else.
+		default: // return an error on everything else.
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -176,6 +178,7 @@ func eventByAgeHandler(w http.ResponseWriter, r *http.Request) {
 
 /*
 Handler for the event API
+Status code 400 - Unsupported content type, or invalid data
 Status code 404 - event not found
 Status code 413 - number of events exceeds limit
 Status code 500 - unanticipated issues
@@ -202,47 +205,21 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 		break
 		// Post a new event
 	case http.MethodPost:
-		contentType := r.Header.Get(clients.ContentType)
-		if contentType == clients.ContentTypeCBOR {
-			errMsg := "CBOR payload is not yet supported"
-			http.Error(w, errMsg, http.StatusNotImplemented)
-			LoggingClient.Error(errMsg)
+		reader := NewRequestReader(r)
 
-			return
-		}
-
-		var e models.Event
-		dec := json.NewDecoder(r.Body)
-		err := dec.Decode(&e)
-
-		// Problem Decoding Event
+		evt := models.Event{}
+		evt, err := reader.Read(r.Body, &ctx)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			LoggingClient.Error("Error decoding event: " + err.Error())
-			return
-		}
-
-		LoggingClient.Info("Posting Event: " + e.String())
-
-		newId, err := addNewEvent(e, ctx)
-		if err != nil {
-			switch t := err.(type) {
-			case *errors.ErrValueDescriptorNotFound:
-				http.Error(w, t.Error(), http.StatusBadRequest)
-			case *errors.ErrValueDescriptorInvalid:
-				http.Error(w, t.Error(), http.StatusBadRequest)
-			default:
-				http.Error(w, t.Error(), http.StatusInternalServerError)
-			}
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			LoggingClient.Error(err.Error())
 			return
 		}
+		newId, err := addNewEvent(evt, ctx)
 
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(newId))
-
 		break
-		// Do not update the readings
+		// Update an existing event, but do not update the readings
 	case http.MethodPut:
 		contentType := r.Header.Get(clients.ContentType)
 		if contentType == clients.ContentTypeCBOR {
@@ -300,10 +277,10 @@ func scrubAllHandler(w http.ResponseWriter, r *http.Request) {
 	encode(true, w)
 }
 
-//GET
-//Return the event specified by the event ID
-///api/v1/event/{id}
-//id - ID of the event to return
+// GET
+// Return the event specified by the event ID
+// /api/v1/event/{id}
+// id - ID of the event to return
 func getEventByIdHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Body != nil {
 		defer r.Body.Close()
@@ -365,7 +342,7 @@ func getEventByDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		case *types.ErrServiceClient:
 			http.Error(w, err.Error(), err.StatusCode)
 			return
-		default: //return an error on everything else.
+		default: // return an error on everything else.
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			return
 		}
@@ -455,6 +432,41 @@ func eventIdHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+/*
+PUT
+Handle events specified by a Checksum
+/api/v1/event/checksum/{checksum}
+404 - ID not found
+*/
+func putEventChecksumHandler(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+
+	vars := mux.Vars(r)
+	checksum := vars["checksum"]
+	ctx := r.Context()
+
+	switch r.Method {
+	// Set the 'pushed' timestamp for the event to the current time - event is going to another (not EdgeX) service
+	case http.MethodPut:
+		LoggingClient.Debug("Updating event with checksum: " + checksum)
+
+		err := updateEventPushDateByChecksum(checksum, ctx)
+		if err != nil {
+			if err == db.ErrNotFound {
+				http.Error(w, err.Error(), http.StatusNotFound)
+			} else {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
+
+			LoggingClient.Error(err.Error())
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+		break
+	}
+}
+
 // Delete all of the events associated with a device
 // api/v1/event/device/{deviceId}
 // 404 - device ID not found in metadata
@@ -480,7 +492,7 @@ func deleteByDeviceIdHandler(w http.ResponseWriter, r *http.Request) {
 		case *types.ErrServiceClient:
 			http.Error(w, err.Error(), err.StatusCode)
 			return
-		default: //return an error on everything else.
+		default: // return an error on everything else.
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -635,7 +647,7 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 				case *types.ErrServiceClient:
 					http.Error(w, err.Error(), err.StatusCode)
 					return
-				default: //return an error on everything else.
+				default: // return an error on everything else.
 					http.Error(w, err.Error(), http.StatusInternalServerError)
 					return
 				}
@@ -713,7 +725,7 @@ func getReadingByIdHandler(w http.ResponseWriter, r *http.Request) {
 			case *errors.ErrDbNotFound:
 				http.Error(w, err.Error(), http.StatusNotFound)
 				return
-			default: //return an error on everything else.
+			default: // return an error on everything else.
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
@@ -760,7 +772,7 @@ func deleteReadingByIdHandler(w http.ResponseWriter, r *http.Request) {
 			case *errors.ErrDbNotFound:
 				http.Error(w, err.Error(), http.StatusNotFound)
 				return
-			default: //return an error on everything else.
+			default: // return an error on everything else.
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
@@ -1090,7 +1102,7 @@ func readingByValueDescriptorAndDeviceHandler(w http.ResponseWriter, r *http.Req
 		case *types.ErrServiceClient:
 			http.Error(w, err.Error(), err.StatusCode)
 			return
-		default: //return an error on everything else.
+		default: // return an error on everything else.
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}

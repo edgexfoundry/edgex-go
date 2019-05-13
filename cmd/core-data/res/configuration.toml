@@ -5,6 +5,7 @@ PersistData = true
 ServiceUpdateLastConnected = false
 ValidateCheck = false
 LogLevel = 'INFO'
+ChecksumAlgo = 'xxHash'
 
 [Service]
 BootTimeout = 30000
@@ -53,5 +54,3 @@ Host = '*'
 Port = 5563
 Type = 'zero'
 Topic = 'events'
-
-
