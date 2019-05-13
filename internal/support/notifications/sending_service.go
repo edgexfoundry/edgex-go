@@ -73,7 +73,13 @@ func persistTransmission(tr models.TransmissionRecord, n models.Notification, c 
 		LoggingClient.Error("Transmission cannot be persisted: " + trx.String())
 		return trx, err
 	}
-	trx.ID = id
+
+	//We need to fetch this transmission for later use in retries, otherwise timestamp information will be lost.
+	trx, err = dbClient.GetTransmissionById(id)
+	if err != nil {
+		LoggingClient.Error("error fetching newly saved transmission: " + id)
+		return models.Transmission{}, err
+	}
 	return trx, nil
 }
 

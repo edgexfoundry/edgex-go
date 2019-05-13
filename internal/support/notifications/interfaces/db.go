@@ -59,6 +59,7 @@ type DBClient interface {
 	DeleteSubscriptionBySlug(id string) error
 
 	// Transmissions
+	GetTransmissionById(id string) (contract.Transmission, error)
 	GetTransmissionsByNotificationSlug(slug string, resendLimit int) ([]contract.Transmission, error)
 	GetTransmissionsByStartEnd(start int64, end int64, resendLimit int) ([]contract.Transmission, error)
 	GetTransmissionsByStart(start int64, resendLimit int) ([]contract.Transmission, error)

@@ -369,6 +369,14 @@ func (mc MongoClient) DeleteTransmission(age int64, status contract.Transmission
 	return mc.deleteAll(bson.M{"modified": bson.M{"$lt": end}, "status": status}, TRANSMISSION_COLLECTION)
 }
 
+func (mc MongoClient) GetTransmissionById(id string) (contract.Transmission, error) {
+	query, err := idToBsonM(id)
+	if err != nil {
+		return contract.Transmission{}, err
+	}
+	return mc.getTransmission(query)
+}
+
 func (mc MongoClient) GetTransmissionsByNotificationSlug(slug string, resendLimit int) ([]contract.Transmission, error) {
 	return mc.getTransmissionsLimit(bson.M{"resendcount": bson.M{"$lt": resendLimit}, "notification.slug": slug})
 }
