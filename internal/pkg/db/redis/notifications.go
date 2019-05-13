@@ -15,7 +15,6 @@ package redis
 
 import (
 	"fmt"
-
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/gomodule/redigo/redis"
@@ -532,6 +531,17 @@ func (c Client) GetTransmissionsByStart(start int64, resendLimit int) (transmiss
 	}
 
 	return transmissions, nil
+}
+
+func (c Client) GetTransmissionById(id string) (transmission contract.Transmission, err error) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	err = getObjectById(conn, id, unmarshalObject, &transmission)
+	if err != nil {
+		return transmission, err
+	}
+	return transmission, nil
 }
 
 func (c Client) GetTransmissionsByEnd(end int64, resendLimit int) (transmissions []contract.Transmission, err error) {
