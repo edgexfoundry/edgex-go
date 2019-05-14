@@ -44,15 +44,11 @@ func (jsonReader) Read(reader io.Reader, ctx *context.Context) (models.Event, er
 	*ctx = c
 
 	event := models.Event{}
-	bytes, err := ioutil.ReadAll(reader)
+	err := json.NewDecoder(reader).Decode(&event)
 	if err != nil {
 		return event, err
 	}
-	err = json.Unmarshal(bytes, &event)
-	if err != nil {
-		return event, err
-	}
-	event.Bytes = bytes
+
 	return event, nil
 }
 

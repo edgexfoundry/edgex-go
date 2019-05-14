@@ -16,8 +16,10 @@ package data
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
+	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 	msgTypes "github.com/edgexfoundry/go-mod-messaging/pkg/types"
 
@@ -236,6 +238,15 @@ func updateEventPushDate(id string, ctx context.Context) error {
 func putEventOnQueue(evt models.Event, ctx context.Context) {
 	LoggingClient.Info("Putting event on message queue")
 
+	//Re-marshal JSON content into bytes.
+	if clients.FromContext(clients.ContentType, ctx) == clients.ContentTypeJSON {
+		data, err := json.Marshal(evt)
+		if err != nil {
+			LoggingClient.Error(fmt.Sprintf("error marshaling event: %s", evt.String()))
+			return
+		}
+		evt.Bytes = data
+	}
 	evt.CorrelationId = correlation.FromContext(ctx)
 
 	msgEnvelope := msgTypes.NewMessageEnvelope(evt.Bytes, ctx)
