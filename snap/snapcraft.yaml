@@ -390,6 +390,7 @@ parts:
     plugin: make
     source: https://github.com/hashicorp/consul.git
     source-tag: v1.1.0
+    source-depth: 1
     override-build: |
       . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
       gopartbootstrap github.com/hashicorp/consul
@@ -623,6 +624,7 @@ parts:
   support-rulesengine:
     source: https://github.com/edgexfoundry/support-rulesengine.git
     source-branch: "master"
+    source-depth: 1
     plugin: maven
     maven-options: ["-Dmaven.test.skip=true"]
     override-build: |
@@ -863,6 +865,7 @@ parts:
     plugin: make
     source: https://github.com/hashicorp/vault.git
     source-tag: v1.0.2
+    source-depth: 1
     override-build: |
       . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
       gopartbootstrap github.com/hashicorp/vault
