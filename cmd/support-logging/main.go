@@ -32,11 +32,14 @@ func main() {
 	start := time.Now()
 	var useRegistry bool
 	var useProfile string
+	var useLocalSecrets bool
 
 	flag.BoolVar(&useRegistry, "registry", false, "Indicates the service should use Registry.")
 	flag.BoolVar(&useRegistry, "r", false, "Indicates the service should use Registry.")
 	flag.StringVar(&useProfile, "profile", "", "Specify a profile other than default.")
 	flag.StringVar(&useProfile, "p", "", "Specify a profile other than default.")
+	flag.BoolVar(&useLocalSecrets, "secrets", false, "Indicates the service should not use a secure secret store.")
+	flag.BoolVar(&useLocalSecrets, "s", false, "Indicates the service should not use a secure secret store.")
 	flag.Usage = usage.HelpCallback
 	flag.Parse()
 

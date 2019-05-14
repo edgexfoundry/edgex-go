@@ -5,6 +5,7 @@ require (
 	github.com/BurntSushi/toml v0.3.1
 	github.com/OneOfOne/xxhash v1.2.5
 	github.com/eclipse/paho.mqtt.golang v1.1.1
+	github.com/edgexfoundry-holding/go-mod-core-security v0.0.0-20190528220651-507f3f8141d3
 	github.com/edgexfoundry/go-mod-core-contracts v0.1.0
 	github.com/edgexfoundry/go-mod-messaging v0.1.0
 	github.com/edgexfoundry/go-mod-registry v0.1.0
@@ -14,7 +15,7 @@ require (
 	github.com/gomodule/redigo v2.0.0+incompatible
 	github.com/google/uuid v1.1.0
 	github.com/gorilla/context v1.1.1
-	github.com/gorilla/mux v1.7.0
+	github.com/gorilla/mux v1.7.1
 	github.com/hashicorp/consul v1.4.2
 	github.com/imdario/mergo v0.3.6
 	github.com/magiconair/properties v1.8.0

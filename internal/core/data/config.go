@@ -13,7 +13,11 @@
  *******************************************************************************/
 package data
 
-import "github.com/edgexfoundry/edgex-go/internal/pkg/config"
+import (
+	"github.com/edgexfoundry-holding/go-mod-core-security/pkg"
+
+	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
+)
 
 type ConfigurationStruct struct {
 	Writable     WritableInfo
@@ -23,6 +27,7 @@ type ConfigurationStruct struct {
 	Logging      config.LoggingInfo
 	Registry     config.RegistryInfo
 	Service      config.ServiceInfo
+	Secrets      pkg.SecretConfig
 }
 
 type WritableInfo struct {

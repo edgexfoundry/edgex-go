@@ -49,16 +49,16 @@ var nc notifications.NotificationsClient
 var registryErrors chan error        //A channel for "config wait errors" sourced from Registry
 var registryUpdates chan interface{} //A channel for "config updates" sourced from Registry.
 
-func Retry(useRegistry bool, useProfile string, timeout int, wait *sync.WaitGroup, ch chan error) {
-	until := time.Now().Add(time.Millisecond * time.Duration(timeout))
+func Retry(params startup.BootParams, wait *sync.WaitGroup, ch chan error) {
+	until := time.Now().Add(time.Millisecond * time.Duration(params.BootTimeout))
 	for time.Now().Before(until) {
 		var err error
 		//When looping, only handle configuration if it hasn't already been set.
 		if Configuration == nil {
-			Configuration, err = initializeConfiguration(useRegistry, useProfile)
+			Configuration, err = initializeConfiguration(params.UseRegistry, params.UseProfile)
 			if err != nil {
 				ch <- err
-				if !useRegistry {
+				if !params.UseRegistry {
 					//Error occurred when attempting to read from local filesystem. Fail fast.
 					close(ch)
 					wait.Done()
@@ -66,7 +66,7 @@ func Retry(useRegistry bool, useProfile string, timeout int, wait *sync.WaitGrou
 				}
 			} else {
 				// Initialize notificationsClient based on configuration
-				initializeClients(useRegistry)
+				initializeClients(params.UseRegistry)
 				// Setup Logging
 				logTarget := setLoggingTarget()
 				LoggingClient = logger.NewClient(clients.CoreMetaDataServiceKey, Configuration.Logging.EnableRemote, logTarget, Configuration.Writable.LogLevel)

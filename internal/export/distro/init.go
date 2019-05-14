@@ -42,16 +42,16 @@ var messageErrors chan error
 var messageEnvelopes chan msgTypes.MessageEnvelope
 var processStop chan bool
 
-func Retry(useRegistry bool, useProfile string, timeout int, wait *sync.WaitGroup, ch chan error) {
-	until := time.Now().Add(time.Millisecond * time.Duration(timeout))
+func Retry(params startup.BootParams, wait *sync.WaitGroup, ch chan error) {
+	until := time.Now().Add(time.Millisecond * time.Duration(params.BootTimeout))
 	for time.Now().Before(until) {
 		var err error
 		//When looping, only handle configuration if it hasn't already been set.
 		if Configuration == nil {
-			Configuration, err = initializeConfiguration(useRegistry, useProfile)
+			Configuration, err = initializeConfiguration(params.UseRegistry, params.UseProfile)
 			if err != nil {
 				ch <- err
-				if !useRegistry {
+				if !params.UseRegistry {
 					//Error occurred when attempting to read from local filesystem. Fail fast.
 					close(ch)
 					wait.Done()
@@ -63,7 +63,7 @@ func Retry(useRegistry bool, useProfile string, timeout int, wait *sync.WaitGrou
 				LoggingClient = logger.NewClient(clients.ExportDistroServiceKey, Configuration.Logging.EnableRemote, logTarget, Configuration.Writable.LogLevel)
 
 				//Initialize service clients
-				initializeClients(useRegistry)
+				initializeClients(params.UseRegistry)
 			}
 		} else {
 			// once config is initialized, stop looping

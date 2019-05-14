@@ -20,6 +20,7 @@ package notifications
 import (
 	"errors"
 	"fmt"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 	"os"
 	"os/signal"
 	"sync"
@@ -47,16 +48,16 @@ var registryClient registry.Client
 var registryErrors chan error        //A channel for "config wait errors" sourced from Registry
 var registerUpdates chan interface{} //A channel for "config updates" sourced from Registry
 
-func Retry(useRegistry bool, useProfile string, timeout int, wait *sync.WaitGroup, ch chan error) {
-	until := time.Now().Add(time.Millisecond * time.Duration(timeout))
+func Retry(params startup.BootParams, wait *sync.WaitGroup, ch chan error) {
+	until := time.Now().Add(time.Millisecond * time.Duration(params.BootTimeout))
 	for time.Now().Before(until) {
 		var err error
 		//When looping, only handle configuration if it hasn't already been set.
 		if Configuration == nil {
-			Configuration, err = initializeConfiguration(useRegistry, useProfile)
+			Configuration, err = initializeConfiguration(params.UseRegistry, params.UseProfile)
 			if err != nil {
 				ch <- err
-				if !useRegistry {
+				if !params.UseRegistry {
 					//Error occurred when attempting to read from local filesystem. Fail fast.
 					close(ch)
 					wait.Done()

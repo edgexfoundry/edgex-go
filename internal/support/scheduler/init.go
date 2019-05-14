@@ -17,6 +17,7 @@ package scheduler
 import (
 	"errors"
 	"fmt"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 	"os"
 	"os/signal"
 	"sync"
@@ -47,17 +48,17 @@ var registryUpdates chan interface{} //A channel for "config updates" sourced fr
 
 var ticker *time.Ticker
 
-func Retry(useRegistry bool, useProfile string, timeout int, wait *sync.WaitGroup, ch chan error) {
+func Retry(params startup.BootParams, wait *sync.WaitGroup, ch chan error) {
 	now := time.Now()
-	until := now.Add(time.Millisecond * time.Duration(timeout))
+	until := now.Add(time.Millisecond * time.Duration(params.BootTimeout))
 	for time.Now().Before(until) {
 		var err error
 		//When looping, only handle configuration if it hasn't already been set.
 		if Configuration == nil {
-			Configuration, err = initializeConfiguration(useRegistry, useProfile)
+			Configuration, err = initializeConfiguration(params.UseRegistry, params.UseProfile)
 			if err != nil {
 				ch <- err
-				if !useRegistry {
+				if !params.UseRegistry {
 					//Error occurred when attempting to read from local filesystem. Fail fast.
 					close(ch)
 					wait.Done()
@@ -65,7 +66,7 @@ func Retry(useRegistry bool, useProfile string, timeout int, wait *sync.WaitGrou
 				}
 			} else {
 				//Check against boot timeout default
-				if Configuration.Service.BootTimeout != timeout {
+				if Configuration.Service.BootTimeout != params.BootTimeout {
 					until = now.Add(time.Millisecond * time.Duration(Configuration.Service.BootTimeout))
 				}
 				// Setup Logging

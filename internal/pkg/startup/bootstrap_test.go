@@ -39,7 +39,7 @@ func clearVars() {
 
 func testPass(t *testing.T) {
 	clearVars()
-	p := BootParams{true, "", timeoutPass}
+	p := BootParams{true, "", false, timeoutPass}
 	Bootstrap(p, mockRetry, mockLog)
 	if !checkInit {
 		t.Error("checkInit should be true.")
@@ -51,7 +51,7 @@ func testPass(t *testing.T) {
 
 func testFail(t *testing.T) {
 	clearVars()
-	p := BootParams{true, "", timeoutFail}
+	p := BootParams{true, "", false, timeoutFail}
 	Bootstrap(p, mockRetry, mockLog)
 	time.Sleep(time.Millisecond * time.Duration(25)) //goroutine timing
 	if checkInit {
@@ -66,10 +66,10 @@ func testFail(t *testing.T) {
 //Different test cases are toggled according to the timeout value
 //SUCCESS = short duration 100ms
 //FAIL = long duration 1000ms
-func mockRetry(UseRegistry bool, useProfile string, timeout int, wait *sync.WaitGroup, ch chan error) {
-	until := time.Now().Add(time.Millisecond * time.Duration(timeout))
+func mockRetry(params BootParams, wait *sync.WaitGroup, ch chan error) {
+	until := time.Now().Add(time.Millisecond * time.Duration(params.BootTimeout))
 	for time.Now().Before(until) {
-		if timeout == timeoutFail {
+		if params.BootTimeout == timeoutFail {
 			err := fmt.Errorf("Timeout Fail caught")
 			ch <- err
 			close(ch)
