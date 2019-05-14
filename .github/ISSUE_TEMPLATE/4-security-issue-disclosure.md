@@ -1,8 +1,12 @@
 ---
 name: ⚠️ Security issue disclosure
-about: Report a security issue in EdgeX Framework
+about: Report a security issue in the EdgeX Framework
 labels: security
 ---
 
 
-# Security Issue
+🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑
+
+Please read https://bit.ly/2VqlLd4 on how to disclose security related issues.
+
+🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑
