@@ -13,6 +13,9 @@ description: |
   for this snap can be found at: https://github.com/edgexfoundry/edgex-go
 icon: snap/local/assets/edgex-snap-icon.png
 
+# delhi is epoch 0, edinburgh epoch 1, etc.
+epoch: 1
+
 # TODO: add armhf here when that's supported
 architectures:
   - build-on: arm64
