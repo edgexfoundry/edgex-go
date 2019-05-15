@@ -298,6 +298,17 @@ apps:
     command: bin/device-random -confdir $SNAP_DATA/config/device-random -profile res --registry
     daemon: simple
     plugs: [network, network-bind]
+  device-virtual:
+    adapter: none
+    after:
+      - core-config-seed
+      - mongo-worker
+      - edgexproxy
+      - core-data
+      - core-metadata
+    command: bin/device-virtual -confdir $SNAP_DATA/config/device-virtual -profile res --registry
+    daemon: simple
+    plugs: [network, network-bind]
 
   # helper commands the snap exposes
   redis-cli:
@@ -1063,6 +1074,38 @@ parts:
          "$SNAPCRAFT_PART_INSTALL/usr/share/doc/device-mqtt/Attribution.txt"
       install -DT "./LICENSE" \
          "$SNAPCRAFT_PART_INSTALL/usr/share/doc/device-mqtt/LICENSE"
+
+  device-virtual-go:
+    source: https://github.com/edgexfoundry/device-virtual-go.git
+    source-depth: 1
+    source-branch: master
+    plugin: make
+    after: [go]
+    override-build: |
+      cd $SNAPCRAFT_PART_SRC
+      make build
+
+      install -DT "./cmd/device-virtual" "$SNAPCRAFT_PART_INSTALL/bin/device-virtual"
+
+      # FIXME: settings can't be overridden from the cmd-line!
+      # Override 'LogFile'
+      install -d "$SNAPCRAFT_PART_INSTALL/config/device-virtual/res/"
+
+      # install configuration & default device profile
+      cat "./cmd/res/configuration.toml" | \
+        sed -e s:\"./device-virtual.log\":\'\$SNAP_COMMON/device-virtual.log\': \
+          -e s:'ProfilesDir = \"./res\"':'ProfilesDir = \"\$SNAP_DATA/config/device-virtual/res\"': > \
+        "$SNAPCRAFT_PART_INSTALL/config/device-virtual/res/configuration.toml"
+
+      for profileType in bool float int uint; do
+        install -T "./cmd/res/device.virtual.$profileType.yaml" \
+          "$SNAPCRAFT_PART_INSTALL/config/device-virtual/res/device.virtual.$profileType.yaml"
+      done
+
+      install -DT "./cmd/Attribution.txt" \
+         "$SNAPCRAFT_PART_INSTALL/usr/share/doc/device-virtual/Attribution.txt"
+      install -DT "./LICENSE" \
+         "$SNAPCRAFT_PART_INSTALL/usr/share/doc/device-virtual/LICENSE"
 
   device-random:
     source: https://github.com/edgexfoundry/device-random.git
