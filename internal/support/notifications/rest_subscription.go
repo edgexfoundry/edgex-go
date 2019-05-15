@@ -112,10 +112,11 @@ func subscriptionByIDHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	vars := mux.Vars(r)
+	id := vars["id"]
 	switch r.Method {
 	case http.MethodGet:
 
-		s, err := dbClient.GetSubscriptionById(vars["id"])
+		s, err := dbClient.GetSubscriptionById(id)
 		if err != nil {
 			if err == db.ErrNotFound {
 				http.Error(w, "Subscription not found", http.StatusNotFound)
@@ -127,6 +128,28 @@ func subscriptionByIDHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		encode(s, w)
+		break
+	case http.MethodDelete:
+		_, err := dbClient.GetSubscriptionById(id)
+		if err != nil {
+			if err == db.ErrNotFound {
+				http.Error(w, "Subscription not found", http.StatusNotFound)
+			} else {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
+			LoggingClient.Error(err.Error())
+			return
+		}
+
+		LoggingClient.Info("Deleting subscription: " + id)
+
+		if err = dbClient.DeleteSubscriptionById(id); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			LoggingClient.Error(err.Error())
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
 	}
 }
 

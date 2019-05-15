@@ -56,6 +56,7 @@ type DBClient interface {
 	GetSubscriptionByCategoriesLabels(categories []string, labels []string) ([]contract.Subscription, error)
 	AddSubscription(s contract.Subscription) (string, error)
 	UpdateSubscription(s contract.Subscription) error
+	DeleteSubscriptionById(id string) error
 	DeleteSubscriptionBySlug(id string) error
 
 	// Transmissions

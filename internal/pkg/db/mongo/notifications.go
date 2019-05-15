@@ -240,6 +240,10 @@ func (mc MongoClient) GetSubscriptionById(id string) (contract.Subscription, err
 	return mc.getSubscription(query)
 }
 
+func (mc MongoClient) DeleteSubscriptionById(id string) error {
+	return mc.deleteByObjectID(id, SUBSCRIPTION_COLLECTION)
+}
+
 func (mc MongoClient) AddSubscription(sub contract.Subscription) (string, error) {
 	s := mc.getSessionCopy()
 	defer s.Close()
