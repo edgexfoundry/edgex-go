@@ -1931,26 +1931,6 @@ schemas:
                 description: if the number returned exceeds the max limit.
             "500":
                 description: for unknown or unanticipated issues.
-/command/id/{id}:
-    displayName: Command Resource (by id)
-    description: Example - http://localhost:48081/api/v1/command/id/57bb3195555e5218873e5a1a
-    uriParameters:
-        id:
-            displayName: id
-            description: database generated id for the Command
-            type: string
-            required: false
-            repeat: false
-    delete:
-        description: Remove the Command designated by database generated id. Internal Service Error (HTTP 500) for unknown or unanticipated issues. NotFoundException (HTTP 404) if no Command is found with the provided id. DataValidationException (HTTP 409) if the Command is still associated to a Device Profile.
-        displayName: delete the command by id
-        responses:
-            "200":
-                description: Successful Response
-            "409":
-                description: if the Command is still associated to a Device Profile.
-            "500":
-                description: for unknown or unanticipated issues.
 /command/{id}:
     displayName: Command Resource (by id)
     description: Example - http://localhost:48081/api/v1/command/57bb3195555e5218873e5a1a
@@ -2000,38 +1980,6 @@ schemas:
 /command:
     displayName: Command Resource
     description: Example - http://localhost:48081/api/v1/command
-    post:
-        description: Add a new Command. Returns Internal Service Error (HTTP 500) for unknown or unanticipated issues.
-        displayName: add command
-        body:
-            application/json:
-                schema: command
-                example: '{"origin":1471806386919,"name":"cooling point","get":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]},"put":{"path":"/cooling", "responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}], "parameterNames":["coolingpoint"]}}'
-        responses:
-            "200":
-                description: database generated id for the new command
-            "400":
-                description: for malformed or unparsable requests
-            "500":
-                description: for unknown or unanticipated issues.
-    put:
-        description: Update the Command identified by the database generated id in the object provided. Returns Internal Service Error (HTTP 500) for unknown or unanticipated issues. NotFoundException (HTTP 404) if no Command is found with the provided id. DataValidationException (HTTP 409) if the name is updated and it is not unique for the Device Profile.
-        displayName: update command
-        body:
-            application/json:
-                schema: command
-                example: '{"id":"57bb3195555e5218873e5a1a","put":{"path":"/cooling", "responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}], "parameterNames":["coolingpoint"]}}'
-        responses:
-            "200":
-                description: Successful Response
-            "400":
-                description: for malformed or unparsable requests
-            "404":
-                description: if no Command is found with the provided id.
-            "409":
-                description: if the name is updated and it is not unique for the Device Profile.
-            "500":
-                description: for unknown or unanticipated issues.
     get:
         description: Return all command objects. Returns Internal Service Error (HTTP 500) for unknown or unanticipated issues. Returns LimitExceededException (HTTP 413) if the number returned exceeds the max limit.
         displayName: get all commands

@@ -106,66 +106,6 @@ func commandByDevice(device contract.Device, command contract.Command, body stri
 	return responseBody, responseCode
 }
 
-func putDeviceAdminState(did string, as string, ctx context.Context) (int, error) {
-	err := mdc.UpdateAdminState(did, as, ctx)
-	if err != nil {
-		LoggingClient.Error(err.Error())
-
-		chk, ok := err.(*types.ErrServiceClient)
-		if ok {
-			return chk.StatusCode, chk
-		} else {
-			return http.StatusInternalServerError, err
-		}
-	}
-	return http.StatusOK, err
-}
-
-func putDeviceAdminStateByName(dn string, as string, ctx context.Context) (int, error) {
-	err := mdc.UpdateAdminStateByName(dn, as, ctx)
-	if err != nil {
-		LoggingClient.Error(err.Error())
-
-		chk, ok := err.(*types.ErrServiceClient)
-		if ok {
-			return chk.StatusCode, chk
-		} else {
-			return http.StatusInternalServerError, err
-		}
-	}
-	return http.StatusOK, err
-}
-
-func putDeviceOpState(did string, as string, ctx context.Context) (int, error) {
-	err := mdc.UpdateOpState(did, as, ctx)
-	if err != nil {
-		LoggingClient.Error(err.Error())
-
-		chk, ok := err.(*types.ErrServiceClient)
-		if ok {
-			return chk.StatusCode, chk
-		} else {
-			return http.StatusInternalServerError, err
-		}
-	}
-	return http.StatusOK, err
-}
-
-func putDeviceOpStateByName(dn string, as string, ctx context.Context) (int, error) {
-	err := mdc.UpdateOpStateByName(dn, as, ctx)
-	if err != nil {
-		LoggingClient.Error(err.Error())
-
-		chk, ok := err.(*types.ErrServiceClient)
-		if ok {
-			return chk.StatusCode, chk
-		} else {
-			return http.StatusInternalServerError, err
-		}
-	}
-	return http.StatusOK, err
-}
-
 func getCommands(ctx context.Context) (int, []contract.CommandResponse, error) {
 	devices, err := mdc.Devices(ctx)
 	if err != nil {

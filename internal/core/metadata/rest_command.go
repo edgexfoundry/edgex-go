@@ -20,7 +20,6 @@ import (
 	"net/url"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
-	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/gorilla/mux"
 )
 
@@ -40,93 +39,6 @@ func restGetAllCommands(w http.ResponseWriter, _ *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(&results)
-}
-
-func restAddCommand(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
-	var c contract.Command
-
-	if err := json.NewDecoder(r.Body).Decode(&c); err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	newId, err := dbClient.AddCommand(c)
-	if err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(newId))
-}
-
-// Update a command
-// 404 if the command can't be found by ID
-// 409 if the name of the command changes and its not unique to the device profile
-func restUpdateCommand(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
-	var c contract.Command
-	if err := json.NewDecoder(r.Body).Decode(&c); err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	// Check if command exists (By ID)
-	former, err := dbClient.GetCommandById(c.Id)
-	if err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusNotFound)
-		return
-	}
-
-	// Name is changed, make sure the new name doesn't conflict with device profile
-	if c.Name != "" {
-		dps, err := dbClient.GetDeviceProfilesByCommandId(c.Id)
-		if err == db.ErrNotFound {
-			err = nil
-			dps = []contract.DeviceProfile{}
-		} else if err != nil {
-			LoggingClient.Error(err.Error())
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		// Loop through matched device profiles to ensure the name isn't duplicate
-		for _, profile := range dps {
-			for _, command := range profile.CoreCommands {
-				if command.Name == c.Name {
-					err = errors.New("Error updating command: duplicate command name in device profile")
-					LoggingClient.Error(err.Error())
-					http.Error(w, err.Error(), http.StatusConflict)
-					return
-				}
-			}
-		}
-	}
-
-	// Update the fields
-	if c.Name != "" {
-		former.Name = c.Name
-	}
-	if (c.Get.String() != contract.Get{}.String()) {
-		former.Get = c.Get
-	}
-	if (c.Put.String() != contract.Put{}.String()) {
-		former.Put = c.Put
-	}
-
-	if err := dbClient.UpdateCommand(c); err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("true"))
 }
 
 func restGetCommandById(w http.ResponseWriter, r *http.Request) {
@@ -169,62 +81,4 @@ func restGetCommandByName(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(results)
-}
-
-// Delete a command by its ID
-func restDeleteCommandById(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	var id string = vars[ID]
-
-	// Check if the command exists
-	_, err := dbClient.GetCommandById(id)
-	if err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusNotFound)
-		return
-	}
-
-	// Check if the command is still in use by a device profile
-	isStillInUse, err := isCommandStillInUse(id)
-	if err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	if isStillInUse {
-		err = errors.New("Can't delete command.  Its still in use by Device Profiles")
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusConflict)
-		return
-	}
-
-	if err := dbClient.DeleteCommandById(id); err != nil {
-		LoggingClient.Error(err.Error())
-		if err == db.ErrCommandStillInUse {
-			http.Error(w, err.Error(), http.StatusConflict)
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		return
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("true"))
-}
-
-// Helper function to determine if the command is still in use by device profiles
-func isCommandStillInUse(id string) (bool, error) {
-	dp, err := dbClient.GetDeviceProfilesByCommandId(id)
-
-	if err == db.ErrNotFound { // XXX Inconsistent return values. Should be ErrNotFound
-		err = nil
-	} else if err != nil {
-		return false, err
-	}
-
-	if len(dp) == 0 {
-		return false, err
-	}
-
-	return true, err
 }

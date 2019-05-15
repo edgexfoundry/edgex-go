@@ -205,14 +205,10 @@ func loadCommandRoutes(b *mux.Router) {
 
 	// /api/v1/command
 	b.HandleFunc("/"+COMMAND, restGetAllCommands).Methods(http.MethodGet)
-	b.HandleFunc("/"+COMMAND, restAddCommand).Methods(http.MethodPost)
-	b.HandleFunc("/"+COMMAND, restUpdateCommand).Methods(http.MethodPut)
 
 	c := b.PathPrefix("/" + COMMAND).Subrouter()
 	c.HandleFunc("/{"+ID+"}", restGetCommandById).Methods(http.MethodGet)
-	c.HandleFunc("/"+ID+"/{"+ID+"}", restDeleteCommandById).Methods(http.MethodDelete)
 	c.HandleFunc("/"+NAME+"/{"+NAME+"}", restGetCommandByName).Methods(http.MethodGet)
-	//c.HandleFunc("/" + NAME + "/{" + NAME + "}", restDeleteCommandByName).Methods(http.MethodDelete)
 }
 func pingHandler(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
