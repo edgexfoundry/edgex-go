@@ -1075,6 +1075,40 @@ traits:
               }
             ]
           }
+  /{id}:
+      displayName: Subscription Resource (by id)
+      description: example - http://localhost:48060/api/v1/subscription/57ba04a1189b95b8afcdafd7
+      uriParameters:
+          id:
+              displayName: id
+              description: database generated id
+              type: string
+              required: false
+              repeat: false
+      get:
+          description: "Fetch a specific subscription by database specified id - returning null if none are found. ServiceException (HTTP 500) for unknown or unanticipated issues"
+          displayName: get subscription by ID
+          responses:
+              "200":
+                  description: subscription
+                  body:
+                      application/json:
+                          schema: subscription
+                          example: '{"slug":"group-a-member","receiver":"Group A Member","subscribedCategories":["HW_HEALTH"],"subscribedLabels":["temperature","humidity"],"channels":[{"type":"EMAIL","mailAddresses":["andy@abc.def","tom@abc.def"]}]}'
+              "404":
+                  description: if the subscription cannot be found by id.
+              "500":
+                  description: for unknown or unanticipated issues.
+      delete:
+          description: Delete a subscription given its database generated ID. NotFoundException (HTTP 404) if the subscription cannot be found by ID. ServiceException (HTTP 500) for unknown or unanticipated issues.
+          displayName: delete a subscription by ID
+          responses:
+              "200":
+                  description: boolean on success of deletion request
+              "404":
+                  description: if the subscription cannot be found by id.
+              "500":
+                  description: for unknown or unanticipated issues.
   /slug/{slug}:
     uriParameters:
       slug:

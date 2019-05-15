@@ -346,6 +346,13 @@ func (c Client) GetSubscriptionById(id string) (s contract.Subscription, err err
 	return s, nil
 }
 
+func (c *Client) DeleteSubscriptionById(id string) error {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	return deleteSubscription(conn, id)
+}
+
 func (c Client) GetSubscriptionBySlug(slug string) (s contract.Subscription, err error) {
 	conn := c.Pool.Get()
 	defer conn.Close()
