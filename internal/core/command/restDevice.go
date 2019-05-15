@@ -14,14 +14,10 @@
 package command
 
 import (
-	"bytes"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/requests/states/admin"
-	"github.com/edgexfoundry/go-mod-core-contracts/requests/states/operating"
 	"github.com/gorilla/mux"
 )
 
@@ -89,101 +85,6 @@ func issueDeviceCommandByNames(w http.ResponseWriter, r *http.Request, isPutComm
 		}
 		w.Write([]byte(body))
 	}
-}
-
-func decodeState(r *http.Request) (mode string, state string, err error) {
-	var admin admin.UpdateRequest
-	var ops operating.UpdateRequest
-
-	bodyBytes, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return
-	}
-
-	decoder := json.NewDecoder(bytes.NewBuffer(bodyBytes))
-	err = decoder.Decode(&admin)
-	if err != nil {
-		LoggingClient.Error(err.Error())
-	}
-
-	if admin.AdminState != "" {
-		return ADMINSTATE, string(admin.AdminState), nil
-	}
-
-	// In this case, the supplied request was not for the AdminState. Try OperatingState.
-	decoder = json.NewDecoder(bytes.NewBuffer(bodyBytes))
-	err = decoder.Decode(&ops)
-	if err != nil {
-		LoggingClient.Error(err.Error())
-		return
-	}
-	if ops.OperatingState != "" {
-		return OPSTATE, string(ops.OperatingState), nil
-	}
-
-	// In this case, the request we were given in completely invalid
-	return "", "", fmt.Errorf("unknown request type")
-}
-
-func restPutDeviceStateByDeviceId(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	did := vars[ID]
-
-	updateMode, state, err := decodeState(r)
-	if err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	ctx := r.Context()
-	var status int
-
-	switch updateMode {
-	case ADMINSTATE:
-		status, err = putDeviceAdminState(did, state, ctx)
-		break
-	case OPSTATE:
-		status, err = putDeviceOpState(did, state, ctx)
-		break
-	}
-	if err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), status)
-		return
-	}
-
-	w.WriteHeader(status)
-}
-
-func restPutDeviceStateByDeviceName(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	dn := vars[NAME]
-	ctx := r.Context()
-
-	updateMode, state, err := decodeState(r)
-	if err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	var status int
-
-	switch updateMode {
-	case ADMINSTATE:
-		status, err = putDeviceAdminStateByName(dn, state, ctx)
-		break
-	case OPSTATE:
-		status, err = putDeviceOpStateByName(dn, state, ctx)
-		break
-	}
-	if err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), status)
-		return
-	}
-
-	w.WriteHeader(status)
 }
 
 func restGetCommandsByDeviceID(w http.ResponseWriter, r *http.Request) {

@@ -542,31 +542,6 @@ func testDBCommand(t *testing.T, db interfaces.DBClient) {
 	if len(commands) != 0 {
 		t.Fatalf("There should be 1 commands instead of %d", len(commands))
 	}
-
-	c.Id = id
-	c.Get = models.Get{}
-	c.Put = models.Put{}
-	c.Name = "name"
-	err = db.UpdateCommand(c)
-	if err != nil {
-		t.Fatalf("Error updating Command %v", err)
-	}
-
-	c.Id = "INVALID"
-	err = db.UpdateCommand(c)
-	if err == nil {
-		t.Fatalf("Should return error")
-	}
-
-	err = db.DeleteCommandById("INVALID")
-	if err == nil {
-		t.Fatalf("Command should not be deleted")
-	}
-
-	err = db.DeleteCommandById(id)
-	if err != nil {
-		t.Fatalf("Command should be deleted: %v", err)
-	}
 }
 
 func testDBDeviceService(t *testing.T, db interfaces.DBClient) {

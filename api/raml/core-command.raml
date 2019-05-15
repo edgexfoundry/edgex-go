@@ -42,12 +42,12 @@ schemas:
         id: 
             displayName: id
             type: string
-            required: false
+            required: true
             repeat: false
         commandid: 
             displayName: commandid
             type: string
-            required: false
+            required: true
             repeat: false
     get: 
         description: Issue the get command referenced by the command id to the device/sensor (also referenced by database generated id) it is associated to via the device service. ServiceException (HTTP 500) for unanticipated or unknown issues encountered. Throws NotFoundException (HTTP 404) if no device exists by the id provided. Throws LockedException (HTTP 423) if the device is locked (admin state).
@@ -85,7 +85,7 @@ schemas:
         id: 
             displayName: id
             type: string
-            required: false
+            required: true
             repeat: false
     get: 
         description: Retrieve a device (by database generated id) and its command offerings. Throws ServiceException (HTTP 500) for unanticipated or unknown issues encountered. Throws NotFoundException (HTTP 404) if no device exists by the id provided.
@@ -100,26 +100,14 @@ schemas:
                 description: if no device exists by the id provided.
             "500": 
                 description: for unanticipated or unknown issues encountered.
-    put:
-        description: Set the admin or op state of the device (as referenced by the database generated id of the device) to the state provided (either enabled or disabled). ServiceException (HTTP 500) for unanticipated or unknown issues encountered. Throws NotFoundException (HTTP 404) if no device exists by the id provided.
-        body:
-            application/json:
-                example: '{"adminState":"enabled"}'
-        responses:
-            "200":
-                description: status code indicating success
-            "404":
-                description: if no device exists by the id provided.
-            "500":
-                description: for unanticipated or unknown issues encountered.
-/device/name/{name}: 
+/device/name/{name}:
     displayName: Device & their commands by name 
     description: Example - http://localhost:48082/api/v1/device/name/livingroomthermostat
     uriParameters: 
         name: 
             displayName: name
             type: string
-            required: false
+            required: true
             repeat: false
     get: 
         description: Retrieve a device (by name) and its command offerings. Throws ServiceException (HTTP 500) for unanticipated or unknown issues encountered. Throws NotFoundException (HTTP 404) if no device exists by the name provided.
@@ -133,18 +121,6 @@ schemas:
             "404": 
                 description: if no device exists by the name provided.
             "500": 
-                description: for unanticipated or unknown issues encountered.
-    put:
-        description: Set the admin or op state of the device (by name of the device) to the state provided (either enabled or disabled). ServiceException (HTTP 500) for unanticipated or unknown issues encountered. Throws NotFoundException (HTTP 404) if no device exists by the name provided.
-        body:
-            application/json:
-                example: '{"adminState":"enabled"}'
-        responses:
-            "200":
-                description: status code indicating success
-            "404":
-                description: if no device exists by the name provided.
-            "500":
                 description: for unanticipated or unknown issues encountered.
 /device: 
     displayName: Devices & their commands
