@@ -30,6 +30,7 @@ ALL_SERVICES="$ALL_SERVICES export-client"
 ALL_SERVICES="$ALL_SERVICES device-modbus"
 ALL_SERVICES="$ALL_SERVICES device-mqtt"
 ALL_SERVICES="$ALL_SERVICES device-random"
+ALL_SERVICES="$ALL_SERVICES device-virtual"
 
 # security services
 ALL_SERVICES="$ALL_SERVICES security-secret-store"
