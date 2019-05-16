@@ -60,7 +60,7 @@ handle_svc () {
 
 for key in $ALL_SERVICES; do
     # get the config key for the service
-    status=$(snapctl get $key)
+    status=$(snapctl get "$key")
     case $key in 
         device*)
             # the device services are all using the device-sdk-go which waits
@@ -71,7 +71,7 @@ for key in $ALL_SERVICES; do
                 handle_svc "core-metadata" "on"
             fi
             # handle the service too
-            handle_svc "$key" $status
+            handle_svc "$key" "$status"
             ;;
         mongo-worker|edgexproxy|vault-worker)
             # it doesn't make any sense to disable the *-worker daemons since 
@@ -83,9 +83,9 @@ for key in $ALL_SERVICES; do
             # - kong
             # - cassandra (because kong requires it)
             # - edgexproxy
-            handle_svc "cassandra" $status
-            handle_svc "kong-daemon" $status
-            handle_svc "edgexproxy" $status
+            handle_svc "cassandra" "$status"
+            handle_svc "kong-daemon" "$status"
+            handle_svc "edgexproxy" "$status"
             # additionally, the secrity-api-gateway needs to use the following
             # services:
             # - vault (because edgexproxy will access/store secrets in vault)
@@ -109,14 +109,14 @@ for key in $ALL_SERVICES; do
                 handle_svc "kong-daemon" "off"
                 handle_svc "edgexproxy" "off"
             fi
-            handle_svc "vault" $status
-            handle_svc "vault-worker" $status
+            handle_svc "vault" "$status"
+            handle_svc "vault-worker" "$status"
             ;;
         *)
             # default case for all other services just enable/disable the service using
             # snapd/systemd
             # if the service is meant to be off, then disable it
-            handle_svc $key $status
+            handle_svc "$key" "$status"
             ;;
     esac
 done
