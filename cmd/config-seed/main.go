@@ -30,6 +30,7 @@ func main() {
 	var useProfile string
 	var dirCmd string
 	var dirProperties string
+	var useDatabase string
 	var overwriteConfig bool
 
 	flag.StringVar(&useProfile, "profile", "", "Specify a profile other than default.")
@@ -38,6 +39,8 @@ func main() {
 	flag.StringVar(&dirProperties, "r", "./res/properties", "Specify alternate properties location as absolute path")
 	flag.StringVar(&dirCmd, "cmd", "../cmd", "Specify alternate cmd location as absolute path")
 	flag.StringVar(&dirCmd, "c", "../cmd", "Specify alternate cmd location as absolute path")
+	flag.StringVar(&useDatabase, "database", "mongo", "Specify either mongo or redis database")
+	flag.StringVar(&useDatabase, "d", "mongo", "Specify either mongo or redis database")
 	flag.BoolVar(&overwriteConfig, "overwrite", false, "Overwrite configuration in Registry")
 	flag.BoolVar(&overwriteConfig, "o", false, "Overwrite configuration in Registry")
 
@@ -57,7 +60,7 @@ func main() {
 		config.LoggingClient.Error(err.Error())
 	}
 
-	err = config.ImportConfiguration(dirCmd, useProfile, overwriteConfig)
+	err = config.ImportConfiguration(dirCmd, useProfile, overwriteConfig, useDatabase)
 	if err != nil {
 		config.LoggingClient.Error(err.Error())
 	}

@@ -24,6 +24,7 @@ import (
 	"strings"
 
 	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/go-mod-registry/pkg/types"
 	"github.com/edgexfoundry/go-mod-registry/registry"
 	"github.com/magiconair/properties"
@@ -75,7 +76,7 @@ func ImportProperties(root string) error {
 
 // Import configuration files using the specified path to the cmd directory where service configuration files reside.
 // Also, profile indicates the preferred deployment target (such as "docker")
-func ImportConfiguration(root string, profile string, overwrite bool) error {
+func ImportConfiguration(root string, profile string, overwrite bool, useDatabase string) error {
 	dirs := listDirectories()
 	absRoot, err := determineAbsRoot(root)
 	if err != nil {
@@ -110,6 +111,13 @@ func ImportConfiguration(root string, profile string, overwrite bool) error {
 		if err != nil {
 			LoggingClient.Warn(err.Error())
 			return nil
+		}
+
+		if useDatabase == "redis" {
+			if configuration.GetPath([]string{"Databases", "Primary", "Type"}) != nil {
+				configuration.SetPath([]string{"Databases", "Primary", "Type"}, db.RedisDB)
+				configuration.SetPath([]string{"Databases", "Primary", "Port"}, "6379")
+			}
 		}
 
 		registryConfig := types.Config{

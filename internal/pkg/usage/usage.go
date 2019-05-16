@@ -23,7 +23,7 @@ Usage: %s [options]
 Server Options:
     -r, --registry                  Indicates service should use Registry
     -p, --profile <name>            Indicate configuration profile other than default
-    -confdir                        Specify local configuration directory
+    --confdir                        Specify local configuration directory
 Common Options:
     -h, --help                      Show this message
 `
@@ -31,9 +31,14 @@ Common Options:
 var configSeedUsageStr = `
 Usage: %s [options]
 Server Options:
+	-c, --cmd <dir>                 Provide absolute path to "cmd" directory containing EdgeX services
+    -d, --database <name>			Indicate which database to use -- mongo or redis. Mongo is default.
+	-o, --overwrite					Indicates service should overwrite any entries already present in the configuration
     -p, --profile <name>            Indicate configuration profile other than default
     -r, --props <dir>               Provide alternate location for legacy application.properties files
-    -c, --cmd <dir>                 Provide absolute path to "cmd" directory containing EdgeX services
+	--confdir                       Specify local configuration directory
+    
+
 Common Options:
     -h, --help                      Show this message
 `
