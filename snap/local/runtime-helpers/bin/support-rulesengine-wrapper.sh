@@ -14,5 +14,5 @@ JAVA="$SNAP"/usr/lib/jvm/java-8-openjdk-"$ARCH"/jre/bin/java
 $JAVA -jar -Djava.security.egd=file:/dev/urandom -Xmx100M \
             -Dspring.cloud.consul.enabled=true \
             -Dspring.cloud.consul.host=localhost \
-            -Dlogging.file=$SNAP_COMMON/logs/edgex-support-rulesengine.log \
-            $SNAP/jar/support-rulesengine/support-rulesengine.jar
+            -Dlogging.file="$SNAP_COMMON/logs/edgex-support-rulesengine.log" \
+            "$SNAP/jar/support-rulesengine/support-rulesengine.jar"
