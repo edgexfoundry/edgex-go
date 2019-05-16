@@ -482,11 +482,11 @@ func (c Client) UpdateTransmission(t contract.Transmission) error {
 	return addTransmission(conn, &t)
 }
 
-func (c Client) GetTransmissionsByNotificationSlug(slug string, resendLimit int) (transmissions []contract.Transmission, err error) {
+func (c Client) GetTransmissionsByNotificationSlug(slug string, limit int) (transmissions []contract.Transmission, err error) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
-	objects, err := getObjectsByScore(conn, db.Transmission+":slug:"+slug, 0, int64(resendLimit), -1)
+	objects, err := getObjectsByScore(conn, db.Transmission+":slug:"+slug, 0, -1, limit)
 	if err != nil {
 		return transmissions, err
 	}
@@ -499,11 +499,11 @@ func (c Client) GetTransmissionsByNotificationSlug(slug string, resendLimit int)
 	return transmissions, nil
 }
 
-func (c Client) GetTransmissionsByStartEnd(start int64, end int64, resendLimit int) (transmissions []contract.Transmission, err error) {
+func (c Client) GetTransmissionsByStartEnd(start int64, end int64, limit int) (transmissions []contract.Transmission, err error) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
-	objects, err := getTransmissionsByStartEndWithResendLimit(conn, start, end, resendLimit)
+	objects, err := getObjectsByScore(conn, db.Transmission+":created", start, end, limit)
 	if err != nil {
 		return transmissions, err
 	}
@@ -516,11 +516,11 @@ func (c Client) GetTransmissionsByStartEnd(start int64, end int64, resendLimit i
 	return transmissions, nil
 }
 
-func (c Client) GetTransmissionsByStart(start int64, resendLimit int) (transmissions []contract.Transmission, err error) {
+func (c Client) GetTransmissionsByStart(start int64, limit int) (transmissions []contract.Transmission, err error) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
-	objects, err := getTransmissionsByStartEndWithResendLimit(conn, start, -1, resendLimit)
+	objects, err := getObjectsByScore(conn, db.Transmission+":created", start, -1, limit)
 	if err != nil {
 		return transmissions, err
 	}
@@ -544,11 +544,11 @@ func (c Client) GetTransmissionById(id string) (transmission contract.Transmissi
 	return transmission, nil
 }
 
-func (c Client) GetTransmissionsByEnd(end int64, resendLimit int) (transmissions []contract.Transmission, err error) {
+func (c Client) GetTransmissionsByEnd(end int64, limit int) (transmissions []contract.Transmission, err error) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
-	objects, err := getTransmissionsByStartEndWithResendLimit(conn, -1, end, resendLimit)
+	objects, err := getObjectsByScore(conn, db.Transmission+":created", -1, end, limit)
 	if err != nil {
 		return transmissions, err
 	}
@@ -561,11 +561,11 @@ func (c Client) GetTransmissionsByEnd(end int64, resendLimit int) (transmissions
 	return transmissions, nil
 }
 
-func (c Client) GetTransmissionsByStatus(resendLimit int, status contract.TransmissionStatus) (transmissions []contract.Transmission, err error) {
+func (c Client) GetTransmissionsByStatus(limit int, status contract.TransmissionStatus) (transmissions []contract.Transmission, err error) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
-	objects, err := getObjectsByRange(conn, db.Transmission+":status:"+string(status), 0, resendLimit)
+	objects, err := getObjectsByRange(conn, db.Transmission+":status:"+string(status), 0, limit)
 	if err != nil {
 		return transmissions, err
 	}
@@ -938,42 +938,4 @@ func subscriptionBySlug(conn redis.Conn, slug string) (subscription contract.Sub
 	}
 
 	return subscription, nil
-}
-
-func getTransmissionsByStartEndWithResendLimit(conn redis.Conn, start, end int64, resendLimit int) (objects [][]byte, err error) {
-	args := []interface{}{db.Transmission + ":created"}
-	if start < 0 {
-		args = append(args, "-inf")
-	} else {
-		args = append(args, start)
-	}
-	if end < 0 {
-		args = append(args, "+inf")
-	} else {
-		args = append(args, end)
-	}
-
-	ids, err := redis.Values(conn.Do("ZRANGEBYSCORE", args...))
-	if err != nil && err != redis.ErrNil {
-		return nil, err
-	}
-
-	var filteredIDs []interface{}
-	for _, id := range ids {
-		score, err := redis.Int(conn.Do("ZSCORE", db.Transmission+":resendcount", id))
-		if err != nil {
-			return nil, err
-		}
-		if score <= resendLimit {
-			filteredIDs = append(filteredIDs, id)
-		}
-	}
-
-	if len(filteredIDs) > 0 {
-		objects, err = redis.ByteSlices(conn.Do("MGET", filteredIDs...))
-		if err != nil {
-			return nil, err
-		}
-	}
-	return objects, nil
 }
