@@ -39,7 +39,7 @@ var registryErrors chan error        //A channel for "config wait errors" source
 var registryUpdates chan interface{} //A channel for "config updates" sourced from Registry
 var messageClient messaging.MessageClient
 var messageErrors chan error
-var messageEnvelopes chan *msgTypes.MessageEnvelope
+var messageEnvelopes chan msgTypes.MessageEnvelope
 var processStop chan bool
 
 func Retry(useRegistry bool, useProfile string, timeout int, wait *sync.WaitGroup, ch chan error) {

@@ -10,13 +10,13 @@
 package distro
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"strconv"
 	"strings"
 
 	MQTT "github.com/eclipse/paho.mqtt.golang"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation/models"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
@@ -63,7 +63,7 @@ func newMqttSender(addr contract.Addressable, cert string, key string) sender {
 	return sender
 }
 
-func (sender *mqttSender) Send(data []byte, event *models.Event) bool {
+func (sender *mqttSender) Send(data []byte, ctx context.Context) bool {
 	if !sender.client.IsConnected() {
 		LoggingClient.Info("Connecting to mqtt server")
 		if token := sender.client.Connect(); token.Wait() && token.Error() != nil {

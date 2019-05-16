@@ -9,11 +9,11 @@
 package distro
 
 import (
+	"context"
 	"crypto/tls"
 	"strings"
 	"time"
 
-	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation/models"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 
 	"github.com/mattn/go-xmpp"
@@ -60,7 +60,7 @@ func newXMPPSender(addr contract.Addressable) sender {
 	return sender
 }
 
-func (sender *xmppSender) Send(data []byte, event *models.Event) bool {
+func (sender *xmppSender) Send(data []byte, ctx context.Context) bool {
 	stringData := string(data)
 
 	sender.client.Send(xmpp.Chat{

@@ -10,13 +10,14 @@
 package distro
 
 import (
-	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation/models"
+	"context"
+
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
 // Sender - Send interface
 type sender interface {
-	Send(data []byte, event *models.Event) bool
+	Send(data []byte, ctx context.Context) bool
 }
 
 // Formatter - Format interface

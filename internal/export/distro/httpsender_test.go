@@ -8,6 +8,7 @@ package distro
 
 import (
 	"bytes"
+	"context"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -16,8 +17,9 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
+	"github.com/google/uuid"
 )
 
 func TestHttpSender(t *testing.T) {
@@ -101,8 +103,8 @@ func TestHttpSender(t *testing.T) {
 			}
 			sender := newHTTPSender(addressableTest)
 
-			e := models.Event{CorrelationId: "test"}
-			sender.Send(msg, &e)
+			ctx := context.WithValue(context.Background(), clients.CorrelationHeader, uuid.New().String())
+			sender.Send(msg, ctx)
 		})
 	}
 }

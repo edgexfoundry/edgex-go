@@ -8,6 +8,7 @@
 package distro
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"sync"
@@ -33,7 +34,7 @@ func newZeroMQEventPublisher() sender {
 	return sender
 }
 
-func (sender *zeroMQEventPublisher) Send(data []byte, event *models.Event) bool {
+func (sender *zeroMQEventPublisher) Send(data []byte, ctx context.Context) bool {
 	sender.mux.Lock()
 	defer sender.mux.Unlock()
 	LoggingClient.Debug("Sending data to 0MQ: " + string(data[:]))

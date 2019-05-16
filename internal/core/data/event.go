@@ -238,6 +238,7 @@ func updateEventPushDate(id string, ctx context.Context) error {
 func putEventOnQueue(evt models.Event, ctx context.Context) {
 	LoggingClient.Info("Putting event on message queue")
 
+	evt.CorrelationId = correlation.FromContext(ctx)
 	//Re-marshal JSON content into bytes.
 	if clients.FromContext(clients.ContentType, ctx) == clients.ContentTypeJSON {
 		data, err := json.Marshal(evt)
@@ -247,7 +248,6 @@ func putEventOnQueue(evt models.Event, ctx context.Context) {
 		}
 		evt.Bytes = data
 	}
-	evt.CorrelationId = correlation.FromContext(ctx)
 
 	msgEnvelope := msgTypes.NewMessageEnvelope(evt.Bytes, ctx)
 	err := msgClient.Publish(msgEnvelope, Configuration.MessageQueue.Topic)
