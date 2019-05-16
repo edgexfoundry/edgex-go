@@ -377,24 +377,24 @@ func (mc MongoClient) GetTransmissionById(id string) (contract.Transmission, err
 	return mc.getTransmission(query)
 }
 
-func (mc MongoClient) GetTransmissionsByNotificationSlug(slug string, resendLimit int) ([]contract.Transmission, error) {
-	return mc.getTransmissionsLimit(bson.M{"resendcount": bson.M{"$lt": resendLimit}, "notification.slug": slug})
+func (mc MongoClient) GetTransmissionsByNotificationSlug(slug string, limit int) ([]contract.Transmission, error) {
+	return mc.getTransmissionsLimit(bson.M{"notification.slug": slug}, limit)
 }
 
-func (mc MongoClient) GetTransmissionsByStartEnd(start int64, end int64, resendLimit int) ([]contract.Transmission, error) {
-	return mc.getTransmissionsLimit(bson.M{"resendcount": bson.M{"$lt": resendLimit}, "created": bson.M{"$gt": start, "$lt": end}})
+func (mc MongoClient) GetTransmissionsByStartEnd(start int64, end int64, limit int) ([]contract.Transmission, error) {
+	return mc.getTransmissionsLimit(bson.M{"created": bson.M{"$gt": start, "$lt": end}}, limit)
 }
 
-func (mc MongoClient) GetTransmissionsByStart(start int64, resendLimit int) ([]contract.Transmission, error) {
-	return mc.getTransmissionsLimit(bson.M{"resendcount": bson.M{"$lt": resendLimit}, "created": bson.M{"$gt": start}})
+func (mc MongoClient) GetTransmissionsByStart(start int64, limit int) ([]contract.Transmission, error) {
+	return mc.getTransmissionsLimit(bson.M{"created": bson.M{"$gt": start}}, limit)
 }
 
-func (mc MongoClient) GetTransmissionsByEnd(end int64, resendLimit int) ([]contract.Transmission, error) {
-	return mc.getTransmissionsLimit(bson.M{"resendcount": bson.M{"$lt": resendLimit}, "created": bson.M{"$lt": end}})
+func (mc MongoClient) GetTransmissionsByEnd(end int64, limit int) ([]contract.Transmission, error) {
+	return mc.getTransmissionsLimit(bson.M{"created": bson.M{"$lt": end}}, limit)
 }
 
-func (mc MongoClient) GetTransmissionsByStatus(resendLimit int, status contract.TransmissionStatus) ([]contract.Transmission, error) {
-	return mc.getTransmissionsLimit(bson.M{"resendcount": bson.M{"$lt": resendLimit}, "status": status})
+func (mc MongoClient) GetTransmissionsByStatus(limit int, status contract.TransmissionStatus) ([]contract.Transmission, error) {
+	return mc.getTransmissionsLimit(bson.M{"status": status}, limit)
 }
 
 func (mc MongoClient) getTransmission(q bson.M) (c contract.Transmission, err error) {
@@ -409,12 +409,16 @@ func (mc MongoClient) getTransmission(q bson.M) (c contract.Transmission, err er
 	return
 }
 
-func (mc MongoClient) getTransmissionsLimit(q bson.M) (c []contract.Transmission, err error) {
+func (mc MongoClient) getTransmissionsLimit(q bson.M, limit int) (c []contract.Transmission, err error) {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
+	if limit == 0 {
+		return []contract.Transmission{}, nil
+	}
+
 	var transmissions []models.Transmission
-	if err = errorMap(s.DB(mc.database.Name).C(TRANSMISSION_COLLECTION).Find(q).All(&transmissions)); err != nil {
+	if err = errorMap(s.DB(mc.database.Name).C(TRANSMISSION_COLLECTION).Find(q).Limit(limit).All(&transmissions)); err != nil {
 		return
 	}
 
