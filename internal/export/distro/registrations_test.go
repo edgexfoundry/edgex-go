@@ -7,11 +7,17 @@
 package distro
 
 import (
+	"context"
+	"encoding/json"
 	"testing"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
+	msgTypes "github.com/edgexfoundry/go-mod-messaging/pkg/types"
+
 	"github.com/google/uuid"
+	"github.com/ugorji/go/codec"
 )
 
 func validRegistration() contract.Registration {
@@ -71,7 +77,7 @@ type dummyStruct struct {
 	lastSize int
 }
 
-func (sender *dummyStruct) Send(data []byte, event *models.Event) bool {
+func (sender *dummyStruct) Send(data []byte, ctx context.Context) bool {
 	sender.count += 1
 	sender.lastSize = len(data)
 
@@ -94,7 +100,7 @@ func TestRegistrationInfoEvent(t *testing.T) {
 
 	ri := newRegistrationInfo()
 	// no configured should not panic
-	ri.processEvent(&models.Event{})
+	ri.processMessage(msgTypes.MessageEnvelope{})
 
 	dummy := &dummyStruct{}
 
@@ -112,11 +118,17 @@ func TestRegistrationInfoEvent(t *testing.T) {
 
 	e1 := &models.Event{}
 	e1.Device = dummyDev
-	ri.processEvent(e1)
+	msg1 := msgTypes.MessageEnvelope{}
+	msg1.ContentType = clients.ContentTypeJSON
+	msg1.Payload, _ = json.Marshal(e1)
+	ri.processMessage(msg1)
 
 	e2 := &models.Event{}
 	e2.Device = filterOutDev
-	ri.processEvent(e2)
+	msg2 := msgTypes.MessageEnvelope{}
+	msg2.ContentType = clients.ContentTypeJSON
+	msg2.Payload, _ = json.Marshal(e2)
+	ri.processMessage(msg2)
 
 	if dummy.count != 1 {
 		t.Fatal("It should send an event")
@@ -163,8 +175,24 @@ func TestRegistrationInfoLoop(t *testing.T) {
 		t.Fatal("deleteme flag should be enabled after an invalid registration")
 	}
 
+	// Assemble an event and MessageEnvelope for also testing CBOR handling
+	e1 := models.Event{}
+	e1.Device = "Some Device"
+	e1.Readings = append(e1.Readings, contract.Reading{Name: "Reading1", Value: "ABC123"})
+
+	var handle codec.CborHandle
+	data := make([]byte, 0, 64)
+	enc := codec.NewEncoderBytes(&data, &handle)
+	err := enc.Encode(e1)
+	if err != nil {
+		t.Fatal("cbor error: " + err.Error())
+	}
+	msg1 := msgTypes.MessageEnvelope{ContentType: clients.ContentTypeCBOR, CorrelationID: uuid.New().String(),
+		Payload: data, Checksum: "1234567890"}
+
 	go func() {
-		ri.chEvent <- &models.Event{}
+		ri.chMessages <- msgTypes.MessageEnvelope{}
+		ri.chMessages <- msg1
 		ri.chRegistration <- nil
 	}()
 	ri.format = &dummyStruct{}
@@ -172,7 +200,7 @@ func TestRegistrationInfoLoop(t *testing.T) {
 	ri.encrypt = &dummyStruct{}
 	ri.compression = &dummyStruct{}
 	ri.filter = nil
-	// Process an event and terminate
+	// Process two events (one JSON, one CBOR) and terminate
 	registrationLoop(ri)
 }
 
@@ -203,6 +231,10 @@ func BenchmarkProcessEvent(b *testing.B) {
 	event := models.Event{}
 	event.Device = "dummyDev"
 
+	msg := msgTypes.MessageEnvelope{}
+	msg.ContentType = clients.ContentTypeJSON
+	msg.Payload, _ = json.Marshal(event)
+
 	ri := newRegistrationInfo()
 	Dummy.count = 0
 
@@ -214,7 +246,7 @@ func BenchmarkProcessEvent(b *testing.B) {
 
 	b.Run("nil", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
-			ri.processEvent(&event)
+			ri.processMessage(msg)
 		}
 		b.SetBytes(int64(Dummy.lastSize))
 	})
@@ -224,7 +256,7 @@ func BenchmarkProcessEvent(b *testing.B) {
 
 	b.Run("json_gzip", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
-			ri.processEvent(&event)
+			ri.processMessage(msg)
 		}
 		b.SetBytes(int64(Dummy.lastSize))
 	})

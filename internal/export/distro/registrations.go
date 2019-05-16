@@ -23,8 +23,9 @@ import (
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
+	msgTypes "github.com/edgexfoundry/go-mod-messaging/pkg/types"
 
-	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation/models"
+	"github.com/pkg/errors"
 )
 
 const (
@@ -44,7 +45,7 @@ type registrationInfo struct {
 	filter       []filterer
 
 	chRegistration chan *contract.Registration
-	chEvent        chan *models.Event
+	chMessages     chan msgTypes.MessageEnvelope
 
 	deleteFlag bool
 }
@@ -58,7 +59,7 @@ func newRegistrationInfo() *registrationInfo {
 	reg := &registrationInfo{}
 
 	reg.chRegistration = make(chan *contract.Registration)
-	reg.chEvent = make(chan *models.Event)
+	reg.chMessages = make(chan msgTypes.MessageEnvelope)
 	return reg
 }
 
@@ -163,21 +164,44 @@ func (reg *registrationInfo) update(newReg contract.Registration) bool {
 	return true
 }
 
-func (reg registrationInfo) processEvent(event *models.Event) {
-	// Valid Event Filter, needed?
+func (reg registrationInfo) processMessage(msg msgTypes.MessageEnvelope) {
+	var err error
+	ctx := context.WithValue(context.Background(), clients.CorrelationHeader, msg.CorrelationID)
+	switch msg.ContentType {
+	case clients.ContentTypeJSON:
+		err = reg.handleJSON(msg, ctx)
+	case clients.ContentTypeCBOR:
+		err = reg.handleCBOR(msg, ctx)
+	default:
+		err = errors.Errorf("unsupported %s provided: %s", clients.ContentType, msg.ContentType)
+	}
+
+	if err != nil {
+		LoggingClient.Error(err.Error())
+	}
+
+	LoggingClient.Debug(fmt.Sprintf("Sent event with registration: %s", reg.registration.Name))
+}
+
+func (reg registrationInfo) handleJSON(msg msgTypes.MessageEnvelope, ctx context.Context) (err error) {
+	str := string(msg.Payload)
+	event := parseEvent(str)
+	if event == nil {
+		return errors.New("unable to parse event from string " + str)
+	}
 
 	data := event.ToContract()
 	for _, f := range reg.filter {
 		var accepted bool
 		accepted, data = f.Filter(data)
 		if !accepted {
-			LoggingClient.Info("Event filtered")
+			LoggingClient.Debug("Event filtered " + event.ID)
 			return
 		}
 	}
 
 	if reg.format == nil {
-		LoggingClient.Warn("registrationInfo with nil format")
+		LoggingClient.Warn("registrationInfo with nil format " + reg.registration.Name)
 		return
 	}
 	formatted := reg.format.Format(data)
@@ -187,30 +211,32 @@ func (reg registrationInfo) processEvent(event *models.Event) {
 		compressed = reg.compression.Transform(formatted)
 	}
 
-	encrypted := compressed
+	bytes := compressed
 	if reg.encrypt != nil {
-		encrypted = reg.encrypt.Transform(compressed)
+		bytes = reg.encrypt.Transform(compressed)
 	}
-
-	if reg.sender.Send(encrypted, event) && Configuration.Writable.MarkPushed {
-		id := event.ID
-		err := ec.MarkPushed(id, context.Background())
-
-		if err != nil {
-			LoggingClient.Error(fmt.Sprintf("Failed to mark event as pushed : event ID = %s: %s", id, err))
-		}
+	if reg.sender.Send(bytes, ctx) && Configuration.Writable.MarkPushed {
+		return ec.MarkPushed(event.ID, ctx)
 	}
+	return
+}
 
-	LoggingClient.Debug(fmt.Sprintf("Sent event with registration: %s", reg.registration.Name))
+func (reg registrationInfo) handleCBOR(msg msgTypes.MessageEnvelope, ctx context.Context) (err error) {
+	ctxPublish := context.WithValue(ctx, clients.ContentType, msg.ContentType)
+	if reg.sender.Send(msg.Payload, ctxPublish) && Configuration.Writable.MarkPushed {
+		//CBOR content type not included here because we don't need that when calling back to core-data
+		return ec.MarkPushedByChecksum(msg.Checksum, ctx)
+	}
+	return
 }
 
 func registrationLoop(reg *registrationInfo) {
 	LoggingClient.Info(fmt.Sprintf("registration loop started: %s", reg.registration.Name))
 	for {
 		select {
-		case event := <-reg.chEvent:
+		case msg := <-reg.chMessages:
 			if reg.registration.Enable {
-				reg.processEvent(event)
+				reg.processMessage(msg)
 			}
 
 		case newReg := <-reg.chRegistration:
@@ -333,23 +359,13 @@ func Loop() {
 			}
 
 		case msgEnvelope := <-messageEnvelopes:
-			LoggingClient.Info(fmt.Sprintf("Event received on message queue. Topic: %s, Correlation-id: %s ", Configuration.MessageQueue.Topic, msgEnvelope.CorrelationID))
-			if msgEnvelope.ContentType != clients.ContentTypeJSON {
-				LoggingClient.Error(fmt.Sprintf("Incorrect content type for event message. Received: %s, Expected: %s", msgEnvelope.ContentType, clients.ContentTypeJSON))
-				continue
-			}
-			str := string(msgEnvelope.Payload)
-			event := parseEvent(str)
-			if event == nil {
-				continue
-			}
+			LoggingClient.Debug("message received via bus", "Topic", Configuration.MessageQueue.Topic, clients.CorrelationHeader, msgEnvelope.CorrelationID)
 
 			for k, reg := range registrations {
 				if reg.deleteFlag {
 					delete(registrations, k)
 				} else {
-					// TODO only sent event if it is not blocking
-					reg.chEvent <- event
+					reg.chMessages <- msgEnvelope
 				}
 			}
 		}

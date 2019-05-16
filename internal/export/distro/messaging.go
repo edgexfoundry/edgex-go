@@ -23,13 +23,13 @@ import (
 	"github.com/edgexfoundry/go-mod-messaging/pkg/types"
 )
 
-func initMessaging(client messaging.MessageClient) (chan error, chan *types.MessageEnvelope, error) {
+func initMessaging(client messaging.MessageClient) (chan error, chan types.MessageEnvelope, error) {
 	if err := client.Connect(); err != nil {
 		return nil, nil, fmt.Errorf("failed to connect to message bus: %s ", err.Error())
 	}
 
 	errs := make(chan error, 2)
-	messages := make(chan *types.MessageEnvelope, 10)
+	messages := make(chan types.MessageEnvelope, 10)
 
 	topics := []types.TopicChannel{
 		{

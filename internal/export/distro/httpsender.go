@@ -18,7 +18,7 @@ import (
 	"time"
 
 	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation/models"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 )
@@ -42,11 +42,11 @@ func newHTTPSender(addr contract.Addressable) sender {
 
 // Send will send the optionally filtered, compressed, encypted contract.Event via HTTP POST
 // The model.Event is provided in order to obtain the necessary correlation-id.
-func (sender httpSender) Send(data []byte, event *models.Event) bool {
+func (sender httpSender) Send(data []byte, ctx context.Context) bool {
 
 	switch sender.method {
 	case http.MethodPost:
-		ctx := context.WithValue(context.Background(), clients.CorrelationHeader, event.CorrelationId)
+		ctx := context.WithValue(context.Background(), clients.CorrelationHeader, correlation.FromContext(ctx))
 		req, err := http.NewRequest(http.MethodPost, sender.url, bytes.NewReader(data))
 		if err != nil {
 			return false
@@ -58,11 +58,11 @@ func (sender httpSender) Send(data []byte, event *models.Event) bool {
 		begin := time.Now()
 		response, err := client.Do(c.Request)
 		if err != nil {
-			LoggingClient.Error(err.Error(), clients.CorrelationHeader, event.CorrelationId, internal.LogDurationKey, time.Since(begin).String())
+			LoggingClient.Error(err.Error(), clients.CorrelationHeader, correlation.FromContext(ctx), internal.LogDurationKey, time.Since(begin).String())
 			return false
 		}
 		defer response.Body.Close()
-		LoggingClient.Info(fmt.Sprintf("Response: %s", response.Status), clients.CorrelationHeader, event.CorrelationId, internal.LogDurationKey, time.Since(begin).String())
+		LoggingClient.Info(fmt.Sprintf("Response: %s", response.Status), clients.CorrelationHeader, correlation.FromContext(ctx), internal.LogDurationKey, time.Since(begin).String())
 	default:
 		LoggingClient.Info(fmt.Sprintf("Unsupported method: %s", sender.method))
 		return false
