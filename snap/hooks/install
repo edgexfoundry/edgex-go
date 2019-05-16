@@ -8,21 +8,21 @@ SNAP_CURRENT=${SNAP/%$SNAP_REVISION/current}
 
 # install all the config files from $SNAP/config/SERVICE/res/configuration.toml 
 # into $SNAP_DATA/config
-mkdir -p ${SNAP_DATA}/config
+mkdir -p "$SNAP_DATA/config"
 for service in security-api-gateway security-secret-store core-command config-seed core-data core-metadata export-client export-distro support-logging support-notifications support-scheduler sys-mgmt-agent device-modbus device-mqtt device-random device-virtual; do
-    if [ ! -f "${SNAP_DATA}/config/${service}/res/configuration.toml" ]; then
-        mkdir -p "${SNAP_DATA}/config/${service}/res"
-        cp ${SNAP}/config/${service}/res/configuration.toml "${SNAP_DATA}/config/${service}/res/configuration.toml"
+    if [ ! -f "$SNAP_DATA/config/$service/res/configuration.toml" ]; then
+        mkdir -p "$SNAP_DATA/config/$service/res"
+        cp "$SNAP/config/$service/res/configuration.toml" "$SNAP_DATA/config/$service/res/configuration.toml"
         # do replacement of the $SNAP, $SNAP_DATA, $SNAP_COMMON environment variables in the config files
         sed -i -e "s@\$SNAP_COMMON@$SNAP_COMMON@g" \
             -e "s@\$SNAP_DATA@$SNAP_DATA_CURRENT@g" \
             -e "s@\$SNAP@$SNAP_CURRENT@g" \
-            "${SNAP_DATA}/config/${service}/res/configuration.toml"
+            "$SNAP_DATA/config/$service/res/configuration.toml"
     fi
 done
 
 # handle device-random device profile
-cp ${SNAP}/config/device-random/res/device.random.yaml "${SNAP_DATA}/config/device-random/res/device.random.yaml"
+cp "$SNAP/config/device-random/res/device.random.yaml" "$SNAP_DATA/config/device-random/res/device.random.yaml"
 
 # handle device-virtual device profiles
 for profileType in bool float int uint; do
@@ -30,58 +30,59 @@ for profileType in bool float int uint; do
 done
 
 # also handle java services' application.properties
+# shellcheck disable=SC2043
 for jsvc in edgex-support-rulesengine; do
-    if [ ! -f "${SNAP_DATA}/config/config-seed/res/properties/$jsvc/application.properties" ]; then
-        mkdir -p "${SNAP_DATA}/config/config-seed/res/properties/$jsvc"
-        cp "${SNAP}/config/config-seed/res/properties/$jsvc/application.properties" "${SNAP_DATA}/config/config-seed/res/properties/$jsvc/application.properties"
+    if [ ! -f "$SNAP_DATA/config/config-seed/res/properties/$jsvc/application.properties" ]; then
+        mkdir -p "$SNAP_DATA/config/config-seed/res/properties/$jsvc"
+        cp "$SNAP/config/config-seed/res/properties/$jsvc/application.properties" "$SNAP_DATA/config/config-seed/res/properties/$jsvc/application.properties"
         # also replace SNAP_DATA and SNAP_COMMON in the application files
-        sed -i -e "s@\$SNAP_COMMON@$SNAP_COMMON@g" -e "s@\$SNAP_DATA@$SNAP_DATA_CURRENT@g" "${SNAP_DATA}/config/config-seed/res/properties/$jsvc/application.properties"
+        sed -i -e "s@\$SNAP_COMMON@$SNAP_COMMON@g" -e "s@\$SNAP_DATA@$SNAP_DATA_CURRENT@g" "$SNAP_DATA/config/config-seed/res/properties/$jsvc/application.properties"
     fi
 done
 
 # create support-rulesengine directories for templates/rules
-if [ ! -f "${SNAP_DATA}/support-rulesengine/templates" ]; then
-    mkdir -p "${SNAP_DATA}/support-rulesengine/templates"
-    cp "${SNAP}/jar/support-rulesengine/templates/rule-template.drl" "${SNAP_DATA}/support-rulesengine/templates/rule-template.drl"
+if [ ! -f "$SNAP_DATA/support-rulesengine/templates" ]; then
+    mkdir -p "$SNAP_DATA/support-rulesengine/templates"
+    cp "$SNAP/jar/support-rulesengine/templates/rule-template.drl" "$SNAP_DATA/support-rulesengine/templates/rule-template.drl"
 fi
 
-if [ ! -f "${SNAP_DATA}/support-rulesengine/rules" ]; then
-    mkdir -p "${SNAP_DATA}/support-rulesengine/rules"
+if [ ! -f "$SNAP_DATA/support-rulesengine/rules" ]; then
+    mkdir -p "$SNAP_DATA/support-rulesengine/rules"
 fi
 
 
 # for security-secret-store, copy the hcl config files used with vault
 for hclType in admin kong; do 
-    if [ ! -f "${SNAP_DATA}/config/security-secret-store/res/vault-policy-${hclType}.hcl" ]; then
-        mkdir -p "${SNAP_DATA}/config/security-secret-store/res"
-        cp "${SNAP}/config/security-secret-store/res/vault-policy-${hclType}.hcl" "${SNAP_DATA}/config/security-secret-store/res/vault-policy-${hclType}.hcl"
+    if [ ! -f "$SNAP_DATA/config/security-secret-store/res/vault-policy-$hclType.hcl" ]; then
+        mkdir -p "$SNAP_DATA/config/security-secret-store/res"
+        cp "$SNAP/config/security-secret-store/res/vault-policy-$hclType.hcl" "$SNAP_DATA/config/security-secret-store/res/vault-policy-$hclType.hcl"
     fi
 done
 
 # for the kong pki setup file, we need to set the hostname as localhost
 # and then set the directory to store the cert files as $SNAP_DATA/kong/ssl
-if [ ! -f "${SNAP_DATA}/config/security-secret-store/pkisetup-kong.json" ]; then
-    mkdir -p ${SNAP_DATA}/config/security-secret-store
+if [ ! -f "$SNAP_DATA/config/security-secret-store/pkisetup-kong.json" ]; then
+    mkdir -p "$SNAP_DATA/config/security-secret-store"
     CONFIG_FILE_PATH="config/security-secret-store/pkisetup-kong.json"
     # replace the hostname with localhost using jq
     jq --arg WORKDIR "$SNAP_DATA_CURRENT/vault" \
         '.x509_tls_server_parameters.tls_host = "localhost" | .pki_setup_dir = "pki" | .working_dir  = $WORKDIR' \
-        "${SNAP}/${CONFIG_FILE_PATH}" > "${SNAP_DATA}/${CONFIG_FILE_PATH}.tmp"
-    mv "${SNAP_DATA}/${CONFIG_FILE_PATH}.tmp" "${SNAP_DATA}/${CONFIG_FILE_PATH}"
-    chmod 600 "${SNAP_DATA}/config/security-secret-store/pkisetup-kong.json"
+        "$SNAP/$CONFIG_FILE_PATH" > "$SNAP_DATA/$CONFIG_FILE_PATH.tmp"
+    mv "$SNAP_DATA/$CONFIG_FILE_PATH.tmp" "$SNAP_DATA/$CONFIG_FILE_PATH"
+    chmod 600 "$SNAP_DATA/config/security-secret-store/pkisetup-kong.json"
 fi
 
 # for vault, we also need to set the hostname as localhost
 # and then set the directory to store the cert files as $SNAP_DATA/vault/pki
-if [ ! -f "${SNAP_DATA}/config/security-secret-store/pkisetup-vault.json" ]; then
-    mkdir -p ${SNAP_DATA}/config/security-secret-store
+if [ ! -f "$SNAP_DATA/config/security-secret-store/pkisetup-vault.json" ]; then
+    mkdir -p "$SNAP_DATA/config/security-secret-store"
     CONFIG_FILE_PATH="config/security-secret-store/pkisetup-vault.json"
     # modify the parameters using jq
     jq --arg WORKDIR "$SNAP_DATA_CURRENT/vault" \
         '.x509_tls_server_parameters.tls_host = "localhost" | .pki_setup_dir = "pki" | .working_dir  = $WORKDIR' \
-        "${SNAP}/${CONFIG_FILE_PATH}" > "${SNAP_DATA}/${CONFIG_FILE_PATH}.tmp"
-    mv "${SNAP_DATA}/${CONFIG_FILE_PATH}.tmp" "${SNAP_DATA}/${CONFIG_FILE_PATH}"
-    chmod 600 "${SNAP_DATA}/config/security-secret-store/pkisetup-vault.json"
+        "$SNAP/$CONFIG_FILE_PATH" > "$SNAP_DATA/$CONFIG_FILE_PATH.tmp"
+    mv "$SNAP_DATA/$CONFIG_FILE_PATH.tmp" "$SNAP_DATA/$CONFIG_FILE_PATH"
+    chmod 600 "$SNAP_DATA/config/security-secret-store/pkisetup-vault.json"
 fi
 
 # ensure consul dirs exist
@@ -92,13 +93,13 @@ mkdir -p "$SNAP_DATA/consul/config"
 mkdir -p "$SNAP_DATA/mongo/db"
 
 # ensure vault pki directory exists
-mkdir -p "${SNAP_DATA}/vault/pki"
+mkdir -p "$SNAP_DATA/vault/pki"
 
 # touch all the kong log files to ensure they exist
 mkdir -p "$SNAP_COMMON/logs"
 for type in proxy admin; do
     for op in access error; do
-        touch $SNAP_COMMON/logs/kong-$type-$op.log
+        touch "$SNAP_COMMON/logs/kong-$type-$op.log"
     done
 done
 
@@ -115,28 +116,28 @@ fi
 # the vault config needs to be generated with sed, replacing $SNAP_DATA in the file 
 # with the actual absolute directory
 # note that if anyone ever somehow has a "@" in their $SNAP_DATA this will likely break :-/
-if [ ! -f "${SNAP_DATA}/config/security-secret-store/vault-config.hcl" ]; then
-    mkdir -p ${SNAP_DATA}/config/security-secret-store
-    sed "s@\$SNAP_DATA@$SNAP_DATA_CURRENT@g" ${SNAP}/config/security-secret-store/vault-config.hcl.in > ${SNAP_DATA}/config/security-secret-store/vault-config.hcl
-    chmod 644 ${SNAP_DATA}/config/security-secret-store/vault-config.hcl
+if [ ! -f "$SNAP_DATA/config/security-secret-store/vault-config.hcl" ]; then
+    mkdir -p "$SNAP_DATA/config/security-secret-store"
+    sed "s@\$SNAP_DATA@$SNAP_DATA_CURRENT@g" "$SNAP/config/security-secret-store/vault-config.hcl.in" > "$SNAP_DATA/config/security-secret-store/vault-config.hcl"
+    chmod 644 "$SNAP_DATA/config/security-secret-store/vault-config.hcl"
 fi
 
 # the kong config file needs to be generated with 3 changes from the default one included in the snap
 # - we set the prefix to be $SNAP_DATA/kong as an absolute path (note that this has to be done here in the install hook)
 # - we set the nginx user to be root
 # - we set the database used to cassandra
-if [ ! -f ${SNAP_DATA}/config/security-api-gateway/kong.conf ]; then
-    mkdir -p "${SNAP_DATA}/config/security-api-gateway"
-    cp "${SNAP}/config/security-api-gateway/kong.conf" "${SNAP_DATA}/config/security-api-gateway/kong.conf"
+if [ ! -f "$SNAP_DATA/config/security-api-gateway/kong.conf" ]; then
+    mkdir -p "$SNAP_DATA/config/security-api-gateway"
+    cp "$SNAP/config/security-api-gateway/kong.conf" "$SNAP_DATA/config/security-api-gateway/kong.conf"
     # replace the default prefix setting with an absolute path using $SNAP_DATA
     # note that if anyone ever has a "@" in their $SNAP_DATA this will likely fail
-    sed -i "s@#prefix = /usr/local/kong/@prefix = ${SNAP_DATA_CURRENT}/kong@" ${SNAP_DATA}/config/security-api-gateway/kong.conf
+    sed -i "s@#prefix = /usr/local/kong/@prefix = $SNAP_DATA_CURRENT/kong@" "$SNAP_DATA/config/security-api-gateway/kong.conf"
 
     # also replace the default nginx user/group to be root
-    sed -i "s@#nginx_user = nobody nobody@nginx_user = root root@" ${SNAP_DATA}/config/security-api-gateway/kong.conf
+    sed -i "s@#nginx_user = nobody nobody@nginx_user = root root@" "$SNAP_DATA/config/security-api-gateway/kong.conf"
 
     # finally set the make database to be cassandra
-    sed -i "s@#database = postgres@database = cassandra@" ${SNAP_DATA}/config/security-api-gateway/kong.conf
+    sed -i "s@#database = postgres@database = cassandra@" "$SNAP_DATA/config/security-api-gateway/kong.conf"
 fi
 
 # finally, disable and turn off non-default services
