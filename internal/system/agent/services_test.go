@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2018 Dell Technologies Inc.
+ * Copyright 2019 Dell Technologies Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -20,8 +20,20 @@ import (
 	"fmt"
 	"testing"
 
+	servicesMock "github.com/edgexfoundry/edgex-go/internal/system/agent/interfaces/mocks"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	"github.com/stretchr/testify/mock"
 )
+
+/*
+TODO: Note that two "services-related" functions are tested elsewhere, in:
+TODO: 	/github.com/edgexfoundry/go-mod-core-contracts/clients/general/client_test.go
+TODO: Those (two "services-related" functions ) are the following
+TODO:	getConfig(...)
+TODO:	getMetrics(...)
+TODO: Therefore, coverage for those two is not provided here.
+*/
 
 func TestProcessResponse(t *testing.T) {
 
@@ -91,164 +103,96 @@ func TestProcessResponse(t *testing.T) {
 	*/
 }
 
-// TODO: The following are (essentially) integration tests which proved invaluable, especially during the development process.
-// TODO: Retain the following as placeholders (to resurrect for integration testing) .
+func reset() {
+	Configuration = &ConfigurationStruct{}
+}
 
-/*func TestInvokeOperationStartKnownService(t *testing.T) {
-
-	action := "start"
-	services := []string{"edgex-config-seed", "edgex-support-logging", "edgex-core-metadata", "edgex-support-notifications", "edgex-core-data", "edgex-core-command", "edgex-export-client", "edgex-export-distro"}
-	params := []string{"graceful"}
+func TestStartOperation(t *testing.T) {
+	reset()
 	LoggingClient = logger.NewMockClient()
+	serviceList := []string{clients.CoreDataServiceKey, clients.CoreCommandServiceKey}
+	mockStarter := &servicesMock.ServiceStarter{}
+	mockStarter.On("Start", mock.AnythingOfType("string")).Return(nil)
 
-	res := InvokeOperation(action, services, params)
-	if res != true {
-		t.Errorf("TestInvokeOperationStartKnownService() failed.")
-		return
+	tests := []struct {
+		name        string
+		starter     interface{}
+		services    []string
+		expectError bool
+	}{
+		{"start services", mockStarter, serviceList, false},
+		{"type check failure", "abc", serviceList, true},
+	}
+	for _, tt := range tests {
+		executorClient = tt.starter
+		t.Run(tt.name, func(t *testing.T) {
+			err := InvokeOperation("start", tt.services)
+			if !tt.expectError && err != nil {
+				t.Errorf("unexpected error: %v", err)
+			}
+			if tt.expectError && err == nil {
+				t.Errorf("did not receive expected error: %s", tt.name)
+			}
+		})
 	}
 }
 
-func TestInvokeOperationRestart(t *testing.T) {
-
-	action := "restart"
-	services := []string{"edgex-config-seed", "edgex-support-logging", "edgex-core-metadata", "edgex-support-notifications", "edgex-core-data", "edgex-core-command", "edgex-export-client", "edgex-export-distro"}
-	params := []string{"graceful"}
+func TestStopOperation(t *testing.T) {
+	reset()
 	LoggingClient = logger.NewMockClient()
+	serviceList := []string{clients.CoreDataServiceKey, clients.CoreCommandServiceKey}
+	mockStopper := &servicesMock.ServiceStopper{}
+	mockStopper.On("Stop", mock.AnythingOfType("string")).Return(nil)
 
-	res := InvokeOperation(action, services, params)
-	if res != true {
-		t.Errorf("TestInvokeOperationRestart() failed.")
-		return
+	tests := []struct {
+		name        string
+		stopper     interface{}
+		services    []string
+		expectError bool
+	}{
+		{"stop services", mockStopper, serviceList, false},
+		{"type check failure", "xyz", serviceList, true},
+	}
+	for _, tt := range tests {
+		executorClient = tt.stopper
+		t.Run(tt.name, func(t *testing.T) {
+			err := InvokeOperation("stop", tt.services)
+			if !tt.expectError && err != nil {
+				t.Errorf("unexpected error: %v", err)
+			}
+			if tt.expectError && err == nil {
+				t.Errorf("did not receive expected error: %s", tt.name)
+			}
+		})
 	}
 }
 
-func TestInvokeOperationStop(t *testing.T) {
-
-	action := "stop"
-	services := []string{"edgex-config-seed", "edgex-support-logging", "edgex-core-metadata", "edgex-support-notifications", "edgex-core-data", "edgex-core-command", "edgex-export-client", "edgex-export-distro"}
-	params := []string{"graceful"}
+func TestRestartOperation(t *testing.T) {
+	reset()
 	LoggingClient = logger.NewMockClient()
+	serviceList := []string{clients.CoreDataServiceKey, clients.CoreCommandServiceKey}
+	mockRestarter := &servicesMock.ServiceRestarter{}
+	mockRestarter.On("Restart", mock.AnythingOfType("string")).Return(nil)
 
-	res := InvokeOperation(action, services, params)
-	if res != true {
-		t.Errorf("TestInvokeOperationStop() failed.")
-		return
+	tests := []struct {
+		name        string
+		restarter   interface{}
+		services    []string
+		expectError bool
+	}{
+		{"restart services", mockRestarter, serviceList, false},
+		{"type check failure", "qrs", serviceList, true},
+	}
+	for _, tt := range tests {
+		executorClient = tt.restarter
+		t.Run(tt.name, func(t *testing.T) {
+			err := InvokeOperation("restart", tt.services)
+			if !tt.expectError && err != nil {
+				t.Errorf("unexpected error: %v", err)
+			}
+			if tt.expectError && err == nil {
+				t.Errorf("did not receive expected error: %s", tt.name)
+			}
+		})
 	}
 }
-
-func TestInvokeOperationStartUnknownService(t *testing.T) {
-
-	action := "start"
-	services := []string{"foo-bar"}
-	params := []string{"graceful"}
-	LoggingClient = logger.NewMockClient()
-
-	res := InvokeOperation(action, services, params)
-	if res != true {
-		t.Errorf("TestInvokeOperationStartUnknownService() failed.")
-		return
-	}
-}
-
-func TestInvokeOperationRestartUnknownService(t *testing.T) {
-
-	action := "restart"
-	services := []string{"foo-bar"}
-	params := []string{"graceful"}
-	LoggingClient = logger.NewMockClient()
-
-	res := InvokeOperation(action, services, params)
-	if res != true {
-		t.Errorf("TestInvokeOperationRestartUnknownService() failed.")
-		return
-	}
-}
-
-func TestInvokeOperationStopUnknownService(t *testing.T) {
-
-	action := "stop"
-	services := []string{"foo-bar"}
-	params := []string{"graceful"}
-	LoggingClient = logger.NewMockClient()
-
-	res := InvokeOperation(action, services, params)
-	if res != true {
-		t.Errorf("TestInvokeOperationStopUnknownService() failed.")
-		return
-	}
-}
-
-func TestGetConfig(t *testing.T) {
-
-	LoggingClient = logger.NewMockClient()
-	services := []string{"edgex-config-seed", "edgex-support-logging", "edgex-core-metadata", "edgex-support-notifications", "edgex-core-data", "edgex-core-command", "edgex-export-client", "edgex-export-distro"}
-	result, err := getConfig(services)
-	if err != nil {
-		t.Errorf("TestGetConfig() failed.")
-		return
-	}
-	LoggingClient.Debug(fmt.Sprintf("Fetched this configuration for the {%v} service: {%v}: ", "first one", result))
-}
-
-func TestGetMetric(t *testing.T) {
-
-	LoggingClient = logger.NewMockClient()
-	services := []string{"edgex-config-seed", "edgex-support-logging", "edgex-core-metadata", "edgex-support-notifications", "edgex-core-data", "edgex-core-command", "edgex-export-client", "edgex-export-distro"}
-
-	result, err := getMetrics(services)
-	if err != nil {
-		t.Errorf("TestGetMetric() failed.")
-		return
-	}
-	LoggingClient.Debug(fmt.Sprintf("Fetched these metrics for the {%v} service: {%v}: ", "first one", result))
-}
-
-func TestStopDockerContainer(t *testing.T) {
-
-	services := []string{"edgex-support-logging", "edgex-support-notifications"}
-
-	for _, s := range services {
-		err := StopService(s)
-		if err != nil {
-			t.Errorf("TestStopDockerContainer() failed.")
-			return
-		}
-	}
-}
-
-func TestFetchDockerComposeYamlAndPath(t *testing.T) {
-
-	_, err := FetchDockerComposeYamlAndPath()
-	if err != nil {
-		t.Errorf("Calling StopService(service) failed.")
-		return
-	}
-}
-
-func TestStartDockerContainer(t *testing.T) {
-
-	services := []string{"edgex-support-logging", "edgex-support-notifications"}
-
-	for _, s := range services {
-		err := StartDockerContainerCompose(s)
-		if err != nil {
-			t.Errorf("TestStartDockerContainer() failed.")
-			return
-		}
-	}
-}
-
-func TestStopAndStartDockerContainer(t *testing.T) {
-
-	services := []string{"edgex-support-logging", "edgex-support-notifications"}
-	param := "graceful"
-
-	for _, s := range services {
-		err := StopAndStartDockerContainer(s, param)
-		if err != nil {
-			t.Errorf("TestStopAndStartDockerContainer() failed.")
-			return
-		}
-	}
-}
-*/
