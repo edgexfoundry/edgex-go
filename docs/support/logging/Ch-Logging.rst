@@ -53,14 +53,14 @@ Configuration Properties
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
 |   **Configuration**                                     |   **Default Value**                 |  **Dependencies**                                                         |
 +=========================================================+=====================================+===========================================================================+
-| Entries in the Writable section of the configuration can be changed on the fly while the service is running if the service is running with the --registry / -r flag       |
+| **Entries in the Writable section of the configuration can be changed on the fly while the service is running if the service is running with the `--registry / -r` flag** |
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
 | Writable Persistence                                    | database                        \*  | "file" to save logging in file;                                           |
 |                                                         |                                     | "database" to save logging in MongoDB                                     |
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
 | Writable LogLevel                                       | INFO                            \*  | Logs messages set to a level of "INFO" or higher                          |
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
-| The following keys represent the core service-level configuration settings                                                                                                |
+| **The following keys represent the core service-level configuration settings**                                                                                            |
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
 | Service MaxResultCount                                  | 50000                          \**  | Read data limit per invocation                                            |
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
@@ -75,18 +75,18 @@ Configuration Properties
 | Service Protocol                                        | http                           \**  | Micro service host protocol                                               |
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
 | Service ClientMonitor                                   | 15000                          \**  | The interval in milliseconds at which any service clients will            |
-|                                                         |                                     | refresh their endpoint information from the service registry (Consul)                                                                          |
+|                                                         |                                     | refresh their endpoint information from the service registry (Consul)     |
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
 | Service CheckInterval                                   | 10s                            \**  | The interval in seconds at which the service registry (Consul) will       |
 |                                                         |                                     | conduct a health check of this service.                                   |
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
-| Service Timeout                                         | 5000                           \**  | Specifies a timeout (in milliseconds) for handling requests               |                                                                       |
+| Service Timeout                                         | 5000                           \**  | Specifies a timeout (in milliseconds) for handling requests               |
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
-| Following config only take effect when Writable.Persistence=file                                                                                                           | 
+| **Following config only take effect when Writable.Persistence=file**                                                                                                      |
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
 | Logging File                                            | ./logs/edgex-support-logging.log    | File path to save logging entries                                         |
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
-| Following config only take effect when logging.persistence=database                                                                                                       |
+| **Following config only take effect when logging.persistence=database**                                                                                                   |
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
 | Databases Database Primary Username                     | [empty string]                 \**  | DB user name                                                              |
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
@@ -102,7 +102,7 @@ Configuration Properties
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
 | Databases Database Type                                 | mongodb                        \**  | DB type                                                                   |
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
-| Following config only take effect when connecting to the registry for configuraiton info                                                                                  |
+| **Following config only take effect when connecting to the registry for configuraiton info**                                                                              |
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
 | Registry Host                                           | localhost                      \**  | Registry host name                                                        |
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
