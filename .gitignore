@@ -7,6 +7,7 @@ docker/docker-compose.yml
 .project
 .vscode/
 go.sum
+coverage.out
 
 # binary files
 cmd/config-seed/config-seed
