@@ -14,15 +14,17 @@ The removal of both exported records and stale records occurs on a configurable 
 
 The Scrubber microservice does not directly remove the data from EdgeX Foundry's persistent storage itself, rather it calls on Core Data to remove the records. Core Data serves as the single point of access to the persistent event/reading data. The Scrubber microservice is an independent service without any clients. That is, there is no API to call Scrubber. Scrubber operates on time triggers.
 
+Scheduler uses a data store to persist the Interval(s) and IntervalAction(s). Persistence is accomplished the Scheduler DB located in your current configured database for EdgeX.
+
 ===============
 Data Dictionary
 ===============
 
 +---------------------+--------------------------------------------------------------------------------------------+
-|   **Class Name**    |   **Descrption**                                                                           | 
+|   **Class Name**    |   **Description**                                                                           |
 +=====================+============================================================================================+
-| Schedule            | An object defining a timer or alarm.                                                       | 
+| Interval            | An object defining a specific "period" in time.                                                      |
 +---------------------+--------------------------------------------------------------------------------------------+
-| ScheduleEvent       | The action taken by a Service when the Schedule fires.                                     | 
+| IntervalAction      | The action taken by a Service when the Interval occurs.                                    |
 +---------------------+--------------------------------------------------------------------------------------------+
 
