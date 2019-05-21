@@ -265,28 +265,6 @@ apps:
     command: bin/sys-mgmt-agent -confdir $SNAP_DATA/config/sys-mgmt-agent/res --registry
     daemon: simple
     plugs: [network, network-bind]
-  device-modbus:
-    adapter: none
-    after:
-      - core-config-seed
-      - mongo-worker
-      - edgexproxy
-      - core-data
-      - core-metadata
-    command: bin/device-modbus -confdir $SNAP_DATA/config/device-modbus -profile res --registry
-    daemon: simple
-    plugs: [network, network-bind]
-  device-mqtt:
-    adapter: none
-    after:
-      - core-config-seed
-      - mongo-worker
-      - edgexproxy
-      - core-data
-      - core-metadata
-    command: bin/device-mqtt -confdir $SNAP_DATA/config/device-mqtt -profile res --registry
-    daemon: simple
-    plugs: [network, network-bind]
   device-random:
     adapter: none
     after:
@@ -1024,57 +1002,6 @@ parts:
         $SNAPCRAFT_PART_INSTALL/config/security-api-gateway/res/configuration.toml
 
   # DEVICE SERVICES parts
-  device-modbus:
-    source: https://github.com/edgexfoundry/device-modbus-go.git
-    source-depth: 1
-    source-branch: master
-    plugin: make
-    after: [go]
-    override-build: |
-      cd $SNAPCRAFT_PART_SRC
-      make build
-
-      install -DT "./cmd/device-modbus" "$SNAPCRAFT_PART_INSTALL/bin/device-modbus"
-
-      # FIXME: settings can't be overridden from the cmd-line!
-      # Override 'LogFile' and 'LoggingRemoteURL'
-      install -d "$SNAPCRAFT_PART_INSTALL/config/device-modbus/res/"
-
-      cat "./cmd/res/configuration.toml" | \
-        sed -e s:\"./device-modbus.log\":\'\$SNAP_COMMON/device-modbus.log\': \
-            -e s:'ProfilesDir = \"./res\"':'ProfilesDir = \"\$SNAP_DATA/config/device-modbus/res\"': > \
-        "$SNAPCRAFT_PART_INSTALL/config/device-modbus/res/configuration.toml"
-      install -DT "./cmd/Attribution.txt" \
-         "$SNAPCRAFT_PART_INSTALL/usr/share/doc/device-modbus/Attribution.txt"
-      install -DT "./LICENSE" \
-         "$SNAPCRAFT_PART_INSTALL/usr/share/doc/device-modbus/LICENSE"
-
-  device-mqtt:
-    source: https://github.com/edgexfoundry/device-mqtt-go.git
-    source-depth: 1
-    source-branch: master
-    plugin: make
-    after: [go]
-    override-build: |
-      cd $SNAPCRAFT_PART_SRC
-      make build
-
-      install -DT "./cmd/device-mqtt" "$SNAPCRAFT_PART_INSTALL/bin/device-mqtt"
-
-      # FIXME: settings can't be overridden from the cmd-line!
-      # Override 'LogFile' and 'LoggingRemoteURL'
-      install -d "$SNAPCRAFT_PART_INSTALL/config/device-mqtt/res/"
-
-      cat "./cmd/res/configuration.toml" | \
-        sed -e s:\"./device-mqtt.log\":\'\$SNAP_COMMON/device-mqtt.log\': \
-          -e s:'ProfilesDir = \"./res\"':'ProfilesDir = \"\$SNAP_DATA/config/device-mqtt/res\"': > \
-        "$SNAPCRAFT_PART_INSTALL/config/device-mqtt/res/configuration.toml"
-
-      install -DT "./cmd/Attribution.txt" \
-         "$SNAPCRAFT_PART_INSTALL/usr/share/doc/device-mqtt/Attribution.txt"
-      install -DT "./LICENSE" \
-         "$SNAPCRAFT_PART_INSTALL/usr/share/doc/device-mqtt/LICENSE"
-
   device-virtual-go:
     source: https://github.com/edgexfoundry/device-virtual-go.git
     source-depth: 1
