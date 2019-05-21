@@ -69,60 +69,6 @@ schemas:
                 description: for incorrect or unparsable requests
             "404":
                 description: device was not found
-/device/name/{name}/opstate/{opState}:
-    displayName: Device Resource (set op state by name)
-    description: Example - http://localhost:48081/api/v1/device/name/livingroomthermostat/opstate/locked (where livingroomthermostat is the device name)
-    uriParameters:
-        opState:
-            displayName: opState
-            type: string
-            required: false
-            repeat: false
-        name:
-            displayName: name
-            type: string
-            required: false
-            repeat: false
-    put:
-        description: Update the op status time of the device by unique name of the device. Returns Internal Service Error (HTTP 500) for unknown or unanticipated issues. Returns NotFoundException (HTTP 404) if the device cannot be found by the name provided.
-        responses:
-            "200":
-                description: boolean indicating success of the operation
-            "400":
-                description: for incorrect or unparsable requests
-            "404":
-                description: if the device cannot be found by the name provided.
-            "409":
-                description: if attempting to update the state with null
-            "500":
-                description: for unknown or unanticipated issues.
-/device/name/{name}/adminstate/{adminState}:
-    displayName: Device Resource (set admin state by name)
-    description: Example - http://localhost:48081/api/v1/device/name/livingroomthermostat/adminstate/locked (where livingroomthermostat is the device name)
-    uriParameters:
-        name:
-            displayName: name
-            type: string
-            required: false
-            repeat: false
-        adminState:
-            displayName: adminState
-            type: string
-            required: false
-            repeat: false
-    put:
-        description: Update the admin state of the device by device name. Returns Internal Service Error (HTTP 500) for unknown or unanticipated issues. Returns NotFoundException (HTTP 404) if the device cannot be found by the identifier provided.
-        responses:
-            "200":
-                description: boolean indicating success of the operation
-            "400":
-                description: for incorrect or unparsable requests
-            "404":
-                description: if the device cannot be found by the name provided.
-            "409":
-                description: if attempting to update the state with null
-            "500":
-                description: for unknown or unanticipated issues.
 /device/name/{name}/lastreported/{time}:
     displayName: Device Resource (set last reported by name)
     description: Example - http://localhost:48081/api/v1/device/name/livingroomthermostat/lastreported/1471966597000 (where livingroomthermostat is the device name)
@@ -251,6 +197,20 @@ schemas:
                 description: for incorrect or unparsable requests
             "404":
                 description: if the device cannot be found by the name provided.
+    put:
+        description: Set the admin or operating state of the device by unique name of the device. Returns Internal Service Error (HTTP 500) for unknown or unanticipated issues. Returns NotFoundException (HTTP 404) if the device cannot be found by the name provided.
+        body:
+            application/json:
+                example: '{"adminState":"unlocked"} or {"operatingState":"enabled"}'
+        responses:
+            "200":
+                description: indicating success of the operation
+            "400":
+                description: for incorrect or unparsable requests
+            "404":
+                description: if the device cannot be found by the name provided.
+            "500":
+                description: for unknown or unanticipated issues.
     get:
         description: Return Device matching given name (device names should be unique). May be null if no device matches on the name provided. Returns Internal Service Error (HTTP 500) for unknown or unanticipated issues. Returns NotFoundException (HTTP 404) if the device cannot be found by the identifier provided.
         responses:
@@ -264,60 +224,6 @@ schemas:
                 description: for incorrect or unparsable requests
             "404":
                 description: if the device cannot be found by the name provided.
-            "500":
-                description: for unknown or unanticipated issues.
-/device/{id}/opstate/{opState}:
-    displayName: Device Resource (set op state by id)
-    description: Example - http://localhost:48081/api/v1/device/57bc6d80555e5218873e5a30/opstate/disabled
-    uriParameters:
-        id:
-            displayName: id
-            type: string
-            required: false
-            repeat: false
-        opState:
-            displayName: opState
-            type: string
-            required: false
-            repeat: false
-    put:
-        description: Update the op state of the device by database generated identifier. Returns Internal Service Error (HTTP 500) for unknown or unanticipated issues. Returns NotFoundException (HTTP 404) if the device cannot be found by the identifier provided.
-        responses:
-            "200":
-                description: boolean indicating success of update
-            "400":
-                description: for incorrect or unparsable requests
-            "404":
-                description: if the device cannot be found by the name provided.
-            "409":
-                description: if attempting to update the state with null
-            "500":
-                description: for unknown or unanticipated issues.
-/device/{id}/adminstate/{adminState}:
-    displayName: Device Resource (set admin state by id)
-    description: Example - http://localhost:48081/api/v1/device/57bc6d80555e5218873e5a30/adminstate/locked
-    uriParameters:
-        id:
-            displayName: id
-            type: string
-            required: false
-            repeat: false
-        adminState:
-            displayName: adminState
-            type: string
-            required: false
-            repeat: false
-    put:
-        description: Update the admin state of the device by database generated identifier. Returns Internal Service Error (HTTP 500) for unknown or unanticipated issues. Returns NotFoundException (HTTP 404) if the device cannot be found by the identifier provided.
-        responses:
-            "200":
-                description: boolean indicating success of update
-            "400":
-                description: for incorrect or unparsable requests
-            "404":
-                description: if the device cannot be found by the name provided.
-            "409":
-                description: if attempting to update the state with null
             "500":
                 description: for unknown or unanticipated issues.
 /device/{id}/lastreported/{time}:
@@ -454,6 +360,20 @@ schemas:
                 description: if the device cannot be found by the name provided.
             "500":
                 description: for unknown or unanticipated issues.
+    put:
+        description: Set the admin or operating state of the device (as referenced by the database generated id of the device) to the state provided (either enabled or disabled). ServiceException (HTTP 500) for unanticipated or unknown issues encountered. Throws NotFoundException (HTTP 404) if no device exists by the id provided.
+        body:
+            application/json:
+                example: '{"adminState":"unlocked"} or {"operatingState":"enabled"} '
+        responses:
+            "200":
+                description: status code indicating success
+            "400":
+                description: for incorrect or unparsable requests
+            "404":
+                description: if no device exists by the id provided.
+            "500":
+                description: for unanticipated or unknown issues encountered.
 /device/label/{label}:
     displayName: Device Resource (by label)
     description: Example - http://localhost:48081/api/v1/device/label/hvac (where hvac is a device label)

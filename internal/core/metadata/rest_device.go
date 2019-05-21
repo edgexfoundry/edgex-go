@@ -14,17 +14,22 @@
 package metadata
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/notifications"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/requests/states/admin"
+	"github.com/edgexfoundry/go-mod-core-contracts/requests/states/operating"
 	"github.com/gorilla/mux"
 )
 
@@ -455,15 +460,54 @@ func restCheckForDevice(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(dev)
 }
 
-func restSetDeviceOpStateById(w http.ResponseWriter, r *http.Request) {
+func decodeState(r *http.Request) (mode string, state string, err error) {
+	var admin admin.UpdateRequest
+	var ops operating.UpdateRequest
+
+	bodyBytes, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return
+	}
+
+	var errMsg string
+	decoder := json.NewDecoder(bytes.NewBuffer(bodyBytes))
+	err = decoder.Decode(&admin)
+	if err != nil {
+		switch err := err.(type) {
+		case models.ErrContractInvalid:
+			errMsg = err.Error()
+		default:
+			return "", "", err
+		}
+	} else {
+		return ADMINSTATE, string(admin.AdminState), nil
+	}
+
+	// In this case, the supplied request was not for the AdminState. Try OperatingState.
+	decoder = json.NewDecoder(bytes.NewBuffer(bodyBytes))
+	err = decoder.Decode(&ops)
+	if err != nil {
+		switch err := err.(type) {
+		case models.ErrContractInvalid:
+			errMsg += "; " + err.Error()
+		default:
+			return "", "", err
+		}
+	} else {
+		return OPSTATE, string(ops.OperatingState), nil
+	}
+
+	// In this case, the request we were given in completely invalid
+	return "", "", fmt.Errorf("unknown request type: data decode failed for both states: %v", errMsg)
+}
+
+func restSetDeviceStateById(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	var did string = vars[ID] // TODO check if DID needs to be a bson
-	var os string = vars[OPSTATE]
-	newOs, f := models.GetOperatingState(os)
-	if !f {
-		err := errors.New("Invalid State: " + os + " Must be 'ENABLED' or 'DISABLED'")
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+	var did = vars[ID]
+	updateMode, state, err := decodeState(r)
+	if err != nil {
 		LoggingClient.Error(err.Error())
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -479,27 +523,19 @@ func restSetDeviceOpStateById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Update OpState
-	d.OperatingState = newOs
-	if err = dbClient.UpdateDevice(d); err != nil {
-		return
-	}
-	if err != nil {
+	if err = updateDeviceState(updateMode, state, d); err != nil {
 		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	ctx := r.Context()
 	// Notify
-	notifyDeviceAssociates(d, http.MethodPut, ctx)
+	notifyDeviceAssociates(d, http.MethodPut, r.Context())
 
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("true"))
-	return
 }
 
-func restSetDeviceOpStateByName(w http.ResponseWriter, r *http.Request) {
+func restSetDeviceStateByDeviceName(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
@@ -507,11 +543,9 @@ func restSetDeviceOpStateByName(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	var os string = vars[OPSTATE]
-	newOs, f := models.GetOperatingState(os)
-	// Opstate is invalid
-	if !f {
-		err := errors.New("Invalid State: " + os + " Must be 'ENABLED' or 'DISABLED'")
+
+	updateMode, state, err := decodeState(r)
+	if err != nil {
 		LoggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -529,9 +563,7 @@ func restSetDeviceOpStateByName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Update OpState
-	d.OperatingState = newOs
-	if err = dbClient.UpdateDevice(d); err != nil {
+	if err = updateDeviceState(updateMode, state, d); err != nil {
 		LoggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -542,101 +574,16 @@ func restSetDeviceOpStateByName(w http.ResponseWriter, r *http.Request) {
 	notifyDeviceAssociates(d, http.MethodPut, ctx)
 
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("true"))
 }
 
-func restSetDeviceAdminStateById(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	var did string = vars[ID]
-	var as string = vars[ADMINSTATE]
-	newAs, f := models.GetAdminState(as)
-	if !f {
-		err := errors.New("Invalid State: " + as + " Must be 'LOCKED' or 'UNLOCKED'")
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		return
+func updateDeviceState(updateMode string, state string, d models.Device) error {
+	switch updateMode {
+	case ADMINSTATE:
+		d.AdminState = models.AdminState(strings.ToUpper(state))
+	case OPSTATE:
+		d.OperatingState = models.OperatingState(strings.ToUpper(state))
 	}
-
-	// Check if the device exists
-	d, err := dbClient.GetDeviceById(did)
-	if err != nil {
-		if err == db.ErrNotFound {
-			http.Error(w, err.Error(), http.StatusNotFound)
-		} else {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		}
-		LoggingClient.Error(err.Error())
-		return
-	}
-
-	// Update the AdminState
-	d.AdminState = newAs
-	if err = dbClient.UpdateDevice(d); err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		return
-	}
-
-	ctx := r.Context()
-	if err := notifyDeviceAssociates(d, http.MethodPut, ctx); err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("true"))
-	return
-}
-
-func restSetDeviceAdminStateByName(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	n, err := url.QueryUnescape(vars[NAME])
-	if err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	var as string = vars[ADMINSTATE]
-
-	newAs, f := models.GetAdminState(as)
-	if !f {
-		err = errors.New("Invalid State: " + as + " Must be 'LOCKED' or 'UNLOCKED'")
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	// Check if the device exists
-	d, err := dbClient.GetDeviceByName(n)
-	if err != nil {
-		if err == db.ErrNotFound {
-			http.Error(w, err.Error(), http.StatusNotFound)
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		LoggingClient.Error(err.Error())
-		return
-	}
-
-	d.AdminState = newAs
-	// Update the admin state
-	if err = dbClient.UpdateDevice(d); err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	ctx := r.Context()
-	if err := notifyDeviceAssociates(d, http.MethodPut, ctx); err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("true"))
-	return
+	return dbClient.UpdateDevice(d)
 }
 
 func restDeleteDeviceById(w http.ResponseWriter, r *http.Request) {
