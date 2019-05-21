@@ -18,6 +18,7 @@ package agent
 import (
 	"context"
 	"fmt"
+
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
@@ -278,15 +279,15 @@ func getHealth(services []string) (map[string]interface{}, error) {
 func IsKnownServiceKey(serviceKey string) bool {
 	// create a map because this is the easiest/cleanest way to determine whether something exists in a set
 	var services = map[string]struct{}{
-		internal.SupportNotificationsServiceKey: {},
-		internal.CoreCommandServiceKey:          {},
-		internal.CoreDataServiceKey:             {},
-		internal.CoreMetaDataServiceKey:         {},
-		internal.ExportClientServiceKey:         {},
-		internal.ExportDistroServiceKey:         {},
-		internal.SupportLoggingServiceKey:       {},
-		internal.SupportSchedulerServiceKey:     {},
-		internal.ConfigSeedServiceKey:           {},
+		clients.SupportNotificationsServiceKey: {},
+		clients.CoreCommandServiceKey:          {},
+		clients.CoreDataServiceKey:             {},
+		clients.CoreMetaDataServiceKey:         {},
+		clients.ExportClientServiceKey:         {},
+		clients.ExportDistroServiceKey:         {},
+		clients.SupportLoggingServiceKey:       {},
+		clients.SupportSchedulerServiceKey:     {},
+		clients.ConfigSeedServiceKey:           {},
 	}
 
 	_, exists := services[serviceKey]

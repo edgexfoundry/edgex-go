@@ -24,6 +24,7 @@ import (
 	"strings"
 
 	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-registry/pkg/types"
 	"github.com/edgexfoundry/go-mod-registry/registry"
 	"github.com/magiconair/properties"
@@ -117,7 +118,7 @@ func ImportConfiguration(root string, profile string, overwrite bool) error {
 			Port:       Configuration.Registry.Port,
 			Type:       Configuration.Registry.Type,
 			Stem:       internal.ConfigRegistryStem,
-			ServiceKey: internal.ServiceKeyPrefix + serviceName,
+			ServiceKey: clients.ServiceKeyPrefix + serviceName,
 		}
 		Registry, err = registry.NewRegistryClient(registryConfig)
 		if err != nil {
@@ -132,12 +133,12 @@ func ImportConfiguration(root string, profile string, overwrite bool) error {
 
 // As services are converted to utilize V2 types, add them to this list and remove from the one above.
 func listDirectories() [9]string {
-	var names = [9]string{internal.CoreMetaDataServiceKey, internal.CoreCommandServiceKey, internal.CoreDataServiceKey,
-		internal.ExportDistroServiceKey, internal.ExportClientServiceKey, internal.SupportLoggingServiceKey,
-		internal.SupportSchedulerServiceKey, internal.SupportNotificationsServiceKey, internal.SystemManagementAgentServiceKey}
+	var names = [9]string{clients.CoreMetaDataServiceKey, clients.CoreCommandServiceKey, clients.CoreDataServiceKey,
+		clients.ExportDistroServiceKey, clients.ExportClientServiceKey, clients.SupportLoggingServiceKey,
+		clients.SupportSchedulerServiceKey, clients.SupportNotificationsServiceKey, clients.SystemManagementAgentServiceKey}
 
 	for i, name := range names {
-		names[i] = strings.Replace(name, internal.ServiceKeyPrefix, "", 1)
+		names[i] = strings.Replace(name, clients.ServiceKeyPrefix, "", 1)
 	}
 
 	return names

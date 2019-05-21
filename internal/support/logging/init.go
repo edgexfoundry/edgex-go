@@ -139,7 +139,7 @@ func connectToRegistry(conf *ConfigurationStruct) error {
 		Host:            conf.Registry.Host,
 		Port:            conf.Registry.Port,
 		Type:            conf.Registry.Type,
-		ServiceKey:      internal.SupportLoggingServiceKey,
+		ServiceKey:      clients.SupportLoggingServiceKey,
 		ServiceHost:     conf.Service.Host,
 		ServicePort:     conf.Service.Port,
 		ServiceProtocol: conf.Service.Protocol,

@@ -9,8 +9,8 @@ package logging
 import (
 	"os"
 
-	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
@@ -49,7 +49,7 @@ func newPrivateLogger() privLogger {
 
 	pl.rootLogger = log.NewLogfmtLogger(os.Stdout)
 	pl.rootLogger = log.WithPrefix(pl.rootLogger, "ts", log.DefaultTimestampUTC,
-		"app", internal.SupportLoggingServiceKey, "source", log.Caller(5))
+		"app", clients.SupportLoggingServiceKey, "source", log.Caller(5))
 
 	return pl
 }
@@ -74,7 +74,7 @@ func (l privLogger) log(logLevel string, msg string, args ...interface{}) {
 		logEntry := models.LogEntry{
 			Level:         logLevel,
 			Args:          args,
-			OriginService: internal.SupportLoggingServiceKey,
+			OriginService: clients.SupportLoggingServiceKey,
 			Message:       msg,
 			Created:       db.MakeTimestamp(),
 		}

@@ -15,6 +15,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/gorilla/context"
@@ -38,12 +39,12 @@ func main() {
 
 	ok := scheduler.Init(useRegistry)
 	if !ok {
-		logBeforeInit(fmt.Errorf("%s: Service bootstrap failed!", internal.SupportSchedulerServiceKey))
+		logBeforeInit(fmt.Errorf("%s: Service bootstrap failed!", clients.SupportSchedulerServiceKey))
 		os.Exit(1)
 	}
 
-	scheduler.LoggingClient.Info(fmt.Sprintf("Service dependencies resolved...%s %s ", internal.SupportSchedulerServiceKey, edgex.Version))
-	scheduler.LoggingClient.Info(fmt.Sprintf("Starting %s %s ", internal.SupportSchedulerServiceKey, edgex.Version))
+	scheduler.LoggingClient.Info(fmt.Sprintf("Service dependencies resolved...%s %s ", clients.SupportSchedulerServiceKey, edgex.Version))
+	scheduler.LoggingClient.Info(fmt.Sprintf("Starting %s %s ", clients.SupportSchedulerServiceKey, edgex.Version))
 
 	// Bootstrap schedulers
 	err := scheduler.LoadScheduler()
@@ -72,7 +73,7 @@ func main() {
 }
 
 func logBeforeInit(err error) {
-	scheduler.LoggingClient = logger.NewClient(internal.SupportSchedulerServiceKey, false, "", models.InfoLog)
+	scheduler.LoggingClient = logger.NewClient(clients.SupportSchedulerServiceKey, false, "", models.InfoLog)
 	scheduler.LoggingClient.Error(err.Error())
 }
 

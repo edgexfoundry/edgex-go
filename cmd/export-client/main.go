@@ -23,6 +23,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 )
@@ -46,12 +47,12 @@ func main() {
 
 	ok := client.Init(useRegistry)
 	if !ok {
-		logBeforeInit(fmt.Errorf("%s: Service bootstrap failed", internal.ExportClientServiceKey))
+		logBeforeInit(fmt.Errorf("%s: Service bootstrap failed", clients.ExportClientServiceKey))
 		os.Exit(1)
 	}
 
 	client.LoggingClient.Info("Service dependencies resolved...")
-	client.LoggingClient.Info(fmt.Sprintf("Starting %s %s ", internal.ExportClientServiceKey, edgex.Version))
+	client.LoggingClient.Info(fmt.Sprintf("Starting %s %s ", clients.ExportClientServiceKey, edgex.Version))
 
 	http.TimeoutHandler(nil, time.Millisecond*time.Duration(client.Configuration.Service.Timeout), "Request timed out")
 	client.LoggingClient.Info(client.Configuration.Service.StartupMsg)
@@ -71,7 +72,7 @@ func main() {
 }
 
 func logBeforeInit(err error) {
-	l := logger.NewClient(internal.ExportClientServiceKey, false, "", models.InfoLog)
+	l := logger.NewClient(clients.ExportClientServiceKey, false, "", models.InfoLog)
 	l.Error(err.Error())
 }
 
