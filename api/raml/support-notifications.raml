@@ -1205,6 +1205,34 @@ traits:
         example: notice-test-007
     get:
       description: Query the Transmissions associating a specific Notification by the Notification slug.
+  /slug/{slug}/start/{start}/end/{end}/{limit}:
+    type: { queryWithLimit: { typeName: Transmission } }
+    uriParameters:
+      slug:
+        type: string
+        description: This is a Notification slug which is a meaningful identifier provided by client, and it is case insensitive for query.
+        example: notice-test-007
+      start:
+        type: number
+        description: Start date in long form.
+        example: 1469175494521
+      end:
+        type: number
+        description: End date in long form.
+        example: 1472439915731
+    get:
+      description: Query limited transmissions with specified slug and created date range
+      responses:
+          "200":
+              description: list of transmissions
+              body:
+                  application/json:
+                      schema: transmission
+                      example: '[ { "created": 1558432657685, "modified": 1558432657685, "id": "ca9bd6ee-330c-4046-bca5-92c238b775bb", "notification": { "id": null, "slug": "notice-025" }, "receiver": "Jack", "channel": { "type": "REST", "url": "http://localhost:5566/test" }, "status": "SENT", "resendcount": 3, "records": [ { "status": "SENT", "response": "true", "sent": 1472439914709 } ] }, { "created": 1558432657687, "modified": 1558432657687, "id": "07a84190-d040-44f2-89ab-b28d843706d5", "notification": { "id": null, "slug": "notice-025" }, "receiver": "Jack", "channel": { "type": "REST", "url": "http://localhost:5566/test" }, "status": "SENT", "resendcount": 3, "records": [ { "status": "SENT", "response": "true", "sent": 1472439914709 } ] } ]'
+          "400":
+              description: request is invalid or unparseable
+          "500":
+              description: for unknown or unanticipated issues.
   /start/{start}/end/{end}/{limit}:
     type: { queryWithLimit: { typeName: Transmission } }
     uriParameters:

@@ -62,6 +62,7 @@ type DBClient interface {
 	// Transmissions
 	GetTransmissionById(id string) (contract.Transmission, error)
 	GetTransmissionsByNotificationSlug(slug string, limit int) ([]contract.Transmission, error)
+	GetTransmissionsByNotificationSlugAndStartEnd(slug string, start int64, end int64, limit int) ([]contract.Transmission, error)
 	GetTransmissionsByStartEnd(start int64, end int64, limit int) ([]contract.Transmission, error)
 	GetTransmissionsByStart(start int64, limit int) ([]contract.Transmission, error)
 	GetTransmissionsByEnd(end int64, limit int) ([]contract.Transmission, error)
