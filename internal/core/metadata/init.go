@@ -69,7 +69,7 @@ func Retry(useRegistry bool, useProfile string, timeout int, wait *sync.WaitGrou
 				initializeClients(useRegistry)
 				// Setup Logging
 				logTarget := setLoggingTarget()
-				LoggingClient = logger.NewClient(internal.CoreMetaDataServiceKey, Configuration.Logging.EnableRemote, logTarget, Configuration.Writable.LogLevel)
+				LoggingClient = logger.NewClient(clients.CoreMetaDataServiceKey, Configuration.Logging.EnableRemote, logTarget, Configuration.Writable.LogLevel)
 			}
 		}
 
@@ -152,7 +152,7 @@ func connectToRegistry(conf *ConfigurationStruct) error {
 		Host:            conf.Registry.Host,
 		Port:            conf.Registry.Port,
 		Type:            conf.Registry.Type,
-		ServiceKey:      internal.CoreMetaDataServiceKey,
+		ServiceKey:      clients.CoreMetaDataServiceKey,
 		ServiceHost:     conf.Service.Host,
 		ServicePort:     conf.Service.Port,
 		ServiceProtocol: conf.Service.Protocol,
@@ -256,7 +256,7 @@ func newDBClient(dbType string) (interfaces.DBClient, error) {
 func initializeClients(useRegistry bool) {
 	// Create notification client
 	params := types.EndpointParams{
-		ServiceKey:  internal.SupportNotificationsServiceKey,
+		ServiceKey:  clients.SupportNotificationsServiceKey,
 		Path:        clients.ApiNotificationRoute,
 		UseRegistry: useRegistry,
 		Url:         Configuration.Clients["Notifications"].Url() + clients.ApiNotificationRoute,

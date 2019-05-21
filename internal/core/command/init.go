@@ -67,7 +67,7 @@ func Retry(useRegistry bool, useProfile string, timeout int, wait *sync.WaitGrou
 				}
 				// Setup Logging
 				logTarget := setLoggingTarget()
-				LoggingClient = logger.NewClient(internal.CoreCommandServiceKey, Configuration.Logging.EnableRemote, logTarget, Configuration.Writable.LogLevel)
+				LoggingClient = logger.NewClient(clients.CoreCommandServiceKey, Configuration.Logging.EnableRemote, logTarget, Configuration.Writable.LogLevel)
 
 				//Initialize service clients
 				initializeClients(useRegistry)
@@ -152,7 +152,7 @@ func connectToRegistry(conf *ConfigurationStruct) error {
 		Host:            conf.Registry.Host,
 		Port:            conf.Registry.Port,
 		Type:            conf.Registry.Type,
-		ServiceKey:      internal.CoreCommandServiceKey,
+		ServiceKey:      clients.CoreCommandServiceKey,
 		ServiceHost:     conf.Service.Host,
 		ServicePort:     conf.Service.Port,
 		ServiceProtocol: conf.Service.Protocol,
@@ -217,7 +217,7 @@ func listenForConfigChanges() {
 func initializeClients(useRegistry bool) {
 	// Create metadata clients
 	params := types.EndpointParams{
-		ServiceKey:  internal.CoreMetaDataServiceKey,
+		ServiceKey:  clients.CoreMetaDataServiceKey,
 		Path:        clients.ApiDeviceRoute,
 		UseRegistry: useRegistry,
 		Url:         Configuration.Clients["Metadata"].Url() + clients.ApiDeviceRoute,

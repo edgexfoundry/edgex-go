@@ -23,6 +23,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/internal/support/logging"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 )
@@ -45,11 +46,11 @@ func main() {
 	ok := logging.Init(useRegistry)
 	if !ok {
 		time.Sleep(time.Millisecond * time.Duration(15))
-		logBeforeInit(fmt.Errorf("%s: Service bootstrap failed!", internal.SupportLoggingServiceKey))
+		logBeforeInit(fmt.Errorf("%s: Service bootstrap failed!", clients.SupportLoggingServiceKey))
 		os.Exit(1)
 	}
 	logging.LoggingClient.Info("Service dependencies resolved...")
-	logging.LoggingClient.Info(fmt.Sprintf("Starting %s %s", internal.SupportLoggingServiceKey, edgex.Version))
+	logging.LoggingClient.Info(fmt.Sprintf("Starting %s %s", clients.SupportLoggingServiceKey, edgex.Version))
 
 	errs := make(chan error, 2)
 	listenForInterrupt(errs)
@@ -67,7 +68,7 @@ func main() {
 }
 
 func logBeforeInit(err error) {
-	l := logger.NewClient(internal.SupportLoggingServiceKey, false, "", models.InfoLog)
+	l := logger.NewClient(clients.SupportLoggingServiceKey, false, "", models.InfoLog)
 	l.Error(err.Error())
 }
 

@@ -19,7 +19,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
@@ -44,7 +43,7 @@ func (d *distroMockClient) NotifyRegistrations(models.NotifyUpdate, context.Cont
 }
 
 func prepareTest(t *testing.T) *httptest.Server {
-	LoggingClient = logger.NewClient(internal.ExportClientServiceKey, false, "./logs/edgex-export-client-test.log", models.InfoLog)
+	LoggingClient = logger.NewClient(clients.ExportClientServiceKey, false, "./logs/edgex-export-client-test.log", models.InfoLog)
 
 	dbClient = &MemDB{}
 	dc = &distroMockClient{}

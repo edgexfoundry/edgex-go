@@ -21,11 +21,11 @@ import (
 	"sync"
 	"time"
 
+	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-registry/pkg/types"
 	"github.com/edgexfoundry/go-mod-registry/registry"
 
-	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 )
 
@@ -49,7 +49,7 @@ func Retry(useProfile string, timeout int, wait *sync.WaitGroup, ch chan error) 
 			} else {
 				// Setup Logging
 				logTarget := setLoggingTarget()
-				LoggingClient = logger.NewClient(internal.ConfigSeedServiceKey, Configuration.EnableRemoteLogging, logTarget, Configuration.LoggingLevel)
+				LoggingClient = logger.NewClient(clients.ConfigSeedServiceKey, Configuration.EnableRemoteLogging, logTarget, Configuration.LoggingLevel)
 			}
 		}
 		//Check to verify Registry connectivity

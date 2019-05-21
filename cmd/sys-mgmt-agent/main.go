@@ -16,12 +16,13 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/gorilla/context"
 	"net/http"
 	"os"
 	"os/signal"
 	"strconv"
 	"time"
+
+	"github.com/gorilla/context"
 
 	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/edgex-go/internal"
@@ -29,6 +30,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 )
@@ -50,12 +52,12 @@ func main() {
 
 	ok := agent.Init(useRegistry)
 	if !ok {
-		logBeforeInit(fmt.Errorf("%s: service bootstrap failed", internal.SystemManagementAgentServiceKey))
+		logBeforeInit(fmt.Errorf("%s: service bootstrap failed", clients.SystemManagementAgentServiceKey))
 		os.Exit(1)
 	}
 
 	agent.LoggingClient.Info("Service dependencies resolved...")
-	agent.LoggingClient.Info(fmt.Sprintf("Starting %s %s ", internal.SystemManagementAgentServiceKey, edgex.Version))
+	agent.LoggingClient.Info(fmt.Sprintf("Starting %s %s ", clients.SystemManagementAgentServiceKey, edgex.Version))
 
 	http.TimeoutHandler(nil, time.Millisecond*time.Duration(agent.Configuration.Service.Timeout), "Request timed out")
 	agent.LoggingClient.Info(agent.Configuration.Service.StartupMsg)
@@ -75,7 +77,7 @@ func main() {
 }
 
 func logBeforeInit(err error) {
-	l := logger.NewClient(internal.SystemManagementAgentServiceKey, false, "", models.InfoLog)
+	l := logger.NewClient(clients.SystemManagementAgentServiceKey, false, "", models.InfoLog)
 	l.Error(err.Error())
 }
 
