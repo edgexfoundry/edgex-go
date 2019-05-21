@@ -43,7 +43,7 @@ RUN make cmd/config-seed/config-seed
 FROM golang:1.11-alpine
 
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
-      copyright='Copyright (c) 2017: Samsung'
+    copyright='Copyright (c) 2017: Samsung'
 
 RUN apk add --no-cache bash
 
@@ -67,4 +67,5 @@ COPY --from=build-env $GOPATH/src/github.com/edgexfoundry/edgex-go/cmd/support-n
 COPY --from=build-env $GOPATH/src/github.com/edgexfoundry/edgex-go/cmd/support-scheduler/res /edgex/cmd/support-scheduler/res
 COPY --from=build-env $GOPATH/src/github.com/edgexfoundry/edgex-go/cmd/sys-mgmt-agent/res /edgex/cmd/sys-mgmt-agent/res
 
-ENTRYPOINT /edgex/cmd/config-seed/config-seed --profile=docker --cmd=/edgex/cmd
+ENTRYPOINT ["/edgex/cmd/config-seed/config-seed"]
+CMD ["--profile=docker", "--cmd=/edgex/cmd"]
