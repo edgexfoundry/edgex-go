@@ -9,7 +9,7 @@ SNAP_CURRENT=${SNAP/%$SNAP_REVISION/current}
 # install all the config files from $SNAP/config/SERVICE/res/configuration.toml 
 # into $SNAP_DATA/config
 mkdir -p "$SNAP_DATA/config"
-for service in security-api-gateway security-secret-store core-command config-seed core-data core-metadata export-client export-distro support-logging support-notifications support-scheduler sys-mgmt-agent device-modbus device-mqtt device-random device-virtual; do
+for service in security-api-gateway security-secret-store core-command config-seed core-data core-metadata export-client export-distro support-logging support-notifications support-scheduler sys-mgmt-agent device-random device-virtual; do
     if [ ! -f "$SNAP_DATA/config/$service/res/configuration.toml" ]; then
         mkdir -p "$SNAP_DATA/config/$service/res"
         cp "$SNAP/config/$service/res/configuration.toml" "$SNAP_DATA/config/$service/res/configuration.toml"
@@ -143,7 +143,7 @@ fi
 # finally, disable and turn off non-default services
 # by default, we want the export-*, support-*, device-*, and redis services 
 # off.
-for svc in export-distro export-client support-notifications support-scheduler support-logging support-rulesengine device-modbus device-mqtt device-random device-virtual redis; do
+for svc in export-distro export-client support-notifications support-scheduler support-logging support-rulesengine device-random device-virtual redis; do
     # set the service as off, so that the setting is persistent after a refresh
     # due to snapd bug: https://bugs.launchpad.net/snapd/+bug/1818306
     snapctl set $svc=off
