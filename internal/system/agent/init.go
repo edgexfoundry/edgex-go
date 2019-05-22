@@ -46,14 +46,14 @@ var chUpdates chan interface{} //A channel for "config updates" sourced from Reg
 var executorClient interface{}
 
 var services = map[string]string{
-	internal.SupportNotificationsServiceKey: "Notifications",
-	internal.CoreCommandServiceKey:          "Command",
-	internal.CoreDataServiceKey:             "CoreData",
-	internal.CoreMetaDataServiceKey:         "Metadata",
-	internal.ExportClientServiceKey:         "Export",
-	internal.ExportDistroServiceKey:         "Distro",
-	internal.SupportLoggingServiceKey:       "Logging",
-	internal.SupportSchedulerServiceKey:     "Scheduler",
+	clients.SupportNotificationsServiceKey: "Notifications",
+	clients.CoreCommandServiceKey:          "Command",
+	clients.CoreDataServiceKey:             "CoreData",
+	clients.CoreMetaDataServiceKey:         "Metadata",
+	clients.ExportClientServiceKey:         "Export",
+	clients.ExportDistroServiceKey:         "Distro",
+	clients.SupportLoggingServiceKey:       "Logging",
+	clients.SupportSchedulerServiceKey:     "Scheduler",
 }
 
 func Retry(useRegistry bool, useProfile string, timeout int, wait *sync.WaitGroup, ch chan error) {
@@ -77,7 +77,7 @@ func Retry(useRegistry bool, useProfile string, timeout int, wait *sync.WaitGrou
 			} else {
 				// Setup Logging
 				logTarget := setLoggingTarget()
-				LoggingClient = logger.NewClient(internal.SystemManagementAgentServiceKey, Configuration.Logging.EnableRemote, logTarget, Configuration.Writable.LogLevel)
+				LoggingClient = logger.NewClient(clients.SystemManagementAgentServiceKey, Configuration.Logging.EnableRemote, logTarget, Configuration.Writable.LogLevel)
 
 				//Initialize service clients
 				initializeClients(useRegistry)
@@ -163,7 +163,7 @@ func connectToRegistry(conf *ConfigurationStruct) error {
 		Host:            conf.Registry.Host,
 		Port:            conf.Registry.Port,
 		Type:            conf.Registry.Type,
-		ServiceKey:      internal.SystemManagementAgentServiceKey,
+		ServiceKey:      clients.SystemManagementAgentServiceKey,
 		ServiceHost:     conf.Service.Host,
 		ServicePort:     conf.Service.Port,
 		ServiceProtocol: conf.Service.Protocol,

@@ -29,6 +29,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/gorilla/context"
@@ -51,12 +52,12 @@ func main() {
 
 	ok := data.Init(useRegistry)
 	if !ok {
-		logBeforeInit(fmt.Errorf("%s: Service bootstrap failed!", internal.CoreDataServiceKey))
+		logBeforeInit(fmt.Errorf("%s: Service bootstrap failed!", clients.CoreDataServiceKey))
 		os.Exit(1)
 	}
 
 	data.LoggingClient.Info("Service dependencies resolved...")
-	data.LoggingClient.Info(fmt.Sprintf("Starting %s %s ", internal.CoreDataServiceKey, edgex.Version))
+	data.LoggingClient.Info(fmt.Sprintf("Starting %s %s ", clients.CoreDataServiceKey, edgex.Version))
 
 	http.TimeoutHandler(nil, time.Millisecond*time.Duration(data.Configuration.Service.Timeout), "Request timed out")
 	data.LoggingClient.Info(data.Configuration.Service.StartupMsg)
@@ -76,7 +77,7 @@ func main() {
 }
 
 func logBeforeInit(err error) {
-	l := logger.NewClient(internal.CoreDataServiceKey, false, "", models.InfoLog)
+	l := logger.NewClient(clients.CoreDataServiceKey, false, "", models.InfoLog)
 	l.Error(err.Error())
 }
 

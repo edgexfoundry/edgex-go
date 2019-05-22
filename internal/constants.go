@@ -22,16 +22,5 @@ const (
 )
 
 const (
-	ServiceKeyPrefix                = "edgex-"
-	ConfigSeedServiceKey            = "edgex-config-seed"
-	CoreCommandServiceKey           = "edgex-core-command"
-	CoreDataServiceKey              = "edgex-core-data"
-	CoreMetaDataServiceKey          = "edgex-core-metadata"
-	ExportClientServiceKey          = "edgex-export-client"
-	ExportDistroServiceKey          = "edgex-export-distro"
-	SupportLoggingServiceKey        = "edgex-support-logging"
-	SupportNotificationsServiceKey  = "edgex-support-notifications"
-	SystemManagementAgentServiceKey = "edgex-sys-mgmt-agent"
-	SupportSchedulerServiceKey      = "edgex-support-scheduler"
-	WritableKey                     = "/Writable"
+	WritableKey = "/Writable"
 )
