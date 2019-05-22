@@ -115,7 +115,7 @@ Given the migration of EdgeX to UUID from BSON Id, UUID is used for the id in th
 |-------------|------------------------------------------|------------------------|-------------|
 | Sets        | Entity ID                                | Entity                 |             |  
 | Sorted sets | "transmission"                           | Entity ID              | 0           |
-| Sorted sets | "transmission:slug:{slug}"               | Entity ID              | ResendCount |
+| Sorted sets | "transmission:slug:{slug}"               | Entity ID              | Timestamp |
 | Sorted sets | "transmission:status:{status}"           | Entity ID              | ResendCount |
 | Sorted sets | "transmission:resendcount:{resendcount}" | Entity ID              | ResendCount |
 | Sorted sets | "transmission:created"                   | Entity ID              | Timestamp   |

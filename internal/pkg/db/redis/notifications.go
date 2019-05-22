@@ -493,17 +493,14 @@ func (c Client) GetTransmissionsByNotificationSlug(slug string, limit int) (tran
 	conn := c.Pool.Get()
 	defer conn.Close()
 
-	objects, err := getObjectsByScore(conn, db.Transmission+":slug:"+slug, 0, -1, limit)
-	if err != nil {
-		return transmissions, err
-	}
+	return getTransmissionsByNotificationSlugAndStartEnd(conn, slug, 0, -1, limit)
+}
 
-	transmissions, err = unmarshalTransmissions(objects)
-	if err != nil {
-		return transmissions, err
-	}
+func (c Client) GetTransmissionsByNotificationSlugAndStartEnd(slug string, start int64, end int64, limit int) (transmissions []contract.Transmission, err error) {
+	conn := c.Pool.Get()
+	defer conn.Close()
 
-	return transmissions, nil
+	return getTransmissionsByNotificationSlugAndStartEnd(conn, slug, start, end, limit)
 }
 
 func (c Client) GetTransmissionsByStartEnd(start int64, end int64, limit int) (transmissions []contract.Transmission, err error) {
@@ -821,7 +818,7 @@ func addTransmission(conn redis.Conn, t *contract.Transmission) error {
 	_ = conn.Send("MULTI")
 	_ = conn.Send("SET", id, m)
 	_ = conn.Send("ZADD", db.Transmission, 0, id)
-	_ = conn.Send("ZADD", db.Transmission+":slug:"+t.Notification.Slug, t.ResendCount, id)
+	_ = conn.Send("ZADD", db.Transmission+":slug:"+t.Notification.Slug, t.Created, id)
 	_ = conn.Send("ZADD", db.Transmission+":status:"+t.Status, t.ResendCount, id)
 	_ = conn.Send("ZADD", db.Transmission+":resendcount", t.ResendCount, id)
 	_ = conn.Send("ZADD", db.Transmission+":created", t.Created, id)
@@ -866,6 +863,20 @@ func (c Client) deleteTransmissionBySlug(conn redis.Conn, slug string) error {
 		}
 	}
 	return nil
+}
+
+func getTransmissionsByNotificationSlugAndStartEnd(conn redis.Conn, slug string, start int64, end int64, limit int) (transmissions []contract.Transmission, err error) {
+	objects, err := getObjectsByScore(conn, db.Transmission+":slug:"+slug, start, end, limit)
+	if err != nil {
+		return transmissions, err
+	}
+
+	transmissions, err = unmarshalTransmissions(objects)
+	if err != nil {
+		return transmissions, err
+	}
+
+	return transmissions, nil
 }
 
 func unmarshalNotifications(objects [][]byte) ([]contract.Notification, error) {

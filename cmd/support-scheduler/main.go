@@ -73,7 +73,10 @@ func main() {
 }
 
 func logBeforeInit(err error) {
-	scheduler.LoggingClient = logger.NewClient(clients.SupportSchedulerServiceKey, false, "", models.InfoLog)
+	if scheduler.LoggingClient == nil {
+		scheduler.LoggingClient = logger.NewClient(clients.SupportSchedulerServiceKey, false, "", models.InfoLog)
+	}
+
 	scheduler.LoggingClient.Error(err.Error())
 }
 

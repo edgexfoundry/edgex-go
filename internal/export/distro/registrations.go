@@ -167,6 +167,7 @@ func (reg *registrationInfo) update(newReg contract.Registration) bool {
 func (reg registrationInfo) processMessage(msg msgTypes.MessageEnvelope) {
 	var err error
 	ctx := context.WithValue(context.Background(), clients.CorrelationHeader, msg.CorrelationID)
+	ctx = context.WithValue(ctx, clients.ContentType, msg.ContentType)
 	switch msg.ContentType {
 	case clients.ContentTypeJSON:
 		err = reg.handleJSON(msg, ctx)
@@ -222,10 +223,11 @@ func (reg registrationInfo) handleJSON(msg msgTypes.MessageEnvelope, ctx context
 }
 
 func (reg registrationInfo) handleCBOR(msg msgTypes.MessageEnvelope, ctx context.Context) (err error) {
-	ctxPublish := context.WithValue(ctx, clients.ContentType, msg.ContentType)
-	if reg.sender.Send(msg.Payload, ctxPublish) && Configuration.Writable.MarkPushed {
-		//CBOR content type not included here because we don't need that when calling back to core-data
-		return ec.MarkPushedByChecksum(msg.Checksum, ctx)
+	if reg.sender.Send(msg.Payload, ctx) && Configuration.Writable.MarkPushed {
+		//Cannot use CBOR Content-Type when calling back to core-data. Ensure Content-Type is JSON.
+		ctxCallback := context.WithValue(context.Background(), clients.CorrelationHeader, msg.CorrelationID)
+		ctxCallback = context.WithValue(ctxCallback, clients.ContentType, clients.ContentTypeJSON)
+		return ec.MarkPushedByChecksum(msg.Checksum, ctxCallback)
 	}
 	return
 }
