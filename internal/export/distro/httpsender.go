@@ -41,17 +41,16 @@ func newHTTPSender(addr contract.Addressable) sender {
 }
 
 // Send will send the optionally filtered, compressed, encypted contract.Event via HTTP POST
-// The model.Event is provided in order to obtain the necessary correlation-id.
+// The context is provided in order to obtain the necessary correlation-id.
 func (sender httpSender) Send(data []byte, ctx context.Context) bool {
 
 	switch sender.method {
 	case http.MethodPost:
-		ctx := context.WithValue(context.Background(), clients.CorrelationHeader, correlation.FromContext(ctx))
 		req, err := http.NewRequest(http.MethodPost, sender.url, bytes.NewReader(data))
 		if err != nil {
 			return false
 		}
-		req.Header.Set("Content-Type", mimeTypeJSON)
+		req.Header.Set(clients.ContentType, ctx.Value(clients.ContentType).(string))
 
 		c := clients.NewCorrelatedRequest(req, ctx)
 		client := &http.Client{}
@@ -60,6 +59,9 @@ func (sender httpSender) Send(data []byte, ctx context.Context) bool {
 		if err != nil {
 			LoggingClient.Error(err.Error(), clients.CorrelationHeader, correlation.FromContext(ctx), internal.LogDurationKey, time.Since(begin).String())
 			return false
+		}
+		if response.StatusCode != http.StatusOK {
+			LoggingClient.Warn(fmt.Sprintf("unexpected http response %v POST %s", response.StatusCode, c.Request.URL.String()), clients.CorrelationHeader, correlation.FromContext(ctx), internal.LogDurationKey, time.Since(begin).String())
 		}
 		defer response.Body.Close()
 		LoggingClient.Info(fmt.Sprintf("Response: %s", response.Status), clients.CorrelationHeader, correlation.FromContext(ctx), internal.LogDurationKey, time.Since(begin).String())
