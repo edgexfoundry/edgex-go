@@ -63,6 +63,7 @@ func LoadRestRoutes() *mux.Router {
 	// Transmissions
 	b.HandleFunc("/transmission", transmissionHandler).Methods(http.MethodPost)
 	b.HandleFunc("/transmission/slug/{slug}/{limit:[0-9]+}", transmissionBySlugHandler).Methods(http.MethodGet)
+	b.HandleFunc("/transmission/slug/{slug}/start/{start}/end/{end}/{limit:[0-9]+}", transmissionBySlugAndStartEndHandler).Methods(http.MethodGet)
 	b.HandleFunc("/transmission/start/{start}/end/{end}/{limit:[0-9]+}", transmissionByStartEndHandler).Methods(http.MethodGet)
 	b.HandleFunc("/transmission/start/{start}/{limit:[0-9]+}", transmissionByStartHandler).Methods(http.MethodGet)
 	b.HandleFunc("/transmission/end/{end}/{limit:[0-9]+}", transmissionByEndHandler).Methods(http.MethodGet)

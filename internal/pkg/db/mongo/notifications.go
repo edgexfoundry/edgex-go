@@ -385,6 +385,10 @@ func (mc MongoClient) GetTransmissionsByNotificationSlug(slug string, limit int)
 	return mc.getTransmissionsLimit(bson.M{"notification.slug": slug}, limit)
 }
 
+func (mc MongoClient) GetTransmissionsByNotificationSlugAndStartEnd(slug string, start int64, end int64, limit int) ([]contract.Transmission, error) {
+	return mc.getTransmissionsLimit(bson.M{"notification.slug": slug, "created": bson.M{"$gt": start, "$lt": end}}, limit)
+}
+
 func (mc MongoClient) GetTransmissionsByStartEnd(start int64, end int64, limit int) ([]contract.Transmission, error) {
 	return mc.getTransmissionsLimit(bson.M{"created": bson.M{"$gt": start, "$lt": end}}, limit)
 }
