@@ -104,6 +104,7 @@ func TestHttpSender(t *testing.T) {
 			sender := newHTTPSender(addressableTest)
 
 			ctx := context.WithValue(context.Background(), clients.CorrelationHeader, uuid.New().String())
+			ctx = context.WithValue(ctx, clients.ContentType, clients.ContentTypeJSON)
 			sender.Send(msg, ctx)
 		})
 	}
