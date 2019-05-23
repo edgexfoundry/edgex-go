@@ -15,30 +15,29 @@ To obtain and run EdgeX Foundry, perform the following steps:
 
 .. image:: EdgeX_GettingStartedUsrDocker.png
 
-=============
-What You Need
-=============
-EdgeX Foundry is an operating system (OS)-agnostic and hardware (HW)-agnostic edge software platform. Minimum platform requirements are being established. At this time use the following recommended characteristics:
+=====================
+Platform Requirements
+=====================
+EdgeX Foundry is an operating system (OS)-agnostic and hardware (HW)-agnostic IoT edge platform. While minimum platform requirements are yet being established, at this time the following options are recommended:
 
 * Memory:  minimum of 1 GB
-* Hard drive space:  minimum of 3 GB of space to run the EdgeX Foundry containers, but you may want more depending on how long sensor and device data is retained
-* OS: EdgeX Foundry has been run successfully on many systems including, but not limited to the following systems
+* Hard drive space:  minimum of 3 GB of space to run the EdgeX Foundry containers, but you may want more depending on how long sensor and device data is to be retained
+* OS: EdgeX Foundry has been run successfully on many systems, including, but not limited to the following systems
         * Windows (ver 7 - 10)
         * Ubuntu Desktop (ver 14-16)
         * Ubuntu Server (ver 14)
         * Ubuntu Core (ver 16)
         * Mac OS X 10
 
-=======================
+==========================================
 Get & Run EdgeX Foundry
-=======================
+==========================================
+|
+.. image:: EdgeX_GettingStartedUsrInstallDocker.png
 
 -------------------------------
 Install Docker & Docker Compose
 -------------------------------
-|
-.. image:: EdgeX_GettingStartedUsrInstallDocker.png
-
 To run Dockerized EdgeX Foundry, you need to install Docker.  See https://docs.docker.com/install/ to learn how to obtain and install Docker.  If you are new to using Docker, the same web site provides you additional information.  The following short video has is also very informative https://www.youtube.com/watch?time_continue=3&v=VhabrYF1nms
 
 Docker Compose is used to orchestrate the fetch (or pull), installation, and the start and stop of the EdgeX Foundry microservice containers. See:  https://docs.docker.com/compose/ to learn more about Docker Compose. 
@@ -68,6 +67,7 @@ A Docker Compose file is a manifest file, which lists:
 * The Docker containers (or more precisely the Docker container images) that should be downloaded, 
 * The order in which the containers should be started
 * The parameters under which the containers should be run
+
 
 -----------------
 Run EdgeX Foundry
@@ -208,7 +208,7 @@ The status above was created using **"docker ps -a --format "table {{.Names}}\t{
 
 **EdgeX Foundry Container Logs**
 
-To view the log of any container, use the command **"docker-compose logs -f [compose-contatainer-name]"**.  The example below shows the log for the data container.
+To view the log of any container, use the command **"docker-compose logs -f [compose-container-name]"**.  The example below shows the log for the data container.
 
 .. image:: EdgeX_GettingStartedUsrLogs.png
 
