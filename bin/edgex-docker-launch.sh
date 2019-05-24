@@ -1,59 +1,39 @@
 #!/usr/bin/env sh
 
-# Copyright (c) 2018
-# Cavium
+# Copyright 2018 Redis Labs Inc.
 #
-# SPDX-License-Identifier: Apache-2.0
+# Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+# in compliance with the License. You may obtain a copy of the License at
 #
-
-# Start EdgeX Foundry services in right order, as described:
-# https://docs.edgexfoundry.org/Ch-GettingStartedUsers.html
-
-# EDGEX_COMPOSE_FILE overrides the default compose file. 
-# EDGEX_CORE_DB identifies the DB for Core Services.
-# EDGEX_SERVICES lists the service to start
+# http://www.apache.org/licenses/LICENSE-2.0
 #
-# E.g. Start everything but metadata and data, use Redis for Core Services and a local compose file
-# EDGEX_SERVICES="logging command export-client export-distro notifications" \
-# EDGEX_CORE_DB=redis EDGEX_COMPOSE_FILE=docker/local-docker-compose.yml \
-# bin/edgex-docker-launch.sh
+# Unless required by applicable law or agreed to in writing, software distributed under the License
+# is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+# or implied. See the License for the specific language governing permissions and limitations under
+# the License.
 
-if [ -z $EDGEX_COMPOSE_FILE ]; then
-  COMPOSE_FILENAME=docker-compose-delhi-0.7.1.yml
-  COMPOSE_FILE=/tmp/${COMPOSE_FILENAME}
-  COMPOSE_URL=https://raw.githubusercontent.com/edgexfoundry/developer-scripts/master/compose-files/${COMPOSE_FILENAME}
-  
-  echo "Pulling latest compose file..."
-  curl -o $COMPOSE_FILE $COMPOSE_URL
-else
-  COMPOSE_FILE=$EDGEX_COMPOSE_FILE
+# Usage: bin/edgex-docker-launch.sh [redis]
+#
+# By default download the Mongo based Docker Compose file and attempt to start EdgeX. If the redis
+# option is used, download the Redis based Docker Compose file and attemp to start EdgeX.
+#
+# To override the compose file entirely set the COMPOSE_FILE_PATH environment variable to the full
+# pathname of the compose file you want to use.
+
+GITHUB_PATH=https://github.com/edgexfoundry/developer-scripts
+VERSION=edinburgh-1.0.0
+
+if [ "x$COMPOSE_FILE_PATH" = x ]; then
+    if [ $# -ne 0 ] && [ "$1" = "redis" ]; then
+        COMPOSE_FILE=compose-files/docker-compose-redis-$VERSION.yml
+    else
+        COMPOSE_FILE=compose-files/docker-compose-$VERSION.yml
+    fi
+    
+    COMPOSE_FILE_PATH=/tmp/$COMPOSE_FILE
+    echo "Downloading Docker Compose file..."
+    curl -s -o $COMPOSE_FILE_PATH $GITHUB_PATH/$COMPOSE_FILE
 fi
 
-EDGEX_CORE_DB=${EDGEX_CORE_DB:-"mongo"}
-
-if [ ${EDGEX_CORE_DB} != mongo ]; then
-  echo "Starting $EDGEX_CORE_DB for Core Data Services and Support Services"
-  docker-compose -f $COMPOSE_FILE up -d $EDGEX_CORE_DB
-fi
-
-echo "Starting consul"
-docker-compose -f $COMPOSE_FILE up -d consul
-echo "Populating configuration"
-docker-compose -f $COMPOSE_FILE up -d config-seed
-
-echo "Sleeping before launching remaining services"
-sleep 15
-
-defaultServices="logging metadata data command export-client export-distro notifications scheduler"
-if [ -z ${EDGEX_SERVICES} ]; then
-  deps=
-  services=${defaultServices}
-else
-  deps=--no-deps
-  services=${EDGEX_SERVICES}
-fi
-
-for s in ${services}; do
-    echo Starting ${s}
-    docker-compose -f $COMPOSE_FILE up -d ${deps} $s
-done
+echo "Starting EdgeX..."
+docker-compose -f $COMPOSE_FILE_PATH up -d
