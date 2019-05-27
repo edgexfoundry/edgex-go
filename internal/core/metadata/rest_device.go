@@ -25,6 +25,8 @@ import (
 	"strconv"
 	"strings"
 
+	types "github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/operators/device"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/notifications"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
@@ -64,71 +66,47 @@ func restAddNewDevice(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&d)
 	if err != nil {
 		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	// Protocol check
-	if len(d.Protocols) == 0 {
-		err := errors.New("no supporting protocol specified for device")
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	// Service Check
-	// Try by name
-	service, err := dbClient.GetDeviceServiceByName(d.Service.Name)
-	if err != nil {
-		// Try by ID
-		service, err = dbClient.GetDeviceServiceById(d.Service.Id)
-		if err != nil {
-			LoggingClient.Error(err.Error())
-			http.Error(w, err.Error()+": A device must be associated with a device service", http.StatusBadRequest)
-			return
+		status := http.StatusBadRequest
+		if _, ok := err.(models.ErrContractInvalid); !ok {
+			status = http.StatusInternalServerError
 		}
-	}
-	d.Service = service
-
-	// Profile Check
-	// Try by name
-	d.Profile, err = dbClient.GetDeviceProfileByName(d.Profile.Name)
-	if err != nil {
-		// Try by ID
-		d.Profile, err = dbClient.GetDeviceProfileById(d.Profile.Id)
-		if err != nil {
-			LoggingClient.Error(err.Error())
-			http.Error(w, err.Error()+": A device must be associated with a device profile", http.StatusBadRequest)
-			return
-		}
-	}
-
-	// Check operating/admin state
-	if d.OperatingState == models.OperatingState("") || d.AdminState == models.AdminState("") {
-		err = errors.New("Device can't have null operating state or admin state")
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	// Add the device
-	d.Id, err = dbClient.AddDevice(d)
-	if err != nil {
-		if err == db.ErrNotUnique {
-			http.Error(w, "Duplicate name for device", http.StatusConflict)
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		LoggingClient.Error(err.Error())
+		http.Error(w, err.Error(), status)
 		return
 	}
 
 	ctx := r.Context()
-	// Notify the associates
-	notifyDeviceAssociates(d, http.MethodPost, ctx)
+	// The following requester instance is necessary because we will be making an HTTP call to the device service
+	// associated with the new device in the Notifier below. There is no device service client. Additionally, the
+	// requester interface should be mocked for unit testability and so is injected into the Notifier.
+	requester, err := device.NewRequester(device.Http, LoggingClient, ctx)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	ch := make(chan device.DeviceEvent)
+	defer close(ch)
+
+	notifier := device.NewNotifier(ch, nc, Configuration.Notifications, dbClient, requester, LoggingClient, ctx)
+	go notifier.Execute()
+
+	op := device.NewAddDevice(ch, dbClient, d)
+	newId, err := op.Execute()
+	if err != nil {
+		LoggingClient.Error(err.Error())
+		switch err.(type) {
+		case *types.ErrDuplicateName:
+			http.Error(w, err.Error(), http.StatusConflict)
+		case *types.ErrItemNotFound:
+			http.Error(w, err.Error(), http.StatusNotFound)
+		default:
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		return
+	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(d.Id))
+	w.Write([]byte(newId))
 }
 
 // Update the device

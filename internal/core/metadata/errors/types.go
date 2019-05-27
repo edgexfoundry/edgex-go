@@ -11,6 +11,7 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
+
 package errors
 
 import (
@@ -29,16 +30,16 @@ func NewErrLimitExceeded(limit int) error {
 	return &ErrLimitExceeded{limit: limit}
 }
 
-type ErrDuplicateAddressableName struct {
-	name string
+type ErrDuplicateName struct {
+	msg string
 }
 
-func (e ErrDuplicateAddressableName) Error() string {
-	return fmt.Sprintf("duplicate name for addressable: %s", e.name)
+func (e ErrDuplicateName) Error() string {
+	return e.msg
 }
 
-func NewErrDuplicateAddressableName(name string) error {
-	return &ErrDuplicateAddressableName{name: name}
+func NewErrDuplicateName(message string) error {
+	return &ErrDuplicateName{msg: message}
 }
 
 type ErrEmptyAddressableName struct {
@@ -80,4 +81,28 @@ func (e ErrAddressableInUse) Error() string {
 
 func NewErrAddressableInUse(name string) error {
 	return &ErrAddressableInUse{name: name}
+}
+
+type ErrBadRequest struct {
+	value string
+}
+
+func (e ErrBadRequest) Error() string {
+	return fmt.Sprintf("received value %v is invalid", e.value)
+}
+
+func NewErrBadRequest(invalid string) error {
+	return &ErrBadRequest{value: invalid}
+}
+
+type ErrItemNotFound struct {
+	key string
+}
+
+func (e ErrItemNotFound) Error() string {
+	return fmt.Sprintf("no item found for supplied key: %s", e.key)
+}
+
+func NewErrItemNotFound(key string) error {
+	return &ErrItemNotFound{key: key}
 }
