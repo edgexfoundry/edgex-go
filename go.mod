@@ -5,9 +5,9 @@ require (
 	github.com/BurntSushi/toml v0.3.1
 	github.com/OneOfOne/xxhash v1.2.5
 	github.com/eclipse/paho.mqtt.golang v1.1.1
-	github.com/edgexfoundry/go-mod-core-contracts v0.0.1
-	github.com/edgexfoundry/go-mod-messaging v0.0.0
-	github.com/edgexfoundry/go-mod-registry v0.0.0
+	github.com/edgexfoundry/go-mod-core-contracts v0.1.0
+	github.com/edgexfoundry/go-mod-messaging v0.1.0
+	github.com/edgexfoundry/go-mod-registry v0.1.0
 	github.com/globalsign/mgo v0.0.0-20181015135952-eeefdecb41b8
 	github.com/go-kit/kit v0.8.0
 	github.com/go-stack/stack v1.8.0 // indirect
