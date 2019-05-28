@@ -19,8 +19,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+
 	"github.com/gomodule/redigo/redis"
+
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 )
 
 var currClient *Client // a singleton so Readings can be de-referenced
@@ -28,11 +31,35 @@ var once sync.Once
 
 // Client represents a Redis client
 type Client struct {
-	Pool *redis.Pool // A thread-safe pool of connections to Redis
+	Pool          *redis.Pool // A thread-safe pool of connections to Redis
+	BatchSize     int
+	loggingClient logger.LoggingClient
+}
+
+type CoreDataClient struct {
+	*Client
+	logger logger.LoggingClient
+}
+
+func NewCoreDataClient(config db.Configuration, logger logger.LoggingClient) (*CoreDataClient, error) {
+	var err error
+	dc := &CoreDataClient{}
+	dc.Client, err = NewClient(config, logger)
+	if err != nil {
+		return nil, err
+	}
+	dc.logger = logger
+	// Background process for deleting device readings and events.
+	// This only needs to be running for core-data since this is the service responsible for handling the deletion
+	// of events
+	go dc.AsyncDeleteEvents()
+	go dc.AsyncDeleteReadings()
+
+	return dc, err
 }
 
 // Return a pointer to the Redis client
-func NewClient(config db.Configuration) (*Client, error) {
+func NewClient(config db.Configuration, loggingClient logger.LoggingClient) (*Client, error) {
 	once.Do(func() {
 		connectionString := fmt.Sprintf("%s:%d", config.Host, config.Port)
 		opts := []redis.DialOption{
@@ -49,7 +76,11 @@ func NewClient(config db.Configuration) (*Client, error) {
 			}
 			return conn, nil
 		}
-
+		// Default the batch size to 1,000 if not set
+		batchSize := 1000
+		if config.BatchSize != 0 {
+			batchSize = config.BatchSize
+		}
 		currClient = &Client{
 			Pool: &redis.Pool{
 				IdleTimeout: 0,
@@ -63,6 +94,8 @@ func NewClient(config db.Configuration) (*Client, error) {
 				MaxIdle: 10,
 				Dial:    dialFunc,
 			},
+			BatchSize:     batchSize,
+			loggingClient: loggingClient,
 		}
 	})
 	return currClient, nil
@@ -76,6 +109,8 @@ func (c *Client) Connect() error {
 // CloseSession closes the connections to Redis
 func (c *Client) CloseSession() {
 	c.Pool.Close()
+	close(deleteEventsChannel)
+	close(deleteReadingsChannel)
 	currClient = nil
 	once = sync.Once{}
 }

@@ -70,7 +70,8 @@ func TestCountByDevice(t *testing.T) {
 func buildEvents() []models.Event {
 	events := []models.Event{}
 	events = append(events, models.Event{
-		ID: "1",
+		ID:     "1",
+		Device: testDeviceName,
 		Readings: []models.Reading{
 			{Id: "1"},
 			{Id: "2"},
@@ -433,6 +434,9 @@ func TestDeleteEventEventDoesNotExist(t *testing.T) {
 	myMock.On("DeleteEventById", mock.MatchedBy(func(id string) bool {
 		return id == testEvent.ID
 	})).Return(db.ErrNotFound)
+	myMock.On("DeleteReadingsByDevice", mock.MatchedBy(func(device string) bool {
+		return device == testDeviceName
+	})).Return(nil)
 
 	dbClient = myMock
 	testEvent.Readings = nil
@@ -454,6 +458,9 @@ func TestDeleteEventReadingDoesNotExist(t *testing.T) {
 		return id == testEvent.Readings[0].Id || id == testEvent.Readings[1].Id
 	})).Return(db.ErrNotFound)
 	dbClient = myMock
+	myMock.On("DeleteReadingsByDevice", mock.MatchedBy(func(device string) bool {
+		return device == testDeviceName
+	})).Return(nil)
 
 	err := deleteEvent(testEvent)
 
@@ -552,18 +559,11 @@ func TestGetEventsByCreationTimeDBThrowsError(t *testing.T) {
 
 func TestDeleteEvents(t *testing.T) {
 	reset()
-	readings := buildReadings()
 	myMock := &dbMock.DBClient{}
 
-	myMock.On("EventsForDevice", mock.MatchedBy(func(deviceId string) bool {
+	myMock.On("DeleteEventsByDevice", mock.MatchedBy(func(deviceId string) bool {
 		return deviceId == testUUIDString
-	})).Return([]models.Event{{ID: testUUIDString, Readings: readings}}, nil)
-
-	myMock.On("DeleteReadingById", mock.Anything).Return(nil).Times(len(readings))
-
-	myMock.On("DeleteEventById", mock.MatchedBy(func(eventId string) bool {
-		return eventId == testUUIDString
-	})).Return(nil)
+	})).Return(0, nil)
 
 	dbClient = myMock
 
@@ -574,25 +574,6 @@ func TestDeleteEvents(t *testing.T) {
 	}
 
 	myMock.AssertExpectations(t)
-}
-
-func TestDeleteEventsDBLookupThrowsError(t *testing.T) {
-	reset()
-	myMock := &dbMock.DBClient{}
-
-	myMock.On("EventsForDevice", mock.Anything).Return(nil, fmt.Errorf("some error"))
-
-	dbClient = myMock
-
-	expectedZero, expectedErr := deleteEvents("error")
-
-	if expectedZero != 0 {
-		t.Errorf("Should return zero on error")
-	}
-
-	if expectedErr == nil {
-		t.Errorf("Should throw error")
-	}
 }
 
 func TestScrubPushedEvents(t *testing.T) {

@@ -144,7 +144,7 @@ func newDBClient(dbType string) (export.DBClient, error) {
 			Host: Configuration.Databases["Primary"].Host,
 			Port: Configuration.Databases["Primary"].Port,
 		}
-		return redis.NewClient(dbConfig) //TODO: Verify this also connects to Redis
+		return redis.NewClient(dbConfig, LoggingClient) //TODO: Verify this also connects to Redis
 	default:
 		return nil, db.ErrUnsupportedDatabase
 	}

@@ -177,6 +177,7 @@ func deleteEvent(e contract.Event) error {
 			return err
 		}
 	}
+
 	if err := dbClient.DeleteEventById(e.ID); err != nil {
 		return err
 	}
@@ -239,7 +240,7 @@ func putEventOnQueue(evt models.Event, ctx context.Context) {
 	LoggingClient.Info("Putting event on message queue")
 
 	evt.CorrelationId = correlation.FromContext(ctx)
-	//Re-marshal JSON content into bytes.
+	// Re-marshal JSON content into bytes.
 	if clients.FromContext(clients.ContentType, ctx) == clients.ContentTypeJSON {
 		data, err := json.Marshal(evt)
 		if err != nil {
@@ -279,25 +280,7 @@ func getEventsByCreationTime(limit int, start int64, end int64) ([]contract.Even
 }
 
 func deleteEvents(deviceId string) (int, error) {
-	// Get the events by the device name
-	events, err := dbClient.EventsForDevice(deviceId)
-	if err != nil {
-		LoggingClient.Error(err.Error())
-		return 0, err
-	}
-
-	LoggingClient.Info("Deleting the events for device: " + deviceId)
-
-	// Delete the events
-	count := len(events)
-	for _, event := range events {
-		if err = deleteEvent(event); err != nil {
-			LoggingClient.Error(err.Error())
-			return 0, err
-		}
-	}
-
-	return count, nil
+	return dbClient.DeleteEventsByDevice(deviceId)
 }
 
 func scrubPushedEvents() (int, error) {
