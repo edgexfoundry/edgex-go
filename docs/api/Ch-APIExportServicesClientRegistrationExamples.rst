@@ -54,25 +54,24 @@ Receive all exported Core Data Event/Readings with valid value descriptors in th
    POST to http://localhost:48071/api/v1/registration
    {"origin":1471806386919,"name":"MQTTClient","addressable":{"origin":1471806386919,"name":"EdgeXTestMQTTBroker","protocol":"TCP","address":"m10.cloudmqtt.com","port":15421,"publisher":"EdgeXExportPublisher","user":"hukfgtoh", "password":"uP6hJLYW6Ji4","topic":"EdgeXDataTopic"},"format":"JSON","enable":true,"destination":"MQTT_TOPIC"}   
 
-**Result:**
+**Result of putting test message to the MQTT Topic:**
 
 ::
 
-  {"pushed":0,"device":"livingroomthermostat","readings":[{"pushed":0,"name":"temperature","value":"72","id":"57ed24f0502fdf73bb637915","created":1475159280744,"modified":1475159280744,"origin":1471806386919},{"pushed":0,"name":"humidity","value":"58","id":"57ed24f0502fdf73bb637916","created":1475159280756,"modified":1475159280756,"origin":1471806386919],"id":"57ed24f0502fdf73bb637917","created":1475159280762,"modified":1475159280762,"origin":1471806386919}
-
+  {"id":"bd14aa05-e6be-4a78-aafc-77301f82e64a","device":"livingroomthermostat","origin":1471806386919,"readings":[{"id":"c91726af-1a4b-46d7-b351-5a273efe6f6f","origin":1471806386919,"name":"temperature","value":"72"},{"id":"795d5581-65db-4d93-b3c8-9388aca06407","origin":1471806386919,"name":"humidity","value":"58"}]}
 
 **Register for JSON formatted data to be sent to a REST address**
 
 ::
 
    POST to http://localhost:48071/api/v1/registration
-   {"origin":1471806386919,"name":"MQTTXMLClient","addressable":{"origin":1471806386919,"name":"EdgeXTestMQTTXMLBroker","protocol":"TCP","address":"m10.cloudmqtt.com","port":15421,"publisher":"EdgeXExportPublisher", "user":"hukfgtoh","password":"uP6hJLYW6Ji4","topic":"EdgeXXMLDataTopic"},"format":"XML","enable":true,"destination":"REST_ENDPOINT"}
+   {"name":"RESTClient","addressable":{"name":"EdgeXTestREST","protocol":"HTTP","address":"localhost","port":8111,"path":"/rest","method":"POST"},"format":"JSON","enable":true,"destination":"REST_ENDPOINT"}
 
-**Result:**
+**Result of sending test message to HTTP Server:**
 
 ::
 
-   {"origin":1471806386919,"name":"RESTClient","addressable":{"origin":1471806386919,"name":"EdgeXTestREST","protocol":"HTTP","address":"http://localhost","port":8111,"path":"/rest"},"format":"JSON","enable":true}
+   {"id":"bd14aa05-e6be-4a78-aafc-77301f82e64a","device":"livingroomthermostat","origin":1471806386919,"readings":[{"id":"c91726af-1a4b-46d7-b351-5a273efe6f6f","origin":1471806386919,"name":"temperature","value":"72"},{"id":"795d5581-65db-4d93-b3c8-9388aca06407","origin":1471806386919,"name":"humidity","value":"58"}]}
 
 **Register for XML formatted data to be sent to MQTT topic**
 
@@ -85,77 +84,20 @@ Receive all exported Core Data Event/Readings with valid value descriptors in th
 
 ::
 
-   <?xml version="1.0" encoding="UTF-8" standalone="yes"?> <Event> <event> <created>1475159280762</created> <id>57ed24f0502fdf73bb637917</id> <modified>1475159280762</modified> <origin>1471806386919</origin> <device>livingroomthermostat</device> <pushed>0</pushed> <readings> <created>1475159280744</created> <id>57ed24f0502fdf73bb637915</id> <modified>1475159280744</modified> <origin>1471806386919</origin> <name>temperature</name> <pushed>0</pushed> <value>72</value> </readings> <readings> <created>1475159280756</created> <id>57ed24f0502fdf73bb637916</id> <modified>1475159280756</modified> <origin>1471806386919</origin> <name>humidity</name> <pushed>0</pushed> <value>58</value> </readings> </event> </Event>
+   <Event><ID>bd14aa05-e6be-4a78-aafc-77301f82e64a</ID><Pushed>0</Pushed><Device>livingroomthermostat</Device><Created>0</Created><Modified>0</Modified><Origin>1471806386919</Origin><Readings><Id>c91726af-1a4b-46d7-b351-5a273efe6f6f</Id><Pushed>0</Pushed><Created>0</Created><Origin>1471806386919</Origin><Modified>0</Modified><Device></Device><Name>temperature</Name><Value>72</Value><BinaryValue></BinaryValue></Readings><Readings><Id>795d5581-65db-4d93-b3c8-9388aca06407</Id><Pushed>0</Pushed><Created>0</Created><Origin>1471806386919</Origin><Modified>0</Modified><Device></Device><Name>humidity</Name><Value>58</Value><BinaryValue></BinaryValue></Readings></Event>
 
 **Register for XML formatted data to be sent to a REST address**
 
 ::
 
    POST to http://localhost:48071/api/v1/registration
-   {"origin":1471806386919,"name":"RESTXMLClient","addressable":{"origin":1471806386919,"name":"EdgeXTestRESTXML","protocol":"HTTP","address":"http://localhost","port":8111,"path":"/rest"},"format":"XML","enable":true,"destination":"REST_ENDPOINT"} 
-
+   {"name":"RESTXMLClient","addressable":{"name":"EdgeXTestXMLREST","protocol":"HTTP","address":"localhost","port":8111,"path":"/rest","method":"POST"},"format":"XML","enable":true,"destination":"REST_ENDPOINT"}
 
 **Result:**
 
 ::
   
-   <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-
-    <Event>
-
-        <event>
-
-            <created>1475159280762</created>
-
-            <id>57ed24f0502fdf73bb637917</id>
-
-            <modified>1475159280762</modified>
-
-            <origin>1471806386919</origin>
-
-            <device>livingroomthermostat</device>
-
-            <pushed>0</pushed>
-
-            <readings>
-
-                <created>1475159280744</created>
-
-                <id>57ed24f0502fdf73bb637915</id>
-
-                <modified>1475159280744</modified>
-
-                <origin>1471806386919</origin>
-
-                <name>temperature</name>
-
-                <pushed>0</pushed>
-
-                <value>72</value>
-
-            </readings>
-
-            <readings>
-
-                <created>1475159280756</created>
-
-                <id>57ed24f0502fdf73bb637916</id>
-
-                <modified>1475159280756</modified>
-
-                <origin>1471806386919</origin>
-
-                <name>humidity</name>
-
-                <pushed>0</pushed>
-
-                <value>58</value>
-
-            </readings>
-
-        </event>
-
-    </Event>
+   <Event><ID>bd14aa05-e6be-4a78-aafc-77301f82e64a</ID><Pushed>0</Pushed><Device>livingroomthermostat</Device><Created>0</Created><Modified>0</Modified><Origin>1471806386919</Origin><Readings><Id>c91726af-1a4b-46d7-b351-5a273efe6f6f</Id><Pushed>0</Pushed><Created>0</Created><Origin>1471806386919</Origin><Modified>0</Modified><Device></Device><Name>temperature</Name><Value>72</Value><BinaryValue></BinaryValue></Readings><Readings><Id>795d5581-65db-4d93-b3c8-9388aca06407</Id><Pushed>0</Pushed><Created>0</Created><Origin>1471806386919</Origin><Modified>0</Modified><Device></Device><Name>humidity</Name><Value>58</Value><BinaryValue></BinaryValue></Readings></Event>
 
 **Example #2 - compression tests**
 
@@ -411,7 +353,7 @@ No data should be received by the client
 ::
 
    POST to http://localhost:48071/api/v1/registration
-   {"origin":1471806386919,"name":"RESTClient","addressable":{"origin":1471806386919,"name":"EdgeXTestREST","protocol":"HTTP","address":"http://localhost","port":8111,"path":"/rest"},"format":"JSON","filter":{"deviceIdentifiers":["motorrpm"]},"enable":true,"destination":"REST_ENDPOINT"} 
+   {"origin":1471806386919,"name":"RESTClient","addressable":{"origin":1471806386919,"name":"EdgeXTestREST","protocol":"HTTP","address":"localhost","port":8111,"path":"/rest","method":"POST"},"format":"JSON","filter":{"deviceIdentifiers":["motorrpm"]},"enable":true,"destination":"REST_ENDPOINT"} 
 
 
 **Result:**
@@ -435,7 +377,7 @@ No data should be received by the client
 ::
 
    POST to http://localhost:48071/api/v1/registration
-   {"origin":1471806386919,"name":"RESTXMLClient","addressable":{"origin":1471806386919,"name":"EdgeXTestRESTXML","protocol":"HTTP","address":"http://localhost","port":8111,"path":"/rest"},"format":"XML","filter":{"deviceIdentifiers":["motorrpm"]},"enable":true,"destination":"REST_ENDPOINT"}
+   {"origin":1471806386919,"name":"RESTXMLClient","addressable":{"origin":1471806386919,"name":"EdgeXTestRESTXML","protocol":"HTTP","address":"localhost","port":8111,"path":"/rest","method":"POST"},"format":"XML","filter":{"deviceIdentifiers":["motorrpm"]},"enable":true,"destination":"REST_ENDPOINT"}
 
 
 **Result:**
@@ -496,8 +438,6 @@ Modify the JSON/MQTT client registration to filter on devices that match the inc
 **Result:**
 
 ::
-
-    <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 
     <Event>
 
