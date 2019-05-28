@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-# Copyright 2018 Redis Labs Inc.
+# Copyright 2019 Redis Labs Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
 # in compliance with the License. You may obtain a copy of the License at
@@ -20,7 +20,7 @@
 # To override the compose file entirely set the COMPOSE_FILE_PATH environment variable to the full
 # pathname of the compose file you want to use.
 
-GITHUB_PATH=https://github.com/edgexfoundry/developer-scripts
+GITHUB_PATH=https://raw.githubusercontent.com/edgexfoundry/developer-scripts/master
 VERSION=edinburgh-1.0.0
 
 if [ "x$COMPOSE_FILE_PATH" = x ]; then
@@ -31,6 +31,7 @@ if [ "x$COMPOSE_FILE_PATH" = x ]; then
     fi
     
     COMPOSE_FILE_PATH=/tmp/$COMPOSE_FILE
+    mkdir -p "$(dirname $COMPOSE_FILE_PATH)"
     echo "Downloading Docker Compose file..."
     curl -s -o $COMPOSE_FILE_PATH $GITHUB_PATH/$COMPOSE_FILE
 fi

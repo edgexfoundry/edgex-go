@@ -73,7 +73,7 @@ run:
 	cd bin && ./edgex-launch.sh
 
 run_docker:
-	cd bin && ./edgex-docker-launch.sh
+	bin/edgex-docker-launch.sh $(EDGEX_DB)
 
 docker: $(DOCKERS)
 
