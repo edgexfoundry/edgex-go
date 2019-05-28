@@ -24,6 +24,7 @@ Welcome to the EdgeX Foundry documentation
    Ch-GettingStarted
    Ch-Walkthrough
    Ch-Examples
+   Ch-SecurityOverall
    Ch-APIReference
 
 Search
