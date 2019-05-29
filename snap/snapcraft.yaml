@@ -273,6 +273,7 @@ apps:
       - edgexproxy
       - core-data
       - core-metadata
+      - support-logging
     command: bin/device-random -confdir $SNAP_DATA/config/device-random -profile res --registry
     daemon: simple
     plugs: [network, network-bind]
@@ -284,6 +285,7 @@ apps:
       - edgexproxy
       - core-data
       - core-metadata
+      - support-logging
     command: bin/device-virtual -confdir $SNAP_DATA/config/device-virtual -profile res --registry
     daemon: simple
     plugs: [network, network-bind]
