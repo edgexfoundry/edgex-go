@@ -655,7 +655,7 @@ parts:
 
   support-rulesengine:
     source: https://github.com/edgexfoundry/support-rulesengine.git
-    source-branch: "master"
+    source-branch: edinburgh
     source-depth: 1
     plugin: maven
     maven-options: ["-Dmaven.test.skip=true"]
@@ -935,7 +935,7 @@ parts:
 
   security-secret-store:
     source: https://github.com/edgexfoundry/security-secret-store.git
-    source-branch: master
+    source-branch: edinburgh
     source-depth: 1
     plugin: make
     override-build: |
@@ -969,7 +969,7 @@ parts:
   security-api-gateway:
     after: [go]
     source: https://github.com/edgexfoundry/security-api-gateway.git
-    source-branch: master
+    source-branch: edinburgh
     source-depth: 1
     plugin: make
     stage-packages:
@@ -1007,7 +1007,7 @@ parts:
   device-virtual-go:
     source: https://github.com/edgexfoundry/device-virtual-go.git
     source-depth: 1
-    source-branch: master
+    source-branch: edinburgh
     plugin: make
     after: [go]
     override-build: |
@@ -1039,7 +1039,7 @@ parts:
   device-random:
     source: https://github.com/edgexfoundry/device-random.git
     source-depth: 1
-    source-branch: master
+    source-branch: edinburgh
     plugin: make
     after: [go]
     override-build: |
