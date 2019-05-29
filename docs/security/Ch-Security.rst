@@ -1,6 +1,6 @@
-########
-Security
-########
+#################
+Security Features
+#################
 
 .. image:: EdgeX_Security.png
 

@@ -7,13 +7,22 @@ labels: security
 
 🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑
 
-The EdgeX Foundry project practices responsible disclosure. Since GitHub issues are public, 
-instead of reporting the issue through GitHub, please email our security issues team at 
-edgex-tsc-security@lists.edgexfoundry.org with details on your environment, expected behavior, 
-how this is a security issue and any applicable exploits or associated CVE's if this issue is 
-related to any previously reported CVE.
+The EdgeX Foundry project practices responsible disclosure.
+GitHub issues are public, so 
 
-For full details please read the "Security Issue Reporting Process" located at 
-https://wiki.edgexfoundry.org/display/FA/Security+Working+Group on how to disclose security related issues.
+PLEASE DO NOT USE THIS TEMPLATE TO REPORT A SECURITY ISSUE!!
+
+EMAIL INSTEAD the Security Issue Review (SIR) team at:
+security-issues@lists.edgexfoundry.org
+
+Please provide the following:
+
+1. Your environment (EdgeX version, Hardware, Operating System)
+2. Expected behavior
+3. Actual behavior
+4. Why it is a security issue, threats
+5. Any applicable exploits or associated CVE's
+
+Thank you!
 
 🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑
