@@ -88,8 +88,14 @@ func Retry(params startup.BootParams, wait *sync.WaitGroup, ch chan error) {
 			// Attempt to connect to secrets service. Fall back to local config on failure.
 			if !params.UseLocalSecrets {
 				err = connectAndPollSecrets()
+
+				// Error occurred trying to read remote secrets. Fail fast.
 				if err != nil {
 					ch <- err
+					ch <- fmt.Errorf("could not fetch remote secrets, shutting down")
+					close(ch)
+					wait.Done()
+					return
 				}
 			}
 
@@ -218,33 +224,33 @@ func initializeConfiguration(params startup.BootParams) (*ConfigurationStruct, e
 }
 
 func connectAndPollSecrets() error {
-		var err error
-		secretsClient, err = pkg.NewSecretClient(Configuration.Secrets)
-		if err != nil {
-			return err
-		}
+	var err error
+	secretsClient, err = pkg.NewSecretClient(Configuration.Secrets)
+	if err != nil {
+		return err
+	}
 
-		username, err := secretsClient.GetValue("coredata")
-		if err != nil {
-			return err
-		}
+	username, err := secretsClient.GetValue("coredata")
+	if err != nil {
+		return err
+	}
 
-		password, err := secretsClient.GetValue("coredatapasswd")
-		if err != nil {
-			return err
-		}
+	password, err := secretsClient.GetValue("coredatapasswd")
+	if err != nil {
+		return err
+	}
 
-		Configuration.Databases["Primary"] = config.DatabaseInfo{
-			Type:     Configuration.Databases["Primary"].Type,
-			Timeout:  Configuration.Databases["Primary"].Timeout,
-			Host:     Configuration.Databases["Primary"].Host,
-			Port:     Configuration.Databases["Primary"].Port,
-			Username: username,
-			Password: password,
-			Name:     Configuration.Databases["Primary"].Name,
-		}
+	Configuration.Databases["Primary"] = config.DatabaseInfo{
+		Type:     Configuration.Databases["Primary"].Type,
+		Timeout:  Configuration.Databases["Primary"].Timeout,
+		Host:     Configuration.Databases["Primary"].Host,
+		Port:     Configuration.Databases["Primary"].Port,
+		Username: username,
+		Password: password,
+		Name:     Configuration.Databases["Primary"].Name,
+	}
 
-		return nil
+	return nil
 }
 
 func connectToRegistry(conf *ConfigurationStruct) error {
