@@ -14,7 +14,7 @@ description: |
 icon: snap/local/assets/edgex-snap-icon.png
 
 # delhi is epoch 0, edinburgh epoch 1, etc.
-epoch: 1
+epoch: 2
 
 # TODO: add armhf here when that's supported
 architectures:
