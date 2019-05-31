@@ -8,7 +8,7 @@ export KONG_SNAP="$SNAP/bin/kong-wrapper.sh"
 # and in this case we should just loop and keep trying
 # we don't implement a timeout here because systemd will kill us if we 
 # don't succeed in 15 minutes (or whatever the configured stop-timeout is)
-until $KONG_SNAP migrations up --yes --conf "$KONG_CONF"; do
+until $KONG_SNAP migrations bootstrap --conf "$KONG_CONF"; do
     sleep 5
 done
 
