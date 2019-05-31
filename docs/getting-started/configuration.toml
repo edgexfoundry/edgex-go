@@ -52,25 +52,17 @@ EnableRemote = false
 File = "./device-simple.log"
 Level = "DEBUG"
 
-# Pre-define Schedule Configuration
-[[Schedules]]
-Name = "10sec-schedule"
-Frequency = "PT10S"
-
-[[ScheduleEvents]]
-Name = "readRandom"
-Schedule = "10sec-schedule"
-  [ScheduleEvents.Addressable]
-  HTTPMethod = "GET"
-  Path = "/api/v1/device/name/RandNum-Device01/Random"
-
 # Pre-define Devices
 [[DeviceList]]
   Name = "RandNum-Device01"
   Profile = "RandNum-Device"
   Description = "Random Number Generator Device"
   Labels = [ "random", "test" ]
-  [DeviceList.Addressable]
-    Address = "random"
-    Port = 300
-    Protocol = "OTHER"
+  [DeviceList.Protocols]
+    [DeviceList.Protocols.Other]
+      Address = "random"
+      Port = 300
+  [[DeviceList.AutoEvents]]
+    Resource = "Random"
+    OnChange = false
+    Frequency = "10s"
