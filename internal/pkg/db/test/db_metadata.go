@@ -195,7 +195,7 @@ func populateDevice(db interfaces.DBClient, count int) (string, error) {
 			return id, fmt.Errorf("Error creating DeviceProfile: %v", err)
 		}
 
-		id, err = db.AddDevice(d)
+		id, err = db.AddDevice(d, d.Profile.CoreCommands)
 		if err != nil {
 			return id, err
 		}
@@ -894,7 +894,7 @@ func testDBDevice(t *testing.T, db interfaces.DBClient) {
 
 	d := models.Device{}
 	d.Name = "name1"
-	_, err = db.AddDevice(d)
+	_, err = db.AddDevice(d, d.Profile.CoreCommands)
 	if err == nil {
 		t.Fatalf("Should be an error adding an existing name")
 	}

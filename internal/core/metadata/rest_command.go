@@ -82,3 +82,28 @@ func restGetCommandByName(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(results)
 }
+
+func restGetCommandsByDeviceId(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	did, err := url.QueryUnescape(vars[ID])
+	if err != nil {
+		LoggingClient.Error(err.Error())
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	commands, err := dbClient.GetCommandsByDeviceId(did)
+	if err != nil {
+		if err == db.ErrNotFound {
+			http.Error(w, err.Error(), http.StatusNotFound)
+		} else {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+
+		LoggingClient.Error(err.Error())
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(commands)
+
+}

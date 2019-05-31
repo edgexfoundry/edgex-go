@@ -92,7 +92,7 @@ type DeviceProfile struct {
 	Labels          []string          `bson:"labels"`
 	DeviceResources []DeviceResource  `bson:"deviceResources"`
 	DeviceCommands  []ProfileResource `bson:"resources"`
-	CoreCommands    []Command         `bson:"commands"`
+	CoreCommands    []CommandProfile  `bson:"commands"`
 }
 
 func (dp *DeviceProfile) ToContract() (c contract.DeviceProfile, err error) {
@@ -258,7 +258,7 @@ func (dp *DeviceProfile) FromContract(from contract.DeviceProfile) (contractId s
 	}
 
 	for _, command := range from.CoreCommands {
-		var commandModel Command
+		var commandModel CommandProfile
 		if _, err = commandModel.FromContract(command); err != nil {
 			return
 		}

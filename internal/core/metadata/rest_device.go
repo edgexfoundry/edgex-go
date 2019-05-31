@@ -112,7 +112,7 @@ func restAddNewDevice(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Add the device
-	d.Id, err = dbClient.AddDevice(d)
+	d.Id, err = dbClient.AddDevice(d, d.Profile.CoreCommands)
 	if err != nil {
 		if err == db.ErrNotUnique {
 			http.Error(w, "Duplicate name for device", http.StatusConflict)

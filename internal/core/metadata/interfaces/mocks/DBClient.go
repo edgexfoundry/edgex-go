@@ -31,41 +31,20 @@ func (_m *DBClient) AddAddressable(a models.Addressable) (string, error) {
 	return r0, r1
 }
 
-// AddCommand provides a mock function with given fields: c
-func (_m *DBClient) AddCommand(c models.Command) (string, error) {
-	ret := _m.Called(c)
+// AddDevice provides a mock function with given fields: d, commands
+func (_m *DBClient) AddDevice(d models.Device, commands []models.Command) (string, error) {
+	ret := _m.Called(d, commands)
 
 	var r0 string
-	if rf, ok := ret.Get(0).(func(models.Command) string); ok {
-		r0 = rf(c)
+	if rf, ok := ret.Get(0).(func(models.Device, []models.Command) string); ok {
+		r0 = rf(d, commands)
 	} else {
 		r0 = ret.Get(0).(string)
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(models.Command) error); ok {
-		r1 = rf(c)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// AddDevice provides a mock function with given fields: d
-func (_m *DBClient) AddDevice(d models.Device) (string, error) {
-	ret := _m.Called(d)
-
-	var r0 string
-	if rf, ok := ret.Get(0).(func(models.Device) string); ok {
-		r0 = rf(d)
-	} else {
-		r0 = ret.Get(0).(string)
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(models.Device) error); ok {
-		r1 = rf(d)
+	if rf, ok := ret.Get(1).(func(models.Device, []models.Command) error); ok {
+		r1 = rf(d, commands)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -164,20 +143,6 @@ func (_m *DBClient) CloseSession() {
 
 // DeleteAddressableById provides a mock function with given fields: id
 func (_m *DBClient) DeleteAddressableById(id string) error {
-	ret := _m.Called(id)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(string) error); ok {
-		r0 = rf(id)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// DeleteCommandById provides a mock function with given fields: id
-func (_m *DBClient) DeleteCommandById(id string) error {
 	ret := _m.Called(id)
 
 	var r0 error
@@ -1152,20 +1117,6 @@ func (_m *DBClient) UpdateAddressable(a models.Addressable) error {
 	var r0 error
 	if rf, ok := ret.Get(0).(func(models.Addressable) error); ok {
 		r0 = rf(a)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// UpdateCommand provides a mock function with given fields: c
-func (_m *DBClient) UpdateCommand(c models.Command) error {
-	ret := _m.Called(c)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(models.Command) error); ok {
-		r0 = rf(c)
 	} else {
 		r0 = ret.Error(0)
 	}

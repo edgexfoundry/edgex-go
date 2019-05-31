@@ -16,7 +16,6 @@ package mongo
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo/models"
@@ -124,7 +123,7 @@ func (mc MongoClient) DeleteDeviceReportById(id string) error {
 }
 
 /* ----------------------------- Device ---------------------------------- */
-func (mc MongoClient) AddDevice(d contract.Device) (string, error) {
+func (mc MongoClient) AddDevice(d contract.Device, commands []contract.Command) (string, error) {
 	s := mc.session.Copy()
 	defer s.Close()
 
@@ -146,8 +145,13 @@ func (mc MongoClient) AddDevice(d contract.Device) (string, error) {
 	}
 
 	mapped.TimestampForAdd()
+	if err = errorMap(col.Insert(mapped)); err != nil {
+		return id, err
+	}
 
-	return id, errorMap(col.Insert(mapped))
+	//add commands based on DeviceProfile.CommandProfile
+	err = mc.addCommands(commands, mapped.Uuid, mapped.Name)
+	return id, errorMap(err)
 }
 
 func (mc MongoClient) UpdateDevice(d contract.Device) error {
@@ -163,7 +167,11 @@ func (mc MongoClient) UpdateDevice(d contract.Device) error {
 }
 
 func (mc MongoClient) DeleteDeviceById(id string) error {
-	return mc.deleteById(db.Device, id)
+	err := mc.deleteById(db.Device, id)
+	if err != nil {
+		return err
+	}
+	return mc.deleteCommandByDeviceId(id)
 }
 
 func (mc MongoClient) GetAllDevices() ([]contract.Device, error) {
@@ -867,12 +875,8 @@ func (mc MongoClient) GetAllCommands() ([]contract.Command, error) {
 	s := mc.session.Copy()
 	defer s.Close()
 
-	var dps []models.DeviceProfile
-	err := s.DB(mc.database.Name).C(db.DeviceProfile).Find(bson.M{}).Select(bson.M{"commands": 1}).Sort("queryts").All(&dps)
-	commands := make([]models.Command, 0)
-	for _, dp := range dps {
-		commands = append(commands, dp.CoreCommands...)
-	}
+	var commands []models.Command
+	err := s.DB(mc.database.Name).C(db.Command).Find(bson.M{}).Sort("queryts").All(&commands)
 	return mapCommands(commands, err)
 }
 
@@ -888,30 +892,59 @@ func (mc MongoClient) getCommandById(id string) (models.Command, error) {
 	s := mc.session.Copy()
 	defer s.Close()
 
-	//query := bson.M{"commands.uuid": id}
-	var dp models.DeviceProfile
-	if err := s.DB(mc.database.Name).C(db.DeviceProfile).Find(bson.M{"commands": bson.M{"$elemMatch": bson.M{"uuid": id}}}).Select(bson.M{"commands.$": 1}).One(&dp); err != nil {
+	query, err := idToBsonM(id)
+	if err != nil {
+		return models.Command{}, err
+	}
+
+	var command models.Command
+	if err := s.DB(mc.database.Name).C(db.Command).Find(query).One(&command); err != nil {
 		return models.Command{}, errorMap(err)
 	}
-	if len(dp.CoreCommands) > 1 {
-		return models.Command{}, fmt.Errorf("not unique result found for command with %v", id)
-	}
-	return dp.CoreCommands[0], nil
+	return command, nil
 }
 
 func (mc MongoClient) GetCommandByName(n string) ([]contract.Command, error) {
 	s := mc.session.Copy()
 	defer s.Close()
 
-	var dps []models.DeviceProfile
-	if err := s.DB(mc.database.Name).C(db.DeviceProfile).Find(bson.M{"commands": bson.M{"$elemMatch": bson.M{"name": n}}}).Select(bson.M{"commands.$": 1}).All(&dps); err != nil {
-		return nil, errorMap(err)
+	var commands []models.Command
+	err := s.DB(mc.database.Name).C(db.Command).Find(bson.M{"name": n}).All(&commands)
+
+	return mapCommands(commands, err)
+}
+
+func (mc MongoClient) GetCommandsByDeviceId(did string) ([]contract.Command, error) {
+	s := mc.session.Copy()
+	defer s.Close()
+
+	var commands []models.Command
+	err := s.DB(mc.database.Name).C(db.Command).Find(bson.M{"deviceId": did}).All(&commands)
+
+	return mapCommands(commands, err)
+}
+
+func (mc MongoClient) deleteCommandByDeviceId(did string) error {
+	s := mc.session.Copy()
+	defer s.Close()
+	_, err := s.DB(mc.database.Name).C(db.Command).RemoveAll(bson.D{{Name: "deviceId", Value: did}})
+	return errorMap(err)
+}
+
+func (mc MongoClient) addCommands(commands []contract.Command, did string, dname string) (err error) {
+	s := mc.session.Copy()
+	defer s.Close()
+	for _, c := range commands {
+		var cMapped models.Command
+		if _, err = cMapped.FromContract(c, did, dname); err != nil {
+			return errors.New("FromContract failed")
+		}
+		cMapped.TimestampForAdd()
+		if err = s.DB(mc.database.Name).C(db.Command).Insert(cMapped); err != nil {
+			return err
+		}
 	}
-	commands := make([]models.Command, 0)
-	for _, dp := range dps {
-		commands = append(commands, dp.CoreCommands...)
-	}
-	return mapCommands(commands, nil)
+	return err
 }
 
 func mapCommands(commands []models.Command, err error) ([]contract.Command, error) {
