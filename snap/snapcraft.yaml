@@ -397,8 +397,12 @@ parts:
     after: [go]
     plugin: make
     source: https://github.com/hashicorp/consul.git
-    source-tag: v1.1.0
+    source-tag: v1.3.1
     source-depth: 1
+    stage: 
+      # duplicated file with the deps of vault, so just drop this one and use
+      # the file from the vault part instead
+      - -usr/share/doc/github.com/patrickmn/go-cache/LICENSE
     override-build: |
       . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
       gopartbootstrap github.com/hashicorp/consul
