@@ -34,7 +34,7 @@ type ProvisionWatcher struct {
 	OperatingState contract.OperatingState `bson:"operatingState"` // operational state - either enabled or disabled
 }
 
-func (pw *ProvisionWatcher) ToContract(dpt deviceProfileTransform, dst deviceServiceTransform, ct commandTransform, at addressableTransform) (c contract.ProvisionWatcher, err error) {
+func (pw *ProvisionWatcher) ToContract(dpt deviceProfileTransform, dst deviceServiceTransform, at addressableTransform) (c contract.ProvisionWatcher, err error) {
 	id := pw.Uuid
 	if id == "" {
 		id = pw.Id.Hex()
@@ -51,7 +51,7 @@ func (pw *ProvisionWatcher) ToContract(dpt deviceProfileTransform, dst deviceSer
 	if err != nil {
 		return contract.ProvisionWatcher{}, err
 	}
-	c.Profile, err = profile.ToContract(ct)
+	c.Profile, err = profile.ToContract()
 	if err != nil {
 		return contract.ProvisionWatcher{}, err
 	}
@@ -70,7 +70,7 @@ func (pw *ProvisionWatcher) ToContract(dpt deviceProfileTransform, dst deviceSer
 	return
 }
 
-func (pw *ProvisionWatcher) FromContract(from contract.ProvisionWatcher, dpt deviceProfileTransform, dst deviceServiceTransform, ct commandTransform, at addressableTransform) (id string, err error) {
+func (pw *ProvisionWatcher) FromContract(from contract.ProvisionWatcher, dpt deviceProfileTransform, dst deviceServiceTransform, at addressableTransform) (id string, err error) {
 	pw.Id, pw.Uuid, err = fromContractId(from.Id)
 	if err != nil {
 		return
@@ -83,7 +83,7 @@ func (pw *ProvisionWatcher) FromContract(from contract.ProvisionWatcher, dpt dev
 	pw.Identifiers = from.Identifiers
 
 	var profile DeviceProfile
-	if _, err = profile.FromContract(from.Profile, ct); err != nil {
+	if _, err = profile.FromContract(from.Profile); err != nil {
 		return
 	}
 	if pw.Profile, err = dpt.DeviceProfileToDBRef(profile); err != nil {

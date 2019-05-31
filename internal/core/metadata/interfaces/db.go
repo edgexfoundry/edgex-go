@@ -52,7 +52,6 @@ type DBClient interface {
 	GetDeviceProfilesByManufacturerModel(man string, mod string) ([]contract.DeviceProfile, error)
 	GetDeviceProfilesByManufacturer(man string) ([]contract.DeviceProfile, error)
 	GetDeviceProfileByName(n string) (contract.DeviceProfile, error)
-	GetDeviceProfilesByCommandId(id string) ([]contract.DeviceProfile, error)
 
 	// Addressable
 	UpdateAddressable(a contract.Addressable) error
@@ -88,12 +87,9 @@ type DBClient interface {
 	DeleteProvisionWatcherById(id string) error
 
 	// Command
+	GetAllCommands() ([]contract.Command, error)
 	GetCommandById(id string) (contract.Command, error)
 	GetCommandByName(id string) ([]contract.Command, error)
-	AddCommand(c contract.Command) (string, error)
-	GetAllCommands() ([]contract.Command, error)
-	UpdateCommand(c contract.Command) error
-	DeleteCommandById(id string) error
 
 	// Scrub all metadata (only used in test)
 	ScrubMetadata() error

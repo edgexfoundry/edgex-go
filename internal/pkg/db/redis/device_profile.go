@@ -15,10 +15,6 @@ package redis
 
 import (
 	"fmt"
-
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
-	"github.com/gomodule/redigo/redis"
-
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
@@ -31,6 +27,7 @@ type redisDeviceProfile struct {
 	Labels          []string
 	DeviceResources []contract.DeviceResource
 	DeviceCommands  []contract.ProfileResource
+	CoreCommands    []contract.Command
 }
 
 func marshalDeviceProfile(dp contract.DeviceProfile) (out []byte, err error) {
@@ -43,6 +40,7 @@ func marshalDeviceProfile(dp contract.DeviceProfile) (out []byte, err error) {
 		Labels:          dp.Labels,
 		DeviceResources: dp.DeviceResources,
 		DeviceCommands:  dp.DeviceCommands,
+		CoreCommands:    dp.CoreCommands,
 	}
 
 	return marshalObject(s)
@@ -66,26 +64,7 @@ func unmarshalDeviceProfile(o []byte, dp interface{}) (err error) {
 		x.Labels = s.Labels
 		x.DeviceResources = s.DeviceResources
 		x.DeviceCommands = s.DeviceCommands
-		conn, err := getConnection()
-		if err != nil {
-			return err
-		}
-		defer conn.Close()
-
-		objects, err := getObjectsByValue(conn, db.DeviceProfile+":commands:"+s.Id)
-		if err != nil {
-			if err != redis.ErrNil {
-				return err
-			}
-		}
-
-		x.CoreCommands = make([]contract.Command, len(objects))
-		for i, in := range objects {
-			err = unmarshalObject(in, &x.CoreCommands[i])
-			if err != nil {
-				return err
-			}
-		}
+		x.CoreCommands = s.CoreCommands
 		return nil
 	default:
 		return fmt.Errorf("Can only unmarshal into a *DeviceProfile, got %T", x)

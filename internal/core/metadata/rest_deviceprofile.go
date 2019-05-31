@@ -167,22 +167,7 @@ func updateDeviceProfileFields(from models.DeviceProfile, to *models.DeviceProfi
 		if err := checkDuplicateCommands(from, w); err != nil {
 			return err
 		}
-
-		// taking lazy approach to commands - remove them all and add them
-		// all back in. TODO - someday make this a two phase commit so
-		// commands don't get wiped out before profile
-
-		// Delete the old commands
-		if err := deleteCommands(*to, w); err != nil {
-			return err
-		}
-
 		to.CoreCommands = from.CoreCommands
-
-		// Add the new commands
-		if err := addCommands(to, w); err != nil {
-			return err
-		}
 	}
 
 	return nil
@@ -221,33 +206,6 @@ func checkDuplicateCommands(dp models.DeviceProfile, w http.ResponseWriter) erro
 			err := errors.New("Error adding device profile: Duplicate names in the commands")
 			http.Error(w, err.Error(), http.StatusConflict)
 			return err
-		}
-	}
-
-	return nil
-}
-
-// Delete all of the commands that are a part of the device profile
-func deleteCommands(dp models.DeviceProfile, w http.ResponseWriter) error {
-	for _, command := range dp.CoreCommands {
-		err := dbClient.DeleteCommandById(command.Id)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-			return err
-		}
-	}
-
-	return nil
-}
-
-// Add all of the commands that are a part of the device profile
-func addCommands(dp *models.DeviceProfile, w http.ResponseWriter) error {
-	for i := range dp.CoreCommands {
-		if newId, err := dbClient.AddCommand(dp.CoreCommands[i]); err != nil {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-			return err
-		} else {
-			dp.CoreCommands[i].Id = newId
 		}
 	}
 
@@ -361,12 +319,6 @@ func deleteDeviceProfile(dp models.DeviceProfile, w http.ResponseWriter) error {
 		err = errors.New("Cant delete device profile, the profile is still in use by a provision watcher")
 		http.Error(w, err.Error(), http.StatusConflict)
 		return err
-	}
-	for _, command := range dp.CoreCommands {
-		if err := dbClient.DeleteCommandById(command.Id); err != nil {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-			return err
-		}
 	}
 	// Delete the profile
 	if err := dbClient.DeleteDeviceProfileById(dp.Id); err != nil {
