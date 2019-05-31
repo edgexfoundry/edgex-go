@@ -14,18 +14,18 @@ deviceResources:
             { type: "random" }
         properties:
             value:
-                { type: "INT32", readWrite: "R", defaultValue: "0.00", minimum: "0.00", maximum: "100.00"  }
+                { type: "Int32", readWrite: "R", minimum: "0.00", maximum: "100.00"  }
             units:
                 { type: "String", readWrite: "R", defaultValue: "" }
 
-resources:
+deviceCommands:
     -
         name: "Random"
         get:
             -
                 { operation: "get", object: "randomnumber", property: "value", parameter: "Random" }
 
-commands:
+coreCommands:
   -
     name: "Random"
     get:
