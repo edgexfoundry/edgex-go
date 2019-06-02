@@ -11,6 +11,10 @@ EdgeX Foundry has the following Export microservices available:
 
    Ch-ClientRegistration
    Ch-Distribution
-   Ch-ApplicationFunctions
    Ch-GoogleIoTCore
- 
+
+**Note** Export Services are expected to be archived in a future release.  They will be replaced by Application services.  See :doc:`./Ch-ApplServices`:
+
+.. image:: EdgeXArchitecture-6-1-19.png
+    :width: 200px
+    :height: 100px
