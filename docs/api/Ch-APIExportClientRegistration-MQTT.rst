@@ -40,7 +40,7 @@ On the "Create new instance" page, enter EdgeXData as the name of your instance 
 Configure the User and Topic
 -----------------------------
 
-With the MQTT istance now created, you need to configure the MQTT topic and users with access to the topic.  On the Instances page displayed after creating the MQTT instance, click on the EdgeXData instance name in the instances listing.  
+With the MQTT istance now created, you need to configure the MQTT topic and users with access to the topic.  On the Instances page displayed after creating the MQTT instance, click on the EdgeXData instance name in the instances listing.
 
 .. image:: Export-CloudMQTTInstanceSelect.png
 
@@ -52,7 +52,7 @@ In the Users section, enter a name and password for your message publishing user
 
 .. image:: Export-CloudMQTTUserAndPass.png
 
-Now setup the topic and access rights to allow the exportpublisher to push messages into the MQTT topic.  On the same page, 
+Now setup the topic and access rights to allow the exportpublisher to push messages into the MQTT topic.  On the same page,
 under the ACL section, follow these steps:
 
 1. push on the "Topic" tab
@@ -69,33 +69,33 @@ Your CloudMQTT topic is now ready for EdgeX to receive sensor data published by 
 Run EdgeX Foundry
 =================
 
-Obtain and start EdgeX Foundry.  In particular, per :doc:`../getting-started/Ch-GettingStartedUsers`, get Docker, Docker Compose setup and then pull the EdgeX docker containers.  After pulling the EdgeX containers, start these containers with the following commands in order:
+Obtain and start EdgeX Foundry.  In particular, per :doc:`Ch-GettingStartedUsers`, get Docker, Docker Compose setup and then pull the EdgeX docker containers.  After pulling the EdgeX containers, start these containers with the following commands in order:
 +------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
 |   **Docker Command**               |   **Description**                                                                   |  **Suggested Waiti Time After Completing**     |
 +====================================+=====================================================================================+================================================+
 | **docker-compose pull**            |  Pull down, but don't start, all the EdgeX Foundry microservices                    | Docker Compose will indicate when all the      |
-|                                    |                                                                                     | containers have been pulled successfully       |     
+|                                    |                                                                                     | containers have been pulled successfully       |
 +------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
 | docker-compose up -d volume        |  Start the EdgeX Foundry file volume--must be done before the other services are    | A couple of seconds.  In the time it takes to  |
-|                                    |  started                                                                            | type the next command it shoud be ready.       |   
+|                                    |  started                                                                            | type the next command it shoud be ready.       |
 +------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
 | docker-compose up -d consul        |  Start the configuration and registry microservice which all services must          | A couple of seconds                            |
-|                                    |  register with and get their configuration from                                     |                                                | 
+|                                    |  register with and get their configuration from                                     |                                                |
 +------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
 | docker-compose up -d config-seed   |  Populate the configuration/registry microservice                                   | A couple of seconds                            |
 +------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-| docker-compose up -d mongo         |  Start the NoSQL MongoDB container                                                  | 10 seconds                                     | 
+| docker-compose up -d mongo         |  Start the NoSQL MongoDB container                                                  | 10 seconds                                     |
 +------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-| docker-compose up -d logging       |  Start the logging microservice - used by all micro services that make log entries  | A couple of seconds                            | 
+| docker-compose up -d logging       |  Start the logging microservice - used by all micro services that make log entries  | A couple of seconds                            |
 +------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
 | docker-compose up -d notifications |  Start the notifications and alerts microservice--used by many of the microservices | 30 seconds                                     |
 |                                    |  Note: this service is still implemented in Java and takes more time to start       |                                                |
 +------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-| docker-compose up -d metadata      |  Start the Core Metadata microservice                                               | A couple of seconds                            | 
+| docker-compose up -d metadata      |  Start the Core Metadata microservice                                               | A couple of seconds                            |
 +------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-| docker-compose up -d data          |  Start the Core Data microservice                                                   | A couple of seconds                            | 
+| docker-compose up -d data          |  Start the Core Data microservice                                                   | A couple of seconds                            |
 +------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-| docker-compose up -d command       |  Start the Core Command microservice                                                | A couple of seconds                            | 
+| docker-compose up -d command       |  Start the Core Command microservice                                                | A couple of seconds                            |
 +------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
 | docker-compose up -d scheduler     |  Start the scheduling microservice -used by many of the microservices               | 1 minute                                       |
 |                                    |  Note: this service is still implemented in Java and takes more time to start       |                                                |

@@ -11,7 +11,7 @@
 
 
 Welcome to the EdgeX Foundry documentation
-==================================
+==========================================
 
 .. toctree::
    :maxdepth: 2
@@ -21,14 +21,13 @@ Welcome to the EdgeX Foundry documentation
    Ch-QuickStart
    Ch-Intro
    Ch-Architecture
+   Ch-SecurityOverall
    Ch-GettingStarted
    Ch-Walkthrough
    Ch-Examples
-   Ch-SecurityOverall
    Ch-APIReference
 
 Search
 ======
 
 * :ref:`search`
-

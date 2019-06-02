@@ -1,8 +1,8 @@
-###################
+############
 Secret Store
-###################
+############
 
-There are all kinds of secrets used within EdgeX Foundry micro services, such as tokens, passwords, certificates etc. The secret store serves as the central repository to keep these secrets. The developers of other EdgeX Foundry micro services utilize the secret store to create, store and retrieve secrets relevant to their corresponding micro service. The communications the between secret store and other micro services are secured by TLS. 
+There are all kinds of secrets used within EdgeX Foundry micro services, such as tokens, passwords, certificates etc. The secret store serves as the central repository to keep these secrets. The developers of other EdgeX Foundry micro services utilize the secret store to create, store and retrieve secrets relevant to their corresponding micro service. The communications the between secret store and other micro services are secured by TLS.
 
 Currently the EdgeX Foundry secret store is implemented with `Vault <https://www.vaultproject.io/>`_, a HashiCorp open source software product.
 
@@ -10,15 +10,15 @@ Vault is a tool for securely accessing secrets. A secret is anything that you wa
 
 Vault can use several backend systems (filesystem, databases, Consul, Etcd, S3, Azure, etc.) to securely store every sensitive asset. The current EdgeX Foundry implementation of Vault is using `Consul <https://www.consul.io/>`_, another HashiCorp open source software product. Consul is a distributed service mesh to connect, secure, and configure services across any runtime platform and public or private cloud. Consul uses a consensus protocol to provide Consistency as defined by `CAP <https://en.wikipedia.org/wiki/CAP_theorem>`_. The consensus protocol is based on `"Raft: In search of an Understandable Consensus Algorithm" <https://ramcloud.stanford.edu/wiki/download/attachments/11370504/raft.pdf>`_. For a visual explanation of Raft, see The `Secret Lives of Data <http://thesecretlivesofdata.com/raft>`_.
 
-The seamless integration of Vault and Consul provides a strong yet simple infrastructure to setup a reliable high availability architecture (Vault failover nodes, Consul Clustering) for the EdgeX Foundry Security services in production. 
+The seamless integration of Vault and Consul provides a strong yet simple infrastructure to setup a reliable high availability architecture (Vault failover nodes, Consul Clustering) for the EdgeX Foundry Security services in production.
 
 The key features of Vault are:
 
-    * **Secure Secret Storage:** Arbitrary key/value secrets can be stored in Vault. Vault encrypts these secrets prior to writing them to persistent storage, so gaining access to the raw storage isn't enough to access your secrets. Authentication mechanisms (internal and/or external) and authorizations based upon policies provide access management. 
+    * **Secure Secret Storage:** Arbitrary key/value secrets can be stored in Vault. Vault encrypts these secrets prior to writing them to persistent storage, so gaining access to the raw storage isn't enough to access your secrets. Authentication mechanisms (internal and/or external) and authorizations based upon policies provide access management.
 
     * **Dynamic Secrets:** Vault can generate secrets on-demand for some systems, automatically revoking them after the lease is up.
 
-    * **Data Encryption:** Vault can encrypt and decrypt data without storing it. 
+    * **Data Encryption:** Vault can encrypt and decrypt data without storing it.
 
     * **Leasing and Renewal:** All secrets in Vault have a lease associated with them (automatic revocation). However, clients can renew leases via built-in renew APIs.
 
@@ -33,7 +33,7 @@ Start the Secret Store with Docker Compose and a Docker Compose manifest file. T
     * https://github.com/edgexfoundry/security-secret-store/blob/delhi/docker-compose-delhi-0.7.0.yml
     * https://github.com/edgexfoundry/developer-scripts/blob/master/compose-files/security/docker-compose-delhi-0.7.0.yml
 
-This Compose file starts the entire EdgeX Foundry platform including the security services. 
+This Compose file starts the entire EdgeX Foundry platform including the security services.
 
 The command to start EdgeX Foundry platform including the Secret Store and API gateway related services is:
 
@@ -88,7 +88,7 @@ Clean-up
     sh> docker-compose down -v
 
     sh> docker-compose ps
-    # Check no previous container is running 
+    # Check no previous container is running
 
     sh> docker volume ls
     # Check and remove any previous persistent and/or unused volumes
@@ -279,7 +279,7 @@ Sample output:
           Line 10: Vault backend storage is **Consul**.
 
 Start the fifth service: vault-worker (Vault init/unseal process and setups)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: shell
 
@@ -479,7 +479,7 @@ Using Consul Web UI
 
 For learning and verification purposes one might use the Consul Web UI interface to gather and double check specific Vault informations.
 
-Consul Web UI endpoint port is exposed by the Docker compose file ``docker-compose-delhi-0.7.0.yml``. EdgeX Foundry platform uses the Consul default port number 8500. It is normally not recommended to expose Consul UI port number in production, at least the UI should not be accessible from outside the platform environment. However, because all the Vault secrets are encrypted before being transmitted and stored in the Consul backend, having access to Consul is not sufficient to access any secrets, the vault data encryption/decryption key would be absolutely necessary. 
+Consul Web UI endpoint port is exposed by the Docker compose file ``docker-compose-delhi-0.7.0.yml``. EdgeX Foundry platform uses the Consul default port number 8500. It is normally not recommended to expose Consul UI port number in production, at least the UI should not be accessible from outside the platform environment. However, because all the Vault secrets are encrypted before being transmitted and stored in the Consul backend, having access to Consul is not sufficient to access any secrets, the vault data encryption/decryption key would be absolutely necessary.
 
 Open a Web browser on ``http://<EdgeX Consul Server>:8500/ui``.
 
@@ -487,7 +487,7 @@ On the screenshot below, after selecting ``SERVICES`` and ``Vault``, the UI will
 
 .. image:: EdgeX-UI-Consul-01.png
 
-As a practical example, we are going to navigate the Consul structure for Vault in order to check if the API Gateway (Kong) TLS certificate and private key were fetched and stored accordingly during the ``vault-worker`` process. 
+As a practical example, we are going to navigate the Consul structure for Vault in order to check if the API Gateway (Kong) TLS certificate and private key were fetched and stored accordingly during the ``vault-worker`` process.
 
 First select ``KEY/VALUE`` menu, and then select ``vault`` root structure:
 
@@ -535,7 +535,7 @@ Select ``edgex-kong/``:
     :align: center
     :height: 233px
 
-And we are now finally able to display the encrypted Vault secret containing the API Gateway (Kong) TLS server certificate and its corresponding private key. As you can see on the screenshot below the Vault key/value is encrypted and totally opaque to Consul, the Vault data encrytion key (DEK) would be necessary to decrypt these secrets. Each Vault secret is encrypted before being transmitted to Consul node(s). 
+And we are now finally able to display the encrypted Vault secret containing the API Gateway (Kong) TLS server certificate and its corresponding private key. As you can see on the screenshot below the Vault key/value is encrypted and totally opaque to Consul, the Vault data encrytion key (DEK) would be necessary to decrypt these secrets. Each Vault secret is encrypted before being transmitted to Consul node(s).
 
 .. image:: EdgeX-UI-Consul-09.png
 
@@ -543,9 +543,7 @@ And we are now finally able to display the encrypted Vault secret containing the
 Shell Access to Consul Container and Using Consul CLI
 -----------------------------------------------------
 
-.. code-block:: json
-    :linenos:
-    :emphasize-lines: 5,9,12,14
+.. code::
 
     sh> docker exec -it -e PS1='\u@\h:\w \$ ' edgex-core-consul sh
 
@@ -572,17 +570,15 @@ Shell Access to Consul Container and Using Consul CLI
 Configuring the Secret Store
 ============================
 
-Vault server configuration is essentially concentrated in one JSON file named ``local.json``. This file was prepared during the Vault Docker image build process. In the eventuality of a change, the Vault server container should be accessed to then modify the JSON file. The absolute path being ``/vault/config/local.json``. To reload the new configuration simply send Vault PID a HUP signal to trigger a configuration reload. 
+Vault server configuration is essentially concentrated in one JSON file named ``local.json``. This file was prepared during the Vault Docker image build process. In the eventuality of a change, the Vault server container should be accessed to then modify the JSON file. The absolute path being ``/vault/config/local.json``. To reload the new configuration simply send Vault PID a HUP signal to trigger a configuration reload.
 
 Sample Vault server configuration file:
 
-.. code-block:: json
-    :linenos:
-    :emphasize-lines: 2,5,11,13
+.. code::
 
-    listener "tcp" { 
-    address = "edgex-vault:8200" 
-    tls_disable = "0" 
+    listener "tcp" {
+    address = "edgex-vault:8200"
+    tls_disable = "0"
     cluster_address = "edgex-vault:8201"
     tls_min_version = "tls12"
     tls_client_ca_file ="/vault/config/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem"
@@ -603,11 +599,9 @@ Sample Vault server configuration file:
 
 The ``listener`` clause refers to Vault server process (port, TLS and server name), the ``backend`` clause refers to the storage backend (i.e. Consul).
 
-To modify this configuration file, execute a shell session in the running Vault container: 
+To modify this configuration file, execute a shell session in the running Vault container:
 
-.. code-block:: json
-    :linenos:
-    :emphasize-lines: 1
+.. code::
 
     sh> docker exec -it -e PS1='\u@\h:\w \$ ' -e VAULT_CAPATH='/vault/config/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem' edgex-vault sh
 
@@ -617,15 +611,13 @@ To modify this configuration file, execute a shell session in the running Vault 
     drwxr-xr-x    2 vault    vault         4096 Jun  7  2018 file
     drwxr-xr-x    2 vault    vault         4096 Jun  7  2018 logs
 
-Pay attention to the ``VAULT_CAPATH`` environment variable passed to the session. This is necessary in order to run succesful Vault CLI command. Every Vault CLI command is a wrapper of the Vault HTTP API. The Vault server is configured with TLS using X.509 PKI materials generated and signed by a local self-signed CA (EdgeXFoundryCA). Therefore, in order for each Vault CLI command (or to that extent cURL commands) to verify the Vault server TLS certificate, the self-signing CA root certificate would have to be known by the CLI command interpreter. This ``VAULT_CAPATH`` variable is checked by every Vault CLI commands, alternatively each Vault CLI command can specify an option with the same certificate path if the variable is not set. 
+Pay attention to the ``VAULT_CAPATH`` environment variable passed to the session. This is necessary in order to run succesful Vault CLI command. Every Vault CLI command is a wrapper of the Vault HTTP API. The Vault server is configured with TLS using X.509 PKI materials generated and signed by a local self-signed CA (EdgeXFoundryCA). Therefore, in order for each Vault CLI command (or to that extent cURL commands) to verify the Vault server TLS certificate, the self-signing CA root certificate would have to be known by the CLI command interpreter. This ``VAULT_CAPATH`` variable is checked by every Vault CLI commands, alternatively each Vault CLI command can specify an option with the same certificate path if the variable is not set.
 
 The self-signed Root CA certificate path can be found in the Vault configuration file (see above local.json), with parameter ``tls_client_ca_file ="/vault/config/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem"``.
 
 The ``local.json`` configuration file can be read and modified within the running container:
 
-.. code-block:: json
-    :linenos:
-    :emphasize-lines: 1
+.. code-::
 
     root@edgex-vault:/vault # cat config/local.json
     listener "tcp" {
@@ -652,9 +644,7 @@ The ``local.json`` configuration file can be read and modified within the runnin
 
 A sample Vault CLI command to check Vault status:
 
-.. code-block:: json
-    :linenos:
-    :emphasize-lines: 1
+.. code::
 
     root@edgex-vault:/vault # vault status
     Key             Value
@@ -670,11 +660,9 @@ A sample Vault CLI command to check Vault status:
     HA Cluster      https://edgex-vault:8201
     HA Mode         active
 
-All the X.509 PKI materials including the self-signing CA are located under ``/vault/config/pki/EdgeXFoundryCA``. 
+All the X.509 PKI materials including the self-signing CA are located under ``/vault/config/pki/EdgeXFoundryCA``.
 
-.. code-block:: json
-    :linenos:
-    :emphasize-lines: 1
+.. code::
 
     root@edgex-vault:/vault # ls -l config/pki/EdgeXFoundryCA/
     total 24
@@ -697,17 +685,15 @@ All the X.509 PKI materials including the self-signing CA are located under ``/v
 
            Line 8: Vault TLS server certificate private key.
 
-The CA name (EdgeXFoundryCA) was defined by the `pkisetup <https://github.com/edgexfoundry/security-secret-store/tree/master/pkisetup>`_ tool during the Vault image build process. This tool is also responsible for all the TLS server configuration and creation tasks. 
+The CA name (EdgeXFoundryCA) was defined by the `pkisetup <https://github.com/edgexfoundry/security-secret-store/tree/master/pkisetup>`_ tool during the Vault image build process. This tool is also responsible for all the TLS server configuration and creation tasks.
 
-If you are willing to change any of the Vault X.509 PKI assets or configuration parameters you will have to modify the `pkisetup-vault.json <https://github.com/edgexfoundry/security-secret-store/blob/master/pkisetup/pkisetup-vault.json>`_ file and rebuild a new Vault Docker image. 
+If you are willing to change any of the Vault X.509 PKI assets or configuration parameters you will have to modify the `pkisetup-vault.json <https://github.com/edgexfoundry/security-secret-store/blob/master/pkisetup/pkisetup-vault.json>`_ file and rebuild a new Vault Docker image.
 
 Similarly to Vault, each EdgeX Foundry service having a TLS server certificate and private key had its X.509 PKI assets generated and signed during the Vault Docker image build process. Therefore, the API Gateway (Kong) configuration file named `pkisetup-kong.json <https://github.com/edgexfoundry/security-secret-store/blob/master/pkisetup/pkisetup-kong.json>`_ would have to be modified accordingly. A new Vault Docker image would have to be built.
 
 The Vault `Dockerfile <https://github.com/edgexfoundry/security-secret-store/blob/master/Dockerfile.vault>`_ contains the ``pkisetup`` executions, see below for a corresponding excerpt (highlighted lines):
 
-.. code-block:: json
-    :linenos:
-    :emphasize-lines: 7,9
+.. code::
 
     # Create assets folder (needed for unseal key/s, root token and tmp)
     # Run CA/Vault and Kong PKI/TLS setups and peform housekeeping tasks
@@ -722,9 +708,9 @@ The Vault `Dockerfile <https://github.com/edgexfoundry/security-secret-store/blo
     rm -f /vault/pkisetup /vault/pkisetup-vault.json /vault/pkisetup-kong.json
 
 
-EdgeX Foundry Docker environment implements a basic Vault/Consul architecture that does not provide high availability guaranties. Only one Consul server and one Vault server will be running. In a more sophisticated production environment it would be possible to build a reliable high availability infrastructure regarding Consul and Vault. To facilitate the setup of a minimal failover architecture the ``security-secret-store`` repository provides a sample folder named `Full-Architecture-Prototype <https://github.com/edgexfoundry/security-secret-store/tree/master/Full-Architecture-Prototype>`_ that contains necessary materials (scripts, helpers, configurations, etc.) to achieve that goal. 
+EdgeX Foundry Docker environment implements a basic Vault/Consul architecture that does not provide high availability guaranties. Only one Consul server and one Vault server will be running. In a more sophisticated production environment it would be possible to build a reliable high availability infrastructure regarding Consul and Vault. To facilitate the setup of a minimal failover architecture the ``security-secret-store`` repository provides a sample folder named `Full-Architecture-Prototype <https://github.com/edgexfoundry/security-secret-store/tree/master/Full-Architecture-Prototype>`_ that contains necessary materials (scripts, helpers, configurations, etc.) to achieve that goal.
 
-These samples describe an architecture design with two Vault servers in failover mode (active/standby), using each one a Consul client, which subsequently connects to a Consul cluster of 3 nodes (minimal Raft concensus quorum). The Consul clients and servers (nodes) have redundant paths. 
+These samples describe an architecture design with two Vault servers in failover mode (active/standby), using each one a Consul client, which subsequently connects to a Consul cluster of 3 nodes (minimal Raft concensus quorum). The Consul clients and servers (nodes) have redundant paths.
 
 ======================
 Using the Secret Store
@@ -741,7 +727,6 @@ Execute a shell session in the running Vault container:
 
 .. code-block:: shell
     :linenos:
-    :emphasize-lines: 7,9
 
     sh> docker exec -it -e PS1='\u@\h:\w \$ ' -e VAULT_CAPATH='/vault/config/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem' edgex-vault sh
 
@@ -1023,7 +1008,7 @@ Sample JSON returned:
     "auth": null
     }
 
-Displaying (GET) the Vault seal status (``API path: /v1/sys/seal-status``): 
+Displaying (GET) the Vault seal status (``API path: /v1/sys/seal-status``):
 
 .. code-block:: shell
     :linenos:
@@ -1055,4 +1040,4 @@ Sample JSON returned:
 
 .. note:: Line 3: Vault is **unsealed** therefore available and ready for requests.
 
-          Line 4 & 5: Vault Shamir Secret Sharing default configuration for EdgeX Foundry: 1 share with threshold 1 (no sharding). 
+          Line 4 & 5: Vault Shamir Secret Sharing default configuration for EdgeX Foundry: 1 share with threshold 1 (no sharding).
