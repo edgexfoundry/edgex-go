@@ -10,41 +10,47 @@ As an example of this process, let's say you want to do coding work with/on the 
 Get and Run the EdgeX Docker Containers
 =======================================
 
-1. Per :doc:`../Ch-GettingStartedUsers`, get Docker, Docker Compose setup and then pull the EdgeX docker containers.
+1. Per :doc:`Ch-GettingStartedUsers`, get Docker, Docker Compose setup and then pull the EdgeX docker containers.
 2. Since you are working with the virtual device, you probably don't need or want to run all the micro services.  You just need the few that the Virtual Device will be communicating with or that will be required to run a minimal EdgeX environment.  So you will need to run Consul, Mongo, Core Data, Core Metadata, Core Command, Support Logging, and Support Notifications.  After pulling the EdgeX containers, start these containers with the following commands in order
 
-+------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-|   **Docker Command**               |   **Description**                                                                   |  **Notes**     |
-+====================================+=====================================================================================+================================================+
-| docker-compose up -d volume        |  Start the EdgeX Foundry file volume--must be done before the other services are    |                                                |
-|                                    |  started                                                                            |                                                |   
-+------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-| docker-compose up -d consul        |  Start the configuration and registry microservice which all services must          |                                                |
-|                                    |  register with and get their configuration from                                     |                                                | 
-+------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-| docker-compose up -d config-seed   |  Populate the configuration/registry microservice                                   |                                                |
-+------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-| docker-compose up -d mongo         |  Start the NoSQL MongoDB container                                                  | An embedded initialization script configures   | 
-|                                    |                                                                                     | the database for EdgeX documents               | 
-+------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-| docker-compose up -d logging       |  Start the logging microservice - used by all micro services that make log entries  |                                                | 
-+------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-| docker-compose up -d notifications |  Start the notifications and alerts microservice--used by many of the microservices |                                                |
-+------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-| docker-compose up -d metadata      |  Start the Core Metadata microservice                                               |                                                | 
-+------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-| docker-compose up -d data          |  Start the Core Data microservice                                                   |                                                | 
-+------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-| docker-compose up -d command       |  Start the Core Command microservice                                                |                                                | 
-+------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
++------------------------------------+--------------------------------------------------------------------------------------+------------------------------------------------+
+|   **Docker Command**               |   **Description**                                                                    |  **Notes**                                     |
++====================================+======================================================================================+================================================+
+| docker-compose up -d volume        | | Start the EdgeX Foundry file volume--must be done before the other services        |                                                |
+|                                    | | are started                                                                        |                                                |
++------------------------------------+--------------------------------------------------------------------------------------+------------------------------------------------+
+| docker-compose up -d consul        | | Start the configuration and registry microservice which all services must          |                                                |
+|                                    | | register with and get their configuration from                                     |                                                |
++------------------------------------+--------------------------------------------------------------------------------------+------------------------------------------------+
+| docker-compose up -d config-seed   |  Populate the configuration/registry microservice                                    |                                                |
++------------------------------------+--------------------------------------------------------------------------------------+------------------------------------------------+
+| docker-compose up -d mongo         |  Start the NoSQL MongoDB container                                                   | | An embedded initialization script configures |
+|                                    |                                                                                      | | the database for EdgeX documents             |
++------------------------------------+--------------------------------------------------------------------------------------+------------------------------------------------+
+| docker-compose up -d logging       |  Start the logging microservice - used by all micro services that make log entries   |                                                |
++------------------------------------+--------------------------------------------------------------------------------------+------------------------------------------------+
+| docker-compose up -d notifications |  Start the notifications and alerts microservice--used by many of the microservices  |                                                |
++------------------------------------+--------------------------------------------------------------------------------------+------------------------------------------------+
+| docker-compose up -d metadata      |  Start the Core Metadata microservice                                                |                                                |
++------------------------------------+--------------------------------------------------------------------------------------+------------------------------------------------+
+| docker-compose up -d data          |  Start the Core Data microservice                                                    |                                                |
++------------------------------------+--------------------------------------------------------------------------------------+------------------------------------------------+
+| docker-compose up -d command       |  Start the Core Command microservice                                                 |                                                |
++------------------------------------+--------------------------------------------------------------------------------------+------------------------------------------------+
 
 Run a **"docker-compose ps"** command to confirm that all the containers have been downloaded and started.  (Note: initialization or seed containers, like config-seed, will have exited as there job is just to initialize the associated service and then exit.)
 
 Note:  If you prefer, you can also use the run-it.sh script found in the developer-scripts repository to start these containers.  Just note that you will need to edit run-it.sh and remove any containers (like the device-virtual container) that you don't want running.
 
-Get and Run the Code In Eclipse
+.. todo::
 
-1. Per :doc:`../Ch-GettingStartedJavaDevelopers`, get your development environment (Eclipse et. al) setup and pull the micro service code you want to work on from GitHub.  In this example, we assume you want to get the device-virtual project and import that as a Maven project into Eclipse.
+ The Java environment has been retired.  This section needs to be redone with Go
+
+===============================
+Get and Run the Code In Eclipse
+===============================
+
+1. Per :doc:`../Ch-GettingStartedGoDevelopers`, get your development environment (Eclipse et. al) setup and pull the micro service code you want to work on from GitHub.  In this example, we assume you want to get the device-virtual project and import that as a Maven project into Eclipse.
 
 2. Next, configure the device-virtual project loaded into Eclipse to use the other Dockerized micro services and allow the other containers to see/find your Eclipse-based micro service (in this case the device-virtual micro service) running in Eclipse.
 
@@ -65,14 +71,14 @@ Get and Run the Code In Eclipse
    meta.db.devicemanager.url=http://10.0.1.149:48081/api/v1/devicemanager
    meta.db.devicereport.url=http://10.0.1.149:48081/api/v1/devicereport
    meta.db.command.url=http://10.0.1.149:48081/api/v1/command
-   meta.db.event.url=http://10.0.1.149:48081/api/v1/scheduleevent		
+   meta.db.event.url=http://10.0.1.149:48081/api/v1/scheduleevent
    meta.db.schedule.url=http://10.0.1.149:48081/api/v1/schedule
    meta.db.provisionwatcher.url=http://10.0.1.149:48081/api/v1/provisionwatcher
    meta.db.ping.url=http://10.0.1.149:48081/api/v1/ping
    #IOT core database service connection information
    core.db.event.url=http://10.0.1.149:48080/api/v1/event
    core.db.reading.url=http://10.0.1.149:48080/api/v1/reading
-   core.db.valuedescriptor.url=http://10.0.1.149:48080/api/v1/valuedescriptor		
+   core.db.valuedescriptor.url=http://10.0.1.149:48080/api/v1/valuedescriptor
    core.db.ping.url=http://10.0.1.149:48080/api/v1/ping
 
 Now you can run the device-virtual in Eclipse.  Right click on the device-virtual project and select Run As → Java Application from the resulting menu.  Pick the main application class from the resulting "Select Java Application" window and watch the Console view for errors.
@@ -80,6 +86,5 @@ Now you can run the device-virtual in Eclipse.  Right click on the device-virtua
 **Check the Results**
 
 At this time, your virtual device micro service running in Eclipse should be communicating with the other EdgeX micro services running in their Docker containers.  Give the virtual device a minute or so to initialize itself and start sending data to Core Data.  To check that it is working properly, open a browser and point your browser to Core Data to check that events are being deposited.  You can do this by calling on the Core Data API that checks the count of events in Core Data (http://[host].48080/api/v1/event/count).
- 
-.. image:: EdgeX_GettingStartedHybridResults.png
 
+.. image:: EdgeX_GettingStartedHybridResults.png
