@@ -43,8 +43,7 @@ passthrough:
       command-chain:
       - snap/command-chain/snapcraft-runner
 
-# TODO: upgrade to stable before releasing to beta/candidate/stable
-grade: devel
+grade: stable
 confinement: strict
 
 apps:
