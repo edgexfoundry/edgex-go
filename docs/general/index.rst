@@ -21,7 +21,6 @@ Welcome to the EdgeX Foundry documentation
    Ch-QuickStart
    Ch-Intro
    Ch-Architecture
-   Ch-SecurityOverall
    Ch-GettingStarted
    Ch-Walkthrough
    Ch-Examples

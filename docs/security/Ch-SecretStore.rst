@@ -479,7 +479,7 @@ Using Consul Web UI
 
 For learning and verification purposes one might use the Consul Web UI interface to gather and double check specific Vault informations.
 
-Consul Web UI endpoint port is exposed by the Docker compose file ``docker-compose-delhi-0.7.0.yml``. EdgeX Foundry platform uses the Consul default port number 8500. It is normally not recommended to expose Consul UI port number in production, at least the UI should not be accessible from outside the platform environment. However, because all the Vault secrets are encrypted before being transmitted and stored in the Consul backend, having access to Consul is not sufficient to access any secrets, the vault data encryption/decryption key would be absolutely necessary.
+Consul Web UI endpoint port is exposed by the Docker compose file. EdgeX Foundry platform uses the Consul default port number 8500. It is normally not recommended to expose Consul UI port number in production, at least the UI should not be accessible from outside the platform environment. However, because all the Vault secrets are encrypted before being transmitted and stored in the Consul backend, having access to Consul is not sufficient to access any secrets, the vault data encryption/decryption key would be absolutely necessary.
 
 Open a Web browser on ``http://<EdgeX Consul Server>:8500/ui``.
 
