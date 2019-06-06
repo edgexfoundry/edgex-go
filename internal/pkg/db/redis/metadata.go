@@ -557,7 +557,7 @@ func deleteDeviceProfile(conn redis.Conn, id string) error {
 	}
 
 	dp := contract.DeviceProfile{}
-	_ = unmarshalObject(object, &dp)
+	_ = unmarshalDeviceProfile(object, &dp)
 
 	_ = conn.Send("MULTI")
 	_ = conn.Send("DEL", id)
