@@ -362,16 +362,18 @@ func deleteDeviceProfile(dp models.DeviceProfile, w http.ResponseWriter) error {
 		http.Error(w, err.Error(), http.StatusConflict)
 		return err
 	}
+
+	// Delete the profile
+	if err := dbClient.DeleteDeviceProfileById(dp.Id); err != nil {
+		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		return err
+	}
+
 	for _, command := range dp.CoreCommands {
 		if err := dbClient.DeleteCommandById(command.Id); err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			return err
 		}
-	}
-	// Delete the profile
-	if err := dbClient.DeleteDeviceProfileById(dp.Id); err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		return err
 	}
 
 	return nil
