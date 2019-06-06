@@ -18,7 +18,6 @@ import (
 	"strconv"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
-	dataBase "github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/gomodule/redigo/redis"
 	"github.com/google/uuid"
@@ -256,15 +255,7 @@ func (c *Client) GetAllDevices() ([]contract.Device, error) {
 }
 
 func (c *Client) GetDevicesByProfileId(id string) ([]contract.Device, error) {
-	d, err := c.getDevicesByValue(db.Device + ":profile:" + id)
-
-	// XXX This is here only because test/db_metadata.go is inconsistent when testing for _not found_. It
-	// should always be checking for database.ErrNotFound but too often it is checking for nil
-	if len(d) == 0 {
-		err = dataBase.ErrNotFound
-	}
-
-	return d, err
+	return c.getDevicesByValue(db.Device + ":profile:" + id)
 }
 
 func (c *Client) GetDeviceById(id string) (contract.Device, error) {
@@ -286,15 +277,7 @@ func (c *Client) GetDeviceByName(n string) (contract.Device, error) {
 }
 
 func (c *Client) GetDevicesByServiceId(id string) ([]contract.Device, error) {
-	d, err := c.getDevicesByValue(db.Device + ":service:" + id)
-
-	// XXX This is here only because test/db_metadata.go is inconsistent when testing for _not found_. It
-	// should always be checking for database.ErrNotFound but too often it is checking for nil
-	if len(d) == 0 {
-		err = dataBase.ErrNotFound
-	}
-
-	return d, err
+	return c.getDevicesByValue(db.Device + ":service:" + id)
 }
 
 func (c *Client) GetDevicesWithLabel(l string) ([]contract.Device, error) {
@@ -439,15 +422,7 @@ func (c *Client) GetDeviceProfileByName(n string) (contract.DeviceProfile, error
 }
 
 func (c *Client) GetDeviceProfilesByCommandId(id string) ([]contract.DeviceProfile, error) {
-	dp, err := c.getDeviceProfilesByValues(db.DeviceProfile + ":command:" + id)
-
-	// XXX This is here only because test/db_metadata.go is inconsistent when testing for _not found_. It
-	// should always be checking for database.ErrNotFound but too often it is checking for nil
-	if len(dp) == 0 {
-		err = dataBase.ErrNotFound
-	}
-
-	return dp, err
+	return c.getDeviceProfilesByValues(db.DeviceProfile + ":command:" + id)
 }
 
 // Get device profiles with the passed query
@@ -798,13 +773,6 @@ func (c *Client) GetDeviceServicesByAddressableId(id string) ([]contract.DeviceS
 		return []contract.DeviceService{}, err
 	}
 
-	// XXX This should really return an ErrNotFound. It's not to be consistent with existing code
-	// assumptions
-	//
-	// if len(objects) == 0 {
-	// 	return []contract.DeviceService{}, dataBase.ErrNotFound
-	// }
-
 	d := make([]contract.DeviceService, len(objects))
 	for i, object := range objects {
 		err = unmarshalDeviceService(object, &d[i])
@@ -988,27 +956,11 @@ func (c *Client) GetProvisionWatchersByIdentifier(k string, v string) (pw []cont
 }
 
 func (c *Client) GetProvisionWatchersByServiceId(id string) ([]contract.ProvisionWatcher, error) {
-	pw, err := c.getProvisionWatchersByValue(db.ProvisionWatcher + ":service:" + id)
-
-	// XXX This is here only because test/db_metadata.go is inconsistent when testing for _not found_. It
-	// should always be checking for database.ErrNotFound but too often it is checking for nil
-	if len(pw) == 0 {
-		err = dataBase.ErrNotFound
-	}
-
-	return pw, err
+	return c.getProvisionWatchersByValue(db.ProvisionWatcher + ":service:" + id)
 }
 
 func (c *Client) GetProvisionWatchersByProfileId(id string) ([]contract.ProvisionWatcher, error) {
-	pw, err := c.getProvisionWatchersByValue(db.ProvisionWatcher + ":profile:" + id)
-
-	// XXX This is here only because test/db_metadata.go is inconsistent when testing for _not found_. It
-	// should always be checking for database.ErrNotFound but too often it is checking for nil
-	if len(pw) == 0 {
-		err = dataBase.ErrNotFound
-	}
-
-	return pw, err
+	return c.getProvisionWatchersByValue(db.ProvisionWatcher + ":profile:" + id)
 }
 
 func (c *Client) GetProvisionWatcherById(id string) (contract.ProvisionWatcher, error) {

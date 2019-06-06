@@ -877,7 +877,7 @@ func testDBDeviceProfile(t *testing.T, db interfaces.DBClient) {
 	}
 
 	deviceProfiles, err = db.GetDeviceProfilesByCommandId(uuid.New().String())
-	if err != dataBase.ErrNotFound {
+	if (err != nil && err != dataBase.ErrNotFound) || len(deviceProfiles) != 0 {
 		t.Fatalf("Error getting deviceProfiles %v", err)
 	}
 	if len(deviceProfiles) != 0 {
@@ -972,7 +972,7 @@ func testDBDevice(t *testing.T, db interfaces.DBClient) {
 	}
 
 	devices, err = db.GetDevicesByProfileId(uuid.New().String())
-	if err != dataBase.ErrNotFound {
+	if (err != nil && err != dataBase.ErrNotFound) || len(devices) != 0 {
 		t.Fatalf("Error getting devices %v", err)
 	}
 	if len(devices) != 0 {
@@ -988,7 +988,7 @@ func testDBDevice(t *testing.T, db interfaces.DBClient) {
 	}
 
 	devices, err = db.GetDevicesByServiceId(uuid.New().String())
-	if err != dataBase.ErrNotFound {
+	if (err != nil && err != dataBase.ErrNotFound) || len(devices) != 0 {
 		t.Fatalf("Error getting devices %v", err)
 	}
 	if len(devices) != 0 {
@@ -1095,7 +1095,7 @@ func testDBProvisionWatcher(t *testing.T, db interfaces.DBClient) {
 	}
 
 	provisionWatchers, err = db.GetProvisionWatchersByServiceId(uuid.New().String())
-	if err != dataBase.ErrNotFound {
+	if (err != nil && err != dataBase.ErrNotFound) || len(provisionWatchers) != 0 {
 		t.Fatalf("Error getting provisionWatchers %v", err)
 	}
 	if len(provisionWatchers) != 0 {
@@ -1111,7 +1111,7 @@ func testDBProvisionWatcher(t *testing.T, db interfaces.DBClient) {
 	}
 
 	provisionWatchers, err = db.GetProvisionWatchersByProfileId(uuid.New().String())
-	if err != dataBase.ErrNotFound {
+	if (err != nil && err != dataBase.ErrNotFound) || len(provisionWatchers) != 0 {
 		t.Fatalf("Error getting provisionWatchers %v", err)
 	}
 	if len(provisionWatchers) != 0 {

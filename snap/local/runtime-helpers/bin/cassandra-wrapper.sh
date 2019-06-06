@@ -20,7 +20,7 @@ else
     CLASSPATH=$CASSANDRA_CONF
 fi
 
-for jar in $SNAP/usr/share/cassandra/lib/*.jar; do
+for jar in "$SNAP/usr/share/cassandra/lib"/*.jar; do
     CLASSPATH="$CLASSPATH:$jar"
 done
 
@@ -47,7 +47,8 @@ export cassandra_storagedir="$CASSANDRA_DATA"
 export JVM_OPTS="$JVM_OPTS -Dcassandra.config=file://$CASSANDRA_CONF/cassandra.yaml"
 
 # set JAVA_HOME
-export JAVA_HOME=$(ls -d $SNAP/usr/lib/jvm/java-1.8.0-openjdk-*)
+JAVA_HOME=$(ls -d "$SNAP/usr/lib/jvm"/java-1.8.0-openjdk-*)
+export JAVA_HOME
 
 # The -x bit isn't set on cassandra
-/bin/sh $SNAP/usr/sbin/cassandra -R -p "$CASSANDRA_HOME/cassandra.pid"
+/bin/sh "$SNAP/usr/sbin/cassandra" -R -p "$CASSANDRA_HOME/cassandra.pid"

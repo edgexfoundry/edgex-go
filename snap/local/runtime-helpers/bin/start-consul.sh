@@ -1,44 +1,23 @@
-#!/bin/sh
-#
-# This script includes some configuration copied from the
-# core-config-seed's Dockerfile, and is otherwise based
-# on two shell scripts which exist in the same directory.
-#
-#  - launch-consul-config.sh
-#  - docker-entrypoint.sh
-#
-set -e
+#!/bin/bash -e
 
-CONSUL_ARGS="-server -client=0.0.0.0 -bind=127.0.0.1 -bootstrap -ui"
+# start consul in the background
+"$SNAP/bin/consul" agent \
+    -data-dir="$SNAP_DATA/consul/data" \
+    -config-dir="$SNAP_DATA/consul/config" \
+    -server -client=0.0.0.0 -bind=127.0.0.1 -bootstrap -ui &
 
-CONSUL_DATA_DIR="$SNAP_DATA"/consul/data
-CONSUL_CONFIG_DIR="$SNAP_DATA"/consul/config
-LOG_DIR="$SNAP_COMMON"
+# loop trying to connect to consul, as soon as we are successful exit
+# NOTE: ideally consul would be able to notify systemd directly, but currently 
+# it only uses systemd's notify socket if consul is _joining_ another cluster
+# and not when bootstrapping
+# see https://github.com/hashicorp/consul/issues/4380
 
-# Handle directory creation & data cleanup
-if [ -e "$CONSUL_DATA_DIR" ] ; then
-    rm -rf "${CONSUL_DATA_DIR:?}"/*
-else
-    mkdir -p "$CONSUL_DATA_DIR"
-fi
-
-if [ ! -e "$CONSUL_CONFIG_DIR" ] ; then
-    mkdir -p "$CONSUL_CONFIG_DIR"
-fi
-
-if [ ! -e "$LOG_DIR" ] ; then
-    mkdir -p "$LOG_DIR"
-fi
-
-# Run available startup hooks to have a point to store custom
-# logic outside of this script. More of the things from above
-# should be moved into these.
-#for hook in $SNAP/startup-hooks/* ; do
-#    [ -x "$hook" ] && /bin/sh -x "$hook"
-#done
-
-exec "$SNAP"/bin/consul agent \
-     -data-dir="$CONSUL_DATA_DIR" \
-     -config-dir="$CONSUL_CONFIG_DIR" \
-     $CONSUL_ARGS | tee "$LOG_DIR"/core-consul.log
-     
+# to actually test if consul is ready, we simply check to see if consul 
+# itself shows up in it's service catalog
+# also note we don't have a timeout here because we use start-timeout for this
+# daemon so systemd will kill us if we take too long waiting for this
+CONSUL_URL=http://localhost:8500/v1/catalog/service/consul
+until [ -n "$(curl -s $CONSUL_URL | jq -r '. | length')" ] && 
+    [ "$(curl -s $CONSUL_URL | jq -r '. | length')" -gt "0" ] ; do
+    sleep 1
+done
