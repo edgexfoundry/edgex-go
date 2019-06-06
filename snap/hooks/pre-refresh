@@ -1,0 +1,6 @@
+#!/bin/bash -e
+
+# save this revision for when we run again in the post-refresh
+snapctl set lastrev="$SNAP_REVISION"
+
+snapctl set release="edinburgh"
