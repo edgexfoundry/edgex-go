@@ -39,17 +39,17 @@ This Data Dictionary has the same content as the Data Dictionary for Export Serv
 
 
 +---------------------+----------------------------------------------------------------------------------------------+
-|   **Class Name**    |   **Descrption**                                                                             | 
+|   **Class Name**    |   **Descrption**                                                                             |
 +=====================+==============================================================================================+
-| EncryptionDetails   | The object describing the encryption method and initialization vector.                       | 
+| EncryptionDetails   | The object describing the encryption method and initialization vector.                       |
 +---------------------+----------------------------------------------------------------------------------------------+
-| ExportFilter        | The object containing device and data filter information.                                    | 
+| ExportFilter        | The object containing device and data filter information.                                    |
 +---------------------+----------------------------------------------------------------------------------------------+
-| ExportMessage       | The object containing the data from an Event sent by Export.                                 | 
+| ExportMessage       | The object containing the data from an Event sent by Export.                                 |
 +---------------------+----------------------------------------------------------------------------------------------+
-| ExportRegistration  | The object containing the reachability method and transport parameters for an Export client. | 
+| ExportRegistration  | The object containing the reachability method and transport parameters for an Export client. |
 +---------------------+----------------------------------------------------------------------------------------------+
-| ExportString        | The object sent to a registered Export client containing an Event.                           | 
+| ExportString        | The object sent to a registered Export client containing an Event.                           |
 +---------------------+----------------------------------------------------------------------------------------------+
 
 ===================
@@ -60,16 +60,11 @@ Inside the Export Distribution service, a set of components, filter and transfor
 
 .. image:: EdgeX_ExportServicesDistributionPipeFilter.png
 
-* **Valid Event Check**--The first component in the pipe and filter, before the copier (described in the previous section) is a filter that can be optionally turned on or off by configuration. This filter is a general purpose data checking filter which assesses the device- or sensor-provided Event, with associated Readings, and ensures the data conforms to the ValueDescriptor associated with the Readings. 
- * For example, if the data from a sensor is described by its metadata profile as adhering to a "Temperature" value descriptor of floating number type, with the value between -100° F and 200° F, but the data seen in the Event and Readings is not a floating point number, for example if the data in the reading is a word such as "cold," instead of a number, then the Event is rejected (no client receives the data) and no further processing is accomplished on the Event by the Export Distro service.
+* **Valid Event Check**--The first component in the pipe and filter, before the copier (described in the previous section) is a filter that can be optionally turned on or off by configuration. This filter is a general purpose data checking filter which assesses the device- or sensor-provided Event, with associated Readings, and ensures the data conforms to the ValueDescriptor associated with the Readings. For example, if the data from a sensor is described by its metadata profile as adhering to a "Temperature" value descriptor of floating number type, with the value between -100° F and 200° F, but the data seen in the Event and Readings is not a floating point number, for example if the data in the reading is a word such as "cold," instead of a number, then the Event is rejected (no client receives the data) and no further processing is accomplished on the Event by the Export Distro service.
 * **Client Copier**--As described above, the client copier creates a "super message" made from a copy of the incoming Event message and the details for each client registration. For two clients registered for all data received, for each Event coming from Core Data, the copier produces two copies of a super message, one for each of the two clients, through all of the Export Distro pipe and filter.
 * **Filter By Device**--Clients register interest in data only from certain sensors. The Filter by Device component looks at the Event in the message and looks at the devices of interest list, provided by the client registration, and filters out those messages whose Event is for devices not on the client's list of devices of interest. Therefore data generated by a motor does not go to clients only interested in data from a thermostat.
-* **Filter By Value Descriptor**--Clients register interest in data from certain types of IoT objects, such as temperatures, motion, and so forth, that may come from an array of sensors or devices. The Filter by Value Descriptor assesses the data in each Event and Reading, and removes readings that have a value descriptor that is not in the list of value descriptors of interest for the client. Therefore, pressure reading data does not go to clients only interested in motion data. 
+* **Filter By Value Descriptor**--Clients register interest in data from certain types of IoT objects, such as temperatures, motion, and so forth, that may come from an array of sensors or devices. The Filter by Value Descriptor assesses the data in each Event and Reading, and removes readings that have a value descriptor that is not in the list of value descriptors of interest for the client. Therefore, pressure reading data does not go to clients only interested in motion data.
 * **XML and JSON Transformers**--Clients must dictate, in their registration, the format of data to be delivered to them. Current options include JSON and XML formats. Transformation components. one each for each format, convert the data from the Events and Readings supplied by Core Data, into JSON or XML strings. A router looks at the client registration in the message and determines which transformer is to transform the data for the client.
 * **Compressor Transformer**--A transformer component compresses the data string to be delivered to the clients, for any clients that have requested their data be compressed either by GZIP or ZIP methods.
 * **Encryption Transformer**--An encryption component encrypts the data to be sent to the client, using the client provided keys and vectors.
 * **REST and MQTT Adapters**--At the end of the Export Distribution pipe and filter, is a pair of components that deliver the Event and Reading data, that may have been transformed based on client request, to the client's destination of choice. The client registration provides the URL, authentication information, and so forth, to enable the adapter components to know how and where to send the data to its destination. Future endpoint adapters can be created to enable use of other protocols or destinations. A router determines which endpoint adapter to use based on the client registration information.
-
-
-
-

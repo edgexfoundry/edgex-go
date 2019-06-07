@@ -19,7 +19,7 @@ The diagram shows the high-level architecture of Alerts and Notifications. On th
 
 On the right side, the notification receiver could be a person or an application system on Cloud or in a server room. By invoking the Subscription RESTful interface to subscribe the specific types of notifications, the receiver obtains the appropriate notifications through defined receiving channels when events occur. The receiving channels include SMS message, e-mail, REST callback, AMQP, MQTT, and so on.  Currently in EdgeX Foundry, e-mail and REST callback channels are provided.
 
-When Alerts and Notifications receive notifications from any interface, the notifications are passed to the Notifications Handler internally. The Notifications Handler persists the receiving notification first, and passes them to the Distribution Coordinator immediately if the notifications are critical (severity = “CRITICAL”).  For normal notifications (severity = “NORMAL”), they wait for the Message Scheduler to process in batch. 
+When Alerts and Notifications receive notifications from any interface, the notifications are passed to the Notifications Handler internally. The Notifications Handler persists the receiving notification first, and passes them to the Distribution Coordinator immediately if the notifications are critical (severity = “CRITICAL”).  For normal notifications (severity = “NORMAL”), they wait for the Message Scheduler to process in batch.
 
 The Alerts and Notifications is scalable, can be expanded to add more severities and set up corresponding Message Schedulers to process them. For example, the Message Scheduler of normal severity notifications is triggered every two hours, and the minor severity notifications is triggered every 24 hours, at midnight each night.
 
@@ -38,13 +38,13 @@ Data Dictionary
 ===============
 
 +---------------------+--------------------------------------------------------------------------------------------+
-|   **Class Name**    |   **Descrption**                                                                           | 
+|   **Class Name**    |   **Descrption**                                                                           |
 +=====================+============================================================================================+
-| Channel             | The object used to describe the Notification end point.                                    | 
+| Channel             | The object used to describe the Notification end point.                                    |
 +---------------------+--------------------------------------------------------------------------------------------+
-| Notification        | The object used to describe the message and sender content of a Notification.              | 
+| Notification        | The object used to describe the message and sender content of a Notification.              |
 +---------------------+--------------------------------------------------------------------------------------------+
-| Transmission        | The object used for grouping of Notifications.                                             | 
+| Transmission        | The object used for grouping of Notifications.                                             |
 +---------------------+--------------------------------------------------------------------------------------------+
 
 ===============================
@@ -67,15 +67,15 @@ When receiving a normal notification (SEVERITY = “NORMAL”), it persists firs
 
 **Critical Resend Sequence**
 
-When encountering any error during sending critical notification, an individual resend task is scheduled, and each transmission record persists. If the resend tasks keeps failing and the resend count exceeds the configurable limit, the escalation process is triggered. The escalated notification is sent to particular receivers of a special subscription (slug = “ESCALATION”). 
+When encountering any error during sending critical notification, an individual resend task is scheduled, and each transmission record persists. If the resend tasks keeps failing and the resend count exceeds the configurable limit, the escalation process is triggered. The escalated notification is sent to particular receivers of a special subscription (slug = “ESCALATION”).
 
-.. image:: EdgeX_SupportingServicesCriticalResend.png 
+.. image:: EdgeX_SupportingServicesCriticalResend.png
 
 **Resend Sequence**
 
 For other non-critical notifications, the resend operation is triggered by a scheduler.
 
-.. image:: EdgeX_SupportingServicesResend.png 
+.. image:: EdgeX_SupportingServicesResend.png
 
 **Cleanup Sequence**
 
@@ -90,7 +90,7 @@ Configuration Properties
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
 |   **Configuration**                                     |   **Default Value**                 |  **Dependencies**                                                         |
 +=========================================================+=====================================+===========================================================================+
-| Service MaxResultCount                         | 50000                           \*  | Read data limit per invocation                                            |
+| Service MaxResultCount                                  | 50000                           \*  | Read data limit per invocation                                            |
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
 | Service BootTimeout                                     | 300000                          \*  | Heart beat time in milliseconds                                           |
 +---------------------------------------------------------+-------------------------------------+---------------------------------------------------------------------------+
@@ -168,7 +168,7 @@ Configuration Properties
 Configure Mail Server
 =====================
 
-All the properties with prefix "smtp" are for mail server configuration. Configure the mail server appropriately to send Alerts and Notifications. The correct values depend on which mail server is used. 
+All the properties with prefix "smtp" are for mail server configuration. Configure the mail server appropriately to send Alerts and Notifications. The correct values depend on which mail server is used.
 
 -----
 Gmail
@@ -187,7 +187,7 @@ Then, use the following settings for the mail server properties:
   Smtp Host=smtp.gmail.com
   Smtp Sender=${Gmail account}
   Smtp Password=${Gmail password or App password}
-  
+
 ----------
 Yahoo Mail
 ----------
@@ -205,23 +205,3 @@ Then, use the following settings for the mail server properties:
   Smtp Host=smtp.mail.yahoo.com
   Smtp Sender=${Yahoo account}
   Smtp Password=${Yahoo password or App password}
-
-
-
-
-
- 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
