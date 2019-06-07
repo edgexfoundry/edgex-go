@@ -14,7 +14,7 @@
 package data
 
 import (
-	"github.com/edgexfoundry-holding/go-mod-core-security/pkg"
+	"github.com/edgexfoundry/go-mod-secrets/pkg/providers/vault"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 )
@@ -27,7 +27,7 @@ type ConfigurationStruct struct {
 	Logging      config.LoggingInfo
 	Registry     config.RegistryInfo
 	Service      config.ServiceInfo
-	Secrets      pkg.SecretConfig
+	Secrets      vault.SecretConfig
 }
 
 type WritableInfo struct {

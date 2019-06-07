@@ -17,13 +17,13 @@ package data
 import (
 	"errors"
 	"fmt"
+	"github.com/edgexfoundry/go-mod-secrets/pkg/providers/vault"
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
 	"time"
 
-	"github.com/edgexfoundry-holding/go-mod-core-security/pkg"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/metadata"
@@ -32,6 +32,7 @@ import (
 	msgTypes "github.com/edgexfoundry/go-mod-messaging/pkg/types"
 	registryTypes "github.com/edgexfoundry/go-mod-registry/pkg/types"
 	"github.com/edgexfoundry/go-mod-registry/registry"
+	"github.com/edgexfoundry/go-mod-secrets/pkg"
 
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/interfaces"
@@ -225,17 +226,17 @@ func initializeConfiguration(params startup.BootParams) (*ConfigurationStruct, e
 
 func connectAndPollSecrets() error {
 	var err error
-	secretsClient, err = pkg.NewSecretClient(Configuration.Secrets)
+	secretsClient, err = vault.NewSecretClient(Configuration.Secrets)
 	if err != nil {
 		return err
 	}
 
-	username, err := secretsClient.GetValue("coredata")
+	username, err := secretsClient.GetSecret("coredata")
 	if err != nil {
 		return err
 	}
 
-	password, err := secretsClient.GetValue("coredatapasswd")
+	password, err := secretsClient.GetSecret("coredatapasswd")
 	if err != nil {
 		return err
 	}
