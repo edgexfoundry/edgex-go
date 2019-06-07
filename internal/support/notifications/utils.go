@@ -38,20 +38,6 @@ func encode(i interface{}, w http.ResponseWriter) {
 	}
 }
 
-// Another helper function for encoding responses (with UTF-8) for returning from REST calls
-func encodeWithUTF8(i interface{}, w http.ResponseWriter) {
-	w.Header().Add("Content-Type", "application/json;charset=utf-8")
-
-	enc := json.NewEncoder(w)
-	err := enc.Encode(i)
-	// Problems encoding
-	if err != nil {
-		LoggingClient.Error("Error encoding the data: " + err.Error())
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-}
-
 // Printing function purely for debugging purposes
 // Print the body of a request to the console
 func printBody(r io.ReadCloser) {
