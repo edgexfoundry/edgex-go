@@ -58,8 +58,9 @@ Topic = 'events'
 [Secrets]
 Host = '127.0.0.1'
 Port = 8200
-Path = '/v1/secret/data/edgex/coredata'
-Protocol = "http"
+Path = '/v1/secret/edgex/coredata/mongodb'
+Provider = 'http'
+Protocol = "https"
  [Secrets.Authentication]
  AuthType = 'X-Vault-Token'
  AuthToken = 'roots'

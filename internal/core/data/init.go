@@ -17,12 +17,13 @@ package data
 import (
 	"errors"
 	"fmt"
-	"github.com/edgexfoundry/go-mod-secrets/pkg/providers/vault"
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
 	"time"
+
+	"github.com/edgexfoundry/go-mod-secrets/pkg/providers/vault"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
@@ -231,12 +232,12 @@ func connectAndPollSecrets() error {
 		return err
 	}
 
-	username, err := secretsClient.GetSecret("coredata")
+	username, err := secretsClient.GetSecret("User")
 	if err != nil {
 		return err
 	}
 
-	password, err := secretsClient.GetSecret("coredatapasswd")
+	password, err := secretsClient.GetSecret("Passwd")
 	if err != nil {
 		return err
 	}
