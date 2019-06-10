@@ -159,3 +159,15 @@ for svc in export-distro export-client support-notifications support-scheduler s
     # stop them afterwards
     snapctl stop --disable "$SNAP_NAME.$svc"
 done
+
+# if we are on arm64, disable the security-api-gateway because kong isn't 
+# properly supported on arm64 due to incorrect memory pointers used by lua and
+# openresty
+# see https://github.com/edgexfoundry/blackbox-testing/issues/185 for more 
+# details
+if [ "$SNAP_ARCH" == "arm64" ]; then
+    snapctl set security-api-gateway=off
+    snapctl stop --disable "$SNAP_NAME.cassandra"
+    snapctl stop --disable "$SNAP_NAME.kong-daemon"
+    snapctl stop --disable "$SNAP_NAME.edgexproxy"
+fi

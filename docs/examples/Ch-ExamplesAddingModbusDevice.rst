@@ -1,80 +1,47 @@
-#################################
-Modbus - Adding a Device to EdgeX
-#################################
+###################################
+Connecting EdgeX to a Modbus Device
+###################################
 
-EdgeX - Delhi Release
+EdgeX - Edinburgh Release
+
+.. image:: Modbus_Example_Overview.png
+    :scale: 50%
+    :alt: PowerScout 3037 Power Submeter
 
 PowerScout 3037 Power Submeter
 
 https://shop.dentinstruments.com/products/powerscout-3037-ps3037
 https://www.dentinstruments.com/hs-fs/hub/472997/file-2378482732-pdf/Pdf_Files/PS3037_Manual.pdf
 
-.. image:: powerscout.png
-    :scale: 50%
-    :alt: PowerScout 3037 Power Submeter
-
-In this example, we simulate the PowerScout meter instead of using a real device. This provides a straight-forward way to test the device-modbus features.
-
-.. image:: simulator.png
-    :scale: 50%
-    :alt: Modbus Simulator
-
-Environment
-===========
-
-You can use any operating system that can install docker and docker-compose. In this example, we use Photon OS to delpoy EdgeX using docker. The system requirements can be found at https://docs.edgexfoundry.org/Ch-GettingStartedUsers.html#what-you-need.
-
-.. image:: PhotonOS.png
-    :scale: 50%
-    :alt: Photon Operating System
-
-.. image:: PhotonOSversion.png
-    :scale: 50%
-    :alt: Version Information
 
 
-Modbus Device (Simulator)
-=========================
+In this example, we use a simulator instead of a real device to allow use to test our device-modbus features.
 
-http://modbuspal.sourceforge.net/
-
-To simulate sensors, such as temperature and humidity, do the following:
-
-1. Add two mock devices:
-
-.. image:: addmockdevices.png
-    :scale: 50%
-    :alt: Add Mock Devices
-
-2. Add registers according to the device manual:
-
-    .. image:: addregisters.png
-        :scale: 50%
-        :alt: Add Registers
-
-3. Add the ModbusPal support value auto-generator, which can bind to registers:
-
-    .. image:: addvaluegen.png
-        :scale: 50%
-        :alt: Add Device Value Generators
-
-    .. image:: bindvalue.png
-        :scale: 50%
-        :alt: Bind Value Generator
-
-
-Set Up Before Starting Services
+Run a Modbus Device (Simulator)
 ===============================
 
-The following sections describe how to complete the set up before starting the services. If you prefer to start the services and then add the device, see `Set Up After Starting Services`_
+https://www.modbusdriver.com/diagslave.html
 
-Set Up Device Profile
----------------------
+::
+
+    sudo ./diagslave -m tcp
+
+
+Set Up: Method One
+==================
+
+In this section, we create a folder that contains the files required for deployment::
+
+    - device-service-demo
+    |- docker-compose.yml
+    |- modbus
+    |- configuration.toml
+    |- DENT.Mod.PS6037.profile.yaml
+
+Device Profile (DENT.Mod.PS6037.profile.yaml)
+---------------------------------------------
 
 The DeviceProfile defines the device's values and operation method, which can be Read or Write. 
-
-You can download and use the provided :download:`modbus.test.device.profile.yml
-<modbus.test.device.profile.yml>`.
 
 In the Modbus protocol, we must define attributes: 
 
@@ -87,7 +54,7 @@ In the Modbus protocol, we must define attributes:
 
 The Property value type decides how many registers will be read. Like Holding registers, a register has 16 bits. If the device manual specifies that a value has two registers, define it as FLOAT32 or INT32 or UINT32 in the deviceProfile.
 
-Once we execute a command, device-modbus knows its value type and register type, startingAddress, and register length. So it can read or write value using the modbus protocol.
+When we execute a command, device-modbus knows its value type, register type, and startingAddress. Then, it determines the register length according to the known information. So it can read or write value using the modbus protocol.
 
     .. image:: properties.png
         :scale: 50%
@@ -100,44 +67,139 @@ Once we execute a command, device-modbus knows its value type and register type,
         :scale: 70%
         :alt: Holding Registers
 
-|
-|
+Create the device profile, as shown below::
 
-    .. image:: profileyaml.png
-        :scale: 70%
-        :alt: Profile YAML
+    # DENT.Mod.PS6037.profile.yaml
+    name: "Network Power Meter"
+    manufacturer: "Dent Instruments"
+    model: "PS3037"
+    description: "Power Scout Meter"
+    labels:
+      - "modbus"
+      - "powerscout"
+    deviceResources:
+        -
+            name: "DemandWindowSize"
+            description: "Demand window size in minutes; default is 15 min"
+            attributes:
+                { primaryTable: "HOLDING_REGISTERS", startingAddress: "4603" }
+            properties:
+                value:
+                    { type: "UINT16", readWrite: "R", size: "1", scale: "1", minimum: "0", maximum: "65535", defaultValue: "0"}
+                units:
+                    { type: "String", readWrite: "R", defaultValue: "min"}
+        -
+        name: "LineFrequency"
+        description: "Line frequency setting for metering: 50=50 Hz, 60=60Hz"
+        attributes:
+            { primaryTable: "HOLDING_REGISTERS", startingAddress: "4609" }
+        properties:
+            value:
+                { type: "UINT16", readWrite: "R", size: "1", scale: "1", minimum: "0", maximum: "65535",  defaultValue: "0"}
+            units:
+                { type: "String", readWrite: "R", defaultValue: "Hz"}
+    deviceCommands:
+        -
+            name: "Configuration"
+            set:
+                - { index: "1", operation: "set", object: "DemandWindowSize", parameter: "DemandWindowSize" }
+                - { index: "2", operation: "set", object: "LineFrequency", parameter:  "LineFrequency" }
+            get:
+                - { index: "1", operation: "get", object: "DemandWindowSize", parameter:  "DemandWindowSize" }
+                - { index: "2", operation: "get", object: "LineFrequency", parameter: "LineFrequency" }
+    coreCommands:
+        -
+            name: "Configuration"
+            get:
+                path: "/api/v1/device/{deviceId}/Configuration"
+                responses:
+                    -
+                        code: "200"
+                        description: "Get the Configuration"
+                        expectedValues: ["DemandWindowSize","LineFrequency"]
+                    -
+                        code: "503"
+                        description: "service unavailable"
+                        expectedValues: []
+            put:
+                path: "/api/v1/device/{deviceId}/Configuration"
+                parameterNames: ["DemandWindowSize","LineFrequency"]
+                responses:
+                    -
+                        code: "204"
+                        description: "Set the Configuration"
+                        expectedValues: []
+                    -
+                        code: "503"
+                        description: "service ununavailable"
+                        expectedValues: []
 
+Device Service Configuration (configuration.toml)
+--------------------------------------------------
 
-Set Up Device Service Configuration
------------------------------------
-
-Use this configuration file to define devices and schedule jobs. The device-modbus generates a relative instance on startup.
-
-device-modbus offers two types of protocol, Modbus TCP and Modbus RTU. An addressable can be defined as shown below:
+We define devices and schedule job (auto events) in the TOML configuration file, and then device-modbus creates the corresponding instances
+on startup.
+device-modbus offers two types of protocol, Modbus TCP and Modbus RTU, which can be defined as shown below:
 
    .. csv-table:: Modbus Protocols
-       :header: "protocol", "Name", "Protocol", "Address", "Port", "Path"
-       :widths: 20, 20, 10, 20, 10, 10
+       :header: "protocol", "Addess", "Port", "UnitID", "BaudRate", "DataBits", "StopBits", "Parity"
+       :widths: 20, 20, 10, 10, 20, 10, 10, 10
 
-       "Modbus TCP", "Gateway address 1", "TCP", "10.211.55.6", "502", "1"
-       "Modbus RTU", "Gateway address 2", "RTU", "/tmp/slave,19200,8,1,0", "502", "2"
+       "Modbus TCP", "10.211.55.6", "502", "1", "", "", "", ""
+       "Modbus RTU", "/tmp/slave", "", "2", "19200", "8", "1", "N"
 
 Path defines the Modbus device's unit ID (or slave ID).
 
-In the RTU protocol, address is defined in five comma-separated parts:
+In the RTU protocol, parity  is as follows: N - None is 0, O - Odd is 1, E - Even is 2, default is E.
 
-* serial port
-* baud rate 
-* data bits
-* stop bits
-* parity (N - None is 0, O - Odd is 1, E - Even is 2, default is E).
+Create the configuration file, as shown below::
 
-::
+    [Service]
+    Host = "edgex-device-modbus"
+    Port = 49991
+    ConnectRetries = 3
+    Labels = ["modbus"]
+    OpenMsg = "device modbus started"
+    ReadMaxLimit = 256
+    Timeout = 5000
+    EnableAsyncReadings = true
+    AsyncBufferSize = 16
+
+    [Registry]
+    Host = "edgex-core-consul"
+    Port = 8500
+    CheckInterval = "10s"
+    FailLimit = 3
+    FailWaitTime = 10
+    Type = "consul"
+
+    [Clients]
+      [Clients.Data]
+      Name = "edgex-core-data"
+      Protocol = "http"
+      Host = "edgex-core-data"
+      Port = 48080
+      Timeout = 50000
+
+      [Clients.Metadata]
+      Name = "edgex-core-metadata"
+      Protocol = "http"
+      Host = "edgex-core-metadata"
+      Port = 48081
+      Timeout = 50000
+
+      [Clients.Logging]
+      Name = "edgex-support-logging"
+      Protocol = "http"
+      Host = "edgex-support-logging"
+      Port = 48061
+
+    [Writable]
+    LogLevel = "INFO"
 
     [Logging]
     EnableRemote = false
-    File = "./device-Modbus.log"
-    Level = "DEBUG"
+    File = "./device-modbus.log"
 
     [Device]
       DataTransform = true
@@ -151,130 +213,144 @@ In the RTU protocol, address is defined in five comma-separated parts:
 
     # Pre-define Devices
     [[DeviceList]]
-      Name = "Modbus TCP test device"
+      Name = "Modbus-TCP-Device"
       Profile = "Network Power Meter"
       Description = "This device is a product for monitoring and controlling digital inputs and outputs over a LAN."
       labels = [ "Air conditioner","modbus TCP" ]
-      [DeviceList.Addressable]
-        name = "Gateway address 1"
-        Protocol = "TCP"
-        Address = "10.211.55.6"
-        Port = 502
-        Path = "1"
-    
+      [DeviceList.Protocols]
+        [DeviceList.Protocols.modbus-tcp]
+           Address = "192.168.214.129"
+           Port = "502"
+           UnitID = "1"
+      [[DeviceList.AutoEvents]]
+        Frequency = "50s"
+        OnChange = false
+        Resource = "Configuration"
+
     [[DeviceList]]
-      Name = "Modbus TCP test device 2"
+      Name = "Modbus-RTU-Device"
       Profile = "Network Power Meter"
       Description = "This device is a product for monitoring and controlling digital inputs and outputs over a LAN."
-      labels = [ "Air conditioner","modbus TCP" ]
-      [DeviceList.Addressable]
-        name = "Gateway address 1"
-        Protocol = "TCP"
-        Address = "10.211.55.6"
-        Port = 502
-        Path = "2"
+      labels = [ "Air conditioner","modbus RTU" ]
+      [DeviceList.Protocols]
+        [DeviceList.Protocols.modbus-rtu]
+           Address = "/tmp/slave"
+           BaudRate = "19200"
+           DataBits = "8"
+           StopBits = "1"
+           Parity = "N"
 
-   # Pre-define Schedule Configuration
-    [[Schedules]]
-    Name = "20sec-schedule"
-    Frequency = "PT20S"
+Note that ProfilesDir points to "/custom-config", so the Device Service loads the device profile YAML files from this folder.
 
-    [[ScheduleEvents]]
-    Name = "Read Switch status"
-    Schedule = "20sec-schedule"
-      [ScheduleEvents.Addressable]
-      HTTPMethod = "GET"
-    Path = "/api/v1/device/name/Modbus TCP test device 1/Configuration"
+Add Device Service to docker-compose File (docker-compose.yml)
+---------------------------------------------------------------
 
-    [[ScheduleEvents]]
-    Name = "Put Configuration"
-    Parameters = "[{\"DemandWindowSize\": \"110\"},{\"LineFrequency\": \"50\"}]"
-    Schedule = "20sec-schedule"
-      [ScheduleEvents.Addressable]
-      HTTPMethod = "Put"
-      Path = "/api/v1/device/name/Modbus TCP test device 1/Configuration"
+Download the docker-compose file from https://github.com/edgexfoundry/developer-scripts/blob/master/compose-files/docker-compose-edinburgh-1.0.0.yml .
 
-You can download and use the provided :download:`EdgeX_ExampleModbus_configuration.toml
-<EdgeX_ExampleModbus_configuration.toml>`.
+Because we deploy EdgeX using docker-compose, we must add the device-modbus to the docker-compose file. If you have prepared configuration files, you can mount them using volumes and change the entrypoint for device-modbus internal use.
 
-Add Device Service to docker-compose File
------------------------------------------
+This is illustrated in the following docker-compose file snippet::
 
-Because we deploy EdgeX using docker-compose, we must add the device-modbus to the docker-compose file ( https://github.com/edgexfoundry/developer-scripts/blob/master/compose-files/docker-compose-delhi-0.7.0.yml ). If you have prepared configuration files, you can mount them using volumes and change the entrypoint for device-modbus internal use.
+    device-modbus:
+        image: edgexfoundry/docker-device-modbus-go:1.0.0
+        ports:
+          - "49991:49991"
+        container_name: edgex-device-modbus
+        hostname: edgex-device-modbus
+        networks:
+          - edgex-network
+        volumes:
+          - db-data:/data/db
+          - log-data:/edgex/logs
+          - consul-config:/consul/config
+          - consul-data:/consul/data
+          - ./modbus:/custom-config
+        depends_on:
+          - data
+         - command
+        entrypoint:
+          - /device-modbus
+          - --registry=consul://edgex-core-consul:8500
+          - --confdir=/custom-config
 
-    .. image:: config_changes.png
-        :scale: 50%
-        :alt: configuration.toml Updates
+When using Device Services, users must provide the registry URL in the ``--registry`` argument.
 
 Start EdgeX Foundry on Docker
 =============================
 
-Finally, we can deploy EdgeX in the Photon OS.
+Once the following folder has been populated, we can deploy EdgeX::
 
-1. Prepare configuration files by moving the files to the Photon OS
+    - device-service-demo
+    |- docker-compose.yml
+    |- modbus
+    |- configuration.toml
+    |- DENT.Mod.PS6037.profile.yaml
 
-2. Deploy EdgeX using the following commands::
+Deploy EdgeX using the following commands::
 
+    cd path/to/device-service-demo
     docker-compose pull
     docker-compose up -d
 
- .. image:: startEdgeX.png
-      :scale: 50%
-      :alt: Start EdgeX
-
-3. Check the consul dashboard
+After the service start, check the consul dashboard
 
     .. image:: consul.png
         :scale: 50%
         :alt: Consul Dashboard
 
 
-Set Up After Starting Services
-==============================
+Set-up: Method Two
+==================
 
-If the services are already running and you want to add a device, you can use the Core Metadata API as outlined in this section. If you set up the device profile and Service as described in `Set Up Before Starting Services`_, you can skip this section.
+Instead of using the configuration described above, you can create the Device Profile and Device using the Core Metadata API after the services start up. To do this, complete the following: 
 
-To add a device after starting the services, complete the following steps:
+1. Upload the device profile, illustrated above, to metadata with a POST to http://localhost:48081/api/v1/deviceprofile/uploadfile and add the file as key “file” to the body in form-data format. The created ID is returned.  The following  example command uses curl to send the request::
 
-1. Upload the device profile above to metadata with a POST to http://localhost:48081/api/v1/deviceprofile/uploadfile and add the file as key “file” to the body in form-data format, and the created ID will be returned.  The following figure is an example if you use Postman to send the request
+    $ curl localhost:48081/api/v1/deviceprofile/uploadfile \ -F "file=@modbus.device.profile.yml"
 
-    .. image:: upload_profile.png
-        :scale: 50%
-        :alt: Uploading the Profile
+2. Ensure that the Modbus Device Service is running, and then adjust the service name in the code shown below to match if necessary or if using other Device Services.
 
-2. Add the addressable containing reachability information for the device with a POST to http://localhost:48081/api/v1/addressable: 
+3. Add the device with a POST to http://localhost:48081/api/v1/device, and the body of the command similar to the following::
 
-    a. If IP connected, the body will look something like: { “name”: “Motor”, “method”: “GET”, “protocol”: “HTTP”, “address”: “10.0.1.29”, “port”: 502 } 
-    b. If serially connected, the body will look something like: { “name”: “Motor”, “method”: “GET”, “protocol”: “OTHER”, “address”: “/dev/ttyS5,9600,8,1,1”, “port”: 0 } (address field contains port, baud rate, number of data bits, stop bits, and parity bits in CSV form)
-
-3. Ensure the Modbus device service is running, adjust the service name below to match if necessary or if using other device services.
-
-4. Add the device with a POST to http://localhost:48081/api/v1/device, the body will look something like::
-
-    {
-      "description": "MicroMax Variable Speed Motor",
-      "name": "Variable Speed motor",
+    $ curl localhost:48081/api/v1/device -H
+    "Content-Type:application/json" -X POST \
+    -d '{
+     "name" :"AWS IOT Button1",
+     "description":"Home automation system",
+     "adminState":"UNLOCKED",
+     "operatingState":"ENABLED",
+     "protocols":{
+        "modbus-tcp":{
+        "host":"localhost",
+        "port":"1234",
+        "unitID":"1"
+      }
+    },
+    "labels":[
+      "home",
+      "hvac",
+    ],
+    "service":{
+      "name":"edgex-device-modbus",
       "adminState": "unlocked",
       "operatingState": "enabled",
       "addressable": {
-        "name": "Motor"
- 
-      },
-      "labels": [
- 
-      ],
-      "location": null,
-      "service": {
-        "name": "edgex-device-modbus"
- 
-      },
-      "profile": {
-        "name": "GS1-VariableSpeedMotor"
- 
-      }
-    }
+        "name": "test addressable for Google Home device service"
+     }
+    },
+    "profile":{
+       "name":"Google Home profile"
+    },
+    "autoEvents":[
+       {
+        "frequency":"300ms",
+        "onChange":true,
+        "resource":"CurrentHumidity"
+       }
+      ]
+    }'
 
-   The addressable name must match/refer to the addressable added in Step 2, the service name must match/refer to the target device service, and the profile name must match the device profile name from Step 1.
+The profile name must match the name of the device profile being used.
 
 Execute Commands
 ================
@@ -286,71 +362,158 @@ Find Executable Commands
 
 Use the following query to find executable commands::
 
-    photon-ip:48082/api/v1/device
+    $ curl http://your-edgex-server-ip:48082/api/v1/device | json_pp
+      % Total % Received % Xferd Average Speed Time Time Time
+    Current
+                                 Dload Upload Total Spent Left Speed
+    100 1718 100 1718 0 0 14081 0 --:--:-- --:--:-- --:--:--14081
+    [
+       {
+        "id" : "56dcf3ad-52d8-4d12-a2d0-ae53c177ae3d",
+        "commands" : [
+           {
+             "put" : {
+                "url" :
+    "http://edgex-core-command:48082/api/v1/device/56dcf3ad-52d8-4d12-a2d0-ae53c177ae3d/command/67b35f63-8f94-427b-a60c-188bf9e0633a",
+                "parameterNames" : [
+                   "DemandWindowSize",
+                   "LineFrequency"
+                 ],
+                 "path" : "/api/v1/device/{deviceId}/Configuration"
+            },
+            "id" : "67b35f63-8f94-427b-a60c-188bf9e0633a",
+            "get" : {
+               "url" :
+    "http://edgex-core-command:48082/api/v1/device/56dcf3ad-52d8-4d12-a2d0-ae53c177ae3d/command/67b35f63-8f94-427b-a60c-188bf9e0633a",
+               "responses" : [
+                  {
+                     "description" : "service unavailable", "code" : "503"
+                  }
+                ],
+                "path" : "/api/v1/device/{deviceId}/Configuration"
+             },
+             ...
+             "name" : "Configuration"
+          }
+        ],
+        ...
+      },
+      {
+        ....
+      }
+    ]
 
-|
-
-    .. image:: commands.png
-        :scale: 50%
-        :alt: Executable Commands
-
-Execute GET command
+Execute put Command
 -------------------
 
-Replace *<host>* with the server IP when running the edgex-core-command.
+Execute a put command according to the url and parameterNames, replacing [host] with the server IP when running the edgex-core-command.
 
-    .. image:: AddingModbusDevice-getcommand.png
-        :scale: 50%
-        :alt: GET Command
+This can be done in either of the following ways::
 
-Execute PUT command
+    $ curl
+    http://your-edgex-server-ip:48082/api/v1/device/56dcf3ad-52d8-4d12-a2d0-ae53c177ae3d/command/67b35f63-8f94-427b-a60c-188bf9e0633a \
+      -H "Content-Type:application/json" -X PUT \
+      -d '{"DemandWindowSize":"1122","LineFrequency":"1012"}'
+
+or::
+
+    $ curl
+    "http://your-edgex-server-ip:48082/api/v1/device/name/Modbus-TCP-Device/command/Configuration" \
+      -H "Content-Type:application/json" -X PUT \
+      -d '{"DemandWindowSize":"1122","LineFrequency":"1012"}'
+
+Execute get Command
 -------------------
 
-Execute PUT command according to ``url`` and ``parameterNames``.
+Execute a get command as follows::
 
-    .. image:: AddingModbusDevice-putcommand.png
-        :scale: 50%
-        :alt: PUT Command
-
-|
-|
-
-    .. image:: putModbusPal.png
-        :scale: 50%
-        :alt: PUT ModbusPal
+    $ curl
+    "http://your-edgex-server-ip:48082/api/v1/device/name/Modbus-TCP-Device/command/Configuration" | json_pp
+      % Total % Received % Xferd Average Speed Time Time Time Current
+                                 Dload Upload Total Spent Left Speed
+        100 254 100 254 0 0 2956 0 --:--:-- --:--:-- --:--:--2988
+    {
+        "readings" : [
+           {
+              "device" : "Modbus-TCP-Device",
+              "name" : "DemandWindowSize",
+              "value" : "1122",
+              "origin" : 1559141214212
+            },
+            {
+              "name" : "LineFrequency",
+              "device" : "Modbus-TCP-Device",
+              "value" : "1012",
+              "origin" : 1559141214239
+            }
+          ],
+          "device" : "Modbus-TCP-Device",
+          "origin" : 1559141214258
+    }
 
 Schedule Job
 ============
 
-After service startup, query core-data's reading API. The results show that the service auto-executes the command every 20 seconds.
+The schedule job is defined in the [[DeviceList.AutoEvents]] section of the TOML configuration file::
 
-    .. image:: scheduleconfig.png
-        :scale: 50%
-        :alt: Schedule Configuration
+    # Pre-define Devices
+    [[DeviceList]]
+      Name = "Modbus-TCP-Device"
+      Profile = "Network Power Meter"
+      Description = "This device is a product for monitoring and controlling digital inputs and outputs over a LAN."
+      labels = [ "Air conditioner","modbus TCP" ]
+      [DeviceList.Protocols]
+        [DeviceList.Protocols.modbus-tcp]
+           Address = "192.168.214.131"
+           Port = "502"
+           UnitID = "1"
+      [[DeviceList.AutoEvents]]
+        Frequency = "50s"
+        OnChange = false
+        Resource = "Configuration"
 
-|
-|
+After the service starts, query core-data's reading API. The results show that the service automatically executes the command every 50 secs, as shown below:
 
-    .. image:: getreading.png
-        :scale: 50%
-        :alt: GET Readings
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    $ curl http://your-edgex-server-ip:48080/api/v1/reading | json_pp
+      % Total % Received % Xferd Average Speed Time Time Time Current
+                                 Dload Upload Total Spent Left Speed
+        100 1115 100 1115 0 0 73340 0 --:--:-- --:--:-- --:--:--74333
+     [
+       {
+         "value" : "1122",
+         "created" : 1559140272386,
+         "device" : "Modbus-TCP-Device",
+         "name" : "DemandWindowSize",
+         "modified" : 1559140272386,
+         "id" : "bd966c85-af0d-4981-a93c-595a95eef25a",
+         "origin" : 1559140272339
+        },
+        {
+         "modified" : 1559140272386,
+         "origin" : 1559140272367,
+         "id" : "deaf0863-8dc5-47b0-9ce9-d9a405c0b356",
+         "value" : "1012",
+         "name" : "LineFrequency",
+         "device" : "Modbus-TCP-Device",
+         "created" : 1559140272386
+        },
+        {
+         "value" : "0",
+         "device" : "Modbus-TCP-Device",
+         "created" : 1559140222335,
+         "name" : "DemandWindowSize",
+         "modified" : 1559140222335,
+         "id" : "f4808bc6-a9ee-4e82-99f5-7e15c501fb7d",
+         "origin" : 1559140222272
+        },
+        {
+         "device" : "Modbus-TCP-Device",
+         "created" : 1559140222335,
+         "name" : "LineFrequency",
+         "value" : "0",
+         "origin" : 1559140222299,
+         "id" : "d3af8e81-c627-45d7-8e39-ad1c1a0a582d",
+         "modified" : 1559140222335
+        }
+    ]
 

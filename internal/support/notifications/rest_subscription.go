@@ -47,7 +47,7 @@ func subscriptionHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			return
 		}
-		encodeWithUTF8(subscriptions, w)
+		encode(subscriptions, w)
 
 		// Modify (an existing) subscription
 	case http.MethodPut:
@@ -172,11 +172,11 @@ func subscriptionsBySlugHandler(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 			LoggingClient.Error(err.Error())
-			encodeWithUTF8(s, w)
+			encode(s, w)
 			return
 		}
 
-		encodeWithUTF8(s, w)
+		encode(s, w)
 	case http.MethodDelete:
 		_, err := dbClient.GetSubscriptionBySlug(slug)
 		if err != nil {
@@ -225,7 +225,7 @@ func subscriptionsByCategoriesHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		encodeWithUTF8(s, w)
+		encode(s, w)
 	}
 }
 
@@ -308,6 +308,6 @@ func subscriptionsByReceiverHandler(w http.ResponseWriter, r *http.Request) {
 			LoggingClient.Error(err.Error())
 			return
 		}
-		encodeWithUTF8(s, w)
+		encode(s, w)
 	}
 }
