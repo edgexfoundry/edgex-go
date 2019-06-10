@@ -36,23 +36,16 @@ func commandByDeviceID(deviceID string, commandID string, body string, isPutComm
 
 	if device.AdminState == contract.Locked {
 		LoggingClient.Error(device.Name + " is in admin locked state")
-
 		return "", http.StatusLocked
 	}
 
-	command, err := cc.Command(commandID, ctx)
-	if err != nil {
-		LoggingClient.Error(err.Error())
-
-		chk, ok := err.(*types.ErrServiceClient)
-		if ok {
-			return err.Error(), chk.StatusCode
-		} else {
-			return err.Error(), http.StatusInternalServerError
+	for _, c := range device.Profile.CoreCommands {
+		if c.Id == commandID {
+			return commandByDevice(device, c, body, isPutCommand, ctx)
 		}
 	}
-
-	return commandByDevice(device, command, body, isPutCommand, ctx)
+	// command with given commandID does not belong to the device
+	return err.Error(), http.StatusNotFound
 }
 
 func commandByNames(dn string, cn string, body string, isPutCommand bool, ctx context.Context) (string, int) {

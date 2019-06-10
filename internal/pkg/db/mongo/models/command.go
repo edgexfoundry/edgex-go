@@ -17,14 +17,7 @@ package models
 import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
-	"github.com/globalsign/mgo"
-	"github.com/globalsign/mgo/bson"
 )
-
-type commandTransform interface {
-	DBRefToCommand(dbRef mgo.DBRef) (c Command, err error)
-	CommandToDBRef(c Command) (dbRef mgo.DBRef, err error)
-}
 
 type Response struct {
 	Code           string   `bson:"code"`
@@ -46,23 +39,18 @@ type Put struct {
 }
 
 type Command struct {
-	Created  int64         `bson:"created"`
-	Modified int64         `bson:"modified"`
-	Origin   int64         `bson:"origin"`
-	Id       bson.ObjectId `bson:"_id,omitempty"`
-	Uuid     string        `bson:"uuid,omitempty"`
-	Name     string        `bson:"name"`
-	Get      Get           `bson:"get"`
-	Put      Put           `bson:"put"`
+	Created  int64  `bson:"created"`
+	Modified int64  `bson:"modified"`
+	Origin   int64  `bson:"origin"`
+	Uuid     string `bson:"uuid,omitempty"`
+	Name     string `bson:"name"`
+	Get      Get    `bson:"get"`
+	Put      Put    `bson:"put"`
 }
 
 func (c *Command) ToContract() (cmd contract.Command) {
 	// Always hand back the UUID as the contract command ID unless it's blank (an old command, for example blackbox test scripts)
 	id := c.Uuid
-	if id == "" {
-		id = c.Id.Hex()
-	}
-
 	cmd.Get = contract.Get{}
 	cmd.Get.Path = c.Get.Path
 	cmd.Get.URL = c.Get.URL
@@ -98,11 +86,8 @@ func (c *Command) ToContract() (cmd contract.Command) {
 }
 
 func (c *Command) FromContract(from contract.Command) (contractId string, err error) {
-	c.Id, c.Uuid, err = fromContractId(from.Id)
-	if err != nil {
-		return
-	}
-
+	//temporary for backward compatibility commands have only "uuid"
+	_, c.Uuid, err = fromContractId(from.Id)
 	c.Created = from.Created
 	c.Modified = from.Modified
 	c.Origin = from.Origin
@@ -132,8 +117,6 @@ func (c *Command) FromContract(from contract.Command) (contractId string, err er
 	}
 	c.Put.URL = from.Put.URL
 	c.Put.ParameterNames = from.Put.ParameterNames
-
-	contractId = toContractId(c.Id, c.Uuid)
 	return
 }
 

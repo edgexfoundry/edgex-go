@@ -49,7 +49,7 @@ type Device struct {
 	ProfileName    string                  `bson:"profileName"`          // Associated Device Profile Name
 }
 
-func (d *Device) ToContract(dsTransform deviceServiceTransform, dpTransform deviceProfileTransform, cTransform commandTransform, aTransform addressableTransform) (c contract.Device, err error) {
+func (d *Device) ToContract(dsTransform deviceServiceTransform, dpTransform deviceProfileTransform, aTransform addressableTransform) (c contract.Device, err error) {
 	// Always hand back the UUID as the contract command ID unless it's blank (an old command, for example blackbox test scripts)
 	id := d.Uuid
 	if id == "" {
@@ -98,7 +98,7 @@ func (d *Device) ToContract(dsTransform deviceServiceTransform, dpTransform devi
 	if err != nil {
 		return
 	}
-	result.Profile, err = dpModel.ToContract(cTransform)
+	result.Profile, err = dpModel.ToContract()
 	if err != nil {
 		return
 	}
@@ -107,7 +107,7 @@ func (d *Device) ToContract(dsTransform deviceServiceTransform, dpTransform devi
 	return
 }
 
-func (d *Device) FromContract(from contract.Device, dsTransform deviceServiceTransform, dpTransform deviceProfileTransform, cTransform commandTransform, aTransform addressableTransform) (id string, err error) {
+func (d *Device) FromContract(from contract.Device, dsTransform deviceServiceTransform, dpTransform deviceProfileTransform, aTransform addressableTransform) (id string, err error) {
 	if d.Id, d.Uuid, err = fromContractId(from.Id); err != nil {
 		return
 	}
@@ -145,13 +145,14 @@ func (d *Device) FromContract(from contract.Device, dsTransform deviceServiceTra
 	}
 
 	var dpModel DeviceProfile
-	if _, err = dpModel.FromContract(from.Profile, cTransform); err != nil {
+	if _, err = dpModel.FromContract(from.Profile); err != nil {
 		return
 	}
 	d.ProfileName = dpModel.Name
 	if d.Profile, err = dpTransform.DeviceProfileToDBRef(dpModel); err != nil {
 		return
 	}
+
 	id = toContractId(d.Id, d.Uuid)
 	return
 }
