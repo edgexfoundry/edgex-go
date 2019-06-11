@@ -166,7 +166,12 @@ func newDBClient(dbType string) (interfaces.DBClient, error) {
 			Host: Configuration.Databases["Primary"].Host,
 			Port: Configuration.Databases["Primary"].Port,
 		}
-		return redis.NewClient(dbConfig) // TODO: Verify this also connects to Redis
+		redisClient, err := redis.NewCoreDataClient(dbConfig, LoggingClient) // TODO: Verify this also connects to Redis
+		if err != nil {
+			return nil, err
+		}
+
+		return redisClient, nil
 	default:
 		return nil, db.ErrUnsupportedDatabase
 	}

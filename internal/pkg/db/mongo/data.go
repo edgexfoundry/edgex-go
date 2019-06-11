@@ -170,6 +170,24 @@ func (mc MongoClient) DeleteEventById(id string) error {
 	return mc.deleteById(db.EventsCollection, id)
 }
 
+// DeleteEventsByDevice Delete events and readings associated with the specified device ID
+func (mc MongoClient) DeleteEventsByDevice(deviceId string) (int, error) {
+	err := mc.DeleteReadingsByDevice(deviceId)
+	if err != nil {
+		return 0, err
+	}
+
+	s := mc.getSessionCopy()
+	defer s.Close()
+
+	i, err := s.DB(mc.database.Name).C(db.EventsCollection).RemoveAll(bson.M{"device": deviceId})
+	if err != nil {
+		return 0, err
+	}
+
+	return i.Removed, err
+}
+
 // Get a list of events based on the device id and limit
 func (mc MongoClient) EventsForDeviceLimit(id string, limit int) ([]contract.Event, error) {
 	return mc.mapEvents(mc.getEventsLimit(bson.M{"device": id}, limit))
@@ -368,6 +386,13 @@ func (mc MongoClient) ReadingCount() (int, error) {
 // 404 - can't find the reading with the given id
 func (mc MongoClient) DeleteReadingById(id string) error {
 	return mc.deleteById(db.ReadingsCollection, id)
+}
+func (mc MongoClient) DeleteReadingsByDevice(deviceId string) error {
+	s := mc.getSessionCopy()
+	defer s.Close()
+
+	_, err := s.DB(mc.database.Name).C(db.ReadingsCollection).RemoveAll(bson.M{"device": deviceId})
+	return err
 }
 
 // Return a list of readings for the given device (id or name)

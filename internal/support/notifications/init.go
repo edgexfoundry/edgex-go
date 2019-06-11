@@ -144,7 +144,7 @@ func newDBClient(dbType string) (interfaces.DBClient, error) {
 			Host: Configuration.Databases["Primary"].Host,
 			Port: Configuration.Databases["Primary"].Port,
 		}
-		return redis.NewClient(dbConfig)
+		return redis.NewClient(dbConfig, LoggingClient)
 	default:
 		return nil, db.ErrUnsupportedDatabase
 	}
