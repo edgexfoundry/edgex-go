@@ -8,7 +8,7 @@ require (
 	github.com/edgexfoundry/go-mod-core-contracts v0.1.0
 	github.com/edgexfoundry/go-mod-messaging v0.1.0
 	github.com/edgexfoundry/go-mod-registry v0.1.0
-	github.com/edgexfoundry/go-mod-secrets v0.0.0-20190607152139-03819e341fe2
+	github.com/edgexfoundry/go-mod-secrets v0.0.0-20190611201817-021c1bf6379c
 	github.com/globalsign/mgo v0.0.0-20181015135952-eeefdecb41b8
 	github.com/go-kit/kit v0.8.0
 	github.com/go-stack/stack v1.8.0 // indirect
