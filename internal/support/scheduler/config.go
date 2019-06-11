@@ -13,7 +13,11 @@
  *******************************************************************************/
 package scheduler
 
-import "github.com/edgexfoundry/edgex-go/internal/pkg/config"
+import (
+	"github.com/edgexfoundry/go-mod-secrets/pkg/providers/vault"
+
+	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
+)
 
 // Configuration V2 for the Support Scheduler Service
 type ConfigurationStruct struct {
@@ -25,6 +29,7 @@ type ConfigurationStruct struct {
 	Service         config.ServiceInfo
 	Intervals       map[string]config.IntervalInfo
 	IntervalActions map[string]config.IntervalActionInfo
+	Secrets         vault.SecretConfig
 }
 
 type WritableInfo struct {

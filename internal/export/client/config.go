@@ -13,7 +13,11 @@
  *******************************************************************************/
 package client
 
-import "github.com/edgexfoundry/edgex-go/internal/pkg/config"
+import (
+	"github.com/edgexfoundry/go-mod-secrets/pkg/providers/vault"
+
+	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
+)
 
 type ConfigurationStruct struct {
 	Writable  WritableInfo
@@ -22,6 +26,7 @@ type ConfigurationStruct struct {
 	Logging   config.LoggingInfo
 	Registry  config.RegistryInfo
 	Service   config.ServiceInfo
+	Secrets   vault.SecretConfig
 }
 
 type WritableInfo struct {

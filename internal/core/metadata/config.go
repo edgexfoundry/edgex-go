@@ -15,6 +15,8 @@ package metadata
 
 import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
+
+	"github.com/edgexfoundry/go-mod-secrets/pkg/providers/vault"
 )
 
 // Struct used to parse the JSON configuration file
@@ -26,6 +28,7 @@ type ConfigurationStruct struct {
 	Notifications config.NotificationInfo
 	Registry      config.RegistryInfo
 	Service       config.ServiceInfo
+	Secrets       vault.SecretConfig
 }
 
 type WritableInfo struct {

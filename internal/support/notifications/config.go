@@ -14,7 +14,11 @@
  *******************************************************************************/
 package notifications
 
-import "github.com/edgexfoundry/edgex-go/internal/pkg/config"
+import (
+	"github.com/edgexfoundry/go-mod-secrets/pkg/providers/vault"
+
+	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
+)
 
 type ConfigurationStruct struct {
 	Writable  WritableInfo
@@ -24,6 +28,7 @@ type ConfigurationStruct struct {
 	Registry  config.RegistryInfo
 	Service   config.ServiceInfo
 	Smtp      SmtpInfo
+	Secrets   vault.SecretConfig
 }
 
 type WritableInfo struct {

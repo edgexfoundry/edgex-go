@@ -22,6 +22,9 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
 	registryTypes "github.com/edgexfoundry/go-mod-registry/pkg/types"
 	"github.com/edgexfoundry/go-mod-registry/registry"
+	"github.com/edgexfoundry/go-mod-secrets/pkg"
+	"github.com/edgexfoundry/go-mod-secrets/pkg/keys"
+	"github.com/edgexfoundry/go-mod-secrets/pkg/providers/vault"
 
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/export"
@@ -38,6 +41,7 @@ var dbClient export.DBClient
 var LoggingClient logger.LoggingClient
 var Configuration *ConfigurationStruct
 var dc distro.DistroClient
+var secretsClient pkg.SecretClient
 var registryClient registry.Client
 var registryErrors chan error        //A channel for "config wait errors" sourced from Registry
 var registryUpdates chan interface{} //A channel for "config updates" sourced from Registry
@@ -67,8 +71,17 @@ func Retry(params startup.BootParams, wait *sync.WaitGroup, ch chan error) {
 			}
 		}
 
-		//Only attempt to connect to database if configuration has been populated
 		if Configuration != nil {
+			// Attempt to connect to secrets service.
+			if !params.UseLocalSecrets {
+				err = connectAndPollSecrets()
+
+				if err != nil {
+					ch <- err
+				}
+			}
+
+			//Only attempt to connect to database if configuration has been populated
 			err := connectToDatabase()
 			if err != nil {
 				ch <- err
@@ -195,6 +208,28 @@ func initializeClients(useRegistry bool) {
 	}
 
 	dc = distro.NewDistroClient(params, startup.Endpoint{RegistryClient: &registryClient})
+}
+
+func connectAndPollSecrets() error {
+	var err error
+	secretsClient, err = vault.NewSecretClient(Configuration.Secrets)
+	if err != nil {
+		return err
+	}
+
+	secrets, err := secretsClient.GetSecrets(keys.DatabaseUsername, keys.DatabasePassword)
+	if err != nil {
+		return err
+	}
+
+	dbConfig := Configuration.Databases["Primary"]
+
+	dbConfig.Username = secrets[keys.DatabaseUsername]
+	dbConfig.Password = secrets[keys.DatabasePassword]
+
+	Configuration.Databases["Primary"] = dbConfig
+
+	return nil
 }
 
 func connectToRegistry(conf *ConfigurationStruct) error {

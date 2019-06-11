@@ -23,9 +23,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/edgexfoundry/go-mod-secrets/pkg/keys"
-	"github.com/edgexfoundry/go-mod-secrets/pkg/providers/vault"
-
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/metadata"
@@ -35,6 +32,8 @@ import (
 	registryTypes "github.com/edgexfoundry/go-mod-registry/pkg/types"
 	"github.com/edgexfoundry/go-mod-registry/registry"
 	"github.com/edgexfoundry/go-mod-secrets/pkg"
+	"github.com/edgexfoundry/go-mod-secrets/pkg/keys"
+	"github.com/edgexfoundry/go-mod-secrets/pkg/providers/vault"
 
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/interfaces"
@@ -50,8 +49,8 @@ import (
 var Configuration *ConfigurationStruct
 var dbClient interfaces.DBClient
 var LoggingClient logger.LoggingClient
-var registryClient registry.Client
 var secretsClient pkg.SecretClient
+var registryClient registry.Client
 
 // TODO: Refactor names in separate PR: See comments on PR #1133
 var chEvents chan interface{}  // A channel for "domain events" sourced from event operations
@@ -88,17 +87,12 @@ func Retry(params startup.BootParams, wait *sync.WaitGroup, ch chan error) {
 		}
 
 		if Configuration != nil {
-			// Attempt to connect to secrets service. Fall back to local config on failure.
+			// Attempt to connect to secrets service.
 			if !params.UseLocalSecrets {
 				err = connectAndPollSecrets()
 
-				// Error occurred trying to read remote secrets. Fail fast.
 				if err != nil {
 					ch <- err
-					ch <- fmt.Errorf("could not fetch remote secrets, shutting down")
-					close(ch)
-					wait.Done()
-					return
 				}
 			}
 
@@ -233,25 +227,17 @@ func connectAndPollSecrets() error {
 		return err
 	}
 
-	username, err := secretsClient.GetSecret(keys.DatabaseUsername)
+	secrets, err := secretsClient.GetSecrets(keys.DatabaseUsername, keys.DatabasePassword)
 	if err != nil {
 		return err
 	}
 
-	password, err := secretsClient.GetSecret(keys.DatabasePassword)
-	if err != nil {
-		return err
-	}
+	dbConfig := Configuration.Databases["Primary"]
 
-	Configuration.Databases["Primary"] = config.DatabaseInfo{
-		Type:     Configuration.Databases["Primary"].Type,
-		Timeout:  Configuration.Databases["Primary"].Timeout,
-		Host:     Configuration.Databases["Primary"].Host,
-		Port:     Configuration.Databases["Primary"].Port,
-		Username: username,
-		Password: password,
-		Name:     Configuration.Databases["Primary"].Name,
-	}
+	dbConfig.Username = secrets[keys.DatabaseUsername]
+	dbConfig.Password = secrets[keys.DatabasePassword]
+
+	Configuration.Databases["Primary"] = dbConfig
 
 	return nil
 }
