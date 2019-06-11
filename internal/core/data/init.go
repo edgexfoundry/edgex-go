@@ -23,6 +23,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/edgexfoundry/go-mod-secrets/pkg/keys"
 	"github.com/edgexfoundry/go-mod-secrets/pkg/providers/vault"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
@@ -232,12 +233,12 @@ func connectAndPollSecrets() error {
 		return err
 	}
 
-	username, err := secretsClient.GetSecret("User")
+	username, err := secretsClient.GetSecret(keys.DatabaseUsername)
 	if err != nil {
 		return err
 	}
 
-	password, err := secretsClient.GetSecret("Passwd")
+	password, err := secretsClient.GetSecret(keys.DatabasePassword)
 	if err != nil {
 		return err
 	}
