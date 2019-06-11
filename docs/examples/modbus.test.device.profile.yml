@@ -58,7 +58,7 @@ deviceResources:
     { primaryTable: "INPUT_REGISTERS", startingAddress: "4" }
   properties:
     value:
-      { type: "FLOAT32", readWrite: "R", scale: "1"}
+      { type: "FLOAT32", readWrite: "R", scale: "1", floatEncoding: "Base64"}
     units:
       { type: "String", readWrite: "R", defaultValue: "degrees Celsius"}
 
@@ -69,45 +69,45 @@ deviceResources:
     { primaryTable: "HOLDING_REGISTERS", startingAddress: "5" }
   properties:
     value:
-      { type: "FLOAT64", readWrite: "RW", scale: "0.1"}
+      { type: "FLOAT64", readWrite: "RW", scale: "0.1", floatEncoding: "eNotation"}
     units:
       { type: "String", readWrite: "R", defaultValue: "degrees Celsius"}
 
 
-resources:
+deviceCommands:
 -
   name: "Switch"
   get:
-  - { index: "1", operation: "set", object: "SwitchA", parameter: "SwitchA", property: "value" ,mappings: { "true":"ON","false":"OFF"}}
-  - { index: "2", operation: "set", object: "SwitchB", parameter: "SwitchB", property: "value" ,mappings: { "true":"ON","false":"OFF"}}
+  - { index: "1", operation: "set", object: "SwitchA", parameter: "SwitchA", mappings: { "true":"ON","false":"OFF"}}
+  - { index: "2", operation: "set", object: "SwitchB", parameter: "SwitchB", mappings: { "true":"ON","false":"OFF"}}
   set:
-  - { index: "1", operation: "set", object: "SwitchA", parameter: "SwitchA", property: "value" ,mappings: { "OFF":"false","ON":"true"}}
-  - { index: "1", operation: "set", object: "SwitchB", parameter: "SwitchB", property: "value" ,mappings: { "OFF":"false","ON":"true"}}
+  - { index: "1", operation: "set", object: "SwitchA", parameter: "SwitchA", mappings: { "OFF":"false","ON":"true"}}
+  - { index: "1", operation: "set", object: "SwitchB", parameter: "SwitchB", mappings: { "OFF":"false","ON":"true"}}
 -
   name: "Values"
   get:
-  - { index: "1", operation: "get", object: "SwitchA", parameter: "SwitchA", property: "value" ,mappings: { "true":"ON","false":"OFF"}}
-  - { index: "2", operation: "get", object: "OperationMode", parameter: "OperationMode", property: "value",mappings: { "0":"Cool","1":"Heat","2":"Auto","3":"Dry","4":"HAUX","5":"Fan","6":"HH","8":"VAM Auto","9":"VAM Bypass","10":"VAM Heat","11":"VAM Normal"} }
-  - { index: "3", operation: "get", object: "FanSpeed", parameter: "FanSpeed", property: "value",mappings: { "0":"Low","1":"Med","2":"High","3":"Auto","4":"Top","5":"Very Lo","7":"VAM Super Hi","8":"VAM Lo FreshUp","9":"VAMHiFreshUp"} }
-  - { index: "4", operation: "get", object: "RoomTemperature", parameter: "RoomTemperature", property: "value" }
-  - { index: "5", operation: "get", object: "Temperature", parameter: "Temperature", property: "value" }
+  - { index: "1", operation: "get", object: "SwitchA", parameter: "SwitchA", mappings: { "true":"ON","false":"OFF"}}
+  - { index: "2", operation: "get", object: "OperationMode", parameter: "OperationMode", mappings: { "0":"Cool","1":"Heat","2":"Auto","3":"Dry","4":"HAUX","5":"Fan","6":"HH","8":"VAM Auto","9":"VAM Bypass","10":"VAM Heat","11":"VAM Normal"} }
+  - { index: "3", operation: "get", object: "FanSpeed", parameter: "FanSpeed", mappings: { "0":"Low","1":"Med","2":"High","3":"Auto","4":"Top","5":"Very Lo","7":"VAM Super Hi","8":"VAM Lo FreshUp","9":"VAMHiFreshUp"} }
+  - { index: "4", operation: "get", object: "RoomTemperature", parameter: "RoomTemperature" }
+  - { index: "5", operation: "get", object: "Temperature", parameter: "Temperature" }
   set:
-  - { index: "1", operation: "set", object: "SwitchA", parameter: "SwitchA", property: "value" ,mappings: { "ON":"true","OFF":"false"}}
-  - { index: "2", operation: "set", object: "OperationMode", parameter: "OperationMode", property: "value",mappings: { "Cool":"0","Heat":"1","Auto":"2","Dry":"3","HAUX":"4","Fan":"5","HH":"6","VAM Auto":"8","VAM Bypass":"9","VAM Heat":"10","VAM Normal":"11"} }
-  - { index: "3", operation: "set", object: "FanSpeed", parameter: "FanSpeed", property: "value",mappings: { "Low":"0","Med":"1","High":"2","Auto":"3","Top":"4","Very Lo":"5","VAM Super Hi":"7","VAM Lo FreshUp":"8","VAMHiFreshUp":"9"} }
-  - { index: "4", operation: "set", object: "Temperature", parameter: "Temperature", property: "value" }
+  - { index: "1", operation: "set", object: "SwitchA", parameter: "SwitchA", mappings: { "ON":"true","OFF":"false"}}
+  - { index: "2", operation: "set", object: "OperationMode", parameter: "OperationMode", mappings: { "Cool":"0","Heat":"1","Auto":"2","Dry":"3","HAUX":"4","Fan":"5","HH":"6","VAM Auto":"8","VAM Bypass":"9","VAM Heat":"10","VAM Normal":"11"} }
+  - { index: "3", operation: "set", object: "FanSpeed", parameter: "FanSpeed", mappings: { "Low":"0","Med":"1","High":"2","Auto":"3","Top":"4","Very Lo":"5","VAM Super Hi":"7","VAM Lo FreshUp":"8","VAMHiFreshUp":"9"} }
+  - { index: "4", operation: "set", object: "Temperature", parameter: "Temperature" }
 -
   name: "HVACValues"
   get:
-  - { index: "1", operation: "get", object: "OperationMode", parameter: "OperationMode", property: "value",mappings: { "0":"Cool","1":"Heat","2":"Auto","3":"Dry","4":"HAUX","5":"Fan","6":"HH","8":"VAM Auto","9":"VAM Bypass","10":"VAM Heat","11":"VAM Normal"} }
-  - { index: "2", operation: "get", object: "FanSpeed", parameter: "FanSpeed", property: "value",mappings: { "0":"Low","1":"Med","2":"High","3":"Auto","4":"Top","5":"Very Lo","7":"VAM Super Hi","8":"VAM Lo FreshUp","9":"VAMHiFreshUp"} }
-  - { index: "3", operation: "get", object: "Temperature", parameter: "Temperature", property: "value" }
+  - { index: "1", operation: "get", object: "OperationMode", parameter: "OperationMode",mappings: { "0":"Cool","1":"Heat","2":"Auto","3":"Dry","4":"HAUX","5":"Fan","6":"HH","8":"VAM Auto","9":"VAM Bypass","10":"VAM Heat","11":"VAM Normal"} }
+  - { index: "2", operation: "get", object: "FanSpeed", parameter: "FanSpeed",mappings: { "0":"Low","1":"Med","2":"High","3":"Auto","4":"Top","5":"Very Lo","7":"VAM Super Hi","8":"VAM Lo FreshUp","9":"VAMHiFreshUp"} }
+  - { index: "3", operation: "get", object: "Temperature", parameter: "Temperature" }
   set:
-  - { index: "1", operation: "set", object: "OperationMode", parameter: "OperationMode", property: "value",mappings: { "Cool":"0","Heat":"1","Auto":"2","Dry":"3","HAUX":"4","Fan":"5","HH":"6","VAM Auto":"8","VAM Bypass":"9","VAM Heat":"10","VAM Normal":"11"} }
-  - { index: "2", operation: "set", object: "FanSpeed", parameter: "FanSpeed", property: "value",mappings: { "Low":"0","Med":"1","High":"2","Auto":"3","Top":"4","Very Lo":"5","VAM Super Hi":"7","VAM Lo FreshUp":"8","VAMHiFreshUp":"9"} }
-  - { index: "3", operation: "set", object: "Temperature", parameter: "Temperature", property: "value" }
+  - { index: "1", operation: "set", object: "OperationMode", parameter: "OperationMode",mappings: { "Cool":"0","Heat":"1","Auto":"2","Dry":"3","HAUX":"4","Fan":"5","HH":"6","VAM Auto":"8","VAM Bypass":"9","VAM Heat":"10","VAM Normal":"11"} }
+  - { index: "2", operation: "set", object: "FanSpeed", parameter: "FanSpeed",mappings: { "Low":"0","Med":"1","High":"2","Auto":"3","Top":"4","Very Lo":"5","VAM Super Hi":"7","VAM Lo FreshUp":"8","VAMHiFreshUp":"9"} }
+  - { index: "3", operation: "set", object: "Temperature", parameter: "Temperature" }
 
-commands:
+coreCommands:
 -
   name: "Switch"
   get:
@@ -180,4 +180,4 @@ commands:
     -
       code: "503"
       description: "service unavailable"
-expectedValues: []
+      expectedValues: []

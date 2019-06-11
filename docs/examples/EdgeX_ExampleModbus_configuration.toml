@@ -4,7 +4,6 @@ Port = 49991
 ConnectRetries = 3
 Labels = []
 OpenMsg = "device modbus started"
-MaxResultCount = 50000
 Timeout = 5000
 EnableAsyncReadings = true
 AsyncBufferSize = 16
@@ -58,52 +57,26 @@ Level = "DEBUG"
   Profile = "Test.Device.Modbus.Profile"
   Description = "This device is a product for monitoring and controlling digital inputs and outputs over a LAN."
   labels = [ "Air conditioner","modbus TCP" ]
-  [DeviceList.Addressable]
-    name = "Gateway address 1"
-    Protocol = "TCP"
-    Address = "0.0.0.0"
-    Port = 1502
-    Path = "1"
+  [DeviceList.Protocols]
+    [DeviceList.Protocols.modbus-tcp]
+       Address = "0.0.0.0"
+       Port = "1502"
+       UnitID = "1"
+  [[DeviceList.AutoEvents]]
+    Frequency = "20s"
+    OnChange = false
+    Resource = "HVACValues"
 
 [[DeviceList]]
   Name = "Modbus RTU test device"
   Profile = "Test.Device.Modbus.Profile"
   Description = "This device is a product for monitoring and controlling digital inputs and outputs over a LAN."
   labels = [ "Air conditioner","modbus RTU" ]
-  [DeviceList.Addressable]
-    name = "Gateway address 2"
-    Protocol = "RTU"
-    Address = "/tmp/slave,19200,8,1,0"
-    Path = "1"
-
-# Pre-define Schedule Configuration
-[[Schedules]]
-Name = "10sec-schedule"
-Frequency = "PT10S"
-
-[[ScheduleEvents]]
-Name = "Set HVAC Values"
-Parameters = "[{\"OperationMode\": \"Auto\"},{\"FanSpeed\": \"Med\"},{\"Temperature\": \"11.22\"}]"
-Schedule = "10sec-schedule"
-  [ScheduleEvents.Addressable]
-  HTTPMethod = "Put"
-  Path = "/api/v1/device/name/Modbus TCP test device/HVACValues"
-
-[[ScheduleEvents]]
-Name = "Set the Switch"
-Parameters = "[{\"SwitchA\": \"ON\"},{\"SwitchB\": \"ON\"}]"
-Schedule = "10sec-schedule"
-  [ScheduleEvents.Addressable]
-  HTTPMethod = "Put"
-  Path = "/api/v1/device/name/Modbus TCP test device/Switch"
-
-[[Schedules]]
-Name = "5sec-schedule"
-Frequency = "PT5S"
-
-[[ScheduleEvents]]
-Name = "Read Values"
-Schedule = "5sec-schedule"
-  [ScheduleEvents.Addressable]
-  HTTPMethod = "GET"
-Path = "/api/v1/device/name/Modbus TCP test device/Values"
+  [DeviceList.Protocols]
+    [DeviceList.Protocols.modbus-rtu]
+       Address = "/tmp/slave"
+       BaudRate = "19200"
+       DataBits = "8"
+       StopBits = "1"
+       Parity = "N"
+       UnitID = "1"
