@@ -27,22 +27,8 @@ func cleanupHandler(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
 	}
 
-	switch r.Method {
-	case http.MethodDelete:
-		LoggingClient.Info("Cleaning up of notifications and transmissions")
-
-		err := dbClient.Cleanup()
-
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			LoggingClient.Error(err.Error())
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusAccepted)
-		w.Write([]byte("true"))
-
-	}
+	LoggingClient.Info("Cleaning up of notifications and transmissions")
+	cleanupHandlerCloser(w, dbClient.Cleanup())
 }
 
 func cleanupAgeHandler(w http.ResponseWriter, r *http.Request) {
@@ -57,18 +43,19 @@ func cleanupAgeHandler(w http.ResponseWriter, r *http.Request) {
 		LoggingClient.Error("Error converting the age to an integer")
 		return
 	}
-	switch r.Method {
-	case http.MethodDelete:
-		LoggingClient.Info("Cleaning up of old notifications and transmissions")
 
-		if err = dbClient.CleanupOld(age); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			LoggingClient.Error(err.Error())
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusAccepted)
-		w.Write([]byte("true"))
+	LoggingClient.Info("Cleaning up of notifications and transmissions")
+	cleanupHandlerCloser(w, dbClient.CleanupOld(age))
+}
 
+func cleanupHandlerCloser(w http.ResponseWriter, err error) {
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		LoggingClient.Error(err.Error())
+		return
 	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusAccepted)
+	w.Write([]byte("true"))
 }
