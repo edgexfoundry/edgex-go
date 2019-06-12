@@ -172,6 +172,92 @@ func getConfig(services []string, ctx context.Context) (ConfigRespMap, error) {
 	return c, nil
 }
 
+func setConfig(services []string, key string, value string, ctx context.Context) error {
+
+	/*
+	  Summary of goals that this func sets out to achieve, at this time:
+	  - Dynamically create a Registry-based GC
+	  - Confirm whether a Service is registered for this ServiceKey
+	  - GetServiceEndpoint()
+	  - At the end, the SMA should be ready to Set Configuration Value for the provided (ServiceKey, Key, Value)
+	*/
+
+	LoggingClient.Info(fmt.Sprintf("service %s whose config the SMA will set (aka updated)", services))
+	LoggingClient.Info(fmt.Sprintf("key %s to use for config updated", key))
+	LoggingClient.Info(fmt.Sprintf("value %s to use for config updated", value))
+
+	// Loop through requested services for which the provided (K,V) pair ("key","value") needs to be updated.
+	for _, service := range services {
+
+		// Check whether SMA does _not_ know of ServiceKey ("service") as being one for one of its ready-made list of clients.
+		if !IsKnownServiceKey(service) {
+			LoggingClient.Info(fmt.Sprintf("service %s not known to SMA as being in the ready-made list of clients", service))
+
+			// Service unknown to SMA, so ask the Registry whether `service` is available.
+			err := registryClient.IsServiceAvailable(service)
+			if err != nil {
+				LoggingClient.Error(err.Error())
+			} else {
+				LoggingClient.Info(fmt.Sprintf("Registry responded with %s service available", service))
+
+				// Since service is unknown to SMA, ask the Registry for a ServiceEndpoint associated with `service`
+				e, err := registryClient.GetServiceEndpoint(service)
+				if err != nil {
+					LoggingClient.Error(fmt.Sprintf("on attempting to get ServiceEndpoint for service %s, got error: %v", service, err.Error()))
+				} else {
+					// Preparing to add the specified key to the map where the value will be the respective GeneralClient
+					clientInfo := config.ClientInfo{}
+					clientInfo.Protocol = Configuration.Service.Protocol
+					clientInfo.Host = e.Host
+					clientInfo.Port = e.Port
+
+					// This code will evolve to take into account a manifest-like functionality in future. So
+					// rather than assume that the runtime bool flag useRegistry has been initialized to true,
+					// given that the flow has reached this point, having already called functions on the Registry,
+					// such as registryClient.IsServiceAvailable(service), we test for its truthiness. I expect
+					// this code to be refactored as we evolve toward a manifest-like functionality in future.
+					usingRegistry := false
+					if registryClient != nil {
+						usingRegistry = true
+					}
+
+					Configuration.Clients[e.ServiceId] = clientInfo
+					params := types.EndpointParams{
+						ServiceKey:  e.ServiceId,
+						Path:        "/",
+						UseRegistry: usingRegistry,
+						Url:         Configuration.Clients[e.ServiceId].Url() + clients.ApiConfigRoute,
+						Interval:    internal.ClientMonitorDefault,
+					}
+					// TODO: The following note is related to future work:
+					// TODO: With the current deployment strategy, GeneralClient's func init(params types.EndpointParams) {...} returns blank "url"...
+					// TODO: [Need a manifest-like functionality in future...]
+					// Add the service key to the map where the value is the respective GeneralClient
+					generalClients[e.ServiceId] = general.NewGeneralClient(params, startup.Endpoint{RegistryClient: &registryClient})
+
+					LoggingClient.Info(fmt.Sprintf("set config with the (K,V) of (%s,%s) for service %s", key, value, service))
+					err := generalClients[e.ServiceId].SetConfiguration(service, key, value, ctx)
+					if err != nil {
+						LoggingClient.Error(err.Error())
+					}
+					return nil
+				}
+			}
+		} else {
+			// Service is known to SMA, so no need to ask the Registry for a ServiceEndpoint associated with `service`
+			// Simply use one of the ready-made list of clients.
+			LoggingClient.Info(fmt.Sprintf("service %s is known to SMA as being in the ready-made list of clients", service))
+
+			LoggingClient.Info(fmt.Sprintf("set config with the (K,V) of (%s,%s) for service %s", key, value, service))
+			err := generalClients[service].SetConfiguration(service, key, value, ctx)
+			if err != nil {
+				LoggingClient.Error(err.Error())
+			}
+		}
+	}
+	return nil
+}
+
 func getMetrics(services []string, ctx context.Context) (MetricsRespMap, error) {
 
 	m := MetricsRespMap{}

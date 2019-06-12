@@ -34,7 +34,7 @@ func LoadRestRoutes() *mux.Router {
 	b := r.PathPrefix("/api/v1").Subrouter()
 
 	b.HandleFunc("/operation", operationHandler).Methods(http.MethodPost)
-	b.HandleFunc("/config/{services}", configHandler).Methods(http.MethodGet)
+	b.HandleFunc("/config/{services}", configHandler).Methods(http.MethodGet, http.MethodPut)
 	b.HandleFunc("/metrics/{services}", metricsHandler).Methods(http.MethodGet)
 
 	// Health Resource
@@ -114,6 +114,10 @@ func operationHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func configHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Body != nil {
+		defer r.Body.Close()
+	}
+
 	vars := mux.Vars(r)
 	LoggingClient.Debug("retrieved service names")
 
@@ -122,16 +126,46 @@ func configHandler(w http.ResponseWriter, r *http.Request) {
 	services = strings.Split(list, ",")
 
 	ctx := r.Context()
-	send, err := getConfig(services, ctx)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		LoggingClient.Error(err.Error())
-		return
-	}
 
-	w.Header().Add(clients.ContentType, clients.ContentTypeJSON)
-	encode(send, w)
-	return
+	switch r.Method {
+	case http.MethodGet:
+
+		send, err := getConfig(services, ctx)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			LoggingClient.Error(err.Error())
+			return
+		}
+
+		w.Header().Add(clients.ContentType, clients.ContentTypeJSON)
+		encode(send, w)
+		return
+
+	case http.MethodPut:
+
+		b, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			LoggingClient.Error(err.Error())
+			return
+		}
+
+		sc := models.SetConfig{}
+		err = sc.UnmarshalJSON(b)
+
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			LoggingClient.Error("error during decoding")
+			return
+		}
+
+		err = setConfig(services, sc.Key, sc.Value, ctx)
+		if err != nil {
+			LoggingClient.Error(err.Error())
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
 }
 
 func metricsHandler(w http.ResponseWriter, r *http.Request) {
