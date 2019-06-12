@@ -129,7 +129,7 @@ func handleFailedTransmission(t models.Transmission) {
 				time.AfterFunc(time.Second*5, func() { criticalSeverityResend(t) })
 			} else {
 				escalate(t)
-				t.Status = models.Escalated
+				t.Status = models.Trxescalated
 				dbClient.UpdateTransmission(t)
 			}
 		}
