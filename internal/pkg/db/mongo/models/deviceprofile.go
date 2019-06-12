@@ -92,10 +92,10 @@ type DeviceProfile struct {
 	Labels          []string          `bson:"labels"`
 	DeviceResources []DeviceResource  `bson:"deviceResources"`
 	DeviceCommands  []ProfileResource `bson:"resources"`
-	CoreCommands    []mgo.DBRef       `bson:"commands"`
+	CoreCommands    []Command         `bson:"commands"`
 }
 
-func (dp *DeviceProfile) ToContract(transform commandTransform) (c contract.DeviceProfile, err error) {
+func (dp *DeviceProfile) ToContract() (c contract.DeviceProfile, err error) {
 	id := dp.Uuid
 	if id == "" {
 		id = dp.Id.Hex()
@@ -173,18 +173,13 @@ func (dp *DeviceProfile) ToContract(transform commandTransform) (c contract.Devi
 		c.DeviceCommands = append(c.DeviceCommands, cpr)
 	}
 
-	for _, dbRef := range dp.CoreCommands {
-		command, err := transform.DBRefToCommand(dbRef)
-		if err != nil {
-			return contract.DeviceProfile{}, err
-		}
-		c.CoreCommands = append(c.CoreCommands, command.ToContract())
+	for _, from := range dp.CoreCommands {
+		c.CoreCommands = append(c.CoreCommands, from.ToContract())
 	}
-
 	return
 }
 
-func (dp *DeviceProfile) FromContract(from contract.DeviceProfile, transform commandTransform) (contractId string, err error) {
+func (dp *DeviceProfile) FromContract(from contract.DeviceProfile) (contractId string, err error) {
 	dp.Id, dp.Uuid, err = fromContractId(from.Id)
 	if err != nil {
 		return
@@ -267,16 +262,8 @@ func (dp *DeviceProfile) FromContract(from contract.DeviceProfile, transform com
 		if _, err = commandModel.FromContract(command); err != nil {
 			return
 		}
-
-		var dbRef mgo.DBRef
-
-		dbRef, err = transform.CommandToDBRef(commandModel)
-		if err != nil {
-			return
-		}
-		dp.CoreCommands = append(dp.CoreCommands, dbRef)
+		dp.CoreCommands = append(dp.CoreCommands, commandModel)
 	}
-
 	contractId = toContractId(dp.Id, dp.Uuid)
 	return
 }

@@ -64,6 +64,9 @@ type DBClient interface {
 	// 503 - Unexpected problems
 	DeleteEventById(id string) error
 
+	// Delete events associated with the specified device
+	DeleteEventsByDevice(deviceId string) (int, error)
+
 	// Get a list of events based on the device id and limit
 	EventsForDeviceLimit(id string, limit int) ([]contract.Event, error)
 
@@ -120,6 +123,9 @@ type DBClient interface {
 	// Delete a reading by ID
 	// 404 - can't find the reading with the given id
 	DeleteReadingById(id string) error
+
+	// DeleteReadingsByDevice delete all readings associated with the specified Device
+	DeleteReadingsByDevice(device string) error
 
 	// Return a list of readings for the given device (id or name)
 	// 404 - meta data checking enabled and can't find the device

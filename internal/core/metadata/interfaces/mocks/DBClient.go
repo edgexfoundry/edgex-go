@@ -683,29 +683,6 @@ func (_m *DBClient) GetDeviceProfileByName(n string) (models.DeviceProfile, erro
 	return r0, r1
 }
 
-// GetDeviceProfilesByCommandId provides a mock function with given fields: id
-func (_m *DBClient) GetDeviceProfilesByCommandId(id string) ([]models.DeviceProfile, error) {
-	ret := _m.Called(id)
-
-	var r0 []models.DeviceProfile
-	if rf, ok := ret.Get(0).(func(string) []models.DeviceProfile); ok {
-		r0 = rf(id)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]models.DeviceProfile)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(string) error); ok {
-		r1 = rf(id)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // GetDeviceProfilesByManufacturer provides a mock function with given fields: man
 func (_m *DBClient) GetDeviceProfilesByManufacturer(man string) ([]models.DeviceProfile, error) {
 	ret := _m.Called(man)

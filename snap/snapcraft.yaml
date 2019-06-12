@@ -281,7 +281,9 @@ apps:
       - core-data
       - core-metadata
       - support-logging
-    command: bin/device-random -confdir $SNAP_DATA/config/device-random -profile res --registry
+    command: bin/device-random -confdir $SNAP_DATA/config/device-random -profile res --registry $CONSUL_ADDR
+    environment:
+      CONSUL_ADDR: "consul://localhost:8500"
     daemon: simple
     plugs: [network, network-bind]
   device-virtual:
@@ -293,7 +295,9 @@ apps:
       - core-data
       - core-metadata
       - support-logging
-    command: bin/device-virtual -confdir $SNAP_DATA/config/device-virtual -profile res --registry
+    command: bin/device-virtual -confdir $SNAP_DATA/config/device-virtual -profile res --registry $CONSUL_ADDR
+    environment:
+      CONSUL_ADDR: "consul://localhost:8500"
     daemon: simple
     plugs: [network, network-bind]
 
@@ -373,20 +377,20 @@ parts:
       # note - we specifically don't use arch
       case "$(dpkg --print-architecture)" in
         amd64)
-          FILE_NAME=go1.11.9.linux-amd64.tar.gz
-          FILE_HASH=e88aa3e39104e3ba6a95a4e05629348b4a1ec82791fb3c941a493ca349730608
+          FILE_NAME=go1.12.5.linux-amd64.tar.gz
+          FILE_HASH=aea86e3c73495f205929cfebba0d63f1382c8ac59be081b6351681415f4063cf
           ;;
         arm64)
-          FILE_NAME=go1.11.9.linux-arm64.tar.gz
-          FILE_HASH=892ab6c2510c4caa5905b3b1b6a1d4c6f04e384841fec50881ca2be7e8accf05
+          FILE_NAME=go1.12.5.linux-arm64.tar.gz
+          FILE_HASH=ff09f34935cd189a4912f3f308ec83e4683c309304144eae9cf60ebc552e7cd8
           ;;
         armhf)
-          FILE_NAME=go1.11.9.linux-armv6l.tar.gz
-          FILE_HASH=f0d7b039cae61efdc346669f3459460e3dc03b6c6de528ca107fc53970cba0d1
+          FILE_NAME=go1.12.5.linux-armv6l.tar.gz
+          FILE_HASH=311f5e76c7cec1ec752474a61d837e474b8e750b8e3eed267911ab57c0e5da9a
           ;;
         i386)
-          FILE_NAME=go1.11.9.linux-386.tar.gz
-          FILE_HASH=0fa4001fcf1ef0644e261bf6dde02fc9f10ae4df6d74fda61fc4d3c3cbef1d79
+          FILE_NAME=go1.12.5.linux-386.tar.gz
+          FILE_HASH=146605e13bf337ff3aacd941a816c5d97a8fef8b5817e07fcec4540632085980
           ;;
       esac
       # download the archive, failing on ssl cert problems

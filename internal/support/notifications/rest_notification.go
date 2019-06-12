@@ -290,7 +290,7 @@ func notificationByStartEndHandler(w http.ResponseWriter, r *http.Request) {
 			LoggingClient.Error(err.Error())
 			return
 		}
-		encodeWithUTF8(n, w)
+		encode(n, w)
 	}
 }
 

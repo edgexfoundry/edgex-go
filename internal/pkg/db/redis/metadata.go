@@ -421,10 +421,6 @@ func (c *Client) GetDeviceProfileByName(n string) (contract.DeviceProfile, error
 	return dp, err
 }
 
-func (c *Client) GetDeviceProfilesByCommandId(id string) ([]contract.DeviceProfile, error) {
-	return c.getDeviceProfilesByValues(db.DeviceProfile + ":command:" + id)
-}
-
 // Get device profiles with the passed query
 func (c *Client) getDeviceProfilesByValues(vals ...string) ([]contract.DeviceProfile, error) {
 	conn := c.Pool.Get()
@@ -493,6 +489,21 @@ func addDeviceProfile(conn redis.Conn, dp contract.DeviceProfile) (string, error
 	}
 	dp.Modified = ts
 
+	var commands = []contract.Command{}
+	for _, from := range dp.CoreCommands {
+		_, err := uuid.Parse(from.Id)
+		if err != nil {
+			from.Id = uuid.New().String()
+		}
+		ts := db.MakeTimestamp()
+		if from.Created == 0 {
+			from.Created = ts
+		}
+		from.Modified = ts
+		commands = append(commands, from)
+	}
+	dp.CoreCommands = commands
+
 	m, err := marshalDeviceProfile(dp)
 	if err != nil {
 		return "", err
@@ -534,6 +545,11 @@ func deleteDeviceProfile(conn redis.Conn, id string) error {
 	dp := contract.DeviceProfile{}
 	_ = unmarshalObject(object, &dp)
 
+	for _, c := range dp.CoreCommands {
+		if err := deleteCommand(conn, c.Id); err != nil {
+			return err
+		}
+	}
 	_ = conn.Send("MULTI")
 	_ = conn.Send("DEL", id)
 	_ = conn.Send("ZREM", db.DeviceProfile, id)
@@ -543,7 +559,6 @@ func deleteDeviceProfile(conn redis.Conn, id string) error {
 	for _, label := range dp.Labels {
 		_ = conn.Send("SREM", db.DeviceProfile+":label:"+label, id)
 	}
-	// TODO: should commands be also removed?
 	for _, c := range dp.CoreCommands {
 		_ = conn.Send("SREM", db.DeviceProfile+":command:"+c.Id, id)
 	}
@@ -1177,50 +1192,7 @@ func (c *Client) GetCommandByName(n string) ([]contract.Command, error) {
 	return cmd, nil
 }
 
-func (c *Client) AddCommand(cmd contract.Command) (string, error) {
-	conn := c.Pool.Get()
-	defer conn.Close()
-
-	return addCommand(conn, true, cmd)
-}
-
-// Update command uses the ID of the command for identification
-func (c *Client) UpdateCommand(cmd contract.Command) error {
-	conn := c.Pool.Get()
-	defer conn.Close()
-
-	err := deleteCommand(conn, cmd.Id)
-	if err != nil {
-		return err
-	}
-
-	_, err = addCommand(conn, true, cmd)
-	return err
-}
-
-// Delete the command by ID
-func (c *Client) DeleteCommandById(id string) error {
-	conn := c.Pool.Get()
-	defer conn.Close()
-
-	// TODO: ??? Check if the command is still in use by device profiles
-
-	return deleteCommand(conn, id)
-}
-
 func addCommand(conn redis.Conn, tx bool, cmd contract.Command) (string, error) {
-	_, err := uuid.Parse(cmd.Id)
-	if err != nil {
-		cmd.Id = uuid.New().String()
-	}
-	id := cmd.Id
-
-	ts := db.MakeTimestamp()
-	if cmd.Created == 0 {
-		cmd.Created = ts
-	}
-	cmd.Modified = ts
-
 	m, err := marshalObject(cmd)
 	if err != nil {
 		return "", err
@@ -1229,9 +1201,9 @@ func addCommand(conn redis.Conn, tx bool, cmd contract.Command) (string, error) 
 	if tx {
 		_ = conn.Send("MULTI")
 	}
-	_ = conn.Send("SET", id, m)
-	_ = conn.Send("ZADD", db.Command, 0, id)
-	_ = conn.Send("SADD", db.Command+":name:"+cmd.Name, id)
+	_ = conn.Send("SET", cmd.Id, m)
+	_ = conn.Send("ZADD", db.Command, 0, cmd.Id)
+	_ = conn.Send("SADD", db.Command+":name:"+cmd.Name, cmd.Id)
 	if tx {
 		_, err = conn.Do("EXEC")
 		if err != nil {
@@ -1239,7 +1211,7 @@ func addCommand(conn redis.Conn, tx bool, cmd contract.Command) (string, error) 
 		}
 	}
 
-	return id, nil
+	return cmd.Id, nil
 }
 
 func deleteCommand(conn redis.Conn, id string) error {
