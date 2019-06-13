@@ -308,7 +308,7 @@ func getEventByIdHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // Get event by device id
-// Returns the events for the given device sorted by creation date and limited by 'limit'
+// Returns the events for the given device sorted by creation date with the newest first and limited by 'limit'
 // {deviceId} - the device that the events are for
 // {limit} - the limit of events
 // api/v1/event/device/{deviceId}/{limit}

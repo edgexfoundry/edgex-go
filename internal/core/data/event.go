@@ -18,6 +18,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sort"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
@@ -265,6 +266,10 @@ func getEventsByDeviceIdLimit(limit int, deviceId string) ([]contract.Event, err
 		LoggingClient.Error(err.Error())
 		return nil, err
 	}
+
+	sort.Slice(eventList, func(i, j int) bool {
+		return eventList[i].Created < eventList[j].Created
+	})
 
 	return eventList, nil
 }

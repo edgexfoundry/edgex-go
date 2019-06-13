@@ -473,9 +473,29 @@ func TestGetEventsByDeviceIdLimit(t *testing.T) {
 	reset()
 	myMock := &dbMock.DBClient{}
 
+	testEvent2 := models.Event{
+		ID:     "2",
+		Device: testDeviceName,
+		Readings: []models.Reading{
+			{Id: "1"},
+			{Id: "2"},
+		},
+		Created: testEvent.Created + 2000,
+	}
+
+	testEvent3 := models.Event{
+		ID:     "3",
+		Device: testDeviceName,
+		Readings: []models.Reading{
+			{Id: "1"},
+			{Id: "2"},
+		},
+		Created: testEvent.Created + 3000,
+	}
+
 	myMock.On("EventsForDeviceLimit", mock.MatchedBy(func(deviceId string) bool {
 		return deviceId == "valid"
-	}), mock.Anything).Return([]models.Event{testEvent}, nil)
+	}), mock.Anything).Return([]models.Event{testEvent2, testEvent3, testEvent}, nil)
 
 	dbClient = myMock
 
@@ -489,8 +509,8 @@ func TestGetEventsByDeviceIdLimit(t *testing.T) {
 		t.Errorf("Should return a list of events")
 	}
 
-	if expectedList[0].ID != testEvent.ID {
-		t.Errorf("Didn't successfully return testEvent")
+	if expectedList[1].ID != testEvent2.ID {
+		t.Errorf("Didn't successfully return testEvent in sorted order")
 	}
 }
 
