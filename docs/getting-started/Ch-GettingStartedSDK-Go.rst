@@ -10,7 +10,7 @@ In this guide, you create a simple Device Service that generates a random number
 Install dependencies
 ====================
 
-Creating a Device Service requires a ittle programming in Go.  Go Lang (version 1.11 or better) must be installed on your system to complete this lab.  Follow the instructions in the link below to install Go if it is not already installed on your platform:
+Creating a Device Service requires a little programming in Go.  Go Lang (version 1.11 or better) must be installed on your system to complete this lab.  Follow the instructions in the link below to install Go if it is not already installed on your platform:
 
     https://golang.org/doc/install
 
@@ -49,7 +49,9 @@ Complete the following steps to create a folder on your file system, download th
 
     mkdir device-simple
 
-#. Copy the example code from **device-sdk-go** to **device-simple**
+#. Copy the example code from **device-sdk-go** to **device-simple**::
+
+    cp -rf ./device-sdk-go/example/* ./device-simple/
 
    .. image:: EdgeX_GettingStartedSDKClone5.png
 
@@ -57,15 +59,11 @@ Complete the following steps to create a folder on your file system, download th
 
     cp ./device-sdk-go/Makefile ./device-simple
 
-|
-
    .. image:: EdgeX_GettingStartedSDKClone6.png
 
 #. Copy VERSION to device-simple::
 
     cp ./device-sdk-go/Version ./device-simple/
-
-|
 
    .. image:: EdgeX_GettingStartedSDKClone7.png
 
@@ -79,25 +77,37 @@ Starting a new Device Service project
 
 The device-sdk-go comes with example code to create a new Device Service.  Complete the following steps to modify the copy of the example code to use in your new service.
 
-#. 1.	Edit the main.go file in the cmd/device-simple folder. Modify the import statements to replace “device-sdk-go/example/driver” to “device-simple/driver” from the paths in the import statements. Save the file when you have finished editing.
+#. Edit the main.go file in the cmd/device-simple folder. Modify the import statements to replace “device-sdk-go/example/driver” to “device-simple/driver” from the paths in the import statements. Save the file when you have finished editing.
 
    .. image:: EdgeX_GettingStartedSDKProject6.png
 
-#. Open Makefile in your favorite text editor and make the following changes:
+#. Open Makefile in your favorite text editor and make the following changes
 
-    a. Replace MICROSERVICES=example/cmd/device-simple/device-simple with MICROSERVICES=cmd/device-simple/device-simple
-    b. Modify the GOFLAGS=-ldflags "-X github.com/edgexfoundry/device-sdk-go.Version=$(VERSION)" line to refer to the new service with GOFLAGS=-ldflags "-X github.com/edgexfoundry/device-simple.Version=$(VERSION)"
-    c. Change the build entry
+   * Replace ``MICROSERVICES`` ::
 
-.. code::
+      MICROSERVICES=example/cmd/device-simple/device-simple
+      
+     with ::
 
-    from:
-    example/cmd/device-simple/device-simple:
-    $(GO) build $(GOFLAGS) -o $@ ./example/cmd/device-simple
+      MICROSERVICES=cmd/device-simple/device-simple
 
-    to:
-    cmd/device-simple/device-simple:
-    $(GO) build $(GOFLAGS) -o $@ ./cmd/device-simple
+   * Modify ``GOFLAGS``::
+
+      GOFLAGS=-ldflags "-X github.com/edgexfoundry/device-sdk-go.Version=$(VERSION)"
+      
+     line to refer to the new service with::
+      
+      GOFLAGS=-ldflags "-X github.com/edgexfoundry/device-simple.Version=$(VERSION)"
+
+   * Modify ``build``::
+
+      example/cmd/device-simple/device-simple:
+        $(GO) build $(GOFLAGS) -o $@ ./example/cmd/device-simple
+
+     to::
+
+      cmd/device-simple/device-simple:
+        $(GO) build $(GOFLAGS) -o $@ ./cmd/device-simple
 
 #. Save the file.
 
@@ -136,7 +146,7 @@ To ensure that the code you have moved and updated still works, build the curren
     └── go.sum
 
 
-#. Build the service by issuing the following commad::
+#. Build the service by issuing the following command::
 
     make build
 
@@ -169,12 +179,13 @@ The Device Service you are creating isn’t going to talk to a real device.  Ins
 #. Replace the two lines of code with the following::
 
     if reqs[0].DeviceResourceName == "randomnumber" {
-    cv, _ := dsModels.NewInt32Value(reqs[0].DeviceResourceName, now, int32(rand.Intn(100)))
+        cv, _ := dsModels.NewInt32Value(reqs[0].DeviceResourceName, now, int32(rand.Intn(100)))
+
 
    .. image:: EdgeX_GettingStartedSDKCode4.png
 
-The first line of code to confirmed request is for the customized resource "randomnumber".
-Also, the second line of code generates an integer (between 0 and 100) and uses that as the value the Device Service sends to EdgeX – mimicking the collection of data from a real device. It is here that the Device Service would normally capture some sensor reading from a device and send the data to EdgeX. The line of code you just added is where you’d need to do some customization work to talk to the sensor, get the sensor’s latest sensor values and send them into EdgeX.
+   The first line of code to confirmed request is for the customized resource "randomnumber".
+   Also, the second line of code generates an integer (between 0 and 100) and uses that as the value the Device Service sends to EdgeX – mimicking the collection of data from a real device. It is here that the Device Service would normally capture some sensor reading from a device and send the data to EdgeX. The line of code you just added is where you’d need to do some customization work to talk to the sensor, get the sensor’s latest sensor values and send them into EdgeX.
 
 
 #. Save the simpledriver.go file
@@ -193,9 +204,9 @@ Do the following:
 
 #. Open the random-generator-device.yaml file in a text editor. In this Device Profile, you define that the device you are describing to EdgeX has a single property (or deviceResource) that EdgeX needs to know about - in this case, the property is the “randomnumber”.  Note how the deviceResource is typed.
 
-  In real world IoT situations, this deviceResource list could be extensive and be filled with all different types of data.
+   In real world IoT situations, this deviceResource list could be extensive and be filled with all different types of data.
 
-  Note also how the Device Profile describes REST commands that can be used by others to call on (or “get”) the random number from the Device Service.
+   Note also how the Device Profile describes REST commands that can be used by others to call on (or “get”) the random number from the Device Service.   
 
 ===============================
 Configuring your Device Service
