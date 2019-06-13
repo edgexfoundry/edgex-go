@@ -92,8 +92,6 @@ func notificationBySlugHandler(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 			LoggingClient.Error(err.Error())
-			w.Header().Set("Content-Type", applicationJson)
-			encode(n, w)
 			return
 		}
 
@@ -142,8 +140,6 @@ func notificationByIDHandler(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 			LoggingClient.Error(err.Error())
-			w.Header().Set("Content-Type", applicationJson)
-			encode(n, w)
 			return
 		}
 
@@ -456,8 +452,6 @@ func notificationsNewHandler(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 			LoggingClient.Error(err.Error())
-			w.Header().Set("Content-Type", applicationJson)
-			encode(n, w)
 			return
 		}
 
