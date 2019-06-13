@@ -18,7 +18,7 @@ Port = 8500
 Type = 'consul'
 
 [Logging]
-EnableRemote = false
+EnableRemote = true
 File = '/edgex/logs/edgex-core-command.log'
 
 [Clients]
