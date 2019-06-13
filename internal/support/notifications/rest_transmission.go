@@ -31,32 +31,28 @@ func transmissionHandler(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
 	}
 
-	switch r.Method {
-	case http.MethodPost:
-		var t models.Transmission
-		dec := json.NewDecoder(r.Body)
-		err := dec.Decode(&t)
+	var t models.Transmission
+	dec := json.NewDecoder(r.Body)
+	err := dec.Decode(&t)
 
-		// Problem Decoding Transmission
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			LoggingClient.Error("Error decoding transmission: " + err.Error())
-			return
-		}
-
-		LoggingClient.Info("Posting Transmission: " + t.String())
-		id, err := dbClient.AddTransmission(t)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			LoggingClient.Error(err.Error())
-			return
-		}
-
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(id))
-
-		break
+	// Problem Decoding Transmission
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		LoggingClient.Error("Error decoding transmission: " + err.Error())
+		return
 	}
+
+	LoggingClient.Info("Posting Transmission: " + t.String())
+	id, err := dbClient.AddTransmission(t)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		LoggingClient.Error(err.Error())
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(id))
+
 }
 
 func transmissionBySlugHandler(w http.ResponseWriter, r *http.Request) {
@@ -73,22 +69,19 @@ func transmissionBySlugHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	switch r.Method {
-	case http.MethodGet:
-
-		t, err := dbClient.GetTransmissionsByNotificationSlug(vars["slug"], limitNum)
-		if err != nil {
-			if err == db.ErrNotFound {
-				http.Error(w, "Transmission not found", http.StatusNotFound)
-			} else {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			}
-			LoggingClient.Error(err.Error())
-			return
+	t, err := dbClient.GetTransmissionsByNotificationSlug(vars["slug"], limitNum)
+	if err != nil {
+		if err == db.ErrNotFound {
+			http.Error(w, "Transmission not found", http.StatusNotFound)
+		} else {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-
-		encode(t, w)
+		LoggingClient.Error(err.Error())
+		return
 	}
+
+	encode(t, w)
+
 }
 
 func transmissionBySlugAndStartEndHandler(w http.ResponseWriter, r *http.Request) {
@@ -118,22 +111,19 @@ func transmissionBySlugAndStartEndHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	switch r.Method {
-	case http.MethodGet:
-
-		t, err := dbClient.GetTransmissionsByNotificationSlugAndStartEnd(slug, start, end, limitNum)
-		if err != nil {
-			if err == db.ErrNotFound {
-				http.Error(w, "Transmission not found", http.StatusNotFound)
-			} else {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			}
-			LoggingClient.Error(err.Error())
-			return
+	t, err := dbClient.GetTransmissionsByNotificationSlugAndStartEnd(slug, start, end, limitNum)
+	if err != nil {
+		if err == db.ErrNotFound {
+			http.Error(w, "Transmission not found", http.StatusNotFound)
+		} else {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-
-		encode(t, w)
+		LoggingClient.Error(err.Error())
+		return
 	}
+
+	encode(t, w)
+
 }
 
 func transmissionByStartEndHandler(w http.ResponseWriter, r *http.Request) {
@@ -163,22 +153,19 @@ func transmissionByStartEndHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	switch r.Method {
-	case http.MethodGet:
-
-		t, err := dbClient.GetTransmissionsByStartEnd(start, end, limitNum)
-		if err != nil {
-			if err == db.ErrNotFound {
-				http.Error(w, "Transmission not found", http.StatusNotFound)
-			} else {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			}
-			LoggingClient.Error(err.Error())
-			return
+	t, err := dbClient.GetTransmissionsByStartEnd(start, end, limitNum)
+	if err != nil {
+		if err == db.ErrNotFound {
+			http.Error(w, "Transmission not found", http.StatusNotFound)
+		} else {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-
-		encode(t, w)
+		LoggingClient.Error(err.Error())
+		return
 	}
+
+	encode(t, w)
+
 }
 
 func transmissionByStartHandler(w http.ResponseWriter, r *http.Request) {
@@ -199,22 +186,20 @@ func transmissionByStartHandler(w http.ResponseWriter, r *http.Request) {
 		LoggingClient.Error("Error converting limit to integer: " + err.Error())
 		return
 	}
-	switch r.Method {
-	case http.MethodGet:
 
-		t, err := dbClient.GetTransmissionsByStart(start, limitNum)
-		if err != nil {
-			if err == db.ErrNotFound {
-				http.Error(w, "Transmission not found", http.StatusNotFound)
-			} else {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			}
-			LoggingClient.Error(err.Error())
-			return
+	t, err := dbClient.GetTransmissionsByStart(start, limitNum)
+	if err != nil {
+		if err == db.ErrNotFound {
+			http.Error(w, "Transmission not found", http.StatusNotFound)
+		} else {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-
-		encode(t, w)
+		LoggingClient.Error(err.Error())
+		return
 	}
+
+	encode(t, w)
+
 }
 
 func transmissionByEndHandler(w http.ResponseWriter, r *http.Request) {
@@ -238,22 +223,19 @@ func transmissionByEndHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	switch r.Method {
-	case http.MethodGet:
-
-		t, err := dbClient.GetTransmissionsByEnd(end, limitNum)
-		if err != nil {
-			if err == db.ErrNotFound {
-				http.Error(w, "Transmission not found", http.StatusNotFound)
-			} else {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			}
-			LoggingClient.Error(err.Error())
-			return
+	t, err := dbClient.GetTransmissionsByEnd(end, limitNum)
+	if err != nil {
+		if err == db.ErrNotFound {
+			http.Error(w, "Transmission not found", http.StatusNotFound)
+		} else {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-
-		encode(t, w)
+		LoggingClient.Error(err.Error())
+		return
 	}
+
+	encode(t, w)
+
 }
 
 func transmissionByEscalatedHandler(w http.ResponseWriter, r *http.Request) {
@@ -327,17 +309,14 @@ func transmissionByAgeStatusHandler(w http.ResponseWriter, r *http.Request, stat
 		return
 	}
 
-	switch r.Method {
-	case http.MethodDelete:
-
-		err := dbClient.DeleteTransmission(age, status)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			LoggingClient.Error(err.Error())
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("true"))
+	err = dbClient.DeleteTransmission(age, status)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		LoggingClient.Error(err.Error())
+		return
 	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("true"))
+
 }
