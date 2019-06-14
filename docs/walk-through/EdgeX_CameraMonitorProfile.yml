@@ -5,7 +5,7 @@ model: "Cam12345"
 labels: 
     - "camera"
 description: "Human and canine camera monitor profile"
-commands: 
+coreCommands: 
   - 
     name: People
     get: 

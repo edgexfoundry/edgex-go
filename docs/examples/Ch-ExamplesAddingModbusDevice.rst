@@ -160,7 +160,6 @@ Create the configuration file, as shown below::
     ConnectRetries = 3
     Labels = ["modbus"]
     OpenMsg = "device modbus started"
-    ReadMaxLimit = 256
     Timeout = 5000
     EnableAsyncReadings = true
     AsyncBufferSize = 16
