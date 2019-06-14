@@ -14,25 +14,9 @@
 package data
 
 import (
-	"encoding/json"
 	"io"
 	"io/ioutil"
-	"net/http"
 )
-
-// Helper function for encoding things for returning from REST calls
-func encode(i interface{}, w http.ResponseWriter) {
-	w.Header().Add("Content-Type", "application/json")
-
-	enc := json.NewEncoder(w)
-	err := enc.Encode(i)
-	// Problems encoding
-	if err != nil {
-		LoggingClient.Error("Error encoding the data: " + err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-}
 
 // Printing function purely for debugging purposes
 // Print the body of a request to the console
