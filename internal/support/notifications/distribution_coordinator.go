@@ -47,6 +47,5 @@ func send(n models.Notification, s models.Subscription) {
 
 func criticalSeverityResend(t models.Transmission) {
 	LoggingClient.Info("Critical severity resend scheduler is triggered.")
-	LoggingClient.Debug("Resending transmission is: " + t.ID + " for: " + t.Notification.Slug)
 	resend(t)
 }

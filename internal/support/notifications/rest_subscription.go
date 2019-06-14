@@ -209,24 +209,22 @@ func subscriptionsByCategoriesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	vars := mux.Vars(r)
-	switch r.Method {
-	case http.MethodGet:
 
-		categories := splitVars(vars["categories"])
+	categories := splitVars(vars["categories"])
 
-		s, err := dbClient.GetSubscriptionByCategories(categories)
-		if err != nil {
-			if err == db.ErrNotFound {
-				http.Error(w, "Subscription not found", http.StatusNotFound)
-			} else {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			}
-			LoggingClient.Error(err.Error())
-			return
+	s, err := dbClient.GetSubscriptionByCategories(categories)
+	if err != nil {
+		if err == db.ErrNotFound {
+			http.Error(w, "Subscription not found", http.StatusNotFound)
+		} else {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-
-		encode(s, w)
+		LoggingClient.Error(err.Error())
+		return
 	}
+
+	encode(s, w)
+
 }
 
 func subscriptionsByLabelsHandler(w http.ResponseWriter, r *http.Request) {
@@ -236,24 +234,22 @@ func subscriptionsByLabelsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	vars := mux.Vars(r)
-	switch r.Method {
-	case http.MethodGet:
 
-		labels := splitVars(vars["labels"])
+	labels := splitVars(vars["labels"])
 
-		s, err := dbClient.GetSubscriptionByLabels(labels)
-		if err != nil {
-			if err == db.ErrNotFound {
-				http.Error(w, "Subscription not found", http.StatusNotFound)
-			} else {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			}
-			LoggingClient.Error(err.Error())
-			return
+	s, err := dbClient.GetSubscriptionByLabels(labels)
+	if err != nil {
+		if err == db.ErrNotFound {
+			http.Error(w, "Subscription not found", http.StatusNotFound)
+		} else {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-
-		encode(s, w)
+		LoggingClient.Error(err.Error())
+		return
 	}
+
+	encode(s, w)
+
 }
 
 func subscriptionsByCategoriesLabelsHandler(w http.ResponseWriter, r *http.Request) {
@@ -263,25 +259,23 @@ func subscriptionsByCategoriesLabelsHandler(w http.ResponseWriter, r *http.Reque
 	}
 
 	vars := mux.Vars(r)
-	switch r.Method {
-	case http.MethodGet:
 
-		labels := splitVars(vars["labels"])
-		categories := splitVars(vars["categories"])
+	labels := splitVars(vars["labels"])
+	categories := splitVars(vars["categories"])
 
-		s, err := dbClient.GetSubscriptionByCategoriesLabels(categories, labels)
-		if err != nil {
-			if err == db.ErrNotFound {
-				http.Error(w, "Subscription not found", http.StatusNotFound)
-			} else {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			}
-			LoggingClient.Error(err.Error())
-			return
+	s, err := dbClient.GetSubscriptionByCategoriesLabels(categories, labels)
+	if err != nil {
+		if err == db.ErrNotFound {
+			http.Error(w, "Subscription not found", http.StatusNotFound)
+		} else {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-
-		encode(s, w)
+		LoggingClient.Error(err.Error())
+		return
 	}
+
+	encode(s, w)
+
 }
 
 func splitVars(vars string) []string {
@@ -295,19 +289,17 @@ func subscriptionsByReceiverHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	vars := mux.Vars(r)
-	switch r.Method {
-	case http.MethodGet:
 
-		s, err := dbClient.GetSubscriptionByReceiver(vars["receiver"])
-		if err != nil {
-			if err == db.ErrNotFound {
-				http.Error(w, "Subscription not found", http.StatusNotFound)
-			} else {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			}
-			LoggingClient.Error(err.Error())
-			return
+	s, err := dbClient.GetSubscriptionByReceiver(vars["receiver"])
+	if err != nil {
+		if err == db.ErrNotFound {
+			http.Error(w, "Subscription not found", http.StatusNotFound)
+		} else {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-		encode(s, w)
+		LoggingClient.Error(err.Error())
+		return
 	}
+	encode(s, w)
+
 }
