@@ -227,7 +227,6 @@ Create the configuration file, named configuration.toml, as shown below replacin
     ConnectRetries = 3
     Labels = []
     OpenMsg = "device mqtt started"
-    ReadMaxLimit = 256
     Timeout = 5000
     EnableAsyncReadings = true
     AsyncBufferSize = 16

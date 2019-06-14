@@ -18,14 +18,14 @@ deviceResources:
             units:
                 { type: "String", readWrite: "R", defaultValue: "" }
 
-resources:
+deviceCommands:
     -
         name: "Random"
         get:
             -
                 { operation: "get", object: "randomnumber", property: "value", parameter: "Random" }
 
-commands:
+coreCommands:
   -
     name: "Random"
     get:
