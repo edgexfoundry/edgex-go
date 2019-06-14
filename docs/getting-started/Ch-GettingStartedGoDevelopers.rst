@@ -6,8 +6,7 @@ Get EdgeX Foundry - Go Developers
 Introduction
 ============
 
-These instructions are for Go Lang Developers to obtain and run Go-based EdgeX Foundry microservices. (Users should read: :doc:`../Ch-GettingStartedUsers`) 
-While many of the Java services still function today, the Go versions of the microservices are considered to be the reference implementation.  Java versions of the services will be archived in the future unless organizations and individuals in the community decide to maintain and keep these services consistent with the reference implementations.
+These instructions are for Go Lang Developers to obtain and run Go-based EdgeX Foundry microservices. (Users should read: :doc:`../Ch-GettingStartedUsers`)
 
 ================================
 What You Need For Go Development
@@ -41,7 +40,7 @@ To download or "pull" the EdgeX Go code, use your git tool and request to clone 
 
 git clone https://github.com/edgexfoundry/edgex-go.git
 
-It is recommended that you clone the edgex-go mono repo to the $GOPATH/src/github.com/edgexfoundry folder.  You will find that the project tools and configuration provided by the EdgeX community will work much better when applied to this structure. 
+It is recommended that you clone the edgex-go mono repo to the $GOPATH/src/github.com/edgexfoundry folder.  You will find that the project tools and configuration provided by the EdgeX community will work much better when applied to this structure.
 
 You can use the build in `go get` command to clone the project into the correct path:
 
