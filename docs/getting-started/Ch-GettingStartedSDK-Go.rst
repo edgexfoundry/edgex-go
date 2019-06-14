@@ -44,7 +44,7 @@ Complete the following steps to create a folder on your file system, download th
     git clone https://github.com/edgexfoundry/device-sdk-go.git
 
    .. image:: EdgeX_GettingStartedSDKClone3.png
-    
+
 #. Create a folder for the Device Service that we are going to develop. In this step, you are naming the folder to the name you want to give your new Device Service. Standard practice in EdgeX is to prefix the name of a Device Service with ``device-``::
 
     mkdir device-simple
@@ -52,7 +52,7 @@ Complete the following steps to create a folder on your file system, download th
 #. Copy the example code from **device-sdk-go** to **device-simple**
 
    .. image:: EdgeX_GettingStartedSDKClone5.png
-    
+
 #. Copy Makefile to device-simple::
 
     cp ./device-sdk-go/Makefile ./device-simple
@@ -71,7 +71,7 @@ Complete the following steps to create a folder on your file system, download th
 
 #. Copy version.go to device-simple::
 
-   cp ./device-sdk-go/version.go ./device-simple/
+    cp ./device-sdk-go/version.go ./device-simple/
 
 =====================================
 Starting a new Device Service project
@@ -83,16 +83,21 @@ The device-sdk-go comes with example code to create a new Device Service.  Compl
 
    .. image:: EdgeX_GettingStartedSDKProject6.png
 
-#. Open Makefile in your favorite text editor and make the following changes: 
+#. Open Makefile in your favorite text editor and make the following changes:
 
     a. Replace MICROSERVICES=example/cmd/device-simple/device-simple with MICROSERVICES=cmd/device-simple/device-simple
     b. Modify the GOFLAGS=-ldflags "-X github.com/edgexfoundry/device-sdk-go.Version=$(VERSION)" line to refer to the new service with GOFLAGS=-ldflags "-X github.com/edgexfoundry/device-simple.Version=$(VERSION)"
-    c. Change the build entry from::
-      example/cmd/device-simple/device-simple:
-      $(GO) build $(GOFLAGS) -o $@ ./example/cmd/device-simple
+    c. Change the build entry
+
+.. code::
+
+    from:
+    example/cmd/device-simple/device-simple:
+    $(GO) build $(GOFLAGS) -o $@ ./example/cmd/device-simple
+
     to:
-      cmd/device-simple/device-simple:
-      $(GO) build $(GOFLAGS) -o $@ ./cmd/device-simple
+    cmd/device-simple/device-simple:
+    $(GO) build $(GOFLAGS) -o $@ ./cmd/device-simple
 
 #. Save the file.
 
@@ -168,7 +173,7 @@ The Device Service you are creating isn’t going to talk to a real device.  Ins
 
    .. image:: EdgeX_GettingStartedSDKCode4.png
 
-  The first line of code to confirmed request is for the customized resource "randomnumber".
+The first line of code to confirmed request is for the customized resource "randomnumber".
 Also, the second line of code generates an integer (between 0 and 100) and uses that as the value the Device Service sends to EdgeX – mimicking the collection of data from a real device. It is here that the Device Service would normally capture some sensor reading from a device and send the data to EdgeX. The line of code you just added is where you’d need to do some customization work to talk to the sensor, get the sensor’s latest sensor values and send them into EdgeX.
 
 
@@ -184,13 +189,13 @@ Do the following:
 
 #. Explore the files in the cmd/device-simple/res folder.  Take note of the example Device Profile YAML file that is already there (Simple-Driver.yml).  You can explore the contents of this file to see how devices are represented by YAML.  In particular, note how fields or properties of a sensor are represented by “deviceResources”.  Command to be issued to the device are represented by “deviceCommands”.
 
-#. Download :download:`random-generator-device.yaml <random-generator-device.yaml>` to the cmd/device-simple/res folder.  
+#. Download :download:`random-generator-device.yaml <random-generator-device.yaml>` to the cmd/device-simple/res folder.
 
 #. Open the random-generator-device.yaml file in a text editor. In this Device Profile, you define that the device you are describing to EdgeX has a single property (or deviceResource) that EdgeX needs to know about - in this case, the property is the “randomnumber”.  Note how the deviceResource is typed.
 
   In real world IoT situations, this deviceResource list could be extensive and be filled with all different types of data.
 
-  Note also how the Device Profile describes REST commands that can be used by others to call on (or “get”) the random number from the Device Service.   
+  Note also how the Device Profile describes REST commands that can be used by others to call on (or “get”) the random number from the Device Service.
 
 ===============================
 Configuring your Device Service
@@ -198,7 +203,7 @@ Configuring your Device Service
 
 Now update the configuration for your new Device Service – changing the port it operates on (so as not to conflict with other Device Services), altering the auto event frequency of when the data is collected from the Device Service (every 10 seconds in this example), and setting up the initial provisioning of the random number generating device when the service starts.
 
-Download :download:`configuration.toml <configuration.toml>` to the cmd/device-simple/res folder (this will overwrite an existing file – that’s ok).  
+Download :download:`configuration.toml <configuration.toml>` to the cmd/device-simple/res folder (this will overwrite an existing file – that’s ok).
 
 ===========================
 Rebuild your Device Service

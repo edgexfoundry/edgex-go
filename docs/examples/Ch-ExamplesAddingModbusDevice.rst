@@ -41,9 +41,9 @@ In this section, we create a folder that contains the files required for deploym
 Device Profile (DENT.Mod.PS6037.profile.yaml)
 ---------------------------------------------
 
-The DeviceProfile defines the device's values and operation method, which can be Read or Write. 
+The DeviceProfile defines the device's values and operation method, which can be Read or Write.
 
-In the Modbus protocol, we must define attributes: 
+In the Modbus protocol, we must define attributes:
 
 * ``primaryTable``: HOLDING_REGISTERS, INPUT_REGISTERS, COILS, DISCRETES_INPUT
 * ``startingAddress`` specifies the address in Modbus device
@@ -302,7 +302,7 @@ After the service start, check the consul dashboard
 Set-up: Method Two
 ==================
 
-Instead of using the configuration described above, you can create the Device Profile and Device using the Core Metadata API after the services start up. To do this, complete the following: 
+Instead of using the configuration described above, you can create the Device Profile and Device using the Core Metadata API after the services start up. To do this, complete the following:
 
 1. Upload the device profile, illustrated above, to metadata with a POST to http://localhost:48081/api/v1/deviceprofile/uploadfile and add the file as key “file” to the body in form-data format. The created ID is returned.  The following  example command uses curl to send the request::
 
@@ -474,6 +474,8 @@ The schedule job is defined in the [[DeviceList.AutoEvents]] section of the TOML
 
 After the service starts, query core-data's reading API. The results show that the service automatically executes the command every 50 secs, as shown below:
 
+.. code::
+
     $ curl http://your-edgex-server-ip:48080/api/v1/reading | json_pp
       % Total % Received % Xferd Average Speed Time Time Time Current
                                  Dload Upload Total Spent Left Speed
@@ -516,4 +518,3 @@ After the service starts, query core-data's reading API. The results show that t
          "modified" : 1559140222335
         }
     ]
-
