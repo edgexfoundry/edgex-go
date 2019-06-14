@@ -88,8 +88,7 @@ Obtain and start EdgeX Foundry.  In particular, per :doc:`Ch-GettingStartedUsers
 +------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
 | docker-compose up -d logging       |  Start the logging microservice - used by all micro services that make log entries  | A couple of seconds                            |
 +------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-| docker-compose up -d notifications |  Start the notifications and alerts microservice--used by many of the microservices | 30 seconds                                     |
-|                                    |  Note: this service is still implemented in Java and takes more time to start       |                                                |
+| docker-compose up -d notifications |  Start the notifications and alerts microservice--used by many of the microservices | A couple of seconds                            |
 +------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
 | docker-compose up -d metadata      |  Start the Core Metadata microservice                                               | A couple of seconds                            |
 +------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
@@ -97,15 +96,13 @@ Obtain and start EdgeX Foundry.  In particular, per :doc:`Ch-GettingStartedUsers
 +------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
 | docker-compose up -d command       |  Start the Core Command microservice                                                | A couple of seconds                            |
 +------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-| docker-compose up -d scheduler     |  Start the scheduling microservice -used by many of the microservices               | 1 minute                                       |
-|                                    |  Note: this service is still implemented in Java and takes more time to start       |                                                |
+| docker-compose up -d scheduler     |  Start the scheduling microservice -used by many of the microservices               | A couple of seconds                            |
 +------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
 | docker-compose up -d export-client |  Start the Export Client registration microservice                                  | A couple of seconds                            |
 +------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
 | docker-compose up -d export-distro |  Start the Export Distribution microservice                                         | A couple of seconds                            |
 +------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-| docker-compose up -d device-virtual|  Start the virtual device service                                                   | 1 minute                                       |
-|                                    |  Note: this service is still implemented in Java and takes more time to start       |                                                |
+| docker-compose up -d device-virtual|  Start the virtual device service                                                   | A couple of seconds                            |
 |                                    |  This service mocks a sensor sending data to EdgX and is used for demonstration     |                                                |
 +------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
 

@@ -129,8 +129,8 @@ In some situations, you may want to bring up the containers one at a time using 
 | docker-compose up -d rulesengine   |  Start the Rules Engine microservice                                                 | | This service is still implemented in Java    |
 |                                    |                                                                                      | | and takes more time to start                 |
 +------------------------------------+--------------------------------------------------------------------------------------+------------------------------------------------+
-| docker-compose up -d device-virtual|  | Start the virtual device service                                                  | this service is still implemented in Java and  |
-|                                    |  | This service mocks a sensor sending data to EdgX and is used for demonstration    | takes more time to start                       |
+| docker-compose up -d device-virtual|  | Start the virtual device service                                                  |                                                |
+|                                    |  | This service mocks a sensor sending data to EdgX and is used for demonstration    |                                                |
 +------------------------------------+--------------------------------------------------------------------------------------+------------------------------------------------+
 
 Run a **"docker-compose ps"** command to confirm that all the containers have been downloaded and started.  (Note: initialization or seed containers, like config-seed, will have exited as there job is just to initialize the associated service and then exit.)

@@ -2,11 +2,11 @@
 Introduction
 ############
 
-EdgeX Foundry is a vendor-neutral open source software platform at the edge of the network, that interacts with the physical, every day working world of devices, sensors, actuators, and other IoT objects. The intent is to build a common framework for Industrial IoT edge computing. The EdgeX platform enables and encourages the rapidly growing community of IoT solution providers to work together in an ecosystem of interoperable components to reduce uncertainty, accelerate time to market, and facilitate scale. 
+EdgeX Foundry is a vendor-neutral open source software platform at the edge of the network, that interacts with the physical, every day working world of devices, sensors, actuators, and other IoT objects. The intent is to build a common framework for Industrial IoT edge computing. The EdgeX platform enables and encourages the rapidly growing community of IoT solution providers to work together in an ecosystem of interoperable components to reduce uncertainty, accelerate time to market, and facilitate scale.
 
 By bringing this much-needed interoperability, EdgeX makes it easier to monitor physical world items, send instructions to them, collect data from them, move the data across the fog up to the cloud where it may be stored, aggregated, analyzed, and turned into information, actuated, and acted upon. So EdgeX enables data to travel northwards towards the Cloud and also laterally to other gateways, or back to devices, sensors, and actuators.
 
-The initiative is aligned around a common goal: the simplification and standardization of the foundation for tiered edge computing architectures in the industrial IoT market while still enabling the ecosystem to provide significant value-added differentiation. 
+The initiative is aligned around a common goal: the simplification and standardization of the foundation for tiered edge computing architectures in the industrial IoT market while still enabling the ecosystem to provide significant value-added differentiation.
 
 If you don't need further description and want to immediately use EdgeX Foundry use this link:  Getting Started Guide
 
@@ -89,7 +89,7 @@ Supporting Services Layer
 
 .. image:: EdgeX_SupportingServicesLayer.png
 
-The Supporting Services (SS) Layer encompass a wide range of microservices that provide the edge analytics and intelligence, and provide service to EdgeX Foundry itself. Normal software application duties such as logging, scheduling, and data clean up (scrubbing) are performed by microservices in the SS Layer.  
+The Supporting Services (SS) Layer encompass a wide range of microservices that provide the edge analytics and intelligence, and provide service to EdgeX Foundry itself. Normal software application duties such as logging, scheduling, and data clean up (scrubbing) are performed by microservices in the SS Layer.
 
 The rules engines, and alerting and notification microservices are within the SS Layer because they operate on top of the Core Services Layer. The local analytics capability (implemented today as a simple rules engine) is also located in this layer.
 
@@ -121,29 +121,27 @@ Device Services Layer
 
 .. image:: EdgeX_DeviceServicesLayer.png
 
-The Device Services Layer interacts with Device Services.  
+The Device Services Layer interacts with Device Services.
 
 Device Services (DS) are the edge connectors interacting with the Devices or IoT objects (the "things") that include, but are not limited to: alarm systems, heating and air conditioning systems in homes and office buildings, lights, machines in any industry, irrigation systems, drones, currently automated transit such as some rail systems, currently automated factories, and appliances in your home.  In the future, this may include driverless cars and trucks, traffic signals, fully automated fast food facilities, fully automated self-serve grocery stores, devices taking medical readings from patients etc.
 
 Device services may service one or a number of devices (sensor, actuator, and so forth) at one time. A "device" that a DS manages, could be something other than a simple single physical device and could be another gateway (and all of that gateway's devices); a device manager; or a device aggregator that acts as a device, or collection of devices, to EdgeX Foundry.
 
-The DS layer's microservices communicate with the devices, sensors, actuators, and other IoT objects through protocols native to each IoT object. The DS Layer converts the data produced and communicated by the IoT object into a common EdgeX Foundry data structure, and sends that converted data into the Core Services layer, and to other microservices in other layers of EdgeX Foundry. 
+The DS layer's microservices communicate with the devices, sensors, actuators, and other IoT objects through protocols native to each IoT object. The DS Layer converts the data produced and communicated by the IoT object into a common EdgeX Foundry data structure, and sends that converted data into the Core Services layer, and to other microservices in other layers of EdgeX Foundry.
 
 EdgeX Foundry provides device service software developer kits (SDK) for generating the shell of a device service.  There are SDKs in Go and C to support the creation of device services in the most convenient language for your use case.  SDKs make the creation of new device services easier and provides connector code to the Core Services Layer (as well as other services).
 
-Please note, EdgeX is in a period of transition with regard to the device service SDKs and device services.  Early versions of EdgeX provide a Java-based SDK and there are a number of legacy Java device services.  The Java SDK and device services are being retired in a future release of EdgeX in favor of the Go and C SDK (and Go/C based device services created from them).  
-
 Examples of what work a Device Service does
 
-* A BACnet DS converts the BACNet device-supplied temperature and humidity readings into a common EdgeX Foundry object data structure. 
-* A DS receives and translates commands from other EdgeX Foundry services or enterprise systems, and communicates those requests to the devices for actuation in a programming language that the device understands. 
-* A DS may receive a request to turn off a Modbus PLC-controlled motor. The DS would translate the generic EdgeX Foundry "shutoff" request into a Modbus serial command that the PLC-controlled motor understands for actuation. 
+* A BACnet DS converts the BACNet device-supplied temperature and humidity readings into a common EdgeX Foundry object data structure.
+* A DS receives and translates commands from other EdgeX Foundry services or enterprise systems, and communicates those requests to the devices for actuation in a programming language that the device understands.
+* A DS may receive a request to turn off a Modbus PLC-controlled motor. The DS would translate the generic EdgeX Foundry "shutoff" request into a Modbus serial command that the PLC-controlled motor understands for actuation.
 
 =====================
 System Services Layer
 =====================
 
-**Security Infrastructure** 
+**Security Infrastructure**
 
 .. image:: EdgeX_SecurityLayer.png
 
@@ -153,16 +151,8 @@ Security elements both inside and outside of EdgeX Foundry protect the data and 
 
 .. image:: EdgeX_SystemManagementLayer.png
 
-System Management facilities provide the central point of contact for external management systems to 
+System Management facilities provide the central point of contact for external management systems to
 * start/stop/restart EdgeX services
-* get metrics on the EdgeX services (such as memory usage) so that the EdgeX services can be monitored 
+* get metrics on the EdgeX services (such as memory usage) so that the EdgeX services can be monitored
 
-In future releases, the EdgeX system management capability will expand to include being able to set service configuration, provide a status/health check of all of the services, and providing other performance and operational information to management platforms.  
-
-
-
-
-
-
-
-
+In future releases, the EdgeX system management capability will expand to include being able to set service configuration, provide a status/health check of all of the services, and providing other performance and operational information to management platforms.

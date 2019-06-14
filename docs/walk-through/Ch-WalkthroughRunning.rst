@@ -8,11 +8,11 @@ If you you have already followed :doc:`../Ch-GettingStartedUsers` you will have 
 Download the docker-compose file
 --------------------------------
 
-After installing Docker and Docker Compose, you need to get a Docker Compose file.  EdgeX Foundry has over 12 microservices, each deployed in their own Docker container, and the Docker Compose file will make it easier to download and run them all. 
+After installing Docker and Docker Compose, you need to get a Docker Compose file.  EdgeX Foundry has over 12 microservices, each deployed in their own Docker container, and the Docker Compose file will make it easier to download and run them all.
 
 A Docker Compose file is a manifest file, which lists:
 
-* The Docker containers (or more precisely the Docker container images) that should be downloaded, 
+* The Docker containers (or more precisely the Docker container images) that should be downloaded,
 * The order in which the containers should be started
 * The parameters under which the containers should be run
 
@@ -37,7 +37,7 @@ Once you have downloaded the ``docker-compose.yml`` file, run the following comm
 Starting EdgeX
 --------------
 
-For this Walkthrough you will need to run all the services with the exception of any device services, including the device-virtual.  The reason is that many of the API calls you make as part of this walk through are actually accomplished by the virtual device service - or any device service for that matter.  In this walk through, your manual call of the EdgeX APIs often simulate the work that a device service would do to get a new device setup and to send data to/through EdgeX.  
+For this Walkthrough you will need to run all the services with the exception of any device services, including the device-virtual.  The reason is that many of the API calls you make as part of this walk through are actually accomplished by the virtual device service - or any device service for that matter.  In this walk through, your manual call of the EdgeX APIs often simulate the work that a device service would do to get a new device setup and to send data to/through EdgeX.
 
 Run the following commands to start the core, supporting and export micro services of EdgeX.
 
@@ -56,8 +56,7 @@ Run the following commands to start the core, supporting and export micro servic
 +------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
 | docker-compose up -d logging       |  Start the logging microservice - used by all micro services that make log entries  | A couple of seconds                            |
 +------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-| docker-compose up -d notifications |  Start the notifications and alerts microservice--used by many of the microservices | 30 seconds                                     |
-|                                    |  Note: this service is still implemented in Java and takes more time to start       |                                                |
+| docker-compose up -d notifications |  Start the notifications and alerts microservice--used by many of the microservices | A couple of seconds                            |
 +------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
 | docker-compose up -d metadata      |  Start the Core Metadata microservice                                               | A couple of seconds                            |
 +------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
@@ -65,8 +64,7 @@ Run the following commands to start the core, supporting and export micro servic
 +------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
 | docker-compose up -d command       |  Start the Core Command microservice                                                | A couple of seconds                            |
 +------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-| docker-compose up -d scheduler     |  Start the scheduling microservice -used by many of the microservices               | 1 minute                                       |
-|                                    |  Note: this service is still implemented in Java and takes more time to start       |                                                |
+| docker-compose up -d scheduler     |  Start the scheduling microservice -used by many of the microservices               | A couple of seconds                            |
 +------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
 | docker-compose up -d export-client |  Start the Export Client registration microservice                                  | A couple of seconds                            |
 +------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
@@ -81,5 +79,3 @@ Run **"docker-compose ps"** to confirm that all the containers have been downloa
 .. image:: EdgeX_WalkthroughDockerProcesses.png
 
 Next we'll create an `Example Use Case 〉 <Ch-WalkthroughUseCase.html>`_
-
-
