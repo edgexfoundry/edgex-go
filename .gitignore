@@ -11,7 +11,6 @@ coverage.out
 debug
 *.dll
 
-
 # binary files
 cmd/config-seed/config-seed
 cmd/core-command/core-command
