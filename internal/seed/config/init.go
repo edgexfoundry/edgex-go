@@ -88,6 +88,7 @@ func initializeConfiguration(useProfile string) (*ConfigurationStruct, error) {
 	if err != nil {
 		return nil, err
 	}
+	conf.Registry = config.OverrideFromEnvironment(conf.Registry)
 	return conf, nil
 }
 

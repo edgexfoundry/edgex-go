@@ -106,6 +106,7 @@ func initializeConfiguration(useRegistry bool, useProfile string) (*Configuratio
 	if err != nil {
 		return nil, err
 	}
+	configuration.Registry = config.OverrideFromEnvironment(configuration.Registry)
 
 	if useRegistry {
 		err = connectToRegistry(configuration)
