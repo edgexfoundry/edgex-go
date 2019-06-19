@@ -127,7 +127,7 @@ func TestAddDuplicateAddressableName(t *testing.T) {
 		t.Errorf("addAddressable() with duplicate addressable name should cause error")
 	}
 
-	if _, ok := expectedErr.(*metadataErrors.ErrDuplicateAddressableName); !ok {
+	if _, ok := expectedErr.(*metadataErrors.ErrDuplicateName); !ok {
 		t.Errorf("expected an ErrDuplicateAddressableName, found: %s", expectedErr.Error())
 	}
 }
