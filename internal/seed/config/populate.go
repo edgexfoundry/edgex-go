@@ -83,6 +83,8 @@ func ImportConfiguration(root string, profile string, overwrite bool) error {
 		return err
 	}
 
+	environment := NewEnvironment()
+
 	// For every application directory...
 	for _, serviceName := range dirs {
 		LoggingClient.Debug(fmt.Sprintf("importing: %s/%s", absRoot, serviceName))
@@ -125,7 +127,7 @@ func ImportConfiguration(root string, profile string, overwrite bool) error {
 			return err
 		}
 
-		Registry.PutConfigurationToml(configuration, overwrite)
+		Registry.PutConfigurationToml(environment.OverrideFromEnvironment(serviceName, configuration), overwrite)
 	}
 
 	return nil
