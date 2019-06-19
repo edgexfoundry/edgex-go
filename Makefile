@@ -5,8 +5,7 @@
 #
 
 
-.PHONY: build clean test docker run
-
+.PHONY: build build_security clean test docker run
 
 GO=CGO_ENABLED=0 GO111MODULE=on go
 GOCGO=CGO_ENABLED=1 GO111MODULE=on go
@@ -18,6 +17,10 @@ MICROSERVICES=cmd/config-seed/config-seed cmd/export-client/export-client cmd/ex
 
 .PHONY: $(MICROSERVICES)
 
+SECURITY=cmd/security-setup/pkisetup
+
+.PHONY: $(SECURITY)
+
 VERSION=$(shell cat ./VERSION)
 DOCKER_TAG=$(VERSION)-dev
 
@@ -26,6 +29,8 @@ GOFLAGS=-ldflags "-X github.com/edgexfoundry/edgex-go.Version=$(VERSION)"
 GIT_SHA=$(shell git rev-parse HEAD)
 
 build: $(MICROSERVICES)
+
+build_security: $(MICROSERVICES) $(SECURITY)
 
 cmd/config-seed/config-seed:
 	$(GO) build $(GOFLAGS) -o $@ ./cmd/config-seed
@@ -59,6 +64,9 @@ cmd/sys-mgmt-agent/sys-mgmt-agent:
 
 cmd/support-scheduler/support-scheduler:
 	$(GO) build $(GOFLAGS) -o $@ ./cmd/support-scheduler
+
+cmd/security-setup/pkisetup:
+	$(GO) build $(GOFLAGS) -o ./cmd/security-setup/pkisetup ./cmd/security-setup
 
 clean:
 	rm -f $(MICROSERVICES)

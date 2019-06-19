@@ -41,6 +41,15 @@ Common Options:
     -h, --help                      Show this message
 `
 
+var securitySetupUsageStr = `
+Usage: %s [options]
+Server Options:
+	-c, --config <name>             Provide absolute path to JSON configuration file
+
+Common Options:
+    -h, --help                      Show this message
+`
+
 // usage will print out the flag options for the server.
 func HelpCallback() {
 	msg := fmt.Sprintf(usageStr, os.Args[0])
@@ -50,6 +59,12 @@ func HelpCallback() {
 
 func HelpCallbackConfigSeed() {
 	msg := fmt.Sprintf(configSeedUsageStr, os.Args[0])
+	fmt.Printf("%s\n", msg)
+	os.Exit(0)
+}
+
+func HelpCallbackSecuritySetup() {
+	msg := fmt.Sprintf(securitySetupUsageStr, os.Args[0])
 	fmt.Printf("%s\n", msg)
 	os.Exit(0)
 }
