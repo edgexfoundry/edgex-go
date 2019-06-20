@@ -33,13 +33,13 @@ The next step is to download and build the EdgeX Device SDK for C. You always wa
 
     ./scripts/build.sh
 
-    
+
 
 =====================================
 Starting a new Device Service project
 =====================================
 
-For this guide we're going to use the example template provided by the C SDK as a starting point, and will modify it to generate random integer values. 
+For this guide we're going to use the example template provided by the C SDK as a starting point, and will modify it to generate random integer values.
 
 #. Begin by copying the template example source into a new directory named `example-device-c`::
 
@@ -70,10 +70,7 @@ Customize your Device Service
 
 Up to now you've been building the example device service provided by the C SDK.  In order to change it to a device service that generates random numbers, you need to modify your `template.c` method **template_get_handler** so that it reads as follows:
 
-.. code-block:: c
-    :linenos:
-    :lineno-start: 97
-    :emphasize-lines: 7,12,15,18
+.. code::
 
   for (uint32_t i = 0; i < nreadings; i++)
   {
@@ -111,7 +108,7 @@ You can open random-generator-device.yaml in a text editor.  In this Device Prof
 
     In more real world IoT situations, this deviceResource list could be extensive and could be filled with all different types of data.
 
-    Note also how the Device Profile describes REST commands that can be used by others to call on (or “get”) the random number from the Device Service.   
+    Note also how the Device Profile describes REST commands that can be used by others to call on (or “get”) the random number from the Device Service.
 
 ===============================
 Configuring your Device Service
@@ -119,7 +116,7 @@ Configuring your Device Service
 
 You will now update the configuration for your new Device Service – changing the port it operates on (so as not to conflict with other Device Services), altering the scheduled times of when the data is collected from the Device Service (every 10 seconds), and setting up the initial provisioning of the random number generating device when the service starts.
 
-* Download this :download:`configuration.toml <configuration.toml>` to the ./res folder.  
+* Download this :download:`configuration.toml <configuration.toml>` to the ./res folder.
 
 If you will be running EdgeX inside of Docker containers (which you will at the bottom of this guide) you need to tell your new Device Service to listen on the Docker host IP address (172.17.0.1) instead of **localhost**. To do that, modify the configuration.toml file so that the top section looks like this:
 
