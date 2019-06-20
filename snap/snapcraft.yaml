@@ -974,7 +974,7 @@ parts:
       mkdir -p $SNAPCRAFT_PART_INSTALL/config/security-api-gateway/res
       cp core/res/configuration.toml $SNAPCRAFT_PART_INSTALL/config/security-api-gateway/res/configuration.toml
       sed -i \
-        -e "s@tokenpath = \"res\\\\\\\\admin-token.json\"@tokenpath = \"\$SNAP_DATA/config/security-api-gateway/res/kong-token.json\"@" \
+        -e "s@tokenpath = \"res\\\\\\\\resp-init.json\"@tokenpath = \"\$SNAP_DATA/config/security-api-gateway/res/kong-token.json\"@" \
         -e "s:snis = \"edgex.com\":snis = \"localhost\":" \
         -e "s:host = \"edgex-core-data\":host = \"localhost\":" \
         -e "s:host = \"edgex-core-metadata\":host = \"localhost\":" \
