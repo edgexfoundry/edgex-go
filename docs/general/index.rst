@@ -11,7 +11,7 @@
 
 
 Welcome to the EdgeX Foundry documentation
-==================================
+==========================================
 
 .. toctree::
    :maxdepth: 2
@@ -30,4 +30,3 @@ Search
 ======
 
 * :ref:`search`
-

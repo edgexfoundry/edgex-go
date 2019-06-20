@@ -10,4 +10,5 @@ EdgeX Foundry Microservices Architecture
    Ch-SystemManagement
    Ch-Security
    Ch-ExportServices
+   Ch-ApplServices
    Ch-DeviceServices

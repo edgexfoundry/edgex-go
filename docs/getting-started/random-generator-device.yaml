@@ -14,7 +14,7 @@ deviceResources:
             { type: "random" }
         properties:
             value:
-                { type: "Int32", readWrite: "R", minimum: "0.00", maximum: "100.00"  }
+                { type: "INT32", readWrite: "R", defaultValue: "0.00", minimum: "0.00", maximum: "100.00"  }
             units:
                 { type: "String", readWrite: "R", defaultValue: "" }
 
