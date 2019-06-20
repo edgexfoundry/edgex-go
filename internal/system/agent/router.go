@@ -16,7 +16,6 @@
 package agent
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -26,6 +25,7 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/gorilla/mux"
 
+	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 )
 
@@ -130,7 +130,7 @@ func configHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Add(clients.ContentType, clients.ContentTypeJSON)
-	encode(send, w)
+	pkg.Encode(send, w, LoggingClient)
 	return
 }
 
@@ -151,7 +151,7 @@ func metricsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Add(clients.ContentType, clients.ContentTypeJSON)
-	encode(send, w)
+	pkg.Encode(send, w, LoggingClient)
 	return
 }
 
@@ -171,20 +171,6 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Add(clients.ContentType, clients.ContentTypeJSON)
-	encode(send, w)
+	pkg.Encode(send, w, LoggingClient)
 	return
-}
-
-// Helper function for encoding things for returning from REST calls
-func encode(i interface{}, w http.ResponseWriter) {
-	w.Header().Add(clients.ContentType, clients.ContentTypeJSON)
-
-	enc := json.NewEncoder(w)
-	err := enc.Encode(i)
-
-	if err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
 }

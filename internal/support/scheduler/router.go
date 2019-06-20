@@ -25,6 +25,7 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/gorilla/mux"
 
+	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/errors"
@@ -76,13 +77,13 @@ func pingHandler(w http.ResponseWriter, _ *http.Request) {
 }
 
 func configHandler(w http.ResponseWriter, _ *http.Request) {
-	encode(Configuration, w)
+	pkg.Encode(Configuration, w, LoggingClient)
 }
 
 func metricsHandler(w http.ResponseWriter, _ *http.Request) {
 	s := telemetry.NewSystemUsage()
 
-	encode(s, w)
+	pkg.Encode(s, w, LoggingClient)
 
 	return
 }
@@ -110,7 +111,7 @@ func intervalHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		encode(intervals, w)
+		pkg.Encode(intervals, w, LoggingClient)
 		break
 		// Post a new Interval
 	case http.MethodPost:
@@ -221,7 +222,7 @@ func intervalByIdHandler(w http.ResponseWriter, r *http.Request) {
 			LoggingClient.Error(err.Error())
 			return
 		}
-		encode(e, w)
+		pkg.Encode(e, w, LoggingClient)
 	case http.MethodDelete:
 		if err = deleteIntervalById(id); err != nil {
 			switch err.(type) {
@@ -278,7 +279,7 @@ func intervalByNameHandler(w http.ResponseWriter, r *http.Request) {
 			LoggingClient.Error(err.Error())
 			return
 		}
-		encode(interval, w)
+		pkg.Encode(interval, w, LoggingClient)
 	case http.MethodDelete:
 		if err = deleteIntervalByName(name); err != nil {
 
@@ -324,7 +325,7 @@ func intervalActionHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		encode(intervalActions, w)
+		pkg.Encode(intervalActions, w, LoggingClient)
 		break
 		// Post a new IntervalAction
 	case http.MethodPost:
@@ -433,7 +434,7 @@ func intervalActionByIdHandler(w http.ResponseWriter, r *http.Request) {
 			LoggingClient.Error(err.Error())
 			return
 		}
-		encode(intervalAction, w)
+		pkg.Encode(intervalAction, w, LoggingClient)
 		// Post a new Interval Action
 	case http.MethodDelete:
 		if err = deleteIntervalActionById(id); err != nil {
@@ -485,7 +486,7 @@ func intervalActionByNameHandler(w http.ResponseWriter, r *http.Request) {
 			LoggingClient.Error(err.Error())
 			return
 		}
-		encode(intervalAction, w)
+		pkg.Encode(intervalAction, w, LoggingClient)
 		// Post a new Interval Action
 	case http.MethodDelete:
 		if err = deleteIntervalActionByName(name); err != nil {
@@ -533,7 +534,7 @@ func intervalActionByTargetHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		encode(intervalActions, w)
+		pkg.Encode(intervalActions, w, LoggingClient)
 		break
 	}
 }
@@ -567,7 +568,7 @@ func intervalActionByIntervalHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		encode(intervalActions, w)
+		pkg.Encode(intervalActions, w, LoggingClient)
 		break
 	}
 }
@@ -605,21 +606,5 @@ func scrubIntervalActionsHandler(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(strconv.Itoa(count)))
-	}
-}
-
-// ************************ HELPER FUNCTION(S) **********************************
-
-// Helper function for encoding things for returning from REST calls
-func encode(i interface{}, w http.ResponseWriter) {
-	w.Header().Add("Content-Type", "application/json")
-
-	enc := json.NewEncoder(w)
-	err := enc.Encode(i)
-	// Problems encoding
-	if err != nil {
-		LoggingClient.Error("Error encoding the data: " + err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
 	}
 }

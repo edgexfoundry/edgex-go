@@ -21,6 +21,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/gorilla/mux"
@@ -80,7 +81,7 @@ func transmissionBySlugHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	encode(t, w)
+	pkg.Encode(t, w, LoggingClient)
 
 }
 
@@ -122,7 +123,7 @@ func transmissionBySlugAndStartEndHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	encode(t, w)
+	pkg.Encode(t, w, LoggingClient)
 
 }
 
@@ -164,7 +165,7 @@ func transmissionByStartEndHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	encode(t, w)
+	pkg.Encode(t, w, LoggingClient)
 
 }
 
@@ -198,7 +199,7 @@ func transmissionByStartHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	encode(t, w)
+	pkg.Encode(t, w, LoggingClient)
 
 }
 
@@ -234,7 +235,7 @@ func transmissionByEndHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	encode(t, w)
+	pkg.Encode(t, w, LoggingClient)
 
 }
 
@@ -274,7 +275,7 @@ func transmissionByStatusHandler(w http.ResponseWriter, r *http.Request, status 
 			return
 		}
 
-		encode(t, w)
+		pkg.Encode(t, w, LoggingClient)
 	}
 }
 
