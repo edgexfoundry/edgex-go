@@ -46,22 +46,22 @@ func LoadRestRoutes() *mux.Router {
 	// Interval
 	r.HandleFunc(clients.ApiIntervalRoute, intervalHandler).Methods(http.MethodGet, http.MethodPut, http.MethodPost)
 	interval := r.PathPrefix(clients.ApiIntervalRoute).Subrouter()
-	interval.HandleFunc("/{id}", intervalByIdHandler).Methods(http.MethodGet, http.MethodDelete)
-	interval.HandleFunc("/name/{name}", intervalByNameHandler).Methods(http.MethodGet, http.MethodDelete)
+	interval.HandleFunc("/{"+ID+"}", intervalByIdHandler).Methods(http.MethodGet, http.MethodDelete)
+	interval.HandleFunc("/"+NAME+"/{"+NAME+"}", intervalByNameHandler).Methods(http.MethodGet, http.MethodDelete)
 
 	// Scrub "Intervals and IntervalActions"
-	interval.HandleFunc("/scrub/", scrubAllHandler).Methods(http.MethodDelete)
+	interval.HandleFunc("/"+SCRUB+"/", scrubAllHandler).Methods(http.MethodDelete)
 
 	// IntervalAction
 	r.HandleFunc(clients.ApiIntervalActionRoute, intervalActionHandler).Methods(http.MethodGet, http.MethodPut, http.MethodPost)
 	intervalAction := r.PathPrefix(clients.ApiIntervalActionRoute).Subrouter()
-	intervalAction.HandleFunc("/{id}", intervalActionByIdHandler).Methods(http.MethodGet, http.MethodDelete)
-	intervalAction.HandleFunc("/name/{name}", intervalActionByNameHandler).Methods(http.MethodGet, http.MethodDelete)
-	intervalAction.HandleFunc("/target/{target}", intervalActionByTargetHandler).Methods(http.MethodGet)
-	intervalAction.HandleFunc("/interval/{interval}", intervalActionByIntervalHandler).Methods(http.MethodGet)
+	intervalAction.HandleFunc("/{"+ID+"}", intervalActionByIdHandler).Methods(http.MethodGet, http.MethodDelete)
+	intervalAction.HandleFunc("/"+NAME+"/{"+NAME+"}", intervalActionByNameHandler).Methods(http.MethodGet, http.MethodDelete)
+	intervalAction.HandleFunc("/"+TARGET+"/{"+TARGET+"}", intervalActionByTargetHandler).Methods(http.MethodGet)
+	intervalAction.HandleFunc("/"+INTERVAL+"/{"+INTERVAL+"}", intervalActionByIntervalHandler).Methods(http.MethodGet)
 
 	// Scrub "IntervalActions"
-	intervalAction.HandleFunc("/scrub/", scrubIntervalActionsHandler).Methods(http.MethodDelete)
+	intervalAction.HandleFunc("/"+SCRUB+"/", scrubIntervalActionsHandler).Methods(http.MethodDelete)
 
 	r.Use(correlation.ManageHeader)
 	r.Use(correlation.OnResponseComplete)

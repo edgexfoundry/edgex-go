@@ -30,6 +30,8 @@ const (
 	ENABLED              = "ENABLED"
 	SCHEDULER_TIMELAYOUT = "20060102T150405" /** Scheduler **/
 	TIMELAYOUT           = "20060102T150405" /** Scheduler **/
+	SCRUB                = "scrub"
+	TARGET               = "target"
 
 	/* ---------------- URL PARAM NAMES -----------------------*/
 	ContentTypeKey       = "Content-Type"

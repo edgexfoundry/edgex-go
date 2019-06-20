@@ -60,7 +60,7 @@ func restAddAddressable(w http.ResponseWriter, r *http.Request) {
 	id, err := addAddressable(a)
 	if err != nil {
 		switch err.(type) {
-		case *types.ErrDuplicateAddressableName:
+		case *types.ErrDuplicateName:
 			http.Error(w, err.Error(), http.StatusConflict)
 		case *types.ErrEmptyAddressableName:
 			http.Error(w, err.Error(), http.StatusBadRequest)
