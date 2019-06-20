@@ -7,13 +7,13 @@
 package client
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/gorilla/mux"
 
+	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
 )
@@ -25,27 +25,13 @@ func pingHandler(w http.ResponseWriter, _ *http.Request) {
 }
 
 func configHandler(w http.ResponseWriter, _ *http.Request) {
-	encode(Configuration, w)
-}
-
-// Helper function for encoding things for returning from REST calls
-func encode(i interface{}, w http.ResponseWriter) {
-	w.Header().Add("Content-Type", "application/json")
-
-	enc := json.NewEncoder(w)
-	err := enc.Encode(i)
-	// Problems encoding
-	if err != nil {
-		LoggingClient.Error("Error encoding the data: " + err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	pkg.Encode(Configuration, w, LoggingClient)
 }
 
 func metricsHandler(w http.ResponseWriter, _ *http.Request) {
 	s := telemetry.NewSystemUsage()
 
-	encode(s, w)
+	pkg.Encode(s, w, LoggingClient)
 
 	return
 }

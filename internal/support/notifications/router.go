@@ -18,6 +18,8 @@ package notifications
 import (
 	"net/http"
 
+	"github.com/edgexfoundry/edgex-go/internal/pkg"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/gorilla/mux"
 
@@ -86,13 +88,13 @@ func LoadRestRoutes() *mux.Router {
 }
 
 func configHandler(w http.ResponseWriter, _ *http.Request) {
-	encode(Configuration, w)
+	pkg.Encode(Configuration, w, LoggingClient)
 }
 
 func metricsHandler(w http.ResponseWriter, _ *http.Request) {
 	s := telemetry.NewSystemUsage()
 
-	encode(s, w)
+	pkg.Encode(s, w, LoggingClient)
 
 	return
 }

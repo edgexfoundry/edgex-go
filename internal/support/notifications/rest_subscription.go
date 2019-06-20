@@ -20,6 +20,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/gorilla/mux"
@@ -47,7 +48,7 @@ func subscriptionHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			return
 		}
-		encode(subscriptions, w)
+		pkg.Encode(subscriptions, w, LoggingClient)
 
 		// Modify (an existing) subscription
 	case http.MethodPut:
@@ -127,7 +128,7 @@ func subscriptionByIDHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		encode(s, w)
+		pkg.Encode(s, w, LoggingClient)
 		break
 	case http.MethodDelete:
 		_, err := dbClient.GetSubscriptionById(id)
@@ -172,11 +173,11 @@ func subscriptionsBySlugHandler(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 			LoggingClient.Error(err.Error())
-			encode(s, w)
+			pkg.Encode(s, w, LoggingClient)
 			return
 		}
 
-		encode(s, w)
+		pkg.Encode(s, w, LoggingClient)
 	case http.MethodDelete:
 		_, err := dbClient.GetSubscriptionBySlug(slug)
 		if err != nil {
@@ -223,7 +224,7 @@ func subscriptionsByCategoriesHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	encode(s, w)
+	pkg.Encode(s, w, LoggingClient)
 
 }
 
@@ -248,7 +249,7 @@ func subscriptionsByLabelsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	encode(s, w)
+	pkg.Encode(s, w, LoggingClient)
 
 }
 
@@ -274,7 +275,7 @@ func subscriptionsByCategoriesLabelsHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	encode(s, w)
+	pkg.Encode(s, w, LoggingClient)
 
 }
 
@@ -300,6 +301,6 @@ func subscriptionsByReceiverHandler(w http.ResponseWriter, r *http.Request) {
 		LoggingClient.Error(err.Error())
 		return
 	}
-	encode(s, w)
+	pkg.Encode(s, w, LoggingClient)
 
 }
