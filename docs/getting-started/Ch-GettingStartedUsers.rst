@@ -5,9 +5,9 @@ Getting Started - Users
 ============
 Introduction
 ============
-These instructions are for Users to obtain and run EdgeX Foundry. (Developers should read: :doc:`../Ch-GettingStartedDevelopers`) 
+These instructions are for Users to obtain and run EdgeX Foundry. (Developers should read: :doc:`../Ch-GettingStartedDevelopers`)
 
-EdgeX Foundry is a collection of more than a dozen microservices that are deployed to provide minimal edge platform capability. EdgeX Foundry microservice source code can be downloaded and built into deployment artifacts, but if you are not a Developer, or if you do not have a specific need to run EdgeX Foundry "natively," you do not need to download source code. 
+EdgeX Foundry is a collection of more than a dozen microservices that are deployed to provide minimal edge platform capability. EdgeX Foundry microservice source code can be downloaded and built into deployment artifacts, but if you are not a Developer, or if you do not have a specific need to run EdgeX Foundry "natively," you do not need to download source code.
 
 Users have the easier option to use Docker and run EdgeX Foundry in microservice Docker containers.  EdgeX Foundry microservices are automatically built and containerized as new code is checked into the source repository. Therefore, "Dockerized" EdgeX Foundry is not only easier to obtain and deploy to your environment, but can also have the most up-to-date EdgeX Foundry microservices (depending on which container registry is used to get the microservices).
 
@@ -32,7 +32,7 @@ EdgeX Foundry is an operating system (OS)-agnostic and hardware (HW)-agnostic Io
 ==========================================
 Get & Run EdgeX Foundry
 ==========================================
-|
+
 .. image:: EdgeX_GettingStartedUsrInstallDocker.png
 
 -------------------------------
@@ -40,23 +40,23 @@ Install Docker & Docker Compose
 -------------------------------
 To run Dockerized EdgeX Foundry, you need to install Docker.  See https://docs.docker.com/install/ to learn how to obtain and install Docker.  If you are new to using Docker, the same web site provides you additional information.  The following short video has is also very informative https://www.youtube.com/watch?time_continue=3&v=VhabrYF1nms
 
-Docker Compose is used to orchestrate the fetch (or pull), installation, and the start and stop of the EdgeX Foundry microservice containers. See:  https://docs.docker.com/compose/ to learn more about Docker Compose. 
+Docker Compose is used to orchestrate the fetch (or pull), installation, and the start and stop of the EdgeX Foundry microservice containers. See:  https://docs.docker.com/compose/ to learn more about Docker Compose.
 
 Docker Compose is automatically installed with Docker for Mac and Windows users. See: https://docs.docker.com/compose/install/ to determine if your Docker installation already contains Docker Compose, and how to install Compose if it does not.
 
-You do not need to be an expert with Docker to obtain and run EdgeX Foundry.  The instructions in this guide provide you with the steps to get EdgeX Foundry running in your environment. Some basic knowledge of these two technologies of Docker and Docker Compose, are nice to have, but not required. Basic Docker and Docker Compose commands, enable you to run, update, and diagnose issues within EdgeX Foundry. 
+You do not need to be an expert with Docker to obtain and run EdgeX Foundry.  The instructions in this guide provide you with the steps to get EdgeX Foundry running in your environment. Some basic knowledge of these two technologies of Docker and Docker Compose, are nice to have, but not required. Basic Docker and Docker Compose commands, enable you to run, update, and diagnose issues within EdgeX Foundry.
 
 ---------------------------------------
 Download the EdgeX Foundry Compose File
 ---------------------------------------
-|
+
 .. image:: EdgeX_GettingStartedUsrDownloadDockerCompose.png
 
-After installing Docker and Docker Compose, you need the Docker Compose file that is a manifest of all the EdgeX Foundry microservices.  EdgeX Foundry has over 12 microservices, each deployed in their own Docker container, in a typical EdgeX Foundry deployment. 
+After installing Docker and Docker Compose, you need the Docker Compose file that is a manifest of all the EdgeX Foundry microservices.  EdgeX Foundry has over 12 microservices, each deployed in their own Docker container, in a typical EdgeX Foundry deployment.
 
 If you know Docker and understand the architecture of EdgeX Foundry and its microservices, you can manually issue Docker commands to download and run each of the EdgeX Foundry containers yourself. Situations exist, particularly in development situations, when you want to have this manual control even though manually issuing commands can be a bit tedious. More instructions are provided in this documentation set if you need to have more control of downloading and running EdgeX Foundry microservices.
 
-Getting and running EdgeX Foundry microservices can also be accomplished more easily provided you have the Docker Compose file that specifies to Docker/Docker Compose which containers you want, and how you want to run those containers. The EdgeX Foundry development team provides you with Docker Compose files for each release through the EdgeX Foundry GitHub repository. To obtain and run EdgeX Foundry, visit the project GitHub and download (or copy the contents) of the EdgeX Foundry Docker Compose file suitable to the version you wish to use - to a local directory.  
+Getting and running EdgeX Foundry microservices can also be accomplished more easily provided you have the Docker Compose file that specifies to Docker/Docker Compose which containers you want, and how you want to run those containers. The EdgeX Foundry development team provides you with Docker Compose files for each release through the EdgeX Foundry GitHub repository. To obtain and run EdgeX Foundry, visit the project GitHub and download (or copy the contents) of the EdgeX Foundry Docker Compose file suitable to the version you wish to use - to a local directory.
 
 The collection of the EdgeX Foundry Docker compose files are found here:  https://github.com/edgexfoundry/developer-scripts/tree/master/compose-files
 
@@ -64,7 +64,7 @@ Note that most of the Docker Compose files carry a specific version identifier (
 
 A Docker Compose file is a manifest file, which lists:
 
-* The Docker containers (or more precisely the Docker container images) that should be downloaded, 
+* The Docker containers (or more precisely the Docker container images) that should be downloaded,
 * The order in which the containers should be started
 * The parameters under which the containers should be run
 
@@ -72,7 +72,7 @@ A Docker Compose file is a manifest file, which lists:
 -----------------
 Run EdgeX Foundry
 -----------------
-|
+
 .. image:: EdgeX_GettingStartedUsrRunEdgex.png
 
 Now that you have the EdgeX Foundry Docker Compose file, you are ready to run EdgeX Foundry. Follow these steps to get the container images and start EdgeX Foundry!
@@ -93,46 +93,45 @@ The -d option indicates you want the Docker Compose to run the EdgeX containers 
 
 In some situations, you may want to bring up the containers one at a time using Docker Compose.  If you are a developer or if you don't want to bring up all of EdgeX (perhaps because you are just working with a few of the services), you can issue Docker Compose commands to pull and start each EdgeX container separately.  Because some containers are dependent on others, you should try to start them in a specific order.  The table below provides you the commands to start each of the EdgeX microservices in the order they should be started (based on their dependencies with one another).  Essentially, the single Docker Compose up command (docker-compose up -d) uses the manifest to run all of the individual up command listed here in order.
 
-+------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-|   **Docker Command**               |   **Description**                                                                   |  **Notes**     |
-+====================================+=====================================================================================+================================================+
-| **docker-compose pull**            |  Pull down, but don't start, all the EdgeX Foundry microservices                    | Docker Compose will indicate when all the      |
-|                                    |                                                                                     | containers have been pulled successfully       |     
-+------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-| docker-compose up -d volume        |  Start the EdgeX Foundry file volume--must be done before the other services are    |                                                |
-|                                    |  started                                                                            |                                                |   
-+------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-| docker-compose up -d consul        |  Start the configuration and registry microservice which all services must          |                                                |
-|                                    |  register with and get their configuration from                                     |                                                | 
-+------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-| docker-compose up -d config-seed   |  Populate the configuration/registry microservice                                   |                                                |
-+------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-| docker-compose up -d mongo         |  Start the NoSQL MongoDB container                                                  | An embedded initialization script configures   | 
-|                                    |                                                                                     | the database for EdgeX documents               | 
-+------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-| docker-compose up -d logging       |  Start the logging microservice - used by all micro services that make log entries  |                                                | 
-+------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-| docker-compose up -d notifications |  Start the notifications and alerts microservice--used by many of the microservices |                                                |
-+------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-| docker-compose up -d metadata      |  Start the Core Metadata microservice                                               |                                                | 
-+------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-| docker-compose up -d data          |  Start the Core Data microservice                                                   |                                                | 
-+------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-| docker-compose up -d command       |  Start the Core Command microservice                                                |                                                | 
-+------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-| docker-compose up -d scheduler     |  Start the scheduling microservice -used by many of the microservices               |                                                | 
-+------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-| docker-compose up -d export-client |  Start the Export Client registration microservice                                  |                                                | 
-+------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-| docker-compose up -d export-distro |  Start the Export Distribution microservice                                         |                                                | 
-+------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-| docker-compose up -d rulesengine   |  Start the Rules Engine microservice                                                | this service is still implemented in Java and  | 
-|                                    |                                                                                     | takes more time to start                       |
-+------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
-| docker-compose up -d device-virtual|  Start the virtual device service                                                   | this service is still implemented in Java and  | 
-|                                    |  This service mocks a sensor sending data to EdgX and is used for demonstration     | takes more time to start                       |
-|                                    |                                                                                     |                                                |
-+------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------+
++------------------------------------+--------------------------------------------------------------------------------------+------------------------------------------------+
+|   **Docker Command**               |   **Description**                                                                    |  **Notes**                                     |
++====================================+======================================================================================+================================================+
+| **docker-compose pull**            |  Pull down, but don't start, all the EdgeX Foundry microservices                     | | Docker Compose will indicate when all the    |
+|                                    |                                                                                      | | containers have been pulled successfully     |
++------------------------------------+--------------------------------------------------------------------------------------+------------------------------------------------+
+| docker-compose up -d volume        |  | Start the EdgeX Foundry file volume--must be done before the other services       |                                                |
+|                                    |  | are started                                                                       |                                                |
++------------------------------------+--------------------------------------------------------------------------------------+------------------------------------------------+
+| docker-compose up -d consul        |  | Start the configuration and registry microservice which all services must         |                                                |
+|                                    |  | register with and get their configuration from                                    |                                                |
++------------------------------------+--------------------------------------------------------------------------------------+------------------------------------------------+
+| docker-compose up -d config-seed   |  Populate the configuration/registry microservice                                    |                                                |
++------------------------------------+--------------------------------------------------------------------------------------+------------------------------------------------+
+| docker-compose up -d mongo         |  Start the NoSQL MongoDB container                                                   | | An embedded initialization script configures |
+|                                    |                                                                                      | | the database for EdgeX documents             |
++------------------------------------+--------------------------------------------------------------------------------------+------------------------------------------------+
+| docker-compose up -d logging       |  Start the logging microservice - used by all micro services that make log entries   |                                                |
++------------------------------------+--------------------------------------------------------------------------------------+------------------------------------------------+
+| docker-compose up -d notifications |  Start the notifications and alerts microservice--used by many of the microservices  |                                                |
++------------------------------------+--------------------------------------------------------------------------------------+------------------------------------------------+
+| docker-compose up -d metadata      |  Start the Core Metadata microservice                                                |                                                |
++------------------------------------+--------------------------------------------------------------------------------------+------------------------------------------------+
+| docker-compose up -d data          |  Start the Core Data microservice                                                    |                                                |
++------------------------------------+--------------------------------------------------------------------------------------+------------------------------------------------+
+| docker-compose up -d command       |  Start the Core Command microservice                                                 |                                                |
++------------------------------------+--------------------------------------------------------------------------------------+------------------------------------------------+
+| docker-compose up -d scheduler     |  Start the scheduling microservice -used by many of the microservices                |                                                |
++------------------------------------+--------------------------------------------------------------------------------------+------------------------------------------------+
+| docker-compose up -d export-client |  Start the Export Client registration microservice                                   |                                                |
++------------------------------------+--------------------------------------------------------------------------------------+------------------------------------------------+
+| docker-compose up -d export-distro |  Start the Export Distribution microservice                                          |                                                |
++------------------------------------+--------------------------------------------------------------------------------------+------------------------------------------------+
+| docker-compose up -d rulesengine   |  Start the Rules Engine microservice                                                 | | This service is still implemented in Java    |
+|                                    |                                                                                      | | and takes more time to start                 |
++------------------------------------+--------------------------------------------------------------------------------------+------------------------------------------------+
+| docker-compose up -d device-virtual|  | Start the virtual device service                                                  |                                                |
+|                                    |  | This service mocks a sensor sending data to EdgX and is used for demonstration    |                                                |
++------------------------------------+--------------------------------------------------------------------------------------+------------------------------------------------+
 
 Run a **"docker-compose ps"** command to confirm that all the containers have been downloaded and started.  (Note: initialization or seed containers, like config-seed, will have exited as there job is just to initialize the associated service and then exit.)
 
@@ -225,25 +224,25 @@ Below is a list of the EdgeX Foundry microservices, their ports, and "ping" URLs
 +---------------------------------+------------------------------+----------------------------+-------------+-----------------------------------+
 | **EdgeX Foundry Microservice**  | **Docker Compose Container** | **Container Name**         | **Port**    |  **Ping URL**                     |
 +=================================+==============================+============================+=============+===================================+
-| Core Command                    |  command                     | edgex-core-command         | 48082       | http://[host]:48082/api/v1/ping   |    
+| Core Command                    |  command                     | edgex-core-command         | 48082       | http://[host]:48082/api/v1/ping   |
 +---------------------------------+------------------------------+----------------------------+-------------+-----------------------------------+
-| Core Data                       |  data                        | edgex-core-data            | 48080       | http://[host]:48080/api/v1/ping   |    
+| Core Data                       |  data                        | edgex-core-data            | 48080       | http://[host]:48080/api/v1/ping   |
 +---------------------------------+------------------------------+----------------------------+-------------+-----------------------------------+
-| Core Metadata                   |  metadata                    | edgex-core-metadata        | 48081       | http://[host]:48081/api/v1/ping   |    
+| Core Metadata                   |  metadata                    | edgex-core-metadata        | 48081       | http://[host]:48081/api/v1/ping   |
 +---------------------------------+------------------------------+----------------------------+-------------+-----------------------------------+
-| Export Client                   |  export-client               | edgex-export-client        | 48071       | http://[host]:48071/api/v1/ping   |    
+| Export Client                   |  export-client               | edgex-export-client        | 48071       | http://[host]:48071/api/v1/ping   |
 +---------------------------------+------------------------------+----------------------------+-------------+-----------------------------------+
-| Export Distribution             |  export-distro               | edgex-export-distro        | 48070       | http://[host]:48070/api/v1/ping   |    
+| Export Distribution             |  export-distro               | edgex-export-distro        | 48070       | http://[host]:48070/api/v1/ping   |
 +---------------------------------+------------------------------+----------------------------+-------------+-----------------------------------+
-| Rules Engine                    |  rulesengine                 | edgex-support-rulesengine  | 48075       | http://[host]:48075/api/v1/ping   |    
+| Rules Engine                    |  rulesengine                 | edgex-support-rulesengine  | 48075       | http://[host]:48075/api/v1/ping   |
 +---------------------------------+------------------------------+----------------------------+-------------+-----------------------------------+
-| Support Logging                 |  logging                     | edgex-support-logging      | 48061       | http://[host]:48061/api/v1/ping   |    
+| Support Logging                 |  logging                     | edgex-support-logging      | 48061       | http://[host]:48061/api/v1/ping   |
 +---------------------------------+------------------------------+----------------------------+-------------+-----------------------------------+
-| Support Notifications           |  notifications               | edgex-support-notifications| 48060       | http://[host]:48060/api/v1/ping   |    
+| Support Notifications           |  notifications               | edgex-support-notifications| 48060       | http://[host]:48060/api/v1/ping   |
 +---------------------------------+------------------------------+----------------------------+-------------+-----------------------------------+
-| Support Scheduler               |  scheduler                   | edgex-support-scheduler    | 48085       | http://[host]:48085/api/v1/ping   |    
+| Support Scheduler               |  scheduler                   | edgex-support-scheduler    | 48085       | http://[host]:48085/api/v1/ping   |
 +---------------------------------+------------------------------+----------------------------+-------------+-----------------------------------+
-| Virtual Device Service          |  device-virtual              | edgex-device-virtual       | 49990       | http://[host]:49990/api/v1/ping   |    
+| Virtual Device Service          |  device-virtual              | edgex-device-virtual       | 49990       | http://[host]:49990/api/v1/ping   |
 +---------------------------------+------------------------------+----------------------------+-------------+-----------------------------------+
 
 The "host" address for the URLs above is determined by the Docker Engine. The default Docker Engine IP address varies by operating system (this can be configured on your system-see the Docker documentation for details).

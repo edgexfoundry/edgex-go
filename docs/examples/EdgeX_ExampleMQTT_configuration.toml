@@ -4,7 +4,6 @@ Port = 49982
 ConnectRetries = 3
 Labels = []
 OpenMsg = "device mqtt started"
-MaxResultCount = 50000
 Timeout = 5000
 EnableAsyncReadings = true
 AsyncBufferSize = 16
@@ -58,24 +57,37 @@ Level = "DEBUG"
   Profile = "Test.Device.MQTT.Profile"
   Description = "MQTT device is created for test purpose"
   Labels = [ "MQTT", "test"]
-  [DeviceList.Addressable]
-    name = "Gateway address"
-    Protocol = "TCP"
-    Address = "0.0.0.0"
-    Port = 1883
-    Publisher = "CommandPublisher"
-    user = "admin"
-    password = "public"
-    topic = "CommandTopic"
+  [DeviceList.Protocols]
+    [DeviceList.Protocols.mqtt]
+       Schema = "tcp"
+       Host = "0.0.0.0"
+       Port = "1883"
+       ClientId = "CommandPublisher"
+       User = "admin"
+       Password = "public"
+       Topic = "CommandTopic"
+  [[DeviceList.AutoEvents]]
+    Frequency = "20s"
+    OnChange = false
+    Resource = "testrandfloat32"
 
-# Pre-define Schedule Configuration
-[[Schedules]]
-Name = "mqtt-30sec-schedule"
-Frequency = "PT30S"
-
-[[ScheduleEvents]]
-Name = "readRandnum"
-Schedule = "mqtt-30sec-schedule"
-  [ScheduleEvents.Addressable]
-  HTTPMethod = "GET"
-Path = "/api/v1/device/name/MQTT test device/testrandnum"
+# Driver configs
+[Driver]
+IncomingSchema = "tcp"
+IncomingHost = "0.0.0.0"
+IncomingPort = "1883"
+IncomingUser = "admin"
+IncomingPassword = "public"
+IncomingQos = "0"
+IncomingKeepAlive = "3600"
+IncomingClientId = "IncomingDataSubscriber"
+IncomingTopic = "DataTopic"
+ResponseSchema = "tcp"
+ResponseHost = "0.0.0.0"
+ResponsePort = "1883"
+ResponseUser = "admin"
+ResponsePassword = "public"
+ResponseQos = "0"
+ResponseKeepAlive = "3600"
+ResponseClientId = "CommandResponseSubscriber"
+ResponseTopic = "ResponseTopic"

@@ -45,6 +45,7 @@ COPY getting-started ./
 COPY walk-through ./
 COPY quick-start ./
 COPY security/* ./
+COPY application/* ./
 
 
 COPY entrypoint.sh /entrypoint.sh

@@ -144,8 +144,6 @@ After that, simply import "github.com/edgexfoundry/go-mod-core-contracts/clients
         client.Error("some info")
     }
 
-::
-
 Log statements will only be written to the log if they match or exceed the minimum LogLevel set in the configuration (described above). This setting can be changed on the fly without restarting the service to help with real-time troubleshooting.
 
 Log statements are currently output in a simple key/value format. For example:
@@ -154,15 +152,11 @@ Log statements are currently output in a simple key/value format. For example:
 
     level=INFO ts=2019-05-16T22:23:44.424176Z app=edgex-support-notifications source=cleanup.go:32 msg="Cleaning up of notifications and transmissions"
 
-::
-
 Everything up to the "msg" key is handled by the logging infrastructure. You get the log level, timestamp, service name and the location in the source code of the logging statement for free with every method invocation on the LoggingClient. The "msg" key's value is the first parameter passed to one of the Logging Client methods shown above. So to extend the usage example a bit, the above calls would result in something like:
 
 ::
 
     level=INFO ts=2019-05-16T22:23:44.424176Z app=logging-demo source=main.go:11 msg="some info"
-
-::
 
 You can add as many custom key/value pairs as you like by simply adding them to the method call:
 
@@ -170,15 +164,11 @@ You can add as many custom key/value pairs as you like by simply adding them to 
 
     client.Info("some info","key1","abc","key2","def")
 
-::
-
 This would result in:
 
 ::
 
     level=INFO ts=2019-05-16T22:23:44.424176Z app=logging-demo source=main.go:11 msg="some info" key1=abc key2=def
-
-::
 
 Quotes are only put around values that contain spaces.
 
@@ -188,7 +178,7 @@ EdgeX Logging Keys
 Within the Edgex Go reference implementation, log entries are currently written as a set of key/value pairs. We may change this later to be more of a struct type than can be formatted according to the user’s requirements (JSON, XML, system, etc). In that case, the targeted struct should contain properties that support the keys utilized by the system and described below.
 
 +-----------------------------------------------+---------------------------------------------------------------------------------------+
-|   **Key**                                     |   **Intent*                                                                           |
+|   **Key**                                     |   **Intent**                                                                          |
 +===============================================+=======================================================================================+
 | level                                         | Indicates the log level of the individual log entry (INFO, DEBUG, ERROR, etc)         |
 +-----------------------------------------------+---------------------------------------------------------------------------------------+
@@ -215,8 +205,3 @@ Within the Edgex Go reference implementation, log entries are currently written 
 +-----------------------------------------------+---------------------------------------------------------------------------------------+
 
 Additional keys can be added as need warrants. This document should be kept updated to reflect their inclusion and purpose.
-
-
-
-
-
