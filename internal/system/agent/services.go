@@ -26,7 +26,10 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/general"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
+	"github.com/edgexfoundry/go-mod-core-contracts/requests/states/configuration"
 )
+
+var sc *configuration.SetConfigRequest
 
 const (
 	START   = "start"
@@ -172,7 +175,7 @@ func getConfig(services []string, ctx context.Context) (ConfigRespMap, error) {
 	return c, nil
 }
 
-func setConfig(services []string, key string, value string, ctx context.Context) error {
+func setConfig(services []string, sc *configuration.SetConfigRequest, ctx context.Context) error {
 
 	/*
 	  Summary of goals that this func sets out to achieve, at this time:
@@ -183,8 +186,8 @@ func setConfig(services []string, key string, value string, ctx context.Context)
 	*/
 
 	LoggingClient.Info(fmt.Sprintf("service %s whose config the SMA will set (aka updated)", services))
-	LoggingClient.Info(fmt.Sprintf("key %s to use for config updated", key))
-	LoggingClient.Info(fmt.Sprintf("value %s to use for config updated", value))
+	LoggingClient.Info(fmt.Sprintf("key %s to use for config updated", sc.Key))
+	LoggingClient.Info(fmt.Sprintf("value %s to use for config updated", sc.Value))
 
 	// Loop through requested services for which the provided (K,V) pair ("key","value") needs to be updated.
 	for _, service := range services {
@@ -235,8 +238,8 @@ func setConfig(services []string, key string, value string, ctx context.Context)
 					// Add the service key to the map where the value is the respective GeneralClient
 					generalClients[e.ServiceId] = general.NewGeneralClient(params, startup.Endpoint{RegistryClient: &registryClient})
 
-					LoggingClient.Info(fmt.Sprintf("set config with the (K,V) of (%s,%s) for service %s", key, value, service))
-					err := generalClients[e.ServiceId].SetConfiguration(service, key, value, ctx)
+					LoggingClient.Info(fmt.Sprintf("set config with the (K,V) of (%s,%s) for service %s", sc.Key, sc.Value, service))
+					err := generalClients[e.ServiceId].SetConfiguration(service, sc, ctx)
 					if err != nil {
 						LoggingClient.Error(err.Error())
 					}
@@ -248,8 +251,8 @@ func setConfig(services []string, key string, value string, ctx context.Context)
 			// Simply use one of the ready-made list of clients.
 			LoggingClient.Info(fmt.Sprintf("service %s is known to SMA as being in the ready-made list of clients", service))
 
-			LoggingClient.Info(fmt.Sprintf("set config with the (K,V) of (%s,%s) for service %s", key, value, service))
-			err := generalClients[service].SetConfiguration(service, key, value, ctx)
+			LoggingClient.Info(fmt.Sprintf("set config with the (K,V) of (%s,%s) for service %s", sc.Key, sc.Value, service))
+			err := generalClients[service].SetConfiguration(service, sc, ctx)
 			if err != nil {
 				LoggingClient.Error(err.Error())
 			}

@@ -27,6 +27,7 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
+	"github.com/edgexfoundry/go-mod-core-contracts/requests/states/configuration"
 )
 
 func LoadRestRoutes() *mux.Router {
@@ -150,7 +151,7 @@ func configHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		sc := models.SetConfig{}
+		sc := configuration.SetConfigRequest{}
 		err = sc.UnmarshalJSON(b)
 
 		if err != nil {
@@ -159,7 +160,7 @@ func configHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		err = setConfig(services, sc.Key, sc.Value, ctx)
+		err = setConfig(services, &sc, ctx)
 		if err != nil {
 			LoggingClient.Error(err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
