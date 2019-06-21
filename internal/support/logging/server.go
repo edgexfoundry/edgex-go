@@ -20,6 +20,7 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/gorilla/mux"
 
+	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
@@ -32,7 +33,7 @@ func pingHandler(w http.ResponseWriter, _ *http.Request) {
 }
 
 func configHandler(w http.ResponseWriter, _ *http.Request) {
-	encode(Configuration, w)
+	pkg.Encode(Configuration, w, LoggingClient)
 }
 
 func addLog(w http.ResponseWriter, r *http.Request) {
@@ -220,23 +221,9 @@ func delLogs(w http.ResponseWriter, r *http.Request) {
 func metricsHandler(w http.ResponseWriter, _ *http.Request) {
 	s := telemetry.NewSystemUsage()
 
-	encode(s, w)
+	pkg.Encode(s, w, LoggingClient)
 
 	return
-}
-
-// Helper function for encoding things for returning from REST calls
-func encode(i interface{}, w http.ResponseWriter) {
-	w.Header().Add("Content-Type", "application/json")
-
-	enc := json.NewEncoder(w)
-	err := enc.Encode(i)
-	// Problems encoding
-	if err != nil {
-		LoggingClient.Error("Error encoding the data: " + err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
 }
 
 // HTTPServer function
@@ -257,19 +244,19 @@ func HttpServer() http.Handler {
 
 	r.HandleFunc(clients.ApiLoggingRoute, getLogs).Methods(http.MethodGet)
 	l := r.PathPrefix(clients.ApiLoggingRoute).Subrouter()
-	l.HandleFunc("/{limit}", getLogs).Methods(http.MethodGet)
-	l.HandleFunc("/{start}/{end}/{limit}", getLogs).Methods(http.MethodGet)
-	l.HandleFunc("/originServices/{services}/{start}/{end}/{limit}", getLogs).Methods(http.MethodGet)
-	l.HandleFunc("/keywords/{keywords}/{start}/{end}/{limit}", getLogs).Methods(http.MethodGet)
-	l.HandleFunc("/logLevels/{levels}/{start}/{end}/{limit}", getLogs).Methods(http.MethodGet)
-	l.HandleFunc("/logLevels/{levels}/originServices/{services}/{start}/{end}/{limit}", getLogs).Methods(http.MethodGet)
+	l.HandleFunc("/{"+LIMIT+"}", getLogs).Methods(http.MethodGet)
+	l.HandleFunc("/{"+START+"}/{"+END+"}/{"+LIMIT+"}", getLogs).Methods(http.MethodGet)
+	l.HandleFunc("/"+ORIGINSERVICES+"/{"+SERVICES+"}/{"+START+"}/{"+END+"}/{"+LIMIT+"}", getLogs).Methods(http.MethodGet)
+	l.HandleFunc("/"+KEYWORDS+"/{"+KEYWORDS+"}/{"+START+"}/{"+END+"}/{"+LIMIT+"}", getLogs).Methods(http.MethodGet)
+	l.HandleFunc("/"+LOGLEVELS+"/{"+LEVELS+"}/{"+START+"}/{"+END+"}/{"+LIMIT+"}", getLogs).Methods(http.MethodGet)
+	l.HandleFunc("/"+LOGLEVELS+"/{"+LEVELS+"}/"+ORIGINSERVICES+"/{"+SERVICES+"}/{"+START+"}/{"+END+"}/{"+LIMIT+"}", getLogs).Methods(http.MethodGet)
 
-	l.HandleFunc("/{start}/{end}", delLogs).Methods(http.MethodDelete)
-	l.HandleFunc("/keywords/{keywords}/{start}/{end}", delLogs).Methods(http.MethodDelete)
-	l.HandleFunc("/originServices/{services}/{start}/{end}", delLogs).Methods(http.MethodDelete)
-	l.HandleFunc("/logLevels/{levels}/{start}/{end}", delLogs).Methods(http.MethodDelete)
-	l.HandleFunc("/logLevels/{levels}/originServices/{services}/{start}/{end}", delLogs).Methods(http.MethodDelete)
-	l.HandleFunc("/removeold/age/{age}", delLogs).Methods(http.MethodDelete)
+	l.HandleFunc("/{"+START+"}/{"+END+"}", delLogs).Methods(http.MethodDelete)
+	l.HandleFunc("/"+KEYWORDS+"/{"+KEYWORDS+"}/{"+START+"}/{"+END+"}", delLogs).Methods(http.MethodDelete)
+	l.HandleFunc("/"+ORIGINSERVICES+"/{"+SERVICES+"}/{"+START+"}/{"+END+"}", delLogs).Methods(http.MethodDelete)
+	l.HandleFunc("/"+LOGLEVELS+"/{"+LEVELS+"}/{"+START+"}/{"+END+"}", delLogs).Methods(http.MethodDelete)
+	l.HandleFunc("/"+LOGLEVELS+"/{"+LEVELS+"}/"+ORIGINSERVICES+"/{"+SERVICES+"}/{"+START+"}/{"+END+"}", delLogs).Methods(http.MethodDelete)
+	l.HandleFunc("/"+REMOVEOLD+"/"+AGE+"/{"+AGE+"}", delLogs).Methods(http.MethodDelete)
 
 	r.Use(correlation.ManageHeader)
 	r.Use(correlation.OnResponseComplete)

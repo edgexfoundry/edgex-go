@@ -25,6 +25,7 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
+	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation/models"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
@@ -201,7 +202,7 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		encode(events, w)
+		pkg.Encode(events, w, LoggingClient)
 		break
 		// Post a new event
 	case http.MethodPost:
@@ -274,7 +275,7 @@ func scrubAllHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	encode(true, w)
+	pkg.Encode(true, w, LoggingClient)
 }
 
 // GET
@@ -304,7 +305,7 @@ func getEventByIdHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	encode(e, w)
+	pkg.Encode(e, w, LoggingClient)
 }
 
 // Get event by device id
@@ -363,7 +364,7 @@ func getEventByDeviceHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		encode(eventList, w)
+		pkg.Encode(eventList, w, LoggingClient)
 	}
 }
 
@@ -561,7 +562,7 @@ func eventByCreationTimeHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		encode(eventList, w)
+		pkg.Encode(eventList, w, LoggingClient)
 	}
 }
 
@@ -592,7 +593,7 @@ func pingHandler(w http.ResponseWriter, _ *http.Request) {
 }
 
 func configHandler(w http.ResponseWriter, r *http.Request) {
-	encode(Configuration, w)
+	pkg.Encode(Configuration, w, LoggingClient)
 }
 
 // Reading handler
@@ -617,7 +618,7 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		encode(r, w)
+		pkg.Encode(r, w, LoggingClient)
 	case http.MethodPost:
 		reading, err := decodeReading(r.Body)
 
@@ -665,7 +666,7 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte(id))
 		} else {
 			// Didn't save the reading in the database
-			encode("unsaved", w)
+			pkg.Encode("unsaved", w, LoggingClient)
 		}
 	case http.MethodPut:
 		from, err := decodeReading(r.Body)
@@ -731,7 +732,7 @@ func getReadingByIdHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		encode(reading, w)
+		pkg.Encode(reading, w, LoggingClient)
 	}
 }
 
@@ -829,7 +830,7 @@ func readingByDeviceHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		encode(readings, w)
+		pkg.Encode(readings, w, LoggingClient)
 	}
 }
 
@@ -861,7 +862,7 @@ func readingbyValueDescriptorHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	encode(read, w)
+	pkg.Encode(read, w, LoggingClient)
 }
 
 // Return a list of readings based on the UOM label for the value decriptor
@@ -912,7 +913,7 @@ func readingByUomLabelHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	encode(readings, w)
+	pkg.Encode(readings, w, LoggingClient)
 }
 
 // Get readings by the value descriptor (specified by the label)
@@ -961,7 +962,7 @@ func readingByLabelHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	encode(readings, w)
+	pkg.Encode(readings, w, LoggingClient)
 }
 
 // Return a list of readings who's value descriptor has the type
@@ -1012,7 +1013,7 @@ func readingByTypeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	encode(readings, w)
+	pkg.Encode(readings, w, LoggingClient)
 }
 
 // Return a list of readings between the start and end (creation time)
@@ -1054,7 +1055,7 @@ func readingByCreationTimeHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		encode(readings, w)
+		pkg.Encode(readings, w, LoggingClient)
 	}
 }
 
@@ -1129,7 +1130,7 @@ func readingByValueDescriptorAndDeviceHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	encode(readings, w)
+	pkg.Encode(readings, w, LoggingClient)
 }
 
 // Value Descriptors
@@ -1154,7 +1155,7 @@ func valueDescriptorHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		encode(vList, w)
+		pkg.Encode(vList, w, LoggingClient)
 	case http.MethodPost:
 		v, err := decodeValueDescriptor(r.Body)
 		if err != nil {
@@ -1292,7 +1293,7 @@ func valueDescriptorByNameHandler(w http.ResponseWriter, r *http.Request) {
 			LoggingClient.Error(err.Error())
 			return
 		}
-		encode(v, w)
+		pkg.Encode(v, w, LoggingClient)
 	case http.MethodDelete:
 		if err = deleteValueDescriptorByName(name); err != nil {
 			switch err.(type) {
@@ -1340,7 +1341,7 @@ func valueDescriptorByIdHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		encode(vd, w)
+		pkg.Encode(vd, w, LoggingClient)
 	}
 }
 
@@ -1373,7 +1374,7 @@ func valueDescriptorByUomLabelHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		encode(vdList, w)
+		pkg.Encode(vdList, w, LoggingClient)
 	}
 }
 
@@ -1406,7 +1407,7 @@ func valueDescriptorByLabelHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		encode(v, w)
+		pkg.Encode(v, w, LoggingClient)
 	}
 }
 
@@ -1441,7 +1442,7 @@ func valueDescriptorByDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	encode(vdList, w)
+	pkg.Encode(vdList, w, LoggingClient)
 }
 
 // Return the value descriptors that are associated with the device specified by the device ID
@@ -1475,13 +1476,13 @@ func valueDescriptorByDeviceIdHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	encode(vdList, w)
+	pkg.Encode(vdList, w, LoggingClient)
 }
 
 func metricsHandler(w http.ResponseWriter, _ *http.Request) {
 	s := telemetry.NewSystemUsage()
 
-	encode(s, w)
+	pkg.Encode(s, w, LoggingClient)
 
 	return
 }

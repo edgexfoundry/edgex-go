@@ -20,6 +20,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/gorilla/mux"
@@ -93,7 +94,7 @@ func notificationBySlugHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		encode(n, w)
+		pkg.Encode(n, w, LoggingClient)
 	case http.MethodDelete:
 		_, err := dbClient.GetNotificationBySlug(slug)
 		if err != nil {
@@ -141,7 +142,7 @@ func notificationByIDHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		encode(n, w)
+		pkg.Encode(n, w, LoggingClient)
 	case http.MethodDelete:
 		_, err := dbClient.GetNotificationById(id)
 		if err != nil {
@@ -225,12 +226,10 @@ func notificationBySenderHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		LoggingClient.Error(err.Error())
-		w.Header().Set("Content-Type", applicationJson)
-		encode(n, w)
 		return
 	}
 
-	encode(n, w)
+	pkg.Encode(n, w, LoggingClient)
 
 }
 
@@ -276,7 +275,7 @@ func notificationByStartEndHandler(w http.ResponseWriter, r *http.Request) {
 		LoggingClient.Error(err.Error())
 		return
 	}
-	encode(n, w)
+	pkg.Encode(n, w, LoggingClient)
 
 }
 
@@ -313,11 +312,11 @@ func notificationByStartHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		LoggingClient.Error(err.Error())
 		w.Header().Set("Content-Type", applicationJson)
-		encode(n, w)
+		pkg.Encode(n, w, LoggingClient)
 		return
 	}
 
-	encode(n, w)
+	pkg.Encode(n, w, LoggingClient)
 
 }
 
@@ -356,11 +355,11 @@ func notificationByEndHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		LoggingClient.Error(err.Error())
 		w.Header().Set("Content-Type", applicationJson)
-		encode(n, w)
+		pkg.Encode(n, w, LoggingClient)
 		return
 	}
 
-	encode(n, w)
+	pkg.Encode(n, w, LoggingClient)
 
 }
 
@@ -395,11 +394,11 @@ func notificationsByLabelsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		LoggingClient.Error(err.Error())
 		w.Header().Set("Content-Type", applicationJson)
-		encode(n, w)
+		pkg.Encode(n, w, LoggingClient)
 		return
 	}
 
-	encode(n, w)
+	pkg.Encode(n, w, LoggingClient)
 
 }
 
@@ -435,6 +434,6 @@ func notificationsNewHandler(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	encode(n, w)
+	pkg.Encode(n, w, LoggingClient)
 
 }
