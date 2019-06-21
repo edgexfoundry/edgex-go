@@ -1,6 +1,6 @@
-##################################
-Connecting EdgeX to an MQTT Device
-##################################
+###############################
+MQTT - Adding a Device to EdgeX
+###############################
 
 EdgeX - Edinburgh Release
 
