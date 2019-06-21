@@ -1,6 +1,5 @@
 /*******************************************************************************
- * Copyright 2017 Dell Inc.
- * Copyright 2018 Dell Technologies Inc.
+ * Copyright 2019 VMware Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -11,33 +10,12 @@
  * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
- *
  *******************************************************************************/
+package client
 
-package notifications
-
-import (
-	"fmt"
-	"io"
-	"io/ioutil"
-	"net/http"
+const (
+	ID        = "id"
+	NAME      = "name"
+	TYPE      = "type"
+	REFERENCE = "reference"
 )
-
-// Printing function purely for debugging purposes
-// Print the body of a request to the console
-func printBody(r io.ReadCloser) {
-	body, err := ioutil.ReadAll(r)
-	bodyString := string(body)
-
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	fmt.Println(bodyString)
-}
-
-// Test if the service is working
-func pingHandler(w http.ResponseWriter, _ *http.Request) {
-	w.Header().Set("Content-Type", "text/plain")
-	w.Write([]byte("pong"))
-}

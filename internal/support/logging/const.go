@@ -1,6 +1,5 @@
 /*******************************************************************************
- * Copyright 2017 Dell Inc.
- * Copyright 2018 Dell Technologies Inc.
+ * Copyright 2019 VMware Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -14,30 +13,18 @@
  *
  *******************************************************************************/
 
-package notifications
+package logging
 
-import (
-	"fmt"
-	"io"
-	"io/ioutil"
-	"net/http"
+var (
+	/* ---------------- URL PARAM NAMES -----------------------*/
+	START          = "start"
+	END            = "end"
+	LIMIT          = "limit"
+	AGE            = "age"
+	KEYWORDS       = "keywords"
+	REMOVEOLD      = "removeold"
+	LOGLEVELS      = "logLevels"
+	ORIGINSERVICES = "originServices"
+	LEVELS         = "levels"
+	SERVICES       = "services"
 )
-
-// Printing function purely for debugging purposes
-// Print the body of a request to the console
-func printBody(r io.ReadCloser) {
-	body, err := ioutil.ReadAll(r)
-	bodyString := string(body)
-
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	fmt.Println(bodyString)
-}
-
-// Test if the service is working
-func pingHandler(w http.ResponseWriter, _ *http.Request) {
-	w.Header().Set("Content-Type", "text/plain")
-	w.Write([]byte("pong"))
-}
