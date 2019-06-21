@@ -33,17 +33,17 @@ func LoadRestRoutes() *mux.Router {
 	r := mux.NewRouter()
 	b := r.PathPrefix("/api/v1").Subrouter()
 
-	b.HandleFunc("/operation", operationHandler).Methods(http.MethodPost)
-	b.HandleFunc("/config/{services}", configHandler).Methods(http.MethodGet)
-	b.HandleFunc("/metrics/{services}", metricsHandler).Methods(http.MethodGet)
+	b.HandleFunc("/"+OPERATION, operationHandler).Methods(http.MethodPost)
+	b.HandleFunc("/"+CONFIG+"/{"+SERVICES+"}", configHandler).Methods(http.MethodGet)
+	b.HandleFunc("/"+METRICS+"/{"+SERVICES+"}", metricsHandler).Methods(http.MethodGet)
 
 	// Health Resource
 	// /api/v1/health
-	b.HandleFunc("/health/{services}", healthHandler).Methods(http.MethodGet)
+	b.HandleFunc("/"+HEALTH+"/{"+SERVICES+"}", healthHandler).Methods(http.MethodGet)
 
 	// Ping Resource
 	// /api/v1/ping
-	b.HandleFunc("/ping", pingHandler).Methods(http.MethodGet)
+	b.HandleFunc("/"+PING, pingHandler).Methods(http.MethodGet)
 
 	r.Use(correlation.ManageHeader)
 	r.Use(correlation.OnResponseComplete)
