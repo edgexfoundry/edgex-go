@@ -7,6 +7,7 @@ EdgeX Foundry Examples and Tutorials
 
   
    Ch-ExamplesProvisionDevice
+   Ch-ExamplesVirtualDeviceService
    Ch-ExamplesAddingModbusDevice
    Ch-ExamplesAddingSNMPDevice
    Ch-ExamplesAddingMQTTDevice
