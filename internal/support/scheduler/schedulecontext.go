@@ -69,7 +69,9 @@ func (sc *IntervalContext) Reset(interval models.Interval) {
 
 	//frequency and next time
 	nowBenchmark := time.Now().Unix()
-	sc.Frequency = parseFrequency(sc.Interval.Frequency)
+	if !sc.Interval.RunOnce {
+		sc.Frequency = parseFrequency(sc.Interval.Frequency)
+	}
 
 	sc.NextTime = sc.StartTime
 	if sc.StartTime.Unix() <= nowBenchmark && !sc.Interval.RunOnce {
@@ -117,10 +119,13 @@ func parseFrequency(durationStr string) time.Duration {
 	minutes := parseInt64(matches[5])
 	seconds := parseInt64(matches[6])
 
-	hour := int64(time.Hour)
-	minute := int64(time.Minute)
 	second := int64(time.Second)
-	return time.Duration(years*24*365*hour + months*30*24*hour + days*24*hour + hours*hour + minutes*minute + seconds*second)
+	minute := int64(time.Minute)
+	hour := int64(time.Hour)
+	day := int64(24 * hour)
+	month := int64(30 * day)
+	year := int64(365 * day)
+	return time.Duration(years*year + months*month + days*day + hours*hour + minutes*minute + seconds*second)
 }
 
 func parseInt64(value string) int64 {

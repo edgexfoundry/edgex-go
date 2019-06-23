@@ -68,12 +68,6 @@ func addNewInterval(interval contract.Interval) (string, error) {
 		}
 	}
 
-	// Validate that interval is not in queue
-	ret, err = scClient.QueryIntervalByName(name)
-	if err == nil && ret.Name == name {
-		return "", errors.NewErrIntervalNameInUse(name)
-	}
-
 	// Add the new interval to the database
 	ID, err := dbClient.AddInterval(interval)
 	if err != nil {
