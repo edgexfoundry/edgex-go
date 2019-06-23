@@ -120,7 +120,6 @@ func intervalHandler(w http.ResponseWriter, r *http.Request) {
 		err := dec.Decode(&interval)
 
 		if err != nil {
-
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			LoggingClient.Error("Error decoding interval" + err.Error())
 			return
@@ -334,7 +333,6 @@ func intervalActionHandler(w http.ResponseWriter, r *http.Request) {
 		err := dec.Decode(&intervalAction)
 
 		if err != nil {
-
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			LoggingClient.Error("error decoding intervalAction" + err.Error())
 			return
