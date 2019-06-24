@@ -20,10 +20,12 @@ import (
 	"net/url"
 	"strconv"
 
-	types "github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/gorilla/mux"
+
+	types "github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/operators/addressable"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 )
 
 func restGetAllAddressables(w http.ResponseWriter, _ *http.Request) {
@@ -308,7 +310,8 @@ func restGetAddressableByAddress(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := dbClient.GetAddressablesByAddress(a)
+	op := addressable.NewAddressLoader(dbClient, a)
+	res, err := op.Execute()
 	if err != nil {
 		LoggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
