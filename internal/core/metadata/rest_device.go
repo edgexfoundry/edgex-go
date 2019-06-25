@@ -36,23 +36,19 @@ import (
 )
 
 func restGetAllDevices(w http.ResponseWriter, _ *http.Request) {
-	res, err := dbClient.GetAllDevices()
+	op := device.NewDeviceLoadAll(Configuration.Service, dbClient, LoggingClient)
+	devices, err := op.Execute()
 	if err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		switch err.(type) {
+		case *types.ErrLimitExceeded:
+			http.Error(w, err.Error(), http.StatusRequestEntityTooLarge)
+		default:
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 		return
 	}
-
-	// Check the max length
-	if len(res) > Configuration.Service.MaxResultCount {
-		err = errors.New("Max limit exceeded")
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusRequestEntityTooLarge)
-		return
-	}
-
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(&res)
+	json.NewEncoder(w).Encode(&devices)
 }
 
 // Post a new device
