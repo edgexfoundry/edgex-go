@@ -1,6 +1,7 @@
 package agent
 
 import (
+	"context"
 	"fmt"
 	"os/exec"
 )
@@ -23,7 +24,20 @@ func runExec(service string, operation string) error {
 	return err
 }
 
-func (ec *ExecuteApp) Start(service string) error {
+func execMetrics(service string) ([]byte, error) {
+
+	cmd := exec.Command(Configuration.ExecutorPath, service, METRICS)
+
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		LoggingClient.Error(fmt.Sprintf("an error occurred in calling executor (to fetch metrics) for service %s: %v ", service, err.Error()))
+	} else {
+		LoggingClient.Debug("invocation of execMetrics() succeeded")
+	}
+	return out, err
+}
+
+func (ea *ExecuteApp) Start(service string) error {
 
 	err := runExec(service, "start")
 	if err != nil {
@@ -34,7 +48,7 @@ func (ec *ExecuteApp) Start(service string) error {
 	return err
 }
 
-func (ec *ExecuteApp) Stop(service string) error {
+func (ea *ExecuteApp) Stop(service string) error {
 
 	err := runExec(service, "stop")
 	if err != nil {
@@ -45,7 +59,7 @@ func (ec *ExecuteApp) Stop(service string) error {
 	return err
 }
 
-func (ec *ExecuteApp) Restart(service string) error {
+func (ea *ExecuteApp) Restart(service string) error {
 
 	err := runExec(service, "restart")
 	if err != nil {
@@ -54,4 +68,15 @@ func (ec *ExecuteApp) Restart(service string) error {
 		LoggingClient.Debug(fmt.Sprintf("restarting service %s succeeded", service))
 	}
 	return err
+}
+
+func (ea *ExecuteApp) Metrics(ctx context.Context, service string) ([]byte, error) {
+
+	out, err := execMetrics(service)
+	if err != nil {
+		LoggingClient.Error(fmt.Sprintf("error in fetching metrics %s: %v", service, err.Error()))
+	} else {
+		LoggingClient.Debug(fmt.Sprintf("fetching metrics %s succeeded", service))
+	}
+	return out, err
 }

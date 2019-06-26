@@ -16,13 +16,14 @@ package agent
 import "github.com/edgexfoundry/edgex-go/internal/pkg/config"
 
 type ConfigurationStruct struct {
-	Writable        WritableInfo
-	Clients         map[string]config.ClientInfo
-	Service         config.ServiceInfo
-	ExecutorPath    string
-	Registry        config.RegistryInfo
-	Logging         config.LoggingInfo
-	FormatSpecifier string
+	Writable         WritableInfo
+	Clients          map[string]config.ClientInfo
+	Service          config.ServiceInfo
+	ExecutorPath     string
+	MetricsMechanism string
+	Registry         config.RegistryInfo
+	Logging          config.LoggingInfo
+	FormatSpecifier  string
 }
 
 type WritableInfo struct {
