@@ -19,3 +19,7 @@ type DeviceProfileLoader interface {
 	GetDeviceProfileById(id string) (contract.DeviceProfile, error)
 	GetDeviceProfileByName(n string) (contract.DeviceProfile, error)
 }
+
+type DeviceLoader interface {
+	GetAllDevices() ([]contract.Device, error)
+}
