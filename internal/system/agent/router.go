@@ -55,6 +55,26 @@ func LoadRestRoutes() *mux.Router {
 	return r
 }
 
+func metricsHandler(w http.ResponseWriter, r *http.Request) {
+
+	vars := mux.Vars(r)
+	LoggingClient.Debug("retrieved service names")
+
+	list := vars["services"]
+	var services []string
+	services = strings.Split(list, ",")
+
+	ctx := r.Context()
+	send, err := InvokeMetrics(services, ctx)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		LoggingClient.Error(err.Error())
+		return
+	}
+	w.Header().Add(clients.ContentType, clients.ContentTypeJSON)
+	pkg.Encode(send, w, LoggingClient)
+}
+
 func operationHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
@@ -126,27 +146,6 @@ func configHandler(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 	send, err := getConfig(services, ctx)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		LoggingClient.Error(err.Error())
-		return
-	}
-
-	w.Header().Add(clients.ContentType, clients.ContentTypeJSON)
-	pkg.Encode(send, w, LoggingClient)
-	return
-}
-
-func metricsHandler(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	LoggingClient.Debug("retrieved service names")
-
-	list := vars["services"]
-	var services []string
-	services = strings.Split(list, ",")
-
-	ctx := r.Context()
-	send, err := getMetrics(services, ctx)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		LoggingClient.Error(err.Error())

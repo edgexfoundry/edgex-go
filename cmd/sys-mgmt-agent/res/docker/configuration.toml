@@ -6,6 +6,16 @@
 # In the future, the manifest may be more dynamic or even provided by some 3rd party orchestrator.
 
 ExecutorPath = '/path/to/the/file'
+# The preceding line (i.e. '/path/to/the/file') is a placeholder that needs to be populated.
+# ExecutorPath = '/sys-mgmt-executor'
+
+MetricsMechanism = 'custom/executor/direct-service'
+# The preceding line (i.e. 'custom/executor/direct-service') is a placeholder that needs to be populated.
+# The MetricsMechanism setting can be one of the following three options, starting with custom mechanism (e.g. snap) to
+# fetch metrics, and from which one should be used to populate the MetricsMechanism setting:
+# MetricsMechanism = 'custom'
+# MetricsMechanism = 'executor'
+# MetricsMechanism = 'direct-service'
 
 [Writable]
 ResendLimit = 2

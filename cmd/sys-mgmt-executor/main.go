@@ -17,9 +17,12 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
+	"log"
 	"os"
 	"os/exec"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/edgexfoundry/edgex-go/internal/system/agent"
@@ -35,6 +38,7 @@ const (
 	START                       = "start"
 	STOP                        = "stop"
 	RESTART                     = "restart"
+	METRICS                     = "metrics"
 	SystemManagementExecutorKey = "docker-compose-executor"
 	AppOpenMsg                  = "This is the docker-compose-executor application!"
 	LoggingTarget               = "console"
@@ -72,12 +76,23 @@ func main() {
 		service = os.Args[1]
 		operation = os.Args[2]
 
-		err := ExecuteDockerCommands(service, operation)
+		LoggingClient.Debug(fmt.Sprintf("service: %s", service))
+		LoggingClient.Debug(fmt.Sprintf("operation: %s", operation))
 
-		if err != nil {
-			LoggingClient.Error(fmt.Sprintf("error performing  %s on service %s: %v", operation, service, err.Error()))
+		// Don't run commands for unknown services - could be an attack
+		if agent.IsKnownServiceKey(service) {
+
+			response, err := executeDockerCommands(service, operation)
+			if err != nil {
+				LoggingClient.Error(fmt.Sprintf("error performing  %s on service %s: %v", operation, service, err.Error()))
+			} else {
+				LoggingClient.Info(fmt.Sprintf("success performing %s on service %s", operation, service))
+				LoggingClient.Debug(fmt.Sprintf("response from main: %s", response))
+				LoggingClient.Debug(fmt.Sprintf("the IsKnownServiceKey() check was a success for service %s", service))
+				LoggingClient.Debug(fmt.Sprintf("operation: %s", operation))
+			}
 		} else {
-			LoggingClient.Info(fmt.Sprintf("success performing %s on service %s", operation, service))
+			LoggingClient.Error(fmt.Sprintf("the service %s is an unknown one for which the request was made to run Docker command", service))
 		}
 	}
 }
@@ -120,26 +135,18 @@ func checkDockerContainerStatus(service string, running bool) (bool, error) {
 	}
 }
 
-func ExecuteDockerCommands(service string, operation string) error {
-	// don't run commands for unknown services - could be an attack
-	if agent.IsKnownServiceKey(service) {
-		return runDockerCommands(service, operation)
-	}
-	return fmt.Errorf("the service %s is an unknown service for which request was made to run Docker command", service)
-}
+func executeDockerCommands(service string, operation string) (string, error) {
 
-func runDockerCommands(service string, operation string) error {
 	// Validate that a known operation was requested.
 	if operation == START || operation == STOP || operation == RESTART {
 		// run the docker command
 		out, err := exec.Command("docker", operation, service).CombinedOutput()
 		if err != nil {
 			LoggingClient.Error(fmt.Sprintf("docker command failed: %s", string(out)))
-			return err
+			return string(out), err
 		}
 
-		// check that the command actually resulted in the correct state for
-		// the container
+		// Check that the command actually resulted in the correct state for the container
 		var expectedStatus bool
 		switch operation {
 		case START:
@@ -148,19 +155,102 @@ func runDockerCommands(service string, operation string) error {
 			expectedStatus = true
 		case STOP:
 			expectedStatus = false
+		case METRICS:
+
 		default:
-			// impossible to get here
 			panic(fmt.Sprintf("invalid operation %s", operation))
 		}
 
 		correctStatus, err := checkDockerContainerStatus(service, expectedStatus)
 		if err != nil {
-			return err
+			return "", err
 		}
 		if !correctStatus {
-			return fmt.Errorf("docker %s operation failed for service %s", operation, service)
+			return "", fmt.Errorf("docker %s operation failed for service %s", operation, service)
 		}
-		return nil
+		return "", nil
+	} else if operation == METRICS {
+
+		LoggingClient.Info(fmt.Sprintf("run the docker stats on service (%s) for operation (%s)", service, operation))
+		cmd := exec.Command("docker", "stats")
+		LoggingClient.Info(fmt.Sprintf("finished running the docker stats command"))
+
+		var stdout, stderr []byte
+		var errStdout, errStderr error
+		stdoutIn, _ := cmd.StdoutPipe()
+		stderrIn, _ := cmd.StderrPipe()
+		err := cmd.Start()
+		if err != nil {
+			LoggingClient.Info(fmt.Sprintf("cmd.Start() failed with '%s'\n", err.Error()))
+		}
+
+		// Note that cmd.Wait() should be called only AFTER we finish reading
+		// from stdoutIn and stderrIn.
+		// The wait group (wg) ensures that we finish
+		var wg sync.WaitGroup
+		wg.Add(1)
+		ticker := time.NewTicker(time.Second)
+		go func(ticker *time.Ticker) {
+			stdout, errStdout = copyAndCapture(os.Stdout, stdoutIn)
+			wg.Done()
+			now := time.Now()
+			for range ticker.C {
+				LoggingClient.Info(fmt.Sprintf("%s", time.Since(now)))
+			}
+		}(ticker)
+
+		// Create a timer that will kill the process
+		timer := time.NewTimer(time.Second * 3)
+		go func(timer *time.Timer, ticker *time.Ticker, cmd *exec.Cmd) {
+			for range timer.C {
+				cmd.Process.Signal(os.Kill)
+				ticker.Stop()
+			}
+		}(timer, ticker, cmd)
+		stderr, errStderr = copyAndCapture(os.Stderr, stderrIn)
+
+		wg.Wait()
+
+		err = cmd.Wait()
+		if err != nil {
+			LoggingClient.Error(fmt.Sprintf("cmd.Run() failed with %s\n", err.Error()))
+			log.Fatalf("cmd.Run() failed with %s\n", err)
+		}
+		if errStdout != nil || errStderr != nil {
+			// The reason for using log.Fatal() here is that we are intentionally terminating the main program.
+			// The intent is not to recover gracefully from the error which has been logged already through
+			// the LoggingClient.
+			LoggingClient.Error(fmt.Sprintf("failed to capture stdout or stderr\n"))
+			log.Fatal("failed to capture stdout or stderr\n")
+		}
+		outStr, errStr := string(stdout), string(stderr)
+		LoggingClient.Debug(fmt.Sprintf("\nout:\n%s\nerr:\n%s\n", outStr, errStr))
+		LoggingClient.Info("invocation of metrics executor in runDockerCommands() succeeded...")
+		return outStr, nil
+	} else {
+		return "", fmt.Errorf("system management was requested to perform an unknown operation %s on the service %s", operation, service)
 	}
-	return fmt.Errorf("system management was requested to perform an unknown operation %s on the service %s", operation, service)
+}
+
+func copyAndCapture(w io.Writer, r io.Reader) ([]byte, error) {
+	var out []byte
+	buf := make([]byte, 1024, 1024)
+	for {
+		n, err := r.Read(buf[:])
+		if n > 0 {
+			d := buf[:n]
+			out = append(out, d...)
+			_, err := w.Write(d)
+			if err != nil {
+				return out, err
+			}
+		}
+		if err != nil {
+			// Read returns io.EOF at the end of file, which is not an error for us
+			if err == io.EOF {
+				err = nil
+			}
+			return out, err
+		}
+	}
 }

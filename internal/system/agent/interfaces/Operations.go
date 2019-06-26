@@ -1,5 +1,7 @@
 package interfaces
 
+import "context"
+
 // The abstraction(s) which should be accessed via a global var.
 
 type ServiceStarter interface {
@@ -12,4 +14,8 @@ type ServiceStopper interface {
 
 type ServiceRestarter interface {
 	Restart(service string) error
+}
+
+type MetricsFetcher interface {
+	Metrics(ctx context.Context, service string) ([]byte, error)
 }

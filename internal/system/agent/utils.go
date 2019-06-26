@@ -35,3 +35,12 @@ func ProcessResponse(response string) map[string]interface{} {
 	}
 	return rsp
 }
+
+func ProcessFetchedResponse(response []byte) map[string]interface{} {
+	rsp := make(map[string]interface{})
+	err := json.Unmarshal(response, &rsp)
+	if err != nil {
+		LoggingClient.Error("error unmarshalling response from JSON: %v", err.Error())
+	}
+	return rsp
+}

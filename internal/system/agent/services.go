@@ -16,8 +16,11 @@
 package agent
 
 import (
+	"bufio"
 	"context"
+	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
@@ -33,6 +36,193 @@ const (
 	STOP    = "stop"
 	RESTART = "restart"
 )
+
+func InvokeMetrics(services []string, ctx context.Context) (MetricsRespMap, error) {
+
+	m := MetricsRespMap{}
+	m.Metrics = map[string]interface{}{}
+
+	// Loop through requested actions, along with (any) respectively-supplied parameters.
+	for _, service := range services {
+		LoggingClient.Info("invoke metrics")
+
+		if Configuration.MetricsMechanism == "direct-service" {
+			es := ExecuteService{}
+			out, err := es.Metrics(ctx, service)
+			if err != nil {
+				LoggingClient.Error("error fetching metrics")
+				return m, err
+			} else {
+				m.Metrics[service] = ProcessResponse(string(out))
+			}
+		} else if Configuration.MetricsMechanism == "executor" {
+			var result []byte
+			ea := ExecuteApp{}
+			out, err := ea.Metrics(ctx, service)
+			if err.Error() != "exit status 1" {
+				LoggingClient.Error("error fetching metrics")
+				return m, err
+			} else {
+				result, _ = processOutput(out, service)
+				m.Metrics[service] = ProcessResponse(string(result))
+			}
+		} else if Configuration.MetricsMechanism == "custom" {
+			err := fmt.Errorf("the requested custom executor (e.g. snap) has not been integrated")
+			LoggingClient.Error(err.Error())
+			m.Metrics[service] = fmt.Sprintf(err.Error())
+		} else {
+			err := fmt.Errorf("the requested metrics mechanism is not supported")
+			LoggingClient.Error(err.Error())
+		}
+	}
+	return m, nil
+}
+
+func processOutput(bytes []byte, service string) ([]byte, error) {
+
+	var relevantLines []string
+	s := string(bytes)
+	var fields [][]string
+	var populated = map[string]Stats{}
+
+	lines, err := stringToLines(s)
+	if err != nil {
+		LoggingClient.Error(err.Error())
+		return nil, err
+	}
+	relevantLines = findRelevantLines(lines)
+	fields = tabulateResult(relevantLines)
+	populated = populateMap(fields)
+	relevantStats := selectRelevantStats(populated, service)
+	response, err := assembleStats(relevantStats)
+	if err != nil {
+		LoggingClient.Error(err.Error())
+		return nil, err
+	}
+	return response, nil
+}
+
+func assembleStats(stats map[string]Stats) ([]byte, error) {
+
+	const (
+		CpuPercent       = "CPU %"
+		MemUsageAndLimit = "MEM USAGE / LIMIT"
+		MemPercent       = "MEM %"
+		Net_IO           = "NET I/O"
+		Block_IO         = "BLOCK I/O"
+		Pids             = "PIDS"
+	)
+
+	data := make(map[string]string)
+
+	for _, value := range stats {
+		data[CpuPercent] = value.CpuPercent
+		data[MemUsageAndLimit] = value.MemUsageAndLimit
+		data[MemPercent] = value.MemPercent
+		data[Net_IO] = value.Net_IO
+		data[Block_IO] = value.Block_IO
+		data[Pids] = value.Pids
+	}
+
+	assembled, err := json.Marshal(data)
+	if err != nil {
+		LoggingClient.Error(err.Error())
+		return nil, err
+	}
+	return assembled, err
+}
+
+func selectRelevantStats(stats map[string]Stats, service string) map[string]Stats {
+
+	var relevantStats = map[string]Stats{}
+
+	for key, value := range stats {
+		if key == service {
+			relevantStats[key] = value
+			return relevantStats
+		}
+	}
+	return relevantStats
+}
+
+type Stats struct {
+	CpuPercent       string
+	MemUsageAndLimit string
+	MemPercent       string
+	Net_IO           string
+	Block_IO         string
+	Pids             string
+}
+
+func populateMap(fields [][]string) map[string]Stats {
+
+	data := make(map[string]Stats)
+
+	// Populate the map ("data") with elements of the console output that are
+	// retrieved after running the "docker stats" command.
+	size := len(fields)
+	for i := 0; i < size; i++ {
+		data[fields[i][1]] = Stats{
+			fields[i][2],
+			fields[i][3] + fields[i][4] + fields[i][5],
+			fields[i][6],
+			fields[i][7] + fields[i][8] + fields[i][9],
+			fields[i][10] + fields[i][11] + fields[i][12],
+			fields[i][13],
+		}
+	}
+	return data
+}
+
+func tabulateResult(relevantLines []string) [][]string {
+
+	var fields [][]string
+	for _, line := range relevantLines {
+		row := strings.Fields(line)
+		fields = append(fields, row)
+	}
+
+	return fields
+}
+
+func findRelevantLines(allLines []string) []string {
+
+	var relevantLines []string
+	var truncated []string
+	var proceed bool
+	proceed = false
+	count := 0
+
+	for _, line := range allLines {
+		if proceed && count < 2 {
+			relevantLines = append(relevantLines, line)
+		} else if count == 2 {
+			break
+		}
+
+		if strings.Contains(line, "CONTAINER ID") {
+			proceed = true
+			count = count + 1
+		} else if count > 1 || strings.Contains(line, "cmd.Run() failed with signal") {
+			proceed = false
+		}
+	}
+	// The following brief logic is to handle an artifact of the way the console output is retrieved
+	// after running the command "docker stats".
+	truncated = relevantLines[:len(relevantLines)-1]
+
+	return truncated
+}
+
+func stringToLines(s string) (lines []string, err error) {
+	scanner := bufio.NewScanner(strings.NewReader(s))
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
+	}
+	err = scanner.Err()
+
+	return lines, err
+}
 
 func InvokeOperation(action string, services []string) error {
 
@@ -139,9 +329,8 @@ func getConfig(services []string, ctx context.Context) (ConfigRespMap, error) {
 						Url:         Configuration.Clients[e.ServiceId].Url() + clients.ApiConfigRoute,
 						Interval:    internal.ClientMonitorDefault,
 					}
-					// TODO: The following note is related to future work:
-					// TODO: With the current deployment strategy, GeneralClient's func init(params types.EndpointParams) {...} returns blank "url"...
-					// TODO: [Need a manifest-like functionality in future...]
+					// TODO: Related to future work: With the current deployment strategy, GeneralClient's
+					//  func init(params types.EndpointParams) {...} returns blank "url"...
 					// Add the service key to the map where the value is the respective GeneralClient
 					generalClients[e.ServiceId] = general.NewGeneralClient(params, startup.Endpoint{RegistryClient: &registryClient})
 
@@ -172,86 +361,77 @@ func getConfig(services []string, ctx context.Context) (ConfigRespMap, error) {
 	return c, nil
 }
 
-func getMetrics(services []string, ctx context.Context) (MetricsRespMap, error) {
+type ExecuteService struct {
+}
 
+func (ec *ExecuteService) Metrics(ctx context.Context, service string) ([]byte, error) {
+
+	out := []byte("")
 	m := MetricsRespMap{}
 	m.Metrics = map[string]interface{}{}
 
-	// Loop through requested actions, along with (any) respectively-supplied parameters.
-	for _, service := range services {
+	// Check whether SMA does _not_ know of ServiceKey ("service") as being one for one of its ready-made list of clients.
+	if !IsKnownServiceKey(service) {
+		LoggingClient.Info(fmt.Sprintf("service %s not known to SMA as being in the ready-made list of clients", service))
 
-		// Check whether SMA does _not_ know of ServiceKey ("service") as being one for one of its ready-made list of clients.
-		if !IsKnownServiceKey(service) {
-			LoggingClient.Info(fmt.Sprintf("service %s not known to SMA as being in the ready-made list of clients", service))
-
-			// Service unknown to SMA, so ask the Registry whether `service` is available.
-			err := registryClient.IsServiceAvailable(service)
-			if err != nil {
-				m.Metrics[service] = fmt.Sprintf(err.Error())
-				LoggingClient.Error(fmt.Sprintf(err.Error()))
-			} else {
-				LoggingClient.Info(fmt.Sprintf("Registry responded with %s service available", service))
-
-				// Since service is unknown to SMA, ask the Registry for a ServiceEndpoint associated with `service`
-				e, err := registryClient.GetServiceEndpoint(service)
-				if err != nil {
-					m.Metrics[service] = fmt.Sprintf("on attempting to get ServiceEndpoint for service %s, got error: %v", service, err.Error())
-					LoggingClient.Error(fmt.Sprintf(service, err.Error()))
-				} else {
-					// Preparing to add the specified key to the map where the value will be the respective GeneralClient
-					clientInfo := config.ClientInfo{}
-					clientInfo.Protocol = Configuration.Service.Protocol
-					clientInfo.Host = e.Host
-					clientInfo.Port = e.Port
-
-					// This code will evolve to take into account a manifest-like functionality in future. So
-					// rather than assume that the runtime bool flag useRegistry has been initialized to true,
-					// given that the flow has reached this point, having already called functions on the Registry,
-					// such as registryClient.IsServiceAvailable(service), we test for its truthiness. I expect
-					// this code to be refactored as we evolve toward a manifest-like functionality in future.
-					usingRegistry := false
-					if registryClient != nil {
-						usingRegistry = true
-					}
-
-					Configuration.Clients[e.ServiceId] = clientInfo
-					params := types.EndpointParams{
-						ServiceKey:  e.ServiceId,
-						Path:        "/",
-						UseRegistry: usingRegistry,
-						Url:         Configuration.Clients[e.ServiceId].Url() + clients.ApiMetricsRoute,
-						Interval:    internal.ClientMonitorDefault,
-					}
-					// TODO: The following note is related to future work:
-					// TODO: With the current deployment strategy, GeneralClient's func init(params types.EndpointParams) {...} returns blank "url"...
-					// TODO: [Need a manifest-like functionality in future...]
-					// Add the service key to the map where the value is the respective GeneralClient
-					generalClients[e.ServiceId] = general.NewGeneralClient(params, startup.Endpoint{RegistryClient: &registryClient})
-
-					responseJSON, err := generalClients[e.ServiceId].FetchMetrics(ctx)
-					if err != nil {
-						m.Metrics[service] = fmt.Sprintf(err.Error())
-						LoggingClient.Error(err.Error())
-					} else {
-						m.Metrics[service] = ProcessResponse(responseJSON)
-					}
-				}
-			}
+		// Service unknown to SMA, so ask the Registry whether `service` is available.
+		err := registryClient.IsServiceAvailable(service)
+		if err != nil {
+			out = []byte(fmt.Sprintf(err.Error()))
+			LoggingClient.Debug(fmt.Sprintf(string(out)))
 		} else {
-			// Service is known to SMA, so no need to ask the Registry for a ServiceEndpoint associated with `service`
-			// Simply use one of the ready-made list of clients.
-			LoggingClient.Info(fmt.Sprintf("service %s is known to SMA as being in the ready-made list of clients", service))
+			LoggingClient.Info(fmt.Sprintf("Registry responded with %s service available", service))
 
-			responseJSON, err := generalClients[service].FetchMetrics(ctx)
+			// Since service is unknown to SMA, ask the Registry for a ServiceEndpoint associated with `service`
+			e, err := registryClient.GetServiceEndpoint(service)
 			if err != nil {
-				m.Metrics[service] = fmt.Sprintf(err.Error())
-				LoggingClient.Error(err.Error())
+				out = []byte(fmt.Sprintf("on attempting to get ServiceEndpoint for service %s, got error: %v", service, err.Error()))
+				LoggingClient.Error(fmt.Sprintf(service, err.Error()))
 			} else {
-				m.Metrics[service] = ProcessResponse(responseJSON)
+				// Preparing to add the specified key to the map where the value will be the respective GeneralClient
+				clientInfo := config.ClientInfo{}
+				clientInfo.Protocol = Configuration.Service.Protocol
+				clientInfo.Host = e.Host
+				clientInfo.Port = e.Port
+
+				// This code will evolve to take into account a manifest-like functionality in future. So
+				// rather than assume that the runtime bool flag useRegistry has been initialized to true,
+				// given that the flow has reached this point, having already called functions on the Registry,
+				// such as registryClient.IsServiceAvailable(service), we test for its truthiness. I expect
+				// this code to be refactored as we evolve toward a manifest-like functionality in future.
+				usingRegistry := false
+				if registryClient != nil {
+					usingRegistry = true
+				}
+
+				Configuration.Clients[e.ServiceId] = clientInfo
+				params := types.EndpointParams{
+					ServiceKey:  e.ServiceId,
+					Path:        "/",
+					UseRegistry: usingRegistry,
+					Url:         Configuration.Clients[e.ServiceId].Url() + clients.ApiMetricsRoute,
+					Interval:    internal.ClientMonitorDefault,
+				}
+				// TODO: Related to future work: With the current deployment strategy, GeneralClient's
+				//  func init(params types.EndpointParams) {...} returns blank "url"...
+				// Add the service key to the map where the value is the respective GeneralClient
+				generalClients[e.ServiceId] = general.NewGeneralClient(params, startup.Endpoint{RegistryClient: &registryClient})
 			}
 		}
+	} else {
+		// Service is known to SMA, so no need to ask the Registry for a ServiceEndpoint associated with `service`
+		// Simply use one of the ready-made list of clients.
+		LoggingClient.Info(fmt.Sprintf("service %s is known to SMA as being in the ready-made list of clients", service))
+
+		responseJSON, err := generalClients[service].FetchMetrics(ctx)
+		if err != nil {
+			out = []byte(fmt.Sprintf(err.Error()))
+			LoggingClient.Error(err.Error())
+		} else {
+			out = []byte(responseJSON)
+		}
 	}
-	return m, nil
+	return out, nil
 }
 
 func getHealth(services []string) (map[string]interface{}, error) {
