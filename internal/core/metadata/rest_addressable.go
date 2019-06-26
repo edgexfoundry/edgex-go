@@ -291,7 +291,8 @@ func restGetAddressableByPublisher(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := dbClient.GetAddressablesByPublisher(p)
+	op := addressable.NewPublisherExecutor(dbClient, p)
+	res, err := op.Execute()
 	if err != nil {
 		LoggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -310,7 +311,7 @@ func restGetAddressableByAddress(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	op := addressable.NewAddressLoader(dbClient, a)
+	op := addressable.NewAddressExecutor(dbClient, a)
 	res, err := op.Execute()
 	if err != nil {
 		LoggingClient.Error(err.Error())
