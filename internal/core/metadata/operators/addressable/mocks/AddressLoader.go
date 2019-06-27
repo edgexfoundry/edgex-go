@@ -78,3 +78,26 @@ func (_m *AddressLoader) GetAddressablesByPublisher(p string) ([]models.Addressa
 
 	return r0, r1
 }
+
+// GetAddressablesByTopic provides a mock function with given fields: t
+func (_m *AddressLoader) GetAddressablesByTopic(t string) ([]models.Addressable, error) {
+	ret := _m.Called(t)
+
+	var r0 []models.Addressable
+	if rf, ok := ret.Get(0).(func(string) []models.Addressable); ok {
+		r0 = rf(t)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.Addressable)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(t)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}

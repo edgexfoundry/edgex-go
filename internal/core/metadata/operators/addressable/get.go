@@ -72,3 +72,26 @@ func NewPortExecutor(db AddressLoader, port int) PortExecutor {
 		database: db,
 		port:     port}
 }
+
+// TopicExecutor provides functionality for retrieving addresses from an underlying data-store.
+type TopicExecutor interface {
+	Execute() ([]contract.Addressable, error)
+}
+
+// addressByTopicLoader loads address by way of the operator pattern.
+type addressByTopicLoader struct {
+	database AddressLoader
+	topic    string
+}
+
+// Execute retrieves the addressables from the underlying data-store.
+func (n addressByTopicLoader) Execute() ([]contract.Addressable, error) {
+	return n.database.GetAddressablesByTopic(n.topic)
+}
+
+// NewTopicExecutor creates a TopicExecutor.
+func NewTopicExecutor(db AddressLoader, topic string) TopicExecutor {
+	return addressByTopicLoader{
+		database: db,
+		topic:    topic}
+}

@@ -252,7 +252,8 @@ func restGetAddressableByTopic(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := dbClient.GetAddressablesByTopic(t)
+	op := addressable.NewTopicExecutor(dbClient, t)
+	res, err := op.Execute()
 	if err != nil {
 		LoggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
