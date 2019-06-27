@@ -17,7 +17,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -118,125 +117,38 @@ func restUpdateDevice(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Check if the device exists
-	// First try ID
-	oldDevice, err := dbClient.GetDeviceById(rd.Id)
-	if err != nil {
-		// Then try name
-		oldDevice, err = dbClient.GetDeviceByName(rd.Name)
-		if err != nil {
-			LoggingClient.Error(err.Error())
-			http.Error(w, err.Error(), http.StatusNotFound)
-			return
-		}
-	}
-
-	if err = updateDeviceFields(rd, &oldDevice); err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		return
-	}
-
-	if err = dbClient.UpdateDevice(oldDevice); err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		return
-	}
+	ch := make(chan device.DeviceEvent)
+	defer close(ch)
 
 	ctx := r.Context()
-	// Notify
-	notifyDeviceAssociates(oldDevice, http.MethodPut, ctx)
+
+	requester, err := device.NewRequester(device.Http, LoggingClient, ctx)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	notifier := device.NewNotifier(ch, nc, Configuration.Notifications, dbClient, requester, LoggingClient, ctx)
+	go notifier.Execute()
+
+	op := device.NewUpdateDevice(ch, dbClient, rd, LoggingClient)
+	err = op.Execute()
+
+	if err != nil {
+		LoggingClient.Error(err.Error())
+		switch err.(type) {
+		case *types.ErrDuplicateName:
+			http.Error(w, err.Error(), http.StatusConflict)
+		case *types.ErrItemNotFound:
+			http.Error(w, err.Error(), http.StatusNotFound)
+		default:
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		return
+	}
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
-}
-
-// Update the device fields
-func updateDeviceFields(from models.Device, to *models.Device) error {
-
-	if (from.Service.String() != models.DeviceService{}.String()) {
-		// Check if the new service exists
-		// Try ID first
-		ds, err := dbClient.GetDeviceServiceById(from.Service.Id)
-		if err != nil {
-			// Then try name
-			ds, err = dbClient.GetDeviceServiceByName(from.Service.Name)
-			if err != nil {
-				return errors.New("Device service not found for updated device")
-			}
-		}
-
-		to.Service = ds
-	}
-	if (from.Profile.String() != models.DeviceProfile{}.String()) {
-		// Check if the new profile exists
-		// Try ID first
-		dp, err := dbClient.GetDeviceProfileById(from.Profile.Id)
-		if err != nil {
-			// Then try Name
-			dp, err = dbClient.GetDeviceProfileByName(from.Profile.Name)
-			if err != nil {
-				return errors.New("Device profile not found for updated device")
-			}
-		}
-
-		to.Profile = dp
-	}
-	if len(from.Protocols) > 0 {
-		to.Protocols = from.Protocols
-	}
-	if len(from.AutoEvents) > 0 {
-		to.AutoEvents = from.AutoEvents
-	}
-	if from.AdminState != "" {
-		to.AdminState = from.AdminState
-	}
-	if from.Description != "" {
-		to.Description = from.Description
-	}
-	if from.Labels != nil {
-		to.Labels = from.Labels
-	}
-	if from.LastConnected != 0 {
-		to.LastConnected = from.LastConnected
-	}
-	if from.LastReported != 0 {
-		to.LastReported = from.LastReported
-	}
-	if from.Location != nil {
-		to.Location = from.Location
-	}
-	if from.OperatingState != models.OperatingState("") {
-		to.OperatingState = from.OperatingState
-	}
-	if from.Origin != 0 {
-		to.Origin = from.Origin
-	}
-	if from.Name != "" {
-		to.Name = from.Name
-
-		// Check if the name is unique
-		checkD, err := dbClient.GetDeviceByName(from.Name)
-		if err != nil {
-			// A problem occurred accessing database
-			if err != db.ErrNotFound {
-				LoggingClient.Error(err.Error())
-				return err
-			}
-		}
-
-		// Found a device, make sure its the one we're trying to update
-		if err != db.ErrNotFound {
-			// Different IDs -> Name is not unique
-			if checkD.Id != to.Id {
-				err = errors.New("Duplicate name for Device")
-				LoggingClient.Error(err.Error())
-				return err
-			}
-		}
-	}
-
-	return nil
 }
 
 func restGetDevicesWithLabel(w http.ResponseWriter, r *http.Request) {
