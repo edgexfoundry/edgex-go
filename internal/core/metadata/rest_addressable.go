@@ -272,7 +272,8 @@ func restGetAddressableByPort(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := dbClient.GetAddressablesByPort(p)
+	op := addressable.NewPortExecutor(dbClient, p)
+	res, err := op.Execute()
 	if err != nil {
 		LoggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)

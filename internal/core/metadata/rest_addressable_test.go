@@ -19,9 +19,13 @@ import (
 // creating a specific handler which will accept all requests. Therefore, the URI is not important
 var TestURI = "/addressable"
 var TestAddress = "TestAddress"
+var TestPort = 8080
 
 // ErrorPathParam path parameter value which will trigger the 'mux.Vars' function to throw an error due to the '%' not being followed by a valid hexadecimal number.
 var ErrorPathParam = "%zz"
+
+// ErrorPortPathParam path parameter used to trigger an error in the `restGetAddressableByPort` function where the port variable is expected to be a number
+var ErrorPortPathParam = "abc"
 
 func TestGetAddressablesByAddress(t *testing.T) {
 	tests := []struct {
@@ -30,10 +34,11 @@ func TestGetAddressablesByAddress(t *testing.T) {
 		dbMock         interfaces.DBClient
 		expectedStatus int
 	}{
-		{"OK", createRequest(ADDRESS, TestAddress), createMockAddressLoader(1, "GetAddressablesByAddress"), http.StatusOK},
-		{"OK(No matches)", createRequest(ADDRESS, TestAddress), createMockAddressLoader(0, "GetAddressablesByAddress"), http.StatusOK},
-		{"Invalid TestAddress path parameter", createRequest(ADDRESS, ErrorPathParam), createMockAddressLoader(1, "GetAddressablesByAddress"), http.StatusBadRequest},
-		{"Internal Server Error", createRequest(ADDRESS, TestAddress), createErrorMockAddressLoader("GetAddressablesByAddress"), http.StatusInternalServerError},
+		{"OK", createRequest(ADDRESS, TestAddress), createMockAddressLoaderForAddressName(1, "GetAddressablesByAddress"), http.StatusOK},
+		{"OK(Multiple matches)", createRequest(ADDRESS, TestAddress), createMockAddressLoaderForAddressName(3, "GetAddressablesByAddress"), http.StatusOK},
+		{"OK(No matches)", createRequest(ADDRESS, TestAddress), createMockAddressLoaderForAddressName(0, "GetAddressablesByAddress"), http.StatusOK},
+		{"Invalid TestAddress path parameter", createRequest(ADDRESS, ErrorPathParam), createMockAddressLoaderForAddressName(1, "GetAddressablesByAddress"), http.StatusBadRequest},
+		{"Internal Server Error", createRequest(ADDRESS, TestAddress), createErrorMockAddressLoaderForAddressName("GetAddressablesByAddress"), http.StatusInternalServerError},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -57,10 +62,11 @@ func TestGetAddressablesByPublisher(t *testing.T) {
 		dbMock         interfaces.DBClient
 		expectedStatus int
 	}{
-		{"OK", createRequest(PUBLISHER, TestAddress), createMockAddressLoader(1, "GetAddressablesByPublisher"), http.StatusOK},
-		{"OK(No matches)", createRequest(PUBLISHER, TestAddress), createMockAddressLoader(0, "GetAddressablesByPublisher"), http.StatusOK},
-		{"Invalid TestAddress path parameter", createRequest(PUBLISHER, ErrorPathParam), createMockAddressLoader(1, "GetAddressablesByPublisher"), http.StatusBadRequest},
-		{"Internal Server Error", createRequest(PUBLISHER, TestAddress), createErrorMockAddressLoader("GetAddressablesByPublisher"), http.StatusInternalServerError},
+		{"OK", createRequest(PUBLISHER, TestAddress), createMockAddressLoaderForAddressName(1, "GetAddressablesByPublisher"), http.StatusOK},
+		{"OK(Multiple matches)", createRequest(PUBLISHER, TestAddress), createMockAddressLoaderForAddressName(3, "GetAddressablesByPublisher"), http.StatusOK},
+		{"OK(No matches)", createRequest(PUBLISHER, TestAddress), createMockAddressLoaderForAddressName(0, "GetAddressablesByPublisher"), http.StatusOK},
+		{"Invalid TestAddress path parameter", createRequest(PUBLISHER, ErrorPathParam), createMockAddressLoaderForAddressName(1, "GetAddressablesByPublisher"), http.StatusBadRequest},
+		{"Internal Server Error", createRequest(PUBLISHER, TestAddress), createErrorMockAddressLoaderForAddressName("GetAddressablesByPublisher"), http.StatusInternalServerError},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -77,7 +83,41 @@ func TestGetAddressablesByPublisher(t *testing.T) {
 	}
 }
 
-func createMockAddressLoader(howMany int, methodName string) interfaces.DBClient {
+func TestGetAddressablesByPort(t *testing.T) {
+	tests := []struct {
+		name           string
+		request        *http.Request
+		dbMock         interfaces.DBClient
+		expectedStatus int
+	}{
+		{"OK", createRequest(PORT, strconv.Itoa(TestPort)), createMockAddressLoaderForPort(1, "GetAddressablesByPort"), http.StatusOK},
+		{"OK(Multiple matches)", createRequest(PORT, strconv.Itoa(TestPort)), createMockAddressLoaderForPort(3, "GetAddressablesByPort"), http.StatusOK},
+		{"OK(No matches)", createRequest(PORT, strconv.Itoa(TestPort)), createMockAddressLoaderForPort(0, "GetAddressablesByPort"), http.StatusOK},
+		{"Invalid PORT path parameter", createRequest(PORT, ErrorPathParam), createMockAddressLoaderForPort(1, "GetAddressablesByPort"), http.StatusBadRequest},
+		{"Non integer PORT path parameter", createRequest(PORT, ErrorPortPathParam), createMockAddressLoaderForPort(1, "GetAddressablesByPort"), http.StatusBadRequest},
+		{"Internal Server Error", createRequest(PORT, strconv.Itoa(TestPort)), createErrorMockAddressLoaderPortExecutor("GetAddressablesByPort"), http.StatusInternalServerError},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			dbClient = tt.dbMock
+			rr := httptest.NewRecorder()
+			handler := http.HandlerFunc(restGetAddressableByPort)
+			handler.ServeHTTP(rr, tt.request)
+			response := rr.Result()
+			if response.StatusCode != tt.expectedStatus {
+				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
+				return
+			}
+		})
+	}
+}
+
+func createRequest(pathParamName string, pathParamValue string) *http.Request {
+	req := httptest.NewRequest(http.MethodGet, TestURI, nil)
+	return mux.SetURLVars(req, map[string]string{pathParamName: pathParamValue})
+}
+
+func createMockAddressLoaderForAddressName(howMany int, methodName string) interfaces.DBClient {
 	var addressables []contract.Addressable
 	for i := 0; i < howMany; i++ {
 		addressables = append(addressables, contract.Addressable{
@@ -93,13 +133,30 @@ func createMockAddressLoader(howMany int, methodName string) interfaces.DBClient
 	return myMock
 }
 
-func createErrorMockAddressLoader(methodName string) interfaces.DBClient {
+func createErrorMockAddressLoaderForAddressName(methodName string) interfaces.DBClient {
 	myMock := &mocks.DBClient{}
 	myMock.On(methodName, TestAddress).Return(nil, errors.New("test error"))
 	return myMock
 }
 
-func createRequest(pathParamName string, pathParamValue string) *http.Request {
-	req := httptest.NewRequest(http.MethodGet, TestURI, nil)
-	return mux.SetURLVars(req, map[string]string{pathParamName: pathParamValue})
+func createMockAddressLoaderForPort(howMany int, methodName string) interfaces.DBClient {
+	var addressables []contract.Addressable
+	for i := 0; i < howMany; i++ {
+		addressables = append(addressables, contract.Addressable{
+			User:       "User" + strconv.Itoa(i),
+			Protocol:   "http",
+			Id:         "address" + strconv.Itoa(i),
+			HTTPMethod: "POST",
+		})
+	}
+
+	myMock := &mocks.DBClient{}
+	myMock.On(methodName, TestPort).Return(addressables, nil)
+	return myMock
+}
+
+func createErrorMockAddressLoaderPortExecutor(methodName string) interfaces.DBClient {
+	myMock := &mocks.DBClient{}
+	myMock.On(methodName, TestPort).Return(nil, errors.New("test error"))
+	return myMock
 }

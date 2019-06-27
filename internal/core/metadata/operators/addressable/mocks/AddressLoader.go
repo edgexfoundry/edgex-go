@@ -33,6 +33,29 @@ func (_m *AddressLoader) GetAddressablesByAddress(address string) ([]models.Addr
 	return r0, r1
 }
 
+// GetAddressablesByPort provides a mock function with given fields: p
+func (_m *AddressLoader) GetAddressablesByPort(p int) ([]models.Addressable, error) {
+	ret := _m.Called(p)
+
+	var r0 []models.Addressable
+	if rf, ok := ret.Get(0).(func(int) []models.Addressable); ok {
+		r0 = rf(p)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.Addressable)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(int) error); ok {
+		r1 = rf(p)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetAddressablesByPublisher provides a mock function with given fields: p
 func (_m *AddressLoader) GetAddressablesByPublisher(p string) ([]models.Addressable, error) {
 	ret := _m.Called(p)

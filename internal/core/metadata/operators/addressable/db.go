@@ -7,4 +7,5 @@ import contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 type AddressLoader interface {
 	GetAddressablesByAddress(address string) ([]contract.Addressable, error)
 	GetAddressablesByPublisher(p string) ([]contract.Addressable, error)
+	GetAddressablesByPort(p int) ([]contract.Addressable, error)
 }
