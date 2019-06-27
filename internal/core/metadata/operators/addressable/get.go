@@ -31,7 +31,7 @@ type PublisherExecutor interface {
 	Execute() ([]contract.Addressable, error)
 }
 
-// PublisherExecutor loads address by way of the operator pattern.
+// addressLoadByPublisher loads address by way of the operator pattern.
 type addressLoadByPublisher struct {
 	database  AddressLoader
 	publisher string
@@ -42,10 +42,33 @@ func (p addressLoadByPublisher) Execute() ([]contract.Addressable, error) {
 	return p.database.GetAddressablesByPublisher(p.publisher)
 }
 
-// NewAddressExecutor creates a PublisherExecutor.
+// NewPublisherExecutor creates a PublisherExecutor.
 func NewPublisherExecutor(db AddressLoader, publisher string) PublisherExecutor {
 	return addressLoadByPublisher{
 		database:  db,
 		publisher: publisher,
 	}
+}
+
+// PortExecutor provides functionality for retrieving addresses from an underlying data-store.
+type PortExecutor interface {
+	Execute() ([]contract.Addressable, error)
+}
+
+// addressByPortLoader loads address by way of the operator pattern.
+type addressByPortLoader struct {
+	database AddressLoader
+	port     int
+}
+
+// Execute retrieves the addressables from the underlying data-store.
+func (n addressByPortLoader) Execute() ([]contract.Addressable, error) {
+	return n.database.GetAddressablesByPort(n.port)
+}
+
+// NewPortExecutor creates a PortExecutor.
+func NewPortExecutor(db AddressLoader, port int) PortExecutor {
+	return addressByPortLoader{
+		database: db,
+		port:     port}
 }
