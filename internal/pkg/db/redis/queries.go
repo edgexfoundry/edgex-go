@@ -275,3 +275,15 @@ func getObjectsByValuesSorted(conn redis.Conn, limit int, vals ...string) (objec
 
 	return objects, nil
 }
+
+func validateKeyExists(conn redis.Conn, key string) error {
+	count, err := redis.Int(conn.Do("EXISTS", key))
+	if err != nil {
+		return err
+	}
+
+	if count == 1 {
+		return nil
+	}
+	return db.ErrNotFound
+}

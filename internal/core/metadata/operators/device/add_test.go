@@ -78,7 +78,7 @@ func TestAddNewDevice(t *testing.T) {
 
 func createAddDeviceDbMockForName() DeviceAdder {
 	dbMock := &mocks.DeviceAdder{}
-	dbMock.On("AddDevice", testDevice).Return(uuid.New().String(), nil)
+	dbMock.On("AddDevice", testDevice, testDeviceProfile.CoreCommands).Return(uuid.New().String(), nil)
 	dbMock.On("GetDeviceProfileByName", testDeviceProfileName).Return(testDeviceProfile, nil)
 	dbMock.On("GetDeviceServiceByName", testDeviceServiceName).Return(testDeviceService, nil)
 	return dbMock
@@ -86,7 +86,7 @@ func createAddDeviceDbMockForName() DeviceAdder {
 
 func createAddDeviceDbMockForId() DeviceAdder {
 	dbMock := &mocks.DeviceAdder{}
-	dbMock.On("AddDevice", testDevice).Return(uuid.New().String(), nil)
+	dbMock.On("AddDevice", testDevice, testDeviceProfile.CoreCommands).Return(uuid.New().String(), nil)
 	dbMock.On("GetDeviceProfileById", testDeviceProfileId).Return(testDeviceProfile, nil)
 	dbMock.On("GetDeviceProfileByName", testDeviceProfileName).Return(models.DeviceProfile{}, db.ErrNotFound)
 	dbMock.On("GetDeviceServiceById", testDeviceServiceId).Return(testDeviceService, nil)
@@ -96,7 +96,7 @@ func createAddDeviceDbMockForId() DeviceAdder {
 
 func createAddDeviceDbMockFailDeviceService() DeviceAdder {
 	dbMock := &mocks.DeviceAdder{}
-	dbMock.On("AddDevice", testDevice).Return(uuid.New().String(), nil)
+	dbMock.On("AddDevice", testDevice, testDeviceProfile.CoreCommands).Return(uuid.New().String(), nil)
 	dbMock.On("GetDeviceServiceById", testDeviceServiceId).Return(models.DeviceService{}, db.ErrNotFound)
 	dbMock.On("GetDeviceServiceByName", testDeviceServiceName).Return(models.DeviceService{}, db.ErrNotFound)
 	return dbMock
@@ -104,7 +104,7 @@ func createAddDeviceDbMockFailDeviceService() DeviceAdder {
 
 func createAddDeviceDbMockFailDeviceProfile() DeviceAdder {
 	dbMock := &mocks.DeviceAdder{}
-	dbMock.On("AddDevice", testDevice).Return(uuid.New().String(), nil)
+	dbMock.On("AddDevice", testDevice, testDeviceProfile.CoreCommands).Return(uuid.New().String(), nil)
 	dbMock.On("GetDeviceServiceByName", testDeviceServiceName).Return(testDeviceService, nil)
 	dbMock.On("GetDeviceProfileById", testDeviceProfileId).Return(models.DeviceProfile{}, db.ErrNotFound)
 	dbMock.On("GetDeviceProfileByName", testDeviceProfileName).Return(models.DeviceProfile{}, db.ErrNotFound)
@@ -113,7 +113,7 @@ func createAddDeviceDbMockFailDeviceProfile() DeviceAdder {
 
 func createAddDeviceDbMockDuplicateName() DeviceAdder {
 	dbMock := &mocks.DeviceAdder{}
-	dbMock.On("AddDevice", testDevice).Return("", db.ErrNotUnique)
+	dbMock.On("AddDevice", testDevice, testDeviceProfile.CoreCommands).Return("", db.ErrNotUnique)
 	dbMock.On("GetDeviceProfileByName", testDeviceProfileName).Return(testDeviceProfile, nil)
 	dbMock.On("GetDeviceServiceByName", testDeviceServiceName).Return(testDeviceService, nil)
 	return dbMock

@@ -75,7 +75,7 @@ func (op addDevice) Execute() (id string, err error) {
 	op.device.Profile = profile
 
 	// Add the device
-	id, err = op.database.AddDevice(op.device)
+	id, err = op.database.AddDevice(op.device, profile.CoreCommands)
 	if err != nil {
 		if err == db.ErrNotUnique {
 			err = errors.NewErrDuplicateName(fmt.Sprintf("duplicate name for device: %s", op.device.Name))

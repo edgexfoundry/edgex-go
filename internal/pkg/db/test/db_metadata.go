@@ -24,8 +24,8 @@ func TestMetadataDB(t *testing.T, db interfaces.DBClient) {
 	testDBDeviceService(t, db)
 	testDBDeviceReport(t, db)
 	testDBDeviceProfile(t, db)
-	testDBCommand(t, db)
 	testDBDevice(t, db)
+	testDBCommand(t, db)
 	testDBProvisionWatcher(t, db)
 
 	db.CloseSession()
@@ -195,7 +195,7 @@ func populateDevice(db interfaces.DBClient, count int) (string, error) {
 			return id, fmt.Errorf("Error creating DeviceProfile: %v", err)
 		}
 
-		id, err = db.AddDevice(d)
+		id, err = db.AddDevice(d, d.Profile.CoreCommands)
 		if err != nil {
 			return id, err
 		}
@@ -475,23 +475,15 @@ func testDBAddressables(t *testing.T, db interfaces.DBClient) {
 }
 
 func testDBCommand(t *testing.T, db interfaces.DBClient) {
-	dps, err := db.GetAllDeviceProfiles()
-	if err != nil {
-		t.Fatalf("Error getting commands %v", err)
-	}
+	var commands []models.Command
 
-	for _, dp := range dps {
-		if err = db.DeleteDeviceProfileById(dp.Id); err != nil {
-			t.Fatalf("Error removing DeviceProfile %v", err)
-		}
-	}
+	clearDevices(t, db)
+	clearDeviceServices(t, db)
+	clearDeviceProfiles(t, db)
+	clearAddressables(t, db)
+	did, err := populateDevice(db, 100)
 
-	_, err = populateDeviceProfile(db, 100)
-	if err != nil {
-		t.Fatalf("Error populating db: %v\n", err)
-	}
-
-	commands, err := db.GetAllCommands()
+	commands, err = db.GetAllCommands()
 	if err != nil {
 		t.Fatalf("Error getting commands %v", err)
 	}
@@ -526,6 +518,35 @@ func testDBCommand(t *testing.T, db interfaces.DBClient) {
 	}
 	if len(commands) != 0 {
 		t.Fatalf("There should be 1 commands instead of %d", len(commands))
+	}
+
+	commands, err = db.GetCommandsByDeviceId(did)
+	if err != nil {
+		t.Fatalf("Error getting commands by device id %v", err)
+	}
+	if len(commands) != 1 {
+		t.Fatalf("There should be 1 commands instead of %d", len(commands))
+	}
+
+	commands, err = db.GetCommandsByDeviceId(uuid.New().String())
+	if err != nil {
+		t.Fatalf("Error getting commands by device id %v", err)
+	}
+	if len(commands) != 0 {
+		t.Fatalf("There should be 0 commands instead of %d", len(commands))
+	}
+
+	err = db.DeleteDeviceById(did)
+	if err != nil {
+		t.Fatalf("Error removing device by id %v", err)
+	}
+
+	commands, err = db.GetAllCommands()
+	if err != nil {
+		t.Fatalf("Error getting commands %v", err)
+	}
+	if len(commands) != 99 {
+		t.Fatalf("There should be 100 commands instead of %d", len(commands))
 	}
 }
 
@@ -883,10 +904,10 @@ func testDBDeviceProfile(t *testing.T, db interfaces.DBClient) {
 func testDBDevice(t *testing.T, db interfaces.DBClient) {
 	var devices []models.Device
 
-	clearDeviceProfiles(t, db)
-	clearDeviceServices(t, db)
-	clearAddressables(t, db)
 	clearDevices(t, db)
+	clearDeviceServices(t, db)
+	clearDeviceProfiles(t, db)
+	clearAddressables(t, db)
 	id, err := populateDevice(db, 100)
 	if err != nil {
 		t.Fatalf("Error populating db: %v\n", err)
@@ -894,7 +915,7 @@ func testDBDevice(t *testing.T, db interfaces.DBClient) {
 
 	d := models.Device{}
 	d.Name = "name1"
-	_, err = db.AddDevice(d)
+	_, err = db.AddDevice(d, d.Profile.CoreCommands)
 	if err == nil {
 		t.Fatalf("Should be an error adding an existing name")
 	}

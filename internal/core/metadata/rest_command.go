@@ -14,13 +14,15 @@
 package metadata
 
 import (
-	"encoding/json"
 	"errors"
+	"github.com/edgexfoundry/edgex-go/internal/pkg"
+	"github.com/gorilla/mux"
 	"net/http"
 	"net/url"
 
+	types "github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/operators/command"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
-	"github.com/gorilla/mux"
 )
 
 func restGetAllCommands(w http.ResponseWriter, _ *http.Request) {
@@ -36,9 +38,7 @@ func restGetAllCommands(w http.ResponseWriter, _ *http.Request) {
 		http.Error(w, errors.New("Max limit exceeded").Error(), http.StatusRequestEntityTooLarge)
 		return
 	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(&results)
+	pkg.Encode(&results, w, LoggingClient)
 }
 
 func restGetCommandById(w http.ResponseWriter, r *http.Request) {
@@ -55,8 +55,7 @@ func restGetCommandById(w http.ResponseWriter, r *http.Request) {
 		LoggingClient.Error(err.Error())
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(res)
+	pkg.Encode(res, w, LoggingClient)
 }
 
 func restGetCommandByName(w http.ResponseWriter, r *http.Request) {
@@ -78,7 +77,29 @@ func restGetCommandByName(w http.ResponseWriter, r *http.Request) {
 		LoggingClient.Error(err.Error())
 		return
 	}
+	pkg.Encode(results, w, LoggingClient)
+}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(results)
+func restGetCommandsByDeviceId(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	did, err := url.QueryUnescape(vars[ID])
+	if err != nil {
+		LoggingClient.Error(err.Error())
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	op := command.NewDeviceIdExecutor(dbClient, did)
+	commands, err := op.Execute()
+	if err != nil {
+		LoggingClient.Error(err.Error())
+		switch err.(type) {
+		case *types.ErrItemNotFound:
+			http.Error(w, err.Error(), http.StatusNotFound)
+		default:
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		return
+	}
+	pkg.Encode(&commands, w, LoggingClient)
 }

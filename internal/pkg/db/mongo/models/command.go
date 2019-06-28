@@ -17,6 +17,7 @@ package models
 import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
+	"github.com/globalsign/mgo/bson"
 )
 
 type Response struct {
@@ -38,19 +39,13 @@ type Put struct {
 	ParameterNames []string   `bson:"parameterNames"`
 }
 
-type Command struct {
-	Created  int64  `bson:"created"`
-	Modified int64  `bson:"modified"`
-	Origin   int64  `bson:"origin"`
-	Uuid     string `bson:"uuid,omitempty"`
-	Name     string `bson:"name"`
-	Get      Get    `bson:"get"`
-	Put      Put    `bson:"put"`
+type CommandProfile struct {
+	Name string `bson:"name"`
+	Get  Get    `bson:"get"`
+	Put  Put    `bson:"put"`
 }
 
-func (c *Command) ToContract() (cmd contract.Command) {
-	// Always hand back the UUID as the contract command ID unless it's blank (an old command, for example blackbox test scripts)
-	id := c.Uuid
+func (c *CommandProfile) ToContract() (cmd contract.Command) {
 	cmd.Get = contract.Get{}
 	cmd.Get.Path = c.Get.Path
 	cmd.Get.URL = c.Get.URL
@@ -76,21 +71,12 @@ func (c *Command) ToContract() (cmd contract.Command) {
 	cmd.Put.URL = c.Put.URL
 	cmd.Put.ParameterNames = c.Put.ParameterNames
 
-	cmd.Id = id
-	cmd.Created = c.Created
-	cmd.Modified = c.Modified
-	cmd.Origin = c.Origin
 	cmd.Name = c.Name
 
 	return
 }
 
-func (c *Command) FromContract(from contract.Command) (contractId string, err error) {
-	//temporary for backward compatibility commands have only "uuid"
-	_, c.Uuid, err = fromContractId(from.Id)
-	c.Created = from.Created
-	c.Modified = from.Modified
-	c.Origin = from.Origin
+func (c *CommandProfile) FromContract(from contract.Command) (contractId string, err error) {
 	c.Name = from.Name
 
 	c.Get = Get{}
@@ -127,4 +113,44 @@ func (c *Command) TimestampForUpdate() {
 func (c *Command) TimestampForAdd() {
 	c.TimestampForUpdate()
 	c.Created = c.Modified
+}
+
+type Command struct {
+	CommandProfile `bson:",inline"`
+	Id             bson.ObjectId `bson:"_id,omitempty"`
+	Uuid           string        `bson:"uuid,omitempty"`
+	DeviceID       string        `bson:"deviceId"`
+	DeviceName     string        `bson:"deviceName"`
+	Created        int64         `bson:"created"`
+	Modified       int64         `bson:"modified"`
+	Origin         int64         `bson:"origin"`
+}
+
+func (c *Command) ToContract() (cmd contract.Command) {
+	cmd = c.CommandProfile.ToContract()
+	id := c.Uuid
+	if id == "" {
+		id = c.Id.Hex()
+	}
+	cmd.Id = id
+	cmd.Created = c.Created
+	cmd.Modified = c.Modified
+	cmd.Origin = c.Origin
+	return
+}
+
+func (c *Command) FromContract(fromCommand contract.Command, fromDeviceId string, fromDeviceName string) (contractId string, err error) {
+	c.Id, c.Uuid, err = fromContractId(fromCommand.Id)
+	if err != nil {
+		return
+	}
+	c.CommandProfile.FromContract(fromCommand)
+	c.DeviceID = fromDeviceId
+	c.DeviceName = fromDeviceName
+	c.Created = fromCommand.Created
+	c.Modified = fromCommand.Modified
+	c.Origin = fromCommand.Origin
+
+	contractId = toContractId(c.Id, c.Uuid)
+	return
 }
