@@ -32,3 +32,26 @@ func (_m *DeviceLoader) GetAllDevices() ([]models.Device, error) {
 
 	return r0, r1
 }
+
+// GetDevicesByProfileId provides a mock function with given fields: pid
+func (_m *DeviceLoader) GetDevicesByProfileId(pid string) ([]models.Device, error) {
+	ret := _m.Called(pid)
+
+	var r0 []models.Device
+	if rf, ok := ret.Get(0).(func(string) []models.Device); ok {
+		r0 = rf(pid)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.Device)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(pid)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}

@@ -106,3 +106,37 @@ func (e ErrItemNotFound) Error() string {
 func NewErrItemNotFound(key string) error {
 	return &ErrItemNotFound{key: key}
 }
+
+type ErrDeviceProfileNotFound struct {
+	name string
+	id   string
+}
+
+func (e ErrDeviceProfileNotFound) Error() string {
+	return fmt.Sprintf("device profile not found -- id: '%s' name: '%s'", e.id, e.name)
+}
+
+func NewErrDeviceProfileNotFound(id string, name string) error {
+	return ErrDeviceProfileNotFound{
+		id:   id,
+		name: name,
+	}
+}
+
+type ErrDeviceProfileInvalidState struct {
+	id          string
+	name        string
+	description string
+}
+
+func (e ErrDeviceProfileInvalidState) Error() string {
+	return fmt.Sprintf("device profile invalid state -- id: '%s' name: '%s' description: '%s'", e.id, e.name, e.description)
+}
+
+func NewErrDeviceProfileInvalidState(id string, name string, description string) error {
+	return ErrDeviceProfileInvalidState{
+		id:          id,
+		name:        name,
+		description: description,
+	}
+}

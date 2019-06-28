@@ -41,9 +41,43 @@ func (op deviceLoadAll) Execute() (devices []contract.Device, err error) {
 		op.logger.Error(err.Error())
 		return
 	}
+
 	if len(devices) > op.config.MaxResultCount {
 		err = errors.NewErrLimitExceeded(op.config.MaxResultCount)
 		return []contract.Device{}, err
 	}
+	return
+}
+
+// ProfileIdExecutor provides functionality for loading devices by way of the operator pattern.
+type ProfileIdExecutor interface {
+	Execute() ([]contract.Device, error)
+}
+
+type deviceLoadByProfileId struct {
+	config   config.ServiceInfo
+	database DeviceLoader
+	profile  string
+	logger   logger.LoggingClient
+}
+
+// NewProfileIdExecutor creates a new ProfileIdExecutor
+func NewProfileIdExecutor(cfg config.ServiceInfo, db DeviceLoader, log logger.LoggingClient, profile string) ProfileIdExecutor {
+	return deviceLoadByProfileId{config: cfg, database: db, logger: log, profile: profile}
+}
+
+// Execute retrieves the devices associated with a profile ID
+func (op deviceLoadByProfileId) Execute() (devices []contract.Device, err error) {
+	devices, err = op.database.GetDevicesByProfileId(op.profile)
+	if err != nil {
+		op.logger.Error(err.Error())
+		return
+	}
+
+	if len(devices) > op.config.MaxResultCount {
+		err = errors.NewErrLimitExceeded(op.config.MaxResultCount)
+		return []contract.Device{}, err
+	}
+
 	return
 }

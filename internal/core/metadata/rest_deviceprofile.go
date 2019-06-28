@@ -20,10 +20,14 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/gorilla/mux"
 	"gopkg.in/yaml.v2"
+
+	errors2 "github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/operators/device"
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/operators/device_profile"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 )
 
 func restGetAllDeviceProfiles(w http.ResponseWriter, _ *http.Request) {
@@ -97,119 +101,33 @@ func restUpdateDeviceProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Check if the Device Profile exists
-	var to models.DeviceProfile
-	// First try with ID
-	to, err := dbClient.GetDeviceProfileById(from.Id)
+	op := device_profile.NewUpdateDeviceProfileExecutor(dbClient, from)
+	dp, err := op.Execute()
 	if err != nil {
-		// Try with name
-		to, err = dbClient.GetDeviceProfileByName(from.Name)
-		if err != nil {
-			LoggingClient.Error(err.Error())
+		LoggingClient.Error(err.Error())
+		switch err.(type) {
+		case errors2.ErrDeviceProfileNotFound:
 			http.Error(w, err.Error(), http.StatusNotFound)
-			return
+		case *errors2.ErrDuplicateName:
+			http.Error(w, err.Error(), http.StatusConflict)
+		case errors2.ErrDeviceProfileInvalidState:
+			http.Error(w, err.Error(), http.StatusConflict)
+		default:
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-	}
 
-	// Update the device profile fields based on the passed JSON
-	if err := updateDeviceProfileFields(from, &to, w); err != nil {
-		LoggingClient.Error(err.Error())
-		return
-	}
-	if err := dbClient.UpdateDeviceProfile(to); err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	// Notify Associates
-	notifyProfileAssociates(to, http.MethodPut)
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("true"))
-}
-
-// Update the fields of the device profile
-// to - the device profile that was already in Mongo (whose fields we're updating)
-// from - the device profile that was passed in with the request
-func updateDeviceProfileFields(from models.DeviceProfile, to *models.DeviceProfile, w http.ResponseWriter) error {
-	if from.Description != "" {
-		to.Description = from.Description
-	}
-	if from.Labels != nil {
-		to.Labels = from.Labels
-	}
-	if from.Manufacturer != "" {
-		to.Manufacturer = from.Manufacturer
-	}
-	if from.Model != "" {
-		to.Model = from.Model
-	}
-	if from.Origin != 0 {
-		to.Origin = from.Origin
-	}
-	if from.Name != "" {
-		to.Name = from.Name
-		// Names must be unique for each device profile
-		if err := checkDuplicateProfileNames(*to, w); err != nil {
-			return err
-		}
-	}
-	if from.DeviceResources != nil {
-		to.DeviceResources = from.DeviceResources
-	}
-	if from.DeviceCommands != nil {
-		to.DeviceCommands = from.DeviceCommands
-	}
-	if from.CoreCommands != nil {
-		// Check for duplicates by command name
-		if err := checkDuplicateCommands(from, w); err != nil {
-			return err
-		}
-		to.CoreCommands = from.CoreCommands
-	}
-
-	return nil
-}
-
-// Check for duplicate names in device profiles
-func checkDuplicateProfileNames(dp models.DeviceProfile, w http.ResponseWriter) error {
-	profiles, err := dbClient.GetAllDeviceProfiles()
+	err = notifyProfileAssociates(dp, dbClient, http.MethodPut)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		return err
+		// Log the error but do not change the response to the client. We do not want this to affect the overall status
+		// of the operation
+		LoggingClient.Warn("Error while notifying profile associates of update: ", err.Error())
 	}
 
-	for _, p := range profiles {
-		if p.Name == dp.Name && p.Id != dp.Id {
-			err = errors.New("Duplicate profile name")
-			http.Error(w, err.Error(), http.StatusConflict)
-			return err
-		}
-	}
-
-	return nil
-}
-
-// Check for duplicate command names in the device profile
-func checkDuplicateCommands(dp models.DeviceProfile, w http.ResponseWriter) error {
-	// Check if there are duplicate names in the device profile command list
-	for _, c1 := range dp.CoreCommands {
-		count := 0
-		for _, c2 := range dp.CoreCommands {
-			if c1.Name == c2.Name {
-				count += 1
-			}
-		}
-		if count > 1 {
-			err := errors.New("Error adding device profile: Duplicate names in the commands")
-			http.Error(w, err.Error(), http.StatusConflict)
-			return err
-		}
-	}
-
-	return nil
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func restGetProfileByProfileId(w http.ResponseWriter, r *http.Request) {
@@ -599,9 +517,10 @@ func restGetYamlProfileById(w http.ResponseWriter, r *http.Request) {
 }
 
 // Notify the associated device services for changes in the device profile
-func notifyProfileAssociates(dp models.DeviceProfile, action string) error {
+func notifyProfileAssociates(dp models.DeviceProfile, dl device.DeviceLoader, action string) error {
 	// Get the devices
-	d, err := dbClient.GetDevicesByProfileId(dp.Id)
+	op := device.NewProfileIdExecutor(Configuration.Service, dl, LoggingClient, dp.Id)
+	d, err := op.Execute()
 	if err != nil {
 		LoggingClient.Error(err.Error())
 		return err

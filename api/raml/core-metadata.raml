@@ -803,6 +803,8 @@ schemas:
         responses:
             "200":
                 description: boolean indicating success of the update
+            "409":
+                description: if the profile contains duplicate command or profile names, or if the device profile is in use by one or more provision watchers or devices.
             "404":
                 description: if the profile cannot be found by the identifier provided
             "400":

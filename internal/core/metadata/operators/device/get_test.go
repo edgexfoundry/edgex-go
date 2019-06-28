@@ -24,6 +24,8 @@ import (
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
+var TestDeviceProfileID = "TestDeviceProfileID"
+
 func TestGetAllDevices(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -31,9 +33,9 @@ func TestGetAllDevices(t *testing.T) {
 		dbMock      DeviceLoader
 		expectError bool
 	}{
-		{"GetAllPass", config.ServiceInfo{MaxResultCount: 1}, createGetDeviceLoaderMock(), false},
-		{"GetAllFailCount", config.ServiceInfo{}, createGetDeviceLoaderMock(), true},
-		{"GetAllFailUnexpected", config.ServiceInfo{MaxResultCount: 1}, createGetDeviceLoaderMockFail(), true},
+		{"GetAllPass", config.ServiceInfo{MaxResultCount: 1}, createDeviceLoaderMockNoArg("GetAllDevices"), false},
+		{"GetAllFailCount", config.ServiceInfo{}, createDeviceLoaderMockNoArg("GetAllDevices"), true},
+		{"GetAllFailUnexpected", config.ServiceInfo{MaxResultCount: 1}, createGetDeviceLoaderMockFail("GetAllDevices"), true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -43,23 +45,68 @@ func TestGetAllDevices(t *testing.T) {
 				t.Error(err)
 				return
 			}
+
 			if err == nil && tt.expectError {
 				t.Errorf("error was expected, none occurred")
+
 				return
 			}
 		})
 	}
 }
 
-func createGetDeviceLoaderMock() DeviceLoader {
+func TestGetDeviceByProfileId(t *testing.T) {
+	tests := []struct {
+		name        string
+		cfg         config.ServiceInfo
+		dbMock      DeviceLoader
+		expectError bool
+	}{
+		{"Get devices by Profile ID", config.ServiceInfo{MaxResultCount: 1}, createDeviceLoaderMockStringArg("GetDevicesByProfileId"), false},
+		{"Get devices more than maximum", config.ServiceInfo{}, createDeviceLoaderMockStringArg("GetDevicesByProfileId"), true},
+		{"Get devices fail", config.ServiceInfo{MaxResultCount: 1}, createDeviceLoaderMockStringArgFail("GetDevicesByProfileId"), true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			op := NewProfileIdExecutor(tt.cfg, tt.dbMock, logger.MockLogger{}, TestDeviceProfileID)
+			_, err := op.Execute()
+			if err != nil && !tt.expectError {
+				t.Error(err)
+
+				return
+			}
+
+			if err == nil && tt.expectError {
+				t.Errorf("error was expected, none occurred")
+
+				return
+			}
+		})
+	}
+}
+
+func createDeviceLoaderMockNoArg(methodName string) DeviceLoader {
 	devices := []contract.Device{testDevice}
 	dbMock := &mocks.DeviceLoader{}
-	dbMock.On("GetAllDevices").Return(devices, nil)
+	dbMock.On(methodName).Return(devices, nil)
 	return dbMock
 }
 
-func createGetDeviceLoaderMockFail() DeviceLoader {
+func createGetDeviceLoaderMockFail(methodName string) DeviceLoader {
 	dbMock := &mocks.DeviceLoader{}
-	dbMock.On("GetAllDevices").Return(nil, errors.New("unexpected error"))
+	dbMock.On(methodName).Return(nil, errors.New("unexpected error"))
+	return dbMock
+}
+
+func createDeviceLoaderMockStringArg(methodName string) DeviceLoader {
+	devices := []contract.Device{testDevice}
+	dbMock := &mocks.DeviceLoader{}
+	dbMock.On(methodName, TestDeviceProfileID).Return(devices, nil)
+	return dbMock
+}
+
+func createDeviceLoaderMockStringArgFail(methodName string) DeviceLoader {
+	dbMock := &mocks.DeviceLoader{}
+	dbMock.On(methodName, TestDeviceProfileID).Return(nil, errors.New("unexpected error"))
 	return dbMock
 }
