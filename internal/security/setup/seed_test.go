@@ -42,11 +42,20 @@ func TestNewCertificateSeed(t *testing.T) {
 	rsaInvalid := valid
 	rsaInvalid.KeyScheme.RSA = "test"
 
-	keySizeInvalid := valid
-	keySizeInvalid.KeyScheme.RSAKeySize = "test"
+	keySizeParseInvalid := valid
+	keySizeParseInvalid.KeyScheme.RSAKeySize = "test"
+
+	keySizeValueInvalid := valid
+	keySizeValueInvalid.KeyScheme.RSAKeySize = "678"
 
 	ecInvalid := valid
 	ecInvalid.KeyScheme.EC = "test"
+
+	curveParseInvalid := valid
+	curveParseInvalid.KeyScheme.ECCurve = "test"
+
+	curveValueInvalid := valid
+	curveValueInvalid.KeyScheme.ECCurve = "555"
 
 	dumpConfigInvalid := valid
 	dumpConfigInvalid.DumpConfig = "test"
@@ -64,8 +73,11 @@ func TestNewCertificateSeed(t *testing.T) {
 		{"CAParseFail", createDirectoryHandlerMock(caInvalid, t), caInvalid, true},
 		{"DumpKeysFail", createDirectoryHandlerMock(dumpKeysInvalid, t), dumpKeysInvalid, true},
 		{"RSAParseFail", createDirectoryHandlerMock(rsaInvalid, t), rsaInvalid, true},
-		{"KeySizeFail", createDirectoryHandlerMock(keySizeInvalid, t), keySizeInvalid, true},
+		{"KeySizeParseFail", createDirectoryHandlerMock(keySizeParseInvalid, t), keySizeParseInvalid, true},
+		{"KeySizeValueFail", createDirectoryHandlerMock(keySizeValueInvalid, t), keySizeValueInvalid, true},
 		{"ECParseFail", createDirectoryHandlerMock(ecInvalid, t), ecInvalid, true},
+		{"CurveParseFail", createDirectoryHandlerMock(curveParseInvalid, t), curveParseInvalid, true},
+		{"CurveValueFail", createDirectoryHandlerMock(curveValueInvalid, t), curveValueInvalid, true},
 		{"DumpConfigFail", createDirectoryHandlerMock(dumpConfigInvalid, t), dumpConfigInvalid, true},
 	}
 	for _, tt := range tests {

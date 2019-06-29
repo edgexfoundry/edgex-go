@@ -15,31 +15,29 @@
 package certificates
 
 import (
-	"crypto"
-	"crypto/x509"
 	"fmt"
 
 	"github.com/edgexfoundry/edgex-go/internal/security/setup"
 )
 
-type GeneratorType int
+type CertificateType int
 
 const (
-	RootCA GeneratorType = 0
-	TLS    GeneratorType = 1
+	RootCertificate CertificateType = 1
+	TLSCertificate  CertificateType = 2
 )
 
 type CertificateGenerator interface {
-	Generate() (*x509.Certificate, crypto.PrivateKey, error)
+	Generate() error
 }
 
-func NewCertificateGenerator(seed setup.CertificateSeed, t GeneratorType) (gen CertificateGenerator, err error) {
+func NewCertificateGenerator(t CertificateType, seed setup.CertificateSeed, w FileWriter) (CertificateGenerator, error) {
 	switch t {
-	case RootCA:
-		return newRootGenerator(seed)
-	case TLS:
-		return newTlsGenerator(seed)
+	case RootCertificate:
+		return rootCertGenerator{seed: seed, writer: w}, nil
+	case TLSCertificate:
+		return tlsCertGenerator{seed: seed, writer: w}, nil
 	default:
-		return nil, fmt.Errorf("unrecognized GeneratorType value %v", t)
+		return nil, fmt.Errorf("unknown CertificateType %v", t)
 	}
 }
