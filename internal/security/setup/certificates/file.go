@@ -15,17 +15,28 @@
 package certificates
 
 import (
-	"github.com/edgexfoundry/edgex-go/internal/security/setup"
+	"io/ioutil"
+	"os"
 )
 
-type rootCertGenerator struct {
-	seed   setup.CertificateSeed
-	writer FileWriter
+// FileWriter is an interface that provides abstraction for writing certificate files to disk. This abstraction is
+// necessary for appropriate mocking of this functionality for unit tests
+type FileWriter interface {
+	Write() error
 }
 
-func (gen rootCertGenerator) Generate() (err error) {
-	if gen.seed.NewCA {
+// NewFileWriter will instantiate an instance of FileWriter for persisting the given file to disk.
+func NewFileWriter(fileName string, contents []byte, permissions os.FileMode) FileWriter {
+	return fileWriter{name: fileName, data: contents, perms: permissions}
+}
 
-	}
-	return
+type fileWriter struct {
+	name  string
+	data  []byte
+	perms os.FileMode
+}
+
+// Write performs the actual write operation based on the parameters supplied to NewFileWriter
+func (w fileWriter) Write() (err error) {
+	return ioutil.WriteFile(w.name, w.data, w.perms)
 }

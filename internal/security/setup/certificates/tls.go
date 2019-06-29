@@ -15,19 +15,14 @@
 package certificates
 
 import (
-	"crypto"
-	"crypto/x509"
-
 	"github.com/edgexfoundry/edgex-go/internal/security/setup"
 )
 
-type tlsGenerator struct {
+type tlsCertGenerator struct {
+	seed   setup.CertificateSeed
+	writer FileWriter
 }
 
-func newTlsGenerator(seed setup.CertificateSeed) (gen tlsGenerator, err error) {
-	return tlsGenerator{}, nil
-}
-
-func (gen tlsGenerator) Generate() (*x509.Certificate, crypto.PrivateKey, error) {
-	return &x509.Certificate{}, nil, nil
+func (gen tlsCertGenerator) Generate() (err error) {
+	return
 }

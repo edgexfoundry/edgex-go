@@ -17,13 +17,52 @@ package setup
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"path/filepath"
 	"strconv"
+
+	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 )
 
 const skFileExt = ".priv.key"
 const certFileExt = ".pem"
+
+type RSAKeySize int
+
+const (
+	RSA_1024 RSAKeySize = 1024
+	RSA_2048 RSAKeySize = 2048
+	RSA_4096 RSAKeySize = 4096
+)
+
+func validateRSAKeySize(value int) bool {
+	sizes := map[int]RSAKeySize{
+		1024: RSA_1024,
+		2048: RSA_2048,
+		4096: RSA_4096,
+	}
+	_, ok := sizes[value]
+	return ok
+}
+
+type EllipticCurve int
+
+const (
+	EC_224 EllipticCurve = 224
+	EC_256 EllipticCurve = 256
+	EC_384 EllipticCurve = 384
+	EC_521 EllipticCurve = 521
+)
+
+func validateEllipticCurve(value int) bool {
+	curves := map[int]EllipticCurve{
+		224: EC_224,
+		256: EC_256,
+		384: EC_384,
+		521: EC_521,
+	}
+	_, ok := curves[value]
+	return ok
+}
 
 // CertificateSeed is responsible for parsing the X509 configuration into values that can be readily used to generate
 // Root CA and TLS-related certificates. It will also validate the configuration provided to it upon instantiation.
@@ -36,10 +75,10 @@ type CertificateSeed struct {
 	CAOrg       string
 	CAState     string
 	DumpKeys    bool
-	ECCurve     string
+	ECCurve     EllipticCurve
 	ECScheme    bool
 	NewCA       bool
-	RSAKeySize  int
+	RSAKeySize  RSAKeySize
 	RSAScheme   bool
 	TLSAltFqdn  string
 	TLSCertFile string
@@ -73,9 +112,15 @@ func NewCertificateSeed(cfg config.X509Config, directory DirectoryHandler) (seed
 	}
 
 	// Convert rsa_key_size JSON string to integer
-	seed.RSAKeySize, err = strconv.Atoi(cfg.KeyScheme.RSAKeySize)
+	check, err := strconv.Atoi(cfg.KeyScheme.RSAKeySize)
 	if err != nil {
 		return
+	}
+
+	if validateRSAKeySize(check) {
+		seed.RSAKeySize = RSAKeySize(check)
+	} else {
+		return seed, fmt.Errorf("RSAKeySize value is invalid %v", check)
 	}
 
 	// Convert ec JSON string "true|false" to boolean
@@ -84,8 +129,17 @@ func NewCertificateSeed(cfg config.X509Config, directory DirectoryHandler) (seed
 		return
 	}
 
-	// EC chosen curve
-	seed.ECCurve = cfg.KeyScheme.ECCurve
+	// Convert EC chosen curve JSON string to integer
+	check, err = strconv.Atoi(cfg.KeyScheme.ECCurve)
+	if err != nil {
+		return
+	}
+
+	if validateEllipticCurve(check) {
+		seed.ECCurve = EllipticCurve(check)
+	} else {
+		return seed, fmt.Errorf("ECCurve value is invalid %v", check)
+	}
 
 	// Init: CA name and PEM key/cert filenames
 	pkiCaDir, err := cfg.PkiCADir()
