@@ -50,3 +50,21 @@ func generatePrivateKey(seed setup.CertificateSeed, logger logger.LoggingClient)
 
 	return nil, fmt.Errorf("Unknown key scheme: RSA[%t] EC[%t]", seed.RSAScheme, seed.ECScheme)
 }
+
+// dumpKeyPair output sk,pk keypair (RSA or EC) to console
+// !!! Debug only for obvious security reasons...
+// ----------------------------------------------------------
+func dumpKeyPair(key interface{}, logger logger.LoggingClient) {
+	switch key.(type) {
+	case *rsa.PrivateKey:
+		logger.Debug(fmt.Sprintf(">> RSA SK: %q", key))
+	case *ecdsa.PrivateKey:
+		logger.Debug(fmt.Sprintf(">> ECDSA SK: %q", key))
+	case *rsa.PublicKey:
+		logger.Debug(fmt.Sprintf(">> RSA PK: %q", key))
+	case *ecdsa.PublicKey:
+		logger.Debug(fmt.Sprintf(">> ECDSA PK: %q", key))
+	default:
+		logger.Error("Unsupported Key Type")
+	}
+}

@@ -16,17 +16,20 @@ package main
 
 import (
 	"flag"
+	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/security/setup"
+	"github.com/edgexfoundry/edgex-go/internal/security/setup/certificates"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"log"
 	"os"
+	"time"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 )
 
 func main() {
-	//start := time.Now()
+	start := time.Now()
 	var configFile string
 
 	flag.StringVar(&configFile, "config", "", "specify JSON configuration file: /path/to/file.json")
@@ -34,29 +37,53 @@ func main() {
 	flag.Parse()
 
 	if configFile == "" {
-		log.Println("ERROR: missing mandatory parameter: -c | --config")
 		flag.PrintDefaults()
 		os.Exit(1)
 	}
 
 	setup.Init()
 
-	// Read the Json config file and unmarshall content into struct type X509Config
-	log.Printf("Config file      : %s \n", configFile)
-	x509config, err := config.NewX509Config(configFile)
-	if err != nil {
-		fatalIfErr(err, "Opening configuration file")
-	}
-
 	// Create and initialize the fs environment and global vars for the PKI materials
 	lc := logger.NewClient("edgex-pki-setup", setup.Configuration.Logging.EnableRemote,
 		setup.Configuration.Logging.File, setup.Configuration.Writable.LogLevel)
 
-	_, err = setup.NewCertificateSeed(x509config, setup.NewDirectoryHandler(lc))
+	// Read the Json config file and unmarshall content into struct type X509Config
+	x509config, err := config.NewX509Config(configFile)
 	if err != nil {
-		fatalIfErr(err, "Environment initialization")
+		lc.Error(err.Error())
+		return
 	}
 
+	seed, err := setup.NewCertificateSeed(x509config, setup.NewDirectoryHandler(lc))
+	if err != nil {
+		lc.Error(err.Error())
+		return
+	}
+
+	rootCA, err := certificates.NewCertificateGenerator(certificates.RootCertificate, seed, certificates.NewFileWriter(), lc)
+	if err != nil {
+		lc.Error(err.Error())
+		return
+	}
+
+	err = rootCA.Generate()
+	if err != nil {
+		lc.Error(err.Error())
+		return
+	}
+
+	tlsCert, err := certificates.NewCertificateGenerator(certificates.TLSCertificate, seed, certificates.NewFileWriter(), lc)
+	if err != nil {
+		lc.Error(err.Error())
+		return
+	}
+
+	tlsCert.Generate()
+	if err != nil {
+		lc.Error(err.Error())
+		return
+	}
+	lc.Info("PKISetup complete", internal.LogDurationKey, time.Since(start).String())
 }
 
 // TODO: ELIMINATE THIS ----------------------------------------------------------

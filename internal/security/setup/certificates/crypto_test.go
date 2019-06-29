@@ -15,10 +15,11 @@
 package certificates
 
 import (
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	"crypto"
 	"testing"
 
 	"github.com/edgexfoundry/edgex-go/internal/security/setup"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
 
 func TestGeneratePrivateKey(t *testing.T) {
@@ -60,15 +61,69 @@ func TestGeneratePrivateKey(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := generatePrivateKey(tt.seed, logger)
+			private, err := generatePrivateKey(tt.seed, logger)
 			if err != nil && !tt.expectError {
 				t.Error(err)
 				return
 			}
-			if err == nil && tt.expectError {
-				t.Error("expected error but none was thrown")
-				return
+			if err == nil {
+				if tt.expectError {
+					t.Error("expected error but none was thrown")
+					return
+				}
+				// Extract PK from RSA or EC generated SK
+				public := private.(crypto.Signer).Public()
+				dumpKeyPair(private, logger)
+				dumpKeyPair(public, logger)
 			}
 		})
 	}
+}
+
+// Note that this only tests for failure because the TestGeneratePrivateKey function above is used to test all the
+// success paths
+func TestDumpKeyPairFailure(t *testing.T) {
+	something := NewFileWriter()
+	logger := newMockCryptoLogger(true, t)
+	dumpKeyPair(something, logger)
+}
+
+// The CryptoLogger mock is used to register unexpected errors with the testing framework.
+// See the implementation of the Error() method.
+type mockCryptoLogger struct {
+	expectError bool
+	t           *testing.T
+}
+
+func newMockCryptoLogger(expectError bool, t *testing.T) logger.LoggingClient {
+	return mockCryptoLogger{expectError: expectError, t: t}
+}
+
+// SetLogLevel simulates setting a log severity level
+func (lc mockCryptoLogger) SetLogLevel(loglevel string) error {
+	return nil
+}
+
+// Info simulates logging an entry at the INFO severity level
+func (lc mockCryptoLogger) Info(msg string, args ...interface{}) {
+}
+
+// Debug simulates logging an entry at the DEBUG severity level
+func (lc mockCryptoLogger) Debug(msg string, args ...interface{}) {
+}
+
+// Error simulates logging an entry at the ERROR severity level
+func (lc mockCryptoLogger) Error(msg string, args ...interface{}) {
+	if !lc.expectError {
+		lc.t.Error(msg)
+		lc.t.Fail()
+	}
+}
+
+// Trace simulates logging an entry at the TRACE severity level
+func (lc mockCryptoLogger) Trace(msg string, args ...interface{}) {
+}
+
+// Warn simulates logging an entry at the WARN severity level
+func (lc mockCryptoLogger) Warn(msg string, args ...interface{}) {
 }
