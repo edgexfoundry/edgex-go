@@ -1,0 +1,6 @@
+[Writable]
+LogLevel = 'DEBUG'
+
+[Logging]
+EnableRemote = false
+File = './logs/edgex-pki-setup.log'
