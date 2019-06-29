@@ -15,30 +15,44 @@
 package certificates
 
 import (
-	"fmt"
+	"os"
+	"testing"
 
 	"github.com/edgexfoundry/edgex-go/internal/security/setup"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
 
-type CertificateType int
+func TestNewCertificateGenerator(t *testing.T) {
+	seed := setup.CertificateSeed{}
+	writer := mockFileWriter{}
+	mockLogger := logger.MockLogger{}
 
-const (
-	RootCertificate CertificateType = 1
-	TLSCertificate  CertificateType = 2
-)
-
-type CertificateGenerator interface {
-	Generate() error
+	tests := []struct {
+		name        string
+		certType    CertificateType
+		expectError bool
+	}{
+		{"RootCAPass", RootCertificate, false},
+		{"TLSPass", TLSCertificate, false},
+		{"InvalidFail", 3, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := NewCertificateGenerator(tt.certType, seed, writer, mockLogger)
+			if err != nil && !tt.expectError {
+				t.Errorf("unexpected error %v", err)
+				return
+			}
+			if err == nil && tt.expectError {
+				t.Error("expected error, none returned")
+				return
+			}
+		})
+	}
 }
 
-func NewCertificateGenerator(t CertificateType, seed setup.CertificateSeed, w FileWriter, logger logger.LoggingClient) (CertificateGenerator, error) {
-	switch t {
-	case RootCertificate:
-		return rootCertGenerator{seed: seed, writer: w, logger: logger}, nil
-	case TLSCertificate:
-		return tlsCertGenerator{seed: seed, writer: w, reader: NewFileReader(), logger: logger}, nil
-	default:
-		return nil, fmt.Errorf("unknown CertificateType %v", t)
-	}
+type mockFileWriter struct{}
+
+func (w mockFileWriter) Write(fileName string, contents []byte, permissions os.FileMode) error {
+	return nil
 }

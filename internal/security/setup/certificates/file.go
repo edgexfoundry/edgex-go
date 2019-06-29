@@ -22,21 +22,34 @@ import (
 // FileWriter is an interface that provides abstraction for writing certificate files to disk. This abstraction is
 // necessary for appropriate mocking of this functionality for unit tests
 type FileWriter interface {
-	Write() error
+	Write(fileName string, contents []byte, permissions os.FileMode) error
 }
 
 // NewFileWriter will instantiate an instance of FileWriter for persisting the given file to disk.
-func NewFileWriter(fileName string, contents []byte, permissions os.FileMode) FileWriter {
-	return fileWriter{name: fileName, data: contents, perms: permissions}
+func NewFileWriter() FileWriter {
+	return fileWriter{}
 }
 
-type fileWriter struct {
-	name  string
-	data  []byte
-	perms os.FileMode
+type fileWriter struct{}
+
+// Write performs the actual write operation based on the parameters supplied
+func (w fileWriter) Write(fileName string, contents []byte, permissions os.FileMode) (err error) {
+	return ioutil.WriteFile(fileName, contents, permissions)
 }
 
-// Write performs the actual write operation based on the parameters supplied to NewFileWriter
-func (w fileWriter) Write() (err error) {
-	return ioutil.WriteFile(w.name, w.data, w.perms)
+// FileReader is an interface that provides abstraction for reading certificate key files from disk. This abstraction is
+// necessary for appropriate mocking of this functionality for unit tests
+type FileReader interface {
+	Read(fileName string) (data []byte, err error)
+}
+
+func NewFileReader() FileReader {
+	return fileReader{}
+}
+
+type fileReader struct{}
+
+// Read performs the actual read operation based on the parameters supplied
+func (r fileReader) Read(fileName string) (data []byte, err error) {
+	return ioutil.ReadFile(fileName)
 }
