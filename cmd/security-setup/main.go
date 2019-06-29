@@ -18,6 +18,8 @@ package main
 
 import (
 	"flag"
+	"github.com/edgexfoundry/edgex-go/internal/security/setup"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"log"
 	"os"
 
@@ -39,6 +41,8 @@ func main() {
 		os.Exit(1)
 	}
 
+	setup.Init()
+
 	// Read the Json config file and unmarshall content into struct type X509Config
 	log.Printf("Config file      : %s \n", configFile)
 	x509config, err := config.NewX509Config(configFile)
@@ -47,14 +51,13 @@ func main() {
 	}
 
 	// Create and initialize the fs environment and global vars for the PKI materials
-	err = createEnv(x509config)
+	lc := logger.NewClient("edgex-pki-setup", setup.Configuration.Logging.EnableRemote,
+		setup.Configuration.Logging.File, setup.Configuration.Writable.LogLevel)
+
+	_, err = setup.NewCertificateSeed(x509config, setup.NewDirectoryHandler(lc))
 	if err != nil {
 		fatalIfErr(err, "Environment initialization")
 	}
-}
-
-func createEnv(x509config config.X509Config) error {
-	return nil
 }
 
 // TODO: ELIMINATE THIS ----------------------------------------------------------

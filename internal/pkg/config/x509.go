@@ -16,8 +16,11 @@ package config
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
+	"strings"
 )
 
 // NewX509Config will populate a struct representing configuration for X.509 key generation
@@ -57,6 +60,16 @@ type X509Config struct {
 	KeyScheme       KeyScheme `json:"key_scheme"`
 	RootCA          RootCA    `json:"x509_root_ca_parameters"`
 	TLSServer       TLSServer `json:"x509_tls_server_parameters"`
+}
+
+func (cfg X509Config) PkiCADir() (string, error) {
+	dir, err := filepath.Abs(cfg.WorkingDir)
+	if err != nil {
+		// Looking at the implementation of filepath.Abs it does NOT verify the existence of the path
+		return "", fmt.Errorf("unable to determine absolute path -- %s", err.Error())
+	}
+	// pkiCaDir: Concatenate working dir absolute path with PKI setup dir, using separator "/"
+	return strings.Join([]string{dir, cfg.PKISetupDir, cfg.RootCA.CAName}, "/"), nil
 }
 
 // KeyScheme parameters (RSA vs EC)
