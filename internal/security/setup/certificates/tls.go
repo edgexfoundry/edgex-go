@@ -21,6 +21,7 @@ import (
 	"crypto/x509/pkix"
 	"encoding/pem"
 	"fmt"
+	"io/ioutil"
 	"math/big"
 	"time"
 
@@ -31,7 +32,6 @@ import (
 
 type tlsCertGenerator struct {
 	logger logger.LoggingClient
-	reader FileReader
 	seed   setup.CertificateSeed
 	writer FileWriter
 }
@@ -42,7 +42,7 @@ func (gen tlsCertGenerator) Generate() (err error) {
 
 	// Root CA certificate fetch --------------------------------------------------------
 	gen.logger.Debug(fmt.Sprintf("Loading Root CA certificate: %s", gen.seed.CACertFile))
-	certPEMBlock, err := gen.reader.Read(gen.seed.CACertFile) // Load Root CA certificate
+	certPEMBlock, err := ioutil.ReadFile(gen.seed.CACertFile) // Load Root CA certificate
 	if err != nil {
 		return fmt.Errorf("failed to read the Root CA certificate: %s", err.Error())
 	}
@@ -61,7 +61,7 @@ func (gen tlsCertGenerator) Generate() (err error) {
 
 	// Root CA private key fetch --------------------------------------------------------
 	gen.logger.Debug("Loading the Root CA private key: %s", gen.seed.CAKeyFile)
-	keyPEMBlock, err := gen.reader.Read(gen.seed.CAKeyFile)
+	keyPEMBlock, err := ioutil.ReadFile(gen.seed.CAKeyFile)
 	if err != nil {
 		return fmt.Errorf("failed to read the Root CA private key: %s", err.Error())
 	}
