@@ -36,20 +36,3 @@ type fileWriter struct{}
 func (w fileWriter) Write(fileName string, contents []byte, permissions os.FileMode) (err error) {
 	return ioutil.WriteFile(fileName, contents, permissions)
 }
-
-// FileReader is an interface that provides abstraction for reading certificate key files from disk. This abstraction is
-// necessary for appropriate mocking of this functionality for unit tests
-type FileReader interface {
-	Read(fileName string) (data []byte, err error)
-}
-
-func NewFileReader() FileReader {
-	return fileReader{}
-}
-
-type fileReader struct{}
-
-// Read performs the actual read operation based on the parameters supplied
-func (r fileReader) Read(fileName string) (data []byte, err error) {
-	return ioutil.ReadFile(fileName)
-}

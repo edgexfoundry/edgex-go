@@ -22,7 +22,7 @@ import (
 )
 
 func TestNewCertificateSeed(t *testing.T) {
-	valid := createValidConfig()
+	valid := mocks.CreateValidX509ConfigMock()
 
 	validNewCA := valid
 	validNewCA.CreateNewRootCA = "true"
@@ -95,6 +95,7 @@ func TestNewCertificateSeed(t *testing.T) {
 	}
 }
 
+// Tried to put this in mocks/custom.go but caused an import cycle with setup.DirectoryHandler
 func createDirectoryHandlerMock(cfg config.X509Config, t *testing.T) DirectoryHandler {
 	dir, err := cfg.PkiCADir()
 	if err != nil {
@@ -105,42 +106,4 @@ func createDirectoryHandlerMock(cfg config.X509Config, t *testing.T) DirectoryHa
 	mock.On("Create", dir).Return(nil)
 	mock.On("Verify", dir).Return(nil)
 	return &mock
-}
-
-func createValidConfig() config.X509Config {
-	key := config.KeyScheme{
-		DumpKeys:   "false",
-		RSA:        "false",
-		RSAKeySize: "4096",
-		EC:         "true",
-		ECCurve:    "384",
-	}
-
-	root := config.RootCA{
-		CAName:     "EdgeXFoundryCA",
-		CACountry:  "US",
-		CAState:    "CA",
-		CALocality: "Austin",
-		CAOrg:      "EdgeXFoundry",
-	}
-
-	tls := config.TLSServer{
-		TLSHost:     "edgex-kong",
-		TLSDomain:   "local",
-		TLSCountry:  "US",
-		TLSSate:     "CA",
-		TLSLocality: "San Francisco",
-		TLSOrg:      "Kong",
-	}
-
-	cfg := config.X509Config{
-		WorkingDir:      ".",
-		CreateNewRootCA: "false",
-		PKISetupDir:     "pki",
-		DumpConfig:      "false",
-		KeyScheme:       key,
-		RootCA:          root,
-		TLSServer:       tls,
-	}
-	return cfg
 }

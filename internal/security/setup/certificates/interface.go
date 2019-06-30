@@ -37,7 +37,7 @@ func NewCertificateGenerator(t CertificateType, seed setup.CertificateSeed, w Fi
 	case RootCertificate:
 		return rootCertGenerator{seed: seed, writer: w, logger: logger}, nil
 	case TLSCertificate:
-		return tlsCertGenerator{seed: seed, writer: w, reader: NewFileReader(), logger: logger}, nil
+		return tlsCertGenerator{seed: seed, writer: w, logger: logger}, nil
 	default:
 		return nil, fmt.Errorf("unknown CertificateType %v", t)
 	}
