@@ -84,15 +84,21 @@ func persistTransmission(tr models.TransmissionRecord, n models.Notification, c 
 }
 
 func smtpSend(message string, addressees []string) models.TransmissionRecord {
+	var err error
 	smtp := Configuration.Smtp
 	tr := getTransmissionRecord("SMTP server received", models.Sent)
 	buf := bytes.NewBufferString("Subject: " + smtp.Subject + "\r\n")
 	// required CRLF at ends of lines and CRLF between header and body for SMTP RFC 822 style email
 	buf.WriteString("\r\n")
 	buf.WriteString(message)
-	err := mail.SendMail(smtp.Host+":"+strconv.Itoa(smtp.Port),
-		mail.PlainAuth("", smtp.Sender, smtp.Password, smtp.Host),
-		smtp.Sender, addressees, []byte(buf.String()))
+	if smtp.Password != "" {
+		err = mail.SendMail(smtp.Host+":"+strconv.Itoa(smtp.Port),
+			mail.PlainAuth("", smtp.Sender, smtp.Password, smtp.Host),
+			smtp.Sender, addressees, []byte(buf.String()))
+	} else {
+		err = mail.SendMail(smtp.Host+":"+strconv.Itoa(smtp.Port),
+			nil, smtp.Sender, addressees, []byte(buf.String()))
+	}
 	if err != nil {
 		LoggingClient.Error("Problems sending message to: " + strings.Join(addressees, ",") + ", issue: " + err.Error())
 		tr.Status = models.Failed
