@@ -104,7 +104,7 @@ func (gen rootCertGenerator) Generate() (err error) {
 			return fmt.Errorf("failed to parse Root CA certificate: %s", err.Error())
 		}
 
-		gen.logger.Debug("Saving Root CA private key to PEM file: %s", gen.seed.CAKeyFile)
+		gen.logger.Debug(fmt.Sprintf("Saving Root CA private key to PEM file: %s", gen.seed.CAKeyFile))
 		skPKCS8, err := x509.MarshalPKCS8PrivateKey(private)
 		if err != nil {
 			return fmt.Errorf("failed to encode CA private key: %s", err.Error())
@@ -115,7 +115,7 @@ func (gen rootCertGenerator) Generate() (err error) {
 			return fmt.Errorf("failed to save CA private key: %s", err.Error())
 		}
 
-		gen.logger.Debug("Saving Root CA certificate to PEM file: %s", gen.seed.CACertFile)
+		gen.logger.Debug(fmt.Sprintf("Saving Root CA certificate to PEM file: %s", gen.seed.CACertFile))
 		err = gen.writer.Write(gen.seed.CACertFile, pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: caDER}), 0644)
 		if err != nil {
 			return fmt.Errorf("failed to save CA certificate: %s", err.Error())

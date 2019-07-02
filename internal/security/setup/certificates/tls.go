@@ -60,7 +60,7 @@ func (gen tlsCertGenerator) Generate() (err error) {
 	}
 
 	// Root CA private key fetch --------------------------------------------------------
-	gen.logger.Debug("Loading the Root CA private key: %s", gen.seed.CAKeyFile)
+	gen.logger.Debug(fmt.Sprintf("Loading the Root CA private key: %s", gen.seed.CAKeyFile))
 	keyPEMBlock, err := ioutil.ReadFile(gen.seed.CAKeyFile)
 	if err != nil {
 		return fmt.Errorf("failed to read the Root CA private key: %s", err.Error())
@@ -130,7 +130,7 @@ func (gen tlsCertGenerator) Generate() (err error) {
 		return fmt.Errorf("failed to parse TLS server certificate - DER: %s", err.Error())
 	}
 
-	gen.logger.Debug("Saving TLS server private key to PEM file: %s", gen.seed.TLSKeyFile)
+	gen.logger.Debug(fmt.Sprintf("Saving TLS server private key to PEM file: %s", gen.seed.TLSKeyFile))
 	skPKCS8, err := x509.MarshalPKCS8PrivateKey(privateTLS)
 	if err != nil {
 		return fmt.Errorf("failed to encode TLS server key: %s", err.Error())
@@ -141,7 +141,7 @@ func (gen tlsCertGenerator) Generate() (err error) {
 		return fmt.Errorf("failed to save TLS server private key: %s", err.Error())
 	}
 
-	gen.logger.Debug("Saving Root CA certificate to PEM file: %s", gen.seed.CACertFile)
+	gen.logger.Debug(fmt.Sprintf("Saving Root CA certificate to PEM file: %s", gen.seed.CACertFile))
 	err = gen.writer.Write(gen.seed.TLSCertFile, pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: tlsDER}), 0644)
 	if err != nil {
 		return fmt.Errorf("failed to save TLS server certificate: %s", err.Error())
