@@ -21,6 +21,7 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"fmt"
+
 	"github.com/edgexfoundry/edgex-go/internal/security/setup"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )

@@ -16,16 +16,16 @@ package main
 
 import (
 	"flag"
-	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/security/setup"
-	"github.com/edgexfoundry/edgex-go/internal/security/setup/certificates"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"log"
 	"os"
 	"time"
 
+	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
+	"github.com/edgexfoundry/edgex-go/internal/security/setup"
+	"github.com/edgexfoundry/edgex-go/internal/security/setup/certificates"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
 
 func main() {
@@ -33,6 +33,7 @@ func main() {
 	var configFile string
 
 	flag.StringVar(&configFile, "config", "", "specify JSON configuration file: /path/to/file.json")
+	flag.StringVar(&configFile, "c", "", "specify JSON configuration file: /path/to/file.json")
 	flag.Usage = usage.HelpCallbackSecuritySetup
 	flag.Parse()
 
@@ -44,7 +45,7 @@ func main() {
 	setup.Init()
 
 	// Create and initialize the fs environment and global vars for the PKI materials
-	lc := logger.NewClient("edgex-pki-setup", setup.Configuration.Logging.EnableRemote,
+	lc := logger.NewClient("security-secrets-setup", setup.Configuration.Logging.EnableRemote,
 		setup.Configuration.Logging.File, setup.Configuration.Writable.LogLevel)
 
 	// Read the Json config file and unmarshall content into struct type X509Config

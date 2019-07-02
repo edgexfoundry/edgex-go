@@ -16,7 +16,6 @@ package setup
 
 import (
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
@@ -66,7 +65,7 @@ func (h directoryHandler) Verify(path string) error {
 		return fmt.Errorf("CA PKI setup directory cannot be reached: %s (%s)", path, err)
 	}
 	if stat.IsDir() {
-		log.Printf("Existing CA PKI setup directory: %s", path)
+		h.logger.Debug(fmt.Sprintf("Existing CA PKI setup directory: %s", path))
 	} else {
 		return fmt.Errorf("Existing CA PKI setup directory is not a directory: %s", path)
 	}

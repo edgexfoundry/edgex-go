@@ -34,6 +34,9 @@ const (
 )
 
 var confDir = flag.String("confdir", "", "Specify local configuration directory")
+
+// TODO: Where is this set? It doesn't appear to be set from anywhere meaning if we fail to locate the config
+//       file, the logging statements below will panic.
 var LoggingClient logger.LoggingClient
 
 func LoadFromFile(profile string, configuration interface{}) error {

@@ -16,13 +16,26 @@ package setup
 
 import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
 // Global variables
 var Configuration *ConfigurationStruct
 
 func Init() {
-	initializeConfiguration(false, "") //These values are defaults. Preserved variables for possible later extension
+	// Unfortunately I have to do this because of utilization of the LoggingClient in config.LoadFromFile below.
+	// That function is expecting a LoggingClient instance. Right now, it appears that is only set via global var in that package
+	// TODO: This doesn't make any sense. Review this usage as applicable to all other service init routines.
+	//       See TODO in internal/pkg/config/loader.go where var LoggingClient is declared.
+	lc := logger.NewClient("edgex-security-pkisetup", false, "", models.InfoLog)
+	config.LoggingClient = lc
+
+	var err error
+	Configuration, err = initializeConfiguration(false, "") //These values are defaults. Preserved variables for possible later extension
+	if err != nil {
+		lc.Error(err.Error())
+	}
 }
 
 func initializeConfiguration(useRegistry bool, useProfile string) (*ConfigurationStruct, error) {

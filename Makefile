@@ -5,21 +5,17 @@
 #
 
 
-.PHONY: build build_security clean test docker run
+.PHONY: build clean test docker run
 
 GO=CGO_ENABLED=0 GO111MODULE=on go
 GOCGO=CGO_ENABLED=1 GO111MODULE=on go
 
-DOCKERS=docker_config_seed docker_export_client docker_export_distro docker_core_data docker_core_metadata docker_core_command docker_support_logging docker_support_notifications docker_sys_mgmt_agent docker_support_scheduler
+DOCKERS=docker_config_seed docker_export_client docker_export_distro docker_core_data docker_core_metadata docker_core_command docker_support_logging docker_support_notifications docker_sys_mgmt_agent docker_support_scheduler docker_security_secrets_setup
 .PHONY: $(DOCKERS)
 
-MICROSERVICES=cmd/config-seed/config-seed cmd/export-client/export-client cmd/export-distro/export-distro cmd/core-metadata/core-metadata cmd/core-data/core-data cmd/core-command/core-command cmd/support-logging/support-logging cmd/support-notifications/support-notifications cmd/sys-mgmt-executor/sys-mgmt-executor cmd/sys-mgmt-agent/sys-mgmt-agent cmd/support-scheduler/support-scheduler cmd/security-setup/pkisetup
+MICROSERVICES=cmd/config-seed/config-seed cmd/export-client/export-client cmd/export-distro/export-distro cmd/core-metadata/core-metadata cmd/core-data/core-data cmd/core-command/core-command cmd/support-logging/support-logging cmd/support-notifications/support-notifications cmd/sys-mgmt-executor/sys-mgmt-executor cmd/sys-mgmt-agent/sys-mgmt-agent cmd/support-scheduler/support-scheduler cmd/security-secrets-setup/security-secrets-setup
 
 .PHONY: $(MICROSERVICES)
-
-SECURITY=cmd/security-setup/pkisetup
-
-.PHONY: $(SECURITY)
 
 VERSION=$(shell cat ./VERSION)
 DOCKER_TAG=$(VERSION)-dev
@@ -29,8 +25,6 @@ GOFLAGS=-ldflags "-X github.com/edgexfoundry/edgex-go.Version=$(VERSION)"
 GIT_SHA=$(shell git rev-parse HEAD)
 
 build: $(MICROSERVICES)
-
-build_security: $(MICROSERVICES) $(SECURITY)
 
 cmd/config-seed/config-seed:
 	$(GO) build $(GOFLAGS) -o $@ ./cmd/config-seed
@@ -65,8 +59,8 @@ cmd/sys-mgmt-agent/sys-mgmt-agent:
 cmd/support-scheduler/support-scheduler:
 	$(GO) build $(GOFLAGS) -o $@ ./cmd/support-scheduler
 
-cmd/security-setup/pkisetup:
-	$(GO) build $(GOFLAGS) -o ./cmd/security-setup/pkisetup ./cmd/security-setup
+cmd/security-secrets-setup/security-secrets-setup:
+	$(GO) build $(GOFLAGS) -o ./cmd/security-secrets-setup/security-secrets-setup ./cmd/security-secrets-setup
 
 clean:
 	rm -f $(MICROSERVICES)
@@ -163,4 +157,12 @@ docker_sys_mgmt_agent:
 		--label "git_sha=$(GIT_SHA)" \
 		-t edgexfoundry/sys-mgmt-agent-go:$(GIT_SHA) \
 		-t edgexfoundry/sys-mgmt-agent-go:$(DOCKER_TAG) \
+		.
+
+docker_security_secrets_setup:
+	docker build \
+		-f cmd/security-secrets-setup/Dockerfile \
+		--label "git_sha=$(GIT_SHA)" \
+		-t edgexfoundry/docker-edgex-vault:$(GIT_SHA) \
+		-t edgexfoundry/docker-edgex-vault:$(DOCKER_TAG) \
 		.

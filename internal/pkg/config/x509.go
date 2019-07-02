@@ -18,7 +18,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"os"
 	"path/filepath"
 	"strings"
 )
@@ -29,21 +28,14 @@ func NewX509Config(configFilePtr string) (X509Config, error) {
 	var jsonX509Config X509Config
 
 	// Open JSON config file
-	jsonFile, err := os.Open(configFilePtr)
-	if err != nil {
-		return jsonX509Config, err
-	}
-	defer jsonFile.Close()
-
-	// Read JSON config file into byteArray
-	byteValue, err := ioutil.ReadAll(jsonFile)
+	bytes, err := ioutil.ReadFile(configFilePtr)
 	if err != nil {
 		return jsonX509Config, err
 	}
 
 	// Initialize the final X509 Configuration array
 	// Unmarshal byteArray with the jsonFile's content into jsonX509Config
-	err = json.Unmarshal(byteValue, &jsonX509Config)
+	err = json.Unmarshal(bytes, &jsonX509Config)
 	if err != nil {
 		return jsonX509Config, err
 	}
