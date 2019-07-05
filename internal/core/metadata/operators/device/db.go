@@ -23,3 +23,11 @@ type DeviceProfileLoader interface {
 type DeviceLoader interface {
 	GetAllDevices() ([]contract.Device, error)
 }
+
+type DeviceUpdater interface {
+	UpdateDevice(d contract.Device) error
+	GetDeviceById(id string) (contract.Device, error)
+	GetDeviceByName(name string) (contract.Device, error)
+	DeviceProfileLoader
+	DeviceServiceLoader
+}
