@@ -252,7 +252,7 @@ func putEventOnQueue(evt models.Event, ctx context.Context) {
 	msgEnvelope := msgTypes.NewMessageEnvelope(evt.Bytes, ctx)
 	err := msgClient.Publish(msgEnvelope, Configuration.MessageQueue.Topic)
 	if err != nil {
-		LoggingClient.Error(fmt.Sprintf("Unable to send message for event: %s", evt.String()))
+		LoggingClient.Error(fmt.Sprintf("Unable to send message for event: %s %v", evt.String(), err))
 	} else {
 		LoggingClient.Info(fmt.Sprintf("Event Published on message queue. Topic: %s, Correlation-id: %s ", Configuration.MessageQueue.Topic, msgEnvelope.CorrelationID))
 	}
