@@ -10,20 +10,20 @@ type DeviceAdder struct {
 	mock.Mock
 }
 
-// AddDevice provides a mock function with given fields: d
-func (_m *DeviceAdder) AddDevice(d models.Device) (string, error) {
-	ret := _m.Called(d)
+// AddDevice provides a mock function with given fields: d, commands
+func (_m *DeviceAdder) AddDevice(d models.Device, commands []models.Command) (string, error) {
+	ret := _m.Called(d, commands)
 
 	var r0 string
-	if rf, ok := ret.Get(0).(func(models.Device) string); ok {
-		r0 = rf(d)
+	if rf, ok := ret.Get(0).(func(models.Device, []models.Command) string); ok {
+		r0 = rf(d, commands)
 	} else {
 		r0 = ret.Get(0).(string)
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(models.Device) error); ok {
-		r1 = rf(d)
+	if rf, ok := ret.Get(1).(func(models.Device, []models.Command) error); ok {
+		r1 = rf(d, commands)
 	} else {
 		r1 = ret.Error(1)
 	}

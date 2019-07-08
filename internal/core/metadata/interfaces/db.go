@@ -38,7 +38,7 @@ type DBClient interface {
 	GetDevicesByProfileId(pid string) ([]contract.Device, error)
 	GetDevicesByServiceId(sid string) ([]contract.Device, error)
 	GetDevicesWithLabel(l string) ([]contract.Device, error)
-	AddDevice(d contract.Device) (string, error)
+	AddDevice(d contract.Device, commands []contract.Command) (string, error)
 	DeleteDeviceById(id string) error
 
 	// Device Profile
@@ -90,6 +90,7 @@ type DBClient interface {
 	GetAllCommands() ([]contract.Command, error)
 	GetCommandById(id string) (contract.Command, error)
 	GetCommandByName(id string) ([]contract.Command, error)
+	GetCommandsByDeviceId(id string) ([]contract.Command, error)
 
 	// Scrub all metadata (only used in test)
 	ScrubMetadata() error

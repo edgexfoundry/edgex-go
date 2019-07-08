@@ -1914,3 +1914,26 @@ schemas:
                 description: if the number returned exceeds the max limit.
             "500":
                 description: for unknown or unanticipated errors
+/command/device/{id}:
+    displayName: Command Resource (by device id)
+    description: Example - http://localhost:48081/api/v1/command/device/57bb3195555e5218873e5a1a
+    uriParameters:
+        id:
+            displayName: id
+            type: string
+            required: true
+            repeat: false
+    get:
+        description: Fetch commands by device id. Returns Internal Service Error (HTTP 500) for unknown or unanticipated issues. Returns NotFoundException (HTTP 404) if no command with the provided id is found.
+        displayName: get command by device id
+        responses:
+            "200":
+                description: Successful Response
+                body:
+                    application/json:
+                        schema: command
+                        example: '{"id":"57bb3195555e5218873e5a1a","created":1471885717486,"modified":1471885944737,"origin":1471806386919,"name":"cooling point","get":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]},"put":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}],"parameterNames":["coolingpoint"]}}'
+            "404":
+                description: if no device exists for the provided id.
+            "500":
+                description: for unknown or unanticipated issues.

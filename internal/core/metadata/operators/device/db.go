@@ -5,7 +5,7 @@ import (
 )
 
 type DeviceAdder interface {
-	AddDevice(d contract.Device) (string, error)
+	AddDevice(d contract.Device, commands []contract.Command) (string, error)
 	DeviceProfileLoader
 	DeviceServiceLoader
 }
