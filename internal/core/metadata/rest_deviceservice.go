@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2017 Dell Inc.
+ * Copyright 2019 Dell Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -11,6 +11,7 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
+
 package metadata
 
 import (
@@ -22,29 +23,27 @@ import (
 	"net/url"
 	"strconv"
 
+	types "github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/operators/device_service"
+	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/gorilla/mux"
 )
 
 func restGetAllDeviceServices(w http.ResponseWriter, _ *http.Request) {
-	r, err := dbClient.GetAllDeviceServices()
+	op := device_service.NewDeviceServiceLoadAll(Configuration.Service, dbClient, LoggingClient)
+	services, err := op.Execute()
 	if err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		switch err.(type) {
+		case *types.ErrLimitExceeded:
+			http.Error(w, err.Error(), http.StatusRequestEntityTooLarge)
+		default:
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 		return
 	}
-
-	// Check the limit
-	if len(r) > Configuration.Service.MaxResultCount {
-		err := errors.New("Max limit exceeded")
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusRequestEntityTooLarge)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(&r)
+	pkg.Encode(services, w, LoggingClient)
 }
 
 func restAddDeviceService(w http.ResponseWriter, r *http.Request) {
