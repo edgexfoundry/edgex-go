@@ -22,6 +22,7 @@ type DeviceProfileLoader interface {
 
 type DeviceLoader interface {
 	GetAllDevices() ([]contract.Device, error)
+	GetDevicesByProfileId(pid string) ([]contract.Device, error)
 }
 
 type DeviceUpdater interface {

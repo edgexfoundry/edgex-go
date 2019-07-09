@@ -20,6 +20,7 @@ require (
 	github.com/magiconair/properties v1.8.0
 	github.com/mattn/go-xmpp v0.0.0-20190124093244-6093f50721ed
 	github.com/mitchellh/consulstructure v0.0.0-20190329231841-56fdc4d2da54
+	github.com/mitchellh/copystructure v1.0.0
 	github.com/pebbe/zmq4 v1.0.0
 	github.com/pelletier/go-toml v1.2.0
 	github.com/pkg/errors v0.8.1
