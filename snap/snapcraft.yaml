@@ -967,13 +967,13 @@ parts:
       cd $SNAPCRAFT_PART_SRC
       make build
 
-      install -DT core/edgexproxy "$SNAPCRAFT_PART_INSTALL/bin/edgexproxy"
+      install -DT cmd/edgexproxy/edgexproxy "$SNAPCRAFT_PART_INSTALL/bin/edgexproxy"
 
       # also modify the configuration file to use "/" instead of "\" in the file
       # and set the snis by default to be localhost so that https works when using the certificate authority 
       # file generated and a url like "https://localhost:8443/{svc}" etc. for kong
       mkdir -p $SNAPCRAFT_PART_INSTALL/config/security-api-gateway/res
-      cp core/res/configuration.toml $SNAPCRAFT_PART_INSTALL/config/security-api-gateway/res/configuration.toml
+      cp cmd/edgexproxy/res/configuration.toml $SNAPCRAFT_PART_INSTALL/config/security-api-gateway/res/configuration.toml
       sed -i \
         -e "s@tokenpath = \"res\\\\\\\\resp-init.json\"@tokenpath = \"\$SNAP_DATA/config/security-api-gateway/res/kong-token.json\"@" \
         -e "s:snis = \"edgex.com\":snis = \"localhost\":" \
