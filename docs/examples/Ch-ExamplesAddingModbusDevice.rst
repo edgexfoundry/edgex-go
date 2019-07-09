@@ -2,7 +2,7 @@
 Modbus - Adding a Device to EdgeX
 #################################
 
-EdgeX - Delhi Release
+EdgeX - Edinburgh Release
 
 PowerScout 3037 Power Submeter
 
@@ -200,7 +200,7 @@ You can download and use the provided :download:`EdgeX_ExampleModbus_configurati
 Add Device Service to docker-compose File
 -----------------------------------------
 
-Because we deploy EdgeX using docker-compose, we must add the device-modbus to the docker-compose file ( https://github.com/edgexfoundry/developer-scripts/blob/master/compose-files/docker-compose-delhi-0.7.0.yml ). If you have prepared configuration files, you can mount them using volumes and change the entrypoint for device-modbus internal use.
+Because we deploy EdgeX using docker-compose, we must add the device-modbus to the docker-compose file ( https://github.com/edgexfoundry/developer-scripts/blob/master/compose-files/docker-compose-edinburgh-1.0.0.yml ). If you have prepared configuration files, you can mount them using volumes and change the entrypoint for device-modbus internal use.
 
     .. image:: config_changes.png
         :scale: 50%
