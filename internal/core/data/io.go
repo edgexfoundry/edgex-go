@@ -8,6 +8,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"strings"
 
 	"github.com/OneOfOne/xxhash"
 
@@ -87,7 +88,7 @@ func (cborReader) Read(reader io.Reader, ctx *context.Context) (models.Event, er
 func NewRequestReader(request *http.Request) EventReader {
 	contentType := request.Header.Get(clients.ContentType)
 
-	switch contentType {
+	switch strings.ToLower(contentType) {
 	case clients.ContentTypeCBOR:
 		return cborReader{}
 	default:
