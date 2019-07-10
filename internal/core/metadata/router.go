@@ -206,7 +206,7 @@ func loadCommandRoutes(b *mux.Router) {
 
 	c := b.PathPrefix("/" + COMMAND).Subrouter()
 	c.HandleFunc("/{"+ID+"}", restGetCommandById).Methods(http.MethodGet)
-	c.HandleFunc("/"+NAME+"/{"+NAME+"}", restGetCommandByName).Methods(http.MethodGet)
+	c.HandleFunc("/"+NAME+"/{"+NAME+"}", restGetCommandsByName).Methods(http.MethodGet)
 
 	d := c.PathPrefix("/" + DEVICE).Subrouter()
 	d.HandleFunc("/{"+ID+"}", restGetCommandsByDeviceId).Methods(http.MethodGet)

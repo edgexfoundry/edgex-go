@@ -27,11 +27,16 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/metadata"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
+
 	registryTypes "github.com/edgexfoundry/go-mod-registry/pkg/types"
 	"github.com/edgexfoundry/go-mod-registry/registry"
 
 	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/internal/core/command/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db/redis"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
 )
@@ -39,7 +44,7 @@ import (
 var Configuration *ConfigurationStruct
 var LoggingClient logger.LoggingClient
 var mdc metadata.DeviceClient
-var cc metadata.CommandClient
+var dbClient interfaces.DBClient
 var registryClient registry.Client
 var registryErrors chan error        //A channel for "config wait errors" sourced from Registry
 var registryUpdates chan interface{} //A channel for "config updates" sourced from Registry
@@ -74,8 +79,14 @@ func Retry(useRegistry bool, useProfile string, timeout int, wait *sync.WaitGrou
 			}
 		}
 
+		//Only attempt to connect to database if configuration has been populated
 		if Configuration != nil {
-			break
+			err := connectToDatabase()
+			if err != nil {
+				ch <- err
+			} else {
+				break
+			}
 		}
 		time.Sleep(time.Second * time.Duration(1))
 	}
@@ -228,7 +239,6 @@ func initializeClients(useRegistry bool) {
 	mdc = metadata.NewDeviceClient(params, startup.Endpoint{RegistryClient: &registryClient})
 	params.Path = clients.ApiCommandRoute
 	params.Url = Configuration.Clients["Metadata"].Url() + clients.ApiCommandRoute
-	cc = metadata.NewCommandClient(params, startup.Endpoint{RegistryClient: &registryClient})
 }
 
 func setLoggingTarget() string {
@@ -236,4 +246,40 @@ func setLoggingTarget() string {
 		return Configuration.Clients["Logging"].Url() + clients.ApiLoggingRoute
 	}
 	return Configuration.Logging.File
+}
+
+func connectToDatabase() error {
+	var err error
+
+	dbClient, err = newDBClient(Configuration.Databases["Primary"].Type)
+	if err != nil {
+		dbClient = nil
+		return fmt.Errorf("couldn't create database client: %v", err.Error())
+	}
+
+	return nil
+}
+
+// Return the dbClient interface
+func newDBClient(dbType string) (interfaces.DBClient, error) {
+	switch dbType {
+	case db.MongoDB:
+		dbConfig := db.Configuration{
+			Host:         Configuration.Databases["Primary"].Host,
+			Port:         Configuration.Databases["Primary"].Port,
+			Timeout:      Configuration.Databases["Primary"].Timeout,
+			DatabaseName: Configuration.Databases["Primary"].Name,
+			Username:     Configuration.Databases["Primary"].Username,
+			Password:     Configuration.Databases["Primary"].Password,
+		}
+		return mongo.NewClient(dbConfig)
+	case db.RedisDB:
+		dbConfig := db.Configuration{
+			Host: Configuration.Databases["Primary"].Host,
+			Port: Configuration.Databases["Primary"].Port,
+		}
+		return redis.NewClient(dbConfig, LoggingClient)
+	default:
+		return nil, db.ErrUnsupportedDatabase
+	}
 }
