@@ -7,7 +7,7 @@ import (
 
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 
-	"github.com/edgexfoundry/edgex-go/internal/core/metadata/operators/device_profile/mocks"
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/operators/device/mocks"
 )
 
 var TestError = errors.New("test error")
@@ -65,7 +65,7 @@ func TestGetDeviceByProfileId(t *testing.T) {
 			true,
 		},
 		{
-			"GetAllDeviceProfilesError database error ",
+			"GetAllDeviceProfilesError db error ",
 			createDBClientGetAllDeviceProfilesError(),
 			TestDeviceProfile,
 			true,
@@ -95,25 +95,25 @@ func TestGetDeviceByProfileId(t *testing.T) {
 			true,
 		},
 		{
-			"GetAllDeviceProfiles database error ",
+			"GetAllDeviceProfiles db error ",
 			createDBClientGetAllDeviceProfilesError(),
 			TestDeviceProfile,
 			true,
 		},
 		{
-			"GetProvisionWatchersByProfileId database error ",
+			"GetProvisionWatchersByProfileId db error ",
 			createDBClientGetProvisionWatchersByProfileIdError(),
 			TestDeviceProfile,
 			true,
 		},
 		{
-			"UpdateDeviceProfile database error ",
+			"UpdateDeviceProfile db error ",
 			createDBClientUpdateDeviceProfileError(),
 			TestDeviceProfile,
 			true,
 		},
 		{
-			"GetDevicesByProfileId database error",
+			"GetDevicesByProfileId db error",
 			createDBClientGetDevicesByProfileIdError(),
 			TestDeviceProfile,
 			true,
