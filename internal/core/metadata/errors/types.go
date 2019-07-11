@@ -23,7 +23,7 @@ type ErrLimitExceeded struct {
 }
 
 func (e ErrLimitExceeded) Error() string {
-	return fmt.Sprintf("limit %d exceeds configured max", e.limit)
+	return fmt.Sprintf("result count exceeds configured max %d", e.limit)
 }
 
 func NewErrLimitExceeded(limit int) error {

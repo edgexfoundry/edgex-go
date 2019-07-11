@@ -8,9 +8,13 @@ import (
 
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 
+	metadataErrors "github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/operators/addressable/mocks"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
 
+var Id = "83cb038b-5a94-4707-985d-13effec62de2"
 var AddressName = "TestAddress"
 var PublisherName = "TestPublisher"
 var Topic = "TestTopic"
@@ -67,6 +71,149 @@ func TestAddressExecutor(t *testing.T) {
 
 			if !reflect.DeepEqual(test.expectedResult, actual) {
 				t.Errorf("Expected result does not match the observed. \nExpected : %v \n Observed: %v", test.expectedResult, actual)
+				return
+			}
+		})
+	}
+}
+
+func TestAllAddressablesExecutor(t *testing.T) {
+	tests := []struct {
+		name             string
+		mockDb           AddressLoader
+		cfg              config.ServiceInfo
+		expectedResult   []contract.Addressable
+		expectedError    bool
+		expectedErrorVal error
+	}{
+		{
+			name:           "Successful database call",
+			mockDb:         createMockAddressLoader(nil, SuccessfulDatabaseResult),
+			cfg:            config.ServiceInfo{MaxResultCount: 5},
+			expectedResult: SuccessfulDatabaseResult,
+			expectedError:  false,
+		},
+		{
+			name:           "Unsuccessful database call",
+			mockDb:         createMockAddressLoader(Error, nil),
+			cfg:            config.ServiceInfo{MaxResultCount: 5},
+			expectedResult: nil,
+			expectedError:  true,
+		},
+		{
+			name:             "MaxResultCount exceeded",
+			mockDb:           createMockAddressLoader(nil, SuccessfulDatabaseResult),
+			cfg:              config.ServiceInfo{MaxResultCount: 1},
+			expectedResult:   nil,
+			expectedError:    true,
+			expectedErrorVal: metadataErrors.NewErrLimitExceeded(1),
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			op := NewAddressableLoadAll(test.cfg, test.mockDb, logger.NewMockClient())
+			actual, err := op.Execute()
+			if test.expectedError && err == nil {
+				t.Error("Expected an error")
+				return
+			}
+			if !test.expectedError && err != nil {
+				t.Error("Unexpected error")
+				return
+			}
+			if !reflect.DeepEqual(actual, test.expectedResult) {
+				t.Errorf("Observed result doesn't match expected.\nExpected: %v\nActual: %v\n", test.expectedResult, actual)
+			}
+			if test.expectedErrorVal != nil {
+				if test.expectedErrorVal.Error() != err.Error() {
+					t.Errorf("Observed error doesn't match expected.\nExpected: %v\nActual: %v\n", test.expectedErrorVal.Error(), err.Error())
+				}
+			}
+		})
+	}
+}
+
+func TestNameExecutor(t *testing.T) {
+	tests := []struct {
+		name           string
+		mockDb         AddressLoader
+		expectedResult contract.Addressable
+		expectedError  bool
+	}{
+		{
+			name:           "Successful database call",
+			mockDb:         createMockAddressLoaderStringArg("GetAddressableByName", nil, SuccessfulDatabaseResult[0], AddressName),
+			expectedResult: SuccessfulDatabaseResult[0],
+			expectedError:  false,
+		},
+		{
+			name:           "Unsuccessful database call",
+			mockDb:         createMockAddressLoaderStringArg("GetAddressableByName", Error, contract.Addressable{}, AddressName),
+			expectedResult: contract.Addressable{},
+			expectedError:  true,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			op := NewNameExecutor(test.mockDb, AddressName)
+			actual, err := op.Execute()
+			if test.expectedError && err == nil {
+				t.Error("Expected an error")
+				return
+			}
+
+			if !test.expectedError && err != nil {
+				t.Errorf("Unexpectedly encountered error: %s", err.Error())
+				return
+			}
+
+			if !reflect.DeepEqual(test.expectedResult, actual) {
+				t.Errorf("Expected result does not match the observed.\nExpected: %v\nObserved: %v\n", test.expectedResult, actual)
+				return
+			}
+		})
+	}
+}
+
+func TestIdExecutor(t *testing.T) {
+	tests := []struct {
+		name           string
+		mockDb         AddressLoader
+		expectedResult contract.Addressable
+		expectedError  bool
+	}{
+		{
+			name:           "Successful database call",
+			mockDb:         createMockAddressLoaderStringArg("GetAddressableById", nil, SuccessfulDatabaseResult[0], Id),
+			expectedResult: SuccessfulDatabaseResult[0],
+			expectedError:  false,
+		},
+		{
+			name:           "Unsuccessful database call",
+			mockDb:         createMockAddressLoaderStringArg("GetAddressableById", Error, contract.Addressable{}, Id),
+			expectedResult: contract.Addressable{},
+			expectedError:  true,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			op := NewIdExecutor(test.mockDb, Id)
+			actual, err := op.Execute()
+			if test.expectedError && err == nil {
+				t.Error("Expected an error")
+				return
+			}
+
+			if !test.expectedError && err != nil {
+				t.Errorf("Unexpectedly encountered error: %s", err.Error())
+				return
+			}
+
+			if !reflect.DeepEqual(test.expectedResult, actual) {
+				t.Errorf("Expected result does not match the observed.\nExpected: %v\nObserved: %v\n", test.expectedResult, actual)
 				return
 			}
 		})
@@ -200,13 +347,19 @@ func TestTopicExecutor(t *testing.T) {
 }
 
 func createMockAddressLoaderStringArg(methodName string, err error, ret interface{}, arg string) AddressLoader {
-	dbMock := &mocks.AddressLoader{}
+	dbMock := mocks.AddressLoader{}
 	dbMock.On(methodName, arg).Return(ret, err)
-	return dbMock
+	return &dbMock
 }
 
 func createMockAddressLoaderIntArg(methodName string, err error, ret interface{}, arg int) AddressLoader {
-	dbMock := &mocks.AddressLoader{}
+	dbMock := mocks.AddressLoader{}
 	dbMock.On(methodName, arg).Return(ret, err)
-	return dbMock
+	return &dbMock
+}
+
+func createMockAddressLoader(err error, ret []contract.Addressable) AddressLoader {
+	dbMock := mocks.AddressLoader{}
+	dbMock.On("GetAddressables").Return(ret, err)
+	return &dbMock
 }
