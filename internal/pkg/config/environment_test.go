@@ -17,13 +17,15 @@ package config
 import (
 	"github.com/stretchr/testify/assert"
 	"os"
-	"strconv"
 	"testing"
 )
 
 const (
-	envValueString = "envValue"
-	envValueInt    = 123456789
+	envValue = "consul://localhost:8500"
+
+	expectedTypeValue = "consul"
+	expectedHostValue = "localhost"
+	expectedPortValue = 8500
 
 	defaultHostValue = "defaultHost"
 	defaultPortValue = 987654321
@@ -40,33 +42,16 @@ func initializeTest(t *testing.T) RegistryInfo {
 }
 
 func TestEnvVariableUpdatesRegistryInfo(t *testing.T) {
-	var tests = []struct {
-		name              string
-		envKey            string
-		envValue          string
-		expectedHostValue string
-		expectedPortValue int
-		expectedTypeValue string
-	}{
-		{"host", envKeyHost, envValueString, envValueString, defaultPortValue, defaultTypeValue},
-		{"port", envKeyPort, strconv.Itoa(envValueInt), defaultHostValue, envValueInt, defaultTypeValue},
-		{"type", envKeyType, envValueString, defaultHostValue, defaultPortValue, envValueString},
+	registryInfo := initializeTest(t)
+
+	if err := os.Setenv(envKeyUrl, envValue); err != nil {
+		t.Fail()
 	}
+	registryInfo = OverrideFromEnvironment(registryInfo)
 
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			registryInfo := initializeTest(t)
-			if err := os.Setenv(test.envKey, test.envValue); err != nil {
-				t.Fail()
-			}
-
-			registryInfo = OverrideFromEnvironment(registryInfo)
-
-			assert.Equal(t, registryInfo.Host, test.expectedHostValue)
-			assert.Equal(t, registryInfo.Port, test.expectedPortValue)
-			assert.Equal(t, registryInfo.Type, test.expectedTypeValue)
-		})
-	}
+	assert.Equal(t, registryInfo.Host, expectedHostValue)
+	assert.Equal(t, registryInfo.Port, expectedPortValue)
+	assert.Equal(t, registryInfo.Type, expectedTypeValue)
 }
 
 func TestNoEnvVariableDoesNotUpdateRegistryInfo(t *testing.T) {

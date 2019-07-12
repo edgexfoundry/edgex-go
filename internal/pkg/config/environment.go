@@ -15,28 +15,24 @@
 package config
 
 import (
+	"net/url"
 	"os"
 	"strconv"
 )
 
 const (
-	envKeyPrefix = "edgex_registry_"
-	envKeyHost   = envKeyPrefix + "host"
-	envKeyPort   = envKeyPrefix + "port"
-	envKeyType   = envKeyPrefix + "type"
+	envKeyUrl = "edgex_registry"
 )
 
 func OverrideFromEnvironment(registry RegistryInfo) RegistryInfo {
-	if env := os.Getenv(envKeyHost); env != "" {
-		registry.Host = env
-	}
-	if env := os.Getenv(envKeyPort); env != "" {
-		if v, err := strconv.ParseInt(env, 10, 0); err == nil {
-			registry.Port = int(v)
+	if env := os.Getenv(envKeyUrl); env != "" {
+		if u, err := url.Parse(env); err == nil {
+			if p, err := strconv.ParseInt(u.Port(), 10, 0); err == nil {
+				registry.Port = int(p)
+				registry.Host = u.Hostname()
+				registry.Type = u.Scheme
+			}
 		}
-	}
-	if env := os.Getenv(envKeyType); env != "" {
-		registry.Type = env
 	}
 	return registry
 }
