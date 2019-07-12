@@ -6,4 +6,5 @@ import (
 
 type CommandLoader interface {
 	GetCommandsByDeviceId(did string) ([]contract.Command, error)
+	GetAllCommands() ([]contract.Command, error)
 }
