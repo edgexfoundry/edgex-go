@@ -7,6 +7,7 @@
 package scheduler
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
@@ -455,22 +456,13 @@ func execute(context *IntervalContext, wg *sync.WaitGroup) error {
 		executingUrl := getUrlStr(intervalAction)
 		LoggingClient.Debug("the event with id : " + eventId + " will request url : " + executingUrl)
 
-		//TODO: change the method type based on the event
-
 		httpMethod := intervalAction.HTTPMethod
 		if !validMethod(httpMethod) {
 			LoggingClient.Error(fmt.Sprintf("net/http: invalid method %q", httpMethod))
 			return nil
 		}
 
-		req, err := http.NewRequest(httpMethod, executingUrl, nil)
-		req.Header.Set(ContentTypeKey, ContentTypeJsonValue)
-
-		params := strings.TrimSpace(intervalAction.Parameters)
-
-		if len(params) > 0 {
-			req.Header.Set(ContentLengthKey, string(len(params)))
-		}
+		req, err := getHttpRequest(httpMethod, executingUrl, intervalAction)
 
 		if err != nil {
 			LoggingClient.Error("create new request occurs error : " + err.Error())
@@ -496,6 +488,29 @@ func execute(context *IntervalContext, wg *sync.WaitGroup) error {
 		intervalQueue.Add(context)
 	}
 	return nil
+}
+
+// EFC We may need to modify this for authorization type in the future
+func getHttpRequest(httpMethod string, executingUrl string, intervalAction contract.IntervalAction) (*http.Request, error) {
+	var body []byte
+
+	params := strings.TrimSpace(intervalAction.Parameters)
+
+	if len(params) > 0 {
+		body = []byte(params)
+	} else {
+		body = nil
+	}
+	req, err := http.NewRequest(httpMethod, executingUrl, bytes.NewBuffer([]byte(body)))
+	req.Header.Set(ContentTypeKey, ContentTypeJsonValue)
+
+	if len(params) > 0 {
+		req.Header.Set(ContentLengthKey, string(len(params)))
+	}
+	if err != nil {
+		LoggingClient.Error("create new request occurs error : " + err.Error())
+	}
+	return req, err
 }
 
 func getUrlStr(intervalAction contract.IntervalAction) string {
