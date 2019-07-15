@@ -128,7 +128,7 @@ func TestCreateJWTToken(t *testing.T) {
 	}
 }
 
-func TestCreateOAuth2Token(t *testing.T) {
+/*func TestCreateOAuth2Token(t *testing.T) {
 	t.Skip()
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -149,4 +149,4 @@ func TestCreateOAuth2Token(t *testing.T) {
 		t.Errorf("failed to creat OAuth2 token for consumer")
 		t.Errorf(err.Error())
 	}
-}
+}*/
