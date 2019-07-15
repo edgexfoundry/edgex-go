@@ -1159,7 +1159,29 @@ func (c *Client) GetCommandById(id string) (contract.Command, error) {
 	return d, err
 }
 
-func (c *Client) GetCommandByName(n string) ([]contract.Command, error) {
+func (c *Client) GetCommandByNameAndDeviceId(cname string, did string) (contract.Command, error) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	objects, err := getObjectsByValues(conn, db.Command+":name:"+cname,
+		db.Command+":device:"+did)
+	if err != nil {
+		return contract.Command{}, err
+	}
+	if len(objects) != 1 {
+		return contract.Command{}, db.ErrNotFound
+	}
+
+	var cmd contract.Command
+	err = unmarshalObject(objects[0], &cmd)
+	if err != nil {
+		return contract.Command{}, err
+	}
+
+	return cmd, nil
+}
+
+func (c *Client) GetCommandsByName(n string) ([]contract.Command, error) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
