@@ -109,6 +109,7 @@ func TestAssociateWithGroup(t *testing.T) {
 func TestCreateJWTToken(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"consumer_id": "test", "created_at": 1442426001000,"id": "test", "key": "test-key","secret": "test-secret"}`))
 		if r.Method != "POST" {
 			t.Errorf("expected POST request, got %s instead", r.Method)
 		}
@@ -131,6 +132,7 @@ func TestCreateOAuth2Token(t *testing.T) {
 	t.Skip()
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"token_type": "oauth2", "access_token": "test", "expires_in": 1442426001000}`))
 		if r.Method != "POST" {
 			t.Errorf("expected POST request, got %s instead", r.Method)
 		}
