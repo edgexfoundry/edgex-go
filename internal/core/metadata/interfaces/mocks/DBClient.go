@@ -541,8 +541,29 @@ func (_m *DBClient) GetCommandById(id string) (models.Command, error) {
 	return r0, r1
 }
 
-// GetCommandByName provides a mock function with given fields: id
-func (_m *DBClient) GetCommandByName(id string) ([]models.Command, error) {
+// GetCommandByNameAndDeviceId provides a mock function with given fields: cname, did
+func (_m *DBClient) GetCommandByNameAndDeviceId(cname string, did string) (models.Command, error) {
+	ret := _m.Called(cname, did)
+
+	var r0 models.Command
+	if rf, ok := ret.Get(0).(func(string, string) models.Command); ok {
+		r0 = rf(cname, did)
+	} else {
+		r0 = ret.Get(0).(models.Command)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string, string) error); ok {
+		r1 = rf(cname, did)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetCommandsByDeviceId provides a mock function with given fields: id
+func (_m *DBClient) GetCommandsByDeviceId(id string) ([]models.Command, error) {
 	ret := _m.Called(id)
 
 	var r0 []models.Command
@@ -564,8 +585,8 @@ func (_m *DBClient) GetCommandByName(id string) ([]models.Command, error) {
 	return r0, r1
 }
 
-// GetCommandsByDeviceId provides a mock function with given fields: id
-func (_m *DBClient) GetCommandsByDeviceId(id string) ([]models.Command, error) {
+// GetCommandsByName provides a mock function with given fields: id
+func (_m *DBClient) GetCommandsByName(id string) ([]models.Command, error) {
 	ret := _m.Called(id)
 
 	var r0 []models.Command

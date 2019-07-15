@@ -56,7 +56,7 @@ func restGetCommandById(w http.ResponseWriter, r *http.Request) {
 	pkg.Encode(res, w, LoggingClient)
 }
 
-func restGetCommandByName(w http.ResponseWriter, r *http.Request) {
+func restGetCommandsByName(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
@@ -64,7 +64,7 @@ func restGetCommandByName(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	results, err := dbClient.GetCommandByName(n)
+	results, err := dbClient.GetCommandsByName(n)
 	if err != nil {
 		if err == db.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
