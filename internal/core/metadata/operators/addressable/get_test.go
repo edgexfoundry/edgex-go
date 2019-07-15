@@ -23,12 +23,14 @@ var Port = 8080
 var SuccessfulDatabaseResult = []contract.Addressable{
 	{
 		User:       "User1",
+		Name:       "Ein",
 		Protocol:   "http",
 		Id:         "address #1",
 		HTTPMethod: "POST",
 	},
 	{
 		User:       "User2",
+		Name:       "Zwei",
 		Protocol:   "http",
 		Id:         "address #2",
 		HTTPMethod: "GET",
@@ -125,7 +127,7 @@ func TestAllAddressablesExecutor(t *testing.T) {
 			if !reflect.DeepEqual(actual, test.expectedResult) {
 				t.Errorf("Observed result doesn't match expected.\nExpected: %v\nActual: %v\n", test.expectedResult, actual)
 			}
-			if test.expectedErrorVal != nil {
+			if test.expectedErrorVal != nil && err != nil {
 				if test.expectedErrorVal.Error() != err.Error() {
 					t.Errorf("Observed error doesn't match expected.\nExpected: %v\nActual: %v\n", test.expectedErrorVal.Error(), err.Error())
 				}

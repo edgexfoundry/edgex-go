@@ -13,3 +13,8 @@ type AddressLoader interface {
 	GetAddressableByName(n string) (contract.Addressable, error)
 	GetAddressableById(id string) (contract.Addressable, error)
 }
+
+// AddressWriter provides functionality for adding and updating Addressables.
+type AddressWriter interface {
+	AddAddressable(addressable contract.Addressable) (string, error)
+}
