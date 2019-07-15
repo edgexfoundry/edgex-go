@@ -1,0 +1,9 @@
+{
+    "keys": [
+      "test-keys"
+    ],
+    "keys_base64": [
+      "test-keys-base64"
+    ],
+    "root_token": "test-token"
+}
