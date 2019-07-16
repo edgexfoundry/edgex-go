@@ -7,7 +7,7 @@ require (
 	github.com/eclipse/paho.mqtt.golang v1.1.1
 	github.com/edgexfoundry/go-mod-core-contracts v0.1.3
 	github.com/edgexfoundry/go-mod-messaging v0.1.5
-	github.com/edgexfoundry/go-mod-registry v0.1.0
+	github.com/edgexfoundry/go-mod-registry v0.1.5
 	github.com/globalsign/mgo v0.0.0-20181015135952-eeefdecb41b8
 	github.com/go-kit/kit v0.8.0
 	github.com/go-stack/stack v1.8.0 // indirect
@@ -15,7 +15,7 @@ require (
 	github.com/google/uuid v1.1.0
 	github.com/gorilla/context v1.1.1
 	github.com/gorilla/mux v1.7.0
-	github.com/hashicorp/consul v1.4.2
+	github.com/hashicorp/consul v1.5.2
 	github.com/imdario/mergo v0.3.6
 	github.com/magiconair/properties v1.8.0
 	github.com/mattn/go-xmpp v0.0.0-20190124093244-6093f50721ed
