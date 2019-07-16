@@ -39,7 +39,7 @@ func main() {
 
 	if len(os.Args) < 2 {
 		worker.HelpCallback()
-	}	
+	}
 	insecureSkipVerify := flag.Bool("insureskipverify", true, "skip server side SSL verification, mainly for self-signed cert")
 	initNeeded := flag.Bool("init", false, "run init procedure for security service.")
 	resetNeeded := flag.Bool("reset", false, "reset reverse proxy by removing all services/routes/consumers")
@@ -108,7 +108,7 @@ func main() {
 		}
 
 		fmt.Println(fmt.Sprintf("the access token for user %s is: %s. Please keep the token for accessing edgex services", *userTobeCreated, t))
-		
+
 		utp := &worker.UserTokenPair{User: *userTobeCreated, Token: t}
 		file, err := os.Create(config.GetProxyAuthOutputPath())
 		if err != nil {
