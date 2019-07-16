@@ -18,6 +18,8 @@ package proxy
 
 import (
 	"fmt"
+	"net/url"
+
 	"github.com/BurntSushi/toml"
 )
 
@@ -134,9 +136,19 @@ func (cfg *tomlConfig) GetEdgeXSvcs() map[string]service {
 }
 
 func (cfg *tomlConfig) GetProxyBaseURL() string {
-	return fmt.Sprintf("http://%s:%s/", cfg.GetProxyServerName(), cfg.GetProxyServerPort())
+	url := &url.URL{
+		Scheme: "http",
+		Host:   fmt.Sprintf("%s:%s", cfg.GetProxyServerName(), cfg.GetProxyServerPort()),
+		Path:   "/",
+	}
+	return url.String()
 }
 
 func (cfg *tomlConfig) GetSecretSvcBaseURL() string {
-	return fmt.Sprintf("https://%s:%s/", cfg.GetSecretSvcName(), cfg.GetSecretSvcPort())
+	url := &url.URL{
+		Scheme: "https",
+		Host:   fmt.Sprintf("%s:%s", cfg.GetSecretSvcName(), cfg.GetSecretSvcPort()),
+		Path:   "/",
+	}
+	return url.String()
 }

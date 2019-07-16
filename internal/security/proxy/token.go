@@ -19,34 +19,23 @@ package proxy
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io"
 )
 
-type userTokenPair struct {
+type UserTokenPair struct {
 	User  string
 	Token string
 }
 
-type Writer interface {
-	Save(u string, t string) error
-}
-
-type TokenFileWriter struct {
-	Filename string
-}
-
-func (tf *TokenFileWriter) Save(u string, t string) error {
-
-	data := userTokenPair{
-		User:  u,
-		Token: t,
-	}
-
-	jdata, err := json.MarshalIndent(data, "", " ")
+func (ut *UserTokenPair) Save(w io.Writer) error {
+	jdata, err := json.MarshalIndent(*ut, "", " ")
 	if err != nil {
 		return err
 	}
 
-	err = ioutil.WriteFile(tf.Filename, jdata, 0600)
-	return err
+	_, err = w.Write(jdata)
+	if err != nil {
+		return err
+	}
+	return nil
 }

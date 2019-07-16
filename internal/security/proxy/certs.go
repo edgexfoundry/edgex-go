@@ -78,10 +78,15 @@ func (cs *Certs) getSecret(filename string) (string, error) {
 func (cs *Certs) retrieve(t string) (*CertPair, error) {
 	s := sling.New().Set(VaultToken, t)
 	req, err := s.New().Base(cs.Connect.GetSecretSvcBaseURL()).Get(cs.Cfg.GetCertPath()).Request()
+	if err != nil {
+		e := fmt.Sprintf("failed to retrieve certificate on path %s with error %s", cs.Cfg.GetCertPath(), err.Error())
+		lc.Error(e)
+		return nil, err
+	}
 	resp, err := cs.Connect.GetHTTPClient().Do(req)
 	if err != nil {
 		e := fmt.Sprintf("failed to retrieve certificate on path %s with error %s", cs.Cfg.GetCertPath(), err.Error())
-		lc.Info(e)
+		lc.Error(e)
 		return nil, err
 	}
 	defer resp.Body.Close()
@@ -92,9 +97,10 @@ func (cs *Certs) retrieve(t string) (*CertPair, error) {
 		if err = json.NewDecoder(resp.Body).Decode(&cc); err != nil {
 			return nil, err
 		}
+		break
 	default:
 		e := fmt.Sprintf("failed to retrieve certificate on path %s with error code %d", cs.Cfg.GetCertPath(), resp.StatusCode)
-		lc.Info(e)
+		lc.Error(e)
 		return nil, err
 	}
 	return &cc.Pair, nil

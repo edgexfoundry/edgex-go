@@ -63,6 +63,7 @@ func (s *Service) checkServiceStatus(path string) error {
 		break
 	default:
 		e := fmt.Sprintf("the service on %s is down", path)
+		lc.Error(e)
 		return errors.New(e)
 	}
 	return nil
@@ -142,6 +143,10 @@ func (s *Service) loadCert() error {
 
 	lc.Info("trying to upload cert to proxy server")
 	req, err := sling.New().Base(s.Connect.GetProxyBaseURL()).Post(CertificatesPath).BodyJSON(body).Request()
+	if err != nil {
+		lc.Error("failed to upload cert to proxy server with error %s", err.Error())
+		return err
+	}
 	resp, err := s.Connect.GetHTTPClient().Do(req)
 	if err != nil {
 		lc.Error("failed to upload cert to proxy server with error %s", err.Error())
@@ -154,7 +159,9 @@ func (s *Service) loadCert() error {
 		lc.Info("successful to add certificate to the reverse proxy")
 		break
 	default:
-		return fmt.Errorf("failed to add certificate with errorcode %d", resp.StatusCode)
+		e := fmt.Sprintf("failed to add certificate with errorcode %d", resp.StatusCode)
+		lc.Error(e)
+		return errors.New(e)
 	}
 	return nil
 }
@@ -166,10 +173,14 @@ func (s *Service) getCertPair() (*CertPair, error) {
 
 func (s *Service) initKongService(service *KongService) error {
 	req, err := sling.New().Base(s.Connect.GetProxyBaseURL()).Post(ServicesPath).BodyForm(service).Request()
-	resp, err := s.Connect.GetHTTPClient().Do(req)
-
 	if err != nil {
 		e := fmt.Sprintf("failed to set up proxy service for %s", service.Name)
+		return errors.New(e)
+	}
+	resp, err := s.Connect.GetHTTPClient().Do(req)
+	if err != nil {
+		e := fmt.Sprintf("failed to set up proxy service for %s", service.Name)
+		lc.Error(e)
 		return errors.New(e)
 	}
 	defer resp.Body.Close()
@@ -182,7 +193,9 @@ func (s *Service) initKongService(service *KongService) error {
 		lc.Info(fmt.Sprintf("proxy service for %s has been set up", service.Name))
 		break
 	default:
-		return fmt.Errorf("failed to set up proxy service for %s with errorcode %d", service.Name, resp.StatusCode)
+		e := fmt.Sprintf("failed to set up proxy service for %s with errorcode %d", service.Name, resp.StatusCode)
+		lc.Error(e)
+		return errors.New(e)
 	}
 	return nil
 }
@@ -190,10 +203,15 @@ func (s *Service) initKongService(service *KongService) error {
 func (s *Service) initKongRoutes(r *KongRoute, name string) error {
 	routesubpath := "services/" + name + "/routes"
 	req, err := sling.New().Base(s.Connect.GetProxyBaseURL()).Post(routesubpath).BodyJSON(r).Request()
+	if err != nil {
+		e := fmt.Sprintf("failed to set up routes for %s with error %s", name, err.Error())
+		lc.Error(e)
+		return err
+	}
 	resp, err := s.Connect.GetHTTPClient().Do(req)
 	if err != nil {
 		e := fmt.Sprintf("failed to set up routes for %s with error %s", name, err.Error())
-		lc.Info(e)
+		lc.Error(e)
 		return err
 	}
 	defer resp.Body.Close()
@@ -216,6 +234,11 @@ func (s *Service) initACL(name string, whitelist string) error {
 		WhiteList: whitelist,
 	}
 	req, err := sling.New().Base(s.Connect.GetProxyBaseURL()).Post(PluginsPath).BodyForm(aclParams).Request()
+	if err != nil {
+		e := fmt.Sprintf("failed to set up acl")
+		lc.Error(e)
+		return err
+	}
 	resp, err := s.Connect.GetHTTPClient().Do(req)
 	if err != nil {
 		e := fmt.Sprintf("failed to set up acl")
@@ -254,6 +277,11 @@ func (s *Service) initJWTAuth() error {
 	}
 
 	req, err := sling.New().Base(s.Connect.GetProxyBaseURL()).Post(PluginsPath).BodyForm(jwtParams).Request()
+	if err != nil {
+		e := fmt.Sprintf("failed to set up jwt authentication")
+		lc.Error(e)
+		return err
+	}
 	resp, err := s.Connect.GetHTTPClient().Do(req)
 	if err != nil {
 		e := fmt.Sprintf("failed to set up jwt authentication")
@@ -285,6 +313,11 @@ func (s *Service) initOAuth2(ttl int) error {
 	}
 
 	req, err := sling.New().Base(s.Connect.GetProxyBaseURL()).Post(PluginsPath).BodyForm(oauth2Params).Request()
+	if err != nil {
+		e := fmt.Sprintf("failed to set up oauth2 authentication with error %s", err.Error())
+		lc.Error(e)
+		return err
+	}
 	resp, err := s.Connect.GetHTTPClient().Do(req)
 	if err != nil {
 		e := fmt.Sprintf("failed to set up oauth2 authentication with error %s", err.Error())

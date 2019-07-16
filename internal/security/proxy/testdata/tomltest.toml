@@ -99,4 +99,3 @@ snis = "test.com"
 		host = "edgex-device-virtual"
 		port = "49990"
 		protocol = "http"
-	

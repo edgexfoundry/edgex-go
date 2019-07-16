@@ -39,8 +39,7 @@ func main() {
 
 	if len(os.Args) < 2 {
 		worker.HelpCallback()
-	}
-	useConsul := flag.Bool("consul", false, "retrieve configuration from consul server")
+	}	
 	insecureSkipVerify := flag.Bool("insureskipverify", true, "skip server side SSL verification, mainly for self-signed cert")
 	initNeeded := flag.Bool("init", false, "run init procedure for security service.")
 	resetNeeded := flag.Bool("reset", false, "reset reverse proxy by removing all services/routes/consumers")
@@ -56,10 +55,6 @@ func main() {
 	if err != nil {
 		lc.Error("failed to retrieve config data from local file. Please make sure res/configuration.toml file exists with correct formats")
 		return
-	}
-
-	if *useConsul {
-		lc.Info("retrieving config data from Consul")
 	}
 
 	client := getNewClient(*insecureSkipVerify)
@@ -113,9 +108,14 @@ func main() {
 		}
 
 		fmt.Println(fmt.Sprintf("the access token for user %s is: %s. Please keep the token for accessing edgex services", *userTobeCreated, t))
-
-		tf := &worker.TokenFileWriter{Filename: config.GetProxyAuthOutputPath()}
-		err = tf.Save(*userTobeCreated, t)
+		
+		utp := &worker.UserTokenPair{User: *userTobeCreated, Token: t}
+		file, err := os.Create(config.GetProxyAuthOutputPath())
+		if err != nil {
+			lc.Error(err.Error())
+			return
+		}
+		err = utp.Save(file)
 		if err != nil {
 			lc.Error(err.Error())
 		}

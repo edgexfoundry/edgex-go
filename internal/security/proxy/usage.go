@@ -23,8 +23,7 @@ import (
 
 var usageStr = `
 Usage: %s [options]
-Server Options:
-	--consul=true/false				Indicates if retrieving config from Consul
+Server Options:	
 	--insureskipverify=true/false			Indicates if skipping the server side SSL cert verifcation, similar to -k of curl
 	--init=true/false				Indicates if security service should be initialized
 	--reset=true/false				Indicate if security service should be reset to initialization status

@@ -31,6 +31,10 @@ type Resource struct {
 
 func (r *Resource) Remove(path string) error {
 	req, err := sling.New().Base(r.Connect.GetProxyBaseURL()).Path(path).Delete(r.ID).Request()
+	if err != nil {
+		e := fmt.Sprintf("failed to delete %s at %s with error %s", r.ID, path, err.Error())
+		return errors.New(e)
+	}
 	resp, err := r.Connect.GetHTTPClient().Do(req)
 	if err != nil {
 		e := fmt.Sprintf("failed to delete %s at %s with error %s", r.ID, path, err.Error())
@@ -44,7 +48,7 @@ func (r *Resource) Remove(path string) error {
 		break
 	default:
 		e := fmt.Sprintf("failed to delete %s at %s with errocode %d.", r.ID, path, resp.StatusCode)
-		lc.Info(e)
+		lc.Error(e)
 		return errors.New(e)
 	}
 	return nil
