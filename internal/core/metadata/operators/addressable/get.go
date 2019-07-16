@@ -1,7 +1,80 @@
 // addressable contains functionality for obtaining Addressable data.
 package addressable
 
-import contract "github.com/edgexfoundry/go-mod-core-contracts/models"
+import (
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
+)
+
+type AddressableAllExecutor interface {
+	Execute() ([]contract.Addressable, error)
+}
+
+type addressableLoadAll struct {
+	config   config.ServiceInfo
+	database AddressLoader
+	logger   logger.LoggingClient
+}
+
+func NewAddressableLoadAll(cfg config.ServiceInfo, db AddressLoader, log logger.LoggingClient) AddressableAllExecutor {
+	return addressableLoadAll{config: cfg, database: db, logger: log}
+}
+
+func (op addressableLoadAll) Execute() (addressables []contract.Addressable, err error) {
+	addressables, err = op.database.GetAddressables()
+	if err != nil {
+		op.logger.Error(err.Error())
+		return nil, err
+	}
+	if len(addressables) > op.config.MaxResultCount {
+		err = errors.NewErrLimitExceeded(op.config.MaxResultCount)
+		op.logger.Error(err.Error())
+		return nil, err
+	}
+	return
+}
+
+type IdExecutor interface {
+	Execute() (contract.Addressable, error)
+}
+
+type addressLoadById struct {
+	database AddressLoader
+	id       string
+}
+
+func (op addressLoadById) Execute() (contract.Addressable, error) {
+	return op.database.GetAddressableById(op.id)
+}
+
+func NewIdExecutor(db AddressLoader, id string) IdExecutor {
+	return addressLoadById{
+		database: db,
+		id:       id,
+	}
+}
+
+type NameExecutor interface {
+	Execute() (contract.Addressable, error)
+}
+
+type addressLoadByName struct {
+	database AddressLoader
+	name     string
+}
+
+func (op addressLoadByName) Execute() (contract.Addressable, error) {
+	return op.database.GetAddressableByName(op.name)
+}
+
+func NewNameExecutor(db AddressLoader, name string) NameExecutor {
+	return addressLoadByName{
+		database: db,
+		name:     name,
+	}
+}
 
 // AddressExecutor provides functionality for retrieving addresses from an underlying data-store.
 type AddressExecutor interface {

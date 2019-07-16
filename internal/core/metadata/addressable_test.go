@@ -15,7 +15,6 @@
 package metadata
 
 import (
-	"errors"
 	"os"
 	"testing"
 
@@ -28,47 +27,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
 )
-
-func TestGetAllAddressables(t *testing.T) {
-	reset()
-	dbClient = newMockDb()
-
-	const expectedAddressables = 3
-
-	addressables, err := getAllAddressables()
-	if err != nil {
-		t.Errorf(err.Error())
-	}
-	if len(addressables) != expectedAddressables {
-		t.Errorf("expected addressable count %d, received: %d", expectedAddressables, len(addressables))
-	}
-}
-
-func TestGetAddressablesFails(t *testing.T) {
-	reset()
-	dbClient = newMockDb(errors.New("some error"))
-
-	_, expectedErr := getAllAddressables()
-	if expectedErr == nil {
-		t.Errorf("expected an error from getAllAddressables()")
-	}
-}
-
-func TestGetAddressablesAboveMaxResultCount(t *testing.T) {
-	reset()
-	dbClient = newMockDb()
-
-	Configuration.Service.MaxResultCount = 1
-
-	expectedNil, expectedErr := getAllAddressables()
-
-	if expectedNil != nil {
-		t.Errorf("getAllAddressables() should return nil when MaxResultCount is exceeded")
-	}
-	if expectedErr == nil {
-		t.Errorf("MaxResultCount exceeded should return an error")
-	}
-}
 
 func TestAddAddressable(t *testing.T) {
 	reset()
