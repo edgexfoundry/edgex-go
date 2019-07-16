@@ -15,7 +15,6 @@ package metadata
 
 import (
 	"encoding/json"
-	"errors"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -24,7 +23,7 @@ import (
 	"github.com/gorilla/mux"
 	"gopkg.in/yaml.v2"
 
-	errors2 "github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/operators/device"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/operators/device_profile"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
@@ -39,7 +38,7 @@ func restGetAllDeviceProfiles(w http.ResponseWriter, _ *http.Request) {
 	}
 
 	if len(res) > Configuration.Service.MaxResultCount {
-		err = errors.New("Max limit exceeded with request for profiles")
+		err = errors.NewErrLimitExceeded(Configuration.Service.MaxResultCount)
 		http.Error(w, err.Error(), http.StatusRequestEntityTooLarge)
 		LoggingClient.Error(err.Error())
 		return
@@ -67,7 +66,7 @@ func restAddDeviceProfile(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		if count > 1 {
-			err := errors.New("Error adding device profile: Duplicate names in the commands")
+			err := errors.NewErrDuplicateName("Error adding device profile: Duplicate names in the commands")
 			LoggingClient.Error(err.Error())
 			http.Error(w, err.Error(), http.StatusConflict)
 			return
@@ -106,11 +105,11 @@ func restUpdateDeviceProfile(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		LoggingClient.Error(err.Error())
 		switch err.(type) {
-		case errors2.ErrDeviceProfileNotFound:
+		case errors.ErrDeviceProfileNotFound:
 			http.Error(w, err.Error(), http.StatusNotFound)
-		case *errors2.ErrDuplicateName:
+		case *errors.ErrDuplicateName:
 			http.Error(w, err.Error(), http.StatusConflict)
-		case errors2.ErrDeviceProfileInvalidState:
+		case errors.ErrDeviceProfileInvalidState:
 			http.Error(w, err.Error(), http.StatusConflict)
 		default:
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -127,7 +126,9 @@ func restUpdateDeviceProfile(w http.ResponseWriter, r *http.Request) {
 		LoggingClient.Warn("Error while notifying profile associates of update: ", err.Error())
 	}
 
-	w.WriteHeader(http.StatusNoContent)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("true"))
 }
 
 func restGetProfileByProfileId(w http.ResponseWriter, r *http.Request) {
@@ -150,25 +151,24 @@ func restGetProfileByProfileId(w http.ResponseWriter, r *http.Request) {
 
 func restDeleteProfileByProfileId(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	var did string = vars["id"]
+	var did = vars["id"]
 
-	// Check if the device profile exists
-	dp, err := dbClient.GetDeviceProfileById(did)
+	op := device_profile.NewDeleteByIDExecutor(dbClient, did)
+	err := op.Execute()
 	if err != nil {
-		if err == db.ErrNotFound {
-			http.Error(w, err.Error(), http.StatusNotFound)
-		} else {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		}
 		LoggingClient.Error(err.Error())
+		switch err.(type) {
+		case errors.ErrDeviceProfileNotFound:
+			http.Error(w, err.Error(), http.StatusNotFound)
+		case errors.ErrDeviceProfileInvalidState:
+			http.Error(w, err.Error(), http.StatusConflict)
+		default:
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+
 		return
 	}
 
-	// Delete the device profile
-	if err = deleteDeviceProfile(dp, w); err != nil {
-		LoggingClient.Error(err.Error())
-		return
-	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
@@ -184,63 +184,25 @@ func restDeleteProfileByName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Check if the device profile exists
-	dp, err := dbClient.GetDeviceProfileByName(n)
+	op := device_profile.NewDeleteByNameExecutor(dbClient, n)
+	err = op.Execute()
 	if err != nil {
-		if err == db.ErrNotFound {
+		LoggingClient.Error(err.Error())
+		switch err.(type) {
+		case errors.ErrDeviceProfileNotFound:
 			http.Error(w, err.Error(), http.StatusNotFound)
-		} else {
+		case errors.ErrDeviceProfileInvalidState:
+			http.Error(w, err.Error(), http.StatusConflict)
+		default:
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-		LoggingClient.Error(err.Error())
+
 		return
 	}
 
-	// Delete the device profile
-	if err = deleteDeviceProfile(dp, w); err != nil {
-		LoggingClient.Error(err.Error())
-		return
-	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
-}
-
-// Delete the device profile
-// Make sure there are no devices still using it
-// Delete the associated commands
-func deleteDeviceProfile(dp models.DeviceProfile, w http.ResponseWriter) error {
-	// Check if the device profile is still in use by devices
-	d, err := dbClient.GetDevicesByProfileId(dp.Id)
-
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		return err
-	}
-	if len(d) > 0 {
-		err = errors.New("Can't delete device profile, the profile is still in use by a device")
-		http.Error(w, err.Error(), http.StatusConflict)
-		return err
-	}
-
-	// Check if the device profile is still in use by provision watchers
-	pw, err := dbClient.GetProvisionWatchersByProfileId(dp.Id)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		return err
-	}
-	if len(pw) > 0 {
-		err = errors.New("Cant delete device profile, the profile is still in use by a provision watcher")
-		http.Error(w, err.Error(), http.StatusConflict)
-		return err
-	}
-	// Delete the profile
-	if err := dbClient.DeleteDeviceProfileById(dp.Id); err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		return err
-	}
-
-	return nil
 }
 
 func restAddProfileByYaml(w http.ResponseWriter, r *http.Request) {
@@ -249,7 +211,7 @@ func restAddProfileByYaml(w http.ResponseWriter, r *http.Request) {
 	case nil:
 	// do nothing
 	case http.ErrMissingFile:
-		err := errors.New("YAML file is empty")
+		err := errors.NewErrEmptyFile("YAML")
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		LoggingClient.Error(err.Error())
 		return
@@ -265,7 +227,7 @@ func restAddProfileByYaml(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if len(data) == 0 {
-		err := errors.New("YAML file is empty")
+		err := errors.NewErrEmptyFile("YAML")
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		LoggingClient.Error(err.Error())
 		return
@@ -307,7 +269,7 @@ func addDeviceProfileYaml(data []byte, w http.ResponseWriter) {
 			}
 		}
 		if count > 1 {
-			err := errors.New("Error adding device profile: Duplicate names in the commands")
+			err := errors.NewErrDuplicateName("Error adding device profile: Duplicate names in the commands")
 			LoggingClient.Error(err.Error())
 			http.Error(w, err.Error(), http.StatusConflict)
 			return

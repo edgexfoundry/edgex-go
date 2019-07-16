@@ -140,3 +140,17 @@ func NewErrDeviceProfileInvalidState(id string, name string, description string)
 		description: description,
 	}
 }
+
+type ErrEmptyFile struct {
+	fileType string
+}
+
+func (e ErrEmptyFile) Error() string {
+	return fmt.Sprintf("%s file is empty", e.fileType)
+}
+
+func NewErrEmptyFile(fileType string) ErrEmptyFile {
+	return ErrEmptyFile{
+		fileType: fileType,
+	}
+}
