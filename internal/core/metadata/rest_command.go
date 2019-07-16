@@ -41,19 +41,26 @@ func restGetAllCommands(w http.ResponseWriter, _ *http.Request) {
 
 func restGetCommandById(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	var did string = vars[ID]
-	res, err := dbClient.GetCommandById(did)
+	cid, err := url.QueryUnescape(vars[ID])
 	if err != nil {
-		if err == db.ErrNotFound {
-			http.Error(w, err.Error(), http.StatusNotFound)
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-
 		LoggingClient.Error(err.Error())
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	pkg.Encode(res, w, LoggingClient)
+
+	op := command.NewCommandById(dbClient, cid)
+	cmd, err := op.Execute()
+	if err != nil {
+		LoggingClient.Error(err.Error())
+		switch err.(type) {
+		case *types.ErrItemNotFound:
+			http.Error(w, err.Error(), http.StatusNotFound)
+		default:
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		return
+	}
+	pkg.Encode(cmd, w, LoggingClient)
 }
 
 func restGetCommandsByName(w http.ResponseWriter, r *http.Request) {
