@@ -10,6 +10,71 @@ type AddressLoader struct {
 	mock.Mock
 }
 
+// GetAddressableById provides a mock function with given fields: id
+func (_m *AddressLoader) GetAddressableById(id string) (models.Addressable, error) {
+	ret := _m.Called(id)
+
+	var r0 models.Addressable
+	if rf, ok := ret.Get(0).(func(string) models.Addressable); ok {
+		r0 = rf(id)
+	} else {
+		r0 = ret.Get(0).(models.Addressable)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetAddressableByName provides a mock function with given fields: n
+func (_m *AddressLoader) GetAddressableByName(n string) (models.Addressable, error) {
+	ret := _m.Called(n)
+
+	var r0 models.Addressable
+	if rf, ok := ret.Get(0).(func(string) models.Addressable); ok {
+		r0 = rf(n)
+	} else {
+		r0 = ret.Get(0).(models.Addressable)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(n)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetAddressables provides a mock function with given fields:
+func (_m *AddressLoader) GetAddressables() ([]models.Addressable, error) {
+	ret := _m.Called()
+
+	var r0 []models.Addressable
+	if rf, ok := ret.Get(0).(func() []models.Addressable); ok {
+		r0 = rf()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.Addressable)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func() error); ok {
+		r1 = rf()
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetAddressablesByAddress provides a mock function with given fields: address
 func (_m *AddressLoader) GetAddressablesByAddress(address string) ([]models.Addressable, error) {
 	ret := _m.Called(address)

@@ -29,7 +29,8 @@ import (
 )
 
 func restGetAllAddressables(w http.ResponseWriter, _ *http.Request) {
-	results, err := getAllAddressables()
+	op := addressable.NewAddressableLoadAll(Configuration.Service, dbClient, LoggingClient)
+	addressables, err := op.Execute()
 	if err != nil {
 		switch err.(type) {
 		case *types.ErrLimitExceeded:
@@ -40,7 +41,7 @@ func restGetAllAddressables(w http.ResponseWriter, _ *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	err = json.NewEncoder(w).Encode(&results)
+	err = json.NewEncoder(w).Encode(&addressables)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -114,7 +115,8 @@ func restUpdateAddressable(w http.ResponseWriter, r *http.Request) {
 func restGetAddressableById(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	var id string = vars["id"]
-	result, err := dbClient.GetAddressableById(id)
+	op := addressable.NewIdExecutor(dbClient, id)
+	result, err := op.Execute()
 	if err != nil {
 		if err == db.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
@@ -228,7 +230,8 @@ func restGetAddressableByName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result, err := dbClient.GetAddressableByName(dn)
+	op := addressable.NewNameExecutor(dbClient, dn)
+	result, err := op.Execute()
 	if err != nil {
 		LoggingClient.Error(err.Error())
 		if err == db.ErrNotFound {

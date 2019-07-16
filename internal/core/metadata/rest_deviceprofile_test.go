@@ -8,12 +8,13 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
-
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces/mocks"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
+	"github.com/gorilla/mux"
 )
 
 var TestError = errors.New("test error")
@@ -50,7 +51,7 @@ func TestUpdateDeviceProfile(t *testing.T) {
 			"OK",
 			createRequestWithBody(TestDeviceProfile),
 			createDBClient(),
-			http.StatusNoContent,
+			http.StatusOK,
 		},
 		{
 			"Multiple devices associated with device profile",
@@ -88,30 +89,6 @@ func TestUpdateDeviceProfile(t *testing.T) {
 			http.StatusNotFound,
 		},
 		{
-			"Multiple devices associated with device profile",
-			createRequestWithBody(TestDeviceProfile),
-			createDBClientMultipleDevicesFoundError(),
-			http.StatusConflict,
-		},
-		{
-			"Multiple provision watchers associated with device profile",
-			createRequestWithBody(TestDeviceProfile),
-			createDBClientMultipleProvisionWatchersFoundError(),
-			http.StatusConflict,
-		},
-		{
-			"Device profile duplicate name",
-			createRequestWithBody(TestDeviceProfile),
-			createDBClientDuplicateDeviceProfileNameError(),
-			http.StatusConflict,
-		},
-		{
-			"GetAllDeviceProfiles database error ",
-			createRequestWithBody(TestDeviceProfile),
-			createDBClientGetAllDeviceProfilesError(),
-			http.StatusInternalServerError,
-		},
-		{
 			"GetProvisionWatchersByProfileId database error ",
 			createRequestWithBody(TestDeviceProfile),
 			createDBClientGetProvisionWatchersByProfileIdError(),
@@ -120,7 +97,7 @@ func TestUpdateDeviceProfile(t *testing.T) {
 		{
 			"UpdateDeviceProfile database error ",
 			createRequestWithBody(TestDeviceProfile),
-			createDBClientUpdateDeviceProfileError(),
+			createDBClientPersistDeviceProfileError(),
 			http.StatusInternalServerError,
 		},
 		{
@@ -154,6 +131,148 @@ func TestUpdateDeviceProfile(t *testing.T) {
 	}
 }
 
+func TestDeleteDeviceProfileById(t *testing.T) {
+	tests := []struct {
+		name           string
+		request        *http.Request
+		dbMock         interfaces.DBClient
+		expectedStatus int
+	}{
+		{
+			"OK",
+			createRequestWithPathParameters(ID, TestDeviceProfileID),
+			createDBClient(),
+			http.StatusOK,
+		},
+		{
+			"Multiple devices associated with device profile",
+			createRequestWithPathParameters(ID, TestDeviceProfileID),
+			createDBClientMultipleDevicesFoundError(),
+			http.StatusConflict,
+		},
+		{
+			"Multiple provision watchers associated with device profile",
+			createRequestWithPathParameters(ID, TestDeviceProfileID),
+			createDBClientMultipleProvisionWatchersFoundError(),
+			http.StatusConflict,
+		},
+		{
+			"Device Profile Not Found",
+			createRequestWithPathParameters(ID, TestDeviceProfileID),
+			createDBClientDeviceProfileNotFoundError(),
+			http.StatusNotFound,
+		},
+		{
+			"GetProvisionWatchersByProfileId database error ",
+			createRequestWithPathParameters(ID, TestDeviceProfileID),
+			createDBClientGetProvisionWatchersByProfileIdError(),
+			http.StatusInternalServerError,
+		},
+		{
+			"DeleteDeviceProfileById database error ",
+			createRequestWithPathParameters(ID, TestDeviceProfileID),
+			createDBClientPersistDeviceProfileError(),
+			http.StatusInternalServerError,
+		},
+		{
+			"GetDevicesByProfileId database error",
+			createRequestWithPathParameters(ID, TestDeviceProfileID),
+			createDBClientGetDevicesByProfileIdError(),
+			http.StatusInternalServerError,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			LoggingClient = logger.MockLogger{}
+			Configuration = &ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 1}}
+			dbClient = tt.dbMock
+			rr := httptest.NewRecorder()
+			handler := http.HandlerFunc(restDeleteProfileByProfileId)
+			handler.ServeHTTP(rr, tt.request)
+			response := rr.Result()
+			if response.StatusCode != tt.expectedStatus {
+				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
+
+				return
+			}
+		})
+	}
+}
+
+func TestDeleteDeviceProfileByName(t *testing.T) {
+	tests := []struct {
+		name           string
+		request        *http.Request
+		dbMock         interfaces.DBClient
+		expectedStatus int
+	}{
+		{
+			"OK",
+			createRequestWithPathParameters(NAME, TestDeviceProfileName),
+			createDBClient(),
+			http.StatusOK,
+		},
+		{
+			"Invalid name",
+			createRequestWithPathParameters(NAME, ErrorPathParam),
+			createDBClient(),
+			http.StatusBadRequest,
+		},
+		{
+			"Multiple devices associated with device profile",
+			createRequestWithPathParameters(NAME, TestDeviceProfileName),
+			createDBClientMultipleDevicesFoundError(),
+			http.StatusConflict,
+		},
+		{
+			"Multiple provision watchers associated with device profile",
+			createRequestWithPathParameters(NAME, TestDeviceProfileName),
+			createDBClientMultipleProvisionWatchersFoundError(),
+			http.StatusConflict,
+		},
+		{
+			"Device Profile Not Found",
+			createRequestWithPathParameters(NAME, TestDeviceProfileName),
+			createDBClientDeviceProfileNotFoundError(),
+			http.StatusNotFound,
+		},
+		{
+			"GetProvisionWatchersByProfileId database error ",
+			createRequestWithPathParameters(NAME, TestDeviceProfileName),
+			createDBClientGetProvisionWatchersByProfileIdError(),
+			http.StatusInternalServerError,
+		},
+		{
+			"DeleteDeviceProfileById database error ",
+			createRequestWithPathParameters(NAME, TestDeviceProfileName),
+			createDBClientPersistDeviceProfileError(),
+			http.StatusInternalServerError,
+		},
+		{
+			"GetDevicesByProfileId database error",
+			createRequestWithPathParameters(NAME, TestDeviceProfileName),
+			createDBClientGetDevicesByProfileIdError(),
+			http.StatusInternalServerError,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			LoggingClient = logger.MockLogger{}
+			Configuration = &ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 1}}
+			dbClient = tt.dbMock
+			rr := httptest.NewRecorder()
+			handler := http.HandlerFunc(restDeleteProfileByName)
+			handler.ServeHTTP(rr, tt.request)
+			response := rr.Result()
+			if response.StatusCode != tt.expectedStatus {
+				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
+
+				return
+			}
+		})
+	}
+}
+
 func createRequestWithBody(d contract.DeviceProfile) *http.Request {
 	body, err := d.MarshalJSON()
 	if err != nil {
@@ -163,6 +282,11 @@ func createRequestWithBody(d contract.DeviceProfile) *http.Request {
 	return httptest.NewRequest(http.MethodPut, TestURI, bytes.NewBuffer(body))
 }
 
+func createRequestWithPathParameters(pathParamName string, pathParamValue string) *http.Request {
+	req := httptest.NewRequest(http.MethodDelete, TestURI, nil)
+	return mux.SetURLVars(req, map[string]string{pathParamName: pathParamValue})
+}
+
 func createRequestWithInvalidBody() *http.Request {
 	return httptest.NewRequest(http.MethodPut, TestURI, bytes.NewBufferString("Bad JSON"))
 }
@@ -170,24 +294,30 @@ func createRequestWithInvalidBody() *http.Request {
 func createDBClient() interfaces.DBClient {
 	d := &mocks.DBClient{}
 	d.On("GetDeviceProfileById", TestDeviceProfileID).Return(TestDeviceProfile, nil)
+	d.On("GetDeviceProfileByName", TestDeviceProfileName).Return(TestDeviceProfile, nil)
 	d.On("GetDevicesByProfileId", TestDeviceProfileID).Return(make([]contract.Device, 0), nil)
 	d.On("GetProvisionWatchersByProfileId", TestDeviceProfileID).Return(make([]contract.ProvisionWatcher, 0), nil)
 	d.On("GetAllDeviceProfiles").Return(make([]contract.DeviceProfile, 0), nil)
+
+	// Mock both the update and delete functions so we can reuse this function for both scenarios
 	d.On("UpdateDeviceProfile", TestDeviceProfile).Return(nil)
+	d.On("DeleteDeviceProfileById", TestDeviceProfileID).Return(nil)
+	d.On("DeleteDeviceProfileByName", TestDeviceProfileName).Return(nil)
 
 	return d
 }
 
 func createDBClientDeviceProfileNotFoundError() interfaces.DBClient {
 	d := &mocks.DBClient{}
-	d.On("GetDeviceProfileById", TestDeviceProfileID).Return(contract.DeviceProfile{}, TestError)
-	d.On("GetDeviceProfileByName", TestDeviceProfileName).Return(contract.DeviceProfile{}, TestError)
+	d.On("GetDeviceProfileById", TestDeviceProfileID).Return(contract.DeviceProfile{}, db.ErrNotFound)
+	d.On("GetDeviceProfileByName", TestDeviceProfileName).Return(contract.DeviceProfile{}, db.ErrNotFound)
 
 	return d
 }
 func createDBClientMultipleDevicesFoundError() interfaces.DBClient {
 	d := &mocks.DBClient{}
 	d.On("GetDeviceProfileById", TestDeviceProfileID).Return(TestDeviceProfile, nil)
+	d.On("GetDeviceProfileByName", TestDeviceProfileName).Return(TestDeviceProfile, nil)
 	d.On("GetDevicesByProfileId", TestDeviceProfileID).Return(TestDevices, nil)
 
 	return d
@@ -196,6 +326,7 @@ func createDBClientMultipleDevicesFoundError() interfaces.DBClient {
 func createDBClientMultipleProvisionWatchersFoundError() interfaces.DBClient {
 	d := &mocks.DBClient{}
 	d.On("GetDeviceProfileById", TestDeviceProfileID).Return(TestDeviceProfile, nil)
+	d.On("GetDeviceProfileByName", TestDeviceProfileName).Return(TestDeviceProfile, nil)
 	d.On("GetDevicesByProfileId", TestDeviceProfileID).Return(make([]contract.Device, 0), nil)
 	d.On("GetProvisionWatchersByProfileId", TestDeviceProfileID).Return(TestProvisionWatchers, nil)
 
@@ -204,6 +335,7 @@ func createDBClientMultipleProvisionWatchersFoundError() interfaces.DBClient {
 func createDBClientDuplicateDeviceProfileNameError() interfaces.DBClient {
 	d := &mocks.DBClient{}
 	d.On("GetDeviceProfileById", TestDeviceProfileID).Return(TestDeviceProfile, nil)
+	d.On("GetDeviceProfileByName", TestDeviceProfileName).Return(TestDeviceProfile, nil)
 	d.On("GetDevicesByProfileId", TestDeviceProfileID).Return(make([]contract.Device, 0), nil)
 	d.On("GetProvisionWatchersByProfileId", TestDeviceProfileID).Return(make([]contract.ProvisionWatcher, 0), nil)
 	d.On("GetAllDeviceProfiles").Return([]contract.DeviceProfile{{Name: TestDeviceProfile.Name, Id: "SomethingElse"}}, nil)
@@ -215,6 +347,7 @@ func createDBClientDuplicateDeviceProfileNameError() interfaces.DBClient {
 func createDBClientGetDevicesByProfileIdError() interfaces.DBClient {
 	d := &mocks.DBClient{}
 	d.On("GetDeviceProfileById", TestDeviceProfileID).Return(TestDeviceProfile, nil)
+	d.On("GetDeviceProfileByName", TestDeviceProfileName).Return(TestDeviceProfile, nil)
 	d.On("GetDevicesByProfileId", TestDeviceProfileID).Return(make([]contract.Device, 0), TestError)
 
 	return d
@@ -232,6 +365,7 @@ func createDBClientGetAllDeviceProfilesError() interfaces.DBClient {
 func createDBClientGetProvisionWatchersByProfileIdError() interfaces.DBClient {
 	d := &mocks.DBClient{}
 	d.On("GetDeviceProfileById", TestDeviceProfileID).Return(TestDeviceProfile, nil)
+	d.On("GetDeviceProfileByName", TestDeviceProfileName).Return(TestDeviceProfile, nil)
 	d.On("GetDevicesByProfileId", TestDeviceProfileID).Return(make([]contract.Device, 0), nil)
 	d.On("GetProvisionWatchersByProfileId", TestDeviceProfileID).Return(make([]contract.ProvisionWatcher, 0), TestError)
 	d.On("GetAllDeviceProfiles").Return([]contract.DeviceProfile{}, TestError)
@@ -239,13 +373,17 @@ func createDBClientGetProvisionWatchersByProfileIdError() interfaces.DBClient {
 	return d
 }
 
-func createDBClientUpdateDeviceProfileError() interfaces.DBClient {
+func createDBClientPersistDeviceProfileError() interfaces.DBClient {
 	d := &mocks.DBClient{}
 	d.On("GetDeviceProfileById", TestDeviceProfileID).Return(TestDeviceProfile, nil)
+	d.On("GetDeviceProfileByName", TestDeviceProfileName).Return(TestDeviceProfile, nil)
 	d.On("GetDevicesByProfileId", TestDeviceProfileID).Return(make([]contract.Device, 0), nil)
 	d.On("GetProvisionWatchersByProfileId", TestDeviceProfileID).Return(make([]contract.ProvisionWatcher, 0), nil)
 	d.On("GetAllDeviceProfiles").Return(make([]contract.DeviceProfile, 0), nil)
+
+	// Mock both persistence functions so this can be used for updates and delete tests
 	d.On("UpdateDeviceProfile", TestDeviceProfile).Return(TestError)
+	d.On("DeleteDeviceProfileById", TestDeviceProfile.Id).Return(TestError)
 
 	return d
 }
