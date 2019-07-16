@@ -504,7 +504,7 @@ func testDBCommand(t *testing.T, db interfaces.DBClient) {
 		t.Fatalf("Command should not be found")
 	}
 
-	commands, err = db.GetCommandByName("name1")
+	commands, err = db.GetCommandsByName("name1")
 	if err != nil {
 		t.Fatalf("Error getting commands by name %v", err)
 	}
@@ -512,7 +512,7 @@ func testDBCommand(t *testing.T, db interfaces.DBClient) {
 		t.Fatalf("There should be 1 commands instead of %d", len(commands))
 	}
 
-	commands, err = db.GetCommandByName("INVALID")
+	commands, err = db.GetCommandsByName("INVALID")
 	if err != nil {
 		t.Fatalf("Error getting commands by name %v", err)
 	}
@@ -526,6 +526,15 @@ func testDBCommand(t *testing.T, db interfaces.DBClient) {
 	}
 	if len(commands) != 1 {
 		t.Fatalf("There should be 1 commands instead of %d", len(commands))
+	}
+
+	cn := commands[0].Name
+	command, err := db.GetCommandByNameAndDeviceId(cn, did)
+	if err != nil {
+		t.Fatalf("Error getting commands by name and device id: %v", err)
+	}
+	if command.Name != commands[0].Name {
+		t.Fatalf("Name does not match %s - %s", command.Name, cn)
 	}
 
 	commands, err = db.GetCommandsByDeviceId(uuid.New().String())
