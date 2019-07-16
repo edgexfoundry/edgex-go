@@ -215,7 +215,7 @@ func (c *Consumer) createOAuth2Token() (string, error) {
 
 		switch tresp.StatusCode {
 		case http.StatusOK, http.StatusCreated:
-			if err = json.NewDecoder(tresp.Body).Decode(&token); err != nil {			
+			if err = json.NewDecoder(tresp.Body).Decode(&token); err != nil {
 				return "", err
 			}
 			lc.Info(fmt.Sprintf("successful on retrieving bearer credential for consumer %s", c.Name))
