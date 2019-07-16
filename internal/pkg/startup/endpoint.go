@@ -45,7 +45,14 @@ func (e Endpoint) Monitor(params types.EndpointParams, ch chan string) {
 		if err != nil {
 			fmt.Fprintln(os.Stdout, err.Error())
 		}
-		url := fmt.Sprintf("http://%s:%v%s", endpoint.Host, endpoint.Port, params.Path)
+
+		var url string
+		if endpoint.Host != "" {
+			url = fmt.Sprintf("http://%s:%v%s", endpoint.Host, endpoint.Port, params.Path)
+		} else {
+			url = params.Url
+		}
+
 		ch <- url
 		time.Sleep(time.Millisecond * time.Duration(params.Interval))
 	}

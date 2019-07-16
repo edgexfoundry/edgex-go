@@ -155,6 +155,7 @@ func addReg(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	LoggingClient.Info(fmt.Sprintf("Registration added %s", reg.Name))
 
 	notifyUpdatedRegistrations(models.NotifyUpdate{Name: reg.Name,
 		Operation: "add"})
