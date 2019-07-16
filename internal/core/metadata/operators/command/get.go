@@ -48,7 +48,7 @@ func (op commandLoadAll) Execute() (cmds []contract.Command, err error) {
 
 	if len(cmds) > op.config.MaxResultCount {
 		err = errors.NewErrLimitExceeded(op.config.MaxResultCount)
-		return cmds, err
+		return []contract.Command{}, err
 	}
 	return
 }

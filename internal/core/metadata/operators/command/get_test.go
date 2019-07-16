@@ -77,7 +77,7 @@ func TestLoadAllCommands(t *testing.T) {
 			"GetAllFailMaxExceeded",
 			config.ServiceInfo{},
 			createCommandLoaderMock("GetAllCommands", []models.Command{testCommand}, nil, ""),
-			[]models.Command{testCommand},
+			[]models.Command{},
 			true,
 		},
 		{
@@ -157,13 +157,13 @@ func TestLoadCommandsById(t *testing.T) {
 }
 
 func createCommandLoaderMock(methodName string, ret interface{}, err error, arg string) CommandLoader {
-	dbCommandMoch := &mock.CommandLoader{}
+	dbCommandMock := &mock.CommandLoader{}
 	if arg != "" {
-		dbCommandMoch.On(methodName, arg).Return(ret, err)
+		dbCommandMock.On(methodName, arg).Return(ret, err)
 	} else {
-		dbCommandMoch.On(methodName).Return(ret, err)
+		dbCommandMock.On(methodName).Return(ret, err)
 	}
-	return dbCommandMoch
+	return dbCommandMock
 }
 
 var commandId = "f97b5f0a-ec32-4e96-bd36-02210af16f8c"
