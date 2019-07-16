@@ -39,7 +39,7 @@ func TestGetAllDevices(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			op := NewDeviceLoadAll(tt.cfg, tt.dbMock, logger.MockLogger{})
+			op := NewDeviceLoadAll(tt.cfg, tt.dbMock, logger.NewMockClient())
 			_, err := op.Execute()
 			if err != nil && !tt.expectError {
 				t.Error(err)
