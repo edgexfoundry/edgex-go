@@ -14,29 +14,10 @@
 package metadata
 
 import (
-	"fmt"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 )
-
-func addAddressable(addressable contract.Addressable) (string, error) {
-	if len(addressable.Name) == 0 {
-		err := errors.NewErrEmptyAddressableName()
-		LoggingClient.Error(err.Error())
-		return "", err
-	}
-	id, err := dbClient.AddAddressable(addressable)
-	if err != nil {
-		if err == db.ErrNotUnique {
-			err = errors.NewErrDuplicateName(fmt.Sprintf("duplicate name for addressable: %s", addressable.Name))
-		}
-		LoggingClient.Error(err.Error())
-		return "", err
-	}
-
-	return id, nil // Coupling to mongo?
-}
 
 func updateAddressable(addressable contract.Addressable) error {
 	var dest contract.Addressable

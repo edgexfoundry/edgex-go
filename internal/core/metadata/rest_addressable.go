@@ -60,7 +60,8 @@ func restAddAddressable(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, err := addAddressable(a)
+	op := addressable.NewAddExecutor(dbClient, a)
+	id, err := op.Execute()
 	if err != nil {
 		switch err.(type) {
 		case *types.ErrDuplicateName:

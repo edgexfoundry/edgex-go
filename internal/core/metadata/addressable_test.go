@@ -18,77 +18,13 @@ import (
 	"os"
 	"testing"
 
-	metadataErrors "github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces"
 	dbMock "github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces/mocks"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
 )
-
-func TestAddAddressable(t *testing.T) {
-	reset()
-	dbClient = newMockDb()
-
-	objectId := uuid.New().String()
-	newAddr := models.Addressable{
-		Id:   objectId,
-		Name: "new addressable",
-	}
-
-	id, err := addAddressable(newAddr)
-
-	if err != nil {
-		t.Errorf(err.Error())
-	}
-	if id != objectId {
-		t.Errorf("Id returned by addAddressable() doesn't match expectation")
-	}
-}
-
-func TestAddAddressableEmptyName(t *testing.T) {
-	reset()
-	dbClient = newMockDb()
-
-	objectId := uuid.New().String()
-	newAddr := models.Addressable{
-		Id: objectId,
-	}
-
-	_, expectedErr := addAddressable(newAddr)
-
-	if expectedErr == nil {
-		t.Errorf("addAddressable() with empty addressable name should cause error")
-		return
-	}
-
-	if _, ok := expectedErr.(*metadataErrors.ErrEmptyAddressableName); !ok {
-		t.Errorf("expected an ErrEmptyAddressableName, found: %s", expectedErr.Error())
-	}
-}
-
-func TestAddDuplicateAddressableName(t *testing.T) {
-	reset()
-	dbClient = newMockDb(db.ErrNotUnique)
-
-	objectId := uuid.New().String()
-	newAddr := models.Addressable{
-		Id:   objectId,
-		Name: "new addressable",
-	}
-
-	_, expectedErr := addAddressable(newAddr)
-
-	if expectedErr == nil {
-		t.Errorf("addAddressable() with duplicate addressable name should cause error")
-	}
-
-	if _, ok := expectedErr.(*metadataErrors.ErrDuplicateName); !ok {
-		t.Errorf("expected an ErrDuplicateAddressableName, found: %s", expectedErr.Error())
-	}
-}
 
 func TestMain(m *testing.M) {
 	LoggingClient = logger.NewMockClient()
