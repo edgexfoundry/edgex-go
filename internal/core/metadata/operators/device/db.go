@@ -15,11 +15,6 @@ type DeviceServiceLoader interface {
 	GetDeviceServiceByName(n string) (contract.DeviceService, error)
 }
 
-type DeviceProfileLoader interface {
-	GetDeviceProfileById(id string) (contract.DeviceProfile, error)
-	GetDeviceProfileByName(n string) (contract.DeviceProfile, error)
-}
-
 type DeviceLoader interface {
 	GetAllDevices() ([]contract.Device, error)
 	GetDevicesByProfileId(pid string) ([]contract.Device, error)
@@ -31,4 +26,9 @@ type DeviceUpdater interface {
 	GetDeviceByName(name string) (contract.Device, error)
 	DeviceProfileLoader
 	DeviceServiceLoader
+}
+
+type DeviceProfileLoader interface {
+	GetDeviceProfileById(id string) (contract.DeviceProfile, error)
+	GetDeviceProfileByName(n string) (contract.DeviceProfile, error)
 }

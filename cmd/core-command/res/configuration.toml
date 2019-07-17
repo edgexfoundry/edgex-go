@@ -31,3 +31,13 @@ File = './logs/edgex-core-command.log'
   Protocol = 'http'
   Host = 'localhost'
   Port = 48061
+
+[Databases]
+  [Databases.Primary]
+  Host = 'localhost'
+  Name = 'metadata'
+  Password = ''
+  Port = 27017
+  Username = ''
+  Timeout = 5000
+  Type = 'mongodb'

@@ -14,51 +14,56 @@
 package metadata
 
 import (
-	"errors"
-	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	"github.com/gorilla/mux"
 	"net/http"
 	"net/url"
 
 	types "github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/operators/command"
+	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 )
 
 func restGetAllCommands(w http.ResponseWriter, _ *http.Request) {
-	results, err := dbClient.GetAllCommands()
+	op := command.NewCommandLoadAll(Configuration.Service, dbClient)
+	cmds, err := op.Execute()
 	if err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		switch err.(type) {
+		case *types.ErrLimitExceeded:
+			http.Error(w, err.Error(), http.StatusRequestEntityTooLarge)
+		default:
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 		return
 	}
-
-	if len(results) > Configuration.Service.MaxResultCount {
-		LoggingClient.Error("Max limit exceeded")
-		http.Error(w, errors.New("Max limit exceeded").Error(), http.StatusRequestEntityTooLarge)
-		return
-	}
-	pkg.Encode(&results, w, LoggingClient)
+	pkg.Encode(&cmds, w, LoggingClient)
 }
 
 func restGetCommandById(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	var did string = vars[ID]
-	res, err := dbClient.GetCommandById(did)
+	cid, err := url.QueryUnescape(vars[ID])
 	if err != nil {
-		if err == db.ErrNotFound {
-			http.Error(w, err.Error(), http.StatusNotFound)
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-
 		LoggingClient.Error(err.Error())
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	pkg.Encode(res, w, LoggingClient)
+
+	op := command.NewCommandById(dbClient, cid)
+	cmd, err := op.Execute()
+	if err != nil {
+		LoggingClient.Error(err.Error())
+		switch err.(type) {
+		case *types.ErrItemNotFound:
+			http.Error(w, err.Error(), http.StatusNotFound)
+		default:
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		return
+	}
+	pkg.Encode(cmd, w, LoggingClient)
 }
 
-func restGetCommandByName(w http.ResponseWriter, r *http.Request) {
+func restGetCommandsByName(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
@@ -66,7 +71,7 @@ func restGetCommandByName(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	results, err := dbClient.GetCommandByName(n)
+	results, err := dbClient.GetCommandsByName(n)
 	if err != nil {
 		if err == db.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)

@@ -23,7 +23,7 @@ type ErrLimitExceeded struct {
 }
 
 func (e ErrLimitExceeded) Error() string {
-	return fmt.Sprintf("limit %d exceeds configured max", e.limit)
+	return fmt.Sprintf("result count exceeds configured max %d", e.limit)
 }
 
 func NewErrLimitExceeded(limit int) error {
@@ -138,5 +138,19 @@ func NewErrDeviceProfileInvalidState(id string, name string, description string)
 		id:          id,
 		name:        name,
 		description: description,
+	}
+}
+
+type ErrEmptyFile struct {
+	fileType string
+}
+
+func (e ErrEmptyFile) Error() string {
+	return fmt.Sprintf("%s file is empty", e.fileType)
+}
+
+func NewErrEmptyFile(fileType string) ErrEmptyFile {
+	return ErrEmptyFile{
+		fileType: fileType,
 	}
 }

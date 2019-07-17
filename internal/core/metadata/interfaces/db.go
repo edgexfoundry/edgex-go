@@ -89,8 +89,9 @@ type DBClient interface {
 	// Command
 	GetAllCommands() ([]contract.Command, error)
 	GetCommandById(id string) (contract.Command, error)
-	GetCommandByName(id string) ([]contract.Command, error)
+	GetCommandsByName(id string) ([]contract.Command, error)
 	GetCommandsByDeviceId(id string) ([]contract.Command, error)
+	GetCommandByNameAndDeviceId(cname string, did string) (contract.Command, error)
 
 	// Scrub all metadata (only used in test)
 	ScrubMetadata() error

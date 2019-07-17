@@ -2,6 +2,7 @@ package metadata
 
 import (
 	"fmt"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 	"net/http"
@@ -22,9 +23,30 @@ func TestGetCommandsByDeviceId(t *testing.T) {
 		request        *http.Request
 		expectedStatus int
 	}{
-		{"OK", createCommandLoaderMock(), createCommandRequest(cmdsByDeviceIdURL, ID, deviceId), http.StatusOK},
-		{"Unexpected", createCommandLoaderMockUnexpectedFail(), createCommandRequest(cmdsByDeviceIdURL, ID, deviceId), http.StatusInternalServerError},
-		{"NotFound", createCommandLoaderMockNotFoundFail(), createCommandRequest(cmdsByDeviceIdURL, ID, deviceId), http.StatusNotFound},
+		{
+			"OK",
+			createCommandByDeviceIdLoaderMock(),
+			createCommandRequest(cmdsByDeviceIdURL, ID, deviceId),
+			http.StatusOK,
+		},
+		{
+			"Unexpected",
+			createMockCommandLoaderMock("GetCommandsByDeviceId", deviceId, nil, unExpectedError),
+			createCommandRequest(cmdsByDeviceIdURL, ID, deviceId),
+			http.StatusInternalServerError,
+		},
+		{
+			"NotFound",
+			createMockCommandLoaderMock("GetCommandsByDeviceId", deviceId, nil, deviceNotFoundErr),
+			createCommandRequest(cmdsByDeviceIdURL, ID, deviceId),
+			http.StatusNotFound,
+		},
+		{
+			"BadRequest",
+			createMockCommandLoaderMock("GetCommandsByDeviceId", deviceId, nil, nil),
+			createCommandRequest(cmdsByDeviceIdURL, ID, ErrorPathParam),
+			http.StatusBadRequest,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -42,15 +64,108 @@ func TestGetCommandsByDeviceId(t *testing.T) {
 	}
 }
 
-var deviceId = "b3445cc6-87df-48f4-b8b0-587dc8a4e1c2"
+func TestGetAllCommands(t *testing.T) {
+	Configuration = &ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 1}}
+	tests := []struct {
+		name           string
+		dbMock         interfaces.DBClient
+		request        *http.Request
+		expectedStatus int
+	}{
+		{"OK", createCommandsLoaderMock(1), createPlainCommandRequest(cmdsURL), http.StatusOK},
+		{"Unexpected", createCommandsLoaderMockUnexpectedFail(), createPlainCommandRequest(cmdsURL), http.StatusInternalServerError},
+		{"MaxExceeded", createCommandsLoaderMock(3), createPlainCommandRequest(cmdsURL), http.StatusRequestEntityTooLarge},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			dbClient = tt.dbMock
+			rr := httptest.NewRecorder()
+			handler := http.HandlerFunc(restGetAllCommands)
+
+			handler.ServeHTTP(rr, tt.request)
+			response := rr.Result()
+			if response.StatusCode != tt.expectedStatus {
+				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
+				return
+			}
+		})
+	}
+	Configuration = &ConfigurationStruct{}
+}
+
+func TestGetCommandById(t *testing.T) {
+	tests := []struct {
+		name           string
+		dbMock         interfaces.DBClient
+		request        *http.Request
+		expectedStatus int
+	}{
+
+		{
+			"OK",
+			createMockCommandLoaderMock("GetCommandById", commandId, contract.Command{Name: fmt.Sprintf("CommandName"), Id: commandId}, nil),
+			createCommandRequest(cmdByIdURL, ID, commandId),
+			http.StatusOK,
+		},
+		{
+			"Unexpected",
+			createMockCommandLoaderMock("GetCommandById", commandId, contract.Command{}, unExpectedError),
+			createCommandRequest(cmdByIdURL, ID, commandId),
+			http.StatusInternalServerError,
+		},
+		{
+			"NotFound",
+			createMockCommandLoaderMock("GetCommandById", commandId, contract.Command{}, cmdNotFoundErr),
+			createCommandRequest(cmdByIdURL, ID, commandId),
+			http.StatusNotFound,
+		},
+		{
+			"BadRequest",
+			createMockCommandLoaderMock("GetCommandById", commandId, contract.Command{}, nil),
+			createCommandRequest(cmdByIdURL, ID, ErrorPathParam),
+			http.StatusBadRequest,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			dbClient = tt.dbMock
+			rr := httptest.NewRecorder()
+			handler := http.HandlerFunc(restGetCommandById)
+
+			handler.ServeHTTP(rr, tt.request)
+			response := rr.Result()
+			if response.StatusCode != tt.expectedStatus {
+				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
+				return
+			}
+		})
+	}
+}
+
+//should be common constants
+var cmdsURL = clients.ApiBase + "/" + COMMAND
+var cmdByIdURL = clients.ApiBase + "/" + COMMAND + "/{" + ID + "}"
 var cmdsByDeviceIdURL = clients.ApiBase + "/" + COMMAND + "/" + DEVICE + "/{" + ID + "}"
 
+var commandId = "f97b5f0a-ec32-4e96-bd36-02210af16f8c"
+var deviceId = "b3445cc6-87df-48f4-b8b0-587dc8a4e1c2"
+
+var unExpectedError = errors.New("unexpected error")
+var cmdNotFoundErr = types.NewErrItemNotFound(fmt.Sprintf("command with id %s not found", commandId))
+var deviceNotFoundErr = types.NewErrItemNotFound(fmt.Sprintf("device with id %s not found", deviceId))
+
+func createPlainCommandRequest(url string) *http.Request {
+	return createCommandRequest(url, "", "")
+}
 func createCommandRequest(url string, pathParamName string, pathParamValue string) *http.Request {
 	req := httptest.NewRequest(http.MethodGet, url, nil)
+	if pathParamName == "" && pathParamValue == "" {
+		return req
+	}
 	return mux.SetURLVars(req, map[string]string{pathParamName: pathParamValue})
 }
 
-func createCommandLoaderMock() interfaces.DBClient {
+func createCommandByDeviceIdLoaderMock() interfaces.DBClient {
 	commands := []contract.Command{}
 	for i := 0; i < 3; i++ {
 		commands = append(commands, contract.Command{Name: fmt.Sprintf("Command %v", i)})
@@ -61,14 +176,26 @@ func createCommandLoaderMock() interfaces.DBClient {
 	return dbMock
 }
 
-func createCommandLoaderMockUnexpectedFail() interfaces.DBClient {
+//TestGetAllCommands Mocks
+func createCommandsLoaderMock(howMany int) interfaces.DBClient {
+	commands := []contract.Command{}
+	for i := 0; i < howMany; i++ {
+		commands = append(commands, contract.Command{Name: fmt.Sprintf("Command %v", i)})
+	}
+
 	dbMock := &mocks.DBClient{}
-	dbMock.On("GetCommandsByDeviceId", deviceId).Return(nil, errors.New("unexpected error"))
+	dbMock.On("GetAllCommands").Return(commands, nil)
 	return dbMock
 }
 
-func createCommandLoaderMockNotFoundFail() interfaces.DBClient {
+func createCommandsLoaderMockUnexpectedFail() interfaces.DBClient {
 	dbMock := &mocks.DBClient{}
-	dbMock.On("GetCommandsByDeviceId", deviceId).Return(nil, types.NewErrItemNotFound(fmt.Sprintf("device with id %s not found", deviceId)))
+	dbMock.On("GetAllCommands").Return(nil, errors.New("unexpected error"))
 	return dbMock
+}
+
+func createMockCommandLoaderMock(methodName string, arg string, result interface{}, err error) interfaces.DBClient {
+	myMock := &mocks.DBClient{}
+	myMock.On(methodName, arg).Return(result, err)
+	return myMock
 }

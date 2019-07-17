@@ -20,21 +20,6 @@ import (
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
-func getAllAddressables() ([]contract.Addressable, error) {
-	results, err := dbClient.GetAddressables()
-	if err != nil {
-		LoggingClient.Error(err.Error())
-		return nil, err
-	}
-	if len(results) > Configuration.Service.MaxResultCount {
-		err = errors.NewErrLimitExceeded(Configuration.Service.MaxResultCount)
-		LoggingClient.Error(err.Error())
-
-		return nil, err
-	}
-	return results, nil
-}
-
 func addAddressable(addressable contract.Addressable) (string, error) {
 	if len(addressable.Name) == 0 {
 		err := errors.NewErrEmptyAddressableName()
