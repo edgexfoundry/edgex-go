@@ -38,19 +38,13 @@ var TestProvisionWatchers = []contract.ProvisionWatcher{
 	},
 }
 
-func TestGetDeviceByProfileId(t *testing.T) {
+func TestUpdateDeviceProfile(t *testing.T) {
 	tests := []struct {
 		name        string
 		dbMock      DeviceProfileUpdater
 		dp          contract.DeviceProfile
 		expectError bool
 	}{
-		{
-			"GetAllPass",
-			createDBClient(),
-			TestDeviceProfile,
-			false,
-		},
 		{
 			"Multiple devices associated with device profile",
 			createDBClientMultipleDevicesFoundError(),
@@ -60,18 +54,6 @@ func TestGetDeviceByProfileId(t *testing.T) {
 		{
 			"Multiple provision watchers associated with device profile",
 			createDBClientMultipleProvisionWatchersFoundError(),
-			TestDeviceProfile,
-			true,
-		},
-		{
-			"Device profile duplicate name",
-			createDBClientDuplicateDeviceProfileNameError(),
-			TestDeviceProfile,
-			true,
-		},
-		{
-			"GetAllDeviceProfilesError db error ",
-			createDBClientGetAllDeviceProfilesError(),
 			TestDeviceProfile,
 			true,
 		},
@@ -94,18 +76,6 @@ func TestGetDeviceByProfileId(t *testing.T) {
 			true,
 		},
 		{
-			"Device profile duplicate name",
-			createDBClientDuplicateDeviceProfileNameError(),
-			TestDeviceProfile,
-			true,
-		},
-		{
-			"GetAllDeviceProfiles db error ",
-			createDBClientGetAllDeviceProfilesError(),
-			TestDeviceProfile,
-			true,
-		},
-		{
 			"GetProvisionWatchersByProfileId db error ",
 			createDBClientGetProvisionWatchersByProfileIdError(),
 			TestDeviceProfile,
@@ -114,12 +84,6 @@ func TestGetDeviceByProfileId(t *testing.T) {
 		{
 			"UpdateDeviceProfile db error ",
 			createDBClientUpdateDeviceProfileError(),
-			TestDeviceProfile,
-			true,
-		},
-		{
-			"GetDevicesByProfileId db error",
-			createDBClientGetDevicesByProfileIdError(),
 			TestDeviceProfile,
 			true,
 		},
@@ -199,6 +163,7 @@ func createDBClientGetAllDeviceProfilesError() DeviceProfileUpdater {
 	d.On("GetDevicesByProfileId", TestDeviceProfileID).Return(make([]contract.Device, 0), nil)
 	d.On("GetProvisionWatchersByProfileId", TestDeviceProfileID).Return(make([]contract.ProvisionWatcher, 0), nil)
 	d.On("GetAllDeviceProfiles").Return([]contract.DeviceProfile{}, TestError)
+	d.On("UpdateDeviceProfile", TestDeviceProfile).Return(nil)
 
 	return d
 }
