@@ -6,15 +6,15 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/gorilla/mux"
-	"github.com/pkg/errors"
-
-	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
-
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces/mocks"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
+	"github.com/gorilla/mux"
+	"github.com/pkg/errors"
 )
 
 // TestURI this is not really used since we are using the HTTP testing framework and not creating routes, but rather
@@ -36,6 +36,7 @@ var ErrorPortPathParam = "abc"
 func TestGetAllAddressables(t *testing.T) {
 	Configuration = &ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 10}}
 	defer func() { Configuration = &ConfigurationStruct{} }()
+	LoggingClient = logger.MockLogger{}
 
 	tests := []struct {
 		name           string
