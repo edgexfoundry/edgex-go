@@ -12,7 +12,7 @@ For a description of the architecture, see :doc:`../Ch-Scheduling`
 Introduction
 ============
 
-The following API RESTful Web Services for EdgeX Foundry at this time shows the older development name of "fuse."  The EdgeX Foundry name in the software will be updated soon to "edgexfoundry." 
+The following is and example of the EdgeX Foundry Scheduler Service RESTful API.
 
 https://github.com/edgexfoundry/edgex-go/blob/master/api/raml/support-scheduling.raml
 
@@ -26,93 +26,73 @@ https://github.com/edgexfoundry/edgex-go/blob/master/api/raml/support-scheduling
 Description
 ===========
 
-**Scheduler Service** - a service that can be used to schedule invocation of a URL. Requires the use of addressables, schedules, and schedule events.
+**Scheduler Service** - a service that can be used to schedule invocation of a URL. Requires the use of interval(s), and interval action(s).
 
-**Addressables**
+**Interval(s)**
+    * **name** - unique name of the service.
+    * **start** - identifies when the operation starts. Expressed in ISO 8601 YYYYMMDD'T'HHmmss format. Empty means now.
+    * **end** - identifies when the operation ends. Expressed in ISO 8601 YYYYMMDD'T'HHmmss format. Empty means never
+    * **frequency** - identifies the interval between invocations. Expressed in ISO 8601 PxYxMxDTxHxMxS format. Empty means no frequency.
 
-    identify the called service
+**Interval Action(s)**
+    * **name** - unique name of the interval action.
+    * **interval** - unique name of an existing interval.
+    * **target** - the recipient of the interval action (ergo service or name).
+    * **protocol** - the protocol type to be used to contact the target. (example HTTP).
+    * **httpMethod** - HTTP protocol verb.
+    * **address** - the endpoint server host.
+    * **port** - the desired port.
+    * **path** - the api path which will be acted on.
+    * **parameters** - (optional) parameters which will be included in the BODY tag for HttpMethods. Any parameters that should be provided to the call, e.g. {"milliseconds":86400000}
 
-**Schedules**
-
-    name - unique name of the service.
-    start - identifies when the operation starts. Expressed in ISO 8601 YYYYMMDD'T'HHmmss format. Empty means now.
-    end - identifies when the operation ends. Expressed in ISO 8601 YYYYMMDD'T'HHmmss format. Empty means never
-    frequency - identifies the interval between invocations. Expressed in ISO 8601 PxYxMxDTxHxMxS format. Empty means no frequency.
-
-**Schedule Events** name - unique name of the event. addressable - address information of the service to invoke parameters - any parameters that should be provided to the call, e.g. {"milliseconds":86400000} service - identifies the service that should execute the event, e.g. fuse-support-scheduler * schedule - associates the event to a schedule
 
 ========
 Examples
 ========
 
-Create an Addressable for the service requiring invocation
-
+Create an interval upon which the scheduler will operate
 ::
 
-   curl -X POST -H "Content-Type: application/json" -H "Cache-Control: no-cache" -d '{ 
-   "origin":1234567890,
-   "name":"pushed events",
-   "protocol":"HTTP",
-   "address":"localhost",
-   "port":48080,
-   "path":"/api/v1/event/scrub",
-   "publisher":null,
-   "user":null,
-   "password":null,
-   "topic":null }' "http://localhost:48081/api/v1/addressable"
+curl -X POST -H "Content-Type: application/json" -H "Cache-Control: no-cache" -d '{
+   "name": "midnight",
+   "start": "20180101T000000",
+   "frequency": "P1D"}' "http://localhost:48081/api/v1/interval"
 
+
+Example of a second interval which will run every 20 seconds
 ::
 
-   curl -X POST -H "Content-Type: application/json" -H "Cache-Control: no-cache" -d '{ 
-   "origin":1234567890,
-   "name":"aged events",
-   "protocol":"HTTP",
-   "address":"localhost",
-   "port":48080,
-   "path":"/api/v1/event/removeold/age/604800000",
-   "publisher":null,
-   "user":null,
-   "password":null,
-   "topic":null }' "http://localhost:48081/api/v1/addressable"
-
-Create a schedule upon which the scheduler will operate
-
-::
-
-   curl -X POST -H "Content-Type: application/json" -H "Cache-Control: no-cache" -d '{ 
-   "origin":1234567890,
-   "name":"midnight",
+curl -X POST -H "Content-Type: application/json" -H "Cache-Control: no-cache" -d '{
+   "name": "every20s",
    "start":"20000101T000000",
    "end":"",
-   "frequency":"P1D"}' "http://localhost:48081/api/v1/schedule"
+   "frequency":"PT20S"}' "http://localhost:48081/api/v1/interval"
 
-Create an event that will use the schedule and invoke the addressable (drive the scrubber)
-
+Create an interval action that will invoke the interval action (drive the scrubber) in core-data
 ::
 
-   curl -X POST -H "Content-Type: application/json" -H "Cache-Control: no-cache" -d '{ 
-   "origin":1234567890,
-   "name":"pushed events",
-   "addressable": { "name" : "pushed events" },
-   "parameters": null,
-   "service" : "fuse-support-scheduler",
-   "schedule":"midnight"}' "http://localhost:48081/api/v1/scheduleevent"
+curl -X POST -H "Content-Type: application/json" -H "Cache-Control: no-cache" -d '{
+    "name": "scrub-pushed-events",
+    "interval": "midnight",
+    "target": "core-data",
+    "protocol": "http",
+    "httpMethod": "DELETE",
+    "address": "localhost",
+    "port": 48080,
+    "path": "/api/v1/event/scrub"}' "http://localhost:48085/api/v1/intervalaction"
 
+
+This is a Random-Boolean-Device which created by edgex-device-virtual that connects every 20 seconds.
 ::
 
-   curl -X POST -H "Content-Type: application/json" -H "Cache-Control: no-cache" -d '{ 
-   "origin":1234567890,
-   "name":"aged events",
-   "addressable": { "name" : "aged events" },
-   "parameters": null,
-   "service" : "fuse-support-scheduler",
-   "schedule":"midnight"}' "http://localhost:48081/api/v1/scheduleevent"
-
-For testing update the midnight service to be every 60 seconds
-
-::
-
-   curl -X PUT -H "Content-Type: application/json" -H "Cache-Control: no-cache" -d '{ 
-   "name":"midnight",
-   "frequency":"PT60S"}' "http://localhost:48081/api/v1/schedule"
-
+curl -X POST -H "Content-Type: application/json" -d '{
+    "name": "put-action",
+    "interval": "every20s",
+    "target": "edgex-device-modbus",
+    "protocol": "http",
+    "httpMethod": "PUT",
+    "address": "localhost",
+    "port": 49990,
+    "path":"/api/v1/device/name/Random-Boolean-Device/RandomValue_Bool",
+    "parameters": "{\"RandomValue_Bool\": \"true\",\"EnableRandomization_Bool\": \"true\"}"
+}'  "http://localhost:48085/api/v1/intervalaction"
