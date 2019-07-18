@@ -1,0 +1,5 @@
+{
+    "fakefield": true,
+    # do not modify this, as this is a test file for syntax json error
+    "syntaxError": yes,
+}

@@ -10,10 +10,10 @@
 GO=CGO_ENABLED=0 GO111MODULE=on go
 GOCGO=CGO_ENABLED=1 GO111MODULE=on go
 
-DOCKERS=docker_config_seed docker_export_client docker_export_distro docker_core_data docker_core_metadata docker_core_command docker_support_logging docker_support_notifications docker_sys_mgmt_agent docker_support_scheduler docker_security_secrets_setup
+DOCKERS=docker_config_seed docker_export_client docker_export_distro docker_core_data docker_core_metadata docker_core_command docker_support_logging docker_support_notifications docker_sys_mgmt_agent docker_support_scheduler docker_security_secrets_setup docker_security_pki_init
 .PHONY: $(DOCKERS)
 
-MICROSERVICES=cmd/config-seed/config-seed cmd/export-client/export-client cmd/export-distro/export-distro cmd/core-metadata/core-metadata cmd/core-data/core-data cmd/core-command/core-command cmd/support-logging/support-logging cmd/support-notifications/support-notifications cmd/sys-mgmt-executor/sys-mgmt-executor cmd/sys-mgmt-agent/sys-mgmt-agent cmd/support-scheduler/support-scheduler cmd/security-secrets-setup/security-secrets-setup
+MICROSERVICES=cmd/config-seed/config-seed cmd/export-client/export-client cmd/export-distro/export-distro cmd/core-metadata/core-metadata cmd/core-data/core-data cmd/core-command/core-command cmd/support-logging/support-logging cmd/support-notifications/support-notifications cmd/sys-mgmt-executor/sys-mgmt-executor cmd/sys-mgmt-agent/sys-mgmt-agent cmd/support-scheduler/support-scheduler cmd/security-secrets-setup/security-secrets-setup cmd/security-pki-init/security-pki-init
 
 .PHONY: $(MICROSERVICES)
 
@@ -63,6 +63,9 @@ cmd/support-scheduler/support-scheduler:
 
 cmd/security-secrets-setup/security-secrets-setup:
 	$(GO) build $(GOFLAGS) -o ./cmd/security-secrets-setup/security-secrets-setup ./cmd/security-secrets-setup
+
+cmd/security-pki-init/security-pki-init:
+	$(GO) build $(GOFLAGS) -o ./cmd/security-pki-init/security-pki-init ./cmd/security-pki-init
 
 clean:
 	rm -f $(MICROSERVICES)
@@ -167,6 +170,14 @@ docker_security_secrets_setup:
 		--label "git_sha=$(GIT_SHA)" \
 		-t edgexfoundry/docker-edgex-vault:$(GIT_SHA) \
 		-t edgexfoundry/docker-edgex-vault:$(DOCKER_TAG) \
+		.
+
+docker_security_pki_init:
+	docker build \
+		-f cmd/security-pki-init/Dockerfile \
+		--label "git_sha=$(GIT_SHA)" \
+		-t edgexfoundry/docker-edgex-pki-init:$(GIT_SHA) \
+		-t edgexfoundry/docker-edgex-pki-init:$(DOCKER_TAG) \
 		.
 
 raml_verify:

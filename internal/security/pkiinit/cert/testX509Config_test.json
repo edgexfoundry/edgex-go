@@ -1,0 +1,28 @@
+{
+    "create_new_rootca": "true",
+    "working_dir": "./config",
+    "pki_setup_dir": "pki",
+    "dump_config": "true",
+    "key_scheme": {
+        "dump_keys": "false",
+        "rsa": "false",
+        "rsa_key_size": "4096",
+        "ec": "true",
+        "ec_curve": "384"
+    },
+    "x509_root_ca_parameters": {
+        "ca_name": "TestCA",
+        "ca_c": "US",
+        "ca_st": "CA",
+        "ca_l": "Chandler",
+        "ca_o": "Intel"
+    },
+    "x509_tls_server_parameters": {
+        "tls_host": "testhost",
+        "tls_domain": "local",
+        "tls_c": "US",
+        "tls_st": "CA",
+        "tls_l": "Chandler",
+        "tls_o": "Intel"
+    }
+}

@@ -7,6 +7,7 @@ docker/docker-compose.yml
 .project
 .vscode/
 go.sum
+zmqlib_setup.sh
 coverage.out
 debug
 *.dll
@@ -18,6 +19,7 @@ cmd/core-data/core-data
 cmd/core-metadata/core-metadata
 cmd/export-client/export-client
 cmd/export-distro/export-distro
+cmd/security-pki-init/security-pki-init
 cmd/security-secrets-setup/security-secrets-setup
 cmd/support-logging/support-logging
 cmd/support-notifications/support-notifications
@@ -25,6 +27,7 @@ cmd/sys-mgmt-agent/sys-mgmt-agent
 cmd/support-scheduler/support-scheduler
 cmd/sys-mgmt-executor/sys-mgmt-executor
 docs/_build/
+zeromq-*
 
 # log dirs
 **/logs
