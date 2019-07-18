@@ -615,7 +615,7 @@ schemas:
     delete:
         description: Remove the DeviceProfile designated by unique name. This does not remove associated commands. Returns Internal Service Error (HTTP 500) for unknown or unanticipated issues. Returns NotFoundException (HTTP 404) if the device profile cannot be found by the name provided. Returns DataValidationException (HTTP 409) if devices still reference the profile.
         responses:
-             "200":
+            "200":
                 description: boolean indicating success of the remove operation
             "400":
                 description: for malformed or unparsable requests
@@ -803,7 +803,7 @@ schemas:
                 schema: deviceprofile
                 example: '{"id":"57bb718f555e5218873e5a27","description":"HTTP Honeywell thermostats"}'
         responses:
-            " "200":
+            "200":
                 description: boolean indicating success of the remove operation
             "409":
                 description: if the profile contains duplicate command or profile names, or if the device profile is in use by one or more provision watchers or devices.
