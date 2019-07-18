@@ -24,6 +24,8 @@ const (
 	pkiSetupExecutable            = "security-secrets-setup"
 	pkiInitExecutable             = "security-pki-init"
 	pkiSetupVaultJSON             = "pkisetup-vault.json"
+	resourceDirName               = "res"
+	configTomlFile                = "configuration.toml"
 	envXdgRuntimeDir              = "XDG_RUNTIME_DIR"
 	envPkiCache                   = "PKI_CACHE"
 	defaultPkiCacheDir            = "/etc/edgex/pki"

@@ -132,7 +132,7 @@ func setupCacheTest(t *testing.T) func(t *testing.T) {
 
 	pkiSetupFile := filepath.Join(curDir, pkiSetupExecutable)
 	if pkisetupLocal {
-		if _, err := copyFile(filepath.Join(curDir, "..", "..", "..", "..", "cmd", "pkisetup", pkiSetupExecutable), pkiSetupFile); err != nil {
+		if _, err := copyFile(filepath.Join(curDir, "..", "..", "..", "..", "cmd", "security-secrets-setup", pkiSetupExecutable), pkiSetupFile); err != nil {
 			t.Fatalf("cannot copy pkisetup binary for the test: %v", err)
 		}
 		os.Chmod(pkiSetupFile, 0777)
@@ -140,9 +140,19 @@ func setupCacheTest(t *testing.T) func(t *testing.T) {
 
 	jsonVaultFile := filepath.Join(curDir, pkiSetupVaultJSON)
 	if vaultJSONPkiSetupExist {
-		if _, err := copyFile(filepath.Join(curDir, "..", "..", "..", "..", "configs", pkiSetupVaultJSON), jsonVaultFile); err != nil {
+		if _, err := copyFile(filepath.Join(curDir, "..", "..", "..", "..", "cmd", "security-secrets-setup", "res", pkiSetupVaultJSON), jsonVaultFile); err != nil {
 			t.Fatalf("cannot copy %s for the test: %v", pkiSetupVaultJSON, err)
 		}
+	}
+
+	resDir := filepath.Join(curDir, resourceDirName)
+	if err := createDirectoryIfNotExists(resDir); err != nil {
+		t.Fatalf("cannot create resource dir %s for the test: %v", resDir, err)
+	}
+
+	resTomlFile := filepath.Join(resDir, configTomlFile)
+	if _, err := copyFile(filepath.Join(curDir, "..", "..", "..", "..", "cmd", "security-pki-init", "res", configTomlFile), resTomlFile); err != nil {
+		t.Fatalf("cannot copy %s for the test: %v", configTomlFile, err)
 	}
 
 	origScratchDir := pkiInitScratchDir
@@ -186,6 +196,7 @@ func setupCacheTest(t *testing.T) func(t *testing.T) {
 		os.RemoveAll(pkiCacheDir)
 		os.RemoveAll(testScratchDir)
 		os.RemoveAll(testGeneratedDir)
+		os.RemoveAll(resDir)
 		pkiInitScratchDir = origScratchDir
 		pkiInitGeneratedDir = origGeneratedDir
 		pkisetupLocal = true

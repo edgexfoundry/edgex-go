@@ -64,12 +64,14 @@ func generatePkis() (exitCode, error) {
 
 	pkiSetupRunPath := filepath.Join(baseWorkingDir, pkiSetupExecutable)
 	pkiSetupVaultJSONPath := filepath.Join(baseWorkingDir, pkiSetupVaultJSON)
+	resourceDirPath := filepath.Join(baseWorkingDir, resourceDirName)
 
 	scratchPath := filepath.Join(os.Getenv(envXdgRuntimeDir), pkiInitScratchDir)
 
 	log.Println("pkiSetupRunPath: ", pkiSetupRunPath,
 		"  pkiSetupVaultJSONPath: ", pkiSetupVaultJSONPath,
-		"  scratchPath: ", scratchPath)
+		"  scratchPath: ", scratchPath,
+		"  resourceDirPath: ", resourceDirPath)
 
 	if _, err := exec.LookPath(pkiSetupRunPath); err != nil {
 		return exitWithError, err
@@ -94,13 +96,12 @@ func generatePkis() (exitCode, error) {
 		return exitWithError, err
 	}
 
-	cmd := exec.Command(pkiSetupRunPath, "--config="+pkiSetupVaultJSONPath)
+	cmd := exec.Command(pkiSetupRunPath, "--config="+pkiSetupVaultJSONPath, "--confdir="+resourceDirPath)
 	result, execErr := cmd.CombinedOutput()
+	log.Printf("result of pkisetup: %s\n", string(result))
 	if execErr != nil {
 		return exitWithError, execErr
 	}
-
-	log.Printf("result of pkisetup: %s\n", string(result))
 
 	return rearrangePkiByServices(baseWorkingDir, pkiSetupVaultJSONPath)
 }

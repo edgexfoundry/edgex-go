@@ -21,7 +21,7 @@ import (
 	"os"
 	"testing"
 
-	option "github.com/edgexfoundry/security-secret-store/internal/pkg/pkiinit/option"
+	option "github.com/edgexfoundry/edgex-go/internal/security/pkiinit/option"
 	"github.com/stretchr/testify/assert"
 )
 

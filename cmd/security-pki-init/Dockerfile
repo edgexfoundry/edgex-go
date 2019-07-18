@@ -24,8 +24,7 @@ ENV GO111MODULE=on
 # set the working directory
 WORKDIR /edgex-go
 
-RUN set -eux; \
-    apk add --no-cache ca-certificates make git dumb-init
+RUN apk update && apk add make git
 
 # copy go source files
 COPY go.mod .
@@ -48,6 +47,9 @@ ENV PKI_INIT_DIR=/edgex/security-pki-init
 
 ENV PKI_CACHE=/etc/edgex/pki
 
+RUN set -eux; \
+    apk add --no-cache ca-certificates dumb-init
+
 RUN mkdir -p $PKI_INIT_DIR
 
 WORKDIR $PKI_INIT_DIR
@@ -58,6 +60,9 @@ COPY --from=build-env /edgex-go/cmd/security-secrets-setup/security-secrets-setu
 
 # setup configuration json file for vault
 COPY --from=build-env /edgex-go/cmd/security-secrets-setup/res/pkisetup-vault.json .
+
+# resource files
+COPY --from=build-env /edgex-go/cmd/security-pki-init/res/ ./res/
 
 # setup the entry point script
 # it uses `dumb-init` as the top-level process to reap any
