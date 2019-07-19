@@ -21,7 +21,6 @@ import (
 	types "github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/operators/command"
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 )
 
 func restGetAllCommands(w http.ResponseWriter, _ *http.Request) {
@@ -71,18 +70,14 @@ func restGetCommandsByName(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	results, err := dbClient.GetCommandsByName(n)
+	op := command.NewCommandsByName(dbClient, n)
+	cmds, err := op.Execute()
 	if err != nil {
-		if err == db.ErrNotFound {
-			http.Error(w, err.Error(), http.StatusNotFound)
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-
 		LoggingClient.Error(err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	pkg.Encode(results, w, LoggingClient)
+	pkg.Encode(&cmds, w, LoggingClient)
 }
 
 func restGetCommandsByDeviceId(w http.ResponseWriter, r *http.Request) {

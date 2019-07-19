@@ -74,3 +74,21 @@ func (op commandByIdLoader) Execute() (cmd contract.Command, err error) {
 	}
 	return
 }
+
+//Get Command By Name
+type CommandsByNameExecutor interface {
+	Execute() ([]contract.Command, error)
+}
+
+type commandsByNameLoader struct {
+	database CommandLoader
+	cname    string
+}
+
+func NewCommandsByName(db CommandLoader, cname string) CommandsByNameExecutor {
+	return commandsByNameLoader{database: db, cname: cname}
+}
+
+func (op commandsByNameLoader) Execute() (cmd []contract.Command, err error) {
+	return op.database.GetCommandsByName(op.cname)
+}
