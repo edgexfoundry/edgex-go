@@ -163,7 +163,11 @@ func initializeConfiguration(useRegistry bool, useProfile string) (*Configuratio
 		configuration = actual
 
 		// Check that information was successfully read from Registry
-		if configuration.Service.Port == 0 {
+		client, ok := configuration.IntervalActions["ScrubAged"]
+		if !ok {
+			return nil, errors.New("error reading configuration from Registry")
+		}
+		if client.Interval == "" {
 			return nil, errors.New("error reading configuration from Registry")
 		}
 	}
