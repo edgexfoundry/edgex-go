@@ -18,3 +18,14 @@ type AddressLoader interface {
 type AddressWriter interface {
 	AddAddressable(addressable contract.Addressable) (string, error)
 }
+
+// AddressUpdater provides functionality for updating existing Addressables.
+type AddressUpdater interface {
+	UpdateAddressable(addressable contract.Addressable) error
+
+	// This method is needed for testing whether addressables are still in use.
+	GetDeviceServicesByAddressableId(id string) ([]contract.DeviceService, error)
+
+	AddressLoader
+	AddressWriter
+}

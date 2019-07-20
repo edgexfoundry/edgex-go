@@ -82,17 +82,19 @@ func restAddAddressable(w http.ResponseWriter, r *http.Request) {
 }
 
 // Update addressable by ID or name (ID used first)
-// 404 Not found if no addressable is found to update
 func restUpdateAddressable(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
-	var ra models.Addressable
-	if err := json.NewDecoder(r.Body).Decode(&ra); err != nil {
+	var a models.Addressable
+	err := json.NewDecoder(r.Body).Decode(&a)
+	if err != nil {
 		LoggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	if err := updateAddressable(ra); err != nil {
+	op := addressable.NewUpdateExecutor(dbClient, a)
+	err = op.Execute()
+	if err != nil {
 		switch err.(type) {
 		case *types.ErrAddressableNotFound:
 			http.Error(w, err.Error(), http.StatusNotFound)
@@ -107,7 +109,8 @@ func restUpdateAddressable(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	if _, err := w.Write([]byte("true")); err != nil {
+	_, err = w.Write([]byte("true"))
+	if err != nil {
 		LoggingClient.Error(err.Error())
 		return
 	}
@@ -222,6 +225,7 @@ func isAddressableStillInUse(a models.Addressable) (bool, error) {
 
 	return false, nil
 }
+
 func restGetAddressableByName(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	dn, err := url.QueryUnescape(vars[NAME])

@@ -27,6 +27,12 @@ var SuccessfulDatabaseResult = []contract.Addressable{
 		Protocol:   "http",
 		Id:         "address #1",
 		HTTPMethod: "POST",
+		Address:    "localhost",
+		Port:       1337,
+		Path:       "/tests",
+		Publisher:  "Brandon!",
+		Password:   "hunter2",
+		Topic:      "Hot",
 	},
 	{
 		User:       "User2",
@@ -34,6 +40,12 @@ var SuccessfulDatabaseResult = []contract.Addressable{
 		Protocol:   "http",
 		Id:         "address #2",
 		HTTPMethod: "GET",
+		Address:    "localhost",
+		Port:       1337,
+		Path:       "/tests",
+		Publisher:  "Brandon!",
+		Password:   "hunter2",
+		Topic:      "Hot",
 	},
 }
 
