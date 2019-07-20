@@ -141,18 +141,68 @@ func TestGetCommandById(t *testing.T) {
 		})
 	}
 }
+func TestGetCommandsByName(t *testing.T) {
+	tests := []struct {
+		name           string
+		dbMock         interfaces.DBClient
+		request        *http.Request
+		expectedStatus int
+	}{
+
+		{
+			"OK",
+			createMockCommandLoaderMock("GetCommandsByName", commandName, []contract.Command{{Name: commandName}}, nil),
+			createCommandRequest(cmdByNameURL, NAME, commandName),
+			http.StatusOK,
+		},
+		{
+			"Unexpected",
+			createMockCommandLoaderMock("GetCommandsByName", commandName, nil, unExpectedError),
+			createCommandRequest(cmdByNameURL, NAME, commandName),
+			http.StatusInternalServerError,
+		},
+		{
+			"BadRequest",
+			createMockCommandLoaderMock("GetCommandsByName", commandName, nil, nil),
+			createCommandRequest(cmdByNameURL, NAME, ErrorPathParam),
+			http.StatusBadRequest,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			dbClient = tt.dbMock
+			rr := httptest.NewRecorder()
+			handler := http.HandlerFunc(restGetCommandsByName)
+
+			handler.ServeHTTP(rr, tt.request)
+			response := rr.Result()
+			if response.StatusCode != tt.expectedStatus {
+				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
+				return
+			}
+		})
+	}
+}
 
 //should be common constants
 var cmdsURL = clients.ApiBase + "/" + COMMAND
-var cmdByIdURL = clients.ApiBase + "/" + COMMAND + "/{" + ID + "}"
-var cmdsByDeviceIdURL = clients.ApiBase + "/" + COMMAND + "/" + DEVICE + "/{" + ID + "}"
+var cmdByIdURL = cmdsURL + "/{" + ID + "}"
+var cmdByNameURL = cmdsURL + "/" + NAME + "/{" + NAME + "}"
+var cmdsByDeviceIdURL = cmdsURL + "/" + DEVICE + "/{" + ID + "}"
 
+var commandName = "Command 0"
 var commandId = "f97b5f0a-ec32-4e96-bd36-02210af16f8c"
 var deviceId = "b3445cc6-87df-48f4-b8b0-587dc8a4e1c2"
 
 var unExpectedError = errors.New("unexpected error")
 var cmdNotFoundErr = types.NewErrItemNotFound(fmt.Sprintf("command with id %s not found", commandId))
 var deviceNotFoundErr = types.NewErrItemNotFound(fmt.Sprintf("device with id %s not found", deviceId))
+
+var commands = []contract.Command{
+	contract.Command{Name: fmt.Sprintf(commandName)},
+	{Name: fmt.Sprintf("Command 1")},
+	{Name: fmt.Sprintf("Command 2")},
+}
 
 func createPlainCommandRequest(url string) *http.Request {
 	return createCommandRequest(url, "", "")
@@ -166,11 +216,6 @@ func createCommandRequest(url string, pathParamName string, pathParamValue strin
 }
 
 func createCommandByDeviceIdLoaderMock() interfaces.DBClient {
-	commands := []contract.Command{}
-	for i := 0; i < 3; i++ {
-		commands = append(commands, contract.Command{Name: fmt.Sprintf("Command %v", i)})
-	}
-
 	dbMock := &mocks.DBClient{}
 	dbMock.On("GetCommandsByDeviceId", deviceId).Return(commands, nil)
 	return dbMock
