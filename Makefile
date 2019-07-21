@@ -166,3 +166,9 @@ docker_security_secrets_setup:
 		-t edgexfoundry/docker-edgex-vault:$(GIT_SHA) \
 		-t edgexfoundry/docker-edgex-vault:$(DOCKER_TAG) \
 		.
+
+raml_verify:
+	docker run --rm --privileged \
+		-v $(PWD):/raml-verification -w /raml-verification \
+		nexus3.edgexfoundry.org:10003/edgex-docs-builder:latest \
+		/scripts/raml-verify.sh
