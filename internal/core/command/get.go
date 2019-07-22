@@ -15,16 +15,17 @@ package command
 
 import (
 	"context"
+	"net/http"
+	"strings"
+
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
-	"net/http"
-	"strings"
 )
 
 // NewGetCommand creates and Executor which can be used to execute the GET related command.
-func NewGetCommand(device contract.Device, command contract.Command, context context.Context, httpCaller internal.HttpCaller) (Executor, error) {
-	url := device.Service.Addressable.GetBaseURL() + strings.Replace(command.Get.Action.Path, DEVICEIDURLPARAM, device.Id, -1)
+func NewGetCommand(device contract.Device, command contract.Command, queryParams string, context context.Context, httpCaller internal.HttpCaller) (Executor, error) {
+	url := device.Service.Addressable.GetBaseURL() + strings.Replace(command.Get.Action.Path, DEVICEIDURLPARAM, device.Id, -1) + "?" + queryParams
 	request, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return serviceCommand{}, err

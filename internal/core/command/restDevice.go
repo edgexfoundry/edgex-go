@@ -42,7 +42,7 @@ func issueDeviceCommand(w http.ResponseWriter, r *http.Request, isPutCommand boo
 	}
 
 	ctx := r.Context()
-	body, status := commandByDeviceID(did, cid, string(b), isPutCommand, ctx)
+	body, status := commandByDeviceID(did, cid, string(b), r.URL.RawQuery, isPutCommand, ctx)
 	if status != http.StatusOK {
 		http.Error(w, body, status)
 	} else {
@@ -75,7 +75,7 @@ func issueDeviceCommandByNames(w http.ResponseWriter, r *http.Request, isPutComm
 		LoggingClient.Error(err.Error())
 		return
 	}
-	body, status := commandByNames(dn, cn, string(b), isPutCommand, ctx)
+	body, status := commandByNames(dn, cn, string(b), r.URL.RawQuery, isPutCommand, ctx)
 
 	if status != http.StatusOK {
 		http.Error(w, body, status)

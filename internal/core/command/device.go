@@ -23,7 +23,7 @@ import (
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
-func commandByDeviceID(deviceID string, commandID string, body string, isPutCommand bool, ctx context.Context) (string, int) {
+func commandByDeviceID(deviceID string, commandID string, body string, queryParams string, isPutCommand bool, ctx context.Context) (string, int) {
 	d, err := mdc.Device(deviceID, ctx)
 	if err != nil {
 		LoggingClient.Error(err.Error())
@@ -66,10 +66,10 @@ func commandByDeviceID(deviceID string, commandID string, body string, isPutComm
 		return errMsg, http.StatusNotFound
 	}
 
-	return commandByDevice(d, c, body, isPutCommand, ctx)
+	return commandByDevice(d, c, body, queryParams, isPutCommand, ctx)
 }
 
-func commandByNames(dn string, cn string, body string, isPutCommand bool, ctx context.Context) (string, int) {
+func commandByNames(dn string, cn string, body string, queryParams string, isPutCommand bool, ctx context.Context) (string, int) {
 	d, err := mdc.DeviceForName(dn, ctx)
 	if err != nil {
 		LoggingClient.Error(err.Error())
@@ -89,16 +89,31 @@ func commandByNames(dn string, cn string, body string, isPutCommand bool, ctx co
 			return err.Error(), http.StatusInternalServerError
 		}
 	}
-	return commandByDevice(d, command, body, isPutCommand, ctx)
+
+	var c contract.Command
+	for _, one := range commands {
+		if cn == one.Name {
+			c = one
+			break
+		}
+	}
+
+	if c.String() == (contract.Command{}).String() {
+		errMsg := fmt.Sprintf("Command with name '%v' not found.", cn)
+		LoggingClient.Error(errMsg)
+		return errMsg, http.StatusNotFound
+	}
+
+	return commandByDevice(d, command, body, queryParams, isPutCommand, ctx)
 }
 
-func commandByDevice(device contract.Device, command contract.Command, body string, isPutCommand bool, ctx context.Context) (string, int) {
+func commandByDevice(device contract.Device, command contract.Command, body string, queryParams string, isPutCommand bool, ctx context.Context) (string, int) {
 	var ex Executor
 	var err error
 	if isPutCommand {
 		ex, err = NewPutCommand(device, command, body, ctx, &http.Client{})
 	} else {
-		ex, err = NewGetCommand(device, command, ctx, &http.Client{})
+		ex, err = NewGetCommand(device, command, queryParams, ctx, &http.Client{})
 	}
 
 	if err != nil {
