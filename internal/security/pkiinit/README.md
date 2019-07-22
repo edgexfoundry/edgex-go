@@ -10,14 +10,14 @@ The new pki-init service supports three modes of operation: In the first mode, "
 
 ## Build
 
-For running in Docker, please build the binaries and docker images before run `docker-compose up` on the existing file `docker-compose.yml`.  To build it, run the followings:
+For running in Docker, please build the binaries and docker images before run `docker-compose up` on the `docker-compose.yml` from the GIT repository developer-scripts.  To build it, run the followings:
 
-1. In the base directory, run `make build`
-2. In the base directory, run `make docker`
+1. In the base edgex-go directory, run `make build`
+2. In the base edgex-go directory, run `make docker`
 
 ## Run Docker
 
-On the command line console, run `docker-compose up --build` from the directory `pkiinit` to start the whole Docker container stack.
+On the command line console, run `docker-compose -f docker-compose-fuji.yml up` from the `compose-files` directory of GIT repository `developer-scripts` to start the whole Docker container stack.
 
 ## Command Line Options
 
