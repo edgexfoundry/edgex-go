@@ -926,12 +926,12 @@ parts:
       cd $SNAPCRAFT_PART_SRC
       make build
 
-      install -DT pkisetup/pkisetup "$SNAPCRAFT_PART_INSTALL/bin/pkisetup"
-      install -DT core/edgex-vault-worker "$SNAPCRAFT_PART_INSTALL/bin/vault-worker"
+      install -DT cmd/pkisetup/pkisetup "$SNAPCRAFT_PART_INSTALL/bin/pkisetup"
+      install -DT cmd/vaultworker/edgex-vault-worker "$SNAPCRAFT_PART_INSTALL/bin/vault-worker"
 
       # modify the configuration file for the vault-worker
       install -d "$SNAPCRAFT_PART_INSTALL/config/security-secret-store/res/"
-      cat "core/res/configuration.toml" | \
+      cat "cmd/vaultworker/res/configuration.toml" | \
         sed -e "s@tokenpath = \"res\\\\\\\\resp-init.json\"@tokenpath = \"res/resp-init.json\"@" \
             -e "s@\"/vault/config/pki/@\"\$SNAP_DATA/vault/pki/@g" \
             -e "s@EdgeXFoundryCA/edgex-vault.pem@EdgeXFoundryCA/localhost.pem@" \
@@ -940,12 +940,12 @@ parts:
         > "$SNAPCRAFT_PART_INSTALL/config/security-secret-store/res/configuration.toml"
 
       # install the hcl files too for vault accesses
-      install -DT "core/res/vault-policy-admin.hcl" "$SNAPCRAFT_PART_INSTALL/config/security-secret-store/res/vault-policy-admin.hcl"
-      install -DT "core/res/vault-policy-kong.hcl" "$SNAPCRAFT_PART_INSTALL/config/security-secret-store/res/vault-policy-kong.hcl"
+      install -DT "cmd/vaultworker/res/vault-policy-admin.hcl" "$SNAPCRAFT_PART_INSTALL/config/security-secret-store/res/vault-policy-admin.hcl"
+      install -DT "cmd/vaultworker/res/vault-policy-kong.hcl" "$SNAPCRAFT_PART_INSTALL/config/security-secret-store/res/vault-policy-kong.hcl"
 
       # also install the pki config files
-      install -DT pkisetup/pkisetup-kong.json "$SNAPCRAFT_PART_INSTALL/config/security-secret-store/pkisetup-kong.json"
-      install -DT pkisetup/pkisetup-vault.json "$SNAPCRAFT_PART_INSTALL/config/security-secret-store/pkisetup-vault.json"
+      install -DT configs/pkisetup-kong.json "$SNAPCRAFT_PART_INSTALL/config/security-secret-store/pkisetup-kong.json"
+      install -DT configs/pkisetup-vault.json "$SNAPCRAFT_PART_INSTALL/config/security-secret-store/pkisetup-vault.json"
     prime:
       - bin/*
       - config/*
