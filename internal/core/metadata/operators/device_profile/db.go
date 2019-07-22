@@ -18,31 +18,46 @@ import (
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
+// DeviceLoader retrieves devices as needed from the perspective of device profiles.
 type DeviceLoader interface {
 	GetAllDevices() ([]contract.Device, error)
 	GetDevicesByProfileId(pid string) ([]contract.Device, error)
 }
 
+// DeviceProfileLoader retrieves device profiles.
 type DeviceProfileLoader interface {
 	GetDeviceProfileById(id string) (contract.DeviceProfile, error)
 	GetDeviceProfileByName(n string) (contract.DeviceProfile, error)
+	GetAllDeviceProfiles() ([]contract.DeviceProfile, error)
+	GetDeviceProfilesByModel(m string) ([]contract.DeviceProfile, error)
+	GetDeviceProfilesWithLabel(l string) ([]contract.DeviceProfile, error)
+	GetDeviceProfilesByManufacturerModel(man string, mod string) ([]contract.DeviceProfile, error)
+	GetDeviceProfilesByManufacturer(man string) ([]contract.DeviceProfile, error)
 }
 
+// DeviceProfileDeleter deletes device profiles.
+// Also provides other functionality for validating the device profile before deletion. Such as loading other entities
+// to ensure there are no other dependencies on the device profile before deletion.
 type DeviceProfileDeleter interface {
 	DeleteDeviceProfileById(id string) error
+
+	// Functionality needed to perform validation and check state of DeviceProfile
 	DeviceProfileLoader
 	DeviceLoader
 	ProvisionWatcherLoader
 }
 
+// DeviceProfileUpdater updates device profiles.
+// Also provides other functionality for validating the device profile before deletion. Such as loading other entities
+// to ensure there are no other dependencies on the device profile before deletion.
 type DeviceProfileUpdater interface {
-	GetAllDeviceProfiles() ([]contract.DeviceProfile, error)
 	GetProvisionWatchersByProfileId(id string) ([]contract.ProvisionWatcher, error)
 	UpdateDeviceProfile(dp contract.DeviceProfile) error
 	DeviceProfileLoader
 	DeviceLoader
 }
 
+// ProvisionWatcherLoader retrieves provision watchers.
 type ProvisionWatcherLoader interface {
 	GetProvisionWatchersByProfileId(id string) ([]contract.ProvisionWatcher, error)
 }
