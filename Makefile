@@ -24,6 +24,8 @@ GOFLAGS=-ldflags "-X github.com/edgexfoundry/edgex-go.Version=$(VERSION)"
 
 GIT_SHA=$(shell git rev-parse HEAD)
 
+ARCH=$(shell uname -m)
+
 build: $(MICROSERVICES)
 
 cmd/config-seed/config-seed:
@@ -170,5 +172,5 @@ docker_security_secrets_setup:
 raml_verify:
 	docker run --rm --privileged \
 		-v $(PWD):/raml-verification -w /raml-verification \
-		nexus3.edgexfoundry.org:10003/edgex-docs-builder:latest \
+		nexus3.edgexfoundry.org:10003/edgex-docs-builder:$(ARCH) \
 		/scripts/raml-verify.sh
