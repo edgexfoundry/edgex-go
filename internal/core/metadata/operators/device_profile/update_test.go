@@ -7,12 +7,17 @@ import (
 
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 
-	"github.com/edgexfoundry/edgex-go/internal/core/metadata/operators/device/mocks"
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/operators/device_profile/mocks"
 )
 
 var TestError = errors.New("test error")
 var TestDeviceProfileID = "TestProfileID"
 var TestDeviceProfileName = "TestProfileName"
+var TestDeviceProfileLabel1 = "TestLabel1"
+var TestDeviceProfileLabel2 = "TestLabel2"
+var TestDeviceProfileLabels = []string{TestDeviceProfileLabel1, TestDeviceProfileLabel2}
+var TestDeviceProfileManufacturer = "TestManufacturer"
+var TestDeviceProfileModel = "TestModel"
 var TestDeviceProfile = createTestDeviceProfile()
 var TestCommand = contract.Command{Name: "TestCommand", Id: "TestCommandId"}
 var TestDevices = []contract.Device{
@@ -223,16 +228,16 @@ func createDBClientUpdateDeviceProfileError() DeviceProfileUpdater {
 // This function handles some of the necessary creation nuances which need to take place for proper mocking and equality
 // verifications.
 func createTestDeviceProfile() contract.DeviceProfile {
-	return createTestDeviceProfileWithCommands(TestCommand)
+	return createTestDeviceProfileWithCommands(TestDeviceProfileID, TestDeviceProfileName, TestDeviceProfileLabels, TestDeviceProfileManufacturer, TestDeviceProfileModel, TestCommand)
 }
 
 // createTestDeviceProfileWithCommands creates a device profile to be used during testing.
 // This function handles some of the necessary creation nuances which need to take place for proper mocking and equality
 // verifications.
-func createTestDeviceProfileWithCommands(commands ...contract.Command) contract.DeviceProfile {
+func createTestDeviceProfileWithCommands(id string, name string, labels []string, manufacturer string, model string, commands ...contract.Command) contract.DeviceProfile {
 	return contract.DeviceProfile{
-		Id:   TestDeviceProfileID,
-		Name: TestDeviceProfileName,
+		Id:   id,
+		Name: name,
 		DescribedObject: contract.DescribedObject{
 			Description: "Some test data",
 			Timestamps: contract.Timestamps{
@@ -241,9 +246,9 @@ func createTestDeviceProfileWithCommands(commands ...contract.Command) contract.
 				Modified: 789,
 			},
 		},
-		Labels:       []string{"test", "data"},
-		Manufacturer: "Test Manufacturer",
-		Model:        "Test Model",
+		Labels:       labels,
+		Manufacturer: manufacturer,
+		Model:        model,
 		CoreCommands: createCoreCommands(commands),
 		DeviceResources: []contract.DeviceResource{
 			{

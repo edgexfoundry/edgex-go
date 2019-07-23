@@ -30,18 +30,19 @@ import (
 )
 
 func restGetAllDeviceProfiles(w http.ResponseWriter, _ *http.Request) {
-	res, err := dbClient.GetAllDeviceProfiles()
+	op := device_profile.NewGetAllExecutor(Configuration.Service, dbClient, LoggingClient)
+	res, err := op.Execute()
 	if err != nil {
 		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+		switch err.(type) {
+		case errors.ErrLimitExceeded:
+			http.Error(w, err.Error(), http.StatusRequestEntityTooLarge)
+			return
+		default:
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 
-	if len(res) > Configuration.Service.MaxResultCount {
-		err = errors.NewErrLimitExceeded(Configuration.Service.MaxResultCount)
-		http.Error(w, err.Error(), http.StatusRequestEntityTooLarge)
-		LoggingClient.Error(err.Error())
-		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -133,9 +134,10 @@ func restUpdateDeviceProfile(w http.ResponseWriter, r *http.Request) {
 
 func restGetProfileByProfileId(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	var did string = vars["id"]
+	var did = vars["id"]
 
-	res, err := dbClient.GetDeviceProfileById(did)
+	op := device_profile.NewGetProfileID(did, dbClient)
+	res, err := op.Execute()
 	if err != nil {
 		if err == db.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
@@ -302,7 +304,8 @@ func restGetProfileByModel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := dbClient.GetDeviceProfilesByModel(an)
+	op := device_profile.NewGetModelExecutor(an, dbClient)
+	res, err := op.Execute()
 	if err != nil {
 		LoggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -323,7 +326,8 @@ func restGetProfileWithLabel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := dbClient.GetDeviceProfilesWithLabel(label)
+	op := device_profile.NewGetLabelExecutor(label, dbClient)
+	res, err := op.Execute()
 	if err != nil {
 		LoggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -350,7 +354,8 @@ func restGetProfileByManufacturerModel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := dbClient.GetDeviceProfilesByManufacturerModel(man, mod)
+	op := device_profile.NewGetManufacturerModelExecutor(man, mod, dbClient)
+	res, err := op.Execute()
 	if err != nil {
 		LoggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -370,7 +375,8 @@ func restGetProfileByManufacturer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := dbClient.GetDeviceProfilesByManufacturer(man)
+	op := device_profile.NewGetManufacturerExecutor(man, dbClient)
+	res, err := op.Execute()
 	if err != nil {
 		LoggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -391,7 +397,8 @@ func restGetProfileByName(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get the device
-	res, err := dbClient.GetDeviceProfileByName(dn)
+	op := device_profile.NewGetProfileName(dn, dbClient)
+	res, err := op.Execute()
 	if err != nil {
 		if err == db.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
@@ -416,7 +423,8 @@ func restGetYamlProfileByName(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check for the device profile
-	dp, err := dbClient.GetDeviceProfileByName(name)
+	op := device_profile.NewGetProfileName(name, dbClient)
+	dp, err := op.Execute()
 	if err != nil {
 		// Not found, return nil
 		if err == db.ErrNotFound {
@@ -453,7 +461,8 @@ func restGetYamlProfileById(w http.ResponseWriter, r *http.Request) {
 	id := vars[ID]
 
 	// Check if the device profile exists
-	dp, err := dbClient.GetDeviceProfileById(id)
+	op := device_profile.NewGetProfileID(id, dbClient)
+	dp, err := op.Execute()
 	if err != nil {
 		if err == db.ErrNotFound {
 			w.WriteHeader(http.StatusNotFound)
