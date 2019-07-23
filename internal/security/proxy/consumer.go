@@ -29,13 +29,13 @@ import (
 )
 
 type Consumer struct {
-	name    string
+	name   string
 	client Requestor
 }
 
 func NewConsumer(name string, r Requestor) Consumer {
 	return Consumer{
-		name: name,
+		name:   name,
 		client: r,
 	}
 }
@@ -148,7 +148,7 @@ func (c *Consumer) createJWTToken() (string, error) {
 			jwtCred.Key,
 			c.name,
 			jwt.StandardClaims{
-				Issuer: EdgeXService,
+				Issuer: EdgeXKong,
 			},
 		}
 
@@ -165,21 +165,15 @@ func (c *Consumer) createJWTToken() (string, error) {
 //curl -X POST "http://localhost:8001/consumers/user123/oauth2" -d "name=www.edgexfoundry.org" --data "client_id=user123" -d "client_secret=user123"  -d "redirect_uri=http://www.edgexfoundry.org/"
 //curl -k -v https://localhost:8443/{service}/oauth2/token -d "client_id=user123" -d "grant_type=client_credentials" -d "client_secret=user123" -d "scope=email"
 func (c *Consumer) createOAuth2Token() (string, error) {
-
-	u := &url.URL{
-		Scheme: "http",
-		Host:   fmt.Sprintf("%s:%v", Configuration.KongURL.Server, Configuration.KongURL.AdminPort),
-		Path:   "/",
-	}
 	token := KongOauth2Token{}
 	ko := &KongConsumerOauth2{
-		Name:         EdgeXService,
+		Name:         EdgeXKong,
 		ClientID:     c.name,
 		ClientSecret: c.name,
-		RedirectURIS: "http://" + EdgeXService,
+		RedirectURIS: "http://" + EdgeXKong,
 	}
 
-	req, err := sling.New().Base(u.String()).Post(fmt.Sprintf("consumers/%s/oauth2", c.name)).BodyForm(ko).Request()
+	req, err := sling.New().Base(Configuration.KongURL.GetProxyBaseURL()).Post(fmt.Sprintf("consumers/%s/oauth2", c.name)).BodyForm(ko).Request()
 	if err != nil {
 		e := fmt.Sprintf("failed to enable oauth2 authentication for consumer %s with error %s", c.name, err.Error())
 		LoggingClient.Error(e)

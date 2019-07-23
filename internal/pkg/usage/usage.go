@@ -62,8 +62,7 @@ Server Options:
 	--group=<groupname>             Group name the user belongs to
 	--userdel=<username>            Delete an account		
 	--configfile=<file.toml>        Use a different config file (default: res/configuration.toml)
-
-Common Options:
+	Common Options:
 	-h, --help                      Show this message
 `
 
