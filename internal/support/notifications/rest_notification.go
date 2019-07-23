@@ -17,16 +17,169 @@ package notifications
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+	"github.com/edgexfoundry/edgex-go/internal/support/notifications/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/gorilla/mux"
 )
 
+func addNotification(n *models.Notification) (e error) {
+
+	var err error
+	n.Status = models.NotificationsStatus(models.New)
+	LoggingClient.Info("Posting Notification: " + n.String())
+	n.ID, err = dbClient.AddNotification(*n)
+	if err != nil {
+		switch err {
+		case db.ErrNotUnique:
+			newErr := errors.NewErrNotificationInUse(n.Slug)
+			LoggingClient.Error(newErr.Error(), "error message", err.Error())
+			return newErr
+		default:
+			LoggingClient.Error(err.Error())
+			return err
+		}
+	}
+	return
+}
+
+func checkSeverity(n *models.Notification) (err error) {
+
+	if n.Severity == models.NotificationsSeverity(models.Critical) {
+
+		LoggingClient.Info("Critical severity scheduler is triggered for: " + n.Slug)
+		err := distributeAndMark(*n)
+		if err != nil {
+			LoggingClient.Error(err.Error())
+			return err
+		}
+		LoggingClient.Info("Critical severity scheduler has completed for: " + n.Slug)
+
+	}
+	return
+}
+
+func getNotificationBySlug(slug string) (n models.Notification, err error) {
+	n, err = dbClient.GetNotificationBySlug(slug)
+	if err != nil {
+		LoggingClient.Error(err.Error())
+		if err == db.ErrNotFound {
+			err = errors.NewErrNotificationNotFound(slug)
+		}
+		return n, err
+	}
+	return n, nil
+}
+
+func getNotificationByID(id string) (n models.Notification, err error) {
+	n, err = dbClient.GetNotificationById(id)
+	if err != nil {
+		LoggingClient.Error(err.Error())
+		if err == db.ErrNotFound {
+			err = errors.NewErrNotificationNotFound(id)
+		}
+		return n, err
+	}
+	return n, nil
+}
+
+func deleteNotificationBySlug(slug string) (err error) {
+	LoggingClient.Info("Deleting notification (and associated transmissions) by slug: " + slug)
+
+	if err = dbClient.DeleteNotificationBySlug(slug); err != nil {
+		LoggingClient.Error(err.Error())
+		if err == db.ErrNotFound {
+			err = errors.NewErrNotificationNotFound(slug)
+		}
+		return err
+	}
+	return
+}
+
+func deleteNotificationByID(slug string) (err error) {
+	LoggingClient.Info("Deleting notification (and associated transmissions) by slug: " + slug)
+
+	if err = dbClient.DeleteNotificationById(slug); err != nil {
+		LoggingClient.Error(err.Error())
+		if err == db.ErrNotFound {
+			err = errors.NewErrNotificationNotFound(slug)
+		}
+		return err
+	}
+	return
+}
+
+func deleteNotificationsOld(age int) (err error) {
+	LoggingClient.Info("Deleting old notifications (and associated transmissions): " + string(age))
+	err = dbClient.DeleteNotificationsOld(age)
+	if err != nil {
+		LoggingClient.Error(err.Error())
+		return err
+	}
+	return
+}
+
+func getNotificationsBySender(sender string, limit int) (n []models.Notification, err error) {
+	n, err = dbClient.GetNotificationBySender(sender, limit)
+	if err != nil {
+		LoggingClient.Error(err.Error())
+		return n, err
+	}
+	return n, nil
+}
+
+func getNotificationsByStartEnd(start int64, end int64, limit int) (n []models.Notification, err error) {
+	n, err = dbClient.GetNotificationsByStartEnd(start, end, limit)
+	if err != nil {
+		LoggingClient.Error(err.Error())
+		return n, err
+	}
+	return n, nil
+}
+
+func getNotificationsByStart(start int64, limit int) (n []models.Notification, err error) {
+	n, err = dbClient.GetNotificationsByStart(start, limit)
+	if err != nil {
+		LoggingClient.Error(err.Error())
+		return n, err
+	}
+	return n, nil
+}
+
+func getNotificationsByEnd(end int64, limit int) (n []models.Notification, err error) {
+	n, err = dbClient.GetNotificationsByEnd(end, limit)
+	if err != nil {
+		LoggingClient.Error(err.Error())
+		return n, err
+	}
+	return n, nil
+}
+
+func getNotificationsByLabels(labels []string, limit int) (n []models.Notification, err error) {
+	n, err = dbClient.GetNotificationsByLabels(labels, limit)
+	if err != nil {
+		LoggingClient.Error(err.Error())
+		return n, err
+	}
+	return n, nil
+}
+
+func getNewNotifications(limit int) (n []models.Notification, err error) {
+	n, err = dbClient.GetNewNotifications(limit)
+	if err != nil {
+		LoggingClient.Error(err.Error())
+		return n, err
+	}
+	return n, nil
+}
+
 func notificationHandler(w http.ResponseWriter, r *http.Request) {
+
 	if r.Body != nil {
 		defer r.Body.Close()
 	}
@@ -41,33 +194,25 @@ func notificationHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	LoggingClient.Info("Posting Notification: " + n.String())
-	n.Status = models.NotificationsStatus(models.New)
-	n.ID, err = dbClient.AddNotification(n)
+	err = addNotification(&n)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusConflict)
-		LoggingClient.Error(err.Error())
+		switch err.(type) {
+		case errors.ErrNotificationInUse:
+			http.Error(w, err.Error(), http.StatusConflict)
+		default:
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 		return
 	}
-
-	if n.Severity == models.NotificationsSeverity(models.Critical) {
-		LoggingClient.Info("Critical severity scheduler is triggered for: " + n.Slug)
-		n, err = dbClient.GetNotificationById(n.ID)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			LoggingClient.Error(err.Error())
-			return
-		}
-
-		err := distributeAndMark(n)
-		if err != nil {
-			return
-		}
-		LoggingClient.Info("Critical severity scheduler has completed for: " + n.Slug)
+	err = checkSeverity(&n)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusAccepted)
+	fmt.Println(n.ID)
 	w.Write([]byte(n.ID))
 
 }
@@ -82,36 +227,26 @@ func notificationBySlugHandler(w http.ResponseWriter, r *http.Request) {
 	slug := vars["slug"]
 	switch r.Method {
 	case http.MethodGet:
-
-		n, err := dbClient.GetNotificationBySlug(slug)
+		n, err := getNotificationBySlug(slug)
 		if err != nil {
-			if err == db.ErrNotFound {
-				http.Error(w, "Notification not found", http.StatusNotFound)
-			} else {
+			switch err.(type) {
+			case errors.ErrNotificationNotFound:
+				http.Error(w, err.Error(), http.StatusNotFound)
+			default:
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
-			LoggingClient.Error(err.Error())
 			return
 		}
-
 		pkg.Encode(n, w, LoggingClient)
 	case http.MethodDelete:
-		_, err := dbClient.GetNotificationBySlug(slug)
-		if err != nil {
-			if err == db.ErrNotFound {
-				http.Error(w, "Notification not found", http.StatusNotFound)
-			} else {
+
+		if err := deleteNotificationBySlug(slug); err != nil {
+			switch err.(type) {
+			case errors.ErrNotificationNotFound:
+				http.Error(w, err.Error(), http.StatusNotFound)
+			default:
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
-			LoggingClient.Error(err.Error())
-			return
-		}
-
-		LoggingClient.Info("Deleting notification (and associated transmissions) by slug: " + slug)
-
-		if err = dbClient.DeleteNotificationBySlug(slug); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			LoggingClient.Error(err.Error())
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
@@ -131,35 +266,29 @@ func notificationByIDHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 
-		n, err := dbClient.GetNotificationById(id)
+		n, err := getNotificationByID(id)
 		if err != nil {
-			if err == db.ErrNotFound {
-				http.Error(w, "Notification not found", http.StatusNotFound)
-			} else {
+			switch err.(type) {
+			case errors.ErrNotificationNotFound:
+				http.Error(w, err.Error(), http.StatusNotFound)
+			default:
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
-			LoggingClient.Error(err.Error())
 			return
 		}
 
 		pkg.Encode(n, w, LoggingClient)
-	case http.MethodDelete:
-		_, err := dbClient.GetNotificationById(id)
-		if err != nil {
-			if err == db.ErrNotFound {
-				http.Error(w, "Notification not found", http.StatusNotFound)
-			} else {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			}
-			LoggingClient.Error(err.Error())
-			return
-		}
 
+	case http.MethodDelete:
 		LoggingClient.Info("Deleting notification (and associated transmissions): " + id)
 
-		if err = dbClient.DeleteNotificationById(id); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			LoggingClient.Error(err.Error())
+		if err := deleteNotificationByID(id); err != nil {
+			switch err.(type) {
+			case errors.ErrNotificationNotFound:
+				http.Error(w, err.Error(), http.StatusNotFound)
+			default:
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
@@ -181,15 +310,9 @@ func notificationOldHandler(w http.ResponseWriter, r *http.Request) {
 		LoggingClient.Error("Error converting the age to an integer")
 		return
 	}
-	LoggingClient.Info("Deleting old notifications (and associated transmissions): " + vars["age"])
-	err = dbClient.DeleteNotificationsOld(age)
+	err = deleteNotificationsOld(age)
 	if err != nil {
-		if err == db.ErrNotFound {
-			http.Error(w, "Notifications not found", http.StatusNotFound)
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		LoggingClient.Error(err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -218,17 +341,11 @@ func notificationBySenderHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	n, err := dbClient.GetNotificationBySender(vars["sender"], limitNum)
+	n, err := getNotificationsBySender(vars["sender"], limitNum)
 	if err != nil {
-		if err == db.ErrNotFound {
-			http.Error(w, "Notification not found", http.StatusNotFound)
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		LoggingClient.Error(err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
 	pkg.Encode(n, w, LoggingClient)
 
 }
@@ -265,16 +382,12 @@ func notificationByStartEndHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	n, err := dbClient.GetNotificationsByStartEnd(start, end, limitNum)
+	n, err := getNotificationsByStartEnd(start, end, limitNum)
 	if err != nil {
-		if err == db.ErrNotFound {
-			http.Error(w, "Notification not found", http.StatusNotFound)
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		LoggingClient.Error(err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
 	pkg.Encode(n, w, LoggingClient)
 
 }
@@ -303,16 +416,9 @@ func notificationByStartHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	n, err := dbClient.GetNotificationsByStart(start, limitNum)
+	n, err := getNotificationsByStart(start, limitNum)
 	if err != nil {
-		if err == db.ErrNotFound {
-			http.Error(w, "Notification not found", http.StatusNotFound)
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		LoggingClient.Error(err.Error())
-		w.Header().Set("Content-Type", applicationJson)
-		pkg.Encode(n, w, LoggingClient)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -346,16 +452,9 @@ func notificationByEndHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	n, err := dbClient.GetNotificationsByEnd(end, limitNum)
+	n, err := getNotificationsByEnd(end, limitNum)
 	if err != nil {
-		if err == db.ErrNotFound {
-			http.Error(w, "Notification not found", http.StatusNotFound)
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		LoggingClient.Error(err.Error())
-		w.Header().Set("Content-Type", applicationJson)
-		pkg.Encode(n, w, LoggingClient)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -385,16 +484,9 @@ func notificationsByLabelsHandler(w http.ResponseWriter, r *http.Request) {
 
 	labels := splitVars(vars["labels"])
 
-	n, err := dbClient.GetNotificationsByLabels(labels, limitNum)
+	n, err := getNotificationsByLabels(labels, limitNum)
 	if err != nil {
-		if err == db.ErrNotFound {
-			http.Error(w, "Notification not found", http.StatusNotFound)
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		LoggingClient.Error(err.Error())
-		w.Header().Set("Content-Type", applicationJson)
-		pkg.Encode(n, w, LoggingClient)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -422,16 +514,10 @@ func notificationsNewHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	n, err := dbClient.GetNewNotifications(limitNum)
+	n, err := getNewNotifications(limitNum)
 	if err != nil {
-		if err == db.ErrNotFound {
-			http.Error(w, "Notification not found", http.StatusNotFound)
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		LoggingClient.Error(err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
-
 	}
 
 	pkg.Encode(n, w, LoggingClient)

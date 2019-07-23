@@ -22,10 +22,82 @@ import (
 	"strconv"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/gorilla/mux"
 )
+
+func addTransmission(t models.Transmission) (id string, err error) {
+	LoggingClient.Info("Posting Transmission: " + t.String())
+	id, err = dbClient.AddTransmission(t)
+	if err != nil {
+		LoggingClient.Error(err.Error())
+		return id, err
+	}
+	return id, nil
+}
+
+func getTransmissionsByNotificationSlug(slug string, limit int) (t []models.Transmission, err error) {
+	t, err = dbClient.GetTransmissionsByNotificationSlug(slug, limit)
+	if err != nil {
+		LoggingClient.Error(err.Error())
+		return t, err
+	}
+	return t, nil
+}
+
+func getTransmissionsByNotificationSlugAndStartEnd(slug string, start int64, end int64, limit int) (t []models.Transmission, err error) {
+	t, err = dbClient.GetTransmissionsByNotificationSlugAndStartEnd(slug, start, end, limit)
+	if err != nil {
+		LoggingClient.Error(err.Error())
+		return t, err
+	}
+	return t, nil
+}
+
+func getTransmissionsByStartEnd(start int64, end int64, limit int) (t []models.Transmission, err error) {
+	t, err = dbClient.GetTransmissionsByStartEnd(start, end, limit)
+	if err != nil {
+		LoggingClient.Error(err.Error())
+		return t, err
+	}
+	return t, nil
+}
+
+func getTransmissionsByStart(start int64, limit int) (t []models.Transmission, err error) {
+	t, err = dbClient.GetTransmissionsByStart(start, limit)
+	if err != nil {
+		LoggingClient.Error(err.Error())
+		return t, err
+	}
+	return t, nil
+}
+
+func getTransmissionsByEnd(end int64, limit int) (t []models.Transmission, err error) {
+	t, err = getTransmissionsByEnd(end, limit)
+	if err != nil {
+		LoggingClient.Error(err.Error())
+		return t, err
+	}
+	return t, nil
+}
+
+func getTransmissionsByStatus(limit int, status models.TransmissionStatus) (t []models.Transmission, err error) {
+	t, err = dbClient.GetTransmissionsByStatus(limit, status)
+	if err != nil {
+		LoggingClient.Error(err.Error())
+		return t, err
+	}
+	return t, nil
+}
+
+func deleteTransmission(age int64, status models.TransmissionStatus) error {
+	err := dbClient.DeleteTransmission(age, status)
+	if err != nil {
+		LoggingClient.Error(err.Error())
+		return err
+	}
+	return nil
+}
 
 func transmissionHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Body != nil {
@@ -43,11 +115,9 @@ func transmissionHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	LoggingClient.Info("Posting Transmission: " + t.String())
-	id, err := dbClient.AddTransmission(t)
+	id, err := addTransmission(t)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		LoggingClient.Error(err.Error())
 		return
 	}
 
@@ -70,19 +140,13 @@ func transmissionBySlugHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t, err := dbClient.GetTransmissionsByNotificationSlug(vars["slug"], limitNum)
+	t, err := getTransmissionsByNotificationSlug(vars["slug"], limitNum)
 	if err != nil {
-		if err == db.ErrNotFound {
-			http.Error(w, "Transmission not found", http.StatusNotFound)
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		LoggingClient.Error(err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	pkg.Encode(t, w, LoggingClient)
-
 }
 
 func transmissionBySlugAndStartEndHandler(w http.ResponseWriter, r *http.Request) {
@@ -112,14 +176,9 @@ func transmissionBySlugAndStartEndHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	t, err := dbClient.GetTransmissionsByNotificationSlugAndStartEnd(slug, start, end, limitNum)
+	t, err := getTransmissionsByNotificationSlugAndStartEnd(slug, start, end, limitNum)
 	if err != nil {
-		if err == db.ErrNotFound {
-			http.Error(w, "Transmission not found", http.StatusNotFound)
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		LoggingClient.Error(err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -154,14 +213,9 @@ func transmissionByStartEndHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t, err := dbClient.GetTransmissionsByStartEnd(start, end, limitNum)
+	t, err := getTransmissionsByStartEnd(start, end, limitNum)
 	if err != nil {
-		if err == db.ErrNotFound {
-			http.Error(w, "Transmission not found", http.StatusNotFound)
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		LoggingClient.Error(err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -188,14 +242,9 @@ func transmissionByStartHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t, err := dbClient.GetTransmissionsByStart(start, limitNum)
+	t, err := getTransmissionsByStart(start, limitNum)
 	if err != nil {
-		if err == db.ErrNotFound {
-			http.Error(w, "Transmission not found", http.StatusNotFound)
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		LoggingClient.Error(err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -224,14 +273,9 @@ func transmissionByEndHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t, err := dbClient.GetTransmissionsByEnd(end, limitNum)
+	t, err := getTransmissionsByEnd(end, limitNum)
 	if err != nil {
-		if err == db.ErrNotFound {
-			http.Error(w, "Transmission not found", http.StatusNotFound)
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		LoggingClient.Error(err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -261,22 +305,14 @@ func transmissionByStatusHandler(w http.ResponseWriter, r *http.Request, status 
 		return
 	}
 
-	switch r.Method {
-	case http.MethodGet:
-
-		t, err := dbClient.GetTransmissionsByStatus(limitNum, status)
-		if err != nil {
-			if err == db.ErrNotFound {
-				http.Error(w, "Transmission not found", http.StatusNotFound)
-			} else {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			}
-			LoggingClient.Error(err.Error())
-			return
-		}
-
-		pkg.Encode(t, w, LoggingClient)
+	t, err := getTransmissionsByStatus(limitNum, status)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
+
+	pkg.Encode(t, w, LoggingClient)
+
 }
 
 func transmissionByAgeSentHandler(w http.ResponseWriter, r *http.Request) {
@@ -310,10 +346,9 @@ func transmissionByAgeStatusHandler(w http.ResponseWriter, r *http.Request, stat
 		return
 	}
 
-	err = dbClient.DeleteTransmission(age, status)
+	err = deleteTransmission(age, status)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		LoggingClient.Error(err.Error())
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
