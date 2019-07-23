@@ -50,6 +50,22 @@ Common Options:
     -h, --help                      Show this message
 `
 
+var securityProxySetupUsageStr = `
+Usage: %s [options]
+Server Options:	
+    -p, --profile <name>            Indicate configuration profile other than default
+    -r, --registry                  Indicates service should use Registry
+	--insureskipverify=true/false   Indicates if skipping the server side SSL cert verifcation, similar to -k of curl
+	--init=true/false               Indicates if security service should be initialized
+	--reset=true/false              Indicate if security service should be reset to initialization status
+	--useradd=<username>            Create an account and return JWT
+	--group=<groupname>             Group name the user belongs to
+	--userdel=<username>            Delete an account		
+	--configfile=<file.toml>        Use a different config file (default: res/configuration.toml)
+	Common Options:
+	-h, --help                      Show this message
+`
+
 // usage will print out the flag options for the server.
 func HelpCallback() {
 	msg := fmt.Sprintf(usageStr, os.Args[0])
@@ -65,6 +81,12 @@ func HelpCallbackConfigSeed() {
 
 func HelpCallbackSecuritySetup() {
 	msg := fmt.Sprintf(securitySetupUsageStr, os.Args[0])
+	fmt.Printf("%s\n", msg)
+	os.Exit(0)
+}
+
+func HelpCallbackSecurityProxy() {
+	msg := fmt.Sprintf(securityProxySetupUsageStr, os.Args[0])
 	fmt.Printf("%s\n", msg)
 	os.Exit(0)
 }

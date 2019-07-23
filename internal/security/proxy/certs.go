@@ -20,9 +20,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/dghubble/sling"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/dghubble/sling"
 )
 
 type Certs struct {

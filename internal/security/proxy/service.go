@@ -21,27 +21,14 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/dghubble/sling"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 )
 
-/*type Service struct {
-	Connect    Requestor
-	CertCfg    CertConfig
-	ServiceCfg ServiceConfig
-}*/
 type Service struct {
 	client Requestor
-}
-
-type ServiceConfig interface {
-	GetProxyAuthMethod() string
-	GetProxyAuthTTL() int
-	GetProxyAuthResource() string
-	GetProxyACLName() string
-	GetProxyACLWhiteList() string
-	GetSecretSvcSNIS() string
 }
 
 func NewService(r Requestor) Service {
@@ -157,7 +144,7 @@ func (s *Service) loadCert() error {
 	body := &CertInfo{
 		Cert: cp.Cert,
 		Key:  cp.Key,
-		Snis: []string{Configuration.SecretService.SNIS},
+		Snis: strings.Split(Configuration.SecretService.SNIS,","),
 	}
 
 	LoggingClient.Info("trying to upload cert to proxy server")

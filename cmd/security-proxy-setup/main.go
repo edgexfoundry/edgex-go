@@ -20,25 +20,19 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"time"
 
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/internal/security/proxy"
-	logger "github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 )
-
-var lc = CreateLogging()
-
-func CreateLogging() logger.LoggingClient {
-	return logger.NewClient(proxy.SecurityService, false, fmt.Sprintf("%s-%s.log", proxy.SecurityService, time.Now().Format("2006-01-02")), models.InfoLog)
-}
 
 func main() {
 
 	if len(os.Args) < 2 {
-		proxy.HelpCallback()
+		usage.HelpCallbackSecurityProxy()
 	}
 	var initNeeded bool
 	var insecureSkipVerify bool
@@ -60,59 +54,57 @@ func main() {
 	flag.StringVar(&useProfile, "profile", "", "Specify a profile other than default.")
 	flag.StringVar(&useProfile, "p", "", "Specify a profile other than default.")
 
-	flag.Usage = proxy.HelpCallback
+	flag.Usage = usage.HelpCallbackSecurityProxy
 	flag.Parse()
 
 	params := startup.BootParams{UseRegistry: useRegistry, UseProfile: useProfile, BootTimeout: internal.BootTimeoutDefault}
 	startup.Bootstrap(params, proxy.Retry, logBeforeInit)
 
-	//er := proxy.EdgeXRequestor{ProxyBaseURL: config.GetProxyBaseURL(), SecretSvcBaseURL: config.GetSecretSvcBaseURL(), Client: client}
-	//s := &proxy.Service{Connect: &er, CertCfg: config, ServiceCfg: config}
 	req := proxy.NewRequestor(insecureSkipVerify)
 	s := proxy.NewService(req)
 
 	err := s.CheckProxyServiceStatus()
 	if err != nil {
-		lc.Error(err.Error())
+		proxy.LoggingClient.Error(err.Error())
 		return
 	}
 
 	if initNeeded {
 		if resetNeeded {
-			lc.Error("can't run initialization and reset at the same time for security service")
+			proxy.LoggingClient.Error("can't run initialization and reset at the same time for security service")
 			return
 		}
 		err = s.Init()
 		if err != nil {
-			lc.Error(err.Error())
+			proxy.LoggingClient.Error(err.Error())
 		}
 	}
 
 	if resetNeeded {
 		err = s.ResetProxy()
 		if err != nil {
-			lc.Error(err.Error())
+			proxy.LoggingClient.Error(err.Error())
 		}
 	}
 
 	if userTobeCreated != "" && userofGroup != "" {
 		c := proxy.NewConsumer(userTobeCreated, req)
 
-		err := c.Create(proxy.EdgeXService)
+		err := c.Create(proxy.EdgeXKong)
 		if err != nil {
-			lc.Error(err.Error())
+			proxy.LoggingClient.Error(err.Error())
 			return
 		}
 
 		err = c.AssociateWithGroup(userofGroup)
 		if err != nil {
-			lc.Error(err.Error())
+			proxy.LoggingClient.Error(err.Error())
 			return
 		}
 
 		t, err := c.CreateToken()
 		if err != nil {
-			lc.Error(fmt.Sprintf("failed to create access token for edgex service due to error %s", err.Error()))
+			proxy.LoggingClient.Error(fmt.Sprintf("failed to create access token for edgex service due to error %s", err.Error()))
 			return
 		}
 
@@ -120,12 +112,19 @@ func main() {
 
 		utp := &proxy.UserTokenPair{User: userTobeCreated, Token: t}
 		if err != nil {
-			lc.Error(err.Error())
+			proxy.LoggingClient.Error(err.Error())
 			return
 		}
-		err = utp.Save()
+		file, err := os.Create(proxy.Configuration.KongAuth.OutputPath)
 		if err != nil {
-			lc.Error(err.Error())
+			proxy.LoggingClient.Error(err.Error())
+			return
+		}
+
+		err = utp.Save(file)
+		if err != nil {
+			proxy.LoggingClient.Error(err.Error())
+			return
 		}
 	}
 

@@ -19,7 +19,7 @@ package proxy
 
 import (
 	"encoding/json"
-	"os"
+	"io"
 )
 
 type UserTokenPair struct {
@@ -27,14 +27,13 @@ type UserTokenPair struct {
 	Token string
 }
 
-func (ut *UserTokenPair) Save() error {
-	file, err := os.Create(Configuration.KongAuth.OutputPath)
+func (ut *UserTokenPair) Save(w io.Writer) error {
 	jdata, err := json.MarshalIndent(*ut, "", " ")
 	if err != nil {
 		return err
 	}
 
-	_, err = file.Write(jdata)
+	_, err = w.Write(jdata)
 	if err != nil {
 		return err
 	}
