@@ -70,7 +70,7 @@ cmd/security-pki-init/security-pki-init:
 clean:
 	rm -f $(MICROSERVICES)
 
-test: cmd/security-secrets-setup/security-secrets-setup
+test:
 	GO111MODULE=on go test -coverprofile=coverage.out ./...
 	GO111MODULE=on go vet ./...
 	gofmt -l .

@@ -130,12 +130,11 @@ func setupCacheTest(t *testing.T) func(t *testing.T) {
 		t.Fatalf("cannot get the working dir %s: %v", curDir, err)
 	}
 
-	pkiSetupFile := filepath.Join(curDir, pkiSetupExecutable)
+	// no real pkiSetupExecutable in tests
 	if pkisetupLocal {
-		if _, err := copyFile(filepath.Join(curDir, "..", "..", "..", "..", "cmd", "security-secrets-setup", pkiSetupExecutable), pkiSetupFile); err != nil {
-			t.Fatalf("cannot copy pkisetup binary for the test: %v", err)
-		}
-		os.Chmod(pkiSetupFile, 0777)
+		pkiSetupExector = &mockPkiSetupRunner{}
+	} else {
+		pkiSetupExector = newPkiSetupRunner()
 	}
 
 	jsonVaultFile := filepath.Join(curDir, pkiSetupVaultJSON)
@@ -188,7 +187,6 @@ func setupCacheTest(t *testing.T) func(t *testing.T) {
 
 	return func(t *testing.T) {
 		// cleanup
-		os.Remove(pkiSetupFile)
 		os.Remove(jsonVaultFile)
 		os.Setenv(envXdgRuntimeDir, origEnvXdgRuntimeDir)
 		os.Setenv(envPkiCache, origEnvPkiCache)

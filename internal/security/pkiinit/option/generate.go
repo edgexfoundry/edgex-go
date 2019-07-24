@@ -25,6 +25,24 @@ import (
 	cert "github.com/edgexfoundry/edgex-go/internal/security/pkiinit/cert"
 )
 
+type pkiSetupRunnable interface {
+	setRunConfig(pkiSetupRunConfig)
+	checkRunConfig() error
+	call() error
+}
+
+type pkiSetupRunner struct {
+	runConfig pkiSetupRunConfig
+}
+
+type pkiSetupRunConfig struct {
+	pkiSetupRunPath       string
+	pkiSetupVaultJSONPath string
+	resourceDirPath       string
+}
+
+var pkiSetupExector = newPkiSetupRunner()
+
 // Generate option....
 func Generate() func(*PkiInitOption) (exitCode, error) {
 	return func(pkiInitOpton *PkiInitOption) (exitCode, error) {
@@ -73,12 +91,7 @@ func generatePkis() (exitCode, error) {
 		"  scratchPath: ", scratchPath,
 		"  resourceDirPath: ", resourceDirPath)
 
-	if _, err := exec.LookPath(pkiSetupRunPath); err != nil {
-		return exitWithError, err
-	}
-
-	if _, err := os.Stat(pkiSetupVaultJSONPath); os.IsNotExist(err) {
-		log.Println("Vault JSON file for pkisetup not exists in ", pkiSetupVaultJSONPath)
+	if err := pkiSetupExector.checkRunConfig(); err != nil {
 		return exitWithError, err
 	}
 
@@ -96,17 +109,50 @@ func generatePkis() (exitCode, error) {
 		return exitWithError, err
 	}
 
-	cmd := exec.Command(pkiSetupRunPath, "--config="+pkiSetupVaultJSONPath, "--confdir="+resourceDirPath)
-	result, execErr := cmd.CombinedOutput()
-	log.Printf("result of pkisetup: %s\n", string(result))
-	if execErr != nil {
-		return exitWithError, execErr
+	pkiSetupExector.setRunConfig(pkiSetupRunConfig{
+		pkiSetupRunPath:       pkiSetupRunPath,
+		pkiSetupVaultJSONPath: pkiSetupVaultJSONPath,
+		resourceDirPath:       resourceDirPath,
+	})
+
+	if err := pkiSetupExector.call(); err != nil {
+		return exitWithError, err
 	}
 
-	return rearrangePkiByServices(baseWorkingDir, pkiSetupVaultJSONPath)
+	return rearrangePkiByServices(pkiSetupVaultJSONPath)
 }
 
-func rearrangePkiByServices(baseWorkingDir, pkiSetupVaultJSONPath string) (exitCode, error) {
+func newPkiSetupRunner() pkiSetupRunnable {
+	return &pkiSetupRunner{}
+}
+
+func (exect *pkiSetupRunner) setRunConfig(runConfig pkiSetupRunConfig) {
+	exect.runConfig = runConfig
+}
+
+func (exect *pkiSetupRunner) checkRunConfig() error {
+	if _, err := exec.LookPath(exect.runConfig.pkiSetupRunPath); err != nil {
+		return err
+	}
+
+	if _, err := os.Stat(exect.runConfig.pkiSetupVaultJSONPath); os.IsNotExist(err) {
+		log.Println("Vault JSON file for pkisetup not exists in ", exect.runConfig.pkiSetupVaultJSONPath)
+		return err
+	}
+
+	return nil
+}
+
+func (exect *pkiSetupRunner) call() error {
+	cmd := exec.Command(exect.runConfig.pkiSetupRunPath,
+		"--config="+exect.runConfig.pkiSetupVaultJSONPath,
+		"--confdir="+exect.runConfig.resourceDirPath)
+	result, execErr := cmd.CombinedOutput()
+	log.Printf("result of pkisetup: %s\n", string(result))
+	return execErr
+}
+
+func rearrangePkiByServices(pkiSetupVaultJSONPath string) (exitCode, error) {
 	reader := cert.NewX509ConfigReader(pkiSetupVaultJSONPath)
 
 	if reader == nil {
