@@ -40,9 +40,9 @@ type WritableInfo struct {
 type KongUrlInfo struct {
 	Server             string
 	AdminPort          int
-	AdminPortSSL       string
-	ApplicationPort    string
-	ApplicationPortSSL string
+	AdminPortSSL       int
+	ApplicationPort    int
+	ApplicationPortSSL int
 }
 
 func (k KongUrlInfo) GetProxyBaseURL() string {

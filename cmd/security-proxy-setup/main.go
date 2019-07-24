@@ -43,12 +43,12 @@ func main() {
 	var userTobeDeleted string
 	var useRegistry bool
 
-	flag.BoolVar(&insecureSkipVerify,"insureskipverify", true, "skip server side SSL verification, mainly for self-signed cert")
-	flag.BoolVar(&initNeeded,"init", false, "run init procedure for security service.")
-	flag.BoolVar(&resetNeeded,"reset", false, "reset reverse proxy by removing all services/routes/consumers")
-	flag.StringVar(&userTobeCreated,"useradd", "", "user that needs to be added to consume the edgex services")
-	flag.StringVar(&userofGroup,"group", "user", "group that the user belongs to. By default it is in user group")
-	flag.StringVar(&userTobeDeleted,"userdel", "", "user that needs to be deleted from the edgex services")
+	flag.BoolVar(&insecureSkipVerify, "insureskipverify", true, "skip server side SSL verification, mainly for self-signed cert")
+	flag.BoolVar(&initNeeded, "init", false, "run init procedure for security service.")
+	flag.BoolVar(&resetNeeded, "reset", false, "reset reverse proxy by removing all services/routes/consumers")
+	flag.StringVar(&userTobeCreated, "useradd", "", "user that needs to be added to consume the edgex services")
+	flag.StringVar(&userofGroup, "group", "user", "group that the user belongs to. By default it is in user group")
+	flag.StringVar(&userTobeDeleted, "userdel", "", "user that needs to be deleted from the edgex services")
 	flag.BoolVar(&useRegistry, "registry", false, "Indicates the service should use registry service.")
 	flag.BoolVar(&useRegistry, "r", false, "Indicates the service should use registry service.")
 	flag.StringVar(&useProfile, "profile", "", "Specify a profile other than default.")

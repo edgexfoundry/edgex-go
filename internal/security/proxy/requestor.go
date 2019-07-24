@@ -32,4 +32,3 @@ func NewRequestor(skipVerify bool) Requestor {
 	}
 	return &http.Client{Timeout: 10 * time.Second, Transport: tr}
 }
-

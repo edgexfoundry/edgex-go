@@ -20,10 +20,15 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
+	"strconv"
 	"testing"
+
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
 
 func TestCheckServiceStatus(t *testing.T) {
+	LoggingClient = logger.MockLogger{}
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		if r.Method != "GET" {
@@ -36,8 +41,7 @@ func TestCheckServiceStatus(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	r := createRequestorMockHttpOK()
-	svc := NewService(r)
+	svc := NewService(&http.Client{})
 	err := svc.checkServiceStatus(ts.URL)
 	if err != nil {
 		t.Errorf("failed to check service status")
@@ -46,6 +50,7 @@ func TestCheckServiceStatus(t *testing.T) {
 }
 
 func TestInitKongService(t *testing.T) {
+	LoggingClient = logger.MockLogger{}
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		if r.Method != "POST" {
@@ -58,10 +63,25 @@ func TestInitKongService(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	r := createRequestorMockHttpOK()
+	parsed, err := url.Parse(ts.URL)
+	if err != nil {
+		t.Errorf("unable to parse test server URL %s", ts.URL)
+		return
+	}
+	port, err := strconv.Atoi(parsed.Port())
+	if err != nil {
+		t.Errorf("parsed port number cannot be converted to int %s", parsed.Port())
+		return
+	}
+	Configuration = &ConfigurationStruct{}
+	Configuration.KongURL = KongUrlInfo{
+		Server:    parsed.Hostname(),
+		AdminPort: port,
+	}
+
 	tk := &KongService{"test", "test", 80, "http"}
-	svc := NewService(r)
-	err := svc.initKongService(tk)
+	svc := NewService(&http.Client{})
+	err = svc.initKongService(tk)
 	if err != nil {
 		t.Errorf("failed to initialize service")
 		t.Errorf(err.Error())
@@ -69,6 +89,7 @@ func TestInitKongService(t *testing.T) {
 }
 
 func TestInitKongRoutes(t *testing.T) {
+	LoggingClient = logger.MockLogger{}
 	path := "test"
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -83,10 +104,25 @@ func TestInitKongRoutes(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	r := createRequestorMockHttpOK()
-	svc := NewService(r)
+	parsed, err := url.Parse(ts.URL)
+	if err != nil {
+		t.Errorf("unable to parse test server URL %s", ts.URL)
+		return
+	}
+	port, err := strconv.Atoi(parsed.Port())
+	if err != nil {
+		t.Errorf("parsed port number cannot be converted to int %s", parsed.Port())
+		return
+	}
+	Configuration = &ConfigurationStruct{}
+	Configuration.KongURL = KongUrlInfo{
+		Server:    parsed.Hostname(),
+		AdminPort: port,
+	}
+
+	svc := NewService(&http.Client{})
 	kr := &KongRoute{}
-	err := svc.initKongRoutes(kr, path)
+	err = svc.initKongRoutes(kr, path)
 	if err != nil {
 		t.Errorf("failed to initialize route")
 		t.Errorf(err.Error())
@@ -94,6 +130,7 @@ func TestInitKongRoutes(t *testing.T) {
 }
 
 func TestInitACL(t *testing.T) {
+	LoggingClient = logger.MockLogger{}
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		if r.Method != "POST" {
@@ -106,10 +143,25 @@ func TestInitACL(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	r := createRequestorMockHttpOK()
-	svc := NewService(r)
+	parsed, err := url.Parse(ts.URL)
+	if err != nil {
+		t.Errorf("unable to parse test server URL %s", ts.URL)
+		return
+	}
+	port, err := strconv.Atoi(parsed.Port())
+	if err != nil {
+		t.Errorf("parsed port number cannot be converted to int %s", parsed.Port())
+		return
+	}
+	Configuration = &ConfigurationStruct{}
+	Configuration.KongURL = KongUrlInfo{
+		Server:    parsed.Hostname(),
+		AdminPort: port,
+	}
 
-	err := svc.initACL("test", "testgroup")
+	svc := NewService(&http.Client{})
+
+	err = svc.initACL("test", "testgroup")
 	if err != nil {
 		t.Errorf("failed to initialize acl")
 		t.Errorf(err.Error())
@@ -117,6 +169,7 @@ func TestInitACL(t *testing.T) {
 }
 
 func TestGetSvcIDs(t *testing.T) {
+	LoggingClient = logger.MockLogger{}
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{"data": [ {"id": "test-id-1"}, {"id": "test-id-2"}]}`))
@@ -130,8 +183,23 @@ func TestGetSvcIDs(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	r := createRequestorMockHttpOK()
-	svc := NewService(r)
+	parsed, err := url.Parse(ts.URL)
+	if err != nil {
+		t.Errorf("unable to parse test server URL %s", ts.URL)
+		return
+	}
+	port, err := strconv.Atoi(parsed.Port())
+	if err != nil {
+		t.Errorf("parsed port number cannot be converted to int %s", parsed.Port())
+		return
+	}
+	Configuration = &ConfigurationStruct{}
+	Configuration.KongURL = KongUrlInfo{
+		Server:    parsed.Hostname(),
+		AdminPort: port,
+	}
+
+	svc := NewService(&http.Client{})
 
 	coll, err := svc.getSvcIDs("test")
 	if err != nil {

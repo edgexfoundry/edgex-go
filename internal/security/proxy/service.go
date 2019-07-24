@@ -144,7 +144,7 @@ func (s *Service) loadCert() error {
 	body := &CertInfo{
 		Cert: cp.Cert,
 		Key:  cp.Key,
-		Snis: strings.Split(Configuration.SecretService.SNIS,","),
+		Snis: strings.Split(Configuration.SecretService.SNIS, ","),
 	}
 
 	LoggingClient.Info("trying to upload cert to proxy server")

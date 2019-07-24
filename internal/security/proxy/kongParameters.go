@@ -21,7 +21,7 @@ import jwt "github.com/dgrijalva/jwt-go"
 type KongService struct {
 	Name     string `url:"name,omitempty"`
 	Host     string `url:"host,omitempty"`
-	Port     int `url:"port,omitempty"`
+	Port     int    `url:"port,omitempty"`
 	Protocol string `url:"protocol,omitempty"`
 }
 

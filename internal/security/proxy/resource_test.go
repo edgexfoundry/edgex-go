@@ -19,8 +19,12 @@ package proxy
 import (
 	"net/http"
 	"net/http/httptest"
+	"net/url"
+	"strconv"
 	"testing"
 	"time"
+
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
 
 type testDeleteRequestor struct {
@@ -40,6 +44,7 @@ func (tr *testDeleteRequestor) GetHTTPClient() *http.Client {
 	return &http.Client{Timeout: 10 * time.Second}
 }
 func TestDelete(t *testing.T) {
+	LoggingClient = logger.MockLogger{}
 	path := "services"
 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -54,9 +59,24 @@ func TestDelete(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	r := createRequestorMockHttpOK()
-	rc := NewResource("1", r)
-	err := rc.Remove(path)
+	parsed, err := url.Parse(ts.URL)
+	if err != nil {
+		t.Errorf("unable to parse test server URL %s", ts.URL)
+		return
+	}
+	port, err := strconv.Atoi(parsed.Port())
+	if err != nil {
+		t.Errorf("parsed port number cannot be converted to int %s", parsed.Port())
+		return
+	}
+	Configuration = &ConfigurationStruct{}
+	Configuration.KongURL = KongUrlInfo{
+		Server:    parsed.Hostname(),
+		AdminPort: port,
+	}
+
+	rc := NewResource("1", &http.Client{})
+	err = rc.Remove(path)
 	if err != nil {
 		t.Errorf("failed to delete resource")
 		t.Errorf(err.Error())
