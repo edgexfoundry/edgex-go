@@ -49,7 +49,17 @@ func Retry(useRegistry bool, useProfile string, timeout int, wait *sync.WaitGrou
 				LoggingClient = logger.NewClient(clients.CoreDataServiceKey, Configuration.Logging.EnableRemote, logTarget, Configuration.Writable.LogLevel)
 			}
 		}
+		// This seems a bit artificial here due to lack of additional service requirements
+		// but conforms to the pattern found in other edgex-go services.
+		if Configuration != nil {
+			break
+		}
+		time.Sleep(time.Second * time.Duration(1))
 	}
+	close(ch)
+	wait.Done()
+
+	return
 }
 
 func initializeConfiguration(useRegistry bool, useProfile string) (*ConfigurationStruct, error) {

@@ -26,10 +26,10 @@ File = './logs/security-proxy-setup.log'
 
 [KongURL]
 Server = "kong"
-AdminPort = "8001"
-AdminPortSSL = "8444"
-ApplicationPort = "8000"
-ApplicationPortSSL = "8443"
+AdminPort = 8001
+AdminPortSSL = 8444
+ApplicationPort = 8000
+ApplicationPortSSL = 8443
 
 [KongAuth]
 Name = "oauth2"
@@ -43,7 +43,7 @@ WhiteList = "admin"
 
 [SecretService]
 Server = "edgex-vault"
-Port = "8200"
+Port = 8200
 HealthCheckPath = "v1/sys/health"
 CertPath = "v1/secret/edgex/pki/tls/edgex-kong"
 TokenPath = "/vault/config/assets/resp-init.json"

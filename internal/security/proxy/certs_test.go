@@ -20,42 +20,17 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
+	"strconv"
 	"testing"
 
 	"github.com/edgexfoundry/edgex-go/internal/security/proxy/mocks"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/stretchr/testify/mock"
 )
 
-type testRequestor struct {
-	SecretSvcBaseURL string
-}
-
-func (tr *testRequestor) GetProxyBaseURL() string {
-	return "test"
-}
-
-func (tr *testRequestor) GetSecretSvcBaseURL() string {
-	return tr.SecretSvcBaseURL
-}
-
-func (tr *testRequestor) GetHTTPClient() *http.Client {
-	return &http.Client{}
-}
-
-type testCertCfg struct {
-	CertPath string
-}
-
-func (tc *testCertCfg) GetCertPath() string {
-	return tc.CertPath
-}
-
-func (tc *testCertCfg) GetTokenPath() string {
-	return "test"
-}
-
 func createRequestorMockHttpOK() Requestor {
-	response := &http.Response{StatusCode:http.StatusOK}
+	response := &http.Response{StatusCode: http.StatusOK}
 	req := &mocks.Requestor{}
 	req.On("Do", mock.Anything).Return(response)
 	return req
@@ -87,9 +62,11 @@ func TestValidate(t *testing.T) {
 }
 
 func TestRetrieve(t *testing.T) {
+	LoggingClient = logger.MockLogger{}
+
 	certPath := "testCertPath"
 	token := "token"
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	ts := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{"data": {"cert": "test-certificate", "key": "test-private-key"}}`))
 		if r.Method != "GET" {
@@ -106,8 +83,23 @@ func TestRetrieve(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	//r := createRequestorMockHttpOK()
-	cs := NewCerts(&http.Client{}, ts.URL, certPath)
+	parsed, err := url.Parse(ts.URL)
+	if err != nil {
+		t.Errorf("unable to parse test server URL %s", ts.URL)
+		return
+	}
+	port, err := strconv.Atoi(parsed.Port())
+	if err != nil {
+		t.Errorf("parsed port number cannot be converted to int %s", parsed.Port())
+		return
+	}
+	Configuration = &ConfigurationStruct{}
+	Configuration.SecretService = SecretServiceInfo{
+		Server: parsed.Hostname(),
+		Port:   port,
+	}
+
+	cs := NewCerts(NewRequestor(true), ts.URL, certPath)
 	cp, err := cs.retrieve(token)
 	if err != nil {
 		t.Errorf("failed to retrieve cert pair")
@@ -116,4 +108,5 @@ func TestRetrieve(t *testing.T) {
 	if cp.Cert != "test-certificate" || cp.Key != "test-private-key" {
 		t.Errorf("failed to parse certificate key pair")
 	}
+	Configuration = &ConfigurationStruct{}
 }

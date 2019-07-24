@@ -201,7 +201,7 @@ func (c *Consumer) createOAuth2Token() (string, error) {
 
 		u := &url.URL{
 			Scheme: "https",
-			Host:   fmt.Sprintf("%s:%s", Configuration.KongURL.Server, Configuration.KongURL.ApplicationPortSSL),
+			Host:   fmt.Sprintf("%s:%v", Configuration.KongURL.Server, Configuration.KongURL.ApplicationPortSSL),
 			Path:   "/",
 		}
 

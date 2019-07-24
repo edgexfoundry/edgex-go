@@ -25,8 +25,8 @@ import (
 )
 
 type Resource struct {
-	name    string
-	client  Requestor
+	name   string
+	client Requestor
 }
 
 func NewResource(name string, r Requestor) Resource {
