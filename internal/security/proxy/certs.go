@@ -78,7 +78,7 @@ func (cs *Certs) getSecret(filename string) (string, error) {
 
 func (cs *Certs) retrieve(t string) (*CertPair, error) {
 	s := sling.New().Set(VaultToken, t)
-	req, err := s.New().Base(Configuration.SecretService.GetSecretSvcBaseURL()).Get(cs.tokenPath).Request()
+	req, err := s.New().Base(Configuration.SecretService.GetSecretSvcBaseURL()).Get(cs.certPath).Request()
 	if err != nil {
 		e := fmt.Sprintf("failed to retrieve certificate on path %s with error %s", cs.certPath, err.Error())
 		LoggingClient.Error(e)
