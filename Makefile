@@ -157,8 +157,8 @@ docker_sys_mgmt_agent:
 	docker build \
 		-f cmd/sys-mgmt-agent/Dockerfile \
 		--label "git_sha=$(GIT_SHA)" \
-		-t edgexfoundry/sys-mgmt-agent-go:$(GIT_SHA) \
-		-t edgexfoundry/sys-mgmt-agent-go:$(DOCKER_TAG) \
+		-t edgexfoundry/docker-sys-mgmt-agent-go:$(GIT_SHA) \
+		-t edgexfoundry/docker-sys-mgmt-agent-go:$(DOCKER_TAG) \
 		.
 
 docker_security_secrets_setup:
