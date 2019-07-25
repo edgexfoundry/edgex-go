@@ -32,5 +32,7 @@ const (
 	DEVICEID       = "deviceid"
 	ID             = "id"
 	NAME           = "name"
+	NAMES          = "names"
 	DEVICE         = "device"
+	USAGE          = "usage"
 )

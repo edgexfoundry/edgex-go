@@ -19,18 +19,26 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
+	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/gorilla/mux"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
+	"github.com/edgexfoundry/edgex-go/internal/core/data/operators/reading"
+	"github.com/edgexfoundry/edgex-go/internal/core/data/operators/value_descriptor"
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation/models"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
 )
+
+// ValueDescriptorUsageReadLimit limit of readings obtained for a given value descriptor to determine if the value
+// descriptor is in use.
+var ValueDescriptorUsageReadLimit = 1
 
 func LoadRestRoutes() *mux.Router {
 	r := mux.NewRouter()
@@ -76,6 +84,7 @@ func LoadRestRoutes() *mux.Router {
 	// Value descriptors
 	r.HandleFunc(clients.ApiValueDescriptorRoute, valueDescriptorHandler).Methods(http.MethodGet, http.MethodPut, http.MethodPost)
 	vd := r.PathPrefix(clients.ApiValueDescriptorRoute).Subrouter()
+	vd.HandleFunc("/"+USAGE, restValueDescriptorsUsageHandler).Methods(http.MethodGet)
 	vd.HandleFunc("/"+ID+"/{"+ID+"}", deleteValueDescriptorByIdHandler).Methods(http.MethodDelete)
 	vd.HandleFunc("/"+NAME+"/{"+NAME+"}", valueDescriptorByNameHandler).Methods(http.MethodGet, http.MethodDelete)
 	vd.HandleFunc("/{"+ID+"}", valueDescriptorByIdHandler).Methods(http.MethodGet)
@@ -1477,6 +1486,65 @@ func valueDescriptorByDeviceIdHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	pkg.Encode(vdList, w, LoggingClient)
+}
+
+// restValueDescriptorsUsageHandler checks if value descriptors are currently being used.
+// This functionality is useful for determining if a value descriptor can be updated, or deleted.
+// This functionality does not provide any guarantee that the value descriptor will not be in use in the near future.
+// Any functionality using the check to perform updates or deletes is responsible for handling any race conditions which
+// may occur.
+// Returns a map[string]bool where the key is the ValueDescriptor Name and the value is a bool stating if the
+// ValueDescriptor is currently in use.
+func restValueDescriptorsUsageHandler(w http.ResponseWriter, r *http.Request) {
+	qparams, err := url.ParseQuery(r.URL.RawQuery)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	namesFilter := qparams[NAMES]
+	var vds []contract.ValueDescriptor
+	var op value_descriptor.GetValueDescriptorsExecutor
+	if len(namesFilter) <= 0 {
+		// We are not filtering so get all the value descriptors
+		op = value_descriptor.NewGetValueDescriptorsExecutor(dbClient, LoggingClient, Configuration.Service)
+	} else {
+		op = value_descriptor.NewGetValueDescriptorsNameExecutor(strings.Split(namesFilter[0], ","), dbClient, LoggingClient, Configuration.Service)
+	}
+
+	vds, err = op.Execute()
+	if err != nil {
+		switch err.(type) {
+		case *errors.ErrLimitExceeded:
+			http.Error(w, err.Error(), http.StatusRequestEntityTooLarge)
+		default:
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+
+		return
+	}
+
+	// Use this data structure so that we can obtain the desired JSON format. Please see RAML for response format
+	// information.
+	resp := make([]map[string]bool, 0)
+	var ops reading.GetReadingsExecutor
+	for _, vd := range vds {
+		ops = reading.NewGetReadingsNameExecutor(vd.Name, ValueDescriptorUsageReadLimit, dbClient, LoggingClient, Configuration.Service)
+		r, err := ops.Execute()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		if len(r) > 0 {
+			resp = append(resp, map[string]bool{vd.Name: true})
+			continue
+		}
+
+		resp = append(resp, map[string]bool{vd.Name: false})
+	}
+
+	pkg.Encode(resp, w, LoggingClient)
 }
 
 func metricsHandler(w http.ResponseWriter, _ *http.Request) {
