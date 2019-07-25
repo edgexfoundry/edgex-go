@@ -66,7 +66,7 @@ SNIS = "edgex-kong"
 		Host = "edgex-core-command"
 		Port = 48082
 
-	[Clients.Notifcations]
+	[Clients.Notifications]
 		Protocol = "http"
 		Host = "edgex-support-notifications"
 		Port = 48060

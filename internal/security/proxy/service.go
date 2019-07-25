@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"strings"
 
@@ -141,12 +142,12 @@ func (s *Service) loadCert() error {
 	if err != nil {
 		return err
 	}
+
 	body := &CertInfo{
 		Cert: cp.Cert,
 		Key:  cp.Key,
 		Snis: strings.Split(Configuration.SecretService.SNIS, ","),
 	}
-
 	LoggingClient.Info("trying to upload cert to proxy server")
 	req, err := sling.New().Base(Configuration.KongURL.GetProxyBaseURL()).Post(CertificatesPath).BodyJSON(body).Request()
 	if err != nil {
@@ -165,7 +166,11 @@ func (s *Service) loadCert() error {
 		LoggingClient.Info("successful to add certificate to the reverse proxy")
 		break
 	default:
-		e := fmt.Sprintf("failed to add certificate with errorcode %d", resp.StatusCode)
+		b, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return err
+		}
+		e := fmt.Sprintf("failed to add certificate with errorcode %d, error %s", resp.StatusCode, string(b))
 		LoggingClient.Error(e)
 		return errors.New(e)
 	}
