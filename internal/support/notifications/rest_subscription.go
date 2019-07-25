@@ -61,8 +61,8 @@ func subscriptionHandler(w http.ResponseWriter, r *http.Request) {
 		for _, c := range s.Channels {
 			if c.Type == "EMAIL" {
 				if !validateEmail(c) {
-					http.Error(w, "Email addresses contains CRLF", http.StatusBadRequest)
-					LoggingClient.Error("Error validating email addresses")
+					http.Error(w, "Email addresses contain CRLF", http.StatusBadRequest)
+					LoggingClient.Error("Email addresses contain CRLF")
 					return
 				}
 			}
@@ -107,8 +107,8 @@ func subscriptionHandler(w http.ResponseWriter, r *http.Request) {
 		for _, c := range s.Channels {
 			if c.Type == "EMAIL" {
 				if !validateEmail(c) {
-					http.Error(w, "Email addresses contains CRLF", http.StatusBadRequest)
-					LoggingClient.Error("Error validating email addresses")
+					http.Error(w, "Email addresses contain CRLF", http.StatusBadRequest)
+					LoggingClient.Error("Email addresses contain CRLF")
 					return
 				}
 			}

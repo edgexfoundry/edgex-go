@@ -160,9 +160,9 @@ func deduceAuth(s SmtpInfo) (mail.Auth, error) {
 // requirement of ability to set-reset the InsecureSkipVerify flag.
 //
 // This is using a lot of unexported methods and types from smtp package through exported
-// interfaces, which makes it a little bit trickier to modify. Since the intention for this
-// function is to use it as support function for handling the low level SMTP protocol
-// mechanism, it is not exported.
+// interfaces, which makes it a little bit trickier to modify. Since, the intention for
+// this function is to use it as a support function for handling the low level SMTP
+// protocol mechanism, it is not exported.
 //
 // The addresses in the to parameter are the SMTP RCPT addresses.
 //
