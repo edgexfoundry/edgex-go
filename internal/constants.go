@@ -14,11 +14,12 @@
 package internal
 
 const (
-	BootTimeoutDefault   = 30000
-	ClientMonitorDefault = 15000
-	ConfigFileName       = "configuration.toml"
-	ConfigRegistryStem   = "edgex/core/1.0/"
-	LogDurationKey       = "duration"
+	BootTimeoutDefault           = 30000
+	ClientMonitorDefault         = 15000
+	ConfigFileName               = "configuration.toml"
+	ConfigRegistryStem           = "edgex/core/1.0/"
+	LogDurationKey               = "duration"
+	SecurityProxySetupServiceKey = "edgex-security-proxy-setup"
 )
 
 const (
