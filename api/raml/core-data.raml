@@ -851,6 +851,30 @@ schemas:
                 description: request is invalid or unparseable
             "500": 
                 description: for unknown or unanticipated issues.
+/valuedescriptor/usage:
+    displayName: Value Descriptor Usage
+    description: Determines if value descriptors are currently in use. This API does not provide any guarantee that the value descriptor will not be in use in the near future and extra measure should be taken to ensure no race conditions exist.
+    get:
+      description: Get a list of value descripors and usage state. True if the value descriptor is in use and should not be modified. Otherwise, false.
+      responses:
+        "200":
+          description: list of ValueDescriptors and thier current usage state
+          body:
+            application/json:
+              example:  '[{"abc":true}, {"def":true}, {"ghi":false}]'
+        "400":
+          description: Malformed query parameters
+        "413":
+          description: the maximum number of results has been exceeded
+        "500":
+          description: for unknown or unanticipated issues
+      queryParameters:
+        names:
+          displayName: Value Descriptor Names
+          description: A comma separated list of value descriptor names for which to perform the usage check.
+          type: string
+          example: temperature,humidity,wind,rain
+          required: false
 /ping: 
     displayName: Ping Resource
     description: example - http://localhost:48080/api/v1/ping
