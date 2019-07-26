@@ -19,8 +19,6 @@ package proxy
 import (
 	"net/http"
 	"net/http/httptest"
-	"net/url"
-	"strconv"
 	"testing"
 	"time"
 
@@ -83,19 +81,13 @@ func TestCreate(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	parsed, err := url.Parse(ts.URL)
+	host, port, err := parseHostAndPort(ts, t)
 	if err != nil {
-		t.Errorf("unable to parse test server URL %s", ts.URL)
-		return
-	}
-	port, err := strconv.Atoi(parsed.Port())
-	if err != nil {
-		t.Errorf("parsed port number cannot be converted to int %s", parsed.Port())
 		return
 	}
 	Configuration = &ConfigurationStruct{}
 	Configuration.KongURL = KongUrlInfo{
-		Server:    parsed.Hostname(),
+		Server:    host,
 		AdminPort: port,
 	}
 
@@ -122,19 +114,14 @@ func TestAssociateWithGroup(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	parsed, err := url.Parse(ts.URL)
+	host, port, err := parseHostAndPort(ts, t)
 	if err != nil {
-		t.Errorf("unable to parse test server URL %s", ts.URL)
 		return
 	}
-	port, err := strconv.Atoi(parsed.Port())
-	if err != nil {
-		t.Errorf("parsed port number cannot be converted to int %s", parsed.Port())
-		return
-	}
+
 	Configuration = &ConfigurationStruct{}
 	Configuration.KongURL = KongUrlInfo{
-		Server:    parsed.Hostname(),
+		Server:    host,
 		AdminPort: port,
 	}
 
@@ -162,19 +149,14 @@ func TestCreateJWTToken(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	parsed, err := url.Parse(ts.URL)
+	host, port, err := parseHostAndPort(ts, t)
 	if err != nil {
-		t.Errorf("unable to parse test server URL %s", ts.URL)
 		return
 	}
-	port, err := strconv.Atoi(parsed.Port())
-	if err != nil {
-		t.Errorf("parsed port number cannot be converted to int %s", parsed.Port())
-		return
-	}
+
 	Configuration = &ConfigurationStruct{}
 	Configuration.KongURL = KongUrlInfo{
-		Server:    parsed.Hostname(),
+		Server:    host,
 		AdminPort: port,
 	}
 

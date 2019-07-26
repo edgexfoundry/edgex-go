@@ -17,20 +17,84 @@
 package proxy
 
 import (
-	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"strconv"
+	"strings"
 	"testing"
 
+	"github.com/BurntSushi/toml"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
+
+type mockCertificateLoader struct{}
+
+func (m mockCertificateLoader) Load() (*CertPair, error) {
+	return &CertPair{"test-certificate", "test-private-key"}, nil
+}
+
+func TestInit(t *testing.T) {
+	LoggingClient = logger.MockLogger{}
+	fileName := "./testdata/configuration.toml"
+	contents, err := ioutil.ReadFile(fileName)
+	if err != nil {
+		t.Errorf("could not load configuration file (%s): %s", fileName, err.Error())
+		return
+	}
+
+	Configuration = &ConfigurationStruct{}
+	err = toml.Unmarshal(contents, Configuration)
+	if err != nil {
+		t.Errorf("unable to parse configuration file (%s): %s", fileName, err.Error())
+		return
+	}
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+
+		if !strings.Contains(r.URL.EscapedPath(), ServicesPath) &&
+			!strings.Contains(r.URL.EscapedPath(), CertificatesPath) &&
+			!strings.Contains(r.URL.EscapedPath(), PluginsPath) {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+
+		_, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer ts.Close()
+
+	host, port, err := parseHostAndPort(ts, t)
+	if err != nil {
+		return
+	}
+	Configuration.KongURL = KongUrlInfo{
+		Server:    host,
+		AdminPort: port,
+	}
+
+	mock := mockCertificateLoader{}
+	service := NewService(NewRequestor(true))
+	err = service.Init(mock)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+}
 
 func TestCheckServiceStatus(t *testing.T) {
 	LoggingClient = logger.MockLogger{}
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != "GET" {
+		if r.Method != http.MethodGet {
 			w.WriteHeader(http.StatusMethodNotAllowed)
 			return
 		}
@@ -71,119 +135,266 @@ func TestCheckServiceStatus(t *testing.T) {
 func TestInitKongService(t *testing.T) {
 	LoggingClient = logger.MockLogger{}
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		if r.Method != "POST" {
-			t.Errorf("expected POST request, got %s instead", r.Method)
+		if r.Method != http.MethodPost {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
 		}
 
 		if r.URL.EscapedPath() != "/services/" {
-			t.Errorf("expected request to /services, got %s instead", r.URL.EscapedPath())
+			w.WriteHeader(http.StatusNotFound)
+			return
 		}
+
+		body, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		recvd := string(body)
+		if recvd == "host=test&name=conflict&port=80&protocol=http" {
+			w.WriteHeader(http.StatusConflict)
+			return
+		}
+		if recvd != "host=test&name=test&port=80&protocol=http" {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
 	}))
 	defer ts.Close()
 
-	parsed, err := url.Parse(ts.URL)
+	host, port, err := parseHostAndPort(ts, t)
 	if err != nil {
-		t.Errorf("unable to parse test server URL %s", ts.URL)
 		return
 	}
-	port, err := strconv.Atoi(parsed.Port())
-	if err != nil {
-		t.Errorf("parsed port number cannot be converted to int %s", parsed.Port())
-		return
-	}
-	Configuration = &ConfigurationStruct{}
-	Configuration.KongURL = KongUrlInfo{
-		Server:    parsed.Hostname(),
+	cfgOK := ConfigurationStruct{}
+	cfgOK.KongURL = KongUrlInfo{
+		Server:    host,
 		AdminPort: port,
 	}
 
-	tk := &KongService{"test", "test", 80, "http"}
-	svc := NewService(&http.Client{})
-	err = svc.initKongService(tk)
-	if err != nil {
-		t.Errorf("failed to initialize service")
-		t.Errorf(err.Error())
+	cfgInvalidPort := cfgOK
+	cfgInvalidPort.KongURL.AdminPort = -1
+
+	cfgInvalidHost := cfgOK
+	cfgInvalidHost.KongURL.Server = ""
+
+	tests := []struct {
+		name        string
+		config      ConfigurationStruct
+		serviceId   string
+		expectError bool
+	}{
+		{"serviceOK", cfgOK, "test", false},
+		{"service409", cfgOK, "conflict", false},
+		{"InvalidPort", cfgInvalidPort, "test", true},
+		{"InvalidService", cfgOK, "invalid", true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			Configuration = &tt.config
+			tk := &KongService{tt.serviceId, "test", 80, "http"}
+			svc := NewService(&http.Client{})
+			err = svc.initKongService(tk)
+
+			if err != nil && !tt.expectError {
+				t.Error(err)
+			}
+
+			if err == nil && tt.expectError {
+				t.Error("error was expected, none occurred")
+			}
+		})
 	}
 }
 
 func TestInitKongRoutes(t *testing.T) {
 	LoggingClient = logger.MockLogger{}
-	path := "test"
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		if r.Method != "POST" {
-			t.Errorf("expected POST request, got %s instead", r.Method)
+		if r.Method != http.MethodPost {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
 		}
 
-		relativePath := fmt.Sprintf("/services/%s/routes", path)
+		relativePath := "/services/test/routes"
 		if r.URL.EscapedPath() != relativePath {
-			t.Errorf("expected request to /services, got %s instead", r.URL.EscapedPath())
+			w.WriteHeader(http.StatusBadRequest)
+			return
 		}
+		w.WriteHeader(http.StatusOK)
 	}))
 	defer ts.Close()
 
-	parsed, err := url.Parse(ts.URL)
+	host, port, err := parseHostAndPort(ts, t)
 	if err != nil {
-		t.Errorf("unable to parse test server URL %s", ts.URL)
 		return
 	}
-	port, err := strconv.Atoi(parsed.Port())
-	if err != nil {
-		t.Errorf("parsed port number cannot be converted to int %s", parsed.Port())
-		return
-	}
-	Configuration = &ConfigurationStruct{}
-	Configuration.KongURL = KongUrlInfo{
-		Server:    parsed.Hostname(),
+
+	cfgOK := ConfigurationStruct{}
+	cfgOK.KongURL = KongUrlInfo{
+		Server:    host,
 		AdminPort: port,
 	}
 
-	svc := NewService(&http.Client{})
-	kr := &KongRoute{}
-	err = svc.initKongRoutes(kr, path)
-	if err != nil {
-		t.Errorf("failed to initialize route")
-		t.Errorf(err.Error())
+	cfgInvalidPort := cfgOK
+	cfgInvalidPort.KongURL.AdminPort = -1
+
+	tests := []struct {
+		name        string
+		config      ConfigurationStruct
+		path        string
+		expectError bool
+	}{
+		{"routeOK", cfgOK, "test", false},
+		{"InvalidRoute", cfgOK, "invalid", true},
+		{"InvalidPort", cfgInvalidPort, "test", true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			Configuration = &tt.config
+			svc := NewService(&http.Client{})
+			err = svc.initKongRoutes(&KongRoute{}, tt.path)
+			if err != nil && !tt.expectError {
+				t.Error(err)
+			}
+
+			if err == nil && tt.expectError {
+				t.Error("error was expected, none occurred")
+			}
+		})
 	}
 }
 
 func TestInitACL(t *testing.T) {
 	LoggingClient = logger.MockLogger{}
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		if r.Method != "POST" {
-			t.Errorf("expected POST request, got %s instead", r.Method)
+		if r.Method != http.MethodPost {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
 		}
 
-		if r.URL.EscapedPath() != "/plugins/" {
-			t.Errorf("expected request to /plugins/, got %s instead", r.URL.EscapedPath())
+		body, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		recvd := string(body)
+		if recvd == "config.whitelist=testgroup&name=conflict" {
+			w.WriteHeader(http.StatusConflict)
+			return
+		}
+		if recvd != "config.whitelist=testgroup&name=test" {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer ts.Close()
+
+	host, port, err := parseHostAndPort(ts, t)
+	if err != nil {
+		return
+	}
+
+	cfgOK := ConfigurationStruct{}
+	cfgOK.KongURL = KongUrlInfo{
+		Server:    host,
+		AdminPort: port,
+	}
+
+	cfgInvalidPort := cfgOK
+	cfgInvalidPort.KongURL.AdminPort = -1
+
+	tests := []struct {
+		name        string
+		config      ConfigurationStruct
+		aclName     string
+		whitelist   string
+		expectError bool
+	}{
+		{"aclOK", cfgOK, "test", "testgroup", false},
+		{"aclConflict", cfgOK, "conflict", "testgroup", false},
+		{"aclInvalid", cfgOK, "invalid", "testgroup", true},
+		{"InvalidPort", cfgInvalidPort, "test", "testgroup", true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			Configuration = &tt.config
+			svc := NewService(&http.Client{})
+			err = svc.initACL(tt.aclName, tt.whitelist)
+			if err != nil && !tt.expectError {
+				t.Error(err)
+			}
+
+			if err == nil && tt.expectError {
+				t.Error("error was expected, none occurred")
+			}
+		})
+	}
+}
+
+func TestResetProxy(t *testing.T) {
+	LoggingClient = logger.MockLogger{}
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		if !strings.Contains(r.URL.EscapedPath(), ServicesPath) &&
+			!strings.Contains(r.URL.EscapedPath(), CertificatesPath) &&
+			!strings.Contains(r.URL.EscapedPath(), PluginsPath) &&
+			!strings.Contains(r.URL.EscapedPath(), RoutesPath) &&
+			!strings.Contains(r.URL.EscapedPath(), ConsumersPath) {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+
+		if r.Method == http.MethodGet {
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(`{"data": [ {"id": "test-id-1"}, {"id": "test-id-2"}]}`))
+		} else if r.Method != http.MethodDelete {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
 		}
 	}))
 	defer ts.Close()
 
-	parsed, err := url.Parse(ts.URL)
+	host, port, err := parseHostAndPort(ts, t)
 	if err != nil {
-		t.Errorf("unable to parse test server URL %s", ts.URL)
 		return
 	}
-	port, err := strconv.Atoi(parsed.Port())
-	if err != nil {
-		t.Errorf("parsed port number cannot be converted to int %s", parsed.Port())
-		return
-	}
-	Configuration = &ConfigurationStruct{}
-	Configuration.KongURL = KongUrlInfo{
-		Server:    parsed.Hostname(),
+
+	cfgOK := ConfigurationStruct{}
+	cfgOK.KongURL = KongUrlInfo{
+		Server:    host,
 		AdminPort: port,
 	}
 
-	svc := NewService(&http.Client{})
+	cfgWrongPort := cfgOK
+	cfgWrongPort.KongURL.AdminPort = -1
 
-	err = svc.initACL("test", "testgroup")
-	if err != nil {
-		t.Errorf("failed to initialize acl")
-		t.Errorf(err.Error())
+	tests := []struct {
+		name        string
+		config      ConfigurationStruct
+		expectError bool
+	}{
+		{"resetOK", cfgOK, false},
+		{"InvalidPort", cfgWrongPort, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			Configuration = &tt.config
+			svc := NewService(&http.Client{})
+			err := svc.ResetProxy()
+			if err != nil && !tt.expectError {
+				t.Error(err)
+			}
+
+			if err == nil && tt.expectError {
+				t.Error("error was expected, none occurred")
+			}
+		})
 	}
 }
 
@@ -191,7 +402,7 @@ func TestGetSvcIDs(t *testing.T) {
 	LoggingClient = logger.MockLogger{}
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		if r.Method != "GET" {
+		if r.Method != http.MethodGet {
 			w.WriteHeader(http.StatusMethodNotAllowed)
 			return
 		}
@@ -211,20 +422,14 @@ func TestGetSvcIDs(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	parsed, err := url.Parse(ts.URL)
+	host, port, err := parseHostAndPort(ts, t)
 	if err != nil {
-		t.Errorf("unable to parse test server URL %s", ts.URL)
-		return
-	}
-	port, err := strconv.Atoi(parsed.Port())
-	if err != nil {
-		t.Errorf("parsed port number cannot be converted to int %s", parsed.Port())
 		return
 	}
 
 	cfgOK := ConfigurationStruct{}
 	cfgOK.KongURL = KongUrlInfo{
-		Server:    parsed.Hostname(),
+		Server:    host,
 		AdminPort: port,
 	}
 
@@ -263,4 +468,75 @@ func TestGetSvcIDs(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestInitJWTAuth(t *testing.T) {
+	LoggingClient = logger.MockLogger{}
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		if r.Method != http.MethodPost {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+
+		if !strings.Contains(r.URL.EscapedPath(), PluginsPath) {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer ts.Close()
+
+	host, port, err := parseHostAndPort(ts, t)
+	if err != nil {
+		return
+	}
+
+	cfgOK := ConfigurationStruct{}
+	cfgOK.KongURL = KongUrlInfo{
+		Server:    host,
+		AdminPort: port,
+	}
+
+	cfgWrongPort := cfgOK
+	cfgWrongPort.KongURL.AdminPort = 123
+
+	tests := []struct {
+		name        string
+		config      ConfigurationStruct
+		expectError bool
+	}{
+		{"jwtOK", cfgOK, false},
+		{"InvalidPort", cfgWrongPort, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			Configuration = &tt.config
+			svc := NewService(&http.Client{})
+			err := svc.initJWTAuth()
+			if err != nil && !tt.expectError {
+				t.Error(err)
+			}
+
+			if err == nil && tt.expectError {
+				t.Error("error was expected, none occurred")
+			}
+		})
+	}
+}
+
+func parseHostAndPort(server *httptest.Server, t *testing.T) (host string, port int, err error) {
+	parsed, err := url.Parse(server.URL)
+	if err != nil {
+		t.Errorf("unable to parse test server URL %s", server.URL)
+		return
+	}
+	port, err = strconv.Atoi(parsed.Port())
+	if err != nil {
+		t.Errorf("parsed port number cannot be converted to int %s", parsed.Port())
+		return
+	}
+	host = parsed.Hostname()
+	return
 }

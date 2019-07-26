@@ -20,8 +20,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"net/url"
-	"strconv"
 	"testing"
 
 	"github.com/edgexfoundry/edgex-go/internal/security/proxy/mocks"
@@ -36,10 +34,62 @@ func createRequestorMockHttpOK() Requestor {
 	return req
 }
 
+func TestLoad(t *testing.T) {
+	LoggingClient = logger.MockLogger{}
+	ts := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != "GET" {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"data": {"cert": "test-certificate", "key": "test-private-key"}}`))
+	}))
+	defer ts.Close()
+
+	host, port, err := parseHostAndPort(ts, t)
+	if err != nil {
+		return
+	}
+
+	cfgOK := ConfigurationStruct{}
+	cfgOK.SecretService = SecretServiceInfo{
+		Server: host,
+		Port:   port,
+	}
+
+	validCertPath := "testCertPath"
+	validTokenPath := "testdata/test-resp-init.json"
+
+	tests := []struct {
+		name        string
+		config      ConfigurationStruct
+		certPath    string
+		tokenPath   string
+		expectError bool
+	}{
+		{"LoadOK", cfgOK, validCertPath, validTokenPath, false},
+		{"InvalidTokenPath", cfgOK, validCertPath, "invalid", true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			Configuration = &tt.config
+			cert := NewCertificateLoader(NewRequestor(true), tt.certPath, tt.tokenPath)
+			_, err := cert.Load()
+			if err != nil && !tt.expectError {
+				t.Error(err)
+			}
+
+			if err == nil && tt.expectError {
+				t.Error("error was expected, none occurred")
+			}
+		})
+	}
+}
+
 func TestGetAccessToken(t *testing.T) {
 	r := createRequestorMockHttpOK()
 	path := "testdata/test-resp-init.json"
-	cs := NewCerts(r, "", "")
+	cs := certificate{r, "", ""}
 	s, err := cs.getAccessToken(path)
 	if err != nil {
 		t.Errorf("failed to parse token file")
@@ -53,11 +103,28 @@ func TestGetAccessToken(t *testing.T) {
 
 func TestValidate(t *testing.T) {
 	r := createRequestorMockHttpOK()
-	cp := &CertPair{"private-cert", "private-key"}
-	cs := NewCerts(r, "", "")
-	err := cs.validate(cp)
-	if err != nil {
-		t.Errorf("failed to validate cert collection")
+	pairOK := CertPair{"private-cert", "private-key"}
+	pairBlank := CertPair{}
+	tests := []struct {
+		name        string
+		pair        CertPair
+		expectError bool
+	}{
+		{"PairOK", pairOK, false},
+		{"PairBlank", pairBlank, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cs := certificate{r, "", ""}
+			err := cs.validate(&tt.pair)
+			if err != nil && !tt.expectError {
+				t.Error(err)
+			}
+
+			if err == nil && tt.expectError {
+				t.Error("error was expected, none occurred")
+			}
+		})
 	}
 }
 
@@ -67,46 +134,73 @@ func TestRetrieve(t *testing.T) {
 	certPath := "testCertPath"
 	token := "token"
 	ts := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"data": {"cert": "test-certificate", "key": "test-private-key"}}`))
 		if r.Method != "GET" {
-			t.Errorf("expected GET request, got %s instead", r.Method)
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+
+		if r.URL.EscapedPath() == "/badjson" {
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(`["bad:json}"`))
+			return
 		}
 
 		if r.URL.EscapedPath() != fmt.Sprintf("/%s", certPath) {
-			t.Errorf("expected request to /%s, got %s instead", certPath, r.URL.EscapedPath())
+			w.WriteHeader(http.StatusNotFound)
+			return
 		}
 
 		if r.Header.Get(VaultToken) != token {
-			t.Errorf("expected request header for %s is %s, got %s instead", VaultToken, token, r.Header.Get(VaultToken))
+			w.WriteHeader(http.StatusBadRequest)
+			return
 		}
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"data": {"cert": "test-certificate", "key": "test-private-key"}}`))
 	}))
 	defer ts.Close()
 
-	parsed, err := url.Parse(ts.URL)
+	host, port, err := parseHostAndPort(ts, t)
 	if err != nil {
-		t.Errorf("unable to parse test server URL %s", ts.URL)
 		return
 	}
-	port, err := strconv.Atoi(parsed.Port())
-	if err != nil {
-		t.Errorf("parsed port number cannot be converted to int %s", parsed.Port())
-		return
-	}
-	Configuration = &ConfigurationStruct{}
-	Configuration.SecretService = SecretServiceInfo{
-		Server: parsed.Hostname(),
+
+	cfgOK := ConfigurationStruct{}
+	cfgOK.SecretService = SecretServiceInfo{
+		Server: host,
 		Port:   port,
 	}
 
-	cs := NewCerts(NewRequestor(true), certPath, "")
-	cp, err := cs.retrieve(token)
-	if err != nil {
-		t.Errorf("failed to retrieve cert pair")
-		t.Errorf(err.Error())
+	cfgInvalidPort := cfgOK
+	cfgInvalidPort.SecretService.Port = -1
+
+	tests := []struct {
+		name        string
+		config      ConfigurationStruct
+		certPath    string
+		token       string
+		expectError bool
+	}{
+		{"RetrieveOK", cfgOK, certPath, token, false},
+		{"InvalidPath", cfgOK, "invalid", token, true},
+		{"InvalidJSON", cfgOK, "badjson", token, true},
+		{"InvalidPort", cfgInvalidPort, certPath, token, true},
 	}
-	if cp.Cert != "test-certificate" || cp.Key != "test-private-key" {
-		t.Errorf("failed to parse certificate key pair")
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			Configuration = &tt.config
+			cs := certificate{NewRequestor(true), tt.certPath, ""}
+			cp, err := cs.retrieve(tt.token)
+			if err != nil && !tt.expectError {
+				t.Error(err)
+			}
+
+			if err == nil {
+				if tt.expectError {
+					t.Error("error was expected, none occurred")
+				} else if cp.Cert != "test-certificate" || cp.Key != "test-private-key" {
+					t.Errorf("failed to parse certificate key pair")
+				}
+			}
+		})
 	}
-	Configuration = &ConfigurationStruct{}
 }

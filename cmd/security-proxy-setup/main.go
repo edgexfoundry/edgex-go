@@ -74,7 +74,8 @@ func main() {
 			proxy.LoggingClient.Error("can't run initialization and reset at the same time for security service")
 			return
 		}
-		err = s.Init()
+		cert := proxy.NewCertificateLoader(req, proxy.Configuration.SecretService.CertPath, proxy.Configuration.SecretService.TokenPath)
+		err = s.Init(cert)
 		if err != nil {
 			proxy.LoggingClient.Error(err.Error())
 		}
