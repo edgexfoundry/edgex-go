@@ -60,9 +60,9 @@ func (s *Service) checkServiceStatus(path string) error {
 		LoggingClient.Info(fmt.Sprintf("the service on %s is up successfully", path))
 		break
 	default:
-		e := fmt.Sprintf("the service on %s is down", path)
-		LoggingClient.Error(e)
-		return errors.New(e)
+		err = fmt.Errorf("unexpected http status %v %s", resp.StatusCode, path)
+		LoggingClient.Error(err.Error())
+		return err
 	}
 	return nil
 }
@@ -350,9 +350,9 @@ func (s *Service) getSvcIDs(path string) (DataCollect, error) {
 	req, err := sling.New().Get(Configuration.KongURL.GetProxyBaseURL()).Path(path).Request()
 	resp, err := s.client.Do(req)
 	if err != nil {
-		e := fmt.Sprintf("failed to get list of %s with error %s", path, err.Error())
-		LoggingClient.Error(e)
-		return collection, errors.New(e)
+		err = fmt.Errorf("failed to get list of %s with error %s", path, err.Error())
+		LoggingClient.Error(err.Error())
+		return collection, err
 	}
 	defer resp.Body.Close()
 

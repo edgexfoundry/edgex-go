@@ -22,40 +22,24 @@ import (
 	"net/url"
 	"strconv"
 	"testing"
-	"time"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
 
-type testDeleteRequestor struct {
-	ProxyBaseURL  string
-	SecretBaseURL string
-}
-
-func (tr *testDeleteRequestor) GetProxyBaseURL() string {
-	return tr.ProxyBaseURL
-}
-
-func (tr *testDeleteRequestor) GetSecretSvcBaseURL() string {
-	return tr.SecretBaseURL
-}
-
-func (tr *testDeleteRequestor) GetHTTPClient() *http.Client {
-	return &http.Client{Timeout: 10 * time.Second}
-}
 func TestDelete(t *testing.T) {
 	LoggingClient = logger.MockLogger{}
 	path := "services"
 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
 		if r.Method != "DELETE" {
 			t.Errorf("expected DELETE request, got %s instead", r.Method)
 		}
 
 		if r.URL.EscapedPath() != "/1" {
-			t.Errorf("expected request to /1, got %s instead", r.URL.EscapedPath())
+			w.WriteHeader(http.StatusBadRequest)
+			return
 		}
+		w.WriteHeader(http.StatusOK)
 	}))
 	defer ts.Close()
 
@@ -69,17 +53,38 @@ func TestDelete(t *testing.T) {
 		t.Errorf("parsed port number cannot be converted to int %s", parsed.Port())
 		return
 	}
-	Configuration = &ConfigurationStruct{}
-	Configuration.KongURL = KongUrlInfo{
+
+	client := &http.Client{}
+	cfgOK := ConfigurationStruct{}
+	cfgOK.KongURL = KongUrlInfo{
 		Server:    parsed.Hostname(),
 		AdminPort: port,
 	}
 
-	rc := NewResource("1", &http.Client{})
-	err = rc.Remove(path)
-	if err != nil {
-		t.Errorf("failed to delete resource")
-		t.Errorf(err.Error())
-	}
+	cfgWrongPort := cfgOK
+	cfgWrongPort.KongURL.AdminPort = 123
 
+	tests := []struct {
+		name        string
+		config      ConfigurationStruct
+		r           Resource
+		expectError bool
+	}{
+		{"DeleteOK", cfgOK, NewResource("1", client), false},
+		{"InvalidResource", cfgOK, NewResource("2", client), true},
+		{"WrongPort", cfgWrongPort, NewResource("1", client), true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			Configuration = &tt.config
+			err = tt.r.Remove(path)
+			if err != nil && !tt.expectError {
+				t.Error(err)
+			}
+
+			if err == nil && tt.expectError {
+				t.Error("error was expected, none occurred")
+			}
+		})
+	}
 }

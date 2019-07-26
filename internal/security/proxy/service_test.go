@@ -30,22 +30,41 @@ import (
 func TestCheckServiceStatus(t *testing.T) {
 	LoggingClient = logger.MockLogger{}
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
 		if r.Method != "GET" {
-			t.Errorf("expected GET request, got %s instead", r.Method)
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
 		}
 
 		if r.URL.EscapedPath() != "/" {
-			t.Errorf("expected request to /, got %s instead", r.URL.EscapedPath())
+			w.WriteHeader(http.StatusNotFound)
+			return
 		}
+		w.WriteHeader(http.StatusOK)
 	}))
 	defer ts.Close()
 
-	svc := NewService(&http.Client{})
-	err := svc.checkServiceStatus(ts.URL)
-	if err != nil {
-		t.Errorf("failed to check service status")
-		t.Errorf(err.Error())
+	tests := []struct {
+		name        string
+		url         string
+		expectError bool
+	}{
+		{"checkOK", ts.URL, false},
+		{"InvalidURL", "invalid", true},
+		{"WrongPort", "http://127.0.0.1:0", true},
+		{"WrongPath", ts.URL + "/test", true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			svc := NewService(&http.Client{})
+			err := svc.checkServiceStatus(tt.url)
+			if err != nil && !tt.expectError {
+				t.Error(err)
+			}
+
+			if err == nil && tt.expectError {
+				t.Error("error was expected, none occurred")
+			}
+		})
 	}
 }
 
@@ -171,15 +190,24 @@ func TestInitACL(t *testing.T) {
 func TestGetSvcIDs(t *testing.T) {
 	LoggingClient = logger.MockLogger{}
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"data": [ {"id": "test-id-1"}, {"id": "test-id-2"}]}`))
+
 		if r.Method != "GET" {
-			t.Errorf("expected GET request, got %s instead", r.Method)
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
 		}
 
-		if r.URL.EscapedPath() != "/test" {
-			t.Errorf("expected request to /test, got %s instead", r.URL.EscapedPath())
+		if r.URL.EscapedPath() == "/badjson" {
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(`{"this is" invalid JSON]`))
+			return
 		}
+
+		if r.URL.EscapedPath() != "/testservice" {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"data": [ {"id": "test-id-1"}, {"id": "test-id-2"}]}`))
 	}))
 	defer ts.Close()
 
@@ -193,20 +221,46 @@ func TestGetSvcIDs(t *testing.T) {
 		t.Errorf("parsed port number cannot be converted to int %s", parsed.Port())
 		return
 	}
-	Configuration = &ConfigurationStruct{}
-	Configuration.KongURL = KongUrlInfo{
+
+	cfgOK := ConfigurationStruct{}
+	cfgOK.KongURL = KongUrlInfo{
 		Server:    parsed.Hostname(),
 		AdminPort: port,
 	}
 
-	svc := NewService(&http.Client{})
+	cfgWrongPort := cfgOK
+	cfgWrongPort.KongURL.AdminPort = 123
 
-	coll, err := svc.getSvcIDs("test")
-	if err != nil {
-		t.Errorf("failed to get service IDs")
-		t.Errorf(err.Error())
+	validService := "testservice"
+
+	tests := []struct {
+		name        string
+		config      ConfigurationStruct
+		serviceId   string
+		expectError bool
+	}{
+		{"GetOK", cfgOK, validService, false},
+		{"InvalidService", cfgOK, "invalid", true},
+		{"InvalidUrl", cfgWrongPort, validService, true},
+		{"BadJSONResponse", cfgOK, "badjson", true},
 	}
-	if coll.Section[0].ID != "test-id-1" {
-		t.Errorf("failed to get service ID test-id-1")
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			Configuration = &tt.config
+			svc := NewService(&http.Client{})
+
+			coll, err := svc.getSvcIDs(tt.serviceId)
+			if err != nil && !tt.expectError {
+				t.Error(err)
+			}
+
+			if err == nil {
+				if tt.expectError {
+					t.Error("error was expected, none occurred")
+				} else if coll.Section[0].ID != "test-id-1" {
+					t.Errorf("failed to get service ID test-id-1")
+				}
+			}
+		})
 	}
 }
