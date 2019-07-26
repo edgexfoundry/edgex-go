@@ -99,7 +99,7 @@ func TestRetrieve(t *testing.T) {
 		Port:   port,
 	}
 
-	cs := NewCerts(NewRequestor(true), ts.URL, certPath)
+	cs := NewCerts(NewRequestor(true), certPath, "")
 	cp, err := cs.retrieve(token)
 	if err != nil {
 		t.Errorf("failed to retrieve cert pair")
