@@ -85,8 +85,8 @@ func (s *Service) ResetProxy() error {
 	return nil
 }
 
-func (s *Service) Init() error {
-	err := s.loadCert()
+func (s *Service) Init(cert CertificateLoader) error {
+	err := s.postCert(cert)
 	if err != nil {
 		return err
 	}
@@ -135,9 +135,8 @@ func (s *Service) Init() error {
 	return nil
 }
 
-func (s *Service) loadCert() error {
-	cert := NewCerts(s.client, Configuration.SecretService.CertPath, Configuration.SecretService.TokenPath)
-	cp, err := cert.getCertPair()
+func (s *Service) postCert(cert CertificateLoader) error {
+	cp, err := cert.Load()
 
 	if err != nil {
 		return err
@@ -199,9 +198,9 @@ func (s *Service) initKongService(service *KongService) error {
 		LoggingClient.Info(fmt.Sprintf("proxy service for %s has been set up", service.Name))
 		break
 	default:
-		e := fmt.Sprintf("failed to set up proxy service for %s with errorcode %d", service.Name, resp.StatusCode)
-		LoggingClient.Error(e)
-		return errors.New(e)
+		err = fmt.Errorf("proxy service for %s returned status %d", service.Name, resp.StatusCode)
+		LoggingClient.Error(err.Error())
+		return err
 	}
 	return nil
 }

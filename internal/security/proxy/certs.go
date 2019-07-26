@@ -26,14 +26,18 @@ import (
 	"github.com/dghubble/sling"
 )
 
-type Certs struct {
+type CertificateLoader interface {
+	Load() (*CertPair, error)
+}
+
+type certificate struct {
 	client    Requestor
 	certPath  string
 	tokenPath string
 }
 
-func NewCerts(r Requestor, certPath string, tokenPath string) Certs {
-	return Certs{client: r, certPath: certPath, tokenPath: tokenPath}
+func NewCertificateLoader(r Requestor, certPath string, tokenPath string) CertificateLoader {
+	return certificate{client: r, certPath: certPath, tokenPath: tokenPath}
 }
 
 type CertCollect struct {
@@ -49,7 +53,7 @@ type auth struct {
 	Token string `json:"root_token"`
 }
 
-func (cs *Certs) getCertPair() (*CertPair, error) {
+func (cs certificate) Load() (*CertPair, error) {
 	t, err := cs.getAccessToken(cs.tokenPath)
 	if err != nil {
 		return &CertPair{"", ""}, err
@@ -65,7 +69,7 @@ func (cs *Certs) getCertPair() (*CertPair, error) {
 	return cp, nil
 }
 
-func (cs *Certs) getAccessToken(filename string) (string, error) {
+func (cs certificate) getAccessToken(filename string) (string, error) {
 	a := auth{}
 	raw, err := ioutil.ReadFile(filename)
 	if err != nil {
@@ -76,7 +80,7 @@ func (cs *Certs) getAccessToken(filename string) (string, error) {
 	return a.Token, err
 }
 
-func (cs *Certs) retrieve(t string) (*CertPair, error) {
+func (cs certificate) retrieve(t string) (*CertPair, error) {
 	s := sling.New().Set(VaultToken, t)
 	req, err := s.New().Base(Configuration.SecretService.GetSecretSvcBaseURL()).Get(cs.certPath).Request()
 	if err != nil {
@@ -100,14 +104,14 @@ func (cs *Certs) retrieve(t string) (*CertPair, error) {
 		}
 		break
 	default:
-		e := fmt.Sprintf("failed to retrieve certificate on path %s with error code %d", cs.certPath, resp.StatusCode)
-		LoggingClient.Error(e)
+		err = fmt.Errorf("failed to retrieve certificate on path %s with error code %d", cs.certPath, resp.StatusCode)
+		LoggingClient.Error(err.Error())
 		return nil, err
 	}
 	return &cc.Pair, nil
 }
 
-func (cs *Certs) validate(cp *CertPair) error {
+func (cs certificate) validate(cp *CertPair) error {
 	if len(cp.Cert) > 0 && len(cp.Key) > 0 {
 		return nil
 	}
