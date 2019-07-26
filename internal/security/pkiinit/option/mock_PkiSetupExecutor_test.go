@@ -20,7 +20,7 @@ import (
 	"os"
 	"path/filepath"
 
-	cert "github.com/edgexfoundry/edgex-go/internal/security/pkiinit/cert"
+	config "github.com/edgexfoundry/edgex-go/internal/pkg/config"
 )
 
 // Note: this is a test helper
@@ -35,12 +35,11 @@ func (mockPkiSetup *mockPkiSetupRunner) checkRunConfig() error {
 
 func (mockPkiSetup *mockPkiSetupRunner) call() error {
 	jsonPath := mockPkiSetup.pkiSetupRunner.runConfig.pkiSetupVaultJSONPath
-	reader := cert.NewX509ConfigReader(jsonPath)
-	config, readErr := reader.Read()
+	config, readErr := config.NewX509Config(jsonPath)
 	if readErr != nil {
 		return readErr
 	}
-	pkiOutputDir, err := config.GetPkiOutputDir()
+	pkiOutputDir, err := config.PkiCADir()
 	fmt.Println("In test, pkiOutDir: ", pkiOutputDir)
 
 	if err != nil {

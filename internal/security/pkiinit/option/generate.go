@@ -16,13 +16,12 @@
 package option
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
 
-	cert "github.com/edgexfoundry/edgex-go/internal/security/pkiinit/cert"
+	config "github.com/edgexfoundry/edgex-go/internal/pkg/config"
 )
 
 type pkiSetupRunnable interface {
@@ -153,18 +152,19 @@ func (exect *pkiSetupRunner) call() error {
 }
 
 func rearrangePkiByServices(pkiSetupVaultJSONPath string) (exitCode, error) {
-	reader := cert.NewX509ConfigReader(pkiSetupVaultJSONPath)
+	config, readErr := config.NewX509Config(pkiSetupVaultJSONPath)
+	// reader := cert.NewX509ConfigReader(pkiSetupVaultJSONPath)
 
-	if reader == nil {
-		return exitWithError, fmt.Errorf("Failed to create X509ConfigReader with json path: %s", pkiSetupVaultJSONPath)
-	}
+	// if reader == nil {
+	// 	return exitWithError, fmt.Errorf("Failed to create X509ConfigReader with json path: %s", pkiSetupVaultJSONPath)
+	// }
 
-	config, readErr := reader.Read()
+	// config, readErr := reader.Read()
 	if readErr != nil {
 		return exitWithError, readErr
 	}
 
-	pkiOutputDir, err := config.GetPkiOutputDir()
+	pkiOutputDir, err := config.PkiCADir()
 	if err != nil {
 		return exitWithError, err
 	}
@@ -189,7 +189,7 @@ func rearrangePkiByServices(pkiSetupVaultJSONPath string) (exitCode, error) {
 	return normal, nil
 }
 
-func copyGeneratedForService(servicePath, pkiOutputDir string, config cert.X509Config) error {
+func copyGeneratedForService(servicePath, pkiOutputDir string, config config.X509Config) error {
 	if err := createDirectoryIfNotExists(servicePath); err != nil {
 		return err
 	}

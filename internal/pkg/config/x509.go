@@ -22,6 +22,11 @@ import (
 	"strings"
 )
 
+const (
+	skFileExt   = ".priv.key"
+	certFileExt = ".pem"
+)
+
 // NewX509Config will populate a struct representing configuration for X.509 key generation
 func NewX509Config(configFilePtr string) (X509Config, error) {
 
@@ -54,6 +59,7 @@ type X509Config struct {
 	TLSServer       TLSServer `json:"x509_tls_server_parameters"`
 }
 
+// PkiCADir returns the pkisetup root CA dir
 func (cfg X509Config) PkiCADir() (string, error) {
 	dir, err := filepath.Abs(cfg.WorkingDir)
 	if err != nil {
@@ -62,6 +68,26 @@ func (cfg X509Config) PkiCADir() (string, error) {
 	}
 	// pkiCaDir: Concatenate working dir absolute path with PKI setup dir, using separator "/"
 	return strings.Join([]string{dir, cfg.PKISetupDir, cfg.RootCA.CAName}, "/"), nil
+}
+
+// GetCAPemFileName returns the file name of CA certificate
+func (cfg X509Config) GetCAPemFileName() string {
+	return cfg.RootCA.CAName + certFileExt
+}
+
+// GetCAPrivateKeyFileName returns the file name of CA private key
+func (cfg X509Config) GetCAPrivateKeyFileName() string {
+	return cfg.RootCA.CAName + skFileExt
+}
+
+// GetTLSPemFileName returns the file name of TLS certificate
+func (cfg X509Config) GetTLSPemFileName() string {
+	return cfg.TLSServer.TLSHost + certFileExt
+}
+
+// GetTLSPrivateKeyFileName returns the file name of TLS private key
+func (cfg X509Config) GetTLSPrivateKeyFileName() string {
+	return cfg.TLSServer.TLSHost + skFileExt
 }
 
 // KeyScheme parameters (RSA vs EC)
