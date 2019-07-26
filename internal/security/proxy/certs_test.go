@@ -36,11 +36,11 @@ func createRequestorMockHttpOK() Requestor {
 	return req
 }
 
-func TestGetSecret(t *testing.T) {
+func TestGetAccessToken(t *testing.T) {
 	r := createRequestorMockHttpOK()
 	path := "testdata/test-resp-init.json"
 	cs := NewCerts(r, "", "")
-	s, err := cs.getSecret(path)
+	s, err := cs.getAccessToken(path)
 	if err != nil {
 		t.Errorf("failed to parse token file")
 		t.Errorf(err.Error())

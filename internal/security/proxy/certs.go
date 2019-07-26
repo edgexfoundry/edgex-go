@@ -50,7 +50,7 @@ type auth struct {
 }
 
 func (cs *Certs) getCertPair() (*CertPair, error) {
-	t, err := cs.getSecret(cs.tokenPath)
+	t, err := cs.getAccessToken(cs.tokenPath)
 	if err != nil {
 		return &CertPair{"", ""}, err
 	}
@@ -65,7 +65,7 @@ func (cs *Certs) getCertPair() (*CertPair, error) {
 	return cp, nil
 }
 
-func (cs *Certs) getSecret(filename string) (string, error) {
+func (cs *Certs) getAccessToken(filename string) (string, error) {
 	a := auth{}
 	raw, err := ioutil.ReadFile(filename)
 	if err != nil {
