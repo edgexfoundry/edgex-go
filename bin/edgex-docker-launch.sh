@@ -20,14 +20,14 @@
 # To override the compose file entirely set the COMPOSE_FILE_PATH environment variable to the full
 # pathname of the compose file you want to use.
 
-GITHUB_PATH=https://raw.githubusercontent.com/edgexfoundry/developer-scripts/master
-VERSION=edinburgh-1.0.0
+GITHUB_PATH=https://raw.githubusercontent.com/edgexfoundry/developer-scripts/master/releases/edinburgh/compose-files/
+VERSION=1.0.1
 
 if [ "x$COMPOSE_FILE_PATH" = x ]; then
     if [ $# -ne 0 ] && [ "$1" = "redis" ]; then
-        COMPOSE_FILE=compose-files/docker-compose-redis-$VERSION.yml
+        COMPOSE_FILE=docker-compose-redis-edinburgh-no-secty-$VERSION.yml
     else
-        COMPOSE_FILE=compose-files/docker-compose-$VERSION.yml
+        COMPOSE_FILE=docker-compose-edinburgh-no-secty-$VERSION.yml
     fi
     
     COMPOSE_FILE_PATH=/tmp/$COMPOSE_FILE
