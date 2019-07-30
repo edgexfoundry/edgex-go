@@ -22,8 +22,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/operators/notification/mocks"
 )
 
-var notificationID string = "683cfbbf-758a-4dca-b70e-a7265589fed6"
-
 func TestNotificationById(t *testing.T) {
 	tests := []struct {
 		name              string
@@ -33,26 +31,26 @@ func TestNotificationById(t *testing.T) {
 	}{
 		{
 			name:              "Successful Delete",
-			database:          createNotificationDeleter(),
+			database:          createMockNotificiationDeleterStringArg("DeleteNotificationById", nil, Id),
 			expectError:       false,
 			expectedErrorType: nil,
 		},
 		{
 			name:              "Notification not found",
-			database:          createNotificationDeleterNotFound(),
+			database:          createMockNotificiationDeleterStringArg("DeleteNotificationById", ErrorNotFound, Id),
 			expectError:       true,
 			expectedErrorType: notificationErrors.ErrNotificationNotFound{},
 		},
 		{
 			name:              "Delete error",
-			database:          createNotificationDeleteError(),
+			database:          createMockNotificiationDeleterStringArg("DeleteNotificationById", Error, Id),
 			expectError:       true,
 			expectedErrorType: Error,
 		},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			op := NewDeleteByIDExecutor(test.database, notificationID)
+			op := NewDeleteByIDExecutor(test.database, Id)
 			err := op.Execute()
 
 			if test.expectError && err == nil {
@@ -75,22 +73,61 @@ func TestNotificationById(t *testing.T) {
 		})
 	}
 }
-func createNotificationDeleter() NotificationDeleter {
-	d := mocks.NotificationDeleter{}
-	d.On("DeleteNotificationById", notificationID).Return(nil)
 
-	return &d
+func TestNotificationBySlug(t *testing.T) {
+	tests := []struct {
+		name              string
+		database          NotificationDeleter
+		expectError       bool
+		expectedErrorType error
+	}{
+		{
+			name:              "Successful Delete",
+			database:          createMockNotificiationDeleterStringArg("DeleteNotificationBySlug", nil, Slug),
+			expectError:       false,
+			expectedErrorType: nil,
+		},
+		{
+			name:              "Notification not found",
+			database:          createMockNotificiationDeleterStringArg("DeleteNotificationBySlug", ErrorNotFound, Slug),
+			expectError:       true,
+			expectedErrorType: notificationErrors.ErrNotificationNotFound{},
+		},
+		{
+			name:              "Delete error",
+			database:          createMockNotificiationDeleterStringArg("DeleteNotificationBySlug", Error, Slug),
+			expectError:       true,
+			expectedErrorType: Error,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			op := NewDeleteBySlugExecutor(test.database, Slug)
+			err := op.Execute()
+
+			if test.expectError && err == nil {
+				t.Error("We expected an error but did not get one")
+			}
+
+			if !test.expectError && err != nil {
+				t.Errorf("We do not expected an error but got one. %s", err.Error())
+			}
+
+			if test.expectError {
+				eet := reflect.TypeOf(test.expectedErrorType)
+				aet := reflect.TypeOf(err)
+				if !aet.AssignableTo(eet) {
+					t.Errorf("Expected error of type %v, but got an error of type %v", eet, aet)
+				}
+			}
+
+			return
+		})
+	}
 }
 
-func createNotificationDeleterNotFound() NotificationDeleter {
-	d := mocks.NotificationDeleter{}
-	d.On("DeleteNotificationById", notificationID).Return(ErrorNotFound)
-
-	return &d
-}
-func createNotificationDeleteError() NotificationDeleter {
-	d := mocks.NotificationDeleter{}
-	d.On("DeleteNotificationById", notificationID).Return(Error)
-
-	return &d
+func createMockNotificiationDeleterStringArg(methodName string, err error, arg string) NotificationDeleter {
+	dbMock := mocks.NotificationDeleter{}
+	dbMock.On(methodName, arg).Return(err)
+	return &dbMock
 }

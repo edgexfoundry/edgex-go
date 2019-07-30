@@ -25,6 +25,7 @@ import (
 )
 
 var Id = "83cb038b-5a94-4707-985d-13effec62de2"
+var Slug = "test-slug"
 
 var Error = errors.New("test error")
 var ErrorNotFound = db.ErrNotFound
@@ -72,6 +73,54 @@ func TestIdExecutor(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			op := NewIdExecutor(test.mockDb, Id)
+			actual, err := op.Execute()
+			if test.expectedError && err == nil {
+				t.Error("Expected an error")
+				return
+			}
+
+			if !test.expectedError && err != nil {
+				t.Errorf("Unexpectedly encountered error: %s", err.Error())
+				return
+			}
+
+			if !reflect.DeepEqual(test.expectedResult, actual) {
+				t.Errorf("Expected result does not match the observed.\nExpected: %v\nObserved: %v\n", test.expectedResult, actual)
+				return
+			}
+		})
+	}
+}
+func TestSlugExecutor(t *testing.T) {
+	tests := []struct {
+		name           string
+		mockDb         NotificationLoader
+		expectedResult contract.Notification
+		expectedError  bool
+	}{
+		{
+			name:           "Successful database call",
+			mockDb:         createMockNotificiationLoaderStringArg("GetNotificationBySlug", nil, SuccessfulDatabaseResult[0], Id),
+			expectedResult: SuccessfulDatabaseResult[0],
+			expectedError:  false,
+		},
+		{
+			name:           "Unsuccessful database call",
+			mockDb:         createMockNotificiationLoaderStringArg("GetNotificationBySlug", Error, contract.Notification{}, Id),
+			expectedResult: contract.Notification{},
+			expectedError:  true,
+		},
+		{
+			name:           "Unsuccessful database call",
+			mockDb:         createMockNotificiationLoaderStringArg("GetNotificationBySlug", ErrorNotFound, contract.Notification{}, Id),
+			expectedResult: contract.Notification{},
+			expectedError:  true,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			op := NewSlugExecutor(test.mockDb, Id)
 			actual, err := op.Execute()
 			if test.expectedError && err == nil {
 				t.Error("Expected an error")

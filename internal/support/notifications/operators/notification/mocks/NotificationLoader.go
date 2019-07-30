@@ -30,3 +30,24 @@ func (_m *NotificationLoader) GetNotificationById(id string) (models.Notificatio
 
 	return r0, r1
 }
+
+// GetNotificationBySlug provides a mock function with given fields: slug
+func (_m *NotificationLoader) GetNotificationBySlug(slug string) (models.Notification, error) {
+	ret := _m.Called(slug)
+
+	var r0 models.Notification
+	if rf, ok := ret.Get(0).(func(string) models.Notification); ok {
+		r0 = rf(slug)
+	} else {
+		r0 = ret.Get(0).(models.Notification)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(slug)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
