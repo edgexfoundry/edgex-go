@@ -15,7 +15,6 @@ package metadata
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -137,11 +136,18 @@ func restDeleteAddressableById(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	var id string = vars[ID]
 
-	op := addressable.NewDeleteByIdExecutor(dbClient, id)
+	op := addressable.NewDeleteExecutor(dbClient, id)
 	err := op.Execute()
 	if err != nil {
+		switch err.(type) {
+		case *types.ErrAddressableNotFound:
+			http.Error(w, err.Error(), http.StatusNotFound)
+		case *types.ErrAddressableInUse:
+			http.Error(w, err.Error(), http.StatusConflict)
+		default:
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -158,11 +164,18 @@ func restDeleteAddressableByName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	op := addressable.NewDeleteByNameExecutor(dbClient, a)
-	err := op.Execute()
-	if err := dbClient.DeleteAddressableById(a.Id); err != nil {
+	op := addressable.NewDeleteExecutor(dbClient, n)
+	err = op.Execute()
+	if err != nil {
+		switch err.(type) {
+		case *types.ErrAddressableNotFound:
+			http.Error(w, err.Error(), http.StatusNotFound)
+		case *types.ErrAddressableInUse:
+			http.Error(w, err.Error(), http.StatusConflict)
+		default:
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
