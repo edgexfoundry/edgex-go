@@ -15,6 +15,7 @@ package errors
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 )
@@ -90,6 +91,18 @@ func (e ErrValueDescriptorInUse) Error() string {
 
 func NewErrValueDescriptorInUse(name string) error {
 	return &ErrValueDescriptorInUse{name: name}
+}
+
+type ErrValueDescriptorsInUse struct {
+	names []string
+}
+
+func (e ErrValueDescriptorsInUse) Error() string {
+	return fmt.Sprintf("value descriptors are still referenced by readings: %s", strings.Join(e.names, ","))
+}
+
+func NewErrValueDescriptorsInUse(names []string) error {
+	return &ErrValueDescriptorsInUse{names: names}
 }
 
 type ErrDuplicateValueDescriptorName struct {

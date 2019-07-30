@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/coredata"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/notifications"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
@@ -46,6 +47,7 @@ var dbClient interfaces.DBClient
 var LoggingClient logger.LoggingClient
 var registryClient registry.Client
 var nc notifications.NotificationsClient
+var vdc coredata.ValueDescriptorClient
 var registryErrors chan error        //A channel for "config wait errors" sourced from Registry
 var registryUpdates chan interface{} //A channel for "config updates" sourced from Registry.
 
@@ -256,7 +258,7 @@ func newDBClient(dbType string) (interfaces.DBClient, error) {
 
 func initializeClients(useRegistry bool) {
 	// Create notification client
-	params := types.EndpointParams{
+	nParams := types.EndpointParams{
 		ServiceKey:  clients.SupportNotificationsServiceKey,
 		Path:        clients.ApiNotificationRoute,
 		UseRegistry: useRegistry,
@@ -264,7 +266,16 @@ func initializeClients(useRegistry bool) {
 		Interval:    Configuration.Service.ClientMonitor,
 	}
 
-	nc = notifications.NewNotificationsClient(params, startup.Endpoint{RegistryClient: &registryClient})
+	nc = notifications.NewNotificationsClient(nParams, startup.Endpoint{RegistryClient: &registryClient})
+
+	vParams := types.EndpointParams{
+		ServiceKey:  clients.CoreDataServiceKey,
+		Path:        clients.ApiValueDescriptorRoute,
+		UseRegistry: useRegistry,
+		Url:         Configuration.Clients["CoreData"].Url() + clients.ApiValueDescriptorRoute,
+		Interval:    Configuration.Service.ClientMonitor,
+	}
+	vdc = coredata.NewValueDescriptorClient(vParams, startup.Endpoint{RegistryClient: &registryClient})
 }
 
 func setLoggingTarget() string {

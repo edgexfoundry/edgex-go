@@ -29,5 +29,6 @@ type ConfigurationStruct struct {
 }
 
 type WritableInfo struct {
-	LogLevel string
+	LogLevel                        string
+	EnableValueDescriptorManagement bool
 }

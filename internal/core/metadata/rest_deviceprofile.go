@@ -19,10 +19,12 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/gorilla/mux"
 	"gopkg.in/yaml.v2"
 
+	errors2 "github.com/edgexfoundry/edgex-go/internal/core/data/errors"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/operators/device"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/operators/device_profile"
@@ -74,6 +76,22 @@ func restAddDeviceProfile(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	if Configuration.Writable.EnableValueDescriptorManagement {
+		op := device_profile.NewAddExecutor(r.Context(), vdc, LoggingClient, dp.DeviceResources...)
+		err := op.Execute()
+		if err != nil {
+			LoggingClient.Error(err.Error())
+			switch err.(type) {
+			case types.ErrServiceClient:
+				http.Error(w, err.Error(), err.(types.ErrServiceClient).StatusCode)
+			default:
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
+
+			return
+		}
+	}
+
 	id, err := dbClient.AddDeviceProfile(dp)
 	if err != nil {
 		if err == db.ErrNotUnique {
@@ -101,6 +119,26 @@ func restUpdateDeviceProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if Configuration.Writable.EnableValueDescriptorManagement {
+		vdOp := device_profile.NewUpdateValueDescriptorExecutor(from, dbClient, vdc, LoggingClient, r.Context())
+		err := vdOp.Execute()
+		if err != nil {
+			LoggingClient.Error(err.Error())
+			switch err.(type) {
+			case types.ErrServiceClient:
+				http.Error(w, err.Error(), err.(types.ErrServiceClient).StatusCode)
+			case errors.ErrDeviceProfileNotFound:
+				http.Error(w, err.Error(), http.StatusNotFound)
+			case *errors2.ErrValueDescriptorsInUse:
+				http.Error(w, err.Error(), http.StatusConflict)
+			default:
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
+
+			return
+		}
+	}
+
 	op := device_profile.NewUpdateDeviceProfileExecutor(dbClient, from)
 	dp, err := op.Execute()
 	if err != nil {
@@ -108,8 +146,6 @@ func restUpdateDeviceProfile(w http.ResponseWriter, r *http.Request) {
 		switch err.(type) {
 		case errors.ErrDeviceProfileNotFound:
 			http.Error(w, err.Error(), http.StatusNotFound)
-		case *errors.ErrDuplicateName:
-			http.Error(w, err.Error(), http.StatusConflict)
 		case errors.ErrDeviceProfileInvalidState:
 			http.Error(w, err.Error(), http.StatusConflict)
 		default:

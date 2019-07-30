@@ -1,5 +1,6 @@
 [Writable]
 LogLevel = 'INFO'
+EnableValueDescriptorManagement = false
 
 [Service]
 BootTimeout = 30000
@@ -30,6 +31,11 @@ File = './logs/edgex-core-metadata.log'
   Protocol = 'http'
   Host = 'localhost'
   Port = 48060
+  [Clients.CoreData]
+  Protocol = 'http'
+  Host = 'localhost'
+  Port = 48080
+
 
 [Databases]
   [Databases.Primary]
