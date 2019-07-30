@@ -90,6 +90,12 @@ func generatePkis() (exitCode, error) {
 		"  scratchPath: ", scratchPath,
 		"  resourceDirPath: ", resourceDirPath)
 
+	pkiSetupExector.setRunConfig(pkiSetupRunConfig{
+		pkiSetupRunPath:       pkiSetupRunPath,
+		pkiSetupVaultJSONPath: pkiSetupVaultJSONPath,
+		resourceDirPath:       resourceDirPath,
+	})
+
 	if err := pkiSetupExector.checkRunConfig(); err != nil {
 		return exitWithError, err
 	}
@@ -107,12 +113,6 @@ func generatePkis() (exitCode, error) {
 	if err := os.Chdir(scratchPath); err != nil {
 		return exitWithError, err
 	}
-
-	pkiSetupExector.setRunConfig(pkiSetupRunConfig{
-		pkiSetupRunPath:       pkiSetupRunPath,
-		pkiSetupVaultJSONPath: pkiSetupVaultJSONPath,
-		resourceDirPath:       resourceDirPath,
-	})
 
 	if err := pkiSetupExector.call(); err != nil {
 		return exitWithError, err
@@ -153,13 +153,6 @@ func (exect *pkiSetupRunner) call() error {
 
 func rearrangePkiByServices(pkiSetupVaultJSONPath string) (exitCode, error) {
 	config, readErr := config.NewX509Config(pkiSetupVaultJSONPath)
-	// reader := cert.NewX509ConfigReader(pkiSetupVaultJSONPath)
-
-	// if reader == nil {
-	// 	return exitWithError, fmt.Errorf("Failed to create X509ConfigReader with json path: %s", pkiSetupVaultJSONPath)
-	// }
-
-	// config, readErr := reader.Read()
 	if readErr != nil {
 		return exitWithError, readErr
 	}

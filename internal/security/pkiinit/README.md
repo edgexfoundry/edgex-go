@@ -21,10 +21,10 @@ On the command line console, run `docker-compose -f docker-compose-fuji.yml up` 
 
 ## Command Line Options
 
-> * --generate: to genearte new TLS certificates
-> * --import: to deploy TLS cetificates from cached area
-> * --cache: generate fresh TLS certificates with erase of CA keys and put into cached area
-> * --cacheca: generate fresh TLS certificates with no erase of CA keys and put into cached area
-> * --help or -h: help message for the pki-init options
+> * -generate: to genearte new TLS certificates
+> * -import: to deploy TLS cetificates from cached area
+> * -cache: generate fresh TLS certificates with erase of CA keys and put into cached area
+> * -cacheca: generate fresh TLS certificates with no erase of CA keys and put into cached area
+> * -help or -h: help message for the pki-init options
 
 Please also see the [pki-init man page](pki-init.1.md).
