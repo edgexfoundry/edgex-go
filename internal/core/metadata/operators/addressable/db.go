@@ -14,7 +14,7 @@ type AddressLoader interface {
 	GetAddressableById(id string) (contract.Addressable, error)
 }
 
-// AddressWriter provides functionality for adding and updating Addressables.
+// AddressWriter provides functionality for adding Addressables.
 type AddressWriter interface {
 	AddAddressable(addressable contract.Addressable) (string, error)
 }
@@ -28,4 +28,14 @@ type AddressUpdater interface {
 
 	AddressLoader
 	AddressWriter
+}
+
+// AddressDeleter provides functionality for removing existing Addressables.
+type AddressDeleter interface {
+	DeleteAddressableById(id string) error
+
+	// This method is needed for testing whether addressables are still in use.
+	GetDeviceServicesByAddressableId(id string) ([]contract.DeviceService, error)
+
+	AddressLoader
 }
