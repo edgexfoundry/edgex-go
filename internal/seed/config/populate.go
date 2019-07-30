@@ -156,7 +156,7 @@ func determineAbsRoot(root string) (string, error) {
 		}
 		execDir := filepath.Dir(exec)
 		LoggingClient.Debug("executing dir " + execDir)
-		ixLast := strings.LastIndex(execDir, "/")
+		ixLast := strings.LastIndex(execDir, filepath.FromSlash("/"))
 		absRoot := execDir[0:(ixLast)] //Seems like there should be some other way
 		LoggingClient.Debug("absolute path " + absRoot)
 		return absRoot, nil
