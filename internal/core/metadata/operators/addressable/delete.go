@@ -16,6 +16,7 @@ package addressable
 
 import (
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 )
@@ -37,8 +38,12 @@ func (op addressDelete) Execute() error {
 
 	// if this case hits, then it's safe to say we don't have a usable addressable
 	if idErr != nil && nameErr != nil {
-		// not the cleanest thing but we can't say anything for certain about the data input
-		return errors.NewErrAddressableNotFound(op.identifier, op.identifier)
+		if idErr == db.ErrNotFound && nameErr == db.ErrNotFound {
+			// not the cleanest thing but we can't say anything for certain about the data input
+			return errors.NewErrAddressableNotFound(op.identifier, op.identifier)
+		}
+
+		return nameErr
 	}
 
 	var a contract.Addressable
