@@ -132,6 +132,7 @@ func restGetAddressableById(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(result)
 }
+
 func restDeleteAddressableById(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	var id string = vars[ID]
@@ -154,6 +155,7 @@ func restDeleteAddressableById(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte("true"))
 }
+
 func restDeleteAddressableByName(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
