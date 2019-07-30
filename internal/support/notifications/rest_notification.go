@@ -22,6 +22,8 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+	"github.com/edgexfoundry/edgex-go/internal/support/notifications/errors"
+	"github.com/edgexfoundry/edgex-go/internal/support/notifications/operators/notification"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/gorilla/mux"
 )
@@ -120,7 +122,31 @@ func notificationBySlugHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func notificationByIDHandler(w http.ResponseWriter, r *http.Request) {
+func restGetNotificationByID(w http.ResponseWriter, r *http.Request) {
+
+	if r.Body != nil {
+		defer r.Body.Close()
+	}
+
+	vars := mux.Vars(r)
+	var id string = vars["id"]
+	op := notification.NewIdExecutor(dbClient, id)
+	result, err := op.Execute()
+	if err != nil {
+		LoggingClient.Error(err.Error())
+		switch err.(type) {
+		case errors.ErrNotificationNotFound:
+			http.Error(w, err.Error(), http.StatusNotFound)
+		default:
+
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		return
+	}
+	pkg.Encode(result, w, LoggingClient)
+}
+
+func restDeleteNotificationByID(w http.ResponseWriter, r *http.Request) {
 
 	if r.Body != nil {
 		defer r.Body.Close()
@@ -128,44 +154,25 @@ func notificationByIDHandler(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
 	id := vars["id"]
-	switch r.Method {
-	case http.MethodGet:
 
-		n, err := dbClient.GetNotificationById(id)
-		if err != nil {
-			if err == db.ErrNotFound {
-				http.Error(w, "Notification not found", http.StatusNotFound)
-			} else {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			}
-			LoggingClient.Error(err.Error())
-			return
-		}
+	LoggingClient.Info("Deleting notification (and associated transmissions): " + id)
 
-		pkg.Encode(n, w, LoggingClient)
-	case http.MethodDelete:
-		_, err := dbClient.GetNotificationById(id)
-		if err != nil {
-			if err == db.ErrNotFound {
-				http.Error(w, "Notification not found", http.StatusNotFound)
-			} else {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			}
-			LoggingClient.Error(err.Error())
-			return
-		}
+	op := notification.NewDeleteByIDExecutor(dbClient, id)
+	err := op.Execute()
 
-		LoggingClient.Info("Deleting notification (and associated transmissions): " + id)
-
-		if err = dbClient.DeleteNotificationById(id); err != nil {
+	if err != nil {
+		LoggingClient.Error(err.Error())
+		switch err.(type) {
+		case errors.ErrNotificationNotFound:
+			http.Error(w, err.Error(), http.StatusNotFound)
+		default:
 			http.Error(w, err.Error(), http.StatusInternalServerError)
-			LoggingClient.Error(err.Error())
-			return
 		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("true"))
+		return
 	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("true"))
 }
 
 func notificationOldHandler(w http.ResponseWriter, r *http.Request) {
