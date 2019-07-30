@@ -43,6 +43,9 @@ func LoadRestRoutes() *mux.Router {
 	// Metrics
 	r.HandleFunc(clients.ApiMetricsRoute, metricsHandler).Methods(http.MethodGet)
 
+	// Version
+	r.HandleFunc(clients.ApiVersionRoute, pkg.VersionHandler).Methods(http.MethodGet)
+
 	// Interval
 	r.HandleFunc(clients.ApiIntervalRoute, intervalHandler).Methods(http.MethodGet, http.MethodPut, http.MethodPost)
 	interval := r.PathPrefix(clients.ApiIntervalRoute).Subrouter()

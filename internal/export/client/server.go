@@ -49,6 +49,9 @@ func httpServer() http.Handler {
 	// Metrics
 	r.HandleFunc(clients.ApiMetricsRoute, metricsHandler).Methods(http.MethodGet)
 
+	// Version
+	r.HandleFunc(clients.ApiVersionRoute, pkg.VersionHandler).Methods(http.MethodGet)
+
 	// Registration
 	r.HandleFunc(clients.ApiRegistrationRoute, getAllReg).Methods(http.MethodGet)
 	r.HandleFunc(clients.ApiRegistrationRoute, addReg).Methods(http.MethodPost)
