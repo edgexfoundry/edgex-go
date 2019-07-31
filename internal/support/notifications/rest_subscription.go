@@ -59,7 +59,7 @@ func subscriptionHandler(w http.ResponseWriter, r *http.Request) {
 		err := dec.Decode(&s)
 
 		for _, c := range s.Channels {
-			if c.Type == "EMAIL" {
+			if c.Type == models.ChannelType(models.Email) {
 				if !validateEmail(c) {
 					http.Error(w, "Email addresses contain CRLF", http.StatusBadRequest)
 					LoggingClient.Error("Email addresses contain CRLF")
@@ -105,7 +105,7 @@ func subscriptionHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		for _, c := range s.Channels {
-			if c.Type == "EMAIL" {
+			if c.Type == models.ChannelType(models.Email) {
 				if !validateEmail(c) {
 					http.Error(w, "Email addresses contain CRLF", http.StatusBadRequest)
 					LoggingClient.Error("Email addresses contain CRLF")
