@@ -1,16 +1,16 @@
-/*******************************************************************************
- * Copyright 2018 Dell Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
- * in compliance with the License. You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software distributed under the License
- * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
- * or implied. See the License for the specific language governing permissions and limitations under
- * the License.
- *******************************************************************************/
+///*******************************************************************************
+// * Copyright 2018 Dell Inc.
+// *
+// * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+// * in compliance with the License. You may obtain a copy of the License at
+// *
+// * http://www.apache.org/licenses/LICENSE-2.0
+// *
+// * Unless required by applicable law or agreed to in writing, software distributed under the License
+// * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+// * or implied. See the License for the specific language governing permissions and limitations under
+// * the License.
+// *******************************************************************************/
 package scheduler
 
 import (
@@ -128,24 +128,6 @@ func TestIntervalBylName(t *testing.T) {
 
 	if interval.Name != testInterval.Name {
 		t.Errorf("expected interval name to be the same")
-	}
-}
-
-func TestIntervalById(t *testing.T) {
-	reset()
-	myMock := &dbMock.DBClient{}
-
-	myMock.On("IntervalById",
-		mock.MatchedBy(func(name string) bool { return name == testInterval.ID })).Return(testInterval, nil)
-	dbClient = myMock
-
-	interval, err := getIntervalById(testInterval.ID)
-	if err != nil {
-		t.Errorf(err.Error())
-	}
-
-	if interval.ID != testInterval.ID {
-		t.Errorf("expected interval ID to be the same")
 	}
 }
 
@@ -289,45 +271,6 @@ func TestUpdateInterval(t *testing.T) {
 	}
 
 	myMock.AssertExpectations(t)
-}
-
-//TODO: TestFailDeleteOnExistingIntervalActions
-func TestDeleteIntervalById(t *testing.T) {
-	reset()
-
-	myMock := &dbMock.DBClient{}
-	mySchedulerMock := &dbMock.SchedulerQueueClient{}
-
-	// Validation call
-	myMock.On("IntervalById",
-		mock.MatchedBy(func(id string) bool { return id == testInterval.ID })).Return(testInterval, nil)
-
-	// remove the IntervalAction from DB
-	myMock.On("DeleteIntervalById",
-		mock.Anything).Return(nil)
-
-	// no associated interval actions
-	myMock.On("IntervalActionsByIntervalName",
-		mock.Anything).Return([]models.IntervalAction{}, nil)
-
-	// Queue Validation
-	mySchedulerMock.On("QueryIntervalByID",
-		mock.Anything).Return(models.Interval{ID: testUUIDString}, nil)
-
-	// remove the IntervalAction from memory
-	mySchedulerMock.On("RemoveIntervalInQueue",
-		mock.Anything).Return(nil)
-
-	// assign clients to mocks
-	dbClient = myMock
-	scClient = mySchedulerMock
-
-	err := deleteIntervalById(testUUIDString)
-	if err != nil {
-		t.Errorf(err.Error())
-	}
-	myMock.AssertExpectations(t)
-	mySchedulerMock.AssertExpectations(t)
 }
 
 //TODO: TestFailDeleteOnExistingIntervalActions

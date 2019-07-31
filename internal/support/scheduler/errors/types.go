@@ -28,7 +28,7 @@ func (e ErrIntervalNotFound) Error() string {
 }
 
 func NewErrIntervalNotFound(id string) error {
-	return &ErrIntervalNotFound{id: id}
+	return ErrIntervalNotFound{id: id}
 }
 
 type ErrIntervalNameInUse struct {
