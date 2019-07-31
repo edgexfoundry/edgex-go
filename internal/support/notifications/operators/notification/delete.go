@@ -30,6 +30,11 @@ type deleteNotificationByID struct {
 	did string
 }
 
+type deleteNotificationBySlug struct {
+	db    NotificationDeleter
+	dslug string
+}
+
 // Execute performs the deletion of the notification.
 func (dnbi deleteNotificationByID) Execute() error {
 	err := dnbi.db.DeleteNotificationById(dnbi.did)
@@ -42,10 +47,29 @@ func (dnbi deleteNotificationByID) Execute() error {
 	return nil
 }
 
+func (dnbs deleteNotificationBySlug) Execute() error {
+	err := dnbs.db.DeleteNotificationBySlug(dnbs.dslug)
+	if err != nil {
+		if err == db.ErrNotFound {
+			err = errors.NewErrNotificationNotFound(dnbs.dslug)
+		}
+		return err
+	}
+	return nil
+}
+
 // NewDeleteByIDExecutor creates a new DeleteExecutor which deletes a notifcation based on id.
 func NewDeleteByIDExecutor(db NotificationDeleter, did string) DeleteExecutor {
 	return deleteNotificationByID{
 		db:  db,
 		did: did,
+	}
+}
+
+// NewDeleteBySlugExecutor creates a new DeleteExecutor which deletes a notifcation based on slug.
+func NewDeleteBySlugExecutor(db NotificationDeleter, dslug string) DeleteExecutor {
+	return deleteNotificationBySlug{
+		db:    db,
+		dslug: dslug,
 	}
 }

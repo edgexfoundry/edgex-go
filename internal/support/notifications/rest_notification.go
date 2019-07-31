@@ -74,7 +74,7 @@ func notificationHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func notificationBySlugHandler(w http.ResponseWriter, r *http.Request) {
+func restGetNotificationBySlug(w http.ResponseWriter, r *http.Request) {
 
 	if r.Body != nil {
 		defer r.Body.Close()
@@ -82,44 +82,52 @@ func notificationBySlugHandler(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
 	slug := vars["slug"]
-	switch r.Method {
-	case http.MethodGet:
 
-		n, err := dbClient.GetNotificationBySlug(slug)
-		if err != nil {
-			if err == db.ErrNotFound {
-				http.Error(w, "Notification not found", http.StatusNotFound)
-			} else {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			}
-			LoggingClient.Error(err.Error())
-			return
-		}
+	op := notification.NewSlugExecutor(dbClient, slug)
+	result, err := op.Execute()
+	if err != nil {
+		LoggingClient.Error(err.Error())
+		switch err.(type) {
+		case errors.ErrNotificationNotFound:
+			http.Error(w, err.Error(), http.StatusNotFound)
+		default:
 
-		pkg.Encode(n, w, LoggingClient)
-	case http.MethodDelete:
-		_, err := dbClient.GetNotificationBySlug(slug)
-		if err != nil {
-			if err == db.ErrNotFound {
-				http.Error(w, "Notification not found", http.StatusNotFound)
-			} else {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			}
-			LoggingClient.Error(err.Error())
-			return
-		}
-
-		LoggingClient.Info("Deleting notification (and associated transmissions) by slug: " + slug)
-
-		if err = dbClient.DeleteNotificationBySlug(slug); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
-			LoggingClient.Error(err.Error())
-			return
 		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("true"))
+		return
 	}
+
+	pkg.Encode(result, w, LoggingClient)
+}
+
+func restDeleteNotificationBySlug(w http.ResponseWriter, r *http.Request) {
+
+	if r.Body != nil {
+		defer r.Body.Close()
+	}
+
+	vars := mux.Vars(r)
+	slug := vars["slug"]
+
+	LoggingClient.Info("Deleting notification (and associated transmissions) by slug: " + slug)
+
+	op := notification.NewDeleteBySlugExecutor(dbClient, slug)
+	err := op.Execute()
+	if err != nil {
+		LoggingClient.Error(err.Error())
+		switch err.(type) {
+		case errors.ErrNotificationNotFound:
+			http.Error(w, err.Error(), http.StatusNotFound)
+		default:
+
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("true"))
 }
 
 func restGetNotificationByID(w http.ResponseWriter, r *http.Request) {
