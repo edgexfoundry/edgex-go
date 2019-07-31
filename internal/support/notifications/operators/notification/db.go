@@ -19,9 +19,11 @@ import contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 // NotificationLoader provides functionality for obtaining Notifications.
 type NotificationLoader interface {
 	GetNotificationById(id string) (contract.Notification, error)
+	GetNotificationBySlug(slug string) (contract.Notification, error)
 }
 
 // NotificationDeleter deletes notifications.
 type NotificationDeleter interface {
 	DeleteNotificationById(id string) error
+	DeleteNotificationBySlug(slug string) error
 }

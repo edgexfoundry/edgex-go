@@ -29,6 +29,11 @@ type notificationLoadById struct {
 	id       string
 }
 
+type notificationLoadBySlug struct {
+	database NotificationLoader
+	slug     string
+}
+
 func (op notificationLoadById) Execute() (contract.Notification, error) {
 	res, err := op.database.GetNotificationById(op.id)
 	if err != nil {
@@ -40,9 +45,26 @@ func (op notificationLoadById) Execute() (contract.Notification, error) {
 	return res, nil
 }
 
+func (op notificationLoadBySlug) Execute() (contract.Notification, error) {
+	res, err := op.database.GetNotificationBySlug(op.slug)
+	if err != nil {
+		if err == db.ErrNotFound {
+			err = errors.NewErrNotificationNotFound(op.slug)
+		}
+		return res, err
+	}
+	return res, nil
+}
+
 func NewIdExecutor(db NotificationLoader, id string) IdExecutor {
 	return notificationLoadById{
 		database: db,
 		id:       id,
+	}
+}
+func NewSlugExecutor(db NotificationLoader, slug string) IdExecutor {
+	return notificationLoadBySlug{
+		database: db,
+		slug:     slug,
 	}
 }
