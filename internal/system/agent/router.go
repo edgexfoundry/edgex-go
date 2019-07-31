@@ -45,6 +45,9 @@ func LoadRestRoutes() *mux.Router {
 	// /api/v1/ping
 	b.HandleFunc("/"+PING, pingHandler).Methods(http.MethodGet)
 
+	// Version
+	r.HandleFunc(clients.ApiVersionRoute, pkg.VersionHandler).Methods(http.MethodGet)
+
 	r.Use(correlation.ManageHeader)
 	r.Use(correlation.OnResponseComplete)
 	r.Use(correlation.OnRequestBegin)
