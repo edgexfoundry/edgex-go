@@ -196,33 +196,6 @@ func deleteIntervalByName(name string) error {
 	return nil
 }
 
-func deleteIntervalById(id string) error {
-
-	// check in memory first
-	inMemory, err := scClient.QueryIntervalByID(id)
-	if err != nil {
-		return errors.NewErrIntervalNotFound(id)
-	}
-
-	// check if interval exists
-	interval, err := getIntervalById(id)
-	if err != nil {
-		return err
-	}
-
-	if err = deleteInterval(interval); err != nil {
-		return err
-	}
-
-	// remove in memory
-	err = scClient.RemoveIntervalInQueue(inMemory.ID)
-	if err != nil {
-		return errors.NewErrDbNotFound()
-	}
-
-	return nil
-}
-
 func deleteInterval(interval contract.Interval) error {
 	intervalActions, err := dbClient.IntervalActionsByIntervalName(interval.Name)
 	if err != nil {

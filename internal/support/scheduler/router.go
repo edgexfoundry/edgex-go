@@ -46,7 +46,8 @@ func LoadRestRoutes() *mux.Router {
 	// Interval
 	r.HandleFunc(clients.ApiIntervalRoute, intervalHandler).Methods(http.MethodGet, http.MethodPut, http.MethodPost)
 	interval := r.PathPrefix(clients.ApiIntervalRoute).Subrouter()
-	interval.HandleFunc("/{"+ID+"}", intervalByIdHandler).Methods(http.MethodGet, http.MethodDelete)
+	interval.HandleFunc("/{"+ID+"}", restGetIntervalByID).Methods(http.MethodGet)
+	interval.HandleFunc("/{"+ID+"}", restDeleteIntervalByID).Methods(http.MethodDelete)
 	interval.HandleFunc("/"+NAME+"/{"+NAME+"}", intervalByNameHandler).Methods(http.MethodGet, http.MethodDelete)
 
 	// Scrub "Intervals and IntervalActions"
@@ -184,64 +185,6 @@ func intervalHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("true"))
 	}
-}
-
-/*
-Handler for the Interval By ID API
-Status code 404 - interval not found
-Status code 400 - interval still in use
-Status code 500 - unanticipated issues
-api/v1/interval
-*/
-func intervalByIdHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Body != nil {
-		defer r.Body.Close()
-	}
-
-	// URL parameters
-	vars := mux.Vars(r)
-	id, err := url.QueryUnescape(vars["id"])
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		LoggingClient.Error("Error un-escaping the value id: " + err.Error())
-		return
-	}
-
-	switch r.Method {
-	case http.MethodGet:
-		// Get the interval
-		e, err := getIntervalById(id)
-		if err != nil {
-			switch x := err.(type) {
-			case *errors.ErrIntervalNotFound:
-				http.Error(w, x.Error(), http.StatusNotFound)
-			default:
-				http.Error(w, x.Error(), http.StatusInternalServerError)
-			}
-			LoggingClient.Error(err.Error())
-			return
-		}
-		pkg.Encode(e, w, LoggingClient)
-	case http.MethodDelete:
-		if err = deleteIntervalById(id); err != nil {
-			switch err.(type) {
-			case *errors.ErrDbNotFound:
-				http.Error(w, err.Error(), http.StatusNotFound)
-				return
-			case *errors.ErrIntervalStillUsedByIntervalActions:
-				http.Error(w, err.Error(), http.StatusBadRequest)
-				return
-			default:
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("true"))
-	}
-
 }
 
 /*

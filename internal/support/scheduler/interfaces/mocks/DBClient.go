@@ -57,20 +57,6 @@ func (_m *DBClient) CloseSession() {
 	_m.Called()
 }
 
-// Connect provides a mock function with given fields:
-func (_m *DBClient) Connect() error {
-	ret := _m.Called()
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func() error); ok {
-		r0 = rf()
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
 // DeleteIntervalActionById provides a mock function with given fields: id
 func (_m *DBClient) DeleteIntervalActionById(id string) error {
 	ret := _m.Called(id)
