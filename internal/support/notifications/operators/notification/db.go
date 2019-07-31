@@ -26,4 +26,5 @@ type NotificationLoader interface {
 type NotificationDeleter interface {
 	DeleteNotificationById(id string) error
 	DeleteNotificationBySlug(slug string) error
+	DeleteNotificationsOld(age int) error
 }

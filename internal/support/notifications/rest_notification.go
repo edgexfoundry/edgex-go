@@ -183,8 +183,7 @@ func restDeleteNotificationByID(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("true"))
 }
 
-func notificationOldHandler(w http.ResponseWriter, r *http.Request) {
-
+func restDeleteNotificationsByAge(w http.ResponseWriter, r *http.Request) {
 	if r.Body != nil {
 		defer r.Body.Close()
 	}
@@ -197,20 +196,16 @@ func notificationOldHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	LoggingClient.Info("Deleting old notifications (and associated transmissions): " + vars["age"])
-	err = dbClient.DeleteNotificationsOld(age)
+	op := notification.NewDeleteByAgeExecutor(dbClient, age)
+	err = op.Execute()
 	if err != nil {
-		if err == db.ErrNotFound {
-			http.Error(w, "Notifications not found", http.StatusNotFound)
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		LoggingClient.Error(err.Error())
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
-
 }
 
 func notificationBySenderHandler(w http.ResponseWriter, r *http.Request) {

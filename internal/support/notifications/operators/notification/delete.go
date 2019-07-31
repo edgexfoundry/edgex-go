@@ -35,6 +35,11 @@ type deleteNotificationBySlug struct {
 	dslug string
 }
 
+type deleteNotificationsByAge struct {
+	db   NotificationDeleter
+	dage int
+}
+
 // Execute performs the deletion of the notification.
 func (dnbi deleteNotificationByID) Execute() error {
 	err := dnbi.db.DeleteNotificationById(dnbi.did)
@@ -58,6 +63,14 @@ func (dnbs deleteNotificationBySlug) Execute() error {
 	return nil
 }
 
+func (dnba deleteNotificationsByAge) Execute() error {
+	err := dnba.db.DeleteNotificationsOld(dnba.dage)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // NewDeleteByIDExecutor creates a new DeleteExecutor which deletes a notifcation based on id.
 func NewDeleteByIDExecutor(db NotificationDeleter, did string) DeleteExecutor {
 	return deleteNotificationByID{
@@ -71,5 +84,13 @@ func NewDeleteBySlugExecutor(db NotificationDeleter, dslug string) DeleteExecuto
 	return deleteNotificationBySlug{
 		db:    db,
 		dslug: dslug,
+	}
+}
+
+// NewDeleteBySlugExecutor creates a new DeleteExecutor which deletes a notifcation based on slug.
+func NewDeleteByAgeExecutor(db NotificationDeleter, dage int) DeleteExecutor {
+	return deleteNotificationsByAge{
+		db:   db,
+		dage: dage,
 	}
 }
