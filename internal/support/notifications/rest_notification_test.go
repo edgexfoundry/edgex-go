@@ -19,6 +19,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strconv"
 	"testing"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
@@ -35,6 +36,8 @@ import (
 var TestURI = "/notification"
 var TestId = "123e4567-e89b-12d3-a456-426655440000"
 var TestSlug = "test-slug"
+var TestAge = 1564594093
+var TestInvalidAge = "invalid age"
 
 func TestGetNotificationById(t *testing.T) {
 	tests := []struct {
@@ -148,10 +151,22 @@ func createMockNotificationDeleter(methodName string, testID string, desiredErro
 	return &myMock
 }
 
+func createMockNotificationAgeDeleter(methodName string, testAge int, desiredError error) interfaces.DBClient {
+	myMock := mocks.DBClient{}
+
+	if desiredError != nil {
+		myMock.On(methodName, testAge).Return(desiredError)
+	} else {
+		myMock.On(methodName, testAge).Return(nil)
+	}
+	return &myMock
+}
+
 func createRequest(pathParamName string, pathParamValue string) *http.Request {
 	req := httptest.NewRequest(http.MethodGet, TestURI, nil)
 	return mux.SetURLVars(req, map[string]string{pathParamName: pathParamValue})
 }
+
 func createDeleteRequest(pathParamName string, pathParamValue string) *http.Request {
 	req := httptest.NewRequest(http.MethodDelete, TestURI, nil)
 	return mux.SetURLVars(req, map[string]string{pathParamName: pathParamValue})
@@ -251,6 +266,50 @@ func TestDeleteNotificationBySlug(t *testing.T) {
 			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
 			handler := http.HandlerFunc(restDeleteNotificationBySlug)
+			handler.ServeHTTP(rr, tt.request)
+			response := rr.Result()
+			if response.StatusCode != tt.expectedStatus {
+				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
+
+				return
+			}
+		})
+	}
+}
+
+func TestDeleteNotificationsByAge(t *testing.T) {
+	tests := []struct {
+		name           string
+		request        *http.Request
+		dbMock         interfaces.DBClient
+		expectedStatus int
+	}{
+		{
+			name:           "OK",
+			request:        createDeleteRequest(AGE, strconv.Itoa(TestAge)),
+			dbMock:         createMockNotificationAgeDeleter("DeleteNotificationsOld", TestAge, nil),
+			expectedStatus: http.StatusOK,
+		},
+		{
+			name:           "Unknown Error",
+			request:        createDeleteRequest(AGE, strconv.Itoa(TestAge)),
+			dbMock:         createMockNotificationAgeDeleter("DeleteNotificationsOld", TestAge, errors.New("Test error")),
+			expectedStatus: http.StatusInternalServerError,
+		},
+		{
+			name:           "Unknown Error",
+			request:        createDeleteRequest(AGE, TestInvalidAge),
+			dbMock:         createMockNotificationAgeDeleter("DeleteNotificationsOld", TestAge, errors.New("Test error")),
+			expectedStatus: http.StatusInternalServerError,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			LoggingClient = logger.MockLogger{}
+			Configuration = &ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 1}}
+			dbClient = tt.dbMock
+			rr := httptest.NewRecorder()
+			handler := http.HandlerFunc(restDeleteNotificationsByAge)
 			handler.ServeHTTP(rr, tt.request)
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {

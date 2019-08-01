@@ -22,6 +22,8 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/operators/notification/mocks"
 )
 
+var TestAge int = 1564594093
+
 func TestNotificationById(t *testing.T) {
 	tests := []struct {
 		name              string
@@ -130,4 +132,56 @@ func createMockNotificiationDeleterStringArg(methodName string, err error, arg s
 	dbMock := mocks.NotificationDeleter{}
 	dbMock.On(methodName, arg).Return(err)
 	return &dbMock
+}
+
+func createMockNotificiationDeleterIntArg(methodName string, err error, arg int) NotificationDeleter {
+	dbMock := mocks.NotificationDeleter{}
+	dbMock.On(methodName, arg).Return(err)
+	return &dbMock
+}
+
+func TestNotificationsByAge(t *testing.T) {
+	tests := []struct {
+		name              string
+		database          NotificationDeleter
+		expectError       bool
+		expectedErrorType error
+	}{
+		{
+			name:              "Successful Delete",
+			database:          createMockNotificiationDeleterIntArg("DeleteNotificationsOld", nil, TestAge),
+			expectError:       false,
+			expectedErrorType: nil,
+		},
+		{
+			name:              "Delete error",
+			database:          createMockNotificiationDeleterIntArg("DeleteNotificationsOld", Error, TestAge),
+			expectError:       true,
+			expectedErrorType: Error,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			op := NewDeleteByAgeExecutor(test.database, TestAge)
+			err := op.Execute()
+
+			if test.expectError && err == nil {
+				t.Error("We expected an error but did not get one")
+			}
+
+			if !test.expectError && err != nil {
+				t.Errorf("We do not expected an error but got one. %s", err.Error())
+			}
+
+			if test.expectError {
+				eet := reflect.TypeOf(test.expectedErrorType)
+				aet := reflect.TypeOf(err)
+				if !aet.AssignableTo(eet) {
+					t.Errorf("Expected error of type %v, but got an error of type %v", eet, aet)
+				}
+			}
+
+			return
+		})
+	}
 }
