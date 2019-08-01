@@ -24,6 +24,10 @@ type IdExecutor interface {
 	Execute() (contract.Notification, error)
 }
 
+type CollectionExecutor interface {
+	Execute() ([]contract.Notification, error)
+}
+
 type notificationLoadById struct {
 	database NotificationLoader
 	id       string
@@ -32,6 +36,12 @@ type notificationLoadById struct {
 type notificationLoadBySlug struct {
 	database NotificationLoader
 	slug     string
+}
+
+type notificationsLoadBySender struct {
+	database NotificationLoader
+	limit    int
+	sender   string
 }
 
 func (op notificationLoadById) Execute() (contract.Notification, error) {
@@ -56,15 +66,32 @@ func (op notificationLoadBySlug) Execute() (contract.Notification, error) {
 	return res, nil
 }
 
+func (op notificationsLoadBySender) Execute() ([]contract.Notification, error) {
+	res, err := op.database.GetNotificationBySender(op.sender, op.limit)
+	if err != nil {
+		return res, err
+	}
+	return res, nil
+}
+
 func NewIdExecutor(db NotificationLoader, id string) IdExecutor {
 	return notificationLoadById{
 		database: db,
 		id:       id,
 	}
 }
+
 func NewSlugExecutor(db NotificationLoader, slug string) IdExecutor {
 	return notificationLoadBySlug{
 		database: db,
 		slug:     slug,
+	}
+}
+
+func NewSenderExecutor(db NotificationLoader, sender string, limit int) CollectionExecutor {
+	return notificationsLoadBySender{
+		database: db,
+		limit:    limit,
+		sender:   sender,
 	}
 }
