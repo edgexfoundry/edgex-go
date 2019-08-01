@@ -208,7 +208,7 @@ func restDeleteNotificationsByAge(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("true"))
 }
 
-func notificationBySenderHandler(w http.ResponseWriter, r *http.Request) {
+func restGetNotificationsBySender(w http.ResponseWriter, r *http.Request) {
 
 	if r.Body != nil {
 		defer r.Body.Close()
@@ -228,19 +228,15 @@ func notificationBySenderHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	n, err := dbClient.GetNotificationBySender(vars["sender"], limitNum)
+	op := notification.NewSenderExecutor(dbClient, vars["sender"], limitNum)
+	results, err := op.Execute()
 	if err != nil {
-		if err == db.ErrNotFound {
-			http.Error(w, "Notification not found", http.StatusNotFound)
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		LoggingClient.Error(err.Error())
 		return
 	}
 
-	pkg.Encode(n, w, LoggingClient)
-
+	pkg.Encode(results, w, LoggingClient)
 }
 
 func notificationByStartEndHandler(w http.ResponseWriter, r *http.Request) {
