@@ -30,3 +30,24 @@ func (_m *IntervalLoader) IntervalById(id string) (models.Interval, error) {
 
 	return r0, r1
 }
+
+// IntervalByName provides a mock function with given fields: name
+func (_m *IntervalLoader) IntervalByName(name string) (models.Interval, error) {
+	ret := _m.Called(name)
+
+	var r0 models.Interval
+	if rf, ok := ret.Get(0).(func(string) models.Interval); ok {
+		r0 = rf(name)
+	} else {
+		r0 = ret.Get(0).(models.Interval)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(name)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}

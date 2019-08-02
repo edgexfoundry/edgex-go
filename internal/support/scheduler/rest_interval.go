@@ -15,12 +15,14 @@
 package scheduler
 
 import (
+	"net/http"
+	"net/url"
+
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/errors"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/operators/interval"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
 	"github.com/gorilla/mux"
-	"net/http"
-	"net/url"
 )
 
 func restGetIntervalByID(w http.ResponseWriter, r *http.Request) {
@@ -67,7 +69,7 @@ func restDeleteIntervalByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	op := interval.NewDeleteByIDExecutor(dbClient, scClient, scClient, id)
+	op := interval.NewDeleteByIDExecutor(dbClient, scClient, id)
 	err = op.Execute()
 
 	if err != nil {
@@ -79,6 +81,72 @@ func restDeleteIntervalByID(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("true"))
+}
+func restGetIntervalByName(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+
+	vars := mux.Vars(r)
+	name, err := url.QueryUnescape(vars["name"])
+
+	//Issues un-escaping
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		LoggingClient.Error("Error un-escaping the value name: " + err.Error())
+		return
+	}
+
+	op := interval.NewNameExecutor(dbClient, name)
+	result, err := op.Execute()
+	if err != nil {
+		switch err := err.(type) {
+		case errors.ErrIntervalNotFound:
+			http.Error(w, err.Error(), http.StatusNotFound)
+		case *types.ErrServiceClient:
+			http.Error(w, err.Error(), err.StatusCode)
+		default:
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		LoggingClient.Error(err.Error())
+		return
+	}
+
+	pkg.Encode(result, w, LoggingClient)
+
+}
+
+func restDeleteIntervalByName(w http.ResponseWriter, r *http.Request) {
+
+	defer r.Body.Close()
+
+	vars := mux.Vars(r)
+	name, err := url.QueryUnescape(vars["name"])
+
+	//Issues un-escaping
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		LoggingClient.Error("Error un-escaping the value name: " + err.Error())
+		return
+	}
+	op := interval.NewDeleteByNameExecutor(dbClient, scClient, name)
+	err = op.Execute()
+	if err != nil {
+
+		switch err.(type) {
+		case errors.ErrIntervalNotFound:
+			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		case errors.ErrIntervalStillUsedByIntervalActions:
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		default:
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 	}
 
 	w.Header().Set("Content-Type", "application/json")

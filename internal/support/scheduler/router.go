@@ -21,7 +21,6 @@ import (
 	"strconv"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/gorilla/mux"
 
@@ -51,8 +50,8 @@ func LoadRestRoutes() *mux.Router {
 	interval := r.PathPrefix(clients.ApiIntervalRoute).Subrouter()
 	interval.HandleFunc("/{"+ID+"}", restGetIntervalByID).Methods(http.MethodGet)
 	interval.HandleFunc("/{"+ID+"}", restDeleteIntervalByID).Methods(http.MethodDelete)
-	interval.HandleFunc("/"+NAME+"/{"+NAME+"}", intervalByNameHandler).Methods(http.MethodGet, http.MethodDelete)
-
+	interval.HandleFunc("/"+NAME+"/{"+NAME+"}", restGetIntervalByName).Methods(http.MethodGet)
+	interval.HandleFunc("/"+NAME+"/{"+NAME+"}", restDeleteIntervalByName).Methods(http.MethodDelete)
 	// Scrub "Intervals and IntervalActions"
 	interval.HandleFunc("/"+SCRUB+"/", scrubAllHandler).Methods(http.MethodDelete)
 
@@ -182,63 +181,6 @@ func intervalHandler(w http.ResponseWriter, r *http.Request) {
 			}
 			LoggingClient.Error(err.Error())
 			return
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("true"))
-	}
-}
-
-/*
-Handler for the Interval By Name API
-Status code 400 - interval in use, malformed request
-Status code 404 - interval not found
-Status code 413 - number of intervals exceeds limit
-Status code 500 - unanticipated issues
-api/v1/interval
-*/
-func intervalByNameHandler(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
-
-	vars := mux.Vars(r)
-	name, err := url.QueryUnescape(vars["name"])
-
-	//Issues un-escaping
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		LoggingClient.Error("Error un-escaping the value name: " + err.Error())
-		return
-	}
-
-	switch r.Method {
-	case http.MethodGet:
-		interval, err := dbClient.IntervalByName(name)
-		if err != nil {
-			switch err := err.(type) {
-			case *types.ErrServiceClient:
-				http.Error(w, err.Error(), err.StatusCode)
-			default:
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			}
-			LoggingClient.Error(err.Error())
-			return
-		}
-		pkg.Encode(interval, w, LoggingClient)
-	case http.MethodDelete:
-		if err = deleteIntervalByName(name); err != nil {
-
-			switch err.(type) {
-			case *errors.ErrDbNotFound:
-				http.Error(w, err.Error(), http.StatusNotFound)
-				return
-			case *errors.ErrIntervalStillUsedByIntervalActions:
-				http.Error(w, err.Error(), http.StatusBadRequest)
-				return
-			default:
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
 		}
 
 		w.Header().Set("Content-Type", "application/json")

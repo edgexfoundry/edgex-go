@@ -30,3 +30,24 @@ func (_m *SchedulerQueueLoader) QueryIntervalByID(intervalId string) (models.Int
 
 	return r0, r1
 }
+
+// QueryIntervalByName provides a mock function with given fields: intervalName
+func (_m *SchedulerQueueLoader) QueryIntervalByName(intervalName string) (models.Interval, error) {
+	ret := _m.Called(intervalName)
+
+	var r0 models.Interval
+	if rf, ok := ret.Get(0).(func(string) models.Interval); ok {
+		r0 = rf(intervalName)
+	} else {
+		r0 = ret.Get(0).(models.Interval)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(intervalName)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}

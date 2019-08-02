@@ -29,6 +29,11 @@ type intervalLoadById struct {
 	id       string
 }
 
+type intervalLoadByName struct {
+	database IntervalLoader
+	name     string
+}
+
 func (op intervalLoadById) Execute() (contract.Interval, error) {
 	res, err := op.database.IntervalById(op.id)
 	if err != nil {
@@ -40,9 +45,27 @@ func (op intervalLoadById) Execute() (contract.Interval, error) {
 	return res, nil
 }
 
+func (op intervalLoadByName) Execute() (contract.Interval, error) {
+	res, err := op.database.IntervalByName(op.name)
+	if err != nil {
+		if err == db.ErrNotFound {
+			err = errors.NewErrIntervalNotFound(op.name)
+		}
+		return res, err
+	}
+	return res, nil
+}
+
 func NewIdExecutor(db IntervalLoader, id string) IdExecutor {
 	return intervalLoadById{
 		database: db,
 		id:       id,
+	}
+}
+
+func NewNameExecutor(db IntervalLoader, name string) IdExecutor {
+	return intervalLoadByName{
+		database: db,
+		name:     name,
 	}
 }
