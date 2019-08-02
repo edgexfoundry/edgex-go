@@ -25,7 +25,7 @@ import (
 )
 
 var Id = "83cb038b-5a94-4707-985d-13effec62de2"
-
+var Name = "hourly"
 var Error = errors.New("test error")
 var ErrorNotFound = db.ErrNotFound
 var SuccessfulDatabaseResult = []contract.Interval{
@@ -35,6 +35,14 @@ var SuccessfulDatabaseResult = []contract.Interval{
 		Start:     "20160101T000000",
 		End:       "",
 		Frequency: "PT1H!",
+	},
+}
+var SuccessfulIntervalActionResult = []contract.IntervalAction{
+	{
+		ID:         Id,
+		Name:       "scrub pushed records",
+		Interval:   "hourly",
+		Parameters: "",
 	},
 }
 
@@ -52,13 +60,13 @@ func TestIdExecutor(t *testing.T) {
 			expectedError:  false,
 		},
 		{
-			name:           "Unsuccessful database call",
+			name:           "Unexpected error",
 			mockDb:         createMockIntervalLoaderStringArg("IntervalById", Error, contract.Interval{}, Id),
 			expectedResult: contract.Interval{},
 			expectedError:  true,
 		},
 		{
-			name:           "Unsuccessful database call",
+			name:           "Interval not found error",
 			mockDb:         createMockIntervalLoaderStringArg("IntervalById", ErrorNotFound, contract.Interval{}, Id),
 			expectedResult: contract.Interval{},
 			expectedError:  true,
@@ -86,8 +94,58 @@ func TestIdExecutor(t *testing.T) {
 		})
 	}
 }
+
 func createMockIntervalLoaderStringArg(methodName string, err error, ret interface{}, arg string) IntervalLoader {
 	dbMock := mocks.IntervalLoader{}
 	dbMock.On(methodName, arg).Return(ret, err)
 	return &dbMock
+}
+
+func TestNameExecutor(t *testing.T) {
+	tests := []struct {
+		name           string
+		mockDb         IntervalLoader
+		expectedResult contract.Interval
+		expectedError  bool
+	}{
+		{
+			name:           "Successful database call",
+			mockDb:         createMockIntervalLoaderStringArg("IntervalByName", nil, SuccessfulDatabaseResult[0], Name),
+			expectedResult: SuccessfulDatabaseResult[0],
+			expectedError:  false,
+		},
+		{
+			name:           "Unexpected error",
+			mockDb:         createMockIntervalLoaderStringArg("IntervalByName", Error, contract.Interval{}, Name),
+			expectedResult: contract.Interval{},
+			expectedError:  true,
+		},
+		{
+			name:           "Interval not found error",
+			mockDb:         createMockIntervalLoaderStringArg("IntervalByName", ErrorNotFound, contract.Interval{}, Name),
+			expectedResult: contract.Interval{},
+			expectedError:  true,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			op := NewNameExecutor(test.mockDb, Name)
+			actual, err := op.Execute()
+			if test.expectedError && err == nil {
+				t.Error("Expected an error")
+				return
+			}
+
+			if !test.expectedError && err != nil {
+				t.Errorf("Unexpectedly encountered error: %s", err.Error())
+				return
+			}
+
+			if !reflect.DeepEqual(test.expectedResult, actual) {
+				t.Errorf("Expected result does not match the observed.\nExpected: %v\nObserved: %v\n", test.expectedResult, actual)
+				return
+			}
+		})
+	}
 }
