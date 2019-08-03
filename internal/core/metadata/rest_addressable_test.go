@@ -15,6 +15,8 @@
 package metadata
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -95,6 +97,141 @@ func TestGetAllAddressables(t *testing.T) {
 			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
 			handler := http.HandlerFunc(restGetAllAddressables)
+			handler.ServeHTTP(rr, tt.request)
+			response := rr.Result()
+			if response.StatusCode != tt.expectedStatus {
+				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
+				return
+			}
+		})
+	}
+}
+
+func TestAddAddressable(t *testing.T) {
+	noName := createAddressables(1)[0]
+	noName.Name = ""
+
+	tests := []struct {
+		name           string
+		request        *http.Request
+		dbMock         interfaces.DBClient
+		expectedStatus int
+	}{
+		{
+			name:    "OK",
+			request: createAddressableRequestWithBody(http.MethodPost, createAddressables(1)[0], ID, TestId),
+			dbMock: createMockWithOutlines([]mockOutline{
+				{"AddAddressable", mock.Anything, TestId, nil}}),
+			expectedStatus: http.StatusOK,
+		},
+		{
+			name:    "Missing name field on addressable",
+			request: createAddressableRequestWithBody(http.MethodPost, noName, ID, TestId),
+			dbMock: createMockWithOutlines([]mockOutline{
+				{"AddAddressable", mock.Anything, TestId, nil}}),
+			expectedStatus: http.StatusBadRequest,
+		},
+		{
+			name:    "Duplicated addressable",
+			request: createAddressableRequestWithBody(http.MethodPost, createAddressables(1)[0], ID, TestId),
+			dbMock: createMockWithOutlines([]mockOutline{
+				{"AddAddressable", mock.Anything, "", db.ErrNotUnique}}),
+			expectedStatus: http.StatusConflict,
+		},
+		{
+			name:    "Other error from database",
+			request: createAddressableRequestWithBody(http.MethodPost, createAddressables(1)[0], ID, TestId),
+			dbMock: createMockWithOutlines([]mockOutline{
+				{"AddAddressable", mock.Anything, "", errors.New("some error")}}),
+			expectedStatus: http.StatusInternalServerError,
+		},
+		{
+			name:           "Bad JSON parse",
+			request:        createRequest(http.MethodPost, ID, TestId),
+			dbMock:         nil,
+			expectedStatus: http.StatusBadRequest,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			dbClient = tt.dbMock
+			rr := httptest.NewRecorder()
+			handler := http.HandlerFunc(restAddAddressable)
+			handler.ServeHTTP(rr, tt.request)
+			response := rr.Result()
+			if response.StatusCode != tt.expectedStatus {
+				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
+				return
+			}
+		})
+	}
+}
+
+func TestUpdateAddressable(t *testing.T) {
+	successNewName := createAddressables(1)[0]
+	successNewName.Name = "something different"
+
+	tests := []struct {
+		name           string
+		request        *http.Request
+		dbMock         interfaces.DBClient
+		expectedStatus int
+	}{
+		{
+			name:    "OK",
+			request: createAddressableRequestWithBody(http.MethodPut, createAddressables(1)[0], ID, TestId),
+			dbMock: createMockWithOutlines([]mockOutline{
+				{"GetAddressableById", createAddressables(1)[0].Id, createAddressables(1)[0], nil},
+				{"UpdateAddressable", mock.Anything, nil, nil}}),
+			expectedStatus: http.StatusOK,
+		},
+		{
+			name:    "Unsuccessful database call",
+			request: createAddressableRequestWithBody(http.MethodPut, createAddressables(1)[0], ID, TestId),
+			dbMock: createMockWithOutlines([]mockOutline{
+				{"GetAddressableById", createAddressables(1)[0].Id, createAddressables(1)[0], nil},
+				{"UpdateAddressable", mock.Anything, errors.New("some error"), nil}}),
+			expectedStatus: http.StatusInternalServerError,
+		},
+		{
+			name:    "Unsuccessful device service database call, updated name",
+			request: createAddressableRequestWithBody(http.MethodPut, successNewName, ID, TestId),
+			dbMock: createMockWithOutlines([]mockOutline{
+				{"GetAddressableById", createAddressables(1)[0].Id, createAddressables(1)[0], nil},
+				{"UpdateAddressable", mock.Anything, nil, nil},
+				{"GetDeviceServicesByAddressableId", mock.Anything, nil, errors.New("some error")}}),
+			expectedStatus: http.StatusInternalServerError,
+		},
+		{
+			name:    "Addressable in use",
+			request: createAddressableRequestWithBody(http.MethodPut, successNewName, ID, TestId),
+			dbMock: createMockWithOutlines([]mockOutline{
+				{"GetAddressableById", createAddressables(1)[0].Id, createAddressables(1)[0], nil},
+				{"UpdateAddressable", mock.Anything, nil, nil},
+				{"GetDeviceServicesByAddressableId", mock.Anything, []contract.DeviceService{{}}, nil}}),
+			expectedStatus: http.StatusConflict,
+		},
+		{
+			name:    "Addressable not found",
+			request: createAddressableRequestWithBody(http.MethodPut, createAddressables(1)[0], ID, TestId),
+			dbMock: createMockWithOutlines([]mockOutline{
+				{"GetAddressableById", createAddressables(1)[0].Id, contract.Addressable{}, db.ErrNotFound}}),
+			expectedStatus: http.StatusNotFound,
+		},
+		{
+			name:           "Bad JSON parse",
+			request:        createRequest(http.MethodPut, ID, TestId),
+			dbMock:         nil,
+			expectedStatus: http.StatusBadRequest,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			dbClient = tt.dbMock
+			rr := httptest.NewRecorder()
+			handler := http.HandlerFunc(restUpdateAddressable)
 			handler.ServeHTTP(rr, tt.request)
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
@@ -413,8 +550,6 @@ func TestGetAddressablesByTopic(t *testing.T) {
 }
 
 func TestDeleteAddressableById(t *testing.T) {
-	success := createAddressables(1)[0]
-
 	tests := []struct {
 		name           string
 		request        *http.Request
@@ -424,8 +559,8 @@ func TestDeleteAddressableById(t *testing.T) {
 		{
 			"OK",
 			createRequest(http.MethodDelete, ID, TestId),
-			createMockAddressDeleter([]mockOutline{
-				{"GetAddressableById", TestId, success, nil},
+			createMockWithOutlines([]mockOutline{
+				{"GetAddressableById", TestId, createAddressables(1)[0], nil},
 				{"GetAddressableByName", mock.Anything, contract.Addressable{}, errors.New("some error")},
 				{"GetDeviceServicesByAddressableId", mock.Anything, []contract.DeviceService{}, nil},
 				{"DeleteAddressableById", mock.Anything, nil, nil}}),
@@ -434,7 +569,7 @@ func TestDeleteAddressableById(t *testing.T) {
 		{
 			name:    "Addressable not found",
 			request: createRequest(http.MethodDelete, ID, TestId),
-			dbMock: createMockAddressDeleter([]mockOutline{
+			dbMock: createMockWithOutlines([]mockOutline{
 				{"GetAddressableByName", TestId, contract.Addressable{}, db.ErrNotFound},
 				{"GetAddressableById", TestId, contract.Addressable{}, db.ErrNotFound}}),
 			expectedStatus: http.StatusNotFound,
@@ -442,8 +577,8 @@ func TestDeleteAddressableById(t *testing.T) {
 		{
 			name:    "Addressable in use",
 			request: createRequest(http.MethodDelete, ID, TestId),
-			dbMock: createMockAddressDeleter([]mockOutline{
-				{"GetAddressableById", TestId, success, nil},
+			dbMock: createMockWithOutlines([]mockOutline{
+				{"GetAddressableById", TestId, createAddressables(1)[0], nil},
 				{"GetAddressableByName", mock.Anything, contract.Addressable{}, errors.New("some error")},
 				{"GetDeviceServicesByAddressableId", mock.Anything, []contract.DeviceService{{}}, nil},
 				{"DeleteAddressableById", mock.Anything, nil, nil}}),
@@ -452,7 +587,7 @@ func TestDeleteAddressableById(t *testing.T) {
 		{
 			name:    "Other error from database",
 			request: createRequest(http.MethodDelete, ID, TestId),
-			dbMock: createMockAddressDeleter([]mockOutline{
+			dbMock: createMockWithOutlines([]mockOutline{
 				{"GetAddressableByName", TestId, contract.Addressable{}, errors.New("some error")},
 				{"GetAddressableById", TestId, contract.Addressable{}, errors.New("some error")}}),
 			expectedStatus: http.StatusInternalServerError,
@@ -475,8 +610,6 @@ func TestDeleteAddressableById(t *testing.T) {
 }
 
 func TestDeleteAddressableByName(t *testing.T) {
-	success := createAddressables(1)[0]
-
 	tests := []struct {
 		name           string
 		request        *http.Request
@@ -486,8 +619,8 @@ func TestDeleteAddressableByName(t *testing.T) {
 		{
 			"OK",
 			createRequest(http.MethodDelete, NAME, TestName),
-			createMockAddressDeleter([]mockOutline{
-				{"GetAddressableByName", TestName, success, nil},
+			createMockWithOutlines([]mockOutline{
+				{"GetAddressableByName", TestName, createAddressables(1)[0], nil},
 				{"GetAddressableById", mock.Anything, contract.Addressable{}, errors.New("some error")},
 				{"GetDeviceServicesByAddressableId", mock.Anything, []contract.DeviceService{}, nil},
 				{"DeleteAddressableById", mock.Anything, nil, nil}}),
@@ -496,7 +629,7 @@ func TestDeleteAddressableByName(t *testing.T) {
 		{
 			name:    "Addressable not found",
 			request: createRequest(http.MethodDelete, NAME, TestName),
-			dbMock: createMockAddressDeleter([]mockOutline{
+			dbMock: createMockWithOutlines([]mockOutline{
 				{"GetAddressableByName", TestName, contract.Addressable{}, db.ErrNotFound},
 				{"GetAddressableById", TestName, contract.Addressable{}, db.ErrNotFound}}),
 			expectedStatus: http.StatusNotFound,
@@ -504,8 +637,8 @@ func TestDeleteAddressableByName(t *testing.T) {
 		{
 			name:    "Addressable in use",
 			request: createRequest(http.MethodDelete, NAME, TestName),
-			dbMock: createMockAddressDeleter([]mockOutline{
-				{"GetAddressableByName", TestName, success, nil},
+			dbMock: createMockWithOutlines([]mockOutline{
+				{"GetAddressableByName", TestName, createAddressables(1)[0], nil},
 				{"GetAddressableById", mock.Anything, contract.Addressable{}, errors.New("some error")},
 				{"GetDeviceServicesByAddressableId", mock.Anything, []contract.DeviceService{{}}, nil},
 				{"DeleteAddressableById", mock.Anything, nil, nil}}),
@@ -514,7 +647,7 @@ func TestDeleteAddressableByName(t *testing.T) {
 		{
 			name:    "Other error from database",
 			request: createRequest(http.MethodDelete, NAME, TestName),
-			dbMock: createMockAddressDeleter([]mockOutline{
+			dbMock: createMockWithOutlines([]mockOutline{
 				{"GetAddressableByName", TestName, contract.Addressable{}, errors.New("some error")},
 				{"GetAddressableById", TestName, contract.Addressable{}, errors.New("some error")}}),
 			expectedStatus: http.StatusInternalServerError,
@@ -541,10 +674,20 @@ func createRequest(httpMethod string, pathParamName string, pathParamValue strin
 	return mux.SetURLVars(req, map[string]string{pathParamName: pathParamValue})
 }
 
+func createAddressableRequestWithBody(httpMethod string, addressable contract.Addressable, pathParamName string, pathParamValue string) *http.Request {
+	// if your JSON marshalling fails you've got bigger problems
+	body, _ := json.Marshal(addressable)
+
+	req := httptest.NewRequest(httpMethod, TestURI, bytes.NewReader(body))
+
+	return mux.SetURLVars(req, map[string]string{pathParamName: pathParamValue})
+}
+
 func createAddressables(howMany int) []contract.Addressable {
 	var addressables []contract.Addressable
 	for i := 0; i < howMany; i++ {
 		addressables = append(addressables, contract.Addressable{
+			Name:       "Name" + strconv.Itoa(i),
 			User:       "User" + strconv.Itoa(i),
 			Protocol:   "http",
 			Id:         "address" + strconv.Itoa(i),
@@ -619,7 +762,7 @@ type mockOutline struct {
 	err        error
 }
 
-func createMockAddressDeleter(outlines []mockOutline) interfaces.DBClient {
+func createMockWithOutlines(outlines []mockOutline) interfaces.DBClient {
 	dbMock := mocks.DBClient{}
 
 	for _, o := range outlines {
