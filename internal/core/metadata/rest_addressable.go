@@ -137,7 +137,7 @@ func restDeleteAddressableById(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	var id string = vars[ID]
 
-	op := addressable.NewDeleteExecutor(dbClient, id)
+	op := addressable.NewDeleteExecutor(dbClient, id, "")
 	err := op.Execute()
 	if err != nil {
 		switch err.(type) {
@@ -158,7 +158,7 @@ func restDeleteAddressableById(w http.ResponseWriter, r *http.Request) {
 
 func restDeleteAddressableByName(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	n, err := url.QueryUnescape(vars[NAME])
+	name, err := url.QueryUnescape(vars[NAME])
 	// Problems unescaping
 	if err != nil {
 		LoggingClient.Error(err.Error())
@@ -166,7 +166,7 @@ func restDeleteAddressableByName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	op := addressable.NewDeleteExecutor(dbClient, n)
+	op := addressable.NewDeleteExecutor(dbClient, "", name)
 	err = op.Execute()
 	if err != nil {
 		switch err.(type) {

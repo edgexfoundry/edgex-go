@@ -26,45 +26,46 @@ type DeleteExecutor interface {
 }
 
 type addressDelete struct {
-	database   AddressDeleter
-	identifier string
+	database AddressDeleter
+	id       string
+	name     string
 }
 
 // This method adds the provided Addressable to the database.
 func (op addressDelete) Execute() error {
-	// Check if the addressable exists
-	idAddr, idErr := op.database.GetAddressableById(op.identifier)
-	nameAddr, nameErr := op.database.GetAddressableByName(op.identifier)
+	var addressable contract.Addressable
+	var err error
 
-	// if this case hits, then it's safe to say we don't have a usable addressable
-	if idErr != nil && nameErr != nil {
-		if idErr == db.ErrNotFound && nameErr == db.ErrNotFound {
-			// not the cleanest thing but we can't say anything for certain about the data input
-			return errors.NewErrAddressableNotFound(op.identifier, op.identifier)
+	// deleteById and deleteByName all use the deleteById database function, so abstract away the front end difference
+	if op.id == "" {
+		if op.name == "" {
+			// short circuit a bad request
+			return errors.NewErrAddressableNotFound(op.id, op.name)
 		}
 
-		return nameErr
+		addressable, err = op.database.GetAddressableByName(op.name)
+	} else {
+		addressable, err = op.database.GetAddressableById(op.id)
 	}
 
-	var a contract.Addressable
+	if err != nil {
+		if err == db.ErrNotFound {
+			return errors.NewErrAddressableNotFound(op.id, op.name)
+		}
 
-	// use the addressable from the operation that did not return an error
-	if idErr != nil {
-		a = nameAddr
-	} else {
-		a = idAddr
+		return err
 	}
 
 	// Check device services
-	ds, err := op.database.GetDeviceServicesByAddressableId(a.Id)
+	ds, err := op.database.GetDeviceServicesByAddressableId(addressable.Id)
 	if err != nil {
 		return err
 	}
 	if len(ds) > 0 {
-		return errors.NewErrAddressableInUse(a.Name)
+		return errors.NewErrAddressableInUse(addressable.Name)
 	}
 
-	err = op.database.DeleteAddressableById(a.Id)
+	err = op.database.DeleteAddressableById(addressable.Id)
 	if err != nil {
 		return err
 	}
@@ -73,9 +74,12 @@ func (op addressDelete) Execute() error {
 }
 
 // This factory method returns an executor used to delete an addressable.
-func NewDeleteExecutor(db AddressDeleter, identifier string) DeleteExecutor {
+// Addressables will first be searched by ID.
+// If the provided ID is the empty string, it will be looked up by name.
+func NewDeleteExecutor(db AddressDeleter, id string, name string) DeleteExecutor {
 	return addressDelete{
-		database:   db,
-		identifier: identifier,
+		database: db,
+		id:       id,
+		name:     name,
 	}
 }
