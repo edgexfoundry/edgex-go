@@ -51,6 +51,12 @@ type notificationsLoadByStartEnd struct {
 	end      int64
 }
 
+type notificationsLoadByStart struct {
+	database NotificationLoader
+	limit    int
+	start    int64
+}
+
 func (op notificationLoadById) Execute() (contract.Notification, error) {
 	res, err := op.database.GetNotificationById(op.id)
 	if err != nil {
@@ -89,6 +95,14 @@ func (op notificationsLoadByStartEnd) Execute() ([]contract.Notification, error)
 	return res, nil
 }
 
+func (op notificationsLoadByStart) Execute() ([]contract.Notification, error) {
+	res, err := op.database.GetNotificationsByStart(op.start, op.limit)
+	if err != nil {
+		return res, err
+	}
+	return res, nil
+}
+
 func NewIdExecutor(db NotificationLoader, id string) IdExecutor {
 	return notificationLoadById{
 		database: db,
@@ -108,6 +122,14 @@ func NewSenderExecutor(db NotificationLoader, sender string, limit int) Collecti
 		database: db,
 		limit:    limit,
 		sender:   sender,
+	}
+}
+
+func NewStartExecutor(db NotificationLoader, start int64, limit int) CollectionExecutor {
+	return notificationsLoadByStart{
+		database: db,
+		limit:    limit,
+		start:    start,
 	}
 }
 
