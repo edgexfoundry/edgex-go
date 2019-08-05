@@ -207,12 +207,12 @@ func (c *Consumer) createOAuth2Token() (string, error) {
 
 		path := fmt.Sprintf("%s/oauth2/token", Configuration.KongAuth.Resource)
 		LoggingClient.Info(fmt.Sprintf("creating token on the endpoint of %s", path))
-		req, err := sling.New().Base(u.String()).Post(path).BodyForm(tokenreq).Request()
+		treq, err := sling.New().Base(u.String()).Post(path).BodyForm(tokenreq).Request()
 		if err != nil {
 			LoggingClient.Error(fmt.Sprintf("failed to create oauth2 token for client_id %s with error %s", c.name, err.Error()))
 			return "", err
 		}
-		tresp, err := c.client.Do(req)
+		tresp, err := c.client.Do(treq)
 		if err != nil {
 			LoggingClient.Error(fmt.Sprintf("failed to create oauth2 token for client_id %s with error %s", c.name, err.Error()))
 			return "", err
@@ -227,11 +227,11 @@ func (c *Consumer) createOAuth2Token() (string, error) {
 			LoggingClient.Info(fmt.Sprintf("successful on retrieving bearer credential for consumer %s", c.name))
 			return token.AccessToken, nil
 		default:
-			b, err := ioutil.ReadAll(resp.Body)
+			b, err := ioutil.ReadAll(tresp.Body)
 			if err != nil {
 				return "", err
 			}
-			e := fmt.Sprintf("failed to create bearer token for oauth authentication at endpoint oauth2/token with error %s,%s", resp.Status, string(b))
+			e := fmt.Sprintf("failed to create bearer token for oauth authentication at endpoint oauth2/token with error %s,%s", tresp.Status, string(b))
 			LoggingClient.Error(e)
 			return "", errors.New(e)
 		}
