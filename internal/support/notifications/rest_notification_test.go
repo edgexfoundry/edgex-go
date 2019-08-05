@@ -179,6 +179,17 @@ func createMockNotificationSenderLoader(methodName string, sender string, limit 
 	return &myMock
 }
 
+func createMockNotificationStartLoader(methodName string, start int64, limit int, desiredError error, ret interface{}) interfaces.DBClient {
+	myMock := mocks.DBClient{}
+
+	if desiredError != nil {
+		myMock.On(methodName, start, limit).Return(ret, desiredError)
+	} else {
+		myMock.On(methodName, start, limit).Return(ret, nil)
+	}
+	return &myMock
+}
+
 func createMockNotificationStartEndLoader(methodName string, start int64, end int64, limit int, desiredError error, ret interface{}) interfaces.DBClient {
 	myMock := mocks.DBClient{}
 
@@ -399,6 +410,68 @@ func TestGetNotificationsBySender(t *testing.T) {
 	}
 }
 
+func TestGetNotificationsByStart(t *testing.T) {
+	tests := []struct {
+		name           string
+		request        *http.Request
+		dbMock         interfaces.DBClient
+		expectedStatus int
+	}{
+		{
+			name:           "OK",
+			request:        createRequest(map[string]string{START: strconv.Itoa(int(TestStart)), END: strconv.Itoa(int(TestEnd)), LIMIT: strconv.Itoa(TestLimit)}),
+			dbMock:         createMockNotificationStartLoader("GetNotificationsByStart", TestStart, TestLimit, nil, createNotifications(1)),
+			expectedStatus: http.StatusOK,
+		},
+		{
+			name:           "Error converting string to integer start",
+			request:        createRequest(map[string]string{START: TestInvalidLimit, END: strconv.Itoa(int(TestEnd)), LIMIT: strconv.Itoa(TestLimit)}),
+			dbMock:         createMockNotificationStartLoader("GetNotificationsByStart", TestStart, TestLimit, errors.New("Test error"), []contract.Notification{}),
+			expectedStatus: http.StatusInternalServerError,
+		},
+		{
+			name:           "Error converting string to integer end",
+			request:        createRequest(map[string]string{START: strconv.Itoa(int(TestStart)), END: TestInvalidLimit, LIMIT: strconv.Itoa(TestLimit)}),
+			dbMock:         createMockNotificationStartLoader("GetNotificationsByStart", TestStart, TestLimit, errors.New("Test error"), []contract.Notification{}),
+			expectedStatus: http.StatusInternalServerError,
+		},
+		{
+			name:           "Error converting string to integer limit",
+			request:        createRequest(map[string]string{START: strconv.Itoa(int(TestStart)), END: strconv.Itoa(int(TestEnd)), LIMIT: TestInvalidLimit}),
+			dbMock:         createMockNotificationStartLoader("GetNotificationsByStart", TestStart, TestLimit, errors.New("Test error"), []contract.Notification{}),
+			expectedStatus: http.StatusInternalServerError,
+		},
+		{
+			name:           "Limit too large Error",
+			request:        createRequest(map[string]string{START: strconv.Itoa(int(TestStart)), END: strconv.Itoa(int(TestEnd)), LIMIT: strconv.Itoa(TestTooLargeLimit)}),
+			dbMock:         createMockNotificationStartLoader("GetNotificationsByStart", TestStart, TestTooLargeLimit, errors.New("Test error"), []contract.Notification{}),
+			expectedStatus: http.StatusRequestEntityTooLarge,
+		},
+		{
+			name:           "Unknown Error",
+			request:        createRequest(map[string]string{START: strconv.Itoa(int(TestStart)), END: strconv.Itoa(int(TestEnd)), LIMIT: strconv.Itoa(TestLimit)}),
+			dbMock:         createMockNotificationStartLoader("GetNotificationsByStart", TestStart, TestLimit, errors.New("Test error"), []contract.Notification{}),
+			expectedStatus: http.StatusInternalServerError,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			LoggingClient = logger.MockLogger{}
+			Configuration = &ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 5}}
+			dbClient = tt.dbMock
+			rr := httptest.NewRecorder()
+			handler := http.HandlerFunc(restNotificationByStart)
+			handler.ServeHTTP(rr, tt.request)
+			response := rr.Result()
+			if response.StatusCode != tt.expectedStatus {
+				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
+
+				return
+			}
+		})
+	}
+}
+
 func TestGetNotificationsByStartEnd(t *testing.T) {
 	tests := []struct {
 		name           string
@@ -408,37 +481,37 @@ func TestGetNotificationsByStartEnd(t *testing.T) {
 	}{
 		{
 			name:           "OK",
-			request:        createDeleteRequest(map[string]string{START: strconv.Itoa(int(TestStart)), END: strconv.Itoa(int(TestEnd)), LIMIT: strconv.Itoa(TestLimit)}),
+			request:        createRequest(map[string]string{START: strconv.Itoa(int(TestStart)), END: strconv.Itoa(int(TestEnd)), LIMIT: strconv.Itoa(TestLimit)}),
 			dbMock:         createMockNotificationStartEndLoader("GetNotificationsByStartEnd", TestStart, TestEnd, TestLimit, nil, createNotifications(1)),
 			expectedStatus: http.StatusOK,
 		},
 		{
 			name:           "Error converting string to integer start",
-			request:        createDeleteRequest(map[string]string{START: TestInvalidLimit, END: strconv.Itoa(int(TestEnd)), LIMIT: strconv.Itoa(TestLimit)}),
+			request:        createRequest(map[string]string{START: TestInvalidLimit, END: strconv.Itoa(int(TestEnd)), LIMIT: strconv.Itoa(TestLimit)}),
 			dbMock:         createMockNotificationStartEndLoader("GetNotificationsByStartEnd", TestStart, TestEnd, TestLimit, errors.New("Test error"), []contract.Notification{}),
 			expectedStatus: http.StatusInternalServerError,
 		},
 		{
 			name:           "Error converting string to integer end",
-			request:        createDeleteRequest(map[string]string{START: strconv.Itoa(int(TestStart)), END: TestInvalidLimit, LIMIT: strconv.Itoa(TestLimit)}),
+			request:        createRequest(map[string]string{START: strconv.Itoa(int(TestStart)), END: TestInvalidLimit, LIMIT: strconv.Itoa(TestLimit)}),
 			dbMock:         createMockNotificationStartEndLoader("GetNotificationsByStartEnd", TestStart, TestEnd, TestLimit, errors.New("Test error"), []contract.Notification{}),
 			expectedStatus: http.StatusInternalServerError,
 		},
 		{
 			name:           "Error converting string to integer limit",
-			request:        createDeleteRequest(map[string]string{START: strconv.Itoa(int(TestStart)), END: strconv.Itoa(int(TestEnd)), LIMIT: TestInvalidLimit}),
+			request:        createRequest(map[string]string{START: strconv.Itoa(int(TestStart)), END: strconv.Itoa(int(TestEnd)), LIMIT: TestInvalidLimit}),
 			dbMock:         createMockNotificationStartEndLoader("GetNotificationsByStartEnd", TestStart, TestEnd, TestLimit, errors.New("Test error"), []contract.Notification{}),
 			expectedStatus: http.StatusInternalServerError,
 		},
 		{
 			name:           "Limit too large Error",
-			request:        createDeleteRequest(map[string]string{START: strconv.Itoa(int(TestStart)), END: strconv.Itoa(int(TestEnd)), LIMIT: strconv.Itoa(TestTooLargeLimit)}),
+			request:        createRequest(map[string]string{START: strconv.Itoa(int(TestStart)), END: strconv.Itoa(int(TestEnd)), LIMIT: strconv.Itoa(TestTooLargeLimit)}),
 			dbMock:         createMockNotificationStartEndLoader("GetNotificationsByStartEnd", TestStart, TestEnd, TestTooLargeLimit, errors.New("Test error"), []contract.Notification{}),
 			expectedStatus: http.StatusRequestEntityTooLarge,
 		},
 		{
 			name:           "Unknown Error",
-			request:        createDeleteRequest(map[string]string{START: strconv.Itoa(int(TestStart)), END: strconv.Itoa(int(TestEnd)), LIMIT: strconv.Itoa(TestLimit)}),
+			request:        createRequest(map[string]string{START: strconv.Itoa(int(TestStart)), END: strconv.Itoa(int(TestEnd)), LIMIT: strconv.Itoa(TestLimit)}),
 			dbMock:         createMockNotificationStartEndLoader("GetNotificationsByStartEnd", TestStart, TestEnd, TestLimit, errors.New("Test error"), []contract.Notification{}),
 			expectedStatus: http.StatusInternalServerError,
 		},
