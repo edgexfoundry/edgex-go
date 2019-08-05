@@ -21,6 +21,7 @@ const (
 	TestUnexpectedMsgFormatStrForIntVal   = "unexpected result, active: '%d' but expected: '%d'"
 	TestUnexpectedMsgFormatStrForFloatVal = "unexpected result, active: '%f' but expected: '%f'"
 	TestUnexpectedMsgFormatStrForBoolVal  = "unexpected result, active: '%t' but expected: '%t'"
+	TestUnexpectedMsgFormatStrForInt64Val = "unexpected result, active: '%d' but expected: '%d'"
 )
 
 // Test Schedule model const fields
@@ -28,12 +29,11 @@ const (
 	TestIntervalName         = "midnight-1"
 	TestIntervalStart        = "20000101T000000"
 	TestIntervalEnd          = ""
-	TestIntervalFrequency    = "P1D"
+	TestIntervalFrequency    = "24h"
 	TestIntervalCron         = "This is a description"
 	TestIntervalRunOnce      = true
 	TestIntervalUpdatingName = "midnight-2"
-
-	TestBadFrequency = "423"
+	TestBadFrequency         = "423"
 )
 
 // Test IntervalAction model const fields
@@ -111,7 +111,7 @@ func TestRet(t *testing.T) {
 		t.Errorf(TestUnexpectedMsgFormatStrForFloatVal, testIntervalContext.Frequency.Hours(), 24.0)
 	}
 
-	testInterval.Frequency = "PT60S"
+	testInterval.Frequency = "60s"
 	testIntervalContext.Reset(testInterval)
 	if testIntervalContext.Frequency.Seconds() != 60 {
 		t.Errorf(TestUnexpectedMsgFormatStrForFloatVal, testIntervalContext.Frequency.Seconds(), 60.0)
@@ -141,7 +141,7 @@ func TestRet(t *testing.T) {
 	}
 
 	testInterval.Start = "20180101T010101"
-	testInterval.Frequency = "P1D"
+	testInterval.Frequency = "24h"
 	testIntervalContext.Reset(testInterval)
 
 	if testIntervalContext.StartTime.Unix() > testIntervalContext.NextTime.Unix() {
@@ -173,7 +173,7 @@ func TestIsComplete(t *testing.T) {
 	}
 
 	testInterval.Start = "20180101T010101"
-	testInterval.Frequency = "P1D"
+	testInterval.Frequency = "24h"
 	testInterval.RunOnce = false
 	testIntervalContext.Reset(testInterval)
 
@@ -182,26 +182,62 @@ func TestIsComplete(t *testing.T) {
 	}
 }
 
-func TestParseFrequency(t *testing.T) {
-	durationStr := "P1D"
-	duration := parseFrequency(durationStr)
+func TestParseNanoSecondFrequency(t *testing.T) {
 
+	durationStr := "50ns"
+	duration, err := parseFrequency(durationStr)
+	if err != nil {
+		t.Errorf(TestUnexpectedMsgFormatStrForInt64Val, duration.Nanoseconds(), 50)
+	}
+	if duration.Nanoseconds() != int64(50) {
+		t.Errorf(TestUnexpectedMsgFormatStrForInt64Val, duration.Nanoseconds(), 50)
+	}
+}
+
+// Note Time.Duration does not support milliseconds, or microseconds directly.
+func TestParseMicrosecondsFrequency(t *testing.T) {
+	durationStr := "1us"
+	duration, err := parseFrequency(durationStr)
+	if err != nil {
+		t.Errorf(TestUnexpectedMsgFormatStrForInt64Val, duration.Nanoseconds(), 1000)
+	}
+	if duration.Nanoseconds() != int64(1000) {
+		t.Errorf(TestUnexpectedMsgFormatStrForInt64Val, duration.Nanoseconds(), 1000)
+	}
+}
+
+// Note Time.Duration does not support milliseconds, or microseconds directly.
+func TestParseMillisecondFrequency(t *testing.T) {
+
+	durationStr := "500ms"
+	duration, err := parseFrequency(durationStr)
+	if err != nil {
+		t.Errorf(TestUnexpectedMsgFormatStrForFloatVal, duration.Seconds(), .5)
+	}
+
+	if duration.Seconds() != .5 {
+		t.Errorf(TestUnexpectedMsgFormatStrForFloatVal, duration.Seconds(), .5)
+	}
+}
+
+func TestParseFrequency(t *testing.T) {
+	durationStr := "24h"
+	duration, err := parseFrequency(durationStr)
+	if err != nil {
+		t.Errorf(TestUnexpectedMsgFormatStrForFloatVal, duration.Hours(), 24.0)
+	}
 	if duration.Hours() != 24 {
 		t.Errorf(TestUnexpectedMsgFormatStrForFloatVal, duration.Hours(), 24.0)
 	}
 
-	durationStr = "PT50S"
-	duration = parseFrequency(durationStr)
+	durationStr = "50s"
+	duration, err = parseFrequency(durationStr)
+
+	if err != nil {
+		t.Errorf(TestUnexpectedMsgFormatStrForFloatVal, duration.Hours(), 24.0)
+	}
 
 	if duration.Seconds() != 50 {
 		t.Errorf(TestUnexpectedMsgFormatStrForFloatVal, duration.Seconds(), 50.0)
-	}
-
-	//exception case
-	durationStr = "TP1234"
-	duration = parseFrequency(durationStr)
-
-	if duration.Seconds() != 0 {
-		t.Errorf(TestUnexpectedMsgFormatStrForFloatVal, duration.Seconds(), 0.0)
 	}
 }
