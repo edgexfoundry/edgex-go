@@ -12,6 +12,7 @@
  * the License.
  *
  * @author: Tingyu Zeng, Dell
+ * @version: 1.1.0
  *******************************************************************************/
 package proxy
 
@@ -21,77 +22,50 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/mocks"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	"github.com/edgexfoundry/edgex-go/internal/security/proxy/mocks"
 	"github.com/stretchr/testify/mock"
 )
 
-func createRequestorMockHttpOK() internal.HttpCaller {
-	response := &http.Response{StatusCode: http.StatusOK}
-	req := &mocks.HttpCaller{}
+type testRequestor struct {
+	SecretSvcBaseURL string
+}
+
+func (tr *testRequestor) GetProxyBaseURL() string {
+	return "test"
+}
+
+func (tr *testRequestor) GetSecretSvcBaseURL() string {
+	return tr.SecretSvcBaseURL
+}
+
+func (tr *testRequestor) GetHTTPClient() *http.Client {
+	return &http.Client{}
+}
+
+type testCertCfg struct {
+	CertPath string
+}
+
+func (tc *testCertCfg) GetCertPath() string {
+	return tc.CertPath
+}
+
+func (tc *testCertCfg) GetTokenPath() string {
+	return "test"
+}
+
+func createRequestorMockHttpOK() Requestor {
+	response := &http.Response{StatusCode:http.StatusOK}
+	req := &mocks.Requestor{}
 	req.On("Do", mock.Anything).Return(response)
 	return req
 }
 
-func TestLoad(t *testing.T) {
-	LoggingClient = logger.MockLogger{}
-	ts := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != "GET" {
-			w.WriteHeader(http.StatusMethodNotAllowed)
-			return
-		}
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"data": {"cert": "test-certificate", "key": "test-private-key"}}`))
-	}))
-	defer ts.Close()
-
-	host, port, err := parseHostAndPort(ts, t)
-	if err != nil {
-		t.Error(err.Error())
-		return
-	}
-
-	cfgOK := ConfigurationStruct{}
-	cfgOK.SecretService = SecretServiceInfo{
-		Server: host,
-		Port:   port,
-	}
-
-	validCertPath := "testCertPath"
-	validTokenPath := "testdata/test-resp-init.json"
-
-	tests := []struct {
-		name        string
-		config      ConfigurationStruct
-		certPath    string
-		tokenPath   string
-		expectError bool
-	}{
-		{"LoadOK", cfgOK, validCertPath, validTokenPath, false},
-		{"InvalidTokenPath", cfgOK, validCertPath, "invalid", true},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			Configuration = &tt.config
-			cert := NewCertificateLoader(NewRequestor(true, 10), tt.certPath, tt.tokenPath)
-			_, err := cert.Load()
-			if err != nil && !tt.expectError {
-				t.Error(err)
-			}
-
-			if err == nil && tt.expectError {
-				t.Error("error was expected, none occurred")
-			}
-		})
-	}
-}
-
-func TestGetAccessToken(t *testing.T) {
+func TestGetSecret(t *testing.T) {
 	r := createRequestorMockHttpOK()
 	path := "testdata/test-resp-init.json"
-	cs := certificate{r, "", ""}
-	s, err := cs.getAccessToken(path)
+	cs := NewCerts(r, "", "")
+	s, err := cs.getSecret(path)
 	if err != nil {
 		t.Errorf("failed to parse token file")
 		t.Errorf(err.Error())
@@ -104,105 +78,42 @@ func TestGetAccessToken(t *testing.T) {
 
 func TestValidate(t *testing.T) {
 	r := createRequestorMockHttpOK()
-	pairOK := CertPair{"private-cert", "private-key"}
-	pairBlank := CertPair{}
-	tests := []struct {
-		name        string
-		pair        CertPair
-		expectError bool
-	}{
-		{"PairOK", pairOK, false},
-		{"PairBlank", pairBlank, true},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			cs := certificate{r, "", ""}
-			err := cs.validate(&tt.pair)
-			if err != nil && !tt.expectError {
-				t.Error(err)
-			}
-
-			if err == nil && tt.expectError {
-				t.Error("error was expected, none occurred")
-			}
-		})
+	cp := &CertPair{"private-cert", "private-key"}
+	cs := NewCerts(r, "", "")
+	err := cs.validate(cp)
+	if err != nil {
+		t.Errorf("failed to validate cert collection")
 	}
 }
 
 func TestRetrieve(t *testing.T) {
-	LoggingClient = logger.MockLogger{}
-
 	certPath := "testCertPath"
 	token := "token"
-	ts := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"data": {"cert": "test-certificate", "key": "test-private-key"}}`))
 		if r.Method != "GET" {
-			w.WriteHeader(http.StatusMethodNotAllowed)
-			return
-		}
-
-		if r.URL.EscapedPath() == "/badjson" {
-			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(`["bad:json}"`))
-			return
+			t.Errorf("expected GET request, got %s instead", r.Method)
 		}
 
 		if r.URL.EscapedPath() != fmt.Sprintf("/%s", certPath) {
-			w.WriteHeader(http.StatusNotFound)
-			return
+			t.Errorf("expected request to /%s, got %s instead", certPath, r.URL.EscapedPath())
 		}
 
 		if r.Header.Get(VaultToken) != token {
-			w.WriteHeader(http.StatusBadRequest)
-			return
+			t.Errorf("expected request header for %s is %s, got %s instead", VaultToken, token, r.Header.Get(VaultToken))
 		}
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"data": {"cert": "test-certificate", "key": "test-private-key"}}`))
 	}))
 	defer ts.Close()
 
-	host, port, err := parseHostAndPort(ts, t)
+	//r := createRequestorMockHttpOK()
+	cs := NewCerts(&http.Client{}, ts.URL, certPath)
+	cp, err := cs.retrieve(token)
 	if err != nil {
-		t.Error(err.Error())
-		return
+		t.Errorf("failed to retrieve cert pair")
+		t.Errorf(err.Error())
 	}
-
-	cfgOK := ConfigurationStruct{}
-	cfgOK.SecretService = SecretServiceInfo{
-		Server: host,
-		Port:   port,
-	}
-
-	cfgInvalidPort := cfgOK
-	cfgInvalidPort.SecretService.Port = -1
-
-	tests := []struct {
-		name        string
-		config      ConfigurationStruct
-		certPath    string
-		token       string
-		expectError bool
-	}{
-		{"RetrieveOK", cfgOK, certPath, token, false},
-		{"InvalidPath", cfgOK, "invalid", token, true},
-		{"InvalidJSON", cfgOK, "badjson", token, true},
-		{"InvalidPort", cfgInvalidPort, certPath, token, true},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			Configuration = &tt.config
-			cs := certificate{NewRequestor(true, 10), tt.certPath, ""}
-			cp, err := cs.retrieve(tt.token)
-			if err != nil && !tt.expectError {
-				t.Error(err)
-			}
-
-			if err == nil {
-				if tt.expectError {
-					t.Error("error was expected, none occurred")
-				} else if cp.Cert != "test-certificate" || cp.Key != "test-private-key" {
-					t.Errorf("failed to parse certificate key pair")
-				}
-			}
-		})
+	if cp.Cert != "test-certificate" || cp.Key != "test-private-key" {
+		t.Errorf("failed to parse certificate key pair")
 	}
 }

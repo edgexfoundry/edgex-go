@@ -12,6 +12,7 @@
  * the License.
  *
  * @author: Tingyu Zeng, Dell
+ * @version: 1.1.0
  *******************************************************************************/
 package proxy
 
@@ -19,13 +20,16 @@ import (
 	"crypto/tls"
 	"net/http"
 	"time"
-
-	"github.com/edgexfoundry/edgex-go/internal"
 )
 
-func NewRequestor(skipVerify bool, timeout int) internal.HttpCaller {
+type Requestor interface {
+	Do(req *http.Request) (*http.Response, error)
+}
+
+func NewRequestor(skipVerify bool) Requestor {
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: skipVerify},
 	}
-	return &http.Client{Timeout: time.Duration(timeout) * time.Second, Transport: tr}
+	return &http.Client{Timeout: 10 * time.Second, Transport: tr}
 }
+

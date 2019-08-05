@@ -12,6 +12,7 @@
  * the License.
  *
  * @author: Tingyu Zeng, Dell
+ * @version: 1.1.0
  *******************************************************************************/
 package proxy
 
@@ -19,25 +20,19 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/dghubble/sling"
 	"io/ioutil"
 	"net/http"
-	"strings"
-
-	"github.com/edgexfoundry/edgex-go/internal"
 )
 
-type CertificateLoader interface {
-	Load() (*CertPair, error)
-}
-
-type certificate struct {
-	client    internal.HttpCaller
-	certPath  string
+type Certs struct {
+	client Requestor
+	certPath string
 	tokenPath string
 }
 
-func NewCertificateLoader(r internal.HttpCaller, certPath string, tokenPath string) CertificateLoader {
-	return certificate{client: r, certPath: certPath, tokenPath: tokenPath}
+func NewCerts(r Requestor, certPath string, tokenPath string) Certs {
+	return Certs { client: r, certPath: certPath, tokenPath: tokenPath}
 }
 
 type CertCollect struct {
@@ -53,23 +48,23 @@ type auth struct {
 	Token string `json:"root_token"`
 }
 
-func (cs certificate) Load() (*CertPair, error) {
-	t, err := cs.getAccessToken(cs.tokenPath)
+func (cs *Certs) getCertPair() (*CertPair, error) {
+	t, err := cs.getSecret(cs.tokenPath)
 	if err != nil {
-		return nil, err
+		return &CertPair{"", ""}, err
 	}
 	cp, err := cs.retrieve(t)
 	if err != nil {
-		return nil, err
+		return &CertPair{"", ""}, err
 	}
 	err = cs.validate(cp)
 	if err != nil {
-		return nil, err
+		return &CertPair{"", ""}, err
 	}
 	return cp, nil
 }
 
-func (cs certificate) getAccessToken(filename string) (string, error) {
+func (cs *Certs) getSecret(filename string) (string, error) {
 	a := auth{}
 	raw, err := ioutil.ReadFile(filename)
 	if err != nil {
@@ -80,16 +75,14 @@ func (cs certificate) getAccessToken(filename string) (string, error) {
 	return a.Token, err
 }
 
-func (cs certificate) retrieve(t string) (*CertPair, error) {
-	tokens := []string{Configuration.SecretService.GetSecretSvcBaseURL(), cs.certPath}
-	req, err := http.NewRequest(http.MethodGet, strings.Join(tokens, "/"), nil)
+func (cs *Certs) retrieve(t string) (*CertPair, error) {
+	s := sling.New().Set(VaultToken, t)
+	req, err := s.New().Base(Configuration.SecretService.GetSecretSvcBaseURL()).Get(cs.certPath).Request()
 	if err != nil {
 		e := fmt.Sprintf("failed to retrieve certificate on path %s with error %s", cs.certPath, err.Error())
 		LoggingClient.Error(e)
 		return nil, err
 	}
-	req.Header.Add(VaultToken, t)
-
 	resp, err := cs.client.Do(req)
 	if err != nil {
 		e := fmt.Sprintf("failed to retrieve certificate on path %s with error %s", cs.certPath, err.Error())
@@ -106,14 +99,14 @@ func (cs certificate) retrieve(t string) (*CertPair, error) {
 		}
 		break
 	default:
-		err = fmt.Errorf("failed to retrieve certificate on path %s with error code %d", cs.certPath, resp.StatusCode)
-		LoggingClient.Error(err.Error())
+		e := fmt.Sprintf("failed to retrieve certificate on path %s with error code %d", cs.certPath, resp.StatusCode)
+		LoggingClient.Error(e)
 		return nil, err
 	}
 	return &cc.Pair, nil
 }
 
-func (cs certificate) validate(cp *CertPair) error {
+func (cs *Certs) validate(cp *CertPair) error {
 	if len(cp.Cert) > 0 && len(cp.Key) > 0 {
 		return nil
 	}

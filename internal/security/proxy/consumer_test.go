@@ -12,6 +12,7 @@
  * the License.
  *
  * @author: Tingyu Zeng, Dell
+ * @version: 1.1.0
  *******************************************************************************/
 package proxy
 
@@ -20,8 +21,6 @@ import (
 	"net/http/httptest"
 	"testing"
 	"time"
-
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
 
 type testConsumerRequestor struct {
@@ -65,8 +64,6 @@ func (te *testConsumerConfig) GetProxyAuthResource() string {
 }
 
 func TestCreate(t *testing.T) {
-	LoggingClient = logger.MockLogger{}
-
 	name := "testuser"
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -80,19 +77,9 @@ func TestCreate(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	host, port, err := parseHostAndPort(ts, t)
-	if err != nil {
-		t.Error(err.Error())
-		return
-	}
-	Configuration = &ConfigurationStruct{}
-	Configuration.KongURL = KongUrlInfo{
-		Server:    host,
-		AdminPort: port,
-	}
-
-	co := NewConsumer(name, &http.Client{})
-	err = co.Create("test")
+	r := createRequestorMockHttpOK()
+	co := NewConsumer(name, r)
+	err := co.Create("test")
 	if err != nil {
 		t.Errorf("failed to creat consumer testuser")
 		t.Errorf(err.Error())
@@ -100,8 +87,6 @@ func TestCreate(t *testing.T) {
 }
 
 func TestAssociateWithGroup(t *testing.T) {
-	LoggingClient = logger.MockLogger{}
-
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		if r.Method != "POST" {
@@ -114,20 +99,9 @@ func TestAssociateWithGroup(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	host, port, err := parseHostAndPort(ts, t)
-	if err != nil {
-		t.Error(err.Error())
-		return
-	}
-
-	Configuration = &ConfigurationStruct{}
-	Configuration.KongURL = KongUrlInfo{
-		Server:    host,
-		AdminPort: port,
-	}
-
-	co := NewConsumer("testuser", &http.Client{})
-	err = co.AssociateWithGroup("groupname")
+	r := createRequestorMockHttpOK()
+	co := NewConsumer("testuser", r)
+	err := co.AssociateWithGroup("groupname")
 	if err != nil {
 		t.Errorf("failed to associate consumer with group")
 		t.Errorf(err.Error())
@@ -135,8 +109,6 @@ func TestAssociateWithGroup(t *testing.T) {
 }
 
 func TestCreateJWTToken(t *testing.T) {
-	LoggingClient = logger.MockLogger{}
-
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{"consumer_id": "test", "created_at": 1442426001000,"id": "test", "key": "test-key","secret": "test-secret"}`))
@@ -150,20 +122,9 @@ func TestCreateJWTToken(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	host, port, err := parseHostAndPort(ts, t)
-	if err != nil {
-		t.Error(err.Error())
-		return
-	}
-
-	Configuration = &ConfigurationStruct{}
-	Configuration.KongURL = KongUrlInfo{
-		Server:    host,
-		AdminPort: port,
-	}
-
-	co := NewConsumer("testuser", &http.Client{})
-	_, err = co.createJWTToken()
+	r := createRequestorMockHttpOK()
+	co := NewConsumer("testuser", r)
+	_, err := co.createJWTToken()
 	if err != nil {
 		t.Errorf("failed to creat JWT token for consumer")
 		t.Errorf(err.Error())

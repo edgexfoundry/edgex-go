@@ -12,6 +12,7 @@
  * the License.
  *
  * @author: Tingyu Zeng, Dell
+ * @version: 1.1.0
  *******************************************************************************/
 package proxy
 
@@ -19,64 +20,46 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	"time"
 )
 
+type testDeleteRequestor struct {
+	ProxyBaseURL  string
+	SecretBaseURL string
+}
+
+func (tr *testDeleteRequestor) GetProxyBaseURL() string {
+	return tr.ProxyBaseURL
+}
+
+func (tr *testDeleteRequestor) GetSecretSvcBaseURL() string {
+	return tr.SecretBaseURL
+}
+
+func (tr *testDeleteRequestor) GetHTTPClient() *http.Client {
+	return &http.Client{Timeout: 10 * time.Second}
+}
 func TestDelete(t *testing.T) {
-	LoggingClient = logger.MockLogger{}
 	path := "services"
 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
 		if r.Method != "DELETE" {
 			t.Errorf("expected DELETE request, got %s instead", r.Method)
 		}
 
-		if r.URL.EscapedPath() != "/services/1" {
-			w.WriteHeader(http.StatusBadRequest)
-			return
+		if r.URL.EscapedPath() != "/1" {
+			t.Errorf("expected request to /1, got %s instead", r.URL.EscapedPath())
 		}
-		w.WriteHeader(http.StatusOK)
 	}))
 	defer ts.Close()
 
-	host, port, err := parseHostAndPort(ts, t)
+	r := createRequestorMockHttpOK()
+	rc := NewResource("1", r)
+	err := rc.Remove(path)
 	if err != nil {
-		t.Error(err.Error())
-		return
+		t.Errorf("failed to delete resource")
+		t.Errorf(err.Error())
 	}
 
-	client := &http.Client{}
-	cfgOK := ConfigurationStruct{}
-	cfgOK.KongURL = KongUrlInfo{
-		Server:    host,
-		AdminPort: port,
-	}
-
-	cfgWrongPort := cfgOK
-	cfgWrongPort.KongURL.AdminPort = 123
-
-	tests := []struct {
-		name        string
-		config      ConfigurationStruct
-		r           Resource
-		expectError bool
-	}{
-		{"DeleteOK", cfgOK, NewResource("1", client), false},
-		{"InvalidResource", cfgOK, NewResource("2", client), true},
-		{"WrongPort", cfgWrongPort, NewResource("1", client), true},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			Configuration = &tt.config
-			err = tt.r.Remove(path)
-			if err != nil && !tt.expectError {
-				t.Error(err)
-			}
-
-			if err == nil && tt.expectError {
-				t.Error("error was expected, none occurred")
-			}
-		})
-	}
 }

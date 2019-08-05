@@ -12,27 +12,27 @@
 # the License.
 #
 # @author: Tingyu Zeng, Dell
+# @version: 1.1.0
 #################################################################################
 
 # This is a TOML config file for edgexsecurity service.
 
 [Writable]
-LogLevel = "DEBUG"
-RequestTimeout = 10
+LogLevel = 'DEBUG'
 
 [Logging]
 EnableRemote = false
-File = "./logs/security-proxy-setup.log"
+File = './logs/security-proxy-setup.log'
 
 [KongURL]
 Server = "kong"
-AdminPort = 8001
-AdminPortSSL = 8444
-ApplicationPort = 8000
-ApplicationPortSSL = 8443
+AdminPort = "8001"
+AdminPortSSL = "8444"
+ApplicationPort = "8000"
+ApplicationPortSSL = "8443"
 
 [KongAuth]
-Name = "jwt"
+Name = "oauth2"
 TokenTTL = 0
 Resource = "coredata"
 OutputPath = "accessToken.json"
@@ -43,60 +43,60 @@ WhiteList = "admin"
 
 [SecretService]
 Server = "edgex-vault"
-Port = 8200
+Port = "8200"
 HealthCheckPath = "v1/sys/health"
 CertPath = "v1/secret/edgex/pki/tls/edgex-kong"
 TokenPath = "/vault/config/assets/resp-init.json"
 CACertPath = "/vault/config/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem"
-SNIS = ["edgex-kong"]
+SNIS = "edgex-kong"
 
 [Clients]
-  [Clients.CoreData]
-  Protocol = "http"
-  Host = "edgex-core-data"
-  Port = 48080
+	[Clients.CoreData]
+		Protocol = "http"
+		Host = "edgex-core-data" #Question: shouldn't these be localhost?
+		Port = 48080
 
-  [Clients.Metadata]
-  Protocol = "http"
-  Host = "edgex-core-metadata"
-  Port = 48081
+	[Clients.Metadata]
+	    Protocol = "http"
+		Host = "edgex-core-metadata"
+		Port = 48081
 
-  [Clients.Command]
-  Protocol = "http"
-  Host = "edgex-core-command"
-  Port = 48082
+	[Clients.Command]
+	    Protocol = "http"
+		Host = "edgex-core-command"
+		Port = 48082
 
-  [Clients.Notifications]
-  Protocol = "http"
-  Host = "edgex-support-notifications"
-  Port = 48060
+	[Clients.Notifcations]
+		Protocol = "http"
+		Host = "edgex-support-notifications"
+		Port = 48060
 
-  [Clients.Logging]
-  Protocol = "http"
-  Host = "edgex-support-logging"
-  Port = 48061
+	[Clients.Logging]
+		Protocol = "http"
+		Host = "edgex-support-logging"
+		Port = 48061
 
-  [Clients.Distro]
-  Protocol = "http"
-  Host = "edgex-export-distro"
-  Port = 48070
+	[Clients.Distro]
+		Protocol = "http"
+		Host = "edgex-export-distro"
+		Port = 48070
 
-  [Clients.Export]
-  Protocol = "http"
-  Host = "edgex-export-client"
-  Port = 48071
+	[Clients.Export]
+		Protocol = "http"
+		Host = "edgex-export-client"
+		Port = 48071
 
-  [Clients.Scheduler]
-  Protocol = "http"
-  Host = "edgex-support-scheduler"
-  Port = 48085
+    [Clients.Scheduler]
+        Protocol = 'http'
+        Host = 'edgex-support-scheduler'
+        Port = 48085
 
-  [Clients.Rulesengine]
-  Protocol = "http"
-  Host = "edgex-support-rulesengine"
-  Port = 48075
+	[Clients.Rulesengine]
+		Protocol = "http"
+		Host = "edgex-support-rulesengine"
+		Port = 48075
 
-  [Clients.Virtualdevice]
-  Protocol = "http"
-  Host = "edgex-device-virtual"
-  Port = 49990
+	[Clients.Virtualdevice]
+		Protocol = "http"
+		Host = "edgex-device-virtual"
+		Port = 49990

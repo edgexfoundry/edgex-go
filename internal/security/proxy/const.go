@@ -12,16 +12,18 @@
  * the License.
  *
  * @author: Tingyu Zeng, Dell
+ * @version: 1.1.0
  *******************************************************************************/
 package proxy
 
 const (
-	ServicesPath     = "services"
-	RoutesPath       = "routes"
-	ConsumersPath    = "consumers"
-	CertificatesPath = "certificates"
-	PluginsPath      = "plugins"
-	EdgeXKong        = "edgex-kong"
+	ServicesPath     = "services/"
+	RoutesPath       = "routes/"
+	ConsumersPath    = "consumers/"
+	CertificatesPath = "certificates/"
+	PluginsPath      = "plugins/"
+	SecurityService  = "securityservice"
+	EdgeXService     = "edgex-kong"
 	VaultToken       = "X-Vault-Token"
 	OAuth2GrantType  = "client_credentials"
 	OAuth2Scopes     = "all"

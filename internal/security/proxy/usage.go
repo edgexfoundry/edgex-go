@@ -14,29 +14,30 @@
  * @author: Tingyu Zeng, Dell
  * @version: 1.1.0
  *******************************************************************************/
-
 package proxy
 
 import (
-	"encoding/json"
+	"fmt"
 	"os"
 )
 
-type UserTokenPair struct {
-	User  string
-	Token string
-}
+var usageStr = `
+Usage: %s [options]
+Server Options:	
+	--insureskipverify=true/false			Indicates if skipping the server side SSL cert verifcation, similar to -k of curl
+	--init=true/false				Indicates if security service should be initialized
+	--reset=true/false				Indicate if security service should be reset to initialization status
+	--useradd=<username>				Create an account and return JWT
+	--group=<groupname>					Group name the user belongs to
+	--userdel=<username>				Delete an account		
+	--configfile=<file.toml>			Use a different config file (default: res/configuration.toml)
+	Common Options:
+	-h, --help					Show this message
+`
 
-func (ut *UserTokenPair) Save() error {
-	file, err := os.Create(Configuration.KongAuth.OutputPath)
-	jdata, err := json.MarshalIndent(*ut, "", " ")
-	if err != nil {
-		return err
-	}
-
-	_, err = file.Write(jdata)
-	if err != nil {
-		return err
-	}
-	return nil
+// 	Print out the flag options for the server.
+func HelpCallback() {
+	msg := fmt.Sprintf(usageStr, os.Args[0])
+	fmt.Printf("%s\n", msg)
+	os.Exit(0)
 }

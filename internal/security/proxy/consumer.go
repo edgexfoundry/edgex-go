@@ -12,6 +12,7 @@
  * the License.
  *
  * @author: Tingyu Zeng, Dell
+ * @version: 1.1.0
  *******************************************************************************/
 package proxy
 
@@ -22,23 +23,25 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"strings"
 
+	"github.com/dghubble/sling"
 	"github.com/dgrijalva/jwt-go"
-	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 )
 
 type Consumer struct {
-	name   string
-	client internal.HttpCaller
+	name    string
+	client Requestor
 }
 
-func NewConsumer(name string, r internal.HttpCaller) Consumer {
+func NewConsumer(name string, r Requestor) Consumer {
 	return Consumer{
-		name:   name,
+		name: name,
 		client: r,
 	}
+}
+
+type acctParams struct {
+	Group string `url:"group"`
 }
 
 func (c *Consumer) Delete() error {
@@ -47,8 +50,8 @@ func (c *Consumer) Delete() error {
 }
 
 func (c *Consumer) Create(service string) error {
-	tokens := []string{Configuration.KongURL.GetProxyBaseURL(), ConsumersPath, c.name}
-	req, err := http.NewRequest(http.MethodPut, strings.Join(tokens, "/"), nil)
+	path := fmt.Sprintf("%s%s", ConsumersPath, c.name)
+	req, err := sling.New().Base(Configuration.KongURL.GetProxyBaseURL()).Put(path).Request()
 	if err != nil {
 		e := fmt.Sprintf("failed to create consumer %s for %s service with error %s", c.name, service, err.Error())
 		LoggingClient.Error(e)
@@ -75,18 +78,14 @@ func (c *Consumer) Create(service string) error {
 }
 
 func (c *Consumer) AssociateWithGroup(g string) error {
-	tokens := []string{Configuration.KongURL.GetProxyBaseURL(), ConsumersPath, c.name, "acls"}
-	formVals := url.Values{
-		"group": {g},
-	}
-	req, err := http.NewRequest(http.MethodPost, strings.Join(tokens, "/"), strings.NewReader(formVals.Encode()))
+	acc := acctParams{g}
+	path := fmt.Sprintf("%s%s/acls", ConsumersPath, c.name)
+	req, err := sling.New().Base(Configuration.KongURL.GetProxyBaseURL()).Post(path).BodyForm(acc).Request()
 	if err != nil {
-		e := fmt.Sprintf("failed to create group association request. consumer %s, group %s -- %s", c.name, g, err.Error())
+		e := fmt.Sprintf("failed to associate consumer %s for with group %s with error %s", c.name, g, err.Error())
 		LoggingClient.Error(e)
 		return errors.New(e)
 	}
-	req.Header.Add(clients.ContentType, "application/x-www-form-urlencoded")
-
 	resp, err := c.client.Do(req)
 	if err != nil {
 		e := fmt.Sprintf("failed to associate consumer %s for with group %s with error %s", c.name, g, err.Error())
@@ -128,15 +127,8 @@ func (c *Consumer) CreateToken() (string, error) {
 
 func (c *Consumer) createJWTToken() (string, error) {
 	jwtCred := JWTCred{}
-	tokens := []string{Configuration.KongURL.GetProxyBaseURL(), ConsumersPath, c.name, "jwt"}
-	req, err := http.NewRequest(http.MethodPost, strings.Join(tokens, "/"), nil)
-	if err != nil {
-		e := fmt.Sprintf("error creating JWT token request -- %s", err.Error())
-		LoggingClient.Error(e)
-		return "", errors.New(e)
-	}
-	req.Header.Add(clients.ContentType, "application/x-www-form-urlencoded")
-
+	s := sling.New().Set("Content-Type", "application/x-www-form-urlencoded")
+	req, err := s.New().Get(Configuration.KongURL.GetProxyBaseURL()).Post(fmt.Sprintf("consumers/%s/jwt", c.name)).Request()
 	resp, err := c.client.Do(req)
 	if err != nil {
 		e := fmt.Sprintf("failed to create jwt token for consumer %s with error %s", c.name, err.Error())
@@ -156,7 +148,7 @@ func (c *Consumer) createJWTToken() (string, error) {
 			jwtCred.Key,
 			c.name,
 			jwt.StandardClaims{
-				Issuer: EdgeXKong,
+				Issuer: EdgeXService,
 			},
 		}
 
@@ -173,29 +165,26 @@ func (c *Consumer) createJWTToken() (string, error) {
 //curl -X POST "http://localhost:8001/consumers/user123/oauth2" -d "name=www.edgexfoundry.org" --data "client_id=user123" -d "client_secret=user123"  -d "redirect_uri=http://www.edgexfoundry.org/"
 //curl -k -v https://localhost:8443/{service}/oauth2/token -d "client_id=user123" -d "grant_type=client_credentials" -d "client_secret=user123" -d "scope=email"
 func (c *Consumer) createOAuth2Token() (string, error) {
+
+	u := &url.URL{
+		Scheme: "http",
+		Host:   fmt.Sprintf("%s:%v", Configuration.KongURL.Server, Configuration.KongURL.AdminPort),
+		Path:   "/",
+	}
+	token := KongOauth2Token{}
 	ko := &KongConsumerOauth2{
-		Name:         EdgeXKong,
+		Name:         EdgeXService,
 		ClientID:     c.name,
 		ClientSecret: c.name,
-		RedirectURIS: "http://" + EdgeXKong,
+		RedirectURIS: "http://" + EdgeXService,
 	}
 
-	formVals := url.Values{
-		"name":          {ko.Name},
-		"client_id":     {ko.ClientID},
-		"client_secret": {ko.ClientSecret},
-		"redirect_uris": {ko.RedirectURIS},
-	}
-
-	tokens := []string{Configuration.KongURL.GetProxyBaseURL(), ConsumersPath, c.name, "oauth2"}
-	req, err := http.NewRequest(http.MethodPost, strings.Join(tokens, "/"), strings.NewReader(formVals.Encode()))
+	req, err := sling.New().Base(u.String()).Post(fmt.Sprintf("consumers/%s/oauth2", c.name)).BodyForm(ko).Request()
 	if err != nil {
-		e := fmt.Sprintf("failed to construct http POST form request: %s %s", c.name, err.Error())
+		e := fmt.Sprintf("failed to enable oauth2 authentication for consumer %s with error %s", c.name, err.Error())
 		LoggingClient.Error(e)
 		return "", err
 	}
-	req.Header.Add(clients.ContentType, "application/x-www-form-urlencoded")
-
 	resp, err := c.client.Do(req)
 	if err != nil {
 		e := fmt.Sprintf("failed to enable oauth2 authentication for consumer %s with error %s", c.name, err.Error())
@@ -216,21 +205,19 @@ func (c *Consumer) createOAuth2Token() (string, error) {
 			Scope:        OAuth2Scopes,
 		}
 
-		formVals := url.Values{
-			"client_id":     {tokenreq.ClientID},
-			"client_secret": {tokenreq.ClientSecret},
-			"grant_type":    {tokenreq.GrantType},
-			"scope":         {tokenreq.Scope},
+		u := &url.URL{
+			Scheme: "https",
+			Host:   fmt.Sprintf("%s:%s", Configuration.KongURL.Server, Configuration.KongURL.ApplicationPortSSL),
+			Path:   "/",
 		}
-		tokens := []string{Configuration.KongURL.GetSecureURL(), Configuration.KongAuth.Resource, "oauth2/token"}
-		LoggingClient.Info(fmt.Sprintf("creating token on the endpoint of %s", strings.Join(tokens, "/")))
 
-		req, err := http.NewRequest(http.MethodPost, strings.Join(tokens, "/"), strings.NewReader(formVals.Encode()))
+		path := fmt.Sprintf("%s/oauth2/token", Configuration.KongAuth.Resource)
+		LoggingClient.Info(fmt.Sprintf("creating token on the endpoint of %s", path))
+		req, err := sling.New().Base(u.String()).Post(path).BodyForm(tokenreq).Request()
 		if err != nil {
 			LoggingClient.Error(fmt.Sprintf("failed to create oauth2 token for client_id %s with error %s", c.name, err.Error()))
 			return "", err
 		}
-		req.Header.Add(clients.ContentType, "application/x-www-form-urlencoded")
 		tresp, err := c.client.Do(req)
 		if err != nil {
 			LoggingClient.Error(fmt.Sprintf("failed to create oauth2 token for client_id %s with error %s", c.name, err.Error()))
@@ -238,7 +225,6 @@ func (c *Consumer) createOAuth2Token() (string, error) {
 		}
 		defer tresp.Body.Close()
 
-		token := KongOauth2Token{}
 		switch tresp.StatusCode {
 		case http.StatusOK, http.StatusCreated:
 			if err = json.NewDecoder(tresp.Body).Decode(&token); err != nil {
@@ -247,11 +233,11 @@ func (c *Consumer) createOAuth2Token() (string, error) {
 			LoggingClient.Info(fmt.Sprintf("successful on retrieving bearer credential for consumer %s", c.name))
 			return token.AccessToken, nil
 		default:
-			b, err := ioutil.ReadAll(tresp.Body)
+			b, err := ioutil.ReadAll(resp.Body)
 			if err != nil {
 				return "", err
 			}
-			e := fmt.Sprintf("failed to create bearer token for oauth authentication at endpoint oauth2/token with error %s,%s", tresp.Status, string(b))
+			e := fmt.Sprintf("failed to create bearer token for oauth authentication at endpoint oauth2/token with error %s,%s", resp.Status, string(b))
 			LoggingClient.Error(e)
 			return "", errors.New(e)
 		}

@@ -19,7 +19,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
@@ -47,20 +46,10 @@ func Retry(useRegistry bool, useProfile string, timeout int, wait *sync.WaitGrou
 			} else {
 				// Setup Logging
 				logTarget := setLoggingTarget()
-				LoggingClient = logger.NewClient(internal.SecurityProxySetupServiceKey, Configuration.Logging.EnableRemote, logTarget, Configuration.Writable.LogLevel)
+				LoggingClient = logger.NewClient(clients.CoreDataServiceKey, Configuration.Logging.EnableRemote, logTarget, Configuration.Writable.LogLevel)
 			}
 		}
-		// This seems a bit artificial here due to lack of additional service requirements
-		// but conforms to the pattern found in other edgex-go services.
-		if Configuration != nil {
-			break
-		}
-		time.Sleep(time.Second * time.Duration(1))
 	}
-	close(ch)
-	wait.Done()
-
-	return
 }
 
 func initializeConfiguration(useRegistry bool, useProfile string) (*ConfigurationStruct, error) {
@@ -70,6 +59,33 @@ func initializeConfiguration(useRegistry bool, useProfile string) (*Configuratio
 	if err != nil {
 		return nil, err
 	}
+
+	/* Uncomment if it's determined this service needs to load configuration from the registry. As of the conversion
+	   into edgex-go 17-Jul-19, it does not.
+	if useRegistry {
+		err = connectToRegistry(configuration)
+		if err != nil {
+			return nil, err
+		}
+
+		rawConfig, err := registryClient.GetConfiguration(configuration)
+		if err != nil {
+			return nil, fmt.Errorf("could not get configuration from Registry: %v", err.Error())
+		}
+
+		actual, ok := rawConfig.(*ConfigurationStruct)
+		if !ok {
+			return nil, fmt.Errorf("configuration from Registry failed type check")
+		}
+
+		configuration = actual
+
+		// Check that information was successfully read from Registry
+		if configuration.Service.Port == 0 {
+			return nil, errors.New("error reading configuration from Registry")
+		}
+	}
+	*/
 
 	return configuration, nil
 }

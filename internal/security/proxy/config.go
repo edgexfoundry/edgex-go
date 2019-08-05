@@ -33,30 +33,23 @@ type ConfigurationStruct struct {
 }
 
 type WritableInfo struct {
-	LogLevel       string
-	RequestTimeout int
+	LogLevel string
+	Title    string
 }
 
 type KongUrlInfo struct {
 	Server             string
 	AdminPort          int
-	AdminPortSSL       int
-	ApplicationPort    int
-	ApplicationPortSSL int
+	AdminPortSSL       string
+	ApplicationPort    string
+	ApplicationPortSSL string
 }
 
 func (k KongUrlInfo) GetProxyBaseURL() string {
 	url := &url.URL{
 		Scheme: "http",
 		Host:   fmt.Sprintf("%s:%v", k.Server, k.AdminPort),
-	}
-	return url.String()
-}
-
-func (k KongUrlInfo) GetSecureURL() string {
-	url := &url.URL{
-		Scheme: "https",
-		Host:   fmt.Sprintf("%s:%v", k.Server, k.ApplicationPortSSL),
+		Path:   "/",
 	}
 	return url.String()
 }
@@ -80,13 +73,14 @@ type SecretServiceInfo struct {
 	CertPath        string
 	TokenPath       string
 	CACertPath      string
-	SNIS            []string
+	SNIS            string
 }
 
 func (s SecretServiceInfo) GetSecretSvcBaseURL() string {
 	url := &url.URL{
 		Scheme: "https",
 		Host:   fmt.Sprintf("%s:%v", s.Server, s.Port),
+		Path:   "/",
 	}
 	return url.String()
 }

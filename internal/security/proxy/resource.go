@@ -12,6 +12,7 @@
  * the License.
  *
  * @author: Tingyu Zeng, Dell
+ * @version: 1.1.0
  *******************************************************************************/
 
 package proxy
@@ -19,24 +20,21 @@ package proxy
 import (
 	"errors"
 	"fmt"
+	"github.com/dghubble/sling"
 	"net/http"
-	"strings"
-
-	"github.com/edgexfoundry/edgex-go/internal"
 )
 
 type Resource struct {
-	name   string
-	client internal.HttpCaller
+	name    string
+	client  Requestor
 }
 
-func NewResource(name string, r internal.HttpCaller) Resource {
+func NewResource(name string, r Requestor) Resource {
 	return Resource{name: name, client: r}
 }
 
 func (r *Resource) Remove(path string) error {
-	tokens := []string{Configuration.KongURL.GetProxyBaseURL(), path, r.name}
-	req, err := http.NewRequest(http.MethodDelete, strings.Join(tokens, "/"), nil)
+	req, err := sling.New().Base(Configuration.KongURL.GetProxyBaseURL()).Path(path).Delete(r.name).Request()
 	if err != nil {
 		e := fmt.Sprintf("failed to delete %s at %s with error %s", r.name, path, err.Error())
 		return errors.New(e)

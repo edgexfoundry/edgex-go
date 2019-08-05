@@ -12,6 +12,7 @@
  * the License.
  *
  * @author: Tingyu Zeng, Dell
+ * @version: 1.1.0
  *******************************************************************************/
 package proxy
 
@@ -20,7 +21,7 @@ import jwt "github.com/dgrijalva/jwt-go"
 type KongService struct {
 	Name     string `url:"name,omitempty"`
 	Host     string `url:"host,omitempty"`
-	Port     int    `url:"port,omitempty"`
+	Port     int `url:"port,omitempty"`
 	Protocol string `url:"protocol,omitempty"`
 }
 
@@ -43,6 +44,10 @@ type KongServiceResponse struct {
 type KongRoute struct {
 	Paths []string `json:"paths,omitempty"`
 	Name  string   `json:"name,omitempty"`
+}
+
+type KongJWTPlugin struct {
+	Name string `url:"name,omitempty"`
 }
 
 type KongOAuth2Plugin struct {
