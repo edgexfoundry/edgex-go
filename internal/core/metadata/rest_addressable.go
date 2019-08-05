@@ -15,7 +15,6 @@ package metadata
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -133,97 +132,58 @@ func restGetAddressableById(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(result)
 }
+
 func restDeleteAddressableById(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	var id string = vars[ID]
 
-	// Check if the addressable exists
-	a, err := dbClient.GetAddressableById(id)
+	op := addressable.NewDeleteExecutor(dbClient, id, "")
+	err := op.Execute()
 	if err != nil {
+		switch err.(type) {
+		case *types.ErrAddressableNotFound:
+			http.Error(w, err.Error(), http.StatusNotFound)
+		case *types.ErrAddressableInUse:
+			http.Error(w, err.Error(), http.StatusConflict)
+		default:
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusNotFound)
-		return
-	}
-
-	// Check if the addressable is still in use
-	isStillInUse, err := isAddressableStillInUse(a)
-	if err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	if isStillInUse {
-		err = errors.New("Data integrity issue: attempt to delete addressable still in use by a device or device service")
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusConflict)
-		return
-	}
-
-	err = dbClient.DeleteAddressableById(a.Id)
-	if err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte("true"))
 }
+
 func restDeleteAddressableByName(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	n, err := url.QueryUnescape(vars[NAME])
+	name, err := url.QueryUnescape(vars[NAME])
 	// Problems unescaping
 	if err != nil {
 		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	// Check if the addressable exists
-	a, err := dbClient.GetAddressableByName(n)
+	op := addressable.NewDeleteExecutor(dbClient, "", name)
+	err = op.Execute()
 	if err != nil {
+		switch err.(type) {
+		case *types.ErrAddressableNotFound:
+			http.Error(w, err.Error(), http.StatusNotFound)
+		case *types.ErrAddressableInUse:
+			http.Error(w, err.Error(), http.StatusConflict)
+		default:
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusNotFound)
-		return
-	}
-
-	// Check if the addressable is still in use
-	isStillInUse, err := isAddressableStillInUse(a)
-	if err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		return
-	}
-	if isStillInUse {
-		err = errors.New("Data integrity issue: attempt to delete addressable still in use by a device or device service")
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusConflict)
-		return
-	}
-
-	if err := dbClient.DeleteAddressableById(a.Id); err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
-}
-
-// Helper function to determine if an addressable is still referenced by a device or device service
-func isAddressableStillInUse(a models.Addressable) (bool, error) {
-	// Check device services
-	ds, err := dbClient.GetDeviceServicesByAddressableId(a.Id)
-	if err != nil {
-		return false, err
-	}
-	if len(ds) > 0 {
-		return true, nil
-	}
-
-	return false, nil
 }
 
 func restGetAddressableByName(w http.ResponseWriter, r *http.Request) {
