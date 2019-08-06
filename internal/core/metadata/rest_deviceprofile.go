@@ -272,6 +272,22 @@ func restAddProfileByYaml(w http.ResponseWriter, r *http.Request) {
 	}
 
 	addDeviceProfileYaml(data, w)
+
+	id, err := dbClient.AddDeviceProfile(dp)
+	if err != nil {
+		if err == db.ErrNotUnique {
+			http.Error(w, "Duplicate profile name", http.StatusConflict)
+		} else if err == db.ErrNameEmpty {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+		} else {
+			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		}
+		LoggingClient.Error(err.Error())
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(id))
 }
 
 // Add a device profile with YAML content
@@ -286,6 +302,22 @@ func restAddProfileByYamlRaw(w http.ResponseWriter, r *http.Request) {
 	}
 
 	addDeviceProfileYaml(body, w)
+
+	id, err := dbClient.AddDeviceProfile(dp)
+	if err != nil {
+		if err == db.ErrNotUnique {
+			http.Error(w, "Duplicate profile name", http.StatusConflict)
+		} else if err == db.ErrNameEmpty {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+		} else {
+			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		}
+		LoggingClient.Error(err.Error())
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(id))
 }
 
 func addDeviceProfileYaml(data []byte, w http.ResponseWriter) {
