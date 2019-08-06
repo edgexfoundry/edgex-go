@@ -75,6 +75,29 @@ func (_m *NotificationLoader) GetNotificationBySlug(slug string) (models.Notific
 	return r0, r1
 }
 
+// GetNotificationsByEnd provides a mock function with given fields: end, limit
+func (_m *NotificationLoader) GetNotificationsByEnd(end int64, limit int) ([]models.Notification, error) {
+	ret := _m.Called(end, limit)
+
+	var r0 []models.Notification
+	if rf, ok := ret.Get(0).(func(int64, int) []models.Notification); ok {
+		r0 = rf(end, limit)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.Notification)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(int64, int) error); ok {
+		r1 = rf(end, limit)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetNotificationsByStart provides a mock function with given fields: start, limit
 func (_m *NotificationLoader) GetNotificationsByStart(start int64, limit int) ([]models.Notification, error) {
 	ret := _m.Called(start, limit)

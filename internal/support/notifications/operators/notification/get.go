@@ -57,6 +57,12 @@ type notificationsLoadByStart struct {
 	start    int64
 }
 
+type notificationsLoadByEnd struct {
+	database NotificationLoader
+	limit    int
+	end      int64
+}
+
 func (op notificationLoadById) Execute() (contract.Notification, error) {
 	res, err := op.database.GetNotificationById(op.id)
 	if err != nil {
@@ -82,6 +88,9 @@ func (op notificationLoadBySlug) Execute() (contract.Notification, error) {
 func (op notificationsLoadBySender) Execute() ([]contract.Notification, error) {
 	res, err := op.database.GetNotificationBySender(op.sender, op.limit)
 	if err != nil {
+		if len(res) == 0 {
+			return res, db.ErrNotFound
+		}
 		return res, err
 	}
 	return res, nil
@@ -90,6 +99,9 @@ func (op notificationsLoadBySender) Execute() ([]contract.Notification, error) {
 func (op notificationsLoadByStartEnd) Execute() ([]contract.Notification, error) {
 	res, err := op.database.GetNotificationsByStartEnd(op.start, op.end, op.limit)
 	if err != nil {
+		if len(res) == 0 {
+			return res, db.ErrNotFound
+		}
 		return res, err
 	}
 	return res, nil
@@ -98,6 +110,20 @@ func (op notificationsLoadByStartEnd) Execute() ([]contract.Notification, error)
 func (op notificationsLoadByStart) Execute() ([]contract.Notification, error) {
 	res, err := op.database.GetNotificationsByStart(op.start, op.limit)
 	if err != nil {
+		if len(res) == 0 {
+			return res, db.ErrNotFound
+		}
+		return res, err
+	}
+	return res, nil
+}
+
+func (op notificationsLoadByEnd) Execute() ([]contract.Notification, error) {
+	res, err := op.database.GetNotificationsByEnd(op.end, op.limit)
+	if err != nil {
+		if len(res) == 0 {
+			return res, db.ErrNotFound
+		}
 		return res, err
 	}
 	return res, nil
@@ -130,6 +156,14 @@ func NewStartExecutor(db NotificationLoader, start int64, limit int) CollectionE
 		database: db,
 		limit:    limit,
 		start:    start,
+	}
+}
+
+func NewEndExecutor(db NotificationLoader, end int64, limit int) CollectionExecutor {
+	return notificationsLoadByEnd{
+		database: db,
+		limit:    limit,
+		end:      end,
 	}
 }
 
