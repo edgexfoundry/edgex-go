@@ -12,30 +12,16 @@
  * the License.
  *******************************************************************************/
 
-package errors
+package subscription
 
-import "fmt"
+import contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 
-type ErrNotificationNotFound struct {
-	slug string
+// SubscriptionLoader provides functionality for obtaining Subscriptions.
+type SubscriptionLoader interface {
+	GetSubscriptionById(id string) (contract.Subscription, error)
 }
 
-func (e ErrNotificationNotFound) Error() string {
-	return fmt.Sprintf("Notification '%s' not found", e.slug)
-}
-
-func NewErrNotificationNotFound(slug string) error {
-	return ErrNotificationNotFound{slug: slug}
-}
-
-type ErrSubscriptionNotFound struct {
-	slug string
-}
-
-func (e ErrSubscriptionNotFound) Error() string {
-	return fmt.Sprintf("Subscription '%s' not found", e.slug)
-}
-
-func NewErrSubscriptionNotFound(slug string) error {
-	return ErrSubscriptionNotFound{slug: slug}
+// SubscriptionDeleter deletes subscriptions.
+type SubscriptionDeleter interface {
+	DeleteSubscriptionById(id string) error
 }
