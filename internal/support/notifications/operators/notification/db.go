@@ -21,6 +21,8 @@ type NotificationLoader interface {
 	GetNotificationById(id string) (contract.Notification, error)
 	GetNotificationBySlug(slug string) (contract.Notification, error)
 	GetNotificationBySender(sender string, limit int) ([]contract.Notification, error)
+	GetNotificationsByStartEnd(start int64, end int64, limit int) ([]contract.Notification, error)
+	GetNotificationsByStart(start int64, limit int) ([]contract.Notification, error)
 }
 
 // NotificationDeleter deletes notifications.

@@ -17,6 +17,7 @@ package interval
 import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/errors"
+	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
 // DeleteExecutor handles the deletion of a interval.
@@ -27,15 +28,20 @@ type DeleteExecutor interface {
 
 type deleteIntervalByID struct {
 	db        IntervalDeleter
-	scLoader  SchedulerQueueLoader
 	scDeleter SchedulerQueueDeleter
 	did       string
+}
+
+type deleteIntervalByName struct {
+	db        IntervalDeleter
+	scDeleter SchedulerQueueDeleter
+	dname     string
 }
 
 // Execute performs the deletion of the interval.
 func (dibi deleteIntervalByID) Execute() error {
 	// check in memory first
-	inMemory, err := dibi.scLoader.QueryIntervalByID(dibi.did)
+	inMemory, err := dibi.scDeleter.QueryIntervalByID(dibi.did)
 	if err != nil {
 		if err == db.ErrNotFound {
 			err = errors.NewErrIntervalNotFound(dibi.did)
@@ -62,12 +68,61 @@ func (dibi deleteIntervalByID) Execute() error {
 	return nil
 }
 
+func (dibn deleteIntervalByName) Execute() error {
+	// check in memory first
+	inMemory, err := dibn.scDeleter.QueryIntervalByName(dibn.dname)
+	if err != nil {
+		return errors.NewErrIntervalNotFound(dibn.dname)
+	}
+	// remove in memory
+	err = dibn.scDeleter.RemoveIntervalInQueue(inMemory.ID)
+	if err != nil {
+		return errors.NewErrIntervalNotFound(inMemory.ID)
+	}
+	// check if interval exist
+	op := NewNameExecutor(dibn.db, dibn.dname)
+	result, err := op.Execute()
+
+	if err != nil {
+		return err
+	}
+	if err = deleteInterval(result, dibn); err != nil {
+		return err
+	}
+	return nil
+}
+
+func deleteInterval(interval contract.Interval, dibn deleteIntervalByName) error {
+	intervalActions, err := dibn.db.IntervalActionsByIntervalName(interval.Name)
+	if err != nil {
+		return err
+	}
+	if len(intervalActions) > 0 {
+		return errors.NewErrIntervalStillInUse(interval.Name)
+	}
+
+	// Delete the interval
+	if err = dibn.db.DeleteIntervalById(interval.ID); err != nil {
+		return err
+	}
+	return nil
+
+}
+
 // NewDeleteByIDExecutor creates a new DeleteExecutor which deletes a interval based on id.
-func NewDeleteByIDExecutor(db IntervalDeleter, scLoader SchedulerQueueLoader, scDeleter SchedulerQueueDeleter, did string) DeleteExecutor {
+func NewDeleteByIDExecutor(db IntervalDeleter, scDeleter SchedulerQueueDeleter, did string) DeleteExecutor {
 	return deleteIntervalByID{
 		db:        db,
-		scLoader:  scLoader,
 		scDeleter: scDeleter,
 		did:       did,
+	}
+}
+
+// NewDeleteByIDExecutor creates a new DeleteExecutor which deletes a interval based on id.
+func NewDeleteByNameExecutor(db IntervalDeleter, scDeleter SchedulerQueueDeleter, dname string) DeleteExecutor {
+	return deleteIntervalByName{
+		db:        db,
+		scDeleter: scDeleter,
+		dname:     dname,
 	}
 }

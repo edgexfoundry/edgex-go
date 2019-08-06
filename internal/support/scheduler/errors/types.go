@@ -52,7 +52,7 @@ func (e ErrIntervalStillUsedByIntervalActions) Error() string {
 }
 
 func NewErrIntervalStillInUse(name string) error {
-	return &ErrIntervalStillUsedByIntervalActions{name: name}
+	return ErrIntervalStillUsedByIntervalActions{name: name}
 }
 
 // IntervalAction
