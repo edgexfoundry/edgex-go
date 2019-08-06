@@ -22,6 +22,8 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+	"github.com/edgexfoundry/edgex-go/internal/support/notifications/errors"
+	"github.com/edgexfoundry/edgex-go/internal/support/notifications/operators/subscription"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/gorilla/mux"
 )
@@ -106,7 +108,7 @@ func subscriptionHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func subscriptionByIDHandler(w http.ResponseWriter, r *http.Request) {
+func restGetSubscriptionByID(w http.ResponseWriter, r *http.Request) {
 
 	if r.Body != nil {
 		defer r.Body.Close()
@@ -114,44 +116,43 @@ func subscriptionByIDHandler(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
 	id := vars["id"]
-	switch r.Method {
-	case http.MethodGet:
-
-		s, err := dbClient.GetSubscriptionById(id)
-		if err != nil {
-			if err == db.ErrNotFound {
-				http.Error(w, "Subscription not found", http.StatusNotFound)
-			} else {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			}
-			LoggingClient.Error(err.Error())
-			return
-		}
-
-		pkg.Encode(s, w, LoggingClient)
-		break
-	case http.MethodDelete:
-		_, err := dbClient.GetSubscriptionById(id)
-		if err != nil {
-			if err == db.ErrNotFound {
-				http.Error(w, "Subscription not found", http.StatusNotFound)
-			} else {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			}
-			LoggingClient.Error(err.Error())
-			return
-		}
-
-		LoggingClient.Info("Deleting subscription: " + id)
-
-		if err = dbClient.DeleteSubscriptionById(id); err != nil {
+	op := subscription.NewIdExecutor(dbClient, id)
+	s, err := op.Execute()
+	if err != nil {
+		LoggingClient.Error(err.Error())
+		switch err.(type) {
+		case errors.ErrSubscriptionNotFound:
+			http.Error(w, err.Error(), http.StatusNotFound)
+		default:
 			http.Error(w, err.Error(), http.StatusInternalServerError)
-			LoggingClient.Error(err.Error())
-			return
 		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
+		return
 	}
+	pkg.Encode(s, w, LoggingClient)
+}
+
+func restDeleteSubscriptionByID(w http.ResponseWriter, r *http.Request) {
+	if r.Body != nil {
+		defer r.Body.Close()
+	}
+
+	vars := mux.Vars(r)
+	id := vars["id"]
+	LoggingClient.Info("Deleting subscription: " + id)
+
+	op := subscription.NewDeleteByIDExecutor(dbClient, id)
+	err := op.Execute()
+	if err != nil {
+		switch err.(type) {
+		case errors.ErrSubscriptionNotFound:
+			http.Error(w, err.Error(), http.StatusNotFound)
+		default:
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
 }
 
 func subscriptionsBySlugHandler(w http.ResponseWriter, r *http.Request) {
