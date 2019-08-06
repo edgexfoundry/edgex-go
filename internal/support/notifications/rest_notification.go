@@ -231,7 +231,11 @@ func restGetNotificationsBySender(w http.ResponseWriter, r *http.Request) {
 	op := notification.NewSenderExecutor(dbClient, vars["sender"], limitNum)
 	results, err := op.Execute()
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		if err == db.ErrNotFound {
+			http.Error(w, "Notification not found", http.StatusNotFound)
+		} else {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 		LoggingClient.Error(err.Error())
 		return
 	}
@@ -274,7 +278,11 @@ func restNotificationByStartEnd(w http.ResponseWriter, r *http.Request) {
 	op := notification.NewStartEndExecutor(dbClient, start, end, limitNum)
 	results, err := op.Execute()
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		if err == db.ErrNotFound {
+			http.Error(w, "Notification not found", http.StatusNotFound)
+		} else {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 		LoggingClient.Error(err.Error())
 		return
 	}
@@ -309,7 +317,11 @@ func restNotificationByStart(w http.ResponseWriter, r *http.Request) {
 	op := notification.NewStartExecutor(dbClient, start, limitNum)
 	results, err := op.Execute()
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		if err == db.ErrNotFound {
+			http.Error(w, "Notification not found", http.StatusNotFound)
+		} else {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 		LoggingClient.Error(err.Error())
 		w.Header().Set("Content-Type", applicationJson)
 		return
@@ -319,7 +331,7 @@ func restNotificationByStart(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func notificationByEndHandler(w http.ResponseWriter, r *http.Request) {
+func restNotificationByEnd(w http.ResponseWriter, r *http.Request) {
 
 	if r.Body != nil {
 		defer r.Body.Close()
@@ -345,7 +357,8 @@ func notificationByEndHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	n, err := dbClient.GetNotificationsByEnd(end, limitNum)
+	op := notification.NewEndExecutor(dbClient, end, limitNum)
+	results, err := op.Execute()
 	if err != nil {
 		if err == db.ErrNotFound {
 			http.Error(w, "Notification not found", http.StatusNotFound)
@@ -354,11 +367,10 @@ func notificationByEndHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		LoggingClient.Error(err.Error())
 		w.Header().Set("Content-Type", applicationJson)
-		pkg.Encode(n, w, LoggingClient)
 		return
 	}
 
-	pkg.Encode(n, w, LoggingClient)
+	pkg.Encode(results, w, LoggingClient)
 
 }
 
