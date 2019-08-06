@@ -76,13 +76,13 @@ func TestUpdateDeviceProfile(t *testing.T) {
 			true,
 		},
 		{
-			"GetProvisionWatchersByProfileId db error ",
+			"GetProvisionWatchersByProfileId adder error ",
 			createDBClientGetProvisionWatchersByProfileIdError(),
 			TestDeviceProfile,
 			true,
 		},
 		{
-			"UpdateDeviceProfile db error ",
+			"UpdateDeviceProfile adder error ",
 			createDBClientUpdateDeviceProfileError(),
 			TestDeviceProfile,
 			true,

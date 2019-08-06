@@ -271,16 +271,17 @@ func restAddProfileByYaml(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	addDeviceProfileYaml(data, w)
+	op := device_profile.NewAddDeviceProfileExecutor(data, dbClient)
+	id, err := op.Execute()
 
-	id, err := dbClient.AddDeviceProfile(dp)
 	if err != nil {
-		if err == db.ErrNotUnique {
-			http.Error(w, "Duplicate profile name", http.StatusConflict)
-		} else if err == db.ErrNameEmpty {
+		switch err.(type) {
+		case *errors.ErrDuplicateName:
+			http.Error(w, err.Error(), http.StatusConflict)
+		case *errors.ErrEmptyDeviceProfileName:
 			http.Error(w, err.Error(), http.StatusBadRequest)
-		} else {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		default:
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		LoggingClient.Error(err.Error())
 		return
@@ -301,59 +302,17 @@ func restAddProfileByYamlRaw(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	addDeviceProfileYaml(body, w)
+	op := device_profile.NewAddDeviceProfileExecutor(body, dbClient)
+	id, err := op.Execute()
 
-	id, err := dbClient.AddDeviceProfile(dp)
 	if err != nil {
-		if err == db.ErrNotUnique {
-			http.Error(w, "Duplicate profile name", http.StatusConflict)
-		} else if err == db.ErrNameEmpty {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-		} else {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		}
-		LoggingClient.Error(err.Error())
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(id))
-}
-
-func addDeviceProfileYaml(data []byte, w http.ResponseWriter) {
-	var dp models.DeviceProfile
-
-	err := yaml.Unmarshal(data, &dp)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		LoggingClient.Error(err.Error())
-		return
-	}
-
-	// Check if there are duplicate names in the device profile command list
-	for _, c1 := range dp.CoreCommands {
-		count := 0
-		for _, c2 := range dp.CoreCommands {
-			if c1.Name == c2.Name {
-				count += 1
-			}
-		}
-		if count > 1 {
-			err := errors.NewErrDuplicateName("Error adding device profile: Duplicate names in the commands")
-			LoggingClient.Error(err.Error())
+		switch err.(type) {
+		case *errors.ErrDuplicateName:
 			http.Error(w, err.Error(), http.StatusConflict)
-			return
-		}
-	}
-
-	id, err := dbClient.AddDeviceProfile(dp)
-	if err != nil {
-		if err == db.ErrNotUnique {
-			http.Error(w, "Duplicate profile name", http.StatusConflict)
-		} else if err == db.ErrNameEmpty {
+		case *errors.ErrEmptyDeviceProfileName:
 			http.Error(w, err.Error(), http.StatusBadRequest)
-		} else {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		default:
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		LoggingClient.Error(err.Error())
 		return

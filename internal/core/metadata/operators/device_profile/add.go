@@ -15,8 +15,6 @@
 package device_profile
 
 import (
-	"net/http"
-
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 
@@ -24,12 +22,12 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-type AddExecutor interface {
-	Execute() error
+type addProfileExecutor interface {
+	Execute() (id string, err error)
 }
 
 type addProfile struct {
-	db  DeviceProfileAdder
+	adder        DeviceProfileAdder
 	profileBytes []byte
 }
 
@@ -56,7 +54,7 @@ func (op addProfile) Execute() (id string, err error) {
 		}
 	}
 
-	id, err = op.db.AddDeviceProfile(dp)
+	id, err = op.adder.AddDeviceProfile(dp)
 	if err != nil {
 		if err == db.ErrNotUnique {
 			return "", errors.NewErrDuplicateName("Duplicate profile name " + dp.Name )
@@ -68,4 +66,12 @@ func (op addProfile) Execute() (id string, err error) {
 	}
 
 	return id, nil
+}
+
+// NewGetModelExecutor creates a new GetProfilesExecutor for retrieving device profiles by model.
+func NewAddDeviceProfileExecutor(profileBytes []byte, adder DeviceProfileAdder) addProfileExecutor {
+	return addProfile{
+		profileBytes:  profileBytes,
+		adder: adder,
+	}
 }
