@@ -15,9 +15,11 @@ package command
 
 import (
 	"context"
+	"strconv"
+	"testing"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
-	"testing"
 )
 
 const (
@@ -58,7 +60,7 @@ var testCommand = contract.Command{
 func TestNewGetCommandWithCorrelationId(t *testing.T) {
 	expectedCorrelationIDHeaderValue := "Testing"
 	testContext := context.WithValue(context.Background(), clients.CorrelationHeader, expectedCorrelationIDHeaderValue)
-	getCommand, _ := NewGetCommand(testDevice, testCommand, testContext, nil)
+	getCommand, _ := NewGetCommand(testDevice, testCommand, "", testContext, nil)
 	actualCorrelationIDHeaderValue := getCommand.(serviceCommand).Request.Header.Get(clients.CorrelationHeader)
 	if actualCorrelationIDHeaderValue == "" {
 		t.Errorf("The populated GetCommand's request should contain a correlation ID header value")
@@ -69,8 +71,33 @@ func TestNewGetCommandWithCorrelationId(t *testing.T) {
 	}
 }
 
+func TestNewGetCommandWithQueryParams(t *testing.T) {
+	queryParams := "test=value1&test2=value2"
+	getCommand, _ := NewGetCommand(testDevice, testCommand, queryParams, context.Background(), nil)
+	req := getCommand.(serviceCommand).Request.URL
+	if req.Scheme != TestProtocol {
+		t.Errorf("Unexpected protocol")
+	}
+	expectedHost := TestAddress + ":" + strconv.Itoa(TestPort)
+	if req.Host != expectedHost {
+		t.Errorf("Unexpected host address and port")
+	}
+	if req.Path != testCommand.Get.Action.Path {
+		t.Errorf("Unexpected path")
+	}
+	if req.RawQuery != queryParams {
+		t.Errorf("Unexpected Raw Query Value")
+	}
+}
+func TestNewGetCommandWithMalformedQueryParams(t *testing.T) {
+	queryParams := "!@#$%"
+	_, err := NewGetCommand(testDevice, testCommand, queryParams, context.Background(), nil)
+	if err == nil {
+		t.Errorf("Expected error for malformed query parameters")
+	}
+}
 func TestNewGetCommandNoCorrelationIDInContext(t *testing.T) {
-	getCommand, _ := NewGetCommand(testDevice, testCommand, context.Background(), nil)
+	getCommand, _ := NewGetCommand(testDevice, testCommand, "", context.Background(), nil)
 	actualCorrelationIDHeaderValue := getCommand.(serviceCommand).Request.Header.Get(clients.CorrelationHeader)
 	if actualCorrelationIDHeaderValue != "" {
 		t.Errorf("No correlation ID should be specified")
@@ -80,8 +107,8 @@ func TestNewGetCommandNoCorrelationIDInContext(t *testing.T) {
 func TestNewGetCommandInvalidBaseUrl(t *testing.T) {
 	device := testDevice
 	device.Service.Addressable.Address = "!@#$"
-	_, err := NewGetCommand(device, testCommand, context.Background(), nil)
-	if err != nil {
-		t.Errorf("The invalid URL error was not properly propegated to the caller")
+	_, err := NewGetCommand(device, testCommand, "", context.Background(), nil)
+	if err == nil {
+		t.Errorf("The invalid URL error was not properly propagated to the caller")
 	}
 }
