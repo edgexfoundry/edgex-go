@@ -822,10 +822,16 @@ func TestAddDeviceProfileByYaml(t *testing.T) {
 		{
 			"Duplicate command name",
 			createDeviceProfileRequestWithFile(dupeBody),
-			createDBClientWithOutlines([]mockOutline{
-				{"AddDeviceProfile", duplicateCommandName, "", db.ErrNotUnique},
-			}),
+			nil,
 			http.StatusBadRequest,
+		},
+		{
+			"Duplicate profile name",
+			createDeviceProfileRequestWithFile(okBody),
+			createDBClientWithOutlines([]mockOutline{
+				{"AddDeviceProfile", dp, "", db.ErrNotUnique},
+			}),
+			http.StatusConflict,
 		},
 		{
 			"Empty device profile name",
@@ -892,12 +898,10 @@ func TestAddDeviceProfileByYamlRaw(t *testing.T) {
 			http.StatusOK,
 		},
 		{
-			"Duplicate command name",
-			httptest.NewRequest(http.MethodPut, TestURI, bytes.NewBuffer(dupeBody)),
-			createDBClientWithOutlines([]mockOutline{
-				{"AddDeviceProfile", duplicateCommandName, "", db.ErrNotUnique},
-			}),
-			http.StatusBadRequest,
+			"YAML unmarshal error",
+			createDeviceProfileRequestWithFile(dupeBody),
+			nil,
+			http.StatusServiceUnavailable,
 		},
 		{
 			"Empty device profile name",

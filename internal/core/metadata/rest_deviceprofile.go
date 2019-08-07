@@ -290,7 +290,7 @@ func restAddProfileByYaml(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 		case errors.ErrDeviceProfileInvalidState:
 			http.Error(w, err.Error(), http.StatusBadRequest)
-		case errors.ErrDuplicateName:
+		case *errors.ErrDuplicateName:
 			http.Error(w, err.Error(), http.StatusConflict)
 		case errors.ErrEmptyDeviceProfileName:
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -334,7 +334,7 @@ func restAddProfileByYamlRaw(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 		case errors.ErrDeviceProfileInvalidState:
 			http.Error(w, err.Error(), http.StatusBadRequest)
-		case errors.ErrDuplicateName:
+		case *errors.ErrDuplicateName:
 			http.Error(w, err.Error(), http.StatusConflict)
 		case errors.ErrEmptyDeviceProfileName:
 			http.Error(w, err.Error(), http.StatusBadRequest)
