@@ -1,7 +1,7 @@
 #%RAML 0.8
 title: core-metadata
 version: "1.0.0"
-baseUri: "http://localhost:48081/api/v1"
+baseUri: "http://localhost:48081/api"
 schemas:
     -
         deviceprofile: '{"type":"object","$schema":"http://json-schema.org/draft-03/schema#","description": "template describing devices and sensors of the same nature in reporting the same data and offering the same commands", "title":"deviceprofile","properties":{"id":{"type":"string","required":false,"title":"id"},"created":{"type":"integer","required":false,"title":"created"},"modified":{"type":"integer","required":false,"title":"modified"},"origin":{"type":"integer","required":false,"title":"origin"},"name":{"type":"string","required":false,"title":"name"},"manufacturer":{"type":"string","required":false,"title":"manufacturer"},"model":{"type":"string","required":false,"title":"model"},"labels":{"type":"array","required":false,"title":"labels","items":{"type":"string","title":"labels"},"uniqueItems":false},"description":{"type":"string","required":false,"title":"description"}, "resources":{"type":"array","required":false,"title":"resources","items":{"type":"string","title":"resources"},"uniqueItems":false}}}'
@@ -17,7 +17,7 @@ schemas:
         command: '{"type":"object","$schema":"http://json-schema.org/draft-03/schema#","title":"command","properties":{"id":{"type":"string","required":false,"title":"id"},"created":{"type":"integer","required":false,"title":"created"},"modified":{"type":"integer","required":false,"title":"modified"},"origin":{"type":"integer","required":false,"title":"origin"},"name":{"type":"string","required":false,"title":"name"},"get":{"type":"object","properties":{"path":{"type":"string","required":false,"title":"path"},"responses":{"type":"object","properties":{"code":{"type":"string","required":false,"title":"code"},"description":{"type":"string","required":false,"title":"description"},"expectedValues":{"type":"string","required":false,"title":"expectedValues"}}}}},"put":{"type":"object","properties":{"path":{"type":"string","required":false,"title":"path"}}}}}'
     -
         provisionwatcher: '{"type":"object","$schema":"http://json-schema.org/draft-03/schema#","title":"provisionwatcher","properties":{"id":{"type":"string","required":false,"title":"id"},"created":{"type":"integer","required":false,"title":"created"},"modified":{"type":"integer","required":false,"title":"modified"},"origin":{"type":"integer","required":false,"title":"origin"},"name":{"type":"string","required":false,"title":"name"}}}'
-/ping:
+/v1/ping:
     displayName: Ping Resource
     description: Example - http://localhost:48081/api/v1/ping
     get:
@@ -25,7 +25,7 @@ schemas:
         responses:
             "200":
                 description: Successful Response
-/config:
+/v1/config:
     displayName: Config Resource
     description: Example - http://localhost:48081/api/v1/config
     get:
@@ -33,7 +33,7 @@ schemas:
         responses:
             "200":
                 description: The service's configuration as JSON document
-/device/id/{id}:
+/v1/device/id/{id}:
     displayName: Device Resource (by id)
     description: Example - http://localhost:48081/api/v1/device/id/57bc6d80555e5218873e5a30
     uriParameters:
@@ -51,7 +51,7 @@ schemas:
                 description: for incorrect or unparsable requests
             "404":
                 description: if the device cannot be found by the id provided.
-/device/check/{token}:
+/v1/device/check/{token}:
     displayName: Device Resource by name (preferred) or id
     description: Example - http://localhost:48081/api/v1/device/check/ohmmeter
     uriParameters:
@@ -69,7 +69,7 @@ schemas:
                 description: for incorrect or unparsable requests
             "404":
                 description: device was not found
-/device/name/{name}/lastreported/{time}:
+/v1/device/name/{name}/lastreported/{time}:
     displayName: Device Resource (set last reported by name)
     description: Example - http://localhost:48081/api/v1/device/name/livingroomthermostat/lastreported/1471966597000 (where livingroomthermostat is the device name)
     uriParameters:
@@ -94,7 +94,7 @@ schemas:
                 description: if the device cannot be found by the name provided.
             "500":
                 description: for unknown or unanticipated issues.
-/device/name/{name}/lastreported/{time}/{notify}:
+/v1/device/name/{name}/lastreported/{time}/{notify}:
     displayName: Device Resource (set last reported by name)
     description: Example - http://localhost:48081/api/v1/device/name/livingroomthermostat/lastreported/1471966597000/true (where livingroomthermostat is the device name)
     uriParameters:
@@ -124,7 +124,7 @@ schemas:
                 description: if the device cannot be found by the name provided.
             "500":
                 description: for unknown or unanticipated issues.
-/device/name/{name}/lastconnected/{time}:
+/v1/device/name/{name}/lastconnected/{time}:
     displayName: Device Resource (set last connected by name)
     description: Example - http://localhost:48081/api/v1/device/name/livingroomthermostat/lastconnected/1471966597000 (where livingroomthermostat is the device name)
     uriParameters:
@@ -149,7 +149,7 @@ schemas:
                 description: if the device cannot be found by the name provided.
             "500":
                 description: for unknown or unanticipated issues.
-/device/name/{name}/lastconnected/{time}/{notify}:
+/v1/device/name/{name}/lastconnected/{time}/{notify}:
     displayName: Device Resource (set last connected by name)
     description: Example - http://localhost:48081/api/v1/device/name/livingroomthermostat/lastconnected/1471966597000/true (where livingroomthermostat is the device name)
     uriParameters:
@@ -179,7 +179,7 @@ schemas:
                 description: if the device cannot be found by the name provided.
             "500":
                 description: for unknown or unanticipated issues.
-/device/name/{name}:
+/v1/device/name/{name}:
     displayName: Device Resource (by name)
     description: Example - http://localhost:48081/api/v1/device/name/livingroomthermostat  (where livingroomthermostat is the device name)
     uriParameters:
@@ -226,7 +226,7 @@ schemas:
                 description: if the device cannot be found by the name provided.
             "500":
                 description: for unknown or unanticipated issues.
-/device/{id}/lastreported/{time}:
+/v1/device/{id}/lastreported/{time}:
     displayName: Device Resource (set last reported by id)
     description: Example - http://localhost:48081/api/v1/device/57bc6d80555e5218873e5a30/lastreported/1471966597000
     uriParameters:
@@ -251,7 +251,7 @@ schemas:
                 description: if the device cannot be found by the name provided.
             "500":
                 description: for unknown or unanticipated issues.
-/device/{id}/lastreported/{time}/{notify}:
+/v1/device/{id}/lastreported/{time}/{notify}:
     displayName: Device Resource (set last reported by id)
     description: Example - http://localhost:48081/api/v1/device/57bc6d80555e5218873e5a30/lastreported/1471966597000/true
     uriParameters:
@@ -281,7 +281,7 @@ schemas:
                 description: if the device cannot be found by the name provided.
             "500":
                 description: for unknown or unanticipated issues.
-/device/{id}/lastconnected/{time}:
+/v1/device/{id}/lastconnected/{time}:
     displayName: Device Resource (set last connected by id)
     description: Example - http://localhost:48081/api/v1/device/57bc6d80555e5218873e5a30/lastconnected/1471966597000
     uriParameters:
@@ -306,7 +306,7 @@ schemas:
                 description: if the device cannot be found by the name provided.
             "500":
                 description: for unknown or unanticipated issues.
-/device/{id}/lastconnected/{time}/{notify}:
+/v1/device/{id}/lastconnected/{time}/{notify}:
     displayName: Device Resource (set last connected by id)
     description: Example - http://localhost:48081/api/v1/device/57bc6d80555e5218873e5a30/lastconnected/1471966597000/true
     uriParameters:
@@ -336,7 +336,7 @@ schemas:
                 description: if the device cannot be found by the name provided.
             "500":
                 description: for unknown or unanticipated issues.
-/device/{id}:
+/v1/device/{id}:
     displayName: Device Resource (by id)
     description: Example - http://localhost:48081/api/v1/device/57bc6d80555e5218873e5a30
     uriParameters:
@@ -374,7 +374,7 @@ schemas:
                 description: if no device exists by the id provided.
             "500":
                 description: for unanticipated or unknown issues encountered.
-/device/label/{label}:
+/v1/device/label/{label}:
     displayName: Device Resource (by label)
     description: Example - http://localhost:48081/api/v1/device/label/hvac (where hvac is a device label)
     uriParameters:
@@ -396,7 +396,7 @@ schemas:
                 description: for incorrect or unparsable requests
             "500":
                 description: for unknown or unanticipated issues.
-/device/profile/{profileId}:
+/v1/device/profile/{profileId}:
     displayName: Device Resource (by profile)
     description: Example - http://localhost:48081/api/v1/device/profile/57bc6d7b555e5218873e5a2f (where the id is a device profile id)
     uriParameters:
@@ -418,7 +418,7 @@ schemas:
                 description: if no device profile match on the id provided.
             "500":
                 description: for unknown or unanticipated issues.
-/device/service/{serviceId}:
+/v1/device/service/{serviceId}:
     displayName: Device Resource (by service)
     description: Example - http://localhost:48081/api/v1/device/service/57bc6d6a555e5218873e5a2d  (where the id is the associated device service id)
     uriParameters:
@@ -440,7 +440,7 @@ schemas:
                 description: if no device service match on the id provided.
             "500":
                 description: for unknown or unanticipated issues.
-/device/servicename/{servicename}:
+/v1/device/servicename/{servicename}:
     displayName: Device Resource (by service name)
     description: Example - http://localhost:48081/api/v1/device/servicename/home thermostat device service (where home thermostat device service is the name of the device service)
     uriParameters:
@@ -464,7 +464,7 @@ schemas:
                 description: if the device cannot be found by the name provided.
             "500":
                 description: for unknown or unanticipated issues.
-/device/profilename/{profilename}:
+/v1/device/profilename/{profilename}:
     displayName: Device Resource (by profile name)
     description: Example - http://localhost:48081/api/v1/device/profilename/thermostat profile (where 'thermostat profile' is the name of a device profile)
     uriParameters:
@@ -488,7 +488,7 @@ schemas:
                 description: if the device cannot be found by the identifier provided.
             "500":
                 description: for unknown or unanticipated issues.
-/device:
+/v1/device:
     displayName: Device Resource
     description: Example - http://localhost:48081/api/v1/device
     post:
@@ -534,7 +534,7 @@ schemas:
                 description: if the number returned exceeds the max limit
             "500":
                 description: for unknown or unanticipated issues
-/deviceprofile/id/{id}:
+/v1/deviceprofile/id/{id}:
     displayName: DeviceProfile Resource (by id)
     description: Example - http://localhost:48081/api/v1/deviceprofile/id/57bb718f555e5218873e5a27
     uriParameters:
@@ -554,7 +554,7 @@ schemas:
                 description: if devices or provision watchers still reference the profile
             "500":
                 description: for unknown or unanticipated issues
-/deviceprofile/manufacturer/{manufacturer}/model/{model}:
+/v1/deviceprofile/manufacturer/{manufacturer}/model/{model}:
     displayName: DeviceProfile Resource (by manufacturer or model)
     description: Example - http://localhost:48081/api/v1/deviceprofile/manufacturer/Honeywell/model/ABC123 (where Honeywell is the manufacturer associated to profiles and ABC123 is the model associated to profiles)
     uriParameters:
@@ -581,7 +581,7 @@ schemas:
                 description: for malformed or unparsable requests
             "500":
                 description: for unknown or unanticipated issues
-/deviceprofile/manufacturer/{manufacturer}:
+/v1/deviceprofile/manufacturer/{manufacturer}:
     displayName: DeviceProfile Resource (by manufacturer)
     description: Example - http://localhost:48081/api/v1/deviceprofile/manufacturer/Honeywell (where Honeywell is the manufacturer associated to profiles)
     uriParameters:
@@ -603,7 +603,7 @@ schemas:
                 description: for malformed or unparsable requests
             "500":
                 description: for unknown or unanticipated issues
-/deviceprofile/name/{name}:
+/v1/deviceprofile/name/{name}:
     displayName: DeviceProfile Resource (by name)
     description: Example - http://localhost:48081/api/v1/deviceprofile/name/thermostat profile (where thermostat profile is the name of a profile)
     uriParameters:
@@ -640,7 +640,7 @@ schemas:
                 description: if the device profile cannot be found by the name provided
             "500":
                 description: for unknown or unanticipated issues
-/deviceprofile/uploadfile:
+/v1/deviceprofile/uploadfile:
     displayName: DeviceProfile Resource (upload YAML file)
     description: Example - http://localhost:48081/api/v1/deviceprofile/uploadfile
     post:
@@ -654,7 +654,7 @@ schemas:
                 description:  if an associated command's name is a duplicate for the profile or if the name is determined to not be unique with regard to others
             "500":
                 description: for unknown or unanticipated issues
-/deviceprofile/{id}:
+/v1/deviceprofile/{id}:
     displayName: DeviceProfile Resource (by id)
     description: Example - http://localhost:48081/api/v1/deviceprofile/57bb718f555e5218873e5a27
     uriParameters:
@@ -676,7 +676,7 @@ schemas:
                 description: if the device profile cannot be found by the id provided
             "500":
                 description: for unknown or unanticipated issues
-/deviceprofile/upload:
+/v1/deviceprofile/upload:
     displayName: DeviceProfile Resource (upload YAML)
     description: Example - http://localhost:48081/api/v1/deviceprofile/upload
     post:
@@ -690,7 +690,7 @@ schemas:
                 description:  if an associated command's name is a duplicate for the profile or if the name is determined to not be unique with regard to others
             "500":
                 description: for unknown or unanticipated issues
-/deviceprofile/yaml/name/{name}:
+/v1/deviceprofile/yaml/name/{name}:
     displayName: DeviceProfile Resource (by name)
     description: Example - http://localhost:48081/api/v1/deviceprofile/yaml/name/thermostat profile (where thermostat profile is the name of a profile)
     uriParameters:
@@ -713,7 +713,7 @@ schemas:
                 description: if the device profile cannot be found by the name provided
             "500":
                 description: for unknown or unanticipated issues
-/deviceprofile/yaml/{id}:
+/v1/deviceprofile/yaml/{id}:
     displayName: DeviceProfile Resource (by id)
     description: Example - http://localhost:48081/api/v1/deviceprofile/yaml/57bb718f555e5218873e5a27
     uriParameters:
@@ -734,7 +734,7 @@ schemas:
                description: if the device profile cannot be found by the id provided
             "500":
                 description: for unknown or unanticipated issues
-/deviceprofile/model/{model}:
+/v1/deviceprofile/model/{model}:
     displayName: DeviceProfile Resource (by model)
     description: Example - http://localhost:48081/api/v1/deviceprofile/model/ABC123 (where ABC123 is a model associated to a profile)
     uriParameters:
@@ -756,7 +756,7 @@ schemas:
                 description: for malformed or unparsable requests
             "500":
                 description: for unknown or unanticipated issues
-/deviceprofile/label/{label}:
+/v1/deviceprofile/label/{label}:
     displayName: DeviceProfile Resource (by label)
     description: Example - http://localhost:48081/api/v1/deviceprofile/label/bacnet (where bacnet is a label associated to profiles)
     uriParameters:
@@ -778,7 +778,7 @@ schemas:
                 description: for malformed or unparsable requests
             "500":
                 description: for unknown or unanticipated issues
-/deviceprofile:
+/v1/deviceprofile:
     displayName: DeviceProfile Resource
     description: Example - http://localhost:48081/api/v1/deviceprofile
     post:
@@ -826,7 +826,7 @@ schemas:
                 description: if the number returned exceeds the max limit
             "500":
                 description: for unknown or unanticipated issues
-/devicereport/id/{id}:
+/v1/devicereport/id/{id}:
     displayName: DeviceReport Resource (by id)
     description: Example - http://localhost:48081/api/v1/devicereport/id/57bb6491555e5218873e5a35
     uriParameters:
@@ -844,7 +844,7 @@ schemas:
                 description: if no DeviceReport is found with the provided id
             "500":
                 description: for unknown or unanticipated issues
-/devicereport/name/{name}:
+/v1/devicereport/name/{name}:
     displayName: DeviceReport Resource (by name)
     description: Example - http://localhost:48081/api/v1/devicereport/name/livingroom collection report (where livingroom collection report is the name of a device report)
     uriParameters:
@@ -879,7 +879,7 @@ schemas:
                 description: if no DeviceReport is found with the provided name
             "500":
                 description: for unknown or unanticipated issues
-/devicereport/{id}:
+/v1/devicereport/{id}:
     displayName: DeviceReport Resource (by id)
     description: Example - http://localhost:48081/api/v1/devicereport/57bb6491555e5218873e5a35
     uriParameters:
@@ -901,7 +901,7 @@ schemas:
                 description: if no DeviceReport is found with the provided id
             "500":
                 description: for unknown or unanticipated issues
-/devicereport/devicename/{devicename}:
+/v1/devicereport/devicename/{devicename}:
     displayName: DeviceReport Resources (by device name)
     description: Example - http://localhost:48081/api/v1/devicereport/devicename/livingroomthermostat  (where livingroomthermostat is the name of a device )
     uriParameters:
@@ -923,7 +923,7 @@ schemas:
                 description: for malformed or unparsable requests
             "500":
                 description: for unknown or unanticipated issues
-/devicereport/valueDescriptorsFor/{devicename}:
+/v1/devicereport/valueDescriptorsFor/{devicename}:
     displayName: Value Descriptor names (associated to device reports for given device name)
     description: Example - http://localhost:48081/api/v1/devicereport/valueDescriptorsFor/livingroomthermostat  (where livingroomthermostat is the name of a device )
     uriParameters:
@@ -944,7 +944,7 @@ schemas:
                 description: for malformed or unparsable requests
             "500":
                 description: for unknown or unanticipated issues
-/devicereport:
+/v1/devicereport:
     displayName: DeviceReport Resource
     description: Example - http://localhost:48081/api/v1/devicereport
     post:
@@ -990,7 +990,7 @@ schemas:
                 description: if the number returned exceeds the max limit.
             "500":
                 description: for unknown or unanticipated issues
-/deviceservice/id/{id}:
+/v1/deviceservice/id/{id}:
     displayName: DeviceService Resource (by id)
     description: Example - http://localhost:48081/api/v1/deviceservice/id/57bbbf8432d22c1c33934c61
     uriParameters:
@@ -1008,7 +1008,7 @@ schemas:
                 description: if no device service is found for the provided id
             "500":
                 description: for unknown or unanticipated issues
-/deviceservice/addressablename/{addressablename}:
+/v1/deviceservice/addressablename/{addressablename}:
     displayName: DeviceService Resource (by addressable name)
     description: Example - http://localhost:48081/api/v1/deviceservice/addressablename/hvac thermo address (where hvac thermo address is the name of an addressable)
     uriParameters:
@@ -1030,7 +1030,7 @@ schemas:
                 description: if no addressable is found for the provided id
             "500":
                 description: for unknown or unanticipated issues
-/deviceservice/name/{name}/opstate/{opState}:
+/v1/deviceservice/name/{name}/opstate/{opState}:
     displayName: DeviceService Resource (update op state by name)
     description: Example - http://localhost:48081/api/v1/deviceservice/name/home thermostat device service/opstate/enabled  (where home thermostat device service is the name of a device service)
     uriParameters:
@@ -1055,7 +1055,7 @@ schemas:
                 description: if no device service is found for the provided id
             "500":
                 description: for unknown or unanticipated issues
-/deviceservice/name/{name}/adminstate/{adminState}:
+/v1/deviceservice/name/{name}/adminstate/{adminState}:
     displayName: DeviceService Resource (update admin state by name)
     description: Example - http://localhost:48081/api/v1/deviceservice/name/home thermostat device service/adminstate/unlocked  (where home thermostat device service is the name of a device service)
     uriParameters:
@@ -1080,7 +1080,7 @@ schemas:
                 description: if no device service is found for the provided id
             "500":
                 description: for unknown or unanticipated issues
-/deviceservice/name/{name}/lastreported/{time}:
+/v1/deviceservice/name/{name}/lastreported/{time}:
     displayName: DeviceService Resource (update last reported by name)
     description: Example - http://localhost:48081/api/v1/deviceservice/name/home thermostat device service/lastreported/1471922060000  (where home thermostat device service is the name of a device service)
     uriParameters:
@@ -1105,7 +1105,7 @@ schemas:
                 description: if no device service is found for the provided id
             "500":
                 description: for unknown or unanticipated issues
-/deviceservice/name/{name}/lastconnected/{time}:
+/v1/deviceservice/name/{name}/lastconnected/{time}:
     displayName: DeviceService Resource (update last connected by name)
     description: Example - http://localhost:48081/api/v1/deviceservice/name/home thermostat device service/lastconnected/1471922060000  (where home thermostat device service is the name of a device service)
     uriParameters:
@@ -1130,7 +1130,7 @@ schemas:
                 description: if no device service is found for the provided id
             "503":
                 description: for unknown or unanticipated issues
-/deviceservice/name/{name}:
+/v1/deviceservice/name/{name}:
     displayName: DeviceService Resource (by name)
     description: Example - http://localhost:48081/api/v1/deviceservice/name/home thermostat device service  (where home thermostat device service is the name of a device service)
     uriParameters:
@@ -1161,7 +1161,7 @@ schemas:
                 description: if no device service is found for the provided id
             "500":
                 description: for unknown or unanticipated issues
-/deviceservice/{id}/opstate/{opState}:
+/v1/deviceservice/{id}/opstate/{opState}:
     displayName: DeviceService Resource (update op state)
     description: Example - http://localhost:48081/api/v1/deviceservice/57bbbf8432d22c1c33934c61/opstate/disabled
     uriParameters:
@@ -1186,7 +1186,7 @@ schemas:
                 description: if no device service is found for the provided id
             "500":
                 description: for unknown or unanticipated issues
-/deviceservice/{id}/adminstate/{adminState}:
+/v1/deviceservice/{id}/adminstate/{adminState}:
     displayName: DeviceService Resource (update admin state)
     description: Example - http://localhost:48081/api/v1/deviceservice/57bbbf8432d22c1c33934c61/adminstate/locked
     uriParameters:
@@ -1211,7 +1211,7 @@ schemas:
                 description: if no device service is found for the provided id
             "500":
                 description: for unknown or unanticipated issues
-/deviceservice/{id}/lastreported/{time}:
+/v1/deviceservice/{id}/lastreported/{time}:
     displayName: DeviceService Resource (update last reported)
     description: Example - http://localhost:48081/api/v1/deviceservice/57bbbf8432d22c1c33934c61/lastreported/1471922060100
     uriParameters:
@@ -1236,7 +1236,7 @@ schemas:
                 description: if no device service is found for the provided id
             "503":
                 description: for unknown or unanticipated issues
-/deviceservice/{id}/lastconnected/{time}:
+/v1/deviceservice/{id}/lastconnected/{time}:
     displayName: DeviceService Resource (update last connected)
     description: Example - http://localhost:48081/api/v1/deviceservice/57bbbf8432d22c1c33934c61/lastconnected/1471922060000
     uriParameters:
@@ -1261,7 +1261,7 @@ schemas:
                 description: if no device service is found for the provided id
             "500":
                 description: for unknown or unanticipated issues
-/deviceservice/{id}:
+/v1/deviceservice/{id}:
     displayName: DeviceService Resource (by id)
     description: Example - http://localhost:48081/api/v1/deviceservice/57bbbf8432d22c1c33934c61
     uriParameters:
@@ -1283,7 +1283,7 @@ schemas:
                 description: if no device service is found for the provided id
             "500":
                 description: for unknown or unanticipated issues
-/deviceservice/addressable/{addressableId}:
+/v1/deviceservice/addressable/{addressableId}:
     displayName: DeviceService Resource (by addressable)
     description: Example - http://localhost:48081/api/v1/deviceservice/addressable/57bbac0332d22c1c33934c60  (the id is an addressable id)
     uriParameters:
@@ -1305,7 +1305,7 @@ schemas:
                 description: if no addressablee is found for the provided id
             "500":
                 description: for unknown or unanticipated issues
-/deviceservice/label/{label}:
+/v1/deviceservice/label/{label}:
     displayName: DeviceService Resource (by label)
     description: Example - http://localhost:48081/api/v1/deviceservice/label/hvac  (where hvac is a label associated to device services)
     uriParameters:
@@ -1327,7 +1327,7 @@ schemas:
                 description: for malformed or unparsable requests
             "500":
                 description: for unknown or unanticipated issues
-/deviceservice:
+/v1/deviceservice:
     displayName: DeviceService Resource
     description: Example - http://localhost:48081/api/v1/deviceservice
     post:
@@ -1375,7 +1375,7 @@ schemas:
                 description: if the number of device services exceeds the current max limit.
             "500":
                 description: for unknown or unanticipated issues
-/provisionwatcher/id/{id}:
+/v1/provisionwatcher/id/{id}:
     displayName: ProvisionWatcher Resource (by id)
     description: Example - http://localhost:48081/api/v1/provisionwatcher/id/57ce0461add4b99e5d020534
     uriParameters:
@@ -1395,7 +1395,7 @@ schemas:
                 description: if no provision watcher with the provided id is found.
             "500":
                 description: for unknown or unanticipated issues
-/provisionwatcher/{id}:
+/v1/provisionwatcher/{id}:
     displayName: ProvisionWatcher Resource (by id)
     description: Example - http://localhost:48081/api/v1/provisionwatcher/57ce0523add4b99e5d020535
     uriParameters:
@@ -1419,7 +1419,7 @@ schemas:
                 description: if no provision watcher with the provided id is found.
             "500":
                 description: for unknown or unanticipated issues
-/provisionwatcher/name/{name}:
+/v1/provisionwatcher/name/{name}:
     displayName: ProvisionWatcher Resource (by name)
     description: Example - http://localhost:48081/api/v1/provisionwatcher/name/bacnet watcher (where bacnet watcher is the unique name of an ProvisionWatcher)
     uriParameters:
@@ -1457,7 +1457,7 @@ schemas:
                 description: if no provision watcher with the provided name is found.
             "500":
                 description: for unknown or unanticipated issues.
-/provisionwatcher/profile/{profileId}:
+/v1/provisionwatcher/profile/{profileId}:
     displayName: ProvisionWatcher Resource (by profile)
     description: Example - http://localhost:48081/api/v1/provisionwatcher/profile/57ce033aadd4b99e5d020532 (where the id is a device profile id)
     uriParameters:
@@ -1479,7 +1479,7 @@ schemas:
                 description: if no device profile match on the id provided.
             "500":
                 description: for unknown or unanticipated issues.
-/provisionwatcher/profilename/{profilename}:
+/v1/provisionwatcher/profilename/{profilename}:
     displayName: ProvisionWatcher Resource (by profile name)
     description: Example - http://localhost:48081/api/v1/provisionwatcher/profilename/thermostat profile (where 'thermostat profile' is the name of a device profile)
     uriParameters:
@@ -1503,7 +1503,7 @@ schemas:
                 description: if no DeviceProfile match on the id provided.
             "500":
                 description: for unknown or unanticipated issues.
-/provisionwatcher/service/{serviceId}:
+/v1/provisionwatcher/service/{serviceId}:
     displayName: ProvisionWatcher Resource (by service)
     description: Example - http://localhost:48081/api/v1/provisionwatcher/service/57ce033aadd4b99e5d020532 (where the id is a device service id)
     uriParameters:
@@ -1525,7 +1525,7 @@ schemas:
                 description: if no device service match on the id provided.
             "500":
                 description: for unknown or unanticipated issues.
-/provisionwatcher/servicename/{servicename}:
+/v1/provisionwatcher/servicename/{servicename}:
     displayName: ProvisionWatcher Resource (by service name)
     description: Example - http://localhost:48081/api/v1/provisionwatcher/servicename/home thermostat device service (where 'home thermostat device service' is the name of a device service)
     uriParameters:
@@ -1549,7 +1549,7 @@ schemas:
                 description: if no DeviceService match on the id provided.
             "500":
                 description: for unknown or unanticipated issues.
-/provisionwatcher/identifier/{key}/{value}:
+/v1/provisionwatcher/identifier/{key}/{value}:
     displayName: ProvisionWatcher Resource (by identifier key value pair)
     description: Example - http://localhost:48081/api/v1/provisionwatcher/identifier/HTTP/10.0.1.1 (where HTTP and 10.0.1.1 are the key value pair of the provision watcher identifier to be searched for )
     uriParameters:
@@ -1576,7 +1576,7 @@ schemas:
                 description: for malformed or unparsable requests
             "500":
                 description: for unknown or unanticipated issues.
-/provisionwatcher:
+/v1/provisionwatcher:
     displayName: ProvisionWatcher Resource
     description: "Example - http://localhost:48081/api/v1/provisionwatcher"
     post:
@@ -1625,7 +1625,7 @@ schemas:
                 description: if the number returned exceeds the max limit.
             "500":
                 description: for unknown or unanticipated issues.
-/addressable/id/{id}:
+/v1/addressable/id/{id}:
     displayName: Addressable Resource (by id)
     description: Example - http://localhost:48081/api/v1/addressable/id/57bb276e555e5218873e5a13
     uriParameters:
@@ -1647,7 +1647,7 @@ schemas:
                 description: if the adressable is still in use
             "500":
                 description: for unknown or unanticipated issues
-/addressable/{id}:
+/v1/addressable/{id}:
     displayName: Addressable Resource (by id)
     description: Example - http://localhost:48081/api/v1/addressable/57bb276e555e5218873e5a13
     uriParameters:
@@ -1671,7 +1671,7 @@ schemas:
                 description: if no addressable with the provided id is found
             "500":
                 description: for unknown or unanticipated issues
-/addressable/name/{name}:
+/v1/addressable/name/{name}:
     displayName: Addressable Resource (by name)
     description: Example - http://localhost:48081/api/v1/addressable/name/hvac thermo address (where hvac thermo address is the unique name of an Addressable)
     uriParameters:
@@ -1709,7 +1709,7 @@ schemas:
                 description: for malformed or unparsable requests
             "500":
                 description: for unknown or unanticipated issues.
-/addressable/topic/{topic}:
+/v1/addressable/topic/{topic}:
     displayName: Addressable Resource (by topic)
     description: Example - http://localhost:48081/api/v1/addressable/topic/thermodata (where thermodata is the name of Addressables' topic)
     uriParameters:
@@ -1733,7 +1733,7 @@ schemas:
                 description: for malformed or unparsable requests
             "500":
                 description: for unknown or unanticipated issues.
-/addressable/port/{port}:
+/v1/addressable/port/{port}:
     displayName: "Addressable Resource (by port)"
     description: Example - http://localhost:48081/api/v1/addressable/port/48089 (where 48089 is the name of Addressables' topic)
     uriParameters:
@@ -1756,7 +1756,7 @@ schemas:
                 description: for malformed or unparsable requests
             "500":
                 description: for unknown or unanticipated issues
-/addressable/publisher/{publisher}:
+/v1/addressable/publisher/{publisher}:
     displayName: Addressable Resource (by publisher)
     description: Example - http://localhost:48081/api/v1/addressable/publisher/DELLPUB (where DELLPUB is an Addressable publisher)
     uriParameters:
@@ -1780,7 +1780,7 @@ schemas:
                 description: for malformed or unparsable requests
             "500":
                 description: for unknown or unanticipated issues.
-/addressable/address/{address}:
+/v1/addressable/address/{address}:
     displayName: Addressable Resource (by address)
     description: Example - http://localhost:48081/api/v1/addressable/address/172.17.0.1
     uriParameters:
@@ -1804,7 +1804,7 @@ schemas:
                 description: for malformed or unparsable requests
             "500":
                 description: for unknown or unanticipated issues.
-/addressable:
+/v1/addressable:
     displayName: Addressable Resource
     description: "Example - http://localhost:48081/api/v1/addressable"
     post:
@@ -1855,7 +1855,7 @@ schemas:
                 description: if the number returned exceeds the max limit.
             "500":
                 description: for unknown or unanticipated issues.
-/command/{id}:
+/v1/command/{id}:
     displayName: Command Resource (by id)
     description: Example - http://localhost:48081/api/v1/command/57bb3195555e5218873e5a1a
     uriParameters:
@@ -1878,7 +1878,7 @@ schemas:
                 description: if no command with the provided id is found.
             "500":
                 description: for unknown or unanticipated issues.
-/command/name/{name}:
+/v1/command/name/{name}:
     displayName: Command Resource
     description: Example - http://localhost:48081/api/v1/command/name/cooling point (where cooling point is the name of a command)
     uriParameters:
@@ -1901,7 +1901,7 @@ schemas:
                 description: for malformed or unparsable requests
             "500":
                 description: for unknown or unanticipated issues.
-/command:
+/v1/command:
     displayName: Command Resource
     description: Example - http://localhost:48081/api/v1/command
     get:
@@ -1918,7 +1918,7 @@ schemas:
                 description: if the number returned exceeds the max limit.
             "500":
                 description: for unknown or unanticipated errors
-/command/device/{id}:
+/v1/command/device/{id}:
     displayName: Command Resource (by device id)
     description: Example - http://localhost:48081/api/v1/command/device/57bb3195555e5218873e5a1a
     uriParameters:
@@ -1941,3 +1941,14 @@ schemas:
                 description: if no device exists for the provided id.
             "500":
                 description: for unknown or unanticipated issues.
+/version:
+    displayName: Edgex API Version
+    description: Example - http://localhost:48081/api/version
+    get:
+        description: Get the API version
+        responses:
+            "200":
+                description: The service's API version as JSON document
+                body:
+                  application/json:
+                    example:  '{"version":"1.1.0"}'

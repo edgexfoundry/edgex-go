@@ -1,8 +1,7 @@
 #%RAML 0.8
 ---
 title: System Management Agent Microservice
-baseUri: http://localhost:48090/api/{version}
-version: v1
+baseUri: http://localhost:48090/api
 protocols: [ HTTP ]
 mediaType:  application/json
 
@@ -20,7 +19,7 @@ schemas:
     -
         operation: '{"type":"object","$schema":"http://json-schema.org/draft-03/schema#","description":"Service operation","title":"operation","properties":{"action":{"type":"string","required":false,"title":"Action"}, "services": {"type": "array","items": { "type": "string" },"uniqueItems": true}}}'
 
-/operation:
+/v1/operation:
     displayName: Service Operation
     description: example - http://localhost:48090/api/v1/operation
     post:
@@ -33,7 +32,7 @@ schemas:
         responses:
             "500":
                 description: for unknown or unanticipated issues.
-/config/{services}:
+/v1/config/{services}:
     displayName: Service Configuration (by service names comma delimited)
     description: example - http://localhost:48090/api/v1/config/edgex-support-notifications,edgex-core-data
     uriParameters:
@@ -55,7 +54,7 @@ schemas:
                         example: '{"Service":"edgex-support-notifications","Config":{"Clients":{"Logging":{"Host":"localhost","Port":48061,"Protocol":"http"}},"Databases":{"Primary":{"Host":"localhost","Name":"notifications","Password":"","Port":27017,"Timeout":5000,"Type":"mongodb","Username":""}},"Logging":{"EnableRemote":false,"File":"./logs/edgex-support-notifications.log"},"Registry":{"Host":"localhost","Port":8500,"Type":"consul"},"ResendLimit":2,"Service":{"BootTimeout":30000,"CheckInterval":"10s","ClientMonitor":15000,"Host":"localhost","Port":48060,"Protocol":"http","MaxResultCount":1000,"StartupMsg":"This is the Support Notifications Microservice","Timeout":5000},"Smtp":{"Host":"smtp.gmail.com","Password":"mypassword","Port":587,"Sender":"jdoe@gmail.com","Subject":"EdgeX Notification"}}}'
             "500":
                 description: for unknown or unanticipated issues.
-/metrics/{services}:
+/v1/metrics/{services}:
     displayName: Service Metrics (by service names comma delimited)
     description: example - http://localhost:48090/api/v1/metrics/edgex-support-notifications,edgex-core-data
     uriParameters:
@@ -77,7 +76,7 @@ schemas:
                         example: '{"Service":"edgex-support-notifications","Metrics":{"Alloc":2128944,"Frees":5911,"LiveObjects":31630,"Mallocs":37541,"Sys":7211256,"TotalAlloc":2128944}}'
             "500":
                 description: for unknown or unanticipated issues.
-/ping:
+/v1/ping:
     displayName: Ping Resource
     description: example - http://localhost:48090/api/v1/ping
     get:
@@ -88,3 +87,14 @@ schemas:
                 description: return value of "pong"
             "503":
                 description: for unknown or unanticipated issues
+/version:
+    displayName: Edgex API Version
+    description: Example - http://localhost:48090/api/version
+    get:
+        description: Get the API version
+        responses:
+            "200":
+                description: The service's API version as JSON document
+                body:
+                  application/json:
+                    example:  '{"version":"1.1.0"}'

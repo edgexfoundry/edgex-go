@@ -1,7 +1,7 @@
 #%RAML 0.8
 title: core-comand
 version: "1.0.0"
-baseUri: "http://localhost:48082/api/v1"
+baseUri: "http://localhost:48082/api"
 schemas: 
     - 
         device: '{"type":"object","$schema":"http://json-schema.org/draft-03/schema#","description":"device or sensor supplying data and taking actuation commands","title":"device","properties":{"id":{"type":"string","required":false,"title":"id"},"created":{"type":"integer","required":false,"title":"created"},"modified":{"type":"integer","required":false,"title":"modified"},"origin":{"type":"integer","required":false,"title":"origin"},"name":{"type":"string","required":false,"title":"name"},"description":{"type":"string","required":false,"title":"description"},"lastConnected":{"type":"integer","required":false,"title":"lastConnected"},"lastReported":{"type":"integer","required":false,"title":"lastReported"},"labels":{"type":"array","required":false,"title":"labels","items":{"type":"string","title":"labels"},"uniqueItems":false},"adminState":{"type":"string","required":false,"title":"adminState"},"operatingState":{"type":"string","required":false,"title":"operatingState"},"addressable":{"type":"object","properties":{"id":{"type":"string","required":false,"title":"id"},"created":{"type":"integer","required":false,"title":"created"},"modified":{"type":"integer","required":false,"title":"modified"},"origin":{"type":"integer","required":false,"title":"origin"},"name":{"type":"string","required":false,"title":"name"},"protocol":{"type":"string","required":false,"title":"protocol"},"address":{"type":"string","required":false,"title":"address"},"port":{"type":"integer","required":false,"title":"port"},"path":{"type":"string","required":false,"title":"path"},"publisher":{"type":"string","required":false,"title":"publisher"},"user":{"type":"string","required":false,"title":"user"},"password":{"type":"string","required":false,"title":"password"},"topic":{"type":"string","required":false,"title":"topic"}}}}}'
@@ -9,7 +9,7 @@ schemas:
         addressable: '{"type":"object","$schema":"http://json-schema.org/draft-03/schema#","title":"addressable","properties":{"id":{"type":"string","required":false,"title":"id"},"created":{"type":"integer","required":false,"title":"created"},"modified":{"type":"integer","required":false,"title":"modified"},"origin":{"type":"integer","required":false,"title":"origin"},"name":{"type":"string","required":false,"title":"name"},"protocol":{"type":"string","required":false,"title":"protocol"},"address":{"type":"string","required":false,"title":"address"},"port":{"type":"integer","required":false,"title":"port"},"path":{"type":"string","required":false,"title":"path"},"publisher":{"type":"string","required":false,"title":"publisher"},"user":{"type":"string","required":false,"title":"user"},"password":{"type":"string","required":false,"title":"password"},"topic":{"type":"string","required":false,"title":"topic"}}}'
     - 
         commandresponse: '{"type":"object","$schema":"http://json-schema.org/draft-03/schema#","title":"commandresponse","properties":{"host":{"type":"string","required":false,"title":"host"},"device":{"type":"object","$ref":"#/schemas/device","required":false,"title":"device"}}}'
-/ping: 
+/v1/ping:
     displayName: Ping Resource
     description: Example - http://localhost:48082/api/v1/ping
     get: 
@@ -19,7 +19,7 @@ schemas:
                 description: pong as a string
             "500": 
                 description: for unanticipated or unknown issues encountered.
-/config:
+/v1/config:
     displayName: Config Resource
     description: Example - http://localhost:48082/api/v1/config
     get:
@@ -27,7 +27,7 @@ schemas:
         responses:
             "200":
                 description: The service's configuration as JSON document
-/metrics:
+/v1/metrics:
     displayName: Metrics Resource
     description: Example - http://localhost:48082/api/v1/metrics
     get:
@@ -35,7 +35,7 @@ schemas:
         responses:
             "200":
                 description: The service's metrics as JSON document
-/device/{id}/command/{commandid}:
+/v1/device/{id}/command/{commandid}:
     displayName: Issue command
     description: Example - http://localhost:48082/api/v1/device/57bd0f2d32d258ad3fcd2d4b/command/57bd0f1432d258ad3fcd2d49
     uriParameters: 
@@ -78,7 +78,7 @@ schemas:
                 description: if the device is locked (admin state)
             "500": 
                 description: for unanticipated or unknown issues encountered.
-/device/{id}: 
+/v1/device/{id}:
     displayName: Device & their commands by id
     description: Example - http://localhost:48082/api/v1/device/57bd0f2d32d258ad3fcd2d4b
     uriParameters: 
@@ -100,7 +100,7 @@ schemas:
                 description: if no device exists by the id provided.
             "500": 
                 description: for unanticipated or unknown issues encountered.
-/device/name/{name}:
+/v1/device/name/{name}:
     displayName: Device & their commands by name 
     description: Example - http://localhost:48082/api/v1/device/name/livingroomthermostat
     uriParameters: 
@@ -122,7 +122,7 @@ schemas:
                 description: if no device exists by the name provided.
             "500": 
                 description: for unanticipated or unknown issues encountered.
-/device: 
+/v1/device:
     displayName: Devices & their commands
     description: Example - http://localhost:48082/api/v1/device
     get: 
@@ -136,7 +136,7 @@ schemas:
                         example: '[{"name":"livingroomthermostat","id":"57bd0f2d32d258ad3fcd2d4b","description":"living room HVAC thermostat","labels":["home","hvac","thermostat"],"adminState":"unlocked","opState":"enabled","lastConnected":0,"lastReported":0,"locationObject":"{lat:45.45,long:47.80}","commands":[{"id":"57bd0f1432d258ad3fcd2d49","name":"cooling point","get":{"url":"http://localhost:48082/api/v1/device/57bd0f2d32d258ad3fcd2d4b/api/v1/command/57bd0f1432d258ad3fcd2d49"},"put":{"url":"http://localhost:48082/api/v1/device/57bd0f2d32d258ad3fcd2d4b/api/v1/command/57bd0f1432d258ad3fcd2d49","parameters":[{"name":"coolingpoint","value":"72"}],"responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]}}]}]'
             "500": 
                 description: for unanticipated or unknown issues encountered.
-/device/name/{name}/command/{commandname}:
+/v1/device/name/{name}/command/{commandname}:
     displayName: Issue command
     description: Example - http://localhost:48082/api/v1/device/name/RPIMotionDetector/command/Set_Green_Led
     uriParameters:
@@ -179,3 +179,14 @@ schemas:
                 description: if the device is locked (admin state)
             "500":
                 description: for unanticipated or unknown issues encountered
+/version:
+    displayName: Edgex API Version
+    description: Example - http://localhost:48082/api/version
+    get:
+        description: Get the API version
+        responses:
+            "200":
+                description: The service's API version as JSON document
+                body:
+                  application/json:
+                    example:  '{"version":"1.1.0"}'

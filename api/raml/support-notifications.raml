@@ -1,8 +1,7 @@
 #%RAML 0.8
 ---
 title: Alerts and Notifcations Microservice
-baseUri: http://localhost/api/{version}
-version: v1
+baseUri: http://localhost/api
 protocols: [ HTTP ]
 mediaType:  application/json
 
@@ -841,7 +840,7 @@ traits:
             application/json:
               schema: Error
 
-/notification:
+/v1/notification:
   displayName: Notification
   post:
     is: [ hasServiceError, hasDuplicateSlugError ]
@@ -996,7 +995,7 @@ traits:
                   }
                 ]
 
-/subscription:
+/v1/subscription:
   displayName: Subscription
   get:
     is: [returnSubscriptionArray]
@@ -1194,7 +1193,7 @@ traits:
       is: [ returnSubscriptionArray, hasServiceError ]
       description: Query the Subscriptions by Receiver Name.
 
-/transmission:
+/v1/transmission:
   displayName: Transmission
   /slug/{slug}/{limit}:
     type: { queryWithLimit: { typeName: Transmission } }
@@ -1417,7 +1416,7 @@ traits:
         202:
           description: Return 202 Accepted status code without content when receiving the request, because it is an asynchronous operation.
 
-/ping:
+/v1/ping:
   displayName: Ping
   get:
     is: [ hasServiceError ]
@@ -1428,3 +1427,14 @@ traits:
         body:
           text/plain:
             example: pong
+/version:
+    displayName: Edgex API Version
+    description: Example - http://localhost:48060/api/version
+    get:
+        description: Get the API version
+        responses:
+            "200":
+                description: The service's API version as JSON document
+                body:
+                  application/json:
+                    example:  '{"version":"1.1.0"}'
