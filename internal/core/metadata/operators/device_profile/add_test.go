@@ -15,7 +15,10 @@
 package device_profile
 
 import (
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"testing"
+
+	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/operators/device_profile/mocks"
@@ -29,51 +32,75 @@ type mockOutline struct {
 }
 
 func TestDeleteExecutor(t *testing.T) {
+	emptyName := TestDeviceProfile
+	emptyName.Name = ""
+
+	duplicateCommandName := TestDeviceProfile
+	duplicateCommandName.CoreCommands = createCoreCommands([]contract.Command{TestCommand, TestCommand})
+
 	tests := []struct {
-		testName           string
-		mockAdder          DeviceProfileAdder
-		deviceProfileBytes []byte
-		expectedReturn     string
-		expectedError      bool
-		expectedErrorVal   error
+		testName         string
+		mockAdder        DeviceProfileAdder
+		deviceProfile    contract.DeviceProfile
+		expectedReturn   string
+		expectedError    bool
+		expectedErrorVal error
 	}{
 		{
-			testName:           "Successful database call",
-			mockAdder:          createMockDeviceProfileAdder([]mockOutline{}),
-			deviceProfileBytes: []byte{},
-			expectedReturn:     TestDeviceProfileID,
-			expectedError:      false,
-			expectedErrorVal:   nil,
+			testName: "Successful database call",
+			mockAdder: createMockDeviceProfileAdder([]mockOutline{
+				{"AddDeviceProfile", TestDeviceProfile, TestDeviceProfileID, nil},
+			}),
+			deviceProfile:    TestDeviceProfile,
+			expectedReturn:   TestDeviceProfileID,
+			expectedError:    false,
+			expectedErrorVal: nil,
 		},
 		{
-			testName:           "Duplicate name",
-			mockAdder:          createMockDeviceProfileAdder([]mockOutline{}),
-			deviceProfileBytes: []byte{},
-			expectedReturn:     "",
-			expectedError:      true,
-			expectedErrorVal:   errors.NewErrDuplicateName("Duplicate profile name " + TestDeviceProfileName),
+			testName: "Duplicate command name",
+			mockAdder: createMockDeviceProfileAdder([]mockOutline{
+				{"AddDeviceProfile", duplicateCommandName, "", db.ErrNotUnique},
+			}),
+			deviceProfile:    duplicateCommandName,
+			expectedReturn:   "",
+			expectedError:    true,
+			expectedErrorVal: errors.NewErrDuplicateName("Error adding device profile: Duplicate names in the commands"),
 		},
 		{
-			testName:           "Empty device profile name",
-			mockAdder:          createMockDeviceProfileAdder([]mockOutline{}),
-			deviceProfileBytes: []byte{},
-			expectedReturn:     "",
-			expectedError:      true,
-			expectedErrorVal:   errors.NewErrEmptyDeviceProfileName(),
+			testName: "Duplicate device profile name",
+			mockAdder: createMockDeviceProfileAdder([]mockOutline{
+				{"AddDeviceProfile", TestDeviceProfile, "", db.ErrNotUnique},
+			}),
+			deviceProfile:    TestDeviceProfile,
+			expectedReturn:   "",
+			expectedError:    true,
+			expectedErrorVal: errors.NewErrDuplicateName("Duplicate profile name " + TestDeviceProfileName),
 		},
 		{
-			testName:           "Unsuccessful database call",
-			mockAdder:          createMockDeviceProfileAdder([]mockOutline{}),
-			deviceProfileBytes: []byte{},
-			expectedReturn:     "",
-			expectedError:      true,
-			expectedErrorVal:   TestError,
+			testName: "Empty device profile name",
+			mockAdder: createMockDeviceProfileAdder([]mockOutline{
+				{"AddDeviceProfile", emptyName, "", db.ErrNameEmpty},
+			}),
+			deviceProfile:    emptyName,
+			expectedReturn:   "",
+			expectedError:    true,
+			expectedErrorVal: errors.NewErrEmptyDeviceProfileName(),
+		},
+		{
+			testName: "Unsuccessful database call",
+			mockAdder: createMockDeviceProfileAdder([]mockOutline{
+				{"AddDeviceProfile", TestDeviceProfile, "", TestError},
+			}),
+			deviceProfile:    TestDeviceProfile,
+			expectedReturn:   "",
+			expectedError:    true,
+			expectedErrorVal: TestError,
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.testName, func(tt *testing.T) {
-			op := NewAddDeviceProfileExecutor(test.deviceProfileBytes, test.mockAdder)
+			op := NewAddDeviceProfileExecutor(test.deviceProfile, test.mockAdder)
 			id, err := op.Execute()
 
 			if test.expectedReturn != id {
