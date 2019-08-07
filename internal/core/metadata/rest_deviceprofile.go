@@ -286,11 +286,13 @@ func restAddProfileByYaml(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		switch err.(type) {
-		case *errors.ErrDuplicateName:
-			http.Error(w, err.Error(), http.StatusConflict)
-		case *errors.ErrEmptyDeviceProfileName:
+		case models.ErrContractInvalid:
 			http.Error(w, err.Error(), http.StatusBadRequest)
-		case *models.ErrContractInvalid:
+		case errors.ErrDeviceProfileInvalidState:
+			http.Error(w, err.Error(), http.StatusBadRequest)
+		case errors.ErrDuplicateName:
+			http.Error(w, err.Error(), http.StatusConflict)
+		case errors.ErrEmptyDeviceProfileName:
 			http.Error(w, err.Error(), http.StatusBadRequest)
 		default:
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -328,11 +330,13 @@ func restAddProfileByYamlRaw(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		switch err.(type) {
-		case *errors.ErrDuplicateName:
-			http.Error(w, err.Error(), http.StatusConflict)
-		case *errors.ErrEmptyDeviceProfileName:
+		case models.ErrContractInvalid:
 			http.Error(w, err.Error(), http.StatusBadRequest)
-		case *models.ErrContractInvalid:
+		case errors.ErrDeviceProfileInvalidState:
+			http.Error(w, err.Error(), http.StatusBadRequest)
+		case errors.ErrDuplicateName:
+			http.Error(w, err.Error(), http.StatusConflict)
+		case errors.ErrEmptyDeviceProfileName:
 			http.Error(w, err.Error(), http.StatusBadRequest)
 		default:
 			http.Error(w, err.Error(), http.StatusInternalServerError)

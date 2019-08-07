@@ -825,7 +825,7 @@ func TestAddDeviceProfileByYaml(t *testing.T) {
 			createDBClientWithOutlines([]mockOutline{
 				{"AddDeviceProfile", duplicateCommandName, "", db.ErrNotUnique},
 			}),
-			http.StatusConflict,
+			http.StatusBadRequest,
 		},
 		{
 			"Empty device profile name",
@@ -897,7 +897,7 @@ func TestAddDeviceProfileByYamlRaw(t *testing.T) {
 			createDBClientWithOutlines([]mockOutline{
 				{"AddDeviceProfile", duplicateCommandName, "", db.ErrNotUnique},
 			}),
-			http.StatusConflict,
+			http.StatusBadRequest,
 		},
 		{
 			"Empty device profile name",
@@ -953,10 +953,9 @@ func createDeviceProfileRequestWithFile(fileContents []byte) *http.Request {
 	}
 
 	req, _ := http.NewRequest(http.MethodPost, TestURI, body)
-	req.Header.Set(clients.ContentType, "multipart/form-data; boundary=" + boundary)
+	req.Header.Set(clients.ContentType, "multipart/form-data; boundary="+boundary)
 	return req
 }
-
 
 func createRequestWithBody(d contract.DeviceProfile) *http.Request {
 	body, err := d.MarshalJSON()
@@ -1142,7 +1141,6 @@ func createDBClientWithOutlines(outlines []mockOutline) interfaces.DBClient {
 
 	return &dbMock
 }
-
 
 // createTestDeviceProfile creates a device profile to be used during testing.
 // This function handles some of the necessary creation nuances which need to take place for proper mocking and equality
