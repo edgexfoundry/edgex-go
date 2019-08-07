@@ -121,7 +121,7 @@ func (s *Service) Init(cert CertificateLoader) error {
 		}
 	}
 
-	err = s.initAuthmethod(Configuration.KongAuth.Name, Configuration.KongAuth.TokenTTL)
+	err = s.initAuthMethod(Configuration.KongAuth.Name, Configuration.KongAuth.TokenTTL)
 	if err != nil {
 		return err
 	}
@@ -264,7 +264,7 @@ func (s *Service) initACL(name string, whitelist string) error {
 	return nil
 }
 
-func (s *Service) initAuthmethod(name string, ttl int) error {
+func (s *Service) initAuthMethod(name string, ttl int) error {
 	LoggingClient.Info(fmt.Sprintf("selected authetication method as %s.", name))
 	switch name {
 	case "jwt":

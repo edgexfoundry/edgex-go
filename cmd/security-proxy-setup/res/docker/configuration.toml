@@ -18,12 +18,12 @@
 # This is a TOML config file for edgexsecurity service.
 
 [Writable]
-LogLevel = 'DEBUG'
+LogLevel = "DEBUG"
 RequestTimeout = 10
 
 [Logging]
 EnableRemote = false
-File = './logs/security-proxy-setup.log'
+File = "./logs/security-proxy-setup.log"
 
 [KongURL]
 Server = "kong"
@@ -54,7 +54,7 @@ SNIS = "edgex-kong"
 [Clients]
 	[Clients.CoreData]
 		Protocol = "http"
-		Host = "edgex-core-data" #Question: shouldn't these be localhost?
+		Host = "edgex-core-data"
 		Port = 48080
 
 	[Clients.Metadata]
@@ -88,8 +88,8 @@ SNIS = "edgex-kong"
 		Port = 48071
 
     [Clients.Scheduler]
-        Protocol = 'http'
-        Host = 'edgex-support-scheduler'
+        Protocol = "http"
+        Host = "edgex-support-scheduler"
         Port = 48085
 
 	[Clients.Rulesengine]
