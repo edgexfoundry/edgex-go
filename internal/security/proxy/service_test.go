@@ -76,6 +76,7 @@ func TestInit(t *testing.T) {
 
 	host, port, err := parseHostAndPort(ts, t)
 	if err != nil {
+		t.Error(err.Error())
 		return
 	}
 	Configuration.KongURL = KongUrlInfo{
@@ -167,6 +168,7 @@ func TestInitKongService(t *testing.T) {
 
 	host, port, err := parseHostAndPort(ts, t)
 	if err != nil {
+		t.Error(err.Error())
 		return
 	}
 	cfgOK := ConfigurationStruct{}
@@ -229,6 +231,7 @@ func TestInitKongRoutes(t *testing.T) {
 
 	host, port, err := parseHostAndPort(ts, t)
 	if err != nil {
+		t.Error(err.Error())
 		return
 	}
 
@@ -297,6 +300,7 @@ func TestInitACL(t *testing.T) {
 
 	host, port, err := parseHostAndPort(ts, t)
 	if err != nil {
+		t.Error(err.Error())
 		return
 	}
 
@@ -362,6 +366,7 @@ func TestResetProxy(t *testing.T) {
 
 	host, port, err := parseHostAndPort(ts, t)
 	if err != nil {
+		t.Error(err.Error())
 		return
 	}
 
@@ -424,6 +429,7 @@ func TestGetSvcIDs(t *testing.T) {
 
 	host, port, err := parseHostAndPort(ts, t)
 	if err != nil {
+		t.Error(err.Error())
 		return
 	}
 
@@ -490,6 +496,7 @@ func TestInitJWTAuth(t *testing.T) {
 
 	host, port, err := parseHostAndPort(ts, t)
 	if err != nil {
+		t.Error(err.Error())
 		return
 	}
 
