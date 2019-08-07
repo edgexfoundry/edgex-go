@@ -5,20 +5,19 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients"
-	"gopkg.in/yaml.v2"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	errors2 "github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/mock"
-
-	errors2 "github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
+	"gopkg.in/yaml.v2"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces/mocks"
