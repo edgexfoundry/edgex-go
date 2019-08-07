@@ -129,6 +129,10 @@ func (c *Consumer) createJWTToken() (string, error) {
 	jwtCred := JWTCred{}
 	s := sling.New().Set("Content-Type", "application/x-www-form-urlencoded")
 	req, err := s.New().Get(Configuration.KongURL.GetProxyBaseURL()).Post(fmt.Sprintf("consumers/%s/jwt", c.name)).Request()
+	if err != nil {
+		return "", err
+	}
+
 	resp, err := c.client.Do(req)
 	if err != nil {
 		e := fmt.Sprintf("failed to create jwt token for consumer %s with error %s", c.name, err.Error())

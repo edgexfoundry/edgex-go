@@ -56,15 +56,15 @@ type auth struct {
 func (cs certificate) Load() (*CertPair, error) {
 	t, err := cs.getAccessToken(cs.tokenPath)
 	if err != nil {
-		return &CertPair{"", ""}, err
+		return nil, err
 	}
 	cp, err := cs.retrieve(t)
 	if err != nil {
-		return &CertPair{"", ""}, err
+		return nil, err
 	}
 	err = cs.validate(cp)
 	if err != nil {
-		return &CertPair{"", ""}, err
+		return nil, err
 	}
 	return cp, nil
 }

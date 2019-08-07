@@ -48,6 +48,9 @@ func (s *Service) CheckSecretServiceStatus() error {
 
 func (s *Service) checkServiceStatus(path string) error {
 	req, err := sling.New().Get(path).Request()
+	if err != nil {
+		return err
+	}
 	resp, err := s.client.Do(req)
 	if err != nil {
 		e := fmt.Sprintf("the status of service on %s is unknown, the initialization is terminated", path)
@@ -147,7 +150,7 @@ func (s *Service) postCert(cert CertificateLoader) error {
 		Key:  cp.Key,
 		Snis: strings.Split(Configuration.SecretService.SNIS, ","),
 	}
-	LoggingClient.Info("trying to upload cert to proxy server")
+	LoggingClient.Debug("trying to upload cert to proxy server")
 	req, err := sling.New().Base(Configuration.KongURL.GetProxyBaseURL()).Post(CertificatesPath).BodyJSON(body).Request()
 	if err != nil {
 		LoggingClient.Error("failed to upload cert to proxy server with error %s", err.Error())
@@ -162,7 +165,7 @@ func (s *Service) postCert(cert CertificateLoader) error {
 
 	switch resp.StatusCode {
 	case http.StatusOK, http.StatusCreated, http.StatusConflict:
-		LoggingClient.Info("successful to add certificate to the reverse proxy")
+		LoggingClient.Info("successfully added certificate to the reverse proxy")
 		break
 	default:
 		b, err := ioutil.ReadAll(resp.Body)
