@@ -30,44 +30,44 @@ type mockOutline struct {
 
 func TestDeleteExecutor(t *testing.T) {
 	tests := []struct {
-		testName         string
-		mockAdder      DeviceProfileAdder
+		testName           string
+		mockAdder          DeviceProfileAdder
 		deviceProfileBytes []byte
-		expectedReturn string
-		expectedError    bool
-		expectedErrorVal error
+		expectedReturn     string
+		expectedError      bool
+		expectedErrorVal   error
 	}{
 		{
-			testName: "Successful database call",
-			mockAdder: createMockDeviceProfileAdder([]mockOutline{}),
+			testName:           "Successful database call",
+			mockAdder:          createMockDeviceProfileAdder([]mockOutline{}),
 			deviceProfileBytes: []byte{},
-			expectedReturn: TestDeviceProfileID,
-			expectedError:    false,
-			expectedErrorVal: nil,
+			expectedReturn:     TestDeviceProfileID,
+			expectedError:      false,
+			expectedErrorVal:   nil,
 		},
 		{
-			testName: "Duplicate name",
-			mockAdder: createMockDeviceProfileAdder([]mockOutline{}),
+			testName:           "Duplicate name",
+			mockAdder:          createMockDeviceProfileAdder([]mockOutline{}),
 			deviceProfileBytes: []byte{},
-			expectedReturn: "",
-			expectedError:    true,
-			expectedErrorVal: errors.NewErrDuplicateName("Duplicate profile name " + TestDeviceProfileName ),
+			expectedReturn:     "",
+			expectedError:      true,
+			expectedErrorVal:   errors.NewErrDuplicateName("Duplicate profile name " + TestDeviceProfileName),
 		},
 		{
-			testName: "Empty device profile name",
-			mockAdder: createMockDeviceProfileAdder([]mockOutline{}),
+			testName:           "Empty device profile name",
+			mockAdder:          createMockDeviceProfileAdder([]mockOutline{}),
 			deviceProfileBytes: []byte{},
-			expectedReturn: "",
-			expectedError:    true,
-			expectedErrorVal: errors.NewErrEmptyDeviceProfileName(),
+			expectedReturn:     "",
+			expectedError:      true,
+			expectedErrorVal:   errors.NewErrEmptyDeviceProfileName(),
 		},
 		{
-			testName: "Unsuccessful database call",
-			mockAdder: createMockDeviceProfileAdder([]mockOutline{}),
+			testName:           "Unsuccessful database call",
+			mockAdder:          createMockDeviceProfileAdder([]mockOutline{}),
 			deviceProfileBytes: []byte{},
-			expectedReturn: "",
-			expectedError:    true,
-			expectedErrorVal: TestError,
+			expectedReturn:     "",
+			expectedError:      true,
+			expectedErrorVal:   TestError,
 		},
 	}
 

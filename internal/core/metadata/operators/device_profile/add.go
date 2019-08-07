@@ -19,7 +19,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 
 	contracts "github.com/edgexfoundry/go-mod-core-contracts/models"
-	"gopkg.in/yaml.v2"
 )
 
 type addProfileExecutor interface {
@@ -27,23 +26,16 @@ type addProfileExecutor interface {
 }
 
 type addProfile struct {
-	adder        DeviceProfileAdder
-	profileBytes []byte
+	adder         DeviceProfileAdder
+	deviceProfile contracts.DeviceProfile
 }
 
 // Execute performs the deletion of the device profile.
 func (op addProfile) Execute() (id string, err error) {
-	var dp contracts.DeviceProfile
-
-	err = yaml.Unmarshal(op.profileBytes, &dp)
-	if err != nil {
-		return "", err
-	}
-
 	// Check if there are duplicate names in the device profile command list
-	for _, c1 := range dp.CoreCommands {
+	for _, c1 := range op.deviceProfile.CoreCommands {
 		count := 0
-		for _, c2 := range dp.CoreCommands {
+		for _, c2 := range op.deviceProfile.CoreCommands {
 			if c1.Name == c2.Name {
 				count += 1
 			}
@@ -54,10 +46,10 @@ func (op addProfile) Execute() (id string, err error) {
 		}
 	}
 
-	id, err = op.adder.AddDeviceProfile(dp)
+	id, err = op.adder.AddDeviceProfile(op.deviceProfile)
 	if err != nil {
 		if err == db.ErrNotUnique {
-			return "", errors.NewErrDuplicateName("Duplicate profile name " + dp.Name )
+			return "", errors.NewErrDuplicateName("Duplicate profile name " + op.deviceProfile.Name)
 		} else if err == db.ErrNameEmpty {
 			return "", errors.NewErrEmptyDeviceProfileName()
 		}
@@ -69,9 +61,9 @@ func (op addProfile) Execute() (id string, err error) {
 }
 
 // NewGetModelExecutor creates a new GetProfilesExecutor for retrieving device profiles by model.
-func NewAddDeviceProfileExecutor(profileBytes []byte, adder DeviceProfileAdder) addProfileExecutor {
+func NewAddDeviceProfileExecutor(deviceProfile contracts.DeviceProfile, adder DeviceProfileAdder) addProfileExecutor {
 	return addProfile{
-		profileBytes:  profileBytes,
-		adder: adder,
+		deviceProfile: deviceProfile,
+		adder:         adder,
 	}
 }

@@ -272,7 +272,16 @@ func restAddProfileByYaml(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	op := device_profile.NewAddDeviceProfileExecutor(data, dbClient)
+	var dp models.DeviceProfile
+
+	err = yaml.Unmarshal(data, &dp)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		LoggingClient.Error(err.Error())
+		return
+	}
+
+	op := device_profile.NewAddDeviceProfileExecutor(dp, dbClient)
 	id, err := op.Execute()
 
 	if err != nil {
@@ -303,7 +312,16 @@ func restAddProfileByYamlRaw(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	op := device_profile.NewAddDeviceProfileExecutor(body, dbClient)
+	var dp models.DeviceProfile
+
+	err = yaml.Unmarshal(body, &dp)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		LoggingClient.Error(err.Error())
+		return
+	}
+
+	op := device_profile.NewAddDeviceProfileExecutor(dp, dbClient)
 	id, err := op.Execute()
 
 	if err != nil {
