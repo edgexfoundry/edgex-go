@@ -35,20 +35,20 @@ func main() {
 		usage.HelpCallbackSecurityProxy()
 	}
 	var initNeeded bool
-	var insecureSkipVerify bool
+	var ensureSkipVerify bool
 	var resetNeeded bool
 	var useProfile string
 	var userTobeCreated string
-	var userofGroup string
-	var userTobeDeleted string
+	var userOfGroup string
+	var userToBeDeleted string
 	var useRegistry bool
 
-	flag.BoolVar(&insecureSkipVerify, "insureskipverify", true, "skip server side SSL verification, mainly for self-signed cert")
+	flag.BoolVar(&ensureSkipVerify, "insureskipverify", true, "skip server side SSL verification, mainly for self-signed cert")
 	flag.BoolVar(&initNeeded, "init", false, "run init procedure for security service.")
 	flag.BoolVar(&resetNeeded, "reset", false, "reset reverse proxy by removing all services/routes/consumers")
 	flag.StringVar(&userTobeCreated, "useradd", "", "user that needs to be added to consume the edgex services")
-	flag.StringVar(&userofGroup, "group", "user", "group that the user belongs to. By default it is in user group")
-	flag.StringVar(&userTobeDeleted, "userdel", "", "user that needs to be deleted from the edgex services")
+	flag.StringVar(&userOfGroup, "group", "user", "group that the user belongs to. By default it is in user group")
+	flag.StringVar(&userToBeDeleted, "userdel", "", "user that needs to be deleted from the edgex services")
 	flag.BoolVar(&useRegistry, "registry", false, "Indicates the service should use registry service.")
 	flag.BoolVar(&useRegistry, "r", false, "Indicates the service should use registry service.")
 	flag.StringVar(&useProfile, "profile", "", "Specify a profile other than default.")
@@ -60,7 +60,7 @@ func main() {
 	params := startup.BootParams{UseRegistry: useRegistry, UseProfile: useProfile, BootTimeout: internal.BootTimeoutDefault}
 	startup.Bootstrap(params, proxy.Retry, logBeforeInit)
 
-	req := proxy.NewRequestor(insecureSkipVerify, proxy.Configuration.Writable.RequestTimeout)
+	req := proxy.NewRequestor(ensureSkipVerify, proxy.Configuration.Writable.RequestTimeout)
 	s := proxy.NewService(req)
 
 	err := s.CheckProxyServiceStatus()
@@ -86,7 +86,7 @@ func main() {
 		}
 	}
 
-	if userTobeCreated != "" && userofGroup != "" {
+	if userTobeCreated != "" && userOfGroup != "" {
 		c := proxy.NewConsumer(userTobeCreated, req)
 
 		err := c.Create(proxy.EdgeXKong)
@@ -95,7 +95,7 @@ func main() {
 			return
 		}
 
-		err = c.AssociateWithGroup(userofGroup)
+		err = c.AssociateWithGroup(userOfGroup)
 		if err != nil {
 			proxy.LoggingClient.Error(err.Error())
 			return
@@ -127,8 +127,8 @@ func main() {
 		}
 	}
 
-	if userTobeDeleted != "" {
-		t := proxy.NewConsumer(userTobeDeleted, req)
+	if userToBeDeleted != "" {
+		t := proxy.NewConsumer(userToBeDeleted, req)
 		t.Delete()
 	}
 }
