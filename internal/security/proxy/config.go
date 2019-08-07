@@ -33,8 +33,8 @@ type ConfigurationStruct struct {
 }
 
 type WritableInfo struct {
-	LogLevel string
-	Title    string
+	LogLevel       string
+	RequestTimeout int
 }
 
 type KongUrlInfo struct {

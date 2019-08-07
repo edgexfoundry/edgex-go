@@ -84,7 +84,7 @@ func TestInit(t *testing.T) {
 	}
 
 	mock := mockCertificateLoader{}
-	service := NewService(NewRequestor(true))
+	service := NewService(NewRequestor(true, 10))
 	err = service.Init(mock)
 	if err != nil {
 		t.Errorf(err.Error())

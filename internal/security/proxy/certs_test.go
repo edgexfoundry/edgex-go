@@ -73,7 +73,7 @@ func TestLoad(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			Configuration = &tt.config
-			cert := NewCertificateLoader(NewRequestor(true), tt.certPath, tt.tokenPath)
+			cert := NewCertificateLoader(NewRequestor(true, 10), tt.certPath, tt.tokenPath)
 			_, err := cert.Load()
 			if err != nil && !tt.expectError {
 				t.Error(err)
@@ -188,7 +188,7 @@ func TestRetrieve(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			Configuration = &tt.config
-			cs := certificate{NewRequestor(true), tt.certPath, ""}
+			cs := certificate{NewRequestor(true, 10), tt.certPath, ""}
 			cp, err := cs.retrieve(tt.token)
 			if err != nil && !tt.expectError {
 				t.Error(err)
