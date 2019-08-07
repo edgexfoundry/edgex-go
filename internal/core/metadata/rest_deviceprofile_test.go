@@ -5,7 +5,9 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"gopkg.in/yaml.v2"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -789,11 +791,15 @@ func TestDeleteDeviceProfileByName(t *testing.T) {
 }
 
 func TestAddDeviceProfileByYaml(t *testing.T) {
-	emptyName := TestDeviceProfile
-	emptyName.Name = ""
+	okBody, _ := yaml.Marshal(TestDeviceProfile)
 
 	duplicateCommandName := TestDeviceProfile
 	duplicateCommandName.CoreCommands = createCoreCommands([]contract.Command{TestCommand, TestCommand})
+	dupeBody, _ := yaml.Marshal(duplicateCommandName)
+
+	emptyName := TestDeviceProfile
+	emptyName.Name = ""
+	emptyBody, _ := yaml.Marshal(emptyName)
 
 	tests := []struct {
 		name           string
@@ -803,7 +809,7 @@ func TestAddDeviceProfileByYaml(t *testing.T) {
 	}{
 		{
 			"OK",
-			createRequestWithPathParameters(http.MethodGet, map[string]string{NAME: TestDeviceProfileName}),
+			createDeviceProfileRequestWithFile(okBody),
 			createDBClientWithOutlines([]mockOutline{
 				{"AddDeviceProfile", TestDeviceProfile, TestDeviceProfileID, nil},
 			}),
@@ -811,7 +817,7 @@ func TestAddDeviceProfileByYaml(t *testing.T) {
 		},
 		{
 			"Duplicate command name",
-			createRequestWithPathParameters(http.MethodGet, map[string]string{NAME: TestDeviceProfileName}),
+			createDeviceProfileRequestWithFile(dupeBody),
 			createDBClientWithOutlines([]mockOutline{
 				{"AddDeviceProfile", duplicateCommandName, "", db.ErrNotUnique},
 			}),
@@ -819,7 +825,7 @@ func TestAddDeviceProfileByYaml(t *testing.T) {
 		},
 		{
 			"Empty device profile name",
-			createRequestWithPathParameters(http.MethodGet, map[string]string{NAME: TestDeviceProfileName}),
+			createDeviceProfileRequestWithFile(emptyBody),
 			createDBClientWithOutlines([]mockOutline{
 				{"AddDeviceProfile", emptyName, "", db.ErrNameEmpty},
 			}),
@@ -827,9 +833,9 @@ func TestAddDeviceProfileByYaml(t *testing.T) {
 		},
 		{
 			"Unsuccessful database call",
-			createRequestWithPathParameters(http.MethodGet, map[string]string{NAME: TestDeviceProfileName}),
+			createDeviceProfileRequestWithFile(okBody),
 			createDBClientWithOutlines([]mockOutline{
-				{"AddDeviceProfile", emptyName, "", TestError},
+				{"AddDeviceProfile", TestDeviceProfile, "", TestError},
 			}),
 			http.StatusInternalServerError,
 		},
@@ -853,8 +859,6 @@ func TestAddDeviceProfileByYaml(t *testing.T) {
 }
 
 func TestAddDeviceProfileByYamlRaw(t *testing.T) {
-	_, _ = TestDeviceProfile.Validate()
-	
 	okBody, _ := yaml.Marshal(TestDeviceProfile)
 
 	duplicateCommandName := TestDeviceProfile
@@ -921,6 +925,30 @@ func TestAddDeviceProfileByYamlRaw(t *testing.T) {
 		})
 	}
 }
+
+func createDeviceProfileRequestWithFile(fileContents []byte) *http.Request {
+	body := new(bytes.Buffer)
+	writer := multipart.NewWriter(body)
+	part, err := writer.CreateFormFile("file", "deviceProfile.yaml")
+	if err != nil {
+		return nil
+	}
+	_, err = part.Write(fileContents)
+	if err != nil {
+		return nil
+	}
+	boundary := writer.Boundary()
+
+	err = writer.Close()
+	if err != nil {
+		return nil
+	}
+
+	req, _ := http.NewRequest(http.MethodPost, TestURI, body)
+	req.Header.Set(clients.ContentType, "multipart/form-data; boundary=" + boundary)
+	return req
+}
+
 
 func createRequestWithBody(d contract.DeviceProfile) *http.Request {
 	body, err := d.MarshalJSON()

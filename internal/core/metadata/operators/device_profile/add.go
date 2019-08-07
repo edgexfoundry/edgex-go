@@ -32,17 +32,11 @@ type addProfile struct {
 // Execute performs the deletion of the device profile.
 func (op addProfile) Execute() (id string, err error) {
 	valid, err := op.deviceProfile.Validate()
-	if !valid || err != nil {
+	if err != nil {
 		return "", err
-	}
-
-	for _, command := range op.deviceProfile.CoreCommands {
-		valid, err = command.Validate()
-		if !valid {
-			return "", errors.NewErrBadRequest(command.Name)
-		} else if err != nil {
-			return "", err
-		}
+	} else if !valid {
+		// I don't think it's possible for this code to run, but we have a case for it anyway
+		return "", errors.NewErrDeviceProfileInvalidState(op.deviceProfile.Id, op.deviceProfile.Name, op.deviceProfile.Description)
 	}
 
 	id, err = op.adder.AddDeviceProfile(op.deviceProfile)
