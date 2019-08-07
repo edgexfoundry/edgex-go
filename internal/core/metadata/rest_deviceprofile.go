@@ -245,19 +245,20 @@ func restDeleteProfileByName(w http.ResponseWriter, r *http.Request) {
 
 func restAddProfileByYaml(w http.ResponseWriter, r *http.Request) {
 	f, _, err := r.FormFile("file")
-	switch err {
-	case nil:
-	// do nothing
-	case http.ErrMissingFile:
-		err := errors.NewErrEmptyFile("YAML")
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		LoggingClient.Error(err.Error())
-		return
-	default:
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		LoggingClient.Error(err.Error())
-		return
+	if err != nil {
+		switch err {
+		case http.ErrMissingFile:
+			err := errors.NewErrEmptyFile("YAML")
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			LoggingClient.Error(err.Error())
+			return
+		default:
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			LoggingClient.Error(err.Error())
+			return
+		}
 	}
+
 	data, err := ioutil.ReadAll(f)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
