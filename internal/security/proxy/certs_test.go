@@ -48,6 +48,7 @@ func TestLoad(t *testing.T) {
 
 	host, port, err := parseHostAndPort(ts, t)
 	if err != nil {
+		t.Error(err.Error())
 		return
 	}
 
@@ -161,6 +162,7 @@ func TestRetrieve(t *testing.T) {
 
 	host, port, err := parseHostAndPort(ts, t)
 	if err != nil {
+		t.Error(err.Error())
 		return
 	}
 

@@ -83,6 +83,7 @@ func TestCreate(t *testing.T) {
 
 	host, port, err := parseHostAndPort(ts, t)
 	if err != nil {
+		t.Error(err.Error())
 		return
 	}
 	Configuration = &ConfigurationStruct{}
@@ -116,6 +117,7 @@ func TestAssociateWithGroup(t *testing.T) {
 
 	host, port, err := parseHostAndPort(ts, t)
 	if err != nil {
+		t.Error(err.Error())
 		return
 	}
 
@@ -151,6 +153,7 @@ func TestCreateJWTToken(t *testing.T) {
 
 	host, port, err := parseHostAndPort(ts, t)
 	if err != nil {
+		t.Error(err.Error())
 		return
 	}
 

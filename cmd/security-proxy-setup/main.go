@@ -66,23 +66,25 @@ func main() {
 	err := s.CheckProxyServiceStatus()
 	if err != nil {
 		proxy.LoggingClient.Error(err.Error())
-		return
+		os.Exit(1)
 	}
 
 	if initNeeded {
 		if resetNeeded {
 			proxy.LoggingClient.Error("can't run initialization and reset at the same time for security service")
-			return
+			os.Exit(1)
 		}
 		cert := proxy.NewCertificateLoader(req, proxy.Configuration.SecretService.CertPath, proxy.Configuration.SecretService.TokenPath)
 		err = s.Init(cert)
 		if err != nil {
 			proxy.LoggingClient.Error(err.Error())
+			os.Exit(1)
 		}
 	} else if resetNeeded {
 		err = s.ResetProxy()
 		if err != nil {
 			proxy.LoggingClient.Error(err.Error())
+			os.Exit(1)
 		}
 	}
 
@@ -92,19 +94,19 @@ func main() {
 		err := c.Create(proxy.EdgeXKong)
 		if err != nil {
 			proxy.LoggingClient.Error(err.Error())
-			return
+			os.Exit(1)
 		}
 
 		err = c.AssociateWithGroup(userOfGroup)
 		if err != nil {
 			proxy.LoggingClient.Error(err.Error())
-			return
+			os.Exit(1)
 		}
 
 		t, err := c.CreateToken()
 		if err != nil {
 			proxy.LoggingClient.Error(fmt.Sprintf("failed to create access token for edgex service due to error %s", err.Error()))
-			return
+			os.Exit(1)
 		}
 
 		fmt.Println(fmt.Sprintf("the access token for user %s is: %s. Please keep the token for accessing edgex services", userTobeCreated, t))
@@ -112,24 +114,28 @@ func main() {
 		utp := &proxy.UserTokenPair{User: userTobeCreated, Token: t}
 		if err != nil {
 			proxy.LoggingClient.Error(err.Error())
-			return
+			os.Exit(1)
 		}
 		file, err := os.Create(proxy.Configuration.KongAuth.OutputPath)
 		if err != nil {
 			proxy.LoggingClient.Error(err.Error())
-			return
+			os.Exit(1)
 		}
 
 		err = utp.Save(file)
 		if err != nil {
 			proxy.LoggingClient.Error(err.Error())
-			return
+			os.Exit(1)
 		}
 	}
 
 	if userToBeDeleted != "" {
 		t := proxy.NewConsumer(userToBeDeleted, req)
 		t.Delete()
+		if err != nil {
+			proxy.LoggingClient.Error(err.Error())
+			os.Exit(1)
+		}
 	}
 }
 

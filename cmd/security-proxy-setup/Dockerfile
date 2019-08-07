@@ -27,4 +27,5 @@ COPY --from=builder /edgex-go/cmd/security-proxy-setup/res/docker/configuration.
 
 COPY --from=builder /edgex-go/cmd/security-proxy-setup/security-proxy-setup .
 
-ENTRYPOINT ["/edgex/security-proxy-setup","--init=true"]
+ENTRYPOINT ["/edgex/security-proxy-setup"]
+CMD ["--init=true"]
