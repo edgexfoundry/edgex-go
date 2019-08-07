@@ -791,13 +791,17 @@ func TestDeleteDeviceProfileByName(t *testing.T) {
 }
 
 func TestAddDeviceProfileByYaml(t *testing.T) {
-	okBody, _ := yaml.Marshal(TestDeviceProfile)
+	// we have to overwrite the CoreCommands so that their isValidated is false
+	dp := TestDeviceProfile
+	dp.CoreCommands = []contract.Command{TestCommand}
 
-	duplicateCommandName := TestDeviceProfile
-	duplicateCommandName.CoreCommands = createCoreCommands([]contract.Command{TestCommand, TestCommand})
+	okBody, _ := yaml.Marshal(dp)
+
+	duplicateCommandName := dp
+	duplicateCommandName.CoreCommands = []contract.Command{TestCommand, TestCommand}
 	dupeBody, _ := yaml.Marshal(duplicateCommandName)
 
-	emptyName := TestDeviceProfile
+	emptyName := dp
 	emptyName.Name = ""
 	emptyBody, _ := yaml.Marshal(emptyName)
 
@@ -811,7 +815,7 @@ func TestAddDeviceProfileByYaml(t *testing.T) {
 			"OK",
 			createDeviceProfileRequestWithFile(okBody),
 			createDBClientWithOutlines([]mockOutline{
-				{"AddDeviceProfile", TestDeviceProfile, TestDeviceProfileID, nil},
+				{"AddDeviceProfile", dp, TestDeviceProfileID, nil},
 			}),
 			http.StatusOK,
 		},
@@ -835,7 +839,7 @@ func TestAddDeviceProfileByYaml(t *testing.T) {
 			"Unsuccessful database call",
 			createDeviceProfileRequestWithFile(okBody),
 			createDBClientWithOutlines([]mockOutline{
-				{"AddDeviceProfile", TestDeviceProfile, "", TestError},
+				{"AddDeviceProfile", dp, "", TestError},
 			}),
 			http.StatusInternalServerError,
 		},
@@ -859,13 +863,17 @@ func TestAddDeviceProfileByYaml(t *testing.T) {
 }
 
 func TestAddDeviceProfileByYamlRaw(t *testing.T) {
-	okBody, _ := yaml.Marshal(TestDeviceProfile)
+	// we have to overwrite the CoreCommands so that their isValidated is false
+	dp := TestDeviceProfile
+	dp.CoreCommands = []contract.Command{TestCommand}
 
-	duplicateCommandName := TestDeviceProfile
-	duplicateCommandName.CoreCommands = createCoreCommands([]contract.Command{TestCommand, TestCommand})
+	okBody, _ := yaml.Marshal(dp)
+
+	duplicateCommandName := dp
+	duplicateCommandName.CoreCommands = []contract.Command{TestCommand, TestCommand}
 	dupeBody, _ := yaml.Marshal(duplicateCommandName)
 
-	emptyName := TestDeviceProfile
+	emptyName := dp
 	emptyName.Name = ""
 	emptyBody, _ := yaml.Marshal(emptyName)
 
@@ -879,7 +887,7 @@ func TestAddDeviceProfileByYamlRaw(t *testing.T) {
 			"OK",
 			httptest.NewRequest(http.MethodPut, TestURI, bytes.NewBuffer(okBody)),
 			createDBClientWithOutlines([]mockOutline{
-				{"AddDeviceProfile", TestDeviceProfile, TestDeviceProfileID, nil},
+				{"AddDeviceProfile", dp, TestDeviceProfileID, nil},
 			}),
 			http.StatusOK,
 		},
@@ -903,7 +911,7 @@ func TestAddDeviceProfileByYamlRaw(t *testing.T) {
 			"Unsuccessful database call",
 			httptest.NewRequest(http.MethodPut, TestURI, bytes.NewBuffer(okBody)),
 			createDBClientWithOutlines([]mockOutline{
-				{"AddDeviceProfile", TestDeviceProfile, "", TestError},
+				{"AddDeviceProfile", dp, "", TestError},
 			}),
 			http.StatusInternalServerError,
 		},

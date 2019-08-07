@@ -31,7 +31,7 @@ type mockOutline struct {
 	err        error
 }
 
-func TestDeleteExecutor(t *testing.T) {
+func TestAddExecutor(t *testing.T) {
 	emptyName := TestDeviceProfile
 	emptyName.Name = ""
 
