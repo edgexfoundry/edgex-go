@@ -17,7 +17,6 @@ package device_profile
 import (
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
-
 	contracts "github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
@@ -32,16 +31,16 @@ type addProfile struct {
 
 // Execute performs the deletion of the device profile.
 func (op addProfile) Execute() (id string, err error) {
-	// Check if there are duplicate names in the device profile command list
-	for _, c1 := range op.deviceProfile.CoreCommands {
-		count := 0
-		for _, c2 := range op.deviceProfile.CoreCommands {
-			if c1.Name == c2.Name {
-				count += 1
-			}
-		}
-		if count > 1 {
-			err = errors.NewErrDuplicateName("Error adding device profile: Duplicate names in the commands")
+	valid, err := op.deviceProfile.Validate()
+	if !valid || err != nil {
+		return "", err
+	}
+
+	for _, command := range op.deviceProfile.CoreCommands {
+		valid, err = command.Validate()
+		if !valid {
+			return "", errors.NewErrBadRequest(command.Name)
+		} else if err != nil {
 			return "", err
 		}
 	}

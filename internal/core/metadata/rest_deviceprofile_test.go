@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"gopkg.in/yaml.v2"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -787,6 +788,140 @@ func TestDeleteDeviceProfileByName(t *testing.T) {
 	}
 }
 
+func TestAddDeviceProfileByYaml(t *testing.T) {
+	emptyName := TestDeviceProfile
+	emptyName.Name = ""
+
+	duplicateCommandName := TestDeviceProfile
+	duplicateCommandName.CoreCommands = createCoreCommands([]contract.Command{TestCommand, TestCommand})
+
+	tests := []struct {
+		name           string
+		request        *http.Request
+		dbMock         interfaces.DBClient
+		expectedStatus int
+	}{
+		{
+			"OK",
+			createRequestWithPathParameters(http.MethodGet, map[string]string{NAME: TestDeviceProfileName}),
+			createDBClientWithOutlines([]mockOutline{
+				{"AddDeviceProfile", TestDeviceProfile, TestDeviceProfileID, nil},
+			}),
+			http.StatusOK,
+		},
+		{
+			"Duplicate command name",
+			createRequestWithPathParameters(http.MethodGet, map[string]string{NAME: TestDeviceProfileName}),
+			createDBClientWithOutlines([]mockOutline{
+				{"AddDeviceProfile", duplicateCommandName, "", db.ErrNotUnique},
+			}),
+			http.StatusConflict,
+		},
+		{
+			"Empty device profile name",
+			createRequestWithPathParameters(http.MethodGet, map[string]string{NAME: TestDeviceProfileName}),
+			createDBClientWithOutlines([]mockOutline{
+				{"AddDeviceProfile", emptyName, "", db.ErrNameEmpty},
+			}),
+			http.StatusBadRequest,
+		},
+		{
+			"Unsuccessful database call",
+			createRequestWithPathParameters(http.MethodGet, map[string]string{NAME: TestDeviceProfileName}),
+			createDBClientWithOutlines([]mockOutline{
+				{"AddDeviceProfile", emptyName, "", TestError},
+			}),
+			http.StatusInternalServerError,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			LoggingClient = logger.MockLogger{}
+			Configuration = &ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 1}}
+			dbClient = tt.dbMock
+			rr := httptest.NewRecorder()
+			handler := http.HandlerFunc(restAddProfileByYaml)
+			handler.ServeHTTP(rr, tt.request)
+			response := rr.Result()
+			if response.StatusCode != tt.expectedStatus {
+				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
+
+				return
+			}
+		})
+	}
+}
+
+func TestAddDeviceProfileByYamlRaw(t *testing.T) {
+	_, _ = TestDeviceProfile.Validate()
+	
+	okBody, _ := yaml.Marshal(TestDeviceProfile)
+
+	duplicateCommandName := TestDeviceProfile
+	duplicateCommandName.CoreCommands = createCoreCommands([]contract.Command{TestCommand, TestCommand})
+	dupeBody, _ := yaml.Marshal(duplicateCommandName)
+
+	emptyName := TestDeviceProfile
+	emptyName.Name = ""
+	emptyBody, _ := yaml.Marshal(emptyName)
+
+	tests := []struct {
+		name           string
+		request        *http.Request
+		dbMock         interfaces.DBClient
+		expectedStatus int
+	}{
+		{
+			"OK",
+			httptest.NewRequest(http.MethodPut, TestURI, bytes.NewBuffer(okBody)),
+			createDBClientWithOutlines([]mockOutline{
+				{"AddDeviceProfile", TestDeviceProfile, TestDeviceProfileID, nil},
+			}),
+			http.StatusOK,
+		},
+		{
+			"Duplicate command name",
+			httptest.NewRequest(http.MethodPut, TestURI, bytes.NewBuffer(dupeBody)),
+			createDBClientWithOutlines([]mockOutline{
+				{"AddDeviceProfile", duplicateCommandName, "", db.ErrNotUnique},
+			}),
+			http.StatusConflict,
+		},
+		{
+			"Empty device profile name",
+			httptest.NewRequest(http.MethodPut, TestURI, bytes.NewBuffer(emptyBody)),
+			createDBClientWithOutlines([]mockOutline{
+				{"AddDeviceProfile", emptyName, "", db.ErrNameEmpty},
+			}),
+			http.StatusBadRequest,
+		},
+		{
+			"Unsuccessful database call",
+			httptest.NewRequest(http.MethodPut, TestURI, bytes.NewBuffer(okBody)),
+			createDBClientWithOutlines([]mockOutline{
+				{"AddDeviceProfile", TestDeviceProfile, "", TestError},
+			}),
+			http.StatusInternalServerError,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			LoggingClient = logger.MockLogger{}
+			Configuration = &ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 1}}
+			dbClient = tt.dbMock
+			rr := httptest.NewRecorder()
+			handler := http.HandlerFunc(restAddProfileByYamlRaw)
+			handler.ServeHTTP(rr, tt.request)
+			response := rr.Result()
+			if response.StatusCode != tt.expectedStatus {
+				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
+
+				return
+			}
+		})
+	}
+}
+
 func createRequestWithBody(d contract.DeviceProfile) *http.Request {
 	body, err := d.MarshalJSON()
 	if err != nil {
@@ -961,6 +1096,17 @@ func createDBServiceClientError(statusCode int) interfaces.DBClient {
 
 	return d
 }
+
+func createDBClientWithOutlines(outlines []mockOutline) interfaces.DBClient {
+	dbMock := mocks.DBClient{}
+
+	for _, o := range outlines {
+		dbMock.On(o.methodName, o.arg).Return(o.ret, o.err)
+	}
+
+	return &dbMock
+}
+
 
 // createTestDeviceProfile creates a device profile to be used during testing.
 // This function handles some of the necessary creation nuances which need to take place for proper mocking and equality

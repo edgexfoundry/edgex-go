@@ -64,7 +64,7 @@ func TestDeleteExecutor(t *testing.T) {
 			deviceProfile:    duplicateCommandName,
 			expectedReturn:   "",
 			expectedError:    true,
-			expectedErrorVal: errors.NewErrDuplicateName("Error adding device profile: Duplicate names in the commands"),
+			expectedErrorVal: contract.NewErrContractInvalid("duplicate names in device profile commands"),
 		},
 		{
 			testName: "Duplicate device profile name",
