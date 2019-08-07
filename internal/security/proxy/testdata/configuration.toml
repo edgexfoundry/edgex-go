@@ -19,6 +19,7 @@
 
 [Writable]
 LogLevel = 'DEBUG'
+RequestTimeout = 10
 
 [Logging]
 EnableRemote = false

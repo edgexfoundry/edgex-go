@@ -26,9 +26,9 @@ type Requestor interface {
 	Do(req *http.Request) (*http.Response, error)
 }
 
-func NewRequestor(skipVerify bool) Requestor {
+func NewRequestor(skipVerify bool, timeout int) Requestor {
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: skipVerify},
 	}
-	return &http.Client{Timeout: 10 * time.Second, Transport: tr}
+	return &http.Client{Timeout: time.Duration(timeout) * time.Second, Transport: tr}
 }
