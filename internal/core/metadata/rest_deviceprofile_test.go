@@ -37,6 +37,7 @@ var TestDeviceProfiles = []contract.DeviceProfile{
 	createTestDeviceProfileWithCommands("TestDeviceProfileID2", "TestDeviceProfileName2", []string{TestDeviceProfileLabel1, TestDeviceProfileLabel2}, TestDeviceProfileManufacturer, TestDeviceProfileModel, TestCommand),
 	createTestDeviceProfileWithCommands("TestErrorID", "TestErrorName", []string{TestLabelError1, TestLabelError2}, "TestErrorManufacturer", "TestErrorModel", TestCommand),
 }
+var TestDeviceProfileValidated = createValidatedTestDeviceProfile()
 var TestError = errors.New("test error")
 var TestContext = context.WithValue(context.Background(), "TestKey", "TestValue")
 var TestDeviceProfileID = "TestProfileID"
@@ -112,6 +113,102 @@ func TestGetAllProfiles(t *testing.T) {
 			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
 			handler := http.HandlerFunc(restGetAllDeviceProfiles)
+			handler.ServeHTTP(rr, tt.request)
+			response := rr.Result()
+			if response.StatusCode != tt.expectedStatus {
+				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
+
+				return
+			}
+		})
+	}
+}
+
+func TestAddDeviceProfile(t *testing.T) {
+	// this one uses validated because it needs it for input and the dbMock
+	emptyName := TestDeviceProfileValidated
+	emptyName.Name = ""
+
+	tests := []struct {
+		name           string
+		request        *http.Request
+		dbMock         interfaces.DBClient
+		vdcMock        MockValueDescriptorClient
+		expectedStatus int
+	}{
+		{
+			"OK",
+			createRequestWithBody(TestDeviceProfile),
+			createDBClientWithOutlines([]mockOutline{
+				{"AddDeviceProfile", TestDeviceProfileValidated, TestDeviceProfileID, nil},
+			}),
+			MockValueDescriptorClient{},
+			http.StatusOK,
+		},
+		{
+			"OK with value descriptor management",
+			createRequestWithBody(TestDeviceProfile),
+			createDBClientWithOutlines([]mockOutline{
+				{"AddDeviceProfile", TestDeviceProfileValidated, TestDeviceProfileID, nil},
+			}),
+			MockValueDescriptorClient{},
+			http.StatusOK,
+		},
+		{
+			"Value descriptor management service client error",
+			createRequestWithBody(TestDeviceProfile),
+			nil,
+			MockValueDescriptorClient{types.ErrServiceClient{StatusCode: http.StatusTeapot}},
+			http.StatusTeapot,
+		},
+		{
+			"Value descriptor management service other error",
+			createRequestWithBody(TestDeviceProfile),
+			nil,
+			MockValueDescriptorClient{TestError},
+			http.StatusInternalServerError,
+		},
+		{
+			"YAML unmarshal error",
+			httptest.NewRequest(http.MethodPut, TestURI, bytes.NewBuffer(nil)),
+			nil,
+			MockValueDescriptorClient{},
+			http.StatusBadRequest,
+		},
+		{
+			"Duplicate commands",
+			createRequestWithBody(createTestDeviceProfileWithCommands(TestDeviceProfileID, TestDeviceProfileName, TestDeviceProfileLabels, TestDeviceProfileManufacturer, TestDeviceProfileModel, TestCommand, TestCommand)),
+			nil,
+			MockValueDescriptorClient{},
+			http.StatusBadRequest,
+		},
+		{
+			"Empty device profile name",
+			createRequestWithBody(emptyName),
+			createDBClientWithOutlines([]mockOutline{
+				{"AddDeviceProfile", emptyName, "", db.ErrNameEmpty},
+			}),
+			MockValueDescriptorClient{},
+			http.StatusBadRequest,
+		},
+		{
+			"Unsuccessful database call",
+			createRequestWithBody(TestDeviceProfile),
+			createDBClientWithOutlines([]mockOutline{
+				{"AddDeviceProfile", TestDeviceProfileValidated, "", TestError},
+			}),
+			MockValueDescriptorClient{},
+			http.StatusInternalServerError,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			LoggingClient = logger.MockLogger{}
+			dbClient = tt.dbMock
+			vdc = tt.vdcMock
+			Configuration = &ConfigurationStruct{Writable: WritableInfo{EnableValueDescriptorManagement: true}, Service: config.ServiceInfo{MaxResultCount: 1}}
+			rr := httptest.NewRecorder()
+			handler := http.HandlerFunc(restAddDeviceProfile)
 			handler.ServeHTTP(rr, tt.request)
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
@@ -1174,6 +1271,16 @@ func createTestDeviceProfile() contract.DeviceProfile {
 	return createTestDeviceProfileWithCommands(TestDeviceProfileID, TestDeviceProfileName, TestDeviceProfileLabels, TestDeviceProfileManufacturer, TestDeviceProfileModel, TestCommand)
 }
 
+// createValidatedTestDeviceProfile creates an object by deserializing it from JSON
+// so that its unexported field isValidated will be true.
+func createValidatedTestDeviceProfile() contract.DeviceProfile {
+	bytes, _ := TestDeviceProfile.MarshalJSON()
+	var dp contract.DeviceProfile
+	_ = json.Unmarshal(bytes, &dp)
+
+	return dp
+}
+
 // createTestDeviceProfileWithCommands creates a device profile to be used during testing.
 // This function handles some of the necessary creation nuances which need to take place for proper mocking and equality
 // verifications.
@@ -1225,7 +1332,9 @@ func createCoreCommands(commands []contract.Command) []contract.Command {
 	return cs
 }
 
-type MockValueDescriptorClient struct{}
+type MockValueDescriptorClient struct {
+	errorToThrow error
+}
 
 func (MockValueDescriptorClient) ValueDescriptorsUsage(names []string, ctx context.Context) (map[string]bool, error) {
 	usage := map[string]bool{}
@@ -1240,7 +1349,11 @@ func (MockValueDescriptorClient) ValueDescriptorsUsage(names []string, ctx conte
 	return usage, nil
 }
 
-func (MockValueDescriptorClient) Add(vdr *contract.ValueDescriptor, ctx context.Context) (string, error) {
+func (mvdc MockValueDescriptorClient) Add(vdr *contract.ValueDescriptor, ctx context.Context) (string, error) {
+	if mvdc.errorToThrow != nil {
+		return "", mvdc.errorToThrow
+	}
+
 	return "", nil
 }
 
