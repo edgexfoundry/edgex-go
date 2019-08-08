@@ -1,6 +1,7 @@
 #  ----------------------------------------------------------------------------------
 #  Copyright 2018 ForgeRock AS.
 #  Copyright 2019 Dell Technologies, Inc.
+#  Copyright 2019 Intel Corp.
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -14,11 +15,11 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
-#  @author: Alain Pulluelo, ForgeRock (created: June 14, 2018)
-#  @version: 1.0.0
+#  @author: Alain Pulluelo, ForgeRock (created: Jun 14, 2018)
 #
 #  @author: Trevor Conn, Dell Technologies, Inc. (created: July 2, 2019)
-#  @version: 1.0.1
+#
+#  @author: Jim Wang, Intel Corp. (modified: August 8, 2019)
 #
 #  SPDX-License-Identifier: Apache-2.0'
 #  ----------------------------------------------------------------------------------
@@ -50,11 +51,17 @@ LABEL license='SPDX-License-Identifier: Apache-2.0' \
 
 USER root
 
+# install necessary tools
+RUN apk update && apk add ca-certificates dumb-init jq \
+    && rm -rf /var/cache/apk/* 
+
+ENV BASE_DIR=/vault
+
 # Vault Config File
-WORKDIR /vault/config
+WORKDIR $BASE_DIR/config
 COPY --from=build-env /edgex-go/cmd/security-secrets-setup/res/local-tls.hcl ./local.hcl
 
-WORKDIR /vault
+WORKDIR $BASE_DIR
 RUN mkdir res
 
 # Vault PKI/TLS setup/config binary
@@ -66,15 +73,20 @@ COPY --from=build-env /edgex-go/cmd/security-secrets-setup/res/pkisetup-vault.js
 # Kong PKI/TLS materials
 COPY --from=build-env /edgex-go/cmd/security-secrets-setup/res/pkisetup-kong.json ./res
 
+# setup the entry point script
+# it uses `dumb-init` as the top-level process to reap any
+# zombie processes created by sub-processes
+COPY --from=build-env /edgex-go/cmd/security-secrets-setup/entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/entrypoint.sh \
+    && ln -s /usr/local/bin/entrypoint.sh /
+
 # Create assets folder (needed for unseal key/s, root token and tmp)
 # Run CA/Vault and Kong PKI/TLS setups and peform housekeeping tasks
-RUN mkdir /vault/config/assets && \
-    chown -R vault:vault /vault && \
-    chmod 644 /vault/config/local.hcl && \
-    chmod 744 security-secrets-setup && \
-    /vault/security-secrets-setup --config /vault/res/pkisetup-vault.json && \
-    echo "" && \
-    /vault/security-secrets-setup --config /vault/res/pkisetup-kong.json && \
-    chown -R vault:vault /vault/config/pki
+RUN mkdir $BASE_DIR/config/assets && \
+    chown -R vault:vault $BASE_DIR && \
+    chmod 644 $BASE_DIR/config/local.hcl && \
+    chmod 744 security-secrets-setup
 
-VOLUME /vault/config
+VOLUME $BASE_DIR/config
+
+ENTRYPOINT ["entrypoint.sh"]
