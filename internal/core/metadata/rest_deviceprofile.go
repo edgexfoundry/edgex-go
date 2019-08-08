@@ -26,6 +26,7 @@ import (
 
 	errors2 "github.com/edgexfoundry/edgex-go/internal/core/data/errors"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/operators/device"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/operators/device_profile"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
@@ -281,28 +282,7 @@ func restAddProfileByYaml(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	op := device_profile.NewAddDeviceProfileExecutor(dp, dbClient)
-	id, err := op.Execute()
-
-	if err != nil {
-		switch err.(type) {
-		case models.ErrContractInvalid:
-			http.Error(w, err.Error(), http.StatusBadRequest)
-		case errors.ErrDeviceProfileInvalidState:
-			http.Error(w, err.Error(), http.StatusBadRequest)
-		case *errors.ErrDuplicateName:
-			http.Error(w, err.Error(), http.StatusConflict)
-		case errors.ErrEmptyDeviceProfileName:
-			http.Error(w, err.Error(), http.StatusBadRequest)
-		default:
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		LoggingClient.Error(err.Error())
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(id))
+	addDeviceProfile(dp, dbClient, w)
 }
 
 // Add a device profile with YAML content
@@ -325,6 +305,11 @@ func restAddProfileByYamlRaw(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	addDeviceProfile(dp, dbClient, w)
+}
+
+// This function centralizes the common logic for adding a device profile to the database and dealing with the return
+func addDeviceProfile(dp models.DeviceProfile, dbClient interfaces.DBClient, w http.ResponseWriter) {
 	op := device_profile.NewAddDeviceProfileExecutor(dp, dbClient)
 	id, err := op.Execute()
 

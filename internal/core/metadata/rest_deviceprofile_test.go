@@ -789,7 +789,7 @@ func TestDeleteDeviceProfileByName(t *testing.T) {
 	}
 }
 
-func TestAddDeviceProfileByYaml(t *testing.T) {
+func TestAddProfileByYaml(t *testing.T) {
 	// we have to overwrite the CoreCommands so that their isValidated is false
 	dp := TestDeviceProfile
 	dp.CoreCommands = []contract.Command{TestCommand}
@@ -804,6 +804,10 @@ func TestAddDeviceProfileByYaml(t *testing.T) {
 	emptyName.Name = ""
 	emptyBody, _ := yaml.Marshal(emptyName)
 
+	emptyFileRequest := createDeviceProfileRequestWithFile(okBody)
+	emptyFileRequest.MultipartForm = new(multipart.Form)
+	emptyFileRequest.MultipartForm.File = nil
+
 	tests := []struct {
 		name           string
 		request        *http.Request
@@ -817,6 +821,24 @@ func TestAddDeviceProfileByYaml(t *testing.T) {
 				{"AddDeviceProfile", dp, TestDeviceProfileID, nil},
 			}),
 			http.StatusOK,
+		},
+		{
+			"Wrong content type",
+			httptest.NewRequest(http.MethodPut, TestURI, bytes.NewBuffer(okBody)),
+			nil,
+			http.StatusInternalServerError,
+		},
+		{
+			"Missing file",
+			emptyFileRequest,
+			nil,
+			http.StatusBadRequest,
+		},
+		{
+			"Empty file",
+			createDeviceProfileRequestWithFile([]byte{}),
+			nil,
+			http.StatusBadRequest,
 		},
 		{
 			"Duplicate command name",
@@ -867,7 +889,7 @@ func TestAddDeviceProfileByYaml(t *testing.T) {
 	}
 }
 
-func TestAddDeviceProfileByYamlRaw(t *testing.T) {
+func TestAddProfileByYamlRaw(t *testing.T) {
 	// we have to overwrite the CoreCommands so that their isValidated is false
 	dp := TestDeviceProfile
 	dp.CoreCommands = []contract.Command{TestCommand}
