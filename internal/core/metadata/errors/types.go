@@ -141,6 +141,17 @@ func NewErrDeviceProfileInvalidState(id string, name string, description string)
 	}
 }
 
+type ErrEmptyDeviceProfileName struct {
+}
+
+func (e ErrEmptyDeviceProfileName) Error() string {
+	return fmt.Sprint("Device profile name cannot be empty")
+}
+
+func NewErrEmptyDeviceProfileName() error {
+	return ErrEmptyDeviceProfileName{}
+}
+
 type ErrEmptyFile struct {
 	fileType string
 }
