@@ -26,6 +26,7 @@ import (
 
 	errors2 "github.com/edgexfoundry/edgex-go/internal/core/data/errors"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/operators/device"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/operators/device_profile"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
@@ -245,19 +246,20 @@ func restDeleteProfileByName(w http.ResponseWriter, r *http.Request) {
 
 func restAddProfileByYaml(w http.ResponseWriter, r *http.Request) {
 	f, _, err := r.FormFile("file")
-	switch err {
-	case nil:
-	// do nothing
-	case http.ErrMissingFile:
-		err := errors.NewErrEmptyFile("YAML")
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		LoggingClient.Error(err.Error())
-		return
-	default:
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		LoggingClient.Error(err.Error())
-		return
+	if err != nil {
+		switch err {
+		case http.ErrMissingFile:
+			err := errors.NewErrEmptyFile("YAML")
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			LoggingClient.Error(err.Error())
+			return
+		default:
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			LoggingClient.Error(err.Error())
+			return
+		}
 	}
+
 	data, err := ioutil.ReadAll(f)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -271,7 +273,16 @@ func restAddProfileByYaml(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	addDeviceProfileYaml(data, w)
+	var dp models.DeviceProfile
+
+	err = yaml.Unmarshal(data, &dp)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		LoggingClient.Error(err.Error())
+		return
+	}
+
+	addDeviceProfile(dp, dbClient, w)
 }
 
 // Add a device profile with YAML content
@@ -285,43 +296,35 @@ func restAddProfileByYamlRaw(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	addDeviceProfileYaml(body, w)
-}
-
-func addDeviceProfileYaml(data []byte, w http.ResponseWriter) {
 	var dp models.DeviceProfile
 
-	err := yaml.Unmarshal(data, &dp)
+	err = yaml.Unmarshal(body, &dp)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		LoggingClient.Error(err.Error())
 		return
 	}
 
-	// Check if there are duplicate names in the device profile command list
-	for _, c1 := range dp.CoreCommands {
-		count := 0
-		for _, c2 := range dp.CoreCommands {
-			if c1.Name == c2.Name {
-				count += 1
-			}
-		}
-		if count > 1 {
-			err := errors.NewErrDuplicateName("Error adding device profile: Duplicate names in the commands")
-			LoggingClient.Error(err.Error())
-			http.Error(w, err.Error(), http.StatusConflict)
-			return
-		}
-	}
+	addDeviceProfile(dp, dbClient, w)
+}
 
-	id, err := dbClient.AddDeviceProfile(dp)
+// This function centralizes the common logic for adding a device profile to the database and dealing with the return
+func addDeviceProfile(dp models.DeviceProfile, dbClient interfaces.DBClient, w http.ResponseWriter) {
+	op := device_profile.NewAddDeviceProfileExecutor(dp, dbClient)
+	id, err := op.Execute()
+
 	if err != nil {
-		if err == db.ErrNotUnique {
-			http.Error(w, "Duplicate profile name", http.StatusConflict)
-		} else if err == db.ErrNameEmpty {
+		switch err.(type) {
+		case models.ErrContractInvalid:
 			http.Error(w, err.Error(), http.StatusBadRequest)
-		} else {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		case errors.ErrDeviceProfileInvalidState:
+			http.Error(w, err.Error(), http.StatusBadRequest)
+		case *errors.ErrDuplicateName:
+			http.Error(w, err.Error(), http.StatusConflict)
+		case errors.ErrEmptyDeviceProfileName:
+			http.Error(w, err.Error(), http.StatusBadRequest)
+		default:
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		LoggingClient.Error(err.Error())
 		return

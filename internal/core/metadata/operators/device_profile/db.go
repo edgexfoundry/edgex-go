@@ -24,6 +24,11 @@ type DeviceLoader interface {
 	GetDevicesByProfileId(pid string) ([]contract.Device, error)
 }
 
+// DeviceProfileAdder adds DeviceProfiles to the database
+type DeviceProfileAdder interface {
+	AddDeviceProfile(d contract.DeviceProfile) (string, error)
+}
+
 // DeviceProfileLoader retrieves device profiles.
 type DeviceProfileLoader interface {
 	GetDeviceProfileById(id string) (contract.DeviceProfile, error)
