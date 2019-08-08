@@ -1,8 +1,7 @@
 #%RAML 0.8
 ---
 title: Scheduler Microservice
-baseUri: http://localhost:48085/api/{version}
-version: v1
+baseUri: http://localhost:48085/api
 protocols: [ HTTP ]
 mediaType:  application/json
 
@@ -16,7 +15,7 @@ schemas:
     -
         intervalAction: '{"type":"object","$schema":"http://json-schema.org/draft-03/schema#","title":"intervalAction","properties":{"id":{"type":"string","required":false,"title":"id"},"created":{"type":"integer","required":false,"title":"created"},"modified":{"type":"integer","required":false,"title":"modified"},"origin":{"type":"integer","required":false,"title":"origin"},"name":{"type":"string","required":false,"title":"name"},"parameters":{"type":"string","required":false,"title":"parameters"},"interval":{"type":"string","required":false,"title":"interval"},"target":{"type":"string","required":true,"title":"target"},"protocol":{"type":"string","required":false,"title":"protocol"},"httpmethod":{"type":"string","required":false,"title":"httpmethod"},"address":{"type":"string","required":false,"title":"address"},"port":{"type":"integer","required":false,"title":"port"},"path":{"type":"string","required":false,"title":"path"},"publisher":{"type":"string","required":false,"title":"publisher"},"user":{"type":"string","required":false,"title":"user"},"password":{"type":"string","required":false,"title":"password"},"topic":{"type":"string","required":false,"title":"topic"}}}'
 
-/info/{name}:
+/v1/info/{name}:
     displayName: Interval Resource (by name)
     description: Example - http://localhost:48085/api/v1/info/midnight (where midnight is the name of an Interval)
     uriParameters:
@@ -38,7 +37,7 @@ schemas:
                 description: if no interval is found for the identifier provided.
             "500":
                 description: for unknown or unanticipated issues
-/ping:
+/v1/ping:
     displayName: Ping Resource
     description: Example - http://localhost:48081/api/v1/ping
     get:
@@ -46,7 +45,7 @@ schemas:
         responses:
             "200":
                 description: Successful Response
-/intervalaction/{id}:
+/v1/intervalaction/{id}:
     displayName: IntervalAction Resource (by id)
     description: Example - http://localhost:48081/api/v1/intervalaction/57bb5837555e5218873e5a23
     uriParameters:
@@ -79,7 +78,7 @@ schemas:
                 description: if no IntervalAction is found with the provided id
             "500":
                 description: for unknown or unanticipated issues
-/intervalaction/name/{name}:
+/v1/intervalaction/name/{name}:
     displayName: IntervalAction Resource (by name)
     description: Example - http://localhost:48081/api/v1/intervalaction/name/scrub pushed records (where 'scrub pushed records' is a interval action name)
     uriParameters:
@@ -116,7 +115,7 @@ schemas:
                 description: if no IntervalAction is found with the provided name
             "500":
                 description: for unknown or unanticipated issues
-/intervalaction/target/{name}:
+/v1/intervalaction/target/{name}:
     displayName: IntervalAction Resource (by target name)
     description: Example - http://localhost:48081/api/v1/intervalaction/target/core-data (returns all intervalaction(s) associated with the target core-data)
     uriParameters:
@@ -153,7 +152,7 @@ schemas:
                 description: if no IntervalAction is found with the provided name
             "500":
                 description: for unknown or unanticipated issues
-/intervalaction:
+/v1/intervalaction:
     displayName: IntervalAction Resource
     description: Example - http://localhost:48081/api/v1/intervalaction
     post:
@@ -203,7 +202,7 @@ schemas:
                 description: if the number of intervals exceeds the current max limit.
             "500":
                 description: for unknown or unanticipated issues
-/interval/{id}:
+/v1/interval/{id}:
     displayName: Interval Resource
     description: Example - http://localhost:48081/api/v1/interval/57bb49e6555e5218873e5a1b
     uriParameters:
@@ -234,7 +233,7 @@ schemas:
                 description: if no interval is found for the identifier provided.
             "500":
                 description: for unknown or unanticipated issues
-/interval/name/{name}:
+/v1/interval/name/{name}:
     displayName: Interval Resource (by name)
     description: Example - http://localhost:48081/api/v1/interval/name/hourly (where hourly is the name of a interval)
     uriParameters:
@@ -270,7 +269,7 @@ schemas:
                 description: if no interval is found for the identifier provided.
             "500":
                 description: for unknown or unanticipated issues
-/interval:
+/v1/interval:
     displayName: Interval Resource
     description: Example - http://localhost:48081/api/v1/interval
     post:
@@ -318,3 +317,14 @@ schemas:
                 description: if the number of intervals exceeds the current max limit.
             "500":
                 description: for unknown or unanticipated issues
+/version:
+    displayName: Edgex API Version
+    description: Example - http://localhost:48081/api/version
+    get:
+        description: Get the API version
+        responses:
+            "200":
+                description: The service's API version as JSON document
+                body:
+                  application/json:
+                    example:  '{"version":"1.1.0"}'

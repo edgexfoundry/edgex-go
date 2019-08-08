@@ -1,8 +1,7 @@
 #%RAML 0.8
 ---
 title: Logging Microservice
-baseUri: http://support-logging:port/api/{version}
-version: v1
+baseUri: http://support-logging:port/api
 protocols: [ HTTP ]
 mediaType:  application/json
 
@@ -35,7 +34,7 @@ schemas:
         },
         "required": ["originService","message","logLevel"]
       }
-/logs:
+/v1/logs:
   post:
     description: Create a new LogEntry
     body:
@@ -416,7 +415,7 @@ schemas:
           description: count of the number of LogEntry being deleted
         500:
           description: for unknown or unanticipated issues.
-/ping:
+/v1/ping:
     displayName: Ping Resource
     description: example - http://localhost:48061/api/v1/ping
     get:
@@ -427,7 +426,7 @@ schemas:
                 description: return value of "pong"
             "503":
                 description: for unknown or unanticipated issues
-/config:
+/v1/config:
     displayName: Config Resource
     description: Example - http://localhost:48061/api/v1/config
     get:
@@ -435,3 +434,14 @@ schemas:
         responses:
             "200":
                 description: The service's configuration as JSON document
+/version:
+    displayName: Edgex API Version
+    description: Example - http://localhost:48061/api/version
+    get:
+        description: Get the API version
+        responses:
+            "200":
+                description: The service's API version as JSON document
+                body:
+                  application/json:
+                    example:  '{"version":"1.1.0"}'

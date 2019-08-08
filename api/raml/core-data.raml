@@ -1,7 +1,7 @@
 #%RAML 0.8
 title: core-data
 version: "1.0.0"
-baseUri: "http://localhost:48080/api/v1"
+baseUri: "http://localhost:48080/api"
 schemas: 
     - 
         event: '{"type":"object","$schema":"http://json-schema.org/draft-03/schema#","description":"Core device/sensor event","title":"event","properties":{"id":{"type":"string","required":false,"title":"id"},"created":{"type":"integer","required":false,"title":"created"},"modified":{"type":"integer","required":false,"title":"modified"},"origin":{"type":"integer","required":false,"title":"origin"},"pushed":{"type":"integer","required":false,"title":"pushed"},"device":{"type":"string","required":false,"title":"device"},"readings":{"type":"array","required":false,"title":"readings","items":{"type":"object","$ref":"#/schemas/reading"},"uniqueItems":false}}}'
@@ -9,7 +9,7 @@ schemas:
         reading: '{"type":"object","$schema":"http://json-schema.org/draft-03/schema#","description":"Core device/sensor reading","title":"reading","properties":{"id":{"type":"string","required":false,"title":"id"},"created":{"type":"integer","required":false,"title":"created"},"modified":{"type":"integer","required":false,"title":"modified"},"origin":{"type":"integer","required":false,"title":"origin"},"pushed":{"type":"integer","required":false,"title":"pushed"},"name":{"type":"string","required":false,"title":"name"},"value":{"type":"string","required":false,"title":"value"}}}'
     - 
         valueDescriptor: '{"type":"object","$schema":"http://json-schema.org/draft-03/schema#","description":"Core and MetaData value descriptor - describes device/sensor data sent and received","title":"valueDescriptor","properties":{"id":{"type":"string","required":false,"title":"id"},"created":{"type":"integer","required":false,"title":"created"},"modified":{"type":"integer","required":false,"title":"modified"},"origin":{"type":"integer","required":false,"title":"origin"},"name":{"type":"string","required":false,"title":"name"},"description":{"type":"string","required":false,"title":"description"},"min":{"type":"string","required":false,"title":"min"},"max":{"type":"string","required":false,"title":"max"},"type":{"type":"string","required":false,"title":"type"},"uomLabel":{"type":"string","required":false,"title":"uomLabel"},"defaultValue":{"type":"string","required":false,"title":"defaultValue"},"formatting":{"type":"string","required":false,"title":"formatting"},"labels":{"type":"array","required":false,"title":"labels","items":{"type":"string","title":"labels"},"uniqueItems":false}}}'
-/event: 
+/v1/event:
     displayName: Event Resource
     description: example - http://localhost:48080/api/v1/event
     post: 
@@ -58,7 +58,7 @@ schemas:
                 description: if the number of events exceeds the current max limit.
             "500": 
                 description: for unknown or unanticipated issues.
-/event/{id}: 
+/v1/event/{id}:
     displayName: Event Resource (by id)
     description: example - http://localhost:48080/api/v1/event/57ba04a1189b95b8afcdafd7
     uriParameters: 
@@ -82,7 +82,7 @@ schemas:
                 description: if the event cannot be found by id.                       
             "500": 
                 description: for unknown or unanticipated issues.
-/event/checksum/{checksum}:
+/v1/event/checksum/{checksum}:
     displayName: Event Resource (by checksum)
     description: "http://localhost:48080/api/v1/event/checksum/499a1a799c47c567"
     uriParameters:
@@ -99,7 +99,7 @@ schemas:
                 description: if the event cannot be found by checksum.
             "500":
                 description: for unknown or unanticipated issues.
-/event/count: 
+/v1/event/count:
     displayName: Event Resource Count 
     description: example - http://localhost:48080/api/v1/event/device/count
     get: 
@@ -110,7 +110,7 @@ schemas:
                 description: number of events in the collection
             "500": 
                 description: for unknown or unanticipated issues.
-/event/count/{deviceId}: 
+/v1/event/count/{deviceId}:
     displayName: Event Resource Count for a given device 
     description: example - http://localhost:48080/api/v1/event/count/livingroomthermostat
     get: 
@@ -123,7 +123,7 @@ schemas:
                 description: query request is invalid
             "500": 
                 description: for unknown or unanticipated issues.                
-/event/id/{id}: 
+/v1/event/id/{id}:
     displayName: Event Resource (by id)
     description: example - http://localhost:48080/api/v1/event/id/57ba05ca189b95b8afcdafd9
     uriParameters: 
@@ -153,7 +153,7 @@ schemas:
                 description: if the event cannot be found by id
             "500": 
                 description: for unknown or unanticipated issues.
-/event/device/{deviceId}/{limit}: 
+/v1/event/device/{deviceId}/{limit}:
     displayName: Event Resource (by device)
     description: example - http://localhost:48080/api/v1/event/device/livingroomthermostat/10 (where livingroomthermostat is a device name)
     uriParameters: 
@@ -187,7 +187,7 @@ schemas:
                 description: if the number of events exceeds the current max limit.
             "500": 
                 description: for unknown or unanticipated issues.
-/event/device/{deviceId}: 
+/v1/event/device/{deviceId}:
     displayName: Event Resource (by device)
     description: example - http://localhost:48080/api/v1/event/device/livingroomthermostat  (where livingroomthermostat is a device name)
     uriParameters: 
@@ -209,7 +209,7 @@ schemas:
                 description: if the meta data checks are on and no device is found for supplied id.
             "500": 
                 description: for unknown or unanticipated issues.
-/event/{start}/{end}/{limit}: 
+/v1/event/{start}/{end}/{limit}:
     displayName: Event Resource (by creation time)
     description: example - http://localhost:48080/api/v1/event/1471809160000/1471809161000/10
     uriParameters: 
@@ -247,7 +247,7 @@ schemas:
                 description: if the number of events exceeds the current max limit.
             "500": 
                 description: for unknown or unanticipated issues.
-/event/removeold/age/{age}: 
+/v1/event/removeold/age/{age}:
     displayName: Event Resource (by age)
     description: example - http://localhost:48080/api/v1/event/removeold/age/604800000
     uriParameters: 
@@ -265,7 +265,7 @@ schemas:
                 description: count of the number of events removed
             "500": 
                 description: for unknown or unanticipated issues.
-/event/scrub: 
+/v1/event/scrub:
     displayName: Scrub Event Resource
     description: example - http://localhost:48080/api/v1/event/scrub
     delete: 
@@ -276,7 +276,7 @@ schemas:
                 description: count of the number of events scrubbed
             "500": 
                 description: for unknown or unanticipated issues.
-/reading: 
+/v1/reading:
     displayName: Reading Resource
     description: example - http://localhost:48080/api/v1/reading
     post: 
@@ -327,7 +327,7 @@ schemas:
                 description: if the number of readings exceeds the current max limit.
             "500": 
                 description: for unknown or unanticipated issues
-/reading/count: 
+/v1/reading/count:
     displayName: Reading Resource Count 
     description: example - http://localhost:48080/api/v1/reading/count
     get: 
@@ -338,7 +338,7 @@ schemas:
                 description: number of readings in the collection
             "500": 
                 description: for unknown or unanticipated issues.
-/reading/{id}: 
+/v1/reading/{id}:
     displayName: Reading Resource (by id)
     description: example - http://localhost:48080/api/v1/reading/57b9fe08189b95b8afcdafd4
     uriParameters: 
@@ -362,7 +362,7 @@ schemas:
                 description: if the reading cannot be found by id                        
             "500": 
                 description: for unknown or unanticipated issues
-/reading/id/{id}: 
+/v1/reading/id/{id}:
     displayName: Reading Resource (by id)
     description: example - http://localhost:48080/api/v1/reading/id/57ba01f8189b95b8afcdafd5
     uriParameters: 
@@ -381,7 +381,7 @@ schemas:
                 description: if the reading cannot be found by id
             "500": 
                 description: for unknown or unanticipated issues.
-/reading/device/{deviceId}/{limit}: 
+/v1/reading/device/{deviceId}/{limit}:
     displayName: Reading Resource (by device)
     description: example - http://localhost:48080/api/v1/reading/device/livingroomthermostat/10  (where livingroomthermostat is the name of a device)
     uriParameters: 
@@ -415,7 +415,7 @@ schemas:
                 description: if the number of readings exceeds the current max limit.
             "500": 
                 description: or unknown or unanticipated issues
-/reading/name/{name}/device/{device}/{limit}: 
+/v1/reading/name/{name}/device/{device}/{limit}:
     displayName: Reading Resource (by value descriptor and device)
     description: example - http://localhost:48080/api/v1/reading/name/temperature/device/livingroomthermostat/10  (where temperature is the name of a value descriptor and livingroomthermostat is the name of the device)
     uriParameters: 
@@ -453,7 +453,7 @@ schemas:
                 description: if the number of readings exceeds the current max limit.
             "500": 
                 description: for unknown or unanticipated issues.
-/reading/name/{name}/{limit}: 
+/v1/reading/name/{name}/{limit}:
     displayName: Reading Resource (by value descriptor)
     description: example - http://localhost:48080/api/v1/reading/name/temperature/10  (where temperature is the name of a value descriptor)
     uriParameters: 
@@ -485,7 +485,7 @@ schemas:
                 description: if the number of readings exceeds the current max limit.
             "500": 
                 description: for unknown or unanticipated issues.
-/reading/uomlabel/{uomLabel}/{limit}: 
+/v1/reading/uomlabel/{uomLabel}/{limit}:
     displayName: Reading Resource (by unit of measure)
     description: example - http://localhost:48080/api/v1/reading/uomlabel/degree cel/10  (where degree cel is the unit of measure for an assocaited value descriptor)
     uriParameters: 
@@ -517,7 +517,7 @@ schemas:
                 description: if the number of readings exceeds the current max limit.
             "500": 
                 description: for unknown or unanticipated issues.
-/reading/label/{label}/{limit}: 
+/v1/reading/label/{label}/{limit}:
     displayName: Reading Resource (by label)
     description: example - http://localhost:48080/api/v1/reading/label/hvac/10  (where hvac is a label on an associated value descriptor)
     uriParameters: 
@@ -549,7 +549,7 @@ schemas:
                 description: if the number of readings exceeds the current max limit.
             "500": 
                 description: for unknown or unanticipated issues.
-/reading/type/{type}/{limit}: 
+/v1/reading/type/{type}/{limit}:
     displayName: Reading Resource (by value data type)
     description: example - http://localhost:48080/api/v1/reading/type/F/10  (where F, which is IoTtype for float, is in the type for an associated value descriptor)
     uriParameters: 
@@ -581,7 +581,7 @@ schemas:
                 description: if the number of readings exceeds the current max limit.
             "500": 
                 description: for unknown or unanticipated issues.
-/reading/{start}/{end}/{limit}: 
+/v1/reading/{start}/{end}/{limit}:
     displayName: Reading Resource (by creation time)
     description: example - http://localhost:48080/api/v1/reading/1471806984000/14718069900000/10
     uriParameters: 
@@ -618,7 +618,7 @@ schemas:
                 description: if the number of readings exceeds the current max limit.
             "500": 
                 description: for unknown or unanticipated issues.
-/valuedescriptor: 
+/v1/valuedescriptor:
     displayName: Value Descriptor Resource
     description: example - http://localhost:48080/api/v1/valuedescriptor
     post: 
@@ -667,7 +667,7 @@ schemas:
                 description: if the number of value descriptors exceeds the current max limit
             "500": 
                 description: for unknown or unanticipated issues.
-/valuedescriptor/id/{id}: 
+/v1/valuedescriptor/id/{id}:
     displayName: Value Descriptor Resource (by id)
     description: example - http://localhost:48080/api/v1/valuedescriptor/id/57b9fd0a189b95b8afcdafd3
     uriParameters: 
@@ -691,7 +691,7 @@ schemas:
                 description: if the value descriptor is still referenced in Readings
             "500": 
                 description: for unknown or unanticipated issues
-/valuedescriptor/name/{name}: 
+/v1/valuedescriptor/name/{name}:
     displayName: Value Descriptor Resource (by name)
     description: example - http://localhost:48080/api/v1/valuedescriptor/name/temperature  (where temperature is the unique name of a value descriptor)
     uriParameters: 
@@ -731,7 +731,7 @@ schemas:
                 description: if the value descriptor is still referenced in Readings
             "500": 
                 description: for unknown or unanticipated issues.
-/valuedescriptor/{id}: 
+/v1/valuedescriptor/{id}:
     displayName: Value Descriptor Resource (by id)
     description: example - http://localhost:48080/api/v1/valuedescriptor/57b9fbb2189b95b8afcdafd2
     uriParameters: 
@@ -751,7 +751,7 @@ schemas:
                 description: if the value descriptor cannot be located by the identifier
             "500": 
                 description: for unknown or unanticipated issues
-/valuedescriptor/devicename/{name}: 
+/v1/valuedescriptor/devicename/{name}:
     displayName: Value Descriptor Resources associated to the device identified by name
     description: example - http://localhost:48080/api/v1/valuedescriptor/devicename/hallthermostat (where hallthermostat is the name of a device)
     uriParameters: 
@@ -777,7 +777,7 @@ schemas:
                 description: if the device cannot be found by the name provided
             "500": 
                 description: for unknown or unanticipated issues.
-/valuedescriptor/deviceid/{id}: 
+/v1/valuedescriptor/deviceid/{id}:
     displayName: Value Descriptor Resources associated to the device identified by id
     description: example - http://localhost:48080/api/v1/valuedescriptor/deviceid/57b9fbb2189b95b8afcdabb1 (where 57b9fbb2189b95b8afcdabb1 is the id of a device)
     uriParameters: 
@@ -803,7 +803,7 @@ schemas:
                 description: if the device cannot be found by the id provided
             "500": 
                 description: for unknown or unanticipated issues.
-/valuedescriptor/uomlabel/{uomLabel}: 
+/v1/valuedescriptor/uomlabel/{uomLabel}:
     displayName: Value Descriptor Resource (by unit of measure)
     description: example - http://localhost:48080/api/v1/valuedescriptor/uomlabel/degree cel  (where degree cel is the UoM for value descriptors)
     uriParameters: 
@@ -827,7 +827,7 @@ schemas:
                 description: request is invalid or unparseable
             "500": 
                 description: for unknown or unanticipated issues.
-/valuedescriptor/label/{label}: 
+/v1/valuedescriptor/label/{label}:
     displayName: Value Descriptor Resource (by label)
     description: example - http://localhost:48080/api/v1/valuedescriptor/label/hvac  (where hvac is one of the labels for value descriptors)
     uriParameters: 
@@ -851,7 +851,7 @@ schemas:
                 description: request is invalid or unparseable
             "500": 
                 description: for unknown or unanticipated issues.
-/valuedescriptor/usage:
+/v1/valuedescriptor/usage:
     displayName: Value Descriptor Usage
     description: Determines if value descriptors are currently in use. This API does not provide any guarantee that the value descriptor will not be in use in the near future and extra measure should be taken to ensure no race conditions exist.
     get:
@@ -875,7 +875,7 @@ schemas:
           type: string
           example: temperature,humidity,wind,rain
           required: false
-/ping: 
+/v1/ping:
     displayName: Ping Resource
     description: example - http://localhost:48080/api/v1/ping
     get: 
@@ -886,7 +886,7 @@ schemas:
                 description: return value of "pong"
             "503": 
                 description: for unknown or unanticipated issues
-/config:
+/v1/config:
     displayName: Config Resource
     description: Example - http://localhost:48080/api/v1/config
     get:
@@ -894,3 +894,15 @@ schemas:
         responses:
             "200":
                 description: The service's configuration as JSON document
+/version:
+    displayName: Edgex API Version
+    description: Example - http://localhost:48080/api/version
+    get:
+        description: Get the API version
+        responses:
+            "200":
+                description: The service's API version as JSON document
+                body:
+                  application/json:
+                    example:  '{"version":"1.1.0"}'
+
