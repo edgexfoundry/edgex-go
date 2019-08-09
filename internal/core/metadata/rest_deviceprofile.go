@@ -61,22 +61,6 @@ func restAddDeviceProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Check if there are duplicate names in the device profile command list
-	for _, c1 := range dp.CoreCommands {
-		count := 0
-		for _, c2 := range dp.CoreCommands {
-			if c1.Name == c2.Name {
-				count += 1
-			}
-		}
-		if count > 1 {
-			err := errors.NewErrDuplicateName("Error adding device profile: Duplicate names in the commands")
-			LoggingClient.Error(err.Error())
-			http.Error(w, err.Error(), http.StatusConflict)
-			return
-		}
-	}
-
 	if Configuration.Writable.EnableValueDescriptorManagement {
 		op := device_profile.NewAddExecutor(r.Context(), vdc, LoggingClient, dp.DeviceResources...)
 		err := op.Execute()
@@ -93,21 +77,7 @@ func restAddDeviceProfile(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	id, err := dbClient.AddDeviceProfile(dp)
-	if err != nil {
-		if err == db.ErrNotUnique {
-			http.Error(w, "Duplicate name for device profile", http.StatusConflict)
-		} else if err == db.ErrNameEmpty {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		LoggingClient.Error(err.Error())
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(id))
+	addDeviceProfile(dp, dbClient, w)
 }
 
 func restUpdateDeviceProfile(w http.ResponseWriter, r *http.Request) {
