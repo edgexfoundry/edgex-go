@@ -138,7 +138,7 @@ func TestAddDeviceProfile(t *testing.T) {
 	}{
 		{
 			"OK",
-			createRequestWithBody(TestDeviceProfile),
+			createRequestWithBody(http.MethodPost, TestDeviceProfile),
 			createDBClientWithOutlines([]mockOutline{
 				{"AddDeviceProfile", TestDeviceProfileValidated, TestDeviceProfileID, nil},
 			}),
@@ -147,7 +147,7 @@ func TestAddDeviceProfile(t *testing.T) {
 		},
 		{
 			"OK with value descriptor management",
-			createRequestWithBody(TestDeviceProfile),
+			createRequestWithBody(http.MethodPost, TestDeviceProfile),
 			createDBClientWithOutlines([]mockOutline{
 				{"AddDeviceProfile", TestDeviceProfileValidated, TestDeviceProfileID, nil},
 			}),
@@ -156,35 +156,35 @@ func TestAddDeviceProfile(t *testing.T) {
 		},
 		{
 			"Value descriptor management service client error",
-			createRequestWithBody(TestDeviceProfile),
+			createRequestWithBody(http.MethodPost, TestDeviceProfile),
 			nil,
 			MockValueDescriptorClient{types.ErrServiceClient{StatusCode: http.StatusTeapot}},
 			http.StatusTeapot,
 		},
 		{
 			"Value descriptor management service other error",
-			createRequestWithBody(TestDeviceProfile),
+			createRequestWithBody(http.MethodPost, TestDeviceProfile),
 			nil,
 			MockValueDescriptorClient{TestError},
 			http.StatusInternalServerError,
 		},
 		{
 			"YAML unmarshal error",
-			httptest.NewRequest(http.MethodPut, TestURI, bytes.NewBuffer(nil)),
+			httptest.NewRequest(http.MethodPost, TestURI, bytes.NewBuffer(nil)),
 			nil,
 			MockValueDescriptorClient{},
 			http.StatusBadRequest,
 		},
 		{
 			"Duplicate commands",
-			createRequestWithBody(createTestDeviceProfileWithCommands(TestDeviceProfileID, TestDeviceProfileName, TestDeviceProfileLabels, TestDeviceProfileManufacturer, TestDeviceProfileModel, TestCommand, TestCommand)),
+			createRequestWithBody(http.MethodPost, createTestDeviceProfileWithCommands(TestDeviceProfileID, TestDeviceProfileName, TestDeviceProfileLabels, TestDeviceProfileManufacturer, TestDeviceProfileModel, TestCommand, TestCommand)),
 			nil,
 			MockValueDescriptorClient{},
 			http.StatusBadRequest,
 		},
 		{
 			"Empty device profile name",
-			createRequestWithBody(emptyName),
+			createRequestWithBody(http.MethodPost, emptyName),
 			createDBClientWithOutlines([]mockOutline{
 				{"AddDeviceProfile", emptyName, "", db.ErrNameEmpty},
 			}),
@@ -193,7 +193,7 @@ func TestAddDeviceProfile(t *testing.T) {
 		},
 		{
 			"Unsuccessful database call",
-			createRequestWithBody(TestDeviceProfile),
+			createRequestWithBody(http.MethodPost, TestDeviceProfile),
 			createDBClientWithOutlines([]mockOutline{
 				{"AddDeviceProfile", TestDeviceProfileValidated, "", TestError},
 			}),
@@ -635,35 +635,35 @@ func TestUpdateDeviceProfile(t *testing.T) {
 	}{
 		{
 			"OK",
-			createRequestWithBody(TestDeviceProfile),
+			createRequestWithBody(http.MethodPut, TestDeviceProfile),
 			createDBClient(),
 			true,
 			http.StatusOK,
 		},
 		{
 			"ValueDescriptor in use error",
-			createRequestWithBody(TestDeviceProfile),
+			createRequestWithBody(http.MethodPut, TestDeviceProfile),
 			createDBClientPersistDeviceInUseError(),
 			true,
 			http.StatusConflict,
 		},
 		{
 			"ValueDescriptor update error",
-			createRequestWithBody(TestDeviceProfile),
+			createRequestWithBody(http.MethodPut, TestDeviceProfile),
 			createDBClientUpdateValueDescriptorError(),
 			true,
 			http.StatusInternalServerError,
 		},
 		{
 			"Multiple devices associated with device profile",
-			createRequestWithBody(TestDeviceProfile),
+			createRequestWithBody(http.MethodPut, TestDeviceProfile),
 			createDBClientMultipleDevicesFoundError(),
 			true,
 			http.StatusConflict,
 		},
 		{
 			"Multiple provision watchers associated with device profile",
-			createRequestWithBody(TestDeviceProfile),
+			createRequestWithBody(http.MethodPut, TestDeviceProfile),
 			createDBClientMultipleProvisionWatchersFoundError(),
 			true,
 			http.StatusConflict,
@@ -677,49 +677,49 @@ func TestUpdateDeviceProfile(t *testing.T) {
 		},
 		{
 			"Device Profile Not Found(ValueDescriptorExecutor)",
-			createRequestWithBody(TestDeviceProfile),
+			createRequestWithBody(http.MethodPut, TestDeviceProfile),
 			createMockErrDeviceProfileNotFound(),
 			true,
 			http.StatusNotFound,
 		},
 		{
 			"Device Profile Not Found(UpdateDeviceProfileExecutor)",
-			createRequestWithBody(TestDeviceProfile),
+			createRequestWithBody(http.MethodPut, TestDeviceProfile),
 			createMockErrDeviceProfileNotFound(),
 			false,
 			http.StatusNotFound,
 		},
 		{
 			"GetProvisionWatchersByProfileId database error ",
-			createRequestWithBody(TestDeviceProfile),
+			createRequestWithBody(http.MethodPut, TestDeviceProfile),
 			createDBClientGetProvisionWatchersByProfileIdError(),
 			true,
 			http.StatusInternalServerError,
 		},
 		{
 			"Service client error ",
-			createRequestWithBody(TestDeviceProfile),
+			createRequestWithBody(http.MethodPut, TestDeviceProfile),
 			createDBServiceClientError(http.StatusTeapot),
 			true,
 			http.StatusTeapot,
 		},
 		{
 			"UpdateDeviceProfile database error ",
-			createRequestWithBody(TestDeviceProfile),
+			createRequestWithBody(http.MethodPut, TestDeviceProfile),
 			createDBClientPersistDeviceProfileError(),
 			true,
 			http.StatusInternalServerError,
 		},
 		{
 			"GetDevicesByProfileId database error",
-			createRequestWithBody(TestDeviceProfile),
+			createRequestWithBody(http.MethodPut, TestDeviceProfile),
 			createDBClientGetDevicesByProfileIdError(),
 			true,
 			http.StatusInternalServerError,
 		},
 		{
 			"Duplicate commands error ",
-			createRequestWithBody(createTestDeviceProfileWithCommands(TestDeviceProfileID, TestDeviceProfileName, TestDeviceProfileLabels, TestDeviceProfileManufacturer, TestDeviceProfileModel, TestCommand, TestCommand)),
+			createRequestWithBody(http.MethodPut, createTestDeviceProfileWithCommands(TestDeviceProfileID, TestDeviceProfileName, TestDeviceProfileLabels, TestDeviceProfileManufacturer, TestDeviceProfileModel, TestCommand, TestCommand)),
 			createDBClient(),
 			true,
 			http.StatusBadRequest,
@@ -1079,13 +1079,13 @@ func createDeviceProfileRequestWithFile(fileContents []byte) *http.Request {
 	return req
 }
 
-func createRequestWithBody(d contract.DeviceProfile) *http.Request {
+func createRequestWithBody(method string, d contract.DeviceProfile) *http.Request {
 	body, err := d.MarshalJSON()
 	if err != nil {
 		panic("Failed to create test JSON:" + err.Error())
 	}
 
-	return httptest.NewRequest(http.MethodPut, TestURI, bytes.NewBuffer(body))
+	return httptest.NewRequest(method, TestURI, bytes.NewBuffer(body))
 }
 
 func createRequestWithPathParameters(httpMethod string, params map[string]string) *http.Request {
