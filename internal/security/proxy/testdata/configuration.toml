@@ -52,51 +52,51 @@ SNIS = ["edgex-kong"]
 
 [Clients]
 	[Clients.Coredata]
-		Protocol = "http"
-		Host = "edgex-core-data" #Question: shouldn't these be localhost?
-		Port = 48080
+	Protocol = "http"
+	Host = "edgex-core-data" #Question: shouldn't these be localhost?
+	Port = 48080
 	
 	[Clients.Metadata]
-	    Protocol = "http"
-		Host = "edgex-core-metadata"
-		Port = 48081
+	Protocol = "http"
+	Host = "edgex-core-metadata"
+	Port = 48081
 	
 	[Clients.Command]
-	    Protocol = "http"
-		Host = "edgex-core-command"
-		Port = 48082
+	Protocol = "http"
+	Host = "edgex-core-command"
+	Port = 48082
 	
 	[Clients.Notifications]
-		Protocol = "http"
-		Host = "edgex-support-notifications"
-		Port = 48060
+	Protocol = "http"
+	Host = "edgex-support-notifications"
+	Port = 48060
 		
 	[Clients.Logging]
-		Protocol = "http"
-		Host = "edgex-support-logging"
-		Port = 48061
+	Protocol = "http"
+	Host = "edgex-support-logging"
+	Port = 48061
 
 	[Clients.Distro]
-		Protocol = "http"
-		Host = "edgex-export-distro"
-		Port = 48070
+	Protocol = "http"
+	Host = "edgex-export-distro"
+	Port = 48070
 	
 	[Clients.Export]
-		Protocol = "http"
-		Host = "edgex-export-client"
-		Port = 48071
+	Protocol = "http"
+	Host = "edgex-export-client"
+	Port = 48071
 
 	[Clients.Scheduler]
-        Protocol = 'http'
-        Host = 'edgex-support-scheduler'
-        Port = 48085
+    Protocol = 'http'
+    Host = 'edgex-support-scheduler'
+    Port = 48085
 
 	[Clients.Rulesengine]
-		Protocol = "http"
-		Host = "edgex-support-rulesengine"
-		Port = 48075
+	Protocol = "http"
+	Host = "edgex-support-rulesengine"
+	Port = 48075
 	
 	[Clients.Virtualdevice]
-		Protocol = "http"
-		Host = "edgex-device-virtual"
-		Port = 49990
+	Protocol = "http"
+	Host = "edgex-device-virtual"
+	Port = 49990

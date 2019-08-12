@@ -21,9 +21,6 @@ https://github.com/go-logfmt/logfmt/blob/master/LICENSE
 robfig/cron (MIT) https://github.com/robfig/cron
 https://github.com/robfig/cron/blob/master/LICENSE
 
-dgrijalva/jwt-go (MIT) https://github.com/dgrijalva/jwt-go
-https://github.com/dgrijalva/jwt-go/blob/master/LICENSE
-
 google/uuid (BSD-3) https://github.com/google/uuid
 https://github.com/google/uuid/blob/master/LICENSE
 
@@ -51,6 +48,9 @@ https://github.com/mitchellh/consulstructure/blob/master/LICENSE
 mitchellh/mapstructure (MIT) https://github.com/mitchellh/mapstructure
 https://github.com/mitchellh/mapstructure/blob/master/LICENSE
 
+mitchellh/copystructure (MIT) https://github.com/mitchellh/copystructure
+https://github.com/mitchellh/copystructure/blob/master/LICENSE
+
 mitchellh/reflectwalk (MIT) https://github.com/mitchellh/reflectwalk
 https://github.com/mitchellh/reflectwalk/blob/master/LICENSE
 
@@ -71,9 +71,6 @@ https://github.com/mitchellh/go-homedir/blob/master/LICENSE
 
 mitchellh/mapstructure (MIT) https://github.com/mitchellh/mapstructure
 https://github.com/mitchellh/mapstructure/blob/master/LICENSE
-
-mitchellh/copystructure (MIT) https://github.com/mitchellh/copystructure
-https://github.com/mitchellh/copystructure/blob/master/LICENSE
 
 hashicorp/serf (Mozilla Public License 2.0) https://github.com/hashicorp/serf
 https://github.com/hashicorp/serf/blob/master/LICENSE
@@ -102,41 +99,37 @@ https://github.com/magiconair/properties/blob/master/LICENSE
 gopkg.in/eapache/queue.v1 (MIT) gopkg.in/eapache/queue.v1
 https://github.com/eapache/queue/blob/v1.1.0/LICENSE
 
+All of the following are due to sys-mgmt-agent's docker import...
+
+docker/docker/api/types (Apache 2.0) https://github.com/moby/moby/tree/master/api/types
+https://github.com/moby/moby/blob/master/LICENSE
+
+docker/go-connections (Apache 2.0) https://github.com/docker/go-connections
+https://github.com/docker/go-connections/blob/master/LICENSE
+
+gogo/protobuf/proto (unspecified) https://github.com/gogo/protobuf/proto
+https://github.com/gogo/protobuf/blob/master/LICENSE
+
+opencontainers/image-spec/specs-go/v1 (Apache 2.0) https://github.com/opencontainers/image-spec
+https://github.com/opencontainers/image-spec/blob/master/LICENSE
+
+opencontainers/go-digest (Apache 2.0) https://github.com/opencontainers/go-digest
+https://github.com/opencontainers/go-digest/blob/master/LICENSE
+
+Azure/go-ansiterm (MIT) https://github.com/Azure/go-ansiterm
+https://github.com/Azure/go-ansiterm/blob/master/LICENSE
+
+sirupsen/logrus (MIT) https://github.com/sirupsen/logrus
+https://github.com/sirupsen/logrus/blob/master/LICENSE
+
+Nvveen/Gotty (unspecified) https://github.com/Nvveen/Gotty
+https://github.com/Nvveen/Gotty/blob/master/LICENSE
+
+docker/go-units (Apache 2.0) https://github.com/docker/go-units
+https://github.com/docker/go-units/blob/master/LICENSE
+
+docker/distribution (Apache 2.0) https://github.com/docker/distribution/
+https://github.com/docker/distribution/blob/master/LICENSE
+
 bertimus9/systemstat (MIT) https://bitbucket.org/bertimus9/systemstat
 https://bitbucket.org/bertimus9/systemstat/src/master/LICENSE
-
-davecgh/go-spew (ISC) https://github.com/davecgh/go-spew
-https://github.com/davecgh/go-spew/blob/master/LICENSE
-
-edgexfoundry/go-mod-core-contracts (Apache 2.0) https://github.com/edgexfoundry/go-mod-core-contracts
-https://github.com/edgexfoundry/go-mod-core-contracts/blob/master/LICENSE
-
-edgexfoundry/go-mod-registry (Apache 2.0) https://github.com/edgexfoundry/go-mod-registry
-https://github.com/edgexfoundry/go-mod-registry/blob/master/LICENSE
-
-edgexfoundry/go-mod-messaging (Apache 2.0) https://github.com/edgexfoundry/go-mod-messaging
-https://github.com/edgexfoundry/go-mod-messaging/blob/master/LICENSE
-
-gorilla/context (BSD-3) https://github.com/gorilla/context
-https://github.com/gorilla/context/blob/master/LICENSE
-
-kr/logfmt (Unspecified) https://github.com/kr/logfmt
-https://github.com/kr/logfmt/blob/master/Readme
-
-pmezard/go-difflib (Unspecified) https://github.com/pmezard/go-difflib
-https://github.com/pmezard/go-difflib/blob/master/LICENSE
-
-stretchr/objx (MIT) https://github.com/stretchr/objx
-https://github.com/stretchr/objx/blob/master/LICENSE
-
-stretchr/testify (MIT) https://github.com/stretchr/testify
-https://github.com/stretchr/testify/blob/master/LICENSE
-
-ugorji/go (MIT) https://github.com/ugorji/go
-https://github.com/ugorji/go/blob/master/LICENSE
-
-golang.org/x/net (Unspecified) https://github.com/golang/net
-https://github.com/golang/net/blob/master/LICENSE
-
-gopkg.in/yaml.v2 (Apache 2.0) https://github.com/go-yaml/yaml/
-https://github.com/go-yaml/yaml/blob/v2.2.2/LICENSE
