@@ -12,7 +12,6 @@
  * the License.
  *
  * @author: Tingyu Zeng, Dell
- * @version: 1.1.0
  *******************************************************************************/
 package proxy
 
