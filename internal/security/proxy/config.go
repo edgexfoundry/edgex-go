@@ -53,6 +53,14 @@ func (k KongUrlInfo) GetProxyBaseURL() string {
 	return url.String()
 }
 
+func (k KongUrlInfo) GetSecureURL() string {
+	url := &url.URL{
+		Scheme: "https",
+		Host:   fmt.Sprintf("%s:%v", k.Server, k.ApplicationPortSSL),
+	}
+	return url.String()
+}
+
 type KongAuthInfo struct {
 	Name       string
 	TokenTTL   int
@@ -79,7 +87,6 @@ func (s SecretServiceInfo) GetSecretSvcBaseURL() string {
 	url := &url.URL{
 		Scheme: "https",
 		Host:   fmt.Sprintf("%s:%v", s.Server, s.Port),
-		Path:   "/",
 	}
 	return url.String()
 }

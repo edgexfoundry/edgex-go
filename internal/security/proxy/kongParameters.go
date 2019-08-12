@@ -45,10 +45,6 @@ type KongRoute struct {
 	Name  string   `json:"name,omitempty"`
 }
 
-type KongJWTPlugin struct {
-	Name string `url:"name,omitempty"`
-}
-
 type KongOAuth2Plugin struct {
 	Name                    string `url:"name"`
 	Scope                   string `url:"config.scopes"`
