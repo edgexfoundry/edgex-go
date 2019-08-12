@@ -63,6 +63,12 @@ type notificationsLoadByEnd struct {
 	end      int64
 }
 
+type notificationsLoadByLabels struct {
+	database NotificationLoader
+	limit    int
+	labels   []string
+}
+
 func (op notificationLoadById) Execute() (contract.Notification, error) {
 	res, err := op.database.GetNotificationById(op.id)
 	if err != nil {
@@ -88,10 +94,10 @@ func (op notificationLoadBySlug) Execute() (contract.Notification, error) {
 func (op notificationsLoadBySender) Execute() ([]contract.Notification, error) {
 	res, err := op.database.GetNotificationBySender(op.sender, op.limit)
 	if err != nil {
-		if len(res) == 0 {
-			return res, db.ErrNotFound
-		}
 		return res, err
+	}
+	if len(res) == 0 {
+		return res, db.ErrNotFound
 	}
 	return res, nil
 }
@@ -99,10 +105,10 @@ func (op notificationsLoadBySender) Execute() ([]contract.Notification, error) {
 func (op notificationsLoadByStartEnd) Execute() ([]contract.Notification, error) {
 	res, err := op.database.GetNotificationsByStartEnd(op.start, op.end, op.limit)
 	if err != nil {
-		if len(res) == 0 {
-			return res, db.ErrNotFound
-		}
 		return res, err
+	}
+	if len(res) == 0 {
+		return res, db.ErrNotFound
 	}
 	return res, nil
 }
@@ -110,10 +116,10 @@ func (op notificationsLoadByStartEnd) Execute() ([]contract.Notification, error)
 func (op notificationsLoadByStart) Execute() ([]contract.Notification, error) {
 	res, err := op.database.GetNotificationsByStart(op.start, op.limit)
 	if err != nil {
-		if len(res) == 0 {
-			return res, db.ErrNotFound
-		}
 		return res, err
+	}
+	if len(res) == 0 {
+		return res, db.ErrNotFound
 	}
 	return res, nil
 }
@@ -121,12 +127,23 @@ func (op notificationsLoadByStart) Execute() ([]contract.Notification, error) {
 func (op notificationsLoadByEnd) Execute() ([]contract.Notification, error) {
 	res, err := op.database.GetNotificationsByEnd(op.end, op.limit)
 	if err != nil {
-		if len(res) == 0 {
-			return res, db.ErrNotFound
-		}
 		return res, err
 	}
+	if len(res) == 0 {
+		return res, db.ErrNotFound
+	}
 	return res, nil
+}
+
+func (op notificationsLoadByLabels) Execute() ([]contract.Notification, error) {
+	n, err := op.database.GetNotificationsByLabels(op.labels, op.limit)
+	if err != nil {
+		return n, err
+	}
+	if len(n) == 0 {
+		return n, db.ErrNotFound
+	}
+	return n, nil
 }
 
 func NewIdExecutor(db NotificationLoader, id string) IdExecutor {
@@ -173,5 +190,13 @@ func NewStartEndExecutor(db NotificationLoader, start int64, end int64, limit in
 		limit:    limit,
 		start:    start,
 		end:      end,
+	}
+}
+
+func NewLabelsExecutor(db NotificationLoader, labels []string, limit int) CollectionExecutor {
+	return notificationsLoadByLabels{
+		database: db,
+		limit:    limit,
+		labels:   labels,
 	}
 }

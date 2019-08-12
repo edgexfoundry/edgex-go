@@ -374,7 +374,7 @@ func restNotificationByEnd(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func notificationsByLabelsHandler(w http.ResponseWriter, r *http.Request) {
+func restNotificationsByLabels(w http.ResponseWriter, r *http.Request) {
 
 	if r.Body != nil {
 		defer r.Body.Close()
@@ -396,7 +396,8 @@ func notificationsByLabelsHandler(w http.ResponseWriter, r *http.Request) {
 
 	labels := splitVars(vars["labels"])
 
-	n, err := dbClient.GetNotificationsByLabels(labels, limitNum)
+	op := notification.NewLabelsExecutor(dbClient, labels, limitNum)
+	results, err := op.Execute()
 	if err != nil {
 		if err == db.ErrNotFound {
 			http.Error(w, "Notification not found", http.StatusNotFound)
@@ -405,11 +406,10 @@ func notificationsByLabelsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		LoggingClient.Error(err.Error())
 		w.Header().Set("Content-Type", applicationJson)
-		pkg.Encode(n, w, LoggingClient)
 		return
 	}
 
-	pkg.Encode(n, w, LoggingClient)
+	pkg.Encode(results, w, LoggingClient)
 
 }
 

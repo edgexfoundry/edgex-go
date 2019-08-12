@@ -98,6 +98,29 @@ func (_m *NotificationLoader) GetNotificationsByEnd(end int64, limit int) ([]mod
 	return r0, r1
 }
 
+// GetNotificationsByLabels provides a mock function with given fields: labels, limit
+func (_m *NotificationLoader) GetNotificationsByLabels(labels []string, limit int) ([]models.Notification, error) {
+	ret := _m.Called(labels, limit)
+
+	var r0 []models.Notification
+	if rf, ok := ret.Get(0).(func([]string, int) []models.Notification); ok {
+		r0 = rf(labels, limit)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.Notification)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func([]string, int) error); ok {
+		r1 = rf(labels, limit)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetNotificationsByStart provides a mock function with given fields: start, limit
 func (_m *NotificationLoader) GetNotificationsByStart(start int64, limit int) ([]models.Notification, error) {
 	ret := _m.Called(start, limit)
