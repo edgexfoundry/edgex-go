@@ -18,7 +18,7 @@ package proxy
 const (
 	ServicesPath     = "services/"
 	RoutesPath       = "routes/"
-	ConsumersPath    = "consumers/"
+	ConsumersPath    = "consumers"
 	CertificatesPath = "certificates/"
 	PluginsPath      = "plugins/"
 	SecurityService  = "securityservice"

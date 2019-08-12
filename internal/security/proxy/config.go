@@ -49,7 +49,6 @@ func (k KongUrlInfo) GetProxyBaseURL() string {
 	url := &url.URL{
 		Scheme: "http",
 		Host:   fmt.Sprintf("%s:%v", k.Server, k.AdminPort),
-		Path:   "/",
 	}
 	return url.String()
 }
@@ -73,7 +72,7 @@ type SecretServiceInfo struct {
 	CertPath        string
 	TokenPath       string
 	CACertPath      string
-	SNIS            string
+	SNIS            []string
 }
 
 func (s SecretServiceInfo) GetSecretSvcBaseURL() string {

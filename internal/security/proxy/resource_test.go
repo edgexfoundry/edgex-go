@@ -32,7 +32,7 @@ func TestDelete(t *testing.T) {
 			t.Errorf("expected DELETE request, got %s instead", r.Method)
 		}
 
-		if r.URL.EscapedPath() != "/1" {
+		if r.URL.EscapedPath() != "/services/1" {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}

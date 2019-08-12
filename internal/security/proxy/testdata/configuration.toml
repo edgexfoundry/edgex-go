@@ -12,7 +12,6 @@
 # the License.
 #
 # @author: Tingyu Zeng, Dell
-# @version: 1.1.0
 #################################################################################
 
 # This is a TOML config file for edgexsecurity service.
@@ -49,7 +48,7 @@ HealthCheckPath = "v1/sys/health"
 CertPath = "v1/secret/edgex/pki/tls/edgex-kong"
 TokenPath = "res/resp-init.json"
 CACertPath = "res/EdgeXFoundryCA/EdgeXFoundryCA.pem"
-SNIS = "edgex-kong"
+SNIS = ["edgex-kong"]
 
 [Clients]
 	[Clients.Coredata]
