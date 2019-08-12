@@ -22,6 +22,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"path/filepath"
 
 	"github.com/dghubble/sling"
 	"github.com/dgrijalva/jwt-go"
@@ -49,7 +50,7 @@ func (c *Consumer) Delete() error {
 }
 
 func (c *Consumer) Create(service string) error {
-	path := fmt.Sprintf("%s%s", ConsumersPath, c.name)
+	path := filepath.Join(ConsumersPath, c.name)
 	req, err := sling.New().Base(Configuration.KongURL.GetProxyBaseURL()).Put(path).Request()
 	if err != nil {
 		e := fmt.Sprintf("failed to create consumer %s for %s service with error %s", c.name, service, err.Error())
@@ -78,7 +79,7 @@ func (c *Consumer) Create(service string) error {
 
 func (c *Consumer) AssociateWithGroup(g string) error {
 	acc := acctParams{g}
-	path := fmt.Sprintf("%s%s/acls", ConsumersPath, c.name)
+	path := filepath.Join(ConsumersPath, c.name, "acls")
 	req, err := sling.New().Base(Configuration.KongURL.GetProxyBaseURL()).Post(path).BodyForm(acc).Request()
 	if err != nil {
 		e := fmt.Sprintf("failed to associate consumer %s for with group %s with error %s", c.name, g, err.Error())

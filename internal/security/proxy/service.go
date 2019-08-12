@@ -19,12 +19,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
-	"net/http"
-	"strings"
-
 	"github.com/dghubble/sling"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
+	"io/ioutil"
+	"net/http"
 )
 
 type Service struct {
@@ -147,7 +145,7 @@ func (s *Service) postCert(cert CertificateLoader) error {
 	body := &CertInfo{
 		Cert: cp.Cert,
 		Key:  cp.Key,
-		Snis: strings.Split(Configuration.SecretService.SNIS, ","),
+		Snis: Configuration.SecretService.SNIS,
 	}
 	LoggingClient.Debug("trying to upload cert to proxy server")
 	req, err := sling.New().Base(Configuration.KongURL.GetProxyBaseURL()).Post(CertificatesPath).BodyJSON(body).Request()

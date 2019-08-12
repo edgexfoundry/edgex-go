@@ -71,33 +71,6 @@ func initializeConfiguration(useRegistry bool, useProfile string) (*Configuratio
 		return nil, err
 	}
 
-	/* Uncomment if it's determined this service needs to load configuration from the registry. As of the conversion
-	   into edgex-go 17-Jul-19, it does not.
-	if useRegistry {
-		err = connectToRegistry(configuration)
-		if err != nil {
-			return nil, err
-		}
-
-		rawConfig, err := registryClient.GetConfiguration(configuration)
-		if err != nil {
-			return nil, fmt.Errorf("could not get configuration from Registry: %v", err.Error())
-		}
-
-		actual, ok := rawConfig.(*ConfigurationStruct)
-		if !ok {
-			return nil, fmt.Errorf("configuration from Registry failed type check")
-		}
-
-		configuration = actual
-
-		// Check that information was successfully read from Registry
-		if configuration.Service.Port == 0 {
-			return nil, errors.New("error reading configuration from Registry")
-		}
-	}
-	*/
-
 	return configuration, nil
 }
 
