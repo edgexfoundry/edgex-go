@@ -125,7 +125,7 @@ func (e ErrInvalidCronFormat) Error() string {
 }
 
 func NewErrInvalidCronFormat(cron string) error {
-	return &ErrInvalidCronFormat{cron: cron}
+	return ErrInvalidCronFormat{cron: cron}
 }
 
 type ErrDbNotFound struct {

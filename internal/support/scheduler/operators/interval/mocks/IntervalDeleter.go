@@ -89,20 +89,22 @@ func (_m *IntervalDeleter) IntervalByName(name string) (models.Interval, error) 
 	return r0, r1
 }
 
-// QueryIntervalByID provides a mock function with given fields: intervalId
-func (_m *IntervalDeleter) QueryIntervalByID(intervalId string) (models.Interval, error) {
-	ret := _m.Called(intervalId)
+// Intervals provides a mock function with given fields:
+func (_m *IntervalDeleter) Intervals() ([]models.Interval, error) {
+	ret := _m.Called()
 
-	var r0 models.Interval
-	if rf, ok := ret.Get(0).(func(string) models.Interval); ok {
-		r0 = rf(intervalId)
+	var r0 []models.Interval
+	if rf, ok := ret.Get(0).(func() []models.Interval); ok {
+		r0 = rf()
 	} else {
-		r0 = ret.Get(0).(models.Interval)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.Interval)
+		}
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(string) error); ok {
-		r1 = rf(intervalId)
+	if rf, ok := ret.Get(1).(func() error); ok {
+		r1 = rf()
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -110,37 +112,25 @@ func (_m *IntervalDeleter) QueryIntervalByID(intervalId string) (models.Interval
 	return r0, r1
 }
 
-// QueryIntervalByName provides a mock function with given fields: intervalName
-func (_m *IntervalDeleter) QueryIntervalByName(intervalName string) (models.Interval, error) {
-	ret := _m.Called(intervalName)
+// IntervalsWithLimit provides a mock function with given fields: limit
+func (_m *IntervalDeleter) IntervalsWithLimit(limit int) ([]models.Interval, error) {
+	ret := _m.Called(limit)
 
-	var r0 models.Interval
-	if rf, ok := ret.Get(0).(func(string) models.Interval); ok {
-		r0 = rf(intervalName)
+	var r0 []models.Interval
+	if rf, ok := ret.Get(0).(func(int) []models.Interval); ok {
+		r0 = rf(limit)
 	} else {
-		r0 = ret.Get(0).(models.Interval)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.Interval)
+		}
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(string) error); ok {
-		r1 = rf(intervalName)
+	if rf, ok := ret.Get(1).(func(int) error); ok {
+		r1 = rf(limit)
 	} else {
 		r1 = ret.Error(1)
 	}
 
 	return r0, r1
-}
-
-// RemoveIntervalInQueue provides a mock function with given fields: intervalId
-func (_m *IntervalDeleter) RemoveIntervalInQueue(intervalId string) error {
-	ret := _m.Called(intervalId)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(string) error); ok {
-		r0 = rf(intervalId)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
 }
