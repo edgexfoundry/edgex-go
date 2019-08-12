@@ -46,7 +46,9 @@ func LoadRestRoutes() *mux.Router {
 	r.HandleFunc(clients.ApiVersionRoute, pkg.VersionHandler).Methods(http.MethodGet)
 
 	// Interval
-	r.HandleFunc(clients.ApiIntervalRoute, intervalHandler).Methods(http.MethodGet, http.MethodPut, http.MethodPost)
+	r.HandleFunc(clients.ApiIntervalRoute, restGetIntervals).Methods(http.MethodGet)
+	r.HandleFunc(clients.ApiIntervalRoute, restUpdateInterval).Methods(http.MethodPut)
+	r.HandleFunc(clients.ApiIntervalRoute, restAddInterval).Methods(http.MethodPost)
 	interval := r.PathPrefix(clients.ApiIntervalRoute).Subrouter()
 	interval.HandleFunc("/{"+ID+"}", restGetIntervalByID).Methods(http.MethodGet)
 	interval.HandleFunc("/{"+ID+"}", restDeleteIntervalByID).Methods(http.MethodDelete)
@@ -89,104 +91,6 @@ func metricsHandler(w http.ResponseWriter, _ *http.Request) {
 	pkg.Encode(s, w, LoggingClient)
 
 	return
-}
-
-// ************************ INTERVAL HANDLERS ***********************************
-
-/*
-Handler for the interval API
-Status code 404 - interval not found
-Status code 413 - number of intervals exceeds limit
-Status code 500 - unanticipated issues
-api/v1/interval
-*/
-func intervalHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Body != nil {
-		defer r.Body.Close()
-	}
-
-	switch r.Method {
-	// Get all Intervals
-	case http.MethodGet:
-		intervals, err := getIntervals(Configuration.Service.MaxResultCount)
-		if err != nil {
-			LoggingClient.Error(err.Error())
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		pkg.Encode(intervals, w, LoggingClient)
-		break
-		// Post a new Interval
-	case http.MethodPost:
-		var interval models.Interval
-		dec := json.NewDecoder(r.Body)
-		err := dec.Decode(&interval)
-
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			LoggingClient.Error("Error decoding interval" + err.Error())
-			return
-		}
-		LoggingClient.Info("Posting new Interval: " + interval.String())
-
-		newId, err := addNewInterval(interval)
-		if err != nil {
-			switch t := err.(type) {
-			case *errors.ErrIntervalNameInUse:
-				http.Error(w, t.Error(), http.StatusBadRequest)
-			case *errors.ErrInvalidTimeFormat:
-				http.Error(w, t.Error(), http.StatusBadRequest)
-			case *errors.ErrInvalidFrequencyFormat:
-				http.Error(w, t.Error(), http.StatusBadRequest)
-			default:
-				http.Error(w, t.Error(), http.StatusInternalServerError)
-			}
-			LoggingClient.Error(err.Error())
-			return
-		}
-
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(newId))
-		break
-	case http.MethodPut:
-		var from models.Interval
-		dec := json.NewDecoder(r.Body)
-		err := dec.Decode(&from)
-
-		// Problem decoding
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			LoggingClient.Error("Error decoding the interval: " + err.Error())
-			return
-		}
-
-		LoggingClient.Info("Updating Interval: " + from.ID)
-		err = updateInterval(from)
-		if err != nil {
-			switch t := err.(type) {
-			case *errors.ErrIntervalNotFound:
-				http.Error(w, t.Error(), http.StatusNotFound)
-			case *errors.ErrInvalidCronFormat:
-				http.Error(w, t.Error(), http.StatusBadRequest)
-			case *errors.ErrInvalidFrequencyFormat:
-				http.Error(w, t.Error(), http.StatusBadRequest)
-			case *errors.ErrInvalidTimeFormat:
-				http.Error(w, t.Error(), http.StatusBadRequest)
-			case *errors.ErrIntervalStillUsedByIntervalActions:
-				http.Error(w, t.Error(), http.StatusBadRequest)
-			case *errors.ErrIntervalNameInUse:
-				http.Error(w, t.Error(), http.StatusBadRequest)
-			default: //return an error on everything else.
-				http.Error(w, err.Error(), http.StatusServiceUnavailable)
-			}
-			LoggingClient.Error(err.Error())
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("true"))
-	}
 }
 
 // ************************ INTERVAL ACTION HANDLERS ****************************

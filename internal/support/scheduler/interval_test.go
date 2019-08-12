@@ -92,27 +92,6 @@ func TestGetIntervalsWithLimit(t *testing.T) {
 	myMock.AssertExpectations(t)
 }
 
-func TestGetIntervals(t *testing.T) {
-	reset()
-	myMock := &dbMock.DBClient{}
-
-	myMock.On("Intervals").Return([]models.Interval{testInterval}, nil)
-	dbClient = myMock
-
-	intervals, err := getIntervals(0)
-	if err != nil {
-		t.Errorf(err.Error())
-	}
-
-	if len(intervals) == 0 {
-		t.Errorf("no interval found")
-	}
-
-	if len(intervals) != 1 {
-		t.Errorf("expected 1 interval")
-	}
-}
-
 func TestIntervalBylName(t *testing.T) {
 	reset()
 	myMock := &dbMock.DBClient{}
@@ -129,43 +108,6 @@ func TestIntervalBylName(t *testing.T) {
 	if interval.Name != testInterval.Name {
 		t.Errorf("expected interval name to be the same")
 	}
-}
-
-func TestAddInterval(t *testing.T) {
-	reset()
-	myMock := &dbMock.DBClient{}
-	mySchedulerMock := &dbMock.SchedulerQueueClient{}
-
-	// Validation call
-	myMock.On("IntervalByName",
-		mock.Anything).Return(models.Interval{}, nil)
-
-	// Add Interval call
-	myMock.On("AddInterval",
-		mock.Anything).Return(testUUIDString, nil)
-
-	// Scheduler call
-	mySchedulerMock.On("AddIntervalToQueue",
-		mock.Anything).Return(nil)
-
-	mySchedulerMock.On("QueryIntervalByName",
-		mock.Anything).Return(models.Interval{}, nil)
-
-	nInterval := models.Interval{Name: testInterNewName, Timestamps: testTimestamps}
-
-	dbClient = myMock
-	scClient = mySchedulerMock
-
-	id, err := addNewInterval(nInterval)
-	if err != nil {
-		t.Errorf(err.Error())
-	}
-
-	if id != testUUIDString {
-		t.Errorf("expected return interval ID to match inserted ID")
-	}
-
-	myMock.AssertExpectations(t)
 }
 
 func TestAddIntervalFailOnExistingName(t *testing.T) {
@@ -239,36 +181,4 @@ func TestAddIntervalFailOnInvalidTimeFormat(t *testing.T) {
 			t.Errorf("Expected errors.ErrInvalidTimeFormat")
 		}
 	}
-}
-
-//TODO:  TestNoIDPassedByName
-//TODO:  TestUpdatingExistingIntervalName
-func TestUpdateInterval(t *testing.T) {
-	reset()
-	myMock := &dbMock.DBClient{}
-	mySchedulerMock := &dbMock.SchedulerQueueClient{}
-
-	// Validation call
-	myMock.On("IntervalById",
-		mock.Anything).Return(models.Interval{Name: testIntervalName}, nil)
-
-	// Update IntervalAction call
-	myMock.On("UpdateInterval",
-		mock.Anything).Return(nil)
-
-	mySchedulerMock.On("UpdateIntervalInQueue",
-		mock.Anything).Return(nil)
-
-	nInterval := models.Interval{Name: testIntervalName, Timestamps: testTimestamps}
-
-	dbClient = myMock
-	scClient = mySchedulerMock
-
-	err := updateInterval(nInterval)
-
-	if err != nil {
-		t.Errorf(err.Error())
-	}
-
-	myMock.AssertExpectations(t)
 }

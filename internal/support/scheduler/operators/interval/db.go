@@ -17,6 +17,8 @@ import contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 
 // IntervalLoader provides functionality for obtaining Interval.
 type IntervalLoader interface {
+	Intervals() ([]contract.Interval, error)
+	IntervalsWithLimit(limit int) ([]contract.Interval, error)
 	IntervalById(id string) (contract.Interval, error)
 	IntervalByName(name string) (contract.Interval, error)
 }
@@ -24,6 +26,19 @@ type IntervalLoader interface {
 // IntervalDeleter deletes interval.
 type IntervalDeleter interface {
 	DeleteIntervalById(id string) error
+	IntervalLoader
+	IntervalActionLoader
+}
+
+// IntervalWriter adds interval.
+type IntervalWriter interface {
+	AddInterval(interval contract.Interval) (string, error)
+	IntervalLoader
+}
+
+// IntervalUpdater updates interval.
+type IntervalUpdater interface {
+	UpdateInterval(interval contract.Interval) error
 	IntervalLoader
 	IntervalActionLoader
 }
@@ -37,6 +52,18 @@ type SchedulerQueueLoader interface {
 // SchedulerQueueDeleter deletes interval from SchedulerQueue
 type SchedulerQueueDeleter interface {
 	RemoveIntervalInQueue(intervalId string) error
+	SchedulerQueueLoader
+}
+
+// SchedulerQueueWriter adds interval in SchedulerQueue
+type SchedulerQueueWriter interface {
+	AddIntervalToQueue(interval contract.Interval) error
+	SchedulerQueueLoader
+}
+
+// SchedulerQueueUpdater update interval in SchedulerQueue
+type SchedulerQueueUpdater interface {
+	UpdateIntervalInQueue(interval contract.Interval) error
 	SchedulerQueueLoader
 }
 

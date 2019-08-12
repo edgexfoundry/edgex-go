@@ -15,6 +15,7 @@
 package scheduler
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/url"
 
@@ -22,8 +23,97 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/errors"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/operators/interval"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
+	"github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/gorilla/mux"
 )
+
+func restGetIntervals(w http.ResponseWriter, r *http.Request) {
+	if r.Body != nil {
+		defer r.Body.Close()
+	}
+
+	op := interval.NewAllExecutor(dbClient, Configuration.Service.MaxResultCount)
+	intervals, err := op.Execute()
+	if err != nil {
+		LoggingClient.Error(err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	pkg.Encode(intervals, w, LoggingClient)
+}
+
+func restUpdateInterval(w http.ResponseWriter, r *http.Request) {
+	if r.Body != nil {
+		defer r.Body.Close()
+	}
+
+	var from models.Interval
+	dec := json.NewDecoder(r.Body)
+	err := dec.Decode(&from)
+
+	// Problem decoding
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		LoggingClient.Error("Error decoding the interval: " + err.Error())
+		return
+	}
+
+	LoggingClient.Info("Updating Interval: " + from.ID)
+	op := interval.NewUpdateExecutor(dbClient, scClient, from)
+	err = op.Execute()
+	if err != nil {
+		switch t := err.(type) {
+		case errors.ErrIntervalNotFound:
+			http.Error(w, t.Error(), http.StatusNotFound)
+		case errors.ErrInvalidCronFormat:
+			http.Error(w, t.Error(), http.StatusBadRequest)
+		case errors.ErrIntervalStillUsedByIntervalActions:
+			http.Error(w, t.Error(), http.StatusBadRequest)
+		case *errors.ErrIntervalNameInUse:
+			http.Error(w, t.Error(), http.StatusBadRequest)
+		default: //return an error on everything else.
+			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		}
+		LoggingClient.Error(err.Error())
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("true"))
+}
+
+func restAddInterval(w http.ResponseWriter, r *http.Request) {
+	if r.Body != nil {
+		defer r.Body.Close()
+	}
+	var intervalObj models.Interval
+	dec := json.NewDecoder(r.Body)
+	err := dec.Decode(&intervalObj)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		LoggingClient.Error("Error decoding interval" + err.Error())
+		return
+	}
+	LoggingClient.Info("Posting new Interval: " + intervalObj.String())
+
+	op := interval.NewAddExecutor(dbClient, scClient, intervalObj)
+	newId, err := op.Execute()
+	if err != nil {
+		switch t := err.(type) {
+		case *errors.ErrIntervalNameInUse:
+			http.Error(w, t.Error(), http.StatusBadRequest)
+		default:
+			http.Error(w, t.Error(), http.StatusInternalServerError)
+		}
+		LoggingClient.Error(err.Error())
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(newId))
+}
 
 func restGetIntervalByID(w http.ResponseWriter, r *http.Request) {
 	if r.Body != nil {
