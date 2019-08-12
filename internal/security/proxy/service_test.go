@@ -140,7 +140,7 @@ func TestInitKongService(t *testing.T) {
 			return
 		}
 
-		if r.URL.EscapedPath() != "/services/" {
+		if r.URL.EscapedPath() != "/services" {
 			w.WriteHeader(http.StatusNotFound)
 			return
 		}

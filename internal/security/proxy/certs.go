@@ -21,8 +21,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-
-	"github.com/dghubble/sling"
+	"strings"
 )
 
 type CertificateLoader interface {
@@ -80,13 +79,15 @@ func (cs certificate) getAccessToken(filename string) (string, error) {
 }
 
 func (cs certificate) retrieve(t string) (*CertPair, error) {
-	s := sling.New().Set(VaultToken, t)
-	req, err := s.New().Base(Configuration.SecretService.GetSecretSvcBaseURL()).Get(cs.certPath).Request()
+	tokens := []string{Configuration.SecretService.GetSecretSvcBaseURL(), cs.certPath}
+	req, err := http.NewRequest(http.MethodGet, strings.Join(tokens, "/"), nil)
 	if err != nil {
 		e := fmt.Sprintf("failed to retrieve certificate on path %s with error %s", cs.certPath, err.Error())
 		LoggingClient.Error(e)
 		return nil, err
 	}
+	req.Header.Add(VaultToken, t)
+
 	resp, err := cs.client.Do(req)
 	if err != nil {
 		e := fmt.Sprintf("failed to retrieve certificate on path %s with error %s", cs.certPath, err.Error())

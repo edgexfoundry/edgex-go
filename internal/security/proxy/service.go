@@ -19,10 +19,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/dghubble/sling"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"io/ioutil"
 	"net/http"
+	"net/url"
+	"strconv"
+	"strings"
+
+	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 )
 
 type Service struct {
@@ -44,7 +48,7 @@ func (s *Service) CheckSecretServiceStatus() error {
 }
 
 func (s *Service) checkServiceStatus(path string) error {
-	req, err := sling.New().Get(path).Request()
+	req, err := http.NewRequest(http.MethodGet, path, nil)
 	if err != nil {
 		return err
 	}
@@ -148,9 +152,15 @@ func (s *Service) postCert(cert CertificateLoader) error {
 		Snis: Configuration.SecretService.SNIS,
 	}
 	LoggingClient.Debug("trying to upload cert to proxy server")
-	req, err := sling.New().Base(Configuration.KongURL.GetProxyBaseURL()).Post(CertificatesPath).BodyJSON(body).Request()
+	data, err := json.Marshal(body)
 	if err != nil {
-		LoggingClient.Error("failed to upload cert to proxy server with error %s", err.Error())
+		LoggingClient.Error(err.Error())
+		return err
+	}
+	tokens := []string{Configuration.KongURL.GetProxyBaseURL(), CertificatesPath}
+	req, err := http.NewRequest(http.MethodPost, strings.Join(tokens, "/"), strings.NewReader(string(data)))
+	if err != nil {
+		LoggingClient.Error("failed to create upload cert request -- %s", err.Error())
 		return err
 	}
 	resp, err := s.client.Do(req)
@@ -177,14 +187,22 @@ func (s *Service) postCert(cert CertificateLoader) error {
 }
 
 func (s *Service) initKongService(service *KongService) error {
-	req, err := sling.New().Base(Configuration.KongURL.GetProxyBaseURL()).Post(ServicesPath).BodyForm(service).Request()
-	if err != nil {
-		e := fmt.Sprintf("failed to set up proxy service for %s", service.Name)
-		return errors.New(e)
+	formVals := url.Values{
+		"name":     {service.Name},
+		"host":     {service.Host},
+		"port":     {strconv.Itoa(service.Port)},
+		"protocol": {service.Protocol},
 	}
+	tokens := []string{Configuration.KongURL.GetProxyBaseURL(), ServicesPath}
+	req, err := http.NewRequest(http.MethodPost, strings.Join(tokens, "/"), strings.NewReader(formVals.Encode()))
+	if err != nil {
+		return fmt.Errorf("failed to construct http POST form request: %s %s", service.Name, err.Error())
+	}
+	req.Header.Add(clients.ContentType, "application/x-www-form-urlencoded")
+
 	resp, err := s.client.Do(req)
 	if err != nil {
-		e := fmt.Sprintf("failed to set up proxy service for %s", service.Name)
+		e := fmt.Sprintf("failed to set up proxy service: %s %s", service.Name, err.Error())
 		LoggingClient.Error(e)
 		return errors.New(e)
 	}
@@ -206,13 +224,20 @@ func (s *Service) initKongService(service *KongService) error {
 }
 
 func (s *Service) initKongRoutes(r *KongRoute, name string) error {
-	routesubpath := "services/" + name + "/routes"
-	req, err := sling.New().Base(Configuration.KongURL.GetProxyBaseURL()).Post(routesubpath).BodyJSON(r).Request()
+	data, err := json.Marshal(r)
+	if err != nil {
+		LoggingClient.Error(err.Error())
+		return err
+	}
+	tokens := []string{Configuration.KongURL.GetProxyBaseURL(), ServicesPath, name, "routes"}
+	req, err := http.NewRequest(http.MethodPost, strings.Join(tokens, "/"), strings.NewReader(string(data)))
 	if err != nil {
 		e := fmt.Sprintf("failed to set up routes for %s with error %s", name, err.Error())
 		LoggingClient.Error(e)
 		return err
 	}
+	req.Header.Add(clients.ContentType, clients.ContentTypeJSON)
+
 	resp, err := s.client.Do(req)
 	if err != nil {
 		e := fmt.Sprintf("failed to set up routes for %s with error %s", name, err.Error())
@@ -238,15 +263,24 @@ func (s *Service) initACL(name string, whitelist string) error {
 		Name:      name,
 		WhiteList: whitelist,
 	}
-	req, err := sling.New().Base(Configuration.KongURL.GetProxyBaseURL()).Post(PluginsPath).BodyForm(aclParams).Request()
+	// The type above is largely useless but I'm leaving it for now as otherwise there'd be no way to know
+	// where or why the second field below is "config.whitelist"
+	formVals := url.Values{
+		"name":             {aclParams.Name},
+		"config.whitelist": {aclParams.WhiteList},
+	}
+	tokens := []string{Configuration.KongURL.GetProxyBaseURL(), PluginsPath}
+	req, err := http.NewRequest(http.MethodPost, strings.Join(tokens, "/"), strings.NewReader(formVals.Encode()))
 	if err != nil {
-		e := fmt.Sprintf("failed to set up acl")
+		e := fmt.Sprintf("failed to set up acl -- %s", err.Error())
 		LoggingClient.Error(e)
 		return err
 	}
+	req.Header.Add(clients.ContentType, "application/x-www-form-urlencoded")
+
 	resp, err := s.client.Do(req)
 	if err != nil {
-		e := fmt.Sprintf("failed to set up acl")
+		e := fmt.Sprintf("failed to set up acl -- %s", err.Error())
 		LoggingClient.Error(e)
 		return err
 	}
@@ -254,7 +288,7 @@ func (s *Service) initACL(name string, whitelist string) error {
 
 	switch resp.StatusCode {
 	case http.StatusOK, http.StatusCreated, http.StatusConflict:
-		LoggingClient.Info("successful to set up acl")
+		LoggingClient.Info("acl set up successfully")
 		break
 	default:
 		e := fmt.Sprintf("failed to set up acl with errorcode %d", resp.StatusCode)
@@ -277,19 +311,21 @@ func (s *Service) initAuthMethod(name string, ttl int) error {
 }
 
 func (s *Service) initJWTAuth() error {
-	jwtParams := &KongJWTPlugin{
-		Name: "jwt",
+	formVals := url.Values{
+		"name": {"jwt"},
 	}
-
-	req, err := sling.New().Base(Configuration.KongURL.GetProxyBaseURL()).Post(PluginsPath).BodyForm(jwtParams).Request()
+	tokens := []string{Configuration.KongURL.GetProxyBaseURL(), PluginsPath}
+	req, err := http.NewRequest(http.MethodPost, strings.Join(tokens, "/"), strings.NewReader(formVals.Encode()))
 	if err != nil {
-		e := fmt.Sprintf("failed to set up jwt authentication")
+		e := fmt.Sprintf("failed to create jwt auth request -- %s", err.Error())
 		LoggingClient.Error(e)
 		return err
 	}
+	req.Header.Add(clients.ContentType, "application/x-www-form-urlencoded")
+
 	resp, err := s.client.Do(req)
 	if err != nil {
-		e := fmt.Sprintf("failed to set up jwt authentication")
+		e := fmt.Sprintf("failed to set up jwt authentication -- %s", err.Error())
 		LoggingClient.Error(e)
 		return err
 	}
@@ -316,16 +352,27 @@ func (s *Service) initOAuth2(ttl int) error {
 		EnableGlobalCredentials: "true",
 		TokenTTL:                ttl,
 	}
-
-	req, err := sling.New().Base(Configuration.KongURL.GetProxyBaseURL()).Post(PluginsPath).BodyForm(oauth2Params).Request()
+	//Again, the type above is largely useless but the struct tags indicate the field names below so I left it.
+	formVals := url.Values{
+		"name":                             {oauth2Params.Name},
+		"config.scopes":                    {oauth2Params.Scope},
+		"config.mandatory_scope":           {oauth2Params.MandatoryScope},
+		"config.enable_client_credentials": {oauth2Params.EnableClientCredentials},
+		"config.global_credentials":        {oauth2Params.EnableGlobalCredentials},
+		"config.refresh_token_ttl":         {strconv.Itoa(oauth2Params.TokenTTL)},
+	}
+	tokens := []string{Configuration.KongURL.GetProxyBaseURL(), PluginsPath}
+	req, err := http.NewRequest(http.MethodPost, strings.Join(tokens, "/"), strings.NewReader(formVals.Encode()))
 	if err != nil {
-		e := fmt.Sprintf("failed to set up oauth2 authentication with error %s", err.Error())
+		e := fmt.Sprintf("failed to create oauth2 request -- %s", err.Error())
 		LoggingClient.Error(e)
 		return err
 	}
+	req.Header.Add(clients.ContentType, "application/x-www-form-urlencoded")
+
 	resp, err := s.client.Do(req)
 	if err != nil {
-		e := fmt.Sprintf("failed to set up oauth2 authentication with error %s", err.Error())
+		e := fmt.Sprintf("failed to set up oauth2 authentication -- %s", err.Error())
 		LoggingClient.Error(e)
 		return err
 	}
@@ -346,7 +393,13 @@ func (s *Service) initOAuth2(ttl int) error {
 func (s *Service) getSvcIDs(path string) (DataCollect, error) {
 	collection := DataCollect{}
 
-	req, err := sling.New().Get(Configuration.KongURL.GetProxyBaseURL()).Path(path).Request()
+	tokens := []string{Configuration.KongURL.GetProxyBaseURL(), path}
+	req, err := http.NewRequest(http.MethodGet, strings.Join(tokens, "/"), nil)
+	if err != nil {
+		e := fmt.Sprintf("failed to create service list request -- %s", err.Error())
+		LoggingClient.Error(e)
+		return collection, err
+	}
 	resp, err := s.client.Do(req)
 	if err != nil {
 		err = fmt.Errorf("failed to get list of %s with error %s", path, err.Error())

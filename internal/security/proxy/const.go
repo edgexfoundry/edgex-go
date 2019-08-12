@@ -16,12 +16,11 @@
 package proxy
 
 const (
-	ServicesPath     = "services/"
-	RoutesPath       = "routes/"
+	ServicesPath     = "services"
+	RoutesPath       = "routes"
 	ConsumersPath    = "consumers"
-	CertificatesPath = "certificates/"
-	PluginsPath      = "plugins/"
-	SecurityService  = "securityservice"
+	CertificatesPath = "certificates"
+	PluginsPath      = "plugins"
 	EdgeXKong        = "edgex-kong"
 	VaultToken       = "X-Vault-Token"
 	OAuth2GrantType  = "client_credentials"
