@@ -21,6 +21,9 @@ https://github.com/go-logfmt/logfmt/blob/master/LICENSE
 robfig/cron (MIT) https://github.com/robfig/cron
 https://github.com/robfig/cron/blob/master/LICENSE
 
+dgrijalva/jwt-go (MIT) https://github.com/dgrijalva/jwt-go
+https://github.com/dgrijalva/jwt-go/blob/master/LICENSE
+
 google/uuid (BSD-3) https://github.com/google/uuid
 https://github.com/google/uuid/blob/master/LICENSE
 
