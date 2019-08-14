@@ -19,6 +19,19 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 )
 
+func ListDefaultServices() map[string]string {
+	return map[string]string{
+		clients.SupportNotificationsServiceKey: "Notifications",
+		clients.CoreCommandServiceKey:          "Command",
+		clients.CoreDataServiceKey:             "CoreData",
+		clients.CoreMetaDataServiceKey:         "Metadata",
+		clients.ExportClientServiceKey:         "Export",
+		clients.ExportDistroServiceKey:         "Distro",
+		clients.SupportLoggingServiceKey:       "Logging",
+		clients.SupportSchedulerServiceKey:     "Scheduler",
+	}
+}
+
 // ServiceInfo contains configuration settings necessary for the basic operation of any EdgeX service.
 type ServiceInfo struct {
 	// BootTimeout indicates, in milliseconds, how long the service will retry connecting to upstream dependencies

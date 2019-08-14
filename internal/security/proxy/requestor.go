@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2018 Dell Inc.
+ * Copyright 2019 Dell Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -10,18 +10,24 @@
  * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
+ *
+ * @author: Tingyu Zeng, Dell
  *******************************************************************************/
-package internal
+package proxy
 
-const (
-	BootTimeoutDefault           = 30000
-	ClientMonitorDefault         = 15000
-	ConfigFileName               = "configuration.toml"
-	ConfigRegistryStem           = "edgex/core/1.0/"
-	LogDurationKey               = "duration"
-	SecurityProxySetupServiceKey = "edgex-security-proxy-setup"
+import (
+	"crypto/tls"
+	"net/http"
+	"time"
 )
 
-const (
-	WritableKey = "/Writable"
-)
+type Requestor interface {
+	Do(req *http.Request) (*http.Response, error)
+}
+
+func NewRequestor(skipVerify bool, timeout int) Requestor {
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: skipVerify},
+	}
+	return &http.Client{Timeout: time.Duration(timeout) * time.Second, Transport: tr}
+}

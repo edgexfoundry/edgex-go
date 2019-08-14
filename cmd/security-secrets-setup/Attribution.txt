@@ -1,9 +1,9 @@
-The following open source projects are referenced by Export Client Go:
+The following open source projects are referenced by Security Secrets Setup:
 
 pkg/errors (BSD-2) https://github.com/pkg/errors
 https://github.com/pkg/errors/blob/master/LICENSE
 
-gorilla/mux (BSD-3) https://github.com/gorilla/mux
+gorilla/mux (BSD-3) - https://github.com/gorilla/mux
 https://github.com/gorilla/mux/blob/master/LICENSE
 
 globalsign/mgo (unspecified) - https://github.com/globalsign/mgo
