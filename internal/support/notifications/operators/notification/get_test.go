@@ -30,7 +30,10 @@ var Sender = "System Management"
 var Limit = 5
 var Start int64 = 1564758450
 var End int64 = 1564758650
-
+var Labels = []string{
+	"test_label",
+	"test_label2",
+}
 var Error = errors.New("test error")
 var ErrorNotFound = db.ErrNotFound
 var SuccessfulDatabaseResult = []contract.Notification{
@@ -40,10 +43,7 @@ var SuccessfulDatabaseResult = []contract.Notification{
 		Category: "SECURITY",
 		Severity: "CRITICAL",
 		Content:  "Hello, Notification!",
-		Labels: []string{
-			"test_label",
-			"test_label2",
-		},
+		Labels:   Labels,
 	},
 }
 
@@ -169,36 +169,47 @@ func createMockNotificiationLoaderStartEndStringArg(methodName string, err error
 	return &dbMock
 }
 
+func createMockNotificiationLoaderLabelsStringArg(methodName string, err error, ret interface{}, labels []string, limit int) NotificationLoader {
+	dbMock := mocks.NotificationLoader{}
+	dbMock.On(methodName, labels, limit).Return(ret, err)
+	return &dbMock
+}
+
 func TestSenderExecutor(t *testing.T) {
 	tests := []struct {
-		name           string
-		mockDb         NotificationLoader
-		expectedResult []contract.Notification
-		expectedError  bool
+		name            string
+		mockDb          NotificationLoader
+		expectedResult  []contract.Notification
+		expectedError   bool
+		expectedErrType error
 	}{
 		{
-			name:           "Successful database call",
-			mockDb:         createMockNotificiationLoaderSenderStringArg("GetNotificationBySender", nil, SuccessfulDatabaseResult, Sender, Limit),
-			expectedResult: SuccessfulDatabaseResult,
-			expectedError:  false,
+			name:            "Successful database call",
+			mockDb:          createMockNotificiationLoaderSenderStringArg("GetNotificationBySender", nil, SuccessfulDatabaseResult, Sender, Limit),
+			expectedResult:  SuccessfulDatabaseResult,
+			expectedError:   false,
+			expectedErrType: nil,
 		},
 		{
-			name:           "Unsuccessful database call",
-			mockDb:         createMockNotificiationLoaderSenderStringArg("GetNotificationBySender", Error, []contract.Notification{}, Sender, Limit),
-			expectedResult: []contract.Notification{},
-			expectedError:  true,
+			name:            "Unsuccessful database call",
+			mockDb:          createMockNotificiationLoaderSenderStringArg("GetNotificationBySender", Error, []contract.Notification{}, Sender, Limit),
+			expectedResult:  []contract.Notification{},
+			expectedError:   true,
+			expectedErrType: Error,
 		},
 		{
-			name:           "Notification not found",
-			mockDb:         createMockNotificiationLoaderSenderStringArg("GetNotificationBySender", ErrorNotFound, []contract.Notification{}, Sender, Limit),
-			expectedResult: []contract.Notification{},
-			expectedError:  true,
+			name:            "Notification not found",
+			mockDb:          createMockNotificiationLoaderSenderStringArg("GetNotificationBySender", nil, []contract.Notification{}, Sender, Limit),
+			expectedResult:  []contract.Notification{},
+			expectedError:   true,
+			expectedErrType: ErrorNotFound,
 		},
 		{
-			name:           "Unknown Error",
-			mockDb:         createMockNotificiationLoaderSenderStringArg("GetNotificationBySender", Error, SuccessfulDatabaseResult, Sender, Limit),
-			expectedResult: SuccessfulDatabaseResult,
-			expectedError:  true,
+			name:            "Unknown Error",
+			mockDb:          createMockNotificiationLoaderSenderStringArg("GetNotificationBySender", Error, SuccessfulDatabaseResult, Sender, Limit),
+			expectedResult:  SuccessfulDatabaseResult,
+			expectedError:   true,
+			expectedErrType: Error,
 		},
 	}
 
@@ -216,6 +227,11 @@ func TestSenderExecutor(t *testing.T) {
 				return
 			}
 
+			if !reflect.DeepEqual(test.expectedErrType, err) {
+				t.Errorf("Expected error result does not match the observed.\nExpected: %v\nObserved: %v\n", test.expectedErrType, err)
+				return
+			}
+
 			if !reflect.DeepEqual(test.expectedResult, actual) {
 				t.Errorf("Expected result does not match the observed.\nExpected: %v\nObserved: %v\n", test.expectedResult, actual)
 				return
@@ -226,34 +242,39 @@ func TestSenderExecutor(t *testing.T) {
 
 func TestStartExecutor(t *testing.T) {
 	tests := []struct {
-		name           string
-		mockDb         NotificationLoader
-		expectedResult []contract.Notification
-		expectedError  bool
+		name            string
+		mockDb          NotificationLoader
+		expectedResult  []contract.Notification
+		expectedError   bool
+		expectedErrType error
 	}{
 		{
-			name:           "Successful database call",
-			mockDb:         createMockNotificiationLoaderStartStringArg("GetNotificationsByStart", nil, SuccessfulDatabaseResult, Start, Limit),
-			expectedResult: SuccessfulDatabaseResult,
-			expectedError:  false,
+			name:            "Successful database call",
+			mockDb:          createMockNotificiationLoaderStartStringArg("GetNotificationsByStart", nil, SuccessfulDatabaseResult, Start, Limit),
+			expectedResult:  SuccessfulDatabaseResult,
+			expectedError:   false,
+			expectedErrType: nil,
 		},
 		{
-			name:           "Unsuccessful database call",
-			mockDb:         createMockNotificiationLoaderStartStringArg("GetNotificationsByStart", Error, []contract.Notification{}, Start, Limit),
-			expectedResult: []contract.Notification{},
-			expectedError:  true,
+			name:            "Unsuccessful database call",
+			mockDb:          createMockNotificiationLoaderStartStringArg("GetNotificationsByStart", Error, []contract.Notification{}, Start, Limit),
+			expectedResult:  []contract.Notification{},
+			expectedError:   true,
+			expectedErrType: Error,
 		},
 		{
-			name:           "Notification not found",
-			mockDb:         createMockNotificiationLoaderStartStringArg("GetNotificationsByStart", ErrorNotFound, []contract.Notification{}, Start, Limit),
-			expectedResult: []contract.Notification{},
-			expectedError:  true,
+			name:            "Notification not found",
+			mockDb:          createMockNotificiationLoaderStartStringArg("GetNotificationsByStart", nil, []contract.Notification{}, Start, Limit),
+			expectedResult:  []contract.Notification{},
+			expectedError:   true,
+			expectedErrType: ErrorNotFound,
 		},
 		{
-			name:           "Unknown Error",
-			mockDb:         createMockNotificiationLoaderStartStringArg("GetNotificationsByStart", Error, SuccessfulDatabaseResult, Start, Limit),
-			expectedResult: SuccessfulDatabaseResult,
-			expectedError:  true,
+			name:            "Unknown Error",
+			mockDb:          createMockNotificiationLoaderStartStringArg("GetNotificationsByStart", Error, SuccessfulDatabaseResult, Start, Limit),
+			expectedResult:  SuccessfulDatabaseResult,
+			expectedError:   true,
+			expectedErrType: Error,
 		},
 	}
 
@@ -271,6 +292,11 @@ func TestStartExecutor(t *testing.T) {
 				return
 			}
 
+			if !reflect.DeepEqual(test.expectedErrType, err) {
+				t.Errorf("Expected error result does not match the observed.\nExpected: %v\nObserved: %v\n", test.expectedErrType, err)
+				return
+			}
+
 			if !reflect.DeepEqual(test.expectedResult, actual) {
 				t.Errorf("Expected result does not match the observed.\nExpected: %v\nObserved: %v\n", test.expectedResult, actual)
 				return
@@ -281,34 +307,39 @@ func TestStartExecutor(t *testing.T) {
 
 func TestEndExecutor(t *testing.T) {
 	tests := []struct {
-		name           string
-		mockDb         NotificationLoader
-		expectedResult []contract.Notification
-		expectedError  bool
+		name            string
+		mockDb          NotificationLoader
+		expectedResult  []contract.Notification
+		expectedError   bool
+		expectedErrType error
 	}{
 		{
-			name:           "Successful database call",
-			mockDb:         createMockNotificiationLoaderStartStringArg("GetNotificationsByEnd", nil, SuccessfulDatabaseResult, End, Limit),
-			expectedResult: SuccessfulDatabaseResult,
-			expectedError:  false,
+			name:            "Successful database call",
+			mockDb:          createMockNotificiationLoaderStartStringArg("GetNotificationsByEnd", nil, SuccessfulDatabaseResult, End, Limit),
+			expectedResult:  SuccessfulDatabaseResult,
+			expectedError:   false,
+			expectedErrType: nil,
 		},
 		{
-			name:           "Unsuccessful database call",
-			mockDb:         createMockNotificiationLoaderStartStringArg("GetNotificationsByEnd", Error, []contract.Notification{}, End, Limit),
-			expectedResult: []contract.Notification{},
-			expectedError:  true,
+			name:            "Unsuccessful database call",
+			mockDb:          createMockNotificiationLoaderStartStringArg("GetNotificationsByEnd", Error, []contract.Notification{}, End, Limit),
+			expectedResult:  []contract.Notification{},
+			expectedError:   true,
+			expectedErrType: Error,
 		},
 		{
-			name:           "Notification not found",
-			mockDb:         createMockNotificiationLoaderStartStringArg("GetNotificationsByEnd", ErrorNotFound, []contract.Notification{}, End, Limit),
-			expectedResult: []contract.Notification{},
-			expectedError:  true,
+			name:            "Notification not found",
+			mockDb:          createMockNotificiationLoaderStartStringArg("GetNotificationsByEnd", nil, []contract.Notification{}, End, Limit),
+			expectedResult:  []contract.Notification{},
+			expectedError:   true,
+			expectedErrType: ErrorNotFound,
 		},
 		{
-			name:           "Unknown Error",
-			mockDb:         createMockNotificiationLoaderStartStringArg("GetNotificationsByEnd", Error, SuccessfulDatabaseResult, End, Limit),
-			expectedResult: SuccessfulDatabaseResult,
-			expectedError:  true,
+			name:            "Unknown Error",
+			mockDb:          createMockNotificiationLoaderStartStringArg("GetNotificationsByEnd", Error, SuccessfulDatabaseResult, End, Limit),
+			expectedResult:  SuccessfulDatabaseResult,
+			expectedError:   true,
+			expectedErrType: Error,
 		},
 	}
 
@@ -326,6 +357,11 @@ func TestEndExecutor(t *testing.T) {
 				return
 			}
 
+			if !reflect.DeepEqual(test.expectedErrType, err) {
+				t.Errorf("Expected error result does not match the observed.\nExpected: %v\nObserved: %v\n", test.expectedErrType, err)
+				return
+			}
+
 			if !reflect.DeepEqual(test.expectedResult, actual) {
 				t.Errorf("Expected result does not match the observed.\nExpected: %v\nObserved: %v\n", test.expectedResult, actual)
 				return
@@ -336,34 +372,39 @@ func TestEndExecutor(t *testing.T) {
 
 func TestStartEndExecutor(t *testing.T) {
 	tests := []struct {
-		name           string
-		mockDb         NotificationLoader
-		expectedResult []contract.Notification
-		expectedError  bool
+		name            string
+		mockDb          NotificationLoader
+		expectedResult  []contract.Notification
+		expectedError   bool
+		expectedErrType error
 	}{
 		{
-			name:           "Successful database call",
-			mockDb:         createMockNotificiationLoaderStartEndStringArg("GetNotificationsByStartEnd", nil, SuccessfulDatabaseResult, Start, End, Limit),
-			expectedResult: SuccessfulDatabaseResult,
-			expectedError:  false,
+			name:            "Successful database call",
+			mockDb:          createMockNotificiationLoaderStartEndStringArg("GetNotificationsByStartEnd", nil, SuccessfulDatabaseResult, Start, End, Limit),
+			expectedResult:  SuccessfulDatabaseResult,
+			expectedError:   false,
+			expectedErrType: nil,
 		},
 		{
-			name:           "Unsuccessful database call",
-			mockDb:         createMockNotificiationLoaderStartEndStringArg("GetNotificationsByStartEnd", Error, []contract.Notification{}, Start, End, Limit),
-			expectedResult: []contract.Notification{},
-			expectedError:  true,
+			name:            "Unsuccessful database call",
+			mockDb:          createMockNotificiationLoaderStartEndStringArg("GetNotificationsByStartEnd", Error, []contract.Notification{}, Start, End, Limit),
+			expectedResult:  []contract.Notification{},
+			expectedError:   true,
+			expectedErrType: Error,
 		},
 		{
-			name:           "Notification not found",
-			mockDb:         createMockNotificiationLoaderStartEndStringArg("GetNotificationsByStartEnd", ErrorNotFound, []contract.Notification{}, Start, End, Limit),
-			expectedResult: []contract.Notification{},
-			expectedError:  true,
+			name:            "Notification not found",
+			mockDb:          createMockNotificiationLoaderStartEndStringArg("GetNotificationsByStartEnd", nil, []contract.Notification{}, Start, End, Limit),
+			expectedResult:  []contract.Notification{},
+			expectedError:   true,
+			expectedErrType: ErrorNotFound,
 		},
 		{
-			name:           "Unknown Error",
-			mockDb:         createMockNotificiationLoaderStartEndStringArg("GetNotificationsByStartEnd", Error, SuccessfulDatabaseResult, Start, End, Limit),
-			expectedResult: SuccessfulDatabaseResult,
-			expectedError:  true,
+			name:            "Unknown Error",
+			mockDb:          createMockNotificiationLoaderStartEndStringArg("GetNotificationsByStartEnd", Error, SuccessfulDatabaseResult, Start, End, Limit),
+			expectedResult:  SuccessfulDatabaseResult,
+			expectedError:   true,
+			expectedErrType: Error,
 		},
 	}
 
@@ -378,6 +419,76 @@ func TestStartEndExecutor(t *testing.T) {
 
 			if !test.expectedError && err != nil {
 				t.Errorf("Unexpectedly encountered error: %s", err.Error())
+				return
+			}
+
+			if !reflect.DeepEqual(test.expectedErrType, err) {
+				t.Errorf("Expected error result does not match the observed.\nExpected: %v\nObserved: %v\n", test.expectedErrType, err)
+				return
+			}
+
+			if !reflect.DeepEqual(test.expectedResult, actual) {
+				t.Errorf("Expected result does not match the observed.\nExpected: %v\nObserved: %v\n", test.expectedResult, actual)
+				return
+			}
+		})
+	}
+}
+
+func TestLabelsExecutor(t *testing.T) {
+	tests := []struct {
+		name            string
+		mockDb          NotificationLoader
+		expectedResult  []contract.Notification
+		expectedError   bool
+		expectedErrType error
+	}{
+		{
+			name:            "Successful database call",
+			mockDb:          createMockNotificiationLoaderLabelsStringArg("GetNotificationsByLabels", nil, SuccessfulDatabaseResult, Labels, Limit),
+			expectedResult:  SuccessfulDatabaseResult,
+			expectedError:   false,
+			expectedErrType: nil,
+		},
+		{
+			name:            "Unsuccessful database call",
+			mockDb:          createMockNotificiationLoaderLabelsStringArg("GetNotificationsByLabels", Error, []contract.Notification{}, Labels, Limit),
+			expectedResult:  []contract.Notification{},
+			expectedError:   true,
+			expectedErrType: Error,
+		},
+		{
+			name:            "Notification not found",
+			mockDb:          createMockNotificiationLoaderLabelsStringArg("GetNotificationsByLabels", nil, []contract.Notification{}, Labels, Limit),
+			expectedResult:  []contract.Notification{},
+			expectedError:   true,
+			expectedErrType: ErrorNotFound,
+		},
+		{
+			name:            "Unknown Error",
+			mockDb:          createMockNotificiationLoaderLabelsStringArg("GetNotificationsByLabels", Error, SuccessfulDatabaseResult, Labels, Limit),
+			expectedResult:  SuccessfulDatabaseResult,
+			expectedError:   true,
+			expectedErrType: Error,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			op := NewLabelsExecutor(test.mockDb, Labels, Limit)
+			actual, err := op.Execute()
+			if test.expectedError && err == nil {
+				t.Error("Expected an error")
+				return
+			}
+
+			if !test.expectedError && err != nil {
+				t.Errorf("Unexpectedly encountered error: %s", err.Error())
+				return
+			}
+
+			if !reflect.DeepEqual(test.expectedErrType, err) {
+				t.Errorf("Expected error result does not match the observed.\nExpected: %v\nObserved: %v\n", test.expectedErrType, err)
 				return
 			}
 

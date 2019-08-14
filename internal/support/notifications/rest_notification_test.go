@@ -20,6 +20,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
@@ -44,6 +45,11 @@ var TestInvalidAge = "invalid age"
 var TestSender = "System Management"
 var TestStart int64 = 1564758450
 var TestEnd int64 = 1564758650
+
+var TestLabels = []string{
+	"test_label",
+	"test_label2",
+}
 
 func TestGetNotificationById(t *testing.T) {
 	tests := []struct {
@@ -197,6 +203,17 @@ func createMockNotificationStartEndLoader(methodName string, start int64, end in
 		myMock.On(methodName, start, end, limit).Return(ret, desiredError)
 	} else {
 		myMock.On(methodName, start, end, limit).Return(ret, nil)
+	}
+	return &myMock
+}
+
+func createMockNotificationLabelsLoader(methodName string, labels []string, limit int, desiredError error, ret interface{}) interfaces.DBClient {
+	myMock := mocks.DBClient{}
+
+	if desiredError != nil {
+		myMock.On(methodName, labels, limit).Return(ret, desiredError)
+	} else {
+		myMock.On(methodName, labels, limit).Return(ret, nil)
 	}
 	return &myMock
 }
@@ -368,12 +385,6 @@ func TestGetNotificationsBySender(t *testing.T) {
 		expectedStatus int
 	}{
 		{
-			name:           "Not found",
-			request:        createDeleteRequest(map[string]string{SENDER: TestSender, LIMIT: strconv.Itoa(TestLimit)}),
-			dbMock:         createMockNotificationSenderLoader("GetNotificationBySender", TestSender, TestLimit, errors.New("Test error"), []contract.Notification{}),
-			expectedStatus: http.StatusNotFound,
-		},
-		{
 			name:           "OK",
 			request:        createDeleteRequest(map[string]string{SENDER: TestSender, LIMIT: strconv.Itoa(TestLimit)}),
 			dbMock:         createMockNotificationSenderLoader("GetNotificationBySender", TestSender, TestLimit, nil, createNotifications(1)),
@@ -394,7 +405,7 @@ func TestGetNotificationsBySender(t *testing.T) {
 		{
 			name:           "Not found",
 			request:        createDeleteRequest(map[string]string{SENDER: TestSender, LIMIT: strconv.Itoa(TestLimit)}),
-			dbMock:         createMockNotificationSenderLoader("GetNotificationBySender", TestSender, TestLimit, errors.New("Test error"), []contract.Notification{}),
+			dbMock:         createMockNotificationSenderLoader("GetNotificationBySender", TestSender, TestLimit, nil, []contract.Notification{}),
 			expectedStatus: http.StatusNotFound,
 		},
 		{
@@ -456,7 +467,7 @@ func TestGetNotificationsByStart(t *testing.T) {
 		{
 			name:           "Not found",
 			request:        createRequest(map[string]string{START: strconv.Itoa(int(TestStart)), END: strconv.Itoa(int(TestEnd)), LIMIT: strconv.Itoa(TestLimit)}),
-			dbMock:         createMockNotificationStartLoader("GetNotificationsByStart", TestStart, TestLimit, errors.New("Test error"), []contract.Notification{}),
+			dbMock:         createMockNotificationStartLoader("GetNotificationsByStart", TestStart, TestLimit, nil, []contract.Notification{}),
 			expectedStatus: http.StatusNotFound,
 		},
 		{
@@ -518,7 +529,7 @@ func TestGetNotificationsByEnd(t *testing.T) {
 		{
 			name:           "Not found",
 			request:        createRequest(map[string]string{START: strconv.Itoa(int(TestStart)), END: strconv.Itoa(int(TestEnd)), LIMIT: strconv.Itoa(TestLimit)}),
-			dbMock:         createMockNotificationStartLoader("GetNotificationsByEnd", TestEnd, TestLimit, errors.New("Test error"), []contract.Notification{}),
+			dbMock:         createMockNotificationStartLoader("GetNotificationsByEnd", TestEnd, TestLimit, nil, []contract.Notification{}),
 			expectedStatus: http.StatusNotFound,
 		},
 		{
@@ -586,7 +597,7 @@ func TestGetNotificationsByStartEnd(t *testing.T) {
 		{
 			name:           "Not Found",
 			request:        createRequest(map[string]string{START: strconv.Itoa(int(TestStart)), END: strconv.Itoa(int(TestEnd)), LIMIT: strconv.Itoa(TestLimit)}),
-			dbMock:         createMockNotificationStartEndLoader("GetNotificationsByStartEnd", TestStart, TestEnd, TestLimit, errors.New("Test error"), []contract.Notification{}),
+			dbMock:         createMockNotificationStartEndLoader("GetNotificationsByStartEnd", TestStart, TestEnd, TestLimit, nil, []contract.Notification{}),
 			expectedStatus: http.StatusNotFound,
 		},
 		{
@@ -603,6 +614,65 @@ func TestGetNotificationsByStartEnd(t *testing.T) {
 			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
 			handler := http.HandlerFunc(restNotificationByStartEnd)
+			handler.ServeHTTP(rr, tt.request)
+			response := rr.Result()
+			if response.StatusCode != tt.expectedStatus {
+				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
+
+				return
+			}
+		})
+	}
+}
+
+func TestGetNotificationsByLabels(t *testing.T) {
+
+	labelsURL := strings.Join(TestLabels, ",")
+
+	tests := []struct {
+		name           string
+		request        *http.Request
+		dbMock         interfaces.DBClient
+		expectedStatus int
+	}{
+		{
+			name:           "OK",
+			request:        createRequest(map[string]string{LABELS: labelsURL, LIMIT: strconv.Itoa(TestLimit)}),
+			dbMock:         createMockNotificationLabelsLoader("GetNotificationsByLabels", TestLabels, TestLimit, nil, createNotifications(1)),
+			expectedStatus: http.StatusOK,
+		},
+		{
+			name:           "Error converting string to integer limit",
+			request:        createRequest(map[string]string{LABELS: labelsURL, LIMIT: TestInvalidLimit}),
+			dbMock:         createMockNotificationLabelsLoader("GetNotificationsByLabels", TestLabels, TestLimit, errors.New("Test error"), []contract.Notification{}),
+			expectedStatus: http.StatusInternalServerError,
+		},
+		{
+			name:           "Limit too large Error",
+			request:        createRequest(map[string]string{LABELS: labelsURL, LIMIT: strconv.Itoa(TestTooLargeLimit)}),
+			dbMock:         createMockNotificationLabelsLoader("GetNotificationsByLabels", TestLabels, TestTooLargeLimit, errors.New("Test error"), []contract.Notification{}),
+			expectedStatus: http.StatusRequestEntityTooLarge,
+		},
+		{
+			name:           "Not Found",
+			request:        createRequest(map[string]string{LABELS: labelsURL, LIMIT: strconv.Itoa(TestLimit)}),
+			dbMock:         createMockNotificationLabelsLoader("GetNotificationsByLabels", TestLabels, TestLimit, nil, []contract.Notification{}),
+			expectedStatus: http.StatusNotFound,
+		},
+		{
+			name:           "Unknown Error",
+			request:        createRequest(map[string]string{LABELS: labelsURL, LIMIT: strconv.Itoa(TestLimit)}),
+			dbMock:         createMockNotificationLabelsLoader("GetNotificationsByLabels", TestLabels, TestLimit, errors.New("Test error"), createNotifications(1)),
+			expectedStatus: http.StatusInternalServerError,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			LoggingClient = logger.MockLogger{}
+			Configuration = &ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 5}}
+			dbClient = tt.dbMock
+			rr := httptest.NewRecorder()
+			handler := http.HandlerFunc(restNotificationsByLabels)
 			handler.ServeHTTP(rr, tt.request)
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
