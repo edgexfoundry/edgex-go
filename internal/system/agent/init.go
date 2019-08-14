@@ -45,17 +45,6 @@ var chUpdates chan interface{} //A channel for "config updates" sourced from Reg
 // to whatever operation we need it to do at runtime.
 var executorClient interface{}
 
-var services = map[string]string{
-	clients.SupportNotificationsServiceKey: "Notifications",
-	clients.CoreCommandServiceKey:          "Command",
-	clients.CoreDataServiceKey:             "CoreData",
-	clients.CoreMetaDataServiceKey:         "Metadata",
-	clients.ExportClientServiceKey:         "Export",
-	clients.ExportDistroServiceKey:         "Distro",
-	clients.SupportLoggingServiceKey:       "Logging",
-	clients.SupportSchedulerServiceKey:     "Scheduler",
-}
-
 func Retry(useRegistry bool, useProfile string, timeout int, wait *sync.WaitGroup, ch chan error) {
 	until := time.Now().Add(time.Millisecond * time.Duration(timeout))
 	for time.Now().Before(until) {
@@ -235,6 +224,7 @@ func listenForConfigChanges() {
 func initializeClients(useRegistry bool) {
 
 	generalClients = make(map[string]general.GeneralClient)
+	services := config.ListDefaultServices()
 
 	for serviceKey, serviceName := range services {
 		params := types.EndpointParams{

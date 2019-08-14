@@ -87,6 +87,9 @@ https://github.com/hashicorp/golang-lru/blob/master/LICENSE
 gomodule/redigo (Apache 2.0) https://github.com/gomodule/redigo
 https://github.com/gomodule/redigo/blob/master/LICENSE
 
+OneOfOne/xxhash (Apache 2.0) https://github.com/OneOfOne/xxhash
+https://github.com/OneOfOne/xxhash/blob/master/LICENSE
+
 imdario/mergo (BSD-3) github.com/imdario/mergo
 https://github.com/imdario/mergo/blob/master/LICENSE
 
