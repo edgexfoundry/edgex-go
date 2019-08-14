@@ -13,19 +13,3 @@
  *******************************************************************************/
 
 package device_service
-
-import (
-	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
-)
-
-type DeviceServiceLoader interface {
-	GetAllDeviceServices() ([]contract.DeviceService, error)
-	GetDeviceServiceByName(n string) (contract.DeviceService, error)
-	GetDeviceServiceById(id string) (contract.DeviceService, error)
-}
-
-type DeviceServiceUpdater interface {
-	UpdateDeviceService(ds contract.DeviceService) error
-
-	DeviceServiceLoader
-}
