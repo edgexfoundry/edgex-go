@@ -25,15 +25,16 @@ import (
 	"strings"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 )
 
 type Consumer struct {
 	name   string
-	client Requestor
+	client internal.HttpCaller
 }
 
-func NewConsumer(name string, r Requestor) Consumer {
+func NewConsumer(name string, r internal.HttpCaller) Consumer {
 	return Consumer{
 		name:   name,
 		client: r,

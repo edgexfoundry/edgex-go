@@ -25,15 +25,16 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 )
 
 type Service struct {
-	client Requestor
+	client internal.HttpCaller
 }
 
-func NewService(r Requestor) Service {
+func NewService(r internal.HttpCaller) Service {
 	return Service{
 		client: r,
 	}

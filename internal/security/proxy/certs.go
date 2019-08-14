@@ -22,6 +22,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+
+	"github.com/edgexfoundry/edgex-go/internal"
 )
 
 type CertificateLoader interface {
@@ -29,12 +31,12 @@ type CertificateLoader interface {
 }
 
 type certificate struct {
-	client    Requestor
+	client    internal.HttpCaller
 	certPath  string
 	tokenPath string
 }
 
-func NewCertificateLoader(r Requestor, certPath string, tokenPath string) CertificateLoader {
+func NewCertificateLoader(r internal.HttpCaller, certPath string, tokenPath string) CertificateLoader {
 	return certificate{client: r, certPath: certPath, tokenPath: tokenPath}
 }
 
