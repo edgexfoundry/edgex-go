@@ -177,7 +177,7 @@ func TestAddDeviceProfile(t *testing.T) {
 		},
 		{
 			"YAML unmarshal error",
-			httptest.NewRequest(http.MethodPost, TestURI, bytes.NewBuffer(nil)),
+			httptest.NewRequest(http.MethodPost, AddressableTestURI, bytes.NewBuffer(nil)),
 			nil,
 			MockValueDescriptorClient{},
 			http.StatusBadRequest,
@@ -930,7 +930,7 @@ func TestAddProfileByYaml(t *testing.T) {
 		},
 		{
 			"Wrong content type",
-			httptest.NewRequest(http.MethodPut, TestURI, bytes.NewBuffer(okBody)),
+			httptest.NewRequest(http.MethodPut, AddressableTestURI, bytes.NewBuffer(okBody)),
 			nil,
 			http.StatusInternalServerError,
 		},
@@ -1018,7 +1018,7 @@ func TestAddProfileByYamlRaw(t *testing.T) {
 	}{
 		{
 			"OK",
-			httptest.NewRequest(http.MethodPut, TestURI, bytes.NewBuffer(okBody)),
+			httptest.NewRequest(http.MethodPut, AddressableTestURI, bytes.NewBuffer(okBody)),
 			createDBClientWithOutlines([]mockOutline{
 				{"AddDeviceProfile", dp, TestDeviceProfileID, nil},
 			}),
@@ -1032,7 +1032,7 @@ func TestAddProfileByYamlRaw(t *testing.T) {
 		},
 		{
 			"Empty device profile name",
-			httptest.NewRequest(http.MethodPut, TestURI, bytes.NewBuffer(emptyBody)),
+			httptest.NewRequest(http.MethodPut, AddressableTestURI, bytes.NewBuffer(emptyBody)),
 			createDBClientWithOutlines([]mockOutline{
 				{"AddDeviceProfile", emptyName, "", db.ErrNameEmpty},
 			}),
@@ -1040,7 +1040,7 @@ func TestAddProfileByYamlRaw(t *testing.T) {
 		},
 		{
 			"Unsuccessful database call",
-			httptest.NewRequest(http.MethodPut, TestURI, bytes.NewBuffer(okBody)),
+			httptest.NewRequest(http.MethodPut, AddressableTestURI, bytes.NewBuffer(okBody)),
 			createDBClientWithOutlines([]mockOutline{
 				{"AddDeviceProfile", dp, "", TestError},
 			}),
@@ -1083,7 +1083,7 @@ func createDeviceProfileRequestWithFile(fileContents []byte) *http.Request {
 		return nil
 	}
 
-	req, _ := http.NewRequest(http.MethodPost, TestURI, body)
+	req, _ := http.NewRequest(http.MethodPost, AddressableTestURI, body)
 	req.Header.Set(clients.ContentType, "multipart/form-data; boundary="+boundary)
 	return req
 }
@@ -1094,16 +1094,16 @@ func createRequestWithBody(method string, d contract.DeviceProfile) *http.Reques
 		panic("Failed to create test JSON:" + err.Error())
 	}
 
-	return httptest.NewRequest(method, TestURI, bytes.NewBuffer(body))
+	return httptest.NewRequest(method, AddressableTestURI, bytes.NewBuffer(body))
 }
 
 func createRequestWithPathParameters(httpMethod string, params map[string]string) *http.Request {
-	req := httptest.NewRequest(httpMethod, TestURI, nil)
+	req := httptest.NewRequest(httpMethod, AddressableTestURI, nil)
 	return mux.SetURLVars(req, params)
 }
 
 func createRequestWithInvalidBody() *http.Request {
-	return httptest.NewRequest(http.MethodPut, TestURI, bytes.NewBufferString("Bad JSON"))
+	return httptest.NewRequest(http.MethodPut, AddressableTestURI, bytes.NewBufferString("Bad JSON"))
 }
 
 func createDBClient() interfaces.DBClient {

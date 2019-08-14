@@ -26,7 +26,7 @@ import (
 )
 
 var testOperatingState, _ = contract.GetOperatingState(contract.Enabled)
-var testAdminState, _ = contract.GetAdminState(contract.Enabled)
+var testAdminState, _ = contract.GetAdminState(contract.Unlocked)
 var testError = goErrors.New("some error")
 
 func TestUpdateOperatingStateByIdExecutor(t *testing.T) {
@@ -160,8 +160,8 @@ func TestUpdateOperatingStateByNameExecutor(t *testing.T) {
 }
 
 func TestUpdateAdminStateByIdExecutor(t *testing.T) {
-	adminStateEnabled := testDeviceService
-	adminStateEnabled.AdminState = testAdminState
+	adminStateUnlocked := testDeviceService
+	adminStateUnlocked.AdminState = testAdminState
 
 	tests := []struct {
 		name             string
@@ -173,7 +173,7 @@ func TestUpdateAdminStateByIdExecutor(t *testing.T) {
 			name: "Successful database call",
 			mockUpdater: createMockUpdater([]mockOutline{
 				{"GetDeviceServiceById", testDeviceServiceId, testDeviceService, nil},
-				{"UpdateDeviceService", adminStateEnabled, nil, nil}}),
+				{"UpdateDeviceService", adminStateUnlocked, nil, nil}}),
 			expectedError:    false,
 			expectedErrorVal: nil,
 		},
@@ -195,7 +195,7 @@ func TestUpdateAdminStateByIdExecutor(t *testing.T) {
 			name: "Update error",
 			mockUpdater: createMockUpdater([]mockOutline{
 				{"GetDeviceServiceById", testDeviceServiceId, testDeviceService, nil},
-				{"UpdateDeviceService", adminStateEnabled, testError, nil}}),
+				{"UpdateDeviceService", adminStateUnlocked, testError, nil}}),
 			expectedError:    true,
 			expectedErrorVal: testError,
 		},
@@ -225,8 +225,8 @@ func TestUpdateAdminStateByIdExecutor(t *testing.T) {
 }
 
 func TestUpdateAdminStateByNameExecutor(t *testing.T) {
-	adminStateEnabled := testDeviceService
-	adminStateEnabled.AdminState = testAdminState
+	adminStateUnlocked := testDeviceService
+	adminStateUnlocked.AdminState = testAdminState
 
 	tests := []struct {
 		name             string
@@ -238,7 +238,7 @@ func TestUpdateAdminStateByNameExecutor(t *testing.T) {
 			name: "Successful database call",
 			mockUpdater: createMockUpdater([]mockOutline{
 				{"GetDeviceServiceByName", testDeviceServiceName, testDeviceService, nil},
-				{"UpdateDeviceService", adminStateEnabled, nil, nil}}),
+				{"UpdateDeviceService", adminStateUnlocked, nil, nil}}),
 			expectedError:    false,
 			expectedErrorVal: nil,
 		},
@@ -260,7 +260,7 @@ func TestUpdateAdminStateByNameExecutor(t *testing.T) {
 			name: "Update error",
 			mockUpdater: createMockUpdater([]mockOutline{
 				{"GetDeviceServiceByName", testDeviceServiceName, testDeviceService, nil},
-				{"UpdateDeviceService", adminStateEnabled, testError, nil}}),
+				{"UpdateDeviceService", adminStateUnlocked, testError, nil}}),
 			expectedError:    true,
 			expectedErrorVal: testError,
 		},

@@ -538,7 +538,7 @@ func restUpdateServiceOpStateByName(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	var os string = vars[OPSTATE]
+	var os = vars[OPSTATE]
 
 	// Check the OpState
 	newOs, f := models.GetOperatingState(os)

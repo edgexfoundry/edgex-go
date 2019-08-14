@@ -35,9 +35,9 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// TestURI this is not really used since we are using the HTTP testing framework and not creating routes, but rather
+// AddressableTestURI this is not really used since we are using the HTTP testing framework and not creating routes, but rather
 // creating a specific handler which will accept all requests. Therefore, the URI is not important.
-var TestURI = "/addressable"
+var AddressableTestURI = "/addressable"
 var TestAddress = "TestAddress"
 var TestPort = 8080
 var TestPublisher = "TestPublisher"
@@ -670,7 +670,7 @@ func TestDeleteAddressableByName(t *testing.T) {
 }
 
 func createRequest(httpMethod string, pathParamName string, pathParamValue string) *http.Request {
-	req := httptest.NewRequest(httpMethod, TestURI, nil)
+	req := httptest.NewRequest(httpMethod, AddressableTestURI, nil)
 	return mux.SetURLVars(req, map[string]string{pathParamName: pathParamValue})
 }
 
@@ -678,7 +678,7 @@ func createAddressableRequestWithBody(httpMethod string, addressable contract.Ad
 	// if your JSON marshalling fails you've got bigger problems
 	body, _ := json.Marshal(addressable)
 
-	req := httptest.NewRequest(httpMethod, TestURI, bytes.NewReader(body))
+	req := httptest.NewRequest(httpMethod, AddressableTestURI, bytes.NewReader(body))
 
 	return mux.SetURLVars(req, map[string]string{pathParamName: pathParamValue})
 }
