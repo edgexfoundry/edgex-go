@@ -9,6 +9,7 @@ import (
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
+	errors2 "github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces"
 	mocks2 "github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces/mocks"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/operators/device_profile/mocks"
@@ -139,7 +140,7 @@ func TestAddValueDescriptors(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			op := NewAddExecutor(TestContext, createMockValueDescriptorAdder(), logger.MockLogger{}, test.dr...)
+			op := NewAddValueDescriptorExecutor(TestContext, createMockValueDescriptorAdder(), logger.MockLogger{}, test.dr...)
 			err := op.Execute()
 
 			if test.expectError && err == nil {
@@ -168,7 +169,7 @@ func TestUpdateValueDescriptors(t *testing.T) {
 		name              string
 		oldDP             contract.DeviceProfile
 		newDP             contract.DeviceProfile
-		loader            DeviceProfileLoader
+		loader            DeviceProfileUpdater
 		client            ValueDescriptorUpdater
 		expectError       bool
 		expectedErrorType error
@@ -181,6 +182,15 @@ func TestUpdateValueDescriptors(t *testing.T) {
 			createMockValueDescriptorUpdater(),
 			false,
 			nil,
+		},
+		{
+			"DeviceProfile in use",
+			TestExistingDeviceProfile,
+			TestUpdatedDeviceProfile,
+			createMockDBClientDeviceProfileInUse(),
+			createMockValueDescriptorUpdater(),
+			true,
+			errors2.ErrDeviceProfileInvalidState{},
 		},
 		{
 			"ValueDescriptor in use",
@@ -319,9 +329,18 @@ func createMockValueDescriptorClientError(addError, getError, updateError, delet
 func createMockDBClient() interfaces.DBClient {
 	mockDb := &mocks2.DBClient{}
 	mockDb.On("GetDeviceProfileByName", TestExistingDeviceProfile.Name).Return(TestExistingDeviceProfile, nil)
+	mockDb.On("GetDevicesByProfileId", TestExistingDeviceProfile.Id).Return([]contract.Device{}, nil)
 
 	return mockDb
 }
+func createMockDBClientDeviceProfileInUse() interfaces.DBClient {
+	mockDb := &mocks2.DBClient{}
+	mockDb.On("GetDeviceProfileByName", TestExistingDeviceProfile.Name).Return(TestExistingDeviceProfile, nil)
+	mockDb.On("GetDevicesByProfileId", TestExistingDeviceProfile.Id).Return(TestDevices, nil)
+
+	return mockDb
+}
+
 func createMockErrorDBClient() interfaces.DBClient {
 	mockDb := &mocks2.DBClient{}
 	mockDb.On("GetDeviceProfileByName", TestExistingDeviceProfile.Name).Return(contract.DeviceProfile{}, TestError)

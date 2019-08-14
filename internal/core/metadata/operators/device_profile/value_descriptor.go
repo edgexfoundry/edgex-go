@@ -3,11 +3,13 @@ package device_profile
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
+	errors2 "github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
 )
 
 // ValueDescriptorAdder provides the necessary functionality for creating a ValueDescriptor.
@@ -51,8 +53,8 @@ func (a addValueDescriptor) Execute() error {
 	return nil
 }
 
-// NewAddExecutor creates a new ValueDescriptorAddExecutor.
-func NewAddExecutor(ctx context.Context, client ValueDescriptorAdder, loggingClient logger.LoggingClient, drs ...contract.DeviceResource) ValueDescriptorAddExecutor {
+// NewAddValueDescriptorExecutor creates a new ValueDescriptorAddExecutor.
+func NewAddValueDescriptorExecutor(ctx context.Context, client ValueDescriptorAdder, loggingClient logger.LoggingClient, drs ...contract.DeviceResource) ValueDescriptorAddExecutor {
 	return addValueDescriptor{
 		ctx:    ctx,
 		drs:    drs,
@@ -65,7 +67,7 @@ func NewAddExecutor(ctx context.Context, client ValueDescriptorAdder, loggingCli
 type updateValueDescriptor struct {
 	ctx    context.Context
 	dp     contract.DeviceProfile
-	loader DeviceProfileLoader
+	loader DeviceProfileUpdater
 	client ValueDescriptorUpdater
 	logger logger.LoggingClient
 }
@@ -77,10 +79,30 @@ type UpdateValueDescriptorExecutor interface {
 
 // Execute updates a value descriptor with the provided information.
 func (u updateValueDescriptor) Execute() error {
-	// Get pre-existing device profile so we can determine what to do with the device resources provided in the update. For example, update/create/delete.
+	// Get pre-existing device profile so we can determine what to do with the device resources provided in the update.
+	// For example, update/create/delete.
 	persistedDeviceProfile, err := u.loader.GetDeviceProfileByName(u.dp.Name)
 	if err != nil {
 		return err
+	}
+
+	devices, err := u.loader.GetDevicesByProfileId(persistedDeviceProfile.Id)
+	if err != nil {
+		return err
+	}
+
+	// Verify the associated DeviceProfile is in an upgradeable state, which means that no devices are associated with
+	// it.
+	if len(devices) > 0 {
+		var associatedDeviceNames []string
+		for _, d := range devices {
+			associatedDeviceNames = append(associatedDeviceNames, d.Name)
+		}
+
+		return errors2.NewErrDeviceProfileInvalidState(
+			persistedDeviceProfile.Id,
+			persistedDeviceProfile.Name,
+			fmt.Sprintf("The DeviceProfile is in use by Device(s):[%s]", strings.Join(associatedDeviceNames, ",")))
 	}
 
 	// Get names of all the device resources so we can check the valueDescriptorUsage with one call to Core-Data.
@@ -144,7 +166,7 @@ func (u updateValueDescriptor) Execute() error {
 }
 
 // NewUpdateValueDescriptorExecutor creates a UpdateValueDescriptorExecutor which will update ValueDescriptors.
-func NewUpdateValueDescriptorExecutor(dp contract.DeviceProfile, loader DeviceProfileLoader, client ValueDescriptorUpdater, logger logger.LoggingClient, ctx context.Context) UpdateValueDescriptorExecutor {
+func NewUpdateValueDescriptorExecutor(dp contract.DeviceProfile, loader DeviceProfileUpdater, client ValueDescriptorUpdater, logger logger.LoggingClient, ctx context.Context) UpdateValueDescriptorExecutor {
 	return updateValueDescriptor{
 		dp:     dp,
 		loader: loader,

@@ -10,7 +10,6 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	errors2 "github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
@@ -18,6 +17,8 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/mock"
 	"gopkg.in/yaml.v2"
+
+	errors2 "github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces/mocks"
@@ -141,6 +142,7 @@ func TestAddDeviceProfile(t *testing.T) {
 			createRequestWithBody(http.MethodPost, TestDeviceProfile),
 			createDBClientWithOutlines([]mockOutline{
 				{"AddDeviceProfile", TestDeviceProfileValidated, TestDeviceProfileID, nil},
+				{"GetDeviceProfileByName", TestDeviceProfileName, contract.DeviceProfile{}, db.ErrNotFound},
 			}),
 			MockValueDescriptorClient{},
 			http.StatusOK,
@@ -150,6 +152,7 @@ func TestAddDeviceProfile(t *testing.T) {
 			createRequestWithBody(http.MethodPost, TestDeviceProfile),
 			createDBClientWithOutlines([]mockOutline{
 				{"AddDeviceProfile", TestDeviceProfileValidated, TestDeviceProfileID, nil},
+				{"GetDeviceProfileByName", TestDeviceProfileName, contract.DeviceProfile{}, db.ErrNotFound},
 			}),
 			MockValueDescriptorClient{},
 			http.StatusOK,
@@ -157,14 +160,18 @@ func TestAddDeviceProfile(t *testing.T) {
 		{
 			"Value descriptor management service client error",
 			createRequestWithBody(http.MethodPost, TestDeviceProfile),
-			nil,
+			createDBClientWithOutlines([]mockOutline{
+				{"GetDeviceProfileByName", TestDeviceProfileName, contract.DeviceProfile{}, db.ErrNotFound},
+			}),
 			MockValueDescriptorClient{types.ErrServiceClient{StatusCode: http.StatusTeapot}},
 			http.StatusTeapot,
 		},
 		{
 			"Value descriptor management service other error",
 			createRequestWithBody(http.MethodPost, TestDeviceProfile),
-			nil,
+			createDBClientWithOutlines([]mockOutline{
+				{"GetDeviceProfileByName", TestDeviceProfileName, contract.DeviceProfile{}, db.ErrNotFound},
+			}),
 			MockValueDescriptorClient{TestError},
 			http.StatusInternalServerError,
 		},
@@ -187,6 +194,7 @@ func TestAddDeviceProfile(t *testing.T) {
 			createRequestWithBody(http.MethodPost, emptyName),
 			createDBClientWithOutlines([]mockOutline{
 				{"AddDeviceProfile", emptyName, "", db.ErrNameEmpty},
+				{"GetDeviceProfileByName", "", contract.DeviceProfile{}, db.ErrNotFound},
 			}),
 			MockValueDescriptorClient{},
 			http.StatusBadRequest,
@@ -196,6 +204,7 @@ func TestAddDeviceProfile(t *testing.T) {
 			createRequestWithBody(http.MethodPost, TestDeviceProfile),
 			createDBClientWithOutlines([]mockOutline{
 				{"AddDeviceProfile", TestDeviceProfileValidated, "", TestError},
+				{"GetDeviceProfileByName", TestDeviceProfileName, contract.DeviceProfile{}, db.ErrNotFound},
 			}),
 			MockValueDescriptorClient{},
 			http.StatusInternalServerError,
@@ -1156,6 +1165,7 @@ func createDBClientMultipleProvisionWatchersFoundError() interfaces.DBClient {
 	d := &mocks.DBClient{}
 	d.On("GetDeviceProfileById", TestDeviceProfileID).Return(TestDeviceProfile, nil)
 	d.On("GetDeviceProfileByName", TestDeviceProfileName).Return(TestDeviceProfile, nil)
+	d.On("GetDeviceProfileByName", TestDeviceProfileName).Return(contract.DeviceProfile{}, TestError)
 	d.On("GetDevicesByProfileId", TestDeviceProfileID).Return(make([]contract.Device, 0), nil)
 	d.On("GetProvisionWatchersByProfileId", TestDeviceProfileID).Return(TestProvisionWatchers, nil)
 
@@ -1230,6 +1240,7 @@ func createDBClientPersistDeviceInUseError() interfaces.DBClient {
 	inUse := TestDeviceProfile
 	inUse.DeviceResources = append(inUse.DeviceResources, TestInUseDeviceResource)
 	d.On("GetDeviceProfileByName", TestDeviceProfileName).Return(inUse, nil)
+	d.On("GetDevicesByProfileId", TestDeviceProfileID).Return([]contract.Device{}, nil)
 
 	return d
 }

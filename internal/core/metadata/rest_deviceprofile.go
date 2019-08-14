@@ -62,8 +62,18 @@ func restAddDeviceProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if Configuration.Writable.EnableValueDescriptorManagement {
-		op := device_profile.NewAddExecutor(r.Context(), vdc, LoggingClient, dp.DeviceResources...)
-		err := op.Execute()
+		// Check if the device profile name is unique so that we do not create ValueDescriptors for a DeviceProfile that
+		// will fail during the creation process later on.
+		nameOp := device_profile.NewGetProfileName(dp.Name, dbClient)
+		_, err := nameOp.Execute()
+		// The operator will return an ItemNotFound error if the DeviceProfile can not be found.
+		if err == nil {
+			http.Error(w, "Duplicate name for device profile", http.StatusConflict)
+			return
+		}
+
+		op := device_profile.NewAddValueDescriptorExecutor(r.Context(), vdc, LoggingClient, dp.DeviceResources...)
+		err = op.Execute()
 		if err != nil {
 			LoggingClient.Error(err.Error())
 			switch err.(type) {
@@ -101,6 +111,8 @@ func restUpdateDeviceProfile(w http.ResponseWriter, r *http.Request) {
 			case errors.ErrDeviceProfileNotFound:
 				http.Error(w, err.Error(), http.StatusNotFound)
 			case *errors2.ErrValueDescriptorsInUse:
+				http.Error(w, err.Error(), http.StatusConflict)
+			case errors.ErrDeviceProfileInvalidState:
 				http.Error(w, err.Error(), http.StatusConflict)
 			default:
 				http.Error(w, err.Error(), http.StatusInternalServerError)
