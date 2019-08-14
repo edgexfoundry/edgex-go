@@ -15,37 +15,11 @@
 package device_service
 
 import (
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 )
-
-type UpdateOpStateByNameExecutor interface {
-	Execute() error
-}
-
-type deviceServiceOpStateUpdateByName struct {
-	name string
-	os contract.OperatingState
-	db DeviceServiceUpdater
-}
-
-func NewUpdateOpStateByNameExecutor(name string, os contract.OperatingState, db DeviceServiceUpdater) UpdateOpStateByNameExecutor {
-	return deviceServiceOpStateUpdateByName{name: name, os: os, db: db}
-}
-
-func (op deviceServiceOpStateUpdateByName) Execute() error {
-	// Check if the device service exists
-	ds, err := op.db.GetDeviceServiceByName(op.name)
-	if err != nil {
-		return err
-	}
-
-	ds.OperatingState = op.os
-	if err = op.db.UpdateDeviceService(ds); err != nil {
-		return err
-	}
-
-	return nil
-}
 
 type UpdateOpStateByIdExecutor interface {
 	Execute() error
@@ -65,6 +39,10 @@ func (op deviceServiceOpStateUpdateById) Execute() error {
 	// Check if the device service exists
 	ds, err := op.db.GetDeviceServiceById(op.id)
 	if err != nil {
+		if err == db.ErrNotFound {
+			return errors.NewErrItemNotFound(op.id)
+		}
+
 		return err
 	}
 
@@ -76,28 +54,32 @@ func (op deviceServiceOpStateUpdateById) Execute() error {
 	return nil
 }
 
-type UpdateAdminStateByNameExecutor interface {
+type UpdateOpStateByNameExecutor interface {
 	Execute() error
 }
 
-type deviceServiceAdminStateUpdateByName struct {
+type deviceServiceOpStateUpdateByName struct {
 	name string
-	as contract.AdminState
-	db DeviceServiceUpdater
+	os   contract.OperatingState
+	db   DeviceServiceUpdater
 }
 
-func NewUpdateAdminStateByNameExecutor(name string, as contract.AdminState, db DeviceServiceUpdater) UpdateAdminStateByNameExecutor {
-	return deviceServiceAdminStateUpdateByName{name: name, as: as, db: db}
+func NewUpdateOpStateByNameExecutor(name string, os contract.OperatingState, db DeviceServiceUpdater) UpdateOpStateByNameExecutor {
+	return deviceServiceOpStateUpdateByName{name: name, os: os, db: db}
 }
 
-func (op deviceServiceAdminStateUpdateByName) Execute() error {
+func (op deviceServiceOpStateUpdateByName) Execute() error {
 	// Check if the device service exists
 	ds, err := op.db.GetDeviceServiceByName(op.name)
 	if err != nil {
+		if err == db.ErrNotFound {
+			return errors.NewErrItemNotFound(op.name)
+		}
+
 		return err
 	}
 
-	ds.AdminState = op.as
+	ds.OperatingState = op.os
 	if err = op.db.UpdateDeviceService(ds); err != nil {
 		return err
 	}
@@ -123,6 +105,43 @@ func (op deviceServiceAdminStateUpdateById) Execute() error {
 	// Check if the device service exists
 	ds, err := op.db.GetDeviceServiceById(op.id)
 	if err != nil {
+		if err == db.ErrNotFound {
+			return errors.NewErrItemNotFound(op.id)
+		}
+
+		return err
+	}
+
+	ds.AdminState = op.as
+	if err = op.db.UpdateDeviceService(ds); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+type UpdateAdminStateByNameExecutor interface {
+	Execute() error
+}
+
+type deviceServiceAdminStateUpdateByName struct {
+	name string
+	as   contract.AdminState
+	db   DeviceServiceUpdater
+}
+
+func NewUpdateAdminStateByNameExecutor(name string, as contract.AdminState, db DeviceServiceUpdater) UpdateAdminStateByNameExecutor {
+	return deviceServiceAdminStateUpdateByName{name: name, as: as, db: db}
+}
+
+func (op deviceServiceAdminStateUpdateByName) Execute() error {
+	// Check if the device service exists
+	ds, err := op.db.GetDeviceServiceByName(op.name)
+	if err != nil {
+		if err == db.ErrNotFound {
+			return errors.NewErrItemNotFound(op.name)
+		}
+
 		return err
 	}
 

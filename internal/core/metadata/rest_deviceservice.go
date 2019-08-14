@@ -19,7 +19,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -28,6 +27,8 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/operators/device_service"
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+
+	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/gorilla/mux"
 )
@@ -515,9 +516,10 @@ func restUpdateServiceOpStateById(w http.ResponseWriter, r *http.Request) {
 
 	op := device_service.NewUpdateOpStateByIdExecutor(id, newOs, dbClient)
 	if err := op.Execute(); err != nil {
-		if err == db.ErrNotFound {
+		switch err.(type) {
+		case *types.ErrItemNotFound:
 			http.Error(w, err.Error(), http.StatusNotFound)
-		} else {
+		default:
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		LoggingClient.Error(err.Error())
@@ -549,9 +551,10 @@ func restUpdateServiceOpStateByName(w http.ResponseWriter, r *http.Request) {
 
 	op := device_service.NewUpdateOpStateByNameExecutor(n, newOs, dbClient)
 	if err := op.Execute(); err != nil {
-		if err == db.ErrNotFound {
+		switch err.(type) {
+		case *types.ErrItemNotFound:
 			http.Error(w, err.Error(), http.StatusNotFound)
-		} else {
+		default:
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		LoggingClient.Error(err.Error())
@@ -578,9 +581,10 @@ func restUpdateServiceAdminStateById(w http.ResponseWriter, r *http.Request) {
 
 	op := device_service.NewUpdateAdminStateByIdExecutor(id, newAs, dbClient)
 	if err := op.Execute(); err != nil {
-		if err == db.ErrNotFound {
+		switch err.(type) {
+		case *types.ErrItemNotFound:
 			http.Error(w, err.Error(), http.StatusNotFound)
-		} else {
+		default:
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		LoggingClient.Error(err.Error())
@@ -612,9 +616,10 @@ func restUpdateServiceAdminStateByName(w http.ResponseWriter, r *http.Request) {
 
 	op := device_service.NewUpdateAdminStateByNameExecutor(n, newAs, dbClient)
 	if err := op.Execute(); err != nil {
-		if err == db.ErrNotFound {
+		switch err.(type) {
+		case *types.ErrItemNotFound:
 			http.Error(w, err.Error(), http.StatusNotFound)
-		} else {
+		default:
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		LoggingClient.Error(err.Error())
