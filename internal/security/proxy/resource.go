@@ -21,14 +21,16 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+
+	"github.com/edgexfoundry/edgex-go/internal"
 )
 
 type Resource struct {
 	name   string
-	client Requestor
+	client internal.HttpCaller
 }
 
-func NewResource(name string, r Requestor) Resource {
+func NewResource(name string, r internal.HttpCaller) Resource {
 	return Resource{name: name, client: r}
 }
 
