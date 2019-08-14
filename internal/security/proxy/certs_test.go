@@ -21,14 +21,15 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/edgexfoundry/edgex-go/internal/security/proxy/mocks"
+	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/internal/mocks"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/stretchr/testify/mock"
 )
 
-func createRequestorMockHttpOK() Requestor {
+func createRequestorMockHttpOK() internal.HttpCaller {
 	response := &http.Response{StatusCode: http.StatusOK}
-	req := &mocks.Requestor{}
+	req := &mocks.HttpCaller{}
 	req.On("Do", mock.Anything).Return(response)
 	return req
 }

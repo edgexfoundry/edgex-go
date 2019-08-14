@@ -19,13 +19,11 @@ import (
 	"crypto/tls"
 	"net/http"
 	"time"
+
+	"github.com/edgexfoundry/edgex-go/internal"
 )
 
-type Requestor interface {
-	Do(req *http.Request) (*http.Response, error)
-}
-
-func NewRequestor(skipVerify bool, timeout int) Requestor {
+func NewRequestor(skipVerify bool, timeout int) internal.HttpCaller {
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: skipVerify},
 	}
