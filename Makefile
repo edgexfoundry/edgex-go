@@ -76,6 +76,7 @@ test:
 	gofmt -l .
 	[ "`gofmt -l .`" = "" ]
 	./bin/test-go-mod-tidy.sh
+	./bin/test-attribution-txt.sh
 
 run:
 	cd bin && ./edgex-launch.sh
