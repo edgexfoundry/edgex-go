@@ -20,4 +20,12 @@ import (
 
 type DeviceServiceLoader interface {
 	GetAllDeviceServices() ([]contract.DeviceService, error)
+	GetDeviceServiceByName(n string) (contract.DeviceService, error)
+	GetDeviceServiceById(id string) (contract.DeviceService, error)
+}
+
+type DeviceServiceUpdater interface {
+	UpdateDeviceService(ds contract.DeviceService) error
+
+	DeviceServiceLoader
 }

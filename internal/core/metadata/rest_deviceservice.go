@@ -27,6 +27,8 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/operators/device_service"
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+
+	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/gorilla/mux"
 )
@@ -500,8 +502,8 @@ func restGetServiceById(w http.ResponseWriter, r *http.Request) {
 
 func restUpdateServiceOpStateById(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	var id string = vars[ID]
-	var os string = vars[OPSTATE]
+	var id = vars[ID]
+	var os = vars[OPSTATE]
 
 	// Check the OpState
 	newOs, f := models.GetOperatingState(os)
@@ -512,23 +514,18 @@ func restUpdateServiceOpStateById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Check if the device service exists
-	ds, err := dbClient.GetDeviceServiceById(id)
-	if err != nil {
-		if err == db.ErrNotFound {
-			http.Error(w, "Device service not found", http.StatusNotFound)
-		} else {
+	op := device_service.NewUpdateOpStateByIdExecutor(id, newOs, dbClient)
+	if err := op.Execute(); err != nil {
+		switch err.(type) {
+		case *types.ErrItemNotFound:
+			http.Error(w, err.Error(), http.StatusNotFound)
+		default:
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		LoggingClient.Error(err.Error())
 		return
 	}
-
-	if err = updateServiceOpState(ds, newOs, w); err != nil {
-		LoggingClient.Error(err.Error())
-		return
-	}
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
 }
@@ -541,7 +538,7 @@ func restUpdateServiceOpStateByName(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	var os string = vars[OPSTATE]
+	var os = vars[OPSTATE]
 
 	// Check the OpState
 	newOs, f := models.GetOperatingState(os)
@@ -552,42 +549,26 @@ func restUpdateServiceOpStateByName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Check if the device service exists
-	ds, err := dbClient.GetDeviceServiceByName(n)
-	if err != nil {
-		if err == db.ErrNotFound {
+	op := device_service.NewUpdateOpStateByNameExecutor(n, newOs, dbClient)
+	if err := op.Execute(); err != nil {
+		switch err.(type) {
+		case *types.ErrItemNotFound:
 			http.Error(w, err.Error(), http.StatusNotFound)
-		} else {
+		default:
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		LoggingClient.Error(err.Error())
 		return
 	}
-
-	if err := updateServiceOpState(ds, newOs, w); err != nil {
-		LoggingClient.Error(err.Error())
-		return
-	}
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
 }
 
-// Update the OpState for the device service
-func updateServiceOpState(ds models.DeviceService, os models.OperatingState, w http.ResponseWriter) error {
-	ds.OperatingState = os
-	if err := dbClient.UpdateDeviceService(ds); err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		return err
-	}
-
-	return nil
-}
-
 func restUpdateServiceAdminStateById(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	var id string = vars[ID]
-	var as string = vars[ADMINSTATE]
+	var id = vars[ID]
+	var as = vars[ADMINSTATE]
 
 	// Check the admin state
 	newAs, f := models.GetAdminState(as)
@@ -598,24 +579,18 @@ func restUpdateServiceAdminStateById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Check if the device service exists
-	ds, err := dbClient.GetDeviceServiceById(id)
-	if err != nil {
-		if err == db.ErrNotFound {
-			http.Error(w, "Device service not found", http.StatusNotFound)
-		} else {
+	op := device_service.NewUpdateAdminStateByIdExecutor(id, newAs, dbClient)
+	if err := op.Execute(); err != nil {
+		switch err.(type) {
+		case *types.ErrItemNotFound:
+			http.Error(w, err.Error(), http.StatusNotFound)
+		default:
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		LoggingClient.Error(err.Error())
 		return
 	}
-
-	// Update the admin state
-	if err = updateServiceAdminState(ds, newAs, w); err != nil {
-		LoggingClient.Error(err.Error())
-		return
-	}
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
 }
@@ -628,7 +603,7 @@ func restUpdateServiceAdminStateByName(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	var as string = vars[ADMINSTATE]
+	var as = vars[ADMINSTATE]
 
 	// Check the admin state
 	newAs, f := models.GetAdminState(as)
@@ -639,37 +614,20 @@ func restUpdateServiceAdminStateByName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Check if the device service exists
-	ds, err := dbClient.GetDeviceServiceByName(n)
-	if err != nil {
-		if err == db.ErrNotFound {
-			http.Error(w, "Device service not found", http.StatusNotFound)
-		} else {
+	op := device_service.NewUpdateAdminStateByNameExecutor(n, newAs, dbClient)
+	if err := op.Execute(); err != nil {
+		switch err.(type) {
+		case *types.ErrItemNotFound:
+			http.Error(w, err.Error(), http.StatusNotFound)
+		default:
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		LoggingClient.Error(err.Error())
 		return
 	}
-
-	// Update the admins state
-	if err = updateServiceAdminState(ds, newAs, w); err != nil {
-		LoggingClient.Error(err.Error())
-		return
-	}
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
-}
-
-// Update the admin state for the device service
-func updateServiceAdminState(ds models.DeviceService, as models.AdminState, w http.ResponseWriter) error {
-	ds.AdminState = as
-	if err := dbClient.UpdateDeviceService(ds); err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		return err
-	}
-
-	return nil
 }
 
 func restUpdateServiceLastReportedById(w http.ResponseWriter, r *http.Request) {
