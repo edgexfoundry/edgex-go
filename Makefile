@@ -75,6 +75,7 @@ test:
 	GO111MODULE=on go vet ./...
 	gofmt -l .
 	[ "`gofmt -l .`" = "" ]
+	./bin/test-go-mod-tidy.sh
 
 run:
 	cd bin && ./edgex-launch.sh
