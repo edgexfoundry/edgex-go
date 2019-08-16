@@ -1,4 +1,4 @@
-The following open source projects are referenced by Export Client Go:
+The following open source projects are referenced by System Mgmt Executor
 
 pkg/errors (BSD-2) https://github.com/pkg/errors
 https://github.com/pkg/errors/blob/master/LICENSE
