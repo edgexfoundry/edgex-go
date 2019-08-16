@@ -46,6 +46,24 @@ func TestUpdateDeviceProfile(t *testing.T) {
 		expectError bool
 	}{
 		{
+			"Update DeviceProfile",
+			createDBClient(TestDeviceProfile),
+			TestDeviceProfile,
+			false,
+		},
+		{
+			"Update DeviceProfile with no name",
+			createDBClient(TestDeviceProfile),
+			createTestDeviceProfileWithName(""),
+			false,
+		},
+		{
+			"Update DeviceProfile with updated name",
+			createDBClient(createTestDeviceProfileWithName("NewName")),
+			createTestDeviceProfileWithName("NewName"),
+			false,
+		},
+		{
 			"Multiple devices associated with device profile",
 			createDBClientMultipleDevicesFoundError(),
 			TestDeviceProfile,
@@ -105,13 +123,13 @@ func TestUpdateDeviceProfile(t *testing.T) {
 	}
 }
 
-func createDBClient() DeviceProfileUpdater {
+func createDBClient(expectedTestProfile contract.DeviceProfile) DeviceProfileUpdater {
 	d := &mocks.DeviceProfileUpdater{}
 	d.On("GetDeviceProfileById", TestDeviceProfileID).Return(TestDeviceProfile, nil)
 	d.On("GetDevicesByProfileId", TestDeviceProfileID).Return(make([]contract.Device, 0), nil)
 	d.On("GetProvisionWatchersByProfileId", TestDeviceProfileID).Return(make([]contract.ProvisionWatcher, 0), nil)
 	d.On("GetAllDeviceProfiles").Return(make([]contract.DeviceProfile, 0), nil)
-	d.On("UpdateDeviceProfile", TestDeviceProfile).Return(nil)
+	d.On("UpdateDeviceProfile", expectedTestProfile).Return(nil)
 
 	return d
 }
@@ -139,34 +157,6 @@ func createDBClientMultipleProvisionWatchersFoundError() DeviceProfileUpdater {
 
 	return d
 }
-func createDBClientDuplicateDeviceProfileNameError() DeviceProfileUpdater {
-	d := &mocks.DeviceProfileUpdater{}
-	d.On("GetDeviceProfileById", TestDeviceProfileID).Return(TestDeviceProfile, nil)
-	d.On("GetDevicesByProfileId", TestDeviceProfileID).Return(make([]contract.Device, 0), nil)
-	d.On("GetProvisionWatchersByProfileId", TestDeviceProfileID).Return(make([]contract.ProvisionWatcher, 0), nil)
-	d.On("GetAllDeviceProfiles").Return([]contract.DeviceProfile{{Name: TestDeviceProfile.Name, Id: "SomethingElse"}}, nil)
-	d.On("UpdateDeviceProfile", TestDeviceProfile).Return(nil)
-
-	return d
-}
-
-func createDBClientGetDevicesByProfileIdError() DeviceProfileUpdater {
-	d := &mocks.DeviceProfileUpdater{}
-	d.On("GetDeviceProfileById", TestDeviceProfileID).Return(TestDeviceProfile, nil)
-	d.On("GetDevicesByProfileId", TestDeviceProfileID).Return(make([]contract.Device, 0), TestError)
-
-	return d
-}
-func createDBClientGetAllDeviceProfilesError() DeviceProfileUpdater {
-	d := &mocks.DeviceProfileUpdater{}
-	d.On("GetDeviceProfileById", TestDeviceProfileID).Return(TestDeviceProfile, nil)
-	d.On("GetDevicesByProfileId", TestDeviceProfileID).Return(make([]contract.Device, 0), nil)
-	d.On("GetProvisionWatchersByProfileId", TestDeviceProfileID).Return(make([]contract.ProvisionWatcher, 0), nil)
-	d.On("GetAllDeviceProfiles").Return([]contract.DeviceProfile{}, TestError)
-	d.On("UpdateDeviceProfile", TestDeviceProfile).Return(nil)
-
-	return d
-}
 
 func createDBClientGetProvisionWatchersByProfileIdError() DeviceProfileUpdater {
 	d := &mocks.DeviceProfileUpdater{}
@@ -187,6 +177,13 @@ func createDBClientUpdateDeviceProfileError() DeviceProfileUpdater {
 	d.On("UpdateDeviceProfile", TestDeviceProfile).Return(TestError)
 
 	return d
+}
+
+// createTestDeviceProfileWithName creates a device profile with the specified name.
+func createTestDeviceProfileWithName(name string) contract.DeviceProfile {
+	dp := createTestDeviceProfile()
+	dp.Name = name
+	return dp
 }
 
 // createTestDeviceProfile creates a device profile to be used during testing.
