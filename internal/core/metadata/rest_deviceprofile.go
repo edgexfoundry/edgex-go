@@ -259,12 +259,37 @@ func restAddProfileByYaml(w http.ResponseWriter, r *http.Request) {
 
 	err = yaml.Unmarshal(data, &dp)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		LoggingClient.Error(err.Error())
 		return
 	}
 
-	addDeviceProfile(dp, dbClient, w)
+	// Avoid using the 'addDeviceProfile' function because we need to be backwards compatibility for API response codes.
+	// The difference is the mapping of 'ErrContractInvalid' to a '409(Conflict)' rather than a '400(Bad request).
+	// Disregarding backwards compatibility, the 'addDeviceProfile' function is the correct implementation to use in the
+	// 'ErrContractInvalid' since a '400(Bad Request)' is the correct response.
+	op := device_profile.NewAddDeviceProfileExecutor(dp, dbClient)
+	id, err := op.Execute()
+
+	if err != nil {
+		switch err.(type) {
+		case errors.ErrDeviceProfileInvalidState:
+			http.Error(w, err.Error(), http.StatusBadRequest)
+		case models.ErrContractInvalid:
+			http.Error(w, err.Error(), http.StatusConflict)
+		case *errors.ErrDuplicateName:
+			http.Error(w, err.Error(), http.StatusConflict)
+		case errors.ErrEmptyDeviceProfileName:
+			http.Error(w, err.Error(), http.StatusBadRequest)
+		default:
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		LoggingClient.Error(err.Error())
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(id))
 }
 
 // Add a device profile with YAML content
