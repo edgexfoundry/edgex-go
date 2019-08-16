@@ -105,3 +105,38 @@ https://github.com/eapache/queue/blob/v1.1.0/LICENSE
 bertimus9/systemstat (MIT) https://bitbucket.org/bertimus9/systemstat
 https://bitbucket.org/bertimus9/systemstat/src/master/LICENSE
 
+davecgh/go-spew (ISC) https://github.com/davecgh/go-spew
+https://github.com/davecgh/go-spew/blob/master/LICENSE
+
+edgexfoundry/go-mod-core-contracts (Apache 2.0) https://github.com/edgexfoundry/go-mod-core-contracts
+https://github.com/edgexfoundry/go-mod-core-contracts/blob/master/LICENSE
+
+edgexfoundry/go-mod-registry (Apache 2.0) https://github.com/edgexfoundry/go-mod-registry
+https://github.com/edgexfoundry/go-mod-registry/blob/master/LICENSE
+
+edgexfoundry/go-mod-messaging (Apache 2.0) https://github.com/edgexfoundry/go-mod-messaging
+https://github.com/edgexfoundry/go-mod-messaging/blob/master/LICENSE
+
+gorilla/context (BSD-3) https://github.com/gorilla/context
+https://github.com/gorilla/context/blob/master/LICENSE
+
+kr/logfmt (Unspecified) https://github.com/kr/logfmt
+https://github.com/kr/logfmt/blob/master/Readme
+
+pmezard/go-difflib (Unspecified) https://github.com/pmezard/go-difflib
+https://github.com/pmezard/go-difflib/blob/master/LICENSE
+
+stretchr/objx (MIT) https://github.com/stretchr/objx
+https://github.com/stretchr/objx/blob/master/LICENSE
+
+stretchr/testify (MIT) https://github.com/stretchr/testify
+https://github.com/stretchr/testify/blob/master/LICENSE
+
+ugorji/go (MIT) https://github.com/ugorji/go
+https://github.com/ugorji/go/blob/master/LICENSE
+
+golang.org/x/net (Unspecified) https://github.com/golang/net
+https://github.com/golang/net/blob/master/LICENSE
+
+gopkg.in/yaml.v2 (Apache 2.0) https://github.com/go-yaml/yaml/
+https://github.com/go-yaml/yaml/blob/v2.2.2/LICENSE
