@@ -10,6 +10,27 @@ type DeviceServiceLoader struct {
 	mock.Mock
 }
 
+// GetAddressableById provides a mock function with given fields: id
+func (_m *DeviceServiceLoader) GetAddressableById(id string) (models.Addressable, error) {
+	ret := _m.Called(id)
+
+	var r0 models.Addressable
+	if rf, ok := ret.Get(0).(func(string) models.Addressable); ok {
+		r0 = rf(id)
+	} else {
+		r0 = ret.Get(0).(models.Addressable)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetAllDeviceServices provides a mock function with given fields:
 func (_m *DeviceServiceLoader) GetAllDeviceServices() ([]models.DeviceService, error) {
 	ret := _m.Called()
@@ -68,6 +89,29 @@ func (_m *DeviceServiceLoader) GetDeviceServiceByName(n string) (models.DeviceSe
 	var r1 error
 	if rf, ok := ret.Get(1).(func(string) error); ok {
 		r1 = rf(n)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetDeviceServicesByAddressableId provides a mock function with given fields: id
+func (_m *DeviceServiceLoader) GetDeviceServicesByAddressableId(id string) ([]models.DeviceService, error) {
+	ret := _m.Called(id)
+
+	var r0 []models.DeviceService
+	if rf, ok := ret.Get(0).(func(string) []models.DeviceService); ok {
+		r0 = rf(id)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.DeviceService)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(id)
 	} else {
 		r1 = ret.Error(1)
 	}

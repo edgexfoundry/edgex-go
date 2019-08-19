@@ -33,16 +33,19 @@ import (
 	"github.com/gorilla/mux"
 )
 
+var testDeviceServiceURI = clients.ApiBase + "/" + DEVICESERVICE
+var testAddressable = contract.Addressable{Id: testDeviceServiceId, Name: testDeviceServiceName}
 var testDeviceServiceId = uuid.New().String()
 var testDeviceServiceName = "test service"
 var testDeviceService = contract.DeviceService{Id: testDeviceServiceId, Name: testDeviceServiceName}
+var testDeviceServices = []contract.DeviceService{testDeviceService}
 var testOperatingState, _ = contract.GetOperatingState(contract.Enabled)
 var testAdminState, _ = contract.GetAdminState(contract.Unlocked)
 var testError = errors.New("some error")
 
 func TestGetAllDeviceServices(t *testing.T) {
 	Configuration = &ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 1}}
-	req, err := http.NewRequest(http.MethodGet, clients.ApiBase+"/"+DEVICESERVICE, nil)
+	req, err := http.NewRequest(http.MethodGet, testDeviceServiceURI, nil)
 	if err != nil {
 		t.Error(err)
 		return
@@ -72,6 +75,58 @@ func TestGetAllDeviceServices(t *testing.T) {
 		})
 	}
 	Configuration = &ConfigurationStruct{}
+}
+
+func TestGetServiceByAddressableId(t *testing.T) {
+	req := createDeviceServiceRequest(http.MethodGet, ADDRESSABLEID, testDeviceServiceId)
+
+	tests := []struct {
+		name           string
+		dbMock         interfaces.DBClient
+		expectedStatus int
+	}{
+		{"OK",
+			createMockWithOutlines([]mockOutline{
+				{"GetAddressableById", testDeviceServiceId, testAddressable, nil},
+				{"GetDeviceServicesByAddressableId", testDeviceServiceId, testDeviceServices, nil},
+			}),
+			http.StatusOK,
+		},
+		{"Addressable not found",
+			createMockWithOutlines([]mockOutline{
+				{"GetAddressableById", testDeviceServiceId, contract.Addressable{}, db.ErrNotFound},
+			}),
+			http.StatusNotFound,
+		},
+		{"Addressable lookup error",
+			createMockWithOutlines([]mockOutline{
+				{"GetAddressableById", testDeviceServiceId, contract.Addressable{}, testError},
+			}),
+			http.StatusInternalServerError,
+		},
+		{"Device services lookup error",
+			createMockWithOutlines([]mockOutline{
+				{"GetAddressableById", testDeviceServiceId, testAddressable, nil},
+				{"GetDeviceServicesByAddressableId", testDeviceServiceId, nil, testError},
+			}),
+			http.StatusInternalServerError,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			Configuration = &ConfigurationStruct{}
+			dbClient = tt.dbMock
+			rr := httptest.NewRecorder()
+			handler := http.HandlerFunc(restGetServiceByAddressableId)
+
+			handler.ServeHTTP(rr, req)
+			response := rr.Result()
+			if response.StatusCode != tt.expectedStatus {
+				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
+				return
+			}
+		})
+	}
 }
 
 func TestUpdateOpStateById(t *testing.T) {
@@ -341,11 +396,16 @@ func createGetDeviceServiceLoaderMockFail() interfaces.DBClient {
 	return dbMock
 }
 
+func createDeviceServiceRequest(httpMethod string, pathParamName string, pathParamValue string) *http.Request {
+	req := httptest.NewRequest(httpMethod, testDeviceServiceURI, nil)
+	return mux.SetURLVars(req, map[string]string{pathParamName: pathParamValue})
+}
+
 func createDeviceServiceRequestWithBody(httpMethod string, deviceService contract.DeviceService, pathParams map[string]string) *http.Request {
 	// if your JSON marshalling fails you've got bigger problems
 	body, _ := json.Marshal(deviceService)
 
-	req := httptest.NewRequest(httpMethod, clients.ApiBase+"/"+DEVICESERVICE, bytes.NewReader(body))
+	req := httptest.NewRequest(httpMethod, testDeviceServiceURI, bytes.NewReader(body))
 
 	return mux.SetURLVars(req, pathParams)
 }

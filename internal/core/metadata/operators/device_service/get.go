@@ -17,6 +17,8 @@ package device_service
 import (
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 )
@@ -46,4 +48,31 @@ func (op deviceServiceLoadAll) Execute() (services []contract.DeviceService, err
 		return []contract.DeviceService{}, err
 	}
 	return
+}
+
+type deviceServiceLoadByAddressableId struct {
+	id string
+	db DeviceServiceLoader
+}
+
+func NewDeviceServiceLoadByAddressableId(id string, db DeviceServiceLoader) DeviceServiceAllExecutor {
+	return deviceServiceLoadByAddressableId{id: id, db: db}
+}
+
+func (op deviceServiceLoadByAddressableId) Execute() ([]contract.DeviceService, error) {
+	// Check if the Addressable exists
+	_, err := op.db.GetAddressableById(op.id)
+	if err != nil {
+		if err == db.ErrNotFound {
+			return nil, errors.NewErrItemNotFound(op.id)
+		} else {
+			return nil, err
+		}
+	}
+
+	if ds, err := op.db.GetDeviceServicesByAddressableId(op.id); err != nil {
+		return nil, err
+	} else {
+		return ds, nil
+	}
 }
