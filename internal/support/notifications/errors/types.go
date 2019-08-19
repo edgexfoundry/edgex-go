@@ -39,3 +39,15 @@ func (e ErrSubscriptionNotFound) Error() string {
 func NewErrSubscriptionNotFound(slug string) error {
 	return ErrSubscriptionNotFound{slug: slug}
 }
+
+type ErrMailAddrContainsCRLF struct {
+	slug string
+}
+
+func (e ErrMailAddrContainsCRLF) Error() string {
+	return fmt.Sprintf("Subscription '%s' mail addresses contain CRLF", e.slug)
+}
+
+func NewErrMailAddrContainsCRLF(slug string) error {
+	return ErrMailAddrContainsCRLF{slug: slug}
+}

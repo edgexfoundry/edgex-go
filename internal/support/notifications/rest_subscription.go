@@ -58,14 +58,11 @@ func subscriptionHandler(w http.ResponseWriter, r *http.Request) {
 		dec := json.NewDecoder(r.Body)
 		err := dec.Decode(&s)
 
-		for _, c := range s.Channels {
-			if c.Type == models.ChannelType(models.Email) {
-				if !validateEmail(c) {
-					http.Error(w, "Email addresses contain CRLF", http.StatusBadRequest)
-					LoggingClient.Error("Email addresses contain CRLF")
-					return
-				}
-			}
+		// validate if email addresses contain CRLF pair
+		if err = validateEmailAddresses(s); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			LoggingClient.Error(err.Error())
+			return
 		}
 
 		// Check if the subscription exists
@@ -104,14 +101,11 @@ func subscriptionHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		for _, c := range s.Channels {
-			if c.Type == models.ChannelType(models.Email) {
-				if !validateEmail(c) {
-					http.Error(w, "Email addresses contain CRLF", http.StatusBadRequest)
-					LoggingClient.Error("Email addresses contain CRLF")
-					return
-				}
-			}
+		// validate if email addresses contain CRLF pair
+		if err = validateEmailAddresses(s); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			LoggingClient.Error(err.Error())
+			return
 		}
 
 		LoggingClient.Info("Posting Subscription: " + s.String())
@@ -304,13 +298,18 @@ func splitVars(vars string) []string {
 	return strings.Split(vars, ",")
 }
 
-func validateEmail(c models.Channel) bool {
-	for _, m := range c.MailAddresses {
-		if strings.ContainsAny(m, "\n\r") {
-			return false
+func validateEmailAddresses(s models.Subscription) error {
+	err := errors.NewErrMailAddrContainsCRLF(s.Slug)
+	for _, c := range s.Channels {
+		if c.Type == models.ChannelType(models.Email) {
+			for _, m := range c.MailAddresses {
+				if strings.ContainsAny(m, "\n\r") {
+					return err
+				}
+			}
 		}
 	}
-	return true
+	return nil
 }
 
 func subscriptionsByReceiverHandler(w http.ResponseWriter, r *http.Request) {

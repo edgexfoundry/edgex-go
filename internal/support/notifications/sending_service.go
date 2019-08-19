@@ -138,10 +138,10 @@ func handleFailedTransmission(t models.Transmission) {
 
 func deduceAuth(s SmtpInfo) (mail.Auth, error) {
 	if s.Username == "" && s.Password == "" {
-		return nil, nil
+		return nil, errors.New("Notifications: Expecting username")
 	}
 	if s.Username != "" && s.Password == "" {
-		return nil, errors.New("Notifications: Expecting password")
+		return nil, nil
 	}
 	if s.Username == "" && s.Password != "" {
 		return nil, errors.New("Notifications: Expecting username")
@@ -163,20 +163,6 @@ func deduceAuth(s SmtpInfo) (mail.Auth, error) {
 // interfaces, which makes it a little bit trickier to modify. Since, the intention for
 // this function is to use it as a support function for handling the low level SMTP
 // protocol mechanism, it is not exported.
-//
-// The addresses in the to parameter are the SMTP RCPT addresses.
-//
-// The msg parameter should be an RFC 822-style email with headers
-// first, a blank line, and then the message body. The lines of msg
-// should be CRLF terminated. The msg headers should usually include
-// fields such as "From", "To", "Subject", and "Cc".  Sending "Bcc"
-// messages is accomplished by including an email address in the to
-// parameter but not including it in the msg headers.
-//
-// The smtpSend provide no support for DKIM signing, MIME
-// attachments (see the mime/multipart package), or other mail
-// functionality.
-
 func smtpSend(to []string, msg []byte, s SmtpInfo) error {
 	addr := s.Host + ":" + strconv.Itoa(s.Port)
 	auth, err := deduceAuth(s)
@@ -184,10 +170,10 @@ func smtpSend(to []string, msg []byte, s SmtpInfo) error {
 		return err
 	}
 	c, err := mail.Dial(addr)
-	defer c.Close()
 	if err != nil {
 		return errors.New("Notifications: Error dialing address")
 	}
+	defer c.Close()
 	serverName, _, err := net.SplitHostPort(addr)
 	if err != nil {
 		return err
