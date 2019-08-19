@@ -531,6 +531,7 @@ func createRequest(pathParamName string, pathParamValue string) *http.Request {
 	req := httptest.NewRequest(http.MethodGet, TestURI, nil)
 	return mux.SetURLVars(req, map[string]string{pathParamName: pathParamValue})
 }
+
 func createDeleteRequest(pathParamName string, pathParamValue string) *http.Request {
 	req := httptest.NewRequest(http.MethodDelete, TestURI, nil)
 	return mux.SetURLVars(req, map[string]string{pathParamName: pathParamValue})
@@ -780,6 +781,66 @@ func TestDeleteIntervalByName(t *testing.T) {
 			scClient = tt.scMock
 			rr := httptest.NewRecorder()
 			handler := http.HandlerFunc(restDeleteIntervalByName)
+			handler.ServeHTTP(rr, tt.request)
+			response := rr.Result()
+			if response.StatusCode != tt.expectedStatus {
+				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
+
+				return
+			}
+		})
+	}
+}
+
+func createScrubDeleteRequest() *http.Request {
+	req := httptest.NewRequest(http.MethodDelete, TestURI+"/scrub/", nil)
+	return mux.SetURLVars(req, map[string]string{})
+}
+
+func createMockScrubDeleterSuccess() interfaces.DBClient {
+	myMock := mocks.DBClient{}
+	myMock.On("ScrubAllIntervals").Return(1, nil)
+	return &myMock
+}
+
+func createMockScrubDeleterErr() interfaces.DBClient {
+	myMock := mocks.DBClient{}
+	myMock.On("ScrubAllIntervals").Return(0, errors.New("test error"))
+	return &myMock
+}
+
+func TestScrubIntervals(t *testing.T) {
+	tests := []struct {
+		name           string
+		request        *http.Request
+		dbMock         interfaces.DBClient
+		scMock         interfaces.SchedulerQueueClient
+		expectedStatus int
+	}{
+
+		{
+			name:           "OK",
+			request:        createScrubDeleteRequest(),
+			dbMock:         createMockScrubDeleterSuccess(),
+			scMock:         createMockNameSCDeleterSuccess(),
+			expectedStatus: http.StatusOK,
+		},
+		{
+			name:           "Unknown Error",
+			request:        createScrubDeleteRequest(),
+			dbMock:         createMockScrubDeleterErr(),
+			scMock:         createMockNameSCDeleterSuccess(),
+			expectedStatus: http.StatusInternalServerError,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			LoggingClient = logger.MockLogger{}
+			Configuration = &ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 1}}
+			dbClient = tt.dbMock
+			scClient = tt.scMock
+			rr := httptest.NewRecorder()
+			handler := http.HandlerFunc(restScrubAllIntervals)
 			handler.ServeHTTP(rr, tt.request)
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
