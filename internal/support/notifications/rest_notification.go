@@ -286,8 +286,8 @@ func restNotificationByStartEnd(w http.ResponseWriter, r *http.Request) {
 		LoggingClient.Error(err.Error())
 		return
 	}
-	pkg.Encode(results, w, LoggingClient)
 
+	pkg.Encode(results, w, LoggingClient)
 }
 
 func restNotificationByStart(w http.ResponseWriter, r *http.Request) {
@@ -323,12 +323,10 @@ func restNotificationByStart(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		LoggingClient.Error(err.Error())
-		w.Header().Set("Content-Type", applicationJson)
 		return
 	}
 
 	pkg.Encode(results, w, LoggingClient)
-
 }
 
 func restNotificationByEnd(w http.ResponseWriter, r *http.Request) {
@@ -366,12 +364,10 @@ func restNotificationByEnd(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		LoggingClient.Error(err.Error())
-		w.Header().Set("Content-Type", applicationJson)
 		return
 	}
 
 	pkg.Encode(results, w, LoggingClient)
-
 }
 
 func restNotificationsByLabels(w http.ResponseWriter, r *http.Request) {
@@ -405,15 +401,13 @@ func restNotificationsByLabels(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		LoggingClient.Error(err.Error())
-		w.Header().Set("Content-Type", applicationJson)
 		return
 	}
 
 	pkg.Encode(results, w, LoggingClient)
-
 }
 
-func notificationsNewHandler(w http.ResponseWriter, r *http.Request) {
+func restNotificationsNew(w http.ResponseWriter, r *http.Request) {
 
 	if r.Body != nil {
 		defer r.Body.Close()
@@ -433,7 +427,8 @@ func notificationsNewHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	n, err := dbClient.GetNewNotifications(limitNum)
+	op := notification.NewGetNewestExecutor(dbClient, limitNum)
+	n, err := op.Execute()
 	if err != nil {
 		if err == db.ErrNotFound {
 			http.Error(w, "Notification not found", http.StatusNotFound)
@@ -442,9 +437,7 @@ func notificationsNewHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		LoggingClient.Error(err.Error())
 		return
-
 	}
 
 	pkg.Encode(n, w, LoggingClient)
-
 }
