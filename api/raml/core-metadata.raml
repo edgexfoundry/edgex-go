@@ -1,7 +1,15 @@
 #%RAML 0.8
+---
 title: core-metadata
-version: "1.0.0"
+version: "1.1.x"
 baseUri: "http://localhost:48081/api"
+protocols: [ HTTP ]
+
+documentation:
+  - title: Welcome
+    content: |
+      Welcome to the EdgeX Foundry Core Metadata Microservice API Documentation.
+
 schemas:
     -
         deviceprofile: '{"type":"object","$schema":"http://json-schema.org/draft-03/schema#","description": "template describing devices and sensors of the same nature in reporting the same data and offering the same commands", "title":"deviceprofile","properties":{"id":{"type":"string","required":false,"title":"id"},"created":{"type":"integer","required":false,"title":"created"},"modified":{"type":"integer","required":false,"title":"modified"},"origin":{"type":"integer","required":false,"title":"origin"},"name":{"type":"string","required":false,"title":"name"},"manufacturer":{"type":"string","required":false,"title":"manufacturer"},"model":{"type":"string","required":false,"title":"model"},"labels":{"type":"array","required":false,"title":"labels","items":{"type":"string","title":"labels"},"uniqueItems":false},"description":{"type":"string","required":false,"title":"description"}, "resources":{"type":"array","required":false,"title":"resources","items":{"type":"string","title":"resources"},"uniqueItems":false}}}'

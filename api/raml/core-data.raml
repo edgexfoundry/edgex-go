@@ -1,7 +1,15 @@
 #%RAML 0.8
+---
 title: core-data
-version: "1.0.0"
+version: "1.1.x"
 baseUri: "http://localhost:48080/api"
+protocols: [ HTTP ]
+
+documentation:
+  - title: Welcome
+    content: |
+      Welcome to the Core Data Microservice API Documentation.
+
 schemas: 
     - 
         event: '{"type":"object","$schema":"http://json-schema.org/draft-03/schema#","description":"Core device/sensor event","title":"event","properties":{"id":{"type":"string","required":false,"title":"id"},"created":{"type":"integer","required":false,"title":"created"},"modified":{"type":"integer","required":false,"title":"modified"},"origin":{"type":"integer","required":false,"title":"origin"},"pushed":{"type":"integer","required":false,"title":"pushed"},"device":{"type":"string","required":false,"title":"device"},"readings":{"type":"array","required":false,"title":"readings","items":{"type":"object","$ref":"#/schemas/reading"},"uniqueItems":false}}}'
