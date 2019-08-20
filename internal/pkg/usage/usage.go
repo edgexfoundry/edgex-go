@@ -69,25 +69,21 @@ Common Options:
 
 // usage will print out the flag options for the server.
 func HelpCallback() {
-	msg := fmt.Sprintf(usageStr, os.Args[0])
-	fmt.Printf("%s\n", msg)
+	fmt.Printf(usageStr, os.Args[0])
 	os.Exit(0)
 }
 
 func HelpCallbackConfigSeed() {
-	msg := fmt.Sprintf(configSeedUsageStr, os.Args[0])
-	fmt.Printf("%s\n", msg)
+	fmt.Printf(configSeedUsageStr, os.Args[0])
 	os.Exit(0)
 }
 
 func HelpCallbackSecuritySetup() {
-	msg := fmt.Sprintf(securitySetupUsageStr, os.Args[0])
-	fmt.Printf("%s\n", msg)
+	fmt.Printf(securitySetupUsageStr, os.Args[0])
 	os.Exit(0)
 }
 
 func HelpCallbackSecurityProxy() {
-	msg := fmt.Sprintf(securityProxySetupUsageStr, os.Args[0])
-	fmt.Printf("%s\n", msg)
+	fmt.Printf(securityProxySetupUsageStr, os.Args[0])
 	os.Exit(0)
 }
