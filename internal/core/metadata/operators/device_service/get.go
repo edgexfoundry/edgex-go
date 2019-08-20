@@ -23,8 +23,8 @@ import (
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
-// DeviceServiceGetExecutor retrieves DeviceService according to parameters defined by the implementation.
-type DeviceServiceGetExecutor interface {
+// DeviceServiceGetAllExecutor retrieves DeviceServices according to parameters defined by the implementation.
+type DeviceServiceGetAllExecutor interface {
 	Execute() ([]contract.DeviceService, error)
 }
 
@@ -35,7 +35,7 @@ type deviceServiceLoadAll struct {
 }
 
 // NewDeviceServiceLoadAll creates a new Executor that retrieves all DeviceService registered.
-func NewDeviceServiceLoadAll(cfg config.ServiceInfo, db DeviceServiceLoader, log logger.LoggingClient) DeviceServiceGetExecutor {
+func NewDeviceServiceLoadAll(cfg config.ServiceInfo, db DeviceServiceLoader, log logger.LoggingClient) DeviceServiceGetAllExecutor {
 	return deviceServiceLoadAll{config: cfg, database: db, logger: log}
 }
 
@@ -59,7 +59,7 @@ type deviceServiceLoadByAddressableId struct {
 }
 
 // NewDeviceServiceLoadByAddressableId creates a new Executor that retrieves all DeviceService associated with a given Addressable ID.
-func NewDeviceServiceLoadByAddressableId(id string, db DeviceServiceLoader) DeviceServiceGetExecutor {
+func NewDeviceServiceLoadByAddressableId(id string, db DeviceServiceLoader) DeviceServiceGetAllExecutor {
 	return deviceServiceLoadByAddressableId{id: id, db: db}
 }
 
@@ -80,4 +80,33 @@ func (op deviceServiceLoadByAddressableId) Execute() ([]contract.DeviceService, 
 	} else {
 		return ds, nil
 	}
+}
+
+// DeviceServiceGetExecutor retrieves DeviceService according to parameters defined by the implementation.
+type DeviceServiceGetExecutor interface {
+	Execute() (contract.DeviceService, error)
+}
+
+type deviceServiceLoadById struct {
+	id string
+	db DeviceServiceLoader
+}
+
+// NewDeviceServiceLoadById creates a new Executor that retrieves all DeviceService associated with a given ID.
+func NewDeviceServiceLoadById(id string, db DeviceServiceLoader) DeviceServiceGetExecutor {
+	return deviceServiceLoadById{id: id, db: db}
+}
+
+// Execute performs an operation that retrieves the DeviceService associated with a given ID.
+func (op deviceServiceLoadById) Execute() (contract.DeviceService, error) {
+	ds, err := op.db.GetDeviceServiceById(op.id)
+	if err != nil {
+		if err == db.ErrNotFound {
+			return contract.DeviceService{}, errors.NewErrItemNotFound(op.id)
+		} else {
+			return contract.DeviceService{}, err
+		}
+	}
+
+	return ds, nil
 }
