@@ -23,7 +23,8 @@ import (
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
-type DeviceServiceAllExecutor interface {
+// DeviceServiceGetExecutor retrieves DeviceService according to parameters defined by the implementation.
+type DeviceServiceGetExecutor interface {
 	Execute() ([]contract.DeviceService, error)
 }
 
@@ -33,10 +34,12 @@ type deviceServiceLoadAll struct {
 	logger   logger.LoggingClient
 }
 
-func NewDeviceServiceLoadAll(cfg config.ServiceInfo, db DeviceServiceLoader, log logger.LoggingClient) DeviceServiceAllExecutor {
+// NewDeviceServiceLoadAll creates a new Executor that retrieves all DeviceService registered.
+func NewDeviceServiceLoadAll(cfg config.ServiceInfo, db DeviceServiceLoader, log logger.LoggingClient) DeviceServiceGetExecutor {
 	return deviceServiceLoadAll{config: cfg, database: db, logger: log}
 }
 
+// Execute performs an operation that retrieves all DeviceService registered.
 func (op deviceServiceLoadAll) Execute() (services []contract.DeviceService, err error) {
 	services, err = op.database.GetAllDeviceServices()
 	if err != nil {
@@ -55,10 +58,12 @@ type deviceServiceLoadByAddressableId struct {
 	db DeviceServiceLoader
 }
 
-func NewDeviceServiceLoadByAddressableId(id string, db DeviceServiceLoader) DeviceServiceAllExecutor {
+// NewDeviceServiceLoadByAddressableId creates a new Executor that retrieves all DeviceService associated with a given Addressable ID.
+func NewDeviceServiceLoadByAddressableId(id string, db DeviceServiceLoader) DeviceServiceGetExecutor {
 	return deviceServiceLoadByAddressableId{id: id, db: db}
 }
 
+// Execute performs an operation that retrieves all DeviceService associated with a given Addressable ID.
 func (op deviceServiceLoadByAddressableId) Execute() ([]contract.DeviceService, error) {
 	// Check if the Addressable exists
 	_, err := op.db.GetAddressableById(op.id)
