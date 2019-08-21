@@ -26,6 +26,7 @@ type IntervalLoader interface {
 // IntervalDeleter deletes interval.
 type IntervalDeleter interface {
 	DeleteIntervalById(id string) error
+	ScrubAllIntervals() (int, error)
 	IntervalLoader
 	IntervalActionLoader
 }
