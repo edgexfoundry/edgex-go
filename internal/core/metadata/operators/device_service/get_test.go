@@ -78,6 +78,71 @@ func TestGetAllDeviceServices(t *testing.T) {
 	}
 }
 
+func TestGetDeviceServiceById(t *testing.T) {
+	tests := []struct {
+		name             string
+		mockLoader       DeviceServiceLoader
+		expectedVal      contract.DeviceService
+		expectedError    bool
+		expectedErrorVal error
+	}{
+		{
+			name: "Successful database call",
+			mockLoader: createMockLoader([]mockOutline{
+				{"GetDeviceServiceById", testDeviceServiceId, testDeviceService, nil},
+			}),
+			expectedVal:      testDeviceService,
+			expectedError:    false,
+			expectedErrorVal: nil,
+		},
+		{
+			name: "Device service not found",
+			mockLoader: createMockLoader([]mockOutline{
+				{"GetDeviceServiceById", testDeviceServiceId, contract.DeviceService{}, db.ErrNotFound},
+			}),
+			expectedVal:      contract.DeviceService{},
+			expectedError:    true,
+			expectedErrorVal: errors.NewErrItemNotFound(testDeviceServiceId),
+		},
+		{
+			name: "Device services lookup error",
+			mockLoader: createMockLoader([]mockOutline{
+				{"GetDeviceServiceById", testDeviceServiceId, contract.DeviceService{}, testError},
+			}),
+			expectedVal:      contract.DeviceService{},
+			expectedError:    true,
+			expectedErrorVal: testError,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(tt *testing.T) {
+			op := NewDeviceServiceLoadById(testDeviceServiceId, test.mockLoader)
+			actualVal, err := op.Execute()
+			if !reflect.DeepEqual(test.expectedVal, actualVal) {
+				t.Errorf("Observed value doesn't match expected.\nExpected: %v\nActual: %v\n", test.expectedVal, actualVal)
+				return
+			}
+
+			if test.expectedError && err == nil {
+				t.Error("Expected an error")
+				return
+			}
+
+			if !test.expectedError && err != nil {
+				t.Errorf("Unexpectedly encountered error: %s", err.Error())
+				return
+			}
+
+			if test.expectedErrorVal != nil && err != nil {
+				if test.expectedErrorVal.Error() != err.Error() {
+					t.Errorf("Observed error doesn't match expected.\nExpected: %v\nActual: %v\n", test.expectedErrorVal.Error(), err.Error())
+				}
+			}
+		})
+	}
+}
+
 func TestGetDeviceServiceByAddressableId(t *testing.T) {
 	tests := []struct {
 		name             string

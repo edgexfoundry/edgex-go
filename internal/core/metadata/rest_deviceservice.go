@@ -230,7 +230,7 @@ func restGetServiceByAddressableName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	json.NewEncoder(w).Encode(res)
 }
 
@@ -477,20 +477,22 @@ func updateServiceLastConnected(ds models.DeviceService, lc int64, w http.Respon
 
 func restGetServiceById(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	var did string = vars[ID]
+	var did = vars[ID]
 
-	res, err := dbClient.GetDeviceServiceById(did)
+	op := device_service.NewDeviceServiceLoadById(did, dbClient)
+	res, err := op.Execute()
 	if err != nil {
-		if err == db.ErrNotFound {
+		switch err.(type) {
+		case *types.ErrItemNotFound:
 			http.Error(w, err.Error(), http.StatusNotFound)
-		} else {
+		default:
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		LoggingClient.Error(err.Error())
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	json.NewEncoder(w).Encode(res)
 }
 
