@@ -206,14 +206,3 @@ func isIntervalStillInUse(s contract.Interval) (bool, error) {
 
 	return false, nil
 }
-
-func scrubAll() (int, error) {
-	LoggingClient.Info("Scrubbing All Interval(s) and IntervalAction(s).")
-
-	count, err := dbClient.ScrubAllIntervals()
-	if err != nil {
-		LoggingClient.Error(err.Error())
-		return 0, err
-	}
-	return count, nil
-}

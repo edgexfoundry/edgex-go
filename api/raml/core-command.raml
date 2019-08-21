@@ -1,7 +1,15 @@
 #%RAML 0.8
-title: core-comand
-version: "1.0.0"
+---
+title: core-command
+version: "1.1.x"
 baseUri: "http://localhost:48082/api"
+protocols: [ HTTP ]
+
+documentation:
+  - title: Welcome
+    content: |
+      Welcome to the Core Command Microservice API Documentation.
+
 schemas: 
     - 
         device: '{"type":"object","$schema":"http://json-schema.org/draft-03/schema#","description":"device or sensor supplying data and taking actuation commands","title":"device","properties":{"id":{"type":"string","required":false,"title":"id"},"created":{"type":"integer","required":false,"title":"created"},"modified":{"type":"integer","required":false,"title":"modified"},"origin":{"type":"integer","required":false,"title":"origin"},"name":{"type":"string","required":false,"title":"name"},"description":{"type":"string","required":false,"title":"description"},"lastConnected":{"type":"integer","required":false,"title":"lastConnected"},"lastReported":{"type":"integer","required":false,"title":"lastReported"},"labels":{"type":"array","required":false,"title":"labels","items":{"type":"string","title":"labels"},"uniqueItems":false},"adminState":{"type":"string","required":false,"title":"adminState"},"operatingState":{"type":"string","required":false,"title":"operatingState"},"addressable":{"type":"object","properties":{"id":{"type":"string","required":false,"title":"id"},"created":{"type":"integer","required":false,"title":"created"},"modified":{"type":"integer","required":false,"title":"modified"},"origin":{"type":"integer","required":false,"title":"origin"},"name":{"type":"string","required":false,"title":"name"},"protocol":{"type":"string","required":false,"title":"protocol"},"address":{"type":"string","required":false,"title":"address"},"port":{"type":"integer","required":false,"title":"port"},"path":{"type":"string","required":false,"title":"path"},"publisher":{"type":"string","required":false,"title":"publisher"},"user":{"type":"string","required":false,"title":"user"},"password":{"type":"string","required":false,"title":"password"},"topic":{"type":"string","required":false,"title":"topic"}}}}}'

@@ -1,7 +1,15 @@
 #%RAML 0.8
+---
 title: export-client
-version: "1.0.0"
+version: "1.1.x"
 baseUri: "http://localhost:48071/api"
+protocols: [ HTTP ]
+
+documentation:
+  - title: Welcome
+    content: |
+      Welcome to the EdgeX Foundry Export Client Microservice API Documentation.
+
 schemas: 
     - 
         ExportRegistration: '{"type":"object","$schema":"http://json-schema.org/draft-03/schema#","description":"Defines the registration details on the part of north side export clients","title":"ExportRegistration","properties":{"id":{"type":"string","required":false,"title":"id"},"created":{"type":"integer","required":false,"title":"created"},"modified":{"type":"integer","required":false,"title":"modified"},"origin":{"type":"integer","required":false,"title":"origin"},"name":{"type":"string","required":true,"title":"name"},"addressable":{"type":"object","properties":{"id":{"type":"string","required":false,"title":"id"},"created":{"type":"integer","required":false,"title":"created"},"modified":{"type":"integer","required":false,"title":"modified"},"origin":{"type":"integer","required":false,"title":"origin"},"name":{"type":"string","required":false,"title":"name"},"protocol":{"type":"string","required":false,"title":"protocol"},"address":{"type":"string","required":false,"title":"address"},"port":{"type":"integer","required":false,"title":"port"},"path":{"type":"string","required":false,"title":"path"},"publisher":{"type":"string","required":false,"title":"publisher"},"user":{"type":"string","required":false,"title":"user"},"password":{"type":"string","required":false,"title":"password"},"topic":{"type":"string","required":false,"title":"topic"}}},"format":{"type":"string","required":false,"title":"format"},"filter":{"type":"object","properties":{"deviceIdentifiers":{"type":"array","required":false,"title":"deviceIdentifiers","items":{"type":"string","title":"deviceIdentifiers"},"uniqueItems":false},"valueDescriptorIdentifiers":{"type":"array","required":false,"title":"valueDescriptorIdentifiers","items":{"type":"string","title":"valueDescriptorIdentifiers"},"uniqueItems":false}}},"encryption":{"type":"object","properties":{"encryptionAlgorithm":{"type":"string","required":false,"title":"encryptionAlgorithm"},"encryptionKey":{"type":"string","required":false,"title":"encryptionKey"},"initializingVector":{"type":"string","required":false,"title":"initializingVector"}}},"compression":{"type":"string","required":false,"title":"compression"},"enable":{"type":"boolean","required":false,"title":"enable"}}}'
