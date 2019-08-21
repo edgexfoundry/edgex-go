@@ -10,6 +10,29 @@ type NotificationLoader struct {
 	mock.Mock
 }
 
+// GetNewNotifications provides a mock function with given fields: limit
+func (_m *NotificationLoader) GetNewNotifications(limit int) ([]models.Notification, error) {
+	ret := _m.Called(limit)
+
+	var r0 []models.Notification
+	if rf, ok := ret.Get(0).(func(int) []models.Notification); ok {
+		r0 = rf(limit)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.Notification)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(int) error); ok {
+		r1 = rf(limit)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetNotificationById provides a mock function with given fields: id
 func (_m *NotificationLoader) GetNotificationById(id string) (models.Notification, error) {
 	ret := _m.Called(id)

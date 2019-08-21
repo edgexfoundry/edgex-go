@@ -69,6 +69,11 @@ type notificationsLoadByLabels struct {
 	labels   []string
 }
 
+type notificationsLoadNew struct {
+	database NotificationLoader
+	limit    int
+}
+
 func (op notificationLoadById) Execute() (contract.Notification, error) {
 	res, err := op.database.GetNotificationById(op.id)
 	if err != nil {
@@ -146,6 +151,17 @@ func (op notificationsLoadByLabels) Execute() ([]contract.Notification, error) {
 	return n, nil
 }
 
+func (op notificationsLoadNew) Execute() ([]contract.Notification, error) {
+	n, err := op.database.GetNewNotifications(op.limit)
+	if err != nil {
+		return n, err
+	}
+	if len(n) == 0 {
+		return n, db.ErrNotFound
+	}
+	return n, nil
+}
+
 func NewIdExecutor(db NotificationLoader, id string) IdExecutor {
 	return notificationLoadById{
 		database: db,
@@ -198,5 +214,12 @@ func NewLabelsExecutor(db NotificationLoader, labels []string, limit int) Collec
 		database: db,
 		limit:    limit,
 		labels:   labels,
+	}
+}
+
+func NewGetNewestExecutor(db NotificationLoader, limit int) CollectionExecutor {
+	return notificationsLoadNew{
+		database: db,
+		limit:    limit,
 	}
 }
