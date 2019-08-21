@@ -68,25 +68,25 @@ func TestGetAllAddressables(t *testing.T) {
 	}{
 		{
 			"OK",
-			createRequest(http.MethodGet, "", ""),
+			createAddressableRequest(http.MethodGet, "", ""),
 			createMockAddressLoader(5, nil),
 			http.StatusOK,
 		},
 		{
 			"OK(No Addressables)",
-			createRequest(http.MethodGet, "", ""),
+			createAddressableRequest(http.MethodGet, "", ""),
 			createMockAddressLoader(0, nil),
 			http.StatusOK,
 		},
 		{
 			"Error Limit Exceeded",
-			createRequest(http.MethodGet, "", ""),
+			createAddressableRequest(http.MethodGet, "", ""),
 			createMockAddressLoader(11, nil),
 			http.StatusRequestEntityTooLarge,
 		},
 		{
 			"Error Unknown",
-			createRequest(http.MethodGet, "", ""),
+			createAddressableRequest(http.MethodGet, "", ""),
 			createMockAddressLoader(0, errors.New("Some error")),
 			http.StatusInternalServerError,
 		},
@@ -147,7 +147,7 @@ func TestAddAddressable(t *testing.T) {
 		},
 		{
 			name:           "Bad JSON parse",
-			request:        createRequest(http.MethodPost, ID, TestId),
+			request:        createAddressableRequest(http.MethodPost, ID, TestId),
 			dbMock:         nil,
 			expectedStatus: http.StatusBadRequest,
 		},
@@ -221,7 +221,7 @@ func TestUpdateAddressable(t *testing.T) {
 		},
 		{
 			name:           "Bad JSON parse",
-			request:        createRequest(http.MethodPut, ID, TestId),
+			request:        createAddressableRequest(http.MethodPut, ID, TestId),
 			dbMock:         nil,
 			expectedStatus: http.StatusBadRequest,
 		},
@@ -251,25 +251,25 @@ func TestGetAddressableByName(t *testing.T) {
 	}{
 		{
 			"OK",
-			createRequest(http.MethodGet, NAME, TestName),
+			createAddressableRequest(http.MethodGet, NAME, TestName),
 			createMockAddressLoaderForName(nil),
 			http.StatusOK,
 		},
 		{
 			name:           "Bad escape character",
-			request:        createRequest(http.MethodGet, NAME, TestName+"%zz"),
+			request:        createAddressableRequest(http.MethodGet, NAME, TestName+"%zz"),
 			dbMock:         createMockAddressLoaderForName(nil),
 			expectedStatus: http.StatusServiceUnavailable,
 		},
 		{
 			name:           "Addressable not found",
-			request:        createRequest(http.MethodGet, NAME, TestName),
+			request:        createAddressableRequest(http.MethodGet, NAME, TestName),
 			dbMock:         createMockAddressLoaderForName(db.ErrNotFound),
 			expectedStatus: http.StatusNotFound,
 		},
 		{
 			name:           "Other error from database",
-			request:        createRequest(http.MethodGet, NAME, TestName),
+			request:        createAddressableRequest(http.MethodGet, NAME, TestName),
 			dbMock:         createMockAddressLoaderForName(errors.New("Test error")),
 			expectedStatus: http.StatusServiceUnavailable,
 		},
@@ -299,19 +299,19 @@ func TestGetAddressableById(t *testing.T) {
 	}{
 		{
 			"OK",
-			createRequest(http.MethodGet, ID, TestId),
+			createAddressableRequest(http.MethodGet, ID, TestId),
 			createMockAddressLoaderForId(nil),
 			http.StatusOK,
 		},
 		{
 			name:           "Addressable not found",
-			request:        createRequest(http.MethodGet, ID, TestId),
+			request:        createAddressableRequest(http.MethodGet, ID, TestId),
 			dbMock:         createMockAddressLoaderForId(db.ErrNotFound),
 			expectedStatus: http.StatusNotFound,
 		},
 		{
 			name:           "Other error from database",
-			request:        createRequest(http.MethodGet, ID, TestId),
+			request:        createAddressableRequest(http.MethodGet, ID, TestId),
 			dbMock:         createMockAddressLoaderForId(errors.New("Test error")),
 			expectedStatus: http.StatusInternalServerError,
 		},
@@ -341,32 +341,32 @@ func TestGetAddressablesByAddress(t *testing.T) {
 	}{
 		{
 			"OK",
-			createRequest(http.MethodGet, ADDRESS, TestAddress),
+			createAddressableRequest(http.MethodGet, ADDRESS, TestAddress),
 			createMockAddressLoaderStringArg(1, "GetAddressablesByAddress", TestAddress),
 			http.StatusOK,
 		},
 		{
 			"OK(Multiple matches)",
-			createRequest(http.MethodGet, ADDRESS, TestAddress),
+			createAddressableRequest(http.MethodGet, ADDRESS, TestAddress),
 			createMockAddressLoaderStringArg(3, "GetAddressablesByAddress", TestAddress),
 			http.StatusOK,
 		},
 		{
 
 			"OK(No matches)",
-			createRequest(http.MethodGet, ADDRESS, TestAddress),
+			createAddressableRequest(http.MethodGet, ADDRESS, TestAddress),
 			createMockAddressLoaderStringArg(0, "GetAddressablesByAddress", TestAddress),
 			http.StatusOK,
 		},
 		{
 			"Invalid ADDRESS path parameter",
-			createRequest(http.MethodGet, ADDRESS, ErrorPathParam),
+			createAddressableRequest(http.MethodGet, ADDRESS, ErrorPathParam),
 			createMockAddressLoaderStringArg(1, "GetAddressablesByAddress", TestAddress),
 			http.StatusBadRequest,
 		},
 		{
 			"Internal Server Error",
-			createRequest(http.MethodGet, ADDRESS, TestAddress),
+			createAddressableRequest(http.MethodGet, ADDRESS, TestAddress),
 			createErrorMockAddressLoaderStringArg("GetAddressablesByAddress", TestAddress),
 			http.StatusInternalServerError,
 		},
@@ -394,30 +394,30 @@ func TestGetAddressablesByPublisher(t *testing.T) {
 		expectedStatus int
 	}{
 		{"OK",
-			createRequest(http.MethodGet, PUBLISHER, TestPublisher),
+			createAddressableRequest(http.MethodGet, PUBLISHER, TestPublisher),
 			createMockAddressLoaderStringArg(1, "GetAddressablesByPublisher", TestPublisher),
 			http.StatusOK,
 		},
 		{
 			"OK(Multiple matches)",
-			createRequest(http.MethodGet, PUBLISHER, TestPublisher), createMockAddressLoaderStringArg(3, "GetAddressablesByPublisher", TestPublisher),
+			createAddressableRequest(http.MethodGet, PUBLISHER, TestPublisher), createMockAddressLoaderStringArg(3, "GetAddressablesByPublisher", TestPublisher),
 			http.StatusOK,
 		},
 		{
 			"OK(No matches)",
-			createRequest(http.MethodGet, PUBLISHER, TestPublisher),
+			createAddressableRequest(http.MethodGet, PUBLISHER, TestPublisher),
 			createMockAddressLoaderStringArg(0, "GetAddressablesByPublisher", TestPublisher),
 			http.StatusOK,
 		},
 		{
 			"Invalid PUBLISHER path parameter",
-			createRequest(http.MethodGet, PUBLISHER, ErrorPathParam),
+			createAddressableRequest(http.MethodGet, PUBLISHER, ErrorPathParam),
 			createMockAddressLoaderStringArg(1, "GetAddressablesByPublisher", TestPublisher),
 			http.StatusBadRequest,
 		},
 		{
 			"Internal Server Error",
-			createRequest(http.MethodGet, PUBLISHER, TestPublisher),
+			createAddressableRequest(http.MethodGet, PUBLISHER, TestPublisher),
 			createErrorMockAddressLoaderStringArg("GetAddressablesByPublisher", TestPublisher),
 			http.StatusInternalServerError,
 		},
@@ -446,37 +446,37 @@ func TestGetAddressablesByPort(t *testing.T) {
 	}{
 		{
 			"OK",
-			createRequest(http.MethodGet, PORT, strconv.Itoa(TestPort)),
+			createAddressableRequest(http.MethodGet, PORT, strconv.Itoa(TestPort)),
 			createMockAddressLoaderForPort(1, "GetAddressablesByPort"),
 			http.StatusOK,
 		},
 		{
 			"OK(Multiple matches)",
-			createRequest(http.MethodGet, PORT, strconv.Itoa(TestPort)),
+			createAddressableRequest(http.MethodGet, PORT, strconv.Itoa(TestPort)),
 			createMockAddressLoaderForPort(3, "GetAddressablesByPort"),
 			http.StatusOK,
 		},
 		{
 			"OK(No matches)",
-			createRequest(http.MethodGet, PORT, strconv.Itoa(TestPort)),
+			createAddressableRequest(http.MethodGet, PORT, strconv.Itoa(TestPort)),
 			createMockAddressLoaderForPort(0, "GetAddressablesByPort"),
 			http.StatusOK,
 		},
 		{
 			"Invalid PORT path parameter",
-			createRequest(http.MethodGet, PORT, ErrorPathParam),
+			createAddressableRequest(http.MethodGet, PORT, ErrorPathParam),
 			createMockAddressLoaderForPort(1, "GetAddressablesByPort"),
 			http.StatusBadRequest,
 		},
 		{
 			"Non-integer PORT path parameter",
-			createRequest(http.MethodGet, PORT, ErrorPortPathParam),
+			createAddressableRequest(http.MethodGet, PORT, ErrorPortPathParam),
 			createMockAddressLoaderForPort(1, "GetAddressablesByPort"),
 			http.StatusBadRequest,
 		},
 		{
 			"Internal Server Error",
-			createRequest(http.MethodGet, PORT, strconv.Itoa(TestPort)),
+			createAddressableRequest(http.MethodGet, PORT, strconv.Itoa(TestPort)),
 			createErrorMockAddressLoaderPortExecutor("GetAddressablesByPort"),
 			http.StatusInternalServerError,
 		},
@@ -505,31 +505,31 @@ func TestGetAddressablesByTopic(t *testing.T) {
 	}{
 		{
 			"OK",
-			createRequest(http.MethodGet, TOPIC, TestTopic),
+			createAddressableRequest(http.MethodGet, TOPIC, TestTopic),
 			createMockAddressLoaderStringArg(1, "GetAddressablesByTopic", TestTopic),
 			http.StatusOK,
 		},
 		{
 			"OK(Multiple matches)",
-			createRequest(http.MethodGet, TOPIC, TestTopic),
+			createAddressableRequest(http.MethodGet, TOPIC, TestTopic),
 			createMockAddressLoaderStringArg(3, "GetAddressablesByTopic", TestTopic),
 			http.StatusOK,
 		},
 		{
 			"OK(No matches)",
-			createRequest(http.MethodGet, TOPIC, TestTopic),
+			createAddressableRequest(http.MethodGet, TOPIC, TestTopic),
 			createMockAddressLoaderStringArg(0, "GetAddressablesByTopic", TestTopic),
 			http.StatusOK,
 		},
 		{
 			"Invalid TOPIC path parameter",
-			createRequest(http.MethodGet, TOPIC, ErrorPathParam),
+			createAddressableRequest(http.MethodGet, TOPIC, ErrorPathParam),
 			createMockAddressLoaderStringArg(1, "GetAddressablesByTopic", TestTopic),
 			http.StatusBadRequest,
 		},
 		{
 			"Internal Server Error",
-			createRequest(http.MethodGet, TOPIC, TestTopic),
+			createAddressableRequest(http.MethodGet, TOPIC, TestTopic),
 			createErrorMockAddressLoaderStringArg("GetAddressablesByTopic", TestTopic),
 			http.StatusInternalServerError,
 		},
@@ -558,7 +558,7 @@ func TestDeleteAddressableById(t *testing.T) {
 	}{
 		{
 			"OK",
-			createRequest(http.MethodDelete, ID, TestId),
+			createAddressableRequest(http.MethodDelete, ID, TestId),
 			createMockWithOutlines([]mockOutline{
 				{"GetAddressableById", TestId, createAddressables(1)[0], nil},
 				{"GetAddressableByName", mock.Anything, contract.Addressable{}, errors.New("some error")},
@@ -568,7 +568,7 @@ func TestDeleteAddressableById(t *testing.T) {
 		},
 		{
 			name:    "Addressable not found",
-			request: createRequest(http.MethodDelete, ID, TestId),
+			request: createAddressableRequest(http.MethodDelete, ID, TestId),
 			dbMock: createMockWithOutlines([]mockOutline{
 				{"GetAddressableByName", TestId, contract.Addressable{}, db.ErrNotFound},
 				{"GetAddressableById", TestId, contract.Addressable{}, db.ErrNotFound}}),
@@ -576,7 +576,7 @@ func TestDeleteAddressableById(t *testing.T) {
 		},
 		{
 			name:    "Addressable in use",
-			request: createRequest(http.MethodDelete, ID, TestId),
+			request: createAddressableRequest(http.MethodDelete, ID, TestId),
 			dbMock: createMockWithOutlines([]mockOutline{
 				{"GetAddressableById", TestId, createAddressables(1)[0], nil},
 				{"GetAddressableByName", mock.Anything, contract.Addressable{}, errors.New("some error")},
@@ -586,7 +586,7 @@ func TestDeleteAddressableById(t *testing.T) {
 		},
 		{
 			name:    "Other error from database",
-			request: createRequest(http.MethodDelete, ID, TestId),
+			request: createAddressableRequest(http.MethodDelete, ID, TestId),
 			dbMock: createMockWithOutlines([]mockOutline{
 				{"GetAddressableByName", TestId, contract.Addressable{}, errors.New("some error")},
 				{"GetAddressableById", TestId, contract.Addressable{}, errors.New("some error")}}),
@@ -618,7 +618,7 @@ func TestDeleteAddressableByName(t *testing.T) {
 	}{
 		{
 			"OK",
-			createRequest(http.MethodDelete, NAME, TestName),
+			createAddressableRequest(http.MethodDelete, NAME, TestName),
 			createMockWithOutlines([]mockOutline{
 				{"GetAddressableByName", TestName, createAddressables(1)[0], nil},
 				{"GetAddressableById", mock.Anything, contract.Addressable{}, errors.New("some error")},
@@ -628,7 +628,7 @@ func TestDeleteAddressableByName(t *testing.T) {
 		},
 		{
 			name:    "Addressable not found",
-			request: createRequest(http.MethodDelete, NAME, TestName),
+			request: createAddressableRequest(http.MethodDelete, NAME, TestName),
 			dbMock: createMockWithOutlines([]mockOutline{
 				{"GetAddressableByName", TestName, contract.Addressable{}, db.ErrNotFound},
 				{"GetAddressableById", TestName, contract.Addressable{}, db.ErrNotFound}}),
@@ -636,7 +636,7 @@ func TestDeleteAddressableByName(t *testing.T) {
 		},
 		{
 			name:    "Addressable in use",
-			request: createRequest(http.MethodDelete, NAME, TestName),
+			request: createAddressableRequest(http.MethodDelete, NAME, TestName),
 			dbMock: createMockWithOutlines([]mockOutline{
 				{"GetAddressableByName", TestName, createAddressables(1)[0], nil},
 				{"GetAddressableById", mock.Anything, contract.Addressable{}, errors.New("some error")},
@@ -646,7 +646,7 @@ func TestDeleteAddressableByName(t *testing.T) {
 		},
 		{
 			name:    "Other error from database",
-			request: createRequest(http.MethodDelete, NAME, TestName),
+			request: createAddressableRequest(http.MethodDelete, NAME, TestName),
 			dbMock: createMockWithOutlines([]mockOutline{
 				{"GetAddressableByName", TestName, contract.Addressable{}, errors.New("some error")},
 				{"GetAddressableById", TestName, contract.Addressable{}, errors.New("some error")}}),
@@ -669,7 +669,7 @@ func TestDeleteAddressableByName(t *testing.T) {
 	}
 }
 
-func createRequest(httpMethod string, pathParamName string, pathParamValue string) *http.Request {
+func createAddressableRequest(httpMethod string, pathParamName string, pathParamValue string) *http.Request {
 	req := httptest.NewRequest(httpMethod, AddressableTestURI, nil)
 	return mux.SetURLVars(req, map[string]string{pathParamName: pathParamValue})
 }
