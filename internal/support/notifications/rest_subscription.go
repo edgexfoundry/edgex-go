@@ -299,17 +299,17 @@ func splitVars(vars string) []string {
 }
 
 func validateEmailAddresses(s models.Subscription) error {
-	err := errors.NewErrMailAddrContainsCRLF(s.Slug)
+	errMail := errors.NewErrMailAddrContainsCRLF(s.Slug)
 	for _, c := range s.Channels {
 		if c.Type == models.ChannelType(models.Email) {
 			for _, m := range c.MailAddresses {
 				if strings.ContainsAny(m, "\n\r") {
-					return err
+					errMail.AddErrMailAddrContainsCRLF(m)
 				}
 			}
 		}
 	}
-	return nil
+	return errMail.GetError()
 }
 
 func subscriptionsByReceiverHandler(w http.ResponseWriter, r *http.Request) {
