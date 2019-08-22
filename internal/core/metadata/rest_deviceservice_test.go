@@ -124,12 +124,82 @@ func TestGetServiceById(t *testing.T) {
 	}
 }
 
-func TestGetServiceByAddressableId(t *testing.T) {
-	req := createDeviceServiceRequest(http.MethodGet, ADDRESSABLEID, testDeviceServiceId)
-
+func TestGetServiceByAddressableName(t *testing.T) {
 	tests := []struct {
 		name           string
 		dbMock         interfaces.DBClient
+		value          string
+		expectedStatus int
+	}{
+		{
+			"OK",
+			createMockWithOutlines([]mockOutline{
+				{"GetAddressableByName", testDeviceServiceName, testAddressable, nil},
+				{"GetDeviceServicesByAddressableId", testDeviceServiceId, testDeviceServices, nil},
+			}),
+			testDeviceServiceName,
+			http.StatusOK,
+		},
+		{
+			"Addressable not found",
+			createMockWithOutlines([]mockOutline{
+				{"GetAddressableByName", testDeviceServiceName, contract.Addressable{}, db.ErrNotFound},
+			}),
+			testDeviceServiceName,
+			http.StatusNotFound,
+		},
+		{
+			"No name provided",
+			nil,
+			"",
+			http.StatusNotFound,
+		},
+		{
+			"Invalid name",
+			nil,
+			"%ERR",
+			http.StatusBadRequest,
+		},
+		{
+			"Addressable lookup error",
+			createMockWithOutlines([]mockOutline{
+				{"GetAddressableByName", testDeviceServiceName, contract.Addressable{}, testError},
+			}),
+			testDeviceServiceName,
+			http.StatusInternalServerError,
+		},
+		{
+			"Device services lookup error",
+			createMockWithOutlines([]mockOutline{
+				{"GetAddressableByName", testDeviceServiceName, testAddressable, nil},
+				{"GetDeviceServicesByAddressableId", testDeviceServiceId, nil, testError},
+			}),
+			testDeviceServiceName,
+			http.StatusInternalServerError,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			Configuration = &ConfigurationStruct{}
+			dbClient = tt.dbMock
+			rr := httptest.NewRecorder()
+			handler := http.HandlerFunc(restGetServiceByAddressableName)
+
+			handler.ServeHTTP(rr, createDeviceServiceRequest(http.MethodGet, ADDRESSABLENAME, tt.value))
+			response := rr.Result()
+			if response.StatusCode != tt.expectedStatus {
+				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
+				return
+			}
+		})
+	}
+}
+
+func TestGetServiceByAddressableId(t *testing.T) {
+	tests := []struct {
+		name           string
+		dbMock         interfaces.DBClient
+		value          string
 		expectedStatus int
 	}{
 		{
@@ -138,13 +208,21 @@ func TestGetServiceByAddressableId(t *testing.T) {
 				{"GetAddressableById", testDeviceServiceId, testAddressable, nil},
 				{"GetDeviceServicesByAddressableId", testDeviceServiceId, testDeviceServices, nil},
 			}),
+			testDeviceServiceId,
 			http.StatusOK,
+		},
+		{
+			"No ID provided",
+			nil,
+			"",
+			http.StatusNotFound,
 		},
 		{
 			"Addressable not found",
 			createMockWithOutlines([]mockOutline{
 				{"GetAddressableById", testDeviceServiceId, contract.Addressable{}, db.ErrNotFound},
 			}),
+			testDeviceServiceId,
 			http.StatusNotFound,
 		},
 		{
@@ -152,6 +230,7 @@ func TestGetServiceByAddressableId(t *testing.T) {
 			createMockWithOutlines([]mockOutline{
 				{"GetAddressableById", testDeviceServiceId, contract.Addressable{}, testError},
 			}),
+			testDeviceServiceId,
 			http.StatusInternalServerError,
 		},
 		{
@@ -160,6 +239,7 @@ func TestGetServiceByAddressableId(t *testing.T) {
 				{"GetAddressableById", testDeviceServiceId, testAddressable, nil},
 				{"GetDeviceServicesByAddressableId", testDeviceServiceId, nil, testError},
 			}),
+			testDeviceServiceId,
 			http.StatusInternalServerError,
 		},
 	}
@@ -170,7 +250,7 @@ func TestGetServiceByAddressableId(t *testing.T) {
 			rr := httptest.NewRecorder()
 			handler := http.HandlerFunc(restGetServiceByAddressableId)
 
-			handler.ServeHTTP(rr, req)
+			handler.ServeHTTP(rr, createDeviceServiceRequest(http.MethodGet, ADDRESSABLEID, tt.value))
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
