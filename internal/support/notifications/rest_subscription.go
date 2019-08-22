@@ -58,9 +58,15 @@ func subscriptionHandler(w http.ResponseWriter, r *http.Request) {
 		dec := json.NewDecoder(r.Body)
 		err := dec.Decode(&s)
 
-		// validate if email addresses contain CRLF pair
-		if err = validateEmailAddresses(s); err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+		// validate email addresses
+		err = validateEmailAddresses(s)
+		if err != nil {
+			switch err.(type) {
+			case errors.ErrInvalidEmailAddresses:
+				http.Error(w, err.Error(), http.StatusBadRequest)
+			default:
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
 			LoggingClient.Error(err.Error())
 			return
 		}
@@ -101,9 +107,15 @@ func subscriptionHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// validate if email addresses contain CRLF pair
-		if err = validateEmailAddresses(s); err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+		// validate email addresses
+		err = validateEmailAddresses(s)
+		if err != nil {
+			switch err.(type) {
+			case errors.ErrInvalidEmailAddresses:
+				http.Error(w, err.Error(), http.StatusBadRequest)
+			default:
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
 			LoggingClient.Error(err.Error())
 			return
 		}
@@ -299,17 +311,26 @@ func splitVars(vars string) []string {
 }
 
 func validateEmailAddresses(s models.Subscription) error {
-	errMail := errors.NewErrMailAddrContainsCRLF(s.Slug)
+	var invalidAddrs []string
 	for _, c := range s.Channels {
 		if c.Type == models.ChannelType(models.Email) {
 			for _, m := range c.MailAddresses {
 				if strings.ContainsAny(m, "\n\r") {
-					errMail.AddErrMailAddrContainsCRLF(m)
+					invalidAddrs = append(invalidAddrs, m)
 				}
 			}
 		}
 	}
-	return errMail.GetError()
+	if len(invalidAddrs) > 0 {
+		resp := "Subscription " + s.Slug + " mail addresses contain CRLF: ["
+		for _, m := range invalidAddrs {
+			resp += m + ", "
+		}
+		resp = strings.TrimSuffix(resp, ", ")
+		resp += "]"
+		return errors.NewErrInvalidEmailAddresses(resp)
+	}
+	return nil
 }
 
 func subscriptionsByReceiverHandler(w http.ResponseWriter, r *http.Request) {

@@ -40,30 +40,14 @@ func NewErrSubscriptionNotFound(slug string) error {
 	return ErrSubscriptionNotFound{slug: slug}
 }
 
-type ErrMailAddrContainsCRLF struct {
-	slug             string
-	errMailAddresses []string
+type ErrInvalidEmailAddresses struct {
+	description string
 }
 
-func (e ErrMailAddrContainsCRLF) Error() string {
-	return fmt.Sprintf("Subscription '%s' mail addresses contain CRLF %v", e.slug, e.errMailAddresses)
+func (e ErrInvalidEmailAddresses) Error() string {
+	return fmt.Sprintf("%s", e.description)
 }
 
-func (e *ErrMailAddrContainsCRLF) AddErrMailAddrContainsCRLF(m string) {
-	lastAddress := len(e.errMailAddresses)
-	if lastAddress > 0 {
-		e.errMailAddresses[lastAddress-1] += ","
-	}
-	e.errMailAddresses = append(e.errMailAddresses, m)
-}
-
-func (e ErrMailAddrContainsCRLF) GetError() error {
-	if len(e.errMailAddresses) > 0 {
-		return e
-	}
-	return nil
-}
-
-func NewErrMailAddrContainsCRLF(slug string) *ErrMailAddrContainsCRLF {
-	return &ErrMailAddrContainsCRLF{slug: slug}
+func NewErrInvalidEmailAddresses(description string) error {
+	return ErrInvalidEmailAddresses{description: description}
 }
