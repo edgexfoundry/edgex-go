@@ -77,6 +77,61 @@ func TestGetAllDeviceServices(t *testing.T) {
 	Configuration = &ConfigurationStruct{}
 }
 
+func TestGetServiceByName(t *testing.T) {
+	tests := []struct {
+		name           string
+		dbMock         interfaces.DBClient
+		value          string
+		expectedStatus int
+	}{
+		{
+			"OK",
+			createMockWithOutlines([]mockOutline{
+				{"GetDeviceServiceByName", testDeviceServiceName, testDeviceService, nil},
+			}),
+			testDeviceServiceName,
+			http.StatusOK,
+		},
+		{
+			"Invalid name",
+			nil,
+			"%ERR",
+			http.StatusBadRequest,
+		},
+		{
+			"Device service not found",
+			createMockWithOutlines([]mockOutline{
+				{"GetDeviceServiceByName", testDeviceServiceName, contract.DeviceService{}, db.ErrNotFound},
+			}),
+			testDeviceServiceName,
+			http.StatusNotFound,
+		},
+		{
+			"Device services lookup error",
+			createMockWithOutlines([]mockOutline{
+				{"GetDeviceServiceByName", testDeviceServiceName, contract.DeviceService{}, testError},
+			}),
+			testDeviceServiceName,
+			http.StatusInternalServerError,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			Configuration = &ConfigurationStruct{}
+			dbClient = tt.dbMock
+			rr := httptest.NewRecorder()
+			handler := http.HandlerFunc(restGetServiceByName)
+
+			handler.ServeHTTP(rr, createDeviceServiceRequest(http.MethodGet, NAME, tt.value))
+			response := rr.Result()
+			if response.StatusCode != tt.expectedStatus {
+				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
+				return
+			}
+		})
+	}
+}
+
 func TestGetServiceById(t *testing.T) {
 	req := createDeviceServiceRequest(http.MethodGet, ID, testDeviceServiceId)
 

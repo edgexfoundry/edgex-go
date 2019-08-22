@@ -115,7 +115,7 @@ type deviceServiceLoadById struct {
 	db DeviceServiceLoader
 }
 
-// NewDeviceServiceLoadById creates a new Executor that retrieves all DeviceService associated with a given ID.
+// NewDeviceServiceLoadById creates a new Executor that retrieves the DeviceService associated with a given ID.
 func NewDeviceServiceLoadById(id string, db DeviceServiceLoader) DeviceServiceGetExecutor {
 	return deviceServiceLoadById{id: id, db: db}
 }
@@ -126,6 +126,30 @@ func (op deviceServiceLoadById) Execute() (contract.DeviceService, error) {
 	if err != nil {
 		if err == db.ErrNotFound {
 			return contract.DeviceService{}, errors.NewErrItemNotFound(op.id)
+		} else {
+			return contract.DeviceService{}, err
+		}
+	}
+
+	return ds, nil
+}
+
+type deviceServiceLoadByName struct {
+	name string
+	db   DeviceServiceLoader
+}
+
+// NewDeviceServiceLoadByName creates a new Executor that retrieves the DeviceService associated with a given name.
+func NewDeviceServiceLoadByName(name string, db DeviceServiceLoader) DeviceServiceGetExecutor {
+	return deviceServiceLoadByName{name: name, db: db}
+}
+
+// Execute performs an operation that retrieves the DeviceService associated with a given name.
+func (op deviceServiceLoadByName) Execute() (contract.DeviceService, error) {
+	ds, err := op.db.GetDeviceServiceByName(op.name)
+	if err != nil {
+		if err == db.ErrNotFound {
+			return contract.DeviceService{}, errors.NewErrItemNotFound(op.name)
 		} else {
 			return contract.DeviceService{}, err
 		}

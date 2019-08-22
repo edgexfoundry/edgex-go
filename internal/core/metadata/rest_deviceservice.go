@@ -278,18 +278,20 @@ func restGetServiceByName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := dbClient.GetDeviceServiceByName(dn)
+	op := device_service.NewDeviceServiceLoadByName(dn, dbClient)
+	res, err := op.Execute()
 	if err != nil {
-		if err == db.ErrNotFound {
+		switch err.(type) {
+		case *types.ErrItemNotFound:
 			http.Error(w, err.Error(), http.StatusNotFound)
-		} else {
+		default:
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		LoggingClient.Error(err.Error())
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	json.NewEncoder(w).Encode(res)
 }
 
