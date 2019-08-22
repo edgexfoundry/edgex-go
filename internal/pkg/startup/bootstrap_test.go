@@ -53,7 +53,7 @@ func testPass(t *testing.T) {
 
 func testFail(t *testing.T) {
 	clearVars()
-	p := config.BootParams{true, "", config.RetryInfo{9999999, timeoutPass, 1}}
+	p := config.BootParams{true, "", config.RetryInfo{9999999, timeoutFail, 1}}
 	Bootstrap(p, mockRetry, mockLog)
 	time.Sleep(time.Millisecond * time.Duration(25)) //goroutine timing
 	if checkInit {
