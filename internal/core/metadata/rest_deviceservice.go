@@ -230,30 +230,24 @@ func restGetServiceByAddressableName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	json.NewEncoder(w).Encode(res)
 }
 
 func restGetServiceByAddressableId(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	var sid string = vars[ADDRESSABLEID]
+	var sid = vars[ADDRESSABLEID]
 
-	// Check if the Addressable exists
-	_, err := dbClient.GetAddressableById(sid)
+	op := device_service.NewDeviceServiceLoadByAddressableId(sid, dbClient)
+	res, err := op.Execute()
 	if err != nil {
-		if err == db.ErrNotFound {
-			http.Error(w, "Addressable not found", http.StatusNotFound)
-		} else {
+		switch err.(type) {
+		case *types.ErrItemNotFound:
+			http.Error(w, err.Error(), http.StatusNotFound)
+		default:
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		LoggingClient.Error(err.Error())
-		return
-	}
-
-	res := make([]models.DeviceService, 0)
-	if res, err = dbClient.GetDeviceServicesByAddressableId(sid); err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -483,20 +477,22 @@ func updateServiceLastConnected(ds models.DeviceService, lc int64, w http.Respon
 
 func restGetServiceById(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	var did string = vars[ID]
+	var did = vars[ID]
 
-	res, err := dbClient.GetDeviceServiceById(did)
+	op := device_service.NewDeviceServiceLoadById(did, dbClient)
+	res, err := op.Execute()
 	if err != nil {
-		if err == db.ErrNotFound {
+		switch err.(type) {
+		case *types.ErrItemNotFound:
 			http.Error(w, err.Error(), http.StatusNotFound)
-		} else {
+		default:
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		LoggingClient.Error(err.Error())
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	json.NewEncoder(w).Encode(res)
 }
 

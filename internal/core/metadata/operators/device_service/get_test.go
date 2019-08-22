@@ -15,14 +15,19 @@
 package device_service
 
 import (
+	goErrors "errors"
+	"reflect"
 	"testing"
 
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/operators/device_service/mocks"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/google/uuid"
-	"github.com/pkg/errors"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestGetAllDeviceServices(t *testing.T) {
@@ -32,9 +37,30 @@ func TestGetAllDeviceServices(t *testing.T) {
 		dbMock      DeviceServiceLoader
 		expectError bool
 	}{
-		{"GetAllPass", config.ServiceInfo{MaxResultCount: 1}, createGetDeviceServiceLoaderMock(), false},
-		{"GetAllFailCount", config.ServiceInfo{}, createGetDeviceServiceLoaderMock(), true},
-		{"GetAllFailUnexpected", config.ServiceInfo{MaxResultCount: 1}, createGetDeviceServiceLoaderMockFail(), true},
+		{
+			"GetAllPass",
+			config.ServiceInfo{MaxResultCount: 1},
+			createMockLoader([]mockOutline{
+				{"GetAllDeviceServices", mock.Anything, testDeviceServices, nil},
+			}),
+			false,
+		},
+		{
+			"GetAllFailCount",
+			config.ServiceInfo{},
+			createMockLoader([]mockOutline{
+				{"GetAllDeviceServices", mock.Anything, testDeviceServices, nil},
+			}),
+			true,
+		},
+		{
+			"GetAllFailUnexpected",
+			config.ServiceInfo{MaxResultCount: 1},
+			createMockLoader([]mockOutline{
+				{"GetAllDeviceServices", mock.Anything, nil, testError},
+			}),
+			true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -52,19 +78,167 @@ func TestGetAllDeviceServices(t *testing.T) {
 	}
 }
 
-func createGetDeviceServiceLoaderMock() DeviceServiceLoader {
-	services := []contract.DeviceService{testDeviceService}
-	dbMock := &mocks.DeviceServiceLoader{}
-	dbMock.On("GetAllDeviceServices").Return(services, nil)
-	return dbMock
+func TestGetDeviceServiceById(t *testing.T) {
+	tests := []struct {
+		name             string
+		mockLoader       DeviceServiceLoader
+		expectedVal      contract.DeviceService
+		expectedError    bool
+		expectedErrorVal error
+	}{
+		{
+			name: "Successful database call",
+			mockLoader: createMockLoader([]mockOutline{
+				{"GetDeviceServiceById", testDeviceServiceId, testDeviceService, nil},
+			}),
+			expectedVal:      testDeviceService,
+			expectedError:    false,
+			expectedErrorVal: nil,
+		},
+		{
+			name: "Device service not found",
+			mockLoader: createMockLoader([]mockOutline{
+				{"GetDeviceServiceById", testDeviceServiceId, contract.DeviceService{}, db.ErrNotFound},
+			}),
+			expectedVal:      contract.DeviceService{},
+			expectedError:    true,
+			expectedErrorVal: errors.NewErrItemNotFound(testDeviceServiceId),
+		},
+		{
+			name: "Device services lookup error",
+			mockLoader: createMockLoader([]mockOutline{
+				{"GetDeviceServiceById", testDeviceServiceId, contract.DeviceService{}, testError},
+			}),
+			expectedVal:      contract.DeviceService{},
+			expectedError:    true,
+			expectedErrorVal: testError,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(tt *testing.T) {
+			op := NewDeviceServiceLoadById(testDeviceServiceId, test.mockLoader)
+			actualVal, err := op.Execute()
+			if !reflect.DeepEqual(test.expectedVal, actualVal) {
+				t.Errorf("Observed value doesn't match expected.\nExpected: %v\nActual: %v\n", test.expectedVal, actualVal)
+				return
+			}
+
+			if test.expectedError && err == nil {
+				t.Error("Expected an error")
+				return
+			}
+
+			if !test.expectedError && err != nil {
+				t.Errorf("Unexpectedly encountered error: %s", err.Error())
+				return
+			}
+
+			if test.expectedErrorVal != nil && err != nil {
+				if test.expectedErrorVal.Error() != err.Error() {
+					t.Errorf("Observed error doesn't match expected.\nExpected: %v\nActual: %v\n", test.expectedErrorVal.Error(), err.Error())
+				}
+			}
+		})
+	}
 }
 
-func createGetDeviceServiceLoaderMockFail() DeviceServiceLoader {
-	dbMock := &mocks.DeviceServiceLoader{}
-	dbMock.On("GetAllDeviceServices").Return(nil, errors.New("unexpected error"))
-	return dbMock
+func TestGetDeviceServiceByAddressableId(t *testing.T) {
+	tests := []struct {
+		name             string
+		mockLoader       DeviceServiceLoader
+		expectedVal      []contract.DeviceService
+		expectedError    bool
+		expectedErrorVal error
+	}{
+		{
+			name: "Successful database call",
+			mockLoader: createMockLoader([]mockOutline{
+				{"GetAddressableById", testDeviceServiceId, testAddressable, nil},
+				{"GetDeviceServicesByAddressableId", testDeviceServiceId, testDeviceServices, nil},
+			}),
+			expectedVal:      testDeviceServices,
+			expectedError:    false,
+			expectedErrorVal: nil,
+		},
+		{
+			name: "Addressable not found",
+			mockLoader: createMockLoader([]mockOutline{
+				{"GetAddressableById", testDeviceServiceId, contract.Addressable{}, db.ErrNotFound},
+			}),
+			expectedVal:      nil,
+			expectedError:    true,
+			expectedErrorVal: errors.NewErrItemNotFound(testDeviceServiceId),
+		},
+		{
+			name: "Addressable lookup error",
+			mockLoader: createMockLoader([]mockOutline{
+				{"GetAddressableById", testDeviceServiceId, contract.Addressable{}, testError},
+			}),
+			expectedVal:      nil,
+			expectedError:    true,
+			expectedErrorVal: testError,
+		},
+		{
+			name: "Device services lookup error",
+			mockLoader: createMockLoader([]mockOutline{
+				{"GetAddressableById", testDeviceServiceId, testAddressable, nil},
+				{"GetDeviceServicesByAddressableId", testDeviceServiceId, nil, testError},
+			}),
+			expectedVal:      nil,
+			expectedError:    true,
+			expectedErrorVal: testError,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(tt *testing.T) {
+			op := NewDeviceServiceLoadByAddressableId(testDeviceServiceId, test.mockLoader)
+			actualVal, err := op.Execute()
+			if !reflect.DeepEqual(test.expectedVal, actualVal) {
+				t.Errorf("Observed value doesn't match expected.\nExpected: %v\nActual: %v\n", test.expectedVal, actualVal)
+				return
+			}
+
+			if test.expectedError && err == nil {
+				t.Error("Expected an error")
+				return
+			}
+
+			if !test.expectedError && err != nil {
+				t.Errorf("Unexpectedly encountered error: %s", err.Error())
+				return
+			}
+
+			if test.expectedErrorVal != nil && err != nil {
+				if test.expectedErrorVal.Error() != err.Error() {
+					t.Errorf("Observed error doesn't match expected.\nExpected: %v\nActual: %v\n", test.expectedErrorVal.Error(), err.Error())
+				}
+			}
+		})
+	}
 }
 
+type mockOutline struct {
+	methodName string
+	arg        interface{}
+	ret        interface{}
+	err        error
+}
+
+func createMockLoader(outlines []mockOutline) DeviceServiceLoader {
+	dbMock := mocks.DeviceServiceLoader{}
+
+	for _, o := range outlines {
+		dbMock.On(o.methodName, o.arg).Return(o.ret, o.err)
+	}
+
+	return &dbMock
+}
+
+var testAddressable = contract.Addressable{Id: testDeviceServiceId, Name: testDeviceServiceName}
 var testDeviceServiceId = uuid.New().String()
 var testDeviceServiceName = "test service"
 var testDeviceService = contract.DeviceService{Id: testDeviceServiceId, Name: testDeviceServiceName}
+var testDeviceServices = []contract.DeviceService{testDeviceService}
+var testError = goErrors.New("some error")

@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/url"
+	"strconv"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/errors"
@@ -242,4 +243,22 @@ func restDeleteIntervalByName(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
+}
+
+// ************************ UTILITY HANDLERS ************************************
+
+// Scrub all the Intervals and IntervalActions
+func restScrubAllIntervals(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+	LoggingClient.Info("Scrubbing All Interval(s) and IntervalAction(s).")
+	op := interval.NewScrubExecutor(dbClient)
+	count, err := op.Execute()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(strconv.Itoa(count)))
+
 }

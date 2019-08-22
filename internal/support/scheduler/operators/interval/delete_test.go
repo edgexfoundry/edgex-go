@@ -292,3 +292,60 @@ func TestIntervalByName(t *testing.T) {
 		})
 	}
 }
+
+func createMockScrubDBSuccessDel() IntervalDeleter {
+	dbMock := mocks.IntervalDeleter{}
+	dbMock.On("ScrubAllIntervals").Return(1, nil)
+	return &dbMock
+}
+
+func createMockScrubDBSuccessErr() IntervalDeleter {
+	dbMock := mocks.IntervalDeleter{}
+	dbMock.On("ScrubAllIntervals").Return(0, Error)
+	return &dbMock
+}
+
+func TestScrubIntervals_Execute(t *testing.T) {
+	tests := []struct {
+		name              string
+		database          IntervalDeleter
+		expectError       bool
+		expectedErrorType error
+	}{
+		{
+			name:              "Successful Delete",
+			database:          createMockScrubDBSuccessDel(),
+			expectError:       false,
+			expectedErrorType: nil,
+		},
+		{
+			name:              "Delete error",
+			database:          createMockScrubDBSuccessErr(),
+			expectError:       true,
+			expectedErrorType: Error,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			op := NewScrubExecutor(test.database)
+			_, err := op.Execute()
+
+			if test.expectError && err == nil {
+				t.Error("We expected an error but did not get one")
+			}
+
+			if !test.expectError && err != nil {
+				t.Errorf("We do not expected an error but got one. %s", err.Error())
+			}
+
+			if test.expectError {
+				eet := reflect.TypeOf(test.expectedErrorType)
+				aet := reflect.TypeOf(err)
+				if !aet.AssignableTo(eet) {
+					t.Errorf("Expected error of type %v, but got an error of type %v", eet, aet)
+				}
+			}
+			return
+		})
+	}
+}
