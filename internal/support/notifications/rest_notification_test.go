@@ -218,6 +218,17 @@ func createMockNotificationLabelsLoader(methodName string, labels []string, limi
 	return &myMock
 }
 
+func createMockNotificationNewestLoader(methodName string, limit int, desiredError error, ret interface{}) interfaces.DBClient {
+	myMock := mocks.DBClient{}
+
+	if desiredError != nil {
+		myMock.On(methodName, limit).Return(ret, desiredError)
+	} else {
+		myMock.On(methodName, limit).Return(ret, nil)
+	}
+	return &myMock
+}
+
 func createRequest(params map[string]string) *http.Request {
 	req := httptest.NewRequest(http.MethodGet, TestURI, nil)
 	return mux.SetURLVars(req, params)
@@ -673,6 +684,65 @@ func TestGetNotificationsByLabels(t *testing.T) {
 			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
 			handler := http.HandlerFunc(restNotificationsByLabels)
+			handler.ServeHTTP(rr, tt.request)
+			response := rr.Result()
+			if response.StatusCode != tt.expectedStatus {
+				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
+
+				return
+			}
+		})
+	}
+}
+
+func TestGetNotificationsNewest(t *testing.T) {
+
+	labelsURL := strings.Join(TestLabels, ",")
+
+	tests := []struct {
+		name           string
+		request        *http.Request
+		dbMock         interfaces.DBClient
+		expectedStatus int
+	}{
+		{
+			name:           "OK",
+			request:        createRequest(map[string]string{LABELS: labelsURL, LIMIT: strconv.Itoa(TestLimit)}),
+			dbMock:         createMockNotificationNewestLoader("GetNewNotifications", TestLimit, nil, createNotifications(1)),
+			expectedStatus: http.StatusOK,
+		},
+		{
+			name:           "Error converting string to integer limit",
+			request:        createRequest(map[string]string{LABELS: labelsURL, LIMIT: TestInvalidLimit}),
+			dbMock:         createMockNotificationNewestLoader("GetNewNotifications", TestLimit, errors.New("Test error"), []contract.Notification{}),
+			expectedStatus: http.StatusInternalServerError,
+		},
+		{
+			name:           "Limit too large Error",
+			request:        createRequest(map[string]string{LABELS: labelsURL, LIMIT: strconv.Itoa(TestTooLargeLimit)}),
+			dbMock:         createMockNotificationNewestLoader("GetNewNotifications", TestTooLargeLimit, errors.New("Test error"), []contract.Notification{}),
+			expectedStatus: http.StatusRequestEntityTooLarge,
+		},
+		{
+			name:           "Not Found",
+			request:        createRequest(map[string]string{LABELS: labelsURL, LIMIT: strconv.Itoa(TestLimit)}),
+			dbMock:         createMockNotificationNewestLoader("GetNewNotifications", TestLimit, nil, []contract.Notification{}),
+			expectedStatus: http.StatusNotFound,
+		},
+		{
+			name:           "Unknown Error",
+			request:        createRequest(map[string]string{LABELS: labelsURL, LIMIT: strconv.Itoa(TestLimit)}),
+			dbMock:         createMockNotificationNewestLoader("GetNewNotifications", TestLimit, errors.New("Test error"), createNotifications(1)),
+			expectedStatus: http.StatusInternalServerError,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			LoggingClient = logger.MockLogger{}
+			Configuration = &ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 5}}
+			dbClient = tt.dbMock
+			rr := httptest.NewRecorder()
+			handler := http.HandlerFunc(restNotificationsNew)
 			handler.ServeHTTP(rr, tt.request)
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {

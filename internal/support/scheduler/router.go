@@ -55,7 +55,7 @@ func LoadRestRoutes() *mux.Router {
 	interval.HandleFunc("/"+NAME+"/{"+NAME+"}", restGetIntervalByName).Methods(http.MethodGet)
 	interval.HandleFunc("/"+NAME+"/{"+NAME+"}", restDeleteIntervalByName).Methods(http.MethodDelete)
 	// Scrub "Intervals and IntervalActions"
-	interval.HandleFunc("/"+SCRUB+"/", scrubAllHandler).Methods(http.MethodDelete)
+	interval.HandleFunc("/"+SCRUB+"/", restScrubAllIntervals).Methods(http.MethodDelete)
 
 	// IntervalAction
 	r.HandleFunc(clients.ApiIntervalActionRoute, intervalActionHandler).Methods(http.MethodGet, http.MethodPut, http.MethodPost)
@@ -360,25 +360,6 @@ func intervalActionByIntervalHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		pkg.Encode(intervalActions, w, LoggingClient)
 		break
-	}
-}
-
-// ************************ UTILITY HANDLERS ************************************
-
-// Scrub all the Intervals and IntervalActions
-func scrubAllHandler(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
-
-	switch r.Method {
-	case http.MethodDelete:
-		count, err := scrubAll()
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(strconv.Itoa(count)))
 	}
 }
 

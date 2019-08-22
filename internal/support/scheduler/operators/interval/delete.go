@@ -26,6 +26,10 @@ type DeleteExecutor interface {
 	Execute() error
 }
 
+type ScrubExecutor interface {
+	Execute() (int, error)
+}
+
 type deleteIntervalByID struct {
 	db        IntervalDeleter
 	scDeleter SchedulerQueueDeleter
@@ -36,6 +40,10 @@ type deleteIntervalByName struct {
 	db        IntervalDeleter
 	scDeleter SchedulerQueueDeleter
 	dname     string
+}
+
+type scrubIntervals struct {
+	db IntervalDeleter
 }
 
 // Execute performs the deletion of the interval.
@@ -92,6 +100,14 @@ func (dibn deleteIntervalByName) Execute() error {
 	return nil
 }
 
+func (si scrubIntervals) Execute() (int, error) {
+	count, err := si.db.ScrubAllIntervals()
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
 func deleteInterval(interval contract.Interval, dibn deleteIntervalByName) error {
 	intervalActions, err := dibn.db.IntervalActionsByIntervalName(interval.Name)
 	if err != nil {
@@ -109,7 +125,7 @@ func deleteInterval(interval contract.Interval, dibn deleteIntervalByName) error
 
 }
 
-// NewDeleteByIDExecutor creates a new DeleteExecutor which deletes a interval based on id.
+// NewDeleteByIDExecutor creates a new DeleteExecutor which deletes an interval based on id.
 func NewDeleteByIDExecutor(db IntervalDeleter, scDeleter SchedulerQueueDeleter, did string) DeleteExecutor {
 	return deleteIntervalByID{
 		db:        db,
@@ -118,11 +134,18 @@ func NewDeleteByIDExecutor(db IntervalDeleter, scDeleter SchedulerQueueDeleter, 
 	}
 }
 
-// NewDeleteByIDExecutor creates a new DeleteExecutor which deletes a interval based on id.
+// NewDeleteByNameExecutor creates a new DeleteExecutor which deletes an interval based on name.
 func NewDeleteByNameExecutor(db IntervalDeleter, scDeleter SchedulerQueueDeleter, dname string) DeleteExecutor {
 	return deleteIntervalByName{
 		db:        db,
 		scDeleter: scDeleter,
 		dname:     dname,
+	}
+}
+
+// NewDeleteByScrubExecutor creates a new DeleteExecutor which scrubs intervals.
+func NewScrubExecutor(db IntervalDeleter) ScrubExecutor {
+	return scrubIntervals{
+		db: db,
 	}
 }

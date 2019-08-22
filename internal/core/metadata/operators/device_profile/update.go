@@ -56,6 +56,12 @@ func (n updateDeviceProfile) Execute() (contract.DeviceProfile, error) {
 	}
 
 	n.dp.Id = existingDeviceProfile.Id
+
+	// For the name field only we will not process an update unless it has been explicitly provided.
+	if n.dp.Name == "" {
+		n.dp.Name = existingDeviceProfile.Name
+	}
+
 	if err := n.database.UpdateDeviceProfile(n.dp); err != nil {
 		return contract.DeviceProfile{}, err
 	}

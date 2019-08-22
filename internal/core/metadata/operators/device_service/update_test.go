@@ -15,7 +15,6 @@
 package device_service
 
 import (
-	goErrors "errors"
 	"testing"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
@@ -24,10 +23,6 @@ import (
 
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 )
-
-var testOperatingState, _ = contract.GetOperatingState(contract.Enabled)
-var testAdminState, _ = contract.GetAdminState(contract.Unlocked)
-var testError = goErrors.New("some error")
 
 func TestUpdateOperatingStateByIdExecutor(t *testing.T) {
 	operatingStateEnabled := testDeviceService
@@ -289,13 +284,6 @@ func TestUpdateAdminStateByNameExecutor(t *testing.T) {
 	}
 }
 
-type mockOutline struct {
-	methodName string
-	arg        interface{}
-	ret        interface{}
-	err        error
-}
-
 func createMockUpdater(outlines []mockOutline) DeviceServiceUpdater {
 	dbMock := mocks.DeviceServiceUpdater{}
 
@@ -305,3 +293,6 @@ func createMockUpdater(outlines []mockOutline) DeviceServiceUpdater {
 
 	return &dbMock
 }
+
+var testAdminState, _ = contract.GetAdminState(contract.Unlocked)
+var testOperatingState, _ = contract.GetOperatingState(contract.Enabled)

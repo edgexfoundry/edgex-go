@@ -56,7 +56,7 @@ func LoadRestRoutes() *mux.Router {
 	b.HandleFunc("/"+NOTIFICATION+"/"+START+"/{"+START+"}/{"+LIMIT+":[0-9]+}", restNotificationByStart).Methods(http.MethodGet)
 	b.HandleFunc("/"+NOTIFICATION+"/"+END+"/{"+END+"}/{"+LIMIT+":[0-9]+}", restNotificationByEnd).Methods(http.MethodGet)
 	b.HandleFunc("/"+NOTIFICATION+"/"+LABELS+"/{"+LABELS+"}/{"+LIMIT+":[0-9]+}", restNotificationsByLabels).Methods(http.MethodGet)
-	b.HandleFunc("/"+NOTIFICATION+"/"+NEW+"/{"+LIMIT+":[0-9]+}", notificationsNewHandler).Methods(http.MethodGet)
+	b.HandleFunc("/"+NOTIFICATION+"/"+NEW+"/{"+LIMIT+":[0-9]+}", restNotificationsNew).Methods(http.MethodGet)
 
 	// GetSubscriptions
 	b.HandleFunc("/"+SUBSCRIPTION, subscriptionHandler).Methods(http.MethodGet, http.MethodPut, http.MethodPost)
