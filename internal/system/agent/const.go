@@ -13,11 +13,22 @@
  *******************************************************************************/
 package agent
 
+import "github.com/edgexfoundry/edgex-go/internal/system/executor"
+
 const (
-	OPERATION = "operation"
-	CONFIG    = "config"
-	SERVICES  = "services"
-	METRICS   = "metrics"
-	HEALTH    = "health"
-	PING      = "ping"
+	operation     = "operation"
+	configuration = "config"
+	services      = "services"
+	start         = executor.Start
+	stop          = executor.Stop
+	restart       = executor.Restart
+	metrics       = executor.Metrics
+	health        = "health"
+	ping          = "ping"
+
+	metricsOptionViaDirectService = "direct-service"
+	metricsOptionViaExecutor      = "executor"
+
+	executorTypeDirectService = metricsOptionViaDirectService
+	executorTypeUnknown       = "unknown"
 )

@@ -41,10 +41,6 @@ var registryClient registry.Client
 var chErrors chan error        //A channel for "config wait error" sourced from Registry
 var chUpdates chan interface{} //A channel for "config updates" sourced from Registry
 
-// Note that executorClient is the empty interface so that we may type-cast it
-// to whatever operation we need it to do at runtime.
-var executorClient interface{}
-
 func Retry(useRegistry bool, useProfile string, timeout int, wait *sync.WaitGroup, ch chan error) {
 	until := time.Now().Add(time.Millisecond * time.Duration(timeout))
 	for time.Now().Before(until) {
@@ -89,7 +85,6 @@ func Init(useRegistry bool) bool {
 	if Configuration == nil {
 		return false
 	}
-	executorClient = &ExecuteApp{}
 
 	if useRegistry && registryClient != nil {
 		chErrors = make(chan error)
@@ -222,19 +217,30 @@ func listenForConfigChanges() {
 }
 
 func initializeClients(useRegistry bool) {
-
 	generalClients = make(map[string]general.GeneralClient)
-	services := config.ListDefaultServices()
 
-	for serviceKey, serviceName := range services {
-		params := types.EndpointParams{
-			ServiceKey:  serviceKey,
-			Path:        "/",
-			UseRegistry: useRegistry,
-			Url:         Configuration.Clients[serviceName].Url(),
-			Interval:    internal.ClientMonitorDefault,
+	var updateGeneralClients = func(serviceKey string, serviceName string) {
+		generalClients[serviceKey] = general.NewGeneralClient(
+			types.EndpointParams{
+				ServiceKey:  serviceKey,
+				Path:        "/",
+				UseRegistry: useRegistry,
+				Url:         Configuration.Clients[serviceName].Url(),
+				Interval:    internal.ClientMonitorDefault,
+			},
+			startup.Endpoint{RegistryClient: &registryClient})
+	}
+
+	if useRegistry {
+		for serviceKey, serviceName := range config.ListDefaultServices() {
+			updateGeneralClients(serviceKey, serviceName)
 		}
-		generalClients[serviceKey] = general.NewGeneralClient(params, startup.Endpoint{RegistryClient: &registryClient})
+		return
+	}
+
+	// if the registry is not being used, load clients from configurations; assume configuration key is service name
+	for key := range Configuration.Clients {
+		updateGeneralClients(key, key)
 	}
 }
 
