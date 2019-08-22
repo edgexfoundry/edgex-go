@@ -18,10 +18,15 @@ import (
 	"net/url"
 	"os"
 	"strconv"
+
+	"github.com/edgexfoundry/edgex-go/internal"
 )
 
 const (
-	envKeyUrl = "edgex_registry"
+	envKeyUrl          = "edgex_registry"
+	envKeyRetryCount   = "edgex_registry_retry_count"
+	envKeyRetryTimeout = "edgex_registry_retry_timeout"
+	envKeyRetryWait    = "edgex_registry_retry_wait"
 )
 
 func OverrideFromEnvironment(registry RegistryInfo) RegistryInfo {
@@ -35,4 +40,21 @@ func OverrideFromEnvironment(registry RegistryInfo) RegistryInfo {
 		}
 	}
 	return registry
+}
+
+func GetRetryInfo () RetryInfo {
+	return RetryInfo {
+		Count:   GetFromEnvironmentUint(envKeyRetryCount, internal.BootRetryCountDefault),
+		Timeout: GetFromEnvironmentUint(envKeyRetryTimeout, internal.BootRetryTimeoutDefault),
+		Wait:    GetFromEnvironmentUint(envKeyRetryWait, internal.BootRetryWaitDefault),
+	}
+}
+
+func GetFromEnvironmentUint(key string, defval int) int {
+	if env := os.Getenv(key); env != "" {
+		if i, err := strconv.ParseInt(env, 10, 0); err == nil && i > 0 {
+			return int(i)
+		}
+	}
+	return defval
 }

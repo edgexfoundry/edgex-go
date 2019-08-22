@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/edgexfoundry/edgex-go"
-	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
@@ -34,7 +34,7 @@ func main() {
 	flag.Usage = usage.HelpCallback
 	flag.Parse()
 
-	params := startup.BootParams{UseRegistry: useRegistry, UseProfile: useProfile, BootTimeout: internal.BootTimeoutDefault}
+	params := config.BootParams{UseRegistry: useRegistry, UseProfile: useProfile, Retry: config.GetRetryInfo()}
 	startup.Bootstrap(params, scheduler.Retry, logBeforeInit)
 
 	ok := scheduler.Init(useRegistry)

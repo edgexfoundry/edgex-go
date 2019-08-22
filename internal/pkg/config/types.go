@@ -79,6 +79,19 @@ type RegistryInfo struct {
 	Type string
 }
 
+//	Various values for use when running the Retry function
+type RetryInfo struct {
+	Count int
+	Timeout int
+	Wait int
+}
+
+// Aggregation of properties used when booting a service
+type BootParams struct {
+	UseRegistry bool
+	UseProfile  string
+	Retry       RetryInfo
+}
 // LoggingInfo provides basic parameters related to where logs should be written.
 type LoggingInfo struct {
 	EnableRemote bool

@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/internal/security/proxy"
@@ -56,7 +56,7 @@ func main() {
 	flag.Usage = usage.HelpCallbackSecurityProxy
 	flag.Parse()
 
-	params := startup.BootParams{UseRegistry: useRegistry, UseProfile: useProfile, BootTimeout: internal.BootTimeoutDefault}
+	params := config.BootParams{UseRegistry: useRegistry, UseProfile: useProfile, Retry: config.GetRetryInfo()}
 	startup.Bootstrap(params, proxy.Retry, logBeforeInit)
 
 	req := proxy.NewRequestor(ensureSkipVerify, proxy.Configuration.Writable.RequestTimeout)

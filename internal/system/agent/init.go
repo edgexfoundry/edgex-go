@@ -45,19 +45,20 @@ var chUpdates chan interface{} //A channel for "config updates" sourced from Reg
 // to whatever operation we need it to do at runtime.
 var executorClient interface{}
 
-func Retry(useRegistry bool, useProfile string, timeout int, wait *sync.WaitGroup, ch chan error) {
-	until := time.Now().Add(time.Millisecond * time.Duration(timeout))
-	for time.Now().Before(until) {
+func Retry(params config.BootParams, wait *sync.WaitGroup, ch chan error) {
+	until := time.Now().Add(time.Millisecond * time.Duration(params.Retry.Timeout))
+	attempts := 0
+	for time.Now().Before(until) && attempts < params.Retry.Count {
 		var err error
 		// When looping, only handle configuration if it hasn't already been set.
 		// Note, too, that the SMA-managed services are bootstrapped by the SMA.
 		// Read in those setting, too, which specifies details for those services
 		// (Those setting were _previously_ to be found in a now-defunct TOML manifest file).
 		if Configuration == nil {
-			Configuration, err = initializeConfiguration(useRegistry, useProfile)
+			Configuration, err = initializeConfiguration(params.UseRegistry, params.UseProfile)
 			if err != nil {
 				ch <- err
-				if !useRegistry {
+				if !params.UseRegistry {
 					//Error occurred when attempting to read from local filesystem. Fail fast.
 					close(ch)
 					wait.Done()
@@ -69,7 +70,7 @@ func Retry(useRegistry bool, useProfile string, timeout int, wait *sync.WaitGrou
 				LoggingClient = logger.NewClient(clients.SystemManagementAgentServiceKey, Configuration.Logging.EnableRemote, logTarget, Configuration.Writable.LogLevel)
 
 				//Initialize service clients
-				initializeClients(useRegistry)
+				initializeClients(params.UseRegistry)
 			}
 		}
 
@@ -77,7 +78,8 @@ func Retry(useRegistry bool, useProfile string, timeout int, wait *sync.WaitGrou
 		if Configuration != nil {
 			break
 		}
-		time.Sleep(time.Second * time.Duration(1))
+		time.Sleep(time.Second * time.Duration(params.Retry.Wait))
+		attempts++
 	}
 	close(ch)
 	wait.Done()

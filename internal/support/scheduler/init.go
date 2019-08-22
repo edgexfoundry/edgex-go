@@ -47,17 +47,18 @@ var registryUpdates chan interface{} //A channel for "config updates" sourced fr
 
 var ticker *time.Ticker
 
-func Retry(useRegistry bool, useProfile string, timeout int, wait *sync.WaitGroup, ch chan error) {
+func Retry(params config.BootParams, wait *sync.WaitGroup, ch chan error) {
 	now := time.Now()
-	until := now.Add(time.Millisecond * time.Duration(timeout))
-	for time.Now().Before(until) {
+	until := now.Add(time.Millisecond * time.Duration(params.Retry.Timeout))
+	attempts := 0
+	for time.Now().Before(until) && attempts < params.Retry.Count {
 		var err error
 		//When looping, only handle configuration if it hasn't already been set.
 		if Configuration == nil {
-			Configuration, err = initializeConfiguration(useRegistry, useProfile)
+			Configuration, err = initializeConfiguration(params.UseRegistry, params.UseProfile)
 			if err != nil {
 				ch <- err
-				if !useRegistry {
+				if !params.UseRegistry {
 					//Error occurred when attempting to read from local filesystem. Fail fast.
 					close(ch)
 					wait.Done()
@@ -65,7 +66,7 @@ func Retry(useRegistry bool, useProfile string, timeout int, wait *sync.WaitGrou
 				}
 			} else {
 				//Check against boot timeout default
-				if Configuration.Service.BootTimeout != timeout {
+				if Configuration.Service.BootTimeout != params.Retry.Timeout {
 					until = now.Add(time.Millisecond * time.Duration(Configuration.Service.BootTimeout))
 				}
 				// Setup Logging
@@ -89,7 +90,8 @@ func Retry(useRegistry bool, useProfile string, timeout int, wait *sync.WaitGrou
 				break
 			}
 		}
-		time.Sleep(time.Second * time.Duration(1))
+		time.Sleep(time.Second * time.Duration(params.Retry.Wait))
+		attempts++
 	}
 	close(ch)
 	wait.Done()
