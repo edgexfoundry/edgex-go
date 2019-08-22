@@ -271,7 +271,7 @@ func TestGetDeviceServiceByAddressableId(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(tt *testing.T) {
-			op := NewDeviceServiceLoadByAddressableByID(test.value, test.mockLoader)
+			op := NewDeviceServiceLoadByAddressableID(test.value, test.mockLoader)
 			actualVal, err := op.Execute()
 			if !reflect.DeepEqual(test.expectedVal, actualVal) {
 				t.Errorf("Observed value doesn't match expected.\nExpected: %v\nActual: %v\n", test.expectedVal, actualVal)
@@ -360,7 +360,7 @@ func TestGetDeviceServiceByAddressableName(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(tt *testing.T) {
-			op := NewDeviceServiceLoadByAddressableByName(test.value, test.mockLoader)
+			op := NewDeviceServiceLoadByAddressableName(test.value, test.mockLoader)
 			actualVal, err := op.Execute()
 			if !reflect.DeepEqual(test.expectedVal, actualVal) {
 				t.Errorf("Observed value doesn't match expected.\nExpected: %v\nActual: %v\n", test.expectedVal, actualVal)

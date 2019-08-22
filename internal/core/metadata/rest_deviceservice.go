@@ -211,7 +211,7 @@ func restGetServiceByAddressableName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	op := device_service.NewDeviceServiceLoadByAddressableByName(an, dbClient)
+	op := device_service.NewDeviceServiceLoadByAddressableName(an, dbClient)
 	res, err := op.Execute()
 	if err != nil {
 		switch err.(type) {
@@ -232,7 +232,7 @@ func restGetServiceByAddressableId(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	var sid = vars[ADDRESSABLEID]
 
-	op := device_service.NewDeviceServiceLoadByAddressableByID(sid, dbClient)
+	op := device_service.NewDeviceServiceLoadByAddressableID(sid, dbClient)
 	res, err := op.Execute()
 	if err != nil {
 		switch err.(type) {

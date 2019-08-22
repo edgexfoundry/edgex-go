@@ -59,13 +59,13 @@ type deviceServiceLoadByAddressable struct {
 	db   DeviceServiceLoader
 }
 
-// NewDeviceServiceLoadByAddressableByName creates a new Executor that retrieves all DeviceService associated with a given Addressable name.
-func NewDeviceServiceLoadByAddressableByName(name string, db DeviceServiceLoader) DeviceServiceGetAllExecutor {
+// NewDeviceServiceLoadByAddressableName creates a new Executor that retrieves all DeviceService associated with a given Addressable name.
+func NewDeviceServiceLoadByAddressableName(name string, db DeviceServiceLoader) DeviceServiceGetAllExecutor {
 	return deviceServiceLoadByAddressable{name: name, db: db}
 }
 
-// NewDeviceServiceLoadByAddressableByID creates a new Executor that retrieves all DeviceService associated with a given Addressable ID.
-func NewDeviceServiceLoadByAddressableByID(id string, db DeviceServiceLoader) DeviceServiceGetAllExecutor {
+// NewDeviceServiceLoadByAddressableID creates a new Executor that retrieves all DeviceService associated with a given Addressable ID.
+func NewDeviceServiceLoadByAddressableID(id string, db DeviceServiceLoader) DeviceServiceGetAllExecutor {
 	return deviceServiceLoadByAddressable{id: id, db: db}
 }
 
