@@ -137,7 +137,7 @@ func restDeleteAddressableById(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	var id string = vars[ID]
 
-	op := addressable.NewDeleteExecutor(dbClient, id, "")
+	op := addressable.NewDeleteByIdExecutor(dbClient, id)
 	err := op.Execute()
 	if err != nil {
 		switch err.(type) {
@@ -166,7 +166,7 @@ func restDeleteAddressableByName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	op := addressable.NewDeleteExecutor(dbClient, "", name)
+	op := addressable.NewDeleteByNameExecutor(dbClient, name)
 	err = op.Execute()
 	if err != nil {
 		switch err.(type) {

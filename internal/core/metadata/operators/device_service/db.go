@@ -25,6 +25,7 @@ type DeviceServiceLoader interface {
 	GetDeviceServicesByAddressableId(id string) ([]contract.DeviceService, error)
 
 	GetAddressableById(id string) (contract.Addressable, error)
+	GetAddressableByName(id string) (contract.Addressable, error)
 }
 
 type DeviceServiceUpdater interface {

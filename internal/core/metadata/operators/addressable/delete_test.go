@@ -25,14 +25,13 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-func TestDeleteExecutor(t *testing.T) {
+func TestDeleteByIdExecutor(t *testing.T) {
 	success := SuccessfulDatabaseResult[0]
 
 	tests := []struct {
 		testName         string
 		mockDeleter      AddressDeleter
 		id               string
-		name             string
 		expectedError    bool
 		expectedErrorVal error
 	}{
@@ -40,51 +39,32 @@ func TestDeleteExecutor(t *testing.T) {
 			testName: "Successful database call by ID",
 			mockDeleter: createMockDeleter([]mockOutline{
 				{"GetAddressableById", success.Id, success, nil},
-				{"GetAddressableByName", mock.Anything, contract.Addressable{}, Error},
 				{"GetDeviceServicesByAddressableId", mock.Anything, []contract.DeviceService{}, nil},
 				{"DeleteAddressableById", mock.Anything, nil, nil}}),
 			id:               success.Id,
-			name:             "",
-			expectedError:    false,
-			expectedErrorVal: nil,
-		},
-		{
-			testName: "Successful database call by name",
-			mockDeleter: createMockDeleter([]mockOutline{
-				{"GetAddressableByName", success.Name, success, nil},
-				{"GetAddressableById", mock.Anything, contract.Addressable{}, Error},
-				{"GetDeviceServicesByAddressableId", mock.Anything, []contract.DeviceService{}, nil},
-				{"DeleteAddressableById", mock.Anything, nil, nil}}),
-			id:               "",
-			name:             success.Name,
 			expectedError:    false,
 			expectedErrorVal: nil,
 		},
 		{
 			testName: "Addressable not found",
 			mockDeleter: createMockDeleter([]mockOutline{
-				{"GetAddressableByName", success.Name, contract.Addressable{}, db.ErrNotFound},
 				{"GetAddressableById", success.Id, contract.Addressable{}, db.ErrNotFound}}),
 			id:               success.Id,
-			name:             success.Name,
 			expectedError:    true,
-			expectedErrorVal: errors.NewErrAddressableNotFound(success.Id, success.Name),
+			expectedErrorVal: errors.NewErrAddressableNotFound(success.Id, ""),
 		},
 		{
 			testName:         "No identifiers provided",
 			mockDeleter:      nil,
 			id:               "",
-			name:             "",
 			expectedError:    true,
 			expectedErrorVal: errors.NewErrAddressableNotFound("", ""),
 		},
 		{
 			testName: "Unsuccessful database call retrieving addressable",
 			mockDeleter: createMockDeleter([]mockOutline{
-				{"GetAddressableById", mock.Anything, contract.Addressable{}, Error},
-				{"GetAddressableByName", mock.Anything, contract.Addressable{}, Error}}),
+				{"GetAddressableById", mock.Anything, contract.Addressable{}, Error}}),
 			id:               success.Id,
-			name:             "",
 			expectedError:    true,
 			expectedErrorVal: Error,
 		},
@@ -92,11 +72,9 @@ func TestDeleteExecutor(t *testing.T) {
 			testName: "Addressable in use",
 			mockDeleter: createMockDeleter([]mockOutline{
 				{"GetAddressableById", success.Id, success, nil},
-				{"GetAddressableByName", mock.Anything, contract.Addressable{}, Error},
 				{"GetDeviceServicesByAddressableId", mock.Anything, []contract.DeviceService{{}}, nil},
 				{"DeleteAddressableById", mock.Anything, nil, nil}}),
 			id:               success.Id,
-			name:             "",
 			expectedError:    true,
 			expectedErrorVal: errors.NewErrAddressableInUse(success.Name),
 		},
@@ -104,10 +82,8 @@ func TestDeleteExecutor(t *testing.T) {
 			testName: "Unsuccessful database call retrieving device services",
 			mockDeleter: createMockDeleter([]mockOutline{
 				{"GetAddressableById", success.Id, success, nil},
-				{"GetAddressableByName", mock.Anything, contract.Addressable{}, Error},
 				{"GetDeviceServicesByAddressableId", mock.Anything, []contract.DeviceService{}, Error}}),
 			id:               success.Id,
-			name:             "",
 			expectedError:    true,
 			expectedErrorVal: Error,
 		},
@@ -115,11 +91,9 @@ func TestDeleteExecutor(t *testing.T) {
 			testName: "Unsuccessful database call deleting addressable",
 			mockDeleter: createMockDeleter([]mockOutline{
 				{"GetAddressableById", success.Id, success, nil},
-				{"GetAddressableByName", mock.Anything, contract.Addressable{}, Error},
 				{"GetDeviceServicesByAddressableId", mock.Anything, []contract.DeviceService{}, nil},
 				{"DeleteAddressableById", mock.Anything, Error, nil}}),
 			id:               success.Id,
-			name:             "",
 			expectedError:    true,
 			expectedErrorVal: Error,
 		},
@@ -127,7 +101,104 @@ func TestDeleteExecutor(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.testName, func(tt *testing.T) {
-			op := NewDeleteExecutor(test.mockDeleter, test.id, test.name)
+			op := NewDeleteByIdExecutor(test.mockDeleter, test.id)
+			err := op.Execute()
+			if test.expectedError && err == nil {
+				t.Error("Expected an error")
+				return
+			}
+
+			if !test.expectedError && err != nil {
+				t.Errorf("Unexpectedly encountered error: %s", err.Error())
+				return
+			}
+
+			if test.expectedErrorVal != nil && err != nil {
+				if test.expectedErrorVal.Error() != err.Error() {
+					t.Errorf("Observed error doesn't match expected.\nExpected: %v\nActual: %v\n", test.expectedErrorVal.Error(), err.Error())
+				}
+			}
+		})
+	}
+}
+
+func TestDeleteByNameExecutor(t *testing.T) {
+	success := SuccessfulDatabaseResult[0]
+
+	tests := []struct {
+		testName         string
+		mockDeleter      AddressDeleter
+		name             string
+		expectedError    bool
+		expectedErrorVal error
+	}{
+		{
+			testName: "Successful database call by name",
+			mockDeleter: createMockDeleter([]mockOutline{
+				{"GetAddressableByName", success.Name, success, nil},
+				{"GetDeviceServicesByAddressableId", mock.Anything, []contract.DeviceService{}, nil},
+				{"DeleteAddressableById", mock.Anything, nil, nil}}),
+			name:             success.Name,
+			expectedError:    false,
+			expectedErrorVal: nil,
+		},
+		{
+			testName: "Addressable not found",
+			mockDeleter: createMockDeleter([]mockOutline{
+				{"GetAddressableByName", success.Name, contract.Addressable{}, db.ErrNotFound}}),
+			name:             success.Name,
+			expectedError:    true,
+			expectedErrorVal: errors.NewErrAddressableNotFound("", success.Name),
+		},
+		{
+			testName:         "No identifiers provided",
+			mockDeleter:      nil,
+			name:             "",
+			expectedError:    true,
+			expectedErrorVal: errors.NewErrAddressableNotFound("", ""),
+		},
+		{
+			testName: "Unsuccessful database call retrieving addressable",
+			mockDeleter: createMockDeleter([]mockOutline{
+				{"GetAddressableByName", mock.Anything, contract.Addressable{}, Error}}),
+			name:             success.Name,
+			expectedError:    true,
+			expectedErrorVal: Error,
+		},
+		{
+			testName: "Addressable in use",
+			mockDeleter: createMockDeleter([]mockOutline{
+				{"GetAddressableByName", mock.Anything, success, nil},
+				{"GetDeviceServicesByAddressableId", mock.Anything, []contract.DeviceService{{}}, nil},
+				{"DeleteAddressableById", mock.Anything, nil, nil}}),
+			name:             success.Name,
+			expectedError:    true,
+			expectedErrorVal: errors.NewErrAddressableInUse(success.Name),
+		},
+		{
+			testName: "Unsuccessful database call retrieving device services",
+			mockDeleter: createMockDeleter([]mockOutline{
+				{"GetAddressableByName", mock.Anything, contract.Addressable{}, Error},
+				{"GetDeviceServicesByAddressableId", mock.Anything, []contract.DeviceService{}, Error}}),
+			name:             success.Name,
+			expectedError:    true,
+			expectedErrorVal: Error,
+		},
+		{
+			testName: "Unsuccessful database call deleting addressable",
+			mockDeleter: createMockDeleter([]mockOutline{
+				{"GetAddressableByName", mock.Anything, contract.Addressable{}, Error},
+				{"GetDeviceServicesByAddressableId", mock.Anything, []contract.DeviceService{}, nil},
+				{"DeleteAddressableById", mock.Anything, Error, nil}}),
+			name:             success.Name,
+			expectedError:    true,
+			expectedErrorVal: Error,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.testName, func(tt *testing.T) {
+			op := NewDeleteByNameExecutor(test.mockDeleter, test.name)
 			err := op.Execute()
 			if test.expectedError && err == nil {
 				t.Error("Expected an error")

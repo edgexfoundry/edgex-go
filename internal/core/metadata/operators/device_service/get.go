@@ -53,29 +53,52 @@ func (op deviceServiceLoadAll) Execute() (services []contract.DeviceService, err
 	return
 }
 
-type deviceServiceLoadByAddressableId struct {
-	id string
-	db DeviceServiceLoader
+type deviceServiceLoadByAddressable struct {
+	id   string
+	name string
+	db   DeviceServiceLoader
 }
 
-// NewDeviceServiceLoadByAddressableId creates a new Executor that retrieves all DeviceService associated with a given Addressable ID.
-func NewDeviceServiceLoadByAddressableId(id string, db DeviceServiceLoader) DeviceServiceGetAllExecutor {
-	return deviceServiceLoadByAddressableId{id: id, db: db}
+// NewDeviceServiceLoadByAddressableByName creates a new Executor that retrieves all DeviceService associated with a given Addressable name.
+func NewDeviceServiceLoadByAddressableByName(name string, db DeviceServiceLoader) DeviceServiceGetAllExecutor {
+	return deviceServiceLoadByAddressable{name: name, db: db}
 }
 
-// Execute performs an operation that retrieves all DeviceService associated with a given Addressable ID.
-func (op deviceServiceLoadByAddressableId) Execute() ([]contract.DeviceService, error) {
+// NewDeviceServiceLoadByAddressableByID creates a new Executor that retrieves all DeviceService associated with a given Addressable ID.
+func NewDeviceServiceLoadByAddressableByID(id string, db DeviceServiceLoader) DeviceServiceGetAllExecutor {
+	return deviceServiceLoadByAddressable{id: id, db: db}
+}
+
+// Execute performs an operation that retrieves all DeviceService associated with a given Addressable.
+func (op deviceServiceLoadByAddressable) Execute() ([]contract.DeviceService, error) {
+	var addr contract.Addressable
+	var err error
+
 	// Check if the Addressable exists
-	_, err := op.db.GetAddressableById(op.id)
+	// determine whether we're doing a lookup by ID or name
+	if op.id == "" {
+		if op.name == "" {
+			// short circuit a bad request
+			return nil, errors.NewErrItemNotFound(op.id)
+		}
+		addr, err = op.db.GetAddressableByName(op.name)
+	} else {
+		addr, err = op.db.GetAddressableById(op.id)
+	}
+
 	if err != nil {
 		if err == db.ErrNotFound {
+			// make sure we're returning useful info
+			if op.id == "" {
+				return nil, errors.NewErrItemNotFound(op.name)
+			}
 			return nil, errors.NewErrItemNotFound(op.id)
 		} else {
 			return nil, err
 		}
 	}
 
-	if ds, err := op.db.GetDeviceServicesByAddressableId(op.id); err != nil {
+	if ds, err := op.db.GetDeviceServicesByAddressableId(addr.Id); err != nil {
 		return nil, err
 	} else {
 		return ds, nil

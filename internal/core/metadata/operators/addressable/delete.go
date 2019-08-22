@@ -73,13 +73,18 @@ func (op addressDelete) Execute() error {
 	return nil
 }
 
-// This factory method returns an executor used to delete an addressable.
-// Addressables will first be searched by ID.
-// If the provided ID is the empty string, it will be looked up by name.
-func NewDeleteExecutor(db AddressDeleter, id string, name string) DeleteExecutor {
+// This factory method returns an executor used to delete an addressable by ID.
+func NewDeleteByIdExecutor(db AddressDeleter, id string) DeleteExecutor {
 	return addressDelete{
 		database: db,
 		id:       id,
+	}
+}
+
+// This factory method returns an executor used to delete an addressable by name.
+func NewDeleteByNameExecutor(db AddressDeleter, name string) DeleteExecutor {
+	return addressDelete{
+		database: db,
 		name:     name,
 	}
 }
