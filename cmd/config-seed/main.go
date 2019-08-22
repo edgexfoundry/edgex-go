@@ -19,7 +19,7 @@ import (
 	"os"
 	"sync"
 
-	"github.com/edgexfoundry/edgex-go/internal"
+	config2 "github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/internal/seed/config"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
@@ -70,7 +70,8 @@ func bootstrap(profile string) {
 	deps := make(chan error, 2)
 	wg := sync.WaitGroup{}
 	wg.Add(1)
-	go config.Retry(profile, internal.BootTimeoutDefault, &wg, deps)
+	var params = config2.BootParams{UseProfile: profile, Retry: config2.GetRetryInfo()}
+	go config.Retry(params, &wg, deps)
 	go func(ch chan error) {
 		for {
 			select {

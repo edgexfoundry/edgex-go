@@ -13,8 +13,12 @@
  *******************************************************************************/
 package internal
 
+import "math"
+
 const (
-	BootTimeoutDefault           = 30000
+	BootRetryCountDefault        = math.MaxInt64
+	BootRetryTimeoutDefault      = 30000
+	BootRetryWaitDefault         = 1
 	ClientMonitorDefault         = 15000
 	ConfigFileName               = "configuration.toml"
 	ConfigRegistryStem           = "edgex/core/1.0/"
