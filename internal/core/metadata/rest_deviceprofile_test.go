@@ -950,7 +950,7 @@ func TestAddProfileByYaml(t *testing.T) {
 			"Duplicate command name",
 			createDeviceProfileRequestWithFile(dupeBody),
 			nil,
-			http.StatusBadRequest,
+			http.StatusConflict,
 		},
 		{
 			"Duplicate profile name",
