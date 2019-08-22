@@ -14,6 +14,7 @@
 package startup
 
 import (
+	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"sync"
 	"testing"
 
@@ -39,7 +40,8 @@ func clearVars() {
 
 func testPass(t *testing.T) {
 	clearVars()
-	p := BootParams{true, "", timeoutPass}
+
+	p := config.BootParams{true, "", config.RetryInfo{9999999, timeoutPass, 1}}
 	Bootstrap(p, mockRetry, mockLog)
 	if !checkInit {
 		t.Error("checkInit should be true.")
@@ -51,7 +53,7 @@ func testPass(t *testing.T) {
 
 func testFail(t *testing.T) {
 	clearVars()
-	p := BootParams{true, "", timeoutFail}
+	p := config.BootParams{true, "", config.RetryInfo{9999999, timeoutPass, 1}}
 	Bootstrap(p, mockRetry, mockLog)
 	time.Sleep(time.Millisecond * time.Duration(25)) //goroutine timing
 	if checkInit {
@@ -66,10 +68,10 @@ func testFail(t *testing.T) {
 //Different test cases are toggled according to the timeout value
 //SUCCESS = short duration 100ms
 //FAIL = long duration 1000ms
-func mockRetry(UseRegistry bool, useProfile string, timeout int, wait *sync.WaitGroup, ch chan error) {
-	until := time.Now().Add(time.Millisecond * time.Duration(timeout))
+func mockRetry(params config.BootParams, wait *sync.WaitGroup, ch chan error) {
+	until := time.Now().Add(time.Millisecond * time.Duration(params.Retry.Timeout))
 	for time.Now().Before(until) {
-		if timeout == timeoutFail {
+		if params.Retry.Timeout == timeoutFail {
 			err := fmt.Errorf("Timeout Fail caught")
 			ch <- err
 			close(ch)
