@@ -45,7 +45,7 @@ var registryUpdates chan interface{} //A channel for "config updates" sourced fr
 func Retry(params config.BootParams, wait *sync.WaitGroup, ch chan error) {
 	until := time.Now().Add(time.Millisecond * time.Duration(params.Retry.Timeout))
 	attempts := 0
-	for time.Now().Before(until) && attempts < params.Retry.Count{
+	for time.Now().Before(until) && attempts < params.Retry.Count {
 		var err error
 		//When looping, only handle configuration if it hasn't already been set.
 		if Configuration == nil {

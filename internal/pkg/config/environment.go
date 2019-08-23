@@ -42,8 +42,8 @@ func OverrideFromEnvironment(registry RegistryInfo) RegistryInfo {
 	return registry
 }
 
-func GetRetryInfo () RetryInfo {
-	return RetryInfo {
+func GetRetryInfo() RetryInfo {
+	return RetryInfo{
 		Count:   GetFromEnvironmentUint(envKeyRetryCount, internal.BootRetryCountDefault),
 		Timeout: GetFromEnvironmentUint(envKeyRetryTimeout, internal.BootRetryTimeoutDefault),
 		Wait:    GetFromEnvironmentUint(envKeyRetryWait, internal.BootRetryWaitDefault),
