@@ -41,7 +41,7 @@ func clearVars() {
 func testPass(t *testing.T) {
 	clearVars()
 
-	p := config.BootParams{true, "", config.RetryInfo{Timeout: timeoutPass}}
+	p := config.BootParams{UseRegistry: true, UseProfile: "", Retry: config.RetryInfo{Timeout: timeoutPass}}
 	Bootstrap(p, mockRetry, mockLog)
 	if !checkInit {
 		t.Error("checkInit should be true.")
@@ -53,7 +53,7 @@ func testPass(t *testing.T) {
 
 func testFail(t *testing.T) {
 	clearVars()
-	p := config.BootParams{true, "", config.RetryInfo{Timeout: timeoutFail}}
+	p := config.BootParams{UseRegistry: true, UseProfile: "", Retry: config.RetryInfo{Timeout: timeoutFail}}
 	Bootstrap(p, mockRetry, mockLog)
 	time.Sleep(time.Millisecond * time.Duration(25)) //goroutine timing
 	if checkInit {
