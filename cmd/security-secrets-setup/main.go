@@ -42,11 +42,13 @@ type pkiInitOptionDispatcher struct{}
 var exitInstance = newExit()
 var dispatcherInstance = newOptionDispatcher()
 var configFile string
+var generateOpt bool
 
 func init() {
 	// define and register command line flags:
 	flag.StringVar(&configFile, "config", "", "specify JSON configuration file: /path/to/file.json")
 	flag.StringVar(&configFile, "c", "", "specify JSON configuration file: /path/to/file.json")
+	flag.BoolVar(&generateOpt, "generate", false, "to generate a new PKI from scratch")
 	flag.Usage = usage.HelpCallbackSecuritySetup
 }
 
@@ -102,7 +104,9 @@ func newOptionDispatcher() optionDispatcher {
 }
 
 func (dispatcher *pkiInitOptionDispatcher) run() (statusCode int, err error) {
-	opts := option.PkiInitOption{}
+	opts := option.PkiInitOption{
+		GenerateOpt: generateOpt,
+	}
 	optsExecutor, statusCode, err := option.NewPkiInitOption(opts)
 	if err != nil {
 		return statusCode, err

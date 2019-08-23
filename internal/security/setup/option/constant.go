@@ -16,7 +16,33 @@
 
 package option
 
+import (
+	"path/filepath"
+)
+
 const (
 	// SecuritySecretsSetup is the name of this module
 	SecuritySecretsSetup = "security-secrets-setup"
+
+	pkiSetupVaultJSON             = "pkisetup-vault.json"
+	pkiSetupKongJSON              = "pkisetup-kong.json"
+	resourceDirName               = "res"
+	configTomlFile                = "configuration.toml"
+	envXdgRuntimeDir              = "XDG_RUNTIME_DIR"
+	defaultXdgRuntimeDir          = "/tmp"
+	pkiInitBaseDir                = "/edgex/security-secrets-setup"
+	tmpfsRunDir                   = "/run"
+	tlsSecretFileName             = "server.key"
+	tlsCertFileName               = "server.crt"
+	caCertFileName                = "ca.pem"
+	pkiInitFilePerServiceComplete = ".security-secrets-setup.complete"
+
+	// service name section:
+	caServiceName    = "ca"
+	vaultServiceName = "edgex-vault"
+	kongServiceName  = "edgex-kong"
 )
+
+var pkiInitScratchDir = filepath.Join(pkiInitBaseDir, "scratch")
+var pkiInitGeneratedDir = filepath.Join(pkiInitBaseDir, "generated")
+var pkiInitDeployDir = filepath.Join(tmpfsRunDir, "edgex", "secrets")

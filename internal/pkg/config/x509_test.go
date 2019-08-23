@@ -64,3 +64,31 @@ func TestPkiCAOutDir(t *testing.T) {
 	assert.True(strings.Contains(pkiDir,
 		filepath.Join(filepath.Base(x509Config.WorkingDir), x509Config.PKISetupDir, x509Config.RootCA.CAName)))
 }
+
+func TestGetCAPemFileName(t *testing.T) {
+	// ignore the file reading error since it will be caught by other test already
+	x509Config, _ := NewX509Config(testJSONFileName)
+	pemFileName := x509Config.GetCAPemFileName()
+	assert.Equal(t, x509Config.RootCA.CAName+certFileExt, pemFileName)
+}
+
+func TestGetCAPrivateKeyFileName(t *testing.T) {
+	// ignore the file reading error since it will be caught by other test already
+	x509Config, _ := NewX509Config(testJSONFileName)
+	prvKeyFileName := x509Config.GetCAPrivateKeyFileName()
+	assert.Equal(t, x509Config.RootCA.CAName+skFileExt, prvKeyFileName)
+}
+
+func TestGetTLSPemFileName(t *testing.T) {
+	// ignore the file reading error since it will be caught by other test already
+	x509Config, _ := NewX509Config(testJSONFileName)
+	pemFileName := x509Config.GetTLSPemFileName()
+	assert.Equal(t, x509Config.TLSServer.TLSHost+certFileExt, pemFileName)
+}
+
+func TestGetTLSPrivateKeyFileName(t *testing.T) {
+	// ignore the file reading error since it will be caught by other test already
+	x509Config, _ := NewX509Config(testJSONFileName)
+	prvKeyFileName := x509Config.GetTLSPrivateKeyFileName()
+	assert.Equal(t, x509Config.TLSServer.TLSHost+skFileExt, prvKeyFileName)
+}

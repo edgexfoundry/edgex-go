@@ -83,6 +83,37 @@ func TestConfigFileOptionError(t *testing.T) {
 	assert.Equal(2, (exitInstance.(*testExitCode)).getStatusCode())
 }
 
+func TestMainWithGenerateOption(t *testing.T) {
+	tearDown := setupTest(t)
+	origArgs := os.Args
+	defer tearDown(t, origArgs)
+	assert := assert.New(t)
+
+	runWithGenerateOption(false)
+	assert.Equal(0, (exitInstance.(*testExitCode)).getStatusCode())
+	assert.True(generateOpt)
+	optionExec := (dispatcherInstance.(*testPkiInitOptionDispatcher)).testOptsExecutor
+	assert.True((optionExec.(*option.PkiInitOption)).GenerateOpt)
+}
+
+func TestGenerateOptionWithRunError(t *testing.T) {
+	tearDown := setupTest(t)
+	origArgs := os.Args
+	defer tearDown(t, origArgs)
+	assert := assert.New(t)
+
+	runWithGenerateOption(true)
+	assert.Equal(2, (exitInstance.(*testExitCode)).getStatusCode())
+	assert.Equal(true, generateOpt)
+}
+
+func runWithGenerateOption(hasError bool) {
+	os.Args = []string{"cmd", "-generate"}
+	printCommandLineStrings(os.Args)
+	hasDispatchError = hasError
+	main()
+}
+
 func printCommandLineStrings(strs []string) {
 	fmt.Println("command line strings:", strings.Join(strs, " "))
 }
@@ -93,6 +124,7 @@ func setupTest(t *testing.T) func(t *testing.T, args []string) {
 	return func(t *testing.T, args []string) {
 		// reset after each test
 		configFile = ""
+		generateOpt = false
 		os.Args = args
 		// cleanup the generated files
 		os.RemoveAll("./config")
@@ -126,9 +158,11 @@ func newTestDispatcher() optionDispatcher {
 }
 
 func (testDispatcher *testPkiInitOptionDispatcher) run() (statusCode int, err error) {
-	setup.LoggingClient.Debug(fmt.Sprintf("In test flag value: configFile = %v", configFile))
+	setup.LoggingClient.Debug(fmt.Sprintf("In test flag value: generateOpt = %v, configFile = %v", generateOpt, configFile))
 
-	optsExecutor, _, _ := option.NewPkiInitOption(option.PkiInitOption{})
+	optsExecutor, _, _ := option.NewPkiInitOption(option.PkiInitOption{
+		GenerateOpt: generateOpt,
+	})
 	testDispatcher.testOptsExecutor = optsExecutor
 
 	if hasDispatchError {
