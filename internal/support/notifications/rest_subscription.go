@@ -322,13 +322,8 @@ func validateEmailAddresses(s models.Subscription) error {
 		}
 	}
 	if len(invalidAddrs) > 0 {
-		resp := "Subscription " + s.Slug + " mail addresses contain CRLF: ["
-		for _, m := range invalidAddrs {
-			resp += m + ", "
-		}
-		resp = strings.TrimSuffix(resp, ", ")
-		resp += "]"
-		return errors.NewErrInvalidEmailAddresses(resp)
+		resp := "Addresses contain invalid CRLF characters"
+		return errors.NewErrInvalidEmailAddresses(invalidAddrs, resp)
 	}
 	return nil
 }
