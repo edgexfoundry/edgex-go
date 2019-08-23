@@ -31,6 +31,27 @@ func (_m *DeviceServiceUpdater) GetAddressableById(id string) (models.Addressabl
 	return r0, r1
 }
 
+// GetAddressableByName provides a mock function with given fields: id
+func (_m *DeviceServiceUpdater) GetAddressableByName(id string) (models.Addressable, error) {
+	ret := _m.Called(id)
+
+	var r0 models.Addressable
+	if rf, ok := ret.Get(0).(func(string) models.Addressable); ok {
+		r0 = rf(id)
+	} else {
+		r0 = ret.Get(0).(models.Addressable)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetAllDeviceServices provides a mock function with given fields:
 func (_m *DeviceServiceUpdater) GetAllDeviceServices() ([]models.DeviceService, error) {
 	ret := _m.Called()

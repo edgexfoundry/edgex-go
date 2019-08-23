@@ -37,22 +37,19 @@ func (op addressDelete) Execute() error {
 	var err error
 
 	// deleteById and deleteByName all use the deleteById database function, so abstract away the front end difference
-	if op.id == "" {
-		if op.name == "" {
-			// short circuit a bad request
-			return errors.NewErrAddressableNotFound(op.id, op.name)
-		}
-
-		addressable, err = op.database.GetAddressableByName(op.name)
-	} else {
+	if op.id != "" {
 		addressable, err = op.database.GetAddressableById(op.id)
+		if err == db.ErrNotFound {
+			err = errors.NewErrAddressableNotFound(op.id, "")
+		}
+	} else {
+		addressable, err = op.database.GetAddressableByName(op.name)
+		if err == db.ErrNotFound {
+			err = errors.NewErrAddressableNotFound("", op.name)
+		}
 	}
 
 	if err != nil {
-		if err == db.ErrNotFound {
-			return errors.NewErrAddressableNotFound(op.id, op.name)
-		}
-
 		return err
 	}
 
@@ -73,13 +70,18 @@ func (op addressDelete) Execute() error {
 	return nil
 }
 
-// This factory method returns an executor used to delete an addressable.
-// Addressables will first be searched by ID.
-// If the provided ID is the empty string, it will be looked up by name.
-func NewDeleteExecutor(db AddressDeleter, id string, name string) DeleteExecutor {
+// This factory method returns an executor used to delete an addressable by ID.
+func NewDeleteByIdExecutor(db AddressDeleter, id string) DeleteExecutor {
 	return addressDelete{
 		database: db,
 		id:       id,
+	}
+}
+
+// This factory method returns an executor used to delete an addressable by name.
+func NewDeleteByNameExecutor(db AddressDeleter, name string) DeleteExecutor {
+	return addressDelete{
+		database: db,
 		name:     name,
 	}
 }

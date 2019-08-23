@@ -211,21 +211,15 @@ func restGetServiceByAddressableName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Check if the addressable exists
-	a, err := dbClient.GetAddressableByName(an)
+	op := device_service.NewDeviceServiceLoadByAddressableName(an, dbClient)
+	res, err := op.Execute()
 	if err != nil {
-		if err == db.ErrNotFound {
-			http.Error(w, "Addressable not found", http.StatusNotFound)
-		} else {
+		switch err.(type) {
+		case *types.ErrItemNotFound:
+			http.Error(w, err.Error(), http.StatusNotFound)
+		default:
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-		LoggingClient.Error(err.Error())
-		return
-	}
-
-	res := make([]models.DeviceService, 0)
-	if res, err = dbClient.GetDeviceServicesByAddressableId(a.Id); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
 		LoggingClient.Error(err.Error())
 		return
 	}
@@ -238,7 +232,7 @@ func restGetServiceByAddressableId(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	var sid = vars[ADDRESSABLEID]
 
-	op := device_service.NewDeviceServiceLoadByAddressableId(sid, dbClient)
+	op := device_service.NewDeviceServiceLoadByAddressableID(sid, dbClient)
 	res, err := op.Execute()
 	if err != nil {
 		switch err.(type) {
@@ -284,18 +278,20 @@ func restGetServiceByName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := dbClient.GetDeviceServiceByName(dn)
+	op := device_service.NewDeviceServiceLoadByName(dn, dbClient)
+	res, err := op.Execute()
 	if err != nil {
-		if err == db.ErrNotFound {
+		switch err.(type) {
+		case *types.ErrItemNotFound:
 			http.Error(w, err.Error(), http.StatusNotFound)
-		} else {
+		default:
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		LoggingClient.Error(err.Error())
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	json.NewEncoder(w).Encode(res)
 }
 
