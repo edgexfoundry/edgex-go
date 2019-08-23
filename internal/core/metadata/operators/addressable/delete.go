@@ -37,22 +37,19 @@ func (op addressDelete) Execute() error {
 	var err error
 
 	// deleteById and deleteByName all use the deleteById database function, so abstract away the front end difference
-	if op.id == "" {
-		if op.name == "" {
-			// short circuit a bad request
-			return errors.NewErrAddressableNotFound(op.id, op.name)
-		}
-
-		addressable, err = op.database.GetAddressableByName(op.name)
-	} else {
+	if op.id != "" {
 		addressable, err = op.database.GetAddressableById(op.id)
+		if err == db.ErrNotFound {
+			err = errors.NewErrAddressableNotFound(op.id, "")
+		}
+	} else {
+		addressable, err = op.database.GetAddressableByName(op.name)
+		if err == db.ErrNotFound {
+			err = errors.NewErrAddressableNotFound("", op.name)
+		}
 	}
 
 	if err != nil {
-		if err == db.ErrNotFound {
-			return errors.NewErrAddressableNotFound(op.id, op.name)
-		}
-
 		return err
 	}
 

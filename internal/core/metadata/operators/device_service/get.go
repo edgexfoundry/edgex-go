@@ -23,8 +23,8 @@ import (
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
-// DeviceServiceGetAllExecutor retrieves DeviceServices according to parameters defined by the implementation.
-type DeviceServiceGetAllExecutor interface {
+// DeviceServiceGetListExecutor retrieves DeviceServices according to parameters defined by the implementation.
+type DeviceServiceGetListExecutor interface {
 	Execute() ([]contract.DeviceService, error)
 }
 
@@ -35,7 +35,7 @@ type deviceServiceLoadAll struct {
 }
 
 // NewDeviceServiceLoadAll creates a new Executor that retrieves all DeviceService registered.
-func NewDeviceServiceLoadAll(cfg config.ServiceInfo, db DeviceServiceLoader, log logger.LoggingClient) DeviceServiceGetAllExecutor {
+func NewDeviceServiceLoadAll(cfg config.ServiceInfo, db DeviceServiceLoader, log logger.LoggingClient) DeviceServiceGetListExecutor {
 	return deviceServiceLoadAll{config: cfg, database: db, logger: log}
 }
 
@@ -60,12 +60,12 @@ type deviceServiceLoadByAddressable struct {
 }
 
 // NewDeviceServiceLoadByAddressableName creates a new Executor that retrieves all DeviceService associated with a given Addressable name.
-func NewDeviceServiceLoadByAddressableName(name string, db DeviceServiceLoader) DeviceServiceGetAllExecutor {
+func NewDeviceServiceLoadByAddressableName(name string, db DeviceServiceLoader) DeviceServiceGetListExecutor {
 	return deviceServiceLoadByAddressable{name: name, db: db}
 }
 
 // NewDeviceServiceLoadByAddressableID creates a new Executor that retrieves all DeviceService associated with a given Addressable ID.
-func NewDeviceServiceLoadByAddressableID(id string, db DeviceServiceLoader) DeviceServiceGetAllExecutor {
+func NewDeviceServiceLoadByAddressableID(id string, db DeviceServiceLoader) DeviceServiceGetListExecutor {
 	return deviceServiceLoadByAddressable{id: id, db: db}
 }
 
@@ -76,26 +76,20 @@ func (op deviceServiceLoadByAddressable) Execute() ([]contract.DeviceService, er
 
 	// Check if the Addressable exists
 	// determine whether we're doing a lookup by ID or name
-	if op.id == "" {
-		if op.name == "" {
-			// short circuit a bad request
-			return nil, errors.NewErrItemNotFound(op.id)
-		}
-		addr, err = op.db.GetAddressableByName(op.name)
-	} else {
+	if op.id != "" {
 		addr, err = op.db.GetAddressableById(op.id)
+		if err == db.ErrNotFound {
+			err = errors.NewErrItemNotFound(op.id)
+		}
+	} else {
+		addr, err = op.db.GetAddressableByName(op.name)
+		if err == db.ErrNotFound {
+			err = errors.NewErrItemNotFound(op.name)
+		}
 	}
 
 	if err != nil {
-		if err == db.ErrNotFound {
-			// make sure we're returning useful info
-			if op.id == "" {
-				return nil, errors.NewErrItemNotFound(op.name)
-			}
-			return nil, errors.NewErrItemNotFound(op.id)
-		} else {
-			return nil, err
-		}
+		return nil, err
 	}
 
 	if ds, err := op.db.GetDeviceServicesByAddressableId(addr.Id); err != nil {

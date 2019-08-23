@@ -229,8 +229,10 @@ func TestGetDeviceServiceByAddressableId(t *testing.T) {
 			expectedErrorVal: nil,
 		},
 		{
-			name:             "No ID provided",
-			mockLoader:       nil,
+			name: "No ID provided",
+			mockLoader: createMockLoader([]mockOutline{
+				{"GetAddressableByName", "", contract.Addressable{}, db.ErrNotFound},
+			}),
 			value:            "",
 			expectedVal:      nil,
 			expectedError:    true,
@@ -318,8 +320,10 @@ func TestGetDeviceServiceByAddressableName(t *testing.T) {
 			expectedErrorVal: nil,
 		},
 		{
-			name:             "No name provided",
-			mockLoader:       nil,
+			name: "No name provided",
+			mockLoader: createMockLoader([]mockOutline{
+				{"GetAddressableByName", "", contract.Addressable{}, db.ErrNotFound},
+			}),
 			value:            "",
 			expectedVal:      nil,
 			expectedError:    true,

@@ -205,7 +205,9 @@ func TestGetServiceByAddressableName(t *testing.T) {
 		},
 		{
 			"No name provided",
-			nil,
+			createMockWithOutlines([]mockOutline{
+				{"GetAddressableByName", "", contract.Addressable{}, db.ErrNotFound},
+			}),
 			"",
 			http.StatusNotFound,
 		},
@@ -268,7 +270,9 @@ func TestGetServiceByAddressableId(t *testing.T) {
 		},
 		{
 			"No ID provided",
-			nil,
+			createMockWithOutlines([]mockOutline{
+				{"GetAddressableByName", "", contract.Addressable{}, db.ErrNotFound},
+			}),
 			"",
 			http.StatusNotFound,
 		},

@@ -40,7 +40,8 @@ func TestDeleteByIdExecutor(t *testing.T) {
 			mockDeleter: createMockDeleter([]mockOutline{
 				{"GetAddressableById", success.Id, success, nil},
 				{"GetDeviceServicesByAddressableId", mock.Anything, []contract.DeviceService{}, nil},
-				{"DeleteAddressableById", mock.Anything, nil, nil}}),
+				{"DeleteAddressableById", mock.Anything, nil, nil},
+			}),
 			id:               success.Id,
 			expectedError:    false,
 			expectedErrorVal: nil,
@@ -48,14 +49,17 @@ func TestDeleteByIdExecutor(t *testing.T) {
 		{
 			testName: "Addressable not found",
 			mockDeleter: createMockDeleter([]mockOutline{
-				{"GetAddressableById", success.Id, contract.Addressable{}, db.ErrNotFound}}),
+				{"GetAddressableById", success.Id, contract.Addressable{}, db.ErrNotFound},
+			}),
 			id:               success.Id,
 			expectedError:    true,
 			expectedErrorVal: errors.NewErrAddressableNotFound(success.Id, ""),
 		},
 		{
-			testName:         "No identifiers provided",
-			mockDeleter:      nil,
+			testName: "No ID provided",
+			mockDeleter: createMockDeleter([]mockOutline{
+				{"GetAddressableByName", "", contract.Addressable{}, db.ErrNotFound},
+			}),
 			id:               "",
 			expectedError:    true,
 			expectedErrorVal: errors.NewErrAddressableNotFound("", ""),
@@ -63,7 +67,8 @@ func TestDeleteByIdExecutor(t *testing.T) {
 		{
 			testName: "Unsuccessful database call retrieving addressable",
 			mockDeleter: createMockDeleter([]mockOutline{
-				{"GetAddressableById", mock.Anything, contract.Addressable{}, Error}}),
+				{"GetAddressableById", mock.Anything, contract.Addressable{}, Error},
+			}),
 			id:               success.Id,
 			expectedError:    true,
 			expectedErrorVal: Error,
@@ -82,7 +87,8 @@ func TestDeleteByIdExecutor(t *testing.T) {
 			testName: "Unsuccessful database call retrieving device services",
 			mockDeleter: createMockDeleter([]mockOutline{
 				{"GetAddressableById", success.Id, success, nil},
-				{"GetDeviceServicesByAddressableId", mock.Anything, []contract.DeviceService{}, Error}}),
+				{"GetDeviceServicesByAddressableId", mock.Anything, []contract.DeviceService{}, Error},
+			}),
 			id:               success.Id,
 			expectedError:    true,
 			expectedErrorVal: Error,
@@ -92,7 +98,8 @@ func TestDeleteByIdExecutor(t *testing.T) {
 			mockDeleter: createMockDeleter([]mockOutline{
 				{"GetAddressableById", success.Id, success, nil},
 				{"GetDeviceServicesByAddressableId", mock.Anything, []contract.DeviceService{}, nil},
-				{"DeleteAddressableById", mock.Anything, Error, nil}}),
+				{"DeleteAddressableById", mock.Anything, Error, nil},
+			}),
 			id:               success.Id,
 			expectedError:    true,
 			expectedErrorVal: Error,
@@ -137,7 +144,8 @@ func TestDeleteByNameExecutor(t *testing.T) {
 			mockDeleter: createMockDeleter([]mockOutline{
 				{"GetAddressableByName", success.Name, success, nil},
 				{"GetDeviceServicesByAddressableId", mock.Anything, []contract.DeviceService{}, nil},
-				{"DeleteAddressableById", mock.Anything, nil, nil}}),
+				{"DeleteAddressableById", mock.Anything, nil, nil},
+			}),
 			name:             success.Name,
 			expectedError:    false,
 			expectedErrorVal: nil,
@@ -145,14 +153,17 @@ func TestDeleteByNameExecutor(t *testing.T) {
 		{
 			testName: "Addressable not found",
 			mockDeleter: createMockDeleter([]mockOutline{
-				{"GetAddressableByName", success.Name, contract.Addressable{}, db.ErrNotFound}}),
+				{"GetAddressableByName", success.Name, contract.Addressable{}, db.ErrNotFound},
+			}),
 			name:             success.Name,
 			expectedError:    true,
 			expectedErrorVal: errors.NewErrAddressableNotFound("", success.Name),
 		},
 		{
-			testName:         "No identifiers provided",
-			mockDeleter:      nil,
+			testName: "No name provided",
+			mockDeleter: createMockDeleter([]mockOutline{
+				{"GetAddressableByName", "", contract.Addressable{}, db.ErrNotFound},
+			}),
 			name:             "",
 			expectedError:    true,
 			expectedErrorVal: errors.NewErrAddressableNotFound("", ""),
@@ -160,7 +171,8 @@ func TestDeleteByNameExecutor(t *testing.T) {
 		{
 			testName: "Unsuccessful database call retrieving addressable",
 			mockDeleter: createMockDeleter([]mockOutline{
-				{"GetAddressableByName", mock.Anything, contract.Addressable{}, Error}}),
+				{"GetAddressableByName", mock.Anything, contract.Addressable{}, Error},
+			}),
 			name:             success.Name,
 			expectedError:    true,
 			expectedErrorVal: Error,
@@ -170,7 +182,8 @@ func TestDeleteByNameExecutor(t *testing.T) {
 			mockDeleter: createMockDeleter([]mockOutline{
 				{"GetAddressableByName", mock.Anything, success, nil},
 				{"GetDeviceServicesByAddressableId", mock.Anything, []contract.DeviceService{{}}, nil},
-				{"DeleteAddressableById", mock.Anything, nil, nil}}),
+				{"DeleteAddressableById", mock.Anything, nil, nil},
+			}),
 			name:             success.Name,
 			expectedError:    true,
 			expectedErrorVal: errors.NewErrAddressableInUse(success.Name),
@@ -179,7 +192,8 @@ func TestDeleteByNameExecutor(t *testing.T) {
 			testName: "Unsuccessful database call retrieving device services",
 			mockDeleter: createMockDeleter([]mockOutline{
 				{"GetAddressableByName", mock.Anything, contract.Addressable{}, Error},
-				{"GetDeviceServicesByAddressableId", mock.Anything, []contract.DeviceService{}, Error}}),
+				{"GetDeviceServicesByAddressableId", mock.Anything, []contract.DeviceService{}, Error},
+			}),
 			name:             success.Name,
 			expectedError:    true,
 			expectedErrorVal: Error,
@@ -189,7 +203,8 @@ func TestDeleteByNameExecutor(t *testing.T) {
 			mockDeleter: createMockDeleter([]mockOutline{
 				{"GetAddressableByName", mock.Anything, contract.Addressable{}, Error},
 				{"GetDeviceServicesByAddressableId", mock.Anything, []contract.DeviceService{}, nil},
-				{"DeleteAddressableById", mock.Anything, Error, nil}}),
+				{"DeleteAddressableById", mock.Anything, Error, nil},
+			}),
 			name:             success.Name,
 			expectedError:    true,
 			expectedErrorVal: Error,
