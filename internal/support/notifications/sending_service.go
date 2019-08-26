@@ -17,6 +17,9 @@ package notifications
 
 import (
 	"bytes"
+	"crypto/tls"
+	"errors"
+	"net"
 	"net/http"
 	mail "net/smtp"
 	"strconv"
@@ -31,7 +34,7 @@ func sendViaChannel(n models.Notification, c models.Channel, receiver string) {
 	LoggingClient.Debug("Sending notification: " + n.Slug + ", via channel: " + c.String())
 	var tr models.TransmissionRecord
 	if c.Type == models.ChannelType(models.Email) {
-		tr = smtpSend(n.Content, c.MailAddresses)
+		tr = sendMail(n.Content, c.MailAddresses)
 	} else {
 		tr = restSend(n.Content, c.Url)
 	}
@@ -44,7 +47,7 @@ func sendViaChannel(n models.Notification, c models.Channel, receiver string) {
 func resendViaChannel(t models.Transmission) {
 	var tr models.TransmissionRecord
 	if t.Channel.Type == models.ChannelType(models.Email) {
-		tr = smtpSend(t.Notification.Content, t.Channel.MailAddresses)
+		tr = sendMail(t.Notification.Content, t.Channel.MailAddresses)
 	} else {
 		tr = restSend(t.Notification.Content, t.Channel.Url)
 	}
@@ -83,22 +86,14 @@ func persistTransmission(tr models.TransmissionRecord, n models.Notification, c 
 	return trx, nil
 }
 
-func smtpSend(message string, addressees []string) models.TransmissionRecord {
-	var err error
+func sendMail(message string, addressees []string) models.TransmissionRecord {
 	smtp := Configuration.Smtp
 	tr := getTransmissionRecord("SMTP server received", models.Sent)
 	buf := bytes.NewBufferString("Subject: " + smtp.Subject + "\r\n")
 	// required CRLF at ends of lines and CRLF between header and body for SMTP RFC 822 style email
 	buf.WriteString("\r\n")
 	buf.WriteString(message)
-	if smtp.Password != "" {
-		err = mail.SendMail(smtp.Host+":"+strconv.Itoa(smtp.Port),
-			mail.PlainAuth("", smtp.Sender, smtp.Password, smtp.Host),
-			smtp.Sender, addressees, []byte(buf.String()))
-	} else {
-		err = mail.SendMail(smtp.Host+":"+strconv.Itoa(smtp.Port),
-			nil, smtp.Sender, addressees, []byte(buf.String()))
-	}
+	err := smtpSend(addressees, []byte(buf.String()), smtp)
 	if err != nil {
 		LoggingClient.Error("Problems sending message to: " + strings.Join(addressees, ",") + ", issue: " + err.Error())
 		tr.Status = models.Failed
@@ -106,7 +101,6 @@ func smtpSend(message string, addressees []string) models.TransmissionRecord {
 		return tr
 	}
 	return tr
-
 }
 
 func restSend(message string, url string) models.TransmissionRecord {
@@ -140,4 +134,88 @@ func handleFailedTransmission(t models.Transmission) {
 			}
 		}
 	}
+}
+
+func deduceAuth(s SmtpInfo) (mail.Auth, error) {
+	if s.CheckUsername() == "" && s.Password == "" {
+		return nil, errors.New("Notifications: Expecting username")
+	}
+	if s.CheckUsername() != "" && s.Password == "" {
+		return nil, nil
+	}
+	if s.CheckUsername() == "" && s.Password != "" {
+		return nil, errors.New("Notifications: Expecting username")
+	}
+	return mail.PlainAuth("", s.CheckUsername(), s.Password, s.Host), nil
+}
+
+// The function smtpSend replicates the functionality provided by the SendMail function
+// from smtp package. A rivision of standard function was needed because smtp.SendMail
+// does not allow for set-reset of InsecureSkipVerify flag of tls.Config structure. This
+// flag is needed to be manipulated for allowing the self-signed certificates.
+//
+// As it is replicating the functionality from smtp.SendMail, it borrows heavily from the
+// original function in its design and implementation. This version adds new functionality
+// for handling the SmtpInfo configuration and authentication management, along with the
+// requirement of ability to set-reset the InsecureSkipVerify flag.
+//
+// This is using a lot of unexported methods and types from smtp package through exported
+// interfaces, which makes it a little bit trickier to modify. Since, the intention for
+// this function is to use it as a support function for handling the low level SMTP
+// protocol mechanism, it is not exported.
+func smtpSend(to []string, msg []byte, s SmtpInfo) error {
+	addr := s.Host + ":" + strconv.Itoa(s.Port)
+	auth, err := deduceAuth(s)
+	if err != nil {
+		return err
+	}
+	c, err := mail.Dial(addr)
+	if err != nil {
+		return errors.New("Notifications: Error dialing address")
+	}
+	defer c.Close()
+	serverName, _, err := net.SplitHostPort(addr)
+	if err != nil {
+		return err
+	}
+	if err = c.Hello(addr); err != nil {
+		return err
+	}
+	if ok, _ := c.Extension("STARTTLS"); ok {
+		config := &tls.Config{ServerName: serverName}
+		config.InsecureSkipVerify = s.EnableSelfSignedCert
+		if err = c.StartTLS(config); err != nil {
+			return err
+		}
+	}
+	if auth != nil {
+		if ok, _ := c.Extension("AUTH"); !ok {
+			return errors.New("Notifications: server doesn't support AUTH")
+		}
+		err = c.Auth(auth)
+		if err != nil {
+			return err
+		}
+	}
+	if err = c.Mail(s.Sender); err != nil {
+		return err
+	}
+	for _, addr := range to {
+		if err = c.Rcpt(addr); err != nil {
+			return err
+		}
+	}
+	w, err := c.Data()
+	if err != nil {
+		return err
+	}
+	_, err = w.Write(msg)
+	if err != nil {
+		return err
+	}
+	err = w.Close()
+	if err != nil {
+		return err
+	}
+	return c.Quit()
 }
