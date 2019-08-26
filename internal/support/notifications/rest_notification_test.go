@@ -15,6 +15,8 @@
 package notifications
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -25,6 +27,7 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+	notificationErrors "github.com/edgexfoundry/edgex-go/internal/support/notifications/errors"
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/interfaces/mocks"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
@@ -49,6 +52,10 @@ var TestEnd int64 = 1564758650
 var TestLabels = []string{
 	"test_label",
 	"test_label2",
+}
+
+var TestCategories = []string{
+	"SECURITY",
 }
 
 func TestGetNotificationById(t *testing.T) {
@@ -234,6 +241,17 @@ func createRequest(params map[string]string) *http.Request {
 	return mux.SetURLVars(req, params)
 }
 
+func createAddRequest(params map[string]string) *http.Request {
+	b, _ := json.Marshal(createNotifications(1)[0])
+	req := httptest.NewRequest(http.MethodPost, TestURI, bytes.NewBuffer(b))
+	return mux.SetURLVars(req, params)
+}
+
+func createInvalidAddRequest(params map[string]string) *http.Request {
+	req := httptest.NewRequest(http.MethodPost, TestURI, bytes.NewBuffer([]byte("invalid")))
+	return mux.SetURLVars(req, params)
+}
+
 func createDeleteRequest(params map[string]string) *http.Request {
 	req := httptest.NewRequest(http.MethodDelete, TestURI, nil)
 	return mux.SetURLVars(req, params)
@@ -248,10 +266,8 @@ func createNotifications(howMany int) []contract.Notification {
 			Category: "SECURITY",
 			Severity: "CRITICAL",
 			Content:  "Hello, Notification!",
-			Labels: []string{
-				"cool",
-				"test",
-			},
+			Labels:   TestLabels,
+			Status:   "NEW",
 		})
 	}
 	return notifications
@@ -743,6 +759,152 @@ func TestGetNotificationsNewest(t *testing.T) {
 			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
 			handler := http.HandlerFunc(restNotificationsNew)
+			handler.ServeHTTP(rr, tt.request)
+			response := rr.Result()
+			if response.StatusCode != tt.expectedStatus {
+				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
+
+				return
+			}
+		})
+	}
+}
+
+func createDistributorMockSuccess() interfaces.Distributor {
+	distributorMock := mocks.Distributor{}
+	notification := createNotifications(1)[0]
+	distributorMock.On("DistributeAndMark", notification).Return(nil)
+	return &distributorMock
+}
+
+func createDistributorMockErr() interfaces.Distributor {
+	distributorMock := mocks.Distributor{}
+	notification := createNotifications(1)[0]
+	distributorMock.On("DistributeAndMark", notification).Return(errors.New("test error"))
+	return &distributorMock
+}
+
+func createMockNotificationAddSuccess() interfaces.DBClient {
+	myMock := mocks.DBClient{}
+	notification := createNotifications(1)[0]
+	myMock.On("AddNotification", notification).Return(TestId, nil)
+	myMock.On("GetNotificationById", TestId).Return(notification, nil)
+	myMock.On("GetSubscriptionByCategoriesLabels", TestCategories, TestLabels).Return(createSubscriptions(1), nil)
+	return &myMock
+}
+
+func createMockNotificationAddErr() interfaces.DBClient {
+	myMock := mocks.DBClient{}
+	notification := createNotifications(1)[0]
+	myMock.On("AddNotification", notification).Return(TestId, errors.New("test error"))
+	myMock.On("GetNotificationById", TestId).Return(notification, nil)
+	myMock.On("GetSubscriptionByCategoriesLabels", TestCategories, TestLabels).Return(createSubscriptions(1), nil)
+	return &myMock
+}
+
+func createMockNotificationAddInUseErr() interfaces.DBClient {
+	myMock := mocks.DBClient{}
+	notification := createNotifications(1)[0]
+	myMock.On("AddNotification", notification).Return(TestId, notificationErrors.NewErrNotificationInUse(notification.Slug))
+	myMock.On("GetNotificationById", TestId).Return(notification, nil)
+	myMock.On("GetSubscriptionByCategoriesLabels", TestCategories, TestLabels).Return(createSubscriptions(1), nil)
+	return &myMock
+}
+
+func createMockNotificationAddGetIDNotFoundErr() interfaces.DBClient {
+	myMock := mocks.DBClient{}
+	notification := createNotifications(1)[0]
+	myMock.On("AddNotification", notification).Return(TestId, nil)
+	myMock.On("GetNotificationById", TestId).Return(notification, notificationErrors.NewErrNotificationNotFound(notification.Slug))
+	myMock.On("GetSubscriptionByCategoriesLabels", TestCategories, TestLabels).Return(createSubscriptions(1), nil)
+	return &myMock
+}
+
+func createMockNotificationAddGetIDErr() interfaces.DBClient {
+	myMock := mocks.DBClient{}
+	notification := createNotifications(1)[0]
+	myMock.On("AddNotification", notification).Return(TestId, nil)
+	myMock.On("GetNotificationById", TestId).Return(notification, errors.New("test error"))
+	myMock.On("GetSubscriptionByCategoriesLabels", TestCategories, TestLabels).Return(createSubscriptions(1), nil)
+	return &myMock
+}
+
+func createMockNotificationAddDistributeErr() interfaces.DBClient {
+	myMock := mocks.DBClient{}
+	notification := createNotifications(1)[0]
+	myMock.On("AddNotification", notification).Return(TestId, nil)
+	myMock.On("GetNotificationById", TestId).Return(notification, nil)
+	myMock.On("GetSubscriptionByCategoriesLabels", TestCategories, TestLabels).Return(createSubscriptions(1), nil)
+	return &myMock
+}
+
+func TestAddNotification(t *testing.T) {
+
+	tests := []struct {
+		name            string
+		request         *http.Request
+		dbMock          interfaces.DBClient
+		distributorMock interfaces.Distributor
+		expectedStatus  int
+	}{
+		{
+			name:            "OK",
+			request:         createAddRequest(map[string]string{}),
+			dbMock:          createMockNotificationAddSuccess(),
+			distributorMock: createDistributorMockSuccess(),
+			expectedStatus:  http.StatusAccepted,
+		},
+		{
+			name:            "Error decoding Notification",
+			request:         createInvalidAddRequest(map[string]string{}),
+			dbMock:          createMockNotificationAddSuccess(),
+			distributorMock: createDistributorMockSuccess(),
+			expectedStatus:  http.StatusBadRequest,
+		},
+		{
+			name:            "Error Adding already exists",
+			request:         createAddRequest(map[string]string{}),
+			dbMock:          createMockNotificationAddInUseErr(),
+			distributorMock: createDistributorMockSuccess(),
+			expectedStatus:  http.StatusConflict,
+		},
+		{
+			name:            "Error Adding",
+			request:         createAddRequest(map[string]string{}),
+			dbMock:          createMockNotificationAddErr(),
+			distributorMock: createDistributorMockSuccess(),
+			expectedStatus:  http.StatusInternalServerError,
+		},
+		{
+			name:            "Error GetNotificationById Not found",
+			request:         createAddRequest(map[string]string{}),
+			dbMock:          createMockNotificationAddGetIDNotFoundErr(),
+			distributorMock: createDistributorMockSuccess(),
+			expectedStatus:  http.StatusNotFound,
+		},
+		{
+			name:            "Error GetNotificationById",
+			request:         createAddRequest(map[string]string{}),
+			dbMock:          createMockNotificationAddGetIDErr(),
+			distributorMock: createDistributorMockSuccess(),
+			expectedStatus:  http.StatusInternalServerError,
+		},
+		{
+			name:            "Error DistributeAndMark",
+			request:         createAddRequest(map[string]string{}),
+			dbMock:          createMockNotificationAddDistributeErr(),
+			distributorMock: createDistributorMockErr(),
+			expectedStatus:  http.StatusInternalServerError,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			LoggingClient = logger.MockLogger{}
+			Configuration = &ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 5}}
+			distributor = tt.distributorMock
+			dbClient = tt.dbMock
+			rr := httptest.NewRecorder()
+			handler := http.HandlerFunc(restAddNotification)
 			handler.ServeHTTP(rr, tt.request)
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {

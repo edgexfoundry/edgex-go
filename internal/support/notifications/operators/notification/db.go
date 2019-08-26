@@ -28,6 +28,11 @@ type NotificationLoader interface {
 	GetNewNotifications(limit int) ([]contract.Notification, error)
 }
 
+// NotificationWriter provides functionality for adding Notifications.
+type NotificationWriter interface {
+	AddNotification(n contract.Notification) (string, error)
+}
+
 // NotificationDeleter deletes notifications.
 type NotificationDeleter interface {
 	DeleteNotificationById(id string) error

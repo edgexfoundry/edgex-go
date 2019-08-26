@@ -28,7 +28,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func notificationHandler(w http.ResponseWriter, r *http.Request) {
+func restAddNotification(w http.ResponseWriter, r *http.Request) {
 	if r.Body != nil {
 		defer r.Body.Close()
 	}
@@ -45,24 +45,38 @@ func notificationHandler(w http.ResponseWriter, r *http.Request) {
 
 	LoggingClient.Info("Posting Notification: " + n.String())
 	n.Status = models.NotificationsStatus(models.New)
-	n.ID, err = dbClient.AddNotification(n)
+
+	op := notification.NewAddExecutor(dbClient, n)
+	n.ID, err = op.Execute()
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusConflict)
+		switch err.(type) {
+		case errors.ErrNotificationInUse:
+			http.Error(w, err.Error(), http.StatusConflict)
+		default:
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 		LoggingClient.Error(err.Error())
 		return
 	}
 
 	if n.Severity == models.NotificationsSeverity(models.Critical) {
 		LoggingClient.Info("Critical severity scheduler is triggered for: " + n.Slug)
-		n, err = dbClient.GetNotificationById(n.ID)
+		op := notification.NewIdExecutor(dbClient, n.ID)
+		n, err := op.Execute()
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
 			LoggingClient.Error(err.Error())
+			switch err.(type) {
+			case errors.ErrNotificationNotFound:
+				http.Error(w, err.Error(), http.StatusNotFound)
+			default:
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
 			return
 		}
 
-		err := distributeAndMark(n)
+		err = distributor.DistributeAndMark(n)
 		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		LoggingClient.Info("Critical severity scheduler has completed for: " + n.Slug)

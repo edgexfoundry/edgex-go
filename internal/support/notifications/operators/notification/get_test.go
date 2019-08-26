@@ -45,6 +45,14 @@ var SuccessfulDatabaseResult = []contract.Notification{
 		Content:  "Hello, Notification!",
 		Labels:   Labels,
 	},
+	{
+		Slug:     "notice-test-124",
+		Sender:   "System Management",
+		Category: "SECURITY",
+		Severity: "CRITICAL",
+		Content:  "Hello, Notification!",
+		Labels:   Labels,
+	},
 }
 
 func TestIdExecutor(t *testing.T) {

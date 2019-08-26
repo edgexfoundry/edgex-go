@@ -45,7 +45,7 @@ func LoadRestRoutes() *mux.Router {
 	b := r.PathPrefix(clients.ApiBase).Subrouter()
 
 	// Notifications
-	b.HandleFunc("/"+NOTIFICATION, notificationHandler).Methods(http.MethodPost)
+	b.HandleFunc("/"+NOTIFICATION, restAddNotification).Methods(http.MethodPost)
 	b.HandleFunc("/"+NOTIFICATION+"/{"+ID+"}", restGetNotificationByID).Methods(http.MethodGet)
 	b.HandleFunc("/"+NOTIFICATION+"/{"+ID+"}", restDeleteNotificationByID).Methods(http.MethodDelete)
 	b.HandleFunc("/"+NOTIFICATION+"/"+SLUG+"/{"+SLUG+"}", restGetNotificationBySlug).Methods(http.MethodGet)

@@ -42,6 +42,7 @@ import (
 // Global variables
 var Configuration *ConfigurationStruct
 var dbClient interfaces.DBClient
+var distributor interfaces.Distributor
 var LoggingClient logger.LoggingClient
 var registryClient registry.Client
 var registryErrors chan error        //A channel for "config wait errors" sourced from Registry
@@ -97,7 +98,7 @@ func Init(useRegistry bool) bool {
 	}
 
 	go telemetry.StartCpuUsageAverage()
-
+	distributor = NewNormalDistributor()
 	return true
 }
 
@@ -112,6 +113,9 @@ func Destruct() {
 
 	if registerUpdates != nil {
 		close(registerUpdates)
+	}
+	if distributor != nil {
+		distributor = nil
 	}
 }
 

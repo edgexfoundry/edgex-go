@@ -31,6 +31,18 @@ func NewErrNotificationNotFound(slug string) error {
 	return ErrNotificationNotFound{slug: slug}
 }
 
+type ErrNotificationInUse struct {
+	slug string
+}
+
+func (e ErrNotificationInUse) Error() string {
+	return fmt.Sprintf("Notification '%s' already in use", e.slug)
+}
+
+func NewErrNotificationInUse(slug string) error {
+	return ErrNotificationInUse{slug: slug}
+}
+
 type ErrSubscriptionNotFound struct {
 	slug string
 }
