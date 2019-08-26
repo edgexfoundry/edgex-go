@@ -15,13 +15,11 @@
 package scheduler
 
 import (
-	"encoding/json"
 	"net/http"
 	"net/url"
 	"strconv"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
-	"github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/gorilla/mux"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
@@ -58,7 +56,9 @@ func LoadRestRoutes() *mux.Router {
 	interval.HandleFunc("/"+SCRUB+"/", restScrubAllIntervals).Methods(http.MethodDelete)
 
 	// IntervalAction
-	r.HandleFunc(clients.ApiIntervalActionRoute, intervalActionHandler).Methods(http.MethodGet, http.MethodPut, http.MethodPost)
+	r.HandleFunc(clients.ApiIntervalActionRoute, restGetIntervalAction).Methods(http.MethodGet)
+	r.HandleFunc(clients.ApiIntervalActionRoute, restUpdateIntervalAction).Methods(http.MethodPut)
+	r.HandleFunc(clients.ApiIntervalActionRoute, restAddIntervalAction).Methods(http.MethodPost)
 	intervalAction := r.PathPrefix(clients.ApiIntervalActionRoute).Subrouter()
 	intervalAction.HandleFunc("/{"+ID+"}", intervalActionByIdHandler).Methods(http.MethodGet, http.MethodDelete)
 	intervalAction.HandleFunc("/"+NAME+"/{"+NAME+"}", intervalActionByNameHandler).Methods(http.MethodGet, http.MethodDelete)
@@ -94,103 +94,6 @@ func metricsHandler(w http.ResponseWriter, _ *http.Request) {
 }
 
 // ************************ INTERVAL ACTION HANDLERS ****************************
-
-/*
-Handler for the IntervalAction API
-Status code 400 - bad request, malformed or missing data
-Status code 404 - interval not found
-Status code 413 - number of interval actions exceeds limit
-Status code 500 - unanticipated issues
-api/v1/interval
-*/
-func intervalActionHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Body != nil {
-		defer r.Body.Close()
-	}
-
-	switch r.Method {
-	case http.MethodGet:
-		intervalActions, err := getIntervalActions(Configuration.Service.MaxResultCount)
-		if err != nil {
-			LoggingClient.Error(err.Error())
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		pkg.Encode(intervalActions, w, LoggingClient)
-		break
-		// Post a new IntervalAction
-	case http.MethodPost:
-		var intervalAction models.IntervalAction
-		dec := json.NewDecoder(r.Body)
-		err := dec.Decode(&intervalAction)
-
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			LoggingClient.Error("error decoding intervalAction" + err.Error())
-			return
-		}
-		LoggingClient.Info("posting new intervalAction: " + intervalAction.String())
-
-		newId, err := addNewIntervalAction(intervalAction)
-		if err != nil {
-			switch t := err.(type) {
-			case *errors.ErrIntervalActionNameInUse:
-				http.Error(w, t.Error(), http.StatusBadRequest)
-			case *errors.ErrInvalidTimeFormat:
-				http.Error(w, t.Error(), http.StatusBadRequest)
-			case *errors.ErrInvalidFrequencyFormat:
-				http.Error(w, t.Error(), http.StatusBadRequest)
-			default:
-				http.Error(w, t.Error(), http.StatusInternalServerError)
-			}
-			LoggingClient.Error(err.Error())
-			return
-		}
-
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(newId))
-		break
-	case http.MethodPut:
-		var from models.IntervalAction
-		dec := json.NewDecoder(r.Body)
-		err := dec.Decode(&from)
-
-		// Problem decoding
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			LoggingClient.Error("Error decoding the intervalAction: " + err.Error())
-			return
-		}
-
-		LoggingClient.Info("Updating IntervalAction: " + from.ID)
-		err = updateIntervalAction(from)
-		if err != nil {
-			switch t := err.(type) {
-			case *errors.ErrIntervalNotFound:
-				http.Error(w, t.Error(), http.StatusNotFound)
-			case *errors.ErrInvalidCronFormat:
-				http.Error(w, t.Error(), http.StatusBadRequest)
-			case *errors.ErrInvalidFrequencyFormat:
-				http.Error(w, t.Error(), http.StatusBadRequest)
-			case *errors.ErrInvalidTimeFormat:
-				http.Error(w, t.Error(), http.StatusBadRequest)
-			case *errors.ErrIntervalStillUsedByIntervalActions:
-				http.Error(w, t.Error(), http.StatusBadRequest)
-			case *errors.ErrIntervalNameInUse:
-				http.Error(w, t.Error(), http.StatusBadRequest)
-			default: //return an error on everything else.
-				http.Error(w, err.Error(), http.StatusServiceUnavailable)
-			}
-			LoggingClient.Error(err.Error())
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("true"))
-	}
-}
-
 /*
 Handler for the IntervalAction By-ID API
 Status code 404 - interval not found

@@ -35,7 +35,7 @@ import (
 
 // TestURI this is not really used since we are using the HTTP testing framework and not creating routes, but rather
 // creating a specific handler which will accept all requests. Therefore, the URI is not important.
-var TestURI = "/interval"
+var TestURI = "/" + INTERVAL
 var TestId = "123e4567-e89b-12d3-a456-426655440000"
 var TestName = "hourly"
 var TestOtherName = "weekly"
