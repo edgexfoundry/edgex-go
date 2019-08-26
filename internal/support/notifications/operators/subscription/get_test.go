@@ -24,7 +24,10 @@ import (
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
-var Id = "83cb038b-5a94-4707-985d-13effec62de2"
+const (
+	Id   = "83cb038b-5a94-4707-985d-13effec62de2"
+	Slug = "test"
+)
 
 var Error = errors.New("test error")
 var ErrorNotFound = db.ErrNotFound
@@ -111,4 +114,53 @@ func createMockSubscriptionLoaderStringArg(methodName string, err error, ret int
 	dbMock := mocks.SubscriptionLoader{}
 	dbMock.On(methodName, arg).Return(ret, err)
 	return &dbMock
+}
+
+func TestSlugExecutor(t *testing.T) {
+	tests := []struct {
+		name           string
+		mockDb         SubscriptionLoader
+		expectedResult contract.Subscription
+		expectedError  bool
+	}{
+		{
+			name:           "Successful database call",
+			mockDb:         createMockSubscriptionLoaderStringArg("GetSubscriptionBySlug", nil, SuccessfulDatabaseResult[0], Slug),
+			expectedResult: SuccessfulDatabaseResult[0],
+			expectedError:  false,
+		},
+		{
+			name:           "Unsuccessful database call",
+			mockDb:         createMockSubscriptionLoaderStringArg("GetSubscriptionBySlug", Error, contract.Subscription{}, Slug),
+			expectedResult: contract.Subscription{},
+			expectedError:  true,
+		},
+		{
+			name:           "Subscription not found",
+			mockDb:         createMockSubscriptionLoaderStringArg("GetSubscriptionBySlug", ErrorNotFound, contract.Subscription{}, Slug),
+			expectedResult: contract.Subscription{},
+			expectedError:  true,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			op := NewSlugExecutor(test.mockDb, Slug)
+			actual, err := op.Execute()
+			if test.expectedError && err == nil {
+				t.Error("Expected an error")
+				return
+			}
+
+			if !test.expectedError && err != nil {
+				t.Errorf("Unexpectedly encountered error: %s", err.Error())
+				return
+			}
+
+			if !reflect.DeepEqual(test.expectedResult, actual) {
+				t.Errorf("Expected result does not match the observed.\nExpected: %v\nObserved: %v\n", test.expectedResult, actual)
+				return
+			}
+		})
+	}
 }

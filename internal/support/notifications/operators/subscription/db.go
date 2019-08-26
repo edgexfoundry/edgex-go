@@ -19,9 +19,11 @@ import contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 // SubscriptionLoader provides functionality for obtaining Subscriptions.
 type SubscriptionLoader interface {
 	GetSubscriptionById(id string) (contract.Subscription, error)
+	GetSubscriptionBySlug(slug string) (contract.Subscription, error)
 }
 
 // SubscriptionDeleter deletes subscriptions.
 type SubscriptionDeleter interface {
 	DeleteSubscriptionById(id string) error
+	DeleteSubscriptionBySlug(id string) error
 }

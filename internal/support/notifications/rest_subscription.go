@@ -28,10 +28,6 @@ import (
 	"github.com/gorilla/mux"
 )
 
-const (
-	applicationJson = "application/json; charset=utf-8"
-)
-
 func subscriptionHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Body != nil {
 		defer r.Body.Close()
@@ -155,7 +151,7 @@ func restDeleteSubscriptionByID(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func subscriptionsBySlugHandler(w http.ResponseWriter, r *http.Request) {
+func restGetSubscriptionBySlug(w http.ResponseWriter, r *http.Request) {
 
 	if r.Body != nil {
 		defer r.Body.Close()
@@ -163,45 +159,50 @@ func subscriptionsBySlugHandler(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
 	slug := vars["slug"]
-	switch r.Method {
-	case http.MethodGet:
 
-		s, err := dbClient.GetSubscriptionBySlug(slug)
-		if err != nil {
-			if err == db.ErrNotFound {
-				http.Error(w, "Subscription not found", http.StatusNotFound)
-			} else {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			}
-			LoggingClient.Error(err.Error())
-			pkg.Encode(s, w, LoggingClient)
-			return
-		}
+	op := subscription.NewSlugExecutor(dbClient, slug)
+	s, err := op.Execute()
 
-		pkg.Encode(s, w, LoggingClient)
-	case http.MethodDelete:
-		_, err := dbClient.GetSubscriptionBySlug(slug)
-		if err != nil {
-			if err == db.ErrNotFound {
-				http.Error(w, "Subscription not found", http.StatusNotFound)
-			} else {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			}
-			LoggingClient.Error(err.Error())
-			return
-		}
-
-		LoggingClient.Info("Deleting subscription by slug: " + slug)
-
-		if err = dbClient.DeleteSubscriptionBySlug(slug); err != nil {
+	if err != nil {
+		switch err.(type) {
+		case errors.ErrSubscriptionNotFound:
+			http.Error(w, err.Error(), http.StatusNotFound)
+		default:
 			http.Error(w, err.Error(), http.StatusInternalServerError)
-			LoggingClient.Error(err.Error())
-			return
 		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("true"))
+		LoggingClient.Error(err.Error())
+		return
 	}
+
+	pkg.Encode(s, w, LoggingClient)
+}
+
+func restDeleteSubscriptionBySlug(w http.ResponseWriter, r *http.Request) {
+
+	if r.Body != nil {
+		defer r.Body.Close()
+	}
+
+	vars := mux.Vars(r)
+	slug := vars["slug"]
+
+	LoggingClient.Info("Deleting subscription by slug: " + slug)
+
+	op := subscription.NewDeleteBySlugExecutor(dbClient, slug)
+	err := op.Execute()
+	if err != nil {
+		switch err.(type) {
+		case errors.ErrSubscriptionNotFound:
+			http.Error(w, err.Error(), http.StatusNotFound)
+		default:
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		LoggingClient.Error(err.Error())
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("true"))
 }
 
 func subscriptionsByCategoriesHandler(w http.ResponseWriter, r *http.Request) {
