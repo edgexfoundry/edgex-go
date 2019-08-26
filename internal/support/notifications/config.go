@@ -40,3 +40,13 @@ type SmtpInfo struct {
 	EnableSelfSignedCert bool
 	Subject              string
 }
+
+// The earlier releases do not have Username field and are using Sender field where Usename will
+// be used now, to make it backward compatible fallback to Sender, which is signified by the empty
+// Username field.
+func (s SmtpInfo) CheckUsername() string {
+	if s.Username != "" {
+		return s.Username
+	}
+	return s.Sender
+}

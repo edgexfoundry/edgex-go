@@ -137,16 +137,16 @@ func handleFailedTransmission(t models.Transmission) {
 }
 
 func deduceAuth(s SmtpInfo) (mail.Auth, error) {
-	if s.Username == "" && s.Password == "" {
+	if s.CheckUsername() == "" && s.Password == "" {
 		return nil, errors.New("Notifications: Expecting username")
 	}
-	if s.Username != "" && s.Password == "" {
+	if s.CheckUsername() != "" && s.Password == "" {
 		return nil, nil
 	}
-	if s.Username == "" && s.Password != "" {
+	if s.CheckUsername() == "" && s.Password != "" {
 		return nil, errors.New("Notifications: Expecting username")
 	}
-	return mail.PlainAuth("", s.Username, s.Password, s.Host), nil
+	return mail.PlainAuth("", s.CheckUsername(), s.Password, s.Host), nil
 }
 
 // The function smtpSend replicates the functionality provided by the SendMail function
