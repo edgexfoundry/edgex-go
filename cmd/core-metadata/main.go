@@ -22,16 +22,16 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
+
+	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
-	"github.com/gorilla/context"
 )
 
 func main() {
@@ -63,7 +63,7 @@ func main() {
 
 	errs := make(chan error, 2)
 	listenForInterrupt(errs)
-	startHttpServer(errs, metadata.Configuration.Service.Port)
+	startHTTPServer(errs)
 
 	// Time it took to start service
 	metadata.LoggingClient.Info("Service started in: " + time.Since(start).String())
@@ -88,10 +88,18 @@ func listenForInterrupt(errChan chan error) {
 	}()
 }
 
-func startHttpServer(errChan chan error, port int) {
+func startHTTPServer(errChan chan error) {
 	go func() {
 		correlation.LoggingClient = metadata.LoggingClient //Not thrilled about this, can't think of anything better ATM
-		r := metadata.LoadRestRoutes()
-		errChan <- http.ListenAndServe(":"+strconv.Itoa(port), context.ClearHandler(r))
+		timeout := time.Millisecond * time.Duration(metadata.Configuration.Service.Timeout)
+
+		server := &http.Server{
+			Handler:      metadata.LoadRestRoutes(),
+			Addr:         metadata.Configuration.Service.Host + ":" + strconv.Itoa(metadata.Configuration.Service.Port),
+			WriteTimeout: timeout,
+			ReadTimeout:  timeout,
+		}
+
+		errChan <- server.ListenAndServe()
 	}()
 }

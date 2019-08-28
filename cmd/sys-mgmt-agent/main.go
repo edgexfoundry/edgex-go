@@ -22,14 +22,13 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gorilla/context"
-
-	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent"
+
+	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
@@ -64,7 +63,7 @@ func main() {
 
 	errs := make(chan error, 2)
 	listenForInterrupt(errs)
-	startHttpServer(errs, agent.Configuration.Service.Port)
+	startHTTPServer(errs)
 
 	// Time it took to start service
 	agent.LoggingClient.Info("Service started in: " + time.Since(start).String())
@@ -89,10 +88,18 @@ func listenForInterrupt(errChan chan error) {
 	}()
 }
 
-func startHttpServer(errChan chan error, port int) {
+func startHTTPServer(errChan chan error) {
 	go func() {
-		correlation.LoggingClient = agent.LoggingClient
-		r := agent.LoadRestRoutes()
-		errChan <- http.ListenAndServe(":"+strconv.Itoa(port), context.ClearHandler(r))
+		correlation.LoggingClient = agent.LoggingClient //Not thrilled about this, can't think of anything better ATM
+		timeout := time.Millisecond * time.Duration(agent.Configuration.Service.Timeout)
+
+		server := &http.Server{
+			Handler:      agent.LoadRestRoutes(),
+			Addr:         agent.Configuration.Service.Host + ":" + strconv.Itoa(agent.Configuration.Service.Port),
+			WriteTimeout: timeout,
+			ReadTimeout:  timeout,
+		}
+
+		errChan <- server.ListenAndServe()
 	}()
 }
