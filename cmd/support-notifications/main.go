@@ -27,12 +27,13 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications"
+
+	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
@@ -67,7 +68,7 @@ func main() {
 
 	errs := make(chan error, 2)
 	listenForInterrupt(errs)
-	startHttpServer(errs, notifications.Configuration.Service.Port)
+	startHTTPServer(errs)
 
 	// Time it took to start service
 	notifications.LoggingClient.Info("Service started in: " + time.Since(start).String())
@@ -92,10 +93,18 @@ func listenForInterrupt(errChan chan error) {
 	}()
 }
 
-func startHttpServer(errChan chan error, port int) {
+func startHTTPServer(errChan chan error) {
 	go func() {
-		correlation.LoggingClient = notifications.LoggingClient
-		r := notifications.LoadRestRoutes()
-		errChan <- http.ListenAndServe(":"+strconv.Itoa(port), r)
+		correlation.LoggingClient = notifications.LoggingClient //Not thrilled about this, can't think of anything better ATM
+		timeout := time.Millisecond * time.Duration(notifications.Configuration.Service.Timeout)
+
+		server := &http.Server{
+			Handler:      notifications.LoadRestRoutes(),
+			Addr:         notifications.Configuration.Service.Host + ":" + strconv.Itoa(notifications.Configuration.Service.Port),
+			WriteTimeout: timeout,
+			ReadTimeout:  timeout),
+		}
+
+		errChan <- server.ListenAndServe()
 	}()
 }

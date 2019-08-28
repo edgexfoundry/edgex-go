@@ -227,7 +227,7 @@ func metricsHandler(w http.ResponseWriter, _ *http.Request) {
 }
 
 // HTTPServer function
-func HttpServer() http.Handler {
+func LoadRestRoutes() http.Handler {
 	r := mux.NewRouter()
 
 	// Ping Resource

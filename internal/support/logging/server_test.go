@@ -64,7 +64,7 @@ func (dp *dummyPersist) closeSession() {
 
 func TestPing(t *testing.T) {
 	// create test server with handler
-	ts := httptest.NewServer(HttpServer())
+	ts := httptest.NewServer(LoadRestRoutes())
 	defer ts.Close()
 
 	response, err := http.Get(ts.URL + clients.ApiPingRoute)
@@ -92,7 +92,7 @@ func TestAddLog(t *testing.T) {
 			http.StatusBadRequest},
 	}
 	// create test server with handler
-	ts := httptest.NewServer(HttpServer())
+	ts := httptest.NewServer(LoadRestRoutes())
 	defer ts.Close()
 
 	dbClient = &dummyPersist{}
@@ -204,7 +204,7 @@ func TestGetLogs(t *testing.T) {
 			3},
 	}
 	// create test server with handler
-	ts := httptest.NewServer(HttpServer())
+	ts := httptest.NewServer(LoadRestRoutes())
 	defer ts.Close()
 
 	dummy := &dummyPersist{}
@@ -295,7 +295,7 @@ func TestRemoveLogs(t *testing.T) {
 			matchCriteria{LogLevels: logLevels, OriginServices: services, Start: 1, End: 2}},
 	}
 	// create test server with handler
-	ts := httptest.NewServer(HttpServer())
+	ts := httptest.NewServer(LoadRestRoutes())
 	defer ts.Close()
 
 	dummy := &dummyPersist{}

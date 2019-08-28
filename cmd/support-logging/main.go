@@ -17,12 +17,13 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/internal/support/logging"
+
+	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
@@ -82,8 +83,16 @@ func listenForInterrupt(errChan chan error) {
 
 func startHTTPServer(errChan chan error) {
 	go func() {
-		correlation.LoggingClient = logging.LoggingClient
-		p := fmt.Sprintf(":%d", logging.Configuration.Service.Port)
-		errChan <- http.ListenAndServe(p, logging.HttpServer())
+		correlation.LoggingClient = logging.LoggingClient //Not thrilled about this, can't think of anything better ATM
+		timeout := time.Millisecond * time.Duration(logging.Configuration.Service.Timeout)
+
+		server := &http.Server{
+			Handler:      logging.LoadRestRoutes(),
+			Addr:         logging.Configuration.Service.Host + ":" + strconv.Itoa(logging.Configuration.Service.Port),
+			WriteTimeout: timeout,
+			ReadTimeout:  timeout,
+		}
+
+		errChan <- server.ListenAndServe()
 	}()
 }

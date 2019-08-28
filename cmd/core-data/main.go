@@ -63,7 +63,7 @@ func main() {
 
 	errs := make(chan error, 2)
 	listenForInterrupt(errs)
-	startHttpServer(errs)
+	startHTTPServer(errs)
 
 	// Time it took to start service
 	data.LoggingClient.Info("Service started in: " + time.Since(start).String())
@@ -88,15 +88,16 @@ func listenForInterrupt(errChan chan error) {
 	}()
 }
 
-func startHttpServer(errChan chan error) {
+func startHTTPServer(errChan chan error) {
 	go func() {
 		correlation.LoggingClient = data.LoggingClient //Not thrilled about this, can't think of anything better ATM
+		timeout := time.Millisecond * time.Duration(data.Configuration.Service.Timeout)
 
 		server := &http.Server{
-			Handler: data.LoadRestRoutes(),
-			Addr: data.Configuration.Service.Host + ":" + strconv.Itoa(data.Configuration.Service.Port),
-			WriteTimeout: time.Millisecond * time.Duration(data.Configuration.Service.Timeout),
-			ReadTimeout: time.Millisecond * time.Duration(data.Configuration.Service.Timeout),
+			Handler:      data.LoadRestRoutes(),
+			Addr:         data.Configuration.Service.Host + ":" + strconv.Itoa(data.Configuration.Service.Port),
+			WriteTimeout: timeout,
+			ReadTimeout:  timeout,
 		}
 
 		errChan <- server.ListenAndServe()
