@@ -31,19 +31,19 @@ func TestSubscriptionById(t *testing.T) {
 	}{
 		{
 			name:              "Successful Delete",
-			database:          createMockSubscriptionnDeleterStringArg("DeleteSubscriptionById", nil, Id),
+			database:          createMockSubscriptionDeleterStringArg("DeleteSubscriptionById", nil, Id),
 			expectError:       false,
 			expectedErrorType: nil,
 		},
 		{
 			name:              "Subscription not found",
-			database:          createMockSubscriptionnDeleterStringArg("DeleteSubscriptionById", ErrorNotFound, Id),
+			database:          createMockSubscriptionDeleterStringArg("DeleteSubscriptionById", ErrorNotFound, Id),
 			expectError:       true,
 			expectedErrorType: notificationErrors.ErrSubscriptionNotFound{},
 		},
 		{
 			name:              "Delete error",
-			database:          createMockSubscriptionnDeleterStringArg("DeleteSubscriptionById", Error, Id),
+			database:          createMockSubscriptionDeleterStringArg("DeleteSubscriptionById", Error, Id),
 			expectError:       true,
 			expectedErrorType: Error,
 		},
@@ -74,7 +74,59 @@ func TestSubscriptionById(t *testing.T) {
 	}
 }
 
-func createMockSubscriptionnDeleterStringArg(methodName string, err error, arg string) SubscriptionDeleter {
+func TestSubscriptionBySlug(t *testing.T) {
+	tests := []struct {
+		name              string
+		database          SubscriptionDeleter
+		expectError       bool
+		expectedErrorType error
+	}{
+		{
+			name:              "Successful Delete",
+			database:          createMockSubscriptionDeleterStringArg("DeleteSubscriptionBySlug", nil, Slug),
+			expectError:       false,
+			expectedErrorType: nil,
+		},
+		{
+			name:              "Subscription not found",
+			database:          createMockSubscriptionDeleterStringArg("DeleteSubscriptionBySlug", ErrorNotFound, Slug),
+			expectError:       true,
+			expectedErrorType: notificationErrors.ErrSubscriptionNotFound{},
+		},
+		{
+			name:              "Delete error",
+			database:          createMockSubscriptionDeleterStringArg("DeleteSubscriptionBySlug", Error, Slug),
+			expectError:       true,
+			expectedErrorType: Error,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			op := NewDeleteBySlugExecutor(test.database, Slug)
+			err := op.Execute()
+
+			if test.expectError && err == nil {
+				t.Error("We expected an error but did not get one")
+			}
+
+			if !test.expectError && err != nil {
+				t.Errorf("We do not expected an error but got one. %s", err.Error())
+			}
+
+			if test.expectError {
+				eet := reflect.TypeOf(test.expectedErrorType)
+				aet := reflect.TypeOf(err)
+				if !aet.AssignableTo(eet) {
+					t.Errorf("Expected error of type %v, but got an error of type %v", eet, aet)
+				}
+			}
+
+			return
+		})
+	}
+}
+
+func createMockSubscriptionDeleterStringArg(methodName string, err error, arg string) SubscriptionDeleter {
 	dbMock := mocks.SubscriptionDeleter{}
 	dbMock.On(methodName, arg).Return(err)
 	return &dbMock

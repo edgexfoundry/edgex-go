@@ -30,7 +30,11 @@ type deleteSubscriptionByID struct {
 	did string
 }
 
-// Execute performs the deletion of the notification.
+type deleteSubscriptionBySlug struct {
+	db    SubscriptionDeleter
+	dslug string
+}
+
 func (dnbi deleteSubscriptionByID) Execute() error {
 	err := dnbi.db.DeleteSubscriptionById(dnbi.did)
 	if err != nil {
@@ -42,10 +46,29 @@ func (dnbi deleteSubscriptionByID) Execute() error {
 	return nil
 }
 
+func (dnbi deleteSubscriptionBySlug) Execute() error {
+	err := dnbi.db.DeleteSubscriptionBySlug(dnbi.dslug)
+	if err != nil {
+		if err == db.ErrNotFound {
+			err = errors.NewErrSubscriptionNotFound(dnbi.dslug)
+		}
+		return err
+	}
+	return nil
+}
+
 // NewDeleteByIDExecutor creates a new DeleteExecutor which deletes a subscription based on id.
 func NewDeleteByIDExecutor(db SubscriptionDeleter, did string) DeleteExecutor {
 	return deleteSubscriptionByID{
 		db:  db,
 		did: did,
+	}
+}
+
+// NewDeleteBySlugExecutor creates a new DeleteExecutor which deletes a subscription based on slug.
+func NewDeleteBySlugExecutor(db SubscriptionDeleter, dslug string) DeleteExecutor {
+	return deleteSubscriptionBySlug{
+		db:    db,
+		dslug: dslug,
 	}
 }

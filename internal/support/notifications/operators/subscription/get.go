@@ -29,6 +29,11 @@ type subscriptionLoadById struct {
 	id       string
 }
 
+type subscriptionLoadBySlug struct {
+	database SubscriptionLoader
+	slug     string
+}
+
 func (op subscriptionLoadById) Execute() (contract.Subscription, error) {
 	res, err := op.database.GetSubscriptionById(op.id)
 	if err != nil {
@@ -40,9 +45,28 @@ func (op subscriptionLoadById) Execute() (contract.Subscription, error) {
 	return res, nil
 }
 
+func (op subscriptionLoadBySlug) Execute() (contract.Subscription, error) {
+	s, err := op.database.GetSubscriptionBySlug(op.slug)
+	if err != nil {
+		if err == db.ErrNotFound {
+			newErr := errors.NewErrSubscriptionNotFound(op.slug)
+			return s, newErr
+		}
+		return s, err
+	}
+	return s, nil
+}
+
 func NewIdExecutor(db SubscriptionLoader, id string) IdExecutor {
 	return subscriptionLoadById{
 		database: db,
 		id:       id,
+	}
+}
+
+func NewSlugExecutor(db SubscriptionLoader, slug string) IdExecutor {
+	return subscriptionLoadBySlug{
+		database: db,
+		slug:     slug,
 	}
 }

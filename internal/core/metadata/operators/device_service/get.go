@@ -23,8 +23,8 @@ import (
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
-// DeviceServiceGetAllExecutor retrieves DeviceServices according to parameters defined by the implementation.
-type DeviceServiceGetAllExecutor interface {
+// DeviceServiceGetListExecutor retrieves DeviceServices according to parameters defined by the implementation.
+type DeviceServiceGetListExecutor interface {
 	Execute() ([]contract.DeviceService, error)
 }
 
@@ -35,7 +35,7 @@ type deviceServiceLoadAll struct {
 }
 
 // NewDeviceServiceLoadAll creates a new Executor that retrieves all DeviceService registered.
-func NewDeviceServiceLoadAll(cfg config.ServiceInfo, db DeviceServiceLoader, log logger.LoggingClient) DeviceServiceGetAllExecutor {
+func NewDeviceServiceLoadAll(cfg config.ServiceInfo, db DeviceServiceLoader, log logger.LoggingClient) DeviceServiceGetListExecutor {
 	return deviceServiceLoadAll{config: cfg, database: db, logger: log}
 }
 
@@ -53,29 +53,46 @@ func (op deviceServiceLoadAll) Execute() (services []contract.DeviceService, err
 	return
 }
 
-type deviceServiceLoadByAddressableId struct {
-	id string
-	db DeviceServiceLoader
+type deviceServiceLoadByAddressable struct {
+	id   string
+	name string
+	db   DeviceServiceLoader
 }
 
-// NewDeviceServiceLoadByAddressableId creates a new Executor that retrieves all DeviceService associated with a given Addressable ID.
-func NewDeviceServiceLoadByAddressableId(id string, db DeviceServiceLoader) DeviceServiceGetAllExecutor {
-	return deviceServiceLoadByAddressableId{id: id, db: db}
+// NewDeviceServiceLoadByAddressableName creates a new Executor that retrieves all DeviceService associated with a given Addressable name.
+func NewDeviceServiceLoadByAddressableName(name string, db DeviceServiceLoader) DeviceServiceGetListExecutor {
+	return deviceServiceLoadByAddressable{name: name, db: db}
 }
 
-// Execute performs an operation that retrieves all DeviceService associated with a given Addressable ID.
-func (op deviceServiceLoadByAddressableId) Execute() ([]contract.DeviceService, error) {
+// NewDeviceServiceLoadByAddressableID creates a new Executor that retrieves all DeviceService associated with a given Addressable ID.
+func NewDeviceServiceLoadByAddressableID(id string, db DeviceServiceLoader) DeviceServiceGetListExecutor {
+	return deviceServiceLoadByAddressable{id: id, db: db}
+}
+
+// Execute performs an operation that retrieves all DeviceService associated with a given Addressable.
+func (op deviceServiceLoadByAddressable) Execute() ([]contract.DeviceService, error) {
+	var addr contract.Addressable
+	var err error
+
 	// Check if the Addressable exists
-	_, err := op.db.GetAddressableById(op.id)
-	if err != nil {
+	// determine whether we're doing a lookup by ID or name
+	if op.id != "" {
+		addr, err = op.db.GetAddressableById(op.id)
 		if err == db.ErrNotFound {
-			return nil, errors.NewErrItemNotFound(op.id)
-		} else {
-			return nil, err
+			err = errors.NewErrItemNotFound(op.id)
+		}
+	} else {
+		addr, err = op.db.GetAddressableByName(op.name)
+		if err == db.ErrNotFound {
+			err = errors.NewErrItemNotFound(op.name)
 		}
 	}
 
-	if ds, err := op.db.GetDeviceServicesByAddressableId(op.id); err != nil {
+	if err != nil {
+		return nil, err
+	}
+
+	if ds, err := op.db.GetDeviceServicesByAddressableId(addr.Id); err != nil {
 		return nil, err
 	} else {
 		return ds, nil
@@ -92,7 +109,7 @@ type deviceServiceLoadById struct {
 	db DeviceServiceLoader
 }
 
-// NewDeviceServiceLoadById creates a new Executor that retrieves all DeviceService associated with a given ID.
+// NewDeviceServiceLoadById creates a new Executor that retrieves the DeviceService associated with a given ID.
 func NewDeviceServiceLoadById(id string, db DeviceServiceLoader) DeviceServiceGetExecutor {
 	return deviceServiceLoadById{id: id, db: db}
 }
@@ -103,6 +120,30 @@ func (op deviceServiceLoadById) Execute() (contract.DeviceService, error) {
 	if err != nil {
 		if err == db.ErrNotFound {
 			return contract.DeviceService{}, errors.NewErrItemNotFound(op.id)
+		} else {
+			return contract.DeviceService{}, err
+		}
+	}
+
+	return ds, nil
+}
+
+type deviceServiceLoadByName struct {
+	name string
+	db   DeviceServiceLoader
+}
+
+// NewDeviceServiceLoadByName creates a new Executor that retrieves the DeviceService associated with a given name.
+func NewDeviceServiceLoadByName(name string, db DeviceServiceLoader) DeviceServiceGetExecutor {
+	return deviceServiceLoadByName{name: name, db: db}
+}
+
+// Execute performs an operation that retrieves the DeviceService associated with a given name.
+func (op deviceServiceLoadByName) Execute() (contract.DeviceService, error) {
+	ds, err := op.db.GetDeviceServiceByName(op.name)
+	if err != nil {
+		if err == db.ErrNotFound {
+			return contract.DeviceService{}, errors.NewErrItemNotFound(op.name)
 		} else {
 			return contract.DeviceService{}, err
 		}

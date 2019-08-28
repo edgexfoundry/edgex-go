@@ -28,10 +28,6 @@ import (
 	"github.com/gorilla/mux"
 )
 
-const (
-	applicationJson = "application/json; charset=utf-8"
-)
-
 func subscriptionHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Body != nil {
 		defer r.Body.Close()
@@ -57,6 +53,19 @@ func subscriptionHandler(w http.ResponseWriter, r *http.Request) {
 		var s models.Subscription
 		dec := json.NewDecoder(r.Body)
 		err := dec.Decode(&s)
+
+		// validate email addresses
+		err = validateEmailAddresses(s)
+		if err != nil {
+			switch err.(type) {
+			case errors.ErrInvalidEmailAddresses:
+				http.Error(w, err.Error(), http.StatusBadRequest)
+			default:
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
+			LoggingClient.Error(err.Error())
+			return
+		}
 
 		// Check if the subscription exists
 		s2, err := dbClient.GetSubscriptionBySlug(s.Slug)
@@ -91,6 +100,19 @@ func subscriptionHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			LoggingClient.Error("Error decoding subscription: " + err.Error())
+			return
+		}
+
+		// validate email addresses
+		err = validateEmailAddresses(s)
+		if err != nil {
+			switch err.(type) {
+			case errors.ErrInvalidEmailAddresses:
+				http.Error(w, err.Error(), http.StatusBadRequest)
+			default:
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
+			LoggingClient.Error(err.Error())
 			return
 		}
 
@@ -155,7 +177,7 @@ func restDeleteSubscriptionByID(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func subscriptionsBySlugHandler(w http.ResponseWriter, r *http.Request) {
+func restGetSubscriptionBySlug(w http.ResponseWriter, r *http.Request) {
 
 	if r.Body != nil {
 		defer r.Body.Close()
@@ -163,45 +185,50 @@ func subscriptionsBySlugHandler(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
 	slug := vars["slug"]
-	switch r.Method {
-	case http.MethodGet:
 
-		s, err := dbClient.GetSubscriptionBySlug(slug)
-		if err != nil {
-			if err == db.ErrNotFound {
-				http.Error(w, "Subscription not found", http.StatusNotFound)
-			} else {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			}
-			LoggingClient.Error(err.Error())
-			pkg.Encode(s, w, LoggingClient)
-			return
-		}
+	op := subscription.NewSlugExecutor(dbClient, slug)
+	s, err := op.Execute()
 
-		pkg.Encode(s, w, LoggingClient)
-	case http.MethodDelete:
-		_, err := dbClient.GetSubscriptionBySlug(slug)
-		if err != nil {
-			if err == db.ErrNotFound {
-				http.Error(w, "Subscription not found", http.StatusNotFound)
-			} else {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			}
-			LoggingClient.Error(err.Error())
-			return
-		}
-
-		LoggingClient.Info("Deleting subscription by slug: " + slug)
-
-		if err = dbClient.DeleteSubscriptionBySlug(slug); err != nil {
+	if err != nil {
+		switch err.(type) {
+		case errors.ErrSubscriptionNotFound:
+			http.Error(w, err.Error(), http.StatusNotFound)
+		default:
 			http.Error(w, err.Error(), http.StatusInternalServerError)
-			LoggingClient.Error(err.Error())
-			return
 		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("true"))
+		LoggingClient.Error(err.Error())
+		return
 	}
+
+	pkg.Encode(s, w, LoggingClient)
+}
+
+func restDeleteSubscriptionBySlug(w http.ResponseWriter, r *http.Request) {
+
+	if r.Body != nil {
+		defer r.Body.Close()
+	}
+
+	vars := mux.Vars(r)
+	slug := vars["slug"]
+
+	LoggingClient.Info("Deleting subscription by slug: " + slug)
+
+	op := subscription.NewDeleteBySlugExecutor(dbClient, slug)
+	err := op.Execute()
+	if err != nil {
+		switch err.(type) {
+		case errors.ErrSubscriptionNotFound:
+			http.Error(w, err.Error(), http.StatusNotFound)
+		default:
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		LoggingClient.Error(err.Error())
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("true"))
 }
 
 func subscriptionsByCategoriesHandler(w http.ResponseWriter, r *http.Request) {
@@ -282,6 +309,24 @@ func subscriptionsByCategoriesLabelsHandler(w http.ResponseWriter, r *http.Reque
 
 func splitVars(vars string) []string {
 	return strings.Split(vars, ",")
+}
+
+func validateEmailAddresses(s models.Subscription) error {
+	var invalidAddrs []string
+	for _, c := range s.Channels {
+		if c.Type == models.ChannelType(models.Email) {
+			for _, m := range c.MailAddresses {
+				if strings.ContainsAny(m, "\n\r") {
+					invalidAddrs = append(invalidAddrs, m)
+				}
+			}
+		}
+	}
+	if len(invalidAddrs) > 0 {
+		resp := "Addresses contain invalid CRLF characters"
+		return errors.NewErrInvalidEmailAddresses(invalidAddrs, resp)
+	}
+	return nil
 }
 
 func subscriptionsByReceiverHandler(w http.ResponseWriter, r *http.Request) {

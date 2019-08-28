@@ -14,7 +14,10 @@
 
 package errors
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 type ErrNotificationNotFound struct {
 	slug string
@@ -38,4 +41,19 @@ func (e ErrSubscriptionNotFound) Error() string {
 
 func NewErrSubscriptionNotFound(slug string) error {
 	return ErrSubscriptionNotFound{slug: slug}
+}
+
+type ErrInvalidEmailAddresses struct {
+	description string
+	addresses   []string
+}
+
+func (e ErrInvalidEmailAddresses) Error() string {
+	return fmt.Sprintf("Invalid email addresses [%s], Reason: %s",
+		strings.Join(e.addresses, ","), e.description)
+}
+
+func NewErrInvalidEmailAddresses(addresses []string, description string) error {
+	return ErrInvalidEmailAddresses{description: description,
+		addresses: addresses}
 }

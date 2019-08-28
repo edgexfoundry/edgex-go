@@ -184,3 +184,89 @@ func TestDeleteSubscriptionById(t *testing.T) {
 		})
 	}
 }
+
+func TestGetSubscriptionBySlug(t *testing.T) {
+	tests := []struct {
+		name           string
+		request        *http.Request
+		dbMock         interfaces.DBClient
+		expectedStatus int
+	}{
+		{
+			name:           "Notification not found",
+			request:        createSubscriptionRequest(map[string]string{SLUG: TestSlug}),
+			dbMock:         createMocSubscriptionLoader("GetSubscriptionBySlug", TestSlug, db.ErrNotFound),
+			expectedStatus: http.StatusNotFound,
+		},
+		{
+			"OK",
+			createSubscriptionRequest(map[string]string{SLUG: TestSlug}),
+			createMocSubscriptionLoader("GetSubscriptionBySlug", TestSlug, nil),
+			http.StatusOK,
+		},
+
+		{
+			name:           "Other error from database",
+			request:        createSubscriptionRequest(map[string]string{SLUG: TestSlug}),
+			dbMock:         createMocSubscriptionLoader("GetSubscriptionBySlug", TestSlug, errors.New("Test error")),
+			expectedStatus: http.StatusInternalServerError,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			dbClient = tt.dbMock
+			rr := httptest.NewRecorder()
+			handler := http.HandlerFunc(restGetSubscriptionBySlug)
+			handler.ServeHTTP(rr, tt.request)
+			response := rr.Result()
+			if response.StatusCode != tt.expectedStatus {
+				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
+				return
+			}
+		})
+	}
+}
+
+func TestDeleteSubscriptionBySlug(t *testing.T) {
+	tests := []struct {
+		name           string
+		request        *http.Request
+		dbMock         interfaces.DBClient
+		expectedStatus int
+	}{
+		{
+			name:           "OK",
+			request:        createSubscriptionDeleteRequest(map[string]string{SLUG: TestSlug}),
+			dbMock:         createMockSubscriptionDeleter("DeleteSubscriptionBySlug", TestSlug, nil),
+			expectedStatus: http.StatusOK,
+		},
+		{
+			name:           "Unknown Error",
+			request:        createSubscriptionDeleteRequest(map[string]string{SLUG: TestSlug}),
+			dbMock:         createMockSubscriptionDeleter("DeleteSubscriptionBySlug", TestSlug, errors.New("Test error")),
+			expectedStatus: http.StatusInternalServerError,
+		},
+		{
+			name:           "Subscription not found",
+			request:        createSubscriptionDeleteRequest(map[string]string{SLUG: TestSlug}),
+			dbMock:         createMockSubscriptionDeleter("DeleteSubscriptionBySlug", TestSlug, db.ErrNotFound),
+			expectedStatus: http.StatusNotFound,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			LoggingClient = logger.MockLogger{}
+			Configuration = &ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 1}}
+			dbClient = tt.dbMock
+			rr := httptest.NewRecorder()
+			handler := http.HandlerFunc(restDeleteSubscriptionBySlug)
+			handler.ServeHTTP(rr, tt.request)
+			response := rr.Result()
+			if response.StatusCode != tt.expectedStatus {
+				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
+				return
+			}
+		})
+	}
+}
