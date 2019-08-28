@@ -17,7 +17,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"net/http"
 	"os"
 	"os/signal"
 	"strconv"
@@ -25,11 +24,11 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/core/data"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 
 	"github.com/edgexfoundry/edgex-go"
+	"github.com/edgexfoundry/edgex-go/cmd/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
@@ -63,7 +62,8 @@ func main() {
 
 	errs := make(chan error, 2)
 	listenForInterrupt(errs)
-	startHTTPServer(errs)
+	url := data.Configuration.Service.Host + ":" + strconv.Itoa(data.Configuration.Service.Port)
+	common.StartHTTPServer(data.LoggingClient, data.Configuration.Service.Timeout, data.LoadRestRoutes(), url, errs)
 
 	// Time it took to start service
 	data.LoggingClient.Info("Service started in: " + time.Since(start).String())
@@ -85,21 +85,5 @@ func listenForInterrupt(errChan chan error) {
 		c := make(chan os.Signal)
 		signal.Notify(c, os.Interrupt)
 		errChan <- fmt.Errorf("%s", <-c)
-	}()
-}
-
-func startHTTPServer(errChan chan error) {
-	go func() {
-		correlation.LoggingClient = data.LoggingClient //Not thrilled about this, can't think of anything better ATM
-		timeout := time.Millisecond * time.Duration(data.Configuration.Service.Timeout)
-
-		server := &http.Server{
-			Handler:      data.LoadRestRoutes(),
-			Addr:         data.Configuration.Service.Host + ":" + strconv.Itoa(data.Configuration.Service.Port),
-			WriteTimeout: timeout,
-			ReadTimeout:  timeout,
-		}
-
-		errChan <- server.ListenAndServe()
 	}()
 }

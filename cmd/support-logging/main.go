@@ -11,14 +11,13 @@ package main
 import (
 	"flag"
 	"fmt"
-	"net/http"
+	"github.com/edgexfoundry/edgex-go/cmd/common"
 	"os"
 	"os/signal"
 	"strconv"
 	"time"
 
 	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/internal/support/logging"
@@ -59,7 +58,8 @@ func main() {
 	// Time it took to start service
 	logging.LoggingClient.Info("Service started in: " + time.Since(start).String())
 	logging.LoggingClient.Info("Listening on port: " + strconv.Itoa(logging.Configuration.Service.Port))
-	startHTTPServer(errs)
+	url := logging.Configuration.Service.Host + ":" + strconv.Itoa(logging.Configuration.Service.Port)
+	common.StartHTTPServer(logging.LoggingClient, logging.Configuration.Service.Timeout, logging.LoadRestRoutes(), url, errs)
 
 	c := <-errs
 	logging.Destruct()
@@ -78,21 +78,5 @@ func listenForInterrupt(errChan chan error) {
 		c := make(chan os.Signal)
 		signal.Notify(c, os.Interrupt)
 		errChan <- fmt.Errorf("%s", <-c)
-	}()
-}
-
-func startHTTPServer(errChan chan error) {
-	go func() {
-		correlation.LoggingClient = logging.LoggingClient //Not thrilled about this, can't think of anything better ATM
-		timeout := time.Millisecond * time.Duration(logging.Configuration.Service.Timeout)
-
-		server := &http.Server{
-			Handler:      logging.LoadRestRoutes(),
-			Addr:         logging.Configuration.Service.Host + ":" + strconv.Itoa(logging.Configuration.Service.Port),
-			WriteTimeout: timeout,
-			ReadTimeout:  timeout,
-		}
-
-		errChan <- server.ListenAndServe()
 	}()
 }

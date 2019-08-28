@@ -10,12 +10,12 @@ import (
 	"time"
 
 	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler"
 
 	"github.com/edgexfoundry/edgex-go"
+	"github.com/edgexfoundry/edgex-go/cmd/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
@@ -57,7 +57,8 @@ func main() {
 
 	errs := make(chan error, 2)
 	listenForInterrupt(errs)
-	startHTTPServer(errs)
+	url := scheduler.Configuration.Service.Host + ":" + strconv.Itoa(scheduler.Configuration.Service.Port)
+	common.StartHTTPServer(scheduler.LoggingClient, scheduler.Configuration.Service.Timeout, scheduler.LoadRestRoutes(), url, errs)
 
 	// Start the ticker
 	scheduler.StartTicker()
@@ -85,21 +86,5 @@ func listenForInterrupt(errChan chan error) {
 		c := make(chan os.Signal)
 		signal.Notify(c, os.Interrupt)
 		errChan <- fmt.Errorf("%s", <-c)
-	}()
-}
-
-func startHTTPServer(errChan chan error) {
-	go func() {
-		correlation.LoggingClient = scheduler.LoggingClient //Not thrilled about this, can't think of anything better ATM
-		timeout := time.Millisecond * time.Duration(scheduler.Configuration.Service.Timeout)
-
-		server := &http.Server{
-			Handler:      scheduler.LoadRestRoutes(),
-			Addr:         scheduler.Configuration.Service.Host + ":" + strconv.Itoa(scheduler.Configuration.Service.Port),
-			WriteTimeout: timeout,
-			ReadTimeout:  timeout,
-		}
-
-		errChan <- server.ListenAndServe()
 	}()
 }
