@@ -51,7 +51,7 @@ var vdc coredata.ValueDescriptorClient
 var registryErrors chan error        //A channel for "config wait errors" sourced from Registry
 var registryUpdates chan interface{} //A channel for "config updates" sourced from Registry.
 
-func Retry(params config.BootParams, wait *sync.WaitGroup, ch chan error) {
+func Retry(params startup.BootParams, wait *sync.WaitGroup, ch chan error) {
 	until := time.Now().Add(time.Millisecond * time.Duration(params.Retry.Timeout))
 	attempts := 0
 	for time.Now().Before(until) && attempts < params.Retry.Count {

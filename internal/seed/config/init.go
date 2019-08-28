@@ -16,6 +16,7 @@ package config
 
 import (
 	"fmt"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 	"io/ioutil"
 	"net/http"
 	"sync"
@@ -37,7 +38,7 @@ var Registry registry.Client
 // The purpose of Retry is different here than in other services. In this case, we use a retry in order
 // to initialize the RegistryClient that will be used to write configuration information. Other services
 // use Retry to read their information. Config-seed writes information.
-func Retry(params config.BootParams, wait *sync.WaitGroup, ch chan error) {
+func Retry(params startup.BootParams, wait *sync.WaitGroup, ch chan error) {
 	until := time.Now().Add(time.Millisecond * time.Duration(params.Retry.Timeout))
 	attempts := 0
 	for time.Now().Before(until) && attempts < params.Retry.Count {

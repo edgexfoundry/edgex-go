@@ -45,7 +45,7 @@ var chUpdates chan interface{} //A channel for "config updates" sourced from Reg
 // to whatever operation we need it to do at runtime.
 var executorClient interface{}
 
-func Retry(params config.BootParams, wait *sync.WaitGroup, ch chan error) {
+func Retry(params startup.BootParams, wait *sync.WaitGroup, ch chan error) {
 	until := time.Now().Add(time.Millisecond * time.Duration(params.Retry.Timeout))
 	attempts := 0
 	for time.Now().Before(until) && attempts < params.Retry.Count {

@@ -46,7 +46,7 @@ func main() {
 	flag.Usage = usage.HelpCallback
 	flag.Parse()
 
-	params := config.BootParams{UseRegistry: useRegistry, UseProfile: useProfile, Retry: config.GetRetryInfo()}
+	params := startup.BootParams{UseRegistry: useRegistry, UseProfile: useProfile, Retry: config.NewRetryInfo()}
 	startup.Bootstrap(params, metadata.Retry, logBeforeInit)
 
 	ok := metadata.Init(useRegistry)

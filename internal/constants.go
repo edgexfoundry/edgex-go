@@ -17,15 +17,15 @@ import "math"
 
 const (
 	BootRetryCountDefault        = math.MaxInt64
+	BootRetryCountKey            = "edgex_registry_retry_count"
 	BootRetryTimeoutDefault      = 30000
+	BootRetryTimeKey             = "edgex_registry_retry_timeout"
 	BootRetryWaitDefault         = 1
+	BootRetryWaitKey             = "edgex_registry_retry_wait"
 	ClientMonitorDefault         = 15000
 	ConfigFileName               = "configuration.toml"
 	ConfigRegistryStem           = "edgex/core/1.0/"
 	LogDurationKey               = "duration"
 	SecurityProxySetupServiceKey = "edgex-security-proxy-setup"
-)
-
-const (
-	WritableKey = "/Writable"
+	WritableKey                  = "/Writable"
 )

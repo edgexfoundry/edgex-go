@@ -10,6 +10,7 @@ package logging
 import (
 	"errors"
 	"fmt"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 	"os"
 	"os/signal"
 	"sync"
@@ -33,7 +34,7 @@ var registryClient registry.Client
 var registryErrors chan error        //A channel for "config wait errors" sourced from Registry
 var registryUpdates chan interface{} //A channel for "config updates" sourced from Registry
 
-func Retry(params config.BootParams, wait *sync.WaitGroup, ch chan error) {
+func Retry(params startup.BootParams, wait *sync.WaitGroup, ch chan error) {
 	LoggingClient = newPrivateLogger()
 	until := time.Now().Add(time.Millisecond * time.Duration(params.Retry.Timeout))
 	attempts := 0

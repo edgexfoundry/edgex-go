@@ -15,15 +15,13 @@ package startup
 
 import (
 	"sync"
-
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 )
 
-type RetryFunc func(params config.BootParams, wait *sync.WaitGroup, ch chan error)
+type RetryFunc func(params BootParams, wait *sync.WaitGroup, ch chan error)
 
 type LogFunc func(err error)
 
-func Bootstrap(params config.BootParams, retry RetryFunc, log LogFunc) {
+func Bootstrap(params BootParams, retry RetryFunc, log LogFunc) {
 	deps := make(chan error, 2)
 	wg := sync.WaitGroup{}
 	wg.Add(1)
@@ -43,3 +41,18 @@ func Bootstrap(params config.BootParams, retry RetryFunc, log LogFunc) {
 
 	wg.Wait()
 }
+
+// Aggregation of properties used when booting a service
+type BootParams struct {
+	UseRegistry bool
+	UseProfile  string
+	Retry       RetryInfo
+}
+
+//	Various values for use when running the Retry function
+type RetryInfo struct {
+	Count   int
+	Timeout int
+	Wait    int
+}
+

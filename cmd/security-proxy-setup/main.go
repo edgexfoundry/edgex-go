@@ -56,7 +56,7 @@ func main() {
 	flag.Usage = usage.HelpCallbackSecurityProxy
 	flag.Parse()
 
-	params := config.BootParams{UseRegistry: useRegistry, UseProfile: useProfile, Retry: config.GetRetryInfo()}
+	params := startup.BootParams{UseRegistry: useRegistry, UseProfile: useProfile, Retry: config.NewRetryInfo()}
 	startup.Bootstrap(params, proxy.Retry, logBeforeInit)
 
 	req := proxy.NewRequestor(ensureSkipVerify, proxy.Configuration.Writable.RequestTimeout)

@@ -16,6 +16,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 	"os"
 	"sync"
 
@@ -70,7 +71,7 @@ func bootstrap(profile string) {
 	deps := make(chan error, 2)
 	wg := sync.WaitGroup{}
 	wg.Add(1)
-	var params = config2.BootParams{UseProfile: profile, Retry: config2.GetRetryInfo()}
+	var params = startup.BootParams{UseProfile: profile, Retry: config2.NewRetryInfo()}
 	go config.Retry(params, &wg, deps)
 	go func(ch chan error) {
 		for {

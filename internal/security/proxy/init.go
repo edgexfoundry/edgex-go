@@ -16,6 +16,7 @@
 package proxy
 
 import (
+	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 	"sync"
 	"time"
 
@@ -29,7 +30,7 @@ import (
 var Configuration *ConfigurationStruct
 var LoggingClient logger.LoggingClient
 
-func Retry(params config.BootParams, wait *sync.WaitGroup, ch chan error) {
+func Retry(params startup.BootParams, wait *sync.WaitGroup, ch chan error) {
 	until := time.Now().Add(time.Millisecond * time.Duration(params.Retry.Timeout))
 	attempts := 0
 	for time.Now().Before(until) && attempts < params.Retry.Count {

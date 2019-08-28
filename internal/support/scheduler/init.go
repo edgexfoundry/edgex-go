@@ -17,6 +17,7 @@ package scheduler
 import (
 	"errors"
 	"fmt"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 	"os"
 	"os/signal"
 	"sync"
@@ -47,7 +48,7 @@ var registryUpdates chan interface{} //A channel for "config updates" sourced fr
 
 var ticker *time.Ticker
 
-func Retry(params config.BootParams, wait *sync.WaitGroup, ch chan error) {
+func Retry(params startup.BootParams, wait *sync.WaitGroup, ch chan error) {
 	now := time.Now()
 	until := now.Add(time.Millisecond * time.Duration(params.Retry.Timeout))
 	attempts := 0

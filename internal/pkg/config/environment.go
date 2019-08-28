@@ -20,13 +20,11 @@ import (
 	"strconv"
 
 	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 )
 
 const (
-	envKeyUrl          = "edgex_registry"
-	envKeyRetryCount   = "edgex_registry_retry_count"
-	envKeyRetryTimeout = "edgex_registry_retry_timeout"
-	envKeyRetryWait    = "edgex_registry_retry_wait"
+	envKeyUrl  = "edgex_registry"
 )
 
 func OverrideFromEnvironment(registry RegistryInfo) RegistryInfo {
@@ -42,11 +40,11 @@ func OverrideFromEnvironment(registry RegistryInfo) RegistryInfo {
 	return registry
 }
 
-func GetRetryInfo() RetryInfo {
-	return RetryInfo{
-		Count:   GetFromEnvironmentUint(envKeyRetryCount, internal.BootRetryCountDefault),
-		Timeout: GetFromEnvironmentUint(envKeyRetryTimeout, internal.BootRetryTimeoutDefault),
-		Wait:    GetFromEnvironmentUint(envKeyRetryWait, internal.BootRetryWaitDefault),
+func NewRetryInfo() startup.RetryInfo {
+	return startup.RetryInfo{
+		Count:   GetFromEnvironmentUint(internal.BootRetryCountKey, internal.BootRetryCountDefault),
+		Timeout: GetFromEnvironmentUint(internal.BootRetryTimeKey, internal.BootRetryTimeoutDefault),
+		Wait:    GetFromEnvironmentUint(internal.BootRetryWaitKey, internal.BootRetryWaitDefault),
 	}
 }
 
