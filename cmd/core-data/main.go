@@ -23,16 +23,16 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/core/data"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
+
+	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
-	"github.com/gorilla/context"
 )
 
 func main() {
@@ -59,12 +59,11 @@ func main() {
 	data.LoggingClient.Info("Service dependencies resolved...")
 	data.LoggingClient.Info(fmt.Sprintf("Starting %s %s ", clients.CoreDataServiceKey, edgex.Version))
 
-	http.TimeoutHandler(nil, time.Millisecond*time.Duration(data.Configuration.Service.Timeout), "Request timed out")
 	data.LoggingClient.Info(data.Configuration.Service.StartupMsg)
 
 	errs := make(chan error, 2)
 	listenForInterrupt(errs)
-	startHttpServer(errs, data.Configuration.Service.Port)
+	startHttpServer(errs)
 
 	// Time it took to start service
 	data.LoggingClient.Info("Service started in: " + time.Since(start).String())
@@ -89,10 +88,17 @@ func listenForInterrupt(errChan chan error) {
 	}()
 }
 
-func startHttpServer(errChan chan error, port int) {
+func startHttpServer(errChan chan error) {
 	go func() {
 		correlation.LoggingClient = data.LoggingClient //Not thrilled about this, can't think of anything better ATM
-		r := data.LoadRestRoutes()
-		errChan <- http.ListenAndServe(":"+strconv.Itoa(port), context.ClearHandler(r))
+
+		server := &http.Server{
+			Handler: data.LoadRestRoutes(),
+			Addr: data.Configuration.Service.Host + ":" + strconv.Itoa(data.Configuration.Service.Port),
+			WriteTimeout: time.Millisecond * time.Duration(data.Configuration.Service.Timeout),
+			ReadTimeout: time.Millisecond * time.Duration(data.Configuration.Service.Timeout),
+		}
+
+		errChan <- server.ListenAndServe()
 	}()
 }
