@@ -24,7 +24,7 @@ import (
 )
 
 const (
-	envKeyUrl  = "edgex_registry"
+	envKeyUrl = "edgex_registry"
 )
 
 func OverrideFromEnvironment(registry RegistryInfo) RegistryInfo {
