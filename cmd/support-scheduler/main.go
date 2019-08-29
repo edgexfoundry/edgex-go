@@ -15,7 +15,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler"
 
 	"github.com/edgexfoundry/edgex-go"
-	"github.com/edgexfoundry/edgex-go/cmd/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
@@ -58,7 +57,7 @@ func main() {
 	errs := make(chan error, 2)
 	listenForInterrupt(errs)
 	url := scheduler.Configuration.Service.Host + ":" + strconv.Itoa(scheduler.Configuration.Service.Port)
-	common.StartHTTPServer(scheduler.LoggingClient, scheduler.Configuration.Service.Timeout, scheduler.LoadRestRoutes(), url, errs)
+	startup.StartHTTPServer(scheduler.LoggingClient, scheduler.Configuration.Service.Timeout, scheduler.LoadRestRoutes(), url, errs)
 
 	// Start the ticker
 	scheduler.StartTicker()

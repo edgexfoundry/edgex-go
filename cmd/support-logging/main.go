@@ -11,7 +11,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/edgexfoundry/edgex-go/cmd/common"
 	"os"
 	"os/signal"
 	"strconv"
@@ -59,7 +58,7 @@ func main() {
 	logging.LoggingClient.Info("Service started in: " + time.Since(start).String())
 	logging.LoggingClient.Info("Listening on port: " + strconv.Itoa(logging.Configuration.Service.Port))
 	url := logging.Configuration.Service.Host + ":" + strconv.Itoa(logging.Configuration.Service.Port)
-	common.StartHTTPServer(logging.LoggingClient, logging.Configuration.Service.Timeout, logging.LoadRestRoutes(), url, errs)
+	startup.StartHTTPServer(logging.LoggingClient, logging.Configuration.Service.Timeout, logging.LoadRestRoutes(), url, errs)
 
 	c := <-errs
 	logging.Destruct()

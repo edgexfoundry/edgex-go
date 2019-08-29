@@ -28,7 +28,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 
 	"github.com/edgexfoundry/edgex-go"
-	"github.com/edgexfoundry/edgex-go/cmd/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
@@ -63,7 +62,7 @@ func main() {
 	errs := make(chan error, 2)
 	listenForInterrupt(errs)
 	url := data.Configuration.Service.Host + ":" + strconv.Itoa(data.Configuration.Service.Port)
-	common.StartHTTPServer(data.LoggingClient, data.Configuration.Service.Timeout, data.LoadRestRoutes(), url, errs)
+	startup.StartHTTPServer(data.LoggingClient, data.Configuration.Service.Timeout, data.LoadRestRoutes(), url, errs)
 
 	// Time it took to start service
 	data.LoggingClient.Info("Service started in: " + time.Since(start).String())

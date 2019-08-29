@@ -12,7 +12,7 @@
  * the License.
  *******************************************************************************/
 
-package common
+package startup
 
 import (
 	"net/http"

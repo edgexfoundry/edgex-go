@@ -33,7 +33,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications"
 
 	"github.com/edgexfoundry/edgex-go"
-	"github.com/edgexfoundry/edgex-go/cmd/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
@@ -69,7 +68,7 @@ func main() {
 	errs := make(chan error, 2)
 	listenForInterrupt(errs)
 	url := notifications.Configuration.Service.Host + ":" + strconv.Itoa(notifications.Configuration.Service.Port)
-	common.StartHTTPServer(notifications.LoggingClient, notifications.Configuration.Service.Timeout, notifications.LoadRestRoutes(), url, errs)
+	startup.StartHTTPServer(notifications.LoggingClient, notifications.Configuration.Service.Timeout, notifications.LoadRestRoutes(), url, errs)
 
 	// Time it took to start service
 	notifications.LoggingClient.Info("Service started in: " + time.Since(start).String())
