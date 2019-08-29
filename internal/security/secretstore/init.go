@@ -16,16 +16,16 @@
 package secretstore
 
 import (
-	"sync"
-	"time"
+//"sync"
+//"time"
 
-	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
-	//"github.com/edgexfoundry/go-mod-core-contracts/clients"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+//"github.com/edgexfoundry/edgex-go/internal"
+//"github.com/edgexfoundry/edgex-go/internal/pkg/config"
+//"github.com/edgexfoundry/go-mod-core-contracts/clients"
+//"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
 
-// Global variables
+/*// Global variables
 var Configuration *ConfigurationStruct
 var LoggingClient logger.LoggingClient
 
@@ -79,3 +79,4 @@ func setLoggingTarget() string {
 	//}
 	return Configuration.Logging.File
 }
+*/
