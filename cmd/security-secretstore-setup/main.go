@@ -13,7 +13,7 @@
  *
  * @author: Alain Pulluelo, ForgeRock AS
  * @author: Tingyu Zeng, Dell
- * @version: 1.1.0
+ *
  *******************************************************************************/
  package main
 
@@ -39,14 +39,14 @@
 	 }
  
 	 var initNeeded bool
-	 var insecureSkipVerify bool
+	 var ensureSkipVerify bool
 	 var configFileLocation string
 	 var waitInterval int
 	 var useProfile string
 	 var useRegistry bool
  
 	 flag.BoolVar(&initNeeded, "init", false, "run init procedure for security service.")
-	 flag.BoolVar(&insecureSkipVerify, "insureskipverify", true, "skip server side SSL verification, mainly for self-signed cert.")
+	 flag.BoolVar(&ensureSkipVerify, "insureskipverify", true, "skip server side SSL verification, mainly for self-signed cert")
 	 flag.StringVar(&configFileLocation, "configfile", "res/configuration.toml", "configuration file")
 	 flag.IntVar(&waitInterval, "wait", 30, "time to wait between checking Vault status in seconds.")
 	 flag.BoolVar(&useRegistry, "registry", false, "Indicates the service should use registry service.")
@@ -68,7 +68,7 @@
  
 	 //step 2: initialize the communications
 
-	 /*req := secretstore.NewRequestor(insecureSkipVerify)
+	 /*req := secretstore.NewRequestor(ensureSkipVerify)
 	 vaultScheme := secretstore.Configuration.SecretService.Scheme
 	 vaultHost := fmt.Sprintf("%s:%v", secretstore.Configuration.SecretService.Server, secretstore.Configuration.SecretService.Port)
 	 vc := secretstore.NewVaultClient(req, vaultScheme, vaultHost)

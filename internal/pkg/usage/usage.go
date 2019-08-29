@@ -74,7 +74,7 @@ Server Options:
 	--init=true/false				Indicates if security service should be initialized
 	--configfile=<file.toml>			Use a different config file (default: res/configuration.toml)
 	--wait=<time in seconds>		Indicates how long the program will pause between the vault initialization until it succeeds
-	Common Options:
+Common Options:
 	-h, --help					Show this message
 `
 

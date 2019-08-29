@@ -16,7 +16,7 @@ COPY . .
 
 RUN make cmd/security-secretstore-setup/security-secretstore-setup
 
-FROM scratch
+FROM alpine:3.10
 
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
       copyright='Copyright (c) 2019: Dell Technologies, Inc.'
@@ -27,4 +27,6 @@ COPY --from=builder /edgex-go/cmd/security-secretstore-setup/res/docker/configur
 
 COPY --from=builder /edgex-go/cmd/security-secretstore-setup/security-secretstore-setup .
 
-ENTRYPOINT ["./security-secretstore-setup","--init=true"]
+ENTRYPOINT ["secretstore-init.sh"]
+
+#ENTRYPOINT ["./security-secretstore-setup","--init=true"]
