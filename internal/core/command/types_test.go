@@ -16,11 +16,12 @@ package command
 import (
 	"errors"
 	"fmt"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
 // FailingMockHttpCaller a HttpCaller which always returns an error when executing a request.
@@ -122,22 +123,5 @@ func TestExecuteHttpReadResponseError(t *testing.T) {
 
 	if responseCode != DefaultErrorCode {
 		t.Errorf("The response code should be the default value for failing requests")
-	}
-}
-
-func TestExecuteWithLockedDevice(t *testing.T) {
-	LoggingClient = logger.MockLogger{}
-	request, _ := http.NewRequest(http.MethodGet, "http://example.com", nil)
-	sc := serviceCommand{
-		Device: contract.Device{
-			AdminState: contract.Locked,
-		},
-		HttpCaller: &http.Client{},
-		Request:    request,
-	}
-
-	_, _, err := sc.Execute()
-	if err == nil {
-		t.Errorf("No error should be present for happy path")
 	}
 }

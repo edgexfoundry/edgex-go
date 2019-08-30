@@ -15,9 +15,10 @@ package command
 
 import (
 	"context"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"io/ioutil"
 	"testing"
+
+	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 )
 
 func TestNewPutCommandWithCorrelationId(t *testing.T) {

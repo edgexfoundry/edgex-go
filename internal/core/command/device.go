@@ -18,9 +18,11 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
+
+	"github.com/edgexfoundry/edgex-go/internal/core/command/errors"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 )
 
 func commandByDeviceID(deviceID string, commandID string, body string, queryParams string, isPutCommand bool, ctx context.Context) (string, int) {
@@ -38,7 +40,7 @@ func commandByDeviceID(deviceID string, commandID string, body string, queryPara
 
 	if d.AdminState == contract.Locked {
 		LoggingClient.Error(d.Name + " is in admin locked state")
-		return "", http.StatusLocked
+		return errors.NewErrDeviceLocked(d.Name).Error(), http.StatusLocked
 	}
 
 	//once command service have its own persistence layer this call will be changed.
@@ -80,6 +82,12 @@ func commandByNames(dn string, cn string, body string, queryParams string, isPut
 			return err.Error(), http.StatusInternalServerError
 		}
 	}
+
+	if d.AdminState == contract.Locked {
+		LoggingClient.Error(d.Name + " is in admin locked state")
+		return errors.NewErrDeviceLocked(d.Name).Error(), http.StatusLocked
+	}
+
 	command, err := dbClient.GetCommandByNameAndDeviceId(cn, d.Id)
 	if err != nil {
 		LoggingClient.Error(err.Error())
