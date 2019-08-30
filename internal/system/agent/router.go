@@ -16,7 +16,6 @@
 package agent
 
 import (
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -33,17 +32,17 @@ func LoadRestRoutes() *mux.Router {
 	r := mux.NewRouter()
 	b := r.PathPrefix("/api/v1").Subrouter()
 
-	b.HandleFunc("/"+OPERATION, operationHandler).Methods(http.MethodPost)
-	b.HandleFunc("/"+CONFIG+"/{"+SERVICES+"}", configHandler).Methods(http.MethodGet)
-	b.HandleFunc("/"+METRICS+"/{"+SERVICES+"}", metricsHandler).Methods(http.MethodGet)
+	b.HandleFunc("/"+operation, operationHandler).Methods(http.MethodPost)
+	b.HandleFunc("/"+configuration+"/{"+services+"}", configHandler).Methods(http.MethodGet)
+	b.HandleFunc("/"+metrics+"/{"+services+"}", metricsHandler).Methods(http.MethodGet)
 
 	// Health Resource
 	// /api/v1/health
-	b.HandleFunc("/"+HEALTH+"/{"+SERVICES+"}", healthHandler).Methods(http.MethodGet)
+	b.HandleFunc("/"+health+"/{"+services+"}", healthHandler).Methods(http.MethodGet)
 
 	// Ping Resource
 	// /api/v1/ping
-	b.HandleFunc("/"+PING, pingHandler).Methods(http.MethodGet)
+	b.HandleFunc("/"+ping, pingHandler).Methods(http.MethodGet)
 
 	// Version
 	r.HandleFunc(clients.ApiVersionRoute, pkg.VersionHandler).Methods(http.MethodGet)
@@ -55,6 +54,31 @@ func LoadRestRoutes() *mux.Router {
 	return r
 }
 
+// pingHandler implements a controller to execute a ping request.
+func pingHandler(w http.ResponseWriter, _ *http.Request) {
+	w.Header().Set("Content-Type", "text/plain")
+	w.Write([]byte("pong"))
+}
+
+// metricsHandler implements a controller to execute a metrics request.
+func metricsHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	LoggingClient.Debug("retrieved service names")
+
+	list := vars["services"]
+	var services []string
+	services = strings.Split(list, ",")
+
+	send, err := invokeMetrics(services, r.Context())
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		LoggingClient.Error(err.Error())
+		return
+	}
+	pkg.Encode(send, w, LoggingClient)
+}
+
+// operationHandler implements a controller to execute a start/stop/restart operation request.
 func operationHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
@@ -64,56 +88,22 @@ func operationHandler(w http.ResponseWriter, r *http.Request) {
 		LoggingClient.Error(err.Error())
 		return
 	}
+
 	o := models.Operation{}
-	err = o.UnmarshalJSON(b)
-	if err != nil {
+	if err = o.UnmarshalJSON(b); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		LoggingClient.Error("error during decoding")
+		LoggingClient.Error("error during decoding: %s", err.Error())
 		return
-	} else if o.Action == "" {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+	}
+
+	send, err := invokeOperation(o.Action, o.Services)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		LoggingClient.Error(err.Error())
 		return
 	}
 
-	switch o.Action {
-	case STOP:
-		err := InvokeOperation(STOP, o.Services)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf("Error: %s", err.Error())))
-		} else {
-			w.WriteHeader(http.StatusOK)
-			w.Write([]byte("Done. Stopped the requested services."))
-		}
-
-		break
-
-	case START:
-		err := InvokeOperation(START, o.Services)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf("Error: %s", err.Error())))
-		} else {
-			w.WriteHeader(http.StatusOK)
-			w.Write([]byte("Done. Started the requested services."))
-		}
-		break
-
-	case RESTART:
-		err := InvokeOperation(RESTART, o.Services)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf("Error: %s", err.Error())))
-		} else {
-			w.WriteHeader(http.StatusOK)
-			w.Write([]byte("Done. Restarted the requested services."))
-		}
-		break
-
-	default:
-		LoggingClient.Warn(o.Action)
-	}
+	pkg.Encode(send, w, LoggingClient)
 }
 
 func configHandler(w http.ResponseWriter, r *http.Request) {
@@ -131,31 +121,7 @@ func configHandler(w http.ResponseWriter, r *http.Request) {
 		LoggingClient.Error(err.Error())
 		return
 	}
-
-	w.Header().Add(clients.ContentType, clients.ContentTypeJSON)
 	pkg.Encode(send, w, LoggingClient)
-	return
-}
-
-func metricsHandler(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	LoggingClient.Debug("retrieved service names")
-
-	list := vars["services"]
-	var services []string
-	services = strings.Split(list, ",")
-
-	ctx := r.Context()
-	send, err := getMetrics(services, ctx)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		LoggingClient.Error(err.Error())
-		return
-	}
-
-	w.Header().Add(clients.ContentType, clients.ContentTypeJSON)
-	pkg.Encode(send, w, LoggingClient)
-	return
 }
 
 func healthHandler(w http.ResponseWriter, r *http.Request) {
@@ -172,8 +138,5 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	w.Header().Add(clients.ContentType, clients.ContentTypeJSON)
 	pkg.Encode(send, w, LoggingClient)
-	return
 }

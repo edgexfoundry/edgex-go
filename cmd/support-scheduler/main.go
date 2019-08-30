@@ -11,14 +11,13 @@ import (
 
 	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
-	"github.com/gorilla/context"
 )
 
 func main() {
@@ -57,7 +56,8 @@ func main() {
 
 	errs := make(chan error, 2)
 	listenForInterrupt(errs)
-	startHttpServer(errs, scheduler.Configuration.Service.Port)
+	url := scheduler.Configuration.Service.Host + ":" + strconv.Itoa(scheduler.Configuration.Service.Port)
+	startup.StartHTTPServer(scheduler.LoggingClient, scheduler.Configuration.Service.Timeout, scheduler.LoadRestRoutes(), url, errs)
 
 	// Start the ticker
 	scheduler.StartTicker()
@@ -85,13 +85,5 @@ func listenForInterrupt(errChan chan error) {
 		c := make(chan os.Signal)
 		signal.Notify(c, os.Interrupt)
 		errChan <- fmt.Errorf("%s", <-c)
-	}()
-}
-
-func startHttpServer(errChan chan error, port int) {
-	go func() {
-		correlation.LoggingClient = scheduler.LoggingClient
-		r := scheduler.LoadRestRoutes()
-		errChan <- http.ListenAndServe(":"+strconv.Itoa(port), context.ClearHandler(r))
 	}()
 }
