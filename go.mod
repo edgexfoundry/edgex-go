@@ -14,7 +14,6 @@ require (
 	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/gomodule/redigo v2.0.0+incompatible
 	github.com/google/uuid v1.1.0
-	github.com/gorilla/context v1.1.1
 	github.com/gorilla/mux v1.7.0
 	github.com/imdario/mergo v0.3.6
 	github.com/magiconair/properties v1.8.0

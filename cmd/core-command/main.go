@@ -11,12 +11,12 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
+
 package main
 
 import (
 	"flag"
 	"fmt"
-	"net/http"
 	"os"
 	"os/signal"
 	"strconv"
@@ -25,13 +25,12 @@ import (
 	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/core/command"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
-	"github.com/gorilla/context"
 )
 
 func main() {
@@ -58,12 +57,12 @@ func main() {
 	command.LoggingClient.Info("Service dependencies resolved...")
 	command.LoggingClient.Info(fmt.Sprintf("Starting %s %s ", clients.CoreCommandServiceKey, edgex.Version))
 
-	http.TimeoutHandler(nil, time.Millisecond*time.Duration(command.Configuration.Service.Timeout), "Request timed out")
 	command.LoggingClient.Info(command.Configuration.Service.StartupMsg)
 
 	errs := make(chan error, 2)
 	listenForInterrupt(errs)
-	startHttpServer(errs, command.Configuration.Service.Port)
+	url := command.Configuration.Service.Host + ":" + strconv.Itoa(command.Configuration.Service.Port)
+	startup.StartHTTPServer(command.LoggingClient, command.Configuration.Service.Timeout, command.LoadRestRoutes(), url, errs)
 
 	// Time it took to start service
 	command.LoggingClient.Info("Service started in: " + time.Since(start).String())
@@ -85,13 +84,5 @@ func listenForInterrupt(errChan chan error) {
 		c := make(chan os.Signal)
 		signal.Notify(c, os.Interrupt)
 		errChan <- fmt.Errorf("%s", <-c)
-	}()
-}
-
-func startHttpServer(errChan chan error, port int) {
-	go func() {
-		correlation.LoggingClient = command.LoggingClient
-		r := command.LoadRestRoutes()
-		errChan <- http.ListenAndServe(":"+strconv.Itoa(port), context.ClearHandler(r))
 	}()
 }

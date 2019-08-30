@@ -47,7 +47,7 @@ func prepareTest(t *testing.T) *httptest.Server {
 
 	dbClient = &MemDB{}
 	dc = &distroMockClient{}
-	return httptest.NewServer(httpServer())
+	return httptest.NewServer(LoadRestRoutes())
 }
 
 func createRegistration(t *testing.T, serverUrl string) string {
@@ -70,7 +70,7 @@ func createRegistration(t *testing.T, serverUrl string) string {
 
 func TestPing(t *testing.T) {
 	// create test server with handler
-	ts := httptest.NewServer(httpServer())
+	ts := httptest.NewServer(LoadRestRoutes())
 	defer ts.Close()
 
 	response, err := http.Get(ts.URL + clients.ApiPingRoute)

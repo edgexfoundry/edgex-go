@@ -18,7 +18,6 @@ package distro
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
@@ -301,12 +300,6 @@ func updateRunningRegistrations(running map[string]*registrationInfo,
 
 // Loop - registration loop
 func Loop() {
-	go func() {
-		p := fmt.Sprintf(":%d", Configuration.Service.Port)
-		LoggingClient.Info(fmt.Sprintf("Starting Export Distro %s", p))
-		messageErrors <- http.ListenAndServe(p, httpServer())
-	}()
-
 	registrations := make(map[string]*registrationInfo)
 
 	allRegs, err := getRegistrations()
