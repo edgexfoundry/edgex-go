@@ -24,7 +24,7 @@ import (
 )
 
 /* NB: This portion of the MemDB provider has been moved to
- * this package because of server_test.go's reliance on them.
+ * this package because of router_test.go's reliance on them.
  * This is meant to be a short-term solution until either this
  * package can be removed or the tests can be refactored to remove
  * this dependency.

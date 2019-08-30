@@ -12,7 +12,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"net/http"
 	"os"
 	"os/signal"
 	"strconv"
@@ -53,12 +52,13 @@ func main() {
 	distro.LoggingClient.Info("Service dependencies resolved...")
 	distro.LoggingClient.Info(fmt.Sprintf("Starting %s %s ", clients.ExportDistroServiceKey, edgex.Version))
 
-	http.TimeoutHandler(nil, time.Millisecond*time.Duration(distro.Configuration.Service.Timeout), "Request timed out")
 	distro.LoggingClient.Info(distro.Configuration.Service.StartupMsg)
 
 	errs := make(chan error, 2)
 
 	listenForInterrupt(errs)
+	url := distro.Configuration.Service.Host + ":" + strconv.Itoa(distro.Configuration.Service.Port)
+	startup.StartHTTPServer(distro.LoggingClient, distro.Configuration.Service.Timeout, distro.LoadRestRoutes(), url, errs)
 
 	go distro.Loop()
 

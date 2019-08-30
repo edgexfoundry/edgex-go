@@ -11,7 +11,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"net/http"
 	"os"
 	"os/signal"
 	"strconv"
@@ -23,6 +22,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
@@ -54,12 +54,12 @@ func main() {
 	client.LoggingClient.Info("Service dependencies resolved...")
 	client.LoggingClient.Info(fmt.Sprintf("Starting %s %s ", clients.ExportClientServiceKey, edgex.Version))
 
-	http.TimeoutHandler(nil, time.Millisecond*time.Duration(client.Configuration.Service.Timeout), "Request timed out")
 	client.LoggingClient.Info(client.Configuration.Service.StartupMsg)
 
 	errs := make(chan error, 2)
 	listenForInterrupt(errs)
-	client.StartHTTPServer(errs)
+	url := client.Configuration.Service.Host + ":" + strconv.Itoa(client.Configuration.Service.Port)
+	startup.StartHTTPServer(client.LoggingClient, client.Configuration.Service.Timeout, client.LoadRestRoutes(), url, errs)
 
 	// Time it took to start service
 	client.LoggingClient.Info("Service started in: " + time.Since(start).String())

@@ -16,7 +16,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"net/http"
 	"os"
 	"os/signal"
 	"strconv"
@@ -57,7 +56,6 @@ func main() {
 	agent.LoggingClient.Info("Service dependencies resolved...")
 	agent.LoggingClient.Info(fmt.Sprintf("Starting %s %s ", clients.SystemManagementAgentServiceKey, edgex.Version))
 
-	http.TimeoutHandler(nil, time.Millisecond*time.Duration(agent.Configuration.Service.Timeout), "Request timed out")
 	agent.LoggingClient.Info(agent.Configuration.Service.StartupMsg)
 
 	errs := make(chan error, 2)

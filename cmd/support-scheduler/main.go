@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"net/http"
 	"os"
 	"os/signal"
 	"strconv"
@@ -51,7 +50,6 @@ func main() {
 		scheduler.LoggingClient.Error(fmt.Sprintf("Failed to load schedules and events %s", err.Error()))
 	}
 
-	http.TimeoutHandler(nil, time.Millisecond*time.Duration(scheduler.Configuration.Service.Timeout), "Request timed out")
 	scheduler.LoggingClient.Info(scheduler.Configuration.Service.StartupMsg)
 
 	errs := make(chan error, 2)
