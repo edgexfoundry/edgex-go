@@ -17,82 +17,81 @@ package agent
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
-
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
-	"github.com/edgexfoundry/edgex-go/internal/system/agent/interfaces"
+	"github.com/edgexfoundry/edgex-go/internal/system/executor"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/general"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
 )
 
-const (
-	START   = "start"
-	STOP    = "stop"
-	RESTART = "restart"
-)
-
-func InvokeOperation(action string, services []string) error {
-
-	// Loop through requested operation, along with respectively-supplied parameters.
-	for _, service := range services {
-		LoggingClient.Info("invoking operation")
-
-		if !IsKnownServiceKey(service) {
-			LoggingClient.Warn(fmt.Sprintf("unknown service %s during invocation", service))
-		}
-
-		switch action {
-
-		case START:
-			if starter, ok := executorClient.(interfaces.ServiceStarter); ok {
-				err := starter.Start(service)
-				if err != nil {
-					LoggingClient.Error("error starting service")
-					return err
-				}
-			} else {
-				err := fmt.Errorf("operation not supported with specified executor")
-				LoggingClient.Error(err.Error())
-				return err
-			}
-
-		case STOP:
-			if stopper, ok := executorClient.(interfaces.ServiceStopper); ok {
-				err := stopper.Stop(service)
-				if err != nil {
-					LoggingClient.Error("error stopping service")
-					return err
-				}
-			} else {
-				err := fmt.Errorf("operation not supported with specified executor")
-				LoggingClient.Error(err.Error())
-				return err
-			}
-
-		case RESTART:
-			if restarter, ok := executorClient.(interfaces.ServiceRestarter); ok {
-				err := restarter.Restart(service)
-				if err != nil {
-					LoggingClient.Error("error restarting service")
-					return err
-				}
-			} else {
-				err := fmt.Errorf("operation not supported with specified executor")
-				LoggingClient.Error(err.Error())
-				return err
-			}
-		}
+// processResponse converts a response string (assumed to contain JSON) to a map.
+func processResponse(response string) map[string]interface{} {
+	rsp := make(map[string]interface{})
+	err := json.Unmarshal([]byte(response), &rsp)
+	if err != nil {
+		LoggingClient.Error("error unmarshalling response from JSON: %v", err.Error())
 	}
-	return nil
+	return rsp
 }
 
-func getConfig(services []string, ctx context.Context) (ConfigRespMap, error) {
+// invokeOperation is called by the start/stop/restart operation request controller to execute the requested operation
+// for each specified service and return an array of the corresponding results.  Start/stop/restart operations are
+// only supported via external executors.
+func invokeOperation(operation string, serviceNames []string) (interface{}, error) {
+	var result []interface{}
 
-	c := ConfigRespMap{}
-	c.Configuration = map[string]interface{}{}
+	// Loop through requested operation, along with respectively-supplied parameters.
+	for _, service := range serviceNames {
+		out, err := operationViaExecutor(service, operation)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, processResponse(out))
+	}
+	return result, nil
+}
+
+// invokeMetrics is called by the metrics request controller to gather and return metrics for each specified service.
+// Metrics requests can be handled by either a call to a service's metrics endpoint or via an external executor.
+func invokeMetrics(services []string, ctx context.Context) (interface{}, error) {
+	var result []interface{}
+
+	// Loop through requested actions, along with (any) respectively-supplied parameters.
+	for _, service := range services {
+		LoggingClient.Debug("invoke metrics")
+
+		switch Configuration.MetricsMechanism {
+		case metricsOptionViaDirectService:
+			out, err := metricsViaDirectService(service, ctx)
+			if err != nil {
+				result = append(result, executor.Failure(service, metrics, executorTypeDirectService, err.Error()))
+				continue
+			}
+			result = append(result, out)
+		case metricsOptionViaExecutor:
+			out, err := metricsViaExecutor(service)
+			if err != nil {
+				result = append(result, executor.Failure(service, metrics, executorTypeUnknown, err.Error()))
+				continue
+			}
+			result = append(result, processResponse(out))
+		default:
+			return nil, fmt.Errorf("the requested metrics mechanism is not supported")
+		}
+	}
+	return result, nil
+}
+
+func getConfig(services []string, ctx context.Context) (interface{}, error) {
+	result := struct {
+		Configuration map[string]interface{} `json:"configuration"`
+	}{
+		Configuration: map[string]interface{}{},
+	}
 
 	// Loop through requested actions, along with (any) respectively-supplied parameters.
 	for _, service := range services {
@@ -104,7 +103,7 @@ func getConfig(services []string, ctx context.Context) (ConfigRespMap, error) {
 			// Service unknown to SMA, so ask the Registry whether `service` is available.
 			err := registryClient.IsServiceAvailable(service)
 			if err != nil {
-				c.Configuration[service] = fmt.Sprintf(err.Error())
+				result.Configuration[service] = fmt.Sprintf(err.Error())
 				LoggingClient.Error(err.Error())
 			} else {
 				LoggingClient.Info(fmt.Sprintf("Registry responded with %s service available", service))
@@ -112,7 +111,7 @@ func getConfig(services []string, ctx context.Context) (ConfigRespMap, error) {
 				// Since service is unknown to SMA, ask the Registry for a ServiceEndpoint associated with `service`
 				e, err := registryClient.GetServiceEndpoint(service)
 				if err != nil {
-					c.Configuration[service] = fmt.Sprintf("on attempting to get ServiceEndpoint for service %s, got error: %v", service, err.Error())
+					result.Configuration[service] = fmt.Sprintf("on attempting to get ServiceEndpoint for service %s, got error: %v", service, err.Error())
 					LoggingClient.Error(err.Error())
 				} else {
 					// Preparing to add the specified key to the map where the value will be the respective GeneralClient
@@ -139,20 +138,17 @@ func getConfig(services []string, ctx context.Context) (ConfigRespMap, error) {
 						Url:         Configuration.Clients[e.ServiceId].Url() + clients.ApiConfigRoute,
 						Interval:    internal.ClientMonitorDefault,
 					}
-					// TODO: The following note is related to future work:
-					// TODO: With the current deployment strategy, GeneralClient's func init(params types.EndpointParams) {...} returns blank "url"...
-					// TODO: [Need a manifest-like functionality in future...]
 					// Add the service key to the map where the value is the respective GeneralClient
 					generalClients[e.ServiceId] = general.NewGeneralClient(params, startup.Endpoint{RegistryClient: &registryClient})
 
 					responseJSON, err := generalClients[e.ServiceId].FetchConfiguration(ctx)
 					if err != nil {
-						c.Configuration[service] = fmt.Sprintf(err.Error())
+						result.Configuration[service] = fmt.Sprintf(err.Error())
 						LoggingClient.Error(err.Error())
 					} else {
-						c.Configuration[service] = ProcessResponse(responseJSON)
+						result.Configuration[service] = processResponse(responseJSON)
 					}
-					return c, nil
+					return result, nil
 				}
 			}
 		} else {
@@ -162,100 +158,17 @@ func getConfig(services []string, ctx context.Context) (ConfigRespMap, error) {
 
 			responseJSON, err := generalClients[service].FetchConfiguration(ctx)
 			if err != nil {
-				c.Configuration[service] = fmt.Sprintf(err.Error())
+				result.Configuration[service] = fmt.Sprintf(err.Error())
 				LoggingClient.Error(err.Error())
 			} else {
-				c.Configuration[service] = ProcessResponse(responseJSON)
+				result.Configuration[service] = processResponse(responseJSON)
 			}
 		}
 	}
-	return c, nil
-}
-
-func getMetrics(services []string, ctx context.Context) (MetricsRespMap, error) {
-
-	m := MetricsRespMap{}
-	m.Metrics = map[string]interface{}{}
-
-	// Loop through requested actions, along with (any) respectively-supplied parameters.
-	for _, service := range services {
-
-		// Check whether SMA does _not_ know of ServiceKey ("service") as being one for one of its ready-made list of clients.
-		if !IsKnownServiceKey(service) {
-			LoggingClient.Info(fmt.Sprintf("service %s not known to SMA as being in the ready-made list of clients", service))
-
-			// Service unknown to SMA, so ask the Registry whether `service` is available.
-			err := registryClient.IsServiceAvailable(service)
-			if err != nil {
-				m.Metrics[service] = fmt.Sprintf(err.Error())
-				LoggingClient.Error(fmt.Sprintf(err.Error()))
-			} else {
-				LoggingClient.Info(fmt.Sprintf("Registry responded with %s service available", service))
-
-				// Since service is unknown to SMA, ask the Registry for a ServiceEndpoint associated with `service`
-				e, err := registryClient.GetServiceEndpoint(service)
-				if err != nil {
-					m.Metrics[service] = fmt.Sprintf("on attempting to get ServiceEndpoint for service %s, got error: %v", service, err.Error())
-					LoggingClient.Error(fmt.Sprintf(service, err.Error()))
-				} else {
-					// Preparing to add the specified key to the map where the value will be the respective GeneralClient
-					clientInfo := config.ClientInfo{}
-					clientInfo.Protocol = Configuration.Service.Protocol
-					clientInfo.Host = e.Host
-					clientInfo.Port = e.Port
-
-					// This code will evolve to take into account a manifest-like functionality in future. So
-					// rather than assume that the runtime bool flag useRegistry has been initialized to true,
-					// given that the flow has reached this point, having already called functions on the Registry,
-					// such as registryClient.IsServiceAvailable(service), we test for its truthiness. I expect
-					// this code to be refactored as we evolve toward a manifest-like functionality in future.
-					usingRegistry := false
-					if registryClient != nil {
-						usingRegistry = true
-					}
-
-					Configuration.Clients[e.ServiceId] = clientInfo
-					params := types.EndpointParams{
-						ServiceKey:  e.ServiceId,
-						Path:        "/",
-						UseRegistry: usingRegistry,
-						Url:         Configuration.Clients[e.ServiceId].Url() + clients.ApiMetricsRoute,
-						Interval:    internal.ClientMonitorDefault,
-					}
-					// TODO: The following note is related to future work:
-					// TODO: With the current deployment strategy, GeneralClient's func init(params types.EndpointParams) {...} returns blank "url"...
-					// TODO: [Need a manifest-like functionality in future...]
-					// Add the service key to the map where the value is the respective GeneralClient
-					generalClients[e.ServiceId] = general.NewGeneralClient(params, startup.Endpoint{RegistryClient: &registryClient})
-
-					responseJSON, err := generalClients[e.ServiceId].FetchMetrics(ctx)
-					if err != nil {
-						m.Metrics[service] = fmt.Sprintf(err.Error())
-						LoggingClient.Error(err.Error())
-					} else {
-						m.Metrics[service] = ProcessResponse(responseJSON)
-					}
-				}
-			}
-		} else {
-			// Service is known to SMA, so no need to ask the Registry for a ServiceEndpoint associated with `service`
-			// Simply use one of the ready-made list of clients.
-			LoggingClient.Info(fmt.Sprintf("service %s is known to SMA as being in the ready-made list of clients", service))
-
-			responseJSON, err := generalClients[service].FetchMetrics(ctx)
-			if err != nil {
-				m.Metrics[service] = fmt.Sprintf(err.Error())
-				LoggingClient.Error(err.Error())
-			} else {
-				m.Metrics[service] = ProcessResponse(responseJSON)
-			}
-		}
-	}
-	return m, nil
+	return result, nil
 }
 
 func getHealth(services []string) (map[string]interface{}, error) {
-
 	health := make(map[string]interface{})
 
 	for _, service := range services {
@@ -277,8 +190,7 @@ func getHealth(services []string) (map[string]interface{}, error) {
 }
 
 func IsKnownServiceKey(serviceKey string) bool {
-	// create a map because this is the easiest/cleanest way to determine whether something exists in a set
-	var services = map[string]struct{}{
+	knownServices := map[string]struct{}{
 		clients.SupportNotificationsServiceKey: {},
 		clients.CoreCommandServiceKey:          {},
 		clients.CoreDataServiceKey:             {},
@@ -290,7 +202,6 @@ func IsKnownServiceKey(serviceKey string) bool {
 		clients.ConfigSeedServiceKey:           {},
 	}
 
-	_, exists := services[serviceKey]
-
+	_, exists := knownServices[serviceKey]
 	return exists
 }
