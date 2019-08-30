@@ -11,7 +11,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"net/http"
 	"os"
 	"os/signal"
 	"strconv"
@@ -19,10 +18,10 @@ import (
 
 	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/internal/support/logging"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
@@ -58,7 +57,8 @@ func main() {
 	// Time it took to start service
 	logging.LoggingClient.Info("Service started in: " + time.Since(start).String())
 	logging.LoggingClient.Info("Listening on port: " + strconv.Itoa(logging.Configuration.Service.Port))
-	startHTTPServer(errs)
+	url := logging.Configuration.Service.Host + ":" + strconv.Itoa(logging.Configuration.Service.Port)
+	startup.StartHTTPServer(logging.LoggingClient, logging.Configuration.Service.Timeout, logging.LoadRestRoutes(), url, errs)
 
 	c := <-errs
 	logging.Destruct()
@@ -77,13 +77,5 @@ func listenForInterrupt(errChan chan error) {
 		c := make(chan os.Signal)
 		signal.Notify(c, os.Interrupt)
 		errChan <- fmt.Errorf("%s", <-c)
-	}()
-}
-
-func startHTTPServer(errChan chan error) {
-	go func() {
-		correlation.LoggingClient = logging.LoggingClient
-		p := fmt.Sprintf(":%d", logging.Configuration.Service.Port)
-		errChan <- http.ListenAndServe(p, logging.HttpServer())
 	}()
 }
