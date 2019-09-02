@@ -10,6 +10,29 @@ type SubscriptionLoader struct {
 	mock.Mock
 }
 
+// GetSubscriptionByCategories provides a mock function with given fields: categories
+func (_m *SubscriptionLoader) GetSubscriptionByCategories(categories []string) ([]models.Subscription, error) {
+	ret := _m.Called(categories)
+
+	var r0 []models.Subscription
+	if rf, ok := ret.Get(0).(func([]string) []models.Subscription); ok {
+		r0 = rf(categories)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.Subscription)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func([]string) error); ok {
+		r1 = rf(categories)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetSubscriptionById provides a mock function with given fields: id
 func (_m *SubscriptionLoader) GetSubscriptionById(id string) (models.Subscription, error) {
 	ret := _m.Called(id)

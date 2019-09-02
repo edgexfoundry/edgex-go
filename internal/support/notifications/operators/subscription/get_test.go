@@ -29,6 +29,10 @@ const (
 	Slug = "test"
 )
 
+var Categories = []string{
+	"Test Category",
+}
+
 var Error = errors.New("test error")
 var ErrorNotFound = db.ErrNotFound
 var SuccessfulDatabaseResult = []contract.Subscription{
@@ -116,6 +120,12 @@ func createMockSubscriptionLoaderStringArg(methodName string, err error, ret int
 	return &dbMock
 }
 
+func createMockSubscriptionLoaderByCategories(methodName string, err error, ret []contract.Subscription, arg []string) SubscriptionLoader {
+	dbMock := mocks.SubscriptionLoader{}
+	dbMock.On(methodName, arg).Return(ret, err)
+	return &dbMock
+}
+
 func TestSlugExecutor(t *testing.T) {
 	tests := []struct {
 		name           string
@@ -146,6 +156,61 @@ func TestSlugExecutor(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			op := NewSlugExecutor(test.mockDb, Slug)
+			actual, err := op.Execute()
+			if test.expectedError && err == nil {
+				t.Error("Expected an error")
+				return
+			}
+
+			if !test.expectedError && err != nil {
+				t.Errorf("Unexpectedly encountered error: %s", err.Error())
+				return
+			}
+
+			if !reflect.DeepEqual(test.expectedResult, actual) {
+				t.Errorf("Expected result does not match the observed.\nExpected: %v\nObserved: %v\n", test.expectedResult, actual)
+				return
+			}
+		})
+	}
+}
+
+func TestCategoriesExecutor(t *testing.T) {
+	tests := []struct {
+		name           string
+		mockDb         SubscriptionLoader
+		expectedResult []contract.Subscription
+		expectedError  bool
+	}{
+		{
+			name:           "Subscription not found",
+			mockDb:         createMockSubscriptionLoaderByCategories("GetSubscriptionByCategories", ErrorNotFound, []contract.Subscription{}, Categories),
+			expectedResult: []contract.Subscription{},
+			expectedError:  true,
+		},
+		{
+			name:           "Successful database call",
+			mockDb:         createMockSubscriptionLoaderByCategories("GetSubscriptionByCategories", nil, SuccessfulDatabaseResult, Categories),
+			expectedResult: SuccessfulDatabaseResult,
+			expectedError:  false,
+		},
+		{
+			name:           "Unsuccessful database call",
+			mockDb:         createMockSubscriptionLoaderByCategories("GetSubscriptionByCategories", Error, []contract.Subscription{}, Categories),
+			expectedResult: []contract.Subscription{},
+			expectedError:  true,
+		},
+		{
+			name:           "Subscription not found",
+			mockDb:         createMockSubscriptionLoaderByCategories("GetSubscriptionByCategories", nil, []contract.Subscription{}, Categories),
+			expectedResult: []contract.Subscription{},
+			expectedError:  true,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			op := NewCategoriesExecutor(test.mockDb, Categories)
 			actual, err := op.Execute()
 			if test.expectedError && err == nil {
 				t.Error("Expected an error")

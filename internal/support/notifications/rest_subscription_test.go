@@ -19,6 +19,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
@@ -40,22 +41,22 @@ func TestGetSubscriptionById(t *testing.T) {
 		expectedStatus int
 	}{
 		{
-			name:           "Notification not found",
+			name:           "Subscription not found",
 			request:        createSubscriptionRequest(map[string]string{ID: TestId}),
-			dbMock:         createMocSubscriptionLoader("GetSubscriptionById", TestId, db.ErrNotFound),
+			dbMock:         createMockSubscriptionLoader("GetSubscriptionById", TestId, db.ErrNotFound),
 			expectedStatus: http.StatusNotFound,
 		},
 		{
-			"OK",
-			createSubscriptionRequest(map[string]string{ID: TestId}),
-			createMocSubscriptionLoader("GetSubscriptionById", TestId, nil),
-			http.StatusOK,
+			name:           "OK",
+			request:        createSubscriptionRequest(map[string]string{ID: TestId}),
+			dbMock:         createMockSubscriptionLoader("GetSubscriptionById", TestId, nil),
+			expectedStatus: http.StatusOK,
 		},
 
 		{
 			name:           "Other error from database",
 			request:        createSubscriptionRequest(map[string]string{ID: TestId}),
-			dbMock:         createMocSubscriptionLoader("GetSubscriptionById", TestId, errors.New("Test error")),
+			dbMock:         createMockSubscriptionLoader("GetSubscriptionById", TestId, errors.New("Test error")),
 			expectedStatus: http.StatusInternalServerError,
 		},
 	}
@@ -85,7 +86,7 @@ func createSubscriptionDeleteRequest(params map[string]string) *http.Request {
 	return mux.SetURLVars(req, params)
 }
 
-func createMocSubscriptionLoader(methodName string, testID string, desiredError error) interfaces.DBClient {
+func createMockSubscriptionLoader(methodName string, testID string, desiredError error) interfaces.DBClient {
 	myMock := mocks.DBClient{}
 
 	if desiredError != nil {
@@ -103,6 +104,17 @@ func createMockSubscriptionDeleter(methodName string, testID string, desiredErro
 		myMock.On(methodName, testID).Return(desiredError)
 	} else {
 		myMock.On(methodName, testID).Return(nil)
+	}
+	return &myMock
+}
+
+func createMockSubscriptionLoaderCollection(methodName string, arg interface{}, desiredError error) interfaces.DBClient {
+	myMock := mocks.DBClient{}
+
+	if desiredError != nil {
+		myMock.On(methodName, arg).Return([]contract.Subscription{}, desiredError)
+	} else {
+		myMock.On(methodName, arg).Return(createSubscriptions(1), nil)
 	}
 	return &myMock
 }
@@ -193,22 +205,22 @@ func TestGetSubscriptionBySlug(t *testing.T) {
 		expectedStatus int
 	}{
 		{
-			name:           "Notification not found",
+			name:           "Subscription not found",
 			request:        createSubscriptionRequest(map[string]string{SLUG: TestSlug}),
-			dbMock:         createMocSubscriptionLoader("GetSubscriptionBySlug", TestSlug, db.ErrNotFound),
+			dbMock:         createMockSubscriptionLoader("GetSubscriptionBySlug", TestSlug, db.ErrNotFound),
 			expectedStatus: http.StatusNotFound,
 		},
 		{
-			"OK",
-			createSubscriptionRequest(map[string]string{SLUG: TestSlug}),
-			createMocSubscriptionLoader("GetSubscriptionBySlug", TestSlug, nil),
-			http.StatusOK,
+			name:           "OK",
+			request:        createSubscriptionRequest(map[string]string{SLUG: TestSlug}),
+			dbMock:         createMockSubscriptionLoader("GetSubscriptionBySlug", TestSlug, nil),
+			expectedStatus: http.StatusOK,
 		},
 
 		{
 			name:           "Other error from database",
 			request:        createSubscriptionRequest(map[string]string{SLUG: TestSlug}),
-			dbMock:         createMocSubscriptionLoader("GetSubscriptionBySlug", TestSlug, errors.New("Test error")),
+			dbMock:         createMockSubscriptionLoader("GetSubscriptionBySlug", TestSlug, errors.New("Test error")),
 			expectedStatus: http.StatusInternalServerError,
 		},
 	}
@@ -261,6 +273,52 @@ func TestDeleteSubscriptionBySlug(t *testing.T) {
 			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
 			handler := http.HandlerFunc(restDeleteSubscriptionBySlug)
+			handler.ServeHTTP(rr, tt.request)
+			response := rr.Result()
+			if response.StatusCode != tt.expectedStatus {
+				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
+				return
+			}
+		})
+	}
+}
+
+func TestGetSubscriptionsByCategories(t *testing.T) {
+
+	categoriesURL := strings.Join(TestCategories, ",")
+
+	tests := []struct {
+		name           string
+		request        *http.Request
+		dbMock         interfaces.DBClient
+		expectedStatus int
+	}{
+		{
+			name:           "Subscription not found",
+			request:        createSubscriptionRequest(map[string]string{CATEGORIES: categoriesURL}),
+			dbMock:         createMockSubscriptionLoaderCollection("GetSubscriptionByCategories", TestCategories, db.ErrNotFound),
+			expectedStatus: http.StatusNotFound,
+		},
+		{
+			name:           "OK",
+			request:        createSubscriptionRequest(map[string]string{CATEGORIES: categoriesURL}),
+			dbMock:         createMockSubscriptionLoaderCollection("GetSubscriptionByCategories", TestCategories, nil),
+			expectedStatus: http.StatusOK,
+		},
+
+		{
+			name:           "Other error from database",
+			request:        createSubscriptionRequest(map[string]string{CATEGORIES: categoriesURL}),
+			dbMock:         createMockSubscriptionLoaderCollection("GetSubscriptionByCategories", TestCategories, errors.New("Test error")),
+			expectedStatus: http.StatusInternalServerError,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			dbClient = tt.dbMock
+			rr := httptest.NewRecorder()
+			handler := http.HandlerFunc(restGetSubscriptionsByCategories)
 			handler.ServeHTTP(rr, tt.request)
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
