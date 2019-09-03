@@ -19,7 +19,7 @@ import (
 
 func TestPing(t *testing.T) {
 	// create test server with handler
-	ts := httptest.NewServer(httpServer())
+	ts := httptest.NewServer(LoadRestRoutes())
 	defer ts.Close()
 
 	response, err := http.Get(ts.URL + clients.ApiPingRoute)
@@ -54,7 +54,7 @@ func TestReplyNotifyRegistrations(t *testing.T) {
 		{"validUpdate", nuValidUpdate, http.StatusOK},
 	}
 	// create test server with handler
-	ts := httptest.NewServer(httpServer())
+	ts := httptest.NewServer(LoadRestRoutes())
 	defer ts.Close()
 
 	url := ts.URL + clients.ApiNotifyRegistrationRoute
