@@ -228,6 +228,20 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		newId, err := addNewEvent(evt, ctx)
+		if err != nil {
+			switch e := err.(type) {
+			case *errors.ErrValueDescriptorNotFound:
+				http.Error(w, err.Error(), http.StatusNotFound)
+			case *errors.ErrValueDescriptorInvalid:
+				http.Error(w, err.Error(), http.StatusBadRequest)
+			case *types.ErrServiceClient:
+				http.Error(w, e.Error(), e.StatusCode)
+			default:
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
+			LoggingClient.Error(err.Error())
+			return
+		}
 
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(newId))
