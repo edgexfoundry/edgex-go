@@ -8,8 +8,8 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 
-	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
-	errors2 "github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
+	dataErrors "github.com/edgexfoundry/edgex-go/internal/core/data/errors"
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
 )
 
 // ValueDescriptorAdder provides the necessary functionality for creating a ValueDescriptor.
@@ -99,7 +99,7 @@ func (u updateValueDescriptor) Execute() error {
 			associatedDeviceNames = append(associatedDeviceNames, d.Name)
 		}
 
-		return errors2.NewErrDeviceProfileInvalidState(
+		return errors.NewErrDeviceProfileInvalidState(
 			persistedDeviceProfile.Id,
 			persistedDeviceProfile.Name,
 			fmt.Sprintf("The DeviceProfile is in use by Device(s):[%s]", strings.Join(associatedDeviceNames, ",")))
@@ -126,7 +126,7 @@ func (u updateValueDescriptor) Execute() error {
 	}
 
 	if len(inUseValueDescriptors) > 0 {
-		return errors.NewErrValueDescriptorsInUse(inUseValueDescriptors)
+		return dataErrors.NewErrValueDescriptorsInUse(inUseValueDescriptors)
 	}
 
 	// Based on the DeviceProfile as it is before the update, determine which operation needs to be applied to each

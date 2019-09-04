@@ -38,7 +38,7 @@ func restGetAllDeviceServices(w http.ResponseWriter, _ *http.Request) {
 	services, err := op.Execute()
 	if err != nil {
 		switch err.(type) {
-		case *types.ErrLimitExceeded:
+		case types.ErrLimitExceeded:
 			http.Error(w, err.Error(), http.StatusRequestEntityTooLarge)
 		default:
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -215,7 +215,7 @@ func restGetServiceByAddressableName(w http.ResponseWriter, r *http.Request) {
 	res, err := op.Execute()
 	if err != nil {
 		switch err.(type) {
-		case *types.ErrItemNotFound:
+		case types.ErrItemNotFound:
 			http.Error(w, err.Error(), http.StatusNotFound)
 		default:
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -236,7 +236,7 @@ func restGetServiceByAddressableId(w http.ResponseWriter, r *http.Request) {
 	res, err := op.Execute()
 	if err != nil {
 		switch err.(type) {
-		case *types.ErrItemNotFound:
+		case types.ErrItemNotFound:
 			http.Error(w, err.Error(), http.StatusNotFound)
 		default:
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -282,7 +282,7 @@ func restGetServiceByName(w http.ResponseWriter, r *http.Request) {
 	res, err := op.Execute()
 	if err != nil {
 		switch err.(type) {
-		case *types.ErrItemNotFound:
+		case types.ErrItemNotFound:
 			http.Error(w, err.Error(), http.StatusNotFound)
 		default:
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -479,7 +479,7 @@ func restGetServiceById(w http.ResponseWriter, r *http.Request) {
 	res, err := op.Execute()
 	if err != nil {
 		switch err.(type) {
-		case *types.ErrItemNotFound:
+		case types.ErrItemNotFound:
 			http.Error(w, err.Error(), http.StatusNotFound)
 		default:
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -509,7 +509,7 @@ func restUpdateServiceOpStateById(w http.ResponseWriter, r *http.Request) {
 	op := device_service.NewUpdateOpStateByIdExecutor(id, newOs, dbClient)
 	if err := op.Execute(); err != nil {
 		switch err.(type) {
-		case *types.ErrItemNotFound:
+		case types.ErrItemNotFound:
 			http.Error(w, err.Error(), http.StatusNotFound)
 		default:
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -544,7 +544,7 @@ func restUpdateServiceOpStateByName(w http.ResponseWriter, r *http.Request) {
 	op := device_service.NewUpdateOpStateByNameExecutor(n, newOs, dbClient)
 	if err := op.Execute(); err != nil {
 		switch err.(type) {
-		case *types.ErrItemNotFound:
+		case types.ErrItemNotFound:
 			http.Error(w, err.Error(), http.StatusNotFound)
 		default:
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -574,7 +574,7 @@ func restUpdateServiceAdminStateById(w http.ResponseWriter, r *http.Request) {
 	op := device_service.NewUpdateAdminStateByIdExecutor(id, newAs, dbClient)
 	if err := op.Execute(); err != nil {
 		switch err.(type) {
-		case *types.ErrItemNotFound:
+		case types.ErrItemNotFound:
 			http.Error(w, err.Error(), http.StatusNotFound)
 		default:
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -609,7 +609,7 @@ func restUpdateServiceAdminStateByName(w http.ResponseWriter, r *http.Request) {
 	op := device_service.NewUpdateAdminStateByNameExecutor(n, newAs, dbClient)
 	if err := op.Execute(); err != nil {
 		switch err.(type) {
-		case *types.ErrItemNotFound:
+		case types.ErrItemNotFound:
 			http.Error(w, err.Error(), http.StatusNotFound)
 		default:
 			http.Error(w, err.Error(), http.StatusInternalServerError)
