@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
+	goErrors "errors"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
@@ -18,7 +18,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"gopkg.in/yaml.v2"
 
-	errors2 "github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces/mocks"
@@ -39,7 +39,7 @@ var TestDeviceProfiles = []contract.DeviceProfile{
 	createTestDeviceProfileWithCommands("TestErrorID", "TestErrorName", []string{TestLabelError1, TestLabelError2}, "TestErrorManufacturer", "TestErrorModel", TestCommand),
 }
 var TestDeviceProfileValidated = createValidatedTestDeviceProfile()
-var TestError = errors.New("test error")
+var TestError = goErrors.New("test error")
 var TestContext = context.WithValue(context.Background(), "TestKey", "TestValue")
 var TestDeviceProfileID = "TestProfileID"
 var TestDeviceProfileName = "TestProfileName"
@@ -1144,10 +1144,10 @@ func createDBClientDeviceProfileErrorNotFound() interfaces.DBClient {
 
 func createMockErrDeviceProfileNotFound() interfaces.DBClient {
 	d := &mocks.DBClient{}
-	d.On("GetDeviceProfileByName", TestDeviceProfileName).Return(contract.DeviceProfile{}, errors2.ErrDeviceProfileNotFound{})
-	d.On("GetDeviceProfileById", TestDeviceProfileName).Return(contract.DeviceProfile{}, errors2.ErrDeviceProfileNotFound{})
-	d.On("GetDeviceProfileByName", TestDeviceProfileID).Return(contract.DeviceProfile{}, errors2.ErrDeviceProfileNotFound{})
-	d.On("GetDeviceProfileById", TestDeviceProfileID).Return(contract.DeviceProfile{}, errors2.ErrDeviceProfileNotFound{})
+	d.On("GetDeviceProfileByName", TestDeviceProfileName).Return(contract.DeviceProfile{}, errors.ErrDeviceProfileNotFound{})
+	d.On("GetDeviceProfileById", TestDeviceProfileName).Return(contract.DeviceProfile{}, errors.ErrDeviceProfileNotFound{})
+	d.On("GetDeviceProfileByName", TestDeviceProfileID).Return(contract.DeviceProfile{}, errors.ErrDeviceProfileNotFound{})
+	d.On("GetDeviceProfileById", TestDeviceProfileID).Return(contract.DeviceProfile{}, errors.ErrDeviceProfileNotFound{})
 
 	return d
 }
@@ -1223,14 +1223,14 @@ func createDBClientGetDeviceProfileError() interfaces.DBClient {
 
 func createDBClientGetDeviceProfileMaxLimitError() interfaces.DBClient {
 	d := &mocks.DBClient{}
-	d.On("GetAllDeviceProfiles").Return(nil, errors2.ErrLimitExceeded{})
-	d.On("GetDeviceProfileById", TestDeviceProfileID).Return(contract.DeviceProfile{}, errors2.ErrLimitExceeded{})
-	d.On("GetDeviceProfileByName", TestDeviceProfileName).Return(contract.DeviceProfile{}, errors2.ErrLimitExceeded{})
-	d.On("GetDeviceProfilesByModel", TestDeviceProfile.Model).Return(nil, errors2.ErrLimitExceeded{})
-	d.On("GetDeviceProfilesWithLabel", TestDeviceProfileLabel1).Return(nil, errors2.ErrLimitExceeded{})
-	d.On("GetDeviceProfilesWithLabel", TestDeviceProfileLabel2).Return(nil, errors2.ErrLimitExceeded{})
-	d.On("GetDeviceProfilesByManufacturer", TestDeviceProfile.Manufacturer).Return(nil, errors2.ErrLimitExceeded{})
-	d.On("GetDeviceProfilesByManufacturerModel", TestDeviceProfile.Manufacturer, TestDeviceProfile.Model).Return(nil, errors2.ErrLimitExceeded{})
+	d.On("GetAllDeviceProfiles").Return(nil, errors.ErrLimitExceeded{})
+	d.On("GetDeviceProfileById", TestDeviceProfileID).Return(contract.DeviceProfile{}, errors.ErrLimitExceeded{})
+	d.On("GetDeviceProfileByName", TestDeviceProfileName).Return(contract.DeviceProfile{}, errors.ErrLimitExceeded{})
+	d.On("GetDeviceProfilesByModel", TestDeviceProfile.Model).Return(nil, errors.ErrLimitExceeded{})
+	d.On("GetDeviceProfilesWithLabel", TestDeviceProfileLabel1).Return(nil, errors.ErrLimitExceeded{})
+	d.On("GetDeviceProfilesWithLabel", TestDeviceProfileLabel2).Return(nil, errors.ErrLimitExceeded{})
+	d.On("GetDeviceProfilesByManufacturer", TestDeviceProfile.Manufacturer).Return(nil, errors.ErrLimitExceeded{})
+	d.On("GetDeviceProfilesByManufacturerModel", TestDeviceProfile.Manufacturer, TestDeviceProfile.Model).Return(nil, errors.ErrLimitExceeded{})
 
 	return d
 }

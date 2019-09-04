@@ -47,7 +47,7 @@ func TestGetAllReadingsOverLimit(t *testing.T) {
 
 	if err != nil {
 		switch err.(type) {
-		case *errors.ErrLimitExceeded:
+		case errors.ErrLimitExceeded:
 			return
 		default:
 			t.Errorf("Unexpected error getting all readings")
@@ -132,7 +132,7 @@ func TestGetReadingByIdNotFound(t *testing.T) {
 
 	if err != nil {
 		switch err.(type) {
-		case *errors.ErrDbNotFound:
+		case errors.ErrDbNotFound:
 			return
 		default:
 			t.Errorf("Unexpected error getting reading by ID missing in DB")

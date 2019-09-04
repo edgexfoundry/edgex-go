@@ -71,7 +71,7 @@ func TestGetValueDescriptorByNameNotFound(t *testing.T) {
 
 	if err != nil {
 		switch err.(type) {
-		case *errors.ErrDbNotFound:
+		case errors.ErrDbNotFound:
 			return
 		default:
 			t.Errorf("Unexpected error getting value descriptor by name missing in DB")
@@ -129,7 +129,7 @@ func TestGetValueDescriptorByIdNotFound(t *testing.T) {
 
 	if err != nil {
 		switch err.(type) {
-		case *errors.ErrDbNotFound:
+		case errors.ErrDbNotFound:
 			return
 		default:
 			t.Errorf("Unexpected error getting value descriptor by ID missing in DB")
@@ -183,7 +183,7 @@ func TestGetValueDescriptorsByUomLabelNotFound(t *testing.T) {
 
 	if err != nil {
 		switch err.(type) {
-		case *errors.ErrDbNotFound:
+		case errors.ErrDbNotFound:
 			return
 		default:
 			t.Errorf("Unexpected error getting value descriptor by UOM label missing in DB")
@@ -243,7 +243,7 @@ func TestGetValueDescriptorsByLabelNotFound(t *testing.T) {
 
 	if err != nil {
 		switch err.(type) {
-		case *errors.ErrDbNotFound:
+		case errors.ErrDbNotFound:
 			return
 		default:
 			t.Errorf("Unexpected error getting value descriptor by label missing in DB")
@@ -297,7 +297,7 @@ func TestGetValueDescriptorsByTypeNotFound(t *testing.T) {
 
 	if err != nil {
 		switch err.(type) {
-		case *errors.ErrDbNotFound:
+		case errors.ErrDbNotFound:
 			return
 		default:
 			t.Errorf("Unexpected error getting value descriptor by type missing in DB")
@@ -343,7 +343,7 @@ func TestGetValueDescriptorsByDeviceNameNotFound(t *testing.T) {
 
 	if err != nil {
 		switch err := err.(type) {
-		case *types.ErrServiceClient:
+		case types.ErrServiceClient:
 			if err.StatusCode != http.StatusNotFound {
 				t.Errorf("Expected a 404 error")
 			}
@@ -388,7 +388,7 @@ func TestGetValueDescriptorsByDeviceIdNotFound(t *testing.T) {
 
 	if err != nil {
 		switch err := err.(type) {
-		case *types.ErrServiceClient:
+		case types.ErrServiceClient:
 			if err.StatusCode != http.StatusNotFound {
 				t.Errorf("Expected a 404 error")
 			}
@@ -475,7 +475,7 @@ func TestAddDuplicateValueDescriptor(t *testing.T) {
 
 	if err != nil {
 		switch err.(type) {
-		case *errors.ErrDuplicateValueDescriptorName:
+		case errors.ErrDuplicateValueDescriptorName:
 			return
 		default:
 			t.Errorf("Unexpected error adding value descriptor that already exists")
@@ -530,7 +530,7 @@ func TestDeleteValueDescriptorInUse(t *testing.T) {
 
 	if err != nil {
 		switch err.(type) {
-		case *errors.ErrValueDescriptorInUse:
+		case errors.ErrValueDescriptorInUse:
 			return
 		default:
 			t.Errorf("Unexpected error deleting value descriptor in use")

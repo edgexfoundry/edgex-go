@@ -40,7 +40,7 @@ func (e ErrIntervalNameInUse) Error() string {
 }
 
 func NewErrIntervalNameInUse(name string) error {
-	return &ErrIntervalNameInUse{name: name}
+	return ErrIntervalNameInUse{name: name}
 }
 
 type ErrIntervalStillUsedByIntervalActions struct {
@@ -65,7 +65,7 @@ func (e ErrIntervalActionNotFound) Error() string {
 }
 
 func NewErrIntervalActionNotFound(id string) error {
-	return &ErrIntervalActionNotFound{id: id}
+	return ErrIntervalActionNotFound{id: id}
 }
 
 type ErrIntervalActionTargetNameRequired struct {
@@ -77,7 +77,7 @@ func (e ErrIntervalActionTargetNameRequired) Error() string {
 }
 
 func NewErrIntervalActionTargetNameRequired(id string) error {
-	return &ErrIntervalActionTargetNameRequired{id: id}
+	return ErrIntervalActionTargetNameRequired{id: id}
 }
 
 type ErrIntervalActionNameInUse struct {
@@ -89,7 +89,7 @@ func (e ErrIntervalActionNameInUse) Error() string {
 }
 
 func NewErrIntervalActionNameInUse(name string) error {
-	return &ErrIntervalActionNameInUse{name: name}
+	return ErrIntervalActionNameInUse{name: name}
 }
 
 type ErrInvalidTimeFormat struct {
@@ -101,7 +101,7 @@ func (e ErrInvalidTimeFormat) Error() string {
 }
 
 func NewErrInvalidTimeFormat(value string) error {
-	return &ErrInvalidTimeFormat{value: value}
+	return ErrInvalidTimeFormat{value: value}
 }
 
 type ErrInvalidFrequencyFormat struct {
@@ -113,7 +113,7 @@ func (e ErrInvalidFrequencyFormat) Error() string {
 }
 
 func NewErrInvalidFrequencyFormat(frequency string) error {
-	return &ErrInvalidFrequencyFormat{frequency: frequency}
+	return ErrInvalidFrequencyFormat{frequency: frequency}
 }
 
 type ErrInvalidCronFormat struct {
@@ -136,5 +136,5 @@ func (e ErrDbNotFound) Error() string {
 }
 
 func NewErrDbNotFound() error {
-	return &ErrDbNotFound{}
+	return ErrDbNotFound{}
 }

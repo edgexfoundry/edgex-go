@@ -139,7 +139,7 @@ func TestAddIntervalFailOnExistingName(t *testing.T) {
 	_, err := addNewInterval(nInterval)
 	if err != nil {
 		switch err.(type) {
-		case *errorsSched.ErrIntervalNameInUse:
+		case errorsSched.ErrIntervalNameInUse:
 		// expected
 		default:
 			t.Errorf("Expected errors.ErrIntervalNameInUse")
@@ -175,7 +175,7 @@ func TestAddIntervalFailOnInvalidTimeFormat(t *testing.T) {
 	_, err := addNewInterval(nInterval)
 	if err != nil {
 		switch err.(type) {
-		case *errorsSched.ErrInvalidTimeFormat:
+		case errorsSched.ErrInvalidTimeFormat:
 		// expected
 		default:
 			t.Errorf("Expected errors.ErrInvalidTimeFormat")

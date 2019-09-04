@@ -70,7 +70,7 @@ func restUpdateInterval(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, t.Error(), http.StatusBadRequest)
 		case errors.ErrIntervalStillUsedByIntervalActions:
 			http.Error(w, t.Error(), http.StatusBadRequest)
-		case *errors.ErrIntervalNameInUse:
+		case errors.ErrIntervalNameInUse:
 			http.Error(w, t.Error(), http.StatusBadRequest)
 		default: //return an error on everything else.
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -103,7 +103,7 @@ func restAddInterval(w http.ResponseWriter, r *http.Request) {
 	newId, err := op.Execute()
 	if err != nil {
 		switch t := err.(type) {
-		case *errors.ErrIntervalNameInUse:
+		case errors.ErrIntervalNameInUse:
 			http.Error(w, t.Error(), http.StatusBadRequest)
 		default:
 			http.Error(w, t.Error(), http.StatusInternalServerError)
@@ -197,7 +197,7 @@ func restGetIntervalByName(w http.ResponseWriter, r *http.Request) {
 		switch err := err.(type) {
 		case errors.ErrIntervalNotFound:
 			http.Error(w, err.Error(), http.StatusNotFound)
-		case *types.ErrServiceClient:
+		case types.ErrServiceClient:
 			http.Error(w, err.Error(), err.StatusCode)
 		default:
 			http.Error(w, err.Error(), http.StatusInternalServerError)

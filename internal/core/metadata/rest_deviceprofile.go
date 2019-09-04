@@ -24,7 +24,7 @@ import (
 	"github.com/gorilla/mux"
 	"gopkg.in/yaml.v2"
 
-	errors2 "github.com/edgexfoundry/edgex-go/internal/core/data/errors"
+	dataErrors "github.com/edgexfoundry/edgex-go/internal/core/data/errors"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/operators/device"
@@ -110,7 +110,7 @@ func restUpdateDeviceProfile(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, err.Error(), err.(types.ErrServiceClient).StatusCode)
 			case errors.ErrDeviceProfileNotFound:
 				http.Error(w, err.Error(), http.StatusNotFound)
-			case *errors2.ErrValueDescriptorsInUse:
+			case dataErrors.ErrValueDescriptorsInUse:
 				http.Error(w, err.Error(), http.StatusConflict)
 			case errors.ErrDeviceProfileInvalidState:
 				http.Error(w, err.Error(), http.StatusConflict)
@@ -277,7 +277,7 @@ func restAddProfileByYaml(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 		case models.ErrContractInvalid:
 			http.Error(w, err.Error(), http.StatusConflict)
-		case *errors.ErrDuplicateName:
+		case errors.ErrDuplicateName:
 			http.Error(w, err.Error(), http.StatusConflict)
 		case errors.ErrEmptyDeviceProfileName:
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -326,7 +326,7 @@ func addDeviceProfile(dp models.DeviceProfile, dbClient interfaces.DBClient, w h
 			http.Error(w, err.Error(), http.StatusBadRequest)
 		case errors.ErrDeviceProfileInvalidState:
 			http.Error(w, err.Error(), http.StatusBadRequest)
-		case *errors.ErrDuplicateName:
+		case errors.ErrDuplicateName:
 			http.Error(w, err.Error(), http.StatusConflict)
 		case errors.ErrEmptyDeviceProfileName:
 			http.Error(w, err.Error(), http.StatusBadRequest)

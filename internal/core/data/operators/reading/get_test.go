@@ -17,14 +17,14 @@
 package reading
 
 import (
-	"errors"
+	goErrors "errors"
 	"reflect"
 	"testing"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 
-	errors2 "github.com/edgexfoundry/edgex-go/internal/core/data/errors"
+	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/operators/reading/mocks"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 )
@@ -36,7 +36,7 @@ var TestErrorReadingName = "TestReadingError"
 var TestLoaderLimit = 5
 
 // TestError error used to simulate non EdgeX type errors.
-var TestError = errors.New("testing error")
+var TestError = goErrors.New("testing error")
 
 var TestReading = contract.Reading{
 	Name:        "TestReadingName",
@@ -120,7 +120,7 @@ func TestGetReadingsExecutor(t *testing.T) {
 			config.ServiceInfo{MaxResultCount: 1},
 			nil,
 			true,
-			&errors2.ErrLimitExceeded{},
+			errors.ErrLimitExceeded{},
 		},
 	}
 	for _, test := range tests {

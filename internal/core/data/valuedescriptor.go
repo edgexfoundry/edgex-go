@@ -142,7 +142,7 @@ func getValueDescriptorsByDevice(device contract.Device) (vdList []contract.Valu
 		// Not an error if not found
 		if err != nil {
 			switch err.(type) {
-			case *errors.ErrDbNotFound:
+			case errors.ErrDbNotFound:
 				continue
 			default:
 				return []contract.ValueDescriptor{}, err
