@@ -231,17 +231,16 @@ func restDeleteSubscriptionBySlug(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("true"))
 }
 
-func subscriptionsByCategoriesHandler(w http.ResponseWriter, r *http.Request) {
+func restGetSubscriptionsByCategories(w http.ResponseWriter, r *http.Request) {
 
 	if r.Body != nil {
 		defer r.Body.Close()
 	}
 
 	vars := mux.Vars(r)
-
 	categories := splitVars(vars["categories"])
-
-	s, err := dbClient.GetSubscriptionByCategories(categories)
+	op := subscription.NewCategoriesExecutor(dbClient, categories)
+	s, err := op.Execute()
 	if err != nil {
 		if err == db.ErrNotFound {
 			http.Error(w, "Subscription not found", http.StatusNotFound)
@@ -253,7 +252,6 @@ func subscriptionsByCategoriesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	pkg.Encode(s, w, LoggingClient)
-
 }
 
 func subscriptionsByLabelsHandler(w http.ResponseWriter, r *http.Request) {

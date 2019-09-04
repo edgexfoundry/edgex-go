@@ -65,7 +65,7 @@ func LoadRestRoutes() *mux.Router {
 	b.HandleFunc("/"+SUBSCRIPTION+"/"+SLUG+"/{"+SLUG+"}", restGetSubscriptionBySlug).Methods(http.MethodGet)
 	b.HandleFunc("/"+SUBSCRIPTION+"/"+SLUG+"/{"+SLUG+"}", restDeleteSubscriptionBySlug).Methods(http.MethodDelete)
 	b.HandleFunc("/"+SUBSCRIPTION+"/"+CATEGORIES+"/{"+CATEGORIES+"}/"+LABELS+"/{"+LABELS+"}", subscriptionsByCategoriesLabelsHandler).Methods(http.MethodGet)
-	b.HandleFunc("/"+SUBSCRIPTION+"/"+CATEGORIES+"/{"+CATEGORIES+"}", subscriptionsByCategoriesHandler).Methods(http.MethodGet)
+	b.HandleFunc("/"+SUBSCRIPTION+"/"+CATEGORIES+"/{"+CATEGORIES+"}", restGetSubscriptionsByCategories).Methods(http.MethodGet)
 	b.HandleFunc("/"+SUBSCRIPTION+"/"+LABELS+"/{"+LABELS+"}", subscriptionsByLabelsHandler).Methods(http.MethodGet)
 	b.HandleFunc("/"+SUBSCRIPTION+"/"+RECEIVER+"/{"+RECEIVER+"}", subscriptionsByReceiverHandler).Methods(http.MethodGet)
 
