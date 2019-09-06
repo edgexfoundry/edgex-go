@@ -70,7 +70,9 @@ Common Options:
 var securitySecretStoreSetupUsageStr = `
 Usage: %s [options]
 Server Options:
-	--insureskipverify=true/false			Indicates if skipping the server side SSL cert verifcation, similar to -k of curl
+	-p, --profile <name>            Indicate configuration profile other than default
+	-r, --registry                  Indicates service should use Registry
+	--insecureSkipVerify=true/false			Indicates if skipping the server side SSL cert verifcation, similar to -k of curl
 	--init=true/false				Indicates if security service should be initialized
 	--configfile=<file.toml>			Use a different config file (default: res/configuration.toml)
 	--wait=<time in seconds>		Indicates how long the program will pause between the vault initialization until it succeeds

@@ -27,6 +27,6 @@ COPY --from=builder /edgex-go/cmd/security-secretstore-setup/res/docker/configur
 
 COPY --from=builder /edgex-go/cmd/security-secretstore-setup/security-secretstore-setup .
 
-ENTRYPOINT ["secretstore-init.sh"]
+#ENTRYPOINT ["secretstore-init.sh"]
 
-#ENTRYPOINT ["./security-secretstore-setup","--init=true"]
+ENTRYPOINT ["./security-secretstore-setup","--init=true"]
