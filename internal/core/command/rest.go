@@ -11,6 +11,7 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
+
 package command
 
 import (
@@ -24,7 +25,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
 )
 
-func LoadRestRoutes() http.Handler {
+func LoadRestRoutes() *mux.Router {
 	r := mux.NewRouter()
 
 	// Ping Resource

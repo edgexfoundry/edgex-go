@@ -7,15 +7,14 @@
 package client
 
 import (
-	"fmt"
 	"net/http"
-
-	"github.com/edgexfoundry/go-mod-core-contracts/clients"
-	"github.com/gorilla/mux"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
+
+	"github.com/edgexfoundry/go-mod-core-contracts/clients"
+	"github.com/gorilla/mux"
 )
 
 // Test if the service is working
@@ -36,8 +35,7 @@ func metricsHandler(w http.ResponseWriter, _ *http.Request) {
 	return
 }
 
-// HTTPServer function
-func httpServer() http.Handler {
+func LoadRestRoutes() *mux.Router {
 	r := mux.NewRouter()
 
 	// Ping Resource
@@ -68,11 +66,4 @@ func httpServer() http.Handler {
 	r.Use(correlation.OnRequestBegin)
 
 	return r
-}
-
-func StartHTTPServer(errChan chan error) {
-	go func() {
-		p := fmt.Sprintf(":%d", Configuration.Service.Port)
-		errChan <- http.ListenAndServe(p, httpServer())
-	}()
 }

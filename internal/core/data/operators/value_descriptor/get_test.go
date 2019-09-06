@@ -17,20 +17,20 @@
 package value_descriptor
 
 import (
+	goErrors "errors"
 	"reflect"
 	"testing"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
-	"github.com/pkg/errors"
 
-	errors2 "github.com/edgexfoundry/edgex-go/internal/core/data/errors"
+	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/operators/value_descriptor/mocks"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 )
 
 var TestSuccessfulConfig = config.ServiceInfo{MaxResultCount: 5}
-var TestError = errors.New("test error")
+var TestError = goErrors.New("test error")
 
 var TestVDDescription = "test description"
 var TestVDName = "Temperature"
@@ -95,7 +95,7 @@ func TestGetValueDescriptorsByNames(t *testing.T) {
 			config.ServiceInfo{MaxResultCount: 1},
 			nil,
 			true,
-			&errors2.ErrLimitExceeded{},
+			errors.ErrLimitExceeded{},
 		},
 	}
 	for _, test := range tests {
@@ -167,7 +167,7 @@ func TestGetAllValueDescriptors(t *testing.T) {
 			config.ServiceInfo{MaxResultCount: 1},
 			nil,
 			true,
-			&errors2.ErrLimitExceeded{},
+			errors.ErrLimitExceeded{},
 		},
 	}
 	for _, test := range tests {

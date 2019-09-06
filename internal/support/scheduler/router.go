@@ -134,11 +134,11 @@ func intervalActionHandler(w http.ResponseWriter, r *http.Request) {
 		newId, err := addNewIntervalAction(intervalAction)
 		if err != nil {
 			switch t := err.(type) {
-			case *errors.ErrIntervalActionNameInUse:
+			case errors.ErrIntervalActionNameInUse:
 				http.Error(w, t.Error(), http.StatusBadRequest)
-			case *errors.ErrInvalidTimeFormat:
+			case errors.ErrInvalidTimeFormat:
 				http.Error(w, t.Error(), http.StatusBadRequest)
-			case *errors.ErrInvalidFrequencyFormat:
+			case errors.ErrInvalidFrequencyFormat:
 				http.Error(w, t.Error(), http.StatusBadRequest)
 			default:
 				http.Error(w, t.Error(), http.StatusInternalServerError)
@@ -166,17 +166,17 @@ func intervalActionHandler(w http.ResponseWriter, r *http.Request) {
 		err = updateIntervalAction(from)
 		if err != nil {
 			switch t := err.(type) {
-			case *errors.ErrIntervalNotFound:
+			case errors.ErrIntervalNotFound:
 				http.Error(w, t.Error(), http.StatusNotFound)
-			case *errors.ErrInvalidCronFormat:
+			case errors.ErrInvalidCronFormat:
 				http.Error(w, t.Error(), http.StatusBadRequest)
-			case *errors.ErrInvalidFrequencyFormat:
+			case errors.ErrInvalidFrequencyFormat:
 				http.Error(w, t.Error(), http.StatusBadRequest)
-			case *errors.ErrInvalidTimeFormat:
+			case errors.ErrInvalidTimeFormat:
 				http.Error(w, t.Error(), http.StatusBadRequest)
-			case *errors.ErrIntervalStillUsedByIntervalActions:
+			case errors.ErrIntervalStillUsedByIntervalActions:
 				http.Error(w, t.Error(), http.StatusBadRequest)
-			case *errors.ErrIntervalNameInUse:
+			case errors.ErrIntervalNameInUse:
 				http.Error(w, t.Error(), http.StatusBadRequest)
 			default: //return an error on everything else.
 				http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -216,7 +216,7 @@ func intervalActionByIdHandler(w http.ResponseWriter, r *http.Request) {
 		intervalAction, err := getIntervalActionById(id)
 		if err != nil {
 			switch x := err.(type) {
-			case *errors.ErrIntervalActionNotFound:
+			case errors.ErrIntervalActionNotFound:
 				http.Error(w, x.Error(), http.StatusNotFound)
 			default:
 				http.Error(w, x.Error(), http.StatusInternalServerError)
@@ -229,7 +229,7 @@ func intervalActionByIdHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodDelete:
 		if err = deleteIntervalActionById(id); err != nil {
 			switch err.(type) {
-			case *errors.ErrIntervalActionNotFound:
+			case errors.ErrIntervalActionNotFound:
 				http.Error(w, err.Error(), http.StatusBadRequest)
 				return
 			default:
@@ -268,7 +268,7 @@ func intervalActionByNameHandler(w http.ResponseWriter, r *http.Request) {
 		intervalAction, err := getIntervalActionByName(name)
 		if err != nil {
 			switch x := err.(type) {
-			case *errors.ErrIntervalActionNotFound:
+			case errors.ErrIntervalActionNotFound:
 				http.Error(w, x.Error(), http.StatusNotFound)
 			default:
 				http.Error(w, x.Error(), http.StatusInternalServerError)
@@ -281,7 +281,7 @@ func intervalActionByNameHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodDelete:
 		if err = deleteIntervalActionByName(name); err != nil {
 			switch err.(type) {
-			case *errors.ErrIntervalActionNotFound:
+			case errors.ErrIntervalActionNotFound:
 				http.Error(w, err.Error(), http.StatusBadRequest)
 				return
 			default:

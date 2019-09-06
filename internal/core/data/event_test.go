@@ -274,7 +274,7 @@ func TestUpdateEventNotFound(t *testing.T) {
 	evt := models.Event{ID: bson.NewObjectId().Hex(), Device: "Not Found", Origin: testOrigin}
 	err := updateEvent(correlation.Event{Event: evt}, context.Background())
 	if err != nil {
-		if x, ok := err.(*errors.ErrEventNotFound); !ok {
+		if x, ok := err.(errors.ErrEventNotFound); !ok {
 			t.Errorf("unexpected error type: %s", x.Error())
 		}
 	} else {
@@ -350,7 +350,7 @@ func TestGetEventByIdNotFound(t *testing.T) {
 
 	_, err := getEventById("abcxyz")
 	if err != nil {
-		if x, ok := err.(*errors.ErrEventNotFound); !ok {
+		if x, ok := err.(errors.ErrEventNotFound); !ok {
 			t.Errorf(x.Error())
 		}
 	}
@@ -420,7 +420,7 @@ func TestDeleteEvent(t *testing.T) {
 
 	_, err = getEventById(testEvent.ID)
 	if err != nil {
-		if x, ok := err.(*errors.ErrEventNotFound); !ok {
+		if x, ok := err.(errors.ErrEventNotFound); !ok {
 			t.Errorf(x.Error())
 		}
 	}

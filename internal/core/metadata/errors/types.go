@@ -27,7 +27,7 @@ func (e ErrLimitExceeded) Error() string {
 }
 
 func NewErrLimitExceeded(limit int) error {
-	return &ErrLimitExceeded{limit: limit}
+	return ErrLimitExceeded{limit: limit}
 }
 
 type ErrDuplicateName struct {
@@ -39,7 +39,7 @@ func (e ErrDuplicateName) Error() string {
 }
 
 func NewErrDuplicateName(message string) error {
-	return &ErrDuplicateName{msg: message}
+	return ErrDuplicateName{msg: message}
 }
 
 type ErrEmptyAddressableName struct {
@@ -50,7 +50,7 @@ func (e ErrEmptyAddressableName) Error() string {
 }
 
 func NewErrEmptyAddressableName() error {
-	return &ErrEmptyAddressableName{}
+	return ErrEmptyAddressableName{}
 }
 
 type ErrAddressableNotFound struct {
@@ -68,7 +68,7 @@ func (e ErrAddressableNotFound) Error() string {
 }
 
 func NewErrAddressableNotFound(id string, name string) error {
-	return &ErrAddressableNotFound{id: id}
+	return ErrAddressableNotFound{id: id}
 }
 
 type ErrAddressableInUse struct {
@@ -80,7 +80,7 @@ func (e ErrAddressableInUse) Error() string {
 }
 
 func NewErrAddressableInUse(name string) error {
-	return &ErrAddressableInUse{name: name}
+	return ErrAddressableInUse{name: name}
 }
 
 type ErrBadRequest struct {
@@ -92,7 +92,7 @@ func (e ErrBadRequest) Error() string {
 }
 
 func NewErrBadRequest(invalid string) error {
-	return &ErrBadRequest{value: invalid}
+	return ErrBadRequest{value: invalid}
 }
 
 type ErrItemNotFound struct {
@@ -104,7 +104,7 @@ func (e ErrItemNotFound) Error() string {
 }
 
 func NewErrItemNotFound(key string) error {
-	return &ErrItemNotFound{key: key}
+	return ErrItemNotFound{key: key}
 }
 
 type ErrDeviceProfileNotFound struct {

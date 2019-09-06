@@ -21,7 +21,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"net/http"
 	"os"
 	"os/signal"
 	"strconv"
@@ -62,7 +61,6 @@ func main() {
 	notifications.LoggingClient.Info("Service dependencies resolved...")
 	notifications.LoggingClient.Info(fmt.Sprintf("Starting %s %s ", clients.SupportNotificationsServiceKey, edgex.Version))
 
-	http.TimeoutHandler(nil, time.Millisecond*time.Duration(notifications.Configuration.Service.Timeout), "Request timed out")
 	notifications.LoggingClient.Info(notifications.Configuration.Service.StartupMsg)
 
 	errs := make(chan error, 2)

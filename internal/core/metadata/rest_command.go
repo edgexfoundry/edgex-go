@@ -28,7 +28,7 @@ func restGetAllCommands(w http.ResponseWriter, _ *http.Request) {
 	cmds, err := op.Execute()
 	if err != nil {
 		switch err.(type) {
-		case *types.ErrLimitExceeded:
+		case types.ErrLimitExceeded:
 			http.Error(w, err.Error(), http.StatusRequestEntityTooLarge)
 		default:
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -52,7 +52,7 @@ func restGetCommandById(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		LoggingClient.Error(err.Error())
 		switch err.(type) {
-		case *types.ErrItemNotFound:
+		case types.ErrItemNotFound:
 			http.Error(w, err.Error(), http.StatusNotFound)
 		default:
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -94,7 +94,7 @@ func restGetCommandsByDeviceId(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		LoggingClient.Error(err.Error())
 		switch err.(type) {
-		case *types.ErrItemNotFound:
+		case types.ErrItemNotFound:
 			http.Error(w, err.Error(), http.StatusNotFound)
 		default:
 			http.Error(w, err.Error(), http.StatusInternalServerError)

@@ -32,7 +32,7 @@ func restGetAllAddressables(w http.ResponseWriter, _ *http.Request) {
 	addressables, err := op.Execute()
 	if err != nil {
 		switch err.(type) {
-		case *types.ErrLimitExceeded:
+		case types.ErrLimitExceeded:
 			http.Error(w, err.Error(), http.StatusRequestEntityTooLarge)
 		default:
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -63,9 +63,9 @@ func restAddAddressable(w http.ResponseWriter, r *http.Request) {
 	id, err := op.Execute()
 	if err != nil {
 		switch err.(type) {
-		case *types.ErrDuplicateName:
+		case types.ErrDuplicateName:
 			http.Error(w, err.Error(), http.StatusConflict)
-		case *types.ErrEmptyAddressableName:
+		case types.ErrEmptyAddressableName:
 			http.Error(w, err.Error(), http.StatusBadRequest)
 		default:
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -95,9 +95,9 @@ func restUpdateAddressable(w http.ResponseWriter, r *http.Request) {
 	err = op.Execute()
 	if err != nil {
 		switch err.(type) {
-		case *types.ErrAddressableNotFound:
+		case types.ErrAddressableNotFound:
 			http.Error(w, err.Error(), http.StatusNotFound)
-		case *types.ErrAddressableInUse:
+		case types.ErrAddressableInUse:
 			http.Error(w, err.Error(), http.StatusConflict)
 		default:
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -141,9 +141,9 @@ func restDeleteAddressableById(w http.ResponseWriter, r *http.Request) {
 	err := op.Execute()
 	if err != nil {
 		switch err.(type) {
-		case *types.ErrAddressableNotFound:
+		case types.ErrAddressableNotFound:
 			http.Error(w, err.Error(), http.StatusNotFound)
-		case *types.ErrAddressableInUse:
+		case types.ErrAddressableInUse:
 			http.Error(w, err.Error(), http.StatusConflict)
 		default:
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -170,9 +170,9 @@ func restDeleteAddressableByName(w http.ResponseWriter, r *http.Request) {
 	err = op.Execute()
 	if err != nil {
 		switch err.(type) {
-		case *types.ErrAddressableNotFound:
+		case types.ErrAddressableNotFound:
 			http.Error(w, err.Error(), http.StatusNotFound)
-		case *types.ErrAddressableInUse:
+		case types.ErrAddressableInUse:
 			http.Error(w, err.Error(), http.StatusConflict)
 		default:
 			http.Error(w, err.Error(), http.StatusInternalServerError)

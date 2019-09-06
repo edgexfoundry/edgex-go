@@ -51,6 +51,10 @@ var TestLabels = []string{
 	"test_label2",
 }
 
+var TestCategories = []string{
+	"test_category",
+}
+
 func TestGetNotificationById(t *testing.T) {
 	tests := []struct {
 		name           string

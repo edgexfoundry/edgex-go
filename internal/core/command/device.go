@@ -30,7 +30,7 @@ func commandByDeviceID(deviceID string, commandID string, body string, queryPara
 	if err != nil {
 		LoggingClient.Error(err.Error())
 
-		chk, ok := err.(*types.ErrServiceClient)
+		chk, ok := err.(types.ErrServiceClient)
 		if ok {
 			return err.Error(), chk.StatusCode
 		} else {
@@ -75,7 +75,7 @@ func commandByNames(dn string, cn string, body string, queryParams string, isPut
 	d, err := mdc.DeviceForName(dn, ctx)
 	if err != nil {
 		LoggingClient.Error(err.Error())
-		chk, ok := err.(*types.ErrServiceClient)
+		chk, ok := err.(types.ErrServiceClient)
 		if ok {
 			return err.Error(), chk.StatusCode
 		} else {
@@ -127,7 +127,7 @@ func commandByDevice(device contract.Device, command contract.Command, body stri
 func getCommands(ctx context.Context) (int, []contract.CommandResponse, error) {
 	devices, err := mdc.Devices(ctx)
 	if err != nil {
-		chk, ok := err.(*types.ErrServiceClient)
+		chk, ok := err.(types.ErrServiceClient)
 		if ok {
 			return chk.StatusCode, nil, chk
 		} else {
@@ -154,7 +154,7 @@ func getCommands(ctx context.Context) (int, []contract.CommandResponse, error) {
 func getCommandsByDeviceID(did string, ctx context.Context) (int, contract.CommandResponse, error) {
 	d, err := mdc.Device(did, ctx)
 	if err != nil {
-		chk, ok := err.(*types.ErrServiceClient)
+		chk, ok := err.(types.ErrServiceClient)
 		if ok {
 			return chk.StatusCode, contract.CommandResponse{}, chk
 		} else {
@@ -178,7 +178,7 @@ func getCommandsByDeviceID(did string, ctx context.Context) (int, contract.Comma
 func getCommandsByDeviceName(dn string, ctx context.Context) (int, contract.CommandResponse, error) {
 	d, err := mdc.DeviceForName(dn, ctx)
 	if err != nil {
-		chk, ok := err.(*types.ErrServiceClient)
+		chk, ok := err.(types.ErrServiceClient)
 		if ok {
 			return chk.StatusCode, contract.CommandResponse{}, err
 		} else {

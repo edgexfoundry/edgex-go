@@ -73,8 +73,7 @@ func metricsHandler(w http.ResponseWriter, _ *http.Request) {
 	return
 }
 
-// HTTPServer function
-func httpServer() http.Handler {
+func LoadRestRoutes() *mux.Router {
 	r := mux.NewRouter()
 
 	// Ping Resource
