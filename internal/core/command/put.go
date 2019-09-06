@@ -15,11 +15,12 @@ package command
 
 import (
 	"context"
+	"net/http"
+	"strings"
+
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
-	"net/http"
-	"strings"
 )
 
 // NewPutCommand creates and Executor which can be used to execute the PUT related command.
