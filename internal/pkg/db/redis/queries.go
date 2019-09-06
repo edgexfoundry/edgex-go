@@ -17,9 +17,10 @@ import (
 	"encoding/json"
 	"strconv"
 
+	"github.com/gomodule/redigo/redis"
+
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/redis/models"
-	"github.com/gomodule/redigo/redis"
 )
 
 func getObjectById(conn redis.Conn, id string, unmarshal unmarshalFunc, out interface{}) error {
@@ -33,7 +34,7 @@ func getObjectById(conn redis.Conn, id string, unmarshal unmarshalFunc, out inte
 	return unmarshal(object, out)
 }
 
-//TODO: Discuss this with Andre as a possibly replacement for getObjectByHash
+// TODO: Discuss this with Andre as a possibly replacement for getObjectByHash
 // 1.) key/value seems clearer to me than hash/field for equivalent concepts. However the latter
 //     may be more consistently used in the Redis community. If so, revert.
 // 2.) Not sure the custom "unmarshal" function is necessary when no domain logic is encapsulated
@@ -111,8 +112,20 @@ func getObjectsByValues(conn redis.Conn, vals ...string) (objects [][]byte, err 
 	return objects, nil
 }
 
+// getObjectsByRange retrieves the entries for keys enumerated in a sorted set. The entries are retrieved in the sorted set order.
 func getObjectsByRange(conn redis.Conn, key string, start, end int) (objects [][]byte, err error) {
-	ids, err := redis.Values(conn.Do("ZRANGE", key, start, end))
+	return getObjectsBySomeRange(conn, "RANGE", key, start, end)
+}
+
+// getObjectsByRevRange retrieves the entries for keys enumerated in a sorted set. The entries are retrieved in the reverse sorted set order.
+func getObjectsByRevRange(conn redis.Conn, key string, start int, end int) (objects [][]byte, err error) {
+	return getObjectsBySomeRange(conn, "REVRANGE", key, start, end)
+}
+
+// getObjectsBySomeRange retrieves the entries for keys enumerated in a sorted set using the specified Redis range
+// command (i.e. RANGE, REVRANGE). The entries are retrieved in the order specified by the supplied Redis command.
+func getObjectsBySomeRange(conn redis.Conn, command string, key string, start int, end int) (objects [][]byte, err error) {
+	ids, err := redis.Values(conn.Do(command, key, start, end))
 	if err != nil && err != redis.ErrNil {
 		return nil, err
 	}
@@ -123,7 +136,9 @@ func getObjectsByRange(conn redis.Conn, key string, start, end int) (objects [][
 			return nil, err
 		}
 	}
+
 	return objects, nil
+
 }
 
 // Return objects by a score from a zset

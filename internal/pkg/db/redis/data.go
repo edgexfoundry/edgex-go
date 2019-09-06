@@ -702,7 +702,7 @@ func (c *Client) ReadingsByDevice(id string, limit int) (readings []contract.Rea
 	conn := c.Pool.Get()
 	defer conn.Close()
 
-	objects, err := getObjectsByRange(conn, db.ReadingsCollection+":device:"+id, 0, limit-1)
+	objects, err := getObjectsByRevRange(conn, db.ReadingsCollection+":device:"+id, 0, limit-1)
 	if err != nil {
 		if err != redis.ErrNil {
 			return readings, err
