@@ -1,5 +1,6 @@
 /*******************************************************************************
  * Copyright 2019 Dell Inc.
+ * Copyright 2019 Intel Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -16,80 +17,96 @@ package main
 
 import (
 	"flag"
-	"log"
+	"fmt"
 	"os"
 	"time"
 
 	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/internal/security/setup"
-	"github.com/edgexfoundry/edgex-go/internal/security/setup/certificates"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	"github.com/edgexfoundry/edgex-go/internal/security/setup/option"
 )
 
-func main() {
-	start := time.Now()
-	var configFile string
+type exiter interface {
+	exit(int)
+}
 
+type exitCode struct{}
+
+type optionDispatcher interface {
+	run() (int, error)
+}
+
+type pkiInitOptionDispatcher struct{}
+
+var exitInstance = newExit()
+var dispatcherInstance = newOptionDispatcher()
+var configFile string
+
+func init() {
+	// define and register command line flags:
 	flag.StringVar(&configFile, "config", "", "specify JSON configuration file: /path/to/file.json")
 	flag.StringVar(&configFile, "c", "", "specify JSON configuration file: /path/to/file.json")
 	flag.Usage = usage.HelpCallbackSecuritySetup
-	flag.Parse()
-
-	if configFile == "" {
-		flag.PrintDefaults()
-		os.Exit(1)
-	}
-
-	setup.Init()
-
-	// Create and initialize the fs environment and global vars for the PKI materials
-	lc := logger.NewClient("security-secrets-setup", setup.Configuration.Logging.EnableRemote,
-		setup.Configuration.Logging.File, setup.Configuration.Writable.LogLevel)
-
-	// Read the Json config file and unmarshall content into struct type X509Config
-	x509config, err := config.NewX509Config(configFile)
-	if err != nil {
-		lc.Error(err.Error())
-		return
-	}
-
-	seed, err := setup.NewCertificateSeed(x509config, setup.NewDirectoryHandler(lc))
-	if err != nil {
-		lc.Error(err.Error())
-		return
-	}
-
-	rootCA, err := certificates.NewCertificateGenerator(certificates.RootCertificate, seed, certificates.NewFileWriter(), lc)
-	if err != nil {
-		lc.Error(err.Error())
-		return
-	}
-
-	err = rootCA.Generate()
-	if err != nil {
-		lc.Error(err.Error())
-		return
-	}
-
-	tlsCert, err := certificates.NewCertificateGenerator(certificates.TLSCertificate, seed, certificates.NewFileWriter(), lc)
-	if err != nil {
-		lc.Error(err.Error())
-		return
-	}
-
-	tlsCert.Generate()
-	if err != nil {
-		lc.Error(err.Error())
-		return
-	}
-	lc.Info("PKISetup complete", internal.LogDurationKey, time.Since(start).String())
 }
 
-// TODO: ELIMINATE THIS ----------------------------------------------------------
-func fatalIfErr(err error, msg string) {
-	if err != nil {
-		log.Fatalf("ERROR: %s: %s", msg, err) // fatalf() =  Prinf() followed by a call to os.Exit(1)
+func main() {
+	start := time.Now()
+
+	flag.Parse()
+
+	if len(os.Args) < 2 {
+		fmt.Println("Please specify option for " + option.SecuritySecretsSetup)
+		flag.PrintDefaults()
+		exitInstance.exit(0)
+		return
 	}
+
+	if err := setup.Init(); err != nil {
+		// the error returned from Init has already been logged inside the call
+		// so here we ignore the error logging
+		exitInstance.exit(1)
+		return
+	}
+
+	if configFile == "" {
+		// run with other options for pki-init
+		statusCode, err := dispatcherInstance.run()
+		if err != nil {
+			setup.LoggingClient.Error(err.Error())
+		}
+
+		exitInstance.exit(statusCode)
+		return
+	}
+
+	if err := option.GenTLSAssets(configFile); err != nil {
+		setup.LoggingClient.Error(err.Error())
+		exitInstance.exit(2)
+		return
+	}
+
+	setup.LoggingClient.Info(option.SecuritySecretsSetup+" complete", internal.LogDurationKey, time.Since(start).String())
+}
+
+func newExit() exiter {
+	return &exitCode{}
+}
+
+func (code *exitCode) exit(statusCode int) {
+	os.Exit(statusCode)
+}
+
+func newOptionDispatcher() optionDispatcher {
+	return &pkiInitOptionDispatcher{}
+}
+
+func (dispatcher *pkiInitOptionDispatcher) run() (statusCode int, err error) {
+	opts := option.PkiInitOption{}
+	optsExecutor, statusCode, err := option.NewPkiInitOption(opts)
+	if err != nil {
+		return statusCode, err
+	}
+
+	return optsExecutor.ProcessOptions()
 }
