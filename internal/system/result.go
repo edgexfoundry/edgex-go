@@ -12,11 +12,13 @@
  * the License.
  *******************************************************************************/
 
-package executor
+package system
 
 import "encoding/json"
 
-// MetricsResultValue provides a generic interface implemented by receivers intended to return their struct as a request result.
+const Metrics = "metrics"
+
+// Result provides a generic interface implemented by receivers intended to return their struct as a request result.
 type Result interface {
 	isResult()
 }
@@ -38,6 +40,7 @@ type SuccessResult struct {
 // isResult method is not called; its only purpose is to include SuccessResult in the Result abstraction.
 func (r SuccessResult) isResult() {}
 
+// metricsResultValue contains the "result" subfields specific to a metrics result.
 type metricsResultValue struct {
 	CpuUsedPercent float64         `json:"cpuUsedPercent"`
 	MemoryUsed     int64           `json:"memoryUsed"`

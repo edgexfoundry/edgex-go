@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2017 Dell Inc.
+ * Copyright 2019 Dell Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -12,24 +12,12 @@
  * the License.
  *******************************************************************************/
 
-package agent
+package executor
 
-import "github.com/edgexfoundry/edgex-go/internal/pkg/config"
+import "os/exec"
 
-type ConfigurationClients map[string]config.ClientInfo
-
-type ConfigurationStruct struct {
-	Writable         WritableInfo
-	Clients          ConfigurationClients
-	Service          config.ServiceInfo
-	ExecutorPath     string
-	MetricsMechanism string
-	Registry         config.RegistryInfo
-	Logging          config.LoggingInfo
-	FormatSpecifier  string
-}
-
-type WritableInfo struct {
-	ResendLimit int
-	LogLevel    string
+// CommandExecutor provides the common callout to the configuration-defined executor.
+func CommandExecutor(executorPath, serviceName, operation string) (string, error) {
+	bytes, err := exec.Command(executorPath, serviceName, operation).CombinedOutput()
+	return string(bytes), err
 }

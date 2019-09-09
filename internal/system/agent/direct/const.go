@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2017 Dell Inc.
+ * Copyright 2019 Dell Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -12,24 +12,9 @@
  * the License.
  *******************************************************************************/
 
-package agent
+package direct
 
-import "github.com/edgexfoundry/edgex-go/internal/pkg/config"
-
-type ConfigurationClients map[string]config.ClientInfo
-
-type ConfigurationStruct struct {
-	Writable         WritableInfo
-	Clients          ConfigurationClients
-	Service          config.ServiceInfo
-	ExecutorPath     string
-	MetricsMechanism string
-	Registry         config.RegistryInfo
-	Logging          config.LoggingInfo
-	FormatSpecifier  string
-}
-
-type WritableInfo struct {
-	ResendLimit int
-	LogLevel    string
-}
+const (
+	MetricsMechanism = "direct-service"
+	ExecutorType     = MetricsMechanism
+)

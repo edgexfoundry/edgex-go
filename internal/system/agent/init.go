@@ -11,6 +11,7 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
+
 package agent
 
 import (
@@ -33,15 +34,24 @@ import (
 	"github.com/edgexfoundry/go-mod-registry/registry"
 )
 
-// Global variables
-var Configuration *ConfigurationStruct
-var generalClients map[string]general.GeneralClient
-var LoggingClient logger.LoggingClient
-var registryClient registry.Client
-var chErrors chan error        //A channel for "config wait error" sourced from Registry
-var chUpdates chan interface{} //A channel for "config updates" sourced from Registry
+type GeneralClients map[string]general.GeneralClient
 
-func Retry(useRegistry bool, useProfile string, timeout int, wait *sync.WaitGroup, ch chan error) {
+// Instance contains what were global variables.
+type Instance struct {
+	Configuration  *ConfigurationStruct
+	GenClients     GeneralClients
+	LoggingClient  logger.LoggingClient
+	RegistryClient registry.Client
+	chErrors       chan error       //A channel for "config wait error" sourced from Registry
+	chUpdates      chan interface{} //A channel for "config updates" sourced from Registry
+}
+
+// NewInstance returns an empty Instance struct that is subsequently populated by a call to the Retry method.
+func NewInstance() *Instance {
+	return &Instance{}
+}
+
+func (instance *Instance) Retry(useRegistry bool, useProfile string, timeout int, wait *sync.WaitGroup, ch chan error) {
 	until := time.Now().Add(time.Millisecond * time.Duration(timeout))
 	for time.Now().Before(until) {
 		var err error
@@ -49,8 +59,8 @@ func Retry(useRegistry bool, useProfile string, timeout int, wait *sync.WaitGrou
 		// Note, too, that the SMA-managed services are bootstrapped by the SMA.
 		// Read in those setting, too, which specifies details for those services
 		// (Those setting were _previously_ to be found in a now-defunct TOML manifest file).
-		if Configuration == nil {
-			Configuration, err = initializeConfiguration(useRegistry, useProfile)
+		if instance.Configuration == nil {
+			instance.Configuration, err = instance.initializeConfiguration(useRegistry, useProfile)
 			if err != nil {
 				ch <- err
 				if !useRegistry {
@@ -61,16 +71,16 @@ func Retry(useRegistry bool, useProfile string, timeout int, wait *sync.WaitGrou
 				}
 			} else {
 				// Setup Logging
-				logTarget := setLoggingTarget()
-				LoggingClient = logger.NewClient(clients.SystemManagementAgentServiceKey, Configuration.Logging.EnableRemote, logTarget, Configuration.Writable.LogLevel)
+				logTarget := instance.setLoggingTarget()
+				instance.LoggingClient = logger.NewClient(clients.SystemManagementAgentServiceKey, instance.Configuration.Logging.EnableRemote, logTarget, instance.Configuration.Writable.LogLevel)
 
 				//Initialize service clients
-				initializeClients(useRegistry)
+				instance.initializeClients(useRegistry)
 			}
 		}
 
 		// Exit the loop if the dependencies have been satisfied.
-		if Configuration != nil {
+		if instance.Configuration != nil {
 			break
 		}
 		time.Sleep(time.Second * time.Duration(1))
@@ -81,32 +91,32 @@ func Retry(useRegistry bool, useProfile string, timeout int, wait *sync.WaitGrou
 	return
 }
 
-func Init(useRegistry bool) bool {
-	if Configuration == nil {
+func (instance *Instance) Init(useRegistry bool) bool {
+	if instance.Configuration == nil {
 		return false
 	}
 
-	if useRegistry && registryClient != nil {
-		chErrors = make(chan error)
-		chUpdates = make(chan interface{})
-		go listenForConfigChanges()
+	if useRegistry && instance.RegistryClient != nil {
+		instance.chErrors = make(chan error)
+		instance.chUpdates = make(chan interface{})
+		go instance.listenForConfigChanges()
 	}
 
 	return true
 }
 
-func Destruct() {
+func (instance *Instance) Destruct() {
 
-	if chErrors != nil {
-		close(chErrors)
+	if instance.chErrors != nil {
+		close(instance.chErrors)
 	}
 
-	if chUpdates != nil {
-		close(chUpdates)
+	if instance.chUpdates != nil {
+		close(instance.chUpdates)
 	}
 }
 
-func initializeConfiguration(useRegistry bool, useProfile string) (*ConfigurationStruct, error) {
+func (instance *Instance) initializeConfiguration(useRegistry bool, useProfile string) (*ConfigurationStruct, error) {
 	//We currently have to load configuration from filesystem first in order to obtain Registry Host/Port
 	configuration := &ConfigurationStruct{}
 	err := config.LoadFromFile(useProfile, configuration)
@@ -116,12 +126,12 @@ func initializeConfiguration(useRegistry bool, useProfile string) (*Configuratio
 	configuration.Registry = config.OverrideFromEnvironment(configuration.Registry)
 
 	if useRegistry {
-		err = connectToRegistry(configuration)
+		err = instance.connectToRegistry(configuration)
 		if err != nil {
 			return nil, err
 		}
 
-		rawConfig, err := registryClient.GetConfiguration(configuration)
+		rawConfig, err := instance.RegistryClient.GetConfiguration(configuration)
 		if err != nil {
 			return nil, fmt.Errorf("could not get configuration from Registry: %v", err.Error())
 		}
@@ -142,7 +152,7 @@ func initializeConfiguration(useRegistry bool, useProfile string) (*Configuratio
 	return configuration, nil
 }
 
-func connectToRegistry(conf *ConfigurationStruct) error {
+func (instance *Instance) connectToRegistry(conf *ConfigurationStruct) error {
 	var err error
 	registryConfig := registryTypes.Config{
 		Host:            conf.Registry.Host,
@@ -157,18 +167,18 @@ func connectToRegistry(conf *ConfigurationStruct) error {
 		Stem:            internal.ConfigRegistryStem,
 	}
 
-	registryClient, err = registry.NewRegistryClient(registryConfig)
+	instance.RegistryClient, err = registry.NewRegistryClient(registryConfig)
 	if err != nil {
 		return fmt.Errorf("connection to Registry could not be made: %v", err.Error())
 	}
 
 	// Check if registry service is running
-	if !registryClient.IsAlive() {
+	if !instance.RegistryClient.IsAlive() {
 		return fmt.Errorf("registry is not available")
 	}
 
 	// Register the service with Registry
-	err = registryClient.Register()
+	err = instance.RegistryClient.Register()
 	if err != nil {
 		return fmt.Errorf("could not register service with Registry: %v", err.Error())
 	}
@@ -176,13 +186,13 @@ func connectToRegistry(conf *ConfigurationStruct) error {
 	return nil
 }
 
-func listenForConfigChanges() {
-	if registryClient == nil {
-		LoggingClient.Error("listenForConfigChanges() registry client not set")
+func (instance *Instance) listenForConfigChanges() {
+	if instance.RegistryClient == nil {
+		instance.LoggingClient.Error("listenForConfigChanges() registry client not set")
 		return
 	}
 
-	registryClient.WatchForChanges(chUpdates, chErrors, &WritableInfo{}, internal.WritableKey)
+	instance.RegistryClient.WatchForChanges(instance.chUpdates, instance.chErrors, &WritableInfo{}, internal.WritableKey)
 
 	// TODO: Refactor names in separate PR: See comments on PR #1133
 	chSignals := make(chan os.Signal)
@@ -194,59 +204,59 @@ func listenForConfigChanges() {
 			// Quietly and gracefully stop when SIGINT/SIGTERM received
 			return
 
-		case ex := <-chErrors:
-			LoggingClient.Error(ex.Error())
+		case ex := <-instance.chErrors:
+			instance.LoggingClient.Error(ex.Error())
 
-		case raw, ok := <-chUpdates:
+		case raw, ok := <-instance.chUpdates:
 			if !ok {
 				return
 			}
 
 			actual, ok := raw.(*WritableInfo)
 			if !ok {
-				LoggingClient.Error("listenForConfigChanges() type check failed")
+				instance.LoggingClient.Error("listenForConfigChanges() type check failed")
 				return
 			}
 
-			Configuration.Writable = *actual
+			instance.Configuration.Writable = *actual
 
-			LoggingClient.Info("Writeable configuration has been updated from the Registry")
-			LoggingClient.SetLogLevel(Configuration.Writable.LogLevel)
+			instance.LoggingClient.Info("Writeable configuration has been updated from the Registry")
+			instance.LoggingClient.SetLogLevel(instance.Configuration.Writable.LogLevel)
 		}
 	}
 }
 
-func initializeClients(useRegistry bool) {
-	generalClients = make(map[string]general.GeneralClient)
+func (instance *Instance) initializeClients(useRegistry bool) {
+	instance.GenClients = make(GeneralClients)
 
-	var updateGeneralClients = func(serviceKey string, serviceName string) {
-		generalClients[serviceKey] = general.NewGeneralClient(
+	var updateGenClients = func(serviceKey string, serviceName string) {
+		instance.GenClients[serviceKey] = general.NewGeneralClient(
 			types.EndpointParams{
 				ServiceKey:  serviceKey,
 				Path:        "/",
 				UseRegistry: useRegistry,
-				Url:         Configuration.Clients[serviceName].Url(),
+				Url:         instance.Configuration.Clients[serviceName].Url(),
 				Interval:    internal.ClientMonitorDefault,
 			},
-			startup.Endpoint{RegistryClient: &registryClient})
+			startup.Endpoint{RegistryClient: &instance.RegistryClient})
 	}
 
 	if useRegistry {
 		for serviceKey, serviceName := range config.ListDefaultServices() {
-			updateGeneralClients(serviceKey, serviceName)
+			updateGenClients(serviceKey, serviceName)
 		}
 		return
 	}
 
 	// if the registry is not being used, load clients from configurations; assume configuration key is service name
-	for key := range Configuration.Clients {
-		updateGeneralClients(key, key)
+	for key := range instance.Configuration.Clients {
+		updateGenClients(key, key)
 	}
 }
 
-func setLoggingTarget() string {
-	if Configuration.Logging.EnableRemote {
-		return Configuration.Clients["Logging"].Url() + clients.ApiLoggingRoute
+func (instance *Instance) setLoggingTarget() string {
+	if instance.Configuration.Logging.EnableRemote {
+		return instance.Configuration.Clients["Logging"].Url() + clients.ApiLoggingRoute
 	}
-	return Configuration.Logging.File
+	return instance.Configuration.Logging.File
 }

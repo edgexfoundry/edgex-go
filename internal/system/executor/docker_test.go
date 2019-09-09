@@ -18,6 +18,7 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/edgexfoundry/edgex-go/internal/system"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -101,7 +102,7 @@ func TestExecute(t *testing.T) {
 	tests := []struct {
 		name           string
 		operation      string
-		expectedResult Result
+		expectedResult system.Result
 		executorCalls  []executorStubCall
 	}{
 		// start command test cases
@@ -109,43 +110,43 @@ func TestExecute(t *testing.T) {
 		{
 			"Start: first executor call fails",
 			Start,
-			Failure(serviceName, Start, executorType, messageExecutorCommandFailed(failedStartPrefix, string([]byte(nil)), errorMessage)),
+			system.Failure(serviceName, Start, executorType, messageExecutorCommandFailed(failedStartPrefix, string([]byte(nil)), errorMessage)),
 			firstCommandCallFails(serviceName, Start),
 		},
 		{
 			"Start: second executor call fails",
 			Start,
-			Failure(serviceName, Start, executorType, messageExecutorInspectFailed(failedStartPrefix, errorMessage)),
+			system.Failure(serviceName, Start, executorType, messageExecutorInspectFailed(failedStartPrefix, errorMessage)),
 			secondCommandCallFails(serviceName, Start),
 		},
 		{
 			"Start: container not found in inspect result",
 			Start,
-			Failure(serviceName, Start, executorType, messageExecutorInspectFailed(failedStartPrefix, messageContainerNotFound(serviceName))),
+			system.Failure(serviceName, Start, executorType, messageExecutorInspectFailed(failedStartPrefix, messageContainerNotFound(serviceName))),
 			secondCommandCallSucceeds(serviceName, Start, "[]"),
 		},
 		{
 			"Start: more than one container instance found in inspect result",
 			Start,
-			Failure(serviceName, Start, executorType, messageExecutorInspectFailed(failedStartPrefix, messageMoreThanOneContainerFound(serviceName))),
+			system.Failure(serviceName, Start, executorType, messageExecutorInspectFailed(failedStartPrefix, messageMoreThanOneContainerFound(serviceName))),
 			secondCommandCallSucceeds(serviceName, Start, "[{\"State\": {\"Running\": false}}, {\"State\": {\"Running\": false}}]"),
 		},
 		{
 			"Start: inspect result says service is not running as expected",
 			Start,
-			Failure(serviceName, Start, executorType, messageServiceIsNotRunningButShouldBe(failedStartPrefix)),
+			system.Failure(serviceName, Start, executorType, messageServiceIsNotRunningButShouldBe(failedStartPrefix)),
 			secondCommandCallSucceeds(serviceName, Start, "[{\"State\": {\"Running\": false}}]"),
 		},
 		{
 			"Start: isContainerRunning json.Decode Failure",
 			Start,
-			Failure(serviceName, Start, executorType, messageExecutorInspectFailed(failedStartPrefix, jsonDecodeFailureErrorMessage)),
+			system.Failure(serviceName, Start, executorType, messageExecutorInspectFailed(failedStartPrefix, jsonDecodeFailureErrorMessage)),
 			secondCommandCallSucceeds(serviceName, Start, ""),
 		},
 		{
 			"Start: Success",
 			Start,
-			Success(serviceName, Start, executorType),
+			system.Success(serviceName, Start, executorType),
 			secondCommandCallSucceeds(serviceName, Start, "[{\"State\": {\"Running\": true}}]"),
 		},
 
@@ -154,43 +155,43 @@ func TestExecute(t *testing.T) {
 		{
 			"Restart: first executor call fails",
 			Restart,
-			Failure(serviceName, Restart, executorType, messageExecutorCommandFailed(failedRestartPrefix, string([]byte(nil)), errorMessage)),
+			system.Failure(serviceName, Restart, executorType, messageExecutorCommandFailed(failedRestartPrefix, string([]byte(nil)), errorMessage)),
 			firstCommandCallFails(serviceName, Restart),
 		},
 		{
 			"Restart: second executor call fails",
 			Restart,
-			Failure(serviceName, Restart, executorType, messageExecutorInspectFailed(failedRestartPrefix, errorMessage)),
+			system.Failure(serviceName, Restart, executorType, messageExecutorInspectFailed(failedRestartPrefix, errorMessage)),
 			secondCommandCallFails(serviceName, Restart),
 		},
 		{
 			"Restart: container not found in inspect result",
 			Restart,
-			Failure(serviceName, Restart, executorType, messageExecutorInspectFailed(failedRestartPrefix, messageContainerNotFound(serviceName))),
+			system.Failure(serviceName, Restart, executorType, messageExecutorInspectFailed(failedRestartPrefix, messageContainerNotFound(serviceName))),
 			secondCommandCallSucceeds(serviceName, Restart, "[]"),
 		},
 		{
 			"Restart: more than one container instance found in inspect result",
 			Restart,
-			Failure(serviceName, Restart, executorType, messageExecutorInspectFailed(failedRestartPrefix, messageMoreThanOneContainerFound(serviceName))),
+			system.Failure(serviceName, Restart, executorType, messageExecutorInspectFailed(failedRestartPrefix, messageMoreThanOneContainerFound(serviceName))),
 			secondCommandCallSucceeds(serviceName, Restart, "[{\"State\": {\"Running\": false}}, {\"State\": {\"Running\": false}}]"),
 		},
 		{
 			"Restart: inspect result says service is not running as expected",
 			Restart,
-			Failure(serviceName, Restart, executorType, messageServiceIsNotRunningButShouldBe(failedRestartPrefix)),
+			system.Failure(serviceName, Restart, executorType, messageServiceIsNotRunningButShouldBe(failedRestartPrefix)),
 			secondCommandCallSucceeds(serviceName, Restart, "[{\"State\": {\"Running\": false}}]"),
 		},
 		{
 			"Restart: isContainerRunning json.Decode Failure",
 			Restart,
-			Failure(serviceName, Restart, executorType, messageExecutorInspectFailed(failedRestartPrefix, jsonDecodeFailureErrorMessage)),
+			system.Failure(serviceName, Restart, executorType, messageExecutorInspectFailed(failedRestartPrefix, jsonDecodeFailureErrorMessage)),
 			secondCommandCallSucceeds(serviceName, Restart, ""),
 		},
 		{
 			"Restart: Success",
 			Restart,
-			Success(serviceName, Restart, executorType),
+			system.Success(serviceName, Restart, executorType),
 			secondCommandCallSucceeds(serviceName, Restart, "[{\"State\": {\"Running\": true}}]"),
 		},
 
@@ -199,43 +200,43 @@ func TestExecute(t *testing.T) {
 		{
 			"Stop: first executor call fails",
 			Stop,
-			Failure(serviceName, Stop, executorType, messageExecutorCommandFailed(failedStopPrefix, string([]byte(nil)), errorMessage)),
+			system.Failure(serviceName, Stop, executorType, messageExecutorCommandFailed(failedStopPrefix, string([]byte(nil)), errorMessage)),
 			firstCommandCallFails(serviceName, Stop),
 		},
 		{
 			"Stop: second executor call fails",
 			Stop,
-			Failure(serviceName, Stop, executorType, messageExecutorInspectFailed(failedStopPrefix, errorMessage)),
+			system.Failure(serviceName, Stop, executorType, messageExecutorInspectFailed(failedStopPrefix, errorMessage)),
 			secondCommandCallFails(serviceName, Stop),
 		},
 		{
 			"Stop: container not found in inspect result",
 			Stop,
-			Failure(serviceName, Stop, executorType, messageExecutorInspectFailed(failedStopPrefix, messageContainerNotFound(serviceName))),
+			system.Failure(serviceName, Stop, executorType, messageExecutorInspectFailed(failedStopPrefix, messageContainerNotFound(serviceName))),
 			secondCommandCallSucceeds(serviceName, Stop, "[]"),
 		},
 		{
 			"Stop: more than one container instance found in inspect result",
 			Stop,
-			Failure(serviceName, Stop, executorType, messageExecutorInspectFailed(failedStopPrefix, messageMoreThanOneContainerFound(serviceName))),
+			system.Failure(serviceName, Stop, executorType, messageExecutorInspectFailed(failedStopPrefix, messageMoreThanOneContainerFound(serviceName))),
 			secondCommandCallSucceeds(serviceName, Stop, "[{\"State\": {\"Running\": true}}, {\"State\": {\"Running\": true}}]"),
 		},
 		{
 			"Stop: inspect result says service is not running as expected",
 			Stop,
-			Failure(serviceName, Stop, executorType, messageServiceIsRunningButShouldNotBe(failedStopPrefix)),
+			system.Failure(serviceName, Stop, executorType, messageServiceIsRunningButShouldNotBe(failedStopPrefix)),
 			secondCommandCallSucceeds(serviceName, Stop, "[{\"State\": {\"Running\": true}}]"),
 		},
 		{
 			"Stop: isContainerRunning json.Decode Failure",
 			Stop,
-			Failure(serviceName, Stop, executorType, messageExecutorInspectFailed(failedStopPrefix, jsonDecodeFailureErrorMessage)),
+			system.Failure(serviceName, Stop, executorType, messageExecutorInspectFailed(failedStopPrefix, jsonDecodeFailureErrorMessage)),
 			secondCommandCallSucceeds(serviceName, Stop, ""),
 		},
 		{
 			"Stop: Success",
 			Stop,
-			Success(serviceName, Stop, executorType),
+			system.Success(serviceName, Stop, executorType),
 			secondCommandCallSucceeds(serviceName, Stop, "[{\"State\": {\"Running\": false}}]"),
 		},
 
@@ -244,37 +245,37 @@ func TestExecute(t *testing.T) {
 		{
 			"MetricsViaExecutor: Failure",
 			Metrics,
-			Failure(serviceName, Metrics, executorType, errorMessage),
+			system.Failure(serviceName, Metrics, executorType, errorMessage),
 			firstMetricsCallFails(serviceName),
 		},
 		{
 			"MetricsViaExecutor: Success (missing memory scale)",
 			Metrics,
-			MetricsSuccess(serviceName, executorType, 1.49, -1, []byte(metricsSuccessRawResult)),
+			system.MetricsSuccess(serviceName, executorType, 1.49, -1, []byte(metricsSuccessRawResult)),
 			firstMetricsCallSucceeds(serviceName, "1.49%"+separator+"1234 / 7.786GiB"+separator+metricsSuccessRawResult),
 		},
 		{
 			"MetricsViaExecutor: Success (kb)",
 			Metrics,
-			MetricsSuccess(serviceName, executorType, 1.49, 1264, []byte(metricsSuccessRawResult)),
+			system.MetricsSuccess(serviceName, executorType, 1.49, 1264, []byte(metricsSuccessRawResult)),
 			firstMetricsCallSucceeds(serviceName, "1.49%"+separator+"1.234KiB / 7.786GiB"+separator+metricsSuccessRawResult),
 		},
 		{
 			"MetricsViaExecutor: Success (mb)",
 			Metrics,
-			MetricsSuccess(serviceName, executorType, 1.49, 1293943, []byte(metricsSuccessRawResult)),
+			system.MetricsSuccess(serviceName, executorType, 1.49, 1293943, []byte(metricsSuccessRawResult)),
 			firstMetricsCallSucceeds(serviceName, "1.49%"+separator+"1.234MiB / 7.786GiB"+separator+metricsSuccessRawResult),
 		},
 		{
 			"MetricsViaExecutor: Success (gb)",
 			Metrics,
-			MetricsSuccess(serviceName, executorType, 1.49, 1324997411, []byte(metricsSuccessRawResult)),
+			system.MetricsSuccess(serviceName, executorType, 1.49, 1324997411, []byte(metricsSuccessRawResult)),
 			firstMetricsCallSucceeds(serviceName, "1.49%"+separator+"1.234GiB / 7.786GiB"+separator+metricsSuccessRawResult),
 		},
 		{
 			"MetricsViaExecutor: Success (missing cpu float value)",
 			Metrics,
-			MetricsSuccess(serviceName, executorType, -1.0, 1264, []byte(metricsSuccessRawResult)),
+			system.MetricsSuccess(serviceName, executorType, -1.0, 1264, []byte(metricsSuccessRawResult)),
 			firstMetricsCallSucceeds(serviceName, "badValue"+separator+"1.234KiB / 7.786GiB"+separator+metricsSuccessRawResult),
 		},
 
@@ -283,7 +284,7 @@ func TestExecute(t *testing.T) {
 		{
 			"operation not supported by executor",
 			invalidOperation,
-			Failure(serviceName, invalidOperation, executorType, messageExecutorOperationNotSupported()),
+			system.Failure(serviceName, invalidOperation, executorType, messageExecutorOperationNotSupported()),
 			[]executorStubCall{},
 		},
 	}
@@ -311,5 +312,5 @@ func TestMissingArguments(t *testing.T) {
 	result := Execute(missingArguments, executor.commandExecutor)
 
 	assert.Equal(t, 0, executor.Called)
-	assert.Equal(t, Failure("", "", executorType, messageMissingArguments()), result)
+	assert.Equal(t, system.Failure("", "", executorType, messageMissingArguments()), result)
 }

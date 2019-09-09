@@ -26,6 +26,9 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent"
+	"github.com/edgexfoundry/edgex-go/internal/system/agent/direct"
+	"github.com/edgexfoundry/edgex-go/internal/system/agent/executor"
+	"github.com/edgexfoundry/edgex-go/internal/system/agent/interfaces"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
@@ -44,33 +47,64 @@ func main() {
 	flag.Usage = usage.HelpCallback
 	flag.Parse()
 
-	params := startup.BootParams{UseRegistry: useRegistry, UseProfile: useProfile, BootTimeout: internal.BootTimeoutDefault}
-	startup.Bootstrap(params, agent.Retry, logBeforeInit)
+	instance := agent.NewInstance()
 
-	ok := agent.Init(useRegistry)
+	startup.Bootstrap(
+		startup.BootParams{UseRegistry: useRegistry, UseProfile: useProfile, BootTimeout: internal.BootTimeoutDefault},
+		instance.Retry,
+		logBeforeInit)
+
+	ok := instance.Init(useRegistry)
 	if !ok {
 		logBeforeInit(fmt.Errorf("%s: service bootstrap failed", clients.SystemManagementAgentServiceKey))
 		os.Exit(1)
 	}
 
-	agent.LoggingClient.Info("Service dependencies resolved...")
-	agent.LoggingClient.Info(fmt.Sprintf("Starting %s %s ", clients.SystemManagementAgentServiceKey, edgex.Version))
+	instance.LoggingClient.Info("Service dependencies resolved...")
+	instance.LoggingClient.Info(fmt.Sprintf("Starting %s %s ", clients.SystemManagementAgentServiceKey, edgex.Version))
 
-	agent.LoggingClient.Info(agent.Configuration.Service.StartupMsg)
+	instance.LoggingClient.Info(instance.Configuration.Service.StartupMsg)
 
 	errs := make(chan error, 2)
 	listenForInterrupt(errs)
-	url := agent.Configuration.Service.Host + ":" + strconv.Itoa(agent.Configuration.Service.Port)
-	startup.StartHTTPServer(agent.LoggingClient, agent.Configuration.Service.Timeout, agent.LoadRestRoutes(), url, errs)
+	startup.StartHTTPServer(
+		instance.LoggingClient,
+		instance.Configuration.Service.Timeout,
+		agent.LoadRestRoutes(instance, getMetricsImplementation(instance)),
+		instance.Configuration.Service.Host+":"+strconv.Itoa(instance.Configuration.Service.Port),
+		errs)
 
 	// Time it took to start service
-	agent.LoggingClient.Info("Service started in: " + time.Since(start).String())
-	agent.LoggingClient.Info("Listening on port: " + strconv.Itoa(agent.Configuration.Service.Port))
+	instance.LoggingClient.Info("Service started in: " + time.Since(start).String())
+	instance.LoggingClient.Info("Listening on port: " + strconv.Itoa(instance.Configuration.Service.Port))
 	c := <-errs
-	agent.Destruct()
-	agent.LoggingClient.Warn(fmt.Sprintf("terminating: %v", c))
+	instance.Destruct()
+	instance.LoggingClient.Warn(fmt.Sprintf("terminating: %v", c))
 
 	os.Exit(0)
+}
+
+// getMetricsImplementation creates and returns an interfaces.Metrics implementation based on configuration settings.
+func getMetricsImplementation(instance *agent.Instance) interfaces.Metrics {
+	var result interfaces.Metrics
+	switch instance.Configuration.MetricsMechanism {
+	case direct.MetricsMechanism:
+		result = direct.NewMetrics(
+			instance.LoggingClient,
+			instance.GenClients,
+			instance.Configuration.Clients,
+			instance.RegistryClient,
+			instance.Configuration.Service.Protocol)
+	case executor.MetricsMechanism:
+		result = executor.NewMetrics(
+			executor.CommandExecutor,
+			instance.LoggingClient,
+			instance.Configuration.ExecutorPath)
+	default:
+		instance.LoggingClient.Error("the requested metrics mechanism is not supported")
+		os.Exit(1)
+	}
+	return result
 }
 
 func logBeforeInit(err error) {
