@@ -22,13 +22,15 @@ import (
 )
 
 const (
-	serviceName = "serviceName"
-	envValue    = "envValue"
-	rootKey     = "rootKey"
-	rootValue   = "rootValue"
-	sub         = "sub"
-	subKey      = "subKey"
-	subValue    = "subValue"
+	serviceName         = "serviceName"
+	serviceNameHyphen   = "service-Name"
+	serviceNameUndScore = "service_Name"
+	envValue            = "envValue"
+	rootKey             = "rootKey"
+	rootValue           = "rootValue"
+	sub                 = "sub"
+	subKey              = "subKey"
+	subValue            = "subValue"
 )
 
 const testToml = `
@@ -62,8 +64,11 @@ func TestKeyMatchOverwritesValue(t *testing.T) {
 		{"generic sub", sub + "." + subKey, sub + "." + subKey, envValue, serviceName, envValue},
 		{"service root", rootKey, serviceName + "." + rootKey, envValue, serviceName, envValue},
 		{"service sub", sub + "." + subKey, serviceName + "." + sub + "." + subKey, envValue, serviceName, envValue},
+		{"service hyphen", rootKey, serviceNameHyphen + "." + rootKey, envValue, serviceNameHyphen, envValue},
+		{"service hyphen sub", sub + "." + subKey, serviceNameHyphen + "." + sub + "." + subKey, envValue, serviceNameHyphen, envValue},
+		{"service underscore", rootKey, serviceNameUndScore + "." + rootKey, envValue, serviceNameHyphen, envValue},
+		{"service underscore sub", sub + "." + subKey, serviceNameUndScore + "." + sub + "." + subKey, envValue, serviceNameHyphen, envValue},
 	}
-
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			tree, sut := newSUT(t, test.envKey, test.envValue)
@@ -87,7 +92,6 @@ func TestNonMatchingKeyDoesNotOverwritesValue(t *testing.T) {
 		{"root", rootKey, serviceName + "." + rootKey, envValue, serviceName + "_other", rootValue},
 		{"sub", sub + "." + subKey, serviceName + "." + sub + "." + subKey, envValue, serviceName + "_other", subValue},
 	}
-
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			tree, sut := newSUT(t, test.envKey, test.envValue)
