@@ -44,7 +44,9 @@ func NewEnvironment() *environment {
 	for _, env := range osEnv {
 		kv := strings.Split(env, "=")
 		if len(kv) == 2 && len(kv[0]) > 0 && len(kv[1]) > 0 {
-			e.env[strings.Replace(kv[0], "_", ".", -1)] = kv[1]
+			kv[0] = strings.Replace(kv[0], "-", ".", -1)
+			kv[0] = strings.Replace(kv[0], "_", ".", -1)
+			e.env[kv[0]] = kv[1]
 		}
 	}
 	return e
@@ -52,7 +54,7 @@ func NewEnvironment() *environment {
 
 // OverrideFromEnvironment method replaces values in the toml.Tree for matching environment variable keys.
 func (e *environment) OverrideFromEnvironment(serviceName string, tree *toml.Tree) *toml.Tree {
-	serviceName += "."
+	serviceName = strings.Replace(serviceName, "-", ".", -1) + "."
 	for k, v := range e.env {
 		switch {
 		case tree.Has(k):
