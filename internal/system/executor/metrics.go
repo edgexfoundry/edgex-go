@@ -17,6 +17,8 @@ package executor
 import (
 	"fmt"
 	"strings"
+
+	"github.com/edgexfoundry/edgex-go/internal/system"
 )
 
 const separator = ";"
@@ -79,11 +81,11 @@ func resultToFields(result string) (cpuUsedPercent float64, memoryUsed int64, ra
 }
 
 // gatherMetrics delegates metrics gathering to the executor and converts the result to a MetricsSuccessResult.
-func gatherMetrics(serviceName string, executor CommandExecutor) Result {
+func gatherMetrics(serviceName string, executor CommandExecutor) system.Result {
 	result, err := executor(metricsExecutorCommands(serviceName)...)
 	if err != nil {
-		return Failure(serviceName, Metrics, executorType, err.Error())
+		return system.Failure(serviceName, Metrics, executorType, err.Error())
 	}
 	cpuUsedPercent, memoryUsed, raw := resultToFields(string(result))
-	return MetricsSuccess(serviceName, executorType, cpuUsedPercent, memoryUsed, raw)
+	return system.MetricsSuccess(serviceName, executorType, cpuUsedPercent, memoryUsed, raw)
 }

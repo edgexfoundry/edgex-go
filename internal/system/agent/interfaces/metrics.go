@@ -12,26 +12,11 @@
  * the License.
  *******************************************************************************/
 
-package executor
+package interfaces
 
-import "testing"
+import "context"
 
-// TestIsResultForCoverage ensures test coverage by calling MetricsResultValue.isResult implementations; these are
-// never called from EdgeX code as their only purpose is to support a Golang union equivalent (i.e. to return
-// an abstract result struct whose content varies).
-func TestIsResultForCoverage(t *testing.T) {
-	tests := []struct {
-		name string
-		sut  Result
-	}{
-		{"SuccessResult", SuccessResult{}},
-		{"MetricsSuccessResult", MetricsSuccessResult{}},
-		{"FailureResult", FailureResult{}},
-	}
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			test.sut.isResult()
-		})
-	}
+// Metrics defines a metrics gathering abstraction.
+type Metrics interface {
+	Get(services []string, ctx context.Context) interface{}
 }

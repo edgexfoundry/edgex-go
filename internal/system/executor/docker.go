@@ -16,13 +16,15 @@ package executor
 
 import (
 	"fmt"
+
+	"github.com/edgexfoundry/edgex-go/internal/system"
 )
 
 const (
 	Start   = "start"
 	Stop    = "stop"
 	Restart = "restart"
-	Metrics = "metrics"
+	Metrics = system.Metrics
 
 	executorType        = "docker"
 	failedStartPrefix   = "Error starting service"
@@ -46,7 +48,7 @@ func messageMissingArguments() string {
 }
 
 // Execute is called from main (which supplies an executor) to process a request.
-func Execute(args []string, executor CommandExecutor) (result Result) {
+func Execute(args []string, executor CommandExecutor) (result system.Result) {
 	switch {
 	case len(args) > 2:
 		service := args[1]
@@ -62,10 +64,10 @@ func Execute(args []string, executor CommandExecutor) (result Result) {
 		case Metrics:
 			result = gatherMetrics(service, executor)
 		default:
-			result = Failure(service, operation, executorType, messageExecutorOperationNotSupported())
+			result = system.Failure(service, operation, executorType, messageExecutorOperationNotSupported())
 		}
 	default:
-		result = Failure("", "", executorType, messageMissingArguments())
+		result = system.Failure("", "", executorType, messageMissingArguments())
 	}
 	return
 }

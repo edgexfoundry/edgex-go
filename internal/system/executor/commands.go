@@ -18,6 +18,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+
+	"github.com/edgexfoundry/edgex-go/internal/system"
 )
 
 const inspect = "inspect"
@@ -90,22 +92,22 @@ func executeACommand(
 	service string,
 	executor CommandExecutor,
 	operationPrefix string,
-	shouldBeRunning bool) Result {
+	shouldBeRunning bool) system.Result {
 
 	if output, err := executor(operation, service); err != nil {
-		return Failure(service, operation, executorType, messageExecutorCommandFailed(operationPrefix, string(output), err.Error()))
+		return system.Failure(service, operation, executorType, messageExecutorCommandFailed(operationPrefix, string(output), err.Error()))
 	}
 
 	isRunning, errorMessage := isContainerRunning(service, executor)
 	switch {
 	case len(errorMessage) > 0:
-		return Failure(service, operation, executorType, messageExecutorInspectFailed(operationPrefix, errorMessage))
+		return system.Failure(service, operation, executorType, messageExecutorInspectFailed(operationPrefix, errorMessage))
 	case isRunning != shouldBeRunning:
 		if isRunning {
-			return Failure(service, operation, executorType, messageServiceIsRunningButShouldNotBe(operationPrefix))
+			return system.Failure(service, operation, executorType, messageServiceIsRunningButShouldNotBe(operationPrefix))
 		}
-		return Failure(service, operation, executorType, messageServiceIsNotRunningButShouldBe(operationPrefix))
+		return system.Failure(service, operation, executorType, messageServiceIsNotRunningButShouldBe(operationPrefix))
 	default:
-		return Success(service, operation, executorType)
+		return system.Success(service, operation, executorType)
 	}
 }

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2017 Dell Inc.
+ * Copyright 2019 Dell Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -12,24 +12,26 @@
  * the License.
  *******************************************************************************/
 
-package agent
+package system
 
-import "github.com/edgexfoundry/edgex-go/internal/pkg/config"
+import "testing"
 
-type ConfigurationClients map[string]config.ClientInfo
+// TestIsResultForCoverage ensures test coverage by calling MetricsResultValue.isResult implementations; these are
+// never called from EdgeX code as their only purpose is to support a Golang union equivalent (i.e. to return
+// an abstract result struct whose content varies).
+func TestIsResultForCoverage(t *testing.T) {
+	tests := []struct {
+		name string
+		sut  Result
+	}{
+		{"SuccessResult", SuccessResult{}},
+		{"MetricsSuccessResult", MetricsSuccessResult{}},
+		{"FailureResult", FailureResult{}},
+	}
 
-type ConfigurationStruct struct {
-	Writable         WritableInfo
-	Clients          ConfigurationClients
-	Service          config.ServiceInfo
-	ExecutorPath     string
-	MetricsMechanism string
-	Registry         config.RegistryInfo
-	Logging          config.LoggingInfo
-	FormatSpecifier  string
-}
-
-type WritableInfo struct {
-	ResendLimit int
-	LogLevel    string
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			test.sut.isResult()
+		})
+	}
 }

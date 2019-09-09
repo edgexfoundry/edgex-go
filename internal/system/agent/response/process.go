@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2017 Dell Inc.
+ * Copyright 2019 Dell Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -12,24 +12,20 @@
  * the License.
  *******************************************************************************/
 
-package agent
+package response
 
-import "github.com/edgexfoundry/edgex-go/internal/pkg/config"
+import (
+	"encoding/json"
 
-type ConfigurationClients map[string]config.ClientInfo
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+)
 
-type ConfigurationStruct struct {
-	Writable         WritableInfo
-	Clients          ConfigurationClients
-	Service          config.ServiceInfo
-	ExecutorPath     string
-	MetricsMechanism string
-	Registry         config.RegistryInfo
-	Logging          config.LoggingInfo
-	FormatSpecifier  string
-}
-
-type WritableInfo struct {
-	ResendLimit int
-	LogLevel    string
+// Process converts a response string (assumed to contain JSON) to a map.
+func Process(response string, loggingClient logger.LoggingClient) map[string]interface{} {
+	rsp := make(map[string]interface{})
+	err := json.Unmarshal([]byte(response), &rsp)
+	if err != nil {
+		loggingClient.Error("error unmarshalling response from JSON: %v", err.Error())
+	}
+	return rsp
 }
