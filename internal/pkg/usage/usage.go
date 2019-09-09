@@ -80,7 +80,6 @@ func HelpCallbackConfigSeed() {
 
 func HelpCallbackSecuritySetup() {
 	fmt.Printf(securitySetupUsageStr, os.Args[0])
-	os.Exit(0)
 }
 
 func HelpCallbackSecurityProxy() {
