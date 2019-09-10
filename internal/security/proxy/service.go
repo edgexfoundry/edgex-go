@@ -104,8 +104,12 @@ func (s *Service) Init(cert CertificateLoader) error {
 
 	for _, name := range services {
 		params := Configuration.Clients[name]
+		if params.Host == "" {
+			LoggingClient.Warn("missing config information for service: " + name)
+			continue
+		}
 		serviceParams := &KongService{
-			Name:     name,
+			Name:     strings.ToLower(name),
 			Host:     params.Host,
 			Port:     params.Port,
 			Protocol: params.Protocol,
@@ -117,10 +121,10 @@ func (s *Service) Init(cert CertificateLoader) error {
 		}
 
 		routeParams := &KongRoute{
-			Paths: []string{"/" + name},
-			Name:  name,
+			Paths: []string{"/" + strings.ToLower(name)},
+			Name:  strings.ToLower(name),
 		}
-		err = s.initKongRoutes(routeParams, name)
+		err = s.initKongRoutes(routeParams, strings.ToLower(name))
 		if err != nil {
 			return err
 		}
@@ -160,6 +164,7 @@ func (s *Service) postCert(cert CertificateLoader) error {
 	}
 	tokens := []string{Configuration.KongURL.GetProxyBaseURL(), CertificatesPath}
 	req, err := http.NewRequest(http.MethodPost, strings.Join(tokens, "/"), strings.NewReader(string(data)))
+	req.Header.Add(clients.ContentType, clients.ContentTypeJSON)
 	if err != nil {
 		LoggingClient.Error("failed to create upload cert request -- %s", err.Error())
 		return err
