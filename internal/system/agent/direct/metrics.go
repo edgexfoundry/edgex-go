@@ -22,7 +22,7 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/endpoint"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
 	"github.com/edgexfoundry/edgex-go/internal/system"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent"
@@ -78,18 +78,18 @@ func (m *metrics) metricsViaDirectService(serviceName string, ctx context.Contex
 		m.loggingClient.Info(fmt.Sprintf("Registry responded with %s serviceName available", serviceName))
 
 		// Since serviceName is unknown to SMA, ask the Registry for a ServiceEndpoint associated with `serviceName`
-		endpoint, err := m.registryClient.GetServiceEndpoint(serviceName)
+		e, err := m.registryClient.GetServiceEndpoint(serviceName)
 		if err != nil {
 			return nil, fmt.Errorf("on attempting to get ServiceEndpoint for serviceName %s, got error: %v", serviceName, err.Error())
 		}
 
 		configClient := config.ClientInfo{
 			Protocol: m.serviceProtocol,
-			Host:     endpoint.Host,
-			Port:     endpoint.Port,
+			Host:     e.Host,
+			Port:     e.Port,
 		}
 		params := types.EndpointParams{
-			ServiceKey:  endpoint.ServiceId,
+			ServiceKey:  e.ServiceId,
 			Path:        "/",
 			UseRegistry: true,
 			Url:         configClient.Url() + clients.ApiMetricsRoute,
@@ -97,8 +97,8 @@ func (m *metrics) metricsViaDirectService(serviceName string, ctx context.Contex
 		}
 
 		// Add the serviceName key to the map where the value is the respective GeneralClient
-		client = general.NewGeneralClient(params, startup.Endpoint{RegistryClient: &m.registryClient})
-		m.genClients.Set(endpoint.ServiceId, client)
+		client = general.NewGeneralClient(params, endpoint.Endpoint{RegistryClient: &m.registryClient})
+		m.genClients.Set(e.ServiceId, client)
 	}
 
 	result, err := client.FetchMetrics(ctx)

@@ -12,20 +12,22 @@
  * the License.
  *******************************************************************************/
 
-package config
+package configuration
 
 import (
 	"net/url"
 	"os"
 	"strconv"
+
+	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 )
 
 const (
 	envKeyUrl = "edgex_registry"
 )
 
-// deprecated
-func OverrideFromEnvironment(registry RegistryInfo) RegistryInfo {
+// OverrideFromEnvironment overrides the registryInfo values from an environment variable value (if it exists).
+func OverrideFromEnvironment(registry config.RegistryInfo) config.RegistryInfo {
 	if env := os.Getenv(envKeyUrl); env != "" {
 		if u, err := url.Parse(env); err == nil {
 			if p, err := strconv.ParseInt(u.Port(), 10, 0); err == nil {

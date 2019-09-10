@@ -17,7 +17,7 @@ package agent
 import (
 	"testing"
 
-	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/endpoint"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/general"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
@@ -38,7 +38,7 @@ func TestGetForKnownReturnsExpectedValues(t *testing.T) {
 	const clientName = "clientName"
 
 	sut := NewGeneralClients()
-	client := general.NewGeneralClient(types.EndpointParams{}, startup.Endpoint{RegistryClient: nil})
+	client := general.NewGeneralClient(types.EndpointParams{}, endpoint.Endpoint{RegistryClient: nil})
 	sut.Set(clientName, client)
 
 	result, ok := sut.Get(clientName)

@@ -16,73 +16,47 @@ package main
 
 import (
 	"flag"
-	"fmt"
-	"os"
-	"os/signal"
-	"strconv"
-	"time"
-
 	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/core/data"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/interfaces"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-	"github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
 func main() {
-	start := time.Now()
+	startupTimer := startup.NewStartUpTimer(1, internal.BootTimeoutDefault)
+
 	var useRegistry bool
-	var useProfile string
+	var profileDir, configDir string
 
 	flag.BoolVar(&useRegistry, "registry", false, "Indicates the service should use registry service.")
 	flag.BoolVar(&useRegistry, "r", false, "Indicates the service should use registry service.")
-	flag.StringVar(&useProfile, "profile", "", "Specify a profile other than default.")
-	flag.StringVar(&useProfile, "p", "", "Specify a profile other than default.")
+	flag.StringVar(&profileDir, "profile", "", "Specify a profile other than default.")
+	flag.StringVar(&profileDir, "p", "", "Specify a profile other than default.")
+	flag.StringVar(&configDir, "confdir", "", "Specify local configuration directory")
+
 	flag.Usage = usage.HelpCallback
 	flag.Parse()
 
-	params := startup.BootParams{UseRegistry: useRegistry, UseProfile: useProfile, BootTimeout: internal.BootTimeoutDefault}
-	startup.Bootstrap(params, data.Retry, logBeforeInit)
-
-	ok := data.Init(useRegistry)
-	if !ok {
-		logBeforeInit(fmt.Errorf("%s: Service bootstrap failed!", clients.CoreDataServiceKey))
-		os.Exit(1)
-	}
-
-	data.LoggingClient.Info("Service dependencies resolved...")
-	data.LoggingClient.Info(fmt.Sprintf("Starting %s %s ", clients.CoreDataServiceKey, edgex.Version))
-
-	data.LoggingClient.Info(data.Configuration.Service.StartupMsg)
-
-	errs := make(chan error, 2)
-	listenForInterrupt(errs)
-	url := data.Configuration.Service.Host + ":" + strconv.Itoa(data.Configuration.Service.Port)
-	startup.StartHTTPServer(data.LoggingClient, data.Configuration.Service.Timeout, data.LoadRestRoutes(), url, errs)
-
-	// Time it took to start service
-	data.LoggingClient.Info("Service started in: " + time.Since(start).String())
-	data.LoggingClient.Info("Listening on port: " + strconv.Itoa(data.Configuration.Service.Port))
-	c := <-errs
-	data.Destruct()
-	data.LoggingClient.Warn(fmt.Sprintf("terminating: %v", c))
-
-	os.Exit(0)
-}
-
-func logBeforeInit(err error) {
-	l := logger.NewClient(clients.CoreDataServiceKey, false, "", models.InfoLog)
-	l.Error(err.Error())
-}
-
-func listenForInterrupt(errChan chan error) {
-	go func() {
-		c := make(chan os.Signal)
-		signal.Notify(c, os.Interrupt)
-		errChan <- fmt.Errorf("%s", <-c)
-	}()
+	httpServer := handlers.NewServerBootstrap(data.LoadRestRoutes())
+	bootstrap.Run(
+		configDir,
+		profileDir,
+		internal.ConfigFileName,
+		useRegistry,
+		clients.CoreDataServiceKey,
+		data.Configuration,
+		startupTimer,
+		[]interfaces.BootstrapHandler{
+			data.NewServiceInit(&httpServer).BootstrapHandler,
+			telemetry.BootstrapHandler,
+			httpServer.Handler,
+			handlers.NewStartMessage(clients.CoreDataServiceKey, edgex.Version).Handler,
+		})
 }

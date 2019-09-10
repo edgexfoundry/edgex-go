@@ -23,6 +23,15 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/internal/core/command/interfaces"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db/redis"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/endpoint"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/metadata"
@@ -30,15 +39,6 @@ import (
 
 	registryTypes "github.com/edgexfoundry/go-mod-registry/pkg/types"
 	"github.com/edgexfoundry/go-mod-registry/registry"
-
-	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/core/command/interfaces"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db/redis"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
 )
 
 var Configuration *ConfigurationStruct
@@ -49,14 +49,14 @@ var registryClient registry.Client
 var registryErrors chan error        //A channel for "config wait errors" sourced from Registry
 var registryUpdates chan interface{} //A channel for "config updates" sourced from Registry
 
-func Retry(useRegistry bool, useProfile string, timeout int, wait *sync.WaitGroup, ch chan error) {
+func Retry(useRegistry bool, configDir, profileDir string, timeout int, wait *sync.WaitGroup, ch chan error) {
 	now := time.Now()
 	until := now.Add(time.Millisecond * time.Duration(timeout))
 	for time.Now().Before(until) {
 		var err error
 		//When looping, only handle configuration if it hasn't already been set.
 		if Configuration == nil {
-			Configuration, err = initializeConfiguration(useRegistry, useProfile)
+			Configuration, err = initializeConfiguration(useRegistry, configDir, profileDir)
 			if err != nil {
 				ch <- err
 				if !useRegistry {
@@ -122,10 +122,10 @@ func Destruct() {
 	}
 }
 
-func initializeConfiguration(useRegistry bool, useProfile string) (*ConfigurationStruct, error) {
+func initializeConfiguration(useRegistry bool, configDir, profileDir string) (*ConfigurationStruct, error) {
 	//We currently have to load configuration from filesystem first in order to obtain RegistryHost/Port
 	configuration := &ConfigurationStruct{}
-	err := config.LoadFromFile(useProfile, configuration)
+	err := config.LoadFromFile(configDir, profileDir, configuration)
 	if err != nil {
 		return nil, err
 	}
@@ -236,7 +236,7 @@ func initializeClients(useRegistry bool) {
 		Interval:    Configuration.Service.ClientMonitor,
 	}
 
-	mdc = metadata.NewDeviceClient(params, startup.Endpoint{RegistryClient: &registryClient})
+	mdc = metadata.NewDeviceClient(params, endpoint.Endpoint{RegistryClient: &registryClient})
 	params.Path = clients.ApiCommandRoute
 	params.Url = Configuration.Clients["Metadata"].Url() + clients.ApiCommandRoute
 }
