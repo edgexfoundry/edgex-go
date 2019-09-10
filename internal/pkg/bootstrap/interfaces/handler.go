@@ -12,32 +12,25 @@
  * the License.
  *******************************************************************************/
 
-package startup
+package interfaces
 
 import (
-	"net/http"
-	"time"
+	"context"
+	"sync"
 
-	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-	"github.com/gorilla/mux"
+
+	"github.com/edgexfoundry/go-mod-registry/registry"
 )
 
-// deprecated
-// StartHTTPServer creates a new server designed to receive requests from the service defined by the parameters.
-func StartHTTPServer(logger logger.LoggingClient, timeout int, router *mux.Router, url string, errChan chan error) {
-	go func() {
-		correlation.LoggingClient = logger //Not thrilled about this, can't think of anything better ATM
-		timeout := time.Millisecond * time.Duration(timeout)
-
-		server := &http.Server{
-			Handler:      router,
-			Addr:         url,
-			WriteTimeout: timeout,
-			ReadTimeout:  timeout,
-		}
-
-		errChan <- server.ListenAndServe()
-	}()
-}
+// BootstrapHandler defines the contract each bootstrap handler must fulfill.  Implementation returns true if the
+// handler completed successfully, false if it did not.
+type BootstrapHandler func(
+	wg *sync.WaitGroup,
+	context context.Context,
+	startupTimer startup.Timer,
+	config Configuration,
+	loggingClient logger.LoggingClient,
+	registryClient registry.Client) (success bool)

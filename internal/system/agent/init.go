@@ -25,7 +25,7 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/endpoint"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/general"
@@ -51,7 +51,7 @@ func NewInstance() *Instance {
 	return &Instance{}
 }
 
-func (instance *Instance) Retry(useRegistry bool, useProfile string, timeout int, wait *sync.WaitGroup, ch chan error) {
+func (instance *Instance) Retry(useRegistry bool, configDir, profileDir string, timeout int, wait *sync.WaitGroup, ch chan error) {
 	until := time.Now().Add(time.Millisecond * time.Duration(timeout))
 	for time.Now().Before(until) {
 		var err error
@@ -60,7 +60,7 @@ func (instance *Instance) Retry(useRegistry bool, useProfile string, timeout int
 		// Read in those setting, too, which specifies details for those services
 		// (Those setting were _previously_ to be found in a now-defunct TOML manifest file).
 		if instance.Configuration == nil {
-			instance.Configuration, err = instance.initializeConfiguration(useRegistry, useProfile)
+			instance.Configuration, err = instance.initializeConfiguration(useRegistry, configDir, profileDir)
 			if err != nil {
 				ch <- err
 				if !useRegistry {
@@ -116,10 +116,10 @@ func (instance *Instance) Destruct() {
 	}
 }
 
-func (instance *Instance) initializeConfiguration(useRegistry bool, useProfile string) (*ConfigurationStruct, error) {
+func (instance *Instance) initializeConfiguration(useRegistry bool, configDir, profileDir string) (*ConfigurationStruct, error) {
 	//We currently have to load configuration from filesystem first in order to obtain Registry Host/Port
 	configuration := &ConfigurationStruct{}
-	err := config.LoadFromFile(useProfile, configuration)
+	err := config.LoadFromFile(configDir, profileDir, configuration)
 	if err != nil {
 		return nil, err
 	}
@@ -245,7 +245,7 @@ func (instance *Instance) initializeClients(useRegistry bool) {
 					Url:         instance.Configuration.Clients[serviceKey].Url(),
 					Interval:    internal.ClientMonitorDefault,
 				},
-				startup.Endpoint{RegistryClient: &instance.RegistryClient}))
+				endpoint.Endpoint{RegistryClient: &instance.RegistryClient}))
 	}
 }
 

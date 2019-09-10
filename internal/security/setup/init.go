@@ -37,7 +37,7 @@ func Init() error {
 	config.LoggingClient = lc
 
 	var err error
-	Configuration, err = initializeConfiguration(false, "") //These values are defaults. Preserved variables for possible later extension
+	Configuration, err = initializeConfiguration(false, "", "") //These values are defaults. Preserved variables for possible later extension
 	if err != nil {
 		lc.Error(err.Error())
 		return err
@@ -55,10 +55,10 @@ func Init() error {
 	return nil
 }
 
-func initializeConfiguration(useRegistry bool, useProfile string) (*ConfigurationStruct, error) {
+func initializeConfiguration(useRegistry bool, configDir, profileDir string) (*ConfigurationStruct, error) {
 	// We currently have to load configuration from filesystem first in order to obtain Registry Host/Port
 	configuration := &ConfigurationStruct{}
-	err := config.LoadFromFile(useProfile, configuration)
+	err := config.LoadFromFile(configDir, profileDir, configuration)
 	if err != nil {
 		return nil, err
 	}
