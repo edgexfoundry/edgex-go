@@ -169,26 +169,3 @@ func TestCreateJWTToken(t *testing.T) {
 		t.Errorf(err.Error())
 	}
 }
-
-/*func TestCreateOAuth2Token(t *testing.T) {
-	t.Skip()
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"token_type": "oauth2", "access_token": "test", "expires_in": 1442426001000}`))
-		if r.Method != "POST" {
-			t.Errorf("expected POST request, got %s instead", r.Method)
-		}
-
-		if r.URL.EscapedPath() != "/consumers/testuser/oauth2" {
-			t.Errorf("expected request to /consumers/testuser/oauth2, got %s instead", r.URL.EscapedPath())
-		}
-	}))
-	defer ts.Close()
-
-	co := Consumer{"testuser", &testConsumerRequestor{ts.URL}, &testConsumerConfig{ts.URL}}
-	_, err := co.createOAuth2Token()
-	if err != nil {
-		t.Errorf("failed to creat OAuth2 token for consumer")
-		t.Errorf(err.Error())
-	}
-}*/

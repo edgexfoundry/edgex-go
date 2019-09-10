@@ -23,9 +23,9 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal"
 )
 
-func NewRequestor(skipVerify bool, timeout int) internal.HttpCaller {
+func NewRequestor(skipVerify bool, timeoutInSecond int) internal.HttpCaller {
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: skipVerify},
 	}
-	return &http.Client{Timeout: time.Duration(timeout) * time.Second, Transport: tr}
+	return &http.Client{Timeout: time.Duration(timeoutInSecond) * time.Second, Transport: tr}
 }
