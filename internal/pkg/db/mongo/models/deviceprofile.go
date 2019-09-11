@@ -64,13 +64,15 @@ type DeviceResource struct {
 }
 
 type ResourceOperation struct {
-	Index     string            `bson:"index"`
-	Operation string            `bson:"operation"`
-	Object    string            `bson:"object"`
-	Parameter string            `bson:"parameter"`
-	Resource  string            `bson:"resource"`
-	Secondary []string          `bson:"secondary"`
-	Mappings  map[string]string `bson:"mappings"`
+	Index          string            `bson:"index"`
+	Operation      string            `bson:"operation"`
+	Object         string            `bson:"object"`
+	DeviceResource string            `bson:"deviceresource"`
+	Parameter      string            `bson:"parameter"`
+	Resource       string            `bson:"resource"`
+	DeviceCommand  string            `bson:"devicecommand"`
+	Secondary      []string          `bson:"secondary"`
+	Mappings       map[string]string `bson:"mappings"`
 }
 
 type ProfileResource struct {
@@ -148,25 +150,29 @@ func (dp *DeviceProfile) ToContract() (c contract.DeviceProfile, err error) {
 		cpr.Name = r.Name
 		for _, ro := range r.Get {
 			cpr.Get = append(cpr.Get, contract.ResourceOperation{
-				Index:     ro.Index,
-				Operation: ro.Operation,
-				Object:    ro.Object,
-				Parameter: ro.Parameter,
-				Resource:  ro.Resource,
-				Secondary: ro.Secondary,
-				Mappings:  ro.Mappings,
+				Index:          ro.Index,
+				Operation:      ro.Operation,
+				Object:         ro.Object,
+				DeviceResource: ro.DeviceResource,
+				Parameter:      ro.Parameter,
+				Resource:       ro.Resource,
+				DeviceCommand:  ro.DeviceCommand,
+				Secondary:      ro.Secondary,
+				Mappings:       ro.Mappings,
 			})
 		}
 
 		for _, ro := range r.Set {
 			cpr.Set = append(cpr.Set, contract.ResourceOperation{
-				Index:     ro.Index,
-				Operation: ro.Operation,
-				Object:    ro.Object,
-				Parameter: ro.Parameter,
-				Resource:  ro.Resource,
-				Secondary: ro.Secondary,
-				Mappings:  ro.Mappings,
+				Index:          ro.Index,
+				Operation:      ro.Operation,
+				Object:         ro.Object,
+				DeviceResource: ro.DeviceResource,
+				Parameter:      ro.Parameter,
+				Resource:       ro.Resource,
+				DeviceCommand:  ro.DeviceCommand,
+				Secondary:      ro.Secondary,
+				Mappings:       ro.Mappings,
 			})
 		}
 
@@ -232,25 +238,29 @@ func (dp *DeviceProfile) FromContract(from contract.DeviceProfile) (contractId s
 		pr.Name = r.Name
 		for _, ro := range r.Get {
 			pr.Get = append(pr.Get, ResourceOperation{
-				Index:     ro.Index,
-				Operation: ro.Operation,
-				Object:    ro.Object,
-				Parameter: ro.Parameter,
-				Resource:  ro.Resource,
-				Secondary: ro.Secondary,
-				Mappings:  ro.Mappings,
+				Index:          ro.Index,
+				Operation:      ro.Operation,
+				Object:         ro.Object,
+				DeviceResource: ro.DeviceResource,
+				Parameter:      ro.Parameter,
+				Resource:       ro.Resource,
+				DeviceCommand:  ro.DeviceCommand,
+				Secondary:      ro.Secondary,
+				Mappings:       ro.Mappings,
 			})
 		}
 
 		for _, ro := range r.Set {
 			pr.Set = append(pr.Set, ResourceOperation{
-				Index:     ro.Index,
-				Operation: ro.Operation,
-				Object:    ro.Object,
-				Parameter: ro.Parameter,
-				Resource:  ro.Resource,
-				Secondary: ro.Secondary,
-				Mappings:  ro.Mappings,
+				Index:          ro.Index,
+				Operation:      ro.Operation,
+				Object:         ro.Object,
+				DeviceResource: ro.DeviceResource,
+				Parameter:      ro.Parameter,
+				Resource:       ro.Resource,
+				DeviceCommand:  ro.DeviceCommand,
+				Secondary:      ro.Secondary,
+				Mappings:       ro.Mappings,
 			})
 		}
 
