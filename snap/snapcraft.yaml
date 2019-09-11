@@ -1,8 +1,6 @@
 name: edgexfoundry
 base: core18
-version: "replace-me"
-version-script: |
-  echo $(cat VERSION)-$(date +%Y%m%d)+$(git rev-parse --short HEAD)
+adopt-info: version
 summary: Open-source framework for IoT edge computing
 description: |
   EdgeX Foundry is a vendor-neutral open source project hosted by The Linux 
@@ -340,6 +338,11 @@ apps:
       - network-bind
 
 parts:
+  version:
+    plugin: nil
+    source: .
+    override-pull: |
+      snapcraftctl set-version $(cat $SNAPCRAFT_PROJECT_DIR/VERSION)-$(date +%Y%m%d)+$(git rev-parse --short HEAD)
   curl:
     plugin: nil
     # the default source for a part that doesn't specify one is ".", which
