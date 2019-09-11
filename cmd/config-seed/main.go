@@ -63,6 +63,11 @@ func main() {
 		config.LoggingClient.Error(err.Error())
 	}
 
+	err = config.ImportSecurityConfiguration()
+	if err != nil {
+		config.LoggingClient.Error(err.Error())
+	}
+
 	os.Exit(0)
 }
 

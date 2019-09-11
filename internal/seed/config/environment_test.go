@@ -102,3 +102,37 @@ func TestNonMatchingKeyDoesNotOverwritesValue(t *testing.T) {
 		})
 	}
 }
+
+func TestEnvironment_InitFromEnvironment(t *testing.T) {
+	const namespace = "name.space."
+	var tests = []struct {
+		name          string
+		key           string
+		envKey        string
+		value         string
+		expectedValue interface{}
+	}{
+		{"root", rootKey, namespace + rootKey, rootValue, rootValue},
+		{"sub", sub + "." + subKey, namespace + sub + "." + subKey, subValue, subValue},
+		{"non-matching key", rootKey, rootKey, rootValue, nil},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var tree *toml.Tree
+			var err error
+			os.Clearenv()
+			if err = os.Setenv(test.envKey, test.value); err != nil {
+				t.Fail()
+			}
+
+			env := NewEnvironment()
+			if tree, err = env.InitFromEnvironment(namespace); err != nil {
+				t.Fail()
+			}
+
+			assert.Equal(t, tree.Get(test.key), test.expectedValue)
+
+		})
+	}
+}
