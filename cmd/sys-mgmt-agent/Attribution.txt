@@ -60,6 +60,9 @@ https://github.com/cenkalti/backoff/blob/master/LICENSE
 hashicorp/consul 1.1.0 (Mozilla Public License 2.0) - https://github.com/hashicorp/consul
 https://github.com/hashicorp/consul/blob/master/LICENSE
 
+Nested consul packages are not separately licensed:
+github.com/hashicorp/consul/api
+
 hashicorp/go-cleanhttp (Mozilla Public License 2.0) - https://github.com/hashicorp/go-cleanhttp
 https://github.com/hashicorp/go-cleanhttp/blob/master/LICENSE
 

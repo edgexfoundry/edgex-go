@@ -161,7 +161,7 @@ func connectToRegistry(conf *ConfigurationStruct) error {
 		ServiceProtocol: conf.Service.Protocol,
 		CheckInterval:   conf.Service.CheckInterval,
 		CheckRoute:      clients.ApiPingRoute,
-		Stem:            internal.ConfigRegistryStem,
+		Stem:            internal.ConfigRegistryStemCore + internal.ConfigMajorVersion,
 	}
 
 	registryClient, err = registry.NewRegistryClient(registryConfig)
