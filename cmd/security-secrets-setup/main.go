@@ -19,6 +19,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/edgexfoundry/edgex-go/internal"
@@ -34,7 +35,7 @@ type exiter interface {
 type exitCode struct{}
 
 type optionDispatcher interface {
-	run() (int, error)
+	run(command string) (int, error)
 }
 
 type pkiInitOptionDispatcher struct{}
@@ -54,14 +55,21 @@ func init() {
 func main() {
 	start := time.Now()
 
-	flag.Parse()
-
 	if len(os.Args) < 2 {
 		fmt.Println("Please specify subcommand or options for " + option.SecuritySecretsSetup)
 		flag.Usage()
 		exitInstance.exit(0)
 		return
 	}
+
+	// Before we call Golang's flag.Parse(), we want to make sure that
+	// the subcommand is extracted ans saved if subcommand is used
+	// retrieve subcommand and delete it from os.Args[]
+	// as the Golang flag.Parse() method always parses from
+	// the frist arguments of os.Args[]
+	subcommand := retrieveSubcommand()
+
+	flag.Parse()
 
 	if err := setup.Init(); err != nil {
 		// the error returned from Init has already been logged inside the call
@@ -72,7 +80,7 @@ func main() {
 
 	if configFile == "" {
 		// run with other options for pki-init
-		statusCode, err := dispatcherInstance.run()
+		statusCode, err := dispatcherInstance.run(subcommand)
 		if err != nil {
 			setup.LoggingClient.Error(err.Error())
 		}
@@ -102,6 +110,18 @@ func newOptionDispatcher() optionDispatcher {
 	return &pkiInitOptionDispatcher{}
 }
 
+// retrieveSubcommand parses the subcommand out of os.Arg if any
+// otherwise returns empty string ("")
+func retrieveSubcommand() (subcommand string) {
+	// commandline options always starts with -
+	// so it is treated as a subcommand if that is not the case
+	if !strings.HasPrefix(os.Args[1], "-") {
+		subcommand = os.Args[1]
+		os.Args = append(os.Args[:1], os.Args[2:]...)
+	}
+	return subcommand
+}
+
 func setupPkiInitOption(subcommand string) (executor option.OptionsExecutor, status int, err error) {
 	generateOpt := false
 	switch subcommand {
@@ -119,8 +139,8 @@ func setupPkiInitOption(subcommand string) (executor option.OptionsExecutor, sta
 	return option.NewPkiInitOption(opts)
 }
 
-func (dispatcher *pkiInitOptionDispatcher) run() (statusCode int, err error) {
-	optsExecutor, statusCode, err := setupPkiInitOption(os.Args[1])
+func (dispatcher *pkiInitOptionDispatcher) run(command string) (statusCode int, err error) {
+	optsExecutor, statusCode, err := setupPkiInitOption(command)
 	if err != nil {
 		return statusCode, err
 	}

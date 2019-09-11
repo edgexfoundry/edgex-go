@@ -104,6 +104,20 @@ func TestGenerateOptionWithRunError(t *testing.T) {
 	assert.Equal(2, (exitInstance.(*testExitCode)).getStatusCode())
 }
 
+func TestMainUnsupportedArgument(t *testing.T) {
+	tearDown := setupTest(t)
+	origArgs := os.Args
+	defer tearDown(t, origArgs)
+	assert := assert.New(t)
+
+	os.Args = []string{"cmd", "unsupported"}
+	printCommandLineStrings(os.Args)
+	hasDispatchError = false
+	main()
+
+	assert.Equal(0, (exitInstance.(*testExitCode)).getStatusCode())
+}
+
 func runWithGenerateOption(hasError bool) {
 	os.Args = []string{"cmd", "generate"}
 	printCommandLineStrings(os.Args)
@@ -153,10 +167,14 @@ func newTestDispatcher() optionDispatcher {
 	return &testPkiInitOptionDispatcher{}
 }
 
-func (testDispatcher *testPkiInitOptionDispatcher) run() (statusCode int, err error) {
-	optsExecutor, _, _ := setupPkiInitOption(os.Args[1])
+func (testDispatcher *testPkiInitOptionDispatcher) run(command string) (statusCode int, err error) {
+	optsExecutor, _, _ := setupPkiInitOption(command)
 
-	genOpt := (optsExecutor.(*option.PkiInitOption)).GenerateOpt
+	genOpt := false
+	if pkiInit, ok := optsExecutor.(*option.PkiInitOption); ok {
+		genOpt = pkiInit.GenerateOpt
+	}
+
 	fmt.Printf("In test flag value: generateOpt = %v, configFile = %v", genOpt, configFile)
 
 	testDispatcher.testOptsExecutor = optsExecutor
