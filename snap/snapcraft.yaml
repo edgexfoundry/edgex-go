@@ -492,6 +492,7 @@ parts:
         redis.conf > $SNAPCRAFT_PART_INSTALL/config/redis/redis.conf
   mongo-config:
     source: https://github.com/edgexfoundry/docker-edgex-mongo.git
+    source-branch: edinburgh
     source-depth: 1
     plugin: dump
     # NOTE - both the mongo-config & go install README.md to root-dir of the snap
