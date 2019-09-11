@@ -44,7 +44,10 @@ Common Options:
 var securitySetupUsageStr = `
 Usage: %s [options]
 Server Options:
-	-c, --config <name>             Provide absolute path to JSON configuration file
+    -c, --config <name>             Provide absolute path to JSON configuration file
+
+Server Subcommand:	
+    generate                        Generate PKI afresh every time and deployed. Typically, this will be whenever the framework is started.
 
 Common Options:
     -h, --help                      Show this message

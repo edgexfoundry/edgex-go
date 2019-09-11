@@ -22,7 +22,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/edgexfoundry/edgex-go/internal/security/setup"
 	"github.com/edgexfoundry/edgex-go/internal/security/setup/option"
 	"github.com/stretchr/testify/assert"
 )
@@ -91,7 +90,6 @@ func TestMainWithGenerateOption(t *testing.T) {
 
 	runWithGenerateOption(false)
 	assert.Equal(0, (exitInstance.(*testExitCode)).getStatusCode())
-	assert.True(generateOpt)
 	optionExec := (dispatcherInstance.(*testPkiInitOptionDispatcher)).testOptsExecutor
 	assert.True((optionExec.(*option.PkiInitOption)).GenerateOpt)
 }
@@ -104,11 +102,10 @@ func TestGenerateOptionWithRunError(t *testing.T) {
 
 	runWithGenerateOption(true)
 	assert.Equal(2, (exitInstance.(*testExitCode)).getStatusCode())
-	assert.Equal(true, generateOpt)
 }
 
 func runWithGenerateOption(hasError bool) {
-	os.Args = []string{"cmd", "-generate"}
+	os.Args = []string{"cmd", "generate"}
 	printCommandLineStrings(os.Args)
 	hasDispatchError = hasError
 	main()
@@ -124,7 +121,6 @@ func setupTest(t *testing.T) func(t *testing.T, args []string) {
 	return func(t *testing.T, args []string) {
 		// reset after each test
 		configFile = ""
-		generateOpt = false
 		os.Args = args
 		// cleanup the generated files
 		os.RemoveAll("./config")
@@ -158,11 +154,11 @@ func newTestDispatcher() optionDispatcher {
 }
 
 func (testDispatcher *testPkiInitOptionDispatcher) run() (statusCode int, err error) {
-	setup.LoggingClient.Debug(fmt.Sprintf("In test flag value: generateOpt = %v, configFile = %v", generateOpt, configFile))
+	optsExecutor, _, _ := setupPkiInitOption(os.Args[1])
 
-	optsExecutor, _, _ := option.NewPkiInitOption(option.PkiInitOption{
-		GenerateOpt: generateOpt,
-	})
+	genOpt := (optsExecutor.(*option.PkiInitOption)).GenerateOpt
+	fmt.Printf("In test flag value: generateOpt = %v, configFile = %v", genOpt, configFile)
+
 	testDispatcher.testOptsExecutor = optsExecutor
 
 	if hasDispatchError {
