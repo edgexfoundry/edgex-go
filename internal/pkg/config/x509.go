@@ -24,8 +24,8 @@ import (
 )
 
 const (
-	skFileExt   = ".priv.key"
-	certFileExt = ".pem"
+	skFileExt   = "priv.key"
+	certFileExt = "pem"
 )
 
 // NewX509Config will populate a struct representing configuration for X.509 key generation
@@ -73,22 +73,22 @@ func (cfg X509Config) PkiCADir() (string, error) {
 
 // GetCAPemFileName returns the file name of CA certificate
 func (cfg X509Config) GetCAPemFileName() string {
-	return cfg.RootCA.CAName + certFileExt
+	return cfg.RootCA.CAName + "." + certFileExt
 }
 
 // GetCAPrivateKeyFileName returns the file name of CA private key
 func (cfg X509Config) GetCAPrivateKeyFileName() string {
-	return cfg.RootCA.CAName + skFileExt
+	return cfg.RootCA.CAName + "." + skFileExt
 }
 
 // GetTLSPemFileName returns the file name of TLS certificate
 func (cfg X509Config) GetTLSPemFileName() string {
-	return cfg.TLSServer.TLSHost + certFileExt
+	return cfg.TLSServer.TLSHost + "." + certFileExt
 }
 
 // GetTLSPrivateKeyFileName returns the file name of TLS private key
 func (cfg X509Config) GetTLSPrivateKeyFileName() string {
-	return cfg.TLSServer.TLSHost + skFileExt
+	return cfg.TLSServer.TLSHost + "." + skFileExt
 }
 
 // KeyScheme parameters (RSA vs EC)

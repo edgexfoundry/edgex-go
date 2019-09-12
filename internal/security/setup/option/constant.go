@@ -43,6 +43,8 @@ const (
 	kongServiceName  = "edgex-kong"
 )
 
-var pkiInitScratchDir = filepath.Join(pkiInitBaseDir, "scratch")
-var pkiInitGeneratedDir = filepath.Join(pkiInitBaseDir, "generated")
-var pkiInitDeployDir = filepath.Join(tmpfsRunDir, "edgex", "secrets")
+var (
+	pkiInitScratchDir   = filepath.Join(pkiInitBaseDir, "scratch")
+	pkiInitGeneratedDir = filepath.Join(pkiInitBaseDir, "generated")
+	pkiInitDeployDir    = filepath.Join(tmpfsRunDir, "edgex", "secrets")
+)

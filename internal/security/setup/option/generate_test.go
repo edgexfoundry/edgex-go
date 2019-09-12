@@ -149,7 +149,7 @@ func setupGenerateTest(t *testing.T) func(t *testing.T) {
 		t.Fatalf("cannot create resource dir %s for the test: %v", testResourceDir, err)
 	}
 
-	resDir := filepath.Join(curDir, "..", "..", "..", "..", "cmd", SecuritySecretsSetup, resourceDirName)
+	resDir := filepath.Join(curDir, "testdata", resourceDirName)
 	jsonVaultFile := filepath.Join(curDir, resourceDirName, pkiSetupVaultJSON)
 	if vaultJSONPkiSetupExist {
 		if _, err := copyFile(filepath.Join(resDir, pkiSetupVaultJSON), jsonVaultFile); err != nil {
