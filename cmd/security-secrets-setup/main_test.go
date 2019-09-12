@@ -115,7 +115,7 @@ func TestMainUnsupportedArgument(t *testing.T) {
 	hasDispatchError = false
 	main()
 
-	assert.Equal(0, (exitInstance.(*testExitCode)).getStatusCode())
+	assert.Equal(1, (exitInstance.(*testExitCode)).getStatusCode())
 }
 
 func runWithGenerateOption(hasError bool) {
@@ -168,7 +168,7 @@ func newTestDispatcher() optionDispatcher {
 }
 
 func (testDispatcher *testPkiInitOptionDispatcher) run(command string) (statusCode int, err error) {
-	optsExecutor, _, _ := setupPkiInitOption(command)
+	optsExecutor, statusCode, err := setupPkiInitOption(command)
 
 	genOpt := false
 	if pkiInit, ok := optsExecutor.(*option.PkiInitOption); ok {

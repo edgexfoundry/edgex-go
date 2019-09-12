@@ -128,9 +128,7 @@ func setupPkiInitOption(subcommand string) (executor option.OptionsExecutor, sta
 	case "generate":
 		generateOpt = true
 	default:
-		flag.Usage()
-		exitInstance.exit(0)
-		return
+		return nil, 1, fmt.Errorf("unsupported subcommand %s", subcommand)
 	}
 
 	opts := option.PkiInitOption{
