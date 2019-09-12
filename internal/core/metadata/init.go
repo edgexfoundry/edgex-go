@@ -27,6 +27,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/redis"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/endpoint"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/coredata"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
@@ -42,6 +43,9 @@ var dbClient interfaces.DBClient
 var LoggingClient logger.LoggingClient
 var nc notifications.NotificationsClient
 var vdc coredata.ValueDescriptorClient
+
+// Global ErrorConcept variables
+var httpErrorHandler errorconcept.ErrorHandler
 
 type server interface {
 	IsRunning() bool
@@ -117,6 +121,7 @@ func (s ServiceInit) BootstrapHandler(
 
 	// update global variables.
 	LoggingClient = logging
+	httpErrorHandler = errorconcept.NewErrorHandler(logging)
 
 	// initialize clients required by service.
 	s.initializeClients(registry != nil, registry)

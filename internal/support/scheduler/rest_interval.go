@@ -23,6 +23,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/errors"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/operators/interval"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/gorilla/mux"
@@ -79,7 +80,7 @@ func restUpdateInterval(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
 }
@@ -174,7 +175,7 @@ func restDeleteIntervalByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
 }
@@ -240,7 +241,7 @@ func restDeleteIntervalByName(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
 }
@@ -257,7 +258,7 @@ func restScrubAllIntervals(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(strconv.Itoa(count)))
 

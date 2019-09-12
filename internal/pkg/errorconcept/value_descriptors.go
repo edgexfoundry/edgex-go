@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2019 VMware Inc.
+ * Copyright 2019 Dell Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -11,25 +11,33 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
-package pkg
+
+package errorconcept
 
 import (
-	"encoding/json"
 	"net/http"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
 )
 
-func Encode(i interface{}, w http.ResponseWriter, LoggingClient logger.LoggingClient) {
-	w.Header().Add(clients.ContentType, clients.ContentTypeJSON)
+var ValueDescriptors valueDescriptorsErrorConcept
 
-	enc := json.NewEncoder(w)
-	err := enc.Encode(i)
-	// Problems encoding
-	if err != nil {
-		LoggingClient.Error("Error encoding the data: " + err.Error())
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
+// ValueDescriptorsErrorConcept represents the accessor for the value-descriptor-specific error concepts
+type valueDescriptorsErrorConcept struct {
+	InUse valueDescriptorsInUse
+}
+
+type valueDescriptorsInUse struct{}
+
+func (r valueDescriptorsInUse) httpErrorCode() int {
+	return http.StatusConflict
+}
+
+func (r valueDescriptorsInUse) isA(err error) bool {
+	_, ok := err.(errors.ErrValueDescriptorsInUse)
+	return ok
+}
+
+func (r valueDescriptorsInUse) message(err error) string {
+	return err.Error()
 }

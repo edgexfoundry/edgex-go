@@ -24,6 +24,7 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/notifications"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
@@ -108,7 +109,7 @@ func (op deviceNotifier) callback(service models.DeviceService, id string, actio
 		if err != nil {
 			return err
 		}
-		req.Header.Add("Content-Type", "application/json")
+		req.Header.Add(clients.ContentType, clients.ContentTypeJSON)
 		go op.requester.Execute(req)
 	} else {
 		op.logger.Error("callback::no addressable for " + service.Name)

@@ -21,6 +21,8 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 )
 
 // Printing function purely for debugging purposes
@@ -38,6 +40,6 @@ func printBody(r io.ReadCloser) {
 
 // Test if the service is working
 func pingHandler(w http.ResponseWriter, _ *http.Request) {
-	w.Header().Set("Content-Type", "text/plain")
+	w.Header().Set(clients.ContentType, clients.ContentTypeText)
 	w.Write([]byte("pong"))
 }
