@@ -11,36 +11,36 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
+
 package metadata
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 	"net/url"
 
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/gorilla/mux"
+	"github.com/pkg/errors"
 )
 
 func restGetAllDeviceReports(w http.ResponseWriter, _ *http.Request) {
 	res, err := dbClient.GetAllDeviceReports()
 	if err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		httpErrorHandler.Handle(w, err, errorconcept.Common.RetrieveError_StatusInternalServer)
 		return
 	}
 
 	// Check max limit
 	if len(res) > Configuration.Service.MaxResultCount {
 		err = errors.New("Max limit exceeded")
-		http.Error(w, err.Error(), http.StatusRequestEntityTooLarge)
-		LoggingClient.Error(err.Error())
+		httpErrorHandler.Handle(w, err, errorconcept.Common.LimitExceeded)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	json.NewEncoder(w).Encode(&res)
 }
 
@@ -51,19 +51,13 @@ func restAddDeviceReport(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	var dr models.DeviceReport
 	if err := json.NewDecoder(r.Body).Decode(&dr); err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		httpErrorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
 		return
 	}
 
 	// Check if the device exists
 	if _, err := dbClient.GetDeviceByName(dr.Device); err != nil {
-		if err == db.ErrNotFound {
-			http.Error(w, "Device referenced by Device Report doesn't exist", http.StatusNotFound)
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		LoggingClient.Error(err.Error())
+		httpErrorHandler.HandleOneVariant(w, err, errorconcept.DeviceReport.DeviceNotFound, errorconcept.Default.InternalServerError)
 		return
 	}
 
@@ -71,12 +65,7 @@ func restAddDeviceReport(w http.ResponseWriter, r *http.Request) {
 	var err error
 	dr.Id, err = dbClient.AddDeviceReport(dr)
 	if err != nil {
-		if err == db.ErrNotUnique {
-			http.Error(w, "Duplicate Name for the device report", http.StatusConflict)
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		LoggingClient.Error(err.Error())
+		httpErrorHandler.HandleOneVariant(w, err, errorconcept.DeviceReport.NotUnique, errorconcept.Default.InternalServerError)
 		return
 	}
 
@@ -93,8 +82,7 @@ func restUpdateDeviceReport(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	var from models.DeviceReport
 	if err := json.NewDecoder(r.Body).Decode(&from); err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		httpErrorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
 		return
 	}
 
@@ -105,12 +93,7 @@ func restUpdateDeviceReport(w http.ResponseWriter, r *http.Request) {
 		// Try by name
 		to, err = dbClient.GetDeviceReportByName(from.Name)
 		if err != nil {
-			if err == db.ErrNotFound {
-				http.Error(w, err.Error(), http.StatusNotFound)
-			} else {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			}
-			LoggingClient.Error(err.Error())
+			httpErrorHandler.HandleOneVariant(w, err, errorconcept.Database.NotFound, errorconcept.Default.InternalServerError)
 			return
 		}
 	}
@@ -121,8 +104,7 @@ func restUpdateDeviceReport(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := dbClient.UpdateDeviceReport(to); err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		httpErrorHandler.Handle(w, err, errorconcept.Common.UpdateError_StatusInternalServer)
 		return
 	}
 
@@ -163,11 +145,7 @@ func updateDeviceReportFields(from models.DeviceReport, to *models.DeviceReport,
 // Validate that the device exists
 func validateDevice(d string, w http.ResponseWriter) error {
 	if _, err := dbClient.GetDeviceByName(d); err != nil {
-		if err == db.ErrNotFound {
-			http.Error(w, "Device was not found", http.StatusNotFound)
-		} else {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		}
+		httpErrorHandler.HandleOneVariant(w, err, errorconcept.DeviceReport.DeviceNotFound, errorconcept.Default.ServiceUnavailable)
 		return err
 	}
 
@@ -179,16 +157,11 @@ func restGetReportById(w http.ResponseWriter, r *http.Request) {
 	var did string = vars[ID]
 	res, err := dbClient.GetDeviceReportById(did)
 	if err != nil {
-		if err == db.ErrNotFound {
-			http.Error(w, err.Error(), http.StatusNotFound)
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		LoggingClient.Error(err.Error())
+		httpErrorHandler.HandleOneVariant(w, err, errorconcept.Database.NotFound, errorconcept.Default.InternalServerError)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	json.NewEncoder(w).Encode(res)
 }
 
@@ -196,23 +169,17 @@ func restGetReportByName(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		LoggingClient.Error(err.Error())
+		httpErrorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
 		return
 	}
 
 	res, err := dbClient.GetDeviceReportByName(n)
 	if err != nil {
-		if err == db.ErrNotFound {
-			http.Error(w, err.Error(), http.StatusNotFound)
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		LoggingClient.Error(err.Error())
+		httpErrorHandler.HandleOneVariant(w, err, errorconcept.Database.NotFound, errorconcept.Default.InternalServerError)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	json.NewEncoder(w).Encode(res)
 }
 
@@ -222,16 +189,14 @@ func restGetValueDescriptorsForDeviceName(w http.ResponseWriter, r *http.Request
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[DEVICENAME])
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		LoggingClient.Error(err.Error())
+		httpErrorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
 		return
 	}
 
 	// Get all the associated device reports
 	reports, err := dbClient.GetDeviceReportByDeviceName(n)
 	if err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		httpErrorHandler.Handle(w, err, errorconcept.Common.RetrieveError_StatusInternalServer)
 		return
 	}
 
@@ -242,26 +207,24 @@ func restGetValueDescriptorsForDeviceName(w http.ResponseWriter, r *http.Request
 		}
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	json.NewEncoder(w).Encode(valueDescriptors)
 }
 func restGetDeviceReportByDeviceName(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[DEVICENAME])
 	if err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		httpErrorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
 		return
 	}
 
 	res, err := dbClient.GetDeviceReportByDeviceName(n)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		LoggingClient.Error(err.Error())
+		httpErrorHandler.Handle(w, err, errorconcept.Common.RetrieveError_StatusInternalServer)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	json.NewEncoder(w).Encode(res)
 }
 
@@ -272,12 +235,7 @@ func restDeleteReportById(w http.ResponseWriter, r *http.Request) {
 	// Check if the device report exists
 	dr, err := dbClient.GetDeviceReportById(id)
 	if err != nil {
-		if err == db.ErrNotFound {
-			http.Error(w, err.Error(), http.StatusNotFound)
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		LoggingClient.Error(err.Error())
+		httpErrorHandler.HandleOneVariant(w, err, errorconcept.Database.NotFound, errorconcept.Default.InternalServerError)
 		return
 	}
 
@@ -285,7 +243,7 @@ func restDeleteReportById(w http.ResponseWriter, r *http.Request) {
 		LoggingClient.Error(err.Error())
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
 }
@@ -294,20 +252,14 @@ func restDeleteReportByName(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		httpErrorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
 		return
 	}
 
 	// Check if the device report exists
 	dr, err := dbClient.GetDeviceReportByName(n)
 	if err != nil {
-		if err == db.ErrNotFound {
-			http.Error(w, err.Error(), http.StatusNotFound)
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		LoggingClient.Error(err.Error())
+		httpErrorHandler.HandleOneVariant(w, err, errorconcept.Database.NotFound, errorconcept.Default.InternalServerError)
 		return
 	}
 
@@ -315,14 +267,14 @@ func restDeleteReportByName(w http.ResponseWriter, r *http.Request) {
 		LoggingClient.Error(err.Error())
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
 }
 
 func deleteDeviceReport(dr models.DeviceReport, w http.ResponseWriter) error {
 	if err := dbClient.DeleteDeviceReportById(dr.Id); err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		httpErrorHandler.Handle(w, err, errorconcept.Common.DeleteError)
 		return err
 	}
 

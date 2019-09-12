@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2019 VMware Inc.
+ * Copyright 2019 Dell Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -11,25 +11,9 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
-package pkg
 
-import (
-	"encoding/json"
-	"net/http"
+package errorconcept
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+const (
+	METHOD_NOT_ALLOWED = "isA should not be invoked, this is to only be used as a default error concept"
 )
-
-func Encode(i interface{}, w http.ResponseWriter, LoggingClient logger.LoggingClient) {
-	w.Header().Add(clients.ContentType, clients.ContentTypeJSON)
-
-	enc := json.NewEncoder(w)
-	err := enc.Encode(i)
-	// Problems encoding
-	if err != nil {
-		LoggingClient.Error("Error encoding the data: " + err.Error())
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-}

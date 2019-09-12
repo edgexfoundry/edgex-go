@@ -14,16 +14,16 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
-	"github.com/gorilla/mux"
-	"github.com/stretchr/testify/mock"
-	"gopkg.in/yaml.v2"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
-
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces/mocks"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+
+	"github.com/gorilla/mux"
+	"github.com/stretchr/testify/mock"
+	"gopkg.in/yaml.v2"
 )
 
 var TestLabelError1 = "TestErrorLabel1"

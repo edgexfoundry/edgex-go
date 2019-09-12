@@ -215,7 +215,7 @@ func loadCommandRoutes(b *mux.Router) {
 	d.HandleFunc("/{"+ID+"}", restGetCommandsByDeviceId).Methods(http.MethodGet)
 }
 func pingHandler(w http.ResponseWriter, _ *http.Request) {
-	w.Header().Set("Content-Type", "text/plain")
+	w.Header().Set(clients.ContentType, clients.ContentTypeText)
 	w.Write([]byte("pong"))
 }
 

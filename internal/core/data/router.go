@@ -184,7 +184,7 @@ func eventByAgeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(strconv.Itoa(count)))
 }
@@ -281,7 +281,7 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("true"))
 	}
@@ -434,7 +434,7 @@ func eventIdHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("true"))
 		break
@@ -453,7 +453,7 @@ func eventIdHandler(w http.ResponseWriter, r *http.Request) {
 			LoggingClient.Error(err.Error())
 			return
 		}
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("true"))
 	}
@@ -533,7 +533,7 @@ func deleteByDeviceIdHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(strconv.Itoa(count)))
 	}
@@ -606,7 +606,7 @@ func scrubHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(strconv.Itoa(count)))
 	}
@@ -614,7 +614,7 @@ func scrubHandler(w http.ResponseWriter, r *http.Request) {
 
 // Test if the service is working
 func pingHandler(w http.ResponseWriter, _ *http.Request) {
-	w.Header().Set("Content-Type", "text/plain")
+	w.Header().Set(clients.ContentType, clients.ContentTypeText)
 	w.Write([]byte("pong"))
 }
 
@@ -729,7 +729,7 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("true"))
 	}
@@ -805,7 +805,7 @@ func deleteReadingByIdHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("true"))
 	}
@@ -1249,7 +1249,7 @@ func valueDescriptorHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("true"))
 	}
@@ -1286,7 +1286,7 @@ func deleteValueDescriptorByIdHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
 }
@@ -1338,7 +1338,7 @@ func valueDescriptorByNameHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("true"))
 	}

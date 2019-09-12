@@ -28,6 +28,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces/mocks"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
@@ -53,6 +54,7 @@ var ErrorPortPathParam = "abc"
 
 func TestMain(m *testing.M) {
 	LoggingClient = logger.NewMockClient()
+	httpErrorHandler = errorconcept.NewErrorHandler(LoggingClient)
 	os.Exit(m.Run())
 }
 
