@@ -19,7 +19,6 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/edgexfoundry/edgex-go/internal"
@@ -43,33 +42,28 @@ type pkiInitOptionDispatcher struct{}
 var exitInstance = newExit()
 var dispatcherInstance = newOptionDispatcher()
 var configFile string
-
-func init() {
-	// define and register command line flags:
-	flag.StringVar(&configFile, "config", "", "specify JSON configuration file: /path/to/file.json")
-	flag.StringVar(&configFile, "c", "", "specify JSON configuration file: /path/to/file.json")
-
-	flag.Usage = usage.HelpCallbackSecuritySetup
-}
+var subcommandList = []string{"legacy", "generate", "cache", "import"}
 
 func main() {
 	start := time.Now()
 
-	if len(os.Args) < 2 {
-		fmt.Println("Please specify subcommand or options for " + option.SecuritySecretsSetup)
+	// define and register command line subcommands:
+	legacyCmd := flag.NewFlagSet("legacy", flag.ExitOnError)
+	legacyCmd.StringVar(&configFile, "config", "", "specify JSON configuration file: /path/to/file.json")
+	legacyCmd.StringVar(&configFile, "c", "", "specify JSON configuration file: /path/to/file.json")
+
+	flag.Usage = usage.HelpCallbackSecuritySetup
+
+	flag.Parse()
+
+	if len(os.Args) < 2 || flag.NArg() < 1 {
+		fmt.Println("Please specify subcommand for " + option.SecuritySecretsSetup)
 		flag.Usage()
 		exitInstance.exit(0)
 		return
 	}
 
-	// Before we call Golang's flag.Parse(), we want to make sure that
-	// the subcommand is extracted ans saved if subcommand is used
-	// retrieve subcommand and delete it from os.Args[]
-	// as the Golang flag.Parse() method always parses from
-	// the frist arguments of os.Args[]
-	subcommand := retrieveSubcommand()
-
-	flag.Parse()
+	subcommand := flag.Args()[0]
 
 	if err := setup.Init(); err != nil {
 		// the error returned from Init has already been logged inside the call
@@ -78,24 +72,39 @@ func main() {
 		return
 	}
 
-	if configFile == "" {
-		// run with other options for pki-init
-		statusCode, err := dispatcherInstance.run(subcommand)
+	if checkIfMultipleSubcommands() {
+		setup.LoggingClient.Error("cannot use multiple subcommands, use one at a time")
+		exitInstance.exit(1)
+		return
+	}
+
+	setup.LoggingClient.Debug(fmt.Sprintf("subcommand <%s>", subcommand))
+
+	var exitStatusCode int
+	var err error
+	// legacy mode of operation
+	if "legacy" == subcommand {
+		err = legacyCmd.Parse(flag.Args()[1:])
+		if err != nil {
+			setup.LoggingClient.Error(err.Error())
+			exitInstance.exit(2)
+			return
+		}
+		if err = option.GenTLSAssets(configFile); err != nil {
+			setup.LoggingClient.Error(err.Error())
+			exitInstance.exit(2)
+			return
+		}
+	} else {
+		// pki-init mode of operations
+		exitStatusCode, err = dispatcherInstance.run(subcommand)
 		if err != nil {
 			setup.LoggingClient.Error(err.Error())
 		}
-
-		exitInstance.exit(statusCode)
-		return
-	}
-
-	if err := option.GenTLSAssets(configFile); err != nil {
-		setup.LoggingClient.Error(err.Error())
-		exitInstance.exit(2)
-		return
 	}
 
 	setup.LoggingClient.Info(option.SecuritySecretsSetup+" complete", internal.LogDurationKey, time.Since(start).String())
+	exitInstance.exit(exitStatusCode)
 }
 
 func newExit() exiter {
@@ -110,16 +119,16 @@ func newOptionDispatcher() optionDispatcher {
 	return &pkiInitOptionDispatcher{}
 }
 
-// retrieveSubcommand parses the subcommand out of os.Arg if any
-// otherwise returns empty string ("")
-func retrieveSubcommand() (subcommand string) {
-	// commandline options always starts with -
-	// so it is treated as a subcommand if that is not the case
-	if !strings.HasPrefix(os.Args[1], "-") {
-		subcommand = os.Args[1]
-		os.Args = append(os.Args[:1], os.Args[2:]...)
+func checkIfMultipleSubcommands() bool {
+	numSubCmds := 0
+	for _, arg := range flag.Args() {
+		for _, subcommand := range subcommandList {
+			if arg == subcommand {
+				numSubCmds++
+			}
+		}
 	}
-	return subcommand
+	return numSubCmds > 1
 }
 
 func setupPkiInitOption(subcommand string) (executor option.OptionsExecutor, status int, err error) {

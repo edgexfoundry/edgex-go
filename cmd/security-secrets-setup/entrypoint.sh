@@ -58,10 +58,10 @@ CERT_EXEC="${CERT_EXEC:-./security-secrets-setup}"
 # check to see if the root certificate generate with security-secrets-setup already exists
 # if so then do not generate a new set of them
 if [ ! -f "$CERT_DIR/$CERT_SUBDIR/$ROOT_NAME/$ROOT_NAME.pem" ]; then
-    ${CERT_EXEC} --config ${PKI_SETUP_VAULT_FILE}
+    ${CERT_EXEC} legacy --config ${PKI_SETUP_VAULT_FILE}
     [ $? -eq 0 ] || (echo "failed to generate TLS assets for Vault" && exit 1)
 
-    ${CERT_EXEC} --config ${PKI_SETUP_KONG_FILE}
+    ${CERT_EXEC} legacy --config ${PKI_SETUP_KONG_FILE}
     [ $? -eq 0 ] || (echo "failed to generate TLS assets for Kong" && exit 1)
 
     # delete CA private key

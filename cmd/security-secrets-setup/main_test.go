@@ -55,7 +55,7 @@ func TestMainWithConfigFileOption(t *testing.T) {
 	defer tearDown(t, origArgs)
 	assert := assert.New(t)
 
-	os.Args = []string{"cmd", "-config", "./res/pkisetup-vault.json"}
+	os.Args = []string{"cmd", "legacy", "-config", "./res/pkisetup-vault.json"}
 	printCommandLineStrings(os.Args)
 	main()
 
@@ -75,7 +75,7 @@ func TestConfigFileOptionError(t *testing.T) {
 	defer tearDown(t, origArgs)
 	assert := assert.New(t)
 
-	os.Args = []string{"cmd", "-config", "./non-exist/cert.json"}
+	os.Args = []string{"cmd", "legacy", "-config", "./non-exist/cert.json"}
 	printCommandLineStrings(os.Args)
 	main()
 
