@@ -38,7 +38,7 @@ func main() {
 	var useRegistry bool
 
 	flag.BoolVar(&initNeeded, "init", false, "run init procedure for security service.")
-	flag.BoolVar(&insecureSkipVerify, "insecureSkipVerify", true, "skip server side SSL verification, mainly for self-signed cert")
+	flag.BoolVar(&insecureSkipVerify, "insecureSkipVerify", false, "skip server side SSL verification, mainly for self-signed cert")
 	flag.StringVar(&configFileLocation, "configfile", "res/configuration.toml", "configuration file")
 	flag.IntVar(&waitInterval, "wait", 30, "time to wait between checking Vault status in seconds.")
 	flag.BoolVar(&useRegistry, "registry", false, "Indicates the service should use registry service.")
