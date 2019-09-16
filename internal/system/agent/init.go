@@ -26,20 +26,20 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/general"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
+
 	registryTypes "github.com/edgexfoundry/go-mod-registry/pkg/types"
 	"github.com/edgexfoundry/go-mod-registry/registry"
 )
 
-type GeneralClients map[string]general.GeneralClient
-
 // Instance contains what were global variables.
 type Instance struct {
 	Configuration  *ConfigurationStruct
-	GenClients     GeneralClients
+	GenClients     *GeneralClients
 	LoggingClient  logger.LoggingClient
 	RegistryClient registry.Client
 	chErrors       chan error       //A channel for "config wait error" sourced from Registry
@@ -227,30 +227,25 @@ func (instance *Instance) listenForConfigChanges() {
 }
 
 func (instance *Instance) initializeClients(useRegistry bool) {
-	instance.GenClients = make(GeneralClients)
-
-	var updateGenClients = func(serviceKey string, serviceName string) {
-		instance.GenClients[serviceKey] = general.NewGeneralClient(
-			types.EndpointParams{
-				ServiceKey:  serviceKey,
-				Path:        "/",
-				UseRegistry: useRegistry,
-				Url:         instance.Configuration.Clients[serviceName].Url(),
-				Interval:    internal.ClientMonitorDefault,
-			},
-			startup.Endpoint{RegistryClient: &instance.RegistryClient})
-	}
-
+	instance.GenClients = NewGeneralClients()
 	if useRegistry {
-		for serviceKey, serviceName := range config.ListDefaultServices() {
-			updateGenClients(serviceKey, serviceName)
-		}
+		// if we're using the registry, we'll create new general clients as we need them.
 		return
 	}
 
 	// if the registry is not being used, load clients from configurations; assume configuration key is service name
-	for key := range instance.Configuration.Clients {
-		updateGenClients(key, key)
+	for serviceKey := range instance.Configuration.Clients {
+		instance.GenClients.Set(
+			serviceKey,
+			general.NewGeneralClient(
+				types.EndpointParams{
+					ServiceKey:  serviceKey,
+					Path:        "/",
+					UseRegistry: useRegistry,
+					Url:         instance.Configuration.Clients[serviceKey].Url(),
+					Interval:    internal.ClientMonitorDefault,
+				},
+				startup.Endpoint{RegistryClient: &instance.RegistryClient}))
 	}
 }
 
