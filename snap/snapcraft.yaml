@@ -165,7 +165,7 @@ apps:
   mongo-worker:
     adapter: full
     after: [mongod]
-    command: bin/mongo-worker-wrapper.sh
+    command: bin/edgex-mongo --config $SNAP_DATA/config/edgex-mongo/res/configuration.toml
     daemon: oneshot
     passthrough:
       start-timeout: 15m
@@ -491,37 +491,27 @@ parts:
       mkdir -p $SNAPCRAFT_PART_INSTALL/config/redis
       sed -e s@'dir ./'@'dir \$SNAP_DATA/redis'@ \
         redis.conf > $SNAPCRAFT_PART_INSTALL/config/redis/redis.conf
-  mongo-config:
+  edgex-mongo:
     source: https://github.com/edgexfoundry/docker-edgex-mongo.git
+    source-branch: master
     source-depth: 1
-    plugin: dump
-    # NOTE - both the mongo-config & go install README.md to root-dir of the snap
-    # which breaks when 'stage' runs.  The only workaround so far is
-    # is to not stage these files.  This needs a better solution long-term.
-    stage:
-      - -README.md
-      - -Dockerfile*
-      - -VERSION
+    plugin: make
+    after: [go]
     override-build: |
-      snapcraftctl build
-      echo "Installing mongo-config files"
-      echo "DIR=`pwd`"
-      echo "SNAPCRAFT_PART_INSTALL=$SNAPCRAFT_PART_INSTALL"
-      install -d "$SNAPCRAFT_PART_INSTALL/mongo"
-      cat ./launch-edgex-mongo.sh | \
-        sed -e s/\$SLEEP_TIME_BEFORE_CONFIG/10/ \
-            -e s:mongod:mongod\ --dbpath\ \$SNAP_DATA/mongo/db\ --logpath\ \$SNAP_COMMON/mongodb.log: \
-            -e '/wait/ d' \
-            -e s:/edgex/mongo/config/:\$SNAP/mongo/: > \
-         "$SNAPCRAFT_PART_INSTALL/mongo/launch-edgex-mongo.sh"
-      mv "$SNAPCRAFT_PART_INSTALL/init_mongo.js" \
-         "$SNAPCRAFT_PART_INSTALL/mongo/init_mongo.js"
-      chmod 755 "$SNAPCRAFT_PART_INSTALL/mongo/launch-edgex-mongo.sh"
+      cd $SNAPCRAFT_PART_SRC
+      make build
+
+      install -DT "./cmd/edgex-mongo" "$SNAPCRAFT_PART_INSTALL/bin/edgex-mongo"
+
+      install -d "$SNAPCRAFT_PART_INSTALL/config/edgex-mongo/res/"
+
+      cp "./cmd/res/configuration.toml" \
+        "$SNAPCRAFT_PART_INSTALL/config/edgex-mongo/res/configuration.toml"
+
+      install -DT "./cmd/Attribution.txt" \
+        "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/docker-edgex-mongo/Attribution.txt"
       install -DT "./LICENSE-2.0.TXT" \
-         "$SNAPCRAFT_PART_INSTALL/usr/share/doc/mongo-config/LICENSE-2.0.TXT"
-    prime:
-      - -launch-edgex-mongo.sh
-      - -LICENSE-2.0.TXT
+              "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/docker-edgex-mongo/LICENSE-2.0.TXT"
 
   edgex-go:
     source: .
