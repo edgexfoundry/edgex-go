@@ -112,48 +112,21 @@ func getConfig(
 	return result, nil
 }
 
-func getHealth(
-	services []string,
-	loggingClient logger.LoggingClient,
-	registryClient registry.Client) (map[string]interface{}, error) {
-
+func getHealth(services []string, registryClient registry.Client) (map[string]interface{}, error) {
 	health := make(map[string]interface{})
-
 	for _, service := range services {
 		if registryClient == nil {
 			health[service] = "registry is required to obtain service health status."
 			continue
 		}
 
-		if !IsKnownServiceKey(service) {
-			loggingClient.Warn(fmt.Sprintf("unknown service %s found while getting health", service))
-		}
-
-		err := registryClient.IsServiceAvailable(service)
 		// the registry service returns nil for a healthy service
-		if err != nil {
+		if err := registryClient.IsServiceAvailable(service); err != nil {
 			health[service] = err.Error()
-		} else {
-			health[service] = true
+			continue
 		}
-	}
 
+		health[service] = true
+	}
 	return health, nil
-}
-
-func IsKnownServiceKey(serviceKey string) bool {
-	knownServices := map[string]struct{}{
-		clients.SupportNotificationsServiceKey: {},
-		clients.CoreCommandServiceKey:          {},
-		clients.CoreDataServiceKey:             {},
-		clients.CoreMetaDataServiceKey:         {},
-		clients.ExportClientServiceKey:         {},
-		clients.ExportDistroServiceKey:         {},
-		clients.SupportLoggingServiceKey:       {},
-		clients.SupportSchedulerServiceKey:     {},
-		clients.ConfigSeedServiceKey:           {},
-	}
-
-	_, exists := knownServices[serviceKey]
-	return exists
 }

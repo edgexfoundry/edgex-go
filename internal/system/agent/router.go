@@ -122,7 +122,7 @@ func healthHandler(w http.ResponseWriter, r *http.Request, instance *Instance) {
 	var services []string
 	services = strings.Split(list, ",")
 
-	send, err := getHealth(services, instance.LoggingClient, instance.RegistryClient)
+	send, err := getHealth(services, instance.RegistryClient)
 	if err != nil {
 		instance.LoggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
