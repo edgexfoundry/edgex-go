@@ -130,6 +130,10 @@ func getHealth(
 	health := make(map[string]interface{})
 
 	for _, service := range services {
+		if registryClient == nil {
+			health[service] = "registry is required to obtain service health status."
+			continue
+		}
 
 		if !IsKnownServiceKey(service) {
 			loggingClient.Warn(fmt.Sprintf("unknown service %s found while getting health", service))
