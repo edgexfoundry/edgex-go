@@ -26,7 +26,6 @@ import (
 	"strings"
 
 	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 )
 
@@ -96,23 +95,12 @@ func (s *Service) Init(cert CertificateLoader) error {
 		return err
 	}
 
-	services := config.ListDefaultServices()
-	//TODO: There are specific other services being routed through Kong. This should probably be driven through configuration
-	//      For now, I'm putting this inline
-	services["edgex-support-rulesengine"] = "Rulesengine"
-	services["edgex-device-virtual"] = "Virtualdevice"
-
-	for _, name := range services {
-		params := Configuration.Clients[name]
-		if params.Host == "" {
-			LoggingClient.Warn("missing config information for service: " + name)
-			continue
-		}
+	for clientName, client := range Configuration.Clients {
 		serviceParams := &KongService{
-			Name:     strings.ToLower(name),
-			Host:     params.Host,
-			Port:     params.Port,
-			Protocol: params.Protocol,
+			Name:     strings.ToLower(clientName),
+			Host:     client.Host,
+			Port:     client.Port,
+			Protocol: client.Protocol,
 		}
 
 		err := s.initKongService(serviceParams)
@@ -121,10 +109,10 @@ func (s *Service) Init(cert CertificateLoader) error {
 		}
 
 		routeParams := &KongRoute{
-			Paths: []string{"/" + strings.ToLower(name)},
-			Name:  strings.ToLower(name),
+			Paths: []string{"/" + strings.ToLower(clientName)},
+			Name:  strings.ToLower(clientName),
 		}
-		err = s.initKongRoutes(routeParams, strings.ToLower(name))
+		err = s.initKongRoutes(routeParams, strings.ToLower(clientName))
 		if err != nil {
 			return err
 		}

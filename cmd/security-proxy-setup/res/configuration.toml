@@ -91,12 +91,12 @@ SNIS = ["edgex-kong"]
   Host = "localhost"
   Port = 48085
 
-  [Clients.Rulesengine]
+  [Clients.RulesEngine]
   Protocol = "http"
   Host = "localhost"
   Port = 48075
 	
-  [Clients.Virtualdevice]
+  [Clients.VirtualDevice]
   Protocol = "http"
   Host = "localhost"
   Port = 49990
