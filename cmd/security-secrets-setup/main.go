@@ -41,29 +41,32 @@ type pkiInitOptionDispatcher struct{}
 
 var exitInstance = newExit()
 var dispatcherInstance = newOptionDispatcher()
+
+var subcommands = map[string]*flag.FlagSet{
+	"legacy":   flag.NewFlagSet("legacy", flag.ExitOnError),
+	"generate": flag.NewFlagSet("generate", flag.ExitOnError),
+}
 var configFile string
-var subcommandList = []string{"legacy", "generate", "cache", "import"}
+
+func init() {
+	// setup options for subcommands:
+	subcommands["legacy"].StringVar(&configFile, "config", "", "specify JSON configuration file: /path/to/file.json")
+	subcommands["legacy"].StringVar(&configFile, "c", "", "specify JSON configuration file: /path/to/file.json")
+
+	flag.Usage = usage.HelpCallbackSecuritySetup
+}
 
 func main() {
 	start := time.Now()
 
-	// define and register command line subcommands:
-	legacyCmd := flag.NewFlagSet("legacy", flag.ExitOnError)
-	legacyCmd.StringVar(&configFile, "config", "", "specify JSON configuration file: /path/to/file.json")
-	legacyCmd.StringVar(&configFile, "c", "", "specify JSON configuration file: /path/to/file.json")
-
-	flag.Usage = usage.HelpCallbackSecuritySetup
-
 	flag.Parse()
 
-	if len(os.Args) < 2 || flag.NArg() < 1 {
+	if flag.NArg() < 1 {
 		fmt.Println("Please specify subcommand for " + option.SecuritySecretsSetup)
 		flag.Usage()
 		exitInstance.exit(0)
 		return
 	}
-
-	subcommand := flag.Args()[0]
 
 	if err := setup.Init(); err != nil {
 		// the error returned from Init has already been logged inside the call
@@ -72,21 +75,29 @@ func main() {
 		return
 	}
 
-	if checkIfMultipleSubcommands() {
-		setup.LoggingClient.Error("cannot use multiple subcommands, use one at a time")
+	subcmdName := flag.Args()[0]
+
+	subcmd, found := subcommands[subcmdName]
+	if !found {
+		setup.LoggingClient.Error(fmt.Sprintf("unsupported subcommand %s", subcmdName))
 		exitInstance.exit(1)
 		return
 	}
 
-	setup.LoggingClient.Debug(fmt.Sprintf("subcommand <%s>", subcommand))
+	if err := subcmd.Parse(flag.Args()[1:]); err != nil {
+		setup.LoggingClient.Error(fmt.Sprintf("error parsing subcommand %s: %v", subcmdName, err))
+		exitInstance.exit(2)
+		return
+	}
 
 	var exitStatusCode int
 	var err error
-	// legacy mode of operation
-	if "legacy" == subcommand {
-		err = legacyCmd.Parse(flag.Args()[1:])
-		if err != nil {
-			setup.LoggingClient.Error(err.Error())
+
+	switch subcmdName {
+	case "legacy":
+		// no additional arguments expected
+		if len(subcmd.Args()) > 0 {
+			setup.LoggingClient.Error(fmt.Sprintf("subcommand %s doesn't use other additional args", subcmdName))
 			exitInstance.exit(2)
 			return
 		}
@@ -95,9 +106,15 @@ func main() {
 			exitInstance.exit(2)
 			return
 		}
-	} else {
-		// pki-init mode of operations
-		exitStatusCode, err = dispatcherInstance.run(subcommand)
+
+	case "generate":
+		// no arguments expected
+		if len(subcmd.Args()) > 0 {
+			setup.LoggingClient.Error(fmt.Sprintf("subcommand %s doesn't use any args", subcmdName))
+			exitInstance.exit(2)
+			return
+		}
+		exitStatusCode, err = dispatcherInstance.run(subcmdName)
 		if err != nil {
 			setup.LoggingClient.Error(err.Error())
 		}
@@ -119,25 +136,11 @@ func newOptionDispatcher() optionDispatcher {
 	return &pkiInitOptionDispatcher{}
 }
 
-func checkIfMultipleSubcommands() bool {
-	numSubCmds := 0
-	for _, arg := range flag.Args() {
-		for _, subcommand := range subcommandList {
-			if arg == subcommand {
-				numSubCmds++
-			}
-		}
-	}
-	return numSubCmds > 1
-}
-
 func setupPkiInitOption(subcommand string) (executor option.OptionsExecutor, status int, err error) {
 	generateOpt := false
 	switch subcommand {
 	case "generate":
 		generateOpt = true
-	default:
-		return nil, 1, fmt.Errorf("unsupported subcommand %s", subcommand)
 	}
 
 	opts := option.PkiInitOption{

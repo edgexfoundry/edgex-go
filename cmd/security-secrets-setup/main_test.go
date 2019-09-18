@@ -118,6 +118,34 @@ func TestMainUnsupportedArgument(t *testing.T) {
 	assert.Equal(1, (exitInstance.(*testExitCode)).getStatusCode())
 }
 
+func TestMainVerifyMultipleSubcommands(t *testing.T) {
+	tearDown := setupTest(t)
+	origArgs := os.Args
+	defer tearDown(t, origArgs)
+	assert := assert.New(t)
+
+	os.Args = []string{"cmd", "generate", "legacy"}
+	printCommandLineStrings(os.Args)
+	hasDispatchError = false
+	main()
+
+	assert.Equal(2, (exitInstance.(*testExitCode)).getStatusCode())
+}
+
+func TestMainLegacySubcommandWithExtraArgs(t *testing.T) {
+	tearDown := setupTest(t)
+	origArgs := os.Args
+	defer tearDown(t, origArgs)
+	assert := assert.New(t)
+
+	os.Args = []string{"cmd", "legacy", "-c", "./res/pkisetup-vault.json", "extra"}
+	printCommandLineStrings(os.Args)
+	hasDispatchError = false
+	main()
+
+	assert.Equal(2, (exitInstance.(*testExitCode)).getStatusCode())
+}
+
 func runWithGenerateOption(hasError bool) {
 	os.Args = []string{"cmd", "generate"}
 	printCommandLineStrings(os.Args)
