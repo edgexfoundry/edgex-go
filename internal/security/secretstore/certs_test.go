@@ -12,6 +12,7 @@
  * the License.
  *
  * @author: Tingyu Zeng, Dell
+ * @author: Daniel Harms, Dell
  *******************************************************************************/
 
 package secretstore
@@ -72,6 +73,10 @@ func TestRetrieve(t *testing.T) {
 		t.Errorf("parsed port number cannot be converted to int %s", parsed.Port())
 		return
 	}
+
+	oldConfig := Configuration
+	defer func() { Configuration = oldConfig }()
+
 	Configuration = &ConfigurationStruct{}
 	Configuration.SecretService = SecretServiceInfo{
 		Server: parsed.Hostname(),
@@ -88,5 +93,4 @@ func TestRetrieve(t *testing.T) {
 	if cp.Cert != "test-certificate" || cp.Key != "test-private-key" {
 		t.Errorf("failed to parse certificate key pair")
 	}
-	Configuration = &ConfigurationStruct{}
 }

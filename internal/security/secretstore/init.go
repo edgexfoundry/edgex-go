@@ -73,8 +73,5 @@ func initializeConfiguration(useRegistry bool, useProfile string) (*Configuratio
 }
 
 func setLoggingTarget() string {
-	//if Configuration.Logging.EnableRemote {
-	//	return Configuration.Clients["Logging"].Url() + clients.ApiLoggingRoute
-	//}
 	return Configuration.Logging.File
 }

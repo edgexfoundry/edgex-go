@@ -23,7 +23,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	url2 "net/url"
+	"net/url"
 
 	"github.com/edgexfoundry/edgex-go/internal"
 )
@@ -52,14 +52,14 @@ func NewCerts(caller internal.HttpCaller, certPath string, tokenPath string) Cer
 }
 
 func (cs *Certs) certPathUrl() (string, error) {
-	baseURL, err := url2.Parse(Configuration.SecretService.GetSecretSvcBaseURL())
+	baseURL, err := url.Parse(Configuration.SecretService.GetSecretSvcBaseURL())
 	if err != nil {
 		e := fmt.Errorf("error parsing secret-service url.  check server and port properties")
 		LoggingClient.Error(e.Error())
 		return "", err
 	}
 
-	certPath, err := url2.Parse(cs.certPath)
+	certPath, err := url.Parse(cs.certPath)
 	if err != nil {
 		e := fmt.Errorf("error parsing secret-service certpath.  check certpath property")
 		LoggingClient.Error(e.Error())
@@ -71,12 +71,12 @@ func (cs *Certs) certPathUrl() (string, error) {
 }
 
 func (cs *Certs) retrieve(t string) (*CertPair, error) {
-	url, err := cs.certPathUrl()
+	certUrl, err := cs.certPathUrl()
 	if err != nil {
 		return nil, err
 	}
 
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+	req, err := http.NewRequest(http.MethodGet, certUrl, nil)
 	if err != nil {
 		e := fmt.Errorf("error creating http request: %v", err.Error())
 		LoggingClient.Error(e.Error())
@@ -97,6 +97,7 @@ func (cs *Certs) retrieve(t string) (*CertPair, error) {
 	if resp.StatusCode == http.StatusNotFound {
 		e := fmt.Errorf("proxy cert pair NOT found in secret store @/%s, status: %s", cs.certPath, resp.Status)
 		LoggingClient.Info(e.Error())
+		return nil, e
 	} else if resp.StatusCode != http.StatusOK {
 		e := fmt.Errorf("failed to retrieve the proxy cert pair on path %s with error code %d", cs.certPath, resp.StatusCode)
 		LoggingClient.Error(e.Error())
@@ -106,7 +107,7 @@ func (cs *Certs) retrieve(t string) (*CertPair, error) {
 	if err = json.NewDecoder(resp.Body).Decode(&cc); err != nil {
 		e := fmt.Errorf("Error decoding json response when retrieving proxy cert pair: %s", err.Error())
 		LoggingClient.Error(e.Error())
-		return nil, err
+		return nil, e
 	}
 
 	return &cc.Pair, nil
@@ -126,11 +127,11 @@ func (cs *Certs) AlreadyinStore() (bool, error) {
 func (cs *Certs) getCertPair() (*CertPair, error) {
 	t, err := GetAccessToken(cs.tokenPath)
 	if err != nil {
-		return &CertPair{"", ""}, err
+		return nil, err
 	}
 	cp, err := cs.retrieve(t)
 	if err != nil {
-		return &CertPair{"", ""}, err
+		return nil, err
 	}
 	return cp, nil
 }
@@ -180,12 +181,12 @@ func (cs *Certs) UploadToStore(cp *CertPair) error {
 	jsonBytes, err := json.Marshal(cp)
 	body := bytes.NewBuffer(jsonBytes)
 
-	url, err := cs.certPathUrl()
+	certUrl, err := cs.certPathUrl()
 	if err != nil {
 		return err
 	}
 
-	req, err := http.NewRequest(http.MethodPost, url, body)
+	req, err := http.NewRequest(http.MethodPost, certUrl, body)
 	if err != nil {
 		e := fmt.Errorf("error creating http request: %v", err.Error())
 		LoggingClient.Error(e.Error())
@@ -201,7 +202,7 @@ func (cs *Certs) UploadToStore(cp *CertPair) error {
 	}
 	defer resp.Body.Close()
 
-	if !statusSuccess(resp.StatusCode) {
+	if resp.StatusCode != http.StatusOK {
 		b, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
 			return err
@@ -213,8 +214,4 @@ func (cs *Certs) UploadToStore(cp *CertPair) error {
 
 	LoggingClient.Info("successful on uploading the proxy cert pair into secret store")
 	return nil
-}
-
-func statusSuccess(status int) bool {
-	return status >= 200 && status < 300
 }
