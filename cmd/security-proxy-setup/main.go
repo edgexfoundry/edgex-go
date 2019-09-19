@@ -59,7 +59,7 @@ func main() {
 	params := startup.BootParams{UseRegistry: useRegistry, UseProfile: useProfile, BootTimeout: internal.BootTimeoutDefault}
 	startup.Bootstrap(params, proxy.Retry, logBeforeInit)
 
-	req := proxy.NewRequestor(insecureskipverify, proxy.Configuration.Writable.RequestTimeout)
+	req := proxy.NewRequestor(insecureSkipVerify, proxy.Configuration.Writable.RequestTimeout)
 	s := proxy.NewService(req)
 
 	err := s.CheckProxyServiceStatus()
