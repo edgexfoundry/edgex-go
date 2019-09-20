@@ -1,0 +1,2638 @@
+openapi: 3.0.0
+info:
+  title: core-metadata
+  version: 1.1.x-oas3
+servers:
+- url: http://localhost:48081/api
+paths:
+  /v1/addressable:
+    get:
+      description: Return all addressable objects sorted by database generated id.
+        Returns Internal Service Error (HTTP 500) for unknown or unanticipated issues.
+        Returns LimitExceededException (HTTP 413) if the number returned exceeds the
+        max limit.
+      responses:
+        200:
+          description: list of addressable
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/addressable'
+        413:
+          description: if the number returned exceeds the max limit.
+        500:
+          description: for unknown or unanticipated issues.
+    put:
+      description: Update the Addressable identified by the id or name in the object
+        provided. Id is used first, name is used second for identification purposes.
+        Returns Internal Service Error (HTTP 500) for unknown or unanticipated issues.
+        Returns NotFoundException (HTTP 404) if no addressable with the provided id
+        is found.
+      requestBody:
+        $ref: '#/components/requestBodies/addressable'
+      responses:
+        200:
+          description: boolean indicating success of the update
+        400:
+          description: for malformed or unparsable requests
+        404:
+          description: if no addressable with the provided id is found.
+        409:
+          description: if the addressable is currently in use
+        500:
+          description: for unknown or unanticipated issues or for any duplicate name
+            (key) error.
+    post:
+      description: Add a new Addressable - name must be unique. Returns Internal Service
+        Error (HTTP 500) for unknown or unanticipated issues.
+      requestBody:
+        $ref: '#/components/requestBodies/addressable'
+      responses:
+        200:
+          description: new database generated id for the new Addressable
+        400:
+          description: for malformed or unparsable requests
+        409:
+          description: if the name is determined to not be unique with regard to others
+        500:
+          description: for unknown or unanticipated issues or for any duplicate name
+            (key) error.
+  /v1/addressable/address/{address}:
+    get:
+      description: Return Addressable objects with given address. List may be empty
+        if none are associated to the address. Returns Internal Service Error (HTTP
+        500) for unknown or unanticipated issues.
+      parameters:
+      - name: address
+        in: path
+        description: address (as in URL address)
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: list of addressable matching address
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/addressable'
+        400:
+          description: for malformed or unparsable requests
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/addressable/id/{id}:
+    delete:
+      description: Remove the Addressable designated by the database generated id
+        for the Addressable. Returns Internal Service Error (HTTP 500) for unknown
+        or unanticipated issues. Returns NotFoundException (HTTP 404) if no addressable
+        with the provided id is found.
+      parameters:
+      - name: id
+        in: path
+        description: database generated id
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: boolean indicating success of the remove operation
+        404:
+          description: if no addressable with the provided id is found.
+        409:
+          description: if the adressable is still in use
+        500:
+          description: for unknown or unanticipated issues
+  /v1/addressable/name/{name}:
+    get:
+      description: Return Addressable with matching name (name should be unique).
+        May be null if none match. Returns Internal Service Error (HTTP 500) for unknown
+        or unanticipated issues.  Returns NotFoundException (HTTP 404) if not found
+        by name.
+      parameters:
+      - name: name
+        in: path
+        description: unique name of addressable
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: addressable matching on name
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/addressable'
+        400:
+          description: for malformed or unparsable requests
+        404:
+          description: if no addressable with the provided name is found
+        500:
+          description: for unknown or unanticipated issues.
+    delete:
+      description: Remove the Addressable designated by unique name identifier. Returns
+        Internal Service Error (HTTP 500) for unknown or unanticipated issues. Returns
+        NotFoundException (HTTP 404) if no addressable with the provided name is found.
+      parameters:
+      - name: name
+        in: path
+        description: unique name of addressable
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: boolean indicating success of the remove operation
+        400:
+          description: for malformed or unparsable requests
+        404:
+          description: if no addressable with the provided name is found.
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/addressable/port/{port}:
+    get:
+      description: Return Addressable objects with given port. List may be empty if
+        none are associated to the port. Returns Internal Service Error (HTTP 500)
+        for unknown or unanticipated issues.
+      parameters:
+      - name: port
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: list of addressable matching port
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/addressable'
+        400:
+          description: for malformed or unparsable requests
+        500:
+          description: for unknown or unanticipated issues
+  /v1/addressable/publisher/{publisher}:
+    get:
+      description: Return Addressable objects with given publisher. List may be empty
+        if none are associated to the publisher. Returns Internal Service Error (HTTP
+        500) for unknown or unanticipated issues.
+      parameters:
+      - name: publisher
+        in: path
+        description: publisher name (as in MQTT publisher)
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: list of addressable matching publisher
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/addressable'
+        400:
+          description: for malformed or unparsable requests
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/addressable/topic/{topic}:
+    get:
+      description: Return Addressable objects with given topic. List may be empty
+        if none are associated to the topic. Returns Internal Service Error (HTTP
+        500) for unknown or unanticipated issues.
+      parameters:
+      - name: topic
+        in: path
+        description: topic name (as in MQTT topic name)
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: list of addressable matching topic
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/addressable'
+        400:
+          description: for malformed or unparsable requests
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/addressable/{id}:
+    get:
+      description: Fetch a specific addressable by database generated id. May return
+        null if no addressable matches on id. Returns Internal Service Error (HTTP
+        500) for unknown or unanticipated issues.  Returns NotFoundException (HTTP
+        404) if not found by the id.
+      parameters:
+      - name: id
+        in: path
+        description: database generated id
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: addressable
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/addressable'
+        404:
+          description: if no addressable with the provided id is found
+        500:
+          description: for unknown or unanticipated issues
+  /v1/command:
+    get:
+      description: Return all command objects. Returns Internal Service Error (HTTP
+        500) for unknown or unanticipated issues. Returns LimitExceededException (HTTP
+        413) if the number returned exceeds the max limit.
+      responses:
+        200:
+          description: Successful Response
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/command'
+        413:
+          description: if the number returned exceeds the max limit.
+        500:
+          description: for unknown or unanticipated errors
+  /v1/command/device/{id}:
+    get:
+      description: Fetch commands by device id. Returns Internal Service Error (HTTP
+        500) for unknown or unanticipated issues. Returns NotFoundException (HTTP
+        404) if no command with the provided id is found.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: Successful Response
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/command'
+        404:
+          description: if no device exists for the provided id.
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/command/name/{name}:
+    get:
+      description: Return Command objects with given name. Name is not unique for
+        all of EdgeX but is unique per any associated Device Profile. Returns Internal
+        Service Error (HTTP 500) for unknown or unanticipated issues.
+      parameters:
+      - name: name
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: Successful Response
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/command'
+        400:
+          description: for malformed or unparsable requests
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/command/{id}:
+    get:
+      description: Fetch a specific command by database generated id. May return null
+        if no commands with the id is found. Returns Internal Service Error (HTTP
+        500) for unknown or unanticipated issues. Returns NotFoundException (HTTP
+        404) if no command with the provided id is found.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: Successful Response
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/command'
+        404:
+          description: if no command with the provided id is found.
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/config:
+    get:
+      description: Fetch the current state of the service's configuration.
+      responses:
+        200:
+          description: The service's configuration as JSON document
+  /v1/device:
+    get:
+      description: Return all devices sorted by id. Returns Internal Service Error
+        (HTTP 500) for unknown or unanticipated issues. Returns LimitExceededException
+        (HTTP 413) if the number returned exceeds the max limit.
+      responses:
+        200:
+          description: list of device
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/device'
+        413:
+          description: if the number returned exceeds the max limit
+        500:
+          description: for unknown or unanticipated issues
+    put:
+      description: Update the Device identified by the id or name stored in the object
+        provided. Id is used first, name is used second for identification purposes.
+        New device services & profiles cannot be created with a PUT, but the service
+        and profile can replaced by referring to a new device service or profile id
+        or name. Returns Internal Service Error (HTTP 500) for unknown or unanticipated
+        issues. Returns NotFoundException (HTTP 404) if the device cannot be found
+        by the identifier provided.
+      requestBody:
+        $ref: '#/components/requestBodies/device'
+      responses:
+        200:
+          description: boolean indicating success of the update
+        400:
+          description: if the request is malformed or unparsable
+        404:
+          description: if the device cannot be found by the identifier provided.
+        500:
+          description: for unknown or unanticipated issues.
+    post:
+      description: Add a new Device - name must be unique. Embedded objects (device,
+        service, profile, addressable) are all referenced in the new Device object
+        by id or name to associated objects. All other data in the embedded objects
+        will be ignored. Returns Internal Service Error (HTTP 500) for unknown or
+        unanticipated issues. Returns DataValidationException (HTTP 409) if an associated
+        object (Addressable, Profile, Service) cannot be found with the id or name
+        provided.
+      requestBody:
+        $ref: '#/components/requestBodies/device'
+      responses:
+        200:
+          description: database generated identifier for the new device
+        400:
+          description: if the request is malformed or unparsable or if an associated
+            object (Addressable, Profile, Service) cannot be found with the id or
+            name provided
+        409:
+          description: if the name is determined to not be unique with regard to others.
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/device/check/{token}:
+    get:
+      description: Obtain a device by either name (preferred) or id. Id must be a
+        valid BSON identifier.
+      parameters:
+      - name: token
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: JSON payload representing the device
+        400:
+          description: for incorrect or unparsable requests
+        404:
+          description: device was not found
+  /v1/device/id/{id}:
+    delete:
+      description: Remove the Device designated by database generated id. This does
+        not remove associated objects (addressable, service, profile, etc.). Returns
+        Internal Service Error (HTTP 500) for unknown or unanticipated issues. Returns
+        NotFoundException (HTTP 404) if the device cannot be found by the identifier
+        provided.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: boolean indicating success of the remove operation
+        400:
+          description: for incorrect or unparsable requests
+        404:
+          description: if the device cannot be found by the id provided.
+  /v1/device/label/{label}:
+    get:
+      description: Find all Devices having at least one label matching the label provided.
+        List may be empty if no device match. Returns Internal Service Error (HTTP
+        500) for unknown or unanticipated issues.
+      parameters:
+      - name: label
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: List of Device matching on specified label
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/device'
+        400:
+          description: for incorrect or unparsable requests
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/device/name/{name}:
+    get:
+      description: Return Device matching given name (device names should be unique).
+        May be null if no device matches on the name provided. Returns Internal Service
+        Error (HTTP 500) for unknown or unanticipated issues. Returns NotFoundException
+        (HTTP 404) if the device cannot be found by the identifier provided.
+      parameters:
+      - name: name
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: device matching on name
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/device'
+        400:
+          description: for incorrect or unparsable requests
+        404:
+          description: if the device cannot be found by the name provided.
+        500:
+          description: for unknown or unanticipated issues.
+    put:
+      description: Set the admin or operating state of the device by unique name of
+        the device. Returns Internal Service Error (HTTP 500) for unknown or unanticipated
+        issues. Returns NotFoundException (HTTP 404) if the device cannot be found
+        by the name provided.
+      parameters:
+      - name: name
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      requestBody:
+        $ref: '#/components/requestBodies/device'
+      responses:
+        200:
+          description: indicating success of the operation
+        400:
+          description: for incorrect or unparsable requests
+        404:
+          description: if the device cannot be found by the name provided.
+        500:
+          description: for unknown or unanticipated issues.
+    delete:
+      description: Remove the Device designated by unique name. This does not remove
+        associated objects (addressable, service, profile, etc.). Returns Internal
+        Service Error (HTTP 500) for unknown or unanticipated issues. Returns NotFoundException
+        (HTTP 404) if the device cannot be found by the identifier provided.
+      parameters:
+      - name: name
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: boolean indicating success of update
+        400:
+          description: for incorrect or unparsable requests
+        404:
+          description: if the device cannot be found by the name provided.
+  /v1/device/name/{name}/lastconnected/{time}:
+    put:
+      description: Update the last connected time of the device by unique name of
+        the device. Returns Internal Service Error (HTTP 500) for unknown or unanticipated
+        issues. Returns NotFoundException (HTTP 404) if the device cannot be found
+        by the name provided.
+      parameters:
+      - name: time
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: name
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: boolean indicating success of update
+        400:
+          description: for incorrect or unparsable requests
+        404:
+          description: if the device cannot be found by the name provided.
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/device/name/{name}/lastconnected/{time}/{notify}:
+    put:
+      description: Update the last connected time of the device by unique name of
+        the device. The notify boolean indicates whether the owning device service
+        should be notified of the change. Returns Internal Service Error (HTTP 500)
+        for unknown or unanticipated issues. Returns NotFoundException (HTTP 404)
+        if the device cannot be found by the name provided.
+      parameters:
+      - name: time
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: name
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: notify
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: boolean indicating success of update
+        400:
+          description: for incorrect or unparsable requests
+        404:
+          description: if the device cannot be found by the name provided.
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/device/name/{name}/lastreported/{time}:
+    put:
+      description: Update the last reported time of the device by unique name of the
+        device. Returns Internal Service Error (HTTP 500) for unknown or unanticipated
+        issues. Returns NotFoundException (HTTP 404) if the device cannot be found
+        by the name provided.
+      parameters:
+      - name: time
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: name
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: boolean indicating success of update
+        400:
+          description: for incorrect or unparsable requests
+        404:
+          description: if the device cannot be found by the name provided.
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/device/name/{name}/lastreported/{time}/{notify}:
+    put:
+      description: Update the last reported time of the device by unique name of the
+        device. The notify boolean indicates whether the owning device service should
+        be notified of the change.  Returns Internal Service Error (HTTP 500) for
+        unknown or unanticipated issues. Returns NotFoundException (HTTP 404) if the
+        device cannot be found by the name provided.
+      parameters:
+      - name: time
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: name
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: notify
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: boolean indicating success of update
+        400:
+          description: for incorrect or unparsable requests
+        404:
+          description: if the device cannot be found by the name provided.
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/device/profile/{profileId}:
+    get:
+      description: Find all devices associated to the DeviceProfile with the specified
+        profile database generated identifier. List may be empty if no device match.
+        Returns Internal Service Error (HTTP 500) for unknown or unanticipated issues.
+        Returns NotFoundException (HTTP 404) if no DeviceProfile match on the id provided.
+      parameters:
+      - name: profileId
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: List of Devices associated to the device profile
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/device'
+        404:
+          description: if no device profile match on the id provided.
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/device/profilename/{profilename}:
+    get:
+      description: Find all devices associated to the DeviceProfile with the specified
+        profile name. List may be empty if no device match. Returns Internal Service
+        Error (HTTP 500) for unknown or unanticipated issues. Returns NotFoundException
+        (HTTP 404) if no DeviceProfile match on the name provided.
+      parameters:
+      - name: profilename
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: List of Devices associated to the profile
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/device'
+        400:
+          description: for incorrect or unparsable requests
+        404:
+          description: if the device cannot be found by the identifier provided.
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/device/service/{serviceId}:
+    get:
+      description: Find all devices associated to the DeviceService with the specified
+        DeviceService database generated identifier. List may be empty if no device
+        match. Returns Internal Service Error (HTTP 500) for unknown or unanticipated
+        issues. Returns NotFoundException (HTTP 404) if no DeviceService match on
+        the id provided.
+      parameters:
+      - name: serviceId
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: List of Devices associated to the device service
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/device'
+        404:
+          description: if no device service match on the id provided.
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/device/servicename/{servicename}:
+    get:
+      description: Find all devices associated to the DeviceService with the specified
+        service name (DeviceService names must be unique). List may be empty if no
+        device match. Returns Internal Service Error (HTTP 500) for unknown or unanticipated
+        issues. Returns NotFoundException (HTTP 404) if no DeviceService match on
+        the name provided.
+      parameters:
+      - name: servicename
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: List of Devices associated to the device service
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/device'
+        400:
+          description: for incorrect or unparsable requests
+        404:
+          description: if the device cannot be found by the name provided.
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/device/{id}:
+    get:
+      description: Fetch a specific device by database generated id. May return null
+        if no device with the id is found. Returns Internal Service Error (HTTP 500)
+        for unknown or unanticipated issues.  Returns NotFoundException (HTTP 404)
+        if the device cannot be found by the identifier provided.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: device matching on the id
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/device'
+        400:
+          description: for incorrect or unparsable requests
+        404:
+          description: if the device cannot be found by the name provided.
+        500:
+          description: for unknown or unanticipated issues.
+    put:
+      description: Set the admin or operating state of the device (as referenced by
+        the database generated id of the device) to the state provided (either enabled
+        or disabled). ServiceException (HTTP 500) for unanticipated or unknown issues
+        encountered. Throws NotFoundException (HTTP 404) if no device exists by the
+        id provided.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      requestBody:
+        $ref: '#/components/requestBodies/device'
+      responses:
+        200:
+          description: status code indicating success
+        400:
+          description: for incorrect or unparsable requests
+        404:
+          description: if no device exists by the id provided.
+        500:
+          description: for unanticipated or unknown issues encountered.
+  /v1/device/{id}/lastconnected/{time}:
+    put:
+      description: Update the last connected time of the device by database generated
+        identifier. Returns Internal Service Error (HTTP 500) for unknown or unanticipated
+        issues. Returns NotFoundException (HTTP 404) if the device cannot be found
+        by the identifier provided.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: time
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: boolean indicating success of update
+        400:
+          description: for incorrect or unparsable requests
+        404:
+          description: if the device cannot be found by the name provided.
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/device/{id}/lastconnected/{time}/{notify}:
+    put:
+      description: Update the last connected time of the device by database generated
+        identifier. The notify boolean indicates whether the owning device service
+        should be notified of the change. Returns Internal Service Error (HTTP 500)
+        for unknown or unanticipated issues. Returns NotFoundException (HTTP 404)
+        if the device cannot be found by the identifier provided.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: time
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: notify
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: boolean indicating success of update
+        400:
+          description: for incorrect or unparsable requests
+        404:
+          description: if the device cannot be found by the name provided.
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/device/{id}/lastreported/{time}:
+    put:
+      description: Update the last reported time of the device by database generated
+        identifier. Returns Internal Service Error (HTTP 500) for unknown or unanticipated
+        issues. Returns NotFoundException (HTTP 404) if the device cannot be found
+        by the identifier provided.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: time
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: boolean indicating success of update
+        400:
+          description: for incorrect or unparsable requests
+        404:
+          description: if the device cannot be found by the name provided.
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/device/{id}/lastreported/{time}/{notify}:
+    put:
+      description: Update the last reported time of the device by database generated
+        identifier. The notify boolean indicates whether the owning device service
+        should be notified of the change. Returns Internal Service Error (HTTP 500)
+        for unknown or unanticipated issues. Returns NotFoundException (HTTP 404)
+        if the device cannot be found by the identifier provided.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: time
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: notify
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: boolean indicating success of update
+        400:
+          description: for incorrect or unparsable requests
+        404:
+          description: if the device cannot be found by the name provided.
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/deviceprofile:
+    get:
+      description: Return all profiles sorted by id. Returns Internal Service Error
+        (HTTP 500) for unknown or unanticipated issues. Returns LimitExceededException
+        (HTTP 413) if the number returned exceeds the max limit.
+      responses:
+        200:
+          description: list of profiles
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/deviceprofile'
+        413:
+          description: if the number returned exceeds the max limit
+        500:
+          description: for unknown or unanticipated issues
+    put:
+      description: Update the DeviceProfile identified by the id or name stored in
+        the object provided. Id is used first, name is used second for identification
+        purposes. Associated commands must be updated directly. Returns Internal Service
+        Error (HTTP 500) for unknown or unanticipated issues. Returns NotFoundException
+        (HTTP 404) if the profile cannot be found by the identifier provided.
+      requestBody:
+        $ref: '#/components/requestBodies/deviceprofile'
+      responses:
+        200:
+          description: boolean indicating success of the remove operation
+        400:
+          description: for malformed or unparsable requests
+        404:
+          description: if the profile cannot be found by the identifier provided
+        409:
+          description: if the profile contains duplicate command or profile names,
+            or if the device profile is in use by one or more provision watchers or
+            devices.
+        500:
+          description: for unknown or unanticipated issues
+    post:
+      description: Add a new DeviceProfile (and associated Command objects) - name
+        must be unique. Returns Internal Service Error (HTTP 500) for unknown or unanticipated
+        issues. Returns DataValidationException (HTTP 409) if an associated command's
+        name is a duplicate for the profile.
+      requestBody:
+        $ref: '#/components/requestBodies/deviceprofile'
+      responses:
+        200:
+          description: database generated identifier for the new device profile
+        400:
+          description: for malformed or unparsable requests
+        409:
+          description: if an associated command's name is a duplicate for the profile
+            or if the name is determined to not be unique with regard to others.
+        500:
+          description: for unknown or unanticipated issues
+  /v1/deviceprofile/id/{id}:
+    delete:
+      description: Remove the DeviceProfile designated by database generated id. This
+        does not remove associated commands. Returns Internal Service Error (HTTP
+        500) for unknown or unanticipated issues. Returns NotFoundException (HTTP
+        404) if the device profile cannot be found by the identifier provided. Returns
+        DataValidationException (HTTP 413) if devices still reference the profile.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: boolean indicating success of the remove operation
+        404:
+          description: if the device profile cannot be found with the identifier provided
+        409:
+          description: if devices or provision watchers still reference the profile
+        500:
+          description: for unknown or unanticipated issues
+  /v1/deviceprofile/label/{label}:
+    get:
+      description: Find all DeviceProfiles having at least one label matching the
+        label provided. List may be empty if no profiles match. Returns Internal Service
+        Error (HTTP 500) for unknown or unanticipated issues.
+      parameters:
+      - name: label
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: List of DeviceProfile matching on specified label
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/deviceprofile'
+        400:
+          description: for malformed or unparsable requests
+        500:
+          description: for unknown or unanticipated issues
+  /v1/deviceprofile/manufacturer/{manufacturer}:
+    get:
+      description: Find all DeviceProfiles with a manufacture attribute matching that
+        provided. List may be empty if no profiles match. Returns Internal Service
+        Error (HTTP 500) for unknown or unanticipated issues.
+      parameters:
+      - name: manufacturer
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: List of DeviceProfile matching on specified manufacturer.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/deviceprofile'
+        400:
+          description: for malformed or unparsable requests
+        500:
+          description: for unknown or unanticipated issues
+  /v1/deviceprofile/manufacturer/{manufacturer}/model/{model}:
+    get:
+      description: Find all DeviceProfiles with a manufacture or model attribute matching
+        that provided (either matching provides a hit). List may be empty if no profiles
+        match. Returns Internal Service Error (HTTP 500) for unknown or unanticipated
+        issues.
+      parameters:
+      - name: model
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: manufacturer
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: List of DeviceProfile matching on specified manufacturer and/or
+            model.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/devicereport'
+        400:
+          description: for malformed or unparsable requests
+        500:
+          description: for unknown or unanticipated issues
+  /v1/deviceprofile/model/{model}:
+    get:
+      description: Find all DeviceProfiles with a model attribute matching that provided.
+        List may be empty if no profiles match. Returns Internal Service Error (HTTP
+        500) for unknown or unanticipated issues.
+      parameters:
+      - name: model
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: List of DeviceProfile matching on specified model.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/deviceprofile'
+        400:
+          description: for malformed or unparsable requests
+        500:
+          description: for unknown or unanticipated issues
+  /v1/deviceprofile/name/{name}:
+    get:
+      description: Return the DeviceProfile matching given name (profile names should
+        be unique). May be null if no profiles matches on the name provided. Returns
+        Internal Service Error (HTTP 500) for unknown or unanticipated issues. Returns
+        NotFoundException (HTTP 404) if the device profile cannot be found by the
+        name provided.
+      parameters:
+      - name: name
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: device profile matching on name
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/deviceprofile'
+        400:
+          description: for malformed or unparsable requests
+        404:
+          description: if the device profile cannot be found by the name provided
+        500:
+          description: for unknown or unanticipated issues
+    delete:
+      description: Remove the DeviceProfile designated by unique name. This does not
+        remove associated commands. Returns Internal Service Error (HTTP 500) for
+        unknown or unanticipated issues. Returns NotFoundException (HTTP 404) if the
+        device profile cannot be found by the name provided. Returns DataValidationException
+        (HTTP 409) if devices still reference the profile.
+      parameters:
+      - name: name
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: boolean indicating success of the remove operation
+        400:
+          description: for malformed or unparsable requests
+        404:
+          description: if the device profile cannot be found by the name provided
+        409:
+          description: if devices or provision watchers still reference the profile
+        500:
+          description: for unknown or unanticipated issues
+  /v1/deviceprofile/upload:
+    post:
+      description: Add a new DeviceProfile (and associated Command objects) via YAML
+        content - name must be unique. Returns Internal Service Error (HTTP 500) for
+        unknown or unanticipated issues. Returns DataValidationException (HTTP 409)
+        if an associated command's name is a duplicate for the profile.
+      responses:
+        200:
+          description: database generated identifier for the new device profile
+        400:
+          description: if the YAML file is empty
+        409:
+          description: if an associated command's name is a duplicate for the profile
+            or if the name is determined to not be unique with regard to others
+        500:
+          description: for unknown or unanticipated issues
+  /v1/deviceprofile/uploadfile:
+    post:
+      description: Add a new DeviceProfile (and associated Command objects) via YAML
+        profile file - name must be unique. Returns Internal Service Error (HTTP 500)
+        for unknown or unanticipated issues. Returns DataValidationException (HTTP
+        409) if an associated command's name is a duplicate for the profile. Returns
+        ClientException (HTTP 400) if the YAML file is empty.
+      responses:
+        200:
+          description: database generated identifier for the new device profile
+        400:
+          description: if the YAML file is empty
+        409:
+          description: if an associated command's name is a duplicate for the profile
+            or if the name is determined to not be unique with regard to others
+        500:
+          description: for unknown or unanticipated issues
+  /v1/deviceprofile/yaml/name/{name}:
+    get:
+      description: Return, in yaml form, the DeviceProfiles matching given name (profile
+        names should be unique). May be null if no profiles matches on the name provided.
+        Returns Internal Service Error (HTTP 500) for unknown or unanticipated issues.  Returns
+        NotFoundException (HTTP 404) if the device profile cannot be found by the
+        name provided.
+      parameters:
+      - name: name
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: device profile in YAML matching on name
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/deviceprofile'
+        400:
+          description: for malformed or unparsable requests
+        404:
+          description: if the device profile cannot be found by the name provided
+        500:
+          description: for unknown or unanticipated issues
+  /v1/deviceprofile/yaml/{id}:
+    get:
+      description: Fetch the profile identified by database generated id and return
+        as a YAML string. Returns Internal Service Error (HTTP 500) for unknown or
+        unanticipated issues.  eturns NotFoundException (HTTP 404) if the device profile
+        cannot be found by the name provided.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: device profile in YAML format
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/deviceprofile'
+        404:
+          description: if the device profile cannot be found by the id provided
+        500:
+          description: for unknown or unanticipated issues
+  /v1/deviceprofile/{id}:
+    get:
+      description: Fetch a specific profile by database generated id. May return null
+        if no profile with the id is found. Returns Internal Service Error (HTTP 500)
+        for unknown or unanticipated issues.  Returns NotFoundException (HTTP 404)
+        if the device profile cannot be found by the id provided.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: device profile matching on id
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/deviceprofile'
+        404:
+          description: if the device profile cannot be found by the id provided
+        500:
+          description: for unknown or unanticipated issues
+  /v1/devicereport:
+    get:
+      description: Return all device reports sorted by id. Returns Internal Service
+        Error (HTTP 500) for unknown or unanticipated issues. Returns LimitExceededException
+        (HTTP 413) if the number returned exceeds the max limit.
+      responses:
+        200:
+          description: list of device reports
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/devicereport'
+        413:
+          description: if the number returned exceeds the max limit.
+        500:
+          description: for unknown or unanticipated issues
+    put:
+      description: Update the DeviceReport identified by the id or name in the object
+        provided. Id is used first, name is used second for identification purposes.
+        Returns Internal Service Error (HTTP 500) for unknown or unanticipated issues.
+        NotFoundException (HTTP 404) if any referenced object cannot be found by its
+        provided name.
+      requestBody:
+        $ref: '#/components/requestBodies/devicereport'
+      responses:
+        200:
+          description: boolean indicating success of the update
+        400:
+          description: for malformed or unparsable requests
+        404:
+          description: if any referenced object cannot be found by its provided name
+        500:
+          description: for unknown or unanticipated issues
+    post:
+      description: Add a new DeviceReport - name must be unique. Referenced objects
+        (device, interval action) are all referenced in the new DeviceReport by name
+        and must already be persisted. Returns Internal Service Error (HTTP 500) for
+        unknown or unanticipated issues. NotFoundException (HTTP 404) if any referenced
+        object cannot be found by its provided name.
+      requestBody:
+        $ref: '#/components/requestBodies/devicereport'
+      responses:
+        200:
+          description: database generated identifier for the new device report
+        400:
+          description: for malformed or unparsable requests
+        404:
+          description: if any referenced object cannot be found by its provided name
+        500:
+          description: for unknown or unanticipated issues
+  /v1/devicereport/devicename/{devicename}:
+    get:
+      description: Return DeviceReports with associated device matching given name
+        (device names should be unique). May be an empty list if no device matches
+        on the name provided. Returns Internal Service Error (HTTP 500) for unknown
+        or unanticipated issues.
+      parameters:
+      - name: devicename
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: device reports matching on device name
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/devicereport'
+        400:
+          description: for malformed or unparsable requests
+        500:
+          description: for unknown or unanticipated issues
+  /v1/devicereport/id/{id}:
+    delete:
+      description: Remove the DevicReport designated by database generated id. Internal
+        Service Error (HTTP 500) for unknown or unanticipated issues. NotFoundException
+        (HTTP 404) if no DeviceReport is found with the provided id.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: boolean indicating success of the remove operation
+        404:
+          description: if no DeviceReport is found with the provided id
+        500:
+          description: for unknown or unanticipated issues
+  /v1/devicereport/name/{name}:
+    get:
+      description: Return DeviceReport matching given name (device report names should
+        be unique). May be null if no report matches on the name provided. Returns
+        Internal Service Error (HTTP 500) for unknown or unanticipated issues.  NotFoundException
+        (HTTP 404) if no DeviceReport is found with the provided name.
+      parameters:
+      - name: name
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: device report matching on name
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/devicereport'
+        400:
+          description: for malformed or unparsable requests
+        404:
+          description: if no DeviceReport is found with the provided name
+        500:
+          description: for unknown or unanticipated issues
+    delete:
+      description: Remove the DevicReport designated by name. Internal Service Error
+        (HTTP 500) for unknown or unanticipated issues. NotFoundException (HTTP 404)
+        if no DeviceReport is found with the provided name.
+      parameters:
+      - name: name
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: boolean indicating success of the remove operation
+        400:
+          description: for malformed or unparsable requests
+        404:
+          description: if no DeviceReport is found with the provided name
+        500:
+          description: for unknown or unanticipated issues
+  /v1/devicereport/valueDescriptorsFor/{devicename}:
+    get:
+      description: Return list of value descriptor names associated to device reports
+        associated to name of the device provided. May be an empty list if no device
+        matches on the name provided. Returns Internal Service Error (HTTP 500) for
+        unknown or unanticipated issues.
+      parameters:
+      - name: devicename
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: value descriptor names
+        400:
+          description: for malformed or unparsable requests
+        500:
+          description: for unknown or unanticipated issues
+  /v1/devicereport/{id}:
+    get:
+      description: Fetch a specific DeviceReport by database generated id. May return
+        null if no report with the id is found. Returns Internal Service Error (HTTP
+        500) for unknown or unanticipated issues.  NotFoundException (HTTP 404) if
+        no DeviceReport is found with the provided id.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: device report matching on the id
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/devicereport'
+        404:
+          description: if no DeviceReport is found with the provided id
+        500:
+          description: for unknown or unanticipated issues
+  /v1/deviceservice:
+    get:
+      description: Return all device services sorted by id. Returns Internal Service
+        Error (HTTP 500) for unknown or unanticipated issues. Returns LimitExceededException
+        (HTTP 413) if the number returned exceeds the max limit.
+      responses:
+        200:
+          description: list of profiles
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/deviceservice'
+        413:
+          description: if the number of device services exceeds the current max limit.
+        500:
+          description: for unknown or unanticipated issues
+    put:
+      description: Update the DeviceServcie identified by the id or name stored in
+        the object provided. Id is used first, name is used second for identification
+        purposes. Returns Internal Service Error (HTTP 500) for unknown or unanticipated
+        issues. Returns NotFoundException (HTTP 404) if the device service cannot
+        be found by the identifier provided.
+      requestBody:
+        $ref: '#/components/requestBodies/deviceservice'
+      responses:
+        200:
+          description: boolean indicating success of the update
+        400:
+          description: for malformed or unparsable requests
+        404:
+          description: if no device service is found with the provided name or id
+        503:
+          description: for unknown or unanticipated issues
+    post:
+      description: Add a new DeviceService - name must be unique.  The Addressable
+        must already exist and can be referenced by an included Addressable object
+        containing the Addressable's id or name. Returns Internal Service Error (HTTP
+        500) for unknown or unanticipated issues. Returns DataValidationException
+        (HTTP 409) if an associated addressable (by id or name) is not found.
+      requestBody:
+        $ref: '#/components/requestBodies/deviceservice'
+      responses:
+        200:
+          description: database generated identifier for the new device service
+        400:
+          description: no addressable was provided for the new device service
+        404:
+          description: if an associated addressable (by id or name) is not found
+        409:
+          description: if the addressable name is determined to not be unique with
+            regard to others
+        500:
+          description: for unknown or unanticipated issues
+  /v1/deviceservice/addressable/{addressableId}:
+    get:
+      description: Find all device servicess associated to the Addressable with the
+        specified addressable database generated identifier. List may be empty if
+        no device service match. Returns Internal Service Error (HTTP 500) for unknown
+        or unanticipated issues. Returns NotFoundException (HTTP 404) if no Addressable
+        match on the id provided.
+      parameters:
+      - name: addressableId
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: List of DeviceServices associated to the addressable
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/deviceservice'
+        404:
+          description: if no addressablee is found for the provided id
+        500:
+          description: for unknown or unanticipated issues
+  /v1/deviceservice/addressablename/{addressablename}:
+    get:
+      description: Find all device serices associated to the Addressable with the
+        specified addressable name. List may be empty if no device services match.
+        Returns Internal Service Error (HTTP 500) for unknown or unanticipated issues.
+        Returns NotFoundException (HTTP 404) if no Addressable match on the name provided.
+      parameters:
+      - name: addressablename
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: List of DeviceServices associated to the addressable
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/deviceservice'
+        404:
+          description: if no addressable is found for the provided id
+        500:
+          description: for unknown or unanticipated issues
+  /v1/deviceservice/id/{id}:
+    delete:
+      description: Remove the DeviceService designated by database generated id. Returns
+        Internal Service Error (HTTP 500) for unknown or unanticipated issues. Returns
+        NotFoundException (HTTP 404) if the device service cannot be found by the
+        identifier provided.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: boolean indicating success of the remove operation
+        404:
+          description: if no device service is found for the provided id
+        500:
+          description: for unknown or unanticipated issues
+  /v1/deviceservice/label/{label}:
+    get:
+      description: Find all DeviceServices having at least one label matching the
+        label provided. List may be empty if no device services match. Returns Internal
+        Service Error (HTTP 500) for unknown or unanticipated issues.
+      parameters:
+      - name: label
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: List of DeviceService matching on specified label
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/deviceservice'
+        400:
+          description: for malformed or unparsable requests
+        500:
+          description: for unknown or unanticipated issues
+  /v1/deviceservice/name/{name}:
+    get:
+      description: Return the DeviceService matching given name (service names should
+        be unique). May be null if no services matches on the name provided. Returns
+        Internal Service Error (HTTP 500) for unknown or unanticipated issues. Returns
+        NotFoundException (HTTP 404) if the device service cannot be found by the
+        name provided.
+      parameters:
+      - name: name
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: device service matching on name
+        400:
+          description: for malformed or unparsable requests
+        404:
+          description: if no device service is found for the provided id
+        500:
+          description: for unknown or unanticipated issues
+    delete:
+      description: Remove the DeviceService designated by name. Returns Internal Service
+        Error (HTTP 500) for unknown or unanticipated issues. Returns NotFoundException
+        (HTTP 404) if the device service cannot be found by the name provided.
+      parameters:
+      - name: name
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: boolean indicating success of the remove operation
+        400:
+          description: for malformed or unparsable requests
+        404:
+          description: if no device service is found for the provided id
+        503:
+          description: for unknown or unanticipated issues
+  /v1/deviceservice/name/{name}/adminstate/{adminState}:
+    put:
+      description: Update the admin state of the device service by device service
+        name. Returns Internal Service Error (HTTP 500) for unknown or unanticipated
+        issues. Returns NotFoundException (HTTP 404) if the device service cannot
+        be found by the identifier provided.
+      parameters:
+      - name: name
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: adminState
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: boolean indicating success of the operation
+        400:
+          description: for malformed or unparsable requests
+        404:
+          description: if no device service is found for the provided id
+        500:
+          description: for unknown or unanticipated issues
+  /v1/deviceservice/name/{name}/lastconnected/{time}:
+    put:
+      description: Update the last connected time of the device service by unique
+        name of the device service. Returns Internal Service Error (HTTP 500) for
+        unknown or unanticipated issues. Returns NotFoundException (HTTP 404) if the
+        device service cannot be found by the name provided.
+      parameters:
+      - name: time
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: name
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: boolean indicating success of update
+        400:
+          description: for malformed or unparsable requests
+        404:
+          description: if no device service is found for the provided id
+        503:
+          description: for unknown or unanticipated issues
+  /v1/deviceservice/name/{name}/lastreported/{time}:
+    put:
+      description: Update the last reported time of the device service by unique name
+        of the device service. Returns Internal Service Error (HTTP 500) for unknown
+        or unanticipated issues. Returns NotFoundException (HTTP 404) if the device
+        service cannot be found by the name provided.
+      parameters:
+      - name: time
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: name
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: boolean indicating success of update
+        400:
+          description: for malformed or unparsable requests
+        404:
+          description: if no device service is found for the provided id
+        500:
+          description: for unknown or unanticipated issues
+  /v1/deviceservice/name/{name}/opstate/{opState}:
+    put:
+      description: Update the op status time of the device service by unique name
+        of the device service. Returns Internal Service Error (HTTP 500) for unknown
+        or unanticipated issues. Returns NotFoundException (HTTP 404) if the device
+        service cannot be found by the name provided.
+      parameters:
+      - name: opState
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: name
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: boolean indicating success of the operation
+        400:
+          description: for malformed or unparsable requests
+        404:
+          description: if no device service is found for the provided id
+        500:
+          description: for unknown or unanticipated issues
+  /v1/deviceservice/{id}:
+    get:
+      description: Fetch a specific device service by database generated id. May return
+        null if no service with the id is found. Returns Internal Service Error (HTTP
+        500) for unknown or unanticipated issues. Returns NotFoundException (HTTP
+        404) if the device service cannot be found by the identifier provided.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: device service matching on id
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/deviceservice'
+        404:
+          description: if no device service is found for the provided id
+        500:
+          description: for unknown or unanticipated issues
+  /v1/deviceservice/{id}/adminstate/{adminState}:
+    put:
+      description: Update the admin state of the device service by database generated
+        identifier. Returns Internal Service Error (HTTP 500) for unknown or unanticipated
+        issues. Returns NotFoundException (HTTP 404) if the device service cannot
+        be found by the identifier provided.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: adminState
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: boolean indicating success of the operation
+        400:
+          description: for malformed or unparsable requests
+        404:
+          description: if no device service is found for the provided id
+        500:
+          description: for unknown or unanticipated issues
+  /v1/deviceservice/{id}/lastconnected/{time}:
+    put:
+      description: Update the last connected time of the device service by database
+        generated identifier. Returns Internal Service Error (HTTP 500) for unknown
+        or unanticipated issues. Returns NotFoundException (HTTP 404) if the device
+        service cannot be found by the identifier provided.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: time
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: boolean indicating success of update
+        400:
+          description: for malformed or unparsable requests
+        404:
+          description: if no device service is found for the provided id
+        500:
+          description: for unknown or unanticipated issues
+  /v1/deviceservice/{id}/lastreported/{time}:
+    put:
+      description: Update the last reported time of the device service by database
+        generated identifier. Returns Internal Service Error (HTTP 500) for unknown
+        or unanticipated issues. Returns NotFoundException (HTTP 404) if the device
+        service cannot be found by the identifier provided.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: time
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: boolean indicating success of update
+        400:
+          description: for malformed or unparsable requests
+        404:
+          description: if no device service is found for the provided id
+        503:
+          description: for unknown or unanticipated issues
+  /v1/deviceservice/{id}/opstate/{opState}:
+    put:
+      description: Update the op state of the device service by database generated
+        identifier. Returns Internal Service Error (HTTP 500) for unknown or unanticipated
+        issues. Returns NotFoundException (HTTP 404) if the device service cannot
+        be found by the identifier provided.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: opState
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: boolean indicating success of the operation
+        400:
+          description: for malformed or unparsable requests
+        404:
+          description: if no device service is found for the provided id
+        500:
+          description: for unknown or unanticipated issues
+  /v1/ping:
+    get:
+      description: ping
+      responses:
+        200:
+          description: Successful Response
+  /v1/provisionwatcher:
+    get:
+      description: Return all provision watcher objects sorted by database generated
+        id. Returns Internal Service Error (HTTP 500) for unknown or unanticipated
+        issues. Returns LimitExceededException (HTTP 413) if the number returned exceeds
+        the max limit.
+      responses:
+        200:
+          description: list of provision watcher
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/provisionwatcher'
+        413:
+          description: if the number returned exceeds the max limit.
+        500:
+          description: for unknown or unanticipated issues.
+    put:
+      description: Update the ProvisionWatcher identified by the id or name in the
+        object provided. Id is used first, name is used second for identification
+        purposes. Returns Internal Service Error (HTTP 500) for unknown or unanticipated
+        issues. Returns NotFoundException (HTTP 404) if no provision watcher with
+        the provided id is found.
+      requestBody:
+        $ref: '#/components/requestBodies/provisionwatcher'
+      responses:
+        200:
+          description: boolean indicating success of the update
+        400:
+          description: for malformed or unparsable requests
+        404:
+          description: if no provision watcher with the provided id is found.
+        500:
+          description: for unknown or unanticipated issues or for any duplicate name
+            (key) error.
+    post:
+      description: Add a new ProvisionWatcher - name must be unique. Returns Internal
+        Service Error (HTTP 500) for unknown or unanticipated issues.  Returns DataValidationException
+        (HTTP 409) if profile service are unknown
+      requestBody:
+        $ref: '#/components/requestBodies/provisionwatcher'
+      responses:
+        200:
+          description: new database generated id for the new ProvisionWatcher
+        400:
+          description: for malformed or unparsable requests
+        409:
+          description: if an associated object (Profile, Service) cannot be found
+            with the id or name provided or if the watcher name is determined to not
+            be unique with regard to others
+        500:
+          description: for unknown or unanticipated issues or for any duplicate name
+            (key) error.
+  /v1/provisionwatcher/id/{id}:
+    delete:
+      description: Remove the ProvisionWatcher designated by the database generated
+        id for the ProvisionWatcher. Returns Internal Service Error (HTTP 500) for
+        unknown or unanticipated issues. Returns NotFoundException (HTTP 404) if no
+        provision watcher with the provided id is found.
+      parameters:
+      - name: id
+        in: path
+        description: database generated id
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: boolean indicating success of the remove operation
+        404:
+          description: if no provision watcher with the provided id is found.
+        500:
+          description: for unknown or unanticipated issues
+  /v1/provisionwatcher/identifier/{key}/{value}:
+    get:
+      description: Find the provision watchers associated to the identifier key/value
+        pair.  The identifier key/value pair identify a protocol and address of the
+        protocol to watch for by the Device Service. List may be none if no provision
+        watcher match. Returns Internal Service Error (HTTP 500) for unknown or unanticipated
+        issues.
+      parameters:
+      - name: key
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: value
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: List of ProvisionWatcher associated to the device service
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/provisionwatcher'
+        400:
+          description: for malformed or unparsable requests
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/provisionwatcher/name/{name}:
+    get:
+      description: Return ProvisionWatcher with matching name (name should be unique).
+        May be null if none match. Returns Internal Service Error (HTTP 500) for unknown
+        or unanticipated issues. Returns NotFoundException (HTTP 404) if no provision
+        watcher with the provided name is found.
+      parameters:
+      - name: name
+        in: path
+        description: unique name of provision watcher
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: provision watcher matching on name
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/provisionwatcher'
+        400:
+          description: for malformed or unparsable requests
+        404:
+          description: if no provision watcher with the provided name is found.
+        500:
+          description: for unknown or unanticipated issues.
+    delete:
+      description: Remove the ProvisionWatcher designated by unique name identifier.
+        Returns Internal Service Error (HTTP 500) for unknown or unanticipated issues.
+        Returns NotFoundException (HTTP 404) if no provision watcher with the provided
+        name is found.
+      parameters:
+      - name: name
+        in: path
+        description: unique name of provision watcher
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: boolean indicating success of the remove operation
+        400:
+          description: for malformed or unparsable requests
+        404:
+          description: if no provision watcher with the provided name is found.
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/provisionwatcher/profile/{profileId}:
+    get:
+      description: Find all provision watchers associated to the DeviceProfile with
+        the specified profile database generated identifier. List may be empty if
+        no provision watchers match. Returns Internal Service Error (HTTP 500) for
+        unknown or unanticipated issues. Returns NotFoundException (HTTP 404) if no
+        DeviceProfile match on the id provided.
+      parameters:
+      - name: profileId
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: List of ProvisionWatchers associated to the device profile
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/provisionwatcher'
+        404:
+          description: if no device profile match on the id provided.
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/provisionwatcher/profilename/{profilename}:
+    get:
+      description: Find all provision watchers associated to the DeviceProfile with
+        the specified profile name. List may be empty if no provision watcher match.
+        Returns Internal Service Error (HTTP 500) for unknown or unanticipated issues.
+        Returns NotFoundException (HTTP 404) if no DeviceProfile match on the name
+        provided.
+      parameters:
+      - name: profilename
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: List of ProvisionWatcher associated to the profile
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/provisionwatcher'
+        400:
+          description: for malformed or unparsable requests
+        404:
+          description: if no DeviceProfile match on the id provided.
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/provisionwatcher/service/{serviceId}:
+    get:
+      description: Find the provision watchers associated to the DeviceService with
+        the specified service database generated identifier. List may be empty if
+        no provision watchers match. Returns Internal Service Error (HTTP 500) for
+        unknown or unanticipated issues. Returns NotFoundException (HTTP 404) if no
+        DeviceService match on the id provided.
+      parameters:
+      - name: serviceId
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: List of ProvisionWatchers associated to the device service
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/provisionwatcher'
+        404:
+          description: if no device service match on the id provided.
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/provisionwatcher/servicename/{servicename}:
+    get:
+      description: Find the provision watchers associated to the DeviceService with
+        the specified service name. List may be none if no provision watcher match.
+        Returns Internal Service Error (HTTP 500) for unknown or unanticipated issues.
+        Returns NotFoundException (HTTP 404) if no DeviceService match on the name
+        provided.
+      parameters:
+      - name: servicename
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: List of ProvisionWatcher associated to the device service
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/provisionwatcher'
+        400:
+          description: for malformed or unparsable requests
+        404:
+          description: if no DeviceService match on the id provided.
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/provisionwatcher/{id}:
+    get:
+      description: Fetch a specific provision watcher by database generated id. May
+        return null if no provision watcher matches on id. Returns Internal Service
+        Error (HTTP 500) for unknown or unanticipated issues.  Returns NotFoundException
+        (HTTP 404) if no provision watcher with the provided id is found.
+      parameters:
+      - name: id
+        in: path
+        description: database generated id
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: provision watcher
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/provisionwatcher'
+        404:
+          description: if no provision watcher with the provided id is found.
+        500:
+          description: for unknown or unanticipated issues
+  /version:
+    get:
+      description: Get the API version
+      responses:
+        200:
+          description: The service's API version as JSON document
+components:
+  schemas:
+    addressable:
+      title: addressable
+      required:
+      - method
+      type: object
+      properties:
+        address:
+          title: address
+          type: string
+        created:
+          title: created
+          type: integer
+        id:
+          title: id
+          type: string
+        method:
+          title: method
+          type: string
+        modified:
+          title: modified
+          type: integer
+        name:
+          title: name
+          type: string
+        origin:
+          title: origin
+          type: integer
+        password:
+          title: password
+          type: string
+        path:
+          title: path
+          type: string
+        port:
+          title: port
+          type: integer
+        protocol:
+          title: protocol
+          type: string
+        publisher:
+          title: publisher
+          type: string
+        topic:
+          title: topic
+          type: string
+        user:
+          title: user
+          type: string
+    command:
+      title: command
+      type: object
+      properties:
+        created:
+          title: created
+          type: integer
+        get:
+          $ref: '#/components/schemas/command_get'
+        id:
+          title: id
+          type: string
+        modified:
+          title: modified
+          type: integer
+        name:
+          title: name
+          type: string
+        origin:
+          title: origin
+          type: integer
+        put:
+          $ref: '#/components/schemas/command_put'
+    device:
+      title: device
+      type: object
+      properties:
+        addressable:
+          $ref: '#/components/schemas/device_addressable'
+        adminState:
+          title: adminState
+          type: string
+        created:
+          title: created
+          type: integer
+        description:
+          title: description
+          type: string
+        id:
+          title: id
+          type: string
+        labels:
+          title: labels
+          uniqueItems: false
+          type: array
+          items:
+            title: labels
+            type: string
+        lastConnected:
+          title: lastConnected
+          type: integer
+        lastReported:
+          title: lastReported
+          type: integer
+        modified:
+          title: modified
+          type: integer
+        name:
+          title: name
+          type: string
+        operatingState:
+          title: operatingState
+          type: string
+        origin:
+          title: origin
+          type: integer
+      description: device or sensor supplying data and taking actuation commands
+    deviceprofile:
+      title: deviceprofile
+      type: object
+      properties:
+        created:
+          title: created
+          type: integer
+        description:
+          title: description
+          type: string
+        id:
+          title: id
+          type: string
+        labels:
+          title: labels
+          uniqueItems: false
+          type: array
+          items:
+            title: labels
+            type: string
+        manufacturer:
+          title: manufacturer
+          type: string
+        model:
+          title: model
+          type: string
+        modified:
+          title: modified
+          type: integer
+        name:
+          title: name
+          type: string
+        origin:
+          title: origin
+          type: integer
+        resources:
+          title: resources
+          uniqueItems: false
+          type: array
+          items:
+            title: resources
+            type: string
+      description: template describing devices and sensors of the same nature in reporting
+        the same data and offering the same commands
+    devicereport:
+      title: devicereport
+      type: object
+      properties:
+        action:
+          title: action
+          type: string
+        created:
+          title: created
+          type: integer
+        device:
+          title: device
+          type: string
+        expected:
+          title: expected
+          uniqueItems: false
+          type: array
+          items:
+            title: expected
+            type: string
+        id:
+          title: id
+          type: string
+        modified:
+          title: modified
+          type: integer
+        name:
+          title: name
+          type: string
+        origin:
+          title: origin
+          type: integer
+      description: description of values (value descriptors) that should be collected
+        per device on a interval action
+    deviceservice:
+      title: deviceservice
+      type: object
+      properties:
+        addressable:
+          $ref: '#/components/schemas/device_addressable'
+        adminState:
+          title: adminState
+          type: string
+        created:
+          title: created
+          type: integer
+        description:
+          title: description
+          type: string
+        id:
+          title: id
+          type: string
+        labels:
+          title: labels
+          uniqueItems: false
+          type: array
+          items:
+            title: labels
+            type: string
+        lastConnected:
+          title: lastConnected
+          type: integer
+        lastReported:
+          title: lastReported
+          type: integer
+        modified:
+          title: modified
+          type: integer
+        name:
+          title: name
+          type: string
+        operatingState:
+          title: operatingState
+          type: string
+        origin:
+          title: origin
+          type: integer
+      description: manages devices and interfaces with core data
+    provisionwatcher:
+      title: provisionwatcher
+      type: object
+      properties:
+        created:
+          title: created
+          type: integer
+        id:
+          title: id
+          type: string
+        modified:
+          title: modified
+          type: integer
+        name:
+          title: name
+          type: string
+        origin:
+          title: origin
+          type: integer
+    command_get_responses:
+      type: object
+      properties:
+        code:
+          title: code
+          type: string
+        description:
+          title: description
+          type: string
+        expectedValues:
+          title: expectedValues
+          type: string
+    command_get:
+      type: object
+      properties:
+        responses:
+          $ref: '#/components/schemas/command_get_responses'
+        path:
+          title: path
+          type: string
+    command_put:
+      type: object
+      properties:
+        path:
+          title: path
+          type: string
+    device_addressable:
+      type: object
+      properties:
+        address:
+          title: address
+          type: string
+        created:
+          title: created
+          type: integer
+        id:
+          title: id
+          type: string
+        modified:
+          title: modified
+          type: integer
+        name:
+          title: name
+          type: string
+        origin:
+          title: origin
+          type: integer
+        password:
+          title: password
+          type: string
+        path:
+          title: path
+          type: string
+        port:
+          title: port
+          type: integer
+        protocol:
+          title: protocol
+          type: string
+        publisher:
+          title: publisher
+          type: string
+        topic:
+          title: topic
+          type: string
+        user:
+          title: user
+          type: string
+  requestBodies:
+    deviceservice:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/deviceservice'
+      required: true
+    device:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/device'
+      required: true
+    provisionwatcher:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/provisionwatcher'
+      required: true
+    addressable:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/addressable'
+      required: true
+    deviceprofile:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/deviceprofile'
+      required: true
+    devicereport:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/devicereport'
+      required: true

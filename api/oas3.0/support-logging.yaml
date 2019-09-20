@@ -1,0 +1,482 @@
+openapi: 3.0.0
+info:
+  title: support-logging
+  version: 1.1.x-oas3
+servers:
+- url: http://localhost:48061/api
+paths:
+  /v1/config:
+    get:
+      description: Fetch the current state of the service's configuration.
+      responses:
+        200:
+          description: The service's configuration as JSON document
+  /v1/logs:
+    post:
+      description: Create a new LogEntry
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LogEntry'
+        required: true
+      responses:
+        202:
+          description: accepted to clients with timestamp being accepted.
+        400:
+          description: creation request is malformed
+  /v1/logs/keywords/{keywords}/{start}/{end}:
+    delete:
+      parameters:
+      - name: keywords
+        in: path
+        description: accepting multiple keywords separated by comma
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: start
+        in: path
+        description: start date in long form
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+      - name: end
+        in: path
+        description: end date in long form
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+      responses:
+        200:
+          description: count of the number of LogEntry being deleted
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/logs/keywords/{keywords}/{start}/{end}/{limit}:
+    get:
+      parameters:
+      - name: keywords
+        in: path
+        description: accepting multiple keywords separated by comma
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: start
+        in: path
+        description: start date in long form
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+      - name: end
+        in: path
+        description: end date in long form
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+      - name: limit
+        in: path
+        description: the maximum number of records to fetch
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+      responses:
+        200:
+          description: list a collection of LogEntry whose message containing any
+            of the specified keywords and being created between the specified start
+            and end dates - limited in size by the limit parameter
+        413:
+          description: if the number of events exceeds the current max limit
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/logs/logLevels/{logLevels}/originServices/{originServices}/{start}/{end}:
+    delete:
+      parameters:
+      - name: logLevels
+        in: path
+        description: accepting multiple logLevels separated by comma
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: originServices
+        in: path
+        description: accepting multiple originServices separated by comma
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: start
+        in: path
+        description: start date in long form
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+      - name: end
+        in: path
+        description: end date in long form
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+      responses:
+        200:
+          description: count of the number of LogEntry being deleted
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/logs/logLevels/{logLevels}/originServices/{originServices}/{start}/{end}/{limit}:
+    get:
+      parameters:
+      - name: logLevels
+        in: path
+        description: accepting multiple logLevels separated by comma
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: originServices
+        in: path
+        description: accepting multiple originServices separated by comma
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: start
+        in: path
+        description: start date in long form
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+      - name: end
+        in: path
+        description: end date in long form
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+      - name: limit
+        in: path
+        description: the maximum number of records to fetch
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+      responses:
+        200:
+          description: list a collection of LogEntry matching any of the specified
+            logLevels, originServices, and also being created between the specified
+            start and end dates - limited in size by the limit parameter
+        413:
+          description: if the number of events exceeds the current max limit
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/logs/logLevels/{logLevels}/{start}/{end}:
+    delete:
+      parameters:
+      - name: logLevels
+        in: path
+        description: accepting multiple logLevels separated by comma
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: start
+        in: path
+        description: start date in long form
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+      - name: end
+        in: path
+        description: end date in long form
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+      responses:
+        200:
+          description: count of the number of LogEntry being deleted
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/logs/logLevels/{logLevels}/{start}/{end}/{limit}:
+    get:
+      parameters:
+      - name: logLevels
+        in: path
+        description: accepting multiple logLevels separated by comma
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: start
+        in: path
+        description: start date in long form
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+      - name: end
+        in: path
+        description: end date in long form
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+      - name: limit
+        in: path
+        description: the maximum number of records to fetch
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+      responses:
+        200:
+          description: list a collection of LogEntry matching any of the specified
+            logLevels and being created between the specified start and end dates
+            - limited in size by the limit parameter
+        413:
+          description: if the number of events exceeds the current max limit
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/logs/originServices/{originServices}/{start}/{end}:
+    delete:
+      parameters:
+      - name: originServices
+        in: path
+        description: accepting multiple originServices separated by comma
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: start
+        in: path
+        description: start date in long form
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+      - name: end
+        in: path
+        description: end date in long form
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+      responses:
+        200:
+          description: count of the number of LogEntry being deleted
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/logs/originServices/{originServices}/{start}/{end}/{limit}:
+    get:
+      parameters:
+      - name: originServices
+        in: path
+        description: accepting multiple originServices separated by comma
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: start
+        in: path
+        description: start date in long form
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+      - name: end
+        in: path
+        description: end date in long form
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+      - name: limit
+        in: path
+        description: the maximum number of records to fetch
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+      responses:
+        200:
+          description: list a collection of LogEntry matching any of the specified
+            originServices and being created between the specified start and end dates
+            - limited in size by the limit parameter
+        413:
+          description: if the number of events exceeds the current max limit
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/logs/removeold/age/{age}:
+    delete:
+      parameters:
+      - name: age
+        in: path
+        description: minimum age in milliseconds (from created timestamp) a LogEntry
+          should be in order to be removed
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+      responses:
+        200:
+          description: count of the number of LogEntry being deleted
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/logs/{limit}:
+    get:
+      parameters:
+      - name: limit
+        in: path
+        description: the maximum number of records to fetch
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+      responses:
+        200:
+          description: list a collection of LogEntry - limited in size by the limit
+            parameter
+        413:
+          description: if the number of events exceeds the current max limit
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/logs/{start}/{end}:
+    delete:
+      parameters:
+      - name: start
+        in: path
+        description: start date in long form
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+      - name: end
+        in: path
+        description: end date in long form
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+      responses:
+        200:
+          description: count of the number of LogEntry being deleted
+        503:
+          description: for unknown or unanticipated issues.
+  /v1/logs/{start}/{end}/{limit}:
+    get:
+      parameters:
+      - name: start
+        in: path
+        description: start date in long form
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+      - name: end
+        in: path
+        description: end date in long form
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+      - name: limit
+        in: path
+        description: the maximimum number of records to fetch
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+      responses:
+        200:
+          description: list a collection of LogEntry created between the specified
+            start and end dates - limited in size by the limit parameter
+        413:
+          description: if the number of events exceeds the current max limit
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/ping:
+    get:
+      description: Test service providing an indication that the service is available.
+      responses:
+        200:
+          description: return value of "pong"
+        503:
+          description: for unknown or unanticipated issues
+  /version:
+    get:
+      description: Get the API version
+      responses:
+        200:
+          description: The service's API version as JSON document
+components:
+  schemas:
+    LogEntry:
+      title: LogEntry Schema
+      required:
+      - logLevel
+      - message
+      - originService
+      type: object
+      properties:
+        created:
+          minimum: 0
+          type: integer
+          description: The creation timestamp
+        logLevel:
+          type: string
+          enum:
+          - TRACE
+          - DEBUG
+          - INFO
+          - WARN
+          - ERROR
+        message:
+          type: string
+        originService:
+          type: string
