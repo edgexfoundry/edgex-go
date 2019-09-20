@@ -60,7 +60,7 @@ Usage: %s [options]
 Server Options:	
     -p, --profile <name>            Indicate configuration profile other than default
     -r, --registry                  Indicates service should use Registry
-	--insureskipverify=true/false   Indicates if skipping the server side SSL cert verifcation, similar to -k of curl
+	--insecureSkipVerify=true/false   Indicates if skipping the server side SSL cert verification, similar to -k of curl
 	--init=true/false               Indicates if security service should be initialized
 	--reset=true/false              Indicate if security service should be reset to initialization status
 	--useradd=<username>            Create an account and return JWT

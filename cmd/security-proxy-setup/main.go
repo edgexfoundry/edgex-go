@@ -34,7 +34,7 @@ func main() {
 		usage.HelpCallbackSecurityProxy()
 	}
 	var initNeeded bool
-	var ensureSkipVerify bool
+	var insecureSkipVerify bool
 	var resetNeeded bool
 	var useProfile string
 	var userTobeCreated string
@@ -42,7 +42,7 @@ func main() {
 	var userToBeDeleted string
 	var useRegistry bool
 
-	flag.BoolVar(&ensureSkipVerify, "insureskipverify", true, "skip server side SSL verification, mainly for self-signed cert")
+	flag.BoolVar(&insecureSkipVerify, "insecureSkipVerify", false, "skip server side SSL verification, mainly for self-signed cert")
 	flag.BoolVar(&initNeeded, "init", false, "run init procedure for security service.")
 	flag.BoolVar(&resetNeeded, "reset", false, "reset reverse proxy by removing all services/routes/consumers")
 	flag.StringVar(&userTobeCreated, "useradd", "", "user that needs to be added to consume the edgex services")
@@ -59,7 +59,7 @@ func main() {
 	params := startup.BootParams{UseRegistry: useRegistry, UseProfile: useProfile, BootTimeout: internal.BootTimeoutDefault}
 	startup.Bootstrap(params, proxy.Retry, logBeforeInit)
 
-	req := proxy.NewRequestor(ensureSkipVerify, proxy.Configuration.Writable.RequestTimeout)
+	req := proxy.NewRequestor(insecureSkipVerify, proxy.Configuration.Writable.RequestTimeout)
 	s := proxy.NewService(req)
 
 	err := s.CheckProxyServiceStatus()
