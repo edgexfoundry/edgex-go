@@ -1,0 +1,18 @@
+[SecretService]
+Scheme = "https"
+Server = "localhost"
+Port = 8200
+# CaFilePath = "EdgeXFoundryCA.pem"
+
+[TokenFileProvider]
+PrivilegedTokenPath = "resp-init.json"
+ConfigFile = "res/token-config.json"
+OutputDir = "/tmp"
+OutputFilename = "secrets-token.json"
+
+[Writable]
+LogLevel = 'DEBUG'
+
+[Logging]
+EnableRemote = false
+File = './logs/security-file-token-provider.log'

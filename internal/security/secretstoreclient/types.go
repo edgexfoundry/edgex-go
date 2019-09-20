@@ -23,6 +23,7 @@ import (
 type SecretServiceInfo struct {
 	Scheme               string
 	Server               string
+	ServerName           string
 	Port                 int
 	CertPath             string
 	CaFilePath           string

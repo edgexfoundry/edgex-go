@@ -1,0 +1,13 @@
+{
+    "service-name": {
+      "edgex_use_defaults": true,
+      "custom_policy": {
+        "path": {
+          "secret/non/standard/location/*": {
+            "capabilities": [ "list", "read" ]
+          }
+        }
+      },
+      "custom_token_parameters": { }
+    }
+  }

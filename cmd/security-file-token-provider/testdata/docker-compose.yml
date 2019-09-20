@@ -1,0 +1,119 @@
+# /*******************************************************************************
+#  * Copyright 2018 Dell Inc.
+#  * Copyright 2019 Intel Corporation
+#  *
+#  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+#  * in compliance with the License. You may obtain a copy of the License at
+#  *
+#  * http://www.apache.org/licenses/LICENSE-2.0
+#  *
+#  * Unless required by applicable law or agreed to in writing, software distributed under the License
+#  * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+#  * or implied. See the License for the specific language governing permissions and limitations under
+#  * the License.
+#  *
+#  * @author: Jim White, Dell
+#  * EdgeX Foundry, Delhi version, 0.7.1
+#  * added: Dec 10, 2018
+#  *******************************************************************************/
+
+version: '3'
+volumes:
+  db-data:
+  log-data:
+  consul-config:
+  consul-data:
+  vault-config:
+  vault-file:
+  vault-logs:
+
+services:
+  volume:
+    image: edgexfoundry/docker-edgex-volume:0.6.0
+    container_name: edgex-files
+    networks:
+      - edgex-network
+    volumes:
+      - db-data:/data/db
+      - log-data:/edgex/logs
+      - consul-config:/consul/config
+      - consul-data:/consul/data
+      
+  consul:
+    image: consul:1.4.4
+    ports:
+      - "8400:8400"
+      - "8500:8500"
+      - "8600:8600"
+    container_name: edgex-core-consul
+    hostname: edgex-core-consul
+    networks:
+      edgex-network:
+        aliases:
+            - edgex-core-consul
+    volumes:
+      - db-data:/data/db
+      - log-data:/edgex/logs
+      - consul-config:/consul/config
+      - consul-data:/consul/data
+    depends_on:
+      - volume  
+
+  config-seed:
+    image: edgexfoundry/docker-core-config-seed-go:0.7.1
+    container_name: edgex-config-seed
+    hostname: edgex-core-config-seed
+    networks:
+      edgex-network:
+        aliases:
+            - edgex-core-config-seed
+    volumes:
+      - db-data:/data/db
+      - log-data:/edgex/logs
+      - consul-config:/consul/config
+      - consul-data:/consul/data
+    depends_on:
+      - volume
+      - consul
+
+  vault:
+    image: edgexfoundry/docker-edgex-vault:1.0.0
+    container_name: edgex-vault
+    hostname: edgex-vault
+    networks:
+      - edgex-network
+    ports:
+      - "8200:8200"
+    cap_add:
+      - "IPC_LOCK"
+    command: "server -log-level=info"
+    environment:
+      - 'VAULT_ADDR=https://edgex-vault:8200'
+      - 'VAULT_CONFIG_DIR=/vault/config'
+      - 'VAULT_UI=true'
+    volumes:
+      - vault-config:/vault/config
+      - vault-file:/vault/file
+      - vault-logs:/vault/logs
+    depends_on:
+      - volume
+      - consul
+
+  vault-worker:
+    image: edgexfoundry/docker-edgex-vault-worker-go:1.0.0
+    container_name: edgex-vault-worker
+    hostname: edgex-vault-worker
+    command: ["--init=true", "--debug=false", "--wait=10", "--insureskipverify=false"]
+    networks:
+      - edgex-network
+    volumes:
+      - vault-config:/vault/config
+    depends_on:
+      - volume
+      - consul
+      - vault  
+
+networks:
+  edgex-network:
+    driver: "bridge"
+...
