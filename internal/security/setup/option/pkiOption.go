@@ -24,7 +24,8 @@ type OptionsExecutor interface {
 
 // PkiInitOption contains command line options for pki-init
 type PkiInitOption struct {
-	executor OptionsExecutor
+	GenerateOpt bool
+	executor    OptionsExecutor
 }
 
 // NewPkiInitOption constructor to get options built for pki-init
@@ -36,7 +37,9 @@ func NewPkiInitOption(opts PkiInitOption) (ex OptionsExecutor, statusCode int, e
 
 // ProcessOptions processes all the input options from the caller
 func (pkiInitOpt *PkiInitOption) ProcessOptions() (int, error) {
-	statusCode, err := pkiInitOpt.executor.executeOptions()
+	statusCode, err := pkiInitOpt.executor.executeOptions(
+		Generate(),
+	)
 
 	return statusCode.intValue(), err
 }

@@ -26,6 +26,39 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestNewPkiInitOption_GenerateOnly(t *testing.T) {
+	assert := assert.New(t)
+
+	options := PkiInitOption{
+		GenerateOpt: true,
+	}
+	// generate option given
+	generateOn, _, _ := NewPkiInitOption(options)
+	assert.NotNil(generateOn)
+	assert.Equal(true, generateOn.(*PkiInitOption).GenerateOpt)
+
+	// generate option omitted
+	options.GenerateOpt = false
+	generateOff, _, _ := NewPkiInitOption(options)
+	assert.NotNil(generateOff)
+	assert.Equal(false, generateOff.(*PkiInitOption).GenerateOpt)
+}
+
+func getMockArguments() []interface{} {
+	var ifc []interface{}
+	// use reflection to find out how many bool type of options in PkiInitOption struct
+	// and create a slice of mock argument interface instances
+	elm := reflect.ValueOf(&PkiInitOption{}).Elem()
+	for i := 0; i < elm.NumField(); i++ {
+		field := elm.Field(i)
+		switch field.Kind() {
+		case reflect.Bool:
+			ifc = append(ifc, mock.AnythingOfTypeArgument("func(*option.PkiInitOption) (option.exitCode, error)"))
+		}
+	}
+
+	return ifc
+}
 func TestProcessOptionNormal(t *testing.T) {
 	testExecutor := &mockOptionsExecutor{}
 	// normal case
@@ -34,7 +67,9 @@ func TestProcessOptionNormal(t *testing.T) {
 
 	assert := assert.New(t)
 
-	options := PkiInitOption{}
+	options := PkiInitOption{
+		GenerateOpt: true,
+	}
 	optsExecutor, _, _ := NewPkiInitOption(options)
 	optsExecutor.(*PkiInitOption).executor = testExecutor
 	exitCode, err := optsExecutor.ProcessOptions()
@@ -53,7 +88,9 @@ func TestProcessOptionError(t *testing.T) {
 
 	assert := assert.New(t)
 
-	options := PkiInitOption{}
+	options := PkiInitOption{
+		GenerateOpt: true,
+	}
 	generateOn, _, _ := NewPkiInitOption(options)
 	generateOn.(*PkiInitOption).executor = testExecutor
 	exitCode, err := generateOn.ProcessOptions()
@@ -67,32 +104,25 @@ func TestExecuteOption(t *testing.T) {
 	testExecutor := &mockOptionsExecutor{}
 	assert := assert.New(t)
 
-	options := PkiInitOption{}
-	anyOpt, _, _ := NewPkiInitOption(options)
-	anyOpt.(*PkiInitOption).executor = testExecutor
-	exitCode, err := anyOpt.executeOptions(mockOption())
+	options := PkiInitOption{
+		GenerateOpt: true,
+	}
+	generateOn, _, _ := NewPkiInitOption(options)
+	generateOn.(*PkiInitOption).executor = testExecutor
+	exitCode, err := generateOn.executeOptions(mockGenerate())
+	assert.Equal(normal, exitCode)
+	assert.Nil(err)
+
+	options.GenerateOpt = false
+	generateOff, _, _ := NewPkiInitOption(options)
+	generateOff.(*PkiInitOption).executor = testExecutor
+	exitCode, err = generateOff.executeOptions(mockGenerate())
 	assert.Equal(normal, exitCode)
 	assert.Nil(err)
 }
 
-func mockOption() func(*PkiInitOption) (exitCode, error) {
+func mockGenerate() func(*PkiInitOption) (exitCode, error) {
 	return func(pkiInitOpton *PkiInitOption) (exitCode, error) {
 		return normal, nil
 	}
-}
-
-func getMockArguments() []interface{} {
-	var ifc []interface{}
-	// use reflection to find out how many bool type of options in PkiInitOption struct
-	// and create a slice of mock argument interface instances
-	elm := reflect.ValueOf(&PkiInitOption{}).Elem()
-	for i := 0; i < elm.NumField(); i++ {
-		field := elm.Field(i)
-		switch field.Kind() {
-		case reflect.Bool:
-			ifc = append(ifc, mock.AnythingOfTypeArgument("func(*option.PkiInitOption) (option.exitCode, error)"))
-		}
-	}
-
-	return ifc
 }
