@@ -22,16 +22,18 @@ import (
 )
 
 type ProvisionWatcher struct {
-	Created        int64                   `bson:"created"`
-	Modified       int64                   `bson:"modified"`
-	Origin         int64                   `bson:"origin"`
-	Id             bson.ObjectId           `bson:"_id,omitempty"`
-	Uuid           string                  `bson:"uuid,omitempty"`
-	Name           string                  `bson:"name"`           // unique name and identifier of the addressable
-	Identifiers    map[string]string       `bson:"identifiers"`    // set of key value pairs that identify type of of address (MAC, HTTP,...) and address to watch for (00-05-1B-A1-99-99, 10.0.0.1,...)
-	Profile        mgo.DBRef               `bson:"profile"`        // device profile that should be applied to the devices available at the identifier addresses
-	Service        mgo.DBRef               `bson:"service"`        // device service that owns the watcher
-	OperatingState contract.OperatingState `bson:"operatingState"` // operational state - either enabled or disabled
+	Created             int64                   `bson:"created"`
+	Modified            int64                   `bson:"modified"`
+	Origin              int64                   `bson:"origin"`
+	Id                  bson.ObjectId           `bson:"_id,omitempty"`
+	Uuid                string                  `bson:"uuid,omitempty"`
+	Name                string                  `bson:"name"`                // unique name and identifier of the addressable
+	Identifiers         map[string]string       `bson:"identifiers"`         // set of key value pairs that identify type of of address (MAC, HTTP,...) and address to watch for (00-05-1B-A1-99-99, 10.0.0.1,...)
+	BlockingIdentifiers map[string][]string     `bson:"blockingidentifiers"` // set of keys and blocking values that disallow matches made on Identifiers
+	Profile             mgo.DBRef               `bson:"profile"`             // device profile that should be applied to the devices available at the identifier addresses
+	Service             mgo.DBRef               `bson:"service"`             // device service that owns the watcher
+	OperatingState      contract.OperatingState `bson:"operatingState"`      // operational state - either enabled or disabled
+	AdminState          contract.AdminState     `bson:"adminState"`          // administrative state - either unlocked or locked
 }
 
 func (pw *ProvisionWatcher) ToContract(dpt deviceProfileTransform, dst deviceServiceTransform, at addressableTransform) (c contract.ProvisionWatcher, err error) {
@@ -46,6 +48,7 @@ func (pw *ProvisionWatcher) ToContract(dpt deviceProfileTransform, dst deviceSer
 	c.Origin = pw.Origin
 	c.Name = pw.Name
 	c.Identifiers = pw.Identifiers
+	c.BlockingIdentifiers = pw.BlockingIdentifiers
 
 	profile, err := dpt.DBRefToDeviceProfile(pw.Profile)
 	if err != nil {
@@ -66,6 +69,7 @@ func (pw *ProvisionWatcher) ToContract(dpt deviceProfileTransform, dst deviceSer
 	}
 
 	c.OperatingState = pw.OperatingState
+	c.AdminState = pw.AdminState
 
 	return
 }
@@ -81,6 +85,7 @@ func (pw *ProvisionWatcher) FromContract(from contract.ProvisionWatcher, dpt dev
 	pw.Origin = from.Origin
 	pw.Name = from.Name
 	pw.Identifiers = from.Identifiers
+	pw.BlockingIdentifiers = from.BlockingIdentifiers
 
 	var profile DeviceProfile
 	if _, err = profile.FromContract(from.Profile); err != nil {
@@ -99,6 +104,7 @@ func (pw *ProvisionWatcher) FromContract(from contract.ProvisionWatcher, dpt dev
 	}
 
 	pw.OperatingState = from.OperatingState
+	pw.AdminState = from.AdminState
 
 	id = toContractId(pw.Id, pw.Uuid)
 	return
