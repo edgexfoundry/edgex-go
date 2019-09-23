@@ -137,8 +137,20 @@ func (b *Bootstrap) Handler(wg *sync.WaitGroup, ctx context.Context, startupTime
 	// Wait on a StatusOK response from vc.HealthCheck()
 	<-healthOkCh
 
-	//Step 4:
-	//TODO: create vault access token for different roles
+	//Step 4: Launch token handler
+	tokenProvider := NewTokenProvider(ctx, loggingClient)
+	if configuration.SecretService.TokenProvider != "" {
+		if err := tokenProvider.SetConfiguration(configuration.SecretService); err != nil {
+			loggingClient.Error(fmt.Sprintf("failed to configure token provider: %s", err.Error()))
+			os.Exit(1)
+		}
+		if err := tokenProvider.Launch(); err != nil {
+			loggingClient.Error(fmt.Sprintf("token provider failed: %s", err.Error()))
+			os.Exit(1)
+		}
+	} else {
+		loggingClient.Info("no token provider configured")
+	}
 
 	// credential creation
 	gk := NewGokeyGenerator(absPath)
