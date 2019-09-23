@@ -42,9 +42,14 @@ Common Options:
 `
 
 var securitySetupUsageStr = `
-Usage: %s [options]
+Usage: %s <subcommands> [options]
 Server Options:
-	-c, --config <name>             Provide absolute path to JSON configuration file
+    --confdir                       Specify local configuration directory
+
+Server Subcommand:	
+	generate                        Generate PKI afresh every time and deployed. Typically, this will be whenever the framework is started.
+	legacy                          [Will be deprecated] Legacy mode to generate PKI
+	  -c, --config <name>           Provide absolute path to JSON configuration file
 
 Common Options:
     -h, --help                      Show this message
@@ -55,7 +60,7 @@ Usage: %s [options]
 Server Options:	
     -p, --profile <name>            Indicate configuration profile other than default
     -r, --registry                  Indicates service should use Registry
-	--insureskipverify=true/false   Indicates if skipping the server side SSL cert verifcation, similar to -k of curl
+	--insecureSkipVerify=true/false   Indicates if skipping the server side SSL cert verification, similar to -k of curl
 	--init=true/false               Indicates if security service should be initialized
 	--reset=true/false              Indicate if security service should be reset to initialization status
 	--useradd=<username>            Create an account and return JWT
@@ -65,6 +70,19 @@ Server Options:
 
 Common Options:
 	-h, --help                      Show this message
+`
+
+var securitySecretStoreSetupUsageStr = `
+Usage: %s [options]
+Server Options:
+	-p, --profile <name>            Indicate configuration profile other than default
+	-r, --registry                  Indicates service should use Registry
+	--insecureSkipVerify=true/false			Indicates if skipping the server side SSL cert verifcation, similar to -k of curl
+	--init=true/false				Indicates if security service should be initialized
+	--configfile=<file.toml>			Use a different config file (default: res/configuration.toml)
+	--wait=<time in seconds>		Indicates how long the program will pause between the vault initialization until it succeeds
+Common Options:
+	-h, --help					Show this message
 `
 
 // usage will print out the flag options for the server.
@@ -84,5 +102,11 @@ func HelpCallbackSecuritySetup() {
 
 func HelpCallbackSecurityProxy() {
 	fmt.Printf(securityProxySetupUsageStr, os.Args[0])
+	os.Exit(0)
+}
+
+func HelpCallbackSecuritySecretStore() {
+	msg := fmt.Sprintf(securitySecretStoreSetupUsageStr, os.Args[0])
+	fmt.Printf("%s\n", msg)
 	os.Exit(0)
 }

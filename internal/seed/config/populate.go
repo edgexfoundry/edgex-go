@@ -119,7 +119,7 @@ func ImportConfiguration(root string, profile string, overwrite bool) error {
 			Host:       Configuration.Registry.Host,
 			Port:       Configuration.Registry.Port,
 			Type:       Configuration.Registry.Type,
-			Stem:       internal.ConfigRegistryStem,
+			Stem:       internal.ConfigRegistryStemCore + internal.ConfigMajorVersion,
 			ServiceKey: clients.ServiceKeyPrefix + serviceName,
 		}
 		Registry, err = registry.NewRegistryClient(registryConfig)
@@ -128,6 +128,31 @@ func ImportConfiguration(root string, profile string, overwrite bool) error {
 		}
 
 		Registry.PutConfigurationToml(environment.OverrideFromEnvironment(serviceName, configuration), overwrite)
+	}
+
+	return nil
+}
+
+func ImportSecurityConfiguration() error {
+	registryConfig := types.Config{
+		Host: Configuration.Registry.Host,
+		Port: Configuration.Registry.Port,
+		Type: Configuration.Registry.Type,
+		Stem: internal.ConfigRegistryStemSecurity + internal.ConfigMajorVersion,
+	}
+
+	reg, err := registry.NewRegistryClient(registryConfig)
+	if err != nil {
+		return err
+	}
+
+	env := NewEnvironment()
+	namespace := strings.Replace(internal.ConfigRegistryStemSecurity, "/", ".", -1)
+	tree, err := env.InitFromEnvironment(namespace)
+
+	err = reg.PutConfigurationToml(tree, false)
+	if err != nil {
+		return err
 	}
 
 	return nil

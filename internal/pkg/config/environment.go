@@ -24,6 +24,7 @@ const (
 	envKeyUrl = "edgex_registry"
 )
 
+// deprecated
 func OverrideFromEnvironment(registry RegistryInfo) RegistryInfo {
 	if env := os.Getenv(envKeyUrl); env != "" {
 		if u, err := url.Parse(env); err == nil {

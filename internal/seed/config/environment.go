@@ -69,3 +69,18 @@ func (e *environment) OverrideFromEnvironment(serviceName string, tree *toml.Tre
 	}
 	return tree
 }
+
+func (e *environment) InitFromEnvironment(namespace string) (*toml.Tree, error) {
+	tree, err := toml.TreeFromMap(map[string]interface{}{})
+	if err != nil {
+		return nil, err
+	}
+
+	for k, v := range e.env {
+		if strings.HasPrefix(k, namespace) {
+			tree.Set(strings.TrimPrefix(k, namespace), v)
+		}
+	}
+
+	return tree, nil
+}

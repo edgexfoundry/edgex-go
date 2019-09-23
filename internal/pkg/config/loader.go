@@ -15,15 +15,16 @@
 package config
 
 import (
-	"flag"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 
-	"github.com/BurntSushi/toml"
 	"github.com/edgexfoundry/edgex-go/internal"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+
+	"github.com/BurntSushi/toml"
 	"github.com/pkg/errors"
 )
 
@@ -33,17 +34,17 @@ const (
 	configDirEnv = "EDGEX_CONF_DIR"
 )
 
-var confDir = flag.String("confdir", "", "Specify local configuration directory")
-
 // TODO: Where is this set? It doesn't appear to be set from anywhere meaning if we fail to locate the config
 //       file, the logging statements below will panic.
+// deprecated
 var LoggingClient logger.LoggingClient
 
-func LoadFromFile(profile string, configuration interface{}) error {
-	path := determinePath()
-	fileName := path + "/" + internal.ConfigFileName //default profile
-	if len(profile) > 0 {
-		fileName = path + "/" + profile + "/" + internal.ConfigFileName
+// deprecated
+func LoadFromFile(configDir, profileDir string, configuration interface{}) error {
+	path := determinePath(configDir)
+	fileName := path + "/" + internal.ConfigFileName //default profileDir
+	if len(profileDir) > 0 {
+		fileName = path + "/" + profileDir + "/" + internal.ConfigFileName
 	}
 	contents, err := ioutil.ReadFile(fileName)
 	if err != nil {
@@ -63,11 +64,8 @@ func LoadFromFile(profile string, configuration interface{}) error {
 	return nil
 }
 
-func determinePath() string {
-	flag.Parse()
-
-	path := *confDir
-
+// deprecated
+func determinePath(path string) string {
 	if len(path) == 0 { //No cmd line param passed
 		//Assumption: one service per container means only one var is needed, set accordingly for each deployment.
 		//For local dev, do not set this variable since configs are all named the same.
@@ -94,14 +92,14 @@ func VerifyTomlFiles(configuration interface{}) error {
 	}
 
 	for _, f := range files {
-		profile := f[len("res") : len(f)-len("/configuration.toml")]
-		if profile != "" {
+		profileDir := f[len("res") : len(f)-len("/configuration.toml")]
+		if profileDir != "" {
 			// remove the dash
-			profile = profile[1:]
+			profileDir = profileDir[1:]
 		}
-		err := LoadFromFile(profile, configuration)
+		err := LoadFromFile("", profileDir, configuration)
 		if err != nil {
-			return fmt.Errorf("Error loading toml file %s: %v", profile, err)
+			return fmt.Errorf("Error loading toml file %s: %v", profileDir, err)
 		}
 	}
 	return nil

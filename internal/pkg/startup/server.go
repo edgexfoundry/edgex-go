@@ -24,6 +24,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// deprecated
 // StartHTTPServer creates a new server designed to receive requests from the service defined by the parameters.
 func StartHTTPServer(logger logger.LoggingClient, timeout int, router *mux.Router, url string, errChan chan error) {
 	go func() {

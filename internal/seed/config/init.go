@@ -37,13 +37,13 @@ var Registry registry.Client
 // The purpose of Retry is different here than in other services. In this case, we use a retry in order
 // to initialize the RegistryClient that will be used to write configuration information. Other services
 // use Retry to read their information. Config-seed writes information.
-func Retry(useProfile string, timeout int, wait *sync.WaitGroup, ch chan error) {
+func Retry(configDir, profileDir string, timeout int, wait *sync.WaitGroup, ch chan error) {
 	until := time.Now().Add(time.Millisecond * time.Duration(timeout))
 	for time.Now().Before(until) {
 		var err error
 		//When looping, only handle configuration if it hasn't already been set.
 		if Configuration == nil {
-			Configuration, err = initializeConfiguration(useProfile)
+			Configuration, err = initializeConfiguration(configDir, profileDir)
 			if err != nil {
 				ch <- err
 			} else {
@@ -82,9 +82,9 @@ func Init() bool {
 	return false
 }
 
-func initializeConfiguration(useProfile string) (*ConfigurationStruct, error) {
+func initializeConfiguration(configDir, profileDir string) (*ConfigurationStruct, error) {
 	conf := &ConfigurationStruct{}
-	err := config.LoadFromFile(useProfile, conf)
+	err := config.LoadFromFile(configDir, profileDir, conf)
 	if err != nil {
 		return nil, err
 	}

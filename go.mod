@@ -6,12 +6,11 @@ require (
 	github.com/OneOfOne/xxhash v1.2.5
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/eclipse/paho.mqtt.golang v1.1.1
-	github.com/edgexfoundry/go-mod-core-contracts v0.1.19
+	github.com/edgexfoundry/go-mod-core-contracts v0.1.25
 	github.com/edgexfoundry/go-mod-messaging v0.1.9
-	github.com/edgexfoundry/go-mod-registry v0.1.9
+	github.com/edgexfoundry/go-mod-registry v0.1.12
 	github.com/globalsign/mgo v0.0.0-20181015135952-eeefdecb41b8
 	github.com/go-kit/kit v0.8.0
-	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/gomodule/redigo v2.0.0+incompatible
 	github.com/google/uuid v1.1.0
 	github.com/gorilla/mux v1.7.0

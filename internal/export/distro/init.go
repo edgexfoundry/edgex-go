@@ -16,19 +16,21 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/endpoint"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/coredata"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
+
 	"github.com/edgexfoundry/go-mod-messaging/messaging"
 	msgTypes "github.com/edgexfoundry/go-mod-messaging/pkg/types"
+
 	registryTypes "github.com/edgexfoundry/go-mod-registry/pkg/types"
 	"github.com/edgexfoundry/go-mod-registry/registry"
-
-	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
 )
 
 var LoggingClient logger.LoggingClient
@@ -42,13 +44,13 @@ var messageErrors chan error
 var messageEnvelopes chan msgTypes.MessageEnvelope
 var processStop chan bool
 
-func Retry(useRegistry bool, useProfile string, timeout int, wait *sync.WaitGroup, ch chan error) {
+func Retry(useRegistry bool, configDir, profileDir string, timeout int, wait *sync.WaitGroup, ch chan error) {
 	until := time.Now().Add(time.Millisecond * time.Duration(timeout))
 	for time.Now().Before(until) {
 		var err error
 		//When looping, only handle configuration if it hasn't already been set.
 		if Configuration == nil {
-			Configuration, err = initializeConfiguration(useRegistry, useProfile)
+			Configuration, err = initializeConfiguration(useRegistry, configDir, profileDir)
 			if err != nil {
 				ch <- err
 				if !useRegistry {
@@ -137,7 +139,7 @@ func connectToRegistry(conf *ConfigurationStruct) error {
 		ServiceProtocol: conf.Service.Protocol,
 		CheckInterval:   conf.Service.CheckInterval,
 		CheckRoute:      clients.ApiPingRoute,
-		Stem:            internal.ConfigRegistryStem,
+		Stem:            internal.ConfigRegistryStemCore + internal.ConfigMajorVersion,
 	}
 
 	registryClient, err = registry.NewRegistryClient(registryConfig)
@@ -167,7 +169,7 @@ func initializeClients(useRegistry bool) {
 		Interval:    Configuration.Service.ClientMonitor,
 	}
 
-	ec = coredata.NewEventClient(params, startup.Endpoint{RegistryClient: &registryClient})
+	ec = coredata.NewEventClient(params, endpoint.Endpoint{RegistryClient: &registryClient})
 
 	// Create the messaging client
 	var err error
@@ -185,10 +187,10 @@ func initializeClients(useRegistry bool) {
 	}
 }
 
-func initializeConfiguration(useRegistry bool, useProfile string) (*ConfigurationStruct, error) {
+func initializeConfiguration(useRegistry bool, configDir, profileDir string) (*ConfigurationStruct, error) {
 	//We currently have to load configuration from filesystem first in order to obtain RegistryHost/Port
 	configuration := &ConfigurationStruct{}
-	err := config.LoadFromFile(useProfile, configuration)
+	err := config.LoadFromFile(configDir, profileDir, configuration)
 	if err != nil {
 		return nil, err
 	}
