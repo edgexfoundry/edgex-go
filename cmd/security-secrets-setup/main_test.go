@@ -22,7 +22,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/edgexfoundry/edgex-go/internal/security/setup"
 	"github.com/edgexfoundry/edgex-go/internal/security/setup/option"
 	"github.com/stretchr/testify/assert"
 )
@@ -56,7 +55,7 @@ func TestMainWithConfigFileOption(t *testing.T) {
 	defer tearDown(t, origArgs)
 	assert := assert.New(t)
 
-	os.Args = []string{"cmd", "-config", "./res/pkisetup-vault.json"}
+	os.Args = []string{"cmd", "legacy", "-config", "./res/pkisetup-vault.json"}
 	printCommandLineStrings(os.Args)
 	main()
 
@@ -76,11 +75,82 @@ func TestConfigFileOptionError(t *testing.T) {
 	defer tearDown(t, origArgs)
 	assert := assert.New(t)
 
-	os.Args = []string{"cmd", "-config", "./non-exist/cert.json"}
+	os.Args = []string{"cmd", "legacy", "-config", "./non-exist/cert.json"}
 	printCommandLineStrings(os.Args)
 	main()
 
 	assert.Equal(2, (exitInstance.(*testExitCode)).getStatusCode())
+}
+
+func TestMainWithGenerateOption(t *testing.T) {
+	tearDown := setupTest(t)
+	origArgs := os.Args
+	defer tearDown(t, origArgs)
+	assert := assert.New(t)
+
+	runWithGenerateOption(false)
+	assert.Equal(0, (exitInstance.(*testExitCode)).getStatusCode())
+	optionExec := (dispatcherInstance.(*testPkiInitOptionDispatcher)).testOptsExecutor
+	assert.True((optionExec.(*option.PkiInitOption)).GenerateOpt)
+}
+
+func TestGenerateOptionWithRunError(t *testing.T) {
+	tearDown := setupTest(t)
+	origArgs := os.Args
+	defer tearDown(t, origArgs)
+	assert := assert.New(t)
+
+	runWithGenerateOption(true)
+	assert.Equal(2, (exitInstance.(*testExitCode)).getStatusCode())
+}
+
+func TestMainUnsupportedArgument(t *testing.T) {
+	tearDown := setupTest(t)
+	origArgs := os.Args
+	defer tearDown(t, origArgs)
+	assert := assert.New(t)
+
+	os.Args = []string{"cmd", "unsupported"}
+	printCommandLineStrings(os.Args)
+	hasDispatchError = false
+	main()
+
+	assert.Equal(1, (exitInstance.(*testExitCode)).getStatusCode())
+}
+
+func TestMainVerifyMultipleSubcommands(t *testing.T) {
+	tearDown := setupTest(t)
+	origArgs := os.Args
+	defer tearDown(t, origArgs)
+	assert := assert.New(t)
+
+	os.Args = []string{"cmd", "generate", "legacy"}
+	printCommandLineStrings(os.Args)
+	hasDispatchError = false
+	main()
+
+	assert.Equal(2, (exitInstance.(*testExitCode)).getStatusCode())
+}
+
+func TestMainLegacySubcommandWithExtraArgs(t *testing.T) {
+	tearDown := setupTest(t)
+	origArgs := os.Args
+	defer tearDown(t, origArgs)
+	assert := assert.New(t)
+
+	os.Args = []string{"cmd", "legacy", "-c", "./res/pkisetup-vault.json", "extra"}
+	printCommandLineStrings(os.Args)
+	hasDispatchError = false
+	main()
+
+	assert.Equal(2, (exitInstance.(*testExitCode)).getStatusCode())
+}
+
+func runWithGenerateOption(hasError bool) {
+	os.Args = []string{"cmd", "generate"}
+	printCommandLineStrings(os.Args)
+	hasDispatchError = hasError
+	main()
 }
 
 func printCommandLineStrings(strs []string) {
@@ -125,10 +195,16 @@ func newTestDispatcher() optionDispatcher {
 	return &testPkiInitOptionDispatcher{}
 }
 
-func (testDispatcher *testPkiInitOptionDispatcher) run() (statusCode int, err error) {
-	setup.LoggingClient.Debug(fmt.Sprintf("In test flag value: configFile = %v", configFile))
+func (testDispatcher *testPkiInitOptionDispatcher) run(command string) (statusCode int, err error) {
+	optsExecutor, statusCode, err := setupPkiInitOption(command)
 
-	optsExecutor, _, _ := option.NewPkiInitOption(option.PkiInitOption{})
+	genOpt := false
+	if pkiInit, ok := optsExecutor.(*option.PkiInitOption); ok {
+		genOpt = pkiInit.GenerateOpt
+	}
+
+	fmt.Printf("In test flag value: generateOpt = %v, configFile = %v", genOpt, configFile)
+
 	testDispatcher.testOptsExecutor = optsExecutor
 
 	if hasDispatchError {

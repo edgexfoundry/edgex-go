@@ -34,19 +34,25 @@ type exiter interface {
 type exitCode struct{}
 
 type optionDispatcher interface {
-	run() (int, error)
+	run(command string) (int, error)
 }
 
 type pkiInitOptionDispatcher struct{}
 
 var exitInstance = newExit()
 var dispatcherInstance = newOptionDispatcher()
+
+var subcommands = map[string]*flag.FlagSet{
+	"legacy":   flag.NewFlagSet("legacy", flag.ExitOnError),
+	"generate": flag.NewFlagSet("generate", flag.ExitOnError),
+}
 var configFile string
 
 func init() {
-	// define and register command line flags:
-	flag.StringVar(&configFile, "config", "", "specify JSON configuration file: /path/to/file.json")
-	flag.StringVar(&configFile, "c", "", "specify JSON configuration file: /path/to/file.json")
+	// setup options for subcommands:
+	subcommands["legacy"].StringVar(&configFile, "config", "", "specify JSON configuration file: /path/to/file.json")
+	subcommands["legacy"].StringVar(&configFile, "c", "", "specify JSON configuration file: /path/to/file.json")
+
 	flag.Usage = usage.HelpCallbackSecuritySetup
 }
 
@@ -55,9 +61,9 @@ func main() {
 
 	flag.Parse()
 
-	if len(os.Args) < 2 {
-		fmt.Println("Please specify option for " + option.SecuritySecretsSetup)
-		flag.PrintDefaults()
+	if flag.NArg() < 1 {
+		fmt.Println("Please specify subcommand for " + option.SecuritySecretsSetup)
+		flag.Usage()
 		exitInstance.exit(0)
 		return
 	}
@@ -69,24 +75,53 @@ func main() {
 		return
 	}
 
-	if configFile == "" {
-		// run with other options for pki-init
-		statusCode, err := dispatcherInstance.run()
-		if err != nil {
-			setup.LoggingClient.Error(err.Error())
-		}
+	subcmdName := flag.Args()[0]
 
-		exitInstance.exit(statusCode)
+	subcmd, found := subcommands[subcmdName]
+	if !found {
+		setup.LoggingClient.Error(fmt.Sprintf("unsupported subcommand %s", subcmdName))
+		exitInstance.exit(1)
 		return
 	}
 
-	if err := option.GenTLSAssets(configFile); err != nil {
-		setup.LoggingClient.Error(err.Error())
+	if err := subcmd.Parse(flag.Args()[1:]); err != nil {
+		setup.LoggingClient.Error(fmt.Sprintf("error parsing subcommand %s: %v", subcmdName, err))
 		exitInstance.exit(2)
 		return
 	}
 
+	var exitStatusCode int
+	var err error
+
+	switch subcmdName {
+	case "legacy":
+		// no additional arguments expected
+		if len(subcmd.Args()) > 0 {
+			setup.LoggingClient.Error(fmt.Sprintf("subcommand %s doesn't use other additional args", subcmdName))
+			exitInstance.exit(2)
+			return
+		}
+		if err = option.GenTLSAssets(configFile); err != nil {
+			setup.LoggingClient.Error(err.Error())
+			exitInstance.exit(2)
+			return
+		}
+
+	case "generate":
+		// no arguments expected
+		if len(subcmd.Args()) > 0 {
+			setup.LoggingClient.Error(fmt.Sprintf("subcommand %s doesn't use any args", subcmdName))
+			exitInstance.exit(2)
+			return
+		}
+		exitStatusCode, err = dispatcherInstance.run(subcmdName)
+		if err != nil {
+			setup.LoggingClient.Error(err.Error())
+		}
+	}
+
 	setup.LoggingClient.Info(option.SecuritySecretsSetup+" complete", internal.LogDurationKey, time.Since(start).String())
+	exitInstance.exit(exitStatusCode)
 }
 
 func newExit() exiter {
@@ -101,9 +136,21 @@ func newOptionDispatcher() optionDispatcher {
 	return &pkiInitOptionDispatcher{}
 }
 
-func (dispatcher *pkiInitOptionDispatcher) run() (statusCode int, err error) {
-	opts := option.PkiInitOption{}
-	optsExecutor, statusCode, err := option.NewPkiInitOption(opts)
+func setupPkiInitOption(subcommand string) (executor option.OptionsExecutor, status int, err error) {
+	generateOpt := false
+	switch subcommand {
+	case "generate":
+		generateOpt = true
+	}
+
+	opts := option.PkiInitOption{
+		GenerateOpt: generateOpt,
+	}
+	return option.NewPkiInitOption(opts)
+}
+
+func (dispatcher *pkiInitOptionDispatcher) run(command string) (statusCode int, err error) {
+	optsExecutor, statusCode, err := setupPkiInitOption(command)
 	if err != nil {
 		return statusCode, err
 	}

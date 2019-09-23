@@ -56,11 +56,11 @@ func (c *Client) GetDeviceReportByName(n string) (contract.DeviceReport, error) 
 	return d, err
 }
 
-func (c *Client) GetDeviceReportByDeviceName(n string) ([]contract.DeviceReport, error) {
+func (c *Client) getDeviceReports(n string) ([]contract.DeviceReport, error) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
-	objects, err := getObjectsByValue(conn, db.DeviceReport+":device:"+n)
+	objects, err := getObjectsByValue(conn, n)
 	if err != nil {
 		return []contract.DeviceReport{}, err
 	}
@@ -74,6 +74,10 @@ func (c *Client) GetDeviceReportByDeviceName(n string) ([]contract.DeviceReport,
 	}
 
 	return d, nil
+}
+
+func (c *Client) GetDeviceReportByDeviceName(n string) ([]contract.DeviceReport, error) {
+	return c.getDeviceReports(db.DeviceReport + ":device:" + n)
 }
 
 func (c *Client) GetDeviceReportById(id string) (contract.DeviceReport, error) {
@@ -86,43 +90,11 @@ func (c *Client) GetDeviceReportById(id string) (contract.DeviceReport, error) {
 }
 
 func (c *Client) GetDeviceReportsByScheduleEventName(n string) ([]contract.DeviceReport, error) {
-	conn := c.Pool.Get()
-	defer conn.Close()
-
-	objects, err := getObjectsByValue(conn, db.DeviceReport+":scheduleevent:"+n)
-	if err != nil {
-		return []contract.DeviceReport{}, err
-	}
-
-	d := make([]contract.DeviceReport, len(objects))
-	for i, object := range objects {
-		err = unmarshalObject(object, &d[i])
-		if err != nil {
-			return []contract.DeviceReport{}, err
-		}
-	}
-
-	return d, nil
+	return c.getDeviceReports(db.DeviceReport + ":scheduleevent:" + n)
 }
 
 func (c *Client) GetDeviceReportsByAction(n string) ([]contract.DeviceReport, error) {
-	conn := c.Pool.Get()
-	defer conn.Close()
-
-	objects, err := getObjectsByValue(conn, db.DeviceReport+":action:"+n)
-	if err != nil {
-		return []contract.DeviceReport{}, err
-	}
-
-	d := make([]contract.DeviceReport, len(objects))
-	for i, object := range objects {
-		err = unmarshalObject(object, &d[i])
-		if err != nil {
-			return []contract.DeviceReport{}, err
-		}
-	}
-
-	return d, nil
+	return c.getDeviceReports(db.DeviceReport + ":action:" + n)
 }
 
 func (c *Client) AddDeviceReport(d contract.DeviceReport) (string, error) {
