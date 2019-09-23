@@ -138,3 +138,15 @@ func (e ErrDbNotFound) Error() string {
 func NewErrDbNotFound() error {
 	return ErrDbNotFound{}
 }
+
+type ErrLimitExceeded struct {
+	limit int
+}
+
+func (e ErrLimitExceeded) Error() string {
+	return fmt.Sprintf("number of records %d exceeds configured max limit", e.limit)
+}
+
+func NewErrLimitExceeded(limit int) error {
+	return ErrLimitExceeded{limit: limit}
+}

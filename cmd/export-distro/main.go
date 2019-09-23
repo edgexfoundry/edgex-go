@@ -30,18 +30,24 @@ import (
 )
 
 func main() {
-	var useRegistry bool
-	var useProfile string
 	start := time.Now()
+	var useRegistry bool
+	var configDir, profileDir string
 
 	flag.BoolVar(&useRegistry, "registry", false, "Indicates the service should use Registry.")
 	flag.BoolVar(&useRegistry, "r", false, "Indicates the service should use Registry.")
-	flag.StringVar(&useProfile, "profile", "", "Specify a profile other than default.")
-	flag.StringVar(&useProfile, "p", "", "Specify a profile other than default.")
+	flag.StringVar(&profileDir, "profile", "", "Specify a profile other than default.")
+	flag.StringVar(&profileDir, "p", "", "Specify a profile other than default.")
+	flag.StringVar(&configDir, "confdir", "", "Specify local configuration directory")
 	flag.Usage = usage.HelpCallback
 	flag.Parse()
 
-	params := startup.BootParams{UseRegistry: useRegistry, UseProfile: useProfile, BootTimeout: internal.BootTimeoutDefault}
+	params := startup.BootParams{
+		UseRegistry: useRegistry,
+		ConfigDir:   configDir,
+		ProfileDir:  profileDir,
+		BootTimeout: internal.BootTimeoutDefault,
+	}
 	startup.Bootstrap(params, distro.Retry, logBeforeInit)
 
 	if ok := distro.Init(useRegistry); !ok {
