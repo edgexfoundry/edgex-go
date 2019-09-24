@@ -28,6 +28,20 @@ import (
 	"github.com/gorilla/mux"
 )
 
+func restGetSubscriptions(w http.ResponseWriter, r *http.Request) {
+	if r.Body != nil {
+		defer r.Body.Close()
+	}
+
+	subscriptions, err := dbClient.GetSubscriptions()
+	if err != nil {
+		LoggingClient.Error(err.Error())
+		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		return
+	}
+	pkg.Encode(subscriptions, w, LoggingClient)
+}
+
 func subscriptionHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Body != nil {
 		defer r.Body.Close()
@@ -37,18 +51,6 @@ func subscriptionHandler(w http.ResponseWriter, r *http.Request) {
 	slug := vars["slug"]
 
 	switch r.Method {
-
-	// Get all subscriptions
-	case http.MethodGet:
-		subscriptions, err := dbClient.GetSubscriptions()
-		if err != nil {
-			LoggingClient.Error(err.Error())
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-			return
-		}
-		pkg.Encode(subscriptions, w, LoggingClient)
-
-		// Modify (an existing) subscription
 	case http.MethodPut:
 		var s models.Subscription
 		dec := json.NewDecoder(r.Body)
