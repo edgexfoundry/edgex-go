@@ -20,6 +20,7 @@ package secretstore
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -46,6 +47,8 @@ type Certs struct {
 type auth struct {
 	Token string `json:"root_token"`
 }
+
+var errNotFound = errors.New("proxy cert pair not found in secret store")
 
 func NewCerts(caller internal.HttpCaller, certPath string, tokenPath string) Certs {
 	return Certs{client: caller, certPath: certPath, tokenPath: tokenPath}
@@ -95,9 +98,8 @@ func (cs *Certs) retrieve(t string) (*CertPair, error) {
 	cc := CertCollect{}
 
 	if resp.StatusCode == http.StatusNotFound {
-		e := fmt.Errorf("proxy cert pair NOT found in secret store @/%s, status: %s", cs.certPath, resp.Status)
-		LoggingClient.Info(e.Error())
-		return nil, e
+		LoggingClient.Info(fmt.Sprintf("proxy cert pair NOT found in secret store @/%s, status: %s", cs.certPath, resp.Status))
+		return nil, errNotFound
 	} else if resp.StatusCode != http.StatusOK {
 		e := fmt.Errorf("failed to retrieve the proxy cert pair on path %s with error code %d", cs.certPath, resp.StatusCode)
 		LoggingClient.Error(e.Error())
@@ -116,6 +118,9 @@ func (cs *Certs) retrieve(t string) (*CertPair, error) {
 func (cs *Certs) AlreadyinStore() (bool, error) {
 	cp, err := cs.getCertPair()
 	if err != nil {
+		if err == errNotFound {
+			return false, nil
+		}
 		return false, err
 	}
 	if len(cp.Cert) > 0 && len(cp.Key) > 0 {
@@ -202,7 +207,7 @@ func (cs *Certs) UploadToStore(cp *CertPair) error {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
+	if resp.StatusCode != http.StatusNoContent && resp.StatusCode != http.StatusOK {
 		b, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
 			return err
