@@ -14,18 +14,21 @@
 package command
 
 import (
+	"github.com/edgexfoundry/go-mod-secrets/pkg/providers/vault"
+
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 )
 
 // ConfigurationStruct contains the configuration properties for the core-command service.
 type ConfigurationStruct struct {
-	Writable  WritableInfo
-	Clients   map[string]config.ClientInfo
-	Databases map[string]config.DatabaseInfo
-	Logging   config.LoggingInfo
-	Registry  config.RegistryInfo
-	Service   config.ServiceInfo
+	Writable    WritableInfo
+	Clients     map[string]config.ClientInfo
+	Databases   map[string]config.DatabaseInfo
+	Logging     config.LoggingInfo
+	Registry    config.RegistryInfo
+	Service     config.ServiceInfo
+	SecretStore vault.SecretConfig
 }
 
 // WritableInfo contains configuration properties that can be updated and applied without restarting the service.
@@ -69,10 +72,11 @@ func (c *ConfigurationStruct) UpdateWritableFromRaw(rawWritable interface{}) boo
 // into an interfaces.BootstrapConfiguration struct contained within ConfigurationStruct).
 func (c *ConfigurationStruct) GetBootstrap() interfaces.BootstrapConfiguration {
 	return interfaces.BootstrapConfiguration{
-		Clients:  c.Clients,
-		Service:  c.Service,
-		Registry: c.Registry,
-		Logging:  c.Logging,
+		Clients:     c.Clients,
+		Service:     c.Service,
+		Registry:    c.Registry,
+		Logging:     c.Logging,
+		SecretStore: c.SecretStore,
 	}
 }
 

@@ -92,6 +92,7 @@ func main() {
 		agent.Configuration,
 		startupTimer,
 		[]interfaces.BootstrapHandler{
+			handlers.SecretClientBootstrapHandler,
 			agent.BootstrapHandler,
 			httpServerBootstrapHandler,
 			handlers.NewStartMessage(clients.SystemManagementAgentServiceKey, edgex.Version).Handler,

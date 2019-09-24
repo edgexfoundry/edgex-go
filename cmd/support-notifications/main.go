@@ -60,6 +60,7 @@ func main() {
 		notifications.Configuration,
 		startupTimer,
 		[]interfaces.BootstrapHandler{
+			handlers.SecretClientBootstrapHandler,
 			notifications.NewServiceInit(&httpServer).BootstrapHandler,
 			telemetry.BootstrapHandler,
 			httpServer.Handler,

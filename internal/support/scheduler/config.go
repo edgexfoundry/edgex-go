@@ -15,6 +15,8 @@
 package scheduler
 
 import (
+	"github.com/edgexfoundry/go-mod-secrets/pkg/providers/vault"
+
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 )
@@ -29,6 +31,7 @@ type ConfigurationStruct struct {
 	Service         config.ServiceInfo
 	Intervals       map[string]config.IntervalInfo
 	IntervalActions map[string]config.IntervalActionInfo
+	SecretStore     vault.SecretConfig
 }
 
 type WritableInfo struct {
@@ -73,10 +76,11 @@ func (c *ConfigurationStruct) UpdateWritableFromRaw(rawWritable interface{}) boo
 func (c *ConfigurationStruct) GetBootstrap() interfaces.BootstrapConfiguration {
 	// temporary until we can make backwards-breaking configuration.toml change
 	return interfaces.BootstrapConfiguration{
-		Clients:  c.Clients,
-		Service:  c.Service,
-		Registry: c.Registry,
-		Logging:  c.Logging,
+		Clients:     c.Clients,
+		Service:     c.Service,
+		Registry:    c.Registry,
+		Logging:     c.Logging,
+		SecretStore: c.SecretStore,
 	}
 }
 

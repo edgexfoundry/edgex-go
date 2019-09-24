@@ -50,6 +50,7 @@ func main() {
 		distro.Configuration,
 		startupTimer,
 		[]interfaces.BootstrapHandler{
+			handlers.SecretClientBootstrapHandler,
 			distro.BootstrapHandler,
 			telemetry.BootstrapHandler,
 			httpServer.Handler,
