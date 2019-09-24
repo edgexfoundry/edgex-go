@@ -21,7 +21,7 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/endpoint"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/response"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
@@ -96,7 +96,7 @@ func getConfig(
 				Interval:    internal.ClientMonitorDefault,
 			}
 			// Add the service key to the map where the value is the respective GeneralClient
-			client = general.NewGeneralClient(params, startup.Endpoint{RegistryClient: &registryClient})
+			client = general.NewGeneralClient(params, endpoint.Endpoint{RegistryClient: &registryClient})
 			genClients.Set(e.ServiceId, client)
 		}
 

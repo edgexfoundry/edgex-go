@@ -28,13 +28,14 @@ import (
 )
 
 func main() {
-	var useProfile string
+	var configDir, profileDir string
 	var dirCmd string
 	var dirProperties string
 	var overwriteConfig bool
 
-	flag.StringVar(&useProfile, "profile", "", "Specify a profile other than default.")
-	flag.StringVar(&useProfile, "p", "", "Specify a profile other than default.")
+	flag.StringVar(&profileDir, "profile", "", "Specify a profile other than default.")
+	flag.StringVar(&profileDir, "p", "", "Specify a profile other than default.")
+	flag.StringVar(&configDir, "confdir", "", "Specify local configuration directory")
 	flag.StringVar(&dirProperties, "props", "./res/properties", "Specify alternate properties location as absolute path")
 	flag.StringVar(&dirProperties, "r", "./res/properties", "Specify alternate properties location as absolute path")
 	flag.StringVar(&dirCmd, "cmd", "../cmd", "Specify alternate cmd location as absolute path")
@@ -45,7 +46,7 @@ func main() {
 	flag.Usage = usage.HelpCallbackConfigSeed
 	flag.Parse()
 
-	bootstrap(useProfile)
+	bootstrap(configDir, profileDir)
 	ok := config.Init()
 	if !ok {
 		logBeforeInit(fmt.Errorf("%s: Service bootstrap failed!", clients.ConfigSeedServiceKey))
@@ -58,7 +59,7 @@ func main() {
 		config.LoggingClient.Error(err.Error())
 	}
 
-	err = config.ImportConfiguration(dirCmd, useProfile, overwriteConfig)
+	err = config.ImportConfiguration(dirCmd, profileDir, overwriteConfig)
 	if err != nil {
 		config.LoggingClient.Error(err.Error())
 	}
@@ -71,11 +72,11 @@ func main() {
 	os.Exit(0)
 }
 
-func bootstrap(profile string) {
+func bootstrap(configDir, profileDir string) {
 	deps := make(chan error, 2)
 	wg := sync.WaitGroup{}
 	wg.Add(1)
-	go config.Retry(profile, internal.BootTimeoutDefault, &wg, deps)
+	go config.Retry(configDir, profileDir, internal.BootTimeoutDefault, &wg, deps)
 	go func(ch chan error) {
 		for {
 			select {

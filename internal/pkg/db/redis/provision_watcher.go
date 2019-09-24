@@ -21,23 +21,27 @@ import (
 
 type redisProvisionWatcher struct {
 	contract.Timestamps
-	Id             string
-	Name           string
-	Identifiers    map[string]string
-	Profile        string
-	Service        string
-	OperatingState contract.OperatingState
+	Id                  string
+	Name                string
+	Identifiers         map[string]string
+	BlockingIdentifiers map[string][]string
+	Profile             string
+	Service             string
+	OperatingState      contract.OperatingState
+	AdminState          contract.AdminState
 }
 
 func marshalProvisionWatcher(pw contract.ProvisionWatcher) (out []byte, err error) {
 	s := redisProvisionWatcher{
-		Timestamps:     pw.Timestamps,
-		Id:             pw.Id,
-		Name:           pw.Name,
-		Identifiers:    pw.Identifiers,
-		Profile:        pw.Profile.Id,
-		Service:        pw.Service.Id,
-		OperatingState: pw.OperatingState,
+		Timestamps:          pw.Timestamps,
+		Id:                  pw.Id,
+		Name:                pw.Name,
+		Identifiers:         pw.Identifiers,
+		BlockingIdentifiers: pw.BlockingIdentifiers,
+		Profile:             pw.Profile.Id,
+		Service:             pw.Service.Id,
+		OperatingState:      pw.OperatingState,
+		AdminState:          pw.AdminState,
 	}
 
 	return marshalObject(s)
@@ -57,7 +61,9 @@ func unmarshalProvisionWatcher(o []byte, pw interface{}) (err error) {
 		x.Id = s.Id
 		x.Name = s.Name
 		x.Identifiers = s.Identifiers
+		x.BlockingIdentifiers = s.BlockingIdentifiers
 		x.OperatingState = s.OperatingState
+		x.AdminState = s.AdminState
 
 		conn, err := getConnection()
 		if err != nil {

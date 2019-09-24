@@ -33,14 +33,14 @@ var registryClient registry.Client
 var registryErrors chan error        //A channel for "config wait errors" sourced from Registry
 var registryUpdates chan interface{} //A channel for "config updates" sourced from Registry
 
-func Retry(useRegistry bool, useProfile string, timeout int, wait *sync.WaitGroup, ch chan error) {
+func Retry(useRegistry bool, configDir, profileDir string, timeout int, wait *sync.WaitGroup, ch chan error) {
 	LoggingClient = newPrivateLogger()
 	until := time.Now().Add(time.Millisecond * time.Duration(timeout))
 	for time.Now().Before(until) {
 		var err error
 		//When looping, only handle configuration if it hasn't already been set.
 		if Configuration == nil {
-			Configuration, err = initializeConfiguration(useRegistry, useProfile)
+			Configuration, err = initializeConfiguration(useRegistry, configDir, profileDir)
 			if err != nil {
 				ch <- err
 				if !useRegistry {
@@ -99,10 +99,10 @@ func Destruct() {
 	}
 }
 
-func initializeConfiguration(useRegistry bool, useProfile string) (*ConfigurationStruct, error) {
+func initializeConfiguration(useRegistry bool, configDir, profileDir string) (*ConfigurationStruct, error) {
 	//We currently have to load configuration from filesystem first in order to obtain RegistryHost/Port
 	configuration := &ConfigurationStruct{}
-	err := config.LoadFromFile(useProfile, configuration)
+	err := config.LoadFromFile(configDir, profileDir, configuration)
 	if err != nil {
 		return nil, err
 	}

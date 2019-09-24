@@ -41,7 +41,7 @@ func main() {
 	var insecureSkipVerify bool
 	var configFileLocation string
 	var waitInterval int
-	var useProfile string
+	var configDir, profileDir string
 	var useRegistry bool
 
 	flag.BoolVar(&initNeeded, "init", false, "run init procedure for security service.")
@@ -50,13 +50,19 @@ func main() {
 	flag.IntVar(&waitInterval, "wait", 30, "time to wait between checking Vault status in seconds.")
 	flag.BoolVar(&useRegistry, "registry", false, "Indicates the service should use registry service.")
 	flag.BoolVar(&useRegistry, "r", false, "Indicates the service should use registry service.")
-	flag.StringVar(&useProfile, "profile", "", "Specify a profile other than default.")
-	flag.StringVar(&useProfile, "p", "", "Specify a profile other than default.")
+	flag.StringVar(&profileDir, "profile", "", "Specify a profile other than default.")
+	flag.StringVar(&profileDir, "p", "", "Specify a profile other than default.")
+	flag.StringVar(&configDir, "confdir", "", "Specify local configuration directory")
 
 	flag.Usage = usage.HelpCallbackSecuritySecretStore
 	flag.Parse()
 
-	params := startup.BootParams{UseRegistry: useRegistry, UseProfile: useProfile, BootTimeout: internal.BootTimeoutDefault}
+	params := startup.BootParams{
+		UseRegistry: useRegistry,
+		ConfigDir:   configDir,
+		ProfileDir:  profileDir,
+		BootTimeout: internal.BootTimeoutDefault,
+	}
 	startup.Bootstrap(params, secretstore.Retry, logBeforeInit)
 
 	//step 1: boot up secretstore general steps same as other EdgeX microservice
