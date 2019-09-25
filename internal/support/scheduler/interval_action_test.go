@@ -137,45 +137,6 @@ func TestGetIntervalActionById(t *testing.T) {
 	}
 }
 
-func TestAddIntervalAction(t *testing.T) {
-	reset()
-	myMock := &dbMock.DBClient{}
-	mySchedulerMock := &dbMock.SchedulerQueueClient{}
-
-	// Validation call
-	myMock.On("IntervalActionByName",
-		mock.Anything).Return(models.IntervalAction{}, nil)
-
-	myMock.On("IntervalByName",
-		mock.Anything).Return(models.Interval{}, nil)
-
-	// Add Interval call
-	myMock.On("AddIntervalAction",
-		mock.Anything).Return(testUUIDString, nil)
-
-	// Scheduler call
-	mySchedulerMock.On("AddIntervalActionToQueue",
-		mock.Anything).Return(nil)
-
-	mySchedulerMock.On("QueryIntervalActionByName",
-		mock.Anything).Return(models.IntervalAction{}, nil)
-
-	nIntervalAction := models.IntervalAction{Name: testIntervalActionNewName, Target: testIntervalActionTarget, Origin: testOrigin, Interval: testIntervalActionInterval}
-	dbClient = myMock
-	scClient = mySchedulerMock
-
-	id, err := addNewIntervalAction(nIntervalAction)
-	if err != nil {
-		t.Errorf(err.Error())
-	}
-
-	if id != testUUIDString {
-		t.Errorf("expected return interval ID to match inserted ID")
-	}
-
-	myMock.AssertExpectations(t)
-}
-
 func TestUpdateIntervalAction(t *testing.T) {
 	reset()
 	myMock := &dbMock.DBClient{}

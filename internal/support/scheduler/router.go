@@ -59,7 +59,8 @@ func LoadRestRoutes() *mux.Router {
 
 	// IntervalAction
 	r.HandleFunc(clients.ApiIntervalActionRoute, restGetIntervalAction).Methods(http.MethodGet)
-	r.HandleFunc(clients.ApiIntervalActionRoute, intervalActionHandler).Methods(http.MethodPut, http.MethodPost)
+	r.HandleFunc(clients.ApiIntervalActionRoute, restAddIntervalAction).Methods(http.MethodPost)
+	r.HandleFunc(clients.ApiIntervalActionRoute, intervalActionHandler).Methods(http.MethodPut)
 	intervalAction := r.PathPrefix(clients.ApiIntervalActionRoute).Subrouter()
 	intervalAction.HandleFunc("/{"+ID+"}", intervalActionByIdHandler).Methods(http.MethodGet, http.MethodDelete)
 	intervalAction.HandleFunc("/"+NAME+"/{"+NAME+"}", intervalActionByNameHandler).Methods(http.MethodGet, http.MethodDelete)
