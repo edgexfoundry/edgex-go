@@ -48,6 +48,7 @@ Server Options:
 
 Server Subcommand:	
 	generate                        Generate PKI afresh every time and deployed. Typically, this will be whenever the framework is started.
+	cache                           Generate PKI exactly once and then copied to a designated cache location for future use.  The PKI is then deployed from the cached location.
 	legacy                          [Will be deprecated] Legacy mode to generate PKI
 	  -c, --config <name>           Provide absolute path to JSON configuration file
 

@@ -13,6 +13,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0'
 //
+
 package main
 
 import (
@@ -146,8 +147,28 @@ func TestMainLegacySubcommandWithExtraArgs(t *testing.T) {
 	assert.Equal(2, (exitInstance.(*testExitCode)).getStatusCode())
 }
 
+func TestMainWithCacheOption(t *testing.T) {
+	tearDown := setupTest(t)
+	origArgs := os.Args
+	defer tearDown(t, origArgs)
+	assert := assert.New(t)
+
+	runWithCacheOption(false)
+	assert.Equal(0, (exitInstance.(*testExitCode)).getStatusCode())
+	optionExec := (dispatcherInstance.(*testPkiInitOptionDispatcher)).testOptsExecutor
+	assert.Equal(true, (optionExec.(*option.PkiInitOption)).CacheOpt)
+	assert.Equal(false, (optionExec.(*option.PkiInitOption)).GenerateOpt)
+}
+
 func runWithGenerateOption(hasError bool) {
 	os.Args = []string{"cmd", "generate"}
+	printCommandLineStrings(os.Args)
+	hasDispatchError = hasError
+	main()
+}
+
+func runWithCacheOption(hasError bool) {
+	os.Args = []string{"cmd", "cache"}
 	printCommandLineStrings(os.Args)
 	hasDispatchError = hasError
 	main()
@@ -163,6 +184,7 @@ func setupTest(t *testing.T) func(t *testing.T, args []string) {
 	return func(t *testing.T, args []string) {
 		// reset after each test
 		configFile = ""
+		hasDispatchError = false
 		os.Args = args
 		// cleanup the generated files
 		os.RemoveAll("./config")
@@ -199,11 +221,13 @@ func (testDispatcher *testPkiInitOptionDispatcher) run(command string) (statusCo
 	optsExecutor, statusCode, err := setupPkiInitOption(command)
 
 	genOpt := false
+	cacheOpt := false
 	if pkiInit, ok := optsExecutor.(*option.PkiInitOption); ok {
 		genOpt = pkiInit.GenerateOpt
+		cacheOpt = pkiInit.CacheOpt
 	}
 
-	fmt.Printf("In test flag value: generateOpt = %v, configFile = %v", genOpt, configFile)
+	fmt.Printf("In test flag value: generateOpt = %v, cacheOpt = %v, configFile = %v\n", genOpt, cacheOpt, configFile)
 
 	testDispatcher.testOptsExecutor = optsExecutor
 

@@ -17,6 +17,7 @@
 package option
 
 import (
+	"errors"
 	"path/filepath"
 )
 
@@ -31,6 +32,8 @@ const (
 	envXdgRuntimeDir              = "XDG_RUNTIME_DIR"
 	defaultXdgRuntimeDir          = "/tmp"
 	pkiInitBaseDir                = "/edgex/security-secrets-setup"
+	envPkiCache                   = "PKI_CACHE"
+	defaultPkiCacheDir            = "/etc/edgex/pki"
 	tmpfsRunDir                   = "/run"
 	tlsSecretFileName             = "server.key"
 	tlsCertFileName               = "server.crt"
@@ -44,7 +47,8 @@ const (
 )
 
 var (
-	pkiInitScratchDir   = filepath.Join(pkiInitBaseDir, "scratch")
-	pkiInitGeneratedDir = filepath.Join(pkiInitBaseDir, "generated")
-	pkiInitDeployDir    = filepath.Join(tmpfsRunDir, "edgex", "secrets")
+	pkiInitScratchDir      = filepath.Join(pkiInitBaseDir, "scratch")
+	pkiInitGeneratedDir    = filepath.Join(pkiInitBaseDir, "generated")
+	pkiInitDeployDir       = filepath.Join(tmpfsRunDir, "edgex", "secrets")
+	errCacheNotChangeAfter = errors.New("PKI cache cannot be changed after it was cached previously")
 )

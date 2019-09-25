@@ -18,11 +18,9 @@ package option
 
 import (
 	"errors"
-
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"os"
 	"path"
 	"path/filepath"
@@ -121,7 +119,7 @@ func copyDir(srcDir, destDir string) error {
 				return err
 			}
 		} else {
-			log.Printf("copying srcFilePath: %s to destFilePath: %s", srcFilePath, destFilePath)
+			setup.LoggingClient.Debug(fmt.Sprintf("copying srcFilePath: %s to destFilePath: %s", srcFilePath, destFilePath))
 			if _, copyErr := copyFile(srcFilePath, destFilePath); copyErr != nil {
 				return copyErr
 			}
@@ -222,6 +220,14 @@ func getXdgRuntimeDir() string {
 	}
 	// if $XDG_RUNTIME_DIR is undefined, default to /tmp
 	return defaultXdgRuntimeDir
+}
+
+func getPkiCacheDirEnv() string {
+	pkiCacheDir := os.Getenv(envPkiCache)
+	if pkiCacheDir == "" {
+		return defaultPkiCacheDir
+	}
+	return pkiCacheDir
 }
 
 // GenTLSAssets generates the TLS assets based on the JSON configuration file
