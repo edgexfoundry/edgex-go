@@ -24,6 +24,7 @@ import (
 type OptionsExecutor interface {
 	ProcessOptions() (int, error)
 	executeOptions(...func(*PkiInitOption) (exitCode, error)) (exitCode, error)
+	setExecutor(executor OptionsExecutor)
 }
 
 // PkiInitOption contains command line options for pki-init
@@ -37,7 +38,7 @@ type PkiInitOption struct {
 func NewPkiInitOption(opts PkiInitOption) (ex OptionsExecutor, statusCode int, err error) {
 	// cache option cannot used with -generate
 	if opts.CacheOpt && opts.GenerateOpt {
-		return ex, exitWithError.intValue(), errors.New("Cannot attempt cache option with other modes")
+		return ex, exitWithError.intValue(), errors.New("Cannot execute cache option with generate option")
 	}
 
 	opts.executor = &opts
@@ -65,4 +66,8 @@ func (pkiInitOpt *PkiInitOption) executeOptions(executors ...func(*PkiInitOption
 		}
 	}
 	return statusCode, err
+}
+
+func (pkiInitOpt *PkiInitOption) setExecutor(executor OptionsExecutor) {
+	pkiInitOpt.executor = executor
 }

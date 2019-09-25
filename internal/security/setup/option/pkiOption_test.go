@@ -87,7 +87,7 @@ func TestProcessOptionNormal(t *testing.T) {
 		GenerateOpt: true,
 	}
 	optsExecutor, _, _ := NewPkiInitOption(options)
-	optsExecutor.(*PkiInitOption).executor = testExecutor
+	optsExecutor.setExecutor(testExecutor)
 	exitCode, err := optsExecutor.ProcessOptions()
 	assert.Equal(normal.intValue(), exitCode)
 	assert.Nil(err)
@@ -108,7 +108,8 @@ func TestProcessOptionError(t *testing.T) {
 		GenerateOpt: true,
 	}
 	generateOn, _, _ := NewPkiInitOption(options)
-	generateOn.(*PkiInitOption).executor = testExecutor
+
+	generateOn.setExecutor(testExecutor)
 	exitCode, err := generateOn.ProcessOptions()
 	assert.Equal(exitWithError.intValue(), exitCode)
 	assert.Equal(generateErr, err)
@@ -124,14 +125,14 @@ func TestExecuteOption(t *testing.T) {
 		GenerateOpt: true,
 	}
 	generateOn, _, _ := NewPkiInitOption(options)
-	generateOn.(*PkiInitOption).executor = testExecutor
+	generateOn.setExecutor(testExecutor)
 	exitCode, err := generateOn.executeOptions(mockGenerate())
 	assert.Equal(normal, exitCode)
 	assert.Nil(err)
 
 	options.GenerateOpt = false
 	generateOff, _, _ := NewPkiInitOption(options)
-	generateOff.(*PkiInitOption).executor = testExecutor
+	generateOff.setExecutor(testExecutor)
 	exitCode, err = generateOff.executeOptions(mockGenerate())
 	assert.Equal(normal, exitCode)
 	assert.Nil(err)

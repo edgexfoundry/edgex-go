@@ -24,7 +24,8 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/security/setup"
 )
 
-// Cache option....
+// Cache generates PKI exactly once and cached to a designated location for future use.
+// The PKI is then deployed from the cached location.
 func Cache() func(*PkiInitOption) (exitCode, error) {
 	return func(pkiInitOpton *PkiInitOption) (exitCode, error) {
 
@@ -44,7 +45,6 @@ func isCacheNoOp(pkiInitOption *PkiInitOption) bool {
 func cachePkis() (statusCode exitCode, err error) {
 	// generate a new one if pkicache dir is empty
 	pkiCacheDir := getPkiCacheDirEnv()
-	cachedCAPrivateKeyFile := filepath.Join(pkiCacheDir, caServiceName, tlsSecretFileName)
 	if empty, err := isDirEmpty(pkiCacheDir); err != nil {
 		return exitWithError, err
 	} else if empty {
@@ -69,6 +69,7 @@ func cachePkis() (statusCode exitCode, err error) {
 	} else {
 		// cache dir is not empty: output error message if CA private key is present
 		// when cache is given
+		cachedCAPrivateKeyFile := filepath.Join(pkiCacheDir, caServiceName, tlsSecretFileName)
 		if checkIfFileExists(cachedCAPrivateKeyFile) {
 			return exitWithError, errCacheNotChangeAfter
 		}

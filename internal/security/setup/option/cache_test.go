@@ -29,13 +29,13 @@ func TestCacheOn(t *testing.T) {
 	vaultJSONPkiSetupExist = true
 	kongJSONPkiSetupExist = true
 	tearDown := setupCacheTest(t)
-	defer tearDown(t)
+	defer tearDown()
 
 	options := PkiInitOption{
 		CacheOpt: true,
 	}
 	cacheOn, _, _ := NewPkiInitOption(options)
-	cacheOn.(*PkiInitOption).executor = testExecutor
+	cacheOn.setExecutor(testExecutor)
 
 	var exitStatus exitCode
 	var err error
@@ -66,13 +66,13 @@ func TestCacheDirNotEmpty(t *testing.T) {
 	vaultJSONPkiSetupExist = true
 	kongJSONPkiSetupExist = true
 	tearDown := setupCacheTest(t)
-	defer tearDown(t)
+	defer tearDown()
 
 	options := PkiInitOption{
 		CacheOpt: true,
 	}
 	cacheOn, _, _ := NewPkiInitOption(options)
-	cacheOn.(*PkiInitOption).executor = testExecutor
+	cacheOn.setExecutor(testExecutor)
 
 	var exitStatus exitCode
 	var err error
@@ -110,13 +110,13 @@ func TestCacheOff(t *testing.T) {
 	vaultJSONPkiSetupExist = true
 	kongJSONPkiSetupExist = true
 	tearDown := setupCacheTest(t)
-	defer tearDown(t)
+	defer tearDown()
 
 	options := PkiInitOption{
 		CacheOpt: false,
 	}
 	cacheOff, _, _ := NewPkiInitOption(options)
-	cacheOff.(*PkiInitOption).executor = testExecutor
+	cacheOff.setExecutor(testExecutor)
 	exitCode, err := cacheOff.executeOptions(Cache())
 
 	assert := assert.New(t)
@@ -124,7 +124,7 @@ func TestCacheOff(t *testing.T) {
 	assert.Nil(err)
 }
 
-func setupCacheTest(t *testing.T) func(t *testing.T) {
+func setupCacheTest(t *testing.T) func() {
 	testExecutor = &mockOptionsExecutor{}
 	curDir, err := os.Getwd()
 	if err != nil {
@@ -189,7 +189,7 @@ func setupCacheTest(t *testing.T) func(t *testing.T) {
 	}
 	pkiInitDeployDir = tempDir
 
-	return func(t *testing.T) {
+	return func() {
 		// cleanup
 		os.Remove(jsonVaultFile)
 		os.Remove(jsonKongFile)
