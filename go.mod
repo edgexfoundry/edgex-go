@@ -7,7 +7,7 @@ require (
 	github.com/cloudflare/gokey v0.1.0
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/eclipse/paho.mqtt.golang v1.1.1
-	github.com/edgexfoundry/go-mod-core-contracts v0.1.33
+	github.com/edgexfoundry/go-mod-core-contracts v0.1.34
 	github.com/edgexfoundry/go-mod-messaging v0.1.9
 	github.com/edgexfoundry/go-mod-registry v0.1.12
 	github.com/edgexfoundry/go-mod-secrets v0.0.9
