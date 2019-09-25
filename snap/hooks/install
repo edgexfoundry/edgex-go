@@ -9,7 +9,7 @@ SNAP_CURRENT=${SNAP/%$SNAP_REVISION/current}
 # install all the config files from $SNAP/config/SERVICE/res/configuration.toml 
 # into $SNAP_DATA/config
 mkdir -p "$SNAP_DATA/config"
-for service in security-api-gateway security-secret-store core-command config-seed core-data core-metadata export-client export-distro support-logging support-notifications support-scheduler sys-mgmt-agent device-random device-virtual; do
+for service in edgex-mongo security-api-gateway security-secret-store core-command config-seed core-data core-metadata export-client export-distro support-logging support-notifications support-scheduler sys-mgmt-agent device-random device-virtual; do
     if [ ! -f "$SNAP_DATA/config/$service/res/configuration.toml" ]; then
         mkdir -p "$SNAP_DATA/config/$service/res"
         cp "$SNAP/config/$service/res/configuration.toml" "$SNAP_DATA/config/$service/res/configuration.toml"
