@@ -234,7 +234,7 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, err.Error(), http.StatusNotFound)
 			case *errors.ErrValueDescriptorInvalid:
 				http.Error(w, err.Error(), http.StatusBadRequest)
-			case *types.ErrServiceClient:
+			case types.ErrServiceClient:
 				http.Error(w, e.Error(), e.StatusCode)
 			default:
 				http.Error(w, err.Error(), http.StatusInternalServerError)
