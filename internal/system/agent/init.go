@@ -21,6 +21,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal"
 	bootstrap "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/endpoint"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/general"
@@ -37,13 +38,7 @@ var RegistryClient registry.Client
 
 func initializeClients(useRegistry bool) {
 	GenClients = NewGeneralClients()
-	if useRegistry {
-		// if we're using the registry, we'll create new general clients as we need them.
-		return
-	}
-
-	// if the registry is not being used, load clients from configurations; assume configuration key is service name
-	for serviceKey := range Configuration.Clients {
+	for serviceKey, serviceName := range config.ListDefaultServices() {
 		GenClients.Set(
 			serviceKey,
 			general.NewGeneralClient(
@@ -51,7 +46,7 @@ func initializeClients(useRegistry bool) {
 					ServiceKey:  serviceKey,
 					Path:        "/",
 					UseRegistry: useRegistry,
-					Url:         Configuration.Clients[serviceKey].Url(),
+					Url:         Configuration.Clients[serviceName].Url(),
 					Interval:    internal.ClientMonitorDefault,
 				},
 				endpoint.Endpoint{RegistryClient: &RegistryClient}))

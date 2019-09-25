@@ -37,7 +37,6 @@ func getConfig(
 	ctx context.Context,
 	loggingClient logger.LoggingClient,
 	genClients *GeneralClients,
-	configClients ConfigurationClients,
 	registryClient registry.Client,
 	serviceProtocol string) (interface{}, error) {
 
@@ -77,12 +76,7 @@ func getConfig(
 				continue
 			}
 
-			// This code will evolve to take into account a manifest-like functionality in future. So
-			// rather than assume that the runtime bool flag useRegistry has been initialized to true,
-			// given that the flow has reached this point, having already called functions on the Registry,
-			// such as RegistryClient.IsServiceAvailable(service), we test for its truthiness. I expect
-			// this code to be refactored as we evolve toward a manifest-like functionality in future.
-			configClients[e.ServiceId] = config.ClientInfo{
+			configClient := config.ClientInfo{
 				Protocol: serviceProtocol,
 				Host:     e.Host,
 				Port:     e.Port,
@@ -92,7 +86,7 @@ func getConfig(
 				ServiceKey:  e.ServiceId,
 				Path:        "/",
 				UseRegistry: registryClient != nil,
-				Url:         configClients[e.ServiceId].Url() + clients.ApiConfigRoute,
+				Url:         configClient.Url() + clients.ApiConfigRoute,
 				Interval:    internal.ClientMonitorDefault,
 			}
 			// Add the service key to the map where the value is the respective GeneralClient
