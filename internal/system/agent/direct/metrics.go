@@ -40,7 +40,6 @@ import (
 type metrics struct {
 	loggingClient   logger.LoggingClient
 	genClients      *agent.GeneralClients
-	configClients   agent.ConfigurationClients
 	registryClient  registry.Client
 	serviceProtocol string
 }
@@ -49,14 +48,12 @@ type metrics struct {
 func NewMetrics(
 	loggingClient logger.LoggingClient,
 	genClients *agent.GeneralClients,
-	configClients agent.ConfigurationClients,
 	registryClient registry.Client,
 	serviceProtocol string) *metrics {
 
 	return &metrics{
 		loggingClient:   loggingClient,
 		genClients:      genClients,
-		configClients:   configClients,
 		registryClient:  registryClient,
 		serviceProtocol: serviceProtocol,
 	}

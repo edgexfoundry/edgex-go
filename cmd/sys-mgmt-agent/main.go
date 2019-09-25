@@ -50,7 +50,6 @@ func httpServerBootstrapHandler(
 		metricsImpl = direct.NewMetrics(
 			agent.LoggingClient,
 			agent.GenClients,
-			agent.Configuration.Clients,
 			agent.RegistryClient,
 			agent.Configuration.Service.Protocol)
 	case executor.MetricsMechanism:

@@ -103,7 +103,6 @@ func configHandler(w http.ResponseWriter, r *http.Request) {
 		ctx,
 		LoggingClient,
 		GenClients,
-		Configuration.Clients,
 		RegistryClient,
 		Configuration.Service.Protocol)
 	if err != nil {
