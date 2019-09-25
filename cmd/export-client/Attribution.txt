@@ -140,3 +140,9 @@ https://github.com/golang/net/blob/master/LICENSE
 
 gopkg.in/yaml.v2 (Apache 2.0) https://github.com/go-yaml/yaml/
 https://github.com/go-yaml/yaml/blob/v2.2.2/LICENSE
+
+fsnotify/fsnotify (BSD-3) https://github.com/fsnotify/fsnotify
+https://github.com/fsnotify/fsnotify/blob/master/LICENSE
+
+golang.org/x/sys (Unspecified) https://github.com/golang/sys
+https://github.com/golang/sys/blob/master/LICENSE
