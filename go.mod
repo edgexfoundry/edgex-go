@@ -9,6 +9,7 @@ require (
 	github.com/edgexfoundry/go-mod-core-contracts v0.1.28
 	github.com/edgexfoundry/go-mod-messaging v0.1.9
 	github.com/edgexfoundry/go-mod-registry v0.1.12
+	github.com/fsnotify/fsnotify v1.4.7
 	github.com/globalsign/mgo v0.0.0-20181015135952-eeefdecb41b8
 	github.com/go-kit/kit v0.8.0
 	github.com/gomodule/redigo v2.0.0+incompatible
