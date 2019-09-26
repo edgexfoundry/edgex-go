@@ -33,6 +33,43 @@ import (
 
 var TestSubscriptionURI = "/subscription"
 
+func TestSubscriptionsAll(t *testing.T) {
+	tests := []struct {
+		name           string
+		request        *http.Request
+		dbMock         interfaces.DBClient
+		expectedStatus int
+	}{
+		{
+			name:           "OK",
+			request:        createSubscriptionRequest(map[string]string{}),
+			dbMock:         createMockSubscriptionAllLoader("GetSubscriptions", nil),
+			expectedStatus: http.StatusOK,
+		},
+
+		{
+			name:           "Other error from database",
+			request:        createSubscriptionRequest(map[string]string{}),
+			dbMock:         createMockSubscriptionAllLoader("GetSubscriptions", errors.New("test error")),
+			expectedStatus: http.StatusServiceUnavailable,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			dbClient = tt.dbMock
+			rr := httptest.NewRecorder()
+			handler := http.HandlerFunc(restGetSubscriptions)
+			handler.ServeHTTP(rr, tt.request)
+			response := rr.Result()
+			if response.StatusCode != tt.expectedStatus {
+				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
+				return
+			}
+		})
+	}
+}
+
 func TestGetSubscriptionById(t *testing.T) {
 	tests := []struct {
 		name           string
@@ -84,6 +121,17 @@ func createSubscriptionRequest(params map[string]string) *http.Request {
 func createSubscriptionDeleteRequest(params map[string]string) *http.Request {
 	req := httptest.NewRequest(http.MethodDelete, TestURI, nil)
 	return mux.SetURLVars(req, params)
+}
+
+func createMockSubscriptionAllLoader(methodName string, desiredError error) interfaces.DBClient {
+	myMock := mocks.DBClient{}
+
+	if desiredError != nil {
+		myMock.On(methodName).Return([]contract.Subscription{}, desiredError)
+	} else {
+		myMock.On(methodName).Return(createSubscriptions(1), nil)
+	}
+	return &myMock
 }
 
 func createMockSubscriptionLoader(methodName string, testID string, desiredError error) interfaces.DBClient {

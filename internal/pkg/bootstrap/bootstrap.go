@@ -40,7 +40,7 @@ func fatalError(err error, loggingClient logger.LoggingClient) {
 
 // translateInterruptToCancel spawns a go routine to translate the receipt of a SIGTERM signal to a call to cancel
 // the context used by the bootstrap implementation.
-func translateInterruptToCancel(wg *sync.WaitGroup, cancel context.CancelFunc) {
+func translateInterruptToCancel(wg *sync.WaitGroup, ctx context.Context, cancel context.CancelFunc) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -51,8 +51,13 @@ func translateInterruptToCancel(wg *sync.WaitGroup, cancel context.CancelFunc) {
 			close(signalStream)
 		}()
 		signal.Notify(signalStream, os.Interrupt, syscall.SIGTERM)
-		<-signalStream
-		cancel()
+		select {
+		case <-signalStream:
+			cancel()
+			return
+		case <-ctx.Done():
+			return
+		}
 	}()
 }
 
@@ -73,7 +78,7 @@ func Run(
 	var registryClient registry.Client
 	var wg sync.WaitGroup
 	ctx, cancel := context.WithCancel(context.Background())
-	translateInterruptToCancel(&wg, cancel)
+	translateInterruptToCancel(&wg, ctx, cancel)
 
 	// load configuration from file.
 	if err = configuration.LoadFromFile(configDir, profileDir, configFileName, config); err != nil {

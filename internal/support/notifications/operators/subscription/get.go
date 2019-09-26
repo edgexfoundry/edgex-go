@@ -28,6 +28,10 @@ type CollectionExecutor interface {
 	Execute() ([]contract.Subscription, error)
 }
 
+type subscriptionsAll struct {
+	database SubscriptionLoader
+}
+
 type subscriptionLoadById struct {
 	database SubscriptionLoader
 	id       string
@@ -41,6 +45,14 @@ type subscriptionLoadBySlug struct {
 type subscriptionsLoadByCategories struct {
 	database   SubscriptionLoader
 	categories []string
+}
+
+func (op subscriptionsAll) Execute() ([]contract.Subscription, error) {
+	subscriptions, err := op.database.GetSubscriptions()
+	if err != nil {
+		return nil, err
+	}
+	return subscriptions, nil
 }
 
 func (op subscriptionLoadById) Execute() (contract.Subscription, error) {
@@ -75,6 +87,12 @@ func (op subscriptionsLoadByCategories) Execute() ([]contract.Subscription, erro
 		return s, db.ErrNotFound
 	}
 	return s, nil
+}
+
+func NewAllExecutor(db SubscriptionLoader) CollectionExecutor {
+	return subscriptionsAll{
+		database: db,
+	}
 }
 
 func NewIdExecutor(db SubscriptionLoader, id string) IdExecutor {

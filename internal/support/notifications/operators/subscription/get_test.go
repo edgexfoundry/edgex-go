@@ -65,6 +65,49 @@ var SuccessfulDatabaseResult = []contract.Subscription{
 	},
 }
 
+func TestAllExecutor(t *testing.T) {
+	tests := []struct {
+		name           string
+		mockDb         SubscriptionLoader
+		expectedResult []contract.Subscription
+		expectedError  bool
+	}{
+		{
+			name:           "Successful database call",
+			mockDb:         createMockSubscriptionLoaderAll("GetSubscriptions", nil, SuccessfulDatabaseResult),
+			expectedResult: SuccessfulDatabaseResult,
+			expectedError:  false,
+		},
+		{
+			name:           "Unsuccessful database call",
+			mockDb:         createMockSubscriptionLoaderAll("GetSubscriptions", Error, nil),
+			expectedResult: nil,
+			expectedError:  true,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			op := NewAllExecutor(test.mockDb)
+			actual, err := op.Execute()
+			if test.expectedError && err == nil {
+				t.Error("Expected an error")
+				return
+			}
+
+			if !test.expectedError && err != nil {
+				t.Errorf("Unexpectedly encountered error: %s", err.Error())
+				return
+			}
+
+			if !reflect.DeepEqual(test.expectedResult, actual) {
+				t.Errorf("Expected result does not match the observed.\nExpected: %v\nObserved: %v\n", test.expectedResult, actual)
+				return
+			}
+		})
+	}
+}
+
 func TestIdExecutor(t *testing.T) {
 	tests := []struct {
 		name           string
@@ -117,6 +160,12 @@ func TestIdExecutor(t *testing.T) {
 func createMockSubscriptionLoaderStringArg(methodName string, err error, ret interface{}, arg string) SubscriptionLoader {
 	dbMock := mocks.SubscriptionLoader{}
 	dbMock.On(methodName, arg).Return(ret, err)
+	return &dbMock
+}
+
+func createMockSubscriptionLoaderAll(methodName string, err error, ret []contract.Subscription) SubscriptionLoader {
+	dbMock := mocks.SubscriptionLoader{}
+	dbMock.On(methodName).Return(ret, err)
 	return &dbMock
 }
 
