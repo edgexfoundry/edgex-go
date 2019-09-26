@@ -128,6 +128,7 @@ func (s ServiceInit) BootstrapHandler(
 		if err == nil {
 			break
 		}
+		dbClient = nil
 		LoggingClient.Warn(fmt.Sprintf("couldn't create database client: %v", err.Error()))
 		startupTimer.SleepForInterval()
 	}
