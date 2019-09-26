@@ -72,3 +72,7 @@ func (_m *mockOptionsExecutor) executeOptions(_a0 ...func(*PkiInitOption) (exitC
 
 	return r0, r1
 }
+
+func (_m *mockOptionsExecutor) setExecutor(executor OptionsExecutor) {
+	// no-op
+}

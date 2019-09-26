@@ -14,29 +14,58 @@
 package main
 
 import (
+	"context"
 	"flag"
-	"fmt"
-	"os"
-	"os/signal"
-	"strconv"
-	"time"
+	"sync"
 
 	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/interfaces"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/direct"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/executor"
-	"github.com/edgexfoundry/edgex-go/internal/system/agent/interfaces"
+	agentInterfaces "github.com/edgexfoundry/edgex-go/internal/system/agent/interfaces"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-	"github.com/edgexfoundry/go-mod-core-contracts/models"
+
+	"github.com/edgexfoundry/go-mod-registry/registry"
 )
 
+func httpServerBootstrapHandler(
+	wg *sync.WaitGroup,
+	ctx context.Context,
+	startupTimer startup.Timer,
+	config interfaces.Configuration,
+	logging logger.LoggingClient,
+	registry registry.Client) bool {
+
+	var metricsImpl agentInterfaces.Metrics
+	switch agent.Configuration.MetricsMechanism {
+	case direct.MetricsMechanism:
+		metricsImpl = direct.NewMetrics(
+			agent.LoggingClient,
+			agent.GenClients,
+			agent.RegistryClient,
+			agent.Configuration.Service.Protocol)
+	case executor.MetricsMechanism:
+		metricsImpl = executor.NewMetrics(executor.CommandExecutor, agent.LoggingClient, agent.Configuration.ExecutorPath)
+	default:
+		agent.LoggingClient.Error("the requested metrics mechanism is not supported")
+		return false
+	}
+
+	httpServer := handlers.NewServerBootstrap(agent.LoadRestRoutes(metricsImpl))
+	return httpServer.Handler(wg, ctx, startupTimer, config, logging, registry)
+}
+
 func main() {
-	start := time.Now()
+	startupTimer := startup.NewStartUpTimer(1, internal.BootTimeoutDefault)
+
 	var useRegistry bool
 	var configDir, profileDir string
 
@@ -45,80 +74,21 @@ func main() {
 	flag.StringVar(&profileDir, "profile", "", "Specify a profile other than default.")
 	flag.StringVar(&profileDir, "p", "", "Specify a profile other than default.")
 	flag.StringVar(&configDir, "confdir", "", "Specify local configuration directory")
+
 	flag.Usage = usage.HelpCallback
 	flag.Parse()
 
-	instance := agent.NewInstance()
-	params := startup.BootParams{
-		UseRegistry: useRegistry,
-		ConfigDir:   configDir,
-		ProfileDir:  profileDir,
-		BootTimeout: internal.BootTimeoutDefault,
-	}
-	startup.Bootstrap(params, instance.Retry, logBeforeInit)
-
-	ok := instance.Init(useRegistry)
-	if !ok {
-		logBeforeInit(fmt.Errorf("%s: service bootstrap failed", clients.SystemManagementAgentServiceKey))
-		os.Exit(1)
-	}
-
-	instance.LoggingClient.Info("Service dependencies resolved...")
-	instance.LoggingClient.Info(fmt.Sprintf("Starting %s %s ", clients.SystemManagementAgentServiceKey, edgex.Version))
-
-	instance.LoggingClient.Info(instance.Configuration.Service.StartupMsg)
-
-	errs := make(chan error, 2)
-	listenForInterrupt(errs)
-	startup.StartHTTPServer(
-		instance.LoggingClient,
-		instance.Configuration.Service.Timeout,
-		agent.LoadRestRoutes(instance, getMetricsImplementation(instance)),
-		instance.Configuration.Service.Host+":"+strconv.Itoa(instance.Configuration.Service.Port),
-		errs)
-
-	// Time it took to start service
-	instance.LoggingClient.Info("Service started in: " + time.Since(start).String())
-	instance.LoggingClient.Info("Listening on port: " + strconv.Itoa(instance.Configuration.Service.Port))
-	c := <-errs
-	instance.Destruct()
-	instance.LoggingClient.Warn(fmt.Sprintf("terminating: %v", c))
-
-	os.Exit(0)
-}
-
-// getMetricsImplementation creates and returns an interfaces.Metrics implementation based on configuration settings.
-func getMetricsImplementation(instance *agent.Instance) interfaces.Metrics {
-	var result interfaces.Metrics
-	switch instance.Configuration.MetricsMechanism {
-	case direct.MetricsMechanism:
-		result = direct.NewMetrics(
-			instance.LoggingClient,
-			instance.GenClients,
-			instance.Configuration.Clients,
-			instance.RegistryClient,
-			instance.Configuration.Service.Protocol)
-	case executor.MetricsMechanism:
-		result = executor.NewMetrics(
-			executor.CommandExecutor,
-			instance.LoggingClient,
-			instance.Configuration.ExecutorPath)
-	default:
-		instance.LoggingClient.Error("the requested metrics mechanism is not supported")
-		os.Exit(1)
-	}
-	return result
-}
-
-func logBeforeInit(err error) {
-	l := logger.NewClient(clients.SystemManagementAgentServiceKey, false, "", models.InfoLog)
-	l.Error(err.Error())
-}
-
-func listenForInterrupt(errChan chan error) {
-	go func() {
-		c := make(chan os.Signal)
-		signal.Notify(c, os.Interrupt)
-		errChan <- fmt.Errorf("%s", <-c)
-	}()
+	bootstrap.Run(
+		configDir,
+		profileDir,
+		internal.ConfigFileName,
+		useRegistry,
+		clients.SystemManagementAgentServiceKey,
+		agent.Configuration,
+		startupTimer,
+		[]interfaces.BootstrapHandler{
+			agent.BootstrapHandler,
+			httpServerBootstrapHandler,
+			handlers.NewStartMessage(clients.SystemManagementAgentServiceKey, edgex.Version).Handler,
+		})
 }

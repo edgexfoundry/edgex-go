@@ -16,20 +16,31 @@
 
 package option
 
+import (
+	"errors"
+)
+
 // OptionsExecutor is an executor to process the input options
 type OptionsExecutor interface {
 	ProcessOptions() (int, error)
 	executeOptions(...func(*PkiInitOption) (exitCode, error)) (exitCode, error)
+	setExecutor(executor OptionsExecutor)
 }
 
 // PkiInitOption contains command line options for pki-init
 type PkiInitOption struct {
 	GenerateOpt bool
+	CacheOpt    bool
 	executor    OptionsExecutor
 }
 
 // NewPkiInitOption constructor to get options built for pki-init
 func NewPkiInitOption(opts PkiInitOption) (ex OptionsExecutor, statusCode int, err error) {
+	// cache option cannot used with -generate
+	if opts.CacheOpt && opts.GenerateOpt {
+		return ex, exitWithError.intValue(), errors.New("Cannot execute cache option with generate option")
+	}
+
 	opts.executor = &opts
 
 	return &opts, normal.intValue(), nil
@@ -39,6 +50,7 @@ func NewPkiInitOption(opts PkiInitOption) (ex OptionsExecutor, statusCode int, e
 func (pkiInitOpt *PkiInitOption) ProcessOptions() (int, error) {
 	statusCode, err := pkiInitOpt.executor.executeOptions(
 		Generate(),
+		Cache(),
 	)
 
 	return statusCode.intValue(), err
@@ -54,4 +66,8 @@ func (pkiInitOpt *PkiInitOption) executeOptions(executors ...func(*PkiInitOption
 		}
 	}
 	return statusCode, err
+}
+
+func (pkiInitOpt *PkiInitOption) setExecutor(executor OptionsExecutor) {
+	pkiInitOpt.executor = executor
 }

@@ -18,10 +18,10 @@ cmd/core-data/core-data
 cmd/core-metadata/core-metadata
 cmd/export-client/export-client
 cmd/export-distro/export-distro
-cmd/security-secrets-setup/security-secrets-setup
-cmd/security-secrets-setup/config/*
-cmd/security-secretstore-setup/security-secretstore-setup
 cmd/security-proxy-setup/security-proxy-setup
+cmd/security-secrets-setup/config/*
+cmd/security-secrets-setup/security-secrets-setup
+cmd/security-secretstore-setup/security-secretstore-setup
 cmd/support-logging/support-logging
 cmd/support-notifications/support-notifications
 cmd/support-scheduler/support-scheduler
