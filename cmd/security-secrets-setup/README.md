@@ -2,7 +2,83 @@
 
 ## Build
 
-Use Makefile in the base directory of this repository to build the docker image of security-secretes-setup:
+Use the Makefile in the root directory of the repository to build  security-secrets-setup:
+
+```sh
+ make cmd/security-secrets-setup/security-secrets-setup
+```
+
+This will create an executable located at `cmd/security-secrets-setup/` if successful.
+
+## Run **generate** subcommand
+
+To use the **generate** subcommand, go to `cmd/security-secrets-setup/` and then run
+
+```sh
+ sudo -E ./security-secrets-setup generate
+```
+
+The `sudo` is used because the base of the deploy directory `/run/` is owned by `root:root`.
+
+Verify that it runs successfully with generating both Vault and Kong's TLS assets under `/run/edgex/secrets/` directory.
+
+## Run **cache** subcommand
+
+Before **cache** subcommand is issued, make sure cache dir (in this example, it is `/tmp/pki/cache`) is non-existing or empty.
+
+To use the **cache** subcommand, from the same `cmd/security-secrets-setup/`  directory run
+
+```sh
+ mkdir -p /tmp/pki/cache
+ export PKI_CACHE=/tmp/pki/cache
+ sudo -E ./security-secrets-setup cache
+```
+
+in which environment variable *PKI_CACHE* is to specify the path to the cached location.  The `sudo` is used because the base of the deploy directory `/run/` is owned by `root:root`.
+
+After being successfully run, the Vault and Kong TLS assets are generated and cached into the cache dir `/tmp/pki/cache` and also deployed from the cache directory into the deployed directory `/run/edgex/secrets`.  One can see the files with `ls` command for example.
+
+One can also use some file diff tool to compare the TLS files like:
+
+```sh
+ sudo diff -r /tmp/pki/cache/ca/ca.pem /run/edgex/secrets/ca/ca.pem
+```
+
+After the certificates are deployed, `security-secrets-setup` will generate a  *sentinel* file `.security-secrets-setup.complete` per certificate directory in the root deploy directory to indicate successful cache.  For example:
+
+```sh
+$ sudo diff -r /tmp/pki/cache/ /run/edgex/secrets/
+
+Only in /run/edgex/secrets/ca: .security-secrets-setup.complete
+Only in /run/edgex/secrets/edgex-kong: .security-secrets-setup.complete
+Only in /run/edgex/secrets/edgex-vault: .security-secrets-setup.complete
+```
+
+## Run **import** subcommand
+
+To use the **import** subcommand, from the same `cmd/security-secrets-setup/` directory run
+
+```sh
+ mkdir -p /tmp/pki/cache
+ export PKI_CACHE=/tmp/pki/cache
+ sudo -E ./security-secrets-setup import
+```
+
+The `sudo` is used because the base of the deploy directory `/run/` is owned by `root:root`.
+
+The **import** subcommand operates differently depending on the status of cache directory:
+
+- Cache dir `/tmp/pki/cache` is empty:
+
+    In this case, import just errors out: the TLS assets are required to be in the cache directory before they can be deployed into directory `/run/edgex/secrets/`.
+
+- Cache dir `/tmp/pki/cache` has already loaded or cached with generated TLS assets before run **import** subcommand:
+
+    One should see the deploying TLS assets from the cached directory `/tmp/pki/cache` into the deployed directory `/run/edgex/secrets`.  One can verify that there are Vault and Kong TLS assets deployed from cache directory `/tmp/pki/cache` onto the directory `/run/edgex/secrets` via `ls` command.
+
+## Docker Build
+
+Go to the root directory of the repository and use the Makefile to build the docker container image for `security-secrets-setup`:
 
 ```sh
 make docker_security_secrets_setup
@@ -10,7 +86,7 @@ make docker_security_secrets_setup
 
 It should create a docker image with the name `edgexfoundry/docker-edgex-vault:<version>-dev` if sucessfully built.
 
-# Run
+## Docker Run
 
 To see what the TLS materials are generated inside the docker container, 
 one can run the built docker image above (assuming the version number is `1.1.0`) as:
@@ -25,3 +101,7 @@ once that is run, one should see the execution console outputs and gives the int
 /vault # ls ./config/pki/EdgeXFoundryCA/
 EdgeXFoundryCA.pem    edgex-kong.pem        edgex-kong.priv.key   edgex-vault.pem       edgex-vault.priv.key
 ```
+
+## Reference
+
+See also [security-secrets-setup man page](https://github.com/edgexfoundry/edgex-docs/blob/master/security/security-secrets-setup.1.rst)
