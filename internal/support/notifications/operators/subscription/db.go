@@ -18,6 +18,7 @@ import contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 
 // SubscriptionLoader provides functionality for obtaining Subscriptions.
 type SubscriptionLoader interface {
+	GetSubscriptions() ([]contract.Subscription, error)
 	GetSubscriptionById(id string) (contract.Subscription, error)
 	GetSubscriptionBySlug(slug string) (contract.Subscription, error)
 	GetSubscriptionByCategories(categories []string) ([]contract.Subscription, error)
