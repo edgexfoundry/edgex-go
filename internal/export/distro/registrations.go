@@ -18,10 +18,13 @@ package distro
 import (
 	"context"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
+
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
+
 	msgTypes "github.com/edgexfoundry/go-mod-messaging/pkg/types"
 
 	"github.com/pkg/errors"
@@ -257,7 +260,8 @@ func registrationLoop(reg *registrationInfo) {
 	}
 }
 
-func updateRunningRegistrations(running map[string]*registrationInfo,
+func updateRunningRegistrations(
+	running map[string]*registrationInfo,
 	update contract.NotifyUpdate) error {
 
 	switch update.Operation {
@@ -299,72 +303,77 @@ func updateRunningRegistrations(running map[string]*registrationInfo,
 }
 
 // Loop - registration loop
-func Loop() {
-	registrations := make(map[string]*registrationInfo)
+func Loop(wg *sync.WaitGroup, ctx context.Context) {
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
 
-	allRegs, err := getRegistrations()
+		registrations := make(map[string]*registrationInfo)
 
-	for allRegs == nil {
-		LoggingClient.Info("Waiting for client microservice")
-		select {
-		case e := <-messageErrors:
-			LoggingClient.Error(fmt.Sprintf("exit msg: %s", e.Error()))
-			if err != nil {
-				LoggingClient.Error(fmt.Sprintf("with error: %s", err.Error()))
+		allRegs, err := getRegistrations()
+
+		for allRegs == nil {
+			LoggingClient.Info("Waiting for client microservice")
+			select {
+			case e := <-messageErrors:
+				LoggingClient.Error(fmt.Sprintf("exit msg: %s", e.Error()))
+				if err != nil {
+					LoggingClient.Error(fmt.Sprintf("with error: %s", err.Error()))
+				}
+				return
+			case <-ctx.Done():
+				LoggingClient.Info(fmt.Sprintf("received term signal"))
+				return
+			case <-time.After(time.Second):
 			}
-			return
-		case <-processStop:
-			LoggingClient.Info(fmt.Sprintf("received term signal"))
-			return
-		case <-time.After(time.Second):
+			allRegs, err = getRegistrations()
 		}
-		allRegs, err = getRegistrations()
-	}
 
-	// Create new goroutines for each registration
-	for _, reg := range allRegs {
-		regInfo := newRegistrationInfo()
-		if regInfo.update(reg) {
-			registrations[reg.Name] = regInfo
-			go registrationLoop(regInfo)
-		}
-	}
-
-	LoggingClient.Info("Starting registration loop")
-	for {
-		select {
-		case e := <-messageErrors:
-			// kill all registration goroutines
-			stop(registrations)
-			LoggingClient.Error(fmt.Sprintf("exit msg: %s", e.Error()))
-			return
-
-		case <-processStop:
-			// kill all registration goroutines
-			stop(registrations)
-			LoggingClient.Info(fmt.Sprintf("received term signal"))
-			return
-
-		case update := <-registrationChanges:
-			LoggingClient.Info("Registration changes")
-			err := updateRunningRegistrations(registrations, update)
-			if err != nil {
-				LoggingClient.Error(err.Error())
-				LoggingClient.Warn(fmt.Sprintf("Error updating registration %s", update.Name))
+		// Create new goroutines for each registration
+		for _, reg := range allRegs {
+			regInfo := newRegistrationInfo()
+			if regInfo.update(reg) {
+				registrations[reg.Name] = regInfo
+				go registrationLoop(regInfo)
 			}
+		}
 
-		case msgEnvelope := <-messageEnvelopes:
-			LoggingClient.Debug("message received via bus", "Topic", Configuration.MessageQueue.Topic, clients.CorrelationHeader, msgEnvelope.CorrelationID)
+		LoggingClient.Info("Starting registration loop")
+		for {
+			select {
+			case e := <-messageErrors:
+				// kill all registration goroutines
+				stop(registrations)
+				LoggingClient.Error(fmt.Sprintf("exit msg: %s", e.Error()))
+				return
 
-			for k, reg := range registrations {
-				if reg.deleteFlag {
-					delete(registrations, k)
-				} else {
-					reg.chMessages <- msgEnvelope
+			case <-ctx.Done():
+				// kill all registration goroutines
+				stop(registrations)
+				LoggingClient.Info(fmt.Sprintf("received term signal"))
+				return
+
+			case update := <-registrationChanges:
+				LoggingClient.Info("Registration changes")
+				err := updateRunningRegistrations(registrations, update)
+				if err != nil {
+					LoggingClient.Error(err.Error())
+					LoggingClient.Warn(fmt.Sprintf("Error updating registration %s", update.Name))
+				}
+
+			case msgEnvelope := <-messageEnvelopes:
+				LoggingClient.Debug("message received via bus", "Topic", Configuration.MessageQueue.Topic, clients.CorrelationHeader, msgEnvelope.CorrelationID)
+
+				for k, reg := range registrations {
+					if reg.deleteFlag {
+						delete(registrations, k)
+					} else {
+						reg.chMessages <- msgEnvelope
+					}
 				}
 			}
 		}
-	}
+	}()
 }
 
 func stop(registrations map[string]*registrationInfo) {
