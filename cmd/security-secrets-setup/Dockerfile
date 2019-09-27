@@ -44,22 +44,18 @@ COPY . .
 
 RUN make cmd/security-secrets-setup/security-secrets-setup
 
-FROM vault:1.0.2
+FROM alpine:latest
 
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
-      copyright='Copyright (c) 2019: Dell Technologies, Inc.'
+      copyright='Copyright (c) 2019: Dell Technologies, Inc.  Copyright (c) 2019 Intel Corporation'
 
 USER root
 
 # install necessary tools
-RUN apk update && apk add ca-certificates dumb-init jq \
+RUN apk update && apk add ca-certificates dumb-init \
     && rm -rf /var/cache/apk/* 
 
-ENV BASE_DIR=/vault
-
-# Vault Config File
-WORKDIR $BASE_DIR/config
-COPY --from=build-env /edgex-go/cmd/security-secrets-setup/res/local-tls.hcl ./local.hcl
+ENV BASE_DIR=/edgex/security-secrets-setup
 
 WORKDIR $BASE_DIR
 RUN mkdir res
@@ -80,13 +76,6 @@ COPY --from=build-env /edgex-go/cmd/security-secrets-setup/entrypoint.sh /usr/lo
 RUN chmod +x /usr/local/bin/entrypoint.sh \
     && ln -s /usr/local/bin/entrypoint.sh /
 
-# Create assets folder (needed for unseal key/s, root token and tmp)
-# Run CA/Vault and Kong PKI/TLS setups and peform housekeeping tasks
-RUN mkdir $BASE_DIR/config/assets && \
-    chown -R vault:vault $BASE_DIR && \
-    chmod 644 $BASE_DIR/config/local.hcl && \
-    chmod 744 security-secrets-setup
-
-VOLUME $BASE_DIR/config
+RUN chmod 755 security-secrets-setup
 
 ENTRYPOINT ["entrypoint.sh"]

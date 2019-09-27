@@ -26,51 +26,12 @@ set -e
 # runtime directory is set per user:
 export XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR:-/run/user/$(echo $(id -u))}
 
-PKI_INIT_RUNTIME_DIR=${XDG_RUNTIME_DIR}/${PKI_INIT_DIR}
-
 # debug output:
 echo XDG_RUNTIME_DIR $XDG_RUNTIME_DIR
-echo PKI_INIT_RUNTIME_DIR $PKI_INIT_RUNTIME_DIR
+echo BASE_DIR $BASE_DIR
 
-# configuration for TLS materials:
-PKI_CONFIG_JSON_DIR="res"
-PKI_SETUP_VAULT_FILE=${PKI_CONFIG_JSON_DIR}"/pkisetup-vault.json"
-PKI_SETUP_KONG_FILE=${PKI_CONFIG_JSON_DIR}"/pkisetup-kong.json"
-
-# check if files exists
-if [ ! -f "${PKI_SETUP_VAULT_FILE}" ]; then
-    echo "Error: certificate config file for Vault is missing"
-    exit 1
-fi
-
-if [ ! -f "${PKI_SETUP_KONG_FILE}" ]; then
-    echo "Error: certificate config file for Kong is missing"
-    exit 1
-fi
-
-# the working dir should be in vault dir based upon the current Docker image
-BASE_DIR="${BASE_DIR:-/vault}"
-cd $BASE_DIR
-CERT_DIR=$(jq -r '.working_dir' ${PKI_SETUP_VAULT_FILE})
-CERT_SUBDIR=$(jq -r '.pki_setup_dir' ${PKI_SETUP_VAULT_FILE})
-ROOT_NAME=$(jq -r '.x509_root_ca_parameters | .ca_name' ${PKI_SETUP_VAULT_FILE})
-CERT_EXEC="${CERT_EXEC:-./security-secrets-setup}"
-# check to see if the root certificate generate with security-secrets-setup already exists
-# if so then do not generate a new set of them
-if [ ! -f "$CERT_DIR/$CERT_SUBDIR/$ROOT_NAME/$ROOT_NAME.pem" ]; then
-    ${CERT_EXEC} legacy --config ${PKI_SETUP_VAULT_FILE}
-    [ $? -eq 0 ] || (echo "failed to generate TLS assets for Vault" && exit 1)
-
-    ${CERT_EXEC} legacy --config ${PKI_SETUP_KONG_FILE}
-    [ $? -eq 0 ] || (echo "failed to generate TLS assets for Kong" && exit 1)
-
-    # delete CA private key
-    rm "$PWD/$CERT_DIR/$CERT_SUBDIR/$ROOT_NAME/$ROOT_NAME.priv.key"
-    [ $? -eq 0 ] || (echo "failed to delete sensitive CA private key" && exit 1)
-
-    # take ownership
-    chown -R vault:vault $PWD/$CERT_DIR/$CERT_SUBDIR || true
-fi 
-
-# run the Vault's docker-entry script 
-source /usr/local/bin/docker-entrypoint.sh
+# after TLS assets are generated- 
+# make edgex vault's TLS assets accessible by vault's user from vault service
+# from the implementation of vault service, it belongs to 100:1000 user group
+${BASE_DIR}/security-secrets-setup generate 
+chown -R 100:1000 /run/edgex/secrets/edgex-vault/
