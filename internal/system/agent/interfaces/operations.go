@@ -14,8 +14,7 @@
 
 package interfaces
 
-import (
-	"context"
-)
-
-type GetExecutor func(service string, ctx context.Context) (string, error)
+// Operations defines an operation execution abstraction.
+type Operations interface {
+	Do(services []string, operation string) interface{}
+}

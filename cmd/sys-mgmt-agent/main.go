@@ -28,7 +28,9 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/system/agent"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/direct"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/executor"
+	"github.com/edgexfoundry/edgex-go/internal/system/agent/getconfig"
 	agentInterfaces "github.com/edgexfoundry/edgex-go/internal/system/agent/interfaces"
+	"github.com/edgexfoundry/edgex-go/internal/system/agent/setconfig"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
@@ -47,19 +49,22 @@ func httpServerBootstrapHandler(
 	var metricsImpl agentInterfaces.Metrics
 	switch agent.Configuration.MetricsMechanism {
 	case direct.MetricsMechanism:
-		metricsImpl = direct.NewMetrics(
-			agent.LoggingClient,
-			agent.GenClients,
-			agent.RegistryClient,
-			agent.Configuration.Service.Protocol)
+		metricsImpl = direct.NewMetrics(logging, agent.GenClients, registry, agent.Configuration.Service.Protocol)
 	case executor.MetricsMechanism:
-		metricsImpl = executor.NewMetrics(executor.CommandExecutor, agent.LoggingClient, agent.Configuration.ExecutorPath)
+		metricsImpl = executor.NewMetrics(executor.CommandExecutor, logging, agent.Configuration.ExecutorPath)
 	default:
-		agent.LoggingClient.Error("the requested metrics mechanism is not supported")
+		logging.Error("the requested metrics mechanism is not supported")
 		return false
 	}
 
-	httpServer := handlers.NewServerBootstrap(agent.LoadRestRoutes(metricsImpl))
+	httpServer := handlers.NewServerBootstrap(
+		agent.LoadRestRoutes(
+			metricsImpl,
+			executor.NewOperations(executor.CommandExecutor, logging, agent.Configuration.ExecutorPath),
+			getconfig.New(
+				getconfig.NewExecutor(agent.GenClients, registry, logging, agent.Configuration.Service.Protocol),
+				logging),
+			setconfig.New(setconfig.NewExecutor(logging, agent.Configuration))))
 	return httpServer.Handler(wg, ctx, startupTimer, config, logging, registry)
 }
 

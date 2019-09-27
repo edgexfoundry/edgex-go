@@ -29,7 +29,7 @@ type operations struct {
 	executorPath  string
 }
 
-// NewOperations is a factory method that returns an initialized operations receiver struct.
+// NewOperations is a factory function that returns an initialized operations receiver struct.
 func NewOperations(
 	executor interfaces.CommandExecutor,
 	loggingClient logger.LoggingClient,
