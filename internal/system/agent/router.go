@@ -28,6 +28,7 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 
+	requests "github.com/edgexfoundry/go-mod-core-contracts/requests/configuration"
 	"github.com/gorilla/mux"
 )
 
@@ -36,7 +37,7 @@ func LoadRestRoutes(metricsImpl interfaces.Metrics) *mux.Router {
 
 	b := r.PathPrefix("/api/v1").Subrouter()
 	b.HandleFunc("/operation", operationHandler).Methods(http.MethodPost)
-	b.HandleFunc("/config/{services}", configHandler).Methods(http.MethodGet)
+	b.HandleFunc("/config/{services}", configHandler).Methods(http.MethodGet, http.MethodPut)
 	b.HandleFunc("/metrics/{services}", func(w http.ResponseWriter, r *http.Request) { metricsHandler(w, r, metricsImpl) }).Methods(http.MethodGet)
 	b.HandleFunc("/health/{services}", healthHandler).Methods(http.MethodGet)
 	b.HandleFunc("/ping", pingHandler).Methods(http.MethodGet)
@@ -90,27 +91,52 @@ func operationHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func configHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Body != nil {
+		defer r.Body.Close()
+	}
+
 	vars := mux.Vars(r)
 	LoggingClient.Debug("retrieved service names")
 
-	list := vars["services"]
-	var services []string
-	services = strings.Split(list, ",")
+	switch r.Method {
 
-	ctx := r.Context()
-	send, err := getConfig(
-		services,
-		ctx,
-		LoggingClient,
-		GenClients,
-		RegistryClient,
-		Configuration.Service.Protocol)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		LoggingClient.Error(err.Error())
-		return
+	case http.MethodGet:
+		nge := NewGetExecutor(
+			NewGetConfig(GenClients,
+				Configuration.Clients,
+				RegistryClient,
+				LoggingClient,
+				Configuration.Service.Protocol).GetConfig,
+			GenClients,
+			Configuration.Clients,
+			RegistryClient,
+			LoggingClient,
+			Configuration.Service.Protocol)
+		pkg.Encode(nge.Get(strings.Split(vars["services"], ","), r.Context()), w, LoggingClient)
+
+	case http.MethodPut:
+		b, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			LoggingClient.Error(err.Error())
+			return
+		}
+
+		sc := requests.SetConfigRequest{}
+		err = sc.UnmarshalJSON(b)
+
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			LoggingClient.Error("error during decoding")
+			return
+		}
+
+		nsc := NewSetExecutor(
+			NewSetConfig(LoggingClient, Configuration).SetConfig,
+			LoggingClient,
+			Configuration)
+		pkg.Encode(nsc.Set(strings.Split(vars["services"], ","), sc), w, LoggingClient)
 	}
-	pkg.Encode(send, w, LoggingClient)
 }
 
 func healthHandler(w http.ResponseWriter, r *http.Request) {
