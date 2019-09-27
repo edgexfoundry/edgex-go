@@ -70,8 +70,7 @@ apps:
       -confdir $SNAP_DATA/config/config-seed/res
       --props $SNAP_DATA/config/config-seed/res/properties
     daemon: oneshot
-    passthrough:
-      start-timeout: 15m
+    start-timeout: 15m
     plugs: [network, network-bind]
   redis:
     adapter: full
@@ -90,8 +89,7 @@ apps:
     adapter: full
     command: bin/cassandra-wrapper.sh
     daemon: forking
-    passthrough:
-      start-timeout: 15m
+    start-timeout: 15m
     plugs:
       - network
       - network-bind
@@ -110,8 +108,7 @@ apps:
       KONG_PROXY_ERROR_LOG: $SNAP_COMMON/logs/kong-proxy-error.log
       KONG_ADMIN_ERROR_LOG: $SNAP_COMMON/logs/kong-admin-error.log
       KONG_ADMIN_LISTEN: "0.0.0.0:8001, 0.0.0.0:8444 ssl"
-    passthrough:
-      start-timeout: 15m
+    start-timeout: 15m
     plugs:
       - network
       - network-bind
@@ -123,8 +120,7 @@ apps:
     environment:
       PKI_SETUP_VAULT_FILE: $SNAP_DATA/config/security-secret-store/pkisetup-vault.json
       PKI_SETUP_KONG_FILE: $SNAP_DATA/config/security-secret-store/pkisetup-kong.json
-    passthrough:
-      start-timeout: 15m
+    start-timeout: 15m
   vault:
     adapter: none
     after:
@@ -145,8 +141,7 @@ apps:
     after: [vault]
     command: bin/vault-worker-wrapper.sh
     daemon: oneshot
-    passthrough:
-      start-timeout: 15m
+    start-timeout: 15m
     plugs:
       - network
       - network-bind
@@ -157,8 +152,7 @@ apps:
       - kong-daemon
     command: bin/edgexproxy-wrapper.sh
     daemon: oneshot
-    passthrough:
-      start-timeout: 15m
+    start-timeout: 15m
     plugs:
       - network
       - network-bind
@@ -167,8 +161,7 @@ apps:
     after: [mongod]
     command: bin/edgex-mongo --config $SNAP_DATA/config/edgex-mongo/res/configuration.toml
     daemon: oneshot
-    passthrough:
-      start-timeout: 15m
+    start-timeout: 15m
     plugs: [network]
   core-data:
     adapter: full
