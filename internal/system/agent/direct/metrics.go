@@ -44,7 +44,7 @@ type metrics struct {
 	serviceProtocol string
 }
 
-// NewMetrics is a factory method that returns an initialized metrics receiver struct.
+// NewMetrics is a factory function that returns an initialized metrics receiver struct.
 func NewMetrics(
 	loggingClient logger.LoggingClient,
 	genClients *agent.GeneralClients,

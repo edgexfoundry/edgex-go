@@ -15,8 +15,15 @@
 package interfaces
 
 import (
-	requests "github.com/edgexfoundry/go-mod-core-contracts/requests/configuration"
-	responses "github.com/edgexfoundry/go-mod-core-contracts/responses/configuration"
+	"context"
+
+	"github.com/edgexfoundry/go-mod-core-contracts/requests/configuration"
 )
 
-type SetExecutor func(service string, sc requests.SetConfigRequest) responses.SetConfigResponse
+type GetConfig interface {
+	Do(services []string, ctx context.Context) interface{}
+}
+
+type SetConfig interface {
+	Do(services []string, sc configuration.SetConfigRequest) interface{}
+}

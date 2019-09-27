@@ -31,7 +31,7 @@ type metrics struct {
 	executorPath  string
 }
 
-// NewMetrics is a factory method that returns an initialized metrics receiver struct.
+// NewMetrics is a factory function that returns an initialized metrics receiver struct.
 func NewMetrics(executor interfaces.CommandExecutor, loggingClient logger.LoggingClient, executorPath string) *metrics {
 	return &metrics{
 		executor:      executor,
