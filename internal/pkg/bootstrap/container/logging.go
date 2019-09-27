@@ -12,20 +12,17 @@
  * the License.
  *******************************************************************************/
 
-package interfaces
+package container
 
 import (
-	"context"
-	"sync"
-
-	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
 
-// BootstrapHandler defines the contract each bootstrap handler must fulfill.  Implementation returns true if the
-// handler completed successfully, false if it did not.
-type BootstrapHandler func(
-	wg *sync.WaitGroup,
-	context context.Context,
-	startupTimer startup.Timer,
-	dic *di.Container) (success bool)
+// LoggingClientInterfaceName contains the name of the logger.LoggingClient implementation in the DIC.
+var LoggingClientInterfaceName = di.TypeInstanceToName((*logger.LoggingClient)(nil))
+
+// LoggingClientFrom helper function queries the DIC and returns the logger.loggingClient implementation.
+func LoggingClientFrom(get di.Get) logger.LoggingClient {
+	return get(LoggingClientInterfaceName).(logger.LoggingClient)
+}

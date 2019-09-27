@@ -12,20 +12,20 @@
  * the License.
  *******************************************************************************/
 
-package interfaces
+package di
 
-import (
-	"context"
-	"sync"
+import "reflect"
 
-	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
-)
+// TypeInstanceToName converts an instance of a type to a unique name.
+func TypeInstanceToName(v interface{}) string {
+	t := reflect.TypeOf(v)
 
-// BootstrapHandler defines the contract each bootstrap handler must fulfill.  Implementation returns true if the
-// handler completed successfully, false if it did not.
-type BootstrapHandler func(
-	wg *sync.WaitGroup,
-	context context.Context,
-	startupTimer startup.Timer,
-	dic *di.Container) (success bool)
+	if name := t.Name(); name != "" {
+		// non-interface types
+		return t.PkgPath() + "." + name
+	}
+
+	// interface types
+	e := t.Elem()
+	return e.PkgPath() + "." + e.Name()
+}

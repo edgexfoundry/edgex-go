@@ -21,8 +21,14 @@ import (
 	"strings"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
+	bootstrapContainer "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
+	"github.com/edgexfoundry/edgex-go/internal/system/agent/container"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/interfaces"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	"github.com/edgexfoundry/go-mod-registry/registry"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 	requests "github.com/edgexfoundry/go-mod-core-contracts/requests/configuration"
@@ -30,19 +36,30 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func LoadRestRoutes(
-	metricsImpl interfaces.Metrics,
-	operationsImpl interfaces.Operations,
-	configGetImpl interfaces.GetConfig,
-	configSetImpl interfaces.SetConfig) *mux.Router {
+func LoadRestRoutes(dic *di.Container) *mux.Router {
 	r := mux.NewRouter()
 
 	b := r.PathPrefix("/api/v1").Subrouter()
-	b.HandleFunc("/operation", func(w http.ResponseWriter, r *http.Request) { operationHandler(w, r, operationsImpl) }).Methods(http.MethodPost)
-	b.HandleFunc("/config/{services}", func(w http.ResponseWriter, r *http.Request) { getConfigHandler(w, r, configGetImpl) }).Methods(http.MethodGet)
-	b.HandleFunc("/config/{services}", func(w http.ResponseWriter, r *http.Request) { setConfigHandler(w, r, configSetImpl) }).Methods(http.MethodPut)
-	b.HandleFunc("/metrics/{services}", func(w http.ResponseWriter, r *http.Request) { metricsHandler(w, r, metricsImpl) }).Methods(http.MethodGet)
-	b.HandleFunc("/health/{services}", healthHandler).Methods(http.MethodGet)
+
+	b.HandleFunc("/operation", func(w http.ResponseWriter, r *http.Request) {
+		operationHandler(w, r, bootstrapContainer.LoggingClientFrom(dic.Get), container.OperationsFrom(dic.Get))
+	}).Methods(http.MethodPost)
+
+	b.HandleFunc("/config/{services}", func(w http.ResponseWriter, r *http.Request) {
+		getConfigHandler(w, r, bootstrapContainer.LoggingClientFrom(dic.Get), container.GetConfigFrom(dic.Get))
+	}).Methods(http.MethodGet)
+
+	b.HandleFunc("/config/{services}", func(w http.ResponseWriter, r *http.Request) {
+		setConfigHandler(w, r, bootstrapContainer.LoggingClientFrom(dic.Get), container.SetConfigFrom(dic.Get))
+	}).Methods(http.MethodPut)
+
+	b.HandleFunc("/metrics/{services}", func(w http.ResponseWriter, r *http.Request) {
+		metricsHandler(w, r, bootstrapContainer.LoggingClientFrom(dic.Get), container.MetricsFrom(dic.Get))
+	}).Methods(http.MethodGet)
+
+	b.HandleFunc("/health/{services}", func(w http.ResponseWriter, r *http.Request) {
+		healthHandler(w, r, bootstrapContainer.LoggingClientFrom(dic.Get), bootstrapContainer.RegistryFrom(dic.Get))
+	}).Methods(http.MethodGet)
 	b.HandleFunc("/ping", pingHandler).Methods(http.MethodGet)
 
 	r.HandleFunc(clients.ApiVersionRoute, pkg.VersionHandler).Methods(http.MethodGet)
@@ -61,77 +78,105 @@ func pingHandler(w http.ResponseWriter, _ *http.Request) {
 }
 
 // metricsHandler implements a controller to execute a metrics request.
-func metricsHandler(w http.ResponseWriter, r *http.Request, metricsImpl interfaces.Metrics) {
-	LoggingClient.Debug("retrieved service names")
+func metricsHandler(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	metricsImpl interfaces.Metrics) {
+
+	loggingClient.Debug("retrieved service names")
 
 	vars := mux.Vars(r)
-	pkg.Encode(metricsImpl.Get(strings.Split(vars["services"], ","), r.Context()), w, LoggingClient)
+	pkg.Encode(metricsImpl.Get(strings.Split(vars["services"], ","), r.Context()), w, loggingClient)
 }
 
 // operationHandler implements a controller to execute a start/stop/restart operation request.
-func operationHandler(w http.ResponseWriter, r *http.Request, operationsImpl interfaces.Operations) {
+func operationHandler(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	operationsImpl interfaces.Operations) {
+
 	defer r.Body.Close()
 
 	b, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		LoggingClient.Error(err.Error())
+		loggingClient.Error(err.Error())
 		return
 	}
 
 	o := models.Operation{}
 	if err = o.UnmarshalJSON(b); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		LoggingClient.Error("error during decoding: %s", err.Error())
+		loggingClient.Error("error during decoding: %s", err.Error())
 		return
 	}
 
-	pkg.Encode(operationsImpl.Do(o.Services, o.Action, o.Parameters), w, LoggingClient)
+	pkg.Encode(operationsImpl.Do(o.Services, o.Action, o.Parameters), w, loggingClient)
 }
 
-func getConfigHandler(w http.ResponseWriter, r *http.Request, getConfigImpl interfaces.GetConfig) {
+// getConfigHandler implements a controller to execute a get configuration request.
+func getConfigHandler(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+
+	getConfigImpl interfaces.GetConfig) {
 	vars := mux.Vars(r)
-	LoggingClient.Debug("retrieved service names")
+	loggingClient.Debug("retrieved service names")
 
-	pkg.Encode(getConfigImpl.Do(strings.Split(vars["services"], ","), r.Context()), w, LoggingClient)
+	pkg.Encode(getConfigImpl.Do(strings.Split(vars["services"], ","), r.Context()), w, loggingClient)
 }
 
-func setConfigHandler(w http.ResponseWriter, r *http.Request, setConfigImpl interfaces.SetConfig) {
+// setConfigHandler implements a controller to execute a set configuration request.
+func setConfigHandler(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	setConfigImpl interfaces.SetConfig) {
+
 	defer r.Body.Close()
 
 	vars := mux.Vars(r)
-	LoggingClient.Debug("retrieved service names")
+	loggingClient.Debug("retrieved service names")
 
 	b, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		LoggingClient.Error(err.Error())
+		loggingClient.Error(err.Error())
 		return
 	}
 
 	sc := requests.SetConfigRequest{}
 	if err = sc.UnmarshalJSON(b); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		LoggingClient.Error("error during decoding")
+		loggingClient.Error("error during decoding")
 		return
 	}
 
-	pkg.Encode(setConfigImpl.Do(strings.Split(vars["services"], ","), sc), w, LoggingClient)
+	pkg.Encode(setConfigImpl.Do(strings.Split(vars["services"], ","), sc), w, loggingClient)
 }
 
-func healthHandler(w http.ResponseWriter, r *http.Request) {
+// healthHandler implements a controller to execute a get health status request.
+func healthHandler(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	registryClient registry.Client) {
+
 	vars := mux.Vars(r)
-	LoggingClient.Debug("health status data requested")
+	loggingClient.Debug("health status data requested")
 
 	list := vars["services"]
 	var services []string
 	services = strings.Split(list, ",")
 
-	send, err := getHealth(services, RegistryClient)
+	send, err := getHealth(services, registryClient)
 	if err != nil {
-		LoggingClient.Error(err.Error())
+		loggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	pkg.Encode(send, w, LoggingClient)
+	pkg.Encode(send, w, loggingClient)
 }
