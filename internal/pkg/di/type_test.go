@@ -12,20 +12,16 @@
  * the License.
  *******************************************************************************/
 
-package interfaces
+package di
 
 import (
-	"context"
-	"sync"
+	"testing"
 
-	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
+	"github.com/stretchr/testify/assert"
 )
 
-// BootstrapHandler defines the contract each bootstrap handler must fulfill.  Implementation returns true if the
-// handler completed successfully, false if it did not.
-type BootstrapHandler func(
-	wg *sync.WaitGroup,
-	context context.Context,
-	startupTimer startup.Timer,
-	dic *di.Container) (success bool)
+type foo struct{}
+
+func TestTypeInstanceToNameReturnsExpectedPackagePlusTypeName(t *testing.T) {
+	assert.Equal(t, "github.com/edgexfoundry/edgex-go/internal/pkg/di.foo", TypeInstanceToName(foo{}))
+}

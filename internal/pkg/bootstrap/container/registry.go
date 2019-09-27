@@ -12,20 +12,21 @@
  * the License.
  *******************************************************************************/
 
-package interfaces
+package container
 
 import (
-	"context"
-	"sync"
-
-	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
+	"github.com/edgexfoundry/go-mod-registry/registry"
 )
 
-// BootstrapHandler defines the contract each bootstrap handler must fulfill.  Implementation returns true if the
-// handler completed successfully, false if it did not.
-type BootstrapHandler func(
-	wg *sync.WaitGroup,
-	context context.Context,
-	startupTimer startup.Timer,
-	dic *di.Container) (success bool)
+// RegistryClientInterfaceName contains the name of the registry.Client implementation in the DIC.
+var RegistryClientInterfaceName = di.TypeInstanceToName((*registry.Client)(nil))
+
+// RegistryFrom helper function queries the DIC and returns the registry.Client implementation.
+func RegistryFrom(get di.Get) registry.Client {
+	registryClient := get(RegistryClientInterfaceName)
+	if registryClient != nil {
+		return registryClient.(registry.Client)
+	}
+	return (registry.Client)(nil)
+}

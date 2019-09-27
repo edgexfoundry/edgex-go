@@ -23,6 +23,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 
@@ -53,6 +54,7 @@ func main() {
 		clients.CoreMetaDataServiceKey,
 		metadata.Configuration,
 		startupTimer,
+		di.NewContainer(di.ServiceConstructorMap{}),
 		[]interfaces.BootstrapHandler{
 			handlers.SecretClientBootstrapHandler,
 			metadata.NewServiceInit(&httpServer).BootstrapHandler,

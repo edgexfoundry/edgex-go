@@ -19,51 +19,98 @@ import (
 	"sync"
 
 	"github.com/edgexfoundry/edgex-go/internal"
-	bootstrap "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/interfaces"
+	bootstrapContainer "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/endpoint"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/clients"
-	agentConfig "github.com/edgexfoundry/edgex-go/internal/system/agent/config"
+	"github.com/edgexfoundry/edgex-go/internal/system/agent/container"
+	"github.com/edgexfoundry/edgex-go/internal/system/agent/direct"
+	"github.com/edgexfoundry/edgex-go/internal/system/agent/executor"
+	"github.com/edgexfoundry/edgex-go/internal/system/agent/getconfig"
+	"github.com/edgexfoundry/edgex-go/internal/system/agent/setconfig"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/general"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
-
-	"github.com/edgexfoundry/go-mod-registry/registry"
 )
 
-var Configuration = &agentConfig.ConfigurationStruct{}
-var GenClients *clients.General
-var LoggingClient logger.LoggingClient
-var RegistryClient registry.Client
-
+// BootstrapHandler fulfills the BootstrapHandler contract.  It implements agent-specific initialization.
 func BootstrapHandler(
 	wg *sync.WaitGroup,
 	ctx context.Context,
 	startupTimer startup.Timer,
-	configuration bootstrap.Configuration,
-	logging logger.LoggingClient,
-	registry registry.Client) bool {
+	dic *di.Container) bool {
 
-	// update global variables.
-	LoggingClient = logging
-	RegistryClient = registry
+	configuration := container.ConfigurationFrom(dic.Get)
+
+	// validate metrics implementation
+	switch configuration.MetricsMechanism {
+	case direct.MetricsMechanism:
+	case executor.MetricsMechanism:
+	default:
+		loggingClient := bootstrapContainer.LoggingClientFrom(dic.Get)
+		loggingClient.Error("the requested metrics mechanism is not supported")
+		return false
+	}
+
+	// add dependencies to container
+	dic.Update(di.ServiceConstructorMap{
+		container.GeneralClientsName: func(get di.Get) interface{} {
+			return clients.NewGeneral()
+		},
+		container.MetricsInterfaceName: func(get di.Get) interface{} {
+			logging := bootstrapContainer.LoggingClientFrom(get)
+			switch configuration.MetricsMechanism {
+			case direct.MetricsMechanism:
+				return direct.NewMetrics(
+					logging,
+					container.GeneralClientsFrom(get),
+					bootstrapContainer.RegistryFrom(get),
+					configuration.Service.Protocol,
+				)
+			case executor.MetricsMechanism:
+				return executor.NewMetrics(executor.CommandExecutor, logging, configuration.ExecutorPath)
+			default:
+				panic("unsupported metrics mechanism " + container.MetricsInterfaceName)
+			}
+		},
+		container.OperationsInterfaceName: func(get di.Get) interface{} {
+			return executor.NewOperations(
+				executor.CommandExecutor,
+				bootstrapContainer.LoggingClientFrom(get),
+				configuration.ExecutorPath)
+		},
+		container.GetConfigInterfaceName: func(get di.Get) interface{} {
+			logging := bootstrapContainer.LoggingClientFrom(get)
+			return getconfig.New(
+				getconfig.NewExecutor(
+					container.GeneralClientsFrom(get),
+					bootstrapContainer.RegistryFrom(get),
+					logging,
+					configuration.Service.Protocol),
+				logging)
+		},
+		container.SetConfigInterfaceName: func(get di.Get) interface{} {
+			return setconfig.New(setconfig.NewExecutor(bootstrapContainer.LoggingClientFrom(get), configuration))
+		},
+	})
 
 	// initialize clients required by service.
-	GenClients = clients.NewGeneral()
+	generalClients := container.GeneralClientsFrom(dic.Get)
+	registryClient := bootstrapContainer.RegistryFrom(dic.Get)
 	for serviceKey, serviceName := range config.ListDefaultServices() {
-		GenClients.Set(
+		generalClients.Set(
 			serviceKey,
 			general.NewGeneralClient(
 				types.EndpointParams{
 					ServiceKey:  serviceKey,
 					Path:        "/",
-					UseRegistry: registry != nil,
-					Url:         Configuration.Clients[serviceName].Url(),
+					UseRegistry: registryClient != nil,
+					Url:         configuration.Clients[serviceName].Url(),
 					Interval:    internal.ClientMonitorDefault,
 				},
-				endpoint.Endpoint{RegistryClient: &registry}))
+				endpoint.Endpoint{RegistryClient: &registryClient}))
 	}
 
 	return true

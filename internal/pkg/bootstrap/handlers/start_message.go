@@ -19,11 +19,9 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/interfaces"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
-
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-	"github.com/edgexfoundry/go-mod-registry/registry"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 )
 
 // StartMessage contains references to dependencies required by the start message handler.
@@ -46,14 +44,13 @@ func (h StartMessage) Handler(
 	wg *sync.WaitGroup,
 	context context.Context,
 	startupTimer startup.Timer,
-	config interfaces.Configuration,
-	loggingClient logger.LoggingClient,
-	registryClient registry.Client) bool {
+	dic *di.Container) bool {
 
+	loggingClient := container.LoggingClientFrom(dic.Get)
 	loggingClient.Info("Service dependencies resolved...")
 	loggingClient.Info(fmt.Sprintf("Starting %s %s ", h.serviceKey, h.version))
 
-	bootstrapConfig := config.GetBootstrap()
+	bootstrapConfig := container.ConfigurationFrom(dic.Get).GetBootstrap()
 	if len(bootstrapConfig.Service.StartupMsg) > 0 {
 		loggingClient.Info(bootstrapConfig.Service.StartupMsg)
 	}

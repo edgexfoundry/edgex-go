@@ -22,9 +22,11 @@ import (
 	"syscall"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/configuration"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/logging"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 
@@ -71,6 +73,7 @@ func Run(
 	serviceKey string,
 	config interfaces.Configuration,
 	startupTimer startup.Timer,
+	dic *di.Container,
 	handlers []interfaces.BootstrapHandler) {
 
 	loggingClient := logging.FactoryToStdout(serviceKey)
@@ -102,9 +105,21 @@ func Run(
 		loggingClient = logging.FactoryFromConfiguration(serviceKey, config)
 	}
 
+	dic.Update(di.ServiceConstructorMap{
+		container.ConfigurationInterfaceName: func(get di.Get) interface{} {
+			return config
+		},
+		container.LoggingClientInterfaceName: func(get di.Get) interface{} {
+			return loggingClient
+		},
+		container.RegistryClientInterfaceName: func(get di.Get) interface{} {
+			return registryClient
+		},
+	})
+
 	// call individual bootstrap handlers.
 	for i := range handlers {
-		if handlers[i](&wg, ctx, startupTimer, config, loggingClient, registryClient) == false {
+		if handlers[i](&wg, ctx, startupTimer, dic) == false {
 			cancel()
 			break
 		}

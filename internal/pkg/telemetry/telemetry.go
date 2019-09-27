@@ -20,12 +20,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/interfaces"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
-
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-
-	"github.com/edgexfoundry/go-mod-registry/registry"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 )
 
 type SystemUsage struct {
@@ -98,10 +95,9 @@ func BootstrapHandler(
 	wg *sync.WaitGroup,
 	ctx context.Context,
 	startupTimer startup.Timer,
-	config interfaces.Configuration,
-	loggingClient logger.LoggingClient,
-	registryClient registry.Client) bool {
+	dic *di.Container) bool {
 
+	loggingClient := container.LoggingClientFrom(dic.Get)
 	loggingClient.Info("Telemetry starting")
 
 	wg.Add(1)

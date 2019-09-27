@@ -21,11 +21,12 @@ import (
 	"time"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/command/interfaces"
-	bootstrap "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/interfaces"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/redis"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/endpoint"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
 
@@ -68,16 +69,15 @@ func (s ServiceInit) BootstrapHandler(
 	wg *sync.WaitGroup,
 	ctx context.Context,
 	startupTimer startup.Timer,
-	config bootstrap.Configuration,
-	logging logger.LoggingClient,
-	registry registry.Client) bool {
+	dic *di.Container) bool {
 
 	// update global variables.
-	LoggingClient = logging
-	httpErrorHandler = errorconcept.NewErrorHandler(logging)
+	LoggingClient = container.LoggingClientFrom(dic.Get)
+	httpErrorHandler = errorconcept.NewErrorHandler(LoggingClient)
 
 	// initialize clients required by service.
-	s.initializeClients(registry)
+	registryClient := container.RegistryFrom(dic.Get)
+	s.initializeClients(registryClient)
 
 	// initialize database.
 	for startupTimer.HasNotElapsed() {

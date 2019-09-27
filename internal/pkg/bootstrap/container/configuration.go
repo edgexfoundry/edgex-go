@@ -12,20 +12,17 @@
  * the License.
  *******************************************************************************/
 
-package interfaces
+package container
 
 import (
-	"context"
-	"sync"
-
-	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 )
 
-// BootstrapHandler defines the contract each bootstrap handler must fulfill.  Implementation returns true if the
-// handler completed successfully, false if it did not.
-type BootstrapHandler func(
-	wg *sync.WaitGroup,
-	context context.Context,
-	startupTimer startup.Timer,
-	dic *di.Container) (success bool)
+// ConfigurationInterfaceName contains the name of the interfaces.Configuration implementation in the DIC.
+var ConfigurationInterfaceName = di.TypeInstanceToName((*interfaces.Configuration)(nil))
+
+// ConfigurationFrom helper function queries the DIC and returns the interfaces.Configuration implementation.
+func ConfigurationFrom(get di.Get) interfaces.Configuration {
+	return get(ConfigurationInterfaceName).(interfaces.Configuration)
+}

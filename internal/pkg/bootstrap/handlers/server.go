@@ -21,12 +21,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/interfaces"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
-
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-
-	"github.com/edgexfoundry/go-mod-registry/registry"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 
 	"github.com/gorilla/mux"
 )
@@ -59,11 +56,9 @@ func (h *Server) Handler(
 	wg *sync.WaitGroup,
 	ctx context.Context,
 	startupTimer startup.Timer,
-	config interfaces.Configuration,
-	loggingClient logger.LoggingClient,
-	registryClient registry.Client) bool {
+	dic *di.Container) bool {
 
-	bootstrapConfig := config.GetBootstrap()
+	bootstrapConfig := container.ConfigurationFrom(dic.Get).GetBootstrap()
 	addr := bootstrapConfig.Service.Host + ":" + strconv.Itoa(bootstrapConfig.Service.Port)
 	timeout := time.Millisecond * time.Duration(bootstrapConfig.Service.Timeout)
 	server := &http.Server{
@@ -73,6 +68,7 @@ func (h *Server) Handler(
 		ReadTimeout:  timeout,
 	}
 
+	loggingClient := container.LoggingClientFrom(dic.Get)
 	loggingClient.Info("Web server starting (" + addr + ")")
 
 	wg.Add(1)
