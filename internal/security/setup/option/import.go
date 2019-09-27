@@ -18,15 +18,16 @@ package option
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/edgexfoundry/edgex-go/internal/security/setup"
-	"github.com/fsnotify/fsnotify"
 )
 
-// Import deploys PKI from CacheDir to DeployDir.  If CacheDir is empty,
-// import blocks until the PKI assets shown in CacheDir;
+// Import deploys PKI from CacheDir to DeployDir.  It retruns an error,
+// if CacheDir is empty instead of blocking or waiting;
 // otherwise it just copies PKI assets from CacheDir into DeployDir.
+// This import enables usage models for deploying a pre-populated PKI assets
+// such as Kong TLS signed by an external certificate authority or TLS keys
+// by other certificate authority.
 func Import() func(*PkiInitOption) (exitCode, error) {
 	return func(pkiInitOpton *PkiInitOption) (exitCode, error) {
 
@@ -45,7 +46,7 @@ func isImportNoOp(pkiInitOption *PkiInitOption) bool {
 
 func importPkis() (statusCode exitCode, err error) {
 	pkiCacheDir := getPkiCacheDirEnv()
-	setup.LoggingClient.Info(fmt.Sprintf("PKI_CACHE: %s", pkiCacheDir))
+	setup.LoggingClient.Info(fmt.Sprintf("importing from PKI_CACHE: %s", pkiCacheDir))
 
 	dirEmpty, err := isDirEmpty(pkiCacheDir)
 
@@ -53,59 +54,15 @@ func importPkis() (statusCode exitCode, err error) {
 		return exitWithError, err
 	}
 
-	if dirEmpty {
-
-		pkiCacheWatcher, err := fsnotify.NewWatcher()
-
-		if err != nil {
-			return exitWithError, err
-		}
-		defer pkiCacheWatcher.Close()
-
-		done := make(chan bool)
-
-		go func() {
-			for {
-				select {
-				case event := <-pkiCacheWatcher.Events:
-					if event.Name == "" { // skip if event name is empty
-						continue
-					}
-					setup.LoggingClient.Debug(fmt.Sprintf("watcher event: %#v\n", event))
-					// wait for some time before the directory settle down on the source side
-					// as the whole directory tree is just dropped in
-					time.Sleep(3 * time.Second)
-
-					err = deploy(pkiCacheDir, pkiInitDeployDir)
-					if err != nil {
-						statusCode = exitWithError
-					} else {
-						statusCode = normal
-					}
-					done <- true
-				case watcherErr := <-pkiCacheWatcher.Errors:
-					if watcherErr == nil {
-						continue
-					}
-					setup.LoggingClient.Error(fmt.Sprintf("watcher error: %v\n", watcherErr))
-					statusCode = exitWithError
-					err = watcherErr
-					done <- true
-				}
-			}
-		}()
-
-		if err := pkiCacheWatcher.Add(pkiCacheDir); err != nil {
-			return exitWithError, err
-		}
-
-		<-done
-	} else {
+	if !dirEmpty {
 		// copy stuff into dest dir from pkiCache
 		err = deploy(pkiCacheDir, pkiInitDeployDir)
 		if err != nil {
 			statusCode = exitWithError
 		}
+	} else {
+		statusCode = exitWithError
+		err = fmt.Errorf("Expecting pre-populated PKI in the directory %s but found empty", pkiCacheDir)
 	}
 
 	return statusCode, err
