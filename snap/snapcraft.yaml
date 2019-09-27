@@ -156,7 +156,7 @@ apps:
     plugs:
       - network
       - network-bind
-  mongo-worker:
+  edgex-mongo:
     adapter: full
     after: [mongod]
     command: bin/edgex-mongo --config $SNAP_DATA/config/edgex-mongo/res/configuration.toml
@@ -167,7 +167,7 @@ apps:
     adapter: full
     after:
       - core-config-seed
-      - mongo-worker
+      - edgex-mongo
       - edgexproxy
     command: bin/core-data -confdir $SNAP_DATA/config/core-data/res --registry
     daemon: simple
@@ -180,7 +180,7 @@ apps:
     adapter: none
     after:
       - core-config-seed
-      - mongo-worker
+      - edgex-mongo
       - edgexproxy
     command: bin/core-metadata -confdir $SNAP_DATA/config/core-metadata/res --registry
     daemon: simple
@@ -190,7 +190,7 @@ apps:
     adapter: none
     after:
       - core-config-seed
-      - mongo-worker
+      - edgex-mongo
       - edgexproxy
     command: bin/core-command -confdir $SNAP_DATA/config/core-command/res --registry
     daemon: simple
@@ -200,7 +200,7 @@ apps:
     adapter: none
     after:
       - core-config-seed
-      - mongo-worker
+      - edgex-mongo
       - edgexproxy
     command: bin/support-logging -confdir $SNAP_DATA/config/support-logging/res --registry
     daemon: simple
@@ -210,7 +210,7 @@ apps:
     adapter: none
     after:
       - core-config-seed
-      - mongo-worker
+      - edgex-mongo
       - edgexproxy
     command: bin/support-notifications -confdir $SNAP_DATA/config/support-notifications/res --registry
     daemon: simple
@@ -220,7 +220,7 @@ apps:
     adapter: none
     after:
       - core-config-seed
-      - mongo-worker
+      - edgex-mongo
       - edgexproxy
     command: bin/support-scheduler -confdir $SNAP_DATA/config/support-scheduler/res --registry
     daemon: simple
@@ -231,7 +231,7 @@ apps:
     after:
       - export-client
       - core-config-seed
-      - mongo-worker
+      - edgex-mongo
       - edgexproxy
     command: bin/support-rulesengine-wrapper.sh
     daemon: simple
@@ -240,7 +240,7 @@ apps:
     adapter: none
     after:
       - core-config-seed
-      - mongo-worker
+      - edgex-mongo
       - edgexproxy
     command: bin/export-client -confdir $SNAP_DATA/config/export-client/res --registry
     daemon: simple
@@ -250,7 +250,7 @@ apps:
     adapter: full
     after:
       - core-config-seed
-      - mongo-worker
+      - edgex-mongo
       - edgexproxy
     command: bin/export-distro -confdir $SNAP_DATA/config/export-distro/res --registry
     daemon: simple
@@ -260,7 +260,7 @@ apps:
     adapter: none
     after:
       - core-config-seed
-      - mongo-worker
+      - edgex-mongo
       - edgexproxy
     command: bin/sys-mgmt-agent -confdir $SNAP_DATA/config/sys-mgmt-agent/res --registry
     daemon: simple
@@ -269,7 +269,7 @@ apps:
     adapter: none
     after:
       - core-config-seed
-      - mongo-worker
+      - edgex-mongo
       - edgexproxy
       - core-data
       - core-metadata
@@ -283,7 +283,7 @@ apps:
     adapter: none
     after:
       - core-config-seed
-      - mongo-worker
+      - edgex-mongo
       - edgexproxy
       - core-data
       - core-metadata
