@@ -27,3 +27,5 @@ require (
 	gopkg.in/eapache/queue.v1 v1.1.0
 	gopkg.in/yaml.v2 v2.2.2
 )
+
+go 1.12
