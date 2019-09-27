@@ -159,7 +159,7 @@ apps:
   edgex-mongo:
     adapter: full
     after: [mongod]
-    command: bin/edgex-mongo --config $SNAP_DATA/config/edgex-mongo/res/configuration.toml
+    command: bin/edgex-mongo -confdir $SNAP_DATA/config/edgex-mongo/res
     daemon: oneshot
     environment:
       # TODO: set this to true and make it configurable when docker-edgex-mongo
