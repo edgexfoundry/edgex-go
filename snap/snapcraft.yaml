@@ -161,6 +161,11 @@ apps:
     after: [mongod]
     command: bin/edgex-mongo --config $SNAP_DATA/config/edgex-mongo/res/configuration.toml
     daemon: oneshot
+    environment:
+      # TODO: set this to true and make it configurable when docker-edgex-mongo
+      # is integrated with vault access for database access, etc. see
+      # https://github.com/edgexfoundry/edgex-go/issues/1840
+      EDGEX_SECURITY_SECRET_STORE: "false"
     start-timeout: 15m
     plugs: [network]
   core-data:
@@ -498,6 +503,8 @@ parts:
 
       install -d "$SNAPCRAFT_PART_INSTALL/config/edgex-mongo/res/"
 
+      # TODO: set CACertPath and TokenPath when docker-edgex-mongo is integrated
+      # with vault, see https://github.com/edgexfoundry/edgex-go/issues/1840
       cp "./cmd/res/configuration.toml" \
         "$SNAPCRAFT_PART_INSTALL/config/edgex-mongo/res/configuration.toml"
 
