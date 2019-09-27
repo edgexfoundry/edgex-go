@@ -21,14 +21,14 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
-	"time"
 
+	"github.com/edgexfoundry/edgex-go/internal/security/setup"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestImportPriorFileChange(t *testing.T) {
+func TestImportCacheDirEmpty(t *testing.T) {
 	// this test case is for import running first
-	// and waiting for files from PKI_CACHE dir to be appeared
+	// and PKI_CACHE_DIR is empty- should expect an error by design
 
 	tearDown := setupImportTest(t)
 	defer tearDown()
@@ -41,32 +41,21 @@ func TestImportPriorFileChange(t *testing.T) {
 
 	var exitStatus exitCode
 	var err error
-	go func() { // in a gorountine, so it won't block
-		f := Import()
-		exitStatus, err = f(importOn.(*PkiInitOption))
-	}()
-
-	// to allow time for go func() to be properly initialized
-	time.Sleep(time.Second)
-
-	// now put a testFile into cache dir
-	writeTestFileToCacheDir(t)
-
-	// to allow time to finish deploy in another go-routine
-	time.Sleep(5 * time.Second)
+	f := Import()
+	exitStatus, err = f(importOn.(*PkiInitOption))
 
 	deployEmpty, emptyErr := isDirEmpty(pkiInitDeployDir)
 
 	assert := assert.New(t)
-	assert.Equal(normal, exitStatus)
-	assert.Nil(err)
+	assert.Equal(exitWithError, exitStatus)
+	assert.NotNil(err)
 	assert.Nil(emptyErr)
-	assert.False(deployEmpty)
+	assert.True(deployEmpty)
 }
 
-func TestImportPostFileChange(t *testing.T) {
-	// this test case is for import running later
-	// files from PKI_CACHE dir are already in-place before import is called
+func TestImportFromPKICache(t *testing.T) {
+	// this test case is for import pre-populated cached PKI
+	// files from PKI_CACHE dir
 
 	tearDown := setupImportTest(t)
 	defer tearDown()
@@ -161,6 +150,20 @@ func setupImportTest(t *testing.T) func() {
 		t.Fatalf("cannot get the working dir %s: %v", curDir, err)
 	}
 
+	testResourceDir := filepath.Join(curDir, resourceDirName)
+	if err := createDirectoryIfNotExists(testResourceDir); err != nil {
+		t.Fatalf("cannot create resource dir %s for the test: %v", testResourceDir, err)
+	}
+
+	resDir := filepath.Join(curDir, "testdata", resourceDirName)
+
+	testResTomlFile := filepath.Join(testResourceDir, configTomlFile)
+	if _, err := copyFile(filepath.Join(resDir, configTomlFile), testResTomlFile); err != nil {
+		t.Fatalf("cannot copy %s for the test: %v", configTomlFile, err)
+	}
+
+	_ = setup.Init()
+
 	origEnvXdgRuntimeDir := os.Getenv(envXdgRuntimeDir)
 	// change it to the current working directory
 	os.Setenv(envXdgRuntimeDir, curDir)
@@ -186,6 +189,7 @@ func setupImportTest(t *testing.T) func() {
 		os.Setenv(envPkiCache, origEnvPkiCache)
 		os.RemoveAll(pkiInitDeployDir)
 		os.RemoveAll(pkiCacheDir)
+		os.RemoveAll(testResourceDir)
 		pkiInitDeployDir = origDeployDir
 	}
 }
