@@ -1,26 +1,37 @@
+/*******************************************************************************
+ * Copyright 2019 Dell Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
+ *******************************************************************************/
+
 package main
 
 import (
 	"flag"
-	"fmt"
-	"os"
-	"os/signal"
-	"strconv"
-	"time"
 
 	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/startup"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/interfaces"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-	"github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
 func main() {
-	start := time.Now()
+	startupTimer := startup.NewStartUpTimer(1, internal.BootTimeoutDefault)
 	var useRegistry bool
 	var configDir, profileDir string
 
@@ -29,64 +40,23 @@ func main() {
 	flag.StringVar(&profileDir, "profile", "", "Specify a profile other than default.")
 	flag.StringVar(&profileDir, "p", "", "Specify a profile other than default.")
 	flag.StringVar(&configDir, "confdir", "", "Specify local configuration directory")
+
 	flag.Usage = usage.HelpCallback
 	flag.Parse()
 
-	params := startup.BootParams{
-		UseRegistry: useRegistry,
-		ConfigDir:   configDir,
-		ProfileDir:  profileDir,
-		BootTimeout: internal.BootTimeoutDefault,
-	}
-	startup.Bootstrap(params, scheduler.Retry, logBeforeInit)
-
-	ok := scheduler.Init(useRegistry)
-	if !ok {
-		logBeforeInit(fmt.Errorf("%s: Service bootstrap failed!", clients.SupportSchedulerServiceKey))
-		os.Exit(1)
-	}
-
-	scheduler.LoggingClient.Info(fmt.Sprintf("Service dependencies resolved...%s %s ", clients.SupportSchedulerServiceKey, edgex.Version))
-	scheduler.LoggingClient.Info(fmt.Sprintf("Starting %s %s ", clients.SupportSchedulerServiceKey, edgex.Version))
-
-	// Bootstrap schedulers
-	err := scheduler.LoadScheduler()
-	if err != nil {
-		scheduler.LoggingClient.Error(fmt.Sprintf("Failed to load schedules and events %s", err.Error()))
-	}
-
-	scheduler.LoggingClient.Info(scheduler.Configuration.Service.StartupMsg)
-
-	errs := make(chan error, 2)
-	listenForInterrupt(errs)
-	url := scheduler.Configuration.Service.Host + ":" + strconv.Itoa(scheduler.Configuration.Service.Port)
-	startup.StartHTTPServer(scheduler.LoggingClient, scheduler.Configuration.Service.Timeout, scheduler.LoadRestRoutes(), url, errs)
-
-	// Start the ticker
-	scheduler.StartTicker()
-
-	// Time it took to start service
-	scheduler.LoggingClient.Info("Service started in: " + time.Since(start).String())
-	scheduler.LoggingClient.Info("Listening on port: " + strconv.Itoa(scheduler.Configuration.Service.Port))
-	c := <-errs
-	scheduler.Destruct()
-	scheduler.LoggingClient.Warn(fmt.Sprintf("terminating: %v", c))
-
-	os.Exit(0)
-}
-
-func logBeforeInit(err error) {
-	if scheduler.LoggingClient == nil {
-		scheduler.LoggingClient = logger.NewClient(clients.SupportSchedulerServiceKey, false, "", models.InfoLog)
-	}
-
-	scheduler.LoggingClient.Error(err.Error())
-}
-
-func listenForInterrupt(errChan chan error) {
-	go func() {
-		c := make(chan os.Signal)
-		signal.Notify(c, os.Interrupt)
-		errChan <- fmt.Errorf("%s", <-c)
-	}()
+	httpServer := handlers.NewServerBootstrap(scheduler.LoadRestRoutes())
+	bootstrap.Run(
+		configDir,
+		profileDir,
+		internal.ConfigFileName,
+		useRegistry,
+		clients.SupportSchedulerServiceKey,
+		scheduler.Configuration,
+		startupTimer,
+		[]interfaces.BootstrapHandler{
+			scheduler.NewServiceInit(&httpServer).BootstrapHandler,
+			telemetry.BootstrapHandler,
+			httpServer.Handler,
+			handlers.NewStartMessage(clients.SupportSchedulerServiceKey, edgex.Version).Handler,
+		})
 }
