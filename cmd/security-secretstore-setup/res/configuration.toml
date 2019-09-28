@@ -18,9 +18,27 @@
 [Writable]
 LogLevel = 'DEBUG'
 
+[Service]
+CheckInterval = '10s'
+Host = 'localhost'
+Port = 48080
+Protocol = 'http'
+Timeout = 5000
+
+[Registry]
+Host = 'localhost'
+Port = 8500
+Type = 'consul'
+
 [Logging]
 EnableRemote = false
 File = './logs/security-secretstore-setup.log'
+
+[Clients]
+  [Clients.Logging]
+  Protocol = 'http'
+  Host = 'localhost'
+  Port = 48061
 
 [SecretService]
 scheme = "https"
