@@ -19,6 +19,7 @@ package fileioperformer
 import (
 	"io"
 	"os"
+	"runtime"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -33,28 +34,34 @@ func TestFileIoPerformerReader(t *testing.T) {
 
 	fileio := NewDefaultFileIoPerformer()
 
-	reader, err := fileio.OpenFileReader("/dev/null", os.O_RDONLY, 0400)
-	assert.Nil(t, err)
-	assert.NotNil(t, fileio)
-	assert.NotNil(t, reader)
+	if isLinux() {
+		reader, err := fileio.OpenFileReader("/dev/null", os.O_RDONLY, 0400)
+		assert.Nil(t, err)
+		assert.NotNil(t, fileio)
+		assert.NotNil(t, reader)
+	}
 }
 
 func TestFileIoPerformerWriter(t *testing.T) {
 
 	fileio := NewDefaultFileIoPerformer()
 
-	writer, err := fileio.OpenFileWriter("/dev/null", os.O_RDONLY, 0400)
-	assert.Nil(t, err)
-	assert.NotNil(t, fileio)
-	assert.NotNil(t, writer)
+	if isLinux() {
+		writer, err := fileio.OpenFileWriter("/dev/null", os.O_RDONLY, 0400)
+		assert.Nil(t, err)
+		assert.NotNil(t, fileio)
+		assert.NotNil(t, writer)
+	}
 }
 
 func TestFileIoPerformerMkdirAll(t *testing.T) {
 
 	fileio := NewDefaultFileIoPerformer()
 
-	err := fileio.MkdirAll("/tmp", 0777)
-	assert.Nil(t, err)
+	if isLinux() {
+		err := fileio.MkdirAll("/tmp", 0777)
+		assert.Nil(t, err)
+	}
 }
 
 func TestMakeReadCloserPassThru(t *testing.T) {
@@ -83,6 +90,10 @@ func TestMakeReadCloserNopCloser(t *testing.T) {
 	// Should get back an object with a NopCloser wrapper
 
 	assert.Implements(t, (*io.ReadCloser)(nil), result)
+}
+
+func isLinux() bool {
+	return runtime.GOOS == "linux"
 }
 
 //
