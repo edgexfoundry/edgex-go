@@ -5,6 +5,7 @@ import (
 )
 
 type DBClient interface {
+	CloseSession()
 	GetAllCommands() ([]contract.Command, error)
 	GetCommandById(id string) (contract.Command, error)
 	GetCommandsByName(id string) ([]contract.Command, error)
