@@ -40,7 +40,7 @@ func NewStub(results []stubCall) Stub {
 
 // CommandExecutor provides the common callout to the configuration-defined executor.  This is a stub implementation of
 // the CommandExecutor interface.
-func (m *Stub) CommandExecutor(executorPath, serviceName, operation string) (string, error) {
+func (m *Stub) CommandExecutor(executorPath, serviceName, operation string, parameters []string) (string, error) {
 	m.Called++
 	m.capturedArgs = append(m.capturedArgs, []string{executorPath, serviceName, operation})
 	return m.perCallResults[m.Called-1].outString, m.perCallResults[m.Called-1].outError

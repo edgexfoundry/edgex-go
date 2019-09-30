@@ -43,10 +43,10 @@ func NewOperations(
 }
 
 // operationViaExecutor delegates a start/stop/restart operation request to the configuration-defined executor.
-func (e operations) Do(services []string, operation string) interface{} {
+func (e operations) Do(services []string, operation string, parameters []string) interface{} {
 	var result []interface{}
 	for _, serviceName := range services {
-		r, err := e.executor(e.executorPath, serviceName, operation)
+		r, err := e.executor(e.executorPath, serviceName, operation, parameters)
 		if err != nil {
 			result = append(result, system.Failure(serviceName, operation, UnknownExecutorType, err.Error()))
 			continue
