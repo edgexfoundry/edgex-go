@@ -14,4 +14,4 @@
 
 package interfaces
 
-type CommandExecutor func(executorPath, serviceName, operation string) (string, error)
+type CommandExecutor func(executorPath, serviceName, operation string, parameters []string) (string, error)

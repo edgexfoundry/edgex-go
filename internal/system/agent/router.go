@@ -86,7 +86,7 @@ func operationHandler(w http.ResponseWriter, r *http.Request, operationsImpl int
 		return
 	}
 
-	pkg.Encode(operationsImpl.Do(o.Services, o.Action), w, LoggingClient)
+	pkg.Encode(operationsImpl.Do(o.Services, o.Action, o.Parameters), w, LoggingClient)
 }
 
 func getConfigHandler(w http.ResponseWriter, r *http.Request, getConfigImpl interfaces.GetConfig) {

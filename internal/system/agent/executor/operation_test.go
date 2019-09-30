@@ -30,7 +30,7 @@ func TestOperationDoWithNoServices(t *testing.T) {
 	executor := NewStub([]stubCall{})
 	sut := NewOperations(executor.CommandExecutor, logger.NewMockClient(), "executorPathDoesNotMatter")
 
-	result := sut.Do([]string{}, "operationDoesNotMatter")
+	result := sut.Do([]string{}, "operationDoesNotMatter", []string{})
 
 	var emptyResult []interface{}
 	assert.Equal(t, result, emptyResult)
@@ -122,7 +122,7 @@ func TestOperationDoWithServices(t *testing.T) {
 			executor := NewStub(test.executorCalls)
 			sut := NewOperations(executor.CommandExecutor, loggingClient, executorPath)
 
-			result := sut.Do(test.services, operation)
+			result := sut.Do(test.services, operation, []string{})
 
 			if assert.Equal(t, len(test.executorCalls), executor.Called) {
 				for key, executorCall := range test.executorCalls {
