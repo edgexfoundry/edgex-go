@@ -29,7 +29,7 @@ type GeneralClients struct {
 	mutex   sync.RWMutex
 }
 
-// NewGeneralClients is a factory method that returns an initialized GeneralClients receiver struct.
+// NewGeneralClients is a factory function that returns an initialized GeneralClients receiver struct.
 func NewGeneralClients() *GeneralClients {
 	return &GeneralClients{
 		clients: make(clientMap),
