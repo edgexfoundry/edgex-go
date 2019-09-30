@@ -223,9 +223,9 @@ func restGetNotificationsBySender(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if limitNum > Configuration.Service.MaxResultCount {
-		http.Error(w, "Exceeded max limit", http.StatusRequestEntityTooLarge)
-		LoggingClient.Error("Exceeded max limit")
+	// Check the length
+	if err = checkMaxLimit(limitNum); err != nil {
+		http.Error(w, ExceededMaxResultCount, http.StatusRequestEntityTooLarge)
 		return
 	}
 
@@ -270,9 +270,9 @@ func restNotificationByStartEnd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if limitNum > Configuration.Service.MaxResultCount {
-		http.Error(w, "Exceeded max limit", http.StatusRequestEntityTooLarge)
-		LoggingClient.Error("Exceeded max limit")
+	// Check the length
+	if err = checkMaxLimit(limitNum); err != nil {
+		http.Error(w, ExceededMaxResultCount, http.StatusRequestEntityTooLarge)
 		return
 	}
 
@@ -309,9 +309,9 @@ func restNotificationByStart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if limitNum > Configuration.Service.MaxResultCount {
-		http.Error(w, "Exceeded max limit", http.StatusRequestEntityTooLarge)
-		LoggingClient.Error("Exceeded max limit")
+	// Check the length
+	if err = checkMaxLimit(limitNum); err != nil {
+		http.Error(w, ExceededMaxResultCount, http.StatusRequestEntityTooLarge)
 		return
 	}
 
@@ -350,9 +350,9 @@ func restNotificationByEnd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if limitNum > Configuration.Service.MaxResultCount {
-		http.Error(w, "Exceeded max limit", http.StatusRequestEntityTooLarge)
-		LoggingClient.Error("Exceeded max limit")
+	// Check the length
+	if err = checkMaxLimit(limitNum); err != nil {
+		http.Error(w, ExceededMaxResultCount, http.StatusRequestEntityTooLarge)
 		return
 	}
 
@@ -385,9 +385,9 @@ func restNotificationsByLabels(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if limitNum > Configuration.Service.MaxResultCount {
-		http.Error(w, "Exceeded max limit", http.StatusRequestEntityTooLarge)
-		LoggingClient.Error("Exceeded max limit")
+	// Check the length
+	if err = checkMaxLimit(limitNum); err != nil {
+		http.Error(w, ExceededMaxResultCount, http.StatusRequestEntityTooLarge)
 		return
 	}
 
@@ -422,9 +422,9 @@ func restNotificationsNew(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if limitNum > Configuration.Service.MaxResultCount {
-		http.Error(w, "Exceeded max limit", http.StatusRequestEntityTooLarge)
-		LoggingClient.Error("Exceeded max limit")
+	// Check the length
+	if err = checkMaxLimit(limitNum); err != nil {
+		http.Error(w, ExceededMaxResultCount, http.StatusRequestEntityTooLarge)
 		return
 	}
 

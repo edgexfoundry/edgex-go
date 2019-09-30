@@ -223,7 +223,7 @@ func TestGetLogs(t *testing.T) {
 			// Only test that criteria is correctly parsed if request is valid
 			if tt.status == http.StatusOK {
 				//Apply rules for limit validation to original criteria
-				tt.criteria.Limit = checkMaxLimit(tt.criteria.Limit)
+				tt.criteria.Limit = checkMaxLimitCount(tt.criteria.Limit)
 				//Then compare against what was persisted during the test run
 				if !reflect.DeepEqual(dummy.criteria, tt.criteria) {
 					t.Errorf("Invalid criteria %v, should be %v", dummy.criteria, tt.criteria)

@@ -23,7 +23,6 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/gorilla/mux"
-	"github.com/pkg/errors"
 )
 
 func restGetAllDeviceReports(w http.ResponseWriter, _ *http.Request) {
@@ -34,8 +33,7 @@ func restGetAllDeviceReports(w http.ResponseWriter, _ *http.Request) {
 	}
 
 	// Check max limit
-	if len(res) > Configuration.Service.MaxResultCount {
-		err = errors.New("Max limit exceeded")
+	if err = checkMaxLimit(len(res)); err != nil {
 		httpErrorHandler.Handle(w, err, errorconcept.Common.LimitExceeded)
 		return
 	}
