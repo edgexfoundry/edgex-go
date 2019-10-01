@@ -41,14 +41,17 @@ func TestImportCacheDirEmpty(t *testing.T) {
 
 	var exitStatus exitCode
 	var err error
+	assert := assert.New(t)
+
 	f := Import()
 	exitStatus, err = f(importOn.(*PkiInitOption))
-
-	deployEmpty, emptyErr := isDirEmpty(pkiInitDeployDir)
-
-	assert := assert.New(t)
-	assert.Equal(exitWithError, exitStatus)
 	assert.NotNil(err)
+	assert.Equal(exitWithError, exitStatus)
+
+	deployDir, err := getDeployDir()
+	assert.Nil(err)
+
+	deployEmpty, emptyErr := isDirEmpty(deployDir)
 	assert.Nil(emptyErr)
 	assert.True(deployEmpty)
 }
@@ -71,13 +74,15 @@ func TestImportFromPKICache(t *testing.T) {
 
 	f := Import()
 
-	exitStatus, err := f(importOn.(*PkiInitOption))
-
-	deployEmpty, emptyErr := isDirEmpty(pkiInitDeployDir)
-
 	assert := assert.New(t)
+	exitStatus, err := f(importOn.(*PkiInitOption))
 	assert.Equal(normal, exitStatus)
 	assert.Nil(err)
+
+	deployDir, err := getDeployDir()
+	assert.Nil(err)
+
+	deployEmpty, emptyErr := isDirEmpty(deployDir)
 	assert.Nil(emptyErr)
 	assert.False(deployEmpty)
 }
@@ -162,46 +167,47 @@ func setupImportTest(t *testing.T) func() {
 		t.Fatalf("cannot copy %s for the test: %v", configTomlFile, err)
 	}
 
-	_ = setup.Init()
+	err = setup.Init()
+	if err != nil {
+		t.Fatalf("Failed to init security-secrets-setup: %v", err)
+	}
 
 	origEnvXdgRuntimeDir := os.Getenv(envXdgRuntimeDir)
 	// change it to the current working directory
 	os.Setenv(envXdgRuntimeDir, curDir)
+	oldConfig := setup.Configuration
 
-	origEnvPkiCache := os.Getenv(envPkiCache)
-	// use curDir/cache as the working directory for test
-	pkiCacheDir := filepath.Join(curDir, "cache")
-	os.Setenv(envPkiCache, pkiCacheDir)
+	pkiCacheDir := "./cachetest"
 	if err := createDirectoryIfNotExists(pkiCacheDir); err != nil {
 		t.Fatalf("cannot create the PKI_CACHE dir %s: %v", pkiCacheDir, err)
 	}
 
-	origDeployDir := pkiInitDeployDir
-	tempDir, tempDirErr := ioutil.TempDir(curDir, "deploytest")
-	if tempDirErr != nil {
-		t.Fatalf("cannot create temporary scratch directory for the test: %v", tempDirErr)
+	pkiInitDeployDir := "./deploytest"
+	if err := createDirectoryIfNotExists(pkiInitDeployDir); err != nil {
+		t.Fatalf("cannot create dir %s for the test: %v", pkiInitDeployDir, err)
 	}
-	pkiInitDeployDir = tempDir
 
 	return func() {
 		// cleanup
 		os.Setenv(envXdgRuntimeDir, origEnvXdgRuntimeDir)
-		os.Setenv(envPkiCache, origEnvPkiCache)
+		setup.Configuration = oldConfig
 		os.RemoveAll(pkiInitDeployDir)
 		os.RemoveAll(pkiCacheDir)
 		os.RemoveAll(testResourceDir)
-		pkiInitDeployDir = origDeployDir
 	}
 }
 
 func writeTestFileToCacheDir(t *testing.T) {
-	pkiCacheDir := os.Getenv(envPkiCache)
+	pkiCacheDir, err := getCacheDir()
+	if err != nil {
+		t.Fatalf("Cache directory %s error: %v", pkiCacheDir, err)
+	}
 	// make a test dir
 	testFileDir := filepath.Join(pkiCacheDir, "test", caServiceName)
 	_ = createDirectoryIfNotExists(testFileDir)
 	testFile := filepath.Join(testFileDir, "testFile")
 	testData := []byte("test data\n")
 	if err := ioutil.WriteFile(testFile, testData, 0644); err != nil {
-		t.Fatalf("cannot write testData to direcotry %s: %v", pkiCacheDir, err)
+		t.Fatalf("cannot write testData to directory %s: %v", pkiCacheDir, err)
 	}
 }

@@ -16,7 +16,6 @@
 package option
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -39,25 +38,35 @@ func TestCacheOn(t *testing.T) {
 
 	var exitStatus exitCode
 	var err error
+	assert := assert.New(t)
+
 	f := Cache()
 	exitStatus, err = f(cacheOn.(*PkiInitOption))
-
-	cacheEmpty, emptyErr := isDirEmpty(getPkiCacheDirEnv())
-
-	assert := assert.New(t)
-	assert.Equal(normal, exitStatus)
 	assert.Nil(err)
+	assert.Equal(normal, exitStatus)
+
+	cacheDir, err := getCacheDir()
+	assert.Nil(err)
+
+	cacheEmpty, emptyErr := isDirEmpty(cacheDir)
 	assert.Nil(emptyErr)
 	assert.False(cacheEmpty)
 
-	generatedDirPath := filepath.Join(os.Getenv(envXdgRuntimeDir), pkiInitGeneratedDir)
+	workDir, err := getWorkDir()
+	if err != nil {
+		t.Errorf("Error getting workdir, %v", err)
+	}
+	generatedDirPath := filepath.Join(workDir, pkiInitGeneratedDir)
 	caPrivateKeyFile := filepath.Join(generatedDirPath, caServiceName, tlsSecretFileName)
 	if _, checkErr := os.Stat(caPrivateKeyFile); checkErr == nil {
 		// means found the file caPrivateKeyFile
 		assert.Fail("CA private key are not removed!")
 	}
 
-	deployEmpty, emptyErr := isDirEmpty(pkiInitDeployDir)
+	deployDir, err := getDeployDir()
+	assert.Nil(err)
+
+	deployEmpty, emptyErr := isDirEmpty(deployDir)
 	assert.Nil(emptyErr)
 	assert.False(deployEmpty)
 }
@@ -76,32 +85,40 @@ func TestCacheDirNotEmpty(t *testing.T) {
 
 	var exitStatus exitCode
 	var err error
+	assert := assert.New(t)
+
 	f := Cache()
 	exitStatus, err = f(cacheOn.(*PkiInitOption))
-
-	cacheEmpty, emptyErr := isDirEmpty(getPkiCacheDirEnv())
-
-	assert := assert.New(t)
-	assert.Equal(normal, exitStatus)
 	assert.Nil(err)
+	assert.Equal(normal, exitStatus)
+
+	cacheDir, err := getCacheDir()
+	assert.Nil(err)
+
+	cacheEmpty, emptyErr := isDirEmpty(cacheDir)
 	assert.Nil(emptyErr)
 	assert.False(cacheEmpty)
 
-	generatedDirPath := filepath.Join(os.Getenv(envXdgRuntimeDir), pkiInitGeneratedDir)
+	workDir, err := getWorkDir()
+	assert.Nil(err)
+
+	generatedDirPath := filepath.Join(workDir, pkiInitGeneratedDir)
 	// now we move the whole generated directory and leave the cache dir untouched
 	os.RemoveAll(generatedDirPath)
 
 	// call the cache option again:
 	exitStatus, err = f(cacheOn.(*PkiInitOption))
-
-	cacheEmpty, emptyErr = isDirEmpty(getPkiCacheDirEnv())
-
-	assert.Equal(normal, exitStatus)
 	assert.Nil(err)
+	assert.Equal(normal, exitStatus)
+
+	cacheEmpty, emptyErr = isDirEmpty(cacheDir)
 	assert.Nil(emptyErr)
 	assert.False(cacheEmpty)
 
-	deployEmpty, emptyErr := isDirEmpty(pkiInitDeployDir)
+	deployDir, err := getDeployDir()
+	assert.Nil(err)
+
+	deployEmpty, emptyErr := isDirEmpty(deployDir)
 	assert.Nil(emptyErr)
 	assert.False(deployEmpty)
 }
@@ -156,53 +173,50 @@ func setupCacheTest(t *testing.T) func() {
 		t.Fatalf("cannot copy %s for the test: %v", configTomlFile, err)
 	}
 
-	_ = setup.Init()
-
-	origScratchDir := pkiInitScratchDir
-	testScratchDir, tempDirErr := ioutil.TempDir(curDir, "scratch")
-	if tempDirErr != nil {
-		t.Fatalf("cannot create temporary scratch directory for the test: %v", tempDirErr)
+	err = setup.Init()
+	if err != nil {
+		t.Fatalf("Failed to init security-secrets-setup: %v", err)
 	}
-	pkiInitScratchDir = filepath.Base(testScratchDir)
 
-	origGeneratedDir := pkiInitGeneratedDir
-	testGeneratedDir, tempDirErr := ioutil.TempDir(curDir, "generated")
-	if tempDirErr != nil {
-		t.Fatalf("cannot create temporary generated directory for the test: %v", tempDirErr)
+	os.Unsetenv(envXdgRuntimeDir) // unset env var, so it uses the config toml
+	oldConfig := setup.Configuration
+
+	testWorkDir, err := getWorkDir()
+	if err != nil {
+		t.Fatalf("Error getting work dir for the test: %v", err)
 	}
-	pkiInitGeneratedDir = filepath.Base(testGeneratedDir)
 
-	origEnvXdgRuntimeDir := os.Getenv(envXdgRuntimeDir)
-	// change it to the current working directory
-	os.Setenv(envXdgRuntimeDir, curDir)
-
-	origEnvPkiCache := os.Getenv(envPkiCache)
-	// use curDir/cache as the working directory for test
-	pkiCacheDir := filepath.Join(curDir, "cache")
-	os.Setenv(envPkiCache, pkiCacheDir)
-	_ = createDirectoryIfNotExists(pkiCacheDir)
-
-	origDeployDir := pkiInitDeployDir
-	tempDir, tempDirErr := ioutil.TempDir(curDir, "deploytest")
-	if tempDirErr != nil {
-		t.Fatalf("cannot create temporary scratch directory for the test: %v", tempDirErr)
+	testScratchDir := filepath.Join(testWorkDir, pkiInitScratchDir)
+	if err := createDirectoryIfNotExists(testScratchDir); err != nil {
+		t.Fatalf("cannot create scratch dir %s for the test: %v", testScratchDir, err)
 	}
-	pkiInitDeployDir = tempDir
+
+	testGeneratedDir := filepath.Join(testWorkDir, pkiInitGeneratedDir)
+	if err := createDirectoryIfNotExists(testGeneratedDir); err != nil {
+		t.Fatalf("cannot create generated dir %s for the test: %v", testGeneratedDir, err)
+	}
+
+	pkiCacheDir := "./cachetest"
+	if err := createDirectoryIfNotExists(pkiCacheDir); err != nil {
+		t.Fatalf("cannot create cache dir %s for the test: %v", pkiCacheDir, err)
+	}
+
+	pkiInitDeployDir := "./deploytest"
+	if err := createDirectoryIfNotExists(pkiInitDeployDir); err != nil {
+		t.Fatalf("cannot create deploy dir %s for the test: %v", pkiInitDeployDir, err)
+	}
 
 	return func() {
 		// cleanup
 		os.Remove(jsonVaultFile)
 		os.Remove(jsonKongFile)
-		os.Setenv(envXdgRuntimeDir, origEnvXdgRuntimeDir)
-		os.Setenv(envPkiCache, origEnvPkiCache)
-		os.RemoveAll(pkiInitDeployDir)
+		os.RemoveAll(testWorkDir)
 		os.RemoveAll(pkiCacheDir)
 		os.RemoveAll(testScratchDir)
 		os.RemoveAll(testGeneratedDir)
+		os.RemoveAll(pkiInitDeployDir)
 		os.RemoveAll(testResourceDir)
-		pkiInitScratchDir = origScratchDir
-		pkiInitGeneratedDir = origGeneratedDir
-		pkiInitDeployDir = origDeployDir
+		setup.Configuration = oldConfig
 		vaultJSONPkiSetupExist = true
 		kongJSONPkiSetupExist = true
 	}

@@ -17,8 +17,6 @@
 package option
 
 import (
-	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -35,35 +33,43 @@ func TestGenerate(t *testing.T) {
 	vaultJSONPkiSetupExist = true
 	kongJSONPkiSetupExist = true
 	tearDown := setupGenerateTest(t)
-	defer tearDown(t)
+	defer tearDown()
 
 	options := PkiInitOption{
 		GenerateOpt: true,
 	}
+
+	assert := assert.New(t)
+
 	generateOn, _, _ := NewPkiInitOption(options)
 	generateOn.(*PkiInitOption).executor = testExecutor
 
 	f := Generate()
 	exitCode, err := f(generateOn.(*PkiInitOption))
-
-	assert := assert.New(t)
 	assert.Equal(normal, exitCode)
 	assert.Nil(err)
-	generatedDirPath := filepath.Join(getXdgRuntimeDir(), pkiInitGeneratedDir)
+
+	workDir, err := getWorkDir()
+	assert.Nil(err)
+
+	generatedDirPath := filepath.Join(workDir, pkiInitGeneratedDir)
 	caPrivateKeyFile := filepath.Join(generatedDirPath, caServiceName, tlsSecretFileName)
 	fileExists := checkIfFileExists(caPrivateKeyFile)
 	assert.False(fileExists, "CA private key are not removed!")
 
-	deployEmpty, emptyErr := isDirEmpty(pkiInitDeployDir)
+	deployDir, err := getDeployDir()
+	assert.Nil(err)
+
+	deployEmpty, emptyErr := isDirEmpty(deployDir)
 	assert.Nil(emptyErr)
 	assert.False(deployEmpty)
 
 	// check sentinel file is present when deploy is done
-	sentinel := filepath.Join(pkiInitDeployDir, caServiceName, pkiInitFilePerServiceComplete)
+	sentinel := filepath.Join(deployDir, caServiceName, pkiInitFilePerServiceComplete)
 	fileExists = checkIfFileExists(sentinel)
 	assert.True(fileExists, "sentinel file does not exist for CA service!")
 
-	sentinel = filepath.Join(pkiInitDeployDir, vaultServiceName, pkiInitFilePerServiceComplete)
+	sentinel = filepath.Join(deployDir, vaultServiceName, pkiInitFilePerServiceComplete)
 	fileExists = checkIfFileExists(sentinel)
 	assert.True(fileExists, "sentinel file does not exist for vault service!")
 }
@@ -72,7 +78,7 @@ func TestGenerateWithVaultJSONPkiSetupMissing(t *testing.T) {
 	vaultJSONPkiSetupExist = false // this will lead to missing json
 	kongJSONPkiSetupExist = true
 	tearDown := setupGenerateTest(t)
-	defer tearDown(t)
+	defer tearDown()
 
 	options := PkiInitOption{
 		GenerateOpt: true,
@@ -92,7 +98,7 @@ func TestGenerateWithKongJSONPkiSetupMissing(t *testing.T) {
 	kongJSONPkiSetupExist = false // this will lead to missing json
 	vaultJSONPkiSetupExist = true
 	tearDown := setupGenerateTest(t)
-	defer tearDown(t)
+	defer tearDown()
 
 	options := PkiInitOption{
 		GenerateOpt: true,
@@ -112,7 +118,7 @@ func TestGenerateOff(t *testing.T) {
 	vaultJSONPkiSetupExist = true
 	kongJSONPkiSetupExist = true
 	tearDown := setupGenerateTest(t)
-	defer tearDown(t)
+	defer tearDown()
 
 	options := PkiInitOption{
 		GenerateOpt: false,
@@ -126,18 +132,7 @@ func TestGenerateOff(t *testing.T) {
 	assert.Nil(err)
 }
 
-func TestGetXdgRuntimeDir(t *testing.T) {
-	origEnvVal := os.Getenv(envXdgRuntimeDir)
-	os.Unsetenv(envXdgRuntimeDir)
-	runTimeDir := getXdgRuntimeDir()
-	assert.Equal(t, defaultXdgRuntimeDir, runTimeDir)
-
-	os.Setenv(envXdgRuntimeDir, origEnvVal)
-	runTimeDir = getXdgRuntimeDir()
-	assert.Equal(t, origEnvVal, runTimeDir)
-}
-
-func setupGenerateTest(t *testing.T) func(t *testing.T) {
+func setupGenerateTest(t *testing.T) func() {
 	testExecutor = &mockOptionsExecutor{}
 
 	curDir, err := os.Getwd()
@@ -170,47 +165,46 @@ func setupGenerateTest(t *testing.T) func(t *testing.T) {
 		t.Fatalf("cannot copy %s for the test: %v", configTomlFile, err)
 	}
 
-	setup.Init()
-
-	origEnvXdgRuntimeDir := getXdgRuntimeDir()
-	fmt.Println("Env XDG_RUNTIME_DIR: ", origEnvXdgRuntimeDir)
-
-	// change it to the current working directory
-	os.Setenv(envXdgRuntimeDir, curDir)
-
-	origScratchDir := pkiInitScratchDir
-	testScratchDir, tempDirErr := ioutil.TempDir(curDir, "scratch")
-	if tempDirErr != nil {
-		t.Fatalf("cannot create temporary scratch directory for the test: %v", tempDirErr)
+	err = setup.Init()
+	if err != nil {
+		t.Fatalf("Failed to init security-secrets-setup: %v", err)
 	}
-	pkiInitScratchDir = filepath.Base(testScratchDir)
 
-	origGeneratedDir := pkiInitGeneratedDir
-	testGeneratedDir, tempDirErr := ioutil.TempDir(curDir, "generated")
-	if tempDirErr != nil {
-		t.Fatalf("cannot create temporary generated directory for the test: %v", tempDirErr)
+	origEnvVal := os.Getenv(envXdgRuntimeDir)
+	os.Unsetenv(envXdgRuntimeDir) // unset env var, so it uses the config toml
+	oldConfig := setup.Configuration
+
+	testWorkDir, err := getWorkDir()
+	if err != nil {
+		t.Fatalf("Error getting work dir for the test: %v", err)
 	}
-	pkiInitGeneratedDir = filepath.Base(testGeneratedDir)
 
-	origDeployDir := pkiInitDeployDir
-	tempDir, tempDirErr := ioutil.TempDir(curDir, "deploytest")
-	if tempDirErr != nil {
-		t.Fatalf("cannot create temporary scratch directory for the test: %v", tempDirErr)
+	testScratchDir := filepath.Join(testWorkDir, pkiInitScratchDir)
+	if err := createDirectoryIfNotExists(testScratchDir); err != nil {
+		t.Fatalf("cannot create scratch dir %s for the test: %v", testScratchDir, err)
 	}
-	pkiInitDeployDir = tempDir
 
-	return func(t *testing.T) {
+	testGeneratedDir := filepath.Join(testWorkDir, pkiInitGeneratedDir)
+	if err := createDirectoryIfNotExists(testGeneratedDir); err != nil {
+		t.Fatalf("cannot create generated dir %s for the test: %v", testGeneratedDir, err)
+	}
+
+	pkiInitDeployDir := "./deploytest"
+	if err := createDirectoryIfNotExists(pkiInitDeployDir); err != nil {
+		t.Fatalf("cannot create deploy dir %s for the test: %v", pkiInitDeployDir, err)
+	}
+
+	return func() {
 		// cleanup
 		os.Remove(jsonVaultFile)
 		os.Remove(jsonKongFile)
-		os.Setenv(envXdgRuntimeDir, origEnvXdgRuntimeDir)
+		os.RemoveAll(testWorkDir)
 		os.RemoveAll(testScratchDir)
 		os.RemoveAll(testGeneratedDir)
 		os.RemoveAll(pkiInitDeployDir)
 		os.RemoveAll(testResourceDir)
-		pkiInitScratchDir = origScratchDir
-		pkiInitGeneratedDir = origGeneratedDir
-		pkiInitDeployDir = origDeployDir
+		os.Setenv(envXdgRuntimeDir, origEnvVal)
+		setup.Configuration = oldConfig
 		vaultJSONPkiSetupExist = true
 		kongJSONPkiSetupExist = true
 	}
