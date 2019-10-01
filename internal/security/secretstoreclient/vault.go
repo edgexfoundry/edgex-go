@@ -47,8 +47,7 @@ func NewSecretStoreClient(logger logger.LoggingClient, r internal.HttpCaller, s 
 }
 
 func (vc *vaultClient) HealthCheck() (statusCode int, err error) {
-	empty := struct{}{}
-	resp, err := vc.commonJSONRequest(nil, http.MethodGet, VaultHealthAPI, &empty)
+	resp, err := vc.commonJSONRequest(nil, http.MethodGet, VaultHealthAPI, struct{}{})
 	if err != nil {
 		vc.logger.Error(fmt.Sprintf("failed on checking status of secret store: %s", err.Error()))
 		return 0, err
@@ -68,9 +67,9 @@ func (vc *vaultClient) Init(config SecretServiceInfo, vmkWriter io.Writer) (stat
 	vc.logger.Info(fmt.Sprintf("vault init strategy (SSS parameters): shares=%d threshold=%d", initRequest.SecretShares, initRequest.SecretThreshold))
 
 	resp, err := vc.commonJSONRequest(nil, http.MethodPost, VaultInitAPI, &initRequest)
-	return vc.processResponse(resp, err, "initialize secret store", http.StatusOK, &initResp, func() error {
-		return json.NewEncoder(vmkWriter).Encode(initResp)
-	})
+	code, err := vc.processResponse(resp, err, "initialize secret store", http.StatusOK, &initResp)
+	err = json.NewEncoder(vmkWriter).Encode(initResp) // Write the init response to disk
+	return code, err
 }
 
 func (vc *vaultClient) Unseal(config SecretServiceInfo, vmkReader io.Reader) (statusCode int, err error) {
@@ -121,12 +120,12 @@ func (vc *vaultClient) InstallPolicy(token string, policyName string, policyDocu
 	path := fmt.Sprintf(CreatePolicyPath, url.PathEscape(policyName))
 	request := UpdateACLPolicyRequest{Policy: policyDocument}
 	resp, err := vc.commonJSONRequest(&token, http.MethodPut, path, request)
-	return vc.processResponse(resp, err, "install policy", http.StatusNoContent, nil, noop)
+	return vc.processResponse(resp, err, "install policy", http.StatusNoContent, nil)
 }
 
 func (vc *vaultClient) CreateToken(token string, parameters map[string]interface{}, response interface{}) (statusCode int, err error) {
 	resp, err := vc.commonJSONRequest(&token, http.MethodPost, CreateTokenAPI, parameters)
-	return vc.processResponse(resp, err, "create token", http.StatusOK, response, noop)
+	return vc.processResponse(resp, err, "create token", http.StatusOK, response)
 }
 
 func (vc *vaultClient) buildURL(path string) string {
@@ -171,8 +170,8 @@ func (vc *vaultClient) commonRequest(token *string, method string, path string, 
 // this function will attempt to decode the object
 // delegate is a callback function called to handle the decoded response
 func (vc *vaultClient) processResponse(resp *http.Response, responseError error,
-	operationDescription string, expectedStatusCode int, responseObject interface{},
-	delegate func() error) (statusCode int, err error) {
+	operationDescription string, expectedStatusCode int,
+	responseObject interface{}) (statusCode int, err error) {
 
 	if responseError != nil {
 		vc.logger.Error(fmt.Sprintf("unable to make request to %s failed: %s", operationDescription, err.Error()))
@@ -185,7 +184,7 @@ func (vc *vaultClient) processResponse(resp *http.Response, responseError error,
 		return resp.StatusCode, err
 	}
 
-	if responseObject != nil && resp.StatusCode == http.StatusOK {
+	if responseObject != nil {
 		err = json.NewDecoder(resp.Body).Decode(responseObject)
 		if err != nil {
 			vc.logger.Error(fmt.Sprintf("failed to parse response body: %s", err.Error()))
@@ -193,17 +192,6 @@ func (vc *vaultClient) processResponse(resp *http.Response, responseError error,
 		}
 	}
 
-	err = delegate()
-	if err != nil {
-		vc.logger.Error(fmt.Sprintf("failed %s while executing delegate function: %s", operationDescription, err.Error()))
-		return resp.StatusCode, err
-	}
-
 	vc.logger.Info(fmt.Sprintf("successfully made request to %s", operationDescription))
 	return resp.StatusCode, nil
-}
-
-// a simple function that returns a nil error object
-func noop() error {
-	return nil
 }
