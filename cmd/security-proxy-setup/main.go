@@ -66,6 +66,7 @@ func main() {
 	startup.Bootstrap(params, proxy.Retry, logBeforeInit)
 
 	req := proxy.NewRequestor(insecureSkipVerify, proxy.Configuration.Writable.RequestTimeout)
+
 	s := proxy.NewService(req)
 
 	err := s.CheckProxyServiceStatus()
@@ -80,7 +81,7 @@ func main() {
 			os.Exit(1)
 		}
 		cert := proxy.NewCertificateLoader(req, proxy.Configuration.SecretService.CertPath, proxy.Configuration.SecretService.TokenPath)
-		err = s.Init(cert)
+		err = s.Init(cert) // Where the Service init is called
 		if err != nil {
 			proxy.LoggingClient.Error(err.Error())
 			os.Exit(1)
