@@ -44,7 +44,7 @@ func NewMetrics(executor interfaces.CommandExecutor, loggingClient logger.Loggin
 func (e metrics) Get(services []string, ctx context.Context) interface{} {
 	var result []interface{}
 	for _, serviceName := range services {
-		r, err := e.executor(e.executorPath, serviceName, system.Metrics)
+		r, err := e.executor(e.executorPath, serviceName, system.Metrics, []string{})
 		if err != nil {
 			result = append(result, system.Failure(serviceName, system.Metrics, UnknownExecutorType, err.Error()))
 			continue
