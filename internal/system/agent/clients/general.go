@@ -12,7 +12,7 @@
  * the License.
  *******************************************************************************/
 
-package agent
+package clients
 
 import (
 	"sync"
@@ -20,33 +20,36 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/general"
 )
 
-// clientMap defines internal map structure to track multiple instances of general.GeneralClient.
-type clientMap map[string]general.GeneralClient
+// GeneralType is an alias for general.GeneralClient and hides implementation detail.
+type GeneralType general.GeneralClient
 
-// GeneralClients contains implementation structures for tracking multiple instances of general.GeneralClient.
-type GeneralClients struct {
+// clientMap defines internal map structure to track multiple instances of general.GeneralClient.
+type clientMap map[string]GeneralType
+
+// General contains implementation structures for tracking multiple instances of GeneralType.
+type General struct {
 	clients clientMap
 	mutex   sync.RWMutex
 }
 
-// NewGeneralClients is a factory function that returns an initialized GeneralClients receiver struct.
-func NewGeneralClients() *GeneralClients {
-	return &GeneralClients{
+// NewGeneral is a factory function that returns an initialized General receiver struct.
+func NewGeneral() *General {
+	return &General{
 		clients: make(clientMap),
 		mutex:   sync.RWMutex{},
 	}
 }
 
-// Get returns the general.GeneralClient and ok = true for the requested client name if it exists, otherwise ok = false.
-func (c *GeneralClients) Get(clientName string) (client general.GeneralClient, ok bool) {
+// Get returns the GeneralType and ok = true for the requested client name if it exists, otherwise ok = false.
+func (c *General) Get(clientName string) (client GeneralType, ok bool) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	client, ok = c.clients[clientName]
 	return
 }
 
-// Set updates the list of clients to ensure the provided clientName key contains the provided general.GeneralClient value.
-func (c *GeneralClients) Set(clientName string, value general.GeneralClient) {
+// Set updates the list of clients to ensure the provided clientName key contains the provided GeneralType value.
+func (c *General) Set(clientName string, value GeneralType) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	c.clients[clientName] = value

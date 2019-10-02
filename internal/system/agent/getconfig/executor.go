@@ -21,7 +21,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/endpoint"
-	"github.com/edgexfoundry/edgex-go/internal/system/agent"
+	agentClients "github.com/edgexfoundry/edgex-go/internal/system/agent/clients"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/general"
@@ -33,7 +33,7 @@ import (
 
 // executor contains references to dependencies required to execute a get configuration request.
 type executor struct {
-	genClients      *agent.GeneralClients
+	genClients      *agentClients.General
 	registryClient  registry.Client
 	loggingClient   logger.LoggingClient
 	serviceProtocol string
@@ -41,7 +41,7 @@ type executor struct {
 
 // NewExecutor is a factory function that returns an initialized executor struct.
 func NewExecutor(
-	genClients *agent.GeneralClients,
+	genClients *agentClients.General,
 	registryClient registry.Client,
 	loggingClient logger.LoggingClient,
 	serviceProtocol string) *executor {
