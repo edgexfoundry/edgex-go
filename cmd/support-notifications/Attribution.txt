@@ -111,11 +111,14 @@ https://github.com/davecgh/go-spew/blob/master/LICENSE
 edgexfoundry/go-mod-core-contracts (Apache 2.0) https://github.com/edgexfoundry/go-mod-core-contracts
 https://github.com/edgexfoundry/go-mod-core-contracts/blob/master/LICENSE
 
+edgexfoundry/go-mod-messaging (Apache 2.0) https://github.com/edgexfoundry/go-mod-messaging
+https://github.com/edgexfoundry/go-mod-messaging/blob/master/LICENSE
+
 edgexfoundry/go-mod-registry (Apache 2.0) https://github.com/edgexfoundry/go-mod-registry
 https://github.com/edgexfoundry/go-mod-registry/blob/master/LICENSE
 
-edgexfoundry/go-mod-messaging (Apache 2.0) https://github.com/edgexfoundry/go-mod-messaging
-https://github.com/edgexfoundry/go-mod-messaging/blob/master/LICENSE
+edgexfoundry/go-mod-secrets (Apache 2.0) https://github.com/edgexfoundry/go-mod-secrets
+https://github.com/edgexfoundry/go-mod-secrets/blob/master/LICENSE
 
 gorilla/context (BSD-3) https://github.com/gorilla/context
 https://github.com/gorilla/context/blob/master/LICENSE

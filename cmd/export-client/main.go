@@ -48,6 +48,7 @@ func main() {
 		client.Configuration,
 		startupTimer,
 		[]interfaces.BootstrapHandler{
+			handlers.SecretClientBootstrapHandler,
 			client.NewServiceInit(&httpServer).BootstrapHandler,
 			telemetry.BootstrapHandler,
 			httpServer.Handler,
