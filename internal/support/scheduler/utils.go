@@ -14,24 +14,9 @@
 package scheduler
 
 import (
-	"regexp"
 	"strconv"
 	"time"
 )
-
-const (
-	frequencyPattern = `^P(\d+Y)?(\d+M)?(\d+D)?(T(\d+H)?(\d+M)?(\d+S)?)?$`
-)
-
-func isFrequencyValid(frequency string) bool {
-	matched, _ := regexp.MatchString(frequencyPattern, frequency)
-	if matched {
-		if frequency == "P" || frequency == "PT" {
-			matched = false
-		}
-	}
-	return matched
-}
 
 // Convert millisecond string to Time
 func msToTime(ms string) (time.Time, error) {
@@ -46,6 +31,26 @@ func msToTime(ms string) (time.Time, error) {
 	}
 
 	return time.Unix(0, msInt*int64(time.Millisecond)), nil
+}
+
+// Frequency indicates how often the specific resource needs to be polled.
+// It represents as a duration string.
+//
+// Nanosecond Duration = 1
+// Microsecond = 1000 * Nanosecond
+// Millisecond = 1000 * Microsecond
+// Second = 1000 * Millisecond
+// Minute = 60 * Second
+// Hour = 60 * Minute
+func parseFrequency(durationStr string) (time.Duration, error) {
+
+	// check Frequency
+	timeDuration, err := time.ParseDuration(durationStr)
+	if err != nil {
+		return 24 * time.Hour, err // default time.Duration w/error
+	}
+
+	return timeDuration, nil
 }
 
 // Scheduler Queue Client

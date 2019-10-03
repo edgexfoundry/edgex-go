@@ -42,7 +42,7 @@ File = '/edgex/logs/edgex-support-scheduler.log'
     [Intervals.Midnight]
     Name = 'midnight'
     Start = '20180101T000000'
-    Frequency = 'P1D'
+    Frequency = '24h'
 
 [IntervalActions]
     [IntervalActions.ScrubPushed]

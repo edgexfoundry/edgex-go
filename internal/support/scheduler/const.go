@@ -16,22 +16,21 @@ package scheduler
 const (
 
 	/* -------------- Constants for Scheduler -------------------- */
-	ID                   = "id"
-	NAME                 = "name"
-	TARGETNAME           = "targetname"
-	INTERVALACTION       = "intervalaction"
-	INTERVAL             = "interval"
-	LABEL                = "label"
-	YAML                 = "yaml"
-	COMMAND              = "command"
-	KEY                  = "key"
-	VALUE                = "value"
-	UNLOCKED             = "UNLOCKED"
-	ENABLED              = "ENABLED"
-	SCHEDULER_TIMELAYOUT = "20060102T150405" /** Scheduler **/
-	TIMELAYOUT           = "20060102T150405" /** Scheduler **/
-	SCRUB                = "scrub"
-	TARGET               = "target"
+	ID             = "id"
+	NAME           = "name"
+	TARGETNAME     = "targetname"
+	INTERVALACTION = "intervalaction"
+	INTERVAL       = "interval"
+	LABEL          = "label"
+	YAML           = "yaml"
+	COMMAND        = "command"
+	KEY            = "key"
+	VALUE          = "value"
+	UNLOCKED       = "UNLOCKED"
+	ENABLED        = "ENABLED"
+	TIMELAYOUT     = "20060102T150405"
+	SCRUB          = "scrub"
+	TARGET         = "target"
 
 	/* ---------------- URL PARAM NAMES -----------------------*/
 	ContentTypeKey       = "Content-Type"
