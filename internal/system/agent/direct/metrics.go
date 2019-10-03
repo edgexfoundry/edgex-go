@@ -25,7 +25,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/endpoint"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
 	"github.com/edgexfoundry/edgex-go/internal/system"
-	"github.com/edgexfoundry/edgex-go/internal/system/agent"
+	agentClients "github.com/edgexfoundry/edgex-go/internal/system/agent/clients"
 	"github.com/edgexfoundry/edgex-go/internal/system/executor"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
@@ -39,7 +39,7 @@ import (
 // metrics contains references to dependencies required to handle the metrics via direct service use case.
 type metrics struct {
 	loggingClient   logger.LoggingClient
-	genClients      *agent.GeneralClients
+	genClients      *agentClients.General
 	registryClient  registry.Client
 	serviceProtocol string
 }
@@ -47,7 +47,7 @@ type metrics struct {
 // NewMetrics is a factory function that returns an initialized metrics receiver struct.
 func NewMetrics(
 	loggingClient logger.LoggingClient,
-	genClients *agent.GeneralClients,
+	genClients *agentClients.General,
 	registryClient registry.Client,
 	serviceProtocol string) *metrics {
 

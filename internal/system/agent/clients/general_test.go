@@ -12,7 +12,7 @@
  * the License.
  *******************************************************************************/
 
-package agent
+package clients
 
 import (
 	"testing"
@@ -26,7 +26,7 @@ import (
 )
 
 func TestEmptyGetReturnsExpectedValues(t *testing.T) {
-	sut := NewGeneralClients()
+	sut := NewGeneral()
 
 	result, ok := sut.Get("nonExistentKey")
 
@@ -37,7 +37,7 @@ func TestEmptyGetReturnsExpectedValues(t *testing.T) {
 func TestGetForKnownReturnsExpectedValues(t *testing.T) {
 	const clientName = "clientName"
 
-	sut := NewGeneralClients()
+	sut := NewGeneral()
 	client := general.NewGeneralClient(types.EndpointParams{}, endpoint.Endpoint{RegistryClient: nil})
 	sut.Set(clientName, client)
 

@@ -23,6 +23,8 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/endpoint"
+	"github.com/edgexfoundry/edgex-go/internal/system/agent/clients"
+	agentConfig "github.com/edgexfoundry/edgex-go/internal/system/agent/config"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/general"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
@@ -31,33 +33,16 @@ import (
 	"github.com/edgexfoundry/go-mod-registry/registry"
 )
 
-var Configuration = &ConfigurationStruct{}
-var GenClients *GeneralClients
+var Configuration = &agentConfig.ConfigurationStruct{}
+var GenClients *clients.General
 var LoggingClient logger.LoggingClient
 var RegistryClient registry.Client
-
-func initializeClients(useRegistry bool) {
-	GenClients = NewGeneralClients()
-	for serviceKey, serviceName := range config.ListDefaultServices() {
-		GenClients.Set(
-			serviceKey,
-			general.NewGeneralClient(
-				types.EndpointParams{
-					ServiceKey:  serviceKey,
-					Path:        "/",
-					UseRegistry: useRegistry,
-					Url:         Configuration.Clients[serviceName].Url(),
-					Interval:    internal.ClientMonitorDefault,
-				},
-				endpoint.Endpoint{RegistryClient: &RegistryClient}))
-	}
-}
 
 func BootstrapHandler(
 	wg *sync.WaitGroup,
 	ctx context.Context,
 	startupTimer startup.Timer,
-	config bootstrap.Configuration,
+	configuration bootstrap.Configuration,
 	logging logger.LoggingClient,
 	registry registry.Client) bool {
 
@@ -66,7 +51,20 @@ func BootstrapHandler(
 	RegistryClient = registry
 
 	// initialize clients required by service.
-	initializeClients(registry != nil)
+	GenClients = clients.NewGeneral()
+	for serviceKey, serviceName := range config.ListDefaultServices() {
+		GenClients.Set(
+			serviceKey,
+			general.NewGeneralClient(
+				types.EndpointParams{
+					ServiceKey:  serviceKey,
+					Path:        "/",
+					UseRegistry: registry != nil,
+					Url:         Configuration.Clients[serviceName].Url(),
+					Interval:    internal.ClientMonitorDefault,
+				},
+				endpoint.Endpoint{RegistryClient: &registry}))
+	}
 
 	return true
 }

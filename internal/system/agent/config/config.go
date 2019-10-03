@@ -12,7 +12,7 @@
  * the License.
  *******************************************************************************/
 
-package agent
+package config
 
 import (
 	"github.com/edgexfoundry/go-mod-secrets/pkg/providers/vault"
