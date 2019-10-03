@@ -17,6 +17,8 @@ package secretstoreclient
 
 import (
 	"encoding/json"
+	"errors"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -205,4 +207,43 @@ func TestCreateToken(t *testing.T) {
 	assert.Nil(err)
 	assert.Equal(http.StatusOK, code)
 	assert.Equal("f00341c1-fad5-f6e6-13fd-235617f858a1", response["request_id"].(string))
+}
+
+func TestProcessResponseError(t *testing.T) {
+	// Arrange
+	assert := assert.New(t)
+	mockLogger := logger.MockLogger{}
+
+	vc := NewSecretStoreClient(mockLogger, NewRequestor(mockLogger).Insecure(), "https", "dummyhost")
+	realvc := (vc).(*vaultClient)
+	resp := http.Response{StatusCode: http.StatusOK}
+	responseError := errors.New("fake error")
+
+	// Act
+	code, err := realvc.processResponse(&resp, responseError, "myop", http.StatusOK, nil)
+
+	// Assert
+	assert.EqualError(err, "fake error")
+	assert.Equal(0, code)
+}
+
+func TestProcessResponseStatusCodeUnexpected(t *testing.T) {
+	// Arrange
+	assert := assert.New(t)
+	mockLogger := logger.MockLogger{}
+
+	vc := NewSecretStoreClient(mockLogger, NewRequestor(mockLogger).Insecure(), "https", "dummyhost")
+	realvc := (vc).(*vaultClient)
+	resp := http.Response{
+		Body:       ioutil.NopCloser(strings.NewReader("")),
+		Status:     "404 Not Found",
+		StatusCode: http.StatusNotFound,
+	}
+
+	// Act
+	code, err := realvc.processResponse(&resp, nil, "myop", http.StatusOK, nil)
+
+	// Assert
+	assert.EqualError(err, "request to myop failed with status: 404 Not Found")
+	assert.Equal(http.StatusNotFound, code)
 }
