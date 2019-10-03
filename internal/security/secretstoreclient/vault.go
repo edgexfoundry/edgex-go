@@ -96,7 +96,8 @@ func (vc *vaultClient) Unseal(config SecretServiceInfo, vmkReader io.Reader) (st
 		defer resp.Body.Close()
 
 		if resp.StatusCode != http.StatusOK {
-			vc.logger.Error(fmt.Sprintf("vault unseal request failed with status code: %s", resp.Status))
+			err := fmt.Errorf("vault unseal request failed with status code: %s", resp.Status)
+			vc.logger.Error(err.Error())
 			return resp.StatusCode, err
 		}
 

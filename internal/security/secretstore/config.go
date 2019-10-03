@@ -16,42 +16,17 @@
 package secretstore
 
 import (
-	"fmt"
-	"net/url"
-
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
+	"github.com/edgexfoundry/edgex-go/internal/security/secretstoreclient"
 )
 
 type ConfigurationStruct struct {
 	Writable      WritableInfo
 	Logging       config.LoggingInfo
-	SecretService SecretServiceInfo
+	SecretService secretstoreclient.SecretServiceInfo
 }
 
 type WritableInfo struct {
 	LogLevel string
 	Title    string
-}
-
-type SecretServiceInfo struct {
-	Scheme               string
-	Server               string
-	Port                 int
-	CertPath             string
-	CaFilePath           string
-	CertFilePath         string
-	KeyFilePath          string
-	TokenFolderPath      string
-	TokenFile            string
-	VaultSecretShares    int
-	VaultSecretThreshold int
-}
-
-func (s SecretServiceInfo) GetSecretSvcBaseURL() string {
-	url := &url.URL{
-		Scheme: s.Scheme,
-		Host:   fmt.Sprintf("%s:%v", s.Server, s.Port),
-		Path:   "/",
-	}
-	return url.String()
 }

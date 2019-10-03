@@ -60,31 +60,31 @@ Common Options:
 var securityProxySetupUsageStr = `
 Usage: %s [options]
 Server Options:	
-    -p, --profile <name>            Indicate configuration profile other than default
-    -r, --registry                  Indicates service should use Registry
+    -p, --profile <name>              Indicate configuration profile other than default
+    -r, --registry                    Indicates service should use Registry
 	--insecureSkipVerify=true/false   Indicates if skipping the server side SSL cert verification, similar to -k of curl
-	--init=true/false               Indicates if security service should be initialized
-	--reset=true/false              Indicate if security service should be reset to initialization status
-	--useradd=<username>            Create an account and return JWT
-	--group=<groupname>             Group name the user belongs to
-	--userdel=<username>            Delete an account		
-	--configfile=<file.toml>        Use a different config file (default: res/configuration.toml)
+	--init=true/false                 Indicates if security service should be initialized
+	--reset=true/false                Indicate if security service should be reset to initialization status
+	--useradd=<username>              Create an account and return JWT
+	--group=<groupname>               Group name the user belongs to
+	--userdel=<username>              Delete an account
+	--configfile=<file.toml>          Use a different config file (default: res/configuration.toml)
 
 Common Options:
-	-h, --help                      Show this message
+	-h, --help                        Show this message
 `
 
 var securitySecretStoreSetupUsageStr = `
 Usage: %s [options]
 Server Options:
-	-p, --profile <name>            Indicate configuration profile other than default
-	-r, --registry                  Indicates service should use Registry
-	--insecureSkipVerify=true/false			Indicates if skipping the server side SSL cert verifcation, similar to -k of curl
-	--init=true/false				Indicates if security service should be initialized
-	--configfile=<file.toml>			Use a different config file (default: res/configuration.toml)
-	--wait=<time in seconds>		Indicates how long the program will pause between the vault initialization until it succeeds
+	-p, --profile <name>                Indicate configuration profile other than default
+	-r, --registry                      Indicates service should use Registry
+	--insecureSkipVerify=true/false     Indicates if skipping the server side SSL cert verifcation, similar to -k of curl
+	--init=true/false                   Indicates if security service should be initialized
+	--configfile=<file.toml>            Use a different config file (default: res/configuration.toml)
+	--vaultInterval=<seconds>           Indicates how long the program will pause between vault initialization attempts until it succeeds
 Common Options:
-	-h, --help					Show this message
+	-h, --help                          Show this message
 `
 
 // usage will print out the flag options for the server.
