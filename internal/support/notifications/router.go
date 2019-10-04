@@ -60,6 +60,7 @@ func LoadRestRoutes() *mux.Router {
 
 	// GetSubscriptions
 	b.HandleFunc("/"+SUBSCRIPTION, restGetSubscriptions).Methods(http.MethodGet)
+	b.HandleFunc("/"+SUBSCRIPTION, restAddSubscription).Methods(http.MethodPost)
 	b.HandleFunc("/"+SUBSCRIPTION, subscriptionHandler).Methods(http.MethodPut, http.MethodPost)
 	b.HandleFunc("/"+SUBSCRIPTION+"/{"+ID+"}", restGetSubscriptionByID).Methods(http.MethodGet)
 	b.HandleFunc("/"+SUBSCRIPTION+"/{"+ID+"}", restDeleteSubscriptionByID).Methods(http.MethodDelete)

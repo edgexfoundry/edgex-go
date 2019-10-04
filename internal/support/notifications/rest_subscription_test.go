@@ -16,6 +16,8 @@
 package notifications
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -32,6 +34,64 @@ import (
 )
 
 var TestSubscriptionURI = "/subscription"
+
+var subscriptionForAdd = contract.Subscription{
+
+	Slug:     "notice-test-123",
+	Receiver: "System Admin",
+	SubscribedCategories: []contract.NotificationsCategory{
+		"SECURITY",
+		"HW_HEALTH",
+		"SW_HEALTH",
+	},
+	SubscribedLabels: []string{
+		"Dell",
+		"IoT",
+		"test",
+	},
+	Channels: []contract.Channel{
+		{
+			Type: "REST",
+			Url:  "http://abc.def/alert",
+		},
+		{
+			Type: "EMAIL",
+			MailAddresses: []string{
+				"cloud@abc.def",
+				"jack@abc.def",
+			},
+		},
+	},
+}
+
+var subscriptionForAddInvalid = contract.Subscription{
+
+	Slug:     "notice-test-123",
+	Receiver: "System Admin",
+	SubscribedCategories: []contract.NotificationsCategory{
+		"SECURITY",
+		"HW_HEALTH",
+		"SW_HEALTH",
+	},
+	SubscribedLabels: []string{
+		"Dell",
+		"IoT",
+		"test",
+	},
+	Channels: []contract.Channel{
+		{
+			Type: "REST",
+			Url:  "http://abc.def/alert",
+		},
+		{
+			Type: "EMAIL",
+			MailAddresses: []string{
+				"cloud\n",
+				"jack\r",
+			},
+		},
+	},
+}
 
 func TestSubscriptionsAll(t *testing.T) {
 	tests := []struct {
@@ -375,4 +435,70 @@ func TestGetSubscriptionsByCategories(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestAddSubscription(t *testing.T) {
+	tests := []struct {
+		name           string
+		request        *http.Request
+		dbMock         interfaces.DBClient
+		expectedStatus int
+	}{
+		{
+			name:           "Invalid Email",
+			request:        createRequestSubscriptionAdd(subscriptionForAddInvalid),
+			dbMock:         createMockSubscriptionLoaderAddSuccess(),
+			expectedStatus: http.StatusBadRequest,
+		},
+		{
+			name:           "OK",
+			request:        createRequestSubscriptionAdd(subscriptionForAdd),
+			dbMock:         createMockSubscriptionLoaderAddSuccess(),
+			expectedStatus: http.StatusCreated,
+		},
+		{
+			name:           "Invalid Email",
+			request:        createRequestSubscriptionAdd(subscriptionForAddInvalid),
+			dbMock:         createMockSubscriptionLoaderAddSuccess(),
+			expectedStatus: http.StatusBadRequest,
+		},
+		{
+			name:           "Unexpected Error",
+			request:        createRequestSubscriptionAdd(subscriptionForAdd),
+			dbMock:         createMockSubscriptionLoaderAddErr(),
+			expectedStatus: http.StatusConflict,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			dbClient = tt.dbMock
+			rr := httptest.NewRecorder()
+			handler := http.HandlerFunc(restAddSubscription)
+			handler.ServeHTTP(rr, tt.request)
+			response := rr.Result()
+			if response.StatusCode != tt.expectedStatus {
+				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
+				return
+			}
+		})
+	}
+}
+
+func createRequestSubscriptionAdd(subscription contract.Subscription) *http.Request {
+	b, _ := json.Marshal(subscription)
+	req := httptest.NewRequest(http.MethodPost, TestURI, bytes.NewBuffer(b))
+	return mux.SetURLVars(req, map[string]string{})
+}
+
+func createMockSubscriptionLoaderAddSuccess() interfaces.DBClient {
+	myMock := mocks.DBClient{}
+	myMock.On("AddSubscription", subscriptionForAdd).Return(subscriptionForAdd.ID, nil)
+	return &myMock
+}
+
+func createMockSubscriptionLoaderAddErr() interfaces.DBClient {
+	myMock := mocks.DBClient{}
+	myMock.On("AddSubscription", subscriptionForAdd).Return(subscriptionForAdd.ID, errors.New("test error"))
+	return &myMock
 }
