@@ -95,7 +95,7 @@ func (c *CommandProfile) FromContract(from contract.Command) (contractId string,
 	c.Put.Path = from.Put.Path
 	c.Put.Responses = []Response{}
 	for _, val := range from.Put.Responses {
-		c.Get.Responses = append(c.Put.Responses, Response{
+		c.Put.Responses = append(c.Put.Responses, Response{
 			Code:           val.Code,
 			Description:    val.Description,
 			ExpectedValues: val.ExpectedValues,
