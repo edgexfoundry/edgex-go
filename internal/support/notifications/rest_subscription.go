@@ -43,6 +43,42 @@ func restGetSubscriptions(w http.ResponseWriter, r *http.Request) {
 	pkg.Encode(subscriptions, w, LoggingClient)
 }
 
+func restAddSubscription(w http.ResponseWriter, r *http.Request) {
+	if r.Body != nil {
+		defer r.Body.Close()
+	}
+
+	var s models.Subscription
+	dec := json.NewDecoder(r.Body)
+	err := dec.Decode(&s)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		LoggingClient.Error("Error decoding subscription: " + err.Error())
+		return
+	}
+
+	// validate email addresses
+	err = validateEmailAddresses(s)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		LoggingClient.Error(err.Error())
+		return
+	}
+
+	LoggingClient.Info("Posting Subscription: " + s.String())
+	op := subscription.NewAddExecutor(dbClient, s)
+	err = op.Execute()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusConflict)
+		LoggingClient.Error(err.Error())
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	w.Write([]byte(s.Slug))
+}
+
 func subscriptionHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Body != nil {
 		defer r.Body.Close()
@@ -94,42 +130,6 @@ func subscriptionHandler(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("true"))
-
-	case http.MethodPost:
-		var s models.Subscription
-		dec := json.NewDecoder(r.Body)
-		err := dec.Decode(&s)
-
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			LoggingClient.Error("Error decoding subscription: " + err.Error())
-			return
-		}
-
-		// validate email addresses
-		err = validateEmailAddresses(s)
-		if err != nil {
-			switch err.(type) {
-			case errors.ErrInvalidEmailAddresses:
-				http.Error(w, err.Error(), http.StatusBadRequest)
-			default:
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			}
-			LoggingClient.Error(err.Error())
-			return
-		}
-
-		LoggingClient.Info("Posting Subscription: " + s.String())
-		_, err = dbClient.AddSubscription(s)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusConflict)
-			LoggingClient.Error(err.Error())
-			return
-		}
-
-		w.WriteHeader(http.StatusCreated)
-		w.Write([]byte(s.Slug))
-
 	}
 }
 

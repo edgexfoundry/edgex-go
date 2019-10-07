@@ -14,23 +14,30 @@
 
 package subscription
 
-import contract "github.com/edgexfoundry/go-mod-core-contracts/models"
+import (
+	"github.com/edgexfoundry/go-mod-core-contracts/models"
+)
 
-// SubscriptionLoader provides functionality for obtaining Subscriptions.
-type SubscriptionLoader interface {
-	GetSubscriptions() ([]contract.Subscription, error)
-	GetSubscriptionById(id string) (contract.Subscription, error)
-	GetSubscriptionBySlug(slug string) (contract.Subscription, error)
-	GetSubscriptionByCategories(categories []string) ([]contract.Subscription, error)
+type AddExecutor interface {
+	Execute() error
 }
 
-// SubscriptionWriter adds subscriptions.
-type SubscriptionWriter interface {
-	AddSubscription(s contract.Subscription) (string, error)
+type subscriptionAdd struct {
+	database     SubscriptionWriter
+	subscription models.Subscription
 }
 
-// SubscriptionDeleter deletes subscriptions.
-type SubscriptionDeleter interface {
-	DeleteSubscriptionById(id string) error
-	DeleteSubscriptionBySlug(id string) error
+func (op subscriptionAdd) Execute() error {
+	_, err := op.database.AddSubscription(op.subscription)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func NewAddExecutor(database SubscriptionWriter, subscription models.Subscription) AddExecutor {
+	return subscriptionAdd{
+		database:     database,
+		subscription: subscription,
+	}
 }
