@@ -26,3 +26,20 @@ type IntervalActionLoader interface {
 	IntervalActionById(id string) (contract.IntervalAction, error)
 	interval.IntervalLoader
 }
+
+// IntervalWriter adds interval.
+type IntervalActionWriter interface {
+	AddIntervalAction(interval contract.IntervalAction) (string, error)
+	IntervalActionLoader
+}
+
+type SchedulerQueueLoader interface {
+	QueryIntervalActionByID(intervalActionId string) (contract.IntervalAction, error)
+	QueryIntervalActionByName(intervalActionName string) (contract.IntervalAction, error)
+}
+
+// SchedulerQueueWriter adds interval in SchedulerQueue
+type SchedulerQueueWriter interface {
+	AddIntervalActionToQueue(interval contract.IntervalAction) error
+	SchedulerQueueLoader
+}

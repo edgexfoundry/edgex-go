@@ -15,11 +15,13 @@
 package scheduler
 
 import (
-	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/errors"
+	"encoding/json"
 	"net/http"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
+	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/errors"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/operators/intervalaction"
+	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
 func restGetIntervalAction(w http.ResponseWriter, r *http.Request) {
@@ -41,4 +43,38 @@ func restGetIntervalAction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	pkg.Encode(intervalActions, w, LoggingClient)
+}
+
+func restAddIntervalAction(w http.ResponseWriter, r *http.Request) {
+	if r.Body != nil {
+		defer r.Body.Close()
+	}
+	var intervalAction contract.IntervalAction
+	dec := json.NewDecoder(r.Body)
+	err := dec.Decode(&intervalAction)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		LoggingClient.Error("error decoding intervalAction" + err.Error())
+		return
+	}
+	LoggingClient.Info("posting new intervalAction: " + intervalAction.String())
+
+	op := intervalaction.NewAddExecutor(dbClient, scClient, intervalAction)
+	newId, err := op.Execute()
+	if err != nil {
+		switch t := err.(type) {
+		case errors.ErrIntervalActionNameInUse:
+			http.Error(w, t.Error(), http.StatusBadRequest)
+		case errors.ErrIntervalNotFound:
+			http.Error(w, t.Error(), http.StatusBadRequest)
+		default:
+			http.Error(w, t.Error(), http.StatusInternalServerError)
+		}
+		LoggingClient.Error(err.Error())
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(newId))
 }
