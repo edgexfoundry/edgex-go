@@ -2,9 +2,6 @@ package metadata
 
 import (
 	"fmt"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
-	"github.com/gorilla/mux"
-	"github.com/pkg/errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -12,8 +9,11 @@ import (
 	types "github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces/mocks"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
+	"github.com/gorilla/mux"
+	"github.com/pkg/errors"
 )
 
 func TestGetCommandsByDeviceId(t *testing.T) {

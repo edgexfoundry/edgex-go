@@ -79,7 +79,7 @@ func LoadRestRoutes() *mux.Router {
 
 // Test if the service is working
 func pingHandler(w http.ResponseWriter, _ *http.Request) {
-	w.Header().Set("Content-Type", "text/plain")
+	w.Header().Set(clients.ContentType, clients.ContentTypeText)
 	w.Write([]byte("pong"))
 }
 
@@ -187,7 +187,7 @@ func intervalActionHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("true"))
 	}
@@ -239,7 +239,7 @@ func intervalActionByIdHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("true"))
 	}
@@ -291,7 +291,7 @@ func intervalActionByNameHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("true"))
 	}
@@ -376,7 +376,7 @@ func scrubIntervalActionsHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(strconv.Itoa(count)))
 	}

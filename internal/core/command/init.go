@@ -15,253 +15,117 @@
 package command
 
 import (
-	"errors"
+	"context"
 	"fmt"
-	"os"
-	"os/signal"
 	"sync"
-	"syscall"
 	"time"
-
-	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/core/command/interfaces"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db/redis"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/endpoint"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/metadata"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
 
-	registryTypes "github.com/edgexfoundry/go-mod-registry/pkg/types"
 	"github.com/edgexfoundry/go-mod-registry/registry"
+
+	"github.com/edgexfoundry/edgex-go/internal/core/command/interfaces"
+	bootstrap "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/interfaces"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db/redis"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/endpoint"
 )
 
-var Configuration *ConfigurationStruct
+var Configuration = &ConfigurationStruct{}
 var LoggingClient logger.LoggingClient
 var mdc metadata.DeviceClient
 var dbClient interfaces.DBClient
-var registryClient registry.Client
-var registryErrors chan error        //A channel for "config wait errors" sourced from Registry
-var registryUpdates chan interface{} //A channel for "config updates" sourced from Registry
 
-func Retry(useRegistry bool, configDir, profileDir string, timeout int, wait *sync.WaitGroup, ch chan error) {
-	now := time.Now()
-	until := now.Add(time.Millisecond * time.Duration(timeout))
-	for time.Now().Before(until) {
-		var err error
-		//When looping, only handle configuration if it hasn't already been set.
-		if Configuration == nil {
-			Configuration, err = initializeConfiguration(useRegistry, configDir, profileDir)
-			if err != nil {
-				ch <- err
-				if !useRegistry {
-					//Error occurred when attempting to read from local filesystem. Fail fast.
-					close(ch)
-					wait.Done()
-					return
-				}
-			} else {
-				//Check against boot timeout default
-				if Configuration.Service.BootTimeout != timeout {
-					until = now.Add(time.Millisecond * time.Duration(Configuration.Service.BootTimeout))
-				}
-				// Setup Logging
-				logTarget := setLoggingTarget()
-				LoggingClient = logger.NewClient(clients.CoreCommandServiceKey, Configuration.Logging.EnableRemote, logTarget, Configuration.Writable.LogLevel)
-
-				//Initialize service clients
-				initializeClients(useRegistry)
-			}
-		}
-
-		//Only attempt to connect to database if configuration has been populated
-		if Configuration != nil {
-			err := connectToDatabase()
-			if err != nil {
-				ch <- err
-			} else {
-				break
-			}
-		}
-		time.Sleep(time.Second * time.Duration(1))
-	}
-	close(ch)
-	wait.Done()
-
-	return
+type server interface {
+	IsRunning() bool
 }
 
-func Init(useRegistry bool) bool {
-	if Configuration == nil {
+// ServiceInit encapsulates information needed for the service to startup.
+type ServiceInit struct {
+	server server
+}
+
+// NewServiceInit creates a new ServiceInit
+func NewServiceInit(server server) ServiceInit {
+	return ServiceInit{
+		server: server,
+	}
+}
+
+// BootstrapHandler fulfills the BootstrapHandler contract and performs and startup actions needed by the service.
+func (s ServiceInit) BootstrapHandler(
+	wg *sync.WaitGroup,
+	ctx context.Context,
+	startupTimer startup.Timer,
+	config bootstrap.Configuration,
+	logging logger.LoggingClient,
+	registry registry.Client) bool {
+
+	// update global variables.
+	LoggingClient = logging
+
+	// initialize clients required by service.
+	s.initializeClients(registry)
+
+	// initialize database.
+	for startupTimer.HasNotElapsed() {
+		var err error
+		dbClient, err = s.newDBClient(Configuration.Databases["Primary"].Type)
+		if err == nil {
+			break
+		}
+		dbClient = nil
+		LoggingClient.Warn(fmt.Sprintf("couldn't create database client: %s", err.Error()))
+		startupTimer.SleepForInterval()
+	}
+
+	if dbClient == nil {
 		return false
 	}
 
-	if useRegistry {
-		registryErrors = make(chan error)
-		registryUpdates = make(chan interface{})
-		go listenForConfigChanges()
-	}
+	LoggingClient.Info("Database connected")
 
-	go telemetry.StartCpuUsageAverage()
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+
+		<-ctx.Done()
+		for {
+			// wait for httpServer to stop running (e.g. handling requests) before closing the database connection.
+			if s.server.IsRunning() == false {
+				dbClient.CloseSession()
+
+				break
+			}
+			time.Sleep(time.Second)
+		}
+		LoggingClient.Info("Database disconnected")
+	}()
 
 	return true
 }
 
-func Destruct() {
-	if registryErrors != nil {
-		close(registryErrors)
-	}
-
-	if registryUpdates != nil {
-		close(registryUpdates)
-	}
-}
-
-func initializeConfiguration(useRegistry bool, configDir, profileDir string) (*ConfigurationStruct, error) {
-	//We currently have to load configuration from filesystem first in order to obtain RegistryHost/Port
-	configuration := &ConfigurationStruct{}
-	err := config.LoadFromFile(configDir, profileDir, configuration)
-	if err != nil {
-		return nil, err
-	}
-	configuration.Registry = config.OverrideFromEnvironment(configuration.Registry)
-
-	if useRegistry {
-		err = connectToRegistry(configuration)
-		if err != nil {
-			return nil, err
-		}
-
-		rawConfig, err := registryClient.GetConfiguration(configuration)
-		if err != nil {
-			return nil, fmt.Errorf("could not get configuration from Registry: %v", err.Error())
-		}
-
-		actual, ok := rawConfig.(*ConfigurationStruct)
-		if !ok {
-			return nil, fmt.Errorf("configuration from Registry failed type check")
-		}
-
-		configuration = actual
-
-		// Check that information was successfully read from Registry
-		if configuration.Service.Port == 0 {
-			return nil, errors.New("error reading configuration from Registry")
-		}
-	}
-
-	return configuration, nil
-}
-
-func connectToRegistry(conf *ConfigurationStruct) error {
-	var err error
-	registryConfig := registryTypes.Config{
-		Host:            conf.Registry.Host,
-		Port:            conf.Registry.Port,
-		Type:            conf.Registry.Type,
-		ServiceKey:      clients.CoreCommandServiceKey,
-		ServiceHost:     conf.Service.Host,
-		ServicePort:     conf.Service.Port,
-		ServiceProtocol: conf.Service.Protocol,
-		CheckInterval:   conf.Service.CheckInterval,
-		CheckRoute:      clients.ApiPingRoute,
-		Stem:            internal.ConfigRegistryStemCore + internal.ConfigMajorVersion,
-	}
-
-	registryClient, err = registry.NewRegistryClient(registryConfig)
-	if err != nil {
-		return fmt.Errorf("connection to Registry could not be made: %v", err.Error())
-	}
-
-	// Check if registry service is running
-	if !registryClient.IsAlive() {
-		return fmt.Errorf("registry is not available")
-	}
-
-	// Register the service with Registry
-	err = registryClient.Register()
-	if err != nil {
-		return fmt.Errorf("could not register service with Registry: %v", err.Error())
-	}
-
-	return nil
-}
-
-func listenForConfigChanges() {
-	if registryClient == nil {
-		LoggingClient.Error("listenForConfigChanges() registry client not set")
-		return
-	}
-
-	registryClient.WatchForChanges(registryUpdates, registryErrors, &WritableInfo{}, internal.WritableKey)
-
-	signals := make(chan os.Signal)
-	signal.Notify(signals, os.Interrupt, syscall.SIGTERM)
-
-	for {
-		select {
-		case <-signals:
-			// Quietly and gracefully stop when SIGINT/SIGTERM received
-			return
-		case ex := <-registryErrors:
-			LoggingClient.Error(ex.Error())
-		case raw, ok := <-registryUpdates:
-			if ok {
-				actual, ok := raw.(*WritableInfo)
-				if !ok {
-					LoggingClient.Error("listenForConfigChanges() type check failed")
-				}
-				Configuration.Writable = *actual
-				LoggingClient.Info("Writeable configuration has been updated from the Registry")
-				LoggingClient.SetLogLevel(Configuration.Writable.LogLevel)
-			} else {
-				return
-			}
-		}
-	}
-}
-
-func initializeClients(useRegistry bool) {
+// initializeClients initializes the clients needed by the service.
+func (s ServiceInit) initializeClients(registry registry.Client) {
 	// Create metadata clients
 	params := types.EndpointParams{
 		ServiceKey:  clients.CoreMetaDataServiceKey,
 		Path:        clients.ApiDeviceRoute,
-		UseRegistry: useRegistry,
+		UseRegistry: registry != nil,
 		Url:         Configuration.Clients["Metadata"].Url() + clients.ApiDeviceRoute,
 		Interval:    Configuration.Service.ClientMonitor,
 	}
 
-	mdc = metadata.NewDeviceClient(params, endpoint.Endpoint{RegistryClient: &registryClient})
-	params.Path = clients.ApiCommandRoute
-	params.Url = Configuration.Clients["Metadata"].Url() + clients.ApiCommandRoute
+	mdc = metadata.NewDeviceClient(params, endpoint.Endpoint{RegistryClient: &registry})
 }
 
-func setLoggingTarget() string {
-	if Configuration.Logging.EnableRemote {
-		return Configuration.Clients["Logging"].Url() + clients.ApiLoggingRoute
-	}
-	return Configuration.Logging.File
-}
-
-func connectToDatabase() error {
-	var err error
-
-	dbClient, err = newDBClient(Configuration.Databases["Primary"].Type)
-	if err != nil {
-		dbClient = nil
-		return fmt.Errorf("couldn't create database client: %v", err.Error())
-	}
-
-	return nil
-}
-
-// Return the dbClient interface
-func newDBClient(dbType string) (interfaces.DBClient, error) {
+// newDBClient creates a DBClient based on the underlying database.
+func (s ServiceInit) newDBClient(dbType string) (interfaces.DBClient, error) {
 	switch dbType {
 	case db.MongoDB:
 		dbConfig := db.Configuration{

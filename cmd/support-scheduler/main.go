@@ -54,6 +54,7 @@ func main() {
 		scheduler.Configuration,
 		startupTimer,
 		[]interfaces.BootstrapHandler{
+			handlers.SecretClientBootstrapHandler,
 			scheduler.NewServiceInit(&httpServer).BootstrapHandler,
 			telemetry.BootstrapHandler,
 			httpServer.Handler,

@@ -14,6 +14,7 @@
 package data
 
 import (
+	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
 	"io"
 	"io/ioutil"
 )
@@ -29,4 +30,13 @@ func printBody(r io.ReadCloser) {
 	}
 
 	LoggingClient.Info(bodyString)
+}
+
+func checkMaxLimit(limit int) error {
+	if limit > Configuration.Service.MaxResultCount {
+		LoggingClient.Error(maxExceededString)
+		return errors.NewErrLimitExceeded(limit)
+	}
+
+	return nil
 }

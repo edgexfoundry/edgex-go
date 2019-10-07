@@ -9,9 +9,6 @@ package scheduler
 
 import (
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
-
-	"regexp"
-	"strconv"
 	"time"
 )
 
@@ -70,7 +67,11 @@ func (sc *IntervalContext) Reset(interval models.Interval) {
 	//frequency and next time
 	nowBenchmark := time.Now().Unix()
 	if !sc.Interval.RunOnce {
-		sc.Frequency = parseFrequency(sc.Interval.Frequency)
+		frequency, err := parseFrequency(sc.Interval.Frequency)
+		if err != nil {
+			LoggingClient.Error("interval parse frequency error  %v", err.Error())
+		}
+		sc.Frequency = frequency
 	}
 
 	sc.NextTime = sc.StartTime
@@ -106,35 +107,4 @@ func (sc *IntervalContext) isComplete(time time.Time) bool {
 		(sc.NextTime.Unix() > sc.EndTime.Unix()) ||
 		((sc.MaxIterations != 0) && (sc.CurrentIterations >= sc.MaxIterations))
 	return complete
-}
-
-func parseFrequency(durationStr string) time.Duration {
-	durationRegex := regexp.MustCompile(`P(?P<years>\d+Y)?(?P<months>\d+M)?(?P<days>\d+D)?T?(?P<hours>\d+H)?(?P<minutes>\d+M)?(?P<seconds>\d+S)?`)
-	matches := durationRegex.FindStringSubmatch(durationStr)
-
-	years := parseInt64(matches[1])
-	months := parseInt64(matches[2])
-	days := parseInt64(matches[3])
-	hours := parseInt64(matches[4])
-	minutes := parseInt64(matches[5])
-	seconds := parseInt64(matches[6])
-
-	second := int64(time.Second)
-	minute := int64(time.Minute)
-	hour := int64(time.Hour)
-	day := int64(24 * hour)
-	month := int64(30 * day)
-	year := int64(365 * day)
-	return time.Duration(years*year + months*month + days*day + hours*hour + minutes*minute + seconds*second)
-}
-
-func parseInt64(value string) int64 {
-	if len(value) == 0 {
-		return 0
-	}
-	parsed, err := strconv.Atoi(value[:len(value)-1])
-	if err != nil {
-		return 0
-	}
-	return int64(parsed)
 }

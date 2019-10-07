@@ -14,14 +14,19 @@
 
 package interfaces
 
-import "github.com/edgexfoundry/edgex-go/internal/pkg/config"
+import (
+	"github.com/edgexfoundry/go-mod-secrets/pkg/providers/vault"
+
+	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
+)
 
 // BootstrapConfiguration defines the configuration elements required by the bootstrap.
 type BootstrapConfiguration struct {
-	Clients  map[string]config.ClientInfo
-	Service  config.ServiceInfo
-	Registry config.RegistryInfo
-	Logging  config.LoggingInfo
+	Clients     map[string]config.ClientInfo
+	Service     config.ServiceInfo
+	Registry    config.RegistryInfo
+	Logging     config.LoggingInfo
+	SecretStore vault.SecretConfig
 }
 
 // Configuration interface provides an abstraction around a configuration struct.

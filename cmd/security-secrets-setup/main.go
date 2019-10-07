@@ -46,6 +46,7 @@ var subcommands = map[string]*flag.FlagSet{
 	"legacy":   flag.NewFlagSet("legacy", flag.ExitOnError),
 	"generate": flag.NewFlagSet("generate", flag.ExitOnError),
 	"cache":    flag.NewFlagSet("cache", flag.ExitOnError),
+	"import":   flag.NewFlagSet("import", flag.ExitOnError),
 }
 var configFile string
 
@@ -108,7 +109,7 @@ func main() {
 			return
 		}
 
-	case "generate", "cache":
+	case "generate", "cache", "import":
 		// no arguments expected
 		if len(subcmd.Args()) > 0 {
 			setup.LoggingClient.Error(fmt.Sprintf("subcommand %s doesn't use any args", subcmdName))
@@ -138,17 +139,20 @@ func newOptionDispatcher() optionDispatcher {
 }
 
 func setupPkiInitOption(subcommand string) (executor option.OptionsExecutor, status int, err error) {
-	var generateOpt, cacheOpt bool
+	var generateOpt, cacheOpt, importOpt bool
 	switch subcommand {
 	case "generate":
 		generateOpt = true
 	case "cache":
 		cacheOpt = true
+	case "import":
+		importOpt = true
 	}
 
 	opts := option.PkiInitOption{
 		GenerateOpt: generateOpt,
 		CacheOpt:    cacheOpt,
+		ImportOpt:   importOpt,
 	}
 	return option.NewPkiInitOption(opts)
 }

@@ -11,44 +11,36 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
+
 package metadata
 
 import (
 	"encoding/json"
+	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
-	"github.com/edgexfoundry/go-mod-core-contracts/models"
-	"github.com/gorilla/mux"
-	"gopkg.in/yaml.v2"
-
-	dataErrors "github.com/edgexfoundry/edgex-go/internal/core/data/errors"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/operators/device"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/operators/device_profile"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/models"
+	"github.com/gorilla/mux"
 )
 
 func restGetAllDeviceProfiles(w http.ResponseWriter, _ *http.Request) {
 	op := device_profile.NewGetAllExecutor(Configuration.Service, dbClient, LoggingClient)
 	res, err := op.Execute()
 	if err != nil {
-		LoggingClient.Error(err.Error())
-		switch err.(type) {
-		case errors.ErrLimitExceeded:
-			http.Error(w, err.Error(), http.StatusRequestEntityTooLarge)
-			return
-		default:
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
+		httpErrorHandler.HandleOneVariant(w, err, errorconcept.Common.LimitExceeded, errorconcept.Default.InternalServerError)
+		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	json.NewEncoder(w).Encode(&res)
 }
 
@@ -56,8 +48,7 @@ func restAddDeviceProfile(w http.ResponseWriter, r *http.Request) {
 	var dp models.DeviceProfile
 
 	if err := json.NewDecoder(r.Body).Decode(&dp); err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		httpErrorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
 		return
 	}
 
@@ -68,21 +59,14 @@ func restAddDeviceProfile(w http.ResponseWriter, r *http.Request) {
 		_, err := nameOp.Execute()
 		// The operator will return an ItemNotFound error if the DeviceProfile can not be found.
 		if err == nil {
-			http.Error(w, "Duplicate name for device profile", http.StatusConflict)
+			httpErrorHandler.Handle(w, err, errorconcept.DeviceProfile.DuplicateName)
 			return
 		}
 
 		op := device_profile.NewAddValueDescriptorExecutor(r.Context(), vdc, LoggingClient, dp.DeviceResources...)
 		err = op.Execute()
 		if err != nil {
-			LoggingClient.Error(err.Error())
-			switch err.(type) {
-			case types.ErrServiceClient:
-				http.Error(w, err.Error(), err.(types.ErrServiceClient).StatusCode)
-			default:
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			}
-
+			httpErrorHandler.HandleOneVariant(w, err, errorconcept.NewServiceClientHttpError(err), errorconcept.Default.InternalServerError)
 			return
 		}
 	}
@@ -95,8 +79,7 @@ func restUpdateDeviceProfile(w http.ResponseWriter, r *http.Request) {
 
 	var from models.DeviceProfile
 	if err := json.NewDecoder(r.Body).Decode(&from); err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		httpErrorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
 		return
 	}
 
@@ -104,20 +87,16 @@ func restUpdateDeviceProfile(w http.ResponseWriter, r *http.Request) {
 		vdOp := device_profile.NewUpdateValueDescriptorExecutor(from, dbClient, vdc, LoggingClient, r.Context())
 		err := vdOp.Execute()
 		if err != nil {
-			LoggingClient.Error(err.Error())
-			switch err.(type) {
-			case types.ErrServiceClient:
-				http.Error(w, err.Error(), err.(types.ErrServiceClient).StatusCode)
-			case errors.ErrDeviceProfileNotFound:
-				http.Error(w, err.Error(), http.StatusNotFound)
-			case dataErrors.ErrValueDescriptorsInUse:
-				http.Error(w, err.Error(), http.StatusConflict)
-			case errors.ErrDeviceProfileInvalidState:
-				http.Error(w, err.Error(), http.StatusConflict)
-			default:
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			}
-
+			httpErrorHandler.HandleManyVariants(
+				w,
+				err,
+				[]errorconcept.ErrorConceptType{
+					errorconcept.NewServiceClientHttpError(err),
+					errorconcept.DeviceProfile.NotFound,
+					errorconcept.ValueDescriptors.InUse,
+					errorconcept.DeviceProfile.InvalidState_StatusConflict,
+				},
+				errorconcept.Default.InternalServerError)
 			return
 		}
 	}
@@ -125,16 +104,14 @@ func restUpdateDeviceProfile(w http.ResponseWriter, r *http.Request) {
 	op := device_profile.NewUpdateDeviceProfileExecutor(dbClient, from)
 	dp, err := op.Execute()
 	if err != nil {
-		LoggingClient.Error(err.Error())
-		switch err.(type) {
-		case errors.ErrDeviceProfileNotFound:
-			http.Error(w, err.Error(), http.StatusNotFound)
-		case errors.ErrDeviceProfileInvalidState:
-			http.Error(w, err.Error(), http.StatusConflict)
-		default:
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-
+		httpErrorHandler.HandleManyVariants(
+			w,
+			err,
+			[]errorconcept.ErrorConceptType{
+				errorconcept.DeviceProfile.NotFound,
+				errorconcept.DeviceProfile.InvalidState_StatusConflict,
+			},
+			errorconcept.Default.InternalServerError)
 		return
 	}
 
@@ -146,7 +123,7 @@ func restUpdateDeviceProfile(w http.ResponseWriter, r *http.Request) {
 		LoggingClient.Warn("Error while notifying profile associates of update: ", err.Error())
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
 }
@@ -158,15 +135,10 @@ func restGetProfileByProfileId(w http.ResponseWriter, r *http.Request) {
 	op := device_profile.NewGetProfileID(did, dbClient)
 	res, err := op.Execute()
 	if err != nil {
-		if err == db.ErrNotFound {
-			http.Error(w, err.Error(), http.StatusNotFound)
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		LoggingClient.Error(err.Error())
+		httpErrorHandler.HandleOneVariant(w, err, errorconcept.Database.NotFound, errorconcept.Default.InternalServerError)
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	json.NewEncoder(w).Encode(res)
 }
 
@@ -177,20 +149,18 @@ func restDeleteProfileByProfileId(w http.ResponseWriter, r *http.Request) {
 	op := device_profile.NewDeleteByIDExecutor(dbClient, did)
 	err := op.Execute()
 	if err != nil {
-		LoggingClient.Error(err.Error())
-		switch err.(type) {
-		case errors.ErrDeviceProfileNotFound:
-			http.Error(w, err.Error(), http.StatusNotFound)
-		case errors.ErrDeviceProfileInvalidState:
-			http.Error(w, err.Error(), http.StatusConflict)
-		default:
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-
+		httpErrorHandler.HandleManyVariants(
+			w,
+			err,
+			[]errorconcept.ErrorConceptType{
+				errorconcept.DeviceProfile.NotFound,
+				errorconcept.DeviceProfile.InvalidState_StatusConflict,
+			},
+			errorconcept.Default.InternalServerError)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
 }
@@ -200,28 +170,25 @@ func restDeleteProfileByName(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		httpErrorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
 		return
 	}
 
 	op := device_profile.NewDeleteByNameExecutor(dbClient, n)
 	err = op.Execute()
 	if err != nil {
-		LoggingClient.Error(err.Error())
-		switch err.(type) {
-		case errors.ErrDeviceProfileNotFound:
-			http.Error(w, err.Error(), http.StatusNotFound)
-		case errors.ErrDeviceProfileInvalidState:
-			http.Error(w, err.Error(), http.StatusConflict)
-		default:
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-
+		httpErrorHandler.HandleManyVariants(
+			w,
+			err,
+			[]errorconcept.ErrorConceptType{
+				errorconcept.DeviceProfile.NotFound,
+				errorconcept.DeviceProfile.InvalidState_StatusConflict,
+			},
+			errorconcept.Default.InternalServerError)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
 }
@@ -229,29 +196,18 @@ func restDeleteProfileByName(w http.ResponseWriter, r *http.Request) {
 func restAddProfileByYaml(w http.ResponseWriter, r *http.Request) {
 	f, _, err := r.FormFile("file")
 	if err != nil {
-		switch err {
-		case http.ErrMissingFile:
-			err := errors.NewErrEmptyFile("YAML")
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			LoggingClient.Error(err.Error())
-			return
-		default:
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			LoggingClient.Error(err.Error())
-			return
-		}
+		httpErrorHandler.HandleOneVariant(w, err, errorconcept.DeviceProfile.MissingFile, errorconcept.Default.InternalServerError)
+		return
 	}
 
 	data, err := ioutil.ReadAll(f)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		LoggingClient.Error(err.Error())
+		httpErrorHandler.Handle(w, err, errorconcept.DeviceProfile.ReadFile)
 		return
 	}
 	if len(data) == 0 {
 		err := errors.NewErrEmptyFile("YAML")
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		LoggingClient.Error(err.Error())
+		httpErrorHandler.Handle(w, err, errorconcept.DeviceProfile.MissingFile)
 		return
 	}
 
@@ -259,8 +215,7 @@ func restAddProfileByYaml(w http.ResponseWriter, r *http.Request) {
 
 	err = yaml.Unmarshal(data, &dp)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		LoggingClient.Error(err.Error())
+		httpErrorHandler.Handle(w, err, errorconcept.DeviceProfile.UnmarshalYaml_StatusInternalServer)
 		return
 	}
 
@@ -272,19 +227,16 @@ func restAddProfileByYaml(w http.ResponseWriter, r *http.Request) {
 	id, err := op.Execute()
 
 	if err != nil {
-		switch err.(type) {
-		case errors.ErrDeviceProfileInvalidState:
-			http.Error(w, err.Error(), http.StatusBadRequest)
-		case models.ErrContractInvalid:
-			http.Error(w, err.Error(), http.StatusConflict)
-		case errors.ErrDuplicateName:
-			http.Error(w, err.Error(), http.StatusConflict)
-		case errors.ErrEmptyDeviceProfileName:
-			http.Error(w, err.Error(), http.StatusBadRequest)
-		default:
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		LoggingClient.Error(err.Error())
+		httpErrorHandler.HandleManyVariants(
+			w,
+			err,
+			[]errorconcept.ErrorConceptType{
+				errorconcept.DeviceProfile.InvalidState_StatusBadRequest,
+				errorconcept.DeviceProfile.ContractInvalid_StatusConflict,
+				errorconcept.Common.DuplicateName,
+				errorconcept.DeviceProfile.EmptyName,
+			},
+			errorconcept.Default.InternalServerError)
 		return
 	}
 
@@ -298,8 +250,7 @@ func restAddProfileByYamlRaw(w http.ResponseWriter, r *http.Request) {
 	// Get the YAML string
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		httpErrorHandler.Handle(w, err, errorconcept.DeviceProfile.ReadFile)
 		return
 	}
 
@@ -307,8 +258,7 @@ func restAddProfileByYamlRaw(w http.ResponseWriter, r *http.Request) {
 
 	err = yaml.Unmarshal(body, &dp)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		LoggingClient.Error(err.Error())
+		httpErrorHandler.Handle(w, err, errorconcept.DeviceProfile.UnmarshalYaml_StatusServiceUnavailable)
 		return
 	}
 
@@ -321,19 +271,16 @@ func addDeviceProfile(dp models.DeviceProfile, dbClient interfaces.DBClient, w h
 	id, err := op.Execute()
 
 	if err != nil {
-		switch err.(type) {
-		case models.ErrContractInvalid:
-			http.Error(w, err.Error(), http.StatusBadRequest)
-		case errors.ErrDeviceProfileInvalidState:
-			http.Error(w, err.Error(), http.StatusBadRequest)
-		case errors.ErrDuplicateName:
-			http.Error(w, err.Error(), http.StatusConflict)
-		case errors.ErrEmptyDeviceProfileName:
-			http.Error(w, err.Error(), http.StatusBadRequest)
-		default:
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		LoggingClient.Error(err.Error())
+		httpErrorHandler.HandleManyVariants(
+			w,
+			err,
+			[]errorconcept.ErrorConceptType{
+				errorconcept.Common.ContractInvalid_StatusBadRequest,
+				errorconcept.DeviceProfile.InvalidState_StatusBadRequest,
+				errorconcept.Common.DuplicateName,
+				errorconcept.DeviceProfile.EmptyName,
+			},
+			errorconcept.Default.InternalServerError)
 		return
 	}
 
@@ -345,20 +292,18 @@ func restGetProfileByModel(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	an, err := url.QueryUnescape(vars[MODEL])
 	if err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		httpErrorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
 		return
 	}
 
 	op := device_profile.NewGetModelExecutor(an, dbClient)
 	res, err := op.Execute()
 	if err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		httpErrorHandler.HandleOneVariant(w, err, errorconcept.Common.LimitExceeded, errorconcept.Default.InternalServerError)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	json.NewEncoder(w).Encode(res)
 }
 
@@ -367,20 +312,18 @@ func restGetProfileWithLabel(w http.ResponseWriter, r *http.Request) {
 
 	label, err := url.QueryUnescape(vars[LABEL])
 	if err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		httpErrorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
 		return
 	}
 
 	op := device_profile.NewGetLabelExecutor(label, dbClient)
 	res, err := op.Execute()
 	if err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		httpErrorHandler.HandleOneVariant(w, err, errorconcept.Common.LimitExceeded, errorconcept.Default.InternalServerError)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	json.NewEncoder(w).Encode(res)
 }
 
@@ -388,27 +331,24 @@ func restGetProfileByManufacturerModel(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	man, err := url.QueryUnescape(vars[MANUFACTURER])
 	if err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		httpErrorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
 		return
 	}
 
 	mod, err := url.QueryUnescape(vars[MODEL])
 	if err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		httpErrorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
 		return
 	}
 
 	op := device_profile.NewGetManufacturerModelExecutor(man, mod, dbClient)
 	res, err := op.Execute()
 	if err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		httpErrorHandler.HandleOneVariant(w, err, errorconcept.Common.LimitExceeded, errorconcept.Default.InternalServerError)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	json.NewEncoder(w).Encode(res)
 }
 
@@ -416,20 +356,18 @@ func restGetProfileByManufacturer(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	man, err := url.QueryUnescape(vars[MANUFACTURER])
 	if err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		httpErrorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
 		return
 	}
 
 	op := device_profile.NewGetManufacturerExecutor(man, dbClient)
 	res, err := op.Execute()
 	if err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		httpErrorHandler.HandleOneVariant(w, err, errorconcept.Common.LimitExceeded, errorconcept.Default.InternalServerError)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	json.NewEncoder(w).Encode(res)
 }
 
@@ -437,8 +375,7 @@ func restGetProfileByName(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	dn, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		LoggingClient.Error(err.Error())
+		httpErrorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
 		return
 	}
 
@@ -446,16 +383,11 @@ func restGetProfileByName(w http.ResponseWriter, r *http.Request) {
 	op := device_profile.NewGetProfileName(dn, dbClient)
 	res, err := op.Execute()
 	if err != nil {
-		if err == db.ErrNotFound {
-			http.Error(w, err.Error(), http.StatusNotFound)
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		LoggingClient.Error(err.Error())
+		httpErrorHandler.HandleOneVariant(w, err, errorconcept.Database.NotFound, errorconcept.Default.InternalServerError)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	json.NewEncoder(w).Encode(res)
 }
 
@@ -463,8 +395,7 @@ func restGetYamlProfileByName(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	name, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		LoggingClient.Error(err.Error())
+		httpErrorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
 		return
 	}
 
@@ -472,21 +403,14 @@ func restGetYamlProfileByName(w http.ResponseWriter, r *http.Request) {
 	op := device_profile.NewGetProfileName(name, dbClient)
 	dp, err := op.Execute()
 	if err != nil {
-		// Not found, return nil
-		if err == db.ErrNotFound {
-			http.Error(w, err.Error(), http.StatusNotFound)
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		LoggingClient.Error(err.Error())
+		httpErrorHandler.HandleOneVariant(w, err, errorconcept.Database.NotFound, errorconcept.Default.InternalServerError)
 		return
 	}
 
 	// Marshal into yaml
 	out, err := yaml.Marshal(dp)
 	if err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		httpErrorHandler.Handle(w, err, errorconcept.DeviceProfile.MarshalYaml)
 		return
 	}
 
@@ -511,11 +435,11 @@ func restGetYamlProfileById(w http.ResponseWriter, r *http.Request) {
 	dp, err := op.Execute()
 	if err != nil {
 		if err == db.ErrNotFound {
-			w.WriteHeader(http.StatusNotFound)
+			httpErrorHandler.Handle(w, err, errorconcept.Default.NotFound)
 			w.Write([]byte(nil))
 			return
 		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			httpErrorHandler.Handle(w, err, errorconcept.Default.InternalServerError)
 		}
 		LoggingClient.Error(err.Error())
 		return
@@ -524,8 +448,7 @@ func restGetYamlProfileById(w http.ResponseWriter, r *http.Request) {
 	// Marshal the device profile into YAML
 	out, err := yaml.Marshal(dp)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		LoggingClient.Error(err.Error())
+		httpErrorHandler.Handle(w, err, errorconcept.DeviceProfile.MarshalYaml)
 		return
 	}
 

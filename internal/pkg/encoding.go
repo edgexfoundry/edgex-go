@@ -17,11 +17,12 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
 
 func Encode(i interface{}, w http.ResponseWriter, LoggingClient logger.LoggingClient) {
-	w.Header().Add("Content-Type", "application/json")
+	w.Header().Add(clients.ContentType, clients.ContentTypeJSON)
 
 	enc := json.NewEncoder(w)
 	err := enc.Encode(i)

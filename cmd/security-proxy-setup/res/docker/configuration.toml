@@ -91,12 +91,12 @@ SNIS = ["edgex-kong"]
   Host = "edgex-support-scheduler"
   Port = 48085
 
-  [Clients.Rulesengine]
+  [Clients.RulesEngine]
   Protocol = "http"
   Host = "edgex-support-rulesengine"
   Port = 48075
 
-  [Clients.Virtualdevice]
+  [Clients.VirtualDevice]
   Protocol = "http"
   Host = "edgex-device-virtual"
   Port = 49990

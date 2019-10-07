@@ -11,11 +11,11 @@ import (
 	"testing"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
-	"github.com/edgexfoundry/edgex-go/internal/system/agent"
+	agentConfig "github.com/edgexfoundry/edgex-go/internal/system/agent/config"
 )
 
 func TestToml(t *testing.T) {
-	configuration := &agent.ConfigurationStruct{}
+	configuration := &agentConfig.ConfigurationStruct{}
 	if err := config.VerifyTomlFiles(configuration); err != nil {
 		t.Fatalf("%v", err)
 	}

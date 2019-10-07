@@ -24,6 +24,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/errors"
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/operators/notification"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/gorilla/mux"
 )
@@ -125,7 +126,7 @@ func restDeleteNotificationBySlug(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
 }
@@ -178,7 +179,7 @@ func restDeleteNotificationByID(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
 }
@@ -203,7 +204,7 @@ func restDeleteNotificationsByAge(w http.ResponseWriter, r *http.Request) {
 		LoggingClient.Error(err.Error())
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
 }
@@ -222,9 +223,9 @@ func restGetNotificationsBySender(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if limitNum > Configuration.Service.MaxResultCount {
-		http.Error(w, "Exceeded max limit", http.StatusRequestEntityTooLarge)
-		LoggingClient.Error("Exceeded max limit")
+	// Check the length
+	if err = checkMaxLimit(limitNum); err != nil {
+		http.Error(w, ExceededMaxResultCount, http.StatusRequestEntityTooLarge)
 		return
 	}
 
@@ -269,9 +270,9 @@ func restNotificationByStartEnd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if limitNum > Configuration.Service.MaxResultCount {
-		http.Error(w, "Exceeded max limit", http.StatusRequestEntityTooLarge)
-		LoggingClient.Error("Exceeded max limit")
+	// Check the length
+	if err = checkMaxLimit(limitNum); err != nil {
+		http.Error(w, ExceededMaxResultCount, http.StatusRequestEntityTooLarge)
 		return
 	}
 
@@ -308,9 +309,9 @@ func restNotificationByStart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if limitNum > Configuration.Service.MaxResultCount {
-		http.Error(w, "Exceeded max limit", http.StatusRequestEntityTooLarge)
-		LoggingClient.Error("Exceeded max limit")
+	// Check the length
+	if err = checkMaxLimit(limitNum); err != nil {
+		http.Error(w, ExceededMaxResultCount, http.StatusRequestEntityTooLarge)
 		return
 	}
 
@@ -349,9 +350,9 @@ func restNotificationByEnd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if limitNum > Configuration.Service.MaxResultCount {
-		http.Error(w, "Exceeded max limit", http.StatusRequestEntityTooLarge)
-		LoggingClient.Error("Exceeded max limit")
+	// Check the length
+	if err = checkMaxLimit(limitNum); err != nil {
+		http.Error(w, ExceededMaxResultCount, http.StatusRequestEntityTooLarge)
 		return
 	}
 
@@ -384,9 +385,9 @@ func restNotificationsByLabels(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if limitNum > Configuration.Service.MaxResultCount {
-		http.Error(w, "Exceeded max limit", http.StatusRequestEntityTooLarge)
-		LoggingClient.Error("Exceeded max limit")
+	// Check the length
+	if err = checkMaxLimit(limitNum); err != nil {
+		http.Error(w, ExceededMaxResultCount, http.StatusRequestEntityTooLarge)
 		return
 	}
 
@@ -421,9 +422,9 @@ func restNotificationsNew(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if limitNum > Configuration.Service.MaxResultCount {
-		http.Error(w, "Exceeded max limit", http.StatusRequestEntityTooLarge)
-		LoggingClient.Error("Exceeded max limit")
+	// Check the length
+	if err = checkMaxLimit(limitNum); err != nil {
+		http.Error(w, ExceededMaxResultCount, http.StatusRequestEntityTooLarge)
 		return
 	}
 

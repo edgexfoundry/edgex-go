@@ -26,6 +26,8 @@ import (
 	"testing"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+
+	"github.com/edgexfoundry/edgex-go/internal/security/secretstoreclient"
 )
 
 func TestGetAccessToken(t *testing.T) {
@@ -78,7 +80,7 @@ func TestRetrieve(t *testing.T) {
 	defer func() { Configuration = oldConfig }()
 
 	Configuration = &ConfigurationStruct{}
-	Configuration.SecretService = SecretServiceInfo{
+	Configuration.SecretService = secretstoreclient.SecretServiceInfo{
 		Server: parsed.Hostname(),
 		Port:   port,
 		Scheme: "https",

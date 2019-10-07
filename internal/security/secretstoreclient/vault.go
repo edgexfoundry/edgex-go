@@ -22,7 +22,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 
@@ -30,38 +29,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/security/fileioperformer"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
-
-// InitRequest contains a Vault init request regarding the Shamir Secret Sharing (SSS) parameters
-type InitRequest struct {
-	SecretShares    int `json:"secret_shares"`
-	SecretThreshold int `json:"secret_threshold"`
-}
-
-// InitResponse contains a Vault init response
-type InitResponse struct {
-	Keys       []string `json:"keys"`
-	KeysBase64 []string `json:"keys_base64"`
-	RootToken  string   `json:"root_token"`
-}
-
-// UnsealRequest contains a Vault unseal request
-type UnsealRequest struct {
-	Key   string `json:"key"`
-	Reset bool   `json:"reset"`
-}
-
-// UnsealResponse contains a Vault unseal response
-type UnsealResponse struct {
-	Sealed   bool `json:"sealed"`
-	T        int  `json:"t"`
-	N        int  `json:"n"`
-	Progress int  `json:"progress"`
-}
-
-// UpdateACLPolicyRequest contains a ACL policy create/update request
-type UpdateACLPolicyRequest struct {
-	Policy string `json:"policy"`
-}
 
 type vaultClient struct {
 	logger logger.LoggingClient
@@ -80,9 +47,7 @@ func NewSecretStoreClient(logger logger.LoggingClient, r internal.HttpCaller, s 
 }
 
 func (vc *vaultClient) HealthCheck() (statusCode int, err error) {
-	url := vc.buildURL(VaultHealthAPI)
-	empty := struct{}{}
-	resp, err := vc.commonRequest(nil, http.MethodGet, url, &empty)
+	resp, err := vc.commonJSONRequest(nil, http.MethodGet, VaultHealthAPI, struct{}{})
 	if err != nil {
 		vc.logger.Error(fmt.Sprintf("failed on checking status of secret store: %s", err.Error()))
 		return 0, err
@@ -97,68 +62,33 @@ func (vc *vaultClient) Init(config SecretServiceInfo, vmkWriter io.Writer) (stat
 		SecretShares:    config.VaultSecretShares,
 		SecretThreshold: config.VaultSecretThreshold,
 	}
+	initResp := InitResponse{}
 
 	vc.logger.Info(fmt.Sprintf("vault init strategy (SSS parameters): shares=%d threshold=%d", initRequest.SecretShares, initRequest.SecretThreshold))
 
-	url := vc.buildURL(VaultInitAPI)
-	resp, err := vc.commonRequest(nil, http.MethodPost, url, &initRequest)
-	if err != nil {
-		vc.logger.Error(fmt.Sprintf("failed to send Vault init request: %s", err.Error()))
-		return 0, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		vc.logger.Error(fmt.Sprintf("vault init request failed with status: %s", resp.Status))
-		return resp.StatusCode, err
-	}
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		vc.logger.Error(fmt.Sprintf("failed to fetch the Vault init request response body: %s", err.Error()))
-		return 0, err
-	}
-
-	initResp := InitResponse{}
-	if err = json.Unmarshal(body, &initResp); err != nil {
-		vc.logger.Error(fmt.Sprintf("failed to build the JSON structure from the init request response body: %s", err.Error()))
-		return 0, err
-	}
-
-	_, err = vmkWriter.Write(body)
-
-	if err != nil {
-		vc.logger.Error(fmt.Sprintf("failed to create Vault init response %s file, HTTP status: %s", config.TokenFolderPath+"/"+config.TokenFile, err.Error()))
-		return 0, err
-	}
-
-	vc.logger.Info("Vault initialization complete.")
-	return resp.StatusCode, nil
+	resp, err := vc.commonJSONRequest(nil, http.MethodPost, VaultInitAPI, &initRequest)
+	code, err := vc.processResponse(resp, err, "initialize secret store", http.StatusOK, &initResp)
+	err = json.NewEncoder(vmkWriter).Encode(initResp) // Write the init response to disk
+	return code, err
 }
 
 func (vc *vaultClient) Unseal(config SecretServiceInfo, vmkReader io.Reader) (statusCode int, err error) {
 	vc.logger.Info(fmt.Sprintf("Vault unsealing Process. Applying key shares."))
 	initResp := InitResponse{}
 	readCloser := fileioperformer.MakeReadCloser(vmkReader)
-	rawBytes, err := ioutil.ReadAll(readCloser)
 	defer readCloser.Close()
-	if err != nil {
-		vc.logger.Error(fmt.Sprintf("failed to read the Vault JSON response init file: %s", err.Error()))
-		return 0, err
-	}
 
-	if err = json.Unmarshal(rawBytes, &initResp); err != nil {
+	if err = json.NewDecoder(vmkReader).Decode(&initResp); err != nil {
 		vc.logger.Error(fmt.Sprintf("failed to build the JSON structure from the init response body: %s", err.Error()))
 		return 0, err
 	}
-
-	url := vc.buildURL(VaultUnsealAPI)
 
 	keyCounter := 1
 	for _, key := range initResp.KeysBase64 {
 		unsealRequest := UnsealRequest{
 			Key: key,
 		}
-		resp, err := vc.commonRequest(nil, http.MethodPost, url, &unsealRequest)
+		resp, err := vc.commonJSONRequest(nil, http.MethodPost, VaultUnsealAPI, &unsealRequest)
 		if err != nil {
 			vc.logger.Error(fmt.Sprintf("failed to send the Vault init request: %s", err.Error()))
 			return 0, err
@@ -166,17 +96,13 @@ func (vc *vaultClient) Unseal(config SecretServiceInfo, vmkReader io.Reader) (st
 		defer resp.Body.Close()
 
 		if resp.StatusCode != http.StatusOK {
-			vc.logger.Error(fmt.Sprintf("vault unseal request failed with status code: %s", resp.Status))
+			err := fmt.Errorf("vault unseal request failed with status code: %s", resp.Status)
+			vc.logger.Error(err.Error())
 			return resp.StatusCode, err
 		}
 
-		unsealedBody, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			vc.logger.Error(fmt.Sprintf("failed to fetch the Vault unseal request response body: %s", err.Error()))
-			return 0, err
-		}
 		unsealResponse := UnsealResponse{}
-		if err = json.Unmarshal(unsealedBody, &unsealResponse); err != nil {
+		if err = json.NewDecoder(resp.Body).Decode(&unsealResponse); err != nil {
 			vc.logger.Error(fmt.Sprintf("failed to build the JSON structure from the unseal request response body: %s", err.Error()))
 			return 0, err
 		}
@@ -191,58 +117,16 @@ func (vc *vaultClient) Unseal(config SecretServiceInfo, vmkReader io.Reader) (st
 	return 0, fmt.Errorf("%d", 1)
 }
 
-func (vc *vaultClient) InstallPolicy(
-	token string,
-	policyName string,
-	policyDocument string) (statusCode int, err error) {
-
+func (vc *vaultClient) InstallPolicy(token string, policyName string, policyDocument string) (statusCode int, err error) {
 	path := fmt.Sprintf(CreatePolicyPath, url.PathEscape(policyName))
-	url := vc.buildURL(path)
-
 	request := UpdateACLPolicyRequest{Policy: policyDocument}
-	resp, err := vc.commonRequest(&token, http.MethodPut, url, request)
-	if err != nil {
-		vc.logger.Error(fmt.Sprintf("failed to send Vault create policy request: %s", err.Error()))
-		return 0, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusNoContent {
-		vc.logger.Error(fmt.Sprintf("vault create policy request failed with status: %s", resp.Status))
-		return resp.StatusCode, err
-	}
-
-	vc.logger.Info(fmt.Sprintf("Created vault policy %s", policyName))
-	return resp.StatusCode, nil
+	resp, err := vc.commonJSONRequest(&token, http.MethodPut, path, request)
+	return vc.processResponse(resp, err, "install policy", http.StatusNoContent, nil)
 }
 
 func (vc *vaultClient) CreateToken(token string, parameters map[string]interface{}, response interface{}) (statusCode int, err error) {
-	url := vc.buildURL(CreateTokenAPI)
-
-	resp, err := vc.commonRequest(&token, http.MethodPost, url, parameters)
-	if err != nil {
-		vc.logger.Error(fmt.Sprintf("failed to send Vault create token request: %s", err.Error()))
-		return 0, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		vc.logger.Error(fmt.Sprintf("vault create token request failed with status: %s", resp.Status))
-		return resp.StatusCode, err
-	}
-
-	err = json.NewDecoder(resp.Body).Decode(&response)
-	if err != nil {
-		vc.logger.Error(fmt.Sprintf("failed to parse response body: %s", err.Error()))
-		return 0, err
-	}
-
-	tokenName, ok := parameters["display_name"].(string)
-	if !ok {
-		tokenName = "UNKNOWN DISPLAY_NAME"
-	}
-	vc.logger.Info(fmt.Sprintf("Created vault token %s", tokenName))
-	return resp.StatusCode, nil
+	resp, err := vc.commonJSONRequest(&token, http.MethodPost, CreateTokenAPI, parameters)
+	return vc.processResponse(resp, err, "create token", http.StatusOK, response)
 }
 
 func (vc *vaultClient) buildURL(path string) string {
@@ -253,14 +137,19 @@ func (vc *vaultClient) buildURL(path string) string {
 	}).String()
 }
 
-func (vc *vaultClient) commonRequest(token *string, method string, url string, jsonBody interface{}) (*http.Response, error) {
+func (vc *vaultClient) commonJSONRequest(token *string, method string, path string, jsonBody interface{}) (*http.Response, error) {
 	body, err := json.Marshal(jsonBody)
 	if err != nil {
 		vc.logger.Error(fmt.Sprintf("failed to marshal request body: %s", err.Error()))
 		return nil, err
 	}
 
-	req, err := http.NewRequest(method, url, bytes.NewReader(body))
+	return vc.commonRequest(token, method, path, bytes.NewReader(body))
+}
+
+func (vc *vaultClient) commonRequest(token *string, method string, path string, bodyReader io.Reader) (*http.Response, error) {
+	url := vc.buildURL(path)
+	req, err := http.NewRequest(method, url, bodyReader)
 	if err != nil {
 		vc.logger.Error(fmt.Sprintf("failed to create request object: %s", err.Error()))
 		return nil, err
@@ -271,4 +160,40 @@ func (vc *vaultClient) commonRequest(token *string, method string, url string, j
 	}
 	req.Header.Set("Content-Type", JSONContentType)
 	return vc.client.Do(req)
+}
+
+// processResponse takes the output of the commonRequest method
+// and performs standard processing based the the following:
+// operationDescription contains a message describing the operation in logs
+// expectedStatusCode is the expected status code for success
+// responseObject is the address of a JSON struct, or nil
+// If the response is HTTP 200 status and responseObject is not nil,
+// this function will attempt to decode the object
+// delegate is a callback function called to handle the decoded response
+func (vc *vaultClient) processResponse(resp *http.Response, responseError error,
+	operationDescription string, expectedStatusCode int,
+	responseObject interface{}) (int, error) {
+
+	if responseError != nil {
+		vc.logger.Error(fmt.Sprintf("unable to make request to %s failed: %s", operationDescription, responseError.Error()))
+		return 0, responseError
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != expectedStatusCode {
+		err := fmt.Errorf("request to %s failed with status: %s", operationDescription, resp.Status)
+		vc.logger.Error(err.Error())
+		return resp.StatusCode, err
+	}
+
+	if responseObject != nil {
+		err := json.NewDecoder(resp.Body).Decode(responseObject)
+		if err != nil {
+			vc.logger.Error(fmt.Sprintf("failed to parse response body: %s", err.Error()))
+			return resp.StatusCode, err
+		}
+	}
+
+	vc.logger.Info(fmt.Sprintf("successfully made request to %s", operationDescription))
+	return resp.StatusCode, nil
 }

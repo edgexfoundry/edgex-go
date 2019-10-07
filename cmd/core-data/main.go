@@ -16,6 +16,7 @@ package main
 
 import (
 	"flag"
+
 	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/core/data"
@@ -54,9 +55,11 @@ func main() {
 		data.Configuration,
 		startupTimer,
 		[]interfaces.BootstrapHandler{
+			handlers.SecretClientBootstrapHandler,
 			data.NewServiceInit(&httpServer).BootstrapHandler,
 			telemetry.BootstrapHandler,
 			httpServer.Handler,
 			handlers.NewStartMessage(clients.CoreDataServiceKey, edgex.Version).Handler,
-		})
+		},
+	)
 }

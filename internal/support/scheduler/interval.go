@@ -63,7 +63,8 @@ func addNewInterval(interval contract.Interval) (string, error) {
 	// Validate the Frequency
 	freq := interval.Frequency
 	if freq != "" {
-		if !isFrequencyValid(interval.Frequency) {
+		_, err := parseFrequency(freq)
+		if err != nil {
 			return "", errors.NewErrInvalidFrequencyFormat(freq)
 		}
 	}
@@ -107,7 +108,8 @@ func updateInterval(from contract.Interval) error {
 		to.End = from.End
 	}
 	if from.Frequency != "" {
-		if !isFrequencyValid(from.Frequency) {
+		_, err := parseFrequency(from.Frequency)
+		if err != nil {
 			return errors.NewErrInvalidFrequencyFormat(from.Frequency)
 		}
 		to.Frequency = from.Frequency

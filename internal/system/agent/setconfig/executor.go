@@ -19,8 +19,7 @@ import (
 	"strings"
 
 	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/system/agent"
-
+	"github.com/edgexfoundry/edgex-go/internal/system/agent/config"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	requests "github.com/edgexfoundry/go-mod-core-contracts/requests/configuration"
 	responses "github.com/edgexfoundry/go-mod-core-contracts/responses/configuration"
@@ -32,11 +31,11 @@ import (
 // executor contains references to dependencies required to execute a set configuration request.
 type executor struct {
 	loggingClient logger.LoggingClient
-	configuration *agent.ConfigurationStruct
+	configuration *config.ConfigurationStruct
 }
 
 // NewExecutor is a factory function that returns an initialized executor struct.
-func NewExecutor(loggingClient logger.LoggingClient, configuration *agent.ConfigurationStruct) *executor {
+func NewExecutor(loggingClient logger.LoggingClient, configuration *config.ConfigurationStruct) *executor {
 	return &executor{
 		loggingClient: loggingClient,
 		configuration: configuration,

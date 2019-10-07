@@ -19,6 +19,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/gorilla/mux"
 )
 
@@ -55,7 +56,7 @@ func cleanupHandlerCloser(w http.ResponseWriter, err error) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	w.WriteHeader(http.StatusAccepted)
 	w.Write([]byte("true"))
 }

@@ -18,9 +18,16 @@ package notifications
 
 import (
 	"fmt"
+	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
 	"io"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/edgexfoundry/go-mod-core-contracts/clients"
+)
+
+const (
+	ExceededMaxResultCount string = "error, exceeded the max limit as defined in config"
 )
 
 // Printing function purely for debugging purposes
@@ -38,6 +45,15 @@ func printBody(r io.ReadCloser) {
 
 // Test if the service is working
 func pingHandler(w http.ResponseWriter, _ *http.Request) {
-	w.Header().Set("Content-Type", "text/plain")
+	w.Header().Set(clients.ContentType, clients.ContentTypeText)
 	w.Write([]byte("pong"))
+}
+
+func checkMaxLimit(limit int) error {
+	if limit > Configuration.Service.MaxResultCount {
+		LoggingClient.Error(ExceededMaxResultCount)
+		return errors.NewErrLimitExceeded(limit)
+	}
+
+	return nil
 }

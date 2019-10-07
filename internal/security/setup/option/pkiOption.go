@@ -31,14 +31,25 @@ type OptionsExecutor interface {
 type PkiInitOption struct {
 	GenerateOpt bool
 	CacheOpt    bool
+	ImportOpt   bool
 	executor    OptionsExecutor
 }
 
 // NewPkiInitOption constructor to get options built for pki-init
 func NewPkiInitOption(opts PkiInitOption) (ex OptionsExecutor, statusCode int, err error) {
-	// cache option cannot used with -generate
+	// cache option cannot be used with -generate
 	if opts.CacheOpt && opts.GenerateOpt {
-		return ex, exitWithError.intValue(), errors.New("Cannot execute cache option with generate option")
+		return ex, exitWithError.intValue(), errors.New("Cannot use cache option with generate option at the same time")
+	}
+
+	// import option cannot be used with -generate
+	if opts.ImportOpt && opts.GenerateOpt {
+		return ex, exitWithError.intValue(), errors.New("Cannot use import option with generate option at the same time")
+	}
+
+	// import option cannot be used with -cache, either
+	if opts.ImportOpt && opts.CacheOpt {
+		return ex, exitWithError.intValue(), errors.New("Cannot use import option with cache option at the same time")
 	}
 
 	opts.executor = &opts
@@ -51,6 +62,7 @@ func (pkiInitOpt *PkiInitOption) ProcessOptions() (int, error) {
 	statusCode, err := pkiInitOpt.executor.executeOptions(
 		Generate(),
 		Cache(),
+		Import(),
 	)
 
 	return statusCode.intValue(), err

@@ -160,6 +160,20 @@ func TestMainWithCacheOption(t *testing.T) {
 	assert.Equal(false, (optionExec.(*option.PkiInitOption)).GenerateOpt)
 }
 
+func TestMainWithImportOption(t *testing.T) {
+	tearDown := setupTest(t)
+	origArgs := os.Args
+	defer tearDown(t, origArgs)
+	assert := assert.New(t)
+
+	runWithImportOption(false)
+	assert.Equal(0, (exitInstance.(*testExitCode)).getStatusCode())
+	optionExec := (dispatcherInstance.(*testPkiInitOptionDispatcher)).testOptsExecutor
+	assert.Equal(true, (optionExec.(*option.PkiInitOption)).ImportOpt)
+	assert.Equal(false, (optionExec.(*option.PkiInitOption)).CacheOpt)
+	assert.Equal(false, (optionExec.(*option.PkiInitOption)).GenerateOpt)
+}
+
 func runWithGenerateOption(hasError bool) {
 	os.Args = []string{"cmd", "generate"}
 	printCommandLineStrings(os.Args)
@@ -169,6 +183,13 @@ func runWithGenerateOption(hasError bool) {
 
 func runWithCacheOption(hasError bool) {
 	os.Args = []string{"cmd", "cache"}
+	printCommandLineStrings(os.Args)
+	hasDispatchError = hasError
+	main()
+}
+
+func runWithImportOption(hasError bool) {
+	os.Args = []string{"cmd", "import"}
 	printCommandLineStrings(os.Args)
 	hasDispatchError = hasError
 	main()
@@ -222,12 +243,14 @@ func (testDispatcher *testPkiInitOptionDispatcher) run(command string) (statusCo
 
 	genOpt := false
 	cacheOpt := false
+	importOpt := false
 	if pkiInit, ok := optsExecutor.(*option.PkiInitOption); ok {
 		genOpt = pkiInit.GenerateOpt
 		cacheOpt = pkiInit.CacheOpt
+		importOpt = pkiInit.ImportOpt
 	}
 
-	fmt.Printf("In test flag value: generateOpt = %v, cacheOpt = %v, configFile = %v\n", genOpt, cacheOpt, configFile)
+	fmt.Printf("In test flag value: generateOpt = %v, cacheOpt = %v, importOpt = %v, configFile = %v\n", genOpt, cacheOpt, importOpt, configFile)
 
 	testDispatcher.testOptsExecutor = optsExecutor
 

@@ -56,7 +56,7 @@ func LoadRestRoutes(
 
 // pingHandler implements a controller to execute a ping request.
 func pingHandler(w http.ResponseWriter, _ *http.Request) {
-	w.Header().Set("Content-Type", "text/plain")
+	w.Header().Set(clients.ContentType, clients.ContentTypeText)
 	w.Write([]byte("pong"))
 }
 

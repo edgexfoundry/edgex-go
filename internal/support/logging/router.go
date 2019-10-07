@@ -28,7 +28,7 @@ import (
 
 // Test if the service is working
 func pingHandler(w http.ResponseWriter, _ *http.Request) {
-	w.Header().Set("Content-Type", "text/plain")
+	w.Header().Set(clients.ContentType, clients.ContentTypeText)
 	w.Write([]byte("pong"))
 }
 
@@ -66,13 +66,6 @@ func addLog(w http.ResponseWriter, r *http.Request) {
 	dbClient.add(l)
 }
 
-func checkMaxLimit(limit int) int {
-	if limit > Configuration.Service.MaxResultCount || limit == 0 {
-		return Configuration.Service.MaxResultCount
-	}
-	return limit
-}
-
 func getCriteria(w http.ResponseWriter, r *http.Request) *matchCriteria {
 	var criteria matchCriteria
 	vars := mux.Vars(r)
@@ -94,7 +87,7 @@ func getCriteria(w http.ResponseWriter, r *http.Request) *matchCriteria {
 		}
 	}
 	//In all cases, cap the # of entries returned at MaxResultCount
-	criteria.Limit = checkMaxLimit(criteria.Limit)
+	criteria.Limit = checkMaxLimitCount(criteria.Limit)
 
 	start := vars["start"]
 	if len(start) > 0 {
