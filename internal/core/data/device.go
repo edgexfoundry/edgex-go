@@ -15,7 +15,6 @@ package data
 
 import (
 	"context"
-	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 )
 
@@ -86,15 +85,6 @@ func updateDeviceServiceLastReportedConnected(device string) {
 	//Use of context.Background because this function is invoked asynchronously from a channel
 	msc.UpdateLastConnected(s.Id, t, context.Background())
 	msc.UpdateLastReported(s.Id, t, context.Background())
-}
-
-func checkMaxLimit(limit int) error {
-	if limit > Configuration.Service.MaxResultCount {
-		LoggingClient.Error(maxExceededString)
-		return errors.NewErrLimitExceeded(limit)
-	}
-
-	return nil
 }
 
 func checkDevice(device string, ctx context.Context) error {

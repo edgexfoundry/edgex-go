@@ -11,12 +11,16 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
-package data
+package metadata
 
 import (
 	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
 	"io"
 	"io/ioutil"
+)
+
+const (
+	ExceededMaxResultCount = "error, exceeded the max limit as defined in config"
 )
 
 // Printing function purely for debugging purposes
@@ -34,7 +38,7 @@ func printBody(r io.ReadCloser) {
 
 func checkMaxLimit(limit int) error {
 	if limit > Configuration.Service.MaxResultCount {
-		LoggingClient.Error(maxExceededString)
+		LoggingClient.Error(ExceededMaxResultCount)
 		return errors.NewErrLimitExceeded(limit)
 	}
 

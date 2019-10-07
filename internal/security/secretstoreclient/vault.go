@@ -96,7 +96,8 @@ func (vc *vaultClient) Unseal(config SecretServiceInfo, vmkReader io.Reader) (st
 		defer resp.Body.Close()
 
 		if resp.StatusCode != http.StatusOK {
-			vc.logger.Error(fmt.Sprintf("vault unseal request failed with status code: %s", resp.Status))
+			err := fmt.Errorf("vault unseal request failed with status code: %s", resp.Status)
+			vc.logger.Error(err.Error())
 			return resp.StatusCode, err
 		}
 
@@ -171,21 +172,22 @@ func (vc *vaultClient) commonRequest(token *string, method string, path string, 
 // delegate is a callback function called to handle the decoded response
 func (vc *vaultClient) processResponse(resp *http.Response, responseError error,
 	operationDescription string, expectedStatusCode int,
-	responseObject interface{}) (statusCode int, err error) {
+	responseObject interface{}) (int, error) {
 
 	if responseError != nil {
-		vc.logger.Error(fmt.Sprintf("unable to make request to %s failed: %s", operationDescription, err.Error()))
-		return 0, err
+		vc.logger.Error(fmt.Sprintf("unable to make request to %s failed: %s", operationDescription, responseError.Error()))
+		return 0, responseError
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != expectedStatusCode {
-		vc.logger.Error(fmt.Sprintf("request to %s failed with status: %s", operationDescription, resp.Status))
+		err := fmt.Errorf("request to %s failed with status: %s", operationDescription, resp.Status)
+		vc.logger.Error(err.Error())
 		return resp.StatusCode, err
 	}
 
 	if responseObject != nil {
-		err = json.NewDecoder(resp.Body).Decode(responseObject)
+		err := json.NewDecoder(resp.Body).Decode(responseObject)
 		if err != nil {
 			vc.logger.Error(fmt.Sprintf("failed to parse response body: %s", err.Error()))
 			return resp.StatusCode, err
