@@ -27,6 +27,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/redis"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/endpoint"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
@@ -49,6 +50,9 @@ var chEvents chan interface{} // A channel for "domain events" sourced from even
 var msgClient messaging.MessageClient
 var mdc metadata.DeviceClient
 var msc metadata.DeviceServiceClient
+
+// Global ErrorConcept variables
+var httpErrorHandler errorconcept.ErrorHandler
 
 type server interface {
 	IsRunning() bool
@@ -142,6 +146,7 @@ func (s ServiceInit) BootstrapHandler(
 
 	// update global variables.
 	LoggingClient = logging
+	httpErrorHandler = errorconcept.NewErrorHandler(logging)
 
 	// initialize clients required by service.
 	s.initializeClients(registry != nil, registry)
