@@ -21,8 +21,10 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/core/data"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers/database"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers/httpserver"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers/message"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers/secret"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
@@ -47,7 +49,7 @@ func main() {
 	flag.Usage = usage.HelpCallback
 	flag.Parse()
 
-	httpServer := handlers.NewServerBootstrap(data.LoadRestRoutes())
+	httpServer := httpserver.NewBootstrap(data.LoadRestRoutes())
 	bootstrap.Run(
 		configDir,
 		profileDir,
@@ -58,12 +60,12 @@ func main() {
 		startupTimer,
 		di.NewContainer(di.ServiceConstructorMap{}),
 		[]interfaces.BootstrapHandler{
-			handlers.SecretClientBootstrapHandler,
+			secret.BootstrapHandler,
 			database.NewDatabaseForCoreData(&httpServer, data.Configuration).BootstrapHandler,
 			data.BootstrapHandler,
 			telemetry.BootstrapHandler,
-			httpServer.Handler,
-			handlers.NewStartMessage(clients.CoreDataServiceKey, edgex.Version).Handler,
+			httpServer.BootstrapHandler,
+			message.NewBootstrap(clients.CoreDataServiceKey, edgex.Version).BootstrapHandler,
 		},
 	)
 }

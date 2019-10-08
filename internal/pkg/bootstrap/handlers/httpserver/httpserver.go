@@ -12,7 +12,7 @@
  * the License.
  *******************************************************************************/
 
-package handlers
+package httpserver
 
 import (
 	"context"
@@ -28,15 +28,15 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// Server contains references to dependencies required by the http server implementation.
-type Server struct {
+// HttpServer contains references to dependencies required by the http server implementation.
+type HttpServer struct {
 	router    *mux.Router
 	isRunning bool
 }
 
-// NewServerBootstrap is a factory method that returns an initialized Server receiver struct.
-func NewServerBootstrap(router *mux.Router) Server {
-	return Server{
+// NewBootstrap is a factory method that returns an initialized HttpServer receiver struct.
+func NewBootstrap(router *mux.Router) HttpServer {
+	return HttpServer{
 		router:    router,
 		isRunning: false,
 	}
@@ -45,14 +45,14 @@ func NewServerBootstrap(router *mux.Router) Server {
 // IsRunning returns whether or not the http server is running.  It is provided to support delayed shutdown of
 // any resources required to successfully process http requests until after all outstanding requests have been
 // processed (e.g. a database connection).
-func (h *Server) IsRunning() bool {
-	return h.isRunning
+func (b *HttpServer) IsRunning() bool {
+	return b.isRunning
 }
 
-// Handler fulfills the BootstrapHandler contract.  It creates two go routines -- one that executes ListenAndServe()
+// BootstrapHandler fulfills the BootstrapHandler contract.  It creates two go routines -- one that executes ListenAndServe()
 // and another that waits on closure of a context's done channel before calling Shutdown() to cleanly shut down the
 // http server.
-func (h *Server) Handler(
+func (b *HttpServer) BootstrapHandler(
 	wg *sync.WaitGroup,
 	ctx context.Context,
 	startupTimer startup.Timer,
@@ -63,7 +63,7 @@ func (h *Server) Handler(
 	timeout := time.Millisecond * time.Duration(bootstrapConfig.Service.Timeout)
 	server := &http.Server{
 		Addr:         addr,
-		Handler:      h.router,
+		Handler:      b.router,
 		WriteTimeout: timeout,
 		ReadTimeout:  timeout,
 	}
@@ -75,10 +75,10 @@ func (h *Server) Handler(
 	go func() {
 		defer wg.Done()
 
-		h.isRunning = true
+		b.isRunning = true
 		server.ListenAndServe()
 		loggingClient.Info("Web server stopped")
-		h.isRunning = false
+		b.isRunning = false
 	}()
 
 	wg.Add(1)
