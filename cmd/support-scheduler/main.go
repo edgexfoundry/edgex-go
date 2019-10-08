@@ -21,6 +21,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers/database"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
@@ -57,7 +58,8 @@ func main() {
 		di.NewContainer(di.ServiceConstructorMap{}),
 		[]interfaces.BootstrapHandler{
 			handlers.SecretClientBootstrapHandler,
-			scheduler.NewServiceInit(&httpServer).BootstrapHandler,
+			database.NewDatabase(&httpServer, scheduler.Configuration).BootstrapHandler,
+			scheduler.BootstrapHandler,
 			telemetry.BootstrapHandler,
 			httpServer.Handler,
 			handlers.NewStartMessage(clients.SupportSchedulerServiceKey, edgex.Version).Handler,

@@ -24,7 +24,7 @@ import (
 type ConfigurationStruct struct {
 	Writable      WritableInfo
 	Clients       map[string]config.ClientInfo
-	Databases     map[string]config.DatabaseInfo
+	Databases     config.DatabaseInfo
 	Logging       config.LoggingInfo
 	Notifications config.NotificationInfo
 	Registry      config.RegistryInfo
@@ -90,4 +90,9 @@ func (c *ConfigurationStruct) GetLogLevel() string {
 // SetLogLevel updates the log level in the ConfigurationStruct.
 func (c *ConfigurationStruct) SetRegistryInfo(registryInfo config.RegistryInfo) {
 	c.Registry = registryInfo
+}
+
+// GetDatabaseInfo returns a database information map.
+func (c *ConfigurationStruct) GetDatabaseInfo() config.DatabaseInfo {
+	return c.Databases
 }
