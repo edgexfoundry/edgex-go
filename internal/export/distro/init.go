@@ -27,12 +27,14 @@ import (
 	"github.com/edgexfoundry/go-mod-registry/registry"
 )
 
+// Global variables
 var LoggingClient logger.LoggingClient
 var ec coredata.EventClient
 var Configuration = &ConfigurationStruct{}
 var messageErrors chan error
 var messageEnvelopes chan msgTypes.MessageEnvelope
 
+// initializeClients creates the clients required by the service.
 func initializeClients(useRegistry bool, registryClient registry.Client) (messaging.MessageClient, error) {
 	ec = coredata.NewEventClient(
 		types.EndpointParams{
@@ -56,12 +58,8 @@ func initializeClients(useRegistry bool, registryClient registry.Client) (messag
 		})
 }
 
-func BootstrapHandler(
-	wg *sync.WaitGroup,
-	ctx context.Context,
-	startupTimer startup.Timer,
-	dic *di.Container) bool {
-
+// BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the export-distro service.
+func BootstrapHandler(wg *sync.WaitGroup, ctx context.Context, startupTimer startup.Timer, dic *di.Container) bool {
 	// update global variables.
 	LoggingClient = container.LoggingClientFrom(dic.Get)
 
