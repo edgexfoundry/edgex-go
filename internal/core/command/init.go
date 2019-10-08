@@ -17,7 +17,6 @@ package command
 import (
 	"context"
 	"fmt"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
 	"sync"
 	"time"
 
@@ -28,6 +27,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/redis"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/endpoint"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"

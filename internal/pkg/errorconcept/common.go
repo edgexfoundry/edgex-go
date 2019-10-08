@@ -34,7 +34,7 @@ type commonErrorConcept struct {
 	InvalidRequest_StatusBadRequest         invalidRequest_BadRequest
 	InvalidRequest_StatusServiceUnavailable invalidRequest_StatusServiceUnavailable
 	ItemNotFound                            itemNotFound
-	JsonDecoding                            decodingJsonError
+	JsonDecoding                            jsonDecoding
 	LimitExceeded                           errLimitExceeded
 	RetrieveError_StatusInternalServer      retrieveError_StatusInternalServer
 	RetrieveError_StatusServiceUnavailable  retrieveError_ServiceUnavailable
@@ -144,18 +144,18 @@ func (r itemNotFound) message(err error) string {
 	return err.Error()
 }
 
-type decodingJsonError struct{}
+type jsonDecoding struct{}
 
-func (r decodingJsonError) httpErrorCode() int {
+func (r jsonDecoding) httpErrorCode() int {
 	return http.StatusBadRequest
 }
 
-func (r decodingJsonError) isA(err error) bool {
+func (r jsonDecoding) isA(err error) bool {
 	_, ok := err.(data.ErrJsonDecoding)
 	return ok
 }
 
-func (r decodingJsonError) message(err error) string {
+func (r jsonDecoding) message(err error) string {
 	return err.Error()
 }
 

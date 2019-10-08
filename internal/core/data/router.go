@@ -63,10 +63,14 @@ func LoadRestRoutes() *mux.Router {
 	e.HandleFunc("/{"+ID+"}", getEventByIdHandler).Methods(http.MethodGet)
 	e.HandleFunc("/"+ID+"/{"+ID+"}", eventIdHandler).Methods(http.MethodDelete, http.MethodPut)
 	e.HandleFunc("/"+CHECKSUM+"/{"+CHECKSUM+"}", putEventChecksumHandler).Methods(http.MethodPut)
-	e.HandleFunc("/"+DEVICE+"/{"+DEVICEID_PARAM+"}/{"+LIMIT+":[0-9]+}", getEventByDeviceHandler).Methods(http.MethodGet)
+	e.HandleFunc(
+		"/"+DEVICE+"/{"+DEVICEID_PARAM+"}/{"+LIMIT+":[0-9]+}",
+		getEventByDeviceHandler).Methods(http.MethodGet)
 	e.HandleFunc("/"+DEVICE+"/{"+DEVICEID_PARAM+"}", deleteByDeviceIdHandler).Methods(http.MethodDelete)
 	e.HandleFunc("/"+REMOVEOLD+"/"+AGE+"/{"+AGE+":[0-9]+}", eventByAgeHandler).Methods(http.MethodDelete)
-	e.HandleFunc("/{"+START+":[0-9]+}/{"+END+":[0-9]+}/{"+LIMIT+":[0-9]+}", eventByCreationTimeHandler).Methods(http.MethodGet)
+	e.HandleFunc(
+		"/{"+START+":[0-9]+}/{"+END+":[0-9]+}/{"+LIMIT+":[0-9]+}",
+		eventByCreationTimeHandler).Methods(http.MethodGet)
 
 	// Readings
 	r.HandleFunc(clients.ApiReadingRoute, readingHandler).Methods(http.MethodGet, http.MethodPut, http.MethodPost)
@@ -74,16 +78,28 @@ func LoadRestRoutes() *mux.Router {
 	rd.HandleFunc("/"+COUNT, readingCountHandler).Methods(http.MethodGet)
 	rd.HandleFunc("/"+ID+"/{"+ID+"}", deleteReadingByIdHandler).Methods(http.MethodDelete)
 	rd.HandleFunc("/{"+ID+"}", getReadingByIdHandler).Methods(http.MethodGet)
-	rd.HandleFunc("/"+DEVICE+"/{"+DEVICEID_PARAM+"}/{"+LIMIT+":[0-9]+}", readingByDeviceHandler).Methods(http.MethodGet)
-	rd.HandleFunc("/"+NAME+"/{"+NAME+"}/{"+LIMIT+":[0-9]+}", readingbyValueDescriptorHandler).Methods(http.MethodGet)
-	rd.HandleFunc("/"+UOMLABEL+"/{"+UOMLABEL_PARAM+"}/{"+LIMIT+":[0-9]+}", readingByUomLabelHandler).Methods(http.MethodGet)
+	rd.HandleFunc(
+		"/"+DEVICE+"/{"+DEVICEID_PARAM+"}/{"+LIMIT+":[0-9]+}",
+		readingByDeviceHandler).Methods(http.MethodGet)
+	rd.HandleFunc(
+		"/"+NAME+"/{"+NAME+"}/{"+LIMIT+":[0-9]+}",
+		readingbyValueDescriptorHandler).Methods(http.MethodGet)
+	rd.HandleFunc(
+		"/"+UOMLABEL+"/{"+UOMLABEL_PARAM+"}/{"+LIMIT+":[0-9]+}",
+		readingByUomLabelHandler).Methods(http.MethodGet)
 	rd.HandleFunc("/"+LABEL+"/{"+LABEL+"}/{"+LIMIT+":[0-9]+}", readingByLabelHandler).Methods(http.MethodGet)
 	rd.HandleFunc("/"+TYPE+"/{"+TYPE+"}/{"+LIMIT+":[0-9]+}", readingByTypeHandler).Methods(http.MethodGet)
-	rd.HandleFunc("/{"+START+":[0-9]+}/{"+END+":[0-9]+}/{"+LIMIT+":[0-9]+}", readingByCreationTimeHandler).Methods(http.MethodGet)
-	rd.HandleFunc("/"+NAME+"/{"+NAME+"}/"+DEVICE+"/{"+DEVICE+"}/{"+LIMIT+":[0-9]+}", readingByValueDescriptorAndDeviceHandler).Methods(http.MethodGet)
+	rd.HandleFunc(
+		"/{"+START+":[0-9]+}/{"+END+":[0-9]+}/{"+LIMIT+":[0-9]+}",
+		readingByCreationTimeHandler).Methods(http.MethodGet)
+	rd.HandleFunc(
+		"/"+NAME+"/{"+NAME+"}/"+DEVICE+"/{"+DEVICE+"}/{"+LIMIT+":[0-9]+}",
+		readingByValueDescriptorAndDeviceHandler).Methods(http.MethodGet)
 
 	// Value descriptors
-	r.HandleFunc(clients.ApiValueDescriptorRoute, valueDescriptorHandler).Methods(http.MethodGet, http.MethodPut, http.MethodPost)
+	r.HandleFunc(
+		clients.ApiValueDescriptorRoute,
+		valueDescriptorHandler).Methods(http.MethodGet, http.MethodPut, http.MethodPost)
 	vd := r.PathPrefix(clients.ApiValueDescriptorRoute).Subrouter()
 	vd.HandleFunc("/"+USAGE, restValueDescriptorsUsageHandler).Methods(http.MethodGet)
 	vd.HandleFunc("/"+ID+"/{"+ID+"}", deleteValueDescriptorByIdHandler).Methods(http.MethodDelete)
@@ -142,7 +158,10 @@ func eventCountByDeviceIdHandler(w http.ResponseWriter, r *http.Request) {
 	// Check device
 	count, err := countEventsByDevice(id, ctx)
 	if err != nil {
-		httpErrorHandler.HandleOneVariant(w, err, errorconcept.NewServiceClientHttpError(err), errorconcept.Default.InternalServerError)
+		httpErrorHandler.HandleOneVariant(w,
+			err,
+			errorconcept.NewServiceClientHttpError(err),
+			errorconcept.Default.InternalServerError)
 	}
 
 	w.WriteHeader(http.StatusOK)
@@ -249,7 +268,11 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 		LoggingClient.Info("Updating event: " + from.ID)
 		err = updateEvent(from, ctx)
 		if err != nil {
-			httpErrorHandler.HandleOneVariant(w, err, errorconcept.Database.NotFound, errorconcept.Default.InternalServerError)
+			httpErrorHandler.HandleOneVariant(
+				w,
+				err,
+				errorconcept.Events.NotFound,
+				errorconcept.Default.InternalServerError)
 			return
 		}
 
@@ -291,7 +314,11 @@ func getEventByIdHandler(w http.ResponseWriter, r *http.Request) {
 	// Get the event
 	e, err := getEventById(id)
 	if err != nil {
-		httpErrorHandler.HandleOneVariant(w, err, errorconcept.Events.NotFound, errorconcept.Default.InternalServerError)
+		httpErrorHandler.HandleOneVariant(
+			w,
+			err,
+			errorconcept.Events.NotFound,
+			errorconcept.Default.InternalServerError)
 		return
 	}
 
@@ -326,7 +353,11 @@ func getEventByDeviceHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Check device
 	if err := checkDevice(deviceId, ctx); err != nil {
-		httpErrorHandler.HandleOneVariant(w, err, errorconcept.NewServiceClientHttpError(err), errorconcept.Default.ServiceUnavailable)
+		httpErrorHandler.HandleOneVariant(
+			w,
+			err,
+			errorconcept.NewServiceClientHttpError(err),
+			errorconcept.Default.ServiceUnavailable)
 	}
 
 	switch r.Method {
@@ -374,7 +405,10 @@ func eventIdHandler(w http.ResponseWriter, r *http.Request) {
 
 		err := updateEventPushDate(id, ctx)
 		if err != nil {
-			httpErrorHandler.HandleOneVariant(w, err, errorconcept.Events.NotFound, errorconcept.Default.InternalServerError)
+			httpErrorHandler.HandleOneVariant(w,
+				err,
+				errorconcept.Events.NotFound,
+				errorconcept.Default.InternalServerError)
 			return
 		}
 
@@ -387,7 +421,11 @@ func eventIdHandler(w http.ResponseWriter, r *http.Request) {
 		LoggingClient.Info("Deleting event: " + id)
 		err := deleteEventById(id)
 		if err != nil {
-			httpErrorHandler.HandleOneVariant(w, err, errorconcept.Events.NotFound, errorconcept.Default.InternalServerError)
+			httpErrorHandler.HandleOneVariant(
+				w,
+				err,
+				errorconcept.Events.NotFound,
+				errorconcept.Default.InternalServerError)
 			return
 		}
 		w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
@@ -416,7 +454,11 @@ func putEventChecksumHandler(w http.ResponseWriter, r *http.Request) {
 
 		err := updateEventPushDateByChecksum(checksum, ctx)
 		if err != nil {
-			httpErrorHandler.HandleOneVariant(w, err, errorconcept.Database.NotFound, errorconcept.Default.InternalServerError)
+			httpErrorHandler.HandleOneVariant(
+				w,
+				err,
+				errorconcept.Database.NotFound,
+				errorconcept.Default.InternalServerError)
 			return
 		}
 
@@ -444,7 +486,11 @@ func deleteByDeviceIdHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Check device
 	if err := checkDevice(deviceId, ctx); err != nil {
-		httpErrorHandler.HandleOneVariant(w, err, errorconcept.NewServiceClientHttpError(err), errorconcept.Default.InternalServerError)
+		httpErrorHandler.HandleOneVariant(
+			w,
+			err,
+			errorconcept.NewServiceClientHttpError(err),
+			errorconcept.Default.InternalServerError)
 	}
 
 	switch r.Method {
@@ -553,7 +599,11 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 		r, err := getAllReadings()
 
 		if err != nil {
-			httpErrorHandler.HandleOneVariant(w, err, errorconcept.Common.LimitExceeded, errorconcept.Default.InternalServerError)
+			httpErrorHandler.HandleOneVariant(
+				w,
+				err,
+				errorconcept.Common.LimitExceeded,
+				errorconcept.Default.InternalServerError)
 		}
 
 		pkg.Encode(r, w, LoggingClient)
@@ -576,7 +626,11 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 		// Check device
 		if reading.Device != "" {
 			if err := checkDevice(reading.Device, ctx); err != nil {
-				httpErrorHandler.HandleOneVariant(w, err, errorconcept.NewServiceClientHttpError(err), errorconcept.Default.InternalServerError)
+				httpErrorHandler.HandleOneVariant(
+					w,
+					err,
+					errorconcept.NewServiceClientHttpError(err),
+					errorconcept.Default.InternalServerError)
 			}
 		}
 
@@ -614,8 +668,8 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 				w,
 				err,
 				[]errorconcept.ErrorConceptType{
-					errorconcept.Common.JsonDecoding,
 					errorconcept.Database.NotFound,
+					errorconcept.ValueDescriptors.Invalid,
 				},
 				errorconcept.Default.InternalServerError)
 		}
@@ -639,7 +693,11 @@ func getReadingByIdHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		reading, err := getReadingById(id)
 		if err != nil {
-			httpErrorHandler.HandleOneVariant(w, err, errorconcept.Database.NotFound, errorconcept.Default.InternalServerError)
+			httpErrorHandler.HandleOneVariant(
+				w,
+				err,
+				errorconcept.Database.NotFound,
+				errorconcept.Default.InternalServerError)
 		}
 
 		pkg.Encode(reading, w, LoggingClient)
@@ -679,7 +737,11 @@ func deleteReadingByIdHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodDelete:
 		err := deleteReadingById(id)
 		if err != nil {
-			httpErrorHandler.HandleOneVariant(w, err, errorconcept.Database.NotFound, errorconcept.Default.InternalServerError)
+			httpErrorHandler.HandleOneVariant(
+				w,
+				err,
+				errorconcept.Database.NotFound,
+				errorconcept.Default.InternalServerError)
 		}
 
 		w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
@@ -721,7 +783,11 @@ func readingByDeviceHandler(w http.ResponseWriter, r *http.Request) {
 
 		readings, err := getReadingsByDevice(deviceId, limit, ctx)
 		if err != nil {
-			httpErrorHandler.HandleOneVariant(w, err, errorconcept.NewServiceClientHttpError(err), errorconcept.Default.InternalServerError)
+			httpErrorHandler.HandleOneVariant(
+				w,
+				err,
+				errorconcept.NewServiceClientHttpError(err),
+				errorconcept.Default.InternalServerError)
 		}
 
 		pkg.Encode(readings, w, LoggingClient)
@@ -906,12 +972,12 @@ func readingByCreationTimeHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	vars := mux.Vars(r)
-	start, err := strconv.ParseInt((vars["start"]), 10, 64)
+	start, err := strconv.ParseInt(vars["start"], 10, 64)
 	if err != nil {
 		httpErrorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
 		return
 	}
-	end, err := strconv.ParseInt((vars["end"]), 10, 64)
+	end, err := strconv.ParseInt(vars["end"], 10, 64)
 	if err != nil {
 		httpErrorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
 		return
@@ -976,14 +1042,22 @@ func readingByValueDescriptorAndDeviceHandler(w http.ResponseWriter, r *http.Req
 
 	// Check device
 	if err := checkDevice(device, ctx); err != nil {
-		httpErrorHandler.HandleOneVariant(w, err, errorconcept.NewServiceClientHttpError(err), errorconcept.Default.InternalServerError)
+		httpErrorHandler.HandleOneVariant(
+			w,
+			err,
+			errorconcept.NewServiceClientHttpError(err),
+			errorconcept.Default.InternalServerError)
 	}
 
 	// Check for value descriptor
 	if Configuration.Writable.ValidateCheck {
 		_, err = getValueDescriptorByName(name)
 		if err != nil {
-			httpErrorHandler.HandleOneVariant(w, err, errorconcept.Database.NotFound, errorconcept.Default.InternalServerError)
+			httpErrorHandler.HandleOneVariant(
+				w,
+				err,
+				errorconcept.Database.NotFound,
+				errorconcept.Default.InternalServerError)
 		}
 	}
 
@@ -1125,7 +1199,11 @@ func valueDescriptorByNameHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		v, err := dbClient.ValueDescriptorByName(name)
 		if err != nil {
-			httpErrorHandler.HandleOneVariant(w, err, errorconcept.NewServiceClientHttpError(err), errorconcept.Default.InternalServerError)
+			httpErrorHandler.HandleOneVariant(
+				w,
+				err,
+				errorconcept.NewServiceClientHttpError(err),
+				errorconcept.Default.InternalServerError)
 			return
 		}
 		pkg.Encode(v, w, LoggingClient)
@@ -1136,7 +1214,7 @@ func valueDescriptorByNameHandler(w http.ResponseWriter, r *http.Request) {
 				err,
 				[]errorconcept.ErrorConceptType{
 					errorconcept.Database.NotFound,
-					errorconcept.Common.InvalidRequest_StatusBadRequest,
+					errorconcept.ValueDescriptors.Invalid,
 					errorconcept.ValueDescriptors.InUse,
 				},
 				errorconcept.Default.InternalServerError)
@@ -1161,7 +1239,11 @@ func valueDescriptorByIdHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		vd, err := getValueDescriptorById(id)
 		if err != nil {
-			httpErrorHandler.HandleOneVariant(w, err, errorconcept.Database.NotFound, errorconcept.Default.InternalServerError)
+			httpErrorHandler.HandleOneVariant(
+				w,
+				err,
+				errorconcept.Database.NotFound,
+				errorconcept.Default.InternalServerError)
 		}
 
 		pkg.Encode(vd, w, LoggingClient)
@@ -1186,7 +1268,11 @@ func valueDescriptorByUomLabelHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		vdList, err := getValueDescriptorsByUomLabel(uomLabel)
 		if err != nil {
-			httpErrorHandler.HandleOneVariant(w, err, errorconcept.Database.NotFound, errorconcept.Default.InternalServerError)
+			httpErrorHandler.HandleOneVariant(
+				w,
+				err,
+				errorconcept.Database.NotFound,
+				errorconcept.Default.InternalServerError)
 		}
 
 		pkg.Encode(vdList, w, LoggingClient)
@@ -1211,7 +1297,11 @@ func valueDescriptorByLabelHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		v, err := getValueDescriptorsByLabel(label)
 		if err != nil {
-			httpErrorHandler.HandleOneVariant(w, err, errorconcept.Database.NotFound, errorconcept.Default.InternalServerError)
+			httpErrorHandler.HandleOneVariant(
+				w,
+				err,
+				errorconcept.Database.NotFound,
+				errorconcept.Default.InternalServerError)
 		}
 
 		pkg.Encode(v, w, LoggingClient)
@@ -1301,12 +1391,20 @@ func restValueDescriptorsUsageHandler(w http.ResponseWriter, r *http.Request) {
 		// We are not filtering so get all the value descriptors
 		op = value_descriptor.NewGetValueDescriptorsExecutor(dbClient, LoggingClient, Configuration.Service)
 	} else {
-		op = value_descriptor.NewGetValueDescriptorsNameExecutor(strings.Split(namesFilter[0], ","), dbClient, LoggingClient, Configuration.Service)
+		op = value_descriptor.NewGetValueDescriptorsNameExecutor(
+			strings.Split(namesFilter[0], ","),
+			dbClient,
+			LoggingClient,
+			Configuration.Service)
 	}
 
 	vds, err = op.Execute()
 	if err != nil {
-		httpErrorHandler.HandleOneVariant(w, err, errorconcept.ValueDescriptors.LimitExceeded, errorconcept.Default.InternalServerError)
+		httpErrorHandler.HandleOneVariant(
+			w,
+			err,
+			errorconcept.ValueDescriptors.LimitExceeded,
+			errorconcept.Default.InternalServerError)
 		return
 	}
 
@@ -1315,7 +1413,12 @@ func restValueDescriptorsUsageHandler(w http.ResponseWriter, r *http.Request) {
 	resp := make([]map[string]bool, 0)
 	var ops reading.GetReadingsExecutor
 	for _, vd := range vds {
-		ops = reading.NewGetReadingsNameExecutor(vd.Name, ValueDescriptorUsageReadLimit, dbClient, LoggingClient, Configuration.Service)
+		ops = reading.NewGetReadingsNameExecutor(
+			vd.Name,
+			ValueDescriptorUsageReadLimit,
+			dbClient,
+			LoggingClient,
+			Configuration.Service)
 		r, err := ops.Execute()
 		if err != nil {
 			httpErrorHandler.Handle(w, err, errorconcept.Default.InternalServerError)
