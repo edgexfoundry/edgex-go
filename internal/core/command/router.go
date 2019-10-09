@@ -70,10 +70,10 @@ func loadDeviceRoutes(b *mux.Router) {
 	dn.HandleFunc("/{"+NAME+"}/"+COMMAND+"/{"+COMMANDNAME+"}", restPutDeviceCommandByNames).Methods(http.MethodPut)
 }
 
-// Respond with PINGRESPONSE to see if the service is alive
+// Test if the service is working
 func pingHandler(w http.ResponseWriter, _ *http.Request) {
-	w.Header().Set(CONTENTTYPE, TEXTPLAIN)
-	w.Write([]byte(PINGRESPONSE))
+	w.Header().Set(clients.ContentType, clients.ContentTypeText)
+	w.Write([]byte("pong"))
 }
 
 func configHandler(w http.ResponseWriter, _ *http.Request) {

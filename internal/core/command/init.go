@@ -20,13 +20,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/metadata"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
-
-	"github.com/edgexfoundry/go-mod-registry/registry"
-
 	"github.com/edgexfoundry/edgex-go/internal/core/command/interfaces"
 	bootstrap "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
@@ -34,12 +27,25 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/redis"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/endpoint"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
+
+	"github.com/edgexfoundry/go-mod-core-contracts/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/metadata"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
+
+	"github.com/edgexfoundry/go-mod-registry/registry"
 )
 
+// Global variables
 var Configuration = &ConfigurationStruct{}
 var LoggingClient logger.LoggingClient
+
 var mdc metadata.DeviceClient
 var dbClient interfaces.DBClient
+
+// Global ErrorConcept variables
+var httpErrorHandler errorconcept.ErrorHandler
 
 type server interface {
 	IsRunning() bool
@@ -68,6 +74,7 @@ func (s ServiceInit) BootstrapHandler(
 
 	// update global variables.
 	LoggingClient = logging
+	httpErrorHandler = errorconcept.NewErrorHandler(logging)
 
 	// initialize clients required by service.
 	s.initializeClients(registry)

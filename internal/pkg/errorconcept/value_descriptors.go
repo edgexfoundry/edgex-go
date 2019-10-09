@@ -24,7 +24,26 @@ var ValueDescriptors valueDescriptorsErrorConcept
 
 // ValueDescriptorsErrorConcept represents the accessor for the value-descriptor-specific error concepts
 type valueDescriptorsErrorConcept struct {
-	InUse valueDescriptorsInUse
+	DuplicateName valueDescriptorDuplicateName
+	InUse         valueDescriptorsInUse
+	Invalid       valueDescriptorInvalid
+	LimitExceeded valueDescriptorLimitExceeded
+	NotFound      valueDescriptorNotFound
+}
+
+type valueDescriptorDuplicateName struct{}
+
+func (r valueDescriptorDuplicateName) httpErrorCode() int {
+	return http.StatusConflict
+}
+
+func (r valueDescriptorDuplicateName) isA(err error) bool {
+	_, ok := err.(errors.ErrDuplicateValueDescriptorName)
+	return ok
+}
+
+func (r valueDescriptorDuplicateName) message(err error) string {
+	return err.Error()
 }
 
 type valueDescriptorsInUse struct{}
@@ -39,5 +58,50 @@ func (r valueDescriptorsInUse) isA(err error) bool {
 }
 
 func (r valueDescriptorsInUse) message(err error) string {
+	return err.Error()
+}
+
+type valueDescriptorInvalid struct{}
+
+func (r valueDescriptorInvalid) httpErrorCode() int {
+	return http.StatusBadRequest
+}
+
+func (r valueDescriptorInvalid) isA(err error) bool {
+	_, ok := err.(errors.ErrValueDescriptorInvalid)
+	return ok
+}
+
+func (r valueDescriptorInvalid) message(err error) string {
+	return err.Error()
+}
+
+type valueDescriptorLimitExceeded struct{}
+
+func (r valueDescriptorLimitExceeded) httpErrorCode() int {
+	return http.StatusRequestEntityTooLarge
+}
+
+func (r valueDescriptorLimitExceeded) isA(err error) bool {
+	_, ok := err.(errors.ErrLimitExceeded)
+	return ok
+}
+
+func (r valueDescriptorLimitExceeded) message(err error) string {
+	return err.Error()
+}
+
+type valueDescriptorNotFound struct{}
+
+func (r valueDescriptorNotFound) httpErrorCode() int {
+	return http.StatusNotFound
+}
+
+func (r valueDescriptorNotFound) isA(err error) bool {
+	_, ok := err.(errors.ErrValueDescriptorNotFound)
+	return ok
+}
+
+func (r valueDescriptorNotFound) message(err error) string {
 	return err.Error()
 }
