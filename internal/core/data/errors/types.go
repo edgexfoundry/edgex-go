@@ -20,6 +20,13 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 )
 
+type ErrCBORNotSupported struct {
+}
+
+func (e ErrCBORNotSupported) Error() string {
+	return "CBOR payload is not yet supported"
+}
+
 type ErrEventNotFound struct {
 	id string
 }

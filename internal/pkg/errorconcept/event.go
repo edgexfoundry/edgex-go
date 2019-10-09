@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2018 Dell Inc.
+ * Copyright 2019 Dell Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -11,14 +11,32 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
-package command
 
-const (
-	ID               = "id"
-	NAME             = "name"
-	DEVICEIDURLPARAM = "{deviceId}"
-	COMMAND          = "command"
-	COMMANDID        = "commandid"
-	COMMANDNAME      = "commandname"
-	DEVICE           = "device"
+package errorconcept
+
+import (
+	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
+	"net/http"
 )
+
+var Events eventErrorConcept
+
+// eventErrorConcept represents the accessor for the event-specific error concepts
+type eventErrorConcept struct {
+	NotFound eventNotFound
+}
+
+type eventNotFound struct{}
+
+func (r eventNotFound) httpErrorCode() int {
+	return http.StatusNotFound
+}
+
+func (r eventNotFound) isA(err error) bool {
+	_, ok := err.(errors.ErrEventNotFound)
+	return ok
+}
+
+func (r eventNotFound) message(err error) string {
+	return err.Error()
+}
