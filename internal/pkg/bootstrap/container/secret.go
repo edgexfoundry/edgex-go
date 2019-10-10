@@ -20,9 +20,9 @@ import (
 )
 
 // SecretClientName contains the name of the registry.Client implementation in the DIC.
-var SecretClientName = di.TypeInstanceToName(pkg.SecretClient{})
+var SecretClientName = di.TypeInstanceToName((*pkg.SecretClient)(nil))
 
 // SecretClientFrom helper function queries the DIC and returns the pkg.SecretClient implementation.
-func SecretClientFrom(get di.Get) *pkg.SecretClient {
-	return get(SecretClientName).(*pkg.SecretClient)
+func SecretClientFrom(get di.Get) pkg.SecretClient {
+	return get(SecretClientName).(pkg.SecretClient)
 }

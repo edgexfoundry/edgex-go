@@ -76,3 +76,14 @@ File = '/edgex/logs/edgex-sys-mgmt-agent.log'
   Protocol = 'http'
   Host = 'edgex-export-distro'
   Port = 48070
+
+[SecretStore]
+Host = 'edgex-vault'
+Port = 8200
+Path = '/v1/secrets/edgex/sys-mgmt-agent/'
+Protocol = 'http'
+RootCaCertPath = '/vault/config/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem'
+ServerName = 'edgex-vault'
+  [SecretStore.Authentication]
+  AuthType = 'X-Vault-Token'
+  AuthToken= 'edgex'

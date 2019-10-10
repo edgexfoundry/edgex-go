@@ -41,3 +41,14 @@ File = '/edgex/logs/edgex-core-command.log'
   Username = 'meta'
   Timeout = 5000
   Type = 'mongodb'
+
+[SecretStore]
+Host = 'edgex-vault'
+Port = 8200
+Path = '/v1/secrets/edgex/core-command/'
+Protocol = 'http'
+RootCaCertPath = '/vault/config/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem'
+ServerName = 'edgex-vault'
+  [SecretStore.Authentication]
+  AuthType = 'X-Vault-Token'
+  AuthToken= 'edgex'

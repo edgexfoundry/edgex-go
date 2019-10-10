@@ -53,3 +53,14 @@ Host = '*'
 Port = 5563
 Type = 'zero'
 Topic = 'events'
+
+[SecretStore]
+Host = 'edgex-vault'
+Port = 8200
+Path = '/v1/secrets/edgex/core-data/'
+Protocol = 'http'
+RootCaCertPath = '/vault/config/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem'
+ServerName = 'edgex-vault'
+  [SecretStore.Authentication]
+  AuthType = 'X-Vault-Token'
+  AuthToken= 'edgex'
