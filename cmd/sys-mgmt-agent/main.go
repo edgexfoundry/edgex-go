@@ -69,7 +69,7 @@ func httpServerBootstrapHandler(
 }
 
 func main() {
-	startupTimer := startup.NewStartUpTimer(1, internal.BootTimeoutDefault)
+	startupTimer := startup.NewStartUpTimer(internal.BootRetrySecondsDefault, internal.BootTimeoutSecondsDefault)
 
 	var useRegistry bool
 	var configDir, profileDir string
