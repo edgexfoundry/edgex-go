@@ -167,7 +167,7 @@ func setupImportTest(t *testing.T) func() {
 		t.Fatalf("cannot copy %s for the test: %v", configTomlFile, err)
 	}
 
-	err = setup.Init()
+	err = setup.Init("")
 	if err != nil {
 		t.Fatalf("Failed to init security-secrets-setup: %v", err)
 	}
