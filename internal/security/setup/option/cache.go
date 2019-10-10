@@ -44,7 +44,10 @@ func isCacheNoOp(pkiInitOption *PkiInitOption) bool {
 
 func cachePkis() (statusCode exitCode, err error) {
 	// generate a new one if pkicache dir is empty
-	pkiCacheDir := getPkiCacheDirEnv()
+	pkiCacheDir, err := getCacheDir()
+	if err != nil {
+		return exitWithError, err
+	}
 	if empty, err := isDirEmpty(pkiCacheDir); err != nil {
 		return exitWithError, err
 	} else if empty {
@@ -55,7 +58,12 @@ func cachePkis() (statusCode exitCode, err error) {
 			return statusCode, err
 		}
 
-		generatedDirPath := filepath.Join(os.Getenv(envXdgRuntimeDir), pkiInitGeneratedDir)
+		workDir, err := getWorkDir()
+		if err != nil {
+			return exitWithError, err
+		}
+		generatedDirPath := filepath.Join(workDir, pkiInitGeneratedDir)
+		defer os.RemoveAll(generatedDirPath)
 
 		// always shreds CA private key before cache
 		caPrivateKeyFile := filepath.Join(generatedDirPath, caServiceName, tlsSecretFileName)
@@ -78,7 +86,12 @@ func cachePkis() (statusCode exitCode, err error) {
 
 	// to deploy
 	// copy stuff into dest dir from pkiCache
-	err = deploy(pkiCacheDir, pkiInitDeployDir)
+	deployDir, err := getDeployDir()
+	if err != nil {
+		return exitWithError, err
+	}
+
+	err = deploy(pkiCacheDir, deployDir)
 	if err != nil {
 		return exitWithError, err
 	}
@@ -88,7 +101,10 @@ func cachePkis() (statusCode exitCode, err error) {
 
 func doCache(fromDir string) error {
 	// destination
-	pkiCacheDir := getPkiCacheDirEnv()
+	pkiCacheDir, err := getCacheDir()
+	if err != nil {
+		return err
+	}
 
 	// to cache
 	return copyDir(fromDir, pkiCacheDir)
