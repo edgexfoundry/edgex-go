@@ -1,18 +1,25 @@
 # EdgeX Foundry System Management Executor
 [![license](https://img.shields.io/badge/license-Apache%20v2.0-blue.svg)](LICENSE)
 
-This README.md is geared toward a developer interested in creating their own executor. It includes related information that ties in with the System Management Agent (aka SMA). The main points are:
+This README.md is geared toward a developer interested in creating their own executor. It includes related information 
+    that ties in with the System Management Agent (aka SMA). The main points are:
 
 - How the SMA passes service name, action, and optional parameters on the command line.
-- Current proxy-like behavior for stop/start/restart operations -- The SMA passes parameters received to executor as-is.
+- Current proxy-like behavior for stop/start/restart operations -- the SMA passes parameters received to executor as-is.
 - The Metrics Result Contract (and its support for embedding executor-specific results).
-Expected format of operation result (based upon the existing Docker executor implementation).
+- Expected format of operation result (based upon the existing Docker executor implementation).
 
 # Passing Parameters to SMA on Command Line #
 
 #### Usage ####
-- ./sys-mgmt-executor [service-name] [operation]
-- Where, "operation" can be one of [start, stop, restart]
+./sys-mgmt-executor [service-name] [operation] {[optional-parameter]...}
+
+Where:
+- "service-name" is the name of the service to apply the operation to.
+- "operation" can be one of [start, stop, restart]
+- "optional-parameter" can be zero or more parameters that are executor-specific, have no meaning to the system 
+    management agent, and are no validated by the system management agent.  **An executor implementation is responsible
+    for validating and/or ignoring any optional-parameters passed to it.**
 
 #### Examples of Usage (and Sample Responses) ####
 - ./sys-mgmt-executor edgex-support-notifications stop
@@ -92,7 +99,9 @@ bash-5.0# ./sys-mgmt-executor edgex-support-notifications restart
 
 ### Note ###
 - The example payload for the "stop" operation, while not shown here, is similar to the ones shown above.
-- The SMA passes parameters received to the executor as-is and that the parameter _"executor": "docker"_ points out the executor implementation being used.
+- The SMA passes parameters received to the executor as-is and that the parameter `"executor": "docker"` points out the 
+    executor implementation being used.  Each executor implementation should return its own unique value for the 
+    `executor` field.
 
 # Metrics Result Contract #
 
@@ -105,12 +114,12 @@ Expected format of operation result (based upon the existing Docker executor imp
 ```
 [
     {
-        "Success": boolean,                    // Stipulated: True or false
-        "executor": "docker",                  // Stipulated: The (reference) executor implementation
-        "operation": "metrics",                // Stipulated: The operation
+        "Success": boolean,                             // Required: True or false
+        "executor": "docker",                           // Required: The (reference) executor implementation
+        "operation": "metrics",                         // Required: The operation
         "result": {            
-            "cpuUsedPercent": 5.08,            // Stipulated: CPU Usase
-            "memoryUsed": 5488247,             // Stipulated: Memory Usase
+            "cpuUsedPercent": 5.08,                     // Required: CPU Usage
+            "memoryUsed": 5488247,                      // Required: Memory Usage
             "raw": {                                    // Optional, executor-specific results
                 "block_io": "8.19kB / 0B",              // Optional, executor-specific results
                 "cpu_perc": "5.08%",                    // Optional, executor-specific results
@@ -120,7 +129,7 @@ Expected format of operation result (based upon the existing Docker executor imp
                 "pids": "14"                            // Optional, executor-specific results
             }                                           // Optional, executor-specific results
         },
-        "service": "edgex-core-command"        // Stipulated: Name of service whose metrics were fetched
+        "service": "edgex-core-command"                 // Required: Name of service whose metrics were fetched
     },
     {
         "Success": true,
@@ -142,12 +151,14 @@ Expected format of operation result (based upon the existing Docker executor imp
     }
 ]
 ```
-- As highlighted above in the results section (for the first of the two services whose metrics were fetched), a handful of fields aer stipulated to be part of the metrics result contract. 
+- As highlighted above in the results section (for the first of the two services whose metrics were fetched), a handful 
+    of fields aer stipulated to be part of the metrics result contract. 
 - The remaining fields fall into the category of executor's support for embedding executor-specific results.
 - The user has the choice of whether to further process the embedded _executor_-specific results.
 
 ### Note ###
-- The expected format of the result is based upon the current _Docker_ executor implementation (as highlighted by the JSON KVP _"executor": "docker"_).
+- The expected format of the result is based upon the current _Docker_ executor implementation (as highlighted by the 
+    JSON key-value pair _"executor": "docker"_).
 
 ## License
 [Apache-2.0](LICENSE)
