@@ -15,6 +15,8 @@ package internal
 
 const (
 	BootTimeoutDefault             = 30000
+	BootTimeoutSecondsDefault      = 30
+	BootRetrySecondsDefault        = 1
 	ClientMonitorDefault           = 15000
 	ConfigFileName                 = "configuration.toml"
 	ConfigRegistryStemCore         = "edgex/core/"
