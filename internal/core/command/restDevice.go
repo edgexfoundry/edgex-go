@@ -43,15 +43,17 @@ func issueDeviceCommand(w http.ResponseWriter, r *http.Request, isPutCommand boo
 	}
 
 	ctx := r.Context()
-	body, status := commandByDeviceID(did, cid, string(b), r.URL.RawQuery, isPutCommand, ctx)
-	if status != http.StatusOK {
+	body, err := commandByDeviceID(did, cid, string(b), r.URL.RawQuery, isPutCommand, ctx)
+	if err != nil {
 		http.Error(w, body, status)
-	} else {
-		if len(body) > 0 {
-			w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
-		}
-		w.Write([]byte(body))
+		return
 	}
+
+	if len(body) > 0 {
+		w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
+	}
+	w.Write([]byte(body))
+
 }
 
 func restGetDeviceCommandByNames(w http.ResponseWriter, r *http.Request) {
@@ -76,31 +78,31 @@ func issueDeviceCommandByNames(w http.ResponseWriter, r *http.Request, isPutComm
 		LoggingClient.Error(err.Error())
 		return
 	}
-	body, status := commandByNames(dn, cn, string(b), r.URL.RawQuery, isPutCommand, ctx)
+	body, err := commandByNames(dn, cn, string(b), r.URL.RawQuery, isPutCommand, ctx)
 
-	if status != http.StatusOK {
+	if err != nil {
 		http.Error(w, body, status)
-	} else {
-		if len(body) > 0 {
-			w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
-		}
-		w.Write([]byte(body))
+		return
 	}
+
+	if len(body) > 0 {
+		w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
+	}
+	w.Write([]byte(body))
+
 }
 
 func restGetCommandsByDeviceID(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	did := vars[ID]
 	ctx := r.Context()
-	status, device, err := getCommandsByDeviceID(did, ctx)
+	device, err := getCommandsByDeviceID(did, ctx)
 	if err != nil {
 		LoggingClient.Error(err.Error())
 		http.Error(w, "Device not found", http.StatusNotFound)
 		return
-	} else if status != http.StatusOK {
-		w.WriteHeader(status)
-		return
 	}
+
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	json.NewEncoder(w).Encode(&device)
 }
@@ -109,29 +111,25 @@ func restGetCommandsByDeviceName(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	dn := vars[NAME]
 	ctx := r.Context()
-	status, devices, err := getCommandsByDeviceName(dn, ctx)
+	devices, err := getCommandsByDeviceName(dn, ctx)
 	if err != nil {
 		LoggingClient.Error(err.Error())
 		http.Error(w, "Device not found", http.StatusNotFound)
 		return
-	} else if status != http.StatusOK {
-		w.WriteHeader(status)
-		return
 	}
+
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	json.NewEncoder(w).Encode(&devices)
 }
 
 func restGetAllCommands(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	status, devices, err := getCommands(ctx)
+	devices, err := getCommands(ctx)
 	if err != nil {
 		LoggingClient.Error(err.Error())
 		w.WriteHeader(status)
-	} else if status != http.StatusOK {
-		w.WriteHeader(status)
-		return
 	}
+
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	json.NewEncoder(w).Encode(devices)
 }
