@@ -111,8 +111,8 @@ func getCommands(ctx context.Context) ([]contract.CommandResponse, error) {
 		}
 		cr = append(cr, contract.CommandResponseFromDevice(d, commands, Configuration.Service.Url()))
 	}
-	return cr, err
 
+	return cr, nil
 }
 
 func getCommandsByDeviceID(did string, ctx context.Context) (contract.CommandResponse, error) {
@@ -126,7 +126,7 @@ func getCommandsByDeviceID(did string, ctx context.Context) (contract.CommandRes
 		return contract.CommandResponse{}, err
 	}
 
-	return contract.CommandResponseFromDevice(d, commands, Configuration.Service.Url()), err
+	return contract.CommandResponseFromDevice(d, commands, Configuration.Service.Url()), nil
 }
 
 func getCommandsByDeviceName(dn string, ctx context.Context) (contract.CommandResponse, error) {
@@ -140,5 +140,5 @@ func getCommandsByDeviceName(dn string, ctx context.Context) (contract.CommandRe
 		return contract.CommandResponse{}, err
 	}
 
-	return contract.CommandResponseFromDevice(d, commands, Configuration.Service.Url()), err
+	return contract.CommandResponseFromDevice(d, commands, Configuration.Service.Url()), nil
 }
