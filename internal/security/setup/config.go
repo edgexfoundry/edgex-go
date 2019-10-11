@@ -17,10 +17,18 @@ package setup
 import "github.com/edgexfoundry/edgex-go/internal/pkg/config"
 
 type ConfigurationStruct struct {
-	Writable WritableInfo
-	Logging  config.LoggingInfo
+	Writable     WritableInfo
+	Logging      config.LoggingInfo
+	SecretsSetup SecretsSetupInfo
 }
 
 type WritableInfo struct {
 	LogLevel string
+}
+
+type SecretsSetupInfo struct {
+	WorkDir       string
+	DeployDir     string
+	CacheDir      string
+	CertConfigDir string
 }

@@ -45,8 +45,11 @@ func isImportNoOp(pkiInitOption *PkiInitOption) bool {
 }
 
 func importPkis() (statusCode exitCode, err error) {
-	pkiCacheDir := getPkiCacheDirEnv()
-	setup.LoggingClient.Info(fmt.Sprintf("importing from PKI_CACHE: %s", pkiCacheDir))
+	pkiCacheDir, err := getCacheDir()
+	if err != nil {
+		return exitWithError, err
+	}
+	setup.LoggingClient.Info(fmt.Sprintf("importing from PKI cache dir: %s", pkiCacheDir))
 
 	dirEmpty, err := isDirEmpty(pkiCacheDir)
 
@@ -56,7 +59,11 @@ func importPkis() (statusCode exitCode, err error) {
 
 	if !dirEmpty {
 		// copy stuff into dest dir from pkiCache
-		err = deploy(pkiCacheDir, pkiInitDeployDir)
+		deployDir, err := getDeployDir()
+		if err != nil {
+			return exitWithError, err
+		}
+		err = deploy(pkiCacheDir, deployDir)
 		if err != nil {
 			statusCode = exitWithError
 		}

@@ -36,14 +36,27 @@ func Generate() func(*PkiInitOption) (exitCode, error) {
 		if statusCode, err := generatePkis(); err != nil {
 			return statusCode, err
 		}
-		generatedDirPath := filepath.Join(getXdgRuntimeDir(), pkiInitGeneratedDir)
+
+		workDir, err := getWorkDir()
+		if err != nil {
+			return exitWithError, err
+		}
+
+		generatedDirPath := filepath.Join(workDir, pkiInitGeneratedDir)
+		defer os.RemoveAll(generatedDirPath)
+
 		// Shred the CA private key before deploy
 		caPrivateKeyFile := filepath.Join(generatedDirPath, caServiceName, tlsSecretFileName)
 		if err := secureEraseFile(caPrivateKeyFile); err != nil {
 			return exitWithError, err
 		}
 
-		if err := deploy(generatedDirPath, pkiInitDeployDir); err != nil {
+		deployDir, err := getDeployDir()
+		if err != nil {
+			return exitWithError, err
+		}
+
+		if err := deploy(generatedDirPath, deployDir); err != nil {
 			return exitWithError, err
 		}
 
@@ -57,30 +70,35 @@ func isGenerateNoOp(pkiInitOption *PkiInitOption) bool {
 }
 
 func generatePkis() (exitCode, error) {
-	baseWorkingDir, err := os.Getwd()
+	certConfigDir, err := getCertConfigDir()
 	if err != nil {
 		return exitWithError, err
 	}
 
-	resourceDirPath := filepath.Join(baseWorkingDir, resourceDirName)
-	pkiSetupVaultJSONPath := filepath.Join(resourceDirPath, pkiSetupVaultJSON)
-	pkiSetupKongJSONPath := filepath.Join(resourceDirPath, pkiSetupKongJSON)
+	certConfigDir, err = filepath.Abs(certConfigDir)
+	if err != nil {
+		return exitWithError, err
+	}
+	pkiSetupVaultJSONPath := filepath.Join(certConfigDir, pkiSetupVaultJSON)
+	pkiSetupKongJSONPath := filepath.Join(certConfigDir, pkiSetupKongJSON)
 
-	scratchPath := filepath.Join(getXdgRuntimeDir(), pkiInitScratchDir)
+	workingDir, err := getWorkDir()
+	if err != nil {
+		return exitWithError, err
+	}
+	scratchPath := filepath.Join(workingDir, pkiInitScratchDir)
 
 	setup.LoggingClient.Debug(fmt.Sprint("pkiSetupVaultJSONPath: ", pkiSetupVaultJSONPath,
 		"  pkiSetupKongJSONPath: ", pkiSetupKongJSONPath,
 		"  scratchPath: ", scratchPath,
-		"  resourceDirPath: ", resourceDirPath))
+		"  certConfigDir: ", certConfigDir))
 
 	if !checkIfFileExists(pkiSetupVaultJSONPath) {
-		setup.LoggingClient.Error(fmt.Sprint("Vault JSON file for security-secrets-setup not exists in ", pkiSetupVaultJSONPath))
-		return exitWithError, err
+		return exitWithError, fmt.Errorf("Vault JSON file for security-secrets-setup does not exist in %s", pkiSetupVaultJSONPath)
 	}
 
 	if !checkIfFileExists(pkiSetupKongJSONPath) {
-		setup.LoggingClient.Error(fmt.Sprint("Kong JSON file for security-secrets-setup not exists in ", pkiSetupKongJSONPath))
-		return exitWithError, err
+		return exitWithError, fmt.Errorf("Kong JSON file for security-secrets-setup does not exist in %s", pkiSetupKongJSONPath)
 	}
 
 	// create scratch dir if not exists yet:
@@ -88,9 +106,14 @@ func generatePkis() (exitCode, error) {
 		return exitWithError, err
 	}
 
+	currDir, err := os.Getwd()
+	if err != nil {
+		return exitWithError, err
+	}
+
 	// after done, need to change it back to the original working dir to avoid os.Getwd() error
 	// and delete the scratch dir
-	defer cleanup(baseWorkingDir, scratchPath)
+	defer cleanup(currDir, scratchPath)
 
 	// generate TLS certs on the env. of $XDG_RUNTIME_DIR/edgex/pki-init/scratch
 	if err := os.Chdir(scratchPath); err != nil {
@@ -105,10 +128,10 @@ func generatePkis() (exitCode, error) {
 		return exitWithError, err
 	}
 
-	return rearrangePkiByServices(pkiSetupVaultJSONPath, pkiSetupKongJSONPath)
+	return rearrangePkiByServices(workingDir, pkiSetupVaultJSONPath, pkiSetupKongJSONPath)
 }
 
-func rearrangePkiByServices(pkiSetupVaultJSONPath, pkiSetupKongJSONPath string) (exitCode, error) {
+func rearrangePkiByServices(workingDir, pkiSetupVaultJSONPath, pkiSetupKongJSONPath string) (exitCode, error) {
 	vaultConfig, readErr := config.NewX509Config(pkiSetupVaultJSONPath)
 	if readErr != nil {
 		return exitWithError, readErr
@@ -119,7 +142,7 @@ func rearrangePkiByServices(pkiSetupVaultJSONPath, pkiSetupKongJSONPath string) 
 		return exitWithError, readErr
 	}
 
-	generatedDirPath := filepath.Join(getXdgRuntimeDir(), pkiInitGeneratedDir)
+	generatedDirPath := filepath.Join(workingDir, pkiInitGeneratedDir)
 
 	setup.LoggingClient.Debug(fmt.Sprint("pki-init generate output base dir: ", generatedDirPath))
 
@@ -182,8 +205,8 @@ func copyGeneratedForService(servicePath string, config config.X509Config) error
 	return os.Chmod(privKeyFileName, 0400)
 }
 
-func cleanup(baseWorkingDir, scratchPath string) {
-	_ = os.Chdir(baseWorkingDir)
+func cleanup(origWorkingDir, scratchPath string) {
+	_ = os.Chdir(origWorkingDir)
 	os.RemoveAll(scratchPath)
 	setup.LoggingClient.Info("pki-init generation completes")
 }
