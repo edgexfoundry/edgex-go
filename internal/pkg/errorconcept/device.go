@@ -16,15 +16,33 @@ package errorconcept
 
 import (
 	"net/http"
+
+	command "github.com/edgexfoundry/edgex-go/internal/core/command/errors"
 )
 
 var Device deviceErrorConcept
 
 // DeviceErrorConcept represents the accessor for the device-specific error concepts
 type deviceErrorConcept struct {
+	Locked         deviceLocked
 	NotFound       deviceNotFound
 	NotifyError    deviceNotify
 	RequesterError deviceRequester
+}
+
+type deviceLocked struct{}
+
+func (r deviceLocked) httpErrorCode() int {
+	return http.StatusNotFound
+}
+
+func (r deviceLocked) isA(err error) bool {
+	_, ok := err.(command.ErrDeviceLocked)
+	return ok
+}
+
+func (r deviceLocked) message(err error) string {
+	return err.Error()
 }
 
 type deviceNotFound struct{}
@@ -44,7 +62,7 @@ func (r deviceNotFound) message(err error) string {
 type deviceNotify struct{}
 
 func (r deviceNotify) httpErrorCode() int {
-	return http.StatusServiceUnavailable
+	return http.StatusLocked
 }
 
 func (r deviceNotify) isA(err error) bool {
