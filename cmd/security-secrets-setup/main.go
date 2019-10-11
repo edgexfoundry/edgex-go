@@ -49,11 +49,14 @@ var subcommands = map[string]*flag.FlagSet{
 	"import":   flag.NewFlagSet("import", flag.ExitOnError),
 }
 var configFile string
+var configDir string
 
 func init() {
 	// setup options for subcommands:
 	subcommands["legacy"].StringVar(&configFile, "config", "", "specify JSON configuration file: /path/to/file.json")
 	subcommands["legacy"].StringVar(&configFile, "c", "", "specify JSON configuration file: /path/to/file.json")
+
+	flag.StringVar(&configDir, "confdir", "", "Specify local configuration directory")
 
 	flag.Usage = usage.HelpCallbackSecuritySetup
 }
@@ -70,7 +73,7 @@ func main() {
 		return
 	}
 
-	if err := setup.Init(); err != nil {
+	if err := setup.Init(configDir); err != nil {
 		// the error returned from Init has already been logged inside the call
 		// so here we ignore the error logging
 		exitInstance.exit(1)
