@@ -41,7 +41,7 @@ File = '/edgex/logs/edgex-support-notifications.log'
 [Smtp]
   Host = 'smtp.gmail.com'
   Username = 'username@mail.example.com'
-  Password = 'password'
+  Password = ''
   Port = 587
   Sender = 'jdoe@gmail.com'
   EnableSelfSignedCert = false

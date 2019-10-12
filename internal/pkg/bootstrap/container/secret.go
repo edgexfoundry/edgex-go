@@ -12,20 +12,17 @@
  * the License.
  *******************************************************************************/
 
-package interfaces
+package container
 
 import (
-	"context"
-	"sync"
-
-	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
+	"github.com/edgexfoundry/go-mod-secrets/pkg"
 )
 
-// BootstrapHandler defines the contract each bootstrap handler must fulfill.  Implementation returns true if the
-// handler completed successfully, false if it did not.
-type BootstrapHandler func(
-	wg *sync.WaitGroup,
-	context context.Context,
-	startupTimer startup.Timer,
-	dic *di.Container) (success bool)
+// SecretClientName contains the name of the registry.Client implementation in the DIC.
+var SecretClientName = di.TypeInstanceToName(pkg.SecretClient{})
+
+// SecretClientFrom helper function queries the DIC and returns the pkg.SecretClient implementation.
+func SecretClientFrom(get di.Get) *pkg.SecretClient {
+	return get(SecretClientName).(*pkg.SecretClient)
+}

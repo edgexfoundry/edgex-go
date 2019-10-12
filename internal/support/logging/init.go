@@ -14,12 +14,11 @@ import (
 	"sync"
 	"time"
 
-	bootstrap "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/interfaces"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-
-	"github.com/edgexfoundry/go-mod-registry/registry"
 )
 
 var Configuration = &ConfigurationStruct{}
@@ -60,12 +59,16 @@ func (s ServiceInit) BootstrapHandler(
 	wg *sync.WaitGroup,
 	ctx context.Context,
 	startupTimer startup.Timer,
-	config bootstrap.Configuration,
-	logging logger.LoggingClient,
-	registry registry.Client) bool {
+	dic *di.Container) bool {
+
+	dic.Update(di.ServiceConstructorMap{
+		container.LoggingClientInterfaceName: func(get di.Get) interface{} {
+			return newPrivateLogger()
+		},
+	})
 
 	// update global variables.
-	LoggingClient = newPrivateLogger()
+	LoggingClient = container.LoggingClientFrom(dic.Get)
 
 	// initialize database.
 	for startupTimer.HasNotElapsed() {

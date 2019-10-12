@@ -29,6 +29,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications"
@@ -59,6 +60,7 @@ func main() {
 		clients.SupportNotificationsServiceKey,
 		notifications.Configuration,
 		startupTimer,
+		di.NewContainer(di.ServiceConstructorMap{}),
 		[]interfaces.BootstrapHandler{
 			handlers.SecretClientBootstrapHandler,
 			notifications.NewServiceInit(&httpServer).BootstrapHandler,

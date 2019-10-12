@@ -19,22 +19,15 @@ import (
 	"os"
 	"sync"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-	"github.com/edgexfoundry/go-mod-registry/registry"
-	"github.com/edgexfoundry/go-mod-secrets/pkg"
-	"github.com/edgexfoundry/go-mod-secrets/pkg/providers/vault"
-
-	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/interfaces"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
+	"github.com/edgexfoundry/go-mod-secrets/pkg"
+
+	"github.com/edgexfoundry/go-mod-secrets/pkg/providers/vault"
 )
 
-// Environment variable used to disable the secret store functionality which is ON/TRUE by default.
-const SecretStore = "EDGEX_SECURITY_SECRET_STORE"
-
-// SecretClient is a global variable used to house the SecretClient to be used system-wide for obtaining secrets.
-var SecretClient pkg.SecretClient
-
-// SecretClientBootstrapHandler creates a SecretClient to be used for obtaining secrets from a secret store manager.
+// SecretClientBootstrapHandler creates a secretClient to be used for obtaining secrets from a secret store manager.
 // NOTE: This BootstrapHandler is responsible for creating a utility that will most likely be used by other
 // BootstrapHandlers to obtain sensitive data, such as database credentials. This BootstrapHandler should be processed
 // before other BootstrapHandlers, possibly even first since it has not other dependencies.
@@ -42,16 +35,31 @@ func SecretClientBootstrapHandler(
 	wg *sync.WaitGroup,
 	context context.Context,
 	startupTimer startup.Timer,
-	config interfaces.Configuration,
-	loggingClient logger.LoggingClient,
-	registryClient registry.Client) bool {
+	dic *di.Container) bool {
 
-	if env := os.Getenv(SecretStore); env != "false" {
+	// check for environment variable that turns security off
+	if env := os.Getenv("EDGEX_SECURITY_SECRET_STORE"); env != "false" {
+		dic.Update(di.ServiceConstructorMap{
+			container.SecretClientName: func(get di.Get) interface{} {
+				return nil
+			},
+		})
 		return true
 	}
 
-	var err error
-	SecretClient, err = vault.NewSecretClient(config.GetBootstrap().SecretStore)
+	// attempt to create a new secret client
+	config := container.ConfigurationFrom(dic.Get)
+	secretClient, err := vault.NewSecretClient(config.GetBootstrap().SecretStore)
+
+	var result *pkg.SecretClient
+	if err == nil {
+		result = &secretClient
+	}
+	dic.Update(di.ServiceConstructorMap{
+		container.SecretClientName: func(get di.Get) interface{} {
+			return result
+		},
+	})
 
 	return err == nil
 }

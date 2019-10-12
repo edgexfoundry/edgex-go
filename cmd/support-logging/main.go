@@ -17,6 +17,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/internal/support/logging"
@@ -48,6 +49,7 @@ func main() {
 		clients.SupportLoggingServiceKey,
 		logging.Configuration,
 		startupTimer,
+		di.NewContainer(di.ServiceConstructorMap{}),
 		[]interfaces.BootstrapHandler{
 			handlers.SecretClientBootstrapHandler,
 			logging.NewServiceInit(&httpServer).BootstrapHandler,

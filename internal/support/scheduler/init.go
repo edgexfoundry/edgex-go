@@ -21,15 +21,15 @@ import (
 	"sync"
 	"time"
 
-	bootstrap "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/interfaces"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-	"github.com/edgexfoundry/go-mod-registry/registry"
-
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/redis"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/interfaces"
+
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
 
 var Configuration = &ConfigurationStruct{}
@@ -80,12 +80,10 @@ func (s ServiceInit) BootstrapHandler(
 	wg *sync.WaitGroup,
 	ctx context.Context,
 	startupTimer startup.Timer,
-	config bootstrap.Configuration,
-	logging logger.LoggingClient,
-	registry registry.Client) bool {
+	dic *di.Container) bool {
 
 	// update global variables.
-	LoggingClient = logging
+	LoggingClient = container.LoggingClientFrom(dic.Get)
 
 	// initialize database.
 	for startupTimer.HasNotElapsed() {
@@ -124,7 +122,7 @@ func (s ServiceInit) BootstrapHandler(
 
 	// Initialize the ticker time
 	if err := LoadScheduler(); err != nil {
-		logging.Error(fmt.Sprintf("Failed to load schedules and events %s", err.Error()))
+		LoggingClient.Error(fmt.Sprintf("Failed to load schedules and events %s", err.Error()))
 		return false
 	}
 
