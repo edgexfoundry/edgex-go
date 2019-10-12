@@ -45,7 +45,7 @@ func (c *ConfigurationStruct) UpdateFromRaw(rawConfig interface{}) bool {
 		if configuration.Service.Port == 0 {
 			return false
 		}
-		c = configuration
+		*c = *configuration
 	}
 	return ok
 }
