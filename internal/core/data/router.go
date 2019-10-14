@@ -457,7 +457,7 @@ func putEventChecksumHandler(w http.ResponseWriter, r *http.Request) {
 			httpErrorHandler.HandleOneVariant(
 				w,
 				err,
-				errorconcept.Database.NotFound,
+				errorconcept.CoreData.DBNotFound,
 				errorconcept.Default.InternalServerError)
 			return
 		}
@@ -542,7 +542,7 @@ func eventByCreationTimeHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		err := checkMaxLimit(limit)
 		if err != nil {
-			httpErrorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
+			httpErrorHandler.Handle(w, err, errorconcept.Common.LimitExceeded)
 			return
 		}
 
@@ -616,8 +616,8 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 				w,
 				err,
 				[]errorconcept.ErrorConceptType{
-					errorconcept.Common.JsonDecoding,
-					errorconcept.Database.NotFound,
+					errorconcept.CoreData.JsonDecoding,
+					errorconcept.ValueDescriptors.NotFoundInDB,
 					errorconcept.ValueDescriptors.Invalid,
 				},
 				errorconcept.Default.InternalServerError)
@@ -655,8 +655,8 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 				w,
 				err,
 				[]errorconcept.ErrorConceptType{
-					errorconcept.Common.JsonDecoding,
-					errorconcept.Database.NotFound,
+					errorconcept.CoreData.JsonDecoding,
+					errorconcept.ValueDescriptors.NotFoundInDB,
 					errorconcept.ValueDescriptors.Invalid,
 				},
 				errorconcept.Default.InternalServerError)
@@ -669,7 +669,7 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 				w,
 				err,
 				[]errorconcept.ErrorConceptType{
-					errorconcept.Database.NotFound,
+					errorconcept.CoreData.DBNotFound,
 					errorconcept.ValueDescriptors.Invalid,
 				},
 				errorconcept.Default.InternalServerError)
@@ -698,7 +698,7 @@ func getReadingByIdHandler(w http.ResponseWriter, r *http.Request) {
 			httpErrorHandler.HandleOneVariant(
 				w,
 				err,
-				errorconcept.Database.NotFound,
+				errorconcept.CoreData.DBNotFound,
 				errorconcept.Default.InternalServerError)
 		}
 
@@ -742,7 +742,7 @@ func deleteReadingByIdHandler(w http.ResponseWriter, r *http.Request) {
 			httpErrorHandler.HandleOneVariant(
 				w,
 				err,
-				errorconcept.Database.NotFound,
+				errorconcept.CoreData.DBNotFound,
 				errorconcept.Default.InternalServerError)
 			return
 		}
@@ -1061,7 +1061,7 @@ func readingByValueDescriptorAndDeviceHandler(w http.ResponseWriter, r *http.Req
 			httpErrorHandler.HandleOneVariant(
 				w,
 				err,
-				errorconcept.Database.NotFound,
+				errorconcept.ValueDescriptors.NotFoundInDB,
 				errorconcept.Default.InternalServerError)
 			return
 		}
@@ -1106,7 +1106,7 @@ func valueDescriptorHandler(w http.ResponseWriter, r *http.Request) {
 				w,
 				err,
 				[]errorconcept.ErrorConceptType{
-					errorconcept.Common.JsonDecoding,
+					errorconcept.CoreData.JsonDecoding,
 					errorconcept.ValueDescriptors.Invalid,
 				},
 				errorconcept.Default.InternalServerError)
@@ -1135,7 +1135,7 @@ func valueDescriptorHandler(w http.ResponseWriter, r *http.Request) {
 				w,
 				err,
 				[]errorconcept.ErrorConceptType{
-					errorconcept.Common.JsonDecoding,
+					errorconcept.CoreData.JsonDecoding,
 					errorconcept.ValueDescriptors.Invalid,
 				},
 				errorconcept.Default.InternalServerError)
@@ -1148,7 +1148,7 @@ func valueDescriptorHandler(w http.ResponseWriter, r *http.Request) {
 				w,
 				err,
 				[]errorconcept.ErrorConceptType{
-					errorconcept.Database.NotFound,
+					errorconcept.CoreData.DBNotFound,
 					errorconcept.ValueDescriptors.Invalid,
 					errorconcept.ValueDescriptors.InUse,
 				},
@@ -1178,7 +1178,7 @@ func deleteValueDescriptorByIdHandler(w http.ResponseWriter, r *http.Request) {
 			w,
 			err,
 			[]errorconcept.ErrorConceptType{
-				errorconcept.Database.NotFound,
+				errorconcept.CoreData.DBNotFound,
 				errorconcept.ValueDescriptors.Invalid,
 				errorconcept.ValueDescriptors.InUse,
 				errorconcept.Common.InvalidID,
@@ -1224,7 +1224,7 @@ func valueDescriptorByNameHandler(w http.ResponseWriter, r *http.Request) {
 				w,
 				err,
 				[]errorconcept.ErrorConceptType{
-					errorconcept.Database.NotFound,
+					errorconcept.CoreData.DBNotFound,
 					errorconcept.ValueDescriptors.Invalid,
 					errorconcept.ValueDescriptors.InUse,
 				},
@@ -1254,7 +1254,7 @@ func valueDescriptorByIdHandler(w http.ResponseWriter, r *http.Request) {
 			httpErrorHandler.HandleOneVariant(
 				w,
 				err,
-				errorconcept.Database.NotFound,
+				errorconcept.CoreData.DBNotFound,
 				errorconcept.Default.InternalServerError)
 			return
 		}
@@ -1284,7 +1284,7 @@ func valueDescriptorByUomLabelHandler(w http.ResponseWriter, r *http.Request) {
 			httpErrorHandler.HandleOneVariant(
 				w,
 				err,
-				errorconcept.Database.NotFound,
+				errorconcept.CoreData.DBNotFound,
 				errorconcept.Default.InternalServerError)
 			return
 		}
@@ -1314,7 +1314,7 @@ func valueDescriptorByLabelHandler(w http.ResponseWriter, r *http.Request) {
 			httpErrorHandler.HandleOneVariant(
 				w,
 				err,
-				errorconcept.Database.NotFound,
+				errorconcept.CoreData.DBNotFound,
 				errorconcept.Default.InternalServerError)
 			return
 		}
@@ -1346,7 +1346,7 @@ func valueDescriptorByDeviceHandler(w http.ResponseWriter, r *http.Request) {
 			err,
 			[]errorconcept.ErrorConceptType{
 				errorconcept.NewServiceClientHttpError(err),
-				errorconcept.Database.NotFound,
+				errorconcept.CoreData.DBNotFound,
 			},
 			errorconcept.Default.InternalServerError)
 		return
@@ -1378,7 +1378,7 @@ func valueDescriptorByDeviceIdHandler(w http.ResponseWriter, r *http.Request) {
 			err,
 			[]errorconcept.ErrorConceptType{
 				errorconcept.NewServiceClientHttpError(err),
-				errorconcept.Database.NotFound,
+				errorconcept.CoreData.DBNotFound,
 			},
 			errorconcept.Default.InternalServerError)
 		return

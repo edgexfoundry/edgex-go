@@ -29,6 +29,7 @@ type valueDescriptorsErrorConcept struct {
 	Invalid       valueDescriptorInvalid
 	LimitExceeded valueDescriptorLimitExceeded
 	NotFound      valueDescriptorNotFound
+	NotFoundInDB  valueDescriptorDBNotFound
 }
 
 type valueDescriptorDuplicateName struct{}
@@ -104,4 +105,19 @@ func (r valueDescriptorNotFound) isA(err error) bool {
 
 func (r valueDescriptorNotFound) message(err error) string {
 	return err.Error()
+}
+
+type valueDescriptorDBNotFound struct{}
+
+func (r valueDescriptorDBNotFound) httpErrorCode() int {
+	return http.StatusConflict
+}
+
+func (r valueDescriptorDBNotFound) isA(err error) bool {
+	_, ok := err.(errors.ErrDbNotFound)
+	return ok
+}
+
+func (r valueDescriptorDBNotFound) message(err error) string {
+	return "Value descriptor not found for reading"
 }
