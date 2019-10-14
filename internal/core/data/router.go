@@ -660,6 +660,7 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 					errorconcept.ValueDescriptors.Invalid,
 				},
 				errorconcept.Default.InternalServerError)
+			return
 		}
 
 		err = updateReading(from)
@@ -672,6 +673,7 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 					errorconcept.ValueDescriptors.Invalid,
 				},
 				errorconcept.Default.InternalServerError)
+			return
 		}
 
 		w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
@@ -742,6 +744,7 @@ func deleteReadingByIdHandler(w http.ResponseWriter, r *http.Request) {
 				err,
 				errorconcept.Database.NotFound,
 				errorconcept.Default.InternalServerError)
+			return
 		}
 
 		w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
@@ -788,6 +791,7 @@ func readingByDeviceHandler(w http.ResponseWriter, r *http.Request) {
 				err,
 				errorconcept.NewServiceClientHttpError(err),
 				errorconcept.Default.InternalServerError)
+			return
 		}
 
 		pkg.Encode(readings, w, LoggingClient)
@@ -1047,6 +1051,7 @@ func readingByValueDescriptorAndDeviceHandler(w http.ResponseWriter, r *http.Req
 			err,
 			errorconcept.NewServiceClientHttpError(err),
 			errorconcept.Default.InternalServerError)
+		return
 	}
 
 	// Check for value descriptor
@@ -1058,6 +1063,7 @@ func readingByValueDescriptorAndDeviceHandler(w http.ResponseWriter, r *http.Req
 				err,
 				errorconcept.Database.NotFound,
 				errorconcept.Default.InternalServerError)
+			return
 		}
 	}
 
@@ -1104,6 +1110,7 @@ func valueDescriptorHandler(w http.ResponseWriter, r *http.Request) {
 					errorconcept.ValueDescriptors.Invalid,
 				},
 				errorconcept.Default.InternalServerError)
+			return
 		}
 
 		id, err := addValueDescriptor(v)
@@ -1116,6 +1123,7 @@ func valueDescriptorHandler(w http.ResponseWriter, r *http.Request) {
 					errorconcept.ValueDescriptors.DuplicateName,
 				},
 				errorconcept.Default.InternalServerError)
+			return
 		}
 
 		w.WriteHeader(http.StatusOK)
@@ -1131,6 +1139,7 @@ func valueDescriptorHandler(w http.ResponseWriter, r *http.Request) {
 					errorconcept.ValueDescriptors.Invalid,
 				},
 				errorconcept.Default.InternalServerError)
+			return
 		}
 
 		err = updateValueDescriptor(vd)
@@ -1144,6 +1153,7 @@ func valueDescriptorHandler(w http.ResponseWriter, r *http.Request) {
 					errorconcept.ValueDescriptors.InUse,
 				},
 				errorconcept.Default.InternalServerError)
+			return
 		}
 
 		w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
@@ -1174,6 +1184,7 @@ func deleteValueDescriptorByIdHandler(w http.ResponseWriter, r *http.Request) {
 				errorconcept.Common.InvalidID,
 			},
 			errorconcept.Default.InternalServerError)
+		return
 	}
 
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
@@ -1218,6 +1229,7 @@ func valueDescriptorByNameHandler(w http.ResponseWriter, r *http.Request) {
 					errorconcept.ValueDescriptors.InUse,
 				},
 				errorconcept.Default.InternalServerError)
+			return
 		}
 
 		w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
@@ -1244,6 +1256,7 @@ func valueDescriptorByIdHandler(w http.ResponseWriter, r *http.Request) {
 				err,
 				errorconcept.Database.NotFound,
 				errorconcept.Default.InternalServerError)
+			return
 		}
 
 		pkg.Encode(vd, w, LoggingClient)
@@ -1273,6 +1286,7 @@ func valueDescriptorByUomLabelHandler(w http.ResponseWriter, r *http.Request) {
 				err,
 				errorconcept.Database.NotFound,
 				errorconcept.Default.InternalServerError)
+			return
 		}
 
 		pkg.Encode(vdList, w, LoggingClient)
@@ -1302,6 +1316,7 @@ func valueDescriptorByLabelHandler(w http.ResponseWriter, r *http.Request) {
 				err,
 				errorconcept.Database.NotFound,
 				errorconcept.Default.InternalServerError)
+			return
 		}
 
 		pkg.Encode(v, w, LoggingClient)
@@ -1334,6 +1349,7 @@ func valueDescriptorByDeviceHandler(w http.ResponseWriter, r *http.Request) {
 				errorconcept.Database.NotFound,
 			},
 			errorconcept.Default.InternalServerError)
+		return
 	}
 
 	pkg.Encode(vdList, w, LoggingClient)
@@ -1365,6 +1381,7 @@ func valueDescriptorByDeviceIdHandler(w http.ResponseWriter, r *http.Request) {
 				errorconcept.Database.NotFound,
 			},
 			errorconcept.Default.InternalServerError)
+		return
 	}
 
 	pkg.Encode(vdList, w, LoggingClient)
