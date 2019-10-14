@@ -45,10 +45,8 @@ type CpuUsage struct {
 	Total uint64 // reported sum total of all usage
 }
 
-var once sync.Once
 var lastSample CpuUsage
 var usageAvg float64
-var wg sync.WaitGroup
 
 func NewSystemUsage() (s SystemUsage) {
 	// The micro-service is to be considered the System Of Record (SOR) in terms of accurate information.
@@ -73,19 +71,11 @@ func NewSystemUsage() (s SystemUsage) {
 	return s
 }
 
-// deprecated
-func StartCpuUsageAverage() {
-	once.Do(func() {
-		for {
-			wg.Add(1)
-			nextUsage := PollCpu()
-			usageAvg = AvgCpuUsage(lastSample, nextUsage)
-			lastSample = nextUsage
-			wg.Done()
-
-			time.Sleep(time.Second * 30)
-		}
-	})
+// cpuUsageAverage implements testable cpu usage average cycle implementation.
+func cpuUsageAverage() {
+	nextUsage := PollCpu()
+	usageAvg = AvgCpuUsage(lastSample, nextUsage)
+	lastSample = nextUsage
 }
 
 // BootstrapHandler fulfills the BootstrapHandler contract.  It creates a go routine to periodically sample CPU usage
@@ -100,9 +90,7 @@ func BootstrapHandler(wg *sync.WaitGroup, ctx context.Context, startupTimer star
 		defer wg.Done()
 
 		for {
-			nextUsage := PollCpu()
-			usageAvg = AvgCpuUsage(lastSample, nextUsage)
-			lastSample = nextUsage
+			cpuUsageAverage()
 
 			for seconds := 30; seconds > 0; seconds-- {
 				select {
