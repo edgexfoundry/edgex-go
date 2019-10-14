@@ -33,6 +33,7 @@ type ConfigurationStruct struct {
 	Logging          config.LoggingInfo
 	FormatSpecifier  string
 	SecretStore      vault.SecretConfig
+	Startup          config.StartupInfo
 }
 
 type WritableInfo struct {
@@ -82,6 +83,7 @@ func (c *ConfigurationStruct) GetBootstrap() interfaces.BootstrapConfiguration {
 		Registry:    c.Registry,
 		Logging:     c.Logging,
 		SecretStore: c.SecretStore,
+		Startup:     c.Startup,
 	}
 }
 
@@ -93,4 +95,9 @@ func (c *ConfigurationStruct) GetLogLevel() string {
 // SetLogLevel updates the log level in the ConfigurationStruct.
 func (c *ConfigurationStruct) SetRegistryInfo(registryInfo config.RegistryInfo) {
 	c.Registry = registryInfo
+}
+
+// SetStartupInfo updates the startup information in the ConfigurationStruct
+func (c *ConfigurationStruct) SetStartupInfo(startupInfo config.StartupInfo) {
+	c.Startup = startupInfo
 }

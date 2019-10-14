@@ -27,6 +27,7 @@ type BootstrapConfiguration struct {
 	Registry    config.RegistryInfo
 	Logging     config.LoggingInfo
 	SecretStore vault.SecretConfig
+	Startup     config.StartupInfo
 }
 
 // Configuration interface provides an abstraction around a configuration struct.
@@ -51,4 +52,7 @@ type Configuration interface {
 
 	// SetLogLevel updates the log level in the ConfigurationStruct.
 	SetRegistryInfo(registryInfo config.RegistryInfo)
+
+	// SetStartupInfo updates the startup information in the ConfigurationStruct
+	SetStartupInfo(startupInfo config.StartupInfo)
 }

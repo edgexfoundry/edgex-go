@@ -15,7 +15,6 @@ package config
 
 import (
 	"fmt"
-
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 )
 
@@ -83,6 +82,11 @@ type RegistryInfo struct {
 type LoggingInfo struct {
 	EnableRemote bool
 	File         string
+}
+
+type StartupInfo struct {
+	Duration int
+	Interval int
 }
 
 // MessageQueueInfo provides parameters related to connecting to a message queue

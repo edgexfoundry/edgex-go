@@ -15,19 +15,20 @@
 package configuration
 
 import (
+	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"net/url"
 	"os"
 	"strconv"
-
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 )
 
 const (
-	envKeyUrl = "edgex_registry"
+	envKeyUrl             = "edgex_registry"
+	envKeyStartupDuration = "edgex_registry_startup_duration"
+	envKeyStartupInterval = "edgex_registry_startup_interval"
 )
 
 // OverrideFromEnvironment overrides the registryInfo values from an environment variable value (if it exists).
-func OverrideFromEnvironment(registry config.RegistryInfo) config.RegistryInfo {
+func OverrideFromEnvironment(registry config.RegistryInfo, startup config.StartupInfo) (config.RegistryInfo, config.StartupInfo) {
 	if env := os.Getenv(envKeyUrl); env != "" {
 		if u, err := url.Parse(env); err == nil {
 			if p, err := strconv.ParseInt(u.Port(), 10, 0); err == nil {
@@ -37,5 +38,18 @@ func OverrideFromEnvironment(registry config.RegistryInfo) config.RegistryInfo {
 			}
 		}
 	}
-	return registry
+
+	//	Override the startup timer configuration, if provided.
+	if env := os.Getenv(envKeyStartupDuration); env != "" {
+		if n, err := strconv.ParseInt(env, 10, 0); err == nil && n > 0 {
+			startup.Duration = int(n)
+		}
+	}
+	if env := os.Getenv(envKeyStartupInterval); env != "" {
+		if n, err := strconv.ParseInt(env, 10, 0); err == nil && n > 0 {
+			startup.Interval = int(n)
+		}
+	}
+
+	return registry, startup
 }
