@@ -69,6 +69,10 @@ func main() {
 		BootTimeout: internal.BootTimeoutDefault,
 	}
 	startup.Bootstrap(params, secretstore.Retry, logBeforeInit)
+	if secretstore.Configuration == nil {
+		// secretstore.LoggingClient wasn't initialized either
+		os.Exit(1)
+	}
 
 	//step 1: boot up secretstore general steps same as other EdgeX microservice
 
