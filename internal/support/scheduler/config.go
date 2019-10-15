@@ -15,8 +15,6 @@
 package scheduler
 
 import (
-	"github.com/edgexfoundry/go-mod-secrets/pkg/providers/vault"
-
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 )
@@ -31,7 +29,7 @@ type ConfigurationStruct struct {
 	Service         config.ServiceInfo
 	Intervals       map[string]config.IntervalInfo
 	IntervalActions map[string]config.IntervalActionInfo
-	SecretStore     vault.SecretConfig
+	SecretStore     config.SecretStoreInfo
 	Startup         config.StartupInfo
 }
 
