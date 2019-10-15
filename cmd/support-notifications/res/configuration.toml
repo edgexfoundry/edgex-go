@@ -46,3 +46,12 @@ File = './logs/edgex-support-notifications.log'
   Sender = 'jdoe@gmail.com'
   EnableSelfSignedCert = false
   Subject = 'EdgeX Notification'
+
+[SecretStore]
+Host = 'localhost'
+Port = 8200
+Path = '/v1/secrets/edgex/support-notifications/'
+Protocol = 'http'
+  [SecretStore.Authentication]
+  AuthType = 'X-Vault-Token'
+  AuthToken = 'edgex'

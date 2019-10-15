@@ -38,7 +38,7 @@ func BootstrapHandler(
 	dic *di.Container) bool {
 
 	// check for environment variable that turns security off
-	if env := os.Getenv("EDGEX_SECURITY_SECRET_STORE"); env != "false" {
+	if env := os.Getenv("EDGEX_SECURITY_SECRET_STORE"); env == "false" {
 		dic.Update(di.ServiceConstructorMap{
 			container.SecretClientName: func(get di.Get) interface{} {
 				return nil
