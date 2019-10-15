@@ -14,9 +14,7 @@
 
 package startup
 
-import (
-	"time"
-)
+import "time"
 
 // Timer contains references to dependencies required by the startup timer implementation.
 type Timer struct {
@@ -49,14 +47,11 @@ func (t Timer) SleepForInterval() {
 	time.Sleep(t.interval)
 }
 
-//	set a new duration based on the loaded configuration
-func (t Timer) SetDuration(maxWaitInSeconds int) {
+//	Update the wait/interval for the timer,
+func (t Timer) UpdateTimer(maxWaitInSeconds int, retryIntervalInSeconds int) {
 	if maxWaitInSeconds > 0 {
 		t.duration = time.Second * time.Duration(maxWaitInSeconds)
 	}
-}
-
-func (t Timer) SetInterval(retryIntervalInSeconds int) {
 	if retryIntervalInSeconds > 0 {
 		t.interval = time.Second * time.Duration(retryIntervalInSeconds)
 	}

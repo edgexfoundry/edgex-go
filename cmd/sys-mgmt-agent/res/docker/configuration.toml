@@ -76,3 +76,7 @@ File = '/edgex/logs/edgex-sys-mgmt-agent.log'
   Protocol = 'http'
   Host = 'edgex-export-distro'
   Port = 48070
+
+[Startup]
+Duration = 30
+Interval = 1

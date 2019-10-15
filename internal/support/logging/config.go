@@ -90,8 +90,3 @@ func (c *ConfigurationStruct) GetLogLevel() string {
 func (c *ConfigurationStruct) SetRegistryInfo(registryInfo config.RegistryInfo) {
 	c.Registry = registryInfo
 }
-
-// SetStartupInfo updates the startup information in the ConfigurationStruct
-func (c *ConfigurationStruct) SetStartupInfo(startupInfo config.StartupInfo) {
-	c.Startup = startupInfo
-}

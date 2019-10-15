@@ -46,3 +46,7 @@ File = '/edgex/logs/edgex-support-notifications.log'
   Sender = 'jdoe@gmail.com'
   EnableSelfSignedCert = false
   Subject = 'EdgeX Notification'
+
+[Startup]
+Duration = 30
+Interval = 1

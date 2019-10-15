@@ -15,20 +15,24 @@
 package configuration
 
 import (
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"net/url"
 	"os"
 	"strconv"
+
+	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 )
 
 const (
 	envKeyUrl             = "edgex_registry"
-	envKeyStartupDuration = "edgex_registry_startup_duration"
-	envKeyStartupInterval = "edgex_registry_startup_interval"
+	envKeyStartupDuration = "startup_duration"
+	envKeyStartupInterval = "startup_interval"
 )
 
 // OverrideFromEnvironment overrides the registryInfo values from an environment variable value (if it exists).
-func OverrideFromEnvironment(registry config.RegistryInfo, startup config.StartupInfo) (config.RegistryInfo, config.StartupInfo) {
+func OverrideFromEnvironment(
+	registry config.RegistryInfo,
+	startup config.StartupInfo) (config.RegistryInfo, config.StartupInfo) {
+
 	if env := os.Getenv(envKeyUrl); env != "" {
 		if u, err := url.Parse(env); err == nil {
 			if p, err := strconv.ParseInt(u.Port(), 10, 0); err == nil {

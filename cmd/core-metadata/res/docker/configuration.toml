@@ -53,3 +53,7 @@ Content = 'Device update: '
 Sender = 'edgex-core-metadata'
 Description = 'Metadata device notice'
 Label = 'metadata'
+
+[Startup]
+Duration = 30
+Interval = 1

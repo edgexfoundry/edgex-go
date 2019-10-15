@@ -30,3 +30,7 @@ File = '/edgex/logs/edgex-support-logging.log'
   Username = 'logging'
   Timeout = 5000
   Type = 'mongodb'
+
+[Startup]
+Duration = 30
+Interval = 1

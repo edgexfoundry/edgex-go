@@ -41,3 +41,7 @@ File = '/edgex/logs/edgex-core-command.log'
   Username = 'meta'
   Timeout = 5000
   Type = 'mongodb'
+
+[Startup]
+Duration = 30
+Interval = 1

@@ -42,3 +42,6 @@ File = './logs/edgex-export-client.log'
   Timeout = 5000
   Type = 'mongodb'
 
+[Startup]
+Duration = 30
+Interval = 1

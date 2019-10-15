@@ -59,3 +59,7 @@ Protocol = 'tcp'
 Host = '*'
 Port = 5566
 Type = 'zero'
+
+[Startup]
+Duration = 30
+Interval = 1

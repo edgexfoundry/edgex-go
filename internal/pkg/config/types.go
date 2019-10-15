@@ -84,6 +84,7 @@ type LoggingInfo struct {
 	File         string
 }
 
+// StartupInfo provides the startup timer values which are applied to the StartupTimer created at boot.
 type StartupInfo struct {
 	Duration int
 	Interval int

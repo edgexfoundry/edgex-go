@@ -54,3 +54,7 @@ Host = '*'
 Port = 5563
 Type = 'zero'
 Topic = 'events'
+
+[Startup]
+Duration = 30
+Interval = 1

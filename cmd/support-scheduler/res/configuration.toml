@@ -65,7 +65,6 @@ File = './logs/edgex-support-scheduler.log'
     Path = '/api/v1/event/removeold/age/604800000'
     Interval = 'midnight'
 
-
-
-
-
+[Startup]
+Duration = 30
+Interval = 1

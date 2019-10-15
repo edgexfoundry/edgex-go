@@ -52,7 +52,4 @@ type Configuration interface {
 
 	// SetLogLevel updates the log level in the ConfigurationStruct.
 	SetRegistryInfo(registryInfo config.RegistryInfo)
-
-	// SetStartupInfo updates the startup information in the ConfigurationStruct
-	SetStartupInfo(startupInfo config.StartupInfo)
 }
