@@ -12,7 +12,7 @@
  * the License.
  *******************************************************************************/
 
-package handlers
+package secret
 
 import (
 	"context"
@@ -31,14 +31,14 @@ import (
 // NOTE: This BootstrapHandler is responsible for creating a utility that will most likely be used by other
 // BootstrapHandlers to obtain sensitive data, such as database credentials. This BootstrapHandler should be processed
 // before other BootstrapHandlers, possibly even first since it has not other dependencies.
-func SecretClientBootstrapHandler(
+func BootstrapHandler(
 	wg *sync.WaitGroup,
 	context context.Context,
 	startupTimer startup.Timer,
 	dic *di.Container) bool {
 
 	// check for environment variable that turns security off
-	if env := os.Getenv("EDGEX_SECURITY_SECRET_STORE"); env != "false" {
+	if env := os.Getenv("EDGEX_SECURITY_SECRET_STORE"); env == "false" {
 		dic.Update(di.ServiceConstructorMap{
 			container.SecretClientName: func(get di.Get) interface{} {
 				return nil

@@ -47,6 +47,17 @@ File = '/edgex/logs/edgex-support-notifications.log'
   EnableSelfSignedCert = false
   Subject = 'EdgeX Notification'
 
+[SecretStore]
+Host = 'edgex-vault'
+Port = 8200
+Path = '/v1/secrets/edgex/support-notifications/'
+Protocol = 'http'
+RootCaCertPath = '/vault/config/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem'
+ServerName = 'edgex-vault'
+  [SecretStore.Authentication]
+  AuthType = 'X-Vault-Token'
+  AuthToken= 'edgex'
+
 [Startup]
 Duration = 30
 Interval = 1

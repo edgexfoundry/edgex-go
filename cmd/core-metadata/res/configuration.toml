@@ -55,6 +55,15 @@ Sender = 'core-metadata'
 Description = 'Metadata device notice'
 Label = 'metadata'
 
+[SecretStore]
+Host = 'localhost'
+Port = 8200
+Path = '/v1/secrets/edgex/core-metadata/'
+Protocol = 'http'
+  [SecretStore.Authentication]
+  AuthType = 'X-Vault-Token'
+  AuthToken = 'edgex'
+
 [Startup]
 Duration = 30
 Interval = 1

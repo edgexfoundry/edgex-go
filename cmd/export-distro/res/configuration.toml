@@ -60,6 +60,15 @@ Host = '*'
 Port = 5566
 Type = 'zero'
 
+[SecretStore]
+Host = 'localhost'
+Port = 8200
+Path = '/v1/secrets/edgex/export-distro/'
+Protocol = 'http'
+  [SecretStore.Authentication]
+  AuthType = 'X-Vault-Token'
+  AuthToken = 'edgex'
+
 [Startup]
 Duration = 30
 Interval = 1

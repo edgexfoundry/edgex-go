@@ -77,6 +77,15 @@ File = './logs/edgex-sys-mgmt-agent.log'
   Host = 'localhost'
   Port = 48070
 
+[SecretStore]
+Host = 'localhost'
+Port = 8200
+Path = '/v1/secrets/edgex/sys-mgmt-agent/'
+Protocol = 'http'
+  [SecretStore.Authentication]
+  AuthType = 'X-Vault-Token'
+  AuthToken = 'edgex'
+
 [Startup]
 Duration = 30
 Interval = 1

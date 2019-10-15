@@ -16,26 +16,20 @@ package metadata
 
 import (
 	"context"
-	"fmt"
 	"sync"
-	"time"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db/redis"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/endpoint"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/coredata"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/notifications"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
-
-	"github.com/edgexfoundry/go-mod-registry/registry"
 )
 
 // Global variables
@@ -44,120 +38,36 @@ var dbClient interfaces.DBClient
 var LoggingClient logger.LoggingClient
 var nc notifications.NotificationsClient
 var vdc coredata.ValueDescriptorClient
-
-// Global ErrorConcept variables
 var httpErrorHandler errorconcept.ErrorHandler
 
-type server interface {
-	IsRunning() bool
-}
-
-type ServiceInit struct {
-	server server
-}
-
-func NewServiceInit(server server) ServiceInit {
-	return ServiceInit{
-		server: server,
-	}
-}
-
-func (s ServiceInit) initializeClients(useRegistry bool, registryClient registry.Client) {
-	// Create notification client
-	nParams := types.EndpointParams{
-		ServiceKey:  clients.SupportNotificationsServiceKey,
-		Path:        clients.ApiNotificationRoute,
-		UseRegistry: useRegistry,
-		Url:         Configuration.Clients["Notifications"].Url() + clients.ApiNotificationRoute,
-		Interval:    Configuration.Service.ClientMonitor,
-	}
-	nc = notifications.NewNotificationsClient(nParams, endpoint.Endpoint{RegistryClient: &registryClient})
-
-	vParams := types.EndpointParams{
-		ServiceKey:  clients.CoreDataServiceKey,
-		Path:        clients.ApiValueDescriptorRoute,
-		UseRegistry: useRegistry,
-		Url:         Configuration.Clients["CoreData"].Url() + clients.ApiValueDescriptorRoute,
-		Interval:    Configuration.Service.ClientMonitor,
-	}
-	vdc = coredata.NewValueDescriptorClient(vParams, endpoint.Endpoint{RegistryClient: &registryClient})
-}
-
-// Return the dbClient interface
-func (s ServiceInit) newDBClient(dbType string) (interfaces.DBClient, error) {
-	switch dbType {
-	case db.MongoDB:
-		dbConfig := db.Configuration{
-			Host:         Configuration.Databases["Primary"].Host,
-			Port:         Configuration.Databases["Primary"].Port,
-			Timeout:      Configuration.Databases["Primary"].Timeout,
-			DatabaseName: Configuration.Databases["Primary"].Name,
-			Username:     Configuration.Databases["Primary"].Username,
-			Password:     Configuration.Databases["Primary"].Password,
-		}
-		return mongo.NewClient(dbConfig)
-	case db.RedisDB:
-		dbConfig := db.Configuration{
-			Host: Configuration.Databases["Primary"].Host,
-			Port: Configuration.Databases["Primary"].Port,
-		}
-		redisClient, err := redis.NewCoreDataClient(dbConfig, LoggingClient) // TODO: Verify this also connects to Redis
-		if err != nil {
-			return nil, err
-		}
-
-		return redisClient, nil
-	default:
-		return nil, db.ErrUnsupportedDatabase
-	}
-}
-
-func (s ServiceInit) BootstrapHandler(
-	wg *sync.WaitGroup,
-	ctx context.Context,
-	startupTimer startup.Timer,
-	dic *di.Container) bool {
-
+// BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the metadata service.
+func BootstrapHandler(wg *sync.WaitGroup, ctx context.Context, startupTimer startup.Timer, dic *di.Container) bool {
 	// update global variables.
 	LoggingClient = container.LoggingClientFrom(dic.Get)
+	dbClient = container.DBClientFrom(dic.Get)
+
 	httpErrorHandler = errorconcept.NewErrorHandler(LoggingClient)
 
 	// initialize clients required by service.
 	registryClient := container.RegistryFrom(dic.Get)
-	s.initializeClients(registryClient != nil, registryClient)
-
-	// initialize database.
-	for startupTimer.HasNotElapsed() {
-		var err error
-		dbClient, err = s.newDBClient(Configuration.Databases["Primary"].Type)
-		if err == nil {
-			break
-		}
-		dbClient = nil
-		LoggingClient.Warn(fmt.Sprintf("couldn't create database client: %v", err.Error()))
-		startupTimer.SleepForInterval()
-	}
-
-	if dbClient == nil {
-		return false
-	}
-
-	LoggingClient.Info("Database connected")
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-
-		<-ctx.Done()
-		for {
-			// wait for httpServer to stop running (e.g. handling requests) before closing the database connection.
-			if s.server.IsRunning() == false {
-				dbClient.CloseSession()
-				break
-			}
-			time.Sleep(time.Second)
-		}
-		LoggingClient.Info("Database disconnected")
-	}()
+	nc = notifications.NewNotificationsClient(
+		types.EndpointParams{
+			ServiceKey:  clients.SupportNotificationsServiceKey,
+			Path:        clients.ApiNotificationRoute,
+			UseRegistry: registryClient != nil,
+			Url:         Configuration.Clients["Notifications"].Url() + clients.ApiNotificationRoute,
+			Interval:    Configuration.Service.ClientMonitor,
+		},
+		endpoint.Endpoint{RegistryClient: &registryClient})
+	vdc = coredata.NewValueDescriptorClient(
+		types.EndpointParams{
+			ServiceKey:  clients.CoreDataServiceKey,
+			Path:        clients.ApiValueDescriptorRoute,
+			UseRegistry: registryClient != nil,
+			Url:         Configuration.Clients["CoreData"].Url() + clients.ApiValueDescriptorRoute,
+			Interval:    Configuration.Service.ClientMonitor,
+		},
+		endpoint.Endpoint{RegistryClient: &registryClient})
 
 	return true
 }

@@ -12,17 +12,12 @@
  * the License.
  *******************************************************************************/
 
-package container
+package interfaces
 
-import (
-	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
-	"github.com/edgexfoundry/go-mod-secrets/pkg"
-)
+import "github.com/edgexfoundry/edgex-go/internal/pkg/config"
 
-// SecretClientName contains the name of the registry.Client implementation in the DIC.
-var SecretClientName = di.TypeInstanceToName((*pkg.SecretClient)(nil))
-
-// SecretClientFrom helper function queries the DIC and returns the pkg.SecretClient implementation.
-func SecretClientFrom(get di.Get) pkg.SecretClient {
-	return get(SecretClientName).(pkg.SecretClient)
+// Database interface provides an abstraction for obtaining the database configuration information.
+type Database interface {
+	// GetDatabaseInfo returns a database information map.
+	GetDatabaseInfo() config.DatabaseInfo
 }

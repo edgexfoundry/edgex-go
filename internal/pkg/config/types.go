@@ -110,7 +110,7 @@ func (m MessageQueueInfo) Uri() string {
 }
 
 // DatabaseInfo defines the parameters necessary for connecting to the desired persistence layer.
-type DatabaseInfo struct {
+type DatabaseInfo map[string]struct {
 	Type     string
 	Timeout  int
 	Host     string

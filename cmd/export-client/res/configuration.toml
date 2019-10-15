@@ -42,6 +42,15 @@ File = './logs/edgex-export-client.log'
   Timeout = 5000
   Type = 'mongodb'
 
+[SecretStore]
+Host = 'localhost'
+Port = 8200
+Path = '/v1/secrets/edgex/export-client/'
+Protocol = 'http'
+  [SecretStore.Authentication]
+  AuthType = 'X-Vault-Token'
+  AuthToken = 'edgex'
+
 [Startup]
 Duration = 30
 Interval = 1

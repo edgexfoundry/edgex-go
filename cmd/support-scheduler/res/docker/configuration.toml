@@ -65,6 +65,17 @@ File = '/edgex/logs/edgex-support-scheduler.log'
     Path = '/api/v1/event/removeold/age/604800000'
     Interval = 'midnight'
 
+[SecretStore]
+Host = 'edgex-vault'
+Port = 8200
+Path = '/v1/secrets/edgex/support-scheduler/'
+Protocol = 'http'
+RootCaCertPath = '/vault/config/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem'
+ServerName = 'edgex-vault'
+  [SecretStore.Authentication]
+  AuthType = 'X-Vault-Token'
+  AuthToken= 'edgex'
+
 [Startup]
 Duration = 30
 Interval = 1

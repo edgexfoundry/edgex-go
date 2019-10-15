@@ -15,14 +15,14 @@
 package container
 
 import (
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
-	"github.com/edgexfoundry/go-mod-secrets/pkg"
 )
 
-// SecretClientName contains the name of the registry.Client implementation in the DIC.
-var SecretClientName = di.TypeInstanceToName((*pkg.SecretClient)(nil))
+// DBClientInterfaceName contains the name of the interfaces.DBClient implementation in the DIC.
+var DBClientInterfaceName = di.TypeInstanceToName((*interfaces.DBClient)(nil))
 
-// SecretClientFrom helper function queries the DIC and returns the pkg.SecretClient implementation.
-func SecretClientFrom(get di.Get) pkg.SecretClient {
-	return get(SecretClientName).(pkg.SecretClient)
+// DBClientFrom helper function queries the DIC and returns the interfaces.DBClient implementation.
+func DBClientFrom(get di.Get) interfaces.DBClient {
+	return get(DBClientInterfaceName).(interfaces.DBClient)
 }

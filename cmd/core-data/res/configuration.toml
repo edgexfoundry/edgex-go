@@ -55,6 +55,15 @@ Port = 5563
 Type = 'zero'
 Topic = 'events'
 
+[SecretStore]
+Host = 'localhost'
+Port = 8200
+Path = '/v1/secret/edgex/core-data/'
+Protocol = 'http'
+  [SecretStore.Authentication]
+  AuthType = 'X-Vault-Token'
+  AuthToken = 'edgex'
+
 [Startup]
 Duration = 30
 Interval = 1

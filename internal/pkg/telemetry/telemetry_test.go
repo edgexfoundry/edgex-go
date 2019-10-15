@@ -3,7 +3,6 @@ package telemetry
 import (
 	"os"
 	"testing"
-	"time"
 )
 
 func TestMain(m *testing.M) {
@@ -29,17 +28,15 @@ func TestNewSystemUsageAvg(t *testing.T) {
 	}
 }
 
-func TestStartCpuUsageAverage(t *testing.T) {
+func TestCpuUsageAverage(t *testing.T) {
 	initialAvg := 13.37
 	usageAvg = initialAvg
 
 	// this test is broad because these conditions should be true no matter the OS the test is run on.
 	// either it will correctly calculate usage and it will change,
 	// or it will run the unimplemented version and change to -1
-	go StartCpuUsageAverage()
+	cpuUsageAverage()
 
-	time.Sleep(time.Second)
-	wg.Wait()
 	if usageAvg == initialAvg {
 		t.Fatalf("Expected CPU usageAvg to change, no change. initial: %f, final: %f", initialAvg, usageAvg)
 	}

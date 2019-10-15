@@ -20,7 +20,9 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap"
 	bootstrapContainer "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers/httpserver"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers/message"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers/secret"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
@@ -56,7 +58,7 @@ func main() {
 			return get(container.ConfigurationName)
 		},
 	})
-	httpServer := handlers.NewServerBootstrap(agent.LoadRestRoutes(dic))
+	httpServer := httpserver.NewBootstrap(agent.LoadRestRoutes(dic))
 	bootstrap.Run(
 		configDir,
 		profileDir,
@@ -67,9 +69,9 @@ func main() {
 		startupTimer,
 		dic,
 		[]interfaces.BootstrapHandler{
-			handlers.SecretClientBootstrapHandler,
+			secret.BootstrapHandler,
 			agent.BootstrapHandler,
-			httpServer.Handler,
-			handlers.NewStartMessage(clients.SystemManagementAgentServiceKey, edgex.Version).Handler,
+			httpServer.BootstrapHandler,
+			message.NewBootstrap(clients.SystemManagementAgentServiceKey, edgex.Version).BootstrapHandler,
 		})
 }

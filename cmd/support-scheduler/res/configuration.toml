@@ -65,6 +65,15 @@ File = './logs/edgex-support-scheduler.log'
     Path = '/api/v1/event/removeold/age/604800000'
     Interval = 'midnight'
 
+[SecretStore]
+Host = 'localhost'
+Port = 8200
+Path = '/v1/secrets/edgex/support-scheduler/'
+Protocol = 'http'
+  [SecretStore.Authentication]
+  AuthType = 'X-Vault-Token'
+  AuthToken = 'edgex'
+
 [Startup]
 Duration = 30
 Interval = 1

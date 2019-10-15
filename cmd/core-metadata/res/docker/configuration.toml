@@ -54,6 +54,17 @@ Sender = 'edgex-core-metadata'
 Description = 'Metadata device notice'
 Label = 'metadata'
 
+[SecretStore]
+Host = 'edgex-vault'
+Port = 8200
+Path = '/v1/secrets/edgex/core-metadata/'
+Protocol = 'http'
+RootCaCertPath = '/vault/config/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem'
+ServerName = 'edgex-vault'
+  [SecretStore.Authentication]
+  AuthType = 'X-Vault-Token'
+  AuthToken= 'edgex'
+
 [Startup]
 Duration = 30
 Interval = 1
