@@ -38,7 +38,7 @@ const (
 	tlsSecretFileName             = "server.key"
 	tlsCertFileName               = "server.crt"
 	caCertFileName                = "ca.pem"
-	pkiInitFilePerServiceComplete = ".security-secrets-setup.complete"
+	pkiInitFilePerServiceComplete = ".security-secrets-secrets.complete"
 
 	// service name section:
 	caServiceName    = "ca"

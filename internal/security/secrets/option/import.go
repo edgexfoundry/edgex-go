@@ -19,7 +19,7 @@ package option
 import (
 	"fmt"
 
-	"github.com/edgexfoundry/edgex-go/internal/security/setup"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets"
 )
 
 // Import deploys PKI from CacheDir to DeployDir.  It retruns an error,
@@ -49,7 +49,7 @@ func importPkis() (statusCode exitCode, err error) {
 	if err != nil {
 		return exitWithError, err
 	}
-	setup.LoggingClient.Info(fmt.Sprintf("importing from PKI cache dir: %s", pkiCacheDir))
+	secrets.LoggingClient.Info(fmt.Sprintf("importing from PKI cache dir: %s", pkiCacheDir))
 
 	dirEmpty, err := isDirEmpty(pkiCacheDir)
 

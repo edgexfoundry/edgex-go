@@ -26,13 +26,13 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/edgexfoundry/edgex-go/internal/security/setup"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
 
 type rootCertGenerator struct {
 	logger logger.LoggingClient
-	seed   setup.CertificateSeed
+	seed   secrets.CertificateSeed
 	writer FileWriter
 }
 

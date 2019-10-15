@@ -22,7 +22,7 @@ import (
 	"path/filepath"
 
 	config "github.com/edgexfoundry/edgex-go/internal/pkg/config"
-	"github.com/edgexfoundry/edgex-go/internal/security/setup"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets"
 )
 
 // Generate option....
@@ -88,7 +88,7 @@ func generatePkis() (exitCode, error) {
 	}
 	scratchPath := filepath.Join(workingDir, pkiInitScratchDir)
 
-	setup.LoggingClient.Debug(fmt.Sprint("pkiSetupVaultJSONPath: ", pkiSetupVaultJSONPath,
+	secrets.LoggingClient.Debug(fmt.Sprint("pkiSetupVaultJSONPath: ", pkiSetupVaultJSONPath,
 		"  pkiSetupKongJSONPath: ", pkiSetupKongJSONPath,
 		"  scratchPath: ", scratchPath,
 		"  certConfigDir: ", certConfigDir))
@@ -144,7 +144,7 @@ func rearrangePkiByServices(workingDir, pkiSetupVaultJSONPath, pkiSetupKongJSONP
 
 	generatedDirPath := filepath.Join(workingDir, pkiInitGeneratedDir)
 
-	setup.LoggingClient.Debug(fmt.Sprint("pki-init generate output base dir: ", generatedDirPath))
+	secrets.LoggingClient.Debug(fmt.Sprint("pki-init generate output base dir: ", generatedDirPath))
 
 	// create generated dir if not exists yet:
 	if err := createDirectoryIfNotExists(generatedDirPath); err != nil {
@@ -208,5 +208,5 @@ func copyGeneratedForService(servicePath string, config config.X509Config) error
 func cleanup(origWorkingDir, scratchPath string) {
 	_ = os.Chdir(origWorkingDir)
 	os.RemoveAll(scratchPath)
-	setup.LoggingClient.Info("pki-init generation completes")
+	secrets.LoggingClient.Info("pki-init generation completes")
 }
