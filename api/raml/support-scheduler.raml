@@ -32,7 +32,7 @@ schemas:
                 body:
                     application/json:
                         schema: interval
-                        example: '{"created":0,"modified":0,"origin":0,"id":"5bc3c18fa493823224c12eb1","name":"midnight","start":"20180101T000000","end":null,"frequency":"P1D","cron":null,"runOnce":false}'
+                        example: '{"created":0,"modified":0,"origin":0,"id":"00d14a4c-cb4c-4750-a24b-f0f89d27fc82","name":"midnight","start":"20180101T000000","end":null,"frequency":"P1D","cron":null,"runOnce":false}'
             "404":
                 description: if no interval is found for the identifier provided.
             "500":
@@ -47,7 +47,7 @@ schemas:
                 description: Successful Response
 /v1/intervalaction/{id}:
     displayName: IntervalAction Resource (by id)
-    description: Example - http://localhost:48081/api/v1/intervalaction/57bb5837555e5218873e5a23
+    description: Example - http://localhost:48081/api/v1/intervalaction/00d14a4c-cb4c-4750-a24b-f0f89d27fc82
     uriParameters:
         id:
             displayName: id
@@ -73,7 +73,7 @@ schemas:
                 body:
                     application/json:
                         schema: intervalaction
-                        example: '{"id":"57bb5837555e5218873e5a23","created":1471895607378,"modified":1471895971882,"origin":1471806386919,"name":"scrub pushed records","addressable":{"name":"scrub pushed records"},"parameters":null,"interval":"daily","service":"edgex-support-scheduler"}'
+                        example: '{"id":"00d14a4c-cb4c-4750-a24b-f0f89d27fc82","created":1471895607378,"modified":1471895971882,"origin":1471806386919,"name":"scrub pushed records","addressable":{"name":"scrub pushed records"},"parameters":null,"interval":"daily","service":"edgex-support-scheduler"}'
             "404":
                 description: if no IntervalAction is found with the provided id
             "500":
@@ -108,7 +108,7 @@ schemas:
                 body:
                     application/json:
                         schema: intervalaction
-                        example: '{"id":"57bb5837555e5218873e5a23","created":1471895607378,"modified":1471895971882,"origin":1471806386919,"name":"scrub pushed records","addressable":{"name":"scrub pushed records"},"parameters":null,"interval":"daily","service":"edgex-support-scheduler"}'
+                        example: '{"id":"00d14a4c-cb4c-4750-a24b-f0f89d27fc82","created":1471895607378,"modified":1471895971882,"origin":1471806386919,"name":"scrub pushed records","addressable":{"name":"scrub pushed records"},"parameters":null,"interval":"daily","service":"edgex-support-scheduler"}'
             "400":
                 description: for malformed or unparsable requests
             "404":
@@ -145,7 +145,7 @@ schemas:
                 body:
                     application/json:
                         schema: intervalaction
-                        example: '{"id":"57bb5837555e5218873e5a23","created":1471895607378,"modified":1471895971882,"origin":1471806386919,"name":"scrub pushed records","addressable":{"name":"scrub pushed records"},"parameters":null,"interval":"daily","service":"edgex-support-scheduler"}'
+                        example: '{"id":"00d14a4c-cb4c-4750-a24b-f0f89d27fc82","created":1471895607378,"modified":1471895971882,"origin":1471806386919,"name":"scrub pushed records","addressable":{"name":"scrub pushed records"},"parameters":null,"interval":"daily","service":"edgex-support-scheduler"}'
             "400":
                 description: for malformed or unparsable requests
             "404":
@@ -177,7 +177,7 @@ schemas:
         body:
             application/json:
                 schema: intervalaction
-                example: '{"id":"57bb5837555e5218873e5a23","addressable":{"name":"weekly scrubber service"}}'
+                example: '{"id":"00d14a4c-cb4c-4750-a24b-f0f89d27fc82","addressable":{"name":"weekly scrubber service"}}'
         responses:
             "200":
                 description: boolean indicating success of the update
@@ -197,14 +197,14 @@ schemas:
                 body:
                     application/json:
                         schema: intervalaction
-                        example: '[{"id":"57bb5837555e5218873e5a23","created":1471895607378,"modified":1471895607378,"origin":1471806386919,"name":"scrub pushed records","addressable:{"name":"scrub pushed records"},"parameters":null,"interval":"daily","service":"edgex-support-scheduler"}]'
+                        example: '[{"id":"00d14a4c-cb4c-4750-a24b-f0f89d27fc82","created":1471895607378,"modified":1471895607378,"origin":1471806386919,"name":"scrub pushed records","addressable:{"name":"scrub pushed records"},"parameters":null,"interval":"daily","service":"edgex-support-scheduler"}]'
             "413":
                 description: if the number of intervals exceeds the current max limit.
             "500":
                 description: for unknown or unanticipated issues
 /v1/interval/{id}:
     displayName: Interval Resource
-    description: Example - http://localhost:48081/api/v1/interval/57bb49e6555e5218873e5a1b
+    description: Example - http://localhost:48081/api/v1/interval/00d14a4c-cb4c-4750-a24b-f0f89d27fc82
     uriParameters:
         id:
             displayName: id
@@ -228,7 +228,7 @@ schemas:
                 body:
                     application/json:
                         schema: interval
-                        example: '{"id":"57bb49e6555e5218873e5a1b","created":1471891942854,"modified":1471893402687,"origin":1471806386919,"name":"hourly","start":1503360000,"end":1503390000,"frequency":60000,"cron":null,"runOnce":"false"}'
+                        example: '{"id":"00d14a4c-cb4c-4750-a24b-f0f89d27fc82","created":1471891942854,"modified":1471893402687,"origin":1471806386919,"name":"hourly","start":1503360000,"end":1503390000,"frequency":60000,"cron":null,"runOnce":"false"}'
             "404":
                 description: if no interval is found for the identifier provided.
             "500":
@@ -262,7 +262,7 @@ schemas:
                 body:
                     application/json:
                         schema: interval
-                        example: '{"id":"57bb49e6555e5218873e5a1b","created":1471891942854,"modified":1471893402687,"origin":1471806386919,"name":"hourly","start":1503360000,"end":1503390000,"frequency":60000,"cron":null,"runOnce":"false"}'
+                        example: '{"id":"00d14a4c-cb4c-4750-a24b-f0f89d27fc82","created":1471891942854,"modified":1471893402687,"origin":1471806386919,"name":"hourly","start":1503360000,"end":1503390000,"frequency":60000,"cron":null,"runOnce":"false"}'
             "400":
                 description: for malformed or unparsable requests
             "404":
@@ -292,7 +292,7 @@ schemas:
         body:
             application/json:
                 schema: interval
-                example: '{"id":"57bb49e6555e5218873e5a1b","end":"20170101T000000"}'
+                example: '{"id":"00d14a4c-cb4c-4750-a24b-f0f89d27fc82","end":"20170101T000000"}'
         responses:
             "200":
                 description: boolean indicating success of the update
@@ -310,7 +310,7 @@ schemas:
                 body:
                     application/json:
                         schema: interval
-                        example: '[{"id":"57fc078d4c1a663f6fda1ae0","created":1476134797194,"modified":1476134797194,"origin":1471806386919,"name":"fifteen minute","start":"20160101T000000","end":"","frequency":"PT15M"},{"id":"57fc077e4c1a663f6fda1adf","created":1476134782460,"modified":1476134782460,"origin":1471806386919,"name":"hourly","start":"20160101T000000","end":"","frequency":"PT1H"},{"id":"57fc075a4c1a663f6fda1ade","created":1476134746390,"modified":1476134746390,"origin":1471806386919,"name":"midnight","start":"20160101T000000","end":"","frequency":"PT1D"}]'
+                        example: '[{"id":"00d14a4c-cb4c-4750-a24b-f0f89d27fc82","created":1476134797194,"modified":1476134797194,"origin":1471806386919,"name":"fifteen minute","start":"20160101T000000","end":"","frequency":"PT15M"},{"id":"47237c46-3f03-4dc5-a3c1-84d7420d9903","created":1476134782460,"modified":1476134782460,"origin":1471806386919,"name":"hourly","start":"20160101T000000","end":"","frequency":"PT1H"},{"id":"2be25a38-e432-4ac7-9749-b57ae11d925f","created":1476134746390,"modified":1476134746390,"origin":1471806386919,"name":"midnight","start":"20160101T000000","end":"","frequency":"PT1D"}]'
             "400":
                 description: for malformed or unparsable requests
             "413":
