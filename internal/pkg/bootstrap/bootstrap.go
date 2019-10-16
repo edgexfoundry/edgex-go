@@ -90,7 +90,11 @@ func Run(
 
 	// override file-based configuration with environment variables.
 	bootstrapConfig := config.GetBootstrap()
-	config.SetRegistryInfo(configuration.OverrideFromEnvironment(bootstrapConfig.Registry))
+	registryInfo, startupInfo := configuration.OverrideFromEnvironment(bootstrapConfig.Registry, bootstrapConfig.Startup)
+	config.SetRegistryInfo(registryInfo)
+
+	//	Update the startup timer to reflect whatever configuration read, if anything available.
+	startupTimer.UpdateTimer(startupInfo.Duration, startupInfo.Interval)
 
 	// set up registryClient and loggingClient; update configuration from registry if we're using a registry.
 	switch useRegistry {

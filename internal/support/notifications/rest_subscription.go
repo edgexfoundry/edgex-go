@@ -79,7 +79,8 @@ func restAddSubscription(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(s.Slug))
 }
 
-func subscriptionHandler(w http.ResponseWriter, r *http.Request) {
+func restUpdateSubscription(w http.ResponseWriter, r *http.Request) {
+
 	if r.Body != nil {
 		defer r.Body.Close()
 	}
@@ -87,50 +88,42 @@ func subscriptionHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	slug := vars["slug"]
 
-	switch r.Method {
-	case http.MethodPut:
-		var s models.Subscription
-		dec := json.NewDecoder(r.Body)
-		err := dec.Decode(&s)
+	var s models.Subscription
+	dec := json.NewDecoder(r.Body)
+	err := dec.Decode(&s)
 
-		// validate email addresses
-		err = validateEmailAddresses(s)
-		if err != nil {
-			switch err.(type) {
-			case errors.ErrInvalidEmailAddresses:
-				http.Error(w, err.Error(), http.StatusBadRequest)
-			default:
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			}
-			LoggingClient.Error(err.Error())
-			return
-		}
-
-		// Check if the subscription exists
-		s2, err := dbClient.GetSubscriptionBySlug(s.Slug)
-		if err != nil {
-			if err == db.ErrNotFound {
-				http.Error(w, "Subscription not found", http.StatusNotFound)
-			} else {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			}
-			LoggingClient.Error(err.Error())
-			return
-		} else {
-			s.ID = s2.ID
-		}
-
-		LoggingClient.Info("Updating subscription by slug: " + slug)
-
-		if err = dbClient.UpdateSubscription(s); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			LoggingClient.Error(err.Error())
-			return
-		}
-		w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("true"))
+	// validate email addresses
+	err = validateEmailAddresses(s)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		LoggingClient.Error(err.Error())
+		return
 	}
+
+	// Check if the subscription exists
+	s2, err := dbClient.GetSubscriptionBySlug(s.Slug)
+	if err != nil {
+		if err == db.ErrNotFound {
+			http.Error(w, "Subscription not found", http.StatusNotFound)
+		} else {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		LoggingClient.Error(err.Error())
+		return
+	} else {
+		s.ID = s2.ID
+	}
+
+	LoggingClient.Info("Updating subscription by slug: " + slug)
+
+	if err = dbClient.UpdateSubscription(s); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		LoggingClient.Error(err.Error())
+		return
+	}
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("true"))
 }
 
 func restGetSubscriptionByID(w http.ResponseWriter, r *http.Request) {

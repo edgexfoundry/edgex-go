@@ -33,36 +33,59 @@ const (
 	defaultHostValue = "defaultHost"
 	defaultPortValue = 987654321
 	defaultTypeValue = "defaultType"
+
+	defaultStartupDuration  = 30
+	defaultStartupInterval  = 1
+	envStartupDuration      = "333"
+	envStartupInterval      = "111"
+	expectedStartupDuration = 333
+	expectedStartupInterval = 111
 )
 
-func initializeTest(t *testing.T) config.RegistryInfo {
+func initializeTest(t *testing.T) (config.RegistryInfo, config.StartupInfo) {
 	os.Clearenv()
-	return config.RegistryInfo{
+	regInfo := config.RegistryInfo{
 		Host: defaultHostValue,
 		Port: defaultPortValue,
 		Type: defaultTypeValue,
 	}
+	startupInfo := config.StartupInfo{
+		Duration: defaultStartupDuration,
+		Interval: defaultStartupInterval,
+	}
+
+	return regInfo, startupInfo
 }
 
 func TestEnvVariableUpdatesRegistryInfo(t *testing.T) {
-	registryInfo := initializeTest(t)
+	registryInfo, startupInfo := initializeTest(t)
 
 	if err := os.Setenv(envKeyUrl, envValue); err != nil {
 		t.Fail()
 	}
-	registryInfo = OverrideFromEnvironment(registryInfo)
+	if err := os.Setenv(envKeyStartupDuration, envStartupDuration); err != nil {
+		t.Fail()
+	}
+	if err := os.Setenv(envKeyStartupInterval, envStartupInterval); err != nil {
+		t.Fail()
+	}
+	registryInfo, startupInfo = OverrideFromEnvironment(registryInfo, startupInfo)
 
 	assert.Equal(t, registryInfo.Host, expectedHostValue)
 	assert.Equal(t, registryInfo.Port, expectedPortValue)
 	assert.Equal(t, registryInfo.Type, expectedTypeValue)
+	assert.Equal(t, startupInfo.Duration, expectedStartupDuration)
+	assert.Equal(t, startupInfo.Interval, expectedStartupInterval)
 }
 
 func TestNoEnvVariableDoesNotUpdateRegistryInfo(t *testing.T) {
-	registryInfo := initializeTest(t)
+	registryInfo, startupInfo := initializeTest(t)
 
-	registryInfo = OverrideFromEnvironment(registryInfo)
+	registryInfo, startupInfo = OverrideFromEnvironment(registryInfo, startupInfo)
 
 	assert.Equal(t, registryInfo.Host, defaultHostValue)
 	assert.Equal(t, registryInfo.Port, defaultPortValue)
 	assert.Equal(t, registryInfo.Type, defaultTypeValue)
+	assert.Equal(t, startupInfo.Duration, defaultStartupDuration)
+	assert.Equal(t, startupInfo.Interval, defaultStartupInterval)
 }

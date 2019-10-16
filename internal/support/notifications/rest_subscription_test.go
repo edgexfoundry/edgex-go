@@ -445,12 +445,6 @@ func TestAddSubscription(t *testing.T) {
 		expectedStatus int
 	}{
 		{
-			name:           "Invalid Email",
-			request:        createRequestSubscriptionAdd(subscriptionForAddInvalid),
-			dbMock:         createMockSubscriptionLoaderAddSuccess(),
-			expectedStatus: http.StatusBadRequest,
-		},
-		{
 			name:           "OK",
 			request:        createRequestSubscriptionAdd(subscriptionForAdd),
 			dbMock:         createMockSubscriptionLoaderAddSuccess(),
@@ -500,5 +494,93 @@ func createMockSubscriptionLoaderAddSuccess() interfaces.DBClient {
 func createMockSubscriptionLoaderAddErr() interfaces.DBClient {
 	myMock := mocks.DBClient{}
 	myMock.On("AddSubscription", subscriptionForAdd).Return(subscriptionForAdd.ID, errors.New("test error"))
+	return &myMock
+}
+
+func TestUpdateSubscription(t *testing.T) {
+	tests := []struct {
+		name           string
+		request        *http.Request
+		dbMock         interfaces.DBClient
+		expectedStatus int
+	}{
+		{
+			name:           "OK",
+			request:        createRequestSubscriptionUpdate(subscriptionForAdd),
+			dbMock:         createMockSubscriptionLoaderUpdateSuccess(),
+			expectedStatus: http.StatusOK,
+		},
+		{
+			name:           "Invalid Email",
+			request:        createRequestSubscriptionUpdate(subscriptionForAddInvalid),
+			dbMock:         createMockSubscriptionLoaderUpdateSuccess(),
+			expectedStatus: http.StatusBadRequest,
+		},
+		{
+			name:           "GetSubscriptionBySlug Not Found Error",
+			request:        createRequestSubscriptionUpdate(subscriptionForAdd),
+			dbMock:         createMockSubscriptionLoaderUpdateGetNotFoundErr(),
+			expectedStatus: http.StatusNotFound,
+		},
+		{
+			name:           "GetSubscriptionBySlug Unexpected Error",
+			request:        createRequestSubscriptionUpdate(subscriptionForAdd),
+			dbMock:         createMockSubscriptionLoaderUpdateGetErr(),
+			expectedStatus: http.StatusInternalServerError,
+		},
+		{
+			name:           "Unexpected Error",
+			request:        createRequestSubscriptionUpdate(subscriptionForAdd),
+			dbMock:         createMockSubscriptionLoaderUpdateErr(),
+			expectedStatus: http.StatusInternalServerError,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			dbClient = tt.dbMock
+			rr := httptest.NewRecorder()
+			handler := http.HandlerFunc(restUpdateSubscription)
+			handler.ServeHTTP(rr, tt.request)
+			response := rr.Result()
+			if response.StatusCode != tt.expectedStatus {
+				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
+				return
+			}
+		})
+	}
+}
+
+func createRequestSubscriptionUpdate(subscription contract.Subscription) *http.Request {
+	b, _ := json.Marshal(subscription)
+	req := httptest.NewRequest(http.MethodPut, TestURI, bytes.NewBuffer(b))
+	return mux.SetURLVars(req, map[string]string{})
+}
+
+func createMockSubscriptionLoaderUpdateSuccess() interfaces.DBClient {
+	myMock := mocks.DBClient{}
+	myMock.On("GetSubscriptionBySlug", subscriptionForAdd.Slug).Return(subscriptionForAdd, nil)
+	myMock.On("UpdateSubscription", subscriptionForAdd).Return(nil)
+	return &myMock
+}
+
+func createMockSubscriptionLoaderUpdateErr() interfaces.DBClient {
+	myMock := mocks.DBClient{}
+	myMock.On("GetSubscriptionBySlug", subscriptionForAdd.Slug).Return(subscriptionForAdd, nil)
+	myMock.On("UpdateSubscription", subscriptionForAdd).Return(errors.New("test error"))
+	return &myMock
+}
+
+func createMockSubscriptionLoaderUpdateGetNotFoundErr() interfaces.DBClient {
+	myMock := mocks.DBClient{}
+	myMock.On("GetSubscriptionBySlug", subscriptionForAdd.Slug).Return(subscriptionForAdd, db.ErrNotFound)
+	myMock.On("UpdateSubscription", subscriptionForAdd).Return(errors.New("test error"))
+	return &myMock
+}
+
+func createMockSubscriptionLoaderUpdateGetErr() interfaces.DBClient {
+	myMock := mocks.DBClient{}
+	myMock.On("GetSubscriptionBySlug", subscriptionForAdd.Slug).Return(subscriptionForAdd, errors.New("test error"))
+	myMock.On("UpdateSubscription", subscriptionForAdd).Return(errors.New("test error"))
 	return &myMock
 }

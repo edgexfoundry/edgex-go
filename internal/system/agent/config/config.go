@@ -33,6 +33,7 @@ type ConfigurationStruct struct {
 	Logging          config.LoggingInfo
 	FormatSpecifier  string
 	SecretStore      vault.SecretConfig
+	Startup          config.StartupInfo
 }
 
 type WritableInfo struct {
@@ -82,6 +83,7 @@ func (c *ConfigurationStruct) GetBootstrap() interfaces.BootstrapConfiguration {
 		Registry:    c.Registry,
 		Logging:     c.Logging,
 		SecretStore: c.SecretStore,
+		Startup:     c.Startup,
 	}
 }
 

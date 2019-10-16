@@ -73,3 +73,7 @@ Protocol = 'http'
   [SecretStore.Authentication]
   AuthType = 'X-Vault-Token'
   AuthToken = 'edgex'
+
+[Startup]
+Duration = 30
+Interval = 1

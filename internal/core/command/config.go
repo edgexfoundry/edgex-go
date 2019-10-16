@@ -29,6 +29,7 @@ type ConfigurationStruct struct {
 	Registry    config.RegistryInfo
 	Service     config.ServiceInfo
 	SecretStore vault.SecretConfig
+	Startup     config.StartupInfo
 }
 
 // WritableInfo contains configuration properties that can be updated and applied without restarting the service.
@@ -77,6 +78,7 @@ func (c *ConfigurationStruct) GetBootstrap() interfaces.BootstrapConfiguration {
 		Registry:    c.Registry,
 		Logging:     c.Logging,
 		SecretStore: c.SecretStore,
+		Startup:     c.Startup,
 	}
 }
 

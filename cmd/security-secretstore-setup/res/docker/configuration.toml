@@ -34,3 +34,7 @@ tokenfolderpath = "/vault/config/assets"
 tokenfile = "resp-init.json"
 vaultsecretshares = 5
 vaultsecretthreshold = 3
+
+[Startup]
+Duration = 30
+Interval = 1

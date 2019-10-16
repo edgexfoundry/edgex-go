@@ -46,3 +46,13 @@ func (t Timer) HasNotElapsed() bool {
 func (t Timer) SleepForInterval() {
 	time.Sleep(t.interval)
 }
+
+//	Update the wait/interval for the timer,
+func (t Timer) UpdateTimer(maxWaitInSeconds int, retryIntervalInSeconds int) {
+	if maxWaitInSeconds > 0 {
+		t.duration = time.Second * time.Duration(maxWaitInSeconds)
+	}
+	if retryIntervalInSeconds > 0 {
+		t.interval = time.Second * time.Duration(retryIntervalInSeconds)
+	}
+}
