@@ -15,68 +15,75 @@
 package certificates
 
 import (
+	"strings"
 	"testing"
 
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
-	"github.com/edgexfoundry/edgex-go/internal/security/setup"
-	"github.com/edgexfoundry/edgex-go/internal/security/setup/mocks"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/mocks"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
 
-func TestRootCertGenerate(t *testing.T) {
+func TestTLSCertGenerate(t *testing.T) {
 	writer := mockFileWriter{}
 	logger := logger.MockLogger{}
 	cfg := mocks.CreateValidX509ConfigMock()
 	dir := createDirectoryHandlerMock(cfg, t)
-	seed, err := setup.NewCertificateSeed(cfg, dir)
+	seed, err := secrets.NewCertificateSeed(cfg, dir)
 	if err != nil {
 		t.Error(err.Error())
 		return
 	}
 
-	seedGeneratorOn := seed
-	seedGeneratorOn.NewCA = true
-	seedGeneratorOn.DumpKeys = true
+	dumpKeysOn := seed
+	dumpKeysOn.DumpKeys = true
 
-	schemesOff := seedGeneratorOn
+	schemesOff := seed
 	schemesOff.ECScheme = false
 	schemesOff.RSAScheme = false
 
+	certFileNotFound := seed
+	certFileNotFound.CACertFile = overridePath("blank.pem", certFileNotFound.CACertFile)
+
+	certFileInvalid := seed
+	certFileInvalid.CACertFile = overridePath("EdgeXTrustCAInvalid.pem", certFileInvalid.CACertFile)
+
+	keyfileNotFound := seed
+	keyfileNotFound.CAKeyFile = overridePath("blank.priv.key", certFileNotFound.CAKeyFile)
+
+	keyFileInvalid := seed
+	keyFileInvalid.CAKeyFile = overridePath("EdgeXTrustCAInvalid.priv.key", keyFileInvalid.CAKeyFile)
+
 	tests := []struct {
 		name        string
-		seed        setup.CertificateSeed
+		seed        secrets.CertificateSeed
 		expectError bool
 	}{
-		{"GenOffOK", seed, false},
-		{"GenOnOK", seedGeneratorOn, false},
+		{"DefaultConfigOK", seed, false},
+		{"DefaultWithDumpKeys", dumpKeysOn, false},
 		{"SchemeFail", schemesOff, true},
+		{"CertFileNotFound", certFileNotFound, true},
+		{"CertFileInvalid", certFileInvalid, true},
+		{"KeyFileNotFound", keyfileNotFound, true},
+		{"KeyFileInvalid", keyFileInvalid, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			generator, err := NewCertificateGenerator(RootCertificate, tt.seed, writer, logger)
+			generator, err := NewCertificateGenerator(TLSCertificate, tt.seed, writer, logger)
 			if generator != nil {
 				err = generator.Generate()
 			}
 			if err != nil && !tt.expectError {
 				t.Error(err)
-				return
 			}
 			if err == nil && tt.expectError {
 				t.Error("expected error but none was thrown")
-				return
 			}
 		})
 	}
 }
 
-func createDirectoryHandlerMock(cfg config.X509Config, t *testing.T) setup.DirectoryHandler {
-	dir, err := cfg.PkiCADir()
-	if err != nil {
-		t.Error(err.Error())
-		return nil
-	}
-	mock := mocks.DirectoryHandler{}
-	mock.On("Create", dir).Return(nil)
-	mock.On("Verify", dir).Return(nil)
-	return &mock
+func overridePath(fileName string, path string) string {
+	idx := strings.LastIndex(path, "/")
+	stem := path[:idx+1]
+	return stem + fileName
 }

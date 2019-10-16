@@ -18,16 +18,16 @@ import (
 	"crypto"
 	"testing"
 
-	"github.com/edgexfoundry/edgex-go/internal/security/setup"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
 
 func TestGeneratePrivateKey(t *testing.T) {
-	baseSeed := setup.CertificateSeed{
+	baseSeed := secrets.CertificateSeed{
 		RSAScheme:  false,
 		ECScheme:   false,
-		RSAKeySize: setup.RSA_4096,
-		ECCurve:    setup.EC_224,
+		RSAKeySize: secrets.RSA_4096,
+		ECCurve:    secrets.EC_224,
 	}
 
 	rsaSeed := baseSeed
@@ -37,19 +37,19 @@ func TestGeneratePrivateKey(t *testing.T) {
 	ecSeed.ECScheme = true
 
 	ec256Seed := ecSeed
-	ec256Seed.ECCurve = setup.EC_256
+	ec256Seed.ECCurve = secrets.EC_256
 
 	ec384Seed := ecSeed
-	ec384Seed.ECCurve = setup.EC_384
+	ec384Seed.ECCurve = secrets.EC_384
 
 	ec521Seed := ecSeed
-	ec521Seed.ECCurve = setup.EC_521
+	ec521Seed.ECCurve = secrets.EC_521
 
 	logger := logger.MockLogger{}
 
 	tests := []struct {
 		name        string
-		seed        setup.CertificateSeed
+		seed        secrets.CertificateSeed
 		expectError bool
 	}{
 		{"BaseFail", baseSeed, true},

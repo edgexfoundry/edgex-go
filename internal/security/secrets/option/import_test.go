@@ -22,7 +22,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/edgexfoundry/edgex-go/internal/security/setup"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -167,7 +167,7 @@ func setupImportTest(t *testing.T) func() {
 		t.Fatalf("cannot copy %s for the test: %v", configTomlFile, err)
 	}
 
-	err = setup.Init("")
+	err = secrets.Init("")
 	if err != nil {
 		t.Fatalf("Failed to init security-secrets-setup: %v", err)
 	}
@@ -175,7 +175,7 @@ func setupImportTest(t *testing.T) func() {
 	origEnvXdgRuntimeDir := os.Getenv(envXdgRuntimeDir)
 	// change it to the current working directory
 	os.Setenv(envXdgRuntimeDir, curDir)
-	oldConfig := setup.Configuration
+	oldConfig := secrets.Configuration
 
 	pkiCacheDir := "./cachetest"
 	if err := createDirectoryIfNotExists(pkiCacheDir); err != nil {
@@ -190,7 +190,7 @@ func setupImportTest(t *testing.T) func() {
 	return func() {
 		// cleanup
 		os.Setenv(envXdgRuntimeDir, origEnvXdgRuntimeDir)
-		setup.Configuration = oldConfig
+		secrets.Configuration = oldConfig
 		os.RemoveAll(pkiInitDeployDir)
 		os.RemoveAll(pkiCacheDir)
 		os.RemoveAll(testResourceDir)

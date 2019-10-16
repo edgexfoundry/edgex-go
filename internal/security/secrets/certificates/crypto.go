@@ -22,13 +22,13 @@ import (
 	"crypto/rsa"
 	"fmt"
 
-	"github.com/edgexfoundry/edgex-go/internal/security/setup"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
 
 // generatePrivateKey creates a new RSA or EC based private key (sk)
 // ----------------------------------------------------------
-func generatePrivateKey(seed setup.CertificateSeed, logger logger.LoggingClient) (crypto.PrivateKey, error) {
+func generatePrivateKey(seed secrets.CertificateSeed, logger logger.LoggingClient) (crypto.PrivateKey, error) {
 
 	if seed.RSAScheme {
 		logger.Debug(fmt.Sprintf("Generating private key with RSA scheme %v", seed.RSAKeySize))
@@ -38,13 +38,13 @@ func generatePrivateKey(seed setup.CertificateSeed, logger logger.LoggingClient)
 	if seed.ECScheme {
 		logger.Debug(fmt.Sprintf("Generating private key with EC scheme %v", seed.ECCurve))
 		switch seed.ECCurve {
-		case setup.EC_224: // secp224r1 NIST P-224
+		case secrets.EC_224: // secp224r1 NIST P-224
 			return ecdsa.GenerateKey(elliptic.P224(), rand.Reader)
-		case setup.EC_256: // secp256v1 NIST P-256
+		case secrets.EC_256: // secp256v1 NIST P-256
 			return ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
-		case setup.EC_384: // secp384r1 NIST P-384
+		case secrets.EC_384: // secp384r1 NIST P-384
 			return ecdsa.GenerateKey(elliptic.P384(), rand.Reader)
-		case setup.EC_521: // secp521r1 NIST P-521
+		case secrets.EC_521: // secp521r1 NIST P-521
 			return ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
 		}
 	}

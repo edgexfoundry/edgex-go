@@ -21,7 +21,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/edgexfoundry/edgex-go/internal/security/setup"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -42,8 +42,8 @@ func TestGetWorkDir(t *testing.T) {
 	assert.Equal(t, expectedWorkDir, runTimeDir)
 
 	// test default WorkDir
-	setup.Configuration = &setup.ConfigurationStruct{
-		SecretsSetup: setup.SecretsSetupInfo{
+	secrets.Configuration = &secrets.ConfigurationStruct{
+		SecretsSetup: secrets.SecretsSetupInfo{
 			WorkDir: "",
 		},
 	}
@@ -69,8 +69,8 @@ func TestGetCertConfigDir(t *testing.T) {
 	assert.Equal(t, "./res", certConfigDir)
 
 	// certificate config dir not configured in toml
-	setup.Configuration = &setup.ConfigurationStruct{
-		SecretsSetup: setup.SecretsSetupInfo{
+	secrets.Configuration = &secrets.ConfigurationStruct{
+		SecretsSetup: secrets.SecretsSetupInfo{
 			CertConfigDir: "",
 		},
 	}
@@ -79,8 +79,8 @@ func TestGetCertConfigDir(t *testing.T) {
 	assert.Equal(t, "", certConfigDir)
 
 	// certificate config dir is configured but does not exist
-	setup.Configuration = &setup.ConfigurationStruct{
-		SecretsSetup: setup.SecretsSetupInfo{
+	secrets.Configuration = &secrets.ConfigurationStruct{
+		SecretsSetup: secrets.SecretsSetupInfo{
 			CertConfigDir: "./fakePath",
 		},
 	}
@@ -100,8 +100,8 @@ func TestGetCacheDir(t *testing.T) {
 	assert.Equal(t, "./cachetest", cacheDir)
 
 	// test default cacheDir
-	setup.Configuration = &setup.ConfigurationStruct{
-		SecretsSetup: setup.SecretsSetupInfo{
+	secrets.Configuration = &secrets.ConfigurationStruct{
+		SecretsSetup: secrets.SecretsSetupInfo{
 			CacheDir: "",
 		},
 	}
@@ -109,8 +109,8 @@ func TestGetCacheDir(t *testing.T) {
 	assert.Equal(t, defaultPkiCacheDir, cacheDir)
 
 	// cache directory is configured but does not exist
-	setup.Configuration = &setup.ConfigurationStruct{
-		SecretsSetup: setup.SecretsSetupInfo{
+	secrets.Configuration = &secrets.ConfigurationStruct{
+		SecretsSetup: secrets.SecretsSetupInfo{
 			CacheDir: "./fakePath",
 		},
 	}
@@ -129,8 +129,8 @@ func TestGetDeployDir(t *testing.T) {
 	assert.Equal(t, "./deploytest", deployDir)
 
 	// test default DeployDir
-	setup.Configuration = &setup.ConfigurationStruct{
-		SecretsSetup: setup.SecretsSetupInfo{
+	secrets.Configuration = &secrets.ConfigurationStruct{
+		SecretsSetup: secrets.SecretsSetupInfo{
 			DeployDir: "",
 		},
 	}
@@ -139,8 +139,8 @@ func TestGetDeployDir(t *testing.T) {
 	assert.Equal(t, defaultPkiDeployDir, deployDir)
 
 	// deploy directory is configured but does not exist
-	setup.Configuration = &setup.ConfigurationStruct{
-		SecretsSetup: setup.SecretsSetupInfo{
+	secrets.Configuration = &secrets.ConfigurationStruct{
+		SecretsSetup: secrets.SecretsSetupInfo{
 			DeployDir: "./fakepath",
 		},
 	}

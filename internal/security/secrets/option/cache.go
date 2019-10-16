@@ -21,7 +21,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/edgexfoundry/edgex-go/internal/security/setup"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets"
 )
 
 // Cache generates PKI exactly once and cached to a designated location for future use.
@@ -51,7 +51,7 @@ func cachePkis() (statusCode exitCode, err error) {
 	if empty, err := isDirEmpty(pkiCacheDir); err != nil {
 		return exitWithError, err
 	} else if empty {
-		setup.LoggingClient.Info(fmt.Sprintf("cache dir %s is empty, generating PKI into it...", pkiCacheDir))
+		secrets.LoggingClient.Info(fmt.Sprintf("cache dir %s is empty, generating PKI into it...", pkiCacheDir))
 		// perform generate func
 		statusCode, err = generatePkis()
 		if err != nil {
@@ -81,7 +81,7 @@ func cachePkis() (statusCode exitCode, err error) {
 		if checkIfFileExists(cachedCAPrivateKeyFile) {
 			return exitWithError, errCacheNotChangeAfter
 		}
-		setup.LoggingClient.Info(fmt.Sprintf("cached TLS assets from dir %s is present, using cached PKI", pkiCacheDir))
+		secrets.LoggingClient.Info(fmt.Sprintf("cached TLS assets from dir %s is present, using cached PKI", pkiCacheDir))
 	}
 
 	// to deploy

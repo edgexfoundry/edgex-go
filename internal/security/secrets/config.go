@@ -12,7 +12,7 @@
  * the License.
  *******************************************************************************/
 
-package setup
+package secrets
 
 import "github.com/edgexfoundry/edgex-go/internal/pkg/config"
 

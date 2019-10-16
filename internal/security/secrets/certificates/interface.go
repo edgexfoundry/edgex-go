@@ -17,7 +17,7 @@ package certificates
 import (
 	"fmt"
 
-	"github.com/edgexfoundry/edgex-go/internal/security/setup"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
 
@@ -32,7 +32,7 @@ type CertificateGenerator interface {
 	Generate() error
 }
 
-func NewCertificateGenerator(t CertificateType, seed setup.CertificateSeed, w FileWriter, logger logger.LoggingClient) (CertificateGenerator, error) {
+func NewCertificateGenerator(t CertificateType, seed secrets.CertificateSeed, w FileWriter, logger logger.LoggingClient) (CertificateGenerator, error) {
 	switch t {
 	case RootCertificate:
 		return rootCertGenerator{seed: seed, writer: w, logger: logger}, nil

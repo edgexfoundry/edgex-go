@@ -12,13 +12,13 @@
  * the License.
  *******************************************************************************/
 
-package setup
+package secrets
 
 import (
 	"testing"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
-	"github.com/edgexfoundry/edgex-go/internal/security/setup/mocks"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/mocks"
 )
 
 func TestNewCertificateSeed(t *testing.T) {
@@ -95,7 +95,7 @@ func TestNewCertificateSeed(t *testing.T) {
 	}
 }
 
-// Tried to put this in mocks/custom.go but caused an import cycle with setup.DirectoryHandler
+// Tried to put this in mocks/custom.go but caused an import cycle with secrets.DirectoryHandler
 func createDirectoryHandlerMock(cfg config.X509Config, t *testing.T) DirectoryHandler {
 	dir, err := cfg.PkiCADir()
 	if err != nil {

@@ -28,8 +28,8 @@ import (
 	"time"
 
 	config "github.com/edgexfoundry/edgex-go/internal/pkg/config"
-	"github.com/edgexfoundry/edgex-go/internal/security/setup"
-	"github.com/edgexfoundry/edgex-go/internal/security/setup/certificates"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/certificates"
 )
 
 func copyFile(fileSrc, fileDest string) (int64, error) {
@@ -119,7 +119,7 @@ func copyDir(srcDir, destDir string) error {
 				return err
 			}
 		} else {
-			setup.LoggingClient.Debug(fmt.Sprintf("copying srcFilePath: %s to destFilePath: %s", srcFilePath, destFilePath))
+			secrets.LoggingClient.Debug(fmt.Sprintf("copying srcFilePath: %s to destFilePath: %s", srcFilePath, destFilePath))
 			if _, copyErr := copyFile(srcFilePath, destFilePath); copyErr != nil {
 				return copyErr
 			}
@@ -239,8 +239,8 @@ func getWorkDir() (string, error) {
 
 	if xdgRuntimeDir, ok := os.LookupEnv(envXdgRuntimeDir); ok {
 		workDir = filepath.Join(xdgRuntimeDir, pkiInitBaseDir)
-	} else if setup.Configuration.SecretsSetup.WorkDir != "" {
-		workDir, err = filepath.Abs(setup.Configuration.SecretsSetup.WorkDir)
+	} else if secrets.Configuration.SecretsSetup.WorkDir != "" {
+		workDir, err = filepath.Abs(secrets.Configuration.SecretsSetup.WorkDir)
 		if err != nil {
 			return "", err
 		}
@@ -253,8 +253,8 @@ func getWorkDir() (string, error) {
 
 func getCertConfigDir() (string, error) {
 	var certConfigDir string
-	if setup.Configuration.SecretsSetup.CertConfigDir != "" {
-		certConfigDir = setup.Configuration.SecretsSetup.CertConfigDir
+	if secrets.Configuration.SecretsSetup.CertConfigDir != "" {
+		certConfigDir = secrets.Configuration.SecretsSetup.CertConfigDir
 
 		// we only read files from CertConfigDir, don't care if it's writable
 		if exist, _ := checkDirExistsAndIsWritable(certConfigDir); !exist {
@@ -270,8 +270,8 @@ func getCertConfigDir() (string, error) {
 func getCacheDir() (string, error) {
 	cacheDir := defaultPkiCacheDir
 
-	if setup.Configuration.SecretsSetup.CacheDir != "" {
-		cacheDir = setup.Configuration.SecretsSetup.CacheDir
+	if secrets.Configuration.SecretsSetup.CacheDir != "" {
+		cacheDir = secrets.Configuration.SecretsSetup.CacheDir
 		exist, isWritable := checkDirExistsAndIsWritable(cacheDir)
 		if !exist {
 			return "", fmt.Errorf("CacheDir, %s, from config file does not exist", cacheDir)
@@ -288,8 +288,8 @@ func getCacheDir() (string, error) {
 func getDeployDir() (string, error) {
 	deployDir := defaultPkiDeployDir
 
-	if setup.Configuration.SecretsSetup.DeployDir != "" {
-		deployDir = setup.Configuration.SecretsSetup.DeployDir
+	if secrets.Configuration.SecretsSetup.DeployDir != "" {
+		deployDir = secrets.Configuration.SecretsSetup.DeployDir
 		exist, isWritable := checkDirExistsAndIsWritable(deployDir)
 		if !exist {
 			return "", fmt.Errorf("DeployDir, %s, from config file does not exist", deployDir)
@@ -310,16 +310,16 @@ func GenTLSAssets(jsonConfig string) error {
 		return err
 	}
 
-	if setup.NewDirectoryHandler(setup.LoggingClient) == nil {
-		return errors.New("setup.LoggingClient is nil")
+	if secrets.NewDirectoryHandler(secrets.LoggingClient) == nil {
+		return errors.New("secrets.LoggingClient is nil")
 	}
 
-	seed, err := setup.NewCertificateSeed(x509Config, setup.NewDirectoryHandler(setup.LoggingClient))
+	seed, err := secrets.NewCertificateSeed(x509Config, secrets.NewDirectoryHandler(secrets.LoggingClient))
 	if err != nil {
 		return err
 	}
 
-	rootCA, err := certificates.NewCertificateGenerator(certificates.RootCertificate, seed, certificates.NewFileWriter(), setup.LoggingClient)
+	rootCA, err := certificates.NewCertificateGenerator(certificates.RootCertificate, seed, certificates.NewFileWriter(), secrets.LoggingClient)
 	if err != nil {
 		return err
 	}
@@ -329,7 +329,7 @@ func GenTLSAssets(jsonConfig string) error {
 		return err
 	}
 
-	tlsCert, err := certificates.NewCertificateGenerator(certificates.TLSCertificate, seed, certificates.NewFileWriter(), setup.LoggingClient)
+	tlsCert, err := certificates.NewCertificateGenerator(certificates.TLSCertificate, seed, certificates.NewFileWriter(), secrets.LoggingClient)
 	if err != nil {
 		return err
 	}

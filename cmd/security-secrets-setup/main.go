@@ -23,8 +23,8 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
-	"github.com/edgexfoundry/edgex-go/internal/security/setup"
-	"github.com/edgexfoundry/edgex-go/internal/security/setup/option"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option"
 )
 
 type exiter interface {
@@ -73,7 +73,7 @@ func main() {
 		return
 	}
 
-	if err := setup.Init(configDir); err != nil {
+	if err := secrets.Init(configDir); err != nil {
 		// the error returned from Init has already been logged inside the call
 		// so here we ignore the error logging
 		exitInstance.exit(1)
@@ -84,13 +84,13 @@ func main() {
 
 	subcmd, found := subcommands[subcmdName]
 	if !found {
-		setup.LoggingClient.Error(fmt.Sprintf("unsupported subcommand %s", subcmdName))
+		secrets.LoggingClient.Error(fmt.Sprintf("unsupported subcommand %s", subcmdName))
 		exitInstance.exit(1)
 		return
 	}
 
 	if err := subcmd.Parse(flag.Args()[1:]); err != nil {
-		setup.LoggingClient.Error(fmt.Sprintf("error parsing subcommand %s: %v", subcmdName, err))
+		secrets.LoggingClient.Error(fmt.Sprintf("error parsing subcommand %s: %v", subcmdName, err))
 		exitInstance.exit(2)
 		return
 	}
@@ -102,12 +102,12 @@ func main() {
 	case "legacy":
 		// no additional arguments expected
 		if len(subcmd.Args()) > 0 {
-			setup.LoggingClient.Error(fmt.Sprintf("subcommand %s doesn't use other additional args", subcmdName))
+			secrets.LoggingClient.Error(fmt.Sprintf("subcommand %s doesn't use other additional args", subcmdName))
 			exitInstance.exit(2)
 			return
 		}
 		if err = option.GenTLSAssets(configFile); err != nil {
-			setup.LoggingClient.Error(err.Error())
+			secrets.LoggingClient.Error(err.Error())
 			exitInstance.exit(2)
 			return
 		}
@@ -115,17 +115,17 @@ func main() {
 	case "generate", "cache", "import":
 		// no arguments expected
 		if len(subcmd.Args()) > 0 {
-			setup.LoggingClient.Error(fmt.Sprintf("subcommand %s doesn't use any args", subcmdName))
+			secrets.LoggingClient.Error(fmt.Sprintf("subcommand %s doesn't use any args", subcmdName))
 			exitInstance.exit(2)
 			return
 		}
 		exitStatusCode, err = dispatcherInstance.run(subcmdName)
 		if err != nil {
-			setup.LoggingClient.Error(err.Error())
+			secrets.LoggingClient.Error(err.Error())
 		}
 	}
 
-	setup.LoggingClient.Info(option.SecuritySecretsSetup+" complete", internal.LogDurationKey, time.Since(start).String())
+	secrets.LoggingClient.Info(option.SecuritySecretsSetup+" complete", internal.LogDurationKey, time.Since(start).String())
 	exitInstance.exit(exitStatusCode)
 }
 

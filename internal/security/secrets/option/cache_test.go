@@ -13,7 +13,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0'
 //
-
 package option
 
 import (
@@ -21,41 +20,48 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/edgexfoundry/edgex-go/internal/security/setup"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets"
 	"github.com/stretchr/testify/assert"
 )
 
-var testExecutor *mockOptionsExecutor
-var vaultJSONPkiSetupExist bool
-var kongJSONPkiSetupExist bool
-
-func TestGenerate(t *testing.T) {
+func TestCacheOn(t *testing.T) {
 	vaultJSONPkiSetupExist = true
 	kongJSONPkiSetupExist = true
-	tearDown := setupGenerateTest(t)
+	tearDown := setupCacheTest(t)
 	defer tearDown()
 
 	options := PkiInitOption{
-		GenerateOpt: true,
+		CacheOpt: true,
 	}
+	cacheOn, _, _ := NewPkiInitOption(options)
+	cacheOn.setExecutor(testExecutor)
 
+	var exitStatus exitCode
+	var err error
 	assert := assert.New(t)
 
-	generateOn, _, _ := NewPkiInitOption(options)
-	generateOn.(*PkiInitOption).executor = testExecutor
-
-	f := Generate()
-	exitCode, err := f(generateOn.(*PkiInitOption))
-	assert.Equal(normal, exitCode)
+	f := Cache()
+	exitStatus, err = f(cacheOn.(*PkiInitOption))
 	assert.Nil(err)
+	assert.Equal(normal, exitStatus)
+
+	cacheDir, err := getCacheDir()
+	assert.Nil(err)
+
+	cacheEmpty, emptyErr := isDirEmpty(cacheDir)
+	assert.Nil(emptyErr)
+	assert.False(cacheEmpty)
 
 	workDir, err := getWorkDir()
-	assert.Nil(err)
-
+	if err != nil {
+		t.Errorf("Error getting workdir, %v", err)
+	}
 	generatedDirPath := filepath.Join(workDir, pkiInitGeneratedDir)
 	caPrivateKeyFile := filepath.Join(generatedDirPath, caServiceName, tlsSecretFileName)
-	fileExists := checkIfFileExists(caPrivateKeyFile)
-	assert.False(fileExists, "CA private key are not removed!")
+	if _, checkErr := os.Stat(caPrivateKeyFile); checkErr == nil {
+		// means found the file caPrivateKeyFile
+		assert.Fail("CA private key are not removed!")
+	}
 
 	deployDir, err := getDeployDir()
 	assert.Nil(err)
@@ -63,78 +69,80 @@ func TestGenerate(t *testing.T) {
 	deployEmpty, emptyErr := isDirEmpty(deployDir)
 	assert.Nil(emptyErr)
 	assert.False(deployEmpty)
-
-	// check sentinel file is present when deploy is done
-	sentinel := filepath.Join(deployDir, caServiceName, pkiInitFilePerServiceComplete)
-	fileExists = checkIfFileExists(sentinel)
-	assert.True(fileExists, "sentinel file does not exist for CA service!")
-
-	sentinel = filepath.Join(deployDir, vaultServiceName, pkiInitFilePerServiceComplete)
-	fileExists = checkIfFileExists(sentinel)
-	assert.True(fileExists, "sentinel file does not exist for vault service!")
 }
 
-func TestGenerateWithVaultJSONPkiSetupMissing(t *testing.T) {
-	vaultJSONPkiSetupExist = false // this will lead to missing json
-	kongJSONPkiSetupExist = true
-	tearDown := setupGenerateTest(t)
-	defer tearDown()
-
-	options := PkiInitOption{
-		GenerateOpt: true,
-	}
-	generateOn, _, _ := NewPkiInitOption(options)
-	generateOn.(*PkiInitOption).executor = testExecutor
-
-	f := Generate()
-	exitCode, err := f(generateOn.(*PkiInitOption))
-
-	assert := assert.New(t)
-	assert.Equal(exitWithError, exitCode)
-	assert.NotNil(err)
-}
-
-func TestGenerateWithKongJSONPkiSetupMissing(t *testing.T) {
-	kongJSONPkiSetupExist = false // this will lead to missing json
-	vaultJSONPkiSetupExist = true
-	tearDown := setupGenerateTest(t)
-	defer tearDown()
-
-	options := PkiInitOption{
-		GenerateOpt: true,
-	}
-	generateOn, _, _ := NewPkiInitOption(options)
-	generateOn.(*PkiInitOption).executor = testExecutor
-
-	f := Generate()
-	exitCode, err := f(generateOn.(*PkiInitOption))
-
-	assert := assert.New(t)
-	assert.Equal(exitWithError, exitCode)
-	assert.NotNil(err)
-}
-
-func TestGenerateOff(t *testing.T) {
+func TestCacheDirNotEmpty(t *testing.T) {
 	vaultJSONPkiSetupExist = true
 	kongJSONPkiSetupExist = true
-	tearDown := setupGenerateTest(t)
+	tearDown := setupCacheTest(t)
 	defer tearDown()
 
 	options := PkiInitOption{
-		GenerateOpt: false,
+		CacheOpt: true,
 	}
-	generateOff, _, _ := NewPkiInitOption(options)
-	generateOff.(*PkiInitOption).executor = testExecutor
-	exitCode, err := generateOff.executeOptions(Generate())
+	cacheOn, _, _ := NewPkiInitOption(options)
+	cacheOn.setExecutor(testExecutor)
+
+	var exitStatus exitCode
+	var err error
+	assert := assert.New(t)
+
+	f := Cache()
+	exitStatus, err = f(cacheOn.(*PkiInitOption))
+	assert.Nil(err)
+	assert.Equal(normal, exitStatus)
+
+	cacheDir, err := getCacheDir()
+	assert.Nil(err)
+
+	cacheEmpty, emptyErr := isDirEmpty(cacheDir)
+	assert.Nil(emptyErr)
+	assert.False(cacheEmpty)
+
+	workDir, err := getWorkDir()
+	assert.Nil(err)
+
+	generatedDirPath := filepath.Join(workDir, pkiInitGeneratedDir)
+	// now we move the whole generated directory and leave the cache dir untouched
+	os.RemoveAll(generatedDirPath)
+
+	// call the cache option again:
+	exitStatus, err = f(cacheOn.(*PkiInitOption))
+	assert.Nil(err)
+	assert.Equal(normal, exitStatus)
+
+	cacheEmpty, emptyErr = isDirEmpty(cacheDir)
+	assert.Nil(emptyErr)
+	assert.False(cacheEmpty)
+
+	deployDir, err := getDeployDir()
+	assert.Nil(err)
+
+	deployEmpty, emptyErr := isDirEmpty(deployDir)
+	assert.Nil(emptyErr)
+	assert.False(deployEmpty)
+}
+
+func TestCacheOff(t *testing.T) {
+	vaultJSONPkiSetupExist = true
+	kongJSONPkiSetupExist = true
+	tearDown := setupCacheTest(t)
+	defer tearDown()
+
+	options := PkiInitOption{
+		CacheOpt: false,
+	}
+	cacheOff, _, _ := NewPkiInitOption(options)
+	cacheOff.setExecutor(testExecutor)
+	exitCode, err := cacheOff.executeOptions(Cache())
 
 	assert := assert.New(t)
 	assert.Equal(normal, exitCode)
 	assert.Nil(err)
 }
 
-func setupGenerateTest(t *testing.T) func() {
+func setupCacheTest(t *testing.T) func() {
 	testExecutor = &mockOptionsExecutor{}
-
 	curDir, err := os.Getwd()
 	if err != nil {
 		t.Fatalf("cannot get the working dir %s: %v", curDir, err)
@@ -165,14 +173,13 @@ func setupGenerateTest(t *testing.T) func() {
 		t.Fatalf("cannot copy %s for the test: %v", configTomlFile, err)
 	}
 
-	err = setup.Init("")
+	err = secrets.Init("")
 	if err != nil {
 		t.Fatalf("Failed to init security-secrets-setup: %v", err)
 	}
 
-	origEnvVal := os.Getenv(envXdgRuntimeDir)
 	os.Unsetenv(envXdgRuntimeDir) // unset env var, so it uses the config toml
-	oldConfig := setup.Configuration
+	oldConfig := secrets.Configuration
 
 	testWorkDir, err := getWorkDir()
 	if err != nil {
@@ -189,6 +196,11 @@ func setupGenerateTest(t *testing.T) func() {
 		t.Fatalf("cannot create generated dir %s for the test: %v", testGeneratedDir, err)
 	}
 
+	pkiCacheDir := "./cachetest"
+	if err := createDirectoryIfNotExists(pkiCacheDir); err != nil {
+		t.Fatalf("cannot create cache dir %s for the test: %v", pkiCacheDir, err)
+	}
+
 	pkiInitDeployDir := "./deploytest"
 	if err := createDirectoryIfNotExists(pkiInitDeployDir); err != nil {
 		t.Fatalf("cannot create deploy dir %s for the test: %v", pkiInitDeployDir, err)
@@ -199,12 +211,12 @@ func setupGenerateTest(t *testing.T) func() {
 		os.Remove(jsonVaultFile)
 		os.Remove(jsonKongFile)
 		os.RemoveAll(testWorkDir)
+		os.RemoveAll(pkiCacheDir)
 		os.RemoveAll(testScratchDir)
 		os.RemoveAll(testGeneratedDir)
 		os.RemoveAll(pkiInitDeployDir)
 		os.RemoveAll(testResourceDir)
-		os.Setenv(envXdgRuntimeDir, origEnvVal)
-		setup.Configuration = oldConfig
+		secrets.Configuration = oldConfig
 		vaultJSONPkiSetupExist = true
 		kongJSONPkiSetupExist = true
 	}
