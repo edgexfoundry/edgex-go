@@ -15,8 +15,6 @@
 package interfaces
 
 import (
-	"github.com/edgexfoundry/go-mod-secrets/pkg/providers/vault"
-
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 )
 
@@ -26,7 +24,7 @@ type BootstrapConfiguration struct {
 	Service     config.ServiceInfo
 	Registry    config.RegistryInfo
 	Logging     config.LoggingInfo
-	SecretStore vault.SecretConfig
+	SecretStore config.SecretStoreInfo
 	Startup     config.StartupInfo
 }
 
