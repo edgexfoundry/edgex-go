@@ -30,7 +30,34 @@ import (
 
 // CredentialGenerator returns a credential generated with random algorithm for secret store
 type CredentialGenerator interface {
-	Generate() (string, error)
+	Generate(string) (string, error)
+}
+
+// GokeyGenerator implements the CredentialGenerator interface using the gokey library
+// using tokenPath as the gokey master password and accepting the realm as the argument
+// to the Generate method
+type GokeyGenerator struct {
+	tokenPath string
+}
+
+func NewGokeyGenerator(tokenPath string) *GokeyGenerator {
+	return &GokeyGenerator{tokenPath: tokenPath}
+}
+
+func (gk GokeyGenerator) Generate(realm string) (string, error) {
+	passSpec := gokey.PasswordSpec{
+		Length:         16,
+		Upper:          3,
+		Lower:          3,
+		Digits:         2,
+		Special:        1,
+		AllowedSpecial: "",
+	}
+	t, err := GetAccessToken(gk.tokenPath)
+	if err != nil {
+		return "", err
+	}
+	return gokey.GetPass(t, realm, nil, &passSpec)
 }
 
 type CredCollect struct {
@@ -45,10 +72,11 @@ type UserPasswordPair struct {
 type Cred struct {
 	client    internal.HttpCaller
 	tokenPath string
+	g         CredentialGenerator
 }
 
-func NewCred(caller internal.HttpCaller, tpath string) Cred {
-	return Cred{client: caller, tokenPath: tpath}
+func NewCred(caller internal.HttpCaller, tpath string, g CredentialGenerator) Cred {
+	return Cred{client: caller, tokenPath: tpath, g: g}
 }
 
 func (cr *Cred) AlreadyInStore(path string) (bool, error) {
@@ -138,20 +166,8 @@ func (cr *Cred) credPathURL(path string) (string, error) {
 	return fullURL.String(), nil
 }
 
-func (cr *Cred) Generate(service string) (string, error) {
-	passSpec := &gokey.PasswordSpec{
-		Length:         16,
-		Upper:          3,
-		Lower:          3,
-		Digits:         2,
-		Special:        1,
-		AllowedSpecial: "",
-	}
-	t, err := GetAccessToken(cr.tokenPath)
-	if err != nil {
-		return "", err
-	}
-	return gokey.GetPass(t, service, nil, passSpec)
+func (cr *Cred) GeneratePassword(service string) (string, error) {
+	return cr.g.Generate(service)
 }
 
 func (cr *Cred) UploadToStore(pair *UserPasswordPair, path string) error {

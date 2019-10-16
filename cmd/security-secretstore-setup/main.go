@@ -78,6 +78,10 @@ func main() {
 
 	//step 2: initialize the communications
 	req := secretstore.NewRequester(insecureSkipVerify)
+	if req == nil {
+		secretstore.LoggingClient.Error("unable to create http requester")
+		os.Exit(1)
+	}
 	vaultScheme := secretstore.Configuration.SecretService.Scheme
 	vaultHost := fmt.Sprintf("%s:%v", secretstore.Configuration.SecretService.Server, secretstore.Configuration.SecretService.Port)
 	intervalDuration := time.Duration(vaultInterval) * time.Second
@@ -92,7 +96,7 @@ func main() {
 		func() {
 			tokenFile, err := os.Open(absPath)
 			if err != nil {
-				secretstore.LoggingClient.Error(fmt.Sprintf("unable to open token file at %s%s", path, filename))
+				secretstore.LoggingClient.Error(fmt.Sprintf("unable to open token file at %s", absPath))
 				os.Exit(1)
 			}
 			defer tokenFile.Close()
@@ -160,7 +164,8 @@ func main() {
 	//TODO: create vault access token for different roles
 
 	// credential creation
-	cred := secretstore.NewCred(req, absPath)
+	gk := secretstore.NewGokeyGenerator(absPath)
+	cred := secretstore.NewCred(req, absPath, gk)
 	for dbname, info := range secretstore.Configuration.Databases {
 		// derive paths from database config info
 		service := info.Service
@@ -171,7 +176,7 @@ func main() {
 		mongoPath := fmt.Sprintf("/v1/secret/edgex/mongo/%s", dbname)
 
 		// generate credentials
-		password, err := cred.Generate(dbname)
+		password, err := cred.GeneratePassword(dbname)
 		if err != nil {
 			secretstore.LoggingClient.Error(fmt.Sprintf("failed to generate credential pair for service %s", service))
 			os.Exit(1)

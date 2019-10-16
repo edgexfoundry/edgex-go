@@ -31,17 +31,18 @@ import (
 func TestGenerate(t *testing.T) {
 	LoggingClient = logger.MockLogger{}
 	tokenPath := "testdata/test-resp-init.json"
-	cr := NewCred(&http.Client{}, tokenPath)
+	gk := NewGokeyGenerator(tokenPath)
+	cr := NewCred(&http.Client{}, tokenPath, gk)
 
 	realm1 := "service1"
 	realm2 := "service2"
 
-	p1, err := cr.Generate(realm1)
+	p1, err := cr.GeneratePassword(realm1)
 	if err != nil {
 		t.Errorf("failed to create credential")
 		t.Errorf(err.Error())
 	}
-	p2, err := cr.Generate(realm2)
+	p2, err := cr.GeneratePassword(realm2)
 	if err != nil {
 		t.Errorf("failed to create credential")
 		t.Errorf(err.Error())
@@ -94,7 +95,7 @@ func TestRetrieveCred(t *testing.T) {
 		Scheme: "https",
 	}
 
-	cr := NewCred(NewRequester(true), "")
+	cr := NewCred(NewRequester(true), "", NewGokeyGenerator(""))
 	pair, err := cr.retrieve(token, credPath)
 	if err != nil {
 		t.Errorf("failed to retrieve credential pair")
