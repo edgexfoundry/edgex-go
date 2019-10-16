@@ -45,7 +45,7 @@ schemas:
                 description: The service's metrics as JSON document
 /v1/device/{id}/command/{commandid}:
     displayName: Issue command
-    description: Example - http://localhost:48082/api/v1/device/57bd0f2d32d258ad3fcd2d4b/command/57bd0f1432d258ad3fcd2d49
+    description: Example - http://localhost:48082/api/v1/device/ebe456c9-b761-42bf-9bf8-1ca0a6c7cfc6/command/8829622b-3c6a-47d2-8afc-80171f474056
     uriParameters: 
         id: 
             displayName: id
@@ -88,7 +88,7 @@ schemas:
                 description: for unanticipated or unknown issues encountered.
 /v1/device/{id}:
     displayName: Device & their commands by id
-    description: Example - http://localhost:48082/api/v1/device/57bd0f2d32d258ad3fcd2d4b
+    description: Example - http://localhost:48082/api/v1/device/ebe456c9-b761-42bf-9bf8-1ca0a6c7cfc6
     uriParameters: 
         id: 
             displayName: id
@@ -103,7 +103,7 @@ schemas:
                 body: 
                     application/json: 
                         schema: commandresponse
-                        example: '{"name":"livingroomthermostat","id":"57bd0f2d32d258ad3fcd2d4b","description":"living room HVAC thermostat","labels":["home","hvac","thermostat"],"adminState":"unlocked","opState":"enabled","lastConnected":0,"lastReported":0,"locationObject":"{lat:45.45,long:47.80}","commands":[{"id":"57bd0f1432d258ad3fcd2d49","name":"cooling point","get":{"url":"http://localhost:48082/api/v1/device/57bd0f2d32d258ad3fcd2d4b/api/v1/command/57bd0f1432d258ad3fcd2d49"},"put":{"url":"http://localhost:48082/api/v1/device/57bd0f2d32d258ad3fcd2d4b/api/v1/command/57bd0f1432d258ad3fcd2d49","parameters":[{"name":"coolingpoint","value":"72"}],"responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]}}]}'                               
+                        example: '{"name":"livingroomthermostat","id":"ebe456c9-b761-42bf-9bf8-1ca0a6c7cfc6","description":"living room HVAC thermostat","labels":["home","hvac","thermostat"],"adminState":"unlocked","opState":"enabled","lastConnected":0,"lastReported":0,"locationObject":"{lat:45.45,long:47.80}","commands":[{"id":"8829622b-3c6a-47d2-8afc-80171f474056","name":"cooling point","get":{"url":"http://localhost:48082/api/v1/device/ebe456c9-b761-42bf-9bf8-1ca0a6c7cfc6/api/v1/command/8829622b-3c6a-47d2-8afc-80171f474056"},"put":{"url":"http://localhost:48082/api/v1/device/ebe456c9-b761-42bf-9bf8-1ca0a6c7cfc6/api/v1/command/8829622b-3c6a-47d2-8afc-80171f474056","parameters":[{"name":"coolingpoint","value":"72"}],"responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]}}]}'
             "404": 
                 description: if no device exists by the id provided.
             "500": 
@@ -125,7 +125,7 @@ schemas:
                 body: 
                     application/json: 
                         schema: commandresponse
-                        example: '{"name":"livingroomthermostat","id":"57bd0f2d32d258ad3fcd2d4b","description":"living room HVAC thermostat","labels":["home","hvac","thermostat"],"adminState":"unlocked","opState":"enabled","lastConnected":0,"lastReported":0,"locationObject":"{lat:45.45,long:47.80}","commands":[{"id":"57bd0f1432d258ad3fcd2d49","name":"cooling point","get":{"url":"http://localhost:48082/api/v1/device/57bd0f2d32d258ad3fcd2d4b/api/v1/command/57bd0f1432d258ad3fcd2d49"},"put":{"url":"http://localhost:48082/api/v1/device/57bd0f2d32d258ad3fcd2d4b/api/v1/command/57bd0f1432d258ad3fcd2d49","parameters":[{"name":"coolingpoint","value":"72"}],"responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]}}]}'                               
+                        example: '{"name":"livingroomthermostat","id":"ebe456c9-b761-42bf-9bf8-1ca0a6c7cfc6","description":"living room HVAC thermostat","labels":["home","hvac","thermostat"],"adminState":"unlocked","opState":"enabled","lastConnected":0,"lastReported":0,"locationObject":"{lat:45.45,long:47.80}","commands":[{"id":"8829622b-3c6a-47d2-8afc-80171f474056","name":"cooling point","get":{"url":"http://localhost:48082/api/v1/device/ebe456c9-b761-42bf-9bf8-1ca0a6c7cfc6/api/v1/command/8829622b-3c6a-47d2-8afc-80171f474056"},"put":{"url":"http://localhost:48082/api/v1/device/ebe456c9-b761-42bf-9bf8-1ca0a6c7cfc6/api/v1/command/12da905b-97d2-4a58-b9ab-84a71980b363","parameters":[{"name":"coolingpoint","value":"72"}],"responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]}}]}'
             "404": 
                 description: if no device exists by the name provided.
             "500": 
@@ -141,7 +141,7 @@ schemas:
                 body: 
                     application/json: 
                         schema: commandresponse
-                        example: '[{"name":"livingroomthermostat","id":"57bd0f2d32d258ad3fcd2d4b","description":"living room HVAC thermostat","labels":["home","hvac","thermostat"],"adminState":"unlocked","opState":"enabled","lastConnected":0,"lastReported":0,"locationObject":"{lat:45.45,long:47.80}","commands":[{"id":"57bd0f1432d258ad3fcd2d49","name":"cooling point","get":{"url":"http://localhost:48082/api/v1/device/57bd0f2d32d258ad3fcd2d4b/api/v1/command/57bd0f1432d258ad3fcd2d49"},"put":{"url":"http://localhost:48082/api/v1/device/57bd0f2d32d258ad3fcd2d4b/api/v1/command/57bd0f1432d258ad3fcd2d49","parameters":[{"name":"coolingpoint","value":"72"}],"responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]}}]}]'
+                        example: '[{"name":"livingroomthermostat","id":"ebe456c9-b761-42bf-9bf8-1ca0a6c7cfc6","description":"living room HVAC thermostat","labels":["home","hvac","thermostat"],"adminState":"unlocked","opState":"enabled","lastConnected":0,"lastReported":0,"locationObject":"{lat:45.45,long:47.80}","commands":[{"id":"8829622b-3c6a-47d2-8afc-80171f474056","name":"cooling point","get":{"url":"http://localhost:48082/api/v1/device/ebe456c9-b761-42bf-9bf8-1ca0a6c7cfc6/api/v1/command/8829622b-3c6a-47d2-8afc-80171f474056"},"put":{"url":"http://localhost:48082/api/v1/device/ebe456c9-b761-42bf-9bf8-1ca0a6c7cfc6/api/v1/command/12da905b-97d2-4a58-b9ab-84a71980b363","parameters":[{"name":"coolingpoint","value":"72"}],"responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]}}]}]'
             "500": 
                 description: for unanticipated or unknown issues encountered.
 /v1/device/name/{name}/command/{commandname}:

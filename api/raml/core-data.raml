@@ -42,7 +42,7 @@ schemas:
         body: 
             application/json: 
                 schema: event
-                example: '{"id":"57ba04a1189b95b8afcdafd7","pushed":1471806399999}'
+                example: '{"id":"ebe456c9-b761-42bf-9bf8-1ca0a6c7cfc6","pushed":1471806399999}'
         responses: 
             "200": 
                 description: boolean on success of update request
@@ -61,14 +61,14 @@ schemas:
                 body: 
                     application/json: 
                         schema: event
-                        example: '[{"id":"5888dea1bd36573f4681d6f9","created":1485364897029,"modified":1485364897029,"origin":1471806386919,"pushed":0,"device":"livingroomthermostat","readings":[{"id":"5888dea0bd36573f4681d6f8","created":1485364896983,"modified":1485364896983,"origin":1471806386919,"pushed":0,"name":"temperature","value":"38","device":"livingroomthermostat"}]}]'
+                        example: '[{"id":"ebe456c9-b761-42bf-9bf8-1ca0a6c7cfc6","created":1485364897029,"modified":1485364897029,"origin":1471806386919,"pushed":0,"device":"livingroomthermostat","readings":[{"id":"c4094ab7-a0dc-4721-aee3-a28b967a5801","created":1485364896983,"modified":1485364896983,"origin":1471806386919,"pushed":0,"name":"temperature","value":"38","device":"livingroomthermostat"}]}]'
             "413": 
                 description: if the number of events exceeds the current max limit.
             "500": 
                 description: for unknown or unanticipated issues.
 /v1/event/{id}:
     displayName: Event Resource (by id)
-    description: example - http://localhost:48080/api/v1/event/57ba04a1189b95b8afcdafd7
+    description: example - http://localhost:48080/api/v1/event/c4094ab7-a0dc-4721-aee3-a28b967a5801
     uriParameters: 
         id: 
             displayName: id
@@ -85,7 +85,7 @@ schemas:
                 body: 
                     application/json: 
                         schema: event
-                        example: '{"id":"5888dea1bd36573f4681d6f9","created":1485364897029,"modified":1485364897029,"origin":1471806386919,"pushed":0,"device":"livingroomthermostat","readings":[{"id":"5888dea0bd36573f4681d6f8","created":1485364896983,"modified":1485364896983,"origin":1471806386919,"pushed":0,"name":"temperature","value":"38","device":"livingroomthermostat"}]}'
+                        example: '{"id":"c4094ab7-a0dc-4721-aee3-a28b967a5801","created":1485364897029,"modified":1485364897029,"origin":1471806386919,"pushed":0,"device":"livingroomthermostat","readings":[{"id":"5f79f674-a25e-44e6-bab0-1cc687420e40","created":1485364896983,"modified":1485364896983,"origin":1471806386919,"pushed":0,"name":"temperature","value":"38","device":"livingroomthermostat"}]}'
             "404": 
                 description: if the event cannot be found by id.                       
             "500": 
@@ -133,7 +133,7 @@ schemas:
                 description: for unknown or unanticipated issues.                
 /v1/event/id/{id}:
     displayName: Event Resource (by id)
-    description: example - http://localhost:48080/api/v1/event/id/57ba05ca189b95b8afcdafd9
+    description: example - http://localhost:48080/api/v1/event/id/5f79f674-a25e-44e6-bab0-1cc687420e40
     uriParameters: 
         id: 
             displayName: id
@@ -186,7 +186,7 @@ schemas:
                 body: 
                     application/json: 
                         schema: event
-                        example: '[{"id":"5888dea1bd36573f4681d6f9","created":1485364897029,"modified":1485364897029,"origin":1471806386919,"pushed":0,"device":"livingroomthermostat","readings":[{"id":"5888dea0bd36573f4681d6f8","created":1485364896983,"modified":1485364896983,"origin":1471806386919,"pushed":0,"name":"temperature","value":"38","device":"livingroomthermostat"}]}]'
+                        example: '[{"id":"c4094ab7-a0dc-4721-aee3-a28b967a5801","created":1485364897029,"modified":1485364897029,"origin":1471806386919,"pushed":0,"device":"livingroomthermostat","readings":[{"id":"5f79f674-a25e-44e6-bab0-1cc687420e40","created":1485364896983,"modified":1485364896983,"origin":1471806386919,"pushed":0,"name":"temperature","value":"38","device":"livingroomthermostat"}]}]'
             "400":
                 description: request is invalid or unparseable
             "404": 
@@ -248,7 +248,7 @@ schemas:
                 body: 
                     application/json: 
                         schema: event
-                        example: '[{"id":"5888dea1bd36573f4681d6f9","created":1485364897029,"modified":1485364897029,"origin":1471806386919,"pushed":0,"device":"livingroomthermostat","readings":[{"id":"5888dea0bd36573f4681d6f8","created":1485364896983,"modified":1485364896983,"origin":1471806386919,"pushed":0,"name":"temperature","value":"38","device":"livingroomthermostat"}]}]'
+                        example: '[{"id":"c4094ab7-a0dc-4721-aee3-a28b967a5801","created":1485364897029,"modified":1485364897029,"origin":1471806386919,"pushed":0,"device":"livingroomthermostat","readings":[{"id":"5f79f674-a25e-44e6-bab0-1cc687420e40","created":1485364896983,"modified":1485364896983,"origin":1471806386919,"pushed":0,"name":"temperature","value":"38","device":"livingroomthermostat"}]}]'
             "400":
                 description: request is invalid or unparseable
             "413": 
@@ -309,7 +309,7 @@ schemas:
         body: 
             application/json: 
                 schema: reading
-                example: '{"id":"57b9fe08189b95b8afcdafd4","value":"39"} or {"id":"57b9fe08189b95b8afcdafd4","pushed":1471806486919}'
+                example: '{"id":"5f79f674-a25e-44e6-bab0-1cc687420e40","value":"39"} or {"id":"5f79f674-a25e-44e6-bab0-1cc687420e40","pushed":1471806486919}'
         responses: 
             "200": 
                 description: boolean indicating success of the update operation
@@ -330,7 +330,7 @@ schemas:
                 body: 
                     application/json: 
                         schema: reading
-                        example: '[{"id":"5888dea0bd36573f4681d6f8","created":1485364896983,"modified":1485364896983,"origin":1471806386919,"pushed":0,"name":"temperature","value":"38","device":"livingroomthermostat"}]'
+                        example: '[{"id":"5f79f674-a25e-44e6-bab0-1cc687420e40","created":1485364896983,"modified":1485364896983,"origin":1471806386919,"pushed":0,"name":"temperature","value":"38","device":"livingroomthermostat"}]'
             "413": 
                 description: if the number of readings exceeds the current max limit.
             "500": 
@@ -348,7 +348,7 @@ schemas:
                 description: for unknown or unanticipated issues.
 /v1/reading/{id}:
     displayName: Reading Resource (by id)
-    description: example - http://localhost:48080/api/v1/reading/57b9fe08189b95b8afcdafd4
+    description: example - http://localhost:48080/api/v1/reading/5f79f674-a25e-44e6-bab0-1cc687420e40
     uriParameters: 
         id: 
             displayName: id
@@ -365,14 +365,14 @@ schemas:
                 body: 
                     application/json: 
                         schema: reading
-                        example: '{"id":"5888dea0bd36573f4681d6f8","created":1485364896983,"modified":1485364896983,"origin":1471806386919,"pushed":0,"name":"temperature","value":"38","device":"livingroomthermostat"}'
+                        example: '{"id":"5f79f674-a25e-44e6-bab0-1cc687420e40","created":1485364896983,"modified":1485364896983,"origin":1471806386919,"pushed":0,"name":"temperature","value":"38","device":"livingroomthermostat"}'
             "404": 
                 description: if the reading cannot be found by id                        
             "500": 
                 description: for unknown or unanticipated issues
 /v1/reading/id/{id}:
     displayName: Reading Resource (by id)
-    description: example - http://localhost:48080/api/v1/reading/id/57ba01f8189b95b8afcdafd5
+    description: example - http://localhost:48080/api/v1/reading/id/5f79f674-a25e-44e6-bab0-1cc687420e40
     uriParameters: 
         id: 
             displayName: id
@@ -414,7 +414,7 @@ schemas:
                 body: 
                     application/json: 
                         schema: reading
-                        example: '[{"id":"5888dea0bd36573f4681d6f8","created":1485364896983,"modified":1485364896983,"origin":1471806386919,"pushed":0,"name":"temperature","value":"38","device":"livingroomthermostat"}]'
+                        example: '[{"id":"5f79f674-a25e-44e6-bab0-1cc687420e40","created":1485364896983,"modified":1485364896983,"origin":1471806386919,"pushed":0,"name":"temperature","value":"38","device":"livingroomthermostat"}]'
             "400":
                 description: request is invalid or unparseable
             "404": 
@@ -454,7 +454,7 @@ schemas:
                 body: 
                     application/json: 
                         schema: reading
-                        example: '[{"id":"5888dea0bd36573f4681d6f8","created":1485364896983,"modified":1485364896983,"origin":1471806386919,"pushed":0,"name":"temperature","value":"38","device":"livingroomthermostat"}]'
+                        example: '[{"id":"5f79f674-a25e-44e6-bab0-1cc687420e40","created":1485364896983,"modified":1485364896983,"origin":1471806386919,"pushed":0,"name":"temperature","value":"38","device":"livingroomthermostat"}]'
             "400":
                 description: request is invalid or unparseable
             "413": 
@@ -486,7 +486,7 @@ schemas:
                 body: 
                     application/json: 
                         schema: reading
-                        example: '[{"id":"5888dea0bd36573f4681d6f8","created":1485364896983,"modified":1485364896983,"origin":1471806386919,"pushed":0,"name":"temperature","value":"38","device":"livingroomthermostat"}]'
+                        example: '[{"id":"5f79f674-a25e-44e6-bab0-1cc687420e40","created":1485364896983,"modified":1485364896983,"origin":1471806386919,"pushed":0,"name":"temperature","value":"38","device":"livingroomthermostat"}]'
             "400":
                 description: request is invalid or unparseable
             "413": 
@@ -518,7 +518,7 @@ schemas:
                 body: 
                     application/json: 
                         schema: reading
-                        example: '[{"id":"5888dea0bd36573f4681d6f8","created":1485364896983,"modified":1485364896983,"origin":1471806386919,"pushed":0,"name":"temperature","value":"38","device":"livingroomthermostat"}]'
+                        example: '[{"id":"5f79f674-a25e-44e6-bab0-1cc687420e40","created":1485364896983,"modified":1485364896983,"origin":1471806386919,"pushed":0,"name":"temperature","value":"38","device":"livingroomthermostat"}]'
             "400":
                 description: request is invalid or unparseable
             "413": 
@@ -550,7 +550,7 @@ schemas:
                 body: 
                     application/json: 
                         schema: reading
-                        example: '[{"id":"5888dea0bd36573f4681d6f8","created":1485364896983,"modified":1485364896983,"origin":1471806386919,"pushed":0,"name":"temperature","value":"38","device":"livingroomthermostat"}]'
+                        example: '[{"id":"5f79f674-a25e-44e6-bab0-1cc687420e40","created":1485364896983,"modified":1485364896983,"origin":1471806386919,"pushed":0,"name":"temperature","value":"38","device":"livingroomthermostat"}]'
             "400":
                 description: request is invalid or unparseable
             "413": 
@@ -582,7 +582,7 @@ schemas:
                 body: 
                     application/json: 
                         schema: reading
-                        example: '[{"id":"5888dea0bd36573f4681d6f8","created":1485364896983,"modified":1485364896983,"origin":1471806386919,"pushed":0,"name":"temperature","value":"38","device":"livingroomthermostat"}]'
+                        example: '[{"id":"5f79f674-a25e-44e6-bab0-1cc687420e40","created":1485364896983,"modified":1485364896983,"origin":1471806386919,"pushed":0,"name":"temperature","value":"38","device":"livingroomthermostat"}]'
             "400":
                 description: request is invalid or unparseable
             "413": 
@@ -619,7 +619,7 @@ schemas:
                 body: 
                     application/json: 
                         schema: reading
-                        example: '[{"id":"5888dea0bd36573f4681d6f8","created":1485364896983,"modified":1485364896983,"origin":1471806386919,"pushed":0,"name":"temperature","value":"38","device":"livingroomthermostat"}]'
+                        example: '[{"id":"5f79f674-a25e-44e6-bab0-1cc687420e40","created":1485364896983,"modified":1485364896983,"origin":1471806386919,"pushed":0,"name":"temperature","value":"38","device":"livingroomthermostat"}]'
             "400":
                 description: request is invalid or unparseable
             "413": 
@@ -670,14 +670,14 @@ schemas:
                 body: 
                     application/json: 
                         schema: valueDescriptor
-                        example: '[{"id":"57b9fbb2189b95b8afcdafd2","created":1471806386919,"modified":1471806467057,"origin":0,"name":"temperature","description":"test description","min":"-100","max":"200","type":"F","uomLabel":"degree cel","defaultValue":"0","formatting":"%s","labels":["temp","hvac"]}]'
+                        example: '[{"id":"5f79f674-a25e-44e6-bab0-1cc687420e40","created":1471806386919,"modified":1471806467057,"origin":0,"name":"temperature","description":"test description","min":"-100","max":"200","type":"F","uomLabel":"degree cel","defaultValue":"0","formatting":"%s","labels":["temp","hvac"]}]'
             "413": 
                 description: if the number of value descriptors exceeds the current max limit
             "500": 
                 description: for unknown or unanticipated issues.
 /v1/valuedescriptor/id/{id}:
     displayName: Value Descriptor Resource (by id)
-    description: example - http://localhost:48080/api/v1/valuedescriptor/id/57b9fd0a189b95b8afcdafd3
+    description: example - http://localhost:48080/api/v1/valuedescriptor/id/5f79f674-a25e-44e6-bab0-1cc687420e40
     uriParameters: 
         id: 
             displayName: id
@@ -718,7 +718,7 @@ schemas:
                 body: 
                     application/json: 
                         schema: valueDescriptor
-                        example: '{"id":"57b9fbb2189b95b8afcdafd2","created":1471806386919,"modified":1471806467057,"origin":0,"name":"temperature","description":"test description","min":"-100","max":"200","type":"F","uomLabel":"degree cel","defaultValue":"0","formatting":"%s","labels":["temp","hvac"]}'
+                        example: '{"id":"5f79f674-a25e-44e6-bab0-1cc687420e40","created":1471806386919,"modified":1471806467057,"origin":0,"name":"temperature","description":"test description","min":"-100","max":"200","type":"F","uomLabel":"degree cel","defaultValue":"0","formatting":"%s","labels":["temp","hvac"]}'
             "400":
                 description: request is invalid or unparseable
             "404":
@@ -741,7 +741,7 @@ schemas:
                 description: for unknown or unanticipated issues.
 /v1/valuedescriptor/{id}:
     displayName: Value Descriptor Resource (by id)
-    description: example - http://localhost:48080/api/v1/valuedescriptor/57b9fbb2189b95b8afcdafd2
+    description: example - http://localhost:48080/api/v1/valuedescriptor/5f79f674-a25e-44e6-bab0-1cc687420e40
     uriParameters: 
         id: 
             displayName: id
@@ -778,7 +778,7 @@ schemas:
                 body: 
                     application/json: 
                         schema: valueDescriptor
-                        example: '[{"id":"57b9fbb2189b95b8afcdafd2","created":1471806386919,"modified":1471806467057,"origin":0,"name":"temperature","description":"test description","min":"-100","max":"200","type":"F","uomLabel":"degree cel","defaultValue":"0","formatting":"%s","labels":["temp","hvac"]}]'
+                        example: '[{"id":"5f79f674-a25e-44e6-bab0-1cc687420e40","created":1471806386919,"modified":1471806467057,"origin":0,"name":"temperature","description":"test description","min":"-100","max":"200","type":"F","uomLabel":"degree cel","defaultValue":"0","formatting":"%s","labels":["temp","hvac"]}]'
             "400":
                 description: if the request is malformed or unparsable
             "404": 
@@ -787,7 +787,7 @@ schemas:
                 description: for unknown or unanticipated issues.
 /v1/valuedescriptor/deviceid/{id}:
     displayName: Value Descriptor Resources associated to the device identified by id
-    description: example - http://localhost:48080/api/v1/valuedescriptor/deviceid/57b9fbb2189b95b8afcdabb1 (where 57b9fbb2189b95b8afcdabb1 is the id of a device)
+    description: example - http://localhost:48080/api/v1/valuedescriptor/deviceid/5f79f674-a25e-44e6-bab0-1cc687420e40 (where 5f79f674-a25e-44e6-bab0-1cc687420e40 is the id of a device)
     uriParameters: 
         id: 
             displayName: id
@@ -804,7 +804,7 @@ schemas:
                 body: 
                     application/json: 
                         schema: valueDescriptor
-                        example: '[{"id":"57b9fbb2189b95b8afcdafd2","created":1471806386919,"modified":1471806467057,"origin":0,"name":"temperature","description":"test description","min":"-100","max":"200","type":"F","uomLabel":"degree cel","defaultValue":"0","formatting":"%s","labels":["temp","hvac"]}]'
+                        example: '[{"id":"5f79f674-a25e-44e6-bab0-1cc687420e40","created":1471806386919,"modified":1471806467057,"origin":0,"name":"temperature","description":"test description","min":"-100","max":"200","type":"F","uomLabel":"degree cel","defaultValue":"0","formatting":"%s","labels":["temp","hvac"]}]'
             "400":
                 description: if the request is malformed or unparsable
             "404": 
@@ -830,7 +830,7 @@ schemas:
                 body: 
                     application/json: 
                         schema: valueDescriptor
-                        example: '[{"id":"57b9fbb2189b95b8afcdafd2","created":1471806386919,"modified":1471806467057,"origin":0,"name":"temperature","description":"test description","min":"-100","max":"200","type":"F","uomLabel":"degree cel","defaultValue":"0","formatting":"%s","labels":["temp","hvac"]}]'
+                        example: '[{"id":"5f79f674-a25e-44e6-bab0-1cc687420e40","created":1471806386919,"modified":1471806467057,"origin":0,"name":"temperature","description":"test description","min":"-100","max":"200","type":"F","uomLabel":"degree cel","defaultValue":"0","formatting":"%s","labels":["temp","hvac"]}]'
             "400":
                 description: request is invalid or unparseable
             "500": 
@@ -854,7 +854,7 @@ schemas:
                 body: 
                     application/json: 
                         schema: valueDescriptor
-                        example: '[{"id":"57b9fbb2189b95b8afcdafd2","created":1471806386919,"modified":1471806467057,"origin":0,"name":"temperature","description":"test description","min":"-100","max":"200","type":"F","uomLabel":"degree cel","defaultValue":"0","formatting":"%s","labels":["temp","hvac"]}]'
+                        example: '[{"id":"5f79f674-a25e-44e6-bab0-1cc687420e40","created":1471806386919,"modified":1471806467057,"origin":0,"name":"temperature","description":"test description","min":"-100","max":"200","type":"F","uomLabel":"degree cel","defaultValue":"0","formatting":"%s","labels":["temp","hvac"]}]'
             "400":
                 description: request is invalid or unparseable
             "500": 

@@ -43,7 +43,7 @@ schemas:
                 description: The service's configuration as JSON document
 /v1/device/id/{id}:
     displayName: Device Resource (by id)
-    description: Example - http://localhost:48081/api/v1/device/id/57bc6d80555e5218873e5a30
+    description: Example - http://localhost:48081/api/v1/device/id/c4094ab7-a0dc-4721-aee3-a28b967a5801
     uriParameters:
         id:
             displayName: id
@@ -69,7 +69,7 @@ schemas:
             required: true
             repeat: false
     get:
-        description: Obtain a device by either name (preferred) or id. Id must be a valid BSON identifier.
+        description: Obtain a device by either name (preferred) or id. Id must be a valid UUID identifier.
         responses:
             "200":
                 description: JSON payload representing the device
@@ -227,7 +227,7 @@ schemas:
                 body:
                     application/json:
                         schema: device
-                        example: '{"id":"57bc6d80555e5218873e5a30","created":1471966592240,"modified":1471966592240,"origin":1471806386919,"name":"livingroomthermostat","description":"living room HVAC thermostat","adminState":null,"operatingState":"enabled","addressable":{"id":"57bc6d5d555e5218873e5a2c","created":1471966557670,"modified":1471966557670,"origin":1471806386919,"name":"hvac thermo address","protocol":"HTTP","address":"172.17.0.1","port":48089,"path":"/livingroomthermostat","publisher":"none","user":"none","password":"none","topic":"none"},"lastConnected":0,"lastReported":0,"labels":["home","hvac","thermostat"],"location":"{lat:45.45,long:47.80}","service":{"id":"57bc6d6a555e5218873e5a2d","created":1471966570667,"modified":1471966570667,"origin":1471806386919,"name":"home thermostat device service","description":"manage home thermostats","lastConnected":0,"lastReported":0,"labels":["hvac","thermostat"],"adminState":"unlocked","operatingState":"enabled","addressable":{"id":"57bc6d5d555e5218873e5a2c","created":1471966557670,"modified":1471966557670,"origin":1471806386919,"name":"hvac thermo address","protocol":"HTTP","address":"172.17.0.1","port":48089,"path":"/livingroomthermostat","publisher":"none","user":"none","password":"none","topic":"none"}},"profile":{"id":"57bc6d7b555e5218873e5a2f","created":1471966587727,"modified":1471966587727,"origin":1471806386919,"name":"thermostat profile","manufacturer":"Honeywell","model":"ABC123","labels":["bacnet","thermostat","Honeywell"],"description":"BACnet Honeywell thermostats","resources":[{"CurrentHumidity":{"get":[{"parameter":"CurrentHumidity","operation":"get","object":"AnalogValue_22"}]}}],"commands":[{"id":"57bc6d7b555e5218873e5a2e","created":1471966587724,"modified":1471966587724,"origin":1471806386919,"name":"cooling point","get":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]},"put":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}],"parameterNames":["coolingpoint"]}}]}}'
+                        example: '{"id":"c4094ab7-a0dc-4721-aee3-a28b967a5801","created":1471966592240,"modified":1471966592240,"origin":1471806386919,"name":"livingroomthermostat","description":"living room HVAC thermostat","adminState":null,"operatingState":"enabled","addressable":{"id":"12da905b-97d2-4a58-b9ab-84a71980b363","created":1471966557670,"modified":1471966557670,"origin":1471806386919,"name":"hvac thermo address","protocol":"HTTP","address":"172.17.0.1","port":48089,"path":"/livingroomthermostat","publisher":"none","user":"none","password":"none","topic":"none"},"lastConnected":0,"lastReported":0,"labels":["home","hvac","thermostat"],"location":"{lat:45.45,long:47.80}","service":{"id":"5f79f674-a25e-44e6-bab0-1cc687420e40","created":1471966570667,"modified":1471966570667,"origin":1471806386919,"name":"home thermostat device service","description":"manage home thermostats","lastConnected":0,"lastReported":0,"labels":["hvac","thermostat"],"adminState":"unlocked","operatingState":"enabled","addressable":{"id":"12da905b-97d2-4a58-b9ab-84a71980b363","created":1471966557670,"modified":1471966557670,"origin":1471806386919,"name":"hvac thermo address","protocol":"HTTP","address":"172.17.0.1","port":48089,"path":"/livingroomthermostat","publisher":"none","user":"none","password":"none","topic":"none"}},"profile":{"id":"ebe456c9-b761-42bf-9bf8-1ca0a6c7cfc6","created":1471966587727,"modified":1471966587727,"origin":1471806386919,"name":"thermostat profile","manufacturer":"Honeywell","model":"ABC123","labels":["bacnet","thermostat","Honeywell"],"description":"BACnet Honeywell thermostats","resources":[{"CurrentHumidity":{"get":[{"parameter":"CurrentHumidity","operation":"get","object":"AnalogValue_22"}]}}],"commands":[{"id":"dd5de4ff-ae3b-44b1-997d-5d410cd22e1c","created":1471966587724,"modified":1471966587724,"origin":1471806386919,"name":"cooling point","get":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]},"put":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}],"parameterNames":["coolingpoint"]}}]}}'
             "400":
                 description: for incorrect or unparsable requests
             "404":
@@ -236,7 +236,7 @@ schemas:
                 description: for unknown or unanticipated issues.
 /v1/device/{id}/lastreported/{time}:
     displayName: Device Resource (set last reported by id)
-    description: Example - http://localhost:48081/api/v1/device/57bc6d80555e5218873e5a30/lastreported/1471966597000
+    description: Example - http://localhost:48081/api/v1/device/c4094ab7-a0dc-4721-aee3-a28b967a5801/lastreported/1471966597000
     uriParameters:
         id:
             displayName: id
@@ -261,7 +261,7 @@ schemas:
                 description: for unknown or unanticipated issues.
 /v1/device/{id}/lastreported/{time}/{notify}:
     displayName: Device Resource (set last reported by id)
-    description: Example - http://localhost:48081/api/v1/device/57bc6d80555e5218873e5a30/lastreported/1471966597000/true
+    description: Example - http://localhost:48081/api/v1/device/c4094ab7-a0dc-4721-aee3-a28b967a5801/lastreported/1471966597000/true
     uriParameters:
         id:
             displayName: id
@@ -291,7 +291,7 @@ schemas:
                 description: for unknown or unanticipated issues.
 /v1/device/{id}/lastconnected/{time}:
     displayName: Device Resource (set last connected by id)
-    description: Example - http://localhost:48081/api/v1/device/57bc6d80555e5218873e5a30/lastconnected/1471966597000
+    description: Example - http://localhost:48081/api/v1/device/c4094ab7-a0dc-4721-aee3-a28b967a5801/lastconnected/1471966597000
     uriParameters:
         id:
             displayName: id
@@ -316,7 +316,7 @@ schemas:
                 description: for unknown or unanticipated issues.
 /v1/device/{id}/lastconnected/{time}/{notify}:
     displayName: Device Resource (set last connected by id)
-    description: Example - http://localhost:48081/api/v1/device/57bc6d80555e5218873e5a30/lastconnected/1471966597000/true
+    description: Example - http://localhost:48081/api/v1/device/c4094ab7-a0dc-4721-aee3-a28b967a5801/lastconnected/1471966597000/true
     uriParameters:
         id:
             displayName: id
@@ -346,7 +346,7 @@ schemas:
                 description: for unknown or unanticipated issues.
 /v1/device/{id}:
     displayName: Device Resource (by id)
-    description: Example - http://localhost:48081/api/v1/device/57bc6d80555e5218873e5a30
+    description: Example - http://localhost:48081/api/v1/device/c4094ab7-a0dc-4721-aee3-a28b967a5801
     uriParameters:
         id:
             displayName: id
@@ -361,7 +361,7 @@ schemas:
                 body:
                     application/json:
                         schema: device
-                        example: '{"id":"57bc6d80555e5218873e5a30","created":1471966592240,"modified":1471966592240,"origin":1471806386919,"name":"livingroomthermostat","description":"living room HVAC thermostat","adminState":null,"operatingState":"enabled","addressable":{"id":"57bc6d5d555e5218873e5a2c","created":1471966557670,"modified":1471966557670,"origin":1471806386919,"name":"hvac thermo address","protocol":"HTTP","address":"172.17.0.1","port":48089,"path":"/livingroomthermostat","publisher":"none","user":"none","password":"none","topic":"none"},"lastConnected":0,"lastReported":0,"labels":["home","hvac","thermostat"],"location":"{lat:45.45,long:47.80}","service":{"id":"57bc6d6a555e5218873e5a2d","created":1471966570667,"modified":1471966570667,"origin":1471806386919,"name":"home thermostat device service","description":"manage home thermostats","lastConnected":0,"lastReported":0,"labels":["hvac","thermostat"],"adminState":"unlocked","operatingState":"enabled","addressable":{"id":"57bc6d5d555e5218873e5a2c","created":1471966557670,"modified":1471966557670,"origin":1471806386919,"name":"hvac thermo address","protocol":"HTTP","address":"172.17.0.1","port":48089,"path":"/livingroomthermostat","publisher":"none","user":"none","password":"none","topic":"none"}},"profile":{"id":"57bc6d7b555e5218873e5a2f","created":1471966587727,"modified":1471966587727,"origin":1471806386919,"name":"thermostat profile","manufacturer":"Honeywell","model":"ABC123","labels":["bacnet","thermostat","Honeywell"],"description":"BACnet Honeywell thermostats","resources":[{"CurrentHumidity":{"get":[{"parameter":"CurrentHumidity","operation":"get","object":"AnalogValue_22"}]}}],"commands":[{"id":"57bc6d7b555e5218873e5a2e","created":1471966587724,"modified":1471966587724,"origin":1471806386919,"name":"cooling point","get":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]},"put":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}],"parameterNames":["coolingpoint"]}}]}}'
+                        example: '{"id":"c4094ab7-a0dc-4721-aee3-a28b967a5801","created":1471966592240,"modified":1471966592240,"origin":1471806386919,"name":"livingroomthermostat","description":"living room HVAC thermostat","adminState":null,"operatingState":"enabled","addressable":{"id":"12da905b-97d2-4a58-b9ab-84a71980b363","created":1471966557670,"modified":1471966557670,"origin":1471806386919,"name":"hvac thermo address","protocol":"HTTP","address":"172.17.0.1","port":48089,"path":"/livingroomthermostat","publisher":"none","user":"none","password":"none","topic":"none"},"lastConnected":0,"lastReported":0,"labels":["home","hvac","thermostat"],"location":"{lat:45.45,long:47.80}","service":{"id":"5f79f674-a25e-44e6-bab0-1cc687420e40","created":1471966570667,"modified":1471966570667,"origin":1471806386919,"name":"home thermostat device service","description":"manage home thermostats","lastConnected":0,"lastReported":0,"labels":["hvac","thermostat"],"adminState":"unlocked","operatingState":"enabled","addressable":{"id":"12da905b-97d2-4a58-b9ab-84a71980b363","created":1471966557670,"modified":1471966557670,"origin":1471806386919,"name":"hvac thermo address","protocol":"HTTP","address":"172.17.0.1","port":48089,"path":"/livingroomthermostat","publisher":"none","user":"none","password":"none","topic":"none"}},"profile":{"id":"ebe456c9-b761-42bf-9bf8-1ca0a6c7cfc6","created":1471966587727,"modified":1471966587727,"origin":1471806386919,"name":"thermostat profile","manufacturer":"Honeywell","model":"ABC123","labels":["bacnet","thermostat","Honeywell"],"description":"BACnet Honeywell thermostats","resources":[{"CurrentHumidity":{"get":[{"parameter":"CurrentHumidity","operation":"get","object":"AnalogValue_22"}]}}],"commands":[{"id":"dd5de4ff-ae3b-44b1-997d-5d410cd22e1c","created":1471966587724,"modified":1471966587724,"origin":1471806386919,"name":"cooling point","get":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]},"put":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}],"parameterNames":["coolingpoint"]}}]}}'
             "400":
                 description: for incorrect or unparsable requests
             "404":
@@ -399,14 +399,14 @@ schemas:
                 body:
                     application/json:
                         schema: device
-                        example: '[{"id":"57bc6d80555e5218873e5a30","created":1471966592240,"modified":1471966592240,"origin":1471806386919,"name":"livingroomthermostat","description":"living room HVAC thermostat","adminState":null,"operatingState":"enabled","addressable":{"id":"57bc6d5d555e5218873e5a2c","created":1471966557670,"modified":1471966557670,"origin":1471806386919,"name":"hvac thermo address","protocol":"HTTP","address":"172.17.0.1","port":48089,"path":"/livingroomthermostat","publisher":"none","user":"none","password":"none","topic":"none"},"lastConnected":0,"lastReported":0,"labels":["home","hvac","thermostat"],"location":"{lat:45.45,long:47.80}","service":{"id":"57bc6d6a555e5218873e5a2d","created":1471966570667,"modified":1471966570667,"origin":1471806386919,"name":"home thermostat device service","description":"manage home thermostats","lastConnected":0,"lastReported":0,"labels":["hvac","thermostat"],"adminState":"unlocked","operatingState":"enabled","addressable":{"id":"57bc6d5d555e5218873e5a2c","created":1471966557670,"modified":1471966557670,"origin":1471806386919,"name":"hvac thermo address","protocol":"HTTP","address":"172.17.0.1","port":48089,"path":"/livingroomthermostat","publisher":"none","user":"none","password":"none","topic":"none"}},"profile":{"id":"57bc6d7b555e5218873e5a2f","created":1471966587727,"modified":1471966587727,"origin":1471806386919,"name":"thermostat profile","manufacturer":"Honeywell","model":"ABC123","labels":["bacnet","thermostat","Honeywell"],"description":"BACnet Honeywell thermostats","resources":[{"CurrentHumidity":{"get":[{"parameter":"CurrentHumidity","operation":"get","object":"AnalogValue_22"}]}}],"commands":[{"id":"57bc6d7b555e5218873e5a2e","created":1471966587724,"modified":1471966587724,"origin":1471806386919,"name":"cooling point","get":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]},"put":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}],"parameterNames":["coolingpoint"]}}]}}]'
+                        example: '[{"id":"c4094ab7-a0dc-4721-aee3-a28b967a5801","created":1471966592240,"modified":1471966592240,"origin":1471806386919,"name":"livingroomthermostat","description":"living room HVAC thermostat","adminState":null,"operatingState":"enabled","addressable":{"id":"12da905b-97d2-4a58-b9ab-84a71980b363","created":1471966557670,"modified":1471966557670,"origin":1471806386919,"name":"hvac thermo address","protocol":"HTTP","address":"172.17.0.1","port":48089,"path":"/livingroomthermostat","publisher":"none","user":"none","password":"none","topic":"none"},"lastConnected":0,"lastReported":0,"labels":["home","hvac","thermostat"],"location":"{lat:45.45,long:47.80}","service":{"id":"5f79f674-a25e-44e6-bab0-1cc687420e40","created":1471966570667,"modified":1471966570667,"origin":1471806386919,"name":"home thermostat device service","description":"manage home thermostats","lastConnected":0,"lastReported":0,"labels":["hvac","thermostat"],"adminState":"unlocked","operatingState":"enabled","addressable":{"id":"12da905b-97d2-4a58-b9ab-84a71980b363","created":1471966557670,"modified":1471966557670,"origin":1471806386919,"name":"hvac thermo address","protocol":"HTTP","address":"172.17.0.1","port":48089,"path":"/livingroomthermostat","publisher":"none","user":"none","password":"none","topic":"none"}},"profile":{"id":"ebe456c9-b761-42bf-9bf8-1ca0a6c7cfc6","created":1471966587727,"modified":1471966587727,"origin":1471806386919,"name":"thermostat profile","manufacturer":"Honeywell","model":"ABC123","labels":["bacnet","thermostat","Honeywell"],"description":"BACnet Honeywell thermostats","resources":[{"CurrentHumidity":{"get":[{"parameter":"CurrentHumidity","operation":"get","object":"AnalogValue_22"}]}}],"commands":[{"id":"dd5de4ff-ae3b-44b1-997d-5d410cd22e1c","created":1471966587724,"modified":1471966587724,"origin":1471806386919,"name":"cooling point","get":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]},"put":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}],"parameterNames":["coolingpoint"]}}]}}]'
             "400":
                 description: for incorrect or unparsable requests
             "500":
                 description: for unknown or unanticipated issues.
 /v1/device/profile/{profileId}:
     displayName: Device Resource (by profile)
-    description: Example - http://localhost:48081/api/v1/device/profile/57bc6d7b555e5218873e5a2f (where the id is a device profile id)
+    description: Example - http://localhost:48081/api/v1/device/profile/ebe456c9-b761-42bf-9bf8-1ca0a6c7cfc6 (where the id is a device profile id)
     uriParameters:
         profileId:
             displayName: profileId
@@ -421,14 +421,14 @@ schemas:
                 body:
                     application/json:
                         schema: device
-                        example: '[{"id":"57bc6d80555e5218873e5a30","created":1471966592240,"modified":1471966592240,"origin":1471806386919,"name":"livingroomthermostat","description":"living room HVAC thermostat","adminState":null,"operatingState":"enabled","addressable":{"id":"57bc6d5d555e5218873e5a2c","created":1471966557670,"modified":1471966557670,"origin":1471806386919,"name":"hvac thermo address","protocol":"HTTP","address":"172.17.0.1","port":48089,"path":"/livingroomthermostat","publisher":"none","user":"none","password":"none","topic":"none"},"lastConnected":0,"lastReported":0,"labels":["home","hvac","thermostat"],"location":"{lat:45.45,long:47.80}","service":{"id":"57bc6d6a555e5218873e5a2d","created":1471966570667,"modified":1471966570667,"origin":1471806386919,"name":"home thermostat device service","description":"manage home thermostats","lastConnected":0,"lastReported":0,"labels":["hvac","thermostat"],"adminState":"unlocked","operatingState":"enabled","addressable":{"id":"57bc6d5d555e5218873e5a2c","created":1471966557670,"modified":1471966557670,"origin":1471806386919,"name":"hvac thermo address","protocol":"HTTP","address":"172.17.0.1","port":48089,"path":"/livingroomthermostat","publisher":"none","user":"none","password":"none","topic":"none"}},"profile":{"id":"57bc6d7b555e5218873e5a2f","created":1471966587727,"modified":1471966587727,"origin":1471806386919,"name":"thermostat profile","manufacturer":"Honeywell","model":"ABC123","labels":["bacnet","thermostat","Honeywell"],"description":"BACnet Honeywell thermostats","resources":[{"CurrentHumidity":{"get":[{"parameter":"CurrentHumidity","operation":"get","object":"AnalogValue_22"}]}}],"commands":[{"id":"57bc6d7b555e5218873e5a2e","created":1471966587724,"modified":1471966587724,"origin":1471806386919,"name":"cooling point","get":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]},"put":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}],"parameterNames":["coolingpoint"]}}]}}]'
+                        example: '[{"id":"c4094ab7-a0dc-4721-aee3-a28b967a5801","created":1471966592240,"modified":1471966592240,"origin":1471806386919,"name":"livingroomthermostat","description":"living room HVAC thermostat","adminState":null,"operatingState":"enabled","addressable":{"id":"12da905b-97d2-4a58-b9ab-84a71980b363","created":1471966557670,"modified":1471966557670,"origin":1471806386919,"name":"hvac thermo address","protocol":"HTTP","address":"172.17.0.1","port":48089,"path":"/livingroomthermostat","publisher":"none","user":"none","password":"none","topic":"none"},"lastConnected":0,"lastReported":0,"labels":["home","hvac","thermostat"],"location":"{lat:45.45,long:47.80}","service":{"id":"5f79f674-a25e-44e6-bab0-1cc687420e40","created":1471966570667,"modified":1471966570667,"origin":1471806386919,"name":"home thermostat device service","description":"manage home thermostats","lastConnected":0,"lastReported":0,"labels":["hvac","thermostat"],"adminState":"unlocked","operatingState":"enabled","addressable":{"id":"12da905b-97d2-4a58-b9ab-84a71980b363","created":1471966557670,"modified":1471966557670,"origin":1471806386919,"name":"hvac thermo address","protocol":"HTTP","address":"172.17.0.1","port":48089,"path":"/livingroomthermostat","publisher":"none","user":"none","password":"none","topic":"none"}},"profile":{"id":"ebe456c9-b761-42bf-9bf8-1ca0a6c7cfc6","created":1471966587727,"modified":1471966587727,"origin":1471806386919,"name":"thermostat profile","manufacturer":"Honeywell","model":"ABC123","labels":["bacnet","thermostat","Honeywell"],"description":"BACnet Honeywell thermostats","resources":[{"CurrentHumidity":{"get":[{"parameter":"CurrentHumidity","operation":"get","object":"AnalogValue_22"}]}}],"commands":[{"id":"dd5de4ff-ae3b-44b1-997d-5d410cd22e1c","created":1471966587724,"modified":1471966587724,"origin":1471806386919,"name":"cooling point","get":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]},"put":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}],"parameterNames":["coolingpoint"]}}]}}]'
             "404":
                 description: if no device profile match on the id provided.
             "500":
                 description: for unknown or unanticipated issues.
 /v1/device/service/{serviceId}:
     displayName: Device Resource (by service)
-    description: Example - http://localhost:48081/api/v1/device/service/57bc6d6a555e5218873e5a2d  (where the id is the associated device service id)
+    description: Example - http://localhost:48081/api/v1/device/service/5f79f674-a25e-44e6-bab0-1cc687420e40  (where the id is the associated device service id)
     uriParameters:
         serviceId:
             displayName: serviceId
@@ -443,7 +443,7 @@ schemas:
                 body:
                     application/json:
                         schema: device
-                        example: '[{"id":"57bc6d80555e5218873e5a30","created":1471966592240,"modified":1471966592240,"origin":1471806386919,"name":"livingroomthermostat","description":"living room HVAC thermostat","adminState":null,"operatingState":"enabled","addressable":{"id":"57bc6d5d555e5218873e5a2c","created":1471966557670,"modified":1471966557670,"origin":1471806386919,"name":"hvac thermo address","protocol":"HTTP","address":"172.17.0.1","port":48089,"path":"/livingroomthermostat","publisher":"none","user":"none","password":"none","topic":"none"},"lastConnected":0,"lastReported":0,"labels":["home","hvac","thermostat"],"location":"{lat:45.45,long:47.80}","service":{"id":"57bc6d6a555e5218873e5a2d","created":1471966570667,"modified":1471966570667,"origin":1471806386919,"name":"home thermostat device service","description":"manage home thermostats","lastConnected":0,"lastReported":0,"labels":["hvac","thermostat"],"adminState":"unlocked","operatingState":"enabled","addressable":{"id":"57bc6d5d555e5218873e5a2c","created":1471966557670,"modified":1471966557670,"origin":1471806386919,"name":"hvac thermo address","protocol":"HTTP","address":"172.17.0.1","port":48089,"path":"/livingroomthermostat","publisher":"none","user":"none","password":"none","topic":"none"}},"profile":{"id":"57bc6d7b555e5218873e5a2f","created":1471966587727,"modified":1471966587727,"origin":1471806386919,"name":"thermostat profile","manufacturer":"Honeywell","model":"ABC123","labels":["bacnet","thermostat","Honeywell"],"description":"BACnet Honeywell thermostats","resources":[{"CurrentHumidity":{"get":[{"parameter":"CurrentHumidity","operation":"get","object":"AnalogValue_22"}]}}],"commands":[{"id":"57bc6d7b555e5218873e5a2e","created":1471966587724,"modified":1471966587724,"origin":1471806386919,"name":"cooling point","get":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]},"put":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}],"parameterNames":["coolingpoint"]}}]}}]'
+                        example: '[{"id":"c4094ab7-a0dc-4721-aee3-a28b967a5801","created":1471966592240,"modified":1471966592240,"origin":1471806386919,"name":"livingroomthermostat","description":"living room HVAC thermostat","adminState":null,"operatingState":"enabled","addressable":{"id":"12da905b-97d2-4a58-b9ab-84a71980b363","created":1471966557670,"modified":1471966557670,"origin":1471806386919,"name":"hvac thermo address","protocol":"HTTP","address":"172.17.0.1","port":48089,"path":"/livingroomthermostat","publisher":"none","user":"none","password":"none","topic":"none"},"lastConnected":0,"lastReported":0,"labels":["home","hvac","thermostat"],"location":"{lat:45.45,long:47.80}","service":{"id":"5f79f674-a25e-44e6-bab0-1cc687420e40","created":1471966570667,"modified":1471966570667,"origin":1471806386919,"name":"home thermostat device service","description":"manage home thermostats","lastConnected":0,"lastReported":0,"labels":["hvac","thermostat"],"adminState":"unlocked","operatingState":"enabled","addressable":{"id":"12da905b-97d2-4a58-b9ab-84a71980b363","created":1471966557670,"modified":1471966557670,"origin":1471806386919,"name":"hvac thermo address","protocol":"HTTP","address":"172.17.0.1","port":48089,"path":"/livingroomthermostat","publisher":"none","user":"none","password":"none","topic":"none"}},"profile":{"id":"ebe456c9-b761-42bf-9bf8-1ca0a6c7cfc6","created":1471966587727,"modified":1471966587727,"origin":1471806386919,"name":"thermostat profile","manufacturer":"Honeywell","model":"ABC123","labels":["bacnet","thermostat","Honeywell"],"description":"BACnet Honeywell thermostats","resources":[{"CurrentHumidity":{"get":[{"parameter":"CurrentHumidity","operation":"get","object":"AnalogValue_22"}]}}],"commands":[{"id":"dd5de4ff-ae3b-44b1-997d-5d410cd22e1c","created":1471966587724,"modified":1471966587724,"origin":1471806386919,"name":"cooling point","get":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]},"put":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}],"parameterNames":["coolingpoint"]}}]}}]'
             "404":
                 description: if no device service match on the id provided.
             "500":
@@ -465,7 +465,7 @@ schemas:
                 body:
                     application/json:
                         schema: device
-                        example: '[{"id":"57bc6d80555e5218873e5a30","created":1471966592240,"modified":1471966592240,"origin":1471806386919,"name":"livingroomthermostat","description":"living room HVAC thermostat","adminState":null,"operatingState":"enabled","addressable":{"id":"57bc6d5d555e5218873e5a2c","created":1471966557670,"modified":1471966557670,"origin":1471806386919,"name":"hvac thermo address","protocol":"HTTP","address":"172.17.0.1","port":48089,"path":"/livingroomthermostat","publisher":"none","user":"none","password":"none","topic":"none"},"lastConnected":0,"lastReported":0,"labels":["home","hvac","thermostat"],"location":"{lat:45.45,long:47.80}","service":{"id":"57bc6d6a555e5218873e5a2d","created":1471966570667,"modified":1471966570667,"origin":1471806386919,"name":"home thermostat device service","description":"manage home thermostats","lastConnected":0,"lastReported":0,"labels":["hvac","thermostat"],"adminState":"unlocked","operatingState":"enabled","addressable":{"id":"57bc6d5d555e5218873e5a2c","created":1471966557670,"modified":1471966557670,"origin":1471806386919,"name":"hvac thermo address","protocol":"HTTP","address":"172.17.0.1","port":48089,"path":"/livingroomthermostat","publisher":"none","user":"none","password":"none","topic":"none"}},"profile":{"id":"57bc6d7b555e5218873e5a2f","created":1471966587727,"modified":1471966587727,"origin":1471806386919,"name":"thermostat profile","manufacturer":"Honeywell","model":"ABC123","labels":["bacnet","thermostat","Honeywell"],"description":"BACnet Honeywell thermostats","resources":[{"CurrentHumidity":{"get":[{"parameter":"CurrentHumidity","operation":"get","object":"AnalogValue_22"}]}}],"commands":[{"id":"57bc6d7b555e5218873e5a2e","created":1471966587724,"modified":1471966587724,"origin":1471806386919,"name":"cooling point","get":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]},"put":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}],"parameterNames":["coolingpoint"]}}]}}]'
+                        example: '[{"id":"c4094ab7-a0dc-4721-aee3-a28b967a5801","created":1471966592240,"modified":1471966592240,"origin":1471806386919,"name":"livingroomthermostat","description":"living room HVAC thermostat","adminState":null,"operatingState":"enabled","addressable":{"id":"12da905b-97d2-4a58-b9ab-84a71980b363","created":1471966557670,"modified":1471966557670,"origin":1471806386919,"name":"hvac thermo address","protocol":"HTTP","address":"172.17.0.1","port":48089,"path":"/livingroomthermostat","publisher":"none","user":"none","password":"none","topic":"none"},"lastConnected":0,"lastReported":0,"labels":["home","hvac","thermostat"],"location":"{lat:45.45,long:47.80}","service":{"id":"5f79f674-a25e-44e6-bab0-1cc687420e40","created":1471966570667,"modified":1471966570667,"origin":1471806386919,"name":"home thermostat device service","description":"manage home thermostats","lastConnected":0,"lastReported":0,"labels":["hvac","thermostat"],"adminState":"unlocked","operatingState":"enabled","addressable":{"id":"12da905b-97d2-4a58-b9ab-84a71980b363","created":1471966557670,"modified":1471966557670,"origin":1471806386919,"name":"hvac thermo address","protocol":"HTTP","address":"172.17.0.1","port":48089,"path":"/livingroomthermostat","publisher":"none","user":"none","password":"none","topic":"none"}},"profile":{"id":"ebe456c9-b761-42bf-9bf8-1ca0a6c7cfc6","created":1471966587727,"modified":1471966587727,"origin":1471806386919,"name":"thermostat profile","manufacturer":"Honeywell","model":"ABC123","labels":["bacnet","thermostat","Honeywell"],"description":"BACnet Honeywell thermostats","resources":[{"CurrentHumidity":{"get":[{"parameter":"CurrentHumidity","operation":"get","object":"AnalogValue_22"}]}}],"commands":[{"id":"dd5de4ff-ae3b-44b1-997d-5d410cd22e1c","created":1471966587724,"modified":1471966587724,"origin":1471806386919,"name":"cooling point","get":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]},"put":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}],"parameterNames":["coolingpoint"]}}]}}]'
             "400":
                 description: for incorrect or unparsable requests
             "404":
@@ -489,7 +489,7 @@ schemas:
                 body:
                     application/json:
                         schema: device
-                        example: '[{"id":"57bc6d80555e5218873e5a30","created":1471966592240,"modified":1471966592240,"origin":1471806386919,"name":"livingroomthermostat","description":"living room HVAC thermostat","adminState":null,"operatingState":"enabled","addressable":{"id":"57bc6d5d555e5218873e5a2c","created":1471966557670,"modified":1471966557670,"origin":1471806386919,"name":"hvac thermo address","protocol":"HTTP","address":"172.17.0.1","port":48089,"path":"/livingroomthermostat","publisher":"none","user":"none","password":"none","topic":"none"},"lastConnected":0,"lastReported":0,"labels":["home","hvac","thermostat"],"location":"{lat:45.45,long:47.80}","service":{"id":"57bc6d6a555e5218873e5a2d","created":1471966570667,"modified":1471966570667,"origin":1471806386919,"name":"home thermostat device service","description":"manage home thermostats","lastConnected":0,"lastReported":0,"labels":["hvac","thermostat"],"adminState":"unlocked","operatingState":"enabled","addressable":{"id":"57bc6d5d555e5218873e5a2c","created":1471966557670,"modified":1471966557670,"origin":1471806386919,"name":"hvac thermo address","protocol":"HTTP","address":"172.17.0.1","port":48089,"path":"/livingroomthermostat","publisher":"none","user":"none","password":"none","topic":"none"}},"profile":{"id":"57bc6d7b555e5218873e5a2f","created":1471966587727,"modified":1471966587727,"origin":1471806386919,"name":"thermostat profile","manufacturer":"Honeywell","model":"ABC123","labels":["bacnet","thermostat","Honeywell"],"description":"BACnet Honeywell thermostats","resources":[{"CurrentHumidity":{"get":[{"parameter":"CurrentHumidity","operation":"get","object":"AnalogValue_22"}]}}],"commands":[{"id":"57bc6d7b555e5218873e5a2e","created":1471966587724,"modified":1471966587724,"origin":1471806386919,"name":"cooling point","get":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]},"put":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}],"parameterNames":["coolingpoint"]}}]}}]'
+                        example: '[{"id":"c4094ab7-a0dc-4721-aee3-a28b967a5801","created":1471966592240,"modified":1471966592240,"origin":1471806386919,"name":"livingroomthermostat","description":"living room HVAC thermostat","adminState":null,"operatingState":"enabled","addressable":{"id":"12da905b-97d2-4a58-b9ab-84a71980b363","created":1471966557670,"modified":1471966557670,"origin":1471806386919,"name":"hvac thermo address","protocol":"HTTP","address":"172.17.0.1","port":48089,"path":"/livingroomthermostat","publisher":"none","user":"none","password":"none","topic":"none"},"lastConnected":0,"lastReported":0,"labels":["home","hvac","thermostat"],"location":"{lat:45.45,long:47.80}","service":{"id":"5f79f674-a25e-44e6-bab0-1cc687420e40","created":1471966570667,"modified":1471966570667,"origin":1471806386919,"name":"home thermostat device service","description":"manage home thermostats","lastConnected":0,"lastReported":0,"labels":["hvac","thermostat"],"adminState":"unlocked","operatingState":"enabled","addressable":{"id":"12da905b-97d2-4a58-b9ab-84a71980b363","created":1471966557670,"modified":1471966557670,"origin":1471806386919,"name":"hvac thermo address","protocol":"HTTP","address":"172.17.0.1","port":48089,"path":"/livingroomthermostat","publisher":"none","user":"none","password":"none","topic":"none"}},"profile":{"id":"ebe456c9-b761-42bf-9bf8-1ca0a6c7cfc6","created":1471966587727,"modified":1471966587727,"origin":1471806386919,"name":"thermostat profile","manufacturer":"Honeywell","model":"ABC123","labels":["bacnet","thermostat","Honeywell"],"description":"BACnet Honeywell thermostats","resources":[{"CurrentHumidity":{"get":[{"parameter":"CurrentHumidity","operation":"get","object":"AnalogValue_22"}]}}],"commands":[{"id":"dd5de4ff-ae3b-44b1-997d-5d410cd22e1c","created":1471966587724,"modified":1471966587724,"origin":1471806386919,"name":"cooling point","get":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]},"put":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}],"parameterNames":["coolingpoint"]}}]}}]'
             "400":
                 description: for incorrect or unparsable requests
             "404":
@@ -519,7 +519,7 @@ schemas:
         body:
             application/json:
                 schema: device
-                example:  '{"id":"57bc6d80555e5218873e5a30", "description":"living room thermostat","adminState":"locked"}'
+                example:  '{"id":"c4094ab7-a0dc-4721-aee3-a28b967a5801", "description":"living room thermostat","adminState":"locked"}'
         responses:
             "200":
                 description: boolean indicating success of the update
@@ -537,14 +537,14 @@ schemas:
                 body:
                     application/json:
                         schema: device
-                        example: '[{"id":"57bc6d80555e5218873e5a30","created":1471966592240,"modified":1471966592240,"origin":1471806386919,"name":"livingroomthermostat","description":"living room HVAC thermostat","adminState":null,"operatingState":"enabled","protocols":{"example":{"host":"localhost","port":"1234","unitID":"1"}}},"lastConnected":0,"lastReported":0,"labels":["home","hvac","thermostat"],"location":"{lat:45.45,long:47.80}","service":{"id":"57bc6d6a555e5218873e5a2d","created":1471966570667,"modified":1471966570667,"origin":1471806386919,"name":"home thermostat device service","description":"manage home thermostats","lastConnected":0,"lastReported":0,"labels":["hvac","thermostat"],"adminState":"unlocked","operatingState":"enabled","addressable":{"id":"57bc6d5d555e5218873e5a2c","created":1471966557670,"modified":1471966557670,"origin":1471806386919,"name":"hvac thermo address","protocol":"HTTP","address":"172.17.0.1","port":48089,"path":"/livingroomthermostat","publisher":"none","user":"none","password":"none","topic":"none"}},"profile":{"id":"57bc6d7b555e5218873e5a2f","created":1471966587727,"modified":1471966587727,"origin":1471806386919,"name":"thermostat profile","manufacturer":"Honeywell","model":"ABC123","labels":["bacnet","thermostat","Honeywell"],"description":"BACnet Honeywell thermostats","resources":[{"CurrentHumidity":{"get":[{"parameter":"CurrentHumidity","operation":"get","object":"AnalogValue_22"}]}}],"commands":[{"id":"57bc6d7b555e5218873e5a2e","created":1471966587724,"modified":1471966587724,"origin":1471806386919,"name":"cooling point","get":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]},"put":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}],"parameterNames":["coolingpoint"]}}]}}]'
+                        example: '[{"id":"c4094ab7-a0dc-4721-aee3-a28b967a5801","created":1471966592240,"modified":1471966592240,"origin":1471806386919,"name":"livingroomthermostat","description":"living room HVAC thermostat","adminState":null,"operatingState":"enabled","protocols":{"example":{"host":"localhost","port":"1234","unitID":"1"}}},"lastConnected":0,"lastReported":0,"labels":["home","hvac","thermostat"],"location":"{lat:45.45,long:47.80}","service":{"id":"5f79f674-a25e-44e6-bab0-1cc687420e40","created":1471966570667,"modified":1471966570667,"origin":1471806386919,"name":"home thermostat device service","description":"manage home thermostats","lastConnected":0,"lastReported":0,"labels":["hvac","thermostat"],"adminState":"unlocked","operatingState":"enabled","addressable":{"id":"12da905b-97d2-4a58-b9ab-84a71980b363","created":1471966557670,"modified":1471966557670,"origin":1471806386919,"name":"hvac thermo address","protocol":"HTTP","address":"172.17.0.1","port":48089,"path":"/livingroomthermostat","publisher":"none","user":"none","password":"none","topic":"none"}},"profile":{"id":"ebe456c9-b761-42bf-9bf8-1ca0a6c7cfc6","created":1471966587727,"modified":1471966587727,"origin":1471806386919,"name":"thermostat profile","manufacturer":"Honeywell","model":"ABC123","labels":["bacnet","thermostat","Honeywell"],"description":"BACnet Honeywell thermostats","resources":[{"CurrentHumidity":{"get":[{"parameter":"CurrentHumidity","operation":"get","object":"AnalogValue_22"}]}}],"commands":[{"id":"dd5de4ff-ae3b-44b1-997d-5d410cd22e1c","created":1471966587724,"modified":1471966587724,"origin":1471806386919,"name":"cooling point","get":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]},"put":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}],"parameterNames":["coolingpoint"]}}]}}]'
             "413":
                 description: if the number returned exceeds the max limit
             "500":
                 description: for unknown or unanticipated issues
 /v1/deviceprofile/id/{id}:
     displayName: DeviceProfile Resource (by id)
-    description: Example - http://localhost:48081/api/v1/deviceprofile/id/57bb718f555e5218873e5a27
+    description: Example - http://localhost:48081/api/v1/deviceprofile/id/dd5de4ff-ae3b-44b1-997d-5d410cd22e1c
     uriParameters:
         id:
             displayName: id
@@ -584,7 +584,7 @@ schemas:
                 body:
                     application/json:
                         schema: devicereport
-                        example: '[{"id":"57bb718f555e5218873e5a27","created":1471902095821,"modified":1471902095821,"origin":1471806386919,"name":"thermostat profile","manufacturer":"Honeywell","model":"ABC123","labels":["bacnet","thermostat","Honeywell"],"description":"BACnet Honeywell thermostats","resources":[{"CurrentHumidity":{"get":[{"parameter":"CurrentHumidity","operation":"get","object":"AnalogValue_22"}]}}],"commands":[{"id":"57bb718f555e5218873e5a26","created":1471902095810,"modified":1471902095810,"origin":1471806386919,"name":"cooling point","get":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]},"put":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}],"parameterNames":["coolingpoint"]}}]}]'
+                        example: '[{"id":"dd5de4ff-ae3b-44b1-997d-5d410cd22e1c","created":1471902095821,"modified":1471902095821,"origin":1471806386919,"name":"thermostat profile","manufacturer":"Honeywell","model":"ABC123","labels":["bacnet","thermostat","Honeywell"],"description":"BACnet Honeywell thermostats","resources":[{"CurrentHumidity":{"get":[{"parameter":"CurrentHumidity","operation":"get","object":"AnalogValue_22"}]}}],"commands":[{"id":"eb5771d3-93f6-4b14-b285-9ed836ed5e35","created":1471902095810,"modified":1471902095810,"origin":1471806386919,"name":"cooling point","get":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]},"put":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}],"parameterNames":["coolingpoint"]}}]}]'
             "400":
                 description: for malformed or unparsable requests
             "500":
@@ -606,7 +606,7 @@ schemas:
                 body:
                     application/json:
                         schema: deviceprofile
-                        example: '[{"id":"57bb718f555e5218873e5a27","created":1471902095821,"modified":1471902095821,"origin":1471806386919,"name":"thermostat profile","manufacturer":"Honeywell","model":"ABC123","labels":["bacnet","thermostat","Honeywell"],"description":"BACnet Honeywell thermostats","resources":[{"CurrentHumidity":{"get":[{"parameter":"CurrentHumidity","operation":"get","object":"AnalogValue_22"}]}}],"commands":[{"id":"57bb718f555e5218873e5a26","created":1471902095810,"modified":1471902095810,"origin":1471806386919,"name":"cooling point","get":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]},"put":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}],"parameterNames":["coolingpoint"]}}]}]'
+                        example: '[{"id":"dd5de4ff-ae3b-44b1-997d-5d410cd22e1c","created":1471902095821,"modified":1471902095821,"origin":1471806386919,"name":"thermostat profile","manufacturer":"Honeywell","model":"ABC123","labels":["bacnet","thermostat","Honeywell"],"description":"BACnet Honeywell thermostats","resources":[{"CurrentHumidity":{"get":[{"parameter":"CurrentHumidity","operation":"get","object":"AnalogValue_22"}]}}],"commands":[{"id":"eb5771d3-93f6-4b14-b285-9ed836ed5e35","created":1471902095810,"modified":1471902095810,"origin":1471806386919,"name":"cooling point","get":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]},"put":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}],"parameterNames":["coolingpoint"]}}]}]'
             "400":
                 description: for malformed or unparsable requests
             "500":
@@ -641,7 +641,7 @@ schemas:
                 body:
                     application/json:
                         schema: deviceprofile
-                        example: '{"id":"57bb718f555e5218873e5a27","created":1471902095821,"modified":1471902095821,"origin":1471806386919,"name":"thermostat profile","manufacturer":"Honeywell","model":"ABC123","labels":["bacnet","thermostat","Honeywell"],"description":"BACnet Honeywell thermostats","resources":[{"CurrentHumidity":{"get":[{"parameter":"CurrentHumidity","operation":"get","object":"AnalogValue_22"}]}}],"commands":[{"id":"57bb718f555e5218873e5a26","created":1471902095810,"modified":1471902095810,"origin":1471806386919,"name":"cooling point","get":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]},"put":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}],"parameterNames":["coolingpoint"]}}]}'
+                        example: '{"id":"dd5de4ff-ae3b-44b1-997d-5d410cd22e1c","created":1471902095821,"modified":1471902095821,"origin":1471806386919,"name":"thermostat profile","manufacturer":"Honeywell","model":"ABC123","labels":["bacnet","thermostat","Honeywell"],"description":"BACnet Honeywell thermostats","resources":[{"CurrentHumidity":{"get":[{"parameter":"CurrentHumidity","operation":"get","object":"AnalogValue_22"}]}}],"commands":[{"id":"eb5771d3-93f6-4b14-b285-9ed836ed5e35","created":1471902095810,"modified":1471902095810,"origin":1471806386919,"name":"cooling point","get":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]},"put":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}],"parameterNames":["coolingpoint"]}}]}'
             "400":
                 description: for malformed or unparsable requests
             "404":
@@ -664,7 +664,7 @@ schemas:
                 description: for unknown or unanticipated issues
 /v1/deviceprofile/{id}:
     displayName: DeviceProfile Resource (by id)
-    description: Example - http://localhost:48081/api/v1/deviceprofile/57bb718f555e5218873e5a27
+    description: Example - http://localhost:48081/api/v1/deviceprofile/dd5de4ff-ae3b-44b1-997d-5d410cd22e1c
     uriParameters:
         id:
             displayName: id
@@ -679,7 +679,7 @@ schemas:
                 body:
                     application/json:
                         schema: deviceprofile
-                        example: '{"id":"57bb718f555e5218873e5a27","created":1471902095821,"modified":1471902095821,"origin":1471806386919,"name":"thermostat profile","manufacturer":"Honeywell","model":"ABC123","labels":["bacnet","thermostat","Honeywell"],"description":"BACnet Honeywell thermostats","resources":[{"CurrentHumidity":{"get":[{"parameter":"CurrentHumidity","operation":"get","object":"AnalogValue_22"}]}}],"commands":[{"id":"57bb718f555e5218873e5a26","created":1471902095810,"modified":1471902095810,"origin":1471806386919,"name":"cooling point","get":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]},"put":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}],"parameterNames":["coolingpoint"]}}]}'
+                        example: '{"id":"dd5de4ff-ae3b-44b1-997d-5d410cd22e1c","created":1471902095821,"modified":1471902095821,"origin":1471806386919,"name":"thermostat profile","manufacturer":"Honeywell","model":"ABC123","labels":["bacnet","thermostat","Honeywell"],"description":"BACnet Honeywell thermostats","resources":[{"CurrentHumidity":{"get":[{"parameter":"CurrentHumidity","operation":"get","object":"AnalogValue_22"}]}}],"commands":[{"id":"eb5771d3-93f6-4b14-b285-9ed836ed5e35","created":1471902095810,"modified":1471902095810,"origin":1471806386919,"name":"cooling point","get":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]},"put":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}],"parameterNames":["coolingpoint"]}}]}'
             "404":
                 description: if the device profile cannot be found by the id provided
             "500":
@@ -723,7 +723,7 @@ schemas:
                 description: for unknown or unanticipated issues
 /v1/deviceprofile/yaml/{id}:
     displayName: DeviceProfile Resource (by id)
-    description: Example - http://localhost:48081/api/v1/deviceprofile/yaml/57bb718f555e5218873e5a27
+    description: Example - http://localhost:48081/api/v1/deviceprofile/yaml/dd5de4ff-ae3b-44b1-997d-5d410cd22e1c
     uriParameters:
         id:
             displayName: id
@@ -759,7 +759,7 @@ schemas:
                 body:
                     application/json:
                         schema: deviceprofile
-                        example: '[{"id":"57bb718f555e5218873e5a27","created":1471902095821,"modified":1471902095821,"origin":1471806386919,"name":"thermostat profile","manufacturer":"Honeywell","model":"ABC123","labels":["bacnet","thermostat","Honeywell"],"description":"BACnet Honeywell thermostats","resources":[{"CurrentHumidity":{"get":[{"parameter":"CurrentHumidity","operation":"get","object":"AnalogValue_22"}]}}],"commands":[{"id":"57bb718f555e5218873e5a26","created":1471902095810,"modified":1471902095810,"origin":1471806386919,"name":"cooling point","get":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]},"put":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}],"parameterNames":["coolingpoint"]}}]}]'
+                        example: '[{"id":"dd5de4ff-ae3b-44b1-997d-5d410cd22e1c","created":1471902095821,"modified":1471902095821,"origin":1471806386919,"name":"thermostat profile","manufacturer":"Honeywell","model":"ABC123","labels":["bacnet","thermostat","Honeywell"],"description":"BACnet Honeywell thermostats","resources":[{"CurrentHumidity":{"get":[{"parameter":"CurrentHumidity","operation":"get","object":"AnalogValue_22"}]}}],"commands":[{"id":"eb5771d3-93f6-4b14-b285-9ed836ed5e35","created":1471902095810,"modified":1471902095810,"origin":1471806386919,"name":"cooling point","get":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]},"put":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}],"parameterNames":["coolingpoint"]}}]}]'
             "400":
                 description: for malformed or unparsable requests
             "500":
@@ -781,7 +781,7 @@ schemas:
                 body:
                     application/json:
                         schema: deviceprofile
-                        example: '[{"id":"57bb718f555e5218873e5a27","created":1471902095821,"modified":1471902095821,"origin":1471806386919,"name":"thermostat profile","manufacturer":"Honeywell","model":"ABC123","labels":["bacnet","thermostat","Honeywell"],"description":"BACnet Honeywell thermostats","resources":[{"CurrentHumidity":{"get":[{"parameter":"CurrentHumidity","operation":"get","object":"AnalogValue_22"}]}}],"commands":[{"id":"57bb718f555e5218873e5a26","created":1471902095810,"modified":1471902095810,"origin":1471806386919,"name":"cooling point","get":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]},"put":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}],"parameterNames":["coolingpoint"]}}]}]'
+                        example: '[{"id":"dd5de4ff-ae3b-44b1-997d-5d410cd22e1c","created":1471902095821,"modified":1471902095821,"origin":1471806386919,"name":"thermostat profile","manufacturer":"Honeywell","model":"ABC123","labels":["bacnet","thermostat","Honeywell"],"description":"BACnet Honeywell thermostats","resources":[{"CurrentHumidity":{"get":[{"parameter":"CurrentHumidity","operation":"get","object":"AnalogValue_22"}]}}],"commands":[{"id":"eb5771d3-93f6-4b14-b285-9ed836ed5e35","created":1471902095810,"modified":1471902095810,"origin":1471806386919,"name":"cooling point","get":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]},"put":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}],"parameterNames":["coolingpoint"]}}]}]'
             "400":
                 description: for malformed or unparsable requests
             "500":
@@ -809,7 +809,7 @@ schemas:
         body:
             application/json:
                 schema: deviceprofile
-                example: '{"id":"57bb718f555e5218873e5a27","description":"HTTP Honeywell thermostats"}'
+                example: '{"id":"dd5de4ff-ae3b-44b1-997d-5d410cd22e1c","description":"HTTP Honeywell thermostats"}'
         responses:
             "200":
                 description: boolean indicating success of the remove operation
@@ -829,14 +829,14 @@ schemas:
                 body:
                     application/json:
                         schema: deviceprofile
-                        example: '[{"id":"57bb718f555e5218873e5a27","created":1471902095821,"modified":1471902095821,"origin":1471806386919,"name":"thermostat profile","manufacturer":"Honeywell","model":"ABC123","labels":["bacnet","thermostat","Honeywell"],"description":"BACnet Honeywell thermostats","resources":[{"CurrentHumidity":{"get":[{"parameter":"CurrentHumidity","operation":"get","object":"AnalogValue_22"}]}}],"commands":[{"id":"57bb718f555e5218873e5a26","created":1471902095810,"modified":1471902095810,"origin":1471806386919,"name":"cooling point","get":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]},"put":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}],"parameterNames":["coolingpoint"]}}]}]'
+                        example: '[{"id":"dd5de4ff-ae3b-44b1-997d-5d410cd22e1c","created":1471902095821,"modified":1471902095821,"origin":1471806386919,"name":"thermostat profile","manufacturer":"Honeywell","model":"ABC123","labels":["bacnet","thermostat","Honeywell"],"description":"BACnet Honeywell thermostats","resources":[{"CurrentHumidity":{"get":[{"parameter":"CurrentHumidity","operation":"get","object":"AnalogValue_22"}]}}],"commands":[{"id":"eb5771d3-93f6-4b14-b285-9ed836ed5e35","created":1471902095810,"modified":1471902095810,"origin":1471806386919,"name":"cooling point","get":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]},"put":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}],"parameterNames":["coolingpoint"]}}]}]'
             "413":
                 description: if the number returned exceeds the max limit
             "500":
                 description: for unknown or unanticipated issues
 /v1/devicereport/id/{id}:
     displayName: DeviceReport Resource (by id)
-    description: Example - http://localhost:48081/api/v1/devicereport/id/57bb6491555e5218873e5a35
+    description: Example - http://localhost:48081/api/v1/devicereport/id/eb5771d3-93f6-4b14-b285-9ed836ed5e35
     uriParameters:
         id:
             displayName: id
@@ -880,7 +880,7 @@ schemas:
                 body:
                     application/json:
                         schema: devicereport
-                        example: '{"id":"57bc88d8555e5218873e5a34","created":1471973592027,"modified":1471973592027,"origin":1471806386919,"name":"livingroom collection report","device":"livingroomthermostat","event":"temperature collection","expected":["temperature"]}'
+                        example: '{"id":"eb5771d3-93f6-4b14-b285-9ed836ed5e35","created":1471973592027,"modified":1471973592027,"origin":1471806386919,"name":"livingroom collection report","device":"livingroomthermostat","event":"temperature collection","expected":["temperature"]}'
             "400":
                 description: for malformed or unparsable requests
             "404":
@@ -889,7 +889,7 @@ schemas:
                 description: for unknown or unanticipated issues
 /v1/devicereport/{id}:
     displayName: DeviceReport Resource (by id)
-    description: Example - http://localhost:48081/api/v1/devicereport/57bb6491555e5218873e5a35
+    description: Example - http://localhost:48081/api/v1/devicereport/eb5771d3-93f6-4b14-b285-9ed836ed5e35
     uriParameters:
         id:
             displayName: id
@@ -904,7 +904,7 @@ schemas:
                 body:
                     application/json:
                         schema: devicereport
-                        example: '{"id":"57bc88d8555e5218873e5a34","created":1471973592027,"modified":1471973592027,"origin":1471806386919,"name":"livingroom collection report","device":"livingroomthermostat","event":"temperature collection","expected":["temperature"]}'
+                        example: '{"id":"eb5771d3-93f6-4b14-b285-9ed836ed5e35","created":1471973592027,"modified":1471973592027,"origin":1471806386919,"name":"livingroom collection report","device":"livingroomthermostat","event":"temperature collection","expected":["temperature"]}'
             "404":
                 description: if no DeviceReport is found with the provided id
             "500":
@@ -926,7 +926,7 @@ schemas:
                 body:
                     application/json:
                         schema: devicereport
-                        example: '[{"id":"57bc88d8555e5218873e5a34","created":1471973592027,"modified":1471973592027,"origin":1471806386919,"name":"livingroom collection report","device":"livingroomthermostat","event":"temperature collection","expected":["temperature"]}]'
+                        example: '[{"id":"eb5771d3-93f6-4b14-b285-9ed836ed5e35","created":1471973592027,"modified":1471973592027,"origin":1471806386919,"name":"livingroom collection report","device":"livingroomthermostat","event":"temperature collection","expected":["temperature"]}]'
             "400":
                 description: for malformed or unparsable requests
             "500":
@@ -975,7 +975,7 @@ schemas:
         body:
             application/json:
                 schema: devicereport
-                example: '{"id":"57bb6491555e5218873e5a35","expected":["hvactemp"]}'
+                example: '{"id":"eb5771d3-93f6-4b14-b285-9ed836ed5e35","expected":["hvactemp"]}'
         responses:
             "200":
                 description: boolean indicating success of the update
@@ -993,14 +993,14 @@ schemas:
                 body:
                     application/json:
                         schema: devicereport
-                        example: '[{"id":"57bc88d8555e5218873e5a34","created":1471973592027,"modified":1471973592027,"origin":1471806386919,"name":"livingroom collection report","device":"livingroomthermostat","action":"temperature collection","expected":["temperature"]}]'
+                        example: '[{"id":"eb5771d3-93f6-4b14-b285-9ed836ed5e35","created":1471973592027,"modified":1471973592027,"origin":1471806386919,"name":"livingroom collection report","device":"livingroomthermostat","action":"temperature collection","expected":["temperature"]}]'
             "413":
                 description: if the number returned exceeds the max limit.
             "500":
                 description: for unknown or unanticipated issues
 /v1/deviceservice/id/{id}:
     displayName: DeviceService Resource (by id)
-    description: Example - http://localhost:48081/api/v1/deviceservice/id/57bbbf8432d22c1c33934c61
+    description: Example - http://localhost:48081/api/v1/deviceservice/id/eb5771d3-93f6-4b14-b285-9ed836ed5e35
     uriParameters:
         id:
             displayName: id
@@ -1033,7 +1033,7 @@ schemas:
                 body:
                     application/json:
                         schema: deviceservice
-                        example: '[{"id":"57bbbf8432d22c1c33934c61","created":1471922052444,"modified":1471922478043,"origin":1471806386919,"name":"home thermostat device service","description":"manager service for home thermostats","lastConnected":0,"lastReported":0,"labels":["hvac","thermostat","home"],"adminState":"unlocked","operatingState":"enabled","addressable":{"id":"57bbac0332d22c1c33934c60","created":1471917059552,"modified":1471917059552,"origin":1471806386919,"name":"hvac thermo address","protocol":"HTTP","address":"172.17.0.1","port":48089,"path":"/livingroomthermostat","publisher":"none","user":"none","password":"none","topic":"none"}}]'
+                        example: '[{"id":"eb5771d3-93f6-4b14-b285-9ed836ed5e35","created":1471922052444,"modified":1471922478043,"origin":1471806386919,"name":"home thermostat device service","description":"manager service for home thermostats","lastConnected":0,"lastReported":0,"labels":["hvac","thermostat","home"],"adminState":"unlocked","operatingState":"enabled","addressable":{"id":"47237c46-3f03-4dc5-a3c1-84d7420d9903","created":1471917059552,"modified":1471917059552,"origin":1471806386919,"name":"hvac thermo address","protocol":"HTTP","address":"172.17.0.1","port":48089,"path":"/livingroomthermostat","publisher":"none","user":"none","password":"none","topic":"none"}}]'
             "404":
                 description: if no addressable is found for the provided id
             "500":
@@ -1171,7 +1171,7 @@ schemas:
                 description: for unknown or unanticipated issues
 /v1/deviceservice/{id}/opstate/{opState}:
     displayName: DeviceService Resource (update op state)
-    description: Example - http://localhost:48081/api/v1/deviceservice/57bbbf8432d22c1c33934c61/opstate/disabled
+    description: Example - http://localhost:48081/api/v1/deviceservice/eb5771d3-93f6-4b14-b285-9ed836ed5e35/opstate/disabled
     uriParameters:
         id:
             displayName: id
@@ -1196,7 +1196,7 @@ schemas:
                 description: for unknown or unanticipated issues
 /v1/deviceservice/{id}/adminstate/{adminState}:
     displayName: DeviceService Resource (update admin state)
-    description: Example - http://localhost:48081/api/v1/deviceservice/57bbbf8432d22c1c33934c61/adminstate/locked
+    description: Example - http://localhost:48081/api/v1/deviceservice/eb5771d3-93f6-4b14-b285-9ed836ed5e35/adminstate/locked
     uriParameters:
         id:
             displayName: id
@@ -1221,7 +1221,7 @@ schemas:
                 description: for unknown or unanticipated issues
 /v1/deviceservice/{id}/lastreported/{time}:
     displayName: DeviceService Resource (update last reported)
-    description: Example - http://localhost:48081/api/v1/deviceservice/57bbbf8432d22c1c33934c61/lastreported/1471922060100
+    description: Example - http://localhost:48081/api/v1/deviceservice/eb5771d3-93f6-4b14-b285-9ed836ed5e35/lastreported/1471922060100
     uriParameters:
         id:
             displayName: id
@@ -1246,7 +1246,7 @@ schemas:
                 description: for unknown or unanticipated issues
 /v1/deviceservice/{id}/lastconnected/{time}:
     displayName: DeviceService Resource (update last connected)
-    description: Example - http://localhost:48081/api/v1/deviceservice/57bbbf8432d22c1c33934c61/lastconnected/1471922060000
+    description: Example - http://localhost:48081/api/v1/deviceservice/eb5771d3-93f6-4b14-b285-9ed836ed5e35/lastconnected/1471922060000
     uriParameters:
         id:
             displayName: id
@@ -1271,7 +1271,7 @@ schemas:
                 description: for unknown or unanticipated issues
 /v1/deviceservice/{id}:
     displayName: DeviceService Resource (by id)
-    description: Example - http://localhost:48081/api/v1/deviceservice/57bbbf8432d22c1c33934c61
+    description: Example - http://localhost:48081/api/v1/deviceservice/eb5771d3-93f6-4b14-b285-9ed836ed5e35
     uriParameters:
         id:
             displayName: id
@@ -1286,14 +1286,14 @@ schemas:
                 body:
                     application/json:
                         schema: deviceservice
-                        example: '{"id":"57bbbf8432d22c1c33934c61","created":1471922052444,"modified":1471922478043,"origin":1471806386919,"name":"home thermostat device service","description":"manager service for home thermostats","lastConnected":0,"lastReported":0,"labels":["hvac","thermostat","home"],"adminState":"unlocked","operatingState":"enabled","addressable":{"id":"57bbac0332d22c1c33934c60","created":1471917059552,"modified":1471917059552,"origin":1471806386919,"name":"hvac thermo address","protocol":"HTTP","address":"172.17.0.1","port":48089,"path":"/livingroomthermostat","publisher":"none","user":"none","password":"none","topic":"none"}}'
+                        example: '{"id":"eb5771d3-93f6-4b14-b285-9ed836ed5e35","created":1471922052444,"modified":1471922478043,"origin":1471806386919,"name":"home thermostat device service","description":"manager service for home thermostats","lastConnected":0,"lastReported":0,"labels":["hvac","thermostat","home"],"adminState":"unlocked","operatingState":"enabled","addressable":{"id":"47237c46-3f03-4dc5-a3c1-84d7420d9903","created":1471917059552,"modified":1471917059552,"origin":1471806386919,"name":"hvac thermo address","protocol":"HTTP","address":"172.17.0.1","port":48089,"path":"/livingroomthermostat","publisher":"none","user":"none","password":"none","topic":"none"}}'
             "404":
                 description: if no device service is found for the provided id
             "500":
                 description: for unknown or unanticipated issues
 /v1/deviceservice/addressable/{addressableId}:
     displayName: DeviceService Resource (by addressable)
-    description: Example - http://localhost:48081/api/v1/deviceservice/addressable/57bbac0332d22c1c33934c60  (the id is an addressable id)
+    description: Example - http://localhost:48081/api/v1/deviceservice/addressable/47237c46-3f03-4dc5-a3c1-84d7420d9903  (the id is an addressable id)
     uriParameters:
         addressableId:
             displayName: addressableId
@@ -1308,7 +1308,7 @@ schemas:
                 body:
                     application/json:
                         schema: deviceservice
-                        example: '[{"id":"57bbbf8432d22c1c33934c61","created":1471922052444,"modified":1471922478043,"origin":1471806386919,"name":"home thermostat device service","description":"manager service for home thermostats","lastConnected":0,"lastReported":0,"labels":["hvac","thermostat","home"],"adminState":"unlocked","operatingState":"enabled","addressable":{"id":"57bbac0332d22c1c33934c60","created":1471917059552,"modified":1471917059552,"origin":1471806386919,"name":"hvac thermo address","protocol":"HTTP","address":"172.17.0.1","port":48089,"path":"/livingroomthermostat","publisher":"none","user":"none","password":"none","topic":"none"}}]'
+                        example: '[{"id":"eb5771d3-93f6-4b14-b285-9ed836ed5e35","created":1471922052444,"modified":1471922478043,"origin":1471806386919,"name":"home thermostat device service","description":"manager service for home thermostats","lastConnected":0,"lastReported":0,"labels":["hvac","thermostat","home"],"adminState":"unlocked","operatingState":"enabled","addressable":{"id":"47237c46-3f03-4dc5-a3c1-84d7420d9903","created":1471917059552,"modified":1471917059552,"origin":1471806386919,"name":"hvac thermo address","protocol":"HTTP","address":"172.17.0.1","port":48089,"path":"/livingroomthermostat","publisher":"none","user":"none","password":"none","topic":"none"}}]'
             "404":
                 description: if no addressablee is found for the provided id
             "500":
@@ -1330,7 +1330,7 @@ schemas:
                 body:
                     application/json:
                         schema: deviceservice
-                        example: '[{"id":"57bbbf8432d22c1c33934c61","created":1471922052444,"modified":1471922478043,"origin":1471806386919,"name":"home thermostat device service","description":"manager service for home thermostats","lastConnected":0,"lastReported":0,"labels":["hvac","thermostat","home"],"adminState":"unlocked","operatingState":"enabled","addressable":{"id":"57bbac0332d22c1c33934c60","created":1471917059552,"modified":1471917059552,"origin":1471806386919,"name":"hvac thermo address","protocol":"HTTP","address":"172.17.0.1","port":48089,"path":"/livingroomthermostat","publisher":"none","user":"none","password":"none","topic":"none"}}]'
+                        example: '[{"id":"eb5771d3-93f6-4b14-b285-9ed836ed5e35","created":1471922052444,"modified":1471922478043,"origin":1471806386919,"name":"home thermostat device service","description":"manager service for home thermostats","lastConnected":0,"lastReported":0,"labels":["hvac","thermostat","home"],"adminState":"unlocked","operatingState":"enabled","addressable":{"id":"47237c46-3f03-4dc5-a3c1-84d7420d9903","created":1471917059552,"modified":1471917059552,"origin":1471806386919,"name":"hvac thermo address","protocol":"HTTP","address":"172.17.0.1","port":48089,"path":"/livingroomthermostat","publisher":"none","user":"none","password":"none","topic":"none"}}]'
             "400":
                 description: for malformed or unparsable requests
             "500":
@@ -1360,7 +1360,7 @@ schemas:
         body:
             application/json:
                 schema: deviceservice
-                example: '{"id":"57bbbf8432d22c1c33934c61","description":"manager service for home thermostats","labels":["hvac","thermostat","home"]}'
+                example: '{"id":"eb5771d3-93f6-4b14-b285-9ed836ed5e35","description":"manager service for home thermostats","labels":["hvac","thermostat","home"]}'
         responses:
             "200":
                 description: boolean indicating success of the update
@@ -1378,14 +1378,14 @@ schemas:
                 body:
                     application/json:
                         schema: deviceservice
-                        example: '[{"id":"57bbbf8432d22c1c33934c61","created":1471922052444,"modified":1471922478043,"origin":1471806386919,"name":"home thermostat device service","description":"manager service for home thermostats","lastConnected":0,"lastReported":0,"labels":["hvac","thermostat","home"],"adminState":"unlocked","operatingState":"enabled","addressable":{"id":"57bbac0332d22c1c33934c60","created":1471917059552,"modified":1471917059552,"origin":1471806386919,"name":"hvac thermo address","protocol":"HTTP","address":"172.17.0.1","port":48089,"path":"/livingroomthermostat","publisher":"none","user":"none","password":"none","topic":"none"}}]'
+                        example: '[{"id":"eb5771d3-93f6-4b14-b285-9ed836ed5e35","created":1471922052444,"modified":1471922478043,"origin":1471806386919,"name":"home thermostat device service","description":"manager service for home thermostats","lastConnected":0,"lastReported":0,"labels":["hvac","thermostat","home"],"adminState":"unlocked","operatingState":"enabled","addressable":{"id":"47237c46-3f03-4dc5-a3c1-84d7420d9903","created":1471917059552,"modified":1471917059552,"origin":1471806386919,"name":"hvac thermo address","protocol":"HTTP","address":"172.17.0.1","port":48089,"path":"/livingroomthermostat","publisher":"none","user":"none","password":"none","topic":"none"}}]'
             "413":
                 description: if the number of device services exceeds the current max limit.
             "500":
                 description: for unknown or unanticipated issues
 /v1/provisionwatcher/id/{id}:
     displayName: ProvisionWatcher Resource (by id)
-    description: Example - http://localhost:48081/api/v1/provisionwatcher/id/57ce0461add4b99e5d020534
+    description: Example - http://localhost:48081/api/v1/provisionwatcher/id/47237c46-3f03-4dc5-a3c1-84d7420d9903
     uriParameters:
         id:
             displayName: id
@@ -1405,7 +1405,7 @@ schemas:
                 description: for unknown or unanticipated issues
 /v1/provisionwatcher/{id}:
     displayName: ProvisionWatcher Resource (by id)
-    description: Example - http://localhost:48081/api/v1/provisionwatcher/57ce0523add4b99e5d020535
+    description: Example - http://localhost:48081/api/v1/provisionwatcher/47237c46-3f03-4dc5-a3c1-84d7420d9903
     uriParameters:
         id:
             displayName: id
@@ -1422,7 +1422,7 @@ schemas:
                 body:
                     application/json:
                         schema: provisionwatcher
-                        example: '{"id":"57cf3a13555ebf53636e2654","created":1473198611772,"modified":1473198611772,"origin":1471806386919,"name":"bacnet watcher","identifiers":{"MAC":"00-05-1B-A1-99-99","HTTP":"10.0.0.1"},"profile":{"id":"57cf3849555ebf53636e2651","created":1473198153474,"modified":1473198153474,"origin":1471806386919,"name":"thermostat profile","manufacturer":"Honeywell","model":"ABC123","labels":["bacnet","thermostat","Honeywell"],"description":"BACnet Honeywell thermostats","resources":[{"CurrentHumidity":{"get":[{"parameter":"CurrentHumidity","operation":"get","object":"AnalogValue_22"}]}}],"commands":[{"id":"57cf3849555ebf53636e2650","created":1473198153434,"modified":1473198153434,"origin":1471806386919,"name":"cooling point","get":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]},"put":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}],"parameterNames":["coolingpoint"]}}]},"service":{"id":"57cf3882555ebf53636e2653","created":1473198210365,"modified":1473198210365,"origin":1471806386919,"name":"home thermostat device service","description":"manage home thermostats","lastConnected":0,"lastReported":0,"labels":["hvac","thermostat"],"adminState":"unlocked","operatingState":"enabled","addressable":{"id":"57cf3875555ebf53636e2652","created":1473198197783,"modified":1473198197783,"origin":1471806386919,"name":"hvac thermo address","protocol":"HTTP","address":"172.17.0.1","port":48089,"path":"/livingroomthermostat","publisher":"none","user":"none","password":"none","topic":"none"}}}'
+                        example: '{"id":"eb5771d3-93f6-4b14-b285-9ed836ed5e35","created":1473198611772,"modified":1473198611772,"origin":1471806386919,"name":"bacnet watcher","identifiers":{"MAC":"00-05-1B-A1-99-99","HTTP":"10.0.0.1"},"profile":{"id":"7076339c-77bb-4247-8cd3-d33fec29f296","created":1473198153474,"modified":1473198153474,"origin":1471806386919,"name":"thermostat profile","manufacturer":"Honeywell","model":"ABC123","labels":["bacnet","thermostat","Honeywell"],"description":"BACnet Honeywell thermostats","resources":[{"CurrentHumidity":{"get":[{"parameter":"CurrentHumidity","operation":"get","object":"AnalogValue_22"}]}}],"commands":[{"id":"f0cdf789-e40f-4d72-b35b-75528b605ac9","created":1473198153434,"modified":1473198153434,"origin":1471806386919,"name":"cooling point","get":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]},"put":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}],"parameterNames":["coolingpoint"]}}]},"service":{"id":"00d14a4c-cb4c-4750-a24b-f0f89d27fc82","created":1473198210365,"modified":1473198210365,"origin":1471806386919,"name":"home thermostat device service","description":"manage home thermostats","lastConnected":0,"lastReported":0,"labels":["hvac","thermostat"],"adminState":"unlocked","operatingState":"enabled","addressable":{"id":"47237c46-3f03-4dc5-a3c1-84d7420d9903","created":1473198197783,"modified":1473198197783,"origin":1471806386919,"name":"hvac thermo address","protocol":"HTTP","address":"172.17.0.1","port":48089,"path":"/livingroomthermostat","publisher":"none","user":"none","password":"none","topic":"none"}}}'
             "404":
                 description: if no provision watcher with the provided id is found.
             "500":
@@ -1458,7 +1458,7 @@ schemas:
                 body:
                     application/json:
                         schema: provisionwatcher
-                        example: '{"id":"57cf3a13555ebf53636e2654","created":1473198611772,"modified":1473198611772,"origin":1471806386919,"name":"bacnet watcher","identifiers":{"MAC":"00-05-1B-A1-99-99","HTTP":"10.0.0.1"},"profile":{"id":"57cf3849555ebf53636e2651","created":1473198153474,"modified":1473198153474,"origin":1471806386919,"name":"thermostat profile","manufacturer":"Honeywell","model":"ABC123","labels":["bacnet","thermostat","Honeywell"],"description":"BACnet Honeywell thermostats","resources":[{"CurrentHumidity":{"get":[{"parameter":"CurrentHumidity","operation":"get","object":"AnalogValue_22"}]}}],"commands":[{"id":"57cf3849555ebf53636e2650","created":1473198153434,"modified":1473198153434,"origin":1471806386919,"name":"cooling point","get":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]},"put":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}],"parameterNames":["coolingpoint"]}}]},"service":{"id":"57cf3882555ebf53636e2653","created":1473198210365,"modified":1473198210365,"origin":1471806386919,"name":"home thermostat device service","description":"manage home thermostats","lastConnected":0,"lastReported":0,"labels":["hvac","thermostat"],"adminState":"unlocked","operatingState":"enabled","addressable":{"id":"57cf3875555ebf53636e2652","created":1473198197783,"modified":1473198197783,"origin":1471806386919,"name":"hvac thermo address","protocol":"HTTP","address":"172.17.0.1","port":48089,"path":"/livingroomthermostat","publisher":"none","user":"none","password":"none","topic":"none"}}}'
+                        example: '{"id":"eb5771d3-93f6-4b14-b285-9ed836ed5e35","created":1473198611772,"modified":1473198611772,"origin":1471806386919,"name":"bacnet watcher","identifiers":{"MAC":"00-05-1B-A1-99-99","HTTP":"10.0.0.1"},"profile":{"id":"7076339c-77bb-4247-8cd3-d33fec29f296","created":1473198153474,"modified":1473198153474,"origin":1471806386919,"name":"thermostat profile","manufacturer":"Honeywell","model":"ABC123","labels":["bacnet","thermostat","Honeywell"],"description":"BACnet Honeywell thermostats","resources":[{"CurrentHumidity":{"get":[{"parameter":"CurrentHumidity","operation":"get","object":"AnalogValue_22"}]}}],"commands":[{"id":"f0cdf789-e40f-4d72-b35b-75528b605ac9","created":1473198153434,"modified":1473198153434,"origin":1471806386919,"name":"cooling point","get":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]},"put":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}],"parameterNames":["coolingpoint"]}}]},"service":{"id":"00d14a4c-cb4c-4750-a24b-f0f89d27fc82","created":1473198210365,"modified":1473198210365,"origin":1471806386919,"name":"home thermostat device service","description":"manage home thermostats","lastConnected":0,"lastReported":0,"labels":["hvac","thermostat"],"adminState":"unlocked","operatingState":"enabled","addressable":{"id":"47237c46-3f03-4dc5-a3c1-84d7420d9903","created":1473198197783,"modified":1473198197783,"origin":1471806386919,"name":"hvac thermo address","protocol":"HTTP","address":"172.17.0.1","port":48089,"path":"/livingroomthermostat","publisher":"none","user":"none","password":"none","topic":"none"}}}'
             "400":
                 description: for malformed or unparsable requests
             "404":
@@ -1467,7 +1467,7 @@ schemas:
                 description: for unknown or unanticipated issues.
 /v1/provisionwatcher/profile/{profileId}:
     displayName: ProvisionWatcher Resource (by profile)
-    description: Example - http://localhost:48081/api/v1/provisionwatcher/profile/57ce033aadd4b99e5d020532 (where the id is a device profile id)
+    description: Example - http://localhost:48081/api/v1/provisionwatcher/profile/47237c46-3f03-4dc5-a3c1-84d7420d9903 (where the id is a device profile id)
     uriParameters:
         profileId:
             displayName: profileId
@@ -1482,7 +1482,7 @@ schemas:
                 body:
                     application/json:
                         schema: provisionwatcher
-                        example: '[{"id":"57ce0523add4b99e5d020535","created":1473119523238,"modified":1473119523238,"origin":1471806386919,"name":"bacnet watcher","identifiers":{"MAC":"00-05-1B-A1-99-99","HTTP":"10.0.0.1"},"profile":{"id":"57ce033aadd4b99e5d020532","created":1473119034719,"modified":1473119034719,"origin":1471806386919,"name":"thermostat profile","manufacturer":"Honeywell","model":"ABC123","labels":["bacnet","thermostat","Honeywell"],"description":"BACnet Honeywell thermostats","resources":[{"CurrentHumidity":{"get":[{"parameter":"CurrentHumidity","operation":"get","object":"AnalogValue_22"}]}}],"commands":[{"id":"57ce033aadd4b99e5d020531","created":1473119034697,"modified":1473119034697,"origin":1471806386919,"name":"cooling point","get":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]},"put":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}],"parameterNames":["coolingpoint"]}}]}}]'
+                        example: '[{"id":"47237c46-3f03-4dc5-a3c1-84d7420d9903","created":1473119523238,"modified":1473119523238,"origin":1471806386919,"name":"bacnet watcher","identifiers":{"MAC":"00-05-1B-A1-99-99","HTTP":"10.0.0.1"},"profile":{"id":"47237c46-3f03-4dc5-a3c1-84d7420d9903","created":1473119034719,"modified":1473119034719,"origin":1471806386919,"name":"thermostat profile","manufacturer":"Honeywell","model":"ABC123","labels":["bacnet","thermostat","Honeywell"],"description":"BACnet Honeywell thermostats","resources":[{"CurrentHumidity":{"get":[{"parameter":"CurrentHumidity","operation":"get","object":"AnalogValue_22"}]}}],"commands":[{"id":"57ce033aadd4b99e5d020531","created":1473119034697,"modified":1473119034697,"origin":1471806386919,"name":"cooling point","get":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]},"put":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}],"parameterNames":["coolingpoint"]}}]}}]'
             "404":
                 description: if no device profile match on the id provided.
             "500":
@@ -1504,7 +1504,7 @@ schemas:
                 body:
                     application/json:
                         schema: provisionwatcher
-                        example: '[{"id":"57cf3a13555ebf53636e2654","created":1473198611772,"modified":1473198611772,"origin":1471806386919,"name":"bacnet watcher","identifiers":{"MAC":"00-05-1B-A1-99-99","HTTP":"10.0.0.1"},"profile":{"id":"57cf3849555ebf53636e2651","created":1473198153474,"modified":1473198153474,"origin":1471806386919,"name":"thermostat profile","manufacturer":"Honeywell","model":"ABC123","labels":["bacnet","thermostat","Honeywell"],"description":"BACnet Honeywell thermostats","resources":[{"CurrentHumidity":{"get":[{"parameter":"CurrentHumidity","operation":"get","object":"AnalogValue_22"}]}}],"commands":[{"id":"57cf3849555ebf53636e2650","created":1473198153434,"modified":1473198153434,"origin":1471806386919,"name":"cooling point","get":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]},"put":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}],"parameterNames":["coolingpoint"]}}]},"service":{"id":"57cf3882555ebf53636e2653","created":1473198210365,"modified":1473198210365,"origin":1471806386919,"name":"home thermostat device service","description":"manage home thermostats","lastConnected":0,"lastReported":0,"labels":["hvac","thermostat"],"adminState":"unlocked","operatingState":"enabled","addressable":{"id":"57cf3875555ebf53636e2652","created":1473198197783,"modified":1473198197783,"origin":1471806386919,"name":"hvac thermo address","protocol":"HTTP","address":"172.17.0.1","port":48089,"path":"/livingroomthermostat","publisher":"none","user":"none","password":"none","topic":"none"}}}]'
+                        example: '[{"id":"eb5771d3-93f6-4b14-b285-9ed836ed5e35","created":1473198611772,"modified":1473198611772,"origin":1471806386919,"name":"bacnet watcher","identifiers":{"MAC":"00-05-1B-A1-99-99","HTTP":"10.0.0.1"},"profile":{"id":"7076339c-77bb-4247-8cd3-d33fec29f296","created":1473198153474,"modified":1473198153474,"origin":1471806386919,"name":"thermostat profile","manufacturer":"Honeywell","model":"ABC123","labels":["bacnet","thermostat","Honeywell"],"description":"BACnet Honeywell thermostats","resources":[{"CurrentHumidity":{"get":[{"parameter":"CurrentHumidity","operation":"get","object":"AnalogValue_22"}]}}],"commands":[{"id":"f0cdf789-e40f-4d72-b35b-75528b605ac9","created":1473198153434,"modified":1473198153434,"origin":1471806386919,"name":"cooling point","get":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]},"put":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}],"parameterNames":["coolingpoint"]}}]},"service":{"id":"00d14a4c-cb4c-4750-a24b-f0f89d27fc82","created":1473198210365,"modified":1473198210365,"origin":1471806386919,"name":"home thermostat device service","description":"manage home thermostats","lastConnected":0,"lastReported":0,"labels":["hvac","thermostat"],"adminState":"unlocked","operatingState":"enabled","addressable":{"id":"47237c46-3f03-4dc5-a3c1-84d7420d9903","created":1473198197783,"modified":1473198197783,"origin":1471806386919,"name":"hvac thermo address","protocol":"HTTP","address":"172.17.0.1","port":48089,"path":"/livingroomthermostat","publisher":"none","user":"none","password":"none","topic":"none"}}}]'
             "400":
               description: for malformed or unparsable requests
             "404":
@@ -1513,7 +1513,7 @@ schemas:
                 description: for unknown or unanticipated issues.
 /v1/provisionwatcher/service/{serviceId}:
     displayName: ProvisionWatcher Resource (by service)
-    description: Example - http://localhost:48081/api/v1/provisionwatcher/service/57ce033aadd4b99e5d020532 (where the id is a device service id)
+    description: Example - http://localhost:48081/api/v1/provisionwatcher/service/47237c46-3f03-4dc5-a3c1-84d7420d9903 (where the id is a device service id)
     uriParameters:
         serviceId:
             displayName: serviceId
@@ -1528,7 +1528,7 @@ schemas:
                 body:
                     application/json:
                         schema: provisionwatcher
-                        example: '[{"id":"57cf3a13555ebf53636e2654","created":1473198611772,"modified":1473198611772,"origin":1471806386919,"name":"bacnet watcher","identifiers":{"MAC":"00-05-1B-A1-99-99","HTTP":"10.0.0.1"},"profile":{"id":"57cf3849555ebf53636e2651","created":1473198153474,"modified":1473198153474,"origin":1471806386919,"name":"thermostat profile","manufacturer":"Honeywell","model":"ABC123","labels":["bacnet","thermostat","Honeywell"],"description":"BACnet Honeywell thermostats","resources":[{"CurrentHumidity":{"get":[{"parameter":"CurrentHumidity","operation":"get","object":"AnalogValue_22"}]}}],"commands":[{"id":"57cf3849555ebf53636e2650","created":1473198153434,"modified":1473198153434,"origin":1471806386919,"name":"cooling point","get":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]},"put":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}],"parameterNames":["coolingpoint"]}}]},"service":{"id":"57cf3882555ebf53636e2653","created":1473198210365,"modified":1473198210365,"origin":1471806386919,"name":"home thermostat device service","description":"manage home thermostats","lastConnected":0,"lastReported":0,"labels":["hvac","thermostat"],"adminState":"unlocked","operatingState":"enabled","addressable":{"id":"57cf3875555ebf53636e2652","created":1473198197783,"modified":1473198197783,"origin":1471806386919,"name":"hvac thermo address","protocol":"HTTP","address":"172.17.0.1","port":48089,"path":"/livingroomthermostat","publisher":"none","user":"none","password":"none","topic":"none"}}}]'
+                        example: '[{"id":"eb5771d3-93f6-4b14-b285-9ed836ed5e35","created":1473198611772,"modified":1473198611772,"origin":1471806386919,"name":"bacnet watcher","identifiers":{"MAC":"00-05-1B-A1-99-99","HTTP":"10.0.0.1"},"profile":{"id":"7076339c-77bb-4247-8cd3-d33fec29f296","created":1473198153474,"modified":1473198153474,"origin":1471806386919,"name":"thermostat profile","manufacturer":"Honeywell","model":"ABC123","labels":["bacnet","thermostat","Honeywell"],"description":"BACnet Honeywell thermostats","resources":[{"CurrentHumidity":{"get":[{"parameter":"CurrentHumidity","operation":"get","object":"AnalogValue_22"}]}}],"commands":[{"id":"f0cdf789-e40f-4d72-b35b-75528b605ac9","created":1473198153434,"modified":1473198153434,"origin":1471806386919,"name":"cooling point","get":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]},"put":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}],"parameterNames":["coolingpoint"]}}]},"service":{"id":"00d14a4c-cb4c-4750-a24b-f0f89d27fc82","created":1473198210365,"modified":1473198210365,"origin":1471806386919,"name":"home thermostat device service","description":"manage home thermostats","lastConnected":0,"lastReported":0,"labels":["hvac","thermostat"],"adminState":"unlocked","operatingState":"enabled","addressable":{"id":"47237c46-3f03-4dc5-a3c1-84d7420d9903","created":1473198197783,"modified":1473198197783,"origin":1471806386919,"name":"hvac thermo address","protocol":"HTTP","address":"172.17.0.1","port":48089,"path":"/livingroomthermostat","publisher":"none","user":"none","password":"none","topic":"none"}}}]'
             "404":
                 description: if no device service match on the id provided.
             "500":
@@ -1550,7 +1550,7 @@ schemas:
                 body:
                     application/json:
                         schema: provisionwatcher
-                        example: '[{"id":"57cf3a13555ebf53636e2654","created":1473198611772,"modified":1473198611772,"origin":1471806386919,"name":"bacnet watcher","identifiers":{"MAC":"00-05-1B-A1-99-99","HTTP":"10.0.0.1"},"profile":{"id":"57cf3849555ebf53636e2651","created":1473198153474,"modified":1473198153474,"origin":1471806386919,"name":"thermostat profile","manufacturer":"Honeywell","model":"ABC123","labels":["bacnet","thermostat","Honeywell"],"description":"BACnet Honeywell thermostats","resources":[{"CurrentHumidity":{"get":[{"parameter":"CurrentHumidity","operation":"get","object":"AnalogValue_22"}]}}],"commands":[{"id":"57cf3849555ebf53636e2650","created":1473198153434,"modified":1473198153434,"origin":1471806386919,"name":"cooling point","get":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]},"put":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}],"parameterNames":["coolingpoint"]}}]},"service":{"id":"57cf3882555ebf53636e2653","created":1473198210365,"modified":1473198210365,"origin":1471806386919,"name":"home thermostat device service","description":"manage home thermostats","lastConnected":0,"lastReported":0,"labels":["hvac","thermostat"],"adminState":"unlocked","operatingState":"enabled","addressable":{"id":"57cf3875555ebf53636e2652","created":1473198197783,"modified":1473198197783,"origin":1471806386919,"name":"hvac thermo address","protocol":"HTTP","address":"172.17.0.1","port":48089,"path":"/livingroomthermostat","publisher":"none","user":"none","password":"none","topic":"none"}}}]'
+                        example: '[{"id":"eb5771d3-93f6-4b14-b285-9ed836ed5e35","created":1473198611772,"modified":1473198611772,"origin":1471806386919,"name":"bacnet watcher","identifiers":{"MAC":"00-05-1B-A1-99-99","HTTP":"10.0.0.1"},"profile":{"id":"7076339c-77bb-4247-8cd3-d33fec29f296","created":1473198153474,"modified":1473198153474,"origin":1471806386919,"name":"thermostat profile","manufacturer":"Honeywell","model":"ABC123","labels":["bacnet","thermostat","Honeywell"],"description":"BACnet Honeywell thermostats","resources":[{"CurrentHumidity":{"get":[{"parameter":"CurrentHumidity","operation":"get","object":"AnalogValue_22"}]}}],"commands":[{"id":"f0cdf789-e40f-4d72-b35b-75528b605ac9","created":1473198153434,"modified":1473198153434,"origin":1471806386919,"name":"cooling point","get":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]},"put":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}],"parameterNames":["coolingpoint"]}}]},"service":{"id":"00d14a4c-cb4c-4750-a24b-f0f89d27fc82","created":1473198210365,"modified":1473198210365,"origin":1471806386919,"name":"home thermostat device service","description":"manage home thermostats","lastConnected":0,"lastReported":0,"labels":["hvac","thermostat"],"adminState":"unlocked","operatingState":"enabled","addressable":{"id":"47237c46-3f03-4dc5-a3c1-84d7420d9903","created":1473198197783,"modified":1473198197783,"origin":1471806386919,"name":"hvac thermo address","protocol":"HTTP","address":"172.17.0.1","port":48089,"path":"/livingroomthermostat","publisher":"none","user":"none","password":"none","topic":"none"}}}]'
             "400":
                 description: for malformed or unparsable requests
             "404":
@@ -1579,7 +1579,7 @@ schemas:
                 body:
                     application/json:
                         schema: provisionwatcher
-                        example: '[{"id":"57cf3a13555ebf53636e2654","created":1473198611772,"modified":1473198611772,"origin":1471806386919,"name":"bacnet watcher","identifiers":{"MAC":"00-05-1B-A1-99-99","HTTP":"10.0.1.1"},"profile":{"id":"57cf3849555ebf53636e2651","created":1473198153474,"modified":1473198153474,"origin":1471806386919,"name":"thermostat profile","manufacturer":"Honeywell","model":"ABC123","labels":["bacnet","thermostat","Honeywell"],"description":"BACnet Honeywell thermostats","resources":[{"CurrentHumidity":{"get":[{"parameter":"CurrentHumidity","operation":"get","object":"AnalogValue_22"}]}}],"commands":[{"id":"57cf3849555ebf53636e2650","created":1473198153434,"modified":1473198153434,"origin":1471806386919,"name":"cooling point","get":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]},"put":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}],"parameterNames":["coolingpoint"]}}]},"service":{"id":"57cf3882555ebf53636e2653","created":1473198210365,"modified":1473198210365,"origin":1471806386919,"name":"home thermostat device service","description":"manage home thermostats","lastConnected":0,"lastReported":0,"labels":["hvac","thermostat"],"adminState":"unlocked","operatingState":"enabled","addressable":{"id":"57cf3875555ebf53636e2652","created":1473198197783,"modified":1473198197783,"origin":1471806386919,"name":"hvac thermo address","protocol":"HTTP","address":"172.17.0.1","port":48089,"path":"/livingroomthermostat","publisher":"none","user":"none","password":"none","topic":"none"}}}]'
+                        example: '[{"id":"eb5771d3-93f6-4b14-b285-9ed836ed5e35","created":1473198611772,"modified":1473198611772,"origin":1471806386919,"name":"bacnet watcher","identifiers":{"MAC":"00-05-1B-A1-99-99","HTTP":"10.0.1.1"},"profile":{"id":"7076339c-77bb-4247-8cd3-d33fec29f296","created":1473198153474,"modified":1473198153474,"origin":1471806386919,"name":"thermostat profile","manufacturer":"Honeywell","model":"ABC123","labels":["bacnet","thermostat","Honeywell"],"description":"BACnet Honeywell thermostats","resources":[{"CurrentHumidity":{"get":[{"parameter":"CurrentHumidity","operation":"get","object":"AnalogValue_22"}]}}],"commands":[{"id":"f0cdf789-e40f-4d72-b35b-75528b605ac9","created":1473198153434,"modified":1473198153434,"origin":1471806386919,"name":"cooling point","get":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]},"put":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}],"parameterNames":["coolingpoint"]}}]},"service":{"id":"00d14a4c-cb4c-4750-a24b-f0f89d27fc82","created":1473198210365,"modified":1473198210365,"origin":1471806386919,"name":"home thermostat device service","description":"manage home thermostats","lastConnected":0,"lastReported":0,"labels":["hvac","thermostat"],"adminState":"unlocked","operatingState":"enabled","addressable":{"id":"47237c46-3f03-4dc5-a3c1-84d7420d9903","created":1473198197783,"modified":1473198197783,"origin":1471806386919,"name":"hvac thermo address","protocol":"HTTP","address":"172.17.0.1","port":48089,"path":"/livingroomthermostat","publisher":"none","user":"none","password":"none","topic":"none"}}}]'
             "400":
                 description: for malformed or unparsable requests
             "500":
@@ -1593,7 +1593,7 @@ schemas:
         body:
             application/json:
                 schema: provisionwatcher
-                example: '{"name":"bacnet watcher", "origin":1471806386919, "identifiers":{"MAC":"00-05-1B-A1-99-99","HTTP":"10.0.0.1"},"profile":{"id":"57ce033aadd4b99e5d020532"},"service":{"id":"57ce033aadd4b99e5d020538"}} or {"name":"bacnet watcher", "origin":1471806386919, "identifiers":{"MAC":"00-05-1B-A1-99-99","HTTP":"10.0.0.1"},"profile":{"name":"thermostat profile"},"service":{"name":"home thermostat device service"}}'
+                example: '{"name":"bacnet watcher", "origin":1471806386919, "identifiers":{"MAC":"00-05-1B-A1-99-99","HTTP":"10.0.0.1"},"profile":{"id":"47237c46-3f03-4dc5-a3c1-84d7420d9903"},"service":{"id":"57ce033aadd4b99e5d020538"}} or {"name":"bacnet watcher", "origin":1471806386919, "identifiers":{"MAC":"00-05-1B-A1-99-99","HTTP":"10.0.0.1"},"profile":{"name":"thermostat profile"},"service":{"name":"home thermostat device service"}}'
         responses:
             "200":
                 description: new database generated id for the new ProvisionWatcher
@@ -1609,7 +1609,7 @@ schemas:
         body:
             application/json:
                 schema: provisionwatcher
-                example: '{"name":"bacnet watcher", "origin":14718063870000}  or {"id":"57ce0523add4b99e5d020535", "origin":14718063870000}'
+                example: '{"name":"bacnet watcher", "origin":14718063870000}  or {"id":"47237c46-3f03-4dc5-a3c1-84d7420d9903", "origin":14718063870000}'
         responses:
             "200":
                 description: boolean indicating success of the update
@@ -1628,14 +1628,14 @@ schemas:
                 body:
                     application/json:
                         schema: provisionwatcher
-                        example: '[{"id":"57cf3a13555ebf53636e2654","created":1473198611772,"modified":1473198611772,"origin":1471806386919,"name":"bacnet watcher","identifiers":{"MAC":"00-05-1B-A1-99-99","HTTP":"10.0.0.1"},"profile":{"id":"57cf3849555ebf53636e2651","created":1473198153474,"modified":1473198153474,"origin":1471806386919,"name":"thermostat profile","manufacturer":"Honeywell","model":"ABC123","labels":["bacnet","thermostat","Honeywell"],"description":"BACnet Honeywell thermostats","resources":[{"CurrentHumidity":{"get":[{"parameter":"CurrentHumidity","operation":"get","object":"AnalogValue_22"}]}}],"commands":[{"id":"57cf3849555ebf53636e2650","created":1473198153434,"modified":1473198153434,"origin":1471806386919,"name":"cooling point","get":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]},"put":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}],"parameterNames":["coolingpoint"]}}]},"service":{"id":"57cf3882555ebf53636e2653","created":1473198210365,"modified":1473198210365,"origin":1471806386919,"name":"home thermostat device service","description":"manage home thermostats","lastConnected":0,"lastReported":0,"labels":["hvac","thermostat"],"adminState":"unlocked","operatingState":"enabled","addressable":{"id":"57cf3875555ebf53636e2652","created":1473198197783,"modified":1473198197783,"origin":1471806386919,"name":"hvac thermo address","protocol":"HTTP","address":"172.17.0.1","port":48089,"path":"/livingroomthermostat","publisher":"none","user":"none","password":"none","topic":"none"}}}]'
+                        example: '[{"id":"eb5771d3-93f6-4b14-b285-9ed836ed5e35","created":1473198611772,"modified":1473198611772,"origin":1471806386919,"name":"bacnet watcher","identifiers":{"MAC":"00-05-1B-A1-99-99","HTTP":"10.0.0.1"},"profile":{"id":"7076339c-77bb-4247-8cd3-d33fec29f296","created":1473198153474,"modified":1473198153474,"origin":1471806386919,"name":"thermostat profile","manufacturer":"Honeywell","model":"ABC123","labels":["bacnet","thermostat","Honeywell"],"description":"BACnet Honeywell thermostats","resources":[{"CurrentHumidity":{"get":[{"parameter":"CurrentHumidity","operation":"get","object":"AnalogValue_22"}]}}],"commands":[{"id":"f0cdf789-e40f-4d72-b35b-75528b605ac9","created":1473198153434,"modified":1473198153434,"origin":1471806386919,"name":"cooling point","get":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]},"put":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}],"parameterNames":["coolingpoint"]}}]},"service":{"id":"00d14a4c-cb4c-4750-a24b-f0f89d27fc82","created":1473198210365,"modified":1473198210365,"origin":1471806386919,"name":"home thermostat device service","description":"manage home thermostats","lastConnected":0,"lastReported":0,"labels":["hvac","thermostat"],"adminState":"unlocked","operatingState":"enabled","addressable":{"id":"47237c46-3f03-4dc5-a3c1-84d7420d9903","created":1473198197783,"modified":1473198197783,"origin":1471806386919,"name":"hvac thermo address","protocol":"HTTP","address":"172.17.0.1","port":48089,"path":"/livingroomthermostat","publisher":"none","user":"none","password":"none","topic":"none"}}}]'
             "413":
                 description: if the number returned exceeds the max limit.
             "500":
                 description: for unknown or unanticipated issues.
 /v1/addressable/id/{id}:
     displayName: Addressable Resource (by id)
-    description: Example - http://localhost:48081/api/v1/addressable/id/57bb276e555e5218873e5a13
+    description: Example - http://localhost:48081/api/v1/addressable/id/47237c46-3f03-4dc5-a3c1-84d7420d9903
     uriParameters:
         id:
             displayName: id
@@ -1657,7 +1657,7 @@ schemas:
                 description: for unknown or unanticipated issues
 /v1/addressable/{id}:
     displayName: Addressable Resource (by id)
-    description: Example - http://localhost:48081/api/v1/addressable/57bb276e555e5218873e5a13
+    description: Example - http://localhost:48081/api/v1/addressable/47237c46-3f03-4dc5-a3c1-84d7420d9903
     uriParameters:
         id:
             displayName: id
@@ -1674,7 +1674,7 @@ schemas:
                 body:
                     application/json:
                         schema: addressable
-                        example: '{"id":"57bb276e555e5218873e5a13","created":1471883118326,"modified":1471883691145,"origin":1471806386919,"name":"hvac thermo address","protocol":"HTTP","address":"172.17.0.1","port":48089,"path":"/livingroomhvac","publisher":"none","user":"none","password":"none","topic":"none","method":"GET"}'
+                        example: '{"id":"47237c46-3f03-4dc5-a3c1-84d7420d9903","created":1471883118326,"modified":1471883691145,"origin":1471806386919,"name":"hvac thermo address","protocol":"HTTP","address":"172.17.0.1","port":48089,"path":"/livingroomhvac","publisher":"none","user":"none","password":"none","topic":"none","method":"GET"}'
             "404":
                 description: if no addressable with the provided id is found
             "500":
@@ -1710,7 +1710,7 @@ schemas:
                 body:
                     application/json:
                         schema: addressable
-                        example: '{"id":"57bb2a31555e5218873e5a14","created":1471883825676,"modified":1471883825676,"origin":1471806386919,"name":"hvac thermo address","protocol":"HTTP","address":"172.17.0.1","port":48089,"path":"/livingroomthermostat","publisher":"none","user":"none","password":"none","topic":"none","method":"GET"}'
+                        example: '{"id":"47237c46-3f03-4dc5-a3c1-84d7420d9903","created":1471883825676,"modified":1471883825676,"origin":1471806386919,"name":"hvac thermo address","protocol":"HTTP","address":"172.17.0.1","port":48089,"path":"/livingroomthermostat","publisher":"none","user":"none","password":"none","topic":"none","method":"GET"}'
             "404":
                 description: if no addressable with the provided name is found
             "400":
@@ -1736,7 +1736,7 @@ schemas:
                 body:
                     application/json:
                         schema: addressable
-                        example: '[{"id":"57bb2bca555e5218873e5a17","created":1471884234787,"modified":1471884234787,"origin":1471806386919,"name":"hvac thermo address2","protocol":"TCP","address":"172.17.0.1","port":60601,"path":"none","publisher":"DELLPUB","user":"dell","password":"abc123","topic":"thermodata","method":"GET"}]'
+                        example: '[{"id":"47237c46-3f03-4dc5-a3c1-84d7420d9903","created":1471884234787,"modified":1471884234787,"origin":1471806386919,"name":"hvac thermo address2","protocol":"TCP","address":"172.17.0.1","port":60601,"path":"none","publisher":"DELLPUB","user":"dell","password":"abc123","topic":"thermodata","method":"GET"}]'
             "400":
                 description: for malformed or unparsable requests
             "500":
@@ -1759,7 +1759,7 @@ schemas:
                 body:
                     application/json:
                         schema: addressable
-                        example: '[{"id":"57bb2b08555e5218873e5a15","created":1471884040857,"modified":1471884040857,"origin":1471806386919,"name":"hvac thermo address","protocol":"HTTP","address":"172.17.0.1","port":48089,"path":"/livingroomthermostat","publisher":"none","user":"none","password":"none","topic":"none","method":"GET"}]'
+                        example: '[{"id":"47237c46-3f03-4dc5-a3c1-84d7420d9903","created":1471884040857,"modified":1471884040857,"origin":1471806386919,"name":"hvac thermo address","protocol":"HTTP","address":"172.17.0.1","port":48089,"path":"/livingroomthermostat","publisher":"none","user":"none","password":"none","topic":"none","method":"GET"}]'
             "400":
                 description: for malformed or unparsable requests
             "500":
@@ -1783,7 +1783,7 @@ schemas:
                 body:
                     application/json:
                         schema: addressable
-                        example: '[{"id":"57bb2bca555e5218873e5a17","created":1471884234787,"modified":1471884234787,"origin":1471806386919,"name":"hvac thermo address2","protocol":"TCP","address":"172.17.0.1","port":60601,"path":"none","publisher":"DELLPUB","user":"dell","password":"abc123","topic":"thermodata","method":"GET"}]'
+                        example: '[{"id":"47237c46-3f03-4dc5-a3c1-84d7420d9903","created":1471884234787,"modified":1471884234787,"origin":1471806386919,"name":"hvac thermo address2","protocol":"TCP","address":"172.17.0.1","port":60601,"path":"none","publisher":"DELLPUB","user":"dell","password":"abc123","topic":"thermodata","method":"GET"}]'
             "400":
                 description: for malformed or unparsable requests
             "500":
@@ -1807,7 +1807,7 @@ schemas:
                 body:
                     application/json:
                         schema: addressable
-                        example: '[{"id":"57bb2b08555e5218873e5a15","created":1471884040857,"modified":1471884040857,"origin":1471806386919,"name":"hvac thermo address","protocol":"HTTP","address":"172.17.0.1","port":48089,"path":"/livingroomthermostat","publisher":"none","user":"none","password":"none","topic":"none"},{"id":"57bb2bca555e5218873e5a17","created":1471884234787,"modified":1471884234787,"origin":1471806386919,"name":"hvac thermo address2","protocol":"TCP","address":"172.17.0.1","port":60601,"path":"none","publisher":"DELLPUB","user":"dell","password":"abc123","topic":"thermodata","method":"GET"}]'
+                        example: '[{"id":"47237c46-3f03-4dc5-a3c1-84d7420d9903","created":1471884040857,"modified":1471884040857,"origin":1471806386919,"name":"hvac thermo address","protocol":"HTTP","address":"172.17.0.1","port":48089,"path":"/livingroomthermostat","publisher":"none","user":"none","password":"none","topic":"none"},{"id":"47237c46-3f03-4dc5-a3c1-84d7420d9903","created":1471884234787,"modified":1471884234787,"origin":1471806386919,"name":"hvac thermo address2","protocol":"TCP","address":"172.17.0.1","port":60601,"path":"none","publisher":"DELLPUB","user":"dell","password":"abc123","topic":"thermodata","method":"GET"}]'
             "400":
                 description: for malformed or unparsable requests
             "500":
@@ -1837,7 +1837,7 @@ schemas:
         body:
             application/json:
                 schema: addressable
-                example: '{"id":"57bb276e555e5218873e5a13", "path":"/livingroomhvac"}'
+                example: '{"id":"47237c46-3f03-4dc5-a3c1-84d7420d9903", "path":"/livingroomhvac"}'
         responses:
             "200":
                 description: boolean indicating success of the update
@@ -1858,14 +1858,14 @@ schemas:
                 body:
                     application/json:
                         schema: addressable
-                        example: '[{"id":"57bb2b08555e5218873e5a15","created":1471884040857,"modified":1471884040857,"origin":1471806386919,"name":"hvac thermo address","protocol":"HTTP","address":"172.17.0.1","port":48089,"path":"/livingroomthermostat","publisher":"none","user":"none","password":"none","topic":"none"},{"id":"57bb2bca555e5218873e5a17","created":1471884234787,"modified":1471884234787,"origin":1471806386919,"name":"hvac thermo address2","protocol":"TCP","address":"172.17.0.1","port":60601,"path":"none","publisher":"DELLPUB","user":"dell","password":"abc123","topic":"thermodata"}]'
+                        example: '[{"id":"47237c46-3f03-4dc5-a3c1-84d7420d9903","created":1471884040857,"modified":1471884040857,"origin":1471806386919,"name":"hvac thermo address","protocol":"HTTP","address":"172.17.0.1","port":48089,"path":"/livingroomthermostat","publisher":"none","user":"none","password":"none","topic":"none"},{"id":"47237c46-3f03-4dc5-a3c1-84d7420d9903","created":1471884234787,"modified":1471884234787,"origin":1471806386919,"name":"hvac thermo address2","protocol":"TCP","address":"172.17.0.1","port":60601,"path":"none","publisher":"DELLPUB","user":"dell","password":"abc123","topic":"thermodata"}]'
             "413":
                 description: if the number returned exceeds the max limit.
             "500":
                 description: for unknown or unanticipated issues.
 /v1/command/{id}:
     displayName: Command Resource (by id)
-    description: Example - http://localhost:48081/api/v1/command/57bb3195555e5218873e5a1a
+    description: Example - http://localhost:48081/api/v1/command/47237c46-3f03-4dc5-a3c1-84d7420d9903
     uriParameters:
         id:
             displayName: id
@@ -1881,7 +1881,7 @@ schemas:
                 body:
                     application/json:
                         schema: command
-                        example: '{"id":"57bb3195555e5218873e5a1a","created":1471885717486,"modified":1471885944737,"origin":1471806386919,"name":"cooling point","get":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]},"put":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}],"parameterNames":["coolingpoint"]}}'
+                        example: '{"id":"47237c46-3f03-4dc5-a3c1-84d7420d9903","created":1471885717486,"modified":1471885944737,"origin":1471806386919,"name":"cooling point","get":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]},"put":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}],"parameterNames":["coolingpoint"]}}'
             "404":
                 description: if no command with the provided id is found.
             "500":
@@ -1904,7 +1904,7 @@ schemas:
                 body:
                     application/json:
                         schema: command
-                        example: '[{"id":"57bb3195555e5218873e5a1a","created":1471885717486,"modified":1471885944737,"origin":1471806386919,"name":"cooling point","get":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]},"put":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}],"parameterNames":["coolingpoint"]}}]'
+                        example: '[{"id":"47237c46-3f03-4dc5-a3c1-84d7420d9903","created":1471885717486,"modified":1471885944737,"origin":1471806386919,"name":"cooling point","get":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]},"put":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}],"parameterNames":["coolingpoint"]}}]'
             "400":
                 description: for malformed or unparsable requests
             "500":
@@ -1921,14 +1921,14 @@ schemas:
                 body:
                     application/json:
                         schema: command
-                        example: '[{"id":"57bb3195555e5218873e5a1a","created":1471885717486,"modified":1471885717486,"origin":1471806386919,"name":"cooling point","get":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]},"put":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}],"parameterNames":["coolingpoint"]}}]'
+                        example: '[{"id":"47237c46-3f03-4dc5-a3c1-84d7420d9903","created":1471885717486,"modified":1471885717486,"origin":1471806386919,"name":"cooling point","get":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]},"put":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}],"parameterNames":["coolingpoint"]}}]'
             "413":
                 description: if the number returned exceeds the max limit.
             "500":
                 description: for unknown or unanticipated errors
 /v1/command/device/{id}:
     displayName: Command Resource (by device id)
-    description: Example - http://localhost:48081/api/v1/command/device/57bb3195555e5218873e5a1a
+    description: Example - http://localhost:48081/api/v1/command/device/47237c46-3f03-4dc5-a3c1-84d7420d9903
     uriParameters:
         id:
             displayName: id
@@ -1944,7 +1944,7 @@ schemas:
                 body:
                     application/json:
                         schema: command
-                        example: '{"id":"57bb3195555e5218873e5a1a","created":1471885717486,"modified":1471885944737,"origin":1471806386919,"name":"cooling point","get":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]},"put":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}],"parameterNames":["coolingpoint"]}}'
+                        example: '{"id":"47237c46-3f03-4dc5-a3c1-84d7420d9903","created":1471885717486,"modified":1471885944737,"origin":1471806386919,"name":"cooling point","get":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}]},"put":{"path":"/cooling","responses":[{"code":"200","description":"ok","expectedValues":["temperature"]}],"parameterNames":["coolingpoint"]}}'
             "404":
                 description: if no device exists for the provided id.
             "500":
