@@ -171,27 +171,29 @@ docker_sys_mgmt_agent:
 		.
 
 docker_security_secrets_setup:
+	# TODO: split this up and rename it when security-secrets-setup is a 
+	# different container
 	docker build \
 		-f cmd/security-secrets-setup/Dockerfile \
 		--label "git_sha=$(GIT_SHA)" \
-		-t edgexfoundry/docker-edgex-vault:$(GIT_SHA) \
-		-t edgexfoundry/docker-edgex-vault:$(DOCKER_TAG) \
+		-t edgexfoundry/docker-edgex-secret-store-go:$(GIT_SHA) \
+		-t edgexfoundry/docker-edgex-secret-store-go:$(DOCKER_TAG) \
 		.
 
 docker_security_proxy_setup:
 	docker build \
 		-f cmd/security-proxy-setup/Dockerfile \
 		--label "git_sha=$(GIT_SHA)" \
-		-t edgexfoundry/docker-edgex-proxy-go:$(GIT_SHA) \
-		-t edgexfoundry/docker-edgex-proxy-go:$(DOCKER_TAG) \
+		-t edgexfoundry/docker-edgex-security-proxy-setup-go:$(GIT_SHA) \
+		-t edgexfoundry/docker-edgex-security-proxy-setup-go:$(DOCKER_TAG) \
 		.
 
 docker_security_secretstore_setup:
 		docker build \
 		-f cmd/security-secretstore-setup/Dockerfile \
 		--label "git_sha=$(GIT_SHA)" \
-		-t edgexfoundry/docker-edgex-vault-worker-go:$(GIT_SHA) \
-		-t edgexfoundry/docker-edgex-vault-worker-go:$(DOCKER_TAG) \
+		-t edgexfoundry/docker-edgex-security-secretstore-setup-go:$(GIT_SHA) \
+		-t edgexfoundry/docker-edgex-security-secretstore-setup-go:$(DOCKER_TAG) \
 		.
 
 raml_verify:

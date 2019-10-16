@@ -49,9 +49,9 @@ Path = '/v1/secrets/edgex/export-client/'
 Protocol = 'http'
 RootCaCertPath = '/vault/config/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem'
 ServerName = 'edgex-vault'
+TokenFile = '/vault/config/assets/resp-init.json'
   [SecretStore.Authentication]
   AuthType = 'X-Vault-Token'
-  AuthToken= 'edgex'
 
 [Startup]
 Duration = 30

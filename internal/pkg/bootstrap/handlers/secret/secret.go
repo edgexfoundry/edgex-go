@@ -21,7 +21,11 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
+	"github.com/edgexfoundry/edgex-go/internal/security/authtokenloader"
+	"github.com/edgexfoundry/edgex-go/internal/security/fileioperformer"
+
 	"github.com/edgexfoundry/go-mod-secrets/pkg"
 
 	"github.com/edgexfoundry/go-mod-secrets/pkg/providers/vault"
@@ -48,8 +52,13 @@ func BootstrapHandler(
 	}
 
 	// attempt to create a new secret client
-	config := container.ConfigurationFrom(dic.Get)
-	secretClient, err := vault.NewSecretClient(config.GetBootstrap().SecretStore)
+	configuration := container.ConfigurationFrom(dic.Get)
+	scc, err := getSecretConfig(configuration.GetBootstrap().SecretStore)
+	if err != nil {
+		return false
+	}
+
+	secretClient, err := vault.NewSecretClient(scc)
 
 	var result *pkg.SecretClient
 	if err == nil {
@@ -62,4 +71,35 @@ func BootstrapHandler(
 	})
 
 	return err == nil
+}
+
+// getSecretConfig creates a SecretConfig based on the SecretStoreInfo configuration properties.
+// If a tokenfile is present it will override the Authentication.AuthToken value.
+func getSecretConfig(secretStoreInfo config.SecretStoreInfo) (vault.SecretConfig, error) {
+	secretConfig := vault.SecretConfig{
+		Host:           secretStoreInfo.Host,
+		Port:           secretStoreInfo.Port,
+		Path:           secretStoreInfo.Path,
+		Protocol:       secretStoreInfo.Protocol,
+		Namespace:      secretStoreInfo.Namespace,
+		RootCaCertPath: secretStoreInfo.RootCaCertPath,
+		ServerName:     secretStoreInfo.ServerName,
+		Authentication: secretStoreInfo.Authentication,
+	}
+
+	if secretStoreInfo.TokenFile == "" {
+		return secretConfig, nil
+	}
+
+	fileIoPerformer := fileioperformer.NewDefaultFileIoPerformer()
+	authTokenLoader := authtokenloader.NewAuthTokenLoader(fileIoPerformer)
+
+	token, err := authTokenLoader.Load(secretStoreInfo.TokenFile)
+	if err != nil {
+		return secretConfig, err
+	}
+
+	secretConfig.Authentication.AuthToken = token
+
+	return secretConfig, nil
 }

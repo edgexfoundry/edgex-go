@@ -16,6 +16,7 @@ package config
 import (
 	"fmt"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
+	"github.com/edgexfoundry/go-mod-secrets/pkg/providers/vault"
 )
 
 func ListDefaultServices() map[string]string {
@@ -185,4 +186,11 @@ type NotificationInfo struct {
 	PostDeviceChanges bool
 	Sender            string
 	Slug              string
+}
+
+// SecretStoreInfo encapsulates configuration properties used to create a SecretClient.
+type SecretStoreInfo struct {
+	vault.SecretConfig
+	// TokenFile provides a location to a token file.
+	TokenFile string
 }

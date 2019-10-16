@@ -14,8 +14,6 @@
 package distro
 
 import (
-	"github.com/edgexfoundry/go-mod-secrets/pkg/providers/vault"
-
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 )
@@ -29,7 +27,7 @@ type ConfigurationStruct struct {
 	AnalyticsQueue config.MessageQueueInfo
 	Registry       config.RegistryInfo
 	Service        config.ServiceInfo
-	SecretStore    vault.SecretConfig
+	SecretStore    config.SecretStoreInfo
 	Startup        config.StartupInfo
 }
 
