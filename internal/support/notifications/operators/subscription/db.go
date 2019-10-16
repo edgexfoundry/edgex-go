@@ -34,3 +34,9 @@ type SubscriptionDeleter interface {
 	DeleteSubscriptionById(id string) error
 	DeleteSubscriptionBySlug(id string) error
 }
+
+// SubscriptionUpdater updates subscriptions.
+type SubscriptionUpdater interface {
+	UpdateSubscription(s contract.Subscription) error
+	SubscriptionLoader
+}
