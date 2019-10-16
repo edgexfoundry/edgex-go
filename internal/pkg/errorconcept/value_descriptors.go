@@ -25,7 +25,8 @@ var ValueDescriptors valueDescriptorsErrorConcept
 // ValueDescriptorsErrorConcept represents the accessor for the value-descriptor-specific error concepts
 type valueDescriptorsErrorConcept struct {
 	DuplicateName valueDescriptorDuplicateName
-	InUse         valueDescriptorsInUse
+	SingleInUse   valueDescriptorInUse
+	MultipleInUse valueDescriptorsInUse
 	Invalid       valueDescriptorInvalid
 	LimitExceeded valueDescriptorLimitExceeded
 	NotFound      valueDescriptorNotFound
@@ -44,6 +45,21 @@ func (r valueDescriptorDuplicateName) isA(err error) bool {
 }
 
 func (r valueDescriptorDuplicateName) message(err error) string {
+	return err.Error()
+}
+
+type valueDescriptorInUse struct{}
+
+func (r valueDescriptorInUse) httpErrorCode() int {
+	return http.StatusConflict
+}
+
+func (r valueDescriptorInUse) isA(err error) bool {
+	_, ok := err.(errors.ErrValueDescriptorInUse)
+	return ok
+}
+
+func (r valueDescriptorInUse) message(err error) string {
 	return err.Error()
 }
 

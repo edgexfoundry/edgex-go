@@ -1119,7 +1119,8 @@ func valueDescriptorHandler(w http.ResponseWriter, r *http.Request) {
 				w,
 				err,
 				[]errorconcept.ErrorConceptType{
-					errorconcept.ValueDescriptors.InUse,
+					errorconcept.ValueDescriptors.SingleInUse,
+					errorconcept.ValueDescriptors.MultipleInUse,
 					errorconcept.ValueDescriptors.DuplicateName,
 				},
 				errorconcept.Default.InternalServerError)
@@ -1150,7 +1151,8 @@ func valueDescriptorHandler(w http.ResponseWriter, r *http.Request) {
 				[]errorconcept.ErrorConceptType{
 					errorconcept.CoreData.DBNotFound,
 					errorconcept.ValueDescriptors.Invalid,
-					errorconcept.ValueDescriptors.InUse,
+					errorconcept.ValueDescriptors.SingleInUse,
+					errorconcept.ValueDescriptors.MultipleInUse,
 				},
 				errorconcept.Default.InternalServerError)
 			return
@@ -1180,7 +1182,8 @@ func deleteValueDescriptorByIdHandler(w http.ResponseWriter, r *http.Request) {
 			[]errorconcept.ErrorConceptType{
 				errorconcept.CoreData.DBNotFound,
 				errorconcept.ValueDescriptors.Invalid,
-				errorconcept.ValueDescriptors.InUse,
+				errorconcept.ValueDescriptors.SingleInUse,
+				errorconcept.ValueDescriptors.MultipleInUse,
 				errorconcept.Common.InvalidID,
 			},
 			errorconcept.Default.InternalServerError)
@@ -1226,7 +1229,8 @@ func valueDescriptorByNameHandler(w http.ResponseWriter, r *http.Request) {
 				[]errorconcept.ErrorConceptType{
 					errorconcept.CoreData.DBNotFound,
 					errorconcept.ValueDescriptors.Invalid,
-					errorconcept.ValueDescriptors.InUse,
+					errorconcept.ValueDescriptors.SingleInUse,
+					errorconcept.ValueDescriptors.MultipleInUse,
 				},
 				errorconcept.Default.InternalServerError)
 			return
