@@ -20,9 +20,13 @@ import (
 	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers/database"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers/httpserver"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers/message"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers/secret"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler"
@@ -31,7 +35,7 @@ import (
 )
 
 func main() {
-	startupTimer := startup.NewStartUpTimer(1, internal.BootTimeoutDefault)
+	startupTimer := startup.NewStartUpTimer(internal.BootRetrySecondsDefault, internal.BootTimeoutSecondsDefault)
 	var useRegistry bool
 	var configDir, profileDir string
 
@@ -44,7 +48,7 @@ func main() {
 	flag.Usage = usage.HelpCallback
 	flag.Parse()
 
-	httpServer := handlers.NewServerBootstrap(scheduler.LoadRestRoutes())
+	httpServer := httpserver.NewBootstrap(scheduler.LoadRestRoutes())
 	bootstrap.Run(
 		configDir,
 		profileDir,
@@ -53,11 +57,13 @@ func main() {
 		clients.SupportSchedulerServiceKey,
 		scheduler.Configuration,
 		startupTimer,
+		di.NewContainer(di.ServiceConstructorMap{}),
 		[]interfaces.BootstrapHandler{
-			handlers.SecretClientBootstrapHandler,
-			scheduler.NewServiceInit(&httpServer).BootstrapHandler,
+			secret.BootstrapHandler,
+			database.NewDatabase(&httpServer, scheduler.Configuration).BootstrapHandler,
+			scheduler.BootstrapHandler,
 			telemetry.BootstrapHandler,
-			httpServer.Handler,
-			handlers.NewStartMessage(clients.SupportSchedulerServiceKey, edgex.Version).Handler,
+			httpServer.BootstrapHandler,
+			message.NewBootstrap(clients.SupportSchedulerServiceKey, edgex.Version).BootstrapHandler,
 		})
 }

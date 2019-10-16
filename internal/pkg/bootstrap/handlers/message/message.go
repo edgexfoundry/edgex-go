@@ -12,18 +12,16 @@
  * the License.
  *******************************************************************************/
 
-package handlers
+package message
 
 import (
 	"context"
 	"fmt"
 	"sync"
 
-	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/interfaces"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
-
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-	"github.com/edgexfoundry/go-mod-registry/registry"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 )
 
 // StartMessage contains references to dependencies required by the start message handler.
@@ -32,28 +30,27 @@ type StartMessage struct {
 	version    string
 }
 
-// NewStartMessage is a factory method that returns an initialized StartMessage receiver struct.
-func NewStartMessage(serviceKey, version string) StartMessage {
+// NewBootstrap is a factory method that returns an initialized StartMessage receiver struct.
+func NewBootstrap(serviceKey, version string) StartMessage {
 	return StartMessage{
 		serviceKey: serviceKey,
 		version:    version,
 	}
 }
 
-// Handler fulfills the BootstrapHandler contract.  It creates no go routines.  It logs a "standard" set of messages
-// when the service first starts up successfully.
-func (h StartMessage) Handler(
+// BootstrapHandler fulfills the BootstrapHandler contract.  It creates no go routines.  It logs a "standard" set of
+// messages when the service first starts up successfully.
+func (h StartMessage) BootstrapHandler(
 	wg *sync.WaitGroup,
 	context context.Context,
 	startupTimer startup.Timer,
-	config interfaces.Configuration,
-	loggingClient logger.LoggingClient,
-	registryClient registry.Client) bool {
+	dic *di.Container) bool {
 
+	loggingClient := container.LoggingClientFrom(dic.Get)
 	loggingClient.Info("Service dependencies resolved...")
 	loggingClient.Info(fmt.Sprintf("Starting %s %s ", h.serviceKey, h.version))
 
-	bootstrapConfig := config.GetBootstrap()
+	bootstrapConfig := container.ConfigurationFrom(dic.Get).GetBootstrap()
 	if len(bootstrapConfig.Service.StartupMsg) > 0 {
 		loggingClient.Info(bootstrapConfig.Service.StartupMsg)
 	}

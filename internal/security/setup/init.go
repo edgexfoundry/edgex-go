@@ -28,7 +28,7 @@ import (
 var Configuration *ConfigurationStruct
 var LoggingClient logger.LoggingClient
 
-func Init() error {
+func Init(configDir string) error {
 	// Unfortunately I have to do this because of utilization of the LoggingClient in config.LoadFromFile below.
 	// That function is expecting a LoggingClient instance. Right now, it appears that is only set via global var in that package
 	// TODO: This doesn't make any sense. Review this usage as applicable to all other service init routines.
@@ -37,7 +37,7 @@ func Init() error {
 	config.LoggingClient = lc
 
 	var err error
-	Configuration, err = initializeConfiguration(false, "", "") //These values are defaults. Preserved variables for possible later extension
+	Configuration, err = initializeConfiguration(false, configDir, "") //These values are defaults. Preserved variables for possible later extension
 	if err != nil {
 		lc.Error(err.Error())
 		return err

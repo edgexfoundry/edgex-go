@@ -178,6 +178,25 @@ func checkIfFileExists(fileName string) bool {
 	return !fileInfo.IsDir()
 }
 
+func checkDirExistsAndIsWritable(path string) (exists bool, isWritable bool) {
+	exists = false
+	isWritable = false
+
+	fileInfo, statErr := os.Stat(path)
+	if os.IsNotExist(statErr) {
+		return
+	}
+
+	exists = fileInfo.IsDir()
+
+	fileMode := uint32(fileInfo.Mode())
+	writableMask := uint32(1 << 7)
+	if fileMode&writableMask != 0 {
+		isWritable = true
+	}
+	return
+}
+
 func writeSentinel(sentinelFilename string) error {
 	timestamp := []byte(strconv.FormatInt(time.Now().Unix(), 10))
 	return ioutil.WriteFile(sentinelFilename, timestamp, 0400)
@@ -214,20 +233,73 @@ func markComplete(dirPath string) error {
 	return nil
 }
 
-func getXdgRuntimeDir() string {
+func getWorkDir() (string, error) {
+	var workDir string
+	var err error
+
 	if xdgRuntimeDir, ok := os.LookupEnv(envXdgRuntimeDir); ok {
-		return xdgRuntimeDir
+		workDir = filepath.Join(xdgRuntimeDir, pkiInitBaseDir)
+	} else if setup.Configuration.SecretsSetup.WorkDir != "" {
+		workDir, err = filepath.Abs(setup.Configuration.SecretsSetup.WorkDir)
+		if err != nil {
+			return "", err
+		}
+	} else {
+		workDir = filepath.Join(defaultWorkDir, pkiInitBaseDir)
 	}
-	// if $XDG_RUNTIME_DIR is undefined, default to /tmp
-	return defaultXdgRuntimeDir
+
+	return workDir, nil
 }
 
-func getPkiCacheDirEnv() string {
-	pkiCacheDir := os.Getenv(envPkiCache)
-	if pkiCacheDir == "" {
-		return defaultPkiCacheDir
+func getCertConfigDir() (string, error) {
+	var certConfigDir string
+	if setup.Configuration.SecretsSetup.CertConfigDir != "" {
+		certConfigDir = setup.Configuration.SecretsSetup.CertConfigDir
+
+		// we only read files from CertConfigDir, don't care if it's writable
+		if exist, _ := checkDirExistsAndIsWritable(certConfigDir); !exist {
+			return "", fmt.Errorf("CertConfigDir from config file does not exist in: %s", certConfigDir)
+		}
+
+		return certConfigDir, nil
 	}
-	return pkiCacheDir
+
+	return "", errors.New("Directory for certificate configuration files not configured")
+}
+
+func getCacheDir() (string, error) {
+	cacheDir := defaultPkiCacheDir
+
+	if setup.Configuration.SecretsSetup.CacheDir != "" {
+		cacheDir = setup.Configuration.SecretsSetup.CacheDir
+		exist, isWritable := checkDirExistsAndIsWritable(cacheDir)
+		if !exist {
+			return "", fmt.Errorf("CacheDir, %s, from config file does not exist", cacheDir)
+		}
+
+		if !isWritable {
+			return "", fmt.Errorf("CacheDir, %s, from config file is not writable", cacheDir)
+		}
+	}
+
+	return cacheDir, nil
+}
+
+func getDeployDir() (string, error) {
+	deployDir := defaultPkiDeployDir
+
+	if setup.Configuration.SecretsSetup.DeployDir != "" {
+		deployDir = setup.Configuration.SecretsSetup.DeployDir
+		exist, isWritable := checkDirExistsAndIsWritable(deployDir)
+		if !exist {
+			return "", fmt.Errorf("DeployDir, %s, from config file does not exist", deployDir)
+		}
+		if !isWritable {
+			return "", fmt.Errorf("DeployDir, %s, from config file is not writable", deployDir)
+		}
+	}
+
+	return deployDir, nil
 }
 
 // GenTLSAssets generates the TLS assets based on the JSON configuration file

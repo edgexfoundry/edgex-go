@@ -17,7 +17,9 @@ package errorconcept
 import (
 	"net/http"
 
-	"github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
+	data "github.com/edgexfoundry/edgex-go/internal/core/data/errors"
+	metadata "github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
@@ -28,9 +30,11 @@ type commonErrorConcept struct {
 	ContractInvalid_StatusBadRequest        contractInvalid_StatusBadRequest
 	DeleteError                             deleteError
 	DuplicateName                           duplicateName
+	InvalidID                               invalidID
 	InvalidRequest_StatusBadRequest         invalidRequest_BadRequest
 	InvalidRequest_StatusServiceUnavailable invalidRequest_StatusServiceUnavailable
 	ItemNotFound                            itemNotFound
+	JsonDecoding                            jsonDecoding
 	LimitExceeded                           errLimitExceeded
 	RetrieveError_StatusInternalServer      retrieveError_StatusInternalServer
 	RetrieveError_StatusServiceUnavailable  retrieveError_ServiceUnavailable
@@ -74,11 +78,26 @@ func (r duplicateName) httpErrorCode() int {
 }
 
 func (r duplicateName) isA(err error) bool {
-	_, ok := err.(errors.ErrDuplicateName)
+	_, ok := err.(metadata.ErrDuplicateName)
 	return ok
 }
 
 func (r duplicateName) message(err error) string {
+	return err.Error()
+}
+
+type invalidID struct{}
+
+func (r invalidID) httpErrorCode() int {
+	return http.StatusBadRequest
+}
+
+func (r invalidID) isA(err error) bool {
+	_, ok := err.(data.ErrInvalidId)
+	return ok
+}
+
+func (r invalidID) message(err error) string {
 	return err.Error()
 }
 
@@ -117,11 +136,26 @@ func (r itemNotFound) httpErrorCode() int {
 }
 
 func (r itemNotFound) isA(err error) bool {
-	_, ok := err.(errors.ErrItemNotFound)
+	_, ok := err.(metadata.ErrItemNotFound)
 	return ok
 }
 
 func (r itemNotFound) message(err error) string {
+	return err.Error()
+}
+
+type jsonDecoding struct{}
+
+func (r jsonDecoding) httpErrorCode() int {
+	return http.StatusBadRequest
+}
+
+func (r jsonDecoding) isA(err error) bool {
+	_, ok := err.(data.ErrJsonDecoding)
+	return ok
+}
+
+func (r jsonDecoding) message(err error) string {
 	return err.Error()
 }
 
@@ -132,7 +166,7 @@ func (r errLimitExceeded) httpErrorCode() int {
 }
 
 func (r errLimitExceeded) isA(err error) bool {
-	_, ok := err.(errors.ErrLimitExceeded)
+	_, ok := err.(metadata.ErrLimitExceeded)
 	return ok
 }
 

@@ -21,110 +21,32 @@ import (
 	"sync"
 	"time"
 
-	bootstrap "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/interfaces"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-	"github.com/edgexfoundry/go-mod-registry/registry"
-
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db/redis"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/interfaces"
+
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
 
+// Global variables
 var Configuration = &ConfigurationStruct{}
 var LoggingClient logger.LoggingClient
 var dbClient interfaces.DBClient
 var scClient interfaces.SchedulerQueueClient
 var ticker *time.Ticker
 
-type server interface {
-	IsRunning() bool
-}
-
-type ServiceInit struct {
-	server server
-}
-
-func NewServiceInit(server server) ServiceInit {
-	return ServiceInit{
-		server: server,
-	}
-}
-
-// Return the dbClient interface
-func (s ServiceInit) newDBClient(dbType string) (interfaces.DBClient, error) {
-	switch dbType {
-	case db.MongoDB:
-		dbConfig := db.Configuration{
-			Host:         Configuration.Databases["Primary"].Host,
-			Port:         Configuration.Databases["Primary"].Port,
-			Timeout:      Configuration.Databases["Primary"].Timeout,
-			DatabaseName: Configuration.Databases["Primary"].Name,
-			Username:     Configuration.Databases["Primary"].Username,
-			Password:     Configuration.Databases["Primary"].Password,
-		}
-		return mongo.NewClient(dbConfig)
-	case db.RedisDB:
-		dbConfig := db.Configuration{
-			Host: Configuration.Databases["Primary"].Host,
-			Port: Configuration.Databases["Primary"].Port,
-		}
-		return redis.NewClient(dbConfig, LoggingClient) //TODO: Verify this also connects to Redis
-	default:
-		return nil, db.ErrUnsupportedDatabase
-	}
-}
-
-func (s ServiceInit) BootstrapHandler(
-	wg *sync.WaitGroup,
-	ctx context.Context,
-	startupTimer startup.Timer,
-	config bootstrap.Configuration,
-	logging logger.LoggingClient,
-	registry registry.Client) bool {
-
+// BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the scheduler service.
+func BootstrapHandler(wg *sync.WaitGroup, ctx context.Context, startupTimer startup.Timer, dic *di.Container) bool {
 	// update global variables.
-	LoggingClient = logging
-
-	// initialize database.
-	for startupTimer.HasNotElapsed() {
-		var err error
-		dbClient, err = s.newDBClient(Configuration.Databases["Primary"].Type)
-		if err == nil {
-			break
-		}
-		dbClient = nil
-		LoggingClient.Warn(fmt.Sprintf("couldn't create database client: %v", err.Error()))
-		startupTimer.SleepForInterval()
-	}
-
-	if dbClient == nil {
-		return false
-	}
-
-	LoggingClient.Info("Database connected")
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-
-		<-ctx.Done()
-		for {
-			// wait for httpServer to stop running (e.g. handling requests) before closing the database connection.
-			if s.server.IsRunning() == false {
-				dbClient.CloseSession()
-				break
-			}
-			time.Sleep(time.Second)
-		}
-		LoggingClient.Info("Database disconnected")
-	}()
+	LoggingClient = container.LoggingClientFrom(dic.Get)
+	dbClient = container.DBClientFrom(dic.Get)
 
 	scClient = NewSchedulerQueueClient()
 
 	// Initialize the ticker time
 	if err := LoadScheduler(); err != nil {
-		logging.Error(fmt.Sprintf("Failed to load schedules and events %s", err.Error()))
+		LoggingClient.Error(fmt.Sprintf("Failed to load schedules and events %s", err.Error()))
 		return false
 	}
 

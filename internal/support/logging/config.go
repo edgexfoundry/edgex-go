@@ -22,7 +22,7 @@ import (
 
 type ConfigurationStruct struct {
 	Writable    WritableInfo
-	Databases   map[string]config.DatabaseInfo
+	Databases   config.DatabaseInfo
 	Logging     config.LoggingInfo
 	Registry    config.RegistryInfo
 	Service     config.ServiceInfo
@@ -43,7 +43,7 @@ func (c *ConfigurationStruct) UpdateFromRaw(rawConfig interface{}) bool {
 		if configuration.Service.Port == 0 {
 			return false
 		}
-		c = configuration
+		*c = *configuration
 	}
 	return ok
 }
@@ -87,4 +87,9 @@ func (c *ConfigurationStruct) GetLogLevel() string {
 // SetLogLevel updates the log level in the ConfigurationStruct.
 func (c *ConfigurationStruct) SetRegistryInfo(registryInfo config.RegistryInfo) {
 	c.Registry = registryInfo
+}
+
+// GetDatabaseInfo returns a database information map.
+func (c *ConfigurationStruct) GetDatabaseInfo() config.DatabaseInfo {
+	return c.Databases
 }

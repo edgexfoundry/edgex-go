@@ -18,15 +18,13 @@ import (
 	"context"
 	"fmt"
 	"sync"
-	"time"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/data/interfaces"
-	bootstrap "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/interfaces"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db/redis"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/endpoint"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
@@ -35,8 +33,6 @@ import (
 
 	"github.com/edgexfoundry/go-mod-messaging/messaging"
 	msgTypes "github.com/edgexfoundry/go-mod-messaging/pkg/types"
-
-	"github.com/edgexfoundry/go-mod-registry/registry"
 )
 
 // Global variables
@@ -50,41 +46,36 @@ var msgClient messaging.MessageClient
 var mdc metadata.DeviceClient
 var msc metadata.DeviceServiceClient
 
-type server interface {
-	IsRunning() bool
-}
+var httpErrorHandler errorconcept.ErrorHandler
 
-type ServiceInit struct {
-	server server
-}
+// BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the data service.
+func BootstrapHandler(wg *sync.WaitGroup, ctx context.Context, startupTimer startup.Timer, dic *di.Container) bool {
+	// update global variables.
+	LoggingClient = container.LoggingClientFrom(dic.Get)
+	dbClient = container.DBClientFrom(dic.Get)
 
-func NewServiceInit(server server) ServiceInit {
-	return ServiceInit{
-		server: server,
-	}
-}
+	httpErrorHandler = errorconcept.NewErrorHandler(LoggingClient)
 
-func (s ServiceInit) initializeClients(useRegistry bool, registry registry.Client) {
-	// Create metadata clients
+	// initialize clients required by service.
+	registryClient := container.RegistryFrom(dic.Get)
 	mdc = metadata.NewDeviceClient(
 		types.EndpointParams{
 			ServiceKey:  clients.CoreMetaDataServiceKey,
 			Path:        clients.ApiDeviceRoute,
-			UseRegistry: useRegistry,
+			UseRegistry: registryClient != nil,
 			Url:         Configuration.Clients["Metadata"].Url() + clients.ApiDeviceRoute,
 			Interval:    Configuration.Service.ClientMonitor,
 		},
-		endpoint.Endpoint{RegistryClient: &registry})
-
+		endpoint.Endpoint{RegistryClient: &registryClient})
 	msc = metadata.NewDeviceServiceClient(
 		types.EndpointParams{
 			ServiceKey:  clients.CoreMetaDataServiceKey,
 			Path:        clients.ApiDeviceServiceRoute,
-			UseRegistry: useRegistry,
+			UseRegistry: registryClient != nil,
 			Url:         Configuration.Clients["Metadata"].Url() + clients.ApiDeviceRoute,
 			Interval:    Configuration.Service.ClientMonitor,
 		},
-		endpoint.Endpoint{RegistryClient: &registry})
+		endpoint.Endpoint{RegistryClient: &registryClient})
 
 	// Create the messaging client
 	var err error
@@ -101,83 +92,6 @@ func (s ServiceInit) initializeClients(useRegistry bool, registry registry.Clien
 	if err != nil {
 		LoggingClient.Error(fmt.Sprintf("failed to create messaging client: %s", err.Error()))
 	}
-}
-
-// Return the dbClient interface
-func (s ServiceInit) newDBClient(dbType string) (interfaces.DBClient, error) {
-	switch dbType {
-	case db.MongoDB:
-		dbConfig := db.Configuration{
-			Host:         Configuration.Databases["Primary"].Host,
-			Port:         Configuration.Databases["Primary"].Port,
-			Timeout:      Configuration.Databases["Primary"].Timeout,
-			DatabaseName: Configuration.Databases["Primary"].Name,
-			Username:     Configuration.Databases["Primary"].Username,
-			Password:     Configuration.Databases["Primary"].Password,
-		}
-		return mongo.NewClient(dbConfig)
-	case db.RedisDB:
-		dbConfig := db.Configuration{
-			Host: Configuration.Databases["Primary"].Host,
-			Port: Configuration.Databases["Primary"].Port,
-		}
-		redisClient, err := redis.NewCoreDataClient(dbConfig, LoggingClient) // TODO: Verify this also connects to Redis
-		if err != nil {
-			return nil, err
-		}
-
-		return redisClient, nil
-	default:
-		return nil, db.ErrUnsupportedDatabase
-	}
-}
-
-func (s ServiceInit) BootstrapHandler(
-	wg *sync.WaitGroup,
-	ctx context.Context,
-	startupTimer startup.Timer,
-	config bootstrap.Configuration,
-	logging logger.LoggingClient,
-	registry registry.Client) bool {
-
-	// update global variables.
-	LoggingClient = logging
-
-	// initialize clients required by service.
-	s.initializeClients(registry != nil, registry)
-
-	// initialize database.
-	for startupTimer.HasNotElapsed() {
-		var err error
-		dbClient, err = s.newDBClient(Configuration.Databases["Primary"].Type)
-		if err == nil {
-			break
-		}
-		dbClient = nil
-		LoggingClient.Warn(fmt.Sprintf("couldn't create database client: %v", err.Error()))
-		startupTimer.SleepForInterval()
-	}
-
-	if dbClient == nil {
-		return false
-	}
-
-	LoggingClient.Info("Database connected")
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-
-		<-ctx.Done()
-		for {
-			// wait for httpServer to stop running (e.g. handling requests) before closing the database connection.
-			if s.server.IsRunning() == false {
-				dbClient.CloseSession()
-				break
-			}
-			time.Sleep(time.Second)
-		}
-		LoggingClient.Info("Database disconnected")
-	}()
 
 	// initialize event handlers
 	chEvents = make(chan interface{}, 100)

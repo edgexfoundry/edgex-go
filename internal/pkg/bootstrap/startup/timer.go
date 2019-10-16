@@ -27,8 +27,8 @@ type Timer struct {
 func NewStartUpTimer(retryIntervalInSeconds, maxWaitInSeconds int) Timer {
 	return Timer{
 		startTime: time.Now(),
-		duration:  time.Millisecond * time.Duration(maxWaitInSeconds),
-		interval:  time.Millisecond * time.Duration(retryIntervalInSeconds),
+		duration:  time.Second * time.Duration(maxWaitInSeconds),
+		interval:  time.Second * time.Duration(retryIntervalInSeconds),
 	}
 }
 

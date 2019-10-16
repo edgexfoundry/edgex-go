@@ -19,10 +19,7 @@ import (
 	"sync"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
-
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-
-	"github.com/edgexfoundry/go-mod-registry/registry"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 )
 
 // BootstrapHandler defines the contract each bootstrap handler must fulfill.  Implementation returns true if the
@@ -31,6 +28,4 @@ type BootstrapHandler func(
 	wg *sync.WaitGroup,
 	context context.Context,
 	startupTimer startup.Timer,
-	config Configuration,
-	loggingClient logger.LoggingClient,
-	registryClient registry.Client) (success bool)
+	dic *di.Container) (success bool)

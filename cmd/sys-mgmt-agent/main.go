@@ -14,62 +14,28 @@
 package main
 
 import (
-	"context"
 	"flag"
-	"sync"
 
 	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers"
+	bootstrapContainer "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers/httpserver"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers/message"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers/secret"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent"
-	"github.com/edgexfoundry/edgex-go/internal/system/agent/direct"
-	"github.com/edgexfoundry/edgex-go/internal/system/agent/executor"
-	"github.com/edgexfoundry/edgex-go/internal/system/agent/getconfig"
-	agentInterfaces "github.com/edgexfoundry/edgex-go/internal/system/agent/interfaces"
-	"github.com/edgexfoundry/edgex-go/internal/system/agent/setconfig"
+	agentConfig "github.com/edgexfoundry/edgex-go/internal/system/agent/config"
+	"github.com/edgexfoundry/edgex-go/internal/system/agent/container"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-
-	"github.com/edgexfoundry/go-mod-registry/registry"
 )
 
-func httpServerBootstrapHandler(
-	wg *sync.WaitGroup,
-	ctx context.Context,
-	startupTimer startup.Timer,
-	config interfaces.Configuration,
-	logging logger.LoggingClient,
-	registry registry.Client) bool {
-
-	var metricsImpl agentInterfaces.Metrics
-	switch agent.Configuration.MetricsMechanism {
-	case direct.MetricsMechanism:
-		metricsImpl = direct.NewMetrics(logging, agent.GenClients, registry, agent.Configuration.Service.Protocol)
-	case executor.MetricsMechanism:
-		metricsImpl = executor.NewMetrics(executor.CommandExecutor, logging, agent.Configuration.ExecutorPath)
-	default:
-		logging.Error("the requested metrics mechanism is not supported")
-		return false
-	}
-
-	httpServer := handlers.NewServerBootstrap(
-		agent.LoadRestRoutes(
-			metricsImpl,
-			executor.NewOperations(executor.CommandExecutor, logging, agent.Configuration.ExecutorPath),
-			getconfig.New(
-				getconfig.NewExecutor(agent.GenClients, registry, logging, agent.Configuration.Service.Protocol),
-				logging),
-			setconfig.New(setconfig.NewExecutor(logging, agent.Configuration))))
-	return httpServer.Handler(wg, ctx, startupTimer, config, logging, registry)
-}
-
 func main() {
-	startupTimer := startup.NewStartUpTimer(1, internal.BootTimeoutDefault)
+	startupTimer := startup.NewStartUpTimer(internal.BootRetrySecondsDefault, internal.BootTimeoutSecondsDefault)
 
 	var useRegistry bool
 	var configDir, profileDir string
@@ -83,18 +49,29 @@ func main() {
 	flag.Usage = usage.HelpCallback
 	flag.Parse()
 
+	configuration := &agentConfig.ConfigurationStruct{}
+	dic := di.NewContainer(di.ServiceConstructorMap{
+		container.ConfigurationName: func(get di.Get) interface{} {
+			return configuration
+		},
+		bootstrapContainer.ConfigurationInterfaceName: func(get di.Get) interface{} {
+			return get(container.ConfigurationName)
+		},
+	})
+	httpServer := httpserver.NewBootstrap(agent.LoadRestRoutes(dic))
 	bootstrap.Run(
 		configDir,
 		profileDir,
 		internal.ConfigFileName,
 		useRegistry,
 		clients.SystemManagementAgentServiceKey,
-		agent.Configuration,
+		configuration,
 		startupTimer,
+		dic,
 		[]interfaces.BootstrapHandler{
-			handlers.SecretClientBootstrapHandler,
+			secret.BootstrapHandler,
 			agent.BootstrapHandler,
-			httpServerBootstrapHandler,
-			handlers.NewStartMessage(clients.SystemManagementAgentServiceKey, edgex.Version).Handler,
+			httpServer.BootstrapHandler,
+			message.NewBootstrap(clients.SystemManagementAgentServiceKey, edgex.Version).BootstrapHandler,
 		})
 }

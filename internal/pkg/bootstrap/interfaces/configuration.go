@@ -49,6 +49,6 @@ type Configuration interface {
 	// GetLogLevel returns the current ConfigurationStruct's log level.
 	GetLogLevel() string
 
-	// SetLogLevel updates the log level in the ConfigurationStruct.
+	// SetRegistryInfo updates the config.RegistryInfo field in the ConfigurationStruct.
 	SetRegistryInfo(registryInfo config.RegistryInfo)
 }

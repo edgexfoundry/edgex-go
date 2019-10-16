@@ -11,8 +11,9 @@ import (
 	"context"
 	"sync"
 
-	bootstrap "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/interfaces"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/endpoint"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
@@ -26,12 +27,14 @@ import (
 	"github.com/edgexfoundry/go-mod-registry/registry"
 )
 
+// Global variables
 var LoggingClient logger.LoggingClient
 var ec coredata.EventClient
 var Configuration = &ConfigurationStruct{}
 var messageErrors chan error
 var messageEnvelopes chan msgTypes.MessageEnvelope
 
+// initializeClients creates the clients required by the service.
 func initializeClients(useRegistry bool, registryClient registry.Client) (messaging.MessageClient, error) {
 	ec = coredata.NewEventClient(
 		types.EndpointParams{
@@ -55,28 +58,23 @@ func initializeClients(useRegistry bool, registryClient registry.Client) (messag
 		})
 }
 
-func BootstrapHandler(
-	wg *sync.WaitGroup,
-	ctx context.Context,
-	startupTimer startup.Timer,
-	config bootstrap.Configuration,
-	logging logger.LoggingClient,
-	registry registry.Client) bool {
-
+// BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the export-distro service.
+func BootstrapHandler(wg *sync.WaitGroup, ctx context.Context, startupTimer startup.Timer, dic *di.Container) bool {
 	// update global variables.
-	LoggingClient = logging
+	LoggingClient = container.LoggingClientFrom(dic.Get)
 
 	// initialize clients required by service.
-	messageClient, err := initializeClients(registry != nil, registry)
+	registryClient := container.RegistryFrom(dic.Get)
+	messageClient, err := initializeClients(registryClient != nil, registryClient)
 	if err != nil {
-		logging.Error("failed to create messaging client: " + err.Error())
+		LoggingClient.Error("failed to create messaging client: " + err.Error())
 		return false
 	}
 
 	// initialize Messaging
 	messageErrors, messageEnvelopes, err = initMessaging(messageClient)
 	if err != nil {
-		logging.Error(err.Error())
+		LoggingClient.Error(err.Error())
 		return false
 	}
 

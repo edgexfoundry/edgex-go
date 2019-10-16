@@ -30,6 +30,8 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/core/data/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/interfaces/mocks"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 )
@@ -68,6 +70,7 @@ func TestRestValueDescriptorsUsageHandler(t *testing.T) {
 	Configuration = &ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 10}}
 	defer func() { Configuration = &ConfigurationStruct{} }()
 	LoggingClient = logger.MockLogger{}
+	httpErrorHandler = errorconcept.NewErrorHandler(LoggingClient)
 
 	tests := []struct {
 		name           string
