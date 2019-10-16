@@ -27,6 +27,7 @@ type BootstrapConfiguration struct {
 	Registry    config.RegistryInfo
 	Logging     config.LoggingInfo
 	SecretStore vault.SecretConfig
+	Startup     config.StartupInfo
 }
 
 // Configuration interface provides an abstraction around a configuration struct.

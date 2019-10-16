@@ -10,3 +10,7 @@ WorkDir = "/run/edgex/secrets-setup"
 DeployDir = "/run/edgex/secrets"
 CacheDir = "/etc/edgex/pki"
 CertConfigDir = "./res"
+
+[Startup]
+Duration = 30
+Interval = 1
