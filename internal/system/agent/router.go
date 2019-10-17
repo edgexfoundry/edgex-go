@@ -67,9 +67,9 @@ func operationHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		LoggingClient.Error("error during decoding")
 		return
-	} else if o.Action == "" {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		LoggingClient.Error(err.Error())
+	} else if len(o.Services) == 0 || len(o.Action) == 0 {
+		http.Error(w, "incorrect or malformed body was passed in with the request", http.StatusBadRequest)
+		LoggingClient.Error("incorrect or malformed body was passed in with the request")
 		return
 	}
 
