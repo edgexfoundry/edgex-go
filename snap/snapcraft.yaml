@@ -1,5 +1,6 @@
 name: edgexfoundry
 base: core18
+type: app
 adopt-info: version
 summary: Open-source framework for IoT edge computing
 description: |
