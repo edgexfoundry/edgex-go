@@ -78,6 +78,10 @@ func main() {
 
 	//step 2: initialize the communications
 	req := secretstore.NewRequester(insecureSkipVerify)
+	if req == nil {
+		secretstore.LoggingClient.Error("unable to create http requester")
+		os.Exit(1)
+	}
 	vaultScheme := secretstore.Configuration.SecretService.Scheme
 	vaultHost := fmt.Sprintf("%s:%v", secretstore.Configuration.SecretService.Server, secretstore.Configuration.SecretService.Port)
 	intervalDuration := time.Duration(vaultInterval) * time.Second
@@ -92,7 +96,8 @@ func main() {
 		func() {
 			tokenFile, err := os.Open(absPath)
 			if err != nil {
-				secretstore.LoggingClient.Error(fmt.Sprintf("unable to open token file at %s%s", path, filename))
+				secretstore.LoggingClient.Error(fmt.Sprintf("unable to open token file at %s", absPath))
+				os.Exit(1)
 			}
 			defer tokenFile.Close()
 			sCode, _ := vc.HealthCheck()
@@ -158,8 +163,59 @@ func main() {
 	//Step 4:
 	//TODO: create vault access token for different roles
 
-	//step 5 :
-	//TODO: implement credential creation
+	// credential creation
+	gk := secretstore.NewGokeyGenerator(absPath)
+	secretstore.LoggingClient.Warn("WARNING: The gokey generator is a reference implementation for credential generation and the underlying libraries not been reviewed for cryptographic security. The user is encouraged to perform their own security investigation before deployment.")
+	cred := secretstore.NewCred(req, absPath, gk)
+	for dbname, info := range secretstore.Configuration.Databases {
+		service := info.Service
+		// generate credentials
+		password, err := cred.GeneratePassword(dbname)
+		if err != nil {
+			secretstore.LoggingClient.Error(fmt.Sprintf("failed to generate credential pair for service %s", service))
+			os.Exit(1)
+		}
+		pair := secretstore.UserPasswordPair{
+			User:     info.Username,
+			Password: password,
+		}
+
+		// add credentials to service path if specified and they're not already there
+		if len(service) != 0 {
+			servicePath := fmt.Sprintf("/v1/secret/edgex/%s/mongodb", service)
+			existing, err := cred.AlreadyInStore(servicePath)
+			if err != nil {
+				secretstore.LoggingClient.Error(err.Error())
+				os.Exit(1)
+			}
+			if !existing {
+				err = cred.UploadToStore(&pair, servicePath)
+				if err != nil {
+					secretstore.LoggingClient.Error(fmt.Sprintf("failed to upload credential pair for db %s on path %s", dbname, servicePath))
+					os.Exit(1)
+				}
+			} else {
+				secretstore.LoggingClient.Info(fmt.Sprintf("credentials for %s already present at path %s", dbname, servicePath))
+			}
+		}
+
+		mongoPath := fmt.Sprintf("/v1/secret/edgex/mongo/%s", dbname)
+		// add credentials to mongo path if they're not already there
+		existing, err := cred.AlreadyInStore(mongoPath)
+		if err != nil {
+			secretstore.LoggingClient.Error(err.Error())
+			os.Exit(1)
+		}
+		if !existing {
+			err = cred.UploadToStore(&pair, mongoPath)
+			if err != nil {
+				secretstore.LoggingClient.Error(fmt.Sprintf("failed to upload credential pair for db %s on path %s", dbname, mongoPath))
+				os.Exit(1)
+			}
+		} else {
+			secretstore.LoggingClient.Info(fmt.Sprintf("credentials for %s already present at path %s", dbname, mongoPath))
+		}
+	}
 
 	cert := secretstore.NewCerts(req, secretstore.Configuration.SecretService.CertPath, absPath)
 	existing, err := cert.AlreadyinStore()

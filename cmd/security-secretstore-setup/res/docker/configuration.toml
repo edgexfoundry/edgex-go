@@ -38,3 +38,48 @@ vaultsecretthreshold = 3
 [Startup]
 Duration = 30
 Interval = 1
+
+[Databases]
+  [Databases.admin]
+  Username = "admin"
+
+  [Databases.authorization]
+  Username = "admin"
+
+  [Databases.config]
+  Username = "admin"
+
+  [Databases.local]
+  Username = "admin"
+
+  [Databases.metadata]
+  Service = "metadata"
+  Username = "meta"
+
+  [Databases.coredata]
+  Service = "coredata"
+  Username = "core"
+
+  [Databases.rulesengine]
+  Service = "rulesengine"
+  Username = "rulesengine"
+
+  [Databases.notifications]
+  Service = "notifications"
+  Username = "notifications"
+
+  [Databases.scheduler]
+  Service = "scheduler"
+  Username = "scheduler"
+
+  [Databases.logging]
+  Service = "logging"
+  Username = "logging"
+
+  [Databases.exportclient]
+  Service = "exportclient"
+  Username = "exportclient"
+
+  [Databases.application-service]
+  Service = "appservice"
+  Username = "appservice"

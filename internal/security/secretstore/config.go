@@ -24,9 +24,15 @@ type ConfigurationStruct struct {
 	Writable      WritableInfo
 	Logging       config.LoggingInfo
 	SecretService secretstoreclient.SecretServiceInfo
+	Databases     map[string]Database
 }
 
 type WritableInfo struct {
 	LogLevel string
 	Title    string
+}
+
+type Database struct {
+	Username string
+	Service  string
 }
