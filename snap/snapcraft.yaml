@@ -1086,6 +1086,8 @@ parts:
       - libyaml-dev
       - luarocks
       - lua5.1
+      - build-essential
+      - autoconf
     stage-packages:
       - perl
       - luarocks
