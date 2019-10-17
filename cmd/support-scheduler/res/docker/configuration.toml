@@ -68,7 +68,7 @@ File = '/edgex/logs/edgex-support-scheduler.log'
 [SecretStore]
 Host = 'edgex-vault'
 Port = 8200
-Path = '/v1/secrets/edgex/support-scheduler/'
+Path = '/v1/secret/edgex/supportscheduler/'
 Protocol = 'http'
 RootCaCertPath = '/vault/config/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem'
 ServerName = 'edgex-vault'

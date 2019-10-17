@@ -80,7 +80,7 @@ File = './logs/edgex-sys-mgmt-agent.log'
 [SecretStore]
 Host = 'localhost'
 Port = 8200
-Path = '/v1/secrets/edgex/sys-mgmt-agent/'
+Path = '/v1/secret/edgex/sysmgmtagent/'
 Protocol = 'http'
   [SecretStore.Authentication]
   AuthType = 'X-Vault-Token'

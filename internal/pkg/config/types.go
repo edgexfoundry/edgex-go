@@ -15,6 +15,7 @@ package config
 
 import (
 	"fmt"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-secrets/pkg/providers/vault"
 )
@@ -111,15 +112,7 @@ func (m MessageQueueInfo) Uri() string {
 }
 
 // DatabaseInfo defines the parameters necessary for connecting to the desired persistence layer.
-type DatabaseInfo map[string]struct {
-	Type     string
-	Timeout  int
-	Host     string
-	Port     int
-	Username string
-	Password string
-	Name     string
-}
+type DatabaseInfo map[string]Database
 
 type IntervalInfo struct {
 	// Name of the schedule must be unique?
@@ -193,4 +186,19 @@ type SecretStoreInfo struct {
 	vault.SecretConfig
 	// TokenFile provides a location to a token file.
 	TokenFile string
+}
+
+type Database struct {
+	Credentials
+	Type    string
+	Timeout int
+	Host    string
+	Port    int
+	Name    string
+}
+
+// Credentials encapsulates username-password attributes.
+type Credentials struct {
+	Username string
+	Password string
 }

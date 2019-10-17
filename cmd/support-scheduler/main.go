@@ -59,7 +59,7 @@ func main() {
 		startupTimer,
 		di.NewContainer(di.ServiceConstructorMap{}),
 		[]interfaces.BootstrapHandler{
-			secret.BootstrapHandler,
+			secret.NewSecret().BootstrapHandler,
 			database.NewDatabase(&httpServer, scheduler.Configuration).BootstrapHandler,
 			scheduler.BootstrapHandler,
 			telemetry.BootstrapHandler,

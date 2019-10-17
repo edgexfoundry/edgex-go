@@ -69,7 +69,7 @@ func main() {
 		startupTimer,
 		dic,
 		[]interfaces.BootstrapHandler{
-			secret.BootstrapHandler,
+			secret.NewSecret().BootstrapHandler,
 			agent.BootstrapHandler,
 			httpServer.BootstrapHandler,
 			message.NewBootstrap(clients.SystemManagementAgentServiceKey, edgex.Version).BootstrapHandler,

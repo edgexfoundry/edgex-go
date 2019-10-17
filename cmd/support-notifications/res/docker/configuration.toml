@@ -50,7 +50,7 @@ File = '/edgex/logs/edgex-support-notifications.log'
 [SecretStore]
 Host = 'edgex-vault'
 Port = 8200
-Path = '/v1/secrets/edgex/support-notifications/'
+Path = '/v1/secret/edgex/supportnotifications/'
 Protocol = 'http'
 RootCaCertPath = '/vault/config/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem'
 ServerName = 'edgex-vault'
