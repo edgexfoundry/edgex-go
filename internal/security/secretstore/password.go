@@ -150,14 +150,14 @@ func (cr *Cred) retrieve(t string, path string) (*UserPasswordPair, error) {
 func (cr *Cred) credPathURL(path string) (string, error) {
 	baseURL, err := url.Parse(Configuration.SecretService.GetSecretSvcBaseURL())
 	if err != nil {
-		e := fmt.Errorf("error parsing secret-service url.  check server and port properties")
+		e := fmt.Errorf("error parsing secret-service url:  %s", err.Error())
 		LoggingClient.Error(e.Error())
 		return "", err
 	}
 
 	p, err := url.Parse(path)
 	if err != nil {
-		e := fmt.Errorf("error parsing secret-service credpath.  check credpath property")
+		e := fmt.Errorf("error parsing secret-service credpath: %s", err.Error())
 		LoggingClient.Error(e.Error())
 		return "", err
 	}
@@ -176,7 +176,7 @@ func (cr *Cred) UploadToStore(pair *UserPasswordPair, path string) error {
 		return err
 	}
 
-	LoggingClient.Info("trying to upload the credential pair into secret store")
+	LoggingClient.Debug("trying to upload the credential pair into secret store")
 	jsonBytes, err := json.Marshal(pair)
 	body := bytes.NewBuffer(jsonBytes)
 
