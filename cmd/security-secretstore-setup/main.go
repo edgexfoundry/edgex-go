@@ -165,6 +165,7 @@ func main() {
 
 	// credential creation
 	gk := secretstore.NewGokeyGenerator(absPath)
+	secretstore.LoggingClient.Warn("WARNING: The gokey generator is a reference implementation for credential generation and the underlying libraries not been reviewed for cryptographic security. The user is encouraged to perform their own security investigation before deployment.")
 	cred := secretstore.NewCred(req, absPath, gk)
 	for dbname, info := range secretstore.Configuration.Databases {
 		service := info.Service
