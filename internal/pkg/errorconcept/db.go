@@ -17,6 +17,7 @@ package errorconcept
 import (
 	"net/http"
 
+	data "github.com/edgexfoundry/edgex-go/internal/core/data/errors"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 )
 
@@ -36,7 +37,12 @@ func (r dbNotFound) httpErrorCode() int {
 }
 
 func (r dbNotFound) isA(err error) bool {
-	return err == db.ErrNotFound
+	if err == db.ErrNotFound {
+		return true
+	} else {
+		_, ok := err.(data.ErrDbNotFound)
+		return ok
+	}
 }
 
 func (r dbNotFound) message(err error) string {
