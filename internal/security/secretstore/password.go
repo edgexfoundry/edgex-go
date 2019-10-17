@@ -72,11 +72,11 @@ type UserPasswordPair struct {
 type Cred struct {
 	client    internal.HttpCaller
 	tokenPath string
-	g         CredentialGenerator
+	generator CredentialGenerator
 }
 
-func NewCred(caller internal.HttpCaller, tpath string, g CredentialGenerator) Cred {
-	return Cred{client: caller, tokenPath: tpath, g: g}
+func NewCred(caller internal.HttpCaller, tpath string, generator CredentialGenerator) Cred {
+	return Cred{client: caller, tokenPath: tpath, generator: generator}
 }
 
 func (cr *Cred) AlreadyInStore(path string) (bool, error) {
@@ -167,7 +167,7 @@ func (cr *Cred) credPathURL(path string) (string, error) {
 }
 
 func (cr *Cred) GeneratePassword(service string) (string, error) {
-	return cr.g.Generate(service)
+	return cr.generator.Generate(service)
 }
 
 func (cr *Cred) UploadToStore(pair *UserPasswordPair, path string) error {

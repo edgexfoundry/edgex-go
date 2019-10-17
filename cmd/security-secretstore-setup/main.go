@@ -167,14 +167,7 @@ func main() {
 	gk := secretstore.NewGokeyGenerator(absPath)
 	cred := secretstore.NewCred(req, absPath, gk)
 	for dbname, info := range secretstore.Configuration.Databases {
-		// derive paths from database config info
 		service := info.Service
-		servicePath := ""
-		if len(service) != 0 {
-			servicePath = fmt.Sprintf("/v1/secret/edgex/%s/mongodb", service)
-		}
-		mongoPath := fmt.Sprintf("/v1/secret/edgex/mongo/%s", dbname)
-
 		// generate credentials
 		password, err := cred.GeneratePassword(dbname)
 		if err != nil {
@@ -187,7 +180,8 @@ func main() {
 		}
 
 		// add credentials to service path if specified and they're not already there
-		if len(servicePath) != 0 {
+		if len(service) != 0 {
+			servicePath := fmt.Sprintf("/v1/secret/edgex/%s/mongodb", service)
 			existing, err := cred.AlreadyInStore(servicePath)
 			if err != nil {
 				secretstore.LoggingClient.Error(err.Error())
@@ -204,6 +198,7 @@ func main() {
 			}
 		}
 
+		mongoPath := fmt.Sprintf("/v1/secret/edgex/mongo/%s", dbname)
 		// add credentials to mongo path if they're not already there
 		existing, err := cred.AlreadyInStore(mongoPath)
 		if err != nil {
@@ -214,6 +209,7 @@ func main() {
 			err = cred.UploadToStore(&pair, mongoPath)
 			if err != nil {
 				secretstore.LoggingClient.Error(fmt.Sprintf("failed to upload credential pair for db %s on path %s", dbname, mongoPath))
+				os.Exit(1)
 			}
 		} else {
 			secretstore.LoggingClient.Info(fmt.Sprintf("credentials for %s already present at path %s", dbname, mongoPath))
