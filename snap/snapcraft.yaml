@@ -22,7 +22,7 @@ architectures:
 
 # for start-timeout, we need snapd 2.38
 # we need command-chain for the hooks too
-assumes: [snapd2.38, command-chain]
+assumes: [snapd2.42, command-chain]
 
 # Ideally snapcraft would generate this command-chain spec for the hooks
 # automatically, but that doesn't currently work, see
@@ -33,14 +33,24 @@ assumes: [snapd2.38, command-chain]
 # to the snap.yaml
 # All of this is necessary so we can use jq and other tools from inside the
 # snap in the configure and install hooks
+# See also https://bugs.launchpad.net/snapcraft/+bug/1848381 for specifying
+# environment for hooks
 passthrough:
+  system-usernames:
+    snap_daemon: shared
   hooks:
     configure:
       command-chain:
         - snap/command-chain/snapcraft-runner
     install:
+      environment:
+        LC_ALL: C.UTF-8
+        LANG: C.UTF-8
+        PGHOST: $SNAP_COMMON/sockets
+        SNAPCRAFT_PRELOAD_REDIRECT_ONLY_SHM: 1
       command-chain:
         - snap/command-chain/snapcraft-runner
+        - bin/snapcraft-preload
 
 # kong runs things through luarocks and luarocks expects it's configuration to
 # be located here and we can't override this at runtime, so map what's in
@@ -84,29 +94,39 @@ apps:
     daemon: simple
     plugs: [hardware-observe, network, network-bind, system-observe]
     stop-command: bin/mongod --shutdown --dbpath $SNAP_DATA/mongo/db
-  cassandra:
+  postgres:
     adapter: full
-    command: bin/cassandra-wrapper.sh
-    daemon: forking
-    start-timeout: 15m
+    command: usr/lib/postgresql/10/bin/postgres -D $SNAP_DATA/postgresql/10/main -c $CONFIG_ARG
+    daemon: simple
+    environment:
+      CONFIG_ARG: config_file=$SNAP_DATA/etc/postgresql/10/main/postgresql.conf
+      SNAPCRAFT_PRELOAD_REDIRECT_ONLY_SHM: 1
+    command-chain:
+      - bin/gosu-snap_daemon.sh
+      - bin/snapcraft-preload
     plugs:
       - network
       - network-bind
-      - mount-observe
   kong-daemon:
     adapter: full
     after:
-      - cassandra
+      - postgres
       - pkisetup
     command: bin/kong-daemon.sh
+    command-chain:
+      - bin/perl5lib-launch.sh
+      - bin/kong-launch.sh
     daemon: forking
     environment:
       KONG_CONF: $SNAP_DATA/config/security-api-gateway/kong.conf
+      KONG_LOGS_DIR: $SNAP_COMMON/logs
       KONG_PROXY_ACCESS_LOG: $SNAP_COMMON/logs/kong-proxy-access.log
       KONG_ADMIN_ACCESS_LOG: $SNAP_COMMON/logs/kong-admin-access.log
       KONG_PROXY_ERROR_LOG: $SNAP_COMMON/logs/kong-proxy-error.log
       KONG_ADMIN_ERROR_LOG: $SNAP_COMMON/logs/kong-admin-error.log
       KONG_ADMIN_LISTEN: "0.0.0.0:8001, 0.0.0.0:8444 ssl"
+      LC_ALL: C.UTF-8
+      LANG: C.UTF-8
     start-timeout: 15m
     plugs:
       - network
@@ -333,9 +353,66 @@ apps:
     plugs: [home, removable-media]
   kong:
     adapter: full
-    command: bin/kong-wrapper.sh
-    plugs:
-      - network-bind
+    command: bin/kong
+    command-chain:
+      - bin/perl5lib-launch.sh
+      - bin/kong-launch.sh
+    environment:
+      KONG_LOGS_DIR: $SNAP_COMMON/logs
+      LC_ALL: C.UTF-8
+      LANG: C.UTF-8
+    plugs: [home, removable-media, network, network-bind]
+  psql:
+    adapter: full
+    command: usr/bin/psql
+    environment:
+      LC_ALL: C.UTF-8
+      LANG: C.UTF-8
+      PGHOST: $SNAP_COMMON/sockets
+      PGDATABASE: kong
+    command-chain:
+      - bin/perl5lib-launch.sh
+      # createuser should be run as the snap_daemon user, which is the user
+      # who is initially created as a role with postgres
+      - bin/gosu-snap_daemon.sh
+    plugs: [home, removable-media, network]
+  psql-any:
+    adapter: full
+    command: usr/bin/psql
+    environment:
+      LC_ALL: C.UTF-8
+      LANG: C.UTF-8
+      PGHOST: $SNAP_COMMON/sockets
+      PSQLRC: $SNAP_USER_COMMON/.psqlrc
+    command-chain:
+      - bin/perl5lib-launch.sh
+    plugs: [home, removable-media, network]
+  createuser:
+    adapter: full
+    command: usr/bin/createuser
+    environment:
+      LC_ALL: C.UTF-8
+      LANG: C.UTF-8
+      PGHOST: $SNAP_COMMON/sockets
+    command-chain:
+      - bin/perl5lib-launch.sh
+      # createuser should be run as the snap_daemon user, which is the user
+      # who is initially created as a role with postgres
+      - bin/gosu-snap_daemon.sh
+    plugs: [home, removable-media, network]
+  createdb:
+    adapter: full
+    command: usr/bin/createdb
+    environment:
+      LC_ALL: C.UTF-8
+      LANG: C.UTF-8
+      PGHOST: $SNAP_COMMON/sockets
+    command-chain:
+      - bin/perl5lib-launch.sh
+      # createdb should be run as the snap_daemon user, which is the user
+      # who is initially created as a role with postgres
+      - bin/gosu-snap_daemon.sh
+    plugs: [home, removable-media, network]
 
 parts:
   version:
@@ -360,6 +437,68 @@ parts:
     source: snap/local/build-helpers
     stage-packages:
       - curl
+
+  # snapcraft-preload is necessary to make postgres just use a different
+  # lockfile location in /dev/shm
+  # snapcraft-preload defines LD_PRELOAD to be a dynamic library compiled here
+  # which will redirect things like open() that are being called with absolute
+  # paths such as /dev/shm/some-dir to snap-specific, confinement supported
+  # paths like /dev/shm/$SNAP_INSTANCE_NAME.some-dir before being passed to the
+  # actual open() implementation
+  # this prevents re-compiling or patching certain applications like postgres
+  # to use snap security confinement friendly paths
+  # NOTE: if this ever breaks in really scary ways when compiling with lots of
+  # warnings, see the comment on the kong part, tldr probably some other C/C++
+  # part in the build broke snapcraft-preload by running before
+  # snapcraft-preload
+  snapcraft-preload:
+    source: https://github.com/sergiusens/snapcraft-preload.git
+    source-depth: 1
+    # unfortunately no tags or releases we can rely on, so just hard-code
+    # master at the time of writing for this
+    source-commit: d654bbe8a5add5a4bea14d96342b656990c5c818
+    plugin: cmake
+    build-packages:
+      - to arm64:
+          - g++-multilib-arm-linux-gnueabihf
+          - gcc-multilib-arm-linux-gnueabihf
+      - else:
+          - gcc-multilib
+          - g++-multilib
+    stage-packages:
+      - to amd64:
+          - lib32stdc++6
+  gosu:
+    source: https://github.com/tianon/gosu.git
+    source-tag: "1.11"
+    plugin: go
+    go-importpath: github.com/tianon/gosu
+    build-snaps: []
+    after: [go]
+    build-environment:
+      - CGO_ENABLED: "0"
+  postgres:
+    plugin: nil
+    source: snap/local/build-helpers
+    override-build: |
+      snapcraftctl build
+      # the perl package for postgres hard-codes the bin dir as /usr/lib/postgresql
+      # so we need to prepend that with /snap/$SNAP_NAME/current/ before it will
+      # work
+      if [ -z "$SNAPCRAFT_PROJECT_NAME" ]; then
+        echo "SNAPCRAFT_PROJECT_NAME is undefined, snapcraft upstream change?"
+        exit 1
+      fi
+      sed -i -e \
+        's@our $binroot = \"/usr/lib/postgresql/\"@our $binroot = \"/snap/'$SNAPCRAFT_PROJECT_NAME'/current/usr/lib/postgresql/\";@' \
+        $SNAPCRAFT_PART_INSTALL/usr/share/perl5/PgCommon.pm
+    stage-packages:
+      # note: version of postgres in core18 that this resolves to is version 10
+      - postgresql
+      - postgresql-contrib
+      - postgresql-client
+      - perl
+
   go-build-helper:
     plugin: dump
     # see comment for curl part about specifying a source part here
@@ -713,45 +852,6 @@ parts:
       - -usr/share/fonts
       - -usr/share/alsa
 
-  cassandra:
-    plugin: dump
-    source: http://archive.apache.org/dist/cassandra/3.11.4/apache-cassandra-3.11.4-bin.tar.gz
-    stage-packages:
-      # Copy some packages into the stage directory to steal their
-      # pre-built binaries.
-      - mawk
-      - grep
-      # For free(1)
-      - procps
-      - openjdk-8-jdk
-    organize:
-      # Rename directories into their expected locations. Analogous to
-      # Debian's .install files.
-      conf: etc/cassandra
-      bin/cassandra: usr/sbin/cassandra
-      lib: usr/share/cassandra/lib
-      # Rename mawk to awk instead of shipping a symlink.
-      usr/bin/mawk: usr/bin/awk
-    override-prime: |
-      snapcraftctl prime
-      # since we only use cassandra for kong, we severly limit the amount of 
-      # RAM that cassandra uses since it's a big of a RAM hog, by default
-      # attempting to use half of your RAM for itself...
-      echo "-Xms64M" >> $SNAPCRAFT_PART_INSTALL/etc/cassandra/jvm.options
-      echo "-Xmx512M" >> $SNAPCRAFT_PART_INSTALL/etc/cassandra/jvm.options
-      echo "-Xmn64M" >> $SNAPCRAFT_PART_INSTALL/etc/cassandra/jvm.options
-    prime:
-      # Files from the stage directory to include in the snap.
-      - bin/nodetool
-      - etc/cassandra
-      - usr/sbin/cassandra
-      - usr/share/cassandra/lib/*.jar
-      - usr/lib/jvm
-      # awk, grep, and free are needed by cassandra-env.sh
-      - usr/bin/awk
-      - bin/grep
-      - usr/bin/free
-
   # KONG + OPENRESTY PARTS
   openresty-kong-patches:
     plugin: dump
@@ -762,7 +862,9 @@ parts:
     stage: [openresty-kong-patches]
     prime: [-*]
   openresty:
-    after: [openresty-kong-patches]
+    # see comment on kong's after spec for why we order after snapcraft-preload
+    # here
+    after: [openresty-kong-patches, snapcraft-preload]
     plugin: autotools
     source: https://openresty.org/download/openresty-1.13.6.2.tar.gz
     install-via: prefix
@@ -806,6 +908,18 @@ parts:
         resty
 
   kong:
+    # order this part after snapcraft-preload because there are include paths
+    # that snapcraft will generate for this parts to auto-include in the
+    # compile options for later parts if the part is C-based (i.e. some deps of
+    # kong), but these include paths will break compiling snapcraft-preload in
+    # very nasty ways
+    # note that it seems only kong breaks snapcraft-preload, but do openresty
+    # too just for good measure until we have a better resolution for this
+    # see also https://github.com/sergiusens/snapcraft-preload/issues/38
+    # ideally this would just be a "before: " on the snapcraft-preload part, but
+    # snapcraft doesn't support that, see
+    # https://bugs.launchpad.net/snapcraft/+bug/1848493
+    after: [snapcraft-preload]
     source: https://github.com/kong/kong.git
     plugin: nil
     source-tag: 1.0.3

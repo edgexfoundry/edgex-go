@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash -ex
 
 # get the values of $SNAP_DATA and $SNAP using the current symlink instead of
 # the default behavior which has the revision hard-coded, which breaks after
@@ -125,7 +125,6 @@ fi
 # the kong config file needs to be generated with 3 changes from the default one included in the snap
 # - we set the prefix to be $SNAP_DATA/kong as an absolute path (note that this has to be done here in the install hook)
 # - we set the nginx user to be root
-# - we set the database used to cassandra
 if [ ! -f "$SNAP_DATA/config/security-api-gateway/kong.conf" ]; then
     mkdir -p "$SNAP_DATA/config/security-api-gateway"
     cp "$SNAP/config/security-api-gateway/kong.conf" "$SNAP_DATA/config/security-api-gateway/kong.conf"
@@ -135,10 +134,59 @@ if [ ! -f "$SNAP_DATA/config/security-api-gateway/kong.conf" ]; then
 
     # also replace the default nginx user/group to be root
     sed -i "s@#nginx_user = nobody nobody@nginx_user = root root@" "$SNAP_DATA/config/security-api-gateway/kong.conf"
-
-    # finally set the make database to be cassandra
-    sed -i "s@#database = postgres@database = cassandra@" "$SNAP_DATA/config/security-api-gateway/kong.conf"
 fi
+
+# setup postgres db config file with env vars replaced
+if [ ! -f "$SNAP_DATA/etc/postgresql/10/main/postgresql.conf" ]; then
+    mkdir -p "$SNAP_DATA/etc/postgresql/10/main"
+    cp "$SNAP/etc/postgresql/10/main/postgresql.conf" "$SNAP_DATA/etc/postgresql/10/main/postgresql.conf"
+    # do replacement of the $SNAP, $SNAP_DATA, $SNAP_COMMON environment variables in the config files
+    sed -i -e "s@\$SNAP_COMMON@$SNAP_COMMON@g" \
+        -e "s@\$SNAP_DATA@$SNAP_DATA_CURRENT@g" \
+        -e "s@\$SNAP@$SNAP_CURRENT@g" \
+        "$SNAP_DATA/etc/postgresql/10/main/postgresql.conf"
+fi
+
+# ensure the postgres data directory exists and is owned by snap_daemon
+mkdir -p "$SNAP_DATA/postgresql" 
+chown -R snap_daemon:snap_daemon "$SNAP_DATA/postgresql" 
+
+# setup the postgres data directory
+gosu snap_daemon "$SNAP/usr/lib/postgresql/10/bin/initdb" -D "$SNAP_DATA/postgresql/10/main"
+
+# ensure the sockets dir exists and is properly owned
+mkdir -p "$SNAP_COMMON/sockets"
+chown -R snap_daemon:snap_daemon "$SNAP_COMMON/sockets" 
+
+# start postgres up and wait a bit for it so we can create the database and user
+# for kong
+snapctl start "$SNAP_NAME.postgres"
+
+# add a kong user and database in postgres - note we have to run these through
+# the perl5lib-launch scripts to setup env vars properly and we need to loop
+# trying to do this because we have to wait for postgres to start up
+iter_num=0
+MAX_POSTGRES_INIT_ITERATIONS=10
+until gosu snap_daemon "$SNAP/bin/perl5lib-launch.sh" "$SNAP/usr/bin/createuser" kong; do
+    sleep 1
+    iter_num=$(( iter_num + 1 ))
+    if [ $iter_num -gt $MAX_POSTGRES_INIT_ITERATIONS ]; then
+        echo "failed to create kong user in postgres after $iter_num iterations"
+        exit 1
+    fi
+done
+iter_num=0
+until gosu snap_daemon "$SNAP/bin/perl5lib-launch.sh" "$SNAP/usr/bin/createdb" kong; do
+    sleep 1
+    iter_num=$(( iter_num + 1 ))
+    if [ $iter_num -gt $MAX_POSTGRES_INIT_ITERATIONS ]; then
+        echo "failed to create kong db in postgres after $iter_num iterations"
+        exit 1
+    fi
+done
+
+# stop postgres again in case the security services should be turned off
+snapctl stop "$SNAP_NAME.postgres"
 
 # finally, disable and turn off non-default services
 # by default, we want the export-*, support-*, device-*, and redis services 
@@ -167,7 +215,6 @@ done
 # details
 if [ "$SNAP_ARCH" == "arm64" ]; then
     snapctl set security-api-gateway=off
-    snapctl stop --disable "$SNAP_NAME.cassandra"
     snapctl stop --disable "$SNAP_NAME.kong-daemon"
     snapctl stop --disable "$SNAP_NAME.edgexproxy"
 fi
