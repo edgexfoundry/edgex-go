@@ -676,7 +676,7 @@ parts:
       # The logic following logic is all handled by DockerFile for
       # the EdgeX support-rulesengine docker image.
       install -d "$SNAPCRAFT_PART_INSTALL/jar/support-rulesengine"
-      mv "$SNAPCRAFT_PART_INSTALL"/jar/support-rulesengine-*-SNAPSHOT.jar \
+      mv "$SNAPCRAFT_PART_INSTALL"/jar/support-rulesengine.jar \
          "$SNAPCRAFT_PART_INSTALL"/jar/support-rulesengine/support-rulesengine.jar
 
       # FIXME:
@@ -685,8 +685,8 @@ parts:
       # to be staged or primed.
       install -DT "./Attribution.txt" \
          "$SNAPCRAFT_PART_INSTALL/usr/share/java/doc/support-rulesengine/Attribution.txt"
-      install -DT "./LICENSE-2.0.txt" \
-         "$SNAPCRAFT_PART_INSTALL/usr/share/java/doc/support-rulesengine/LICENSE-2.0.txt"
+      install -DT "./LICENSE" \
+         "$SNAPCRAFT_PART_INSTALL/usr/share/java/doc/support-rulesengine/LICENSE"
       install -DT "./src/main/resources/rule-template.drl" \
          "$SNAPCRAFT_PART_INSTALL/jar/support-rulesengine/templates/rule-template.drl"
     prime:
