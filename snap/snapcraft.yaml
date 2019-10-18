@@ -347,7 +347,7 @@ parts:
       cd $SNAPCRAFT_PROJECT_DIR
       PROJECT_VERSION=$(cat VERSION)
       GIT_REVISION=$(git rev-parse --short HEAD)
-      snapcraftctl set-version ${PROJECT_VERSION}-$(date +%Y%m%d)+${GIT_REVISION}}
+      snapcraftctl set-version ${PROJECT_VERSION}-$(date +%Y%m%d)+${GIT_REVISION}
   curl:
     plugin: nil
     # the default source for a part that doesn't specify one is ".", which
