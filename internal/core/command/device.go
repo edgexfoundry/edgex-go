@@ -134,7 +134,7 @@ func getCommands(ctx context.Context) (int, []contract.CommandResponse, error) {
 			return http.StatusInternalServerError, nil, err
 		}
 	}
-	var cr []contract.CommandResponse
+	cr := []contract.CommandResponse{}
 	for _, d := range devices {
 		commands, err := dbClient.GetCommandsByDeviceId(d.Id)
 		if err != nil {
