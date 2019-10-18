@@ -17,7 +17,7 @@ package executor
 import "os/exec"
 
 // CommandExecutor provides the common callout to the configuration-defined executor.
-func CommandExecutor(executorPath, serviceName, operation string, parameters []string) (string, error) {
-	bytes, err := exec.Command(executorPath, append([]string{serviceName, operation}, parameters...)...).CombinedOutput()
+func CommandExecutor(executorPath, serviceName, operation string) (string, error) {
+	bytes, err := exec.Command(executorPath, serviceName, operation).CombinedOutput()
 	return string(bytes), err
 }

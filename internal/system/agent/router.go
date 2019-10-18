@@ -113,7 +113,7 @@ func operationHandler(
 		return
 	}
 
-	pkg.Encode(operationsImpl.Do(o.Services, o.Action, o.Parameters), w, loggingClient)
+	pkg.Encode(operationsImpl.Do(o.Services, o.Action), w, loggingClient)
 }
 
 // getConfigHandler implements a controller to execute a get configuration request.

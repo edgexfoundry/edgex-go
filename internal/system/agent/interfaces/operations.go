@@ -16,5 +16,5 @@ package interfaces
 
 // Operations defines an operation execution abstraction.
 type Operations interface {
-	Do(services []string, operation string, parameters []string) interface{}
+	Do(services []string, operation string) interface{}
 }
