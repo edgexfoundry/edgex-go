@@ -94,7 +94,7 @@ func main() {
 	for shouldContinue := true; shouldContinue; {
 		// Anonymous function used to prevent file handles from accumulating
 		func() {
-			tokenFile, err := os.Open(absPath)
+			tokenFile, err := os.OpenFile(absPath, os.O_CREATE|os.O_RDWR, 0600)
 			if err != nil {
 				secretstore.LoggingClient.Error(fmt.Sprintf("unable to open token file at %s", absPath))
 				os.Exit(1)
@@ -113,6 +113,7 @@ func main() {
 				secretstore.LoggingClient.Info(fmt.Sprintf("vault is not initialized (status code: %d). Starting initialisation and unseal phases", sCode))
 				_, err := vc.Init(secretstore.Configuration.SecretService, tokenFile)
 				if err == nil {
+					tokenFile.Seek(0, 0) // Read starting at beginning
 					_, err = vc.Unseal(secretstore.Configuration.SecretService, tokenFile)
 					if err == nil {
 						shouldContinue = false
