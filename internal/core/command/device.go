@@ -17,6 +17,8 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
+
 	"github.com/edgexfoundry/edgex-go/internal/core/command/errors"
 
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
@@ -92,7 +94,7 @@ func commandByDevice(device contract.Device, command contract.Command, body stri
 		return "", err
 	}
 	if responseCode != 200 {
-		return "", errors.NewErrUnexpectedResponseFromService(responseCode)
+		return "", types.NewErrServiceClient(responseCode, []byte(responseBody))
 	}
 
 	return responseBody, nil

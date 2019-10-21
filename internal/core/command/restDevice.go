@@ -25,17 +25,17 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
 )
 
-// Returns 200, 400, 404, 423, 500
+// Returns 200, 400, 404, 423, 500 according to the RAML
 func restGetDeviceCommandByCommandID(w http.ResponseWriter, r *http.Request) {
 	issueDeviceCommand(w, r, false)
 }
 
-// Returns 200, 400, 404, 423, 500
+// Returns 200, 400, 404, 423, 500 according to the RAML
 func restPutDeviceCommandByCommandID(w http.ResponseWriter, r *http.Request) {
 	issueDeviceCommand(w, r, true)
 }
 
-// Returns 200, 400, 404, 423, 500
+// Returns 200, 400, 404, 423, 500 according to the RAML
 func issueDeviceCommand(w http.ResponseWriter, r *http.Request, isPutCommand bool) {
 	defer r.Body.Close()
 
@@ -55,32 +55,31 @@ func issueDeviceCommand(w http.ResponseWriter, r *http.Request, isPutCommand boo
 			w,
 			err,
 			[]errorconcept.ErrorConceptType{
-				errorconcept.Device.NotFound,
+				errorconcept.NewServiceClientHttpError(err),
 				errorconcept.Device.Locked,
+				errorconcept.Database.NotFound,
+				errorconcept.Command.NotAssociatedWithDevice,
 			},
 			errorconcept.Default.InternalServerError)
 		return
 	}
 
-	if len(body) > 0 {
-		w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
-	}
-
 	w.WriteHeader(http.StatusOK)
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	w.Write([]byte(body))
 }
 
-// Returns 200, 400, 404, 423, 500
+// Returns 200, 400, 404, 423, 500 according to the RAML
 func restGetDeviceCommandByNames(w http.ResponseWriter, r *http.Request) {
 	issueDeviceCommandByNames(w, r, false)
 }
 
-// Returns 200, 400, 404, 423, 500
+// Returns 200, 400, 404, 423, 500 according to the RAML
 func restPutDeviceCommandByNames(w http.ResponseWriter, r *http.Request) {
 	issueDeviceCommandByNames(w, r, true)
 }
 
-// Returns 200, 400, 404, 423, 500
+// Returns 200, 400, 404, 423, 500 according to the RAML
 func issueDeviceCommandByNames(w http.ResponseWriter, r *http.Request, isPutCommand bool) {
 	defer r.Body.Close()
 
@@ -102,51 +101,56 @@ func issueDeviceCommandByNames(w http.ResponseWriter, r *http.Request, isPutComm
 			w,
 			err,
 			[]errorconcept.ErrorConceptType{
-				errorconcept.Device.NotFound,
+				errorconcept.NewServiceClientHttpError(err),
 				errorconcept.Device.Locked,
+				errorconcept.Database.NotFound,
 			},
 			errorconcept.Default.InternalServerError)
 		return
 	}
 
-	if len(body) > 0 {
-		w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
-	}
-
 	w.WriteHeader(http.StatusOK)
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	w.Write([]byte(body))
 }
 
-// Returns 200, 404, 500
+// Returns 200, 404, 500 according to the RAML
 func restGetCommandsByDeviceID(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	did := vars[ID]
 	ctx := r.Context()
 	device, err := getCommandsByDeviceID(did, ctx)
 	if err != nil {
-		httpErrorHandler.HandleOneVariant(
+		httpErrorHandler.HandleManyVariants(
 			w,
 			err,
-			errorconcept.Device.NotFound,
+			[]errorconcept.ErrorConceptType{
+				errorconcept.NewServiceClientHttpError(err),
+				errorconcept.Device.NotFoundInDB,
+			},
 			errorconcept.Default.InternalServerError)
 		return
 	}
 
+	w.WriteHeader(http.StatusOK)
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	json.NewEncoder(w).Encode(&device)
 }
 
-// Returns 200, 404, 500
+// Returns 200, 404, 500 according to the RAML
 func restGetCommandsByDeviceName(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	dn := vars[NAME]
 	ctx := r.Context()
 	devices, err := getCommandsByDeviceName(dn, ctx)
 	if err != nil {
-		httpErrorHandler.HandleOneVariant(
+		httpErrorHandler.HandleManyVariants(
 			w,
 			err,
-			errorconcept.Device.NotFound,
+			[]errorconcept.ErrorConceptType{
+				errorconcept.NewServiceClientHttpError(err),
+				errorconcept.Device.NotFoundInDB,
+			},
 			errorconcept.Default.InternalServerError)
 		return
 	}
@@ -156,12 +160,20 @@ func restGetCommandsByDeviceName(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(&devices)
 }
 
-// Returns 200 and 500
+// Returns 200 and 500 according to the RAML
 func restGetAllCommands(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	devices, err := getCommands(ctx)
 	if err != nil {
-		httpErrorHandler.Handle(w, err, errorconcept.Default.InternalServerError)
+		httpErrorHandler.HandleManyVariants(
+			w,
+			err,
+			[]errorconcept.ErrorConceptType{
+				errorconcept.NewServiceClientHttpError(err),
+				errorconcept.Database.NotFound,
+			},
+			errorconcept.Default.InternalServerError)
+		return
 	}
 
 	w.WriteHeader(http.StatusOK)

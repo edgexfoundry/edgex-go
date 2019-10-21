@@ -18,6 +18,7 @@ import (
 	"net/http"
 
 	command "github.com/edgexfoundry/edgex-go/internal/core/command/errors"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 )
 
 var Device deviceErrorConcept
@@ -26,6 +27,7 @@ var Device deviceErrorConcept
 type deviceErrorConcept struct {
 	Locked         deviceLocked
 	NotFound       deviceNotFound
+	NotFoundInDB   deviceNotFoundInDB
 	NotifyError    deviceNotify
 	RequesterError deviceRequester
 }
@@ -59,10 +61,24 @@ func (r deviceNotFound) message(err error) string {
 	return err.Error()
 }
 
+type deviceNotFoundInDB struct{}
+
+func (r deviceNotFoundInDB) httpErrorCode() int {
+	return http.StatusNotFound
+}
+
+func (r deviceNotFoundInDB) isA(err error) bool {
+	return err == db.ErrNotFound
+}
+
+func (r deviceNotFoundInDB) message(err error) string {
+	return "Device not found"
+}
+
 type deviceNotify struct{}
 
 func (r deviceNotify) httpErrorCode() int {
-	return http.StatusLocked
+	return http.StatusServiceUnavailable
 }
 
 func (r deviceNotify) isA(err error) bool {

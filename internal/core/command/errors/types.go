@@ -26,15 +26,3 @@ func (e ErrCommandNotAssociatedWithDevice) Error() string {
 func NewErrCommandNotAssociatedWithDevice(commandID string, deviceID string) error {
 	return ErrCommandNotAssociatedWithDevice{commandID, deviceID}
 }
-
-type ErrUnexpectedResponseFromService struct {
-	statusCode int
-}
-
-func (e ErrUnexpectedResponseFromService) Error() string {
-	return fmt.Sprintf("Command response HTTP status code was %v, expected 200", e.statusCode)
-}
-
-func NewErrUnexpectedResponseFromService(statusCode int) error {
-	return ErrUnexpectedResponseFromService{statusCode}
-}

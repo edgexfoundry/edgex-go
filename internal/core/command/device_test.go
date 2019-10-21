@@ -2,8 +2,9 @@ package command
 
 import (
 	"context"
-	"errors"
+	goErrors "errors"
 	"net/http"
+	"net/url"
 	"testing"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
@@ -12,6 +13,7 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 
+	"github.com/edgexfoundry/edgex-go/internal/core/command/errors"
 	"github.com/edgexfoundry/edgex-go/internal/core/command/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/core/command/interfaces/mocks"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
@@ -25,67 +27,69 @@ func TestExecuteGETCommandByDeviceIdAndCommandId(t *testing.T) {
 	dbClient = newCommandMock()
 
 	tests := []struct {
-		name           string
-		deviceId       string
-		commandId      string
-		expectedStatus int
+		name        string
+		deviceId    string
+		commandId   string
+		expectedErr error
 	}{
 		{
 			"Device-InvalidObjectId",
 			status400,
 			TestCommandId,
-			http.StatusBadRequest,
+			types.NewErrServiceClient(400, []byte("Invalid object ID")),
 		},
 		{
 			"Device-NotFound",
 			status404,
 			TestCommandId,
-			http.StatusNotFound,
+			types.NewErrServiceClient(http.StatusNotFound, []byte{}),
 		},
 		{
 			"Device-InternalServerErr",
 			status500,
 			TestCommandId,
-			http.StatusInternalServerError,
+			goErrors.New("unexpected error"),
 		},
 		{
 			"Device-Locked",
 			status423,
 			TestCommandId,
-			http.StatusLocked,
+			errors.NewErrDeviceLocked(""),
 		},
 		{
 			"Command-NotFound",
 			d200c404,
 			status400,
-			http.StatusNotFound,
+			db.ErrNotFound,
 		},
 		{
 			"Command-InternalServerErr",
 			d200c500,
 			status500,
-			http.StatusInternalServerError,
+			goErrors.New("unexpected error"),
 		},
 		{
 			"Command-NotBelongToDevice",
 			mismatch,
 			mismatch,
-			http.StatusNotFound,
+			errors.NewErrCommandNotAssociatedWithDevice(TestCommandId, mismatch),
 		},
 		{
 			"Command-500URLCannotBeParsed",
 			"d200c200",
 			"200",
-			http.StatusInternalServerError,
+			&url.Error{Op: "parse", URL: "://:0?", Err: goErrors.New("missing protocol scheme")},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, statusCode := commandByDeviceID(tt.deviceId, TestCommandId, "", "", false, context.Background())
-			if tt.expectedStatus != statusCode {
-				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, statusCode)
-				return
+			_, actualErr := commandByDeviceID(tt.deviceId, TestCommandId, "", "", false, context.Background())
+			if actualErr == nil {
+				t.Fatal("expected error")
+			}
+			if tt.expectedErr.Error() != actualErr.Error() {
+				t.Fatalf("error value mismatch -- expected %v got %v", tt.expectedErr, actualErr)
 			}
 		})
 	}
@@ -95,7 +99,7 @@ func newMockDeviceClient() *mdMocks.DeviceClient {
 	client := mdMocks.DeviceClient{}
 	client.On("Device", status404, context.Background()).Return(contract.Device{}, types.NewErrServiceClient(http.StatusNotFound, []byte{}))
 	client.On("Device", status400, context.Background()).Return(contract.Device{}, types.NewErrServiceClient(400, []byte("Invalid object ID")))
-	client.On("Device", status500, context.Background()).Return(contract.Device{}, errors.New("unexpected error"))
+	client.On("Device", status500, context.Background()).Return(contract.Device{}, goErrors.New("unexpected error"))
 	client.On("Device", status423, context.Background()).Return(contract.Device{AdminState: "LOCKED"}, nil)
 	client.On("Device", d200c404, context.Background()).Return(contract.Device{Id: status400}, nil)
 	client.On("Device", d200c500, context.Background()).Return(contract.Device{Id: status500}, nil)
@@ -108,7 +112,7 @@ func newMockDeviceClient() *mdMocks.DeviceClient {
 func newCommandMock() interfaces.DBClient {
 	dbMock := &mocks.DBClient{}
 	dbMock.On("GetCommandsByDeviceId", status400).Return(nil, db.ErrNotFound)
-	dbMock.On("GetCommandsByDeviceId", status500).Return(nil, errors.New("unexpected error"))
+	dbMock.On("GetCommandsByDeviceId", status500).Return(nil, goErrors.New("unexpected error"))
 	dbMock.On("GetCommandsByDeviceId", mismatch).Return([]models.Command{contract.Command{Id: "dummy"}}, nil)
 
 	dbMock.On("GetCommandsByDeviceId", TestDeviceId).Return([]models.Command{contract.Command{Id: TestCommandId}}, nil)
