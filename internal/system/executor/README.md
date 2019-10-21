@@ -4,7 +4,7 @@
 This README.md is geared toward a developer interested in creating their own executor. It includes related information 
     that ties in with the System Management Agent (aka SMA). The main points are:
 
-- How the SMA passes service name, action, and optional parameters on the command line.
+- How the SMA passes service name, and action on the command line.
 - Current proxy-like behavior for stop/start/restart operations -- the SMA passes parameters received to executor as-is.
 - The Metrics Result Contract (and its support for embedding executor-specific results).
 - Expected format of operation result (based upon the existing Docker executor implementation).
@@ -12,14 +12,13 @@ This README.md is geared toward a developer interested in creating their own exe
 # Passing Parameters to SMA on Command Line #
 
 #### Usage ####
-./sys-mgmt-executor [service-name] [operation] {[optional-parameter]...}
+./sys-mgmt-executor [service-name] [operation]
 
 Where:
 - "service-name" is the name of the service to apply the operation to.
 - "operation" can be one of [start, stop, restart]
-- "optional-parameter" can be zero or more parameters that are executor-specific, have no meaning to the system 
-    management agent, and are no validated by the system management agent.  **An executor implementation is responsible
-    for validating and/or ignoring any optional-parameters passed to it.**
+
+**Note**: neither operation, nor service-name are verified by the SMA before passing to the executor, the executor is responsible for ensuring invalid service names and operations are handled gracefully.
 
 #### Examples of Usage (and Sample Responses) ####
 - ./sys-mgmt-executor edgex-support-notifications stop
