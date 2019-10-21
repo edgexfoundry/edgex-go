@@ -18,7 +18,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/system"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/response"
-
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
 
