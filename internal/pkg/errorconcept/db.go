@@ -26,6 +26,7 @@ var Database databaseErrorConcept
 // DatabaseErrorConcept represents a collection of database error concepts
 type databaseErrorConcept struct {
 	NotFound        dbNotFound
+	NotFoundTyped   dbNotFoundTyped
 	NotUnique       dbNotUnique
 	InvalidObjectId dbInvalidObjectId
 }
@@ -37,15 +38,25 @@ func (r dbNotFound) httpErrorCode() int {
 }
 
 func (r dbNotFound) isA(err error) bool {
-	if err == db.ErrNotFound {
-		return true
-	} else {
-		_, ok := err.(data.ErrDbNotFound)
-		return ok
-	}
+	return err == db.ErrNotFound
 }
 
 func (r dbNotFound) message(err error) string {
+	return err.Error()
+}
+
+type dbNotFoundTyped struct{}
+
+func (r dbNotFoundTyped) httpErrorCode() int {
+	return http.StatusNotFound
+}
+
+func (r dbNotFoundTyped) isA(err error) bool {
+	_, ok := err.(data.ErrDbNotFound)
+	return ok
+}
+
+func (r dbNotFoundTyped) message(err error) string {
 	return err.Error()
 }
 
