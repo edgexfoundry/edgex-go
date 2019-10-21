@@ -93,7 +93,7 @@ func restUpdateDeviceProfile(w http.ResponseWriter, r *http.Request) {
 				[]errorconcept.ErrorConceptType{
 					errorconcept.NewServiceClientHttpError(err),
 					errorconcept.DeviceProfile.NotFound,
-					errorconcept.ValueDescriptors.InUse,
+					errorconcept.ValueDescriptors.MultipleInUse,
 					errorconcept.DeviceProfile.InvalidState_StatusConflict,
 				},
 				errorconcept.Default.InternalServerError)

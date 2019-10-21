@@ -17,6 +17,7 @@ package errorconcept
 import (
 	"net/http"
 
+	data "github.com/edgexfoundry/edgex-go/internal/core/data/errors"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 )
 
@@ -25,6 +26,7 @@ var Database databaseErrorConcept
 // DatabaseErrorConcept represents a collection of database error concepts
 type databaseErrorConcept struct {
 	NotFound        dbNotFound
+	NotFoundTyped   dbNotFoundTyped
 	NotUnique       dbNotUnique
 	InvalidObjectId dbInvalidObjectId
 }
@@ -40,6 +42,21 @@ func (r dbNotFound) isA(err error) bool {
 }
 
 func (r dbNotFound) message(err error) string {
+	return err.Error()
+}
+
+type dbNotFoundTyped struct{}
+
+func (r dbNotFoundTyped) httpErrorCode() int {
+	return http.StatusNotFound
+}
+
+func (r dbNotFoundTyped) isA(err error) bool {
+	_, ok := err.(data.ErrDbNotFound)
+	return ok
+}
+
+func (r dbNotFoundTyped) message(err error) string {
 	return err.Error()
 }
 

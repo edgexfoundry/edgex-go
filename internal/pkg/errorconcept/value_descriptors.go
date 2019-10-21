@@ -25,10 +25,12 @@ var ValueDescriptors valueDescriptorsErrorConcept
 // ValueDescriptorsErrorConcept represents the accessor for the value-descriptor-specific error concepts
 type valueDescriptorsErrorConcept struct {
 	DuplicateName valueDescriptorDuplicateName
-	InUse         valueDescriptorsInUse
+	SingleInUse   valueDescriptorInUse
+	MultipleInUse valueDescriptorsInUse
 	Invalid       valueDescriptorInvalid
 	LimitExceeded valueDescriptorLimitExceeded
 	NotFound      valueDescriptorNotFound
+	NotFoundInDB  valueDescriptorDBNotFound
 }
 
 type valueDescriptorDuplicateName struct{}
@@ -43,6 +45,21 @@ func (r valueDescriptorDuplicateName) isA(err error) bool {
 }
 
 func (r valueDescriptorDuplicateName) message(err error) string {
+	return err.Error()
+}
+
+type valueDescriptorInUse struct{}
+
+func (r valueDescriptorInUse) httpErrorCode() int {
+	return http.StatusConflict
+}
+
+func (r valueDescriptorInUse) isA(err error) bool {
+	_, ok := err.(errors.ErrValueDescriptorInUse)
+	return ok
+}
+
+func (r valueDescriptorInUse) message(err error) string {
 	return err.Error()
 }
 
@@ -104,4 +121,19 @@ func (r valueDescriptorNotFound) isA(err error) bool {
 
 func (r valueDescriptorNotFound) message(err error) string {
 	return err.Error()
+}
+
+type valueDescriptorDBNotFound struct{}
+
+func (r valueDescriptorDBNotFound) httpErrorCode() int {
+	return http.StatusConflict
+}
+
+func (r valueDescriptorDBNotFound) isA(err error) bool {
+	_, ok := err.(errors.ErrDbNotFound)
+	return ok
+}
+
+func (r valueDescriptorDBNotFound) message(err error) string {
+	return "Value descriptor not found for reading"
 }
