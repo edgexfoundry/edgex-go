@@ -1089,7 +1089,7 @@ func createDeviceProfileRequestWithFile(fileContents []byte) *http.Request {
 }
 
 func createRequestWithBody(method string, d contract.DeviceProfile) *http.Request {
-	body, err := d.MarshalJSON()
+	body, err := json.Marshal(d)
 	if err != nil {
 		panic("Failed to create test JSON:" + err.Error())
 	}
@@ -1285,7 +1285,7 @@ func createTestDeviceProfile() contract.DeviceProfile {
 // createValidatedTestDeviceProfile creates an object by deserializing it from JSON
 // so that its unexported field isValidated will be true.
 func createValidatedTestDeviceProfile() contract.DeviceProfile {
-	bytes, _ := TestDeviceProfile.MarshalJSON()
+	bytes, _ := json.Marshal(TestDeviceProfile)
 	var dp contract.DeviceProfile
 	_ = json.Unmarshal(bytes, &dp)
 
