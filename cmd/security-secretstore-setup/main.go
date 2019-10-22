@@ -91,6 +91,14 @@ func main() {
 	path := secretstore.Configuration.SecretService.TokenFolderPath
 	filename := secretstore.Configuration.SecretService.TokenFile
 	absPath := filepath.Join(path, filename)
+
+	// Ensure token path exists
+	err := os.MkdirAll(path, 0700)
+	if err != nil {
+		secretstore.LoggingClient.Error(fmt.Sprintf("unable to create token folder path: %s", err.Error()))
+		os.Exit(1)
+	}
+
 	for shouldContinue := true; shouldContinue; {
 		// Anonymous function used to prevent file handles from accumulating
 		func() {
