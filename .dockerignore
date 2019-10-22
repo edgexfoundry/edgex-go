@@ -1,2 +1,4 @@
 docs
 *.snap
+.git
+**/logs
