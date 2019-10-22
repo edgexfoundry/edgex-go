@@ -64,8 +64,8 @@ func issueDeviceCommand(w http.ResponseWriter, r *http.Request, isPutCommand boo
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
+	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(body))
 }
 
@@ -109,8 +109,8 @@ func issueDeviceCommandByNames(w http.ResponseWriter, r *http.Request, isPutComm
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
+	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(body))
 }
 
@@ -132,8 +132,8 @@ func restGetCommandsByDeviceID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
+	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(&device)
 }
 
@@ -155,8 +155,8 @@ func restGetCommandsByDeviceName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
+	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(&devices)
 }
 
@@ -176,7 +176,7 @@ func restGetAllCommands(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
+	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(devices)
 }
