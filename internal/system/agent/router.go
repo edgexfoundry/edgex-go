@@ -26,6 +26,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/container"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/interfaces"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-registry/registry"
 
@@ -110,6 +111,13 @@ func operationHandler(
 	if err = o.UnmarshalJSON(b); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		loggingClient.Error("error during decoding: %s", err.Error())
+		return
+	}
+
+	if len(o.Services) == 0 || len(o.Action) == 0 {
+		const errorMessage = "incorrect or malformed body was passed in with the request"
+		http.Error(w, errorMessage, http.StatusBadRequest)
+		loggingClient.Error(errorMessage)
 		return
 	}
 
