@@ -59,7 +59,7 @@ func TestRetrieveCred(t *testing.T) {
 	token := "token"
 	ts := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"data": {"user": "test-user", "password": "test-password"}}`))
+		w.Write([]byte(`{"data": {"username": "test-user", "password": "test-password"}}`))
 		if r.Method != "GET" {
 			t.Errorf("expected GET request, got %s instead", r.Method)
 		}
