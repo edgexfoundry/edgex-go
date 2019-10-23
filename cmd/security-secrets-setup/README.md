@@ -1,11 +1,14 @@
-# Testing Instruction for security-secrets-setup
+# EdgeX Foundry Security Service - Security Secrets Setup
+[![license](https://img.shields.io/badge/license-Apache%20v2.0-blue.svg)](LICENSE)
+
+Go implementation of EdgeX security-secrets-setup service.
 
 ## Build
 
 Use the Makefile in the root directory of the repository to build  security-secrets-setup:
 
 ```sh
- make cmd/security-secrets-setup/security-secrets-setup
+$ make cmd/security-secrets-setup/security-secrets-setup
 ```
 
 This will create an executable located at `cmd/security-secrets-setup/` if successful.
@@ -15,7 +18,7 @@ This will create an executable located at `cmd/security-secrets-setup/` if succe
 To use the **generate** subcommand, go to `cmd/security-secrets-setup/` and then run
 
 ```sh
- sudo -E ./security-secrets-setup generate
+$ sudo -E ./security-secrets-setup generate
 ```
 
 The `sudo` is used because the base of the deploy directory `/run/` is owned by `root:root`.
@@ -29,9 +32,9 @@ Before **cache** subcommand is issued, make sure cache dir (in this example, it 
 To use the **cache** subcommand, from the same `cmd/security-secrets-setup/`  directory run
 
 ```sh
- mkdir -p /tmp/pki/cache
- export PKI_CACHE=/tmp/pki/cache
- sudo -E ./security-secrets-setup cache
+$ mkdir -p /tmp/pki/cache
+$ export PKI_CACHE=/tmp/pki/cache
+$ sudo -E ./security-secrets-setup cache
 ```
 
 in which environment variable *PKI_CACHE* is to specify the path to the cached location.  The `sudo` is used because the base of the deploy directory `/run/` is owned by `root:root`.
@@ -41,7 +44,7 @@ After being successfully run, the Vault and Kong TLS assets are generated and ca
 One can also use some file diff tool to compare the TLS files like:
 
 ```sh
- sudo diff -r /tmp/pki/cache/ca/ca.pem /run/edgex/secrets/ca/ca.pem
+$ sudo diff -r /tmp/pki/cache/ca/ca.pem /run/edgex/secrets/ca/ca.pem
 ```
 
 After the certificates are deployed, `security-secrets-setup` will generate a  *sentinel* file `.security-secrets-setup.complete` per certificate directory in the root deploy directory to indicate successful cache.  For example:
@@ -59,9 +62,9 @@ Only in /run/edgex/secrets/edgex-vault: .security-secrets-setup.complete
 To use the **import** subcommand, from the same `cmd/security-secrets-setup/` directory run
 
 ```sh
- mkdir -p /tmp/pki/cache
- export PKI_CACHE=/tmp/pki/cache
- sudo -E ./security-secrets-setup import
+$ mkdir -p /tmp/pki/cache
+$ export PKI_CACHE=/tmp/pki/cache
+$ sudo -E ./security-secrets-setup import
 ```
 
 The `sudo` is used because the base of the deploy directory `/run/` is owned by `root:root`.
@@ -81,7 +84,7 @@ The **import** subcommand operates differently depending on the status of cache 
 Go to the root directory of the repository and use the Makefile to build the docker container image for `security-secrets-setup`:
 
 ```sh
-make docker_security_secrets_setup
+$ make docker_security_secrets_setup
 ```
 
 It should create a docker image with the name `edgexfoundry/docker-edgex-vault:<version>-dev` if sucessfully built.
@@ -92,7 +95,7 @@ To see what the TLS materials are generated inside the docker container,
 one can run the built docker image above (assuming the version number is `1.1.0`) as:
 
 ```sh
-docker run --rm -it edgexfoundry/docker-edgex-vault:1.1.0-dev /bin/sh
+$ docker run --rm -it edgexfoundry/docker-edgex-vault:1.1.0-dev /bin/sh
 ```
 
 once that is run, one should see the execution console outputs and gives the interactive console prompt in the base directory `/vault`.  Based on the current JSON configuration, TLS materials should be able to found in the directory of `./config/pki/EdgeXFoundryCA/` showed as follows:

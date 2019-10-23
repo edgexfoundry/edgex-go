@@ -21,6 +21,22 @@ You can check the status of your running EdgeX services by going to http://local
 
 Now that you have EdgeX up and running, you can follow our [API Walkthrough](https://docs.edgexfoundry.org/Ch-Walkthrough.html) to learn how the different services work together to connect IoT devices to cloud services.
 
+# Running EdgeX with security components
+
+Starting with the Fuji release, EdgeX includes enhanced security features that are enabled by default. There are 3 major components that are responsible for security
+features: 
+
+- Security-secrets-setup
+- Security-secretstore-setup
+- Security-proxy-setup
+
+When security features are enabled, additional steps are required to access the resources of EdgeX.
+
+1. The user needs to create an access token and associate every REST request with the access token. 
+2. The exported external ports (such as 48080, 48081 etc.) will be inaccessible for security purposes. Instead, all REST requests need to go through the proxy. The proxy will redirect the request to the individual microservices on behalf of the user.
+
+Sample steps to create an access token and use the token to access EdgeX resources can be found here: [Security Components](SECURITY.md)
+
 # Other installation and deployment options
 
 ## Snap Package
