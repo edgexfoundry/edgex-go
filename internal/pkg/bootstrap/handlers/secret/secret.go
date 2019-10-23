@@ -16,6 +16,7 @@ package secret
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"sync"
 
@@ -31,42 +32,41 @@ import (
 	"github.com/edgexfoundry/go-mod-secrets/pkg/providers/vault"
 )
 
-// SecretClientBootstrapHandler creates a secretClient to be used for obtaining secrets from a secret store manager.
+type SecretProvider struct {
+	secretClient pkg.SecretClient
+}
+
+func NewSecret() *SecretProvider {
+	return &SecretProvider{}
+}
+
+// SecretClientBootstrapHandler creates a secretClient to be used for obtaining secrets from a SecretProvider store manager.
 // NOTE: This BootstrapHandler is responsible for creating a utility that will most likely be used by other
 // BootstrapHandlers to obtain sensitive data, such as database credentials. This BootstrapHandler should be processed
 // before other BootstrapHandlers, possibly even first since it has not other dependencies.
-func BootstrapHandler(
+func (s *SecretProvider) BootstrapHandler(
 	wg *sync.WaitGroup,
 	context context.Context,
 	startupTimer startup.Timer,
 	dic *di.Container) bool {
+	loggingClient := container.LoggingClientFrom(dic.Get)
 
-	// check for environment variable that turns security off
-	if env := os.Getenv("EDGEX_SECURITY_SECRET_STORE"); env == "false" {
-		dic.Update(di.ServiceConstructorMap{
-			container.SecretClientName: func(get di.Get) interface{} {
-				return nil
-			},
-		})
-		return true
-	}
-
-	// attempt to create a new secret client
+	// attempt to create a new SecretProvider client
 	configuration := container.ConfigurationFrom(dic.Get)
-	scc, err := getSecretConfig(configuration.GetBootstrap().SecretStore)
+	secretConfig, err := s.getSecretConfig(configuration.GetBootstrap().SecretStore)
 	if err != nil {
+		loggingClient.Error(fmt.Sprintf("unable to parse secret store configuration: %s", err.Error()))
 		return false
 	}
 
-	secretClient, err := vault.NewSecretClient(scc)
-
-	var result *pkg.SecretClient
-	if err == nil {
-		result = &secretClient
+	s.secretClient, err = vault.NewSecretClient(secretConfig)
+	if err != nil {
+		loggingClient.Error(fmt.Sprintf("unable to create SecretClient: %s", err.Error()))
 	}
+
 	dic.Update(di.ServiceConstructorMap{
-		container.SecretClientName: func(get di.Get) interface{} {
-			return result
+		container.CredentialsProviderName: func(get di.Get) interface{} {
+			return s
 		},
 	})
 
@@ -75,7 +75,7 @@ func BootstrapHandler(
 
 // getSecretConfig creates a SecretConfig based on the SecretStoreInfo configuration properties.
 // If a tokenfile is present it will override the Authentication.AuthToken value.
-func getSecretConfig(secretStoreInfo config.SecretStoreInfo) (vault.SecretConfig, error) {
+func (s *SecretProvider) getSecretConfig(secretStoreInfo config.SecretStoreInfo) (vault.SecretConfig, error) {
 	secretConfig := vault.SecretConfig{
 		Host:           secretStoreInfo.Host,
 		Port:           secretStoreInfo.Port,
@@ -102,4 +102,10 @@ func getSecretConfig(secretStoreInfo config.SecretStoreInfo) (vault.SecretConfig
 	secretConfig.Authentication.AuthToken = token
 
 	return secretConfig, nil
+}
+
+// isSecurityEnabled determines if security has been enabled.
+func (s *SecretProvider) isSecurityEnabled() bool {
+	env := os.Getenv("EDGEX_SECURITY_SECRET_STORE")
+	return env != "false"
 }

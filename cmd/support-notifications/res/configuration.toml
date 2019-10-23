@@ -50,7 +50,7 @@ File = './logs/edgex-support-notifications.log'
 [SecretStore]
 Host = 'localhost'
 Port = 8200
-Path = '/v1/secrets/edgex/support-notifications/'
+Path = '/v1/secret/edgex/supportnotifications/'
 Protocol = 'http'
   [SecretStore.Authentication]
   AuthType = 'X-Vault-Token'

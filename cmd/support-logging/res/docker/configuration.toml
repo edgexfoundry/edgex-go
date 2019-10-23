@@ -34,7 +34,7 @@ File = '/edgex/logs/edgex-support-logging.log'
 [SecretStore]
 Host = 'edgex-vault'
 Port = 8200
-Path = '/v1/secrets/edgex/support-logging/'
+Path = '/v1/secret/edgex/supportlogging/'
 Protocol = 'http'
 RootCaCertPath = '/vault/config/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem'
 ServerName = 'edgex-vault'

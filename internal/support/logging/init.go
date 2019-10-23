@@ -16,6 +16,7 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
@@ -39,13 +40,13 @@ func NewServiceInit(server server) ServiceInit {
 	}
 }
 
-func getPersistence() (persistence, error) {
+func getPersistence(credentials config.Credentials) (persistence, error) {
 	switch Configuration.Writable.Persistence {
 	case PersistenceFile:
 		return &fileLog{filename: Configuration.Logging.File}, nil
 	case PersistenceDB:
 		// TODO: Integrate db layer with internal/pkg/db/ types so we can support other databases
-		ms, err := connectToMongo()
+		ms, err := connectToMongo(credentials)
 		if err != nil {
 			return nil, err
 		}
@@ -70,10 +71,22 @@ func (s ServiceInit) BootstrapHandler(
 	// update global variables.
 	LoggingClient = container.LoggingClientFrom(dic.Get)
 
+	// get database credentials.
+	var credentials config.Credentials
+	for startupTimer.HasNotElapsed() {
+		var err error
+		credentials, err = container.CredentialsProviderFrom(dic.Get).GetDatabaseCredentials(Configuration.Databases["Primary"])
+		if err == nil {
+			break
+		}
+		LoggingClient.Warn(fmt.Sprintf("couldn't retrieve database credentials: %v", err.Error()))
+		startupTimer.SleepForInterval()
+	}
+
 	// initialize database.
 	for startupTimer.HasNotElapsed() {
 		var err error
-		dbClient, err = getPersistence()
+		dbClient, err = getPersistence(credentials)
 		if err == nil {
 			break
 		}

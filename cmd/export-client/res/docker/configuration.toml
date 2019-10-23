@@ -45,7 +45,7 @@ File = '/edgex/logs/edgex-export-client.log'
 [SecretStore]
 Host = 'edgex-vault'
 Port = 8200
-Path = '/v1/secrets/edgex/export-client/'
+Path = '/v1/secret/edgex/exportclient/'
 Protocol = 'http'
 RootCaCertPath = '/vault/config/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem'
 ServerName = 'edgex-vault'

@@ -57,7 +57,7 @@ Topic = 'events'
 [SecretStore]
 Host = 'edgex-vault'
 Port = 8200
-Path = '/v1/secrets/edgex/core-data/'
+Path = '/v1/secret/edgex/coredata/'
 Protocol = 'http'
 RootCaCertPath = '/vault/config/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem'
 ServerName = 'edgex-vault'

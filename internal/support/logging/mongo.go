@@ -11,8 +11,10 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
+
+	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 
 	mgo "github.com/globalsign/mgo"
 	bson "github.com/globalsign/mgo/bson"
@@ -22,13 +24,13 @@ type mongoLog struct {
 	session *mgo.Session // Mongo database session
 }
 
-func connectToMongo() (*mgo.Session, error) {
+func connectToMongo(credentials config.Credentials) (*mgo.Session, error) {
 	mongoDBDialInfo := &mgo.DialInfo{
 		Addrs:    []string{Configuration.Databases["Primary"].Host + ":" + strconv.Itoa(Configuration.Databases["Primary"].Port)},
 		Timeout:  time.Duration(Configuration.Databases["Primary"].Timeout) * time.Millisecond,
 		Database: Configuration.Databases["Primary"].Name,
-		Username: Configuration.Databases["Primary"].Username,
-		Password: Configuration.Databases["Primary"].Password,
+		Username: credentials.Username,
+		Password: credentials.Password,
 	}
 
 	ms, err := mgo.DialWithInfo(mongoDBDialInfo)

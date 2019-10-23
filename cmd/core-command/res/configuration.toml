@@ -45,7 +45,7 @@ File = './logs/edgex-core-command.log'
 [SecretStore]
 Host = 'localhost'
 Port = 8200
-Path = '/v1/secrets/edgex/core-command/'
+Path = '/v1/secret/edgex/corecommand/'
 Protocol = 'http'
   [SecretStore.Authentication]
   AuthType = 'X-Vault-Token'

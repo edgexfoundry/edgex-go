@@ -23,6 +23,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	dbInterfaces "github.com/edgexfoundry/edgex-go/internal/pkg/db/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo"
@@ -63,7 +64,7 @@ func NewDatabaseForCoreData(httpServer httpServer, database interfaces.Database)
 }
 
 // Return the dbClient interface
-func (d Database) newDBClient(loggingClient logger.LoggingClient) (dbInterfaces.DBClient, error) {
+func (d Database) newDBClient(loggingClient logger.LoggingClient, credentials config.Credentials) (dbInterfaces.DBClient, error) {
 	databaseInfo := d.database.GetDatabaseInfo()["Primary"]
 	switch databaseInfo.Type {
 	case db.MongoDB:
@@ -73,8 +74,8 @@ func (d Database) newDBClient(loggingClient logger.LoggingClient) (dbInterfaces.
 				Port:         databaseInfo.Port,
 				Timeout:      databaseInfo.Timeout,
 				DatabaseName: databaseInfo.Name,
-				Username:     databaseInfo.Username,
-				Password:     databaseInfo.Password,
+				Username:     credentials.Username,
+				Password:     credentials.Password,
 			})
 	case db.RedisDB:
 		if d.isCoreData {
@@ -100,11 +101,23 @@ func (d Database) BootstrapHandler(
 
 	loggingClient := container.LoggingClientFrom(dic.Get)
 
+	// get database credentials.
+	var credentials config.Credentials
+	for startupTimer.HasNotElapsed() {
+		var err error
+		credentials, err = container.CredentialsProviderFrom(dic.Get).GetDatabaseCredentials(d.database.GetDatabaseInfo()["Primary"])
+		if err == nil {
+			break
+		}
+		loggingClient.Warn(fmt.Sprintf("couldn't retrieve database credentials: %v", err.Error()))
+		startupTimer.SleepForInterval()
+	}
+
 	// initialize database.
 	var dbClient dbInterfaces.DBClient
 	for startupTimer.HasNotElapsed() {
 		var err error
-		dbClient, err = d.newDBClient(loggingClient)
+		dbClient, err = d.newDBClient(loggingClient, credentials)
 		if err == nil {
 			break
 		}

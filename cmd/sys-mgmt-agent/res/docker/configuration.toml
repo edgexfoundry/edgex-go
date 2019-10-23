@@ -80,7 +80,7 @@ File = '/edgex/logs/edgex-sys-mgmt-agent.log'
 [SecretStore]
 Host = 'edgex-vault'
 Port = 8200
-Path = '/v1/secrets/edgex/sys-mgmt-agent/'
+Path = '/v1/secret/edgex/sysmgmtagent/'
 Protocol = 'http'
 RootCaCertPath = '/vault/config/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem'
 ServerName = 'edgex-vault'

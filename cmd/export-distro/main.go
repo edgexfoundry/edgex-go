@@ -54,7 +54,7 @@ func main() {
 		startupTimer,
 		di.NewContainer(di.ServiceConstructorMap{}),
 		[]interfaces.BootstrapHandler{
-			secret.BootstrapHandler,
+			secret.NewSecret().BootstrapHandler,
 			distro.BootstrapHandler,
 			telemetry.BootstrapHandler,
 			httpServer.BootstrapHandler,

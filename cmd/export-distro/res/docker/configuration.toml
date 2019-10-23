@@ -63,7 +63,7 @@ Type = 'zero'
 [SecretStore]
 Host = 'edgex-vault'
 Port = 8200
-Path = '/v1/secrets/edgex/export-distro/'
+Path = '/v1/secret/edgex/exportdistro/'
 Protocol = 'http'
 RootCaCertPath = '/vault/config/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem'
 ServerName = 'edgex-vault'

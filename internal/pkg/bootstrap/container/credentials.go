@@ -1,5 +1,5 @@
-/*******************************************************************************
- * Copyright 2019 Dell Inc.
+/********************************************************************************
+ *  Copyright 2019 Dell Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -15,15 +15,15 @@
 package container
 
 import (
-	"github.com/edgexfoundry/go-mod-secrets/pkg"
-
+	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 )
 
-// SecretClientName contains the name of the registry.Client implementation in the DIC.
-var SecretClientName = di.TypeInstanceToName((*pkg.SecretClient)(nil))
+// CredentialsProviderName contains the name of the interfaces.CredentialsProvider implementation in the DIC.
+var CredentialsProviderName = di.TypeInstanceToName((*interfaces.CredentialsProvider)(nil))
 
-// SecretClientFrom helper function queries the DIC and returns the pkg.SecretClient implementation.
-func SecretClientFrom(get di.Get) pkg.SecretClient {
-	return get(SecretClientName).(pkg.SecretClient)
+// CredentialsProviderFrom helper function queries the DIC and returns the interfaces.CredentialsProviderName
+// implementation.
+func CredentialsProviderFrom(get di.Get) interfaces.CredentialsProvider {
+	return get(CredentialsProviderName).(interfaces.CredentialsProvider)
 }
