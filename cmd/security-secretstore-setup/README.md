@@ -1,7 +1,7 @@
 # EdgeX Foundry Security Service - Security Secretstore Setup
 [![license](https://img.shields.io/badge/license-Apache%20v2.0-blue.svg)](LICENSE)
 
-# Testing Instruction for security-secretstore-setup
+Go implementation of EdgeX security-secretstore-setup service.
 
 ## Build
 

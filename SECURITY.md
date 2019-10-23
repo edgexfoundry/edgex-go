@@ -7,7 +7,7 @@ features:
 - [Security-secretstore-setup] (https://github.com/edgexfoundry/edgex-go/blob/master/cmd/security-secretstore-setup/README.md)
 - [Security-proxy-setup] (https://github.com/edgexfoundry/edgex-go/blob/master/cmd/security-proxy-setup/README.md)
 
-Security-secrets-setup is resonsible for creating necessary certificates. Security-secretstore-setup is responsible for initializing the secret store that holds various credentials for EdgeX. Security-proxy-setup is responsible for initializating the environment for proxy for EdgeX to protect all the REST API resources, set up related permissions and authentication methods. 
+Security-secrets-setup is responsible for creating necessary certificates. Security-secretstore-setup is responsible for initializing the secret store that holds various credentials for EdgeX. Security-proxy-setup is responsible for initializating the environment for proxy for EdgeX to protect all the REST API resources, set up related permissions and authentication methods. 
 
 # Get Started
 
