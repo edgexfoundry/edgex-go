@@ -28,9 +28,9 @@ The binary supports multiple command line parameters
  --insecureSkipVerify //skip server side SSL verification, mainly for self-signed cert
  --configfile //use different configuration file other than the default
  --reset //reset proxy by removing all customerization
- --useradd //user that needs to be added to consume the edgex services, need to used with 'group' parameter
+ --useradd //user that needs to be added to consume the edgex services, needs to used with the 'group' parameter
  --group //group that the user belongs to
- --userdel //user that needs to be deleted from the proxy services
+ --userdel //user that needs to be deleted in the the proxy services
 ```
 
 An example of use of the parameters can be found from docker compose file

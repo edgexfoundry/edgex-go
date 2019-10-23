@@ -1,13 +1,12 @@
 # Security Components in EdgeX Foundry Services
 
-Starting from Fuji release, EdgeX includes enhanced security features. There are 3 major components that are responsible for security
-features: 
+Starting with Fuji release, EdgeX includes enhanced security features that are enabled by default. There are 3 major components that are responsible for security features: 
 
-- [Security-secrets-setup] (https://github.com/edgexfoundry/edgex-go/blob/master/cmd/security-secrets-setup/README.md)
-- [Security-secretstore-setup] (https://github.com/edgexfoundry/edgex-go/blob/master/cmd/security-secretstore-setup/README.md)
-- [Security-proxy-setup] (https://github.com/edgexfoundry/edgex-go/blob/master/cmd/security-proxy-setup/README.md)
+-[Security-secrets-setup] (cmd/security-secrets-setup/README.md)
+-[Security-secretstore-setup] (cmd/security-secretstore-setup/README.md)
+-[Security-proxy-setup] (cmd/security-proxy-setup/README.md)
 
-Security-secrets-setup is responsible for creating necessary certificates. Security-secretstore-setup is responsible for initializing the secret store that holds various credentials for EdgeX. Security-proxy-setup is responsible for initializating the environment for proxy for EdgeX to protect all the REST API resources, set up related permissions and authentication methods. 
+Security-secrets-setup is responsible for creating necessary certificates. Security-secretstore-setup is responsible for initializing the secret store to hold various credentials for EdgeX. Security-proxy-setup is responsible for initializating the EdgeX proxy environment, which includes setting up related permissions and authentication methods. The proxy will protect all the REST API resources. 
 
 # Get Started
 

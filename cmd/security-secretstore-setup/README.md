@@ -24,7 +24,7 @@ The binary supports multiple command line parameters
  --vaultInterval //time to wait between checking Vault status in seconds
 ```
 
-An example of use of the parameters can be found from docker compose file
+An example of using the parameters can be found in the docker compose file
 
 https://github.com/edgexfoundry/developer-scripts/master/releases/fuji/compose-files/docker-compose-fuji-1.1.0.yml
 
