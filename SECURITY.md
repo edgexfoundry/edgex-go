@@ -26,7 +26,7 @@ while sending the request. Use "admin" as groupname below as it is the default e
 docker-compose run security-proxy-setup --useradd=<account> --group=<groupname>
 ```
 
-which will create an access token. The token will be like this: eyJpc3MiOiI5M3V3cmZBc0xzS2Qwd1JnckVFdlRzQloxSmtYOTRRciIsImFjY291bnQiOiJhZG1pbmlzdHJhdG9yIn0
+which will create an access token. One exmaple of an access token will be like: eyJpc3MiOiI5M3V3cmZBc0xzS2Qwd1JnckVFdlRzQloxSmtYOTRRciIsImFjY291bnQiOiJhZG1pbmlzdHJhdG9yIn0
 
 2. The exported external ports (such as 48080, 48081 etc.) will be inaccessible due to security enhancement. Instead all the REST requests need to go through the proxy, and the proxy will redirect the request to individual microservice on behalf of the user.
 E.g, if we need to send a request to the ping endpoint of coredata, the original request be like this below:
@@ -35,7 +35,7 @@ E.g, if we need to send a request to the ping endpoint of coredata, the original
 curl http://{coredata-microservice-ip}:48080/api/v1/ping
 ```
 
-Such request needs to be converted into a request like this below:
+Such request now needs to be converted into a request through `proxy service` and provided `access token`. One example is like this below:
 
 ```
 curl -k https://{proxy-service-ip}:8443/coredata/api/v1/ping -H "Authorization: Bearer <access-token>"
