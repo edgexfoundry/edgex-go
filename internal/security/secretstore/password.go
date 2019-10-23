@@ -65,7 +65,7 @@ type CredCollect struct {
 }
 
 type UserPasswordPair struct {
-	User     string `json:"user,omitempty"`
+	User     string `json:"username,omitempty"`
 	Password string `json:"password,omitempty"`
 }
 
