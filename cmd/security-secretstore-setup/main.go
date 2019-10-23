@@ -96,7 +96,7 @@ func main() {
 		func() {
 			tokenFile, err := os.OpenFile(absPath, os.O_CREATE|os.O_RDWR, 0600)
 			if err != nil {
-				secretstore.LoggingClient.Error(fmt.Sprintf("unable to open token file at %s with error: %s", absPath, err.Error()))
+				secretstore.LoggingClient.Error(fmt.Sprintf("unable to open token file at %s", absPath))
 				os.Exit(1)
 			}
 			defer tokenFile.Close()
