@@ -25,7 +25,7 @@ $ docker-compose up -d
 Once EdgeX is up and running, the following steps are required to access EdgeX resources:
 
 1. The user needs to create an access token and associate every REST request with the security token
-while sending the request. Use "admin" as groupname below, as it is the privileged group in the default configuration of the proxy.
+while sending the request. Use "admin" as group name below, as it is the privileged group in the default configuration of the proxy.
 `<account>` below should be substituted for the desired account name (e.g., "mary", "iot_user", etc).
 
     ```sh
