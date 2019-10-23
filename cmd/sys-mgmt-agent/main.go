@@ -22,7 +22,6 @@ import (
 	bootstrapContainer "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers/httpserver"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers/message"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers/secret"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
@@ -69,7 +68,6 @@ func main() {
 		startupTimer,
 		dic,
 		[]interfaces.BootstrapHandler{
-			secret.NewSecret().BootstrapHandler,
 			agent.BootstrapHandler,
 			httpServer.BootstrapHandler,
 			message.NewBootstrap(clients.SystemManagementAgentServiceKey, edgex.Version).BootstrapHandler,

@@ -77,17 +77,6 @@ File = '/edgex/logs/edgex-sys-mgmt-agent.log'
   Host = 'edgex-export-distro'
   Port = 48070
 
-[SecretStore]
-Host = 'edgex-vault'
-Port = 8200
-Path = '/v1/secret/edgex/sysmgmtagent/'
-Protocol = 'http'
-RootCaCertPath = '/vault/config/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem'
-ServerName = 'edgex-vault'
-TokenFile = '/vault/config/assets/resp-init.json'
-  [SecretStore.Authentication]
-  AuthType = 'X-Vault-Token'
-
 [Startup]
 Duration = 30
 Interval = 1
