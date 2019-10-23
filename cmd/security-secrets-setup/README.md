@@ -1,4 +1,7 @@
-# Testing Instruction for security-secrets-setup
+# EdgeX Foundry Security Service - Security Secrets Setup
+[![license](https://img.shields.io/badge/license-Apache%20v2.0-blue.svg)](LICENSE)
+
+Go implementation of EdgeX security-secrets-setup service.
 
 ## Build
 
