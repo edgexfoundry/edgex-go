@@ -8,7 +8,7 @@ Go implementation of EdgeX security-secretstore-setup service.
 Use the Makefile in the root directory of the repository to build  security-secrets-setup:
 
 ```sh
- make cmd/security-secretstore-setup/security-secretstore-setup
+$ make cmd/security-secretstore-setup/security-secretstore-setup
 ```
 
 This will create an executable located at `cmd/security-secretstore-setup/` if successful.
@@ -18,10 +18,10 @@ This will create an executable located at `cmd/security-secretstore-setup/` if s
 The binary supports multiple command line parameters 
 
 ```sh
- --init  //run init procedure for security service
- --insecureSkipVerify //skip server side SSL verification, mainly for self-signed cert
- --configfile //use different configuration file other than the default
- --vaultInterval //time to wait between checking Vault status in seconds
+ --init  // run init procedure for security service
+ --insecureSkipVerify // skip server side SSL verification, mainly for self-signed cert
+ --configfile // use different configuration file other than the default
+ --vaultInterval // time to wait between checking Vault status in seconds
 ```
 
 An example of using the parameters can be found in the docker compose file
@@ -33,7 +33,7 @@ https://github.com/edgexfoundry/developer-scripts/master/releases/fuji/compose-f
 Go to the root directory of the repository and use the Makefile to build the docker container image for `security-secretstore-setup`:
 
 ```sh
-make docker_security_secretstore_setup
+$ make docker_security_secretstore_setup
 ```
 
 It should create a docker image with the name `edgexfoundry/docker_security_secretstore_setup:<version>-dev` if sucessfully built.

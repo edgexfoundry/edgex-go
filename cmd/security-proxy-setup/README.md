@@ -42,7 +42,7 @@ https://github.com/edgexfoundry/developer-scripts/master/releases/fuji/compose-f
 Go to the root directory of the repository and use the Makefile to build the docker container image for `security-proxy-setup`:
 
 ```sh
-make docker_security_proxy_setup
+$ make docker_security_proxy_setup
 ```
 
 It should create a docker image with the name `edgexfoundry/docker_security_proxy_setup:<version>-dev` if sucessfully built.
