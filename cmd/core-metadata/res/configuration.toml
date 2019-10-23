@@ -58,8 +58,8 @@ Label = 'metadata'
 [SecretStore]
 Host = 'localhost'
 Port = 8200
-Path = '/v1/secret/edgex/coremetadata/'
-Protocol = 'http'
+Path = '/v1/secret/edgex/metadata/'
+Protocol = 'https'
   [SecretStore.Authentication]
   AuthType = 'X-Vault-Token'
   AuthToken = 'edgex'

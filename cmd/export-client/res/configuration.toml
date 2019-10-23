@@ -46,7 +46,7 @@ File = './logs/edgex-export-client.log'
 Host = 'localhost'
 Port = 8200
 Path = '/v1/secret/edgex/exportclient/'
-Protocol = 'http'
+Protocol = 'https'
   [SecretStore.Authentication]
   AuthType = 'X-Vault-Token'
   AuthToken = 'edgex'

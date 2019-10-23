@@ -68,8 +68,8 @@ File = './logs/edgex-support-scheduler.log'
 [SecretStore]
 Host = 'localhost'
 Port = 8200
-Path = '/v1/secret/edgex/supportscheduler/'
-Protocol = 'http'
+Path = '/v1/secret/edgex/scheduler/'
+Protocol = 'https'
   [SecretStore.Authentication]
   AuthType = 'X-Vault-Token'
   AuthToken = 'edgex'

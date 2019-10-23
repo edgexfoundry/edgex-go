@@ -50,8 +50,8 @@ File = '/edgex/logs/edgex-support-notifications.log'
 [SecretStore]
 Host = 'edgex-vault'
 Port = 8200
-Path = '/v1/secret/edgex/supportnotifications/'
-Protocol = 'http'
+Path = '/v1/secret/edgex/notifications/'
+Protocol = 'https'
 RootCaCertPath = '/vault/config/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem'
 ServerName = 'edgex-vault'
 TokenFile = '/vault/config/assets/resp-init.json'
