@@ -60,10 +60,6 @@ Interval = 1
   Service = "coredata"
   Username = "core"
 
-  [Databases.corecommand]
-  Service = "corecommand"
-  Username = "core"
-
   [Databases.rulesengine]
   Service = "rulesengine"
   Username = "rulesengine"
