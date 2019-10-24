@@ -45,7 +45,8 @@ File = './logs/edgex-core-command.log'
 [SecretStore]
 Host = 'localhost'
 Port = 8200
-Path = '/v1/secret/edgex/corecommand/'
+# Use the core-meta data secrets due to core-command using core-meta-data's database for persistance.
+Path = '/v1/secret/edgex/metadata/'
 Protocol = 'https'
   [SecretStore.Authentication]
   AuthType = 'X-Vault-Token'
