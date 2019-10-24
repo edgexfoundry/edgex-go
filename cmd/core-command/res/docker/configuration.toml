@@ -45,7 +45,8 @@ File = '/edgex/logs/edgex-core-command.log'
 [SecretStore]
 Host = 'edgex-vault'
 Port = 8200
-Path = '/v1/secret/edgex/corecommand/'
+# Use the core-meta data secrets due to core-command using core-meta-data's database for persistance.
+Path = '/v1/secret/edgex/metadata/'
 Protocol = 'https'
 RootCaCertPath = '/vault/config/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem'
 ServerName = 'edgex-vault'
