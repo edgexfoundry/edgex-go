@@ -17,6 +17,8 @@ package proxy
 
 import (
 	"crypto/tls"
+	"crypto/x509"
+	"io/ioutil"
 	"net/http"
 	"time"
 
@@ -24,8 +26,28 @@ import (
 )
 
 func NewRequestor(skipVerify bool, timeoutInSecond int) internal.HttpCaller {
-	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: skipVerify},
+	var tr *http.Transport
+	if skipVerify {
+		tr = &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		}
+	} else {
+		caCert, err := ioutil.ReadFile(Configuration.SecretService.CACertPath)
+		if err != nil {
+			LoggingClient.Error("failed to load rootCA certificate.")
+			return nil
+		}
+		LoggingClient.Info("successfully loaded rootCA certificate.")
+		caCertPool := x509.NewCertPool()
+		caCertPool.AppendCertsFromPEM(caCert)
+
+		tr = &http.Transport{
+			TLSClientConfig: &tls.Config{
+				RootCAs:            caCertPool,
+				InsecureSkipVerify: false,
+			},
+			TLSHandshakeTimeout: 10 * time.Second,
+		}
 	}
 	return &http.Client{Timeout: time.Duration(timeoutInSecond) * time.Second, Transport: tr}
 }
