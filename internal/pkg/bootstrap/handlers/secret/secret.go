@@ -51,7 +51,6 @@ func (s *SecretProvider) BootstrapHandler(
 	dic *di.Container) bool {
 	loggingClient := container.LoggingClientFrom(dic.Get)
 
-	// attempt to create a new SecretProvider client
 	configuration := container.ConfigurationFrom(dic.Get)
 	secretConfig, err := s.getSecretConfig(configuration.GetBootstrap().SecretStore)
 	if err != nil {
@@ -59,9 +58,13 @@ func (s *SecretProvider) BootstrapHandler(
 		return false
 	}
 
-	s.secretClient, err = vault.NewSecretClient(secretConfig)
-	if err != nil {
-		loggingClient.Error(fmt.Sprintf("unable to create SecretClient: %s", err.Error()))
+	// attempt to create a new SecretProvider client only if security is enabled.
+	if s.isSecurityEnabled() {
+		s.secretClient, err = vault.NewSecretClient(secretConfig)
+		if err != nil {
+			loggingClient.Error(fmt.Sprintf("unable to create SecretClient: %s", err.Error()))
+			return false
+		}
 	}
 
 	dic.Update(di.ServiceConstructorMap{
@@ -70,7 +73,7 @@ func (s *SecretProvider) BootstrapHandler(
 		},
 	})
 
-	return err == nil
+	return true
 }
 
 // getSecretConfig creates a SecretConfig based on the SecretStoreInfo configuration properties.
@@ -87,10 +90,11 @@ func (s *SecretProvider) getSecretConfig(secretStoreInfo config.SecretStoreInfo)
 		Authentication: secretStoreInfo.Authentication,
 	}
 
-	if secretStoreInfo.TokenFile == "" {
+	if !s.isSecurityEnabled() || secretStoreInfo.TokenFile == "" {
 		return secretConfig, nil
 	}
 
+	// only bother getting a token if security is enabled and the configuration-provided tokenfile is not empty.
 	fileIoPerformer := fileioperformer.NewDefaultFileIoPerformer()
 	authTokenLoader := authtokenloader.NewAuthTokenLoader(fileIoPerformer)
 
@@ -98,9 +102,7 @@ func (s *SecretProvider) getSecretConfig(secretStoreInfo config.SecretStoreInfo)
 	if err != nil {
 		return secretConfig, err
 	}
-
 	secretConfig.Authentication.AuthToken = token
-
 	return secretConfig, nil
 }
 
