@@ -24,7 +24,7 @@ import (
 
 // FactoryToStdout returns a logger.LoggingClient that outputs to stdout.
 func FactoryToStdout(serviceKey string) logger.LoggingClient {
-	return logger.NewClient(serviceKey, false, "", models.DebugLog)
+	return logger.NewClientStdOut(serviceKey, false, models.DebugLog)
 }
 
 // FactoryFromConfiguration returns a logger.LoggingClient based on configuration settings.
