@@ -20,7 +20,6 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
@@ -58,7 +57,6 @@ func (MockBody) Close() error {
 func TestExecute(t *testing.T) {
 	expectedResponseBody := "Sample Response Body"
 	expectedResponseCode := http.StatusOK
-	LoggingClient = logger.MockLogger{}
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, expectedResponseBody)
 		w.WriteHeader(expectedResponseCode)
@@ -89,7 +87,6 @@ func TestExecute(t *testing.T) {
 }
 
 func TestExecuteHttpRequestError(t *testing.T) {
-	LoggingClient = logger.MockLogger{}
 	request, _ := http.NewRequest(http.MethodGet, "http://example.com", nil)
 	sc := serviceCommand{
 		Device: contract.Device{
@@ -106,7 +103,6 @@ func TestExecuteHttpRequestError(t *testing.T) {
 }
 
 func TestExecuteHttpReadResponseError(t *testing.T) {
-	LoggingClient = logger.MockLogger{}
 	request, _ := http.NewRequest(http.MethodGet, "http://example.com", nil)
 	sc := serviceCommand{
 		Device: contract.Device{

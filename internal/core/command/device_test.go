@@ -17,10 +17,10 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 )
 
+var mockLoggingClient = logger.NewMockClient()
+
 //commandByDeviceID
 func TestExecuteGETCommandByDeviceIdAndCommandId(t *testing.T) {
-
-	LoggingClient = logger.NewMockClient()
 	mdc = newMockDeviceClient()
 	dbClient = newCommandMock()
 
@@ -82,7 +82,8 @@ func TestExecuteGETCommandByDeviceIdAndCommandId(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, statusCode := commandByDeviceID(tt.deviceId, TestCommandId, "", "", false, context.Background())
+			_, statusCode := commandByDeviceID(tt.deviceId, TestCommandId, "", "", false, context.Background(),
+				mockLoggingClient)
 			if tt.expectedStatus != statusCode {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, statusCode)
 				return

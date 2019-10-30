@@ -48,7 +48,8 @@ func main() {
 	flag.Usage = usage.HelpCallback
 	flag.Parse()
 
-	httpServer := httpserver.NewBootstrap(command.LoadRestRoutes())
+	dic := di.NewContainer(nil)
+	httpServer := httpserver.NewBootstrap(command.LoadRestRoutes(dic))
 	bootstrap.Run(
 		configDir,
 		profileDir,

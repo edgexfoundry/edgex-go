@@ -11,6 +11,7 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
+
 package command
 
 import (
@@ -18,6 +19,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 
@@ -25,10 +27,11 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 )
 
-func commandByDeviceID(deviceID string, commandID string, body string, queryParams string, isPutCommand bool, ctx context.Context) (string, int) {
+func commandByDeviceID(deviceID string, commandID string, body string, queryParams string, isPutCommand bool,
+	ctx context.Context, loggingClient logger.LoggingClient) (string, int) {
 	d, err := mdc.Device(deviceID, ctx)
 	if err != nil {
-		LoggingClient.Error(err.Error())
+		loggingClient.Error(err.Error())
 
 		chk, ok := err.(types.ErrServiceClient)
 		if ok {
@@ -39,14 +42,14 @@ func commandByDeviceID(deviceID string, commandID string, body string, queryPara
 	}
 
 	if d.AdminState == contract.Locked {
-		LoggingClient.Error(d.Name + " is in admin locked state")
+		loggingClient.Error(d.Name + " is in admin locked state")
 		return errors.NewErrDeviceLocked(d.Name).Error(), http.StatusLocked
 	}
 
 	//once command service have its own persistence layer this call will be changed.
 	commands, err := dbClient.GetCommandsByDeviceId(d.Id)
 	if err != nil {
-		LoggingClient.Error(err.Error())
+		loggingClient.Error(err.Error())
 		if err == db.ErrNotFound {
 			return err.Error(), http.StatusNotFound
 		} else {
@@ -64,17 +67,18 @@ func commandByDeviceID(deviceID string, commandID string, body string, queryPara
 
 	if c.String() == (contract.Command{}).String() {
 		errMsg := fmt.Sprintf("Command with id '%v' does not belong to device with id '%v'.", commandID, deviceID)
-		LoggingClient.Error(errMsg)
+		loggingClient.Error(errMsg)
 		return errMsg, http.StatusNotFound
 	}
 
-	return commandByDevice(d, c, body, queryParams, isPutCommand, ctx)
+	return commandByDevice(d, c, body, queryParams, isPutCommand, ctx, loggingClient)
 }
 
-func commandByNames(dn string, cn string, body string, queryParams string, isPutCommand bool, ctx context.Context) (string, int) {
+func commandByNames(dn string, cn string, body string, queryParams string, isPutCommand bool, ctx context.Context,
+	loggingClient logger.LoggingClient) (string, int) {
 	d, err := mdc.DeviceForName(dn, ctx)
 	if err != nil {
-		LoggingClient.Error(err.Error())
+		loggingClient.Error(err.Error())
 		chk, ok := err.(types.ErrServiceClient)
 		if ok {
 			return err.Error(), chk.StatusCode
@@ -84,13 +88,13 @@ func commandByNames(dn string, cn string, body string, queryParams string, isPut
 	}
 
 	if d.AdminState == contract.Locked {
-		LoggingClient.Error(d.Name + " is in admin locked state")
+		loggingClient.Error(d.Name + " is in admin locked state")
 		return errors.NewErrDeviceLocked(d.Name).Error(), http.StatusLocked
 	}
 
 	command, err := dbClient.GetCommandByNameAndDeviceId(cn, d.Id)
 	if err != nil {
-		LoggingClient.Error(err.Error())
+		loggingClient.Error(err.Error())
 		if err == db.ErrNotFound {
 			return err.Error(), http.StatusNotFound
 		} else {
@@ -98,33 +102,34 @@ func commandByNames(dn string, cn string, body string, queryParams string, isPut
 		}
 	}
 
-	return commandByDevice(d, command, body, queryParams, isPutCommand, ctx)
+	return commandByDevice(d, command, body, queryParams, isPutCommand, ctx, loggingClient)
 }
 
-func commandByDevice(device contract.Device, command contract.Command, body string, queryParams string, isPutCommand bool, ctx context.Context) (string, int) {
+func commandByDevice(device contract.Device, command contract.Command, body string, queryParams string,
+	isPutCommand bool, ctx context.Context, loggingClient logger.LoggingClient) (string, int) {
 	var ex Executor
 	var err error
 	if isPutCommand {
-		ex, err = NewPutCommand(device, command, body, ctx, &http.Client{})
+		ex, err = NewPutCommand(device, command, body, ctx, &http.Client{}, loggingClient)
 	} else {
-		ex, err = NewGetCommand(device, command, queryParams, ctx, &http.Client{})
+		ex, err = NewGetCommand(device, command, queryParams, ctx, &http.Client{}, loggingClient)
 	}
 
 	if err != nil {
-		LoggingClient.Error(err.Error())
+		loggingClient.Error(err.Error())
 		return err.Error(), http.StatusInternalServerError
 	}
 
 	responseBody, responseCode, err := ex.Execute()
 	if err != nil {
-		LoggingClient.Error(err.Error())
+		loggingClient.Error(err.Error())
 		return err.Error(), http.StatusInternalServerError
 	}
 
 	return responseBody, responseCode
 }
 
-func getCommands(ctx context.Context) (int, []contract.CommandResponse, error) {
+func getCommands(ctx context.Context, loggingClient logger.LoggingClient) (int, []contract.CommandResponse, error) {
 	devices, err := mdc.Devices(ctx)
 	if err != nil {
 		chk, ok := err.(types.ErrServiceClient)
@@ -138,7 +143,7 @@ func getCommands(ctx context.Context) (int, []contract.CommandResponse, error) {
 	for _, d := range devices {
 		commands, err := dbClient.GetCommandsByDeviceId(d.Id)
 		if err != nil {
-			LoggingClient.Error(err.Error())
+			loggingClient.Error(err.Error())
 			if err == db.ErrNotFound {
 				return http.StatusNotFound, nil, err
 			} else {
@@ -151,7 +156,8 @@ func getCommands(ctx context.Context) (int, []contract.CommandResponse, error) {
 
 }
 
-func getCommandsByDeviceID(did string, ctx context.Context) (int, contract.CommandResponse, error) {
+func getCommandsByDeviceID(did string, ctx context.Context, loggingClient logger.LoggingClient) (int,
+	contract.CommandResponse, error) {
 	d, err := mdc.Device(did, ctx)
 	if err != nil {
 		chk, ok := err.(types.ErrServiceClient)
@@ -164,7 +170,7 @@ func getCommandsByDeviceID(did string, ctx context.Context) (int, contract.Comma
 
 	commands, err := dbClient.GetCommandsByDeviceId(d.Id)
 	if err != nil {
-		LoggingClient.Error(err.Error())
+		loggingClient.Error(err.Error())
 		if err == db.ErrNotFound {
 			return http.StatusNotFound, contract.CommandResponse{}, err
 		} else {
@@ -175,7 +181,8 @@ func getCommandsByDeviceID(did string, ctx context.Context) (int, contract.Comma
 	return http.StatusOK, contract.CommandResponseFromDevice(d, commands, Configuration.Service.Url()), err
 }
 
-func getCommandsByDeviceName(dn string, ctx context.Context) (int, contract.CommandResponse, error) {
+func getCommandsByDeviceName(dn string, ctx context.Context, loggingClient logger.LoggingClient) (int,
+	contract.CommandResponse, error) {
 	d, err := mdc.DeviceForName(dn, ctx)
 	if err != nil {
 		chk, ok := err.(types.ErrServiceClient)
@@ -188,7 +195,7 @@ func getCommandsByDeviceName(dn string, ctx context.Context) (int, contract.Comm
 
 	commands, err := dbClient.GetCommandsByDeviceId(d.Id)
 	if err != nil {
-		LoggingClient.Error(err.Error())
+		loggingClient.Error(err.Error())
 		if err == db.ErrNotFound {
 			return http.StatusNotFound, contract.CommandResponse{}, err
 		} else {

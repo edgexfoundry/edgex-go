@@ -18,6 +18,7 @@ import (
 	"net/http"
 
 	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
@@ -29,14 +30,19 @@ type serviceCommand struct {
 	contract.Device
 	internal.HttpCaller
 	*http.Request
+	loggingClient logger.LoggingClient
 }
 
 // Execute sends the command to the command service
 func (sc serviceCommand) Execute() (string, int, error) {
-	LoggingClient.Debug("Issuing" + sc.Request.Method + " command to: " + sc.Request.URL.String())
+	if sc.loggingClient != nil {
+		sc.loggingClient.Debug("Issuing" + sc.Request.Method + " command to: " + sc.Request.URL.String())
+	}
 	resp, reqErr := sc.HttpCaller.Do(sc.Request)
 	if reqErr != nil {
-		LoggingClient.Error(reqErr.Error())
+		if sc.loggingClient != nil {
+			sc.loggingClient.Error(reqErr.Error())
+		}
 		return "", http.StatusInternalServerError, reqErr
 
 	}

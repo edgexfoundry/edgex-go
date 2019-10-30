@@ -60,7 +60,7 @@ var testCommand = contract.Command{
 func TestNewGetCommandWithCorrelationId(t *testing.T) {
 	expectedCorrelationIDHeaderValue := "Testing"
 	testContext := context.WithValue(context.Background(), clients.CorrelationHeader, expectedCorrelationIDHeaderValue)
-	getCommand, _ := NewGetCommand(testDevice, testCommand, "", testContext, nil)
+	getCommand, _ := NewGetCommand(testDevice, testCommand, "", testContext, nil, mockLoggingClient)
 	actualCorrelationIDHeaderValue := getCommand.(serviceCommand).Request.Header.Get(clients.CorrelationHeader)
 	if actualCorrelationIDHeaderValue == "" {
 		t.Errorf("The populated GetCommand's request should contain a correlation ID header value")
@@ -73,7 +73,7 @@ func TestNewGetCommandWithCorrelationId(t *testing.T) {
 
 func TestNewGetCommandWithQueryParams(t *testing.T) {
 	queryParams := "test=value1&test2=value2"
-	getCommand, _ := NewGetCommand(testDevice, testCommand, queryParams, context.Background(), nil)
+	getCommand, _ := NewGetCommand(testDevice, testCommand, queryParams, context.Background(), nil, mockLoggingClient)
 	req := getCommand.(serviceCommand).Request.URL
 	if req.Scheme != TestProtocol {
 		t.Errorf("Unexpected protocol")
@@ -91,13 +91,13 @@ func TestNewGetCommandWithQueryParams(t *testing.T) {
 }
 func TestNewGetCommandWithMalformedQueryParams(t *testing.T) {
 	queryParams := "!@#$%"
-	_, err := NewGetCommand(testDevice, testCommand, queryParams, context.Background(), nil)
+	_, err := NewGetCommand(testDevice, testCommand, queryParams, context.Background(), nil, mockLoggingClient)
 	if err == nil {
 		t.Errorf("Expected error for malformed query parameters")
 	}
 }
 func TestNewGetCommandNoCorrelationIDInContext(t *testing.T) {
-	getCommand, _ := NewGetCommand(testDevice, testCommand, "", context.Background(), nil)
+	getCommand, _ := NewGetCommand(testDevice, testCommand, "", context.Background(), nil, mockLoggingClient)
 	actualCorrelationIDHeaderValue := getCommand.(serviceCommand).Request.Header.Get(clients.CorrelationHeader)
 	if actualCorrelationIDHeaderValue != "" {
 		t.Errorf("No correlation ID should be specified")
@@ -107,7 +107,7 @@ func TestNewGetCommandNoCorrelationIDInContext(t *testing.T) {
 func TestNewGetCommandInvalidBaseUrl(t *testing.T) {
 	device := testDevice
 	device.Service.Addressable.Address = "!@#$"
-	_, err := NewGetCommand(device, testCommand, "", context.Background(), nil)
+	_, err := NewGetCommand(device, testCommand, "", context.Background(), nil, mockLoggingClient)
 	if err == nil {
 		t.Errorf("The invalid URL error was not properly propagated to the caller")
 	}

@@ -26,14 +26,12 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/metadata"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
 )
 
 // Global variables
 var Configuration = &ConfigurationStruct{}
-var LoggingClient logger.LoggingClient
 
 var mdc metadata.DeviceClient
 var dbClient interfaces.DBClient
@@ -44,7 +42,7 @@ var httpErrorHandler errorconcept.ErrorHandler
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the command service.
 func BootstrapHandler(wg *sync.WaitGroup, ctx context.Context, startupTimer startup.Timer, dic *di.Container) bool {
 	// update global variables.
-	LoggingClient = container.LoggingClientFrom(dic.Get)
+	LoggingClient := container.LoggingClientFrom(dic.Get)
 	httpErrorHandler = errorconcept.NewErrorHandler(LoggingClient)
 	dbClient = container.DBClientFrom(dic.Get)
 
