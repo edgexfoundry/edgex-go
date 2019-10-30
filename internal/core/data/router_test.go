@@ -27,13 +27,14 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+
+	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
+
 	"github.com/edgexfoundry/edgex-go/internal/core/data/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/interfaces/mocks"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
-
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
 // TestSuccessfulConfig configuration used to avoid MaxResultCount errors.
@@ -67,11 +68,6 @@ var TestValueDescriptor3 = contract.ValueDescriptor{
 }
 
 func TestRestValueDescriptorsUsageHandler(t *testing.T) {
-	Configuration = &ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 10}}
-	defer func() { Configuration = &ConfigurationStruct{} }()
-	LoggingClient = logger.MockLogger{}
-	httpErrorHandler = errorconcept.NewErrorHandler(LoggingClient)
-
 	tests := []struct {
 		name           string
 		request        *http.Request
@@ -180,12 +176,14 @@ func TestRestValueDescriptorsUsageHandler(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			Configuration = &ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 10}}
+			defer func() { Configuration = &ConfigurationStruct{} }()
 
+			httpErrorHandler = errorconcept.NewErrorHandler(logger.NewMockClient())
 			dbClient = tt.dbMock
 			Configuration.Service = tt.config
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(restValueDescriptorsUsageHandler)
-			handler.ServeHTTP(rr, tt.request)
+			restValueDescriptorsUsageHandler(rr, tt.request, logger.NewMockClient())
 			response := rr.Result()
 			b, _ := ioutil.ReadAll(response.Body)
 			var r []map[string]bool

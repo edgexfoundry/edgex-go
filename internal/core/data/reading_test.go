@@ -6,6 +6,8 @@ import (
 	"math"
 	"testing"
 
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+
 	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/interfaces"
 	dbMock "github.com/edgexfoundry/edgex-go/internal/core/data/interfaces/mocks"
@@ -30,7 +32,7 @@ func TestGetAllReadings(t *testing.T) {
 
 	dbClient = newReadingsMockDB()
 
-	_, err := getAllReadings()
+	_, err := getAllReadings(logger.NewMockClient())
 
 	if err != nil {
 		t.Errorf("Unexpected error thrown getting all readings: %s", err.Error())
@@ -43,7 +45,7 @@ func TestGetAllReadingsOverLimit(t *testing.T) {
 
 	dbClient = newReadingsMockDB()
 
-	_, err := getAllReadings()
+	_, err := getAllReadings(logger.NewMockClient())
 
 	if err != nil {
 		switch err.(type) {
@@ -68,7 +70,7 @@ func TestGetAllReadingsError(t *testing.T) {
 
 	dbClient = myMock
 
-	_, err := getAllReadings()
+	_, err := getAllReadings(logger.NewMockClient())
 
 	if err == nil {
 		t.Errorf("Expected error getting all readings")
@@ -83,7 +85,7 @@ func TestAddReading(t *testing.T) {
 
 	dbClient = myMock
 
-	_, err := addReading(models.Reading{Name: "valid"})
+	_, err := addReading(models.Reading{Name: "valid"}, logger.NewMockClient())
 
 	if err != nil {
 		t.Errorf("Unexpected error adding reading")
@@ -98,7 +100,7 @@ func TestAddReadingError(t *testing.T) {
 
 	dbClient = myMock
 
-	_, err := addReading(models.Reading{})
+	_, err := addReading(models.Reading{}, logger.NewMockClient())
 
 	if err == nil {
 		t.Errorf("Expected error adding reading")
@@ -113,7 +115,7 @@ func TestGetReadingById(t *testing.T) {
 
 	dbClient = myMock
 
-	_, err := getReadingById("valid")
+	_, err := getReadingById("valid", logger.NewMockClient())
 
 	if err != nil {
 		t.Errorf("Unexpected error getting reading by ID")
@@ -128,7 +130,7 @@ func TestGetReadingByIdNotFound(t *testing.T) {
 
 	dbClient = myMock
 
-	_, err := getReadingById("404")
+	_, err := getReadingById("404", logger.NewMockClient())
 
 	if err != nil {
 		switch err.(type) {
@@ -152,7 +154,7 @@ func TestGetReadingByIdError(t *testing.T) {
 
 	dbClient = myMock
 
-	_, err := getReadingById("error")
+	_, err := getReadingById("error", logger.NewMockClient())
 
 	if err == nil {
 		t.Errorf("Expected error getting reading by ID with some error")
@@ -167,7 +169,7 @@ func TestDeleteReadingById(t *testing.T) {
 
 	dbClient = myMock
 
-	err := deleteReadingById("valid")
+	err := deleteReadingById("valid", logger.NewMockClient())
 
 	if err != nil {
 		t.Errorf("Unexpected error deleting reading by ID")
@@ -184,7 +186,7 @@ func TestDeleteReadingByIdError(t *testing.T) {
 
 	dbClient = myMock
 
-	err := deleteReadingById("invalid")
+	err := deleteReadingById("invalid", logger.NewMockClient())
 
 	if err == nil {
 		t.Errorf("Expected error deleting reading by ID")
@@ -201,7 +203,7 @@ func TestCountReadings(t *testing.T) {
 
 	dbClient = myMock
 
-	_, err := countReadings()
+	_, err := countReadings(logger.NewMockClient())
 
 	if err != nil {
 		t.Errorf("Unexpected error in CountReadings")
@@ -216,7 +218,7 @@ func TestCountReadingsError(t *testing.T) {
 
 	dbClient = myMock
 
-	_, err := countReadings()
+	_, err := countReadings(logger.NewMockClient())
 
 	if err == nil {
 		t.Errorf("Expected error in CountReadings")
@@ -231,7 +233,7 @@ func TestGetReadingsByDevice(t *testing.T) {
 
 	dbClient = myMock
 
-	expectedReadings, err := getReadingsByDevice("valid", 0, context.Background())
+	expectedReadings, err := getReadingsByDevice("valid", 0, context.Background(), logger.NewMockClient())
 
 	if err != nil {
 		t.Errorf("Unexpected error in getReadingsByDevice")
@@ -250,7 +252,7 @@ func TestGetReadingsByDeviceError(t *testing.T) {
 
 	dbClient = myMock
 
-	_, err := getReadingsByDevice("error", 0, context.Background())
+	_, err := getReadingsByDevice("error", 0, context.Background(), logger.NewMockClient())
 
 	if err == nil {
 		t.Errorf("Expected error in getReadingsByDevice")
@@ -265,7 +267,7 @@ func TestGetReadingsByValueDescriptor(t *testing.T) {
 
 	dbClient = myMock
 
-	_, err := getReadingsByValueDescriptor("valid", 0)
+	_, err := getReadingsByValueDescriptor("valid", 0, logger.NewMockClient())
 
 	if err != nil {
 		t.Errorf("Unexpected error getting readings by value descriptor")
@@ -276,7 +278,7 @@ func TestGetReadingsByValueDescriptorOverLimit(t *testing.T) {
 	reset()
 	dbClient = nil
 
-	_, err := getReadingsByValueDescriptor("", math.MaxInt32)
+	_, err := getReadingsByValueDescriptor("", math.MaxInt32, logger.NewMockClient())
 
 	if err == nil {
 		t.Errorf("Expected error getting readings by value descriptor")
@@ -291,7 +293,7 @@ func TestGetReadingsByValueDescriptorError(t *testing.T) {
 
 	dbClient = myMock
 
-	_, err := getReadingsByValueDescriptor("error", 0)
+	_, err := getReadingsByValueDescriptor("error", 0, logger.NewMockClient())
 
 	if err == nil {
 		t.Errorf("Expected error in getting readings by value descriptor")
@@ -306,7 +308,7 @@ func TestGetReadingsByValueDescriptorNames(t *testing.T) {
 
 	dbClient = myMock
 
-	_, err := getReadingsByValueDescriptorNames([]string{"valid"}, 0)
+	_, err := getReadingsByValueDescriptorNames([]string{"valid"}, 0, logger.NewMockClient())
 
 	if err != nil {
 		t.Errorf("Unexpected error getting readings by value descriptor names")
@@ -321,7 +323,7 @@ func TestGetReadingsByValueDescriptorNamesError(t *testing.T) {
 
 	dbClient = myMock
 
-	_, err := getReadingsByValueDescriptorNames([]string{"error"}, 0)
+	_, err := getReadingsByValueDescriptorNames([]string{"error"}, 0, logger.NewMockClient())
 
 	if err == nil {
 		t.Errorf("Expected error in getting readings by value descriptor names")
@@ -336,7 +338,7 @@ func TestGetReadingsByCreationTime(t *testing.T) {
 
 	dbClient = myMock
 
-	_, err := getReadingsByCreationTime(0xBEEF, 0, 0)
+	_, err := getReadingsByCreationTime(0xBEEF, 0, 0, logger.NewMockClient())
 
 	if err != nil {
 		t.Errorf("Unexpected error getting readings by creation time")
@@ -351,7 +353,7 @@ func TestGetReadingsByCreationTimeError(t *testing.T) {
 
 	dbClient = myMock
 
-	_, err := getReadingsByCreationTime(0xDEADBEEF, 0, 0)
+	_, err := getReadingsByCreationTime(0xDEADBEEF, 0, 0, logger.NewMockClient())
 
 	if err == nil {
 		t.Errorf("Expected error in getting readings by creation time")
@@ -366,7 +368,7 @@ func TestGetReadingsByDeviceAndValueDescriptor(t *testing.T) {
 
 	dbClient = myMock
 
-	_, err := getReadingsByDeviceAndValueDescriptor("valid", "valid", 0)
+	_, err := getReadingsByDeviceAndValueDescriptor("valid", "valid", 0, logger.NewMockClient())
 
 	if err != nil {
 		t.Errorf("Unexpected error getting readings by device and value descriptor")
@@ -381,7 +383,7 @@ func TestGetReadingsByDeviceAndValueDescriptorError(t *testing.T) {
 
 	dbClient = myMock
 
-	_, err := getReadingsByDeviceAndValueDescriptor("error", "error", 0)
+	_, err := getReadingsByDeviceAndValueDescriptor("error", "error", 0, logger.NewMockClient())
 
 	if err == nil {
 		t.Errorf("Expected error in getting readings by device and value descriptor")
