@@ -175,6 +175,12 @@ apps:
     plugs:
       - network
       - network-bind
+  edgexproxy-cmd:
+    adapter: none
+    command: bin/edgexproxy
+    plugs:
+      - network
+      - network-bind
   edgex-mongo:
     adapter: full
     after: [mongod]
