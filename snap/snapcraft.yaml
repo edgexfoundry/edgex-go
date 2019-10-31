@@ -434,7 +434,7 @@ apps:
 parts:
   version:
     plugin: nil
-    # as with curl plugin, the source dir is unrelated to this part and is used
+    # as with static-packages part, the source dir is unrelated to this part and is used
     # since it changes rarely and therefore will not trigger a new pull
     source: snap/local/build-helpers
     override-pull: |
@@ -442,7 +442,7 @@ parts:
       PROJECT_VERSION=$(cat VERSION)
       GIT_REVISION=$(git rev-parse --short HEAD)
       snapcraftctl set-version ${PROJECT_VERSION}-$(date +%Y%m%d)+${GIT_REVISION}
-  curl:
+  static-packages:
     plugin: nil
     # the default source for a part that doesn't specify one is ".", which
     # then means snapcraft will scan the full git directory here and determine
@@ -454,6 +454,7 @@ parts:
     source: snap/local/build-helpers
     stage-packages:
       - curl
+      - jq
 
   # snapcraft-preload is necessary to make postgres just use a different
   # lockfile location in /dev/shm
@@ -518,7 +519,7 @@ parts:
 
   go-build-helper:
     plugin: dump
-    # see comment for curl part about specifying a source part here
+    # see comment for static-packages part about specifying a source part here
     source: snap/local/build-helpers
     prime: [-*]
 
