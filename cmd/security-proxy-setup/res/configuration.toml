@@ -48,7 +48,7 @@ HealthCheckPath = "v1/sys/health"
 CertPath = "v1/secret/edgex/pki/tls/edgex-kong"
 TokenPath = "res/resp-init.json"
 CACertPath = "res/EdgeXFoundryCA/EdgeXFoundryCA.pem"
-SNIS = ["edgex-kong"]
+SNIS = ["localhost"]
 
 [Clients]
   [Clients.Coredata]
