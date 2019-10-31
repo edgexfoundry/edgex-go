@@ -32,7 +32,7 @@ ALL_SERVICES="$ALL_SERVICES device-virtual"
 
 # security services
 ALL_SERVICES="$ALL_SERVICES security-secret-store"
-ALL_SERVICES="$ALL_SERVICES security-api-gateway"
+ALL_SERVICES="$ALL_SERVICES security-proxy"
 
 # handle_svc will either turn a service off or on and set the associated
 # config item
@@ -71,43 +71,43 @@ for key in $ALL_SERVICES; do
             # handle the service too
             handle_svc "$key" "$status"
             ;;
-        mongo-worker|edgexproxy|vault-worker)
+        mongo-worker|security-proxy-setup|security-secretstore-setup)
             # it doesn't make any sense to disable the *-worker daemons since 
             # they are just oneshot daemons that run after other daemons, so
             # just ignore this request
             ;;
-        security-api-gateway)
-            # the security-api-gateway consists of the following base services
+        security-proxy)
+            # the security-proxy consists of the following base services
             # - kong
             # - postgres (because kong requires it)
             handle_svc "postgres" "$status"
             handle_svc "kong-daemon" "$status"
-            handle_svc "edgexproxy" "$status"
-            # additionally, the secrity-api-gateway needs to use the following
+            handle_svc "security-proxy-setup" "$status"
+            # additionally, the security-proxy needs to use the following
             # services:
-            # - vault (because edgexproxy will access/store secrets in vault)
-            # - vault-worker
+            # - vault (because security-proxy-setup will access/store secrets in vault)
+            # - security-secretstore-setup
             # so if we are turning the security-api-gateway on, then turn 
             # those services on too
             if [ "$status" = "on" ]; then
                 handle_svc "vault" "on"
-                handle_svc "vault-worker" "on"
+                handle_svc "security-secretstore-setup" "on"
             fi
             ;;
         security-secret-store)
             # the security-api-gateway consists of the following services:
             # - vault
-            # - vault-worker
+            # - security-secretstore-setup
             # and since the security-api-gateway needs to be able to use 
             # security-secret-store, we also need to turn off those services
             # if this one is disabled
             if [ "$status" = "off" ]; then
                 handle_svc "postgres" "off"
                 handle_svc "kong-daemon" "off"
-                handle_svc "edgexproxy" "off"
+                handle_svc "security-proxy-setup" "off" 
             fi
             handle_svc "vault" "$status"
-            handle_svc "vault-worker" "$status"
+            handle_svc "security-secretstore-setup" "$status"
             ;;
         *)
             # default case for all other services just enable/disable the service using
