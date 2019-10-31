@@ -19,10 +19,10 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/config"
 )
 
-// ConfigurationName contains the name of the interfaces.GetConfig implementation in the DIC.
+// ConfigurationName contains the name of the agent's config.ConfigurationStruct implementation in the DIC.
 var ConfigurationName = di.TypeInstanceToName(config.ConfigurationStruct{})
 
-// ConfigurationFrom helper function queries the DIC and returns the interfaces.GetConfig implementation.
+// ConfigurationFrom helper function queries the DIC and returns the agent's config.ConfigurationStruct implementation.
 func ConfigurationFrom(get di.Get) *config.ConfigurationStruct {
 	return get(ConfigurationName).(*config.ConfigurationStruct)
 }
