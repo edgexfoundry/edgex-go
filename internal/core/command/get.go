@@ -11,6 +11,7 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
+
 package command
 
 import (
@@ -31,11 +32,11 @@ func NewGetCommand(device contract.Device, command contract.Command, queryParams
 	urlResult := device.Service.Addressable.GetBaseURL() + strings.Replace(command.Get.Action.Path, DEVICEIDURLPARAM, device.Id, -1) + "?" + queryParams
 	validURL, err := url.ParseRequestURI(urlResult)
 	if err != nil {
-		return serviceCommand{loggingClient: loggingClient}, err
+		return serviceCommand{}, err
 	}
 	request, err := http.NewRequest(http.MethodGet, validURL.String(), nil)
 	if err != nil {
-		return serviceCommand{loggingClient: loggingClient}, err
+		return serviceCommand{}, err
 	}
 
 	correlationID := context.Value(clients.CorrelationHeader)
@@ -43,10 +44,5 @@ func NewGetCommand(device contract.Device, command contract.Command, queryParams
 		request.Header.Set(clients.CorrelationHeader, correlationID.(string))
 	}
 
-	return serviceCommand{
-		Device:        device,
-		HttpCaller:    httpCaller,
-		Request:       request,
-		loggingClient: loggingClient,
-	}, nil
+	return NewServiceCommand(device, httpCaller, request, loggingClient), nil
 }

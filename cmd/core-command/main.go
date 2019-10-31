@@ -48,7 +48,7 @@ func main() {
 	flag.Usage = usage.HelpCallback
 	flag.Parse()
 
-	dic := di.NewContainer(nil)
+	dic := di.NewContainer(di.ServiceConstructorMap{})
 	httpServer := httpserver.NewBootstrap(command.LoadRestRoutes(dic))
 	bootstrap.Run(
 		configDir,
@@ -58,7 +58,7 @@ func main() {
 		clients.CoreCommandServiceKey,
 		command.Configuration,
 		startupTimer,
-		di.NewContainer(di.ServiceConstructorMap{}),
+		dic,
 		[]interfaces.BootstrapHandler{
 			secret.NewSecret().BootstrapHandler,
 			database.NewDatabase(&httpServer, command.Configuration).BootstrapHandler,

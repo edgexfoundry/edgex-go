@@ -97,14 +97,14 @@ func pingHandler(w http.ResponseWriter, _ *http.Request) {
 	w.Write([]byte("pong"))
 }
 
-func configHandler(w http.ResponseWriter, LoggingClient logger.LoggingClient) {
-	pkg.Encode(Configuration, w, LoggingClient)
+func configHandler(w http.ResponseWriter, loggingClient logger.LoggingClient) {
+	pkg.Encode(Configuration, w, loggingClient)
 }
 
-func metricsHandler(w http.ResponseWriter, LoggingClient logger.LoggingClient) {
+func metricsHandler(w http.ResponseWriter, loggingClient logger.LoggingClient) {
 	s := telemetry.NewSystemUsage()
 
-	pkg.Encode(s, w, LoggingClient)
+	pkg.Encode(s, w, loggingClient)
 
 	return
 }

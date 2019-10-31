@@ -1,3 +1,17 @@
+/*******************************************************************************
+ * Copyright 2019 Dell Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
+ *******************************************************************************/
+
 package command
 
 import (
@@ -17,9 +31,20 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 )
 
-var mockLoggingClient = logger.NewMockClient()
+var (
+	status400 = "400"
+	status404 = "404"
+	status500 = "500"
+	status423 = "423"
 
-//commandByDeviceID
+	mismatch = "d200-c200-mismatch"
+	d200c404 = "d200-c404"
+	d200c500 = "d200-c500"
+
+	TestCommandId = "TestCommandID"
+)
+
+// commandByDeviceID
 func TestExecuteGETCommandByDeviceIdAndCommandId(t *testing.T) {
 	mdc = newMockDeviceClient()
 	dbClient = newCommandMock()
@@ -83,7 +108,7 @@ func TestExecuteGETCommandByDeviceIdAndCommandId(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			_, statusCode := commandByDeviceID(tt.deviceId, TestCommandId, "", "", false, context.Background(),
-				mockLoggingClient)
+				logger.NewMockClient())
 			if tt.expectedStatus != statusCode {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, statusCode)
 				return
@@ -116,16 +141,3 @@ func newCommandMock() interfaces.DBClient {
 
 	return dbMock
 }
-
-var (
-	status400 = "400"
-	status404 = "404"
-	status500 = "500"
-	status423 = "423"
-
-	mismatch = "d200-c200-mismatch"
-	d200c404 = "d200-c404"
-	d200c500 = "d200-c500"
-
-	TestCommandId = "TestCommandID"
-)

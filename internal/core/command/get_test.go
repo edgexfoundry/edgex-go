@@ -11,6 +11,7 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
+
 package command
 
 import (
@@ -19,6 +20,7 @@ import (
 	"testing"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
@@ -60,7 +62,7 @@ var testCommand = contract.Command{
 func TestNewGetCommandWithCorrelationId(t *testing.T) {
 	expectedCorrelationIDHeaderValue := "Testing"
 	testContext := context.WithValue(context.Background(), clients.CorrelationHeader, expectedCorrelationIDHeaderValue)
-	getCommand, _ := NewGetCommand(testDevice, testCommand, "", testContext, nil, mockLoggingClient)
+	getCommand, _ := NewGetCommand(testDevice, testCommand, "", testContext, nil, logger.NewMockClient())
 	actualCorrelationIDHeaderValue := getCommand.(serviceCommand).Request.Header.Get(clients.CorrelationHeader)
 	if actualCorrelationIDHeaderValue == "" {
 		t.Errorf("The populated GetCommand's request should contain a correlation ID header value")
@@ -73,7 +75,7 @@ func TestNewGetCommandWithCorrelationId(t *testing.T) {
 
 func TestNewGetCommandWithQueryParams(t *testing.T) {
 	queryParams := "test=value1&test2=value2"
-	getCommand, _ := NewGetCommand(testDevice, testCommand, queryParams, context.Background(), nil, mockLoggingClient)
+	getCommand, _ := NewGetCommand(testDevice, testCommand, queryParams, context.Background(), nil, logger.NewMockClient())
 	req := getCommand.(serviceCommand).Request.URL
 	if req.Scheme != TestProtocol {
 		t.Errorf("Unexpected protocol")
@@ -91,13 +93,13 @@ func TestNewGetCommandWithQueryParams(t *testing.T) {
 }
 func TestNewGetCommandWithMalformedQueryParams(t *testing.T) {
 	queryParams := "!@#$%"
-	_, err := NewGetCommand(testDevice, testCommand, queryParams, context.Background(), nil, mockLoggingClient)
+	_, err := NewGetCommand(testDevice, testCommand, queryParams, context.Background(), nil, logger.NewMockClient())
 	if err == nil {
 		t.Errorf("Expected error for malformed query parameters")
 	}
 }
 func TestNewGetCommandNoCorrelationIDInContext(t *testing.T) {
-	getCommand, _ := NewGetCommand(testDevice, testCommand, "", context.Background(), nil, mockLoggingClient)
+	getCommand, _ := NewGetCommand(testDevice, testCommand, "", context.Background(), nil, logger.NewMockClient())
 	actualCorrelationIDHeaderValue := getCommand.(serviceCommand).Request.Header.Get(clients.CorrelationHeader)
 	if actualCorrelationIDHeaderValue != "" {
 		t.Errorf("No correlation ID should be specified")
@@ -107,7 +109,7 @@ func TestNewGetCommandNoCorrelationIDInContext(t *testing.T) {
 func TestNewGetCommandInvalidBaseUrl(t *testing.T) {
 	device := testDevice
 	device.Service.Addressable.Address = "!@#$"
-	_, err := NewGetCommand(device, testCommand, "", context.Background(), nil, mockLoggingClient)
+	_, err := NewGetCommand(device, testCommand, "", context.Background(), nil, logger.NewMockClient())
 	if err == nil {
 		t.Errorf("The invalid URL error was not properly propagated to the caller")
 	}

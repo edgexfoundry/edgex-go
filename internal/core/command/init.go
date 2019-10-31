@@ -12,6 +12,7 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
+
 package command
 
 import (
@@ -41,13 +42,10 @@ var httpErrorHandler errorconcept.ErrorHandler
 
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the command service.
 func BootstrapHandler(wg *sync.WaitGroup, ctx context.Context, startupTimer startup.Timer, dic *di.Container) bool {
-	// update global variables.
-	LoggingClient := container.LoggingClientFrom(dic.Get)
-	httpErrorHandler = errorconcept.NewErrorHandler(LoggingClient)
-	dbClient = container.DBClientFrom(dic.Get)
-
-	// initialize clients required by service.
+	loggingClient := container.LoggingClientFrom(dic.Get)
 	registryClient := container.RegistryFrom(dic.Get)
+	httpErrorHandler = errorconcept.NewErrorHandler(loggingClient)
+	dbClient = container.DBClientFrom(dic.Get)
 	mdc = metadata.NewDeviceClient(
 		types.EndpointParams{
 			ServiceKey:  clients.CoreMetaDataServiceKey,
