@@ -319,9 +319,9 @@ apps:
       - core-metadata
       - support-logging
     command: bin/device-random -confdir $SNAP_DATA/config/device-random -profile res --registry $CONSUL_ADDR
+    daemon: simple
     environment:
       CONSUL_ADDR: "consul://localhost:8500"
-    daemon: simple
     plugs: [network, network-bind]
   device-virtual:
     adapter: none
@@ -333,9 +333,9 @@ apps:
       - core-metadata
       - support-logging
     command: bin/device-virtual -confdir $SNAP_DATA/config/device-virtual -profile res --registry $CONSUL_ADDR
+    daemon: simple
     environment:
       CONSUL_ADDR: "consul://localhost:8500"
-    daemon: simple
     plugs: [network, network-bind]
   app-service-configurable:
     adapter: full
