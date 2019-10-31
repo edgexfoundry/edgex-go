@@ -9,7 +9,7 @@ SNAP_CURRENT=${SNAP/%$SNAP_REVISION/current}
 # install all the config files from $SNAP/config/SERVICE/res/configuration.toml 
 # into $SNAP_DATA/config
 mkdir -p "$SNAP_DATA/config"
-for service in edgex-mongo security-api-gateway security-secret-store core-command config-seed core-data core-metadata export-client export-distro support-logging support-notifications support-scheduler sys-mgmt-agent device-random device-virtual; do
+for service in edgex-mongo security-proxy-setup security-secrets-setup security-secretstore-setup core-command config-seed core-data core-metadata export-client export-distro support-logging support-notifications support-scheduler sys-mgmt-agent device-random device-virtual; do
     if [ ! -f "$SNAP_DATA/config/$service/res/configuration.toml" ]; then
         mkdir -p "$SNAP_DATA/config/$service/res"
         cp "$SNAP/config/$service/res/configuration.toml" "$SNAP_DATA/config/$service/res/configuration.toml"
@@ -50,40 +50,20 @@ if [ ! -f "$SNAP_DATA/support-rulesengine/rules" ]; then
     mkdir -p "$SNAP_DATA/support-rulesengine/rules"
 fi
 
-
-# for security-secret-store, copy the hcl config files used with vault
-for hclType in admin kong; do 
-    if [ ! -f "$SNAP_DATA/config/security-secret-store/res/vault-policy-$hclType.hcl" ]; then
-        mkdir -p "$SNAP_DATA/config/security-secret-store/res"
-        cp "$SNAP/config/security-secret-store/res/vault-policy-$hclType.hcl" "$SNAP_DATA/config/security-secret-store/res/vault-policy-$hclType.hcl"
-    fi
-done
-
 # for the kong pki setup file, we need to set the hostname as localhost
 # and then set the directory to store the cert files as $SNAP_DATA/kong/ssl
-if [ ! -f "$SNAP_DATA/config/security-secret-store/pkisetup-kong.json" ]; then
-    mkdir -p "$SNAP_DATA/config/security-secret-store"
-    CONFIG_FILE_PATH="config/security-secret-store/pkisetup-kong.json"
-    # replace the hostname with localhost using jq
-    jq --arg WORKDIR "$SNAP_DATA_CURRENT/vault" \
-        '.x509_tls_server_parameters.tls_host = "localhost" | .pki_setup_dir = "pki" | .working_dir  = $WORKDIR' \
-        "$SNAP/$CONFIG_FILE_PATH" > "$SNAP_DATA/$CONFIG_FILE_PATH.tmp"
-    mv "$SNAP_DATA/$CONFIG_FILE_PATH.tmp" "$SNAP_DATA/$CONFIG_FILE_PATH"
-    chmod 600 "$SNAP_DATA/config/security-secret-store/pkisetup-kong.json"
-fi
-
-# for vault, we also need to set the hostname as localhost
-# and then set the directory to store the cert files as $SNAP_DATA/vault/pki
-if [ ! -f "$SNAP_DATA/config/security-secret-store/pkisetup-vault.json" ]; then
-    mkdir -p "$SNAP_DATA/config/security-secret-store"
-    CONFIG_FILE_PATH="config/security-secret-store/pkisetup-vault.json"
-    # modify the parameters using jq
-    jq --arg WORKDIR "$SNAP_DATA_CURRENT/vault" \
-        '.x509_tls_server_parameters.tls_host = "localhost" | .pki_setup_dir = "pki" | .working_dir  = $WORKDIR' \
-        "$SNAP/$CONFIG_FILE_PATH" > "$SNAP_DATA/$CONFIG_FILE_PATH.tmp"
-    mv "$SNAP_DATA/$CONFIG_FILE_PATH.tmp" "$SNAP_DATA/$CONFIG_FILE_PATH"
-    chmod 600 "$SNAP_DATA/config/security-secret-store/pkisetup-vault.json"
-fi
+mkdir -p "$SNAP_DATA/config/security-secrets-setup/res"
+for svc in kong vault; do 
+    CONFIG_FILE_PATH="config/security-secrets-setup/res/pkisetup-$svc.json"
+    if [ ! -f "$SNAP_DATA/$CONFIG_FILE_PATH" ]; then
+        # replace the hostname with localhost using jq
+        jq --arg WORKDIR "$SNAP_DATA_CURRENT" \
+            '.x509_tls_server_parameters.tls_host = "localhost" | .pki_setup_dir = "pki" | .working_dir  = $WORKDIR' \
+            "$SNAP/$CONFIG_FILE_PATH" > "$SNAP_DATA/$CONFIG_FILE_PATH.tmp"
+        mv "$SNAP_DATA/$CONFIG_FILE_PATH.tmp" "$SNAP_DATA/$CONFIG_FILE_PATH"
+        chmod 600 "$SNAP_DATA/$CONFIG_FILE_PATH"
+    fi
+done
 
 # ensure consul dirs exist
 mkdir -p "$SNAP_DATA/consul/data"
@@ -125,15 +105,15 @@ fi
 # the kong config file needs to be generated with 3 changes from the default one included in the snap
 # - we set the prefix to be $SNAP_DATA/kong as an absolute path (note that this has to be done here in the install hook)
 # - we set the nginx user to be root
-if [ ! -f "$SNAP_DATA/config/security-api-gateway/kong.conf" ]; then
-    mkdir -p "$SNAP_DATA/config/security-api-gateway"
-    cp "$SNAP/config/security-api-gateway/kong.conf" "$SNAP_DATA/config/security-api-gateway/kong.conf"
+if [ ! -f "$SNAP_DATA/config/security-proxy-setup/kong.conf" ]; then
+    mkdir -p "$SNAP_DATA/config/security-proxy-setup"
+    cp "$SNAP/config/security-proxy-setup/kong.conf" "$SNAP_DATA/config/security-proxy-setup/kong.conf"
     # replace the default prefix setting with an absolute path using $SNAP_DATA
     # note that if anyone ever has a "@" in their $SNAP_DATA this will likely fail
-    sed -i "s@#prefix = /usr/local/kong/@prefix = $SNAP_DATA_CURRENT/kong@" "$SNAP_DATA/config/security-api-gateway/kong.conf"
+    sed -i "s@#prefix = /usr/local/kong/@prefix = $SNAP_DATA_CURRENT/kong@" "$SNAP_DATA/config/security-proxy-setup/kong.conf"
 
     # also replace the default nginx user/group to be root
-    sed -i "s@#nginx_user = nobody nobody@nginx_user = root root@" "$SNAP_DATA/config/security-api-gateway/kong.conf"
+    sed -i "s@#nginx_user = nobody nobody@nginx_user = root root@" "$SNAP_DATA/config/security-proxy-setup/kong.conf"
 fi
 
 # setup postgres db config file with env vars replaced
@@ -208,13 +188,13 @@ for svc in export-distro export-client support-notifications support-scheduler s
     snapctl stop --disable "$SNAP_NAME.$svc"
 done
 
-# if we are on arm64, disable the security-api-gateway because kong isn't 
+# if we are on arm64, disable the security-proxy because kong isn't 
 # properly supported on arm64 due to incorrect memory pointers used by lua and
 # openresty
 # see https://github.com/edgexfoundry/blackbox-testing/issues/185 for more 
 # details
 if [ "$SNAP_ARCH" == "arm64" ]; then
-    snapctl set security-api-gateway=off
+    snapctl set security-proxy=off
     snapctl stop --disable "$SNAP_NAME.kong-daemon"
-    snapctl stop --disable "$SNAP_NAME.edgexproxy"
+    snapctl stop --disable "$SNAP_NAME.security-proxy-setup"
 fi
