@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # stop kong
-"$SNAP/bin/kong-wrapper.sh" stop -p "$SNAP_DATA/kong"
+"$SNAP/bin/kong" stop -p "$SNAP_DATA/kong"
 
 # in some cases stopping kong doesn't succeed properly, so to ensure that
 # it always is put into a state where it can startup, just remove the env
