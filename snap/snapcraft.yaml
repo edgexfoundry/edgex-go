@@ -179,12 +179,9 @@ apps:
     adapter: full
     after: [mongod]
     command: bin/edgex-mongo -confdir $SNAP_DATA/config/edgex-mongo/res
+    command-chain:
+      - bin/security-secret-store-env-var.sh
     daemon: oneshot
-    environment:
-      # TODO: set this to true and make it configurable when docker-edgex-mongo
-      # is integrated with vault access for database access, etc. see
-      # https://github.com/edgexfoundry/edgex-go/issues/1840
-      EDGEX_SECURITY_SECRET_STORE: "false"
     start-timeout: 15m
     plugs: [network]
   core-data:
@@ -194,6 +191,8 @@ apps:
       - edgex-mongo
       - edgexproxy
     command: bin/core-data -confdir $SNAP_DATA/config/core-data/res --registry
+    command-chain:
+      - bin/security-secret-store-env-var.sh
     daemon: simple
     plugs: [network, network-bind]
     # for now, specify a shorter stop-timeout until services learn how
@@ -207,6 +206,8 @@ apps:
       - edgex-mongo
       - edgexproxy
     command: bin/core-metadata -confdir $SNAP_DATA/config/core-metadata/res --registry
+    command-chain:
+      - bin/security-secret-store-env-var.sh
     daemon: simple
     plugs: [network, network-bind]
     stop-timeout: 10s
@@ -217,6 +218,8 @@ apps:
       - edgex-mongo
       - edgexproxy
     command: bin/core-command -confdir $SNAP_DATA/config/core-command/res --registry
+    command-chain:
+      - bin/security-secret-store-env-var.sh
     daemon: simple
     plugs: [network, network-bind]
     stop-timeout: 10s
@@ -227,6 +230,8 @@ apps:
       - edgex-mongo
       - edgexproxy
     command: bin/support-logging -confdir $SNAP_DATA/config/support-logging/res --registry
+    command-chain:
+      - bin/security-secret-store-env-var.sh
     daemon: simple
     plugs: [network, network-bind]
     stop-timeout: 10s
@@ -237,6 +242,8 @@ apps:
       - edgex-mongo
       - edgexproxy
     command: bin/support-notifications -confdir $SNAP_DATA/config/support-notifications/res --registry
+    command-chain:
+      - bin/security-secret-store-env-var.sh
     daemon: simple
     plugs: [network, network-bind]
     stop-timeout: 10s
@@ -247,6 +254,8 @@ apps:
       - edgex-mongo
       - edgexproxy
     command: bin/support-scheduler -confdir $SNAP_DATA/config/support-scheduler/res --registry
+    command-chain:
+      - bin/security-secret-store-env-var.sh
     daemon: simple
     plugs: [network, network-bind]
     stop-timeout: 10s
@@ -258,6 +267,8 @@ apps:
       - edgex-mongo
       - edgexproxy
     command: bin/support-rulesengine-wrapper.sh
+    command-chain:
+      - bin/security-secret-store-env-var.sh
     daemon: simple
     plugs: [network, network-bind]
   export-client:
@@ -267,6 +278,8 @@ apps:
       - edgex-mongo
       - edgexproxy
     command: bin/export-client -confdir $SNAP_DATA/config/export-client/res --registry
+    command-chain:
+      - bin/security-secret-store-env-var.sh
     daemon: simple
     plugs: [network, network-bind]
     stop-timeout: 10s
@@ -277,6 +290,8 @@ apps:
       - edgex-mongo
       - edgexproxy
     command: bin/export-distro -confdir $SNAP_DATA/config/export-distro/res --registry
+    command-chain:
+      - bin/security-secret-store-env-var.sh
     daemon: simple
     plugs: [network, network-bind]
     stop-timeout: 10s
@@ -287,6 +302,8 @@ apps:
       - edgex-mongo
       - edgexproxy
     command: bin/sys-mgmt-agent -confdir $SNAP_DATA/config/sys-mgmt-agent/res --registry
+    command-chain:
+      - bin/security-secret-store-env-var.sh
     daemon: simple
     plugs: [network, network-bind]
   device-random:
