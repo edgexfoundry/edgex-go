@@ -23,6 +23,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
 // Global variables
@@ -35,6 +36,11 @@ func Retry(useRegistry bool, configDir, profileDir string, timeout int, wait *sy
 		var err error
 		// When looping, only handle configuration if it hasn't already been set.
 		if Configuration == nil {
+			// Next two lines are workaround for issue #1814 (nil panic while logging)
+			// where config.LoadFromFile depends on a global LoggingClient that isn't set anywhere
+			// Remove this workaround once this tool is migrated to common bootstrap.
+			lc := logger.NewClient(internal.SecurityProxySetupServiceKey, false, "", models.InfoLog)
+			config.LoggingClient = lc
 			Configuration, err = initializeConfiguration(useRegistry, configDir, profileDir)
 			if err != nil {
 				ch <- err

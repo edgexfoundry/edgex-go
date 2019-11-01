@@ -64,6 +64,10 @@ func main() {
 		BootTimeout: internal.BootTimeoutDefault,
 	}
 	startup.Bootstrap(params, proxy.Retry, logBeforeInit)
+	if proxy.Configuration == nil {
+		// proxy.LoggingClient wasn't initialized either
+		os.Exit(1)
+	}
 
 	req := proxy.NewRequestor(insecureSkipVerify, proxy.Configuration.Writable.RequestTimeout)
 
