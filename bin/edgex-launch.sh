@@ -21,6 +21,9 @@ function cleanup {
 	pkill edgex
 }
 
+# disable secret-store integration
+export EDGEX_SECURITY_SECRET_STORE=false
+
 ###
 # Support logging
 ###
