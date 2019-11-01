@@ -48,7 +48,8 @@ func main() {
 	flag.Usage = usage.HelpCallback
 	flag.Parse()
 
-	httpServer := httpserver.NewBootstrap(metadata.LoadRestRoutes())
+	dic := di.NewContainer(di.ServiceConstructorMap{})
+	httpServer := httpserver.NewBootstrap(metadata.LoadRestRoutes(dic))
 	bootstrap.Run(
 		configDir,
 		profileDir,
@@ -57,7 +58,7 @@ func main() {
 		clients.CoreMetaDataServiceKey,
 		metadata.Configuration,
 		startupTimer,
-		di.NewContainer(di.ServiceConstructorMap{}),
+		dic,
 		[]interfaces.BootstrapHandler{
 			secret.NewSecret().BootstrapHandler,
 			database.NewDatabase(&httpServer, metadata.Configuration).BootstrapHandler,

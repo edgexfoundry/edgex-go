@@ -28,16 +28,22 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/operators/device"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/notifications"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/edgexfoundry/go-mod-core-contracts/requests/states/admin"
 	"github.com/edgexfoundry/go-mod-core-contracts/requests/states/operating"
+
 	"github.com/gorilla/mux"
 )
 
-func restGetAllDevices(w http.ResponseWriter, _ *http.Request) {
-	op := device.NewDeviceLoadAll(Configuration.Service, dbClient, LoggingClient)
+func restGetAllDevices(
+	w http.ResponseWriter,
+	loggingClient logger.LoggingClient) {
+
+	op := device.NewDeviceLoadAll(Configuration.Service, dbClient, loggingClient)
 	devices, err := op.Execute()
 	if err != nil {
 		httpErrorHandler.HandleOneVariant(w, err, errorconcept.Common.LimitExceeded, errorconcept.Default.InternalServerError)
@@ -51,7 +57,11 @@ func restGetAllDevices(w http.ResponseWriter, _ *http.Request) {
 // Attached objects (Addressable, Profile, Service) are referenced by ID or name
 // 409 conflict if any of the attached items can't be found by ID or name
 // Ignore everything else from the attached objects
-func restAddNewDevice(w http.ResponseWriter, r *http.Request) {
+func restAddNewDevice(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient) {
+
 	defer r.Body.Close()
 
 	var d models.Device
@@ -65,7 +75,7 @@ func restAddNewDevice(w http.ResponseWriter, r *http.Request) {
 	// The following requester instance is necessary because we will be making an HTTP call to the device service
 	// associated with the new device in the Notifier below. There is no device service client. Additionally, the
 	// requester interface should be mocked for unit testability and so is injected into the Notifier.
-	requester, err := device.NewRequester(device.Http, LoggingClient, ctx)
+	requester, err := device.NewRequester(device.Http, loggingClient, ctx)
 	if err != nil {
 		httpErrorHandler.Handle(w, err, errorconcept.Device.RequesterError)
 		return
@@ -74,7 +84,7 @@ func restAddNewDevice(w http.ResponseWriter, r *http.Request) {
 	ch := make(chan device.DeviceEvent)
 	defer close(ch)
 
-	notifier := device.NewNotifier(ch, nc, Configuration.Notifications, dbClient, requester, LoggingClient, ctx)
+	notifier := device.NewNotifier(ch, nc, Configuration.Notifications, dbClient, requester, loggingClient, ctx)
 	go notifier.Execute()
 
 	op := device.NewAddDevice(ch, dbClient, d)
@@ -98,7 +108,11 @@ func restAddNewDevice(w http.ResponseWriter, r *http.Request) {
 // Update the device
 // Use ID to identify device first, then name
 // Can't create new Device Services/Profiles with a PUT, but you can reference another one
-func restUpdateDevice(w http.ResponseWriter, r *http.Request) {
+func restUpdateDevice(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient) {
+
 	defer r.Body.Close()
 	var rd models.Device
 	err := json.NewDecoder(r.Body).Decode(&rd)
@@ -112,16 +126,16 @@ func restUpdateDevice(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 
-	requester, err := device.NewRequester(device.Http, LoggingClient, ctx)
+	requester, err := device.NewRequester(device.Http, loggingClient, ctx)
 	if err != nil {
 		httpErrorHandler.Handle(w, err, errorconcept.Device.RequesterError)
 		return
 	}
 
-	notifier := device.NewNotifier(ch, nc, Configuration.Notifications, dbClient, requester, LoggingClient, ctx)
+	notifier := device.NewNotifier(ch, nc, Configuration.Notifications, dbClient, requester, loggingClient, ctx)
 	go notifier.Execute()
 
-	op := device.NewUpdateDevice(ch, dbClient, rd, LoggingClient)
+	op := device.NewUpdateDevice(ch, dbClient, rd, loggingClient)
 	err = op.Execute()
 
 	if err != nil {
@@ -267,7 +281,11 @@ func restGetDeviceById(w http.ResponseWriter, r *http.Request) {
 }
 
 //Shouldn't need "rest" in any of these methods. Adding it here for consistency right now.
-func restCheckForDevice(w http.ResponseWriter, r *http.Request) {
+func restCheckForDevice(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient) {
+
 	vars := mux.Vars(r)
 	token := vars[ID] //referring to this as "token" for now since the source variable is double purposed
 
@@ -278,7 +296,7 @@ func restCheckForDevice(w http.ResponseWriter, r *http.Request) {
 			httpErrorHandler.Handle(w, err, errorconcept.Common.RetrieveError_StatusInternalServer)
 			return
 		} else {
-			LoggingClient.Debug(fmt.Sprintf("device %s %v", token, err))
+			loggingClient.Debug(fmt.Sprintf("device %s %v", token, err))
 		}
 	}
 
@@ -342,7 +360,11 @@ func decodeState(r *http.Request) (mode string, state string, err error) {
 	return "", "", fmt.Errorf("unknown request type: data decode failed for both states: %v", errMsg)
 }
 
-func restSetDeviceStateById(w http.ResponseWriter, r *http.Request) {
+func restSetDeviceStateById(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient) {
+
 	vars := mux.Vars(r)
 	var did = vars[ID]
 	updateMode, state, err := decodeState(r)
@@ -364,12 +386,16 @@ func restSetDeviceStateById(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Notify
-	notifyDeviceAssociates(d, http.MethodPut, r.Context())
+	notifyDeviceAssociates(d, http.MethodPut, r.Context(), loggingClient)
 
 	w.WriteHeader(http.StatusOK)
 }
 
-func restSetDeviceStateByDeviceName(w http.ResponseWriter, r *http.Request) {
+func restSetDeviceStateByDeviceName(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient) {
+
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
@@ -397,7 +423,7 @@ func restSetDeviceStateByDeviceName(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 	// Notify
-	notifyDeviceAssociates(d, http.MethodPut, ctx)
+	notifyDeviceAssociates(d, http.MethodPut, ctx, loggingClient)
 
 	w.WriteHeader(http.StatusOK)
 }
@@ -412,7 +438,11 @@ func updateDeviceState(updateMode string, state string, d models.Device) error {
 	return dbClient.UpdateDevice(d)
 }
 
-func restDeleteDeviceById(w http.ResponseWriter, r *http.Request) {
+func restDeleteDeviceById(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient) {
+
 	vars := mux.Vars(r)
 	var did string = vars[ID]
 
@@ -424,15 +454,19 @@ func restDeleteDeviceById(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := r.Context()
-	if err := deleteDevice(d, w, ctx); err != nil {
-		LoggingClient.Error(err.Error())
+	if err := deleteDevice(d, w, ctx, loggingClient); err != nil {
+		loggingClient.Error(err.Error())
 		return
 	}
 
 	w.Write([]byte("true"))
 }
 
-func restDeleteDeviceByName(w http.ResponseWriter, r *http.Request) {
+func restDeleteDeviceByName(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient) {
+
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
@@ -448,8 +482,8 @@ func restDeleteDeviceByName(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := r.Context()
-	if err := deleteDevice(d, w, ctx); err != nil {
-		LoggingClient.Error(err.Error())
+	if err := deleteDevice(d, w, ctx, loggingClient); err != nil {
+		loggingClient.Error(err.Error())
 		return
 	}
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
@@ -458,8 +492,13 @@ func restDeleteDeviceByName(w http.ResponseWriter, r *http.Request) {
 }
 
 // Delete the device
-func deleteDevice(d models.Device, w http.ResponseWriter, ctx context.Context) error {
-	if err := deleteAssociatedReportsForDevice(d, w); err != nil {
+func deleteDevice(
+	d models.Device,
+	w http.ResponseWriter,
+	ctx context.Context,
+	loggingClient logger.LoggingClient) error {
+
+	if err := deleteAssociatedReportsForDevice(d, w, loggingClient); err != nil {
 		httpErrorHandler.Handle(w, err, errorconcept.Common.DeleteError)
 		return err
 	}
@@ -470,7 +509,7 @@ func deleteDevice(d models.Device, w http.ResponseWriter, ctx context.Context) e
 	}
 
 	// Notify Associates
-	if err := notifyDeviceAssociates(d, http.MethodDelete, ctx); err != nil {
+	if err := notifyDeviceAssociates(d, http.MethodDelete, ctx, loggingClient); err != nil {
 		httpErrorHandler.Handle(w, err, errorconcept.Device.NotifyError)
 		return err
 	}
@@ -479,7 +518,11 @@ func deleteDevice(d models.Device, w http.ResponseWriter, ctx context.Context) e
 }
 
 // Delete the associated device reports for the device
-func deleteAssociatedReportsForDevice(d models.Device, w http.ResponseWriter) error {
+func deleteAssociatedReportsForDevice(
+	d models.Device,
+	w http.ResponseWriter,
+	loggingClient logger.LoggingClient) error {
+
 	reports, err := dbClient.GetDeviceReportByDeviceName(d.Name)
 	if err != nil {
 		httpErrorHandler.Handle(w, err, errorconcept.Common.RetrieveError_StatusServiceUnavailable)
@@ -492,13 +535,17 @@ func deleteAssociatedReportsForDevice(d models.Device, w http.ResponseWriter) er
 			httpErrorHandler.Handle(w, err, errorconcept.Common.DeleteError)
 			return err
 		}
-		notifyDeviceReportAssociates(report, http.MethodDelete)
+		notifyDeviceReportAssociates(report, http.MethodDelete, loggingClient)
 	}
 
 	return nil
 }
 
-func restSetDeviceLastConnectedById(w http.ResponseWriter, r *http.Request) {
+func restSetDeviceLastConnectedById(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient) {
+
 	vars := mux.Vars(r)
 	var did string = vars[ID]
 	var vlc string = vars[LASTCONNECTED]
@@ -517,7 +564,7 @@ func restSetDeviceLastConnectedById(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 	// Update last connected
-	if err = setLastConnected(d, lc, false, w, ctx); err != nil {
+	if err = setLastConnected(d, lc, false, w, ctx, loggingClient); err != nil {
 		return
 	}
 
@@ -525,7 +572,11 @@ func restSetDeviceLastConnectedById(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("true"))
 }
 
-func restSetLastConnectedByIdNotify(w http.ResponseWriter, r *http.Request) {
+func restSetLastConnectedByIdNotify(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient) {
+
 	// Get the URL parameters
 	vars := mux.Vars(r)
 	var did = vars[ID]
@@ -550,7 +601,7 @@ func restSetLastConnectedByIdNotify(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 	// Update last connected
-	if err = setLastConnected(d, lc, notify, w, ctx); err != nil {
+	if err = setLastConnected(d, lc, notify, w, ctx, loggingClient); err != nil {
 		return
 	}
 
@@ -558,7 +609,11 @@ func restSetLastConnectedByIdNotify(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("true"))
 }
 
-func restSetDeviceLastConnectedByName(w http.ResponseWriter, r *http.Request) {
+func restSetDeviceLastConnectedByName(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient) {
+
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
@@ -581,7 +636,7 @@ func restSetDeviceLastConnectedByName(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 	// Update last connected
-	if err = setLastConnected(d, lc, false, w, ctx); err != nil {
+	if err = setLastConnected(d, lc, false, w, ctx, loggingClient); err != nil {
 		return
 	}
 
@@ -589,7 +644,11 @@ func restSetDeviceLastConnectedByName(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("true"))
 }
 
-func restSetDeviceLastConnectedByNameNotify(w http.ResponseWriter, r *http.Request) {
+func restSetDeviceLastConnectedByNameNotify(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient) {
+
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
@@ -617,7 +676,7 @@ func restSetDeviceLastConnectedByNameNotify(w http.ResponseWriter, r *http.Reque
 
 	ctx := r.Context()
 	// Update last connected
-	if err = setLastConnected(d, lc, notify, w, ctx); err != nil {
+	if err = setLastConnected(d, lc, notify, w, ctx, loggingClient); err != nil {
 		return
 	}
 
@@ -626,7 +685,14 @@ func restSetDeviceLastConnectedByNameNotify(w http.ResponseWriter, r *http.Reque
 }
 
 // Update the last connected value for the device
-func setLastConnected(d models.Device, time int64, notify bool, w http.ResponseWriter, ctx context.Context) error {
+func setLastConnected(
+	d models.Device,
+	time int64,
+	notify bool,
+	w http.ResponseWriter,
+	ctx context.Context,
+	loggingClient logger.LoggingClient) error {
+
 	d.LastConnected = time
 	if err := dbClient.UpdateDevice(d); err != nil {
 		httpErrorHandler.Handle(w, err, errorconcept.Common.UpdateError_StatusServiceUnavailable)
@@ -634,13 +700,17 @@ func setLastConnected(d models.Device, time int64, notify bool, w http.ResponseW
 	}
 
 	if notify {
-		notifyDeviceAssociates(d, http.MethodPut, ctx)
+		notifyDeviceAssociates(d, http.MethodPut, ctx, loggingClient)
 	}
 
 	return nil
 }
 
-func restSetDeviceLastReportedById(w http.ResponseWriter, r *http.Request) {
+func restSetDeviceLastReportedById(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient) {
+
 	vars := mux.Vars(r)
 	var did string = vars[ID]
 	var vlr string = vars[LASTREPORTED]
@@ -659,7 +729,7 @@ func restSetDeviceLastReportedById(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 	// Update Last Reported
-	if err = setLastReported(d, lr, false, w, ctx); err != nil {
+	if err = setLastReported(d, lr, false, w, ctx, loggingClient); err != nil {
 		return
 	}
 
@@ -667,7 +737,11 @@ func restSetDeviceLastReportedById(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("true"))
 }
 
-func restSetDeviceLastReportedByIdNotify(w http.ResponseWriter, r *http.Request) {
+func restSetDeviceLastReportedByIdNotify(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient) {
+
 	vars := mux.Vars(r)
 	var did string = vars[ID]
 	var vlr string = vars[LASTREPORTED]
@@ -691,7 +765,7 @@ func restSetDeviceLastReportedByIdNotify(w http.ResponseWriter, r *http.Request)
 
 	ctx := r.Context()
 	// Update last reported
-	if err = setLastReported(d, lr, notify, w, ctx); err != nil {
+	if err = setLastReported(d, lr, notify, w, ctx, loggingClient); err != nil {
 		return
 	}
 
@@ -699,7 +773,11 @@ func restSetDeviceLastReportedByIdNotify(w http.ResponseWriter, r *http.Request)
 	w.Write([]byte("true"))
 }
 
-func restSetDeviceLastReportedByName(w http.ResponseWriter, r *http.Request) {
+func restSetDeviceLastReportedByName(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient) {
+
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
@@ -722,7 +800,7 @@ func restSetDeviceLastReportedByName(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 	// Update last reported
-	if err = setLastReported(d, lr, false, w, ctx); err != nil {
+	if err = setLastReported(d, lr, false, w, ctx, loggingClient); err != nil {
 		return
 	}
 
@@ -730,7 +808,11 @@ func restSetDeviceLastReportedByName(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("true"))
 }
 
-func restSetDeviceLastReportedByNameNotify(w http.ResponseWriter, r *http.Request) {
+func restSetDeviceLastReportedByNameNotify(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient) {
+
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
@@ -758,7 +840,7 @@ func restSetDeviceLastReportedByNameNotify(w http.ResponseWriter, r *http.Reques
 
 	ctx := r.Context()
 	// Update last reported
-	if err = setLastReported(d, lr, notify, w, ctx); err != nil {
+	if err = setLastReported(d, lr, notify, w, ctx, loggingClient); err != nil {
 		return
 	}
 
@@ -767,7 +849,14 @@ func restSetDeviceLastReportedByNameNotify(w http.ResponseWriter, r *http.Reques
 }
 
 // Update the last reported field of the device
-func setLastReported(d models.Device, time int64, notify bool, w http.ResponseWriter, ctx context.Context) error {
+func setLastReported(
+	d models.Device,
+	time int64,
+	notify bool,
+	w http.ResponseWriter,
+	ctx context.Context,
+	loggingClient logger.LoggingClient) error {
+
 	d.LastReported = time
 	if err := dbClient.UpdateDevice(d); err != nil {
 		httpErrorHandler.Handle(w, err, errorconcept.Common.UpdateError_StatusServiceUnavailable)
@@ -775,7 +864,7 @@ func setLastReported(d models.Device, time int64, notify bool, w http.ResponseWr
 	}
 
 	if notify {
-		notifyDeviceAssociates(d, http.MethodPut, ctx)
+		notifyDeviceAssociates(d, http.MethodPut, ctx, loggingClient)
 	}
 
 	return nil
@@ -798,18 +887,23 @@ func restGetDeviceByName(w http.ResponseWriter, r *http.Request) {
 }
 
 // Notify the associated device service for the device
-func notifyDeviceAssociates(d models.Device, action string, ctx context.Context) error {
+func notifyDeviceAssociates(
+	d models.Device,
+	action string,
+	ctx context.Context,
+	loggingClient logger.LoggingClient) error {
+
 	// Post the notification to the notifications service
 	postNotification(d.Name, action, ctx)
 
 	// Callback for device service
 	ds, err := dbClient.GetDeviceServiceById(d.Service.Id)
 	if err != nil {
-		LoggingClient.Error(err.Error())
+		loggingClient.Error(err.Error())
 		return err
 	}
-	if err := notifyAssociates([]models.DeviceService{ds}, d.Id, action, models.DEVICE); err != nil {
-		LoggingClient.Error(err.Error())
+	if err := notifyAssociates([]models.DeviceService{ds}, d.Id, action, models.DEVICE, loggingClient); err != nil {
+		loggingClient.Error(err.Error())
 		return err
 	}
 

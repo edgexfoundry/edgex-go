@@ -10,8 +10,11 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces/mocks"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
+
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 )
@@ -52,9 +55,7 @@ func TestGetCommandsByDeviceId(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(restGetCommandsByDeviceId)
-
-			handler.ServeHTTP(rr, tt.request)
+			restGetCommandsByDeviceId(rr, tt.request, logger.NewMockClient())
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -80,9 +81,7 @@ func TestGetAllCommands(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(restGetAllCommands)
-
-			handler.ServeHTTP(rr, tt.request)
+			restGetAllCommands(rr, logger.NewMockClient())
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -130,9 +129,7 @@ func TestGetCommandById(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(restGetCommandById)
-
-			handler.ServeHTTP(rr, tt.request)
+			restGetCommandById(rr, tt.request, logger.NewMockClient())
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -172,9 +169,7 @@ func TestGetCommandsByName(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(restGetCommandsByName)
-
-			handler.ServeHTTP(rr, tt.request)
+			restGetCommandsByName(rr, tt.request, logger.NewMockClient())
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -199,7 +194,7 @@ var cmdNotFoundErr = types.NewErrItemNotFound(fmt.Sprintf("command with id %s no
 var deviceNotFoundErr = types.NewErrItemNotFound(fmt.Sprintf("device with id %s not found", deviceId))
 
 var commands = []contract.Command{
-	contract.Command{Name: fmt.Sprintf(commandName)},
+	{Name: fmt.Sprintf(commandName)},
 	{Name: fmt.Sprintf("Command 1")},
 	{Name: fmt.Sprintf("Command 2")},
 }

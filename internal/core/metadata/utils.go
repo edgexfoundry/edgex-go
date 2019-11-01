@@ -15,30 +15,10 @@ package metadata
 
 import (
 	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
-	"io"
-	"io/ioutil"
 )
-
-const (
-	ExceededMaxResultCount = "error, exceeded the max limit as defined in config"
-)
-
-// Printing function purely for debugging purposes
-// Print the body of a request to the console
-func printBody(r io.ReadCloser) {
-	body, err := ioutil.ReadAll(r)
-	bodyString := string(body)
-
-	if err != nil {
-		LoggingClient.Error(err.Error())
-	}
-
-	LoggingClient.Info(bodyString)
-}
 
 func checkMaxLimit(limit int) error {
 	if limit > Configuration.Service.MaxResultCount {
-		LoggingClient.Error(ExceededMaxResultCount)
 		return errors.NewErrLimitExceeded(limit)
 	}
 

@@ -20,7 +20,6 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"strconv"
 	"testing"
 
@@ -32,6 +31,7 @@ import (
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
+
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/mock"
 )
@@ -52,13 +52,9 @@ var ErrorPathParam = "%zz"
 // ErrorPortPathParam path parameter used to trigger an error in the `restGetAddressableByPort` function where the port variable is expected to be a number.
 var ErrorPortPathParam = "abc"
 
-func TestMain(m *testing.M) {
-	LoggingClient = logger.NewMockClient()
-	httpErrorHandler = errorconcept.NewErrorHandler(LoggingClient)
-	os.Exit(m.Run())
-}
-
 func TestGetAllAddressables(t *testing.T) {
+
+	httpErrorHandler = errorconcept.NewErrorHandler(logger.NewMockClient())
 	Configuration = &ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 10}}
 	defer func() { Configuration = &ConfigurationStruct{} }()
 
@@ -98,8 +94,7 @@ func TestGetAllAddressables(t *testing.T) {
 
 			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(restGetAllAddressables)
-			handler.ServeHTTP(rr, tt.request)
+			restGetAllAddressables(rr, logger.NewMockClient())
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -159,8 +154,7 @@ func TestAddAddressable(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(restAddAddressable)
-			handler.ServeHTTP(rr, tt.request)
+			restAddAddressable(rr, tt.request, logger.NewMockClient())
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -233,8 +227,7 @@ func TestUpdateAddressable(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(restUpdateAddressable)
-			handler.ServeHTTP(rr, tt.request)
+			restUpdateAddressable(rr, tt.request, logger.NewMockClient())
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)

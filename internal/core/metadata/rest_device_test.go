@@ -22,18 +22,14 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces/mocks"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients"
+
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/pkg/errors"
 )
 
 func TestGetAllDevices(t *testing.T) {
 	Configuration = &ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 1}}
-	req, err := http.NewRequest(http.MethodGet, clients.ApiBase+"/"+DEVICE, nil)
-	if err != nil {
-		t.Error(err)
-		return
-	}
 
 	tests := []struct {
 		name           string
@@ -48,9 +44,7 @@ func TestGetAllDevices(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(restGetAllDevices)
-
-			handler.ServeHTTP(rr, req)
+			restGetAllDevices(rr, logger.NewMockClient())
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)

@@ -27,19 +27,25 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
+
 	"github.com/gorilla/mux"
 )
 
-func restGetAllDeviceServices(w http.ResponseWriter, _ *http.Request) {
-	op := device_service.NewDeviceServiceLoadAll(Configuration.Service, dbClient, LoggingClient)
+func restGetAllDeviceServices(
+	w http.ResponseWriter,
+	loggingClient logger.LoggingClient) {
+
+	op := device_service.NewDeviceServiceLoadAll(Configuration.Service, dbClient, loggingClient)
 	services, err := op.Execute()
 	if err != nil {
 		httpErrorHandler.HandleOneVariant(w, err, errorconcept.Common.LimitExceeded, errorconcept.Default.InternalServerError)
 		return
 	}
-	pkg.Encode(services, w, LoggingClient)
+	pkg.Encode(services, w, loggingClient)
 }
 
 func restAddDeviceService(w http.ResponseWriter, r *http.Request) {
@@ -79,7 +85,11 @@ func restAddDeviceService(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(ds.Id))
 }
 
-func restUpdateDeviceService(w http.ResponseWriter, r *http.Request) {
+func restUpdateDeviceService(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient) {
+
 	defer r.Body.Close()
 	var from models.DeviceService
 	err := json.NewDecoder(r.Body).Decode(&from)
@@ -103,7 +113,7 @@ func restUpdateDeviceService(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err = updateDeviceServiceFields(from, &to, w); err != nil {
-		LoggingClient.Error(err.Error())
+		loggingClient.Error(err.Error())
 		return
 	}
 
@@ -236,7 +246,11 @@ func restGetServiceByName(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(res)
 }
 
-func restDeleteServiceById(w http.ResponseWriter, r *http.Request) {
+func restDeleteServiceById(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient) {
+
 	vars := mux.Vars(r)
 	var id string = vars[ID]
 
@@ -248,15 +262,19 @@ func restDeleteServiceById(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := r.Context()
-	if err = deleteDeviceService(ds, w, ctx); err != nil {
-		LoggingClient.Error(err.Error())
+	if err = deleteDeviceService(ds, w, ctx, loggingClient); err != nil {
+		loggingClient.Error(err.Error())
 		return
 	}
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	w.Write([]byte("true"))
 }
 
-func restDeleteServiceByName(w http.ResponseWriter, r *http.Request) {
+func restDeleteServiceByName(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient) {
+
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
@@ -273,8 +291,8 @@ func restDeleteServiceByName(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 	// Delete the device service
-	if err = deleteDeviceService(ds, w, ctx); err != nil {
-		LoggingClient.Error(err.Error())
+	if err = deleteDeviceService(ds, w, ctx, loggingClient); err != nil {
+		loggingClient.Error(err.Error())
 		return
 	}
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
@@ -285,7 +303,12 @@ func restDeleteServiceByName(w http.ResponseWriter, r *http.Request) {
 // Delete the device service
 // Delete the associated devices
 // Delete the associated provision watchers
-func deleteDeviceService(ds models.DeviceService, w http.ResponseWriter, ctx context.Context) error {
+func deleteDeviceService(
+	ds models.DeviceService,
+	w http.ResponseWriter,
+	ctx context.Context,
+	loggingClient logger.LoggingClient) error {
+
 	// Delete the associated devices
 	devices, err := dbClient.GetDevicesByServiceId(ds.Id)
 	if err != nil {
@@ -293,7 +316,7 @@ func deleteDeviceService(ds models.DeviceService, w http.ResponseWriter, ctx con
 		return err
 	}
 	for _, device := range devices {
-		if err = deleteDevice(device, w, ctx); err != nil {
+		if err = deleteDevice(device, w, ctx, loggingClient); err != nil {
 			return err
 		}
 	}
@@ -305,7 +328,7 @@ func deleteDeviceService(ds models.DeviceService, w http.ResponseWriter, ctx con
 		return err
 	}
 	for _, watcher := range watchers {
-		if err = deleteProvisionWatcher(watcher, w); err != nil {
+		if err = deleteProvisionWatcher(watcher, w, loggingClient); err != nil {
 			return err
 		}
 	}
@@ -319,7 +342,11 @@ func deleteDeviceService(ds models.DeviceService, w http.ResponseWriter, ctx con
 	return nil
 }
 
-func restUpdateServiceLastConnectedById(w http.ResponseWriter, r *http.Request) {
+func restUpdateServiceLastConnectedById(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient) {
+
 	vars := mux.Vars(r)
 	var id string = vars[ID]
 	var vlc string = vars[LASTCONNECTED]
@@ -337,7 +364,7 @@ func restUpdateServiceLastConnectedById(w http.ResponseWriter, r *http.Request) 
 	}
 
 	if err = updateServiceLastConnected(ds, lc, w); err != nil {
-		LoggingClient.Error(err.Error())
+		loggingClient.Error(err.Error())
 		return
 	}
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
@@ -345,7 +372,11 @@ func restUpdateServiceLastConnectedById(w http.ResponseWriter, r *http.Request) 
 	w.Write([]byte("true"))
 }
 
-func restUpdateServiceLastConnectedByName(w http.ResponseWriter, r *http.Request) {
+func restUpdateServiceLastConnectedByName(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient) {
+
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
@@ -368,7 +399,7 @@ func restUpdateServiceLastConnectedByName(w http.ResponseWriter, r *http.Request
 
 	// Update last connected
 	if err = updateServiceLastConnected(ds, lc, w); err != nil {
-		LoggingClient.Error(err.Error())
+		loggingClient.Error(err.Error())
 		return
 	}
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
@@ -503,7 +534,11 @@ func restUpdateServiceAdminStateByName(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("true"))
 }
 
-func restUpdateServiceLastReportedById(w http.ResponseWriter, r *http.Request) {
+func restUpdateServiceLastReportedById(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient) {
+
 	vars := mux.Vars(r)
 	var id string = vars[ID]
 	var vlr string = vars[LASTREPORTED]
@@ -521,7 +556,7 @@ func restUpdateServiceLastReportedById(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err = updateServiceLastReported(ds, lr, w); err != nil {
-		LoggingClient.Error(err.Error())
+		loggingClient.Error(err.Error())
 		return
 	}
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
@@ -529,7 +564,11 @@ func restUpdateServiceLastReportedById(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("true"))
 }
 
-func restUpdateServiceLastReportedByName(w http.ResponseWriter, r *http.Request) {
+func restUpdateServiceLastReportedByName(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient) {
+
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
@@ -551,7 +590,7 @@ func restUpdateServiceLastReportedByName(w http.ResponseWriter, r *http.Request)
 	}
 
 	if err = updateServiceLastReported(ds, lr, w); err != nil {
-		LoggingClient.Error(err.Error())
+		loggingClient.Error(err.Error())
 		return
 	}
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
@@ -572,9 +611,15 @@ func updateServiceLastReported(ds models.DeviceService, lr int64, w http.Respons
 
 // Notify associates (associated device services)
 // This function is called when an object changes in metadata
-func notifyAssociates(deviceServices []models.DeviceService, id string, action string, actionType models.ActionType) error {
+func notifyAssociates(
+	deviceServices []models.DeviceService,
+	id string,
+	action string,
+	actionType models.ActionType,
+	loggingClient logger.LoggingClient) error {
+
 	for _, ds := range deviceServices {
-		if err := callback(ds, id, action, actionType); err != nil {
+		if err := callback(ds, id, action, actionType, loggingClient); err != nil {
 			return err
 		}
 	}
@@ -583,7 +628,13 @@ func notifyAssociates(deviceServices []models.DeviceService, id string, action s
 }
 
 // Make the callback for the device service
-func callback(service models.DeviceService, id string, action string, actionType models.ActionType) error {
+func callback(
+	service models.DeviceService,
+	id string,
+	action string,
+	actionType models.ActionType,
+	loggingClient logger.LoggingClient) error {
+
 	client := &http.Client{}
 	url := service.Addressable.GetCallbackURL()
 	if len(url) > 0 {
@@ -597,22 +648,26 @@ func callback(service models.DeviceService, id string, action string, actionType
 		}
 		req.Header.Add(clients.ContentType, clients.ContentTypeJSON)
 
-		go makeRequest(client, req)
+		go makeRequest(client, req, loggingClient)
 	} else {
-		LoggingClient.Info("callback::no addressable for " + service.Name)
+		loggingClient.Info("callback::no addressable for " + service.Name)
 	}
 	return nil
 }
 
 // Asynchronous call
-func makeRequest(client *http.Client, req *http.Request) {
+func makeRequest(
+	client *http.Client,
+	req *http.Request,
+	loggingClient logger.LoggingClient) {
+
 	// Make the request
 	resp, err := client.Do(req)
 	if err == nil {
 		defer resp.Body.Close()
 		resp.Close = true
 	} else {
-		LoggingClient.Error(err.Error())
+		loggingClient.Error(err.Error())
 	}
 }
 

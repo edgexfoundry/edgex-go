@@ -21,20 +21,30 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/operators/command"
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
+
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+
 	"github.com/gorilla/mux"
 )
 
-func restGetAllCommands(w http.ResponseWriter, _ *http.Request) {
+func restGetAllCommands(
+	w http.ResponseWriter,
+	loggingClient logger.LoggingClient) {
+
 	op := command.NewCommandLoadAll(Configuration.Service, dbClient)
 	cmds, err := op.Execute()
 	if err != nil {
 		httpErrorHandler.HandleOneVariant(w, err, errorconcept.Common.LimitExceeded, errorconcept.Default.InternalServerError)
 		return
 	}
-	pkg.Encode(&cmds, w, LoggingClient)
+	pkg.Encode(&cmds, w, loggingClient)
 }
 
-func restGetCommandById(w http.ResponseWriter, r *http.Request) {
+func restGetCommandById(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient) {
+
 	vars := mux.Vars(r)
 	cid, err := url.QueryUnescape(vars[ID])
 	if err != nil {
@@ -48,10 +58,13 @@ func restGetCommandById(w http.ResponseWriter, r *http.Request) {
 		httpErrorHandler.HandleOneVariant(w, err, errorconcept.Common.ItemNotFound, errorconcept.Default.InternalServerError)
 		return
 	}
-	pkg.Encode(cmd, w, LoggingClient)
+	pkg.Encode(cmd, w, loggingClient)
 }
 
-func restGetCommandsByName(w http.ResponseWriter, r *http.Request) {
+func restGetCommandsByName(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient) {
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
@@ -64,10 +77,14 @@ func restGetCommandsByName(w http.ResponseWriter, r *http.Request) {
 		httpErrorHandler.Handle(w, err, errorconcept.Common.RetrieveError_StatusInternalServer)
 		return
 	}
-	pkg.Encode(&cmds, w, LoggingClient)
+	pkg.Encode(&cmds, w, loggingClient)
 }
 
-func restGetCommandsByDeviceId(w http.ResponseWriter, r *http.Request) {
+func restGetCommandsByDeviceId(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient) {
+
 	vars := mux.Vars(r)
 	did, err := url.QueryUnescape(vars[ID])
 	if err != nil {
@@ -81,5 +98,5 @@ func restGetCommandsByDeviceId(w http.ResponseWriter, r *http.Request) {
 		httpErrorHandler.HandleOneVariant(w, err, errorconcept.Common.ItemNotFound, errorconcept.Default.InternalServerError)
 		return
 	}
-	pkg.Encode(&commands, w, LoggingClient)
+	pkg.Encode(&commands, w, loggingClient)
 }

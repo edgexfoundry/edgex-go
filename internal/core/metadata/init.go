@@ -27,7 +27,6 @@ import (
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/coredata"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/notifications"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
 )
@@ -35,7 +34,6 @@ import (
 // Global variables
 var Configuration = &ConfigurationStruct{}
 var dbClient interfaces.DBClient
-var LoggingClient logger.LoggingClient
 var nc notifications.NotificationsClient
 var vdc coredata.ValueDescriptorClient
 var httpErrorHandler errorconcept.ErrorHandler
@@ -43,10 +41,9 @@ var httpErrorHandler errorconcept.ErrorHandler
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the metadata service.
 func BootstrapHandler(wg *sync.WaitGroup, ctx context.Context, startupTimer startup.Timer, dic *di.Container) bool {
 	// update global variables.
-	LoggingClient = container.LoggingClientFrom(dic.Get)
 	dbClient = container.DBClientFrom(dic.Get)
 
-	httpErrorHandler = errorconcept.NewErrorHandler(LoggingClient)
+	httpErrorHandler = errorconcept.NewErrorHandler(container.LoggingClientFrom(dic.Get))
 
 	// initialize clients required by service.
 	registryClient := container.RegistryFrom(dic.Get)
