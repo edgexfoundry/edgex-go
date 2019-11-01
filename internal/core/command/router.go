@@ -84,7 +84,7 @@ func loadDeviceRoutes(b *mux.Router, dic *di.Container) {
 		restGetCommandsByDeviceName(w, r, bootstrapContainer.LoggingClientFrom(dic.Get))
 	}).Methods(http.MethodGet)
 	dn.HandleFunc("/{"+NAME+"}/"+COMMAND+"/{"+COMMANDNAME+"}", func(w http.ResponseWriter, r *http.Request) {
-		restGetCommandsByDeviceName(w, r, bootstrapContainer.LoggingClientFrom(dic.Get))
+		restGetDeviceCommandByNames(w, r, bootstrapContainer.LoggingClientFrom(dic.Get))
 	}).Methods(http.MethodGet)
 	dn.HandleFunc("/{"+NAME+"}/"+COMMAND+"/{"+COMMANDNAME+"}", func(w http.ResponseWriter, r *http.Request) {
 		restPutDeviceCommandByNames(w, r, bootstrapContainer.LoggingClientFrom(dic.Get))
