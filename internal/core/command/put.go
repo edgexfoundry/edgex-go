@@ -26,8 +26,13 @@ import (
 )
 
 // NewPutCommand creates and Executor which can be used to execute the PUT related command.
-func NewPutCommand(device contract.Device, command contract.Command, body string, context context.Context,
-	httpCaller internal.HttpCaller, loggingClient logger.LoggingClient) (Executor, error) {
+func NewPutCommand(
+	device contract.Device,
+	command contract.Command,
+	body string,
+	context context.Context,
+	httpCaller internal.HttpCaller,
+	loggingClient logger.LoggingClient) (Executor, error) {
 	url := device.Service.Addressable.GetBaseURL() + strings.Replace(command.Put.Action.Path, DEVICEIDURLPARAM, device.Id, -1)
 	request, err := http.NewRequest(http.MethodPut, url, strings.NewReader(body))
 	if err != nil {
@@ -39,5 +44,5 @@ func NewPutCommand(device contract.Device, command contract.Command, body string
 		request.Header.Set(clients.CorrelationHeader, correlationID.(string))
 	}
 
-	return NewServiceCommand(device, httpCaller, request, loggingClient), nil
+	return newServiceCommand(device, httpCaller, request, loggingClient), nil
 }

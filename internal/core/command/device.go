@@ -27,8 +27,14 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 )
 
-func commandByDeviceID(deviceID string, commandID string, body string, queryParams string, isPutCommand bool,
-	ctx context.Context, loggingClient logger.LoggingClient) (string, int) {
+func commandByDeviceID(
+	deviceID string,
+	commandID string,
+	body string,
+	queryParams string,
+	isPutCommand bool,
+	ctx context.Context,
+	loggingClient logger.LoggingClient) (string, int) {
 	d, err := mdc.Device(deviceID, ctx)
 	if err != nil {
 		loggingClient.Error(err.Error())
@@ -74,7 +80,13 @@ func commandByDeviceID(deviceID string, commandID string, body string, queryPara
 	return commandByDevice(d, c, body, queryParams, isPutCommand, ctx, loggingClient)
 }
 
-func commandByNames(dn string, cn string, body string, queryParams string, isPutCommand bool, ctx context.Context,
+func commandByNames(
+	dn string,
+	cn string,
+	body string,
+	queryParams string,
+	isPutCommand bool,
+	ctx context.Context,
 	loggingClient logger.LoggingClient) (string, int) {
 	d, err := mdc.DeviceForName(dn, ctx)
 	if err != nil {
@@ -105,8 +117,14 @@ func commandByNames(dn string, cn string, body string, queryParams string, isPut
 	return commandByDevice(d, command, body, queryParams, isPutCommand, ctx, loggingClient)
 }
 
-func commandByDevice(device contract.Device, command contract.Command, body string, queryParams string,
-	isPutCommand bool, ctx context.Context, loggingClient logger.LoggingClient) (string, int) {
+func commandByDevice(
+	device contract.Device,
+	command contract.Command,
+	body string,
+	queryParams string,
+	isPutCommand bool,
+	ctx context.Context,
+	loggingClient logger.LoggingClient) (string, int) {
 	var ex Executor
 	var err error
 	if isPutCommand {
@@ -156,8 +174,10 @@ func getCommands(ctx context.Context, loggingClient logger.LoggingClient) (int, 
 
 }
 
-func getCommandsByDeviceID(did string, ctx context.Context, loggingClient logger.LoggingClient) (int,
-	contract.CommandResponse, error) {
+func getCommandsByDeviceID(
+	did string,
+	ctx context.Context,
+	loggingClient logger.LoggingClient) (int, contract.CommandResponse, error) {
 	d, err := mdc.Device(did, ctx)
 	if err != nil {
 		chk, ok := err.(types.ErrServiceClient)
@@ -181,8 +201,10 @@ func getCommandsByDeviceID(did string, ctx context.Context, loggingClient logger
 	return http.StatusOK, contract.CommandResponseFromDevice(d, commands, Configuration.Service.Url()), err
 }
 
-func getCommandsByDeviceName(dn string, ctx context.Context, loggingClient logger.LoggingClient) (int,
-	contract.CommandResponse, error) {
+func getCommandsByDeviceName(
+	dn string,
+	ctx context.Context,
+	loggingClient logger.LoggingClient) (int, contract.CommandResponse, error) {
 	d, err := mdc.DeviceForName(dn, ctx)
 	if err != nil {
 		chk, ok := err.(types.ErrServiceClient)

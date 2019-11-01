@@ -27,8 +27,13 @@ import (
 )
 
 // NewGetCommand creates and Executor which can be used to execute the GET related command.
-func NewGetCommand(device contract.Device, command contract.Command, queryParams string, context context.Context,
-	httpCaller internal.HttpCaller, loggingClient logger.LoggingClient) (Executor, error) {
+func NewGetCommand(
+	device contract.Device,
+	command contract.Command,
+	queryParams string,
+	context context.Context,
+	httpCaller internal.HttpCaller,
+	loggingClient logger.LoggingClient) (Executor, error) {
 	urlResult := device.Service.Addressable.GetBaseURL() + strings.Replace(command.Get.Action.Path, DEVICEIDURLPARAM, device.Id, -1) + "?" + queryParams
 	validURL, err := url.ParseRequestURI(urlResult)
 	if err != nil {
@@ -44,5 +49,5 @@ func NewGetCommand(device contract.Device, command contract.Command, queryParams
 		request.Header.Set(clients.CorrelationHeader, correlationID.(string))
 	}
 
-	return NewServiceCommand(device, httpCaller, request, loggingClient), nil
+	return newServiceCommand(device, httpCaller, request, loggingClient), nil
 }

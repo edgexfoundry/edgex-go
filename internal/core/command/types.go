@@ -53,7 +53,10 @@ func (sc serviceCommand) Execute() (string, int, error) {
 	return buf.String(), resp.StatusCode, nil
 }
 
-func NewServiceCommand(device contract.Device, caller internal.HttpCaller, req *http.Request,
+func newServiceCommand(
+	device contract.Device,
+	caller internal.HttpCaller,
+	req *http.Request,
 	loggingClient logger.LoggingClient) serviceCommand {
 	return serviceCommand{
 		Device:        device,

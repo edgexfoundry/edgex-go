@@ -66,7 +66,7 @@ func TestExecute(t *testing.T) {
 	defer ts.Close()
 
 	request, _ := http.NewRequest(http.MethodGet, ts.URL, nil)
-	sc := NewServiceCommand(contract.Device{AdminState: contract.Unlocked}, &http.Client{}, request, logger.NewMockClient())
+	sc := newServiceCommand(contract.Device{AdminState: contract.Unlocked}, &http.Client{}, request, logger.NewMockClient())
 
 	body, responseCode, err := sc.Execute()
 	if err != nil {
@@ -84,7 +84,7 @@ func TestExecute(t *testing.T) {
 
 func TestExecuteHttpRequestError(t *testing.T) {
 	request, _ := http.NewRequest(http.MethodGet, "http://example.com", nil)
-	sc := NewServiceCommand(contract.Device{AdminState: contract.Unlocked}, &FailingMockHttpCaller{}, request, logger.NewMockClient())
+	sc := newServiceCommand(contract.Device{AdminState: contract.Unlocked}, &FailingMockHttpCaller{}, request, logger.NewMockClient())
 
 	_, _, err := sc.Execute()
 	if err == nil {
@@ -94,7 +94,7 @@ func TestExecuteHttpRequestError(t *testing.T) {
 
 func TestExecuteHttpReadResponseError(t *testing.T) {
 	request, _ := http.NewRequest(http.MethodGet, "http://example.com", nil)
-	sc := NewServiceCommand(contract.Device{AdminState: contract.Unlocked}, &ReadFailMockHttpCaller{}, request, logger.NewMockClient())
+	sc := newServiceCommand(contract.Device{AdminState: contract.Unlocked}, &ReadFailMockHttpCaller{}, request, logger.NewMockClient())
 
 	_, responseCode, err := sc.Execute()
 	if err == nil {
