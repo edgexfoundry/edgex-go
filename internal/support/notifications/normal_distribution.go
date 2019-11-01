@@ -16,15 +16,16 @@
 package notifications
 
 import (
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
-func distributeAndMark(n models.Notification) error {
-	go distribute(n)
+func distributeAndMark(n models.Notification, loggingClient logger.LoggingClient) error {
+	go distribute(n, loggingClient)
 
 	err := dbClient.MarkNotificationProcessed(n)
 	if err != nil {
-		LoggingClient.Error("Trouble updating notification to Processed for: " + n.Slug)
+		loggingClient.Error("Trouble updating notification to Processed for: " + n.Slug)
 		return err
 	}
 	return nil

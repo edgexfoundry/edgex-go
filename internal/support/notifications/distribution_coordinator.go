@@ -16,36 +16,37 @@
 package notifications
 
 import (
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
-func distribute(n models.Notification) error {
-	LoggingClient.Debug("DistributionCoordinator start distributing notification: " + n.Slug)
+func distribute(n models.Notification, loggingClient logger.LoggingClient) error {
+	loggingClient.Debug("DistributionCoordinator start distributing notification: " + n.Slug)
 	var categories []string
 	categories = append(categories, string(n.Category))
 	subs, err := dbClient.GetSubscriptionByCategoriesLabels(categories, n.Labels)
 	if err != nil {
-		LoggingClient.Error("Unable to get subcriptions to distribute notification:" + n.Slug)
+		loggingClient.Error("Unable to get subscriptions to distribute notification:" + n.Slug)
 		return err
 	}
 	for _, sub := range subs {
-		send(n, sub)
+		send(n, sub, loggingClient)
 	}
 	return nil
 }
 
-func resend(t models.Transmission) {
-	LoggingClient.Debug("Resending transmission: " + t.ID + " for: " + t.Notification.Slug)
-	resendViaChannel(t)
+func resend(t models.Transmission, loggingClient logger.LoggingClient) {
+	loggingClient.Debug("Resending transmission: " + t.ID + " for: " + t.Notification.Slug)
+	resendViaChannel(t, loggingClient)
 }
 
-func send(n models.Notification, s models.Subscription) {
+func send(n models.Notification, s models.Subscription, loggingClient logger.LoggingClient) {
 	for _, ch := range s.Channels {
-		sendViaChannel(n, ch, s.Receiver)
+		sendViaChannel(n, ch, s.Receiver, loggingClient)
 	}
 }
 
-func criticalSeverityResend(t models.Transmission) {
-	LoggingClient.Info("Critical severity resend scheduler is triggered.")
-	resend(t)
+func criticalSeverityResend(t models.Transmission, loggingClient logger.LoggingClient) {
+	loggingClient.Info("Critical severity resend scheduler is triggered.")
+	resend(t, loggingClient)
 }

@@ -18,12 +18,14 @@ package notifications
 
 import (
 	"fmt"
-	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
 	"io"
 	"io/ioutil"
 	"net/http"
 
+	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
 
 const (
@@ -49,9 +51,9 @@ func pingHandler(w http.ResponseWriter, _ *http.Request) {
 	w.Write([]byte("pong"))
 }
 
-func checkMaxLimit(limit int) error {
+func checkMaxLimit(limit int, loggingClient logger.LoggingClient) error {
 	if limit > Configuration.Service.MaxResultCount {
-		LoggingClient.Error(ExceededMaxResultCount)
+		loggingClient.Error(ExceededMaxResultCount)
 		return errors.NewErrLimitExceeded(limit)
 	}
 

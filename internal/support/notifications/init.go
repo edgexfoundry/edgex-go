@@ -25,19 +25,15 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/interfaces"
-
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
 
 // Global variables
 var Configuration = &ConfigurationStruct{}
 var dbClient interfaces.DBClient
-var LoggingClient logger.LoggingClient
 
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the notifications service.
 func BootstrapHandler(wg *sync.WaitGroup, ctx context.Context, startupTimer startup.Timer, dic *di.Container) bool {
 	// update global variables.
-	LoggingClient = container.LoggingClientFrom(dic.Get)
 	dbClient = container.DBClientFrom(dic.Get)
 
 	return true
