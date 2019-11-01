@@ -17,6 +17,8 @@ package main
 import (
 	"flag"
 
+	"github.com/edgexfoundry/go-mod-core-contracts/clients"
+
 	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/core/data"
@@ -30,8 +32,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
-
-	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 )
 
 func main() {
@@ -49,7 +49,8 @@ func main() {
 	flag.Usage = usage.HelpCallback
 	flag.Parse()
 
-	httpServer := httpserver.NewBootstrap(data.LoadRestRoutes())
+	dic := di.NewContainer(di.ServiceConstructorMap{})
+	httpServer := httpserver.NewBootstrap(data.LoadRestRoutes(dic))
 	bootstrap.Run(
 		configDir,
 		profileDir,
@@ -58,7 +59,7 @@ func main() {
 		clients.CoreDataServiceKey,
 		data.Configuration,
 		startupTimer,
-		di.NewContainer(di.ServiceConstructorMap{}),
+		dic,
 		[]interfaces.BootstrapHandler{
 			secret.NewSecret().BootstrapHandler,
 			database.NewDatabaseForCoreData(&httpServer, data.Configuration).BootstrapHandler,

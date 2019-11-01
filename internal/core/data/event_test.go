@@ -21,12 +21,16 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/models"
+	"github.com/edgexfoundry/go-mod-messaging/messaging"
+
 	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
 	dbMock "github.com/edgexfoundry/edgex-go/internal/core/data/interfaces/mocks"
 	correlation "github.com/edgexfoundry/edgex-go/internal/pkg/correlation/models"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
-	"github.com/edgexfoundry/go-mod-core-contracts/models"
 
+	msgTypes "github.com/edgexfoundry/go-mod-messaging/pkg/types"
 	"github.com/globalsign/mgo/bson"
 	"github.com/stretchr/testify/mock"
 )
@@ -106,7 +110,7 @@ func TestDeleteByAge(t *testing.T) {
 	reset()
 	mockDb := newDeleteEventsOlderThanAgeMockDB()
 	dbClient = mockDb
-	count, err := deleteEventsByAge(-1)
+	count, err := deleteEventsByAge(-1, logger.NewMockClient())
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -128,7 +132,7 @@ func TestDeleteEventByAgeErrorThrownByEventsOlderThanAge(t *testing.T) {
 
 	dbClient = myMock
 
-	_, err := deleteEventsByAge(-1)
+	_, err := deleteEventsByAge(-1, logger.NewMockClient())
 
 	if err == nil {
 		t.Errorf("Should throw error")
@@ -207,8 +211,20 @@ func newAddEventMockDB(persist bool) *dbMock.DBClient {
 
 func TestAddEventWithPersistence(t *testing.T) {
 	reset()
+
+	// no need to mock this since it's all in process
+	msgClient, _ = messaging.NewMessageClient(msgTypes.MessageBusConfig{
+		PublishHost: msgTypes.HostInfo{
+			Host:     "*",
+			Protocol: "tcp",
+			Port:     5563,
+		},
+		Type: "zero",
+	})
+
 	myMock := newAddEventMockDB(true)
 	dbClient = myMock
+	chEvents = make(chan interface{}, 10)
 	Configuration.Writable.PersistData = true
 	evt := models.Event{Device: testDeviceName, Origin: testOrigin, Readings: buildReadings()}
 	// wire up handlers to listen for device events
@@ -217,7 +233,7 @@ func TestAddEventWithPersistence(t *testing.T) {
 	wg.Add(1)
 	go handleDomainEvents(bitEvents, &wg, t)
 
-	_, err := addNewEvent(correlation.Event{Event: evt}, context.Background())
+	_, err := addNewEvent(correlation.Event{Event: evt}, context.Background(), logger.NewMockClient())
 	Configuration.Writable.PersistData = false
 	if err != nil {
 		t.Errorf(err.Error())
@@ -245,7 +261,7 @@ func TestAddEventNoPersistence(t *testing.T) {
 	wg.Add(1)
 	go handleDomainEvents(bitEvents, &wg, t)
 
-	newId, err := addNewEvent(correlation.Event{Event: evt}, context.Background())
+	newId, err := addNewEvent(correlation.Event{Event: evt}, context.Background(), logger.NewMockClient())
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -399,7 +415,7 @@ func TestDeleteEventById(t *testing.T) {
 	myMock := newDeleteEventMockDB()
 	dbClient = myMock
 
-	err := deleteEventById(testEvent.ID)
+	err := deleteEventById(testEvent.ID, logger.NewMockClient())
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -412,7 +428,7 @@ func TestDeleteEvent(t *testing.T) {
 	myMock := newDeleteEventMockDB()
 	dbClient = myMock
 
-	err := deleteEvent(testEvent)
+	err := deleteEvent(testEvent, logger.NewMockClient())
 
 	if err != nil {
 		t.Errorf(err.Error())
@@ -441,7 +457,7 @@ func TestDeleteEventEventDoesNotExist(t *testing.T) {
 	dbClient = myMock
 	testEvent.Readings = nil
 
-	err := deleteEvent(testEvent)
+	err := deleteEvent(testEvent, logger.NewMockClient())
 
 	if err == nil {
 		t.Errorf("Event does not exist and should throw error")
@@ -462,7 +478,7 @@ func TestDeleteEventReadingDoesNotExist(t *testing.T) {
 		return device == testDeviceName
 	})).Return(nil)
 
-	err := deleteEvent(testEvent)
+	err := deleteEvent(testEvent, logger.NewMockClient())
 
 	if err == nil {
 		t.Errorf("Reading does not exist and should throw error")
@@ -479,7 +495,7 @@ func TestGetEventsByDeviceIdLimit(t *testing.T) {
 
 	dbClient = myMock
 
-	expectedList, expectedNil := getEventsByDeviceIdLimit(0, "valid")
+	expectedList, expectedNil := getEventsByDeviceIdLimit(0, "valid", logger.NewMockClient())
 
 	if expectedNil != nil {
 		t.Errorf("Should not throw error")
@@ -504,7 +520,7 @@ func TestGetEventsByDeviceIdLimitDBThrowsError(t *testing.T) {
 
 	dbClient = myMock
 
-	expectedNil, expectedErr := getEventsByDeviceIdLimit(0, "error")
+	expectedNil, expectedErr := getEventsByDeviceIdLimit(0, "error", logger.NewMockClient())
 
 	if expectedNil != nil {
 		t.Errorf("Should not return list")
@@ -525,7 +541,7 @@ func TestGetEventsByCreationTime(t *testing.T) {
 
 	dbClient = myMock
 
-	expectedReadings, expectedNil := getEventsByCreationTime(0, 0xF00D, 0)
+	expectedReadings, expectedNil := getEventsByCreationTime(0, 0xF00D, 0, logger.NewMockClient())
 
 	if expectedReadings == nil {
 		t.Errorf("Should return Events")
@@ -546,7 +562,7 @@ func TestGetEventsByCreationTimeDBThrowsError(t *testing.T) {
 
 	dbClient = myMock
 
-	expectedNil, expectedErr := getEventsByCreationTime(0, 0xBADF00D, 0)
+	expectedNil, expectedErr := getEventsByCreationTime(0, 0xBADF00D, 0, logger.NewMockClient())
 
 	if expectedNil != nil {
 		t.Errorf("Should not return list")
@@ -596,7 +612,7 @@ func TestScrubPushedEvents(t *testing.T) {
 	dbClient = myMock
 
 	expectedCount := 2
-	actualCount, expectedNil := scrubPushedEvents()
+	actualCount, expectedNil := scrubPushedEvents(logger.NewMockClient())
 
 	if actualCount != expectedCount {
 		t.Errorf("Expected %d deletions, was %d", expectedCount, actualCount)

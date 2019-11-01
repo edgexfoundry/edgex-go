@@ -5,28 +5,23 @@ import (
 	"fmt"
 	"math"
 	"net/http"
-	"os"
 	"sync"
 	"testing"
 	"time"
 
 	"github.com/globalsign/mgo/bson"
 	"github.com/google/uuid"
-	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/mock"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/metadata/mocks"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
-	"github.com/edgexfoundry/go-mod-messaging/messaging"
-	msgTypes "github.com/edgexfoundry/go-mod-messaging/pkg/types"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 )
 
 var testEvent contract.Event
-var testRoutes *mux.Router
 
 const (
 	testDeviceName string = "Test Device"
@@ -40,7 +35,7 @@ func TestCheckMaxLimit(t *testing.T) {
 
 	testedLimit := math.MinInt32
 
-	expectedNil := checkMaxLimit(testedLimit)
+	expectedNil := checkMaxLimit(testedLimit, logger.NewMockClient())
 
 	if expectedNil != nil {
 		t.Errorf("Should not exceed limit")
@@ -52,28 +47,11 @@ func TestCheckMaxLimitOverLimit(t *testing.T) {
 
 	testedLimit := math.MaxInt32
 
-	expectedErr := checkMaxLimit(testedLimit)
+	expectedErr := checkMaxLimit(testedLimit, logger.NewMockClient())
 
 	if expectedErr == nil {
 		t.Errorf("Exceeded limit and should throw error")
 	}
-}
-
-func TestMain(m *testing.M) {
-	testRoutes = LoadRestRoutes()
-	LoggingClient = logger.NewMockClient()
-	mdc = newMockDeviceClient()
-	// no need to mock this since it's all in process
-	msgClient, _ = messaging.NewMessageClient(msgTypes.MessageBusConfig{
-		PublishHost: msgTypes.HostInfo{
-			Host:     "*",
-			Protocol: "tcp",
-			Port:     5563,
-		},
-		Type: "zero",
-	})
-	chEvents = make(chan interface{}, 10)
-	os.Exit(m.Run())
 }
 
 // Supporting methods
@@ -162,7 +140,7 @@ func buildReadings() []contract.Reading {
 }
 
 func handleDomainEvents(bitEvents []bool, wait *sync.WaitGroup, t *testing.T) {
-	until := time.Now().Add(500 * time.Millisecond) //Kill this loop after half second.
+	until := time.Now().Add(500 * time.Millisecond) // Kill this loop after half second.
 	for time.Now().Before(until) {
 		select {
 		case evt := <-chEvents:
