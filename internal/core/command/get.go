@@ -11,6 +11,7 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
+
 package command
 
 import (
@@ -21,11 +22,18 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
 // NewGetCommand creates and Executor which can be used to execute the GET related command.
-func NewGetCommand(device contract.Device, command contract.Command, queryParams string, context context.Context, httpCaller internal.HttpCaller) (Executor, error) {
+func NewGetCommand(
+	device contract.Device,
+	command contract.Command,
+	queryParams string,
+	context context.Context,
+	httpCaller internal.HttpCaller,
+	loggingClient logger.LoggingClient) (Executor, error) {
 	urlResult := device.Service.Addressable.GetBaseURL() + strings.Replace(command.Get.Action.Path, DEVICEIDURLPARAM, device.Id, -1) + "?" + queryParams
 	validURL, err := url.ParseRequestURI(urlResult)
 	if err != nil {
@@ -41,9 +49,5 @@ func NewGetCommand(device contract.Device, command contract.Command, queryParams
 		request.Header.Set(clients.CorrelationHeader, correlationID.(string))
 	}
 
-	return serviceCommand{
-		Device:     device,
-		HttpCaller: httpCaller,
-		Request:    request,
-	}, nil
+	return newServiceCommand(device, httpCaller, request, loggingClient), nil
 }

@@ -92,7 +92,9 @@ func NewContainer(serviceConstructors ServiceConstructorMap) *Container {
 		serviceMap: map[string]service{},
 		mutex:      sync.RWMutex{},
 	}
-	c.Update(serviceConstructors)
+	if serviceConstructors != nil {
+		c.Update(serviceConstructors)
+	}
 	return &c
 }
 
