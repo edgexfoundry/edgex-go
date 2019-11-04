@@ -24,7 +24,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/interfaces/mocks"
@@ -287,7 +286,6 @@ func TestDeleteSubscriptionById(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			Configuration = &ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 1}}
 			rr := httptest.NewRecorder()
 			restDeleteSubscriptionByID(rr, tt.request, logger.NewMockClient(), tt.dbMock)
 			response := rr.Result()
@@ -369,7 +367,6 @@ func TestDeleteSubscriptionBySlug(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			Configuration = &ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 1}}
 			rr := httptest.NewRecorder()
 			restDeleteSubscriptionBySlug(rr, tt.request, logger.NewMockClient(), tt.dbMock)
 			response := rr.Result()

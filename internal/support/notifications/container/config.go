@@ -12,10 +12,19 @@
  * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
- *
  *******************************************************************************/
 
-package notifications
+package container
 
-// Global variables
-var Configuration = &ConfigurationStruct{}
+import (
+	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
+	"github.com/edgexfoundry/edgex-go/internal/support/notifications/config"
+)
+
+// ConfigurationName contains the name of the config.ConfigurationStruct implementation in the DIC.
+var ConfigurationName = di.TypeInstanceToName(config.ConfigurationStruct{})
+
+// ConfigurationFrom helper function queries the DIC and returns the config.ConfigurationStruct implementation.
+func ConfigurationFrom(get di.Get) *config.ConfigurationStruct {
+	return get(ConfigurationName).(*config.ConfigurationStruct)
+}

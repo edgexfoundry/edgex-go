@@ -16,6 +16,7 @@
 package notifications
 
 import (
+	notificationsConfig "github.com/edgexfoundry/edgex-go/internal/support/notifications/config"
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/interfaces"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
@@ -25,7 +26,8 @@ import (
 func distribute(
 	n models.Notification,
 	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient) error {
+	dbClient interfaces.DBClient,
+	config notificationsConfig.ConfigurationStruct) error {
 
 	loggingClient.Debug("DistributionCoordinator start distributing notification: " + n.Slug)
 	var categories []string
@@ -36,32 +38,39 @@ func distribute(
 		return err
 	}
 	for _, sub := range subs {
-		send(n, sub, loggingClient, dbClient)
+		send(n, sub, loggingClient, dbClient, config)
 	}
 	return nil
 }
 
-func resend(t models.Transmission, loggingClient logger.LoggingClient, dbClient interfaces.DBClient) {
+func resend(
+	t models.Transmission,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient,
+	config notificationsConfig.ConfigurationStruct) {
+
 	loggingClient.Debug("Resending transmission: " + t.ID + " for: " + t.Notification.Slug)
-	resendViaChannel(t, loggingClient, dbClient)
+	resendViaChannel(t, loggingClient, dbClient, config)
 }
 
 func send(
 	n models.Notification,
 	s models.Subscription,
 	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient) {
+	dbClient interfaces.DBClient,
+	config notificationsConfig.ConfigurationStruct) {
 
 	for _, ch := range s.Channels {
-		sendViaChannel(n, ch, s.Receiver, loggingClient, dbClient)
+		sendViaChannel(n, ch, s.Receiver, loggingClient, dbClient, config)
 	}
 }
 
 func criticalSeverityResend(
 	t models.Transmission,
 	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient) {
+	dbClient interfaces.DBClient,
+	config notificationsConfig.ConfigurationStruct) {
 
 	loggingClient.Info("Critical severity resend scheduler is triggered.")
-	resend(t, loggingClient, dbClient)
+	resend(t, loggingClient, dbClient, config)
 }

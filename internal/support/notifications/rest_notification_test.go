@@ -24,6 +24,7 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+	notificationsConfig "github.com/edgexfoundry/edgex-go/internal/support/notifications/config"
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/interfaces/mocks"
 
@@ -280,7 +281,6 @@ func TestDeleteNotificationById(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			Configuration = &ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 1}}
 			rr := httptest.NewRecorder()
 			restDeleteNotificationByID(rr, tt.request, logger.NewMockClient(), tt.dbMock)
 			response := rr.Result()
@@ -320,7 +320,6 @@ func TestDeleteNotificationBySlug(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			Configuration = &ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 1}}
 			rr := httptest.NewRecorder()
 			restDeleteNotificationBySlug(rr, tt.request, logger.NewMockClient(), tt.dbMock)
 			response := rr.Result()
@@ -361,7 +360,6 @@ func TestDeleteNotificationsByAge(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			Configuration = &ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 1}}
 			rr := httptest.NewRecorder()
 			restDeleteNotificationsByAge(rr, tt.request, logger.NewMockClient(), tt.dbMock)
 			response := rr.Result()
@@ -414,9 +412,13 @@ func TestGetNotificationsBySender(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			Configuration = &ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 5}}
 			rr := httptest.NewRecorder()
-			restGetNotificationsBySender(rr, tt.request, logger.NewMockClient(), tt.dbMock)
+			restGetNotificationsBySender(
+				rr,
+				tt.request,
+				logger.NewMockClient(),
+				tt.dbMock,
+				notificationsConfig.ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 5}})
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -473,9 +475,13 @@ func TestGetNotificationsByStart(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			Configuration = &ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 5}}
 			rr := httptest.NewRecorder()
-			restNotificationByStart(rr, tt.request, logger.NewMockClient(), tt.dbMock)
+			restNotificationByStart(
+				rr,
+				tt.request,
+				logger.NewMockClient(),
+				tt.dbMock,
+				notificationsConfig.ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 5}})
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -532,9 +538,13 @@ func TestGetNotificationsByEnd(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			Configuration = &ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 5}}
 			rr := httptest.NewRecorder()
-			restNotificationByEnd(rr, tt.request, logger.NewMockClient(), tt.dbMock)
+			restNotificationByEnd(
+				rr,
+				tt.request,
+				logger.NewMockClient(),
+				tt.dbMock,
+				notificationsConfig.ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 5}})
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -597,9 +607,13 @@ func TestGetNotificationsByStartEnd(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			Configuration = &ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 5}}
 			rr := httptest.NewRecorder()
-			restNotificationByStartEnd(rr, tt.request, logger.NewMockClient(), tt.dbMock)
+			restNotificationByStartEnd(
+				rr,
+				tt.request,
+				logger.NewMockClient(),
+				tt.dbMock,
+				notificationsConfig.ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 5}})
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -651,9 +665,13 @@ func TestGetNotificationsByLabels(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			Configuration = &ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 5}}
 			rr := httptest.NewRecorder()
-			restNotificationsByLabels(rr, tt.request, logger.NewMockClient(), tt.dbMock)
+			restNotificationsByLabels(
+				rr,
+				tt.request,
+				logger.NewMockClient(),
+				tt.dbMock,
+				notificationsConfig.ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 5}})
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -705,9 +723,13 @@ func TestGetNotificationsNewest(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			Configuration = &ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 5}}
 			rr := httptest.NewRecorder()
-			restNotificationsNew(rr, tt.request, logger.NewMockClient(), tt.dbMock)
+			restNotificationsNew(
+				rr,
+				tt.request,
+				logger.NewMockClient(),
+				tt.dbMock,
+				notificationsConfig.ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 5}})
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
