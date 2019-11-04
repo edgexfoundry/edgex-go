@@ -23,6 +23,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/errors"
+	"github.com/edgexfoundry/edgex-go/internal/support/notifications/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/operators/notification"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
@@ -32,7 +33,12 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func notificationHandler(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
+func notificationHandler(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
+
 	if r.Body != nil {
 		defer r.Body.Close()
 	}
@@ -65,7 +71,7 @@ func notificationHandler(w http.ResponseWriter, r *http.Request, loggingClient l
 			return
 		}
 
-		err := distributeAndMark(n, loggingClient)
+		err := distributeAndMark(n, loggingClient, dbClient)
 		if err != nil {
 			return
 		}
@@ -78,7 +84,12 @@ func notificationHandler(w http.ResponseWriter, r *http.Request, loggingClient l
 
 }
 
-func restGetNotificationBySlug(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
+func restGetNotificationBySlug(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
+
 	if r.Body != nil {
 		defer r.Body.Close()
 	}
@@ -103,7 +114,12 @@ func restGetNotificationBySlug(w http.ResponseWriter, r *http.Request, loggingCl
 	pkg.Encode(result, w, loggingClient)
 }
 
-func restDeleteNotificationBySlug(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
+func restDeleteNotificationBySlug(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
+
 	if r.Body != nil {
 		defer r.Body.Close()
 	}
@@ -132,7 +148,12 @@ func restDeleteNotificationBySlug(w http.ResponseWriter, r *http.Request, loggin
 	w.Write([]byte("true"))
 }
 
-func restGetNotificationByID(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
+func restGetNotificationByID(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
+
 	if r.Body != nil {
 		defer r.Body.Close()
 	}
@@ -155,7 +176,12 @@ func restGetNotificationByID(w http.ResponseWriter, r *http.Request, loggingClie
 	pkg.Encode(result, w, loggingClient)
 }
 
-func restDeleteNotificationByID(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
+func restDeleteNotificationByID(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
+
 	if r.Body != nil {
 		defer r.Body.Close()
 	}
@@ -183,7 +209,12 @@ func restDeleteNotificationByID(w http.ResponseWriter, r *http.Request, loggingC
 	w.Write([]byte("true"))
 }
 
-func restDeleteNotificationsByAge(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
+func restDeleteNotificationsByAge(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
+
 	if r.Body != nil {
 		defer r.Body.Close()
 	}
@@ -208,7 +239,12 @@ func restDeleteNotificationsByAge(w http.ResponseWriter, r *http.Request, loggin
 	w.Write([]byte("true"))
 }
 
-func restGetNotificationsBySender(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
+func restGetNotificationsBySender(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
+
 	if r.Body != nil {
 		defer r.Body.Close()
 	}
@@ -242,7 +278,12 @@ func restGetNotificationsBySender(w http.ResponseWriter, r *http.Request, loggin
 	pkg.Encode(results, w, loggingClient)
 }
 
-func restNotificationByStartEnd(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
+func restNotificationByStartEnd(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
+
 	if r.Body != nil {
 		defer r.Body.Close()
 	}
@@ -288,7 +329,12 @@ func restNotificationByStartEnd(w http.ResponseWriter, r *http.Request, loggingC
 	pkg.Encode(results, w, loggingClient)
 }
 
-func restNotificationByStart(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
+func restNotificationByStart(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
+
 	if r.Body != nil {
 		defer r.Body.Close()
 	}
@@ -327,7 +373,12 @@ func restNotificationByStart(w http.ResponseWriter, r *http.Request, loggingClie
 	pkg.Encode(results, w, loggingClient)
 }
 
-func restNotificationByEnd(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
+func restNotificationByEnd(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
+
 	if r.Body != nil {
 		defer r.Body.Close()
 	}
@@ -367,7 +418,12 @@ func restNotificationByEnd(w http.ResponseWriter, r *http.Request, loggingClient
 	pkg.Encode(results, w, loggingClient)
 }
 
-func restNotificationsByLabels(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
+func restNotificationsByLabels(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
+
 	if r.Body != nil {
 		defer r.Body.Close()
 	}
@@ -403,7 +459,12 @@ func restNotificationsByLabels(w http.ResponseWriter, r *http.Request, loggingCl
 	pkg.Encode(results, w, loggingClient)
 }
 
-func restNotificationsNew(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
+func restNotificationsNew(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
+
 	if r.Body != nil {
 		defer r.Body.Close()
 	}

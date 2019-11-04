@@ -23,6 +23,7 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+	"github.com/edgexfoundry/edgex-go/internal/support/notifications/interfaces"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
@@ -31,7 +32,12 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func transmissionHandler(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
+func transmissionHandler(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
+
 	if r.Body != nil {
 		defer r.Body.Close()
 	}
@@ -60,7 +66,12 @@ func transmissionHandler(w http.ResponseWriter, r *http.Request, loggingClient l
 
 }
 
-func transmissionBySlugHandler(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
+func transmissionBySlugHandler(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
+
 	if r.Body != nil {
 		defer r.Body.Close()
 	}
@@ -88,7 +99,12 @@ func transmissionBySlugHandler(w http.ResponseWriter, r *http.Request, loggingCl
 
 }
 
-func transmissionBySlugAndStartEndHandler(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
+func transmissionBySlugAndStartEndHandler(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
+
 	if r.Body != nil {
 		defer r.Body.Close()
 	}
@@ -129,7 +145,12 @@ func transmissionBySlugAndStartEndHandler(w http.ResponseWriter, r *http.Request
 
 }
 
-func transmissionByStartEndHandler(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
+func transmissionByStartEndHandler(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
+
 	if r.Body != nil {
 		defer r.Body.Close()
 	}
@@ -170,7 +191,12 @@ func transmissionByStartEndHandler(w http.ResponseWriter, r *http.Request, loggi
 
 }
 
-func transmissionByStartHandler(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
+func transmissionByStartHandler(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
+
 	if r.Body != nil {
 		defer r.Body.Close()
 	}
@@ -204,7 +230,12 @@ func transmissionByStartHandler(w http.ResponseWriter, r *http.Request, loggingC
 
 }
 
-func transmissionByEndHandler(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
+func transmissionByEndHandler(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
+
 	if r.Body != nil {
 		defer r.Body.Close()
 	}
@@ -239,19 +270,30 @@ func transmissionByEndHandler(w http.ResponseWriter, r *http.Request, loggingCli
 
 }
 
-func transmissionByEscalatedHandler(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
-	transmissionByStatusHandler(w, r, models.Trxescalated, loggingClient)
+func transmissionByEscalatedHandler(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
+
+	transmissionByStatusHandler(w, r, models.Trxescalated, loggingClient, dbClient)
 }
 
-func transmissionByFailedHandler(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
-	transmissionByStatusHandler(w, r, models.Failed, loggingClient)
+func transmissionByFailedHandler(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
+
+	transmissionByStatusHandler(w, r, models.Failed, loggingClient, dbClient)
 }
 
 func transmissionByStatusHandler(
 	w http.ResponseWriter,
 	r *http.Request,
 	status models.TransmissionStatus,
-	loggingClient logger.LoggingClient) {
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
 
 	if r.Body != nil {
 		defer r.Body.Close()
@@ -283,27 +325,48 @@ func transmissionByStatusHandler(
 	}
 }
 
-func transmissionByAgeSentHandler(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
-	transmissionByAgeStatusHandler(w, r, models.Sent, loggingClient)
+func transmissionByAgeSentHandler(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
+
+	transmissionByAgeStatusHandler(w, r, models.Sent, loggingClient, dbClient)
 }
 
-func transmissionByAgeEscalatedHandler(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
-	transmissionByAgeStatusHandler(w, r, models.Trxescalated, loggingClient)
+func transmissionByAgeEscalatedHandler(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
+
+	transmissionByAgeStatusHandler(w, r, models.Trxescalated, loggingClient, dbClient)
 }
 
-func transmissionByAgeAcknowledgedHandler(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
-	transmissionByAgeStatusHandler(w, r, models.Acknowledged, loggingClient)
+func transmissionByAgeAcknowledgedHandler(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
+
+	transmissionByAgeStatusHandler(w, r, models.Acknowledged, loggingClient, dbClient)
 }
 
-func transmissionByAgeFailedHandler(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
-	transmissionByAgeStatusHandler(w, r, models.Failed, loggingClient)
+func transmissionByAgeFailedHandler(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
+
+	transmissionByAgeStatusHandler(w, r, models.Failed, loggingClient, dbClient)
 }
 
 func transmissionByAgeStatusHandler(
 	w http.ResponseWriter,
 	r *http.Request,
 	status models.TransmissionStatus,
-	loggingClient logger.LoggingClient) {
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
 
 	if r.Body != nil {
 		defer r.Body.Close()

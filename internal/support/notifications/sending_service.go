@@ -27,12 +27,19 @@ import (
 	"time"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+	"github.com/edgexfoundry/edgex-go/internal/support/notifications/interfaces"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
-func sendViaChannel(n models.Notification, c models.Channel, receiver string, loggingClient logger.LoggingClient) {
+func sendViaChannel(
+	n models.Notification,
+	c models.Channel,
+	receiver string,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
+
 	loggingClient.Debug("Sending notification: " + n.Slug + ", via channel: " + c.String())
 	var tr models.TransmissionRecord
 	if c.Type == models.ChannelType(models.Email) {
@@ -40,13 +47,17 @@ func sendViaChannel(n models.Notification, c models.Channel, receiver string, lo
 	} else {
 		tr = restSend(n.Content, c.Url, loggingClient)
 	}
-	t, err := persistTransmission(tr, n, c, receiver, loggingClient)
+	t, err := persistTransmission(tr, n, c, receiver, loggingClient, dbClient)
 	if err == nil {
-		handleFailedTransmission(t, loggingClient)
+		handleFailedTransmission(t, loggingClient, dbClient)
 	}
 }
 
-func resendViaChannel(t models.Transmission, loggingClient logger.LoggingClient) {
+func resendViaChannel(
+	t models.Transmission,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
+
 	var tr models.TransmissionRecord
 	if t.Channel.Type == models.ChannelType(models.Email) {
 		tr = sendMail(t.Notification.Content, t.Channel.MailAddresses, loggingClient)
@@ -58,7 +69,7 @@ func resendViaChannel(t models.Transmission, loggingClient logger.LoggingClient)
 	t.Records = append(t.Records, tr)
 	err := dbClient.UpdateTransmission(t)
 	if err == nil {
-		handleFailedTransmission(t, loggingClient)
+		handleFailedTransmission(t, loggingClient, dbClient)
 	}
 }
 
@@ -75,7 +86,8 @@ func persistTransmission(
 	n models.Notification,
 	c models.Channel,
 	rec string,
-	loggingClient logger.LoggingClient) (models.Transmission, error) {
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) (models.Transmission, error) {
 
 	trx := models.Transmission{Notification: n, Receiver: rec, Channel: c, ResendCount: 0, Status: tr.Status}
 	trx.Records = []models.TransmissionRecord{tr}
@@ -125,7 +137,11 @@ func restSend(message string, url string, loggingClient logger.LoggingClient) mo
 	return tr
 }
 
-func handleFailedTransmission(t models.Transmission, loggingClient logger.LoggingClient) {
+func handleFailedTransmission(
+	t models.Transmission,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
+
 	n := t.Notification
 	if t.ResendCount >= Configuration.Writable.ResendLimit {
 		loggingClient.Error("Too many transmission resend attempts!  Giving up on transmission: " + t.ID + ", for notification: " + n.Slug)
@@ -134,9 +150,9 @@ func handleFailedTransmission(t models.Transmission, loggingClient logger.Loggin
 		loggingClient.Debug("Handling failed transmission for: " + t.ID + " for notification: " + t.Notification.Slug + ", resends so far: " + strconv.Itoa(t.ResendCount))
 		if n.Severity == models.Critical {
 			if t.ResendCount < Configuration.Writable.ResendLimit {
-				time.AfterFunc(time.Second*5, func() { criticalSeverityResend(t, loggingClient) })
+				time.AfterFunc(time.Second*5, func() { criticalSeverityResend(t, loggingClient, dbClient) })
 			} else {
-				escalate(t, loggingClient)
+				escalate(t, loggingClient, dbClient)
 				t.Status = models.Trxescalated
 				dbClient.UpdateTransmission(t)
 			}

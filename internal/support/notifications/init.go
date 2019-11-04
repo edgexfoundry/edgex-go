@@ -17,24 +17,5 @@
 
 package notifications
 
-import (
-	"context"
-	"sync"
-
-	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
-	"github.com/edgexfoundry/edgex-go/internal/support/notifications/interfaces"
-)
-
 // Global variables
 var Configuration = &ConfigurationStruct{}
-var dbClient interfaces.DBClient
-
-// BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the notifications service.
-func BootstrapHandler(wg *sync.WaitGroup, ctx context.Context, startupTimer startup.Timer, dic *di.Container) bool {
-	// update global variables.
-	dbClient = container.DBClientFrom(dic.Get)
-
-	return true
-}

@@ -23,6 +23,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/errors"
+	"github.com/edgexfoundry/edgex-go/internal/support/notifications/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/operators/subscription"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
@@ -32,7 +33,12 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func restGetSubscriptions(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
+func restGetSubscriptions(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
+
 	if r.Body != nil {
 		defer r.Body.Close()
 	}
@@ -46,7 +52,12 @@ func restGetSubscriptions(w http.ResponseWriter, r *http.Request, loggingClient 
 	pkg.Encode(subscriptions, w, loggingClient)
 }
 
-func restAddSubscription(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
+func restAddSubscription(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
+
 	if r.Body != nil {
 		defer r.Body.Close()
 	}
@@ -82,7 +93,12 @@ func restAddSubscription(w http.ResponseWriter, r *http.Request, loggingClient l
 	w.Write([]byte(s.Slug))
 }
 
-func restUpdateSubscription(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
+func restUpdateSubscription(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
+
 	if r.Body != nil {
 		defer r.Body.Close()
 	}
@@ -128,7 +144,12 @@ func restUpdateSubscription(w http.ResponseWriter, r *http.Request, loggingClien
 	w.Write([]byte("true"))
 }
 
-func restGetSubscriptionByID(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
+func restGetSubscriptionByID(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
+
 	if r.Body != nil {
 		defer r.Body.Close()
 	}
@@ -150,7 +171,12 @@ func restGetSubscriptionByID(w http.ResponseWriter, r *http.Request, loggingClie
 	pkg.Encode(s, w, loggingClient)
 }
 
-func restDeleteSubscriptionByID(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
+func restDeleteSubscriptionByID(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
+
 	if r.Body != nil {
 		defer r.Body.Close()
 	}
@@ -174,7 +200,12 @@ func restDeleteSubscriptionByID(w http.ResponseWriter, r *http.Request, loggingC
 	w.WriteHeader(http.StatusOK)
 }
 
-func restGetSubscriptionBySlug(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
+func restGetSubscriptionBySlug(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
+
 	if r.Body != nil {
 		defer r.Body.Close()
 	}
@@ -199,7 +230,12 @@ func restGetSubscriptionBySlug(w http.ResponseWriter, r *http.Request, loggingCl
 	pkg.Encode(s, w, loggingClient)
 }
 
-func restDeleteSubscriptionBySlug(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
+func restDeleteSubscriptionBySlug(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
+
 	if r.Body != nil {
 		defer r.Body.Close()
 	}
@@ -226,7 +262,12 @@ func restDeleteSubscriptionBySlug(w http.ResponseWriter, r *http.Request, loggin
 	w.Write([]byte("true"))
 }
 
-func restGetSubscriptionsByCategories(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
+func restGetSubscriptionsByCategories(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
+
 	if r.Body != nil {
 		defer r.Body.Close()
 	}
@@ -248,7 +289,12 @@ func restGetSubscriptionsByCategories(w http.ResponseWriter, r *http.Request, lo
 	pkg.Encode(s, w, loggingClient)
 }
 
-func subscriptionsByLabelsHandler(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
+func subscriptionsByLabelsHandler(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
+
 	if r.Body != nil {
 		defer r.Body.Close()
 	}
@@ -272,7 +318,12 @@ func subscriptionsByLabelsHandler(w http.ResponseWriter, r *http.Request, loggin
 
 }
 
-func subscriptionsByCategoriesLabelsHandler(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
+func subscriptionsByCategoriesLabelsHandler(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
+
 	if r.Body != nil {
 		defer r.Body.Close()
 	}
@@ -319,7 +370,12 @@ func validateEmailAddresses(s models.Subscription) error {
 	return nil
 }
 
-func subscriptionsByReceiverHandler(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
+func subscriptionsByReceiverHandler(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
+
 	if r.Body != nil {
 		defer r.Body.Close()
 	}

@@ -16,30 +16,39 @@
 package notifications
 
 import (
+	"github.com/edgexfoundry/edgex-go/internal/support/notifications/interfaces"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
-func escalate(t models.Transmission, loggingClient logger.LoggingClient) {
+func escalate(
+	t models.Transmission,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
+
 	loggingClient.Warn("Escalating transmission: " + t.ID + ", for: " + t.Notification.Slug)
 
 	var err error
 	s, err := dbClient.GetSubscriptionBySlug(ESCALATIONSUBSCRIPTIONSLUG)
 	if err != nil {
-		loggingClient.Error("Unable to find Escalation subcriber to send escalation notice for " + t.ID)
+		loggingClient.Error("Unable to find Escalation subscriber to send escalation notice for " + t.ID)
 		return
 	}
 
-	n, err := createEscalatedNotification(t)
+	n, err := createEscalatedNotification(t, dbClient)
 	if err != nil {
 		loggingClient.Error("Unable to create new escalating notice to send escalation notice for " + t.ID)
 		return
 	}
 
-	send(n, s, loggingClient)
+	send(n, s, loggingClient, dbClient)
 }
 
-func createEscalatedNotification(t models.Transmission) (models.Notification, error) {
+func createEscalatedNotification(
+	t models.Transmission,
+	dbClient interfaces.DBClient) (models.Notification, error) {
+
 	old := t.Notification
 	n := models.Notification{Category: old.Category, Severity: old.Severity, Description: old.Description, Labels: old.Labels, ContentType: "text/plain"}
 	n.Slug = ESCALATIONPREFIX + old.Slug

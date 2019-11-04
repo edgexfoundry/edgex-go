@@ -16,12 +16,18 @@
 package notifications
 
 import (
+	"github.com/edgexfoundry/edgex-go/internal/support/notifications/interfaces"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
-func distributeAndMark(n models.Notification, loggingClient logger.LoggingClient) error {
-	go distribute(n, loggingClient)
+func distributeAndMark(
+	n models.Notification,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) error {
+
+	go distribute(n, loggingClient, dbClient)
 
 	err := dbClient.MarkNotificationProcessed(n)
 	if err != nil {
