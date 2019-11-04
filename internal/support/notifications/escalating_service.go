@@ -16,6 +16,7 @@
 package notifications
 
 import (
+	notificationsConfig "github.com/edgexfoundry/edgex-go/internal/support/notifications/config"
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/interfaces"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
@@ -25,7 +26,8 @@ import (
 func escalate(
 	t models.Transmission,
 	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient) {
+	dbClient interfaces.DBClient,
+	config notificationsConfig.ConfigurationStruct) {
 
 	loggingClient.Warn("Escalating transmission: " + t.ID + ", for: " + t.Notification.Slug)
 
@@ -42,7 +44,7 @@ func escalate(
 		return
 	}
 
-	send(n, s, loggingClient, dbClient)
+	send(n, s, loggingClient, dbClient, config)
 }
 
 func createEscalatedNotification(
