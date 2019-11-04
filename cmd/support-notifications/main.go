@@ -68,7 +68,6 @@ func main() {
 		[]interfaces.BootstrapHandler{
 			secret.NewSecret().BootstrapHandler,
 			database.NewDatabase(&httpServer, notifications.Configuration).BootstrapHandler,
-			notifications.BootstrapHandler,
 			telemetry.BootstrapHandler,
 			httpServer.BootstrapHandler,
 			message.NewBootstrap(clients.SupportNotificationsServiceKey, edgex.Version).BootstrapHandler,
