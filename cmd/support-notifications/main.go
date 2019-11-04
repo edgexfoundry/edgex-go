@@ -54,7 +54,8 @@ func main() {
 	flag.Usage = usage.HelpCallback
 	flag.Parse()
 
-	httpServer := httpserver.NewBootstrap(notifications.LoadRestRoutes())
+	dic := di.NewContainer(di.ServiceConstructorMap{})
+	httpServer := httpserver.NewBootstrap(notifications.LoadRestRoutes(dic))
 	bootstrap.Run(
 		configDir,
 		profileDir,
@@ -63,7 +64,7 @@ func main() {
 		clients.SupportNotificationsServiceKey,
 		notifications.Configuration,
 		startupTimer,
-		di.NewContainer(di.ServiceConstructorMap{}),
+		dic,
 		[]interfaces.BootstrapHandler{
 			secret.NewSecret().BootstrapHandler,
 			database.NewDatabase(&httpServer, notifications.Configuration).BootstrapHandler,

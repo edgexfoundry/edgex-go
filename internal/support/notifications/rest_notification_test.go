@@ -18,7 +18,6 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"strconv"
 	"strings"
 	"testing"
@@ -86,8 +85,7 @@ func TestGetNotificationById(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(restGetNotificationByID)
-			handler.ServeHTTP(rr, tt.request)
+			restGetNotificationByID(rr, tt.request, logger.NewMockClient())
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -128,8 +126,7 @@ func TestGetNotificationBySlug(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(restGetNotificationBySlug)
-			handler.ServeHTTP(rr, tt.request)
+			restGetNotificationBySlug(rr, tt.request, logger.NewMockClient())
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -137,12 +134,6 @@ func TestGetNotificationBySlug(t *testing.T) {
 			}
 		})
 	}
-}
-
-func TestMain(m *testing.M) {
-	Configuration = &ConfigurationStruct{}
-	LoggingClient = logger.NewMockClient()
-	os.Exit(m.Run())
 }
 
 func createMockNotificationLoader(methodName string, testID string, desiredError error) interfaces.DBClient {
@@ -289,12 +280,10 @@ func TestDeleteNotificationById(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			LoggingClient = logger.MockLogger{}
 			Configuration = &ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 1}}
 			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(restDeleteNotificationByID)
-			handler.ServeHTTP(rr, tt.request)
+			restDeleteNotificationByID(rr, tt.request, logger.NewMockClient())
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -332,12 +321,10 @@ func TestDeleteNotificationBySlug(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			LoggingClient = logger.MockLogger{}
 			Configuration = &ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 1}}
 			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(restDeleteNotificationBySlug)
-			handler.ServeHTTP(rr, tt.request)
+			restDeleteNotificationBySlug(rr, tt.request, logger.NewMockClient())
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -376,12 +363,10 @@ func TestDeleteNotificationsByAge(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			LoggingClient = logger.MockLogger{}
 			Configuration = &ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 1}}
 			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(restDeleteNotificationsByAge)
-			handler.ServeHTTP(rr, tt.request)
+			restDeleteNotificationsByAge(rr, tt.request, logger.NewMockClient())
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -432,12 +417,10 @@ func TestGetNotificationsBySender(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			LoggingClient = logger.MockLogger{}
 			Configuration = &ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 5}}
 			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(restGetNotificationsBySender)
-			handler.ServeHTTP(rr, tt.request)
+			restGetNotificationsBySender(rr, tt.request, logger.NewMockClient())
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -494,12 +477,10 @@ func TestGetNotificationsByStart(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			LoggingClient = logger.MockLogger{}
 			Configuration = &ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 5}}
 			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(restNotificationByStart)
-			handler.ServeHTTP(rr, tt.request)
+			restNotificationByStart(rr, tt.request, logger.NewMockClient())
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -556,12 +537,10 @@ func TestGetNotificationsByEnd(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			LoggingClient = logger.MockLogger{}
 			Configuration = &ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 5}}
 			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(restNotificationByEnd)
-			handler.ServeHTTP(rr, tt.request)
+			restNotificationByEnd(rr, tt.request, logger.NewMockClient())
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -624,12 +603,10 @@ func TestGetNotificationsByStartEnd(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			LoggingClient = logger.MockLogger{}
 			Configuration = &ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 5}}
 			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(restNotificationByStartEnd)
-			handler.ServeHTTP(rr, tt.request)
+			restNotificationByStartEnd(rr, tt.request, logger.NewMockClient())
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -641,9 +618,7 @@ func TestGetNotificationsByStartEnd(t *testing.T) {
 }
 
 func TestGetNotificationsByLabels(t *testing.T) {
-
 	labelsURL := strings.Join(TestLabels, ",")
-
 	tests := []struct {
 		name           string
 		request        *http.Request
@@ -683,12 +658,10 @@ func TestGetNotificationsByLabels(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			LoggingClient = logger.MockLogger{}
 			Configuration = &ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 5}}
 			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(restNotificationsByLabels)
-			handler.ServeHTTP(rr, tt.request)
+			restNotificationsByLabels(rr, tt.request, logger.NewMockClient())
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -700,9 +673,7 @@ func TestGetNotificationsByLabels(t *testing.T) {
 }
 
 func TestGetNotificationsNewest(t *testing.T) {
-
 	labelsURL := strings.Join(TestLabels, ",")
-
 	tests := []struct {
 		name           string
 		request        *http.Request
@@ -742,12 +713,10 @@ func TestGetNotificationsNewest(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			LoggingClient = logger.MockLogger{}
 			Configuration = &ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 5}}
 			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(restNotificationsNew)
-			handler.ServeHTTP(rr, tt.request)
+			restNotificationsNew(rr, tt.request, logger.NewMockClient())
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)

@@ -119,8 +119,7 @@ func TestSubscriptionsAll(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(restGetSubscriptions)
-			handler.ServeHTTP(rr, tt.request)
+			restGetSubscriptions(rr, tt.request, logger.NewMockClient())
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -162,8 +161,7 @@ func TestGetSubscriptionById(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(restGetSubscriptionByID)
-			handler.ServeHTTP(rr, tt.request)
+			restGetSubscriptionByID(rr, tt.request, logger.NewMockClient())
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -289,12 +287,10 @@ func TestDeleteSubscriptionById(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			LoggingClient = logger.MockLogger{}
 			Configuration = &ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 1}}
 			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(restDeleteSubscriptionByID)
-			handler.ServeHTTP(rr, tt.request)
+			restDeleteSubscriptionByID(rr, tt.request, logger.NewMockClient())
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -337,8 +333,7 @@ func TestGetSubscriptionBySlug(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(restGetSubscriptionBySlug)
-			handler.ServeHTTP(rr, tt.request)
+			restGetSubscriptionBySlug(rr, tt.request, logger.NewMockClient())
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -376,12 +371,10 @@ func TestDeleteSubscriptionBySlug(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			LoggingClient = logger.MockLogger{}
 			Configuration = &ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 1}}
 			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(restDeleteSubscriptionBySlug)
-			handler.ServeHTTP(rr, tt.request)
+			restDeleteSubscriptionBySlug(rr, tt.request, logger.NewMockClient())
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -426,8 +419,7 @@ func TestGetSubscriptionsByCategories(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(restGetSubscriptionsByCategories)
-			handler.ServeHTTP(rr, tt.request)
+			restGetSubscriptionsByCategories(rr, tt.request, logger.NewMockClient())
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -468,8 +460,7 @@ func TestAddSubscription(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(restAddSubscription)
-			handler.ServeHTTP(rr, tt.request)
+			restAddSubscription(rr, tt.request, logger.NewMockClient())
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -540,8 +531,7 @@ func TestUpdateSubscription(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(restUpdateSubscription)
-			handler.ServeHTTP(rr, tt.request)
+			restUpdateSubscription(rr, tt.request, logger.NewMockClient())
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
