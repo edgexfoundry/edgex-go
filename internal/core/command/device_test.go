@@ -47,7 +47,6 @@ var (
 // commandByDeviceID
 func TestExecuteGETCommandByDeviceIdAndCommandId(t *testing.T) {
 	mdc = newMockDeviceClient()
-	dbClient = newCommandMock()
 
 	tests := []struct {
 		name           string
@@ -107,8 +106,15 @@ func TestExecuteGETCommandByDeviceIdAndCommandId(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, statusCode := commandByDeviceID(tt.deviceId, TestCommandId, "", "", false, context.Background(),
-				logger.NewMockClient())
+			_, statusCode := commandByDeviceID(
+				tt.deviceId,
+				TestCommandId,
+				"",
+				"",
+				false,
+				context.Background(),
+				logger.NewMockClient(),
+				newCommandMock())
 			if tt.expectedStatus != statusCode {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, statusCode)
 				return

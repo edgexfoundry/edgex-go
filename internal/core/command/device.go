@@ -24,6 +24,7 @@ import (
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/command/errors"
+	"github.com/edgexfoundry/edgex-go/internal/core/command/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 )
 
@@ -34,7 +35,8 @@ func commandByDeviceID(
 	queryParams string,
 	isPutCommand bool,
 	ctx context.Context,
-	loggingClient logger.LoggingClient) (string, int) {
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) (string, int) {
 	d, err := mdc.Device(deviceID, ctx)
 	if err != nil {
 		loggingClient.Error(err.Error())
@@ -87,7 +89,8 @@ func commandByNames(
 	queryParams string,
 	isPutCommand bool,
 	ctx context.Context,
-	loggingClient logger.LoggingClient) (string, int) {
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) (string, int) {
 	d, err := mdc.DeviceForName(dn, ctx)
 	if err != nil {
 		loggingClient.Error(err.Error())
@@ -147,7 +150,10 @@ func commandByDevice(
 	return responseBody, responseCode
 }
 
-func getCommands(ctx context.Context, loggingClient logger.LoggingClient) (int, []contract.CommandResponse, error) {
+func getCommands(
+	ctx context.Context,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) (int, []contract.CommandResponse, error) {
 	devices, err := mdc.Devices(ctx)
 	if err != nil {
 		chk, ok := err.(types.ErrServiceClient)
@@ -177,7 +183,8 @@ func getCommands(ctx context.Context, loggingClient logger.LoggingClient) (int, 
 func getCommandsByDeviceID(
 	did string,
 	ctx context.Context,
-	loggingClient logger.LoggingClient) (int, contract.CommandResponse, error) {
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) (int, contract.CommandResponse, error) {
 	d, err := mdc.Device(did, ctx)
 	if err != nil {
 		chk, ok := err.(types.ErrServiceClient)
@@ -204,7 +211,8 @@ func getCommandsByDeviceID(
 func getCommandsByDeviceName(
 	dn string,
 	ctx context.Context,
-	loggingClient logger.LoggingClient) (int, contract.CommandResponse, error) {
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) (int, contract.CommandResponse, error) {
 	d, err := mdc.DeviceForName(dn, ctx)
 	if err != nil {
 		chk, ok := err.(types.ErrServiceClient)

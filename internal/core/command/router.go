@@ -61,33 +61,61 @@ func LoadRestRoutes(dic *di.Container) *mux.Router {
 func loadDeviceRoutes(b *mux.Router, dic *di.Container) {
 
 	b.HandleFunc("/device", func(w http.ResponseWriter, r *http.Request) {
-		restGetAllCommands(w, r, bootstrapContainer.LoggingClientFrom(dic.Get))
+		restGetAllCommands(
+			w,
+			r,
+			bootstrapContainer.LoggingClientFrom(dic.Get),
+			bootstrapContainer.DBClientFrom(dic.Get))
 	}).Methods(http.MethodGet)
 
 	d := b.PathPrefix("/" + DEVICE).Subrouter()
 
 	// /api/<version>/device
 	d.HandleFunc("/{"+ID+"}", func(w http.ResponseWriter, r *http.Request) {
-		restGetCommandsByDeviceID(w, r, bootstrapContainer.LoggingClientFrom(dic.Get))
+		restGetCommandsByDeviceID(
+			w,
+			r,
+			bootstrapContainer.LoggingClientFrom(dic.Get),
+			bootstrapContainer.DBClientFrom(dic.Get))
 	}).Methods(http.MethodGet)
 	d.HandleFunc("/{"+ID+"}/"+COMMAND+"/{"+COMMANDID+"}", func(w http.ResponseWriter, r *http.Request) {
-		restGetDeviceCommandByCommandID(w, r, bootstrapContainer.LoggingClientFrom(dic.Get))
+		restGetDeviceCommandByCommandID(
+			w,
+			r,
+			bootstrapContainer.LoggingClientFrom(dic.Get),
+			bootstrapContainer.DBClientFrom(dic.Get))
 	}).Methods(http.MethodGet)
 	d.HandleFunc("/{"+ID+"}/"+COMMAND+"/{"+COMMANDID+"}", func(w http.ResponseWriter, r *http.Request) {
-		restPutDeviceCommandByCommandID(w, r, bootstrapContainer.LoggingClientFrom(dic.Get))
+		restPutDeviceCommandByCommandID(
+			w,
+			r,
+			bootstrapContainer.LoggingClientFrom(dic.Get),
+			bootstrapContainer.DBClientFrom(dic.Get))
 	}).Methods(http.MethodPut)
 
 	// /api/<version>/device/name
 	dn := d.PathPrefix("/" + NAME).Subrouter()
 
 	dn.HandleFunc("/{"+NAME+"}", func(w http.ResponseWriter, r *http.Request) {
-		restGetCommandsByDeviceName(w, r, bootstrapContainer.LoggingClientFrom(dic.Get))
+		restGetCommandsByDeviceName(
+			w,
+			r,
+			bootstrapContainer.LoggingClientFrom(dic.Get),
+			bootstrapContainer.DBClientFrom(dic.Get))
 	}).Methods(http.MethodGet)
 	dn.HandleFunc("/{"+NAME+"}/"+COMMAND+"/{"+COMMANDNAME+"}", func(w http.ResponseWriter, r *http.Request) {
-		restGetDeviceCommandByNames(w, r, bootstrapContainer.LoggingClientFrom(dic.Get))
+		restGetDeviceCommandByNames(
+			w,
+			r,
+			bootstrapContainer.LoggingClientFrom(dic.Get),
+			bootstrapContainer.DBClientFrom(dic.Get))
 	}).Methods(http.MethodGet)
 	dn.HandleFunc("/{"+NAME+"}/"+COMMAND+"/{"+COMMANDNAME+"}", func(w http.ResponseWriter, r *http.Request) {
-		restPutDeviceCommandByNames(w, r, bootstrapContainer.LoggingClientFrom(dic.Get))
+		restPutDeviceCommandByNames(
+			w,
+			r,
+			bootstrapContainer.LoggingClientFrom(dic.Get),
+			bootstrapContainer.DBClientFrom(dic.Get))
 	}).Methods(http.MethodPut)
 }
 
