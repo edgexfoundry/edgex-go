@@ -16,7 +16,9 @@ COPY . .
 
 RUN make cmd/security-proxy-setup/security-proxy-setup
 
-FROM scratch
+FROM alpine
+
+RUN apk update && apk add curl && rm -rf /var/cache/apk/* 
 
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
       copyright='Copyright (c) 2019: Dell Technologies, Inc.'
