@@ -105,6 +105,8 @@ for key in $ALL_SERVICES; do
                 handle_svc "postgres" "off"
                 handle_svc "kong-daemon" "off"
                 handle_svc "security-proxy-setup" "off" 
+                # turn off security-secrets-setup too
+                handle_svc "security-secrets-setup" "off" 
             fi
             handle_svc "vault" "$status"
             handle_svc "security-secretstore-setup" "$status"
