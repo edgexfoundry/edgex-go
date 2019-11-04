@@ -18,6 +18,8 @@ RUN make cmd/security-secretstore-setup/security-secretstore-setup
 
 FROM alpine:3.10
 
+RUN apk update && apk add curl && rm -rf /var/cache/apk/* 
+
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
       copyright='Copyright (c) 2019: Dell Technologies, Inc.'
 
