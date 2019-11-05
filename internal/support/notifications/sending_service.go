@@ -27,6 +27,7 @@ import (
 	"time"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+	notificationsConfig "github.com/edgexfoundry/edgex-go/internal/support/notifications/config"
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/interfaces"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
@@ -38,29 +39,31 @@ func sendViaChannel(
 	c models.Channel,
 	receiver string,
 	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient) {
+	dbClient interfaces.DBClient,
+	config notificationsConfig.ConfigurationStruct) {
 
 	loggingClient.Debug("Sending notification: " + n.Slug + ", via channel: " + c.String())
 	var tr models.TransmissionRecord
 	if c.Type == models.ChannelType(models.Email) {
-		tr = sendMail(n.Content, c.MailAddresses, loggingClient)
+		tr = sendMail(n.Content, c.MailAddresses, loggingClient, config.Smtp)
 	} else {
 		tr = restSend(n.Content, c.Url, loggingClient)
 	}
 	t, err := persistTransmission(tr, n, c, receiver, loggingClient, dbClient)
 	if err == nil {
-		handleFailedTransmission(t, loggingClient, dbClient)
+		handleFailedTransmission(t, loggingClient, dbClient, config)
 	}
 }
 
 func resendViaChannel(
 	t models.Transmission,
 	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient) {
+	dbClient interfaces.DBClient,
+	config notificationsConfig.ConfigurationStruct) {
 
 	var tr models.TransmissionRecord
 	if t.Channel.Type == models.ChannelType(models.Email) {
-		tr = sendMail(t.Notification.Content, t.Channel.MailAddresses, loggingClient)
+		tr = sendMail(t.Notification.Content, t.Channel.MailAddresses, loggingClient, config.Smtp)
 	} else {
 		tr = restSend(t.Notification.Content, t.Channel.Url, loggingClient)
 	}
@@ -69,7 +72,7 @@ func resendViaChannel(
 	t.Records = append(t.Records, tr)
 	err := dbClient.UpdateTransmission(t)
 	if err == nil {
-		handleFailedTransmission(t, loggingClient, dbClient)
+		handleFailedTransmission(t, loggingClient, dbClient, config)
 	}
 }
 
@@ -106,8 +109,12 @@ func persistTransmission(
 	return trx, nil
 }
 
-func sendMail(message string, addressees []string, loggingClient logger.LoggingClient) models.TransmissionRecord {
-	smtp := Configuration.Smtp
+func sendMail(
+	message string,
+	addressees []string,
+	loggingClient logger.LoggingClient,
+	smtp notificationsConfig.SmtpInfo) models.TransmissionRecord {
+
 	tr := getTransmissionRecord("SMTP server received", models.Sent)
 	buf := bytes.NewBufferString("Subject: " + smtp.Subject + "\r\n")
 	// required CRLF at ends of lines and CRLF between header and body for SMTP RFC 822 style email
@@ -140,19 +147,22 @@ func restSend(message string, url string, loggingClient logger.LoggingClient) mo
 func handleFailedTransmission(
 	t models.Transmission,
 	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient) {
+	dbClient interfaces.DBClient,
+	config notificationsConfig.ConfigurationStruct) {
 
 	n := t.Notification
-	if t.ResendCount >= Configuration.Writable.ResendLimit {
+	if t.ResendCount >= config.Writable.ResendLimit {
 		loggingClient.Error("Too many transmission resend attempts!  Giving up on transmission: " + t.ID + ", for notification: " + n.Slug)
 	}
 	if t.Status == models.Failed && n.Status != models.Escalated {
 		loggingClient.Debug("Handling failed transmission for: " + t.ID + " for notification: " + t.Notification.Slug + ", resends so far: " + strconv.Itoa(t.ResendCount))
 		if n.Severity == models.Critical {
-			if t.ResendCount < Configuration.Writable.ResendLimit {
-				time.AfterFunc(time.Second*5, func() { criticalSeverityResend(t, loggingClient, dbClient) })
+			if t.ResendCount < config.Writable.ResendLimit {
+				time.AfterFunc(time.Second*5, func() {
+					criticalSeverityResend(t, loggingClient, dbClient, config)
+				})
 			} else {
-				escalate(t, loggingClient, dbClient)
+				escalate(t, loggingClient, dbClient, config)
 				t.Status = models.Trxescalated
 				dbClient.UpdateTransmission(t)
 			}
@@ -160,7 +170,7 @@ func handleFailedTransmission(
 	}
 }
 
-func deduceAuth(s SmtpInfo) (mail.Auth, error) {
+func deduceAuth(s notificationsConfig.SmtpInfo) (mail.Auth, error) {
 	if s.CheckUsername() == "" && s.Password == "" {
 		return nil, errors.New("Notifications: Expecting username")
 	}
@@ -187,7 +197,7 @@ func deduceAuth(s SmtpInfo) (mail.Auth, error) {
 // interfaces, which makes it a little bit trickier to modify. Since, the intention for
 // this function is to use it as a support function for handling the low level SMTP
 // protocol mechanism, it is not exported.
-func smtpSend(to []string, msg []byte, s SmtpInfo) error {
+func smtpSend(to []string, msg []byte, s notificationsConfig.SmtpInfo) error {
 	addr := s.Host + ":" + strconv.Itoa(s.Port)
 	auth, err := deduceAuth(s)
 	if err != nil {

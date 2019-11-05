@@ -22,6 +22,7 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+	notificationsConfig "github.com/edgexfoundry/edgex-go/internal/support/notifications/config"
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/errors"
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/operators/notification"
@@ -37,7 +38,8 @@ func notificationHandler(
 	w http.ResponseWriter,
 	r *http.Request,
 	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient) {
+	dbClient interfaces.DBClient,
+	config notificationsConfig.ConfigurationStruct) {
 
 	if r.Body != nil {
 		defer r.Body.Close()
@@ -71,7 +73,7 @@ func notificationHandler(
 			return
 		}
 
-		err := distributeAndMark(n, loggingClient, dbClient)
+		err := distributeAndMark(n, loggingClient, dbClient, config)
 		if err != nil {
 			return
 		}
@@ -243,7 +245,8 @@ func restGetNotificationsBySender(
 	w http.ResponseWriter,
 	r *http.Request,
 	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient) {
+	dbClient interfaces.DBClient,
+	config notificationsConfig.ConfigurationStruct) {
 
 	if r.Body != nil {
 		defer r.Body.Close()
@@ -258,7 +261,7 @@ func restGetNotificationsBySender(
 	}
 
 	// Check the length
-	if err = checkMaxLimit(limitNum, loggingClient); err != nil {
+	if err = checkMaxLimit(limitNum, loggingClient, config); err != nil {
 		http.Error(w, ExceededMaxResultCount, http.StatusRequestEntityTooLarge)
 		return
 	}
@@ -282,7 +285,8 @@ func restNotificationByStartEnd(
 	w http.ResponseWriter,
 	r *http.Request,
 	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient) {
+	dbClient interfaces.DBClient,
+	config notificationsConfig.ConfigurationStruct) {
 
 	if r.Body != nil {
 		defer r.Body.Close()
@@ -309,7 +313,7 @@ func restNotificationByStartEnd(
 	}
 
 	// Check the length
-	if err = checkMaxLimit(limitNum, loggingClient); err != nil {
+	if err = checkMaxLimit(limitNum, loggingClient, config); err != nil {
 		http.Error(w, ExceededMaxResultCount, http.StatusRequestEntityTooLarge)
 		return
 	}
@@ -333,7 +337,8 @@ func restNotificationByStart(
 	w http.ResponseWriter,
 	r *http.Request,
 	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient) {
+	dbClient interfaces.DBClient,
+	config notificationsConfig.ConfigurationStruct) {
 
 	if r.Body != nil {
 		defer r.Body.Close()
@@ -353,7 +358,7 @@ func restNotificationByStart(
 	}
 
 	// Check the length
-	if err = checkMaxLimit(limitNum, loggingClient); err != nil {
+	if err = checkMaxLimit(limitNum, loggingClient, config); err != nil {
 		http.Error(w, ExceededMaxResultCount, http.StatusRequestEntityTooLarge)
 		return
 	}
@@ -377,7 +382,8 @@ func restNotificationByEnd(
 	w http.ResponseWriter,
 	r *http.Request,
 	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient) {
+	dbClient interfaces.DBClient,
+	config notificationsConfig.ConfigurationStruct) {
 
 	if r.Body != nil {
 		defer r.Body.Close()
@@ -398,7 +404,7 @@ func restNotificationByEnd(
 	}
 
 	// Check the length
-	if err = checkMaxLimit(limitNum, loggingClient); err != nil {
+	if err = checkMaxLimit(limitNum, loggingClient, config); err != nil {
 		http.Error(w, ExceededMaxResultCount, http.StatusRequestEntityTooLarge)
 		return
 	}
@@ -422,7 +428,8 @@ func restNotificationsByLabels(
 	w http.ResponseWriter,
 	r *http.Request,
 	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient) {
+	dbClient interfaces.DBClient,
+	config notificationsConfig.ConfigurationStruct) {
 
 	if r.Body != nil {
 		defer r.Body.Close()
@@ -437,7 +444,7 @@ func restNotificationsByLabels(
 	}
 
 	// Check the length
-	if err = checkMaxLimit(limitNum, loggingClient); err != nil {
+	if err = checkMaxLimit(limitNum, loggingClient, config); err != nil {
 		http.Error(w, ExceededMaxResultCount, http.StatusRequestEntityTooLarge)
 		return
 	}
@@ -463,7 +470,8 @@ func restNotificationsNew(
 	w http.ResponseWriter,
 	r *http.Request,
 	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient) {
+	dbClient interfaces.DBClient,
+	config notificationsConfig.ConfigurationStruct) {
 
 	if r.Body != nil {
 		defer r.Body.Close()
@@ -478,7 +486,7 @@ func restNotificationsNew(
 	}
 
 	// Check the length
-	if err = checkMaxLimit(limitNum, loggingClient); err != nil {
+	if err = checkMaxLimit(limitNum, loggingClient, config); err != nil {
 		http.Error(w, ExceededMaxResultCount, http.StatusRequestEntityTooLarge)
 		return
 	}
