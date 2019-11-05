@@ -19,7 +19,8 @@ import (
 	"context"
 	"sync"
 
-	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
+	container "github.com/edgexfoundry/edgex-go/internal/core/metadata/containers"
+	bootstrapContainer "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/endpoint"
@@ -33,25 +34,29 @@ import (
 // Global variables
 var Configuration = &ConfigurationStruct{}
 
-var mdc metadata.DeviceClient
-
 // Global ErrorConcept variables
 var httpErrorHandler errorconcept.ErrorHandler
 
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the command service.
 func BootstrapHandler(wg *sync.WaitGroup, ctx context.Context, startupTimer startup.Timer, dic *di.Container) bool {
-	loggingClient := container.LoggingClientFrom(dic.Get)
-	registryClient := container.RegistryFrom(dic.Get)
+	loggingClient := bootstrapContainer.LoggingClientFrom(dic.Get)
+	registryClient := bootstrapContainer.RegistryFrom(dic.Get)
 	httpErrorHandler = errorconcept.NewErrorHandler(loggingClient)
-	mdc = metadata.NewDeviceClient(
-		types.EndpointParams{
-			ServiceKey:  clients.CoreMetaDataServiceKey,
-			Path:        clients.ApiDeviceRoute,
-			UseRegistry: registryClient != nil,
-			Url:         Configuration.Clients["Metadata"].Url() + clients.ApiDeviceRoute,
-			Interval:    Configuration.Service.ClientMonitor,
+
+	// initialize clients required by the service
+	dic.Update(di.ServiceConstructorMap{
+		container.DeviceClientName: func(get di.Get) interface{} {
+			return metadata.NewDeviceClient(
+				types.EndpointParams{
+					ServiceKey:  clients.CoreMetaDataServiceKey,
+					Path:        clients.ApiDeviceRoute,
+					UseRegistry: registryClient != nil,
+					Url:         Configuration.Clients["Metadata"].Url() + clients.ApiDeviceRoute,
+					Interval:    Configuration.Service.ClientMonitor,
+				},
+				endpoint.Endpoint{RegistryClient: &registryClient})
 		},
-		endpoint.Endpoint{RegistryClient: &registryClient})
+	})
 
 	return true
 }
