@@ -19,7 +19,6 @@ import (
 	"context"
 	"sync"
 
-	"github.com/edgexfoundry/edgex-go/internal/core/command/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
@@ -35,7 +34,6 @@ import (
 var Configuration = &ConfigurationStruct{}
 
 var mdc metadata.DeviceClient
-var dbClient interfaces.DBClient
 
 // Global ErrorConcept variables
 var httpErrorHandler errorconcept.ErrorHandler
@@ -45,7 +43,6 @@ func BootstrapHandler(wg *sync.WaitGroup, ctx context.Context, startupTimer star
 	loggingClient := container.LoggingClientFrom(dic.Get)
 	registryClient := container.RegistryFrom(dic.Get)
 	httpErrorHandler = errorconcept.NewErrorHandler(loggingClient)
-	dbClient = container.DBClientFrom(dic.Get)
 	mdc = metadata.NewDeviceClient(
 		types.EndpointParams{
 			ServiceKey:  clients.CoreMetaDataServiceKey,
