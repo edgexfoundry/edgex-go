@@ -21,6 +21,7 @@ import (
 	"strings"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/gorilla/mux"
 
@@ -28,8 +29,10 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/core/data/operators/reading"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/operators/value_descriptor"
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation/models"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
 )
@@ -38,77 +41,172 @@ import (
 // descriptor is in use.
 var ValueDescriptorUsageReadLimit = 1
 
-func LoadRestRoutes() *mux.Router {
+func LoadRestRoutes(dic *di.Container) *mux.Router {
 	r := mux.NewRouter()
 
 	// Ping Resource
 	r.HandleFunc(clients.ApiPingRoute, pingHandler).Methods(http.MethodGet)
 
 	// Configuration
-	r.HandleFunc(clients.ApiConfigRoute, configHandler).Methods(http.MethodGet)
+	r.HandleFunc(clients.ApiConfigRoute, func(writer http.ResponseWriter, request *http.Request) {
+		configHandler(writer, request, container.LoggingClientFrom(dic.Get))
+	}).Methods(http.MethodGet)
 
 	// Metrics
-	r.HandleFunc(clients.ApiMetricsRoute, metricsHandler).Methods(http.MethodGet)
+	r.HandleFunc(clients.ApiMetricsRoute, func(writer http.ResponseWriter, request *http.Request) {
+		metricsHandler(writer, request, container.LoggingClientFrom(dic.Get))
+	}).Methods(http.MethodGet)
 
 	// Version
 	r.HandleFunc(clients.ApiVersionRoute, pkg.VersionHandler).Methods(http.MethodGet)
 
 	// Events
-	r.HandleFunc(clients.ApiEventRoute, eventHandler).Methods(http.MethodGet, http.MethodPut, http.MethodPost)
+	r.HandleFunc(clients.ApiEventRoute, func(writer http.ResponseWriter, request *http.Request) {
+		eventHandler(writer, request, container.LoggingClientFrom(dic.Get))
+	}).Methods(http.MethodGet, http.MethodPut, http.MethodPost)
+
 	e := r.PathPrefix(clients.ApiEventRoute).Subrouter()
-	e.HandleFunc("/"+SCRUB, scrubHandler).Methods(http.MethodDelete)
-	e.HandleFunc("/"+SCRUBALL, scrubAllHandler).Methods(http.MethodDelete)
-	e.HandleFunc("/"+COUNT, eventCountHandler).Methods(http.MethodGet)
+
+	e.HandleFunc("/"+SCRUB, func(writer http.ResponseWriter, request *http.Request) {
+		scrubHandler(writer, request, container.LoggingClientFrom(dic.Get))
+	}).Methods(http.MethodDelete)
+
+	e.HandleFunc("/"+SCRUBALL, func(writer http.ResponseWriter, request *http.Request) {
+		scrubAllHandler(writer, request, container.LoggingClientFrom(dic.Get))
+	}).Methods(http.MethodDelete)
+
+	e.HandleFunc("/"+COUNT, func(writer http.ResponseWriter, request *http.Request) {
+		eventCountHandler(writer, request, container.LoggingClientFrom(dic.Get))
+	}).Methods(http.MethodGet)
+
 	e.HandleFunc("/"+COUNT+"/{"+DEVICEID_PARAM+"}", eventCountByDeviceIdHandler).Methods(http.MethodGet)
-	e.HandleFunc("/{"+ID+"}", getEventByIdHandler).Methods(http.MethodGet)
-	e.HandleFunc("/"+ID+"/{"+ID+"}", eventIdHandler).Methods(http.MethodDelete, http.MethodPut)
-	e.HandleFunc("/"+CHECKSUM+"/{"+CHECKSUM+"}", putEventChecksumHandler).Methods(http.MethodPut)
+
+	e.HandleFunc("/{"+ID+"}", func(writer http.ResponseWriter, request *http.Request) {
+		getEventByIdHandler(writer, request, container.LoggingClientFrom(dic.Get))
+	}).Methods(http.MethodGet)
+
+	e.HandleFunc("/"+ID+"/{"+ID+"}", func(writer http.ResponseWriter, request *http.Request) {
+		eventIdHandler(writer, request, container.LoggingClientFrom(dic.Get))
+	}).Methods(http.MethodDelete, http.MethodPut)
+
+	e.HandleFunc("/"+CHECKSUM+"/{"+CHECKSUM+"}", func(writer http.ResponseWriter, request *http.Request) {
+		putEventChecksumHandler(writer, request, container.LoggingClientFrom(dic.Get))
+	}).Methods(http.MethodPut)
+
 	e.HandleFunc(
 		"/"+DEVICE+"/{"+DEVICEID_PARAM+"}/{"+LIMIT+":[0-9]+}",
-		getEventByDeviceHandler).Methods(http.MethodGet)
+		func(writer http.ResponseWriter, request *http.Request) {
+			getEventByDeviceHandler(writer, request, container.LoggingClientFrom(dic.Get))
+		}).Methods(http.MethodGet)
 	e.HandleFunc("/"+DEVICE+"/{"+DEVICEID_PARAM+"}", deleteByDeviceIdHandler).Methods(http.MethodDelete)
-	e.HandleFunc("/"+REMOVEOLD+"/"+AGE+"/{"+AGE+":[0-9]+}", eventByAgeHandler).Methods(http.MethodDelete)
+
+	e.HandleFunc("/"+REMOVEOLD+"/"+AGE+"/{"+AGE+":[0-9]+}", func(writer http.ResponseWriter, request *http.Request) {
+		eventByAgeHandler(writer, request, container.LoggingClientFrom(dic.Get))
+	}).Methods(http.MethodDelete)
+
 	e.HandleFunc(
 		"/{"+START+":[0-9]+}/{"+END+":[0-9]+}/{"+LIMIT+":[0-9]+}",
-		eventByCreationTimeHandler).Methods(http.MethodGet)
+		func(writer http.ResponseWriter, request *http.Request) {
+			eventByCreationTimeHandler(writer, request, container.LoggingClientFrom(dic.Get))
+		}).Methods(http.MethodGet)
 
 	// Readings
-	r.HandleFunc(clients.ApiReadingRoute, readingHandler).Methods(http.MethodGet, http.MethodPut, http.MethodPost)
+	r.HandleFunc(clients.ApiReadingRoute, func(writer http.ResponseWriter, request *http.Request) {
+		readingHandler(writer, request, container.LoggingClientFrom(dic.Get))
+	}).Methods(http.MethodGet, http.MethodPut, http.MethodPost)
+
 	rd := r.PathPrefix(clients.ApiReadingRoute).Subrouter()
-	rd.HandleFunc("/"+COUNT, readingCountHandler).Methods(http.MethodGet)
-	rd.HandleFunc("/"+ID+"/{"+ID+"}", deleteReadingByIdHandler).Methods(http.MethodDelete)
-	rd.HandleFunc("/{"+ID+"}", getReadingByIdHandler).Methods(http.MethodGet)
+
+	rd.HandleFunc("/"+COUNT, func(writer http.ResponseWriter, request *http.Request) {
+		readingCountHandler(writer, request, container.LoggingClientFrom(dic.Get))
+	}).Methods(http.MethodGet)
+
+	rd.HandleFunc("/"+ID+"/{"+ID+"}", func(writer http.ResponseWriter, request *http.Request) {
+		deleteReadingByIdHandler(writer, request, container.LoggingClientFrom(dic.Get))
+	}).Methods(http.MethodDelete)
+
+	rd.HandleFunc("/{"+ID+"}", func(writer http.ResponseWriter, request *http.Request) {
+		getReadingByIdHandler(writer, request, container.LoggingClientFrom(dic.Get))
+	}).Methods(http.MethodGet)
+
 	rd.HandleFunc(
 		"/"+DEVICE+"/{"+DEVICEID_PARAM+"}/{"+LIMIT+":[0-9]+}",
-		readingByDeviceHandler).Methods(http.MethodGet)
+		func(writer http.ResponseWriter, request *http.Request) {
+			readingByDeviceHandler(writer, request, container.LoggingClientFrom(dic.Get))
+		}).Methods(http.MethodGet)
+
 	rd.HandleFunc(
 		"/"+NAME+"/{"+NAME+"}/{"+LIMIT+":[0-9]+}",
-		readingbyValueDescriptorHandler).Methods(http.MethodGet)
+		func(writer http.ResponseWriter, request *http.Request) {
+			readingbyValueDescriptorHandler(writer, request, container.LoggingClientFrom(dic.Get))
+		}).Methods(http.MethodGet)
+
 	rd.HandleFunc(
 		"/"+UOMLABEL+"/{"+UOMLABEL_PARAM+"}/{"+LIMIT+":[0-9]+}",
-		readingByUomLabelHandler).Methods(http.MethodGet)
-	rd.HandleFunc("/"+LABEL+"/{"+LABEL+"}/{"+LIMIT+":[0-9]+}", readingByLabelHandler).Methods(http.MethodGet)
-	rd.HandleFunc("/"+TYPE+"/{"+TYPE+"}/{"+LIMIT+":[0-9]+}", readingByTypeHandler).Methods(http.MethodGet)
+		func(writer http.ResponseWriter, request *http.Request) {
+			readingByUomLabelHandler(writer, request, container.LoggingClientFrom(dic.Get))
+		}).Methods(http.MethodGet)
+
+	rd.HandleFunc("/"+LABEL+"/{"+LABEL+"}/{"+LIMIT+":[0-9]+}", func(writer http.ResponseWriter, request *http.Request) {
+		readingByLabelHandler(writer, request, container.LoggingClientFrom(dic.Get))
+	}).Methods(http.MethodGet)
+
+	rd.HandleFunc("/"+TYPE+"/{"+TYPE+"}/{"+LIMIT+":[0-9]+}", func(writer http.ResponseWriter, request *http.Request) {
+		readingByTypeHandler(writer, request, container.LoggingClientFrom(dic.Get))
+	}).Methods(http.MethodGet)
+
 	rd.HandleFunc(
 		"/{"+START+":[0-9]+}/{"+END+":[0-9]+}/{"+LIMIT+":[0-9]+}",
-		readingByCreationTimeHandler).Methods(http.MethodGet)
+		func(writer http.ResponseWriter, request *http.Request) {
+			readingByCreationTimeHandler(writer, request, container.LoggingClientFrom(dic.Get))
+		}).Methods(http.MethodGet)
+
 	rd.HandleFunc(
 		"/"+NAME+"/{"+NAME+"}/"+DEVICE+"/{"+DEVICE+"}/{"+LIMIT+":[0-9]+}",
-		readingByValueDescriptorAndDeviceHandler).Methods(http.MethodGet)
+		func(writer http.ResponseWriter, request *http.Request) {
+			readingByValueDescriptorAndDeviceHandler(writer, request, container.LoggingClientFrom(dic.Get))
+		}).Methods(http.MethodGet)
 
 	// Value descriptors
 	r.HandleFunc(
 		clients.ApiValueDescriptorRoute,
-		valueDescriptorHandler).Methods(http.MethodGet, http.MethodPut, http.MethodPost)
+		func(writer http.ResponseWriter, request *http.Request) {
+			valueDescriptorHandler(writer, request, container.LoggingClientFrom(dic.Get))
+		}).Methods(http.MethodGet, http.MethodPut, http.MethodPost)
+
 	vd := r.PathPrefix(clients.ApiValueDescriptorRoute).Subrouter()
-	vd.HandleFunc("/"+USAGE, restValueDescriptorsUsageHandler).Methods(http.MethodGet)
-	vd.HandleFunc("/"+ID+"/{"+ID+"}", deleteValueDescriptorByIdHandler).Methods(http.MethodDelete)
-	vd.HandleFunc("/"+NAME+"/{"+NAME+"}", valueDescriptorByNameHandler).Methods(http.MethodGet, http.MethodDelete)
-	vd.HandleFunc("/{"+ID+"}", valueDescriptorByIdHandler).Methods(http.MethodGet)
-	vd.HandleFunc("/"+UOMLABEL+"/{"+UOMLABEL_PARAM+"}", valueDescriptorByUomLabelHandler).Methods(http.MethodGet)
-	vd.HandleFunc("/"+LABEL+"/{"+LABEL+"}", valueDescriptorByLabelHandler).Methods(http.MethodGet)
-	vd.HandleFunc("/"+DEVICENAME+"/{"+DEVICE+"}", valueDescriptorByDeviceHandler).Methods(http.MethodGet)
-	vd.HandleFunc("/"+DEVICEID+"/{"+ID+"}", valueDescriptorByDeviceIdHandler).Methods(http.MethodGet)
+
+	vd.HandleFunc("/"+USAGE, func(writer http.ResponseWriter, request *http.Request) {
+		restValueDescriptorsUsageHandler(writer, request, container.LoggingClientFrom(dic.Get))
+	}).Methods(http.MethodGet)
+
+	vd.HandleFunc("/"+ID+"/{"+ID+"}", func(writer http.ResponseWriter, request *http.Request) {
+		deleteValueDescriptorByIdHandler(writer, request, container.LoggingClientFrom(dic.Get))
+	}).Methods(http.MethodDelete)
+
+	vd.HandleFunc("/"+NAME+"/{"+NAME+"}", func(writer http.ResponseWriter, request *http.Request) {
+		valueDescriptorByNameHandler(writer, request, container.LoggingClientFrom(dic.Get))
+	}).Methods(http.MethodGet, http.MethodDelete)
+
+	vd.HandleFunc("/{"+ID+"}", func(writer http.ResponseWriter, request *http.Request) {
+		valueDescriptorByIdHandler(writer, request, container.LoggingClientFrom(dic.Get))
+	}).Methods(http.MethodGet)
+
+	vd.HandleFunc("/"+UOMLABEL+"/{"+UOMLABEL_PARAM+"}", func(writer http.ResponseWriter, request *http.Request) {
+		valueDescriptorByUomLabelHandler(writer, request, container.LoggingClientFrom(dic.Get))
+	}).Methods(http.MethodGet)
+
+	vd.HandleFunc("/"+LABEL+"/{"+LABEL+"}", func(writer http.ResponseWriter, request *http.Request) {
+		valueDescriptorByLabelHandler(writer, request, container.LoggingClientFrom(dic.Get))
+	}).Methods(http.MethodGet)
+
+	vd.HandleFunc("/"+DEVICENAME+"/{"+DEVICE+"}", func(writer http.ResponseWriter, request *http.Request) {
+		valueDescriptorByDeviceHandler(writer, request, container.LoggingClientFrom(dic.Get))
+	}).Methods(http.MethodGet)
+
+	vd.HandleFunc("/"+DEVICEID+"/{"+ID+"}", func(writer http.ResponseWriter, request *http.Request) {
+		valueDescriptorByDeviceIdHandler(writer, request, container.LoggingClientFrom(dic.Get))
+	}).Methods(http.MethodGet)
 
 	r.Use(correlation.ManageHeader)
 	r.Use(correlation.OnResponseComplete)
@@ -121,7 +219,7 @@ func LoadRestRoutes() *mux.Router {
 Return number of events in Core Data
 /api/v1/event/count
 */
-func eventCountHandler(w http.ResponseWriter, r *http.Request) {
+func eventCountHandler(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
 	defer r.Body.Close()
 
 	count, err := countEvents()
@@ -134,7 +232,7 @@ func eventCountHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	_, err = w.Write([]byte(strconv.Itoa(count)))
 	if err != nil {
-		LoggingClient.Error(err.Error())
+		loggingClient.Error(err.Error())
 	}
 }
 
@@ -170,7 +268,7 @@ func eventCountByDeviceIdHandler(w http.ResponseWriter, r *http.Request) {
 
 // Remove all the old events and associated readings (by age)
 // event/removeold/age/{age}
-func eventByAgeHandler(w http.ResponseWriter, r *http.Request) {
+func eventByAgeHandler(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
 	defer r.Body.Close()
 
 	vars := mux.Vars(r)
@@ -181,9 +279,9 @@ func eventByAgeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	LoggingClient.Info("Deleting events by age: " + vars["age"])
+	loggingClient.Info("Deleting events by age: " + vars["age"])
 
-	count, err := deleteEventsByAge(age)
+	count, err := deleteEventsByAge(age, loggingClient)
 	if err != nil {
 		httpErrorHandler.Handle(w, err, errorconcept.Default.InternalServerError)
 		return
@@ -202,7 +300,7 @@ Status code 413 - number of events exceeds limit
 Status code 500 - unanticipated issues
 api/v1/event
 */
-func eventHandler(w http.ResponseWriter, r *http.Request) {
+func eventHandler(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
 	if r.Body != nil {
 		defer r.Body.Close()
 	}
@@ -218,7 +316,7 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		pkg.Encode(events, w, LoggingClient)
+		pkg.Encode(events, w, loggingClient)
 		break
 		// Post a new event
 	case http.MethodPost:
@@ -230,7 +328,7 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 			httpErrorHandler.Handle(w, err, errorconcept.Default.InternalServerError)
 			return
 		}
-		newId, err := addNewEvent(evt, ctx)
+		newId, err := addNewEvent(evt, ctx, loggingClient)
 		if err != nil {
 			httpErrorHandler.HandleManyVariants(
 				w,
@@ -265,7 +363,7 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		LoggingClient.Info("Updating event: " + from.ID)
+		loggingClient.Info("Updating event: " + from.ID)
 		err = updateEvent(from, ctx)
 		if err != nil {
 			httpErrorHandler.HandleOneVariant(
@@ -284,10 +382,10 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 
 // Undocumented feature to remove all readings and events from the database
 // This should primarily be used for debugging purposes
-func scrubAllHandler(w http.ResponseWriter, r *http.Request) {
+func scrubAllHandler(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
 	defer r.Body.Close()
 
-	LoggingClient.Info("Deleting all events from database")
+	loggingClient.Info("Deleting all events from database")
 
 	err := deleteAllEvents()
 	if err != nil {
@@ -295,14 +393,14 @@ func scrubAllHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pkg.Encode(true, w, LoggingClient)
+	pkg.Encode(true, w, loggingClient)
 }
 
 // GET
 // Return the event specified by the event ID
 // /api/v1/event/{id}
 // id - ID of the event to return
-func getEventByIdHandler(w http.ResponseWriter, r *http.Request) {
+func getEventByIdHandler(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
 	if r.Body != nil {
 		defer r.Body.Close()
 	}
@@ -322,7 +420,7 @@ func getEventByIdHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pkg.Encode(e, w, LoggingClient)
+	pkg.Encode(e, w, loggingClient)
 }
 
 // Get event by device id
@@ -330,7 +428,7 @@ func getEventByIdHandler(w http.ResponseWriter, r *http.Request) {
 // {deviceId} - the device that the events are for
 // {limit} - the limit of events
 // api/v1/event/device/{deviceId}/{limit}
-func getEventByDeviceHandler(w http.ResponseWriter, r *http.Request) {
+func getEventByDeviceHandler(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
 	defer r.Body.Close()
 
 	vars := mux.Vars(r)
@@ -362,20 +460,20 @@ func getEventByDeviceHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodGet:
-		err := checkMaxLimit(limitNum)
+		err := checkMaxLimit(limitNum, loggingClient)
 		if err != nil {
 			httpErrorHandler.Handle(w, err, errorconcept.Common.LimitExceeded)
 			return
 		}
 
-		eventList, err := getEventsByDeviceIdLimit(limitNum, deviceId)
+		eventList, err := getEventsByDeviceIdLimit(limitNum, deviceId, loggingClient)
 
 		if err != nil {
 			httpErrorHandler.Handle(w, err, errorconcept.Default.InternalServerError)
 			return
 		}
 
-		pkg.Encode(eventList, w, LoggingClient)
+		pkg.Encode(eventList, w, loggingClient)
 	}
 }
 
@@ -385,7 +483,7 @@ Handle events specified by an ID
 /api/v1/event/id/{id}
 404 - ID not found
 */
-func eventIdHandler(w http.ResponseWriter, r *http.Request) {
+func eventIdHandler(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
 	defer r.Body.Close()
 
 	vars := mux.Vars(r)
@@ -401,7 +499,7 @@ func eventIdHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		LoggingClient.Info("Updating event: " + id)
+		loggingClient.Info("Updating event: " + id)
 
 		err := updateEventPushDate(id, ctx)
 		if err != nil {
@@ -418,8 +516,8 @@ func eventIdHandler(w http.ResponseWriter, r *http.Request) {
 		break
 		// Delete the event and all of it's readings
 	case http.MethodDelete:
-		LoggingClient.Info("Deleting event: " + id)
-		err := deleteEventById(id)
+		loggingClient.Info("Deleting event: " + id)
+		err := deleteEventById(id, loggingClient)
 		if err != nil {
 			httpErrorHandler.HandleOneVariant(
 				w,
@@ -440,7 +538,7 @@ Handle events specified by a Checksum
 /api/v1/event/checksum/{checksum}
 404 - ID not found
 */
-func putEventChecksumHandler(w http.ResponseWriter, r *http.Request) {
+func putEventChecksumHandler(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
 	defer r.Body.Close()
 
 	vars := mux.Vars(r)
@@ -450,7 +548,7 @@ func putEventChecksumHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	// Set the 'pushed' timestamp for the event to the current time - event is going to another (not EdgeX) service
 	case http.MethodPut:
-		LoggingClient.Debug("Updating event with checksum: " + checksum)
+		loggingClient.Debug("Updating event with checksum: " + checksum)
 
 		err := updateEventPushDateByChecksum(checksum, ctx)
 		if err != nil {
@@ -513,7 +611,7 @@ func deleteByDeviceIdHandler(w http.ResponseWriter, r *http.Request) {
 // 413 - number of results exceeds limit
 // 503 - service unavailable
 // api/v1/event/{start}/{end}/{limit}
-func eventByCreationTimeHandler(w http.ResponseWriter, r *http.Request) {
+func eventByCreationTimeHandler(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
 	defer r.Body.Close()
 
 	vars := mux.Vars(r)
@@ -540,32 +638,32 @@ func eventByCreationTimeHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodGet:
-		err := checkMaxLimit(limit)
+		err := checkMaxLimit(limit, loggingClient)
 		if err != nil {
 			httpErrorHandler.Handle(w, err, errorconcept.Common.LimitExceeded)
 			return
 		}
 
-		eventList, err := getEventsByCreationTime(limit, start, end)
+		eventList, err := getEventsByCreationTime(limit, start, end, loggingClient)
 
 		if err != nil {
 			httpErrorHandler.Handle(w, err, errorconcept.Default.InternalServerError)
 			return
 		}
 
-		pkg.Encode(eventList, w, LoggingClient)
+		pkg.Encode(eventList, w, loggingClient)
 	}
 }
 
 // Scrub all the events that have been pushed
 // Also remove the readings associated with the events
 // api/v1/event/scrub
-func scrubHandler(w http.ResponseWriter, r *http.Request) {
+func scrubHandler(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
 	defer r.Body.Close()
 
 	switch r.Method {
 	case http.MethodDelete:
-		count, err := scrubPushedEvents()
+		count, err := scrubPushedEvents(loggingClient)
 		if err != nil {
 			httpErrorHandler.Handle(w, err, errorconcept.Default.InternalServerError)
 			return
@@ -583,20 +681,20 @@ func pingHandler(w http.ResponseWriter, _ *http.Request) {
 	w.Write([]byte("pong"))
 }
 
-func configHandler(w http.ResponseWriter, r *http.Request) {
-	pkg.Encode(Configuration, w, LoggingClient)
+func configHandler(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
+	pkg.Encode(Configuration, w, loggingClient)
 }
 
 // Reading handler
 // GET, PUT, and POST readings
-func readingHandler(w http.ResponseWriter, r *http.Request) {
+func readingHandler(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
 	defer r.Body.Close()
 
 	ctx := r.Context()
 
 	switch r.Method {
 	case http.MethodGet:
-		r, err := getAllReadings()
+		r, err := getAllReadings(loggingClient)
 
 		if err != nil {
 			httpErrorHandler.HandleOneVariant(
@@ -606,9 +704,9 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 				errorconcept.Default.InternalServerError)
 		}
 
-		pkg.Encode(r, w, LoggingClient)
+		pkg.Encode(r, w, loggingClient)
 	case http.MethodPost:
-		reading, err := decodeReading(r.Body)
+		reading, err := decodeReading(r.Body, loggingClient)
 
 		// Problem decoding
 		if err != nil {
@@ -635,7 +733,7 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if Configuration.Writable.PersistData {
-			id, err := addReading(reading)
+			id, err := addReading(reading, loggingClient)
 			if err != nil {
 				httpErrorHandler.Handle(w, err, errorconcept.Default.InternalServerError)
 				return
@@ -645,10 +743,10 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte(id))
 		} else {
 			// Didn't save the reading in the database
-			pkg.Encode("unsaved", w, LoggingClient)
+			pkg.Encode("unsaved", w, loggingClient)
 		}
 	case http.MethodPut:
-		from, err := decodeReading(r.Body)
+		from, err := decodeReading(r.Body, loggingClient)
 		// Problem decoding
 		if err != nil {
 			httpErrorHandler.HandleManyVariants(
@@ -663,7 +761,7 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		err = updateReading(from)
+		err = updateReading(from, loggingClient)
 		if err != nil {
 			httpErrorHandler.HandleManyVariants(
 				w,
@@ -685,7 +783,7 @@ func readingHandler(w http.ResponseWriter, r *http.Request) {
 // Get a reading by id
 // HTTP 404 not found if the reading can't be found by the ID
 // api/v1/reading/{id}
-func getReadingByIdHandler(w http.ResponseWriter, r *http.Request) {
+func getReadingByIdHandler(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
 	defer r.Body.Close()
 
 	vars := mux.Vars(r)
@@ -693,7 +791,7 @@ func getReadingByIdHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodGet:
-		reading, err := getReadingById(id)
+		reading, err := getReadingById(id, loggingClient)
 		if err != nil {
 			httpErrorHandler.HandleOneVariant(
 				w,
@@ -702,18 +800,18 @@ func getReadingByIdHandler(w http.ResponseWriter, r *http.Request) {
 				errorconcept.Default.InternalServerError)
 		}
 
-		pkg.Encode(reading, w, LoggingClient)
+		pkg.Encode(reading, w, loggingClient)
 	}
 }
 
 // Return a count for the number of readings in core data
 // api/v1/reading/count
-func readingCountHandler(w http.ResponseWriter, r *http.Request) {
+func readingCountHandler(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
 	defer r.Body.Close()
 
 	switch r.Method {
 	case http.MethodGet:
-		count, err := countReadings()
+		count, err := countReadings(loggingClient)
 		if err != nil {
 			httpErrorHandler.Handle(w, err, errorconcept.Default.InternalServerError)
 			return
@@ -722,14 +820,14 @@ func readingCountHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, err = w.Write([]byte(strconv.Itoa(count)))
 		if err != nil {
-			LoggingClient.Error(err.Error())
+			loggingClient.Error(err.Error())
 		}
 	}
 }
 
 // Delete a reading by its id
 // api/v1/reading/id/{id}
-func deleteReadingByIdHandler(w http.ResponseWriter, r *http.Request) {
+func deleteReadingByIdHandler(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
 	defer r.Body.Close()
 
 	vars := mux.Vars(r)
@@ -737,7 +835,7 @@ func deleteReadingByIdHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodDelete:
-		err := deleteReadingById(id)
+		err := deleteReadingById(id, loggingClient)
 		if err != nil {
 			httpErrorHandler.HandleOneVariant(
 				w,
@@ -757,7 +855,7 @@ func deleteReadingByIdHandler(w http.ResponseWriter, r *http.Request) {
 // 404 - device ID or name doesn't match
 // 413 - max count exceeded
 // api/v1/reading/device/{deviceId}/{limit}
-func readingByDeviceHandler(w http.ResponseWriter, r *http.Request) {
+func readingByDeviceHandler(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
 	defer r.Body.Close()
 
 	vars := mux.Vars(r)
@@ -778,13 +876,13 @@ func readingByDeviceHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodGet:
-		err := checkMaxLimit(limit)
+		err := checkMaxLimit(limit, loggingClient)
 		if err != nil {
 			httpErrorHandler.Handle(w, err, errorconcept.Common.LimitExceeded)
 			return
 		}
 
-		readings, err := getReadingsByDevice(deviceId, limit, ctx)
+		readings, err := getReadingsByDevice(deviceId, limit, ctx, loggingClient)
 		if err != nil {
 			httpErrorHandler.HandleOneVariant(
 				w,
@@ -794,14 +892,14 @@ func readingByDeviceHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		pkg.Encode(readings, w, LoggingClient)
+		pkg.Encode(readings, w, loggingClient)
 	}
 }
 
 // Return a list of readings associated with a value descriptor, limited by limit
 // HTTP 413 (limit exceeded) if the limit is greater than max limit
 // api/v1/reading/name/{name}/{limit}
-func readingbyValueDescriptorHandler(w http.ResponseWriter, r *http.Request) {
+func readingbyValueDescriptorHandler(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
 	defer r.Body.Close()
 
 	vars := mux.Vars(r)
@@ -818,18 +916,18 @@ func readingbyValueDescriptorHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	read, err := getReadingsByValueDescriptor(name, limit)
+	read, err := getReadingsByValueDescriptor(name, limit, loggingClient)
 	if err != nil {
 		httpErrorHandler.Handle(w, err, errorconcept.Default.InternalServerError)
 		return
 	}
 
-	pkg.Encode(read, w, LoggingClient)
+	pkg.Encode(read, w, loggingClient)
 }
 
 // Return a list of readings based on the UOM label for the value decriptor
 // api/v1/reading/uomlabel/{uomLabel}/{limit}
-func readingByUomLabelHandler(w http.ResponseWriter, r *http.Request) {
+func readingByUomLabelHandler(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
 	defer r.Body.Close()
 
 	vars := mux.Vars(r)
@@ -849,14 +947,14 @@ func readingByUomLabelHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Limit was exceeded
-	err = checkMaxLimit(limit)
+	err = checkMaxLimit(limit, loggingClient)
 	if err != nil {
 		httpErrorHandler.Handle(w, err, errorconcept.Common.LimitExceeded)
 		return
 	}
 
 	// Get the value descriptors
-	vList, err := getValueDescriptorsByUomLabel(uomLabel)
+	vList, err := getValueDescriptorsByUomLabel(uomLabel, loggingClient)
 	if err != nil {
 		httpErrorHandler.Handle(w, err, errorconcept.Default.InternalServerError)
 		return
@@ -867,19 +965,19 @@ func readingByUomLabelHandler(w http.ResponseWriter, r *http.Request) {
 		vNames = append(vNames, v.Name)
 	}
 
-	readings, err := getReadingsByValueDescriptorNames(vNames, limit)
+	readings, err := getReadingsByValueDescriptorNames(vNames, limit, loggingClient)
 	if err != nil {
 		httpErrorHandler.Handle(w, err, errorconcept.Default.InternalServerError)
 		return
 	}
 
-	pkg.Encode(readings, w, LoggingClient)
+	pkg.Encode(readings, w, loggingClient)
 }
 
 // Get readings by the value descriptor (specified by the label)
 // 413 - limit exceeded
 // api/v1/reading/label/{label}/{limit}
-func readingByLabelHandler(w http.ResponseWriter, r *http.Request) {
+func readingByLabelHandler(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
 	defer r.Body.Close()
 
 	vars := mux.Vars(r)
@@ -897,14 +995,14 @@ func readingByLabelHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Limit is too large
-	err = checkMaxLimit(limit)
+	err = checkMaxLimit(limit, loggingClient)
 	if err != nil {
 		httpErrorHandler.Handle(w, err, errorconcept.Common.LimitExceeded)
 		return
 	}
 
 	// Get the value descriptors
-	vdList, err := getValueDescriptorsByLabel(label)
+	vdList, err := getValueDescriptorsByLabel(label, loggingClient)
 	if err != nil {
 		httpErrorHandler.Handle(w, err, errorconcept.Default.InternalServerError)
 		return
@@ -914,19 +1012,19 @@ func readingByLabelHandler(w http.ResponseWriter, r *http.Request) {
 		vdNames = append(vdNames, vd.Name)
 	}
 
-	readings, err := getReadingsByValueDescriptorNames(vdNames, limit)
+	readings, err := getReadingsByValueDescriptorNames(vdNames, limit, loggingClient)
 	if err != nil {
 		httpErrorHandler.Handle(w, err, errorconcept.Default.InternalServerError)
 		return
 	}
 
-	pkg.Encode(readings, w, LoggingClient)
+	pkg.Encode(readings, w, loggingClient)
 }
 
 // Return a list of readings who's value descriptor has the type
 // 413 - number exceeds the current limit
 // /reading/type/{type}/{limit}
-func readingByTypeHandler(w http.ResponseWriter, r *http.Request) {
+func readingByTypeHandler(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
 	defer r.Body.Close()
 
 	vars := mux.Vars(r)
@@ -944,14 +1042,14 @@ func readingByTypeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = checkMaxLimit(limit)
+	err = checkMaxLimit(limit, loggingClient)
 	if err != nil {
 		httpErrorHandler.Handle(w, err, errorconcept.Common.LimitExceeded)
 		return
 	}
 
 	// Get the value descriptors
-	vdList, err := getValueDescriptorsByType(t)
+	vdList, err := getValueDescriptorsByType(t, loggingClient)
 	if err != nil {
 		httpErrorHandler.Handle(w, err, errorconcept.Default.InternalServerError)
 		return
@@ -961,18 +1059,18 @@ func readingByTypeHandler(w http.ResponseWriter, r *http.Request) {
 		vdNames = append(vdNames, vd.Name)
 	}
 
-	readings, err := getReadingsByValueDescriptorNames(vdNames, limit)
+	readings, err := getReadingsByValueDescriptorNames(vdNames, limit, loggingClient)
 	if err != nil {
 		httpErrorHandler.Handle(w, err, errorconcept.Default.InternalServerError)
 		return
 	}
 
-	pkg.Encode(readings, w, LoggingClient)
+	pkg.Encode(readings, w, loggingClient)
 }
 
 // Return a list of readings between the start and end (creation time)
 // /reading/{start}/{end}/{limit}
-func readingByCreationTimeHandler(w http.ResponseWriter, r *http.Request) {
+func readingByCreationTimeHandler(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
 	defer r.Body.Close()
 
 	vars := mux.Vars(r)
@@ -994,26 +1092,26 @@ func readingByCreationTimeHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodGet:
-		err = checkMaxLimit(limit)
+		err = checkMaxLimit(limit, loggingClient)
 		if err != nil {
 			httpErrorHandler.Handle(w, err, errorconcept.Common.LimitExceeded)
 			return
 		}
 
-		readings, err := getReadingsByCreationTime(start, end, limit)
+		readings, err := getReadingsByCreationTime(start, end, limit, loggingClient)
 		if err != nil {
 			httpErrorHandler.Handle(w, err, errorconcept.Default.InternalServerError)
 			return
 		}
 
-		pkg.Encode(readings, w, LoggingClient)
+		pkg.Encode(readings, w, loggingClient)
 	}
 }
 
 // Return a list of redings associated with the device and value descriptor
 // Limit exceeded exception 413 if the limit exceeds the max limit
 // api/v1/reading/name/{name}/device/{device}/{limit}
-func readingByValueDescriptorAndDeviceHandler(w http.ResponseWriter, r *http.Request) {
+func readingByValueDescriptorAndDeviceHandler(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
 	defer r.Body.Close()
 
 	vars := mux.Vars(r)
@@ -1038,7 +1136,7 @@ func readingByValueDescriptorAndDeviceHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	err = checkMaxLimit(limit)
+	err = checkMaxLimit(limit, loggingClient)
 	if err != nil {
 		httpErrorHandler.Handle(w, err, errorconcept.Common.LimitExceeded)
 		return
@@ -1056,7 +1154,7 @@ func readingByValueDescriptorAndDeviceHandler(w http.ResponseWriter, r *http.Req
 
 	// Check for value descriptor
 	if Configuration.Writable.ValidateCheck {
-		_, err = getValueDescriptorByName(name)
+		_, err = getValueDescriptorByName(name, loggingClient)
 		if err != nil {
 			httpErrorHandler.HandleOneVariant(
 				w,
@@ -1067,40 +1165,40 @@ func readingByValueDescriptorAndDeviceHandler(w http.ResponseWriter, r *http.Req
 		}
 	}
 
-	readings, err := getReadingsByDeviceAndValueDescriptor(device, name, limit)
+	readings, err := getReadingsByDeviceAndValueDescriptor(device, name, limit, loggingClient)
 	if err != nil {
 		httpErrorHandler.Handle(w, err, errorconcept.Default.InternalServerError)
 		return
 	}
 
-	pkg.Encode(readings, w, LoggingClient)
+	pkg.Encode(readings, w, loggingClient)
 }
 
 // Value Descriptors
 
 // GET, POST, and PUT for value descriptors
 // api/v1/valuedescriptor
-func valueDescriptorHandler(w http.ResponseWriter, r *http.Request) {
+func valueDescriptorHandler(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
 	defer r.Body.Close()
 
 	switch r.Method {
 	case http.MethodGet:
-		vList, err := getAllValueDescriptors()
+		vList, err := getAllValueDescriptors(loggingClient)
 		if err != nil {
 			httpErrorHandler.Handle(w, err, errorconcept.Default.InternalServerError)
 			return
 		}
 
 		// Check the limit
-		err = checkMaxLimit(len(vList))
+		err = checkMaxLimit(len(vList), loggingClient)
 		if err != nil {
 			httpErrorHandler.Handle(w, err, errorconcept.Common.LimitExceeded)
 			return
 		}
 
-		pkg.Encode(vList, w, LoggingClient)
+		pkg.Encode(vList, w, loggingClient)
 	case http.MethodPost:
-		v, err := decodeValueDescriptor(r.Body)
+		v, err := decodeValueDescriptor(r.Body, loggingClient)
 		if err != nil {
 			httpErrorHandler.HandleManyVariants(
 				w,
@@ -1113,7 +1211,7 @@ func valueDescriptorHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		id, err := addValueDescriptor(v)
+		id, err := addValueDescriptor(v, loggingClient)
 		if err != nil {
 			httpErrorHandler.HandleManyVariants(
 				w,
@@ -1130,7 +1228,7 @@ func valueDescriptorHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(id))
 	case http.MethodPut:
-		vd, err := decodeValueDescriptor(r.Body)
+		vd, err := decodeValueDescriptor(r.Body, loggingClient)
 		if err != nil {
 			httpErrorHandler.HandleManyVariants(
 				w,
@@ -1143,7 +1241,7 @@ func valueDescriptorHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		err = updateValueDescriptor(vd)
+		err = updateValueDescriptor(vd, loggingClient)
 		if err != nil {
 			httpErrorHandler.HandleManyVariants(
 				w,
@@ -1168,13 +1266,13 @@ func valueDescriptorHandler(w http.ResponseWriter, r *http.Request) {
 // DataValidationException (HTTP 409) - The value descriptor is still referenced by readings
 // NotFoundException (404) - Can't find the value descriptor
 // valuedescriptor/id/{id}
-func deleteValueDescriptorByIdHandler(w http.ResponseWriter, r *http.Request) {
+func deleteValueDescriptorByIdHandler(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
 	defer r.Body.Close()
 
 	vars := mux.Vars(r)
 	id := vars["id"]
 
-	err := deleteValueDescriptorById(id)
+	err := deleteValueDescriptorById(id, loggingClient)
 	if err != nil {
 		httpErrorHandler.HandleManyVariants(
 			w,
@@ -1197,7 +1295,7 @@ func deleteValueDescriptorByIdHandler(w http.ResponseWriter, r *http.Request) {
 
 // Value descriptors based on name
 // api/v1/valuedescriptor/name/{name}
-func valueDescriptorByNameHandler(w http.ResponseWriter, r *http.Request) {
+func valueDescriptorByNameHandler(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
 	defer r.Body.Close()
 
 	vars := mux.Vars(r)
@@ -1220,9 +1318,9 @@ func valueDescriptorByNameHandler(w http.ResponseWriter, r *http.Request) {
 				errorconcept.Default.InternalServerError)
 			return
 		}
-		pkg.Encode(v, w, LoggingClient)
+		pkg.Encode(v, w, loggingClient)
 	case http.MethodDelete:
-		if err = deleteValueDescriptorByName(name); err != nil {
+		if err = deleteValueDescriptorByName(name, loggingClient); err != nil {
 			httpErrorHandler.HandleManyVariants(
 				w,
 				err,
@@ -1245,7 +1343,7 @@ func valueDescriptorByNameHandler(w http.ResponseWriter, r *http.Request) {
 // Get a value descriptor based on the ID
 // HTTP 404 not found if the ID isn't in the database
 // api/v1/valuedescriptor/{id}
-func valueDescriptorByIdHandler(w http.ResponseWriter, r *http.Request) {
+func valueDescriptorByIdHandler(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
 	defer r.Body.Close()
 
 	vars := mux.Vars(r)
@@ -1253,7 +1351,7 @@ func valueDescriptorByIdHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodGet:
-		vd, err := getValueDescriptorById(id)
+		vd, err := getValueDescriptorById(id, loggingClient)
 		if err != nil {
 			httpErrorHandler.HandleOneVariant(
 				w,
@@ -1263,13 +1361,13 @@ func valueDescriptorByIdHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		pkg.Encode(vd, w, LoggingClient)
+		pkg.Encode(vd, w, loggingClient)
 	}
 }
 
 // Get the value descriptor from the UOM label
 // api/v1/valuedescriptor/uomlabel/{uomLabel}
-func valueDescriptorByUomLabelHandler(w http.ResponseWriter, r *http.Request) {
+func valueDescriptorByUomLabelHandler(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
 	defer r.Body.Close()
 
 	vars := mux.Vars(r)
@@ -1283,7 +1381,7 @@ func valueDescriptorByUomLabelHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodGet:
-		vdList, err := getValueDescriptorsByUomLabel(uomLabel)
+		vdList, err := getValueDescriptorsByUomLabel(uomLabel, loggingClient)
 		if err != nil {
 			httpErrorHandler.HandleOneVariant(
 				w,
@@ -1293,13 +1391,13 @@ func valueDescriptorByUomLabelHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		pkg.Encode(vdList, w, LoggingClient)
+		pkg.Encode(vdList, w, loggingClient)
 	}
 }
 
 // Get value descriptors who have one of the labels
 // api/v1/valuedescriptor/label/{label}
-func valueDescriptorByLabelHandler(w http.ResponseWriter, r *http.Request) {
+func valueDescriptorByLabelHandler(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
 	defer r.Body.Close()
 
 	vars := mux.Vars(r)
@@ -1313,7 +1411,7 @@ func valueDescriptorByLabelHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodGet:
-		v, err := getValueDescriptorsByLabel(label)
+		v, err := getValueDescriptorsByLabel(label, loggingClient)
 		if err != nil {
 			httpErrorHandler.HandleOneVariant(
 				w,
@@ -1323,14 +1421,14 @@ func valueDescriptorByLabelHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		pkg.Encode(v, w, LoggingClient)
+		pkg.Encode(v, w, loggingClient)
 	}
 }
 
 // Return the value descriptors that are associated with a device
 // The value descriptor is expected parameters on puts or expected values on get/put commands
 // api/v1/valuedescriptor/devicename/{device}
-func valueDescriptorByDeviceHandler(w http.ResponseWriter, r *http.Request) {
+func valueDescriptorByDeviceHandler(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
 	defer r.Body.Close()
 
 	vars := mux.Vars(r)
@@ -1343,7 +1441,7 @@ func valueDescriptorByDeviceHandler(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 	// Get the value descriptors
-	vdList, err := getValueDescriptorsByDeviceName(device, ctx)
+	vdList, err := getValueDescriptorsByDeviceName(device, ctx, loggingClient)
 	if err != nil {
 		httpErrorHandler.HandleManyVariants(
 			w,
@@ -1356,13 +1454,13 @@ func valueDescriptorByDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pkg.Encode(vdList, w, LoggingClient)
+	pkg.Encode(vdList, w, loggingClient)
 }
 
 // Return the value descriptors that are associated with the device specified by the device ID
 // Associated value descripts are expected parameters of PUT commands and expected results of PUT/GET commands
 // api/v1/valuedescriptor/deviceid/{id}
-func valueDescriptorByDeviceIdHandler(w http.ResponseWriter, r *http.Request) {
+func valueDescriptorByDeviceIdHandler(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
 	defer r.Body.Close()
 
 	vars := mux.Vars(r)
@@ -1375,7 +1473,7 @@ func valueDescriptorByDeviceIdHandler(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 	// Get the value descriptors
-	vdList, err := getValueDescriptorsByDeviceId(deviceId, ctx)
+	vdList, err := getValueDescriptorsByDeviceId(deviceId, ctx, loggingClient)
 	if err != nil {
 		httpErrorHandler.HandleManyVariants(
 			w,
@@ -1388,7 +1486,7 @@ func valueDescriptorByDeviceIdHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pkg.Encode(vdList, w, LoggingClient)
+	pkg.Encode(vdList, w, loggingClient)
 }
 
 // restValueDescriptorsUsageHandler checks if value descriptors are currently being used.
@@ -1398,7 +1496,7 @@ func valueDescriptorByDeviceIdHandler(w http.ResponseWriter, r *http.Request) {
 // may occur.
 // Returns a map[string]bool where the key is the ValueDescriptor Name and the value is a bool stating if the
 // ValueDescriptor is currently in use.
-func restValueDescriptorsUsageHandler(w http.ResponseWriter, r *http.Request) {
+func restValueDescriptorsUsageHandler(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
 	qparams, err := url.ParseQuery(r.URL.RawQuery)
 	if err != nil {
 		httpErrorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
@@ -1410,12 +1508,12 @@ func restValueDescriptorsUsageHandler(w http.ResponseWriter, r *http.Request) {
 	var op value_descriptor.GetValueDescriptorsExecutor
 	if len(namesFilter) <= 0 {
 		// We are not filtering so get all the value descriptors
-		op = value_descriptor.NewGetValueDescriptorsExecutor(dbClient, LoggingClient, Configuration.Service)
+		op = value_descriptor.NewGetValueDescriptorsExecutor(dbClient, loggingClient, Configuration.Service)
 	} else {
 		op = value_descriptor.NewGetValueDescriptorsNameExecutor(
 			strings.Split(namesFilter[0], ","),
 			dbClient,
-			LoggingClient,
+			loggingClient,
 			Configuration.Service)
 	}
 
@@ -1438,7 +1536,7 @@ func restValueDescriptorsUsageHandler(w http.ResponseWriter, r *http.Request) {
 			vd.Name,
 			ValueDescriptorUsageReadLimit,
 			dbClient,
-			LoggingClient,
+			loggingClient,
 			Configuration.Service)
 		r, err := ops.Execute()
 		if err != nil {
@@ -1454,13 +1552,13 @@ func restValueDescriptorsUsageHandler(w http.ResponseWriter, r *http.Request) {
 		resp = append(resp, map[string]bool{vd.Name: false})
 	}
 
-	pkg.Encode(resp, w, LoggingClient)
+	pkg.Encode(resp, w, loggingClient)
 }
 
-func metricsHandler(w http.ResponseWriter, _ *http.Request) {
+func metricsHandler(w http.ResponseWriter, _ *http.Request, loggingClient logger.LoggingClient) {
 	s := telemetry.NewSystemUsage()
 
-	pkg.Encode(s, w, LoggingClient)
+	pkg.Encode(s, w, loggingClient)
 
 	return
 }

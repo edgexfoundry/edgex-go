@@ -13,7 +13,7 @@
  *
  *******************************************************************************/
 
-package notifications
+package config
 
 import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/interfaces"

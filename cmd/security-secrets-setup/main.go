@@ -19,9 +19,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"time"
 
-	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option"
@@ -62,8 +60,6 @@ func init() {
 }
 
 func main() {
-	start := time.Now()
-
 	flag.Parse()
 
 	if flag.NArg() < 1 {
@@ -125,7 +121,6 @@ func main() {
 		}
 	}
 
-	secrets.LoggingClient.Info(option.SecuritySecretsSetup+" complete", internal.LogDurationKey, time.Since(start).String())
 	exitInstance.exit(exitStatusCode)
 }
 

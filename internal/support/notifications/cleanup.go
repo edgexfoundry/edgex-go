@@ -19,20 +19,34 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/edgexfoundry/edgex-go/internal/support/notifications/interfaces"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+
 	"github.com/gorilla/mux"
 )
 
-func cleanupHandler(w http.ResponseWriter, r *http.Request) {
+func cleanupHandler(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
+
 	if r.Body != nil {
 		defer r.Body.Close()
 	}
 
-	LoggingClient.Info("Cleaning up of notifications and transmissions")
-	cleanupHandlerCloser(w, dbClient.Cleanup())
+	loggingClient.Info("Cleaning up of notifications and transmissions")
+	cleanupHandlerCloser(w, dbClient.Cleanup(), loggingClient)
 }
 
-func cleanupAgeHandler(w http.ResponseWriter, r *http.Request) {
+func cleanupAgeHandler(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
+
 	if r.Body != nil {
 		defer r.Body.Close()
 	}
@@ -41,18 +55,18 @@ func cleanupAgeHandler(w http.ResponseWriter, r *http.Request) {
 	// Problem converting age
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		LoggingClient.Error("Error converting the age to an integer")
+		loggingClient.Error("Error converting the age to an integer")
 		return
 	}
 
-	LoggingClient.Info("Cleaning up of notifications and transmissions")
-	cleanupHandlerCloser(w, dbClient.CleanupOld(age))
+	loggingClient.Info("Cleaning up of notifications and transmissions")
+	cleanupHandlerCloser(w, dbClient.CleanupOld(age), loggingClient)
 }
 
-func cleanupHandlerCloser(w http.ResponseWriter, err error) {
+func cleanupHandlerCloser(w http.ResponseWriter, err error, loggingClient logger.LoggingClient) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		LoggingClient.Error(err.Error())
+		loggingClient.Error(err.Error())
 		return
 	}
 

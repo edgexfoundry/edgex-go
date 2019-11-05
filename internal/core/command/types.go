@@ -11,6 +11,7 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
+
 package command
 
 import (
@@ -18,6 +19,7 @@ import (
 	"net/http"
 
 	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
@@ -29,14 +31,15 @@ type serviceCommand struct {
 	contract.Device
 	internal.HttpCaller
 	*http.Request
+	logger.LoggingClient
 }
 
 // Execute sends the command to the command service
 func (sc serviceCommand) Execute() (string, int, error) {
-	LoggingClient.Debug("Issuing" + sc.Request.Method + " command to: " + sc.Request.URL.String())
+	sc.LoggingClient.Debug("Issuing" + sc.Request.Method + " command to: " + sc.Request.URL.String())
 	resp, reqErr := sc.HttpCaller.Do(sc.Request)
 	if reqErr != nil {
-		LoggingClient.Error(reqErr.Error())
+		sc.LoggingClient.Error(reqErr.Error())
 		return "", http.StatusInternalServerError, reqErr
 
 	}
@@ -48,4 +51,17 @@ func (sc serviceCommand) Execute() (string, int, error) {
 		return "", DefaultErrorCode, readErr
 	}
 	return buf.String(), resp.StatusCode, nil
+}
+
+func newServiceCommand(
+	device contract.Device,
+	caller internal.HttpCaller,
+	req *http.Request,
+	loggingClient logger.LoggingClient) serviceCommand {
+	return serviceCommand{
+		Device:        device,
+		HttpCaller:    caller,
+		Request:       req,
+		LoggingClient: loggingClient,
+	}
 }

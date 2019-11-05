@@ -23,27 +23,41 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/errors"
+	"github.com/edgexfoundry/edgex-go/internal/support/notifications/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/operators/subscription"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
+
 	"github.com/gorilla/mux"
 )
 
-func restGetSubscriptions(w http.ResponseWriter, r *http.Request) {
+func restGetSubscriptions(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
+
 	if r.Body != nil {
 		defer r.Body.Close()
 	}
 
 	subscriptions, err := dbClient.GetSubscriptions()
 	if err != nil {
-		LoggingClient.Error(err.Error())
+		loggingClient.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return
 	}
-	pkg.Encode(subscriptions, w, LoggingClient)
+	pkg.Encode(subscriptions, w, loggingClient)
 }
 
-func restAddSubscription(w http.ResponseWriter, r *http.Request) {
+func restAddSubscription(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
+
 	if r.Body != nil {
 		defer r.Body.Close()
 	}
@@ -54,7 +68,7 @@ func restAddSubscription(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		LoggingClient.Error("Error decoding subscription: " + err.Error())
+		loggingClient.Error("Error decoding subscription: " + err.Error())
 		return
 	}
 
@@ -62,16 +76,16 @@ func restAddSubscription(w http.ResponseWriter, r *http.Request) {
 	err = validateEmailAddresses(s)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		LoggingClient.Error(err.Error())
+		loggingClient.Error(err.Error())
 		return
 	}
 
-	LoggingClient.Info("Posting Subscription: " + s.String())
+	loggingClient.Info("Posting Subscription: " + s.String())
 	op := subscription.NewAddExecutor(dbClient, s)
 	err = op.Execute()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusConflict)
-		LoggingClient.Error(err.Error())
+		loggingClient.Error(err.Error())
 		return
 	}
 
@@ -79,7 +93,11 @@ func restAddSubscription(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(s.Slug))
 }
 
-func restUpdateSubscription(w http.ResponseWriter, r *http.Request) {
+func restUpdateSubscription(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
 
 	if r.Body != nil {
 		defer r.Body.Close()
@@ -96,7 +114,7 @@ func restUpdateSubscription(w http.ResponseWriter, r *http.Request) {
 	err = validateEmailAddresses(s)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		LoggingClient.Error(err.Error())
+		loggingClient.Error(err.Error())
 		return
 	}
 
@@ -108,17 +126,17 @@ func restUpdateSubscription(w http.ResponseWriter, r *http.Request) {
 		} else {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-		LoggingClient.Error(err.Error())
+		loggingClient.Error(err.Error())
 		return
 	} else {
 		s.ID = s2.ID
 	}
 
-	LoggingClient.Info("Updating subscription by slug: " + slug)
+	loggingClient.Info("Updating subscription by slug: " + slug)
 
 	if err = dbClient.UpdateSubscription(s); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		LoggingClient.Error(err.Error())
+		loggingClient.Error(err.Error())
 		return
 	}
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
@@ -126,7 +144,11 @@ func restUpdateSubscription(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("true"))
 }
 
-func restGetSubscriptionByID(w http.ResponseWriter, r *http.Request) {
+func restGetSubscriptionByID(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
 
 	if r.Body != nil {
 		defer r.Body.Close()
@@ -137,7 +159,7 @@ func restGetSubscriptionByID(w http.ResponseWriter, r *http.Request) {
 	op := subscription.NewIdExecutor(dbClient, id)
 	s, err := op.Execute()
 	if err != nil {
-		LoggingClient.Error(err.Error())
+		loggingClient.Error(err.Error())
 		switch err.(type) {
 		case errors.ErrSubscriptionNotFound:
 			http.Error(w, err.Error(), http.StatusNotFound)
@@ -146,17 +168,22 @@ func restGetSubscriptionByID(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	pkg.Encode(s, w, LoggingClient)
+	pkg.Encode(s, w, loggingClient)
 }
 
-func restDeleteSubscriptionByID(w http.ResponseWriter, r *http.Request) {
+func restDeleteSubscriptionByID(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
+
 	if r.Body != nil {
 		defer r.Body.Close()
 	}
 
 	vars := mux.Vars(r)
 	id := vars["id"]
-	LoggingClient.Info("Deleting subscription: " + id)
+	loggingClient.Info("Deleting subscription: " + id)
 
 	op := subscription.NewDeleteByIDExecutor(dbClient, id)
 	err := op.Execute()
@@ -173,7 +200,11 @@ func restDeleteSubscriptionByID(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func restGetSubscriptionBySlug(w http.ResponseWriter, r *http.Request) {
+func restGetSubscriptionBySlug(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
 
 	if r.Body != nil {
 		defer r.Body.Close()
@@ -192,14 +223,18 @@ func restGetSubscriptionBySlug(w http.ResponseWriter, r *http.Request) {
 		default:
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-		LoggingClient.Error(err.Error())
+		loggingClient.Error(err.Error())
 		return
 	}
 
-	pkg.Encode(s, w, LoggingClient)
+	pkg.Encode(s, w, loggingClient)
 }
 
-func restDeleteSubscriptionBySlug(w http.ResponseWriter, r *http.Request) {
+func restDeleteSubscriptionBySlug(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
 
 	if r.Body != nil {
 		defer r.Body.Close()
@@ -208,7 +243,7 @@ func restDeleteSubscriptionBySlug(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	slug := vars["slug"]
 
-	LoggingClient.Info("Deleting subscription by slug: " + slug)
+	loggingClient.Info("Deleting subscription by slug: " + slug)
 
 	op := subscription.NewDeleteBySlugExecutor(dbClient, slug)
 	err := op.Execute()
@@ -219,7 +254,7 @@ func restDeleteSubscriptionBySlug(w http.ResponseWriter, r *http.Request) {
 		default:
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-		LoggingClient.Error(err.Error())
+		loggingClient.Error(err.Error())
 		return
 	}
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
@@ -227,7 +262,11 @@ func restDeleteSubscriptionBySlug(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("true"))
 }
 
-func restGetSubscriptionsByCategories(w http.ResponseWriter, r *http.Request) {
+func restGetSubscriptionsByCategories(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
 
 	if r.Body != nil {
 		defer r.Body.Close()
@@ -243,14 +282,18 @@ func restGetSubscriptionsByCategories(w http.ResponseWriter, r *http.Request) {
 		} else {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-		LoggingClient.Error(err.Error())
+		loggingClient.Error(err.Error())
 		return
 	}
 
-	pkg.Encode(s, w, LoggingClient)
+	pkg.Encode(s, w, loggingClient)
 }
 
-func subscriptionsByLabelsHandler(w http.ResponseWriter, r *http.Request) {
+func subscriptionsByLabelsHandler(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
 
 	if r.Body != nil {
 		defer r.Body.Close()
@@ -267,15 +310,19 @@ func subscriptionsByLabelsHandler(w http.ResponseWriter, r *http.Request) {
 		} else {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-		LoggingClient.Error(err.Error())
+		loggingClient.Error(err.Error())
 		return
 	}
 
-	pkg.Encode(s, w, LoggingClient)
+	pkg.Encode(s, w, loggingClient)
 
 }
 
-func subscriptionsByCategoriesLabelsHandler(w http.ResponseWriter, r *http.Request) {
+func subscriptionsByCategoriesLabelsHandler(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
 
 	if r.Body != nil {
 		defer r.Body.Close()
@@ -293,11 +340,11 @@ func subscriptionsByCategoriesLabelsHandler(w http.ResponseWriter, r *http.Reque
 		} else {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-		LoggingClient.Error(err.Error())
+		loggingClient.Error(err.Error())
 		return
 	}
 
-	pkg.Encode(s, w, LoggingClient)
+	pkg.Encode(s, w, loggingClient)
 
 }
 
@@ -323,7 +370,11 @@ func validateEmailAddresses(s models.Subscription) error {
 	return nil
 }
 
-func subscriptionsByReceiverHandler(w http.ResponseWriter, r *http.Request) {
+func subscriptionsByReceiverHandler(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
 
 	if r.Body != nil {
 		defer r.Body.Close()
@@ -338,9 +389,9 @@ func subscriptionsByReceiverHandler(w http.ResponseWriter, r *http.Request) {
 		} else {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-		LoggingClient.Error(err.Error())
+		loggingClient.Error(err.Error())
 		return
 	}
-	pkg.Encode(s, w, LoggingClient)
+	pkg.Encode(s, w, loggingClient)
 
 }

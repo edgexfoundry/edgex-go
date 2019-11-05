@@ -11,6 +11,7 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
+
 package command
 
 import (
@@ -58,7 +59,6 @@ func (MockBody) Close() error {
 func TestExecute(t *testing.T) {
 	expectedResponseBody := "Sample Response Body"
 	expectedResponseCode := http.StatusOK
-	LoggingClient = logger.MockLogger{}
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, expectedResponseBody)
 		w.WriteHeader(expectedResponseCode)
@@ -66,13 +66,7 @@ func TestExecute(t *testing.T) {
 	defer ts.Close()
 
 	request, _ := http.NewRequest(http.MethodGet, ts.URL, nil)
-	sc := serviceCommand{
-		Device: contract.Device{
-			AdminState: contract.Unlocked,
-		},
-		HttpCaller: &http.Client{},
-		Request:    request,
-	}
+	sc := newServiceCommand(contract.Device{AdminState: contract.Unlocked}, &http.Client{}, request, logger.NewMockClient())
 
 	body, responseCode, err := sc.Execute()
 	if err != nil {
@@ -89,15 +83,8 @@ func TestExecute(t *testing.T) {
 }
 
 func TestExecuteHttpRequestError(t *testing.T) {
-	LoggingClient = logger.MockLogger{}
 	request, _ := http.NewRequest(http.MethodGet, "http://example.com", nil)
-	sc := serviceCommand{
-		Device: contract.Device{
-			AdminState: contract.Unlocked,
-		},
-		HttpCaller: &FailingMockHttpCaller{},
-		Request:    request,
-	}
+	sc := newServiceCommand(contract.Device{AdminState: contract.Unlocked}, &FailingMockHttpCaller{}, request, logger.NewMockClient())
 
 	_, _, err := sc.Execute()
 	if err == nil {
@@ -106,15 +93,8 @@ func TestExecuteHttpRequestError(t *testing.T) {
 }
 
 func TestExecuteHttpReadResponseError(t *testing.T) {
-	LoggingClient = logger.MockLogger{}
 	request, _ := http.NewRequest(http.MethodGet, "http://example.com", nil)
-	sc := serviceCommand{
-		Device: contract.Device{
-			AdminState: contract.Unlocked,
-		},
-		HttpCaller: &ReadFailMockHttpCaller{},
-		Request:    request,
-	}
+	sc := newServiceCommand(contract.Device{AdminState: contract.Unlocked}, &ReadFailMockHttpCaller{}, request, logger.NewMockClient())
 
 	_, responseCode, err := sc.Execute()
 	if err == nil {

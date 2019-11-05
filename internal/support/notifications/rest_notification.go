@@ -22,14 +22,25 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+	notificationsConfig "github.com/edgexfoundry/edgex-go/internal/support/notifications/config"
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/errors"
+	"github.com/edgexfoundry/edgex-go/internal/support/notifications/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/operators/notification"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
+
 	"github.com/gorilla/mux"
 )
 
-func notificationHandler(w http.ResponseWriter, r *http.Request) {
+func notificationHandler(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient,
+	config notificationsConfig.ConfigurationStruct) {
+
 	if r.Body != nil {
 		defer r.Body.Close()
 	}
@@ -40,33 +51,33 @@ func notificationHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		LoggingClient.Error("Error decoding notification: " + err.Error())
+		loggingClient.Error("Error decoding notification: " + err.Error())
 		return
 	}
 
-	LoggingClient.Info("Posting Notification: " + n.String())
+	loggingClient.Info("Posting Notification: " + n.String())
 	n.Status = models.NotificationsStatus(models.New)
 	n.ID, err = dbClient.AddNotification(n)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusConflict)
-		LoggingClient.Error(err.Error())
+		loggingClient.Error(err.Error())
 		return
 	}
 
 	if n.Severity == models.NotificationsSeverity(models.Critical) {
-		LoggingClient.Info("Critical severity scheduler is triggered for: " + n.Slug)
+		loggingClient.Info("Critical severity scheduler is triggered for: " + n.Slug)
 		n, err = dbClient.GetNotificationById(n.ID)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
-			LoggingClient.Error(err.Error())
+			loggingClient.Error(err.Error())
 			return
 		}
 
-		err := distributeAndMark(n)
+		err := distributeAndMark(n, loggingClient, dbClient, config)
 		if err != nil {
 			return
 		}
-		LoggingClient.Info("Critical severity scheduler has completed for: " + n.Slug)
+		loggingClient.Info("Critical severity scheduler has completed for: " + n.Slug)
 	}
 
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
@@ -75,7 +86,11 @@ func notificationHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func restGetNotificationBySlug(w http.ResponseWriter, r *http.Request) {
+func restGetNotificationBySlug(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
 
 	if r.Body != nil {
 		defer r.Body.Close()
@@ -87,7 +102,7 @@ func restGetNotificationBySlug(w http.ResponseWriter, r *http.Request) {
 	op := notification.NewSlugExecutor(dbClient, slug)
 	result, err := op.Execute()
 	if err != nil {
-		LoggingClient.Error(err.Error())
+		loggingClient.Error(err.Error())
 		switch err.(type) {
 		case errors.ErrNotificationNotFound:
 			http.Error(w, err.Error(), http.StatusNotFound)
@@ -98,10 +113,14 @@ func restGetNotificationBySlug(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pkg.Encode(result, w, LoggingClient)
+	pkg.Encode(result, w, loggingClient)
 }
 
-func restDeleteNotificationBySlug(w http.ResponseWriter, r *http.Request) {
+func restDeleteNotificationBySlug(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
 
 	if r.Body != nil {
 		defer r.Body.Close()
@@ -110,12 +129,12 @@ func restDeleteNotificationBySlug(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	slug := vars["slug"]
 
-	LoggingClient.Info("Deleting notification (and associated transmissions) by slug: " + slug)
+	loggingClient.Info("Deleting notification (and associated transmissions) by slug: " + slug)
 
 	op := notification.NewDeleteBySlugExecutor(dbClient, slug)
 	err := op.Execute()
 	if err != nil {
-		LoggingClient.Error(err.Error())
+		loggingClient.Error(err.Error())
 		switch err.(type) {
 		case errors.ErrNotificationNotFound:
 			http.Error(w, err.Error(), http.StatusNotFound)
@@ -131,7 +150,11 @@ func restDeleteNotificationBySlug(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("true"))
 }
 
-func restGetNotificationByID(w http.ResponseWriter, r *http.Request) {
+func restGetNotificationByID(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
 
 	if r.Body != nil {
 		defer r.Body.Close()
@@ -142,7 +165,7 @@ func restGetNotificationByID(w http.ResponseWriter, r *http.Request) {
 	op := notification.NewIdExecutor(dbClient, id)
 	result, err := op.Execute()
 	if err != nil {
-		LoggingClient.Error(err.Error())
+		loggingClient.Error(err.Error())
 		switch err.(type) {
 		case errors.ErrNotificationNotFound:
 			http.Error(w, err.Error(), http.StatusNotFound)
@@ -152,10 +175,14 @@ func restGetNotificationByID(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	pkg.Encode(result, w, LoggingClient)
+	pkg.Encode(result, w, loggingClient)
 }
 
-func restDeleteNotificationByID(w http.ResponseWriter, r *http.Request) {
+func restDeleteNotificationByID(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
 
 	if r.Body != nil {
 		defer r.Body.Close()
@@ -164,13 +191,13 @@ func restDeleteNotificationByID(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 
-	LoggingClient.Info("Deleting notification (and associated transmissions): " + id)
+	loggingClient.Info("Deleting notification (and associated transmissions): " + id)
 
 	op := notification.NewDeleteByIDExecutor(dbClient, id)
 	err := op.Execute()
 
 	if err != nil {
-		LoggingClient.Error(err.Error())
+		loggingClient.Error(err.Error())
 		switch err.(type) {
 		case errors.ErrNotificationNotFound:
 			http.Error(w, err.Error(), http.StatusNotFound)
@@ -184,7 +211,12 @@ func restDeleteNotificationByID(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("true"))
 }
 
-func restDeleteNotificationsByAge(w http.ResponseWriter, r *http.Request) {
+func restDeleteNotificationsByAge(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
+
 	if r.Body != nil {
 		defer r.Body.Close()
 	}
@@ -193,15 +225,15 @@ func restDeleteNotificationsByAge(w http.ResponseWriter, r *http.Request) {
 	age, err := strconv.Atoi(vars["age"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		LoggingClient.Error("Error converting the age to an integer")
+		loggingClient.Error("Error converting the age to an integer")
 		return
 	}
-	LoggingClient.Info("Deleting old notifications (and associated transmissions): " + vars["age"])
+	loggingClient.Info("Deleting old notifications (and associated transmissions): " + vars["age"])
 	op := notification.NewDeleteByAgeExecutor(dbClient, age)
 	err = op.Execute()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		LoggingClient.Error(err.Error())
+		loggingClient.Error(err.Error())
 		return
 	}
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
@@ -209,7 +241,12 @@ func restDeleteNotificationsByAge(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("true"))
 }
 
-func restGetNotificationsBySender(w http.ResponseWriter, r *http.Request) {
+func restGetNotificationsBySender(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient,
+	config notificationsConfig.ConfigurationStruct) {
 
 	if r.Body != nil {
 		defer r.Body.Close()
@@ -219,12 +256,12 @@ func restGetNotificationsBySender(w http.ResponseWriter, r *http.Request) {
 	limitNum, err := strconv.Atoi(vars["limit"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		LoggingClient.Error("Error converting limit to integer: " + err.Error())
+		loggingClient.Error("Error converting limit to integer: " + err.Error())
 		return
 	}
 
 	// Check the length
-	if err = checkMaxLimit(limitNum); err != nil {
+	if err = checkMaxLimit(limitNum, loggingClient, config); err != nil {
 		http.Error(w, ExceededMaxResultCount, http.StatusRequestEntityTooLarge)
 		return
 	}
@@ -237,14 +274,19 @@ func restGetNotificationsBySender(w http.ResponseWriter, r *http.Request) {
 		} else {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-		LoggingClient.Error(err.Error())
+		loggingClient.Error(err.Error())
 		return
 	}
 
-	pkg.Encode(results, w, LoggingClient)
+	pkg.Encode(results, w, loggingClient)
 }
 
-func restNotificationByStartEnd(w http.ResponseWriter, r *http.Request) {
+func restNotificationByStartEnd(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient,
+	config notificationsConfig.ConfigurationStruct) {
 
 	if r.Body != nil {
 		defer r.Body.Close()
@@ -254,24 +296,24 @@ func restNotificationByStartEnd(w http.ResponseWriter, r *http.Request) {
 	start, err := strconv.ParseInt(vars["start"], 10, 64)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		LoggingClient.Error("Error converting the start to an integer")
+		loggingClient.Error("Error converting the start to an integer")
 		return
 	}
 	end, err := strconv.ParseInt(vars["end"], 10, 64)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		LoggingClient.Error("Error converting the end to an integer")
+		loggingClient.Error("Error converting the end to an integer")
 		return
 	}
 	limitNum, err := strconv.Atoi(vars["limit"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		LoggingClient.Error("Error converting limit to integer: " + err.Error())
+		loggingClient.Error("Error converting limit to integer: " + err.Error())
 		return
 	}
 
 	// Check the length
-	if err = checkMaxLimit(limitNum); err != nil {
+	if err = checkMaxLimit(limitNum, loggingClient, config); err != nil {
 		http.Error(w, ExceededMaxResultCount, http.StatusRequestEntityTooLarge)
 		return
 	}
@@ -284,14 +326,20 @@ func restNotificationByStartEnd(w http.ResponseWriter, r *http.Request) {
 		} else {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-		LoggingClient.Error(err.Error())
+		loggingClient.Error(err.Error())
 		return
 	}
 
-	pkg.Encode(results, w, LoggingClient)
+	pkg.Encode(results, w, loggingClient)
 }
 
-func restNotificationByStart(w http.ResponseWriter, r *http.Request) {
+func restNotificationByStart(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient,
+	config notificationsConfig.ConfigurationStruct) {
+
 	if r.Body != nil {
 		defer r.Body.Close()
 	}
@@ -299,18 +347,18 @@ func restNotificationByStart(w http.ResponseWriter, r *http.Request) {
 	start, err := strconv.ParseInt(vars["start"], 10, 64)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		LoggingClient.Error("Error converting the start to an integer")
+		loggingClient.Error("Error converting the start to an integer")
 		return
 	}
 	limitNum, err := strconv.Atoi(vars["limit"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		LoggingClient.Error("Error converting limit to integer: " + err.Error())
+		loggingClient.Error("Error converting limit to integer: " + err.Error())
 		return
 	}
 
 	// Check the length
-	if err = checkMaxLimit(limitNum); err != nil {
+	if err = checkMaxLimit(limitNum, loggingClient, config); err != nil {
 		http.Error(w, ExceededMaxResultCount, http.StatusRequestEntityTooLarge)
 		return
 	}
@@ -323,14 +371,19 @@ func restNotificationByStart(w http.ResponseWriter, r *http.Request) {
 		} else {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-		LoggingClient.Error(err.Error())
+		loggingClient.Error(err.Error())
 		return
 	}
 
-	pkg.Encode(results, w, LoggingClient)
+	pkg.Encode(results, w, loggingClient)
 }
 
-func restNotificationByEnd(w http.ResponseWriter, r *http.Request) {
+func restNotificationByEnd(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient,
+	config notificationsConfig.ConfigurationStruct) {
 
 	if r.Body != nil {
 		defer r.Body.Close()
@@ -340,18 +393,18 @@ func restNotificationByEnd(w http.ResponseWriter, r *http.Request) {
 	end, err := strconv.ParseInt(vars["end"], 10, 64)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		LoggingClient.Error("Error converting the end to an integer")
+		loggingClient.Error("Error converting the end to an integer")
 		return
 	}
 	limitNum, err := strconv.Atoi(vars["limit"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		LoggingClient.Error("Error converting limit to integer: " + err.Error())
+		loggingClient.Error("Error converting limit to integer: " + err.Error())
 		return
 	}
 
 	// Check the length
-	if err = checkMaxLimit(limitNum); err != nil {
+	if err = checkMaxLimit(limitNum, loggingClient, config); err != nil {
 		http.Error(w, ExceededMaxResultCount, http.StatusRequestEntityTooLarge)
 		return
 	}
@@ -364,14 +417,19 @@ func restNotificationByEnd(w http.ResponseWriter, r *http.Request) {
 		} else {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-		LoggingClient.Error(err.Error())
+		loggingClient.Error(err.Error())
 		return
 	}
 
-	pkg.Encode(results, w, LoggingClient)
+	pkg.Encode(results, w, loggingClient)
 }
 
-func restNotificationsByLabels(w http.ResponseWriter, r *http.Request) {
+func restNotificationsByLabels(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient,
+	config notificationsConfig.ConfigurationStruct) {
 
 	if r.Body != nil {
 		defer r.Body.Close()
@@ -381,12 +439,12 @@ func restNotificationsByLabels(w http.ResponseWriter, r *http.Request) {
 	limitNum, err := strconv.Atoi(vars["limit"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		LoggingClient.Error("Error converting limit to integer: " + err.Error())
+		loggingClient.Error("Error converting limit to integer: " + err.Error())
 		return
 	}
 
 	// Check the length
-	if err = checkMaxLimit(limitNum); err != nil {
+	if err = checkMaxLimit(limitNum, loggingClient, config); err != nil {
 		http.Error(w, ExceededMaxResultCount, http.StatusRequestEntityTooLarge)
 		return
 	}
@@ -401,14 +459,19 @@ func restNotificationsByLabels(w http.ResponseWriter, r *http.Request) {
 		} else {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-		LoggingClient.Error(err.Error())
+		loggingClient.Error(err.Error())
 		return
 	}
 
-	pkg.Encode(results, w, LoggingClient)
+	pkg.Encode(results, w, loggingClient)
 }
 
-func restNotificationsNew(w http.ResponseWriter, r *http.Request) {
+func restNotificationsNew(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient,
+	config notificationsConfig.ConfigurationStruct) {
 
 	if r.Body != nil {
 		defer r.Body.Close()
@@ -418,12 +481,12 @@ func restNotificationsNew(w http.ResponseWriter, r *http.Request) {
 	limitNum, err := strconv.Atoi(vars["limit"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		LoggingClient.Error("Error converting limit to integer: " + err.Error())
+		loggingClient.Error("Error converting limit to integer: " + err.Error())
 		return
 	}
 
 	// Check the length
-	if err = checkMaxLimit(limitNum); err != nil {
+	if err = checkMaxLimit(limitNum, loggingClient, config); err != nil {
 		http.Error(w, ExceededMaxResultCount, http.StatusRequestEntityTooLarge)
 		return
 	}
@@ -436,9 +499,9 @@ func restNotificationsNew(w http.ResponseWriter, r *http.Request) {
 		} else {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-		LoggingClient.Error(err.Error())
+		loggingClient.Error(err.Error())
 		return
 	}
 
-	pkg.Encode(n, w, LoggingClient)
+	pkg.Encode(n, w, loggingClient)
 }

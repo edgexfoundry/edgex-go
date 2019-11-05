@@ -11,6 +11,7 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
+
 package command
 
 import (
@@ -20,11 +21,18 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
 // NewPutCommand creates and Executor which can be used to execute the PUT related command.
-func NewPutCommand(device contract.Device, command contract.Command, body string, context context.Context, httpCaller internal.HttpCaller) (Executor, error) {
+func NewPutCommand(
+	device contract.Device,
+	command contract.Command,
+	body string,
+	context context.Context,
+	httpCaller internal.HttpCaller,
+	loggingClient logger.LoggingClient) (Executor, error) {
 	url := device.Service.Addressable.GetBaseURL() + strings.Replace(command.Put.Action.Path, DEVICEIDURLPARAM, device.Id, -1)
 	request, err := http.NewRequest(http.MethodPut, url, strings.NewReader(body))
 	if err != nil {
@@ -36,9 +44,5 @@ func NewPutCommand(device contract.Device, command contract.Command, body string
 		request.Header.Set(clients.CorrelationHeader, correlationID.(string))
 	}
 
-	return serviceCommand{
-		Device:     device,
-		HttpCaller: httpCaller,
-		Request:    request,
-	}, nil
+	return newServiceCommand(device, httpCaller, request, loggingClient), nil
 }
