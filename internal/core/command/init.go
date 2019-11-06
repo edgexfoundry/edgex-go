@@ -34,14 +34,11 @@ import (
 // Global variables
 var Configuration = &ConfigurationStruct{}
 
-// Global ErrorConcept variables
-var httpErrorHandler errorconcept.ErrorHandler
-
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the command service.
 func BootstrapHandler(wg *sync.WaitGroup, ctx context.Context, startupTimer startup.Timer, dic *di.Container) bool {
 	loggingClient := bootstrapContainer.LoggingClientFrom(dic.Get)
 	registryClient := bootstrapContainer.RegistryFrom(dic.Get)
-	httpErrorHandler = errorconcept.NewErrorHandler(loggingClient)
+	errorconcept.NewErrorHandler(loggingClient)
 
 	// initialize clients required by the service
 	dic.Update(di.ServiceConstructorMap{
