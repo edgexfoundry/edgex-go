@@ -21,6 +21,7 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/gorilla/mux"
 
+	container "github.com/edgexfoundry/edgex-go/internal/core/command/containers"
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	bootstrapContainer "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
@@ -65,7 +66,8 @@ func loadDeviceRoutes(b *mux.Router, dic *di.Container) {
 			w,
 			r,
 			bootstrapContainer.LoggingClientFrom(dic.Get),
-			bootstrapContainer.DBClientFrom(dic.Get))
+			bootstrapContainer.DBClientFrom(dic.Get),
+			container.MetadataDeviceClientFrom(dic.Get))
 	}).Methods(http.MethodGet)
 
 	d := b.PathPrefix("/" + DEVICE).Subrouter()
@@ -76,21 +78,24 @@ func loadDeviceRoutes(b *mux.Router, dic *di.Container) {
 			w,
 			r,
 			bootstrapContainer.LoggingClientFrom(dic.Get),
-			bootstrapContainer.DBClientFrom(dic.Get))
+			bootstrapContainer.DBClientFrom(dic.Get),
+			container.MetadataDeviceClientFrom(dic.Get))
 	}).Methods(http.MethodGet)
 	d.HandleFunc("/{"+ID+"}/"+COMMAND+"/{"+COMMANDID+"}", func(w http.ResponseWriter, r *http.Request) {
 		restGetDeviceCommandByCommandID(
 			w,
 			r,
 			bootstrapContainer.LoggingClientFrom(dic.Get),
-			bootstrapContainer.DBClientFrom(dic.Get))
+			bootstrapContainer.DBClientFrom(dic.Get),
+			container.MetadataDeviceClientFrom(dic.Get))
 	}).Methods(http.MethodGet)
 	d.HandleFunc("/{"+ID+"}/"+COMMAND+"/{"+COMMANDID+"}", func(w http.ResponseWriter, r *http.Request) {
 		restPutDeviceCommandByCommandID(
 			w,
 			r,
 			bootstrapContainer.LoggingClientFrom(dic.Get),
-			bootstrapContainer.DBClientFrom(dic.Get))
+			bootstrapContainer.DBClientFrom(dic.Get),
+			container.MetadataDeviceClientFrom(dic.Get))
 	}).Methods(http.MethodPut)
 
 	// /api/<version>/device/name
@@ -101,21 +106,24 @@ func loadDeviceRoutes(b *mux.Router, dic *di.Container) {
 			w,
 			r,
 			bootstrapContainer.LoggingClientFrom(dic.Get),
-			bootstrapContainer.DBClientFrom(dic.Get))
+			bootstrapContainer.DBClientFrom(dic.Get),
+			container.MetadataDeviceClientFrom(dic.Get))
 	}).Methods(http.MethodGet)
 	dn.HandleFunc("/{"+NAME+"}/"+COMMAND+"/{"+COMMANDNAME+"}", func(w http.ResponseWriter, r *http.Request) {
 		restGetDeviceCommandByNames(
 			w,
 			r,
 			bootstrapContainer.LoggingClientFrom(dic.Get),
-			bootstrapContainer.DBClientFrom(dic.Get))
+			bootstrapContainer.DBClientFrom(dic.Get),
+			container.MetadataDeviceClientFrom(dic.Get))
 	}).Methods(http.MethodGet)
 	dn.HandleFunc("/{"+NAME+"}/"+COMMAND+"/{"+COMMANDNAME+"}", func(w http.ResponseWriter, r *http.Request) {
 		restPutDeviceCommandByNames(
 			w,
 			r,
 			bootstrapContainer.LoggingClientFrom(dic.Get),
-			bootstrapContainer.DBClientFrom(dic.Get))
+			bootstrapContainer.DBClientFrom(dic.Get),
+			container.MetadataDeviceClientFrom(dic.Get))
 	}).Methods(http.MethodPut)
 }
 

@@ -19,27 +19,30 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/edgexfoundry/edgex-go/internal/core/command/interfaces"
-
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/metadata"
 	"github.com/gorilla/mux"
+
+	"github.com/edgexfoundry/edgex-go/internal/core/command/interfaces"
 )
 
 func restGetDeviceCommandByCommandID(
 	w http.ResponseWriter,
 	r *http.Request,
 	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient) {
-	issueDeviceCommand(w, r, false, loggingClient, dbClient)
+	dbClient interfaces.DBClient,
+	deviceClient metadata.DeviceClient) {
+	issueDeviceCommand(w, r, false, loggingClient, dbClient, deviceClient)
 }
 
 func restPutDeviceCommandByCommandID(
 	w http.ResponseWriter,
 	r *http.Request,
 	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient) {
-	issueDeviceCommand(w, r, true, loggingClient, dbClient)
+	dbClient interfaces.DBClient,
+	deviceClient metadata.DeviceClient) {
+	issueDeviceCommand(w, r, true, loggingClient, dbClient, deviceClient)
 }
 
 func issueDeviceCommand(
@@ -47,7 +50,8 @@ func issueDeviceCommand(
 	r *http.Request,
 	isPutCommand bool,
 	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient) {
+	dbClient interfaces.DBClient,
+	deviceClient metadata.DeviceClient) {
 	defer r.Body.Close()
 
 	vars := mux.Vars(r)
@@ -60,7 +64,16 @@ func issueDeviceCommand(
 	}
 
 	ctx := r.Context()
-	body, status := commandByDeviceID(did, cid, string(b), r.URL.RawQuery, isPutCommand, ctx, loggingClient, dbClient)
+	body, status := commandByDeviceID(
+		did,
+		cid,
+		string(b),
+		r.URL.RawQuery,
+		isPutCommand,
+		ctx,
+		loggingClient,
+		dbClient,
+		deviceClient)
 	if status != http.StatusOK {
 		http.Error(w, body, status)
 	} else {
@@ -75,16 +88,18 @@ func restGetDeviceCommandByNames(
 	w http.ResponseWriter,
 	r *http.Request,
 	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient) {
-	issueDeviceCommandByNames(w, r, false, loggingClient, dbClient)
+	dbClient interfaces.DBClient,
+	deviceClient metadata.DeviceClient) {
+	issueDeviceCommandByNames(w, r, false, loggingClient, dbClient, deviceClient)
 }
 
 func restPutDeviceCommandByNames(
 	w http.ResponseWriter,
 	r *http.Request,
 	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient) {
-	issueDeviceCommandByNames(w, r, true, loggingClient, dbClient)
+	dbClient interfaces.DBClient,
+	deviceClient metadata.DeviceClient) {
+	issueDeviceCommandByNames(w, r, true, loggingClient, dbClient, deviceClient)
 }
 
 func issueDeviceCommandByNames(
@@ -92,7 +107,8 @@ func issueDeviceCommandByNames(
 	r *http.Request,
 	isPutCommand bool,
 	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient) {
+	dbClient interfaces.DBClient,
+	deviceClient metadata.DeviceClient) {
 	defer r.Body.Close()
 
 	vars := mux.Vars(r)
@@ -106,7 +122,16 @@ func issueDeviceCommandByNames(
 		loggingClient.Error(err.Error())
 		return
 	}
-	body, status := commandByNames(dn, cn, string(b), r.URL.RawQuery, isPutCommand, ctx, loggingClient, dbClient)
+	body, status := commandByNames(
+		dn,
+		cn,
+		string(b),
+		r.URL.RawQuery,
+		isPutCommand,
+		ctx,
+		loggingClient,
+		dbClient,
+		deviceClient)
 
 	if status != http.StatusOK {
 		http.Error(w, body, status)
@@ -122,11 +147,12 @@ func restGetCommandsByDeviceID(
 	w http.ResponseWriter,
 	r *http.Request,
 	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient) {
+	dbClient interfaces.DBClient,
+	deviceClient metadata.DeviceClient) {
 	vars := mux.Vars(r)
 	did := vars[ID]
 	ctx := r.Context()
-	status, device, err := getCommandsByDeviceID(did, ctx, loggingClient, dbClient)
+	status, device, err := getCommandsByDeviceID(did, ctx, loggingClient, dbClient, deviceClient)
 	if err != nil {
 		loggingClient.Error(err.Error())
 		http.Error(w, "Device not found", http.StatusNotFound)
@@ -143,11 +169,12 @@ func restGetCommandsByDeviceName(
 	w http.ResponseWriter,
 	r *http.Request,
 	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient) {
+	dbClient interfaces.DBClient,
+	deviceClient metadata.DeviceClient) {
 	vars := mux.Vars(r)
 	dn := vars[NAME]
 	ctx := r.Context()
-	status, devices, err := getCommandsByDeviceName(dn, ctx, loggingClient, dbClient)
+	status, devices, err := getCommandsByDeviceName(dn, ctx, loggingClient, dbClient, deviceClient)
 	if err != nil {
 		loggingClient.Error(err.Error())
 		http.Error(w, "Device not found", http.StatusNotFound)
@@ -164,9 +191,10 @@ func restGetAllCommands(
 	w http.ResponseWriter,
 	r *http.Request,
 	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient) {
+	dbClient interfaces.DBClient,
+	deviceClient metadata.DeviceClient) {
 	ctx := r.Context()
-	status, devices, err := getCommands(ctx, loggingClient, dbClient)
+	status, devices, err := getCommands(ctx, loggingClient, dbClient, deviceClient)
 	if err != nil {
 		loggingClient.Error(err.Error())
 		w.WriteHeader(status)
