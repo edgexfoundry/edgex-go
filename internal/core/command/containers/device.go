@@ -20,10 +20,10 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 )
 
-// DeviceClientName contains the name of the client implementation in the DIC.
-var DeviceClientName = di.TypeInstanceToName((*metadata.DeviceClient)(nil))
+// MetadataDeviceClientName contains the name of the client implementation in the DIC.
+var MetadataDeviceClientName = di.TypeInstanceToName((*metadata.DeviceClient)(nil))
 
-// DeviceClientFrom helper function queries the DIC and returns the client implementation.
-func DeviceClientFrom(get di.Get) metadata.DeviceClient {
-	return get(DeviceClientName).(metadata.DeviceClient)
+// MetadataDeviceClientFrom helper function queries the DIC and returns the client implementation.
+func MetadataDeviceClientFrom(get di.Get) metadata.DeviceClient {
+	return get(MetadataDeviceClientName).(metadata.DeviceClient)
 }

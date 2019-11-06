@@ -19,7 +19,7 @@ import (
 	"context"
 	"sync"
 
-	container "github.com/edgexfoundry/edgex-go/internal/core/metadata/containers"
+	container "github.com/edgexfoundry/edgex-go/internal/core/command/containers"
 	bootstrapContainer "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
@@ -45,7 +45,7 @@ func BootstrapHandler(wg *sync.WaitGroup, ctx context.Context, startupTimer star
 
 	// initialize clients required by the service
 	dic.Update(di.ServiceConstructorMap{
-		container.DeviceClientName: func(get di.Get) interface{} {
+		container.MetadataDeviceClientName: func(get di.Get) interface{} {
 			return metadata.NewDeviceClient(
 				types.EndpointParams{
 					ServiceKey:  clients.CoreMetaDataServiceKey,
