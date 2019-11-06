@@ -49,7 +49,7 @@ type Device struct {
 	ProfileName    string                  `bson:"profileName"`          // Associated Device Profile Name
 }
 
-func (d *Device) ToContract(dsTransform deviceServiceTransform, dpTransform deviceProfileTransform, cTransform commandTransform, aTransform addressableTransform) (c contract.Device, err error) {
+func (d *Device) ToContract(dsTransform deviceServiceTransform, dpTransform deviceProfileTransform, cTransform commandTransform, aTransform addressableTransform) (contract.Device, error) {
 	// Always hand back the UUID as the contract command ID unless it's blank (an old command, for example blackbox test scripts)
 	id := d.Uuid
 	if id == "" {
@@ -57,11 +57,12 @@ func (d *Device) ToContract(dsTransform deviceServiceTransform, dpTransform devi
 	}
 
 	var result contract.Device
+	var err error
 
-	c.Created = d.Created
-	c.Modified = d.Modified
-	c.Origin = d.Origin
-	c.Description = d.Description
+	result.Created = d.Created
+	result.Modified = d.Modified
+	result.Origin = d.Origin
+	result.Description = d.Description
 	result.Id = id
 	result.Name = d.Name
 	result.AdminState = d.AdminState
@@ -70,14 +71,14 @@ func (d *Device) ToContract(dsTransform deviceServiceTransform, dpTransform devi
 	p := make(map[string]contract.ProtocolProperties)
 	err = json.Unmarshal([]byte(d.Protocols), &p)
 	if err != nil {
-		return
+		return contract.Device{}, err
 	}
 	result.Protocols = p
 
 	ae := make([]contract.AutoEvent, 0)
 	err = json.Unmarshal([]byte(d.AutoEvents), &ae)
 	if err != nil {
-		return
+		return contract.Device{}, err
 	}
 	result.AutoEvents = ae
 	result.LastConnected = d.LastConnected
@@ -87,29 +88,29 @@ func (d *Device) ToContract(dsTransform deviceServiceTransform, dpTransform devi
 
 	dsModel, err := dsTransform.DBRefToDeviceService(d.Service)
 	if err != nil {
-		return
+		return contract.Device{}, err
 	}
 	result.Service, err = dsModel.ToContract(aTransform)
 	if err != nil {
-		return
+		return contract.Device{}, err
 	}
 
 	dpModel, err := dpTransform.DBRefToDeviceProfile(d.Profile)
 	if err != nil {
-		return
+		return contract.Device{}, err
 	}
 	result.Profile, err = dpModel.ToContract(cTransform)
 	if err != nil {
-		return
+		return contract.Device{}, err
 	}
 
-	c = result
-	return
+	return result, nil
 }
 
-func (d *Device) FromContract(from contract.Device, dsTransform deviceServiceTransform, dpTransform deviceProfileTransform, cTransform commandTransform, aTransform addressableTransform) (id string, err error) {
+func (d *Device) FromContract(from contract.Device, dsTransform deviceServiceTransform, dpTransform deviceProfileTransform, cTransform commandTransform, aTransform addressableTransform) (string, error) {
+	var err error
 	if d.Id, d.Uuid, err = fromContractId(from.Id); err != nil {
-		return
+		return "", err
 	}
 
 	d.Created = from.Created
@@ -122,13 +123,13 @@ func (d *Device) FromContract(from contract.Device, dsTransform deviceServiceTra
 
 	p, err := json.Marshal(from.Protocols)
 	if err != nil {
-		return
+		return "", err
 	}
 	d.Protocols = string(p)
 
 	ae, err := json.Marshal(from.AutoEvents)
 	if err != nil {
-		return
+		return "", err
 	}
 	d.AutoEvents = string(ae)
 	d.LastConnected = from.LastConnected
@@ -138,22 +139,21 @@ func (d *Device) FromContract(from contract.Device, dsTransform deviceServiceTra
 
 	var dsModel DeviceService
 	if _, err = dsModel.FromContract(from.Service, aTransform); err != nil {
-		return
+		return "", err
 	}
 	if d.Service, err = dsTransform.DeviceServiceToDBRef(dsModel); err != nil {
-		return
+		return "", err
 	}
 
 	var dpModel DeviceProfile
 	if _, err = dpModel.FromContract(from.Profile, cTransform); err != nil {
-		return
+		return "", err
 	}
 	d.ProfileName = dpModel.Name
 	if d.Profile, err = dpTransform.DeviceProfileToDBRef(dpModel); err != nil {
-		return
+		return "", err
 	}
-	id = toContractId(d.Id, d.Uuid)
-	return
+	return toContractId(d.Id, d.Uuid), nil
 }
 
 func (d *Device) TimestampForUpdate() {
