@@ -20,12 +20,18 @@ import (
 	"net/url"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
+
 	"github.com/gorilla/mux"
 )
 
-func restGetAllDeviceReports(w http.ResponseWriter, _ *http.Request) {
+func restGetAllDeviceReports(
+	w http.ResponseWriter,
+	loggingClient logger.LoggingClient) {
+
 	res, err := dbClient.GetAllDeviceReports()
 	if err != nil {
 		httpErrorHandler.Handle(w, err, errorconcept.Common.RetrieveError_StatusInternalServer)
@@ -45,7 +51,11 @@ func restGetAllDeviceReports(w http.ResponseWriter, _ *http.Request) {
 // Add a new device report
 // Referenced objects (Device, Schedule event) must already exist
 // 404 If any of the referenced objects aren't found
-func restAddDeviceReport(w http.ResponseWriter, r *http.Request) {
+func restAddDeviceReport(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient) {
+
 	defer r.Body.Close()
 	var dr models.DeviceReport
 	if err := json.NewDecoder(r.Body).Decode(&dr); err != nil {
@@ -68,15 +78,19 @@ func restAddDeviceReport(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Notify associates
-	if err := notifyDeviceReportAssociates(dr, http.MethodPost); err != nil {
-		LoggingClient.Error(err.Error())
+	if err := notifyDeviceReportAssociates(dr, http.MethodPost, loggingClient); err != nil {
+		loggingClient.Error(err.Error())
 	}
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(dr.Id))
 }
 
-func restUpdateDeviceReport(w http.ResponseWriter, r *http.Request) {
+func restUpdateDeviceReport(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient) {
+
 	defer r.Body.Close()
 	var from models.DeviceReport
 	if err := json.NewDecoder(r.Body).Decode(&from); err != nil {
@@ -97,7 +111,7 @@ func restUpdateDeviceReport(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := updateDeviceReportFields(from, &to, w); err != nil {
-		LoggingClient.Error(err.Error())
+		loggingClient.Error(err.Error())
 		return
 	}
 
@@ -107,8 +121,8 @@ func restUpdateDeviceReport(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Notify Associates
-	if err := notifyDeviceReportAssociates(to, http.MethodPut); err != nil {
-		LoggingClient.Error(err.Error())
+	if err := notifyDeviceReportAssociates(to, http.MethodPut, loggingClient); err != nil {
+		loggingClient.Error(err.Error())
 	}
 
 	w.WriteHeader(http.StatusOK)
@@ -226,7 +240,11 @@ func restGetDeviceReportByDeviceName(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(res)
 }
 
-func restDeleteReportById(w http.ResponseWriter, r *http.Request) {
+func restDeleteReportById(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient) {
+
 	vars := mux.Vars(r)
 	var id string = vars[ID]
 
@@ -237,8 +255,8 @@ func restDeleteReportById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := deleteDeviceReport(dr, w); err != nil {
-		LoggingClient.Error(err.Error())
+	if err := deleteDeviceReport(dr, w, loggingClient); err != nil {
+		loggingClient.Error(err.Error())
 		return
 	}
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
@@ -246,7 +264,11 @@ func restDeleteReportById(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("true"))
 }
 
-func restDeleteReportByName(w http.ResponseWriter, r *http.Request) {
+func restDeleteReportByName(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient) {
+
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
@@ -261,8 +283,8 @@ func restDeleteReportByName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err = deleteDeviceReport(dr, w); err != nil {
-		LoggingClient.Error(err.Error())
+	if err = deleteDeviceReport(dr, w, loggingClient); err != nil {
+		loggingClient.Error(err.Error())
 		return
 	}
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
@@ -270,14 +292,18 @@ func restDeleteReportByName(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("true"))
 }
 
-func deleteDeviceReport(dr models.DeviceReport, w http.ResponseWriter) error {
+func deleteDeviceReport(
+	dr models.DeviceReport,
+	w http.ResponseWriter,
+	loggingClient logger.LoggingClient) error {
+
 	if err := dbClient.DeleteDeviceReportById(dr.Id); err != nil {
 		httpErrorHandler.Handle(w, err, errorconcept.Common.DeleteError)
 		return err
 	}
 
 	// Notify Associates
-	if err := notifyDeviceReportAssociates(dr, http.MethodDelete); err != nil {
+	if err := notifyDeviceReportAssociates(dr, http.MethodDelete, loggingClient); err != nil {
 		return err
 	}
 
@@ -285,7 +311,11 @@ func deleteDeviceReport(dr models.DeviceReport, w http.ResponseWriter) error {
 }
 
 // Notify the associated device services to the device report
-func notifyDeviceReportAssociates(dr models.DeviceReport, action string) error {
+func notifyDeviceReportAssociates(
+	dr models.DeviceReport,
+	action string,
+	loggingClient logger.LoggingClient) error {
+
 	// Get the device of the report
 	d, err := dbClient.GetDeviceByName(dr.Device)
 	if err != nil {
@@ -299,7 +329,7 @@ func notifyDeviceReportAssociates(dr models.DeviceReport, action string) error {
 	}
 
 	// Notify the associating device services
-	if err = notifyAssociates([]models.DeviceService{ds}, dr.Id, action, models.REPORT); err != nil {
+	if err = notifyAssociates([]models.DeviceService{ds}, dr.Id, action, models.REPORT, loggingClient); err != nil {
 		return err
 	}
 

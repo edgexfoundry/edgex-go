@@ -21,12 +21,17 @@ import (
 	"net/url"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
+
 	"github.com/gorilla/mux"
 )
 
-func restGetProvisionWatchers(w http.ResponseWriter, _ *http.Request) {
+func restGetProvisionWatchers(
+	w http.ResponseWriter) {
+
 	res, err := dbClient.GetAllProvisionWatchers()
 	if err != nil {
 		httpErrorHandler.Handle(w, err, errorconcept.Common.RetrieveError_StatusServiceUnavailable)
@@ -43,7 +48,11 @@ func restGetProvisionWatchers(w http.ResponseWriter, _ *http.Request) {
 	json.NewEncoder(w).Encode(&res)
 }
 
-func restDeleteProvisionWatcherById(w http.ResponseWriter, r *http.Request) {
+func restDeleteProvisionWatcherById(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient) {
+
 	vars := mux.Vars(r)
 	var id string = vars[ID]
 
@@ -54,7 +63,7 @@ func restDeleteProvisionWatcherById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = deleteProvisionWatcher(pw, w)
+	err = deleteProvisionWatcher(pw, w, loggingClient)
 	if err != nil {
 		httpErrorHandler.Handle(w, err, errorconcept.ProvisionWatcher.DeleteError_StatusInternalServer)
 		return
@@ -63,7 +72,11 @@ func restDeleteProvisionWatcherById(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("true"))
 }
 
-func restDeleteProvisionWatcherByName(w http.ResponseWriter, r *http.Request) {
+func restDeleteProvisionWatcherByName(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient) {
+
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
@@ -78,8 +91,8 @@ func restDeleteProvisionWatcherByName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err = deleteProvisionWatcher(pw, w); err != nil {
-		LoggingClient.Error("Problem deleting provision watcher: " + err.Error())
+	if err = deleteProvisionWatcher(pw, w, loggingClient); err != nil {
+		loggingClient.Error("Problem deleting provision watcher: " + err.Error())
 		return
 	}
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
@@ -88,14 +101,18 @@ func restDeleteProvisionWatcherByName(w http.ResponseWriter, r *http.Request) {
 }
 
 // Delete the provision watcher
-func deleteProvisionWatcher(pw models.ProvisionWatcher, w http.ResponseWriter) error {
+func deleteProvisionWatcher(
+	pw models.ProvisionWatcher,
+	w http.ResponseWriter,
+	loggingClient logger.LoggingClient) error {
+
 	if err := dbClient.DeleteProvisionWatcherById(pw.Id); err != nil {
 		httpErrorHandler.Handle(w, err, errorconcept.Common.DeleteError)
 		return err
 	}
 
-	if err := notifyProvisionWatcherAssociates(pw, http.MethodDelete); err != nil {
-		LoggingClient.Error("Problem notifying associated device services to provision watcher: " + err.Error())
+	if err := notifyProvisionWatcherAssociates(pw, http.MethodDelete, loggingClient); err != nil {
+		loggingClient.Error("Problem notifying associated device services to provision watcher: " + err.Error())
 	}
 
 	return nil
@@ -247,7 +264,11 @@ func restGetProvisionWatchersByIdentifier(w http.ResponseWriter, r *http.Request
 	json.NewEncoder(w).Encode(res)
 }
 
-func restAddProvisionWatcher(w http.ResponseWriter, r *http.Request) {
+func restAddProvisionWatcher(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient) {
+
 	defer r.Body.Close()
 	var pw models.ProvisionWatcher
 	var err error
@@ -300,8 +321,8 @@ func restAddProvisionWatcher(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Notify Associates
-	if err = notifyProvisionWatcherAssociates(pw, http.MethodPost); err != nil {
-		LoggingClient.Error("Problem with notifying associating device services for the provision watcher: " + err.Error())
+	if err = notifyProvisionWatcherAssociates(pw, http.MethodPost, loggingClient); err != nil {
+		loggingClient.Error("Problem with notifying associating device services for the provision watcher: " + err.Error())
 	}
 
 	w.WriteHeader(http.StatusOK)
@@ -311,7 +332,11 @@ func restAddProvisionWatcher(w http.ResponseWriter, r *http.Request) {
 // Update the provision watcher object
 // ID is used first for identification, then name
 // The service and profile cannot be updated
-func restUpdateProvisionWatcher(w http.ResponseWriter, r *http.Request) {
+func restUpdateProvisionWatcher(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient) {
+
 	defer r.Body.Close()
 	var from models.ProvisionWatcher
 	if err := json.NewDecoder(r.Body).Decode(&from); err != nil {
@@ -331,7 +356,7 @@ func restUpdateProvisionWatcher(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := updateProvisionWatcherFields(from, &to, w); err != nil {
-		LoggingClient.Error("Problem updating provision watcher: " + err.Error())
+		loggingClient.Error("Problem updating provision watcher: " + err.Error())
 		return
 	}
 
@@ -341,8 +366,8 @@ func restUpdateProvisionWatcher(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Notify Associates
-	if err := notifyProvisionWatcherAssociates(to, http.MethodPut); err != nil {
-		LoggingClient.Error("Problem notifying associated device services for provision watcher: " + err.Error())
+	if err := notifyProvisionWatcherAssociates(to, http.MethodPut, loggingClient); err != nil {
+		loggingClient.Error("Problem notifying associated device services for provision watcher: " + err.Error())
 	}
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	w.WriteHeader(http.StatusOK)
@@ -371,7 +396,11 @@ func updateProvisionWatcherFields(from models.ProvisionWatcher, to *models.Provi
 }
 
 // Notify the associated device services for the provision watcher
-func notifyProvisionWatcherAssociates(pw models.ProvisionWatcher, action string) error {
+func notifyProvisionWatcherAssociates(
+	pw models.ProvisionWatcher,
+	action string,
+	loggingClient logger.LoggingClient) error {
+
 	// Get the device service for the provision watcher
 	ds, err := dbClient.GetDeviceServiceById(pw.Service.Id)
 	if err != nil {
@@ -379,7 +408,8 @@ func notifyProvisionWatcherAssociates(pw models.ProvisionWatcher, action string)
 	}
 
 	// Notify the service
-	if err = notifyAssociates([]models.DeviceService{ds}, pw.Id, action, models.PROVISIONWATCHER); err != nil {
+	err = notifyAssociates([]models.DeviceService{ds}, pw.Id, action, models.PROVISIONWATCHER, loggingClient)
+	if err != nil {
 		return err
 	}
 

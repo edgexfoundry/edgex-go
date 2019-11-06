@@ -16,7 +16,6 @@ package metadata
 
 import (
 	"encoding/json"
-	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -27,13 +26,20 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/operators/device_profile"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
+
 	"github.com/gorilla/mux"
+	"gopkg.in/yaml.v2"
 )
 
-func restGetAllDeviceProfiles(w http.ResponseWriter, _ *http.Request) {
-	op := device_profile.NewGetAllExecutor(Configuration.Service, dbClient, LoggingClient)
+func restGetAllDeviceProfiles(
+	w http.ResponseWriter,
+	loggingClient logger.LoggingClient) {
+
+	op := device_profile.NewGetAllExecutor(Configuration.Service, dbClient, loggingClient)
 	res, err := op.Execute()
 	if err != nil {
 		httpErrorHandler.HandleOneVariant(w, err, errorconcept.Common.LimitExceeded, errorconcept.Default.InternalServerError)
@@ -44,7 +50,11 @@ func restGetAllDeviceProfiles(w http.ResponseWriter, _ *http.Request) {
 	json.NewEncoder(w).Encode(&res)
 }
 
-func restAddDeviceProfile(w http.ResponseWriter, r *http.Request) {
+func restAddDeviceProfile(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient) {
+
 	var dp models.DeviceProfile
 
 	if err := json.NewDecoder(r.Body).Decode(&dp); err != nil {
@@ -63,7 +73,7 @@ func restAddDeviceProfile(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		op := device_profile.NewAddValueDescriptorExecutor(r.Context(), vdc, LoggingClient, dp.DeviceResources...)
+		op := device_profile.NewAddValueDescriptorExecutor(r.Context(), vdc, loggingClient, dp.DeviceResources...)
 		err = op.Execute()
 		if err != nil {
 			httpErrorHandler.HandleOneVariant(w, err, errorconcept.NewServiceClientHttpError(err), errorconcept.Default.InternalServerError)
@@ -74,7 +84,11 @@ func restAddDeviceProfile(w http.ResponseWriter, r *http.Request) {
 	addDeviceProfile(dp, dbClient, w)
 }
 
-func restUpdateDeviceProfile(w http.ResponseWriter, r *http.Request) {
+func restUpdateDeviceProfile(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient) {
+
 	defer r.Body.Close()
 
 	var from models.DeviceProfile
@@ -84,7 +98,7 @@ func restUpdateDeviceProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if Configuration.Writable.EnableValueDescriptorManagement {
-		vdOp := device_profile.NewUpdateValueDescriptorExecutor(from, dbClient, vdc, LoggingClient, r.Context())
+		vdOp := device_profile.NewUpdateValueDescriptorExecutor(from, dbClient, vdc, loggingClient, r.Context())
 		err := vdOp.Execute()
 		if err != nil {
 			httpErrorHandler.HandleManyVariants(
@@ -116,11 +130,11 @@ func restUpdateDeviceProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Notify Associates
-	err = notifyProfileAssociates(dp, dbClient, http.MethodPut)
+	err = notifyProfileAssociates(dp, dbClient, http.MethodPut, loggingClient)
 	if err != nil {
 		// Log the error but do not change the response to the client. We do not want this to affect the overall status
 		// of the operation
-		LoggingClient.Warn("Error while notifying profile associates of update: ", err.Error())
+		loggingClient.Warn("Error while notifying profile associates of update: ", err.Error())
 	}
 
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
@@ -129,6 +143,7 @@ func restUpdateDeviceProfile(w http.ResponseWriter, r *http.Request) {
 }
 
 func restGetProfileByProfileId(w http.ResponseWriter, r *http.Request) {
+
 	vars := mux.Vars(r)
 	var did = vars["id"]
 
@@ -143,6 +158,7 @@ func restGetProfileByProfileId(w http.ResponseWriter, r *http.Request) {
 }
 
 func restDeleteProfileByProfileId(w http.ResponseWriter, r *http.Request) {
+
 	vars := mux.Vars(r)
 	var did = vars["id"]
 
@@ -167,6 +183,7 @@ func restDeleteProfileByProfileId(w http.ResponseWriter, r *http.Request) {
 
 // Delete the device profile based on its name
 func restDeleteProfileByName(w http.ResponseWriter, r *http.Request) {
+
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
@@ -194,6 +211,7 @@ func restDeleteProfileByName(w http.ResponseWriter, r *http.Request) {
 }
 
 func restAddProfileByYaml(w http.ResponseWriter, r *http.Request) {
+
 	f, _, err := r.FormFile("file")
 	if err != nil {
 		httpErrorHandler.HandleOneVariant(w, err, errorconcept.DeviceProfile.MissingFile, errorconcept.Default.InternalServerError)
@@ -247,6 +265,7 @@ func restAddProfileByYaml(w http.ResponseWriter, r *http.Request) {
 // Add a device profile with YAML content
 // The YAML content is passed as a string in the http request
 func restAddProfileByYamlRaw(w http.ResponseWriter, r *http.Request) {
+
 	// Get the YAML string
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -267,6 +286,7 @@ func restAddProfileByYamlRaw(w http.ResponseWriter, r *http.Request) {
 
 // This function centralizes the common logic for adding a device profile to the database and dealing with the return
 func addDeviceProfile(dp models.DeviceProfile, dbClient interfaces.DBClient, w http.ResponseWriter) {
+
 	op := device_profile.NewAddDeviceProfileExecutor(dp, dbClient)
 	id, err := op.Execute()
 
@@ -289,6 +309,7 @@ func addDeviceProfile(dp models.DeviceProfile, dbClient interfaces.DBClient, w h
 }
 
 func restGetProfileByModel(w http.ResponseWriter, r *http.Request) {
+
 	vars := mux.Vars(r)
 	an, err := url.QueryUnescape(vars[MODEL])
 	if err != nil {
@@ -308,6 +329,7 @@ func restGetProfileByModel(w http.ResponseWriter, r *http.Request) {
 }
 
 func restGetProfileWithLabel(w http.ResponseWriter, r *http.Request) {
+
 	vars := mux.Vars(r)
 
 	label, err := url.QueryUnescape(vars[LABEL])
@@ -328,6 +350,7 @@ func restGetProfileWithLabel(w http.ResponseWriter, r *http.Request) {
 }
 
 func restGetProfileByManufacturerModel(w http.ResponseWriter, r *http.Request) {
+
 	vars := mux.Vars(r)
 	man, err := url.QueryUnescape(vars[MANUFACTURER])
 	if err != nil {
@@ -353,6 +376,7 @@ func restGetProfileByManufacturerModel(w http.ResponseWriter, r *http.Request) {
 }
 
 func restGetProfileByManufacturer(w http.ResponseWriter, r *http.Request) {
+
 	vars := mux.Vars(r)
 	man, err := url.QueryUnescape(vars[MANUFACTURER])
 	if err != nil {
@@ -372,6 +396,7 @@ func restGetProfileByManufacturer(w http.ResponseWriter, r *http.Request) {
 }
 
 func restGetProfileByName(w http.ResponseWriter, r *http.Request) {
+
 	vars := mux.Vars(r)
 	dn, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
@@ -392,6 +417,7 @@ func restGetProfileByName(w http.ResponseWriter, r *http.Request) {
 }
 
 func restGetYamlProfileByName(w http.ResponseWriter, r *http.Request) {
+
 	vars := mux.Vars(r)
 	name, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
@@ -426,7 +452,11 @@ func restGetYamlProfileByName(w http.ResponseWriter, r *http.Request) {
  *	- 409: an associated command's name is a duplicate for the profile or if the name is determined to not be uniqe with regard to others
  * 	- 503: Server Error
  */
-func restGetYamlProfileById(w http.ResponseWriter, r *http.Request) {
+func restGetYamlProfileById(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient) {
+
 	vars := mux.Vars(r)
 	id := vars[ID]
 
@@ -441,7 +471,7 @@ func restGetYamlProfileById(w http.ResponseWriter, r *http.Request) {
 		} else {
 			httpErrorHandler.Handle(w, err, errorconcept.Default.InternalServerError)
 		}
-		LoggingClient.Error(err.Error())
+		loggingClient.Error(err.Error())
 		return
 	}
 
@@ -457,12 +487,17 @@ func restGetYamlProfileById(w http.ResponseWriter, r *http.Request) {
 }
 
 // Notify the associated device services for changes in the device profile
-func notifyProfileAssociates(dp models.DeviceProfile, dl device.DeviceLoader, action string) error {
+func notifyProfileAssociates(
+	dp models.DeviceProfile,
+	dl device.DeviceLoader,
+	action string,
+	loggingClient logger.LoggingClient) error {
+
 	// Get the devices
-	op := device.NewProfileIdExecutor(Configuration.Service, dl, LoggingClient, dp.Id)
+	op := device.NewProfileIdExecutor(Configuration.Service, dl, loggingClient, dp.Id)
 	d, err := op.Execute()
 	if err != nil {
-		LoggingClient.Error(err.Error())
+		loggingClient.Error(err.Error())
 		return err
 	}
 
@@ -478,8 +513,8 @@ func notifyProfileAssociates(dp models.DeviceProfile, dl device.DeviceLoader, ac
 		}
 	}
 
-	if err := notifyAssociates(ds, dp.Id, action, models.PROFILE); err != nil {
-		LoggingClient.Error(err.Error())
+	if err := notifyAssociates(ds, dp.Id, action, models.PROFILE, loggingClient); err != nil {
+		loggingClient.Error(err.Error())
 		return err
 	}
 

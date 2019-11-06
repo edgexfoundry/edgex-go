@@ -22,13 +22,19 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/operators/addressable"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
+
 	"github.com/gorilla/mux"
 )
 
-func restGetAllAddressables(w http.ResponseWriter, _ *http.Request) {
-	op := addressable.NewAddressableLoadAll(Configuration.Service, dbClient, LoggingClient)
+func restGetAllAddressables(
+	w http.ResponseWriter,
+	loggingClient logger.LoggingClient) {
+
+	op := addressable.NewAddressableLoadAll(Configuration.Service, dbClient, loggingClient)
 	addressables, err := op.Execute()
 	if err != nil {
 		httpErrorHandler.HandleOneVariant(w, err, errorconcept.Common.LimitExceeded, errorconcept.Default.InternalServerError)
@@ -44,7 +50,11 @@ func restGetAllAddressables(w http.ResponseWriter, _ *http.Request) {
 
 // Add a new addressable
 // The name must be unique
-func restAddAddressable(w http.ResponseWriter, r *http.Request) {
+func restAddAddressable(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient) {
+
 	defer r.Body.Close()
 	var a models.Addressable
 	err := json.NewDecoder(r.Body).Decode(&a)
@@ -69,13 +79,17 @@ func restAddAddressable(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	_, err = w.Write([]byte(id))
 	if err != nil {
-		LoggingClient.Error(err.Error())
+		loggingClient.Error(err.Error())
 		return
 	}
 }
 
 // Update addressable by ID or name (ID used first)
-func restUpdateAddressable(w http.ResponseWriter, r *http.Request) {
+func restUpdateAddressable(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient) {
+
 	defer r.Body.Close()
 	var a models.Addressable
 	err := json.NewDecoder(r.Body).Decode(&a)
@@ -102,7 +116,7 @@ func restUpdateAddressable(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	_, err = w.Write([]byte("true"))
 	if err != nil {
-		LoggingClient.Error(err.Error())
+		loggingClient.Error(err.Error())
 		return
 	}
 }
