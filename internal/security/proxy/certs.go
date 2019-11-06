@@ -22,6 +22,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/edgexfoundry/edgex-go/internal"
 )
@@ -58,9 +59,15 @@ func (cs certificate) Load() (*CertPair, error) {
 	if err != nil {
 		return nil, err
 	}
-	cp, err := cs.retrieve(t)
-	if err != nil {
-		return nil, err
+	var cp *CertPair
+	for {
+		cp, err = cs.retrieve(t)
+		if err != nil {
+			//return nil, err
+			time.Sleep(1 * time.Second)
+			continue
+		}
+		break
 	}
 	err = cs.validate(cp)
 	if err != nil {
