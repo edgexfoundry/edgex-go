@@ -109,7 +109,7 @@ func (c *Client) UpdateEvent(e correlation.Event) (err error) {
 
 	id := event.ID
 
-	o, err := eventByID(conn, id)
+	o, err := eventByID(conn, id, false)
 	if err != nil {
 		if err == redis.ErrNil {
 			return db.ErrNotFound
@@ -137,7 +137,7 @@ func (c *Client) EventById(id string) (event contract.Event, err error) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
-	event, err = eventByID(conn, id)
+	event, err = eventByID(conn, id, false)
 	if err != nil {
 		if err == redis.ErrNil {
 			return event, db.ErrNotFound
@@ -201,11 +201,11 @@ func (c *Client) EventCountByDeviceId(id string) (count int, err error) {
 // Delete an event by ID. Readings are not deleted as this should be handled by the contract layer
 // 404 - Event not found
 // 503 - Unexpected problems
-func (c *Client) DeleteEventById(id string) (err error) {
+func (c *Client) DeleteEventById(id string) error {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
-	err = deleteEvent(conn, id)
+	err := deleteEvent(conn, id)
 	if err != nil {
 		if err == redis.ErrNil {
 			return db.ErrNotFound
@@ -1089,11 +1089,21 @@ func addEvent(conn redis.Conn, e correlation.Event) (id string, err error) {
 }
 
 func deleteEvent(conn redis.Conn, id string) error {
+	o, err := eventByID(conn, id, true)
+	if err != nil {
+		if err == redis.ErrNil {
+			return db.ErrNotFound
+		}
+		return err
+	}
+
 	_ = conn.Send("MULTI")
 	_ = conn.Send("UNLINK", id)
 	_ = conn.Send("UNLINK", db.EventsCollection+":readings:"+id)
 	_ = conn.Send("ZREM", db.EventsCollection, id)
 	_ = conn.Send("ZREM", db.EventsCollection+":created", id)
+	_ = conn.Send("ZREM", db.EventsCollection+":pushed", id)
+	_ = conn.Send("ZREM", db.EventsCollection+":device:"+o.Device, id)
 	res, err := redis.Values(conn.Do("EXEC"))
 	if err != nil {
 		return err
@@ -1108,7 +1118,7 @@ func deleteEvent(conn redis.Conn, id string) error {
 	return nil
 }
 
-func eventByID(conn redis.Conn, id string) (event contract.Event, err error) {
+func eventByID(conn redis.Conn, id string, skipReadings bool) (event contract.Event, err error) {
 	obj, err := redis.Bytes(conn.Do("GET", id))
 	if err == redis.ErrNil {
 		return event, db.ErrNotFound
@@ -1117,7 +1127,7 @@ func eventByID(conn redis.Conn, id string) (event contract.Event, err error) {
 		return event, err
 	}
 
-	event, err = unmarshalEvent(obj)
+	event, err = unmarshalEvent(obj, skipReadings)
 	if err != nil {
 		return event, err
 	}
