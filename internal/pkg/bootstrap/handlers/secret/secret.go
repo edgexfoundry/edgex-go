@@ -80,14 +80,16 @@ func (s *SecretProvider) BootstrapHandler(
 // If a tokenfile is present it will override the Authentication.AuthToken value.
 func (s *SecretProvider) getSecretConfig(secretStoreInfo config.SecretStoreInfo) (vault.SecretConfig, error) {
 	secretConfig := vault.SecretConfig{
-		Host:           secretStoreInfo.Host,
-		Port:           secretStoreInfo.Port,
-		Path:           secretStoreInfo.Path,
-		Protocol:       secretStoreInfo.Protocol,
-		Namespace:      secretStoreInfo.Namespace,
-		RootCaCertPath: secretStoreInfo.RootCaCertPath,
-		ServerName:     secretStoreInfo.ServerName,
-		Authentication: secretStoreInfo.Authentication,
+		Host:                    secretStoreInfo.Host,
+		Port:                    secretStoreInfo.Port,
+		Path:                    secretStoreInfo.Path,
+		Protocol:                secretStoreInfo.Protocol,
+		Namespace:               secretStoreInfo.Namespace,
+		RootCaCertPath:          secretStoreInfo.RootCaCertPath,
+		ServerName:              secretStoreInfo.ServerName,
+		Authentication:          secretStoreInfo.Authentication,
+		AdditionalRetryAttempts: secretStoreInfo.AdditionalRetryAttempts,
+		RetryWaitPeriod:         secretStoreInfo.RetryWaitPeriod,
 	}
 
 	if !s.isSecurityEnabled() || secretStoreInfo.TokenFile == "" {
