@@ -81,7 +81,6 @@ func unmarshalEvent(o []byte) (contract.Event, error) {
 	if err != nil {
 		return contract.Event{}, err
 	}
-
 	defer conn.Close()
 
 	objects, err := getObjectsByRange(conn, db.EventsCollection+":readings:"+s.ID, 0, -1)
