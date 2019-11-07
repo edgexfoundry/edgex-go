@@ -112,12 +112,14 @@ func getObjectsByValues(conn redis.Conn, vals ...string) (objects [][]byte, err 
 	return objects, nil
 }
 
-// getObjectsByRange retrieves the entries for keys enumerated in a sorted set. The entries are retrieved in the sorted set order.
+// getObjectsByRange retrieves the entries for keys enumerated in a sorted set.
+// The entries are retrieved in the sorted set order.
 func getObjectsByRange(conn redis.Conn, key string, start, end int) (objects [][]byte, err error) {
 	return getObjectsBySomeRange(conn, "ZRANGE", key, start, end)
 }
 
-// getObjectsByRevRange retrieves the entries for keys enumerated in a sorted set. The entries are retrieved in the reverse sorted set order.
+// getObjectsByRevRange retrieves the entries for keys enumerated in a sorted set.
+// The entries are retrieved in the reverse sorted set order.
 func getObjectsByRevRange(conn redis.Conn, key string, start int, end int) (objects [][]byte, err error) {
 	return getObjectsBySomeRange(conn, "ZREVRANGE", key, start, end)
 }
@@ -135,6 +137,10 @@ func getObjectsBySomeRange(conn redis.Conn, command string, key string, start in
 		if err != nil {
 			return nil, err
 		}
+	}
+
+	if len(objects) == 1 && objects[0] == nil {
+		objects = [][]byte{}
 	}
 
 	return objects, nil

@@ -109,7 +109,7 @@ func (c *Client) UpdateEvent(e correlation.Event) (err error) {
 
 	id := event.ID
 
-	o, err := eventByID(conn, id, false)
+	o, err := eventByID(conn, id)
 	if err != nil {
 		if err == redis.ErrNil {
 			return db.ErrNotFound
@@ -137,7 +137,7 @@ func (c *Client) EventById(id string) (event contract.Event, err error) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
-	event, err = eventByID(conn, id, false)
+	event, err = eventByID(conn, id)
 	if err != nil {
 		if err == redis.ErrNil {
 			return event, db.ErrNotFound
@@ -1089,7 +1089,7 @@ func addEvent(conn redis.Conn, e correlation.Event) (id string, err error) {
 }
 
 func deleteEvent(conn redis.Conn, id string) error {
-	o, err := eventByID(conn, id, true)
+	o, err := eventByID(conn, id)
 	if err != nil {
 		if err == redis.ErrNil {
 			return db.ErrNotFound
@@ -1118,7 +1118,7 @@ func deleteEvent(conn redis.Conn, id string) error {
 	return nil
 }
 
-func eventByID(conn redis.Conn, id string, skipReadings bool) (event contract.Event, err error) {
+func eventByID(conn redis.Conn, id string) (event contract.Event, err error) {
 	obj, err := redis.Bytes(conn.Do("GET", id))
 	if err == redis.ErrNil {
 		return event, db.ErrNotFound
@@ -1127,7 +1127,7 @@ func eventByID(conn redis.Conn, id string, skipReadings bool) (event contract.Ev
 		return event, err
 	}
 
-	event, err = unmarshalEvent(obj, skipReadings)
+	event, err = unmarshalEvent(obj)
 	if err != nil {
 		return event, err
 	}
