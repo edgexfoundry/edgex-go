@@ -50,7 +50,7 @@ func marshalEvent(event correlation.Event) (out []byte, err error) {
 func unmarshalEvents(objects [][]byte, events []contract.Event) (err error) {
 	for i, o := range objects {
 		if len(o) > 0 {
-			events[i], err = unmarshalEvent(o, false)
+			events[i], err = unmarshalEvent(o)
 			if err != nil {
 				return err
 			}
@@ -60,7 +60,7 @@ func unmarshalEvents(objects [][]byte, events []contract.Event) (err error) {
 	return nil
 }
 
-func unmarshalEvent(o []byte, skipReadings bool) (contract.Event, error) {
+func unmarshalEvent(o []byte) (contract.Event, error) {
 	var s redisEvent
 
 	err := json.Unmarshal(o, &s)
@@ -80,10 +80,6 @@ func unmarshalEvent(o []byte, skipReadings bool) (contract.Event, error) {
 	conn, err := getConnection()
 	if err != nil {
 		return contract.Event{}, err
-	}
-
-	if skipReadings {
-		return event, nil
 	}
 
 	defer conn.Close()
