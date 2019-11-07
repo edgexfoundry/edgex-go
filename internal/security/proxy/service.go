@@ -173,8 +173,12 @@ func (s *Service) postCert(cert CertificateLoader) error {
 		if err != nil {
 			return err
 		}
-		e := fmt.Sprintf("failed to add certificate with errorcode %d, error %s", resp.StatusCode, string(b))
+		reason := string(b)
+		e := fmt.Sprintf("failed to add certificate with errorcode %d, error %s", resp.StatusCode, reason)
 		LoggingClient.Error(e)
+		if (resp.StatusCode == http.StatusBadRequest) && (strings.Index(reason, "existing certificate") != -1) {
+			e = fmt.Sprintf("certificate already exists on reverse proxy")
+		}
 		return errors.New(e)
 	}
 	return nil
