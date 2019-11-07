@@ -59,8 +59,7 @@ layout:
   /etc/luarocks:
     bind: $SNAP/etc/luarocks
 
-# TODO: upgrade to stable before releasing to beta/candidate/stable
-grade: devel
+grade: stable
 confinement: strict
 
 apps:
