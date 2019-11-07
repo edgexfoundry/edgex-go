@@ -654,7 +654,7 @@ parts:
         redis.conf > $SNAPCRAFT_PART_INSTALL/config/redis/redis.conf
   edgex-mongo:
     source: https://github.com/edgexfoundry/docker-edgex-mongo.git
-    source-branch: master
+    source-branch: fuji
     source-depth: 1
     plugin: make
     after: [go]
@@ -887,7 +887,7 @@ parts:
 
   support-rulesengine:
     source: https://github.com/edgexfoundry/support-rulesengine.git
-    source-branch: "master"
+    source-branch: master
     source-depth: 1
     plugin: maven
     maven-options: ["-Dmaven.test.skip=true"]
@@ -1113,7 +1113,7 @@ parts:
   device-virtual-go:
     source: https://github.com/edgexfoundry/device-virtual-go.git
     source-depth: 1
-    source-branch: master
+    source-branch: fuji
     plugin: make
     after: [go]
     override-build: |
@@ -1145,7 +1145,7 @@ parts:
   device-random:
     source: https://github.com/edgexfoundry/device-random.git
     source-depth: 1
-    source-branch: master
+    source-branch: fuji
     plugin: make
     after: [go]
     override-build: |
