@@ -59,8 +59,7 @@ layout:
   /etc/luarocks:
     bind: $SNAP/etc/luarocks
 
-# TODO: upgrade to stable before releasing to beta/candidate/stable
-grade: devel
+grade: stable
 confinement: strict
 
 apps:
@@ -111,14 +110,14 @@ apps:
     adapter: full
     after:
       - postgres
-      - pkisetup
+      - security-secrets-setup
     command: bin/kong-daemon.sh
     command-chain:
       - bin/perl5lib-launch.sh
       - bin/kong-launch.sh
     daemon: forking
     environment:
-      KONG_CONF: $SNAP_DATA/config/security-api-gateway/kong.conf
+      KONG_CONF: $SNAP_DATA/config/security-proxy-setup/kong.conf
       KONG_LOGS_DIR: $SNAP_COMMON/logs
       KONG_PROXY_ACCESS_LOG: $SNAP_COMMON/logs/kong-proxy-access.log
       KONG_ADMIN_ACCESS_LOG: $SNAP_COMMON/logs/kong-admin-access.log
@@ -132,19 +131,16 @@ apps:
       - network
       - network-bind
     stop-command: bin/kong-stop.sh
-  pkisetup:
+  security-secrets-setup:
     adapter: full
-    command: bin/pkisetup-wrapper.sh
+    command: bin/security-secrets-setup -confdir $SNAP_DATA/config/security-secrets-setup/res generate
     daemon: oneshot
-    environment:
-      PKI_SETUP_VAULT_FILE: $SNAP_DATA/config/security-secret-store/pkisetup-vault.json
-      PKI_SETUP_KONG_FILE: $SNAP_DATA/config/security-secret-store/pkisetup-kong.json
     start-timeout: 15m
   vault:
     adapter: none
     after:
       - consul
-      - pkisetup
+      - security-secrets-setup
       - core-config-seed
     command: bin/vault server --config $VAULT_CONFIG
     daemon: simple
@@ -155,36 +151,33 @@ apps:
     plugs:
       - network
       - network-bind
-  vault-worker:
+  security-secretstore-setup:
     adapter: full
     after: [vault]
-    command: bin/vault-worker-wrapper.sh
-    daemon: oneshot
-    start-timeout: 15m
-    plugs:
-      - network
-      - network-bind
-  edgexproxy:
-    adapter: none
-    after:
-      - vault-worker
-      - kong-daemon
-    command: bin/edgexproxy-wrapper.sh
-    daemon: oneshot
-    start-timeout: 15m
-    plugs:
-      - network
-      - network-bind
-  edgex-mongo:
-    adapter: full
-    after: [mongod]
-    command: bin/edgex-mongo -confdir $SNAP_DATA/config/edgex-mongo/res
+    command: bin/security-secretstore-setup -confdir $SNAP_DATA/config/security-secretstore-setup/res $INIT_ARG
     daemon: oneshot
     environment:
-      # TODO: set this to true and make it configurable when docker-edgex-mongo
-      # is integrated with vault access for database access, etc. see
-      # https://github.com/edgexfoundry/edgex-go/issues/1840
-      EDGEX_SECURITY_SECRET_STORE: "false"
+      INIT_ARG: "--init=true"
+    start-timeout: 15m
+    plugs: [network]
+  security-proxy-setup:
+    adapter: none
+    after:
+      - security-secretstore-setup
+      - kong-daemon
+    command: bin/security-proxy-setup -confdir $SNAP_DATA/config/security-proxy-setup/res $INIT_ARG
+    environment:
+      INIT_ARG: "--init=true"
+    daemon: oneshot
+    start-timeout: 15m
+    plugs: [network]
+  edgex-mongo:
+    adapter: full
+    after: [mongod, security-secretstore-setup]
+    command: bin/edgex-mongo -confdir $SNAP_DATA/config/edgex-mongo/res
+    command-chain:
+      - bin/security-secret-store-env-var.sh
+    daemon: oneshot
     start-timeout: 15m
     plugs: [network]
   core-data:
@@ -192,8 +185,10 @@ apps:
     after:
       - core-config-seed
       - edgex-mongo
-      - edgexproxy
+      - security-proxy-setup
     command: bin/core-data -confdir $SNAP_DATA/config/core-data/res --registry
+    command-chain:
+      - bin/security-secret-store-env-var.sh
     daemon: simple
     plugs: [network, network-bind]
     # for now, specify a shorter stop-timeout until services learn how
@@ -205,8 +200,10 @@ apps:
     after:
       - core-config-seed
       - edgex-mongo
-      - edgexproxy
+      - security-proxy-setup
     command: bin/core-metadata -confdir $SNAP_DATA/config/core-metadata/res --registry
+    command-chain:
+      - bin/security-secret-store-env-var.sh
     daemon: simple
     plugs: [network, network-bind]
     stop-timeout: 10s
@@ -215,8 +212,10 @@ apps:
     after:
       - core-config-seed
       - edgex-mongo
-      - edgexproxy
+      - security-proxy-setup
     command: bin/core-command -confdir $SNAP_DATA/config/core-command/res --registry
+    command-chain:
+      - bin/security-secret-store-env-var.sh
     daemon: simple
     plugs: [network, network-bind]
     stop-timeout: 10s
@@ -225,8 +224,10 @@ apps:
     after:
       - core-config-seed
       - edgex-mongo
-      - edgexproxy
+      - security-proxy-setup
     command: bin/support-logging -confdir $SNAP_DATA/config/support-logging/res --registry
+    command-chain:
+      - bin/security-secret-store-env-var.sh
     daemon: simple
     plugs: [network, network-bind]
     stop-timeout: 10s
@@ -235,8 +236,10 @@ apps:
     after:
       - core-config-seed
       - edgex-mongo
-      - edgexproxy
+      - security-proxy-setup
     command: bin/support-notifications -confdir $SNAP_DATA/config/support-notifications/res --registry
+    command-chain:
+      - bin/security-secret-store-env-var.sh
     daemon: simple
     plugs: [network, network-bind]
     stop-timeout: 10s
@@ -245,8 +248,10 @@ apps:
     after:
       - core-config-seed
       - edgex-mongo
-      - edgexproxy
+      - security-proxy-setup
     command: bin/support-scheduler -confdir $SNAP_DATA/config/support-scheduler/res --registry
+    command-chain:
+      - bin/security-secret-store-env-var.sh
     daemon: simple
     plugs: [network, network-bind]
     stop-timeout: 10s
@@ -256,8 +261,10 @@ apps:
       - export-client
       - core-config-seed
       - edgex-mongo
-      - edgexproxy
+      - security-proxy-setup
     command: bin/support-rulesengine-wrapper.sh
+    command-chain:
+      - bin/security-secret-store-env-var.sh
     daemon: simple
     plugs: [network, network-bind]
   export-client:
@@ -265,8 +272,10 @@ apps:
     after:
       - core-config-seed
       - edgex-mongo
-      - edgexproxy
+      - security-proxy-setup
     command: bin/export-client -confdir $SNAP_DATA/config/export-client/res --registry
+    command-chain:
+      - bin/security-secret-store-env-var.sh
     daemon: simple
     plugs: [network, network-bind]
     stop-timeout: 10s
@@ -275,8 +284,10 @@ apps:
     after:
       - core-config-seed
       - edgex-mongo
-      - edgexproxy
+      - security-proxy-setup
     command: bin/export-distro -confdir $SNAP_DATA/config/export-distro/res --registry
+    command-chain:
+      - bin/security-secret-store-env-var.sh
     daemon: simple
     plugs: [network, network-bind]
     stop-timeout: 10s
@@ -285,8 +296,10 @@ apps:
     after:
       - core-config-seed
       - edgex-mongo
-      - edgexproxy
+      - security-proxy-setup
     command: bin/sys-mgmt-agent -confdir $SNAP_DATA/config/sys-mgmt-agent/res --registry
+    command-chain:
+      - bin/security-secret-store-env-var.sh
     daemon: simple
     plugs: [network, network-bind]
   device-random:
@@ -294,7 +307,7 @@ apps:
     after:
       - core-config-seed
       - edgex-mongo
-      - edgexproxy
+      - security-proxy-setup
       - core-data
       - core-metadata
       - support-logging
@@ -308,7 +321,7 @@ apps:
     after:
       - core-config-seed
       - edgex-mongo
-      - edgexproxy
+      - security-proxy-setup
       - core-data
       - core-metadata
       - support-logging
@@ -417,7 +430,7 @@ apps:
 parts:
   version:
     plugin: nil
-    # as with curl plugin, the source dir is unrelated to this part and is used
+    # as with static-packages part, the source dir is unrelated to this part and is used
     # since it changes rarely and therefore will not trigger a new pull
     source: snap/local/build-helpers
     override-pull: |
@@ -425,7 +438,7 @@ parts:
       PROJECT_VERSION=$(cat VERSION)
       GIT_REVISION=$(git rev-parse --short HEAD)
       snapcraftctl set-version ${PROJECT_VERSION}-$(date +%Y%m%d)+${GIT_REVISION}
-  curl:
+  static-packages:
     plugin: nil
     # the default source for a part that doesn't specify one is ".", which
     # then means snapcraft will scan the full git directory here and determine
@@ -437,6 +450,7 @@ parts:
     source: snap/local/build-helpers
     stage-packages:
       - curl
+      - jq
 
   # snapcraft-preload is necessary to make postgres just use a different
   # lockfile location in /dev/shm
@@ -501,7 +515,7 @@ parts:
 
   go-build-helper:
     plugin: dump
-    # see comment for curl part about specifying a source part here
+    # see comment for static-packages part about specifying a source part here
     source: snap/local/build-helpers
     prime: [-*]
 
@@ -639,7 +653,7 @@ parts:
         redis.conf > $SNAPCRAFT_PART_INSTALL/config/redis/redis.conf
   edgex-mongo:
     source: https://github.com/edgexfoundry/docker-edgex-mongo.git
-    source-branch: master
+    source-branch: fuji
     source-depth: 1
     plugin: make
     after: [go]
@@ -651,10 +665,15 @@ parts:
 
       install -d "$SNAPCRAFT_PART_INSTALL/config/edgex-mongo/res/"
 
-      # TODO: set CACertPath and TokenPath when docker-edgex-mongo is integrated
-      # with vault, see https://github.com/edgexfoundry/edgex-go/issues/1840
-      cp "./cmd/res/configuration.toml" \
-        "$SNAPCRAFT_PART_INSTALL/config/edgex-mongo/res/configuration.toml"
+      # set CACertPath and TokenPath to work with security on by default
+      # these things are also configurable by the user, that handling is done in
+      # the install hook
+      cat "./cmd/res/configuration.toml" | \
+        sed -e s:./logs/security-proxy-setup.log:\$SNAP_COMMON/security-proxy-setup.log: \
+            -e "s@TokenPath = \"/vault/config/assets/resp-init.json\"@TokenPath = \"\$SNAP_DATA/config/security-secrets-setup/res/resp-init.json\"@" \
+            -e "s@CACertPath = \"/vault/config/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem\"@CACertPath = \"\$SNAP_DATA/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem\"@" \
+            > \
+       "$SNAPCRAFT_PART_INSTALL/config/edgex-mongo/res/configuration.toml"
 
       install -DT "./cmd/Attribution.txt" \
         "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/docker-edgex-mongo/Attribution.txt"
@@ -679,6 +698,9 @@ parts:
       install -DT "./cmd/support-notifications/support-notifications" "$SNAPCRAFT_PART_INSTALL/bin/support-notifications"
       install -DT "./cmd/support-scheduler/support-scheduler" "$SNAPCRAFT_PART_INSTALL/bin/support-scheduler"
       install -DT "./cmd/sys-mgmt-agent/sys-mgmt-agent" "$SNAPCRAFT_PART_INSTALL/bin/sys-mgmt-agent"
+      install -DT "./cmd/security-proxy-setup/security-proxy-setup" "$SNAPCRAFT_PART_INSTALL/bin/security-proxy-setup"
+      install -DT "./cmd/security-secrets-setup/security-secrets-setup" "$SNAPCRAFT_PART_INSTALL/bin/security-secrets-setup"
+      install -DT "./cmd/security-secretstore-setup/security-secretstore-setup" "$SNAPCRAFT_PART_INSTALL/bin/security-secretstore-setup"
 
 
       # FIXME: settings can't be overridden from the cmd-line!
@@ -693,6 +715,9 @@ parts:
       install -d "$SNAPCRAFT_PART_INSTALL/config/support-notifications/res/"
       install -d "$SNAPCRAFT_PART_INSTALL/config/support-scheduler/res/"
       install -d "$SNAPCRAFT_PART_INSTALL/config/sys-mgmt-agent/res/"
+      install -d "$SNAPCRAFT_PART_INSTALL/config/security-proxy-setup/res/"
+      install -d "$SNAPCRAFT_PART_INSTALL/config/security-secrets-setup/res/"
+      install -d "$SNAPCRAFT_PART_INSTALL/config/security-secretstore-setup/res/"
 
       install -d "$SNAPCRAFT_PART_INSTALL/config/config-seed/res/properties/edgex-support-rulesengine/"
 
@@ -709,21 +734,29 @@ parts:
 
       cat "./cmd/core-command/res/configuration.toml" | \
         sed -e s:./logs/edgex-core-command.log:\$SNAP_COMMON/core-command.log: \
+            -e "s@RootCaCertPath = '/vault/config/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem'@RootCaCertPath = \"\$SNAP_DATA/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem\"@" \
+            -e "s@TokenFile = '/vault/config/assets/resp-init.json'@TokenFile = \"\$SNAP_DATA/config/security-secrets-setup/res/resp-init.json\"@" \
             -e s:'http\://localhost\:48061/api/v1/logs':: > \
        "$SNAPCRAFT_PART_INSTALL/config/core-command/res/configuration.toml"
 
       cat "./cmd/core-data/res/configuration.toml" | \
         sed -e s:./logs/edgex-core-data.log:\$SNAP_COMMON/core-data.log: \
+            -e "s@RootCaCertPath = '/vault/config/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem'@RootCaCertPath = \"\$SNAP_DATA/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem\"@" \
+            -e "s@TokenFile = '/vault/config/assets/resp-init.json'@TokenFile = \"\$SNAP_DATA/config/security-secrets-setup/res/resp-init.json\"@" \
             -e s:'http\://localhost\:48061/api/v1/logs':: > \
        "$SNAPCRAFT_PART_INSTALL/config/core-data/res/configuration.toml"
 
       cat "./cmd/core-metadata/res/configuration.toml" | \
         sed -e s:./logs/edgex-core-metadata.log:\$SNAP_COMMON/core-metadata.log: \
+            -e "s@RootCaCertPath = '/vault/config/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem'@RootCaCertPath = \"\$SNAP_DATA/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem\"@" \
+            -e "s@TokenFile = '/vault/config/assets/resp-init.json'@TokenFile = \"\$SNAP_DATA/config/security-secrets-setup/res/resp-init.json\"@" \
             -e s:'http\://localhost\:48061/api/v1/logs':: > \
        "$SNAPCRAFT_PART_INSTALL/config/core-metadata/res/configuration.toml"
 
       cat "./cmd/export-client/res/configuration.toml" | \
         sed -e s:./logs/edgex-export-client.log:\$SNAP_COMMON/export-client.log: \
+            -e "s@RootCaCertPath = '/vault/config/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem'@RootCaCertPath = \"\$SNAP_DATA/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem\"@" \
+            -e "s@TokenFile = '/vault/config/assets/resp-init.json'@TokenFile = \"\$SNAP_DATA/config/security-secrets-setup/res/resp-init.json\"@" \
             -e s:'http\://localhost\:48061/api/v1/logs':: > \
        "$SNAPCRAFT_PART_INSTALL/config/export-client/res/configuration.toml"
 
@@ -737,17 +770,23 @@ parts:
       # in the snap by default
       cat "./cmd/support-logging/res/configuration.toml" | \
         sed -e s:./logs/edgex-support-logging.log:\$SNAP_COMMON/support-logging.log: \
+            -e "s@RootCaCertPath = '/vault/config/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem'@RootCaCertPath = \"\$SNAP_DATA/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem\"@" \
+            -e "s@TokenFile = '/vault/config/assets/resp-init.json'@TokenFile = \"\$SNAP_DATA/config/security-secrets-setup/res/resp-init.json\"@" \
             -e s:"Persistence = 'database'":"Persistence = 'file'":\
             -e s:'http\://localhost\:48061/api/v1/logs':: > \
        "$SNAPCRAFT_PART_INSTALL/config/support-logging/res/configuration.toml"
 
       cat "./cmd/support-notifications/res/configuration.toml" | \
         sed -e s:./logs/edgex-support-notifications.log:\$SNAP_COMMON/support-notifications.log: \
+            -e "s@RootCaCertPath = '/vault/config/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem'@RootCaCertPath = \"\$SNAP_DATA/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem\"@" \
+            -e "s@TokenFile = '/vault/config/assets/resp-init.json'@TokenFile = \"\$SNAP_DATA/config/security-secrets-setup/res/resp-init.json\"@" \
             -e s:'http\://localhost\:48061/api/v1/logs':: > \
        "$SNAPCRAFT_PART_INSTALL/config/support-notifications/res/configuration.toml"
 
       cat "./cmd/support-scheduler/res/configuration.toml" | \
         sed -e s:./logs/edgex-support-scheduler.log:\$SNAP_COMMON/support-scheduler.log: \
+            -e "s@RootCaCertPath = '/vault/config/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem'@RootCaCertPath = \"\$SNAP_DATA/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem\"@" \
+            -e "s@TokenFile = '/vault/config/assets/resp-init.json'@TokenFile = \"\$SNAP_DATA/config/security-secrets-setup/res/resp-init.json\"@" \
             -e s:'http\://localhost\:48061/api/v1/logs':: > \
        "$SNAPCRAFT_PART_INSTALL/config/support-scheduler/res/configuration.toml"
 
@@ -757,6 +796,45 @@ parts:
             -e s:"ExecutorPath = '/path/to/the/file'":"ExecutorPath = '\$SNAP/bin/sys-mgmt-agent-snap-executor.sh'": \
             -e s:'http\://localhost\:48061/api/v1/logs':: > \
        "$SNAPCRAFT_PART_INSTALL/config/sys-mgmt-agent/res/configuration.toml"
+
+      # for security-secrets-setup, we need to replace the locations of where
+      # to write the certificates and such
+      cat "./cmd/security-secrets-setup/res/configuration.toml" | \
+        sed -e s:./logs/security-secrets-setup.log:\$SNAP_COMMON/security-secrets-setup.log: \
+            -e "s@DeployDir = \"/run/edgex/secrets\"@DeployDir = \"\$SNAP_DATA/pki/\"@" \
+            -e "s@CertConfigDir = \"./res\"@CertConfigDir = \"\$SNAP_DATA/config/security-secrets-setup/res\"@" \
+            > \
+       "$SNAPCRAFT_PART_INSTALL/config/security-secrets-setup/res/configuration.toml"
+
+      # also install the json config files for security-secrets-setup for kong 
+      # and vault PKI, note that the file contents are processed using the real
+      # value of $SNAP_DATA using jq in the install hook
+      cp "./cmd/security-secrets-setup/res/pkisetup-vault.json" \
+        "$SNAPCRAFT_PART_INSTALL/config/security-secrets-setup/res/pkisetup-vault.json" 
+      cp "./cmd/security-secrets-setup/res/pkisetup-kong.json" \
+        "$SNAPCRAFT_PART_INSTALL/config/security-secrets-setup/res/pkisetup-kong.json" 
+
+      # for security-proxy-setup we need to replace the token location and the 
+      # certificate location as well
+      cat "./cmd/security-proxy-setup/res/configuration.toml" | \
+        sed -e s:./logs/security-proxy-setup.log:\$SNAP_COMMON/security-proxy-setup.log: \
+            -e "s@TokenPath = \"res/resp-init.json\"@TokenPath = \"\$SNAP_DATA/config/security-secrets-setup/res/resp-init.json\"@" \
+            -e "s@CACertPath = \"res/EdgeXFoundryCA/EdgeXFoundryCA.pem\"@CACertPath = \"\$SNAP_DATA/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem\"@" \
+            > \
+       "$SNAPCRAFT_PART_INSTALL/config/security-proxy-setup/res/configuration.toml"
+
+      # for security-secretstore-setup we need to replace the token location and the 
+      # certificate location as well
+      cat "./cmd/security-secretstore-setup/res/configuration.toml" | \
+        sed -e s:./logs/security-secretstore-setup.log:\$SNAP_COMMON/security-secretstore-setup.log: \
+            -e "s@tokenfolderpath = \"/vault/config/assets\"@tokenfolderpath = \"\$SNAP_DATA/config/security-secrets-setup/res\"@" \
+            -e "s@cafilepath = \"/vault/config/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem\"@cafilepath = \"\$SNAP_DATA/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem\"@" \
+            -e "s@server = \"edgex-vault\"@server = \"localhost\"@" \
+            -e "s@certfilepath = \"/vault/config/pki/EdgeXFoundryCA/edgex-kong.pem\"@certfilepath = \"\$SNAP_DATA/pki/EdgeXFoundryCA/localhost.pem\"@" \
+            -e "s@keyfilepath = \"/vault/config/pki/EdgeXFoundryCA/edgex-kong.priv.key\"@keyfilepath = \"\$SNAP_DATA/pki/EdgeXFoundryCA/localhost.priv.key\"@" \
+            > \
+       "$SNAPCRAFT_PART_INSTALL/config/security-secretstore-setup/res/configuration.toml"
+
 
       # handle license/attribution files
       install -DT "./cmd/core-command/Attribution.txt" \
@@ -808,7 +886,7 @@ parts:
 
   support-rulesengine:
     source: https://github.com/edgexfoundry/support-rulesengine.git
-    source-branch: "master"
+    source-branch: master
     source-depth: 1
     plugin: maven
     maven-options: ["-Dmaven.test.skip=true"]
@@ -939,8 +1017,8 @@ parts:
     override-build: |
       # first copy the default config file provided and install it into $SNAPCRAFT_PART_INSTALL
       # it will be generated/configured during the install hook
-      mkdir -p $SNAPCRAFT_PART_INSTALL/config/security-api-gateway
-      cp kong.conf.default $SNAPCRAFT_PART_INSTALL/config/security-api-gateway/kong.conf
+      mkdir -p $SNAPCRAFT_PART_INSTALL/config/security-proxy-setup
+      cp kong.conf.default $SNAPCRAFT_PART_INSTALL/config/security-proxy-setup/kong.conf
 
       # handle the location of openssl + libcrypto by architecture
       # cause luarocks is silly and hardcodes /usr/lib/x86_64-linux-gnu as the lib search path
@@ -1030,81 +1108,11 @@ parts:
       rm -rf $SNAPCRAFT_PART_INSTALL/usr/share/doc/golang.org/x/oauth2/LICENSE
       rm -rf $SNAPCRAFT_PART_INSTALL/usr/share/doc/google.golang.org/grpc/LICENSE
 
-  security-secret-store:
-    source: https://github.com/edgexfoundry/security-secret-store.git
-    source-branch: master
-    source-depth: 1
-    plugin: make
-    override-build: |
-      cd $SNAPCRAFT_PART_SRC
-      make build
-
-      install -DT cmd/pkisetup/pkisetup "$SNAPCRAFT_PART_INSTALL/bin/pkisetup"
-      install -DT cmd/vaultworker/edgex-vault-worker "$SNAPCRAFT_PART_INSTALL/bin/vault-worker"
-
-      # modify the configuration file for the vault-worker
-      install -d "$SNAPCRAFT_PART_INSTALL/config/security-secret-store/res/"
-      cat "cmd/vaultworker/res/configuration.toml" | \
-        sed -e "s@tokenpath = \"res\\\\\\\\resp-init.json\"@tokenpath = \"res/resp-init.json\"@" \
-            -e "s@\"/vault/config/pki/@\"\$SNAP_DATA/vault/pki/@g" \
-            -e "s@EdgeXFoundryCA/edgex-vault.pem@EdgeXFoundryCA/localhost.pem@" \
-            -e "s@EdgeXFoundryCA/edgex-vault.priv.key@EdgeXFoundryCA/localhost.priv.key@" \
-            -e "s@tokenfolderpath = \"/vault/config/assets\"@tokenfolderpath = \"\$SNAP_DATA/config/security-secret-store/res\"@" \
-        > "$SNAPCRAFT_PART_INSTALL/config/security-secret-store/res/configuration.toml"
-
-      # install the hcl files too for vault accesses
-      install -DT "cmd/vaultworker/res/vault-policy-admin.hcl" "$SNAPCRAFT_PART_INSTALL/config/security-secret-store/res/vault-policy-admin.hcl"
-      install -DT "cmd/vaultworker/res/vault-policy-kong.hcl" "$SNAPCRAFT_PART_INSTALL/config/security-secret-store/res/vault-policy-kong.hcl"
-
-      # also install the pki config files
-      install -DT configs/pkisetup-kong.json "$SNAPCRAFT_PART_INSTALL/config/security-secret-store/pkisetup-kong.json"
-      install -DT configs/pkisetup-vault.json "$SNAPCRAFT_PART_INSTALL/config/security-secret-store/pkisetup-vault.json"
-    prime:
-      - bin/*
-      - config/*
-
-  security-api-gateway:
-    after: [go]
-    source: https://github.com/edgexfoundry/security-api-gateway.git
-    source-branch: master
-    source-depth: 1
-    plugin: make
-    stage-packages:
-      - openssl
-      - jq
-      - bind9utils
-      # for dig
-      - dnsutils
-      - libdb5.3
-    override-build: |
-      cd $SNAPCRAFT_PART_SRC
-      make build
-
-      install -DT cmd/edgexproxy/edgexproxy "$SNAPCRAFT_PART_INSTALL/bin/edgexproxy"
-
-      # also modify the configuration file to use "/" instead of "\" in the file
-      # and set the snis by default to be localhost so that https works when using the certificate authority 
-      # file generated and a url like "https://localhost:8443/{svc}" etc. for kong
-      mkdir -p $SNAPCRAFT_PART_INSTALL/config/security-api-gateway/res
-      cp cmd/edgexproxy/res/configuration.toml $SNAPCRAFT_PART_INSTALL/config/security-api-gateway/res/configuration.toml
-      sed -i \
-        -e "s@tokenpath = \"res\\\\\\\\resp-init.json\"@tokenpath = \"\$SNAP_DATA/config/security-api-gateway/res/kong-token.json\"@" \
-        -e "s:snis = \"edgex.com\":snis = \"localhost\":" \
-        -e "s:host = \"edgex-core-data\":host = \"localhost\":" \
-        -e "s:host = \"edgex-core-metadata\":host = \"localhost\":" \
-        -e "s:host = \"edgex-core-command\":host = \"localhost\":" \
-        -e "s:host = \"edgex-support-notifications\":host = \"localhost\":" \
-        -e "s:host = \"edgex-support-logging\":host = \"localhost\":" \
-        -e "s:host = \"edgex-export-distro\":host = \"localhost\":" \
-        -e "s:host = \"edgex-export-client\":host = \"localhost\":" \
-        -e "s:host = \"edgex-support-rulesengine\":host = \"localhost\":" \
-        $SNAPCRAFT_PART_INSTALL/config/security-api-gateway/res/configuration.toml
-
   # DEVICE SERVICES parts
   device-virtual-go:
     source: https://github.com/edgexfoundry/device-virtual-go.git
     source-depth: 1
-    source-branch: master
+    source-branch: fuji
     plugin: make
     after: [go]
     override-build: |
@@ -1136,7 +1144,7 @@ parts:
   device-random:
     source: https://github.com/edgexfoundry/device-random.git
     source-depth: 1
-    source-branch: master
+    source-branch: fuji
     plugin: make
     after: [go]
     override-build: |
