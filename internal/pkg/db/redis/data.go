@@ -852,12 +852,22 @@ func addEvent(conn redis.Conn, e correlation.Event) (id string, err error) {
 }
 
 func deleteEvent(conn redis.Conn, id string) error {
+	o, err := eventByID(conn, id)
+	if err != nil {
+		if err == redis.ErrNil {
+			return db.ErrNotFound
+		}
+		return err
+	}
+
 	_ = conn.Send("MULTI")
 	_ = conn.Send("UNLINK", id)
 	_ = conn.Send("ZRANGE", db.EventsCollection+":readings:"+id, 0, -1)
 	_ = conn.Send("UNLINK", db.EventsCollection+":readings:"+id)
 	_ = conn.Send("ZREM", db.EventsCollection, id)
 	_ = conn.Send("ZREM", db.EventsCollection+":created", id)
+	_ = conn.Send("ZREM", db.EventsCollection+":pushed", id)
+	_ = conn.Send("ZREM", db.EventsCollection+":device:"+o.Device, id)
 	res, err := redis.Values(conn.Do("EXEC"))
 	if err != nil {
 		return err

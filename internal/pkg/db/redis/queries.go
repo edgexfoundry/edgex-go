@@ -123,6 +123,11 @@ func getObjectsByRange(conn redis.Conn, key string, start, end int) (objects [][
 			return nil, err
 		}
 	}
+
+	if len(objects) == 1 && objects[0] == nil {
+		objects = [][]byte{}
+	}
+
 	return objects, nil
 }
 
