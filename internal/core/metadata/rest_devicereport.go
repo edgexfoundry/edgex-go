@@ -19,6 +19,7 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
@@ -28,9 +29,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func restGetAllDeviceReports(
-	w http.ResponseWriter,
-	loggingClient logger.LoggingClient) {
+func restGetAllDeviceReports(w http.ResponseWriter, dbClient interfaces.DBClient) {
 
 	res, err := dbClient.GetAllDeviceReports()
 	if err != nil {
@@ -54,7 +53,8 @@ func restGetAllDeviceReports(
 func restAddDeviceReport(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient) {
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
 
 	defer r.Body.Close()
 	var dr models.DeviceReport
@@ -78,7 +78,7 @@ func restAddDeviceReport(
 	}
 
 	// Notify associates
-	if err := notifyDeviceReportAssociates(dr, http.MethodPost, loggingClient); err != nil {
+	if err := notifyDeviceReportAssociates(dr, http.MethodPost, loggingClient, dbClient); err != nil {
 		loggingClient.Error(err.Error())
 	}
 
@@ -89,7 +89,8 @@ func restAddDeviceReport(
 func restUpdateDeviceReport(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient) {
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
 
 	defer r.Body.Close()
 	var from models.DeviceReport
@@ -110,7 +111,7 @@ func restUpdateDeviceReport(
 		}
 	}
 
-	if err := updateDeviceReportFields(from, &to, w); err != nil {
+	if err := updateDeviceReportFields(from, &to, w, dbClient); err != nil {
 		loggingClient.Error(err.Error())
 		return
 	}
@@ -121,7 +122,7 @@ func restUpdateDeviceReport(
 	}
 
 	// Notify Associates
-	if err := notifyDeviceReportAssociates(to, http.MethodPut, loggingClient); err != nil {
+	if err := notifyDeviceReportAssociates(to, http.MethodPut, loggingClient, dbClient); err != nil {
 		loggingClient.Error(err.Error())
 	}
 
@@ -130,10 +131,15 @@ func restUpdateDeviceReport(
 }
 
 // Update the relevant fields for the device report
-func updateDeviceReportFields(from models.DeviceReport, to *models.DeviceReport, w http.ResponseWriter) error {
+func updateDeviceReportFields(
+	from models.DeviceReport,
+	to *models.DeviceReport,
+	w http.ResponseWriter,
+	dbClient interfaces.DBClient) error {
+
 	if from.Device != "" {
 		to.Device = from.Device
-		if err := validateDevice(to.Device, w); err != nil {
+		if err := validateDevice(to.Device, w, dbClient); err != nil {
 			return err
 		}
 	}
@@ -155,7 +161,8 @@ func updateDeviceReportFields(from models.DeviceReport, to *models.DeviceReport,
 }
 
 // Validate that the device exists
-func validateDevice(d string, w http.ResponseWriter) error {
+func validateDevice(d string, w http.ResponseWriter, dbClient interfaces.DBClient) error {
+
 	if _, err := dbClient.GetDeviceByName(d); err != nil {
 		httpErrorHandler.HandleOneVariant(w, err, errorconcept.DeviceReport.DeviceNotFound, errorconcept.Default.ServiceUnavailable)
 		return err
@@ -164,7 +171,8 @@ func validateDevice(d string, w http.ResponseWriter) error {
 	return nil
 }
 
-func restGetReportById(w http.ResponseWriter, r *http.Request) {
+func restGetReportById(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
+
 	vars := mux.Vars(r)
 	var did string = vars[ID]
 	res, err := dbClient.GetDeviceReportById(did)
@@ -177,7 +185,8 @@ func restGetReportById(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(res)
 }
 
-func restGetReportByName(w http.ResponseWriter, r *http.Request) {
+func restGetReportByName(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
+
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
@@ -197,7 +206,8 @@ func restGetReportByName(w http.ResponseWriter, r *http.Request) {
 
 // Get a list of value descriptor names
 // The names are a union of all the value descriptors from the device reports for the given device
-func restGetValueDescriptorsForDeviceName(w http.ResponseWriter, r *http.Request) {
+func restGetValueDescriptorsForDeviceName(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
+
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[DEVICENAME])
 	if err != nil {
@@ -222,7 +232,8 @@ func restGetValueDescriptorsForDeviceName(w http.ResponseWriter, r *http.Request
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	json.NewEncoder(w).Encode(valueDescriptors)
 }
-func restGetDeviceReportByDeviceName(w http.ResponseWriter, r *http.Request) {
+func restGetDeviceReportByDeviceName(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
+
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[DEVICENAME])
 	if err != nil {
@@ -243,7 +254,8 @@ func restGetDeviceReportByDeviceName(w http.ResponseWriter, r *http.Request) {
 func restDeleteReportById(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient) {
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
 
 	vars := mux.Vars(r)
 	var id string = vars[ID]
@@ -255,7 +267,7 @@ func restDeleteReportById(
 		return
 	}
 
-	if err := deleteDeviceReport(dr, w, loggingClient); err != nil {
+	if err := deleteDeviceReport(dr, w, loggingClient, dbClient); err != nil {
 		loggingClient.Error(err.Error())
 		return
 	}
@@ -267,7 +279,8 @@ func restDeleteReportById(
 func restDeleteReportByName(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient) {
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
 
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
@@ -283,7 +296,7 @@ func restDeleteReportByName(
 		return
 	}
 
-	if err = deleteDeviceReport(dr, w, loggingClient); err != nil {
+	if err = deleteDeviceReport(dr, w, loggingClient, dbClient); err != nil {
 		loggingClient.Error(err.Error())
 		return
 	}
@@ -295,7 +308,8 @@ func restDeleteReportByName(
 func deleteDeviceReport(
 	dr models.DeviceReport,
 	w http.ResponseWriter,
-	loggingClient logger.LoggingClient) error {
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) error {
 
 	if err := dbClient.DeleteDeviceReportById(dr.Id); err != nil {
 		httpErrorHandler.Handle(w, err, errorconcept.Common.DeleteError)
@@ -303,7 +317,7 @@ func deleteDeviceReport(
 	}
 
 	// Notify Associates
-	if err := notifyDeviceReportAssociates(dr, http.MethodDelete, loggingClient); err != nil {
+	if err := notifyDeviceReportAssociates(dr, http.MethodDelete, loggingClient, dbClient); err != nil {
 		return err
 	}
 
@@ -314,7 +328,8 @@ func deleteDeviceReport(
 func notifyDeviceReportAssociates(
 	dr models.DeviceReport,
 	action string,
-	loggingClient logger.LoggingClient) error {
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) error {
 
 	// Get the device of the report
 	d, err := dbClient.GetDeviceByName(dr.Device)

@@ -96,9 +96,8 @@ func TestGetAllProfiles(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			Configuration = &ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: len(TestDeviceProfiles)}}
-			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			restGetAllDeviceProfiles(rr, logger.NewMockClient())
+			restGetAllDeviceProfiles(rr, logger.NewMockClient(), tt.dbMock)
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -196,11 +195,10 @@ func TestAddDeviceProfile(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			dbClient = tt.dbMock
 			vdc = tt.vdcMock
 			Configuration = &ConfigurationStruct{Writable: WritableInfo{EnableValueDescriptorManagement: true}, Service: config.ServiceInfo{MaxResultCount: 1}}
 			rr := httptest.NewRecorder()
-			restAddDeviceProfile(rr, tt.request, logger.NewMockClient())
+			restAddDeviceProfile(rr, tt.request, logger.NewMockClient(), tt.dbMock)
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -239,10 +237,8 @@ func TestGetProfileById(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(restGetProfileByProfileId)
-			handler.ServeHTTP(rr, tt.request)
+			restGetProfileByProfileId(rr, tt.request, tt.dbMock)
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -281,9 +277,8 @@ func TestGetYamlProfileById(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			restGetYamlProfileById(rr, tt.request, logger.NewMockClient())
+			restGetYamlProfileById(rr, tt.request, logger.NewMockClient(), tt.dbMock)
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -328,10 +323,8 @@ func TestGetProfileByName(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(restGetProfileByName)
-			handler.ServeHTTP(rr, tt.request)
+			restGetProfileByName(rr, tt.request, tt.dbMock)
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -376,10 +369,8 @@ func TestGetYamlProfileByName(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(restGetYamlProfileByName)
-			handler.ServeHTTP(rr, tt.request)
+			restGetYamlProfileByName(rr, tt.request, tt.dbMock)
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -424,10 +415,8 @@ func TestGetProfileByLabel(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(restGetProfileWithLabel)
-			handler.ServeHTTP(rr, tt.request)
+			restGetProfileWithLabel(rr, tt.request, tt.dbMock)
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -472,10 +461,8 @@ func TestGetProfileByManufacturer(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(restGetProfileByManufacturer)
-			handler.ServeHTTP(rr, tt.request)
+			restGetProfileByManufacturer(rr, tt.request, tt.dbMock)
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -520,10 +507,8 @@ func TestGetProfileByModel(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(restGetProfileByModel)
-			handler.ServeHTTP(rr, tt.request)
+			restGetProfileByModel(rr, tt.request, tt.dbMock)
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -593,10 +578,8 @@ func TestGetProfileByManufacturerModel(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(restGetProfileByManufacturerModel)
-			handler.ServeHTTP(rr, tt.request)
+			restGetProfileByManufacturerModel(rr, tt.request, tt.dbMock)
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -710,10 +693,9 @@ func TestUpdateDeviceProfile(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			Configuration = &ConfigurationStruct{Writable: WritableInfo{EnableValueDescriptorManagement: tt.enableValueDescriptorManagement}, Service: config.ServiceInfo{MaxResultCount: 1}}
-			dbClient = tt.dbMock
 			vdc = MockValueDescriptorClient{}
 			rr := httptest.NewRecorder()
-			restUpdateDeviceProfile(rr, tt.request, logger.NewMockClient())
+			restUpdateDeviceProfile(rr, tt.request, logger.NewMockClient(), tt.dbMock)
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -777,10 +759,8 @@ func TestDeleteDeviceProfileById(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			Configuration = &ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 1}}
-			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(restDeleteProfileByProfileId)
-			handler.ServeHTTP(rr, tt.request)
+			restDeleteProfileByProfileId(rr, tt.request, tt.dbMock)
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -850,10 +830,8 @@ func TestDeleteDeviceProfileByName(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			Configuration = &ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 1}}
-			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(restDeleteProfileByName)
-			handler.ServeHTTP(rr, tt.request)
+			restDeleteProfileByName(rr, tt.request, tt.dbMock)
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -949,10 +927,8 @@ func TestAddProfileByYaml(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			Configuration = &ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 1}}
-			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(restAddProfileByYaml)
-			handler.ServeHTTP(rr, tt.request)
+			restAddProfileByYaml(rr, tt.request, tt.dbMock)
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -1018,10 +994,8 @@ func TestAddProfileByYamlRaw(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			Configuration = &ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 1}}
-			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(restAddProfileByYamlRaw)
-			handler.ServeHTTP(rr, tt.request)
+			restAddProfileByYamlRaw(rr, tt.request, tt.dbMock)
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)

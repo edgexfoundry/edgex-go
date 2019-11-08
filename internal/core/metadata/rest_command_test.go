@@ -53,9 +53,8 @@ func TestGetCommandsByDeviceId(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			restGetCommandsByDeviceId(rr, tt.request, logger.NewMockClient())
+			restGetCommandsByDeviceId(rr, tt.request, logger.NewMockClient(), tt.dbMock)
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -79,9 +78,8 @@ func TestGetAllCommands(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			restGetAllCommands(rr, logger.NewMockClient())
+			restGetAllCommands(rr, logger.NewMockClient(), tt.dbMock)
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -127,9 +125,8 @@ func TestGetCommandById(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			restGetCommandById(rr, tt.request, logger.NewMockClient())
+			restGetCommandById(rr, tt.request, logger.NewMockClient(), tt.dbMock)
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -167,9 +164,8 @@ func TestGetCommandsByName(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			restGetCommandsByName(rr, tt.request, logger.NewMockClient())
+			restGetCommandsByName(rr, tt.request, logger.NewMockClient(), tt.dbMock)
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)

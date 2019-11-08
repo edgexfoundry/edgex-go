@@ -20,6 +20,7 @@ import (
 	"net/url"
 	"strconv"
 
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/operators/addressable"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
 
@@ -30,14 +31,15 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func restGetAllAddressables(
-	w http.ResponseWriter,
-	loggingClient logger.LoggingClient) {
+func restGetAllAddressables(w http.ResponseWriter, loggingClient logger.LoggingClient, dbClient interfaces.DBClient) {
 
 	op := addressable.NewAddressableLoadAll(Configuration.Service, dbClient, loggingClient)
 	addressables, err := op.Execute()
 	if err != nil {
-		httpErrorHandler.HandleOneVariant(w, err, errorconcept.Common.LimitExceeded, errorconcept.Default.InternalServerError)
+		httpErrorHandler.HandleOneVariant(
+			w, err,
+			errorconcept.Common.LimitExceeded,
+			errorconcept.Default.InternalServerError)
 		return
 	}
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
@@ -53,7 +55,8 @@ func restGetAllAddressables(
 func restAddAddressable(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient) {
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
 
 	defer r.Body.Close()
 	var a models.Addressable
@@ -88,7 +91,8 @@ func restAddAddressable(
 func restUpdateAddressable(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient) {
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
 
 	defer r.Body.Close()
 	var a models.Addressable
@@ -121,9 +125,10 @@ func restUpdateAddressable(
 	}
 }
 
-func restGetAddressableById(w http.ResponseWriter, r *http.Request) {
+func restGetAddressableById(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
+
 	vars := mux.Vars(r)
-	var id string = vars["id"]
+	var id = vars["id"]
 	op := addressable.NewIdExecutor(dbClient, id)
 	result, err := op.Execute()
 	if err != nil {
@@ -134,9 +139,10 @@ func restGetAddressableById(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(result)
 }
 
-func restDeleteAddressableById(w http.ResponseWriter, r *http.Request) {
+func restDeleteAddressableById(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
+
 	vars := mux.Vars(r)
-	var id string = vars[ID]
+	var id = vars[ID]
 
 	op := addressable.NewDeleteByIdExecutor(dbClient, id)
 	err := op.Execute()
@@ -156,7 +162,8 @@ func restDeleteAddressableById(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("true"))
 }
 
-func restDeleteAddressableByName(w http.ResponseWriter, r *http.Request) {
+func restDeleteAddressableByName(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
+
 	vars := mux.Vars(r)
 	name, err := url.QueryUnescape(vars[NAME])
 	// Problems unescaping
@@ -184,7 +191,8 @@ func restDeleteAddressableByName(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("true"))
 }
 
-func restGetAddressableByName(w http.ResponseWriter, r *http.Request) {
+func restGetAddressableByName(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
+
 	vars := mux.Vars(r)
 	dn, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
@@ -207,7 +215,8 @@ func restGetAddressableByName(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(result)
 }
 
-func restGetAddressableByTopic(w http.ResponseWriter, r *http.Request) {
+func restGetAddressableByTopic(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
+
 	vars := mux.Vars(r)
 	t, err := url.QueryUnescape(vars[TOPIC])
 	if err != nil {
@@ -225,9 +234,10 @@ func restGetAddressableByTopic(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	json.NewEncoder(w).Encode(res)
 }
-func restGetAddressableByPort(w http.ResponseWriter, r *http.Request) {
+func restGetAddressableByPort(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
+
 	vars := mux.Vars(r)
-	var strp string = vars[PORT]
+	var strp = vars[PORT]
 	p, err := strconv.Atoi(strp)
 	if err != nil {
 		httpErrorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
@@ -244,7 +254,8 @@ func restGetAddressableByPort(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	json.NewEncoder(w).Encode(res)
 }
-func restGetAddressableByPublisher(w http.ResponseWriter, r *http.Request) {
+func restGetAddressableByPublisher(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
+
 	vars := mux.Vars(r)
 	p, err := url.QueryUnescape(vars[PUBLISHER])
 	if err != nil {
@@ -262,7 +273,8 @@ func restGetAddressableByPublisher(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	json.NewEncoder(w).Encode(res)
 }
-func restGetAddressableByAddress(w http.ResponseWriter, r *http.Request) {
+func restGetAddressableByAddress(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
+
 	vars := mux.Vars(r)
 	a, err := url.QueryUnescape(vars[ADDRESS])
 	if err != nil {

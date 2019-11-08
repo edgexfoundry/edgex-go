@@ -23,6 +23,7 @@ import (
 	"net/url"
 	"strconv"
 
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/operators/device_service"
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
@@ -35,9 +36,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func restGetAllDeviceServices(
-	w http.ResponseWriter,
-	loggingClient logger.LoggingClient) {
+func restGetAllDeviceServices(w http.ResponseWriter, loggingClient logger.LoggingClient, dbClient interfaces.DBClient) {
 
 	op := device_service.NewDeviceServiceLoadAll(Configuration.Service, dbClient, loggingClient)
 	services, err := op.Execute()
@@ -48,7 +47,8 @@ func restGetAllDeviceServices(
 	pkg.Encode(services, w, loggingClient)
 }
 
-func restAddDeviceService(w http.ResponseWriter, r *http.Request) {
+func restAddDeviceService(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
+
 	defer r.Body.Close()
 	var ds models.DeviceService
 	err := json.NewDecoder(r.Body).Decode(&ds)
@@ -88,7 +88,8 @@ func restAddDeviceService(w http.ResponseWriter, r *http.Request) {
 func restUpdateDeviceService(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient) {
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
 
 	defer r.Body.Close()
 	var from models.DeviceService
@@ -112,7 +113,7 @@ func restUpdateDeviceService(
 		}
 	}
 
-	if err = updateDeviceServiceFields(from, &to, w); err != nil {
+	if err = updateDeviceServiceFields(from, &to, w, dbClient); err != nil {
 		loggingClient.Error(err.Error())
 		return
 	}
@@ -127,7 +128,12 @@ func restUpdateDeviceService(
 }
 
 // Update the relevant device service fields
-func updateDeviceServiceFields(from models.DeviceService, to *models.DeviceService, w http.ResponseWriter) error {
+func updateDeviceServiceFields(
+	from models.DeviceService,
+	to *models.DeviceService,
+	w http.ResponseWriter,
+	dbClient interfaces.DBClient) error {
+
 	// Use .String() to compare empty structs (not ideal, but there is no .equals method)
 	if (from.Addressable.String() != models.Addressable{}.String()) {
 		var addr models.Addressable
@@ -175,7 +181,8 @@ func updateDeviceServiceFields(from models.DeviceService, to *models.DeviceServi
 	return nil
 }
 
-func restGetServiceByAddressableName(w http.ResponseWriter, r *http.Request) {
+func restGetServiceByAddressableName(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
+
 	vars := mux.Vars(r)
 	an, err := url.QueryUnescape(vars[ADDRESSABLENAME])
 	if err != nil {
@@ -194,7 +201,8 @@ func restGetServiceByAddressableName(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(res)
 }
 
-func restGetServiceByAddressableId(w http.ResponseWriter, r *http.Request) {
+func restGetServiceByAddressableId(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
+
 	vars := mux.Vars(r)
 	var sid = vars[ADDRESSABLEID]
 
@@ -209,7 +217,8 @@ func restGetServiceByAddressableId(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(res)
 }
 
-func restGetServiceWithLabel(w http.ResponseWriter, r *http.Request) {
+func restGetServiceWithLabel(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
+
 	vars := mux.Vars(r)
 	l, err := url.QueryUnescape(vars[LABEL])
 	if err != nil {
@@ -227,7 +236,8 @@ func restGetServiceWithLabel(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(res)
 }
 
-func restGetServiceByName(w http.ResponseWriter, r *http.Request) {
+func restGetServiceByName(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
+
 	vars := mux.Vars(r)
 	dn, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
@@ -249,7 +259,8 @@ func restGetServiceByName(w http.ResponseWriter, r *http.Request) {
 func restDeleteServiceById(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient) {
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
 
 	vars := mux.Vars(r)
 	var id string = vars[ID]
@@ -262,7 +273,7 @@ func restDeleteServiceById(
 	}
 
 	ctx := r.Context()
-	if err = deleteDeviceService(ds, w, ctx, loggingClient); err != nil {
+	if err = deleteDeviceService(ds, w, ctx, loggingClient, dbClient); err != nil {
 		loggingClient.Error(err.Error())
 		return
 	}
@@ -273,7 +284,8 @@ func restDeleteServiceById(
 func restDeleteServiceByName(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient) {
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
 
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
@@ -291,7 +303,7 @@ func restDeleteServiceByName(
 
 	ctx := r.Context()
 	// Delete the device service
-	if err = deleteDeviceService(ds, w, ctx, loggingClient); err != nil {
+	if err = deleteDeviceService(ds, w, ctx, loggingClient, dbClient); err != nil {
 		loggingClient.Error(err.Error())
 		return
 	}
@@ -307,7 +319,8 @@ func deleteDeviceService(
 	ds models.DeviceService,
 	w http.ResponseWriter,
 	ctx context.Context,
-	loggingClient logger.LoggingClient) error {
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) error {
 
 	// Delete the associated devices
 	devices, err := dbClient.GetDevicesByServiceId(ds.Id)
@@ -316,7 +329,7 @@ func deleteDeviceService(
 		return err
 	}
 	for _, device := range devices {
-		if err = deleteDevice(device, w, ctx, loggingClient); err != nil {
+		if err = deleteDevice(device, w, ctx, loggingClient, dbClient); err != nil {
 			return err
 		}
 	}
@@ -328,7 +341,7 @@ func deleteDeviceService(
 		return err
 	}
 	for _, watcher := range watchers {
-		if err = deleteProvisionWatcher(watcher, w, loggingClient); err != nil {
+		if err = deleteProvisionWatcher(watcher, w, loggingClient, dbClient); err != nil {
 			return err
 		}
 	}
@@ -345,7 +358,8 @@ func deleteDeviceService(
 func restUpdateServiceLastConnectedById(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient) {
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
 
 	vars := mux.Vars(r)
 	var id string = vars[ID]
@@ -363,7 +377,7 @@ func restUpdateServiceLastConnectedById(
 		return
 	}
 
-	if err = updateServiceLastConnected(ds, lc, w); err != nil {
+	if err = updateServiceLastConnected(ds, lc, w, dbClient); err != nil {
 		loggingClient.Error(err.Error())
 		return
 	}
@@ -375,7 +389,8 @@ func restUpdateServiceLastConnectedById(
 func restUpdateServiceLastConnectedByName(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient) {
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
 
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
@@ -398,7 +413,7 @@ func restUpdateServiceLastConnectedByName(
 	}
 
 	// Update last connected
-	if err = updateServiceLastConnected(ds, lc, w); err != nil {
+	if err = updateServiceLastConnected(ds, lc, w, dbClient); err != nil {
 		loggingClient.Error(err.Error())
 		return
 	}
@@ -408,7 +423,12 @@ func restUpdateServiceLastConnectedByName(
 }
 
 // Update the last connected value of the device service
-func updateServiceLastConnected(ds models.DeviceService, lc int64, w http.ResponseWriter) error {
+func updateServiceLastConnected(
+	ds models.DeviceService,
+	lc int64,
+	w http.ResponseWriter,
+	dbClient interfaces.DBClient) error {
+
 	ds.LastConnected = lc
 
 	if err := dbClient.UpdateDeviceService(ds); err != nil {
@@ -419,7 +439,8 @@ func updateServiceLastConnected(ds models.DeviceService, lc int64, w http.Respon
 	return nil
 }
 
-func restGetServiceById(w http.ResponseWriter, r *http.Request) {
+func restGetServiceById(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
+
 	vars := mux.Vars(r)
 	var did = vars[ID]
 
@@ -434,7 +455,8 @@ func restGetServiceById(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(res)
 }
 
-func restUpdateServiceOpStateById(w http.ResponseWriter, r *http.Request) {
+func restUpdateServiceOpStateById(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
+
 	vars := mux.Vars(r)
 	var id = vars[ID]
 	var os = vars[OPSTATE]
@@ -457,7 +479,8 @@ func restUpdateServiceOpStateById(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("true"))
 }
 
-func restUpdateServiceOpStateByName(w http.ResponseWriter, r *http.Request) {
+func restUpdateServiceOpStateByName(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
+
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
@@ -484,7 +507,8 @@ func restUpdateServiceOpStateByName(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("true"))
 }
 
-func restUpdateServiceAdminStateById(w http.ResponseWriter, r *http.Request) {
+func restUpdateServiceAdminStateById(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
+
 	vars := mux.Vars(r)
 	var id = vars[ID]
 	var as = vars[ADMINSTATE]
@@ -507,7 +531,8 @@ func restUpdateServiceAdminStateById(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("true"))
 }
 
-func restUpdateServiceAdminStateByName(w http.ResponseWriter, r *http.Request) {
+func restUpdateServiceAdminStateByName(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
+
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
@@ -537,7 +562,8 @@ func restUpdateServiceAdminStateByName(w http.ResponseWriter, r *http.Request) {
 func restUpdateServiceLastReportedById(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient) {
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
 
 	vars := mux.Vars(r)
 	var id string = vars[ID]
@@ -555,7 +581,7 @@ func restUpdateServiceLastReportedById(
 		return
 	}
 
-	if err = updateServiceLastReported(ds, lr, w); err != nil {
+	if err = updateServiceLastReported(ds, lr, w, dbClient); err != nil {
 		loggingClient.Error(err.Error())
 		return
 	}
@@ -567,7 +593,8 @@ func restUpdateServiceLastReportedById(
 func restUpdateServiceLastReportedByName(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient) {
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
 
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
@@ -589,7 +616,7 @@ func restUpdateServiceLastReportedByName(
 		return
 	}
 
-	if err = updateServiceLastReported(ds, lr, w); err != nil {
+	if err = updateServiceLastReported(ds, lr, w, dbClient); err != nil {
 		loggingClient.Error(err.Error())
 		return
 	}
@@ -599,7 +626,12 @@ func restUpdateServiceLastReportedByName(
 }
 
 // Update the last reported value for the device service
-func updateServiceLastReported(ds models.DeviceService, lr int64, w http.ResponseWriter) error {
+func updateServiceLastReported(
+	ds models.DeviceService,
+	lr int64,
+	w http.ResponseWriter,
+	dbClient interfaces.DBClient) error {
+
 	ds.LastReported = lr
 	if err := dbClient.UpdateDeviceService(ds); err != nil {
 		httpErrorHandler.Handle(w, err, errorconcept.Common.UpdateError_StatusServiceUnavailable)
@@ -673,5 +705,6 @@ func makeRequest(
 
 // Turn the ID and ActionType into the JSON body that will be passed
 func getBody(id string, actionType models.ActionType) ([]byte, error) {
+
 	return json.Marshal(models.CallbackAlert{ActionType: actionType, Id: id})
 }

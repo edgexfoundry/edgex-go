@@ -59,9 +59,8 @@ func TestGetAllDeviceServices(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			restGetAllDeviceServices(rr, logger.NewMockClient())
+			restGetAllDeviceServices(rr, logger.NewMockClient(), tt.dbMock)
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -113,11 +112,8 @@ func TestGetServiceByName(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			Configuration = &ConfigurationStruct{}
-			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(restGetServiceByName)
-
-			handler.ServeHTTP(rr, createDeviceServiceRequest(http.MethodGet, NAME, tt.value))
+			restGetServiceByName(rr, createDeviceServiceRequest(http.MethodGet, NAME, tt.value), tt.dbMock)
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -128,6 +124,7 @@ func TestGetServiceByName(t *testing.T) {
 }
 
 func TestGetServiceById(t *testing.T) {
+
 	req := createDeviceServiceRequest(http.MethodGet, ID, testDeviceServiceId)
 
 	tests := []struct {
@@ -160,11 +157,8 @@ func TestGetServiceById(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			Configuration = &ConfigurationStruct{}
-			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(restGetServiceById)
-
-			handler.ServeHTTP(rr, req)
+			restGetServiceById(rr, req, tt.dbMock)
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -233,11 +227,8 @@ func TestGetServiceByAddressableName(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			Configuration = &ConfigurationStruct{}
-			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(restGetServiceByAddressableName)
-
-			handler.ServeHTTP(rr, createDeviceServiceRequest(http.MethodGet, ADDRESSABLENAME, tt.value))
+			restGetServiceByAddressableName(rr, createDeviceServiceRequest(http.MethodGet, ADDRESSABLENAME, tt.value), tt.dbMock)
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -300,11 +291,8 @@ func TestGetServiceByAddressableId(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			Configuration = &ConfigurationStruct{}
-			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(restGetServiceByAddressableId)
-
-			handler.ServeHTTP(rr, createDeviceServiceRequest(http.MethodGet, ADDRESSABLEID, tt.value))
+			restGetServiceByAddressableId(rr, createDeviceServiceRequest(http.MethodGet, ADDRESSABLEID, tt.value), tt.dbMock)
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -360,11 +348,8 @@ func TestUpdateOpStateById(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(restUpdateServiceOpStateById)
-
-			handler.ServeHTTP(rr, tt.req)
+			restUpdateServiceOpStateById(rr, tt.req, tt.dbMock)
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -382,7 +367,7 @@ func TestUpdateOpStateByName(t *testing.T) {
 
 	tests := []struct {
 		name           string
-		req            *http.Request
+		request        *http.Request
 		dbMock         interfaces.DBClient
 		expectedStatus int
 	}{
@@ -425,11 +410,8 @@ func TestUpdateOpStateByName(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(restUpdateServiceOpStateByName)
-
-			handler.ServeHTTP(rr, tt.req)
+			restUpdateServiceOpStateByName(rr, tt.request, tt.dbMock)
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -447,7 +429,7 @@ func TestUpdateAdminStateById(t *testing.T) {
 
 	tests := []struct {
 		name           string
-		req            *http.Request
+		request        *http.Request
 		dbMock         interfaces.DBClient
 		expectedStatus int
 	}{
@@ -485,11 +467,8 @@ func TestUpdateAdminStateById(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(restUpdateServiceAdminStateById)
-
-			handler.ServeHTTP(rr, tt.req)
+			restUpdateServiceAdminStateById(rr, tt.request, tt.dbMock)
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -507,7 +486,7 @@ func TestUpdateAdminStateByName(t *testing.T) {
 
 	tests := []struct {
 		name           string
-		req            *http.Request
+		request        *http.Request
 		dbMock         interfaces.DBClient
 		expectedStatus int
 	}{
@@ -550,11 +529,8 @@ func TestUpdateAdminStateByName(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(restUpdateServiceAdminStateByName)
-
-			handler.ServeHTTP(rr, tt.req)
+			restUpdateServiceAdminStateByName(rr, tt.request, tt.dbMock)
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)

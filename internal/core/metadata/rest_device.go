@@ -25,6 +25,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/operators/device"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
@@ -39,9 +40,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func restGetAllDevices(
-	w http.ResponseWriter,
-	loggingClient logger.LoggingClient) {
+func restGetAllDevices(w http.ResponseWriter, loggingClient logger.LoggingClient, dbClient interfaces.DBClient) {
 
 	op := device.NewDeviceLoadAll(Configuration.Service, dbClient, loggingClient)
 	devices, err := op.Execute()
@@ -60,7 +59,8 @@ func restGetAllDevices(
 func restAddNewDevice(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient) {
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
 
 	defer r.Body.Close()
 
@@ -111,7 +111,8 @@ func restAddNewDevice(
 func restUpdateDevice(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient) {
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
 
 	defer r.Body.Close()
 	var rd models.Device
@@ -154,7 +155,8 @@ func restUpdateDevice(
 	w.Write([]byte("true"))
 }
 
-func restGetDevicesWithLabel(w http.ResponseWriter, r *http.Request) {
+func restGetDevicesWithLabel(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
+
 	vars := mux.Vars(r)
 	label, err := url.QueryUnescape(vars[LABEL])
 	if err != nil {
@@ -172,7 +174,8 @@ func restGetDevicesWithLabel(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(res)
 }
 
-func restGetDeviceByProfileId(w http.ResponseWriter, r *http.Request) {
+func restGetDeviceByProfileId(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
+
 	vars := mux.Vars(r)
 	var pid string = vars[PROFILEID]
 
@@ -193,7 +196,8 @@ func restGetDeviceByProfileId(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(res)
 }
 
-func restGetDeviceByServiceId(w http.ResponseWriter, r *http.Request) {
+func restGetDeviceByServiceId(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
+
 	vars := mux.Vars(r)
 	var sid string = vars[SERVICEID]
 
@@ -215,7 +219,8 @@ func restGetDeviceByServiceId(w http.ResponseWriter, r *http.Request) {
 }
 
 // If the result array is empty, don't return http.NotFound, just return empty array
-func restGetDeviceByServiceName(w http.ResponseWriter, r *http.Request) {
+func restGetDeviceByServiceName(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
+
 	vars := mux.Vars(r)
 	sn, err := url.QueryUnescape(vars[SERVICENAME])
 	if err != nil {
@@ -241,7 +246,8 @@ func restGetDeviceByServiceName(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(res)
 }
 
-func restGetDeviceByProfileName(w http.ResponseWriter, r *http.Request) {
+func restGetDeviceByProfileName(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
+
 	vars := mux.Vars(r)
 	pn, err := url.QueryUnescape(vars[PROFILENAME])
 	if err != nil {
@@ -267,7 +273,8 @@ func restGetDeviceByProfileName(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(res)
 }
 
-func restGetDeviceById(w http.ResponseWriter, r *http.Request) {
+func restGetDeviceById(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
+
 	vars := mux.Vars(r)
 	var did string = vars[ID]
 
@@ -284,7 +291,8 @@ func restGetDeviceById(w http.ResponseWriter, r *http.Request) {
 func restCheckForDevice(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient) {
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
 
 	vars := mux.Vars(r)
 	token := vars[ID] //referring to this as "token" for now since the source variable is double purposed
@@ -320,6 +328,7 @@ func restCheckForDevice(
 }
 
 func decodeState(r *http.Request) (mode string, state string, err error) {
+
 	var admin admin.UpdateRequest
 	var ops operating.UpdateRequest
 
@@ -363,7 +372,8 @@ func decodeState(r *http.Request) (mode string, state string, err error) {
 func restSetDeviceStateById(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient) {
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
 
 	vars := mux.Vars(r)
 	var did = vars[ID]
@@ -380,13 +390,13 @@ func restSetDeviceStateById(
 		return
 	}
 
-	if err = updateDeviceState(updateMode, state, d); err != nil {
+	if err = updateDeviceState(updateMode, state, d, dbClient); err != nil {
 		httpErrorHandler.Handle(w, err, errorconcept.Common.UpdateError_StatusInternalServer)
 		return
 	}
 
 	// Notify
-	notifyDeviceAssociates(d, http.MethodPut, r.Context(), loggingClient)
+	notifyDeviceAssociates(d, http.MethodPut, r.Context(), loggingClient, dbClient)
 
 	w.WriteHeader(http.StatusOK)
 }
@@ -394,7 +404,8 @@ func restSetDeviceStateById(
 func restSetDeviceStateByDeviceName(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient) {
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
 
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
@@ -416,19 +427,20 @@ func restSetDeviceStateByDeviceName(
 		return
 	}
 
-	if err = updateDeviceState(updateMode, state, d); err != nil {
+	if err = updateDeviceState(updateMode, state, d, dbClient); err != nil {
 		httpErrorHandler.Handle(w, err, errorconcept.Common.UpdateError_StatusInternalServer)
 		return
 	}
 
 	ctx := r.Context()
 	// Notify
-	notifyDeviceAssociates(d, http.MethodPut, ctx, loggingClient)
+	notifyDeviceAssociates(d, http.MethodPut, ctx, loggingClient, dbClient)
 
 	w.WriteHeader(http.StatusOK)
 }
 
-func updateDeviceState(updateMode string, state string, d models.Device) error {
+func updateDeviceState(updateMode string, state string, d models.Device, dbClient interfaces.DBClient) error {
+
 	switch updateMode {
 	case ADMINSTATE:
 		d.AdminState = models.AdminState(strings.ToUpper(state))
@@ -441,7 +453,8 @@ func updateDeviceState(updateMode string, state string, d models.Device) error {
 func restDeleteDeviceById(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient) {
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
 
 	vars := mux.Vars(r)
 	var did string = vars[ID]
@@ -454,7 +467,7 @@ func restDeleteDeviceById(
 	}
 
 	ctx := r.Context()
-	if err := deleteDevice(d, w, ctx, loggingClient); err != nil {
+	if err := deleteDevice(d, w, ctx, loggingClient, dbClient); err != nil {
 		loggingClient.Error(err.Error())
 		return
 	}
@@ -465,7 +478,8 @@ func restDeleteDeviceById(
 func restDeleteDeviceByName(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient) {
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
 
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
@@ -482,7 +496,7 @@ func restDeleteDeviceByName(
 	}
 
 	ctx := r.Context()
-	if err := deleteDevice(d, w, ctx, loggingClient); err != nil {
+	if err := deleteDevice(d, w, ctx, loggingClient, dbClient); err != nil {
 		loggingClient.Error(err.Error())
 		return
 	}
@@ -496,9 +510,10 @@ func deleteDevice(
 	d models.Device,
 	w http.ResponseWriter,
 	ctx context.Context,
-	loggingClient logger.LoggingClient) error {
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) error {
 
-	if err := deleteAssociatedReportsForDevice(d, w, loggingClient); err != nil {
+	if err := deleteAssociatedReportsForDevice(d, w, loggingClient, dbClient); err != nil {
 		httpErrorHandler.Handle(w, err, errorconcept.Common.DeleteError)
 		return err
 	}
@@ -509,7 +524,7 @@ func deleteDevice(
 	}
 
 	// Notify Associates
-	if err := notifyDeviceAssociates(d, http.MethodDelete, ctx, loggingClient); err != nil {
+	if err := notifyDeviceAssociates(d, http.MethodDelete, ctx, loggingClient, dbClient); err != nil {
 		httpErrorHandler.Handle(w, err, errorconcept.Device.NotifyError)
 		return err
 	}
@@ -521,7 +536,8 @@ func deleteDevice(
 func deleteAssociatedReportsForDevice(
 	d models.Device,
 	w http.ResponseWriter,
-	loggingClient logger.LoggingClient) error {
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) error {
 
 	reports, err := dbClient.GetDeviceReportByDeviceName(d.Name)
 	if err != nil {
@@ -535,7 +551,7 @@ func deleteAssociatedReportsForDevice(
 			httpErrorHandler.Handle(w, err, errorconcept.Common.DeleteError)
 			return err
 		}
-		notifyDeviceReportAssociates(report, http.MethodDelete, loggingClient)
+		notifyDeviceReportAssociates(report, http.MethodDelete, loggingClient, dbClient)
 	}
 
 	return nil
@@ -544,7 +560,8 @@ func deleteAssociatedReportsForDevice(
 func restSetDeviceLastConnectedById(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient) {
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
 
 	vars := mux.Vars(r)
 	var did string = vars[ID]
@@ -564,7 +581,7 @@ func restSetDeviceLastConnectedById(
 
 	ctx := r.Context()
 	// Update last connected
-	if err = setLastConnected(d, lc, false, w, ctx, loggingClient); err != nil {
+	if err = setLastConnected(d, lc, false, w, ctx, loggingClient, dbClient); err != nil {
 		return
 	}
 
@@ -575,7 +592,8 @@ func restSetDeviceLastConnectedById(
 func restSetLastConnectedByIdNotify(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient) {
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
 
 	// Get the URL parameters
 	vars := mux.Vars(r)
@@ -601,7 +619,7 @@ func restSetLastConnectedByIdNotify(
 
 	ctx := r.Context()
 	// Update last connected
-	if err = setLastConnected(d, lc, notify, w, ctx, loggingClient); err != nil {
+	if err = setLastConnected(d, lc, notify, w, ctx, loggingClient, dbClient); err != nil {
 		return
 	}
 
@@ -612,7 +630,8 @@ func restSetLastConnectedByIdNotify(
 func restSetDeviceLastConnectedByName(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient) {
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
 
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
@@ -636,7 +655,7 @@ func restSetDeviceLastConnectedByName(
 
 	ctx := r.Context()
 	// Update last connected
-	if err = setLastConnected(d, lc, false, w, ctx, loggingClient); err != nil {
+	if err = setLastConnected(d, lc, false, w, ctx, loggingClient, dbClient); err != nil {
 		return
 	}
 
@@ -647,7 +666,8 @@ func restSetDeviceLastConnectedByName(
 func restSetDeviceLastConnectedByNameNotify(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient) {
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
 
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
@@ -676,7 +696,7 @@ func restSetDeviceLastConnectedByNameNotify(
 
 	ctx := r.Context()
 	// Update last connected
-	if err = setLastConnected(d, lc, notify, w, ctx, loggingClient); err != nil {
+	if err = setLastConnected(d, lc, notify, w, ctx, loggingClient, dbClient); err != nil {
 		return
 	}
 
@@ -691,7 +711,8 @@ func setLastConnected(
 	notify bool,
 	w http.ResponseWriter,
 	ctx context.Context,
-	loggingClient logger.LoggingClient) error {
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) error {
 
 	d.LastConnected = time
 	if err := dbClient.UpdateDevice(d); err != nil {
@@ -700,7 +721,7 @@ func setLastConnected(
 	}
 
 	if notify {
-		notifyDeviceAssociates(d, http.MethodPut, ctx, loggingClient)
+		notifyDeviceAssociates(d, http.MethodPut, ctx, loggingClient, dbClient)
 	}
 
 	return nil
@@ -709,7 +730,8 @@ func setLastConnected(
 func restSetDeviceLastReportedById(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient) {
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
 
 	vars := mux.Vars(r)
 	var did string = vars[ID]
@@ -729,7 +751,7 @@ func restSetDeviceLastReportedById(
 
 	ctx := r.Context()
 	// Update Last Reported
-	if err = setLastReported(d, lr, false, w, ctx, loggingClient); err != nil {
+	if err = setLastReported(d, lr, false, w, ctx, loggingClient, dbClient); err != nil {
 		return
 	}
 
@@ -740,7 +762,8 @@ func restSetDeviceLastReportedById(
 func restSetDeviceLastReportedByIdNotify(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient) {
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
 
 	vars := mux.Vars(r)
 	var did string = vars[ID]
@@ -765,7 +788,7 @@ func restSetDeviceLastReportedByIdNotify(
 
 	ctx := r.Context()
 	// Update last reported
-	if err = setLastReported(d, lr, notify, w, ctx, loggingClient); err != nil {
+	if err = setLastReported(d, lr, notify, w, ctx, loggingClient, dbClient); err != nil {
 		return
 	}
 
@@ -776,7 +799,8 @@ func restSetDeviceLastReportedByIdNotify(
 func restSetDeviceLastReportedByName(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient) {
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
 
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
@@ -800,7 +824,7 @@ func restSetDeviceLastReportedByName(
 
 	ctx := r.Context()
 	// Update last reported
-	if err = setLastReported(d, lr, false, w, ctx, loggingClient); err != nil {
+	if err = setLastReported(d, lr, false, w, ctx, loggingClient, dbClient); err != nil {
 		return
 	}
 
@@ -811,7 +835,8 @@ func restSetDeviceLastReportedByName(
 func restSetDeviceLastReportedByNameNotify(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient) {
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
 
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
@@ -840,7 +865,7 @@ func restSetDeviceLastReportedByNameNotify(
 
 	ctx := r.Context()
 	// Update last reported
-	if err = setLastReported(d, lr, notify, w, ctx, loggingClient); err != nil {
+	if err = setLastReported(d, lr, notify, w, ctx, loggingClient, dbClient); err != nil {
 		return
 	}
 
@@ -855,7 +880,8 @@ func setLastReported(
 	notify bool,
 	w http.ResponseWriter,
 	ctx context.Context,
-	loggingClient logger.LoggingClient) error {
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) error {
 
 	d.LastReported = time
 	if err := dbClient.UpdateDevice(d); err != nil {
@@ -864,13 +890,14 @@ func setLastReported(
 	}
 
 	if notify {
-		notifyDeviceAssociates(d, http.MethodPut, ctx, loggingClient)
+		notifyDeviceAssociates(d, http.MethodPut, ctx, loggingClient, dbClient)
 	}
 
 	return nil
 }
 
-func restGetDeviceByName(w http.ResponseWriter, r *http.Request) {
+func restGetDeviceByName(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
+
 	vars := mux.Vars(r)
 	dn, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
@@ -891,7 +918,8 @@ func notifyDeviceAssociates(
 	d models.Device,
 	action string,
 	ctx context.Context,
-	loggingClient logger.LoggingClient) error {
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) error {
 
 	// Post the notification to the notifications service
 	postNotification(d.Name, action, ctx)
@@ -911,6 +939,7 @@ func notifyDeviceAssociates(
 }
 
 func postNotification(name string, action string, ctx context.Context) {
+
 	// Only post notification if the configuration is set
 	if Configuration.Notifications.PostDeviceChanges {
 		// Make the notification
