@@ -55,6 +55,10 @@ Protocol = 'https'
 RootCaCertPath = '/vault/config/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem'
 ServerName = 'localhost'
 TokenFile = '/vault/config/assets/resp-init.json'
+# Number of attemtps to retry retrieving secrets before failing to start the service.
+AdditionalRetryAttempts = 10
+# Amount of time to wait before attempting another retry in nanoseconds.
+RetryWaitPeriod = 1000000000
   [SecretStore.Authentication]
   AuthType = 'X-Vault-Token'
   AuthToken = 'edgex'
