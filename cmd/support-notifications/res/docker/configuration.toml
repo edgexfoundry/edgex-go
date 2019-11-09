@@ -57,8 +57,8 @@ ServerName = 'edgex-vault'
 TokenFile = '/vault/config/assets/resp-init.json'
 # Number of attemtps to retry retrieving secrets before failing to start the service.
 AdditionalRetryAttempts = 10
-# Amount of time to wait before attempting another retry in nanoseconds.
-RetryWaitPeriod = 1000000000
+# Amount of time to wait before attempting another retry
+RetryWaitPeriod = "1s"
   [SecretStore.Authentication]
   AuthType = 'X-Vault-Token'
 
