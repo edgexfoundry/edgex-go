@@ -27,7 +27,7 @@ Once EdgeX is up and running, the following steps are required to access EdgeX r
 1. The user needs to create an access token and associate every REST request with the security token
 while sending the request. Use "admin" as group name below, as it is the privileged group in the default configuration of the proxy.
 `<account>` below should be substituted for the desired account name (e.g., "mary", "iot_user", etc).
-    Due to different docker-compose file configuration the command may need to be adjusted. E.g, for docker compose file that comes from nightly-build folder, it may be necessary to upgrade the entry point of edgex-proxy to something like this:
+   Due to different docker-compose file configuration the command may need to be adjusted. E.g, for docker compose file that comes from nightly-build folder, it may be necessary to change the execution portion of the entry point of edgex-proxy to provide proper command flags like this:
     
     ```sh
     /edgex/security-proxy-setup --init=false --useradd=<account> --group=<groupname> 
