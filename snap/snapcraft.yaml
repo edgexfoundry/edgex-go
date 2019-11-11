@@ -335,6 +335,10 @@ apps:
     plugs: [network, network-bind]
 
   # helper commands the snap exposes
+  security-proxy-setup-cmd:
+    adapter: none
+    command: bin/security-proxy-setup
+    plugs: [home, removable-media, network]
   redis-cli:
     adapter: full
     command: bin/redis-cli
