@@ -27,13 +27,20 @@ Once EdgeX is up and running, the following steps are required to access EdgeX r
 1. The user needs to create an access token and associate every REST request with the security token
 while sending the request. Use "admin" as group name below, as it is the privileged group in the default configuration of the proxy.
 `<account>` below should be substituted for the desired account name (e.g., "mary", "iot_user", etc).
-
+    Due to different docker-compose file configuration the command may need to be adjusted. E.g, for docker compose file that comes from nightly-build folder, it may be necessary to upgrade the entry point of edgex-proxy to something like this:
+    
     ```sh
-    $ docker-compose run security-proxy-setup --useradd=<account> --group=<groupname>
+    /edgex/security-proxy-setup --init=false --useradd=<account> --group=<groupname> 
     ```
+    then run 
+    ```sh
+    $ docker-compose run edgex-proxy
+    ```
+    
     which will create an access token. One example of an access token is: 
     `eyJpc3MiOiI5M3V3cmZBc0xzS2Qwd1JnckVFdlRzQloxSmtYOTRRciIsImFjY291bnQiOiJhZG1pbmlzdHJhdG9yIn0`.  
     Yours will differ from this one.
+    
 2. The exported external ports (such as 48080, 48081 etc.) will be inaccessible for security reasons. 
 Instead, all the REST requests need to go through the proxy, and the proxy will redirect the request to individual 
 microservice on behalf of the user.
