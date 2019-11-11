@@ -90,9 +90,13 @@ func (s *Service) ResetProxy() error {
 }
 
 func (s *Service) Init(cert CertificateLoader) error {
-	err := s.postCert(cert)
+	err, existed := s.postCert(cert)
 	if err != nil {
 		return err
+	}
+	if existed == true {
+		LoggingClient.Info("skipping as the initialization has been done successfully")
+		return nil
 	}
 
 	for clientName, client := range Configuration.Clients {
@@ -132,11 +136,11 @@ func (s *Service) Init(cert CertificateLoader) error {
 	return nil
 }
 
-func (s *Service) postCert(cert CertificateLoader) error {
+func (s *Service) postCert(cert CertificateLoader) (error, bool) {
 	cp, err := cert.Load()
 
 	if err != nil {
-		return err
+		return err, false
 	}
 
 	body := &CertInfo{
@@ -148,19 +152,19 @@ func (s *Service) postCert(cert CertificateLoader) error {
 	data, err := json.Marshal(body)
 	if err != nil {
 		LoggingClient.Error(err.Error())
-		return err
+		return err, false
 	}
 	tokens := []string{Configuration.KongURL.GetProxyBaseURL(), CertificatesPath}
 	req, err := http.NewRequest(http.MethodPost, strings.Join(tokens, "/"), strings.NewReader(string(data)))
 	req.Header.Add(clients.ContentType, clients.ContentTypeJSON)
 	if err != nil {
 		LoggingClient.Error("failed to create upload cert request -- %s", err.Error())
-		return err
+		return err, false
 	}
 	resp, err := s.client.Do(req)
 	if err != nil {
 		LoggingClient.Error("failed to upload cert to proxy server with error %s", err.Error())
-		return err
+		return err, false
 	}
 	defer resp.Body.Close()
 
@@ -171,13 +175,18 @@ func (s *Service) postCert(cert CertificateLoader) error {
 	default:
 		b, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			return err
+			return err, false
 		}
-		e := fmt.Sprintf("failed to add certificate with errorcode %d, error %s", resp.StatusCode, string(b))
+		reason := string(b)
+		e := fmt.Sprintf("failed to add certificate with errorcode %d, error %s", resp.StatusCode, reason)
 		LoggingClient.Error(e)
-		return errors.New(e)
+		if (resp.StatusCode == http.StatusBadRequest) && (strings.Index(reason, "existing certificate") != -1) {
+			e = fmt.Sprintf("certificate already exists on reverse proxy")
+			return nil, true
+		}
+		return errors.New(e), false
 	}
-	return nil
+	return nil, false
 }
 
 func (s *Service) initKongService(service *KongService) error {

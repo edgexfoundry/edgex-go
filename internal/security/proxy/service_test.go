@@ -34,6 +34,54 @@ func (m mockCertificateLoader) Load() (*CertPair, error) {
 	return &CertPair{"test-certificate", "test-private-key"}, nil
 }
 
+func TestPostCertExists(t *testing.T) {
+	LoggingClient = logger.MockLogger{}
+	fileName := "./testdata/configuration.toml"
+	contents, err := ioutil.ReadFile(fileName)
+	if err != nil {
+		t.Errorf("could not load configuration file (%s): %s", fileName, err.Error())
+		return
+	}
+
+	Configuration = &ConfigurationStruct{}
+	err = toml.Unmarshal(contents, Configuration)
+	if err != nil {
+		t.Errorf("unable to parse configuration file (%s): %s", fileName, err.Error())
+		return
+	}
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(`"edgex-kong already associated with existing certificate"`))
+	}))
+	defer ts.Close()
+
+	host, port, err := parseHostAndPort(ts, t)
+	if err != nil {
+		t.Error(err.Error())
+		return
+	}
+	Configuration.KongURL = KongUrlInfo{
+		Server:    host,
+		AdminPort: port,
+	}
+
+	mock := mockCertificateLoader{}
+	service := NewService(NewRequestor(true, 10))
+	err, existed := service.postCert(mock)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	if existed == false {
+		t.Errorf("failed on testing existing certificate on proxy")
+	}
+}
+
 func TestInit(t *testing.T) {
 	LoggingClient = logger.MockLogger{}
 	fileName := "./testdata/configuration.toml"
