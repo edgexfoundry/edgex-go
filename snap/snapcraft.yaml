@@ -901,7 +901,7 @@ parts:
          "$SNAPCRAFT_PART_INSTALL"/jar/support-rulesengine/support-rulesengine.jar
 
       # FIXME:
-      # copy service license into /usr/share/java/doc, because the
+      # copy service license into /usr/share/java/doc, because the 
       # jdk plugin has a bug which prevents any files from /usr/share/doc
       # to be staged or primed.
       install -DT "./Attribution.txt" \
