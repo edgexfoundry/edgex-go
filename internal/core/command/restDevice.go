@@ -24,6 +24,7 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/metadata"
 	"github.com/gorilla/mux"
 
+	"github.com/edgexfoundry/edgex-go/internal/core/command/config"
 	"github.com/edgexfoundry/edgex-go/internal/core/command/interfaces"
 )
 
@@ -148,11 +149,12 @@ func restGetCommandsByDeviceID(
 	r *http.Request,
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
-	deviceClient metadata.DeviceClient) {
+	deviceClient metadata.DeviceClient,
+	configuration *config.ConfigurationStruct) {
 	vars := mux.Vars(r)
 	did := vars[ID]
 	ctx := r.Context()
-	status, device, err := getCommandsByDeviceID(did, ctx, loggingClient, dbClient, deviceClient)
+	status, device, err := getCommandsByDeviceID(did, ctx, loggingClient, dbClient, deviceClient, configuration)
 	if err != nil {
 		loggingClient.Error(err.Error())
 		http.Error(w, "Device not found", http.StatusNotFound)
@@ -170,11 +172,12 @@ func restGetCommandsByDeviceName(
 	r *http.Request,
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
-	deviceClient metadata.DeviceClient) {
+	deviceClient metadata.DeviceClient,
+	configuration *config.ConfigurationStruct) {
 	vars := mux.Vars(r)
 	dn := vars[NAME]
 	ctx := r.Context()
-	status, devices, err := getCommandsByDeviceName(dn, ctx, loggingClient, dbClient, deviceClient)
+	status, devices, err := getCommandsByDeviceName(dn, ctx, loggingClient, dbClient, deviceClient, configuration)
 	if err != nil {
 		loggingClient.Error(err.Error())
 		http.Error(w, "Device not found", http.StatusNotFound)
@@ -192,9 +195,10 @@ func restGetAllCommands(
 	r *http.Request,
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
-	deviceClient metadata.DeviceClient) {
+	deviceClient metadata.DeviceClient,
+	configuration *config.ConfigurationStruct) {
 	ctx := r.Context()
-	status, devices, err := getCommands(ctx, loggingClient, dbClient, deviceClient)
+	status, devices, err := getCommands(ctx, loggingClient, dbClient, deviceClient, configuration)
 	if err != nil {
 		loggingClient.Error(err.Error())
 		w.WriteHeader(status)
