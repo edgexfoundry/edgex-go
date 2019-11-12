@@ -20,6 +20,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/edgexfoundry/edgex-go/internal/security/proxy/config"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
 
@@ -47,8 +49,8 @@ func TestDelete(t *testing.T) {
 	}
 
 	client := &http.Client{}
-	cfgOK := ConfigurationStruct{}
-	cfgOK.KongURL = KongUrlInfo{
+	cfgOK := config.ConfigurationStruct{}
+	cfgOK.KongURL = config.KongUrlInfo{
 		Server:    host,
 		AdminPort: port,
 	}
@@ -58,7 +60,7 @@ func TestDelete(t *testing.T) {
 
 	tests := []struct {
 		name        string
-		config      ConfigurationStruct
+		config      config.ConfigurationStruct
 		r           Resource
 		expectError bool
 	}{

@@ -24,8 +24,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/BurntSushi/toml"
+	"github.com/edgexfoundry/edgex-go/internal/security/proxy/config"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+
+	"github.com/BurntSushi/toml"
 )
 
 type mockCertificateLoader struct{}
@@ -43,7 +46,7 @@ func TestInit(t *testing.T) {
 		return
 	}
 
-	Configuration = &ConfigurationStruct{}
+	Configuration = &config.ConfigurationStruct{}
 	err = toml.Unmarshal(contents, Configuration)
 	if err != nil {
 		t.Errorf("unable to parse configuration file (%s): %s", fileName, err.Error())
@@ -78,7 +81,7 @@ func TestInit(t *testing.T) {
 		t.Error(err.Error())
 		return
 	}
-	Configuration.KongURL = KongUrlInfo{
+	Configuration.KongURL = config.KongUrlInfo{
 		Server:    host,
 		AdminPort: port,
 	}
@@ -170,8 +173,8 @@ func TestInitKongService(t *testing.T) {
 		t.Error(err.Error())
 		return
 	}
-	cfgOK := ConfigurationStruct{}
-	cfgOK.KongURL = KongUrlInfo{
+	cfgOK := config.ConfigurationStruct{}
+	cfgOK.KongURL = config.KongUrlInfo{
 		Server:    host,
 		AdminPort: port,
 	}
@@ -184,7 +187,7 @@ func TestInitKongService(t *testing.T) {
 
 	tests := []struct {
 		name        string
-		config      ConfigurationStruct
+		config      config.ConfigurationStruct
 		serviceId   string
 		expectError bool
 	}{
@@ -234,8 +237,8 @@ func TestInitKongRoutes(t *testing.T) {
 		return
 	}
 
-	cfgOK := ConfigurationStruct{}
-	cfgOK.KongURL = KongUrlInfo{
+	cfgOK := config.ConfigurationStruct{}
+	cfgOK.KongURL = config.KongUrlInfo{
 		Server:    host,
 		AdminPort: port,
 	}
@@ -245,7 +248,7 @@ func TestInitKongRoutes(t *testing.T) {
 
 	tests := []struct {
 		name        string
-		config      ConfigurationStruct
+		config      config.ConfigurationStruct
 		path        string
 		expectError bool
 	}{
@@ -303,8 +306,8 @@ func TestInitACL(t *testing.T) {
 		return
 	}
 
-	cfgOK := ConfigurationStruct{}
-	cfgOK.KongURL = KongUrlInfo{
+	cfgOK := config.ConfigurationStruct{}
+	cfgOK.KongURL = config.KongUrlInfo{
 		Server:    host,
 		AdminPort: port,
 	}
@@ -314,7 +317,7 @@ func TestInitACL(t *testing.T) {
 
 	tests := []struct {
 		name        string
-		config      ConfigurationStruct
+		config      config.ConfigurationStruct
 		aclName     string
 		whitelist   string
 		expectError bool
@@ -369,8 +372,8 @@ func TestResetProxy(t *testing.T) {
 		return
 	}
 
-	cfgOK := ConfigurationStruct{}
-	cfgOK.KongURL = KongUrlInfo{
+	cfgOK := config.ConfigurationStruct{}
+	cfgOK.KongURL = config.KongUrlInfo{
 		Server:    host,
 		AdminPort: port,
 	}
@@ -380,7 +383,7 @@ func TestResetProxy(t *testing.T) {
 
 	tests := []struct {
 		name        string
-		config      ConfigurationStruct
+		config      config.ConfigurationStruct
 		expectError bool
 	}{
 		{"resetOK", cfgOK, false},
@@ -432,8 +435,8 @@ func TestGetSvcIDs(t *testing.T) {
 		return
 	}
 
-	cfgOK := ConfigurationStruct{}
-	cfgOK.KongURL = KongUrlInfo{
+	cfgOK := config.ConfigurationStruct{}
+	cfgOK.KongURL = config.KongUrlInfo{
 		Server:    host,
 		AdminPort: port,
 	}
@@ -445,7 +448,7 @@ func TestGetSvcIDs(t *testing.T) {
 
 	tests := []struct {
 		name        string
-		config      ConfigurationStruct
+		config      config.ConfigurationStruct
 		serviceId   string
 		expectError bool
 	}{
@@ -499,8 +502,8 @@ func TestInitJWTAuth(t *testing.T) {
 		return
 	}
 
-	cfgOK := ConfigurationStruct{}
-	cfgOK.KongURL = KongUrlInfo{
+	cfgOK := config.ConfigurationStruct{}
+	cfgOK.KongURL = config.KongUrlInfo{
 		Server:    host,
 		AdminPort: port,
 	}
@@ -510,7 +513,7 @@ func TestInitJWTAuth(t *testing.T) {
 
 	tests := []struct {
 		name        string
-		config      ConfigurationStruct
+		config      config.ConfigurationStruct
 		expectError bool
 	}{
 		{"jwtOK", cfgOK, false},

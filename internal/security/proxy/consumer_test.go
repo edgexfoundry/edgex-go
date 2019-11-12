@@ -21,6 +21,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/edgexfoundry/edgex-go/internal/security/proxy/config"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
 
@@ -85,8 +87,8 @@ func TestCreate(t *testing.T) {
 		t.Error(err.Error())
 		return
 	}
-	Configuration = &ConfigurationStruct{}
-	Configuration.KongURL = KongUrlInfo{
+	Configuration = &config.ConfigurationStruct{}
+	Configuration.KongURL = config.KongUrlInfo{
 		Server:    host,
 		AdminPort: port,
 	}
@@ -120,8 +122,8 @@ func TestAssociateWithGroup(t *testing.T) {
 		return
 	}
 
-	Configuration = &ConfigurationStruct{}
-	Configuration.KongURL = KongUrlInfo{
+	Configuration = &config.ConfigurationStruct{}
+	Configuration.KongURL = config.KongUrlInfo{
 		Server:    host,
 		AdminPort: port,
 	}
@@ -156,8 +158,8 @@ func TestCreateJWTToken(t *testing.T) {
 		return
 	}
 
-	Configuration = &ConfigurationStruct{}
-	Configuration.KongURL = KongUrlInfo{
+	Configuration = &config.ConfigurationStruct{}
+	Configuration.KongURL = config.KongUrlInfo{
 		Server:    host,
 		AdminPort: port,
 	}

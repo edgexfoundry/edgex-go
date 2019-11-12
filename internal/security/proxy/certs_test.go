@@ -23,7 +23,10 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/mocks"
+	"github.com/edgexfoundry/edgex-go/internal/security/proxy/config"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+
 	"github.com/stretchr/testify/mock"
 )
 
@@ -52,8 +55,8 @@ func TestLoad(t *testing.T) {
 		return
 	}
 
-	cfgOK := ConfigurationStruct{}
-	cfgOK.SecretService = SecretServiceInfo{
+	cfgOK := config.ConfigurationStruct{}
+	cfgOK.SecretService = config.SecretServiceInfo{
 		Server: host,
 		Port:   port,
 	}
@@ -63,7 +66,7 @@ func TestLoad(t *testing.T) {
 
 	tests := []struct {
 		name        string
-		config      ConfigurationStruct
+		config      config.ConfigurationStruct
 		certPath    string
 		tokenPath   string
 		expectError bool
@@ -166,8 +169,8 @@ func TestRetrieve(t *testing.T) {
 		return
 	}
 
-	cfgOK := ConfigurationStruct{}
-	cfgOK.SecretService = SecretServiceInfo{
+	cfgOK := config.ConfigurationStruct{}
+	cfgOK.SecretService = config.SecretServiceInfo{
 		Server: host,
 		Port:   port,
 	}
@@ -177,7 +180,7 @@ func TestRetrieve(t *testing.T) {
 
 	tests := []struct {
 		name        string
-		config      ConfigurationStruct
+		config      config.ConfigurationStruct
 		certPath    string
 		token       string
 		expectError bool
