@@ -333,6 +333,11 @@ apps:
       CONSUL_ADDR: "consul://localhost:8500"
     daemon: simple
     plugs: [network, network-bind]
+  app-service-configurable:
+    adapter: full
+    command: bin/app-service-configurable -confdir $SNAP_DATA/config/app-service-configurable/res -profile rules-engine --registry
+    daemon: simple
+    plugs: [network, network-bind]
 
   # helper commands the snap exposes
   security-proxy-setup-cmd:
@@ -1241,3 +1246,29 @@ parts:
          "$SNAPCRAFT_PART_INSTALL/usr/share/doc/device-random/Attribution.txt"
       install -DT "./LICENSE" \
          "$SNAPCRAFT_PART_INSTALL/usr/share/doc/device-random/LICENSE"
+
+  app-service-config:
+    source: https://github.com/edgexfoundry/app-service-configurable.git
+    source-branch: master
+    plugin: make
+    build-packages: [gcc, git, libzmq3-dev, pkg-config]
+    stage-packages: [libzmq5]
+    after: [go]
+    override-build: |
+      cd $SNAPCRAFT_PART_SRC
+      make build
+
+      # install the service binary
+      install -DT "./app-service-configurable" \
+         "$SNAPCRAFT_PART_INSTALL/bin/app-service-configurable"
+
+      # replace relative log paths in configuration.toml files with fully qualified paths
+      # prefixed with $SNAP_COMMON
+      mkdir -p "$SNAPCRAFT_PART_INSTALL/config/app-service-configurable/res/rules-engine"
+      cat "res/rules-engine/configuration.toml" | sed -e s:\./logs/:\\'$SNAP_COMMON/'\: > \
+        "$SNAPCRAFT_PART_INSTALL/config/app-service-configurable/res/rules-engine/configuration.toml"
+
+      install -DT "./Attribution.txt" \
+         "$SNAPCRAFT_PART_INSTALL/usr/share/doc/app-service-configurable/Attribution.txt"
+      install -DT "./LICENSE" \
+         "$SNAPCRAFT_PART_INSTALL/usr/share/doc/app-service-configurable/LICENSE"

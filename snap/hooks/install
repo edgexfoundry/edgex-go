@@ -8,6 +8,7 @@ SNAP_CURRENT=${SNAP/%$SNAP_REVISION/current}
 
 # install all the config files from $SNAP/config/SERVICE/res/configuration.toml 
 # into $SNAP_DATA/config
+# note that app-service-configurable is handled separately
 mkdir -p "$SNAP_DATA/config"
 for service in edgex-mongo security-proxy-setup security-secrets-setup security-secretstore-setup core-command config-seed core-data core-metadata export-client export-distro support-logging support-notifications support-scheduler sys-mgmt-agent device-random device-virtual; do
     if [ ! -f "$SNAP_DATA/config/$service/res/configuration.toml" ]; then
@@ -20,6 +21,21 @@ for service in edgex-mongo security-proxy-setup security-secrets-setup security-
             "$SNAP_DATA/config/$service/res/configuration.toml"
     fi
 done
+
+# handle app-service-configurable's various profiles:
+# 1. ensure all the directories from app-service-configurable exist
+# 2. copy the config files from $SNAP into $SNAP_DATA
+# 3. replace the various env vars that might be in that config file with their
+#    "current" symlink equivalent
+mkdir -p "$SNAP_DATA/config/app-service-configurable/res/rules-engine"
+RULES_ENGINE_PROFILE_CONFIG="config/app-service-configurable/res/rules-engine/configuration.toml"
+if [ ! -f "$SNAP_DATA/$RULES_ENGINE_PROFILE_CONFIG" ]; then
+    cp "$SNAP/$RULES_ENGINE_PROFILE_CONFIG" "$SNAP_DATA/$RULES_ENGINE_PROFILE_CONFIG"
+    sed -i -e "s@\$SNAP_COMMON@$SNAP_COMMON@g" \
+        -e "s@\$SNAP_DATA@$SNAP_DATA_CURRENT@g" \
+        -e "s@\$SNAP@$SNAP_CURRENT@g" \
+        "$SNAP_DATA/$RULES_ENGINE_PROFILE_CONFIG"
+fi
 
 # handle device-random device profile
 cp "$SNAP/config/device-random/res/device.random.yaml" "$SNAP_DATA/config/device-random/res/device.random.yaml"
@@ -171,7 +187,9 @@ snapctl stop "$SNAP_NAME.postgres"
 # finally, disable and turn off non-default services
 # by default, we want the export-*, support-*, device-*, and redis services 
 # off.
-for svc in export-distro export-client support-notifications support-scheduler support-logging support-rulesengine device-random device-virtual redis; do
+# also the app-service-configurable service since that is meant to replace the 
+# export services
+for svc in export-distro export-client support-notifications support-scheduler support-logging app-service-configurable support-rulesengine device-random device-virtual redis; do
     # set the service as off, so that the setting is persistent after a refresh
     # due to snapd bug: https://bugs.launchpad.net/snapd/+bug/1818306
     snapctl set $svc=off
