@@ -24,6 +24,7 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 
+	"github.com/edgexfoundry/edgex-go/internal/core/command/config"
 	"github.com/edgexfoundry/edgex-go/internal/core/command/errors"
 	"github.com/edgexfoundry/edgex-go/internal/core/command/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
@@ -157,7 +158,8 @@ func getCommands(
 	ctx context.Context,
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
-	deviceClient metadata.DeviceClient) (int, []contract.CommandResponse, error) {
+	deviceClient metadata.DeviceClient,
+	configuration config.ConfigurationStruct) (int, []contract.CommandResponse, error) {
 	devices, err := deviceClient.Devices(ctx)
 	if err != nil {
 		chk, ok := err.(types.ErrServiceClient)
@@ -178,7 +180,7 @@ func getCommands(
 				return http.StatusInternalServerError, nil, err
 			}
 		}
-		cr = append(cr, contract.CommandResponseFromDevice(d, commands, Configuration.Service.Url()))
+		cr = append(cr, contract.CommandResponseFromDevice(d, commands, configuration.Service.Url()))
 	}
 	return http.StatusOK, cr, err
 
@@ -189,7 +191,8 @@ func getCommandsByDeviceID(
 	ctx context.Context,
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
-	deviceClient metadata.DeviceClient) (int, contract.CommandResponse, error) {
+	deviceClient metadata.DeviceClient,
+	configuration config.ConfigurationStruct) (int, contract.CommandResponse, error) {
 	d, err := deviceClient.Device(did, ctx)
 	if err != nil {
 		chk, ok := err.(types.ErrServiceClient)
@@ -210,7 +213,7 @@ func getCommandsByDeviceID(
 		}
 	}
 
-	return http.StatusOK, contract.CommandResponseFromDevice(d, commands, Configuration.Service.Url()), err
+	return http.StatusOK, contract.CommandResponseFromDevice(d, commands, configuration.Service.Url()), err
 }
 
 func getCommandsByDeviceName(
@@ -218,7 +221,8 @@ func getCommandsByDeviceName(
 	ctx context.Context,
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
-	deviceClient metadata.DeviceClient) (int, contract.CommandResponse, error) {
+	deviceClient metadata.DeviceClient,
+	configuration config.ConfigurationStruct) (int, contract.CommandResponse, error) {
 	d, err := deviceClient.DeviceForName(dn, ctx)
 	if err != nil {
 		chk, ok := err.(types.ErrServiceClient)
@@ -239,5 +243,5 @@ func getCommandsByDeviceName(
 		}
 	}
 
-	return http.StatusOK, contract.CommandResponseFromDevice(d, commands, Configuration.Service.Url()), err
+	return http.StatusOK, contract.CommandResponseFromDevice(d, commands, configuration.Service.Url()), err
 }

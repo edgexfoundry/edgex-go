@@ -12,7 +12,7 @@
  * the License.
  *******************************************************************************/
 
-package command
+package config
 
 import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/interfaces"
