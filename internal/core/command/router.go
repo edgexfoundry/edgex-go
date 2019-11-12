@@ -38,7 +38,7 @@ func LoadRestRoutes(dic *di.Container) *mux.Router {
 
 	// Configuration
 	r.HandleFunc(clients.ApiConfigRoute, func(w http.ResponseWriter, r *http.Request) {
-		configHandler(w, bootstrapContainer.LoggingClientFrom(dic.Get), *container.ConfigurationFrom(dic.Get))
+		configHandler(w, bootstrapContainer.LoggingClientFrom(dic.Get), container.ConfigurationFrom(dic.Get))
 	}).Methods(http.MethodGet)
 
 	// Metrics
@@ -69,7 +69,7 @@ func loadDeviceRoutes(b *mux.Router, dic *di.Container) {
 			bootstrapContainer.LoggingClientFrom(dic.Get),
 			bootstrapContainer.DBClientFrom(dic.Get),
 			container.MetadataDeviceClientFrom(dic.Get),
-			*container.ConfigurationFrom(dic.Get))
+			container.ConfigurationFrom(dic.Get))
 	}).Methods(http.MethodGet)
 
 	d := b.PathPrefix("/" + DEVICE).Subrouter()
@@ -82,7 +82,7 @@ func loadDeviceRoutes(b *mux.Router, dic *di.Container) {
 			bootstrapContainer.LoggingClientFrom(dic.Get),
 			bootstrapContainer.DBClientFrom(dic.Get),
 			container.MetadataDeviceClientFrom(dic.Get),
-			*container.ConfigurationFrom(dic.Get))
+			container.ConfigurationFrom(dic.Get))
 	}).Methods(http.MethodGet)
 	d.HandleFunc("/{"+ID+"}/"+COMMAND+"/{"+COMMANDID+"}", func(w http.ResponseWriter, r *http.Request) {
 		restGetDeviceCommandByCommandID(
@@ -111,7 +111,7 @@ func loadDeviceRoutes(b *mux.Router, dic *di.Container) {
 			bootstrapContainer.LoggingClientFrom(dic.Get),
 			bootstrapContainer.DBClientFrom(dic.Get),
 			container.MetadataDeviceClientFrom(dic.Get),
-			*container.ConfigurationFrom(dic.Get))
+			container.ConfigurationFrom(dic.Get))
 	}).Methods(http.MethodGet)
 	dn.HandleFunc("/{"+NAME+"}/"+COMMAND+"/{"+COMMANDNAME+"}", func(w http.ResponseWriter, r *http.Request) {
 		restGetDeviceCommandByNames(
@@ -137,7 +137,7 @@ func pingHandler(w http.ResponseWriter, _ *http.Request) {
 	w.Write([]byte("pong"))
 }
 
-func configHandler(w http.ResponseWriter, loggingClient logger.LoggingClient, configuration config.ConfigurationStruct) {
+func configHandler(w http.ResponseWriter, loggingClient logger.LoggingClient, configuration *config.ConfigurationStruct) {
 	pkg.Encode(configuration, w, loggingClient)
 }
 

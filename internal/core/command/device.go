@@ -159,7 +159,7 @@ func getCommands(
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	deviceClient metadata.DeviceClient,
-	configuration config.ConfigurationStruct) (int, []contract.CommandResponse, error) {
+	configuration *config.ConfigurationStruct) (int, []contract.CommandResponse, error) {
 	devices, err := deviceClient.Devices(ctx)
 	if err != nil {
 		chk, ok := err.(types.ErrServiceClient)
@@ -192,7 +192,7 @@ func getCommandsByDeviceID(
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	deviceClient metadata.DeviceClient,
-	configuration config.ConfigurationStruct) (int, contract.CommandResponse, error) {
+	configuration *config.ConfigurationStruct) (int, contract.CommandResponse, error) {
 	d, err := deviceClient.Device(did, ctx)
 	if err != nil {
 		chk, ok := err.(types.ErrServiceClient)
@@ -222,7 +222,7 @@ func getCommandsByDeviceName(
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	deviceClient metadata.DeviceClient,
-	configuration config.ConfigurationStruct) (int, contract.CommandResponse, error) {
+	configuration *config.ConfigurationStruct) (int, contract.CommandResponse, error) {
 	d, err := deviceClient.DeviceForName(dn, ctx)
 	if err != nil {
 		chk, ok := err.(types.ErrServiceClient)

@@ -150,7 +150,7 @@ func restGetCommandsByDeviceID(
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	deviceClient metadata.DeviceClient,
-	configuration config.ConfigurationStruct) {
+	configuration *config.ConfigurationStruct) {
 	vars := mux.Vars(r)
 	did := vars[ID]
 	ctx := r.Context()
@@ -173,7 +173,7 @@ func restGetCommandsByDeviceName(
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	deviceClient metadata.DeviceClient,
-	configuration config.ConfigurationStruct) {
+	configuration *config.ConfigurationStruct) {
 	vars := mux.Vars(r)
 	dn := vars[NAME]
 	ctx := r.Context()
@@ -196,7 +196,7 @@ func restGetAllCommands(
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	deviceClient metadata.DeviceClient,
-	configuration config.ConfigurationStruct) {
+	configuration *config.ConfigurationStruct) {
 	ctx := r.Context()
 	status, devices, err := getCommands(ctx, loggingClient, dbClient, deviceClient, configuration)
 	if err != nil {
