@@ -49,7 +49,7 @@ COPY ./cmd ./cmd-redis
 # Databases.Primary.Type = redisdb 
 # Databases.Primary.Port = 6379
 # Databases.Primary.Host = edgex-redis
-RUN for svc in core-data core-metadata export-client support-notifications support-scheduler; do \
+RUN for svc in core-command core-data core-metadata export-client support-notifications support-scheduler; do \
     configFile=./cmd-redis/$svc/res/docker/configuration.toml && \
     toml2json --preserve-key-order "$configFile" | \
     jq -r '.Databases.Primary.Type = "redisdb" | .Databases.Primary.Port = 6379 | .Databases.Primary.Host = "edgex-redis"' | \
