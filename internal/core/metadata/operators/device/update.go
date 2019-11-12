@@ -140,7 +140,7 @@ func (op updateDevice) Execute() (err error) {
 
 	evt.DeviceId = op.device.Id
 	evt.DeviceName = op.device.Name
-	evt.HttpMethod = http.MethodPost
+	evt.HttpMethod = http.MethodPut
 	evt.ServiceId = op.device.Service.Id
 
 	op.events <- evt
