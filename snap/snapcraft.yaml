@@ -89,7 +89,7 @@ apps:
   mongod:
     adapter: full
     after: [core-config-seed]
-    command: bin/mongod --dbpath $SNAP_DATA/mongo/db --logpath $SNAP_COMMON/mongodb.log --smallfiles
+    command: bin/mongod --dbpath $SNAP_DATA/mongo/db --logpath $SNAP_COMMON/mongodb.log
     daemon: simple
     plugs: [hardware-observe, network, network-bind, system-observe]
     stop-command: bin/mongod --shutdown --dbpath $SNAP_DATA/mongo/db
@@ -617,17 +617,17 @@ parts:
   mongodb:
     plugin: dump
     source:
-      - on amd64: https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-ubuntu1604-3.4.10.tgz
+      - on amd64: http://downloads.mongodb.org/linux/mongodb-linux-x86_64-ubuntu1804-4.2.0.tgz
       - else:
-          - on arm64: https://fastdl.mongodb.org/linux/mongodb-linux-arm64-ubuntu1604-3.4.10.tgz
+          - on arm64: http://downloads.mongodb.org/linux/mongodb-linux-aarch64-ubuntu1804-4.2.0.tgz
       - else fail
     organize:
-      GNU-AGPL-3.0: usr/share/doc/mongodb/GNU-AGPL-3.0
       MPL-2: usr/share/doc/mongodb/MPL-2
       README: usr/share/doc/mongodb/README
       THIRD-PARTY-NOTICES: usr/share/doc/mongodb/THIRD-PARTY-NOTICES
+      LICENSE-Community.txt: usr/share/doc/mongodb/LICENSE-Community.txt
     stage-packages:
-      - libssl1.0.0
+      - libssl1.1
     stage:
       - -bin/bsondump
       - -bin/mongoexport
