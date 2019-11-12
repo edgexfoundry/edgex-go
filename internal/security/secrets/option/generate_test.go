@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets"
+
 	"github.com/stretchr/testify/assert"
 )
 

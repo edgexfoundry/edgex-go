@@ -33,23 +33,26 @@ type CertificateLoader interface {
 }
 
 type certificate struct {
-	client        internal.HttpCaller
-	certPath      string
-	tokenPath     string
-	loggingClient logger.LoggingClient
+	client               internal.HttpCaller
+	certPath             string
+	tokenPath            string
+	secretServiceBaseUrl string
+	loggingClient        logger.LoggingClient
 }
 
 func NewCertificateLoader(
 	r internal.HttpCaller,
 	certPath string,
 	tokenPath string,
+	secretServiceBaseUrl string,
 	loggingClient logger.LoggingClient) CertificateLoader {
 
 	return certificate{
-		client:        r,
-		certPath:      certPath,
-		tokenPath:     tokenPath,
-		loggingClient: loggingClient,
+		client:               r,
+		certPath:             certPath,
+		tokenPath:            tokenPath,
+		loggingClient:        loggingClient,
+		secretServiceBaseUrl: secretServiceBaseUrl,
 	}
 }
 
@@ -94,7 +97,7 @@ func (cs certificate) getAccessToken(filename string) (string, error) {
 }
 
 func (cs certificate) retrieve(t string) (*CertPair, error) {
-	tokens := []string{Configuration.SecretService.GetSecretSvcBaseURL(), cs.certPath}
+	tokens := []string{cs.secretServiceBaseUrl, cs.certPath}
 	req, err := http.NewRequest(http.MethodGet, strings.Join(tokens, "/"), nil)
 	if err != nil {
 		e := fmt.Sprintf("failed to retrieve certificate on path %s with error %s", cs.certPath, err.Error())

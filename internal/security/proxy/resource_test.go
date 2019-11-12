@@ -64,13 +64,12 @@ func TestDelete(t *testing.T) {
 		r           *Resource
 		expectError bool
 	}{
-		{"DeleteOK", cfgOK, NewResource("1", client, mockLogger), false},
-		{"InvalidResource", cfgOK, NewResource("2", client, mockLogger), true},
-		{"WrongPort", cfgWrongPort, NewResource("1", client, mockLogger), true},
+		{"DeleteOK", cfgOK, NewResource("1", client, cfgOK.KongURL.GetProxyBaseURL(), mockLogger), false},
+		{"InvalidResource", cfgOK, NewResource("2", client, cfgOK.KongURL.GetProxyBaseURL(), mockLogger), true},
+		{"WrongPort", cfgWrongPort, NewResource("1", client, cfgWrongPort.KongURL.GetProxyBaseURL(), mockLogger), true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			Configuration = &tt.config
 			err = tt.r.Remove(path)
 			if err != nil && !tt.expectError {
 				t.Error(err)

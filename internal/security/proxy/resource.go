@@ -28,21 +28,28 @@ import (
 )
 
 type Resource struct {
-	name          string
-	client        internal.HttpCaller
-	loggingClient logger.LoggingClient
+	name             string
+	client           internal.HttpCaller
+	kongProxyBaseUrl string
+	loggingClient    logger.LoggingClient
 }
 
-func NewResource(name string, r internal.HttpCaller, loggingClient logger.LoggingClient) *Resource {
+func NewResource(
+	name string,
+	r internal.HttpCaller,
+	kongProxyBaseUrl string,
+	loggingClient logger.LoggingClient) *Resource {
+
 	return &Resource{
-		name:          name,
-		client:        r,
-		loggingClient: loggingClient,
+		name:             name,
+		client:           r,
+		kongProxyBaseUrl: kongProxyBaseUrl,
+		loggingClient:    loggingClient,
 	}
 }
 
 func (r *Resource) Remove(path string) error {
-	tokens := []string{Configuration.KongURL.GetProxyBaseURL(), path, r.name}
+	tokens := []string{r.kongProxyBaseUrl, path, r.name}
 	req, err := http.NewRequest(http.MethodDelete, strings.Join(tokens, "/"), nil)
 	if err != nil {
 		e := fmt.Sprintf("failed to delete %s at %s with error %s", r.name, path, err.Error())

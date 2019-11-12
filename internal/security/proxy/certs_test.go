@@ -75,9 +75,13 @@ func TestLoad(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			Configuration = &tt.config
 			mockLogger := logger.MockLogger{}
-			cert := NewCertificateLoader(NewRequestor(true, 10, mockLogger), tt.certPath, tt.tokenPath, mockLogger)
+			cert := NewCertificateLoader(
+				NewRequestor(true, 10, "", mockLogger),
+				tt.certPath,
+				tt.tokenPath,
+				tt.config.SecretService.GetSecretSvcBaseURL(),
+				mockLogger)
 			_, err := cert.Load()
 			if err != nil && !tt.expectError {
 				t.Error(err)
@@ -93,7 +97,7 @@ func TestLoad(t *testing.T) {
 func TestGetAccessToken(t *testing.T) {
 	r := createRequestorMockHttpOK()
 	path := "testdata/test-resp-init.json"
-	cs := certificate{r, "", "", logger.MockLogger{}}
+	cs := certificate{r, "", "", "", logger.MockLogger{}}
 	s, err := cs.getAccessToken(path)
 	if err != nil {
 		t.Errorf("failed to parse token file")
@@ -119,7 +123,7 @@ func TestValidate(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cs := certificate{r, "", "", logger.MockLogger{}}
+			cs := certificate{r, "", "", "", logger.MockLogger{}}
 			err := cs.validate(&tt.pair)
 			if err != nil && !tt.expectError {
 				t.Error(err)
@@ -190,9 +194,13 @@ func TestRetrieve(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			Configuration = &tt.config
 			mockLogger := logger.MockLogger{}
-			cs := certificate{NewRequestor(true, 10, mockLogger), tt.certPath, "", mockLogger}
+			cs := certificate{
+				NewRequestor(true, 10, "", mockLogger),
+				tt.certPath,
+				"",
+				tt.config.SecretService.GetSecretSvcBaseURL(),
+				mockLogger}
 			cp, err := cs.retrieve(tt.token)
 			if err != nil && !tt.expectError {
 				t.Error(err)

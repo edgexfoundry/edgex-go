@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/edgexfoundry/edgex-go/internal/security/proxy/config"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -34,21 +35,27 @@ import (
 type Service struct {
 	client        internal.HttpCaller
 	loggingClient logger.LoggingClient
+	configuration *config.ConfigurationStruct
 }
 
-func NewService(r internal.HttpCaller, loggingClient logger.LoggingClient) Service {
+func NewService(
+	r internal.HttpCaller,
+	loggingClient logger.LoggingClient,
+	configuration *config.ConfigurationStruct) Service {
+
 	return Service{
 		client:        r,
 		loggingClient: loggingClient,
+		configuration: configuration,
 	}
 }
 
 func (s *Service) CheckProxyServiceStatus() error {
-	return s.checkServiceStatus(Configuration.KongURL.GetProxyBaseURL())
+	return s.checkServiceStatus(s.configuration.KongURL.GetProxyBaseURL())
 }
 
 func (s *Service) CheckSecretServiceStatus() error {
-	return s.checkServiceStatus(Configuration.SecretService.GetSecretSvcBaseURL())
+	return s.checkServiceStatus(s.configuration.SecretService.GetSecretSvcBaseURL())
 }
 
 func (s *Service) checkServiceStatus(path string) error {
@@ -83,7 +90,7 @@ func (s *Service) ResetProxy() error {
 			return err
 		}
 		for _, c := range d.Section {
-			r := NewResource(c.ID, s.client, s.loggingClient)
+			r := NewResource(c.ID, s.client, s.configuration.KongURL.GetProxyBaseURL(), s.loggingClient)
 			err = r.Remove(path)
 			if err != nil {
 				return err
@@ -99,7 +106,7 @@ func (s *Service) Init(cert CertificateLoader) error {
 		return err
 	}
 
-	for clientName, client := range Configuration.Clients {
+	for clientName, client := range s.configuration.Clients {
 		serviceParams := &KongService{
 			Name:     strings.ToLower(clientName),
 			Host:     client.Host,
@@ -122,12 +129,12 @@ func (s *Service) Init(cert CertificateLoader) error {
 		}
 	}
 
-	err = s.initAuthMethod(Configuration.KongAuth.Name, Configuration.KongAuth.TokenTTL)
+	err = s.initAuthMethod(s.configuration.KongAuth.Name, s.configuration.KongAuth.TokenTTL)
 	if err != nil {
 		return err
 	}
 
-	err = s.initACL(Configuration.KongACL.Name, Configuration.KongACL.WhiteList)
+	err = s.initACL(s.configuration.KongACL.Name, s.configuration.KongACL.WhiteList)
 	if err != nil {
 		return err
 	}
@@ -146,7 +153,7 @@ func (s *Service) postCert(cert CertificateLoader) error {
 	body := &CertInfo{
 		Cert: cp.Cert,
 		Key:  cp.Key,
-		Snis: Configuration.SecretService.SNIS,
+		Snis: s.configuration.SecretService.SNIS,
 	}
 	s.loggingClient.Debug("trying to upload cert to proxy server")
 	data, err := json.Marshal(body)
@@ -154,7 +161,7 @@ func (s *Service) postCert(cert CertificateLoader) error {
 		s.loggingClient.Error(err.Error())
 		return err
 	}
-	tokens := []string{Configuration.KongURL.GetProxyBaseURL(), CertificatesPath}
+	tokens := []string{s.configuration.KongURL.GetProxyBaseURL(), CertificatesPath}
 	req, err := http.NewRequest(http.MethodPost, strings.Join(tokens, "/"), strings.NewReader(string(data)))
 	req.Header.Add(clients.ContentType, clients.ContentTypeJSON)
 	if err != nil {
@@ -191,7 +198,7 @@ func (s *Service) initKongService(service *KongService) error {
 		"port":     {strconv.Itoa(service.Port)},
 		"protocol": {service.Protocol},
 	}
-	tokens := []string{Configuration.KongURL.GetProxyBaseURL(), ServicesPath}
+	tokens := []string{s.configuration.KongURL.GetProxyBaseURL(), ServicesPath}
 	req, err := http.NewRequest(http.MethodPost, strings.Join(tokens, "/"), strings.NewReader(formVals.Encode()))
 	if err != nil {
 		return fmt.Errorf("failed to construct http POST form request: %s %s", service.Name, err.Error())
@@ -227,7 +234,7 @@ func (s *Service) initKongRoutes(r *KongRoute, name string) error {
 		s.loggingClient.Error(err.Error())
 		return err
 	}
-	tokens := []string{Configuration.KongURL.GetProxyBaseURL(), ServicesPath, name, "routes"}
+	tokens := []string{s.configuration.KongURL.GetProxyBaseURL(), ServicesPath, name, "routes"}
 	req, err := http.NewRequest(http.MethodPost, strings.Join(tokens, "/"), strings.NewReader(string(data)))
 	if err != nil {
 		e := fmt.Sprintf("failed to set up routes for %s with error %s", name, err.Error())
@@ -267,7 +274,7 @@ func (s *Service) initACL(name string, whitelist string) error {
 		"name":             {aclParams.Name},
 		"config.whitelist": {aclParams.WhiteList},
 	}
-	tokens := []string{Configuration.KongURL.GetProxyBaseURL(), PluginsPath}
+	tokens := []string{s.configuration.KongURL.GetProxyBaseURL(), PluginsPath}
 	req, err := http.NewRequest(http.MethodPost, strings.Join(tokens, "/"), strings.NewReader(formVals.Encode()))
 	if err != nil {
 		e := fmt.Sprintf("failed to set up acl -- %s", err.Error())
@@ -312,7 +319,7 @@ func (s *Service) initJWTAuth() error {
 	formVals := url.Values{
 		"name": {"jwt"},
 	}
-	tokens := []string{Configuration.KongURL.GetProxyBaseURL(), PluginsPath}
+	tokens := []string{s.configuration.KongURL.GetProxyBaseURL(), PluginsPath}
 	req, err := http.NewRequest(http.MethodPost, strings.Join(tokens, "/"), strings.NewReader(formVals.Encode()))
 	if err != nil {
 		e := fmt.Sprintf("failed to create jwt auth request -- %s", err.Error())
@@ -359,7 +366,7 @@ func (s *Service) initOAuth2(ttl int) error {
 		"config.global_credentials":        {oauth2Params.EnableGlobalCredentials},
 		"config.refresh_token_ttl":         {strconv.Itoa(oauth2Params.TokenTTL)},
 	}
-	tokens := []string{Configuration.KongURL.GetProxyBaseURL(), PluginsPath}
+	tokens := []string{s.configuration.KongURL.GetProxyBaseURL(), PluginsPath}
 	req, err := http.NewRequest(http.MethodPost, strings.Join(tokens, "/"), strings.NewReader(formVals.Encode()))
 	if err != nil {
 		e := fmt.Sprintf("failed to create oauth2 request -- %s", err.Error())
@@ -391,7 +398,7 @@ func (s *Service) initOAuth2(ttl int) error {
 func (s *Service) getSvcIDs(path string) (DataCollect, error) {
 	collection := DataCollect{}
 
-	tokens := []string{Configuration.KongURL.GetProxyBaseURL(), path}
+	tokens := []string{s.configuration.KongURL.GetProxyBaseURL(), path}
 	req, err := http.NewRequest(http.MethodGet, strings.Join(tokens, "/"), nil)
 	if err != nil {
 		e := fmt.Sprintf("failed to create service list request -- %s", err.Error())

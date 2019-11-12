@@ -27,14 +27,19 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
 
-func NewRequestor(skipVerify bool, timeoutInSecond int, loggingClient logger.LoggingClient) internal.HttpCaller {
+func NewRequestor(
+	skipVerify bool,
+	timeoutInSecond int,
+	caCertPath string,
+	loggingClient logger.LoggingClient) internal.HttpCaller {
+
 	var tr *http.Transport
 	if skipVerify {
 		tr = &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		}
 	} else {
-		caCert, err := ioutil.ReadFile(Configuration.SecretService.CACertPath)
+		caCert, err := ioutil.ReadFile(caCertPath)
 		if err != nil {
 			loggingClient.Error("failed to load rootCA certificate.")
 			return nil

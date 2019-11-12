@@ -45,8 +45,8 @@ func TestInit(t *testing.T) {
 		return
 	}
 
-	Configuration = &config.ConfigurationStruct{}
-	err = toml.Unmarshal(contents, Configuration)
+	configuration := &config.ConfigurationStruct{}
+	err = toml.Unmarshal(contents, configuration)
 	if err != nil {
 		t.Errorf("unable to parse configuration file (%s): %s", fileName, err.Error())
 		return
@@ -80,14 +80,14 @@ func TestInit(t *testing.T) {
 		t.Error(err.Error())
 		return
 	}
-	Configuration.KongURL = config.KongUrlInfo{
+	configuration.KongURL = config.KongUrlInfo{
 		Server:    host,
 		AdminPort: port,
 	}
 
 	mock := mockCertificateLoader{}
 	mockLogger := logger.MockLogger{}
-	service := NewService(NewRequestor(true, 10, mockLogger), mockLogger)
+	service := NewService(NewRequestor(true, 10, "", mockLogger), mockLogger, configuration)
 	err = service.Init(mock)
 	if err != nil {
 		t.Errorf(err.Error())
@@ -120,8 +120,9 @@ func TestCheckServiceStatus(t *testing.T) {
 		{"WrongPath", ts.URL + "/test", true},
 	}
 	for _, tt := range tests {
+		configuration := &config.ConfigurationStruct{}
 		t.Run(tt.name, func(t *testing.T) {
-			svc := NewService(&http.Client{}, logger.MockLogger{})
+			svc := NewService(&http.Client{}, logger.MockLogger{}, configuration)
 			err := svc.checkServiceStatus(tt.url)
 			if err != nil && !tt.expectError {
 				t.Error(err)
@@ -196,9 +197,8 @@ func TestInitKongService(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			Configuration = &tt.config
 			tk := &KongService{tt.serviceId, "test", 80, "http"}
-			svc := NewService(&http.Client{}, logger.MockLogger{})
+			svc := NewService(&http.Client{}, logger.MockLogger{}, &tt.config)
 			err = svc.initKongService(tk)
 
 			if err != nil && !tt.expectError {
@@ -255,8 +255,7 @@ func TestInitKongRoutes(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			Configuration = &tt.config
-			svc := NewService(&http.Client{}, logger.MockLogger{})
+			svc := NewService(&http.Client{}, logger.MockLogger{}, &tt.config)
 			err = svc.initKongRoutes(&KongRoute{}, tt.path)
 			if err != nil && !tt.expectError {
 				t.Error(err)
@@ -325,8 +324,7 @@ func TestInitACL(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			Configuration = &tt.config
-			svc := NewService(&http.Client{}, logger.MockLogger{})
+			svc := NewService(&http.Client{}, logger.MockLogger{}, &tt.config)
 			err = svc.initACL(tt.aclName, tt.whitelist)
 			if err != nil && !tt.expectError {
 				t.Error(err)
@@ -386,8 +384,7 @@ func TestResetProxy(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			Configuration = &tt.config
-			svc := NewService(&http.Client{}, logger.MockLogger{})
+			svc := NewService(&http.Client{}, logger.MockLogger{}, &tt.config)
 			err := svc.ResetProxy()
 			if err != nil && !tt.expectError {
 				t.Error(err)
@@ -453,8 +450,7 @@ func TestGetSvcIDs(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			Configuration = &tt.config
-			svc := NewService(&http.Client{}, logger.MockLogger{})
+			svc := NewService(&http.Client{}, logger.MockLogger{}, &tt.config)
 
 			coll, err := svc.getSvcIDs(tt.serviceId)
 			if err != nil && !tt.expectError {
@@ -513,8 +509,7 @@ func TestInitJWTAuth(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			Configuration = &tt.config
-			svc := NewService(&http.Client{}, logger.MockLogger{})
+			svc := NewService(&http.Client{}, logger.MockLogger{}, &tt.config)
 			err := svc.initJWTAuth()
 			if err != nil && !tt.expectError {
 				t.Error(err)

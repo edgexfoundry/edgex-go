@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/edgexfoundry/edgex-go/internal/security/proxy/config"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -36,23 +37,30 @@ type Consumer struct {
 	name          string
 	client        internal.HttpCaller
 	loggingClient logger.LoggingClient
+	configuration *config.ConfigurationStruct
 }
 
-func NewConsumer(name string, r internal.HttpCaller, loggingClient logger.LoggingClient) Consumer {
+func NewConsumer(
+	name string,
+	r internal.HttpCaller,
+	loggingClient logger.LoggingClient,
+	configuration *config.ConfigurationStruct) Consumer {
+
 	return Consumer{
 		name:          name,
 		client:        r,
 		loggingClient: loggingClient,
+		configuration: configuration,
 	}
 }
 
 func (c *Consumer) Delete() error {
-	resource := NewResource(c.name, c.client, c.loggingClient)
+	resource := NewResource(c.name, c.client, c.configuration.KongURL.GetProxyBaseURL(), c.loggingClient)
 	return resource.Remove(ConsumersPath)
 }
 
 func (c *Consumer) Create(service string) error {
-	tokens := []string{Configuration.KongURL.GetProxyBaseURL(), ConsumersPath, c.name}
+	tokens := []string{c.configuration.KongURL.GetProxyBaseURL(), ConsumersPath, c.name}
 	req, err := http.NewRequest(http.MethodPut, strings.Join(tokens, "/"), nil)
 	if err != nil {
 		e := fmt.Sprintf("failed to create consumer %s for %s service with error %s", c.name, service, err.Error())
@@ -80,7 +88,7 @@ func (c *Consumer) Create(service string) error {
 }
 
 func (c *Consumer) AssociateWithGroup(g string) error {
-	tokens := []string{Configuration.KongURL.GetProxyBaseURL(), ConsumersPath, c.name, "acls"}
+	tokens := []string{c.configuration.KongURL.GetProxyBaseURL(), ConsumersPath, c.name, "acls"}
 	formVals := url.Values{
 		"group": {g},
 	}
@@ -117,7 +125,7 @@ func (c *Consumer) AssociateWithGroup(g string) error {
 }
 
 func (c *Consumer) CreateToken() (string, error) {
-	switch Configuration.KongAuth.Name {
+	switch c.configuration.KongAuth.Name {
 	case "jwt":
 		c.loggingClient.Info("autheticate the user with jwt authentication.")
 		return c.createJWTToken()
@@ -125,7 +133,7 @@ func (c *Consumer) CreateToken() (string, error) {
 		c.loggingClient.Info("authenticate the user with oauth2 authentication.")
 		return c.createOAuth2Token()
 	default:
-		e := fmt.Sprintf("unknown authentication method provided: %s", Configuration.KongAuth.Name)
+		e := fmt.Sprintf("unknown authentication method provided: %s", c.configuration.KongAuth.Name)
 		c.loggingClient.Error(e)
 		return "", errors.New(e)
 	}
@@ -133,7 +141,7 @@ func (c *Consumer) CreateToken() (string, error) {
 
 func (c *Consumer) createJWTToken() (string, error) {
 	jwtCred := JWTCred{}
-	tokens := []string{Configuration.KongURL.GetProxyBaseURL(), ConsumersPath, c.name, "jwt"}
+	tokens := []string{c.configuration.KongURL.GetProxyBaseURL(), ConsumersPath, c.name, "jwt"}
 	req, err := http.NewRequest(http.MethodPost, strings.Join(tokens, "/"), nil)
 	if err != nil {
 		e := fmt.Sprintf("error creating JWT token request -- %s", err.Error())
@@ -192,7 +200,7 @@ func (c *Consumer) createOAuth2Token() (string, error) {
 		"redirect_uris": {ko.RedirectURIS},
 	}
 
-	tokens := []string{Configuration.KongURL.GetProxyBaseURL(), ConsumersPath, c.name, "oauth2"}
+	tokens := []string{c.configuration.KongURL.GetProxyBaseURL(), ConsumersPath, c.name, "oauth2"}
 	req, err := http.NewRequest(http.MethodPost, strings.Join(tokens, "/"), strings.NewReader(formVals.Encode()))
 	if err != nil {
 		e := fmt.Sprintf("failed to construct http POST form request: %s %s", c.name, err.Error())
@@ -227,7 +235,7 @@ func (c *Consumer) createOAuth2Token() (string, error) {
 			"grant_type":    {tokenreq.GrantType},
 			"scope":         {tokenreq.Scope},
 		}
-		tokens := []string{Configuration.KongURL.GetSecureURL(), Configuration.KongAuth.Resource, "oauth2/token"}
+		tokens := []string{c.configuration.KongURL.GetSecureURL(), c.configuration.KongAuth.Resource, "oauth2/token"}
 		c.loggingClient.Info(fmt.Sprintf("creating token on the endpoint of %s", strings.Join(tokens, "/")))
 
 		req, err := http.NewRequest(http.MethodPost, strings.Join(tokens, "/"), strings.NewReader(formVals.Encode()))
