@@ -19,26 +19,20 @@ import (
 	"context"
 	"sync"
 
-	container "github.com/edgexfoundry/edgex-go/internal/core/command/container"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/metadata"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
+
+	"github.com/edgexfoundry/edgex-go/internal/core/command/container"
 	bootstrapContainer "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/endpoint"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
-
-	"github.com/edgexfoundry/go-mod-core-contracts/clients"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/metadata"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
 )
-
-// Global ErrorConcept variables
-var httpErrorHandler errorconcept.ErrorHandler
 
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the command service.
 func BootstrapHandler(wg *sync.WaitGroup, ctx context.Context, startupTimer startup.Timer, dic *di.Container) bool {
-	loggingClient := bootstrapContainer.LoggingClientFrom(dic.Get)
 	registryClient := bootstrapContainer.RegistryFrom(dic.Get)
-	httpErrorHandler = errorconcept.NewErrorHandler(loggingClient)
 	configuration := container.ConfigurationFrom(dic.Get)
 
 	// initialize clients required by the service
