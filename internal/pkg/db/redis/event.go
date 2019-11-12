@@ -60,31 +60,33 @@ func unmarshalEvents(objects [][]byte, events []contract.Event) (err error) {
 	return nil
 }
 
-func unmarshalEvent(o []byte) (event contract.Event, err error) {
+func unmarshalEvent(o []byte) (contract.Event, error) {
 	var s redisEvent
 
-	err = json.Unmarshal(o, &s)
+	err := json.Unmarshal(o, &s)
 	if err != nil {
 		return contract.Event{}, err
 	}
 
-	event.ID = s.ID
-	event.Pushed = s.Pushed
-	event.Device = s.Device
-	event.Created = s.Created
-	event.Modified = s.Modified
-	event.Origin = s.Origin
+	event := contract.Event{
+		ID:       s.ID,
+		Pushed:   s.Pushed,
+		Device:   s.Device,
+		Created:  s.Created,
+		Modified: s.Modified,
+		Origin:   s.Origin,
+	}
 
 	conn, err := getConnection()
 	if err != nil {
-		return event, err
+		return contract.Event{}, err
 	}
 	defer conn.Close()
 
 	objects, err := getObjectsByRange(conn, db.EventsCollection+":readings:"+s.ID, 0, -1)
 	if err != nil {
 		if err != redis.ErrNil {
-			return event, err
+			return contract.Event{}, err
 		}
 	}
 
@@ -93,7 +95,7 @@ func unmarshalEvent(o []byte) (event contract.Event, err error) {
 	for i, in := range objects {
 		err = unmarshalObject(in, &event.Readings[i])
 		if err != nil {
-			return event, err
+			return contract.Event{}, err
 		}
 	}
 
