@@ -970,14 +970,16 @@ parts:
       - zlib1g-dev
     stage-packages:
       - perl
-    override-build: |
+    override-pull: |
+      snapcraftctl pull
       cd $SNAPCRAFT_PART_SRC/bundle
       # apply patches from openresty-kong-patches
       for i in $SNAPCRAFT_STAGE/openresty-kong-patches/1.13.6.2/*.patch; do 
         patch -p1 < $i
       done
+    override-build: |
       snapcraftctl build
-      # openresty will make an absolute symbolic link of openresty to the 
+      # openresty will make an absolute symbolic link of openresty to the
       # nginx binary, so we need to delete that and replace it with a relative
       # symlink
       cd $SNAPCRAFT_PART_INSTALL/bin
