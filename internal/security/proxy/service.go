@@ -26,16 +26,20 @@ import (
 	"strings"
 
 	"github.com/edgexfoundry/edgex-go/internal"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
 
 type Service struct {
-	client internal.HttpCaller
+	client        internal.HttpCaller
+	loggingClient logger.LoggingClient
 }
 
-func NewService(r internal.HttpCaller) Service {
+func NewService(r internal.HttpCaller, loggingClient logger.LoggingClient) Service {
 	return Service{
-		client: r,
+		client:        r,
+		loggingClient: loggingClient,
 	}
 }
 
@@ -61,11 +65,11 @@ func (s *Service) checkServiceStatus(path string) error {
 
 	switch resp.StatusCode {
 	case http.StatusOK:
-		LoggingClient.Info(fmt.Sprintf("the service on %s is up successfully", path))
+		s.loggingClient.Info(fmt.Sprintf("the service on %s is up successfully", path))
 		break
 	default:
 		err = fmt.Errorf("unexpected http status %v %s", resp.StatusCode, path)
-		LoggingClient.Error(err.Error())
+		s.loggingClient.Error(err.Error())
 		return err
 	}
 	return nil
@@ -79,7 +83,7 @@ func (s *Service) ResetProxy() error {
 			return err
 		}
 		for _, c := range d.Section {
-			r := &Resource{c.ID, s.client}
+			r := NewResource(c.ID, s.client, s.loggingClient)
 			err = r.Remove(path)
 			if err != nil {
 				return err
@@ -128,7 +132,7 @@ func (s *Service) Init(cert CertificateLoader) error {
 		return err
 	}
 
-	LoggingClient.Info("finishing initialization for reverse proxy")
+	s.loggingClient.Info("finishing initialization for reverse proxy")
 	return nil
 }
 
@@ -144,29 +148,29 @@ func (s *Service) postCert(cert CertificateLoader) error {
 		Key:  cp.Key,
 		Snis: Configuration.SecretService.SNIS,
 	}
-	LoggingClient.Debug("trying to upload cert to proxy server")
+	s.loggingClient.Debug("trying to upload cert to proxy server")
 	data, err := json.Marshal(body)
 	if err != nil {
-		LoggingClient.Error(err.Error())
+		s.loggingClient.Error(err.Error())
 		return err
 	}
 	tokens := []string{Configuration.KongURL.GetProxyBaseURL(), CertificatesPath}
 	req, err := http.NewRequest(http.MethodPost, strings.Join(tokens, "/"), strings.NewReader(string(data)))
 	req.Header.Add(clients.ContentType, clients.ContentTypeJSON)
 	if err != nil {
-		LoggingClient.Error("failed to create upload cert request -- %s", err.Error())
+		s.loggingClient.Error("failed to create upload cert request -- %s", err.Error())
 		return err
 	}
 	resp, err := s.client.Do(req)
 	if err != nil {
-		LoggingClient.Error("failed to upload cert to proxy server with error %s", err.Error())
+		s.loggingClient.Error("failed to upload cert to proxy server with error %s", err.Error())
 		return err
 	}
 	defer resp.Body.Close()
 
 	switch resp.StatusCode {
 	case http.StatusOK, http.StatusCreated, http.StatusConflict:
-		LoggingClient.Info("successfully added certificate to the reverse proxy")
+		s.loggingClient.Info("successfully added certificate to the reverse proxy")
 		break
 	default:
 		b, err := ioutil.ReadAll(resp.Body)
@@ -174,7 +178,7 @@ func (s *Service) postCert(cert CertificateLoader) error {
 			return err
 		}
 		e := fmt.Sprintf("failed to add certificate with errorcode %d, error %s", resp.StatusCode, string(b))
-		LoggingClient.Error(e)
+		s.loggingClient.Error(e)
 		return errors.New(e)
 	}
 	return nil
@@ -197,21 +201,21 @@ func (s *Service) initKongService(service *KongService) error {
 	resp, err := s.client.Do(req)
 	if err != nil {
 		e := fmt.Sprintf("failed to set up proxy service: %s %s", service.Name, err.Error())
-		LoggingClient.Error(e)
+		s.loggingClient.Error(e)
 		return errors.New(e)
 	}
 	defer resp.Body.Close()
 
 	switch resp.StatusCode {
 	case http.StatusOK, http.StatusCreated:
-		LoggingClient.Info(fmt.Sprintf("successful to set up proxy service for %s", service.Name))
+		s.loggingClient.Info(fmt.Sprintf("successful to set up proxy service for %s", service.Name))
 		break
 	case http.StatusConflict:
-		LoggingClient.Info(fmt.Sprintf("proxy service for %s has been set up", service.Name))
+		s.loggingClient.Info(fmt.Sprintf("proxy service for %s has been set up", service.Name))
 		break
 	default:
 		err = fmt.Errorf("proxy service for %s returned status %d", service.Name, resp.StatusCode)
-		LoggingClient.Error(err.Error())
+		s.loggingClient.Error(err.Error())
 		return err
 	}
 	return nil
@@ -220,14 +224,14 @@ func (s *Service) initKongService(service *KongService) error {
 func (s *Service) initKongRoutes(r *KongRoute, name string) error {
 	data, err := json.Marshal(r)
 	if err != nil {
-		LoggingClient.Error(err.Error())
+		s.loggingClient.Error(err.Error())
 		return err
 	}
 	tokens := []string{Configuration.KongURL.GetProxyBaseURL(), ServicesPath, name, "routes"}
 	req, err := http.NewRequest(http.MethodPost, strings.Join(tokens, "/"), strings.NewReader(string(data)))
 	if err != nil {
 		e := fmt.Sprintf("failed to set up routes for %s with error %s", name, err.Error())
-		LoggingClient.Error(e)
+		s.loggingClient.Error(e)
 		return err
 	}
 	req.Header.Add(clients.ContentType, clients.ContentTypeJSON)
@@ -235,18 +239,18 @@ func (s *Service) initKongRoutes(r *KongRoute, name string) error {
 	resp, err := s.client.Do(req)
 	if err != nil {
 		e := fmt.Sprintf("failed to set up routes for %s with error %s", name, err.Error())
-		LoggingClient.Error(e)
+		s.loggingClient.Error(e)
 		return err
 	}
 	defer resp.Body.Close()
 
 	switch resp.StatusCode {
 	case http.StatusOK, http.StatusCreated, http.StatusConflict:
-		LoggingClient.Info(fmt.Sprintf("successful to set up route for %s", name))
+		s.loggingClient.Info(fmt.Sprintf("successful to set up route for %s", name))
 		break
 	default:
 		e := fmt.Sprintf("failed to set up route for %s with error %s", name, resp.Status)
-		LoggingClient.Error(e)
+		s.loggingClient.Error(e)
 		return errors.New(e)
 	}
 	return nil
@@ -267,7 +271,7 @@ func (s *Service) initACL(name string, whitelist string) error {
 	req, err := http.NewRequest(http.MethodPost, strings.Join(tokens, "/"), strings.NewReader(formVals.Encode()))
 	if err != nil {
 		e := fmt.Sprintf("failed to set up acl -- %s", err.Error())
-		LoggingClient.Error(e)
+		s.loggingClient.Error(e)
 		return err
 	}
 	req.Header.Add(clients.ContentType, "application/x-www-form-urlencoded")
@@ -275,25 +279,25 @@ func (s *Service) initACL(name string, whitelist string) error {
 	resp, err := s.client.Do(req)
 	if err != nil {
 		e := fmt.Sprintf("failed to set up acl -- %s", err.Error())
-		LoggingClient.Error(e)
+		s.loggingClient.Error(e)
 		return err
 	}
 	defer resp.Body.Close()
 
 	switch resp.StatusCode {
 	case http.StatusOK, http.StatusCreated, http.StatusConflict:
-		LoggingClient.Info("acl set up successfully")
+		s.loggingClient.Info("acl set up successfully")
 		break
 	default:
 		e := fmt.Sprintf("failed to set up acl with errorcode %d", resp.StatusCode)
-		LoggingClient.Error(e)
+		s.loggingClient.Error(e)
 		return errors.New(e)
 	}
 	return nil
 }
 
 func (s *Service) initAuthMethod(name string, ttl int) error {
-	LoggingClient.Info(fmt.Sprintf("selected authetication method as %s.", name))
+	s.loggingClient.Info(fmt.Sprintf("selected authetication method as %s.", name))
 	switch name {
 	case "jwt":
 		return s.initJWTAuth()
@@ -312,7 +316,7 @@ func (s *Service) initJWTAuth() error {
 	req, err := http.NewRequest(http.MethodPost, strings.Join(tokens, "/"), strings.NewReader(formVals.Encode()))
 	if err != nil {
 		e := fmt.Sprintf("failed to create jwt auth request -- %s", err.Error())
-		LoggingClient.Error(e)
+		s.loggingClient.Error(e)
 		return err
 	}
 	req.Header.Add(clients.ContentType, "application/x-www-form-urlencoded")
@@ -320,18 +324,18 @@ func (s *Service) initJWTAuth() error {
 	resp, err := s.client.Do(req)
 	if err != nil {
 		e := fmt.Sprintf("failed to set up jwt authentication -- %s", err.Error())
-		LoggingClient.Error(e)
+		s.loggingClient.Error(e)
 		return err
 	}
 	defer resp.Body.Close()
 
 	switch resp.StatusCode {
 	case http.StatusOK, http.StatusCreated, http.StatusConflict:
-		LoggingClient.Info("successful to set up jwt authentication")
+		s.loggingClient.Info("successful to set up jwt authentication")
 		break
 	default:
 		e := fmt.Sprintf("failed to set up jwt authentication with errorcode %d", resp.StatusCode)
-		LoggingClient.Error(e)
+		s.loggingClient.Error(e)
 		return errors.New(e)
 	}
 	return nil
@@ -359,7 +363,7 @@ func (s *Service) initOAuth2(ttl int) error {
 	req, err := http.NewRequest(http.MethodPost, strings.Join(tokens, "/"), strings.NewReader(formVals.Encode()))
 	if err != nil {
 		e := fmt.Sprintf("failed to create oauth2 request -- %s", err.Error())
-		LoggingClient.Error(e)
+		s.loggingClient.Error(e)
 		return err
 	}
 	req.Header.Add(clients.ContentType, "application/x-www-form-urlencoded")
@@ -367,18 +371,18 @@ func (s *Service) initOAuth2(ttl int) error {
 	resp, err := s.client.Do(req)
 	if err != nil {
 		e := fmt.Sprintf("failed to set up oauth2 authentication -- %s", err.Error())
-		LoggingClient.Error(e)
+		s.loggingClient.Error(e)
 		return err
 	}
 	defer resp.Body.Close()
 
 	switch resp.StatusCode {
 	case http.StatusOK, http.StatusCreated, http.StatusConflict:
-		LoggingClient.Info("successful to set up oauth2 authentication")
+		s.loggingClient.Info("successful to set up oauth2 authentication")
 		break
 	default:
 		e := fmt.Sprintf("failed to set up oauth2 authentication with errorcode %d", resp.StatusCode)
-		LoggingClient.Error(e)
+		s.loggingClient.Error(e)
 		return errors.New(e)
 	}
 	return nil
@@ -391,13 +395,13 @@ func (s *Service) getSvcIDs(path string) (DataCollect, error) {
 	req, err := http.NewRequest(http.MethodGet, strings.Join(tokens, "/"), nil)
 	if err != nil {
 		e := fmt.Sprintf("failed to create service list request -- %s", err.Error())
-		LoggingClient.Error(e)
+		s.loggingClient.Error(e)
 		return collection, err
 	}
 	resp, err := s.client.Do(req)
 	if err != nil {
 		err = fmt.Errorf("failed to get list of %s with error %s", path, err.Error())
-		LoggingClient.Error(err.Error())
+		s.loggingClient.Error(err.Error())
 		return collection, err
 	}
 	defer resp.Body.Close()
@@ -410,7 +414,7 @@ func (s *Service) getSvcIDs(path string) (DataCollect, error) {
 		break
 	default:
 		e := fmt.Sprintf("failed to get list of %s with HTTP error code %d", path, resp.StatusCode)
-		LoggingClient.Error(e)
+		s.loggingClient.Error(e)
 		return collection, errors.New(e)
 	}
 	return collection, nil

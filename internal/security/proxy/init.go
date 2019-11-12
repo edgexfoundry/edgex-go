@@ -31,7 +31,6 @@ import (
 
 // Global variables
 var Configuration = &config.ConfigurationStruct{}
-var LoggingClient logger.LoggingClient
 
 type Bootstrap struct {
 	insecureSkipVerify bool
@@ -60,62 +59,61 @@ func NewBootstrapHandler(
 	}
 }
 
-func (b *Bootstrap) errorAndHalt(message string) {
-	LoggingClient.Error(message)
+func (b *Bootstrap) errorAndHalt(loggingClient logger.LoggingClient, message string) {
+	loggingClient.Error(message)
 	os.Exit(1)
 }
 
-func (b *Bootstrap) haltIfError(err error) {
+func (b *Bootstrap) haltIfError(loggingClient logger.LoggingClient, err error) {
 	if err != nil {
-		b.errorAndHalt(err.Error())
+		b.errorAndHalt(loggingClient, err.Error())
 	}
 }
 
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the data service.
 func (b *Bootstrap) Handler(wg *sync.WaitGroup, ctx context.Context, startupTimer startup.Timer, dic *di.Container) bool {
-	// update global variables.
-	LoggingClient = bootstrapContainer.LoggingClientFrom(dic.Get)
+	loggingClient := bootstrapContainer.LoggingClientFrom(dic.Get)
 
-	req := NewRequestor(b.insecureSkipVerify, Configuration.Writable.RequestTimeout)
+	req := NewRequestor(b.insecureSkipVerify, Configuration.Writable.RequestTimeout, loggingClient)
 	if req == nil {
 		os.Exit(1)
 	}
 
-	s := NewService(req)
-	b.haltIfError(s.CheckProxyServiceStatus())
+	s := NewService(req, loggingClient)
+	b.haltIfError(loggingClient, s.CheckProxyServiceStatus())
 
 	if b.initNeeded {
 		if b.resetNeeded {
-			b.errorAndHalt("can't run initialization and reset at the same time for security service")
+			b.errorAndHalt(loggingClient, "can't run initialization and reset at the same time for security service")
 		}
-		cert := NewCertificateLoader(req, Configuration.SecretService.CertPath, Configuration.SecretService.TokenPath)
-		b.haltIfError(s.Init(cert)) // Where the Service init is called
+		cert := NewCertificateLoader(req, Configuration.SecretService.CertPath, Configuration.SecretService.TokenPath, loggingClient)
+		b.haltIfError(loggingClient, s.Init(cert)) // Where the Service init is called
 	} else if b.resetNeeded {
-		b.haltIfError(s.ResetProxy())
+		b.haltIfError(loggingClient, s.ResetProxy())
 	}
 
 	if b.userTobeCreated != "" && b.userOfGroup != "" {
-		c := NewConsumer(b.userTobeCreated, req)
-		b.haltIfError(c.Create(EdgeXKong))
-		b.haltIfError(c.AssociateWithGroup(b.userOfGroup))
+		c := NewConsumer(b.userTobeCreated, req, loggingClient)
+		b.haltIfError(loggingClient, c.Create(EdgeXKong))
+		b.haltIfError(loggingClient, c.AssociateWithGroup(b.userOfGroup))
 
 		t, err := c.CreateToken()
 		if err != nil {
-			b.errorAndHalt(fmt.Sprintf("failed to create access token for edgex service due to error %s", err.Error()))
+			b.errorAndHalt(loggingClient, fmt.Sprintf("failed to create access token for edgex service due to error %s", err.Error()))
 		}
 
 		fmt.Println(fmt.Sprintf("the access token for user %s is: %s. Please keep the token for accessing edgex services", b.userTobeCreated, t))
 
 		file, err := os.Create(Configuration.KongAuth.OutputPath)
-		b.haltIfError(err)
+		b.haltIfError(loggingClient, err)
 
 		utp := &UserTokenPair{User: b.userTobeCreated, Token: t}
-		b.haltIfError(utp.Save(file))
+		b.haltIfError(loggingClient, utp.Save(file))
 	}
 
 	if b.userToBeDeleted != "" {
-		t := NewConsumer(b.userToBeDeleted, req)
-		b.haltIfError(t.Delete())
+		t := NewConsumer(b.userToBeDeleted, req, loggingClient)
+		b.haltIfError(loggingClient, t.Delete())
 	}
 
 	return false

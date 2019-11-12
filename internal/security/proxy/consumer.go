@@ -24,25 +24,30 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/dgrijalva/jwt-go"
 	"github.com/edgexfoundry/edgex-go/internal"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+
+	"github.com/dgrijalva/jwt-go"
 )
 
 type Consumer struct {
-	name   string
-	client internal.HttpCaller
+	name          string
+	client        internal.HttpCaller
+	loggingClient logger.LoggingClient
 }
 
-func NewConsumer(name string, r internal.HttpCaller) Consumer {
+func NewConsumer(name string, r internal.HttpCaller, loggingClient logger.LoggingClient) Consumer {
 	return Consumer{
-		name:   name,
-		client: r,
+		name:          name,
+		client:        r,
+		loggingClient: loggingClient,
 	}
 }
 
 func (c *Consumer) Delete() error {
-	resource := NewResource(c.name, c.client)
+	resource := NewResource(c.name, c.client, c.loggingClient)
 	return resource.Remove(ConsumersPath)
 }
 
@@ -51,24 +56,24 @@ func (c *Consumer) Create(service string) error {
 	req, err := http.NewRequest(http.MethodPut, strings.Join(tokens, "/"), nil)
 	if err != nil {
 		e := fmt.Sprintf("failed to create consumer %s for %s service with error %s", c.name, service, err.Error())
-		LoggingClient.Error(e)
+		c.loggingClient.Error(e)
 		return errors.New(e)
 	}
 	resp, err := c.client.Do(req)
 	if err != nil {
 		e := fmt.Sprintf("failed to create consumer %s for %s service with error %s", c.name, service, err.Error())
-		LoggingClient.Error(e)
+		c.loggingClient.Error(e)
 		return errors.New(e)
 	}
 	defer resp.Body.Close()
 
 	switch resp.StatusCode {
 	case http.StatusOK, http.StatusCreated, http.StatusConflict:
-		LoggingClient.Info(fmt.Sprintf("successful to create consumer %s for %s service", c.name, service))
+		c.loggingClient.Info(fmt.Sprintf("successful to create consumer %s for %s service", c.name, service))
 		break
 	default:
 		e := fmt.Sprintf("failed to create consumer %s for %s service", c.name, service)
-		LoggingClient.Error(e)
+		c.loggingClient.Error(e)
 		return errors.New(e)
 	}
 	return nil
@@ -82,7 +87,7 @@ func (c *Consumer) AssociateWithGroup(g string) error {
 	req, err := http.NewRequest(http.MethodPost, strings.Join(tokens, "/"), strings.NewReader(formVals.Encode()))
 	if err != nil {
 		e := fmt.Sprintf("failed to create group association request. consumer %s, group %s -- %s", c.name, g, err.Error())
-		LoggingClient.Error(e)
+		c.loggingClient.Error(e)
 		return errors.New(e)
 	}
 	req.Header.Add(clients.ContentType, "application/x-www-form-urlencoded")
@@ -90,14 +95,14 @@ func (c *Consumer) AssociateWithGroup(g string) error {
 	resp, err := c.client.Do(req)
 	if err != nil {
 		e := fmt.Sprintf("failed to associate consumer %s for with group %s with error %s", c.name, g, err.Error())
-		LoggingClient.Error(e)
+		c.loggingClient.Error(e)
 		return errors.New(e)
 	}
 	defer resp.Body.Close()
 
 	switch resp.StatusCode {
 	case http.StatusOK, http.StatusCreated, http.StatusConflict:
-		LoggingClient.Info(fmt.Sprintf("successful to associate consumer %s with group %s", c.name, g))
+		c.loggingClient.Info(fmt.Sprintf("successful to associate consumer %s with group %s", c.name, g))
 		break
 	default:
 		b, err := ioutil.ReadAll(resp.Body)
@@ -105,7 +110,7 @@ func (c *Consumer) AssociateWithGroup(g string) error {
 			return err
 		}
 		e := fmt.Sprintf("failed to associate consumer %s with group %s with error %s,%s", c.name, g, resp.Status, string(b))
-		LoggingClient.Error(e)
+		c.loggingClient.Error(e)
 		return errors.New(e)
 	}
 	return nil
@@ -114,14 +119,14 @@ func (c *Consumer) AssociateWithGroup(g string) error {
 func (c *Consumer) CreateToken() (string, error) {
 	switch Configuration.KongAuth.Name {
 	case "jwt":
-		LoggingClient.Info("autheticate the user with jwt authentication.")
+		c.loggingClient.Info("autheticate the user with jwt authentication.")
 		return c.createJWTToken()
 	case "oauth2":
-		LoggingClient.Info("authenticate the user with oauth2 authentication.")
+		c.loggingClient.Info("authenticate the user with oauth2 authentication.")
 		return c.createOAuth2Token()
 	default:
 		e := fmt.Sprintf("unknown authentication method provided: %s", Configuration.KongAuth.Name)
-		LoggingClient.Error(e)
+		c.loggingClient.Error(e)
 		return "", errors.New(e)
 	}
 }
@@ -132,7 +137,7 @@ func (c *Consumer) createJWTToken() (string, error) {
 	req, err := http.NewRequest(http.MethodPost, strings.Join(tokens, "/"), nil)
 	if err != nil {
 		e := fmt.Sprintf("error creating JWT token request -- %s", err.Error())
-		LoggingClient.Error(e)
+		c.loggingClient.Error(e)
 		return "", errors.New(e)
 	}
 	req.Header.Add(clients.ContentType, "application/x-www-form-urlencoded")
@@ -149,7 +154,7 @@ func (c *Consumer) createJWTToken() (string, error) {
 		if err = json.NewDecoder(resp.Body).Decode(&jwtCred); err != nil {
 			return "", err
 		}
-		LoggingClient.Info(fmt.Sprintf("successful on retrieving JWT credential for consumer %s", c.name))
+		c.loggingClient.Info(fmt.Sprintf("successful on retrieving JWT credential for consumer %s", c.name))
 
 		// Create the Claims
 		claims := KongJWTClaims{
@@ -164,7 +169,7 @@ func (c *Consumer) createJWTToken() (string, error) {
 		return token.SignedString([]byte(jwtCred.Secret))
 	default:
 		e := fmt.Sprintf("failed to create JWT for consumer %s with errorCode %d", c.name, resp.StatusCode)
-		LoggingClient.Error(e)
+		c.loggingClient.Error(e)
 		return "", errors.New(e)
 	}
 }
@@ -191,7 +196,7 @@ func (c *Consumer) createOAuth2Token() (string, error) {
 	req, err := http.NewRequest(http.MethodPost, strings.Join(tokens, "/"), strings.NewReader(formVals.Encode()))
 	if err != nil {
 		e := fmt.Sprintf("failed to construct http POST form request: %s %s", c.name, err.Error())
-		LoggingClient.Error(e)
+		c.loggingClient.Error(e)
 		return "", err
 	}
 	req.Header.Add(clients.ContentType, "application/x-www-form-urlencoded")
@@ -199,14 +204,14 @@ func (c *Consumer) createOAuth2Token() (string, error) {
 	resp, err := c.client.Do(req)
 	if err != nil {
 		e := fmt.Sprintf("failed to enable oauth2 authentication for consumer %s with error %s", c.name, err.Error())
-		LoggingClient.Error(e)
+		c.loggingClient.Error(e)
 		return "", err
 	}
 	defer resp.Body.Close()
 
 	switch resp.StatusCode {
 	case http.StatusOK, http.StatusCreated, http.StatusConflict:
-		LoggingClient.Info(fmt.Sprintf("successful on enabling oauth2 for consumer %s", c.name))
+		c.loggingClient.Info(fmt.Sprintf("successful on enabling oauth2 for consumer %s", c.name))
 
 		// obtain token
 		tokenreq := &KongOuath2TokenRequest{
@@ -223,17 +228,17 @@ func (c *Consumer) createOAuth2Token() (string, error) {
 			"scope":         {tokenreq.Scope},
 		}
 		tokens := []string{Configuration.KongURL.GetSecureURL(), Configuration.KongAuth.Resource, "oauth2/token"}
-		LoggingClient.Info(fmt.Sprintf("creating token on the endpoint of %s", strings.Join(tokens, "/")))
+		c.loggingClient.Info(fmt.Sprintf("creating token on the endpoint of %s", strings.Join(tokens, "/")))
 
 		req, err := http.NewRequest(http.MethodPost, strings.Join(tokens, "/"), strings.NewReader(formVals.Encode()))
 		if err != nil {
-			LoggingClient.Error(fmt.Sprintf("failed to create oauth2 token for client_id %s with error %s", c.name, err.Error()))
+			c.loggingClient.Error(fmt.Sprintf("failed to create oauth2 token for client_id %s with error %s", c.name, err.Error()))
 			return "", err
 		}
 		req.Header.Add(clients.ContentType, "application/x-www-form-urlencoded")
 		tresp, err := c.client.Do(req)
 		if err != nil {
-			LoggingClient.Error(fmt.Sprintf("failed to create oauth2 token for client_id %s with error %s", c.name, err.Error()))
+			c.loggingClient.Error(fmt.Sprintf("failed to create oauth2 token for client_id %s with error %s", c.name, err.Error()))
 			return "", err
 		}
 		defer tresp.Body.Close()
@@ -244,7 +249,7 @@ func (c *Consumer) createOAuth2Token() (string, error) {
 			if err = json.NewDecoder(tresp.Body).Decode(&token); err != nil {
 				return "", err
 			}
-			LoggingClient.Info(fmt.Sprintf("successful on retrieving bearer credential for consumer %s", c.name))
+			c.loggingClient.Info(fmt.Sprintf("successful on retrieving bearer credential for consumer %s", c.name))
 			return token.AccessToken, nil
 		default:
 			b, err := ioutil.ReadAll(tresp.Body)
@@ -252,12 +257,12 @@ func (c *Consumer) createOAuth2Token() (string, error) {
 				return "", err
 			}
 			e := fmt.Sprintf("failed to create bearer token for oauth authentication at endpoint oauth2/token with error %s,%s", tresp.Status, string(b))
-			LoggingClient.Error(e)
+			c.loggingClient.Error(e)
 			return "", errors.New(e)
 		}
 	default:
 		e := fmt.Sprintf("failed to enable oauth2 for consumer %s with error code %d", c.name, resp.StatusCode)
-		LoggingClient.Error(e)
+		c.loggingClient.Error(e)
 		return "", errors.New(e)
 	}
 }

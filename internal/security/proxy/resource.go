@@ -23,15 +23,22 @@ import (
 	"strings"
 
 	"github.com/edgexfoundry/edgex-go/internal"
+
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
 
 type Resource struct {
-	name   string
-	client internal.HttpCaller
+	name          string
+	client        internal.HttpCaller
+	loggingClient logger.LoggingClient
 }
 
-func NewResource(name string, r internal.HttpCaller) Resource {
-	return Resource{name: name, client: r}
+func NewResource(name string, r internal.HttpCaller, loggingClient logger.LoggingClient) *Resource {
+	return &Resource{
+		name:          name,
+		client:        r,
+		loggingClient: loggingClient,
+	}
 }
 
 func (r *Resource) Remove(path string) error {
@@ -50,11 +57,11 @@ func (r *Resource) Remove(path string) error {
 
 	switch resp.StatusCode {
 	case http.StatusOK, http.StatusCreated, http.StatusNoContent:
-		LoggingClient.Info(fmt.Sprintf("successful to delete %s at %s", r.name, path))
+		r.loggingClient.Info(fmt.Sprintf("successful to delete %s at %s", r.name, path))
 		break
 	default:
 		e := fmt.Sprintf("failed to delete %s at %s with errocode %d.", r.name, path, resp.StatusCode)
-		LoggingClient.Error(e)
+		r.loggingClient.Error(e)
 		return errors.New(e)
 	}
 	return nil

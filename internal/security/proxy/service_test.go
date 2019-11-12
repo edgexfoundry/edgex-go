@@ -38,7 +38,6 @@ func (m mockCertificateLoader) Load() (*CertPair, error) {
 }
 
 func TestInit(t *testing.T) {
-	LoggingClient = logger.MockLogger{}
 	fileName := "./testdata/configuration.toml"
 	contents, err := ioutil.ReadFile(fileName)
 	if err != nil {
@@ -87,7 +86,8 @@ func TestInit(t *testing.T) {
 	}
 
 	mock := mockCertificateLoader{}
-	service := NewService(NewRequestor(true, 10))
+	mockLogger := logger.MockLogger{}
+	service := NewService(NewRequestor(true, 10, mockLogger), mockLogger)
 	err = service.Init(mock)
 	if err != nil {
 		t.Errorf(err.Error())
@@ -95,7 +95,6 @@ func TestInit(t *testing.T) {
 }
 
 func TestCheckServiceStatus(t *testing.T) {
-	LoggingClient = logger.MockLogger{}
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			w.WriteHeader(http.StatusMethodNotAllowed)
@@ -122,7 +121,7 @@ func TestCheckServiceStatus(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			svc := NewService(&http.Client{})
+			svc := NewService(&http.Client{}, logger.MockLogger{})
 			err := svc.checkServiceStatus(tt.url)
 			if err != nil && !tt.expectError {
 				t.Error(err)
@@ -136,7 +135,6 @@ func TestCheckServiceStatus(t *testing.T) {
 }
 
 func TestInitKongService(t *testing.T) {
-	LoggingClient = logger.MockLogger{}
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			w.WriteHeader(http.StatusMethodNotAllowed)
@@ -200,7 +198,7 @@ func TestInitKongService(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			Configuration = &tt.config
 			tk := &KongService{tt.serviceId, "test", 80, "http"}
-			svc := NewService(&http.Client{})
+			svc := NewService(&http.Client{}, logger.MockLogger{})
 			err = svc.initKongService(tk)
 
 			if err != nil && !tt.expectError {
@@ -215,7 +213,6 @@ func TestInitKongService(t *testing.T) {
 }
 
 func TestInitKongRoutes(t *testing.T) {
-	LoggingClient = logger.MockLogger{}
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			w.WriteHeader(http.StatusMethodNotAllowed)
@@ -259,7 +256,7 @@ func TestInitKongRoutes(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			Configuration = &tt.config
-			svc := NewService(&http.Client{})
+			svc := NewService(&http.Client{}, logger.MockLogger{})
 			err = svc.initKongRoutes(&KongRoute{}, tt.path)
 			if err != nil && !tt.expectError {
 				t.Error(err)
@@ -273,7 +270,6 @@ func TestInitKongRoutes(t *testing.T) {
 }
 
 func TestInitACL(t *testing.T) {
-	LoggingClient = logger.MockLogger{}
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			w.WriteHeader(http.StatusMethodNotAllowed)
@@ -330,7 +326,7 @@ func TestInitACL(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			Configuration = &tt.config
-			svc := NewService(&http.Client{})
+			svc := NewService(&http.Client{}, logger.MockLogger{})
 			err = svc.initACL(tt.aclName, tt.whitelist)
 			if err != nil && !tt.expectError {
 				t.Error(err)
@@ -344,7 +340,6 @@ func TestInitACL(t *testing.T) {
 }
 
 func TestResetProxy(t *testing.T) {
-	LoggingClient = logger.MockLogger{}
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		if !strings.Contains(r.URL.EscapedPath(), ServicesPath) &&
@@ -392,7 +387,7 @@ func TestResetProxy(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			Configuration = &tt.config
-			svc := NewService(&http.Client{})
+			svc := NewService(&http.Client{}, logger.MockLogger{})
 			err := svc.ResetProxy()
 			if err != nil && !tt.expectError {
 				t.Error(err)
@@ -406,7 +401,6 @@ func TestResetProxy(t *testing.T) {
 }
 
 func TestGetSvcIDs(t *testing.T) {
-	LoggingClient = logger.MockLogger{}
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		if r.Method != http.MethodGet {
@@ -460,7 +454,7 @@ func TestGetSvcIDs(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			Configuration = &tt.config
-			svc := NewService(&http.Client{})
+			svc := NewService(&http.Client{}, logger.MockLogger{})
 
 			coll, err := svc.getSvcIDs(tt.serviceId)
 			if err != nil && !tt.expectError {
@@ -479,8 +473,6 @@ func TestGetSvcIDs(t *testing.T) {
 }
 
 func TestInitJWTAuth(t *testing.T) {
-	LoggingClient = logger.MockLogger{}
-
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		if r.Method != http.MethodPost {
@@ -522,7 +514,7 @@ func TestInitJWTAuth(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			Configuration = &tt.config
-			svc := NewService(&http.Client{})
+			svc := NewService(&http.Client{}, logger.MockLogger{})
 			err := svc.initJWTAuth()
 			if err != nil && !tt.expectError {
 				t.Error(err)

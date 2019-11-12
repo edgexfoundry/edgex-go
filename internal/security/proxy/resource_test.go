@@ -26,7 +26,6 @@ import (
 )
 
 func TestDelete(t *testing.T) {
-	LoggingClient = logger.MockLogger{}
 	path := "services"
 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -58,15 +57,16 @@ func TestDelete(t *testing.T) {
 	cfgWrongPort := cfgOK
 	cfgWrongPort.KongURL.AdminPort = 123
 
+	mockLogger := logger.MockLogger{}
 	tests := []struct {
 		name        string
 		config      config.ConfigurationStruct
-		r           Resource
+		r           *Resource
 		expectError bool
 	}{
-		{"DeleteOK", cfgOK, NewResource("1", client), false},
-		{"InvalidResource", cfgOK, NewResource("2", client), true},
-		{"WrongPort", cfgWrongPort, NewResource("1", client), true},
+		{"DeleteOK", cfgOK, NewResource("1", client, mockLogger), false},
+		{"InvalidResource", cfgOK, NewResource("2", client, mockLogger), true},
+		{"WrongPort", cfgWrongPort, NewResource("1", client, mockLogger), true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

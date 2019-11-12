@@ -67,8 +67,6 @@ func (te *testConsumerConfig) GetProxyAuthResource() string {
 }
 
 func TestCreate(t *testing.T) {
-	LoggingClient = logger.MockLogger{}
-
 	name := "testuser"
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -93,7 +91,7 @@ func TestCreate(t *testing.T) {
 		AdminPort: port,
 	}
 
-	co := NewConsumer(name, &http.Client{})
+	co := NewConsumer(name, &http.Client{}, logger.MockLogger{})
 	err = co.Create("test")
 	if err != nil {
 		t.Errorf("failed to creat consumer testuser")
@@ -102,8 +100,6 @@ func TestCreate(t *testing.T) {
 }
 
 func TestAssociateWithGroup(t *testing.T) {
-	LoggingClient = logger.MockLogger{}
-
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		if r.Method != "POST" {
@@ -128,7 +124,7 @@ func TestAssociateWithGroup(t *testing.T) {
 		AdminPort: port,
 	}
 
-	co := NewConsumer("testuser", &http.Client{})
+	co := NewConsumer("testuser", &http.Client{}, logger.MockLogger{})
 	err = co.AssociateWithGroup("groupname")
 	if err != nil {
 		t.Errorf("failed to associate consumer with group")
@@ -137,8 +133,6 @@ func TestAssociateWithGroup(t *testing.T) {
 }
 
 func TestCreateJWTToken(t *testing.T) {
-	LoggingClient = logger.MockLogger{}
-
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{"consumer_id": "test", "created_at": 1442426001000,"id": "test", "key": "test-key","secret": "test-secret"}`))
@@ -164,7 +158,7 @@ func TestCreateJWTToken(t *testing.T) {
 		AdminPort: port,
 	}
 
-	co := NewConsumer("testuser", &http.Client{})
+	co := NewConsumer("testuser", &http.Client{}, logger.MockLogger{})
 	_, err = co.createJWTToken()
 	if err != nil {
 		t.Errorf("failed to creat JWT token for consumer")
