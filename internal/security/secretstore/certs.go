@@ -27,6 +27,8 @@ import (
 	"net/url"
 
 	"github.com/edgexfoundry/edgex-go/internal"
+
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
 
 type CertCollect struct {
@@ -39,9 +41,10 @@ type CertPair struct {
 }
 
 type Certs struct {
-	client    internal.HttpCaller
-	certPath  string
-	tokenPath string
+	client        internal.HttpCaller
+	certPath      string
+	tokenPath     string
+	loggingClient logger.LoggingClient
 }
 
 type auth struct {
@@ -50,22 +53,27 @@ type auth struct {
 
 var errNotFound = errors.New("proxy cert pair not found in secret store")
 
-func NewCerts(caller internal.HttpCaller, certPath string, tokenPath string) Certs {
-	return Certs{client: caller, certPath: certPath, tokenPath: tokenPath}
+func NewCerts(caller internal.HttpCaller, certPath string, tokenPath string, loggingClient logger.LoggingClient) Certs {
+	return Certs{
+		client:        caller,
+		certPath:      certPath,
+		tokenPath:     tokenPath,
+		loggingClient: loggingClient,
+	}
 }
 
 func (cs *Certs) certPathUrl() (string, error) {
 	baseURL, err := url.Parse(Configuration.SecretService.GetSecretSvcBaseURL())
 	if err != nil {
 		e := fmt.Errorf("error parsing secret-service url.  check server and port properties")
-		LoggingClient.Error(e.Error())
+		cs.loggingClient.Error(e.Error())
 		return "", err
 	}
 
 	certPath, err := url.Parse(cs.certPath)
 	if err != nil {
 		e := fmt.Errorf("error parsing secret-service certpath.  check certpath property")
-		LoggingClient.Error(e.Error())
+		cs.loggingClient.Error(e.Error())
 		return "", err
 	}
 
@@ -82,7 +90,7 @@ func (cs *Certs) retrieve(t string) (*CertPair, error) {
 	req, err := http.NewRequest(http.MethodGet, certUrl, nil)
 	if err != nil {
 		e := fmt.Errorf("error creating http request: %v", err.Error())
-		LoggingClient.Error(e.Error())
+		cs.loggingClient.Error(e.Error())
 		return nil, e
 	}
 
@@ -90,7 +98,7 @@ func (cs *Certs) retrieve(t string) (*CertPair, error) {
 	resp, err := cs.client.Do(req)
 	if err != nil {
 		e := fmt.Errorf("failed to retrieve the proxy cert on path %s with error %s", cs.certPath, err.Error())
-		LoggingClient.Error(e.Error())
+		cs.loggingClient.Error(e.Error())
 		return nil, e
 	}
 	defer resp.Body.Close()
@@ -98,17 +106,17 @@ func (cs *Certs) retrieve(t string) (*CertPair, error) {
 	cc := CertCollect{}
 
 	if resp.StatusCode == http.StatusNotFound {
-		LoggingClient.Info(fmt.Sprintf("proxy cert pair NOT found in secret store @/%s, status: %s", cs.certPath, resp.Status))
+		cs.loggingClient.Info(fmt.Sprintf("proxy cert pair NOT found in secret store @/%s, status: %s", cs.certPath, resp.Status))
 		return nil, errNotFound
 	} else if resp.StatusCode != http.StatusOK {
 		e := fmt.Errorf("failed to retrieve the proxy cert pair on path %s with error code %d", cs.certPath, resp.StatusCode)
-		LoggingClient.Error(e.Error())
+		cs.loggingClient.Error(e.Error())
 		return nil, e
 	}
 
 	if err = json.NewDecoder(resp.Body).Decode(&cc); err != nil {
 		e := fmt.Errorf("Error decoding json response when retrieving proxy cert pair: %s", err.Error())
-		LoggingClient.Error(e.Error())
+		cs.loggingClient.Error(e.Error())
 		return nil, e
 	}
 
@@ -182,7 +190,7 @@ func (cs *Certs) UploadToStore(cp *CertPair) error {
 		return err
 	}
 
-	LoggingClient.Info("trying to upload the proxy cert pair into secret store")
+	cs.loggingClient.Info("trying to upload the proxy cert pair into secret store")
 	jsonBytes, err := json.Marshal(cp)
 	body := bytes.NewBuffer(jsonBytes)
 
@@ -194,7 +202,7 @@ func (cs *Certs) UploadToStore(cp *CertPair) error {
 	req, err := http.NewRequest(http.MethodPost, certUrl, body)
 	if err != nil {
 		e := fmt.Errorf("error creating http request: %v", err.Error())
-		LoggingClient.Error(e.Error())
+		cs.loggingClient.Error(e.Error())
 		return e
 	}
 
@@ -202,7 +210,7 @@ func (cs *Certs) UploadToStore(cp *CertPair) error {
 	resp, err := cs.client.Do(req)
 	if err != nil {
 		e := fmt.Sprintf("failed to upload the proxy cert pair on path %s with error %s", cs.certPath, err.Error())
-		LoggingClient.Error(e)
+		cs.loggingClient.Error(e)
 		return err
 	}
 	defer resp.Body.Close()
@@ -213,10 +221,10 @@ func (cs *Certs) UploadToStore(cp *CertPair) error {
 			return err
 		}
 		e := fmt.Errorf("failed to load the proxy cert pair to the secret store: %s,%s", resp.Status, string(b))
-		LoggingClient.Error(e.Error())
+		cs.loggingClient.Error(e.Error())
 		return e
 	}
 
-	LoggingClient.Info("successful on uploading the proxy cert pair into secret store")
+	cs.loggingClient.Info("successful on uploading the proxy cert pair into secret store")
 	return nil
 }

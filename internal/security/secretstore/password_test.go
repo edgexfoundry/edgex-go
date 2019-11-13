@@ -29,10 +29,9 @@ import (
 )
 
 func TestGenerate(t *testing.T) {
-	LoggingClient = logger.MockLogger{}
 	tokenPath := "testdata/test-resp-init.json"
 	gk := NewGokeyGenerator(tokenPath)
-	cr := NewCred(&http.Client{}, tokenPath, gk)
+	cr := NewCred(&http.Client{}, tokenPath, gk, logger.MockLogger{})
 
 	realm1 := "service1"
 	realm2 := "service2"
@@ -53,8 +52,6 @@ func TestGenerate(t *testing.T) {
 }
 
 func TestRetrieveCred(t *testing.T) {
-	LoggingClient = logger.MockLogger{}
-
 	credPath := "testCredPath"
 	token := "token"
 	ts := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -95,7 +92,8 @@ func TestRetrieveCred(t *testing.T) {
 		Scheme: "https",
 	}
 
-	cr := NewCred(NewRequester(true), "", NewGokeyGenerator(""))
+	mockLogger := logger.MockLogger{}
+	cr := NewCred(NewRequester(true, mockLogger), "", NewGokeyGenerator(""), mockLogger)
 	pair, err := cr.retrieve(token, credPath)
 	if err != nil {
 		t.Errorf("failed to retrieve credential pair")

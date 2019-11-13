@@ -22,9 +22,11 @@ import (
 	"io/ioutil"
 	"net/http"
 	"time"
+
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
 
-func NewRequester(skipVerify bool) *http.Client {
+func NewRequester(skipVerify bool, loggingClient logger.LoggingClient) *http.Client {
 	var tr *http.Transport
 
 	if skipVerify {
@@ -34,10 +36,10 @@ func NewRequester(skipVerify bool) *http.Client {
 	} else {
 		caCert, err := ioutil.ReadFile(Configuration.SecretService.CaFilePath)
 		if err != nil {
-			LoggingClient.Error("failed to load rootCA certificate.")
+			loggingClient.Error("failed to load rootCA certificate.")
 			return nil
 		}
-		LoggingClient.Info("successfully loaded rootCA certificate.")
+		loggingClient.Info("successfully loaded rootCA certificate.")
 		caCertPool := x509.NewCertPool()
 		caCertPool.AppendCertsFromPEM(caCert)
 

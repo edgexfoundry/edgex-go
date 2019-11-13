@@ -44,8 +44,6 @@ func TestGetAccessToken(t *testing.T) {
 }
 
 func TestRetrieve(t *testing.T) {
-	LoggingClient = logger.MockLogger{}
-
 	certPath := "testCertPath"
 	token := "token"
 	ts := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -86,7 +84,8 @@ func TestRetrieve(t *testing.T) {
 		Scheme: "https",
 	}
 
-	cs := NewCerts(NewRequester(true), certPath, "")
+	mockLogger := logger.MockLogger{}
+	cs := NewCerts(NewRequester(true, mockLogger), certPath, "", mockLogger)
 	cp, err := cs.retrieve(token)
 	if err != nil {
 		t.Errorf("failed to retrieve cert pair")
