@@ -41,10 +41,11 @@ type CertPair struct {
 }
 
 type Certs struct {
-	client        internal.HttpCaller
-	certPath      string
-	tokenPath     string
-	loggingClient logger.LoggingClient
+	client               internal.HttpCaller
+	certPath             string
+	tokenPath            string
+	secretServiceBaseURL string
+	loggingClient        logger.LoggingClient
 }
 
 type auth struct {
@@ -53,17 +54,24 @@ type auth struct {
 
 var errNotFound = errors.New("proxy cert pair not found in secret store")
 
-func NewCerts(caller internal.HttpCaller, certPath string, tokenPath string, loggingClient logger.LoggingClient) Certs {
+func NewCerts(
+	caller internal.HttpCaller,
+	certPath string,
+	tokenPath string,
+	secretServiceBaseURL string,
+	loggingClient logger.LoggingClient) Certs {
+
 	return Certs{
-		client:        caller,
-		certPath:      certPath,
-		tokenPath:     tokenPath,
-		loggingClient: loggingClient,
+		client:               caller,
+		certPath:             certPath,
+		tokenPath:            tokenPath,
+		secretServiceBaseURL: secretServiceBaseURL,
+		loggingClient:        loggingClient,
 	}
 }
 
 func (cs *Certs) certPathUrl() (string, error) {
-	baseURL, err := url.Parse(Configuration.SecretService.GetSecretSvcBaseURL())
+	baseURL, err := url.Parse(cs.secretServiceBaseURL)
 	if err != nil {
 		e := fmt.Errorf("error parsing secret-service url.  check server and port properties")
 		cs.loggingClient.Error(e.Error())

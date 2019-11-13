@@ -23,15 +23,16 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-
+	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstoreclient"
+
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
 
 func TestGenerate(t *testing.T) {
 	tokenPath := "testdata/test-resp-init.json"
 	gk := NewGokeyGenerator(tokenPath)
-	cr := NewCred(&http.Client{}, tokenPath, gk, logger.MockLogger{})
+	cr := NewCred(&http.Client{}, tokenPath, gk, "", logger.MockLogger{})
 
 	realm1 := "service1"
 	realm2 := "service2"
@@ -82,18 +83,21 @@ func TestRetrieveCred(t *testing.T) {
 		return
 	}
 
-	oldConfig := Configuration
-	defer func() { Configuration = oldConfig }()
-
-	Configuration = &ConfigurationStruct{}
-	Configuration.SecretService = secretstoreclient.SecretServiceInfo{
-		Server: parsed.Hostname(),
-		Port:   port,
-		Scheme: "https",
+	configuration := &config.ConfigurationStruct{
+		SecretService: secretstoreclient.SecretServiceInfo{
+			Server: parsed.Hostname(),
+			Port:   port,
+			Scheme: "https",
+		},
 	}
 
 	mockLogger := logger.MockLogger{}
-	cr := NewCred(NewRequester(true, mockLogger), "", NewGokeyGenerator(""), mockLogger)
+	cr := NewCred(
+		NewRequester(true, configuration.SecretService.CaFilePath, mockLogger),
+		"",
+		NewGokeyGenerator(""),
+		configuration.SecretService.GetSecretSvcBaseURL(),
+		mockLogger)
 	pair, err := cr.retrieve(token, credPath)
 	if err != nil {
 		t.Errorf("failed to retrieve credential pair")

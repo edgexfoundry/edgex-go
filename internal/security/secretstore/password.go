@@ -72,23 +72,26 @@ type UserPasswordPair struct {
 }
 
 type Cred struct {
-	client        internal.HttpCaller
-	tokenPath     string
-	generator     CredentialGenerator
-	loggingClient logger.LoggingClient
+	client               internal.HttpCaller
+	tokenPath            string
+	generator            CredentialGenerator
+	secretServiceBaseURL string
+	loggingClient        logger.LoggingClient
 }
 
 func NewCred(
 	caller internal.HttpCaller,
 	tpath string,
 	generator CredentialGenerator,
+	secretServiceBaseURL string,
 	loggingClient logger.LoggingClient) Cred {
 
 	return Cred{
-		client:        caller,
-		tokenPath:     tpath,
-		generator:     generator,
-		loggingClient: loggingClient,
+		client:               caller,
+		tokenPath:            tpath,
+		generator:            generator,
+		secretServiceBaseURL: secretServiceBaseURL,
+		loggingClient:        loggingClient,
 	}
 }
 
@@ -161,7 +164,7 @@ func (cr *Cred) retrieve(t string, path string) (*UserPasswordPair, error) {
 }
 
 func (cr *Cred) credPathURL(path string) (string, error) {
-	baseURL, err := url.Parse(Configuration.SecretService.GetSecretSvcBaseURL())
+	baseURL, err := url.Parse(cr.secretServiceBaseURL)
 	if err != nil {
 		e := fmt.Errorf("error parsing secret-service url:  %s", err.Error())
 		cr.loggingClient.Error(e.Error())

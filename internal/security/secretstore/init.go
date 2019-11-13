@@ -27,11 +27,9 @@ import (
 	bootstrapContainer "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
+	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/container"
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstoreclient"
 )
-
-// Global variables
-var Configuration = &ConfigurationStruct{}
 
 type Bootstrap struct {
 	insecureSkipVerify bool
@@ -49,25 +47,25 @@ func NewBootstrapHandler(insecureSkipVerify bool, initNeeded bool, vaultInterval
 
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the data service.
 func (b *Bootstrap) Handler(wg *sync.WaitGroup, ctx context.Context, startupTimer startup.Timer, dic *di.Container) bool {
-	// initialize globals from bootstrap
+	configuration := container.ConfigurationFrom(dic.Get)
 	loggingClient := bootstrapContainer.LoggingClientFrom(dic.Get)
 
 	//step 1: boot up secretstore general steps same as other EdgeX microservice
 
 	//step 2: initialize the communications
-	req := NewRequester(b.insecureSkipVerify, loggingClient)
+	req := NewRequester(b.insecureSkipVerify, configuration.SecretService.CaFilePath, loggingClient)
 	if req == nil {
 		os.Exit(1)
 	}
 
-	vaultScheme := Configuration.SecretService.Scheme
-	vaultHost := fmt.Sprintf("%s:%v", Configuration.SecretService.Server, Configuration.SecretService.Port)
+	vaultScheme := configuration.SecretService.Scheme
+	vaultHost := fmt.Sprintf("%s:%v", configuration.SecretService.Server, configuration.SecretService.Port)
 	intervalDuration := time.Duration(b.vaultInterval) * time.Second
 	vc := secretstoreclient.NewSecretStoreClient(loggingClient, req, vaultScheme, vaultHost)
 
 	//step 3: initialize and unseal Vault
-	path := Configuration.SecretService.TokenFolderPath
-	filename := Configuration.SecretService.TokenFile
+	path := configuration.SecretService.TokenFolderPath
+	filename := configuration.SecretService.TokenFile
 	absPath := filepath.Join(path, filename)
 	for shouldContinue := true; shouldContinue; {
 		// Anonymous function used to prevent file handles from accumulating
@@ -89,17 +87,17 @@ func (b *Bootstrap) Handler(wg *sync.WaitGroup, ctx context.Context, startupTime
 				shouldContinue = false
 			case http.StatusNotImplemented:
 				loggingClient.Info(fmt.Sprintf("vault is not initialized (status code: %d). Starting initialisation and unseal phases", sCode))
-				_, err := vc.Init(Configuration.SecretService, tokenFile)
+				_, err := vc.Init(configuration.SecretService, tokenFile)
 				if err == nil {
 					tokenFile.Seek(0, 0) // Read starting at beginning
-					_, err = vc.Unseal(Configuration.SecretService, tokenFile)
+					_, err = vc.Unseal(configuration.SecretService, tokenFile)
 					if err == nil {
 						shouldContinue = false
 					}
 				}
 			case http.StatusServiceUnavailable:
 				loggingClient.Info(fmt.Sprintf("vault is sealed (status code: %d). Starting unseal phase", sCode))
-				_, err := vc.Unseal(Configuration.SecretService, tokenFile)
+				_, err := vc.Unseal(configuration.SecretService, tokenFile)
 				if err == nil {
 					shouldContinue = false
 				}
@@ -145,8 +143,8 @@ func (b *Bootstrap) Handler(wg *sync.WaitGroup, ctx context.Context, startupTime
 	// credential creation
 	gk := NewGokeyGenerator(absPath)
 	loggingClient.Warn("WARNING: The gokey generator is a reference implementation for credential generation and the underlying libraries not been reviewed for cryptographic security. The user is encouraged to perform their own security investigation before deployment.")
-	cred := NewCred(req, absPath, gk, loggingClient)
-	for dbname, info := range Configuration.Databases {
+	cred := NewCred(req, absPath, gk, configuration.SecretService.GetSecretSvcBaseURL(), loggingClient)
+	for dbname, info := range configuration.Databases {
 		service := info.Service
 		// generate credentials
 		password, err := cred.GeneratePassword(dbname)
@@ -196,7 +194,7 @@ func (b *Bootstrap) Handler(wg *sync.WaitGroup, ctx context.Context, startupTime
 		}
 	}
 
-	cert := NewCerts(req, Configuration.SecretService.CertPath, absPath, loggingClient)
+	cert := NewCerts(req, configuration.SecretService.CertPath, absPath, configuration.SecretService.GetSecretSvcBaseURL(), loggingClient)
 	existing, err := cert.AlreadyinStore()
 	if err != nil {
 		loggingClient.Error(err.Error())
@@ -209,7 +207,7 @@ func (b *Bootstrap) Handler(wg *sync.WaitGroup, ctx context.Context, startupTime
 	}
 
 	loggingClient.Info("proxy certificate pair are not in the secret store yet, uploading them")
-	cp, err := cert.ReadFrom(Configuration.SecretService.CertFilePath, Configuration.SecretService.KeyFilePath)
+	cp, err := cert.ReadFrom(configuration.SecretService.CertFilePath, configuration.SecretService.KeyFilePath)
 	if err != nil {
 		loggingClient.Error("failed to get certificate pair from volume")
 		os.Exit(1)
