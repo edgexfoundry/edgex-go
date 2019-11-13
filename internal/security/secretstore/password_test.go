@@ -23,16 +23,16 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-
+	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstoreclient"
+
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
 
 func TestGenerate(t *testing.T) {
-	LoggingClient = logger.MockLogger{}
 	tokenPath := "testdata/test-resp-init.json"
 	gk := NewGokeyGenerator(tokenPath)
-	cr := NewCred(&http.Client{}, tokenPath, gk)
+	cr := NewCred(&http.Client{}, tokenPath, gk, "", logger.MockLogger{})
 
 	realm1 := "service1"
 	realm2 := "service2"
@@ -53,8 +53,6 @@ func TestGenerate(t *testing.T) {
 }
 
 func TestRetrieveCred(t *testing.T) {
-	LoggingClient = logger.MockLogger{}
-
 	credPath := "testCredPath"
 	token := "token"
 	ts := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -85,17 +83,21 @@ func TestRetrieveCred(t *testing.T) {
 		return
 	}
 
-	oldConfig := Configuration
-	defer func() { Configuration = oldConfig }()
-
-	Configuration = &ConfigurationStruct{}
-	Configuration.SecretService = secretstoreclient.SecretServiceInfo{
-		Server: parsed.Hostname(),
-		Port:   port,
-		Scheme: "https",
+	configuration := &config.ConfigurationStruct{
+		SecretService: secretstoreclient.SecretServiceInfo{
+			Server: parsed.Hostname(),
+			Port:   port,
+			Scheme: "https",
+		},
 	}
 
-	cr := NewCred(NewRequester(true), "", NewGokeyGenerator(""))
+	mockLogger := logger.MockLogger{}
+	cr := NewCred(
+		NewRequester(true, configuration.SecretService.CaFilePath, mockLogger),
+		"",
+		NewGokeyGenerator(""),
+		configuration.SecretService.GetSecretSvcBaseURL(),
+		mockLogger)
 	pair, err := cr.retrieve(token, credPath)
 	if err != nil {
 		t.Errorf("failed to retrieve credential pair")

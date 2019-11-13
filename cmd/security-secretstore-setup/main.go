@@ -25,11 +25,14 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap"
+	bootstrapContainer "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore"
+	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/config"
+	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/container"
 )
 
 func main() {
@@ -57,15 +60,24 @@ func main() {
 	flag.Usage = usage.HelpCallbackSecuritySecretStore
 	flag.Parse()
 
+	configuration := &config.ConfigurationStruct{}
+	dic := di.NewContainer(di.ServiceConstructorMap{
+		container.ConfigurationName: func(get di.Get) interface{} {
+			return configuration
+		},
+		bootstrapContainer.ConfigurationInterfaceName: func(get di.Get) interface{} {
+			return get(container.ConfigurationName)
+		},
+	})
 	bootstrap.Run(
 		configDir,
 		profileDir,
 		internal.ConfigFileName,
 		useRegistry,
 		internal.SecuritySecretStoreSetupServiceKey,
-		secretstore.Configuration,
+		configuration,
 		startupTimer,
-		di.NewContainer(di.ServiceConstructorMap{}),
+		dic,
 		[]interfaces.BootstrapHandler{
 			secretstore.NewBootstrapHandler(insecureSkipVerify, initNeeded, vaultInterval).Handler,
 		},

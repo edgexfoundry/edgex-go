@@ -27,14 +27,9 @@ import (
 	bootstrapContainer "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
+	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/container"
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstoreclient"
-
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
-
-// Global variables
-var Configuration = &ConfigurationStruct{}
-var LoggingClient logger.LoggingClient
 
 type Bootstrap struct {
 	insecureSkipVerify bool
@@ -52,32 +47,32 @@ func NewBootstrapHandler(insecureSkipVerify bool, initNeeded bool, vaultInterval
 
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the data service.
 func (b *Bootstrap) Handler(wg *sync.WaitGroup, ctx context.Context, startupTimer startup.Timer, dic *di.Container) bool {
-	// initialize globals from bootstrap
-	LoggingClient = bootstrapContainer.LoggingClientFrom(dic.Get)
+	configuration := container.ConfigurationFrom(dic.Get)
+	loggingClient := bootstrapContainer.LoggingClientFrom(dic.Get)
 
 	//step 1: boot up secretstore general steps same as other EdgeX microservice
 
 	//step 2: initialize the communications
-	req := NewRequester(b.insecureSkipVerify)
+	req := NewRequester(b.insecureSkipVerify, configuration.SecretService.CaFilePath, loggingClient)
 	if req == nil {
 		os.Exit(1)
 	}
 
-	vaultScheme := Configuration.SecretService.Scheme
-	vaultHost := fmt.Sprintf("%s:%v", Configuration.SecretService.Server, Configuration.SecretService.Port)
+	vaultScheme := configuration.SecretService.Scheme
+	vaultHost := fmt.Sprintf("%s:%v", configuration.SecretService.Server, configuration.SecretService.Port)
 	intervalDuration := time.Duration(b.vaultInterval) * time.Second
-	vc := secretstoreclient.NewSecretStoreClient(LoggingClient, req, vaultScheme, vaultHost)
+	vc := secretstoreclient.NewSecretStoreClient(loggingClient, req, vaultScheme, vaultHost)
 
 	//step 3: initialize and unseal Vault
-	path := Configuration.SecretService.TokenFolderPath
-	filename := Configuration.SecretService.TokenFile
+	path := configuration.SecretService.TokenFolderPath
+	filename := configuration.SecretService.TokenFile
 	absPath := filepath.Join(path, filename)
 	for shouldContinue := true; shouldContinue; {
 		// Anonymous function used to prevent file handles from accumulating
 		func() {
 			tokenFile, err := os.OpenFile(absPath, os.O_CREATE|os.O_RDWR, 0600)
 			if err != nil {
-				LoggingClient.Error(fmt.Sprintf("unable to open token file at %s with error: %s", absPath, err.Error()))
+				loggingClient.Error(fmt.Sprintf("unable to open token file at %s with error: %s", absPath, err.Error()))
 				os.Exit(1)
 			}
 			defer tokenFile.Close()
@@ -85,38 +80,38 @@ func (b *Bootstrap) Handler(wg *sync.WaitGroup, ctx context.Context, startupTime
 
 			switch sCode {
 			case http.StatusOK:
-				LoggingClient.Info(fmt.Sprintf("vault is initialized and unsealed (status code: %d)", sCode))
+				loggingClient.Info(fmt.Sprintf("vault is initialized and unsealed (status code: %d)", sCode))
 				shouldContinue = false
 			case http.StatusTooManyRequests:
-				LoggingClient.Error(fmt.Sprintf("vault is unsealed and in standby mode (Status Code: %d)", sCode))
+				loggingClient.Error(fmt.Sprintf("vault is unsealed and in standby mode (Status Code: %d)", sCode))
 				shouldContinue = false
 			case http.StatusNotImplemented:
-				LoggingClient.Info(fmt.Sprintf("vault is not initialized (status code: %d). Starting initialisation and unseal phases", sCode))
-				_, err := vc.Init(Configuration.SecretService, tokenFile)
+				loggingClient.Info(fmt.Sprintf("vault is not initialized (status code: %d). Starting initialisation and unseal phases", sCode))
+				_, err := vc.Init(configuration.SecretService, tokenFile)
 				if err == nil {
 					tokenFile.Seek(0, 0) // Read starting at beginning
-					_, err = vc.Unseal(Configuration.SecretService, tokenFile)
+					_, err = vc.Unseal(configuration.SecretService, tokenFile)
 					if err == nil {
 						shouldContinue = false
 					}
 				}
 			case http.StatusServiceUnavailable:
-				LoggingClient.Info(fmt.Sprintf("vault is sealed (status code: %d). Starting unseal phase", sCode))
-				_, err := vc.Unseal(Configuration.SecretService, tokenFile)
+				loggingClient.Info(fmt.Sprintf("vault is sealed (status code: %d). Starting unseal phase", sCode))
+				_, err := vc.Unseal(configuration.SecretService, tokenFile)
 				if err == nil {
 					shouldContinue = false
 				}
 			default:
 				if sCode == 0 {
-					LoggingClient.Error(fmt.Sprintf("vault is in an unknown state. No Status code available"))
+					loggingClient.Error(fmt.Sprintf("vault is in an unknown state. No Status code available"))
 				} else {
-					LoggingClient.Error(fmt.Sprintf("vault is in an unknown state. Status code: %d", sCode))
+					loggingClient.Error(fmt.Sprintf("vault is in an unknown state. Status code: %d", sCode))
 				}
 			}
 		}()
 
 		if shouldContinue {
-			LoggingClient.Info(fmt.Sprintf("trying Vault init/unseal again in %d seconds", b.vaultInterval))
+			loggingClient.Info(fmt.Sprintf("trying Vault init/unseal again in %d seconds", b.vaultInterval))
 			time.Sleep(intervalDuration)
 		}
 	}
@@ -147,14 +142,14 @@ func (b *Bootstrap) Handler(wg *sync.WaitGroup, ctx context.Context, startupTime
 
 	// credential creation
 	gk := NewGokeyGenerator(absPath)
-	LoggingClient.Warn("WARNING: The gokey generator is a reference implementation for credential generation and the underlying libraries not been reviewed for cryptographic security. The user is encouraged to perform their own security investigation before deployment.")
-	cred := NewCred(req, absPath, gk)
-	for dbname, info := range Configuration.Databases {
+	loggingClient.Warn("WARNING: The gokey generator is a reference implementation for credential generation and the underlying libraries not been reviewed for cryptographic security. The user is encouraged to perform their own security investigation before deployment.")
+	cred := NewCred(req, absPath, gk, configuration.SecretService.GetSecretSvcBaseURL(), loggingClient)
+	for dbname, info := range configuration.Databases {
 		service := info.Service
 		// generate credentials
 		password, err := cred.GeneratePassword(dbname)
 		if err != nil {
-			LoggingClient.Error(fmt.Sprintf("failed to generate credential pair for service %s", service))
+			loggingClient.Error(fmt.Sprintf("failed to generate credential pair for service %s", service))
 			os.Exit(1)
 		}
 		pair := UserPasswordPair{
@@ -167,17 +162,17 @@ func (b *Bootstrap) Handler(wg *sync.WaitGroup, ctx context.Context, startupTime
 			servicePath := fmt.Sprintf("/v1/secret/edgex/%s/mongodb", service)
 			existing, err := cred.AlreadyInStore(servicePath)
 			if err != nil {
-				LoggingClient.Error(err.Error())
+				loggingClient.Error(err.Error())
 				os.Exit(1)
 			}
 			if !existing {
 				err = cred.UploadToStore(&pair, servicePath)
 				if err != nil {
-					LoggingClient.Error(fmt.Sprintf("failed to upload credential pair for db %s on path %s", dbname, servicePath))
+					loggingClient.Error(fmt.Sprintf("failed to upload credential pair for db %s on path %s", dbname, servicePath))
 					os.Exit(1)
 				}
 			} else {
-				LoggingClient.Info(fmt.Sprintf("credentials for %s already present at path %s", dbname, servicePath))
+				loggingClient.Info(fmt.Sprintf("credentials for %s already present at path %s", dbname, servicePath))
 			}
 		}
 
@@ -185,48 +180,48 @@ func (b *Bootstrap) Handler(wg *sync.WaitGroup, ctx context.Context, startupTime
 		// add credentials to mongo path if they're not already there
 		existing, err := cred.AlreadyInStore(mongoPath)
 		if err != nil {
-			LoggingClient.Error(err.Error())
+			loggingClient.Error(err.Error())
 			os.Exit(1)
 		}
 		if !existing {
 			err = cred.UploadToStore(&pair, mongoPath)
 			if err != nil {
-				LoggingClient.Error(fmt.Sprintf("failed to upload credential pair for db %s on path %s", dbname, mongoPath))
+				loggingClient.Error(fmt.Sprintf("failed to upload credential pair for db %s on path %s", dbname, mongoPath))
 				os.Exit(1)
 			}
 		} else {
-			LoggingClient.Info(fmt.Sprintf("credentials for %s already present at path %s", dbname, mongoPath))
+			loggingClient.Info(fmt.Sprintf("credentials for %s already present at path %s", dbname, mongoPath))
 		}
 	}
 
-	cert := NewCerts(req, Configuration.SecretService.CertPath, absPath)
+	cert := NewCerts(req, configuration.SecretService.CertPath, absPath, configuration.SecretService.GetSecretSvcBaseURL(), loggingClient)
 	existing, err := cert.AlreadyinStore()
 	if err != nil {
-		LoggingClient.Error(err.Error())
+		loggingClient.Error(err.Error())
 		os.Exit(1)
 	}
 
 	if existing == true {
-		LoggingClient.Info("proxy certificate pair are in the secret store already, skip uploading")
+		loggingClient.Info("proxy certificate pair are in the secret store already, skip uploading")
 		return false
 	}
 
-	LoggingClient.Info("proxy certificate pair are not in the secret store yet, uploading them")
-	cp, err := cert.ReadFrom(Configuration.SecretService.CertFilePath, Configuration.SecretService.KeyFilePath)
+	loggingClient.Info("proxy certificate pair are not in the secret store yet, uploading them")
+	cp, err := cert.ReadFrom(configuration.SecretService.CertFilePath, configuration.SecretService.KeyFilePath)
 	if err != nil {
-		LoggingClient.Error("failed to get certificate pair from volume")
+		loggingClient.Error("failed to get certificate pair from volume")
 		os.Exit(1)
 	}
 
-	LoggingClient.Info("proxy certificate pair are loaded from volume successfully, will upload to secret store")
+	loggingClient.Info("proxy certificate pair are loaded from volume successfully, will upload to secret store")
 
 	err = cert.UploadToStore(cp)
 	if err != nil {
-		LoggingClient.Error("failed to upload the proxy cert pair into the secret store")
-		LoggingClient.Error(err.Error())
+		loggingClient.Error("failed to upload the proxy cert pair into the secret store")
+		loggingClient.Error(err.Error())
 		os.Exit(1)
 	}
 
-	LoggingClient.Info("proxy certificate pair are uploaded to secret store successfully, Vault init done successfully")
+	loggingClient.Info("proxy certificate pair are uploaded to secret store successfully, Vault init done successfully")
 	return false
 }

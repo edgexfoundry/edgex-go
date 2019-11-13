@@ -25,9 +25,10 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-
+	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstoreclient"
+
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
 
 func TestGetAccessToken(t *testing.T) {
@@ -44,8 +45,6 @@ func TestGetAccessToken(t *testing.T) {
 }
 
 func TestRetrieve(t *testing.T) {
-	LoggingClient = logger.MockLogger{}
-
 	certPath := "testCertPath"
 	token := "token"
 	ts := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -76,17 +75,20 @@ func TestRetrieve(t *testing.T) {
 		return
 	}
 
-	oldConfig := Configuration
-	defer func() { Configuration = oldConfig }()
-
-	Configuration = &ConfigurationStruct{}
-	Configuration.SecretService = secretstoreclient.SecretServiceInfo{
+	configuration := &config.ConfigurationStruct{}
+	configuration.SecretService = secretstoreclient.SecretServiceInfo{
 		Server: parsed.Hostname(),
 		Port:   port,
 		Scheme: "https",
 	}
 
-	cs := NewCerts(NewRequester(true), certPath, "")
+	mockLogger := logger.MockLogger{}
+	cs := NewCerts(
+		NewRequester(true, configuration.SecretService.CaFilePath, mockLogger),
+		certPath,
+		"",
+		configuration.SecretService.GetSecretSvcBaseURL(),
+		mockLogger)
 	cp, err := cs.retrieve(token)
 	if err != nil {
 		t.Errorf("failed to retrieve cert pair")
