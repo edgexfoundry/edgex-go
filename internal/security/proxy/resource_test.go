@@ -20,11 +20,12 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/edgexfoundry/edgex-go/internal/security/proxy/config"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
 
 func TestDelete(t *testing.T) {
-	LoggingClient = logger.MockLogger{}
 	path := "services"
 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -47,8 +48,8 @@ func TestDelete(t *testing.T) {
 	}
 
 	client := &http.Client{}
-	cfgOK := ConfigurationStruct{}
-	cfgOK.KongURL = KongUrlInfo{
+	cfgOK := config.ConfigurationStruct{}
+	cfgOK.KongURL = config.KongUrlInfo{
 		Server:    host,
 		AdminPort: port,
 	}
@@ -56,19 +57,19 @@ func TestDelete(t *testing.T) {
 	cfgWrongPort := cfgOK
 	cfgWrongPort.KongURL.AdminPort = 123
 
+	mockLogger := logger.MockLogger{}
 	tests := []struct {
 		name        string
-		config      ConfigurationStruct
-		r           Resource
+		config      config.ConfigurationStruct
+		r           *Resource
 		expectError bool
 	}{
-		{"DeleteOK", cfgOK, NewResource("1", client), false},
-		{"InvalidResource", cfgOK, NewResource("2", client), true},
-		{"WrongPort", cfgWrongPort, NewResource("1", client), true},
+		{"DeleteOK", cfgOK, NewResource("1", client, cfgOK.KongURL.GetProxyBaseURL(), mockLogger), false},
+		{"InvalidResource", cfgOK, NewResource("2", client, cfgOK.KongURL.GetProxyBaseURL(), mockLogger), true},
+		{"WrongPort", cfgWrongPort, NewResource("1", client, cfgWrongPort.KongURL.GetProxyBaseURL(), mockLogger), true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			Configuration = &tt.config
 			err = tt.r.Remove(path)
 			if err != nil && !tt.expectError {
 				t.Error(err)

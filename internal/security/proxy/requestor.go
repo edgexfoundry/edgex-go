@@ -23,21 +23,28 @@ import (
 	"time"
 
 	"github.com/edgexfoundry/edgex-go/internal"
+
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
 
-func NewRequestor(skipVerify bool, timeoutInSecond int) internal.HttpCaller {
+func NewRequestor(
+	skipVerify bool,
+	timeoutInSecond int,
+	caCertPath string,
+	loggingClient logger.LoggingClient) internal.HttpCaller {
+
 	var tr *http.Transport
 	if skipVerify {
 		tr = &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		}
 	} else {
-		caCert, err := ioutil.ReadFile(Configuration.SecretService.CACertPath)
+		caCert, err := ioutil.ReadFile(caCertPath)
 		if err != nil {
-			LoggingClient.Error("failed to load rootCA certificate.")
+			loggingClient.Error("failed to load rootCA certificate.")
 			return nil
 		}
-		LoggingClient.Info("successfully loaded rootCA certificate.")
+		loggingClient.Info("successfully loaded rootCA certificate.")
 		caCertPool := x509.NewCertPool()
 		caCertPool.AppendCertsFromPEM(caCert)
 

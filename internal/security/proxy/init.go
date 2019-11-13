@@ -16,73 +16,117 @@
 package proxy
 
 import (
+	"context"
+	"fmt"
+	"github.com/edgexfoundry/edgex-go/internal/security/proxy/container"
+	"os"
 	"sync"
-	"time"
 
-	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients"
+	bootstrapContainer "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-	"github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
-// Global variables
-var Configuration *ConfigurationStruct
-var LoggingClient logger.LoggingClient
-
-func Retry(useRegistry bool, configDir, profileDir string, timeout int, wait *sync.WaitGroup, ch chan error) {
-	until := time.Now().Add(time.Millisecond * time.Duration(timeout))
-	for time.Now().Before(until) {
-		var err error
-		// When looping, only handle configuration if it hasn't already been set.
-		if Configuration == nil {
-			// Next two lines are workaround for issue #1814 (nil panic while logging)
-			// where config.LoadFromFile depends on a global LoggingClient that isn't set anywhere
-			// Remove this workaround once this tool is migrated to common bootstrap.
-			lc := logger.NewClient(internal.SecurityProxySetupServiceKey, false, "", models.InfoLog)
-			config.LoggingClient = lc
-			Configuration, err = initializeConfiguration(useRegistry, configDir, profileDir)
-			if err != nil {
-				ch <- err
-				if !useRegistry {
-					// Error occurred when attempting to read from local filesystem. Fail fast.
-					close(ch)
-					wait.Done()
-					return
-				}
-			} else {
-				// Setup Logging
-				logTarget := setLoggingTarget()
-				LoggingClient = logger.NewClient(internal.SecurityProxySetupServiceKey, Configuration.Logging.EnableRemote, logTarget, Configuration.Writable.LogLevel)
-			}
-		}
-		// This seems a bit artificial here due to lack of additional service requirements
-		// but conforms to the pattern found in other edgex-go services.
-		if Configuration != nil {
-			break
-		}
-		time.Sleep(time.Second * time.Duration(1))
-	}
-	close(ch)
-	wait.Done()
-
-	return
+type Bootstrap struct {
+	insecureSkipVerify bool
+	initNeeded         bool
+	resetNeeded        bool
+	userTobeCreated    string
+	userOfGroup        string
+	userToBeDeleted    string
 }
 
-func initializeConfiguration(useRegistry bool, configDir, profileDir string) (*ConfigurationStruct, error) {
-	// We currently have to load configuration from filesystem first in order to obtain Registry Host/Port
-	configuration := &ConfigurationStruct{}
-	err := config.LoadFromFile(configDir, profileDir, configuration)
+func NewBootstrapHandler(
+	insecureSkipVerify bool,
+	initNeeded bool,
+	resetNeeded bool,
+	userTobeCreated string,
+	userOfGroup string,
+	userToBeDeleted string) *Bootstrap {
+
+	return &Bootstrap{
+		insecureSkipVerify: insecureSkipVerify,
+		initNeeded:         initNeeded,
+		resetNeeded:        resetNeeded,
+		userTobeCreated:    userTobeCreated,
+		userOfGroup:        userOfGroup,
+		userToBeDeleted:    userToBeDeleted,
+	}
+}
+
+func (b *Bootstrap) errorAndHalt(loggingClient logger.LoggingClient, message string) {
+	loggingClient.Error(message)
+	os.Exit(1)
+}
+
+func (b *Bootstrap) haltIfError(loggingClient logger.LoggingClient, err error) {
 	if err != nil {
-		return nil, err
+		b.errorAndHalt(loggingClient, err.Error())
 	}
-
-	return configuration, nil
 }
 
-func setLoggingTarget() string {
-	if Configuration.Logging.EnableRemote {
-		return Configuration.Clients["Logging"].Url() + clients.ApiLoggingRoute
+// BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the data service.
+func (b *Bootstrap) Handler(wg *sync.WaitGroup, ctx context.Context, startupTimer startup.Timer, dic *di.Container) bool {
+	loggingClient := bootstrapContainer.LoggingClientFrom(dic.Get)
+	configuration := container.ConfigurationFrom(dic.Get)
+
+	req := NewRequestor(
+		b.insecureSkipVerify,
+		configuration.Writable.RequestTimeout,
+		configuration.SecretService.CACertPath,
+		loggingClient)
+	if req == nil {
+		os.Exit(1)
 	}
-	return Configuration.Logging.File
+
+	s := NewService(req, loggingClient, configuration)
+	b.haltIfError(loggingClient, s.CheckProxyServiceStatus())
+
+	if b.initNeeded {
+		if b.resetNeeded {
+			b.errorAndHalt(loggingClient, "can't run initialization and reset at the same time for security service")
+		}
+
+		b.haltIfError(
+			loggingClient,
+			s.Init(
+				NewCertificateLoader(
+					req,
+					configuration.SecretService.CertPath,
+					configuration.SecretService.TokenPath,
+					configuration.SecretService.GetSecretSvcBaseURL(),
+					loggingClient,
+				),
+			),
+		) // Where the Service init is called
+	} else if b.resetNeeded {
+		b.haltIfError(loggingClient, s.ResetProxy())
+	}
+
+	if b.userTobeCreated != "" && b.userOfGroup != "" {
+		c := NewConsumer(b.userTobeCreated, req, loggingClient, configuration)
+		b.haltIfError(loggingClient, c.Create(EdgeXKong))
+		b.haltIfError(loggingClient, c.AssociateWithGroup(b.userOfGroup))
+
+		t, err := c.CreateToken()
+		if err != nil {
+			b.errorAndHalt(loggingClient, fmt.Sprintf("failed to create access token for edgex service due to error %s", err.Error()))
+		}
+
+		fmt.Println(fmt.Sprintf("the access token for user %s is: %s. Please keep the token for accessing edgex services", b.userTobeCreated, t))
+
+		file, err := os.Create(configuration.KongAuth.OutputPath)
+		b.haltIfError(loggingClient, err)
+
+		utp := &UserTokenPair{User: b.userTobeCreated, Token: t}
+		b.haltIfError(loggingClient, utp.Save(file))
+	}
+
+	if b.userToBeDeleted != "" {
+		t := NewConsumer(b.userToBeDeleted, req, loggingClient, configuration)
+		b.haltIfError(loggingClient, t.Delete())
+	}
+
+	return false
 }

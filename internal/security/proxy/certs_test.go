@@ -23,7 +23,10 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/mocks"
+	"github.com/edgexfoundry/edgex-go/internal/security/proxy/config"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+
 	"github.com/stretchr/testify/mock"
 )
 
@@ -35,7 +38,6 @@ func createRequestorMockHttpOK() internal.HttpCaller {
 }
 
 func TestLoad(t *testing.T) {
-	LoggingClient = logger.MockLogger{}
 	ts := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != "GET" {
 			w.WriteHeader(http.StatusMethodNotAllowed)
@@ -52,8 +54,8 @@ func TestLoad(t *testing.T) {
 		return
 	}
 
-	cfgOK := ConfigurationStruct{}
-	cfgOK.SecretService = SecretServiceInfo{
+	cfgOK := config.ConfigurationStruct{}
+	cfgOK.SecretService = config.SecretServiceInfo{
 		Server: host,
 		Port:   port,
 	}
@@ -63,7 +65,7 @@ func TestLoad(t *testing.T) {
 
 	tests := []struct {
 		name        string
-		config      ConfigurationStruct
+		config      config.ConfigurationStruct
 		certPath    string
 		tokenPath   string
 		expectError bool
@@ -73,8 +75,13 @@ func TestLoad(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			Configuration = &tt.config
-			cert := NewCertificateLoader(NewRequestor(true, 10), tt.certPath, tt.tokenPath)
+			mockLogger := logger.MockLogger{}
+			cert := NewCertificateLoader(
+				NewRequestor(true, 10, "", mockLogger),
+				tt.certPath,
+				tt.tokenPath,
+				tt.config.SecretService.GetSecretSvcBaseURL(),
+				mockLogger)
 			_, err := cert.Load()
 			if err != nil && !tt.expectError {
 				t.Error(err)
@@ -90,7 +97,7 @@ func TestLoad(t *testing.T) {
 func TestGetAccessToken(t *testing.T) {
 	r := createRequestorMockHttpOK()
 	path := "testdata/test-resp-init.json"
-	cs := certificate{r, "", ""}
+	cs := certificate{r, "", "", "", logger.MockLogger{}}
 	s, err := cs.getAccessToken(path)
 	if err != nil {
 		t.Errorf("failed to parse token file")
@@ -116,7 +123,7 @@ func TestValidate(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cs := certificate{r, "", ""}
+			cs := certificate{r, "", "", "", logger.MockLogger{}}
 			err := cs.validate(&tt.pair)
 			if err != nil && !tt.expectError {
 				t.Error(err)
@@ -130,8 +137,6 @@ func TestValidate(t *testing.T) {
 }
 
 func TestRetrieve(t *testing.T) {
-	LoggingClient = logger.MockLogger{}
-
 	certPath := "testCertPath"
 	token := "token"
 	ts := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -166,8 +171,8 @@ func TestRetrieve(t *testing.T) {
 		return
 	}
 
-	cfgOK := ConfigurationStruct{}
-	cfgOK.SecretService = SecretServiceInfo{
+	cfgOK := config.ConfigurationStruct{}
+	cfgOK.SecretService = config.SecretServiceInfo{
 		Server: host,
 		Port:   port,
 	}
@@ -177,7 +182,7 @@ func TestRetrieve(t *testing.T) {
 
 	tests := []struct {
 		name        string
-		config      ConfigurationStruct
+		config      config.ConfigurationStruct
 		certPath    string
 		token       string
 		expectError bool
@@ -189,8 +194,13 @@ func TestRetrieve(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			Configuration = &tt.config
-			cs := certificate{NewRequestor(true, 10), tt.certPath, ""}
+			mockLogger := logger.MockLogger{}
+			cs := certificate{
+				NewRequestor(true, 10, "", mockLogger),
+				tt.certPath,
+				"",
+				tt.config.SecretService.GetSecretSvcBaseURL(),
+				mockLogger}
 			cp, err := cs.retrieve(tt.token)
 			if err != nil && !tt.expectError {
 				t.Error(err)

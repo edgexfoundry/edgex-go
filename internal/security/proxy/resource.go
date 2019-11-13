@@ -23,19 +23,33 @@ import (
 	"strings"
 
 	"github.com/edgexfoundry/edgex-go/internal"
+
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
 
 type Resource struct {
-	name   string
-	client internal.HttpCaller
+	name             string
+	client           internal.HttpCaller
+	kongProxyBaseUrl string
+	loggingClient    logger.LoggingClient
 }
 
-func NewResource(name string, r internal.HttpCaller) Resource {
-	return Resource{name: name, client: r}
+func NewResource(
+	name string,
+	r internal.HttpCaller,
+	kongProxyBaseUrl string,
+	loggingClient logger.LoggingClient) *Resource {
+
+	return &Resource{
+		name:             name,
+		client:           r,
+		kongProxyBaseUrl: kongProxyBaseUrl,
+		loggingClient:    loggingClient,
+	}
 }
 
 func (r *Resource) Remove(path string) error {
-	tokens := []string{Configuration.KongURL.GetProxyBaseURL(), path, r.name}
+	tokens := []string{r.kongProxyBaseUrl, path, r.name}
 	req, err := http.NewRequest(http.MethodDelete, strings.Join(tokens, "/"), nil)
 	if err != nil {
 		e := fmt.Sprintf("failed to delete %s at %s with error %s", r.name, path, err.Error())
@@ -50,11 +64,11 @@ func (r *Resource) Remove(path string) error {
 
 	switch resp.StatusCode {
 	case http.StatusOK, http.StatusCreated, http.StatusNoContent:
-		LoggingClient.Info(fmt.Sprintf("successful to delete %s at %s", r.name, path))
+		r.loggingClient.Info(fmt.Sprintf("successful to delete %s at %s", r.name, path))
 		break
 	default:
 		e := fmt.Sprintf("failed to delete %s at %s with errocode %d.", r.name, path, resp.StatusCode)
-		LoggingClient.Error(e)
+		r.loggingClient.Error(e)
 		return errors.New(e)
 	}
 	return nil

@@ -24,6 +24,8 @@ import (
 	"strings"
 
 	"github.com/edgexfoundry/edgex-go/internal"
+
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
 
 type CertificateLoader interface {
@@ -31,13 +33,27 @@ type CertificateLoader interface {
 }
 
 type certificate struct {
-	client    internal.HttpCaller
-	certPath  string
-	tokenPath string
+	client               internal.HttpCaller
+	certPath             string
+	tokenPath            string
+	secretServiceBaseUrl string
+	loggingClient        logger.LoggingClient
 }
 
-func NewCertificateLoader(r internal.HttpCaller, certPath string, tokenPath string) CertificateLoader {
-	return certificate{client: r, certPath: certPath, tokenPath: tokenPath}
+func NewCertificateLoader(
+	r internal.HttpCaller,
+	certPath string,
+	tokenPath string,
+	secretServiceBaseUrl string,
+	loggingClient logger.LoggingClient) CertificateLoader {
+
+	return certificate{
+		client:               r,
+		certPath:             certPath,
+		tokenPath:            tokenPath,
+		loggingClient:        loggingClient,
+		secretServiceBaseUrl: secretServiceBaseUrl,
+	}
 }
 
 type CertCollect struct {
@@ -81,11 +97,11 @@ func (cs certificate) getAccessToken(filename string) (string, error) {
 }
 
 func (cs certificate) retrieve(t string) (*CertPair, error) {
-	tokens := []string{Configuration.SecretService.GetSecretSvcBaseURL(), cs.certPath}
+	tokens := []string{cs.secretServiceBaseUrl, cs.certPath}
 	req, err := http.NewRequest(http.MethodGet, strings.Join(tokens, "/"), nil)
 	if err != nil {
 		e := fmt.Sprintf("failed to retrieve certificate on path %s with error %s", cs.certPath, err.Error())
-		LoggingClient.Error(e)
+		cs.loggingClient.Error(e)
 		return nil, err
 	}
 	req.Header.Add(VaultToken, t)
@@ -93,7 +109,7 @@ func (cs certificate) retrieve(t string) (*CertPair, error) {
 	resp, err := cs.client.Do(req)
 	if err != nil {
 		e := fmt.Sprintf("failed to retrieve certificate on path %s with error %s", cs.certPath, err.Error())
-		LoggingClient.Error(e)
+		cs.loggingClient.Error(e)
 		return nil, err
 	}
 	defer resp.Body.Close()
@@ -107,7 +123,7 @@ func (cs certificate) retrieve(t string) (*CertPair, error) {
 		break
 	default:
 		err = fmt.Errorf("failed to retrieve certificate on path %s with error code %d", cs.certPath, resp.StatusCode)
-		LoggingClient.Error(err.Error())
+		cs.loggingClient.Error(err.Error())
 		return nil, err
 	}
 	return &cc.Pair, nil

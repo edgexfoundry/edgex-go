@@ -24,8 +24,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/BurntSushi/toml"
+	"github.com/edgexfoundry/edgex-go/internal/security/proxy/config"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+
+	"github.com/BurntSushi/toml"
 )
 
 type mockCertificateLoader struct{}
@@ -35,7 +38,6 @@ func (m mockCertificateLoader) Load() (*CertPair, error) {
 }
 
 func TestInit(t *testing.T) {
-	LoggingClient = logger.MockLogger{}
 	fileName := "./testdata/configuration.toml"
 	contents, err := ioutil.ReadFile(fileName)
 	if err != nil {
@@ -43,8 +45,8 @@ func TestInit(t *testing.T) {
 		return
 	}
 
-	Configuration = &ConfigurationStruct{}
-	err = toml.Unmarshal(contents, Configuration)
+	configuration := &config.ConfigurationStruct{}
+	err = toml.Unmarshal(contents, configuration)
 	if err != nil {
 		t.Errorf("unable to parse configuration file (%s): %s", fileName, err.Error())
 		return
@@ -78,13 +80,14 @@ func TestInit(t *testing.T) {
 		t.Error(err.Error())
 		return
 	}
-	Configuration.KongURL = KongUrlInfo{
+	configuration.KongURL = config.KongUrlInfo{
 		Server:    host,
 		AdminPort: port,
 	}
 
 	mock := mockCertificateLoader{}
-	service := NewService(NewRequestor(true, 10))
+	mockLogger := logger.MockLogger{}
+	service := NewService(NewRequestor(true, 10, "", mockLogger), mockLogger, configuration)
 	err = service.Init(mock)
 	if err != nil {
 		t.Errorf(err.Error())
@@ -92,7 +95,6 @@ func TestInit(t *testing.T) {
 }
 
 func TestCheckServiceStatus(t *testing.T) {
-	LoggingClient = logger.MockLogger{}
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			w.WriteHeader(http.StatusMethodNotAllowed)
@@ -118,8 +120,9 @@ func TestCheckServiceStatus(t *testing.T) {
 		{"WrongPath", ts.URL + "/test", true},
 	}
 	for _, tt := range tests {
+		configuration := &config.ConfigurationStruct{}
 		t.Run(tt.name, func(t *testing.T) {
-			svc := NewService(&http.Client{})
+			svc := NewService(&http.Client{}, logger.MockLogger{}, configuration)
 			err := svc.checkServiceStatus(tt.url)
 			if err != nil && !tt.expectError {
 				t.Error(err)
@@ -133,7 +136,6 @@ func TestCheckServiceStatus(t *testing.T) {
 }
 
 func TestInitKongService(t *testing.T) {
-	LoggingClient = logger.MockLogger{}
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			w.WriteHeader(http.StatusMethodNotAllowed)
@@ -170,8 +172,8 @@ func TestInitKongService(t *testing.T) {
 		t.Error(err.Error())
 		return
 	}
-	cfgOK := ConfigurationStruct{}
-	cfgOK.KongURL = KongUrlInfo{
+	cfgOK := config.ConfigurationStruct{}
+	cfgOK.KongURL = config.KongUrlInfo{
 		Server:    host,
 		AdminPort: port,
 	}
@@ -184,7 +186,7 @@ func TestInitKongService(t *testing.T) {
 
 	tests := []struct {
 		name        string
-		config      ConfigurationStruct
+		config      config.ConfigurationStruct
 		serviceId   string
 		expectError bool
 	}{
@@ -195,9 +197,8 @@ func TestInitKongService(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			Configuration = &tt.config
 			tk := &KongService{tt.serviceId, "test", 80, "http"}
-			svc := NewService(&http.Client{})
+			svc := NewService(&http.Client{}, logger.MockLogger{}, &tt.config)
 			err = svc.initKongService(tk)
 
 			if err != nil && !tt.expectError {
@@ -212,7 +213,6 @@ func TestInitKongService(t *testing.T) {
 }
 
 func TestInitKongRoutes(t *testing.T) {
-	LoggingClient = logger.MockLogger{}
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			w.WriteHeader(http.StatusMethodNotAllowed)
@@ -234,8 +234,8 @@ func TestInitKongRoutes(t *testing.T) {
 		return
 	}
 
-	cfgOK := ConfigurationStruct{}
-	cfgOK.KongURL = KongUrlInfo{
+	cfgOK := config.ConfigurationStruct{}
+	cfgOK.KongURL = config.KongUrlInfo{
 		Server:    host,
 		AdminPort: port,
 	}
@@ -245,7 +245,7 @@ func TestInitKongRoutes(t *testing.T) {
 
 	tests := []struct {
 		name        string
-		config      ConfigurationStruct
+		config      config.ConfigurationStruct
 		path        string
 		expectError bool
 	}{
@@ -255,8 +255,7 @@ func TestInitKongRoutes(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			Configuration = &tt.config
-			svc := NewService(&http.Client{})
+			svc := NewService(&http.Client{}, logger.MockLogger{}, &tt.config)
 			err = svc.initKongRoutes(&KongRoute{}, tt.path)
 			if err != nil && !tt.expectError {
 				t.Error(err)
@@ -270,7 +269,6 @@ func TestInitKongRoutes(t *testing.T) {
 }
 
 func TestInitACL(t *testing.T) {
-	LoggingClient = logger.MockLogger{}
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			w.WriteHeader(http.StatusMethodNotAllowed)
@@ -303,8 +301,8 @@ func TestInitACL(t *testing.T) {
 		return
 	}
 
-	cfgOK := ConfigurationStruct{}
-	cfgOK.KongURL = KongUrlInfo{
+	cfgOK := config.ConfigurationStruct{}
+	cfgOK.KongURL = config.KongUrlInfo{
 		Server:    host,
 		AdminPort: port,
 	}
@@ -314,7 +312,7 @@ func TestInitACL(t *testing.T) {
 
 	tests := []struct {
 		name        string
-		config      ConfigurationStruct
+		config      config.ConfigurationStruct
 		aclName     string
 		whitelist   string
 		expectError bool
@@ -326,8 +324,7 @@ func TestInitACL(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			Configuration = &tt.config
-			svc := NewService(&http.Client{})
+			svc := NewService(&http.Client{}, logger.MockLogger{}, &tt.config)
 			err = svc.initACL(tt.aclName, tt.whitelist)
 			if err != nil && !tt.expectError {
 				t.Error(err)
@@ -341,7 +338,6 @@ func TestInitACL(t *testing.T) {
 }
 
 func TestResetProxy(t *testing.T) {
-	LoggingClient = logger.MockLogger{}
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		if !strings.Contains(r.URL.EscapedPath(), ServicesPath) &&
@@ -369,8 +365,8 @@ func TestResetProxy(t *testing.T) {
 		return
 	}
 
-	cfgOK := ConfigurationStruct{}
-	cfgOK.KongURL = KongUrlInfo{
+	cfgOK := config.ConfigurationStruct{}
+	cfgOK.KongURL = config.KongUrlInfo{
 		Server:    host,
 		AdminPort: port,
 	}
@@ -380,7 +376,7 @@ func TestResetProxy(t *testing.T) {
 
 	tests := []struct {
 		name        string
-		config      ConfigurationStruct
+		config      config.ConfigurationStruct
 		expectError bool
 	}{
 		{"resetOK", cfgOK, false},
@@ -388,8 +384,7 @@ func TestResetProxy(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			Configuration = &tt.config
-			svc := NewService(&http.Client{})
+			svc := NewService(&http.Client{}, logger.MockLogger{}, &tt.config)
 			err := svc.ResetProxy()
 			if err != nil && !tt.expectError {
 				t.Error(err)
@@ -403,7 +398,6 @@ func TestResetProxy(t *testing.T) {
 }
 
 func TestGetSvcIDs(t *testing.T) {
-	LoggingClient = logger.MockLogger{}
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		if r.Method != http.MethodGet {
@@ -432,8 +426,8 @@ func TestGetSvcIDs(t *testing.T) {
 		return
 	}
 
-	cfgOK := ConfigurationStruct{}
-	cfgOK.KongURL = KongUrlInfo{
+	cfgOK := config.ConfigurationStruct{}
+	cfgOK.KongURL = config.KongUrlInfo{
 		Server:    host,
 		AdminPort: port,
 	}
@@ -445,7 +439,7 @@ func TestGetSvcIDs(t *testing.T) {
 
 	tests := []struct {
 		name        string
-		config      ConfigurationStruct
+		config      config.ConfigurationStruct
 		serviceId   string
 		expectError bool
 	}{
@@ -456,8 +450,7 @@ func TestGetSvcIDs(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			Configuration = &tt.config
-			svc := NewService(&http.Client{})
+			svc := NewService(&http.Client{}, logger.MockLogger{}, &tt.config)
 
 			coll, err := svc.getSvcIDs(tt.serviceId)
 			if err != nil && !tt.expectError {
@@ -476,8 +469,6 @@ func TestGetSvcIDs(t *testing.T) {
 }
 
 func TestInitJWTAuth(t *testing.T) {
-	LoggingClient = logger.MockLogger{}
-
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		if r.Method != http.MethodPost {
@@ -499,8 +490,8 @@ func TestInitJWTAuth(t *testing.T) {
 		return
 	}
 
-	cfgOK := ConfigurationStruct{}
-	cfgOK.KongURL = KongUrlInfo{
+	cfgOK := config.ConfigurationStruct{}
+	cfgOK.KongURL = config.KongUrlInfo{
 		Server:    host,
 		AdminPort: port,
 	}
@@ -510,7 +501,7 @@ func TestInitJWTAuth(t *testing.T) {
 
 	tests := []struct {
 		name        string
-		config      ConfigurationStruct
+		config      config.ConfigurationStruct
 		expectError bool
 	}{
 		{"jwtOK", cfgOK, false},
@@ -518,8 +509,7 @@ func TestInitJWTAuth(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			Configuration = &tt.config
-			svc := NewService(&http.Client{})
+			svc := NewService(&http.Client{}, logger.MockLogger{}, &tt.config)
 			err := svc.initJWTAuth()
 			if err != nil && !tt.expectError {
 				t.Error(err)
