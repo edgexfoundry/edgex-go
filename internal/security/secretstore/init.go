@@ -16,68 +16,217 @@
 package secretstore
 
 import (
+	"context"
+	"fmt"
+	"net/http"
+	"os"
+	"path/filepath"
 	"sync"
 	"time"
 
-	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
+	bootstrapContainer "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
+	"github.com/edgexfoundry/edgex-go/internal/security/secretstoreclient"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-	"github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
 // Global variables
-var Configuration *ConfigurationStruct
+var Configuration = &ConfigurationStruct{}
 var LoggingClient logger.LoggingClient
 
-func Retry(useRegistry bool, configDir, profileDir string, timeout int, wait *sync.WaitGroup, ch chan error) {
-	until := time.Now().Add(time.Millisecond * time.Duration(timeout))
-	for time.Now().Before(until) {
-		var err error
-		// When looping, only handle configuration if it hasn't already been set.
-		if Configuration == nil {
-			// Next two lines are workaround for issue #1814 (nil panic while logging)
-			// where config.LoadFromFile depends on a global LoggingClient that isn't set anywhere
-			// Remove this workaround once this tool is migrated to common bootstrap.
-			lc := logger.NewClient(internal.SecuritySecretStoreSetupServiceKey, false, "", models.InfoLog)
-			config.LoggingClient = lc
-			Configuration, err = initializeConfiguration(useRegistry, configDir, profileDir)
+type Bootstrap struct {
+	insecureSkipVerify bool
+	initNeeded         bool
+	vaultInterval      int
+}
+
+func NewBootstrapHandler(insecureSkipVerify bool, initNeeded bool, vaultInterval int) *Bootstrap {
+	return &Bootstrap{
+		insecureSkipVerify: insecureSkipVerify,
+		initNeeded:         initNeeded,
+		vaultInterval:      vaultInterval,
+	}
+}
+
+// BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the data service.
+func (b *Bootstrap) Handler(wg *sync.WaitGroup, ctx context.Context, startupTimer startup.Timer, dic *di.Container) bool {
+	// initialize globals from bootstrap
+	LoggingClient = bootstrapContainer.LoggingClientFrom(dic.Get)
+
+	//step 1: boot up secretstore general steps same as other EdgeX microservice
+
+	//step 2: initialize the communications
+	req := NewRequester(b.insecureSkipVerify)
+	if req == nil {
+		os.Exit(1)
+	}
+
+	vaultScheme := Configuration.SecretService.Scheme
+	vaultHost := fmt.Sprintf("%s:%v", Configuration.SecretService.Server, Configuration.SecretService.Port)
+	intervalDuration := time.Duration(b.vaultInterval) * time.Second
+	vc := secretstoreclient.NewSecretStoreClient(LoggingClient, req, vaultScheme, vaultHost)
+
+	//step 3: initialize and unseal Vault
+	path := Configuration.SecretService.TokenFolderPath
+	filename := Configuration.SecretService.TokenFile
+	absPath := filepath.Join(path, filename)
+	for shouldContinue := true; shouldContinue; {
+		// Anonymous function used to prevent file handles from accumulating
+		func() {
+			tokenFile, err := os.OpenFile(absPath, os.O_CREATE|os.O_RDWR, 0600)
 			if err != nil {
-				ch <- err
-				if !useRegistry {
-					// Error occurred when attempting to read from local filesystem. Fail fast.
-					close(ch)
-					wait.Done()
+				LoggingClient.Error(fmt.Sprintf("unable to open token file at %s with error: %s", absPath, err.Error()))
+				os.Exit(1)
+			}
+			defer tokenFile.Close()
+			sCode, _ := vc.HealthCheck()
+
+			switch sCode {
+			case http.StatusOK:
+				LoggingClient.Info(fmt.Sprintf("vault is initialized and unsealed (status code: %d)", sCode))
+				shouldContinue = false
+			case http.StatusTooManyRequests:
+				LoggingClient.Error(fmt.Sprintf("vault is unsealed and in standby mode (Status Code: %d)", sCode))
+				shouldContinue = false
+			case http.StatusNotImplemented:
+				LoggingClient.Info(fmt.Sprintf("vault is not initialized (status code: %d). Starting initialisation and unseal phases", sCode))
+				_, err := vc.Init(Configuration.SecretService, tokenFile)
+				if err == nil {
+					tokenFile.Seek(0, 0) // Read starting at beginning
+					_, err = vc.Unseal(Configuration.SecretService, tokenFile)
+					if err == nil {
+						shouldContinue = false
+					}
+				}
+			case http.StatusServiceUnavailable:
+				LoggingClient.Info(fmt.Sprintf("vault is sealed (status code: %d). Starting unseal phase", sCode))
+				_, err := vc.Unseal(Configuration.SecretService, tokenFile)
+				if err == nil {
+					shouldContinue = false
+				}
+			default:
+				if sCode == 0 {
+					LoggingClient.Error(fmt.Sprintf("vault is in an unknown state. No Status code available"))
+				} else {
+					LoggingClient.Error(fmt.Sprintf("vault is in an unknown state. Status code: %d", sCode))
+				}
+			}
+		}()
+
+		if shouldContinue {
+			LoggingClient.Info(fmt.Sprintf("trying Vault init/unseal again in %d seconds", b.vaultInterval))
+			time.Sleep(intervalDuration)
+		}
+	}
+
+	/* After vault is init'd and unsealed, it takes a while to get ready to accept any request. During which period any request will get http 500 error.
+	We need to check the status constantly until it return http StatusOK.
+	*/
+	ticker := time.NewTicker(time.Second)
+	healthOkCh := make(chan struct{})
+	go func() {
+		for {
+			select {
+			case <-ticker.C:
+				if sCode, _ := vc.HealthCheck(); sCode == http.StatusOK {
+					close(healthOkCh)
+					ticker.Stop()
 					return
 				}
-			} else {
-				// Setup Logging
-				logTarget := setLoggingTarget()
-				LoggingClient = logger.NewClient(internal.SecuritySecretStoreSetupServiceKey, Configuration.Logging.EnableRemote, logTarget, Configuration.Writable.LogLevel)
 			}
 		}
-		// This seems a bit artificial here due to lack of additional service requirements
-		// but conforms to the pattern found in other edgex-go services.
-		if Configuration != nil {
-			break
+	}()
+
+	// Wait on a StatusOK response from vc.HealthCheck()
+	<-healthOkCh
+
+	//Step 4:
+	//TODO: create vault access token for different roles
+
+	// credential creation
+	gk := NewGokeyGenerator(absPath)
+	LoggingClient.Warn("WARNING: The gokey generator is a reference implementation for credential generation and the underlying libraries not been reviewed for cryptographic security. The user is encouraged to perform their own security investigation before deployment.")
+	cred := NewCred(req, absPath, gk)
+	for dbname, info := range Configuration.Databases {
+		service := info.Service
+		// generate credentials
+		password, err := cred.GeneratePassword(dbname)
+		if err != nil {
+			LoggingClient.Error(fmt.Sprintf("failed to generate credential pair for service %s", service))
+			os.Exit(1)
 		}
-		time.Sleep(time.Second * time.Duration(1))
+		pair := UserPasswordPair{
+			User:     info.Username,
+			Password: password,
+		}
+
+		// add credentials to service path if specified and they're not already there
+		if len(service) != 0 {
+			servicePath := fmt.Sprintf("/v1/secret/edgex/%s/mongodb", service)
+			existing, err := cred.AlreadyInStore(servicePath)
+			if err != nil {
+				LoggingClient.Error(err.Error())
+				os.Exit(1)
+			}
+			if !existing {
+				err = cred.UploadToStore(&pair, servicePath)
+				if err != nil {
+					LoggingClient.Error(fmt.Sprintf("failed to upload credential pair for db %s on path %s", dbname, servicePath))
+					os.Exit(1)
+				}
+			} else {
+				LoggingClient.Info(fmt.Sprintf("credentials for %s already present at path %s", dbname, servicePath))
+			}
+		}
+
+		mongoPath := fmt.Sprintf("/v1/secret/edgex/mongo/%s", dbname)
+		// add credentials to mongo path if they're not already there
+		existing, err := cred.AlreadyInStore(mongoPath)
+		if err != nil {
+			LoggingClient.Error(err.Error())
+			os.Exit(1)
+		}
+		if !existing {
+			err = cred.UploadToStore(&pair, mongoPath)
+			if err != nil {
+				LoggingClient.Error(fmt.Sprintf("failed to upload credential pair for db %s on path %s", dbname, mongoPath))
+				os.Exit(1)
+			}
+		} else {
+			LoggingClient.Info(fmt.Sprintf("credentials for %s already present at path %s", dbname, mongoPath))
+		}
 	}
-	close(ch)
-	wait.Done()
 
-	return
-}
-
-func initializeConfiguration(useRegistry bool, configDir, profileDir string) (*ConfigurationStruct, error) {
-	// We currently have to load configuration from filesystem first in order to obtain Registry Host/Port
-	configuration := &ConfigurationStruct{}
-	err := config.LoadFromFile(configDir, profileDir, configuration)
+	cert := NewCerts(req, Configuration.SecretService.CertPath, absPath)
+	existing, err := cert.AlreadyinStore()
 	if err != nil {
-		return nil, err
+		LoggingClient.Error(err.Error())
+		os.Exit(1)
 	}
-	return configuration, nil
-}
 
-func setLoggingTarget() string {
-	return Configuration.Logging.File
+	if existing == true {
+		LoggingClient.Info("proxy certificate pair are in the secret store already, skip uploading")
+		return false
+	}
+
+	LoggingClient.Info("proxy certificate pair are not in the secret store yet, uploading them")
+	cp, err := cert.ReadFrom(Configuration.SecretService.CertFilePath, Configuration.SecretService.KeyFilePath)
+	if err != nil {
+		LoggingClient.Error("failed to get certificate pair from volume")
+		os.Exit(1)
+	}
+
+	LoggingClient.Info("proxy certificate pair are loaded from volume successfully, will upload to secret store")
+
+	err = cert.UploadToStore(cp)
+	if err != nil {
+		LoggingClient.Error("failed to upload the proxy cert pair into the secret store")
+		LoggingClient.Error(err.Error())
+		os.Exit(1)
+	}
+
+	LoggingClient.Info("proxy certificate pair are uploaded to secret store successfully, Vault init done successfully")
+	return false
 }
