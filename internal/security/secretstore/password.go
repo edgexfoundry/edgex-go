@@ -23,9 +23,11 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/cloudflare/gokey"
-
 	"github.com/edgexfoundry/edgex-go/internal"
+
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+
+	"github.com/cloudflare/gokey"
 )
 
 // CredentialGenerator returns a credential generated with random algorithm for secret store
@@ -70,13 +72,27 @@ type UserPasswordPair struct {
 }
 
 type Cred struct {
-	client    internal.HttpCaller
-	tokenPath string
-	generator CredentialGenerator
+	client               internal.HttpCaller
+	tokenPath            string
+	generator            CredentialGenerator
+	secretServiceBaseURL string
+	loggingClient        logger.LoggingClient
 }
 
-func NewCred(caller internal.HttpCaller, tpath string, generator CredentialGenerator) Cred {
-	return Cred{client: caller, tokenPath: tpath, generator: generator}
+func NewCred(
+	caller internal.HttpCaller,
+	tpath string,
+	generator CredentialGenerator,
+	secretServiceBaseURL string,
+	loggingClient logger.LoggingClient) Cred {
+
+	return Cred{
+		client:               caller,
+		tokenPath:            tpath,
+		generator:            generator,
+		secretServiceBaseURL: secretServiceBaseURL,
+		loggingClient:        loggingClient,
+	}
 }
 
 func (cr *Cred) AlreadyInStore(path string) (bool, error) {
@@ -114,7 +130,7 @@ func (cr *Cred) retrieve(t string, path string) (*UserPasswordPair, error) {
 	req, err := http.NewRequest(http.MethodGet, credUrl, nil)
 	if err != nil {
 		e := fmt.Errorf("error creating http request: %v", err.Error())
-		LoggingClient.Error(e.Error())
+		cr.loggingClient.Error(e.Error())
 		return nil, e
 	}
 
@@ -122,7 +138,7 @@ func (cr *Cred) retrieve(t string, path string) (*UserPasswordPair, error) {
 	resp, err := cr.client.Do(req)
 	if err != nil {
 		e := fmt.Errorf("failed to retrieve the credential pair on path %s with error %s", path, err.Error())
-		LoggingClient.Error(e.Error())
+		cr.loggingClient.Error(e.Error())
 		return nil, e
 	}
 	defer resp.Body.Close()
@@ -130,17 +146,17 @@ func (cr *Cred) retrieve(t string, path string) (*UserPasswordPair, error) {
 	cred := CredCollect{}
 
 	if resp.StatusCode == http.StatusNotFound {
-		LoggingClient.Info(fmt.Sprintf("credential pair NOT found in secret store @/%s, status: %s", path, resp.Status))
+		cr.loggingClient.Info(fmt.Sprintf("credential pair NOT found in secret store @/%s, status: %s", path, resp.Status))
 		return nil, errNotFound
 	} else if resp.StatusCode != http.StatusOK {
 		e := fmt.Errorf("failed to retrieve the credential pair on path %s with error code %d", path, resp.StatusCode)
-		LoggingClient.Error(e.Error())
+		cr.loggingClient.Error(e.Error())
 		return nil, e
 	}
 
 	if err = json.NewDecoder(resp.Body).Decode(&cred); err != nil {
 		e := fmt.Errorf("error decoding json response when retrieving credential pair: %s", err.Error())
-		LoggingClient.Error(e.Error())
+		cr.loggingClient.Error(e.Error())
 		return nil, e
 	}
 
@@ -148,17 +164,17 @@ func (cr *Cred) retrieve(t string, path string) (*UserPasswordPair, error) {
 }
 
 func (cr *Cred) credPathURL(path string) (string, error) {
-	baseURL, err := url.Parse(Configuration.SecretService.GetSecretSvcBaseURL())
+	baseURL, err := url.Parse(cr.secretServiceBaseURL)
 	if err != nil {
 		e := fmt.Errorf("error parsing secret-service url:  %s", err.Error())
-		LoggingClient.Error(e.Error())
+		cr.loggingClient.Error(e.Error())
 		return "", err
 	}
 
 	p, err := url.Parse(path)
 	if err != nil {
 		e := fmt.Errorf("error parsing secret-service credpath: %s", err.Error())
-		LoggingClient.Error(e.Error())
+		cr.loggingClient.Error(e.Error())
 		return "", err
 	}
 
@@ -176,7 +192,7 @@ func (cr *Cred) UploadToStore(pair *UserPasswordPair, path string) error {
 		return err
 	}
 
-	LoggingClient.Debug("trying to upload the credential pair into secret store")
+	cr.loggingClient.Debug("trying to upload the credential pair into secret store")
 	jsonBytes, err := json.Marshal(pair)
 	body := bytes.NewBuffer(jsonBytes)
 
@@ -188,7 +204,7 @@ func (cr *Cred) UploadToStore(pair *UserPasswordPair, path string) error {
 	req, err := http.NewRequest(http.MethodPost, credURL, body)
 	if err != nil {
 		e := fmt.Errorf("error creating http request: %v", err.Error())
-		LoggingClient.Error(e.Error())
+		cr.loggingClient.Error(e.Error())
 		return e
 	}
 
@@ -196,7 +212,7 @@ func (cr *Cred) UploadToStore(pair *UserPasswordPair, path string) error {
 	resp, err := cr.client.Do(req)
 	if err != nil {
 		e := fmt.Sprintf("failed to upload the credential pair on path %s: %s", path, err.Error())
-		LoggingClient.Error(e)
+		cr.loggingClient.Error(e)
 		return err
 	}
 	defer resp.Body.Close()
@@ -207,10 +223,10 @@ func (cr *Cred) UploadToStore(pair *UserPasswordPair, path string) error {
 			return err
 		}
 		e := fmt.Errorf("failed to load the credential pair to the secret store: %s %s", resp.Status, string(b))
-		LoggingClient.Error(e.Error())
+		cr.loggingClient.Error(e.Error())
 		return e
 	}
 
-	LoggingClient.Info("successfully uploaded the credential pair into secret store")
+	cr.loggingClient.Info("successfully uploaded the credential pair into secret store")
 	return nil
 }
