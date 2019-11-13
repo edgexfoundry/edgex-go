@@ -16,6 +16,7 @@ package device
 
 import (
 	"fmt"
+	"net/http"
 	"sync"
 	"testing"
 
@@ -58,6 +59,10 @@ func TestUpdateDevice(t *testing.T) {
 				if msg.Error != nil && !tt.expectError {
 					t.Errorf("%s error reported via channel: %s", t.Name(), msg.Error.Error())
 					return
+				}
+				// Ensure that all successful operations result in the correct action.
+				if !tt.expectError && msg.HttpMethod != http.MethodPut {
+					t.Errorf("Expected HTTP method 'PUT', but recieved '%s'", msg.HttpMethod)
 				}
 			}(&wg, t)
 
