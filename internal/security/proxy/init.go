@@ -18,13 +18,14 @@ package proxy
 import (
 	"context"
 	"fmt"
-	"github.com/edgexfoundry/edgex-go/internal/security/proxy/container"
 	"os"
 	"sync"
 
 	bootstrapContainer "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
+	"github.com/edgexfoundry/edgex-go/internal/security/proxy/container"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
 
