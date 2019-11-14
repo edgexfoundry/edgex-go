@@ -135,6 +135,8 @@ apps:
     adapter: full
     command: bin/security-secrets-setup -confdir $SNAP_DATA/config/security-secrets-setup/res generate
     daemon: oneshot
+    environment:
+      XDG_RUNTIME_DIR: /tmp
     start-timeout: 15m
   vault:
     adapter: none
