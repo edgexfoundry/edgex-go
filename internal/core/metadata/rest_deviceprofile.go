@@ -35,9 +35,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-func restGetAllDeviceProfiles(
-	w http.ResponseWriter,
-	loggingClient logger.LoggingClient) {
+func restGetAllDeviceProfiles(w http.ResponseWriter, loggingClient logger.LoggingClient, dbClient interfaces.DBClient) {
 
 	op := device_profile.NewGetAllExecutor(Configuration.Service, dbClient, loggingClient)
 	res, err := op.Execute()
@@ -53,7 +51,8 @@ func restGetAllDeviceProfiles(
 func restAddDeviceProfile(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient) {
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
 
 	var dp models.DeviceProfile
 
@@ -87,7 +86,8 @@ func restAddDeviceProfile(
 func restUpdateDeviceProfile(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient) {
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
 
 	defer r.Body.Close()
 
@@ -142,7 +142,7 @@ func restUpdateDeviceProfile(
 	w.Write([]byte("true"))
 }
 
-func restGetProfileByProfileId(w http.ResponseWriter, r *http.Request) {
+func restGetProfileByProfileId(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
 
 	vars := mux.Vars(r)
 	var did = vars["id"]
@@ -157,7 +157,7 @@ func restGetProfileByProfileId(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(res)
 }
 
-func restDeleteProfileByProfileId(w http.ResponseWriter, r *http.Request) {
+func restDeleteProfileByProfileId(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
 
 	vars := mux.Vars(r)
 	var did = vars["id"]
@@ -182,7 +182,7 @@ func restDeleteProfileByProfileId(w http.ResponseWriter, r *http.Request) {
 }
 
 // Delete the device profile based on its name
-func restDeleteProfileByName(w http.ResponseWriter, r *http.Request) {
+func restDeleteProfileByName(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
 
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
@@ -210,7 +210,7 @@ func restDeleteProfileByName(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("true"))
 }
 
-func restAddProfileByYaml(w http.ResponseWriter, r *http.Request) {
+func restAddProfileByYaml(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
 
 	f, _, err := r.FormFile("file")
 	if err != nil {
@@ -264,7 +264,7 @@ func restAddProfileByYaml(w http.ResponseWriter, r *http.Request) {
 
 // Add a device profile with YAML content
 // The YAML content is passed as a string in the http request
-func restAddProfileByYamlRaw(w http.ResponseWriter, r *http.Request) {
+func restAddProfileByYamlRaw(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
 
 	// Get the YAML string
 	body, err := ioutil.ReadAll(r.Body)
@@ -308,7 +308,7 @@ func addDeviceProfile(dp models.DeviceProfile, dbClient interfaces.DBClient, w h
 	w.Write([]byte(id))
 }
 
-func restGetProfileByModel(w http.ResponseWriter, r *http.Request) {
+func restGetProfileByModel(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
 
 	vars := mux.Vars(r)
 	an, err := url.QueryUnescape(vars[MODEL])
@@ -328,7 +328,7 @@ func restGetProfileByModel(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(res)
 }
 
-func restGetProfileWithLabel(w http.ResponseWriter, r *http.Request) {
+func restGetProfileWithLabel(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
 
 	vars := mux.Vars(r)
 
@@ -349,7 +349,7 @@ func restGetProfileWithLabel(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(res)
 }
 
-func restGetProfileByManufacturerModel(w http.ResponseWriter, r *http.Request) {
+func restGetProfileByManufacturerModel(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
 
 	vars := mux.Vars(r)
 	man, err := url.QueryUnescape(vars[MANUFACTURER])
@@ -375,7 +375,7 @@ func restGetProfileByManufacturerModel(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(res)
 }
 
-func restGetProfileByManufacturer(w http.ResponseWriter, r *http.Request) {
+func restGetProfileByManufacturer(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
 
 	vars := mux.Vars(r)
 	man, err := url.QueryUnescape(vars[MANUFACTURER])
@@ -395,7 +395,7 @@ func restGetProfileByManufacturer(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(res)
 }
 
-func restGetProfileByName(w http.ResponseWriter, r *http.Request) {
+func restGetProfileByName(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
 
 	vars := mux.Vars(r)
 	dn, err := url.QueryUnescape(vars[NAME])
@@ -416,7 +416,7 @@ func restGetProfileByName(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(res)
 }
 
-func restGetYamlProfileByName(w http.ResponseWriter, r *http.Request) {
+func restGetYamlProfileByName(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
 
 	vars := mux.Vars(r)
 	name, err := url.QueryUnescape(vars[NAME])
@@ -455,7 +455,8 @@ func restGetYamlProfileByName(w http.ResponseWriter, r *http.Request) {
 func restGetYamlProfileById(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient) {
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
 
 	vars := mux.Vars(r)
 	id := vars[ID]

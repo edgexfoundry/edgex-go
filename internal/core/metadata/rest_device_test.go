@@ -25,6 +25,7 @@ import (
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
+
 	"github.com/pkg/errors"
 )
 
@@ -42,9 +43,8 @@ func TestGetAllDevices(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			restGetAllDevices(rr, logger.NewMockClient())
+			restGetAllDevices(rr, logger.NewMockClient(), tt.dbMock)
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)

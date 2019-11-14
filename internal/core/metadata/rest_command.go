@@ -18,6 +18,7 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/operators/command"
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
@@ -27,9 +28,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func restGetAllCommands(
-	w http.ResponseWriter,
-	loggingClient logger.LoggingClient) {
+func restGetAllCommands(w http.ResponseWriter, loggingClient logger.LoggingClient, dbClient interfaces.DBClient) {
 
 	op := command.NewCommandLoadAll(Configuration.Service, dbClient)
 	cmds, err := op.Execute()
@@ -43,7 +42,8 @@ func restGetAllCommands(
 func restGetCommandById(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient) {
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
 
 	vars := mux.Vars(r)
 	cid, err := url.QueryUnescape(vars[ID])
@@ -64,7 +64,9 @@ func restGetCommandById(
 func restGetCommandsByName(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient) {
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
+
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
@@ -83,7 +85,8 @@ func restGetCommandsByName(
 func restGetCommandsByDeviceId(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient) {
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
 
 	vars := mux.Vars(r)
 	did, err := url.QueryUnescape(vars[ID])

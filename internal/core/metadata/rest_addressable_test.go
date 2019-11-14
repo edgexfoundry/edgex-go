@@ -92,9 +92,8 @@ func TestGetAllAddressables(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			restGetAllAddressables(rr, logger.NewMockClient())
+			restGetAllAddressables(rr, logger.NewMockClient(), tt.dbMock)
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -152,9 +151,8 @@ func TestAddAddressable(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			restAddAddressable(rr, tt.request, logger.NewMockClient())
+			restAddAddressable(rr, tt.request, logger.NewMockClient(), tt.dbMock)
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -225,9 +223,8 @@ func TestUpdateAddressable(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			restUpdateAddressable(rr, tt.request, logger.NewMockClient())
+			restUpdateAddressable(rr, tt.request, logger.NewMockClient(), tt.dbMock)
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -272,10 +269,8 @@ func TestGetAddressableByName(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(restGetAddressableByName)
-			handler.ServeHTTP(rr, tt.request)
+			restGetAddressableByName(rr, tt.request, tt.dbMock)
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -314,10 +309,8 @@ func TestGetAddressableById(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(restGetAddressableById)
-			handler.ServeHTTP(rr, tt.request)
+			restGetAddressableById(rr, tt.request, tt.dbMock)
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -368,10 +361,8 @@ func TestGetAddressablesByAddress(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(restGetAddressableByAddress)
-			handler.ServeHTTP(rr, tt.request)
+			restGetAddressableByAddress(rr, tt.request, tt.dbMock)
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -419,10 +410,8 @@ func TestGetAddressablesByPublisher(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(restGetAddressableByPublisher)
-			handler.ServeHTTP(rr, tt.request)
+			restGetAddressableByPublisher(rr, tt.request, tt.dbMock)
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -478,10 +467,8 @@ func TestGetAddressablesByPort(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(restGetAddressableByPort)
-			handler.ServeHTTP(rr, tt.request)
+			restGetAddressableByPort(rr, tt.request, tt.dbMock)
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -531,10 +518,8 @@ func TestGetAddressablesByTopic(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(restGetAddressableByTopic)
-			handler.ServeHTTP(rr, tt.request)
+			restGetAddressableByTopic(rr, tt.request, tt.dbMock)
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -591,10 +576,8 @@ func TestDeleteAddressableById(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(restDeleteAddressableById)
-			handler.ServeHTTP(rr, tt.request)
+			restDeleteAddressableById(rr, tt.request, tt.dbMock)
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -651,10 +634,8 @@ func TestDeleteAddressableByName(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(restDeleteAddressableByName)
-			handler.ServeHTTP(rr, tt.request)
+			restDeleteAddressableByName(rr, tt.request, tt.dbMock)
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)

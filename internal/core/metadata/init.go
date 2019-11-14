@@ -18,7 +18,6 @@ import (
 	"context"
 	"sync"
 
-	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
@@ -33,15 +32,12 @@ import (
 
 // Global variables
 var Configuration = &ConfigurationStruct{}
-var dbClient interfaces.DBClient
 var nc notifications.NotificationsClient
 var vdc coredata.ValueDescriptorClient
 var httpErrorHandler errorconcept.ErrorHandler
 
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the metadata service.
 func BootstrapHandler(wg *sync.WaitGroup, ctx context.Context, startupTimer startup.Timer, dic *di.Container) bool {
-	// update global variables.
-	dbClient = container.DBClientFrom(dic.Get)
 
 	httpErrorHandler = errorconcept.NewErrorHandler(container.LoggingClientFrom(dic.Get))
 
