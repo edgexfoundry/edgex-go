@@ -20,8 +20,8 @@ import (
 	"flag"
 	"fmt"
 
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/constant"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/helper"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
@@ -44,13 +44,13 @@ func NewCommand(flags *FlagSet, loggingClient logger.LoggingClient) (*Command, *
 // such as Kong TLS signed by an external certificate authority or TLS keys
 // by other certificate authority.
 func (c *Command) Execute() (statusCode int, err error) {
-	pkiCacheDir, err := option.GetCacheDir()
+	pkiCacheDir, err := helper.GetCacheDir()
 	if err != nil {
 		return constant.ExitWithError, err
 	}
 	c.loggingClient.Info(fmt.Sprintf("importing from PKI cache dir: %s", pkiCacheDir))
 
-	dirEmpty, err := option.IsDirEmpty(pkiCacheDir)
+	dirEmpty, err := helper.IsDirEmpty(pkiCacheDir)
 
 	if err != nil {
 		return constant.ExitWithError, err
@@ -58,11 +58,11 @@ func (c *Command) Execute() (statusCode int, err error) {
 
 	if !dirEmpty {
 		// copy stuff into dest dir from pkiCache
-		deployDir, err := option.GetDeployDir()
+		deployDir, err := helper.GetDeployDir()
 		if err != nil {
 			return constant.ExitWithError, err
 		}
-		err = option.Deploy(pkiCacheDir, deployDir)
+		err = helper.Deploy(pkiCacheDir, deployDir)
 		if err != nil {
 			statusCode = constant.ExitWithError
 		}

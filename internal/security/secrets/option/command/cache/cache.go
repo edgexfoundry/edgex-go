@@ -22,9 +22,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/command/generate"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/constant"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/helper"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
@@ -46,12 +46,12 @@ func NewCommand(flags *FlagSet, loggingClient logger.LoggingClient, generate *ge
 // The PKI is then deployed from the cached location.
 func (c *Command) Execute() (statusCode int, err error) {
 	// generate a new one if pkicache dir is empty
-	pkiCacheDir, err := option.GetCacheDir()
+	pkiCacheDir, err := helper.GetCacheDir()
 	if err != nil {
 		return constant.ExitWithError, err
 	}
 
-	empty, err := option.IsDirEmpty(pkiCacheDir)
+	empty, err := helper.IsDirEmpty(pkiCacheDir)
 	if err != nil {
 		return constant.ExitWithError, err
 	}
@@ -64,7 +64,7 @@ func (c *Command) Execute() (statusCode int, err error) {
 			return statusCode, err
 		}
 
-		workDir, err := option.GetWorkDir()
+		workDir, err := helper.GetWorkDir()
 		if err != nil {
 			return constant.ExitWithError, err
 		}
@@ -73,7 +73,7 @@ func (c *Command) Execute() (statusCode int, err error) {
 
 		// always shreds CA private key before cache
 		caPrivateKeyFile := filepath.Join(generatedDirPath, constant.CaServiceName, constant.TlsSecretFileName)
-		if err := option.SecureEraseFile(caPrivateKeyFile); err != nil {
+		if err := helper.SecureEraseFile(caPrivateKeyFile); err != nil {
 			return constant.ExitWithError, err
 		}
 
@@ -84,7 +84,7 @@ func (c *Command) Execute() (statusCode int, err error) {
 		// cache dir is not empty: output error message if CA private key is present
 		// when cache is given
 		cachedCAPrivateKeyFile := filepath.Join(pkiCacheDir, constant.CaServiceName, constant.TlsSecretFileName)
-		if option.CheckIfFileExists(cachedCAPrivateKeyFile) {
+		if helper.CheckIfFileExists(cachedCAPrivateKeyFile) {
 			return constant.ExitWithError, constant.ErrCacheNotChangeAfter
 		}
 		c.loggingClient.Info(fmt.Sprintf("cached TLS assets from dir %s is present, using cached PKI", pkiCacheDir))
@@ -92,12 +92,12 @@ func (c *Command) Execute() (statusCode int, err error) {
 
 	// to Deploy
 	// copy stuff into dest dir from pkiCache
-	deployDir, err := option.GetDeployDir()
+	deployDir, err := helper.GetDeployDir()
 	if err != nil {
 		return constant.ExitWithError, err
 	}
 
-	err = option.Deploy(pkiCacheDir, deployDir)
+	err = helper.Deploy(pkiCacheDir, deployDir)
 	if err != nil {
 		return constant.ExitWithError, err
 	}
@@ -107,11 +107,11 @@ func (c *Command) Execute() (statusCode int, err error) {
 
 func (c *Command) doCache(fromDir string) error {
 	// destination
-	pkiCacheDir, err := option.GetCacheDir()
+	pkiCacheDir, err := helper.GetCacheDir()
 	if err != nil {
 		return err
 	}
 
 	// to cache
-	return option.CopyDir(fromDir, pkiCacheDir)
+	return helper.CopyDir(fromDir, pkiCacheDir)
 }
