@@ -12,32 +12,20 @@
  * the License.
  *******************************************************************************/
 
-package legacy
+package generate
 
 import (
 	"flag"
 
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/command/constant"
 )
 
-type Command struct {
-	configFile string
+type FlagSet struct {
+	flagSet *flag.FlagSet
 }
 
-func NewCommand(flags *FlagSet) (*Command, *flag.FlagSet) {
-	return &Command{
-			configFile: flags.configFile,
-		},
-		flags.flagSet
-}
-
-func (c *Command) Execute() (statusCode int, err error) {
-	err = option.GenTLSAssets(c.configFile)
-	if err != nil {
-		statusCode = constant.ExitWithError
-	} else {
-		statusCode = constant.ExitNormal
+func NewFlags() (flags *FlagSet) {
+	return &FlagSet{
+		flagSet: flag.NewFlagSet(constant.CommandGenerate, flag.ExitOnError),
 	}
-	return
 }

@@ -15,13 +15,14 @@
 package generate
 
 import (
+	"flag"
 	"fmt"
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/command/constant"
 	"os"
 	"path/filepath"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/command/constant"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
@@ -30,10 +31,11 @@ type Command struct {
 	loggingClient logger.LoggingClient
 }
 
-func NewCommand(loggingClient logger.LoggingClient) *Command {
+func NewCommand(flags *FlagSet, loggingClient logger.LoggingClient) (*Command, *flag.FlagSet) {
 	return &Command{
-		loggingClient: loggingClient,
-	}
+			loggingClient: loggingClient,
+		},
+		flags.flagSet
 }
 
 func (g *Command) Execute() (statusCode int, err error) {

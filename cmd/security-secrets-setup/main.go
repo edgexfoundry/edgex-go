@@ -18,34 +18,26 @@ package main
 import (
 	"flag"
 	"fmt"
-	"os"
-
-	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/command/cache"
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/command/constant"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/command/generate"
 	_import "github.com/edgexfoundry/edgex-go/internal/security/secrets/option/command/import"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/command/legacy"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/contract"
+	"os"
+
+	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/command/constant"
 )
 
 func main() {
-	var configFile string
 	var configDir string
-	var subcommands = map[string]*flag.FlagSet{
-		constant.CommandLegacy:   flag.NewFlagSet(constant.CommandLegacy, flag.ExitOnError),
-		constant.CommandGenerate: flag.NewFlagSet(constant.CommandGenerate, flag.ExitOnError),
-		constant.CommandCache:    flag.NewFlagSet(constant.CommandCache, flag.ExitOnError),
-		constant.CommandImport:   flag.NewFlagSet(constant.CommandImport, flag.ExitOnError),
-	}
 
-	// setup options for subcommands:
-	subcommands[constant.CommandLegacy].StringVar(&configFile, "config", "", "specify JSON configuration file: /path/to/file.json")
-	subcommands[constant.CommandLegacy].StringVar(&configFile, "c", "", "specify JSON configuration file: /path/to/file.json")
-
+	legacyFlags := legacy.NewFlags()
+	generateFlagSet := generate.NewFlags()
+	cacheFlagSet := cache.NewFlags()
+	importFlagSet := _import.NewFlags()
 	flag.StringVar(&configDir, "confdir", "", "Specify local configuration directory")
-
 	flag.Usage = usage.HelpCallbackSecuritySetup
 	flag.Parse()
 
@@ -63,40 +55,34 @@ func main() {
 		return
 	}
 
-	subcmdName := flag.Args()[0]
-
-	subcmd, found := subcommands[subcmdName]
-	if !found {
-		secrets.LoggingClient.Error(fmt.Sprintf("unsupported subcommand %s", subcmdName))
-		os.Exit(constant.NoOptionSelected)
-		return
-	}
-
-	if err := subcmd.Parse(flag.Args()[1:]); err != nil {
-		secrets.LoggingClient.Error(fmt.Sprintf("error parsing subcommand %s: %v", subcmdName, err))
-		os.Exit(constant.ExitWithError)
-		return
-	}
-
-	// no arguments expected
-	if len(subcmd.Args()) > 0 {
-		secrets.LoggingClient.Error(fmt.Sprintf("subcommand %s doesn't use any args", subcmdName))
-		os.Exit(constant.ExitWithError)
-		return
-	}
-
+	commandName := flag.Args()[0]
 	var command contract.Command
-	switch subcmdName {
+	var flagSet *flag.FlagSet
+	switch commandName {
 	case constant.CommandLegacy:
-		command = legacy.NewCommand(configFile)
+		command, flagSet = legacy.NewCommand(legacyFlags)
 	case constant.CommandGenerate:
-		command = generate.NewCommand(secrets.LoggingClient)
+		command, flagSet = generate.NewCommand(generateFlagSet, secrets.LoggingClient)
 	case constant.CommandCache:
-		command = cache.NewCommand(secrets.LoggingClient, generate.NewCommand(secrets.LoggingClient))
+		generateCommand, _ := generate.NewCommand(generateFlagSet, secrets.LoggingClient)
+		command, flagSet = cache.NewCommand(cacheFlagSet, secrets.LoggingClient, generateCommand)
 	case constant.CommandImport:
-		command = _import.NewCommand(secrets.LoggingClient)
+		command, flagSet = _import.NewCommand(importFlagSet, secrets.LoggingClient)
 	default:
-		panic("unexpected subcmdName")
+		secrets.LoggingClient.Error(fmt.Sprintf("unsupported subcommand %s", commandName))
+		os.Exit(constant.ExitWithError)
+	}
+
+	if err := flagSet.Parse(flag.Args()[1:]); err != nil {
+		secrets.LoggingClient.Error(fmt.Sprintf("error parsing subcommand %s: %v", commandName, err))
+		os.Exit(constant.ExitWithError)
+		return
+	}
+
+	if len(flagSet.Args()) > 0 {
+		secrets.LoggingClient.Error(fmt.Sprintf("subcommand %s doesn't use any args", commandName))
+		os.Exit(constant.ExitWithError)
+		return
 	}
 
 	exitStatusCode, err := command.Execute()

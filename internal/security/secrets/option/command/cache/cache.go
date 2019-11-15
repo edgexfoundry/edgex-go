@@ -17,6 +17,7 @@
 package cache
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -33,11 +34,12 @@ type Command struct {
 	generate      *generate.Command
 }
 
-func NewCommand(loggingClient logger.LoggingClient, generate *generate.Command) *Command {
+func NewCommand(flags *FlagSet, loggingClient logger.LoggingClient, generate *generate.Command) (*Command, *flag.FlagSet) {
 	return &Command{
-		loggingClient: loggingClient,
-		generate:      generate,
-	}
+			loggingClient: loggingClient,
+			generate:      generate,
+		},
+		flags.flagSet
 }
 
 // Execute generates PKI exactly once and cached to a designated location for future use.

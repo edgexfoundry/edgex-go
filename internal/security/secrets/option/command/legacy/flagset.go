@@ -16,28 +16,19 @@ package legacy
 
 import (
 	"flag"
-
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/command/constant"
 )
 
-type Command struct {
+type FlagSet struct {
+	flagSet    *flag.FlagSet
 	configFile string
 }
 
-func NewCommand(flags *FlagSet) (*Command, *flag.FlagSet) {
-	return &Command{
-			configFile: flags.configFile,
-		},
-		flags.flagSet
-}
-
-func (c *Command) Execute() (statusCode int, err error) {
-	err = option.GenTLSAssets(c.configFile)
-	if err != nil {
-		statusCode = constant.ExitWithError
-	} else {
-		statusCode = constant.ExitNormal
+func NewFlags() (flags *FlagSet) {
+	flags = &FlagSet{
+		flagSet: flag.NewFlagSet(constant.CommandLegacy, flag.ExitOnError),
 	}
+	flags.flagSet.StringVar(&flags.configFile, "config", "", "specify JSON configuration file: /path/to/file.json")
+	flags.flagSet.StringVar(&flags.configFile, "c", "", "specify JSON configuration file: /path/to/file.json")
 	return
 }

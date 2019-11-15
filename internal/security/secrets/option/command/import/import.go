@@ -17,6 +17,7 @@
 package _import
 
 import (
+	"flag"
 	"fmt"
 
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option"
@@ -29,10 +30,11 @@ type Command struct {
 	loggingClient logger.LoggingClient
 }
 
-func NewCommand(loggingClient logger.LoggingClient) *Command {
+func NewCommand(flags *FlagSet, loggingClient logger.LoggingClient) (*Command, *flag.FlagSet) {
 	return &Command{
-		loggingClient: loggingClient,
-	}
+			loggingClient: loggingClient,
+		},
+		flags.flagSet
 }
 
 // Execute deploys PKI from CacheDir to DeployDir.  It retruns an error,
