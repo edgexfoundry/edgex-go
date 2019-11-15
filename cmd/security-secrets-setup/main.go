@@ -18,9 +18,9 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"os"
 
-	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/command/cache"
@@ -30,16 +30,16 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/contract"
 )
 
-var subcommands = map[string]*flag.FlagSet{
-	constant.CommandLegacy:   flag.NewFlagSet(constant.CommandLegacy, flag.ExitOnError),
-	constant.CommandGenerate: flag.NewFlagSet(constant.CommandGenerate, flag.ExitOnError),
-	constant.CommandCache:    flag.NewFlagSet(constant.CommandCache, flag.ExitOnError),
-	constant.CommandImport:   flag.NewFlagSet(constant.CommandImport, flag.ExitOnError),
-}
-var configFile string
-var configDir string
+func main() {
+	var configFile string
+	var configDir string
+	var subcommands = map[string]*flag.FlagSet{
+		constant.CommandLegacy:   flag.NewFlagSet(constant.CommandLegacy, flag.ExitOnError),
+		constant.CommandGenerate: flag.NewFlagSet(constant.CommandGenerate, flag.ExitOnError),
+		constant.CommandCache:    flag.NewFlagSet(constant.CommandCache, flag.ExitOnError),
+		constant.CommandImport:   flag.NewFlagSet(constant.CommandImport, flag.ExitOnError),
+	}
 
-func init() {
 	// setup options for subcommands:
 	subcommands[constant.CommandLegacy].StringVar(&configFile, "config", "", "specify JSON configuration file: /path/to/file.json")
 	subcommands[constant.CommandLegacy].StringVar(&configFile, "c", "", "specify JSON configuration file: /path/to/file.json")
@@ -47,9 +47,6 @@ func init() {
 	flag.StringVar(&configDir, "confdir", "", "Specify local configuration directory")
 
 	flag.Usage = usage.HelpCallbackSecuritySetup
-}
-
-func main() {
 	flag.Parse()
 
 	if flag.NArg() < 1 {
