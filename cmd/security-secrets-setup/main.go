@@ -24,6 +24,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/command/cache"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/command/constant"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/command/generate"
 	_import "github.com/edgexfoundry/edgex-go/internal/security/secrets/option/command/import"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/contract"
@@ -42,18 +43,18 @@ type optionDispatcher interface {
 var exitInstance = newExit()
 
 var subcommands = map[string]*flag.FlagSet{
-	"legacy":   flag.NewFlagSet("legacy", flag.ExitOnError),
-	"generate": flag.NewFlagSet("generate", flag.ExitOnError),
-	"cache":    flag.NewFlagSet("cache", flag.ExitOnError),
-	"import":   flag.NewFlagSet("import", flag.ExitOnError),
+	constant.CommandLegacy:   flag.NewFlagSet(constant.CommandLegacy, flag.ExitOnError),
+	constant.CommandGenerate: flag.NewFlagSet(constant.CommandGenerate, flag.ExitOnError),
+	constant.CommandCache:    flag.NewFlagSet(constant.CommandCache, flag.ExitOnError),
+	constant.CommandImport:   flag.NewFlagSet(constant.CommandImport, flag.ExitOnError),
 }
 var configFile string
 var configDir string
 
 func init() {
 	// setup options for subcommands:
-	subcommands["legacy"].StringVar(&configFile, "config", "", "specify JSON configuration file: /path/to/file.json")
-	subcommands["legacy"].StringVar(&configFile, "c", "", "specify JSON configuration file: /path/to/file.json")
+	subcommands[constant.CommandLegacy].StringVar(&configFile, "config", "", "specify JSON configuration file: /path/to/file.json")
+	subcommands[constant.CommandLegacy].StringVar(&configFile, "c", "", "specify JSON configuration file: /path/to/file.json")
 
 	flag.StringVar(&configDir, "confdir", "", "Specify local configuration directory")
 
@@ -64,7 +65,7 @@ func main() {
 	flag.Parse()
 
 	if flag.NArg() < 1 {
-		fmt.Println("Please specify subcommand for " + option.SecuritySecretsSetup)
+		fmt.Println("Please specify subcommand for " + constant.SecuritySecretsSetup)
 		flag.Usage()
 		exitInstance.exit(0)
 		return
@@ -96,7 +97,7 @@ func main() {
 	var err error
 
 	switch subcmdName {
-	case "legacy":
+	case constant.CommandLegacy:
 		// no additional arguments expected
 		if len(subcmd.Args()) > 0 {
 			secrets.LoggingClient.Error(fmt.Sprintf("subcommand %s doesn't use other additional args", subcmdName))
@@ -109,7 +110,7 @@ func main() {
 			return
 		}
 
-	case "generate", "cache", "import":
+	case constant.CommandGenerate, constant.CommandCache, constant.CommandImport:
 		// no arguments expected
 		if len(subcmd.Args()) > 0 {
 			secrets.LoggingClient.Error(fmt.Sprintf("subcommand %s doesn't use any args", subcmdName))
@@ -119,11 +120,11 @@ func main() {
 
 		var command contract.Command
 		switch subcmdName {
-		case "generate":
+		case constant.CommandGenerate:
 			command = generate.NewCommand(secrets.LoggingClient)
-		case "cache":
+		case constant.CommandCache:
 			command = cache.NewCommand(secrets.LoggingClient, generate.NewCommand(secrets.LoggingClient))
-		case "import":
+		case constant.CommandImport:
 			command = _import.NewCommand(secrets.LoggingClient)
 		default:
 			panic("unexpected subcmdName")

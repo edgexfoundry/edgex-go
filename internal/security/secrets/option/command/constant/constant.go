@@ -14,7 +14,7 @@
 // SPDX-License-Identifier: Apache-2.0'
 //
 
-package option
+package constant
 
 import (
 	"errors"
@@ -28,8 +28,6 @@ const (
 	PkiSetupKongJSON              = "pkisetup-kong.json"
 	PkiInitScratchDir             = "scratch"
 	PkiInitGeneratedDir           = "generated"
-	ResourceDirName               = "res"
-	ConfigTomlFile                = "configuration.toml"
 	EnvXdgRuntimeDir              = "XDG_RUNTIME_DIR"
 	DefaultWorkDir                = "/tmp"
 	PkiInitBaseDir                = "edgex/security-secrets-setup"
@@ -49,6 +47,11 @@ const (
 	ExitNormal int = 0
 	// ExitWithError is exit code for error
 	ExitWithError int = 2
+
+	CommandLegacy   = "legacy"
+	CommandGenerate = "generate"
+	CommandCache    = "cache"
+	CommandImport   = "import"
 )
 
 var (

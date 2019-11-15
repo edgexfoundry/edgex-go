@@ -19,6 +19,7 @@ package option
 import (
 	"errors"
 	"fmt"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/command/constant"
 	"io"
 	"io/ioutil"
 	"os"
@@ -221,7 +222,7 @@ func MarkComplete(dirPath string) error {
 		} else {
 			// now we are at the leaf node, write sentinel file if not yet
 			deployPathDir := path.Dir(aFilePath)
-			sentinel := filepath.Join(deployPathDir, PkiInitFilePerServiceComplete)
+			sentinel := filepath.Join(deployPathDir, constant.PkiInitFilePerServiceComplete)
 			if !CheckIfFileExists(sentinel) {
 				if err := WriteSentinel(sentinel); err != nil {
 					return err
@@ -237,15 +238,15 @@ func GetWorkDir() (string, error) {
 	var workDir string
 	var err error
 
-	if xdgRuntimeDir, ok := os.LookupEnv(EnvXdgRuntimeDir); ok {
-		workDir = filepath.Join(xdgRuntimeDir, PkiInitBaseDir)
+	if xdgRuntimeDir, ok := os.LookupEnv(constant.EnvXdgRuntimeDir); ok {
+		workDir = filepath.Join(xdgRuntimeDir, constant.PkiInitBaseDir)
 	} else if secrets.Configuration.SecretsSetup.WorkDir != "" {
 		workDir, err = filepath.Abs(secrets.Configuration.SecretsSetup.WorkDir)
 		if err != nil {
 			return "", err
 		}
 	} else {
-		workDir = filepath.Join(DefaultWorkDir, PkiInitBaseDir)
+		workDir = filepath.Join(constant.DefaultWorkDir, constant.PkiInitBaseDir)
 	}
 
 	return workDir, nil
@@ -268,7 +269,7 @@ func GetCertConfigDir() (string, error) {
 }
 
 func GetCacheDir() (string, error) {
-	cacheDir := DefaultPkiCacheDir
+	cacheDir := constant.DefaultPkiCacheDir
 
 	if secrets.Configuration.SecretsSetup.CacheDir != "" {
 		cacheDir = secrets.Configuration.SecretsSetup.CacheDir
@@ -286,7 +287,7 @@ func GetCacheDir() (string, error) {
 }
 
 func GetDeployDir() (string, error) {
-	deployDir := DefaultPkiDeployDir
+	deployDir := constant.DefaultPkiDeployDir
 
 	if secrets.Configuration.SecretsSetup.DeployDir != "" {
 		deployDir = secrets.Configuration.SecretsSetup.DeployDir

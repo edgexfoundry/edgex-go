@@ -18,6 +18,7 @@ package _import
 
 import (
 	"fmt"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/command/constant"
 
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option"
 
@@ -43,28 +44,28 @@ func NewCommand(loggingClient logger.LoggingClient) *Command {
 func (c *Command) Execute() (statusCode int, err error) {
 	pkiCacheDir, err := option.GetCacheDir()
 	if err != nil {
-		return option.ExitWithError, err
+		return constant.ExitWithError, err
 	}
 	c.loggingClient.Info(fmt.Sprintf("importing from PKI cache dir: %s", pkiCacheDir))
 
 	dirEmpty, err := option.IsDirEmpty(pkiCacheDir)
 
 	if err != nil {
-		return option.ExitWithError, err
+		return constant.ExitWithError, err
 	}
 
 	if !dirEmpty {
 		// copy stuff into dest dir from pkiCache
 		deployDir, err := option.GetDeployDir()
 		if err != nil {
-			return option.ExitWithError, err
+			return constant.ExitWithError, err
 		}
 		err = option.Deploy(pkiCacheDir, deployDir)
 		if err != nil {
-			statusCode = option.ExitWithError
+			statusCode = constant.ExitWithError
 		}
 	} else {
-		statusCode = option.ExitWithError
+		statusCode = constant.ExitWithError
 		err = fmt.Errorf("Expecting pre-populated PKI in the directory %s but found empty", pkiCacheDir)
 	}
 
