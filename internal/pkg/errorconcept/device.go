@@ -35,7 +35,7 @@ type deviceErrorConcept struct {
 type deviceLocked struct{}
 
 func (r deviceLocked) httpErrorCode() int {
-	return http.StatusNotFound
+	return http.StatusLocked
 }
 
 func (r deviceLocked) isA(err error) bool {

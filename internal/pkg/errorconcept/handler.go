@@ -26,7 +26,7 @@ type ErrorConceptType interface {
 	message(err error) string
 }
 
-type handler struct {
+type Handler struct {
 	logger logger.LoggingClient
 }
 
@@ -37,12 +37,12 @@ type ErrorHandler interface {
 }
 
 func NewErrorHandler(l logger.LoggingClient) ErrorHandler {
-	h := handler{l}
+	h := Handler{l}
 	return &h
 }
 
 // Handle applies the specified error and error concept tot he HTTP response writer
-func (e *handler) Handle(w http.ResponseWriter, err error, ec ErrorConceptType) {
+func (e *Handler) Handle(w http.ResponseWriter, err error, ec ErrorConceptType) {
 	message := ec.message(err)
 	e.logger.Error(message)
 	http.Error(w, message, ec.httpErrorCode())
@@ -50,7 +50,7 @@ func (e *handler) Handle(w http.ResponseWriter, err error, ec ErrorConceptType) 
 
 // HandleOneVariant applies general error-handling with a single allowable error and a default error to be used as a
 // fallback when none of the allowable errors are matched
-func (e *handler) HandleOneVariant(w http.ResponseWriter, err error, allowableError ErrorConceptType, defaultError ErrorConceptType) {
+func (e *Handler) HandleOneVariant(w http.ResponseWriter, err error, allowableError ErrorConceptType, defaultError ErrorConceptType) {
 	if allowableError != nil && allowableError.isA(err) {
 		e.Handle(w, err, allowableError)
 		return
@@ -60,7 +60,7 @@ func (e *handler) HandleOneVariant(w http.ResponseWriter, err error, allowableEr
 
 // HandleManyVariants applies general error-handling for the specified set of allowable errors and a default error to be used
 // as a fallback when none of the allowable errors are matched
-func (e *handler) HandleManyVariants(w http.ResponseWriter, err error, allowableErrors []ErrorConceptType, defaultError ErrorConceptType) {
+func (e *Handler) HandleManyVariants(w http.ResponseWriter, err error, allowableErrors []ErrorConceptType, defaultError ErrorConceptType) {
 	for key := range allowableErrors {
 		if allowableErrors[key].isA(err) {
 			e.Handle(w, err, allowableErrors[key])

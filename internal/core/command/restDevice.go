@@ -34,8 +34,10 @@ func restGetDeviceCommandByCommandID(
 	r *http.Request,
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
-	deviceClient metadata.DeviceClient) {
-	issueDeviceCommand(w, r, false, loggingClient, dbClient, deviceClient)
+	deviceClient metadata.DeviceClient,
+	httpErrorHandler errorconcept.ErrorHandler) {
+
+	issueDeviceCommand(w, r, false, loggingClient, dbClient, deviceClient, httpErrorHandler)
 }
 
 func restPutDeviceCommandByCommandID(
@@ -43,8 +45,10 @@ func restPutDeviceCommandByCommandID(
 	r *http.Request,
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
-	deviceClient metadata.DeviceClient) {
-	issueDeviceCommand(w, r, true, loggingClient, dbClient, deviceClient)
+	deviceClient metadata.DeviceClient,
+	httpErrorHandler errorconcept.ErrorHandler) {
+
+	issueDeviceCommand(w, r, true, loggingClient, dbClient, deviceClient, httpErrorHandler)
 }
 
 func issueDeviceCommand(
@@ -53,7 +57,9 @@ func issueDeviceCommand(
 	isPutCommand bool,
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
-	deviceClient metadata.DeviceClient) {
+	deviceClient metadata.DeviceClient,
+	httpErrorHandler errorconcept.ErrorHandler) {
+
 	defer r.Body.Close()
 
 	vars := mux.Vars(r)
@@ -100,8 +106,10 @@ func restGetDeviceCommandByNames(
 	r *http.Request,
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
-	deviceClient metadata.DeviceClient) {
-	issueDeviceCommandByNames(w, r, false, loggingClient, dbClient, deviceClient)
+	deviceClient metadata.DeviceClient,
+	httpErrorHandler errorconcept.ErrorHandler) {
+
+	issueDeviceCommandByNames(w, r, false, loggingClient, dbClient, deviceClient, httpErrorHandler)
 }
 
 func restPutDeviceCommandByNames(
@@ -109,8 +117,10 @@ func restPutDeviceCommandByNames(
 	r *http.Request,
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
-	deviceClient metadata.DeviceClient) {
-	issueDeviceCommandByNames(w, r, true, loggingClient, dbClient, deviceClient)
+	deviceClient metadata.DeviceClient,
+	httpErrorHandler errorconcept.ErrorHandler) {
+
+	issueDeviceCommandByNames(w, r, true, loggingClient, dbClient, deviceClient, httpErrorHandler)
 }
 
 func issueDeviceCommandByNames(
@@ -119,7 +129,9 @@ func issueDeviceCommandByNames(
 	isPutCommand bool,
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
-	deviceClient metadata.DeviceClient) {
+	deviceClient metadata.DeviceClient,
+	httpErrorHandler errorconcept.ErrorHandler) {
+
 	defer r.Body.Close()
 
 	vars := mux.Vars(r)
@@ -167,11 +179,13 @@ func restGetCommandsByDeviceID(
 	r *http.Request,
 	dbClient interfaces.DBClient,
 	deviceClient metadata.DeviceClient,
-	configuration *config.ConfigurationStruct) {
+	configuration *config.ConfigurationStruct,
+	httpErrorHandler errorconcept.ErrorHandler) {
+
 	vars := mux.Vars(r)
 	did := vars[ID]
 	ctx := r.Context()
-	device, err := getCommandsByDeviceID(did, ctx, dbClient, deviceClient)
+	device, err := getCommandsByDeviceID(did, ctx, dbClient, deviceClient, configuration)
 	if err != nil {
 		httpErrorHandler.HandleManyVariants(
 			w,
@@ -179,6 +193,7 @@ func restGetCommandsByDeviceID(
 			[]errorconcept.ErrorConceptType{
 				errorconcept.NewServiceClientHttpError(err),
 				errorconcept.Device.NotFoundInDB,
+				errorconcept.Database.NotFound,
 			},
 			errorconcept.Default.InternalServerError)
 		return
@@ -194,11 +209,13 @@ func restGetCommandsByDeviceName(
 	r *http.Request,
 	dbClient interfaces.DBClient,
 	deviceClient metadata.DeviceClient,
-	configuration *config.ConfigurationStruct) {
+	configuration *config.ConfigurationStruct,
+	httpErrorHandler errorconcept.ErrorHandler) {
+
 	vars := mux.Vars(r)
 	dn := vars[NAME]
 	ctx := r.Context()
-	devices, err := getCommandsByDeviceName(dn, ctx, dbClient, deviceClient)
+	devices, err := getCommandsByDeviceName(dn, ctx, dbClient, deviceClient, configuration)
 	if err != nil {
 		httpErrorHandler.HandleManyVariants(
 			w,
@@ -221,9 +238,11 @@ func restGetAllCommands(
 	r *http.Request,
 	dbClient interfaces.DBClient,
 	deviceClient metadata.DeviceClient,
-	configuration *config.ConfigurationStruct) {
+	configuration *config.ConfigurationStruct,
+	httpErrorHandler errorconcept.ErrorHandler) {
+
 	ctx := r.Context()
-	devices, err := getAllCommands(ctx, dbClient, deviceClient)
+	devices, err := getAllCommands(ctx, dbClient, deviceClient, configuration)
 	if err != nil {
 		httpErrorHandler.HandleManyVariants(
 			w,

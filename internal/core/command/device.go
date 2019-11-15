@@ -38,9 +38,14 @@ func executeCommandByDeviceID(
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	deviceClient metadata.DeviceClient) (string, error) {
+
 	d, err := deviceClient.Device(deviceID, ctx)
 	if err != nil {
 		return "", err
+	}
+
+	if d.AdminState == contract.Locked {
+		return "", errors.NewErrDeviceLocked(d.Name)
 	}
 
 	// once command service have its own persistence layer this call will be changed.
@@ -74,14 +79,19 @@ func executeCommandByName(
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	deviceClient metadata.DeviceClient) (string, error) {
+
 	d, err := deviceClient.DeviceForName(dn, ctx)
 	if err != nil {
 		return "", err
 	}
 
+	if d.AdminState == contract.Locked {
+		return "", errors.NewErrDeviceLocked(d.Name)
+	}
+
 	command, err := dbClient.GetCommandByNameAndDeviceId(cn, d.Id)
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 
 	return executeCommandByDevice(d, command, body, queryParams, isPutCommand, ctx, loggingClient)
@@ -95,9 +105,6 @@ func executeCommandByDevice(
 	isPutCommand bool,
 	ctx context.Context,
 	loggingClient logger.LoggingClient) (string, error) {
-	if device.AdminState == contract.Locked {
-		return "", errors.NewErrDeviceLocked(device.Name)
-	}
 
 	var ex Executor
 	var err error
@@ -115,7 +122,7 @@ func executeCommandByDevice(
 	if err != nil {
 		return "", err
 	}
-	if responseCode != 200 {
+	if responseCode != http.StatusOK {
 		return "", types.NewErrServiceClient(responseCode, []byte(responseBody))
 	}
 
@@ -125,8 +132,9 @@ func executeCommandByDevice(
 func getAllCommands(
 	ctx context.Context,
 	dbClient interfaces.DBClient,
-	deviceClient metadata.DeviceClient) ([]contract.CommandResponse, error) {
-	configuration *config.ConfigurationStruct) (int, []contract.CommandResponse, error) {
+	deviceClient metadata.DeviceClient,
+	configuration *config.ConfigurationStruct) ([]contract.CommandResponse, error) {
+
 	devices, err := deviceClient.Devices(ctx)
 	if err != nil {
 		return nil, err
@@ -134,7 +142,7 @@ func getAllCommands(
 
 	var responses []contract.CommandResponse
 	for _, d := range devices {
-		cr, err := newCommandResponse(d, dbClient)
+		cr, err := newCommandResponse(d, dbClient, configuration)
 		if err != nil {
 			return nil, err
 		}
@@ -142,42 +150,48 @@ func getAllCommands(
 		responses = append(responses, cr)
 	}
 
-	return responses, err
+	return responses, nil
 }
 
 func getCommandsByDeviceID(
 	did string,
 	ctx context.Context,
 	dbClient interfaces.DBClient,
-	deviceClient metadata.DeviceClient) (contract.CommandResponse, error) {
+	deviceClient metadata.DeviceClient,
+	configuration *config.ConfigurationStruct) (contract.CommandResponse, error) {
+
 	d, err := deviceClient.Device(did, ctx)
 	if err != nil {
-		return contract.CommandResponse{}, nil
+		return contract.CommandResponse{}, err
 	}
 
-	return newCommandResponse(d, dbClient)
+	return newCommandResponse(d, dbClient, configuration)
 }
 
 func getCommandsByDeviceName(
 	dn string,
 	ctx context.Context,
 	dbClient interfaces.DBClient,
-	deviceClient metadata.DeviceClient) (contract.CommandResponse, error) {
+	deviceClient metadata.DeviceClient,
+	configuration *config.ConfigurationStruct) (contract.CommandResponse, error) {
+
 	d, err := deviceClient.DeviceForName(dn, ctx)
 	if err != nil {
-		return contract.CommandResponse{}, nil
+		return contract.CommandResponse{}, err
 	}
 
-	return newCommandResponse(d, dbClient)
+	return newCommandResponse(d, dbClient, configuration)
 }
 
 func newCommandResponse(
 	d contract.Device,
-	dbClient interfaces.DBClient) (contract.CommandResponse, error) {
+	dbClient interfaces.DBClient,
+	configuration *config.ConfigurationStruct) (contract.CommandResponse, error) {
+
 	commands, err := dbClient.GetCommandsByDeviceId(d.Id)
 	if err != nil {
-		return contract.CommandResponse{}, nil
+		return contract.CommandResponse{}, err
 	}
 
-	return contract.CommandResponseFromDevice(d, commands, Configuration.Service.Url()), err
+	return contract.CommandResponseFromDevice(d, commands, configuration.Service.Url()), nil
 }
