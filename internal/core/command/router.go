@@ -66,7 +66,6 @@ func loadDeviceRoutes(b *mux.Router, dic *di.Container) {
 		restGetAllCommands(
 			w,
 			r,
-			bootstrapContainer.LoggingClientFrom(dic.Get),
 			bootstrapContainer.DBClientFrom(dic.Get),
 			container.MetadataDeviceClientFrom(dic.Get),
 			container.ConfigurationFrom(dic.Get))
@@ -79,7 +78,6 @@ func loadDeviceRoutes(b *mux.Router, dic *di.Container) {
 		restGetCommandsByDeviceID(
 			w,
 			r,
-			bootstrapContainer.LoggingClientFrom(dic.Get),
 			bootstrapContainer.DBClientFrom(dic.Get),
 			container.MetadataDeviceClientFrom(dic.Get),
 			container.ConfigurationFrom(dic.Get))
@@ -108,7 +106,6 @@ func loadDeviceRoutes(b *mux.Router, dic *di.Container) {
 		restGetCommandsByDeviceName(
 			w,
 			r,
-			bootstrapContainer.LoggingClientFrom(dic.Get),
 			bootstrapContainer.DBClientFrom(dic.Get),
 			container.MetadataDeviceClientFrom(dic.Get),
 			container.ConfigurationFrom(dic.Get))

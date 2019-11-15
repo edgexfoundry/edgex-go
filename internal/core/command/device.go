@@ -128,7 +128,6 @@ func commandByDevice(
 
 func getCommands(
 	ctx context.Context,
-	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	deviceClient metadata.DeviceClient) ([]contract.CommandResponse, error) {
 	configuration *config.ConfigurationStruct) (int, []contract.CommandResponse, error) {
@@ -151,7 +150,6 @@ func getCommands(
 func getCommandsByDeviceID(
 	did string,
 	ctx context.Context,
-	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	deviceClient metadata.DeviceClient) (contract.CommandResponse, error) {
 	d, err := deviceClient.Device(did, ctx)
@@ -170,7 +168,6 @@ func getCommandsByDeviceID(
 func getCommandsByDeviceName(
 	dn string,
 	ctx context.Context,
-	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	deviceClient metadata.DeviceClient) (contract.CommandResponse, error) {
 	d, err := deviceClient.DeviceForName(dn, ctx)
