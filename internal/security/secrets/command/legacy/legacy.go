@@ -12,34 +12,38 @@
  * the License.
  *******************************************************************************/
 
-package certificates
+package legacy
 
 import (
-	"fmt"
+	"flag"
 
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets/seed"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/contract"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/helper"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
 
-type CertificateType int
+const CommandName = "legacy"
 
-const (
-	RootCertificate CertificateType = 1
-	TLSCertificate  CertificateType = 2
-)
-
-type CertificateGenerator interface {
-	Generate() error
+type Command struct {
+	flags         *FlagSet
+	loggingClient logger.LoggingClient
 }
 
-func NewCertificateGenerator(t CertificateType, certificateSeed seed.CertificateSeed, w FileWriter, logger logger.LoggingClient) (CertificateGenerator, error) {
-	switch t {
-	case RootCertificate:
-		return rootCertGenerator{certificateSeed: certificateSeed, writer: w, logger: logger}, nil
-	case TLSCertificate:
-		return tlsCertGenerator{certificateSeed: certificateSeed, writer: w, logger: logger}, nil
-	default:
-		return nil, fmt.Errorf("unknown CertificateType %v", t)
+func NewCommand(flags *FlagSet, loggingClient logger.LoggingClient) (*Command, *flag.FlagSet) {
+	return &Command{
+			flags:         flags,
+			loggingClient: loggingClient,
+		},
+		flags.flagSet
+}
+
+func (c *Command) Execute() (statusCode int, err error) {
+	err = helper.GenTLSAssets(c.flags.configFile, c.loggingClient)
+	if err != nil {
+		statusCode = contract.StatusCodeExitWithError
+	} else {
+		statusCode = contract.StatusCodeExitNormal
 	}
+	return
 }

@@ -22,34 +22,35 @@ import (
 	"crypto/rsa"
 	"fmt"
 
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/seed"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
 
 // generatePrivateKey creates a new RSA or EC based private key (sk)
 // ----------------------------------------------------------
-func generatePrivateKey(seed secrets.CertificateSeed, logger logger.LoggingClient) (crypto.PrivateKey, error) {
+func generatePrivateKey(certificateSeed seed.CertificateSeed, logger logger.LoggingClient) (crypto.PrivateKey, error) {
 
-	if seed.RSAScheme {
-		logger.Debug(fmt.Sprintf("Generating private key with RSA scheme %v", seed.RSAKeySize))
-		return rsa.GenerateKey(rand.Reader, int(seed.RSAKeySize))
+	if certificateSeed.RSAScheme {
+		logger.Debug(fmt.Sprintf("Generating private key with RSA scheme %v", certificateSeed.RSAKeySize))
+		return rsa.GenerateKey(rand.Reader, int(certificateSeed.RSAKeySize))
 	}
 
-	if seed.ECScheme {
-		logger.Debug(fmt.Sprintf("Generating private key with EC scheme %v", seed.ECCurve))
-		switch seed.ECCurve {
-		case secrets.EC_224: // secp224r1 NIST P-224
+	if certificateSeed.ECScheme {
+		logger.Debug(fmt.Sprintf("Generating private key with EC scheme %v", certificateSeed.ECCurve))
+		switch certificateSeed.ECCurve {
+		case seed.EC_224: // secp224r1 NIST P-224
 			return ecdsa.GenerateKey(elliptic.P224(), rand.Reader)
-		case secrets.EC_256: // secp256v1 NIST P-256
+		case seed.EC_256: // secp256v1 NIST P-256
 			return ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
-		case secrets.EC_384: // secp384r1 NIST P-384
+		case seed.EC_384: // secp384r1 NIST P-384
 			return ecdsa.GenerateKey(elliptic.P384(), rand.Reader)
-		case secrets.EC_521: // secp521r1 NIST P-521
+		case seed.EC_521: // secp521r1 NIST P-521
 			return ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
 		}
 	}
 
-	return nil, fmt.Errorf("Unknown key scheme: RSA[%t] EC[%t]", seed.RSAScheme, seed.ECScheme)
+	return nil, fmt.Errorf("Unknown key scheme: RSA[%t] EC[%t]", certificateSeed.RSAScheme, certificateSeed.ECScheme)
 }
 
 // dumpKeyPair output sk,pk keypair (RSA or EC) to console

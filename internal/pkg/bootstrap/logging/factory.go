@@ -15,6 +15,8 @@
 package logging
 
 import (
+	"path/filepath"
+
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/interfaces"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
@@ -34,7 +36,7 @@ func FactoryFromConfiguration(serviceKey string, config interfaces.Configuration
 	if bootstrapConfig.Logging.EnableRemote {
 		target = bootstrapConfig.Clients["Logging"].Url() + clients.ApiLoggingRoute
 	} else {
-		target = bootstrapConfig.Logging.File
+		target, _ = filepath.Abs(bootstrapConfig.Logging.File)
 	}
 	return logger.NewClient(serviceKey, bootstrapConfig.Logging.EnableRemote, target, config.GetLogLevel())
 }

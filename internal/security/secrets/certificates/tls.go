@@ -25,15 +25,17 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/seed"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+
 	"github.com/pkg/errors"
 )
 
 type tlsCertGenerator struct {
-	logger logger.LoggingClient
-	seed   secrets.CertificateSeed
-	writer FileWriter
+	logger          logger.LoggingClient
+	certificateSeed seed.CertificateSeed
+	writer          FileWriter
 }
 
 func (gen tlsCertGenerator) Generate() (err error) {
@@ -41,8 +43,8 @@ func (gen tlsCertGenerator) Generate() (err error) {
 	gen.logger.Debug("<Phase 2> Generating TLS server PKI materials")
 
 	// Root CA certificate fetch --------------------------------------------------------
-	gen.logger.Debug(fmt.Sprintf("Loading Root CA certificate: %s", gen.seed.CACertFile))
-	certPEMBlock, err := ioutil.ReadFile(gen.seed.CACertFile) // Load Root CA certificate
+	gen.logger.Debug(fmt.Sprintf("Loading Root CA certificate: %s", gen.certificateSeed.CACertFile))
+	certPEMBlock, err := ioutil.ReadFile(gen.certificateSeed.CACertFile) // Load Root CA certificate
 	if err != nil {
 		return fmt.Errorf("failed to read the Root CA certificate: %s", err.Error())
 	}
@@ -60,8 +62,8 @@ func (gen tlsCertGenerator) Generate() (err error) {
 	}
 
 	// Root CA private key fetch --------------------------------------------------------
-	gen.logger.Debug(fmt.Sprintf("Loading the Root CA private key: %s", gen.seed.CAKeyFile))
-	keyPEMBlock, err := ioutil.ReadFile(gen.seed.CAKeyFile)
+	gen.logger.Debug(fmt.Sprintf("Loading the Root CA private key: %s", gen.certificateSeed.CAKeyFile))
+	keyPEMBlock, err := ioutil.ReadFile(gen.certificateSeed.CAKeyFile)
 	if err != nil {
 		return fmt.Errorf("failed to read the Root CA private key: %s", err.Error())
 	}
@@ -82,14 +84,14 @@ func (gen tlsCertGenerator) Generate() (err error) {
 	gen.logger.Debug("Generating TLS server key pair (sk,pk)")
 
 	// Generate RSA or EC based SK
-	privateTLS, err := generatePrivateKey(gen.seed, gen.logger)
+	privateTLS, err := generatePrivateKey(gen.certificateSeed, gen.logger)
 	if err != nil {
 		return err
 	}
 	// Extract PK from RSA or EC generated SK
 	publicTLS := privateTLS.(crypto.Signer).Public()
 	// Debug the key pair generation/extraction
-	if gen.seed.DumpKeys {
+	if gen.certificateSeed.DumpKeys {
 		dumpKeyPair(privateTLS, gen.logger)
 		dumpKeyPair(publicTLS, gen.logger)
 	}
@@ -103,15 +105,15 @@ func (gen tlsCertGenerator) Generate() (err error) {
 	tlsCertTemplate := &x509.Certificate{
 		SerialNumber: serialNumber,
 		Subject: pkix.Name{
-			CommonName:         gen.seed.TLSFqdn,
-			Organization:       []string{gen.seed.TLSHost},
-			OrganizationalUnit: []string{gen.seed.TLSOrg},
-			Locality:           []string{gen.seed.TLSLocality},
-			Province:           []string{gen.seed.TLSState},
-			Country:            []string{gen.seed.TLSCountry},
+			CommonName:         gen.certificateSeed.TLSFqdn,
+			Organization:       []string{gen.certificateSeed.TLSHost},
+			OrganizationalUnit: []string{gen.certificateSeed.TLSOrg},
+			Locality:           []string{gen.certificateSeed.TLSLocality},
+			Province:           []string{gen.certificateSeed.TLSState},
+			Country:            []string{gen.certificateSeed.TLSCountry},
 		},
-		EmailAddresses:        []string{"admin@" + gen.seed.TLSDomain},
-		DNSNames:              []string{gen.seed.TLSFqdn, gen.seed.TLSAltFqdn}, // Alternative Names
+		EmailAddresses:        []string{"admin@" + gen.certificateSeed.TLSDomain},
+		DNSNames:              []string{gen.certificateSeed.TLSFqdn, gen.certificateSeed.TLSAltFqdn}, // Alternative Names
 		NotAfter:              time.Now().AddDate(10, 0, 0),
 		NotBefore:             time.Now(),
 		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
@@ -130,19 +132,19 @@ func (gen tlsCertGenerator) Generate() (err error) {
 		return fmt.Errorf("failed to parse TLS server certificate - DER: %s", err.Error())
 	}
 
-	gen.logger.Debug(fmt.Sprintf("Saving TLS server private key to PEM file: %s", gen.seed.TLSKeyFile))
+	gen.logger.Debug(fmt.Sprintf("Saving TLS server private key to PEM file: %s", gen.certificateSeed.TLSKeyFile))
 	skPKCS8, err := x509.MarshalPKCS8PrivateKey(privateTLS)
 	if err != nil {
 		return fmt.Errorf("failed to encode TLS server key: %s", err.Error())
 	}
 
-	err = gen.writer.Write(gen.seed.TLSKeyFile, pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: skPKCS8}), 0600)
+	err = gen.writer.Write(gen.certificateSeed.TLSKeyFile, pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: skPKCS8}), 0600)
 	if err != nil {
 		return fmt.Errorf("failed to save TLS server private key: %s", err.Error())
 	}
 
-	gen.logger.Debug(fmt.Sprintf("Saving Root CA certificate to PEM file: %s", gen.seed.CACertFile))
-	err = gen.writer.Write(gen.seed.TLSCertFile, pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: tlsDER}), 0644)
+	gen.logger.Debug(fmt.Sprintf("Saving Root CA certificate to PEM file: %s", gen.certificateSeed.CACertFile))
+	err = gen.writer.Write(gen.certificateSeed.TLSCertFile, pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: tlsDER}), 0644)
 	if err != nil {
 		return fmt.Errorf("failed to save TLS server certificate: %s", err.Error())
 	}
