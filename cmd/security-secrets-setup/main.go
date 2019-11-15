@@ -27,7 +27,7 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets"
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/command/constant"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/constant"
 )
 
 func main() {
@@ -45,14 +45,12 @@ func main() {
 		fmt.Println("Please specify subcommand for " + constant.SecuritySecretsSetup)
 		flag.Usage()
 		os.Exit(constant.ExitNormal)
-		return
 	}
 
 	if err := secrets.Init(configDir); err != nil {
 		// the error returned from Init has already been logged inside the call
 		// so here we ignore the error logging
 		os.Exit(constant.NoOptionSelected)
-		return
 	}
 
 	commandName := flag.Args()[0]
@@ -76,13 +74,11 @@ func main() {
 	if err := flagSet.Parse(flag.Args()[1:]); err != nil {
 		secrets.LoggingClient.Error(fmt.Sprintf("error parsing subcommand %s: %v", commandName, err))
 		os.Exit(constant.ExitWithError)
-		return
 	}
 
 	if len(flagSet.Args()) > 0 {
 		secrets.LoggingClient.Error(fmt.Sprintf("subcommand %s doesn't use any args", commandName))
 		os.Exit(constant.ExitWithError)
-		return
 	}
 
 	exitStatusCode, err := command.Execute()

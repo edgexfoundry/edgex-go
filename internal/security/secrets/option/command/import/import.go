@@ -21,7 +21,7 @@ import (
 	"fmt"
 
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option"
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/command/constant"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/constant"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )

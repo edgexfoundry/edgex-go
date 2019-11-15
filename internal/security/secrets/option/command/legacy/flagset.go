@@ -16,7 +16,7 @@ package legacy
 
 import (
 	"flag"
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/command/constant"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/constant"
 )
 
 type FlagSet struct {
