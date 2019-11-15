@@ -35,7 +35,7 @@ func NewCommand(loggingClient logger.LoggingClient) *Command {
 	}
 }
 
-func (g *Command) Execute() (statusCode option.ExitCode, err error) {
+func (g *Command) Execute() (statusCode int, err error) {
 	if statusCode, err := g.GeneratePkis(); err != nil {
 		return statusCode, err
 	}
@@ -63,10 +63,10 @@ func (g *Command) Execute() (statusCode option.ExitCode, err error) {
 		return option.ExitWithError, err
 	}
 
-	return option.Normal, nil
+	return option.ExitNormal, nil
 }
 
-func (g *Command) GeneratePkis() (option.ExitCode, error) {
+func (g *Command) GeneratePkis() (int, error) {
 	certConfigDir, err := option.GetCertConfigDir()
 	if err != nil {
 		return option.ExitWithError, err
@@ -128,7 +128,7 @@ func (g *Command) GeneratePkis() (option.ExitCode, error) {
 	return g.rearrangePkiByServices(workingDir, pkiSetupVaultJSONPath, pkiSetupKongJSONPath)
 }
 
-func (g *Command) rearrangePkiByServices(workingDir, pkiSetupVaultJSONPath, pkiSetupKongJSONPath string) (option.ExitCode, error) {
+func (g *Command) rearrangePkiByServices(workingDir, pkiSetupVaultJSONPath, pkiSetupKongJSONPath string) (int, error) {
 	vaultConfig, readErr := config.NewX509Config(pkiSetupVaultJSONPath)
 	if readErr != nil {
 		return option.ExitWithError, readErr
@@ -166,7 +166,7 @@ func (g *Command) rearrangePkiByServices(workingDir, pkiSetupVaultJSONPath, pkiS
 		return option.ExitWithError, err
 	}
 
-	return option.Normal, nil
+	return option.ExitNormal, nil
 }
 
 func (g *Command) copyGeneratedForService(servicePath string, config config.X509Config) error {

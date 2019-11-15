@@ -14,8 +14,6 @@
 
 package contract
 
-import "github.com/edgexfoundry/edgex-go/internal/security/secrets/option"
-
 type Command interface {
-	Execute() (statusCode option.ExitCode, err error)
+	Execute() (statusCode int, err error)
 }

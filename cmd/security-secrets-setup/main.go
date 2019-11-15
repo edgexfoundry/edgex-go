@@ -18,15 +18,15 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/command/cache"
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/command/generate"
-	_import "github.com/edgexfoundry/edgex-go/internal/security/secrets/option/command/import"
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/contract"
 	"os"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/command/cache"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/command/generate"
+	_import "github.com/edgexfoundry/edgex-go/internal/security/secrets/option/command/import"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/contract"
 )
 
 type exiter interface {
@@ -92,7 +92,7 @@ func main() {
 		return
 	}
 
-	var exitStatusCode option.ExitCode
+	var exitStatusCode int
 	var err error
 
 	switch subcmdName {
@@ -134,7 +134,7 @@ func main() {
 		}
 	}
 
-	exitInstance.exit(int(exitStatusCode))
+	exitInstance.exit(exitStatusCode)
 }
 
 func newExit() exiter {

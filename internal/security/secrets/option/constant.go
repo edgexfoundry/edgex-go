@@ -44,6 +44,11 @@ const (
 	CaServiceName    = "ca"
 	VaultServiceName = "edgex-vault"
 	KongServiceName  = "edgex-kong"
+
+	// ExitNormal exit code
+	ExitNormal int = 0
+	// ExitWithError is exit code for error
+	ExitWithError int = 2
 )
 
 var (

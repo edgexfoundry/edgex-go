@@ -41,7 +41,7 @@ func NewCommand(loggingClient logger.LoggingClient, generate *generate.Command) 
 
 // Execute generates PKI exactly once and cached to a designated location for future use.
 // The PKI is then deployed from the cached location.
-func (c *Command) Execute() (statusCode option.ExitCode, err error) {
+func (c *Command) Execute() (statusCode int, err error) {
 	// generate a new one if pkicache dir is empty
 	pkiCacheDir, err := option.GetCacheDir()
 	if err != nil {
@@ -99,7 +99,7 @@ func (c *Command) Execute() (statusCode option.ExitCode, err error) {
 		return option.ExitWithError, err
 	}
 
-	return option.Normal, nil
+	return option.ExitNormal, nil
 }
 
 func (c *Command) doCache(fromDir string) error {

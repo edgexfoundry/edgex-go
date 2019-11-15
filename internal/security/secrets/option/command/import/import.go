@@ -40,7 +40,7 @@ func NewCommand(loggingClient logger.LoggingClient) *Command {
 // This import enables usage models for deploying a pre-populated PKI assets
 // such as Kong TLS signed by an external certificate authority or TLS keys
 // by other certificate authority.
-func (c *Command) Execute() (statusCode option.ExitCode, err error) {
+func (c *Command) Execute() (statusCode int, err error) {
 	pkiCacheDir, err := option.GetCacheDir()
 	if err != nil {
 		return option.ExitWithError, err
