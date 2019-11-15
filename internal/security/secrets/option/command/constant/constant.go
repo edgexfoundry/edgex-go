@@ -43,10 +43,9 @@ const (
 	VaultServiceName = "edgex-vault"
 	KongServiceName  = "edgex-kong"
 
-	// ExitNormal exit code
-	ExitNormal int = 0
-	// ExitWithError is exit code for error
-	ExitWithError int = 2
+	ExitNormal       = 0 // ExitNormal exit code
+	NoOptionSelected = 1 // NoOptionSelected exit code
+	ExitWithError    = 2 // ExitWithError is exit code for error
 
 	CommandLegacy   = "legacy"
 	CommandGenerate = "generate"

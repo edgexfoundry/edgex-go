@@ -30,18 +30,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/contract"
 )
 
-type exiter interface {
-	exit(int)
-}
-
-type exitCode struct{}
-
-type optionDispatcher interface {
-	run(command string) (int, error)
-}
-
-var exitInstance = newExit()
-
 var subcommands = map[string]*flag.FlagSet{
 	constant.CommandLegacy:   flag.NewFlagSet(constant.CommandLegacy, flag.ExitOnError),
 	constant.CommandGenerate: flag.NewFlagSet(constant.CommandGenerate, flag.ExitOnError),
@@ -67,14 +55,14 @@ func main() {
 	if flag.NArg() < 1 {
 		fmt.Println("Please specify subcommand for " + constant.SecuritySecretsSetup)
 		flag.Usage()
-		exitInstance.exit(0)
+		os.Exit(constant.ExitNormal)
 		return
 	}
 
 	if err := secrets.Init(configDir); err != nil {
 		// the error returned from Init has already been logged inside the call
 		// so here we ignore the error logging
-		exitInstance.exit(1)
+		os.Exit(constant.NoOptionSelected)
 		return
 	}
 
@@ -83,13 +71,13 @@ func main() {
 	subcmd, found := subcommands[subcmdName]
 	if !found {
 		secrets.LoggingClient.Error(fmt.Sprintf("unsupported subcommand %s", subcmdName))
-		exitInstance.exit(1)
+		os.Exit(constant.NoOptionSelected)
 		return
 	}
 
 	if err := subcmd.Parse(flag.Args()[1:]); err != nil {
 		secrets.LoggingClient.Error(fmt.Sprintf("error parsing subcommand %s: %v", subcmdName, err))
-		exitInstance.exit(2)
+		os.Exit(constant.ExitWithError)
 		return
 	}
 
@@ -101,12 +89,12 @@ func main() {
 		// no additional arguments expected
 		if len(subcmd.Args()) > 0 {
 			secrets.LoggingClient.Error(fmt.Sprintf("subcommand %s doesn't use other additional args", subcmdName))
-			exitInstance.exit(2)
+			os.Exit(constant.ExitWithError)
 			return
 		}
 		if err = option.GenTLSAssets(configFile); err != nil {
 			secrets.LoggingClient.Error(err.Error())
-			exitInstance.exit(2)
+			os.Exit(constant.ExitWithError)
 			return
 		}
 
@@ -114,7 +102,7 @@ func main() {
 		// no arguments expected
 		if len(subcmd.Args()) > 0 {
 			secrets.LoggingClient.Error(fmt.Sprintf("subcommand %s doesn't use any args", subcmdName))
-			exitInstance.exit(2)
+			os.Exit(constant.ExitWithError)
 			return
 		}
 
@@ -135,13 +123,5 @@ func main() {
 		}
 	}
 
-	exitInstance.exit(exitStatusCode)
-}
-
-func newExit() exiter {
-	return &exitCode{}
-}
-
-func (code *exitCode) exit(statusCode int) {
-	os.Exit(statusCode)
+	os.Exit(exitStatusCode)
 }
