@@ -66,7 +66,7 @@ func issueDeviceCommand(
 	}
 
 	ctx := r.Context()
-	body, err := commandByDeviceID(
+	body, err := executeCommandByDeviceID(
 		did,
 		cid,
 		string(b),
@@ -133,7 +133,7 @@ func issueDeviceCommandByNames(
 		httpErrorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
 		return
 	}
-	body, err := commandByNames(
+	body, err := executeCommandByName(
 		dn,
 		cn,
 		string(b),
@@ -223,7 +223,7 @@ func restGetAllCommands(
 	deviceClient metadata.DeviceClient,
 	configuration *config.ConfigurationStruct) {
 	ctx := r.Context()
-	devices, err := getCommands(ctx, dbClient, deviceClient)
+	devices, err := getAllCommands(ctx, dbClient, deviceClient)
 	if err != nil {
 		httpErrorHandler.HandleManyVariants(
 			w,

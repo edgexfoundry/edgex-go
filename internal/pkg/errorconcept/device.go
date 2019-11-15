@@ -47,8 +47,6 @@ func (r deviceLocked) message(err error) string {
 	return err.Error()
 }
 
-
-
 type deviceNotFound struct{}
 
 func (r deviceNotFound) httpErrorCode() int {

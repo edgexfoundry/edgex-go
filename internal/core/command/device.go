@@ -28,7 +28,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/core/command/interfaces"
 )
 
-func commandByDeviceID(
+func executeCommandByDeviceID(
 	deviceID string,
 	commandID string,
 	body string,
@@ -43,10 +43,6 @@ func commandByDeviceID(
 		return "", err
 	}
 
-	if d.AdminState == contract.Locked {
-		return "", errors.NewErrDeviceLocked(d.Name)
-	}
-
 	// once command service have its own persistence layer this call will be changed.
 	commands, err := dbClient.GetCommandsByDeviceId(d.Id)
 	if err != nil {
@@ -54,9 +50,9 @@ func commandByDeviceID(
 	}
 
 	var c contract.Command
-	for _, one := range commands {
-		if commandID == one.Id {
-			c = one
+	for _, command := range commands {
+		if commandID == command.Id {
+			c = command
 			break
 		}
 	}
@@ -65,10 +61,10 @@ func commandByDeviceID(
 		return "", errors.NewErrCommandNotAssociatedWithDevice(commandID, deviceID)
 	}
 
-	return commandByDevice(d, c, body, queryParams, isPutCommand, ctx, loggingClient)
+	return executeCommandByDevice(d, c, body, queryParams, isPutCommand, ctx, loggingClient)
 }
 
-func commandByNames(
+func executeCommandByName(
 	dn string,
 	cn string,
 	body string,
@@ -83,19 +79,15 @@ func commandByNames(
 		return "", err
 	}
 
-	if d.AdminState == contract.Locked {
-		return "", errors.NewErrDeviceLocked(d.Name)
-	}
-
 	command, err := dbClient.GetCommandByNameAndDeviceId(cn, d.Id)
 	if err != nil {
 		return "", nil
 	}
 
-	return commandByDevice(d, command, body, queryParams, isPutCommand, ctx, loggingClient)
+	return executeCommandByDevice(d, command, body, queryParams, isPutCommand, ctx, loggingClient)
 }
 
-func commandByDevice(
+func executeCommandByDevice(
 	device contract.Device,
 	command contract.Command,
 	body string,
@@ -103,6 +95,10 @@ func commandByDevice(
 	isPutCommand bool,
 	ctx context.Context,
 	loggingClient logger.LoggingClient) (string, error) {
+	if device.AdminState == contract.Locked {
+		return "", errors.NewErrDeviceLocked(device.Name)
+	}
+
 	var ex Executor
 	var err error
 	if isPutCommand {
@@ -126,7 +122,7 @@ func commandByDevice(
 	return responseBody, nil
 }
 
-func getCommands(
+func getAllCommands(
 	ctx context.Context,
 	dbClient interfaces.DBClient,
 	deviceClient metadata.DeviceClient) ([]contract.CommandResponse, error) {
@@ -135,16 +131,18 @@ func getCommands(
 	if err != nil {
 		return nil, err
 	}
-	cr := []contract.CommandResponse{}
+
+	var responses []contract.CommandResponse
 	for _, d := range devices {
-		commands, err := dbClient.GetCommandsByDeviceId(d.Id)
+		cr, err := newCommandResponse(d, dbClient)
 		if err != nil {
 			return nil, err
 		}
-		cr = append(cr, contract.CommandResponseFromDevice(d, commands, configuration.Service.Url()))
+
+		responses = append(responses, cr)
 	}
 
-	return cr, err
+	return responses, err
 }
 
 func getCommandsByDeviceID(
@@ -157,12 +155,7 @@ func getCommandsByDeviceID(
 		return contract.CommandResponse{}, nil
 	}
 
-	commands, err := dbClient.GetCommandsByDeviceId(d.Id)
-	if err != nil {
-		return contract.CommandResponse{}, nil
-	}
-
-	return contract.CommandResponseFromDevice(d, commands, Configuration.Service.Url()), err
+	return newCommandResponse(d, dbClient)
 }
 
 func getCommandsByDeviceName(
@@ -175,6 +168,12 @@ func getCommandsByDeviceName(
 		return contract.CommandResponse{}, nil
 	}
 
+	return newCommandResponse(d, dbClient)
+}
+
+func newCommandResponse(
+	d contract.Device,
+	dbClient interfaces.DBClient) (contract.CommandResponse, error) {
 	commands, err := dbClient.GetCommandsByDeviceId(d.Id)
 	if err != nil {
 		return contract.CommandResponse{}, nil
