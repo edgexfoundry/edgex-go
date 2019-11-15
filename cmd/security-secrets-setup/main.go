@@ -18,15 +18,15 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"os"
 
+	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets"
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/command/cache"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/command/constant"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/command/generate"
 	_import "github.com/edgexfoundry/edgex-go/internal/security/secrets/option/command/import"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/command/legacy"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/contract"
 )
 
@@ -78,47 +78,30 @@ func main() {
 		return
 	}
 
-	var exitStatusCode int
-	var err error
-
-	switch subcmdName {
-	case constant.CommandLegacy:
-		// no additional arguments expected
-		if len(subcmd.Args()) > 0 {
-			secrets.LoggingClient.Error(fmt.Sprintf("subcommand %s doesn't use other additional args", subcmdName))
-			os.Exit(constant.ExitWithError)
-			return
-		}
-		if err = option.GenTLSAssets(configFile); err != nil {
-			secrets.LoggingClient.Error(err.Error())
-			os.Exit(constant.ExitWithError)
-			return
-		}
-
-	case constant.CommandGenerate, constant.CommandCache, constant.CommandImport:
-		// no arguments expected
-		if len(subcmd.Args()) > 0 {
-			secrets.LoggingClient.Error(fmt.Sprintf("subcommand %s doesn't use any args", subcmdName))
-			os.Exit(constant.ExitWithError)
-			return
-		}
-
-		var command contract.Command
-		switch subcmdName {
-		case constant.CommandGenerate:
-			command = generate.NewCommand(secrets.LoggingClient)
-		case constant.CommandCache:
-			command = cache.NewCommand(secrets.LoggingClient, generate.NewCommand(secrets.LoggingClient))
-		case constant.CommandImport:
-			command = _import.NewCommand(secrets.LoggingClient)
-		default:
-			panic("unexpected subcmdName")
-		}
-		exitStatusCode, err = command.Execute()
-		if err != nil {
-			secrets.LoggingClient.Error(err.Error())
-		}
+	// no arguments expected
+	if len(subcmd.Args()) > 0 {
+		secrets.LoggingClient.Error(fmt.Sprintf("subcommand %s doesn't use any args", subcmdName))
+		os.Exit(constant.ExitWithError)
+		return
 	}
 
+	var command contract.Command
+	switch subcmdName {
+	case constant.CommandLegacy:
+		command = legacy.NewCommand(configFile)
+	case constant.CommandGenerate:
+		command = generate.NewCommand(secrets.LoggingClient)
+	case constant.CommandCache:
+		command = cache.NewCommand(secrets.LoggingClient, generate.NewCommand(secrets.LoggingClient))
+	case constant.CommandImport:
+		command = _import.NewCommand(secrets.LoggingClient)
+	default:
+		panic("unexpected subcmdName")
+	}
+
+	exitStatusCode, err := command.Execute()
+	if err != nil {
+		secrets.LoggingClient.Error(err.Error())
+	}
 	os.Exit(exitStatusCode)
 }
