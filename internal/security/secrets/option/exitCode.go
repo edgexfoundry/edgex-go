@@ -17,17 +17,17 @@
 package option
 
 // ExitCode is the code used for exit status
-type exitCode int
+type ExitCode int
 
 const (
-	// normal exit code
-	normal exitCode = 0
-	// noOptionSelected exit code
-	noOptionSelected exitCode = 1
-	// exitWithError is exit code for error
-	exitWithError exitCode = 2
+	// Normal exit code
+	Normal ExitCode = 0
+	// NoOptionSelected exit code
+	NoOptionSelected ExitCode = 1
+	// ExitWithError is exit code for error
+	ExitWithError ExitCode = 2
 )
 
-func (code exitCode) intValue() int {
+func (code ExitCode) intValue() int {
 	return int(code)
 }

@@ -31,7 +31,7 @@ func TestGetWorkDir(t *testing.T) {
 	defer tearDown()
 
 	// test WorkDir that's configured by toml
-	runTimeDir, err := getWorkDir()
+	runTimeDir, err := GetWorkDir()
 	if err != nil {
 		t.Errorf("Error getting workdir, %v", err)
 	}
@@ -47,15 +47,15 @@ func TestGetWorkDir(t *testing.T) {
 			WorkDir: "",
 		},
 	}
-	runTimeDir, err = getWorkDir()
+	runTimeDir, err = GetWorkDir()
 	assert.Nil(t, err)
-	assert.Equal(t, filepath.Join(defaultWorkDir, pkiInitBaseDir), runTimeDir)
+	assert.Equal(t, filepath.Join(DefaultWorkDir, PkiInitBaseDir), runTimeDir)
 
 	// test env variable
-	os.Setenv(envXdgRuntimeDir, "/run")
-	runTimeDir, err = getWorkDir()
+	os.Setenv(EnvXdgRuntimeDir, "/run")
+	runTimeDir, err = GetWorkDir()
 	assert.Nil(t, err)
-	assert.Equal(t, filepath.Join("/run", pkiInitBaseDir), runTimeDir)
+	assert.Equal(t, filepath.Join("/run", PkiInitBaseDir), runTimeDir)
 }
 
 func TestGetCertConfigDir(t *testing.T) {
@@ -64,7 +64,7 @@ func TestGetCertConfigDir(t *testing.T) {
 	defer tearDown()
 
 	// test CertConfigDir that's configured by toml
-	certConfigDir, err := getCertConfigDir()
+	certConfigDir, err := GetCertConfigDir()
 	assert.Nil(t, err)
 	assert.Equal(t, "./res", certConfigDir)
 
@@ -74,7 +74,7 @@ func TestGetCertConfigDir(t *testing.T) {
 			CertConfigDir: "",
 		},
 	}
-	certConfigDir, err = getCertConfigDir()
+	certConfigDir, err = GetCertConfigDir()
 	assert.NotNil(t, err)
 	assert.Equal(t, "", certConfigDir)
 
@@ -84,7 +84,7 @@ func TestGetCertConfigDir(t *testing.T) {
 			CertConfigDir: "./fakePath",
 		},
 	}
-	_, err = getCertConfigDir()
+	_, err = GetCertConfigDir()
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "does not exist")
 }
@@ -95,7 +95,7 @@ func TestGetCacheDir(t *testing.T) {
 	defer tearDown()
 
 	// test CacheDir that's configured by toml
-	cacheDir, err := getCacheDir()
+	cacheDir, err := GetCacheDir()
 	assert.Nil(t, err)
 	assert.Equal(t, "./cachetest", cacheDir)
 
@@ -105,8 +105,8 @@ func TestGetCacheDir(t *testing.T) {
 			CacheDir: "",
 		},
 	}
-	cacheDir, _ = getCacheDir()
-	assert.Equal(t, defaultPkiCacheDir, cacheDir)
+	cacheDir, _ = GetCacheDir()
+	assert.Equal(t, DefaultPkiCacheDir, cacheDir)
 
 	// cache directory is configured but does not exist
 	secrets.Configuration = &secrets.ConfigurationStruct{
@@ -114,7 +114,7 @@ func TestGetCacheDir(t *testing.T) {
 			CacheDir: "./fakePath",
 		},
 	}
-	_, err = getCacheDir()
+	_, err = GetCacheDir()
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "does not exist")
 }
@@ -124,7 +124,7 @@ func TestGetDeployDir(t *testing.T) {
 	defer tearDown()
 
 	// test DeployDir that's configured by toml
-	deployDir, err := getDeployDir()
+	deployDir, err := GetDeployDir()
 	assert.Nil(t, err)
 	assert.Equal(t, "./deploytest", deployDir)
 
@@ -134,17 +134,17 @@ func TestGetDeployDir(t *testing.T) {
 			DeployDir: "",
 		},
 	}
-	deployDir, err = getDeployDir()
+	deployDir, err = GetDeployDir()
 	assert.Nil(t, err)
-	assert.Equal(t, defaultPkiDeployDir, deployDir)
+	assert.Equal(t, DefaultPkiDeployDir, deployDir)
 
-	// deploy directory is configured but does not exist
+	// Deploy directory is configured but does not exist
 	secrets.Configuration = &secrets.ConfigurationStruct{
 		SecretsSetup: secrets.SecretsSetupInfo{
 			DeployDir: "./fakepath",
 		},
 	}
-	_, err = getDeployDir()
+	_, err = GetDeployDir()
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "does not exist")
 }

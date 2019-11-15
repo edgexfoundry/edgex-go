@@ -47,7 +47,7 @@ func (_m *mockOptionsExecutor) ProcessOptions() (int, error) {
 }
 
 // executeOptions provides a mock function with given fields: _a0
-func (_m *mockOptionsExecutor) executeOptions(_a0 ...func(*PkiInitOption) (exitCode, error)) (exitCode, error) {
+func (_m *mockOptionsExecutor) executeOptions(_a0 ...func(*PkiInitOption) (ExitCode, error)) (ExitCode, error) {
 	_va := make([]interface{}, len(_a0))
 	for _i := range _a0 {
 		_va[_i] = _a0[_i]
@@ -56,15 +56,15 @@ func (_m *mockOptionsExecutor) executeOptions(_a0 ...func(*PkiInitOption) (exitC
 	_ca = append(_ca, _va...)
 	ret := _m.Called(_ca...)
 
-	var r0 exitCode
-	if rf, ok := ret.Get(0).(func(...func(*PkiInitOption) (exitCode, error)) exitCode); ok {
+	var r0 ExitCode
+	if rf, ok := ret.Get(0).(func(...func(*PkiInitOption) (ExitCode, error)) ExitCode); ok {
 		r0 = rf(_a0...)
 	} else {
-		r0 = ret.Get(0).(exitCode)
+		r0 = ret.Get(0).(ExitCode)
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(...func(*PkiInitOption) (exitCode, error)) error); ok {
+	if rf, ok := ret.Get(1).(func(...func(*PkiInitOption) (ExitCode, error)) error); ok {
 		r1 = rf(_a0...)
 	} else {
 		r1 = ret.Error(1)

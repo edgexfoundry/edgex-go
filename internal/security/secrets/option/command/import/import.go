@@ -14,61 +14,57 @@
 // SPDX-License-Identifier: Apache-2.0'
 //
 
-package option
+package _import
 
 import (
 	"fmt"
 
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option"
+
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
 
-// Import deploys PKI from CacheDir to DeployDir.  It retruns an error,
+type Command struct {
+	loggingClient logger.LoggingClient
+}
+
+func NewCommand(loggingClient logger.LoggingClient) *Command {
+	return &Command{
+		loggingClient: loggingClient,
+	}
+}
+
+// Execute deploys PKI from CacheDir to DeployDir.  It retruns an error,
 // if CacheDir is empty instead of blocking or waiting;
 // otherwise it just copies PKI assets from CacheDir into DeployDir.
 // This import enables usage models for deploying a pre-populated PKI assets
 // such as Kong TLS signed by an external certificate authority or TLS keys
 // by other certificate authority.
-func Import() func(*PkiInitOption) (exitCode, error) {
-	return func(pkiInitOpton *PkiInitOption) (exitCode, error) {
-
-		if isImportNoOp(pkiInitOpton) {
-			return normal, nil
-		}
-
-		return importPkis()
-	}
-}
-
-func isImportNoOp(pkiInitOption *PkiInitOption) bool {
-	// nop: if the flag is missing or not on
-	return pkiInitOption == nil || !pkiInitOption.ImportOpt
-}
-
-func importPkis() (statusCode exitCode, err error) {
-	pkiCacheDir, err := getCacheDir()
+func (c *Command) Execute() (statusCode option.ExitCode, err error) {
+	pkiCacheDir, err := option.GetCacheDir()
 	if err != nil {
-		return exitWithError, err
+		return option.ExitWithError, err
 	}
-	secrets.LoggingClient.Info(fmt.Sprintf("importing from PKI cache dir: %s", pkiCacheDir))
+	c.loggingClient.Info(fmt.Sprintf("importing from PKI cache dir: %s", pkiCacheDir))
 
-	dirEmpty, err := isDirEmpty(pkiCacheDir)
+	dirEmpty, err := option.IsDirEmpty(pkiCacheDir)
 
 	if err != nil {
-		return exitWithError, err
+		return option.ExitWithError, err
 	}
 
 	if !dirEmpty {
 		// copy stuff into dest dir from pkiCache
-		deployDir, err := getDeployDir()
+		deployDir, err := option.GetDeployDir()
 		if err != nil {
-			return exitWithError, err
+			return option.ExitWithError, err
 		}
-		err = deploy(pkiCacheDir, deployDir)
+		err = option.Deploy(pkiCacheDir, deployDir)
 		if err != nil {
-			statusCode = exitWithError
+			statusCode = option.ExitWithError
 		}
 	} else {
-		statusCode = exitWithError
+		statusCode = option.ExitWithError
 		err = fmt.Errorf("Expecting pre-populated PKI in the directory %s but found empty", pkiCacheDir)
 	}
 

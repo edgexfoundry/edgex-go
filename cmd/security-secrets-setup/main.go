@@ -18,6 +18,10 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/command/cache"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/command/generate"
+	_import "github.com/edgexfoundry/edgex-go/internal/security/secrets/option/command/import"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/contract"
 	"os"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
@@ -35,10 +39,7 @@ type optionDispatcher interface {
 	run(command string) (int, error)
 }
 
-type pkiInitOptionDispatcher struct{}
-
 var exitInstance = newExit()
-var dispatcherInstance = newOptionDispatcher()
 
 var subcommands = map[string]*flag.FlagSet{
 	"legacy":   flag.NewFlagSet("legacy", flag.ExitOnError),
@@ -91,7 +92,7 @@ func main() {
 		return
 	}
 
-	var exitStatusCode int
+	var exitStatusCode option.ExitCode
 	var err error
 
 	switch subcmdName {
@@ -115,13 +116,25 @@ func main() {
 			exitInstance.exit(2)
 			return
 		}
-		exitStatusCode, err = dispatcherInstance.run(subcmdName)
+
+		var command contract.Command
+		switch subcmdName {
+		case "generate":
+			command = generate.NewCommand(secrets.LoggingClient)
+		case "cache":
+			command = cache.NewCommand(secrets.LoggingClient, generate.NewCommand(secrets.LoggingClient))
+		case "import":
+			command = _import.NewCommand(secrets.LoggingClient)
+		default:
+			panic("unexpected subcmdName")
+		}
+		exitStatusCode, err = command.Execute()
 		if err != nil {
 			secrets.LoggingClient.Error(err.Error())
 		}
 	}
 
-	exitInstance.exit(exitStatusCode)
+	exitInstance.exit(int(exitStatusCode))
 }
 
 func newExit() exiter {
@@ -130,36 +143,4 @@ func newExit() exiter {
 
 func (code *exitCode) exit(statusCode int) {
 	os.Exit(statusCode)
-}
-
-func newOptionDispatcher() optionDispatcher {
-	return &pkiInitOptionDispatcher{}
-}
-
-func setupPkiInitOption(subcommand string) (executor option.OptionsExecutor, status int, err error) {
-	var generateOpt, cacheOpt, importOpt bool
-	switch subcommand {
-	case "generate":
-		generateOpt = true
-	case "cache":
-		cacheOpt = true
-	case "import":
-		importOpt = true
-	}
-
-	opts := option.PkiInitOption{
-		GenerateOpt: generateOpt,
-		CacheOpt:    cacheOpt,
-		ImportOpt:   importOpt,
-	}
-	return option.NewPkiInitOption(opts)
-}
-
-func (dispatcher *pkiInitOptionDispatcher) run(command string) (statusCode int, err error) {
-	optsExecutor, statusCode, err := setupPkiInitOption(command)
-	if err != nil {
-		return statusCode, err
-	}
-
-	return optsExecutor.ProcessOptions()
 }

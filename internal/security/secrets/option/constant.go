@@ -24,28 +24,28 @@ const (
 	// SecuritySecretsSetup is the name of this module
 	SecuritySecretsSetup = "security-secrets-setup"
 
-	pkiSetupVaultJSON             = "pkisetup-vault.json"
-	pkiSetupKongJSON              = "pkisetup-kong.json"
-	pkiInitScratchDir             = "scratch"
-	pkiInitGeneratedDir           = "generated"
-	resourceDirName               = "res"
-	configTomlFile                = "configuration.toml"
-	envXdgRuntimeDir              = "XDG_RUNTIME_DIR"
-	defaultWorkDir                = "/tmp"
-	pkiInitBaseDir                = "edgex/security-secrets-setup"
-	defaultPkiCacheDir            = "/etc/edgex/pki"
-	defaultPkiDeployDir           = "/run/edgex/secrets"
-	tlsSecretFileName             = "server.key"
-	tlsCertFileName               = "server.crt"
-	caCertFileName                = "ca.pem"
-	pkiInitFilePerServiceComplete = ".security-secrets-secrets.complete"
+	PkiSetupVaultJSON             = "pkisetup-vault.json"
+	PkiSetupKongJSON              = "pkisetup-kong.json"
+	PkiInitScratchDir             = "scratch"
+	PkiInitGeneratedDir           = "generated"
+	ResourceDirName               = "res"
+	ConfigTomlFile                = "configuration.toml"
+	EnvXdgRuntimeDir              = "XDG_RUNTIME_DIR"
+	DefaultWorkDir                = "/tmp"
+	PkiInitBaseDir                = "edgex/security-secrets-setup"
+	DefaultPkiCacheDir            = "/etc/edgex/pki"
+	DefaultPkiDeployDir           = "/run/edgex/secrets"
+	TlsSecretFileName             = "server.key"
+	TlsCertFileName               = "server.crt"
+	CaCertFileName                = "ca.pem"
+	PkiInitFilePerServiceComplete = ".security-secrets-secrets.complete"
 
 	// service name section:
-	caServiceName    = "ca"
-	vaultServiceName = "edgex-vault"
-	kongServiceName  = "edgex-kong"
+	CaServiceName    = "ca"
+	VaultServiceName = "edgex-vault"
+	KongServiceName  = "edgex-kong"
 )
 
 var (
-	errCacheNotChangeAfter = errors.New("PKI cache cannot be changed after it was cached previously")
+	ErrCacheNotChangeAfter = errors.New("PKI cache cannot be changed after it was cached previously")
 )
