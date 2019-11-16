@@ -19,7 +19,6 @@ package helper
 import (
 	"errors"
 	"fmt"
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/constant"
 	"io"
 	"io/ioutil"
 	"os"
@@ -28,9 +27,18 @@ import (
 	"strconv"
 	"time"
 
-	config "github.com/edgexfoundry/edgex-go/internal/pkg/config"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/certificates"
+)
+
+const (
+	envXdgRuntimeDir              = "XDG_RUNTIME_DIR"
+	defaultWorkDir                = "/tmp"
+	pkiInitBaseDir                = "edgex/security-secrets-setup"
+	defaultPkiCacheDir            = "/etc/edgex/pki"
+	defaultPkiDeployDir           = "/run/edgex/secrets"
+	pkiInitFilePerServiceComplete = ".security-secrets-secrets.complete"
 )
 
 func CopyFile(fileSrc, fileDest string) (int64, error) {
@@ -222,7 +230,7 @@ func MarkComplete(dirPath string) error {
 		} else {
 			// now we are at the leaf node, write sentinel file if not yet
 			deployPathDir := path.Dir(aFilePath)
-			sentinel := filepath.Join(deployPathDir, constant.PkiInitFilePerServiceComplete)
+			sentinel := filepath.Join(deployPathDir, pkiInitFilePerServiceComplete)
 			if !CheckIfFileExists(sentinel) {
 				if err := WriteSentinel(sentinel); err != nil {
 					return err
@@ -238,15 +246,15 @@ func GetWorkDir() (string, error) {
 	var workDir string
 	var err error
 
-	if xdgRuntimeDir, ok := os.LookupEnv(constant.EnvXdgRuntimeDir); ok {
-		workDir = filepath.Join(xdgRuntimeDir, constant.PkiInitBaseDir)
+	if xdgRuntimeDir, ok := os.LookupEnv(envXdgRuntimeDir); ok {
+		workDir = filepath.Join(xdgRuntimeDir, pkiInitBaseDir)
 	} else if secrets.Configuration.SecretsSetup.WorkDir != "" {
 		workDir, err = filepath.Abs(secrets.Configuration.SecretsSetup.WorkDir)
 		if err != nil {
 			return "", err
 		}
 	} else {
-		workDir = filepath.Join(constant.DefaultWorkDir, constant.PkiInitBaseDir)
+		workDir = filepath.Join(defaultWorkDir, pkiInitBaseDir)
 	}
 
 	return workDir, nil
@@ -269,7 +277,7 @@ func GetCertConfigDir() (string, error) {
 }
 
 func GetCacheDir() (string, error) {
-	cacheDir := constant.DefaultPkiCacheDir
+	cacheDir := defaultPkiCacheDir
 
 	if secrets.Configuration.SecretsSetup.CacheDir != "" {
 		cacheDir = secrets.Configuration.SecretsSetup.CacheDir
@@ -287,7 +295,7 @@ func GetCacheDir() (string, error) {
 }
 
 func GetDeployDir() (string, error) {
-	deployDir := constant.DefaultPkiDeployDir
+	deployDir := defaultPkiDeployDir
 
 	if secrets.Configuration.SecretsSetup.DeployDir != "" {
 		deployDir = secrets.Configuration.SecretsSetup.DeployDir

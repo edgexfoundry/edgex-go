@@ -17,9 +17,11 @@ package legacy
 import (
 	"flag"
 
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/constant"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/contract"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/helper"
 )
+
+const CommandLegacy = "legacy"
 
 type Command struct {
 	configFile string
@@ -35,9 +37,9 @@ func NewCommand(flags *FlagSet) (*Command, *flag.FlagSet) {
 func (c *Command) Execute() (statusCode int, err error) {
 	err = helper.GenTLSAssets(c.configFile)
 	if err != nil {
-		statusCode = constant.ExitWithError
+		statusCode = contract.StatusCodeExitWithError
 	} else {
-		statusCode = constant.ExitNormal
+		statusCode = contract.StatusCodeExitNormal
 	}
 	return
 }

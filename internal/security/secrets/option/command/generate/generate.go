@@ -17,14 +17,28 @@ package generate
 import (
 	"flag"
 	"fmt"
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/helper"
 	"os"
 	"path/filepath"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/constant"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/contract"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/helper"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+)
+
+const (
+	CommandGenerate     = "generate"
+	pkiSetupVaultJSON   = "pkisetup-vault.json"
+	pkiSetupKongJSON    = "pkisetup-kong.json"
+	pkiInitScratchDir   = "scratch"
+	tlsCertFileName     = "server.crt"
+	caCertFileName      = "ca.pem"
+	PkiInitGeneratedDir = "generated"
+	TlsSecretFileName   = "server.key"
+	CaServiceName       = "ca"
+	vaultServiceName    = "edgex-vault"
+	kongServiceName     = "edgex-kong"
 )
 
 type Command struct {
@@ -45,48 +59,48 @@ func (g *Command) Execute() (statusCode int, err error) {
 
 	workDir, err := helper.GetWorkDir()
 	if err != nil {
-		return constant.ExitWithError, err
+		return contract.StatusCodeExitWithError, err
 	}
 
-	generatedDirPath := filepath.Join(workDir, constant.PkiInitGeneratedDir)
+	generatedDirPath := filepath.Join(workDir, PkiInitGeneratedDir)
 	defer os.RemoveAll(generatedDirPath)
 
 	// Shred the CA private key before deploy
-	caPrivateKeyFile := filepath.Join(generatedDirPath, constant.CaServiceName, constant.TlsSecretFileName)
+	caPrivateKeyFile := filepath.Join(generatedDirPath, CaServiceName, TlsSecretFileName)
 	if err := helper.SecureEraseFile(caPrivateKeyFile); err != nil {
-		return constant.ExitWithError, err
+		return contract.StatusCodeExitWithError, err
 	}
 
 	deployDir, err := helper.GetDeployDir()
 	if err != nil {
-		return constant.ExitWithError, err
+		return contract.StatusCodeExitWithError, err
 	}
 
 	if err := helper.Deploy(generatedDirPath, deployDir); err != nil {
-		return constant.ExitWithError, err
+		return contract.StatusCodeExitWithError, err
 	}
 
-	return constant.ExitNormal, nil
+	return contract.StatusCodeExitNormal, nil
 }
 
 func (g *Command) GeneratePkis() (int, error) {
 	certConfigDir, err := helper.GetCertConfigDir()
 	if err != nil {
-		return constant.ExitWithError, err
+		return contract.StatusCodeExitWithError, err
 	}
 
 	certConfigDir, err = filepath.Abs(certConfigDir)
 	if err != nil {
-		return constant.ExitWithError, err
+		return contract.StatusCodeExitWithError, err
 	}
-	pkiSetupVaultJSONPath := filepath.Join(certConfigDir, constant.PkiSetupVaultJSON)
-	pkiSetupKongJSONPath := filepath.Join(certConfigDir, constant.PkiSetupKongJSON)
+	pkiSetupVaultJSONPath := filepath.Join(certConfigDir, pkiSetupVaultJSON)
+	pkiSetupKongJSONPath := filepath.Join(certConfigDir, pkiSetupKongJSON)
 
 	workingDir, err := helper.GetWorkDir()
 	if err != nil {
-		return constant.ExitWithError, err
+		return contract.StatusCodeExitWithError, err
 	}
-	scratchPath := filepath.Join(workingDir, constant.PkiInitScratchDir)
+	scratchPath := filepath.Join(workingDir, pkiInitScratchDir)
 
 	g.loggingClient.Debug(fmt.Sprint("pkiSetupVaultJSONPath: ", pkiSetupVaultJSONPath,
 		"  pkiSetupKongJSONPath: ", pkiSetupKongJSONPath,
@@ -94,21 +108,21 @@ func (g *Command) GeneratePkis() (int, error) {
 		"  certConfigDir: ", certConfigDir))
 
 	if !helper.CheckIfFileExists(pkiSetupVaultJSONPath) {
-		return constant.ExitWithError, fmt.Errorf("Vault JSON file for security-secrets-setup does not exist in %s", pkiSetupVaultJSONPath)
+		return contract.StatusCodeExitWithError, fmt.Errorf("Vault JSON file for security-secrets-setup does not exist in %s", pkiSetupVaultJSONPath)
 	}
 
 	if !helper.CheckIfFileExists(pkiSetupKongJSONPath) {
-		return constant.ExitWithError, fmt.Errorf("Kong JSON file for security-secrets-setup does not exist in %s", pkiSetupKongJSONPath)
+		return contract.StatusCodeExitWithError, fmt.Errorf("Kong JSON file for security-secrets-setup does not exist in %s", pkiSetupKongJSONPath)
 	}
 
 	// create scratch dir if not exists yet:
 	if err := helper.CreateDirectoryIfNotExists(scratchPath); err != nil {
-		return constant.ExitWithError, err
+		return contract.StatusCodeExitWithError, err
 	}
 
 	currDir, err := os.Getwd()
 	if err != nil {
-		return constant.ExitWithError, err
+		return contract.StatusCodeExitWithError, err
 	}
 
 	// after done, need to change it back to the original working dir to avoid os.Getwd() error
@@ -117,15 +131,15 @@ func (g *Command) GeneratePkis() (int, error) {
 
 	// generate TLS certs on the env. of $XDG_RUNTIME_DIR/edgex/pki-init/scratch
 	if err := os.Chdir(scratchPath); err != nil {
-		return constant.ExitWithError, err
+		return contract.StatusCodeExitWithError, err
 	}
 
 	if err := helper.GenTLSAssets(pkiSetupVaultJSONPath); err != nil {
-		return constant.ExitWithError, err
+		return contract.StatusCodeExitWithError, err
 	}
 
 	if err := helper.GenTLSAssets(pkiSetupKongJSONPath); err != nil {
-		return constant.ExitWithError, err
+		return contract.StatusCodeExitWithError, err
 	}
 
 	return g.rearrangePkiByServices(workingDir, pkiSetupVaultJSONPath, pkiSetupKongJSONPath)
@@ -134,42 +148,42 @@ func (g *Command) GeneratePkis() (int, error) {
 func (g *Command) rearrangePkiByServices(workingDir, pkiSetupVaultJSONPath, pkiSetupKongJSONPath string) (int, error) {
 	vaultConfig, readErr := config.NewX509Config(pkiSetupVaultJSONPath)
 	if readErr != nil {
-		return constant.ExitWithError, readErr
+		return contract.StatusCodeExitWithError, readErr
 	}
 
 	kongConfig, readErr := config.NewX509Config(pkiSetupKongJSONPath)
 	if readErr != nil {
-		return constant.ExitWithError, readErr
+		return contract.StatusCodeExitWithError, readErr
 	}
 
-	generatedDirPath := filepath.Join(workingDir, constant.PkiInitGeneratedDir)
+	generatedDirPath := filepath.Join(workingDir, PkiInitGeneratedDir)
 
 	g.loggingClient.Debug(fmt.Sprint("pki-init generate output base dir: ", generatedDirPath))
 
 	// create generated dir if not exists yet:
 	if err := helper.CreateDirectoryIfNotExists(generatedDirPath); err != nil {
-		return constant.ExitWithError, err
+		return contract.StatusCodeExitWithError, err
 	}
 
 	// CA:
-	caDirPath := filepath.Join(generatedDirPath, constant.CaServiceName)
+	caDirPath := filepath.Join(generatedDirPath, CaServiceName)
 	if err := g.copyGeneratedForService(caDirPath, vaultConfig); err != nil {
-		return constant.ExitWithError, err
+		return contract.StatusCodeExitWithError, err
 	}
 
 	// Vault:
-	vaultServicePath := filepath.Join(generatedDirPath, constant.VaultServiceName)
+	vaultServicePath := filepath.Join(generatedDirPath, vaultServiceName)
 	if err := g.copyGeneratedForService(vaultServicePath, vaultConfig); err != nil {
-		return constant.ExitWithError, err
+		return contract.StatusCodeExitWithError, err
 	}
 
 	// Kong:
-	kongServicePath := filepath.Join(generatedDirPath, constant.KongServiceName)
+	kongServicePath := filepath.Join(generatedDirPath, kongServiceName)
 	if err := g.copyGeneratedForService(kongServicePath, kongConfig); err != nil {
-		return constant.ExitWithError, err
+		return contract.StatusCodeExitWithError, err
 	}
 
-	return constant.ExitNormal, nil
+	return contract.StatusCodeExitNormal, nil
 }
 
 func (g *Command) copyGeneratedForService(servicePath string, config config.X509Config) error {
@@ -182,12 +196,12 @@ func (g *Command) copyGeneratedForService(servicePath string, config config.X509
 		return err
 	}
 
-	if _, err := helper.CopyFile(filepath.Join(pkiOutputDir, config.GetCAPemFileName()), filepath.Join(servicePath, constant.CaCertFileName)); err != nil {
+	if _, err := helper.CopyFile(filepath.Join(pkiOutputDir, config.GetCAPemFileName()), filepath.Join(servicePath, caCertFileName)); err != nil {
 		return err
 	}
 
-	privKeyFileName := filepath.Join(servicePath, constant.TlsSecretFileName)
-	if filepath.Base(servicePath) == constant.CaServiceName {
+	privKeyFileName := filepath.Join(servicePath, TlsSecretFileName)
+	if filepath.Base(servicePath) == CaServiceName {
 		if _, err := helper.CopyFile(filepath.Join(pkiOutputDir, config.GetCAPrivateKeyFileName()), privKeyFileName); err != nil {
 			return err
 		}
@@ -196,7 +210,7 @@ func (g *Command) copyGeneratedForService(servicePath string, config config.X509
 			return err
 		}
 		// if not CA, then also copy the TLS cert as well
-		if _, err := helper.CopyFile(filepath.Join(pkiOutputDir, config.GetTLSPemFileName()), filepath.Join(servicePath, constant.TlsCertFileName)); err != nil {
+		if _, err := helper.CopyFile(filepath.Join(pkiOutputDir, config.GetTLSPemFileName()), filepath.Join(servicePath, tlsCertFileName)); err != nil {
 			return err
 		}
 	}

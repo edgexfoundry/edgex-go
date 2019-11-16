@@ -52,7 +52,7 @@ func TestGetWorkDir(t *testing.T) {
 	assert.Equal(t, filepath.Join(DefaultWorkDir, PkiInitBaseDir), runTimeDir)
 
 	// test env variable
-	os.Setenv(EnvXdgRuntimeDir, "/run")
+	os.Setenv(envXdgRuntimeDir, "/run")
 	runTimeDir, err = GetWorkDir()
 	assert.Nil(t, err)
 	assert.Equal(t, filepath.Join("/run", PkiInitBaseDir), runTimeDir)

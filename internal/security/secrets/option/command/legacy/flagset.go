@@ -14,10 +14,7 @@
 
 package legacy
 
-import (
-	"flag"
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/constant"
-)
+import "flag"
 
 type FlagSet struct {
 	flagSet    *flag.FlagSet
@@ -26,7 +23,7 @@ type FlagSet struct {
 
 func NewFlags() (flags *FlagSet) {
 	flags = &FlagSet{
-		flagSet: flag.NewFlagSet(constant.CommandLegacy, flag.ExitOnError),
+		flagSet: flag.NewFlagSet(CommandLegacy, flag.ExitOnError),
 	}
 	flags.flagSet.StringVar(&flags.configFile, "config", "", "specify JSON configuration file: /path/to/file.json")
 	flags.flagSet.StringVar(&flags.configFile, "c", "", "specify JSON configuration file: /path/to/file.json")

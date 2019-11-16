@@ -20,11 +20,13 @@ import (
 	"flag"
 	"fmt"
 
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/constant"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/contract"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/helper"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
+
+const CommandImport = "import"
 
 type Command struct {
 	loggingClient logger.LoggingClient
@@ -46,28 +48,28 @@ func NewCommand(flags *FlagSet, loggingClient logger.LoggingClient) (*Command, *
 func (c *Command) Execute() (statusCode int, err error) {
 	pkiCacheDir, err := helper.GetCacheDir()
 	if err != nil {
-		return constant.ExitWithError, err
+		return contract.StatusCodeExitWithError, err
 	}
 	c.loggingClient.Info(fmt.Sprintf("importing from PKI cache dir: %s", pkiCacheDir))
 
 	dirEmpty, err := helper.IsDirEmpty(pkiCacheDir)
 
 	if err != nil {
-		return constant.ExitWithError, err
+		return contract.StatusCodeExitWithError, err
 	}
 
 	if !dirEmpty {
 		// copy stuff into dest dir from pkiCache
 		deployDir, err := helper.GetDeployDir()
 		if err != nil {
-			return constant.ExitWithError, err
+			return contract.StatusCodeExitWithError, err
 		}
 		err = helper.Deploy(pkiCacheDir, deployDir)
 		if err != nil {
-			statusCode = constant.ExitWithError
+			statusCode = contract.StatusCodeExitWithError
 		}
 	} else {
-		statusCode = constant.ExitWithError
+		statusCode = contract.StatusCodeExitWithError
 		err = fmt.Errorf("Expecting pre-populated PKI in the directory %s but found empty", pkiCacheDir)
 	}
 

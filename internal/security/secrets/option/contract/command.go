@@ -14,6 +14,12 @@
 
 package contract
 
+const (
+	StatusCodeExitNormal       = 0 // StatusCodeExitNormal exit code
+	StatusCodeNoOptionSelected = 1 // StatusCodeNoOptionSelected exit code
+	StatusCodeExitWithError    = 2 // StatusCodeExitWithError is exit code for error
+)
+
 type Command interface {
 	Execute() (statusCode int, err error)
 }

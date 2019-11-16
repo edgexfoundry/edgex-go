@@ -14,11 +14,7 @@
 
 package cache
 
-import (
-	"flag"
-
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/constant"
-)
+import "flag"
 
 type FlagSet struct {
 	flagSet *flag.FlagSet
@@ -26,6 +22,6 @@ type FlagSet struct {
 
 func NewFlags() (flags *FlagSet) {
 	return &FlagSet{
-		flagSet: flag.NewFlagSet(constant.CommandCache, flag.ExitOnError),
+		flagSet: flag.NewFlagSet(CommandCache, flag.ExitOnError),
 	}
 }

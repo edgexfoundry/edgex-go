@@ -17,17 +17,20 @@
 package cache
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
 
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/command/generate"
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/constant"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/contract"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/helper"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
+
+const CommandCache = "cache"
 
 type Command struct {
 	loggingClient logger.LoggingClient
@@ -48,12 +51,12 @@ func (c *Command) Execute() (statusCode int, err error) {
 	// generate a new one if pkicache dir is empty
 	pkiCacheDir, err := helper.GetCacheDir()
 	if err != nil {
-		return constant.ExitWithError, err
+		return contract.StatusCodeExitWithError, err
 	}
 
 	empty, err := helper.IsDirEmpty(pkiCacheDir)
 	if err != nil {
-		return constant.ExitWithError, err
+		return contract.StatusCodeExitWithError, err
 	}
 
 	if empty {
@@ -66,26 +69,26 @@ func (c *Command) Execute() (statusCode int, err error) {
 
 		workDir, err := helper.GetWorkDir()
 		if err != nil {
-			return constant.ExitWithError, err
+			return contract.StatusCodeExitWithError, err
 		}
-		generatedDirPath := filepath.Join(workDir, constant.PkiInitGeneratedDir)
+		generatedDirPath := filepath.Join(workDir, generate.PkiInitGeneratedDir)
 		defer os.RemoveAll(generatedDirPath)
 
 		// always shreds CA private key before cache
-		caPrivateKeyFile := filepath.Join(generatedDirPath, constant.CaServiceName, constant.TlsSecretFileName)
+		caPrivateKeyFile := filepath.Join(generatedDirPath, generate.CaServiceName, generate.TlsSecretFileName)
 		if err := helper.SecureEraseFile(caPrivateKeyFile); err != nil {
-			return constant.ExitWithError, err
+			return contract.StatusCodeExitWithError, err
 		}
 
 		if err = c.doCache(generatedDirPath); err != nil {
-			return constant.ExitWithError, err
+			return contract.StatusCodeExitWithError, err
 		}
 	} else {
 		// cache dir is not empty: output error message if CA private key is present
 		// when cache is given
-		cachedCAPrivateKeyFile := filepath.Join(pkiCacheDir, constant.CaServiceName, constant.TlsSecretFileName)
+		cachedCAPrivateKeyFile := filepath.Join(pkiCacheDir, generate.CaServiceName, generate.TlsSecretFileName)
 		if helper.CheckIfFileExists(cachedCAPrivateKeyFile) {
-			return constant.ExitWithError, constant.ErrCacheNotChangeAfter
+			return contract.StatusCodeExitWithError, errors.New("PKI cache cannot be changed after it was cached previously")
 		}
 		c.loggingClient.Info(fmt.Sprintf("cached TLS assets from dir %s is present, using cached PKI", pkiCacheDir))
 	}
@@ -94,15 +97,15 @@ func (c *Command) Execute() (statusCode int, err error) {
 	// copy stuff into dest dir from pkiCache
 	deployDir, err := helper.GetDeployDir()
 	if err != nil {
-		return constant.ExitWithError, err
+		return contract.StatusCodeExitWithError, err
 	}
 
 	err = helper.Deploy(pkiCacheDir, deployDir)
 	if err != nil {
-		return constant.ExitWithError, err
+		return contract.StatusCodeExitWithError, err
 	}
 
-	return constant.ExitNormal, nil
+	return contract.StatusCodeExitNormal, nil
 }
 
 func (c *Command) doCache(fromDir string) error {
