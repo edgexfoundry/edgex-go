@@ -33,6 +33,11 @@ import (
 	"github.com/edgexfoundry/go-mod-registry/registry"
 )
 
+const (
+	EmptyProfileDir  = ""
+	DoNotUseRegistry = false
+)
+
 // fatalError logs an error and exits the application.  It's intended to be used only within the bootstrap prior to
 // any go routines being spawned.
 func fatalError(err error, loggingClient logger.LoggingClient) {

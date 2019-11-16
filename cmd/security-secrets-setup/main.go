@@ -20,6 +20,11 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/interfaces"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/command/cache"
@@ -29,9 +34,9 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/contract"
 )
 
-const securitySecretsSetup = "security-secrets-setup"
-
 func main() {
+	startupTimer := startup.NewStartUpTimer(internal.BootRetrySecondsDefault, internal.BootTimeoutSecondsDefault)
+
 	var configDir string
 
 	legacyFlags := legacy.NewFlags()
@@ -43,48 +48,27 @@ func main() {
 	flag.Parse()
 
 	if flag.NArg() < 1 {
-		fmt.Println("Please specify subcommand for " + securitySecretsSetup)
+		fmt.Println("Please specify subcommand for " + internal.SecuritySecretsSetupServiceKey)
 		flag.Usage()
 		os.Exit(contract.StatusCodeExitNormal)
 	}
 
-	if err := secrets.Init(configDir); err != nil {
-		// the error returned from Init has already been logged inside the call
-		// so here we ignore the error logging
-		os.Exit(contract.StatusCodeNoOptionSelected)
-	}
-
-	commandName := flag.Args()[0]
-	var command contract.Command
-	var flagSet *flag.FlagSet
-	switch commandName {
-	case legacy.CommandLegacy:
-		command, flagSet = legacy.NewCommand(legacyFlags)
-	case generate.CommandGenerate:
-		command, flagSet = generate.NewCommand(generateFlagSet, secrets.LoggingClient)
-	case cache.CommandCache:
-		generateCommand, _ := generate.NewCommand(generateFlagSet, secrets.LoggingClient)
-		command, flagSet = cache.NewCommand(cacheFlagSet, secrets.LoggingClient, generateCommand)
-	case _import.CommandImport:
-		command, flagSet = _import.NewCommand(importFlagSet, secrets.LoggingClient)
-	default:
-		secrets.LoggingClient.Error(fmt.Sprintf("unsupported subcommand %s", commandName))
-		os.Exit(contract.StatusCodeExitWithError)
-	}
-
-	if err := flagSet.Parse(flag.Args()[1:]); err != nil {
-		secrets.LoggingClient.Error(fmt.Sprintf("error parsing subcommand %s: %v", commandName, err))
-		os.Exit(contract.StatusCodeExitWithError)
-	}
-
-	if len(flagSet.Args()) > 0 {
-		secrets.LoggingClient.Error(fmt.Sprintf("subcommand %s doesn't use any args", commandName))
-		os.Exit(contract.StatusCodeExitWithError)
-	}
-
-	exitStatusCode, err := command.Execute()
-	if err != nil {
-		secrets.LoggingClient.Error(err.Error())
-	}
-	os.Exit(exitStatusCode)
+	bootstrap.Run(
+		configDir,
+		bootstrap.EmptyProfileDir,
+		internal.ConfigFileName,
+		bootstrap.DoNotUseRegistry,
+		internal.SecuritySecretsSetupServiceKey,
+		secrets.Configuration,
+		startupTimer,
+		di.NewContainer(di.ServiceConstructorMap{}),
+		[]interfaces.BootstrapHandler{
+			secrets.NewBootstrapHandler(
+				legacyFlags,
+				generateFlagSet,
+				cacheFlagSet,
+				importFlagSet,
+				flag.Args()[0]).Handler,
+		},
+	)
 }
