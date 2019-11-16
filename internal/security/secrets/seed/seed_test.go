@@ -15,6 +15,7 @@
 package seed
 
 import (
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/contract"
 	"testing"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
@@ -62,7 +63,7 @@ func TestNewCertificateSeed(t *testing.T) {
 
 	tests := []struct {
 		name        string
-		dir         DirectoryHandler
+		dir         contract.DirectoryHandler
 		cfg         config.X509Config
 		expectError bool
 	}{
@@ -96,7 +97,7 @@ func TestNewCertificateSeed(t *testing.T) {
 }
 
 // Tried to put this in mocks/custom.go but caused an import cycle with secrets.DirectoryHandler
-func createDirectoryHandlerMock(cfg config.X509Config, t *testing.T) DirectoryHandler {
+func createDirectoryHandlerMock(cfg config.X509Config, t *testing.T) contract.DirectoryHandler {
 	dir, err := cfg.PkiCADir()
 	if err != nil {
 		t.Error(err.Error())
