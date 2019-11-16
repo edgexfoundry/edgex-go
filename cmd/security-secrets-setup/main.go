@@ -22,15 +22,18 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap"
+	bootstrapContainer "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/container"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/command/cache"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/command/generate"
 	_import "github.com/edgexfoundry/edgex-go/internal/security/secrets/option/command/import"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/command/legacy"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/contract"
 )
 
@@ -53,15 +56,24 @@ func main() {
 		os.Exit(contract.StatusCodeExitNormal)
 	}
 
+	configuration := &config.ConfigurationStruct{}
+	dic := di.NewContainer(di.ServiceConstructorMap{
+		container.ConfigurationName: func(get di.Get) interface{} {
+			return configuration
+		},
+		bootstrapContainer.ConfigurationInterfaceName: func(get di.Get) interface{} {
+			return get(container.ConfigurationName)
+		},
+	})
 	bootstrap.Run(
 		configDir,
 		bootstrap.EmptyProfileDir,
 		internal.ConfigFileName,
 		bootstrap.DoNotUseRegistry,
 		internal.SecuritySecretsSetupServiceKey,
-		secrets.Configuration,
+		configuration,
 		startupTimer,
-		di.NewContainer(di.ServiceConstructorMap{}),
+		dic,
 		[]interfaces.BootstrapHandler{
 			secrets.NewBootstrapHandler(
 				legacyFlags,

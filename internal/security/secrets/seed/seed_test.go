@@ -12,7 +12,7 @@
  * the License.
  *******************************************************************************/
 
-package secrets
+package seed
 
 import (
 	"testing"

@@ -1,5 +1,7 @@
 /*******************************************************************************
- * Copyright 2019 Dell Inc.
+ * Copyright 2017 Dell Inc.
+ * Copyright 2018 Dell Technologies Inc.
+ * Copyright (c) 2019 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -12,36 +14,17 @@
  * the License.
  *******************************************************************************/
 
-package legacy
+package container
 
 import (
-	"flag"
-
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/contract"
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/helper"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/config"
 )
 
-const CommandLegacy = "legacy"
+// ConfigurationName contains the name of the config.ConfigurationStruct implementation in the DIC.
+var ConfigurationName = di.TypeInstanceToName(config.ConfigurationStruct{})
 
-type Command struct {
-	configFile string
-	helper     *helper.Helper
-}
-
-func NewCommand(flags *FlagSet, helper *helper.Helper) (*Command, *flag.FlagSet) {
-	return &Command{
-			configFile: flags.configFile,
-			helper:     helper,
-		},
-		flags.flagSet
-}
-
-func (c *Command) Execute() (statusCode int, err error) {
-	err = c.helper.GenTLSAssets(c.configFile)
-	if err != nil {
-		statusCode = contract.StatusCodeExitWithError
-	} else {
-		statusCode = contract.StatusCodeExitNormal
-	}
-	return
+// ConfigurationFrom helper function queries the DIC and returns the config.ConfigurationStruct implementation.
+func ConfigurationFrom(get di.Get) *config.ConfigurationStruct {
+	return get(ConfigurationName).(*config.ConfigurationStruct)
 }

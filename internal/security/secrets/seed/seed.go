@@ -12,7 +12,7 @@
  * the License.
  *******************************************************************************/
 
-package secrets
+package seed
 
 import (
 	"encoding/json"
@@ -21,6 +21,7 @@ import (
 	"strconv"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/directory"
 )
 
 const skFileExt = ".priv.key"
@@ -92,7 +93,7 @@ type CertificateSeed struct {
 	TLSState    string
 }
 
-func NewCertificateSeed(cfg config.X509Config, directory DirectoryHandler) (seed CertificateSeed, err error) {
+func NewCertificateSeed(cfg config.X509Config, directory directory.Handler) (seed CertificateSeed, err error) {
 	// Convert create_new_ca JSON string "true|false" to boolean
 	seed.NewCA, err = strconv.ParseBool(cfg.CreateNewRootCA)
 	if err != nil {

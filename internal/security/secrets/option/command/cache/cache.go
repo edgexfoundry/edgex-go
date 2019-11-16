@@ -35,12 +35,19 @@ const CommandCache = "cache"
 type Command struct {
 	loggingClient logger.LoggingClient
 	generate      *generate.Command
+	helper        *helper.Helper
 }
 
-func NewCommand(flags *FlagSet, loggingClient logger.LoggingClient, generate *generate.Command) (*Command, *flag.FlagSet) {
+func NewCommand(
+	flags *FlagSet,
+	loggingClient logger.LoggingClient,
+	generate *generate.Command,
+	helper *helper.Helper) (*Command, *flag.FlagSet) {
+
 	return &Command{
 			loggingClient: loggingClient,
 			generate:      generate,
+			helper:        helper,
 		},
 		flags.flagSet
 }
@@ -49,12 +56,12 @@ func NewCommand(flags *FlagSet, loggingClient logger.LoggingClient, generate *ge
 // The PKI is then deployed from the cached location.
 func (c *Command) Execute() (statusCode int, err error) {
 	// generate a new one if pkicache dir is empty
-	pkiCacheDir, err := helper.GetCacheDir()
+	pkiCacheDir, err := c.helper.GetCacheDir()
 	if err != nil {
 		return contract.StatusCodeExitWithError, err
 	}
 
-	empty, err := helper.IsDirEmpty(pkiCacheDir)
+	empty, err := c.helper.IsDirEmpty(pkiCacheDir)
 	if err != nil {
 		return contract.StatusCodeExitWithError, err
 	}
@@ -67,7 +74,7 @@ func (c *Command) Execute() (statusCode int, err error) {
 			return statusCode, err
 		}
 
-		workDir, err := helper.GetWorkDir()
+		workDir, err := c.helper.GetWorkDir()
 		if err != nil {
 			return contract.StatusCodeExitWithError, err
 		}
@@ -76,7 +83,7 @@ func (c *Command) Execute() (statusCode int, err error) {
 
 		// always shreds CA private key before cache
 		caPrivateKeyFile := filepath.Join(generatedDirPath, generate.CaServiceName, generate.TlsSecretFileName)
-		if err := helper.SecureEraseFile(caPrivateKeyFile); err != nil {
+		if err := c.helper.SecureEraseFile(caPrivateKeyFile); err != nil {
 			return contract.StatusCodeExitWithError, err
 		}
 
@@ -87,7 +94,7 @@ func (c *Command) Execute() (statusCode int, err error) {
 		// cache dir is not empty: output error message if CA private key is present
 		// when cache is given
 		cachedCAPrivateKeyFile := filepath.Join(pkiCacheDir, generate.CaServiceName, generate.TlsSecretFileName)
-		if helper.CheckIfFileExists(cachedCAPrivateKeyFile) {
+		if c.helper.CheckIfFileExists(cachedCAPrivateKeyFile) {
 			return contract.StatusCodeExitWithError, errors.New("PKI cache cannot be changed after it was cached previously")
 		}
 		c.loggingClient.Info(fmt.Sprintf("cached TLS assets from dir %s is present, using cached PKI", pkiCacheDir))
@@ -95,12 +102,12 @@ func (c *Command) Execute() (statusCode int, err error) {
 
 	// to Deploy
 	// copy stuff into dest dir from pkiCache
-	deployDir, err := helper.GetDeployDir()
+	deployDir, err := c.helper.GetDeployDir()
 	if err != nil {
 		return contract.StatusCodeExitWithError, err
 	}
 
-	err = helper.Deploy(pkiCacheDir, deployDir)
+	err = c.helper.Deploy(pkiCacheDir, deployDir)
 	if err != nil {
 		return contract.StatusCodeExitWithError, err
 	}
@@ -110,11 +117,11 @@ func (c *Command) Execute() (statusCode int, err error) {
 
 func (c *Command) doCache(fromDir string) error {
 	// destination
-	pkiCacheDir, err := helper.GetCacheDir()
+	pkiCacheDir, err := c.helper.GetCacheDir()
 	if err != nil {
 		return err
 	}
 
 	// to cache
-	return helper.CopyDir(fromDir, pkiCacheDir)
+	return c.helper.CopyDir(fromDir, pkiCacheDir)
 }

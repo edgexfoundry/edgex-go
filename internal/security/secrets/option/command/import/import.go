@@ -30,11 +30,13 @@ const CommandImport = "import"
 
 type Command struct {
 	loggingClient logger.LoggingClient
+	helper        *helper.Helper
 }
 
-func NewCommand(flags *FlagSet, loggingClient logger.LoggingClient) (*Command, *flag.FlagSet) {
+func NewCommand(flags *FlagSet, loggingClient logger.LoggingClient, helper *helper.Helper) (*Command, *flag.FlagSet) {
 	return &Command{
 			loggingClient: loggingClient,
+			helper:        helper,
 		},
 		flags.flagSet
 }
@@ -46,13 +48,13 @@ func NewCommand(flags *FlagSet, loggingClient logger.LoggingClient) (*Command, *
 // such as Kong TLS signed by an external certificate authority or TLS keys
 // by other certificate authority.
 func (c *Command) Execute() (statusCode int, err error) {
-	pkiCacheDir, err := helper.GetCacheDir()
+	pkiCacheDir, err := c.helper.GetCacheDir()
 	if err != nil {
 		return contract.StatusCodeExitWithError, err
 	}
 	c.loggingClient.Info(fmt.Sprintf("importing from PKI cache dir: %s", pkiCacheDir))
 
-	dirEmpty, err := helper.IsDirEmpty(pkiCacheDir)
+	dirEmpty, err := c.helper.IsDirEmpty(pkiCacheDir)
 
 	if err != nil {
 		return contract.StatusCodeExitWithError, err
@@ -60,11 +62,11 @@ func (c *Command) Execute() (statusCode int, err error) {
 
 	if !dirEmpty {
 		// copy stuff into dest dir from pkiCache
-		deployDir, err := helper.GetDeployDir()
+		deployDir, err := c.helper.GetDeployDir()
 		if err != nil {
 			return contract.StatusCodeExitWithError, err
 		}
-		err = helper.Deploy(pkiCacheDir, deployDir)
+		err = c.helper.Deploy(pkiCacheDir, deployDir)
 		if err != nil {
 			statusCode = contract.StatusCodeExitWithError
 		}

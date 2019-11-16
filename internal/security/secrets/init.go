@@ -24,19 +24,14 @@ import (
 	bootstrapContainer "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/container"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/command/cache"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/command/generate"
 	_import "github.com/edgexfoundry/edgex-go/internal/security/secrets/option/command/import"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/command/legacy"
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/contract"
-
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/helper"
 )
-
-// Global variables
-var Configuration *config.ConfigurationStruct
-var LoggingClient logger.LoggingClient
 
 type Bootstrap struct {
 	legacyFlags     *legacy.FlagSet
@@ -65,20 +60,23 @@ func NewBootstrapHandler(
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the data service.
 func (b *Bootstrap) Handler(wg *sync.WaitGroup, ctx context.Context, startupTimer startup.Timer, dic *di.Container) bool {
 	loggingClient := bootstrapContainer.LoggingClientFrom(dic.Get)
+	configuration := container.ConfigurationFrom(dic.Get)
 
-	commandName := flag.Args()[0]
 	var command contract.Command
 	var flagSet *flag.FlagSet
+
+	commandName := flag.Args()[0]
+	helper := helper.NewHelper(loggingClient, configuration)
 	switch commandName {
 	case legacy.CommandLegacy:
-		command, flagSet = legacy.NewCommand(b.legacyFlags)
+		command, flagSet = legacy.NewCommand(b.legacyFlags, helper)
 	case generate.CommandGenerate:
-		command, flagSet = generate.NewCommand(b.generateFlagSet, loggingClient)
+		command, flagSet = generate.NewCommand(b.generateFlagSet, loggingClient, helper)
 	case cache.CommandCache:
-		generateCommand, _ := generate.NewCommand(b.generateFlagSet, loggingClient)
-		command, flagSet = cache.NewCommand(b.cacheFlagSet, loggingClient, generateCommand)
+		generateCommand, _ := generate.NewCommand(b.generateFlagSet, loggingClient, helper)
+		command, flagSet = cache.NewCommand(b.cacheFlagSet, loggingClient, generateCommand, helper)
 	case _import.CommandImport:
-		command, flagSet = _import.NewCommand(b.importFlagSet, loggingClient)
+		command, flagSet = _import.NewCommand(b.importFlagSet, loggingClient, helper)
 	default:
 		loggingClient.Error(fmt.Sprintf("unsupported subcommand %s", commandName))
 		os.Exit(contract.StatusCodeExitWithError)
@@ -99,4 +97,5 @@ func (b *Bootstrap) Handler(wg *sync.WaitGroup, ctx context.Context, startupTime
 		loggingClient.Error(err.Error())
 	}
 	os.Exit(exitStatusCode)
+	return false
 }

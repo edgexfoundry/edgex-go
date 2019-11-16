@@ -12,7 +12,7 @@
  * the License.
  *******************************************************************************/
 
-package secrets
+package directory
 
 import (
 	"fmt"
@@ -21,20 +21,20 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
 
-type DirectoryHandler interface {
+type Handler interface {
 	Create(path string) error
 	Verify(path string) error
 }
 
-type directoryHandler struct {
+type handler struct {
 	logger logger.LoggingClient
 }
 
-func NewDirectoryHandler(logger logger.LoggingClient) DirectoryHandler {
-	return directoryHandler{logger: logger}
+func NewHandler(logger logger.LoggingClient) Handler {
+	return handler{logger: logger}
 }
 
-func (h directoryHandler) Create(path string) error {
+func (h handler) Create(path string) error {
 	// Remove eventual previous PKI setup directory
 	// Create a new empty PKI setup directory
 	h.logger.Debug("New CA creation requested by configuration")
@@ -53,7 +53,7 @@ func (h directoryHandler) Create(path string) error {
 	return nil
 }
 
-func (h directoryHandler) Verify(path string) error {
+func (h handler) Verify(path string) error {
 	h.logger.Debug("No new CA creation requested by configuration")
 
 	// Is the CA there? (if nil then OK... but could be something else than a directory)
