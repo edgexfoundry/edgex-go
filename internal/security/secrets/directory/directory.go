@@ -18,34 +18,33 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/contract"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
 
-type Handler interface {
-	Create(path string) error
-	Verify(path string) error
-}
-
 type handler struct {
-	logger logger.LoggingClient
+	loggingClient logger.LoggingClient
 }
 
-func NewHandler(logger logger.LoggingClient) Handler {
-	return handler{logger: logger}
+func NewHandler(loggingClient logger.LoggingClient) contract.DirectoryHandler {
+	return handler{
+		loggingClient: loggingClient,
+	}
 }
 
 func (h handler) Create(path string) error {
 	// Remove eventual previous PKI setup directory
 	// Create a new empty PKI setup directory
-	h.logger.Debug("New CA creation requested by configuration")
-	h.logger.Debug("Cleaning up CA PKI setup directory")
+	h.loggingClient.Debug("New CA creation requested by configuration")
+	h.loggingClient.Debug("Cleaning up CA PKI setup directory")
 
 	err := os.RemoveAll(path) // Remove pkiCaDir
 	if err != nil {
 		return fmt.Errorf("Attempted removal of existing CA PKI config directory: %s (%s)", path, err)
 	}
 
-	h.logger.Debug("Creating CA PKI setup directory: %s", path)
+	h.loggingClient.Debug("Creating CA PKI setup directory: %s", path)
 	err = os.MkdirAll(path, 0750) // Create pkiCaDir
 	if err != nil {
 		return fmt.Errorf("Failed to create the CA PKI configuration directory: %s (%s)", path, err)
@@ -54,7 +53,7 @@ func (h handler) Create(path string) error {
 }
 
 func (h handler) Verify(path string) error {
-	h.logger.Debug("No new CA creation requested by configuration")
+	h.loggingClient.Debug("No new CA creation requested by configuration")
 
 	// Is the CA there? (if nil then OK... but could be something else than a directory)
 	stat, err := os.Stat(path)
@@ -65,7 +64,7 @@ func (h handler) Verify(path string) error {
 		return fmt.Errorf("CA PKI setup directory cannot be reached: %s (%s)", path, err)
 	}
 	if stat.IsDir() {
-		h.logger.Debug(fmt.Sprintf("Existing CA PKI setup directory: %s", path))
+		h.loggingClient.Debug(fmt.Sprintf("Existing CA PKI setup directory: %s", path))
 	} else {
 		return fmt.Errorf("Existing CA PKI setup directory is not a directory: %s", path)
 	}
