@@ -18,16 +18,17 @@ import (
 	"crypto"
 	"testing"
 
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/seed"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
 
 func TestGeneratePrivateKey(t *testing.T) {
-	baseSeed := secrets.CertificateSeed{
+	baseSeed := seed.CertificateSeed{
 		RSAScheme:  false,
 		ECScheme:   false,
-		RSAKeySize: secrets.RSA_4096,
-		ECCurve:    secrets.EC_224,
+		RSAKeySize: seed.RSA_4096,
+		ECCurve:    seed.EC_224,
 	}
 
 	rsaSeed := baseSeed
@@ -37,19 +38,19 @@ func TestGeneratePrivateKey(t *testing.T) {
 	ecSeed.ECScheme = true
 
 	ec256Seed := ecSeed
-	ec256Seed.ECCurve = secrets.EC_256
+	ec256Seed.ECCurve = seed.EC_256
 
 	ec384Seed := ecSeed
-	ec384Seed.ECCurve = secrets.EC_384
+	ec384Seed.ECCurve = seed.EC_384
 
 	ec521Seed := ecSeed
-	ec521Seed.ECCurve = secrets.EC_521
+	ec521Seed.ECCurve = seed.EC_521
 
-	logger := logger.MockLogger{}
+	mockLogger := logger.MockLogger{}
 
 	tests := []struct {
 		name        string
-		seed        secrets.CertificateSeed
+		seed        seed.CertificateSeed
 		expectError bool
 	}{
 		{"BaseFail", baseSeed, true},
@@ -61,7 +62,7 @@ func TestGeneratePrivateKey(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			private, err := generatePrivateKey(tt.seed, logger)
+			private, err := generatePrivateKey(tt.seed, mockLogger)
 			if err != nil && !tt.expectError {
 				t.Error(err)
 				return
@@ -73,8 +74,8 @@ func TestGeneratePrivateKey(t *testing.T) {
 				}
 				// Extract PK from RSA or EC generated SK
 				public := private.(crypto.Signer).Public()
-				dumpKeyPair(private, logger)
-				dumpKeyPair(public, logger)
+				dumpKeyPair(private, mockLogger)
+				dumpKeyPair(public, mockLogger)
 			}
 		})
 	}

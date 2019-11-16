@@ -15,10 +15,10 @@
 package seed
 
 import (
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets/contract"
 	"testing"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/contract"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/mocks"
 )
 
