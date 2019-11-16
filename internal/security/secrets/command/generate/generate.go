@@ -29,7 +29,7 @@ import (
 )
 
 const (
-	CommandGenerate     = "generate"
+	CommandName         = "generate"
 	pkiSetupVaultJSON   = "pkisetup-vault.json"
 	pkiSetupKongJSON    = "pkisetup-kong.json"
 	pkiInitScratchDir   = "scratch"

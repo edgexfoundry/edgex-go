@@ -27,7 +27,7 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
 
-const CommandImport = "import"
+const CommandName = "import"
 
 type Command struct {
 	loggingClient logger.LoggingClient

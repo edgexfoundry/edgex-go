@@ -23,7 +23,7 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
 
-const CommandLegacy = "legacy"
+const CommandName = "legacy"
 
 type Command struct {
 	configFile    string

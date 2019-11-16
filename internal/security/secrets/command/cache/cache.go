@@ -31,7 +31,7 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
 
-const CommandCache = "cache"
+const CommandName = "cache"
 
 type Command struct {
 	loggingClient logger.LoggingClient

@@ -22,6 +22,6 @@ type FlagSet struct {
 
 func NewFlags() (flags *FlagSet) {
 	return &FlagSet{
-		flagSet: flag.NewFlagSet(CommandCache, flag.ExitOnError),
+		flagSet: flag.NewFlagSet(CommandName, flag.ExitOnError),
 	}
 }

@@ -66,14 +66,14 @@ func (b *Bootstrap) Handler(wg *sync.WaitGroup, ctx context.Context, startupTime
 
 	commandName := flag.Args()[0]
 	switch commandName {
-	case legacy.CommandLegacy:
+	case legacy.CommandName:
 		command, flagSet = legacy.NewCommand(b.legacyFlags, loggingClient)
-	case generate.CommandGenerate:
+	case generate.CommandName:
 		command, flagSet = generate.NewCommand(b.generateFlagSet, loggingClient, configuration)
-	case cache.CommandCache:
+	case cache.CommandName:
 		generateCommand, _ := generate.NewCommand(b.generateFlagSet, loggingClient, configuration)
 		command, flagSet = cache.NewCommand(b.cacheFlagSet, loggingClient, configuration, generateCommand)
-	case _import.CommandImport:
+	case _import.CommandName:
 		command, flagSet = _import.NewCommand(b.importFlagSet, loggingClient, configuration)
 	default:
 		loggingClient.Error(fmt.Sprintf("unsupported subcommand %s", commandName))

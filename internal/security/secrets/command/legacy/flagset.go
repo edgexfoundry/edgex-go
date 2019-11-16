@@ -23,7 +23,7 @@ type FlagSet struct {
 
 func NewFlags() (flags *FlagSet) {
 	flags = &FlagSet{
-		flagSet: flag.NewFlagSet(CommandLegacy, flag.ExitOnError),
+		flagSet: flag.NewFlagSet(CommandName, flag.ExitOnError),
 	}
 	flags.flagSet.StringVar(&flags.configFile, "config", "", "specify JSON configuration file: /path/to/file.json")
 	flags.flagSet.StringVar(&flags.configFile, "c", "", "specify JSON configuration file: /path/to/file.json")
