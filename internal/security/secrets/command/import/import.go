@@ -20,6 +20,7 @@ import (
 	"flag"
 	"fmt"
 
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/contract"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/helper"
 
@@ -30,13 +31,17 @@ const CommandImport = "import"
 
 type Command struct {
 	loggingClient logger.LoggingClient
-	helper        *helper.Helper
+	configuration *config.ConfigurationStruct
 }
 
-func NewCommand(flags *FlagSet, loggingClient logger.LoggingClient, helper *helper.Helper) (*Command, *flag.FlagSet) {
+func NewCommand(
+	flags *FlagSet,
+	loggingClient logger.LoggingClient,
+	configuration *config.ConfigurationStruct) (*Command, *flag.FlagSet) {
+
 	return &Command{
 			loggingClient: loggingClient,
-			helper:        helper,
+			configuration: configuration,
 		},
 		flags.flagSet
 }
@@ -48,13 +53,13 @@ func NewCommand(flags *FlagSet, loggingClient logger.LoggingClient, helper *help
 // such as Kong TLS signed by an external certificate authority or TLS keys
 // by other certificate authority.
 func (c *Command) Execute() (statusCode int, err error) {
-	pkiCacheDir, err := c.helper.GetCacheDir()
+	pkiCacheDir, err := helper.GetCacheDir(c.configuration)
 	if err != nil {
 		return contract.StatusCodeExitWithError, err
 	}
 	c.loggingClient.Info(fmt.Sprintf("importing from PKI cache dir: %s", pkiCacheDir))
 
-	dirEmpty, err := c.helper.IsDirEmpty(pkiCacheDir)
+	dirEmpty, err := helper.IsDirEmpty(pkiCacheDir)
 
 	if err != nil {
 		return contract.StatusCodeExitWithError, err
@@ -62,11 +67,11 @@ func (c *Command) Execute() (statusCode int, err error) {
 
 	if !dirEmpty {
 		// copy stuff into dest dir from pkiCache
-		deployDir, err := c.helper.GetDeployDir()
+		deployDir, err := helper.GetDeployDir(c.configuration)
 		if err != nil {
 			return contract.StatusCodeExitWithError, err
 		}
-		err = c.helper.Deploy(pkiCacheDir, deployDir)
+		err = helper.Deploy(pkiCacheDir, deployDir, c.loggingClient)
 		if err != nil {
 			statusCode = contract.StatusCodeExitWithError
 		}

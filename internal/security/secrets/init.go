@@ -30,7 +30,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/command/legacy"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/container"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/contract"
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets/helper"
 )
 
 type Bootstrap struct {
@@ -66,17 +65,16 @@ func (b *Bootstrap) Handler(wg *sync.WaitGroup, ctx context.Context, startupTime
 	var flagSet *flag.FlagSet
 
 	commandName := flag.Args()[0]
-	helper := helper.NewHelper(loggingClient, configuration)
 	switch commandName {
 	case legacy.CommandLegacy:
-		command, flagSet = legacy.NewCommand(b.legacyFlags, helper)
+		command, flagSet = legacy.NewCommand(b.legacyFlags, loggingClient)
 	case generate.CommandGenerate:
-		command, flagSet = generate.NewCommand(b.generateFlagSet, loggingClient, helper)
+		command, flagSet = generate.NewCommand(b.generateFlagSet, loggingClient, configuration)
 	case cache.CommandCache:
-		generateCommand, _ := generate.NewCommand(b.generateFlagSet, loggingClient, helper)
-		command, flagSet = cache.NewCommand(b.cacheFlagSet, loggingClient, generateCommand, helper)
+		generateCommand, _ := generate.NewCommand(b.generateFlagSet, loggingClient, configuration)
+		command, flagSet = cache.NewCommand(b.cacheFlagSet, loggingClient, configuration, generateCommand)
 	case _import.CommandImport:
-		command, flagSet = _import.NewCommand(b.importFlagSet, loggingClient, helper)
+		command, flagSet = _import.NewCommand(b.importFlagSet, loggingClient, configuration)
 	default:
 		loggingClient.Error(fmt.Sprintf("unsupported subcommand %s", commandName))
 		os.Exit(contract.StatusCodeExitWithError)

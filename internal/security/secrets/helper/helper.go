@@ -45,19 +45,7 @@ const (
 	pkiInitFilePerServiceComplete = ".security-secrets-secrets.complete"
 )
 
-type Helper struct {
-	loggingClient logger.LoggingClient
-	configuration *config.ConfigurationStruct
-}
-
-func NewHelper(loggingClient logger.LoggingClient, configuration *config.ConfigurationStruct) *Helper {
-	return &Helper{
-		loggingClient: loggingClient,
-		configuration: configuration,
-	}
-}
-
-func (h *Helper) CopyFile(fileSrc, fileDest string) (int64, error) {
+func CopyFile(fileSrc, fileDest string) (int64, error) {
 	var zeroByte int64
 	sourceFileSt, err := os.Stat(fileSrc)
 	if err != nil {
@@ -97,14 +85,14 @@ func (h *Helper) CopyFile(fileSrc, fileDest string) (int64, error) {
 	return bytesWritten, nil
 }
 
-func (h *Helper) CreateDirectoryIfNotExists(dirName string) (err error) {
+func CreateDirectoryIfNotExists(dirName string) (err error) {
 	if _, err := os.Stat(dirName); os.IsNotExist(err) {
 		err = os.MkdirAll(dirName, os.ModePerm)
 	}
 	return err
 }
 
-func (h *Helper) IsDirEmpty(dir string) (empty bool, err error) {
+func IsDirEmpty(dir string) (empty bool, err error) {
 	handle, err := os.Open(dir)
 	if err != nil {
 		return empty, err
@@ -121,7 +109,7 @@ func (h *Helper) IsDirEmpty(dir string) (empty bool, err error) {
 	return empty, err
 }
 
-func (h *Helper) CopyDir(srcDir, destDir string) error {
+func CopyDir(srcDir, destDir string, loggingClient logger.LoggingClient) error {
 	srcFileInfo, statErr := os.Stat(srcDir)
 	if statErr != nil {
 		return statErr
@@ -140,12 +128,12 @@ func (h *Helper) CopyDir(srcDir, destDir string) error {
 		destFilePath := filepath.Join(destDir, fileDesc.Name())
 
 		if fileDesc.IsDir() {
-			if err := h.CopyDir(srcFilePath, destFilePath); err != nil {
+			if err := CopyDir(srcFilePath, destFilePath, loggingClient); err != nil {
 				return err
 			}
 		} else {
-			h.loggingClient.Debug(fmt.Sprintf("copying srcFilePath: %s to destFilePath: %s", srcFilePath, destFilePath))
-			if _, copyErr := h.CopyFile(srcFilePath, destFilePath); copyErr != nil {
+			loggingClient.Debug(fmt.Sprintf("copying srcFilePath: %s to destFilePath: %s", srcFilePath, destFilePath))
+			if _, copyErr := CopyFile(srcFilePath, destFilePath); copyErr != nil {
 				return copyErr
 			}
 
@@ -155,21 +143,21 @@ func (h *Helper) CopyDir(srcDir, destDir string) error {
 	return nil
 }
 
-func (h *Helper) Deploy(srcDir, destDir string) error {
-	if err := h.CopyDir(srcDir, destDir); err != nil {
+func Deploy(srcDir, destDir string, loggingClient logger.LoggingClient) error {
+	if err := CopyDir(srcDir, destDir, loggingClient); err != nil {
 		return err
 	}
-	return h.MarkComplete(destDir)
+	return markComplete(destDir)
 }
 
-func (h *Helper) SecureEraseFile(fileToErase string) error {
-	if err := h.ZeroOutFile(fileToErase); err != nil {
+func SecureEraseFile(fileToErase string) error {
+	if err := zeroOutFile(fileToErase); err != nil {
 		return err
 	}
 	return os.Remove(fileToErase)
 }
 
-func (h *Helper) ZeroOutFile(fileToErase string) error {
+func zeroOutFile(fileToErase string) error {
 	// grant the file read-write permission first
 	_ = os.Chmod(fileToErase, 0600)
 	fileHdl, err := os.OpenFile(fileToErase, os.O_RDWR, 0600)
@@ -195,7 +183,7 @@ func (h *Helper) ZeroOutFile(fileToErase string) error {
 	return nil
 }
 
-func (h *Helper) CheckIfFileExists(fileName string) bool {
+func CheckIfFileExists(fileName string) bool {
 	fileInfo, statErr := os.Stat(fileName)
 	if os.IsNotExist(statErr) {
 		return false
@@ -203,7 +191,7 @@ func (h *Helper) CheckIfFileExists(fileName string) bool {
 	return !fileInfo.IsDir()
 }
 
-func (h *Helper) CheckDirExistsAndIsWritable(path string) (exists bool, isWritable bool) {
+func CheckDirExistsAndIsWritable(path string) (exists bool, isWritable bool) {
 	exists = false
 	isWritable = false
 
@@ -222,13 +210,13 @@ func (h *Helper) CheckDirExistsAndIsWritable(path string) (exists bool, isWritab
 	return
 }
 
-func (h *Helper) WriteSentinel(sentinelFilename string) error {
+func writeSentinel(sentinelFilename string) error {
 	timestamp := []byte(strconv.FormatInt(time.Now().Unix(), 10))
 	return ioutil.WriteFile(sentinelFilename, timestamp, 0400)
 }
 
-// MarkComplete creates sentinel files of all services to signal pki-init Deploy is done
-func (h *Helper) MarkComplete(dirPath string) error {
+// markComplete creates sentinel files of all services to signal pki-init Deploy is done
+func markComplete(dirPath string) error {
 	// recursively walk through all sub-directories until reach the leaf node
 	// to write the sentinel files
 	fileDescs, readErr := ioutil.ReadDir(dirPath)
@@ -240,15 +228,15 @@ func (h *Helper) MarkComplete(dirPath string) error {
 		aFilePath := filepath.Join(dirPath, fileDesc.Name())
 
 		if fileDesc.IsDir() {
-			if err := h.MarkComplete(aFilePath); err != nil {
+			if err := markComplete(aFilePath); err != nil {
 				return err
 			}
 		} else {
 			// now we are at the leaf node, write sentinel file if not yet
 			deployPathDir := path.Dir(aFilePath)
 			sentinel := filepath.Join(deployPathDir, pkiInitFilePerServiceComplete)
-			if !h.CheckIfFileExists(sentinel) {
-				if err := h.WriteSentinel(sentinel); err != nil {
+			if !CheckIfFileExists(sentinel) {
+				if err := writeSentinel(sentinel); err != nil {
 					return err
 				}
 			}
@@ -258,14 +246,14 @@ func (h *Helper) MarkComplete(dirPath string) error {
 	return nil
 }
 
-func (h *Helper) GetWorkDir() (string, error) {
+func GetWorkDir(configuration *config.ConfigurationStruct) (string, error) {
 	var workDir string
 	var err error
 
 	if xdgRuntimeDir, ok := os.LookupEnv(envXdgRuntimeDir); ok {
 		workDir = filepath.Join(xdgRuntimeDir, pkiInitBaseDir)
-	} else if h.configuration.SecretsSetup.WorkDir != "" {
-		workDir, err = filepath.Abs(h.configuration.SecretsSetup.WorkDir)
+	} else if configuration.SecretsSetup.WorkDir != "" {
+		workDir, err = filepath.Abs(configuration.SecretsSetup.WorkDir)
 		if err != nil {
 			return "", err
 		}
@@ -276,13 +264,13 @@ func (h *Helper) GetWorkDir() (string, error) {
 	return workDir, nil
 }
 
-func (h *Helper) GetCertConfigDir() (string, error) {
+func GetCertConfigDir(configuration *config.ConfigurationStruct) (string, error) {
 	var certConfigDir string
-	if h.configuration.SecretsSetup.CertConfigDir != "" {
-		certConfigDir = h.configuration.SecretsSetup.CertConfigDir
+	if configuration.SecretsSetup.CertConfigDir != "" {
+		certConfigDir = configuration.SecretsSetup.CertConfigDir
 
 		// we only read files from CertConfigDir, don't care if it's writable
-		if exist, _ := h.CheckDirExistsAndIsWritable(certConfigDir); !exist {
+		if exist, _ := CheckDirExistsAndIsWritable(certConfigDir); !exist {
 			return "", fmt.Errorf("CertConfigDir from x509 file does not exist in: %s", certConfigDir)
 		}
 
@@ -292,12 +280,12 @@ func (h *Helper) GetCertConfigDir() (string, error) {
 	return "", errors.New("Directory for certificate configuration files not configured")
 }
 
-func (h *Helper) GetCacheDir() (string, error) {
+func GetCacheDir(configuration *config.ConfigurationStruct) (string, error) {
 	cacheDir := defaultPkiCacheDir
 
-	if h.configuration.SecretsSetup.CacheDir != "" {
-		cacheDir = h.configuration.SecretsSetup.CacheDir
-		exist, isWritable := h.CheckDirExistsAndIsWritable(cacheDir)
+	if configuration.SecretsSetup.CacheDir != "" {
+		cacheDir = configuration.SecretsSetup.CacheDir
+		exist, isWritable := CheckDirExistsAndIsWritable(cacheDir)
 		if !exist {
 			return "", fmt.Errorf("CacheDir, %s, from x509 file does not exist", cacheDir)
 		}
@@ -310,12 +298,12 @@ func (h *Helper) GetCacheDir() (string, error) {
 	return cacheDir, nil
 }
 
-func (h *Helper) GetDeployDir() (string, error) {
+func GetDeployDir(configuration *config.ConfigurationStruct) (string, error) {
 	deployDir := defaultPkiDeployDir
 
-	if h.configuration.SecretsSetup.DeployDir != "" {
-		deployDir = h.configuration.SecretsSetup.DeployDir
-		exist, isWritable := h.CheckDirExistsAndIsWritable(deployDir)
+	if configuration.SecretsSetup.DeployDir != "" {
+		deployDir = configuration.SecretsSetup.DeployDir
+		exist, isWritable := CheckDirExistsAndIsWritable(deployDir)
 		if !exist {
 			return "", fmt.Errorf("DeployDir, %s, from x509 file does not exist", deployDir)
 		}
@@ -328,14 +316,14 @@ func (h *Helper) GetDeployDir() (string, error) {
 }
 
 // GenTLSAssets generates the TLS assets based on the JSON configuration file
-func (h *Helper) GenTLSAssets(jsonConfig string) error {
+func GenTLSAssets(jsonConfig string, loggingClient logger.LoggingClient) error {
 	// Read the Json x509 file and unmarshall content into struct type X509Config
 	x509Config, err := x509.NewX509Config(jsonConfig)
 	if err != nil {
 		return err
 	}
 
-	directoryHandler := directory.NewHandler(h.loggingClient)
+	directoryHandler := directory.NewHandler(loggingClient)
 	if directoryHandler == nil {
 		return errors.New("h.loggingClient is nil")
 	}
@@ -345,7 +333,7 @@ func (h *Helper) GenTLSAssets(jsonConfig string) error {
 		return err
 	}
 
-	rootCA, err := certificates.NewCertificateGenerator(certificates.RootCertificate, seed, certificates.NewFileWriter(), h.loggingClient)
+	rootCA, err := certificates.NewCertificateGenerator(certificates.RootCertificate, seed, certificates.NewFileWriter(), loggingClient)
 	if err != nil {
 		return err
 	}
@@ -355,7 +343,7 @@ func (h *Helper) GenTLSAssets(jsonConfig string) error {
 		return err
 	}
 
-	tlsCert, err := certificates.NewCertificateGenerator(certificates.TLSCertificate, seed, certificates.NewFileWriter(), h.loggingClient)
+	tlsCert, err := certificates.NewCertificateGenerator(certificates.TLSCertificate, seed, certificates.NewFileWriter(), loggingClient)
 	if err != nil {
 		return err
 	}

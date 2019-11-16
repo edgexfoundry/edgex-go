@@ -19,25 +19,27 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/contract"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/helper"
+
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
 
 const CommandLegacy = "legacy"
 
 type Command struct {
-	configFile string
-	helper     *helper.Helper
+	configFile    string
+	loggingClient logger.LoggingClient
 }
 
-func NewCommand(flags *FlagSet, helper *helper.Helper) (*Command, *flag.FlagSet) {
+func NewCommand(flags *FlagSet, loggingClient logger.LoggingClient) (*Command, *flag.FlagSet) {
 	return &Command{
-			configFile: flags.configFile,
-			helper:     helper,
+			configFile:    flags.configFile,
+			loggingClient: loggingClient,
 		},
 		flags.flagSet
 }
 
 func (c *Command) Execute() (statusCode int, err error) {
-	err = c.helper.GenTLSAssets(c.configFile)
+	err = helper.GenTLSAssets(c.configFile, c.loggingClient)
 	if err != nil {
 		statusCode = contract.StatusCodeExitWithError
 	} else {
