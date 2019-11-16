@@ -17,8 +17,8 @@ package legacy
 import (
 	"flag"
 
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/contract"
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/helper"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/contract"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/helper"
 )
 
 const CommandLegacy = "legacy"

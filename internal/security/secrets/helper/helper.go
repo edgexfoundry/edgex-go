@@ -29,8 +29,8 @@ import (
 
 	x509 "github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/certificates"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/directory"
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/seed"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"

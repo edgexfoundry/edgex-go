@@ -23,9 +23,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/command/generate"
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/contract"
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/helper"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/command/generate"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/contract"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/helper"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )

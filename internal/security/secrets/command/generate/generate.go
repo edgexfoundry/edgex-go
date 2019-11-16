@@ -21,8 +21,8 @@ import (
 	"path/filepath"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/contract"
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/helper"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/contract"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/helper"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )

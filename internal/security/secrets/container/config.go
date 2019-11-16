@@ -18,7 +18,7 @@ package container
 
 import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/config"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/config"
 )
 
 // ConfigurationName contains the name of the config.ConfigurationStruct implementation in the DIC.

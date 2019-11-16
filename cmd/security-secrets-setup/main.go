@@ -28,13 +28,13 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/command/cache"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/command/generate"
+	_import "github.com/edgexfoundry/edgex-go/internal/security/secrets/command/import"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/command/legacy"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/container"
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/command/cache"
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/command/generate"
-	_import "github.com/edgexfoundry/edgex-go/internal/security/secrets/option/command/import"
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/command/legacy"
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/config"
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/contract"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/contract"
 )
 
 func main() {

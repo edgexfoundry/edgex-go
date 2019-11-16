@@ -24,13 +24,13 @@ import (
 	bootstrapContainer "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/command/cache"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/command/generate"
+	_import "github.com/edgexfoundry/edgex-go/internal/security/secrets/command/import"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/command/legacy"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/container"
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/command/cache"
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/command/generate"
-	_import "github.com/edgexfoundry/edgex-go/internal/security/secrets/option/command/import"
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/command/legacy"
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/contract"
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option/helper"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/contract"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/helper"
 )
 
 type Bootstrap struct {
