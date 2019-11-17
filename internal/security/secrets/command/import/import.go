@@ -60,25 +60,22 @@ func (c *Command) Execute() (statusCode int, err error) {
 	c.loggingClient.Info(fmt.Sprintf("importing from PKI cache dir: %s", pkiCacheDir))
 
 	dirEmpty, err := helper.IsDirEmpty(pkiCacheDir)
-
 	if err != nil {
 		return contract.StatusCodeExitWithError, err
 	}
-
-	if !dirEmpty {
-		// copy stuff into dest dir from pkiCache
-		deployDir, err := helper.GetDeployDir(c.configuration)
-		if err != nil {
-			return contract.StatusCodeExitWithError, err
-		}
-		err = helper.Deploy(pkiCacheDir, deployDir, c.loggingClient)
-		if err != nil {
-			statusCode = contract.StatusCodeExitWithError
-		}
-	} else {
-		statusCode = contract.StatusCodeExitWithError
-		err = fmt.Errorf("Expecting pre-populated PKI in the directory %s but found empty", pkiCacheDir)
+	if dirEmpty {
+		return contract.StatusCodeExitWithError,
+			fmt.Errorf("Expecting pre-populated PKI in the directory %s but found empty", pkiCacheDir)
 	}
 
+	// copy stuff into dest dir from pkiCache
+	deployDir, err := helper.GetDeployDir(c.configuration)
+	if err != nil {
+		return contract.StatusCodeExitWithError, err
+	}
+	err = helper.Deploy(pkiCacheDir, deployDir, c.loggingClient)
+	if err != nil {
+		return contract.StatusCodeExitWithError, err
+	}
 	return statusCode, err
 }

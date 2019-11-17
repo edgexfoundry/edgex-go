@@ -20,189 +20,183 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets"
+	types "github.com/edgexfoundry/edgex-go/internal/pkg/config"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/command/generate"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/config"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/contract"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/helper"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/test"
+
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+
 	"github.com/stretchr/testify/assert"
 )
 
 func TestCacheOn(t *testing.T) {
-	vaultJSONPkiSetupExist = true
-	kongJSONPkiSetupExist = true
-	tearDown := setupCacheTest(t)
+	tearDown, configuration := setupCacheTest(t, test.VaultJSONPkiSetupExists, test.KongJSONPkiSetupExists)
 	defer tearDown()
 
-	options := PkiInitOption{
-		CacheOpt: true,
-	}
-	cacheOn, _, _ := NewPkiInitOption(options)
-	cacheOn.setExecutor(testExecutor)
+	loggerMock := logger.NewMockClient()
+	generateCommand, _ := generate.NewCommand(generate.NewFlags(), loggerMock, configuration)
+	command, _ := NewCommand(NewFlags(), loggerMock, configuration, generateCommand)
+	exitCode, err := command.Execute()
 
-	var exitStatus ExitCode
-	var err error
-	assert := assert.New(t)
+	assert.Nil(t, err)
+	assert.Equal(t, contract.StatusCodeExitNormal, exitCode)
 
-	f := Command()
-	exitStatus, err = f(cacheOn.(*PkiInitOption))
-	assert.Nil(err)
-	assert.Equal(Normal, exitStatus)
+	cacheDir, err := helper.GetCacheDir(configuration)
+	assert.Nil(t, err)
 
-	cacheDir, err := GetCacheDir()
-	assert.Nil(err)
+	cacheEmpty, emptyErr := helper.IsDirEmpty(cacheDir)
+	assert.Nil(t, emptyErr)
+	assert.False(t, cacheEmpty)
 
-	cacheEmpty, emptyErr := IsDirEmpty(cacheDir)
-	assert.Nil(emptyErr)
-	assert.False(cacheEmpty)
-
-	workDir, err := GetWorkDir()
+	workDir, err := helper.GetWorkDir(configuration)
 	if err != nil {
 		t.Errorf("Error getting workdir, %v", err)
 	}
-	generatedDirPath := filepath.Join(workDir, PkiInitGeneratedDir)
-	caPrivateKeyFile := filepath.Join(generatedDirPath, CaServiceName, TlsSecretFileName)
+	generatedDirPath := filepath.Join(workDir, generate.PkiInitGeneratedDir)
+	caPrivateKeyFile := filepath.Join(generatedDirPath, generate.CaServiceName, generate.TlsSecretFileName)
 	if _, checkErr := os.Stat(caPrivateKeyFile); checkErr == nil {
 		// means found the file caPrivateKeyFile
-		assert.Fail("CA private key are not removed!")
+		assert.Fail(t, "CA private key are not removed!")
 	}
 
-	deployDir, err := GetDeployDir()
-	assert.Nil(err)
+	deployDir, err := helper.GetDeployDir(configuration)
+	assert.Nil(t, err)
 
-	deployEmpty, emptyErr := IsDirEmpty(deployDir)
-	assert.Nil(emptyErr)
-	assert.False(deployEmpty)
+	deployEmpty, emptyErr := helper.IsDirEmpty(deployDir)
+	assert.Nil(t, emptyErr)
+	assert.False(t, deployEmpty)
 }
 
 func TestCacheDirNotEmpty(t *testing.T) {
-	vaultJSONPkiSetupExist = true
-	kongJSONPkiSetupExist = true
-	tearDown := setupCacheTest(t)
+	tearDown, configuration := setupCacheTest(t, test.VaultJSONPkiSetupExists, test.KongJSONPkiSetupExists)
 	defer tearDown()
 
-	options := PkiInitOption{
-		CacheOpt: true,
-	}
-	cacheOn, _, _ := NewPkiInitOption(options)
-	cacheOn.setExecutor(testExecutor)
+	loggerMock := logger.NewMockClient()
+	generateCommand, _ := generate.NewCommand(generate.NewFlags(), loggerMock, configuration)
+	command, _ := NewCommand(NewFlags(), loggerMock, configuration, generateCommand)
+	exitCode, err := command.Execute()
 
-	var exitStatus ExitCode
-	var err error
-	assert := assert.New(t)
+	assert.Nil(t, err)
+	assert.Equal(t, contract.StatusCodeExitNormal, exitCode)
 
-	f := Command()
-	exitStatus, err = f(cacheOn.(*PkiInitOption))
-	assert.Nil(err)
-	assert.Equal(Normal, exitStatus)
+	cacheDir, err := helper.GetCacheDir(configuration)
+	assert.Nil(t, err)
 
-	cacheDir, err := GetCacheDir()
-	assert.Nil(err)
+	cacheEmpty, emptyErr := helper.IsDirEmpty(cacheDir)
+	assert.Nil(t, emptyErr)
+	assert.False(t, cacheEmpty)
 
-	cacheEmpty, emptyErr := IsDirEmpty(cacheDir)
-	assert.Nil(emptyErr)
-	assert.False(cacheEmpty)
+	workDir, err := helper.GetWorkDir(configuration)
+	assert.Nil(t, err)
 
-	workDir, err := GetWorkDir()
-	assert.Nil(err)
-
-	generatedDirPath := filepath.Join(workDir, PkiInitGeneratedDir)
+	generatedDirPath := filepath.Join(workDir, generate.PkiInitGeneratedDir)
 	// now we move the whole generated directory and leave the cache dir untouched
 	os.RemoveAll(generatedDirPath)
 
 	// call the cache option again:
-	exitStatus, err = f(cacheOn.(*PkiInitOption))
-	assert.Nil(err)
-	assert.Equal(Normal, exitStatus)
+	exitCode, err = command.Execute()
+	assert.Nil(t, err)
+	assert.Equal(t, contract.StatusCodeExitNormal, exitCode)
 
-	cacheEmpty, emptyErr = IsDirEmpty(cacheDir)
-	assert.Nil(emptyErr)
-	assert.False(cacheEmpty)
+	cacheEmpty, emptyErr = helper.IsDirEmpty(cacheDir)
+	assert.Nil(t, emptyErr)
+	assert.False(t, cacheEmpty)
 
-	deployDir, err := GetDeployDir()
-	assert.Nil(err)
+	deployDir, err := helper.GetDeployDir(configuration)
+	assert.Nil(t, err)
 
-	deployEmpty, emptyErr := IsDirEmpty(deployDir)
-	assert.Nil(emptyErr)
-	assert.False(deployEmpty)
+	deployEmpty, emptyErr := helper.IsDirEmpty(deployDir)
+	assert.Nil(t, emptyErr)
+	assert.False(t, deployEmpty)
 }
 
 func TestCacheOff(t *testing.T) {
-	vaultJSONPkiSetupExist = true
-	kongJSONPkiSetupExist = true
-	tearDown := setupCacheTest(t)
+	tearDown, configuration := setupCacheTest(t, test.VaultJSONPkiSetupExists, test.KongJSONPkiSetupExists)
 	defer tearDown()
 
-	options := PkiInitOption{
-		CacheOpt: false,
-	}
-	cacheOff, _, _ := NewPkiInitOption(options)
-	cacheOff.setExecutor(testExecutor)
-	exitCode, err := cacheOff.executeOptions(Command())
+	loggerMock := logger.NewMockClient()
+	generateCommand, _ := generate.NewCommand(generate.NewFlags(), loggerMock, configuration)
+	command, _ := NewCommand(NewFlags(), loggerMock, configuration, generateCommand)
+	exitCode, err := command.Execute()
 
-	assert := assert.New(t)
-	assert.Equal(Normal, exitCode)
-	assert.Nil(err)
+	assert.Equal(t, contract.StatusCodeExitNormal, exitCode)
+	assert.Nil(t, err)
 }
 
-func setupCacheTest(t *testing.T) func() {
-	testExecutor = &mockOptionsExecutor{}
+func setupCacheTest(t *testing.T, vaultJSONPkiSetupExist bool, kongJSONPkiSetupExist bool) (func(), *config.ConfigurationStruct) {
 	curDir, err := os.Getwd()
 	if err != nil {
 		t.Fatalf("cannot get the working dir %s: %v", curDir, err)
 	}
 
-	testResourceDir := filepath.Join(curDir, ResourceDirName)
-	if err := CreateDirectoryIfNotExists(testResourceDir); err != nil {
+	testResourceDir := filepath.Join(curDir, test.ResourceDirName)
+	if err := helper.CreateDirectoryIfNotExists(testResourceDir); err != nil {
 		t.Fatalf("cannot create resource dir %s for the test: %v", testResourceDir, err)
 	}
 
-	resDir := filepath.Join(curDir, "testdata", ResourceDirName)
-	jsonVaultFile := filepath.Join(curDir, ResourceDirName, PkiSetupVaultJSON)
+	resDir := filepath.Join(curDir, "testdata", test.ResourceDirName)
+	jsonVaultFile := filepath.Join(curDir, test.ResourceDirName, generate.PkiSetupVaultJSON)
 	if vaultJSONPkiSetupExist {
-		if _, err := CopyFile(filepath.Join(resDir, PkiSetupVaultJSON), jsonVaultFile); err != nil {
-			t.Fatalf("cannot copy %s for the test: %v", PkiSetupVaultJSON, err)
+		if _, err := helper.CopyFile(filepath.Join(resDir, generate.PkiSetupVaultJSON), jsonVaultFile); err != nil {
+			t.Fatalf("cannot copy %s for the test: %v", generate.PkiSetupVaultJSON, err)
 		}
 	}
 
-	jsonKongFile := filepath.Join(curDir, ResourceDirName, PkiSetupKongJSON)
+	jsonKongFile := filepath.Join(curDir, test.ResourceDirName, generate.PkiSetupKongJSON)
 	if kongJSONPkiSetupExist {
-		if _, err := CopyFile(filepath.Join(resDir, PkiSetupKongJSON), jsonKongFile); err != nil {
-			t.Fatalf("cannot copy %s for the test: %v", PkiSetupKongJSON, err)
+		if _, err := helper.CopyFile(filepath.Join(resDir, generate.PkiSetupKongJSON), jsonKongFile); err != nil {
+			t.Fatalf("cannot copy %s for the test: %v", generate.PkiSetupKongJSON, err)
 		}
 	}
 
-	testResTomlFile := filepath.Join(testResourceDir, ConfigTomlFile)
-	if _, err := CopyFile(filepath.Join(resDir, ConfigTomlFile), testResTomlFile); err != nil {
-		t.Fatalf("cannot copy %s for the test: %v", ConfigTomlFile, err)
+	testResTomlFile := filepath.Join(testResourceDir, test.ConfigTomlFile)
+	if _, err := helper.CopyFile(filepath.Join(resDir, test.ConfigTomlFile), testResTomlFile); err != nil {
+		t.Fatalf("cannot copy %s for the test: %v", test.ConfigTomlFile, err)
 	}
 
-	err = secrets.Init("")
-	if err != nil {
-		t.Fatalf("Failed to init security-secrets-setup: %v", err)
+	configuration := &config.ConfigurationStruct{
+		Writable: config.WritableInfo{
+			LogLevel: "DEBUG",
+		},
+		Logging: types.LoggingInfo{
+			EnableRemote: false,
+			File:         "./logs/security-secrets-setup.log",
+		},
+		SecretsSetup: config.SecretsSetupInfo{
+			WorkDir:       "./workingtest",
+			DeployDir:     "./deploytest",
+			CacheDir:      "./cachetest",
+			CertConfigDir: "./res",
+		},
 	}
 
-	os.Unsetenv(EnvXdgRuntimeDir) // unset env var, so it uses the config toml
-	oldConfig := secrets.Configuration
+	os.Unsetenv(helper.EnvXdgRuntimeDir) // unset env var, so it uses the config toml
 
-	testWorkDir, err := GetWorkDir()
+	testWorkDir, err := helper.GetWorkDir(configuration)
 	if err != nil {
 		t.Fatalf("Error getting work dir for the test: %v", err)
 	}
 
-	testScratchDir := filepath.Join(testWorkDir, PkiInitScratchDir)
-	if err := CreateDirectoryIfNotExists(testScratchDir); err != nil {
+	testScratchDir := filepath.Join(testWorkDir, generate.PkiInitScratchDir)
+	if err := helper.CreateDirectoryIfNotExists(testScratchDir); err != nil {
 		t.Fatalf("cannot create scratch dir %s for the test: %v", testScratchDir, err)
 	}
 
-	testGeneratedDir := filepath.Join(testWorkDir, PkiInitGeneratedDir)
-	if err := CreateDirectoryIfNotExists(testGeneratedDir); err != nil {
+	testGeneratedDir := filepath.Join(testWorkDir, generate.PkiInitGeneratedDir)
+	if err := helper.CreateDirectoryIfNotExists(testGeneratedDir); err != nil {
 		t.Fatalf("cannot create generated dir %s for the test: %v", testGeneratedDir, err)
 	}
 
 	pkiCacheDir := "./cachetest"
-	if err := CreateDirectoryIfNotExists(pkiCacheDir); err != nil {
+	if err := helper.CreateDirectoryIfNotExists(pkiCacheDir); err != nil {
 		t.Fatalf("cannot create cache dir %s for the test: %v", pkiCacheDir, err)
 	}
 
 	pkiInitDeployDir := "./deploytest"
-	if err := CreateDirectoryIfNotExists(pkiInitDeployDir); err != nil {
+	if err := helper.CreateDirectoryIfNotExists(pkiInitDeployDir); err != nil {
 		t.Fatalf("cannot create Deploy dir %s for the test: %v", pkiInitDeployDir, err)
 	}
 
@@ -216,8 +210,5 @@ func setupCacheTest(t *testing.T) func() {
 		os.RemoveAll(testGeneratedDir)
 		os.RemoveAll(pkiInitDeployDir)
 		os.RemoveAll(testResourceDir)
-		secrets.Configuration = oldConfig
-		vaultJSONPkiSetupExist = true
-		kongJSONPkiSetupExist = true
-	}
+	}, configuration
 }

@@ -37,12 +37,12 @@ import (
 )
 
 const (
-	envXdgRuntimeDir              = "XDG_RUNTIME_DIR"
+	EnvXdgRuntimeDir              = "XDG_RUNTIME_DIR"
 	defaultWorkDir                = "/tmp"
 	pkiInitBaseDir                = "edgex/security-secrets-setup"
 	defaultPkiCacheDir            = "/etc/edgex/pki"
 	defaultPkiDeployDir           = "/run/edgex/secrets"
-	pkiInitFilePerServiceComplete = ".security-secrets-secrets.complete"
+	PkiInitFilePerServiceComplete = ".security-secrets-secrets.complete"
 )
 
 func CopyFile(fileSrc, fileDest string) (int64, error) {
@@ -234,7 +234,7 @@ func markComplete(dirPath string) error {
 		} else {
 			// now we are at the leaf node, write sentinel file if not yet
 			deployPathDir := path.Dir(aFilePath)
-			sentinel := filepath.Join(deployPathDir, pkiInitFilePerServiceComplete)
+			sentinel := filepath.Join(deployPathDir, PkiInitFilePerServiceComplete)
 			if !CheckIfFileExists(sentinel) {
 				if err := writeSentinel(sentinel); err != nil {
 					return err
@@ -250,7 +250,7 @@ func GetWorkDir(configuration *config.ConfigurationStruct) (string, error) {
 	var workDir string
 	var err error
 
-	if xdgRuntimeDir, ok := os.LookupEnv(envXdgRuntimeDir); ok {
+	if xdgRuntimeDir, ok := os.LookupEnv(EnvXdgRuntimeDir); ok {
 		workDir = filepath.Join(xdgRuntimeDir, pkiInitBaseDir)
 	} else if configuration.SecretsSetup.WorkDir != "" {
 		workDir, err = filepath.Abs(configuration.SecretsSetup.WorkDir)

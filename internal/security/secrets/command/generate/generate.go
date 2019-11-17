@@ -30,9 +30,9 @@ import (
 
 const (
 	CommandName         = "generate"
-	pkiSetupVaultJSON   = "pkisetup-vault.json"
-	pkiSetupKongJSON    = "pkisetup-kong.json"
-	pkiInitScratchDir   = "scratch"
+	PkiSetupVaultJSON   = "pkisetup-vault.json"
+	PkiSetupKongJSON    = "pkisetup-kong.json"
+	PkiInitScratchDir   = "scratch"
 	tlsCertFileName     = "server.crt"
 	caCertFileName      = "ca.pem"
 	PkiInitGeneratedDir = "generated"
@@ -100,14 +100,14 @@ func (c *Command) GeneratePkis() (int, error) {
 	if err != nil {
 		return contract.StatusCodeExitWithError, err
 	}
-	pkiSetupVaultJSONPath := filepath.Join(certConfigDir, pkiSetupVaultJSON)
-	pkiSetupKongJSONPath := filepath.Join(certConfigDir, pkiSetupKongJSON)
+	pkiSetupVaultJSONPath := filepath.Join(certConfigDir, PkiSetupVaultJSON)
+	pkiSetupKongJSONPath := filepath.Join(certConfigDir, PkiSetupKongJSON)
 
 	workingDir, err := helper.GetWorkDir(c.configuration)
 	if err != nil {
 		return contract.StatusCodeExitWithError, err
 	}
-	scratchPath := filepath.Join(workingDir, pkiInitScratchDir)
+	scratchPath := filepath.Join(workingDir, PkiInitScratchDir)
 
 	c.loggingClient.Debug(fmt.Sprint("pkiSetupVaultJSONPath: ", pkiSetupVaultJSONPath,
 		"  pkiSetupKongJSONPath: ", pkiSetupKongJSONPath,

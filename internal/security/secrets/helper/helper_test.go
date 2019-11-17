@@ -27,11 +27,11 @@ import (
 
 func TestGetWorkDir(t *testing.T) {
 	// sets up configuration for SecretsSetupInfo
-	tearDown := setupGenerateTest(t)
+	tearDown, configuration := generate.SetupGenerateTest(t)
 	defer tearDown()
 
 	// test WorkDir that's configured by toml
-	runTimeDir, err := GetWorkDir()
+	runTimeDir, err := GetWorkDir(configuration)
 	if err != nil {
 		t.Errorf("Error getting workdir, %v", err)
 	}
@@ -49,18 +49,18 @@ func TestGetWorkDir(t *testing.T) {
 	}
 	runTimeDir, err = GetWorkDir()
 	assert.Nil(t, err)
-	assert.Equal(t, filepath.Join(DefaultWorkDir, PkiInitBaseDir), runTimeDir)
+	assert.Equal(t, filepath.Join(defaultWorkDir, pkiInitBaseDir), runTimeDir)
 
 	// test env variable
-	os.Setenv(envXdgRuntimeDir, "/run")
+	os.Setenv(EnvXdgRuntimeDir, "/run")
 	runTimeDir, err = GetWorkDir()
 	assert.Nil(t, err)
-	assert.Equal(t, filepath.Join("/run", PkiInitBaseDir), runTimeDir)
+	assert.Equal(t, filepath.Join("/run", pkiInitBaseDir), runTimeDir)
 }
 
 func TestGetCertConfigDir(t *testing.T) {
 	// sets up configuration data for SecretsSetupInfo
-	tearDown := setupGenerateTest(t)
+	tearDown := generate.SetupGenerateTest(t)
 	defer tearDown()
 
 	// test CertConfigDir that's configured by toml
@@ -106,7 +106,7 @@ func TestGetCacheDir(t *testing.T) {
 		},
 	}
 	cacheDir, _ = GetCacheDir()
-	assert.Equal(t, DefaultPkiCacheDir, cacheDir)
+	assert.Equal(t, defaultPkiCacheDir, cacheDir)
 
 	// cache directory is configured but does not exist
 	secrets.Configuration = &secrets.ConfigurationStruct{
@@ -136,7 +136,7 @@ func TestGetDeployDir(t *testing.T) {
 	}
 	deployDir, err = GetDeployDir()
 	assert.Nil(t, err)
-	assert.Equal(t, DefaultPkiDeployDir, deployDir)
+	assert.Equal(t, defaultPkiDeployDir, deployDir)
 
 	// Deploy directory is configured but does not exist
 	secrets.Configuration = &secrets.ConfigurationStruct{

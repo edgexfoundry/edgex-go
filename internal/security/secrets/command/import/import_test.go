@@ -22,189 +22,152 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets"
+	types "github.com/edgexfoundry/edgex-go/internal/pkg/config"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/command/generate"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/config"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/contract"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/helper"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/test"
+
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+
 	"github.com/stretchr/testify/assert"
 )
 
 func TestImportCacheDirEmpty(t *testing.T) {
 	// this test case is for import running first
 	// and PKI_CACHE_DIR is empty- should expect an error by design
-
-	tearDown := setupImportTest(t)
+	tearDown, configuration := setupImportTest(t)
 	defer tearDown()
 
-	options := PkiInitOption{
-		ImportOpt: true,
-	}
-	importOn, _, _ := NewPkiInitOption(options)
-	importOn.setExecutor(testExecutor)
+	command, _ := NewCommand(NewFlags(), logger.NewMockClient(), configuration)
+	exitCode, err := command.Execute()
 
-	var exitStatus ExitCode
-	var err error
-	assert := assert.New(t)
+	assert.NotNil(t, err)
+	assert.Equal(t, contract.StatusCodeExitWithError, exitCode)
 
-	f := Import()
-	exitStatus, err = f(importOn.(*PkiInitOption))
-	assert.NotNil(err)
-	assert.Equal(ExitWithError, exitStatus)
+	deployDir, err := helper.GetDeployDir(configuration)
+	assert.Nil(t, err)
 
-	deployDir, err := GetDeployDir()
-	assert.Nil(err)
-
-	deployEmpty, emptyErr := IsDirEmpty(deployDir)
-	assert.Nil(emptyErr)
-	assert.True(deployEmpty)
+	deployEmpty, emptyErr := helper.IsDirEmpty(deployDir)
+	assert.Nil(t, emptyErr)
+	assert.True(t, deployEmpty)
 }
 
 func TestImportFromPKICache(t *testing.T) {
 	// this test case is for import pre-populated cached PKI
 	// files from PKI_CACHE dir
-
-	tearDown := setupImportTest(t)
+	tearDown, configuration := setupImportTest(t)
 	defer tearDown()
 
 	// put some test file into the cache dir first
-	writeTestFileToCacheDir(t)
+	writeTestFileToCacheDir(t, configuration)
 
-	options := PkiInitOption{
-		ImportOpt: true,
-	}
-	importOn, _, _ := NewPkiInitOption(options)
-	importOn.setExecutor(testExecutor)
+	command, _ := NewCommand(NewFlags(), logger.NewMockClient(), configuration)
+	exitCode, err := command.Execute()
 
-	f := Import()
+	assert.Equal(t, contract.StatusCodeExitNormal, exitCode)
+	assert.Nil(t, err)
 
-	assert := assert.New(t)
-	exitStatus, err := f(importOn.(*PkiInitOption))
-	assert.Equal(Normal, exitStatus)
-	assert.Nil(err)
+	deployDir, err := helper.GetDeployDir(configuration)
+	assert.Nil(t, err)
 
-	deployDir, err := GetDeployDir()
-	assert.Nil(err)
-
-	deployEmpty, emptyErr := IsDirEmpty(deployDir)
-	assert.Nil(emptyErr)
-	assert.False(deployEmpty)
+	deployEmpty, emptyErr := helper.IsDirEmpty(deployDir)
+	assert.Nil(t, emptyErr)
+	assert.False(t, deployEmpty)
 }
 
 func TestEmptyPkiCacheEnvironment(t *testing.T) {
-	options := PkiInitOption{
-		ImportOpt: true,
-	}
-	importOn, _, _ := NewPkiInitOption(options)
-	importOn.setExecutor(testExecutor)
-	exitCode, err := importOn.executeOptions(Import())
+	command, _ := NewCommand(NewFlags(), logger.NewMockClient(), getConfiguration())
+	exitCode, err := command.Execute()
 
 	// when PKI_CACHE env is empty, it leads to non-existing dir
 	// and should be an error case
-	assert := assert.New(t)
-	assert.NotNil(err)
-	assert.Equal(ExitWithError, exitCode)
+	assert.NotNil(t, err)
+	assert.Equal(t, contract.StatusCodeExitWithError, exitCode)
 }
 
 func TestImportOff(t *testing.T) {
-	tearDown := setupImportTest(t)
+	tearDown, configuration := setupImportTest(t)
 	defer tearDown()
 
-	options := PkiInitOption{
-		ImportOpt: false,
-	}
-	importOff, _, _ := NewPkiInitOption(options)
-	importOff.setExecutor(testExecutor)
-	exitCode, err := importOff.executeOptions(Import())
+	// put some test file into the cache dir first
+	writeTestFileToCacheDir(t, configuration)
 
-	assert := assert.New(t)
-	assert.Equal(Normal, exitCode)
-	assert.Nil(err)
+	command, _ := NewCommand(NewFlags(), logger.NewMockClient(), configuration)
+	exitCode, err := command.Execute()
+
+	assert.Equal(t, contract.StatusCodeExitNormal, exitCode)
+	assert.Nil(t, err)
 }
 
-func TestIsDirEmpty(t *testing.T) {
-	assert := assert.New(t)
-	_, err := IsDirEmpty("/non/existing/dir/")
-
-	assert.NotNil(err)
-
-	// put some test file into the current dir to trigger event
-	curDir, err := os.Getwd()
-	if err != nil {
-		t.Fatalf("cannot get the working dir %s: %v", curDir, err)
+func getConfiguration() *config.ConfigurationStruct {
+	return &config.ConfigurationStruct{
+		Writable: config.WritableInfo{
+			LogLevel: "DEBUG",
+		},
+		Logging: types.LoggingInfo{
+			EnableRemote: false,
+			File:         "./logs/security-secrets-setup.log",
+		},
+		SecretsSetup: config.SecretsSetupInfo{
+			WorkDir:       "./workingtest",
+			DeployDir:     "./deploytest",
+			CacheDir:      "./cachetest",
+			CertConfigDir: "./res",
+		},
 	}
-	empty, err := IsDirEmpty(curDir)
-	assert.Nil(err)
-	assert.False(empty)
-
-	// create an empty temp dir
-	tempDir, err := ioutil.TempDir(curDir, "test")
-	if err != nil {
-		t.Fatalf("cannot create the temporary dir %s: %v", tempDir, err)
-	}
-	empty, err = IsDirEmpty(tempDir)
-	defer func() {
-		// remove tempDir:
-		os.RemoveAll(tempDir)
-	}()
-
-	assert.Nil(err)
-	assert.True(empty)
 }
 
-func setupImportTest(t *testing.T) func() {
-	testExecutor = &mockOptionsExecutor{}
+func setupImportTest(t *testing.T) (func(), *config.ConfigurationStruct) {
 	curDir, err := os.Getwd()
 	if err != nil {
 		t.Fatalf("cannot get the working dir %s: %v", curDir, err)
 	}
 
-	testResourceDir := filepath.Join(curDir, ResourceDirName)
-	if err := CreateDirectoryIfNotExists(testResourceDir); err != nil {
+	testResourceDir := filepath.Join(curDir, test.ResourceDirName)
+	if err := helper.CreateDirectoryIfNotExists(testResourceDir); err != nil {
 		t.Fatalf("cannot create resource dir %s for the test: %v", testResourceDir, err)
 	}
 
-	resDir := filepath.Join(curDir, "testdata", ResourceDirName)
+	resDir := filepath.Join(curDir, "testdata", test.ResourceDirName)
 
-	testResTomlFile := filepath.Join(testResourceDir, ConfigTomlFile)
-	if _, err := CopyFile(filepath.Join(resDir, ConfigTomlFile), testResTomlFile); err != nil {
-		t.Fatalf("cannot copy %s for the test: %v", ConfigTomlFile, err)
+	testResTomlFile := filepath.Join(testResourceDir, test.ConfigTomlFile)
+	if _, err := helper.CopyFile(filepath.Join(resDir, test.ConfigTomlFile), testResTomlFile); err != nil {
+		t.Fatalf("cannot copy %s for the test: %v", test.ConfigTomlFile, err)
 	}
 
-	err = secrets.Init("")
-	if err != nil {
-		t.Fatalf("Failed to init security-secrets-setup: %v", err)
-	}
-
-	origEnvXdgRuntimeDir := os.Getenv(EnvXdgRuntimeDir)
+	origEnvXdgRuntimeDir := os.Getenv(helper.EnvXdgRuntimeDir)
 	// change it to the current working directory
-	os.Setenv(EnvXdgRuntimeDir, curDir)
-	oldConfig := secrets.Configuration
+	os.Setenv(helper.EnvXdgRuntimeDir, curDir)
 
 	pkiCacheDir := "./cachetest"
-	if err := CreateDirectoryIfNotExists(pkiCacheDir); err != nil {
+	if err := helper.CreateDirectoryIfNotExists(pkiCacheDir); err != nil {
 		t.Fatalf("cannot create the PKI_CACHE dir %s: %v", pkiCacheDir, err)
 	}
 
 	pkiInitDeployDir := "./deploytest"
-	if err := CreateDirectoryIfNotExists(pkiInitDeployDir); err != nil {
+	if err := helper.CreateDirectoryIfNotExists(pkiInitDeployDir); err != nil {
 		t.Fatalf("cannot create dir %s for the test: %v", pkiInitDeployDir, err)
 	}
 
 	return func() {
 		// cleanup
-		os.Setenv(EnvXdgRuntimeDir, origEnvXdgRuntimeDir)
-		secrets.Configuration = oldConfig
+		os.Setenv(helper.EnvXdgRuntimeDir, origEnvXdgRuntimeDir)
 		os.RemoveAll(pkiInitDeployDir)
 		os.RemoveAll(pkiCacheDir)
 		os.RemoveAll(testResourceDir)
-	}
+	}, getConfiguration()
 }
 
-func writeTestFileToCacheDir(t *testing.T) {
-	pkiCacheDir, err := GetCacheDir()
+func writeTestFileToCacheDir(t *testing.T, configuration *config.ConfigurationStruct) {
+	pkiCacheDir, err := helper.GetCacheDir(configuration)
 	if err != nil {
 		t.Fatalf("Cache directory %s error: %v", pkiCacheDir, err)
 	}
 	// make a test dir
-	testFileDir := filepath.Join(pkiCacheDir, "test", CaServiceName)
-	_ = CreateDirectoryIfNotExists(testFileDir)
+	testFileDir := filepath.Join(pkiCacheDir, "test", generate.CaServiceName)
+	_ = helper.CreateDirectoryIfNotExists(testFileDir)
 	testFile := filepath.Join(testFileDir, "testFile")
 	testData := []byte("test data\n")
 	if err := ioutil.WriteFile(testFile, testData, 0644); err != nil {
