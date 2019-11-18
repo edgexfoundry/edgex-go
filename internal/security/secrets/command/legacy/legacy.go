@@ -26,20 +26,20 @@ import (
 const CommandName = "legacy"
 
 type Command struct {
-	configFile    string
+	flags         *FlagSet
 	loggingClient logger.LoggingClient
 }
 
 func NewCommand(flags *FlagSet, loggingClient logger.LoggingClient) (*Command, *flag.FlagSet) {
 	return &Command{
-			configFile:    flags.configFile,
+			flags:         flags,
 			loggingClient: loggingClient,
 		},
 		flags.flagSet
 }
 
 func (c *Command) Execute() (statusCode int, err error) {
-	err = helper.GenTLSAssets(c.configFile, c.loggingClient)
+	err = helper.GenTLSAssets(c.flags.configFile, c.loggingClient)
 	if err != nil {
 		statusCode = contract.StatusCodeExitWithError
 	} else {

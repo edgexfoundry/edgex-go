@@ -37,7 +37,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/contract"
 )
 
-func main() {
+func wrappedMain() (*config.ConfigurationStruct, int) {
 	startupTimer := startup.NewStartUpTimer(internal.BootRetrySecondsDefault, internal.BootTimeoutSecondsDefault)
 
 	var configDir string
@@ -46,14 +46,16 @@ func main() {
 	generateFlagSet := generate.NewFlags()
 	cacheFlagSet := cache.NewFlags()
 	importFlagSet := _import.NewFlags()
-	flag.StringVar(&configDir, "confdir", "", "Specify local configuration directory")
+	flags := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
+	flags.StringVar(&configDir, "confdir", "", "Specify local configuration directory")
+
 	flag.Usage = usage.HelpCallbackSecuritySetup
 	flag.Parse()
 
 	if flag.NArg() < 1 {
 		fmt.Println("Please specify subcommand for " + internal.SecuritySecretsSetupServiceKey)
 		flag.Usage()
-		os.Exit(contract.StatusCodeExitNormal)
+		return nil, contract.StatusCodeExitNormal
 	}
 
 	configuration := &config.ConfigurationStruct{}
@@ -65,6 +67,7 @@ func main() {
 			return get(container.ConfigurationName)
 		},
 	})
+	serviceHandler := secrets.NewBootstrapHandler(legacyFlags, generateFlagSet, cacheFlagSet, importFlagSet, flag.Args()[0])
 	bootstrap.Run(
 		configDir,
 		bootstrap.EmptyProfileDir,
@@ -75,12 +78,13 @@ func main() {
 		startupTimer,
 		dic,
 		[]interfaces.BootstrapHandler{
-			secrets.NewBootstrapHandler(
-				legacyFlags,
-				generateFlagSet,
-				cacheFlagSet,
-				importFlagSet,
-				flag.Args()[0]).Handler,
+			serviceHandler.Handler,
 		},
 	)
+	return configuration, serviceHandler.ExitStatusCode()
+}
+
+func main() {
+	_, exitStatusCode := wrappedMain()
+	os.Exit(exitStatusCode)
 }

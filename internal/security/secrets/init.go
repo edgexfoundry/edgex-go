@@ -18,7 +18,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"os"
 	"sync"
 
 	bootstrapContainer "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
@@ -38,6 +37,7 @@ type Bootstrap struct {
 	cacheFlagSet    *cache.FlagSet
 	importFlagSet   *_import.FlagSet
 	commandName     string
+	exitStatusCode  int
 }
 
 func NewBootstrapHandler(
@@ -77,23 +77,30 @@ func (b *Bootstrap) Handler(wg *sync.WaitGroup, ctx context.Context, startupTime
 		command, flagSet = _import.NewCommand(b.importFlagSet, loggingClient, configuration)
 	default:
 		loggingClient.Error(fmt.Sprintf("unsupported subcommand %s", commandName))
-		os.Exit(contract.StatusCodeExitWithError)
+		b.exitStatusCode = contract.StatusCodeNoOptionSelected
+		return false
 	}
 
 	if err := flagSet.Parse(flag.Args()[1:]); err != nil {
 		loggingClient.Error(fmt.Sprintf("error parsing subcommand %s: %v", commandName, err))
-		os.Exit(contract.StatusCodeExitWithError)
+		b.exitStatusCode = contract.StatusCodeExitWithError
+		return false
 	}
 
 	if len(flagSet.Args()) > 0 {
 		loggingClient.Error(fmt.Sprintf("subcommand %s doesn't use any args", commandName))
-		os.Exit(contract.StatusCodeExitWithError)
+		b.exitStatusCode = contract.StatusCodeExitWithError
+		return false
 	}
 
 	exitStatusCode, err := command.Execute()
 	if err != nil {
 		loggingClient.Error(err.Error())
 	}
-	os.Exit(exitStatusCode)
+	b.exitStatusCode = exitStatusCode
 	return false
+}
+
+func (b *Bootstrap) ExitStatusCode() int {
+	return b.exitStatusCode
 }

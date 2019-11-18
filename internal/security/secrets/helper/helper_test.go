@@ -26,8 +26,18 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func envSetup() func() {
+	envOrig := os.Getenv(EnvXdgRuntimeDir)
+	os.Unsetenv(EnvXdgRuntimeDir)
+	return func() {
+		os.Setenv(EnvXdgRuntimeDir, envOrig)
+	}
+}
+
 func TestGetWorkDirValid(t *testing.T) {
-	workDir, _ := filepath.Abs("./workingtest")
+	defer (envSetup())()
+	workDir := "./workingtest"
+	expectedWorkDir, _ := filepath.Abs(workDir)
 	configuration := &config.ConfigurationStruct{
 		SecretsSetup: config.SecretsSetupInfo{
 			WorkDir: workDir,
@@ -36,15 +46,17 @@ func TestGetWorkDirValid(t *testing.T) {
 
 	d, err := GetWorkDir(configuration)
 
-	if err != nil {
-		assert.Fail(t, "Error GetWorkDir, %v", err)
-	}
 	assert.Nil(t, err)
-	assert.Equal(t, workDir, d)
+	assert.Equal(t, expectedWorkDir, d)
 }
 
 func TestGetWorkDirDefault(t *testing.T) {
-	configuration := &config.ConfigurationStruct{}
+	defer (envSetup())()
+	configuration := &config.ConfigurationStruct{
+		SecretsSetup: config.SecretsSetupInfo{
+			WorkDir: "",
+		},
+	}
 
 	d, err := GetWorkDir(configuration)
 
@@ -53,11 +65,8 @@ func TestGetWorkDirDefault(t *testing.T) {
 }
 
 func TestWorkDirEnvVar(t *testing.T) {
+	defer (envSetup())()
 	const workDir = "./run"
-	envOrig := os.Getenv(EnvXdgRuntimeDir)
-	defer func() {
-		os.Setenv(EnvXdgRuntimeDir, envOrig)
-	}()
 	os.Setenv(EnvXdgRuntimeDir, workDir)
 	configuration := &config.ConfigurationStruct{}
 
@@ -79,18 +88,15 @@ func TestGetCertConfigDirValid(t *testing.T) {
 	if err := CreateDirectoryIfNotExists(certConfigDir); err != nil {
 		assert.Fail(t, "unable to create directory")
 	}
-	if _, err := os.Create(filepath.Join(certConfigDir, testFileName)); err != nil {
-		assert.Fail(t, "unable to create file")
-	}
 	defer func() {
 		os.Remove(certConfigDir)
 	}()
+	if _, err := os.Create(filepath.Join(certConfigDir, testFileName)); err != nil {
+		assert.Fail(t, "unable to create file")
+	}
 
 	d, err := GetCertConfigDir(configuration)
 
-	if err != nil {
-		assert.Fail(t, "Error GetCertConfigDir, %v", err)
-	}
 	assert.Nil(t, err)
 	assert.Equal(t, certConfigDir, d)
 }
@@ -133,9 +139,6 @@ func TestGetCacheDirValid(t *testing.T) {
 
 	d, err := GetCacheDir(configuration)
 
-	if err != nil {
-		assert.Fail(t, "Error GetCacheDir, %v", err)
-	}
 	assert.Nil(t, err)
 	assert.Equal(t, cacheDir, d)
 }
@@ -178,9 +181,6 @@ func TestGetDeployDirValid(t *testing.T) {
 
 	d, err := GetDeployDir(configuration)
 
-	if err != nil {
-		assert.Fail(t, "Error GetDeployDir, %v", err)
-	}
 	assert.Nil(t, err)
 	assert.Equal(t, deployDir, d)
 }

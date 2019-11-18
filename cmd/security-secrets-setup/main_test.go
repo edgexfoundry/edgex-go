@@ -17,198 +17,163 @@
 package main
 
 import (
-	"errors"
 	"fmt"
+	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/command/generate"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/config"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/contract"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/helper"
+
 	"github.com/stretchr/testify/assert"
 )
 
-type testExitCode struct {
-	testStatusCode int
-}
-
-type testPkiInitOptionDispatcher struct {
-	testOptsExecutor option.OptionsExecutor
-}
-
-var hasDispatchError bool
-
 func TestMainWithNoOption(t *testing.T) {
-	tearDown := setupTest(t)
-	origArgs := os.Args
-	defer tearDown(t, origArgs)
-	assert := assert.New(t)
+	defer (setupTest([]string{"cmd"}))()
 
-	os.Args = []string{"cmd"}
-	printCommandLineStrings(os.Args)
-	main()
+	configuration, exitStatusCode := wrappedMain()
 
-	assert.Equal(0, (exitInstance.(*testExitCode)).getStatusCode())
+	removeTestDirectories(configuration)
+	assert.Equal(t, contract.StatusCodeExitNormal, exitStatusCode)
 }
 
 func TestMainWithConfigFileOption(t *testing.T) {
-	tearDown := setupTest(t)
-	origArgs := os.Args
-	defer tearDown(t, origArgs)
-	assert := assert.New(t)
+	defer (setupTest([]string{"cmd", "legacy", "-config", "./res/pkisetup-vault.json"}))()
 
-	os.Args = []string{"cmd", "legacy", "-config", "./res/pkisetup-vault.json"}
-	printCommandLineStrings(os.Args)
-	main()
+	configuration, exitStatusCode := wrappedMain()
 
-	assert.Equal(0, (exitInstance.(*testExitCode)).getStatusCode())
+	removeTestDirectories(configuration)
+	assert.Equal(t, contract.StatusCodeExitNormal, exitStatusCode)
 
 	// verify ./config/pki/EdgeXFoundryCA directory exists
 	exists, err := doesDirectoryExist("./config/pki/EdgeXFoundryCA")
 	if !exists {
-		assert.NotNil(err)
-		assert.FailNow("cannot find the directory for TLS assets", err)
+		assert.NotNil(t, err)
+		assert.FailNow(t, "cannot find the directory for TLS assets", err)
 	}
 }
 
 func TestConfigFileOptionError(t *testing.T) {
-	tearDown := setupTest(t)
-	origArgs := os.Args
-	defer tearDown(t, origArgs)
-	assert := assert.New(t)
+	defer (setupTest([]string{"cmd", "legacy", "-config", "./non-exist/cert.json"}))()
 
-	os.Args = []string{"cmd", "legacy", "-config", "./non-exist/cert.json"}
-	printCommandLineStrings(os.Args)
-	main()
+	configuration, exitStatusCode := wrappedMain()
 
-	assert.Equal(2, (exitInstance.(*testExitCode)).getStatusCode())
+	removeTestDirectories(configuration)
+	assert.Equal(t, contract.StatusCodeExitWithError, exitStatusCode)
 }
 
 func TestMainWithGenerateOption(t *testing.T) {
-	tearDown := setupTest(t)
-	origArgs := os.Args
-	defer tearDown(t, origArgs)
-	assert := assert.New(t)
+	defer (setupTest([]string{"cmd", "generate"}))()
+	// following dir must match SecretsSetup.DeployDir value in configuration.toml
+	if err := helper.CreateDirectoryIfNotExists("/run/edgex/secrets"); err != nil {
+		assert.Fail(t, "unable to create deploy directory")
+	}
 
-	runWithGenerateOption(false)
-	assert.Equal(0, (exitInstance.(*testExitCode)).getStatusCode())
-	optionExec := (dispatcherInstance.(*testPkiInitOptionDispatcher)).testOptsExecutor
-	assert.True((optionExec.(*option.PkiInitOption)).GenerateOpt)
-}
+	configuration, exitStatusCode := wrappedMain()
 
-func TestGenerateOptionWithRunError(t *testing.T) {
-	tearDown := setupTest(t)
-	origArgs := os.Args
-	defer tearDown(t, origArgs)
-	assert := assert.New(t)
-
-	runWithGenerateOption(true)
-	assert.Equal(2, (exitInstance.(*testExitCode)).getStatusCode())
+	removeTestDirectories(configuration)
+	assert.Equal(t, contract.StatusCodeExitNormal, exitStatusCode)
 }
 
 func TestMainUnsupportedArgument(t *testing.T) {
-	tearDown := setupTest(t)
-	origArgs := os.Args
-	defer tearDown(t, origArgs)
-	assert := assert.New(t)
+	defer (setupTest([]string{"cmd", "unsupported"}))()
 
-	os.Args = []string{"cmd", "unsupported"}
-	printCommandLineStrings(os.Args)
-	hasDispatchError = false
-	main()
+	configuration, exitStatusCode := wrappedMain()
 
-	assert.Equal(1, (exitInstance.(*testExitCode)).getStatusCode())
+	removeTestDirectories(configuration)
+	assert.Equal(t, contract.StatusCodeNoOptionSelected, exitStatusCode)
 }
 
 func TestMainVerifyMultipleSubcommands(t *testing.T) {
-	tearDown := setupTest(t)
-	origArgs := os.Args
-	defer tearDown(t, origArgs)
-	assert := assert.New(t)
+	defer (setupTest([]string{"cmd", "generate", "legacy"}))()
 
-	os.Args = []string{"cmd", "generate", "legacy"}
-	printCommandLineStrings(os.Args)
-	hasDispatchError = false
-	main()
+	configuration, exitStatusCode := wrappedMain()
 
-	assert.Equal(2, (exitInstance.(*testExitCode)).getStatusCode())
+	removeTestDirectories(configuration)
+	assert.Equal(t, contract.StatusCodeExitWithError, exitStatusCode)
 }
 
 func TestMainLegacySubcommandWithExtraArgs(t *testing.T) {
-	tearDown := setupTest(t)
-	origArgs := os.Args
-	defer tearDown(t, origArgs)
-	assert := assert.New(t)
+	defer (setupTest([]string{"cmd", "legacy", "-c", "./res/pkisetup-vault.json", "extra"}))()
 
-	os.Args = []string{"cmd", "legacy", "-c", "./res/pkisetup-vault.json", "extra"}
-	printCommandLineStrings(os.Args)
-	hasDispatchError = false
-	main()
+	configuration, exitStatusCode := wrappedMain()
 
-	assert.Equal(2, (exitInstance.(*testExitCode)).getStatusCode())
+	removeTestDirectories(configuration)
+	assert.Equal(t, contract.StatusCodeExitWithError, exitStatusCode)
 }
 
 func TestMainWithCacheOption(t *testing.T) {
-	tearDown := setupTest(t)
-	origArgs := os.Args
-	defer tearDown(t, origArgs)
-	assert := assert.New(t)
+	defer (setupTest([]string{"cmd", "cache"}))()
+	// following dir must match SecretsSetup.DeployDir value in configuration.toml
+	if err := helper.CreateDirectoryIfNotExists("/run/edgex/secrets"); err != nil {
+		assert.Fail(t, "unable to create deploy directory")
+	}
+	// must match SecretsSetup.CacheDir value in configuration.toml
+	if err := helper.CreateDirectoryIfNotExists("/etc/edgex/pki"); err != nil {
+		assert.Fail(t, "unable to create cache directory")
+	}
 
-	runWithCacheOption(false)
-	assert.Equal(0, (exitInstance.(*testExitCode)).getStatusCode())
-	optionExec := (dispatcherInstance.(*testPkiInitOptionDispatcher)).testOptsExecutor
-	assert.Equal(true, (optionExec.(*option.PkiInitOption)).CacheOpt)
-	assert.Equal(false, (optionExec.(*option.PkiInitOption)).GenerateOpt)
+	configuration, exitStatusCode := wrappedMain()
+
+	removeTestDirectories(configuration)
+	assert.Equal(t, contract.StatusCodeExitNormal, exitStatusCode)
+}
+
+func writeTestFileToCacheDir(t *testing.T, pkiCacheDir string) {
+	testFileDir := filepath.Join(pkiCacheDir, "test", generate.CaServiceName)
+	_ = helper.CreateDirectoryIfNotExists(testFileDir)
+	testFile := filepath.Join(testFileDir, "testFile")
+	testData := []byte("test data\n")
+	if err := ioutil.WriteFile(testFile, testData, 0644); err != nil {
+		t.Fatalf("cannot write testData to directory %s: %v", pkiCacheDir, err)
+	}
 }
 
 func TestMainWithImportOption(t *testing.T) {
-	tearDown := setupTest(t)
+	defer (setupTest([]string{"cmd", "import"}))()
+
+	// following dir must match SecretsSetup.DeployDir value in configuration.toml
+	if err := helper.CreateDirectoryIfNotExists("/run/edgex/secrets"); err != nil {
+		assert.Fail(t, "unable to create deploy directory")
+	}
+	writeTestFileToCacheDir(t, "/etc/edgex/pki") // must match SecretsSetup.CacheDir value in configuration.toml
+
+	configuration, exitStatusCode := wrappedMain()
+
+	removeTestDirectories(configuration)
+	assert.Equal(t, contract.StatusCodeExitNormal, exitStatusCode)
+}
+
+func setupTest(args []string) func() {
 	origArgs := os.Args
-	defer tearDown(t, origArgs)
-	assert := assert.New(t)
+	os.Args = args
+	fmt.Println("command line strings:", strings.Join(args, " "))
 
-	runWithImportOption(false)
-	assert.Equal(0, (exitInstance.(*testExitCode)).getStatusCode())
-	optionExec := (dispatcherInstance.(*testPkiInitOptionDispatcher)).testOptsExecutor
-	assert.Equal(true, (optionExec.(*option.PkiInitOption)).ImportOpt)
-	assert.Equal(false, (optionExec.(*option.PkiInitOption)).CacheOpt)
-	assert.Equal(false, (optionExec.(*option.PkiInitOption)).GenerateOpt)
-}
+	origEnv := os.Getenv(helper.EnvXdgRuntimeDir)
+	os.Unsetenv(helper.EnvXdgRuntimeDir)
 
-func runWithGenerateOption(hasError bool) {
-	os.Args = []string{"cmd", "generate"}
-	printCommandLineStrings(os.Args)
-	hasDispatchError = hasError
-	main()
-}
-
-func runWithCacheOption(hasError bool) {
-	os.Args = []string{"cmd", "cache"}
-	printCommandLineStrings(os.Args)
-	hasDispatchError = hasError
-	main()
-}
-
-func runWithImportOption(hasError bool) {
-	os.Args = []string{"cmd", "import"}
-	printCommandLineStrings(os.Args)
-	hasDispatchError = hasError
-	main()
-}
-
-func printCommandLineStrings(strs []string) {
-	fmt.Println("command line strings:", strings.Join(strs, " "))
-}
-
-func setupTest(t *testing.T) func(t *testing.T, args []string) {
-	exitInstance = newTestExit()
-	dispatcherInstance = newTestDispatcher()
-	return func(t *testing.T, args []string) {
-		// reset after each test
-		configFile = ""
-		hasDispatchError = false
-		os.Args = args
-		// cleanup the generated files
+	return func() {
+		os.Setenv(helper.EnvXdgRuntimeDir, origEnv)
+		os.Args = origArgs
 		os.RemoveAll("./config")
+	}
+}
+
+func removeTestDirectories(configuration *config.ConfigurationStruct) {
+	remove := func(name string) {
+		if name != "" && name != "/" {
+			os.RemoveAll(name)
+		}
+	}
+	if configuration != nil {
+		remove(configuration.Logging.File)
+		remove(configuration.SecretsSetup.WorkDir)
+		remove(configuration.SecretsSetup.DeployDir)
+		remove(configuration.SecretsSetup.CacheDir)
 	}
 }
 
@@ -219,44 +184,4 @@ func doesDirectoryExist(dir string) (bool, error) {
 		return true, err
 	}
 	return true, nil
-}
-
-func newTestExit() exiter {
-	return &testExitCode{}
-}
-
-func (testExit *testExitCode) exit(statusCode int) {
-	fmt.Printf("In test: exitCode = %d\n", statusCode)
-	testExit.testStatusCode = statusCode
-}
-
-func (testExit *testExitCode) getStatusCode() int {
-	return testExit.testStatusCode
-}
-
-func newTestDispatcher() optionDispatcher {
-	return &testPkiInitOptionDispatcher{}
-}
-
-func (testDispatcher *testPkiInitOptionDispatcher) run(command string) (statusCode int, err error) {
-	optsExecutor, statusCode, err := setupPkiInitOption(command)
-
-	genOpt := false
-	cacheOpt := false
-	importOpt := false
-	if pkiInit, ok := optsExecutor.(*option.PkiInitOption); ok {
-		genOpt = pkiInit.GenerateOpt
-		cacheOpt = pkiInit.CacheOpt
-		importOpt = pkiInit.ImportOpt
-	}
-
-	fmt.Printf("In test flag value: generateOpt = %v, cacheOpt = %v, importOpt = %v, configFile = %v\n", genOpt, cacheOpt, importOpt, configFile)
-
-	testDispatcher.testOptsExecutor = optsExecutor
-
-	if hasDispatchError {
-		statusCode = 2
-		err = errors.New("dispatch error found")
-	}
-	return statusCode, err
 }
