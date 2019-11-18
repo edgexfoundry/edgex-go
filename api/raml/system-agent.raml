@@ -66,10 +66,10 @@ schemas:
             repeat: false
     get:
         description: "Fetch the operating performance metrics of the specified EdgeX services by their unique names - returning null if none is found for the service. HTTP 500 for unknown or unanticipated issues"
-        displayName: get metrics for each of the names EdgeX services
+        displayName: get metrics for each of the named EdgeX services. 
         responses:
             "200":
-                description: an array of metrics
+                description: An array of metrics, reference obtained from Go [runtime pkg](https://golang.org/pkg/runtime/#MemStats). <br/> **Alloc** is the number bytes of allocated heap objects. <br/> **TotalAlloc** increases as heap objects are allocated, but unlike **Alloc**, it does not decrease when objects are freed. <br/> **Mallocs** is the cumulative count of heap objects allocated. <br/> The number of **LiveObjects** is **Mallocs** - **Frees**. <br/> **Sys** is the total bytes of memory obtained from the OS. 
                 body:
                     application/json:
                         schema: metric
