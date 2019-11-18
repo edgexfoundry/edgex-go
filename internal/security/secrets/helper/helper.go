@@ -264,6 +264,8 @@ func GetWorkDir(configuration *config.ConfigurationStruct) (string, error) {
 	return workDir, nil
 }
 
+const errMessageCertConfigDirNotSet = "Directory for certificate configuration files not configured"
+
 func GetCertConfigDir(configuration *config.ConfigurationStruct) (string, error) {
 	var certConfigDir string
 	if configuration.SecretsSetup.CertConfigDir != "" {
@@ -277,7 +279,7 @@ func GetCertConfigDir(configuration *config.ConfigurationStruct) (string, error)
 		return certConfigDir, nil
 	}
 
-	return "", errors.New("Directory for certificate configuration files not configured")
+	return "", errors.New(errMessageCertConfigDirNotSet)
 }
 
 func GetCacheDir(configuration *config.ConfigurationStruct) (string, error) {

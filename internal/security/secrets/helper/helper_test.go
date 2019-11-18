@@ -21,130 +21,188 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/config"
+
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGetWorkDir(t *testing.T) {
-	// sets up configuration for SecretsSetupInfo
-	tearDown, configuration := generate.SetupGenerateTest(t)
-	defer tearDown()
-
-	// test WorkDir that's configured by toml
-	runTimeDir, err := GetWorkDir(configuration)
-	if err != nil {
-		t.Errorf("Error getting workdir, %v", err)
-	}
-	expectedWorkDir, err := filepath.Abs("./workingtest")
-	if err != nil {
-		t.Error(err)
-	}
-	assert.Equal(t, expectedWorkDir, runTimeDir)
-
-	// test default WorkDir
-	secrets.Configuration = &secrets.ConfigurationStruct{
-		SecretsSetup: secrets.SecretsSetupInfo{
-			WorkDir: "",
+func TestGetWorkDirValid(t *testing.T) {
+	workDir, _ := filepath.Abs("./workingtest")
+	configuration := &config.ConfigurationStruct{
+		SecretsSetup: config.SecretsSetupInfo{
+			WorkDir: workDir,
 		},
 	}
-	runTimeDir, err = GetWorkDir()
-	assert.Nil(t, err)
-	assert.Equal(t, filepath.Join(defaultWorkDir, pkiInitBaseDir), runTimeDir)
 
-	// test env variable
-	os.Setenv(EnvXdgRuntimeDir, "/run")
-	runTimeDir, err = GetWorkDir()
+	d, err := GetWorkDir(configuration)
+
+	if err != nil {
+		assert.Fail(t, "Error GetWorkDir, %v", err)
+	}
 	assert.Nil(t, err)
-	assert.Equal(t, filepath.Join("/run", pkiInitBaseDir), runTimeDir)
+	assert.Equal(t, workDir, d)
 }
 
-func TestGetCertConfigDir(t *testing.T) {
-	// sets up configuration data for SecretsSetupInfo
-	tearDown := generate.SetupGenerateTest(t)
-	defer tearDown()
+func TestGetWorkDirDefault(t *testing.T) {
+	configuration := &config.ConfigurationStruct{}
 
-	// test CertConfigDir that's configured by toml
-	certConfigDir, err := GetCertConfigDir()
+	d, err := GetWorkDir(configuration)
+
 	assert.Nil(t, err)
-	assert.Equal(t, "./res", certConfigDir)
+	assert.Equal(t, filepath.Join(defaultWorkDir, pkiInitBaseDir), d)
+}
 
-	// certificate config dir not configured in toml
-	secrets.Configuration = &secrets.ConfigurationStruct{
-		SecretsSetup: secrets.SecretsSetupInfo{
-			CertConfigDir: "",
+func TestWorkDirEnvVar(t *testing.T) {
+	const workDir = "./run"
+	envOrig := os.Getenv(EnvXdgRuntimeDir)
+	defer func() {
+		os.Setenv(EnvXdgRuntimeDir, envOrig)
+	}()
+	os.Setenv(EnvXdgRuntimeDir, workDir)
+	configuration := &config.ConfigurationStruct{}
+
+	d, err := GetWorkDir(configuration)
+
+	assert.Nil(t, err)
+	assert.Equal(t, filepath.Join(workDir, pkiInitBaseDir), d)
+
+}
+
+func TestGetCertConfigDirValid(t *testing.T) {
+	const testFileName = "test.file"
+	certConfigDir, _ := filepath.Abs("./validDirectory")
+	configuration := &config.ConfigurationStruct{
+		SecretsSetup: config.SecretsSetupInfo{
+			CertConfigDir: certConfigDir,
 		},
 	}
-	certConfigDir, err = GetCertConfigDir()
+	if err := CreateDirectoryIfNotExists(certConfigDir); err != nil {
+		assert.Fail(t, "unable to create directory")
+	}
+	if _, err := os.Create(filepath.Join(certConfigDir, testFileName)); err != nil {
+		assert.Fail(t, "unable to create file")
+	}
+	defer func() {
+		os.Remove(certConfigDir)
+	}()
+
+	d, err := GetCertConfigDir(configuration)
+
+	if err != nil {
+		assert.Fail(t, "Error GetCertConfigDir, %v", err)
+	}
+	assert.Nil(t, err)
+	assert.Equal(t, certConfigDir, d)
+}
+
+func TestGetCertConfigDirEmpty(t *testing.T) {
+	configuration := &config.ConfigurationStruct{}
+
+	_, err := GetCertConfigDir(configuration)
+
 	assert.NotNil(t, err)
-	assert.Equal(t, "", certConfigDir)
+	assert.Equal(t, errMessageCertConfigDirNotSet, err.Error())
+}
 
-	// certificate config dir is configured but does not exist
-	secrets.Configuration = &secrets.ConfigurationStruct{
-		SecretsSetup: secrets.SecretsSetupInfo{
-			CertConfigDir: "./fakePath",
+func TestGetCertConfigDirInvalid(t *testing.T) {
+	configuration := &config.ConfigurationStruct{
+		SecretsSetup: config.SecretsSetupInfo{
+			CertConfigDir: "./directoryDoesNotExist",
 		},
 	}
-	_, err = GetCertConfigDir()
+
+	_, err := GetCertConfigDir(configuration)
+
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "does not exist")
 }
 
-func TestGetCacheDir(t *testing.T) {
-	// sets up configuration data for SecretsSetupInfo
-	tearDown := setupCacheTest(t)
-	defer tearDown()
+func TestGetCacheDirValid(t *testing.T) {
+	cacheDir, _ := filepath.Abs("./cachetest")
+	configuration := &config.ConfigurationStruct{
+		SecretsSetup: config.SecretsSetupInfo{
+			CacheDir: cacheDir,
+		},
+	}
+	if err := CreateDirectoryIfNotExists(cacheDir); err != nil {
+		assert.Fail(t, "unable to create directory")
+	}
+	defer func() {
+		os.Remove(cacheDir)
+	}()
 
-	// test CacheDir that's configured by toml
-	cacheDir, err := GetCacheDir()
+	d, err := GetCacheDir(configuration)
+
+	if err != nil {
+		assert.Fail(t, "Error GetCacheDir, %v", err)
+	}
 	assert.Nil(t, err)
-	assert.Equal(t, "./cachetest", cacheDir)
+	assert.Equal(t, cacheDir, d)
+}
 
-	// test default cacheDir
-	secrets.Configuration = &secrets.ConfigurationStruct{
-		SecretsSetup: secrets.SecretsSetupInfo{
-			CacheDir: "",
+func TestGetCacheDirEmpty(t *testing.T) {
+	configuration := &config.ConfigurationStruct{}
+
+	d, err := GetCacheDir(configuration)
+
+	assert.Nil(t, err)
+	assert.Equal(t, defaultPkiCacheDir, d)
+}
+
+func TestGetCacheDirInvalid(t *testing.T) {
+	configuration := &config.ConfigurationStruct{
+		SecretsSetup: config.SecretsSetupInfo{
+			CacheDir: "./directoryDoesNotExist",
 		},
 	}
-	cacheDir, _ = GetCacheDir()
-	assert.Equal(t, defaultPkiCacheDir, cacheDir)
 
-	// cache directory is configured but does not exist
-	secrets.Configuration = &secrets.ConfigurationStruct{
-		SecretsSetup: secrets.SecretsSetupInfo{
-			CacheDir: "./fakePath",
-		},
-	}
-	_, err = GetCacheDir()
+	_, err := GetCacheDir(configuration)
+
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "does not exist")
 }
 
-func TestGetDeployDir(t *testing.T) {
-	tearDown := setupImportTest(t)
-	defer tearDown()
-
-	// test DeployDir that's configured by toml
-	deployDir, err := GetDeployDir()
-	assert.Nil(t, err)
-	assert.Equal(t, "./deploytest", deployDir)
-
-	// test default DeployDir
-	secrets.Configuration = &secrets.ConfigurationStruct{
-		SecretsSetup: secrets.SecretsSetupInfo{
-			DeployDir: "",
+func TestGetDeployDirValid(t *testing.T) {
+	deployDir, _ := filepath.Abs("./deploytest")
+	configuration := &config.ConfigurationStruct{
+		SecretsSetup: config.SecretsSetupInfo{
+			DeployDir: deployDir,
 		},
 	}
-	deployDir, err = GetDeployDir()
-	assert.Nil(t, err)
-	assert.Equal(t, defaultPkiDeployDir, deployDir)
+	if err := CreateDirectoryIfNotExists(deployDir); err != nil {
+		assert.Fail(t, "unable to create directory")
+	}
+	defer func() {
+		os.Remove(deployDir)
+	}()
 
-	// Deploy directory is configured but does not exist
-	secrets.Configuration = &secrets.ConfigurationStruct{
-		SecretsSetup: secrets.SecretsSetupInfo{
-			DeployDir: "./fakepath",
+	d, err := GetDeployDir(configuration)
+
+	if err != nil {
+		assert.Fail(t, "Error GetDeployDir, %v", err)
+	}
+	assert.Nil(t, err)
+	assert.Equal(t, deployDir, d)
+}
+
+func TestGetDeployDirEmpty(t *testing.T) {
+	configuration := &config.ConfigurationStruct{}
+
+	d, err := GetDeployDir(configuration)
+
+	assert.Nil(t, err)
+	assert.Equal(t, defaultPkiDeployDir, d)
+}
+
+func TestGetDeployDirInvalid(t *testing.T) {
+	configuration := &config.ConfigurationStruct{
+		SecretsSetup: config.SecretsSetupInfo{
+			DeployDir: "./directoryDoesNotExist",
 		},
 	}
-	_, err = GetDeployDir()
+
+	_, err := GetDeployDir(configuration)
+
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "does not exist")
 }
