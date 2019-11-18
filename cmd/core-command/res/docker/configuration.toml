@@ -48,7 +48,7 @@ Port = 8200
 # Use the core-meta data secrets due to core-command using core-meta-data's database for persistance.
 Path = '/v1/secret/edgex/metadata/'
 Protocol = 'https'
-RootCaCertPath = '/vault/config/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem'
+RootCaCertPath = '/tmp/edgex/secrets/ca/ca.pem'
 ServerName = 'edgex-vault'
 TokenFile = '/vault/config/assets/resp-init.json'
 # Number of attemtps to retry retrieving secrets before failing to start the service.
