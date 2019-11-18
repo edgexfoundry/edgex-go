@@ -40,15 +40,13 @@ import (
 func wrappedMain() (*config.ConfigurationStruct, int) {
 	startupTimer := startup.NewStartUpTimer(internal.BootRetrySecondsDefault, internal.BootTimeoutSecondsDefault)
 
-	var configDir string
-
 	legacyFlags := legacy.NewFlags()
 	generateFlagSet := generate.NewFlags()
 	cacheFlagSet := cache.NewFlags()
 	importFlagSet := _import.NewFlags()
-	flags := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
-	flags.StringVar(&configDir, "confdir", "", "Specify local configuration directory")
 
+	var configDir string
+	flag.StringVar(&configDir, "confdir", "", "Specify local configuration directory")
 	flag.Usage = usage.HelpCallbackSecuritySetup
 	flag.Parse()
 

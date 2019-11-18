@@ -304,7 +304,7 @@ func GetDeployDir(configuration *config.ConfigurationStruct) (string, error) {
 	deployDir := defaultPkiDeployDir
 
 	if configuration.SecretsSetup.DeployDir != "" {
-		deployDir = configuration.SecretsSetup.DeployDir
+		deployDir, _ = filepath.Abs(configuration.SecretsSetup.DeployDir)
 		exist, isWritable := CheckDirExistsAndIsWritable(deployDir)
 		if !exist {
 			return "", fmt.Errorf("DeployDir, %s, from x509 file does not exist", deployDir)

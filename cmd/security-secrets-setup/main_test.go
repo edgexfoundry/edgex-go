@@ -17,6 +17,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -67,9 +68,10 @@ func TestConfigFileOptionError(t *testing.T) {
 }
 
 func TestMainWithGenerateOption(t *testing.T) {
-	defer (setupTest([]string{"cmd", "generate"}))()
+	defer (setupTest([]string{"cmd", "--confdir=./testdata/res", "generate"}))()
 	// following dir must match SecretsSetup.DeployDir value in configuration.toml
-	if err := helper.CreateDirectoryIfNotExists("/run/edgex/secrets"); err != nil {
+	d, _ := filepath.Abs("./deploytest")
+	if err := helper.CreateDirectoryIfNotExists(d); err != nil {
 		assert.Fail(t, "unable to create deploy directory")
 	}
 
@@ -107,13 +109,15 @@ func TestMainLegacySubcommandWithExtraArgs(t *testing.T) {
 }
 
 func TestMainWithCacheOption(t *testing.T) {
-	defer (setupTest([]string{"cmd", "cache"}))()
+	defer (setupTest([]string{"cmd", "--confdir=./testdata/res", "cache"}))()
 	// following dir must match SecretsSetup.DeployDir value in configuration.toml
-	if err := helper.CreateDirectoryIfNotExists("/run/edgex/secrets"); err != nil {
+	d, _ := filepath.Abs("./deploytest")
+	if err := helper.CreateDirectoryIfNotExists(d); err != nil {
 		assert.Fail(t, "unable to create deploy directory")
 	}
 	// must match SecretsSetup.CacheDir value in configuration.toml
-	if err := helper.CreateDirectoryIfNotExists("/etc/edgex/pki"); err != nil {
+	d, _ = filepath.Abs("./cachetest")
+	if err := helper.CreateDirectoryIfNotExists(d); err != nil {
 		assert.Fail(t, "unable to create cache directory")
 	}
 
@@ -134,13 +138,15 @@ func writeTestFileToCacheDir(t *testing.T, pkiCacheDir string) {
 }
 
 func TestMainWithImportOption(t *testing.T) {
-	defer (setupTest([]string{"cmd", "import"}))()
+	defer (setupTest([]string{"cmd", "--confdir=./testdata/res", "import"}))()
 
 	// following dir must match SecretsSetup.DeployDir value in configuration.toml
-	if err := helper.CreateDirectoryIfNotExists("/run/edgex/secrets"); err != nil {
+	d, _ := filepath.Abs("./deploytest")
+	if err := helper.CreateDirectoryIfNotExists(d); err != nil {
 		assert.Fail(t, "unable to create deploy directory")
 	}
-	writeTestFileToCacheDir(t, "/etc/edgex/pki") // must match SecretsSetup.CacheDir value in configuration.toml
+	d, _ = filepath.Abs("./cachetest")
+	writeTestFileToCacheDir(t, d) // must match SecretsSetup.CacheDir value in configuration.toml
 
 	configuration, exitStatusCode := wrappedMain()
 
@@ -153,11 +159,19 @@ func setupTest(args []string) func() {
 	os.Args = args
 	fmt.Println("command line strings:", strings.Join(args, " "))
 
-	origEnv := os.Getenv(helper.EnvXdgRuntimeDir)
-	os.Unsetenv(helper.EnvXdgRuntimeDir)
+	origEnv, origEnvSet := os.LookupEnv(helper.EnvXdgRuntimeDir)
+	if origEnvSet {
+		os.Unsetenv(helper.EnvXdgRuntimeDir)
+	}
+
+	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 
 	return func() {
-		os.Setenv(helper.EnvXdgRuntimeDir, origEnv)
+		if origEnvSet {
+			os.Setenv(helper.EnvXdgRuntimeDir, origEnv)
+		} else {
+			os.Unsetenv(helper.EnvXdgRuntimeDir)
+		}
 		os.Args = origArgs
 		os.RemoveAll("./config")
 	}
