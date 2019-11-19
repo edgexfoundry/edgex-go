@@ -21,54 +21,147 @@ import (
 	"strconv"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/gorilla/mux"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
+	bootstrapContainer "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/errors"
 )
 
-func LoadRestRoutes() *mux.Router {
+func LoadRestRoutes(dic *di.Container) *mux.Router {
 	r := mux.NewRouter()
 
 	// Ping Resource
 	r.HandleFunc(clients.ApiPingRoute, pingHandler).Methods(http.MethodGet)
 
 	// Configuration
-	r.HandleFunc(clients.ApiConfigRoute, configHandler).Methods(http.MethodGet)
+	r.HandleFunc(clients.ApiConfigRoute, func(w http.ResponseWriter, r *http.Request) {
+		configHandler(
+			w,
+			r,
+			bootstrapContainer.LoggingClientFrom(dic.Get))
+	}).Methods(http.MethodGet)
 
 	// Metrics
-	r.HandleFunc(clients.ApiMetricsRoute, metricsHandler).Methods(http.MethodGet)
+	r.HandleFunc(clients.ApiMetricsRoute, func(w http.ResponseWriter, r *http.Request) {
+		metricsHandler(
+			w,
+			r,
+			bootstrapContainer.LoggingClientFrom(dic.Get))
+	}).Methods(http.MethodGet)
 
 	// Version
 	r.HandleFunc(clients.ApiVersionRoute, pkg.VersionHandler).Methods(http.MethodGet)
 
 	// Interval
-	r.HandleFunc(clients.ApiIntervalRoute, restGetIntervals).Methods(http.MethodGet)
-	r.HandleFunc(clients.ApiIntervalRoute, restUpdateInterval).Methods(http.MethodPut)
-	r.HandleFunc(clients.ApiIntervalRoute, restAddInterval).Methods(http.MethodPost)
+	r.HandleFunc(clients.ApiIntervalRoute, func(w http.ResponseWriter, r *http.Request) {
+		restGetIntervals(
+			w,
+			r,
+			bootstrapContainer.LoggingClientFrom(dic.Get))
+	}).Methods(http.MethodGet)
+	r.HandleFunc(clients.ApiIntervalRoute, func(w http.ResponseWriter, r *http.Request) {
+		restUpdateInterval(
+			w,
+			r,
+			bootstrapContainer.LoggingClientFrom(dic.Get))
+	}).Methods(http.MethodPut)
+	r.HandleFunc(clients.ApiIntervalRoute, func(w http.ResponseWriter, r *http.Request) {
+		restAddInterval(
+			w,
+			r,
+			bootstrapContainer.LoggingClientFrom(dic.Get))
+	}).Methods(http.MethodPost)
 	interval := r.PathPrefix(clients.ApiIntervalRoute).Subrouter()
-	interval.HandleFunc("/{"+ID+"}", restGetIntervalByID).Methods(http.MethodGet)
-	interval.HandleFunc("/{"+ID+"}", restDeleteIntervalByID).Methods(http.MethodDelete)
-	interval.HandleFunc("/"+NAME+"/{"+NAME+"}", restGetIntervalByName).Methods(http.MethodGet)
-	interval.HandleFunc("/"+NAME+"/{"+NAME+"}", restDeleteIntervalByName).Methods(http.MethodDelete)
+	interval.HandleFunc("/{"+ID+"}", func(w http.ResponseWriter, r *http.Request) {
+		restGetIntervalByID(
+			w,
+			r,
+			bootstrapContainer.LoggingClientFrom(dic.Get))
+	}).Methods(http.MethodGet)
+	interval.HandleFunc("/{"+ID+"}", func(w http.ResponseWriter, r *http.Request) {
+		restDeleteIntervalByID(
+			w,
+			r,
+			bootstrapContainer.LoggingClientFrom(dic.Get))
+	}).Methods(http.MethodDelete)
+	interval.HandleFunc("/"+NAME+"/{"+NAME+"}", func(w http.ResponseWriter, r *http.Request) {
+		restGetIntervalByName(
+			w,
+			r,
+			bootstrapContainer.LoggingClientFrom(dic.Get))
+	}).Methods(http.MethodGet)
+	interval.HandleFunc("/"+NAME+"/{"+NAME+"}", func(w http.ResponseWriter, r *http.Request) {
+		restDeleteIntervalByName(
+			w,
+			r,
+			bootstrapContainer.LoggingClientFrom(dic.Get))
+	}).Methods(http.MethodDelete)
 	// Scrub "Intervals and IntervalActions"
-	interval.HandleFunc("/"+SCRUB+"/", restScrubAllIntervals).Methods(http.MethodDelete)
+	interval.HandleFunc("/"+SCRUB+"/", func(w http.ResponseWriter, r *http.Request) {
+		restScrubAllIntervals(
+			w,
+			r,
+			bootstrapContainer.LoggingClientFrom(dic.Get))
+	}).Methods(http.MethodDelete)
 
 	// IntervalAction
-	r.HandleFunc(clients.ApiIntervalActionRoute, restGetIntervalAction).Methods(http.MethodGet)
-	r.HandleFunc(clients.ApiIntervalActionRoute, restAddIntervalAction).Methods(http.MethodPost)
-	r.HandleFunc(clients.ApiIntervalActionRoute, intervalActionHandler).Methods(http.MethodPut)
+	r.HandleFunc(clients.ApiIntervalActionRoute, func(w http.ResponseWriter, r *http.Request) {
+		restGetIntervalAction(
+			w,
+			r,
+			bootstrapContainer.LoggingClientFrom(dic.Get))
+	}).Methods(http.MethodGet)
+	r.HandleFunc(clients.ApiIntervalActionRoute, func(w http.ResponseWriter, r *http.Request) {
+		restAddIntervalAction(
+			w,
+			r,
+			bootstrapContainer.LoggingClientFrom(dic.Get))
+	}).Methods(http.MethodPost)
+	r.HandleFunc(clients.ApiIntervalActionRoute, func(w http.ResponseWriter, r *http.Request) {
+		intervalActionHandler(
+			w,
+			r,
+			bootstrapContainer.LoggingClientFrom(dic.Get))
+	}).Methods(http.MethodPut)
 	intervalAction := r.PathPrefix(clients.ApiIntervalActionRoute).Subrouter()
-	intervalAction.HandleFunc("/{"+ID+"}", intervalActionByIdHandler).Methods(http.MethodGet, http.MethodDelete)
-	intervalAction.HandleFunc("/"+NAME+"/{"+NAME+"}", intervalActionByNameHandler).Methods(http.MethodGet, http.MethodDelete)
-	intervalAction.HandleFunc("/"+TARGET+"/{"+TARGET+"}", intervalActionByTargetHandler).Methods(http.MethodGet)
-	intervalAction.HandleFunc("/"+INTERVAL+"/{"+INTERVAL+"}", intervalActionByIntervalHandler).Methods(http.MethodGet)
+	intervalAction.HandleFunc("/{"+ID+"}", func(w http.ResponseWriter, r *http.Request) {
+		intervalActionByIdHandler(
+			w,
+			r,
+			bootstrapContainer.LoggingClientFrom(dic.Get))
+	}).Methods(http.MethodGet, http.MethodDelete)
+	intervalAction.HandleFunc("/"+NAME+"/{"+NAME+"}", func(w http.ResponseWriter, r *http.Request) {
+		intervalActionByNameHandler(
+			w,
+			r,
+			bootstrapContainer.LoggingClientFrom(dic.Get))
+	}).Methods(http.MethodGet, http.MethodDelete)
+	intervalAction.HandleFunc("/"+TARGET+"/{"+TARGET+"}", func(w http.ResponseWriter, r *http.Request) {
+		intervalActionByTargetHandler(
+			w,
+			r,
+			bootstrapContainer.LoggingClientFrom(dic.Get))
+	}).Methods(http.MethodGet)
+	intervalAction.HandleFunc("/"+INTERVAL+"/{"+INTERVAL+"}", func(w http.ResponseWriter, r *http.Request) {
+		intervalActionByIntervalHandler(
+			w,
+			r,
+			bootstrapContainer.LoggingClientFrom(dic.Get))
+	}).Methods(http.MethodGet)
 
 	// Scrub "IntervalActions"
-	intervalAction.HandleFunc("/"+SCRUB+"/", scrubIntervalActionsHandler).Methods(http.MethodDelete)
+	intervalAction.HandleFunc("/"+SCRUB+"/", func(w http.ResponseWriter, r *http.Request) {
+		scrubIntervalActionsHandler(
+			w,
+			r,
+			bootstrapContainer.LoggingClientFrom(dic.Get))
+	}).Methods(http.MethodDelete)
 
 	r.Use(correlation.ManageHeader)
 	r.Use(correlation.OnResponseComplete)
@@ -83,14 +176,14 @@ func pingHandler(w http.ResponseWriter, _ *http.Request) {
 	w.Write([]byte("pong"))
 }
 
-func configHandler(w http.ResponseWriter, _ *http.Request) {
-	pkg.Encode(Configuration, w, LoggingClient)
+func configHandler(w http.ResponseWriter, _ *http.Request, loggingClient logger.LoggingClient) {
+	pkg.Encode(Configuration, w, loggingClient)
 }
 
-func metricsHandler(w http.ResponseWriter, _ *http.Request) {
+func metricsHandler(w http.ResponseWriter, _ *http.Request, loggingClient logger.LoggingClient) {
 	s := telemetry.NewSystemUsage()
 
-	pkg.Encode(s, w, LoggingClient)
+	pkg.Encode(s, w, loggingClient)
 
 	return
 }
@@ -105,7 +198,7 @@ Status code 413 - number of interval actions exceeds limit
 Status code 500 - unanticipated issues
 api/v1/interval
 */
-func intervalActionHandler(w http.ResponseWriter, r *http.Request) {
+func intervalActionHandler(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
 	if r.Body != nil {
 		defer r.Body.Close()
 	}
@@ -114,11 +207,11 @@ func intervalActionHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		intervalActions, err := getIntervalActions(Configuration.Service.MaxResultCount)
 		if err != nil {
-			LoggingClient.Error(err.Error())
+			loggingClient.Error(err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		pkg.Encode(intervalActions, w, LoggingClient)
+		pkg.Encode(intervalActions, w, loggingClient)
 		break
 		// Post a new IntervalAction
 	case http.MethodPost:
@@ -128,12 +221,12 @@ func intervalActionHandler(w http.ResponseWriter, r *http.Request) {
 
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
-			LoggingClient.Error("error decoding intervalAction" + err.Error())
+			loggingClient.Error("error decoding intervalAction" + err.Error())
 			return
 		}
-		LoggingClient.Info("posting new intervalAction: " + intervalAction.String())
+		loggingClient.Info("posting new intervalAction: " + intervalAction.String())
 
-		newId, err := addNewIntervalAction(intervalAction)
+		newId, err := addNewIntervalAction(intervalAction, loggingClient)
 		if err != nil {
 			switch t := err.(type) {
 			case errors.ErrIntervalActionNameInUse:
@@ -145,7 +238,7 @@ func intervalActionHandler(w http.ResponseWriter, r *http.Request) {
 			default:
 				http.Error(w, t.Error(), http.StatusInternalServerError)
 			}
-			LoggingClient.Error(err.Error())
+			loggingClient.Error(err.Error())
 			return
 		}
 
@@ -160,11 +253,11 @@ func intervalActionHandler(w http.ResponseWriter, r *http.Request) {
 		// Problem decoding
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
-			LoggingClient.Error("Error decoding the intervalAction: " + err.Error())
+			loggingClient.Error("Error decoding the intervalAction: " + err.Error())
 			return
 		}
 
-		LoggingClient.Info("Updating IntervalAction: " + from.ID)
+		loggingClient.Info("Updating IntervalAction: " + from.ID)
 		err = updateIntervalAction(from)
 		if err != nil {
 			switch t := err.(type) {
@@ -180,10 +273,10 @@ func intervalActionHandler(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, t.Error(), http.StatusBadRequest)
 			case errors.ErrIntervalNameInUse:
 				http.Error(w, t.Error(), http.StatusBadRequest)
-			default: //return an error on everything else.
+			default:
 				http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			}
-			LoggingClient.Error(err.Error())
+			loggingClient.Error(err.Error())
 			return
 		}
 
@@ -199,7 +292,7 @@ Status code 404 - interval not found
 Status code 500 - unanticipated issues
 api/v1/interval
 */
-func intervalActionByIdHandler(w http.ResponseWriter, r *http.Request) {
+func intervalActionByIdHandler(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
 	if r.Body != nil {
 		defer r.Body.Close()
 	}
@@ -209,7 +302,7 @@ func intervalActionByIdHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := url.QueryUnescape(vars["id"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		LoggingClient.Error("Error un-escaping the value interval id: " + err.Error())
+		loggingClient.Error("Error un-escaping the value interval id: " + err.Error())
 		return
 	}
 
@@ -223,10 +316,10 @@ func intervalActionByIdHandler(w http.ResponseWriter, r *http.Request) {
 			default:
 				http.Error(w, x.Error(), http.StatusInternalServerError)
 			}
-			LoggingClient.Error(err.Error())
+			loggingClient.Error(err.Error())
 			return
 		}
-		pkg.Encode(intervalAction, w, LoggingClient)
+		pkg.Encode(intervalAction, w, loggingClient)
 		// Post a new Interval Action
 	case http.MethodDelete:
 		if err = deleteIntervalActionById(id); err != nil {
@@ -251,7 +344,7 @@ Status code 404 - interval action not found
 Status code 500 - unanticipated issues
 api/v1/interval
 */
-func intervalActionByNameHandler(w http.ResponseWriter, r *http.Request) {
+func intervalActionByNameHandler(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
 	if r.Body != nil {
 		defer r.Body.Close()
 	}
@@ -261,7 +354,7 @@ func intervalActionByNameHandler(w http.ResponseWriter, r *http.Request) {
 	name, err := url.QueryUnescape(vars["name"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		LoggingClient.Error("Error un-escaping the value name: " + err.Error())
+		loggingClient.Error("Error un-escaping the value name: " + err.Error())
 		return
 	}
 
@@ -275,10 +368,10 @@ func intervalActionByNameHandler(w http.ResponseWriter, r *http.Request) {
 			default:
 				http.Error(w, x.Error(), http.StatusInternalServerError)
 			}
-			LoggingClient.Error(err.Error())
+			loggingClient.Error(err.Error())
 			return
 		}
-		pkg.Encode(intervalAction, w, LoggingClient)
+		pkg.Encode(intervalAction, w, loggingClient)
 		// Post a new Interval Action
 	case http.MethodDelete:
 		if err = deleteIntervalActionByName(name); err != nil {
@@ -303,7 +396,7 @@ Status code 404 - interval action not found
 Status code 500 - unanticipated issues
 api/v1/interval
 */
-func intervalActionByTargetHandler(w http.ResponseWriter, r *http.Request) {
+func intervalActionByTargetHandler(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
 	if r.Body != nil {
 		defer r.Body.Close()
 	}
@@ -311,10 +404,11 @@ func intervalActionByTargetHandler(w http.ResponseWriter, r *http.Request) {
 	// URL parameters
 	vars := mux.Vars(r)
 	target, err := url.QueryUnescape(vars["target"])
-	//Issues un-escaping
+
+	// Issues un-escaping
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		LoggingClient.Error("Error un-escaping the value descriptor name: " + err.Error())
+		loggingClient.Error("Error un-escaping the value descriptor name: " + err.Error())
 		return
 	}
 
@@ -322,11 +416,11 @@ func intervalActionByTargetHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		intervalActions, err := getIntervalActionsByTarget(target)
 		if err != nil {
-			LoggingClient.Error(err.Error())
+			loggingClient.Error(err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		pkg.Encode(intervalActions, w, LoggingClient)
+		pkg.Encode(intervalActions, w, loggingClient)
 		break
 	}
 }
@@ -337,7 +431,7 @@ Status code 404 - interval action not found
 Status code 500 - unanticipated issues
 api/v1/interval
 */
-func intervalActionByIntervalHandler(w http.ResponseWriter, r *http.Request) {
+func intervalActionByIntervalHandler(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
 	if r.Body != nil {
 		defer r.Body.Close()
 	}
@@ -345,10 +439,11 @@ func intervalActionByIntervalHandler(w http.ResponseWriter, r *http.Request) {
 	// URL parameters
 	vars := mux.Vars(r)
 	interval, err := url.QueryUnescape(vars["interval"])
-	//Issues un-escaping
+
+	// Issues un-escaping
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		LoggingClient.Error("Error un-escaping the value interval name: " + err.Error())
+		loggingClient.Error("Error un-escaping the value interval name: " + err.Error())
 		return
 	}
 
@@ -356,22 +451,22 @@ func intervalActionByIntervalHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		intervalActions, err := getIntervalActionsByInterval(interval)
 		if err != nil {
-			LoggingClient.Error(err.Error())
+			loggingClient.Error(err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		pkg.Encode(intervalActions, w, LoggingClient)
+		pkg.Encode(intervalActions, w, loggingClient)
 		break
 	}
 }
 
 // Scrub only the IntervalAction(s) leaving the Interval(s) behind
-func scrubIntervalActionsHandler(w http.ResponseWriter, r *http.Request) {
+func scrubIntervalActionsHandler(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
 	defer r.Body.Close()
 
 	switch r.Method {
 	case http.MethodDelete:
-		count, err := scrubAllInteralActions()
+		count, err := scrubAllInteralActions(loggingClient)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
