@@ -42,7 +42,7 @@ const (
 	pkiInitBaseDir                = "edgex/security-secrets-setup"
 	defaultPkiCacheDir            = "/etc/edgex/pki"
 	defaultPkiDeployDir           = "/run/edgex/secrets"
-	PkiInitFilePerServiceComplete = ".security-secrets-secrets.complete"
+	PkiInitFilePerServiceComplete = ".security-secrets-setup.complete"
 )
 
 func CopyFile(fileSrc, fileDest string) (int64, error) {
