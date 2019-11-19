@@ -26,6 +26,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/core/command/container"
 	bootstrapContainer "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
+	errorContainer "github.com/edgexfoundry/edgex-go/internal/pkg/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/endpoint"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
@@ -50,7 +51,7 @@ func BootstrapHandler(wg *sync.WaitGroup, ctx context.Context, startupTimer star
 				},
 				endpoint.Endpoint{RegistryClient: &registryClient})
 		},
-		bootstrapContainer.ErrorHandlerName: func(get di.Get) interface{} {
+		errorContainer.ErrorHandlerName: func(get di.Get) interface{} {
 			return errorconcept.NewErrorHandler(loggingClient)
 		},
 	})
