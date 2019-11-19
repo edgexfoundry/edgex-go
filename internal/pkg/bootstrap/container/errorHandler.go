@@ -19,10 +19,10 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
 )
 
-// ErrorHandler contains the name of command's errorconcept.Handler implementation in the DIC.
+// ErrorHandler contains the name of the errorconcept.Handler implementation in the DIC.
 var ErrorHandlerName = di.TypeInstanceToName(errorconcept.Handler{})
 
-// ErrorHandlerFrom helper function queries the DIC and returns command's errorconcept.Handler implementation.
+// ErrorHandlerFrom helper function queries the DIC and returns the errorconcept.Handler implementation.
 func ErrorHandlerFrom(get di.Get) *errorconcept.Handler {
 	return get(ErrorHandlerName).(*errorconcept.Handler)
 }

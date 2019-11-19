@@ -50,7 +50,7 @@ func BootstrapHandler(wg *sync.WaitGroup, ctx context.Context, startupTimer star
 				},
 				endpoint.Endpoint{RegistryClient: &registryClient})
 		},
-		container.ErrorHandlerName: func(get di.Get) interface{} {
+		bootstrapContainer.ErrorHandlerName: func(get di.Get) interface{} {
 			return errorconcept.NewErrorHandler(loggingClient)
 		},
 	})
