@@ -415,6 +415,8 @@ func createMockIntervalLoaderUpdateErr() interfaces.DBClient {
 	return &myMock
 }
 
+// this function serves to update the unexported isValidated field,
+// which can only be done by marshalling and unmarshalling to JSON.
 func validateInterval(interval *contract.Interval) {
 	b, _ := json.Marshal(interval)
 	_ = interval.UnmarshalJSON(b)
