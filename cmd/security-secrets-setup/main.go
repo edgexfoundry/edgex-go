@@ -28,10 +28,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets"
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets/command/cache"
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets/command/generate"
-	_import "github.com/edgexfoundry/edgex-go/internal/security/secrets/command/import"
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets/command/legacy"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/container"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/contract"
@@ -39,11 +35,6 @@ import (
 
 func wrappedMain() (*config.ConfigurationStruct, int) {
 	startupTimer := startup.NewStartUpTimer(internal.BootRetrySecondsDefault, internal.BootTimeoutSecondsDefault)
-
-	legacyFlags := legacy.NewFlags()
-	generateFlagSet := generate.NewFlags()
-	cacheFlagSet := cache.NewFlags()
-	importFlagSet := _import.NewFlags()
 
 	var configDir string
 	flag.StringVar(&configDir, "confdir", "", "Specify local configuration directory")
@@ -65,7 +56,7 @@ func wrappedMain() (*config.ConfigurationStruct, int) {
 			return get(container.ConfigurationName)
 		},
 	})
-	serviceHandler := secrets.NewBootstrapHandler(legacyFlags, generateFlagSet, cacheFlagSet, importFlagSet, flag.Args()[0])
+	serviceHandler := secrets.NewBootstrapHandler()
 	bootstrap.Run(
 		configDir,
 		bootstrap.EmptyProfileDir,

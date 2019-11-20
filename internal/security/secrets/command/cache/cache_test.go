@@ -37,8 +37,8 @@ func TestCacheOn(t *testing.T) {
 	defer tearDown()
 
 	loggerMock := logger.NewMockClient()
-	generateCommand, _ := generate.NewCommand(generate.NewFlags(), loggerMock, configuration)
-	command, _ := NewCommand(NewFlags(), loggerMock, configuration, generateCommand)
+	generateCommand, _ := generate.NewCommand(loggerMock, configuration)
+	command, _ := NewCommand(loggerMock, configuration, generateCommand)
 	exitCode, err := command.Execute()
 
 	assert.Nil(t, err)
@@ -75,8 +75,8 @@ func TestCacheDirNotEmpty(t *testing.T) {
 	defer tearDown()
 
 	loggerMock := logger.NewMockClient()
-	generateCommand, _ := generate.NewCommand(generate.NewFlags(), loggerMock, configuration)
-	command, _ := NewCommand(NewFlags(), loggerMock, configuration, generateCommand)
+	generateCommand, _ := generate.NewCommand(loggerMock, configuration)
+	command, _ := NewCommand(loggerMock, configuration, generateCommand)
 	exitCode, err := command.Execute()
 
 	assert.Nil(t, err)
@@ -118,8 +118,8 @@ func TestCacheOff(t *testing.T) {
 	defer tearDown()
 
 	loggerMock := logger.NewMockClient()
-	generateCommand, _ := generate.NewCommand(generate.NewFlags(), loggerMock, configuration)
-	command, _ := NewCommand(NewFlags(), loggerMock, configuration, generateCommand)
+	generateCommand, _ := generate.NewCommand(loggerMock, configuration)
+	command, _ := NewCommand(loggerMock, configuration, generateCommand)
 	exitCode, err := command.Execute()
 
 	assert.Equal(t, contract.StatusCodeExitNormal, exitCode)

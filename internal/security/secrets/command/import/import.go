@@ -35,15 +35,13 @@ type Command struct {
 }
 
 func NewCommand(
-	flags *FlagSet,
 	loggingClient logger.LoggingClient,
 	configuration *config.ConfigurationStruct) (*Command, *flag.FlagSet) {
 
 	return &Command{
-			loggingClient: loggingClient,
-			configuration: configuration,
-		},
-		flags.flagSet
+		loggingClient: loggingClient,
+		configuration: configuration,
+	}, flag.NewFlagSet(CommandName, flag.ExitOnError)
 }
 
 // Execute deploys PKI from CacheDir to DeployDir.  It retruns an error,

@@ -48,15 +48,13 @@ type Command struct {
 }
 
 func NewCommand(
-	flags *FlagSet,
 	loggingClient logger.LoggingClient,
 	configuration *config.ConfigurationStruct) (*Command, *flag.FlagSet) {
 
 	return &Command{
-			loggingClient: loggingClient,
-			configuration: configuration,
-		},
-		flags.flagSet
+		loggingClient: loggingClient,
+		configuration: configuration,
+	}, flag.NewFlagSet(CommandName, flag.ExitOnError)
 }
 
 func (c *Command) Execute() (statusCode int, err error) {

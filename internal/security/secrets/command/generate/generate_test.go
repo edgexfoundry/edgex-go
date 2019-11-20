@@ -34,7 +34,7 @@ func TestGenerate(t *testing.T) {
 	tearDown, configuration := SetupGenerateTest(t, test.VaultJSONPkiSetupExists, test.KongJSONPkiSetupExists)
 	defer tearDown()
 
-	command, _ := NewCommand(NewFlags(), logger.NewMockClient(), configuration)
+	command, _ := NewCommand(logger.NewMockClient(), configuration)
 	exitCode, err := command.Execute()
 
 	assert.Equal(t, contract.StatusCodeExitNormal, exitCode)
@@ -69,7 +69,7 @@ func TestGenerateWithVaultJSONPkiSetupMissing(t *testing.T) {
 	tearDown, configuration := SetupGenerateTest(t, test.VaultJSONPkiSetupDoesNotExist, test.KongJSONPkiSetupExists)
 	defer tearDown()
 
-	command, _ := NewCommand(NewFlags(), logger.NewMockClient(), configuration)
+	command, _ := NewCommand(logger.NewMockClient(), configuration)
 	exitCode, err := command.Execute()
 
 	assert.Equal(t, contract.StatusCodeExitWithError, exitCode)
@@ -80,7 +80,7 @@ func TestGenerateWithKongJSONPkiSetupMissing(t *testing.T) {
 	tearDown, configuration := SetupGenerateTest(t, test.VaultJSONPkiSetupExists, test.KongJSONPkiSetupDoesNotExist)
 	defer tearDown()
 
-	command, _ := NewCommand(NewFlags(), logger.NewMockClient(), configuration)
+	command, _ := NewCommand(logger.NewMockClient(), configuration)
 	exitCode, err := command.Execute()
 
 	assert.Equal(t, contract.StatusCodeExitWithError, exitCode)

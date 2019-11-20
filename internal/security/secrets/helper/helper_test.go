@@ -89,7 +89,7 @@ func TestGetCertConfigDirValid(t *testing.T) {
 		assert.Fail(t, "unable to create directory")
 	}
 	defer func() {
-		os.Remove(certConfigDir)
+		os.RemoveAll(certConfigDir)
 	}()
 	if _, err := os.Create(filepath.Join(certConfigDir, testFileName)); err != nil {
 		assert.Fail(t, "unable to create file")

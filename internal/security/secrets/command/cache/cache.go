@@ -40,17 +40,15 @@ type Command struct {
 }
 
 func NewCommand(
-	flags *FlagSet,
 	loggingClient logger.LoggingClient,
 	configuration *config.ConfigurationStruct,
 	generate *generate.Command) (*Command, *flag.FlagSet) {
 
 	return &Command{
-			loggingClient: loggingClient,
-			configuration: configuration,
-			generate:      generate,
-		},
-		flags.flagSet
+		loggingClient: loggingClient,
+		configuration: configuration,
+		generate:      generate,
+	}, flag.NewFlagSet(CommandName, flag.ExitOnError)
 }
 
 // Execute generates PKI exactly once and cached to a designated location for future use.

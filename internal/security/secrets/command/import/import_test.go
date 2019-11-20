@@ -40,7 +40,7 @@ func TestImportCacheDirEmpty(t *testing.T) {
 	tearDown, configuration := setupImportTest(t)
 	defer tearDown()
 
-	command, _ := NewCommand(NewFlags(), logger.NewMockClient(), configuration)
+	command, _ := NewCommand(logger.NewMockClient(), configuration)
 	exitCode, err := command.Execute()
 
 	assert.NotNil(t, err)
@@ -63,7 +63,7 @@ func TestImportFromPKICache(t *testing.T) {
 	// put some test file into the cache dir first
 	writeTestFileToCacheDir(t, configuration)
 
-	command, _ := NewCommand(NewFlags(), logger.NewMockClient(), configuration)
+	command, _ := NewCommand(logger.NewMockClient(), configuration)
 	exitCode, err := command.Execute()
 
 	assert.Equal(t, contract.StatusCodeExitNormal, exitCode)
@@ -78,7 +78,7 @@ func TestImportFromPKICache(t *testing.T) {
 }
 
 func TestEmptyPkiCacheEnvironment(t *testing.T) {
-	command, _ := NewCommand(NewFlags(), logger.NewMockClient(), getConfiguration())
+	command, _ := NewCommand(logger.NewMockClient(), getConfiguration())
 	exitCode, err := command.Execute()
 
 	// when PKI_CACHE env is empty, it leads to non-existing dir
@@ -94,7 +94,7 @@ func TestImportOff(t *testing.T) {
 	// put some test file into the cache dir first
 	writeTestFileToCacheDir(t, configuration)
 
-	command, _ := NewCommand(NewFlags(), logger.NewMockClient(), configuration)
+	command, _ := NewCommand(logger.NewMockClient(), configuration)
 	exitCode, err := command.Execute()
 
 	assert.Equal(t, contract.StatusCodeExitNormal, exitCode)

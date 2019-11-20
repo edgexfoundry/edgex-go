@@ -32,28 +32,11 @@ import (
 )
 
 type Bootstrap struct {
-	legacyFlags     *legacy.FlagSet
-	generateFlagSet *generate.FlagSet
-	cacheFlagSet    *cache.FlagSet
-	importFlagSet   *_import.FlagSet
-	commandName     string
-	exitStatusCode  int
+	exitStatusCode int
 }
 
-func NewBootstrapHandler(
-	legacyFlags *legacy.FlagSet,
-	generateFlagSet *generate.FlagSet,
-	cacheFlagSet *cache.FlagSet,
-	importFlagSet *_import.FlagSet,
-	commandName string) *Bootstrap {
-
-	return &Bootstrap{
-		legacyFlags:     legacyFlags,
-		generateFlagSet: generateFlagSet,
-		cacheFlagSet:    cacheFlagSet,
-		importFlagSet:   importFlagSet,
-		commandName:     commandName,
-	}
+func NewBootstrapHandler() *Bootstrap {
+	return &Bootstrap{}
 }
 
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the data service.
@@ -67,14 +50,14 @@ func (b *Bootstrap) Handler(wg *sync.WaitGroup, ctx context.Context, startupTime
 	commandName := flag.Args()[0]
 	switch commandName {
 	case legacy.CommandName:
-		command, flagSet = legacy.NewCommand(b.legacyFlags, loggingClient)
+		command, flagSet = legacy.NewCommand(loggingClient)
 	case generate.CommandName:
-		command, flagSet = generate.NewCommand(b.generateFlagSet, loggingClient, configuration)
+		command, flagSet = generate.NewCommand(loggingClient, configuration)
 	case cache.CommandName:
-		generateCommand, _ := generate.NewCommand(b.generateFlagSet, loggingClient, configuration)
-		command, flagSet = cache.NewCommand(b.cacheFlagSet, loggingClient, configuration, generateCommand)
+		generateCommand, _ := generate.NewCommand(loggingClient, configuration)
+		command, flagSet = cache.NewCommand(loggingClient, configuration, generateCommand)
 	case _import.CommandName:
-		command, flagSet = _import.NewCommand(b.importFlagSet, loggingClient, configuration)
+		command, flagSet = _import.NewCommand(loggingClient, configuration)
 	default:
 		loggingClient.Error(fmt.Sprintf("unsupported subcommand %s", commandName))
 		b.exitStatusCode = contract.StatusCodeNoOptionSelected
