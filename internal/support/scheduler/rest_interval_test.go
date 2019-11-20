@@ -326,7 +326,6 @@ func createMockIntervalLoaderAddSuccess() interfaces.DBClient {
 	interval := createIntervals(1)[0]
 
 	validateInterval(&intervalForAdd)
-	validateInterval(&interval)
 
 	myMock.On("IntervalByName", intervalForAdd.Name).Return(interval, nil)
 	myMock.On("AddInterval", intervalForAdd).Return(intervalForAdd.ID, nil)
