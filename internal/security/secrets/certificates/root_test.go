@@ -15,26 +15,28 @@
 package certificates
 
 import (
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/contract"
 	"testing"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/mocks"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/seed"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
 
 func TestRootCertGenerate(t *testing.T) {
 	writer := mockFileWriter{}
-	logger := logger.MockLogger{}
+	mockLogger := logger.MockLogger{}
 	cfg := mocks.CreateValidX509ConfigMock()
 	dir := createDirectoryHandlerMock(cfg, t)
-	seed, err := secrets.NewCertificateSeed(cfg, dir)
+	certificateSeed, err := seed.NewCertificateSeed(cfg, dir)
 	if err != nil {
 		t.Error(err.Error())
 		return
 	}
 
-	seedGeneratorOn := seed
+	seedGeneratorOn := certificateSeed
 	seedGeneratorOn.NewCA = true
 	seedGeneratorOn.DumpKeys = true
 
@@ -43,17 +45,17 @@ func TestRootCertGenerate(t *testing.T) {
 	schemesOff.RSAScheme = false
 
 	tests := []struct {
-		name        string
-		seed        secrets.CertificateSeed
-		expectError bool
+		name            string
+		certificateSeed seed.CertificateSeed
+		expectError     bool
 	}{
-		{"GenOffOK", seed, false},
+		{"GenOffOK", certificateSeed, false},
 		{"GenOnOK", seedGeneratorOn, false},
 		{"SchemeFail", schemesOff, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			generator, err := NewCertificateGenerator(RootCertificate, tt.seed, writer, logger)
+			generator, err := NewCertificateGenerator(RootCertificate, tt.certificateSeed, writer, mockLogger)
 			if generator != nil {
 				err = generator.Generate()
 			}
@@ -69,7 +71,7 @@ func TestRootCertGenerate(t *testing.T) {
 	}
 }
 
-func createDirectoryHandlerMock(cfg config.X509Config, t *testing.T) secrets.DirectoryHandler {
+func createDirectoryHandlerMock(cfg config.X509Config, t *testing.T) contract.DirectoryHandler {
 	dir, err := cfg.PkiCADir()
 	if err != nil {
 		t.Error(err.Error())

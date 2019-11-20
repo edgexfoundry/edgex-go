@@ -15,53 +15,75 @@
 package secrets
 
 import (
+	"context"
+	"flag"
 	"fmt"
-	"path/filepath"
+	"sync"
 
-	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-	"github.com/edgexfoundry/go-mod-core-contracts/models"
+	bootstrapContainer "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/command/cache"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/command/generate"
+	_import "github.com/edgexfoundry/edgex-go/internal/security/secrets/command/import"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/command/legacy"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/container"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/contract"
 )
 
-// Global variables
-var Configuration *ConfigurationStruct
-var LoggingClient logger.LoggingClient
-
-func Init(configDir string) error {
-	// Unfortunately I have to do this because of utilization of the LoggingClient in config.LoadFromFile below.
-	// That function is expecting a LoggingClient instance. Right now, it appears that is only set via global var in that package
-	// TODO: This doesn't make any sense. Review this usage as applicable to all other service init routines.
-	//       See TODO in internal/pkg/config/loader.go where var LoggingClient is declared.
-	lc := logger.NewClient(internal.SecuritySecretsSetupServiceKey, false, "", models.InfoLog)
-	config.LoggingClient = lc
-
-	var err error
-	Configuration, err = initializeConfiguration(false, configDir, "") //These values are defaults. Preserved variables for possible later extension
-	if err != nil {
-		lc.Error(err.Error())
-		return err
-	}
-
-	loggerAbsPath, err := filepath.Abs(Configuration.Logging.File)
-	if err != nil {
-		lc.Error(fmt.Sprintf("Error on finding the absolute path for logging client from configuration Logging.File file %s: %v\n", Configuration.Logging.File, err))
-		return err
-	}
-
-	LoggingClient = logger.NewClient(internal.SecuritySecretsSetupServiceKey, Configuration.Logging.EnableRemote,
-		loggerAbsPath, Configuration.Writable.LogLevel)
-
-	return nil
+type Bootstrap struct {
+	exitStatusCode int
 }
 
-func initializeConfiguration(useRegistry bool, configDir, profileDir string) (*ConfigurationStruct, error) {
-	// We currently have to load configuration from filesystem first in order to obtain Registry Host/Port
-	configuration := &ConfigurationStruct{}
-	err := config.LoadFromFile(configDir, profileDir, configuration)
-	if err != nil {
-		return nil, err
+func NewBootstrapHandler() *Bootstrap {
+	return &Bootstrap{}
+}
+
+// BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the data service.
+func (b *Bootstrap) Handler(wg *sync.WaitGroup, ctx context.Context, startupTimer startup.Timer, dic *di.Container) bool {
+	loggingClient := bootstrapContainer.LoggingClientFrom(dic.Get)
+	configuration := container.ConfigurationFrom(dic.Get)
+
+	var command contract.Command
+	var flagSet *flag.FlagSet
+
+	commandName := flag.Args()[0]
+	switch commandName {
+	case legacy.CommandName:
+		command, flagSet = legacy.NewCommand(loggingClient)
+	case generate.CommandName:
+		command, flagSet = generate.NewCommand(loggingClient, configuration)
+	case cache.CommandName:
+		generateCommand, _ := generate.NewCommand(loggingClient, configuration)
+		command, flagSet = cache.NewCommand(loggingClient, configuration, generateCommand)
+	case _import.CommandName:
+		command, flagSet = _import.NewCommand(loggingClient, configuration)
+	default:
+		loggingClient.Error(fmt.Sprintf("unsupported subcommand %s", commandName))
+		b.exitStatusCode = contract.StatusCodeNoOptionSelected
+		return false
 	}
 
-	return configuration, nil
+	if err := flagSet.Parse(flag.Args()[1:]); err != nil {
+		loggingClient.Error(fmt.Sprintf("error parsing subcommand %s: %v", commandName, err))
+		b.exitStatusCode = contract.StatusCodeExitWithError
+		return false
+	}
+
+	if len(flagSet.Args()) > 0 {
+		loggingClient.Error(fmt.Sprintf("subcommand %s doesn't use any args", commandName))
+		b.exitStatusCode = contract.StatusCodeExitWithError
+		return false
+	}
+
+	exitStatusCode, err := command.Execute()
+	if err != nil {
+		loggingClient.Error(err.Error())
+	}
+	b.exitStatusCode = exitStatusCode
+	return false
+}
+
+func (b *Bootstrap) ExitStatusCode() int {
+	return b.exitStatusCode
 }

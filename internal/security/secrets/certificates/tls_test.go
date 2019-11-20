@@ -18,47 +18,48 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/mocks"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/seed"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
 
 func TestTLSCertGenerate(t *testing.T) {
 	writer := mockFileWriter{}
-	logger := logger.MockLogger{}
+	mockLogger := logger.MockLogger{}
 	cfg := mocks.CreateValidX509ConfigMock()
 	dir := createDirectoryHandlerMock(cfg, t)
-	seed, err := secrets.NewCertificateSeed(cfg, dir)
+	certificateSeed, err := seed.NewCertificateSeed(cfg, dir)
 	if err != nil {
 		t.Error(err.Error())
 		return
 	}
 
-	dumpKeysOn := seed
+	dumpKeysOn := certificateSeed
 	dumpKeysOn.DumpKeys = true
 
-	schemesOff := seed
+	schemesOff := certificateSeed
 	schemesOff.ECScheme = false
 	schemesOff.RSAScheme = false
 
-	certFileNotFound := seed
+	certFileNotFound := certificateSeed
 	certFileNotFound.CACertFile = overridePath("blank.pem", certFileNotFound.CACertFile)
 
-	certFileInvalid := seed
+	certFileInvalid := certificateSeed
 	certFileInvalid.CACertFile = overridePath("EdgeXTrustCAInvalid.pem", certFileInvalid.CACertFile)
 
-	keyfileNotFound := seed
+	keyfileNotFound := certificateSeed
 	keyfileNotFound.CAKeyFile = overridePath("blank.priv.key", certFileNotFound.CAKeyFile)
 
-	keyFileInvalid := seed
+	keyFileInvalid := certificateSeed
 	keyFileInvalid.CAKeyFile = overridePath("EdgeXTrustCAInvalid.priv.key", keyFileInvalid.CAKeyFile)
 
 	tests := []struct {
-		name        string
-		seed        secrets.CertificateSeed
-		expectError bool
+		name            string
+		certificateSeed seed.CertificateSeed
+		expectError     bool
 	}{
-		{"DefaultConfigOK", seed, false},
+		{"DefaultConfigOK", certificateSeed, false},
 		{"DefaultWithDumpKeys", dumpKeysOn, false},
 		{"SchemeFail", schemesOff, true},
 		{"CertFileNotFound", certFileNotFound, true},
@@ -68,7 +69,7 @@ func TestTLSCertGenerate(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			generator, err := NewCertificateGenerator(TLSCertificate, tt.seed, writer, logger)
+			generator, err := NewCertificateGenerator(TLSCertificate, tt.certificateSeed, writer, mockLogger)
 			if generator != nil {
 				err = generator.Generate()
 			}

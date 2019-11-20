@@ -1,5 +1,7 @@
 /*******************************************************************************
- * Copyright 2019 Dell Inc.
+ * Copyright 2017 Dell Inc.
+ * Copyright 2018 Dell Technologies Inc.
+ * Copyright (c) 2019 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -12,23 +14,17 @@
  * the License.
  *******************************************************************************/
 
-package secrets
+package container
 
-import "github.com/edgexfoundry/edgex-go/internal/pkg/config"
+import (
+	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/config"
+)
 
-type ConfigurationStruct struct {
-	Writable     WritableInfo
-	Logging      config.LoggingInfo
-	SecretsSetup SecretsSetupInfo
-}
+// ConfigurationName contains the name of the config.ConfigurationStruct implementation in the DIC.
+var ConfigurationName = di.TypeInstanceToName(config.ConfigurationStruct{})
 
-type WritableInfo struct {
-	LogLevel string
-}
-
-type SecretsSetupInfo struct {
-	WorkDir       string
-	DeployDir     string
-	CacheDir      string
-	CertConfigDir string
+// ConfigurationFrom helper function queries the DIC and returns the config.ConfigurationStruct implementation.
+func ConfigurationFrom(get di.Get) *config.ConfigurationStruct {
+	return get(ConfigurationName).(*config.ConfigurationStruct)
 }
