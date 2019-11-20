@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/edgexfoundry/edgex-go/internal/core/data/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
@@ -36,7 +35,6 @@ import (
 
 // Global variables
 var Configuration = &ConfigurationStruct{}
-var dbClient interfaces.DBClient
 
 // TODO: Refactor names in separate PR: See comments on PR #1133
 var chEvents chan interface{} // A channel for "domain events" sourced from event operations
@@ -50,7 +48,6 @@ var httpErrorHandler errorconcept.ErrorHandler
 func BootstrapHandler(wg *sync.WaitGroup, ctx context.Context, startupTimer startup.Timer, dic *di.Container) bool {
 	// update global variables.
 	loggingClient := container.LoggingClientFrom(dic.Get)
-	dbClient = container.DBClientFrom(dic.Get)
 
 	httpErrorHandler = errorconcept.NewErrorHandler(loggingClient)
 
