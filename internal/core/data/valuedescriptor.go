@@ -24,6 +24,7 @@ import (
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
+	"github.com/edgexfoundry/edgex-go/internal/core/data/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 )
 
@@ -54,7 +55,11 @@ func validateFormatString(v contract.ValueDescriptor, loggingClient logger.Loggi
 	return nil
 }
 
-func getValueDescriptorByName(name string, loggingClient logger.LoggingClient) (vd contract.ValueDescriptor, err error) {
+func getValueDescriptorByName(
+	name string,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) (vd contract.ValueDescriptor, err error) {
+
 	vd, err = dbClient.ValueDescriptorByName(name)
 
 	if err != nil {
@@ -69,7 +74,11 @@ func getValueDescriptorByName(name string, loggingClient logger.LoggingClient) (
 	return vd, nil
 }
 
-func getValueDescriptorById(id string, loggingClient logger.LoggingClient) (vd contract.ValueDescriptor, err error) {
+func getValueDescriptorById(
+	id string,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) (vd contract.ValueDescriptor, err error) {
+
 	vd, err = dbClient.ValueDescriptorById(id)
 
 	if err != nil {
@@ -86,7 +95,11 @@ func getValueDescriptorById(id string, loggingClient logger.LoggingClient) (vd c
 	return vd, nil
 }
 
-func getValueDescriptorsByUomLabel(uomLabel string, loggingClient logger.LoggingClient) (vdList []contract.ValueDescriptor, err error) {
+func getValueDescriptorsByUomLabel(
+	uomLabel string,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) (vdList []contract.ValueDescriptor, err error) {
+
 	vdList, err = dbClient.ValueDescriptorsByUomLabel(uomLabel)
 
 	if err != nil {
@@ -101,7 +114,11 @@ func getValueDescriptorsByUomLabel(uomLabel string, loggingClient logger.Logging
 	return vdList, nil
 }
 
-func getValueDescriptorsByLabel(label string, loggingClient logger.LoggingClient) (vdList []contract.ValueDescriptor, err error) {
+func getValueDescriptorsByLabel(
+	label string,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) (vdList []contract.ValueDescriptor, err error) {
+
 	vdList, err = dbClient.ValueDescriptorsByLabel(label)
 
 	if err != nil {
@@ -116,7 +133,11 @@ func getValueDescriptorsByLabel(label string, loggingClient logger.LoggingClient
 	return vdList, nil
 }
 
-func getValueDescriptorsByType(typ string, loggingClient logger.LoggingClient) (vdList []contract.ValueDescriptor, err error) {
+func getValueDescriptorsByType(
+	typ string,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) (vdList []contract.ValueDescriptor, err error) {
+
 	vdList, err = dbClient.ValueDescriptorsByType(typ)
 
 	if err != nil {
@@ -131,7 +152,11 @@ func getValueDescriptorsByType(typ string, loggingClient logger.LoggingClient) (
 	return vdList, nil
 }
 
-func getValueDescriptorsByDevice(device contract.Device, loggingClient logger.LoggingClient) (vdList []contract.ValueDescriptor, err error) {
+func getValueDescriptorsByDevice(
+	device contract.Device,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) (vdList []contract.ValueDescriptor, err error) {
+
 	// Get the names of the value descriptors
 	vdNames := []string{}
 	device.AllAssociatedValueDescriptors(&vdNames)
@@ -139,7 +164,7 @@ func getValueDescriptorsByDevice(device contract.Device, loggingClient logger.Lo
 	// Get the value descriptors
 	vdList = []contract.ValueDescriptor{}
 	for _, name := range vdNames {
-		vd, err := getValueDescriptorByName(name, loggingClient)
+		vd, err := getValueDescriptorByName(name, loggingClient, dbClient)
 
 		// Not an error if not found
 		if err != nil {
@@ -157,7 +182,12 @@ func getValueDescriptorsByDevice(device contract.Device, loggingClient logger.Lo
 	return vdList, nil
 }
 
-func getValueDescriptorsByDeviceName(name string, ctx context.Context, loggingClient logger.LoggingClient) (vdList []contract.ValueDescriptor, err error) {
+func getValueDescriptorsByDeviceName(
+	name string,
+	ctx context.Context,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) (vdList []contract.ValueDescriptor, err error) {
+
 	// Get the device
 	device, err := mdc.DeviceForName(name, ctx)
 	if err != nil {
@@ -165,10 +195,15 @@ func getValueDescriptorsByDeviceName(name string, ctx context.Context, loggingCl
 		return []contract.ValueDescriptor{}, err
 	}
 
-	return getValueDescriptorsByDevice(device, loggingClient)
+	return getValueDescriptorsByDevice(device, loggingClient, dbClient)
 }
 
-func getValueDescriptorsByDeviceId(id string, ctx context.Context, loggingClient logger.LoggingClient) (vdList []contract.ValueDescriptor, err error) {
+func getValueDescriptorsByDeviceId(
+	id string,
+	ctx context.Context,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) (vdList []contract.ValueDescriptor, err error) {
+
 	// Get the device
 	device, err := mdc.Device(id, ctx)
 	if err != nil {
@@ -176,10 +211,13 @@ func getValueDescriptorsByDeviceId(id string, ctx context.Context, loggingClient
 		return []contract.ValueDescriptor{}, err
 	}
 
-	return getValueDescriptorsByDevice(device, loggingClient)
+	return getValueDescriptorsByDevice(device, loggingClient, dbClient)
 }
 
-func getAllValueDescriptors(loggingClient logger.LoggingClient) (vd []contract.ValueDescriptor, err error) {
+func getAllValueDescriptors(
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) (vd []contract.ValueDescriptor, err error) {
+
 	vd, err = dbClient.ValueDescriptors()
 	if err != nil {
 		loggingClient.Error(err.Error())
@@ -189,7 +227,10 @@ func getAllValueDescriptors(loggingClient logger.LoggingClient) (vd []contract.V
 	return vd, nil
 }
 
-func decodeValueDescriptor(reader io.ReadCloser, loggingClient logger.LoggingClient) (vd contract.ValueDescriptor, err error) {
+func decodeValueDescriptor(
+	reader io.ReadCloser,
+	loggingClient logger.LoggingClient) (vd contract.ValueDescriptor, err error) {
+
 	v := contract.ValueDescriptor{}
 	err = json.NewDecoder(reader).Decode(&v)
 	// Problems decoding
@@ -207,7 +248,11 @@ func decodeValueDescriptor(reader io.ReadCloser, loggingClient logger.LoggingCli
 	return v, nil
 }
 
-func addValueDescriptor(vd contract.ValueDescriptor, loggingClient logger.LoggingClient) (id string, err error) {
+func addValueDescriptor(
+	vd contract.ValueDescriptor,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) (id string, err error) {
+
 	id, err = dbClient.AddValueDescriptor(vd)
 	if err != nil {
 		loggingClient.Error(err.Error())
@@ -221,8 +266,12 @@ func addValueDescriptor(vd contract.ValueDescriptor, loggingClient logger.Loggin
 	return id, nil
 }
 
-func updateValueDescriptor(from contract.ValueDescriptor, loggingClient logger.LoggingClient) error {
-	to, err := getValueDescriptorById(from.Id, loggingClient)
+func updateValueDescriptor(
+	from contract.ValueDescriptor,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) error {
+
+	to, err := getValueDescriptorById(from.Id, loggingClient, dbClient)
 	if err != nil {
 		return err
 	}
@@ -259,7 +308,7 @@ func updateValueDescriptor(from contract.ValueDescriptor, loggingClient logger.L
 	if from.Name != "" {
 		// Check if value descriptor is still in use by readings if the name changes
 		if from.Name != to.Name {
-			r, err := getReadingsByValueDescriptor(to.Name, 10, loggingClient) // Arbitrary limit, we're just checking if there are any readings
+			r, err := getReadingsByValueDescriptor(to.Name, 10, loggingClient, dbClient) // Arbitrary limit, we're just checking if there are any readings
 			if err != nil {
 				loggingClient.Error("Error checking the readings for the value descriptor: " + err.Error())
 				return err
@@ -297,7 +346,11 @@ func updateValueDescriptor(from contract.ValueDescriptor, loggingClient logger.L
 	return nil
 }
 
-func deleteValueDescriptor(vd contract.ValueDescriptor, loggingClient logger.LoggingClient) error {
+func deleteValueDescriptor(
+	vd contract.ValueDescriptor,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) error {
+
 	// Check if the value descriptor is still in use by readings
 	readings, err := dbClient.ReadingsByValueDescriptor(vd.Name, 10)
 	if err != nil {
@@ -318,28 +371,28 @@ func deleteValueDescriptor(vd contract.ValueDescriptor, loggingClient logger.Log
 	return nil
 }
 
-func deleteValueDescriptorByName(name string, loggingClient logger.LoggingClient) error {
+func deleteValueDescriptorByName(name string, loggingClient logger.LoggingClient, dbClient interfaces.DBClient) error {
 	// Check if the value descriptor exists
-	vd, err := getValueDescriptorByName(name, loggingClient)
+	vd, err := getValueDescriptorByName(name, loggingClient, dbClient)
 	if err != nil {
 		return err
 	}
 
-	if err = deleteValueDescriptor(vd, loggingClient); err != nil {
+	if err = deleteValueDescriptor(vd, loggingClient, dbClient); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func deleteValueDescriptorById(id string, loggingClient logger.LoggingClient) error {
+func deleteValueDescriptorById(id string, loggingClient logger.LoggingClient, dbClient interfaces.DBClient) error {
 	// Check if the value descriptor exists
-	vd, err := getValueDescriptorById(id, loggingClient)
+	vd, err := getValueDescriptorById(id, loggingClient, dbClient)
 	if err != nil {
 		return err
 	}
 
-	if err = deleteValueDescriptor(vd, loggingClient); err != nil {
+	if err = deleteValueDescriptor(vd, loggingClient, dbClient); err != nil {
 		return err
 	}
 

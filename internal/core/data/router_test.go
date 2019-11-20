@@ -180,10 +180,9 @@ func TestRestValueDescriptorsUsageHandler(t *testing.T) {
 			defer func() { Configuration = &ConfigurationStruct{} }()
 
 			httpErrorHandler = errorconcept.NewErrorHandler(logger.NewMockClient())
-			dbClient = tt.dbMock
 			Configuration.Service = tt.config
 			rr := httptest.NewRecorder()
-			restValueDescriptorsUsageHandler(rr, tt.request, logger.NewMockClient())
+			restValueDescriptorsUsageHandler(rr, tt.request, logger.NewMockClient(), tt.dbMock)
 			response := rr.Result()
 			b, _ := ioutil.ReadAll(response.Body)
 			var r []map[string]bool

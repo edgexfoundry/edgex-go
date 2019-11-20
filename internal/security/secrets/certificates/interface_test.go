@@ -18,12 +18,13 @@ import (
 	"os"
 	"testing"
 
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/seed"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
 
 func TestNewCertificateGenerator(t *testing.T) {
-	seed := secrets.CertificateSeed{}
+	certificateSeed := seed.CertificateSeed{}
 	writer := mockFileWriter{}
 	mockLogger := logger.MockLogger{}
 
@@ -38,7 +39,7 @@ func TestNewCertificateGenerator(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := NewCertificateGenerator(tt.certType, seed, writer, mockLogger)
+			_, err := NewCertificateGenerator(tt.certType, certificateSeed, writer, mockLogger)
 			if err != nil && !tt.expectError {
 				t.Errorf("unexpected error %v", err)
 				return

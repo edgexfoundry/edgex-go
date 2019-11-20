@@ -29,11 +29,7 @@ func newReadingsMockDB() interfaces.DBClient {
 func TestGetAllReadings(t *testing.T) {
 	reset()
 	Configuration.Service.MaxResultCount = 5
-
-	dbClient = newReadingsMockDB()
-
-	_, err := getAllReadings(logger.NewMockClient())
-
+	_, err := getAllReadings(logger.NewMockClient(), newReadingsMockDB())
 	if err != nil {
 		t.Errorf("Unexpected error thrown getting all readings: %s", err.Error())
 	}
@@ -42,10 +38,7 @@ func TestGetAllReadings(t *testing.T) {
 func TestGetAllReadingsOverLimit(t *testing.T) {
 	reset()
 	Configuration.Service.MaxResultCount = 1
-
-	dbClient = newReadingsMockDB()
-
-	_, err := getAllReadings(logger.NewMockClient())
+	_, err := getAllReadings(logger.NewMockClient(), newReadingsMockDB())
 
 	if err != nil {
 		switch err.(type) {
@@ -64,14 +57,9 @@ func TestGetAllReadingsOverLimit(t *testing.T) {
 func TestGetAllReadingsError(t *testing.T) {
 	reset()
 	Configuration.Service.MaxResultCount = 5
-	myMock := &dbMock.DBClient{}
-
-	myMock.On("Readings").Return([]models.Reading{}, fmt.Errorf("some error"))
-
-	dbClient = myMock
-
-	_, err := getAllReadings(logger.NewMockClient())
-
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("Readings").Return([]models.Reading{}, fmt.Errorf("some error"))
+	_, err := getAllReadings(logger.NewMockClient(), dbClientMock)
 	if err == nil {
 		t.Errorf("Expected error getting all readings")
 	}
@@ -79,14 +67,9 @@ func TestGetAllReadingsError(t *testing.T) {
 
 func TestAddReading(t *testing.T) {
 	reset()
-	myMock := &dbMock.DBClient{}
-
-	myMock.On("AddReading", mock.Anything).Return("", nil)
-
-	dbClient = myMock
-
-	_, err := addReading(models.Reading{Name: "valid"}, logger.NewMockClient())
-
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("AddReading", mock.Anything).Return("", nil)
+	_, err := addReading(models.Reading{Name: "valid"}, logger.NewMockClient(), dbClientMock)
 	if err != nil {
 		t.Errorf("Unexpected error adding reading")
 	}
@@ -94,14 +77,9 @@ func TestAddReading(t *testing.T) {
 
 func TestAddReadingError(t *testing.T) {
 	reset()
-	myMock := &dbMock.DBClient{}
-
-	myMock.On("AddReading", mock.Anything).Return("", fmt.Errorf("some error"))
-
-	dbClient = myMock
-
-	_, err := addReading(models.Reading{}, logger.NewMockClient())
-
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("AddReading", mock.Anything).Return("", fmt.Errorf("some error"))
+	_, err := addReading(models.Reading{}, logger.NewMockClient(), dbClientMock)
 	if err == nil {
 		t.Errorf("Expected error adding reading")
 	}
@@ -109,14 +87,9 @@ func TestAddReadingError(t *testing.T) {
 
 func TestGetReadingById(t *testing.T) {
 	reset()
-	myMock := &dbMock.DBClient{}
-
-	myMock.On("ReadingById", mock.Anything).Return(models.Reading{}, nil)
-
-	dbClient = myMock
-
-	_, err := getReadingById("valid", logger.NewMockClient())
-
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("ReadingById", mock.Anything).Return(models.Reading{}, nil)
+	_, err := getReadingById("valid", logger.NewMockClient(), dbClientMock)
 	if err != nil {
 		t.Errorf("Unexpected error getting reading by ID")
 	}
@@ -124,14 +97,9 @@ func TestGetReadingById(t *testing.T) {
 
 func TestGetReadingByIdNotFound(t *testing.T) {
 	reset()
-	myMock := &dbMock.DBClient{}
-
-	myMock.On("ReadingById", mock.Anything).Return(models.Reading{}, db.ErrNotFound)
-
-	dbClient = myMock
-
-	_, err := getReadingById("404", logger.NewMockClient())
-
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("ReadingById", mock.Anything).Return(models.Reading{}, db.ErrNotFound)
+	_, err := getReadingById("404", logger.NewMockClient(), dbClientMock)
 	if err != nil {
 		switch err.(type) {
 		case errors.ErrDbNotFound:
@@ -148,14 +116,9 @@ func TestGetReadingByIdNotFound(t *testing.T) {
 
 func TestGetReadingByIdError(t *testing.T) {
 	reset()
-	myMock := &dbMock.DBClient{}
-
-	myMock.On("ReadingById", mock.Anything).Return(models.Reading{}, fmt.Errorf("some error"))
-
-	dbClient = myMock
-
-	_, err := getReadingById("error", logger.NewMockClient())
-
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("ReadingById", mock.Anything).Return(models.Reading{}, fmt.Errorf("some error"))
+	_, err := getReadingById("error", logger.NewMockClient(), dbClientMock)
 	if err == nil {
 		t.Errorf("Expected error getting reading by ID with some error")
 	}
@@ -163,48 +126,33 @@ func TestGetReadingByIdError(t *testing.T) {
 
 func TestDeleteReadingById(t *testing.T) {
 	reset()
-	myMock := &dbMock.DBClient{}
-
-	myMock.On("DeleteReadingById", mock.Anything).Return(nil).Once()
-
-	dbClient = myMock
-
-	err := deleteReadingById("valid", logger.NewMockClient())
-
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("DeleteReadingById", mock.Anything).Return(nil).Once()
+	err := deleteReadingById("valid", logger.NewMockClient(), dbClientMock)
 	if err != nil {
 		t.Errorf("Unexpected error deleting reading by ID")
 	}
 
-	myMock.AssertExpectations(t)
+	dbClientMock.AssertExpectations(t)
 }
 
 func TestDeleteReadingByIdError(t *testing.T) {
 	reset()
-	myMock := &dbMock.DBClient{}
-
-	myMock.On("DeleteReadingById", mock.Anything).Return(fmt.Errorf("some error"))
-
-	dbClient = myMock
-
-	err := deleteReadingById("invalid", logger.NewMockClient())
-
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("DeleteReadingById", mock.Anything).Return(fmt.Errorf("some error"))
+	err := deleteReadingById("invalid", logger.NewMockClient(), dbClientMock)
 	if err == nil {
 		t.Errorf("Expected error deleting reading by ID")
 	}
 
-	myMock.AssertExpectations(t)
+	dbClientMock.AssertExpectations(t)
 }
 
 func TestCountReadings(t *testing.T) {
 	reset()
-	myMock := &dbMock.DBClient{}
-
-	myMock.On("ReadingCount").Return(2, nil)
-
-	dbClient = myMock
-
-	_, err := countReadings(logger.NewMockClient())
-
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("ReadingCount").Return(2, nil)
+	_, err := countReadings(logger.NewMockClient(), dbClientMock)
 	if err != nil {
 		t.Errorf("Unexpected error in CountReadings")
 	}
@@ -212,14 +160,9 @@ func TestCountReadings(t *testing.T) {
 
 func TestCountReadingsError(t *testing.T) {
 	reset()
-	myMock := &dbMock.DBClient{}
-
-	myMock.On("ReadingCount").Return(2, fmt.Errorf("some error"))
-
-	dbClient = myMock
-
-	_, err := countReadings(logger.NewMockClient())
-
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("ReadingCount").Return(2, fmt.Errorf("some error"))
+	_, err := countReadings(logger.NewMockClient(), dbClientMock)
 	if err == nil {
 		t.Errorf("Expected error in CountReadings")
 	}
@@ -227,14 +170,9 @@ func TestCountReadingsError(t *testing.T) {
 
 func TestGetReadingsByDevice(t *testing.T) {
 	reset()
-	myMock := &dbMock.DBClient{}
-
-	myMock.On("ReadingsByDevice", mock.Anything, mock.Anything).Return(buildReadings(), nil)
-
-	dbClient = myMock
-
-	expectedReadings, err := getReadingsByDevice("valid", 0, context.Background(), logger.NewMockClient())
-
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("ReadingsByDevice", mock.Anything, mock.Anything).Return(buildReadings(), nil)
+	expectedReadings, err := getReadingsByDevice("valid", 0, context.Background(), logger.NewMockClient(), dbClientMock)
 	if err != nil {
 		t.Errorf("Unexpected error in getReadingsByDevice")
 	}
@@ -246,14 +184,9 @@ func TestGetReadingsByDevice(t *testing.T) {
 
 func TestGetReadingsByDeviceError(t *testing.T) {
 	reset()
-	myMock := &dbMock.DBClient{}
-
-	myMock.On("ReadingsByDevice", mock.Anything, mock.Anything).Return([]models.Reading{}, fmt.Errorf("some error"))
-
-	dbClient = myMock
-
-	_, err := getReadingsByDevice("error", 0, context.Background(), logger.NewMockClient())
-
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("ReadingsByDevice", mock.Anything, mock.Anything).Return([]models.Reading{}, fmt.Errorf("some error"))
+	_, err := getReadingsByDevice("error", 0, context.Background(), logger.NewMockClient(), dbClientMock)
 	if err == nil {
 		t.Errorf("Expected error in getReadingsByDevice")
 	}
@@ -261,14 +194,9 @@ func TestGetReadingsByDeviceError(t *testing.T) {
 
 func TestGetReadingsByValueDescriptor(t *testing.T) {
 	reset()
-	myMock := &dbMock.DBClient{}
-
-	myMock.On("ReadingsByValueDescriptor", mock.Anything, mock.Anything).Return([]models.Reading{}, nil)
-
-	dbClient = myMock
-
-	_, err := getReadingsByValueDescriptor("valid", 0, logger.NewMockClient())
-
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("ReadingsByValueDescriptor", mock.Anything, mock.Anything).Return([]models.Reading{}, nil)
+	_, err := getReadingsByValueDescriptor("valid", 0, logger.NewMockClient(), dbClientMock)
 	if err != nil {
 		t.Errorf("Unexpected error getting readings by value descriptor")
 	}
@@ -276,10 +204,7 @@ func TestGetReadingsByValueDescriptor(t *testing.T) {
 
 func TestGetReadingsByValueDescriptorOverLimit(t *testing.T) {
 	reset()
-	dbClient = nil
-
-	_, err := getReadingsByValueDescriptor("", math.MaxInt32, logger.NewMockClient())
-
+	_, err := getReadingsByValueDescriptor("", math.MaxInt32, logger.NewMockClient(), nil)
 	if err == nil {
 		t.Errorf("Expected error getting readings by value descriptor")
 	}
@@ -287,14 +212,9 @@ func TestGetReadingsByValueDescriptorOverLimit(t *testing.T) {
 
 func TestGetReadingsByValueDescriptorError(t *testing.T) {
 	reset()
-	myMock := &dbMock.DBClient{}
-
-	myMock.On("ReadingsByValueDescriptor", mock.Anything, mock.Anything).Return([]models.Reading{}, fmt.Errorf("some error"))
-
-	dbClient = myMock
-
-	_, err := getReadingsByValueDescriptor("error", 0, logger.NewMockClient())
-
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("ReadingsByValueDescriptor", mock.Anything, mock.Anything).Return([]models.Reading{}, fmt.Errorf("some error"))
+	_, err := getReadingsByValueDescriptor("error", 0, logger.NewMockClient(), dbClientMock)
 	if err == nil {
 		t.Errorf("Expected error in getting readings by value descriptor")
 	}
@@ -302,14 +222,9 @@ func TestGetReadingsByValueDescriptorError(t *testing.T) {
 
 func TestGetReadingsByValueDescriptorNames(t *testing.T) {
 	reset()
-	myMock := &dbMock.DBClient{}
-
-	myMock.On("ReadingsByValueDescriptorNames", mock.Anything, mock.Anything).Return([]models.Reading{}, nil)
-
-	dbClient = myMock
-
-	_, err := getReadingsByValueDescriptorNames([]string{"valid"}, 0, logger.NewMockClient())
-
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("ReadingsByValueDescriptorNames", mock.Anything, mock.Anything).Return([]models.Reading{}, nil)
+	_, err := getReadingsByValueDescriptorNames([]string{"valid"}, 0, logger.NewMockClient(), dbClientMock)
 	if err != nil {
 		t.Errorf("Unexpected error getting readings by value descriptor names")
 	}
@@ -317,14 +232,9 @@ func TestGetReadingsByValueDescriptorNames(t *testing.T) {
 
 func TestGetReadingsByValueDescriptorNamesError(t *testing.T) {
 	reset()
-	myMock := &dbMock.DBClient{}
-
-	myMock.On("ReadingsByValueDescriptorNames", mock.Anything, mock.Anything).Return([]models.Reading{}, fmt.Errorf("some error"))
-
-	dbClient = myMock
-
-	_, err := getReadingsByValueDescriptorNames([]string{"error"}, 0, logger.NewMockClient())
-
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("ReadingsByValueDescriptorNames", mock.Anything, mock.Anything).Return([]models.Reading{}, fmt.Errorf("some error"))
+	_, err := getReadingsByValueDescriptorNames([]string{"error"}, 0, logger.NewMockClient(), dbClientMock)
 	if err == nil {
 		t.Errorf("Expected error in getting readings by value descriptor names")
 	}
@@ -332,14 +242,9 @@ func TestGetReadingsByValueDescriptorNamesError(t *testing.T) {
 
 func TestGetReadingsByCreationTime(t *testing.T) {
 	reset()
-	myMock := &dbMock.DBClient{}
-
-	myMock.On("ReadingsByCreationTime", mock.Anything, mock.Anything, mock.Anything).Return([]models.Reading{}, nil)
-
-	dbClient = myMock
-
-	_, err := getReadingsByCreationTime(0xBEEF, 0, 0, logger.NewMockClient())
-
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("ReadingsByCreationTime", mock.Anything, mock.Anything, mock.Anything).Return([]models.Reading{}, nil)
+	_, err := getReadingsByCreationTime(0xBEEF, 0, 0, logger.NewMockClient(), dbClientMock)
 	if err != nil {
 		t.Errorf("Unexpected error getting readings by creation time")
 	}
@@ -347,14 +252,9 @@ func TestGetReadingsByCreationTime(t *testing.T) {
 
 func TestGetReadingsByCreationTimeError(t *testing.T) {
 	reset()
-	myMock := &dbMock.DBClient{}
-
-	myMock.On("ReadingsByCreationTime", mock.Anything, mock.Anything, mock.Anything).Return([]models.Reading{}, fmt.Errorf("some error"))
-
-	dbClient = myMock
-
-	_, err := getReadingsByCreationTime(0xDEADBEEF, 0, 0, logger.NewMockClient())
-
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("ReadingsByCreationTime", mock.Anything, mock.Anything, mock.Anything).Return([]models.Reading{}, fmt.Errorf("some error"))
+	_, err := getReadingsByCreationTime(0xDEADBEEF, 0, 0, logger.NewMockClient(), dbClientMock)
 	if err == nil {
 		t.Errorf("Expected error in getting readings by creation time")
 	}
@@ -362,14 +262,9 @@ func TestGetReadingsByCreationTimeError(t *testing.T) {
 
 func TestGetReadingsByDeviceAndValueDescriptor(t *testing.T) {
 	reset()
-	myMock := &dbMock.DBClient{}
-
-	myMock.On("ReadingsByDeviceAndValueDescriptor", mock.Anything, mock.Anything, mock.Anything).Return([]models.Reading{}, nil)
-
-	dbClient = myMock
-
-	_, err := getReadingsByDeviceAndValueDescriptor("valid", "valid", 0, logger.NewMockClient())
-
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("ReadingsByDeviceAndValueDescriptor", mock.Anything, mock.Anything, mock.Anything).Return([]models.Reading{}, nil)
+	_, err := getReadingsByDeviceAndValueDescriptor("valid", "valid", 0, logger.NewMockClient(), dbClientMock)
 	if err != nil {
 		t.Errorf("Unexpected error getting readings by device and value descriptor")
 	}
@@ -377,14 +272,9 @@ func TestGetReadingsByDeviceAndValueDescriptor(t *testing.T) {
 
 func TestGetReadingsByDeviceAndValueDescriptorError(t *testing.T) {
 	reset()
-	myMock := &dbMock.DBClient{}
-
-	myMock.On("ReadingsByDeviceAndValueDescriptor", mock.Anything, mock.Anything, mock.Anything).Return([]models.Reading{}, fmt.Errorf("some error"))
-
-	dbClient = myMock
-
-	_, err := getReadingsByDeviceAndValueDescriptor("error", "error", 0, logger.NewMockClient())
-
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("ReadingsByDeviceAndValueDescriptor", mock.Anything, mock.Anything, mock.Anything).Return([]models.Reading{}, fmt.Errorf("some error"))
+	_, err := getReadingsByDeviceAndValueDescriptor("error", "error", 0, logger.NewMockClient(), dbClientMock)
 	if err == nil {
 		t.Errorf("Expected error in getting readings by device and value descriptor")
 	}

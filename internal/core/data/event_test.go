@@ -38,12 +38,10 @@ import (
 // Test methods
 func TestEventCount(t *testing.T) {
 	reset()
-	myMock := &dbMock.DBClient{}
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("EventCount").Return(1, nil)
 
-	myMock.On("EventCount").Return(1, nil)
-	dbClient = myMock
-
-	c, err := countEvents()
+	c, err := countEvents(dbClientMock)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -55,13 +53,10 @@ func TestEventCount(t *testing.T) {
 
 func TestCountByDevice(t *testing.T) {
 	reset()
-	myMock := &dbMock.DBClient{}
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("EventCountByDeviceId", mock.Anything).Return(2, nil)
 
-	myMock.On("EventCountByDeviceId", mock.Anything).Return(2, nil)
-
-	dbClient = myMock
-
-	count, err := countEventsByDevice(testEvent.Device, context.Background())
+	count, err := countEventsByDevice(testEvent.Device, context.Background(), dbClientMock)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -108,9 +103,8 @@ func newDeleteEventsOlderThanAgeMockDB() *dbMock.DBClient {
 
 func TestDeleteByAge(t *testing.T) {
 	reset()
-	mockDb := newDeleteEventsOlderThanAgeMockDB()
-	dbClient = mockDb
-	count, err := deleteEventsByAge(-1, logger.NewMockClient())
+	dbClientMock := newDeleteEventsOlderThanAgeMockDB()
+	count, err := deleteEventsByAge(-1, logger.NewMockClient(), dbClientMock)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -119,20 +113,17 @@ func TestDeleteByAge(t *testing.T) {
 		t.Errorf("deleteEventsByAge returned 0; expected non-zero")
 	}
 
-	mockDb.AssertExpectations(t)
+	dbClientMock.AssertExpectations(t)
 }
 
 func TestDeleteEventByAgeErrorThrownByEventsOlderThanAge(t *testing.T) {
 	reset()
-	myMock := &dbMock.DBClient{}
-
-	myMock.On("EventsOlderThanAge", mock.MatchedBy(func(age int64) bool {
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("EventsOlderThanAge", mock.MatchedBy(func(age int64) bool {
 		return age == -1
 	})).Return([]models.Event{}, fmt.Errorf("some error"))
 
-	dbClient = myMock
-
-	_, err := deleteEventsByAge(-1, logger.NewMockClient())
+	_, err := deleteEventsByAge(-1, logger.NewMockClient(), dbClientMock)
 
 	if err == nil {
 		t.Errorf("Should throw error")
@@ -141,12 +132,10 @@ func TestDeleteEventByAgeErrorThrownByEventsOlderThanAge(t *testing.T) {
 
 func TestGetEvents(t *testing.T) {
 	reset()
-	myMock := &dbMock.DBClient{}
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("Events").Return([]models.Event{testEvent}, nil)
 
-	myMock.On("Events").Return([]models.Event{testEvent}, nil)
-	dbClient = myMock
-
-	events, err := getEvents(0)
+	events, err := getEvents(0, dbClientMock)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -184,10 +173,9 @@ func TestGetEventsWithLimit(t *testing.T) {
 	reset()
 
 	limit := 1
-	myMock := newGetEventsWithLimitMockDB(limit)
-	dbClient = myMock
+	dbClientMock := newGetEventsWithLimitMockDB(limit)
 
-	events, err := getEvents(limit)
+	events, err := getEvents(limit, dbClientMock)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -196,7 +184,7 @@ func TestGetEventsWithLimit(t *testing.T) {
 		t.Errorf("expected %d event", limit)
 	}
 
-	myMock.AssertExpectations(t)
+	dbClientMock.AssertExpectations(t)
 }
 
 func newAddEventMockDB(persist bool) *dbMock.DBClient {
@@ -222,8 +210,7 @@ func TestAddEventWithPersistence(t *testing.T) {
 		Type: "zero",
 	})
 
-	myMock := newAddEventMockDB(true)
-	dbClient = myMock
+	dbClientMock := newAddEventMockDB(true)
 	chEvents = make(chan interface{}, 10)
 	Configuration.Writable.PersistData = true
 	evt := models.Event{Device: testDeviceName, Origin: testOrigin, Readings: buildReadings()}
@@ -233,7 +220,7 @@ func TestAddEventWithPersistence(t *testing.T) {
 	wg.Add(1)
 	go handleDomainEvents(bitEvents, &wg, t)
 
-	_, err := addNewEvent(correlation.Event{Event: evt}, context.Background(), logger.NewMockClient())
+	_, err := addNewEvent(correlation.Event{Event: evt}, context.Background(), logger.NewMockClient(), dbClientMock)
 	Configuration.Writable.PersistData = false
 	if err != nil {
 		t.Errorf(err.Error())
@@ -246,13 +233,12 @@ func TestAddEventWithPersistence(t *testing.T) {
 		}
 	}
 
-	myMock.AssertExpectations(t)
+	dbClientMock.AssertExpectations(t)
 }
 
 func TestAddEventNoPersistence(t *testing.T) {
 	reset()
-	myMock := newAddEventMockDB(false)
-	dbClient = myMock
+	dbClientMock := newAddEventMockDB(false)
 	Configuration.Writable.PersistData = false
 	evt := models.Event{Device: testDeviceName, Origin: testOrigin, Readings: buildReadings()}
 	// wire up handlers to listen for device events
@@ -261,7 +247,7 @@ func TestAddEventNoPersistence(t *testing.T) {
 	wg.Add(1)
 	go handleDomainEvents(bitEvents, &wg, t)
 
-	newId, err := addNewEvent(correlation.Event{Event: evt}, context.Background(), logger.NewMockClient())
+	newId, err := addNewEvent(correlation.Event{Event: evt}, context.Background(), logger.NewMockClient(), dbClientMock)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -276,19 +262,16 @@ func TestAddEventNoPersistence(t *testing.T) {
 		}
 	}
 
-	myMock.AssertExpectations(t)
+	dbClientMock.AssertExpectations(t)
 }
 
 func TestUpdateEventNotFound(t *testing.T) {
 	reset()
-	myMock := &dbMock.DBClient{}
-
-	myMock.On("EventById", mock.Anything).Return(models.Event{}, fmt.Errorf("Event not found"))
-
-	dbClient = myMock
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("EventById", mock.Anything).Return(models.Event{}, fmt.Errorf("Event not found"))
 
 	evt := models.Event{ID: bson.NewObjectId().Hex(), Device: "Not Found", Origin: testOrigin}
-	err := updateEvent(correlation.Event{Event: evt}, context.Background())
+	err := updateEvent(correlation.Event{Event: evt}, context.Background(), dbClientMock)
 	if err != nil {
 		if x, ok := err.(errors.ErrEventNotFound); !ok {
 			t.Errorf("unexpected error type: %s", x.Error())
@@ -315,82 +298,75 @@ func newUpdateEventMockDB(expectedDevice string) *dbMock.DBClient {
 func TestUpdateEvent(t *testing.T) {
 	reset()
 	expectedDevice := "Some Value"
-	myMock := newUpdateEventMockDB(expectedDevice)
-	dbClient = myMock
+	dbClientMock := newUpdateEventMockDB(expectedDevice)
 
 	evt := models.Event{ID: testEvent.ID, Device: expectedDevice, Origin: testOrigin}
-	err := updateEvent(correlation.Event{Event: evt}, context.Background())
+	err := updateEvent(correlation.Event{Event: evt}, context.Background(), dbClientMock)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
 
-	myMock.AssertExpectations(t)
+	dbClientMock.AssertExpectations(t)
 }
 
 func TestDeleteAllEvents(t *testing.T) {
 	reset()
-	myMock := &dbMock.DBClient{}
-	myMock.On("ScrubAllEvents").Return(nil)
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("ScrubAllEvents").Return(nil)
 
-	dbClient = myMock
-
-	err := deleteAllEvents()
+	err := deleteAllEvents(dbClientMock)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
-	myMock.AssertExpectations(t)
+	dbClientMock.AssertExpectations(t)
 }
 
 func TestGetEventById(t *testing.T) {
 	reset()
-	myMock := &dbMock.DBClient{}
-	myMock.On("EventById", mock.MatchedBy(func(id string) bool {
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("EventById", mock.MatchedBy(func(id string) bool {
 		return id == testEvent.ID
 	})).Return(testEvent, nil)
 
-	dbClient = myMock
-
-	_, err := getEventById(testEvent.ID)
+	_, err := getEventById(testEvent.ID, dbClientMock)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
 
-	myMock.AssertExpectations(t)
+	dbClientMock.AssertExpectations(t)
 }
 
 func TestGetEventByIdNotFound(t *testing.T) {
 	reset()
-	myMock := &dbMock.DBClient{}
-	myMock.On("EventById", mock.Anything).Return(testEvent, db.ErrNotFound)
-	dbClient = myMock
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("EventById", mock.Anything).Return(testEvent, db.ErrNotFound)
 
-	_, err := getEventById("abcxyz")
+	_, err := getEventById("abcxyz", dbClientMock)
 	if err != nil {
 		if x, ok := err.(errors.ErrEventNotFound); !ok {
 			t.Errorf(x.Error())
 		}
 	}
 
-	myMock.AssertExpectations(t)
+	dbClientMock.AssertExpectations(t)
 }
 
 func TestUpdateEventPushDate(t *testing.T) {
 	reset()
-	myMock := &dbMock.DBClient{}
-	myMock.On("EventById", mock.MatchedBy(func(id string) bool {
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("EventById", mock.MatchedBy(func(id string) bool {
 		return id == testEvent.ID
 	})).Return(testEvent, nil)
-	myMock.On("UpdateEvent", mock.MatchedBy(func(event correlation.Event) bool {
+	dbClientMock.On("UpdateEvent", mock.MatchedBy(func(event correlation.Event) bool {
 		return event.ID == testEvent.ID
 	})).Return(nil)
-	dbClient = myMock
 
-	err := updateEventPushDate(testEvent.ID, context.Background())
+	err := updateEventPushDate(testEvent.ID, context.Background(), dbClientMock)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
 
-	myMock.AssertExpectations(t)
+	dbClientMock.AssertExpectations(t)
 }
 
 func newDeleteEventMockDB() *dbMock.DBClient {
@@ -412,52 +388,48 @@ func newDeleteEventMockDB() *dbMock.DBClient {
 
 func TestDeleteEventById(t *testing.T) {
 	reset()
-	myMock := newDeleteEventMockDB()
-	dbClient = myMock
+	dbClientMock := newDeleteEventMockDB()
 
-	err := deleteEventById(testEvent.ID, logger.NewMockClient())
+	err := deleteEventById(testEvent.ID, logger.NewMockClient(), dbClientMock)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
 
-	myMock.AssertExpectations(t)
+	dbClientMock.AssertExpectations(t)
 }
 
 func TestDeleteEvent(t *testing.T) {
 	reset()
-	myMock := newDeleteEventMockDB()
-	dbClient = myMock
+	dbClientMock := newDeleteEventMockDB()
 
-	err := deleteEvent(testEvent, logger.NewMockClient())
+	err := deleteEvent(testEvent, logger.NewMockClient(), dbClientMock)
 
 	if err != nil {
 		t.Errorf(err.Error())
 	}
 
-	_, err = getEventById(testEvent.ID)
+	_, err = getEventById(testEvent.ID, dbClientMock)
 	if err != nil {
 		if x, ok := err.(errors.ErrEventNotFound); !ok {
 			t.Errorf(x.Error())
 		}
 	}
 
-	myMock.AssertExpectations(t)
+	dbClientMock.AssertExpectations(t)
 }
 
 func TestDeleteEventEventDoesNotExist(t *testing.T) {
 	reset()
-	myMock := &dbMock.DBClient{}
-	myMock.On("DeleteEventById", mock.MatchedBy(func(id string) bool {
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("DeleteEventById", mock.MatchedBy(func(id string) bool {
 		return id == testEvent.ID
 	})).Return(db.ErrNotFound)
-	myMock.On("DeleteReadingsByDevice", mock.MatchedBy(func(device string) bool {
+	dbClientMock.On("DeleteReadingsByDevice", mock.MatchedBy(func(device string) bool {
 		return device == testDeviceName
 	})).Return(nil)
 
-	dbClient = myMock
 	testEvent.Readings = nil
-
-	err := deleteEvent(testEvent, logger.NewMockClient())
+	err := deleteEvent(testEvent, logger.NewMockClient(), dbClientMock)
 
 	if err == nil {
 		t.Errorf("Event does not exist and should throw error")
@@ -466,19 +438,18 @@ func TestDeleteEventEventDoesNotExist(t *testing.T) {
 
 func TestDeleteEventReadingDoesNotExist(t *testing.T) {
 	reset()
-	myMock := &dbMock.DBClient{}
-	myMock.On("DeleteEventById", mock.MatchedBy(func(id string) bool {
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("DeleteEventById", mock.MatchedBy(func(id string) bool {
 		return id == testEvent.ID
 	})).Return(db.ErrNotFound)
-	myMock.On("DeleteReadingById", mock.MatchedBy(func(id string) bool {
+	dbClientMock.On("DeleteReadingById", mock.MatchedBy(func(id string) bool {
 		return id == testEvent.Readings[0].Id || id == testEvent.Readings[1].Id
 	})).Return(db.ErrNotFound)
-	dbClient = myMock
-	myMock.On("DeleteReadingsByDevice", mock.MatchedBy(func(device string) bool {
+	dbClientMock.On("DeleteReadingsByDevice", mock.MatchedBy(func(device string) bool {
 		return device == testDeviceName
 	})).Return(nil)
 
-	err := deleteEvent(testEvent, logger.NewMockClient())
+	err := deleteEvent(testEvent, logger.NewMockClient(), dbClientMock)
 
 	if err == nil {
 		t.Errorf("Reading does not exist and should throw error")
@@ -487,15 +458,13 @@ func TestDeleteEventReadingDoesNotExist(t *testing.T) {
 
 func TestGetEventsByDeviceIdLimit(t *testing.T) {
 	reset()
-	myMock := &dbMock.DBClient{}
+	dbClientMock := &dbMock.DBClient{}
 
-	myMock.On("EventsForDeviceLimit", mock.MatchedBy(func(deviceId string) bool {
+	dbClientMock.On("EventsForDeviceLimit", mock.MatchedBy(func(deviceId string) bool {
 		return deviceId == "valid"
 	}), mock.Anything).Return([]models.Event{testEvent}, nil)
 
-	dbClient = myMock
-
-	expectedList, expectedNil := getEventsByDeviceIdLimit(0, "valid", logger.NewMockClient())
+	expectedList, expectedNil := getEventsByDeviceIdLimit(0, "valid", logger.NewMockClient(), dbClientMock)
 
 	if expectedNil != nil {
 		t.Errorf("Should not throw error")
@@ -512,15 +481,13 @@ func TestGetEventsByDeviceIdLimit(t *testing.T) {
 
 func TestGetEventsByDeviceIdLimitDBThrowsError(t *testing.T) {
 	reset()
-	myMock := &dbMock.DBClient{}
+	dbClientMock := &dbMock.DBClient{}
 
-	myMock.On("EventsForDeviceLimit", mock.MatchedBy(func(deviceId string) bool {
+	dbClientMock.On("EventsForDeviceLimit", mock.MatchedBy(func(deviceId string) bool {
 		return deviceId == "error"
 	}), mock.Anything).Return(nil, fmt.Errorf("some error"))
 
-	dbClient = myMock
-
-	expectedNil, expectedErr := getEventsByDeviceIdLimit(0, "error", logger.NewMockClient())
+	expectedNil, expectedErr := getEventsByDeviceIdLimit(0, "error", logger.NewMockClient(), dbClientMock)
 
 	if expectedNil != nil {
 		t.Errorf("Should not return list")
@@ -533,15 +500,12 @@ func TestGetEventsByDeviceIdLimitDBThrowsError(t *testing.T) {
 
 func TestGetEventsByCreationTime(t *testing.T) {
 	reset()
-	myMock := &dbMock.DBClient{}
-
-	myMock.On("EventsByCreationTime", mock.MatchedBy(func(start int64) bool {
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("EventsByCreationTime", mock.MatchedBy(func(start int64) bool {
 		return start == 0xF00D
 	}), mock.Anything, mock.Anything).Return([]models.Event{}, nil)
 
-	dbClient = myMock
-
-	expectedReadings, expectedNil := getEventsByCreationTime(0, 0xF00D, 0, logger.NewMockClient())
+	expectedReadings, expectedNil := getEventsByCreationTime(0, 0xF00D, 0, logger.NewMockClient(), dbClientMock)
 
 	if expectedReadings == nil {
 		t.Errorf("Should return Events")
@@ -554,15 +518,12 @@ func TestGetEventsByCreationTime(t *testing.T) {
 
 func TestGetEventsByCreationTimeDBThrowsError(t *testing.T) {
 	reset()
-	myMock := &dbMock.DBClient{}
-
-	myMock.On("EventsByCreationTime", mock.MatchedBy(func(start int64) bool {
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("EventsByCreationTime", mock.MatchedBy(func(start int64) bool {
 		return start == 0xBADF00D
 	}), mock.Anything, mock.Anything).Return(nil, fmt.Errorf("some error"))
 
-	dbClient = myMock
-
-	expectedNil, expectedErr := getEventsByCreationTime(0, 0xBADF00D, 0, logger.NewMockClient())
+	expectedNil, expectedErr := getEventsByCreationTime(0, 0xBADF00D, 0, logger.NewMockClient(), dbClientMock)
 
 	if expectedNil != nil {
 		t.Errorf("Should not return list")
@@ -575,21 +536,18 @@ func TestGetEventsByCreationTimeDBThrowsError(t *testing.T) {
 
 func TestDeleteEvents(t *testing.T) {
 	reset()
-	myMock := &dbMock.DBClient{}
-
-	myMock.On("DeleteEventsByDevice", mock.MatchedBy(func(deviceId string) bool {
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("DeleteEventsByDevice", mock.MatchedBy(func(deviceId string) bool {
 		return deviceId == testUUIDString
 	})).Return(0, nil)
 
-	dbClient = myMock
-
-	_, expectedNil := deleteEvents(testUUIDString)
+	_, expectedNil := deleteEvents(testUUIDString, dbClientMock)
 
 	if expectedNil != nil {
 		t.Errorf("Should not throw error")
 	}
 
-	myMock.AssertExpectations(t)
+	dbClientMock.AssertExpectations(t)
 }
 
 func TestScrubPushedEvents(t *testing.T) {
@@ -598,21 +556,18 @@ func TestScrubPushedEvents(t *testing.T) {
 	pushedEvents := []models.Event{testEvent, testEvent}
 	pushedEvents[1].ID = testUUIDString
 
-	myMock := &dbMock.DBClient{}
-	myMock.On("EventsPushed").Return(pushedEvents, nil)
-
-	myMock.On("DeleteReadingById", mock.MatchedBy(func(id string) bool {
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("EventsPushed").Return(pushedEvents, nil)
+	dbClientMock.On("DeleteReadingById", mock.MatchedBy(func(id string) bool {
 		return id == pushedEvents[0].Readings[0].Id || id == pushedEvents[0].Readings[1].Id
 	})).Return(nil).Times(4)
 
-	myMock.On("DeleteEventById", mock.MatchedBy(func(id string) bool {
+	dbClientMock.On("DeleteEventById", mock.MatchedBy(func(id string) bool {
 		return id == pushedEvents[0].ID || id == pushedEvents[1].ID
 	})).Return(nil).Twice()
 
-	dbClient = myMock
-
 	expectedCount := 2
-	actualCount, expectedNil := scrubPushedEvents(logger.NewMockClient())
+	actualCount, expectedNil := scrubPushedEvents(logger.NewMockClient(), dbClientMock)
 
 	if actualCount != expectedCount {
 		t.Errorf("Expected %d deletions, was %d", expectedCount, actualCount)

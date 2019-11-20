@@ -25,6 +25,7 @@ import (
 	msgTypes "github.com/edgexfoundry/go-mod-messaging/pkg/types"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
+	"github.com/edgexfoundry/edgex-go/internal/core/data/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation/models"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
@@ -35,7 +36,7 @@ const (
 	ChecksumAlgoxxHash = "xxHash"
 )
 
-func countEvents() (int, error) {
+func countEvents(dbClient interfaces.DBClient) (int, error) {
 	count, err := dbClient.EventCount()
 	if err != nil {
 		return -1, err
@@ -43,7 +44,7 @@ func countEvents() (int, error) {
 	return count, nil
 }
 
-func countEventsByDevice(device string, ctx context.Context) (int, error) {
+func countEventsByDevice(device string, ctx context.Context, dbClient interfaces.DBClient) (int, error) {
 	err := checkDevice(device, ctx)
 	if err != nil {
 		return -1, err
@@ -56,7 +57,7 @@ func countEventsByDevice(device string, ctx context.Context) (int, error) {
 	return count, err
 }
 
-func deleteEventsByAge(age int64, loggingClient logger.LoggingClient) (int, error) {
+func deleteEventsByAge(age int64, loggingClient logger.LoggingClient, dbClient interfaces.DBClient) (int, error) {
 	events, err := dbClient.EventsOlderThanAge(age)
 	if err != nil {
 		return -1, err
@@ -65,14 +66,14 @@ func deleteEventsByAge(age int64, loggingClient logger.LoggingClient) (int, erro
 	// Delete all the events
 	count := len(events)
 	for _, event := range events {
-		if err = deleteEvent(event, loggingClient); err != nil {
+		if err = deleteEvent(event, loggingClient, dbClient); err != nil {
 			return -1, err
 		}
 	}
 	return count, nil
 }
 
-func getEvents(limit int) ([]contract.Event, error) {
+func getEvents(limit int, dbClient interfaces.DBClient) ([]contract.Event, error) {
 	var err error
 	var events []contract.Event
 
@@ -88,7 +89,11 @@ func getEvents(limit int) ([]contract.Event, error) {
 	return events, err
 }
 
-func addNewEvent(e models.Event, ctx context.Context, loggingClient logger.LoggingClient) (string, error) {
+func addNewEvent(
+	e models.Event, ctx context.Context,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) (string, error) {
+
 	err := checkDevice(e.Device, ctx)
 	if err != nil {
 		return "", err
@@ -130,7 +135,7 @@ func addNewEvent(e models.Event, ctx context.Context, loggingClient logger.Loggi
 	return e.ID, nil
 }
 
-func updateEvent(from models.Event, ctx context.Context) error {
+func updateEvent(from models.Event, ctx context.Context, dbClient interfaces.DBClient) error {
 	to, err := dbClient.EventById(from.ID)
 	if err != nil {
 		return errors.NewErrEventNotFound(from.ID)
@@ -158,13 +163,13 @@ func updateEvent(from models.Event, ctx context.Context) error {
 	return dbClient.UpdateEvent(mapped)
 }
 
-func deleteEventById(id string, loggingClient logger.LoggingClient) error {
-	e, err := getEventById(id)
+func deleteEventById(id string, loggingClient logger.LoggingClient, dbClient interfaces.DBClient) error {
+	e, err := getEventById(id, dbClient)
 	if err != nil {
 		return err
 	}
 
-	err = deleteEvent(e, loggingClient)
+	err = deleteEvent(e, loggingClient, dbClient)
 	if err != nil {
 		return err
 	}
@@ -172,9 +177,9 @@ func deleteEventById(id string, loggingClient logger.LoggingClient) error {
 }
 
 // Delete the event and readings
-func deleteEvent(e contract.Event, loggingClient logger.LoggingClient) error {
+func deleteEvent(e contract.Event, loggingClient logger.LoggingClient, dbClient interfaces.DBClient) error {
 	for _, reading := range e.Readings {
-		if err := deleteReadingById(reading.Id, loggingClient); err != nil {
+		if err := deleteReadingById(reading.Id, loggingClient, dbClient); err != nil {
 			return err
 		}
 	}
@@ -186,11 +191,11 @@ func deleteEvent(e contract.Event, loggingClient logger.LoggingClient) error {
 	return nil
 }
 
-func deleteAllEvents() error {
+func deleteAllEvents(dbClient interfaces.DBClient) error {
 	return dbClient.ScrubAllEvents()
 }
 
-func getEventById(id string) (contract.Event, error) {
+func getEventById(id string, dbClient interfaces.DBClient) (contract.Event, error) {
 	e, err := dbClient.EventById(id)
 	if err != nil {
 		if err == db.ErrNotFound {
@@ -202,7 +207,7 @@ func getEventById(id string) (contract.Event, error) {
 }
 
 // updateEventPushDateByChecksum updates the pushed dated for all events with a matching checksum which have not already been marked pushed
-func updateEventPushDateByChecksum(checksum string, ctx context.Context) error {
+func updateEventPushDateByChecksum(checksum string, ctx context.Context, dbClient interfaces.DBClient) error {
 	evts, err := dbClient.EventsByChecksum(checksum)
 	if err != nil {
 		return err
@@ -214,7 +219,7 @@ func updateEventPushDateByChecksum(checksum string, ctx context.Context) error {
 		// We only want the checksum for "marked pushed" functionality and once the event
 		// has been marked pushed there is no reason to keep the checksum around.
 		// The expectation is that above query will only return one result, but this is not guaranteed
-		err = updateEvent(models.Event{Event: e}, ctx)
+		err = updateEvent(models.Event{Event: e}, ctx, dbClient)
 		if err != nil {
 			return err
 		}
@@ -222,14 +227,14 @@ func updateEventPushDateByChecksum(checksum string, ctx context.Context) error {
 	return nil
 }
 
-func updateEventPushDate(id string, ctx context.Context) error {
-	e, err := getEventById(id)
+func updateEventPushDate(id string, ctx context.Context, dbClient interfaces.DBClient) error {
+	e, err := getEventById(id, dbClient)
 	if err != nil {
 		return err
 	}
 
 	e.Pushed = db.MakeTimestamp()
-	err = updateEvent(models.Event{Event: e}, ctx)
+	err = updateEvent(models.Event{Event: e}, ctx, dbClient)
 	if err != nil {
 		return err
 	}
@@ -260,7 +265,12 @@ func putEventOnQueue(evt models.Event, ctx context.Context, loggingClient logger
 	}
 }
 
-func getEventsByDeviceIdLimit(limit int, deviceId string, loggingClient logger.LoggingClient) ([]contract.Event, error) {
+func getEventsByDeviceIdLimit(
+	limit int,
+	deviceId string,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) ([]contract.Event, error) {
+
 	eventList, err := dbClient.EventsForDeviceLimit(deviceId, limit)
 	if err != nil {
 		loggingClient.Error(err.Error())
@@ -270,7 +280,13 @@ func getEventsByDeviceIdLimit(limit int, deviceId string, loggingClient logger.L
 	return eventList, nil
 }
 
-func getEventsByCreationTime(limit int, start int64, end int64, loggingClient logger.LoggingClient) ([]contract.Event, error) {
+func getEventsByCreationTime(
+	limit int,
+	start int64,
+	end int64,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) ([]contract.Event, error) {
+
 	eventList, err := dbClient.EventsByCreationTime(start, end, limit)
 	if err != nil {
 		loggingClient.Error(err.Error())
@@ -280,11 +296,11 @@ func getEventsByCreationTime(limit int, start int64, end int64, loggingClient lo
 	return eventList, nil
 }
 
-func deleteEvents(deviceId string) (int, error) {
+func deleteEvents(deviceId string, dbClient interfaces.DBClient) (int, error) {
 	return dbClient.DeleteEventsByDevice(deviceId)
 }
 
-func scrubPushedEvents(loggingClient logger.LoggingClient) (int, error) {
+func scrubPushedEvents(loggingClient logger.LoggingClient, dbClient interfaces.DBClient) (int, error) {
 	loggingClient.Info("Scrubbing events.  Deleting all events that have been pushed")
 
 	// Get the events
@@ -297,7 +313,7 @@ func scrubPushedEvents(loggingClient logger.LoggingClient) (int, error) {
 	// Delete all the events
 	count := len(events)
 	for _, event := range events {
-		if err = deleteEvent(event, loggingClient); err != nil {
+		if err = deleteEvent(event, loggingClient, dbClient); err != nil {
 			loggingClient.Error(err.Error())
 			return 0, err
 		}

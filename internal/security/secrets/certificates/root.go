@@ -26,29 +26,30 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/seed"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
 
 type rootCertGenerator struct {
-	logger logger.LoggingClient
-	seed   secrets.CertificateSeed
-	writer FileWriter
+	logger          logger.LoggingClient
+	certificateSeed seed.CertificateSeed
+	writer          FileWriter
 }
 
 func (gen rootCertGenerator) Generate() (err error) {
-	if gen.seed.NewCA {
+	if gen.certificateSeed.NewCA {
 		gen.logger.Debug("<Phase 1> Generating CA PKI materials")
 		gen.logger.Debug("Generating Root CA key pair (sk,pk)")
 
-		private, err := generatePrivateKey(gen.seed, gen.logger)
+		private, err := generatePrivateKey(gen.certificateSeed, gen.logger)
 		if err != nil {
 			return err
 		}
 
 		// Extract PK from RSA or EC generated SK
 		public := private.(crypto.Signer).Public()
-		if gen.seed.DumpKeys {
+		if gen.certificateSeed.DumpKeys {
 			dumpKeyPair(private, gen.logger)
 			dumpKeyPair(public, gen.logger)
 		}
@@ -77,14 +78,14 @@ func (gen rootCertGenerator) Generate() (err error) {
 		caCertTemplate := &x509.Certificate{
 			SerialNumber: serialNumber,
 			Subject: pkix.Name{
-				CommonName:         gen.seed.CAName,
-				Organization:       []string{gen.seed.CAName},
-				OrganizationalUnit: []string{gen.seed.CAOrg},
-				Locality:           []string{gen.seed.CALocality},
-				Province:           []string{gen.seed.CAState},
-				Country:            []string{gen.seed.CACountry},
+				CommonName:         gen.certificateSeed.CAName,
+				Organization:       []string{gen.certificateSeed.CAName},
+				OrganizationalUnit: []string{gen.certificateSeed.CAOrg},
+				Locality:           []string{gen.certificateSeed.CALocality},
+				Province:           []string{gen.certificateSeed.CAState},
+				Country:            []string{gen.certificateSeed.CACountry},
 			},
-			EmailAddresses:        []string{gen.seed.CAName + "@" + gen.seed.TLSDomain},
+			EmailAddresses:        []string{gen.certificateSeed.CAName + "@" + gen.certificateSeed.TLSDomain},
 			SubjectKeyId:          skid[:],
 			NotAfter:              time.Now().AddDate(10, 0, 0),
 			NotBefore:             time.Now(),
@@ -104,19 +105,19 @@ func (gen rootCertGenerator) Generate() (err error) {
 			return fmt.Errorf("failed to parse Root CA certificate: %s", err.Error())
 		}
 
-		gen.logger.Debug(fmt.Sprintf("Saving Root CA private key to PEM file: %s", gen.seed.CAKeyFile))
+		gen.logger.Debug(fmt.Sprintf("Saving Root CA private key to PEM file: %s", gen.certificateSeed.CAKeyFile))
 		skPKCS8, err := x509.MarshalPKCS8PrivateKey(private)
 		if err != nil {
 			return fmt.Errorf("failed to encode CA private key: %s", err.Error())
 		}
 
-		err = gen.writer.Write(gen.seed.CAKeyFile, pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: skPKCS8}), 0400)
+		err = gen.writer.Write(gen.certificateSeed.CAKeyFile, pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: skPKCS8}), 0400)
 		if err != nil {
 			return fmt.Errorf("failed to save CA private key: %s", err.Error())
 		}
 
-		gen.logger.Debug(fmt.Sprintf("Saving Root CA certificate to PEM file: %s", gen.seed.CACertFile))
-		err = gen.writer.Write(gen.seed.CACertFile, pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: caDER}), 0644)
+		gen.logger.Debug(fmt.Sprintf("Saving Root CA certificate to PEM file: %s", gen.certificateSeed.CACertFile))
+		err = gen.writer.Write(gen.certificateSeed.CACertFile, pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: caDER}), 0644)
 		if err != nil {
 			return fmt.Errorf("failed to save CA certificate: %s", err.Error())
 		}

@@ -20,146 +20,60 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap"
+	bootstrapContainer "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/interfaces"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets"
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets/option"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/config"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/container"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/contract"
 )
 
-type exiter interface {
-	exit(int)
-}
+func wrappedMain() (*config.ConfigurationStruct, int) {
+	startupTimer := startup.NewStartUpTimer(internal.BootRetrySecondsDefault, internal.BootTimeoutSecondsDefault)
 
-type exitCode struct{}
-
-type optionDispatcher interface {
-	run(command string) (int, error)
-}
-
-type pkiInitOptionDispatcher struct{}
-
-var exitInstance = newExit()
-var dispatcherInstance = newOptionDispatcher()
-
-var subcommands = map[string]*flag.FlagSet{
-	"legacy":   flag.NewFlagSet("legacy", flag.ExitOnError),
-	"generate": flag.NewFlagSet("generate", flag.ExitOnError),
-	"cache":    flag.NewFlagSet("cache", flag.ExitOnError),
-	"import":   flag.NewFlagSet("import", flag.ExitOnError),
-}
-var configFile string
-var configDir string
-
-func init() {
-	// setup options for subcommands:
-	subcommands["legacy"].StringVar(&configFile, "config", "", "specify JSON configuration file: /path/to/file.json")
-	subcommands["legacy"].StringVar(&configFile, "c", "", "specify JSON configuration file: /path/to/file.json")
-
+	var configDir string
 	flag.StringVar(&configDir, "confdir", "", "Specify local configuration directory")
-
 	flag.Usage = usage.HelpCallbackSecuritySetup
-}
-
-func main() {
 	flag.Parse()
 
 	if flag.NArg() < 1 {
-		fmt.Println("Please specify subcommand for " + option.SecuritySecretsSetup)
+		fmt.Println("Please specify subcommand for " + internal.SecuritySecretsSetupServiceKey)
 		flag.Usage()
-		exitInstance.exit(0)
-		return
+		return nil, contract.StatusCodeExitNormal
 	}
 
-	if err := secrets.Init(configDir); err != nil {
-		// the error returned from Init has already been logged inside the call
-		// so here we ignore the error logging
-		exitInstance.exit(1)
-		return
-	}
-
-	subcmdName := flag.Args()[0]
-
-	subcmd, found := subcommands[subcmdName]
-	if !found {
-		secrets.LoggingClient.Error(fmt.Sprintf("unsupported subcommand %s", subcmdName))
-		exitInstance.exit(1)
-		return
-	}
-
-	if err := subcmd.Parse(flag.Args()[1:]); err != nil {
-		secrets.LoggingClient.Error(fmt.Sprintf("error parsing subcommand %s: %v", subcmdName, err))
-		exitInstance.exit(2)
-		return
-	}
-
-	var exitStatusCode int
-	var err error
-
-	switch subcmdName {
-	case "legacy":
-		// no additional arguments expected
-		if len(subcmd.Args()) > 0 {
-			secrets.LoggingClient.Error(fmt.Sprintf("subcommand %s doesn't use other additional args", subcmdName))
-			exitInstance.exit(2)
-			return
-		}
-		if err = option.GenTLSAssets(configFile); err != nil {
-			secrets.LoggingClient.Error(err.Error())
-			exitInstance.exit(2)
-			return
-		}
-
-	case "generate", "cache", "import":
-		// no arguments expected
-		if len(subcmd.Args()) > 0 {
-			secrets.LoggingClient.Error(fmt.Sprintf("subcommand %s doesn't use any args", subcmdName))
-			exitInstance.exit(2)
-			return
-		}
-		exitStatusCode, err = dispatcherInstance.run(subcmdName)
-		if err != nil {
-			secrets.LoggingClient.Error(err.Error())
-		}
-	}
-
-	exitInstance.exit(exitStatusCode)
+	configuration := &config.ConfigurationStruct{}
+	dic := di.NewContainer(di.ServiceConstructorMap{
+		container.ConfigurationName: func(get di.Get) interface{} {
+			return configuration
+		},
+		bootstrapContainer.ConfigurationInterfaceName: func(get di.Get) interface{} {
+			return get(container.ConfigurationName)
+		},
+	})
+	serviceHandler := secrets.NewBootstrapHandler()
+	bootstrap.Run(
+		configDir,
+		bootstrap.EmptyProfileDir,
+		internal.ConfigFileName,
+		bootstrap.DoNotUseRegistry,
+		internal.SecuritySecretsSetupServiceKey,
+		configuration,
+		startupTimer,
+		dic,
+		[]interfaces.BootstrapHandler{
+			serviceHandler.Handler,
+		},
+	)
+	return configuration, serviceHandler.ExitStatusCode()
 }
 
-func newExit() exiter {
-	return &exitCode{}
-}
-
-func (code *exitCode) exit(statusCode int) {
-	os.Exit(statusCode)
-}
-
-func newOptionDispatcher() optionDispatcher {
-	return &pkiInitOptionDispatcher{}
-}
-
-func setupPkiInitOption(subcommand string) (executor option.OptionsExecutor, status int, err error) {
-	var generateOpt, cacheOpt, importOpt bool
-	switch subcommand {
-	case "generate":
-		generateOpt = true
-	case "cache":
-		cacheOpt = true
-	case "import":
-		importOpt = true
-	}
-
-	opts := option.PkiInitOption{
-		GenerateOpt: generateOpt,
-		CacheOpt:    cacheOpt,
-		ImportOpt:   importOpt,
-	}
-	return option.NewPkiInitOption(opts)
-}
-
-func (dispatcher *pkiInitOptionDispatcher) run(command string) (statusCode int, err error) {
-	optsExecutor, statusCode, err := setupPkiInitOption(command)
-	if err != nil {
-		return statusCode, err
-	}
-
-	return optsExecutor.ProcessOptions()
+func main() {
+	_, exitStatusCode := wrappedMain()
+	os.Exit(exitStatusCode)
 }
