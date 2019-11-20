@@ -26,6 +26,7 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/core/command/config"
 	"github.com/edgexfoundry/edgex-go/internal/core/command/interfaces"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
 )
 
 func restGetDeviceCommandByCommandID(
@@ -33,8 +34,10 @@ func restGetDeviceCommandByCommandID(
 	r *http.Request,
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
-	deviceClient metadata.DeviceClient) {
-	issueDeviceCommand(w, r, false, loggingClient, dbClient, deviceClient)
+	deviceClient metadata.DeviceClient,
+	httpErrorHandler errorconcept.ErrorHandler) {
+
+	issueDeviceCommand(w, r, false, loggingClient, dbClient, deviceClient, httpErrorHandler)
 }
 
 func restPutDeviceCommandByCommandID(
@@ -42,8 +45,10 @@ func restPutDeviceCommandByCommandID(
 	r *http.Request,
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
-	deviceClient metadata.DeviceClient) {
-	issueDeviceCommand(w, r, true, loggingClient, dbClient, deviceClient)
+	deviceClient metadata.DeviceClient,
+	httpErrorHandler errorconcept.ErrorHandler) {
+
+	issueDeviceCommand(w, r, true, loggingClient, dbClient, deviceClient, httpErrorHandler)
 }
 
 func issueDeviceCommand(
@@ -52,7 +57,9 @@ func issueDeviceCommand(
 	isPutCommand bool,
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
-	deviceClient metadata.DeviceClient) {
+	deviceClient metadata.DeviceClient,
+	httpErrorHandler errorconcept.ErrorHandler) {
+
 	defer r.Body.Close()
 
 	vars := mux.Vars(r)
@@ -65,7 +72,7 @@ func issueDeviceCommand(
 	}
 
 	ctx := r.Context()
-	body, status := commandByDeviceID(
+	body, err := executeCommandByDeviceID(
 		did,
 		cid,
 		string(b),
@@ -75,14 +82,23 @@ func issueDeviceCommand(
 		loggingClient,
 		dbClient,
 		deviceClient)
-	if status != http.StatusOK {
-		http.Error(w, body, status)
-	} else {
-		if len(body) > 0 {
-			w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
-		}
-		w.Write([]byte(body))
+	if err != nil {
+		httpErrorHandler.HandleManyVariants(
+			w,
+			err,
+			[]errorconcept.ErrorConceptType{
+				errorconcept.NewServiceClientHttpError(err),
+				errorconcept.Device.Locked,
+				errorconcept.Database.NotFound,
+				errorconcept.Command.NotAssociatedWithDevice,
+			},
+			errorconcept.Default.InternalServerError)
+		return
 	}
+
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(body))
 }
 
 func restGetDeviceCommandByNames(
@@ -90,8 +106,10 @@ func restGetDeviceCommandByNames(
 	r *http.Request,
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
-	deviceClient metadata.DeviceClient) {
-	issueDeviceCommandByNames(w, r, false, loggingClient, dbClient, deviceClient)
+	deviceClient metadata.DeviceClient,
+	httpErrorHandler errorconcept.ErrorHandler) {
+
+	issueDeviceCommandByNames(w, r, false, loggingClient, dbClient, deviceClient, httpErrorHandler)
 }
 
 func restPutDeviceCommandByNames(
@@ -99,8 +117,10 @@ func restPutDeviceCommandByNames(
 	r *http.Request,
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
-	deviceClient metadata.DeviceClient) {
-	issueDeviceCommandByNames(w, r, true, loggingClient, dbClient, deviceClient)
+	deviceClient metadata.DeviceClient,
+	httpErrorHandler errorconcept.ErrorHandler) {
+
+	issueDeviceCommandByNames(w, r, true, loggingClient, dbClient, deviceClient, httpErrorHandler)
 }
 
 func issueDeviceCommandByNames(
@@ -109,7 +129,9 @@ func issueDeviceCommandByNames(
 	isPutCommand bool,
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
-	deviceClient metadata.DeviceClient) {
+	deviceClient metadata.DeviceClient,
+	httpErrorHandler errorconcept.ErrorHandler) {
+
 	defer r.Body.Close()
 
 	vars := mux.Vars(r)
@@ -120,10 +142,10 @@ func issueDeviceCommandByNames(
 
 	b, err := ioutil.ReadAll(r.Body)
 	if b == nil && err != nil {
-		loggingClient.Error(err.Error())
+		httpErrorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
 		return
 	}
-	body, status := commandByNames(
+	body, err := executeCommandByName(
 		dn,
 		cn,
 		string(b),
@@ -134,78 +156,106 @@ func issueDeviceCommandByNames(
 		dbClient,
 		deviceClient)
 
-	if status != http.StatusOK {
-		http.Error(w, body, status)
-	} else {
-		if len(body) > 0 {
-			w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
-		}
-		w.Write([]byte(body))
+	if err != nil {
+		httpErrorHandler.HandleManyVariants(
+			w,
+			err,
+			[]errorconcept.ErrorConceptType{
+				errorconcept.NewServiceClientHttpError(err),
+				errorconcept.Device.Locked,
+				errorconcept.Database.NotFound,
+			},
+			errorconcept.Default.InternalServerError)
+		return
 	}
+
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(body))
 }
 
 func restGetCommandsByDeviceID(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	deviceClient metadata.DeviceClient,
-	configuration *config.ConfigurationStruct) {
+	configuration *config.ConfigurationStruct,
+	httpErrorHandler errorconcept.ErrorHandler) {
+
 	vars := mux.Vars(r)
 	did := vars[ID]
 	ctx := r.Context()
-	status, device, err := getCommandsByDeviceID(did, ctx, loggingClient, dbClient, deviceClient, configuration)
+	device, err := getCommandsByDeviceID(did, ctx, dbClient, deviceClient, configuration)
 	if err != nil {
-		loggingClient.Error(err.Error())
-		http.Error(w, "Device not found", http.StatusNotFound)
-		return
-	} else if status != http.StatusOK {
-		w.WriteHeader(status)
+		httpErrorHandler.HandleManyVariants(
+			w,
+			err,
+			[]errorconcept.ErrorConceptType{
+				errorconcept.NewServiceClientHttpError(err),
+				errorconcept.Device.NotFoundInDB,
+				errorconcept.Database.NotFound,
+			},
+			errorconcept.Default.InternalServerError)
 		return
 	}
+
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
+	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(&device)
 }
 
 func restGetCommandsByDeviceName(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	deviceClient metadata.DeviceClient,
-	configuration *config.ConfigurationStruct) {
+	configuration *config.ConfigurationStruct,
+	httpErrorHandler errorconcept.ErrorHandler) {
+
 	vars := mux.Vars(r)
 	dn := vars[NAME]
 	ctx := r.Context()
-	status, devices, err := getCommandsByDeviceName(dn, ctx, loggingClient, dbClient, deviceClient, configuration)
+	devices, err := getCommandsByDeviceName(dn, ctx, dbClient, deviceClient, configuration)
 	if err != nil {
-		loggingClient.Error(err.Error())
-		http.Error(w, "Device not found", http.StatusNotFound)
-		return
-	} else if status != http.StatusOK {
-		w.WriteHeader(status)
+		httpErrorHandler.HandleManyVariants(
+			w,
+			err,
+			[]errorconcept.ErrorConceptType{
+				errorconcept.NewServiceClientHttpError(err),
+				errorconcept.Device.NotFoundInDB,
+			},
+			errorconcept.Default.InternalServerError)
 		return
 	}
+
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
+	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(&devices)
 }
 
 func restGetAllCommands(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	deviceClient metadata.DeviceClient,
-	configuration *config.ConfigurationStruct) {
+	configuration *config.ConfigurationStruct,
+	httpErrorHandler errorconcept.ErrorHandler) {
+
 	ctx := r.Context()
-	status, devices, err := getCommands(ctx, loggingClient, dbClient, deviceClient, configuration)
+	devices, err := getAllCommands(ctx, dbClient, deviceClient, configuration)
 	if err != nil {
-		loggingClient.Error(err.Error())
-		w.WriteHeader(status)
-	} else if status != http.StatusOK {
-		w.WriteHeader(status)
+		httpErrorHandler.HandleManyVariants(
+			w,
+			err,
+			[]errorconcept.ErrorConceptType{
+				errorconcept.NewServiceClientHttpError(err),
+				errorconcept.Database.NotFound,
+			},
+			errorconcept.Default.InternalServerError)
 		return
 	}
+
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
+	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(devices)
 }

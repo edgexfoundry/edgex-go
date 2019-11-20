@@ -26,14 +26,17 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/core/command/container"
 	bootstrapContainer "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
+	errorContainer "github.com/edgexfoundry/edgex-go/internal/pkg/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/endpoint"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
 )
 
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the command service.
 func BootstrapHandler(wg *sync.WaitGroup, ctx context.Context, startupTimer startup.Timer, dic *di.Container) bool {
 	registryClient := bootstrapContainer.RegistryFrom(dic.Get)
 	configuration := container.ConfigurationFrom(dic.Get)
+	loggingClient := bootstrapContainer.LoggingClientFrom(dic.Get)
 
 	// initialize clients required by the service
 	dic.Update(di.ServiceConstructorMap{
@@ -47,6 +50,9 @@ func BootstrapHandler(wg *sync.WaitGroup, ctx context.Context, startupTimer star
 					Interval:    configuration.Service.ClientMonitor,
 				},
 				endpoint.Endpoint{RegistryClient: &registryClient})
+		},
+		errorContainer.ErrorHandlerName: func(get di.Get) interface{} {
+			return errorconcept.NewErrorHandler(loggingClient)
 		},
 	})
 
