@@ -102,13 +102,7 @@ func TestGetIntervals(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				restGetIntervals(
-					w,
-					r,
-					logger.NewMockClient())
-			})
-			handler.ServeHTTP(rr, tt.request)
+			restGetIntervals(rr, tt.request, logger.NewMockClient())
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -169,13 +163,7 @@ func TestAddInterval(t *testing.T) {
 			dbClient = tt.dbMock
 			scClient = tt.scClient
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				restAddInterval(
-					w,
-					r,
-					logger.NewMockClient())
-			})
-			handler.ServeHTTP(rr, tt.request)
+			restAddInterval(rr, tt.request, logger.NewMockClient())
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -256,13 +244,7 @@ func TestUpdateInterval(t *testing.T) {
 			dbClient = tt.dbMock
 			scClient = tt.scClient
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				restUpdateInterval(
-					w,
-					r,
-					logger.NewMockClient())
-			})
-			handler.ServeHTTP(rr, tt.request)
+			restUpdateInterval(rr, tt.request, logger.NewMockClient())
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -309,13 +291,7 @@ func TestIntervalById(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				restGetIntervalByID(
-					w,
-					r,
-					logger.NewMockClient())
-			})
-			handler.ServeHTTP(rr, tt.request)
+			restGetIntervalByID(rr, tt.request, logger.NewMockClient())
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -627,13 +603,7 @@ func TestDeleteIntervalById(t *testing.T) {
 			dbClient = tt.dbMock
 			scClient = tt.scMock
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				restDeleteIntervalByID(
-					w,
-					r,
-					logger.NewMockClient())
-			})
-			handler.ServeHTTP(rr, tt.request)
+			restDeleteIntervalByID(rr, tt.request, logger.NewMockClient())
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -688,13 +658,7 @@ func TestIntervalByName(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				restGetIntervalByName(
-					w,
-					r,
-					logger.NewMockClient())
-			})
-			handler.ServeHTTP(rr, tt.request)
+			restGetIntervalByName(rr, tt.request, logger.NewMockClient())
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -809,13 +773,7 @@ func TestDeleteIntervalByName(t *testing.T) {
 			dbClient = tt.dbMock
 			scClient = tt.scMock
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				restDeleteIntervalByName(
-					w,
-					r,
-					logger.NewMockClient())
-			})
-			handler.ServeHTTP(rr, tt.request)
+			restDeleteIntervalByName(rr, tt.request, logger.NewMockClient())
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -873,13 +831,7 @@ func TestScrubIntervals(t *testing.T) {
 			dbClient = tt.dbMock
 			scClient = tt.scMock
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				restScrubAllIntervals(
-					w,
-					r,
-					logger.NewMockClient())
-			})
-			handler.ServeHTTP(rr, tt.request)
+			restScrubAllIntervals(rr, tt.request, logger.NewMockClient())
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
