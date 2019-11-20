@@ -143,7 +143,7 @@ func (gen tlsCertGenerator) Generate() (err error) {
 		return fmt.Errorf("failed to save TLS server private key: %s", err.Error())
 	}
 
-	gen.logger.Debug(fmt.Sprintf("Saving TLS server certificate to PEM file: %s", gen.certificateSeed.CACertFile))
+	gen.logger.Debug(fmt.Sprintf("Saving TLS server certificate to PEM file: %s", gen.certificateSeed.TLSCertFile))
 	err = gen.writer.Write(gen.certificateSeed.TLSCertFile, pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: tlsDER}), 0644)
 	if err != nil {
 		return fmt.Errorf("failed to save TLS server certificate: %s", err.Error())
