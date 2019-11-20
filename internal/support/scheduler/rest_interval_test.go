@@ -324,8 +324,9 @@ func createMockIntervalLoaderAllErr() interfaces.DBClient {
 func createMockIntervalLoaderAddSuccess() interfaces.DBClient {
 	myMock := mocks.DBClient{}
 	interval := createIntervals(1)[0]
-	b, _ := json.Marshal(intervalForAdd)
-	_ = intervalForAdd.UnmarshalJSON(b)
+
+	validateInterval(&intervalForAdd)
+	validateInterval(&interval)
 
 	myMock.On("IntervalByName", intervalForAdd.Name).Return(interval, nil)
 	myMock.On("AddInterval", intervalForAdd).Return(intervalForAdd.ID, nil)
