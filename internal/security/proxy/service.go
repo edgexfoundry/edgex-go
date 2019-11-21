@@ -32,6 +32,22 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
 
+type CertUploadErrorType int
+
+const (
+	CertExisting  CertUploadErrorType = 0
+	InternalError CertUploadErrorType = 1
+)
+
+type CertError struct {
+	err    string
+	reason CertUploadErrorType
+}
+
+func (ce *CertError) Error() string {
+	return ce.err
+}
+
 type Service struct {
 	client        internal.HttpCaller
 	loggingClient logger.LoggingClient
@@ -101,9 +117,17 @@ func (s *Service) ResetProxy() error {
 }
 
 func (s *Service) Init(cert CertificateLoader) error {
-	err := s.postCert(cert)
-	if err != nil {
-		return err
+	postErr := s.postCert(cert)
+	if postErr != nil {
+		switch postErr.reason {
+		case CertExisting:
+			s.loggingClient.Info("skipping as the initialization has been done successfully")
+			return nil
+		case InternalError:
+			return errors.New(postErr.Error())
+		default:
+			return errors.New(postErr.Error())
+		}
 	}
 
 	for clientName, client := range s.configuration.Clients {
@@ -129,7 +153,7 @@ func (s *Service) Init(cert CertificateLoader) error {
 		}
 	}
 
-	err = s.initAuthMethod(s.configuration.KongAuth.Name, s.configuration.KongAuth.TokenTTL)
+	err := s.initAuthMethod(s.configuration.KongAuth.Name, s.configuration.KongAuth.TokenTTL)
 	if err != nil {
 		return err
 	}
@@ -143,11 +167,11 @@ func (s *Service) Init(cert CertificateLoader) error {
 	return nil
 }
 
-func (s *Service) postCert(cert CertificateLoader) error {
+func (s *Service) postCert(cert CertificateLoader) *CertError {
 	cp, err := cert.Load()
 
 	if err != nil {
-		return err
+		return &CertError{err.Error(), InternalError}
 	}
 
 	body := &CertInfo{
@@ -159,19 +183,19 @@ func (s *Service) postCert(cert CertificateLoader) error {
 	data, err := json.Marshal(body)
 	if err != nil {
 		s.loggingClient.Error(err.Error())
-		return err
+		return &CertError{err.Error(), InternalError}
 	}
 	tokens := []string{s.configuration.KongURL.GetProxyBaseURL(), CertificatesPath}
 	req, err := http.NewRequest(http.MethodPost, strings.Join(tokens, "/"), strings.NewReader(string(data)))
 	req.Header.Add(clients.ContentType, clients.ContentTypeJSON)
 	if err != nil {
 		s.loggingClient.Error("failed to create upload cert request -- %s", err.Error())
-		return err
+		return &CertError{err.Error(), InternalError}
 	}
 	resp, err := s.client.Do(req)
 	if err != nil {
 		s.loggingClient.Error("failed to upload cert to proxy server with error %s", err.Error())
-		return err
+		return &CertError{err.Error(), InternalError}
 	}
 	defer resp.Body.Close()
 
@@ -182,11 +206,17 @@ func (s *Service) postCert(cert CertificateLoader) error {
 	default:
 		b, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			return err
+			return &CertError{err.Error(), InternalError}
 		}
-		e := fmt.Sprintf("failed to add certificate with errorcode %d, error %s", resp.StatusCode, string(b))
-		s.loggingClient.Error(e)
-		return errors.New(e)
+		why := string(b)
+		message := fmt.Sprintf("failed to add certificate with errorcode %d, error %s", resp.StatusCode, why)
+		s.loggingClient.Error(message)
+		e := &CertError{message, InternalError}
+		if (resp.StatusCode == http.StatusBadRequest) && (strings.Index(why, "existing certificate") != -1) {
+			message = fmt.Sprintf("certificate already exists on reverse proxy")
+		}
+		e = &CertError{message, CertExisting}
+		return e
 	}
 	return nil
 }
