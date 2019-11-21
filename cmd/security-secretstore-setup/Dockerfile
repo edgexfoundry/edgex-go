@@ -18,7 +18,8 @@ RUN make cmd/security-secretstore-setup/security-secretstore-setup
 
 FROM alpine:3.10
 
-RUN apk update && apk add curl && rm -rf /var/cache/apk/* 
+RUN apk update && apk add ca-certificates dumb-init curl \
+    && rm -rf /var/cache/apk/* 
 
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
       copyright='Copyright (c) 2019: Dell Technologies, Inc.'
@@ -29,4 +30,9 @@ COPY --from=builder /edgex-go/cmd/security-secretstore-setup/res/docker/configur
 
 COPY --from=builder /edgex-go/cmd/security-secretstore-setup/security-secretstore-setup .
 
-ENTRYPOINT ["./security-secretstore-setup","--init=true"]
+# setup the entry point script
+COPY --from=builder /edgex-go/cmd/security-secretstore-setup/entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/entrypoint.sh \
+    && ln -s /usr/local/bin/entrypoint.sh /
+
+ENTRYPOINT ["entrypoint.sh"]
