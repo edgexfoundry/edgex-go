@@ -90,7 +90,7 @@ apps:
   mongod:
     adapter: full
     after: [core-config-seed]
-    command: bin/mongod --dbpath $SNAP_DATA/mongo/db --logpath $SNAP_COMMON/mongodb.log --smallfiles
+    command: bin/mongod --dbpath $SNAP_DATA/mongo/db --logpath $SNAP_COMMON/mongodb.log
     daemon: simple
     plugs: [hardware-observe, network, network-bind, system-observe]
     stop-command: bin/mongod --shutdown --dbpath $SNAP_DATA/mongo/db
@@ -615,17 +615,17 @@ parts:
   mongodb:
     plugin: dump
     source:
-      - on amd64: https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-ubuntu1604-3.4.10.tgz
+      - on amd64: http://downloads.mongodb.org/linux/mongodb-linux-x86_64-ubuntu1804-4.2.0.tgz
       - else:
-          - on arm64: https://fastdl.mongodb.org/linux/mongodb-linux-arm64-ubuntu1604-3.4.10.tgz
+          - on arm64: http://downloads.mongodb.org/linux/mongodb-linux-aarch64-ubuntu1804-4.2.0.tgz
       - else fail
     organize:
-      GNU-AGPL-3.0: usr/share/doc/mongodb/GNU-AGPL-3.0
       MPL-2: usr/share/doc/mongodb/MPL-2
       README: usr/share/doc/mongodb/README
       THIRD-PARTY-NOTICES: usr/share/doc/mongodb/THIRD-PARTY-NOTICES
+      LICENSE-Community.txt: usr/share/doc/mongodb/LICENSE-Community.txt
     stage-packages:
-      - libssl1.0.0
+      - libssl1.1
     stage:
       - -bin/bsondump
       - -bin/mongoexport
@@ -946,12 +946,33 @@ parts:
       patches: openresty-kong-patches
     stage: [openresty-kong-patches]
     prime: [-*]
+  lua-kong-nginx-module:
+    source: https://github.com/Kong/lua-kong-nginx-module.git
+    source-tag: 0.0.4
+    plugin: nil
+    override-build: |
+      # install the static lualib dir into the final snap, the compiled parts
+      # will be installed into the snap as part of the OpenResty part build
+      mkdir -p $SNAPCRAFT_PART_INSTALL/lualib/resty/kong
+      cp -r $SNAPCRAFT_PART_SRC/lualib/resty/kong/tls.lua $SNAPCRAFT_PART_INSTALL/lualib/resty/kong/tls.lua
+
+      # copy the necessary soruce files from here into a module specific dir in
+      # $SNAPCRAFT_STAGE because some of these files such as config conflict 
+      # with files that Kong generates/needs, so we want these to be in their
+      # own dir for OpenResty to compile with
+      mkdir -p $SNAPCRAFT_STAGE/lua-kong-nginx-module
+      for f in lualib src config Makefile; do
+        cp -r "$SNAPCRAFT_PART_SRC/$f" "$SNAPCRAFT_STAGE/lua-kong-nginx-module/$f"
+      done
+      mkdir -p $SNAPCRAFT_PART_INSTALL/usr/share/doc/lua-kong-nginx-module
+      cp LICENSE $SNAPCRAFT_PART_INSTALL/usr/share/doc/lua-kong-nginx-module/LICENSE
+
   openresty:
     # see comment on kong's after spec for why we order after snapcraft-preload
     # here
-    after: [openresty-kong-patches, snapcraft-preload]
+    after: [openresty-kong-patches, snapcraft-preload, lua-kong-nginx-module]
     plugin: autotools
-    source: https://openresty.org/download/openresty-1.13.6.2.tar.gz
+    source: https://openresty.org/download/openresty-1.15.8.1.tar.gz
     install-via: prefix
     # configure options here from https://getkong.org/install/source/
     configflags:
@@ -961,23 +982,26 @@ parts:
       - --with-http_ssl_module
       - --with-http_stub_status_module
       - --with-http_v2_module
+      - --add-module=$SNAPCRAFT_STAGE/lua-kong-nginx-module
     build-packages:
       - build-essential
       - libpcre3-dev
       - perl
       - curl
-      - libssl1.0-dev
+      - libssl-dev
       - zlib1g-dev
     stage-packages:
       - perl
-    override-build: |
+    override-pull: |
+      snapcraftctl pull
       cd $SNAPCRAFT_PART_SRC/bundle
       # apply patches from openresty-kong-patches
-      for i in $SNAPCRAFT_STAGE/openresty-kong-patches/1.13.6.2/*.patch; do 
+      for i in $SNAPCRAFT_STAGE/openresty-kong-patches/1.15.8.1/*.patch; do
         patch -p1 < $i
       done
+    override-build: |
       snapcraftctl build
-      # openresty will make an absolute symbolic link of openresty to the 
+      # openresty will make an absolute symbolic link of openresty to the
       # nginx binary, so we need to delete that and replace it with a relative
       # symlink
       cd $SNAPCRAFT_PART_INSTALL/bin
@@ -986,12 +1010,52 @@ parts:
       ln -s ../nginx/sbin/nginx nginx
       # the openresty build system also hard-codes the path to nginx inside
       # the "resty" binary so we need to change that
-      # TODO: make this use $SNAP as an env var directly rather than 
-      # hard-coding /snap/edgexfoundry/current as $SNAP
+      if [ -z "$SNAPCRAFT_PROJECT_NAME" ]; then
+        echo "SNAPCRAFT_PROJECT_NAME is undefined, snapcraft upstream change?"
+        exit 1
+      fi
       sed -i \
-        -e s@$SNAPCRAFT_PART_INSTALL/nginx/sbin/nginx@/snap/edgexfoundry/current/nginx/sbin/nginx@ \
+        -e s@$SNAPCRAFT_PART_INSTALL/nginx/sbin/nginx@/snap/$SNAPCRAFT_PROJECT_NAME/current/nginx/sbin/nginx@ \
         resty
-
+  lua:
+    # this dependency is somewhat artificial, because
+    # when iterating on the openresty parts if you just rebuild openresty,
+    # without also rebuilding lua, then kong will fail because it can't find
+    # luarocks.cfg somewhere...
+    # not sure why re-building openresty causes the luarocks config file to be
+    # messed up, but if we order it like so then rebuilding any one of them will
+    # always work
+    # openresty -> lua -> luarocks -> kong
+    # this may have to do with installing lua and luarocks into $SNAPCRAFT_STAGE
+    after: [openresty]
+    source: https://www.lua.org/ftp/lua-5.1.5.tar.gz
+    source-type: tar
+    plugin: make
+    make-parameters: [linux]
+    build-packages:
+      - libreadline-dev
+      - libncurses5-dev
+    override-build: |
+      # patch the Makefile to use $SNAPCRAFT_STAGE for the INSTALL_TOP variable
+      # which unfortunately is not settable using an environment variable and thus needs
+      # this manual patch
+      sed -i "s@INSTALL_TOP= /usr/local@INSTALL_TOP=$SNAPCRAFT_STAGE@" Makefile
+      snapcraftctl build
+  luarocks:
+    after: [lua]
+    plugin: autotools
+    source: https://github.com/luarocks/luarocks.git
+    source-branch: v3.1.3
+    source-depth: 1
+    override-build: |
+      ./configure \
+        --prefix=$SNAPCRAFT_STAGE \
+        --lua-suffix=jit \
+        --with-lua=$SNAPCRAFT_STAGE \
+        --with-lua-include=$SNAPCRAFT_STAGE/luajit/include/luajit-2.1 \
+        --lua-version=5.1
+      make build
+      make install
   kong:
     # order this part after snapcraft-preload because there are include paths
     # that snapcraft will generate for this parts to auto-include in the
@@ -1004,14 +1068,14 @@ parts:
     # ideally this would just be a "before: " on the snapcraft-preload part, but
     # snapcraft doesn't support that, see
     # https://bugs.launchpad.net/snapcraft/+bug/1848493
-    after: [snapcraft-preload]
+    after: [snapcraft-preload, luarocks]
     source: https://github.com/kong/kong.git
     plugin: nil
-    source-tag: 1.0.3
+    source-tag: 1.3.0
     source-depth: 1
     build-packages:
       - unzip
-      - libssl1.0-dev
+      - libssl-dev
       - libpcre3-dev
       - libyaml-dev
       - luarocks
@@ -1069,7 +1133,7 @@ parts:
         chmod +x $cmd
       done
 
-      # TODO: the json2lua script references $SNAPCRAFT_PART_INSTALL in some 
+      # TODO: the json2lua script references $SNAPCRAFT_PART_INSTALL in some
       # paths it tries to load things from, probably worth fixing that to use
       # $SNAP, etc. but currently json2lua seems unused so not changing it now
 
