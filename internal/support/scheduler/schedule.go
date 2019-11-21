@@ -100,7 +100,7 @@ func (qc *QueueClient) QueryIntervalByID(intervalId string) (contract.Interval, 
 	intervalContext, exists := intervalIdToContextMap[intervalId]
 	if !exists {
 		return contract.Interval{},
-			errors.New(fmt.Sprintf("scheduler could not find a interval context with interval id : %s", intervalId))
+			fmt.Errorf("scheduler could not find a interval context with interval id : %s", intervalId)
 	}
 
 	qc.loggingClient.Debug(fmt.Sprintf("querying found the interval with id : %s", intervalId))
@@ -116,7 +116,7 @@ func (qc *QueueClient) QueryIntervalByName(intervalName string) (contract.Interv
 	intervalContext, exists := intervalNameToContextMap[intervalName]
 	if !exists {
 		return contract.Interval{},
-			errors.New(fmt.Sprintf("scheduler could not find interval with interval with name : %s", intervalName))
+			fmt.Errorf("scheduler could not find interval with interval with name : %s", intervalName)
 	}
 
 	qc.loggingClient.Debug(fmt.Sprintf("scheduler found the interval with name : %s", intervalName))
@@ -186,7 +186,7 @@ func (qc *QueueClient) RemoveIntervalInQueue(intervalId string) error {
 
 	intervalContext, exists := intervalIdToContextMap[intervalId]
 	if !exists {
-		return errors.New(fmt.Sprintf("scheduler could not find interval context with interval id : %s", intervalId))
+		return fmt.Errorf("scheduler could not find interval context with interval id : %s", intervalId)
 	}
 
 	qc.loggingClient.Debug(fmt.Sprintf("removing all the mappings of interval action id to interval id: %s ", intervalId))
@@ -209,7 +209,7 @@ func (qc *QueueClient) QueryIntervalActionByID(intervalActionId string) (contrac
 	intervalId, exists := intervalActionIdToIntervalMap[intervalActionId]
 	if !exists {
 		return contract.IntervalAction{},
-			errors.New(fmt.Sprintf("scheduler could not find interval id with interval action id : %s", intervalActionId))
+			fmt.Errorf("scheduler could not find interval id with interval action id : %s", intervalActionId)
 	}
 
 	intervalContext, exists := intervalIdToContextMap[intervalId]
@@ -221,7 +221,7 @@ func (qc *QueueClient) QueryIntervalActionByID(intervalActionId string) (contrac
 	intervalAction, exists := intervalContext.IntervalActionsMap[intervalActionId]
 	if !exists {
 		return contract.IntervalAction{},
-			errors.New(fmt.Sprintf("scheduler could not find interval action with interval action id : %s", intervalActionId))
+			fmt.Errorf("scheduler could not find interval action with interval action id : %s", intervalActionId)
 	}
 
 	return intervalAction, nil
@@ -235,31 +235,31 @@ func (qc *QueueClient) QueryIntervalActionByName(intervalActionName string) (con
 	intervalId, exists := intervalActionNameToIntervalMap[intervalActionName]
 	if !exists {
 		return contract.IntervalAction{},
-			errors.New(fmt.Sprintf("scheduler could not find interval id with intervalAction name : %s", intervalActionName))
+			fmt.Errorf("scheduler could not find interval id with intervalAction name : %s", intervalActionName)
 	}
 
 	intervalActionId, exists := intervalActionNameToIntervalActionIdMap[intervalActionName]
 	if !exists {
 		return contract.IntervalAction{},
-			errors.New(fmt.Sprintf(
+			fmt.Errorf(
 				"scheduler could not find intervalAction id with intervalAction name : %s",
-				intervalActionName))
+				intervalActionName)
 	}
 
 	intervalContext, exists := intervalIdToContextMap[intervalId]
 	if !exists {
 		return contract.IntervalAction{},
-			errors.New(fmt.Sprintf(
+			fmt.Errorf(
 				"scheduler could not find a interval context with interval id : %s",
-				intervalId))
+				intervalId)
 	}
 
 	intervalAction, exists := intervalContext.IntervalActionsMap[intervalActionId]
 	if !exists {
 		return contract.IntervalAction{},
-			errors.New(fmt.Sprintf(
+			fmt.Errorf(
 				"scheduler could not find intervalAction with intervalAction id :  %s",
-				intervalContext.Interval.ID))
+				intervalContext.Interval.ID)
 	}
 
 	return intervalAction, nil
@@ -280,19 +280,19 @@ func (qc *QueueClient) AddIntervalActionToQueue(intervalAction contract.Interval
 		intervalName))
 
 	if _, exists := intervalActionNameToIntervalMap[intervalActionName]; exists {
-		return errors.New(fmt.Sprintf("scheduler found existing intervalAction with same name: %s", intervalName))
+		return fmt.Errorf("scheduler found existing intervalAction with same name: %s", intervalName)
 	}
 
 	// Ensure we have an existing Interval
 	intervalId, exists := intervalNameToIdMap[intervalName]
 	if !exists {
-		return errors.New(fmt.Sprintf("scheduler could not find a interval with interval name : %s", intervalName))
+		return fmt.Errorf("scheduler could not find a interval with interval name : %s", intervalName)
 	}
 
 	// Get the Schedule Context
 	intervalContext, exists := intervalIdToContextMap[intervalId]
 	if !exists {
-		return errors.New(fmt.Sprintf("scheduler could not find a interval with interval name : %s", intervalName))
+		return fmt.Errorf("scheduler could not find a interval with interval name : %s", intervalName)
 	}
 
 	interval := intervalContext.Interval
@@ -318,16 +318,16 @@ func (qc *QueueClient) UpdateIntervalActionQueue(intervalAction contract.Interva
 
 	oldIntervalId, exists := intervalActionIdToIntervalMap[intervalActionId]
 	if !exists {
-		return errors.New(fmt.Sprintf(
-			"there is no mapping from interval action id : %s to interval.",
-			intervalActionId))
+		return fmt.Errorf(
+			"there is no mapping from interval action id : %s to interval",
+			intervalActionId)
 	}
 
 	intervalContext, exists := intervalNameToContextMap[intervalAction.Interval]
 	if !exists {
-		return errors.New(fmt.Sprintf(
+		return fmt.Errorf(
 			"query the interval with name : %s  and did not exist.",
-			intervalAction.Interval))
+			intervalAction.Interval)
 	}
 
 	// if the interval action switched interval
@@ -390,12 +390,12 @@ func (qc *QueueClient) RemoveIntervalActionQueue(intervalActionId string) error 
 
 	intervalId, exists := intervalActionIdToIntervalMap[intervalActionId]
 	if !exists {
-		return errors.New(fmt.Sprintf("could not find interval id with interval action id : %s", intervalActionId))
+		return fmt.Errorf("could not find interval id with interval action id : %s", intervalActionId)
 	}
 
 	intervalContext, exists := intervalIdToContextMap[intervalId]
 	if !exists {
-		return errors.New(fmt.Sprintf("can not find interval context with interval id : %s", intervalId))
+		return fmt.Errorf("can not find interval context with interval id : %s", intervalId)
 	}
 
 	action, exists := intervalContext.IntervalActionsMap[intervalActionId]

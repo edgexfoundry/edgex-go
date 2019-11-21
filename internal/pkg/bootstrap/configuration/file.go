@@ -15,7 +15,6 @@
 package configuration
 
 import (
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -44,10 +43,10 @@ func LoadFromFile(configDir, profileDir, configFileName string, config interface
 
 	contents, err := ioutil.ReadFile(fileName)
 	if err != nil {
-		return errors.New(fmt.Sprintf("could not load configuration file (%s): %s", fileName, err.Error()))
+		return fmt.Errorf("could not load configuration file (%s): %s", fileName, err.Error())
 	}
 	if err = toml.Unmarshal(contents, config); err != nil {
-		return errors.New(fmt.Sprintf("could not load configuration file (%s): %s", fileName, err.Error()))
+		return fmt.Errorf("could not load configuration file (%s): %s", fileName, err.Error())
 	}
 	return nil
 }
