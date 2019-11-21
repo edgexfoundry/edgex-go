@@ -14,11 +14,13 @@
 package scheduler
 
 import (
-	dbMock "github.com/edgexfoundry/edgex-go/internal/support/scheduler/interfaces/mocks"
+	"testing"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/mock"
-	"testing"
+
+	dbMock "github.com/edgexfoundry/edgex-go/internal/support/scheduler/interfaces/mocks"
 )
 
 func newGetIntervalActionsWithLimitMockDB(expectedLimit int) *dbMock.DBClient {
@@ -42,15 +44,14 @@ func TestGetIntervalActionsWithLimit(t *testing.T) {
 
 	limit := 1
 	myMock := newGetIntervalActionsWithLimitMockDB(limit)
-	dbClient = myMock
 
-	intervalActions, err := getIntervalActions(limit)
+	intervalActions, err := getIntervalActions(limit, myMock)
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 
 	if len(intervalActions) != limit {
-		t.Errorf("expected %d event", limit)
+		t.Fatalf("expected %d event", limit)
 	}
 
 	myMock.AssertExpectations(t)
@@ -61,19 +62,18 @@ func TestGetIntervalActions(t *testing.T) {
 	myMock := &dbMock.DBClient{}
 
 	myMock.On("IntervalActions").Return([]models.IntervalAction{testIntervalAction}, nil)
-	dbClient = myMock
 
-	intervalActions, err := getIntervalActions(0)
+	intervalActions, err := getIntervalActions(0, myMock)
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 
 	if len(intervalActions) == 0 {
-		t.Errorf("no actions found")
+		t.Fatalf("no actions found")
 	}
 
 	if len(intervalActions) != 1 {
-		t.Errorf("expected 1 event")
+		t.Fatalf("expected 1 event")
 	}
 }
 
@@ -82,18 +82,20 @@ func TestGetIntervalActionsByIntervalName(t *testing.T) {
 	myMock := &dbMock.DBClient{}
 
 	myMock.On("IntervalActionsByIntervalName",
-		mock.MatchedBy(func(name string) bool { return name == testIntervalAction.Interval })).Return([]models.IntervalAction{testIntervalAction}, nil)
-	dbClient = myMock
+		mock.MatchedBy(
+			func(name string) bool {
+				return name == testIntervalAction.Interval
+			})).Return([]models.IntervalAction{testIntervalAction}, nil)
 
-	intervalActions, err := getIntervalActionsByInterval(testIntervalActionInterval)
+	intervalActions, err := getIntervalActionsByInterval(testIntervalActionInterval, myMock)
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 	if len(intervalActions) == 0 {
-		t.Errorf("no interval action(s) found")
+		t.Fatalf("no interval action(s) found")
 	}
 	if len(intervalActions) != 1 {
-		t.Errorf("expected 1 event")
+		t.Fatalf("expected 1 event")
 	}
 }
 
@@ -103,17 +105,16 @@ func TestGetIntervalActionByName(t *testing.T) {
 
 	myMock.On("IntervalActionByName",
 		mock.MatchedBy(func(name string) bool { return name == testIntervalAction.Name })).Return(testIntervalAction, nil)
-	dbClient = myMock
 
-	intervalAction, err := getIntervalActionByName(testIntervalActionName)
+	intervalAction, err := getIntervalActionByName(testIntervalActionName, myMock)
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 	if len(intervalAction.Name) == 0 {
-		t.Errorf("no interval action found")
+		t.Fatalf("no interval action found")
 	}
 	if intervalAction.Name != testIntervalActionName {
-		t.Errorf("incorrect interval action name found")
+		t.Fatalf("incorrect interval action name found")
 	}
 }
 
@@ -123,17 +124,16 @@ func TestGetIntervalActionById(t *testing.T) {
 
 	myMock.On("IntervalActionById",
 		mock.MatchedBy(func(id string) bool { return id == testIntervalAction.ID })).Return(testIntervalAction, nil)
-	dbClient = myMock
 
-	intervalAction, err := getIntervalActionById(testUUIDString)
+	intervalAction, err := getIntervalActionById(testUUIDString, myMock)
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 	if len(intervalAction.ID) == 0 {
-		t.Errorf("no interval action found")
+		t.Fatalf("no interval action found")
 	}
 	if intervalAction.ID != testUUIDString {
-		t.Errorf("incorrect UUID found")
+		t.Fatalf("incorrect UUID found")
 	}
 }
 
@@ -157,12 +157,11 @@ func TestUpdateIntervalAction(t *testing.T) {
 		mock.Anything).Return(models.IntervalAction{}, errors.New("mock db not found"))
 
 	nIntervalAction := models.IntervalAction{Name: testIntervalActionName, Target: testIntervalActionTarget, Origin: testOrigin, Interval: testIntervalActionInterval}
-	dbClient = myMock
 	scClient = mySchedulerMock
 
-	err := updateIntervalAction(nIntervalAction)
+	err := updateIntervalAction(nIntervalAction, myMock)
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 
 	myMock.AssertExpectations(t)
@@ -191,12 +190,11 @@ func TestDeleteIntervalActionById(t *testing.T) {
 		mock.Anything).Return(nil)
 
 	// assign clients to mocks
-	dbClient = myMock
 	scClient = mySchedulerMock
 
-	err := deleteIntervalActionById(testUUIDString)
+	err := deleteIntervalActionById(testUUIDString, myMock)
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 	myMock.AssertExpectations(t)
 	mySchedulerMock.AssertExpectations(t)
