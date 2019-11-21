@@ -171,13 +171,11 @@ docker_sys_mgmt_agent:
 		.
 
 docker_security_secrets_setup:
-	# TODO: split this up and rename it when security-secrets-setup is a 
-	# different container
 	docker build \
 		-f cmd/security-secrets-setup/Dockerfile \
 		--label "git_sha=$(GIT_SHA)" \
-		-t edgexfoundry/docker-edgex-secret-store-go:$(GIT_SHA) \
-		-t edgexfoundry/docker-edgex-secret-store-go:$(DOCKER_TAG) \
+		-t edgexfoundry/docker-edgex-secrets-setup-go:$(GIT_SHA) \
+		-t edgexfoundry/docker-edgex-secrets-setup-go:$(DOCKER_TAG) \
 		.
 
 docker_security_proxy_setup:
