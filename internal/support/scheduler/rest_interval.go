@@ -56,7 +56,8 @@ func restUpdateInterval(
 	w http.ResponseWriter,
 	r *http.Request,
 	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient) {
+	dbClient interfaces.DBClient,
+	scClient interfaces.SchedulerQueueClient) {
 
 	if r.Body != nil {
 		defer r.Body.Close()
@@ -102,7 +103,8 @@ func restAddInterval(
 	w http.ResponseWriter,
 	r *http.Request,
 	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient) {
+	dbClient interfaces.DBClient,
+	scClient interfaces.SchedulerQueueClient) {
 
 	if r.Body != nil {
 		defer r.Body.Close()
@@ -174,7 +176,8 @@ func restDeleteIntervalByID(
 	w http.ResponseWriter,
 	r *http.Request,
 	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient) {
+	dbClient interfaces.DBClient,
+	scClient interfaces.SchedulerQueueClient) {
 
 	if r.Body != nil {
 		defer r.Body.Close()
@@ -248,7 +251,8 @@ func restDeleteIntervalByName(
 	w http.ResponseWriter,
 	r *http.Request,
 	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient) {
+	dbClient interfaces.DBClient,
+	scClient interfaces.SchedulerQueueClient) {
 
 	defer r.Body.Close()
 

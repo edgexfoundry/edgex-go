@@ -39,7 +39,11 @@ func getIntervals(limit int, dbClient interfaces.DBClient) ([]contract.Interval,
 	return intervals, err
 }
 
-func addNewInterval(interval contract.Interval, dbClient interfaces.DBClient) (string, error) {
+func addNewInterval(
+	interval contract.Interval,
+	dbClient interfaces.DBClient,
+	scClient interfaces.SchedulerQueueClient) (string, error) {
+
 	name := interval.Name
 
 	// Check if the name is unique
