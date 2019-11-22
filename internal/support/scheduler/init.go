@@ -30,7 +30,6 @@ import (
 // Global variables
 var Configuration = &ConfigurationStruct{}
 var scClient interfaces.SchedulerQueueClient
-var ticker *time.Ticker
 
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the scheduler service.
 func BootstrapHandler(wg *sync.WaitGroup, ctx context.Context, startupTimer startup.Timer, dic *di.Container) bool {
@@ -44,15 +43,15 @@ func BootstrapHandler(wg *sync.WaitGroup, ctx context.Context, startupTimer star
 		return false
 	}
 
-	ticker = time.NewTicker(time.Duration(Configuration.Writable.ScheduleIntervalTime) * time.Millisecond)
-	StartTicker(loggingClient)
+	ticker := time.NewTicker(time.Duration(Configuration.Writable.ScheduleIntervalTime) * time.Millisecond)
+	StartTicker(ticker, loggingClient)
 
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 
 		<-ctx.Done()
-		StopTicker()
+		StopTicker(ticker)
 	}()
 
 	return true
