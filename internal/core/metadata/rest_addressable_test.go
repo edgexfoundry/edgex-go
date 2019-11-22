@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -29,15 +30,14 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/mock"
 )
 
-// AddressableTestURI this is not really used since we are using the HTTP testing framework and not creating routes, but rather
-// creating a specific handler which will accept all requests. Therefore, the URI is not important.
+// AddressableTestURI this is not really used since we are using the HTTP testing framework and not creating routes,
+// but rather creating a specific handler which will accept all requests. Therefore, the URI is not important.
 var AddressableTestURI = "/addressable"
 var TestAddress = "TestAddress"
 var TestPort = 8080
@@ -46,15 +46,15 @@ var TestTopic = "TestTopic"
 var TestName = "AddressableName"
 var TestId = "123e4567-e89b-12d3-a456-426655440000"
 
-// ErrorPathParam path parameter value which will trigger the 'mux.Vars' function to throw an error due to the '%' not being followed by a valid hexadecimal number.
+// ErrorPathParam path parameter value which will trigger the 'mux.Vars' function to throw an error due to the '%' not
+// being followed by a valid hexadecimal number.
 var ErrorPathParam = "%zz"
 
-// ErrorPortPathParam path parameter used to trigger an error in the `restGetAddressableByPort` function where the port variable is expected to be a number.
+// ErrorPortPathParam path parameter used to trigger an error in the `restGetAddressableByPort` function where the
+// port variable is expected to be a number.
 var ErrorPortPathParam = "abc"
 
 func TestGetAllAddressables(t *testing.T) {
-
-	httpErrorHandler = errorconcept.NewErrorHandler(logger.NewMockClient())
 	Configuration = &ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 10}}
 	defer func() { Configuration = &ConfigurationStruct{} }()
 
@@ -93,7 +93,12 @@ func TestGetAllAddressables(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 
 			rr := httptest.NewRecorder()
-			restGetAllAddressables(rr, logger.NewMockClient(), tt.dbMock)
+			var loggerMock = logger.NewMockClient()
+			restGetAllAddressables(
+				rr,
+				loggerMock,
+				tt.dbMock,
+				errorconcept.NewErrorHandler(loggerMock))
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -152,7 +157,12 @@ func TestAddAddressable(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			rr := httptest.NewRecorder()
-			restAddAddressable(rr, tt.request, logger.NewMockClient(), tt.dbMock)
+			var loggerMock = logger.NewMockClient()
+			restAddAddressable(
+				rr,
+				tt.request,
+				loggerMock,
+				tt.dbMock, errorconcept.NewErrorHandler(loggerMock))
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -224,7 +234,13 @@ func TestUpdateAddressable(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			rr := httptest.NewRecorder()
-			restUpdateAddressable(rr, tt.request, logger.NewMockClient(), tt.dbMock)
+			var loggerMock = logger.NewMockClient()
+			restUpdateAddressable(
+				rr,
+				tt.request,
+				loggerMock,
+				tt.dbMock,
+				errorconcept.NewErrorHandler(loggerMock))
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -270,7 +286,7 @@ func TestGetAddressableByName(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			rr := httptest.NewRecorder()
-			restGetAddressableByName(rr, tt.request, tt.dbMock)
+			restGetAddressableByName(rr, tt.request, tt.dbMock, errorconcept.NewErrorHandler(logger.NewMockClient()))
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -310,7 +326,7 @@ func TestGetAddressableById(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			rr := httptest.NewRecorder()
-			restGetAddressableById(rr, tt.request, tt.dbMock)
+			restGetAddressableById(rr, tt.request, tt.dbMock, errorconcept.NewErrorHandler(logger.NewMockClient()))
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -362,7 +378,7 @@ func TestGetAddressablesByAddress(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			rr := httptest.NewRecorder()
-			restGetAddressableByAddress(rr, tt.request, tt.dbMock)
+			restGetAddressableByAddress(rr, tt.request, tt.dbMock, errorconcept.NewErrorHandler(logger.NewMockClient()))
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -411,7 +427,11 @@ func TestGetAddressablesByPublisher(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			rr := httptest.NewRecorder()
-			restGetAddressableByPublisher(rr, tt.request, tt.dbMock)
+			restGetAddressableByPublisher(
+				rr,
+				tt.request,
+				tt.dbMock,
+				errorconcept.NewErrorHandler(logger.NewMockClient()))
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -468,7 +488,7 @@ func TestGetAddressablesByPort(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			rr := httptest.NewRecorder()
-			restGetAddressableByPort(rr, tt.request, tt.dbMock)
+			restGetAddressableByPort(rr, tt.request, tt.dbMock, errorconcept.NewErrorHandler(logger.NewMockClient()))
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -519,7 +539,7 @@ func TestGetAddressablesByTopic(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			rr := httptest.NewRecorder()
-			restGetAddressableByTopic(rr, tt.request, tt.dbMock)
+			restGetAddressableByTopic(rr, tt.request, tt.dbMock, errorconcept.NewErrorHandler(logger.NewMockClient()))
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -577,7 +597,7 @@ func TestDeleteAddressableById(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			rr := httptest.NewRecorder()
-			restDeleteAddressableById(rr, tt.request, tt.dbMock)
+			restDeleteAddressableById(rr, tt.request, tt.dbMock, errorconcept.NewErrorHandler(logger.NewMockClient()))
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -635,7 +655,7 @@ func TestDeleteAddressableByName(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			rr := httptest.NewRecorder()
-			restDeleteAddressableByName(rr, tt.request, tt.dbMock)
+			restDeleteAddressableByName(rr, tt.request, tt.dbMock, errorconcept.NewErrorHandler(logger.NewMockClient()))
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -650,7 +670,12 @@ func createAddressableRequest(httpMethod string, pathParamName string, pathParam
 	return mux.SetURLVars(req, map[string]string{pathParamName: pathParamValue})
 }
 
-func createAddressableRequestWithBody(httpMethod string, addressable contract.Addressable, pathParamName string, pathParamValue string) *http.Request {
+func createAddressableRequestWithBody(
+	httpMethod string,
+	addressable contract.Addressable,
+	pathParamName string,
+	pathParamValue string) *http.Request {
+
 	// if your JSON marshalling fails you've got bigger problems
 	body, _ := json.Marshal(addressable)
 

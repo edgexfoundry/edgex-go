@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -26,9 +27,9 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces/mocks"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 
 	"github.com/google/uuid"
@@ -60,7 +61,12 @@ func TestGetAllDeviceServices(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			rr := httptest.NewRecorder()
-			restGetAllDeviceServices(rr, logger.NewMockClient(), tt.dbMock)
+			var loggerMock = logger.NewMockClient()
+			restGetAllDeviceServices(
+				rr,
+				loggerMock,
+				tt.dbMock,
+				errorconcept.NewErrorHandler(loggerMock))
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -113,7 +119,11 @@ func TestGetServiceByName(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			Configuration = &ConfigurationStruct{}
 			rr := httptest.NewRecorder()
-			restGetServiceByName(rr, createDeviceServiceRequest(http.MethodGet, NAME, tt.value), tt.dbMock)
+			restGetServiceByName(
+				rr,
+				createDeviceServiceRequest(http.MethodGet, NAME, tt.value),
+				tt.dbMock,
+				errorconcept.NewErrorHandler(logger.NewMockClient()))
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -124,7 +134,6 @@ func TestGetServiceByName(t *testing.T) {
 }
 
 func TestGetServiceById(t *testing.T) {
-
 	req := createDeviceServiceRequest(http.MethodGet, ID, testDeviceServiceId)
 
 	tests := []struct {
@@ -158,7 +167,7 @@ func TestGetServiceById(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			Configuration = &ConfigurationStruct{}
 			rr := httptest.NewRecorder()
-			restGetServiceById(rr, req, tt.dbMock)
+			restGetServiceById(rr, req, tt.dbMock, errorconcept.NewErrorHandler(logger.NewMockClient()))
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -228,7 +237,11 @@ func TestGetServiceByAddressableName(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			Configuration = &ConfigurationStruct{}
 			rr := httptest.NewRecorder()
-			restGetServiceByAddressableName(rr, createDeviceServiceRequest(http.MethodGet, ADDRESSABLENAME, tt.value), tt.dbMock)
+			restGetServiceByAddressableName(
+				rr,
+				createDeviceServiceRequest(http.MethodGet, ADDRESSABLENAME, tt.value),
+				tt.dbMock,
+				errorconcept.NewErrorHandler(logger.NewMockClient()))
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -292,7 +305,11 @@ func TestGetServiceByAddressableId(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			Configuration = &ConfigurationStruct{}
 			rr := httptest.NewRecorder()
-			restGetServiceByAddressableId(rr, createDeviceServiceRequest(http.MethodGet, ADDRESSABLEID, tt.value), tt.dbMock)
+			restGetServiceByAddressableId(
+				rr,
+				createDeviceServiceRequest(http.MethodGet, ADDRESSABLEID, tt.value),
+				tt.dbMock,
+				errorconcept.NewErrorHandler(logger.NewMockClient()))
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -349,7 +366,7 @@ func TestUpdateOpStateById(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			rr := httptest.NewRecorder()
-			restUpdateServiceOpStateById(rr, tt.req, tt.dbMock)
+			restUpdateServiceOpStateById(rr, tt.req, tt.dbMock, errorconcept.NewErrorHandler(logger.NewMockClient()))
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -411,7 +428,11 @@ func TestUpdateOpStateByName(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			rr := httptest.NewRecorder()
-			restUpdateServiceOpStateByName(rr, tt.request, tt.dbMock)
+			restUpdateServiceOpStateByName(
+				rr,
+				tt.request,
+				tt.dbMock,
+				errorconcept.NewErrorHandler(logger.NewMockClient()))
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -468,7 +489,11 @@ func TestUpdateAdminStateById(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			rr := httptest.NewRecorder()
-			restUpdateServiceAdminStateById(rr, tt.request, tt.dbMock)
+			restUpdateServiceAdminStateById(
+				rr,
+				tt.request,
+				tt.dbMock,
+				errorconcept.NewErrorHandler(logger.NewMockClient()))
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -530,7 +555,11 @@ func TestUpdateAdminStateByName(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			rr := httptest.NewRecorder()
-			restUpdateServiceAdminStateByName(rr, tt.request, tt.dbMock)
+			restUpdateServiceAdminStateByName(
+				rr,
+				tt.request,
+				tt.dbMock,
+				errorconcept.NewErrorHandler(logger.NewMockClient()))
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -562,7 +591,11 @@ func createDeviceServiceRequest(httpMethod string, pathParamName string, pathPar
 	return mux.SetURLVars(req, map[string]string{pathParamName: pathParamValue})
 }
 
-func createDeviceServiceRequestWithBody(httpMethod string, deviceService contract.DeviceService, pathParams map[string]string) *http.Request {
+func createDeviceServiceRequestWithBody(
+	httpMethod string,
+	deviceService contract.DeviceService,
+	pathParams map[string]string) *http.Request {
+
 	// if your JSON marshalling fails you've got bigger problems
 	body, _ := json.Marshal(deviceService)
 
