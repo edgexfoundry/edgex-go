@@ -159,9 +159,8 @@ func TestAddInterval(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			scClient = tt.scClient
 			rr := httptest.NewRecorder()
-			restAddInterval(rr, tt.request, logger.NewMockClient(), tt.dbMock)
+			restAddInterval(rr, tt.request, logger.NewMockClient(), tt.dbMock, tt.scClient)
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -239,9 +238,8 @@ func TestUpdateInterval(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			scClient = tt.scClient
 			rr := httptest.NewRecorder()
-			restUpdateInterval(rr, tt.request, logger.NewMockClient(), tt.dbMock)
+			restUpdateInterval(rr, tt.request, logger.NewMockClient(), tt.dbMock, tt.scClient)
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -570,9 +568,8 @@ func TestDeleteIntervalById(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			Configuration = &ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 1}}
-			scClient = tt.scMock
 			rr := httptest.NewRecorder()
-			restDeleteIntervalByID(rr, tt.request, logger.NewMockClient(), tt.dbMock)
+			restDeleteIntervalByID(rr, tt.request, logger.NewMockClient(), tt.dbMock, tt.scMock)
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -738,9 +735,8 @@ func TestDeleteIntervalByName(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			Configuration = &ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 1}}
-			scClient = tt.scMock
 			rr := httptest.NewRecorder()
-			restDeleteIntervalByName(rr, tt.request, logger.NewMockClient(), tt.dbMock)
+			restDeleteIntervalByName(rr, tt.request, logger.NewMockClient(), tt.dbMock, tt.scMock)
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -773,7 +769,6 @@ func TestScrubIntervals(t *testing.T) {
 		name           string
 		request        *http.Request
 		dbMock         interfaces.DBClient
-		scMock         interfaces.SchedulerQueueClient
 		expectedStatus int
 	}{
 
@@ -781,21 +776,18 @@ func TestScrubIntervals(t *testing.T) {
 			name:           "OK",
 			request:        createScrubDeleteRequest(),
 			dbMock:         createMockScrubDeleterSuccess(),
-			scMock:         createMockNameSCDeleterSuccess(),
 			expectedStatus: http.StatusOK,
 		},
 		{
 			name:           "Unknown Error",
 			request:        createScrubDeleteRequest(),
 			dbMock:         createMockScrubDeleterErr(),
-			scMock:         createMockNameSCDeleterSuccess(),
 			expectedStatus: http.StatusInternalServerError,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			Configuration = &ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 1}}
-			scClient = tt.scMock
 			rr := httptest.NewRecorder()
 			restScrubAllIntervals(rr, tt.request, logger.NewMockClient(), tt.dbMock)
 			response := rr.Result()

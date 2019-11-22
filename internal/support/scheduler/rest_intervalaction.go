@@ -61,7 +61,8 @@ func restAddIntervalAction(
 	w http.ResponseWriter,
 	r *http.Request,
 	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient) {
+	dbClient interfaces.DBClient,
+	scClient interfaces.SchedulerQueueClient) {
 
 	if r.Body != nil {
 		defer r.Body.Close()
@@ -107,7 +108,8 @@ func intervalActionHandler(
 	w http.ResponseWriter,
 	r *http.Request,
 	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient) {
+	dbClient interfaces.DBClient,
+	scClient interfaces.SchedulerQueueClient) {
 
 	if r.Body != nil {
 		defer r.Body.Close()
@@ -136,7 +138,7 @@ func intervalActionHandler(
 		}
 		loggingClient.Info("posting new intervalAction: " + intervalAction.String())
 
-		newId, err := addNewIntervalAction(intervalAction, dbClient)
+		newId, err := addNewIntervalAction(intervalAction, dbClient, scClient)
 		if err != nil {
 			switch t := err.(type) {
 			case errors.ErrIntervalActionNameInUse:
@@ -168,7 +170,7 @@ func intervalActionHandler(
 		}
 
 		loggingClient.Info("Updating IntervalAction: " + from.ID)
-		err = updateIntervalAction(from, dbClient)
+		err = updateIntervalAction(from, dbClient, scClient)
 		if err != nil {
 			switch t := err.(type) {
 			case errors.ErrIntervalNotFound:
@@ -206,7 +208,8 @@ func intervalActionByIdHandler(
 	w http.ResponseWriter,
 	r *http.Request,
 	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient) {
+	dbClient interfaces.DBClient,
+	scClient interfaces.SchedulerQueueClient) {
 
 	if r.Body != nil {
 		defer r.Body.Close()
@@ -237,7 +240,7 @@ func intervalActionByIdHandler(
 		pkg.Encode(intervalAction, w, loggingClient)
 		// Post a new Interval Action
 	case http.MethodDelete:
-		if err = deleteIntervalActionById(id, dbClient); err != nil {
+		if err = deleteIntervalActionById(id, dbClient, scClient); err != nil {
 			switch err.(type) {
 			case errors.ErrIntervalActionNotFound:
 				http.Error(w, err.Error(), http.StatusBadRequest)
@@ -263,7 +266,8 @@ func intervalActionByNameHandler(
 	w http.ResponseWriter,
 	r *http.Request,
 	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient) {
+	dbClient interfaces.DBClient,
+	scClient interfaces.SchedulerQueueClient) {
 
 	if r.Body != nil {
 		defer r.Body.Close()
@@ -294,7 +298,7 @@ func intervalActionByNameHandler(
 		pkg.Encode(intervalAction, w, loggingClient)
 		// Post a new Interval Action
 	case http.MethodDelete:
-		if err = deleteIntervalActionByName(name, dbClient); err != nil {
+		if err = deleteIntervalActionByName(name, dbClient, scClient); err != nil {
 			switch err.(type) {
 			case errors.ErrIntervalActionNotFound:
 				http.Error(w, err.Error(), http.StatusBadRequest)

@@ -148,9 +148,8 @@ func TestAddIntervalAction(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			scClient = tt.scClient
 			rr := httptest.NewRecorder()
-			restAddIntervalAction(rr, tt.request, logger.NewMockClient(), tt.dbMock)
+			restAddIntervalAction(rr, tt.request, logger.NewMockClient(), tt.dbMock, tt.scClient)
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
