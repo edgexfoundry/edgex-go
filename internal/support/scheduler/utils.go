@@ -17,8 +17,6 @@ import (
 	"regexp"
 	"strconv"
 	"time"
-
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
 
 const (
@@ -101,17 +99,4 @@ func parseInt64(value string) int64 {
 		return 0
 	}
 	return int64(parsed)
-}
-
-// Scheduler Queue Client
-var currentQueueClient *QueueClient // Singleton used so that queueClient can use it to de-reference readings
-type QueueClient struct {
-	loggingClient logger.LoggingClient
-}
-
-// NewClient
-func NewSchedulerQueueClient(loggingClient logger.LoggingClient) *QueueClient {
-	queueClient := &QueueClient{loggingClient}
-	currentQueueClient = queueClient // Set the singleton
-	return queueClient
 }
