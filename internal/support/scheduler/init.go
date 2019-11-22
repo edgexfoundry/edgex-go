@@ -29,20 +29,17 @@ import (
 
 // Global variables
 var Configuration = &ConfigurationStruct{}
-var dbClient interfaces.DBClient
 var scClient interfaces.SchedulerQueueClient
 var ticker *time.Ticker
 
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the scheduler service.
 func BootstrapHandler(wg *sync.WaitGroup, ctx context.Context, startupTimer startup.Timer, dic *di.Container) bool {
-	// update global variables.
-	dbClient = container.DBClientFrom(dic.Get)
-
 	loggingClient := container.LoggingClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
 	scClient = NewSchedulerQueueClient(loggingClient)
 
 	// Initialize the ticker time
-	if err := LoadScheduler(loggingClient); err != nil {
+	if err := LoadScheduler(loggingClient, dbClient); err != nil {
 		loggingClient.Error(fmt.Sprintf("Failed to load schedules and events %s", err.Error()))
 		return false
 	}

@@ -1,4 +1,4 @@
-///*******************************************************************************
+// *******************************************************************************
 // * Copyright 2018 Dell Inc.
 // *
 // * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
@@ -11,29 +11,27 @@
 // * or implied. See the License for the specific language governing permissions and limitations under
 // * the License.
 // *******************************************************************************/
+
 package scheduler
 
 import (
+	"testing"
+
+	"github.com/edgexfoundry/go-mod-core-contracts/models"
+	"github.com/stretchr/testify/mock"
+
 	errorsSched "github.com/edgexfoundry/edgex-go/internal/support/scheduler/errors"
 	dbMock "github.com/edgexfoundry/edgex-go/internal/support/scheduler/interfaces/mocks"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-	"github.com/edgexfoundry/go-mod-core-contracts/models"
-	"github.com/gorilla/mux"
-	"github.com/stretchr/testify/mock"
-	"testing"
 )
 
 var testInterval models.Interval
 var testIntervalAction models.IntervalAction
 var testTimestamps models.Timestamps
 
-var testRoutes *mux.Router
-
 const (
 	testIntervalName     string = "midnight"
 	testInterNewName     string = "noon"
 	testOrigin           int64  = 123456789
-	testBsonString       string = "57e59a71e4b0ca8e6d6d4cc2"
 	testUUIDString       string = "ca93c8fa-9919-4ec5-85d3-f81b2b6a7bc1"
 	testIntervalActionId string = "ca93c8fa-9919-4ec5-85d3-f81b2b6a7bc1"
 
@@ -79,15 +77,14 @@ func TestGetIntervalsWithLimit(t *testing.T) {
 
 	limit := 1
 	myMock := newGetIntervalsWithLimitMockDB(limit)
-	dbClient = myMock
 
-	intervals, err := getIntervals(limit)
+	intervals, err := getIntervals(limit, myMock)
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 
 	if len(intervals) != limit {
-		t.Errorf("expected %d interval", limit)
+		t.Fatalf("expected %d interval", limit)
 	}
 
 	myMock.AssertExpectations(t)
@@ -99,15 +96,14 @@ func TestIntervalBylName(t *testing.T) {
 
 	myMock.On("IntervalByName",
 		mock.MatchedBy(func(name string) bool { return name == testInterval.Name })).Return(testInterval, nil)
-	dbClient = myMock
 
-	interval, err := getIntervalByName(testInterval.Name)
+	interval, err := getIntervalByName(testInterval.Name, myMock)
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 
 	if interval.Name != testInterval.Name {
-		t.Errorf("expected interval name to be the same")
+		t.Fatalf("expected interval name to be the same")
 	}
 }
 
@@ -134,16 +130,15 @@ func TestAddIntervalFailOnExistingName(t *testing.T) {
 
 	nInterval := models.Interval{Name: testInterval.Name, Timestamps: testTimestamps}
 
-	dbClient = myMock
 	scClient = mySchedulerMock
 
-	_, err := addNewInterval(nInterval, logger.NewMockClient())
+	_, err := addNewInterval(nInterval, myMock)
 	if err != nil {
 		switch err.(type) {
 		case errorsSched.ErrIntervalNameInUse:
 		// expected
 		default:
-			t.Errorf("Expected errors.ErrIntervalNameInUse")
+			t.Fatalf("Expected errors.ErrIntervalNameInUse")
 		}
 	}
 }
@@ -170,16 +165,15 @@ func TestAddIntervalFailOnInvalidTimeFormat(t *testing.T) {
 
 	nInterval := models.Interval{Name: testInterval.Name, Start: "34343", Timestamps: testTimestamps}
 
-	dbClient = myMock
 	scClient = mySchedulerMock
 
-	_, err := addNewInterval(nInterval, logger.NewMockClient())
+	_, err := addNewInterval(nInterval, myMock)
 	if err != nil {
 		switch err.(type) {
 		case errorsSched.ErrInvalidTimeFormat:
 		// expected
 		default:
-			t.Errorf("Expected errors.ErrInvalidTimeFormat")
+			t.Fatalf("Expected errors.ErrInvalidTimeFormat")
 		}
 	}
 }

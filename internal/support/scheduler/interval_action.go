@@ -15,13 +15,15 @@
 package scheduler
 
 import (
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
-	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
+
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/errors"
+	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/interfaces"
 )
 
-func addNewIntervalAction(intervalAction contract.IntervalAction, loggingClient logger.LoggingClient) (string, error) {
+func addNewIntervalAction(intervalAction contract.IntervalAction, dbClient interfaces.DBClient) (string, error) {
 	name := intervalAction.Name
 
 	// Validate the IntervalAction is not in use
@@ -70,7 +72,7 @@ func addNewIntervalAction(intervalAction contract.IntervalAction, loggingClient 
 	return ID, nil
 }
 
-func updateIntervalAction(from contract.IntervalAction) error {
+func updateIntervalAction(from contract.IntervalAction, dbClient interfaces.DBClient) error {
 	to, err := dbClient.IntervalActionById(from.ID)
 	if err != nil {
 		// check by name
@@ -140,19 +142,19 @@ func updateIntervalAction(from contract.IntervalAction) error {
 		to.Port = port
 	}
 	// Address
-	//TODO: Do we need a regex on a valid path sequence?
+	// TODO: Do we need a regex on a valid path sequence?
 	address := from.Address
 	if address != to.Address {
 		to.Address = address
 	}
 	// HTTPMethod
-	//TODO: Valid set of HTTP Verbs
+	// TODO: Valid set of HTTP Verbs
 	method := from.HTTPMethod
 	if method != to.HTTPMethod {
 		to.HTTPMethod = method
 	}
 	// Protocol
-	//TODO: Valid protocol constraint?
+	// TODO: Valid protocol constraint?
 	protocol := from.Protocol
 	if protocol != to.Protocol {
 		to.Protocol = protocol
@@ -175,7 +177,7 @@ func updateIntervalAction(from contract.IntervalAction) error {
 	return dbClient.UpdateIntervalAction(to)
 }
 
-func getIntervalActionById(id string) (contract.IntervalAction, error) {
+func getIntervalActionById(id string, dbClient interfaces.DBClient) (contract.IntervalAction, error) {
 	intervalAction, err := dbClient.IntervalActionById(id)
 	if err != nil {
 		if err == db.ErrNotFound {
@@ -186,7 +188,7 @@ func getIntervalActionById(id string) (contract.IntervalAction, error) {
 	return intervalAction, nil
 }
 
-func getIntervalActions(limit int) ([]contract.IntervalAction, error) {
+func getIntervalActions(limit int, dbClient interfaces.DBClient) ([]contract.IntervalAction, error) {
 	var err error
 	var intervalActions []contract.IntervalAction
 
@@ -203,7 +205,7 @@ func getIntervalActions(limit int) ([]contract.IntervalAction, error) {
 	return intervalActions, err
 }
 
-func getIntervalActionByName(name string) (contract.IntervalAction, error) {
+func getIntervalActionByName(name string, dbClient interfaces.DBClient) (contract.IntervalAction, error) {
 	intervalAction, err := dbClient.IntervalActionByName(name)
 	if err != nil {
 		if err == db.ErrNotFound {
@@ -214,7 +216,7 @@ func getIntervalActionByName(name string) (contract.IntervalAction, error) {
 	return intervalAction, nil
 }
 
-func getIntervalActionsByTarget(target string) ([]contract.IntervalAction, error) {
+func getIntervalActionsByTarget(target string, dbClient interfaces.DBClient) ([]contract.IntervalAction, error) {
 	intervalActions, err := dbClient.IntervalActionsByTarget(target)
 	if err != nil {
 		return []contract.IntervalAction{}, err
@@ -222,7 +224,7 @@ func getIntervalActionsByTarget(target string) ([]contract.IntervalAction, error
 	return intervalActions, err
 }
 
-func getIntervalActionsByInterval(interval string) ([]contract.IntervalAction, error) {
+func getIntervalActionsByInterval(interval string, dbClient interfaces.DBClient) ([]contract.IntervalAction, error) {
 	intervalActions, err := dbClient.IntervalActionsByIntervalName(interval)
 	if err != nil {
 		return []contract.IntervalAction{}, err
@@ -230,7 +232,7 @@ func getIntervalActionsByInterval(interval string) ([]contract.IntervalAction, e
 	return intervalActions, err
 }
 
-func deleteIntervalActionById(id string) error {
+func deleteIntervalActionById(id string, dbClient interfaces.DBClient) error {
 
 	// check in memory first
 	inMemory, err := scClient.QueryIntervalActionByID(id)
@@ -244,7 +246,7 @@ func deleteIntervalActionById(id string) error {
 	}
 
 	// check in DB
-	intervalAction, err := getIntervalActionById(id)
+	intervalAction, err := getIntervalActionById(id, dbClient)
 	if err != nil {
 		if err == db.ErrNotFound {
 			return errors.NewErrIntervalNotFound(intervalAction.Name)
@@ -254,13 +256,13 @@ func deleteIntervalActionById(id string) error {
 	}
 
 	// remove from DB
-	if err = deleteIntervalAction(intervalAction); err != nil {
+	if err = deleteIntervalAction(intervalAction, dbClient); err != nil {
 		return err
 	}
 	return nil
 }
 
-func deleteIntervalActionByName(name string) error {
+func deleteIntervalActionByName(name string, dbClient interfaces.DBClient) error {
 	// check in memory first
 	inMemory, err := scClient.QueryIntervalActionByName(name)
 	if err != nil {
@@ -272,7 +274,7 @@ func deleteIntervalActionByName(name string) error {
 		return errors.NewErrDbNotFound()
 	}
 
-	intervalAction, err := getIntervalActionByName(name)
+	intervalAction, err := getIntervalActionByName(name, dbClient)
 	if err != nil {
 		if err == db.ErrNotFound {
 			return errors.NewErrIntervalNotFound(intervalAction.Name)
@@ -280,20 +282,20 @@ func deleteIntervalActionByName(name string) error {
 			return err
 		}
 	}
-	if err = deleteIntervalAction(intervalAction); err != nil {
+	if err = deleteIntervalAction(intervalAction, dbClient); err != nil {
 		return err
 	}
 	return nil
 }
 
-func deleteIntervalAction(intervalAction contract.IntervalAction) error {
+func deleteIntervalAction(intervalAction contract.IntervalAction, dbClient interfaces.DBClient) error {
 	if err := dbClient.DeleteIntervalActionById(intervalAction.ID); err != nil {
 		return err
 	}
 	return nil
 }
 
-func scrubAllInteralActions(loggingClient logger.LoggingClient) (int, error) {
+func scrubAllInteralActions(loggingClient logger.LoggingClient, dbClient interfaces.DBClient) (int, error) {
 	loggingClient.Info("Scrubbing All IntervalAction(s).")
 
 	count, err := dbClient.ScrubAllIntervalActions()
