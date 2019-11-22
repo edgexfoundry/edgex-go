@@ -34,7 +34,7 @@ var (
 	intervalActionNameToIntervalActionIdMap = make(map[string]string)
 )
 
-func StartTicker(loggingClient logger.LoggingClient) {
+func StartTicker(ticker *time.Ticker, loggingClient logger.LoggingClient) {
 	go func() {
 		for range ticker.C {
 			triggerInterval(loggingClient)
@@ -42,7 +42,7 @@ func StartTicker(loggingClient logger.LoggingClient) {
 	}()
 }
 
-func StopTicker() {
+func StopTicker(ticker *time.Ticker) {
 	ticker.Stop()
 }
 
