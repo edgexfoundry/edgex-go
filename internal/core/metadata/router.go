@@ -16,6 +16,7 @@ package metadata
 import (
 	"net/http"
 
+	metadataContainer "github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
 	errorContainer "github.com/edgexfoundry/edgex-go/internal/pkg/container"
@@ -72,14 +73,16 @@ func loadDeviceRoutes(b *mux.Router, dic *di.Container) {
 			r,
 			container.LoggingClientFrom(dic.Get),
 			container.DBClientFrom(dic.Get),
-			errorContainer.ErrorHandlerFrom(dic.Get))
+			errorContainer.ErrorHandlerFrom(dic.Get),
+			metadataContainer.NotificationsClientFrom(dic.Get))
 	}).Methods(http.MethodPost)
 	b.HandleFunc("/"+DEVICE, func(w http.ResponseWriter, r *http.Request) {
 		restUpdateDevice(w,
 			r,
 			container.LoggingClientFrom(dic.Get),
 			container.DBClientFrom(dic.Get),
-			errorContainer.ErrorHandlerFrom(dic.Get))
+			errorContainer.ErrorHandlerFrom(dic.Get),
+			metadataContainer.NotificationsClientFrom(dic.Get))
 	}).Methods(http.MethodPut)
 	b.HandleFunc("/"+DEVICE, func(w http.ResponseWriter, r *http.Request) {
 		restGetAllDevices(
@@ -117,7 +120,8 @@ func loadDeviceRoutes(b *mux.Router, dic *di.Container) {
 			r,
 			container.LoggingClientFrom(dic.Get),
 			container.DBClientFrom(dic.Get),
-			errorContainer.ErrorHandlerFrom(dic.Get))
+			errorContainer.ErrorHandlerFrom(dic.Get),
+			metadataContainer.NotificationsClientFrom(dic.Get))
 	}).Methods(http.MethodPut)
 	d.HandleFunc("/"+ID+"/{"+ID+"}", func(w http.ResponseWriter, r *http.Request) {
 		restDeleteDeviceById(
@@ -125,7 +129,8 @@ func loadDeviceRoutes(b *mux.Router, dic *di.Container) {
 			r,
 			container.LoggingClientFrom(dic.Get),
 			container.DBClientFrom(dic.Get),
-			errorContainer.ErrorHandlerFrom(dic.Get))
+			errorContainer.ErrorHandlerFrom(dic.Get),
+			metadataContainer.NotificationsClientFrom(dic.Get))
 	}).Methods(http.MethodDelete)
 	d.HandleFunc(
 		"/{"+ID+"}/"+URLLASTREPORTED+"/{"+LASTREPORTED+"}",
@@ -135,7 +140,8 @@ func loadDeviceRoutes(b *mux.Router, dic *di.Container) {
 				r,
 				container.LoggingClientFrom(dic.Get),
 				container.DBClientFrom(dic.Get),
-				errorContainer.ErrorHandlerFrom(dic.Get))
+				errorContainer.ErrorHandlerFrom(dic.Get),
+				metadataContainer.NotificationsClientFrom(dic.Get))
 		}).Methods(http.MethodPut)
 	d.HandleFunc(
 		"/{"+ID+"}/"+URLLASTREPORTED+"/{"+LASTREPORTED+"}/{"+LASTREPORTEDNOTIFY+"}",
@@ -145,7 +151,8 @@ func loadDeviceRoutes(b *mux.Router, dic *di.Container) {
 				r,
 				container.LoggingClientFrom(dic.Get),
 				container.DBClientFrom(dic.Get),
-				errorContainer.ErrorHandlerFrom(dic.Get))
+				errorContainer.ErrorHandlerFrom(dic.Get),
+				metadataContainer.NotificationsClientFrom(dic.Get))
 		}).Methods(http.MethodPut)
 	d.HandleFunc(
 		"/{"+ID+"}/"+URLLASTCONNECTED+"/{"+LASTCONNECTED+"}",
@@ -154,7 +161,8 @@ func loadDeviceRoutes(b *mux.Router, dic *di.Container) {
 				w,
 				r,
 				container.LoggingClientFrom(dic.Get),
-				container.DBClientFrom(dic.Get), errorContainer.ErrorHandlerFrom(dic.Get))
+				container.DBClientFrom(dic.Get), errorContainer.ErrorHandlerFrom(dic.Get),
+				metadataContainer.NotificationsClientFrom(dic.Get))
 		}).Methods(http.MethodPut)
 	d.HandleFunc(
 		"/{"+ID+"}/"+URLLASTCONNECTED+"/{"+LASTCONNECTED+"}/{"+LASTCONNECTEDNOTIFY+"}",
@@ -164,7 +172,8 @@ func loadDeviceRoutes(b *mux.Router, dic *di.Container) {
 				r,
 				container.LoggingClientFrom(dic.Get),
 				container.DBClientFrom(dic.Get),
-				errorContainer.ErrorHandlerFrom(dic.Get))
+				errorContainer.ErrorHandlerFrom(dic.Get),
+				metadataContainer.NotificationsClientFrom(dic.Get))
 		}).Methods(http.MethodPut)
 	d.HandleFunc("/"+CHECK+"/{"+ID+"}", func(w http.ResponseWriter, r *http.Request) {
 		restCheckForDevice(
@@ -187,7 +196,8 @@ func loadDeviceRoutes(b *mux.Router, dic *di.Container) {
 			r,
 			container.LoggingClientFrom(dic.Get),
 			container.DBClientFrom(dic.Get),
-			errorContainer.ErrorHandlerFrom(dic.Get))
+			errorContainer.ErrorHandlerFrom(dic.Get),
+			metadataContainer.NotificationsClientFrom(dic.Get))
 	}).Methods(http.MethodDelete)
 	n.HandleFunc("/{"+NAME+"}", func(w http.ResponseWriter, r *http.Request) {
 		restSetDeviceStateByDeviceName(
@@ -195,7 +205,8 @@ func loadDeviceRoutes(b *mux.Router, dic *di.Container) {
 			r,
 			container.LoggingClientFrom(dic.Get),
 			container.DBClientFrom(dic.Get),
-			errorContainer.ErrorHandlerFrom(dic.Get))
+			errorContainer.ErrorHandlerFrom(dic.Get),
+			metadataContainer.NotificationsClientFrom(dic.Get))
 	}).Methods(http.MethodPut)
 	n.HandleFunc(
 		"/{"+NAME+"}/"+URLLASTREPORTED+"/{"+LASTREPORTED+"}",
@@ -206,7 +217,8 @@ func loadDeviceRoutes(b *mux.Router, dic *di.Container) {
 				r,
 				container.LoggingClientFrom(dic.Get),
 				container.DBClientFrom(dic.Get),
-				errorContainer.ErrorHandlerFrom(dic.Get))
+				errorContainer.ErrorHandlerFrom(dic.Get),
+				metadataContainer.NotificationsClientFrom(dic.Get))
 		}).Methods(http.MethodPut)
 	n.HandleFunc(
 		"/{"+NAME+"}/"+URLLASTREPORTED+"/{"+LASTREPORTED+"}/{"+LASTREPORTEDNOTIFY+"}",
@@ -215,7 +227,9 @@ func loadDeviceRoutes(b *mux.Router, dic *di.Container) {
 				w,
 				r,
 				container.LoggingClientFrom(dic.Get),
-				container.DBClientFrom(dic.Get), errorContainer.ErrorHandlerFrom(dic.Get))
+				container.DBClientFrom(dic.Get),
+				errorContainer.ErrorHandlerFrom(dic.Get),
+				metadataContainer.NotificationsClientFrom(dic.Get))
 		}).Methods(http.MethodPut)
 	n.HandleFunc(
 		"/{"+NAME+"}/"+URLLASTCONNECTED+"/{"+LASTCONNECTED+"}",
@@ -226,7 +240,8 @@ func loadDeviceRoutes(b *mux.Router, dic *di.Container) {
 				r,
 				container.LoggingClientFrom(dic.Get),
 				container.DBClientFrom(dic.Get),
-				errorContainer.ErrorHandlerFrom(dic.Get))
+				errorContainer.ErrorHandlerFrom(dic.Get),
+				metadataContainer.NotificationsClientFrom(dic.Get))
 		}).Methods(http.MethodPut)
 	n.HandleFunc(
 		"/{"+NAME+"}/"+URLLASTCONNECTED+"/{"+LASTCONNECTED+"}/{"+LASTCONNECTEDNOTIFY+"}",
@@ -235,7 +250,8 @@ func loadDeviceRoutes(b *mux.Router, dic *di.Container) {
 				w,
 				r,
 				container.LoggingClientFrom(dic.Get),
-				container.DBClientFrom(dic.Get), errorContainer.ErrorHandlerFrom(dic.Get))
+				container.DBClientFrom(dic.Get), errorContainer.ErrorHandlerFrom(dic.Get),
+				metadataContainer.NotificationsClientFrom(dic.Get))
 		}).Methods(http.MethodPut)
 
 }
@@ -447,7 +463,8 @@ func loadDeviceServiceRoutes(b *mux.Router, dic *di.Container) {
 			r,
 			container.LoggingClientFrom(dic.Get),
 			container.DBClientFrom(dic.Get),
-			errorContainer.ErrorHandlerFrom(dic.Get))
+			errorContainer.ErrorHandlerFrom(dic.Get),
+			metadataContainer.NotificationsClientFrom(dic.Get))
 	}).Methods(http.MethodDelete)
 	dsn.HandleFunc("/{"+NAME+"}/"+OPSTATE+"/{"+OPSTATE+"}", func(w http.ResponseWriter, r *http.Request) {
 		restUpdateServiceOpStateByName(
@@ -486,23 +503,23 @@ func loadDeviceServiceRoutes(b *mux.Router, dic *di.Container) {
 	ds.HandleFunc("/{"+ID+"}", func(w http.ResponseWriter, r *http.Request) {
 		restGetServiceById(w, r, container.DBClientFrom(dic.Get), errorContainer.ErrorHandlerFrom(dic.Get))
 	}).Methods(http.MethodGet)
-
 	ds.HandleFunc("/"+ID+"/{"+ID+"}", func(w http.ResponseWriter, r *http.Request) {
 		restDeleteServiceById(
 			w,
 			r,
 			container.LoggingClientFrom(dic.Get),
 			container.DBClientFrom(dic.Get),
-			errorContainer.ErrorHandlerFrom(dic.Get))
+			errorContainer.ErrorHandlerFrom(dic.Get),
+			metadataContainer.NotificationsClientFrom(dic.Get))
 	}).Methods(http.MethodDelete)
-
 	ds.HandleFunc("/"+ID+"/{"+ID+"}", func(w http.ResponseWriter, r *http.Request) {
 		restDeleteServiceById(
 			w,
 			r,
 			container.LoggingClientFrom(dic.Get),
 			container.DBClientFrom(dic.Get),
-			errorContainer.ErrorHandlerFrom(dic.Get))
+			errorContainer.ErrorHandlerFrom(dic.Get),
+			metadataContainer.NotificationsClientFrom(dic.Get))
 	}).Methods(http.MethodDelete)
 
 	ds.HandleFunc("/{"+ID+"}/"+OPSTATE+"/{"+OPSTATE+"}", func(w http.ResponseWriter, r *http.Request) {
