@@ -16,6 +16,7 @@ package scheduler
 import (
 	errorsSched "github.com/edgexfoundry/edgex-go/internal/support/scheduler/errors"
 	dbMock "github.com/edgexfoundry/edgex-go/internal/support/scheduler/interfaces/mocks"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/mock"
@@ -136,7 +137,7 @@ func TestAddIntervalFailOnExistingName(t *testing.T) {
 	dbClient = myMock
 	scClient = mySchedulerMock
 
-	_, err := addNewInterval(nInterval)
+	_, err := addNewInterval(nInterval, logger.NewMockClient())
 	if err != nil {
 		switch err.(type) {
 		case errorsSched.ErrIntervalNameInUse:
@@ -172,7 +173,7 @@ func TestAddIntervalFailOnInvalidTimeFormat(t *testing.T) {
 	dbClient = myMock
 	scClient = mySchedulerMock
 
-	_, err := addNewInterval(nInterval)
+	_, err := addNewInterval(nInterval, logger.NewMockClient())
 	if err != nil {
 		switch err.(type) {
 		case errorsSched.ErrInvalidTimeFormat:

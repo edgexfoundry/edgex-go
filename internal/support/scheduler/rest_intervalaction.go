@@ -18,13 +18,15 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
+
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/errors"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/operators/intervalaction"
-	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
-func restGetIntervalAction(w http.ResponseWriter, r *http.Request) {
+func restGetIntervalAction(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
 	if r.Body != nil {
 		defer r.Body.Close()
 	}
@@ -32,20 +34,19 @@ func restGetIntervalAction(w http.ResponseWriter, r *http.Request) {
 	intervalActions, err := op.Execute()
 
 	if err != nil {
-		LoggingClient.Error(err.Error())
+		loggingClient.Error(err.Error())
 		switch err.(type) {
 		case errors.ErrLimitExceeded:
 			http.Error(w, "Exceeded max limit", http.StatusRequestEntityTooLarge)
-
 		default:
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		return
 	}
-	pkg.Encode(intervalActions, w, LoggingClient)
+	pkg.Encode(intervalActions, w, loggingClient)
 }
 
-func restAddIntervalAction(w http.ResponseWriter, r *http.Request) {
+func restAddIntervalAction(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
 	if r.Body != nil {
 		defer r.Body.Close()
 	}
@@ -55,10 +56,9 @@ func restAddIntervalAction(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		LoggingClient.Error("error decoding intervalAction" + err.Error())
 		return
 	}
-	LoggingClient.Info("posting new intervalAction: " + intervalAction.String())
+	loggingClient.Info("posting new intervalAction: " + intervalAction.String())
 
 	op := intervalaction.NewAddExecutor(dbClient, scClient, intervalAction)
 	newId, err := op.Execute()
@@ -71,7 +71,7 @@ func restAddIntervalAction(w http.ResponseWriter, r *http.Request) {
 		default:
 			http.Error(w, t.Error(), http.StatusInternalServerError)
 		}
-		LoggingClient.Error(err.Error())
+		loggingClient.Error(err.Error())
 		return
 	}
 

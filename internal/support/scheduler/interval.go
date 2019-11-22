@@ -11,13 +11,16 @@
 * or implied. See the License for the specific language governing permissions and limitations under
 * the License.
 *******************************************************************************/
+
 package scheduler
 
 import (
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
-	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/errors"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/robfig/cron"
+
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/errors"
 )
 
 func getIntervals(limit int) ([]contract.Interval, error) {
@@ -37,7 +40,7 @@ func getIntervals(limit int) ([]contract.Interval, error) {
 	return intervals, err
 }
 
-func addNewInterval(interval contract.Interval) (string, error) {
+func addNewInterval(interval contract.Interval, loggingClient logger.LoggingClient) (string, error) {
 	name := interval.Name
 
 	// Check if the name is unique
@@ -79,9 +82,9 @@ func addNewInterval(interval contract.Interval) (string, error) {
 	interval.ID = ID
 	err = scClient.AddIntervalToQueue(interval)
 	if err != nil {
-		//failed to add to scheduler queue
-		LoggingClient.Error(err.Error())
+		return "", err
 	}
+
 	return ID, nil
 }
 
@@ -145,8 +148,6 @@ func updateInterval(from contract.Interval) error {
 
 	err = scClient.UpdateIntervalInQueue(to)
 	if err != nil {
-		//failed to update the scheduler queue
-		LoggingClient.Error(err.Error())
 		return err
 	}
 
@@ -163,34 +164,34 @@ func getIntervalById(id string) (contract.Interval, error) {
 	}
 	return interval, nil
 }
+
 func getIntervalByName(name string) (interval contract.Interval, err error) {
 	interval, err = dbClient.IntervalByName(name)
 	if err != nil {
-		LoggingClient.Error(err.Error())
 		if err == db.ErrNotFound {
 			err = errors.NewErrIntervalNotFound(name)
 		}
+
 		return contract.Interval{}, err
 	}
+
 	return interval, nil
 }
 
 func deleteInterval(interval contract.Interval) error {
 	intervalActions, err := dbClient.IntervalActionsByIntervalName(interval.Name)
 	if err != nil {
-		LoggingClient.Error(err.Error())
 		return err
 	}
 	if len(intervalActions) > 0 {
-		LoggingClient.Error("Data integrity issue.  Interval is still referenced by existing Interval Actions.")
 		return errors.NewErrIntervalStillInUse(interval.Name)
 	}
 
 	// Delete the interval
 	if err = dbClient.DeleteIntervalById(interval.ID); err != nil {
-		LoggingClient.Error(err.Error())
 		return err
 	}
+
 	return nil
 }
 

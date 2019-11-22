@@ -11,15 +11,17 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
+
 package scheduler
 
 import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/errors"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
-func addNewIntervalAction(intervalAction contract.IntervalAction) (string, error) {
+func addNewIntervalAction(intervalAction contract.IntervalAction, loggingClient logger.LoggingClient) (string, error) {
 	name := intervalAction.Name
 
 	// Validate the IntervalAction is not in use
@@ -286,18 +288,16 @@ func deleteIntervalActionByName(name string) error {
 
 func deleteIntervalAction(intervalAction contract.IntervalAction) error {
 	if err := dbClient.DeleteIntervalActionById(intervalAction.ID); err != nil {
-		LoggingClient.Error(err.Error())
 		return err
 	}
 	return nil
 }
 
-func scrubAllInteralActions() (int, error) {
-	LoggingClient.Info("Scrubbing All IntervalAction(s).")
+func scrubAllInteralActions(loggingClient logger.LoggingClient) (int, error) {
+	loggingClient.Info("Scrubbing All IntervalAction(s).")
 
 	count, err := dbClient.ScrubAllIntervalActions()
 	if err != nil {
-		LoggingClient.Error(err.Error())
 		return 0, err
 	}
 	return count, nil

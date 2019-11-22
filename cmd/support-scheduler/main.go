@@ -48,7 +48,9 @@ func main() {
 	flag.Usage = usage.HelpCallback
 	flag.Parse()
 
-	httpServer := httpserver.NewBootstrap(scheduler.LoadRestRoutes())
+	dic := di.NewContainer(di.ServiceConstructorMap{})
+
+	httpServer := httpserver.NewBootstrap(scheduler.LoadRestRoutes(dic))
 	bootstrap.Run(
 		configDir,
 		profileDir,
@@ -57,7 +59,7 @@ func main() {
 		clients.SupportSchedulerServiceKey,
 		scheduler.Configuration,
 		startupTimer,
-		di.NewContainer(di.ServiceConstructorMap{}),
+		dic,
 		[]interfaces.BootstrapHandler{
 			secret.NewSecret().BootstrapHandler,
 			database.NewDatabase(&httpServer, scheduler.Configuration).BootstrapHandler,
