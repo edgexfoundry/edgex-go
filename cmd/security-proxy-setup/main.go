@@ -29,6 +29,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/security/proxy"
 	"github.com/edgexfoundry/edgex-go/internal/security/proxy/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/proxy/container"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 )
 
 func main() {
@@ -75,7 +76,7 @@ func main() {
 		profileDir,
 		internal.ConfigFileName,
 		useRegistry,
-		internal.SecurityProxySetupServiceKey,
+		clients.SecurityProxySetupServiceKey,
 		configuration,
 		startupTimer,
 		dic,
