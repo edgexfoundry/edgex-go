@@ -30,17 +30,20 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func restGetProvisionWatchers(w http.ResponseWriter, dbClient interfaces.DBClient) {
+func restGetProvisionWatchers(
+	w http.ResponseWriter,
+	dbClient interfaces.DBClient,
+	errorHandler errorconcept.ErrorHandler) {
 
 	res, err := dbClient.GetAllProvisionWatchers()
 	if err != nil {
-		httpErrorHandler.Handle(w, err, errorconcept.Common.RetrieveError_StatusServiceUnavailable)
+		errorHandler.Handle(w, err, errorconcept.Common.RetrieveError_StatusServiceUnavailable)
 		return
 	}
 
 	// Check the length
 	if err = checkMaxLimit(len(res)); err != nil {
-		httpErrorHandler.Handle(w, err, errorconcept.Common.LimitExceeded)
+		errorHandler.Handle(w, err, errorconcept.Common.LimitExceeded)
 		return
 	}
 
@@ -52,7 +55,8 @@ func restDeleteProvisionWatcherById(
 	w http.ResponseWriter,
 	r *http.Request,
 	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient) {
+	dbClient interfaces.DBClient,
+	errorHandler errorconcept.ErrorHandler) {
 
 	vars := mux.Vars(r)
 	var id string = vars[ID]
@@ -60,13 +64,13 @@ func restDeleteProvisionWatcherById(
 	// Check if the provision watcher exists
 	pw, err := dbClient.GetProvisionWatcherById(id)
 	if err != nil {
-		httpErrorHandler.Handle(w, err, errorconcept.ProvisionWatcher.NotFoundById)
+		errorHandler.Handle(w, err, errorconcept.ProvisionWatcher.NotFoundById)
 		return
 	}
 
-	err = deleteProvisionWatcher(pw, w, loggingClient, dbClient)
+	err = deleteProvisionWatcher(pw, w, loggingClient, dbClient, errorHandler)
 	if err != nil {
-		httpErrorHandler.Handle(w, err, errorconcept.ProvisionWatcher.DeleteError_StatusInternalServer)
+		errorHandler.Handle(w, err, errorconcept.ProvisionWatcher.DeleteError_StatusInternalServer)
 		return
 	}
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
@@ -77,23 +81,24 @@ func restDeleteProvisionWatcherByName(
 	w http.ResponseWriter,
 	r *http.Request,
 	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient) {
+	dbClient interfaces.DBClient,
+	errorHandler errorconcept.ErrorHandler) {
 
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
-		httpErrorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
+		errorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
 		return
 	}
 
 	// Check if the provision watcher exists
 	pw, err := dbClient.GetProvisionWatcherByName(n)
 	if err != nil {
-		httpErrorHandler.HandleOneVariant(w, err, errorconcept.ProvisionWatcher.NotFoundByName, errorconcept.Default.InternalServerError)
+		errorHandler.HandleOneVariant(w, err, errorconcept.ProvisionWatcher.NotFoundByName, errorconcept.Default.InternalServerError)
 		return
 	}
 
-	if err = deleteProvisionWatcher(pw, w, loggingClient, dbClient); err != nil {
+	if err = deleteProvisionWatcher(pw, w, loggingClient, dbClient, errorHandler); err != nil {
 		loggingClient.Error("Problem deleting provision watcher: " + err.Error())
 		return
 	}
@@ -107,10 +112,11 @@ func deleteProvisionWatcher(
 	pw models.ProvisionWatcher,
 	w http.ResponseWriter,
 	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient) error {
+	dbClient interfaces.DBClient,
+	errorHandler errorconcept.ErrorHandler) error {
 
 	if err := dbClient.DeleteProvisionWatcherById(pw.Id); err != nil {
-		httpErrorHandler.Handle(w, err, errorconcept.Common.DeleteError)
+		errorHandler.Handle(w, err, errorconcept.Common.DeleteError)
 		return err
 	}
 
@@ -125,14 +131,18 @@ func deleteProvisionWatcher(
 	return nil
 }
 
-func restGetProvisionWatcherById(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
+func restGetProvisionWatcherById(
+	w http.ResponseWriter,
+	r *http.Request,
+	dbClient interfaces.DBClient,
+	errorHandler errorconcept.ErrorHandler) {
 
 	vars := mux.Vars(r)
 	var id string = vars[ID]
 
 	res, err := dbClient.GetProvisionWatcherById(id)
 	if err != nil {
-		httpErrorHandler.HandleOneVariant(w, err, errorconcept.ProvisionWatcher.NotFoundById, errorconcept.Default.InternalServerError)
+		errorHandler.HandleOneVariant(w, err, errorconcept.ProvisionWatcher.NotFoundById, errorconcept.Default.InternalServerError)
 		return
 	}
 
@@ -140,18 +150,22 @@ func restGetProvisionWatcherById(w http.ResponseWriter, r *http.Request, dbClien
 	json.NewEncoder(w).Encode(res)
 }
 
-func restGetProvisionWatcherByName(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
+func restGetProvisionWatcherByName(
+	w http.ResponseWriter,
+	r *http.Request,
+	dbClient interfaces.DBClient,
+	errorHandler errorconcept.ErrorHandler) {
 
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
-		httpErrorHandler.Handle(w, err, errorconcept.Default.BadRequest)
+		errorHandler.Handle(w, err, errorconcept.Default.BadRequest)
 		return
 	}
 
 	res, err := dbClient.GetProvisionWatcherByName(n)
 	if err != nil {
-		httpErrorHandler.HandleOneVariant(w, err, errorconcept.ProvisionWatcher.NotFoundByName, errorconcept.Default.InternalServerError)
+		errorHandler.HandleOneVariant(w, err, errorconcept.ProvisionWatcher.NotFoundByName, errorconcept.Default.InternalServerError)
 		return
 	}
 
@@ -159,20 +173,24 @@ func restGetProvisionWatcherByName(w http.ResponseWriter, r *http.Request, dbCli
 	json.NewEncoder(w).Encode(res)
 }
 
-func restGetProvisionWatchersByProfileId(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
+func restGetProvisionWatchersByProfileId(
+	w http.ResponseWriter,
+	r *http.Request,
+	dbClient interfaces.DBClient,
+	errorHandler errorconcept.ErrorHandler) {
 
 	vars := mux.Vars(r)
 	var pid string = vars[ID]
 
 	// Check if the device profile exists
 	if _, err := dbClient.GetDeviceProfileById(pid); err != nil {
-		httpErrorHandler.Handle(w, err, errorconcept.ProvisionWatcher.DeviceProfileNotFound_StatusNotFound)
+		errorHandler.Handle(w, err, errorconcept.ProvisionWatcher.DeviceProfileNotFound_StatusNotFound)
 		return
 	}
 
 	res, err := dbClient.GetProvisionWatchersByProfileId(pid)
 	if err != nil {
-		httpErrorHandler.Handle(w, err, errorconcept.Common.RetrieveError_StatusInternalServer)
+		errorHandler.Handle(w, err, errorconcept.Common.RetrieveError_StatusInternalServer)
 		return
 	}
 
@@ -180,25 +198,29 @@ func restGetProvisionWatchersByProfileId(w http.ResponseWriter, r *http.Request,
 	json.NewEncoder(w).Encode(res)
 }
 
-func restGetProvisionWatchersByProfileName(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
+func restGetProvisionWatchersByProfileName(
+	w http.ResponseWriter,
+	r *http.Request,
+	dbClient interfaces.DBClient,
+	errorHandler errorconcept.ErrorHandler) {
 
 	vars := mux.Vars(r)
 	pn, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
-		httpErrorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
+		errorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
 		return
 	}
 
 	// Check if the device profile exists
 	dp, err := dbClient.GetDeviceProfileByName(pn)
 	if err != nil {
-		httpErrorHandler.HandleOneVariant(w, err, errorconcept.ProvisionWatcher.DeviceProfileNotFound_StatusNotFound, errorconcept.Default.InternalServerError)
+		errorHandler.HandleOneVariant(w, err, errorconcept.ProvisionWatcher.DeviceProfileNotFound_StatusNotFound, errorconcept.Default.InternalServerError)
 		return
 	}
 
 	res, err := dbClient.GetProvisionWatchersByProfileId(dp.Id)
 	if err != nil {
-		httpErrorHandler.Handle(w, err, errorconcept.Common.RetrieveError_StatusInternalServer)
+		errorHandler.Handle(w, err, errorconcept.Common.RetrieveError_StatusInternalServer)
 		return
 	}
 
@@ -206,20 +228,24 @@ func restGetProvisionWatchersByProfileName(w http.ResponseWriter, r *http.Reques
 	json.NewEncoder(w).Encode(res)
 }
 
-func restGetProvisionWatchersByServiceId(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
+func restGetProvisionWatchersByServiceId(
+	w http.ResponseWriter,
+	r *http.Request,
+	dbClient interfaces.DBClient,
+	errorHandler errorconcept.ErrorHandler) {
 
 	vars := mux.Vars(r)
 	var sid string = vars[ID]
 
 	// Check if the device service exists
 	if _, err := dbClient.GetDeviceServiceById(sid); err != nil {
-		httpErrorHandler.Handle(w, errors.New("Device Service not found"), errorconcept.Default.NotFound)
+		errorHandler.Handle(w, errors.New("Device Service not found"), errorconcept.Default.NotFound)
 		return
 	}
 
 	res, err := dbClient.GetProvisionWatchersByServiceId(sid)
 	if err != nil {
-		httpErrorHandler.Handle(w, err, errorconcept.Common.RetrieveError_StatusInternalServer)
+		errorHandler.Handle(w, err, errorconcept.Common.RetrieveError_StatusInternalServer)
 		return
 	}
 
@@ -227,26 +253,30 @@ func restGetProvisionWatchersByServiceId(w http.ResponseWriter, r *http.Request,
 	json.NewEncoder(w).Encode(res)
 }
 
-func restGetProvisionWatchersByServiceName(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
+func restGetProvisionWatchersByServiceName(
+	w http.ResponseWriter,
+	r *http.Request,
+	dbClient interfaces.DBClient,
+	errorHandler errorconcept.ErrorHandler) {
 
 	vars := mux.Vars(r)
 	sn, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
-		httpErrorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
+		errorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
 		return
 	}
 
 	// Check if the device service exists
 	ds, err := dbClient.GetDeviceServiceByName(sn)
 	if err != nil {
-		httpErrorHandler.HandleOneVariant(w, err, errorconcept.ProvisionWatcher.DeviceServiceNotFound_StatusNotFound, errorconcept.Default.InternalServerError)
+		errorHandler.HandleOneVariant(w, err, errorconcept.ProvisionWatcher.DeviceServiceNotFound_StatusNotFound, errorconcept.Default.InternalServerError)
 		return
 	}
 
 	// Get the provision watchers
 	res, err := dbClient.GetProvisionWatchersByServiceId(ds.Id)
 	if err != nil {
-		httpErrorHandler.Handle(w, err, errorconcept.ProvisionWatcher.RetrieveError_StatusNotFound)
+		errorHandler.Handle(w, err, errorconcept.ProvisionWatcher.RetrieveError_StatusNotFound)
 		return
 	}
 
@@ -254,23 +284,27 @@ func restGetProvisionWatchersByServiceName(w http.ResponseWriter, r *http.Reques
 	json.NewEncoder(w).Encode(res)
 }
 
-func restGetProvisionWatchersByIdentifier(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
+func restGetProvisionWatchersByIdentifier(
+	w http.ResponseWriter,
+	r *http.Request,
+	dbClient interfaces.DBClient,
+	errorHandler errorconcept.ErrorHandler) {
 
 	vars := mux.Vars(r)
 	k, err := url.QueryUnescape(vars[KEY])
 	if err != nil {
-		httpErrorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
+		errorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
 		return
 	}
 	v, err := url.QueryUnescape(vars[VALUE])
 	if err != nil {
-		httpErrorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
+		errorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
 		return
 	}
 
 	res, err := dbClient.GetProvisionWatchersByIdentifier(k, v)
 	if err != nil {
-		httpErrorHandler.Handle(w, err, errorconcept.Common.RetrieveError_StatusInternalServer)
+		errorHandler.Handle(w, err, errorconcept.Common.RetrieveError_StatusInternalServer)
 		return
 	}
 
@@ -282,20 +316,25 @@ func restAddProvisionWatcher(
 	w http.ResponseWriter,
 	r *http.Request,
 	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient) {
+	dbClient interfaces.DBClient,
+	errorHandler errorconcept.ErrorHandler) {
 
 	defer r.Body.Close()
 	var pw models.ProvisionWatcher
 	var err error
 
 	if err = json.NewDecoder(r.Body).Decode(&pw); err != nil {
-		httpErrorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusServiceUnavailable)
+		errorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusServiceUnavailable)
 		return
 	}
 
 	// Check if the name exists
 	if pw.Name == "" {
-		httpErrorHandler.HandleOneVariant(w, errors.New("No name provided for new provision watcher"), nil, errorconcept.Default.Conflict)
+		errorHandler.HandleOneVariant(
+			w,
+			errors.New("No name provided for new provision watcher"),
+			nil,
+			errorconcept.Default.Conflict)
 		return
 	}
 
@@ -308,7 +347,11 @@ func restAddProvisionWatcher(
 	if pw.Profile.Id == "" || err != nil {
 		// Try by name
 		if profile, err = dbClient.GetDeviceProfileByName(pw.Profile.Name); err != nil {
-			httpErrorHandler.HandleOneVariant(w, err, errorconcept.ProvisionWatcher.DeviceProfileNotFound_StatusConflict, errorconcept.Default.ServiceUnavailable)
+			errorHandler.HandleOneVariant(
+				w,
+				err,
+				errorconcept.ProvisionWatcher.DeviceProfileNotFound_StatusConflict,
+				errorconcept.Default.ServiceUnavailable)
 			return
 		}
 	}
@@ -323,7 +366,11 @@ func restAddProvisionWatcher(
 	if pw.Service.Id == "" || err != nil {
 		// Try by name
 		if service, err = dbClient.GetDeviceServiceByName(pw.Service.Name); err != nil {
-			httpErrorHandler.HandleOneVariant(w, err, errorconcept.ProvisionWatcher.DeviceServiceNotFound_StatusConflict, errorconcept.Default.ServiceUnavailable)
+			errorHandler.HandleOneVariant(
+				w,
+				err,
+				errorconcept.ProvisionWatcher.DeviceServiceNotFound_StatusConflict,
+				errorconcept.Default.ServiceUnavailable)
 			return
 		}
 	}
@@ -331,7 +378,11 @@ func restAddProvisionWatcher(
 
 	id, err := dbClient.AddProvisionWatcher(pw)
 	if err != nil {
-		httpErrorHandler.HandleOneVariant(w, err, errorconcept.ProvisionWatcher.NotUnique, errorconcept.Default.ServiceUnavailable)
+		errorHandler.HandleOneVariant(
+			w,
+			err,
+			errorconcept.ProvisionWatcher.NotUnique,
+			errorconcept.Default.ServiceUnavailable)
 		return
 	}
 
@@ -351,12 +402,13 @@ func restUpdateProvisionWatcher(
 	w http.ResponseWriter,
 	r *http.Request,
 	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient) {
+	dbClient interfaces.DBClient,
+	errorHandler errorconcept.ErrorHandler) {
 
 	defer r.Body.Close()
 	var from models.ProvisionWatcher
 	if err := json.NewDecoder(r.Body).Decode(&from); err != nil {
-		httpErrorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusServiceUnavailable)
+		errorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusServiceUnavailable)
 		return
 	}
 
@@ -366,18 +418,22 @@ func restUpdateProvisionWatcher(
 	if err != nil {
 		// Try by name
 		if to, err = dbClient.GetProvisionWatcherByName(from.Name); err != nil {
-			httpErrorHandler.HandleOneVariant(w, err, errorconcept.ProvisionWatcher.NotFoundByName, errorconcept.Common.RetrieveError_StatusServiceUnavailable)
+			errorHandler.HandleOneVariant(
+				w,
+				err,
+				errorconcept.ProvisionWatcher.NotFoundByName,
+				errorconcept.Common.RetrieveError_StatusServiceUnavailable)
 			return
 		}
 	}
 
-	if err := updateProvisionWatcherFields(from, &to, w, dbClient); err != nil {
+	if err := updateProvisionWatcherFields(from, &to, w, dbClient, errorHandler); err != nil {
 		loggingClient.Error("Problem updating provision watcher: " + err.Error())
 		return
 	}
 
 	if err := dbClient.UpdateProvisionWatcher(to); err != nil {
-		httpErrorHandler.Handle(w, err, errorconcept.Common.UpdateError_StatusServiceUnavailable)
+		errorHandler.Handle(w, err, errorconcept.Common.UpdateError_StatusServiceUnavailable)
 		return
 	}
 
@@ -395,7 +451,8 @@ func updateProvisionWatcherFields(
 	from models.ProvisionWatcher,
 	to *models.ProvisionWatcher,
 	w http.ResponseWriter,
-	dbClient interfaces.DBClient) error {
+	dbClient interfaces.DBClient,
+	errorHandler errorconcept.ErrorHandler) error {
 
 	if from.Identifiers != nil {
 		to.Identifiers = from.Identifiers
@@ -408,7 +465,7 @@ func updateProvisionWatcherFields(
 		checkPW, err := dbClient.GetProvisionWatcherByName(from.Name)
 		if err != nil {
 			// DuplicateProvisionWatcherErrorConcept will evaluate to true if the ID is a duplicate
-			httpErrorHandler.HandleOneVariant(
+			errorHandler.HandleOneVariant(
 				w,
 				err,
 				errorconcept.NewProvisionWatcherDuplicateErrorConcept(checkPW.Id, to.Id),

@@ -28,12 +28,16 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func restGetAllCommands(w http.ResponseWriter, loggingClient logger.LoggingClient, dbClient interfaces.DBClient) {
+func restGetAllCommands(
+	w http.ResponseWriter,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient,
+	errorHandler errorconcept.ErrorHandler) {
 
 	op := command.NewCommandLoadAll(Configuration.Service, dbClient)
 	cmds, err := op.Execute()
 	if err != nil {
-		httpErrorHandler.HandleOneVariant(w, err, errorconcept.Common.LimitExceeded, errorconcept.Default.InternalServerError)
+		errorHandler.HandleOneVariant(w, err, errorconcept.Common.LimitExceeded, errorconcept.Default.InternalServerError)
 		return
 	}
 	pkg.Encode(&cmds, w, loggingClient)
@@ -43,19 +47,20 @@ func restGetCommandById(
 	w http.ResponseWriter,
 	r *http.Request,
 	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient) {
+	dbClient interfaces.DBClient,
+	errorHandler errorconcept.ErrorHandler) {
 
 	vars := mux.Vars(r)
 	cid, err := url.QueryUnescape(vars[ID])
 	if err != nil {
-		httpErrorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
+		errorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
 		return
 	}
 
 	op := command.NewCommandById(dbClient, cid)
 	cmd, err := op.Execute()
 	if err != nil {
-		httpErrorHandler.HandleOneVariant(w, err, errorconcept.Common.ItemNotFound, errorconcept.Default.InternalServerError)
+		errorHandler.HandleOneVariant(w, err, errorconcept.Common.ItemNotFound, errorconcept.Default.InternalServerError)
 		return
 	}
 	pkg.Encode(cmd, w, loggingClient)
@@ -65,18 +70,19 @@ func restGetCommandsByName(
 	w http.ResponseWriter,
 	r *http.Request,
 	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient) {
+	dbClient interfaces.DBClient,
+	errorHandler errorconcept.ErrorHandler) {
 
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
-		httpErrorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
+		errorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
 		return
 	}
 	op := command.NewCommandsByName(dbClient, n)
 	cmds, err := op.Execute()
 	if err != nil {
-		httpErrorHandler.Handle(w, err, errorconcept.Common.RetrieveError_StatusInternalServer)
+		errorHandler.Handle(w, err, errorconcept.Common.RetrieveError_StatusInternalServer)
 		return
 	}
 	pkg.Encode(&cmds, w, loggingClient)
@@ -86,19 +92,20 @@ func restGetCommandsByDeviceId(
 	w http.ResponseWriter,
 	r *http.Request,
 	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient) {
+	dbClient interfaces.DBClient,
+	errorHandler errorconcept.ErrorHandler) {
 
 	vars := mux.Vars(r)
 	did, err := url.QueryUnescape(vars[ID])
 	if err != nil {
-		httpErrorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
+		errorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
 		return
 	}
 
 	op := command.NewDeviceIdExecutor(dbClient, did)
 	commands, err := op.Execute()
 	if err != nil {
-		httpErrorHandler.HandleOneVariant(w, err, errorconcept.Common.ItemNotFound, errorconcept.Default.InternalServerError)
+		errorHandler.HandleOneVariant(w, err, errorconcept.Common.ItemNotFound, errorconcept.Default.InternalServerError)
 		return
 	}
 	pkg.Encode(&commands, w, loggingClient)

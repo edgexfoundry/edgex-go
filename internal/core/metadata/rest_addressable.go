@@ -31,12 +31,16 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func restGetAllAddressables(w http.ResponseWriter, loggingClient logger.LoggingClient, dbClient interfaces.DBClient) {
+func restGetAllAddressables(
+	w http.ResponseWriter,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient,
+	errorHandler errorconcept.ErrorHandler) {
 
 	op := addressable.NewAddressableLoadAll(Configuration.Service, dbClient, loggingClient)
 	addressables, err := op.Execute()
 	if err != nil {
-		httpErrorHandler.HandleOneVariant(
+		errorHandler.HandleOneVariant(
 			w, err,
 			errorconcept.Common.LimitExceeded,
 			errorconcept.Default.InternalServerError)
@@ -45,7 +49,7 @@ func restGetAllAddressables(w http.ResponseWriter, loggingClient logger.LoggingC
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	err = json.NewEncoder(w).Encode(&addressables)
 	if err != nil {
-		httpErrorHandler.Handle(w, err, errorconcept.Default.InternalServerError)
+		errorHandler.Handle(w, err, errorconcept.Default.InternalServerError)
 		return
 	}
 }
@@ -56,20 +60,21 @@ func restAddAddressable(
 	w http.ResponseWriter,
 	r *http.Request,
 	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient) {
+	dbClient interfaces.DBClient,
+	errorHandler errorconcept.ErrorHandler) {
 
 	defer r.Body.Close()
 	var a models.Addressable
 	err := json.NewDecoder(r.Body).Decode(&a)
 	if err != nil {
-		httpErrorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
+		errorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
 		return
 	}
 
 	op := addressable.NewAddExecutor(dbClient, a)
 	id, err := op.Execute()
 	if err != nil {
-		httpErrorHandler.HandleManyVariants(
+		errorHandler.HandleManyVariants(
 			w,
 			err,
 			[]errorconcept.ErrorConceptType{
@@ -92,20 +97,21 @@ func restUpdateAddressable(
 	w http.ResponseWriter,
 	r *http.Request,
 	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient) {
+	dbClient interfaces.DBClient,
+	errorHandler errorconcept.ErrorHandler) {
 
 	defer r.Body.Close()
 	var a models.Addressable
 	err := json.NewDecoder(r.Body).Decode(&a)
 	if err != nil {
-		httpErrorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
+		errorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
 		return
 	}
 
 	op := addressable.NewUpdateExecutor(dbClient, a)
 	err = op.Execute()
 	if err != nil {
-		httpErrorHandler.HandleManyVariants(
+		errorHandler.HandleManyVariants(
 			w,
 			err,
 			[]errorconcept.ErrorConceptType{
@@ -125,21 +131,29 @@ func restUpdateAddressable(
 	}
 }
 
-func restGetAddressableById(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
+func restGetAddressableById(
+	w http.ResponseWriter,
+	r *http.Request,
+	dbClient interfaces.DBClient,
+	errorHandler errorconcept.ErrorHandler) {
 
 	vars := mux.Vars(r)
 	var id = vars["id"]
 	op := addressable.NewIdExecutor(dbClient, id)
 	result, err := op.Execute()
 	if err != nil {
-		httpErrorHandler.HandleOneVariant(w, err, errorconcept.Database.NotFound, errorconcept.Default.InternalServerError)
+		errorHandler.HandleOneVariant(w, err, errorconcept.Database.NotFound, errorconcept.Default.InternalServerError)
 		return
 	}
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	json.NewEncoder(w).Encode(result)
 }
 
-func restDeleteAddressableById(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
+func restDeleteAddressableById(
+	w http.ResponseWriter,
+	r *http.Request,
+	dbClient interfaces.DBClient,
+	errorHandler errorconcept.ErrorHandler) {
 
 	vars := mux.Vars(r)
 	var id = vars[ID]
@@ -147,7 +161,7 @@ func restDeleteAddressableById(w http.ResponseWriter, r *http.Request, dbClient 
 	op := addressable.NewDeleteByIdExecutor(dbClient, id)
 	err := op.Execute()
 	if err != nil {
-		httpErrorHandler.HandleManyVariants(
+		errorHandler.HandleManyVariants(
 			w,
 			err,
 			[]errorconcept.ErrorConceptType{
@@ -162,20 +176,24 @@ func restDeleteAddressableById(w http.ResponseWriter, r *http.Request, dbClient 
 	w.Write([]byte("true"))
 }
 
-func restDeleteAddressableByName(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
+func restDeleteAddressableByName(
+	w http.ResponseWriter,
+	r *http.Request,
+	dbClient interfaces.DBClient,
+	errorHandler errorconcept.ErrorHandler) {
 
 	vars := mux.Vars(r)
 	name, err := url.QueryUnescape(vars[NAME])
 	// Problems unescaping
 	if err != nil {
-		httpErrorHandler.Handle(w, err, errorconcept.Addressable.InvalidRequest_StatusInternalServer)
+		errorHandler.Handle(w, err, errorconcept.Addressable.InvalidRequest_StatusInternalServer)
 		return
 	}
 
 	op := addressable.NewDeleteByNameExecutor(dbClient, name)
 	err = op.Execute()
 	if err != nil {
-		httpErrorHandler.HandleManyVariants(
+		errorHandler.HandleManyVariants(
 			w,
 			err,
 			[]errorconcept.ErrorConceptType{
@@ -191,19 +209,23 @@ func restDeleteAddressableByName(w http.ResponseWriter, r *http.Request, dbClien
 	w.Write([]byte("true"))
 }
 
-func restGetAddressableByName(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
+func restGetAddressableByName(
+	w http.ResponseWriter,
+	r *http.Request,
+	dbClient interfaces.DBClient,
+	errorHandler errorconcept.ErrorHandler) {
 
 	vars := mux.Vars(r)
 	dn, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
-		httpErrorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusServiceUnavailable)
+		errorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusServiceUnavailable)
 		return
 	}
 
 	op := addressable.NewNameExecutor(dbClient, dn)
 	result, err := op.Execute()
 	if err != nil {
-		httpErrorHandler.HandleOneVariant(
+		errorHandler.HandleOneVariant(
 			w,
 			err,
 			errorconcept.Database.NotFound,
@@ -215,77 +237,96 @@ func restGetAddressableByName(w http.ResponseWriter, r *http.Request, dbClient i
 	json.NewEncoder(w).Encode(result)
 }
 
-func restGetAddressableByTopic(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
+func restGetAddressableByTopic(
+	w http.ResponseWriter,
+	r *http.Request,
+	dbClient interfaces.DBClient,
+	errorHandler errorconcept.ErrorHandler) {
 
 	vars := mux.Vars(r)
 	t, err := url.QueryUnescape(vars[TOPIC])
 	if err != nil {
-		httpErrorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
+		errorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
 		return
 	}
 
 	op := addressable.NewTopicExecutor(dbClient, t)
 	res, err := op.Execute()
 	if err != nil {
-		httpErrorHandler.Handle(w, err, errorconcept.Common.RetrieveError_StatusInternalServer)
+		errorHandler.Handle(w, err, errorconcept.Common.RetrieveError_StatusInternalServer)
 		return
 	}
 
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	json.NewEncoder(w).Encode(res)
 }
-func restGetAddressableByPort(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
+
+func restGetAddressableByPort(
+	w http.ResponseWriter,
+	r *http.Request,
+	dbClient interfaces.DBClient,
+	errorHandler errorconcept.ErrorHandler) {
 
 	vars := mux.Vars(r)
 	var strp = vars[PORT]
 	p, err := strconv.Atoi(strp)
 	if err != nil {
-		httpErrorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
+		errorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
 		return
 	}
 
 	op := addressable.NewPortExecutor(dbClient, p)
 	res, err := op.Execute()
 	if err != nil {
-		httpErrorHandler.Handle(w, err, errorconcept.Common.RetrieveError_StatusInternalServer)
+		errorHandler.Handle(w, err, errorconcept.Common.RetrieveError_StatusInternalServer)
 		return
 	}
 
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	json.NewEncoder(w).Encode(res)
 }
-func restGetAddressableByPublisher(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
+
+func restGetAddressableByPublisher(
+	w http.ResponseWriter,
+	r *http.Request,
+	dbClient interfaces.DBClient,
+	errorHandler errorconcept.ErrorHandler) {
 
 	vars := mux.Vars(r)
 	p, err := url.QueryUnescape(vars[PUBLISHER])
 	if err != nil {
-		httpErrorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
+		errorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
 		return
 	}
 
 	op := addressable.NewPublisherExecutor(dbClient, p)
 	res, err := op.Execute()
 	if err != nil {
-		httpErrorHandler.Handle(w, err, errorconcept.Common.RetrieveError_StatusInternalServer)
+		errorHandler.Handle(w, err, errorconcept.Common.RetrieveError_StatusInternalServer)
 		return
 	}
 
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	json.NewEncoder(w).Encode(res)
 }
-func restGetAddressableByAddress(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
+
+func restGetAddressableByAddress(
+	w http.ResponseWriter,
+	r *http.Request,
+	dbClient interfaces.DBClient,
+	errorHandler errorconcept.ErrorHandler) {
 
 	vars := mux.Vars(r)
 	a, err := url.QueryUnescape(vars[ADDRESS])
 	if err != nil {
-		httpErrorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
+		errorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
 		return
 	}
 
 	op := addressable.NewAddressExecutor(dbClient, a)
 	res, err := op.Execute()
 	if err != nil {
-		httpErrorHandler.Handle(w, err, errorconcept.Common.RetrieveError_StatusInternalServer)
+		errorHandler.Handle(w, err, errorconcept.Common.RetrieveError_StatusInternalServer)
 		return
 	}
 

@@ -36,31 +36,39 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func restGetAllDeviceServices(w http.ResponseWriter, loggingClient logger.LoggingClient, dbClient interfaces.DBClient) {
+func restGetAllDeviceServices(
+	w http.ResponseWriter,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient,
+	errorHandler errorconcept.ErrorHandler) {
 
 	op := device_service.NewDeviceServiceLoadAll(Configuration.Service, dbClient, loggingClient)
 	services, err := op.Execute()
 	if err != nil {
-		httpErrorHandler.HandleOneVariant(w, err, errorconcept.Common.LimitExceeded, errorconcept.Default.InternalServerError)
+		errorHandler.HandleOneVariant(w, err, errorconcept.Common.LimitExceeded, errorconcept.Default.InternalServerError)
 		return
 	}
 	pkg.Encode(services, w, loggingClient)
 }
 
-func restAddDeviceService(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
+func restAddDeviceService(
+	w http.ResponseWriter,
+	r *http.Request,
+	dbClient interfaces.DBClient,
+	errorHandler errorconcept.ErrorHandler) {
 
 	defer r.Body.Close()
 	var ds models.DeviceService
 	err := json.NewDecoder(r.Body).Decode(&ds)
 	if err != nil {
-		httpErrorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
+		errorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
 		return
 	}
 
 	// Addressable Check
 	// No ID or Name given for addressable
 	if ds.Addressable.Id == "" && ds.Addressable.Name == "" {
-		httpErrorHandler.Handle(w, err, errorconcept.DeviceService.EmptyAddressable)
+		errorHandler.Handle(w, err, errorconcept.DeviceService.EmptyAddressable)
 		return
 	}
 
@@ -70,14 +78,14 @@ func restAddDeviceService(w http.ResponseWriter, r *http.Request, dbClient inter
 		addressable, err = dbClient.GetAddressableById(ds.Addressable.Id)
 	}
 	if err != nil {
-		httpErrorHandler.HandleOneVariant(w, err, errorconcept.DeviceService.AddressableNotFound, errorconcept.Default.InternalServerError)
+		errorHandler.HandleOneVariant(w, err, errorconcept.DeviceService.AddressableNotFound, errorconcept.Default.InternalServerError)
 		return
 	}
 	ds.Addressable = addressable
 
 	// Add the device service
 	if ds.Id, err = dbClient.AddDeviceService(ds); err != nil {
-		httpErrorHandler.HandleOneVariant(w, err, errorconcept.DeviceService.NotUnique, errorconcept.Default.InternalServerError)
+		errorHandler.HandleOneVariant(w, err, errorconcept.DeviceService.NotUnique, errorconcept.Default.InternalServerError)
 		return
 	}
 
@@ -89,13 +97,14 @@ func restUpdateDeviceService(
 	w http.ResponseWriter,
 	r *http.Request,
 	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient) {
+	dbClient interfaces.DBClient,
+	errorHandler errorconcept.ErrorHandler) {
 
 	defer r.Body.Close()
 	var from models.DeviceService
 	err := json.NewDecoder(r.Body).Decode(&from)
 	if err != nil {
-		httpErrorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
+		errorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
 		return
 	}
 
@@ -108,18 +117,18 @@ func restUpdateDeviceService(
 	if from.Id == "" || err != nil {
 		// Try by Name
 		if to, err = dbClient.GetDeviceServiceByName(from.Name); err != nil {
-			httpErrorHandler.Handle(w, err, errorconcept.DeviceService.NotFound)
+			errorHandler.Handle(w, err, errorconcept.DeviceService.NotFound)
 			return
 		}
 	}
 
-	if err = updateDeviceServiceFields(from, &to, w, dbClient); err != nil {
+	if err = updateDeviceServiceFields(from, &to, w, dbClient, errorHandler); err != nil {
 		loggingClient.Error(err.Error())
 		return
 	}
 
 	if err := dbClient.UpdateDeviceService(to); err != nil {
-		httpErrorHandler.Handle(w, err, errorconcept.Common.UpdateError_StatusInternalServer)
+		errorHandler.Handle(w, err, errorconcept.Common.UpdateError_StatusInternalServer)
 		return
 	}
 
@@ -132,7 +141,8 @@ func updateDeviceServiceFields(
 	from models.DeviceService,
 	to *models.DeviceService,
 	w http.ResponseWriter,
-	dbClient interfaces.DBClient) error {
+	dbClient interfaces.DBClient,
+	errorHandler errorconcept.ErrorHandler) error {
 
 	// Use .String() to compare empty structs (not ideal, but there is no .equals method)
 	if (from.Addressable.String() != models.Addressable{}.String()) {
@@ -169,7 +179,7 @@ func updateDeviceServiceFields(
 		// Check if the new name is unique
 		checkDS, err := dbClient.GetDeviceServiceByName(from.Name)
 		if err != nil {
-			httpErrorHandler.HandleOneVariant(w, err, errorconcept.NewDeviceServiceDuplicate(checkDS.Id, to.Id), errorconcept.Default.ServiceUnavailable)
+			errorHandler.HandleOneVariant(w, err, errorconcept.NewDeviceServiceDuplicate(checkDS.Id, to.Id), errorconcept.Default.ServiceUnavailable)
 		}
 	}
 
@@ -181,19 +191,23 @@ func updateDeviceServiceFields(
 	return nil
 }
 
-func restGetServiceByAddressableName(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
+func restGetServiceByAddressableName(
+	w http.ResponseWriter,
+	r *http.Request,
+	dbClient interfaces.DBClient,
+	errorHandler errorconcept.ErrorHandler) {
 
 	vars := mux.Vars(r)
 	an, err := url.QueryUnescape(vars[ADDRESSABLENAME])
 	if err != nil {
-		httpErrorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
+		errorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
 		return
 	}
 
 	op := device_service.NewDeviceServiceLoadByAddressableName(an, dbClient)
 	res, err := op.Execute()
 	if err != nil {
-		httpErrorHandler.HandleOneVariant(w, err, errorconcept.Common.ItemNotFound, errorconcept.Default.InternalServerError)
+		errorHandler.HandleOneVariant(w, err, errorconcept.Common.ItemNotFound, errorconcept.Default.InternalServerError)
 		return
 	}
 
@@ -201,7 +215,11 @@ func restGetServiceByAddressableName(w http.ResponseWriter, r *http.Request, dbC
 	json.NewEncoder(w).Encode(res)
 }
 
-func restGetServiceByAddressableId(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
+func restGetServiceByAddressableId(
+	w http.ResponseWriter,
+	r *http.Request,
+	dbClient interfaces.DBClient,
+	errorHandler errorconcept.ErrorHandler) {
 
 	vars := mux.Vars(r)
 	var sid = vars[ADDRESSABLEID]
@@ -209,7 +227,7 @@ func restGetServiceByAddressableId(w http.ResponseWriter, r *http.Request, dbCli
 	op := device_service.NewDeviceServiceLoadByAddressableID(sid, dbClient)
 	res, err := op.Execute()
 	if err != nil {
-		httpErrorHandler.HandleOneVariant(w, err, errorconcept.Common.ItemNotFound, errorconcept.Default.InternalServerError)
+		errorHandler.HandleOneVariant(w, err, errorconcept.Common.ItemNotFound, errorconcept.Default.InternalServerError)
 		return
 	}
 
@@ -217,18 +235,22 @@ func restGetServiceByAddressableId(w http.ResponseWriter, r *http.Request, dbCli
 	json.NewEncoder(w).Encode(res)
 }
 
-func restGetServiceWithLabel(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
+func restGetServiceWithLabel(
+	w http.ResponseWriter,
+	r *http.Request,
+	dbClient interfaces.DBClient,
+	errorHandler errorconcept.ErrorHandler) {
 
 	vars := mux.Vars(r)
 	l, err := url.QueryUnescape(vars[LABEL])
 	if err != nil {
-		httpErrorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
+		errorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
 		return
 	}
 
 	res := make([]models.DeviceService, 0)
 	if res, err = dbClient.GetDeviceServicesWithLabel(l); err != nil {
-		httpErrorHandler.Handle(w, err, errorconcept.Common.RetrieveError_StatusInternalServer)
+		errorHandler.Handle(w, err, errorconcept.Common.RetrieveError_StatusInternalServer)
 		return
 	}
 
@@ -236,19 +258,23 @@ func restGetServiceWithLabel(w http.ResponseWriter, r *http.Request, dbClient in
 	json.NewEncoder(w).Encode(res)
 }
 
-func restGetServiceByName(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
+func restGetServiceByName(
+	w http.ResponseWriter,
+	r *http.Request,
+	dbClient interfaces.DBClient,
+	errorHandler errorconcept.ErrorHandler) {
 
 	vars := mux.Vars(r)
 	dn, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
-		httpErrorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
+		errorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
 		return
 	}
 
 	op := device_service.NewDeviceServiceLoadByName(dn, dbClient)
 	res, err := op.Execute()
 	if err != nil {
-		httpErrorHandler.HandleOneVariant(w, err, errorconcept.Common.ItemNotFound, errorconcept.Default.InternalServerError)
+		errorHandler.HandleOneVariant(w, err, errorconcept.Common.ItemNotFound, errorconcept.Default.InternalServerError)
 		return
 	}
 
@@ -260,7 +286,8 @@ func restDeleteServiceById(
 	w http.ResponseWriter,
 	r *http.Request,
 	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient) {
+	dbClient interfaces.DBClient,
+	errorHandler errorconcept.ErrorHandler) {
 
 	vars := mux.Vars(r)
 	var id string = vars[ID]
@@ -268,12 +295,12 @@ func restDeleteServiceById(
 	// Check if the device service exists and get it
 	ds, err := dbClient.GetDeviceServiceById(id)
 	if err != nil {
-		httpErrorHandler.HandleOneVariant(w, err, errorconcept.DeviceService.NotFound, errorconcept.Default.InternalServerError)
+		errorHandler.HandleOneVariant(w, err, errorconcept.DeviceService.NotFound, errorconcept.Default.InternalServerError)
 		return
 	}
 
 	ctx := r.Context()
-	if err = deleteDeviceService(ds, w, ctx, loggingClient, dbClient); err != nil {
+	if err = deleteDeviceService(ds, w, ctx, loggingClient, dbClient, errorHandler); err != nil {
 		loggingClient.Error(err.Error())
 		return
 	}
@@ -285,25 +312,26 @@ func restDeleteServiceByName(
 	w http.ResponseWriter,
 	r *http.Request,
 	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient) {
+	dbClient interfaces.DBClient,
+	errorHandler errorconcept.ErrorHandler) {
 
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
-		httpErrorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
+		errorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
 		return
 	}
 
 	// Check if the device service exists
 	ds, err := dbClient.GetDeviceServiceByName(n)
 	if err != nil {
-		httpErrorHandler.HandleOneVariant(w, err, errorconcept.DeviceService.NotFound, errorconcept.Default.InternalServerError)
+		errorHandler.HandleOneVariant(w, err, errorconcept.DeviceService.NotFound, errorconcept.Default.InternalServerError)
 		return
 	}
 
 	ctx := r.Context()
 	// Delete the device service
-	if err = deleteDeviceService(ds, w, ctx, loggingClient, dbClient); err != nil {
+	if err = deleteDeviceService(ds, w, ctx, loggingClient, dbClient, errorHandler); err != nil {
 		loggingClient.Error(err.Error())
 		return
 	}
@@ -320,16 +348,17 @@ func deleteDeviceService(
 	w http.ResponseWriter,
 	ctx context.Context,
 	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient) error {
+	dbClient interfaces.DBClient,
+	errorHandler errorconcept.ErrorHandler) error {
 
 	// Delete the associated devices
 	devices, err := dbClient.GetDevicesByServiceId(ds.Id)
 	if err != nil {
-		httpErrorHandler.Handle(w, err, errorconcept.Common.RetrieveError_StatusServiceUnavailable)
+		errorHandler.Handle(w, err, errorconcept.Common.RetrieveError_StatusServiceUnavailable)
 		return err
 	}
 	for _, device := range devices {
-		if err = deleteDevice(device, w, ctx, loggingClient, dbClient); err != nil {
+		if err = deleteDevice(device, w, ctx, loggingClient, dbClient, errorHandler); err != nil {
 			return err
 		}
 	}
@@ -337,18 +366,18 @@ func deleteDeviceService(
 	// Delete the associated provision watchers
 	watchers, err := dbClient.GetProvisionWatchersByServiceId(ds.Id)
 	if err != nil {
-		httpErrorHandler.Handle(w, err, errorconcept.Common.RetrieveError_StatusServiceUnavailable)
+		errorHandler.Handle(w, err, errorconcept.Common.RetrieveError_StatusServiceUnavailable)
 		return err
 	}
 	for _, watcher := range watchers {
-		if err = deleteProvisionWatcher(watcher, w, loggingClient, dbClient); err != nil {
+		if err = deleteProvisionWatcher(watcher, w, loggingClient, dbClient, errorHandler); err != nil {
 			return err
 		}
 	}
 
 	// Delete the device service
 	if err = dbClient.DeleteDeviceServiceById(ds.Id); err != nil {
-		httpErrorHandler.Handle(w, err, errorconcept.Common.DeleteError)
+		errorHandler.Handle(w, err, errorconcept.Common.DeleteError)
 		return err
 	}
 
@@ -359,25 +388,26 @@ func restUpdateServiceLastConnectedById(
 	w http.ResponseWriter,
 	r *http.Request,
 	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient) {
+	dbClient interfaces.DBClient,
+	errorHandler errorconcept.ErrorHandler) {
 
 	vars := mux.Vars(r)
 	var id string = vars[ID]
 	var vlc string = vars[LASTCONNECTED]
 	lc, err := strconv.ParseInt(vlc, 10, 64)
 	if err != nil {
-		httpErrorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
+		errorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
 		return
 	}
 
 	// Check if the device service exists
 	ds, err := dbClient.GetDeviceServiceById(id)
 	if err != nil {
-		httpErrorHandler.HandleOneVariant(w, err, errorconcept.DeviceService.NotFound, errorconcept.Default.InternalServerError)
+		errorHandler.HandleOneVariant(w, err, errorconcept.DeviceService.NotFound, errorconcept.Default.InternalServerError)
 		return
 	}
 
-	if err = updateServiceLastConnected(ds, lc, w, dbClient); err != nil {
+	if err = updateServiceLastConnected(ds, lc, w, dbClient, errorHandler); err != nil {
 		loggingClient.Error(err.Error())
 		return
 	}
@@ -390,30 +420,31 @@ func restUpdateServiceLastConnectedByName(
 	w http.ResponseWriter,
 	r *http.Request,
 	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient) {
+	dbClient interfaces.DBClient,
+	errorHandler errorconcept.ErrorHandler) {
 
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
-		httpErrorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
+		errorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
 		return
 	}
 	var vlc string = vars[LASTCONNECTED]
 	lc, err := strconv.ParseInt(vlc, 10, 64)
 	if err != nil {
-		httpErrorHandler.Handle(w, err, errorconcept.DeviceService.InvalidRequest_StatusInternalServer)
+		errorHandler.Handle(w, err, errorconcept.DeviceService.InvalidRequest_StatusInternalServer)
 		return
 	}
 
 	// Check if the device service exists
 	ds, err := dbClient.GetDeviceServiceByName(n)
 	if err != nil {
-		httpErrorHandler.HandleOneVariant(w, err, errorconcept.DeviceService.NotFound, errorconcept.Default.InternalServerError)
+		errorHandler.HandleOneVariant(w, err, errorconcept.DeviceService.NotFound, errorconcept.Default.InternalServerError)
 		return
 	}
 
 	// Update last connected
-	if err = updateServiceLastConnected(ds, lc, w, dbClient); err != nil {
+	if err = updateServiceLastConnected(ds, lc, w, dbClient, errorHandler); err != nil {
 		loggingClient.Error(err.Error())
 		return
 	}
@@ -427,19 +458,24 @@ func updateServiceLastConnected(
 	ds models.DeviceService,
 	lc int64,
 	w http.ResponseWriter,
-	dbClient interfaces.DBClient) error {
+	dbClient interfaces.DBClient,
+	errorHandler errorconcept.ErrorHandler) error {
 
 	ds.LastConnected = lc
 
 	if err := dbClient.UpdateDeviceService(ds); err != nil {
-		httpErrorHandler.Handle(w, err, errorconcept.Common.UpdateError_StatusServiceUnavailable)
+		errorHandler.Handle(w, err, errorconcept.Common.UpdateError_StatusServiceUnavailable)
 		return err
 	}
 
 	return nil
 }
 
-func restGetServiceById(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
+func restGetServiceById(
+	w http.ResponseWriter,
+	r *http.Request,
+	dbClient interfaces.DBClient,
+	errorHandler errorconcept.ErrorHandler) {
 
 	vars := mux.Vars(r)
 	var did = vars[ID]
@@ -447,7 +483,7 @@ func restGetServiceById(w http.ResponseWriter, r *http.Request, dbClient interfa
 	op := device_service.NewDeviceServiceLoadById(did, dbClient)
 	res, err := op.Execute()
 	if err != nil {
-		httpErrorHandler.HandleOneVariant(w, err, errorconcept.Common.ItemNotFound, errorconcept.Default.InternalServerError)
+		errorHandler.HandleOneVariant(w, err, errorconcept.Common.ItemNotFound, errorconcept.Default.InternalServerError)
 		return
 	}
 
@@ -455,7 +491,11 @@ func restGetServiceById(w http.ResponseWriter, r *http.Request, dbClient interfa
 	json.NewEncoder(w).Encode(res)
 }
 
-func restUpdateServiceOpStateById(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
+func restUpdateServiceOpStateById(
+	w http.ResponseWriter,
+	r *http.Request,
+	dbClient interfaces.DBClient,
+	errorHandler errorconcept.ErrorHandler) {
 
 	vars := mux.Vars(r)
 	var id = vars[ID]
@@ -465,13 +505,13 @@ func restUpdateServiceOpStateById(w http.ResponseWriter, r *http.Request, dbClie
 	newOs, f := models.GetOperatingState(os)
 	if !f {
 		err := errors.New("Invalid State: " + os + " Must be 'ENABLED' or 'DISABLED'")
-		httpErrorHandler.Handle(w, err, errorconcept.DeviceService.InvalidState)
+		errorHandler.Handle(w, err, errorconcept.DeviceService.InvalidState)
 		return
 	}
 
 	op := device_service.NewUpdateOpStateByIdExecutor(id, newOs, dbClient)
 	if err := op.Execute(); err != nil {
-		httpErrorHandler.HandleOneVariant(w, err, errorconcept.Common.ItemNotFound, errorconcept.Default.InternalServerError)
+		errorHandler.HandleOneVariant(w, err, errorconcept.Common.ItemNotFound, errorconcept.Default.InternalServerError)
 		return
 	}
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
@@ -479,12 +519,16 @@ func restUpdateServiceOpStateById(w http.ResponseWriter, r *http.Request, dbClie
 	w.Write([]byte("true"))
 }
 
-func restUpdateServiceOpStateByName(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
+func restUpdateServiceOpStateByName(
+	w http.ResponseWriter,
+	r *http.Request,
+	dbClient interfaces.DBClient,
+	errorHandler errorconcept.ErrorHandler) {
 
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
-		httpErrorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
+		errorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
 		return
 	}
 	var os = vars[OPSTATE]
@@ -493,13 +537,13 @@ func restUpdateServiceOpStateByName(w http.ResponseWriter, r *http.Request, dbCl
 	newOs, f := models.GetOperatingState(os)
 	if !f {
 		err = errors.New("Invalid State: " + os + " Must be 'ENABLED' or 'DISABLED'")
-		httpErrorHandler.Handle(w, err, errorconcept.DeviceService.InvalidState)
+		errorHandler.Handle(w, err, errorconcept.DeviceService.InvalidState)
 		return
 	}
 
 	op := device_service.NewUpdateOpStateByNameExecutor(n, newOs, dbClient)
 	if err := op.Execute(); err != nil {
-		httpErrorHandler.HandleOneVariant(w, err, errorconcept.Common.ItemNotFound, errorconcept.Default.InternalServerError)
+		errorHandler.HandleOneVariant(w, err, errorconcept.Common.ItemNotFound, errorconcept.Default.InternalServerError)
 		return
 	}
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
@@ -507,7 +551,11 @@ func restUpdateServiceOpStateByName(w http.ResponseWriter, r *http.Request, dbCl
 	w.Write([]byte("true"))
 }
 
-func restUpdateServiceAdminStateById(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
+func restUpdateServiceAdminStateById(
+	w http.ResponseWriter,
+	r *http.Request,
+	dbClient interfaces.DBClient,
+	errorHandler errorconcept.ErrorHandler) {
 
 	vars := mux.Vars(r)
 	var id = vars[ID]
@@ -517,13 +565,13 @@ func restUpdateServiceAdminStateById(w http.ResponseWriter, r *http.Request, dbC
 	newAs, f := models.GetAdminState(as)
 	if !f {
 		err := errors.New("Invalid state: " + as + " Must be 'LOCKED' or 'UNLOCKED'")
-		httpErrorHandler.Handle(w, err, errorconcept.DeviceService.InvalidState)
+		errorHandler.Handle(w, err, errorconcept.DeviceService.InvalidState)
 		return
 	}
 
 	op := device_service.NewUpdateAdminStateByIdExecutor(id, newAs, dbClient)
 	if err := op.Execute(); err != nil {
-		httpErrorHandler.HandleOneVariant(w, err, errorconcept.Common.ItemNotFound, errorconcept.Default.InternalServerError)
+		errorHandler.HandleOneVariant(w, err, errorconcept.Common.ItemNotFound, errorconcept.Default.InternalServerError)
 		return
 	}
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
@@ -531,12 +579,16 @@ func restUpdateServiceAdminStateById(w http.ResponseWriter, r *http.Request, dbC
 	w.Write([]byte("true"))
 }
 
-func restUpdateServiceAdminStateByName(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
+func restUpdateServiceAdminStateByName(
+	w http.ResponseWriter,
+	r *http.Request,
+	dbClient interfaces.DBClient,
+	errorHandler errorconcept.ErrorHandler) {
 
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
-		httpErrorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
+		errorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
 		return
 	}
 	var as = vars[ADMINSTATE]
@@ -545,13 +597,13 @@ func restUpdateServiceAdminStateByName(w http.ResponseWriter, r *http.Request, d
 	newAs, f := models.GetAdminState(as)
 	if !f {
 		err := errors.New("Invalid state: " + as + " Must be 'LOCKED' or 'UNLOCKED'")
-		httpErrorHandler.Handle(w, err, errorconcept.DeviceService.InvalidState)
+		errorHandler.Handle(w, err, errorconcept.DeviceService.InvalidState)
 		return
 	}
 
 	op := device_service.NewUpdateAdminStateByNameExecutor(n, newAs, dbClient)
 	if err := op.Execute(); err != nil {
-		httpErrorHandler.HandleOneVariant(w, err, errorconcept.Common.ItemNotFound, errorconcept.Default.InternalServerError)
+		errorHandler.HandleOneVariant(w, err, errorconcept.Common.ItemNotFound, errorconcept.Default.InternalServerError)
 		return
 	}
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
@@ -563,25 +615,26 @@ func restUpdateServiceLastReportedById(
 	w http.ResponseWriter,
 	r *http.Request,
 	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient) {
+	dbClient interfaces.DBClient,
+	errorHandler errorconcept.ErrorHandler) {
 
 	vars := mux.Vars(r)
 	var id string = vars[ID]
 	var vlr string = vars[LASTREPORTED]
 	lr, err := strconv.ParseInt(vlr, 10, 64)
 	if err != nil {
-		httpErrorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
+		errorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
 		return
 	}
 
 	// Check if the device service exists
 	ds, err := dbClient.GetDeviceServiceById(id)
 	if err != nil {
-		httpErrorHandler.HandleOneVariant(w, err, errorconcept.DeviceService.NotFound, errorconcept.Default.InternalServerError)
+		errorHandler.HandleOneVariant(w, err, errorconcept.DeviceService.NotFound, errorconcept.Default.InternalServerError)
 		return
 	}
 
-	if err = updateServiceLastReported(ds, lr, w, dbClient); err != nil {
+	if err = updateServiceLastReported(ds, lr, w, dbClient, errorHandler); err != nil {
 		loggingClient.Error(err.Error())
 		return
 	}
@@ -594,29 +647,30 @@ func restUpdateServiceLastReportedByName(
 	w http.ResponseWriter,
 	r *http.Request,
 	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient) {
+	dbClient interfaces.DBClient,
+	errorHandler errorconcept.ErrorHandler) {
 
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
-		httpErrorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
+		errorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
 		return
 	}
 	var vlr string = vars[LASTREPORTED]
 	lr, err := strconv.ParseInt(vlr, 10, 64)
 	if err != nil {
-		httpErrorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
+		errorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
 		return
 	}
 
 	// Check if the device service exists
 	ds, err := dbClient.GetDeviceServiceByName(n)
 	if err != nil {
-		httpErrorHandler.HandleOneVariant(w, err, errorconcept.DeviceService.NotFound, errorconcept.Default.InternalServerError)
+		errorHandler.HandleOneVariant(w, err, errorconcept.DeviceService.NotFound, errorconcept.Default.InternalServerError)
 		return
 	}
 
-	if err = updateServiceLastReported(ds, lr, w, dbClient); err != nil {
+	if err = updateServiceLastReported(ds, lr, w, dbClient, errorHandler); err != nil {
 		loggingClient.Error(err.Error())
 		return
 	}
@@ -630,11 +684,12 @@ func updateServiceLastReported(
 	ds models.DeviceService,
 	lr int64,
 	w http.ResponseWriter,
-	dbClient interfaces.DBClient) error {
+	dbClient interfaces.DBClient,
+	errorHandler errorconcept.ErrorHandler) error {
 
 	ds.LastReported = lr
 	if err := dbClient.UpdateDeviceService(ds); err != nil {
-		httpErrorHandler.Handle(w, err, errorconcept.Common.UpdateError_StatusServiceUnavailable)
+		errorHandler.Handle(w, err, errorconcept.Common.UpdateError_StatusServiceUnavailable)
 		return err
 	}
 
@@ -688,11 +743,7 @@ func callback(
 }
 
 // Asynchronous call
-func makeRequest(
-	client *http.Client,
-	req *http.Request,
-	loggingClient logger.LoggingClient) {
-
+func makeRequest(client *http.Client, req *http.Request, loggingClient logger.LoggingClient) {
 	// Make the request
 	resp, err := client.Do(req)
 	if err == nil {
@@ -705,6 +756,5 @@ func makeRequest(
 
 // Turn the ID and ActionType into the JSON body that will be passed
 func getBody(id string, actionType models.ActionType) ([]byte, error) {
-
 	return json.Marshal(models.CallbackAlert{ActionType: actionType, Id: id})
 }
