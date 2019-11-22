@@ -27,6 +27,7 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
+	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/config"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/errors"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/operators/intervalaction"
@@ -36,12 +37,13 @@ func restGetIntervalAction(
 	w http.ResponseWriter,
 	r *http.Request,
 	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient) {
+	dbClient interfaces.DBClient,
+	configuration *config.ConfigurationStruct) {
 
 	if r.Body != nil {
 		defer r.Body.Close()
 	}
-	op := intervalaction.NewAllExecutor(dbClient, Configuration.Service)
+	op := intervalaction.NewAllExecutor(dbClient, configuration.Service)
 	intervalActions, err := op.Execute()
 
 	if err != nil {
@@ -109,7 +111,8 @@ func intervalActionHandler(
 	r *http.Request,
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
-	scClient interfaces.SchedulerQueueClient) {
+	scClient interfaces.SchedulerQueueClient,
+	configuration *config.ConfigurationStruct) {
 
 	if r.Body != nil {
 		defer r.Body.Close()
@@ -117,7 +120,7 @@ func intervalActionHandler(
 
 	switch r.Method {
 	case http.MethodGet:
-		intervalActions, err := getIntervalActions(Configuration.Service.MaxResultCount, dbClient)
+		intervalActions, err := getIntervalActions(configuration.Service.MaxResultCount, dbClient)
 		if err != nil {
 			loggingClient.Error(err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)

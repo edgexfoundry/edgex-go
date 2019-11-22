@@ -20,6 +20,8 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 	queueV1 "gopkg.in/eapache/queue.v1"
+
+	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/config"
 )
 
 // the interval specific shared variables
@@ -34,10 +36,10 @@ var (
 	intervalActionNameToIntervalActionIdMap = make(map[string]string)
 )
 
-func StartTicker(ticker *time.Ticker, loggingClient logger.LoggingClient) {
+func StartTicker(ticker *time.Ticker, loggingClient logger.LoggingClient, configuration *config.ConfigurationStruct) {
 	go func() {
 		for range ticker.C {
-			triggerInterval(loggingClient)
+			triggerInterval(loggingClient, configuration)
 		}
 	}()
 }
@@ -421,7 +423,7 @@ func (qc *QueueClient) RemoveIntervalActionQueue(intervalActionId string) error 
 	return nil
 }
 
-func triggerInterval(loggingClient logger.LoggingClient) {
+func triggerInterval(loggingClient logger.LoggingClient, configuration *config.ConfigurationStruct) {
 	nowEpoch := time.Now().Unix()
 
 	defer func() {
@@ -452,7 +454,7 @@ func triggerInterval(loggingClient logger.LoggingClient) {
 					wg.Add(1)
 
 					// execute it in a individual go routine
-					go execute(intervalContext, &wg, loggingClient)
+					go execute(intervalContext, &wg, loggingClient, configuration)
 				} else {
 					intervalQueue.Add(intervalContext)
 				}
@@ -463,7 +465,12 @@ func triggerInterval(loggingClient logger.LoggingClient) {
 	wg.Wait()
 }
 
-func execute(context *IntervalContext, wg *sync.WaitGroup, loggingClient logger.LoggingClient) {
+func execute(
+	context *IntervalContext,
+	wg *sync.WaitGroup,
+	loggingClient logger.LoggingClient,
+	configuration *config.ConfigurationStruct) {
+
 	intervalActionMap := context.IntervalActionsMap
 
 	defer wg.Done()
@@ -499,7 +506,7 @@ func execute(context *IntervalContext, wg *sync.WaitGroup, loggingClient logger.
 		}
 
 		client := &http.Client{
-			Timeout: time.Duration(Configuration.Service.Timeout) * time.Millisecond,
+			Timeout: time.Duration(configuration.Service.Timeout) * time.Millisecond,
 		}
 		responseBytes, statusCode, err := sendRequestAndGetResponse(client, req)
 		responseStr := string(responseBytes)

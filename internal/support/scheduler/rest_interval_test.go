@@ -20,7 +20,6 @@ import (
 	goErrors "errors"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"testing"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
@@ -28,8 +27,8 @@ import (
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/gorilla/mux"
 
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+	schedConfig "github.com/edgexfoundry/edgex-go/internal/support/scheduler/config"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/interfaces/mocks"
 )
@@ -101,7 +100,7 @@ func TestGetIntervals(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			rr := httptest.NewRecorder()
-			restGetIntervals(rr, tt.request, logger.NewMockClient(), tt.dbMock)
+			restGetIntervals(rr, tt.request, logger.NewMockClient(), tt.dbMock, &schedConfig.ConfigurationStruct{})
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -293,10 +292,6 @@ func TestIntervalById(t *testing.T) {
 			}
 		})
 	}
-}
-func TestMain(m *testing.M) {
-	Configuration = &ConfigurationStruct{}
-	os.Exit(m.Run())
 }
 
 func createMockIntervalLoaderAllSuccess() interfaces.DBClient {
@@ -567,7 +562,6 @@ func TestDeleteIntervalById(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			Configuration = &ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 1}}
 			rr := httptest.NewRecorder()
 			restDeleteIntervalByID(rr, tt.request, logger.NewMockClient(), tt.dbMock, tt.scMock)
 			response := rr.Result()
@@ -734,7 +728,6 @@ func TestDeleteIntervalByName(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			Configuration = &ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 1}}
 			rr := httptest.NewRecorder()
 			restDeleteIntervalByName(rr, tt.request, logger.NewMockClient(), tt.dbMock, tt.scMock)
 			response := rr.Result()
@@ -787,7 +780,6 @@ func TestScrubIntervals(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			Configuration = &ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 1}}
 			rr := httptest.NewRecorder()
 			restScrubAllIntervals(rr, tt.request, logger.NewMockClient(), tt.dbMock)
 			response := rr.Result()

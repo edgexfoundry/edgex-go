@@ -20,6 +20,7 @@ import (
 	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap"
+	bootstrapContainer "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers/database"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers/httpserver"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers/message"
@@ -30,6 +31,8 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler"
+	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/config"
+	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/container"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 )
@@ -48,7 +51,15 @@ func main() {
 	flag.Usage = usage.HelpCallback
 	flag.Parse()
 
-	dic := di.NewContainer(di.ServiceConstructorMap{})
+	configuration := &config.ConfigurationStruct{}
+	dic := di.NewContainer(di.ServiceConstructorMap{
+		container.ConfigurationName: func(get di.Get) interface{} {
+			return configuration
+		},
+		bootstrapContainer.ConfigurationInterfaceName: func(get di.Get) interface{} {
+			return get(container.ConfigurationName)
+		},
+	})
 
 	httpServer := httpserver.NewBootstrap(scheduler.LoadRestRoutes(dic))
 	bootstrap.Run(
@@ -57,12 +68,12 @@ func main() {
 		internal.ConfigFileName,
 		useRegistry,
 		clients.SupportSchedulerServiceKey,
-		scheduler.Configuration,
+		configuration,
 		startupTimer,
 		dic,
 		[]interfaces.BootstrapHandler{
 			secret.NewSecret().BootstrapHandler,
-			database.NewDatabase(&httpServer, scheduler.Configuration).BootstrapHandler,
+			database.NewDatabase(&httpServer, configuration).BootstrapHandler,
 			scheduler.BootstrapHandler,
 			telemetry.BootstrapHandler,
 			httpServer.BootstrapHandler,
