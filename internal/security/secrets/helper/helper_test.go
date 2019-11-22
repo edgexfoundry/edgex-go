@@ -66,7 +66,7 @@ func TestGetWorkDirDefault(t *testing.T) {
 
 func TestWorkDirEnvVar(t *testing.T) {
 	defer (envSetup())()
-	const workDir = "./run"
+	const workDir = "./tmp"
 	os.Setenv(EnvXdgRuntimeDir, workDir)
 	configuration := &config.ConfigurationStruct{}
 
