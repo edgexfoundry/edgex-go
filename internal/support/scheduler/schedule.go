@@ -89,6 +89,17 @@ func addIntervalActionOperation(interval contract.Interval, intervalAction contr
 	intervalActionNameToIntervalActionIdMap[intervalAction.Name] = intervalAction.ID
 }
 
+type QueueClient struct {
+	loggingClient logger.LoggingClient
+}
+
+// NewClient
+func NewSchedulerQueueClient(loggingClient logger.LoggingClient) *QueueClient {
+	return &QueueClient{
+		loggingClient: loggingClient,
+	}
+}
+
 func (qc *QueueClient) Connect() (string, error) {
 	return "alive..", nil
 }
