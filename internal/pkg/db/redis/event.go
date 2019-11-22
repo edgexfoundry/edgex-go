@@ -16,9 +16,10 @@ package redis
 import (
 	"encoding/json"
 
+	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
+
 	correlation "github.com/edgexfoundry/edgex-go/internal/pkg/correlation/models"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
-	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 
 	"github.com/gomodule/redigo/redis"
 )
@@ -61,9 +62,7 @@ func unmarshalEvents(objects [][]byte, events []contract.Event) (err error) {
 }
 
 func unmarshalEvent(o []byte) (contract.Event, error) {
-	var s redisEvent
-
-	err := json.Unmarshal(o, &s)
+	s, err := unmarshalRedisEvent(o)
 	if err != nil {
 		return contract.Event{}, err
 	}
@@ -97,6 +96,18 @@ func unmarshalEvent(o []byte) (contract.Event, error) {
 		if err != nil {
 			return contract.Event{}, err
 		}
+	}
+
+	return event, nil
+}
+
+// unmarshalRedisEvent constructs a redisEvent type from the provided bytes.
+func unmarshalRedisEvent(o []byte) (redisEvent, error) {
+	var event redisEvent
+
+	err := json.Unmarshal(o, &event)
+	if err != nil {
+		return redisEvent{}, err
 	}
 
 	return event, nil
