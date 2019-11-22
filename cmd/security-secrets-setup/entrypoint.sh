@@ -26,7 +26,7 @@ set -e
 # runtime directory is set per user:
 XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR:-/run/user/$(echo $(id -u))}
 PATH="$BASE_DIR:$PATH"
-VAULT_TLS_PATH=${VAULT_TLS_PATH:-/run/edgex/secrets/edgex-vault}
+VAULT_TLS_PATH=${VAULT_TLS_PATH:-/tmp/edgex/secrets/edgex-vault}
 export XDG_RUNTIME_DIR PATH VAULT_TLS_PATH
 
 # debug output:

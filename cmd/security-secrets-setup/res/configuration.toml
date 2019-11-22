@@ -6,8 +6,8 @@ EnableRemote = false
 File = './logs/security-secrets-setup.log'
 
 [SecretsSetup]
-WorkDir = "/run/edgex/secrets-setup"
-DeployDir = "/run/edgex/secrets"
+WorkDir = "/tmp/edgex/secrets-setup"
+DeployDir = "/tmp/edgex/secrets"
 CacheDir = "/etc/edgex/pki"
 CertConfigDir = "./res"
 
