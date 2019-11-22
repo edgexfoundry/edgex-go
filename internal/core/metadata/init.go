@@ -20,10 +20,10 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
+	errorContainer "github.com/edgexfoundry/edgex-go/internal/pkg/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/endpoint"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
-
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/coredata"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/notifications"
@@ -34,12 +34,9 @@ import (
 var Configuration = &ConfigurationStruct{}
 var nc notifications.NotificationsClient
 var vdc coredata.ValueDescriptorClient
-var httpErrorHandler errorconcept.ErrorHandler
 
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the metadata service.
 func BootstrapHandler(wg *sync.WaitGroup, ctx context.Context, startupTimer startup.Timer, dic *di.Container) bool {
-
-	httpErrorHandler = errorconcept.NewErrorHandler(container.LoggingClientFrom(dic.Get))
 
 	// initialize clients required by service.
 	registryClient := container.RegistryFrom(dic.Get)
@@ -61,6 +58,13 @@ func BootstrapHandler(wg *sync.WaitGroup, ctx context.Context, startupTimer star
 			Interval:    Configuration.Service.ClientMonitor,
 		},
 		endpoint.Endpoint{RegistryClient: &registryClient})
+
+	// add dependencies to container
+	dic.Update(di.ServiceConstructorMap{
+		errorContainer.ErrorHandlerName: func(get di.Get) interface{} {
+			return errorconcept.NewErrorHandler(container.LoggingClientFrom(get))
+		},
+	})
 
 	return true
 }
