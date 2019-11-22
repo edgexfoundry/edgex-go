@@ -8,8 +8,10 @@
 package scheduler
 
 import (
-	"github.com/edgexfoundry/go-mod-core-contracts/models"
 	"time"
+
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
 type IntervalContext struct {
@@ -24,15 +26,15 @@ type IntervalContext struct {
 	MarkedDeleted      bool
 }
 
-func (sc *IntervalContext) Reset(interval models.Interval) {
+func (sc *IntervalContext) Reset(interval models.Interval, loggingClient logger.LoggingClient) {
 	if sc.Interval != (models.Interval{}) && sc.Interval.Name != interval.Name {
-		//if interval name has changed, we should clear the old actions map(here just renew one)
+		// if interval name has changed, we should clear the old actions map(here just renew one)
 		sc.IntervalActionsMap = make(map[string]models.IntervalAction)
 	}
 
 	sc.Interval = interval
 
-	//run times, current and max iteration
+	// run times, current and max iteration
 	if sc.Interval.RunOnce {
 		sc.MaxIterations = 1
 	} else {
@@ -40,36 +42,36 @@ func (sc *IntervalContext) Reset(interval models.Interval) {
 	}
 	sc.CurrentIterations = 0
 
-	//start and end time
+	// start and end time
 	if sc.Interval.Start == "" {
 		sc.StartTime = time.Now()
 	} else {
 		t, err := time.Parse(TIMELAYOUT, sc.Interval.Start)
 		if err != nil {
-			LoggingClient.Error("parse time error, the original time string is : " + sc.Interval.Start)
+			loggingClient.Error("parse time error, the original time string is : " + sc.Interval.Start)
 		}
 
 		sc.StartTime = t
 	}
 
 	if sc.Interval.End == "" {
-		//use max time
+		// use max time
 		sc.EndTime = time.Unix(1<<63-62135596801, 999999999)
 	} else {
 		t, err := time.Parse(TIMELAYOUT, sc.Interval.End)
 		if err != nil {
-			LoggingClient.Error("parse time error, the original time string is : " + sc.Interval.End)
+			loggingClient.Error("parse time error, the original time string is : " + sc.Interval.End)
 		}
 
 		sc.EndTime = t
 	}
 
-	//frequency and next time
+	// frequency and next time
 	nowBenchmark := time.Now().Unix()
 	if !sc.Interval.RunOnce {
 		frequency, err := parseFrequency(sc.Interval.Frequency)
 		if err != nil {
-			LoggingClient.Error("interval parse frequency error  %v", err.Error())
+			loggingClient.Error("interval parse frequency error  %v", err.Error())
 		}
 		sc.Frequency = frequency
 	}

@@ -64,12 +64,12 @@ func UpdateFromRegistry(
 		}
 
 		if err := registryClient.Register(); err != nil {
-			return errors.New(fmt.Sprintf("could not register service with Registry: %v", err.Error()))
+			return fmt.Errorf("could not register service with Registry: %v", err.Error())
 		}
 
 		rawConfig, err := registryClient.GetConfiguration(config)
 		if err != nil {
-			return errors.New(fmt.Sprintf("could not get configuration from Registry: %v", err.Error()))
+			return fmt.Errorf("could not get configuration from Registry: %v", err.Error())
 		}
 
 		if !config.UpdateFromRaw(rawConfig) {
@@ -81,7 +81,7 @@ func UpdateFromRegistry(
 
 	registryClient, err := createRegistryClient(serviceKey, config)
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("createRegistryClient failed: %v", err.Error()))
+		return nil, fmt.Errorf("createRegistryClient failed: %v", err.Error())
 	}
 
 	for startupTimer.HasNotElapsed() {

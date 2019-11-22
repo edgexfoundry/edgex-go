@@ -22,11 +22,13 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
+	"github.com/gorilla/mux"
+
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/interfaces/mocks"
-	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
-	"github.com/gorilla/mux"
 )
 
 var intervalActionForAdd = contract.IntervalAction{
@@ -83,8 +85,7 @@ func TestGetIntervalAction(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			dbClient = tt.dbMock
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(restGetIntervalAction)
-			handler.ServeHTTP(rr, tt.request)
+			restGetIntervalAction(rr, tt.request, logger.NewMockClient())
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -151,8 +152,7 @@ func TestAddIntervalAction(t *testing.T) {
 			dbClient = tt.dbMock
 			scClient = tt.scClient
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(restAddIntervalAction)
-			handler.ServeHTTP(rr, tt.request)
+			restAddIntervalAction(rr, tt.request, logger.NewMockClient())
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -184,7 +184,7 @@ func createMockIntervalActionLoaderAddSuccess() interfaces.DBClient {
 	myMock := mocks.DBClient{}
 	intervalAction := createIntervalActions(1)[0]
 	b, _ := json.Marshal(intervalAction)
-	intervalAction.UnmarshalJSON(b)
+	_ = intervalAction.UnmarshalJSON(b)
 	validateIntervalAction(&intervalActionForAdd)
 
 	myMock.On("IntervalActionByName", intervalActionForAdd.Name).Return(intervalAction, nil)
@@ -210,7 +210,7 @@ func createMockIntervalActionLoaderAddErr() interfaces.DBClient {
 	myMock := mocks.DBClient{}
 	intervalAction := createIntervalActions(1)[0]
 	b, _ := json.Marshal(intervalAction)
-	intervalAction.UnmarshalJSON(b)
+	_ = intervalAction.UnmarshalJSON(b)
 	validateIntervalAction(&intervalActionForAdd)
 
 	myMock.On("IntervalActionByName", intervalActionForAdd.Name).Return(intervalAction, nil)
@@ -221,7 +221,7 @@ func createMockIntervalActionLoaderAddErr() interfaces.DBClient {
 
 func validateIntervalAction(intervalAction *contract.IntervalAction) {
 	b, _ := json.Marshal(intervalAction)
-	intervalAction.UnmarshalJSON(b)
+	_ = intervalAction.UnmarshalJSON(b)
 }
 
 func createMockIntervalActionLoaderSCAddSuccess() interfaces.SchedulerQueueClient {
