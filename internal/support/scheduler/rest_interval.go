@@ -28,10 +28,16 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/errors"
+	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/operators/interval"
 )
 
-func restGetIntervals(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
+func restGetIntervals(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
+
 	if r.Body != nil {
 		defer r.Body.Close()
 	}
@@ -46,7 +52,12 @@ func restGetIntervals(w http.ResponseWriter, r *http.Request, loggingClient logg
 	pkg.Encode(intervals, w, loggingClient)
 }
 
-func restUpdateInterval(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
+func restUpdateInterval(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
+
 	if r.Body != nil {
 		defer r.Body.Close()
 	}
@@ -87,7 +98,12 @@ func restUpdateInterval(w http.ResponseWriter, r *http.Request, loggingClient lo
 	w.Write([]byte("true"))
 }
 
-func restAddInterval(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
+func restAddInterval(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
+
 	if r.Body != nil {
 		defer r.Body.Close()
 	}
@@ -119,7 +135,12 @@ func restAddInterval(w http.ResponseWriter, r *http.Request, loggingClient logge
 	w.Write([]byte(newId))
 }
 
-func restGetIntervalByID(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
+func restGetIntervalByID(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
+
 	if r.Body != nil {
 		defer r.Body.Close()
 	}
@@ -149,7 +170,12 @@ func restGetIntervalByID(w http.ResponseWriter, r *http.Request, loggingClient l
 	pkg.Encode(result, w, loggingClient)
 }
 
-func restDeleteIntervalByID(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
+func restDeleteIntervalByID(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
+
 	if r.Body != nil {
 		defer r.Body.Close()
 	}
@@ -181,7 +207,12 @@ func restDeleteIntervalByID(w http.ResponseWriter, r *http.Request, loggingClien
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
 }
-func restGetIntervalByName(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
+func restGetIntervalByName(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
+
 	defer r.Body.Close()
 
 	vars := mux.Vars(r)
@@ -213,7 +244,11 @@ func restGetIntervalByName(w http.ResponseWriter, r *http.Request, loggingClient
 
 }
 
-func restDeleteIntervalByName(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
+func restDeleteIntervalByName(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
 
 	defer r.Body.Close()
 
@@ -251,7 +286,12 @@ func restDeleteIntervalByName(w http.ResponseWriter, r *http.Request, loggingCli
 // ************************ UTILITY HANDLERS ************************************
 
 // Scrub all the Intervals and IntervalActions
-func restScrubAllIntervals(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
+func restScrubAllIntervals(
+	w http.ResponseWriter,
+	r *http.Request,
+	loggingClient logger.LoggingClient,
+	dbClient interfaces.DBClient) {
+
 	defer r.Body.Close()
 	loggingClient.Info("Scrubbing All Interval(s) and IntervalAction(s).")
 	op := interval.NewScrubExecutor(dbClient)
