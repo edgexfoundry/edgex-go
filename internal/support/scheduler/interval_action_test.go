@@ -157,9 +157,8 @@ func TestUpdateIntervalAction(t *testing.T) {
 		mock.Anything).Return(models.IntervalAction{}, errors.New("mock db not found"))
 
 	nIntervalAction := models.IntervalAction{Name: testIntervalActionName, Target: testIntervalActionTarget, Origin: testOrigin, Interval: testIntervalActionInterval}
-	scClient = mySchedulerMock
 
-	err := updateIntervalAction(nIntervalAction, myMock)
+	err := updateIntervalAction(nIntervalAction, myMock, mySchedulerMock)
 	if err != nil {
 		t.Fatalf(err.Error())
 	}
@@ -189,10 +188,7 @@ func TestDeleteIntervalActionById(t *testing.T) {
 	mySchedulerMock.On("RemoveIntervalActionQueue",
 		mock.Anything).Return(nil)
 
-	// assign clients to mocks
-	scClient = mySchedulerMock
-
-	err := deleteIntervalActionById(testUUIDString, myMock)
+	err := deleteIntervalActionById(testUUIDString, myMock, mySchedulerMock)
 	if err != nil {
 		t.Fatalf(err.Error())
 	}

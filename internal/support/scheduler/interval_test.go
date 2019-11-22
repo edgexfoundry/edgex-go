@@ -130,9 +130,7 @@ func TestAddIntervalFailOnExistingName(t *testing.T) {
 
 	nInterval := models.Interval{Name: testInterval.Name, Timestamps: testTimestamps}
 
-	scClient = mySchedulerMock
-
-	_, err := addNewInterval(nInterval, myMock)
+	_, err := addNewInterval(nInterval, myMock, mySchedulerMock)
 	if err != nil {
 		switch err.(type) {
 		case errorsSched.ErrIntervalNameInUse:
@@ -165,9 +163,7 @@ func TestAddIntervalFailOnInvalidTimeFormat(t *testing.T) {
 
 	nInterval := models.Interval{Name: testInterval.Name, Start: "34343", Timestamps: testTimestamps}
 
-	scClient = mySchedulerMock
-
-	_, err := addNewInterval(nInterval, myMock)
+	_, err := addNewInterval(nInterval, myMock, mySchedulerMock)
 	if err != nil {
 		switch err.(type) {
 		case errorsSched.ErrInvalidTimeFormat:

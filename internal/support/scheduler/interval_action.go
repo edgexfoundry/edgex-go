@@ -23,7 +23,11 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/interfaces"
 )
 
-func addNewIntervalAction(intervalAction contract.IntervalAction, dbClient interfaces.DBClient) (string, error) {
+func addNewIntervalAction(
+	intervalAction contract.IntervalAction,
+	dbClient interfaces.DBClient,
+	scClient interfaces.SchedulerQueueClient) (string, error) {
+
 	name := intervalAction.Name
 
 	// Validate the IntervalAction is not in use
@@ -72,7 +76,11 @@ func addNewIntervalAction(intervalAction contract.IntervalAction, dbClient inter
 	return ID, nil
 }
 
-func updateIntervalAction(from contract.IntervalAction, dbClient interfaces.DBClient) error {
+func updateIntervalAction(
+	from contract.IntervalAction,
+	dbClient interfaces.DBClient,
+	scClient interfaces.SchedulerQueueClient) error {
+
 	to, err := dbClient.IntervalActionById(from.ID)
 	if err != nil {
 		// check by name
@@ -232,7 +240,10 @@ func getIntervalActionsByInterval(interval string, dbClient interfaces.DBClient)
 	return intervalActions, err
 }
 
-func deleteIntervalActionById(id string, dbClient interfaces.DBClient) error {
+func deleteIntervalActionById(
+	id string,
+	dbClient interfaces.DBClient,
+	scClient interfaces.SchedulerQueueClient) error {
 
 	// check in memory first
 	inMemory, err := scClient.QueryIntervalActionByID(id)
@@ -262,7 +273,11 @@ func deleteIntervalActionById(id string, dbClient interfaces.DBClient) error {
 	return nil
 }
 
-func deleteIntervalActionByName(name string, dbClient interfaces.DBClient) error {
+func deleteIntervalActionByName(
+	name string,
+	dbClient interfaces.DBClient,
+	scClient interfaces.SchedulerQueueClient) error {
+
 	// check in memory first
 	inMemory, err := scClient.QueryIntervalActionByName(name)
 	if err != nil {
