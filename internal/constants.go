@@ -14,18 +14,15 @@
 package internal
 
 const (
-	BootTimeoutDefault                 = BootTimeoutSecondsDefault * 1000
-	BootTimeoutSecondsDefault          = 30
-	BootRetrySecondsDefault            = 1
-	ClientMonitorDefault               = 15000
-	ConfigFileName                     = "configuration.toml"
-	ConfigRegistryStemCore             = "edgex/core/"
-	ConfigRegistryStemSecurity         = "edgex/security/"
-	ConfigMajorVersion                 = "1.0/"
-	LogDurationKey                     = "duration"
-	SecuritySecretStoreSetupServiceKey = "edgex-security-secretstore-setup"
-	SecuritySecretsSetupServiceKey     = "edgex-security-secrets-setup"
-	SecurityProxySetupServiceKey       = "edgex-security-proxy-setup"
+	BootTimeoutDefault         = BootTimeoutSecondsDefault * 1000
+	BootTimeoutSecondsDefault  = 30
+	BootRetrySecondsDefault    = 1
+	ClientMonitorDefault       = 15000
+	ConfigFileName             = "configuration.toml"
+	ConfigRegistryStemCore     = "edgex/core/"
+	ConfigRegistryStemSecurity = "edgex/security/"
+	ConfigMajorVersion         = "1.0/"
+	LogDurationKey             = "duration"
 )
 
 const (
