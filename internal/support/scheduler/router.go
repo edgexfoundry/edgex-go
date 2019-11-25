@@ -34,22 +34,22 @@ func LoadRestRoutes(dic *di.Container) *mux.Router {
 	r := mux.NewRouter()
 
 	// Ping Resource
-	r.HandleFunc(clients.ApiPingRoute, pingHandler).Methods(http.MethodGet)
+	r.HandleFunc(clients.ApiPingRoute, func(w http.ResponseWriter, _ *http.Request) {
+		pingHandler(w)
+	}).Methods(http.MethodGet)
 
 	// Configuration
-	r.HandleFunc(clients.ApiConfigRoute, func(w http.ResponseWriter, r *http.Request) {
+	r.HandleFunc(clients.ApiConfigRoute, func(w http.ResponseWriter, _ *http.Request) {
 		configHandler(
 			w,
-			r,
 			bootstrapContainer.LoggingClientFrom(dic.Get),
 			container.ConfigurationFrom(dic.Get))
 	}).Methods(http.MethodGet)
 
 	// Metrics
-	r.HandleFunc(clients.ApiMetricsRoute, func(w http.ResponseWriter, r *http.Request) {
+	r.HandleFunc(clients.ApiMetricsRoute, func(w http.ResponseWriter, _ *http.Request) {
 		metricsHandler(
 			w,
-			r,
 			bootstrapContainer.LoggingClientFrom(dic.Get))
 	}).Methods(http.MethodGet)
 
@@ -196,24 +196,21 @@ func LoadRestRoutes(dic *di.Container) *mux.Router {
 }
 
 // Test if the service is working
-func pingHandler(w http.ResponseWriter, _ *http.Request) {
+func pingHandler(w http.ResponseWriter) {
 	w.Header().Set(clients.ContentType, clients.ContentTypeText)
 	w.Write([]byte("pong"))
 }
 
 func configHandler(
 	w http.ResponseWriter,
-	_ *http.Request,
 	loggingClient logger.LoggingClient,
 	configuration *config.ConfigurationStruct) {
 
 	pkg.Encode(configuration, w, loggingClient)
 }
 
-func metricsHandler(w http.ResponseWriter, _ *http.Request, loggingClient logger.LoggingClient) {
+func metricsHandler(w http.ResponseWriter, loggingClient logger.LoggingClient) {
 	s := telemetry.NewSystemUsage()
 
 	pkg.Encode(s, w, loggingClient)
-
-	return
 }
