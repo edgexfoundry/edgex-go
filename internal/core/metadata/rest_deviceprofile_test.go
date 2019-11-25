@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	goErrors "errors"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
@@ -19,6 +18,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 
@@ -215,7 +215,6 @@ func TestAddDeviceProfile(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			vdc = tt.vdcMock
 			Configuration = &ConfigurationStruct{
 				Writable: WritableInfo{EnableValueDescriptorManagement: true},
 				Service:  config.ServiceInfo{MaxResultCount: 1}}
@@ -226,7 +225,8 @@ func TestAddDeviceProfile(t *testing.T) {
 				tt.request,
 				loggerMock,
 				tt.dbMock,
-				errorconcept.NewErrorHandler(loggerMock))
+				errorconcept.NewErrorHandler(loggerMock),
+				tt.vdcMock)
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -737,7 +737,6 @@ func TestUpdateDeviceProfile(t *testing.T) {
 			Configuration = &ConfigurationStruct{
 				Writable: WritableInfo{EnableValueDescriptorManagement: tt.enableValueDescriptorManagement},
 				Service:  config.ServiceInfo{MaxResultCount: 1}}
-			vdc = MockValueDescriptorClient{}
 			rr := httptest.NewRecorder()
 			var loggerMock = logger.NewMockClient()
 			restUpdateDeviceProfile(
@@ -745,7 +744,8 @@ func TestUpdateDeviceProfile(t *testing.T) {
 				tt.request,
 				loggerMock,
 				tt.dbMock,
-				errorconcept.NewErrorHandler(loggerMock))
+				errorconcept.NewErrorHandler(loggerMock),
+				MockValueDescriptorClient{})
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)

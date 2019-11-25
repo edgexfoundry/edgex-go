@@ -34,7 +34,6 @@ import (
 
 // Global variables
 var Configuration = &ConfigurationStruct{}
-var vdc coredata.ValueDescriptorClient
 
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the metadata service.
 func BootstrapHandler(wg *sync.WaitGroup, ctx context.Context, startupTimer startup.Timer, dic *di.Container) bool {
@@ -42,20 +41,21 @@ func BootstrapHandler(wg *sync.WaitGroup, ctx context.Context, startupTimer star
 	// initialize clients required by service.
 	registryClient := container.RegistryFrom(dic.Get)
 
-	vdc = coredata.NewValueDescriptorClient(
-		types.EndpointParams{
-			ServiceKey:  clients.CoreDataServiceKey,
-			Path:        clients.ApiValueDescriptorRoute,
-			UseRegistry: registryClient != nil,
-			Url:         Configuration.Clients["CoreData"].Url() + clients.ApiValueDescriptorRoute,
-			Interval:    Configuration.Service.ClientMonitor,
-		},
-		endpoint.Endpoint{RegistryClient: &registryClient})
-
 	// add dependencies to container
 	dic.Update(di.ServiceConstructorMap{
 		errorContainer.ErrorHandlerName: func(get di.Get) interface{} {
 			return errorconcept.NewErrorHandler(container.LoggingClientFrom(get))
+		},
+		metadataContainer.CoreDataValueDescriptorClientName: func(get di.Get) interface{} {
+			return coredata.NewValueDescriptorClient(
+				types.EndpointParams{
+					ServiceKey:  clients.CoreDataServiceKey,
+					Path:        clients.ApiValueDescriptorRoute,
+					UseRegistry: registryClient != nil,
+					Url:         Configuration.Clients["CoreData"].Url() + clients.ApiValueDescriptorRoute,
+					Interval:    Configuration.Service.ClientMonitor,
+				},
+				endpoint.Endpoint{RegistryClient: &registryClient})
 		},
 		metadataContainer.NotificationsClientName: func(get di.Get) interface{} {
 			return notifications.NewNotificationsClient(types.EndpointParams{

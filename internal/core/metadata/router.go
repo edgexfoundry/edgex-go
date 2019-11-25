@@ -271,7 +271,8 @@ func loadDeviceProfileRoutes(b *mux.Router, dic *di.Container) {
 			r,
 			container.LoggingClientFrom(dic.Get),
 			container.DBClientFrom(dic.Get),
-			errorContainer.ErrorHandlerFrom(dic.Get))
+			errorContainer.ErrorHandlerFrom(dic.Get),
+			metadataContainer.CoreDataValueDescriptorClientFrom(dic.Get))
 	}).Methods(http.MethodPost)
 	b.HandleFunc("/"+DEVICEPROFILE+"", func(w http.ResponseWriter, r *http.Request) {
 		restUpdateDeviceProfile(
@@ -279,7 +280,8 @@ func loadDeviceProfileRoutes(b *mux.Router, dic *di.Container) {
 			r,
 			container.LoggingClientFrom(dic.Get),
 			container.DBClientFrom(dic.Get),
-			errorContainer.ErrorHandlerFrom(dic.Get))
+			errorContainer.ErrorHandlerFrom(dic.Get),
+			metadataContainer.CoreDataValueDescriptorClientFrom(dic.Get))
 	}).Methods(http.MethodPut)
 
 	dp := b.PathPrefix("/" + DEVICEPROFILE).Subrouter()

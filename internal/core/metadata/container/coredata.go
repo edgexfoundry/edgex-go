@@ -17,13 +17,13 @@ package container
 import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/notifications"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/coredata"
 )
 
-// NotificationsClientName contains the name of the NotificationsClient's implementation in the DIC.
-var NotificationsClientName = di.TypeInstanceToName((*notifications.NotificationsClient)(nil))
+// CoreDataValueDescriptorClientName contains the name of the CoreDataValueDescriptorClient's implementation in the DIC.
+var CoreDataValueDescriptorClientName = di.TypeInstanceToName((*coredata.ValueDescriptorClient)(nil))
 
-// NotificationsClientFrom helper function queries the DIC and returns the NotificationsClient's implementation.
-func NotificationsClientFrom(get di.Get) notifications.NotificationsClient {
-	return get(NotificationsClientName).(notifications.NotificationsClient)
+// CoreDataValueDescriptorClientFrom helper function queries the DIC and returns the CoreDataValueDescriptorClient's implementation.
+func CoreDataValueDescriptorClientFrom(get di.Get) coredata.ValueDescriptorClient {
+	return get(CoreDataValueDescriptorClientName).(coredata.ValueDescriptorClient)
 }
