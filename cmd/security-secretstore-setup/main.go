@@ -33,6 +33,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore"
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/container"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 )
 
 func main() {
@@ -74,7 +75,7 @@ func main() {
 		profileDir,
 		internal.ConfigFileName,
 		useRegistry,
-		internal.SecuritySecretStoreSetupServiceKey,
+		clients.SecuritySecretStoreSetupServiceKey,
 		configuration,
 		startupTimer,
 		dic,
