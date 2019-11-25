@@ -31,6 +31,7 @@ import (
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/notifications"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 
 	"github.com/gorilla/mux"
@@ -287,7 +288,8 @@ func restDeleteServiceById(
 	r *http.Request,
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
-	errorHandler errorconcept.ErrorHandler) {
+	errorHandler errorconcept.ErrorHandler,
+	nc notifications.NotificationsClient) {
 
 	vars := mux.Vars(r)
 	var id string = vars[ID]
@@ -300,7 +302,7 @@ func restDeleteServiceById(
 	}
 
 	ctx := r.Context()
-	if err = deleteDeviceService(ds, w, ctx, loggingClient, dbClient, errorHandler); err != nil {
+	if err = deleteDeviceService(ds, w, ctx, loggingClient, dbClient, errorHandler, nc); err != nil {
 		loggingClient.Error(err.Error())
 		return
 	}
@@ -313,7 +315,8 @@ func restDeleteServiceByName(
 	r *http.Request,
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
-	errorHandler errorconcept.ErrorHandler) {
+	errorHandler errorconcept.ErrorHandler,
+	nc notifications.NotificationsClient) {
 
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
@@ -331,7 +334,7 @@ func restDeleteServiceByName(
 
 	ctx := r.Context()
 	// Delete the device service
-	if err = deleteDeviceService(ds, w, ctx, loggingClient, dbClient, errorHandler); err != nil {
+	if err = deleteDeviceService(ds, w, ctx, loggingClient, dbClient, errorHandler, nc); err != nil {
 		loggingClient.Error(err.Error())
 		return
 	}
@@ -349,7 +352,8 @@ func deleteDeviceService(
 	ctx context.Context,
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
-	errorHandler errorconcept.ErrorHandler) error {
+	errorHandler errorconcept.ErrorHandler,
+	nc notifications.NotificationsClient) error {
 
 	// Delete the associated devices
 	devices, err := dbClient.GetDevicesByServiceId(ds.Id)
@@ -358,7 +362,7 @@ func deleteDeviceService(
 		return err
 	}
 	for _, device := range devices {
-		if err = deleteDevice(device, w, ctx, loggingClient, dbClient, errorHandler); err != nil {
+		if err = deleteDevice(device, w, ctx, loggingClient, dbClient, errorHandler, nc); err != nil {
 			return err
 		}
 	}

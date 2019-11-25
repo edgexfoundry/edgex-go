@@ -18,12 +18,14 @@ import (
 	"context"
 	"sync"
 
+	metadataContainer "github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
 	errorContainer "github.com/edgexfoundry/edgex-go/internal/pkg/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/endpoint"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/coredata"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/notifications"
@@ -32,7 +34,6 @@ import (
 
 // Global variables
 var Configuration = &ConfigurationStruct{}
-var nc notifications.NotificationsClient
 var vdc coredata.ValueDescriptorClient
 
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the metadata service.
@@ -40,15 +41,7 @@ func BootstrapHandler(wg *sync.WaitGroup, ctx context.Context, startupTimer star
 
 	// initialize clients required by service.
 	registryClient := container.RegistryFrom(dic.Get)
-	nc = notifications.NewNotificationsClient(
-		types.EndpointParams{
-			ServiceKey:  clients.SupportNotificationsServiceKey,
-			Path:        clients.ApiNotificationRoute,
-			UseRegistry: registryClient != nil,
-			Url:         Configuration.Clients["Notifications"].Url() + clients.ApiNotificationRoute,
-			Interval:    Configuration.Service.ClientMonitor,
-		},
-		endpoint.Endpoint{RegistryClient: &registryClient})
+
 	vdc = coredata.NewValueDescriptorClient(
 		types.EndpointParams{
 			ServiceKey:  clients.CoreDataServiceKey,
@@ -63,6 +56,16 @@ func BootstrapHandler(wg *sync.WaitGroup, ctx context.Context, startupTimer star
 	dic.Update(di.ServiceConstructorMap{
 		errorContainer.ErrorHandlerName: func(get di.Get) interface{} {
 			return errorconcept.NewErrorHandler(container.LoggingClientFrom(get))
+		},
+		metadataContainer.NotificationsClientName: func(get di.Get) interface{} {
+			return notifications.NewNotificationsClient(types.EndpointParams{
+				ServiceKey:  clients.SupportNotificationsServiceKey,
+				Path:        clients.ApiNotificationRoute,
+				UseRegistry: registryClient != nil,
+				Url:         Configuration.Clients["Notifications"].Url() + clients.ApiNotificationRoute,
+				Interval:    Configuration.Service.ClientMonitor,
+			},
+				endpoint.Endpoint{RegistryClient: &registryClient})
 		},
 	})
 
