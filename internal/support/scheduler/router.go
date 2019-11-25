@@ -26,6 +26,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
+	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/config"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/container"
 )
 
@@ -40,7 +41,8 @@ func LoadRestRoutes(dic *di.Container) *mux.Router {
 		configHandler(
 			w,
 			r,
-			bootstrapContainer.LoggingClientFrom(dic.Get))
+			bootstrapContainer.LoggingClientFrom(dic.Get),
+			container.ConfigurationFrom(dic.Get))
 	}).Methods(http.MethodGet)
 
 	// Metrics
@@ -60,7 +62,8 @@ func LoadRestRoutes(dic *di.Container) *mux.Router {
 			w,
 			r,
 			bootstrapContainer.LoggingClientFrom(dic.Get),
-			bootstrapContainer.DBClientFrom(dic.Get))
+			bootstrapContainer.DBClientFrom(dic.Get),
+			container.ConfigurationFrom(dic.Get))
 	}).Methods(http.MethodGet)
 	r.HandleFunc(clients.ApiIntervalRoute, func(w http.ResponseWriter, r *http.Request) {
 		restUpdateInterval(
@@ -124,7 +127,8 @@ func LoadRestRoutes(dic *di.Container) *mux.Router {
 			w,
 			r,
 			bootstrapContainer.LoggingClientFrom(dic.Get),
-			bootstrapContainer.DBClientFrom(dic.Get))
+			bootstrapContainer.DBClientFrom(dic.Get),
+			container.ConfigurationFrom(dic.Get))
 	}).Methods(http.MethodGet)
 	r.HandleFunc(clients.ApiIntervalActionRoute, func(w http.ResponseWriter, r *http.Request) {
 		restAddIntervalAction(
@@ -140,7 +144,8 @@ func LoadRestRoutes(dic *di.Container) *mux.Router {
 			r,
 			bootstrapContainer.LoggingClientFrom(dic.Get),
 			bootstrapContainer.DBClientFrom(dic.Get),
-			container.QueueFrom(dic.Get))
+			container.QueueFrom(dic.Get),
+			container.ConfigurationFrom(dic.Get))
 	}).Methods(http.MethodPut)
 	intervalAction := r.PathPrefix(clients.ApiIntervalActionRoute).Subrouter()
 	intervalAction.HandleFunc("/{"+ID+"}", func(w http.ResponseWriter, r *http.Request) {
@@ -196,8 +201,13 @@ func pingHandler(w http.ResponseWriter, _ *http.Request) {
 	w.Write([]byte("pong"))
 }
 
-func configHandler(w http.ResponseWriter, _ *http.Request, loggingClient logger.LoggingClient) {
-	pkg.Encode(Configuration, w, loggingClient)
+func configHandler(
+	w http.ResponseWriter,
+	_ *http.Request,
+	loggingClient logger.LoggingClient,
+	configuration *config.ConfigurationStruct) {
+
+	pkg.Encode(configuration, w, loggingClient)
 }
 
 func metricsHandler(w http.ResponseWriter, _ *http.Request, loggingClient logger.LoggingClient) {

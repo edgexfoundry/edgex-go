@@ -27,13 +27,10 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/container"
 )
 
-// Global variables
-var Configuration = &ConfigurationStruct{}
-
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the scheduler service.
 func BootstrapHandler(wg *sync.WaitGroup, ctx context.Context, startupTimer startup.Timer, dic *di.Container) bool {
 	loggingClient := bootstrapContainer.LoggingClientFrom(dic.Get)
-	dbClient := bootstrapContainer.DBClientFrom(dic.Get)
+	configuration := container.ConfigurationFrom(dic.Get)
 
 	// add dependencies to bootstrapContainer
 	scClient := NewSchedulerQueueClient(loggingClient)
@@ -43,14 +40,14 @@ func BootstrapHandler(wg *sync.WaitGroup, ctx context.Context, startupTimer star
 		},
 	})
 
-	// Initialize the ticker time
-	if err := LoadScheduler(loggingClient, dbClient, scClient); err != nil {
+	err := LoadScheduler(loggingClient, bootstrapContainer.DBClientFrom(dic.Get), scClient, configuration)
+	if err != nil {
 		loggingClient.Error(fmt.Sprintf("Failed to load schedules and events %s", err.Error()))
 		return false
 	}
 
-	ticker := time.NewTicker(time.Duration(Configuration.Writable.ScheduleIntervalTime) * time.Millisecond)
-	StartTicker(ticker, loggingClient)
+	ticker := time.NewTicker(time.Duration(configuration.Writable.ScheduleIntervalTime) * time.Millisecond)
+	StartTicker(ticker, loggingClient, configuration)
 
 	wg.Add(1)
 	go func() {

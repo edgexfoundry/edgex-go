@@ -27,6 +27,7 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
+	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/config"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/errors"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/operators/interval"
@@ -36,13 +37,14 @@ func restGetIntervals(
 	w http.ResponseWriter,
 	r *http.Request,
 	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient) {
+	dbClient interfaces.DBClient,
+	configuration *config.ConfigurationStruct) {
 
 	if r.Body != nil {
 		defer r.Body.Close()
 	}
 
-	op := interval.NewAllExecutor(dbClient, Configuration.Service.MaxResultCount)
+	op := interval.NewAllExecutor(dbClient, configuration.Service.MaxResultCount)
 	intervals, err := op.Execute()
 	if err != nil {
 		loggingClient.Error(err.Error())

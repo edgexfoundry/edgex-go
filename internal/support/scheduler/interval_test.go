@@ -44,7 +44,6 @@ const (
 // Supporting methods
 // Reset() re-initializes dependencies for each test
 func reset() {
-	Configuration = &ConfigurationStruct{}
 	testTimestamps = models.Timestamps{Origin: testOrigin}
 	testInterval.ID = testUUIDString
 	testInterval.Timestamps = testTimestamps

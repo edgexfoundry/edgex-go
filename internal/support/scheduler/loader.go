@@ -18,6 +18,7 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 
+	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/config"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/interfaces"
 )
 
@@ -25,7 +26,8 @@ import (
 func LoadScheduler(
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
-	scClient interfaces.SchedulerQueueClient) error {
+	scClient interfaces.SchedulerQueueClient,
+	configuration *config.ConfigurationStruct) error {
 
 	// ensure maps are clean
 	clearMaps()
@@ -42,13 +44,13 @@ func LoadScheduler(
 	}
 
 	// load config intervals
-	errLCI := loadConfigIntervals(loggingClient, dbClient, scClient)
+	errLCI := loadConfigIntervals(loggingClient, dbClient, scClient, configuration)
 	if errLCI != nil {
 		return errLCI
 	}
 
 	// load config interval actions
-	errLCA := loadConfigIntervalActions(loggingClient, dbClient, scClient)
+	errLCA := loadConfigIntervalActions(loggingClient, dbClient, scClient, configuration)
 	if errLCA != nil {
 		return errLCA
 	}
@@ -194,9 +196,10 @@ func addIntervalActionToSchedulerDB(
 func loadConfigIntervals(
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
-	scClient interfaces.SchedulerQueueClient) error {
+	scClient interfaces.SchedulerQueueClient,
+	configuration *config.ConfigurationStruct) error {
 
-	intervals := Configuration.Intervals
+	intervals := configuration.Intervals
 	for i := range intervals {
 		interval := contract.Interval{
 			ID:         "",
@@ -242,9 +245,10 @@ func loadConfigIntervals(
 func loadConfigIntervalActions(
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
-	scClient interfaces.SchedulerQueueClient) error {
+	scClient interfaces.SchedulerQueueClient,
+	configuration *config.ConfigurationStruct) error {
 
-	intervalActions := Configuration.IntervalActions
+	intervalActions := configuration.IntervalActions
 
 	for ia := range intervalActions {
 		intervalAction := contract.IntervalAction{
