@@ -21,15 +21,13 @@ func logAllLevels(pl privLogger, msg string) {
 }
 
 func TestPrivLogger(t *testing.T) {
-	pl := newPrivateLogger()
-	pl.SetLogLevel(models.TraceLog)
-
-	// Does not break with nil persistence
-	dbClient = nil
+	// Does not break with nil Persistence
+	pl := newPrivateLogger(nil)
+	_ = pl.SetLogLevel(models.TraceLog)
 	logAllLevels(pl, "dummy")
 
 	dp := dummyPersist{}
-	dbClient = &dp
+	pl.dbClient = &dp
 	logAllLevels(pl, "dummy")
 	if dp.added != 5 {
 		t.Errorf("Should be added 5 logs, not %d", dp.added)

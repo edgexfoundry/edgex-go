@@ -7,26 +7,19 @@
 package logging
 
 import (
-	"encoding/json"
-	"fmt"
-	"io"
-	"io/ioutil"
 	"net/http"
-	"strconv"
-	"strings"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-	"github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/gorilla/mux"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
+	"github.com/edgexfoundry/edgex-go/internal/support/logging/container"
 )
 
-func LoadRestRoutes() *mux.Router {
+func LoadRestRoutes(dic *di.Container) *mux.Router {
 	r := mux.NewRouter()
 
 	// Ping Resource
@@ -42,23 +35,101 @@ func LoadRestRoutes() *mux.Router {
 	r.HandleFunc(clients.ApiVersionRoute, pkg.VersionHandler).Methods(http.MethodGet)
 
 	// Logs
-	r.HandleFunc(clients.ApiLoggingRoute, addLog).Methods(http.MethodPost)
+	r.HandleFunc(clients.ApiLoggingRoute, func(w http.ResponseWriter, r *http.Request) {
+		addLog(
+			w,
+			r,
+			container.PersistenceFrom(dic.Get))
+	}).Methods(http.MethodPost)
 
-	r.HandleFunc(clients.ApiLoggingRoute, getLogs).Methods(http.MethodGet)
+	r.HandleFunc(clients.ApiLoggingRoute, func(w http.ResponseWriter, r *http.Request) {
+		getLogs(
+			w,
+			r,
+			container.PersistenceFrom(dic.Get))
+	}).Methods(http.MethodGet)
+
 	l := r.PathPrefix(clients.ApiLoggingRoute).Subrouter()
-	l.HandleFunc("/{"+LIMIT+"}", getLogs).Methods(http.MethodGet)
-	l.HandleFunc("/{"+START+"}/{"+END+"}/{"+LIMIT+"}", getLogs).Methods(http.MethodGet)
-	l.HandleFunc("/"+ORIGINSERVICES+"/{"+SERVICES+"}/{"+START+"}/{"+END+"}/{"+LIMIT+"}", getLogs).Methods(http.MethodGet)
-	l.HandleFunc("/"+KEYWORDS+"/{"+KEYWORDS+"}/{"+START+"}/{"+END+"}/{"+LIMIT+"}", getLogs).Methods(http.MethodGet)
-	l.HandleFunc("/"+LOGLEVELS+"/{"+LEVELS+"}/{"+START+"}/{"+END+"}/{"+LIMIT+"}", getLogs).Methods(http.MethodGet)
-	l.HandleFunc("/"+LOGLEVELS+"/{"+LEVELS+"}/"+ORIGINSERVICES+"/{"+SERVICES+"}/{"+START+"}/{"+END+"}/{"+LIMIT+"}", getLogs).Methods(http.MethodGet)
+	l.HandleFunc("/{"+LIMIT+"}", func(w http.ResponseWriter, r *http.Request) {
+		getLogs(
+			w,
+			r,
+			container.PersistenceFrom(dic.Get))
+	}).Methods(http.MethodGet)
+	l.HandleFunc("/{"+START+"}/{"+END+"}/{"+LIMIT+"}", func(w http.ResponseWriter, r *http.Request) {
+		getLogs(
+			w,
+			r,
+			container.PersistenceFrom(dic.Get))
+	}).Methods(http.MethodGet)
+	l.HandleFunc("/"+ORIGINSERVICES+"/{"+SERVICES+"}/{"+START+"}/{"+END+"}/{"+LIMIT+"}",
+		func(w http.ResponseWriter, r *http.Request) {
+			getLogs(
+				w,
+				r,
+				container.PersistenceFrom(dic.Get))
+		}).Methods(http.MethodGet)
+	l.HandleFunc("/"+KEYWORDS+"/{"+KEYWORDS+"}/{"+START+"}/{"+END+"}/{"+LIMIT+"}",
+		func(w http.ResponseWriter, r *http.Request) {
+			getLogs(
+				w,
+				r,
+				container.PersistenceFrom(dic.Get))
+		}).Methods(http.MethodGet)
+	l.HandleFunc("/"+LOGLEVELS+"/{"+LEVELS+"}/{"+START+"}/{"+END+"}/{"+LIMIT+"}",
+		func(w http.ResponseWriter, r *http.Request) {
+			getLogs(
+				w,
+				r,
+				container.PersistenceFrom(dic.Get))
+		}).Methods(http.MethodGet)
+	l.HandleFunc("/"+LOGLEVELS+"/{"+LEVELS+"}/"+ORIGINSERVICES+"/{"+SERVICES+"}/{"+START+"}/{"+END+"}/{"+LIMIT+"}",
+		func(w http.ResponseWriter, r *http.Request) {
+			getLogs(
+				w,
+				r,
+				container.PersistenceFrom(dic.Get))
+		}).Methods(http.MethodGet)
 
-	l.HandleFunc("/{"+START+"}/{"+END+"}", delLogs).Methods(http.MethodDelete)
-	l.HandleFunc("/"+KEYWORDS+"/{"+KEYWORDS+"}/{"+START+"}/{"+END+"}", delLogs).Methods(http.MethodDelete)
-	l.HandleFunc("/"+ORIGINSERVICES+"/{"+SERVICES+"}/{"+START+"}/{"+END+"}", delLogs).Methods(http.MethodDelete)
-	l.HandleFunc("/"+LOGLEVELS+"/{"+LEVELS+"}/{"+START+"}/{"+END+"}", delLogs).Methods(http.MethodDelete)
-	l.HandleFunc("/"+LOGLEVELS+"/{"+LEVELS+"}/"+ORIGINSERVICES+"/{"+SERVICES+"}/{"+START+"}/{"+END+"}", delLogs).Methods(http.MethodDelete)
-	l.HandleFunc("/"+REMOVEOLD+"/"+AGE+"/{"+AGE+"}", delLogs).Methods(http.MethodDelete)
+	l.HandleFunc("/{"+START+"}/{"+END+"}", func(w http.ResponseWriter, r *http.Request) {
+		delLogs(
+			w,
+			r,
+			container.PersistenceFrom(dic.Get))
+	}).Methods(http.MethodDelete)
+	l.HandleFunc("/"+KEYWORDS+"/{"+KEYWORDS+"}/{"+START+"}/{"+END+"}",
+		func(w http.ResponseWriter, r *http.Request) {
+			delLogs(
+				w,
+				r,
+				container.PersistenceFrom(dic.Get))
+		}).Methods(http.MethodDelete)
+	l.HandleFunc("/"+ORIGINSERVICES+"/{"+SERVICES+"}/{"+START+"}/{"+END+"}",
+		func(w http.ResponseWriter, r *http.Request) {
+			delLogs(
+				w,
+				r,
+				container.PersistenceFrom(dic.Get))
+		}).Methods(http.MethodDelete)
+	l.HandleFunc("/"+LOGLEVELS+"/{"+LEVELS+"}/{"+START+"}/{"+END+"}", func(w http.ResponseWriter, r *http.Request) {
+		delLogs(
+			w,
+			r,
+			container.PersistenceFrom(dic.Get))
+	}).Methods(http.MethodDelete)
+	l.HandleFunc("/"+LOGLEVELS+"/{"+LEVELS+"}/"+ORIGINSERVICES+"/{"+SERVICES+"}/{"+START+"}/{"+END+"}",
+		func(w http.ResponseWriter, r *http.Request) {
+			delLogs(
+				w,
+				r,
+				container.PersistenceFrom(dic.Get))
+		}).Methods(http.MethodDelete)
+	l.HandleFunc("/"+REMOVEOLD+"/"+AGE+"/{"+AGE+"}", func(w http.ResponseWriter, r *http.Request) {
+		delLogs(
+			w,
+			r,
+			container.PersistenceFrom(dic.Get))
+	}).Methods(http.MethodDelete)
 
 	r.Use(correlation.ManageHeader)
 	r.Use(correlation.OnResponseComplete)
@@ -81,6 +152,4 @@ func metricsHandler(w http.ResponseWriter, _ *http.Request) {
 	s := telemetry.NewSystemUsage()
 
 	pkg.Encode(s, w, LoggingClient)
-
-	return
 }

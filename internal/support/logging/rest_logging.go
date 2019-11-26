@@ -28,13 +28,14 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+	logging "github.com/edgexfoundry/edgex-go/internal/support/logging/interfaces"
 )
 
-func addLog(w http.ResponseWriter, r *http.Request) {
+func addLog(w http.ResponseWriter, r *http.Request, dbClient logging.Persistence) {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		io.WriteString(w, err.Error())
+		_, _ = io.WriteString(w, err.Error())
 		return
 	}
 
@@ -42,14 +43,14 @@ func addLog(w http.ResponseWriter, r *http.Request) {
 	if err := json.Unmarshal(data, &l); err != nil {
 		fmt.Println("Failed to parse LogEntry: ", err)
 		w.WriteHeader(http.StatusBadRequest)
-		io.WriteString(w, err.Error())
+		_, _ = io.WriteString(w, err.Error())
 		return
 	}
 
 	if !logger.IsValidLogLevel(l.Level) {
 		s := fmt.Sprintf("Invalid level in LogEntry: %s", l.Level)
 		w.WriteHeader(http.StatusBadRequest)
-		io.WriteString(w, s)
+		_, _ = io.WriteString(w, s)
 		return
 	}
 
@@ -57,11 +58,11 @@ func addLog(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusAccepted)
 
-	dbClient.add(l)
+	_ = dbClient.Add(l)
 }
 
-func getCriteria(w http.ResponseWriter, r *http.Request) *matchCriteria {
-	var criteria matchCriteria
+func getCriteria(w http.ResponseWriter, r *http.Request) *MatchCriteria {
+	var criteria MatchCriteria
 	vars := mux.Vars(r)
 
 	limit := vars["limit"]
@@ -76,11 +77,11 @@ func getCriteria(w http.ResponseWriter, r *http.Request) *matchCriteria {
 		}
 		if len(s) > 0 {
 			w.WriteHeader(http.StatusBadRequest)
-			io.WriteString(w, s)
+			_, _ = io.WriteString(w, s)
 			return nil
 		}
 	}
-	//In all cases, cap the # of entries returned at MaxResultCount
+	// In all cases, cap the # of entries returned at MaxResultCount
 	criteria.Limit = checkMaxLimitCount(criteria.Limit)
 
 	start := vars["start"]
@@ -95,7 +96,7 @@ func getCriteria(w http.ResponseWriter, r *http.Request) *matchCriteria {
 		}
 		if len(s) > 0 {
 			w.WriteHeader(http.StatusBadRequest)
-			io.WriteString(w, s)
+			_, _ = io.WriteString(w, s)
 			return nil
 		}
 	}
@@ -112,7 +113,7 @@ func getCriteria(w http.ResponseWriter, r *http.Request) *matchCriteria {
 		}
 		if len(s) > 0 {
 			w.WriteHeader(http.StatusBadRequest)
-			io.WriteString(w, s)
+			_, _ = io.WriteString(w, s)
 			return nil
 		}
 	}
@@ -133,7 +134,7 @@ func getCriteria(w http.ResponseWriter, r *http.Request) *matchCriteria {
 		}
 		if len(s) > 0 {
 			w.WriteHeader(http.StatusBadRequest)
-			io.WriteString(w, s)
+			_, _ = io.WriteString(w, s)
 			return nil
 		}
 		criteria.End = now - criteria.End
@@ -159,21 +160,22 @@ func getCriteria(w http.ResponseWriter, r *http.Request) *matchCriteria {
 			if !logger.IsValidLogLevel(l) {
 				s := fmt.Sprintf("Invalid log level '%s'", l)
 				w.WriteHeader(http.StatusBadRequest)
-				io.WriteString(w, s)
+				_, _ = io.WriteString(w, s)
 				return nil
 			}
 		}
 	}
+
 	return &criteria
 }
 
-func getLogs(w http.ResponseWriter, r *http.Request) {
+func getLogs(w http.ResponseWriter, r *http.Request, dbClient logging.Persistence) {
 	criteria := getCriteria(w, r)
 	if criteria == nil {
 		return
 	}
 
-	logs, err := dbClient.find(*criteria)
+	logs, err := dbClient.Find(*criteria)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -186,21 +188,21 @@ func getLogs(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
-	io.WriteString(w, string(res))
+	_, _ = io.WriteString(w, string(res))
 }
 
-func delLogs(w http.ResponseWriter, r *http.Request) {
+func delLogs(w http.ResponseWriter, r *http.Request, dbClient logging.Persistence) {
 	criteria := getCriteria(w, r)
 	if criteria == nil {
 		return
 	}
 
-	removed, err := dbClient.remove(*criteria)
+	removed, err := dbClient.Remove(*criteria)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
-	io.WriteString(w, strconv.Itoa(removed))
+	_, _ = io.WriteString(w, strconv.Itoa(removed))
 }

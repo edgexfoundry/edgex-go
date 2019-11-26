@@ -11,6 +11,8 @@ import (
 	"testing"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
+
+	"github.com/edgexfoundry/edgex-go/internal/support/logging/interfaces"
 )
 
 const (
@@ -21,20 +23,20 @@ const (
 	message2       string = "message2"
 )
 
-func testPersistenceFind(t *testing.T, persistence persistence) {
+func testPersistenceFind(t *testing.T, persistence interfaces.Persistence) {
 	var keywords1 = []string{"1"}
 	var keywords2 = []string{"2"}
 	var keywords12 = []string{"2", "1"}
 
 	var tests = []struct {
 		name     string
-		criteria matchCriteria
+		criteria MatchCriteria
 		result   int
 	}{
-		{"empty", matchCriteria{}, 5},
-		{"keywords1", matchCriteria{Keywords: keywords1}, 3},
-		{"keywords2", matchCriteria{Keywords: keywords2}, 2},
-		{"keywords12", matchCriteria{Keywords: keywords12}, 5},
+		{"empty", MatchCriteria{}, 5},
+		{"keywords1", MatchCriteria{Keywords: keywords1}, 3},
+		{"keywords2", MatchCriteria{Keywords: keywords2}, 2},
+		{"keywords12", MatchCriteria{Keywords: keywords12}, 5},
 	}
 
 	le := models.LogEntry{
@@ -42,20 +44,20 @@ func testPersistenceFind(t *testing.T, persistence persistence) {
 		OriginService: sampleService1,
 		Message:       message1,
 	}
-	persistence.add(le)
+	_ = persistence.Add(le)
 	le.Message = message2
-	persistence.add(le)
+	_ = persistence.Add(le)
 	le.Message = message1
-	persistence.add(le)
+	_ = persistence.Add(le)
 	le.Message = message2
 	le.OriginService = sampleService2
-	persistence.add(le)
+	_ = persistence.Add(le)
 	le.Message = message1
-	persistence.add(le)
+	_ = persistence.Add(le)
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			logs, err := persistence.find(tt.criteria)
+			logs, err := persistence.Find(tt.criteria)
 			if err != nil {
 				t.Errorf("Error thrown: %s", err.Error())
 			}
@@ -72,7 +74,7 @@ func testPersistenceFind(t *testing.T, persistence persistence) {
 
 func TestFileFind(t *testing.T) {
 	// Remove test log, the test needs an empty file
-	os.Remove(testFilename)
+	_ = os.Remove(testFilename)
 
 	// Remove test log when test ends
 	defer os.Remove(testFilename)
@@ -81,43 +83,43 @@ func TestFileFind(t *testing.T) {
 	testPersistenceFind(t, &fl)
 }
 
-func testPersistenceRemove(t *testing.T, persistence persistence) {
+func testPersistenceRemove(t *testing.T, persistence interfaces.Persistence) {
 	var keywords1 = []string{"1"}
 	var keywords2 = []string{"2"}
 	var keywords12 = []string{"2", "1"}
 
 	var tests = []struct {
 		name     string
-		criteria matchCriteria
+		criteria MatchCriteria
 		result   int
 	}{
-		{"empty", matchCriteria{}, 5},
-		{"keywords1", matchCriteria{Keywords: keywords1}, 3},
-		{"keywords2", matchCriteria{Keywords: keywords2}, 2},
-		{"keywords12", matchCriteria{Keywords: keywords12}, 5},
+		{"empty", MatchCriteria{}, 5},
+		{"keywords1", MatchCriteria{Keywords: keywords1}, 3},
+		{"keywords2", MatchCriteria{Keywords: keywords2}, 2},
+		{"keywords12", MatchCriteria{Keywords: keywords12}, 5},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			persistence.reset()
+			persistence.Reset()
 
 			le := models.LogEntry{
 				Level:         models.TraceLog,
 				OriginService: sampleService1,
 				Message:       message1,
 			}
-			persistence.add(le)
+			_ = persistence.Add(le)
 			le.Message = message2
-			persistence.add(le)
+			_ = persistence.Add(le)
 			le.Message = message1
-			persistence.add(le)
+			_ = persistence.Add(le)
 			le.Message = message2
 			le.OriginService = sampleService2
-			persistence.add(le)
+			_ = persistence.Add(le)
 			le.Message = message1
-			persistence.add(le)
+			_ = persistence.Add(le)
 
-			removed, err := persistence.remove(tt.criteria)
+			removed, err := persistence.Remove(tt.criteria)
 			if err != nil {
 				t.Errorf("Error thrown: %s", err.Error())
 			}
@@ -126,8 +128,8 @@ func testPersistenceRemove(t *testing.T, persistence persistence) {
 					tt.result, removed)
 			}
 			// we add a new log
-			persistence.add(le)
-			logs, err := persistence.find(matchCriteria{})
+			_ = persistence.Add(le)
+			logs, err := persistence.Find(MatchCriteria{})
 			if len(logs) != 5-tt.result+1 {
 				t.Errorf("Should return %d log entries, returned %d",
 					6-tt.result+1, len(logs))
@@ -138,7 +140,7 @@ func testPersistenceRemove(t *testing.T, persistence persistence) {
 
 func TestFileRemove(t *testing.T) {
 	// Remove test log, the test needs an empty file
-	os.Remove(testFilename)
+	_ = os.Remove(testFilename)
 
 	// Remove test log when test ends
 	defer os.Remove(testFilename)

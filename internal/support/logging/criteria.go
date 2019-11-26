@@ -12,7 +12,7 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
-type matchCriteria struct {
+type MatchCriteria struct {
 	OriginServices []string
 	LogLevels      []string
 	Keywords       []string
@@ -33,7 +33,7 @@ func matchStringInSlice(s string, l []string) bool {
 	return true
 }
 
-func (criteria matchCriteria) match(le models.LogEntry) bool {
+func (criteria MatchCriteria) Match(le models.LogEntry) bool {
 	if !matchStringInSlice(le.OriginService, criteria.OriginServices) {
 		return false
 	}
@@ -65,4 +65,12 @@ func (criteria matchCriteria) match(le models.LogEntry) bool {
 	}
 
 	return true
+}
+
+func (criteria MatchCriteria) LimitExceeded(value int) bool {
+	if criteria.Limit != 0 && value >= criteria.Limit {
+		return true
+	}
+
+	return false
 }

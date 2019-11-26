@@ -7,22 +7,24 @@
 package logging
 
 import (
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
-	"reflect"
-	"strconv"
-	"strings"
 	"testing"
 
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
-	"github.com/edgexfoundry/go-mod-core-contracts/models"
+
+	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
+	"github.com/edgexfoundry/edgex-go/internal/support/logging/container"
 )
 
 func TestPing(t *testing.T) {
 	// create test server with handler
-	ts := httptest.NewServer(LoadRestRoutes())
+	dic := di.NewContainer(di.ServiceConstructorMap{
+		container.PersistenceName: func(get di.Get) interface{} {
+			return dummyPersist{}
+		},
+	})
+	ts := httptest.NewServer(LoadRestRoutes(dic))
 	defer ts.Close()
 
 	response, err := http.Get(ts.URL + clients.ApiPingRoute)

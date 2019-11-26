@@ -10,6 +10,8 @@ import (
 	"os"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+	"github.com/edgexfoundry/edgex-go/internal/support/logging/interfaces"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
@@ -17,30 +19,15 @@ import (
 	"github.com/go-kit/kit/log"
 )
 
-const (
-	PersistenceDB   = "database"
-	PersistenceFile = "file"
-)
-
-type persistence interface {
-	add(logEntry models.LogEntry) error
-	closeSession()
-	remove(criteria matchCriteria) (int, error)
-	find(criteria matchCriteria) ([]models.LogEntry, error)
-
-	// Needed for the tests. Reset the instance (closing files, sessions...)
-	// and clear the logs.
-	reset()
-}
-
 type privLogger struct {
 	logLevel     *string
 	rootLogger   log.Logger
 	levelLoggers map[string]log.Logger
+	dbClient     interfaces.Persistence
 }
 
-func newPrivateLogger() privLogger {
-	pl := privLogger{}
+func newPrivateLogger(dbClient interfaces.Persistence) privLogger {
+	pl := privLogger{dbClient: dbClient}
 	logLevel := models.InfoLog
 	pl.logLevel = &logLevel
 
@@ -70,7 +57,7 @@ func (l privLogger) log(logLevel string, msg string, args ...interface{}) {
 		}
 	}
 
-	if dbClient != nil {
+	if l.dbClient != nil {
 		logEntry := models.LogEntry{
 			Level:         logLevel,
 			Args:          args,
@@ -78,7 +65,7 @@ func (l privLogger) log(logLevel string, msg string, args ...interface{}) {
 			Message:       msg,
 			Created:       db.MakeTimestamp(),
 		}
-		dbClient.add(logEntry)
+		_ = l.dbClient.Add(logEntry)
 	}
 
 	if args == nil {
@@ -97,7 +84,7 @@ func (l privLogger) log(logLevel string, msg string, args ...interface{}) {
 	if l.levelLoggers[logLevel] == nil {
 		l.levelLoggers[logLevel] = log.WithPrefix(l.rootLogger, "level", logLevel)
 	}
-	l.levelLoggers[logLevel].Log(args...)
+	_ = l.levelLoggers[logLevel].Log(args...)
 
 }
 

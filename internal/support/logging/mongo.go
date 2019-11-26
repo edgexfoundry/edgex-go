@@ -7,6 +7,7 @@
 package logging
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"time"
@@ -15,6 +16,7 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+	"github.com/edgexfoundry/edgex-go/internal/support/logging/interfaces"
 
 	mgo "github.com/globalsign/mgo"
 	bson "github.com/globalsign/mgo/bson"
@@ -44,14 +46,14 @@ func connectToMongo(credentials config.Credentials) (*mgo.Session, error) {
 	return ms, nil
 }
 
-func (ml *mongoLog) closeSession() {
+func (ml *mongoLog) CloseSession() {
 	if ml.session != nil {
 		ml.session.Close()
 		ml.session = nil
 	}
 }
 
-func (ml *mongoLog) add(le models.LogEntry) error {
+func (ml *mongoLog) Add(le models.LogEntry) error {
 
 	session := ml.session.Copy()
 	defer session.Close()
@@ -74,7 +76,7 @@ func createConditions(conditions []bson.M, field string, elements []string) []bs
 	return append(conditions, bson.M{"$or": keyCond})
 }
 
-func createQuery(criteria matchCriteria) bson.M {
+func createQuery(criteria MatchCriteria) bson.M {
 	conditions := []bson.M{{}}
 
 	if len(criteria.Keywords) > 0 {
@@ -106,14 +108,17 @@ func createQuery(criteria matchCriteria) bson.M {
 
 }
 
-func (ml *mongoLog) remove(criteria matchCriteria) (int, error) {
-
+func (ml *mongoLog) Remove(criteria interfaces.Criteria) (int, error) {
 	session := ml.session.Copy()
 	defer session.Close()
 
 	c := session.DB(Configuration.Databases["Primary"].Name).C(db.LogsCollection)
 
-	base := createQuery(criteria)
+	matchCriteria, ok := criteria.(MatchCriteria)
+	if !ok {
+		return 0, errors.New("unknown criteria type")
+	}
+	base := createQuery(matchCriteria)
 
 	info, err := c.RemoveAll(base)
 
@@ -124,29 +129,32 @@ func (ml *mongoLog) remove(criteria matchCriteria) (int, error) {
 	return info.Removed, nil
 }
 
-func (ml *mongoLog) find(criteria matchCriteria) ([]models.LogEntry, error) {
+func (ml *mongoLog) Find(criteria interfaces.Criteria) ([]models.LogEntry, error) {
 	session := ml.session.Copy()
 	defer session.Close()
 
 	c := session.DB(Configuration.Databases["Primary"].Name).C(db.LogsCollection)
 
-	le := []models.LogEntry{}
+	matchCriteria, ok := criteria.(MatchCriteria)
+	if !ok {
+		return nil, errors.New("unknown criteria type")
+	}
 
-	base := createQuery(criteria)
+	base := createQuery(matchCriteria)
 
 	q := c.Find(base)
 
-	if err := q.Limit(criteria.Limit).All(&le); err != nil {
+	le := []models.LogEntry{}
+	if err := q.Limit(matchCriteria.Limit).All(&le); err != nil {
 		return le, err
 	}
 
 	return le, nil
 }
 
-func (ml *mongoLog) reset() {
+func (ml *mongoLog) Reset() {
 	session := ml.session.Copy()
 	defer session.Close()
 
-	session.DB(Configuration.Databases["Primary"].Name).C(db.LogsCollection).RemoveAll(bson.M{})
-	return
+	_, _ = session.DB(Configuration.Databases["Primary"].Name).C(db.LogsCollection).RemoveAll(bson.M{})
 }
