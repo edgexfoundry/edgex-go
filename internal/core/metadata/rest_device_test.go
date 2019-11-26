@@ -15,25 +15,23 @@
 package metadata
 
 import (
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	metadataConfig "github.com/edgexfoundry/edgex-go/internal/core/metadata/config"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces/mocks"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
 
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 
 	"github.com/pkg/errors"
 )
 
 func TestGetAllDevices(t *testing.T) {
-
-	Configuration = &ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 1}}
-
 	tests := []struct {
 		name           string
 		dbMock         interfaces.DBClient
@@ -47,11 +45,15 @@ func TestGetAllDevices(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			rr := httptest.NewRecorder()
 			var loggerMock = logger.NewMockClient()
+			configuration := metadataConfig.ConfigurationStruct{
+				Service: config.ServiceInfo{MaxResultCount: 1},
+			}
 			restGetAllDevices(
 				rr,
 				loggerMock,
 				tt.dbMock,
-				errorconcept.NewErrorHandler(loggerMock))
+				errorconcept.NewErrorHandler(loggerMock),
+				&configuration)
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -59,7 +61,6 @@ func TestGetAllDevices(t *testing.T) {
 			}
 		})
 	}
-	Configuration = &ConfigurationStruct{}
 }
 
 func createGetDeviceLoaderMock(howMany int) interfaces.DBClient {

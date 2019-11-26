@@ -23,6 +23,7 @@ import (
 	"net/url"
 	"strconv"
 
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/config"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/operators/device_service"
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
@@ -41,12 +42,17 @@ func restGetAllDeviceServices(
 	w http.ResponseWriter,
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
-	errorHandler errorconcept.ErrorHandler) {
+	errorHandler errorconcept.ErrorHandler,
+	configuration *config.ConfigurationStruct) {
 
-	op := device_service.NewDeviceServiceLoadAll(Configuration.Service, dbClient, loggingClient)
+	op := device_service.NewDeviceServiceLoadAll(configuration.Service, dbClient, loggingClient)
 	services, err := op.Execute()
 	if err != nil {
-		errorHandler.HandleOneVariant(w, err, errorconcept.Common.LimitExceeded, errorconcept.Default.InternalServerError)
+		errorHandler.HandleOneVariant(
+			w,
+			err,
+			errorconcept.Common.LimitExceeded,
+			errorconcept.Default.InternalServerError)
 		return
 	}
 	pkg.Encode(services, w, loggingClient)
@@ -79,14 +85,22 @@ func restAddDeviceService(
 		addressable, err = dbClient.GetAddressableById(ds.Addressable.Id)
 	}
 	if err != nil {
-		errorHandler.HandleOneVariant(w, err, errorconcept.DeviceService.AddressableNotFound, errorconcept.Default.InternalServerError)
+		errorHandler.HandleOneVariant(
+			w,
+			err,
+			errorconcept.DeviceService.AddressableNotFound,
+			errorconcept.Default.InternalServerError)
 		return
 	}
 	ds.Addressable = addressable
 
 	// Add the device service
 	if ds.Id, err = dbClient.AddDeviceService(ds); err != nil {
-		errorHandler.HandleOneVariant(w, err, errorconcept.DeviceService.NotUnique, errorconcept.Default.InternalServerError)
+		errorHandler.HandleOneVariant(
+			w,
+			err,
+			errorconcept.DeviceService.NotUnique,
+			errorconcept.Default.InternalServerError)
 		return
 	}
 
@@ -180,7 +194,11 @@ func updateDeviceServiceFields(
 		// Check if the new name is unique
 		checkDS, err := dbClient.GetDeviceServiceByName(from.Name)
 		if err != nil {
-			errorHandler.HandleOneVariant(w, err, errorconcept.NewDeviceServiceDuplicate(checkDS.Id, to.Id), errorconcept.Default.ServiceUnavailable)
+			errorHandler.HandleOneVariant(
+				w,
+				err,
+				errorconcept.NewDeviceServiceDuplicate(checkDS.Id, to.Id),
+				errorconcept.Default.ServiceUnavailable)
 		}
 	}
 
@@ -208,7 +226,11 @@ func restGetServiceByAddressableName(
 	op := device_service.NewDeviceServiceLoadByAddressableName(an, dbClient)
 	res, err := op.Execute()
 	if err != nil {
-		errorHandler.HandleOneVariant(w, err, errorconcept.Common.ItemNotFound, errorconcept.Default.InternalServerError)
+		errorHandler.HandleOneVariant(
+			w,
+			err,
+			errorconcept.Common.ItemNotFound,
+			errorconcept.Default.InternalServerError)
 		return
 	}
 
@@ -228,7 +250,11 @@ func restGetServiceByAddressableId(
 	op := device_service.NewDeviceServiceLoadByAddressableID(sid, dbClient)
 	res, err := op.Execute()
 	if err != nil {
-		errorHandler.HandleOneVariant(w, err, errorconcept.Common.ItemNotFound, errorconcept.Default.InternalServerError)
+		errorHandler.HandleOneVariant(
+			w,
+			err,
+			errorconcept.Common.ItemNotFound,
+			errorconcept.Default.InternalServerError)
 		return
 	}
 
@@ -275,7 +301,11 @@ func restGetServiceByName(
 	op := device_service.NewDeviceServiceLoadByName(dn, dbClient)
 	res, err := op.Execute()
 	if err != nil {
-		errorHandler.HandleOneVariant(w, err, errorconcept.Common.ItemNotFound, errorconcept.Default.InternalServerError)
+		errorHandler.HandleOneVariant(
+			w,
+			err,
+			errorconcept.Common.ItemNotFound,
+			errorconcept.Default.InternalServerError)
 		return
 	}
 
@@ -289,7 +319,8 @@ func restDeleteServiceById(
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	errorHandler errorconcept.ErrorHandler,
-	nc notifications.NotificationsClient) {
+	nc notifications.NotificationsClient,
+	configuration *config.ConfigurationStruct) {
 
 	vars := mux.Vars(r)
 	var id string = vars[ID]
@@ -297,12 +328,16 @@ func restDeleteServiceById(
 	// Check if the device service exists and get it
 	ds, err := dbClient.GetDeviceServiceById(id)
 	if err != nil {
-		errorHandler.HandleOneVariant(w, err, errorconcept.DeviceService.NotFound, errorconcept.Default.InternalServerError)
+		errorHandler.HandleOneVariant(
+			w,
+			err,
+			errorconcept.DeviceService.NotFound,
+			errorconcept.Default.InternalServerError)
 		return
 	}
 
 	ctx := r.Context()
-	if err = deleteDeviceService(ds, w, ctx, loggingClient, dbClient, errorHandler, nc); err != nil {
+	if err = deleteDeviceService(ds, w, ctx, loggingClient, dbClient, errorHandler, nc, configuration); err != nil {
 		loggingClient.Error(err.Error())
 		return
 	}
@@ -316,7 +351,8 @@ func restDeleteServiceByName(
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	errorHandler errorconcept.ErrorHandler,
-	nc notifications.NotificationsClient) {
+	nc notifications.NotificationsClient,
+	configuration *config.ConfigurationStruct) {
 
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
@@ -328,13 +364,17 @@ func restDeleteServiceByName(
 	// Check if the device service exists
 	ds, err := dbClient.GetDeviceServiceByName(n)
 	if err != nil {
-		errorHandler.HandleOneVariant(w, err, errorconcept.DeviceService.NotFound, errorconcept.Default.InternalServerError)
+		errorHandler.HandleOneVariant(
+			w,
+			err,
+			errorconcept.DeviceService.NotFound,
+			errorconcept.Default.InternalServerError)
 		return
 	}
 
 	ctx := r.Context()
 	// Delete the device service
-	if err = deleteDeviceService(ds, w, ctx, loggingClient, dbClient, errorHandler, nc); err != nil {
+	if err = deleteDeviceService(ds, w, ctx, loggingClient, dbClient, errorHandler, nc, configuration); err != nil {
 		loggingClient.Error(err.Error())
 		return
 	}
@@ -353,7 +393,8 @@ func deleteDeviceService(
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	errorHandler errorconcept.ErrorHandler,
-	nc notifications.NotificationsClient) error {
+	nc notifications.NotificationsClient,
+	configuration *config.ConfigurationStruct) error {
 
 	// Delete the associated devices
 	devices, err := dbClient.GetDevicesByServiceId(ds.Id)
@@ -362,7 +403,7 @@ func deleteDeviceService(
 		return err
 	}
 	for _, device := range devices {
-		if err = deleteDevice(device, w, ctx, loggingClient, dbClient, errorHandler, nc); err != nil {
+		if err = deleteDevice(device, w, ctx, loggingClient, dbClient, errorHandler, nc, configuration); err != nil {
 			return err
 		}
 	}
@@ -407,7 +448,11 @@ func restUpdateServiceLastConnectedById(
 	// Check if the device service exists
 	ds, err := dbClient.GetDeviceServiceById(id)
 	if err != nil {
-		errorHandler.HandleOneVariant(w, err, errorconcept.DeviceService.NotFound, errorconcept.Default.InternalServerError)
+		errorHandler.HandleOneVariant(
+			w,
+			err,
+			errorconcept.DeviceService.NotFound,
+			errorconcept.Default.InternalServerError)
 		return
 	}
 
@@ -443,7 +488,11 @@ func restUpdateServiceLastConnectedByName(
 	// Check if the device service exists
 	ds, err := dbClient.GetDeviceServiceByName(n)
 	if err != nil {
-		errorHandler.HandleOneVariant(w, err, errorconcept.DeviceService.NotFound, errorconcept.Default.InternalServerError)
+		errorHandler.HandleOneVariant(
+			w,
+			err,
+			errorconcept.DeviceService.NotFound,
+			errorconcept.Default.InternalServerError)
 		return
 	}
 
@@ -487,7 +536,11 @@ func restGetServiceById(
 	op := device_service.NewDeviceServiceLoadById(did, dbClient)
 	res, err := op.Execute()
 	if err != nil {
-		errorHandler.HandleOneVariant(w, err, errorconcept.Common.ItemNotFound, errorconcept.Default.InternalServerError)
+		errorHandler.HandleOneVariant(
+			w,
+			err,
+			errorconcept.Common.ItemNotFound,
+			errorconcept.Default.InternalServerError)
 		return
 	}
 
@@ -515,7 +568,11 @@ func restUpdateServiceOpStateById(
 
 	op := device_service.NewUpdateOpStateByIdExecutor(id, newOs, dbClient)
 	if err := op.Execute(); err != nil {
-		errorHandler.HandleOneVariant(w, err, errorconcept.Common.ItemNotFound, errorconcept.Default.InternalServerError)
+		errorHandler.HandleOneVariant(
+			w,
+			err,
+			errorconcept.Common.ItemNotFound,
+			errorconcept.Default.InternalServerError)
 		return
 	}
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
@@ -547,7 +604,11 @@ func restUpdateServiceOpStateByName(
 
 	op := device_service.NewUpdateOpStateByNameExecutor(n, newOs, dbClient)
 	if err := op.Execute(); err != nil {
-		errorHandler.HandleOneVariant(w, err, errorconcept.Common.ItemNotFound, errorconcept.Default.InternalServerError)
+		errorHandler.HandleOneVariant(
+			w,
+			err,
+			errorconcept.Common.ItemNotFound,
+			errorconcept.Default.InternalServerError)
 		return
 	}
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
@@ -575,7 +636,11 @@ func restUpdateServiceAdminStateById(
 
 	op := device_service.NewUpdateAdminStateByIdExecutor(id, newAs, dbClient)
 	if err := op.Execute(); err != nil {
-		errorHandler.HandleOneVariant(w, err, errorconcept.Common.ItemNotFound, errorconcept.Default.InternalServerError)
+		errorHandler.HandleOneVariant(
+			w,
+			err,
+			errorconcept.Common.ItemNotFound,
+			errorconcept.Default.InternalServerError)
 		return
 	}
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
@@ -607,7 +672,11 @@ func restUpdateServiceAdminStateByName(
 
 	op := device_service.NewUpdateAdminStateByNameExecutor(n, newAs, dbClient)
 	if err := op.Execute(); err != nil {
-		errorHandler.HandleOneVariant(w, err, errorconcept.Common.ItemNotFound, errorconcept.Default.InternalServerError)
+		errorHandler.HandleOneVariant(
+			w,
+			err,
+			errorconcept.Common.ItemNotFound,
+			errorconcept.Default.InternalServerError)
 		return
 	}
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
@@ -634,7 +703,11 @@ func restUpdateServiceLastReportedById(
 	// Check if the device service exists
 	ds, err := dbClient.GetDeviceServiceById(id)
 	if err != nil {
-		errorHandler.HandleOneVariant(w, err, errorconcept.DeviceService.NotFound, errorconcept.Default.InternalServerError)
+		errorHandler.HandleOneVariant(
+			w,
+			err,
+			errorconcept.DeviceService.NotFound,
+			errorconcept.Default.InternalServerError)
 		return
 	}
 
@@ -670,7 +743,11 @@ func restUpdateServiceLastReportedByName(
 	// Check if the device service exists
 	ds, err := dbClient.GetDeviceServiceByName(n)
 	if err != nil {
-		errorHandler.HandleOneVariant(w, err, errorconcept.DeviceService.NotFound, errorconcept.Default.InternalServerError)
+		errorHandler.HandleOneVariant(
+			w,
+			err,
+			errorconcept.DeviceService.NotFound,
+			errorconcept.Default.InternalServerError)
 		return
 	}
 

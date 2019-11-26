@@ -18,6 +18,7 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/config"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/operators/command"
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
@@ -32,12 +33,17 @@ func restGetAllCommands(
 	w http.ResponseWriter,
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
-	errorHandler errorconcept.ErrorHandler) {
+	errorHandler errorconcept.ErrorHandler,
+	configuration *config.ConfigurationStruct) {
 
-	op := command.NewCommandLoadAll(Configuration.Service, dbClient)
+	op := command.NewCommandLoadAll(configuration.Service, dbClient)
 	cmds, err := op.Execute()
 	if err != nil {
-		errorHandler.HandleOneVariant(w, err, errorconcept.Common.LimitExceeded, errorconcept.Default.InternalServerError)
+		errorHandler.HandleOneVariant(
+			w,
+			err,
+			errorconcept.Common.LimitExceeded,
+			errorconcept.Default.InternalServerError)
 		return
 	}
 	pkg.Encode(&cmds, w, loggingClient)
@@ -60,7 +66,11 @@ func restGetCommandById(
 	op := command.NewCommandById(dbClient, cid)
 	cmd, err := op.Execute()
 	if err != nil {
-		errorHandler.HandleOneVariant(w, err, errorconcept.Common.ItemNotFound, errorconcept.Default.InternalServerError)
+		errorHandler.HandleOneVariant(
+			w,
+			err,
+			errorconcept.Common.ItemNotFound,
+			errorconcept.Default.InternalServerError)
 		return
 	}
 	pkg.Encode(cmd, w, loggingClient)
@@ -105,7 +115,11 @@ func restGetCommandsByDeviceId(
 	op := command.NewDeviceIdExecutor(dbClient, did)
 	commands, err := op.Execute()
 	if err != nil {
-		errorHandler.HandleOneVariant(w, err, errorconcept.Common.ItemNotFound, errorconcept.Default.InternalServerError)
+		errorHandler.HandleOneVariant(
+			w,
+			err,
+			errorconcept.Common.ItemNotFound,
+			errorconcept.Default.InternalServerError)
 		return
 	}
 	pkg.Encode(&commands, w, loggingClient)

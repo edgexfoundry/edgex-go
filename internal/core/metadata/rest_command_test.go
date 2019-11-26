@@ -2,11 +2,11 @@ package metadata
 
 import (
 	"fmt"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	metadataConfig "github.com/edgexfoundry/edgex-go/internal/core/metadata/config"
 	types "github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces/mocks"
@@ -14,6 +14,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 
 	"github.com/gorilla/mux"
@@ -72,7 +73,6 @@ func TestGetCommandsByDeviceId(t *testing.T) {
 }
 
 func TestGetAllCommands(t *testing.T) {
-	Configuration = &ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 1}}
 	tests := []struct {
 		name           string
 		dbMock         interfaces.DBClient
@@ -87,11 +87,15 @@ func TestGetAllCommands(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			rr := httptest.NewRecorder()
 			var loggerMock = logger.NewMockClient()
+			configuration := metadataConfig.ConfigurationStruct{
+				Service: config.ServiceInfo{MaxResultCount: 1},
+			}
 			restGetAllCommands(
 				rr,
 				loggerMock,
 				tt.dbMock,
-				errorconcept.NewErrorHandler(loggerMock))
+				errorconcept.NewErrorHandler(loggerMock),
+				&configuration)
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -99,7 +103,6 @@ func TestGetAllCommands(t *testing.T) {
 			}
 		})
 	}
-	Configuration = &ConfigurationStruct{}
 }
 
 func TestGetCommandById(t *testing.T) {
