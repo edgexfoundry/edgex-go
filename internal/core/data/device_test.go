@@ -139,7 +139,7 @@ func buildReadings() []contract.Reading {
 	return readings
 }
 
-func handleDomainEvents(bitEvents []bool, wait *sync.WaitGroup, t *testing.T) {
+func handleDomainEvents(bitEvents []bool, chEvents <-chan interface{}, wait *sync.WaitGroup, t *testing.T) {
 	until := time.Now().Add(500 * time.Millisecond) // Kill this loop after half second.
 	for time.Now().Before(until) {
 		select {

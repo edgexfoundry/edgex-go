@@ -211,16 +211,22 @@ func TestAddEventWithPersistence(t *testing.T) {
 	})
 
 	dbClientMock := newAddEventMockDB(true)
-	chEvents = make(chan interface{}, 10)
+	chEvents := make(chan interface{}, 10)
 	Configuration.Writable.PersistData = true
 	evt := models.Event{Device: testDeviceName, Origin: testOrigin, Readings: buildReadings()}
 	// wire up handlers to listen for device events
 	bitEvents := make([]bool, 2)
 	wg := sync.WaitGroup{}
 	wg.Add(1)
-	go handleDomainEvents(bitEvents, &wg, t)
+	go handleDomainEvents(bitEvents, chEvents, &wg, t)
 
-	_, err := addNewEvent(correlation.Event{Event: evt}, context.Background(), logger.NewMockClient(), dbClientMock)
+	_, err := addNewEvent(
+		correlation.Event{Event: evt},
+		context.Background(),
+		logger.NewMockClient(),
+		dbClientMock,
+		chEvents)
+
 	Configuration.Writable.PersistData = false
 	if err != nil {
 		t.Errorf(err.Error())
@@ -243,11 +249,18 @@ func TestAddEventNoPersistence(t *testing.T) {
 	evt := models.Event{Device: testDeviceName, Origin: testOrigin, Readings: buildReadings()}
 	// wire up handlers to listen for device events
 	bitEvents := make([]bool, 2)
+	chEvents := make(chan interface{})
 	wg := sync.WaitGroup{}
 	wg.Add(1)
-	go handleDomainEvents(bitEvents, &wg, t)
+	go handleDomainEvents(bitEvents, chEvents, &wg, t)
 
-	newId, err := addNewEvent(correlation.Event{Event: evt}, context.Background(), logger.NewMockClient(), dbClientMock)
+	newId, err := addNewEvent(
+		correlation.Event{Event: evt},
+		context.Background(),
+		logger.NewMockClient(),
+		dbClientMock,
+		chEvents)
+
 	if err != nil {
 		t.Errorf(err.Error())
 	}
