@@ -43,13 +43,11 @@ func main() {
 		usage.HelpCallbackSecuritySecretStore()
 	}
 
-	var initNeeded bool
 	var insecureSkipVerify bool
 	var vaultInterval int
 	var configDir, profileDir string
 	var useRegistry bool
 
-	flag.BoolVar(&initNeeded, "init", false, "run init procedure for security service.")
 	flag.BoolVar(&insecureSkipVerify, "insecureSkipVerify", false, "skip server side SSL verification, mainly for self-signed cert")
 	flag.IntVar(&vaultInterval, "vaultInterval", 30, "time to wait between checking Vault status in seconds.")
 	flag.BoolVar(&useRegistry, "registry", false, "Indicates the service should use registry service.")
@@ -80,7 +78,7 @@ func main() {
 		startupTimer,
 		dic,
 		[]interfaces.BootstrapHandler{
-			secretstore.NewBootstrapHandler(insecureSkipVerify, initNeeded, vaultInterval).Handler,
+			secretstore.NewBootstrapHandler(insecureSkipVerify, vaultInterval).Handler,
 		},
 	)
 }
