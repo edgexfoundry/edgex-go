@@ -132,15 +132,18 @@ func getObjectsBySomeRange(conn redis.Conn, command string, key string, start in
 		return nil, err
 	}
 
+	var result [][]byte
 	if len(ids) > 0 {
-		objects, err = redis.ByteSlices(conn.Do("MGET", ids...))
+		result, err = redis.ByteSlices(conn.Do("MGET", ids...))
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	if len(objects) == 1 && objects[0] == nil {
-		objects = [][]byte{}
+	for _, obj := range result {
+		if obj != nil {
+			objects = append(objects, obj)
+		}
 	}
 
 	return objects, nil
