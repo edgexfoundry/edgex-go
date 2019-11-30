@@ -57,7 +57,7 @@ func testPersistenceFind(t *testing.T, persistence persistence) {
 		t.Run(tt.name, func(t *testing.T) {
 			logs, err := persistence.find(tt.criteria)
 			if err != nil {
-				t.Errorf("Error thrown: %s", err.Error())
+				t.Errorf("Error thrown: %v", err)
 			}
 			if logs == nil {
 				t.Errorf("Should not be nil")
@@ -119,7 +119,7 @@ func testPersistenceRemove(t *testing.T, persistence persistence) {
 
 			removed, err := persistence.remove(tt.criteria)
 			if err != nil {
-				t.Errorf("Error thrown: %s", err.Error())
+				t.Errorf("Error thrown: %v", err)
 			}
 			if removed != tt.result {
 				t.Errorf("Should return %d log entries, returned %d",
