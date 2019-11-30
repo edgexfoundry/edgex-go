@@ -31,7 +31,7 @@ const (
 )
 
 func (dp *dummyPersist) add(le models.LogEntry) error {
-	dp.added += 1
+	dp.added++
 	return nil
 }
 

@@ -88,7 +88,7 @@ func (fl *fileLog) remove(criteria matchCriteria) (int, error) {
 				tmpFile.Write(line)
 				tmpFile.Write([]byte("\n"))
 			} else {
-				count += 1
+				count++
 			}
 		}
 	}
