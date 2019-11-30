@@ -102,7 +102,7 @@ func (l privLogger) log(logLevel string, msg string, args ...interface{}) {
 
 // SetLogLevel sets logger log level
 func (l privLogger) SetLogLevel(logLevel string) error {
-	if logger.IsValidLogLevel(logLevel) == true {
+	if logger.IsValidLogLevel(logLevel) {
 		*l.logLevel = logLevel
 		return nil
 	}

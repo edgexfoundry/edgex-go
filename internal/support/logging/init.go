@@ -105,7 +105,7 @@ func (s ServiceInit) BootstrapHandler(
 		<-ctx.Done()
 		for {
 			// wait for httpServer to stop running (e.g. handling requests) before closing the database connection.
-			if s.server.IsRunning() == false {
+			if !s.server.IsRunning() {
 				LoggingClient.Info("Database disconnecting")
 				dbClient.closeSession()
 				break
