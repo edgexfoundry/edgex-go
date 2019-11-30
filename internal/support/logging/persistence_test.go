@@ -72,7 +72,11 @@ func testPersistenceFind(t *testing.T, persistence persistence) {
 
 func TestFileFind(t *testing.T) {
 	// Remove test log, the test needs an empty file
-	os.Remove(testFilename)
+	if err := os.Remove(testFilename); err != nil {
+		if !os.IsNotExist(err) {
+			t.Errorf("Error thrown: %v", err)
+		}
+	}
 
 	// Remove test log when test ends
 	defer os.Remove(testFilename)
@@ -141,7 +145,11 @@ func testPersistenceRemove(t *testing.T, persistence persistence) {
 
 func TestFileRemove(t *testing.T) {
 	// Remove test log, the test needs an empty file
-	os.Remove(testFilename)
+	if err := os.Remove(testFilename); err != nil {
+		if !os.IsNotExist(err) {
+			t.Errorf("Error thrown: %v", err)
+		}
+	}
 
 	// Remove test log when test ends
 	defer os.Remove(testFilename)
