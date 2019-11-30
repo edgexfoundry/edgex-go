@@ -75,7 +75,6 @@ func TestPing(t *testing.T) {
 	if response.StatusCode != http.StatusOK {
 		t.Errorf("Returned status %d, should be %d", response.StatusCode, http.StatusOK)
 	}
-
 }
 
 func TestAddLog(t *testing.T) {

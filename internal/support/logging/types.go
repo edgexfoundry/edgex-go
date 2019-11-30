@@ -98,7 +98,6 @@ func (l privLogger) log(logLevel string, msg string, args ...interface{}) {
 		l.levelLoggers[logLevel] = log.WithPrefix(l.rootLogger, "level", logLevel)
 	}
 	l.levelLoggers[logLevel].Log(args...)
-
 }
 
 // SetLogLevel sets logger log level
