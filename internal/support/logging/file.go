@@ -96,6 +96,10 @@ func (fl *fileLog) remove(criteria matchCriteria) (int, error) {
 		}
 	}
 
+	if err = scanner.Err(); err != nil {
+		return 0, err
+	}
+
 	// Close old file to open the new one when writing next log
 	tmpFile.Close()
 	f.Close()
@@ -138,6 +142,7 @@ func (fl *fileLog) find(criteria matchCriteria) ([]models.LogEntry, error) {
 			}
 		}
 	}
+	err = scanner.Err()
 	return logs, err
 }
 
