@@ -145,5 +145,4 @@ func (ml *mongoLog) reset() {
 	defer session.Close()
 
 	session.DB(Configuration.Databases["Primary"].Name).C(db.LogsCollection).RemoveAll(bson.M{})
-	return
 }

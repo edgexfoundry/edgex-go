@@ -215,8 +215,6 @@ func metricsHandler(w http.ResponseWriter, _ *http.Request) {
 	s := telemetry.NewSystemUsage()
 
 	pkg.Encode(s, w, LoggingClient)
-
-	return
 }
 
 func LoadRestRoutes() *mux.Router {
