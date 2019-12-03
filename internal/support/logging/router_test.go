@@ -15,8 +15,12 @@ import (
 	"strings"
 	"testing"
 
+	bootstrapContainer "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
@@ -62,9 +66,17 @@ func (dp dummyPersist) reset() {
 func (dp *dummyPersist) closeSession() {
 }
 
+func mockDIC() *di.Container {
+	return di.NewContainer(di.ServiceConstructorMap{
+		bootstrapContainer.LoggingClientInterfaceName: func(get di.Get) interface{} {
+			return logger.NewMockClient()
+		},
+	})
+}
+
 func TestPing(t *testing.T) {
 	// create test server with handler
-	ts := httptest.NewServer(LoadRestRoutes())
+	ts := httptest.NewServer(LoadRestRoutes(mockDIC()))
 	defer ts.Close()
 
 	response, err := http.Get(ts.URL + clients.ApiPingRoute)
@@ -92,7 +104,7 @@ func TestAddLog(t *testing.T) {
 			http.StatusBadRequest},
 	}
 	// create test server with handler
-	ts := httptest.NewServer(LoadRestRoutes())
+	ts := httptest.NewServer(LoadRestRoutes(mockDIC()))
 	defer ts.Close()
 
 	dbClient = &dummyPersist{}
@@ -204,7 +216,7 @@ func TestGetLogs(t *testing.T) {
 			3},
 	}
 	// create test server with handler
-	ts := httptest.NewServer(LoadRestRoutes())
+	ts := httptest.NewServer(LoadRestRoutes(mockDIC()))
 	defer ts.Close()
 
 	dummy := &dummyPersist{}
@@ -295,7 +307,7 @@ func TestRemoveLogs(t *testing.T) {
 			matchCriteria{LogLevels: logLevels, OriginServices: services, Start: 1, End: 2}},
 	}
 	// create test server with handler
-	ts := httptest.NewServer(LoadRestRoutes())
+	ts := httptest.NewServer(LoadRestRoutes(mockDIC()))
 	defer ts.Close()
 
 	dummy := &dummyPersist{}
