@@ -74,10 +74,11 @@ func TestFileFind(t *testing.T) {
 	// Remove test log, the test needs an empty file
 	os.Remove(testFilename)
 
-	// Remove test log when test ends
-	defer os.Remove(testFilename)
-
 	fl := fileLog{filename: testFilename}
+
+	// Close and remove test log when test ends
+	defer fl.reset()
+
 	testPersistenceFind(t, &fl)
 }
 
@@ -140,9 +141,10 @@ func TestFileRemove(t *testing.T) {
 	// Remove test log, the test needs an empty file
 	os.Remove(testFilename)
 
-	// Remove test log when test ends
-	defer os.Remove(testFilename)
-
 	fl := fileLog{filename: testFilename}
+
+	// Close and remove test log when test ends
+	defer fl.reset()
+
 	testPersistenceRemove(t, &fl)
 }
