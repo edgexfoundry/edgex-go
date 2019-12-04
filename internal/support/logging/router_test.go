@@ -193,7 +193,7 @@ func TestGetLogs(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			rr := httptest.NewRecorder()
-			getLogsWithVars(rr, tt.vars)
+			getLogs(rr, tt.vars)
 			response := rr.Result()
 
 			if response.StatusCode != tt.status {
@@ -281,7 +281,7 @@ func TestRemoveLogs(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			rr := httptest.NewRecorder()
-			delLogsWithVars(rr, tt.vars)
+			delLogs(rr, tt.vars)
 			response := rr.Result()
 			if response.StatusCode != tt.status {
 				t.Errorf("Returned status %d, should be %d", response.StatusCode, tt.status)

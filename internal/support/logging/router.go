@@ -174,11 +174,7 @@ func getCriteria(w http.ResponseWriter, vars map[string]string) *matchCriteria {
 	return &criteria
 }
 
-func getLogs(w http.ResponseWriter, r *http.Request) {
-	getLogsWithVars(w, mux.Vars(r))
-}
-
-func getLogsWithVars(w http.ResponseWriter, vars map[string]string) {
+func getLogs(w http.ResponseWriter, vars map[string]string) {
 	criteria := getCriteria(w, vars)
 	if criteria == nil {
 		return
@@ -200,11 +196,7 @@ func getLogsWithVars(w http.ResponseWriter, vars map[string]string) {
 	io.WriteString(w, string(res))
 }
 
-func delLogs(w http.ResponseWriter, r *http.Request) {
-	delLogsWithVars(w, mux.Vars(r))
-}
-
-func delLogsWithVars(w http.ResponseWriter, vars map[string]string) {
+func delLogs(w http.ResponseWriter, vars map[string]string) {
 	criteria := getCriteria(w, vars)
 	if criteria == nil {
 		return
@@ -250,21 +242,48 @@ func LoadRestRoutes(dic *di.Container) *mux.Router {
 	// Logs
 	r.HandleFunc(clients.ApiLoggingRoute, addLog).Methods(http.MethodPost)
 
-	r.HandleFunc(clients.ApiLoggingRoute, getLogs).Methods(http.MethodGet)
-	l := r.PathPrefix(clients.ApiLoggingRoute).Subrouter()
-	l.HandleFunc("/{"+LIMIT+"}", getLogs).Methods(http.MethodGet)
-	l.HandleFunc("/{"+START+"}/{"+END+"}/{"+LIMIT+"}", getLogs).Methods(http.MethodGet)
-	l.HandleFunc("/"+ORIGINSERVICES+"/{"+SERVICES+"}/{"+START+"}/{"+END+"}/{"+LIMIT+"}", getLogs).Methods(http.MethodGet)
-	l.HandleFunc("/"+KEYWORDS+"/{"+KEYWORDS+"}/{"+START+"}/{"+END+"}/{"+LIMIT+"}", getLogs).Methods(http.MethodGet)
-	l.HandleFunc("/"+LOGLEVELS+"/{"+LEVELS+"}/{"+START+"}/{"+END+"}/{"+LIMIT+"}", getLogs).Methods(http.MethodGet)
-	l.HandleFunc("/"+LOGLEVELS+"/{"+LEVELS+"}/"+ORIGINSERVICES+"/{"+SERVICES+"}/{"+START+"}/{"+END+"}/{"+LIMIT+"}", getLogs).Methods(http.MethodGet)
+	r.HandleFunc(clients.ApiLoggingRoute, func(w http.ResponseWriter, r *http.Request) {
+		getLogs(w, mux.Vars(r))
+	}).Methods(http.MethodGet)
 
-	l.HandleFunc("/{"+START+"}/{"+END+"}", delLogs).Methods(http.MethodDelete)
-	l.HandleFunc("/"+KEYWORDS+"/{"+KEYWORDS+"}/{"+START+"}/{"+END+"}", delLogs).Methods(http.MethodDelete)
-	l.HandleFunc("/"+ORIGINSERVICES+"/{"+SERVICES+"}/{"+START+"}/{"+END+"}", delLogs).Methods(http.MethodDelete)
-	l.HandleFunc("/"+LOGLEVELS+"/{"+LEVELS+"}/{"+START+"}/{"+END+"}", delLogs).Methods(http.MethodDelete)
-	l.HandleFunc("/"+LOGLEVELS+"/{"+LEVELS+"}/"+ORIGINSERVICES+"/{"+SERVICES+"}/{"+START+"}/{"+END+"}", delLogs).Methods(http.MethodDelete)
-	l.HandleFunc("/"+REMOVEOLD+"/"+AGE+"/{"+AGE+"}", delLogs).Methods(http.MethodDelete)
+	l := r.PathPrefix(clients.ApiLoggingRoute).Subrouter()
+	l.HandleFunc("/{"+LIMIT+"}", func(w http.ResponseWriter, r *http.Request) {
+		getLogs(w, mux.Vars(r))
+	}).Methods(http.MethodGet)
+	l.HandleFunc("/{"+START+"}/{"+END+"}/{"+LIMIT+"}", func(w http.ResponseWriter, r *http.Request) {
+		getLogs(w, mux.Vars(r))
+	}).Methods(http.MethodGet)
+	l.HandleFunc("/"+ORIGINSERVICES+"/{"+SERVICES+"}/{"+START+"}/{"+END+"}/{"+LIMIT+"}", func(w http.ResponseWriter, r *http.Request) {
+		getLogs(w, mux.Vars(r))
+	}).Methods(http.MethodGet)
+	l.HandleFunc("/"+KEYWORDS+"/{"+KEYWORDS+"}/{"+START+"}/{"+END+"}/{"+LIMIT+"}", func(w http.ResponseWriter, r *http.Request) {
+		getLogs(w, mux.Vars(r))
+	}).Methods(http.MethodGet)
+	l.HandleFunc("/"+LOGLEVELS+"/{"+LEVELS+"}/{"+START+"}/{"+END+"}/{"+LIMIT+"}", func(w http.ResponseWriter, r *http.Request) {
+		getLogs(w, mux.Vars(r))
+	}).Methods(http.MethodGet)
+	l.HandleFunc("/"+LOGLEVELS+"/{"+LEVELS+"}/"+ORIGINSERVICES+"/{"+SERVICES+"}/{"+START+"}/{"+END+"}/{"+LIMIT+"}", func(w http.ResponseWriter, r *http.Request) {
+		getLogs(w, mux.Vars(r))
+	}).Methods(http.MethodGet)
+
+	l.HandleFunc("/{"+START+"}/{"+END+"}", func(w http.ResponseWriter, r *http.Request) {
+		delLogs(w, mux.Vars(r))
+	}).Methods(http.MethodDelete)
+	l.HandleFunc("/"+KEYWORDS+"/{"+KEYWORDS+"}/{"+START+"}/{"+END+"}", func(w http.ResponseWriter, r *http.Request) {
+		delLogs(w, mux.Vars(r))
+	}).Methods(http.MethodDelete)
+	l.HandleFunc("/"+ORIGINSERVICES+"/{"+SERVICES+"}/{"+START+"}/{"+END+"}", func(w http.ResponseWriter, r *http.Request) {
+		delLogs(w, mux.Vars(r))
+	}).Methods(http.MethodDelete)
+	l.HandleFunc("/"+LOGLEVELS+"/{"+LEVELS+"}/{"+START+"}/{"+END+"}", func(w http.ResponseWriter, r *http.Request) {
+		delLogs(w, mux.Vars(r))
+	}).Methods(http.MethodDelete)
+	l.HandleFunc("/"+LOGLEVELS+"/{"+LEVELS+"}/"+ORIGINSERVICES+"/{"+SERVICES+"}/{"+START+"}/{"+END+"}", func(w http.ResponseWriter, r *http.Request) {
+		delLogs(w, mux.Vars(r))
+	}).Methods(http.MethodDelete)
+	l.HandleFunc("/"+REMOVEOLD+"/"+AGE+"/{"+AGE+"}", func(w http.ResponseWriter, r *http.Request) {
+		delLogs(w, mux.Vars(r))
+	}).Methods(http.MethodDelete)
 
 	r.Use(correlation.ManageHeader)
 	r.Use(correlation.OnResponseComplete)
