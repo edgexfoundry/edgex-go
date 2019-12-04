@@ -11,8 +11,6 @@ import (
 	"testing"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
-
-	"github.com/edgexfoundry/edgex-go/internal/support/logging/interfaces"
 )
 
 const (
@@ -23,7 +21,15 @@ const (
 	message2       string = "message2"
 )
 
-func testPersistenceFind(t *testing.T, persistence interfaces.Persistence) {
+func TestFind(t *testing.T) {
+	// Remove test log, the test needs an empty file
+	_ = os.Remove(testFilename)
+
+	// Remove test log when test ends
+	defer os.Remove(testFilename)
+
+	persistence := fileLog{filename: testFilename}
+
 	var keywords1 = []string{"1"}
 	var keywords2 = []string{"2"}
 	var keywords12 = []string{"2", "1"}
@@ -72,18 +78,15 @@ func testPersistenceFind(t *testing.T, persistence interfaces.Persistence) {
 	}
 }
 
-func TestFileFind(t *testing.T) {
+func TestRemove(t *testing.T) {
 	// Remove test log, the test needs an empty file
 	_ = os.Remove(testFilename)
 
 	// Remove test log when test ends
 	defer os.Remove(testFilename)
 
-	fl := fileLog{filename: testFilename}
-	testPersistenceFind(t, &fl)
-}
+	persistence := fileLog{filename: testFilename}
 
-func testPersistenceRemove(t *testing.T, persistence interfaces.Persistence) {
 	var keywords1 = []string{"1"}
 	var keywords2 = []string{"2"}
 	var keywords12 = []string{"2", "1"}
@@ -101,7 +104,11 @@ func testPersistenceRemove(t *testing.T, persistence interfaces.Persistence) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			persistence.Reset()
+			if persistence.out != nil {
+				_ = persistence.out.Close()
+				persistence.out = nil
+			}
+			_ = os.Remove(persistence.filename)
 
 			le := models.LogEntry{
 				Level:         models.TraceLog,
@@ -136,15 +143,4 @@ func testPersistenceRemove(t *testing.T, persistence interfaces.Persistence) {
 			}
 		})
 	}
-}
-
-func TestFileRemove(t *testing.T) {
-	// Remove test log, the test needs an empty file
-	_ = os.Remove(testFilename)
-
-	// Remove test log when test ends
-	defer os.Remove(testFilename)
-
-	fl := fileLog{filename: testFilename}
-	testPersistenceRemove(t, &fl)
 }

@@ -55,7 +55,7 @@ func TestCheckMaxLimitOverLimit(t *testing.T) {
 }
 
 // Supporting methods
-// Reset() re-initializes dependencies for each test
+// reset() re-initializes dependencies for each test
 func reset() {
 	Configuration = &ConfigurationStruct{}
 	testEvent.ID = testBsonString

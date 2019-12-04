@@ -79,9 +79,6 @@ func (dp *dummyPersist) Find(criteria interfaces.Criteria) ([]models.LogEntry, e
 	return retValue, nil
 }
 
-func (dp dummyPersist) Reset() {
-}
-
 func (dp *dummyPersist) CloseSession() {
 }
 

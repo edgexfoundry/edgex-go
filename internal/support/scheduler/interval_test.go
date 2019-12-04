@@ -42,7 +42,7 @@ const (
 )
 
 // Supporting methods
-// Reset() re-initializes dependencies for each test
+// reset() re-initializes dependencies for each test
 func reset() {
 	testTimestamps = models.Timestamps{Origin: testOrigin}
 	testInterval.ID = testUUIDString

@@ -28,8 +28,4 @@ type Persistence interface {
 	CloseSession()
 	Remove(criteria Criteria) (int, error)
 	Find(criteria Criteria) ([]models.LogEntry, error)
-
-	// Needed for the tests. Reset the instance (closing files, sessions...)
-	// and clear the logs.
-	Reset()
 }

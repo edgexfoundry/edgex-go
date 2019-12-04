@@ -151,10 +151,3 @@ func (ml *mongoLog) Find(criteria interfaces.Criteria) ([]models.LogEntry, error
 
 	return le, nil
 }
-
-func (ml *mongoLog) Reset() {
-	session := ml.session.Copy()
-	defer session.Close()
-
-	_, _ = session.DB(Configuration.Databases["Primary"].Name).C(db.LogsCollection).RemoveAll(bson.M{})
-}

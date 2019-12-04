@@ -131,10 +131,3 @@ func (fl *fileLog) Find(criteria interfaces.Criteria) ([]models.LogEntry, error)
 	return logs, err
 }
 
-func (fl *fileLog) Reset() {
-	if fl.out != nil {
-		_ = fl.out.Close()
-		fl.out = nil
-	}
-	_ = os.Remove(fl.filename)
-}
