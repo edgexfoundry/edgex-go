@@ -74,22 +74,6 @@ func mockDIC() *di.Container {
 	})
 }
 
-func TestPing(t *testing.T) {
-	// create test server with handler
-	ts := httptest.NewServer(LoadRestRoutes(mockDIC()))
-	defer ts.Close()
-
-	response, err := http.Get(ts.URL + clients.ApiPingRoute)
-	if err != nil {
-		t.Errorf("Error getting ping: %v", err)
-	}
-	defer response.Body.Close()
-	if response.StatusCode != http.StatusOK {
-		t.Errorf("Returned status %d, should be %d", response.StatusCode, http.StatusOK)
-	}
-
-}
-
 func TestAddLog(t *testing.T) {
 	var tests = []struct {
 		name   string
