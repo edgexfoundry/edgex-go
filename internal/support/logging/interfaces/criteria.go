@@ -16,7 +16,9 @@ package interfaces
 
 import "github.com/edgexfoundry/go-mod-core-contracts/models"
 
+// Criteria defines how to compare two LogEntries and determine if they meet some condition.
 type Criteria interface {
+	// Match compares the details in the implementation of Criteria and the provided LogEntry.
+	// Returns true if the implementation's condition is met, false otherwise.
 	Match(le models.LogEntry) bool
-	LimitExceeded(value int) bool
 }

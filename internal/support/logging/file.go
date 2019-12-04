@@ -9,6 +9,7 @@ package logging
 import (
 	"bufio"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -122,7 +123,12 @@ func (fl *fileLog) Find(criteria interfaces.Criteria) ([]models.LogEntry, error)
 			if criteria.Match(le) {
 				logs = append(logs, le)
 
-				if criteria.LimitExceeded(len(logs)) {
+				match, ok := criteria.(MatchCriteria)
+				if !ok {
+					return nil, errors.New("unknown Criteria implementation")
+				}
+
+				if match.LimitExceeded(len(logs)) {
 					break
 				}
 			}
