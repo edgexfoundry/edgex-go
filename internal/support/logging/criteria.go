@@ -12,6 +12,9 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
+// MatchCritieria implements the Criteria interface.
+// MatchCriteria is designed to accept LogEntries whose data perfectly fits with "desired" LogEntry fields in the
+// MatchCriteria object itself.
 type MatchCriteria struct {
 	OriginServices []string
 	LogLevels      []string
@@ -33,6 +36,8 @@ func matchStringInSlice(s string, l []string) bool {
 	return true
 }
 
+// Match returns true if the provided LogEntry exactly matches the data present in the MatchCriteria
+// and false otherwise.
 func (criteria MatchCriteria) Match(le models.LogEntry) bool {
 	if !matchStringInSlice(le.OriginService, criteria.OriginServices) {
 		return false
@@ -67,6 +72,8 @@ func (criteria MatchCriteria) Match(le models.LogEntry) bool {
 	return true
 }
 
+// LimitExceeded returns true if the provided value is larger than the Limit defined in the MatchCriteria
+// and false otherwise.
 func (criteria MatchCriteria) LimitExceeded(value int) bool {
 	if criteria.Limit != 0 && value >= criteria.Limit {
 		return true
