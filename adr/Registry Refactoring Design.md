@@ -20,6 +20,8 @@ If **no value** is provided to the `-cp/-configProvider` option, i.e. just `-cp`
 
 if `-cp/-configProvider` **not used** and no environment variable override is specified the local configuration file is used, as is it now.
 
+All services will log the `Configuration Provider` connection information that is used.
+
 The existing `-r/-registry` command line option will be removed from all services. 
 
 ### Bootstrap Changes
@@ -29,6 +31,10 @@ All services in the edgex-go mono repo use the new common bootstrap functionalit
 ### Config-Seed Changes
 
 The `conf-seed` service will have similar changes for specifying the `Configuration Provider` connection information since it doesn't use the common bootstrap package. Beyond that it will have minor changes for switching to using the `Configuration Client` interface, which will just be imports and appropriate name refactoring.
+
+### Config Endpoint Changes
+
+Since the `Configuration Provider` connection information will no longer be in the service's configuration struct, the `config` endpoint processing will be modified to add the `Configuration Provider` connection information to the resulting JSON create from service's configuration.
 
 ### Client Interfaces changes
 
@@ -119,7 +125,7 @@ type Config struct {
 	Host string
 	Port int
 	Type string
-	Stem string
+	BasePath string
 	ServiceKey string
 }
 ```
