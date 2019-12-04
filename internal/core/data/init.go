@@ -45,7 +45,7 @@ var msc metadata.DeviceServiceClient
 var httpErrorHandler errorconcept.ErrorHandler
 
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the data service.
-func BootstrapHandler(wg *sync.WaitGroup, ctx context.Context, startupTimer startup.Timer, dic *di.Container) bool {
+func BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, startupTimer startup.Timer, dic *di.Container) bool {
 	// update global variables.
 	loggingClient := container.LoggingClientFrom(dic.Get)
 

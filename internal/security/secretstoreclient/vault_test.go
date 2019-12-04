@@ -17,8 +17,6 @@ package secretstoreclient
 
 import (
 	"encoding/json"
-	"errors"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -49,9 +47,50 @@ func TestHealthCheck(t *testing.T) {
 
 	host := strings.Replace(ts.URL, "https://", "", -1)
 	vc := NewSecretStoreClient(mockLogger, NewRequestor(mockLogger).Insecure(), "https", host)
-	code, _ := vc.HealthCheck()
+	code, err := vc.HealthCheck()
 
+	assert.NoError(t, err)
 	if code != http.StatusOK {
+		t.Errorf("incorrect vault health check status.")
+	}
+}
+
+// TestHealthCheckUninit tests that a no error object is returned
+// for uninitialized vault (with 5xx error)
+func TestHealthCheckUninit(t *testing.T) {
+	mockLogger := logger.MockLogger{}
+
+	ts := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotImplemented)
+	}))
+	defer ts.Close()
+
+	host := strings.Replace(ts.URL, "https://", "", -1)
+	vc := NewSecretStoreClient(mockLogger, NewRequestor(mockLogger).Insecure(), "https", host)
+	code, err := vc.HealthCheck()
+
+	assert.NoError(t, err)
+	if code != http.StatusNotImplemented {
+		t.Errorf("incorrect vault health check status.")
+	}
+}
+
+// TestHealthCheckSealed tests that a no error object is returned
+// for sealed vault (with 5xx error)
+func TestHealthCheckSealed(t *testing.T) {
+	mockLogger := logger.MockLogger{}
+
+	ts := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusServiceUnavailable)
+	}))
+	defer ts.Close()
+
+	host := strings.Replace(ts.URL, "https://", "", -1)
+	vc := NewSecretStoreClient(mockLogger, NewRequestor(mockLogger).Insecure(), "https", host)
+	code, err := vc.HealthCheck()
+
+	assert.NoError(t, err)
+	if code != http.StatusServiceUnavailable {
 		t.Errorf("incorrect vault health check status.")
 	}
 }
@@ -207,43 +246,4 @@ func TestCreateToken(t *testing.T) {
 	assert.Nil(err)
 	assert.Equal(http.StatusOK, code)
 	assert.Equal("f00341c1-fad5-f6e6-13fd-235617f858a1", response["request_id"].(string))
-}
-
-func TestProcessResponseError(t *testing.T) {
-	// Arrange
-	assert := assert.New(t)
-	mockLogger := logger.MockLogger{}
-
-	vc := NewSecretStoreClient(mockLogger, NewRequestor(mockLogger).Insecure(), "https", "dummyhost")
-	realvc := (vc).(*vaultClient)
-	resp := http.Response{StatusCode: http.StatusOK}
-	responseError := errors.New("fake error")
-
-	// Act
-	code, err := realvc.processResponse(&resp, responseError, "myop", http.StatusOK, nil)
-
-	// Assert
-	assert.EqualError(err, "fake error")
-	assert.Equal(0, code)
-}
-
-func TestProcessResponseStatusCodeUnexpected(t *testing.T) {
-	// Arrange
-	assert := assert.New(t)
-	mockLogger := logger.MockLogger{}
-
-	vc := NewSecretStoreClient(mockLogger, NewRequestor(mockLogger).Insecure(), "https", "dummyhost")
-	realvc := (vc).(*vaultClient)
-	resp := http.Response{
-		Body:       ioutil.NopCloser(strings.NewReader("")),
-		Status:     "404 Not Found",
-		StatusCode: http.StatusNotFound,
-	}
-
-	// Act
-	code, err := realvc.processResponse(&resp, nil, "myop", http.StatusOK, nil)
-
-	// Assert
-	assert.EqualError(err, "request to myop failed with status: 404 Not Found")
-	assert.Equal(http.StatusNotFound, code)
 }

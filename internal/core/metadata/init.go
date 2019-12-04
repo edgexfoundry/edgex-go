@@ -36,8 +36,7 @@ import (
 var Configuration = &ConfigurationStruct{}
 
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the metadata service.
-func BootstrapHandler(wg *sync.WaitGroup, ctx context.Context, startupTimer startup.Timer, dic *di.Container) bool {
-
+func BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, startupTimer startup.Timer, dic *di.Container) bool {
 	// initialize clients required by service.
 	registryClient := container.RegistryFrom(dic.Get)
 

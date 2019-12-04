@@ -45,10 +45,11 @@ func NewSecret() *SecretProvider {
 // BootstrapHandlers to obtain sensitive data, such as database credentials. This BootstrapHandler should be processed
 // before other BootstrapHandlers, possibly even first since it has not other dependencies.
 func (s *SecretProvider) BootstrapHandler(
+	ctx context.Context,
 	wg *sync.WaitGroup,
-	context context.Context,
 	startupTimer startup.Timer,
 	dic *di.Container) bool {
+
 	loggingClient := container.LoggingClientFrom(dic.Get)
 
 	configuration := container.ConfigurationFrom(dic.Get)

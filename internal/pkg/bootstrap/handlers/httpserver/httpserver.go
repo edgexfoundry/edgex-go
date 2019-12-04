@@ -53,8 +53,8 @@ func (b *HttpServer) IsRunning() bool {
 // and another that waits on closure of a context's done channel before calling Shutdown() to cleanly shut down the
 // http server.
 func (b *HttpServer) BootstrapHandler(
-	wg *sync.WaitGroup,
 	ctx context.Context,
+	wg *sync.WaitGroup,
 	startupTimer startup.Timer,
 	dic *di.Container) bool {
 

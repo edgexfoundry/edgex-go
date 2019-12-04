@@ -105,8 +105,8 @@ func UpdateFromRegistry(
 // writable struct and this function explicitly updates the loggingClient's log level when new configuration changes
 // are received.
 func ListenForChanges(
-	wg *sync.WaitGroup,
 	ctx context.Context,
+	wg *sync.WaitGroup,
 	config interfaces.Configuration,
 	loggingClient logger.LoggingClient,
 	registryClient registry.Client) {

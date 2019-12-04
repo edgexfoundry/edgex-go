@@ -81,7 +81,7 @@ func cpuUsageAverage() {
 // BootstrapHandler fulfills the BootstrapHandler contract.  It creates a go routine to periodically sample CPU usage
 // and is intended to supersede the existing StartCpuUsageAverage() function when the new bootstrap package is used
 // by all of the core services.
-func BootstrapHandler(wg *sync.WaitGroup, ctx context.Context, startupTimer startup.Timer, dic *di.Container) bool {
+func BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, startupTimer startup.Timer, dic *di.Container) bool {
 	loggingClient := container.LoggingClientFrom(dic.Get)
 	loggingClient.Info("Telemetry starting")
 
