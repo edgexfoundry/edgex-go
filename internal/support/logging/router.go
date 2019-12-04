@@ -34,8 +34,8 @@ func pingHandler(w http.ResponseWriter, _ *http.Request) {
 	w.Write([]byte("pong"))
 }
 
-func configHandler(w http.ResponseWriter, _ *http.Request, lc logger.LoggingClient) {
-	pkg.Encode(Configuration, w, lc)
+func configHandler(w http.ResponseWriter, _ *http.Request, loggingClient logger.LoggingClient) {
+	pkg.Encode(Configuration, w, loggingClient)
 }
 
 func addLog(w http.ResponseWriter, r *http.Request) {
@@ -213,10 +213,10 @@ func delLogs(w http.ResponseWriter, r *http.Request) {
 	io.WriteString(w, strconv.Itoa(removed))
 }
 
-func metricsHandler(w http.ResponseWriter, _ *http.Request, lc logger.LoggingClient) {
+func metricsHandler(w http.ResponseWriter, _ *http.Request, loggingClient logger.LoggingClient) {
 	s := telemetry.NewSystemUsage()
 
-	pkg.Encode(s, w, lc)
+	pkg.Encode(s, w, loggingClient)
 
 	return
 }
