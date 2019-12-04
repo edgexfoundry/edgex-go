@@ -2,6 +2,7 @@ package metadata
 
 import (
 	"fmt"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -10,9 +11,9 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces/mocks"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 
 	"github.com/gorilla/mux"
@@ -54,7 +55,13 @@ func TestGetCommandsByDeviceId(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			rr := httptest.NewRecorder()
-			restGetCommandsByDeviceId(rr, tt.request, logger.NewMockClient(), tt.dbMock)
+			var loggerMock = logger.NewMockClient()
+			restGetCommandsByDeviceId(
+				rr,
+				tt.request,
+				loggerMock,
+				tt.dbMock,
+				errorconcept.NewErrorHandler(loggerMock))
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -79,7 +86,12 @@ func TestGetAllCommands(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			rr := httptest.NewRecorder()
-			restGetAllCommands(rr, logger.NewMockClient(), tt.dbMock)
+			var loggerMock = logger.NewMockClient()
+			restGetAllCommands(
+				rr,
+				loggerMock,
+				tt.dbMock,
+				errorconcept.NewErrorHandler(loggerMock))
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -126,7 +138,13 @@ func TestGetCommandById(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			rr := httptest.NewRecorder()
-			restGetCommandById(rr, tt.request, logger.NewMockClient(), tt.dbMock)
+			var loggerMock = logger.NewMockClient()
+			restGetCommandById(
+				rr,
+				tt.request,
+				loggerMock,
+				tt.dbMock,
+				errorconcept.NewErrorHandler(loggerMock))
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -135,6 +153,7 @@ func TestGetCommandById(t *testing.T) {
 		})
 	}
 }
+
 func TestGetCommandsByName(t *testing.T) {
 	tests := []struct {
 		name           string
@@ -165,7 +184,13 @@ func TestGetCommandsByName(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			rr := httptest.NewRecorder()
-			restGetCommandsByName(rr, tt.request, logger.NewMockClient(), tt.dbMock)
+			var loggerMock = logger.NewMockClient()
+			restGetCommandsByName(
+				rr,
+				tt.request,
+				loggerMock,
+				tt.dbMock,
+				errorconcept.NewErrorHandler(loggerMock))
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -196,8 +221,10 @@ var commands = []contract.Command{
 }
 
 func createPlainCommandRequest(url string) *http.Request {
+
 	return createCommandRequest(url, "", "")
 }
+
 func createCommandRequest(url string, pathParamName string, pathParamValue string) *http.Request {
 	req := httptest.NewRequest(http.MethodGet, url, nil)
 	if pathParamName == "" && pathParamValue == "" {

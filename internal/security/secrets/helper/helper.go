@@ -41,7 +41,7 @@ const (
 	defaultWorkDir                = "/tmp"
 	pkiInitBaseDir                = "edgex/security-secrets-setup"
 	defaultPkiCacheDir            = "/etc/edgex/pki"
-	defaultPkiDeployDir           = "/run/edgex/secrets"
+	defaultPkiDeployDir           = "/tmp/edgex/secrets"
 	PkiInitFilePerServiceComplete = ".security-secrets-setup.complete"
 )
 

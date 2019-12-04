@@ -100,15 +100,3 @@ func parseInt64(value string) int64 {
 	}
 	return int64(parsed)
 }
-
-// Scheduler Queue Client
-var currentQueueClient *QueueClient // Singleton used so that queueClient can use it to de-reference readings
-type QueueClient struct {
-}
-
-// NewClient
-func NewSchedulerQueueClient() *QueueClient {
-	queueClient := &QueueClient{}
-	currentQueueClient = queueClient // Set the singleton
-	return queueClient
-}
