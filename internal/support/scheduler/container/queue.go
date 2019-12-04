@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2018 Dell Inc.
+ * Copyright 2019 Dell Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -11,20 +11,18 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
-package internal
 
-const (
-	BootTimeoutDefault         = BootTimeoutSecondsDefault * 1000
-	BootTimeoutSecondsDefault  = 30
-	BootRetrySecondsDefault    = 1
-	ClientMonitorDefault       = 15000
-	ConfigFileName             = "configuration.toml"
-	ConfigRegistryStemCore     = "edgex/core/"
-	ConfigRegistryStemSecurity = "edgex/security/"
-	ConfigMajorVersion         = "1.0/"
-	LogDurationKey             = "duration"
+package container
+
+import (
+	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
+	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/interfaces"
 )
 
-const (
-	WritableKey = "/Writable"
-)
+// QueueName contains the name of scheduler's SchedulerQueueClient implementation in the DIC.
+var QueueName = di.TypeInstanceToName((*interfaces.SchedulerQueueClient)(nil))
+
+// QueueFrom helper function queries the DIC and returns scheduler's SchedulerQueueClient implementation.
+func QueueFrom(get di.Get) interfaces.SchedulerQueueClient {
+	return get(QueueName).(interfaces.SchedulerQueueClient)
+}

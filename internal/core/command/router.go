@@ -22,10 +22,10 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/command/config"
-	container "github.com/edgexfoundry/edgex-go/internal/core/command/container"
+	"github.com/edgexfoundry/edgex-go/internal/core/command/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	bootstrapContainer "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
-	container2 "github.com/edgexfoundry/edgex-go/internal/pkg/container"
+	errorContainer "github.com/edgexfoundry/edgex-go/internal/pkg/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
@@ -35,15 +35,17 @@ func LoadRestRoutes(dic *di.Container) *mux.Router {
 	r := mux.NewRouter()
 
 	// Ping Resource
-	r.HandleFunc(clients.ApiPingRoute, pingHandler).Methods(http.MethodGet)
+	r.HandleFunc(clients.ApiPingRoute, func(w http.ResponseWriter, _ *http.Request) {
+		pingHandler(w)
+	}).Methods(http.MethodGet)
 
 	// Configuration
-	r.HandleFunc(clients.ApiConfigRoute, func(w http.ResponseWriter, r *http.Request) {
+	r.HandleFunc(clients.ApiConfigRoute, func(w http.ResponseWriter, _ *http.Request) {
 		configHandler(w, bootstrapContainer.LoggingClientFrom(dic.Get), container.ConfigurationFrom(dic.Get))
 	}).Methods(http.MethodGet)
 
 	// Metrics
-	r.HandleFunc(clients.ApiMetricsRoute, func(w http.ResponseWriter, r *http.Request) {
+	r.HandleFunc(clients.ApiMetricsRoute, func(w http.ResponseWriter, _ *http.Request) {
 		metricsHandler(w, bootstrapContainer.LoggingClientFrom(dic.Get))
 	}).Methods(http.MethodGet)
 
@@ -62,7 +64,6 @@ func LoadRestRoutes(dic *di.Container) *mux.Router {
 }
 
 func loadDeviceRoutes(b *mux.Router, dic *di.Container) {
-
 	b.HandleFunc("/device", func(w http.ResponseWriter, r *http.Request) {
 		restGetAllCommands(
 			w,
@@ -70,7 +71,7 @@ func loadDeviceRoutes(b *mux.Router, dic *di.Container) {
 			bootstrapContainer.DBClientFrom(dic.Get),
 			container.MetadataDeviceClientFrom(dic.Get),
 			container.ConfigurationFrom(dic.Get),
-			container2.ErrorHandlerFrom(dic.Get))
+			errorContainer.ErrorHandlerFrom(dic.Get))
 	}).Methods(http.MethodGet)
 
 	d := b.PathPrefix("/" + DEVICE).Subrouter()
@@ -83,7 +84,7 @@ func loadDeviceRoutes(b *mux.Router, dic *di.Container) {
 			bootstrapContainer.DBClientFrom(dic.Get),
 			container.MetadataDeviceClientFrom(dic.Get),
 			container.ConfigurationFrom(dic.Get),
-			container2.ErrorHandlerFrom(dic.Get))
+			errorContainer.ErrorHandlerFrom(dic.Get))
 	}).Methods(http.MethodGet)
 	d.HandleFunc("/{"+ID+"}/"+COMMAND+"/{"+COMMANDID+"}", func(w http.ResponseWriter, r *http.Request) {
 		restGetDeviceCommandByCommandID(
@@ -92,7 +93,7 @@ func loadDeviceRoutes(b *mux.Router, dic *di.Container) {
 			bootstrapContainer.LoggingClientFrom(dic.Get),
 			bootstrapContainer.DBClientFrom(dic.Get),
 			container.MetadataDeviceClientFrom(dic.Get),
-			container2.ErrorHandlerFrom(dic.Get))
+			errorContainer.ErrorHandlerFrom(dic.Get))
 	}).Methods(http.MethodGet)
 	d.HandleFunc("/{"+ID+"}/"+COMMAND+"/{"+COMMANDID+"}", func(w http.ResponseWriter, r *http.Request) {
 		restPutDeviceCommandByCommandID(
@@ -101,7 +102,7 @@ func loadDeviceRoutes(b *mux.Router, dic *di.Container) {
 			bootstrapContainer.LoggingClientFrom(dic.Get),
 			bootstrapContainer.DBClientFrom(dic.Get),
 			container.MetadataDeviceClientFrom(dic.Get),
-			container2.ErrorHandlerFrom(dic.Get))
+			errorContainer.ErrorHandlerFrom(dic.Get))
 	}).Methods(http.MethodPut)
 
 	// /api/<version>/device/name
@@ -114,7 +115,7 @@ func loadDeviceRoutes(b *mux.Router, dic *di.Container) {
 			bootstrapContainer.DBClientFrom(dic.Get),
 			container.MetadataDeviceClientFrom(dic.Get),
 			container.ConfigurationFrom(dic.Get),
-			container2.ErrorHandlerFrom(dic.Get))
+			errorContainer.ErrorHandlerFrom(dic.Get))
 	}).Methods(http.MethodGet)
 	dn.HandleFunc("/{"+NAME+"}/"+COMMAND+"/{"+COMMANDNAME+"}", func(w http.ResponseWriter, r *http.Request) {
 		restGetDeviceCommandByNames(
@@ -123,7 +124,7 @@ func loadDeviceRoutes(b *mux.Router, dic *di.Container) {
 			bootstrapContainer.LoggingClientFrom(dic.Get),
 			bootstrapContainer.DBClientFrom(dic.Get),
 			container.MetadataDeviceClientFrom(dic.Get),
-			container2.ErrorHandlerFrom(dic.Get))
+			errorContainer.ErrorHandlerFrom(dic.Get))
 	}).Methods(http.MethodGet)
 	dn.HandleFunc("/{"+NAME+"}/"+COMMAND+"/{"+COMMANDNAME+"}", func(w http.ResponseWriter, r *http.Request) {
 		restPutDeviceCommandByNames(
@@ -132,17 +133,21 @@ func loadDeviceRoutes(b *mux.Router, dic *di.Container) {
 			bootstrapContainer.LoggingClientFrom(dic.Get),
 			bootstrapContainer.DBClientFrom(dic.Get),
 			container.MetadataDeviceClientFrom(dic.Get),
-			container2.ErrorHandlerFrom(dic.Get))
+			errorContainer.ErrorHandlerFrom(dic.Get))
 	}).Methods(http.MethodPut)
 }
 
 // Test if the service is working
-func pingHandler(w http.ResponseWriter, _ *http.Request) {
+func pingHandler(w http.ResponseWriter) {
 	w.Header().Set(clients.ContentType, clients.ContentTypeText)
 	w.Write([]byte("pong"))
 }
 
-func configHandler(w http.ResponseWriter, loggingClient logger.LoggingClient, configuration *config.ConfigurationStruct) {
+func configHandler(
+	w http.ResponseWriter,
+	loggingClient logger.LoggingClient,
+	configuration *config.ConfigurationStruct) {
+
 	pkg.Encode(configuration, w, loggingClient)
 }
 
@@ -150,6 +155,4 @@ func metricsHandler(w http.ResponseWriter, loggingClient logger.LoggingClient) {
 	s := telemetry.NewSystemUsage()
 
 	pkg.Encode(s, w, loggingClient)
-
-	return
 }

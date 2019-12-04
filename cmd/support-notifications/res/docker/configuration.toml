@@ -52,7 +52,7 @@ Host = 'edgex-vault'
 Port = 8200
 Path = '/v1/secret/edgex/notifications/'
 Protocol = 'https'
-RootCaCertPath = '/vault/config/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem'
+RootCaCertPath = '/tmp/edgex/secrets/ca/ca.pem'
 ServerName = 'edgex-vault'
 TokenFile = '/vault/config/assets/resp-init.json'
 # Number of attemtps to retry retrieving secrets before failing to start the service.

@@ -19,7 +19,7 @@
 
 set -e
 
-VAULT_TLS_PATH=${VAULT_TLS_PATH:-/run/edgex/secrets/edgex-vault}
+VAULT_TLS_PATH=${VAULT_TLS_PATH:-/tmp/edgex/secrets/edgex-vault}
 
 VAULT_LOCAL_CONFIG='
 listener "tcp" { 

@@ -1097,6 +1097,14 @@ func deleteEvent(conn redis.Conn, id string) error {
 		return err
 	}
 
+	// Obtain the checksum associated with the event.
+	// This is necessary since the helper functions result in an Event type which does not contain the checksum
+	// information, so we need to do a separate lookup to get the information.
+	checksum, err := checksumByEventID(conn, o.ID)
+	if err != nil {
+		return err
+	}
+
 	_ = conn.Send("MULTI")
 	_ = conn.Send("UNLINK", id)
 	_ = conn.Send("UNLINK", db.EventsCollection+":readings:"+id)
@@ -1104,6 +1112,10 @@ func deleteEvent(conn redis.Conn, id string) error {
 	_ = conn.Send("ZREM", db.EventsCollection+":created", id)
 	_ = conn.Send("ZREM", db.EventsCollection+":pushed", id)
 	_ = conn.Send("ZREM", db.EventsCollection+":device:"+o.Device, id)
+	if checksum != "" {
+		_ = conn.Send("ZREM", db.EventsCollection+":checksum:"+checksum, id)
+	}
+
 	res, err := redis.Values(conn.Do("EXEC"))
 	if err != nil {
 		return err
@@ -1149,6 +1161,25 @@ func eventByChecksum(conn redis.Conn, checksum string) (events []contract.Event,
 	}
 
 	return events, nil
+}
+
+// checksumByEventID retrieves the checksum of the event associated with the provided Event ID.
+// If there is no checksum associated with the Event then an empty string is returned.
+func checksumByEventID(conn redis.Conn, id string) (string, error) {
+	obj, err := redis.Bytes(conn.Do("GET", id))
+	if err == redis.ErrNil {
+		return "", db.ErrNotFound
+	}
+	if err != nil {
+		return "", err
+	}
+
+	event, err := unmarshalRedisEvent(obj)
+	if err != nil {
+		return "", err
+	}
+
+	return event.Checksum, nil
 }
 
 // Add a reading to the database

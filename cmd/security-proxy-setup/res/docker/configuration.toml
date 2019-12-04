@@ -47,7 +47,7 @@ Port = 8200
 HealthCheckPath = "v1/sys/health"
 CertPath = "v1/secret/edgex/pki/tls/edgex-kong"
 TokenPath = "/vault/config/assets/resp-init.json"
-CACertPath = "/vault/config/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem"
+CACertPath = "/tmp/edgex/secrets/ca/ca.pem"
 SNIS = ["edgex-kong"]
 
 [Clients]

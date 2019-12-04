@@ -813,7 +813,7 @@ parts:
       # to write the certificates and such
       cat "./cmd/security-secrets-setup/res/configuration.toml" | \
         sed -e s:./logs/security-secrets-setup.log:\$SNAP_COMMON/security-secrets-setup.log: \
-            -e "s@DeployDir = \"/run/edgex/secrets\"@DeployDir = \"\$SNAP_DATA/pki/\"@" \
+            -e "s@DeployDir = \"/tmp/edgex/secrets\"@DeployDir = \"\$SNAP_DATA/pki/\"@" \
             -e "s@CertConfigDir = \"./res\"@CertConfigDir = \"\$SNAP_DATA/config/security-secrets-setup/res\"@" \
             > \
        "$SNAPCRAFT_PART_INSTALL/config/security-secrets-setup/res/configuration.toml"

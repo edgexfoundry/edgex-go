@@ -33,14 +33,12 @@ import (
 
 type Bootstrap struct {
 	insecureSkipVerify bool
-	initNeeded         bool
 	vaultInterval      int
 }
 
-func NewBootstrapHandler(insecureSkipVerify bool, initNeeded bool, vaultInterval int) *Bootstrap {
+func NewBootstrapHandler(insecureSkipVerify bool, vaultInterval int) *Bootstrap {
 	return &Bootstrap{
 		insecureSkipVerify: insecureSkipVerify,
-		initNeeded:         initNeeded,
 		vaultInterval:      vaultInterval,
 	}
 }

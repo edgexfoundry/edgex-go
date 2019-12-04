@@ -9,7 +9,6 @@ package logging
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -52,7 +51,7 @@ func getPersistence(credentials config.Credentials) (persistence, error) {
 		}
 		return &mongoLog{session: ms}, nil
 	default:
-		return nil, errors.New(fmt.Sprintf("unrecognized value Configuration.Persistence: %s", Configuration.Writable.Persistence))
+		return nil, fmt.Errorf("unrecognized value Configuration.Persistence: %s", Configuration.Writable.Persistence)
 	}
 }
 

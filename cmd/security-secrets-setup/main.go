@@ -31,6 +31,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/container"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/contract"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 )
 
 func wrappedMain() (*config.ConfigurationStruct, int) {
@@ -42,7 +43,7 @@ func wrappedMain() (*config.ConfigurationStruct, int) {
 	flag.Parse()
 
 	if flag.NArg() < 1 {
-		fmt.Println("Please specify subcommand for " + internal.SecuritySecretsSetupServiceKey)
+		fmt.Println("Please specify subcommand for " + clients.SecuritySecretsSetupServiceKey)
 		flag.Usage()
 		return nil, contract.StatusCodeExitNormal
 	}
@@ -62,7 +63,7 @@ func wrappedMain() (*config.ConfigurationStruct, int) {
 		bootstrap.EmptyProfileDir,
 		internal.ConfigFileName,
 		bootstrap.DoNotUseRegistry,
-		internal.SecuritySecretsSetupServiceKey,
+		clients.SecuritySecretsSetupServiceKey,
 		configuration,
 		startupTimer,
 		dic,

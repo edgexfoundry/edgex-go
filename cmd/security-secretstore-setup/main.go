@@ -33,6 +33,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore"
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/container"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 )
 
 func main() {
@@ -42,13 +43,11 @@ func main() {
 		usage.HelpCallbackSecuritySecretStore()
 	}
 
-	var initNeeded bool
 	var insecureSkipVerify bool
 	var vaultInterval int
 	var configDir, profileDir string
 	var useRegistry bool
 
-	flag.BoolVar(&initNeeded, "init", false, "run init procedure for security service.")
 	flag.BoolVar(&insecureSkipVerify, "insecureSkipVerify", false, "skip server side SSL verification, mainly for self-signed cert")
 	flag.IntVar(&vaultInterval, "vaultInterval", 30, "time to wait between checking Vault status in seconds.")
 	flag.BoolVar(&useRegistry, "registry", false, "Indicates the service should use registry service.")
@@ -74,12 +73,12 @@ func main() {
 		profileDir,
 		internal.ConfigFileName,
 		useRegistry,
-		internal.SecuritySecretStoreSetupServiceKey,
+		clients.SecuritySecretStoreSetupServiceKey,
 		configuration,
 		startupTimer,
 		dic,
 		[]interfaces.BootstrapHandler{
-			secretstore.NewBootstrapHandler(insecureSkipVerify, initNeeded, vaultInterval).Handler,
+			secretstore.NewBootstrapHandler(insecureSkipVerify, vaultInterval).Handler,
 		},
 	)
 }
