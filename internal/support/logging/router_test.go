@@ -21,7 +21,7 @@ import (
 )
 
 type dummyPersist struct {
-	criteria matchCriteria
+	criteria MatchCriteria
 	deleted  int
 	added    int
 }
@@ -35,13 +35,13 @@ func (dp *dummyPersist) add(le models.LogEntry) error {
 	return nil
 }
 
-func (dp *dummyPersist) remove(criteria matchCriteria) (int, error) {
+func (dp *dummyPersist) remove(criteria MatchCriteria) (int, error) {
 	dp.criteria = criteria
 	dp.deleted = 42
 	return dp.deleted, nil
 }
 
-func (dp *dummyPersist) find(criteria matchCriteria) ([]models.LogEntry, error) {
+func (dp *dummyPersist) find(criteria MatchCriteria) ([]models.LogEntry, error) {
 	dp.criteria = criteria
 
 	var retValue []models.LogEntry
@@ -106,73 +106,73 @@ func TestGetLogs(t *testing.T) {
 		name       string
 		vars       map[string]string
 		status     int
-		criteria   matchCriteria
+		criteria   MatchCriteria
 		limitCheck int
 	}{
 		{"withoutParams",
 			map[string]string{},
 			http.StatusOK,
-			matchCriteria{},
+			MatchCriteria{},
 			maxLimit},
 		{"limit",
 			map[string]string{"limit": "1000"},
 			http.StatusOK,
-			matchCriteria{Limit: 1000},
+			MatchCriteria{Limit: 1000},
 			maxLimit},
 		{"invalidlimit",
 			map[string]string{"limit": "-1"},
 			http.StatusBadRequest,
-			matchCriteria{Limit: 1000},
+			MatchCriteria{Limit: 1000},
 			maxLimit},
 		{"wronglimit",
 			map[string]string{"limit": "ten"},
 			http.StatusBadRequest,
-			matchCriteria{Limit: 1000},
+			MatchCriteria{Limit: 1000},
 			maxLimit},
 		{"start/end/limit",
 			map[string]string{"start": "1", "end": "2", "limit": "3"},
 			http.StatusOK,
-			matchCriteria{Start: 1, End: 2, Limit: 3},
+			MatchCriteria{Start: 1, End: 2, Limit: 3},
 			3},
 		{"invalidstart/end/limit",
 			map[string]string{"start": "-1", "end": "2", "limit": "3"},
 			http.StatusBadRequest,
-			matchCriteria{},
+			MatchCriteria{},
 			3},
 		{"start/invalidend/limit",
 			map[string]string{"start": "1", "end": "-2", "limit": "3"},
 			http.StatusBadRequest,
-			matchCriteria{},
+			MatchCriteria{},
 			3},
 		{"wrongstart/end/limit",
 			map[string]string{"start": "one", "end": "2", "limit": "3"},
 			http.StatusBadRequest,
-			matchCriteria{},
+			MatchCriteria{},
 			3},
 		{"start/wrongend/limit",
 			map[string]string{"start": "1", "end": "two", "limit": "3"},
 			http.StatusBadRequest,
-			matchCriteria{},
+			MatchCriteria{},
 			3},
 		{"services/start/end/limit",
 			map[string]string{"services": "service1,service2", "start": "1", "end": "2", "limit": "3"},
 			http.StatusOK,
-			matchCriteria{OriginServices: services, Start: 1, End: 2, Limit: 3},
+			MatchCriteria{OriginServices: services, Start: 1, End: 2, Limit: 3},
 			3},
 		{"keywords/start/end/limit",
 			map[string]string{"keywords": "keyword1,keyword2", "start": "1", "end": "2", "limit": "3"},
 			http.StatusOK,
-			matchCriteria{Keywords: keywords, Start: 1, End: 2, Limit: 3},
+			MatchCriteria{Keywords: keywords, Start: 1, End: 2, Limit: 3},
 			3},
 		{"levels/start/end/limit",
 			map[string]string{"levels": "TRACE,DEBUG,WARN,INFO,ERROR", "start": "1", "end": "2", "limit": "3"},
 			http.StatusOK,
-			matchCriteria{LogLevels: logLevels, Start: 1, End: 2, Limit: 3},
+			MatchCriteria{LogLevels: logLevels, Start: 1, End: 2, Limit: 3},
 			3},
 		{"wronglevels/start/end/limit",
 			map[string]string{"levels": "INF,ERROR", "start": "1", "end": "2", "limit": "3"},
 			http.StatusBadRequest,
-			matchCriteria{},
+			MatchCriteria{},
 			3},
 		{"levels/services/start/end/limit",
 			map[string]string{
@@ -183,7 +183,7 @@ func TestGetLogs(t *testing.T) {
 				"limit":    "3",
 			},
 			http.StatusOK,
-			matchCriteria{LogLevels: logLevels, OriginServices: services, Start: 1, End: 2, Limit: 3},
+			MatchCriteria{LogLevels: logLevels, OriginServices: services, Start: 1, End: 2, Limit: 3},
 			3},
 	}
 
@@ -226,44 +226,44 @@ func TestRemoveLogs(t *testing.T) {
 		name     string
 		vars     map[string]string
 		status   int
-		criteria matchCriteria
+		criteria MatchCriteria
 	}{
 		{"start/end",
 			map[string]string{"start": "1", "end": "2"},
 			http.StatusOK,
-			matchCriteria{Start: 1, End: 2}},
+			MatchCriteria{Start: 1, End: 2}},
 		{"invalidstart/end",
 			map[string]string{"start": "-1", "end": "2"},
 			http.StatusBadRequest,
-			matchCriteria{}},
+			MatchCriteria{}},
 		{"start/invalidend",
 			map[string]string{"start": "1", "end": "-2"},
 			http.StatusBadRequest,
-			matchCriteria{}},
+			MatchCriteria{}},
 		{"wrongstart/end",
 			map[string]string{"start": "one", "end": "2"},
 			http.StatusBadRequest,
-			matchCriteria{}},
+			MatchCriteria{}},
 		{"start/wrongend",
 			map[string]string{"start": "1", "end": "two"},
 			http.StatusBadRequest,
-			matchCriteria{}},
+			MatchCriteria{}},
 		{"services/start/end",
 			map[string]string{"services": "service1,service2", "start": "1", "end": "2"},
 			http.StatusOK,
-			matchCriteria{OriginServices: services, Start: 1, End: 2}},
+			MatchCriteria{OriginServices: services, Start: 1, End: 2}},
 		{"keywords/start/end",
 			map[string]string{"keywords": "keyword1,keyword2", "start": "1", "end": "2"},
 			http.StatusOK,
-			matchCriteria{Keywords: keywords, Start: 1, End: 2}},
+			MatchCriteria{Keywords: keywords, Start: 1, End: 2}},
 		{"levels/start/end",
 			map[string]string{"levels": "TRACE,DEBUG,WARN,INFO,ERROR", "start": "1", "end": "2"},
 			http.StatusOK,
-			matchCriteria{LogLevels: logLevels, Start: 1, End: 2}},
+			MatchCriteria{LogLevels: logLevels, Start: 1, End: 2}},
 		{"wronglevels/start/end",
 			map[string]string{"levels": "INF,ERROR", "start": "1", "end": "2"},
 			http.StatusBadRequest,
-			matchCriteria{}},
+			MatchCriteria{}},
 		{"levels/services/start/end",
 			map[string]string{
 				"levels":   "TRACE,DEBUG,WARN,INFO,ERROR",
@@ -272,7 +272,7 @@ func TestRemoveLogs(t *testing.T) {
 				"end":      "2",
 			},
 			http.StatusOK,
-			matchCriteria{LogLevels: logLevels, OriginServices: services, Start: 1, End: 2}},
+			MatchCriteria{LogLevels: logLevels, OriginServices: services, Start: 1, End: 2}},
 	}
 
 	dummy := &dummyPersist{}

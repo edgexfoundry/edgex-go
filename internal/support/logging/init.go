@@ -10,6 +10,7 @@ package logging
 import (
 	"context"
 	"fmt"
+	"github.com/edgexfoundry/edgex-go/internal/support/logging/interfaces"
 	"sync"
 	"time"
 
@@ -21,7 +22,7 @@ import (
 )
 
 var Configuration = &config.ConfigurationStruct{}
-var dbClient persistence
+var dbClient interfaces.Persistence
 
 type server interface {
 	IsRunning() bool
@@ -37,17 +38,17 @@ func NewServiceInit(server server) ServiceInit {
 	}
 }
 
-func getPersistence(credentials types.Credentials) (persistence, error) {
+func getPersistence(credentials types.Credentials) (interfaces.Persistence, error) {
 	switch Configuration.Writable.Persistence {
 	case PersistenceFile:
-		return &fileLog{filename: Configuration.Logging.File}, nil
+		return &FileLog{filename: Configuration.Logging.File}, nil
 	case PersistenceDB:
 		// TODO: Integrate db layer with internal/pkg/db/ types so we can support other databases
 		ms, err := connectToMongo(credentials)
 		if err != nil {
 			return nil, err
 		}
-		return &mongoLog{session: ms}, nil
+		return &MongoLog{session: ms}, nil
 	default:
 		return nil, fmt.Errorf("unrecognized value Configuration.Persistence: %s", Configuration.Writable.Persistence)
 	}
@@ -104,7 +105,7 @@ func (s ServiceInit) BootstrapHandler(
 			// wait for httpServer to stop running (e.g. handling requests) before closing the database connection.
 			if s.server.IsRunning() == false {
 				loggingClient.Info("Database disconnecting")
-				dbClient.closeSession()
+				dbClient.CloseSession()
 				break
 			}
 			time.Sleep(time.Second)

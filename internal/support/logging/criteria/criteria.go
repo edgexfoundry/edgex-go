@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-package logging
+package criteria
 
 import (
 	"strings"
@@ -12,7 +12,7 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
-type matchCriteria struct {
+type Criteria struct {
 	OriginServices []string
 	LogLevels      []string
 	Keywords       []string
@@ -33,7 +33,7 @@ func matchStringInSlice(s string, l []string) bool {
 	return true
 }
 
-func (criteria matchCriteria) match(le models.LogEntry) bool {
+func (criteria Criteria) Match(le models.LogEntry) bool {
 	if !matchStringInSlice(le.OriginService, criteria.OriginServices) {
 		return false
 	}

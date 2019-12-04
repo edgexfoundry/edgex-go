@@ -15,17 +15,19 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-	"github.com/edgexfoundry/go-mod-core-contracts/models"
-	"github.com/gorilla/mux"
-
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	bootstrapContainer "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
+	criteria2 "github.com/edgexfoundry/edgex-go/internal/support/logging/criteria"
+
+	"github.com/edgexfoundry/go-mod-core-contracts/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/models"
+
+	"github.com/gorilla/mux"
 )
 
 // Test if the service is working
@@ -65,11 +67,11 @@ func addLog(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusAccepted)
 
-	dbClient.add(l)
+	dbClient.Add(l)
 }
 
-func getCriteria(w http.ResponseWriter, vars map[string]string) *matchCriteria {
-	var criteria matchCriteria
+func getCriteria(w http.ResponseWriter, vars map[string]string) *criteria2.Criteria {
+	var criteria criteria2.Criteria
 
 	limit := vars["limit"]
 	if len(limit) > 0 {
@@ -180,7 +182,7 @@ func getLogs(w http.ResponseWriter, vars map[string]string) {
 		return
 	}
 
-	logs, err := dbClient.find(*criteria)
+	logs, err := dbClient.Find(*criteria)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -202,7 +204,7 @@ func delLogs(w http.ResponseWriter, vars map[string]string) {
 		return
 	}
 
-	removed, err := dbClient.remove(*criteria)
+	removed, err := dbClient.Remove(*criteria)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return

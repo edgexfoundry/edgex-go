@@ -10,6 +10,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"github.com/edgexfoundry/edgex-go/internal/support/logging/criteria"
 	"io"
 	"os"
 	"path/filepath"
@@ -21,18 +22,18 @@ const (
 	rmFileSuffix string = ".tmp"
 )
 
-type fileLog struct {
+type FileLog struct {
 	filename string
 	out      io.WriteCloser
 }
 
-func (fl *fileLog) closeSession() {
+func (fl *FileLog) CloseSession() {
 	if fl.out != nil {
 		fl.out.Close()
 	}
 }
 
-func (fl *fileLog) add(le models.LogEntry) error {
+func (fl *FileLog) Add(le models.LogEntry) error {
 	if fl.out == nil {
 		var err error
 		//First check to see if the specified directory exists
@@ -59,7 +60,7 @@ func (fl *fileLog) add(le models.LogEntry) error {
 	return nil
 }
 
-func (fl *fileLog) remove(criteria matchCriteria) (int, error) {
+func (fl *FileLog) Remove(criteria criteria.Criteria) (int, error) {
 	tmpFilename := fl.filename + rmFileSuffix
 	tmpFile, err := os.OpenFile(tmpFilename, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
@@ -84,7 +85,7 @@ func (fl *fileLog) remove(criteria matchCriteria) (int, error) {
 		line := scanner.Bytes()
 		err := json.Unmarshal(line, &le)
 		if err == nil {
-			if !criteria.match(le) {
+			if !criteria.Match(le) {
 				tmpFile.Write(line)
 				tmpFile.Write([]byte("\n"))
 			} else {
@@ -106,7 +107,7 @@ func (fl *fileLog) remove(criteria matchCriteria) (int, error) {
 	return count, nil
 }
 
-func (fl *fileLog) find(criteria matchCriteria) ([]models.LogEntry, error) {
+func (fl *FileLog) Find(criteria criteria.Criteria) ([]models.LogEntry, error) {
 	var logs []models.LogEntry
 	f, err := os.Open(fl.filename)
 	if err != nil {
@@ -120,7 +121,7 @@ func (fl *fileLog) find(criteria matchCriteria) ([]models.LogEntry, error) {
 		line := scanner.Bytes()
 		err := json.Unmarshal(line, &le)
 		if err == nil {
-			if criteria.match(le) {
+			if criteria.Match(le) {
 				logs = append(logs, le)
 
 				if criteria.Limit != 0 && len(logs) >= criteria.Limit {
@@ -132,7 +133,7 @@ func (fl *fileLog) find(criteria matchCriteria) ([]models.LogEntry, error) {
 	return logs, err
 }
 
-func (fl *fileLog) reset() {
+func (fl *FileLog) Reset() {
 	if fl.out != nil {
 		fl.out.Close()
 		fl.out = nil

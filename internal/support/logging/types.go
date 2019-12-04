@@ -22,17 +22,6 @@ const (
 	PersistenceFile = "file"
 )
 
-type persistence interface {
-	add(logEntry models.LogEntry) error
-	closeSession()
-	remove(criteria matchCriteria) (int, error)
-	find(criteria matchCriteria) ([]models.LogEntry, error)
-
-	// Needed for the tests. Reset the instance (closing files, sessions...)
-	// and clear the logs.
-	reset()
-}
-
 type privLogger struct {
 	logLevel     *string
 	rootLogger   log.Logger
@@ -78,14 +67,14 @@ func (l privLogger) log(logLevel string, msg string, args ...interface{}) {
 			Message:       msg,
 			Created:       db.MakeTimestamp(),
 		}
-		dbClient.add(logEntry)
+		dbClient.Add(logEntry)
 	}
 
 	if args == nil {
 		args = []interface{}{"msg", msg}
 	} else {
 		if len(args)%2 == 1 {
-			// add an empty string to keep k/v pairs correct
+			// Add an empty string to keep k/v pairs correct
 			args = append(args, "")
 		}
 		// Practical usage thus far has been to call this type like so Logger.Info("message")

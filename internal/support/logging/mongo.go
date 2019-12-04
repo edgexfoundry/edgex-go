@@ -8,6 +8,7 @@ package logging
 
 import (
 	"fmt"
+	"github.com/edgexfoundry/edgex-go/internal/support/logging/criteria"
 	"strconv"
 	"time"
 
@@ -20,7 +21,7 @@ import (
 	bson "github.com/globalsign/mgo/bson"
 )
 
-type mongoLog struct {
+type MongoLog struct {
 	session *mgo.Session // Mongo database session
 }
 
@@ -44,14 +45,14 @@ func connectToMongo(credentials config.Credentials) (*mgo.Session, error) {
 	return ms, nil
 }
 
-func (ml *mongoLog) closeSession() {
+func (ml *MongoLog) CloseSession() {
 	if ml.session != nil {
 		ml.session.Close()
 		ml.session = nil
 	}
 }
 
-func (ml *mongoLog) add(le models.LogEntry) error {
+func (ml *MongoLog) Add(le models.LogEntry) error {
 
 	session := ml.session.Copy()
 	defer session.Close()
@@ -74,7 +75,7 @@ func createConditions(conditions []bson.M, field string, elements []string) []bs
 	return append(conditions, bson.M{"$or": keyCond})
 }
 
-func createQuery(criteria matchCriteria) bson.M {
+func createQuery(criteria criteria.Criteria) bson.M {
 	conditions := []bson.M{{}}
 
 	if len(criteria.Keywords) > 0 {
@@ -106,7 +107,7 @@ func createQuery(criteria matchCriteria) bson.M {
 
 }
 
-func (ml *mongoLog) remove(criteria matchCriteria) (int, error) {
+func (ml *MongoLog) Remove(criteria criteria.Criteria) (int, error) {
 
 	session := ml.session.Copy()
 	defer session.Close()
@@ -124,7 +125,7 @@ func (ml *mongoLog) remove(criteria matchCriteria) (int, error) {
 	return info.Removed, nil
 }
 
-func (ml *mongoLog) find(criteria matchCriteria) ([]models.LogEntry, error) {
+func (ml *MongoLog) Find(criteria criteria.Criteria) ([]models.LogEntry, error) {
 	session := ml.session.Copy()
 	defer session.Close()
 
@@ -143,7 +144,7 @@ func (ml *mongoLog) find(criteria matchCriteria) ([]models.LogEntry, error) {
 	return le, nil
 }
 
-func (ml *mongoLog) reset() {
+func (ml *MongoLog) Reset() {
 	session := ml.session.Copy()
 	defer session.Close()
 
