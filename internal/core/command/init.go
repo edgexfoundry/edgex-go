@@ -33,7 +33,7 @@ import (
 )
 
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the command service.
-func BootstrapHandler(wg *sync.WaitGroup, ctx context.Context, startupTimer startup.Timer, dic *di.Container) bool {
+func BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, startupTimer startup.Timer, dic *di.Container) bool {
 	registryClient := bootstrapContainer.RegistryFrom(dic.Get)
 	configuration := container.ConfigurationFrom(dic.Get)
 	loggingClient := bootstrapContainer.LoggingClientFrom(dic.Get)

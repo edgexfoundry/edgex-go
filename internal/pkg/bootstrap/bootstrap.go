@@ -47,7 +47,7 @@ func fatalError(err error, loggingClient logger.LoggingClient) {
 
 // translateInterruptToCancel spawns a go routine to translate the receipt of a SIGTERM signal to a call to cancel
 // the context used by the bootstrap implementation.
-func translateInterruptToCancel(wg *sync.WaitGroup, ctx context.Context, cancel context.CancelFunc) {
+func translateInterruptToCancel(ctx context.Context, wg *sync.WaitGroup, cancel context.CancelFunc) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -86,7 +86,7 @@ func Run(
 	var registryClient registry.Client
 	var wg sync.WaitGroup
 	ctx, cancel := context.WithCancel(context.Background())
-	translateInterruptToCancel(&wg, ctx, cancel)
+	translateInterruptToCancel(ctx, &wg, cancel)
 
 	// load configuration from file.
 	if err = configuration.LoadFromFile(configDir, profileDir, configFileName, config); err != nil {
@@ -109,7 +109,7 @@ func Run(
 			fatalError(err, loggingClient)
 		}
 		loggingClient = logging.FactoryFromConfiguration(serviceKey, config)
-		configuration.ListenForChanges(&wg, ctx, config, loggingClient, registryClient)
+		configuration.ListenForChanges(ctx, &wg, config, loggingClient, registryClient)
 	case false:
 		loggingClient = logging.FactoryFromConfiguration(serviceKey, config)
 	}
@@ -128,7 +128,7 @@ func Run(
 
 	// call individual bootstrap handlers.
 	for i := range handlers {
-		if handlers[i](&wg, ctx, startupTimer, dic) == false {
+		if handlers[i](ctx, &wg, startupTimer, dic) == false {
 			cancel()
 			break
 		}
