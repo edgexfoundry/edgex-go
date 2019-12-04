@@ -21,8 +21,10 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
+	bootstrapContainer "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
 )
 
@@ -32,8 +34,8 @@ func pingHandler(w http.ResponseWriter, _ *http.Request) {
 	w.Write([]byte("pong"))
 }
 
-func configHandler(w http.ResponseWriter, _ *http.Request) {
-	pkg.Encode(Configuration, w, LoggingClient)
+func configHandler(w http.ResponseWriter, loggingClient logger.LoggingClient) {
+	pkg.Encode(Configuration, w, loggingClient)
 }
 
 func addLog(w http.ResponseWriter, r *http.Request) {
@@ -66,9 +68,8 @@ func addLog(w http.ResponseWriter, r *http.Request) {
 	dbClient.add(l)
 }
 
-func getCriteria(w http.ResponseWriter, r *http.Request) *matchCriteria {
+func getCriteria(w http.ResponseWriter, vars map[string]string) *matchCriteria {
 	var criteria matchCriteria
-	vars := mux.Vars(r)
 
 	limit := vars["limit"]
 	if len(limit) > 0 {
@@ -174,7 +175,11 @@ func getCriteria(w http.ResponseWriter, r *http.Request) *matchCriteria {
 }
 
 func getLogs(w http.ResponseWriter, r *http.Request) {
-	criteria := getCriteria(w, r)
+	getLogsWithVars(w, mux.Vars(r))
+}
+
+func getLogsWithVars(w http.ResponseWriter, vars map[string]string) {
+	criteria := getCriteria(w, vars)
 	if criteria == nil {
 		return
 	}
@@ -196,7 +201,11 @@ func getLogs(w http.ResponseWriter, r *http.Request) {
 }
 
 func delLogs(w http.ResponseWriter, r *http.Request) {
-	criteria := getCriteria(w, r)
+	delLogsWithVars(w, mux.Vars(r))
+}
+
+func delLogsWithVars(w http.ResponseWriter, vars map[string]string) {
+	criteria := getCriteria(w, vars)
 	if criteria == nil {
 		return
 	}
@@ -211,25 +220,29 @@ func delLogs(w http.ResponseWriter, r *http.Request) {
 	io.WriteString(w, strconv.Itoa(removed))
 }
 
-func metricsHandler(w http.ResponseWriter, _ *http.Request) {
+func metricsHandler(w http.ResponseWriter, loggingClient logger.LoggingClient) {
 	s := telemetry.NewSystemUsage()
 
-	pkg.Encode(s, w, LoggingClient)
+	pkg.Encode(s, w, loggingClient)
 
 	return
 }
 
-func LoadRestRoutes() *mux.Router {
+func LoadRestRoutes(dic *di.Container) *mux.Router {
 	r := mux.NewRouter()
 
 	// Ping Resource
 	r.HandleFunc(clients.ApiPingRoute, pingHandler).Methods(http.MethodGet)
 
 	// Configuration
-	r.HandleFunc(clients.ApiConfigRoute, configHandler).Methods(http.MethodGet)
+	r.HandleFunc(clients.ApiConfigRoute, func(w http.ResponseWriter, r *http.Request) {
+		configHandler(w, bootstrapContainer.LoggingClientFrom(dic.Get))
+	}).Methods(http.MethodGet)
 
 	// Metrics
-	r.HandleFunc(clients.ApiMetricsRoute, metricsHandler).Methods(http.MethodGet)
+	r.HandleFunc(clients.ApiMetricsRoute, func(w http.ResponseWriter, r *http.Request) {
+		metricsHandler(w, bootstrapContainer.LoggingClientFrom(dic.Get))
+	}).Methods(http.MethodGet)
 
 	// Version
 	r.HandleFunc(clients.ApiVersionRoute, pkg.VersionHandler).Methods(http.MethodGet)
