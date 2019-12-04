@@ -56,8 +56,8 @@ func getPersistence(credentials config.Credentials) (persistence, error) {
 }
 
 func (s ServiceInit) BootstrapHandler(
-	wg *sync.WaitGroup,
 	ctx context.Context,
+	wg *sync.WaitGroup,
 	startupTimer startup.Timer,
 	dic *di.Container) bool {
 
