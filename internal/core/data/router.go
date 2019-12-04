@@ -23,6 +23,7 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
+	"github.com/edgexfoundry/go-mod-messaging/messaging"
 	"github.com/gorilla/mux"
 
 	dataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/container"
@@ -69,7 +70,8 @@ func LoadRestRoutes(dic *di.Container) *mux.Router {
 			request,
 			container.LoggingClientFrom(dic.Get),
 			container.DBClientFrom(dic.Get),
-			dataContainer.PublisherEventsChannelFrom(dic.Get))
+			dataContainer.PublisherEventsChannelFrom(dic.Get),
+			dataContainer.MessagingClientFrom(dic.Get))
 
 	}).Methods(http.MethodGet, http.MethodPut, http.MethodPost)
 
@@ -327,7 +329,8 @@ func eventHandler(
 	r *http.Request,
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
-	chEvents chan<- interface{}) {
+	chEvents chan<- interface{},
+	msgClient messaging.MessageClient) {
 
 	if r.Body != nil {
 		defer r.Body.Close()
@@ -356,7 +359,7 @@ func eventHandler(
 			httpErrorHandler.Handle(w, err, errorconcept.Default.InternalServerError)
 			return
 		}
-		newId, err := addNewEvent(evt, ctx, loggingClient, dbClient, chEvents)
+		newId, err := addNewEvent(evt, ctx, loggingClient, dbClient, chEvents, msgClient)
 		if err != nil {
 			httpErrorHandler.HandleManyVariants(
 				w,
