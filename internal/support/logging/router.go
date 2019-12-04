@@ -68,9 +68,8 @@ func addLog(w http.ResponseWriter, r *http.Request) {
 	dbClient.add(l)
 }
 
-func getCriteria(w http.ResponseWriter, r *http.Request) *matchCriteria {
+func getCriteria(w http.ResponseWriter, vars map[string]string) *matchCriteria {
 	var criteria matchCriteria
-	vars := mux.Vars(r)
 
 	limit := vars["limit"]
 	if len(limit) > 0 {
@@ -176,7 +175,11 @@ func getCriteria(w http.ResponseWriter, r *http.Request) *matchCriteria {
 }
 
 func getLogs(w http.ResponseWriter, r *http.Request) {
-	criteria := getCriteria(w, r)
+	getLogsWithVars(w, mux.Vars(r))
+}
+
+func getLogsWithVars(w http.ResponseWriter, vars map[string]string) {
+	criteria := getCriteria(w, vars)
 	if criteria == nil {
 		return
 	}
@@ -198,7 +201,11 @@ func getLogs(w http.ResponseWriter, r *http.Request) {
 }
 
 func delLogs(w http.ResponseWriter, r *http.Request) {
-	criteria := getCriteria(w, r)
+	delLogsWithVars(w, mux.Vars(r))
+}
+
+func delLogsWithVars(w http.ResponseWriter, vars map[string]string) {
+	criteria := getCriteria(w, vars)
 	if criteria == nil {
 		return
 	}
