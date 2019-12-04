@@ -15,12 +15,8 @@ import (
 	"strings"
 	"testing"
 
-	bootstrapContainer "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
@@ -66,14 +62,6 @@ func (dp dummyPersist) reset() {
 func (dp *dummyPersist) closeSession() {
 }
 
-func mockDIC() *di.Container {
-	return di.NewContainer(di.ServiceConstructorMap{
-		bootstrapContainer.LoggingClientInterfaceName: func(get di.Get) interface{} {
-			return logger.NewMockClient()
-		},
-	})
-}
-
 func TestAddLog(t *testing.T) {
 	var tests = []struct {
 		name   string
@@ -87,18 +75,15 @@ func TestAddLog(t *testing.T) {
 		{"invalidLevel", `{"logLevel":"NONE","originService":"tests","message":"test1"}`,
 			http.StatusBadRequest},
 	}
-	// create test server with handler
-	ts := httptest.NewServer(LoadRestRoutes(mockDIC()))
-	defer ts.Close()
 
 	dbClient = &dummyPersist{}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			response, err := http.Post(ts.URL+clients.ApiLoggingRoute, "application/json", strings.NewReader(tt.data))
-			if err != nil {
-				t.Errorf("Error sending log %v", err)
-			}
+			rr := httptest.NewRecorder()
+			req := httptest.NewRequest("POST", "/", strings.NewReader(tt.data))
+			addLog(rr, req)
+			response := rr.Result()
 			defer response.Body.Close()
 			if response.StatusCode != tt.status {
 				t.Errorf("Returned status %d, should be %d", response.StatusCode, tt.status)
