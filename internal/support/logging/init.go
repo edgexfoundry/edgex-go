@@ -15,11 +15,12 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
+	types "github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
+	"github.com/edgexfoundry/edgex-go/internal/support/logging/config"
 )
 
-var Configuration = &ConfigurationStruct{}
+var Configuration = &config.ConfigurationStruct{}
 var dbClient persistence
 
 type server interface {
@@ -36,7 +37,7 @@ func NewServiceInit(server server) ServiceInit {
 	}
 }
 
-func getPersistence(credentials config.Credentials) (persistence, error) {
+func getPersistence(credentials types.Credentials) (persistence, error) {
 	switch Configuration.Writable.Persistence {
 	case PersistenceFile:
 		return &fileLog{filename: Configuration.Logging.File}, nil
@@ -67,7 +68,7 @@ func (s ServiceInit) BootstrapHandler(
 	loggingClient := container.LoggingClientFrom(dic.Get)
 
 	// get database credentials.
-	var credentials config.Credentials
+	var credentials types.Credentials
 	for startupTimer.HasNotElapsed() {
 		var err error
 		credentials, err = container.CredentialsProviderFrom(dic.Get).GetDatabaseCredentials(Configuration.Databases["Primary"])
