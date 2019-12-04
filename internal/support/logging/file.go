@@ -136,4 +136,3 @@ func (fl *fileLog) Find(criteria interfaces.Criteria) ([]models.LogEntry, error)
 	}
 	return logs, err
 }
-

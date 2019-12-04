@@ -49,9 +49,6 @@ func TestCriteriaMatch(t *testing.T) {
 		{"KeywordsEmptyString", models.LogEntry{Message: "222222"}, MatchCriteria{Keywords: keywordsEmptyString}, true},
 		{"KeywordsEmptyString2", models.LogEntry{Message: ""}, MatchCriteria{Keywords: keywordsEmptyString}, true},
 	}
-	le := models.LogEntry{}
-
-	criteria := MatchCriteria{}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -60,9 +57,5 @@ func TestCriteriaMatch(t *testing.T) {
 					tt.log, tt.criteria, tt.result)
 			}
 		})
-	}
-
-	if !criteria.Match(le) {
-		t.Errorf("log %v should Match criteria %v", le, criteria)
 	}
 }
