@@ -94,8 +94,8 @@ func (d Database) newDBClient(loggingClient logger.LoggingClient, credentials co
 
 // BootstrapHandler fulfills the BootstrapHandler contract and initializes the database.
 func (d Database) BootstrapHandler(
+	ctx context.Context,
 	wg *sync.WaitGroup,
-	context context.Context,
 	startupTimer startup.Timer,
 	dic *di.Container) bool {
 
@@ -141,7 +141,7 @@ func (d Database) BootstrapHandler(
 	go func() {
 		defer wg.Done()
 
-		<-context.Done()
+		<-ctx.Done()
 		for {
 			// wait for httpServer to stop running (e.g. handling requests) before closing the database connection.
 			if d.httpServer.IsRunning() == false {

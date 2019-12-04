@@ -59,7 +59,7 @@ func initializeClients(useRegistry bool, registryClient registry.Client) (messag
 }
 
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the export-distro service.
-func BootstrapHandler(wg *sync.WaitGroup, ctx context.Context, startupTimer startup.Timer, dic *di.Container) bool {
+func BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, startupTimer startup.Timer, dic *di.Container) bool {
 	// update global variables.
 	LoggingClient = container.LoggingClientFrom(dic.Get)
 

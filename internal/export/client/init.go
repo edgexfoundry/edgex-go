@@ -30,7 +30,8 @@ var Configuration = &ConfigurationStruct{}
 var dc distro.DistroClient
 
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the export-client service.
-func BootstrapHandler(wg *sync.WaitGroup, ctx context.Context, startupTimer startup.Timer, dic *di.Container) bool {
+func BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, startupTimer startup.Timer, dic *di.Container) bool {
+
 	// update global variables.
 	LoggingClient = container.LoggingClientFrom(dic.Get)
 	dbClient = container.DBClientFrom(dic.Get)

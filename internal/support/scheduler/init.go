@@ -28,7 +28,12 @@ import (
 )
 
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the scheduler service.
-func BootstrapHandler(wg *sync.WaitGroup, ctx context.Context, startupTimer startup.Timer, dic *di.Container) bool {
+func BootstrapHandler(
+	ctx context.Context,
+	wg *sync.WaitGroup,
+	startupTimer startup.Timer,
+	dic *di.Container) bool {
+
 	loggingClient := bootstrapContainer.LoggingClientFrom(dic.Get)
 	configuration := container.ConfigurationFrom(dic.Get)
 

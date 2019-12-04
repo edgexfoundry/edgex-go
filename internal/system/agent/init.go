@@ -36,7 +36,7 @@ import (
 )
 
 // BootstrapHandler fulfills the BootstrapHandler contract.  It implements agent-specific initialization.
-func BootstrapHandler(wg *sync.WaitGroup, ctx context.Context, startupTimer startup.Timer, dic *di.Container) bool {
+func BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, startupTimer startup.Timer, dic *di.Container) bool {
 	configuration := container.ConfigurationFrom(dic.Get)
 
 	// validate metrics implementation
