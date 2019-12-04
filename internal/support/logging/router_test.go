@@ -244,7 +244,8 @@ func TestGetLogs(t *testing.T) {
 }
 
 func TestRemoveLogs(t *testing.T) {
-	maxLimit := 100
+	const maxLimit = 100
+	defer func() { Configuration = nil }()
 	Configuration = &ConfigurationStruct{Service: config.ServiceInfo{}}
 	Configuration.Service.MaxResultCount = maxLimit
 
@@ -254,74 +255,65 @@ func TestRemoveLogs(t *testing.T) {
 		models.InfoLog, models.ErrorLog}
 	var tests = []struct {
 		name     string
-		url      string
+		vars     map[string]string
 		status   int
 		criteria matchCriteria
 	}{
 		{"start/end",
-			"1/2",
+			map[string]string{"start": "1", "end": "2"},
 			http.StatusOK,
 			matchCriteria{Start: 1, End: 2}},
 		{"invalidstart/end",
-			"-1/2",
+			map[string]string{"start": "-1", "end": "2"},
 			http.StatusBadRequest,
 			matchCriteria{}},
 		{"start/invalidend",
-			"1/-2",
+			map[string]string{"start": "1", "end": "-2"},
 			http.StatusBadRequest,
 			matchCriteria{}},
 		{"wrongstart/end",
-			"one/2",
+			map[string]string{"start": "one", "end": "2"},
 			http.StatusBadRequest,
 			matchCriteria{}},
 		{"start/wrongend",
-			"1/two",
+			map[string]string{"start": "1", "end": "two"},
 			http.StatusBadRequest,
 			matchCriteria{}},
-		{"start/end",
-			"1/2",
-			http.StatusOK,
-			matchCriteria{Start: 1, End: 2}},
 		{"services/start/end",
-			"originServices/service1,service2/1/2",
+			map[string]string{"services": "service1,service2", "start": "1", "end": "2"},
 			http.StatusOK,
 			matchCriteria{OriginServices: services, Start: 1, End: 2}},
 		{"keywords/start/end",
-			"keywords/keyword1,keyword2/1/2",
+			map[string]string{"keywords": "keyword1,keyword2", "start": "1", "end": "2"},
 			http.StatusOK,
 			matchCriteria{Keywords: keywords, Start: 1, End: 2}},
 		{"levels/start/end",
-			"logLevels/TRACE,DEBUG,WARN,INFO,ERROR/1/2",
+			map[string]string{"levels": "TRACE,DEBUG,WARN,INFO,ERROR", "start": "1", "end": "2"},
 			http.StatusOK,
 			matchCriteria{LogLevels: logLevels, Start: 1, End: 2}},
 		{"wronglevels/start/end",
-			"logLevels/INF,ERROR/1/2",
+			map[string]string{"levels": "INF,ERROR", "start": "1", "end": "2"},
 			http.StatusBadRequest,
 			matchCriteria{}},
 		{"levels/services/start/end",
-			"logLevels/TRACE,DEBUG,WARN,INFO,ERROR/originServices/service1,service2/1/2",
+			map[string]string{
+				"levels":   "TRACE,DEBUG,WARN,INFO,ERROR",
+				"services": "service1,service2",
+				"start":    "1",
+				"end":      "2",
+			},
 			http.StatusOK,
 			matchCriteria{LogLevels: logLevels, OriginServices: services, Start: 1, End: 2}},
 	}
-	// create test server with handler
-	ts := httptest.NewServer(LoadRestRoutes(mockDIC()))
-	defer ts.Close()
 
 	dummy := &dummyPersist{}
 	dbClient = dummy
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodDelete, ts.URL+clients.ApiLoggingRoute+"/"+tt.url, nil)
-			if err != nil {
-				t.Errorf("Error creating request logs %v", err)
-			}
-
-			response, err := http.DefaultClient.Do(req)
-			if err != nil {
-				t.Errorf("Error requesting DELETE %v", err)
-			}
-			defer response.Body.Close()
+			rr := httptest.NewRecorder()
+			delLogsWithVars(rr, tt.vars)
+			response := rr.Result()
 			if response.StatusCode != tt.status {
 				t.Errorf("Returned status %d, should be %d", response.StatusCode, tt.status)
 			}
@@ -337,5 +329,4 @@ func TestRemoveLogs(t *testing.T) {
 			}
 		})
 	}
-	Configuration = nil
 }
