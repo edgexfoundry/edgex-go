@@ -34,7 +34,7 @@ func pingHandler(w http.ResponseWriter, _ *http.Request) {
 	w.Write([]byte("pong"))
 }
 
-func configHandler(w http.ResponseWriter, _ *http.Request, loggingClient logger.LoggingClient) {
+func configHandler(w http.ResponseWriter, loggingClient logger.LoggingClient) {
 	pkg.Encode(Configuration, w, loggingClient)
 }
 
@@ -213,7 +213,7 @@ func delLogs(w http.ResponseWriter, r *http.Request) {
 	io.WriteString(w, strconv.Itoa(removed))
 }
 
-func metricsHandler(w http.ResponseWriter, _ *http.Request, loggingClient logger.LoggingClient) {
+func metricsHandler(w http.ResponseWriter, loggingClient logger.LoggingClient) {
 	s := telemetry.NewSystemUsage()
 
 	pkg.Encode(s, w, loggingClient)
@@ -229,12 +229,12 @@ func LoadRestRoutes(dic *di.Container) *mux.Router {
 
 	// Configuration
 	r.HandleFunc(clients.ApiConfigRoute, func(w http.ResponseWriter, r *http.Request) {
-		configHandler(w, r, bootstrapContainer.LoggingClientFrom(dic.Get))
+		configHandler(w, bootstrapContainer.LoggingClientFrom(dic.Get))
 	}).Methods(http.MethodGet)
 
 	// Metrics
 	r.HandleFunc(clients.ApiMetricsRoute, func(w http.ResponseWriter, r *http.Request) {
-		metricsHandler(w, r, bootstrapContainer.LoggingClientFrom(dic.Get))
+		metricsHandler(w, bootstrapContainer.LoggingClientFrom(dic.Get))
 	}).Methods(http.MethodGet)
 
 	// Version
