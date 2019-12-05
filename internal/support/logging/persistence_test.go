@@ -7,9 +7,11 @@
 package logging
 
 import (
-	"github.com/edgexfoundry/edgex-go/internal/support/logging/interfaces"
 	"os"
 	"testing"
+
+	"github.com/edgexfoundry/edgex-go/internal/support/logging/criteria"
+	"github.com/edgexfoundry/edgex-go/internal/support/logging/interfaces"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 )
@@ -29,13 +31,13 @@ func testPersistenceFind(t *testing.T, persistence interfaces.Persistence) {
 
 	var tests = []struct {
 		name     string
-		criteria MatchCriteria
+		criteria criteria.Criteria
 		result   int
 	}{
-		{"empty", MatchCriteria{}, 5},
-		{"keywords1", MatchCriteria{Keywords: keywords1}, 3},
-		{"keywords2", MatchCriteria{Keywords: keywords2}, 2},
-		{"keywords12", MatchCriteria{Keywords: keywords12}, 5},
+		{"empty", criteria.Criteria{}, 5},
+		{"keywords1", criteria.Criteria{Keywords: keywords1}, 3},
+		{"keywords2", criteria.Criteria{Keywords: keywords2}, 2},
+		{"keywords12", criteria.Criteria{Keywords: keywords12}, 5},
 	}
 
 	le := models.LogEntry{
@@ -43,20 +45,20 @@ func testPersistenceFind(t *testing.T, persistence interfaces.Persistence) {
 		OriginService: sampleService1,
 		Message:       message1,
 	}
-	persistence.add(le)
+	persistence.Add(le)
 	le.Message = message2
-	persistence.add(le)
+	persistence.Add(le)
 	le.Message = message1
-	persistence.add(le)
+	persistence.Add(le)
 	le.Message = message2
 	le.OriginService = sampleService2
-	persistence.add(le)
+	persistence.Add(le)
 	le.Message = message1
-	persistence.add(le)
+	persistence.Add(le)
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			logs, err := persistence.find(tt.criteria)
+			logs, err := persistence.Find(tt.criteria)
 			if err != nil {
 				t.Errorf("Error thrown: %s", err.Error())
 			}
@@ -89,36 +91,36 @@ func testPersistenceRemove(t *testing.T, persistence interfaces.Persistence) {
 
 	var tests = []struct {
 		name     string
-		criteria MatchCriteria
+		criteria criteria.Criteria
 		result   int
 	}{
-		{"empty", MatchCriteria{}, 5},
-		{"keywords1", MatchCriteria{Keywords: keywords1}, 3},
-		{"keywords2", MatchCriteria{Keywords: keywords2}, 2},
-		{"keywords12", MatchCriteria{Keywords: keywords12}, 5},
+		{"empty", criteria.Criteria{}, 5},
+		{"keywords1", criteria.Criteria{Keywords: keywords1}, 3},
+		{"keywords2", criteria.Criteria{Keywords: keywords2}, 2},
+		{"keywords12", criteria.Criteria{Keywords: keywords12}, 5},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			persistence.reset()
+			persistence.Reset()
 
 			le := models.LogEntry{
 				Level:         models.TraceLog,
 				OriginService: sampleService1,
 				Message:       message1,
 			}
-			persistence.add(le)
+			persistence.Add(le)
 			le.Message = message2
-			persistence.add(le)
+			persistence.Add(le)
 			le.Message = message1
-			persistence.add(le)
+			persistence.Add(le)
 			le.Message = message2
 			le.OriginService = sampleService2
-			persistence.add(le)
+			persistence.Add(le)
 			le.Message = message1
-			persistence.add(le)
+			persistence.Add(le)
 
-			removed, err := persistence.remove(tt.criteria)
+			removed, err := persistence.Remove(tt.criteria)
 			if err != nil {
 				t.Errorf("Error thrown: %s", err.Error())
 			}
@@ -127,8 +129,8 @@ func testPersistenceRemove(t *testing.T, persistence interfaces.Persistence) {
 					tt.result, removed)
 			}
 			// we Add a new log
-			persistence.add(le)
-			logs, err := persistence.find(MatchCriteria{})
+			persistence.Add(le)
+			logs, err := persistence.Find(criteria.Criteria{})
 			if len(logs) != 5-tt.result+1 {
 				t.Errorf("Should return %d log entries, returned %d",
 					6-tt.result+1, len(logs))

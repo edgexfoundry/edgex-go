@@ -55,14 +55,14 @@ func TestCriteriaMatch(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if tt.result != tt.criteria.match(tt.log) {
+			if tt.result != tt.criteria.Match(tt.log) {
 				t.Errorf("matching log %v criteria %v should be %v",
 					tt.log, tt.criteria, tt.result)
 			}
 		})
 	}
 
-	if !criteria.match(le) {
+	if !criteria.Match(le) {
 		t.Errorf("log %v should match criteria %v", le, criteria)
 	}
 }

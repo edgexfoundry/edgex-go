@@ -10,16 +10,13 @@ import (
 	"os"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
-	"github.com/go-kit/kit/log"
-)
 
-const (
-	PersistenceDB   = "database"
-	PersistenceFile = "file"
+	"github.com/go-kit/kit/log"
 )
 
 type privLogger struct {

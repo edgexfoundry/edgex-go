@@ -10,7 +10,6 @@ package logging
 import (
 	"context"
 	"fmt"
-	"github.com/edgexfoundry/edgex-go/internal/support/logging/interfaces"
 	"sync"
 	"time"
 
@@ -19,6 +18,12 @@ import (
 	types "github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 	"github.com/edgexfoundry/edgex-go/internal/support/logging/config"
+	"github.com/edgexfoundry/edgex-go/internal/support/logging/interfaces"
+)
+
+const (
+	PersistenceDB   = "database"
+	PersistenceFile = "file"
 )
 
 var Configuration = &config.ConfigurationStruct{}
