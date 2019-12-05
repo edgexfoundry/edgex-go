@@ -16,16 +16,13 @@ package interfaces
 
 import (
 	"github.com/edgexfoundry/edgex-go/internal/support/logging/filter"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
 type Logger interface {
 	Add(logEntry models.LogEntry) error
-	CloseSession()
 	Remove(criteria filter.Criteria) (int, error)
 	Find(criteria filter.Criteria) ([]models.LogEntry, error)
-
-	// Needed for the tests. Reset the instance (closing files, sessions...)
-	// and clear the logs.
-	Reset()
+	CloseSession()
 }

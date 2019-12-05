@@ -8,12 +8,12 @@ package mongo
 
 import (
 	"fmt"
-	"github.com/edgexfoundry/edgex-go/internal/support/logging/config"
 	"strconv"
 	"time"
 
 	types "github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+	"github.com/edgexfoundry/edgex-go/internal/support/logging/config"
 	"github.com/edgexfoundry/edgex-go/internal/support/logging/filter"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
@@ -26,15 +26,6 @@ type Logger struct {
 	databaseName string
 	session      *mgo.Session // Mongo database session
 }
-
-/*
-	Type    string
-	Timeout int
-	Host    string
-	Port    int
-	Name    string
-
-*/
 
 func connectToMongo(
 	credentials *types.Credentials,
@@ -177,12 +168,4 @@ func (l *Logger) Find(criteria filter.Criteria) ([]models.LogEntry, error) {
 	}
 
 	return le, nil
-}
-
-func (l *Logger) Reset() {
-	session := l.session.Copy()
-	defer session.Close()
-
-	session.DB(l.databaseName).C(db.LogsCollection).RemoveAll(bson.M{})
-	return
 }

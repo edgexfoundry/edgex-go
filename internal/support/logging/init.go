@@ -10,6 +10,7 @@ package logging
 import (
 	"context"
 	"fmt"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/logging"
 	"github.com/edgexfoundry/edgex-go/internal/support/logging/logger/mongo"
 	"sync"
 	"time"
@@ -36,12 +37,14 @@ type server interface {
 }
 
 type ServiceInit struct {
-	server server
+	server     server
+	serviceKey string
 }
 
-func NewServiceInit(server server) ServiceInit {
+func NewServiceInit(server server, serviceKey string) ServiceInit {
 	return ServiceInit{
-		server: server,
+		server:     server,
+		serviceKey: serviceKey,
 	}
 }
 
@@ -64,7 +67,7 @@ func (s ServiceInit) BootstrapHandler(
 
 	dic.Update(di.ServiceConstructorMap{
 		container.LoggingClientInterfaceName: func(get di.Get) interface{} {
-			return newPrivateLogger()
+			return logging.FactoryToStdout(s.serviceKey)
 		},
 	})
 
