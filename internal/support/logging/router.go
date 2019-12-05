@@ -9,7 +9,6 @@ package logging
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"strconv"
@@ -57,7 +56,7 @@ func addLog(w http.ResponseWriter, r *http.Request) {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		io.WriteString(w, err.Error())
+		w.Write([]byte(err.Error()))
 		return
 	}
 
@@ -65,14 +64,14 @@ func addLog(w http.ResponseWriter, r *http.Request) {
 	if err := json.Unmarshal(data, &l); err != nil {
 		fmt.Println("Failed to parse LogEntry: ", err)
 		w.WriteHeader(http.StatusBadRequest)
-		io.WriteString(w, err.Error())
+		w.Write([]byte(err.Error()))
 		return
 	}
 
 	if !logger.IsValidLogLevel(l.Level) {
 		s := fmt.Sprintf("Invalid level in LogEntry: %s", l.Level)
 		w.WriteHeader(http.StatusBadRequest)
-		io.WriteString(w, s)
+		w.Write([]byte(s))
 		return
 	}
 
@@ -105,7 +104,7 @@ func getCriteria(w http.ResponseWriter, vars map[string]string) *filter.Criteria
 		}
 		if len(s) > 0 {
 			w.WriteHeader(http.StatusBadRequest)
-			io.WriteString(w, s)
+			w.Write([]byte(s))
 			return nil
 		}
 	}
@@ -124,7 +123,7 @@ func getCriteria(w http.ResponseWriter, vars map[string]string) *filter.Criteria
 		}
 		if len(s) > 0 {
 			w.WriteHeader(http.StatusBadRequest)
-			io.WriteString(w, s)
+			w.Write([]byte(s))
 			return nil
 		}
 	}
@@ -141,7 +140,7 @@ func getCriteria(w http.ResponseWriter, vars map[string]string) *filter.Criteria
 		}
 		if len(s) > 0 {
 			w.WriteHeader(http.StatusBadRequest)
-			io.WriteString(w, s)
+			w.Write([]byte(s))
 			return nil
 		}
 	}
@@ -162,7 +161,7 @@ func getCriteria(w http.ResponseWriter, vars map[string]string) *filter.Criteria
 		}
 		if len(s) > 0 {
 			w.WriteHeader(http.StatusBadRequest)
-			io.WriteString(w, s)
+			w.Write([]byte(s))
 			return nil
 		}
 		criteria.End = now - criteria.End
@@ -188,7 +187,7 @@ func getCriteria(w http.ResponseWriter, vars map[string]string) *filter.Criteria
 			if !logger.IsValidLogLevel(l) {
 				s := fmt.Sprintf("Invalid log level '%s'", l)
 				w.WriteHeader(http.StatusBadRequest)
-				io.WriteString(w, s)
+				w.Write([]byte(s))
 				return nil
 			}
 		}
@@ -215,7 +214,7 @@ func getLogs(w http.ResponseWriter, vars map[string]string) {
 	}
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
-	io.WriteString(w, string(res))
+	w.Write([]byte(string(res)))
 }
 
 func delLogs(w http.ResponseWriter, vars map[string]string) {
@@ -231,15 +230,11 @@ func delLogs(w http.ResponseWriter, vars map[string]string) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	io.WriteString(w, strconv.Itoa(removed))
+	w.Write([]byte(strconv.Itoa(removed)))
 }
 
 func metricsHandler(w http.ResponseWriter, loggingClient logger.LoggingClient) {
-	s := telemetry.NewSystemUsage()
-
-	pkg.Encode(s, w, loggingClient)
-
-	return
+	pkg.Encode(telemetry.NewSystemUsage(), w, loggingClient)
 }
 
 func LoadRestRoutes(dic *di.Container) *mux.Router {
