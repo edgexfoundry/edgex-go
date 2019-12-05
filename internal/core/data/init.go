@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"sync"
 
+	dataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
@@ -37,7 +38,6 @@ import (
 var Configuration = &ConfigurationStruct{}
 
 // TODO: Refactor names in separate PR: See comments on PR #1133
-var chEvents chan interface{} // A channel for "domain events" sourced from event operations
 var msgClient messaging.MessageClient
 var mdc metadata.DeviceClient
 var msc metadata.DeviceServiceClient
@@ -48,8 +48,16 @@ var httpErrorHandler errorconcept.ErrorHandler
 func BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, startupTimer startup.Timer, dic *di.Container) bool {
 	// update global variables.
 	loggingClient := container.LoggingClientFrom(dic.Get)
-
 	httpErrorHandler = errorconcept.NewErrorHandler(loggingClient)
+
+	chEvents := make(chan interface{}, 100)
+	dic.Update(di.ServiceConstructorMap{
+		dataContainer.EventsChannelName: func(get di.Get) interface{} {
+			return chEvents
+		}})
+
+	// initialize event handlers
+	initEventHandlers(loggingClient, chEvents)
 
 	// initialize clients required by service.
 	registryClient := container.RegistryFrom(dic.Get)
@@ -87,10 +95,6 @@ func BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, startupTimer star
 	if err != nil {
 		loggingClient.Error(fmt.Sprintf("failed to create messaging client: %s", err.Error()))
 	}
-
-	// initialize event handlers
-	chEvents = make(chan interface{}, 100)
-	initEventHandlers(loggingClient)
 
 	return true
 }
