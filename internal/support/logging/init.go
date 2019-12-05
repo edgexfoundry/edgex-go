@@ -86,8 +86,8 @@ func (s ServiceInit) BootstrapHandler(
 	}
 
 	// initialize database.
+	var err error
 	for startupTimer.HasNotElapsed() {
-		var err error
 		dbClient, err = getPersistence(&credentials)
 		if err == nil {
 			break
@@ -96,7 +96,7 @@ func (s ServiceInit) BootstrapHandler(
 		startupTimer.SleepForInterval()
 	}
 
-	if dbClient == nil {
+	if err != nil {
 		return false
 	}
 

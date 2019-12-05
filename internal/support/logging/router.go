@@ -29,19 +29,6 @@ import (
 	"github.com/gorilla/mux"
 )
 
-const (
-	start          = "start"
-	end            = "end"
-	limit          = "limit"
-	age            = "age"
-	keywords       = "keywords"
-	removeOld      = "removeOld"
-	logLevels      = "logLevels"
-	originServices = "originServices"
-	levels         = "levels"
-	services       = "services"
-)
-
 // Test if the service is working
 func pingHandler(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set(clients.ContentType, clients.ContentTypeText)
@@ -238,6 +225,19 @@ func metricsHandler(w http.ResponseWriter, loggingClient logger.LoggingClient) {
 }
 
 func LoadRestRoutes(dic *di.Container) *mux.Router {
+	const (
+		start          = "start"
+		end            = "end"
+		limit          = "limit"
+		age            = "age"
+		keywords       = "keywords"
+		removeOld      = "removeOld"
+		logLevels      = "logLevels"
+		originServices = "originServices"
+		levels         = "levels"
+		services       = "services"
+	)
+
 	r := mux.NewRouter()
 
 	// Ping Resource
