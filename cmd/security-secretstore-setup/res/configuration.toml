@@ -34,6 +34,9 @@ tokenfolderpath = "/vault/config/assets"
 tokenfile = "resp-init.json"
 vaultsecretshares = 5
 vaultsecretthreshold = 3
+tokenprovider = ""
+tokenproviderargs = [ "-confdir", "res/token-file-provider" ]
+tokenprovidertype = "oneshot"
 
 [Startup]
 Duration = 30
@@ -83,3 +86,4 @@ Interval = 1
   [Databases.application-service]
   Service = "appservice"
   Username = "appservice"
+

@@ -33,6 +33,9 @@ type SecretServiceInfo struct {
 	TokenFile            string
 	VaultSecretShares    int
 	VaultSecretThreshold int
+	TokenProvider        string
+	TokenProviderArgs    []string
+	TokenProviderType    string
 }
 
 func (s SecretServiceInfo) GetSecretSvcBaseURL() string {
