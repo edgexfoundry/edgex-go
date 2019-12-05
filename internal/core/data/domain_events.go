@@ -20,12 +20,12 @@ type DeviceLastReported struct {
 	DeviceName string
 }
 
-//An event indicating that the service associated with the device that just reported data is alive.
+// An event indicating that the service associated with the device that just reported data is alive.
 type DeviceServiceLastReported struct {
 	DeviceName string
 }
 
-func initEventHandlers(loggingClient logger.LoggingClient) {
+func initEventHandlers(loggingClient logger.LoggingClient, chEvents <-chan interface{}) {
 	go func() {
 		for {
 			select {

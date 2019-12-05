@@ -92,7 +92,8 @@ func getEvents(limit int, dbClient interfaces.DBClient) ([]contract.Event, error
 func addNewEvent(
 	e models.Event, ctx context.Context,
 	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient) (string, error) {
+	dbClient interfaces.DBClient,
+	chEvents chan<- interface{}) (string, error) {
 
 	err := checkDevice(e.Device, ctx)
 	if err != nil {
