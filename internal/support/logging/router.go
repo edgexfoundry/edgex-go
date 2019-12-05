@@ -231,7 +231,7 @@ func LoadRestRoutes(dic *di.Container) *mux.Router {
 		limit          = "limit"
 		age            = "age"
 		keywords       = "keywords"
-		removeOld      = "removeOld"
+		removeOld      = "removeold"
 		logLevels      = "logLevels"
 		originServices = "originServices"
 		levels         = "levels"
