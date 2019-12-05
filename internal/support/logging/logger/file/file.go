@@ -10,7 +10,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"github.com/edgexfoundry/edgex-go/internal/support/logging/criteria"
+	"github.com/edgexfoundry/edgex-go/internal/support/logging/filter"
 	"io"
 	"os"
 	"path/filepath"
@@ -66,7 +66,7 @@ func (l *Logger) Add(le models.LogEntry) error {
 	return nil
 }
 
-func (l *Logger) Remove(criteria criteria.Criteria) (int, error) {
+func (l *Logger) Remove(criteria filter.Criteria) (int, error) {
 	tmpFilename := l.filename + rmFileSuffix
 	tmpFile, err := os.OpenFile(tmpFilename, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
@@ -113,7 +113,7 @@ func (l *Logger) Remove(criteria criteria.Criteria) (int, error) {
 	return count, nil
 }
 
-func (l *Logger) Find(criteria criteria.Criteria) ([]models.LogEntry, error) {
+func (l *Logger) Find(criteria filter.Criteria) ([]models.LogEntry, error) {
 	var logs []models.LogEntry
 	f, err := os.Open(l.filename)
 	if err != nil {

@@ -14,7 +14,7 @@ import (
 
 	types "github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
-	"github.com/edgexfoundry/edgex-go/internal/support/logging/criteria"
+	"github.com/edgexfoundry/edgex-go/internal/support/logging/filter"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 
@@ -110,7 +110,7 @@ func createConditions(conditions []bson.M, field string, elements []string) []bs
 	return append(conditions, bson.M{"$or": keyCond})
 }
 
-func createQuery(criteria criteria.Criteria) bson.M {
+func createQuery(criteria filter.Criteria) bson.M {
 	conditions := []bson.M{{}}
 
 	if len(criteria.Keywords) > 0 {
@@ -142,7 +142,7 @@ func createQuery(criteria criteria.Criteria) bson.M {
 
 }
 
-func (l *Logger) Remove(criteria criteria.Criteria) (int, error) {
+func (l *Logger) Remove(criteria filter.Criteria) (int, error) {
 
 	session := l.session.Copy()
 	defer session.Close()
@@ -160,7 +160,7 @@ func (l *Logger) Remove(criteria criteria.Criteria) (int, error) {
 	return info.Removed, nil
 }
 
-func (l *Logger) Find(criteria criteria.Criteria) ([]models.LogEntry, error) {
+func (l *Logger) Find(criteria filter.Criteria) ([]models.LogEntry, error) {
 	session := l.session.Copy()
 	defer session.Close()
 

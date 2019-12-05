@@ -21,7 +21,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
-	criteria2 "github.com/edgexfoundry/edgex-go/internal/support/logging/criteria"
+	criteria2 "github.com/edgexfoundry/edgex-go/internal/support/logging/filter"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"

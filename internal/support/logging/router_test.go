@@ -17,13 +17,13 @@ import (
 
 	types "github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/support/logging/config"
-	"github.com/edgexfoundry/edgex-go/internal/support/logging/criteria"
+	"github.com/edgexfoundry/edgex-go/internal/support/logging/filter"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
 type dummyPersist struct {
-	criteria criteria.Criteria
+	criteria filter.Criteria
 	deleted  int
 	added    int
 }
@@ -37,13 +37,13 @@ func (dp *dummyPersist) Add(le models.LogEntry) error {
 	return nil
 }
 
-func (dp *dummyPersist) Remove(criteria criteria.Criteria) (int, error) {
+func (dp *dummyPersist) Remove(criteria filter.Criteria) (int, error) {
 	dp.criteria = criteria
 	dp.deleted = 42
 	return dp.deleted, nil
 }
 
-func (dp *dummyPersist) Find(criteria criteria.Criteria) ([]models.LogEntry, error) {
+func (dp *dummyPersist) Find(criteria filter.Criteria) ([]models.LogEntry, error) {
 	dp.criteria = criteria
 
 	var retValue []models.LogEntry
@@ -108,73 +108,73 @@ func TestGetLogs(t *testing.T) {
 		name       string
 		vars       map[string]string
 		status     int
-		criteria   criteria.Criteria
+		criteria   filter.Criteria
 		limitCheck int
 	}{
 		{"withoutParams",
 			map[string]string{},
 			http.StatusOK,
-			criteria.Criteria{},
+			filter.Criteria{},
 			maxLimit},
 		{"limit",
 			map[string]string{"limit": "1000"},
 			http.StatusOK,
-			criteria.Criteria{Limit: 1000},
+			filter.Criteria{Limit: 1000},
 			maxLimit},
 		{"invalidlimit",
 			map[string]string{"limit": "-1"},
 			http.StatusBadRequest,
-			criteria.Criteria{Limit: 1000},
+			filter.Criteria{Limit: 1000},
 			maxLimit},
 		{"wronglimit",
 			map[string]string{"limit": "ten"},
 			http.StatusBadRequest,
-			criteria.Criteria{Limit: 1000},
+			filter.Criteria{Limit: 1000},
 			maxLimit},
 		{"start/end/limit",
 			map[string]string{"start": "1", "end": "2", "limit": "3"},
 			http.StatusOK,
-			criteria.Criteria{Start: 1, End: 2, Limit: 3},
+			filter.Criteria{Start: 1, End: 2, Limit: 3},
 			3},
 		{"invalidstart/end/limit",
 			map[string]string{"start": "-1", "end": "2", "limit": "3"},
 			http.StatusBadRequest,
-			criteria.Criteria{},
+			filter.Criteria{},
 			3},
 		{"start/invalidend/limit",
 			map[string]string{"start": "1", "end": "-2", "limit": "3"},
 			http.StatusBadRequest,
-			criteria.Criteria{},
+			filter.Criteria{},
 			3},
 		{"wrongstart/end/limit",
 			map[string]string{"start": "one", "end": "2", "limit": "3"},
 			http.StatusBadRequest,
-			criteria.Criteria{},
+			filter.Criteria{},
 			3},
 		{"start/wrongend/limit",
 			map[string]string{"start": "1", "end": "two", "limit": "3"},
 			http.StatusBadRequest,
-			criteria.Criteria{},
+			filter.Criteria{},
 			3},
 		{"services/start/end/limit",
 			map[string]string{"services": "service1,service2", "start": "1", "end": "2", "limit": "3"},
 			http.StatusOK,
-			criteria.Criteria{OriginServices: services, Start: 1, End: 2, Limit: 3},
+			filter.Criteria{OriginServices: services, Start: 1, End: 2, Limit: 3},
 			3},
 		{"keywords/start/end/limit",
 			map[string]string{"keywords": "keyword1,keyword2", "start": "1", "end": "2", "limit": "3"},
 			http.StatusOK,
-			criteria.Criteria{Keywords: keywords, Start: 1, End: 2, Limit: 3},
+			filter.Criteria{Keywords: keywords, Start: 1, End: 2, Limit: 3},
 			3},
 		{"levels/start/end/limit",
 			map[string]string{"levels": "TRACE,DEBUG,WARN,INFO,ERROR", "start": "1", "end": "2", "limit": "3"},
 			http.StatusOK,
-			criteria.Criteria{LogLevels: logLevels, Start: 1, End: 2, Limit: 3},
+			filter.Criteria{LogLevels: logLevels, Start: 1, End: 2, Limit: 3},
 			3},
 		{"wronglevels/start/end/limit",
 			map[string]string{"levels": "INF,ERROR", "start": "1", "end": "2", "limit": "3"},
 			http.StatusBadRequest,
-			criteria.Criteria{},
+			filter.Criteria{},
 			3},
 		{"levels/services/start/end/limit",
 			map[string]string{
@@ -185,7 +185,7 @@ func TestGetLogs(t *testing.T) {
 				"limit":    "3",
 			},
 			http.StatusOK,
-			criteria.Criteria{LogLevels: logLevels, OriginServices: services, Start: 1, End: 2, Limit: 3},
+			filter.Criteria{LogLevels: logLevels, OriginServices: services, Start: 1, End: 2, Limit: 3},
 			3},
 	}
 
@@ -228,44 +228,44 @@ func TestRemoveLogs(t *testing.T) {
 		name     string
 		vars     map[string]string
 		status   int
-		criteria criteria.Criteria
+		criteria filter.Criteria
 	}{
 		{"start/end",
 			map[string]string{"start": "1", "end": "2"},
 			http.StatusOK,
-			criteria.Criteria{Start: 1, End: 2}},
+			filter.Criteria{Start: 1, End: 2}},
 		{"invalidstart/end",
 			map[string]string{"start": "-1", "end": "2"},
 			http.StatusBadRequest,
-			criteria.Criteria{}},
+			filter.Criteria{}},
 		{"start/invalidend",
 			map[string]string{"start": "1", "end": "-2"},
 			http.StatusBadRequest,
-			criteria.Criteria{}},
+			filter.Criteria{}},
 		{"wrongstart/end",
 			map[string]string{"start": "one", "end": "2"},
 			http.StatusBadRequest,
-			criteria.Criteria{}},
+			filter.Criteria{}},
 		{"start/wrongend",
 			map[string]string{"start": "1", "end": "two"},
 			http.StatusBadRequest,
-			criteria.Criteria{}},
+			filter.Criteria{}},
 		{"services/start/end",
 			map[string]string{"services": "service1,service2", "start": "1", "end": "2"},
 			http.StatusOK,
-			criteria.Criteria{OriginServices: services, Start: 1, End: 2}},
+			filter.Criteria{OriginServices: services, Start: 1, End: 2}},
 		{"keywords/start/end",
 			map[string]string{"keywords": "keyword1,keyword2", "start": "1", "end": "2"},
 			http.StatusOK,
-			criteria.Criteria{Keywords: keywords, Start: 1, End: 2}},
+			filter.Criteria{Keywords: keywords, Start: 1, End: 2}},
 		{"levels/start/end",
 			map[string]string{"levels": "TRACE,DEBUG,WARN,INFO,ERROR", "start": "1", "end": "2"},
 			http.StatusOK,
-			criteria.Criteria{LogLevels: logLevels, Start: 1, End: 2}},
+			filter.Criteria{LogLevels: logLevels, Start: 1, End: 2}},
 		{"wronglevels/start/end",
 			map[string]string{"levels": "INF,ERROR", "start": "1", "end": "2"},
 			http.StatusBadRequest,
-			criteria.Criteria{}},
+			filter.Criteria{}},
 		{"levels/services/start/end",
 			map[string]string{
 				"levels":   "TRACE,DEBUG,WARN,INFO,ERROR",
@@ -274,7 +274,7 @@ func TestRemoveLogs(t *testing.T) {
 				"end":      "2",
 			},
 			http.StatusOK,
-			criteria.Criteria{LogLevels: logLevels, OriginServices: services, Start: 1, End: 2}},
+			filter.Criteria{LogLevels: logLevels, OriginServices: services, Start: 1, End: 2}},
 	}
 
 	dummy := &dummyPersist{}

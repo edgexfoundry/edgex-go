@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-package criteria
+package filter
 
 import (
 	"testing"

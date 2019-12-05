@@ -10,7 +10,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/edgexfoundry/edgex-go/internal/support/logging/criteria"
+	"github.com/edgexfoundry/edgex-go/internal/support/logging/filter"
 	"github.com/edgexfoundry/edgex-go/internal/support/logging/interfaces"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
@@ -31,13 +31,13 @@ func testPersistenceFind(t *testing.T, persistence interfaces.Logger) {
 
 	var tests = []struct {
 		name     string
-		criteria criteria.Criteria
+		criteria filter.Criteria
 		result   int
 	}{
-		{"empty", criteria.Criteria{}, 5},
-		{"keywords1", criteria.Criteria{Keywords: keywords1}, 3},
-		{"keywords2", criteria.Criteria{Keywords: keywords2}, 2},
-		{"keywords12", criteria.Criteria{Keywords: keywords12}, 5},
+		{"empty", filter.Criteria{}, 5},
+		{"keywords1", filter.Criteria{Keywords: keywords1}, 3},
+		{"keywords2", filter.Criteria{Keywords: keywords2}, 2},
+		{"keywords12", filter.Criteria{Keywords: keywords12}, 5},
 	}
 
 	le := models.LogEntry{
@@ -90,13 +90,13 @@ func testPersistenceRemove(t *testing.T, persistence interfaces.Logger) {
 
 	var tests = []struct {
 		name     string
-		criteria criteria.Criteria
+		criteria filter.Criteria
 		result   int
 	}{
-		{"empty", criteria.Criteria{}, 5},
-		{"keywords1", criteria.Criteria{Keywords: keywords1}, 3},
-		{"keywords2", criteria.Criteria{Keywords: keywords2}, 2},
-		{"keywords12", criteria.Criteria{Keywords: keywords12}, 5},
+		{"empty", filter.Criteria{}, 5},
+		{"keywords1", filter.Criteria{Keywords: keywords1}, 3},
+		{"keywords2", filter.Criteria{Keywords: keywords2}, 2},
+		{"keywords12", filter.Criteria{Keywords: keywords12}, 5},
 	}
 
 	for _, tt := range tests {
@@ -129,7 +129,7 @@ func testPersistenceRemove(t *testing.T, persistence interfaces.Logger) {
 			}
 			// we Add a new log
 			persistence.Add(le)
-			logs, err := persistence.Find(criteria.Criteria{})
+			logs, err := persistence.Find(filter.Criteria{})
 			if len(logs) != 5-tt.result+1 {
 				t.Errorf("Should return %d log entries, returned %d",
 					6-tt.result+1, len(logs))
