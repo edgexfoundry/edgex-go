@@ -19,7 +19,7 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
-type Persistence interface {
+type Logger interface {
 	Add(logEntry models.LogEntry) error
 	CloseSession()
 	Remove(criteria criteria.Criteria) (int, error)

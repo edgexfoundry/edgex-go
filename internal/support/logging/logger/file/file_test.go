@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-package logging
+package file
 
 import (
 	"os"
@@ -24,7 +24,7 @@ const (
 	message2       string = "message2"
 )
 
-func testPersistenceFind(t *testing.T, persistence interfaces.Persistence) {
+func testPersistenceFind(t *testing.T, persistence interfaces.Logger) {
 	var keywords1 = []string{"1"}
 	var keywords2 = []string{"2"}
 	var keywords12 = []string{"2", "1"}
@@ -80,11 +80,10 @@ func TestFileFind(t *testing.T) {
 	// Remove test log when test ends
 	defer os.Remove(testFilename)
 
-	fl := FileLog{filename: testFilename}
-	testPersistenceFind(t, &fl)
+	testPersistenceFind(t, NewLogger(testFilename))
 }
 
-func testPersistenceRemove(t *testing.T, persistence interfaces.Persistence) {
+func testPersistenceRemove(t *testing.T, persistence interfaces.Logger) {
 	var keywords1 = []string{"1"}
 	var keywords2 = []string{"2"}
 	var keywords12 = []string{"2", "1"}
@@ -146,6 +145,5 @@ func TestFileRemove(t *testing.T) {
 	// Remove test log when test ends
 	defer os.Remove(testFilename)
 
-	fl := FileLog{filename: testFilename}
-	testPersistenceRemove(t, &fl)
+	testPersistenceRemove(t, NewLogger(testFilename))
 }

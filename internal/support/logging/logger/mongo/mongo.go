@@ -4,32 +4,49 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-package logging
+package mongo
 
 import (
 	"fmt"
-	"github.com/edgexfoundry/edgex-go/internal/support/logging/criteria"
+	"github.com/edgexfoundry/edgex-go/internal/support/logging/config"
 	"strconv"
 	"time"
 
+	types "github.com/edgexfoundry/edgex-go/internal/pkg/config"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+	"github.com/edgexfoundry/edgex-go/internal/support/logging/criteria"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
-
-	mgo "github.com/globalsign/mgo"
-	bson "github.com/globalsign/mgo/bson"
+	"github.com/globalsign/mgo"
+	"github.com/globalsign/mgo/bson"
 )
 
-type MongoLog struct {
-	session *mgo.Session // Mongo database session
+type Logger struct {
+	databaseName string
+	session      *mgo.Session // Mongo database session
 }
 
-func connectToMongo(credentials config.Credentials) (*mgo.Session, error) {
+/*
+	Type    string
+	Timeout int
+	Host    string
+	Port    int
+	Name    string
+
+*/
+
+func connectToMongo(
+	credentials *types.Credentials,
+	host string,
+	port int,
+	timeout int,
+	name string) (*mgo.Session, error) {
+
 	mongoDBDialInfo := &mgo.DialInfo{
-		Addrs:    []string{Configuration.Databases["Primary"].Host + ":" + strconv.Itoa(Configuration.Databases["Primary"].Port)},
-		Timeout:  time.Duration(Configuration.Databases["Primary"].Timeout) * time.Millisecond,
-		Database: Configuration.Databases["Primary"].Name,
+		Addrs:    []string{host + ":" + strconv.Itoa(port)},
+		Timeout:  time.Duration(timeout) * time.Millisecond,
+		Database: name,
 		Username: credentials.Username,
 		Password: credentials.Password,
 	}
@@ -39,25 +56,43 @@ func connectToMongo(credentials config.Credentials) (*mgo.Session, error) {
 		return nil, err
 	}
 
-	ms.SetSocketTimeout(time.Duration(Configuration.Databases["Primary"].Timeout) * time.Millisecond)
+	ms.SetSocketTimeout(time.Duration(timeout) * time.Millisecond)
 	ms.SetMode(mgo.Monotonic, true)
 
 	return ms, nil
 }
 
-func (ml *MongoLog) CloseSession() {
-	if ml.session != nil {
-		ml.session.Close()
-		ml.session = nil
+func NewLogger(credentials *types.Credentials, configuration *config.ConfigurationStruct) (*Logger, error) {
+	databaseName := configuration.Databases["Primary"].Name
+	session, err := connectToMongo(
+		credentials,
+		configuration.Databases["Primary"].Host,
+		configuration.Databases["Primary"].Port,
+		configuration.Databases["Primary"].Timeout,
+		databaseName,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &Logger{
+		databaseName: databaseName,
+		session:      session,
+	}, nil
+}
+
+func (l *Logger) CloseSession() {
+	if l.session != nil {
+		l.session.Close()
+		l.session = nil
 	}
 }
 
-func (ml *MongoLog) Add(le models.LogEntry) error {
+func (l *Logger) Add(le models.LogEntry) error {
 
-	session := ml.session.Copy()
+	session := l.session.Copy()
 	defer session.Close()
 
-	c := session.DB(Configuration.Databases["Primary"].Name).C(db.LogsCollection)
+	c := session.DB(l.databaseName).C(db.LogsCollection)
 
 	if err := c.Insert(le); err != nil {
 		return err
@@ -107,12 +142,12 @@ func createQuery(criteria criteria.Criteria) bson.M {
 
 }
 
-func (ml *MongoLog) Remove(criteria criteria.Criteria) (int, error) {
+func (l *Logger) Remove(criteria criteria.Criteria) (int, error) {
 
-	session := ml.session.Copy()
+	session := l.session.Copy()
 	defer session.Close()
 
-	c := session.DB(Configuration.Databases["Primary"].Name).C(db.LogsCollection)
+	c := session.DB(l.databaseName).C(db.LogsCollection)
 
 	base := createQuery(criteria)
 
@@ -125,11 +160,11 @@ func (ml *MongoLog) Remove(criteria criteria.Criteria) (int, error) {
 	return info.Removed, nil
 }
 
-func (ml *MongoLog) Find(criteria criteria.Criteria) ([]models.LogEntry, error) {
-	session := ml.session.Copy()
+func (l *Logger) Find(criteria criteria.Criteria) ([]models.LogEntry, error) {
+	session := l.session.Copy()
 	defer session.Close()
 
-	c := session.DB(Configuration.Databases["Primary"].Name).C(db.LogsCollection)
+	c := session.DB(l.databaseName).C(db.LogsCollection)
 
 	le := []models.LogEntry{}
 
@@ -144,10 +179,10 @@ func (ml *MongoLog) Find(criteria criteria.Criteria) ([]models.LogEntry, error) 
 	return le, nil
 }
 
-func (ml *MongoLog) Reset() {
-	session := ml.session.Copy()
+func (l *Logger) Reset() {
+	session := l.session.Copy()
 	defer session.Close()
 
-	session.DB(Configuration.Databases["Primary"].Name).C(db.LogsCollection).RemoveAll(bson.M{})
+	session.DB(l.databaseName).C(db.LogsCollection).RemoveAll(bson.M{})
 	return
 }

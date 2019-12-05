@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-package logging
+package file
 
 import (
 	"bufio"
@@ -22,30 +22,36 @@ const (
 	rmFileSuffix string = ".tmp"
 )
 
-type FileLog struct {
+type Logger struct {
 	filename string
 	out      io.WriteCloser
 }
 
-func (fl *FileLog) CloseSession() {
-	if fl.out != nil {
-		fl.out.Close()
+func NewLogger(filename string) *Logger {
+	return &Logger{
+		filename: filename,
 	}
 }
 
-func (fl *FileLog) Add(le models.LogEntry) error {
-	if fl.out == nil {
+func (l *Logger) CloseSession() {
+	if l.out != nil {
+		l.out.Close()
+	}
+}
+
+func (l *Logger) Add(le models.LogEntry) error {
+	if l.out == nil {
 		var err error
 		//First check to see if the specified directory exists
 		//File won't be written without directory.
-		path := filepath.Dir(fl.filename)
+		path := filepath.Dir(l.filename)
 		if _, err = os.Stat(path); os.IsNotExist(err) {
 			os.MkdirAll(path, 0755)
 		}
-		fl.out, err = os.OpenFile(fl.filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		l.out, err = os.OpenFile(l.filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 		if err != nil {
-			//fmt.Println("Error opening log file: ", fl.filename, err)
-			fl.out = nil
+			//fmt.Println("Error opening log file: ", l.filename, err)
+			l.out = nil
 			return err
 		}
 	}
@@ -54,14 +60,14 @@ func (fl *FileLog) Add(le models.LogEntry) error {
 	if err != nil {
 		return err
 	}
-	fl.out.Write(res)
-	fl.out.Write([]byte("\n"))
+	l.out.Write(res)
+	l.out.Write([]byte("\n"))
 
 	return nil
 }
 
-func (fl *FileLog) Remove(criteria criteria.Criteria) (int, error) {
-	tmpFilename := fl.filename + rmFileSuffix
+func (l *Logger) Remove(criteria criteria.Criteria) (int, error) {
+	tmpFilename := l.filename + rmFileSuffix
 	tmpFile, err := os.OpenFile(tmpFilename, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		//fmt.Println("Error creating tmp log file: ", tmpFilename, err)
@@ -70,9 +76,9 @@ func (fl *FileLog) Remove(criteria criteria.Criteria) (int, error) {
 
 	defer os.Remove(tmpFilename)
 
-	f, err := os.Open(fl.filename)
+	f, err := os.Open(l.filename)
 	if err != nil {
-		fmt.Println("Error opening log file: ", fl.filename, err)
+		fmt.Println("Error opening log file: ", l.filename, err)
 		tmpFile.Close()
 		return 0, err
 	}
@@ -95,23 +101,23 @@ func (fl *FileLog) Remove(criteria criteria.Criteria) (int, error) {
 	}
 
 	tmpFile.Close()
-	err = os.Rename(tmpFilename, fl.filename)
+	err = os.Rename(tmpFilename, l.filename)
 	if err != nil {
-		//fmt.Printf("Error renaming %s to %s: %v", tmpFilename, fl.filename, err)
+		//fmt.Printf("Error renaming %s to %s: %v", tmpFilename, l.filename, err)
 		return 0, err
 	}
 
 	// Close old file to open the new one when writing next log
-	fl.out.Close()
-	fl.out = nil
+	l.out.Close()
+	l.out = nil
 	return count, nil
 }
 
-func (fl *FileLog) Find(criteria criteria.Criteria) ([]models.LogEntry, error) {
+func (l *Logger) Find(criteria criteria.Criteria) ([]models.LogEntry, error) {
 	var logs []models.LogEntry
-	f, err := os.Open(fl.filename)
+	f, err := os.Open(l.filename)
 	if err != nil {
-		//fmt.Println("Error opening log file: ", fl.filename, err)
+		//fmt.Println("Error opening log file: ", l.filename, err)
 		return nil, err
 	}
 	scanner := bufio.NewScanner(f)
@@ -133,10 +139,10 @@ func (fl *FileLog) Find(criteria criteria.Criteria) ([]models.LogEntry, error) {
 	return logs, err
 }
 
-func (fl *FileLog) Reset() {
-	if fl.out != nil {
-		fl.out.Close()
-		fl.out = nil
+func (l *Logger) Reset() {
+	if l.out != nil {
+		l.out.Close()
+		l.out = nil
 	}
-	os.Remove(fl.filename)
+	os.Remove(l.filename)
 }

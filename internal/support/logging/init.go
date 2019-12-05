@@ -10,6 +10,7 @@ package logging
 import (
 	"context"
 	"fmt"
+	"github.com/edgexfoundry/edgex-go/internal/support/logging/logger/mongo"
 	"sync"
 	"time"
 
@@ -19,6 +20,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 	"github.com/edgexfoundry/edgex-go/internal/support/logging/config"
 	"github.com/edgexfoundry/edgex-go/internal/support/logging/interfaces"
+	"github.com/edgexfoundry/edgex-go/internal/support/logging/logger/file"
 )
 
 const (
@@ -27,7 +29,7 @@ const (
 )
 
 var Configuration = &config.ConfigurationStruct{}
-var dbClient interfaces.Persistence
+var dbClient interfaces.Logger
 
 type server interface {
 	IsRunning() bool
@@ -43,19 +45,14 @@ func NewServiceInit(server server) ServiceInit {
 	}
 }
 
-func getPersistence(credentials types.Credentials) (interfaces.Persistence, error) {
+func getPersistence(credentials *types.Credentials) (interfaces.Logger, error) {
 	switch Configuration.Writable.Persistence {
 	case PersistenceFile:
-		return &FileLog{filename: Configuration.Logging.File}, nil
+		return file.NewLogger(Configuration.Logging.File), nil
 	case PersistenceDB:
-		// TODO: Integrate db layer with internal/pkg/db/ types so we can support other databases
-		ms, err := connectToMongo(credentials)
-		if err != nil {
-			return nil, err
-		}
-		return &MongoLog{session: ms}, nil
+		return mongo.NewLogger(credentials, Configuration)
 	default:
-		return nil, fmt.Errorf("unrecognized value Configuration.Persistence: %s", Configuration.Writable.Persistence)
+		return nil, fmt.Errorf("unrecognized value Configuration.Logger: %s", Configuration.Writable.Persistence)
 	}
 }
 
@@ -88,7 +85,7 @@ func (s ServiceInit) BootstrapHandler(
 	// initialize database.
 	for startupTimer.HasNotElapsed() {
 		var err error
-		dbClient, err = getPersistence(credentials)
+		dbClient, err = getPersistence(&credentials)
 		if err == nil {
 			break
 		}
