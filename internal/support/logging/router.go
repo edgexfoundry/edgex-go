@@ -21,7 +21,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
-	criteria2 "github.com/edgexfoundry/edgex-go/internal/support/logging/filter"
+	"github.com/edgexfoundry/edgex-go/internal/support/logging/filter"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
@@ -83,8 +83,15 @@ func addLog(w http.ResponseWriter, r *http.Request) {
 	dbClient.Add(l)
 }
 
-func getCriteria(w http.ResponseWriter, vars map[string]string) *criteria2.Criteria {
-	var criteria criteria2.Criteria
+func checkMaxLimitCount(limit int) int {
+	if limit > Configuration.Service.MaxResultCount || limit == 0 {
+		return Configuration.Service.MaxResultCount
+	}
+	return limit
+}
+
+func getCriteria(w http.ResponseWriter, vars map[string]string) *filter.Criteria {
+	var criteria filter.Criteria
 
 	limit := vars["limit"]
 	if len(limit) > 0 {
