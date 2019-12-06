@@ -23,7 +23,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/core/command/config"
 	container "github.com/edgexfoundry/edgex-go/internal/core/command/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap"
-	bootstrapContainer "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers/database"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers/httpserver"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers/message"
@@ -55,9 +54,6 @@ func main() {
 	dic := di.NewContainer(di.ServiceConstructorMap{
 		container.ConfigurationName: func(get di.Get) interface{} {
 			return configuration
-		},
-		bootstrapContainer.ConfigurationInterfaceName: func(get di.Get) interface{} {
-			return get(container.ConfigurationName)
 		},
 	})
 	httpServer := httpserver.NewBootstrap(command.LoadRestRoutes(dic))
