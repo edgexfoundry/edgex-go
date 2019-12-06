@@ -10,45 +10,52 @@ package logging
 import (
 	"context"
 	"fmt"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/logging"
+	"github.com/edgexfoundry/edgex-go/internal/support/logging/logger/mongo"
 	"sync"
 	"time"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
+	types "github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
+	"github.com/edgexfoundry/edgex-go/internal/support/logging/config"
+	"github.com/edgexfoundry/edgex-go/internal/support/logging/interfaces"
+	"github.com/edgexfoundry/edgex-go/internal/support/logging/logger/file"
 )
 
-var Configuration = &ConfigurationStruct{}
-var dbClient persistence
+const (
+	PersistenceDB   = "database"
+	PersistenceFile = "file"
+)
+
+var Configuration = &config.ConfigurationStruct{}
+var dbClient interfaces.Logger
 
 type server interface {
 	IsRunning() bool
 }
 
 type ServiceInit struct {
-	server server
+	server     server
+	serviceKey string
 }
 
-func NewServiceInit(server server) ServiceInit {
+func NewServiceInit(server server, serviceKey string) ServiceInit {
 	return ServiceInit{
-		server: server,
+		server:     server,
+		serviceKey: serviceKey,
 	}
 }
 
-func getPersistence(credentials config.Credentials) (persistence, error) {
+func getPersistence(credentials *types.Credentials) (interfaces.Logger, error) {
 	switch Configuration.Writable.Persistence {
 	case PersistenceFile:
-		return &fileLog{filename: Configuration.Logging.File}, nil
+		return file.NewLogger(Configuration.Logging.File), nil
 	case PersistenceDB:
-		// TODO: Integrate db layer with internal/pkg/db/ types so we can support other databases
-		ms, err := connectToMongo(credentials)
-		if err != nil {
-			return nil, err
-		}
-		return &mongoLog{session: ms}, nil
+		return mongo.NewLogger(credentials, Configuration)
 	default:
-		return nil, fmt.Errorf("unrecognized value Configuration.Persistence: %s", Configuration.Writable.Persistence)
+		return nil, fmt.Errorf("unrecognized value Configuration.Logger: %s", Configuration.Writable.Persistence)
 	}
 }
 
@@ -60,14 +67,14 @@ func (s ServiceInit) BootstrapHandler(
 
 	dic.Update(di.ServiceConstructorMap{
 		container.LoggingClientInterfaceName: func(get di.Get) interface{} {
-			return newPrivateLogger()
+			return logging.FactoryToStdout(s.serviceKey)
 		},
 	})
 
 	loggingClient := container.LoggingClientFrom(dic.Get)
 
 	// get database credentials.
-	var credentials config.Credentials
+	var credentials types.Credentials
 	for startupTimer.HasNotElapsed() {
 		var err error
 		credentials, err = container.CredentialsProviderFrom(dic.Get).GetDatabaseCredentials(Configuration.Databases["Primary"])
@@ -79,9 +86,9 @@ func (s ServiceInit) BootstrapHandler(
 	}
 
 	// initialize database.
+	var err error
 	for startupTimer.HasNotElapsed() {
-		var err error
-		dbClient, err = getPersistence(credentials)
+		dbClient, err = getPersistence(&credentials)
 		if err == nil {
 			break
 		}
@@ -89,7 +96,7 @@ func (s ServiceInit) BootstrapHandler(
 		startupTimer.SleepForInterval()
 	}
 
-	if dbClient == nil {
+	if err != nil {
 		return false
 	}
 
@@ -103,7 +110,7 @@ func (s ServiceInit) BootstrapHandler(
 			// wait for httpServer to stop running (e.g. handling requests) before closing the database connection.
 			if s.server.IsRunning() == false {
 				loggingClient.Info("Database disconnecting")
-				dbClient.closeSession()
+				dbClient.CloseSession()
 				break
 			}
 			time.Sleep(time.Second)

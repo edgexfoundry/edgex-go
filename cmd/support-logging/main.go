@@ -55,7 +55,7 @@ func main() {
 		dic,
 		[]interfaces.BootstrapHandler{
 			secret.NewSecret().BootstrapHandler,
-			logging.NewServiceInit(&httpServer).BootstrapHandler,
+			logging.NewServiceInit(&httpServer, clients.SupportLoggingServiceKey).BootstrapHandler,
 			telemetry.BootstrapHandler,
 			httpServer.BootstrapHandler,
 			message.NewBootstrap(clients.SupportLoggingServiceKey, edgex.Version).BootstrapHandler,
