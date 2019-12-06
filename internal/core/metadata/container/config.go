@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2017 Dell Inc.
+ * Copyright 2019 Dell Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -11,17 +11,18 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
-package metadata
+
+package container
 
 import (
-	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/config"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 )
 
-func checkMaxLimit(limit int, configuration *config.ConfigurationStruct) error {
-	if limit > configuration.Service.MaxResultCount {
-		return errors.NewErrLimitExceeded(limit)
-	}
+// ConfigurationName contains the name of the metadata's config.ConfigurationStruct implementation in the DIC.
+var ConfigurationName = di.TypeInstanceToName((*config.ConfigurationStruct)(nil))
 
-	return nil
+// ConfigurationFrom helper function queries the DIC and returns metadata's config.ConfigurationStruct implementation.
+func ConfigurationFrom(get di.Get) *config.ConfigurationStruct {
+	return get(ConfigurationName).(*config.ConfigurationStruct)
 }

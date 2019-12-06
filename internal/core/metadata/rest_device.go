@@ -25,6 +25,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/config"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/operators/device"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
@@ -44,12 +45,17 @@ func restGetAllDevices(
 	w http.ResponseWriter,
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
-	errorHandler errorconcept.ErrorHandler) {
+	errorHandler errorconcept.ErrorHandler,
+	configuration *config.ConfigurationStruct) {
 
-	op := device.NewDeviceLoadAll(Configuration.Service, dbClient, loggingClient)
+	op := device.NewDeviceLoadAll(configuration.Service, dbClient, loggingClient)
 	devices, err := op.Execute()
 	if err != nil {
-		errorHandler.HandleOneVariant(w, err, errorconcept.Common.LimitExceeded, errorconcept.Default.InternalServerError)
+		errorHandler.HandleOneVariant(
+			w,
+			err,
+			errorconcept.Common.LimitExceeded,
+			errorconcept.Default.InternalServerError)
 		return
 	}
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
@@ -66,7 +72,8 @@ func restAddNewDevice(
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	errorHandler errorconcept.ErrorHandler,
-	nc notifications.NotificationsClient) {
+	nc notifications.NotificationsClient,
+	configuration *config.ConfigurationStruct) {
 
 	defer r.Body.Close()
 
@@ -94,7 +101,7 @@ func restAddNewDevice(
 	ch := make(chan device.DeviceEvent)
 	defer close(ch)
 
-	notifier := device.NewNotifier(ch, nc, Configuration.Notifications, dbClient, requester, loggingClient, ctx)
+	notifier := device.NewNotifier(ch, nc, configuration.Notifications, dbClient, requester, loggingClient, ctx)
 	go notifier.Execute()
 
 	op := device.NewAddDevice(ch, dbClient, d)
@@ -124,7 +131,8 @@ func restUpdateDevice(
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	errorHandler errorconcept.ErrorHandler,
-	nc notifications.NotificationsClient) {
+	nc notifications.NotificationsClient,
+	configuration *config.ConfigurationStruct) {
 
 	defer r.Body.Close()
 	var rd models.Device
@@ -145,7 +153,7 @@ func restUpdateDevice(
 		return
 	}
 
-	notifier := device.NewNotifier(ch, nc, Configuration.Notifications, dbClient, requester, loggingClient, ctx)
+	notifier := device.NewNotifier(ch, nc, configuration.Notifications, dbClient, requester, loggingClient, ctx)
 	go notifier.Execute()
 
 	op := device.NewUpdateDevice(ch, dbClient, rd, loggingClient)
@@ -402,7 +410,9 @@ func decodeState(r *http.Request) (mode string, state string, err error) {
 	}
 
 	// In this case, the request we were given in completely invalid
-	return "", "", fmt.Errorf("unknown request type: data decode failed for both states: %v", errMsg)
+	return "", "", fmt.Errorf(
+		"unknown request type: data decode failed for both states: %v",
+		errMsg)
 }
 
 func restSetDeviceStateById(
@@ -411,7 +421,8 @@ func restSetDeviceStateById(
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	errorHandler errorconcept.ErrorHandler,
-	nc notifications.NotificationsClient) {
+	nc notifications.NotificationsClient,
+	configuration *config.ConfigurationStruct) {
 
 	vars := mux.Vars(r)
 	var did = vars[ID]
@@ -434,7 +445,7 @@ func restSetDeviceStateById(
 	}
 
 	// Notify
-	notifyDeviceAssociates(d, http.MethodPut, r.Context(), loggingClient, dbClient, nc)
+	notifyDeviceAssociates(d, http.MethodPut, r.Context(), loggingClient, dbClient, nc, configuration)
 
 	w.WriteHeader(http.StatusOK)
 }
@@ -445,7 +456,8 @@ func restSetDeviceStateByDeviceName(
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	errorHandler errorconcept.ErrorHandler,
-	nc notifications.NotificationsClient) {
+	nc notifications.NotificationsClient,
+	configuration *config.ConfigurationStruct) {
 
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
@@ -474,7 +486,7 @@ func restSetDeviceStateByDeviceName(
 
 	ctx := r.Context()
 	// Notify
-	notifyDeviceAssociates(d, http.MethodPut, ctx, loggingClient, dbClient, nc)
+	notifyDeviceAssociates(d, http.MethodPut, ctx, loggingClient, dbClient, nc, configuration)
 
 	w.WriteHeader(http.StatusOK)
 }
@@ -495,7 +507,8 @@ func restDeleteDeviceById(
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	errorHandler errorconcept.ErrorHandler,
-	nc notifications.NotificationsClient) {
+	nc notifications.NotificationsClient,
+	configuration *config.ConfigurationStruct) {
 
 	vars := mux.Vars(r)
 	var did string = vars[ID]
@@ -508,7 +521,7 @@ func restDeleteDeviceById(
 	}
 
 	ctx := r.Context()
-	if err := deleteDevice(d, w, ctx, loggingClient, dbClient, errorHandler, nc); err != nil {
+	if err := deleteDevice(d, w, ctx, loggingClient, dbClient, errorHandler, nc, configuration); err != nil {
 		loggingClient.Error(err.Error())
 		return
 	}
@@ -522,7 +535,8 @@ func restDeleteDeviceByName(
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	errorHandler errorconcept.ErrorHandler,
-	nc notifications.NotificationsClient) {
+	nc notifications.NotificationsClient,
+	configuration *config.ConfigurationStruct) {
 
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
@@ -539,7 +553,7 @@ func restDeleteDeviceByName(
 	}
 
 	ctx := r.Context()
-	if err := deleteDevice(d, w, ctx, loggingClient, dbClient, errorHandler, nc); err != nil {
+	if err := deleteDevice(d, w, ctx, loggingClient, dbClient, errorHandler, nc, configuration); err != nil {
 		loggingClient.Error(err.Error())
 		return
 	}
@@ -556,7 +570,8 @@ func deleteDevice(
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	errorHandler errorconcept.ErrorHandler,
-	nc notifications.NotificationsClient) error {
+	nc notifications.NotificationsClient,
+	configuration *config.ConfigurationStruct) error {
 
 	if err := deleteAssociatedReportsForDevice(d, w, loggingClient, dbClient, errorHandler); err != nil {
 		errorHandler.Handle(w, err, errorconcept.Common.DeleteError)
@@ -569,7 +584,8 @@ func deleteDevice(
 	}
 
 	// Notify Associates
-	if err := notifyDeviceAssociates(d, http.MethodDelete, ctx, loggingClient, dbClient, nc); err != nil {
+	err := notifyDeviceAssociates(d, http.MethodDelete, ctx, loggingClient, dbClient, nc, configuration)
+	if err != nil {
 		errorHandler.Handle(w, err, errorconcept.Device.NotifyError)
 		return err
 	}
@@ -609,7 +625,8 @@ func restSetDeviceLastConnectedById(
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	errorHandler errorconcept.ErrorHandler,
-	nc notifications.NotificationsClient) {
+	nc notifications.NotificationsClient,
+	configuration *config.ConfigurationStruct) {
 
 	vars := mux.Vars(r)
 	var did string = vars[ID]
@@ -629,7 +646,8 @@ func restSetDeviceLastConnectedById(
 
 	ctx := r.Context()
 	// Update last connected
-	if err = setLastConnected(d, lc, false, w, ctx, loggingClient, dbClient, errorHandler, nc); err != nil {
+	err = setLastConnected(d, lc, false, w, ctx, loggingClient, dbClient, errorHandler, nc, configuration)
+	if err != nil {
 		return
 	}
 
@@ -643,7 +661,8 @@ func restSetLastConnectedByIdNotify(
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	errorHandler errorconcept.ErrorHandler,
-	nc notifications.NotificationsClient) {
+	nc notifications.NotificationsClient,
+	configuration *config.ConfigurationStruct) {
 
 	// Get the URL parameters
 	vars := mux.Vars(r)
@@ -669,7 +688,8 @@ func restSetLastConnectedByIdNotify(
 
 	ctx := r.Context()
 	// Update last connected
-	if err = setLastConnected(d, lc, notify, w, ctx, loggingClient, dbClient, errorHandler, nc); err != nil {
+	err = setLastConnected(d, lc, notify, w, ctx, loggingClient, dbClient, errorHandler, nc, configuration)
+	if err != nil {
 		return
 	}
 
@@ -683,7 +703,8 @@ func restSetDeviceLastConnectedByName(
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	errorHandler errorconcept.ErrorHandler,
-	nc notifications.NotificationsClient) {
+	nc notifications.NotificationsClient,
+	configuration *config.ConfigurationStruct) {
 
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
@@ -707,7 +728,8 @@ func restSetDeviceLastConnectedByName(
 
 	ctx := r.Context()
 	// Update last connected
-	if err = setLastConnected(d, lc, false, w, ctx, loggingClient, dbClient, errorHandler, nc); err != nil {
+	err = setLastConnected(d, lc, false, w, ctx, loggingClient, dbClient, errorHandler, nc, configuration)
+	if err != nil {
 		return
 	}
 
@@ -721,7 +743,8 @@ func restSetDeviceLastConnectedByNameNotify(
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	errorHandler errorconcept.ErrorHandler,
-	nc notifications.NotificationsClient) {
+	nc notifications.NotificationsClient,
+	configuration *config.ConfigurationStruct) {
 
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
@@ -750,7 +773,8 @@ func restSetDeviceLastConnectedByNameNotify(
 
 	ctx := r.Context()
 	// Update last connected
-	if err = setLastConnected(d, lc, notify, w, ctx, loggingClient, dbClient, errorHandler, nc); err != nil {
+	err = setLastConnected(d, lc, notify, w, ctx, loggingClient, dbClient, errorHandler, nc, configuration)
+	if err != nil {
 		return
 	}
 
@@ -768,7 +792,8 @@ func setLastConnected(
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	errorHandler errorconcept.ErrorHandler,
-	nc notifications.NotificationsClient) error {
+	nc notifications.NotificationsClient,
+	configuration *config.ConfigurationStruct) error {
 
 	d.LastConnected = time
 	if err := dbClient.UpdateDevice(d); err != nil {
@@ -777,7 +802,7 @@ func setLastConnected(
 	}
 
 	if notify {
-		notifyDeviceAssociates(d, http.MethodPut, ctx, loggingClient, dbClient, nc)
+		notifyDeviceAssociates(d, http.MethodPut, ctx, loggingClient, dbClient, nc, configuration)
 	}
 
 	return nil
@@ -789,7 +814,8 @@ func restSetDeviceLastReportedById(
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	errorHandler errorconcept.ErrorHandler,
-	nc notifications.NotificationsClient) {
+	nc notifications.NotificationsClient,
+	configuration *config.ConfigurationStruct) {
 
 	vars := mux.Vars(r)
 	var did string = vars[ID]
@@ -809,7 +835,17 @@ func restSetDeviceLastReportedById(
 
 	ctx := r.Context()
 	// Update Last Reported
-	if err = setLastReported(d, lr, false, w, ctx, loggingClient, dbClient, errorHandler, nc); err != nil {
+	if err = setLastReported(
+		d,
+		lr,
+		false,
+		w,
+		ctx,
+		loggingClient,
+		dbClient,
+		errorHandler,
+		nc,
+		configuration); err != nil {
 		return
 	}
 
@@ -823,7 +859,8 @@ func restSetDeviceLastReportedByIdNotify(
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	errorHandler errorconcept.ErrorHandler,
-	nc notifications.NotificationsClient) {
+	nc notifications.NotificationsClient,
+	configuration *config.ConfigurationStruct) {
 
 	vars := mux.Vars(r)
 	var did string = vars[ID]
@@ -848,7 +885,8 @@ func restSetDeviceLastReportedByIdNotify(
 
 	ctx := r.Context()
 	// Update last reported
-	if err = setLastReported(d, lr, notify, w, ctx, loggingClient, dbClient, errorHandler, nc); err != nil {
+	err = setLastReported(d, lr, notify, w, ctx, loggingClient, dbClient, errorHandler, nc, configuration)
+	if err != nil {
 		return
 	}
 
@@ -862,7 +900,8 @@ func restSetDeviceLastReportedByName(
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	errorHandler errorconcept.ErrorHandler,
-	nc notifications.NotificationsClient) {
+	nc notifications.NotificationsClient,
+	configuration *config.ConfigurationStruct) {
 
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
@@ -886,7 +925,17 @@ func restSetDeviceLastReportedByName(
 
 	ctx := r.Context()
 	// Update last reported
-	if err = setLastReported(d, lr, false, w, ctx, loggingClient, dbClient, errorHandler, nc); err != nil {
+	if err = setLastReported(
+		d,
+		lr,
+		false,
+		w,
+		ctx,
+		loggingClient,
+		dbClient,
+		errorHandler,
+		nc,
+		configuration); err != nil {
 		return
 	}
 
@@ -900,7 +949,8 @@ func restSetDeviceLastReportedByNameNotify(
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	errorHandler errorconcept.ErrorHandler,
-	nc notifications.NotificationsClient) {
+	nc notifications.NotificationsClient,
+	configuration *config.ConfigurationStruct) {
 
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
@@ -929,7 +979,8 @@ func restSetDeviceLastReportedByNameNotify(
 
 	ctx := r.Context()
 	// Update last reported
-	if err = setLastReported(d, lr, notify, w, ctx, loggingClient, dbClient, errorHandler, nc); err != nil {
+	err = setLastReported(d, lr, notify, w, ctx, loggingClient, dbClient, errorHandler, nc, configuration)
+	if err != nil {
 		return
 	}
 
@@ -947,7 +998,8 @@ func setLastReported(
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	errorHandler errorconcept.ErrorHandler,
-	nc notifications.NotificationsClient) error {
+	nc notifications.NotificationsClient,
+	configuration *config.ConfigurationStruct) error {
 
 	d.LastReported = time
 	if err := dbClient.UpdateDevice(d); err != nil {
@@ -956,7 +1008,7 @@ func setLastReported(
 	}
 
 	if notify {
-		notifyDeviceAssociates(d, http.MethodPut, ctx, loggingClient, dbClient, nc)
+		notifyDeviceAssociates(d, http.MethodPut, ctx, loggingClient, dbClient, nc, configuration)
 	}
 
 	return nil
@@ -990,10 +1042,11 @@ func notifyDeviceAssociates(
 	ctx context.Context,
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
-	nc notifications.NotificationsClient) error {
+	nc notifications.NotificationsClient,
+	configuration *config.ConfigurationStruct) error {
 
 	// Post the notification to the notifications service
-	postNotification(d.Name, action, ctx, nc)
+	postNotification(d.Name, action, ctx, nc, configuration)
 
 	// Callback for device service
 	ds, err := dbClient.GetDeviceServiceById(d.Service.Id)
@@ -1009,17 +1062,23 @@ func notifyDeviceAssociates(
 	return nil
 }
 
-func postNotification(name string, action string, ctx context.Context, nc notifications.NotificationsClient) {
+func postNotification(
+	name string,
+	action string,
+	ctx context.Context,
+	nc notifications.NotificationsClient,
+	configuration *config.ConfigurationStruct) {
+
 	// Only post notification if the configuration is set
-	if Configuration.Notifications.PostDeviceChanges {
+	if configuration.Notifications.PostDeviceChanges {
 		// Make the notification
 		notification := notifications.Notification{
-			Slug:        Configuration.Notifications.Slug + strconv.FormatInt(db.MakeTimestamp(), 10),
-			Content:     Configuration.Notifications.Content + name + "-" + string(action),
+			Slug:        configuration.Notifications.Slug + strconv.FormatInt(db.MakeTimestamp(), 10),
+			Content:     configuration.Notifications.Content + name + "-" + string(action),
 			Category:    notifications.SW_HEALTH,
-			Description: Configuration.Notifications.Description,
-			Labels:      []string{Configuration.Notifications.Label},
-			Sender:      Configuration.Notifications.Sender,
+			Description: configuration.Notifications.Description,
+			Labels:      []string{configuration.Notifications.Label},
+			Sender:      configuration.Notifications.Sender,
 			Severity:    notifications.NORMAL,
 		}
 

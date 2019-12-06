@@ -20,6 +20,7 @@ import (
 	"net/url"
 	"strconv"
 
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/config"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/operators/addressable"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
@@ -35,9 +36,10 @@ func restGetAllAddressables(
 	w http.ResponseWriter,
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
-	errorHandler errorconcept.ErrorHandler) {
+	errorHandler errorconcept.ErrorHandler,
+	configuration *config.ConfigurationStruct) {
 
-	op := addressable.NewAddressableLoadAll(Configuration.Service, dbClient, loggingClient)
+	op := addressable.NewAddressableLoadAll(configuration.Service, dbClient, loggingClient)
 	addressables, err := op.Execute()
 	if err != nil {
 		errorHandler.HandleOneVariant(
