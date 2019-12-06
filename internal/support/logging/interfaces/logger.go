@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2019 VMware Inc.
+ * Copyright 2019 Dell Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -10,21 +10,19 @@
  * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
- *
  *******************************************************************************/
 
-package logging
+package interfaces
 
-var (
-	/* ---------------- URL PARAM NAMES -----------------------*/
-	START          = "start"
-	END            = "end"
-	LIMIT          = "limit"
-	AGE            = "age"
-	KEYWORDS       = "keywords"
-	REMOVEOLD      = "removeold"
-	LOGLEVELS      = "logLevels"
-	ORIGINSERVICES = "originServices"
-	LEVELS         = "levels"
-	SERVICES       = "services"
+import (
+	"github.com/edgexfoundry/edgex-go/internal/support/logging/filter"
+
+	"github.com/edgexfoundry/go-mod-core-contracts/models"
 )
+
+type Logger interface {
+	Add(logEntry models.LogEntry) error
+	Remove(criteria filter.Criteria) (int, error)
+	Find(criteria filter.Criteria) ([]models.LogEntry, error)
+	CloseSession()
+}

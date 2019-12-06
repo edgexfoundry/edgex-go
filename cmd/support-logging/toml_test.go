@@ -10,13 +10,13 @@ package main
 import (
 	"testing"
 
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
-	"github.com/edgexfoundry/edgex-go/internal/support/logging"
+	types "github.com/edgexfoundry/edgex-go/internal/pkg/config"
+	"github.com/edgexfoundry/edgex-go/internal/support/logging/config"
 )
 
 func TestToml(t *testing.T) {
-	configuration := &logging.ConfigurationStruct{}
-	if err := config.VerifyTomlFiles(configuration); err != nil {
+	configuration := &config.ConfigurationStruct{}
+	if err := types.VerifyTomlFiles(configuration); err != nil {
 		t.Fatalf("%v", err)
 	}
 	if configuration.Service.StartupMsg == "" {
