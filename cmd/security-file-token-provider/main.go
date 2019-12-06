@@ -20,7 +20,6 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap"
-	bootstrapContainer "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
@@ -50,9 +49,6 @@ func main() {
 	dic := di.NewContainer(di.ServiceConstructorMap{
 		container.ConfigurationName: func(get di.Get) interface{} {
 			return configuration
-		},
-		bootstrapContainer.ConfigurationInterfaceName: func(get di.Get) interface{} {
-			return get(container.ConfigurationName)
 		},
 	})
 	bootstrap.Run(
