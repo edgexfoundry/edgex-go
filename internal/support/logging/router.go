@@ -20,6 +20,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
+	"github.com/edgexfoundry/edgex-go/internal/support/logging/config"
 	"github.com/edgexfoundry/edgex-go/internal/support/logging/container"
 	"github.com/edgexfoundry/edgex-go/internal/support/logging/filter"
 	"github.com/edgexfoundry/edgex-go/internal/support/logging/interfaces"
@@ -37,8 +38,12 @@ func pingHandler(w http.ResponseWriter, _ *http.Request) {
 	w.Write([]byte("pong"))
 }
 
-func configHandler(w http.ResponseWriter, loggingClient logger.LoggingClient) {
-	pkg.Encode(Configuration, w, loggingClient)
+func configHandler(
+	w http.ResponseWriter,
+	loggingClient logger.LoggingClient,
+	configuration *config.ConfigurationStruct) {
+
+	pkg.Encode(configuration, w, loggingClient)
 }
 
 func addLog(w http.ResponseWriter, r *http.Request, dbClient interfaces.Logger) {
@@ -71,14 +76,18 @@ func addLog(w http.ResponseWriter, r *http.Request, dbClient interfaces.Logger) 
 	dbClient.Add(l)
 }
 
-func checkMaxLimitCount(limit int) int {
-	if limit > Configuration.Service.MaxResultCount || limit == 0 {
-		return Configuration.Service.MaxResultCount
+func checkMaxLimitCount(limit int, configuration *config.ConfigurationStruct) int {
+	if limit > configuration.Service.MaxResultCount || limit == 0 {
+		return configuration.Service.MaxResultCount
 	}
 	return limit
 }
 
-func getCriteria(w http.ResponseWriter, vars map[string]string) *filter.Criteria {
+func getCriteria(
+	w http.ResponseWriter,
+	vars map[string]string,
+	configuration *config.ConfigurationStruct) *filter.Criteria {
+
 	var criteria filter.Criteria
 
 	limit := vars["limit"]
@@ -98,7 +107,7 @@ func getCriteria(w http.ResponseWriter, vars map[string]string) *filter.Criteria
 		}
 	}
 	//In all cases, cap the # of entries returned at MaxResultCount
-	criteria.Limit = checkMaxLimitCount(criteria.Limit)
+	criteria.Limit = checkMaxLimitCount(criteria.Limit, configuration)
 
 	start := vars["start"]
 	if len(start) > 0 {
@@ -184,8 +193,13 @@ func getCriteria(w http.ResponseWriter, vars map[string]string) *filter.Criteria
 	return &criteria
 }
 
-func getLogs(w http.ResponseWriter, vars map[string]string, dbClient interfaces.Logger) {
-	criteria := getCriteria(w, vars)
+func getLogs(
+	w http.ResponseWriter,
+	vars map[string]string,
+	dbClient interfaces.Logger,
+	configuration *config.ConfigurationStruct) {
+
+	criteria := getCriteria(w, vars, configuration)
 	if criteria == nil {
 		return
 	}
@@ -206,8 +220,13 @@ func getLogs(w http.ResponseWriter, vars map[string]string, dbClient interfaces.
 	w.Write([]byte(string(res)))
 }
 
-func delLogs(w http.ResponseWriter, vars map[string]string, dbClient interfaces.Logger) {
-	criteria := getCriteria(w, vars)
+func delLogs(
+	w http.ResponseWriter,
+	vars map[string]string,
+	dbClient interfaces.Logger,
+	configuration *config.ConfigurationStruct) {
+
+	criteria := getCriteria(w, vars, configuration)
 	if criteria == nil {
 		return
 	}
@@ -247,7 +266,7 @@ func LoadRestRoutes(dic *di.Container) *mux.Router {
 
 	// Configuration
 	r.HandleFunc(clients.ApiConfigRoute, func(w http.ResponseWriter, r *http.Request) {
-		configHandler(w, bootstrapContainer.LoggingClientFrom(dic.Get))
+		configHandler(w, bootstrapContainer.LoggingClientFrom(dic.Get), container.ConfigurationFrom(dic.Get))
 	}).Methods(http.MethodGet)
 
 	// Metrics
@@ -264,46 +283,98 @@ func LoadRestRoutes(dic *di.Container) *mux.Router {
 	}).Methods(http.MethodPost)
 
 	r.HandleFunc(clients.ApiLoggingRoute, func(w http.ResponseWriter, r *http.Request) {
-		getLogs(w, mux.Vars(r), container.LoggerInterfaceFrom(dic.Get))
+		getLogs(
+			w,
+			mux.Vars(r),
+			container.LoggerInterfaceFrom(dic.Get),
+			container.ConfigurationFrom(dic.Get))
 	}).Methods(http.MethodGet)
 
 	l := r.PathPrefix(clients.ApiLoggingRoute).Subrouter()
 	l.HandleFunc("/{"+limit+"}", func(w http.ResponseWriter, r *http.Request) {
-		getLogs(w, mux.Vars(r), container.LoggerInterfaceFrom(dic.Get))
+		getLogs(
+			w,
+			mux.Vars(r),
+			container.LoggerInterfaceFrom(dic.Get),
+			container.ConfigurationFrom(dic.Get))
 	}).Methods(http.MethodGet)
 	l.HandleFunc("/{"+start+"}/{"+end+"}/{"+limit+"}", func(w http.ResponseWriter, r *http.Request) {
-		getLogs(w, mux.Vars(r), container.LoggerInterfaceFrom(dic.Get))
+		getLogs(
+			w,
+			mux.Vars(r),
+			container.LoggerInterfaceFrom(dic.Get),
+			container.ConfigurationFrom(dic.Get))
 	}).Methods(http.MethodGet)
 	l.HandleFunc("/"+originServices+"/{"+services+"}/{"+start+"}/{"+end+"}/{"+limit+"}", func(w http.ResponseWriter, r *http.Request) {
-		getLogs(w, mux.Vars(r), container.LoggerInterfaceFrom(dic.Get))
+		getLogs(
+			w,
+			mux.Vars(r),
+			container.LoggerInterfaceFrom(dic.Get),
+			container.ConfigurationFrom(dic.Get))
 	}).Methods(http.MethodGet)
 	l.HandleFunc("/"+keywords+"/{"+keywords+"}/{"+start+"}/{"+end+"}/{"+limit+"}", func(w http.ResponseWriter, r *http.Request) {
-		getLogs(w, mux.Vars(r), container.LoggerInterfaceFrom(dic.Get))
+		getLogs(
+			w,
+			mux.Vars(r),
+			container.LoggerInterfaceFrom(dic.Get),
+			container.ConfigurationFrom(dic.Get))
 	}).Methods(http.MethodGet)
 	l.HandleFunc("/"+logLevels+"/{"+levels+"}/{"+start+"}/{"+end+"}/{"+limit+"}", func(w http.ResponseWriter, r *http.Request) {
-		getLogs(w, mux.Vars(r), container.LoggerInterfaceFrom(dic.Get))
+		getLogs(
+			w,
+			mux.Vars(r),
+			container.LoggerInterfaceFrom(dic.Get),
+			container.ConfigurationFrom(dic.Get))
 	}).Methods(http.MethodGet)
 	l.HandleFunc("/"+logLevels+"/{"+levels+"}/"+originServices+"/{"+services+"}/{"+start+"}/{"+end+"}/{"+limit+"}", func(w http.ResponseWriter, r *http.Request) {
-		getLogs(w, mux.Vars(r), container.LoggerInterfaceFrom(dic.Get))
+		getLogs(
+			w,
+			mux.Vars(r),
+			container.LoggerInterfaceFrom(dic.Get),
+			container.ConfigurationFrom(dic.Get))
 	}).Methods(http.MethodGet)
 
 	l.HandleFunc("/{"+start+"}/{"+end+"}", func(w http.ResponseWriter, r *http.Request) {
-		delLogs(w, mux.Vars(r), container.LoggerInterfaceFrom(dic.Get))
+		delLogs(
+			w,
+			mux.Vars(r),
+			container.LoggerInterfaceFrom(dic.Get),
+			container.ConfigurationFrom(dic.Get))
 	}).Methods(http.MethodDelete)
 	l.HandleFunc("/"+keywords+"/{"+keywords+"}/{"+start+"}/{"+end+"}", func(w http.ResponseWriter, r *http.Request) {
-		delLogs(w, mux.Vars(r), container.LoggerInterfaceFrom(dic.Get))
+		delLogs(
+			w,
+			mux.Vars(r),
+			container.LoggerInterfaceFrom(dic.Get),
+			container.ConfigurationFrom(dic.Get))
 	}).Methods(http.MethodDelete)
 	l.HandleFunc("/"+originServices+"/{"+services+"}/{"+start+"}/{"+end+"}", func(w http.ResponseWriter, r *http.Request) {
-		delLogs(w, mux.Vars(r), container.LoggerInterfaceFrom(dic.Get))
+		delLogs(
+			w,
+			mux.Vars(r),
+			container.LoggerInterfaceFrom(dic.Get),
+			container.ConfigurationFrom(dic.Get))
 	}).Methods(http.MethodDelete)
 	l.HandleFunc("/"+logLevels+"/{"+levels+"}/{"+start+"}/{"+end+"}", func(w http.ResponseWriter, r *http.Request) {
-		delLogs(w, mux.Vars(r), container.LoggerInterfaceFrom(dic.Get))
+		delLogs(
+			w,
+			mux.Vars(r),
+			container.LoggerInterfaceFrom(dic.Get),
+			container.ConfigurationFrom(dic.Get))
 	}).Methods(http.MethodDelete)
 	l.HandleFunc("/"+logLevels+"/{"+levels+"}/"+originServices+"/{"+services+"}/{"+start+"}/{"+end+"}", func(w http.ResponseWriter, r *http.Request) {
-		delLogs(w, mux.Vars(r), container.LoggerInterfaceFrom(dic.Get))
+		delLogs(
+			w,
+			mux.Vars(r),
+			container.LoggerInterfaceFrom(dic.Get),
+			container.ConfigurationFrom(dic.Get))
 	}).Methods(http.MethodDelete)
 	l.HandleFunc("/"+removeOld+"/"+age+"/{"+age+"}", func(w http.ResponseWriter, r *http.Request) {
-		delLogs(w, mux.Vars(r), container.LoggerInterfaceFrom(dic.Get))
+		delLogs(
+			w,
+			mux.Vars(r),
+			container.LoggerInterfaceFrom(dic.Get),
+			container.ConfigurationFrom(dic.Get))
 	}).Methods(http.MethodDelete)
 
 	r.Use(correlation.ManageHeader)

@@ -30,8 +30,6 @@ const (
 	PersistenceFile = "file"
 )
 
-var Configuration = &config.ConfigurationStruct{}
-
 type server interface {
 	IsRunning() bool
 }
@@ -48,14 +46,17 @@ func NewServiceInit(server server, serviceKey string) ServiceInit {
 	}
 }
 
-func getPersistence(credentials *types.Credentials) (interfaces.Logger, error) {
-	switch Configuration.Writable.Persistence {
+func getPersistence(
+	credentials *types.Credentials,
+	configuration *config.ConfigurationStruct) (interfaces.Logger, error) {
+
+	switch configuration.Writable.Persistence {
 	case PersistenceFile:
-		return file.NewLogger(Configuration.Logging.File), nil
+		return file.NewLogger(configuration.Logging.File), nil
 	case PersistenceDB:
-		return mongo.NewLogger(credentials, Configuration)
+		return mongo.NewLogger(credentials, configuration)
 	default:
-		return nil, fmt.Errorf("unrecognized value Configuration.Logger: %s", Configuration.Writable.Persistence)
+		return nil, fmt.Errorf("unrecognized value Configuration.Logger: %s", configuration.Writable.Persistence)
 	}
 }
 
@@ -66,12 +67,14 @@ func (s ServiceInit) BootstrapHandler(
 	dic *di.Container) bool {
 
 	loggingClient := logging.FactoryToStdout(s.serviceKey)
+	configuration := container.ConfigurationFrom(dic.Get)
 
 	// get database credentials.
+	credentialsProvider := bootstrapContainer.CredentialsProviderFrom(dic.Get)
 	var credentials types.Credentials
 	for startupTimer.HasNotElapsed() {
 		var err error
-		credentials, err = bootstrapContainer.CredentialsProviderFrom(dic.Get).GetDatabaseCredentials(Configuration.Databases["Primary"])
+		credentials, err = credentialsProvider.GetDatabaseCredentials(configuration.Databases["Primary"])
 		if err == nil {
 			break
 		}
@@ -83,7 +86,7 @@ func (s ServiceInit) BootstrapHandler(
 	var dbClient interfaces.Logger
 	var err error
 	for startupTimer.HasNotElapsed() {
-		dbClient, err = getPersistence(&credentials)
+		dbClient, err = getPersistence(&credentials, configuration)
 		if err == nil {
 			break
 		}
