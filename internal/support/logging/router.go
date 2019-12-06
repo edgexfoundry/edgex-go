@@ -20,7 +20,9 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
+	"github.com/edgexfoundry/edgex-go/internal/support/logging/container"
 	"github.com/edgexfoundry/edgex-go/internal/support/logging/filter"
+	"github.com/edgexfoundry/edgex-go/internal/support/logging/interfaces"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
@@ -39,7 +41,7 @@ func configHandler(w http.ResponseWriter, loggingClient logger.LoggingClient) {
 	pkg.Encode(Configuration, w, loggingClient)
 }
 
-func addLog(w http.ResponseWriter, r *http.Request) {
+func addLog(w http.ResponseWriter, r *http.Request, dbClient interfaces.Logger) {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -182,7 +184,7 @@ func getCriteria(w http.ResponseWriter, vars map[string]string) *filter.Criteria
 	return &criteria
 }
 
-func getLogs(w http.ResponseWriter, vars map[string]string) {
+func getLogs(w http.ResponseWriter, vars map[string]string, dbClient interfaces.Logger) {
 	criteria := getCriteria(w, vars)
 	if criteria == nil {
 		return
@@ -204,7 +206,7 @@ func getLogs(w http.ResponseWriter, vars map[string]string) {
 	w.Write([]byte(string(res)))
 }
 
-func delLogs(w http.ResponseWriter, vars map[string]string) {
+func delLogs(w http.ResponseWriter, vars map[string]string, dbClient interfaces.Logger) {
 	criteria := getCriteria(w, vars)
 	if criteria == nil {
 		return
@@ -257,49 +259,51 @@ func LoadRestRoutes(dic *di.Container) *mux.Router {
 	r.HandleFunc(clients.ApiVersionRoute, pkg.VersionHandler).Methods(http.MethodGet)
 
 	// Logs
-	r.HandleFunc(clients.ApiLoggingRoute, addLog).Methods(http.MethodPost)
+	r.HandleFunc(clients.ApiLoggingRoute, func(w http.ResponseWriter, r *http.Request) {
+		addLog(w, r, container.LoggerInterfaceFrom(dic.Get))
+	}).Methods(http.MethodPost)
 
 	r.HandleFunc(clients.ApiLoggingRoute, func(w http.ResponseWriter, r *http.Request) {
-		getLogs(w, mux.Vars(r))
+		getLogs(w, mux.Vars(r), container.LoggerInterfaceFrom(dic.Get))
 	}).Methods(http.MethodGet)
 
 	l := r.PathPrefix(clients.ApiLoggingRoute).Subrouter()
 	l.HandleFunc("/{"+limit+"}", func(w http.ResponseWriter, r *http.Request) {
-		getLogs(w, mux.Vars(r))
+		getLogs(w, mux.Vars(r), container.LoggerInterfaceFrom(dic.Get))
 	}).Methods(http.MethodGet)
 	l.HandleFunc("/{"+start+"}/{"+end+"}/{"+limit+"}", func(w http.ResponseWriter, r *http.Request) {
-		getLogs(w, mux.Vars(r))
+		getLogs(w, mux.Vars(r), container.LoggerInterfaceFrom(dic.Get))
 	}).Methods(http.MethodGet)
 	l.HandleFunc("/"+originServices+"/{"+services+"}/{"+start+"}/{"+end+"}/{"+limit+"}", func(w http.ResponseWriter, r *http.Request) {
-		getLogs(w, mux.Vars(r))
+		getLogs(w, mux.Vars(r), container.LoggerInterfaceFrom(dic.Get))
 	}).Methods(http.MethodGet)
 	l.HandleFunc("/"+keywords+"/{"+keywords+"}/{"+start+"}/{"+end+"}/{"+limit+"}", func(w http.ResponseWriter, r *http.Request) {
-		getLogs(w, mux.Vars(r))
+		getLogs(w, mux.Vars(r), container.LoggerInterfaceFrom(dic.Get))
 	}).Methods(http.MethodGet)
 	l.HandleFunc("/"+logLevels+"/{"+levels+"}/{"+start+"}/{"+end+"}/{"+limit+"}", func(w http.ResponseWriter, r *http.Request) {
-		getLogs(w, mux.Vars(r))
+		getLogs(w, mux.Vars(r), container.LoggerInterfaceFrom(dic.Get))
 	}).Methods(http.MethodGet)
 	l.HandleFunc("/"+logLevels+"/{"+levels+"}/"+originServices+"/{"+services+"}/{"+start+"}/{"+end+"}/{"+limit+"}", func(w http.ResponseWriter, r *http.Request) {
-		getLogs(w, mux.Vars(r))
+		getLogs(w, mux.Vars(r), container.LoggerInterfaceFrom(dic.Get))
 	}).Methods(http.MethodGet)
 
 	l.HandleFunc("/{"+start+"}/{"+end+"}", func(w http.ResponseWriter, r *http.Request) {
-		delLogs(w, mux.Vars(r))
+		delLogs(w, mux.Vars(r), container.LoggerInterfaceFrom(dic.Get))
 	}).Methods(http.MethodDelete)
 	l.HandleFunc("/"+keywords+"/{"+keywords+"}/{"+start+"}/{"+end+"}", func(w http.ResponseWriter, r *http.Request) {
-		delLogs(w, mux.Vars(r))
+		delLogs(w, mux.Vars(r), container.LoggerInterfaceFrom(dic.Get))
 	}).Methods(http.MethodDelete)
 	l.HandleFunc("/"+originServices+"/{"+services+"}/{"+start+"}/{"+end+"}", func(w http.ResponseWriter, r *http.Request) {
-		delLogs(w, mux.Vars(r))
+		delLogs(w, mux.Vars(r), container.LoggerInterfaceFrom(dic.Get))
 	}).Methods(http.MethodDelete)
 	l.HandleFunc("/"+logLevels+"/{"+levels+"}/{"+start+"}/{"+end+"}", func(w http.ResponseWriter, r *http.Request) {
-		delLogs(w, mux.Vars(r))
+		delLogs(w, mux.Vars(r), container.LoggerInterfaceFrom(dic.Get))
 	}).Methods(http.MethodDelete)
 	l.HandleFunc("/"+logLevels+"/{"+levels+"}/"+originServices+"/{"+services+"}/{"+start+"}/{"+end+"}", func(w http.ResponseWriter, r *http.Request) {
-		delLogs(w, mux.Vars(r))
+		delLogs(w, mux.Vars(r), container.LoggerInterfaceFrom(dic.Get))
 	}).Methods(http.MethodDelete)
 	l.HandleFunc("/"+removeOld+"/"+age+"/{"+age+"}", func(w http.ResponseWriter, r *http.Request) {
-		delLogs(w, mux.Vars(r))
+		delLogs(w, mux.Vars(r), container.LoggerInterfaceFrom(dic.Get))
 	}).Methods(http.MethodDelete)
 
 	r.Use(correlation.ManageHeader)
