@@ -10,18 +10,19 @@ package logging
 import (
 	"context"
 	"fmt"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/logging"
-	"github.com/edgexfoundry/edgex-go/internal/support/logging/logger/mongo"
 	"sync"
 	"time"
 
-	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
+	bootstrapContainer "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/logging"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
 	types "github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 	"github.com/edgexfoundry/edgex-go/internal/support/logging/config"
+	"github.com/edgexfoundry/edgex-go/internal/support/logging/container"
 	"github.com/edgexfoundry/edgex-go/internal/support/logging/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/support/logging/logger/file"
+	"github.com/edgexfoundry/edgex-go/internal/support/logging/logger/mongo"
 )
 
 const (
@@ -30,7 +31,6 @@ const (
 )
 
 var Configuration = &config.ConfigurationStruct{}
-var dbClient interfaces.Logger
 
 type server interface {
 	IsRunning() bool
@@ -65,19 +65,13 @@ func (s ServiceInit) BootstrapHandler(
 	startupTimer startup.Timer,
 	dic *di.Container) bool {
 
-	dic.Update(di.ServiceConstructorMap{
-		container.LoggingClientInterfaceName: func(get di.Get) interface{} {
-			return logging.FactoryToStdout(s.serviceKey)
-		},
-	})
-
-	loggingClient := container.LoggingClientFrom(dic.Get)
+	loggingClient := logging.FactoryToStdout(s.serviceKey)
 
 	// get database credentials.
 	var credentials types.Credentials
 	for startupTimer.HasNotElapsed() {
 		var err error
-		credentials, err = container.CredentialsProviderFrom(dic.Get).GetDatabaseCredentials(Configuration.Databases["Primary"])
+		credentials, err = bootstrapContainer.CredentialsProviderFrom(dic.Get).GetDatabaseCredentials(Configuration.Databases["Primary"])
 		if err == nil {
 			break
 		}
@@ -86,6 +80,7 @@ func (s ServiceInit) BootstrapHandler(
 	}
 
 	// initialize database.
+	var dbClient interfaces.Logger
 	var err error
 	for startupTimer.HasNotElapsed() {
 		dbClient, err = getPersistence(&credentials)
@@ -99,6 +94,15 @@ func (s ServiceInit) BootstrapHandler(
 	if err != nil {
 		return false
 	}
+
+	dic.Update(di.ServiceConstructorMap{
+		bootstrapContainer.LoggingClientInterfaceName: func(get di.Get) interface{} {
+			return loggingClient
+		},
+		container.LoggerInterfaceName: func(get di.Get) interface{} {
+			return dbClient
+		},
+	})
 
 	loggingClient.Info("Database connected")
 	wg.Add(1)

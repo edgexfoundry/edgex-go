@@ -32,7 +32,7 @@ const (
 	numberOfLogs = 2
 )
 
-func (dp *dummyPersist) Add(le models.LogEntry) error {
+func (dp *dummyPersist) Add(_ models.LogEntry) error {
 	dp.added += 1
 	return nil
 }
@@ -78,15 +78,13 @@ func TestAddLog(t *testing.T) {
 			http.StatusBadRequest},
 	}
 
-	dbClient = &dummyPersist{}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			rr := httptest.NewRecorder()
 			req := httptest.NewRequest("POST", "/", strings.NewReader(tt.data))
-			addLog(rr, req)
+			addLog(rr, req, &dummyPersist{})
 			response := rr.Result()
-			defer response.Body.Close()
+			defer func() { _ = response.Body.Close() }()
 			if response.StatusCode != tt.status {
 				t.Errorf("Returned status %d, should be %d", response.StatusCode, tt.status)
 			}
@@ -189,14 +187,13 @@ func TestGetLogs(t *testing.T) {
 			3},
 	}
 
-	dummy := &dummyPersist{}
-	dbClient = dummy
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			persistence := &dummyPersist{}
 			rr := httptest.NewRecorder()
-			getLogs(rr, tt.vars)
+			getLogs(rr, tt.vars, persistence)
 			response := rr.Result()
+			defer func() { _ = response.Body.Close() }()
 
 			if response.StatusCode != tt.status {
 				t.Errorf("Returned status %d, should be %d", response.StatusCode, tt.status)
@@ -206,8 +203,8 @@ func TestGetLogs(t *testing.T) {
 				//Apply rules for limit validation to original criteria
 				tt.criteria.Limit = checkMaxLimitCount(tt.criteria.Limit)
 				//Then compare against what was persisted during the test run
-				if !reflect.DeepEqual(dummy.criteria, tt.criteria) {
-					t.Errorf("Invalid criteria %v, should be %v", dummy.criteria, tt.criteria)
+				if !reflect.DeepEqual(persistence.criteria, tt.criteria) {
+					t.Errorf("Invalid criteria %v, should be %v", persistence.criteria, tt.criteria)
 				}
 			}
 		})
@@ -277,25 +274,25 @@ func TestRemoveLogs(t *testing.T) {
 			filter.Criteria{LogLevels: logLevels, OriginServices: services, Start: 1, End: 2}},
 	}
 
-	dummy := &dummyPersist{}
-	dbClient = dummy
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			persistence := &dummyPersist{}
 			rr := httptest.NewRecorder()
-			delLogs(rr, tt.vars)
+			delLogs(rr, tt.vars, persistence)
 			response := rr.Result()
+			defer func() { _ = response.Body.Close() }()
+
 			if response.StatusCode != tt.status {
 				t.Errorf("Returned status %d, should be %d", response.StatusCode, tt.status)
 			}
 			// Only test that criteria is correctly parsed if request has status ok and limit > 0
 			if tt.status == http.StatusOK && tt.criteria.Limit != 0 {
-				if !reflect.DeepEqual(dummy.criteria, tt.criteria) {
-					t.Errorf("Invalid criteria %v, should be %v", dummy.criteria, tt.criteria)
+				if !reflect.DeepEqual(persistence.criteria, tt.criteria) {
+					t.Errorf("Invalid criteria %v, should be %v", persistence.criteria, tt.criteria)
 				}
 				bodyBytes, _ := ioutil.ReadAll(response.Body)
-				if string(bodyBytes) != strconv.Itoa(dummy.deleted) {
-					t.Errorf("Invalid criteria %v, should be %v", dummy.criteria, tt.criteria)
+				if string(bodyBytes) != strconv.Itoa(persistence.deleted) {
+					t.Errorf("Invalid criteria %v, should be %v", persistence.criteria, tt.criteria)
 				}
 			}
 		})
