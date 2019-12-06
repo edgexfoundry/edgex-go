@@ -19,10 +19,10 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/support/logging/interfaces"
 )
 
-// LoggerInterfaceName contains the name of the interfaces.DBClient implementation in the DIC.
-var LoggerInterfaceName = di.TypeInstanceToName((*interfaces.Logger)(nil))
+// PersistenceInterfaceName contains the name of the interfaces.Persistence implementation in the DIC.
+var PersistenceInterfaceName = di.TypeInstanceToName((*interfaces.Persistence)(nil))
 
-// LoggerInterfaceFrom helper function queries the DIC and returns the interfaces.Logger implementation.
-func LoggerInterfaceFrom(get di.Get) interfaces.Logger {
-	return get(LoggerInterfaceName).(interfaces.Logger)
+// PersistenceInterfaceFrom helper function queries the DIC and returns the interfaces.Persistence implementation.
+func PersistenceInterfaceFrom(get di.Get) interfaces.Persistence {
+	return get(PersistenceInterfaceName).(interfaces.Persistence)
 }
