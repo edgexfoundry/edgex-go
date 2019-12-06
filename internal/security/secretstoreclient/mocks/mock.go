@@ -56,3 +56,39 @@ func (m *MockSecretStoreClient) CreateToken(token string, parameters map[string]
 	arguments := m.Called(token, parameters, response)
 	return arguments.Int(0), arguments.Error(1)
 }
+
+func (m *MockSecretStoreClient) ListAccessors(token string, accessors *[]string) (statusCode int, err error) {
+	// Boilerplate that returns whatever Mock.On().Returns() is configured for
+	arguments := m.Called(token, accessors)
+	return arguments.Int(0), arguments.Error(1)
+}
+
+func (m *MockSecretStoreClient) RevokeAccessor(token string, accessor string) (statusCode int, err error) {
+	// Boilerplate that returns whatever Mock.On().Returns() is configured for
+	arguments := m.Called(token, accessor)
+	return arguments.Int(0), arguments.Error(1)
+}
+
+func (m *MockSecretStoreClient) LookupAccessor(token string, accessor string, tokenMetadata *TokenMetadata) (statusCode int, err error) {
+	// Boilerplate that returns whatever Mock.On().Returns() is configured for
+	arguments := m.Called(token, accessor, tokenMetadata)
+	return arguments.Int(0), arguments.Error(1)
+}
+
+func (m *MockSecretStoreClient) LookupSelf(token string, tokenMetadata *TokenMetadata) (statusCode int, err error) {
+	// Boilerplate that returns whatever Mock.On().Returns() is configured for
+	arguments := m.Called(token, tokenMetadata)
+	return arguments.Int(0), arguments.Error(1)
+}
+
+func (m *MockSecretStoreClient) RevokeSelf(token string) (statusCode int, err error) {
+	// Boilerplate that returns whatever Mock.On().Returns() is configured for
+	arguments := m.Called(token)
+	return arguments.Int(0), arguments.Error(1)
+}
+
+func (m *MockSecretStoreClient) RegenRootToken(vmkReader io.Reader, rootToken *string) (err error) {
+	// Boilerplate that returns whatever Mock.On().Returns() is configured for
+	arguments := m.Called(vmkReader, rootToken)
+	return arguments.Error(0)
+}

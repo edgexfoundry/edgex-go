@@ -23,6 +23,7 @@ import (
 
 	. "github.com/edgexfoundry/edgex-go/internal/security/secretstoreclient"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestMockInterfaceType(t *testing.T) {
@@ -70,7 +71,7 @@ func TestMockInstallPolicy(t *testing.T) {
 	mockClient.On("InstallPolicy", "fake-token", "foo", "bar").Return(http.StatusOK, nil)
 
 	rc, err := mockClient.InstallPolicy("fake-token", "foo", "bar")
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, rc)
 	mockClient.AssertExpectations(t)
 }
@@ -82,7 +83,70 @@ func TestMockCreateToken(t *testing.T) {
 	mockClient.On("CreateToken", "fake-token", params, response).Return(http.StatusOK, nil)
 
 	rc, err := mockClient.CreateToken("fake-token", params, response)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, rc)
+	mockClient.AssertExpectations(t)
+}
+
+func TestMockListAccessors(t *testing.T) {
+	var response []string
+	mockClient := &MockSecretStoreClient{}
+	mockClient.On("ListAccessors", "fake-token", mock.Anything).Return(http.StatusOK, nil)
+
+	rc, err := mockClient.ListAccessors("fake-token", &response)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, rc)
+	mockClient.AssertExpectations(t)
+}
+
+func TestMockRevokeAccessor(t *testing.T) {
+	mockClient := &MockSecretStoreClient{}
+	mockClient.On("RevokeAccessor", "fake-token", "someaccessor").Return(http.StatusNoContent, nil)
+
+	rc, err := mockClient.RevokeAccessor("fake-token", "someaccessor")
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusNoContent, rc)
+	mockClient.AssertExpectations(t)
+}
+
+func TestMockLookupAccessor(t *testing.T) {
+	mockClient := &MockSecretStoreClient{}
+	mockClient.On("LookupAccessor", "fake-token", "8609694a-cdbc-db9b-d345-e782dbb562ed", mock.Anything).Return(http.StatusOK, nil)
+
+	var tokenMetadata TokenMetadata
+	rc, err := mockClient.LookupAccessor("fake-token", "8609694a-cdbc-db9b-d345-e782dbb562ed", &tokenMetadata)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, rc)
+	mockClient.AssertExpectations(t)
+}
+
+func TestMockLookupSelf(t *testing.T) {
+	mockClient := &MockSecretStoreClient{}
+	mockClient.On("LookupSelf", "fake-token", mock.Anything).Return(http.StatusOK, nil)
+
+	var tokenMetadata TokenMetadata
+	rc, err := mockClient.LookupSelf("fake-token", &tokenMetadata)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, rc)
+	mockClient.AssertExpectations(t)
+}
+
+func TestMockRevokeSelf(t *testing.T) {
+	mockClient := &MockSecretStoreClient{}
+	mockClient.On("RevokeSelf", "fake-token", mock.Anything).Return(http.StatusOK, nil)
+
+	rc, err := mockClient.RevokeSelf("fake-token")
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, rc)
+	mockClient.AssertExpectations(t)
+}
+
+func TestMockRegenRootToken(t *testing.T) {
+	mockClient := &MockSecretStoreClient{}
+	mockClient.On("RegenRootToken", mock.Anything, mock.Anything).Return(nil)
+
+	var rootToken string
+	err := mockClient.RegenRootToken(nil, &rootToken)
+	assert.NoError(t, err)
 	mockClient.AssertExpectations(t)
 }

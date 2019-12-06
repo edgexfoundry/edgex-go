@@ -63,8 +63,15 @@ type RevokeTokenAccessorRequest struct {
 
 // TokenMetadata has introspection data about a token
 type TokenMetadata struct {
-	Accessor   string `json:"accessor"`
-	ExpireTime string `json:"expire_time"`
+	Accessor   string   `json:"accessor"`
+	ExpireTime string   `json:"expire_time"`
+	Path       string   `json:"path"`
+	Policies   []string `json:"policies"`
+}
+
+// LookupAccessorRequest is used by accessor lookup API
+type LookupAccessorRequest struct {
+	Accessor string `json:"accessor"`
 }
 
 // TokenLookupResponse is the response to the token lookup API
@@ -72,8 +79,8 @@ type TokenLookupResponse struct {
 	Data TokenMetadata
 }
 
-// RootTokenControlRespose is the response to /v1/sys/generate-root/attempt
-type RootTokenControlRespose struct {
+// RootTokenControlResponse is the response to /v1/sys/generate-root/attempt
+type RootTokenControlResponse struct {
 	Complete bool   `json:"complete"`
 	Nonce    string `json:"nonce"`
 	Otp      string `json:"otp"`

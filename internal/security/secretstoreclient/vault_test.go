@@ -247,3 +247,194 @@ func TestCreateToken(t *testing.T) {
 	assert.Equal(http.StatusOK, code)
 	assert.Equal("f00341c1-fad5-f6e6-13fd-235617f858a1", response["request_id"].(string))
 }
+
+func TestListAccessors(t *testing.T) {
+	// Arrange
+	assert := assert.New(t)
+	mockLogger := logger.MockLogger{}
+
+	ts := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal("LIST", r.Method)
+		assert.Equal(ListAccessorsAPI, r.URL.EscapedPath())
+		assert.Equal("fake-token", r.Header.Get("X-Vault-Token"))
+
+		// No body for this request
+
+		w.WriteHeader(http.StatusOK)
+
+		response := struct {
+			Data interface{} `json:"data"`
+		}{
+			Data: struct {
+				Keys []string `json:"keys"`
+			}{
+				Keys: []string{"accessor1", "accessor2"},
+			},
+		}
+		err := json.NewEncoder(w).Encode(response)
+		assert.Nil(err)
+
+	}))
+	defer ts.Close()
+
+	host := strings.Replace(ts.URL, "https://", "", -1)
+	vc := NewSecretStoreClient(mockLogger, NewRequestor(mockLogger).Insecure(), "https", host)
+
+	// Act
+	var response []string
+	code, err := vc.ListAccessors("fake-token", &response)
+
+	// Assert
+	assert.Nil(err)
+	assert.Equal(http.StatusOK, code)
+	assert.Equal("accessor1", response[0])
+	assert.Equal("accessor2", response[1])
+}
+
+func TestRevokeAccessor(t *testing.T) {
+	// Arrange
+	assert := assert.New(t)
+	mockLogger := logger.MockLogger{}
+
+	ts := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal("POST", r.Method)
+		assert.Equal(RevokeAccessorAPI, r.URL.EscapedPath())
+		assert.Equal("fake-token", r.Header.Get("X-Vault-Token"))
+
+		body := make(map[string]interface{})
+		err := json.NewDecoder(r.Body).Decode(&body)
+		assert.Nil(err)
+
+		assert.Equal("accessor1", body["accessor"])
+
+		w.WriteHeader(http.StatusNoContent)
+
+		// no response body
+	}))
+	defer ts.Close()
+
+	host := strings.Replace(ts.URL, "https://", "", -1)
+	vc := NewSecretStoreClient(mockLogger, NewRequestor(mockLogger).Insecure(), "https", host)
+
+	// Act
+	code, err := vc.RevokeAccessor("fake-token", "accessor1")
+
+	// Assert
+	assert.Nil(err)
+	assert.Equal(http.StatusNoContent, code)
+}
+
+func TestLookupAccessor(t *testing.T) {
+	// Arrange
+	assert := assert.New(t)
+	mockLogger := logger.MockLogger{}
+
+	ts := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal("POST", r.Method)
+		assert.Equal(LookupAccessorAPI, r.URL.EscapedPath())
+		assert.Equal("fake-token", r.Header.Get("X-Vault-Token"))
+
+		body := make(map[string]interface{})
+		err := json.NewDecoder(r.Body).Decode(&body)
+		assert.Nil(err)
+
+		assert.Equal("8609694a-cdbc-db9b-d345-e782dbb562ed", body["accessor"])
+
+		w.WriteHeader(http.StatusOK)
+
+		response := struct {
+			Data interface{} `json:"data"`
+		}{
+			Data: struct {
+				Accessor string `json:"accessor"`
+			}{
+				Accessor: "accessor-value",
+			},
+		}
+		err = json.NewEncoder(w).Encode(response)
+		assert.Nil(err)
+
+	}))
+	defer ts.Close()
+
+	host := strings.Replace(ts.URL, "https://", "", -1)
+	vc := NewSecretStoreClient(mockLogger, NewRequestor(mockLogger).Insecure(), "https", host)
+
+	// Act
+	var md TokenMetadata
+	code, err := vc.LookupAccessor("fake-token", "8609694a-cdbc-db9b-d345-e782dbb562ed", &md)
+
+	// Assert
+	assert.Nil(err)
+	assert.Equal(http.StatusOK, code)
+	assert.Equal("accessor-value", md.Accessor)
+}
+
+func TestLookupSelf(t *testing.T) {
+	// Arrange
+	assert := assert.New(t)
+	mockLogger := logger.MockLogger{}
+
+	ts := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal("GET", r.Method)
+		assert.Equal(LookupSelfAPI, r.URL.EscapedPath())
+		assert.Equal("fake-token", r.Header.Get("X-Vault-Token"))
+
+		// No body for this request
+
+		w.WriteHeader(http.StatusOK)
+
+		response := struct {
+			Data interface{} `json:"data"`
+		}{
+			Data: struct {
+				Accessor string `json:"accessor"`
+			}{
+				Accessor: "accessor-value",
+			},
+		}
+		err := json.NewEncoder(w).Encode(response)
+		assert.Nil(err)
+
+	}))
+	defer ts.Close()
+
+	host := strings.Replace(ts.URL, "https://", "", -1)
+	vc := NewSecretStoreClient(mockLogger, NewRequestor(mockLogger).Insecure(), "https", host)
+
+	// Act
+	var md TokenMetadata
+	code, err := vc.LookupSelf("fake-token", &md)
+
+	// Assert
+	assert.Nil(err)
+	assert.Equal(http.StatusOK, code)
+	assert.Equal("accessor-value", md.Accessor)
+}
+
+func TestRevokeSelf(t *testing.T) {
+	// Arrange
+	assert := assert.New(t)
+	mockLogger := logger.MockLogger{}
+
+	ts := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal("POST", r.Method)
+		assert.Equal(RevokeSelfAPI, r.URL.EscapedPath())
+		assert.Equal("fake-token", r.Header.Get("X-Vault-Token"))
+
+		// No body, no response body for this request
+
+		w.WriteHeader(http.StatusNoContent)
+	}))
+	defer ts.Close()
+
+	host := strings.Replace(ts.URL, "https://", "", -1)
+	vc := NewSecretStoreClient(mockLogger, NewRequestor(mockLogger).Insecure(), "https", host)
+
+	// Act
+	code, err := vc.RevokeSelf("fake-token")
+
+	// Assert
+	assert.Nil(err)
+	assert.Equal(http.StatusNoContent, code)
+}
