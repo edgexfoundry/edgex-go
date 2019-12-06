@@ -42,7 +42,8 @@ func main() {
 	flag.Usage = usage.HelpCallback
 	flag.Parse()
 
-	httpServer := httpserver.NewBootstrap(logging.LoadRestRoutes())
+	dic := di.NewContainer(di.ServiceConstructorMap{})
+	httpServer := httpserver.NewBootstrap(logging.LoadRestRoutes(dic))
 	bootstrap.Run(
 		configDir,
 		profileDir,
@@ -51,7 +52,7 @@ func main() {
 		clients.SupportLoggingServiceKey,
 		logging.Configuration,
 		startupTimer,
-		di.NewContainer(di.ServiceConstructorMap{}),
+		dic,
 		[]interfaces.BootstrapHandler{
 			secret.NewSecret().BootstrapHandler,
 			logging.NewServiceInit(&httpServer).BootstrapHandler,

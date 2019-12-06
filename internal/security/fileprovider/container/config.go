@@ -1,5 +1,7 @@
 /*******************************************************************************
- * Copyright 2019 Dell Inc.
+ * Copyright 2017 Dell Inc.
+ * Copyright 2018 Dell Technologies Inc.
+ * Copyright (c) 2019 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -12,20 +14,17 @@
  * the License.
  *******************************************************************************/
 
-package interfaces
+package container
 
 import (
-	"context"
-	"sync"
-
-	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
+	"github.com/edgexfoundry/edgex-go/internal/security/fileprovider/config"
 )
 
-// BootstrapHandler defines the contract each bootstrap handler must fulfill.  Implementation returns true if the
-// handler completed successfully, false if it did not.
-type BootstrapHandler func(
-	ctx context.Context,
-	wg *sync.WaitGroup,
-	startupTimer startup.Timer,
-	dic *di.Container) (success bool)
+// ConfigurationName contains the name of the config.ConfigurationStruct implementation in the DIC.
+var ConfigurationName = di.TypeInstanceToName(config.ConfigurationStruct{})
+
+// ConfigurationFrom helper function queries the DIC and returns the config.ConfigurationStruct implementation.
+func ConfigurationFrom(get di.Get) *config.ConfigurationStruct {
+	return get(ConfigurationName).(*config.ConfigurationStruct)
+}

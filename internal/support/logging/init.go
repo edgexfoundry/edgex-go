@@ -17,13 +17,10 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
-
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
 
 var Configuration = &ConfigurationStruct{}
 var dbClient persistence
-var LoggingClient logger.LoggingClient
 
 type server interface {
 	IsRunning() bool
@@ -56,8 +53,8 @@ func getPersistence(credentials config.Credentials) (persistence, error) {
 }
 
 func (s ServiceInit) BootstrapHandler(
-	wg *sync.WaitGroup,
 	ctx context.Context,
+	wg *sync.WaitGroup,
 	startupTimer startup.Timer,
 	dic *di.Container) bool {
 
@@ -67,8 +64,7 @@ func (s ServiceInit) BootstrapHandler(
 		},
 	})
 
-	// update global variables.
-	LoggingClient = container.LoggingClientFrom(dic.Get)
+	loggingClient := container.LoggingClientFrom(dic.Get)
 
 	// get database credentials.
 	var credentials config.Credentials
@@ -78,7 +74,7 @@ func (s ServiceInit) BootstrapHandler(
 		if err == nil {
 			break
 		}
-		LoggingClient.Warn(fmt.Sprintf("couldn't retrieve database credentials: %v", err.Error()))
+		loggingClient.Warn(fmt.Sprintf("couldn't retrieve database credentials: %v", err.Error()))
 		startupTimer.SleepForInterval()
 	}
 
@@ -89,7 +85,7 @@ func (s ServiceInit) BootstrapHandler(
 		if err == nil {
 			break
 		}
-		LoggingClient.Warn(fmt.Sprintf("couldn't create database client: %v", err.Error()))
+		loggingClient.Warn(fmt.Sprintf("couldn't create database client: %v", err.Error()))
 		startupTimer.SleepForInterval()
 	}
 
@@ -97,7 +93,7 @@ func (s ServiceInit) BootstrapHandler(
 		return false
 	}
 
-	LoggingClient.Info("Database connected")
+	loggingClient.Info("Database connected")
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -106,7 +102,7 @@ func (s ServiceInit) BootstrapHandler(
 		for {
 			// wait for httpServer to stop running (e.g. handling requests) before closing the database connection.
 			if s.server.IsRunning() == false {
-				LoggingClient.Info("Database disconnecting")
+				loggingClient.Info("Database disconnecting")
 				dbClient.closeSession()
 				break
 			}

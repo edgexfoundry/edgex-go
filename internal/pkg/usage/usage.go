@@ -86,6 +86,16 @@ Common Options:
 	-h, --help                          Show this message
 `
 
+var securityFileTokenProviderUsageStr = `
+Usage: %s [options]
+Server Options:
+	-p, --profile <name>                Indicate configuration profile other than default
+	-r, --registry                      Indicates service should use Registry
+	--configfile=<file.toml>            Use a different config file (default: res/configuration.toml)
+Common Options:
+	-h, --help                          Show this message
+`
+
 // usage will print out the flag options for the server.
 func HelpCallback() {
 	fmt.Printf(usageStr, os.Args[0])
@@ -108,6 +118,12 @@ func HelpCallbackSecurityProxy() {
 
 func HelpCallbackSecuritySecretStore() {
 	msg := fmt.Sprintf(securitySecretStoreSetupUsageStr, os.Args[0])
+	fmt.Printf("%s\n", msg)
+	os.Exit(0)
+}
+
+func HelpCallbackSecurityFileTokenProvider() {
+	msg := fmt.Sprintf(securityFileTokenProviderUsageStr, os.Args[0])
 	fmt.Printf("%s\n", msg)
 	os.Exit(0)
 }

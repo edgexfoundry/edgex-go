@@ -23,6 +23,7 @@ import (
 type SecretServiceInfo struct {
 	Scheme               string
 	Server               string
+	ServerName           string
 	Port                 int
 	CertPath             string
 	CaFilePath           string
@@ -32,6 +33,9 @@ type SecretServiceInfo struct {
 	TokenFile            string
 	VaultSecretShares    int
 	VaultSecretThreshold int
+	TokenProvider        string
+	TokenProviderArgs    []string
+	TokenProviderType    string
 }
 
 func (s SecretServiceInfo) GetSecretSvcBaseURL() string {

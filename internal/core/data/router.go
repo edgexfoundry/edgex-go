@@ -25,6 +25,7 @@ import (
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/gorilla/mux"
 
+	dataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/container"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/operators/reading"
@@ -63,7 +64,13 @@ func LoadRestRoutes(dic *di.Container) *mux.Router {
 
 	// Events
 	r.HandleFunc(clients.ApiEventRoute, func(writer http.ResponseWriter, request *http.Request) {
-		eventHandler(writer, request, container.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
+		eventHandler(
+			writer,
+			request,
+			container.LoggingClientFrom(dic.Get),
+			container.DBClientFrom(dic.Get),
+			dataContainer.PublisherEventsChannelFrom(dic.Get))
+
 	}).Methods(http.MethodGet, http.MethodPut, http.MethodPost)
 
 	e := r.PathPrefix(clients.ApiEventRoute).Subrouter()
@@ -319,7 +326,8 @@ func eventHandler(
 	w http.ResponseWriter,
 	r *http.Request,
 	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient) {
+	dbClient interfaces.DBClient,
+	chEvents chan<- interface{}) {
 
 	if r.Body != nil {
 		defer r.Body.Close()
@@ -348,7 +356,7 @@ func eventHandler(
 			httpErrorHandler.Handle(w, err, errorconcept.Default.InternalServerError)
 			return
 		}
-		newId, err := addNewEvent(evt, ctx, loggingClient, dbClient)
+		newId, err := addNewEvent(evt, ctx, loggingClient, dbClient, chEvents)
 		if err != nil {
 			httpErrorHandler.HandleManyVariants(
 				w,
