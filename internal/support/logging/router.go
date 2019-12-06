@@ -32,25 +32,11 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// Test if the service is working
-func pingHandler(w http.ResponseWriter, _ *http.Request) {
-	w.Header().Set(clients.ContentType, clients.ContentTypeText)
-	w.Write([]byte("pong"))
-}
-
-func configHandler(
-	w http.ResponseWriter,
-	loggingClient logger.LoggingClient,
-	configuration *config.ConfigurationStruct) {
-
-	pkg.Encode(configuration, w, loggingClient)
-}
-
 func addLog(w http.ResponseWriter, r *http.Request, persistenceClient interfaces.Persistence) {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(err.Error()))
+		_, _ = w.Write([]byte(err.Error()))
 		return
 	}
 
@@ -58,14 +44,14 @@ func addLog(w http.ResponseWriter, r *http.Request, persistenceClient interfaces
 	if err := json.Unmarshal(data, &l); err != nil {
 		fmt.Println("Failed to parse LogEntry: ", err)
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(err.Error()))
+		_, _ = w.Write([]byte(err.Error()))
 		return
 	}
 
 	if !logger.IsValidLogLevel(l.Level) {
 		s := fmt.Sprintf("Invalid level in LogEntry: %s", l.Level)
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(s))
+		_, _ = w.Write([]byte(s))
 		return
 	}
 
@@ -102,7 +88,7 @@ func getCriteria(
 		}
 		if len(s) > 0 {
 			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(s))
+			_, _ = w.Write([]byte(s))
 			return nil
 		}
 	}
@@ -121,7 +107,7 @@ func getCriteria(
 		}
 		if len(s) > 0 {
 			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(s))
+			_, _ = w.Write([]byte(s))
 			return nil
 		}
 	}
@@ -185,7 +171,7 @@ func getCriteria(
 			if !logger.IsValidLogLevel(l) {
 				s := fmt.Sprintf("Invalid log level '%s'", l)
 				w.WriteHeader(http.StatusBadRequest)
-				w.Write([]byte(s))
+				_, _ = w.Write([]byte(s))
 				return nil
 			}
 		}
@@ -217,7 +203,7 @@ func getLogs(
 	}
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(string(res)))
+	_, _ = w.Write(res)
 }
 
 func delLogs(
@@ -238,11 +224,7 @@ func delLogs(
 	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(strconv.Itoa(removed)))
-}
-
-func metricsHandler(w http.ResponseWriter, loggingClient logger.LoggingClient) {
-	pkg.Encode(telemetry.NewSystemUsage(), w, loggingClient)
+	_, _ = w.Write([]byte(strconv.Itoa(removed)))
 }
 
 func LoadRestRoutes(dic *di.Container) *mux.Router {
@@ -262,17 +244,26 @@ func LoadRestRoutes(dic *di.Container) *mux.Router {
 	r := mux.NewRouter()
 
 	// Ping Resource
-	r.HandleFunc(clients.ApiPingRoute, pingHandler).Methods(http.MethodGet)
+	r.HandleFunc(
+		clients.ApiPingRoute,
+		func(w http.ResponseWriter, _ *http.Request) {
+			w.Header().Set(clients.ContentType, clients.ContentTypeText)
+			_, _ = w.Write([]byte("pong"))
+		}).Methods(http.MethodGet)
 
 	// Configuration
-	r.HandleFunc(clients.ApiConfigRoute, func(w http.ResponseWriter, r *http.Request) {
-		configHandler(w, bootstrapContainer.LoggingClientFrom(dic.Get), container.ConfigurationFrom(dic.Get))
-	}).Methods(http.MethodGet)
+	r.HandleFunc(
+		clients.ApiConfigRoute,
+		func(w http.ResponseWriter, _ *http.Request) {
+			pkg.Encode(container.ConfigurationFrom(dic.Get), w, bootstrapContainer.LoggingClientFrom(dic.Get))
+		}).Methods(http.MethodGet)
 
 	// Metrics
-	r.HandleFunc(clients.ApiMetricsRoute, func(w http.ResponseWriter, r *http.Request) {
-		metricsHandler(w, bootstrapContainer.LoggingClientFrom(dic.Get))
-	}).Methods(http.MethodGet)
+	r.HandleFunc(
+		clients.ApiMetricsRoute,
+		func(w http.ResponseWriter, _ *http.Request) {
+			pkg.Encode(telemetry.NewSystemUsage(), w, bootstrapContainer.LoggingClientFrom(dic.Get))
+		}).Methods(http.MethodGet)
 
 	// Version
 	r.HandleFunc(clients.ApiVersionRoute, pkg.VersionHandler).Methods(http.MethodGet)

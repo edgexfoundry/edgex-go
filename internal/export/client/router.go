@@ -14,13 +14,14 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
+
 	"github.com/gorilla/mux"
 )
 
 // Test if the service is working
 func pingHandler(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set(clients.ContentType, clients.ContentTypeText)
-	w.Write([]byte("pong"))
+	_, _ = w.Write([]byte("pong"))
 }
 
 func configHandler(w http.ResponseWriter, _ *http.Request) {
@@ -28,11 +29,7 @@ func configHandler(w http.ResponseWriter, _ *http.Request) {
 }
 
 func metricsHandler(w http.ResponseWriter, _ *http.Request) {
-	s := telemetry.NewSystemUsage()
-
-	pkg.Encode(s, w, LoggingClient)
-
-	return
+	pkg.Encode(telemetry.NewSystemUsage(), w, LoggingClient)
 }
 
 func LoadRestRoutes() *mux.Router {
