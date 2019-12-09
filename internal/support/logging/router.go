@@ -46,7 +46,7 @@ func configHandler(
 	pkg.Encode(configuration, w, loggingClient)
 }
 
-func addLog(w http.ResponseWriter, r *http.Request, dbClient interfaces.Logger) {
+func addLog(w http.ResponseWriter, r *http.Request, persistenceClient interfaces.Persistence) {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -73,7 +73,7 @@ func addLog(w http.ResponseWriter, r *http.Request, dbClient interfaces.Logger) 
 
 	w.WriteHeader(http.StatusAccepted)
 
-	dbClient.Add(l)
+	persistenceClient.Add(l)
 }
 
 func checkMaxLimitCount(limit int, configuration *config.ConfigurationStruct) int {
@@ -196,7 +196,7 @@ func getCriteria(
 func getLogs(
 	w http.ResponseWriter,
 	vars map[string]string,
-	dbClient interfaces.Logger,
+	persistenceClient interfaces.Persistence,
 	configuration *config.ConfigurationStruct) {
 
 	criteria := getCriteria(w, vars, configuration)
@@ -204,7 +204,7 @@ func getLogs(
 		return
 	}
 
-	logs, err := dbClient.Find(*criteria)
+	logs, err := persistenceClient.Find(*criteria)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -223,7 +223,7 @@ func getLogs(
 func delLogs(
 	w http.ResponseWriter,
 	vars map[string]string,
-	dbClient interfaces.Logger,
+	persistenceClient interfaces.Persistence,
 	configuration *config.ConfigurationStruct) {
 
 	criteria := getCriteria(w, vars, configuration)
@@ -231,7 +231,7 @@ func delLogs(
 		return
 	}
 
-	removed, err := dbClient.Remove(*criteria)
+	removed, err := persistenceClient.Remove(*criteria)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -279,14 +279,14 @@ func LoadRestRoutes(dic *di.Container) *mux.Router {
 
 	// Logs
 	r.HandleFunc(clients.ApiLoggingRoute, func(w http.ResponseWriter, r *http.Request) {
-		addLog(w, r, container.LoggerInterfaceFrom(dic.Get))
+		addLog(w, r, container.PersistenceInterfaceFrom(dic.Get))
 	}).Methods(http.MethodPost)
 
 	r.HandleFunc(clients.ApiLoggingRoute, func(w http.ResponseWriter, r *http.Request) {
 		getLogs(
 			w,
 			mux.Vars(r),
-			container.LoggerInterfaceFrom(dic.Get),
+			container.PersistenceInterfaceFrom(dic.Get),
 			container.ConfigurationFrom(dic.Get))
 	}).Methods(http.MethodGet)
 
@@ -295,42 +295,42 @@ func LoadRestRoutes(dic *di.Container) *mux.Router {
 		getLogs(
 			w,
 			mux.Vars(r),
-			container.LoggerInterfaceFrom(dic.Get),
+			container.PersistenceInterfaceFrom(dic.Get),
 			container.ConfigurationFrom(dic.Get))
 	}).Methods(http.MethodGet)
 	l.HandleFunc("/{"+start+"}/{"+end+"}/{"+limit+"}", func(w http.ResponseWriter, r *http.Request) {
 		getLogs(
 			w,
 			mux.Vars(r),
-			container.LoggerInterfaceFrom(dic.Get),
+			container.PersistenceInterfaceFrom(dic.Get),
 			container.ConfigurationFrom(dic.Get))
 	}).Methods(http.MethodGet)
 	l.HandleFunc("/"+originServices+"/{"+services+"}/{"+start+"}/{"+end+"}/{"+limit+"}", func(w http.ResponseWriter, r *http.Request) {
 		getLogs(
 			w,
 			mux.Vars(r),
-			container.LoggerInterfaceFrom(dic.Get),
+			container.PersistenceInterfaceFrom(dic.Get),
 			container.ConfigurationFrom(dic.Get))
 	}).Methods(http.MethodGet)
 	l.HandleFunc("/"+keywords+"/{"+keywords+"}/{"+start+"}/{"+end+"}/{"+limit+"}", func(w http.ResponseWriter, r *http.Request) {
 		getLogs(
 			w,
 			mux.Vars(r),
-			container.LoggerInterfaceFrom(dic.Get),
+			container.PersistenceInterfaceFrom(dic.Get),
 			container.ConfigurationFrom(dic.Get))
 	}).Methods(http.MethodGet)
 	l.HandleFunc("/"+logLevels+"/{"+levels+"}/{"+start+"}/{"+end+"}/{"+limit+"}", func(w http.ResponseWriter, r *http.Request) {
 		getLogs(
 			w,
 			mux.Vars(r),
-			container.LoggerInterfaceFrom(dic.Get),
+			container.PersistenceInterfaceFrom(dic.Get),
 			container.ConfigurationFrom(dic.Get))
 	}).Methods(http.MethodGet)
 	l.HandleFunc("/"+logLevels+"/{"+levels+"}/"+originServices+"/{"+services+"}/{"+start+"}/{"+end+"}/{"+limit+"}", func(w http.ResponseWriter, r *http.Request) {
 		getLogs(
 			w,
 			mux.Vars(r),
-			container.LoggerInterfaceFrom(dic.Get),
+			container.PersistenceInterfaceFrom(dic.Get),
 			container.ConfigurationFrom(dic.Get))
 	}).Methods(http.MethodGet)
 
@@ -338,42 +338,42 @@ func LoadRestRoutes(dic *di.Container) *mux.Router {
 		delLogs(
 			w,
 			mux.Vars(r),
-			container.LoggerInterfaceFrom(dic.Get),
+			container.PersistenceInterfaceFrom(dic.Get),
 			container.ConfigurationFrom(dic.Get))
 	}).Methods(http.MethodDelete)
 	l.HandleFunc("/"+keywords+"/{"+keywords+"}/{"+start+"}/{"+end+"}", func(w http.ResponseWriter, r *http.Request) {
 		delLogs(
 			w,
 			mux.Vars(r),
-			container.LoggerInterfaceFrom(dic.Get),
+			container.PersistenceInterfaceFrom(dic.Get),
 			container.ConfigurationFrom(dic.Get))
 	}).Methods(http.MethodDelete)
 	l.HandleFunc("/"+originServices+"/{"+services+"}/{"+start+"}/{"+end+"}", func(w http.ResponseWriter, r *http.Request) {
 		delLogs(
 			w,
 			mux.Vars(r),
-			container.LoggerInterfaceFrom(dic.Get),
+			container.PersistenceInterfaceFrom(dic.Get),
 			container.ConfigurationFrom(dic.Get))
 	}).Methods(http.MethodDelete)
 	l.HandleFunc("/"+logLevels+"/{"+levels+"}/{"+start+"}/{"+end+"}", func(w http.ResponseWriter, r *http.Request) {
 		delLogs(
 			w,
 			mux.Vars(r),
-			container.LoggerInterfaceFrom(dic.Get),
+			container.PersistenceInterfaceFrom(dic.Get),
 			container.ConfigurationFrom(dic.Get))
 	}).Methods(http.MethodDelete)
 	l.HandleFunc("/"+logLevels+"/{"+levels+"}/"+originServices+"/{"+services+"}/{"+start+"}/{"+end+"}", func(w http.ResponseWriter, r *http.Request) {
 		delLogs(
 			w,
 			mux.Vars(r),
-			container.LoggerInterfaceFrom(dic.Get),
+			container.PersistenceInterfaceFrom(dic.Get),
 			container.ConfigurationFrom(dic.Get))
 	}).Methods(http.MethodDelete)
 	l.HandleFunc("/"+removeOld+"/"+age+"/{"+age+"}", func(w http.ResponseWriter, r *http.Request) {
 		delLogs(
 			w,
 			mux.Vars(r),
-			container.LoggerInterfaceFrom(dic.Get),
+			container.PersistenceInterfaceFrom(dic.Get),
 			container.ConfigurationFrom(dic.Get))
 	}).Methods(http.MethodDelete)
 
