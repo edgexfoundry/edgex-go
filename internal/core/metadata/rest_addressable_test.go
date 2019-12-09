@@ -18,18 +18,19 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
 	"testing"
 
+	metadataConfig "github.com/edgexfoundry/edgex-go/internal/core/metadata/config"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces/mocks"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
 
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 
 	"github.com/gorilla/mux"
@@ -55,9 +56,6 @@ var ErrorPathParam = "%zz"
 var ErrorPortPathParam = "abc"
 
 func TestGetAllAddressables(t *testing.T) {
-	Configuration = &ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 10}}
-	defer func() { Configuration = &ConfigurationStruct{} }()
-
 	tests := []struct {
 		name           string
 		request        *http.Request
@@ -91,14 +89,17 @@ func TestGetAllAddressables(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-
+			configuration := metadataConfig.ConfigurationStruct{
+				Service: config.ServiceInfo{MaxResultCount: 10},
+			}
 			rr := httptest.NewRecorder()
 			var loggerMock = logger.NewMockClient()
 			restGetAllAddressables(
 				rr,
 				loggerMock,
 				tt.dbMock,
-				errorconcept.NewErrorHandler(loggerMock))
+				errorconcept.NewErrorHandler(loggerMock),
+				&configuration)
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)

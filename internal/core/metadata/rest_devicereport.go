@@ -19,6 +19,7 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/config"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
 
@@ -32,7 +33,8 @@ import (
 func restGetAllDeviceReports(
 	w http.ResponseWriter,
 	dbClient interfaces.DBClient,
-	errorHandler errorconcept.ErrorHandler) {
+	errorHandler errorconcept.ErrorHandler,
+	configuration *config.ConfigurationStruct) {
 
 	res, err := dbClient.GetAllDeviceReports()
 	if err != nil {
@@ -41,7 +43,7 @@ func restGetAllDeviceReports(
 	}
 
 	// Check max limit
-	if err = checkMaxLimit(len(res)); err != nil {
+	if err = checkMaxLimit(len(res), configuration); err != nil {
 		errorHandler.Handle(w, err, errorconcept.Common.LimitExceeded)
 		return
 	}
@@ -69,7 +71,11 @@ func restAddDeviceReport(
 
 	// Check if the device exists
 	if _, err := dbClient.GetDeviceByName(dr.Device); err != nil {
-		errorHandler.HandleOneVariant(w, err, errorconcept.DeviceReport.DeviceNotFound, errorconcept.Default.InternalServerError)
+		errorHandler.HandleOneVariant(
+			w,
+			err,
+			errorconcept.DeviceReport.DeviceNotFound,
+			errorconcept.Default.InternalServerError)
 		return
 	}
 
@@ -77,7 +83,11 @@ func restAddDeviceReport(
 	var err error
 	dr.Id, err = dbClient.AddDeviceReport(dr)
 	if err != nil {
-		errorHandler.HandleOneVariant(w, err, errorconcept.DeviceReport.NotUnique, errorconcept.Default.InternalServerError)
+		errorHandler.HandleOneVariant(
+			w,
+			err,
+			errorconcept.DeviceReport.NotUnique,
+			errorconcept.Default.InternalServerError)
 		return
 	}
 
@@ -111,7 +121,11 @@ func restUpdateDeviceReport(
 		// Try by name
 		to, err = dbClient.GetDeviceReportByName(from.Name)
 		if err != nil {
-			errorHandler.HandleOneVariant(w, err, errorconcept.Database.NotFound, errorconcept.Default.InternalServerError)
+			errorHandler.HandleOneVariant(
+				w,
+				err,
+				errorconcept.Database.NotFound,
+				errorconcept.Default.InternalServerError)
 			return
 		}
 	}

@@ -18,11 +18,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	metadataConfig "github.com/edgexfoundry/edgex-go/internal/core/metadata/config"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces/mocks"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
@@ -30,6 +30,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 
 	"github.com/google/uuid"
@@ -47,8 +48,6 @@ var testAdminState, _ = contract.GetAdminState(contract.Unlocked)
 var testError = errors.New("some error")
 
 func TestGetAllDeviceServices(t *testing.T) {
-	Configuration = &ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 1}}
-
 	tests := []struct {
 		name           string
 		dbMock         interfaces.DBClient
@@ -62,11 +61,15 @@ func TestGetAllDeviceServices(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			rr := httptest.NewRecorder()
 			var loggerMock = logger.NewMockClient()
+			configuration := metadataConfig.ConfigurationStruct{
+				Service: config.ServiceInfo{MaxResultCount: 1},
+			}
 			restGetAllDeviceServices(
 				rr,
 				loggerMock,
 				tt.dbMock,
-				errorconcept.NewErrorHandler(loggerMock))
+				errorconcept.NewErrorHandler(loggerMock),
+				&configuration)
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -74,7 +77,6 @@ func TestGetAllDeviceServices(t *testing.T) {
 			}
 		})
 	}
-	Configuration = &ConfigurationStruct{}
 }
 
 func TestGetServiceByName(t *testing.T) {
@@ -117,7 +119,6 @@ func TestGetServiceByName(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			Configuration = &ConfigurationStruct{}
 			rr := httptest.NewRecorder()
 			restGetServiceByName(
 				rr,
@@ -165,7 +166,6 @@ func TestGetServiceById(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			Configuration = &ConfigurationStruct{}
 			rr := httptest.NewRecorder()
 			restGetServiceById(rr, req, tt.dbMock, errorconcept.NewErrorHandler(logger.NewMockClient()))
 			response := rr.Result()
@@ -235,7 +235,6 @@ func TestGetServiceByAddressableName(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			Configuration = &ConfigurationStruct{}
 			rr := httptest.NewRecorder()
 			restGetServiceByAddressableName(
 				rr,
@@ -303,7 +302,6 @@ func TestGetServiceByAddressableId(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			Configuration = &ConfigurationStruct{}
 			rr := httptest.NewRecorder()
 			restGetServiceByAddressableId(
 				rr,
@@ -322,8 +320,6 @@ func TestGetServiceByAddressableId(t *testing.T) {
 func TestUpdateOpStateById(t *testing.T) {
 	operatingStateEnabled := testDeviceService
 	operatingStateEnabled.OperatingState = testOperatingState
-
-	Configuration = &ConfigurationStruct{}
 
 	tests := []struct {
 		name           string
@@ -379,8 +375,6 @@ func TestUpdateOpStateById(t *testing.T) {
 func TestUpdateOpStateByName(t *testing.T) {
 	operatingStateEnabled := testDeviceService
 	operatingStateEnabled.OperatingState = testOperatingState
-
-	Configuration = &ConfigurationStruct{}
 
 	tests := []struct {
 		name           string
@@ -446,8 +440,6 @@ func TestUpdateAdminStateById(t *testing.T) {
 	adminStateEnabled := testDeviceService
 	adminStateEnabled.AdminState = testAdminState
 
-	Configuration = &ConfigurationStruct{}
-
 	tests := []struct {
 		name           string
 		request        *http.Request
@@ -506,8 +498,6 @@ func TestUpdateAdminStateById(t *testing.T) {
 func TestUpdateAdminStateByName(t *testing.T) {
 	adminStateEnabled := testDeviceService
 	adminStateEnabled.AdminState = testAdminState
-
-	Configuration = &ConfigurationStruct{}
 
 	tests := []struct {
 		name           string
