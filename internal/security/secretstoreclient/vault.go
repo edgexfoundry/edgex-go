@@ -141,7 +141,6 @@ func (vc *vaultClient) InstallPolicy(token string, policyName string, policyDocu
 		ExpectedStatusCode:   http.StatusNoContent,
 		ResponseObject:       nil,
 	})
-
 }
 
 func (vc *vaultClient) CreateToken(token string, parameters map[string]interface{}, response interface{}) (int, error) {
@@ -154,5 +153,81 @@ func (vc *vaultClient) CreateToken(token string, parameters map[string]interface
 		OperationDescription: "create token",
 		ExpectedStatusCode:   http.StatusOK,
 		ResponseObject:       response,
+	})
+}
+
+func (vc *vaultClient) ListAccessors(token string, accessors *[]string) (statusCode int, err error) {
+	var response ListTokenAccessorsResponse
+	code, err := vc.doRequest(commonRequestArgs{
+		AuthToken:            token,
+		Method:               "LIST",
+		Path:                 ListAccessorsAPI,
+		JSONObject:           nil,
+		BodyReader:           nil,
+		OperationDescription: "list token accessors",
+		ExpectedStatusCode:   http.StatusOK,
+		ResponseObject:       &response,
+	})
+	*accessors = response.Data.Keys
+	return code, err
+}
+
+func (vc *vaultClient) RevokeAccessor(token string, accessor string) (statusCode int, err error) {
+	parameters := RevokeTokenAccessorRequest{Accessor: accessor}
+	return vc.doRequest(commonRequestArgs{
+		AuthToken:            token,
+		Method:               http.MethodPost,
+		Path:                 RevokeAccessorAPI,
+		JSONObject:           parameters,
+		BodyReader:           nil,
+		OperationDescription: "revoke token accessor",
+		ExpectedStatusCode:   http.StatusNoContent,
+		ResponseObject:       nil,
+	})
+}
+
+func (vc *vaultClient) LookupAccessor(token string, accessor string, tokenMetadata *TokenMetadata) (statusCode int, err error) {
+	parameters := LookupAccessorRequest{Accessor: accessor}
+	var response TokenLookupResponse
+	code, err := vc.doRequest(commonRequestArgs{
+		AuthToken:            token,
+		Method:               http.MethodPost,
+		Path:                 LookupAccessorAPI,
+		JSONObject:           parameters,
+		BodyReader:           nil,
+		OperationDescription: "lookup accessor",
+		ExpectedStatusCode:   http.StatusOK,
+		ResponseObject:       &response,
+	})
+	*tokenMetadata = response.Data
+	return code, err
+}
+
+func (vc *vaultClient) LookupSelf(token string, tokenMetadata *TokenMetadata) (statusCode int, err error) {
+	var response TokenLookupResponse
+	code, err := vc.doRequest(commonRequestArgs{
+		AuthToken:            token,
+		Method:               http.MethodGet,
+		Path:                 LookupSelfAPI,
+		JSONObject:           nil,
+		BodyReader:           nil,
+		OperationDescription: "lookup self token",
+		ExpectedStatusCode:   http.StatusOK,
+		ResponseObject:       &response,
+	})
+	*tokenMetadata = response.Data
+	return code, err
+}
+
+func (vc *vaultClient) RevokeSelf(token string) (statusCode int, err error) {
+	return vc.doRequest(commonRequestArgs{
+		AuthToken:            token,
+		Method:               http.MethodPost,
+		Path:                 RevokeSelfAPI,
+		JSONObject:           nil,
+		BodyReader:           nil,
+		OperationDescription: "revoke self token",
+		ExpectedStatusCode:   http.StatusNoContent,
+		ResponseObject:       nil,
 	})
 }

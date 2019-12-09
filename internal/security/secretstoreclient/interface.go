@@ -29,4 +29,10 @@ type SecretStoreClient interface {
 		policyName string, policyDocument string) (statusCode int, err error)
 	CreateToken(token string,
 		parameters map[string]interface{}, response interface{}) (statusCode int, err error)
+	ListAccessors(token string, accessors *[]string) (statusCode int, err error)
+	RevokeAccessor(token string, accessor string) (statusCode int, err error)
+	LookupAccessor(token string, accessor string, tokenMetadata *TokenMetadata) (statusCode int, err error)
+	LookupSelf(token string, tokenMetadata *TokenMetadata) (statusCode int, err error)
+	RevokeSelf(token string) (statusCode int, err error)
+	RegenRootToken(vmkReader io.Reader, rootToken *string) (err error)
 }
