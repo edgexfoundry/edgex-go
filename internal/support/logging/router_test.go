@@ -94,14 +94,9 @@ func TestAddLog(t *testing.T) {
 
 func TestGetLogs(t *testing.T) {
 	const maxLimit = 100
-	defer func() { Configuration = nil }()
-	Configuration = &config.ConfigurationStruct{Service: types.ServiceInfo{}}
-	Configuration.Service.MaxResultCount = maxLimit
-
 	var services = []string{"service1", "service2"}
 	var keywords = []string{"keyword1", "keyword2"}
-	var logLevels = []string{models.TraceLog, models.DebugLog, models.WarnLog,
-		models.InfoLog, models.ErrorLog}
+	var logLevels = []string{models.TraceLog, models.DebugLog, models.WarnLog, models.InfoLog, models.ErrorLog}
 	var tests = []struct {
 		name       string
 		vars       map[string]string
@@ -189,9 +184,14 @@ func TestGetLogs(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			configuration := &config.ConfigurationStruct{
+				Service: types.ServiceInfo{
+					MaxResultCount: maxLimit,
+				},
+			}
 			persistence := &dummyPersist{}
 			rr := httptest.NewRecorder()
-			getLogs(rr, tt.vars, persistence)
+			getLogs(rr, tt.vars, persistence, configuration)
 			response := rr.Result()
 			defer func() { _ = response.Body.Close() }()
 
@@ -201,7 +201,7 @@ func TestGetLogs(t *testing.T) {
 			// Only test that criteria is correctly parsed if request is valid
 			if tt.status == http.StatusOK {
 				//Apply rules for limit validation to original criteria
-				tt.criteria.Limit = checkMaxLimitCount(tt.criteria.Limit)
+				tt.criteria.Limit = checkMaxLimitCount(tt.criteria.Limit, configuration)
 				//Then compare against what was persisted during the test run
 				if !reflect.DeepEqual(persistence.criteria, tt.criteria) {
 					t.Errorf("Invalid criteria %v, should be %v", persistence.criteria, tt.criteria)
@@ -213,14 +213,10 @@ func TestGetLogs(t *testing.T) {
 
 func TestRemoveLogs(t *testing.T) {
 	const maxLimit = 100
-	defer func() { Configuration = nil }()
-	Configuration = &config.ConfigurationStruct{Service: types.ServiceInfo{}}
-	Configuration.Service.MaxResultCount = maxLimit
 
 	var services = []string{"service1", "service2"}
 	var keywords = []string{"keyword1", "keyword2"}
-	var logLevels = []string{models.TraceLog, models.DebugLog, models.WarnLog,
-		models.InfoLog, models.ErrorLog}
+	var logLevels = []string{models.TraceLog, models.DebugLog, models.WarnLog, models.InfoLog, models.ErrorLog}
 	var tests = []struct {
 		name     string
 		vars     map[string]string
@@ -276,9 +272,14 @@ func TestRemoveLogs(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			configuration := &config.ConfigurationStruct{
+				Service: types.ServiceInfo{
+					MaxResultCount: maxLimit,
+				},
+			}
 			persistence := &dummyPersist{}
 			rr := httptest.NewRecorder()
-			delLogs(rr, tt.vars, persistence)
+			delLogs(rr, tt.vars, persistence, configuration)
 			response := rr.Result()
 			defer func() { _ = response.Body.Close() }()
 

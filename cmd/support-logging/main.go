@@ -23,6 +23,8 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/internal/support/logging"
+	"github.com/edgexfoundry/edgex-go/internal/support/logging/config"
+	"github.com/edgexfoundry/edgex-go/internal/support/logging/container"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 )
@@ -42,7 +44,12 @@ func main() {
 	flag.Usage = usage.HelpCallback
 	flag.Parse()
 
-	dic := di.NewContainer(di.ServiceConstructorMap{})
+	configuration := &config.ConfigurationStruct{}
+	dic := di.NewContainer(di.ServiceConstructorMap{
+		container.ConfigurationName: func(get di.Get) interface{} {
+			return configuration
+		},
+	})
 	httpServer := httpserver.NewBootstrap(logging.LoadRestRoutes(dic))
 	bootstrap.Run(
 		configDir,
@@ -50,7 +57,7 @@ func main() {
 		internal.ConfigFileName,
 		useRegistry,
 		clients.SupportLoggingServiceKey,
-		logging.Configuration,
+		configuration,
 		startupTimer,
 		dic,
 		[]interfaces.BootstrapHandler{
