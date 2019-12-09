@@ -201,7 +201,7 @@ func TestAddEventWithPersistence(t *testing.T) {
 	reset()
 
 	// no need to mock this since it's all in process
-	msgClient, _ = messaging.NewMessageClient(msgTypes.MessageBusConfig{
+	msgClient, _ := messaging.NewMessageClient(msgTypes.MessageBusConfig{
 		PublishHost: msgTypes.HostInfo{
 			Host:     "*",
 			Protocol: "tcp",
@@ -225,7 +225,8 @@ func TestAddEventWithPersistence(t *testing.T) {
 		context.Background(),
 		logger.NewMockClient(),
 		dbClientMock,
-		chEvents)
+		chEvents,
+		msgClient)
 
 	Configuration.Writable.PersistData = false
 	if err != nil {
@@ -244,6 +245,15 @@ func TestAddEventWithPersistence(t *testing.T) {
 
 func TestAddEventNoPersistence(t *testing.T) {
 	reset()
+	msgClient, _ := messaging.NewMessageClient(msgTypes.MessageBusConfig{
+		PublishHost: msgTypes.HostInfo{
+			Host:     "*",
+			Protocol: "tcp",
+			Port:     5563,
+		},
+		Type: "zero",
+	})
+
 	dbClientMock := newAddEventMockDB(false)
 	Configuration.Writable.PersistData = false
 	evt := models.Event{Device: testDeviceName, Origin: testOrigin, Readings: buildReadings()}
@@ -259,7 +269,8 @@ func TestAddEventNoPersistence(t *testing.T) {
 		context.Background(),
 		logger.NewMockClient(),
 		dbClientMock,
-		chEvents)
+		chEvents,
+		msgClient)
 
 	if err != nil {
 		t.Errorf(err.Error())
