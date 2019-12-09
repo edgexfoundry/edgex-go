@@ -48,7 +48,7 @@ func NewServiceInit(server server, serviceKey string) ServiceInit {
 
 func getPersistence(
 	credentials *types.Credentials,
-	configuration *config.ConfigurationStruct) (interfaces.Logger, error) {
+	configuration *config.ConfigurationStruct) (interfaces.Persistence, error) {
 
 	switch configuration.Writable.Persistence {
 	case PersistenceFile:
@@ -56,7 +56,7 @@ func getPersistence(
 	case PersistenceDB:
 		return mongo.NewLogger(credentials, configuration)
 	default:
-		return nil, fmt.Errorf("unrecognized value Configuration.Logger: %s", configuration.Writable.Persistence)
+		return nil, fmt.Errorf("unrecognized value Configuration.Persistence: %s", configuration.Writable.Persistence)
 	}
 }
 
@@ -83,10 +83,10 @@ func (s ServiceInit) BootstrapHandler(
 	}
 
 	// initialize database.
-	var dbClient interfaces.Logger
+	var persistenceClient interfaces.Persistence
 	var err error
 	for startupTimer.HasNotElapsed() {
-		dbClient, err = getPersistence(&credentials, configuration)
+		persistenceClient, err = getPersistence(&credentials, configuration)
 		if err == nil {
 			break
 		}
@@ -102,8 +102,8 @@ func (s ServiceInit) BootstrapHandler(
 		bootstrapContainer.LoggingClientInterfaceName: func(get di.Get) interface{} {
 			return loggingClient
 		},
-		container.LoggerInterfaceName: func(get di.Get) interface{} {
-			return dbClient
+		container.PersistenceInterfaceName: func(get di.Get) interface{} {
+			return persistenceClient
 		},
 	})
 
@@ -117,7 +117,7 @@ func (s ServiceInit) BootstrapHandler(
 			// wait for httpServer to stop running (e.g. handling requests) before closing the database connection.
 			if s.server.IsRunning() == false {
 				loggingClient.Info("Database disconnecting")
-				dbClient.CloseSession()
+				persistenceClient.CloseSession()
 				break
 			}
 			time.Sleep(time.Second)

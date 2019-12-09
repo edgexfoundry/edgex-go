@@ -20,7 +20,7 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
-type Logger interface {
+type Persistence interface {
 	Add(logEntry models.LogEntry) error
 	Remove(criteria filter.Criteria) (int, error)
 	Find(criteria filter.Criteria) ([]models.LogEntry, error)
