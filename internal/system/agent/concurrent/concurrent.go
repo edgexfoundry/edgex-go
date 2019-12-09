@@ -12,11 +12,34 @@
  * the License.
  *******************************************************************************/
 
-package interfaces
+package concurrent
 
-import "context"
+import "sync"
 
-// Metrics defines a metrics gathering abstraction.
-type Metrics interface {
-	Get(ctx context.Context, services []string) []interface{}
+// Closure defines the signature for the closure to execute concurrently within ExecuteAndAggregateResults.
+type Closure func() interface{}
+
+// ExecuteAndAggregateResults handles concurrent execution of []Closure.
+func ExecuteAndAggregateResults(closures []Closure) []interface{} {
+	var wg sync.WaitGroup
+	stream := make(chan interface{})
+
+	var results []interface{}
+	for _, closure := range closures {
+		wg.Add(1)
+		go func(closure func() interface{}) {
+			defer wg.Done()
+			stream <- closure()
+		}(closure)
+	}
+
+	go func() {
+		wg.Wait()
+		close(stream)
+	}()
+
+	for result := range stream {
+		results = append(results, result)
+	}
+	return results
 }
