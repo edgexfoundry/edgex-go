@@ -67,7 +67,7 @@ This following is the new `Configuration Client` Interface which contains the  *
 ```go
 type Client interface {
 	HasConfiguration() (bool, error)
-	PutConfigurationFromToml(configuration *toml.Tree, overwrite bool) error
+	PutConfigurationToml(configuration *toml.Tree, overwrite bool) error
 	PutConfiguration(configStruct interface{}, overwrite bool) error
 	GetConfiguration(configStruct interface{}) (interface{}, error)
 	WatchForChanges(updateChannel chan<- interface{}, errorChannel chan<- error,
