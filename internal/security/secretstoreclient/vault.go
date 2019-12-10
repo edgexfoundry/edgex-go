@@ -23,6 +23,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"path"
 
 	"github.com/edgexfoundry/edgex-go/internal"
 
@@ -232,4 +233,39 @@ func (vc *vaultClient) RevokeSelf(token string) (statusCode int, err error) {
 		ExpectedStatusCode:   http.StatusNoContent,
 		ResponseObject:       nil,
 	})
+}
+
+func (vc *vaultClient) CheckSecretEngineInstalled(token string, mountPoint string, engine string) (isInstalled bool, err error) {
+	var response ListSecretEnginesResponse
+	_, err = vc.doRequest(commonRequestArgs{
+		AuthToken:            token,
+		Method:               http.MethodGet,
+		Path:                 VaultMountsAPI,
+		JSONObject:           nil,
+		BodyReader:           nil,
+		OperationDescription: "query mounts",
+		ExpectedStatusCode:   http.StatusOK,
+		ResponseObject:       &response,
+	})
+	if mountdata := response.Data[mountPoint]; mountdata.Type == engine {
+		return true, nil
+	}
+	return false, err
+}
+
+func (vc *vaultClient) EnableKVSecretEngine(token string, mountPoint string, kvVersion string) (statusCode int, err error) {
+	urlPath := path.Join(VaultMountsAPI, mountPoint)
+	parameters := EnableSecretsEngineRequest{Type: "kv", Description: "key/value secret storage"}
+	parameters.Options.Version = kvVersion
+	rc, err := vc.doRequest(commonRequestArgs{
+		AuthToken:            token,
+		Method:               http.MethodPost,
+		Path:                 urlPath,
+		JSONObject:           parameters,
+		BodyReader:           nil,
+		OperationDescription: "update mounts",
+		ExpectedStatusCode:   http.StatusNoContent,
+		ResponseObject:       nil,
+	})
+	return rc, err
 }
