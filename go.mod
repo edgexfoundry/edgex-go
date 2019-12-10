@@ -6,7 +6,6 @@ require (
 	github.com/OneOfOne/xxhash v1.2.5
 	github.com/cloudflare/gokey v0.1.0
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
-	github.com/eclipse/paho.mqtt.golang v1.1.1
 	github.com/edgexfoundry/go-mod-bootstrap v0.0.0-20191211194834-bc83c435a7d6
 	github.com/edgexfoundry/go-mod-core-contracts v0.1.35
 	github.com/edgexfoundry/go-mod-messaging v0.1.9
@@ -18,8 +17,6 @@ require (
 	github.com/gorilla/mux v1.7.1
 	github.com/imdario/mergo v0.3.6
 	github.com/magiconair/properties v1.8.0
-	github.com/mattn/go-xmpp v0.0.0-20190124093244-6093f50721ed
-	github.com/pebbe/zmq4 v1.0.0
 	github.com/pelletier/go-toml v1.2.0
 	github.com/pkg/errors v0.8.1
 	github.com/robfig/cron v0.0.0-20180505203441-b41be1df6967

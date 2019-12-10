@@ -25,10 +25,6 @@ ALL_SERVICES="$ALL_SERVICES support-rulesengine"
 # app-services
 ALL_SERVICES="$ALL_SERVICES app-service-configurable"
 
-# export services
-ALL_SERVICES="$ALL_SERVICES export-distro"
-ALL_SERVICES="$ALL_SERVICES export-client"
-
 # device services
 ALL_SERVICES="$ALL_SERVICES device-random"
 ALL_SERVICES="$ALL_SERVICES device-virtual"
@@ -149,10 +145,9 @@ case "$dbProvider" in
             # services:
             # * core-data
             # * core-metadata
-            # * export-client
             # * support-notifications
             # * support-scheduler
-            for svc in core-data core-metadata export-client support-notifications support-scheduler; do
+            for svc in core-data core-metadata support-notifications support-scheduler; do
                 configFile=$SNAP_DATA/config/$svc/res/configuration.toml
                 toml2json --preserve-key-order "$configFile" | \
                     jq -r '.Databases.Primary.Type = "redisdb" | .Databases.Primary.Port = 6379' | \
@@ -180,7 +175,7 @@ case "$dbProvider" in
             # restart the services with updated configuration if they were 
             # already running
             # note support-logging is here too due to the file Persistence
-            "$SNAP/bin/push-config.sh" core-data core-metadata export-client support-notifications support-scheduler support-logging
+            "$SNAP/bin/push-config.sh" core-data core-metadata support-notifications support-scheduler support-logging
         fi
         # save the database provider as redis for next invocation
         echo "redis" > "$PREV_DB_PROVIDER_FILE"
@@ -194,10 +189,9 @@ case "$dbProvider" in
             # services:
             # * core-data
             # * core-metadata
-            # * export-client
             # * support-notifications
             # * support-scheduler
-            for svc in core-data core-metadata export-client support-notifications support-scheduler; do
+            for svc in core-data core-metadata support-notifications support-scheduler; do
                 configFile=$SNAP_DATA/config/$svc/res/configuration.toml
                 toml2json --preserve-key-order "$configFile" | \
                     jq -r '.Databases.Primary.Type = "mongodb" | .Databases.Primary.Port = 27017' | \
@@ -216,7 +210,7 @@ case "$dbProvider" in
             # changes need to be progpogated into relevant services, so 
             # restart the services with updated configuration if they were 
             # already running
-            "$SNAP/bin/push-config.sh" core-data core-metadata export-client support-notifications support-scheduler
+            "$SNAP/bin/push-config.sh" core-data core-metadata support-notifications support-scheduler
         fi
 
         # save the database provider as mongodb for next invocation

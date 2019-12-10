@@ -49,7 +49,7 @@ COPY ./cmd ./cmd-redis
 # Databases.Primary.Type = redisdb 
 # Databases.Primary.Port = 6379
 # Databases.Primary.Host = edgex-redis
-RUN for svc in core-command core-data core-metadata export-client support-notifications support-scheduler; do \
+RUN for svc in core-command core-data core-metadata support-notifications support-scheduler; do \
     configFile=./cmd-redis/$svc/res/docker/configuration.toml && \
     toml2json --preserve-key-order "$configFile" | \
     jq -r '.Databases.Primary.Type = "redisdb" | .Databases.Primary.Port = 6379 | .Databases.Primary.Host = "edgex-redis"' | \
@@ -86,8 +86,6 @@ COPY --from=build-env /go/src/github.com/edgexfoundry/edgex-go/cmd/config-seed/r
 COPY --from=build-env /go/src/github.com/edgexfoundry/edgex-go/cmd/core-command/res /edgex/cmd/core-command/res
 COPY --from=build-env /go/src/github.com/edgexfoundry/edgex-go/cmd/core-data/res /edgex/cmd/core-data/res
 COPY --from=build-env /go/src/github.com/edgexfoundry/edgex-go/cmd/core-metadata/res /edgex/cmd/core-metadata/res
-COPY --from=build-env /go/src/github.com/edgexfoundry/edgex-go/cmd/export-client/res /edgex/cmd/export-client/res
-COPY --from=build-env /go/src/github.com/edgexfoundry/edgex-go/cmd/export-distro/res /edgex/cmd/export-distro/res
 COPY --from=build-env /go/src/github.com/edgexfoundry/edgex-go/cmd/support-logging/res /edgex/cmd/support-logging/res
 COPY --from=build-env /go/src/github.com/edgexfoundry/edgex-go/cmd/support-notifications/res /edgex/cmd/support-notifications/res
 COPY --from=build-env /go/src/github.com/edgexfoundry/edgex-go/cmd/support-scheduler/res /edgex/cmd/support-scheduler/res
@@ -97,8 +95,6 @@ COPY --from=build-env /go/src/github.com/edgexfoundry/edgex-go/cmd/sys-mgmt-agen
 COPY --from=build-env /go/src/github.com/edgexfoundry/edgex-go/cmd-redis/core-command/res /edgex/cmd-redis/core-command/res
 COPY --from=build-env /go/src/github.com/edgexfoundry/edgex-go/cmd-redis/core-data/res /edgex/cmd-redis/core-data/res
 COPY --from=build-env /go/src/github.com/edgexfoundry/edgex-go/cmd-redis/core-metadata/res /edgex/cmd-redis/core-metadata/res
-COPY --from=build-env /go/src/github.com/edgexfoundry/edgex-go/cmd-redis/export-client/res /edgex/cmd-redis/export-client/res
-COPY --from=build-env /go/src/github.com/edgexfoundry/edgex-go/cmd-redis/export-distro/res /edgex/cmd-redis/export-distro/res
 COPY --from=build-env /go/src/github.com/edgexfoundry/edgex-go/cmd-redis/support-logging/res /edgex/cmd-redis/support-logging/res
 COPY --from=build-env /go/src/github.com/edgexfoundry/edgex-go/cmd-redis/support-notifications/res /edgex/cmd-redis/support-notifications/res
 COPY --from=build-env /go/src/github.com/edgexfoundry/edgex-go/cmd-redis/support-scheduler/res /edgex/cmd-redis/support-scheduler/res
