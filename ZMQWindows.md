@@ -14,12 +14,12 @@
 
     3.b. Copy the `libsodium.dll` and `libzmq-v120-mt-4_x_x.dll` files from step 3 into `%GOPATH%\pkg\mod\github.com\pebbe\zmq4@v1.0.0\lib`; create the lib directory as needed. Rename `libzmq-v120-mt-4_x_x.dll` to `libzmq.dll`, so that gcc can link and find `-lzmq`. If this is not done, errors like this may occur: `C:/TDM-GCC-64/bin/../lib/gcc/x86_64-w64-mingw32/5.1.0/../../../../x86_64-w64-mingw32/bin/ld.exe:cannot find -lzmq`
 
-4. In any directory you prefer, clone the source of ZMQ that matches the version/commit you downloaded from AppVeyor: `git clone https://github.com/zeromq/libzmq.git`.
-
-> As of Nov 2019, ZMQ 4.3.3 does not work and results in an error: https://github.com/pebbe/zmq4/issues/152/. 4.3.2 is recommended and tested on Win 10:
+> Note: As of Nov 2019, ZMQ 4.3.3 does not work and results in an error: https://github.com/pebbe/zmq4/issues/152/. 4.3.2 is recommended and tested on Win 10:
 https://ci.appveyor.com/project/zeromq/libzmq/builds/25882500/job/s2yhbnjrdouq5qnm/artifacts
 and
 https://github.com/zeromq/libzmq/tree/a84ffa12b2eb3569ced199660bac5ad128bff1f0. 
+
+4. In any directory you prefer, clone the source of ZMQ `git clone https://github.com/zeromq/libzmq.git` and ensure it matches the version/commit you downloaded from AppVeyor (i.e `git reset --hard a84ffa12`).
 
 5. Copy over the `include` directory from the source downloaded in step 3 to  `%GOPATH%\pkg\mod\github.com\pebbe\zmq4@v1.0.0\`.
 
@@ -36,7 +36,7 @@ After setting those, running `go get -v -x github.com/pebbe/zmq4` should succeed
 
 7. Next, navigate to `$Env:GOPATH\src\github.com\edgexfoundry\edgex-go\cmd\core-data`. *If you didn't acquire dependencies previously, run `go get -v` to acquire all dependencies*. Run `go build -v`. If it complains about not finding zmq.h from auth.go, double check the CGO_ environment variables by running `go env`.
 
-8. There should now be a `core-data.exe` file in your directory. The last step is to ensure that a copy of the DLL's `libsodium.dll` and `libzmq-v120-mt-4_x_x.dll` (yes, this one, not with the rename we did earlier) is in the same directory as your `.exe`.
+8. There should now be a `core-data.exe` file in your directory. The last step is to ensure that a copy of the DLL's `libsodium.dll` and `libzmq-v120-mt-4_x_x.dll` (yes, this one, not with the rename we did earlier) is in the same directory as your `.exe`. You will need to copy these .dlls in manually. 
 
 9. Run `.\core-data.exe`.
 
