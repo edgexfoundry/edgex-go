@@ -27,7 +27,7 @@ import (
 )
 
 func TestOperationDoWithNoServices(t *testing.T) {
-	executor := NewStub([]stubCall{})
+	executor := NewStub(map[string]stubCall{})
 	sut := NewOperations(executor.CommandExecutor, logger.NewMockClient(), "executorPathDoesNotMatter")
 
 	result := sut.Do([]string{}, "operationDoesNotMatter")
@@ -53,19 +53,23 @@ func TestOperationDoWithServices(t *testing.T) {
 		name           string
 		services       []string
 		expectedResult []interface{}
-		executorCalls  []stubCall
+		executorCalls  map[string]stubCall
 	}{
 		{
 			"one service with no error",
 			[]string{service1Name},
 			[]interface{}{response.Process(service1Result, loggingClient)},
-			[]stubCall{{[]string{executorPath, service1Name, operation}, service1Result, nil}},
+			map[string]stubCall{
+				service1Name: {[]string{executorPath, service1Name, operation}, service1Result, nil},
+			},
 		},
 		{
 			"one service with error",
 			[]string{service1Name},
 			[]interface{}{system.Failure(service1Name, operation, UnknownExecutorType, expectedError.Error())},
-			[]stubCall{{[]string{executorPath, service1Name, operation}, "", expectedError}},
+			map[string]stubCall{
+				service1Name: {[]string{executorPath, service1Name, operation}, "", expectedError},
+			},
 		},
 		{
 			"two services with no errors",
@@ -74,9 +78,9 @@ func TestOperationDoWithServices(t *testing.T) {
 				response.Process(service1Result, loggingClient),
 				response.Process(service2Result, loggingClient),
 			},
-			[]stubCall{
-				{[]string{executorPath, service1Name, operation}, service1Result, nil},
-				{[]string{executorPath, service2Name, operation}, service2Result, nil},
+			map[string]stubCall{
+				service1Name: {[]string{executorPath, service1Name, operation}, service1Result, nil},
+				service2Name: {[]string{executorPath, service2Name, operation}, service2Result, nil},
 			},
 		},
 		{
@@ -86,9 +90,9 @@ func TestOperationDoWithServices(t *testing.T) {
 				system.Failure(service1Name, operation, UnknownExecutorType, expectedError.Error()),
 				response.Process(service2Result, loggingClient),
 			},
-			[]stubCall{
-				{[]string{executorPath, service1Name, operation}, "", expectedError},
-				{[]string{executorPath, service2Name, operation}, service2Result, nil},
+			map[string]stubCall{
+				service1Name: {[]string{executorPath, service1Name, operation}, "", expectedError},
+				service2Name: {[]string{executorPath, service2Name, operation}, service2Result, nil},
 			},
 		},
 		{
@@ -98,9 +102,9 @@ func TestOperationDoWithServices(t *testing.T) {
 				response.Process(service1Result, loggingClient),
 				system.Failure(service2Name, operation, UnknownExecutorType, expectedError.Error()),
 			},
-			[]stubCall{
-				{[]string{executorPath, service1Name, operation}, service1Result, nil},
-				{[]string{executorPath, service2Name, operation}, "", expectedError},
+			map[string]stubCall{
+				service1Name: {[]string{executorPath, service1Name, operation}, service1Result, nil},
+				service2Name: {[]string{executorPath, service2Name, operation}, "", expectedError},
 			},
 		},
 		{
@@ -110,9 +114,9 @@ func TestOperationDoWithServices(t *testing.T) {
 				system.Failure(service1Name, operation, UnknownExecutorType, expectedError.Error()),
 				system.Failure(service2Name, operation, UnknownExecutorType, expectedError.Error()),
 			},
-			[]stubCall{
-				{[]string{executorPath, service1Name, operation}, "", expectedError},
-				{[]string{executorPath, service2Name, operation}, "", expectedError},
+			map[string]stubCall{
+				service1Name: {[]string{executorPath, service1Name, operation}, "", expectedError},
+				service2Name: {[]string{executorPath, service2Name, operation}, "", expectedError},
 			},
 		},
 	}
@@ -125,11 +129,20 @@ func TestOperationDoWithServices(t *testing.T) {
 			result := sut.Do(test.services, operation)
 
 			if assert.Equal(t, len(test.executorCalls), executor.Called) {
-				for key, executorCall := range test.executorCalls {
-					assertArgsAreEqual(t, executorCall.expectedArgs, executor.capturedArgs[key])
+				var expectedArgs []string
+				for key := range test.executorCalls {
+					expectedArgs = append(expectedArgs, argsToString(test.executorCalls[key].expectedArgs))
 				}
+
+				var capturedArgs []string
+				for key := range executor.capturedArgs {
+					capturedArgs = append(capturedArgs, argsToString(executor.capturedArgs[key]))
+				}
+
+				assertArgsAreEqualInAnyOrder(t, expectedArgs, capturedArgs)
 			}
-			assert.Equal(t, test.expectedResult, result)
+
+			assertResultsAreEqualInAnyOrder(t, test.expectedResult, result)
 		})
 	}
 }

@@ -33,7 +33,7 @@ type resultType struct {
 
 // GetExecutor defines a contract for getting configuration for a service.
 type GetExecutor interface {
-	Do(service string, ctx context.Context) (string, error)
+	Do(ctx context.Context, service string) (string, error)
 }
 
 // get contains references to dependencies required to execute a get configuration request.
@@ -51,12 +51,12 @@ func New(executor GetExecutor, loggingClient logger.LoggingClient) *get {
 }
 
 // Do fulfills the GetConfig contract and implements the retrieval of configuration for multiple services.
-func (g get) Do(services []string, ctx context.Context) interface{} {
+func (g get) Do(ctx context.Context, services []string) interface{} {
 	result := resultType{
 		Configuration: resultConfigurationType{},
 	}
 	for _, service := range services {
-		c, err := g.executor.Do(service, ctx)
+		c, err := g.executor.Do(ctx, service)
 		if err != nil {
 			g.loggingClient.Error(fmt.Sprintf(err.Error()))
 			result.Configuration[service] = fmt.Sprintf(err.Error())

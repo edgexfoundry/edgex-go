@@ -55,7 +55,7 @@ func NewExecutor(
 }
 
 // Do fulfills the GetExecutor contract and implements the functionality to retrieve a service's configuration.
-func (e executor) Do(serviceName string, ctx context.Context) (string, error) {
+func (e executor) Do(ctx context.Context, serviceName string) (string, error) {
 	var result string
 	client, ok := e.genClients.Get(serviceName)
 	if !ok {
