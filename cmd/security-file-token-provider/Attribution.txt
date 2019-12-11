@@ -30,12 +30,6 @@ https://github.com/google/uuid/blob/master/LICENSE
 pelletier/go-toml (MIT) https://github.com/pelletier/go-toml
 https://github.com/pelletier/go-toml/blob/master/LICENSE
 
-influxdata/influxdb/client/v2 (MIT) https://github.com/influxdata/influxdb
-https://github.com/influxdata/influxdb/blob/master/LICENSE
-
-influxdata/platform (MIT) https://github.com/influxdata/platform
-https://github.com/influxdata/platform/blob/master/LICENSE
-
 eclipse/paho.mqtt.golang (Eclipse Public License 1.0) https://github.com/eclipse/paho.mqtt.golang
 https://github.com/eclipse/paho.mqtt.golang/blob/master/LICENSE
 
@@ -119,9 +113,6 @@ https://github.com/edgexfoundry/go-mod-registry/blob/master/LICENSE
 
 edgexfoundry/go-mod-secrets (Apache 2.0) https://github.com/edgexfoundry/go-mod-secrets
 https://github.com/edgexfoundry/go-mod-secrets/blob/master/LICENSE
-
-gorilla/context (BSD-3) https://github.com/gorilla/context
-https://github.com/gorilla/context/blob/master/LICENSE
 
 kr/logfmt (Unspecified) https://github.com/kr/logfmt
 https://github.com/kr/logfmt/blob/master/Readme
