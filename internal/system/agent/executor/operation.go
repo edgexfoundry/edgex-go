@@ -16,8 +16,10 @@ package executor
 
 import (
 	"github.com/edgexfoundry/edgex-go/internal/system"
+	"github.com/edgexfoundry/edgex-go/internal/system/agent/concurrent"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/response"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
 
@@ -41,16 +43,27 @@ func NewOperations(
 	}
 }
 
-// operationViaExecutor delegates a start/stop/restart operation request to the configuration-defined executor.
-func (e operations) Do(services []string, operation string) []interface{} {
-	var result []interface{}
-	for _, serviceName := range services {
-		r, err := e.executor(e.executorPath, serviceName, operation)
-		if err != nil {
-			result = append(result, system.Failure(serviceName, operation, UnknownExecutorType, err.Error()))
-			continue
-		}
-		result = append(result, response.Process(r, e.loggingClient))
+// delegateToExecutor wraps executor execution and handles error response creation when necessary.
+func (e operations) delegateToExecutor(serviceName, operation string) interface{} {
+	r, err := e.executor(e.executorPath, serviceName, operation)
+	if err != nil {
+		return system.Failure(serviceName, operation, UnknownExecutorType, err.Error())
 	}
-	return result
+	return response.Process(r, e.loggingClient)
+}
+
+// Do concurrently delegates a start/stop/restart operation request to the configuration-defined executor.
+func (e operations) Do(services []string, operation string) []interface{} {
+	var closures []concurrent.Closure
+	for index := range services {
+		closures = append(
+			closures,
+			func(serviceName string) concurrent.Closure {
+				return func() interface{} {
+					return e.delegateToExecutor(serviceName, operation)
+				}
+			}(services[index]),
+		)
+	}
+	return concurrent.ExecuteAndAggregateResults(closures)
 }
